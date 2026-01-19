@@ -39,10 +39,11 @@ from .aksara import (
 
 class PadaType(IntEnum):
     """The three types of words in the Mahamantra."""
-    HARE = 0      # Addressing Shakti (Energy)
-    KRISHNA = 1   # Addressing Bhagavan (All-Attractive)
-    RAMA = 2      # Addressing Bhagavan (Pleasure)
-    VOID = 3      # Error/Maya
+
+    HARE = 0  # Addressing Shakti (Energy)
+    KRISHNA = 1  # Addressing Bhagavan (All-Attractive)
+    RAMA = 2  # Addressing Bhagavan (Pleasure)
+    VOID = 3  # Error/Maya
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,7 @@ class Pada:
         aksaras: Component syllables
         meaning: Philosophical meaning
     """
+
     pada_type: PadaType
     aksaras: Tuple[Aksara, ...]
     meaning: str = ""
@@ -125,13 +127,25 @@ PADA_BY_TYPE: Final[dict] = {
 
 MAHAMANTRA_SEQUENCE: Final[Tuple[Pada, ...]] = (
     # Quarter 1: Hare Krishna Hare Krishna
-    PADA_HARE, PADA_KRISHNA, PADA_HARE, PADA_KRISHNA,
+    PADA_HARE,
+    PADA_KRISHNA,
+    PADA_HARE,
+    PADA_KRISHNA,
     # Quarter 2: Krishna Krishna Hare Hare
-    PADA_KRISHNA, PADA_KRISHNA, PADA_HARE, PADA_HARE,
+    PADA_KRISHNA,
+    PADA_KRISHNA,
+    PADA_HARE,
+    PADA_HARE,
     # Quarter 3: Hare Rama Hare Rama
-    PADA_HARE, PADA_RAMA, PADA_HARE, PADA_RAMA,
+    PADA_HARE,
+    PADA_RAMA,
+    PADA_HARE,
+    PADA_RAMA,
     # Quarter 4: Rama Rama Hare Hare
-    PADA_RAMA, PADA_RAMA, PADA_HARE, PADA_HARE,
+    PADA_RAMA,
+    PADA_RAMA,
+    PADA_HARE,
+    PADA_HARE,
 )
 
 

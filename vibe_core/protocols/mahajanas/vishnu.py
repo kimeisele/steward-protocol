@@ -26,7 +26,6 @@ This protocol is the EYES of Vishnu watching the Lotus.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -57,42 +56,38 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 OWNER: Final[Mahajana] = Mahajana.BRAHMA
 
 
-
 # =============================================================================
 # THE 16 LOTUS POSITIONS
 # =============================================================================
 
 LOTUS_POSITIONS: Final[Dict[int, str]] = {
     # GENESIS Quarter (Hare Krishna Hare Krishna)
-    0: "PRITHU",      # Head - Infrastructure Avatar
-    1: "BRAHMA",      # Worker - Creation
-    2: "NARADA",      # Worker - Communication
-    3: "SHAMBHU",     # Worker - Destruction
-
+    0: "PRITHU",  # Head - Infrastructure Avatar
+    1: "BRAHMA",  # Worker - Creation
+    2: "NARADA",  # Worker - Communication
+    3: "SHAMBHU",  # Worker - Destruction
     # DHARMA Quarter (Krishna Krishna Hare Hare)
-    4: "VYASA",       # Head - Documentation Avatar
-    5: "KUMARAS",     # Worker - Purity
-    6: "KAPILA",      # Worker - Analysis
-    7: "MANU",        # Worker - Law
-
+    4: "VYASA",  # Head - Documentation Avatar
+    5: "KUMARAS",  # Worker - Purity
+    6: "KAPILA",  # Worker - Analysis
+    7: "MANU",  # Worker - Law
     # KARMA Quarter (Hare Rama Hare Rama)
-    8: "PARASHURAMA", # Head - Enforcement Avatar
-    9: "PRAHLADA",    # Worker - Devotion
-    10: "JANAKA",     # Worker - Execution
-    11: "BHISHMA",    # Worker - Commitment
-
+    8: "PARASHURAMA",  # Head - Enforcement Avatar
+    9: "PRAHLADA",  # Worker - Devotion
+    10: "JANAKA",  # Worker - Execution
+    11: "BHISHMA",  # Worker - Commitment
     # MOKSHA Quarter (Rama Rama Hare Hare)
-    12: "NRISIMHA",   # Head - Protection Avatar
-    13: "BALI",       # Worker - Surrender
-    14: "SHUKA",      # Worker - Liberation
-    15: "YAMARAJA",   # Worker - Death/Correction
+    12: "NRISIMHA",  # Head - Protection Avatar
+    13: "BALI",  # Worker - Surrender
+    14: "SHUKA",  # Worker - Liberation
+    15: "YAMARAJA",  # Worker - Death/Correction
 }
 
 QUARTER_NAMES: Final[Dict[int, str]] = {
-    0: "genesis",   # Creation of the universe
-    1: "dharma",    # Maintenance of law
-    2: "karma",     # Action and duty
-    3: "moksha",    # Liberation and transcendence
+    0: "genesis",  # Creation of the universe
+    1: "dharma",  # Maintenance of law
+    2: "karma",  # Action and duty
+    3: "moksha",  # Liberation and transcendence
 }
 
 
@@ -100,47 +95,49 @@ QUARTER_NAMES: Final[Dict[int, str]] = {
 # THE 24 PRAKRITI (Material Elements)
 # =============================================================================
 
+
 class PrakritiElement(str, Enum):
     """
     The 24 material elements from Sankhya philosophy.
     These are the "dead matter" that Mahajanas work with.
     Supplied by Ananta Shesha / Balarama.
     """
+
     # Root
-    PRAKRITI = "prakriti"           # 1. Root nature (unmanifest)
+    PRAKRITI = "prakriti"  # 1. Root nature (unmanifest)
 
     # Subtle (Mahat-tattva evolution)
-    MAHAT = "mahat"                 # 2. Cosmic intelligence
-    AHANKARA = "ahankara"           # 3. False ego
-    MANAS = "manas"                 # 4. Mind
+    MAHAT = "mahat"  # 2. Cosmic intelligence
+    AHANKARA = "ahankara"  # 3. False ego
+    MANAS = "manas"  # 4. Mind
 
     # Tanmatras (subtle elements)
-    SHABDA = "shabda"               # 5. Sound
-    SPARSHA = "sparsha"             # 6. Touch
-    RUPA = "rupa"                   # 7. Form
-    RASA = "rasa"                   # 8. Taste
-    GANDHA = "gandha"               # 9. Smell
+    SHABDA = "shabda"  # 5. Sound
+    SPARSHA = "sparsha"  # 6. Touch
+    RUPA = "rupa"  # 7. Form
+    RASA = "rasa"  # 8. Taste
+    GANDHA = "gandha"  # 9. Smell
 
     # Jnanendriyas (knowledge senses)
-    SHROTRA = "shrotra"             # 10. Ear
-    TVAK = "tvak"                   # 11. Skin
-    CHAKSHUS = "chakshus"           # 12. Eye
-    RASANA = "rasana"               # 13. Tongue
-    GHRANA = "ghrana"               # 14. Nose
+    SHROTRA = "shrotra"  # 10. Ear
+    TVAK = "tvak"  # 11. Skin
+    CHAKSHUS = "chakshus"  # 12. Eye
+    RASANA = "rasana"  # 13. Tongue
+    GHRANA = "ghrana"  # 14. Nose
 
     # Karmendriyas (action organs)
-    VAK = "vak"                     # 15. Speech
-    PANI = "pani"                   # 16. Hands
-    PADA = "pada"                   # 17. Feet
-    PAYU = "payu"                   # 18. Excretion
-    UPASTHA = "upastha"             # 19. Generation
+    VAK = "vak"  # 15. Speech
+    PANI = "pani"  # 16. Hands
+    PADA = "pada"  # 17. Feet
+    PAYU = "payu"  # 18. Excretion
+    UPASTHA = "upastha"  # 19. Generation
 
     # Mahabhutas (gross elements)
-    AKASHA = "akasha"               # 20. Ether/Space
-    VAYU = "vayu"                   # 21. Air
-    TEJAS = "tejas"                 # 22. Fire
-    APAS = "apas"                   # 23. Water
-    PRITHVI = "prithvi"             # 24. Earth
+    AKASHA = "akasha"  # 20. Ether/Space
+    VAYU = "vayu"  # 21. Air
+    TEJAS = "tejas"  # 22. Fire
+    APAS = "apas"  # 23. Water
+    PRITHVI = "prithvi"  # 24. Earth
 
 
 # =============================================================================
@@ -150,12 +147,13 @@ class PrakritiElement(str, Enum):
 
 class ChantingStrength(str, Enum):
     """How strongly a position is chanting."""
-    SILENT = "silent"           # 0% - No protocols, no chanting
-    WHISPER = "whisper"         # 1-25% - Minimal presence
-    MURMUR = "murmur"           # 26-50% - Some protocols
-    CHANT = "chant"             # 51-75% - Good coverage
-    ROAR = "roar"               # 76-99% - Strong presence
-    KIRTAN = "kirtan"           # 100% - Full congregational chanting
+
+    SILENT = "silent"  # 0% - No protocols, no chanting
+    WHISPER = "whisper"  # 1-25% - Minimal presence
+    MURMUR = "murmur"  # 26-50% - Some protocols
+    CHANT = "chant"  # 51-75% - Good coverage
+    ROAR = "roar"  # 76-99% - Strong presence
+    KIRTAN = "kirtan"  # 100% - Full congregational chanting
 
 
 class PositionHealth(TypedDict, total=False):
@@ -163,18 +161,19 @@ class PositionHealth(TypedDict, total=False):
     Health of a single Lotus position.
     WATERTIGHT - no Any!
     """
+
     position: int
     name: str
     quarter: str
-    is_head: bool               # True if Shaktyavesha Avatara
-    protocol_count: int         # Number of protocols defined
-    file_count: int             # Number of .py files
-    has_null_impl: bool         # Has NullX fallback
-    has_tests: bool             # Has test coverage
-    chanting_strength: str      # ChantingStrength value
-    coverage_percent: float     # 0.0-100.0
+    is_head: bool  # True if Shaktyavesha Avatara
+    protocol_count: int  # Number of protocols defined
+    file_count: int  # Number of .py files
+    has_null_impl: bool  # Has NullX fallback
+    has_tests: bool  # Has test coverage
+    chanting_strength: str  # ChantingStrength value
+    coverage_percent: float  # 0.0-100.0
     missing_protocols: List[str]
-    health: str                 # "pristine", "healthy", "weak", "silent"
+    health: str  # "pristine", "healthy", "weak", "silent"
 
 
 class QuarterHealth(TypedDict, total=False):
@@ -182,6 +181,7 @@ class QuarterHealth(TypedDict, total=False):
     Health of a quarter (4 positions).
     WATERTIGHT - no Any!
     """
+
     quarter_index: int
     quarter_name: str
     head_position: int
@@ -198,8 +198,9 @@ class LotusHealth(TypedDict, total=False):
     Health of the entire 16-position Lotus.
     WATERTIGHT - no Any!
     """
-    timestamp: str              # ISO timestamp
-    total_positions: int        # 16
+
+    timestamp: str  # ISO timestamp
+    total_positions: int  # 16
     total_protocols: int
     total_files: int
     average_coverage: float
@@ -215,9 +216,10 @@ class PrakritiCoverage(TypedDict, total=False):
     Coverage of the 24 Prakriti elements.
     WATERTIGHT - no Any!
     """
-    element: str                # PrakritiElement value
-    is_materialized: bool       # Has implementation
-    owner_mahajana: str         # Which Mahajana uses it
+
+    element: str  # PrakritiElement value
+    is_materialized: bool  # Has implementation
+    owner_mahajana: str  # Which Mahajana uses it
     usage_count: int
     health: str
 

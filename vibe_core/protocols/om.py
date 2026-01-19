@@ -61,6 +61,7 @@ if TYPE_CHECKING:
 from .universal.bhagavan import BhagavanProtocol
 from .universal.kurukshetra import BattleReport, KurukshetraProtocol
 from .universal.ramanujan import RamanujanProtocol
+
 # NullYamaraja is the merciful implementation (for Kali Yuga)
 from .mahajanas.yamaraja import NullYamaraja as YamarajaProtocol
 
@@ -159,7 +160,7 @@ class OM(BaseTestable):
         # Collect from all sub-protocols
         cases.extend(self._ramanujan.get_test_cases())  # 12 tests
         # NullYamaraja is merciful - no test cases (accepts all)
-        if hasattr(self._yamaraja, 'get_test_cases'):
+        if hasattr(self._yamaraja, "get_test_cases"):
             cases.extend(self._yamaraja.get_test_cases())  # 14 tests
         cases.extend(self._bhagavan.get_test_cases())  # 6 tests
         cases.extend(self._kurukshetra.get_test_cases())  # 4 tests
@@ -197,10 +198,7 @@ class OM(BaseTestable):
     # =========================================================================
 
     @classmethod
-    def manifest(
-        cls,
-        diksha_certificate: Optional[DikshaCertificate] = None
-    ) -> "RealVibeKernel":
+    def manifest(cls, diksha_certificate: Optional[DikshaCertificate] = None) -> "RealVibeKernel":
         """
         THE BIG BANG - Manifest the entire system.
 

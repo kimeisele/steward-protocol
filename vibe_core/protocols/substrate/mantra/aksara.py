@@ -40,6 +40,7 @@ class Aksara:
         roman: Western approximation
         varnas: Component varnas (letters)
     """
+
     devanagari: str
     iast: str
     roman: str

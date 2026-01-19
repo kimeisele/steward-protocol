@@ -20,24 +20,31 @@ from typing import Protocol, TypedDict, runtime_checkable, Optional
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
+
 class GenesisByte(TypedDict):
     """The Seal of Validity."""
-    hash: str       # "0x..."
-    vector: int     # Numeric value
+
+    hash: str  # "0x..."
+    vector: int  # Numeric value
     is_valid: bool  # vector % 37 == 0
+
 
 class InjectionRequest(TypedDict):
     """Request to inject DNA into a host."""
+
     path: str
     mahajana: str
     position: int
 
+
 class WiringStats(TypedDict):
     """Statistics from wiring healing."""
+
     checked: int
     healed: int
     skipped: int
     failed: int
+
 
 @runtime_checkable
 class SankirtanProtocol(PanchaTattvaProtocol, Protocol):
@@ -76,6 +83,7 @@ class SankirtanProtocol(PanchaTattvaProtocol, Protocol):
         Ensures __init__.py files match the Blueprint.
         """
         ...
+
 
 # =============================================================================
 # EXPORTS

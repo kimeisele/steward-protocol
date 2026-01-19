@@ -53,7 +53,6 @@ Architecture:
             (Only approved intents)
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

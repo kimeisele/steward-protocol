@@ -33,7 +33,6 @@ Zoom in: Same structure. Zoom out: Same structure.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -86,12 +85,13 @@ class FractalLevel(IntEnum):
     The 6 levels of fractal decomposition.
     Each level contains the whole - self-similar structure.
     """
-    VARNA = 0     # Letter (~50 unique)
-    AKSARA = 1    # Syllable (6 unique: ha, re, kṛ, ṣṇa, rā, ma)
-    PADA = 2      # Word (3 unique: Hare, Krishna, Rama)
-    VAKYA = 3     # Mantra (16 words = 1 instruction set)
-    MALA = 4      # Round (108 mantras = 1 mala)
-    SADHANA = 5   # Session (16 rounds = 1 sadhana)
+
+    VARNA = 0  # Letter (~50 unique)
+    AKSARA = 1  # Syllable (6 unique: ha, re, kṛ, ṣṇa, rā, ma)
+    PADA = 2  # Word (3 unique: Hare, Krishna, Rama)
+    VAKYA = 3  # Mantra (16 words = 1 instruction set)
+    MALA = 4  # Round (108 mantras = 1 mala)
+    SADHANA = 5  # Session (16 rounds = 1 sadhana)
 
 
 # =============================================================================
@@ -104,11 +104,12 @@ class RegisterState(TypedDict):
     State of the 3 registers (H, K, R).
     WATERTIGHT - no Any!
     """
-    hare_count: int      # How many HARE encountered
-    krishna_count: int   # How many KRISHNA encountered
-    rama_count: int      # How many RAMA encountered
-    total_count: int     # Total operations
-    resonance: float     # Current resonance level (0.0-1.0)
+
+    hare_count: int  # How many HARE encountered
+    krishna_count: int  # How many KRISHNA encountered
+    rama_count: int  # How many RAMA encountered
+    total_count: int  # Total operations
+    resonance: float  # Current resonance level (0.0-1.0)
 
 
 @dataclass
@@ -119,9 +120,10 @@ class CPURegisters:
     Like x86 has AX, BX, CX - Mahamantra CPU has H, K, R.
     These accumulate the vibrational count.
     """
-    hare: int = 0       # H register
-    krishna: int = 0    # K register
-    rama: int = 0       # R register
+
+    hare: int = 0  # H register
+    krishna: int = 0  # K register
+    rama: int = 0  # R register
 
     def increment(self, name: HolyName) -> None:
         """Increment the appropriate register."""
@@ -153,7 +155,7 @@ class CPURegisters:
             return 0.0
 
         # Expected ratios
-        expected_h = 0.5   # 8/16
+        expected_h = 0.5  # 8/16
         expected_k = 0.25  # 4/16
         expected_r = 0.25  # 4/16
 
@@ -163,14 +165,11 @@ class CPURegisters:
         actual_r = self.rama / self.total
 
         # Distance from expected (Euclidean)
-        distance = (
-            (actual_h - expected_h) ** 2 +
-            (actual_k - expected_k) ** 2 +
-            (actual_r - expected_r) ** 2
-        ) ** 0.5
+        distance = ((actual_h - expected_h) ** 2 + (actual_k - expected_k) ** 2 + (actual_r - expected_r) ** 2) ** 0.5
 
         # Convert to resonance (inverse exponential)
         import math
+
         return math.exp(-5.0 * distance)
 
     def to_state(self) -> RegisterState:
@@ -203,6 +202,7 @@ class ProgramCounter:
     Position 0-15 maps to the 16 opcodes.
     Wraps around (modulo 16) for continuous cycling.
     """
+
     position: int = 0
     cycle_count: int = 0  # How many complete cycles (vakyas)
 
@@ -250,13 +250,14 @@ class InstructionResult(TypedDict):
     Result of executing one instruction.
     WATERTIGHT - no Any!
     """
-    position: int          # Which position was executed
-    opcode: str            # The opcode name (e.g., "SYS_WAKE")
-    pada: str              # The word (HARE/KRISHNA/RAMA)
-    aksaras: str           # Syllable breakdown
-    owner: str             # Who owns this opcode (Avatara/Mahajana)
-    quarter: int           # Which quarter (0-3)
-    success: bool          # Did execution succeed?
+
+    position: int  # Which position was executed
+    opcode: str  # The opcode name (e.g., "SYS_WAKE")
+    pada: str  # The word (HARE/KRISHNA/RAMA)
+    aksaras: str  # Syllable breakdown
+    owner: str  # Who owns this opcode (Avatara/Mahajana)
+    quarter: int  # Which quarter (0-3)
+    success: bool  # Did execution succeed?
 
 
 @dataclass(frozen=True)
@@ -270,6 +271,7 @@ class Instruction:
     - The OpCode mapping
     - The Owner (Avatara/Mahajana)
     """
+
     position: int
     pada: Pada
     opcode_name: str
@@ -305,18 +307,42 @@ class Instruction:
 
 # The 16 OpCode names (from MantraOpCode)
 OPCODE_NAMES: Final[Tuple[str, ...]] = (
-    "SYS_WAKE", "LOAD_ROOT", "ALLOC_MEM", "BIND_CTX",
-    "ASSERT_TRUTH", "RESOLVE_REQ", "GARBAGE_COLLECT", "PULSE_SYNC",
-    "FETCH_RES", "EXEC_SERVICE", "CHECK_DHARMA", "COMMIT_LOG",
-    "CACHE_STATE", "OPTIMIZE", "YIELD_CPU", "RESET_IP",
+    "SYS_WAKE",
+    "LOAD_ROOT",
+    "ALLOC_MEM",
+    "BIND_CTX",
+    "ASSERT_TRUTH",
+    "RESOLVE_REQ",
+    "GARBAGE_COLLECT",
+    "PULSE_SYNC",
+    "FETCH_RES",
+    "EXEC_SERVICE",
+    "CHECK_DHARMA",
+    "COMMIT_LOG",
+    "CACHE_STATE",
+    "OPTIMIZE",
+    "YIELD_CPU",
+    "RESET_IP",
 )
 
 # The 16 Owners (4 Avataras + 12 Mahajanas)
 OWNER_NAMES: Final[Tuple[str, ...]] = (
-    "PRITHU", "BRAHMA", "NARADA", "SHAMBHU",
-    "VYASA", "KUMARAS", "KAPILA", "MANU",
-    "PARASHURAMA", "PRAHLADA", "JANAKA", "BHISHMA",
-    "NRISIMHA", "BALI", "SHUKA", "YAMARAJA",
+    "PRITHU",
+    "BRAHMA",
+    "NARADA",
+    "SHAMBHU",
+    "VYASA",
+    "KUMARAS",
+    "KAPILA",
+    "MANU",
+    "PARASHURAMA",
+    "PRAHLADA",
+    "JANAKA",
+    "BHISHMA",
+    "NRISIMHA",
+    "BALI",
+    "SHUKA",
+    "YAMARAJA",
 )
 
 
@@ -334,9 +360,7 @@ def get_instruction(position: int) -> Instruction:
 
 
 # Build full instruction set
-INSTRUCTION_SET: Final[Tuple[Instruction, ...]] = tuple(
-    get_instruction(i) for i in range(16)
-)
+INSTRUCTION_SET: Final[Tuple[Instruction, ...]] = tuple(get_instruction(i) for i in range(16))
 
 
 # =============================================================================
@@ -349,6 +373,7 @@ class CPUState(TypedDict):
     Complete CPU state snapshot.
     WATERTIGHT - no Any!
     """
+
     program_counter: int
     cycle_count: int
     registers: RegisterState
@@ -605,7 +630,7 @@ class MantraCPU:
             "",
         ]
 
-        if state['last_instruction']:
+        if state["last_instruction"]:
             lines.append(f"  Last Instruction: {state['last_instruction']}")
 
         lines.append("")

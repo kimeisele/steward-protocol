@@ -76,13 +76,15 @@ OWNER: Final[Mahajana] = Mahajana.KAPILA
 # THE 24 PRAKRITI ELEMENTS (Enumerated by Kapila)
 # =============================================================================
 
+
 class PrakritiCategory(str, Enum):
     """The 5 categories of Prakriti elements."""
-    ANTAHKARANA = "antahkarana"    # 4 Internal instruments (1-4)
-    TANMATRA = "tanmatra"          # 5 Subtle elements (5-9)
-    JNANENDRIYA = "jnanendriya"    # 5 Knowledge senses (10-14)
-    KARMENDRIYA = "karmendriya"    # 5 Working senses (15-19)
-    MAHABHUTA = "mahabhuta"        # 5 Gross elements (20-24)
+
+    ANTAHKARANA = "antahkarana"  # 4 Internal instruments (1-4)
+    TANMATRA = "tanmatra"  # 5 Subtle elements (5-9)
+    JNANENDRIYA = "jnanendriya"  # 5 Knowledge senses (10-14)
+    KARMENDRIYA = "karmendriya"  # 5 Working senses (15-19)
+    MAHABHUTA = "mahabhuta"  # 5 Gross elements (20-24)
 
 
 class PrakritiElement(IntEnum):
@@ -92,39 +94,40 @@ class PrakritiElement(IntEnum):
     Enumerated by Lord Kapila to His mother Devahuti.
     Each element maps to a protocol layer and Mahajana guardian.
     """
+
     # ANTAHKARANA (4 Internal Instruments) — Positions 1-4
-    MANAS = 1        # Mind → Cognition/Think
-    BUDDHI = 2       # Intelligence → Decide/Judge
-    AHANKARA = 3     # Ego → Identity/Auth
-    CITTA = 4        # Consciousness → Awareness/State (MAHAT)
+    MANAS = 1  # Mind → Cognition/Think
+    BUDDHI = 2  # Intelligence → Decide/Judge
+    AHANKARA = 3  # Ego → Identity/Auth
+    CITTA = 4  # Consciousness → Awareness/State (MAHAT)
 
     # TANMATRA (5 Subtle Elements) — Positions 5-9
-    SHABDA = 5       # Sound → Event/Signal
-    SPARSHA = 6      # Touch → Input/Interface
-    RUPA = 7         # Form → Display/Render
-    RASA = 8         # Taste → Validate/Parse
-    GANDHA = 9       # Smell → Detect/Trace
+    SHABDA = 5  # Sound → Event/Signal
+    SPARSHA = 6  # Touch → Input/Interface
+    RUPA = 7  # Form → Display/Render
+    RASA = 8  # Taste → Validate/Parse
+    GANDHA = 9  # Smell → Detect/Trace
 
     # JNANENDRIYA (5 Knowledge Senses) — Positions 10-14
-    SHROTRA = 10     # Ear → Listen/Subscribe
-    TVAK = 11        # Skin → Sense/Context
-    CHAKSHUS = 12    # Eye → Observe/Monitor
-    RASANA = 13      # Tongue → Parse/Interpret
-    GHRANA = 14      # Nose → Detect/Audit
+    SHROTRA = 10  # Ear → Listen/Subscribe
+    TVAK = 11  # Skin → Sense/Context
+    CHAKSHUS = 12  # Eye → Observe/Monitor
+    RASANA = 13  # Tongue → Parse/Interpret
+    GHRANA = 14  # Nose → Detect/Audit
 
     # KARMENDRIYA (5 Working Senses) — Positions 15-19
-    VAK = 15         # Speech → Chat/Translation/Language
-    PANI = 16        # Hands → Execute/Build
-    PADA = 17        # Feet → Navigate/Route
-    PAYU = 18        # Excretion → Cleanup/GC
-    UPASTHA = 19     # Generation → Create/Genesis
+    VAK = 15  # Speech → Chat/Translation/Language
+    PANI = 16  # Hands → Execute/Build
+    PADA = 17  # Feet → Navigate/Route
+    PAYU = 18  # Excretion → Cleanup/GC
+    UPASTHA = 19  # Generation → Create/Genesis
 
     # MAHABHUTA (5 Gross Elements) — Positions 20-24
-    AKASHA = 20      # Ether → Network/Field
-    VAYU = 21        # Air → Process/Flow
-    TEJAS = 22       # Fire → Transform/Compute
-    APAS = 23        # Water → Memory/State
-    PRITHVI = 24     # Earth → Storage/Persist
+    AKASHA = 20  # Ether → Network/Field
+    VAYU = 21  # Air → Process/Flow
+    TEJAS = 22  # Fire → Transform/Compute
+    APAS = 23  # Water → Memory/State
+    PRITHVI = 24  # Earth → Storage/Persist
 
 
 # =============================================================================
@@ -137,28 +140,24 @@ ELEMENT_PROTOCOL_LAYER: Final[Dict[PrakritiElement, str]] = {
     PrakritiElement.BUDDHI: "decision",
     PrakritiElement.AHANKARA: "identity",
     PrakritiElement.CITTA: "awareness",
-
     # TANMATRA → Signal/sensing
     PrakritiElement.SHABDA: "event",
     PrakritiElement.SPARSHA: "input",
     PrakritiElement.RUPA: "display",
     PrakritiElement.RASA: "validate",
     PrakritiElement.GANDHA: "detect",
-
     # JNANENDRIYA → Knowledge acquisition
     PrakritiElement.SHROTRA: "listen",
     PrakritiElement.TVAK: "context",
     PrakritiElement.CHAKSHUS: "observe",
     PrakritiElement.RASANA: "parse",
     PrakritiElement.GHRANA: "audit",
-
     # KARMENDRIYA → Action/output
     PrakritiElement.VAK: "speech",
     PrakritiElement.PANI: "execute",
     PrakritiElement.PADA: "navigate",
     PrakritiElement.PAYU: "cleanup",
     PrakritiElement.UPASTHA: "create",
-
     # MAHABHUTA → Infrastructure
     PrakritiElement.AKASHA: "network",
     PrakritiElement.VAYU: "process",
@@ -174,38 +173,34 @@ ELEMENT_PROTOCOL_LAYER: Final[Dict[PrakritiElement, str]] = {
 
 ELEMENT_GUARDIAN: Final[Dict[PrakritiElement, Mahajana]] = {
     # ANTAHKARANA guardians (Internal instruments need wisdom)
-    PrakritiElement.MANAS: Mahajana.KAPILA,      # Mind → Analysis
-    PrakritiElement.BUDDHI: Mahajana.YAMARAJA,   # Intelligence → Judgment
-    PrakritiElement.AHANKARA: Mahajana.MANU,     # Ego → Law/Identity
-    PrakritiElement.CITTA: Mahajana.KUMARAS,     # Consciousness → Purity
-
+    PrakritiElement.MANAS: Mahajana.KAPILA,  # Mind → Analysis
+    PrakritiElement.BUDDHI: Mahajana.YAMARAJA,  # Intelligence → Judgment
+    PrakritiElement.AHANKARA: Mahajana.MANU,  # Ego → Law/Identity
+    PrakritiElement.CITTA: Mahajana.KUMARAS,  # Consciousness → Purity
     # TANMATRA guardians (Subtle elements need sensitivity)
-    PrakritiElement.SHABDA: Mahajana.NARADA,     # Sound → Communication
-    PrakritiElement.SPARSHA: Mahajana.JANAKA,    # Touch → Duty/Service
-    PrakritiElement.RUPA: Mahajana.SHUKA,        # Form → Vision
-    PrakritiElement.RASA: Mahajana.KAPILA,       # Taste → Analysis
-    PrakritiElement.GANDHA: Mahajana.YAMARAJA,   # Smell → Detection
-
+    PrakritiElement.SHABDA: Mahajana.NARADA,  # Sound → Communication
+    PrakritiElement.SPARSHA: Mahajana.JANAKA,  # Touch → Duty/Service
+    PrakritiElement.RUPA: Mahajana.SHUKA,  # Form → Vision
+    PrakritiElement.RASA: Mahajana.KAPILA,  # Taste → Analysis
+    PrakritiElement.GANDHA: Mahajana.YAMARAJA,  # Smell → Detection
     # JNANENDRIYA guardians (Knowledge senses need discrimination)
-    PrakritiElement.SHROTRA: Mahajana.NARADA,    # Ear → Listening
-    PrakritiElement.TVAK: Mahajana.PRAHLADA,     # Skin → Resilience
-    PrakritiElement.CHAKSHUS: Mahajana.SHUKA,    # Eye → Observation
-    PrakritiElement.RASANA: Mahajana.KAPILA,     # Tongue → Interpretation
-    PrakritiElement.GHRANA: Mahajana.YAMARAJA,   # Nose → Audit
-
+    PrakritiElement.SHROTRA: Mahajana.NARADA,  # Ear → Listening
+    PrakritiElement.TVAK: Mahajana.PRAHLADA,  # Skin → Resilience
+    PrakritiElement.CHAKSHUS: Mahajana.SHUKA,  # Eye → Observation
+    PrakritiElement.RASANA: Mahajana.KAPILA,  # Tongue → Interpretation
+    PrakritiElement.GHRANA: Mahajana.YAMARAJA,  # Nose → Audit
     # KARMENDRIYA guardians (Working senses need direction)
-    PrakritiElement.VAK: Mahajana.NARADA,        # Speech → Communication
-    PrakritiElement.PANI: Mahajana.JANAKA,       # Hands → Service/Duty
-    PrakritiElement.PADA: Mahajana.BHISHMA,      # Feet → Navigation/Vow
-    PrakritiElement.PAYU: Mahajana.SHAMBHU,      # Excretion → Destruction
-    PrakritiElement.UPASTHA: Mahajana.BRAHMA,    # Generation → Creation
-
+    PrakritiElement.VAK: Mahajana.NARADA,  # Speech → Communication
+    PrakritiElement.PANI: Mahajana.JANAKA,  # Hands → Service/Duty
+    PrakritiElement.PADA: Mahajana.BHISHMA,  # Feet → Navigation/Vow
+    PrakritiElement.PAYU: Mahajana.SHAMBHU,  # Excretion → Destruction
+    PrakritiElement.UPASTHA: Mahajana.BRAHMA,  # Generation → Creation
     # MAHABHUTA guardians (Gross elements need management)
-    PrakritiElement.AKASHA: Mahajana.NARADA,     # Ether → Field/Communication
-    PrakritiElement.VAYU: Mahajana.PRAHLADA,     # Air → Process/Flow
-    PrakritiElement.TEJAS: Mahajana.SHAMBHU,     # Fire → Transformation
-    PrakritiElement.APAS: Mahajana.BALI,         # Water → Memory/Surrender
-    PrakritiElement.PRITHVI: Mahajana.BRAHMA,    # Earth → Storage/Creation
+    PrakritiElement.AKASHA: Mahajana.NARADA,  # Ether → Field/Communication
+    PrakritiElement.VAYU: Mahajana.PRAHLADA,  # Air → Process/Flow
+    PrakritiElement.TEJAS: Mahajana.SHAMBHU,  # Fire → Transformation
+    PrakritiElement.APAS: Mahajana.BALI,  # Water → Memory/Surrender
+    PrakritiElement.PRITHVI: Mahajana.BRAHMA,  # Earth → Storage/Creation
 }
 
 
@@ -219,28 +214,24 @@ ELEMENT_OPCODE: Final[Dict[PrakritiElement, MantraOpCode]] = {
     PrakritiElement.BUDDHI: MantraOpCode.COMPILE_AST,
     PrakritiElement.AHANKARA: MantraOpCode.INIT_THREAD,
     PrakritiElement.CITTA: MantraOpCode.YIELD_CPU,
-
     # TANMATRA → Signal ops
     PrakritiElement.SHABDA: MantraOpCode.DHARMA_TEST,
     PrakritiElement.SPARSHA: MantraOpCode.EXEC_OP,
     PrakritiElement.RUPA: MantraOpCode.YIELD_CPU,
     PrakritiElement.RASA: MantraOpCode.COMPILE_AST,
     PrakritiElement.GANDHA: MantraOpCode.STATE_SYNC,
-
     # JNANENDRIYA → Knowledge ops
     PrakritiElement.SHROTRA: MantraOpCode.DHARMA_TEST,
     PrakritiElement.TVAK: MantraOpCode.EXEC_OP,
     PrakritiElement.CHAKSHUS: MantraOpCode.STATE_SYNC,
     PrakritiElement.RASANA: MantraOpCode.BIND_SYMBOL,
     PrakritiElement.GHRANA: MantraOpCode.STATE_SYNC,
-
     # KARMENDRIYA → Action ops
     PrakritiElement.VAK: MantraOpCode.DHARMA_TEST,
     PrakritiElement.PANI: MantraOpCode.EXTEND_CAP,
     PrakritiElement.PADA: MantraOpCode.EXEC_OP,
     PrakritiElement.PAYU: MantraOpCode.TYPE_CHECK,
     PrakritiElement.UPASTHA: MantraOpCode.LOAD_ROOT,
-
     # MAHABHUTA → Infrastructure ops
     PrakritiElement.AKASHA: MantraOpCode.ALLOC_MEM,
     PrakritiElement.VAYU: MantraOpCode.EXTEND_CAP,
@@ -254,35 +245,39 @@ ELEMENT_OPCODE: Final[Dict[PrakritiElement, MantraOpCode]] = {
 # WATERTIGHT TYPES
 # =============================================================================
 
+
 class ElementAnalysis(TypedDict):
     """Analysis of a protocol element classification. WATERTIGHT."""
-    element: str                   # PrakritiElement name
-    element_number: int            # 1-24
-    category: str                  # PrakritiCategory value
-    protocol_layer: str            # Layer name
-    guardian: str                  # Mahajana name
-    guardian_position: int         # Lotus position of guardian
-    opcode: str                    # MantraOpCode value
-    quarter: str                   # LotusQuarter value
-    analyzed_at: str               # ISO timestamp
+
+    element: str  # PrakritiElement name
+    element_number: int  # 1-24
+    category: str  # PrakritiCategory value
+    protocol_layer: str  # Layer name
+    guardian: str  # Mahajana name
+    guardian_position: int  # Lotus position of guardian
+    opcode: str  # MantraOpCode value
+    quarter: str  # LotusQuarter value
+    analyzed_at: str  # ISO timestamp
 
 
 class EntropyReport(TypedDict):
     """Report on protocol entropy state. WATERTIGHT."""
+
     protocol_name: str
-    entropy_score: float           # 0.0 (ordered) to 1.0 (chaotic)
-    is_wild: bool                  # Not yet adopted
-    is_orphan: bool                # No guardian
-    parampara_connected: bool      # % 37 == 0
-    mahamantra_aligned: bool       # Has valid OpCode mapping
-    recommended_element: str       # Best-fit PrakritiElement
-    recommended_guardian: str      # Best-fit Mahajana
-    entropy_fighters: List[str]    # OpCodes that reduce entropy
+    entropy_score: float  # 0.0 (ordered) to 1.0 (chaotic)
+    is_wild: bool  # Not yet adopted
+    is_orphan: bool  # No guardian
+    parampara_connected: bool  # % 37 == 0
+    mahamantra_aligned: bool  # Has valid OpCode mapping
+    recommended_element: str  # Best-fit PrakritiElement
+    recommended_guardian: str  # Best-fit Mahajana
+    entropy_fighters: List[str]  # OpCodes that reduce entropy
     analyzed_at: str
 
 
 class SamkhyaState(TypedDict, total=False):
     """State of the Samkhya protocol. WATERTIGHT."""
+
     protocol_name: str
     owner: str
     is_chanting: bool
@@ -296,15 +291,16 @@ class SamkhyaState(TypedDict, total=False):
     parampara_hash: int
     is_lotus_connected: bool
     # Samkhya-specific
-    elements_mapped: int           # How many of 24 mapped
-    protocols_analyzed: int        # How many protocols analyzed
-    entropy_reduced: float         # Total entropy reduction
-    wild_protocols_adopted: int    # Protocols brought to order
+    elements_mapped: int  # How many of 24 mapped
+    protocols_analyzed: int  # How many protocols analyzed
+    entropy_reduced: float  # Total entropy reduction
+    wild_protocols_adopted: int  # Protocols brought to order
 
 
 # =============================================================================
 # SAMKHYA PROTOCOL IMPLEMENTATION
 # =============================================================================
+
 
 class SamkhyaProtocol(OwnedProtocol):
     """
@@ -325,7 +321,7 @@ class SamkhyaProtocol(OwnedProtocol):
 
     OWNER: Mahajana = Mahajana.KAPILA
     OPCODES: List[MantraOpCode] = [
-        MantraOpCode.BIND_SYMBOL,      # Primary: Resolution
+        MantraOpCode.BIND_SYMBOL,  # Primary: Resolution
         MantraOpCode.TYPE_CHECK,  # Secondary: Cleanup
     ]
     PROTOCOL_NAME: str = "samkhya"
@@ -405,28 +401,24 @@ class SamkhyaProtocol(OwnedProtocol):
             "decision": {"decide", "judge", "buddhi", "intelligence"},
             "identity": {"auth", "identity", "ego", "ahankar", "session"},
             "awareness": {"state", "aware", "conscious", "citta", "mahat"},
-
             # TANMATRA layers
             "event": {"event", "signal", "sound", "shabda", "notify"},
             "input": {"input", "touch", "sparsha", "interface"},
             "display": {"display", "render", "form", "rupa", "ui"},
             "validate": {"validate", "parse", "taste", "rasa", "check"},
             "detect": {"detect", "trace", "smell", "gandha", "sniff"},
-
             # JNANENDRIYA layers
             "listen": {"listen", "subscribe", "ear", "shrotra", "hear"},
             "context": {"context", "sense", "skin", "tvak", "feel"},
             "observe": {"observe", "monitor", "eye", "chakshus", "watch"},
             "parse": {"parse", "interpret", "tongue", "rasana"},
             "audit": {"audit", "detect", "nose", "ghrana", "smell"},
-
             # KARMENDRIYA layers
             "speech": {"chat", "speak", "vak", "translate", "language"},
             "execute": {"execute", "build", "hands", "pani", "do"},
             "navigate": {"navigate", "route", "feet", "pada", "walk"},
             "cleanup": {"cleanup", "gc", "garbage", "payu", "destroy"},
             "create": {"create", "genesis", "upastha", "generate", "new"},
-
             # MAHABHUTA layers
             "network": {"network", "field", "ether", "akasha", "space"},
             "process": {"process", "flow", "air", "vayu", "wind"},
@@ -611,7 +603,8 @@ class SamkhyaProtocol(OwnedProtocol):
 
         # Re-analyze with guardian
         report = self.analyze_entropy(
-            protocol_name, source_code,
+            protocol_name,
+            source_code,
             has_owner=True,
             parampara_hash=new_parampara_hash,
         )
@@ -639,14 +632,16 @@ class SamkhyaProtocol(OwnedProtocol):
         elements: List[Dict[str, str]] = []
 
         for element in PrakritiElement:
-            elements.append({
-                "number": str(element.value),
-                "name": element.name,
-                "category": self._get_category(element).value,
-                "layer": ELEMENT_PROTOCOL_LAYER[element],
-                "guardian": ELEMENT_GUARDIAN[element].value,
-                "opcode": ELEMENT_OPCODE[element].value,
-            })
+            elements.append(
+                {
+                    "number": str(element.value),
+                    "name": element.name,
+                    "category": self._get_category(element).value,
+                    "layer": ELEMENT_PROTOCOL_LAYER[element],
+                    "guardian": ELEMENT_GUARDIAN[element].value,
+                    "opcode": ELEMENT_OPCODE[element].value,
+                }
+            )
 
         return elements
 
@@ -717,6 +712,7 @@ def get_samkhya() -> SamkhyaProtocol:
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 def analyze_prakriti_element(
     protocol_name: str,

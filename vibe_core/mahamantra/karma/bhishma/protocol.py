@@ -17,13 +17,16 @@ LOCATION: vibe_core.mahamantra.karma.bhishma.protocol
 from typing import Protocol, runtime_checkable, Dict, List, Optional, TypedDict
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
+
 class CommitEntry(TypedDict):
     """A single entry in the ledger."""
+
     event_type: str
     agent_id: str
     details: Dict[str, str]  # Strict typing: values must be strings/serialized
     timestamp: str
     signature: str
+
 
 class CommitResult(TypedDict):
     success: bool
@@ -31,6 +34,7 @@ class CommitResult(TypedDict):
     timestamp: str
     previous_id: str
     error_message: str
+
 
 class VerificationResult(TypedDict):
     valid: bool
@@ -41,12 +45,14 @@ class VerificationResult(TypedDict):
 
 class CommitState(TypedDict):
     """Current state of the commitment ledger."""
+
     total_commits: int
     last_commit_id: str
     last_commit_time: str
     lineage_length: int
     lineage_hash: str
     health: str
+
 
 @runtime_checkable
 class BhishmaProtocol(PanchaTattvaProtocol, Protocol):
@@ -83,6 +89,7 @@ class BhishmaProtocol(PanchaTattvaProtocol, Protocol):
         Get the chain of custody.
         """
         ...
+
 
 # =============================================================================
 # EXPORTS

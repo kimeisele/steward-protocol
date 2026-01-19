@@ -63,6 +63,7 @@ class GovernanceCLI:
         if self._intel_bridge is None:
             try:
                 from vibe_core.di import ServiceRegistry
+
                 bridge = ServiceRegistry.get(IntelBridgeProtocol)
                 if bridge is not None:
                     self._intel_bridge = bridge
@@ -170,7 +171,7 @@ WRITE COMMANDS:
     steward governance assign <path> <mahajana>   Assign ownership to file
     steward governance fix-all [--dry-run]        Auto-fix all ungoverned files
 
-Status: {report['governed_count']}/{report['total_protocols']} governed | {len(intel_insights)} intel items
+Status: {report["governed_count"]}/{report["total_protocols"]} governed | {len(intel_insights)} intel items
 """)
 
     def cmd_audit(self, args: List[str]) -> int:
@@ -186,10 +187,10 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
             print(json.dumps(result, indent=2))
         else:
             # DATA section
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"  GOVERNANCE AUDIT (DATA)")
-            print(f"{'='*60}")
-            print(f"  Health: {report['health_score']*100:.0f}%")
+            print(f"{'=' * 60}")
+            print(f"  Health: {report['health_score'] * 100:.0f}%")
             print(f"  Governed: {report['governed_count']}")
             print(f"  Ungoverned: {report['ungoverned_count']}")
             if report["ungoverned_list"]:
@@ -197,9 +198,9 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
 
             # INTEL section
             if intel_insights:
-                print(f"\n{'='*60}")
+                print(f"\n{'=' * 60}")
                 print(f"  NAGA INTELLIGENCE (SHUKA)")
-                print(f"{'='*60}")
+                print(f"{'=' * 60}")
                 for insight in intel_insights:
                     print(f"  {insight}")
             else:
@@ -298,16 +299,18 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
 
         if as_json:
             result = {
-                "recent": [{"summary": i.summary, "category": i.category.value, "priority": i.priority.value} for i in recent],
+                "recent": [
+                    {"summary": i.summary, "category": i.category.value, "priority": i.priority.value} for i in recent
+                ],
                 "critical": [i.summary for i in critical],
                 "threats": [i.summary for i in threats],
                 "active_nagas": intel.get_active_nagas(),
             }
             print(json.dumps(result, indent=2))
         else:
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"  NAGA INTELLIGENCE FEED (SHUKA)")
-            print(f"{'='*60}")
+            print(f"{'=' * 60}")
 
             if critical:
                 print(f"\n  🚨 CRITICAL ({len(critical)}):")
@@ -344,12 +347,14 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
 
         # 1. Ungoverned protocols = GAPS
         for p in report["ungoverned_list"]:
-            gaps.append({
-                "type": "ungoverned",
-                "severity": "high",
-                "item": p,
-                "suggestion": f"Assign {p} to a Mahajana",
-            })
+            gaps.append(
+                {
+                    "type": "ungoverned",
+                    "severity": "high",
+                    "item": p,
+                    "suggestion": f"Assign {p} to a Mahajana",
+                }
+            )
 
         # 2. Underrepresented Mahajanas = IMBALANCE
         dist = report["owner_distribution"]
@@ -357,22 +362,26 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
         for m in Mahajana:
             count = dist.get(m.value, 0)
             if count < avg * 0.3:  # Less than 30% of average
-                gaps.append({
-                    "type": "imbalance",
-                    "severity": "medium",
-                    "item": m.value,
-                    "suggestion": f"{m.value.upper()} only owns {count} protocols (avg: {avg:.0f})",
-                })
+                gaps.append(
+                    {
+                        "type": "imbalance",
+                        "severity": "medium",
+                        "item": m.value,
+                        "suggestion": f"{m.value.upper()} only owns {count} protocols (avg: {avg:.0f})",
+                    }
+                )
 
         # 3. Security level distribution gaps
         level_dist = report.get("level_distribution", {})
         if level_dist.get("SUBSTRATE", 0) < 5:
-            gaps.append({
-                "type": "security",
-                "severity": "high",
-                "item": "SUBSTRATE",
-                "suggestion": "Need more SUBSTRATE level protocols for foundation",
-            })
+            gaps.append(
+                {
+                    "type": "security",
+                    "severity": "high",
+                    "item": "SUBSTRATE",
+                    "suggestion": "Need more SUBSTRATE level protocols for foundation",
+                }
+            )
 
         # 4. Query NAGA for additional gaps
         intel = self._get_intel()
@@ -383,19 +392,21 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
         )
         intel_response = intel.query(query)
         for item in intel_response.items:
-            gaps.append({
-                "type": "intel",
-                "severity": item.priority.value,
-                "item": item.source_naga,
-                "suggestion": item.summary,
-            })
+            gaps.append(
+                {
+                    "type": "intel",
+                    "severity": item.priority.value,
+                    "item": item.source_naga,
+                    "suggestion": item.summary,
+                }
+            )
 
         if as_json:
             print(json.dumps({"gaps": gaps, "total": len(gaps)}, indent=2))
         else:
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"  GOVERNANCE GAPS & ANOMALIES")
-            print(f"{'='*60}")
+            print(f"{'=' * 60}")
 
             if not gaps:
                 print(f"\n  ✅ No gaps detected - governance is watertight!")
@@ -455,9 +466,9 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
             coverage = (result.declarations_found / max(result.files_scanned, 1)) * 100
             ungoverned = result.files_scanned - result.declarations_found
 
-            print(f"\n  {'='*50}")
+            print(f"\n  {'=' * 50}")
             print(f"  GOVERNANCE STATUS")
-            print(f"  {'='*50}")
+            print(f"  {'=' * 50}")
             print(f"  Coverage:    {coverage:.1f}%")
             print(f"  Ungoverned:  {ungoverned} files")
             print(f"\n  ACTION: Add __mahajana__ = 'name' to ungoverned files")
@@ -469,6 +480,7 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
         """Show detailed terrain of ungoverned directories with Mahajana suggestions."""
         from pathlib import Path
         from collections import defaultdict
+
         as_json = "--json" in args
 
         vibe_core = Path(__file__).parent.parent
@@ -524,11 +536,11 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
             }
             print(json.dumps(result, indent=2))
         else:
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"  TERRAIN MAP - Mahajana Assignments")
-            print(f"{'='*60}")
+            print(f"{'=' * 60}")
             print(f"\n  {'DIRECTORY':<15} {'FILES':>5} {'MAHAJANA':<12} {'REASON':<25}")
-            print(f"  {'-'*60}")
+            print(f"  {'-' * 60}")
 
             for d, files in sorted(by_dir.items(), key=lambda x: -len(x[1])):
                 mahajana, reason = DIR_MAHAJANA_MAP.get(d, ("prahlada", "Default assignment"))
@@ -618,13 +630,7 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
             print(f"❌ Failed to write to {file_path}")
             return 1
 
-    def _write_owner_to_file(
-        self,
-        file_path: Path,
-        mahajana: Mahajana,
-        content: str,
-        has_owner: bool
-    ) -> bool:
+    def _write_owner_to_file(self, file_path: Path, mahajana: Mahajana, content: str, has_owner: bool) -> bool:
         """
         Write OWNER declaration to a Python file.
 
@@ -632,24 +638,24 @@ Status: {report['governed_count']}/{report['total_protocols']} governed | {len(i
         """
         try:
             # Build the OWNER block
-            owner_block = f'''
+            owner_block = f"""
 # =============================================================================
 # PROTOCOL OWNERSHIP (Governed by CLI)
 # =============================================================================
 
 OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
-'''
+"""
 
             if has_owner:
                 # Replace existing OWNER line
                 content = re.sub(
-                    r'OWNER:\s*Final\[Mahajana\]\s*=\s*Mahajana\.\w+',
-                    f'OWNER: Final[Mahajana] = Mahajana.{mahajana.name}',
-                    content
+                    r"OWNER:\s*Final\[Mahajana\]\s*=\s*Mahajana\.\w+",
+                    f"OWNER: Final[Mahajana] = Mahajana.{mahajana.name}",
+                    content,
                 )
             else:
                 # Find insertion point (after imports, before first class/def)
-                lines = content.split('\n')
+                lines = content.split("\n")
                 insert_idx = 0
 
                 # Skip docstring
@@ -662,9 +668,9 @@ OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
                         else:
                             in_docstring = True
                     elif not in_docstring:
-                        if line.startswith('from ') or line.startswith('import '):
+                        if line.startswith("from ") or line.startswith("import "):
                             insert_idx = i + 1
-                        elif line.startswith('class ') or line.startswith('def '):
+                        elif line.startswith("class ") or line.startswith("def "):
                             break
 
                 # Check if we need to add the import
@@ -677,28 +683,20 @@ OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
                 if needs_final:
                     if "from typing import" in content:
                         # Add Final to existing typing import
-                        content = re.sub(
-                            r'from typing import \(',
-                            'from typing import (\n    Final,',
-                            content
-                        )
-                        content = re.sub(
-                            r'from typing import ([^(])',
-                            r'from typing import Final, \1',
-                            content
-                        )
+                        content = re.sub(r"from typing import \(", "from typing import (\n    Final,", content)
+                        content = re.sub(r"from typing import ([^(])", r"from typing import Final, \1", content)
                     else:
                         import_additions.append("from typing import Final")
 
                 # Insert imports if needed
                 if import_additions:
-                    import_block = '\n'.join(import_additions) + '\n'
+                    import_block = "\n".join(import_additions) + "\n"
                     lines.insert(insert_idx, import_block)
                     insert_idx += 1
 
                 # Insert OWNER block
                 lines.insert(insert_idx, owner_block)
-                content = '\n'.join(lines)
+                content = "\n".join(lines)
 
             # Write back
             file_path.write_text(content)
@@ -712,6 +710,7 @@ OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
         """Log assignment to Bhishma ledger (if available)."""
         try:
             from vibe_core.protocols.mahajanas.bhishma.ledger import Ledger
+
             ledger = Ledger()
             ledger.record(
                 event_type="governance.assign",
@@ -720,7 +719,7 @@ OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
                     "owner": mahajana.value,
                     "timestamp": datetime.now().isoformat(),
                     "by": "governance-cli",
-                }
+                },
             )
         except Exception:
             pass  # Ledger not available, skip
@@ -747,9 +746,9 @@ OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
             print("✅ No ungoverned files - governance is watertight!")
             return 0
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  FIX-ALL: {len(ungoverned)} ungoverned files")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         if dry_run:
             print("  [DRY-RUN MODE - No changes will be made]\n")
@@ -773,9 +772,9 @@ OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
                     failed.append(file_path)
 
         # Summary
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  SUMMARY")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"  Fixed: {len(fixed)}")
         print(f"  Failed: {len(failed)}")
 

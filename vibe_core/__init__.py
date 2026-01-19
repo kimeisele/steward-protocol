@@ -92,6 +92,7 @@ def __getattr__(name: str):
     """Lazy import on attribute access."""
     if name in _LAZY_IMPORTS:
         import importlib
+
         module = importlib.import_module(_LAZY_IMPORTS[name], __package__)
         return getattr(module, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -18,17 +18,13 @@ __genesis__ = "0xb310ef29"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Tuple
 from pathlib import Path
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.AUDIT_SEAL,
-    name="chaos",
-    help_text="Run Hiranyakashipu chaos attacks (YAMARAJA's judgment)")
+    opcode=MantraOpCode.AUDIT_SEAL, name="chaos", help_text="Run Hiranyakashipu chaos attacks (YAMARAJA's judgment)"
+)
 class ChaosCommand(NagaCommandBase):
     def execute(self, args: List[str]) -> NagaCommandResult:
         if not args:
@@ -39,6 +35,7 @@ class ChaosCommand(NagaCommandBase):
             if subcmd == "list":
                 from vibe_core.di import ServiceRegistry
                 from vibe_core.protocols.naga import PrahladProtocol
+
                 prahlad = ServiceRegistry.get(PrahladProtocol)
                 count = prahlad.load_attack_seeds()
                 return self.success(f"[CHAOS] Loaded {count} attack seeds.")

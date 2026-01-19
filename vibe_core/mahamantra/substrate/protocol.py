@@ -22,7 +22,6 @@ KEIN DUPLIKAT MEHR. NUR DIESE DATEI.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -68,6 +67,7 @@ T = TypeVar("T", bound="MantraProtocol")
 # MANTRA PROTOCOL - The Base Class
 # =============================================================================
 
+
 class MantraProtocol(ABC):
     """
     Basisklasse für ALLE Protokolle im System.
@@ -102,7 +102,7 @@ class MantraProtocol(ABC):
     # =========================================================================
 
     _position_index: ClassVar[int] = -1  # Must be overridden (0-15)
-    _intents: ClassVar[List[str]] = []   # List of keywords/intents this protocol handles
+    _intents: ClassVar[List[str]] = []  # List of keywords/intents this protocol handles
 
     # =========================================================================
     # INTENT DISCOVERY - Resonance Routing
@@ -112,21 +112,21 @@ class MantraProtocol(ABC):
     def get_resonance(cls, phrase: str) -> float:
         """
         Calculate resonance score for a given phrase.
-        
+
         1.0 = Exact Match (or phrase contains intent as a whole word)
         0.5 = Partial Match
         0.0 = No Resonance
-        
+
         SSOT: Reads from central INTENT_MAP, falls back to _intents for legacy.
         """
         from vibe_core.mahamantra.substrate.intents import get_intents
-        
+
         # Get intents from CENTRAL map (SSOT), fallback to class-level _intents
         intents = get_intents(cls._position_index) or tuple(cls._intents)
-        
+
         phrase_lower = phrase.lower()
         phrase_words = phrase_lower.split()
-        
+
         for intent in intents:
             intent_lower = intent.lower()
             # Exact Match or Word Match
@@ -149,9 +149,7 @@ class MantraProtocol(ABC):
         This is THE source of all other properties.
         """
         if cls._position_index < 0 or cls._position_index > 15:
-            raise ValueError(
-                f"{cls.__name__}._position_index must be 0-15, got {cls._position_index}"
-            )
+            raise ValueError(f"{cls.__name__}._position_index must be 0-15, got {cls._position_index}")
         return MAHAMANTRA_POSITIONS[cls._position_index]
 
     @classmethod
@@ -283,6 +281,7 @@ class MantraProtocol(ABC):
 # WORKER PROTOCOL - For Mahajana-owned positions
 # =============================================================================
 
+
 class WorkerProtocol(MantraProtocol):
     """
     Basisklasse für WORKER Protokolle (Mahajana-owned).
@@ -314,6 +313,7 @@ class WorkerProtocol(MantraProtocol):
 # HEAD PROTOCOL - For Avatara-owned positions
 # =============================================================================
 
+
 class HeadProtocol(MantraProtocol):
     """
     Basisklasse für HEAD Protokolle (Avatara-owned).
@@ -327,8 +327,7 @@ class HeadProtocol(MantraProtocol):
         guardian = cls.guardian()
         if not isinstance(guardian, Avatara):
             raise TypeError(
-                f"{cls.__name__} is at WORKER position {cls._position_index}, "
-                f"but HeadProtocol requires a HEAD position"
+                f"{cls.__name__} is at WORKER position {cls._position_index}, but HeadProtocol requires a HEAD position"
             )
         return guardian
 
@@ -343,6 +342,7 @@ class HeadProtocol(MantraProtocol):
 # =============================================================================
 # PROTOCOL INTERFACE - For runtime_checkable protocols
 # =============================================================================
+
 
 @runtime_checkable
 class MantraAware(TypingProtocol):
@@ -371,6 +371,7 @@ class MantraAware(TypingProtocol):
 # =============================================================================
 # PROTOCOL REGISTRY
 # =============================================================================
+
 
 class ProtocolRegistry:
     """
@@ -416,8 +417,7 @@ class ProtocolRegistry:
         if idx in cls._registry:
             existing = cls._registry[idx]
             raise ValueError(
-                f"Position {idx} already registered to {existing.__name__}, "
-                f"cannot register {protocol_class.__name__}"
+                f"Position {idx} already registered to {existing.__name__}, cannot register {protocol_class.__name__}"
             )
         cls._registry[idx] = protocol_class
         return protocol_class

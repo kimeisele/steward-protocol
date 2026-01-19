@@ -64,12 +64,14 @@ WORKER_LEVEL: Final[ProtocolLevel] = ProtocolLevel.MAHAJANAS
 # OPCODES
 # =============================================================================
 
+
 class DharmaOpCode:
     """Die OpCodes des Dharma Quarters."""
-    COMPILE_AST = 4   # Vyasa (HEAD)
-    BIND_SYMBOL = 5   # Kumaras
-    TYPE_CHECK = 6    # Kapila
-    DHARMA_TEST = 7   # Manu
+
+    COMPILE_AST = 4  # Vyasa (HEAD)
+    BIND_SYMBOL = 5  # Kumaras
+    TYPE_CHECK = 6  # Kapila
+    DHARMA_TEST = 7  # Manu
 
 
 # =============================================================================

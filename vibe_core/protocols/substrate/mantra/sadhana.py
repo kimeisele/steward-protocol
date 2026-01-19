@@ -57,6 +57,7 @@ AVG_SADHANA_DURATION: Final[float] = AVG_ROUND_DURATION * ROUNDS_PER_SADHANA  # 
 
 class SadhanaState(IntEnum):
     """States of a sadhana session."""
+
     NOT_STARTED = 0
     IN_PROGRESS = 1
     PAUSED = 2
@@ -66,10 +67,11 @@ class SadhanaState(IntEnum):
 
 class SadhanaIntensity(IntEnum):
     """Intensity levels of practice."""
-    MINIMUM = 16      # Standard initiation vow
-    MODERATE = 32     # 2× minimum
-    INTENSIVE = 64    # 4× minimum (called "Laksha" practice)
-    EXTREME = 192     # 100,000 names (approx)
+
+    MINIMUM = 16  # Standard initiation vow
+    MODERATE = 32  # 2× minimum
+    INTENSIVE = 64  # 4× minimum (called "Laksha" practice)
+    EXTREME = 192  # 100,000 names (approx)
 
 
 @dataclass
@@ -85,6 +87,7 @@ class Sadhana:
         state: Current state of the session
         start_time: When session began
     """
+
     target_rounds: int = ROUNDS_PER_SADHANA
     current_round: int = 0
     state: SadhanaState = SadhanaState.NOT_STARTED
@@ -230,6 +233,7 @@ class Sadhana:
 # SADHANA METRICS
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class SadhanaMetrics:
     """
@@ -237,24 +241,25 @@ class SadhanaMetrics:
 
     The 37 formula manifests at this highest level.
     """
+
     total_rounds: int = ROUNDS_PER_SADHANA
     total_mantras: int = MANTRAS_PER_SADHANA
     total_words: int = WORDS_PER_SADHANA
     total_syllables: int = SYLLABLES_PER_SADHANA
-    total_hare: int = MANTRAS_PER_SADHANA * 8      # 13,824
-    total_krishna: int = MANTRAS_PER_SADHANA * 4   # 6,912
-    total_rama: int = MANTRAS_PER_SADHANA * 4      # 6,912
+    total_hare: int = MANTRAS_PER_SADHANA * 8  # 13,824
+    total_krishna: int = MANTRAS_PER_SADHANA * 4  # 6,912
+    total_rama: int = MANTRAS_PER_SADHANA * 4  # 6,912
 
     @property
     def formula_37(self) -> dict:
         """The 37 formula at sadhana level."""
         return {
-            "rounds": self.total_rounds,              # 16
-            "mantras": self.total_mantras,            # 1,728
-            "words": self.total_words,                # 27,648
-            "syllables": self.total_syllables,        # 55,296
-            "mantras_mod_37": self.total_mantras % 37,      # 1,728 % 37 = 28
-            "words_div_748": self.total_words // 748,       # 27,648 / 748 ≈ 37
+            "rounds": self.total_rounds,  # 16
+            "mantras": self.total_mantras,  # 1,728
+            "words": self.total_words,  # 27,648
+            "syllables": self.total_syllables,  # 55,296
+            "mantras_mod_37": self.total_mantras % 37,  # 1,728 % 37 = 28
+            "words_div_748": self.total_words // 748,  # 27,648 / 748 ≈ 37
         }
 
 
@@ -264,6 +269,7 @@ SADHANA_METRICS: Final[SadhanaMetrics] = SadhanaMetrics()
 # =============================================================================
 # FACTORY FUNCTIONS
 # =============================================================================
+
 
 def create_sadhana(target_rounds: int = ROUNDS_PER_SADHANA) -> Sadhana:
     """Create a new sadhana session."""

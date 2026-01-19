@@ -26,8 +26,10 @@ from typing import Optional, TypedDict
 # WATERTIGHT TYPES - No Any allowed
 # =============================================================================
 
+
 class TickState(TypedDict):
     """Return type for tick() - WATERTIGHT."""
+
     tick: int
     position: int
     quarter: str
@@ -38,6 +40,7 @@ class TickState(TypedDict):
 
 class RouteResult(TypedDict):
     """Return type for route() - WATERTIGHT."""
+
     position: int
     guardian: str
     quarter: str
@@ -45,13 +48,14 @@ class RouteResult(TypedDict):
 
 class ExecuteResult(TypedDict):
     """Return type for execute() - WATERTIGHT."""
+
     success: bool
     exit_code: int
     position: int
     guardian: str
     quarter: str
-    guna: str                       # sattva/rajas/tamas
-    requires_confirmation: bool     # True for TAMAS ops
+    guna: str  # sattva/rajas/tamas
+    requires_confirmation: bool  # True for TAMAS ops
     output: str
     error: Optional[str]
 
@@ -63,16 +67,17 @@ class LilaState(TypedDict):
     Chaitanya's Lila = 48 positions (24 Navadvipa + 24 Puri).
     This is the COMPLETE lifecycle, not just the 16-word mantra.
     """
-    lila_position: int      # 0-47
-    position: int           # 0-15 (mantra position)
-    phase: str              # "navadvipa" or "puri"
-    cycle: int              # 1, 2, or 3
+
+    lila_position: int  # 0-47
+    position: int  # 0-15 (mantra position)
+    phase: str  # "navadvipa" or "puri"
+    cycle: int  # 1, 2, or 3
     quarter: str
     guardian: str
     word: str
     opcode: Optional[int]
-    is_navadvipa: bool      # True for 0-23
-    is_puri: bool           # True for 24-47
+    is_navadvipa: bool  # True for 0-23
+    is_puri: bool  # True for 24-47
 
 
 # =============================================================================

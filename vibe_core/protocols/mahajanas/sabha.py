@@ -71,6 +71,7 @@ from vibe_core.protocols.mahajanas.router import (
 @dataclass
 class MahajanaStatus:
     """Status of a Mahajana in the Sabha."""
+
     mahajana: Mahajana
     opcodes: List[MantraOpCode]
     is_active: bool
@@ -81,6 +82,7 @@ class MahajanaStatus:
 @dataclass
 class SabhaState:
     """The current state of the Mahajana Sabha."""
+
     members: List[MahajanaStatus]
     vishnu_present: bool  # Is the kernel active?
     current_position: int  # 0-15, which word of the Mahamantra

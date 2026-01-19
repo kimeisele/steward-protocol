@@ -38,7 +38,6 @@ ROBUSTNESS:
 WATERTIGHT: No Any types. Protocol-first.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -55,13 +54,15 @@ from typing import Dict, List, Optional, Protocol, TypedDict, runtime_checkable
 # TYPES - Strict, No Any
 # =============================================================================
 
+
 class EntryType(str, Enum):
     """How the request entered the system."""
-    CLI = "cli"           # steward <command>
-    HTTP = "http"         # API gateway
-    CHAT = "chat"         # steward chat / natural language
-    AGENT = "agent"       # Programmatic / agent syscall
-    INTERNAL = "internal" # System-to-system
+
+    CLI = "cli"  # steward <command>
+    HTTP = "http"  # API gateway
+    CHAT = "chat"  # steward chat / natural language
+    AGENT = "agent"  # Programmatic / agent syscall
+    INTERNAL = "internal"  # System-to-system
 
 
 class GatewayRequest(TypedDict):
@@ -70,9 +71,10 @@ class GatewayRequest(TypedDict):
 
     WATERTIGHT: All fields typed explicitly.
     """
-    entry_type: str       # EntryType value
-    command: str          # The command/message
-    args: List[str]       # Arguments
+
+    entry_type: str  # EntryType value
+    command: str  # The command/message
+    args: List[str]  # Arguments
     context: Dict[str, str]  # Additional context (session_id, etc.)
 
 
@@ -82,23 +84,25 @@ class GatewayResponse(TypedDict):
 
     WATERTIGHT: All fields typed explicitly.
     """
+
     success: bool
     exit_code: int
     output: str
     error: Optional[str]
     # Routing info
-    position: int         # 0-15
-    guardian: str         # mahajana name
-    quarter: str          # genesis/dharma/karma/moksha
-    guna: str             # sattva/rajas/tamas/vishuddha
+    position: int  # 0-15
+    guardian: str  # mahajana name
+    quarter: str  # genesis/dharma/karma/moksha
+    guna: str  # sattva/rajas/tamas/vishuddha
     # Metadata
-    entry_type: str       # How it came in
-    routed_via: str       # How it was routed
+    entry_type: str  # How it came in
+    routed_via: str  # How it was routed
 
 
 # =============================================================================
 # THE GATEWAY PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class GatewayProtocol(Protocol):
@@ -173,6 +177,7 @@ class GatewayProtocol(Protocol):
 # =============================================================================
 # HELPER: Create Request
 # =============================================================================
+
 
 def create_request(
     command: str,

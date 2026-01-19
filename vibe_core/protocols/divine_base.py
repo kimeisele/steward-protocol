@@ -37,6 +37,7 @@ class DharmaViolation(Exception):
 
     "Better to fail doing your own duty than succeed at another's." - BG 3.35
     """
+
     pass
 
 
@@ -75,6 +76,7 @@ class DivineBase(ABC):
             JSON-serializable state dump
         """
         import json
+
         return json.dumps({"identity": self.identity, "divine_hash": self.divine_hash})
 
     def assert_integrity(self) -> None:
@@ -85,9 +87,7 @@ class DivineBase(ABC):
             DharmaViolation: If the entity does not comply with STD_1972
         """
         if self.divine_hash != STD_1972_HASH:
-            raise DharmaViolation(
-                f"Integrity violation: Expected {STD_1972_HASH}, got {self.divine_hash}"
-            )
+            raise DharmaViolation(f"Integrity violation: Expected {STD_1972_HASH}, got {self.divine_hash}")
 
 
 # =============================================================================

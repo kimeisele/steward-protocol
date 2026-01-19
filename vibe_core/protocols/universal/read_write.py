@@ -28,7 +28,7 @@ class ReadWriteProtocol(Protocol):
     - Composability: Can pipe ReadResult into specialized logic.
     - Idempotency: Read is side-effect free; Write is idempotent.
     - Recoverability: Exceptions defined for graceful handling.
-    
+
     HARDENED (Phase 27):
     - NO ANONYMOUS ACCESS.
     - Context is MANDATORY.

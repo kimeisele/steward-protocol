@@ -34,10 +34,11 @@ from .aksara import Aksara
 
 class QuarterType(IntEnum):
     """The four quarters of the Mahamantra."""
-    KRISHNA_ADDRESS = 0   # Q1: Hare Krishna Hare Krishna
-    KRISHNA_GLORIFY = 1   # Q2: Krishna Krishna Hare Hare
-    RAMA_ADDRESS = 2      # Q3: Hare Rama Hare Rama
-    RAMA_GLORIFY = 3      # Q4: Rama Rama Hare Hare
+
+    KRISHNA_ADDRESS = 0  # Q1: Hare Krishna Hare Krishna
+    KRISHNA_GLORIFY = 1  # Q2: Krishna Krishna Hare Hare
+    RAMA_ADDRESS = 2  # Q3: Hare Rama Hare Rama
+    RAMA_GLORIFY = 3  # Q4: Rama Rama Hare Hare
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,7 @@ class Quarter:
         quarter_type: Which quarter (0-3)
         padas: The 4 words in this quarter
     """
+
     quarter_type: QuarterType
     padas: Tuple[Pada, Pada, Pada, Pada]
 
@@ -91,26 +93,22 @@ class Quarter:
 
 QUARTER_1: Final[Quarter] = Quarter(
     quarter_type=QuarterType.KRISHNA_ADDRESS,
-    padas=(MAHAMANTRA_SEQUENCE[0], MAHAMANTRA_SEQUENCE[1],
-           MAHAMANTRA_SEQUENCE[2], MAHAMANTRA_SEQUENCE[3]),
+    padas=(MAHAMANTRA_SEQUENCE[0], MAHAMANTRA_SEQUENCE[1], MAHAMANTRA_SEQUENCE[2], MAHAMANTRA_SEQUENCE[3]),
 )
 
 QUARTER_2: Final[Quarter] = Quarter(
     quarter_type=QuarterType.KRISHNA_GLORIFY,
-    padas=(MAHAMANTRA_SEQUENCE[4], MAHAMANTRA_SEQUENCE[5],
-           MAHAMANTRA_SEQUENCE[6], MAHAMANTRA_SEQUENCE[7]),
+    padas=(MAHAMANTRA_SEQUENCE[4], MAHAMANTRA_SEQUENCE[5], MAHAMANTRA_SEQUENCE[6], MAHAMANTRA_SEQUENCE[7]),
 )
 
 QUARTER_3: Final[Quarter] = Quarter(
     quarter_type=QuarterType.RAMA_ADDRESS,
-    padas=(MAHAMANTRA_SEQUENCE[8], MAHAMANTRA_SEQUENCE[9],
-           MAHAMANTRA_SEQUENCE[10], MAHAMANTRA_SEQUENCE[11]),
+    padas=(MAHAMANTRA_SEQUENCE[8], MAHAMANTRA_SEQUENCE[9], MAHAMANTRA_SEQUENCE[10], MAHAMANTRA_SEQUENCE[11]),
 )
 
 QUARTER_4: Final[Quarter] = Quarter(
     quarter_type=QuarterType.RAMA_GLORIFY,
-    padas=(MAHAMANTRA_SEQUENCE[12], MAHAMANTRA_SEQUENCE[13],
-           MAHAMANTRA_SEQUENCE[14], MAHAMANTRA_SEQUENCE[15]),
+    padas=(MAHAMANTRA_SEQUENCE[12], MAHAMANTRA_SEQUENCE[13], MAHAMANTRA_SEQUENCE[14], MAHAMANTRA_SEQUENCE[15]),
 )
 
 QUARTERS: Final[Tuple[Quarter, ...]] = (QUARTER_1, QUARTER_2, QUARTER_3, QUARTER_4)
@@ -128,9 +126,8 @@ class Vakya:
         quarters: The 4 quarters (each with 4 words)
         count: Which repetition (1-108 in a mala, or absolute count)
     """
-    quarters: Tuple[Quarter, Quarter, Quarter, Quarter] = field(
-        default=(QUARTER_1, QUARTER_2, QUARTER_3, QUARTER_4)
-    )
+
+    quarters: Tuple[Quarter, Quarter, Quarter, Quarter] = field(default=(QUARTER_1, QUARTER_2, QUARTER_3, QUARTER_4))
     count: int = 1  # Which repetition
 
     @property

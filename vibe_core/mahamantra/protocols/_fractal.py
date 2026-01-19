@@ -33,7 +33,6 @@ WATERTIGHT: No Any types. Everything explicit.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -71,6 +70,7 @@ from vibe_core.mahamantra.protocols._core import (
 # FRACTAL ADDRESS - Hierarchical Location
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class FractalAddress:
     """
@@ -99,9 +99,7 @@ class FractalAddress:
         # Validate each component is 0-15
         for i, component in enumerate(self.path):
             if not 0 <= component < 16:
-                raise ValueError(
-                    f"Address component {i} must be 0-15, got {component}"
-                )
+                raise ValueError(f"Address component {i} must be 0-15, got {component}")
 
     @property
     def depth(self) -> int:
@@ -135,7 +133,7 @@ class FractalAddress:
         """Check if this address is an ancestor of another."""
         if self.depth >= other.depth:
             return False
-        return other.path[:self.depth] == self.path
+        return other.path[: self.depth] == self.path
 
     def is_descendant_of(self, other: "FractalAddress") -> bool:
         """Check if this address is a descendant of another."""
@@ -260,6 +258,7 @@ class FractalNode(Generic[T]):
 # FRACTAL TREE - The complete fractal structure
 # =============================================================================
 
+
 @dataclass
 class FractalTree(Generic[T]):
     """
@@ -339,16 +338,18 @@ class FractalTree(Generic[T]):
 # FRACTAL GROWTH - How things expand
 # =============================================================================
 
+
 class GrowthPattern(str, Enum):
     """
     Patterns for fractal growth.
 
     Different patterns create different structures.
     """
-    FULL = "full"           # Grow all 16 children
-    SPARSE = "sparse"       # Grow only needed children
-    BALANCED = "balanced"   # Keep tree balanced
-    LAZY = "lazy"           # Grow on demand
+
+    FULL = "full"  # Grow all 16 children
+    SPARSE = "sparse"  # Grow only needed children
+    BALANCED = "balanced"  # Keep tree balanced
+    LAZY = "lazy"  # Grow on demand
 
 
 @dataclass
@@ -361,9 +362,7 @@ class GrowthRule:
 
     pattern: GrowthPattern
     max_depth: int = 16  # Reasonable limit
-    can_grow: Callable[[FractalAddress], bool] = field(
-        default_factory=lambda: lambda addr: True
-    )
+    can_grow: Callable[[FractalAddress], bool] = field(default_factory=lambda: lambda addr: True)
 
     def should_grow(self, address: FractalAddress) -> bool:
         """Check if growth is allowed at this address."""
@@ -375,6 +374,7 @@ class GrowthRule:
 # =============================================================================
 # FRACTAL PROTOCOL - Self-reference
 # =============================================================================
+
 
 class FractalProtocol(MahamantraProtocolBase):
     """

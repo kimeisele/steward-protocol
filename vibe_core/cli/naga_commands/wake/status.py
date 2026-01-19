@@ -31,17 +31,15 @@ __genesis__ = "0x504e2862"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.SYS_WAKE,
     name="status",
-    help_text="System status (PRITHU's wake - first command of every cycle)")
+    help_text="System status (PRITHU's wake - first command of every cycle)",
+)
 class StatusCommand(NagaCommandBase):
     """
     Status command implementation.
@@ -71,9 +69,7 @@ class StatusCommand(NagaCommandBase):
 
             federation = ServiceRegistry.get(NagaFederationProtocol)
             if not federation:
-                return self.failure(
-                    "NAGA Federation not initialized. Boot the kernel first: steward boot",
-                    exit_code=1)
+                return self.failure("NAGA Federation not initialized. Boot the kernel first: steward boot", exit_code=1)
 
             if brief:
                 status = self._get_brief_status(federation)
@@ -86,15 +82,10 @@ class StatusCommand(NagaCommandBase):
 
             return self.success(
                 status,
-                data=(
-                    ("phase", "wake"),
-                    ("position", "0"),
-                    ("mahajana", "prithu"),
-                    ("mode", self._get_mode(args))))
+                data=(("phase", "wake"), ("position", "0"), ("mahajana", "prithu"), ("mode", self._get_mode(args))),
+            )
         except Exception as e:
-            return self.failure(
-                f"Status check failed: {e}",
-                exit_code=1)
+            return self.failure(f"Status check failed: {e}", exit_code=1)
 
     def _get_mode(self, args: List[str]) -> str:
         """Determine status mode from args."""
@@ -134,11 +125,15 @@ class StatusCommand(NagaCommandBase):
 
             if federation.flood_manager:
                 f = federation.flood_manager.get_status()
-                lines.append(f"  FLOOD MANAGER:       {'ACTIVE' if f.get('active') else 'INACTIVE'} [{f.get('total_observations', 0)} obs]")
+                lines.append(
+                    f"  FLOOD MANAGER:       {'ACTIVE' if f.get('active') else 'INACTIVE'} [{f.get('total_observations', 0)} obs]"
+                )
 
             if federation.commit_watcher:
                 c = federation.commit_watcher.get_stats()
-                lines.append(f"  COMMIT WATCHER:      {c.get('total_observed', 0)} observed, {c.get('alerts_generated', 0)} alerts")
+                lines.append(
+                    f"  COMMIT WATCHER:      {c.get('total_observed', 0)} observed, {c.get('alerts_generated', 0)} alerts"
+                )
         except Exception as e:
             lines.append(f"  Error querying NAGAs: {e}")
 
@@ -151,7 +146,7 @@ class StatusCommand(NagaCommandBase):
             "[PRITHU] Service Health",
             "=" * 60,
         ]
-        
+
         # Query ServiceRegistry for key protocols
         from vibe_core.di import ServiceRegistry
         from vibe_core.protocols.naga import IntelBridgeProtocol
@@ -162,7 +157,7 @@ class StatusCommand(NagaCommandBase):
 
         lines.append(f"  Intel Bridge        : {'HEALTHY' if intel else 'NOT FOUND'}")
         lines.append(f"  Sync Protocol       : {'HEALTHY' if sync else 'NOT FOUND'}")
-        
+
         lines.append("=" * 60)
         return "\n".join(lines)
 
@@ -177,14 +172,14 @@ class StatusCommand(NagaCommandBase):
 
         lines.append("\n  NAGA Federation Components:")
         lines.append(self._get_naga_status(federation))
-        
+
         lines.append("\n  MANTRA STATE:")
         lines.append("    Phase: WAKE (Position 0)")
         lines.append("    OpCode: SYS_WAKE")
         lines.append("    Mahajana: PRITHU (The Avatara King)")
 
         lines.append("\n" + "=" * 60)
-        lines.append("\"Prithu made the earth yield - status reveals all.\"")
+        lines.append('"Prithu made the earth yield - status reveals all."')
         return "\n".join(lines)
 
 

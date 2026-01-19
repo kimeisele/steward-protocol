@@ -35,17 +35,15 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.ALLOC_MEM,
     name="resources",
-    help_text="Resource allocation status (NARADA's distribution - WAKE phase)")
+    help_text="Resource allocation status (NARADA's distribution - WAKE phase)",
+)
 class ResourcesCommand(NagaCommandBase):
     """
     Resources command implementation.
@@ -127,9 +125,7 @@ class ResourcesCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         output_parts.append("ALLOC_MEM: Resources allocated")
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _get_resource_overview(self) -> dict:
         """Get basic resource overview."""
@@ -151,11 +147,7 @@ class ResourcesCommand(NagaCommandBase):
         try:
             import subprocess
 
-            result = subprocess.run(
-                ["lsof", "-p", str(os.getpid())],
-                capture_output=True,
-                text=True,
-                timeout=5)
+            result = subprocess.run(["lsof", "-p", str(os.getpid())], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 open_files = str(len(result.stdout.strip().split("\n")) - 1)
             else:
@@ -226,9 +218,7 @@ class ResourcesCommand(NagaCommandBase):
         except Exception:
             allocations["Prompts"] = "unavailable"
 
-        allocations["total"] = sum(
-            1 for v in allocations.values() if v not in ["unavailable", "active"]
-        )
+        allocations["total"] = sum(1 for v in allocations.values() if v not in ["unavailable", "active"])
 
         return allocations
 

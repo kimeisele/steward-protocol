@@ -32,9 +32,9 @@ from typing import Dict, Optional, Final, Union
 
 # Import constants from protocols._seed (THE SOURCE)
 from vibe_core.mahamantra.protocols._seed import (
-    PARAMPARA,       # 37 - verification constant
-    WORDS,           # 16 - mantra positions
-    SHARANAGATI,     # 6 - connection limbs
+    PARAMPARA,  # 37 - verification constant
+    WORDS,  # 16 - mantra positions
+    SHARANAGATI,  # 6 - connection limbs
     MAHAJANA_COUNT,  # 12 - the mahajanas
 )
 
@@ -43,8 +43,8 @@ from vibe_core.mahamantra.substrate.seed import (
     MAHAJANA_TO_POSITION,  # Name → Position mapping
     POSITION_TO_MAHAJANA,  # Position → Name mapping
     get_mahajana_position,  # Function to get position by name
-    verify_parampara,       # Function to verify % 37 == 0
-    lotus_declaration,      # Function to generate genesis signature
+    verify_parampara,  # Function to verify % 37 == 0
+    lotus_declaration,  # Function to generate genesis signature
 )
 
 
@@ -57,27 +57,22 @@ from vibe_core.mahamantra.substrate.seed import (
 
 PURPOSE_MAP: Final[Dict[str, int]] = {
     # STATE OPERATIONS
-    "state_update": get_mahajana_position("janaka"),    # Position 10 - STATE_SYNC
-    "state_read": get_mahajana_position("janaka"),      # Position 10 - STATE_SYNC
-
+    "state_update": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
+    "state_read": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
     # LEDGER OPERATIONS
-    "ledger_write": get_mahajana_position("bhishma"),   # Position 11 - LEDGER_SIGN
+    "ledger_write": get_mahajana_position("bhishma"),  # Position 11 - LEDGER_SIGN
     "ledger_append": get_mahajana_position("bhishma"),  # Position 11 - LEDGER_SIGN
-
     # LOG OPERATIONS
-    "log_emit": get_mahajana_position("shuka"),         # Position 14 - LOG_EMIT
-    "log_write": get_mahajana_position("shuka"),        # Position 14 - LOG_EMIT
-
+    "log_emit": get_mahajana_position("shuka"),  # Position 14 - LOG_EMIT
+    "log_write": get_mahajana_position("shuka"),  # Position 14 - LOG_EMIT
     # FILE OPERATIONS
-    "file_flush": get_mahajana_position("bali"),        # Position 13 - IO_FLUSH
-    "file_write": get_mahajana_position("bali"),        # Position 13 - IO_FLUSH
-
+    "file_flush": get_mahajana_position("bali"),  # Position 13 - IO_FLUSH
+    "file_write": get_mahajana_position("bali"),  # Position 13 - IO_FLUSH
     # EXECUTION OPERATIONS
-    "execute": get_mahajana_position("parashurama"),    # Position 8 - EXEC_OP
-
+    "execute": get_mahajana_position("parashurama"),  # Position 8 - EXEC_OP
     # VERIFICATION OPERATIONS
-    "verify": get_mahajana_position("kapila"),          # Position 6 - TYPE_CHECK
-    "type_check": get_mahajana_position("kapila"),      # Position 6 - TYPE_CHECK
+    "verify": get_mahajana_position("kapila"),  # Position 6 - TYPE_CHECK
+    "type_check": get_mahajana_position("kapila"),  # Position 6 - TYPE_CHECK
 }
 
 
@@ -85,8 +80,10 @@ PURPOSE_MAP: Final[Dict[str, int]] = {
 # OFFER - The Gate (Der einzige legitime Zugang)
 # =============================================================================
 
+
 class OfferResult(Dict[str, object]):
     """Result of an offer() call. WATERTIGHT: object instead of Any."""
+
     pass
 
 
@@ -156,7 +153,7 @@ def offer(
             mahajana="unknown",
             quarter="unknown",
             purpose=purpose,
-            error=f"Position {position} out of bounds (0 to {WORDS-1})",
+            error=f"Position {position} out of bounds (0 to {WORDS - 1})",
         )
 
     # Get mahajana name for this position (from seed mapping)
@@ -195,6 +192,7 @@ def offer(
 # =============================================================================
 # QUERY - Inspect routing without execution
 # =============================================================================
+
 
 def query_purpose(purpose: str) -> Optional[Dict[str, object]]:
     """

@@ -43,7 +43,6 @@ GAD-000 Compliance:
     ✓R Recoverability - State persists in ledger
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

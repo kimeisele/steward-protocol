@@ -19,13 +19,16 @@ from typing import Protocol, Dict, Any, Optional, TypedDict, runtime_checkable
 from datetime import datetime
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
+
 class KarmaPhalam(TypedDict):
     """The fruit of action (Result + Log)."""
+
     action_id: str
     timestamp: str
     status: str
     result: Optional[Any]
     error: Optional[str]
+
 
 @runtime_checkable
 class KarmaProtocol(PanchaTattvaProtocol, Protocol):
@@ -54,6 +57,7 @@ class KarmaProtocol(PanchaTattvaProtocol, Protocol):
     def log_karma(self, phalam: KarmaPhalam) -> None:
         """Record the fruit of action to the immutable Ledger."""
         ...
+
 
 # =============================================================================
 # EXPORTS

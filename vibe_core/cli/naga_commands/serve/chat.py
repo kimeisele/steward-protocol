@@ -68,28 +68,59 @@ from vibe_core.protocols.mahajanas import (
 INTENT_PATTERNS = {
     "status": {
         "keywords": [
-            "status", "state", "health", "running", "alive", "up",
-            "how is", "how's", "what's running", "system state",
-            "are you", "you ok", "you there", "awake",
+            "status",
+            "state",
+            "health",
+            "running",
+            "alive",
+            "up",
+            "how is",
+            "how's",
+            "what's running",
+            "system state",
+            "are you",
+            "you ok",
+            "you there",
+            "awake",
         ],
         "command": "status",
         "mahajana": "PRITHU",
     },
     "scan": {
         "keywords": [
-            "scan", "check", "verify", "validate", "audit",
-            "vulnerabilities", "security", "toxicity", "toxic",
-            "protocol coverage", "integrity", "analyze", "analyse",
+            "scan",
+            "check",
+            "verify",
+            "validate",
+            "audit",
+            "vulnerabilities",
+            "security",
+            "toxicity",
+            "toxic",
+            "protocol coverage",
+            "integrity",
+            "analyze",
+            "analyse",
         ],
         "command": "scan",
         "mahajana": "VYASA",
     },
     "intel": {
         "keywords": [
-            "intel", "intelligence", "threats", "threat",
-            "warnings", "alerts", "critical", "observations",
-            "what's happening", "what happened", "recent",
-            "news", "updates", "report",
+            "intel",
+            "intelligence",
+            "threats",
+            "threat",
+            "warnings",
+            "alerts",
+            "critical",
+            "observations",
+            "what's happening",
+            "what happened",
+            "recent",
+            "news",
+            "updates",
+            "report",
         ],
         "command": "intel",
         "mahajana": "SHUKA",
@@ -242,7 +273,8 @@ class ChatCommand(NagaCommandBase):
             output=routing_header + result.output,
             error=result.error,
             opcode=result.opcode,
-            data=result.data + (
+            data=result.data
+            + (
                 ("routed_by", "prahlada"),
                 ("original_message", message),
             ),
@@ -270,7 +302,7 @@ class ChatCommand(NagaCommandBase):
         elif "help" in msg_lower:
             response = self._get_help_text()
         else:
-            response = f"[PRAHLADA] I heard: \"{message}\"\n\nI can help you with:\n" + self._get_capabilities()
+            response = f'[PRAHLADA] I heard: "{message}"\n\nI can help you with:\n' + self._get_capabilities()
 
         return self.success(
             response,

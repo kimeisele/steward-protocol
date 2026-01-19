@@ -32,9 +32,10 @@ class ShaktiType(str, Enum):
     ANTI-MAYAVAD: These are PERSONAL energies, not abstract forces.
     Hara = Srimati Radharani (The Pleasure Potency)
     """
-    HARA = "hara"   # Para Shakti - Superior/Spiritual (Hladini)
-    MAYA = "maya"   # Apara Shakti - Inferior/Material (External)
-    JIVA = "jiva"   # Tatastha Shakti - Marginal (Living Entities)
+
+    HARA = "hara"  # Para Shakti - Superior/Spiritual (Hladini)
+    MAYA = "maya"  # Apara Shakti - Inferior/Material (External)
+    JIVA = "jiva"  # Tatastha Shakti - Marginal (Living Entities)
 
 
 # Energy relationships

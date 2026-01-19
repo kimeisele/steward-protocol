@@ -99,11 +99,7 @@ class KernelFactory:
         Get or Create the MAIN Kernel instance (Singleton Access).
         Delegates to VibeFactory.
         """
-        return StaticFactory.get_kernel(
-            ledger_path=ledger_path,
-            load_plugins=load_plugins,
-            test_mode=test_mode
-        )
+        return StaticFactory.get_kernel(ledger_path=ledger_path, load_plugins=load_plugins, test_mode=test_mode)
 
 
 __all__ = ["KernelFactory"]

@@ -57,6 +57,7 @@ from typing import (
 # THE 8 MOMENT - Bhoga/Prasadam Phase
 # =============================================================================
 
+
 class YajnaPhase(str, Enum):
     """
     The phases of Yajna (sacrifice).
@@ -65,14 +66,15 @@ class YajnaPhase(str, Enum):
     PRASADAM: Positions 8-15 (Rama half) - Grace
     RETURN: Position 15→0 - Prasadam becomes next Bhoga
     """
-    BHOGA = "bhoga"        # Offering phase (0-7)
+
+    BHOGA = "bhoga"  # Offering phase (0-7)
     PRASADAM = "prasadam"  # Grace phase (8-15)
-    RETURN = "return"      # Cycle completion (15→0)
+    RETURN = "return"  # Cycle completion (15→0)
 
 
 # Constants
-SWITCH_POSITION: Final[int] = 8   # Parashurama - EXEC_OP
-RETURN_POSITION: Final[int] = 0   # Prithu - SYS_WAKE (after 15)
+SWITCH_POSITION: Final[int] = 8  # Parashurama - EXEC_OP
+RETURN_POSITION: Final[int] = 0  # Prithu - SYS_WAKE (after 15)
 
 
 def get_phase(position: int, previous_position: int = -1) -> YajnaPhase:
@@ -100,12 +102,14 @@ def get_phase(position: int, previous_position: int = -1) -> YajnaPhase:
 # WATERTIGHT TYPES
 # =============================================================================
 
+
 class TickStateInput(TypedDict):
     """
     Input from mahamantra.tick() - WATERTIGHT.
 
     This is what we receive from the Lotus.
     """
+
     tick: int
     position: int
     quarter: str
@@ -120,15 +124,16 @@ class ShadowState(TypedDict):
 
     Tracks the full Bhoga-Prasadam-Return cycle.
     """
-    position: int          # Current position (0-15)
-    previous: int          # Previous position (for RETURN detection)
-    phase: str             # Current phase (bhoga/prasadam/return)
-    quarter: str           # Current quarter
-    guardian: str          # Current guardian
-    opcode: str            # Current opcode
-    cycle_count: int       # How many full cycles completed
-    switch_count: int      # How many Bhoga→Prasadam switches
-    return_count: int      # How many 15→0 RETURNs (cycle completions)
+
+    position: int  # Current position (0-15)
+    previous: int  # Previous position (for RETURN detection)
+    phase: str  # Current phase (bhoga/prasadam/return)
+    quarter: str  # Current quarter
+    guardian: str  # Current guardian
+    opcode: str  # Current opcode
+    cycle_count: int  # How many full cycles completed
+    switch_count: int  # How many Bhoga→Prasadam switches
+    return_count: int  # How many 15→0 RETURNs (cycle completions)
     dissonance_report: Optional[str]  # Audit log for silent failures (Aparadha)
 
 
@@ -139,6 +144,7 @@ class ShadowReactorResult:
 
     Similar to TaskKernelResult - used for folding results.
     """
+
     # Identity
     reactor_id: str
 
@@ -177,6 +183,7 @@ class ShadowReactorResult:
 # SHADOW REACTOR LISTENER PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class ShadowReactorListenerProtocol(Protocol):
     """
@@ -214,6 +221,7 @@ class ShadowReactorListenerProtocol(Protocol):
 # =============================================================================
 # SHADOW REACTOR PROTOCOL - The Contract
 # =============================================================================
+
 
 @runtime_checkable
 class ShadowReactorProtocol(Protocol):
@@ -327,6 +335,7 @@ class ShadowReactorProtocol(Protocol):
 # =============================================================================
 # SHADOW REACTOR FACTORY PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class ShadowReactorFactoryProtocol(Protocol):

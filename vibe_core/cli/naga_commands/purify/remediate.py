@@ -18,17 +18,13 @@ __genesis__ = "0x4c2144dc"  # GenesisByte: parampara % 37 == 0
 import re
 from pathlib import Path
 from typing import List, Tuple
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
-    opcode=MantraOpCode.TYPE_CHECK,
-    name="remediate",
-    help_text="Actually FIX detected issues (KAPILA's analysis)")
+    opcode=MantraOpCode.TYPE_CHECK, name="remediate", help_text="Actually FIX detected issues (KAPILA's analysis)"
+)
 class RemediateCommand(NagaCommandBase):
     def execute(self, args: List[str]) -> NagaCommandResult:
         auto_fix = "--fix" in args
@@ -54,14 +50,15 @@ class RemediateCommand(NagaCommandBase):
                 new_content = re.sub(
                     r"(except\s+\w+.*?):\s*pass(\s*$)",
                     r'\1:\n                logger.debug("Suppressed exception")',
-                    content, flags=re.MULTILINE)
+                    content,
+                    flags=re.MULTILINE,
+                )
                 if new_content != content:
                     if not dry_run:
                         py_file.write_text(new_content, encoding="utf-8")
                     fixed_count += 1
             except Exception:
                 pass
-        
+
         status = "Would fix" if dry_run else "Fixed"
         return self.success(f"[KAPILA] {status} {fixed_count} files.")
-

@@ -36,17 +36,15 @@ import shutil
 from pathlib import Path
 from typing import List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.TYPE_CHECK,
     name="gc",
-    help_text="Analyze and clean unused resources (KAPILA's analysis - PURIFY phase)")
+    help_text="Analyze and clean unused resources (KAPILA's analysis - PURIFY phase)",
+)
 class GcCommand(NagaCommandBase):
     """
     Garbage collection command implementation.
@@ -103,8 +101,8 @@ class GcCommand(NagaCommandBase):
         output_parts.append(f"    Build artifacts:     {analysis['build_count']}")
         output_parts.append(f"    Total size:          {analysis['total_size_mb']:.2f} MB")
 
-        data.append(("pycache_count", str(analysis['pycache_count'])))
-        data.append(("pyc_count", str(analysis['pyc_count'])))
+        data.append(("pycache_count", str(analysis["pycache_count"])))
+        data.append(("pyc_count", str(analysis["pyc_count"])))
         data.append(("total_size_mb", f"{analysis['total_size_mb']:.2f}"))
 
         if analyze_only:
@@ -144,9 +142,7 @@ class GcCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         output_parts.append("GARBAGE_COLLECT: Analysis complete")
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _analyze_garbage(self) -> dict:
         """Analyze what garbage exists."""

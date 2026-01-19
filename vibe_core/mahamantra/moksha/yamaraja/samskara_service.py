@@ -223,10 +223,7 @@ class SamskaraService(YamarajaBase):
 
     def get_wild_by_status(self, status: MigrationStatus) -> List[WildProtocol]:
         """Get wild protocols by status."""
-        return [
-            p for p in self._wild_protocols.values()
-            if p.get("status") == status.value
-        ]
+        return [p for p in self._wild_protocols.values() if p.get("status") == status.value]
 
     # =========================================================================
     # Judgment - Yamaraja's Domain
@@ -438,9 +435,7 @@ class SamskaraService(YamarajaBase):
         if not verdict:
             verdict = self.judge(protocol_path)
 
-        return [
-            SamskaraType(s) for s in verdict.get("required_samskaras", [])
-        ]
+        return [SamskaraType(s) for s in verdict.get("required_samskaras", [])]
 
     # =========================================================================
     # Migration - The Actual Move

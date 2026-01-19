@@ -32,15 +32,15 @@ class BootProtocol(Protocol):
         """
         Spark the engine.
         Transfers the system from Pralaya (Dissolution) to Sristi (Creation).
-        
+
         Requires a valid GenesisByte (Signature + 16-bit Resonance).
-        
+
         Args:
             genesis: The 16-Bit Genesis Byte authorizing the boot
-            
+
         Returns:
             The magnetized system (Kernel) or SystemStatus
-            
+
         Raises:
             PermissionError: If resonance is incomplete (Maya)
         """
@@ -54,12 +54,9 @@ class BootProtocol(Protocol):
 @runtime_checkable
 class KernelFactoryProtocol(Protocol):
     """Abstract Factory to prevent Hard Dependency in Orchestrator."""
-    
+
     def get_kernel(
-        self,
-        ledger_path: Optional[str] = None,
-        load_plugins: bool = True,
-        test_mode: bool = False
+        self, ledger_path: Optional[str] = None, load_plugins: bool = True, test_mode: bool = False
     ) -> KernelProtocol:
         """Get or Create the Kernel instance (Singleton Access)."""
         ...

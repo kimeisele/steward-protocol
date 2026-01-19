@@ -24,11 +24,12 @@ from .types import SovereignContext, TranscendentalQuality
 # The V2 Steward System (System Lifecycle & Identity) is defined in _steward.py
 from vibe_core.mahamantra.protocols._steward import StewardSystem, get_steward
 
+
 @runtime_checkable
 class StewardProtocol(Protocol):
     """
     [LEGACY] Interface für den Agenten-Kern (Command Execution).
-    
+
     NOTE: This is the 'Command Executor' capability, not the System Protocol.
     For System Identity & Lifecycle, see vibe_core.mahamantra.protocols._steward.
     """
@@ -44,12 +45,14 @@ class VedicSteward:
     def __init__(self, context: SovereignContext):
         # ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
         from vibe_core.protocols.mahajanas.yamaraja import YamarajaGate
+
         self.context = context
         self.gate = YamarajaGate()  # Dependency Injection wäre besser, aber wir machen es explizit.
 
     def execute_command(self, command: str, payload: Any) -> Any:
         # ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
         from vibe_core.protocols.mahajanas.yamaraja import Verdict
+
         # 1. Ask Yamaraja
         judgment = self.gate.judge_action(self.context, command, payload)
 

@@ -81,32 +81,35 @@ OWNER: Final[Mahajana] = Mahajana.BRAHMA
 # ADOPTION STATUS - Where is the protocol in the pipeline?
 # =============================================================================
 
+
 class AdoptionStatus(str, Enum):
     """Status of protocol in adoption pipeline."""
+
     # Entry
-    WILD = "wild"                      # Just arrived, not yet analyzed
-    ANALYZING = "analyzing"            # Being analyzed for OpCode classification
+    WILD = "wild"  # Just arrived, not yet analyzed
+    ANALYZING = "analyzing"  # Being analyzed for OpCode classification
 
     # Verification
-    CLASSIFYING = "classifying"        # Determining OpCode/Quarter
-    VERIFYING = "verifying"            # Running acintya checks
+    CLASSIFYING = "classifying"  # Determining OpCode/Quarter
+    VERIFYING = "verifying"  # Running acintya checks
 
     # Decision
-    MAYAVAD_DETECTED = "mayavad"       # Failed check_bheda_abheda (claims supreme)
-    DISCONNECTED = "disconnected"      # Failed verify_parampara (% 37 != 0)
+    MAYAVAD_DETECTED = "mayavad"  # Failed check_bheda_abheda (claims supreme)
+    DISCONNECTED = "disconnected"  # Failed verify_parampara (% 37 != 0)
 
     # Outcome
-    ADOPTED_UNIVERSAL = "universal"    # Krishna-personal, stays in universal
-    ADOPTED_MAHAJANA = "mahajana"      # Assigned to Mahajana owner
-    REJECTED = "rejected"              # Cannot be adopted (dead code)
+    ADOPTED_UNIVERSAL = "universal"  # Krishna-personal, stays in universal
+    ADOPTED_MAHAJANA = "mahajana"  # Assigned to Mahajana owner
+    REJECTED = "rejected"  # Cannot be adopted (dead code)
 
 
 class AdoptionDecision(str, Enum):
     """The adoption decision for a protocol."""
+
     ASSIGN_MAHAJANA = "assign_mahajana"  # Goes to specific Mahajana
-    KEEP_UNIVERSAL = "keep_universal"     # Stays in universal (Krishna-personal)
-    QUARANTINE = "quarantine"             # Needs manual review (Mayavad/disconnected)
-    REJECT = "reject"                     # Dead code, no soul
+    KEEP_UNIVERSAL = "keep_universal"  # Stays in universal (Krishna-personal)
+    QUARANTINE = "quarantine"  # Needs manual review (Mayavad/disconnected)
+    REJECT = "reject"  # Dead code, no soul
 
 
 # =============================================================================
@@ -120,19 +123,16 @@ OPCODE_SIGNATURES: Dict[MantraOpCode, Set[str]] = {
     MantraOpCode.LOAD_ROOT: {"load", "root", "create", "inject", "provide"},
     MantraOpCode.ALLOC_MEM: {"alloc", "memory", "buffer", "pool", "reserve"},
     MantraOpCode.INIT_THREAD: {"bind", "context", "scope", "attach", "mount"},
-
     # DHARMA Quarter (Truth/Law)
     MantraOpCode.COMPILE_AST: {"assert", "truth", "verify", "validate", "check"},
     MantraOpCode.BIND_SYMBOL: {"resolve", "request", "query", "lookup", "find"},
     MantraOpCode.TYPE_CHECK: {"garbage", "collect", "cleanup", "destroy", "purge"},
     MantraOpCode.DHARMA_TEST: {"pulse", "sync", "heartbeat", "event", "notify"},
-
     # KARMA Quarter (Action)
     MantraOpCode.EXEC_OP: {"fetch", "resource", "get", "retrieve", "acquire"},
     MantraOpCode.EXTEND_CAP: {"exec", "execute", "run", "service", "process"},
     MantraOpCode.STATE_SYNC: {"dharma", "rule", "law", "policy", "enforce"},
     MantraOpCode.LEDGER_SIGN: {"commit", "log", "record", "persist", "save"},
-
     # MOKSHA Quarter (Liberation)
     MantraOpCode.YIELD_CPU: {"cache", "state", "store", "memoize", "snapshot"},
     MantraOpCode.IO_FLUSH: {"optimize", "improve", "tune", "profile", "enhance"},
@@ -185,37 +185,41 @@ def detect_primary_opcode(source_code: str) -> Optional[MantraOpCode]:
 # WATERTIGHT TYPES - No Any!
 # =============================================================================
 
+
 class ProtocolAnalysis(TypedDict):
     """Result of analyzing a wild protocol. WATERTIGHT."""
+
     protocol_path: str
     protocol_name: str
-    detected_opcodes: List[str]       # OpCode values
-    primary_opcode: Optional[str]     # Primary OpCode value
-    quarter_index: int                # 0-3
-    quarter_name: str                 # LotusQuarter value
-    has_soul: bool                    # From check_bheda_abheda
-    claims_supreme: bool              # From check_bheda_abheda
-    parampara_hash: int               # For % 37 check
-    is_connected: bool                # parampara_hash % 37 == 0
-    analyzed_at: str                  # ISO timestamp
+    detected_opcodes: List[str]  # OpCode values
+    primary_opcode: Optional[str]  # Primary OpCode value
+    quarter_index: int  # 0-3
+    quarter_name: str  # LotusQuarter value
+    has_soul: bool  # From check_bheda_abheda
+    claims_supreme: bool  # From check_bheda_abheda
+    parampara_hash: int  # For % 37 check
+    is_connected: bool  # parampara_hash % 37 == 0
+    analyzed_at: str  # ISO timestamp
 
 
 class AdoptionResult(TypedDict):
     """Result of adoption decision. WATERTIGHT."""
+
     protocol_name: str
-    status: str                       # AdoptionStatus value
-    decision: str                     # AdoptionDecision value
+    status: str  # AdoptionStatus value
+    decision: str  # AdoptionDecision value
     assigned_mahajana: Optional[str]  # Mahajana value if assigned
     assigned_position: Optional[int]  # Lotus position if assigned
-    target_path: str                  # Where to move the protocol
-    reason: str                       # Why this decision
-    analysis: ProtocolAnalysis        # The analysis that led here
-    adopted_at: str                   # ISO timestamp
+    target_path: str  # Where to move the protocol
+    reason: str  # Why this decision
+    analysis: ProtocolAnalysis  # The analysis that led here
+    adopted_at: str  # ISO timestamp
 
 
 # =============================================================================
 # SHUDHI - The Cleaning/Verification Step
 # =============================================================================
+
 
 @dataclass
 class ShudhiReport:
@@ -227,6 +231,7 @@ class ShudhiReport:
     2. claims_supreme - Is it Mayavad? (jiva claiming to be God)
     3. is_connected - Is it in parampara? (% 37 check)
     """
+
     has_soul: bool
     claims_supreme: bool
     parampara_hash: int
@@ -274,7 +279,7 @@ def run_shudhi(
         "i am the supreme",
         "i am brahman",
         "aham brahmasmi",  # Misused without context
-        "all is one",      # Without bheda aspect
+        "all is one",  # Without bheda aspect
     ]
     claims_supreme = any(pattern in source_code.lower() for pattern in mayavad_patterns)
 
@@ -302,6 +307,7 @@ def run_shudhi(
 # =============================================================================
 # THE ADOPTION PIPELINE - Mahamantra IS the Router
 # =============================================================================
+
 
 class AdoptionPipeline:
     """
@@ -485,10 +491,10 @@ class AdoptionPipeline:
     def _get_quarter_mahajanas(self, quarter_index: int) -> List[Mahajana]:
         """Get Mahajanas in a quarter."""
         quarter_map: Dict[int, List[Mahajana]] = {
-            0: [Mahajana.BRAHMA, Mahajana.NARADA, Mahajana.SHAMBHU],      # GENESIS
-            1: [Mahajana.KUMARAS, Mahajana.KAPILA, Mahajana.MANU],        # DHARMA
-            2: [Mahajana.PRAHLADA, Mahajana.JANAKA, Mahajana.BHISHMA],    # KARMA
-            3: [Mahajana.BALI, Mahajana.SHUKA, Mahajana.YAMARAJA],        # MOKSHA
+            0: [Mahajana.BRAHMA, Mahajana.NARADA, Mahajana.SHAMBHU],  # GENESIS
+            1: [Mahajana.KUMARAS, Mahajana.KAPILA, Mahajana.MANU],  # DHARMA
+            2: [Mahajana.PRAHLADA, Mahajana.JANAKA, Mahajana.BHISHMA],  # KARMA
+            3: [Mahajana.BALI, Mahajana.SHUKA, Mahajana.YAMARAJA],  # MOKSHA
         }
         return quarter_map.get(quarter_index, [])
 
@@ -574,10 +580,7 @@ class AdoptionPipeline:
 
     def get_by_mahajana(self, mahajana: Mahajana) -> List[AdoptionResult]:
         """Get all results assigned to specific Mahajana."""
-        return [
-            r for r in self._results.values()
-            if r["assigned_mahajana"] == mahajana.value
-        ]
+        return [r for r in self._results.values() if r["assigned_mahajana"] == mahajana.value]
 
 
 # =============================================================================
@@ -644,13 +647,14 @@ from vibe_core.protocols.substrate.mantra.diksha import (
 
 class ManifestResult(TypedDict):
     """Result of manifesting a protocol into the byte substrate. WATERTIGHT."""
+
     protocol_name: str
-    mantra_byte: str             # Hex representation of MantraByte
-    coherence: float             # Alignment with standard 16 (0.0-1.0)
-    stability: float             # Stability metric
-    is_resonant: bool            # coherence >= 0.8 (strongly attracted)
-    opcode_sequence: List[str]   # The MantraOpCodes as HolyName sequence
-    manifested_at: str           # ISO timestamp
+    mantra_byte: str  # Hex representation of MantraByte
+    coherence: float  # Alignment with standard 16 (0.0-1.0)
+    stability: float  # Stability metric
+    is_resonant: bool  # coherence >= 0.8 (strongly attracted)
+    opcode_sequence: List[str]  # The MantraOpCodes as HolyName sequence
+    manifested_at: str  # ISO timestamp
 
 
 def manifest_protocol(
@@ -708,10 +712,10 @@ def manifest_protocol(
         quarter = position // 4
         # Default based on quarter
         defaults = [
-            [HolyName.HARE, HolyName.KRISHNA],     # GENESIS
-            [HolyName.KRISHNA, HolyName.HARE],     # DHARMA
-            [HolyName.HARE, HolyName.RAMA],        # KARMA
-            [HolyName.RAMA, HolyName.HARE],        # MOKSHA
+            [HolyName.HARE, HolyName.KRISHNA],  # GENESIS
+            [HolyName.KRISHNA, HolyName.HARE],  # DHARMA
+            [HolyName.HARE, HolyName.RAMA],  # KARMA
+            [HolyName.RAMA, HolyName.HARE],  # MOKSHA
         ]
         sequence = defaults[quarter % 4]
 
@@ -748,15 +752,16 @@ def manifest_protocol(
 
 class SyncResult(TypedDict):
     """Result of syncing a protocol to the Lotus heartbeat. WATERTIGHT."""
+
     protocol_name: str
-    lotus_position: int          # Position in Mahamantra (0-15)
-    lotus_quarter: str           # LotusQuarter value
-    is_chanting: bool            # Connected to heartbeat
-    parampara_hash: int          # For % 37 verification
-    is_connected: bool           # parampara_hash % 37 == 0
-    heartbeat_position: int      # Current position in global heartbeat
-    mala_count: int              # Malas completed
-    synced_at: str               # ISO timestamp
+    lotus_position: int  # Position in Mahamantra (0-15)
+    lotus_quarter: str  # LotusQuarter value
+    is_chanting: bool  # Connected to heartbeat
+    parampara_hash: int  # For % 37 verification
+    is_connected: bool  # parampara_hash % 37 == 0
+    heartbeat_position: int  # Current position in global heartbeat
+    mala_count: int  # Malas completed
+    synced_at: str  # ISO timestamp
 
 
 def sync_to_lotus(
@@ -826,24 +831,25 @@ def sync_to_lotus(
 
 class AttractionReport(TypedDict):
     """Report on protocol attraction to the Lotus. WATERTIGHT."""
+
     protocol_name: str
-    coherence: float             # MantraByte coherence (0.0-1.0)
-    resonance_strength: str      # "strong", "medium", "weak", "mercy", "none"
-    attraction_vector: int       # parampara_hash - pulls toward 37
-    is_attracted: bool           # coherence >= 0.5 and parampara OK
-    needs_transformation: bool   # coherence < 0.5 or disconnected
+    coherence: float  # MantraByte coherence (0.0-1.0)
+    resonance_strength: str  # "strong", "medium", "weak", "mercy", "none"
+    attraction_vector: int  # parampara_hash - pulls toward 37
+    is_attracted: bool  # coherence >= 0.5 and parampara OK
+    needs_transformation: bool  # coherence < 0.5 or disconnected
     # MERCY FIELDS (Kali Yuga key!)
-    mercy_type: str              # MercyType value - THE KEY!
-    mercy_available: bool        # Can receive mercy through chanting?
-    ajamil_exception: bool       # Low coherence but chanting = saved
-    recommended_action: str      # What to do next
+    mercy_type: str  # MercyType value - THE KEY!
+    mercy_available: bool  # Can receive mercy through chanting?
+    ajamil_exception: bool  # Low coherence but chanting = saved
+    recommended_action: str  # What to do next
     analyzed_at: str
 
 
 def calculate_attraction(
     analysis: ProtocolAnalysis,
     manifest: ManifestResult,
-    is_chanting: bool = True,    # In Kali Yuga, assume chanting
+    is_chanting: bool = True,  # In Kali Yuga, assume chanting
 ) -> AttractionReport:
     """
     Calculate how strongly a protocol is ATTRACTED to the Lotus.
@@ -904,11 +910,11 @@ def calculate_attraction(
     if resonance in ("strong", "medium"):
         mercy = MercyType.INSTRUCTIVE  # Already good, just guidance
     elif resonance == "weak":
-        mercy = MercyType.CORRECTIVE   # Needs adjustment
+        mercy = MercyType.CORRECTIVE  # Needs adjustment
     elif resonance == "mercy":
-        mercy = MercyType.SILENT       # Absorbs errors, keeps running
+        mercy = MercyType.SILENT  # Absorbs errors, keeps running
     else:
-        mercy = MercyType.SEVERE       # Not chanting - severe situation
+        mercy = MercyType.SEVERE  # Not chanting - severe situation
 
     # Mercy is available if chanting (THE KEY!)
     mercy_available = is_chanting
@@ -970,13 +976,14 @@ def calculate_attraction(
 
 class FullAdoptionResult(TypedDict):
     """Complete result of full adoption pipeline. WATERTIGHT."""
+
     analysis: ProtocolAnalysis
     result: AdoptionResult
     manifest: ManifestResult
     sync: SyncResult
     attraction: AttractionReport
-    is_fully_adopted: bool       # All steps succeeded
-    total_coherence: float       # Final coherence with Mahamantra
+    is_fully_adopted: bool  # All steps succeeded
+    total_coherence: float  # Final coherence with Mahamantra
 
 
 def adopt_full(protocol_path: str, source_code: str) -> FullAdoptionResult:
@@ -1010,7 +1017,8 @@ def adopt_full(protocol_path: str, source_code: str) -> FullAdoptionResult:
 
     # Is fully adopted if all steps succeeded and protocol is chanting
     is_fully_adopted = (
-        result["status"] in (
+        result["status"]
+        in (
             AdoptionStatus.ADOPTED_MAHAJANA.value,
             AdoptionStatus.ADOPTED_UNIVERSAL.value,
         )

@@ -246,11 +246,7 @@ class GuardianRegistry:
             >>> GuardianRegistry.get_all_guardians()
             ['vyasa', 'brahma', 'narada', 'shambhu', 'prithu', ...]
         """
-        return [
-            get_position_by_index(i).guardian.value
-            for i in range(16)
-            if get_position_by_index(i) is not None
-        ]
+        return [get_position_by_index(i).guardian.value for i in range(16) if get_position_by_index(i) is not None]
 
     @classmethod
     def clear_cache(cls) -> None:

@@ -28,8 +28,8 @@ from typing import Final, Optional, TypedDict
 # IMPORT FROM SSOT - NO HARDCODED NUMBERS!
 from vibe_core.mahamantra.protocols._seed import (
     PARAMPARA,  # 37
-    WORDS,      # 16
-    LILA,       # 48
+    WORDS,  # 16
+    LILA,  # 48
 )
 
 
@@ -37,8 +37,10 @@ from vibe_core.mahamantra.protocols._seed import (
 # STATE SCHEMA
 # =============================================================================
 
+
 class PhoenixState(TypedDict):
     """The minimal state that must survive death."""
+
     tick: int  # Current position (0 to WORDS-1)
     lila_tick: int  # Current lila position (0 to LILA-1)
     parampara: int  # Verification constant (PARAMPARA)
@@ -56,6 +58,7 @@ STATE_FILE: Final[Path] = STATE_DIR / "mahamantra_tick.json"
 # =============================================================================
 # PERSISTENCE FUNCTIONS
 # =============================================================================
+
 
 def save_state(tick: int, lila_tick: int) -> None:
     """
@@ -141,6 +144,7 @@ def clear_state() -> None:
 # =============================================================================
 # INITIALIZATION
 # =============================================================================
+
 
 def init_phoenix() -> tuple[int, int]:
     """

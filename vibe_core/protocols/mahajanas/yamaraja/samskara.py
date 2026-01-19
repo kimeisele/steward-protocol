@@ -24,7 +24,6 @@ a purification TODO marker.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -72,40 +71,42 @@ class SamskaraType(str, Enum):
     The 16 Samskaras mapped to protocol lifecycle.
     Each corresponds to a Mahamantra bit.
     """
+
     # QUARTER 1: GENESIS (Before Birth)
-    GARBHADHANA = "garbhadhana"     # 1. Conception - Protocol idea
-    PUMSAVANA = "pumsavana"         # 2. Fetus protection - Initial design
+    GARBHADHANA = "garbhadhana"  # 1. Conception - Protocol idea
+    PUMSAVANA = "pumsavana"  # 2. Fetus protection - Initial design
     SIMANTONNAYANA = "simantonnayana"  # 3. Hair parting - API definition
-    JATAKARMA = "jatakarma"         # 4. Birth - First implementation
+    JATAKARMA = "jatakarma"  # 4. Birth - First implementation
 
     # QUARTER 2: DHARMA (Childhood)
-    NAMAKARANA = "namakarana"       # 5. Naming - Protocol naming
-    NISHKRAMANA = "nishkramana"     # 6. First outing - First test
-    ANNAPRASHANA = "annaprashana"   # 7. First food - First integration
-    CHUDAKARANA = "chudakarana"     # 8. Head shaving - Cleanup
+    NAMAKARANA = "namakarana"  # 5. Naming - Protocol naming
+    NISHKRAMANA = "nishkramana"  # 6. First outing - First test
+    ANNAPRASHANA = "annaprashana"  # 7. First food - First integration
+    CHUDAKARANA = "chudakarana"  # 8. Head shaving - Cleanup
 
     # QUARTER 3: KARMA (Youth)
-    KARNAVEDHA = "karnavedha"       # 9. Ear piercing - Listen to feedback
-    VIDYARAMBHA = "vidyarambha"     # 10. Learning begins - Documentation
-    UPANAYANA = "upanayana"         # 11. Sacred thread - GAD-000 audit
-    VEDARAMBHA = "vedarambha"       # 12. Veda study - Deep review
+    KARNAVEDHA = "karnavedha"  # 9. Ear piercing - Listen to feedback
+    VIDYARAMBHA = "vidyarambha"  # 10. Learning begins - Documentation
+    UPANAYANA = "upanayana"  # 11. Sacred thread - GAD-000 audit
+    VEDARAMBHA = "vedarambha"  # 12. Veda study - Deep review
 
     # QUARTER 4: MOKSHA (Maturity)
-    KESHANTA = "keshanta"           # 13. First shave - Production ready
-    SAMAVARTANA = "samavartana"     # 14. Graduation - Migration complete
-    VIVAHA = "vivaha"               # 15. Marriage - Mahajana binding
-    ANTYESHTI = "antyeshti"         # 16. Last rites - Wild protocol death
+    KESHANTA = "keshanta"  # 13. First shave - Production ready
+    SAMAVARTANA = "samavartana"  # 14. Graduation - Migration complete
+    VIVAHA = "vivaha"  # 15. Marriage - Mahajana binding
+    ANTYESHTI = "antyeshti"  # 16. Last rites - Wild protocol death
 
 
 class MigrationStatus(str, Enum):
     """Status of a protocol migration."""
-    WILD = "wild"                   # Not yet migrated
-    JUDGING = "judging"             # Under Yamaraja's review
-    PURIFYING = "purifying"         # Needs cleanup (ATONE verdict)
-    MIGRATING = "migrating"         # In transit
-    BLESSED = "blessed"             # NAGA blessed, in folder
-    REJECTED = "rejected"           # Failed, needs major work
-    MERCY = "mercy"                 # Failed but chants - gets in anyway
+
+    WILD = "wild"  # Not yet migrated
+    JUDGING = "judging"  # Under Yamaraja's review
+    PURIFYING = "purifying"  # Needs cleanup (ATONE verdict)
+    MIGRATING = "migrating"  # In transit
+    BLESSED = "blessed"  # NAGA blessed, in folder
+    REJECTED = "rejected"  # Failed, needs major work
+    MERCY = "mercy"  # Failed but chants - gets in anyway
 
 
 class WildProtocol(TypedDict, total=False):
@@ -113,18 +114,19 @@ class WildProtocol(TypedDict, total=False):
     A wild protocol awaiting migration.
     WATERTIGHT - no Any!
     """
-    path: str                       # File path
-    name: str                       # Protocol name
-    target_mahajana: str            # Mahajana.value
-    status: str                     # MigrationStatus.value
-    gad_score: float                # 0.0 to 1.0
-    has_chanting: bool              # Does it call chant()?
-    has_owner: bool                 # Does it have OWNER constant?
-    has_watertight: bool            # No Any types?
-    samskara_stage: str             # SamskaraType.value
-    discovered_at: str              # ISO timestamp
-    judged_at: str                  # ISO timestamp (empty if not judged)
-    migrated_at: str                # ISO timestamp (empty if not migrated)
+
+    path: str  # File path
+    name: str  # Protocol name
+    target_mahajana: str  # Mahajana.value
+    status: str  # MigrationStatus.value
+    gad_score: float  # 0.0 to 1.0
+    has_chanting: bool  # Does it call chant()?
+    has_owner: bool  # Does it have OWNER constant?
+    has_watertight: bool  # No Any types?
+    samskara_stage: str  # SamskaraType.value
+    discovered_at: str  # ISO timestamp
+    judged_at: str  # ISO timestamp (empty if not judged)
+    migrated_at: str  # ISO timestamp (empty if not migrated)
 
 
 class MigrationVerdict(TypedDict, total=False):
@@ -132,11 +134,12 @@ class MigrationVerdict(TypedDict, total=False):
     Yamaraja's verdict on a protocol migration.
     WATERTIGHT - no Any!
     """
+
     protocol_path: str
-    verdict: str                    # "allow", "deny", "atone", "mercy"
+    verdict: str  # "allow", "deny", "atone", "mercy"
     reason: str
-    required_samskaras: List[str]   # SamskaraType values needed
-    target_path: str                # Where it should go
+    required_samskaras: List[str]  # SamskaraType values needed
+    target_path: str  # Where it should go
     chanting_detected: bool
     gad_compliant: bool
 
@@ -146,6 +149,7 @@ class SamskaraState(TypedDict, total=False):
     Full state of the Samskara system.
     WATERTIGHT - no Any!
     """
+
     protocol_name: str
     owner: str
     is_chanting: bool
@@ -165,6 +169,7 @@ class MigrationManifest(TypedDict, total=False):
     Complete migration manifest.
     WATERTIGHT - no Any!
     """
+
     version: str
     created_at: str
     updated_at: str

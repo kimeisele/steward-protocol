@@ -33,8 +33,10 @@ from vibe_core.protocols import StateServiceProtocol
 from vibe_core.protocols.command import CommandContext
 from vibe_core.protocols.naga.takshaka import TakshakaProtocol, VajraViolation
 from vibe_core.protocols.universal.bridge import SetuBandha
+
 # Yamaraja = Position 15 in Mahamantra (ONE source)
 from vibe_core.protocols.mahajanas.yamaraja import Verdict
+
 # ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
 from vibe_core.protocols.mahajanas.yamaraja import YamarajaGate
 

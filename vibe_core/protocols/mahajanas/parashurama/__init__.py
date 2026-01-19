@@ -30,7 +30,6 @@ DOMAIN:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -59,6 +58,7 @@ from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRe
 # PARASHURAMA PROTOCOL BASE - Derives from MantraPosition 8
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class ParashuramaProtocolBase(HeadProtocol):
     """
@@ -75,6 +75,7 @@ class ParashuramaProtocolBase(HeadProtocol):
         is_head()   -> True (HEAD position)
         parampara_vector() -> 333 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 8  # THE ONLY CONFIGURATION
 
 
@@ -85,14 +86,16 @@ class ParashuramaProtocolBase(HeadProtocol):
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
+
 class FetchStatus(str, Enum):
     """Status of fetch operation."""
-    PENDING = "pending"       # Fetch queued
-    FETCHING = "fetching"     # In progress
-    SUCCESS = "success"       # Fetch completed
-    FAILED = "failed"         # Fetch failed
-    TIMEOUT = "timeout"       # Fetch timed out
-    CACHED = "cached"         # Returned from cache
+
+    PENDING = "pending"  # Fetch queued
+    FETCHING = "fetching"  # In progress
+    SUCCESS = "success"  # Fetch completed
+    FAILED = "failed"  # Fetch failed
+    TIMEOUT = "timeout"  # Fetch timed out
+    CACHED = "cached"  # Returned from cache
 
 
 # Resource value types - WATERTIGHT
@@ -104,12 +107,13 @@ class FetchResult(TypedDict, total=False):
     Result of fetch operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
-    status: str               # FetchStatus value
+    status: str  # FetchStatus value
     resource_id: str
     resource_type: str
     size_bytes: int
-    timestamp: str            # ISO timestamp
+    timestamp: str  # ISO timestamp
     latency_ms: int
     error_message: str
 
@@ -119,18 +123,20 @@ class FetchState(TypedDict, total=False):
     State of fetch operations.
     WATERTIGHT - no Any!
     """
+
     total_fetches: int
     successful_fetches: int
     failed_fetches: int
     cache_hits: int
     total_bytes_fetched: int
     avg_latency_ms: int
-    last_fetch: str           # ISO timestamp
-    health: str               # "pristine", "healthy", "degraded"
+    last_fetch: str  # ISO timestamp
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class FetchCliResult(TypedDict):
     """Result of CLI fetch operation. WATERTIGHT - no Any!"""
+
     success: bool
     resource_id: str
     status: str

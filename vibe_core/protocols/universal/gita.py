@@ -18,17 +18,12 @@ from typing import Protocol, runtime_checkable
 from typing_extensions import Final
 
 # Import the Strict Types (No Any)
-from .types import (
-    SankhyaDualism,
-    KarmaCounter,
-    VisvarupaSnapshot,
-    SovereignContext,
-    DivineCommand
-)
+from .types import SankhyaDualism, KarmaCounter, VisvarupaSnapshot, SovereignContext, DivineCommand
 
 # THE STANDARD
 GITA_EDITION: Final[int] = 1972
 TOTAL_CHAPTERS: Final[int] = 18
+
 
 @runtime_checkable
 class GitaProtocol(Protocol):
@@ -87,10 +82,10 @@ class GitaProtocol(Protocol):
         """
         GATE 18: Surrender & Conclusion.
         Executes a 'Divine Command'.
-        
+
         INPUT: DivineCommand (Envelope containing Sovereign + Instruction).
         OUTPUT: True if surrendered (executed), False if rebelled.
-        
+
         NO RAW STRINGS. NO ANONYMOUS CALLS.
         """
         ...

@@ -13,7 +13,6 @@ MAHAMANTRA AS LENS:
 PARAMPARA: 74 (% 37 == 0 -> CONNECTED)
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -29,6 +28,7 @@ QUARTER: Final[str] = "genesis"
 OPCODE: Final[str] = "LOAD_ROOT"
 PARAMPARA_VECTOR: Final[int] = 74
 
+
 def __getattr__(name: str) -> object:
     """
     Lazy load BrahmaService from the services layer.
@@ -36,9 +36,11 @@ def __getattr__(name: str) -> object:
     """
     if name == "BrahmaService":
         from vibe_core.services.brahma_service import BrahmaService
+
         return BrahmaService
-    
+
     # Legacy fallbacks might be needed for types, handled by static imports above
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = ["BrahmaService", "POSITION", "QUARTER", "OPCODE", "PARAMPARA_VECTOR"]

@@ -68,19 +68,21 @@ from vibe_core.mahamantra.substrate.seed import (
 # "bhūmir āpo 'nalo vāyuḥ khaṁ mano buddhir eva ca
 #  ahaṅkāra itīyaṁ me bhinnā prakṛtir aṣṭadhā"
 
+
 class AparaPrakriti(IntEnum):
     """
     Die 8 Elemente der materiellen Natur (BG 7.4).
     "Abgetrennte materielle Energie" - bhinnā prakṛtir aṣṭadhā.
     """
-    BHUMI = 1       # Erde (Earth) - Prithvi
-    APAH = 2        # Wasser (Water) - Jala
-    ANALAH = 3      # Feuer (Fire) - Agni/Tejas
-    VAYUH = 4       # Luft (Air) - Vayu
-    KHAM = 5        # Äther/Raum (Ether/Space) - Akasha
-    MANAH = 6       # Geist (Mind) - Manas
-    BUDDHI = 7      # Intelligenz (Intelligence) - Buddhi
-    AHANKARA = 8    # Falsches Ego (False Ego) - Ahankara
+
+    BHUMI = 1  # Erde (Earth) - Prithvi
+    APAH = 2  # Wasser (Water) - Jala
+    ANALAH = 3  # Feuer (Fire) - Agni/Tejas
+    VAYUH = 4  # Luft (Air) - Vayu
+    KHAM = 5  # Äther/Raum (Ether/Space) - Akasha
+    MANAH = 6  # Geist (Mind) - Manas
+    BUDDHI = 7  # Intelligenz (Intelligence) - Buddhi
+    AHANKARA = 8  # Falsches Ego (False Ego) - Ahankara
 
 
 # Die 5 groben Elemente (Pancha Mahabhutas)
@@ -106,6 +108,7 @@ SUBTLE_ELEMENTS: Final[List[AparaPrakriti]] = [
 # "mahā-bhūtāny ahaṅkāro buddhir avyaktam eva ca
 #  indriyāṇi daśaikaṁ ca pañca cendriya-gocarāḥ"
 
+
 class KshetraElement(IntEnum):
     """
     Die 24 Elemente des Kshetra (Feld) nach BG 13.6-7.
@@ -113,45 +116,46 @@ class KshetraElement(IntEnum):
     Dies sind die Bestandteile der materiellen Welt,
     die vom Ksetrajna (Wissenden des Feldes) beobachtet werden.
     """
+
     # 5 Mahabhutas (Grobe Elemente)
-    PRITHVI = 1         # Erde
-    JALA = 2            # Wasser
-    TEJAS = 3           # Feuer
-    VAYU = 4            # Luft
-    AKASHA = 5          # Äther
+    PRITHVI = 1  # Erde
+    JALA = 2  # Wasser
+    TEJAS = 3  # Feuer
+    VAYU = 4  # Luft
+    AKASHA = 5  # Äther
 
     # 1 Ahankara (Ego)
-    AHANKARA = 6        # Falsches Ego
+    AHANKARA = 6  # Falsches Ego
 
     # 1 Buddhi (Intelligenz)
-    BUDDHI = 7          # Unterscheidungsvermögen
+    BUDDHI = 7  # Unterscheidungsvermögen
 
     # 1 Avyakta (Unmanifestiertes)
-    AVYAKTA = 8         # Prakriti in unmanifestierter Form
+    AVYAKTA = 8  # Prakriti in unmanifestierter Form
 
     # 5 Jnanendriyas (Wahrnehmungssinne)
-    CHAKSHU = 9         # Sehen (Augen)
-    SHROTRA = 10        # Hören (Ohren)
-    GHRANA = 11         # Riechen (Nase)
-    RASANA = 12         # Schmecken (Zunge)
-    TVAK = 13           # Fühlen (Haut)
+    CHAKSHU = 9  # Sehen (Augen)
+    SHROTRA = 10  # Hören (Ohren)
+    GHRANA = 11  # Riechen (Nase)
+    RASANA = 12  # Schmecken (Zunge)
+    TVAK = 13  # Fühlen (Haut)
 
     # 5 Karmendriyas (Handlungssinne)
-    VAK = 14            # Sprechen (Mund)
-    PANI = 15           # Greifen (Hände)
-    PADA = 16           # Gehen (Füße)
-    PAYU = 17           # Ausscheiden
-    UPASTHA = 18        # Fortpflanzung
+    VAK = 14  # Sprechen (Mund)
+    PANI = 15  # Greifen (Hände)
+    PADA = 16  # Gehen (Füße)
+    PAYU = 17  # Ausscheiden
+    UPASTHA = 18  # Fortpflanzung
 
     # 1 Manas (Geist)
-    MANAS = 19          # Der denkende Geist
+    MANAS = 19  # Der denkende Geist
 
     # 5 Tanmatras (Sinnesobjekte)
-    SHABDA = 20         # Klang
-    SPARSHA = 21        # Berührung
-    RUPA = 22           # Form
-    RASA = 23           # Geschmack
-    GANDHA = 24         # Geruch
+    SHABDA = 20  # Klang
+    SPARSHA = 21  # Berührung
+    RUPA = 22  # Form
+    RASA = 23  # Geschmack
+    GANDHA = 24  # Geruch
 
 
 # Gruppierungen
@@ -186,6 +190,7 @@ TANMATRAS: Final[Tuple[KshetraElement, ...]] = (
 # "apareyam itas tv anyāṁ prakṛtiṁ viddhi me parām
 #  jīva-bhūtāṁ mahā-bāho yayedaṁ dhāryate jagat"
 
+
 @dataclass(frozen=True)
 class ParaPrakriti:
     """
@@ -201,6 +206,7 @@ class ParaPrakriti:
     NICHT MAYAVAD: Der Jiva ist NICHT Gott.
     Er ist Teil von Gott, aber nicht das Ganze.
     """
+
     # Der Jiva ist EINS mit Krishna qualitativ
     qualitatively_one: bool = True
 
@@ -228,6 +234,7 @@ JIVA: Final[ParaPrakriti] = ParaPrakriti()
 # "tad viddhi praṇipātena paripraśnena sevayā
 #  upadekṣyanti te jñānaṁ jñāninas tattva-darśinaḥ"
 
+
 class GuruTattva(str, Enum):
     """
     Das Guru Tattva ist KEINE Zahl in einer Liste.
@@ -243,9 +250,10 @@ class GuruTattva(str, Enum):
     2. PARIPRASNA - Fragen stellen (aus Wissbegierde)
     3. SEVA - Dienst (praktische Hingabe)
     """
-    PRANIPATA = "pranipata"   # Demütige Hingabe
-    PARIPRASNA = "pariprasna" # Fragen mit Hingabe
-    SEVA = "seva"             # Dienst am Guru
+
+    PRANIPATA = "pranipata"  # Demütige Hingabe
+    PARIPRASNA = "pariprasna"  # Fragen mit Hingabe
+    SEVA = "seva"  # Dienst am Guru
 
 
 @dataclass(frozen=True)
@@ -259,9 +267,10 @@ class GuruConnection:
     Parampara = Die Kette der Lehrer-Schüler-Nachfolge.
     Ohne Parampara ist das Wissen tot (wie die 24 ohne den 37).
     """
-    has_pranipata: bool = False    # Hat sich hingegeben
-    has_pariprasna: bool = False   # Stellt Fragen
-    has_seva: bool = False         # Dient dem Guru
+
+    has_pranipata: bool = False  # Hat sich hingegeben
+    has_pariprasna: bool = False  # Stellt Fragen
+    has_seva: bool = False  # Dient dem Guru
 
     @property
     def is_connected(self) -> bool:
@@ -280,6 +289,7 @@ class GuruConnection:
 # =============================================================================
 # "yasmāt kṣaram atīto 'ham akṣarād api cottamaḥ
 #  ato 'smi loke vede ca prathitaḥ puruṣottamaḥ"
+
 
 class Purushottama:
     """

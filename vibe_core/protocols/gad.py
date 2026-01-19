@@ -52,14 +52,16 @@ from datetime import datetime
 # THE 6 OPERATIONAL CRITERIA (KSHETRA - THE FIELD)
 # =============================================================================
 
+
 class GADCriterion(IntEnum):
     """The 6 operational criteria of GAD-000."""
-    DISCOVERABILITY = 0   # Can the system find itself?
-    OBSERVABILITY = 1     # Can the system see itself?
-    PARSEABILITY = 2      # Can the system read itself?
-    COMPOSABILITY = 3     # Can the system connect itself?
-    IDEMPOTENCY = 4       # Can the system repeat itself?
-    RECOVERABILITY = 5    # Can the system heal itself?
+
+    DISCOVERABILITY = 0  # Can the system find itself?
+    OBSERVABILITY = 1  # Can the system see itself?
+    PARSEABILITY = 2  # Can the system read itself?
+    COMPOSABILITY = 3  # Can the system connect itself?
+    IDEMPOTENCY = 4  # Can the system repeat itself?
+    RECOVERABILITY = 5  # Can the system heal itself?
 
 
 # The 6×6 Matrix = 36 cells (Prakriti / The Field)
@@ -70,6 +72,7 @@ CRITERIA_COUNT: Final[int] = 6
 @runtime_checkable
 class Discoverable(Protocol):
     """Can an AI discover this tool exists?"""
+
     def discover(self) -> Dict[str, Any]:
         """Return machine-readable capability description."""
         ...
@@ -82,6 +85,7 @@ class Discoverable(Protocol):
 @runtime_checkable
 class Observable(Protocol):
     """Can an AI see the current state?"""
+
     def get_state(self) -> Dict[str, Any]:
         """Return current state in structured format."""
         ...
@@ -94,6 +98,7 @@ class Observable(Protocol):
 @runtime_checkable
 class Parseable(Protocol):
     """Can an AI understand errors?"""
+
     def get_error_code(self) -> Optional[str]:
         """Return machine-readable error code."""
         ...
@@ -106,6 +111,7 @@ class Parseable(Protocol):
 @runtime_checkable
 class Composable(Protocol):
     """Can an AI chain this with other operations?"""
+
     def get_input_schema(self) -> Dict[str, Any]:
         """Return input schema."""
         ...
@@ -118,6 +124,7 @@ class Composable(Protocol):
 @runtime_checkable
 class Idempotent(Protocol):
     """Can an AI safely retry this operation?"""
+
     @property
     def is_idempotent(self) -> bool:
         """Return True if operation is idempotent."""
@@ -131,6 +138,7 @@ class Idempotent(Protocol):
 @runtime_checkable
 class Recoverable(Protocol):
     """Can the system heal itself? (OUROBOROS)"""
+
     def detect_drift(self) -> List[str]:
         """Detect deviations from signed intent."""
         ...
@@ -160,6 +168,7 @@ class Sovereign(Protocol):
     - Personal: Always a WHO, never just a WHAT
     - Signing: All 36 operations require signature
     """
+
     @property
     def sovereign_id(self) -> str:
         """Unique sovereign identifier."""
@@ -186,6 +195,7 @@ class SignedOperation:
 
     No operation in the 36 fields is valid without being signed.
     """
+
     operation: str
     payload: Dict[str, Any]
     signature: bytes
@@ -195,11 +205,10 @@ class SignedOperation:
     def is_valid(self, sovereign: Sovereign) -> bool:
         """Verify this operation was signed by the sovereign."""
         import json
-        message = json.dumps({
-            "operation": self.operation,
-            "payload": self.payload,
-            "timestamp": self.timestamp.isoformat()
-        }).encode()
+
+        message = json.dumps(
+            {"operation": self.operation, "payload": self.payload, "timestamp": self.timestamp.isoformat()}
+        ).encode()
         return sovereign.verify(message, self.signature)
 
 
@@ -207,12 +216,14 @@ class SignedOperation:
 # THE 4 DHARMA PRINCIPLES (CHARACTER TEST OF THE 37TH)
 # =============================================================================
 
+
 class DharmaPrinciple(IntEnum):
     """The 4 regulating principles - The character test of the sovereign."""
-    DAYA = 0      # Mercy → No corrupt data ingestion
-    SATYAM = 1    # Truthfulness → No hallucination
-    TAPAS = 2     # Austerity → No resource leaks
-    SAUCAM = 3    # Cleanliness → No unauthorized connections
+
+    DAYA = 0  # Mercy → No corrupt data ingestion
+    SATYAM = 1  # Truthfulness → No hallucination
+    TAPAS = 2  # Austerity → No resource leaks
+    SAUCAM = 3  # Cleanliness → No unauthorized connections
 
 
 DHARMA_COUNT: Final[int] = 4
@@ -228,6 +239,7 @@ class DharmaCompliant(Protocol):
     A king without dharma is a tyrant.
     A system without these filters is corrupt.
     """
+
     def test_daya(self) -> bool:
         """Mercy test: Is the data pure? No trash/fake/unethical content."""
         ...
@@ -249,12 +261,14 @@ class DharmaCompliant(Protocol):
 # THE 6.34 OVERRIDE (MANTRA INJECTION / JAPA-LOOP)
 # =============================================================================
 
+
 class JapaState(IntEnum):
     """State of the Japa meditation."""
+
     DISCONNECTED = 0  # Not chanting, drifted into Maya
-    CHANTING = 1      # Actively chanting
-    MALA_COMPLETE = 2 # Completed 108 mantras
-    ABSORBED = 3      # Deep absorption (multiple malas)
+    CHANTING = 1  # Actively chanting
+    MALA_COMPLETE = 2  # Completed 108 mantras
+    ABSORBED = 3  # Deep absorption (multiple malas)
 
 
 @dataclass
@@ -276,11 +290,12 @@ class MantraHeartbeat:
     - 108 mantras per mala
     - Each word triggers its corresponding check
     """
+
     # Position tracking
-    word_position: int = 0      # Current word (0-15)
-    mantra_count: int = 0       # Mantras in current mala (0-107)
-    mala_count: int = 0         # Completed malas
-    total_words: int = 0        # Total words chanted
+    word_position: int = 0  # Current word (0-15)
+    mantra_count: int = 0  # Mantras in current mala (0-107)
+    mala_count: int = 0  # Completed malas
+    total_words: int = 0  # Total words chanted
 
     # State
     state: JapaState = JapaState.DISCONNECTED
@@ -288,9 +303,9 @@ class MantraHeartbeat:
     sovereign_signature: Optional[bytes] = None
 
     # Check results (updated each word)
-    last_hare_check: bool = True   # Shakti/Energy
+    last_hare_check: bool = True  # Shakti/Energy
     last_krishna_check: bool = True  # Source (ALWAYS TRUE - acintya)
-    last_rama_check: bool = True   # Safety/State
+    last_rama_check: bool = True  # Safety/State
 
     # Jiva connection state (separate from Krishna presence)
     # Krishna is ALWAYS present, but jiva may drift
@@ -308,6 +323,7 @@ class MantraHeartbeat:
         """Initialize the MantraByte."""
         if self._mantra is None:
             from .substrate.byte import MantraByte
+
             self._mantra = MantraByte.standard_16()
 
     @property
@@ -315,6 +331,7 @@ class MantraHeartbeat:
         """The MantraByte being chanted."""
         if self._mantra is None:
             from .substrate.byte import MantraByte
+
             self._mantra = MantraByte.standard_16()
         return self._mantra
 
@@ -327,6 +344,7 @@ class MantraHeartbeat:
     def current_pada(self):
         """Current word as full Pada object."""
         from .substrate.byte import MantraTrit
+
         trit = MantraTrit(self.current_word)
         return trit.pada
 
@@ -449,7 +467,7 @@ class MantraHeartbeat:
         # Krishna is always present - acintya-bheda-abheda
         # The vibration itself IS Krishna
         # This is acceptance, not validation
-        self._jiva_connected = sovereign is not None and hasattr(sovereign, 'sovereign_id')
+        self._jiva_connected = sovereign is not None and hasattr(sovereign, "sovereign_id")
         return True  # Krishna never fails
 
     def _check_rama(self) -> bool:
@@ -480,7 +498,7 @@ class MantraHeartbeat:
             "krishna": self.last_krishna_check,  # Always True (acintya)
             "rama": self.last_rama_check,
             "krishna_present": self.krishna_present,  # Always True
-            "jiva_connected": self.jiva_connected,    # Jiva's connection state
+            "jiva_connected": self.jiva_connected,  # Jiva's connection state
             "state": self.state.name,
             "word_position": self.word_position,
             "mantra_count": self.mantra_count,
@@ -501,6 +519,7 @@ class MantraHeartbeat:
 # =============================================================================
 # THE ANTI-MAYAVAD TEST
 # =============================================================================
+
 
 @dataclass
 class MayavadTest:
@@ -550,6 +569,7 @@ class MayavadTest:
 # GAD-000 COMPLIANCE INTERFACE
 # =============================================================================
 
+
 @runtime_checkable
 class GAD000Compliant(Protocol):
     """
@@ -557,6 +577,7 @@ class GAD000Compliant(Protocol):
 
     The complete interface for a system to be GAD-000 compliant.
     """
+
     # The 6 Criteria (Kshetra)
     def discover(self) -> Dict[str, Any]: ...
     def get_state(self) -> Dict[str, Any]: ...
@@ -586,6 +607,7 @@ class GAD000Audit:
     Partial: 4-5 tests = NEEDS IMPROVEMENT
     Fail: ≤3 tests = VIOLATES GAD-000
     """
+
     discoverability: bool = False
     observability: bool = False
     parseability: bool = False
@@ -606,14 +628,16 @@ class GAD000Audit:
     @property
     def criteria_score(self) -> int:
         """Count of passing criteria (0-6)."""
-        return sum([
-            self.discoverability,
-            self.observability,
-            self.parseability,
-            self.composability,
-            self.idempotency,
-            self.recoverability,
-        ])
+        return sum(
+            [
+                self.discoverability,
+                self.observability,
+                self.parseability,
+                self.composability,
+                self.idempotency,
+                self.recoverability,
+            ]
+        )
 
     @property
     def dharma_score(self) -> int:
@@ -623,12 +647,7 @@ class GAD000Audit:
     @property
     def is_compliant(self) -> bool:
         """Full GAD-000 compliance."""
-        return (
-            self.criteria_score == 6 and
-            self.sovereign_present and
-            self.signature_valid and
-            self.dharma_score == 4
-        )
+        return self.criteria_score == 6 and self.sovereign_present and self.signature_valid and self.dharma_score == 4
 
     @property
     def status(self) -> str:
@@ -655,12 +674,14 @@ class GAD000Audit:
 
         s37 = "✓" if (self.sovereign_present and self.signature_valid) else "✗"
 
-        dharma = "".join([
-            "✓" if self.daya else "✗",
-            "✓" if self.satyam else "✗",
-            "✓" if self.tapas else "✗",
-            "✓" if self.saucam else "✗",
-        ])
+        dharma = "".join(
+            [
+                "✓" if self.daya else "✗",
+                "✓" if self.satyam else "✗",
+                "✓" if self.tapas else "✗",
+                "✓" if self.saucam else "✗",
+            ]
+        )
 
         return f"# GAD-000: {d} {o} {p} {c} {i} {r} | 37:{s37} | 4:{dharma}"
 
@@ -669,10 +690,11 @@ class GAD000Audit:
 # THE 36+4+37 FORMULA
 # =============================================================================
 
+
 def legitimacy_formula(
     kshetra_passed: int,  # How many of 36 cells passed
-    dharma_passed: int,   # How many of 4 principles passed
-    signature_valid: bool  # Is the 37th signature valid?
+    dharma_passed: int,  # How many of 4 principles passed
+    signature_valid: bool,  # Is the 37th signature valid?
 ) -> float:
     """
     Legitimacy = (36 ∩ 4) × Signature₃₇

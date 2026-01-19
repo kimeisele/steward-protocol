@@ -166,27 +166,28 @@ class NagaBase(IGene, ABC):
 
 class AnantaNull:
     """
-    The Divine Zero. 
+    The Divine Zero.
     Not 'Nothing', but 'Potency in Slumber'.
-    
+
     "Purnam adah purnam idam" - That is Full, This is Full.
-    
+
     Every Null implementation should inherit from this to ensure:
     1. It is not Void (Shunyavad)
     2. It carries the Mantra in HARE state (00 = Potential)
     3. It serves by waiting
     """
-    
+
     def __init__(self) -> None:
         # Import here to avoid circular dependency
         try:
             from vibe_core.protocols.substrate.byte import MantraByte, HolyName
+
             # 00 = HARE (Potential / Seed / Silence)
             self.resonance = MantraByte(HolyName.HARE)
         except ImportError:
             # Fallback for bootstrapping
             self.resonance = None
-    
+
     @property
     def is_void(self) -> bool:
         """Returns False. Nothing is Void in this system."""

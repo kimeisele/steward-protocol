@@ -33,6 +33,7 @@ logger = logging.getLogger("CAPABILITY_REGISTRY")
 
 class LedgerProtocol(Protocol):
     """Protocol for the ledger operations required by CapabilityRegistry."""
+
     def record_event(
         self,
         event_type: str,
@@ -41,8 +42,7 @@ class LedgerProtocol(Protocol):
         result: Optional[str] = None,
         task_id: Optional[str] = None,
         error: Optional[str] = None,
-    ) -> str:
-        ...
+    ) -> str: ...
 
 
 class CapabilityRegistry:

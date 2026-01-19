@@ -26,7 +26,6 @@ DOMAIN:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -54,6 +53,7 @@ from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRe
 # PRITHU PROTOCOL BASE - Derives from MantraPosition 4
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class PrithuProtocolBase(HeadProtocol):
     """
@@ -70,6 +70,7 @@ class PrithuProtocolBase(HeadProtocol):
         is_head()   -> True (HEAD position)
         parampara_vector() -> 185 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 4  # THE ONLY CONFIGURATION
 
 
@@ -80,13 +81,15 @@ class PrithuProtocolBase(HeadProtocol):
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
+
 class TruthLevel(str, Enum):
     """Levels of truth assertion."""
-    ABSOLUTE = "absolute"     # Vedic truth - cannot be questioned
-    VERIFIED = "verified"     # Verified against schema
-    ASSERTED = "asserted"     # Asserted but not verified
-    DISPUTED = "disputed"     # Multiple conflicting claims
-    FALSE = "false"           # Proven false
+
+    ABSOLUTE = "absolute"  # Vedic truth - cannot be questioned
+    VERIFIED = "verified"  # Verified against schema
+    ASSERTED = "asserted"  # Asserted but not verified
+    DISPUTED = "disputed"  # Multiple conflicting claims
+    FALSE = "false"  # Proven false
 
 
 class AssertionResult(TypedDict, total=False):
@@ -94,9 +97,10 @@ class AssertionResult(TypedDict, total=False):
     Result of truth assertion.
     WATERTIGHT - no Any!
     """
+
     valid: bool
-    truth_level: str          # TruthLevel value
-    timestamp: str            # ISO timestamp
+    truth_level: str  # TruthLevel value
+    timestamp: str  # ISO timestamp
     assertion_id: str
     violations: List[str]
     error_message: str
@@ -107,16 +111,18 @@ class TruthState(TypedDict, total=False):
     State of truth assertions.
     WATERTIGHT - no Any!
     """
+
     total_assertions: int
     valid_assertions: int
     invalid_assertions: int
-    last_assertion: str       # ISO timestamp
-    truth_coverage: float     # 0.0-1.0
-    health: str               # "pristine", "healthy", "degraded"
+    last_assertion: str  # ISO timestamp
+    truth_coverage: float  # 0.0-1.0
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class AssertCliResult(TypedDict):
     """Result of CLI assert operation. WATERTIGHT - no Any!"""
+
     success: bool
     claim: str
     truth_level: str

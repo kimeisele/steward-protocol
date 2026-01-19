@@ -47,7 +47,6 @@ His workers are: KUMARAS, KAPILA, MANU
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -80,11 +79,12 @@ class TruthAssertion(TypedDict, total=False):
     An assertion of truth to be validated.
     WATERTIGHT - no Any!
     """
-    statement: str        # The statement to validate
-    source: str           # Where it came from
-    context: str          # Contextual information
-    lineage_hash: int     # Parampara verification
-    timestamp: str        # ISO format
+
+    statement: str  # The statement to validate
+    source: str  # Where it came from
+    context: str  # Contextual information
+    lineage_hash: int  # Parampara verification
+    timestamp: str  # ISO format
 
 
 class ValidationResult(TypedDict, total=False):
@@ -92,11 +92,12 @@ class ValidationResult(TypedDict, total=False):
     Result of truth validation.
     WATERTIGHT - no Any!
     """
+
     valid: bool
     statement: str
-    confidence: float     # 0.0 to 1.0
-    reason: str           # Why valid/invalid
-    contradictions: str   # Any contradicting statements
+    confidence: float  # 0.0 to 1.0
+    reason: str  # Why valid/invalid
+    contradictions: str  # Any contradicting statements
     lineage_verified: bool
 
 
@@ -105,12 +106,13 @@ class KnowledgeCompilation(TypedDict, total=False):
     A compiled body of knowledge.
     WATERTIGHT - no Any!
     """
+
     title: str
-    category: str         # "veda", "purana", "itihasa", "sutra"
-    entries: int          # Number of entries
-    compiled_at: str      # ISO timestamp
-    compiler_id: str      # Usually "vyasa"
-    checksum: str         # SHA-256 of content
+    category: str  # "veda", "purana", "itihasa", "sutra"
+    entries: int  # Number of entries
+    compiled_at: str  # ISO timestamp
+    compiler_id: str  # Usually "vyasa"
+    checksum: str  # SHA-256 of content
 
 
 class DharmaVerdict(TypedDict, total=False):
@@ -118,11 +120,12 @@ class DharmaVerdict(TypedDict, total=False):
     A dharmic verdict on an action.
     WATERTIGHT - no Any!
     """
+
     action: str
-    dharmic: bool         # Is it dharmic?
-    reasoning: str        # Why
-    precedents: str       # Supporting scriptural references
-    exceptions: str       # Any contextual exceptions
+    dharmic: bool  # Is it dharmic?
+    reasoning: str  # Why
+    precedents: str  # Supporting scriptural references
+    exceptions: str  # Any contextual exceptions
 
 
 # =============================================================================

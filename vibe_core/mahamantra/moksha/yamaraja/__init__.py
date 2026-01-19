@@ -19,7 +19,6 @@ CLI AUTO INTEGRATION:
     steward samskara → cli_auto → NullYamaraja.samskara_* → SamskaraService
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -42,8 +41,10 @@ PARAMPARA_VECTOR: Final[int] = 592
 # CLI AUTO RETURN TYPES (TypedDict for introspection)
 # =============================================================================
 
+
 class SamskaraStatusResult(TypedDict):
     """Status result for cli_auto."""
+
     health: str
     wild_count: int
     blessed_count: int
@@ -53,12 +54,14 @@ class SamskaraStatusResult(TypedDict):
 
 class SamskaraDiscoverResult(TypedDict):
     """Discover result for cli_auto."""
+
     count: int
     protocols: List[Dict[str, str]]  # [{path, target, has_chanting}]
 
 
 class SamskaraJudgeResult(TypedDict):
     """Judge result for cli_auto."""
+
     verdict: str
     reason: str
     target_path: str
@@ -66,6 +69,7 @@ class SamskaraJudgeResult(TypedDict):
 
 class SamskaraMigrateResult(TypedDict):
     """Migrate result for cli_auto."""
+
     success: bool
     message: str
     from_path: str
@@ -75,6 +79,7 @@ class SamskaraMigrateResult(TypedDict):
 # =============================================================================
 # YAMARAJA PROTOCOL - With Samskara Methods
 # =============================================================================
+
 
 @runtime_checkable
 class YamarajaProtocol(Protocol):
@@ -144,6 +149,7 @@ class NullYamaraja(YamarajaBase):
         """Lazy load SamskaraService."""
         if self._service is None:
             from vibe_core.mahamantra.moksha.yamaraja.samskara_service import SamskaraService
+
             self._service = SamskaraService()
         return self._service
 

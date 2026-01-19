@@ -3,7 +3,6 @@ AGENT SYSTEM INTERFACE - The Bridge Between Kernel and Agents
 ==============================================================
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -49,12 +48,15 @@ from typing import IO, TYPE_CHECKING, Callable, Dict, List, Optional, Protocol, 
 
 from vibe_core.protocols.event import Event
 
+
 # Decoupling from vibe_core.kernel: Local Protocol Definitions
 class LedgerProtocol(Protocol):
     def record_event(self, event_type: str, agent_id: str, details: Dict[str, object]) -> str: ...
 
+
 class ToolRegistryProtocol(Protocol):
     def execute(self, call: object) -> object: ...
+
 
 class EventBusProtocol(Protocol):
     def subscribe(self, callback: Callable, event_type: Optional[str] = None) -> str: ...
@@ -63,24 +65,27 @@ class EventBusProtocol(Protocol):
     def get_status(self) -> Dict[str, object]: ...
     def get_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[object]: ...
 
+
 class KernelProtocol(Protocol):
     """Protocol defining the kernel interface required by AgentSystemInterface."""
+
     config: object
     agent_registry: Dict[str, object]
     _data_store: Dict[str, Dict[str, object]]
-    
+
     @property
     def tool_registry(self) -> ToolRegistryProtocol: ...
-    
+
     @property
     def event_bus(self) -> EventBusProtocol: ...
-    
+
     @property
     def ledger(self) -> LedgerProtocol: ...
 
     def get_agent_manifest(self, agent_id: str) -> Optional[object]: ...
     def find_agents_by_capability(self, capability: str) -> List[object]: ...
     def _check_agent_capability(self, agent_id: str, capability: str) -> bool: ...
+
 
 logger = logging.getLogger("AGENT_INTERFACE")
 

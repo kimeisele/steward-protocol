@@ -52,6 +52,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # SHUKA PROTOCOL BASE - Derives from MantraPosition 14
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class ShukaProtocolBase(WorkerProtocol):
     """
@@ -68,6 +69,7 @@ class ShukaProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 555 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 14  # THE ONLY CONFIGURATION
 
 
@@ -109,6 +111,7 @@ class ReflectionResult(TypedDict, total=False):
 
 class ViewCliResult(TypedDict):
     """Result of CLI view operation. WATERTIGHT - no Any!"""
+
     success: bool
     key: str
     cached: bool
@@ -218,9 +221,7 @@ class SectionProtocol(Protocol):
         ...
 
     @classmethod
-    def from_dict(
-        cls, data: Dict[str, Union[str, int, float, bool, List[str], Dict[str, str]]]
-    ) -> "SectionProtocol":
+    def from_dict(cls, data: Dict[str, Union[str, int, float, bool, List[str], Dict[str, str]]]) -> "SectionProtocol":
         """
         Deserialize from dict.
         WATERTIGHT: Input type explicitly defined, no Any.
@@ -291,9 +292,7 @@ class ConfigProtocol(Protocol):
         """Check if section exists."""
         ...
 
-    def read(
-        self, path: str
-    ) -> Union[str, int, float, bool, List[str], Dict[str, str], None]:
+    def read(self, path: str) -> Union[str, int, float, bool, List[str], Dict[str, str], None]:
         """
         Read value by dotted path (e.g., 'kernel.features.live_fire').
         WATERTIGHT: Return type is union of allowed types, no Any.
@@ -399,7 +398,6 @@ class ShukaProtocol(Protocol):
     def get_state(self) -> dict[str, object]:
         """Get state."""
         ...
-
 
     def invalidate(self, key: str) -> bool:
         """

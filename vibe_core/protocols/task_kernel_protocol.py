@@ -65,20 +65,22 @@ if TYPE_CHECKING:
 # STATUS ENUM (Shared with task_kernel.py)
 # =============================================================================
 
+
 class TaskKernelStatus(str, Enum):
     """Status of TaskKernel execution."""
 
-    SPAWNED = "spawned"      # Created, not yet executing
+    SPAWNED = "spawned"  # Created, not yet executing
     EXECUTING = "executing"  # Running task
     COMPLETED = "completed"  # Finished successfully
-    FAILED = "failed"        # Finished with error
-    TIMEOUT = "timeout"      # Exceeded time limit
+    FAILED = "failed"  # Finished with error
+    TIMEOUT = "timeout"  # Exceeded time limit
     CANCELLED = "cancelled"  # Explicitly cancelled
 
 
 # =============================================================================
 # RESULT TYPES (Shared with task_kernel.py)
 # =============================================================================
+
 
 @dataclass
 class TaskKernelResult:
@@ -136,6 +138,7 @@ class TaskKernelResult:
 # CAPABILITY INJECTOR (Shared with task_kernel.py)
 # =============================================================================
 
+
 @dataclass
 class InjectedCapabilities:
     """
@@ -168,6 +171,7 @@ class InjectedCapabilities:
 # =============================================================================
 # TASK KERNEL PROTOCOL - The Contract
 # =============================================================================
+
 
 @runtime_checkable
 class TaskKernelProtocol(Protocol):
@@ -272,6 +276,7 @@ class TaskKernelProtocol(Protocol):
 # =============================================================================
 # TASK KERNEL FACTORY PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class TaskKernelFactoryProtocol(Protocol):

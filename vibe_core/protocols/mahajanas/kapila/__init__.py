@@ -18,7 +18,6 @@ His Sankhya leads to bhakti, not dry speculation.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -48,6 +47,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # KAPILA PROTOCOL BASE - Derives from MantraPosition 6
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class KapilaProtocolBase(WorkerProtocol):
     """
@@ -64,6 +64,7 @@ class KapilaProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 259 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 6  # THE ONLY CONFIGURATION
 
 
@@ -80,10 +81,11 @@ AnalysisInput = Union[str, int, float, bool, Dict[str, str], List[str], None]
 
 class AnalysisType(str, Enum):
     """Types of analysis."""
-    RESOLUTION = "resolution"     # RESOLVE_REQ
-    OPTIMIZATION = "optimization" # OPTIMIZE
-    INFERENCE = "inference"       # Logical deduction
-    ENUMERATION = "enumeration"   # Sankhya counting
+
+    RESOLUTION = "resolution"  # RESOLVE_REQ
+    OPTIMIZATION = "optimization"  # OPTIMIZE
+    INFERENCE = "inference"  # Logical deduction
+    ENUMERATION = "enumeration"  # Sankhya counting
 
 
 class AnalysisResult(TypedDict, total=False):
@@ -91,10 +93,11 @@ class AnalysisResult(TypedDict, total=False):
     Result of analysis.
     WATERTIGHT - no Any!
     """
+
     success: bool
-    analysis_type: str        # AnalysisType value
-    conclusion: str           # The analytical result
-    confidence: float         # 0.0-1.0
+    analysis_type: str  # AnalysisType value
+    conclusion: str  # The analytical result
+    confidence: float  # 0.0-1.0
     duration_ms: int
     error_message: str
 
@@ -104,6 +107,7 @@ class OptimizationResult(TypedDict, total=False):
     Result of optimization.
     WATERTIGHT - no Any!
     """
+
     success: bool
     improvement_percent: float
     original_metric: float
@@ -117,8 +121,9 @@ class MetricsResult(TypedDict, total=False):
     Collected metrics.
     WATERTIGHT - no Any!
     """
+
     metrics: Dict[str, float]
-    collected_at: str         # ISO timestamp
+    collected_at: str  # ISO timestamp
     sample_count: int
 
 
@@ -127,15 +132,17 @@ class AnalysisState(TypedDict, total=False):
     State of analysis.
     WATERTIGHT - no Any!
     """
+
     analyses_performed: int
     optimizations_performed: int
     total_improvement: float
-    last_analysis: str        # ISO timestamp
+    last_analysis: str  # ISO timestamp
     health: str
 
 
 class AnalyzeCliResult(TypedDict):
     """Result of CLI analyze operation. WATERTIGHT - no Any!"""
+
     success: bool
     target: str
     analysis_type: str

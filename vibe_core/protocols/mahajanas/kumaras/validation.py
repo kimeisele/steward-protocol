@@ -30,7 +30,6 @@ VALIDATION TYPES:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -71,14 +70,16 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # VALIDATION TYPES
 # =============================================================================
 
+
 class ValidationType(str, Enum):
     """Types of validation."""
-    TYPE = "type"           # Type checking
-    RANGE = "range"         # Value range
-    PATTERN = "pattern"     # Regex pattern
-    LENGTH = "length"       # String/list length
-    REQUIRED = "required"   # Non-null check
-    CUSTOM = "custom"       # Custom function
+
+    TYPE = "type"  # Type checking
+    RANGE = "range"  # Value range
+    PATTERN = "pattern"  # Regex pattern
+    LENGTH = "length"  # String/list length
+    REQUIRED = "required"  # Non-null check
+    CUSTOM = "custom"  # Custom function
 
 
 # =============================================================================
@@ -91,6 +92,7 @@ ValidatorFunc = Callable[[PurifiableData], bool]
 @dataclass
 class ValidationRule:
     """A single validation rule."""
+
     name: str
     validation_type: ValidationType
     error_message: str
@@ -153,6 +155,7 @@ class ValidationRule:
 @dataclass(frozen=True)
 class ValidationResult:
     """Result of validation."""
+
     valid: bool
     field: str
     value_type: str
@@ -163,6 +166,7 @@ class ValidationResult:
 # =============================================================================
 # VALIDATION PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class ValidationProtocol(Protocol):
@@ -210,6 +214,7 @@ class ValidationProtocol(Protocol):
 # =============================================================================
 # VALIDATOR IMPLEMENTATION
 # =============================================================================
+
 
 class Validator:
     """
@@ -320,6 +325,7 @@ class Validator:
 # COMMON RULES (Factory Functions)
 # =============================================================================
 
+
 def required(field_name: str) -> ValidationRule:
     """Create a required field rule."""
     return ValidationRule(
@@ -375,6 +381,7 @@ def length_check(field_name: str, min_len: Optional[int] = None, max_len: Option
 # NULL VALIDATOR
 # =============================================================================
 
+
 class NullValidator:
     """Null validator - everything is valid."""
 
@@ -392,7 +399,9 @@ class NullValidator:
         return []
 
     def validate(self, field: str, data: PurifiableData) -> ValidationResult:
-        return ValidationResult(valid=True, field=field, value_type=type(data).__name__, errors=[], purity_level=PurityLevel.PRISTINE)
+        return ValidationResult(
+            valid=True, field=field, value_type=type(data).__name__, errors=[], purity_level=PurityLevel.PRISTINE
+        )
 
     def validate_all(self, data: Dict[str, PurifiableData]) -> Dict[str, ValidationResult]:
         return {k: self.validate(k, v) for k, v in data.items()}
@@ -406,9 +415,21 @@ class NullValidator:
 # =============================================================================
 
 __all__ = [
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_OPCODES",
-    "ValidationType", "ValidationRule", "ValidationResult", "ValidatorFunc",
-    "ValidationProtocol", "Validator", "NullValidator",
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_OPCODES",
+    "ValidationType",
+    "ValidationRule",
+    "ValidationResult",
+    "ValidatorFunc",
+    "ValidationProtocol",
+    "Validator",
+    "NullValidator",
     # Factory functions
-    "required", "type_check", "range_check", "pattern_check", "length_check",
+    "required",
+    "type_check",
+    "range_check",
+    "pattern_check",
+    "length_check",
 ]

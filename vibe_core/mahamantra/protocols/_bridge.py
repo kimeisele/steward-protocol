@@ -33,7 +33,6 @@ WATERTIGHT: No Any types. All typed explicitly.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -78,37 +77,42 @@ from vibe_core.mahamantra.protocols._fractal import (
 # BRIDGE TYPES - What kind of bridges exist
 # =============================================================================
 
+
 class BridgeType(str, Enum):
     """Types of bridges in the system."""
-    LEVEL = "level"           # Connects different levels
-    QUARTER = "quarter"       # Connects different quarters
-    PROTOCOL = "protocol"     # Connects different protocols
-    SYSTEM = "system"         # Connects different systems
-    INTERFACE = "interface"   # Connects code to user
-    MIGRATION = "migration"   # Connects legacy to new
+
+    LEVEL = "level"  # Connects different levels
+    QUARTER = "quarter"  # Connects different quarters
+    PROTOCOL = "protocol"  # Connects different protocols
+    SYSTEM = "system"  # Connects different systems
+    INTERFACE = "interface"  # Connects code to user
+    MIGRATION = "migration"  # Connects legacy to new
 
 
 class BridgeDirection(str, Enum):
     """Direction of bridge traversal."""
-    UNIDIRECTIONAL = "uni"    # One way only
-    BIDIRECTIONAL = "bi"      # Both directions
-    UPSTREAM = "up"           # From lower to higher
-    DOWNSTREAM = "down"       # From higher to lower
+
+    UNIDIRECTIONAL = "uni"  # One way only
+    BIDIRECTIONAL = "bi"  # Both directions
+    UPSTREAM = "up"  # From lower to higher
+    DOWNSTREAM = "down"  # From higher to lower
 
 
 class BridgeState(str, Enum):
     """Current state of a bridge."""
-    BLUEPRINT = "blueprint"   # Not yet built
-    BUILDING = "building"     # Under construction
-    ACTIVE = "active"         # Operational
-    SUSPENDED = "suspended"   # Temporarily paused
-    DEPRECATED = "deprecated" # Marked for removal
-    DESTROYED = "destroyed"   # No longer exists
+
+    BLUEPRINT = "blueprint"  # Not yet built
+    BUILDING = "building"  # Under construction
+    ACTIVE = "active"  # Operational
+    SUSPENDED = "suspended"  # Temporarily paused
+    DEPRECATED = "deprecated"  # Marked for removal
+    DESTROYED = "destroyed"  # No longer exists
 
 
 # =============================================================================
 # BRIDGE ENDPOINT - One side of a bridge
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class BridgeEndpoint:
@@ -118,8 +122,8 @@ class BridgeEndpoint:
     Can be a level, quarter, protocol, or system.
     """
 
-    name: str               # Identifier
-    endpoint_type: str      # "level", "quarter", "protocol", "system"
+    name: str  # Identifier
+    endpoint_type: str  # "level", "quarter", "protocol", "system"
     level: Optional[Level] = None
     quarter: Optional[Quarter] = None
     position: Optional[int] = None
@@ -176,6 +180,7 @@ class BridgeEndpoint:
 # =============================================================================
 # BRIDGE SPEC - The specification of a bridge
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class BridgeSpec:
@@ -306,6 +311,7 @@ class Bridge(Generic[T, S]):
 # BRIDGE PROTOCOL - The Interface
 # =============================================================================
 
+
 @runtime_checkable
 class BridgeProtocol(Protocol):
     """
@@ -342,6 +348,7 @@ class BridgeProtocol(Protocol):
 # =============================================================================
 # BRIDGE REGISTRY - Tracks all bridges
 # =============================================================================
+
 
 class BridgeRegistry:
     """
@@ -405,12 +412,13 @@ class BridgeRegistry:
         for bridge in self._bridges.values():
             if bridge.state != BridgeState.ACTIVE:
                 continue
-            if (bridge.spec.source.address == source.address and
-                bridge.spec.target.address == target.address):
+            if bridge.spec.source.address == source.address and bridge.spec.target.address == target.address:
                 return [bridge]
-            if (bridge.spec.direction == BridgeDirection.BIDIRECTIONAL and
-                bridge.spec.source.address == target.address and
-                bridge.spec.target.address == source.address):
+            if (
+                bridge.spec.direction == BridgeDirection.BIDIRECTIONAL
+                and bridge.spec.source.address == target.address
+                and bridge.spec.target.address == source.address
+            ):
                 return [bridge]
 
         # TODO: Implement multi-hop path finding
@@ -433,6 +441,7 @@ class BridgeRegistry:
 # =============================================================================
 # BRIDGE BUILDERS - Fluent API for creating bridges
 # =============================================================================
+
 
 class BridgeBuilder(Generic[T, S]):
     """
@@ -550,6 +559,7 @@ class BridgeBuilder(Generic[T, S]):
 # BRIDGE PROTOCOL DEFINITION - Self-Reference
 # =============================================================================
 
+
 class BridgeProtocolDef(MahamantraProtocolBase):
     """
     The Bridge Protocol.
@@ -590,6 +600,7 @@ assert _valid, f"BridgeProtocol failed validation: {_violations}"
 # =============================================================================
 # CONVENIENCE: Get the global registry
 # =============================================================================
+
 
 def get_bridge_registry() -> BridgeRegistry:
     """Get the global bridge registry."""

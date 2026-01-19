@@ -34,17 +34,15 @@ import os
 import sys
 from typing import List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.YIELD_CPU,
     name="yield",
-    help_text="CPU yield and scheduling (SHUKA's detachment - SUSTAIN phase)")
+    help_text="CPU yield and scheduling (SHUKA's detachment - SUSTAIN phase)",
+)
 class YieldCommand(NagaCommandBase):
     """
     Yield command implementation.
@@ -121,9 +119,7 @@ class YieldCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         output_parts.append("YIELD_CPU: Ready to yield")
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _get_yield_info(self) -> dict:
         """Get basic yield information."""

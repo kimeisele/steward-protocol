@@ -18,7 +18,6 @@ He is the first created being, not the creator.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -48,6 +47,7 @@ from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, Protoco
 # BRAHMA PROTOCOL BASE - Derives from MantraPosition 1
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class BrahmaProtocolBase(WorkerProtocol):
     """
@@ -64,6 +64,7 @@ class BrahmaProtocolBase(WorkerProtocol):
         is_head()   -> False (Worker position)
         parampara_vector() -> 74 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 1  # THE ONLY CONFIGURATION
 
 
@@ -74,14 +75,16 @@ class BrahmaProtocolBase(WorkerProtocol):
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
+
 class GenesisPhase(str, Enum):
     """Phases of creation."""
-    DORMANT = "dormant"       # Before creation
-    AWAKENING = "awakening"   # SYS_WAKE
-    LOADING = "loading"       # LOAD_ROOT
-    ALLOCATING = "allocating" # ALLOC_MEM
-    ACTIVE = "active"         # Fully created
-    DISSOLVING = "dissolving" # Being destroyed
+
+    DORMANT = "dormant"  # Before creation
+    AWAKENING = "awakening"  # SYS_WAKE
+    LOADING = "loading"  # LOAD_ROOT
+    ALLOCATING = "allocating"  # ALLOC_MEM
+    ACTIVE = "active"  # Fully created
+    DISSOLVING = "dissolving"  # Being destroyed
 
 
 class GenesisState(TypedDict, total=False):
@@ -89,12 +92,13 @@ class GenesisState(TypedDict, total=False):
     State of creation/genesis.
     WATERTIGHT - no Any!
     """
-    phase: str                # GenesisPhase value
-    wake_time: str            # ISO timestamp
+
+    phase: str  # GenesisPhase value
+    wake_time: str  # ISO timestamp
     root_loaded: bool
     memory_allocated_bytes: int
-    creation_id: str          # Unique ID for this creation cycle
-    health: str               # "pristine", "healthy", "degraded"
+    creation_id: str  # Unique ID for this creation cycle
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class AllocationResult(TypedDict, total=False):
@@ -102,14 +106,16 @@ class AllocationResult(TypedDict, total=False):
     Result of memory allocation.
     WATERTIGHT - no Any!
     """
+
     success: bool
     allocated_bytes: int
-    address: str              # Memory address (as hex string)
+    address: str  # Memory address (as hex string)
     error_message: str
 
 
 class CreateCliResult(TypedDict):
     """Result of CLI create operation. WATERTIGHT - no Any!"""
+
     success: bool
     phase: str
     is_created: bool
@@ -270,9 +276,13 @@ __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE
     "BrahmaProtocolBase",
     # Genesis Types (WATERTIGHT)
-    "GenesisPhase", "GenesisState", "AllocationResult", "CreateCliResult",
+    "GenesisPhase",
+    "GenesisState",
+    "AllocationResult",
+    "CreateCliResult",
     # Protocol
-    "BrahmaProtocol", "NullBrahma",
+    "BrahmaProtocol",
+    "NullBrahma",
     # DI (Service Registry)
     "ServiceRegistryProtocol",
     "ServiceRegistryOwnedProtocol",
@@ -308,5 +318,6 @@ def __getattr__(name: str):
     """Lazy import for BrahmaService to avoid circular import."""
     if name == "BrahmaService":
         from vibe_core.protocols.mahajanas.brahma.service import BrahmaService
+
         return BrahmaService
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

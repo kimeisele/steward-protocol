@@ -93,18 +93,19 @@ SB_GAJENDRA_CHAPTER: Final[str] = "8.2-4"  # The elephant's prayer
 
 # The sacred thresholds (inverted from health to pain)
 # pain = 1.0 - health
-PAIN_SAMADHI: Final[float] = 0.05    # Below this: deep rest (health >= 0.95)
-PAIN_SADHANA: Final[float] = 0.20    # Below this: normal (health >= 0.80)
+PAIN_SAMADHI: Final[float] = 0.05  # Below this: deep rest (health >= 0.95)
+PAIN_SADHANA: Final[float] = 0.20  # Below this: normal (health >= 0.80)
 # Above PAIN_SADHANA: Gajendra mode (health < 0.80)
 
 # Health thresholds (for compatibility with daemon)
-HEALTH_SAMADHI: Final[float] = 0.95   # Above: Samadhi
-HEALTH_SADHANA: Final[float] = 0.80   # Above: Sadhana, Below: Gajendra
+HEALTH_SAMADHI: Final[float] = 0.95  # Above: Samadhi
+HEALTH_SADHANA: Final[float] = 0.80  # Above: Sadhana, Below: Gajendra
 
 
 # =============================================================================
 # ENTROPY LEVEL - The Three States
 # =============================================================================
+
 
 class EntropyLevel(str, Enum):
     """
@@ -112,8 +113,9 @@ class EntropyLevel(str, Enum):
 
     Based on Gajendra Moksha - pain intensity determines prayer intensity.
     """
-    SAMADHI = "samadhi"    # Pure state - minimal chanting
-    SADHANA = "sadhana"    # Normal state - regular chanting
+
+    SAMADHI = "samadhi"  # Pure state - minimal chanting
+    SADHANA = "sadhana"  # Normal state - regular chanting
     GAJENDRA = "gajendra"  # Emergency state - intense chanting
 
     @classmethod
@@ -152,9 +154,9 @@ class EntropyLevel(str, Enum):
     def frequency_hz(self) -> float:
         """Get chanting frequency in Hz."""
         return {
-            EntropyLevel.SAMADHI: 0.5,    # Slow - 32 sec/cycle
-            EntropyLevel.SADHANA: 1.0,    # Normal - 16 sec/cycle
-            EntropyLevel.GAJENDRA: 5.0,   # Fast - 3.2 sec/cycle
+            EntropyLevel.SAMADHI: 0.5,  # Slow - 32 sec/cycle
+            EntropyLevel.SADHANA: 1.0,  # Normal - 16 sec/cycle
+            EntropyLevel.GAJENDRA: 5.0,  # Fast - 3.2 sec/cycle
         }[self]
 
     @property
@@ -181,6 +183,7 @@ class EntropyLevel(str, Enum):
 # ENTROPY SOURCE - Single point of entropy measurement
 # =============================================================================
 
+
 @dataclass
 class EntropyReading:
     """
@@ -192,6 +195,7 @@ class EntropyReading:
     - Timestamp
     - Optional details
     """
+
     source: str
     pain: float  # 0.0 = healthy, 1.0 = maximum pain
     timestamp: datetime = field(default_factory=datetime.now)
@@ -215,6 +219,7 @@ class EntropyReading:
 # =============================================================================
 # ENTROPY SENSOR PROTOCOL - The Interface
 # =============================================================================
+
 
 @runtime_checkable
 class EntropySensor(Protocol):
@@ -258,6 +263,7 @@ class EntropySensor(Protocol):
 # ENTROPY AGGREGATOR PROTOCOL - Combines multiple sensors
 # =============================================================================
 
+
 @dataclass
 class AggregateEntropy:
     """
@@ -265,6 +271,7 @@ class AggregateEntropy:
 
     This is what the daemon uses to determine frequency.
     """
+
     readings: List[EntropyReading] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -360,6 +367,7 @@ class EntropyAggregator(Protocol):
 # ENTROPY PROTOCOL DEFINITION - Self-Reference
 # =============================================================================
 
+
 class EntropyProtocolDef(MahamantraProtocolBase):
     """
     The Entropy Protocol.
@@ -396,6 +404,7 @@ class EntropyProtocolDef(MahamantraProtocolBase):
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 def pain_to_frequency(pain: float) -> float:
     """

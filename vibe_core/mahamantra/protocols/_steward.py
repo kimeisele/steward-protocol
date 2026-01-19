@@ -38,7 +38,6 @@ WATERTIGHT: No Any types. All typed explicitly.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -72,10 +71,10 @@ from vibe_core.mahamantra.protocols._core import (
 
 from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,
-    KSHETRA as KSETRA,       # 24 - The field (prakriti elements)
-    KSETRAJNA,               # 1 - The knower (Krishna)
-    MAHAJANAS,               # 12 - The authorities
-    WORDS as POSITIONS,      # 16 - Total positions
+    KSHETRA as KSETRA,  # 24 - The field (prakriti elements)
+    KSETRAJNA,  # 1 - The knower (Krishna)
+    MAHAJANAS,  # 12 - The authorities
+    WORDS as POSITIONS,  # 16 - Total positions
 )
 from vibe_core.mahamantra.protocols._declaration import (
     MahajanaCard,
@@ -110,29 +109,33 @@ STEWARD_VERSION: Final[str] = f"0.{PARAMPARA}.0"  # 37 = Parampara
 # SYSTEM MODES
 # =============================================================================
 
+
 class StewardMode(str, Enum):
     """Operating modes of the Steward."""
-    SEED = "seed"           # Initialization mode
-    AWAKENING = "awakening" # Coming online
-    ACTIVE = "active"       # Normal operation
-    GOVERNANCE = "governance" # Reviewing/deciding
-    MAINTENANCE = "maintenance" # Self-repair
-    HIBERNATION = "hibernation" # Minimal operation
-    MOKSHA = "moksha"       # Graceful shutdown
+
+    SEED = "seed"  # Initialization mode
+    AWAKENING = "awakening"  # Coming online
+    ACTIVE = "active"  # Normal operation
+    GOVERNANCE = "governance"  # Reviewing/deciding
+    MAINTENANCE = "maintenance"  # Self-repair
+    HIBERNATION = "hibernation"  # Minimal operation
+    MOKSHA = "moksha"  # Graceful shutdown
 
 
 class StewardHealth(str, Enum):
     """Health states of the Steward."""
-    PRISTINE = "pristine"   # Perfect health
-    HEALTHY = "healthy"     # Normal operation
-    DEGRADED = "degraded"   # Some issues
-    CRITICAL = "critical"   # Major issues
-    FAILING = "failing"     # System failing
+
+    PRISTINE = "pristine"  # Perfect health
+    HEALTHY = "healthy"  # Normal operation
+    DEGRADED = "degraded"  # Some issues
+    CRITICAL = "critical"  # Major issues
+    FAILING = "failing"  # System failing
 
 
 # =============================================================================
 # SYSTEM STATE
 # =============================================================================
+
 
 @dataclass
 class StewardState:
@@ -197,6 +200,7 @@ class StewardState:
 # SYSTEM AUDIT
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class StewardAudit:
     """
@@ -243,6 +247,7 @@ class StewardAudit:
 # =============================================================================
 # THE STEWARD SYSTEM
 # =============================================================================
+
 
 class StewardSystem:
     """
@@ -373,9 +378,7 @@ class StewardSystem:
         for name, proto in self._protocols.items():
             valid, violations = proto.validate()
             if not valid:
-                protocol_issues.extend(
-                    f"{name}: {v}" for v in violations
-                )
+                protocol_issues.extend(f"{name}: {v}" for v in violations)
             # Check parampara connection
             identity = proto.get_identity()
             if identity.parampara_vector % PARAMPARA != 0:
@@ -402,6 +405,7 @@ class StewardSystem:
 # =============================================================================
 # STEWARD PROTOCOL - The Interface
 # =============================================================================
+
 
 @runtime_checkable
 class StewardProtocol(Protocol):
@@ -446,6 +450,7 @@ class StewardProtocol(Protocol):
 # =============================================================================
 # STEWARD PROTOCOL DEFINITION - Self-Reference
 # =============================================================================
+
 
 class StewardProtocolDef(MahamantraProtocolBase):
     """
@@ -494,6 +499,7 @@ assert _valid, f"StewardProtocol failed validation: {_violations}"
 # =============================================================================
 # CONVENIENCE: Get the global Steward
 # =============================================================================
+
 
 def get_steward() -> StewardSystem:
     """

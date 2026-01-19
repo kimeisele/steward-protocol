@@ -23,28 +23,24 @@ CONCEPTS:
 
 from typing import Protocol, runtime_checkable
 
+
 @runtime_checkable
 class OrbitProtocol(Protocol):
     """
     Interface for the Orbital Calculator (Jyotisha).
     Determines if an entity should act at a given cosmic moment.
     """
-    
-    def should_dance(
-        self, 
-        current_tick: int, 
-        entity_id: str, 
-        kaksha_modulus: int = 16
-    ) -> bool:
+
+    def should_dance(self, current_tick: int, entity_id: str, kaksha_modulus: int = 16) -> bool:
         """
         Determine if it's time to dance.
-        
+
         Args:
             current_tick: The absolute cosmic tick count.
             entity_id: Unique string ID of the entity (for Phase Shift).
             kaksha_modulus: The frequency orbit (16=Mantra, 48=Lila, etc).
                             Default is 16 (Every Mantra).
-                            
+
         Returns:
             True if (current_tick + hash(entity_id)) % kaksha_modulus == 0
         """

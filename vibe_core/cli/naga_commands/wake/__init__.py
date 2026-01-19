@@ -26,8 +26,8 @@ from vibe_core.cli.naga_commands.wake.resources import ResourcesCommand
 from vibe_core.cli.naga_commands.wake.context import ContextCommand
 
 __all__ = [
-    "StatusCommand",     # PRITHU - SYS_WAKE (Position 0)
-    "IdentityCommand",   # BRAHMA - LOAD_ROOT (Position 1)
+    "StatusCommand",  # PRITHU - SYS_WAKE (Position 0)
+    "IdentityCommand",  # BRAHMA - LOAD_ROOT (Position 1)
     "ResourcesCommand",  # NARADA - ALLOC_MEM (Position 2)
-    "ContextCommand",    # SHAMBHU - BIND_CTX (Position 3)
+    "ContextCommand",  # SHAMBHU - BIND_CTX (Position 3)
 ]

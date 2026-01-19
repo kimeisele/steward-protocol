@@ -1,4 +1,3 @@
-
 """
 PRABHUPADA PROTOCOL - The Transparent Link
 ==========================================
@@ -30,11 +29,12 @@ __genesis__ = "0xLINK3737"
 
 from typing import Protocol, runtime_checkable
 
+
 @runtime_checkable
 class PrabhupadaProtocol(Protocol):
     """
     The Interface of the Acharya.
-    
+
     He is the "Transparent Via Medium".
     He does not invent the truth; he transmits it.
     """
@@ -42,15 +42,15 @@ class PrabhupadaProtocol(Protocol):
     def verify_link(self, component: object) -> bool:
         """
         Verify if a component is connected to the Parampara.
-        
+
         The Check:
         1. Does component have Identity (mahajana/position)?
         2. Does component have Genesis signature?
         3. Is the signature valid against the 37?
-        
+
         Args:
             component: The object to check (must be GAD-compliant or aspiring).
-            
+
         Returns:
             True if connected, False if disconnected (Sahajiya).
         """
@@ -59,13 +59,13 @@ class PrabhupadaProtocol(Protocol):
     def transmit(self, seed: str) -> str:
         """
         Transmit the instruction (Seed) without distortion.
-        
+
         "As It Is" - The output must match the input essence,
         translated for time/place/circumstance.
-        
+
         Args:
             seed: The original instruction/seed.
-            
+
         Returns:
             The instruction ready for execution.
         """

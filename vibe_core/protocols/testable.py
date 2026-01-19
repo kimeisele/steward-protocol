@@ -177,7 +177,7 @@ class BaseTestable(ABC):
 
     Provides common functionality and default implementations.
     """
-    
+
     def _bool_to_holy_name(self, result: bool) -> HolyName:
         """
         Converts raw boolean reality to Holy Name.
@@ -192,11 +192,11 @@ class BaseTestable(ABC):
         This represents the component's 'Karma'.
         """
         trits = [self._bool_to_holy_name(r) for r in results]
-        
+
         # Pad with HARE (Potential/Silence) to fill the byte (16 trits)
         while len(trits) < 16:
             trits.append(HolyName.HARE)
-            
+
         # If we have more than 16, we compress or truncate (Fractal View)
         # For now, taking the first 16 (The Standard Mantra Length)
         mb = MantraByte.from_trits(trits[:16])
@@ -213,21 +213,21 @@ class BaseTestable(ABC):
         Returns a diagnosis based on Mantra Coherence.
         """
         mb = self.calculate_mantra(results)
-        
+
         # Check for VOID (Maya) directly in the sequence
         # We need to peek into the trits.
         if any(r is False for r in results):
-             return f"RED (MAYA DETECTED) - One or more tests entered VOID state."
+            return f"RED (MAYA DETECTED) - One or more tests entered VOID state."
 
-        coherence = mb.coherence # 0.0 to 1.0 (Calculated in byte.py)
-        
+        coherence = mb.coherence  # 0.0 to 1.0 (Calculated in byte.py)
+
         # The Thresholds of Reality
         if coherence >= 0.95:
-             return f"GREEN (VAIKUNTHA) - Pure Resonance ({coherence:.2f})"
+            return f"GREEN (VAIKUNTHA) - Pure Resonance ({coherence:.2f})"
         elif coherence >= 0.75:
-             return f"YELLOW (MATERIAL) - Functional but noisy ({coherence:.2f})"
+            return f"YELLOW (MATERIAL) - Functional but noisy ({coherence:.2f})"
         else:
-             return f"ORANGE (STRUGGLING) - Low Coherence ({coherence:.2f})"
+            return f"ORANGE (STRUGGLING) - Low Coherence ({coherence:.2f})"
 
     @property
     @abstractmethod

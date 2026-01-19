@@ -2,10 +2,10 @@
 BALARAMA PROTOCOL - The Strength / The Injector
 ===============================================
 
-Balarama is the First Expansion. He provides the strength (Bala) 
+Balarama is the First Expansion. He provides the strength (Bala)
 to maintain the existence.
 
-In the Runtime, Balarama acts as the INJECTOR. 
+In the Runtime, Balarama acts as the INJECTOR.
 He takes a raw object and infuses it with Life (Gene).
 """
 
@@ -25,24 +25,27 @@ from vibe_core.protocols.naga.proxy import NagaProxy
 
 T = TypeVar("T")
 
+
 @runtime_checkable
 class BalaramaProtocol(Protocol):
-    def inject(self, target: T, gene: iGene) -> T:
-        ...
+    def inject(self, target: T, gene: iGene) -> T: ...
+
 
 class BalaramaInjector(BalaramaProtocol):
     """
     The Strength Provider.
     Wraps objects in the NagaProxy to enable Genetic Runtime.
     """
+
     def inject(self, target: T, gene: iGene) -> T:
         """
         Infuses the target with the iGene.
         Returns a Proxy that mutates execution based on the Gene.
         """
-        # If target is already proxied, we might merge genes? 
+        # If target is already proxied, we might merge genes?
         # For now, we just wrap.
-        return NagaProxy(target, gene) # type: ignore
+        return NagaProxy(target, gene)  # type: ignore
+
 
 # Alias for compatibility with NagaBase
 BalaramaProxy = NagaProxy

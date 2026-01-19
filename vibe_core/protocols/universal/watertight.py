@@ -33,13 +33,15 @@ from typing import Any, Protocol, Type, runtime_checkable, get_type_hints
 # THE 6 OPULENCES (Audit Criteria)
 # =============================================================================
 
+
 class Opulence(Enum):
-    AISHVARYA = "Aishvarya (Economy)"     # Resource accounting
-    VIRYA = "Virya (Strength/Defense)"    # Error handling spec
-    YASHAS = "Yashas (Identity/Fame)"     # Signatures/Context
-    SHRI = "Shri (Beauty/Form)"           # Typing perfection
-    JNANA = "Jnana (Knowledge)"           # Documentation depth
+    AISHVARYA = "Aishvarya (Economy)"  # Resource accounting
+    VIRYA = "Virya (Strength/Defense)"  # Error handling spec
+    YASHAS = "Yashas (Identity/Fame)"  # Signatures/Context
+    SHRI = "Shri (Beauty/Form)"  # Typing perfection
+    JNANA = "Jnana (Knowledge)"  # Documentation depth
     VAIRAGYA = "Vairagya (Renunciation)"  # Cleanup/Closing
+
 
 @runtime_checkable
 class Watertight(Protocol):
@@ -47,7 +49,9 @@ class Watertight(Protocol):
     The Meta-Protocol.
     Classes implementing this promise to be structurally perfect.
     """
+
     pass
+
 
 class WatertightValidator:
     """
@@ -74,21 +78,21 @@ class WatertightValidator:
         for name, member in inspect.getmembers(protocol):
             if name.startswith("_") or not inspect.isfunction(member):
                 continue
-            
+
             try:
                 # Inspect signatures
                 hints = get_type_hints(member)
-                
+
                 # Check for 'Any' (The Stain on Beauty)
                 for param_name, param_type in hints.items():
                     if _is_any(param_type):
-                         type_leaks.append(f"{name}:{param_name}")
-                
+                        type_leaks.append(f"{name}:{param_name}")
+
                 # Check Return Type
-                if 'return' not in hints:
-                     type_leaks.append(f"{name}:return_missing")
-                elif _is_any(hints['return']):
-                     type_leaks.append(f"{name}:return_is_Any")
+                if "return" not in hints:
+                    type_leaks.append(f"{name}:return_missing")
+                elif _is_any(hints["return"]):
+                    type_leaks.append(f"{name}:return_is_Any")
 
             except Exception:
                 # Introspection failed or no type hints found
@@ -103,12 +107,13 @@ class WatertightValidator:
         # Does the protocol require Context/Identity?
         has_identity = False
         for name, member in inspect.getmembers(protocol):
-            if not inspect.isfunction(member): continue
+            if not inspect.isfunction(member):
+                continue
             sig = inspect.signature(member)
-            if any(p in sig.parameters for p in ['context', 'identity', 'signer', 'certificate', 'caller_id']):
+            if any(p in sig.parameters for p in ["context", "identity", "signer", "certificate", "caller_id"]):
                 has_identity = True
                 break
-        
+
         if has_identity:
             opulences_found.add(Opulence.YASHAS)
         else:
@@ -118,12 +123,13 @@ class WatertightValidator:
         # Does it define explicit Raises in docstrings?
         has_raises = False
         for name, member in inspect.getmembers(protocol):
-            if not inspect.isfunction(member): continue
+            if not inspect.isfunction(member):
+                continue
             doc = member.__doc__ or ""
-            if "Raises" in doc or "Returns" in doc: # Basic structure check
+            if "Raises" in doc or "Returns" in doc:  # Basic structure check
                 has_raises = True
                 break
-        
+
         if has_raises:
             opulences_found.add(Opulence.VIRYA)
         else:
@@ -131,41 +137,40 @@ class WatertightValidator:
 
         # 5. VAIRAGYA CHECK (Renunciation/Cleanup)
         # Is there a close/release/unbind mechanism?
-        has_cleanup = any(m in dir(protocol) for m in ['close', 'stop', 'unbind', 'release', 'dispose', 'deactivate', 'shutdown'])
+        has_cleanup = any(
+            m in dir(protocol) for m in ["close", "stop", "unbind", "release", "dispose", "deactivate", "shutdown"]
+        )
         if has_cleanup:
             opulences_found.add(Opulence.VAIRAGYA)
         else:
-             leaks.append(f"⚠️ [VAIRAGYA] No explicit cleanup/unbind method found.")
+            leaks.append(f"⚠️ [VAIRAGYA] No explicit cleanup/unbind method found.")
 
         # 6. AISHVARYA CHECK (Economy)
         # Hard to check statically, but we check for 'metrics' or 'cost' awareness
-        opulences_found.add(Opulence.AISHVARYA) # Assumed implicit unless proven otherwise for now
+        opulences_found.add(Opulence.AISHVARYA)  # Assumed implicit unless proven otherwise for now
 
         # VERDICT
         sealed = len(leaks) == 0
-        
-        return {
-            "sealed": sealed,
-            "score": f"{len(opulences_found)}/6",
-            "leaks": leaks,
-            "protocol": protocol.__name__
-        }
+
+        return {"sealed": sealed, "score": f"{len(opulences_found)}/6", "leaks": leaks, "protocol": protocol.__name__}
+
 
 def _is_any(annotation: Any) -> bool:
     """Detects if an annotation is typing.Any or Unannotated."""
     str_val = str(annotation)
     return "typing.Any" in str_val or annotation is Any
 
+
 def watertight(cls):
     """
     Decorator that enforces the Watertight Standard at import time.
     """
     if not issubclass(cls, Protocol) and not getattr(cls, "_is_protocol", False):
-         pass
-         
+        pass
+
     report = WatertightValidator.inspect(cls)
     if not report["sealed"]:
         leak_msg = "\n".join(report["leaks"])
         print(f"🌊 [WATERTIGHT WARNING] {cls.__name__} failed audit ({report['score']}):\n{leak_msg}")
-        
+
     return cls

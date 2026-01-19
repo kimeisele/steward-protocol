@@ -43,12 +43,14 @@ from vibe_core.protocols.cognition import IntentType, CognitiveResult
 # STRICT TYPES (NO ANY)
 # =============================================================================
 
+
 class ChatMode(str, Enum):
     """Mode of chat interaction."""
-    DIRECT = "direct"          # Direct LLM response
-    ROUTED = "routed"          # Route to Mahajana
-    SYSCALL = "syscall"        # Execute syscall
-    QUERY = "query"            # Query data
+
+    DIRECT = "direct"  # Direct LLM response
+    ROUTED = "routed"  # Route to Mahajana
+    SYSCALL = "syscall"  # Execute syscall
+    QUERY = "query"  # Query data
 
 
 @dataclass(frozen=True)
@@ -58,6 +60,7 @@ class ChatMessage:
 
     Strict typing - no Any allowed.
     """
+
     content: str
     role: str  # "user", "assistant", "system"
     timestamp: datetime = field(default_factory=datetime.now)
@@ -78,6 +81,7 @@ class ChatResponse:
 
     Strictly typed - no Any.
     """
+
     success: bool
     message: ChatMessage
 
@@ -102,6 +106,7 @@ class ChatContext:
 
     Contains session info, history, and sovereign identity.
     """
+
     session_id: str
 
     # Conversation history (typed messages)
@@ -118,6 +123,7 @@ class ChatContext:
 # =============================================================================
 # CHAT PROTOCOL (THE CONTRACT)
 # =============================================================================
+
 
 @runtime_checkable
 class ChatProtocol(Protocol):
@@ -165,11 +171,7 @@ class ChatProtocol(Protocol):
     # CHAT OPERATIONS
     # ==========================================================================
 
-    async def chat(
-        self,
-        message: str,
-        context: ChatContext
-    ) -> ChatResponse:
+    async def chat(self, message: str, context: ChatContext) -> ChatResponse:
         """
         Process a chat message.
 
@@ -187,12 +189,7 @@ class ChatProtocol(Protocol):
         """
         ...
 
-    async def chat_with_routing(
-        self,
-        message: str,
-        context: ChatContext,
-        force_routing: bool = False
-    ) -> ChatResponse:
+    async def chat_with_routing(self, message: str, context: ChatContext, force_routing: bool = False) -> ChatResponse:
         """
         Chat with explicit Mahajana routing.
 

@@ -27,6 +27,7 @@ from vibe_core.protocols.substrate.byte import MantraByte
 
 # Import Universal (0) - using TYPE_CHECKING to avoid circular imports
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from vibe_core.protocols.universal.types import SovereignContext, ProtectedMemory
 
@@ -35,15 +36,16 @@ if TYPE_CHECKING:
 # THE PROTOCOL (The Divine Contract)
 # =============================================================================
 
+
 @runtime_checkable
 class PrahladProtocol(Protocol):
     """
     The Interface for System Memory.
     Requires Identity (Sovereign Context) for all operations.
-    
+
     PHASE 30: Protocol-First (No more phantom imports).
     """
-    
+
     def remember(self, key: str, value: Any, mantra: MantraByte) -> bool:
         """
         Stores a memory. Returns True if accepted (Resonance).
@@ -69,14 +71,16 @@ class PrahladProtocol(Protocol):
 # NULL IMPLEMENTATION (The Silent Witness)
 # =============================================================================
 
+
 class NullPrahlad:
     """
     The Silent Witness.
     Used in tests where Memory is not the focus.
     Returns 'Success' but stores nothing (Akarma).
-    
+
     Implements PrahladProtocol via structural typing.
     """
+
     def remember(self, key: str, value: Any, mantra: MantraByte) -> bool:
         return True  # Acknowledge without attachment
 
@@ -98,11 +102,13 @@ from vibe_core.protocols.types import PersonProtocol
 # T_Sacred: The type of data we are protecting (e.g., str, bytes, Model)
 T_Sacred = TypeVar("T_Sacred")
 
+
 class PrahladMemory(Generic[T_Sacred]):
     """
     A Typed Memory Store that defies Entropy.
     The Active Devotee Implementation of PrahladProtocol.
     """
+
     def __init__(self, entropy_intensity: float = 10.0):
         self._store: Dict[str, EntropyState] = {}
         self._data: Dict[str, T_Sacred] = {}  # Strictly Typed

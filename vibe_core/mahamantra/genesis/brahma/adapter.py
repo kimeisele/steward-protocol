@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 # BRAHMA ADAPTER (Position 1: Genesis/Creation)
 # =============================================================================
 
+
 class BrahmaAdapter(GADBase, GADProtocol):
     """
     Explicit adapter for BrahmaService → Mahamantra Position 1.
@@ -67,8 +68,7 @@ class BrahmaAdapter(GADBase, GADProtocol):
         # PROTOCOL VERIFICATION (No silent acceptance!)
         if not verify_brahma_protocol(legacy_service):
             raise TypeError(
-                f"Service {type(legacy_service).__name__} does not implement "
-                "BrahmaServiceProtocol. Cannot adapt."
+                f"Service {type(legacy_service).__name__} does not implement BrahmaServiceProtocol. Cannot adapt."
             )
 
         # Initialize GAD compliance
@@ -79,6 +79,7 @@ class BrahmaAdapter(GADBase, GADProtocol):
 
         # Position identity (from _seed.py, not hardcoded)
         from vibe_core.mahamantra.substrate.seed import get_mahajana_position
+
         self._position: int = get_mahajana_position("brahma")
         self._mahajana: str = "brahma"
         self._quarter: str = "genesis"
@@ -130,10 +131,7 @@ class BrahmaAdapter(GADBase, GADProtocol):
             # Log success
             ready = status.get("ready", False)
             agents_count = status.get("agents_count", 0)
-            logger.debug(
-                f"✓ Brahma tick #{self._tick_count}: "
-                f"ready={ready}, agents={agents_count}"
-            )
+            logger.debug(f"✓ Brahma tick #{self._tick_count}: ready={ready}, agents={agents_count}")
 
             # Clear last error on success
             self._last_error = None
@@ -162,7 +160,7 @@ class BrahmaAdapter(GADBase, GADProtocol):
             offer(
                 content={"adapter": "brahma", "error": error, "tick": self._tick_count},
                 purpose="log_emit",
-                actor="BrahmaAdapter"
+                actor="BrahmaAdapter",
             )
         except Exception as e:
             # Even audit reporting can fail - log it
@@ -172,12 +170,7 @@ class BrahmaAdapter(GADBase, GADProtocol):
     # DELEGATION TO LEGACY SERVICE (Explicit, typed)
     # =========================================================================
 
-    def register_agent(
-        self,
-        kernel: object,
-        agent: object,
-        spawn_process: bool = True
-    ) -> None:
+    def register_agent(self, kernel: object, agent: object, spawn_process: bool = True) -> None:
         """
         Delegate agent registration to legacy BrahmaService.
 
@@ -289,11 +282,7 @@ class BrahmaAdapter(GADBase, GADProtocol):
         return self._tick_count
 
     def __repr__(self) -> str:
-        return (
-            f"BrahmaAdapter(position={self._position}, "
-            f"ticks={self._tick_count}, "
-            f"healthy={self.is_healthy()})"
-        )
+        return f"BrahmaAdapter(position={self._position}, ticks={self._tick_count}, healthy={self.is_healthy()})"
 
 
 # =============================================================================

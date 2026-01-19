@@ -168,7 +168,10 @@ class MemoryStore(AkashicProtocol, PrahladaProtocol):
             # Prune old memories before saving
             self._prune_old_memories()
 
-            data = {"memories": [m.to_dict() for m in self._memories], "updated_at": datetime.now(timezone.utc).isoformat()}
+            data = {
+                "memories": [m.to_dict() for m in self._memories],
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
 
             # Atomic write
             temp_file = self._memory_file.with_suffix(".tmp")

@@ -11,7 +11,6 @@ It uses the CodeScanner to detect structural smells:
  When the skeleton is weak, the mind cannot act with power."
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

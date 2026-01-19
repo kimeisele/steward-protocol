@@ -31,7 +31,6 @@ USAGE:
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -64,22 +63,22 @@ from vibe_core.protocols.substrate.mantra.acintya import PARAMPARA
 
 # The 16 positions map to opcodes (from _source.py truth table)
 GATE_OPCODES: Final[Dict[int, str]] = {
-    0: "wake",       # Prithu - GENESIS HEAD
-    1: "create",     # Brahma
+    0: "wake",  # Prithu - GENESIS HEAD
+    1: "create",  # Brahma
     2: "broadcast",  # Narada
-    3: "destroy",    # Shambhu
-    4: "assert",     # Vyasa - DHARMA HEAD
-    5: "purify",     # Kumaras
-    6: "analyze",    # Kapila
-    7: "sync",       # Manu
-    8: "fetch",      # Parashurama - KARMA HEAD
-    9: "execute",    # Prahlada
-    10: "check",     # Janaka
-    11: "commit",    # Bhishma
-    12: "cache",     # Nrisimha - MOKSHA HEAD
-    13: "surrender", # Bali
-    14: "view",      # Shuka
-    15: "judge",     # Yamaraja
+    3: "destroy",  # Shambhu
+    4: "assert",  # Vyasa - DHARMA HEAD
+    5: "purify",  # Kumaras
+    6: "analyze",  # Kapila
+    7: "sync",  # Manu
+    8: "fetch",  # Parashurama - KARMA HEAD
+    9: "execute",  # Prahlada
+    10: "check",  # Janaka
+    11: "commit",  # Bhishma
+    12: "cache",  # Nrisimha - MOKSHA HEAD
+    13: "surrender",  # Bali
+    14: "view",  # Shuka
+    15: "judge",  # Yamaraja
 }
 
 # Reverse lookup: opcode → position
@@ -98,6 +97,7 @@ QUARTER_GATES: Final[Dict[LotusQuarter, Tuple[int, int, int, int]]] = {
 # GATE RESULT (Structured Output)
 # =============================================================================
 
+
 @dataclass
 class GateResult:
     """
@@ -105,6 +105,7 @@ class GateResult:
 
     WATERTIGHT - no Any types.
     """
+
     success: bool
     exit_code: int
     position: int
@@ -175,6 +176,7 @@ def _init_gate(base_path: Optional[Path] = None) -> bool:
 # GATE 2: ROUTE GATE (Nityananda) - Routing
 # =============================================================================
 
+
 def route_gate(command: str) -> Tuple[int, str]:
     """
     ROUTE GATE (Nityananda) - The Original Guru routes to Krishna.
@@ -214,6 +216,7 @@ def route_gate(command: str) -> Tuple[int, str]:
 # =============================================================================
 # GATE 3: EXECUTE GATE (Run Protocol Method)
 # =============================================================================
+
 
 def execute_gate(
     position: int,
@@ -331,6 +334,7 @@ def execute_gate(
 # GATE 4: RESULT GATE (Format Output)
 # =============================================================================
 
+
 def format_result(result: GateResult) -> str:
     """Format GateResult as string (no printing)."""
     if result.success:
@@ -363,6 +367,7 @@ def result_gate(result: GateResult, silent: bool = False) -> int:
 # =============================================================================
 # GATE (Chaitanya) - The Main Entry
 # =============================================================================
+
 
 def gate(command: str, args: Optional[List[str]] = None) -> GateResult:
     """
@@ -401,6 +406,7 @@ def gate(command: str, args: Optional[List[str]] = None) -> GateResult:
 # =============================================================================
 # GATE 5: SYNC GATE (Srivasa) - Parallel Execution
 # =============================================================================
+
 
 def _parse_command(cmd_string: str) -> Tuple[str, List[str]]:
     """Parse command string into (command, args)."""
@@ -454,10 +460,7 @@ def sync_gate(
 
     # Execute in parallel using ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {
-            executor.submit(_execute_single, cmd): cmd
-            for cmd in commands
-        }
+        futures = {executor.submit(_execute_single, cmd): cmd for cmd in commands}
 
         if preserve_order:
             # Collect results maintaining input order
@@ -478,6 +481,7 @@ cli_gate = gate
 # =============================================================================
 # CONVENIENCE: Direct CLI Entry
 # =============================================================================
+
 
 def gate_main(argv: Optional[List[str]] = None) -> int:
     """
@@ -527,12 +531,12 @@ __all__ = [
     "GateResult",
     "format_result",
     # THE 5 GATES (Pancha Tattva)
-    "gate",          # 1. Chaitanya - Main entry
-    "route_gate",    # 2. Nityananda - Routing
+    "gate",  # 1. Chaitanya - Main entry
+    "route_gate",  # 2. Nityananda - Routing
     "execute_gate",  # 3. Advaita - Execution
-    "result_gate",   # 4. Gadadhara - Result
-    "sync_gate",     # 5. Srivasa - Parallel
+    "result_gate",  # 4. Gadadhara - Result
+    "sync_gate",  # 5. Srivasa - Parallel
     # Aliases
-    "cli_gate",      # Alias for gate
+    "cli_gate",  # Alias for gate
     "gate_main",
 ]

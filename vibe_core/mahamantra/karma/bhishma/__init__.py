@@ -36,11 +36,13 @@ def __getattr__(name: str) -> object:
     """
     if name == "BhishmaService":
         from vibe_core.services.bhishma_service import BhishmaService
+
         return BhishmaService
-    
+
     # Fallback to protocol definitions if needed (for types)
     try:
         import importlib
+
         module = importlib.import_module("vibe_core.mahamantra.karma.bhishma.protocol")
         return getattr(module, name)
     except (ImportError, AttributeError):

@@ -44,7 +44,6 @@ Pattern: Singleton with caching (follows triggers.py pattern)
 OPUS Reference: OPUS-210-STATE-UNIFICATION, OPUS-171
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

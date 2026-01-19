@@ -40,7 +40,6 @@ The wrapped CLI gains substrate connection without code changes.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -347,9 +346,7 @@ class BalaramaRegistry:
         cls._wrapped[command] = wrapped
 
         logger.info(
-            f"🔱 Balarama wrapped: {command} "
-            f"(pos={wrapped.substrate_node.position}, "
-            f"connected={wrapped.is_connected})"
+            f"🔱 Balarama wrapped: {command} (pos={wrapped.substrate_node.position}, connected={wrapped.is_connected})"
         )
 
         return wrapped
@@ -708,33 +705,23 @@ def discover_cli_folder(
                     if wrap and not BalaramaRegistry.is_wrapped(command):
                         # Check if already has substrate (via @register_cli)
                         has_substrate = (
-                            hasattr(instance.meta, "lotus_position")
-                            and instance.meta.lotus_position is not None
+                            hasattr(instance.meta, "lotus_position") and instance.meta.lotus_position is not None
                         )
 
                         if not has_substrate:
                             try:
                                 BalaramaRegistry.wrap(instance, command)
                                 result["wrapped"] += 1
-                                logger.info(
-                                    f"🔱 Auto-discovered & wrapped: {command} "
-                                    f"from {cli_file.name}"
-                                )
+                                logger.info(f"🔱 Auto-discovered & wrapped: {command} from {cli_file.name}")
                             except Exception as wrap_err:
                                 result["failed"] += 1
-                                result["errors"].append(
-                                    f"Wrap failed for {command}: {wrap_err}"
-                                )
+                                result["errors"].append(f"Wrap failed for {command}: {wrap_err}")
                         else:
-                            logger.debug(
-                                f"Skipped {command} - already has substrate"
-                            )
+                            logger.debug(f"Skipped {command} - already has substrate")
 
                 except TypeError as te:
                     # CLI requires constructor arguments - can't auto-wrap
-                    result["errors"].append(
-                        f"{name} requires constructor args: {te}"
-                    )
+                    result["errors"].append(f"{name} requires constructor args: {te}")
                 except Exception as e:
                     result["failed"] += 1
                     result["errors"].append(f"Failed to process {name}: {e}")
@@ -799,9 +786,7 @@ def auto_discover_all_clis(
     return results
 
 
-def get_discovery_summary(
-    results: Dict[str, CLIDiscoveryResult]
-) -> Dict[str, Union[int, List[str]]]:
+def get_discovery_summary(results: Dict[str, CLIDiscoveryResult]) -> Dict[str, Union[int, List[str]]]:
     """
     Get summary of discovery results.
 

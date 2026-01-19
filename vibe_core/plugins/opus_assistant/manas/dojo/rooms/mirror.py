@@ -29,7 +29,6 @@ wiring:
 -->
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

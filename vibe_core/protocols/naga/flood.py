@@ -44,15 +44,18 @@ from vibe_core.protocols.substrate import MantraOpCode
 # FLOOD LAYER ENUM
 # =============================================================================
 
+
 class FloodLayer(str, Enum):
     """The three layers of NAGA flooding."""
-    EVENT_BUS = "event_bus"       # Layer 1: All events
-    SIGNAL_BUS = "signal_bus"     # Layer 2: Critical signals
+
+    EVENT_BUS = "event_bus"  # Layer 1: All events
+    SIGNAL_BUS = "signal_bus"  # Layer 2: Critical signals
     INTELLIGENCE = "intelligence"  # Layer 3: Insights to consumers
 
 
 class FloodStatus(str, Enum):
     """Status of the flood system."""
+
     INACTIVE = "inactive"
     STARTING = "starting"
     ACTIVE = "active"
@@ -64,6 +67,7 @@ class FloodStatus(str, Enum):
 # FLOOD STATS (Strict Typed)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class FloodStats:
     """
@@ -71,6 +75,7 @@ class FloodStats:
 
     GAD-000: Observable, Parseable
     """
+
     events_seen: int = 0
     events_skipped_recursion: int = 0
     events_skipped_noise: int = 0
@@ -103,6 +108,7 @@ class FloodConfig:
 
     Immutable to prevent runtime tampering.
     """
+
     max_analysis_queue: int = 1000
     analysis_timeout_ms: int = 50
     queue_wait_timeout_seconds: float = 5.0
@@ -116,6 +122,7 @@ class FloodConfig:
 # FLOOD SIGNAL (For Cortex Integration)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class FloodSignal:
     """
@@ -123,6 +130,7 @@ class FloodSignal:
 
     Contains observation data for correlation.
     """
+
     source_id: str
     event_type: str
     agent_id: Optional[str]
@@ -139,6 +147,7 @@ FloodCortexCallback = Callable[[FloodSignal], None]
 # FLOOD OBSERVATION (What we broadcast)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class FloodObservation:
     """
@@ -146,10 +155,11 @@ class FloodObservation:
 
     This is the INTELLIGENCE that chat can use.
     """
+
     observation_type: str  # "toxicity", "anomaly", "pattern", "alert"
-    severity: str          # "info", "warning", "critical"
-    source: str            # Which NAGA made this observation
-    summary: str           # Human-readable summary
+    severity: str  # "info", "warning", "critical"
+    source: str  # Which NAGA made this observation
+    summary: str  # Human-readable summary
     details: Tuple[Tuple[str, str], ...]  # Key-value pairs (immutable)
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -162,6 +172,7 @@ class FloodObservation:
 # =============================================================================
 # FLOOD PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class FloodProtocol(Protocol):
@@ -246,10 +257,7 @@ class FloodProtocol(Protocol):
     # INTELLIGENCE PROPAGATION
     # =========================================================================
 
-    def subscribe_observations(
-        self,
-        callback: Callable[[FloodObservation], None]
-    ) -> str:
+    def subscribe_observations(self, callback: Callable[[FloodObservation], None]) -> str:
         """
         Subscribe to flood observations.
 
@@ -267,11 +275,7 @@ class FloodProtocol(Protocol):
         """
         ...
 
-    def get_recent_observations(
-        self,
-        limit: int = 10,
-        severity: Optional[str] = None
-    ) -> List[FloodObservation]:
+    def get_recent_observations(self, limit: int = 10, severity: Optional[str] = None) -> List[FloodObservation]:
         """
         Get recent observations.
 
@@ -296,6 +300,7 @@ class FloodProtocol(Protocol):
 # INTELLIGENCE CONSUMER PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class FloodConsumerProtocol(Protocol):
     """
@@ -313,11 +318,7 @@ class FloodConsumerProtocol(Protocol):
         """
         ...
 
-    def get_relevant_observations(
-        self,
-        context: str,
-        limit: int = 5
-    ) -> List[FloodObservation]:
+    def get_relevant_observations(self, context: str, limit: int = 5) -> List[FloodObservation]:
         """
         Get observations relevant to current context.
 
@@ -329,6 +330,7 @@ class FloodConsumerProtocol(Protocol):
 # =============================================================================
 # NULL IMPLEMENTATION
 # =============================================================================
+
 
 class NullFlood:
     """
@@ -361,20 +363,13 @@ class NullFlood:
     def get_layers(self) -> List[FloodLayer]:
         return []
 
-    def subscribe_observations(
-        self,
-        callback: Callable[[FloodObservation], None]
-    ) -> str:
+    def subscribe_observations(self, callback: Callable[[FloodObservation], None]) -> str:
         return "null-subscription"
 
     def unsubscribe_observations(self, subscription_id: str) -> bool:
         return False
 
-    def get_recent_observations(
-        self,
-        limit: int = 10,
-        severity: Optional[str] = None
-    ) -> List[FloodObservation]:
+    def get_recent_observations(self, limit: int = 10, severity: Optional[str] = None) -> List[FloodObservation]:
         return []
 
     def set_cortex_callback(self, callback: FloodCortexCallback) -> None:

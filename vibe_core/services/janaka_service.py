@@ -180,6 +180,7 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
         if current_reactor is None:
             try:
                 from vibe_core.reactor import QuantumReactor
+
                 current_reactor = QuantumReactor(initial_inertia=0.5)
                 logger.info("☢️ JANAKA: QuantumReactor loaded as execution primitive")
                 setattr(kernel, "_reactor", current_reactor)
@@ -203,10 +204,11 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
 
         try:
             from vibe_core.reactor import encode
+
             akasha = self.get_akasha_hash(kernel)
             agent_tensor = encode(f"agent:{agent_id}", akasha)
             cap_tensor = encode(f"capability:{capability}", akasha)
-            field = reactor.resonate(agent_tensor, cap_tensor) # type: ignore
+            field = reactor.resonate(agent_tensor, cap_tensor)  # type: ignore
             return float(min(1.0, field.total_energy))
         except Exception:
             return 0.0
@@ -261,7 +263,7 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
         """🔄 MAIN KERNEL LOOP. Delegated from Kernel."""
         while str(getattr(kernel, "_status", "")) == "RUNNING":
             if hasattr(kernel, "tick_async"):
-                await kernel.tick_async() # type: ignore
+                await kernel.tick_async()  # type: ignore
             await asyncio.sleep(0.1)
 
 

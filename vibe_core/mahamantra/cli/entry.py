@@ -32,7 +32,6 @@ ARCHITECTURE:
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -111,13 +110,13 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
             # Combine all remaining args into message
             message = " ".join(remaining)
             response = gateway_chat(message)
-            
+
             # Print output from GatewayResponse
             print()
             if response.success:
-                 print(response.output)
+                print(response.output)
             else:
-                 print(f"Error: {response.error}")
+                print(f"Error: {response.error}")
             print()
             return response.exit_code
 
@@ -251,6 +250,7 @@ def get_entry() -> MahamantraCLIEntry:
 # =============================================================================
 # ENTRY POINTS
 # =============================================================================
+
 
 def main(argv: Optional[List[str]] = None) -> int:
     """Main entry point."""

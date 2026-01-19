@@ -686,11 +686,13 @@ class Prakriti(PrakritiProtocol):
 
             # Bridge Pattern: State -> AnantaShesha -> Naga
             anchor = get_system_anchor()
-            
+
             # Send pure data dict
             anchor.notify_commit(asdict(result))
-            
-            logger.debug(f"[PRAKRITI] NAGA CommitWatcher notified via Bridge: {result.git_sha[:7] if result.git_sha else 'N/A'}")
+
+            logger.debug(
+                f"[PRAKRITI] NAGA CommitWatcher notified via Bridge: {result.git_sha[:7] if result.git_sha else 'N/A'}"
+            )
         except Exception as e:
             # Non-critical - don't block commits
             logger.debug(f"[PRAKRITI] Bridge notification failed: {e}")

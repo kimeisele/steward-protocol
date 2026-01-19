@@ -46,34 +46,38 @@ from vibe_core.mahamantra.substrate.mahajana import Quarter
 # VIOLATION TYPES (Watertight - no Any)
 # =============================================================================
 
+
 class ViolationType:
     """Types of wiring violations."""
-    ORPHAN_FOLDER: Final[str] = "orphan_folder"      # Folder not in SSOT
-    MISSING_FOLDER: Final[str] = "missing_folder"    # SSOT entry without folder
-    MISSING_DECLARATION: Final[str] = "missing_decl" # No __mahajana__ etc
-    WRONG_POSITION: Final[str] = "wrong_position"    # __position__ doesn't match
-    WRONG_QUARTER: Final[str] = "wrong_quarter"      # Folder in wrong quarter
-    NO_PROTOCOL: Final[str] = "no_protocol"          # No Protocol class
-    NO_NULL: Final[str] = "no_null"                  # No Null implementation
+
+    ORPHAN_FOLDER: Final[str] = "orphan_folder"  # Folder not in SSOT
+    MISSING_FOLDER: Final[str] = "missing_folder"  # SSOT entry without folder
+    MISSING_DECLARATION: Final[str] = "missing_decl"  # No __mahajana__ etc
+    WRONG_POSITION: Final[str] = "wrong_position"  # __position__ doesn't match
+    WRONG_QUARTER: Final[str] = "wrong_quarter"  # Folder in wrong quarter
+    NO_PROTOCOL: Final[str] = "no_protocol"  # No Protocol class
+    NO_NULL: Final[str] = "no_null"  # No Null implementation
 
 
 class Violation(TypedDict):
     """A single wiring violation."""
-    type: str           # ViolationType value
-    path: str           # Folder or file path
-    expected: str       # What SSOT says should be
-    actual: str         # What we found
-    severity: str       # "error" or "warning"
+
+    type: str  # ViolationType value
+    path: str  # Folder or file path
+    expected: str  # What SSOT says should be
+    actual: str  # What we found
+    severity: str  # "error" or "warning"
 
 
 class ValidationResult(TypedDict):
     """Result of wiring validation."""
+
     valid: bool
     violations: List[Violation]
-    wired_count: int        # Correctly wired folders
-    orphan_count: int       # Folders not in SSOT
-    missing_count: int      # SSOT entries without folders
-    coverage: float         # wired_count / 16
+    wired_count: int  # Correctly wired folders
+    orphan_count: int  # Folders not in SSOT
+    missing_count: int  # SSOT entries without folders
+    coverage: float  # wired_count / 16
 
 
 # =============================================================================
@@ -106,6 +110,7 @@ for pos in MAHAMANTRA_POSITIONS:
 # =============================================================================
 # WIRING PROTOCOL (The Enforcement Interface)
 # =============================================================================
+
 
 @runtime_checkable
 class WiringEnforcementProtocol(Protocol):
@@ -146,6 +151,7 @@ class WiringEnforcementProtocol(Protocol):
 # =============================================================================
 # WIRING ENFORCER (The Implementation)
 # =============================================================================
+
 
 class WiringEnforcer:
     """
@@ -201,13 +207,15 @@ class WiringEnforcer:
         for quarter in EXPECTED_QUARTERS:
             quarter_path = self._base / quarter
             if not quarter_path.exists():
-                self._violations.append(Violation(
-                    type=ViolationType.MISSING_FOLDER,
-                    path=str(quarter_path),
-                    expected=quarter,
-                    actual="<missing>",
-                    severity="error",
-                ))
+                self._violations.append(
+                    Violation(
+                        type=ViolationType.MISSING_FOLDER,
+                        path=str(quarter_path),
+                        expected=quarter,
+                        actual="<missing>",
+                        severity="error",
+                    )
+                )
 
     def _validate_positions(self) -> None:
         """Check all positions exist in correct quarters."""
@@ -222,25 +230,29 @@ class WiringEnforcer:
                 expected_index = EXPECTED_PATHS.get(full_path, -1)
 
                 if not pos_path.exists():
-                    self._violations.append(Violation(
-                        type=ViolationType.MISSING_FOLDER,
-                        path=str(pos_path),
-                        expected=full_path,
-                        actual="<missing>",
-                        severity="error",
-                    ))
+                    self._violations.append(
+                        Violation(
+                            type=ViolationType.MISSING_FOLDER,
+                            path=str(pos_path),
+                            expected=full_path,
+                            actual="<missing>",
+                            severity="error",
+                        )
+                    )
                     continue
 
                 # Check __init__.py exists
                 init_file = pos_path / "__init__.py"
                 if not init_file.exists():
-                    self._violations.append(Violation(
-                        type=ViolationType.MISSING_DECLARATION,
-                        path=str(init_file),
-                        expected="__init__.py with __mahajana__, __position__",
-                        actual="<missing>",
-                        severity="error",
-                    ))
+                    self._violations.append(
+                        Violation(
+                            type=ViolationType.MISSING_DECLARATION,
+                            path=str(init_file),
+                            expected="__init__.py with __mahajana__, __position__",
+                            actual="<missing>",
+                            severity="error",
+                        )
+                    )
                     continue
 
                 # Check declarations
@@ -258,32 +270,38 @@ class WiringEnforcer:
             if f'__mahajana__ = "{expected_name}"' not in content:
                 # Try single quotes
                 if f"__mahajana__ = '{expected_name}'" not in content:
-                    self._violations.append(Violation(
-                        type=ViolationType.MISSING_DECLARATION,
-                        path=str(init_file),
-                        expected=f'__mahajana__ = "{expected_name}"',
-                        actual="<wrong or missing>",
-                        severity="error",
-                    ))
+                    self._violations.append(
+                        Violation(
+                            type=ViolationType.MISSING_DECLARATION,
+                            path=str(init_file),
+                            expected=f'__mahajana__ = "{expected_name}"',
+                            actual="<wrong or missing>",
+                            severity="error",
+                        )
+                    )
 
             # Check __position__
             if f"__position__ = {expected_index}" not in content:
-                self._violations.append(Violation(
-                    type=ViolationType.WRONG_POSITION,
-                    path=str(init_file),
-                    expected=f"__position__ = {expected_index}",
-                    actual="<wrong or missing>",
-                    severity="error",
-                ))
+                self._violations.append(
+                    Violation(
+                        type=ViolationType.WRONG_POSITION,
+                        path=str(init_file),
+                        expected=f"__position__ = {expected_index}",
+                        actual="<wrong or missing>",
+                        severity="error",
+                    )
+                )
 
         except Exception:
-            self._violations.append(Violation(
-                type=ViolationType.MISSING_DECLARATION,
-                path=str(init_file),
-                expected="readable __init__.py",
-                actual="<read error>",
-                severity="error",
-            ))
+            self._violations.append(
+                Violation(
+                    type=ViolationType.MISSING_DECLARATION,
+                    path=str(init_file),
+                    expected="readable __init__.py",
+                    actual="<read error>",
+                    severity="error",
+                )
+            )
 
     def _find_orphans(self) -> None:
         """Find folders that exist but aren't in SSOT."""
@@ -301,13 +319,15 @@ class WiringEnforcer:
                     continue
 
                 if child.name not in expected_in_quarter:
-                    self._violations.append(Violation(
-                        type=ViolationType.ORPHAN_FOLDER,
-                        path=str(child),
-                        expected="<should not exist>",
-                        actual=child.name,
-                        severity="warning",
-                    ))
+                    self._violations.append(
+                        Violation(
+                            type=ViolationType.ORPHAN_FOLDER,
+                            path=str(child),
+                            expected="<should not exist>",
+                            actual=child.name,
+                            severity="warning",
+                        )
+                    )
 
     def is_wired(self, path: str) -> bool:
         """Check if path is properly wired."""
@@ -325,6 +345,7 @@ class WiringEnforcer:
 # =============================================================================
 # CONVENIENCE FUNCTION
 # =============================================================================
+
 
 def enforce_wiring(mahamantra_path: Path) -> ValidationResult:
     """

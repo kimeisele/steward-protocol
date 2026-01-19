@@ -125,8 +125,7 @@ class UnifiedCLI:
             summary = get_discovery_summary(discovery_results)
             if summary["total_wrapped"] > 0:
                 logger.info(
-                    f"BALARAMA: Auto-discovered {summary['total_discovered']} CLIs, "
-                    f"wrapped {summary['total_wrapped']}"
+                    f"BALARAMA: Auto-discovered {summary['total_discovered']} CLIs, wrapped {summary['total_wrapped']}"
                 )
         except Exception as e:
             logger.debug(f"BALARAMA: Auto-discovery skipped: {e}")
@@ -415,6 +414,7 @@ class UnifiedCLI:
         # śrī-advaita gadādhara śrīvāsādi-gaura-bhakta-vṛnda
         try:
             from vibe_core.cli.gates import gate, result_gate
+
             result = gate(command_name, remaining_args)
             if result.exit_code != 127:  # 127 = command not found
                 return result_gate(result)
@@ -1196,6 +1196,7 @@ class UnifiedCLI:
         """
         # Delegate to LotusCLI (the protocol implementation)
         from vibe_core.cli.lotus_cli import LotusCLI
+
         lotus = LotusCLI()
         return lotus.run(args)
 

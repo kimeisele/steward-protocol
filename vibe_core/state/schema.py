@@ -9,7 +9,6 @@ to eliminate duplication across the codebase.
 "Fragmentation is the source of Tamas. Unity is the path to Sattva."
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

@@ -115,6 +115,7 @@ from vibe_core.mahamantra.substrate.position import (
 # SHADOW REACTOR - The Core Engine (SPAWNBAR)
 # =============================================================================
 
+
 class ShadowReactor(GADBase, ShadowReactorProtocol):
     """
     The Shadow Reactor - Auto-discovery Yajna Engine (SPAWNBAR).
@@ -186,7 +187,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             self._lagna = forced_lagna
         else:
             from vibe_core.mahamantra.substrate.orbit import OrbitCalculator
-            
+
             orbit_calc = OrbitCalculator()
             # Lagna: Personal Phase Offset
             self._lagna = orbit_calc.get_phase_offset(self._reactor_id, modulus=16)
@@ -269,10 +270,10 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
             # Check for reactor methods (any of the 4 phases)
             has_reactor = (
-                hasattr(module, "on_bhoga") or
-                hasattr(module, "on_switch") or
-                hasattr(module, "on_prasadam") or
-                hasattr(module, "on_return")
+                hasattr(module, "on_bhoga")
+                or hasattr(module, "on_switch")
+                or hasattr(module, "on_prasadam")
+                or hasattr(module, "on_return")
             )
 
             if has_reactor:
@@ -316,9 +317,9 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # Or at SWITCH position (8) - the transformation point
         # Or at RETURN position (0) after a cycle - renewal
         return (
-            total_ticks % PARAMPARA == 0 or
-            position == SWITCH_POSITION or  # The 8 Moment
-            (position == RETURN_POSITION and cycle > 0)  # The Return
+            total_ticks % PARAMPARA == 0
+            or position == SWITCH_POSITION  # The 8 Moment
+            or (position == RETURN_POSITION and cycle > 0)  # The Return
         )
 
     def _compute_parampara_coherence(self, position: int, cycle: int) -> float:
@@ -372,16 +373,16 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         """
         # Extract position from tick_state (WATERTIGHT)
         global_position = tick_state["position"]
-        
+
         # APPLY ORBITAL LAGNA (Phase Shift)
         effective_position = (global_position - self._lagna) % 16
-        
+
         previous = self._position  # Current internal position is standard
-        
+
         # Update state with EFFECTIVE position
         self._position = effective_position
         self._previous_position = previous
-        
+
         # Local alias for downstream logic (fixes NameError)
         position = effective_position
 
@@ -397,7 +398,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # =====================================================================
         # 1. Scale frequency (coherence) to COSMIC_FRAME
         frequency_scaled = int(parampara_coherence * COSMIC_FRAME)
-        
+
         # 2. Calculate Grace using integer arithmetic
         self._effective_grace = calculate_grace_scaled(
             frequency_scaled=frequency_scaled,
@@ -462,7 +463,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         """Trigger on_bhoga for all reactors at current position."""
         if not self.is_authorized():
             return  # BLOCKED
-        
+
         position = state["position"]
         listeners = self._listeners.get(position, [])
 
@@ -471,45 +472,44 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
                 try:
                     reactor.on_bhoga(state)
                 except Exception as e:
-                    state['dissonance_report'] = f"APARADHA [BHOGA @ {position}]: {str(e)}"
-
+                    state["dissonance_report"] = f"APARADHA [BHOGA @ {position}]: {str(e)}"
 
     def _trigger_switch(self, state: ShadowState) -> None:
         """Trigger on_switch for position 8 (THE 8 MOMENT)."""
         if not self.is_authorized():
             return  # BLOCKED
-        
+
         for reactor in self._listeners.get(SWITCH_POSITION, []):
             if hasattr(reactor, "on_switch"):
                 try:
                     reactor.on_switch(state)
                 except Exception as e:
-                     state['dissonance_report'] = f"APARADHA [SWITCH]: {str(e)}"
+                    state["dissonance_report"] = f"APARADHA [SWITCH]: {str(e)}"
 
     def _trigger_prasadam(self, state: ShadowState) -> None:
         """Trigger on_prasadam for all reactors at current position."""
         if not self.is_authorized():
             return  # BLOCKED
-        
+
         position = state["position"]
         for reactor in self._listeners.get(position, []):
             if hasattr(reactor, "on_prasadam"):
                 try:
                     reactor.on_prasadam(state)
                 except Exception as e:
-                    state['dissonance_report'] = f"APARADHA [PRASADAM @ {position}]: {str(e)}"
+                    state["dissonance_report"] = f"APARADHA [PRASADAM @ {position}]: {str(e)}"
 
     def _trigger_return(self, state: ShadowState) -> None:
         """Trigger on_return for position 0 (THE RETURN)."""
         if not self.is_authorized():
             return  # BLOCKED
-            
+
         for reactor in self._listeners.get(RETURN_POSITION, []):
             if hasattr(reactor, "on_return"):
                 try:
                     reactor.on_return(state)
                 except Exception as e:
-                    state['dissonance_report'] = f"APARADHA [RETURN]: {str(e)}"
+                    state["dissonance_report"] = f"APARADHA [RETURN]: {str(e)}"
 
     # =========================================================================
     # STATE ACCESS
@@ -588,6 +588,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     def request_authorization(self, quarter: AdhikaraQuarter, operation_id: str) -> AuthorizationBundle:
         """Request authorization for operations in a quarter."""
         import hashlib
+
         payload_hash = hashlib.sha256(operation_id.encode()).hexdigest()
         self._authorization = AuthorizationBundle(
             quarter=quarter,
@@ -600,11 +601,11 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         """Sign the current authorization bundle with a Mahajana."""
         if self._authorization is None:
             return False
-        
+
         sig = create_signature(mahajana, payload)
         if sig is None:
             return False
-        
+
         return self._authorization.add_signature(sig)
 
     # =========================================================================
@@ -631,8 +632,8 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     ) -> None:
         """Unregister a listener from a position."""
         if position in self._listeners:
-             if listener in self._listeners[position]:
-                 self._listeners[position].remove(listener)
+            if listener in self._listeners[position]:
+                self._listeners[position].remove(listener)
 
     # =========================================================================
     # GAD COMPLIANCE (REAL TESTS - NO MAYA)
@@ -647,10 +648,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         return {
             "reactor_id": self._reactor_id,
             "type": "ShadowReactor",
-            "listeners": {
-                pos: [str(l) for l in listeners]
-                for pos, listeners in self._listeners.items()
-            },
+            "listeners": {pos: [str(l) for l in listeners] for pos, listeners in self._listeners.items()},
             "discovered_count": self.discovered_count,
             "lagna": self._lagna,
         }
@@ -674,9 +672,10 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             # 2. Source of Truth Check (Anti-Mayavad)
             # Verify PARAMPARA hasn't been tampered with locally
             from vibe_core.mahamantra.substrate.seed import PARAMPARA as SEED_PARAMPARA
+
             if PARAMPARA != SEED_PARAMPARA:
-                 print(f"SATYAM FAIL: Local PARAMPARA {PARAMPARA} != Seed {SEED_PARAMPARA}")
-                 return False
+                print(f"SATYAM FAIL: Local PARAMPARA {PARAMPARA} != Seed {SEED_PARAMPARA}")
+                return False
 
             return True
         except Exception:
@@ -690,12 +689,12 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         """
         for position_listeners in self._listeners.values():
             for listener in position_listeners:
-                 if not hasattr(listener, "__mahajana__"):
-                     # If manually registered (no __mahajana__), it's fail for Strict Saucam?
-                     # Allow if it's a test listener? No, Strict is Strict.
-                     # But our tests use CrashingListener.
-                     # We might need to add __mahajana__ to test listeners.
-                     return False
+                if not hasattr(listener, "__mahajana__"):
+                    # If manually registered (no __mahajana__), it's fail for Strict Saucam?
+                    # Allow if it's a test listener? No, Strict is Strict.
+                    # But our tests use CrashingListener.
+                    # We might need to add __mahajana__ to test listeners.
+                    return False
         return True
 
     def test_tapas(self) -> bool:
@@ -713,10 +712,12 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         Simulates a 'Killer Reactor' that raises exception.
         Verifies that ShadowReactor catches it and reports APARADHA without crashing.
         """
+
         # 1. Spawn a Killer
         class KillerReactor:
             # Fake __mahajana__ for Saucam compatibility in other tests
-            __mahajana__ = "killer" 
+            __mahajana__ = "killer"
+
             def on_bhoga(self, state: ShadowState):
                 raise ValueError("KILLER")
 
@@ -726,50 +727,51 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
         # 3. Trigger
         state = self.get_state()
-        state['dissonance_report'] = None
-        
+        state["dissonance_report"] = None
+
         # We need to bypass ADHIKARA check for this self-test or ensure authorized
         # For simplicity, we assume test is authorized or we force it.
         # Check current auth status:
         was_authorized = self.is_authorized()
-        
+
         # Attempt trigger
         try:
             # We must be careful not to crash the test itself if logic is wrong
             # We call the internal trigger directly if possible, or simulate tick
             # But _trigger_bhoga checks auth.
-            
+
             # Temporary "God Mode" for test
             # (In reality, tests should have proper setup, but this is an internal self-test)
             if not was_authorized:
-                 # Create a dummy auth for the test
-                 from vibe_core.mahamantra.protocols._adhikara import Quarter
-                 # We need a proper Quarter enum that matches current position string
-                 mapping = get_position_by_index(pos)
-                 if mapping and mapping.quarter.value == "genesis":
+                # Create a dummy auth for the test
+                from vibe_core.mahamantra.protocols._adhikara import Quarter
+
+                # We need a proper Quarter enum that matches current position string
+                mapping = get_position_by_index(pos)
+                if mapping and mapping.quarter.value == "genesis":
                     q = AdhikaraQuarter.GENESIS
-                 elif mapping and mapping.quarter.value == "dharma":
+                elif mapping and mapping.quarter.value == "dharma":
                     q = AdhikaraQuarter.DHARMA
-                 elif mapping and mapping.quarter.value == "karma":
+                elif mapping and mapping.quarter.value == "karma":
                     q = AdhikaraQuarter.KARMA
-                 else:
+                else:
                     q = AdhikaraQuarter.MOKSHA
-                    
-                 self.request_authorization(q, "TEST_DAYA_OP")
-                 # We can't easily sign it without keys. 
-                 # If _trigger_bhoga protects, we can't test crash handling without auth.
-                 # This reveals a dependency: Test Daya needs Auth.
-                 
-                 # FALLBACK: If we can't authorize, we can't run the crash test fully.
-                 # But we can check if we *have* the capacity to handle errors.
-                 pass
+
+                self.request_authorization(q, "TEST_DAYA_OP")
+                # We can't easily sign it without keys.
+                # If _trigger_bhoga protects, we can't test crash handling without auth.
+                # This reveals a dependency: Test Daya needs Auth.
+
+                # FALLBACK: If we can't authorize, we can't run the crash test fully.
+                # But we can check if we *have* the capacity to handle errors.
+                pass
 
             # Proceed if authorized (or if we trust the logic handles the skipped auth)
             if self.is_authorized():
                 self._trigger_bhoga(state)
-                
+
                 # 4. Verify Survival
-                params = state.get('dissonance_report', "")
+                params = state.get("dissonance_report", "")
                 if params and "KILLER" in params:
                     # Clean up
                     self._listeners[pos].pop()
@@ -788,7 +790,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         except Exception:
             # If it crashed, we failed
             if pos in self._listeners:
-                 self._listeners[pos].pop()
+                self._listeners[pos].pop()
             return False
 
     def is_authorized(self) -> bool:
@@ -799,7 +801,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         mapping = get_position_by_index(self._position)
         if mapping is None:
             return False
-            
+
         current_quarter_str = mapping.quarter.value
 
         quarter_map = {
@@ -808,7 +810,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             "karma": AdhikaraQuarter.KARMA,
             "moksha": AdhikaraQuarter.MOKSHA,
         }
-        
+
         expected_quarter = quarter_map.get(current_quarter_str)
         if expected_quarter is None:
             return False
@@ -834,7 +836,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             cycle_count=self._cycle_count,
             switch_count=self._switch_count,
             return_count=self._return_count,
-            dissonance_report=self._authorization.quarter if self._authorization else None, # Debug? No.
+            dissonance_report=self._authorization.quarter if self._authorization else None,  # Debug? No.
             # Fix: Dissonance is passed via mutation in triggers, but get_state creates new snapshot.
             # We need to expose if there was a report?
             # State is transient.
@@ -843,9 +845,11 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     def __repr__(self) -> str:
         return f"OrbitalShadowReactor(id={self._reactor_id}, lagna={self._lagna}, position={self._position})"
 
+
 # =============================================================================
 # SHADOW REACTOR FACTORY - Implements ShadowReactorFactoryProtocol
 # =============================================================================
+
 
 class ShadowReactorFactory:
     """
@@ -901,6 +905,7 @@ shadow_reactor_factory = ShadowReactorFactory()
 # CONVENIENCE FUNCTIONS (BACKWARD COMPATIBILITY)
 # =============================================================================
 
+
 def get_shadow_reactor() -> ShadowReactor:
     """
     Create a new Shadow Reactor.
@@ -917,7 +922,6 @@ shadow = get_shadow_reactor
 
 # Upgraded Identity
 OrbitalShadowReactor = ShadowReactor
-
 
 
 # =============================================================================

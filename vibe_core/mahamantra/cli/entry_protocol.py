@@ -37,7 +37,6 @@ ARCHITECTURE LAYERS:
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -60,6 +59,7 @@ from vibe_core.mahamantra.cli.protocol import (
 # =============================================================================
 # CLI ENTRY PROTOCOL - What an entry point MUST be
 # =============================================================================
+
 
 @runtime_checkable
 class CLIEntryProtocol(Protocol):
@@ -120,6 +120,7 @@ class CLIEntryProtocol(Protocol):
 # CLI ENTRY RESULT - Structured output from entry point
 # =============================================================================
 
+
 @dataclass
 class CLIEntryResult:
     """
@@ -127,11 +128,12 @@ class CLIEntryResult:
 
     This wraps CLIResult with entry-point specific metadata.
     """
+
     result: CLIResult
     command: str
     args: List[str]
     routed_to: Optional[str] = None  # e.g., "mahamantra[6].analyze"
-    fallback_used: bool = False      # True if fell back to legacy
+    fallback_used: bool = False  # True if fell back to legacy
 
 
 # =============================================================================

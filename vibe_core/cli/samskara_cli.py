@@ -54,7 +54,10 @@ def _format_output(cmd: str, output: str) -> str:
             if protocols_str:
                 # Parse the flattened list string
                 import re
-                for m in re.finditer(r"\{'path': '([^']+)', 'target': '([^']+)', 'has_chanting': '([^']+)'\}", protocols_str):
+
+                for m in re.finditer(
+                    r"\{'path': '([^']+)', 'target': '([^']+)', 'has_chanting': '([^']+)'\}", protocols_str
+                ):
                     path, target, chant = m.groups()
                     mark = "✓" if chant == "yes" else "○"
                     lines.append(f"  {mark} {path} → {target}")

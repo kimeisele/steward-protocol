@@ -33,7 +33,6 @@ VEDA-4 PATTERN:
     KARMA    (कर्म)    → Instantiates with workspace
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

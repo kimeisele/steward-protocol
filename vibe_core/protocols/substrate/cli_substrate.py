@@ -41,7 +41,6 @@ NO MANUAL WIRING:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -81,7 +80,6 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 OWNER: Final[Mahajana] = Mahajana.NARADA
 
 
-
 # =============================================================================
 # ANANTA CONSTANTS
 # =============================================================================
@@ -103,6 +101,7 @@ LOTUS_QUARTERS: Final[int] = PHASES
 # CLI LOTUS POSITION (Every CLI is a Lotus Node)
 # =============================================================================
 
+
 class CLILotusQuarter(IntEnum):
     """
     The four quarters of the Lotus (Mahamantra phases).
@@ -110,10 +109,11 @@ class CLILotusQuarter(IntEnum):
     Each CLI command belongs to one quarter based on its purpose.
     This is not arbitrary - the Mahamantra structure IS the architecture.
     """
-    GENESIS = 0   # Hare Krishna (creation, bootstrap, init)
-    DHARMA = 1    # Hare Krishna (righteousness, audit, validate)
-    KARMA = 2     # Hare Rama (action, run, execute, tool)
-    MOKSHA = 3    # Hare Rama (liberation, gc, reset, clean)
+
+    GENESIS = 0  # Hare Krishna (creation, bootstrap, init)
+    DHARMA = 1  # Hare Krishna (righteousness, audit, validate)
+    KARMA = 2  # Hare Rama (action, run, execute, tool)
+    MOKSHA = 3  # Hare Rama (liberation, gc, reset, clean)
 
 
 # Quarter mapping based on command purpose
@@ -136,6 +136,7 @@ class CLILotusPosition:
 
     Position = (quarter * 4) + worker (0-15)
     """
+
     quarter: CLILotusQuarter
     worker: int  # 0-3 within quarter
 
@@ -185,6 +186,7 @@ def derive_lotus_position(command: str) -> CLILotusPosition:
 # CLI PARAMPARA CONNECTION
 # =============================================================================
 
+
 @dataclass
 class CLIParamparaConnection:
     """
@@ -200,6 +202,7 @@ class CLIParamparaConnection:
 
     If mutation_vector % 37 == 0, the command is CONNECTED.
     """
+
     command: str
     lotus_position: CLILotusPosition
     mutation_vector: int
@@ -236,7 +239,7 @@ class CLIParamparaConnection:
         # Ensure divisibility by 37
         remainder = base_vector % ANANTA_PARAMPARA
         if remainder != 0:
-            base_vector += (ANANTA_PARAMPARA - remainder)
+            base_vector += ANANTA_PARAMPARA - remainder
 
         return cls(
             command=command,
@@ -261,14 +264,12 @@ COMMAND_OPCODE_MAP: Final[Dict[str, MantraOpCode]] = {
     "init": MantraOpCode.LOAD_ROOT,
     "config": MantraOpCode.INIT_THREAD,
     "bootstrap": MantraOpCode.SYS_WAKE,
-
     # DHARMA Quarter (ASSERT_TRUTH, RESOLVE_REQ, GARBAGE_COLLECT, PULSE_SYNC)
     "audit": MantraOpCode.COMPILE_AST,
     "validate": MantraOpCode.BIND_SYMBOL,
     "standards": MantraOpCode.STATE_SYNC,
     "naga": MantraOpCode.STATE_SYNC,
     "knowledge": MantraOpCode.DHARMA_TEST,
-
     # KARMA Quarter (FETCH_RES, EXEC_SERVICE, CHECK_DHARMA, COMMIT_LOG)
     "run": MantraOpCode.EXTEND_CAP,
     "tool": MantraOpCode.EXTEND_CAP,
@@ -276,7 +277,6 @@ COMMAND_OPCODE_MAP: Final[Dict[str, MantraOpCode]] = {
     "plugins": MantraOpCode.EXEC_OP,
     "prompts": MantraOpCode.LEDGER_SIGN,
     "circuit": MantraOpCode.EXTEND_CAP,
-
     # MOKSHA Quarter (CACHE_STATE, OPTIMIZE, YIELD_CPU, RESET_IP)
     "remedies": MantraOpCode.IO_FLUSH,
     "gc": MantraOpCode.TYPE_CHECK,
@@ -306,11 +306,13 @@ def derive_opcode(command: str) -> MantraOpCode:
 # CLI SUBSTRATE NODE (The Ananta Head)
 # =============================================================================
 
+
 class CLISubstrateState(TypedDict, total=False):
     """
     State of a CLI substrate node.
     WATERTIGHT - no Any!
     """
+
     command: str
     lotus_position: int
     lotus_quarter: str
@@ -337,6 +339,7 @@ class CLISubstrateNode:
 
     The node "sings glories" (executes commands as seva).
     """
+
     command: str
     lotus_position: CLILotusPosition
     opcode: MantraOpCode
@@ -402,6 +405,7 @@ class CLISubstrateNode:
 # =============================================================================
 # ANANTA SUBSTRATE REGISTRY
 # =============================================================================
+
 
 class AnantaSubstrate:
     """
@@ -480,6 +484,7 @@ class AnantaSubstrate:
 # CLI ACINTYA AWARE PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class CLIAcintyaAware(Protocol):
     """
@@ -509,6 +514,7 @@ class CLIAcintyaAware(Protocol):
 # =============================================================================
 # INTEGRATION FUNCTION (For @register_cli)
 # =============================================================================
+
 
 def create_substrate_node(command: str) -> CLISubstrateNode:
     """
@@ -541,6 +547,7 @@ def verify_cli_parampara(command: str) -> bool:
 # CLI HEARTBEAT - Singing Glories (WAVE 2)
 # =============================================================================
 
+
 class CLIHeartbeatData(TypedDict, total=False):
     """
     Data for CLI heartbeat events.
@@ -548,6 +555,7 @@ class CLIHeartbeatData(TypedDict, total=False):
 
     Every CLI execution is "singing glories" - a heartbeat pulse.
     """
+
     command: str
     lotus_position: int
     lotus_quarter: str
@@ -600,6 +608,7 @@ class CLIHeartbeat:
         # Emit to AnantaShesha (if available)
         try:
             from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
             anchor = get_system_anchor()
             anchor.emit_event("cli.heartbeat", dict(heartbeat_data))
         except ImportError:
@@ -620,6 +629,7 @@ class CLIHeartbeat:
         """
         try:
             from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
             anchor = get_system_anchor()
             return dict(anchor.heartbeat())
         except ImportError:

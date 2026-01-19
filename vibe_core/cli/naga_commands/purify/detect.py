@@ -35,17 +35,15 @@ import subprocess
 from pathlib import Path
 from typing import List, Tuple, Optional
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.BIND_SYMBOL,
     name="detect",
-    help_text="Detect drifts and resolve intent (KUMARAS' purity - PURIFY phase)")
+    help_text="Detect drifts and resolve intent (KUMARAS' purity - PURIFY phase)",
+)
 class DetectCommand(NagaCommandBase):
     """
     Detect command implementation.
@@ -82,12 +80,12 @@ class DetectCommand(NagaCommandBase):
         if intent_mode:
             intent_idx = args.index("--intent")
             if intent_idx + 1 < len(args):
-                message = " ".join(args[intent_idx + 1:])
+                message = " ".join(args[intent_idx + 1 :])
                 return self._detect_intent(message)
             else:
                 return self.failure(
-                    "Missing message after --intent. Usage: naga detect --intent <message>",
-                    exit_code=1)
+                    "Missing message after --intent. Usage: naga detect --intent <message>", exit_code=1
+                )
 
         # Build output
         output_parts = []
@@ -118,19 +116,14 @@ class DetectCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         output_parts.append("RESOLVE_REQ: Detection complete")
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _detect_git_drift(self) -> dict:
         """Detect drift via git status."""
         try:
             result = subprocess.run(
-                ["git", "status", "--porcelain"],
-                capture_output=True,
-                text=True,
-                cwd=Path.cwd(),
-                timeout=10)
+                ["git", "status", "--porcelain"], capture_output=True, text=True, cwd=Path.cwd(), timeout=10
+            )
 
             if result.stdout.strip():
                 lines = result.stdout.strip().split("\n")
@@ -178,7 +171,7 @@ class DetectCommand(NagaCommandBase):
                 healed = stats.get("healed_count", 0)
                 if total > 10 and healed / total > 0.5:
                     patterns_found.append("CONFLICT_DRIFT")
-                    output_lines.append(f"    ⚠️  CONFLICT DRIFT: {healed/total:.1%} require healing")
+                    output_lines.append(f"    ⚠️  CONFLICT DRIFT: {healed / total:.1%} require healing")
 
         except Exception:
             pass  # Federation not available, skip
@@ -219,7 +212,7 @@ class DetectCommand(NagaCommandBase):
 ========================================
   Message: "{message}"
   Primary Intent: {primary_intent.upper()}
-  All Intents: {', '.join(detected_intents)}
+  All Intents: {", ".join(detected_intents)}
 ========================================
 RESOLVE_REQ: Intent resolved → {primary_intent}"""
         else:
@@ -235,7 +228,9 @@ RESOLVE_REQ: No specific command intent detected"""
             data=(
                 ("message", message),
                 ("intent", detected_intents[0] if detected_intents else "unknown"),
-                ("all_intents", ",".join(detected_intents) if detected_intents else "none")))
+                ("all_intents", ",".join(detected_intents) if detected_intents else "none"),
+            ),
+        )
 
 
 # Export for direct import

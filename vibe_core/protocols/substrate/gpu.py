@@ -36,7 +36,6 @@ The GPU computes this interference pattern.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -80,6 +79,7 @@ class ThreadState(TypedDict):
     State of one GPU thread.
     WATERTIGHT - no Any!
     """
+
     thread_id: int
     cpu_state: CPUState
     cycles_executed: int
@@ -95,6 +95,7 @@ class GPUThread:
     Each thread has its own MantraCPU instance.
     Threads can be synchronized for coherent resonance.
     """
+
     thread_id: int
     cpu: MantraCPU = field(default_factory=MantraCPU)
     cycles_executed: int = 0
@@ -141,6 +142,7 @@ class WarpState(TypedDict):
     State of a warp (16 threads).
     WATERTIGHT - no Any!
     """
+
     warp_id: int
     threads: List[ThreadState]
     total_resonance: float
@@ -157,6 +159,7 @@ class GPUWarp:
     Here, each thread processes the same position simultaneously,
     creating resonance through parallel vibration.
     """
+
     warp_id: int
     threads: List[GPUThread] = field(default_factory=list)
 
@@ -224,7 +227,7 @@ class GPUWarp:
         variance = sum((r - mean_res) ** 2 for r in resonances) / len(resonances)
 
         # Coherence is inverse of normalized variance
-        return math.exp(-variance / (mean_res ** 2 + 0.001))
+        return math.exp(-variance / (mean_res**2 + 0.001))
 
     def get_dominant_position(self) -> int:
         """Get position with highest resonance."""
@@ -267,6 +270,7 @@ class BlockState(TypedDict):
     State of a block (108 warps = 1 mala).
     WATERTIGHT - no Any!
     """
+
     block_id: int
     warps_completed: int
     total_resonance: float
@@ -284,6 +288,7 @@ class GPUBlock:
     - 108 mantras per round
     - 108 x 16 = 1728 words per round
     """
+
     block_id: int
     warps: List[GPUWarp] = field(default_factory=list)
     warps_completed: int = 0
@@ -312,19 +317,13 @@ class GPUBlock:
 
     def get_total_resonance(self) -> float:
         """Get total resonance across all warps."""
-        return sum(
-            sum(t.get_resonance() for t in warp.threads)
-            for warp in self.warps[:self.warps_completed]
-        )
+        return sum(sum(t.get_resonance() for t in warp.threads) for warp in self.warps[: self.warps_completed])
 
     def get_average_coherence(self) -> float:
         """Get average coherence across completed warps."""
         if self.warps_completed == 0:
             return 0.0
-        return sum(
-            warp.get_coherence()
-            for warp in self.warps[:self.warps_completed]
-        ) / self.warps_completed
+        return sum(warp.get_coherence() for warp in self.warps[: self.warps_completed]) / self.warps_completed
 
     def get_state(self) -> BlockState:
         """Get block state."""
@@ -353,6 +352,7 @@ class GridState(TypedDict):
     State of the GPU grid (congregation).
     WATERTIGHT - no Any!
     """
+
     grid_size: int
     blocks_active: int
     total_resonance: float
@@ -368,6 +368,7 @@ class GPUGrid:
     Multiple blocks (malas) running in parallel.
     This is the "sankirtan" - congregational chanting.
     """
+
     grid_size: int = 1  # Number of parallel blocks
     blocks: List[GPUBlock] = field(default_factory=list)
 
@@ -401,10 +402,7 @@ class GPUGrid:
             return block.get_state()
 
         with ThreadPoolExecutor(max_workers=self.grid_size) as executor:
-            futures: List[Future[BlockState]] = [
-                executor.submit(run_block, block)
-                for block in self.blocks
-            ]
+            futures: List[Future[BlockState]] = [executor.submit(run_block, block) for block in self.blocks]
             for future in futures:
                 results.append(future.result())
 

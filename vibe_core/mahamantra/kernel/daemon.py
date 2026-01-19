@@ -94,19 +94,22 @@ logger = logging.getLogger("MAHAMANTRA.DAEMON")
 # STATE
 # =============================================================================
 
+
 class DaemonState(str, Enum):
     """Current state of the daemon."""
-    DORMANT = "dormant"       # Not started
-    AWAKENING = "awakening"   # Starting up
-    CHANTING = "chanting"     # Active chanting
-    SAMADHI = "samadhi"       # Deep rest (system pure)
-    STOPPING = "stopping"     # Shutting down
-    DEAD = "dead"             # Stopped
+
+    DORMANT = "dormant"  # Not started
+    AWAKENING = "awakening"  # Starting up
+    CHANTING = "chanting"  # Active chanting
+    SAMADHI = "samadhi"  # Deep rest (system pure)
+    STOPPING = "stopping"  # Shutting down
+    DEAD = "dead"  # Stopped
 
 
 @dataclass
 class DaemonMetrics:
     """Metrics from the daemon's operation."""
+
     cycles_completed: int = 0
     total_chants: int = 0
     last_health_score: float = 0.0
@@ -154,6 +157,7 @@ class DaemonMetrics:
 # =============================================================================
 # THE DAEMON
 # =============================================================================
+
 
 class MahamantraDaemon:
     """
@@ -295,8 +299,7 @@ class MahamantraDaemon:
         16 words, paced according to frequency.
         """
         logger.info(
-            f"Cycle {cycle}: CHANTING ({frequency.name}, health={health:.1%}, "
-            f"trend={self._metrics.health_trend})"
+            f"Cycle {cycle}: CHANTING ({frequency.name}, health={health:.1%}, trend={self._metrics.health_trend})"
         )
 
         # Chant each quarter
@@ -418,6 +421,7 @@ class MahamantraDaemon:
                     mahajana = service.identify_mahajana(path)
                     if mahajana:
                         from pathlib import Path
+
                         name = Path(path).stem
                         if service.migrate(path, mahajana, name):
                             migrated += 1
@@ -515,6 +519,7 @@ def get_daemon() -> MahamantraDaemon:
 # =============================================================================
 # CONVENIENCE
 # =============================================================================
+
 
 async def start_daemon(max_cycles: Optional[int] = None) -> None:
     """Start the daemon (convenience function)."""

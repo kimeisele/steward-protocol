@@ -43,7 +43,6 @@ wiring:
 -->
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -102,6 +101,7 @@ class KarmaSummaryDict(TypedDict):
     chronic_pain_count: int
     most_troubled_path: Optional[str]
     health_score: float
+
 
 logger = logging.getLogger("MANAS.Cortex.KarmaSense")
 

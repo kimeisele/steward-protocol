@@ -44,15 +44,18 @@ from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkab
 # TRANSLATION LAYERS
 # =============================================================================
 
+
 class TranslationLayer(str, Enum):
     """The three layers of translation."""
+
     RESONANCE = "resonance"  # Śabda - Sound pattern (Layer 1)
-    MEANING = "meaning"      # Artha - Semantic content (Layer 2)
-    FORM = "form"            # Rūpa - Written form (Layer 3)
+    MEANING = "meaning"  # Artha - Semantic content (Layer 2)
+    FORM = "form"  # Rūpa - Written form (Layer 3)
 
 
 class NaturalLanguage(str, Enum):
     """Supported natural languages."""
+
     ENGLISH = "en"
     GERMAN = "de"
     SANSKRIT = "sa"
@@ -64,6 +67,7 @@ class NaturalLanguage(str, Enum):
 # RESONANCE LAYER (Śabda) - THE UNIVERSAL CONNECTOR
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class Phoneme:
     """
@@ -72,13 +76,14 @@ class Phoneme:
     This is the ATOMIC unit of resonance.
     All languages share phonemes (with variations).
     """
-    ipa: str           # International Phonetic Alphabet
+
+    ipa: str  # International Phonetic Alphabet
     frequency_hz: float = 0.0  # Approximate frequency
-    duration_ms: float = 0.0   # Approximate duration
+    duration_ms: float = 0.0  # Approximate duration
 
     # Vedic classification
-    sthana: str = ""   # Place of articulation (kaṇṭha, tālu, etc.)
-    prayatna: str = "" # Effort (spṛṣṭa, īṣat-spṛṣṭa, etc.)
+    sthana: str = ""  # Place of articulation (kaṇṭha, tālu, etc.)
+    prayatna: str = ""  # Effort (spṛṣṭa, īṣat-spṛṣṭa, etc.)
 
 
 @dataclass(frozen=True)
@@ -89,11 +94,12 @@ class ResonancePattern:
     This is the RESONANCE representation of text.
     Languages connect at this level.
     """
+
     phonemes: Tuple[Phoneme, ...]
 
     # Prosodic features
     stress_pattern: str = ""  # e.g., "10" for first syllable stressed
-    rhythm: str = ""          # e.g., "iambic", "mantra"
+    rhythm: str = ""  # e.g., "iambic", "mantra"
 
     # Mantra properties
     is_mantra: bool = False
@@ -110,6 +116,7 @@ class ResonancePattern:
 # MEANING LAYER (Artha) - LANGUAGE-INDEPENDENT
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class SemanticUnit:
     """
@@ -117,15 +124,16 @@ class SemanticUnit:
 
     This is what gets translated - not words, but MEANING.
     """
-    concept_id: str       # Universal concept identifier
-    concept_type: str     # noun, verb, adjective, etc.
+
+    concept_id: str  # Universal concept identifier
+    concept_type: str  # noun, verb, adjective, etc.
 
     # Semantic properties
     properties: Tuple[str, ...] = ()  # e.g., ("divine", "personal")
-    relations: Tuple[str, ...] = ()   # e.g., ("part_of:deity",)
+    relations: Tuple[str, ...] = ()  # e.g., ("part_of:deity",)
 
     # Vedic classification (if applicable)
-    tattva: str = ""      # Ontological category
+    tattva: str = ""  # Ontological category
 
 
 @dataclass(frozen=True)
@@ -136,17 +144,19 @@ class MeaningGraph:
     This is the UNIVERSAL representation of meaning.
     All translations preserve this structure.
     """
+
     units: Tuple[SemanticUnit, ...]
     relations: Tuple[Tuple[int, str, int], ...]  # (from_idx, relation, to_idx)
 
     # Context
     context_type: str = ""  # e.g., "greeting", "instruction", "mantra"
-    mood: str = ""          # e.g., "devotional", "imperative"
+    mood: str = ""  # e.g., "devotional", "imperative"
 
 
 # =============================================================================
 # FORM LAYER (Rūpa) - WRITTEN REPRESENTATION
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class TextForm:
@@ -155,6 +165,7 @@ class TextForm:
 
     This is the SURFACE representation.
     """
+
     text: str
     language: NaturalLanguage
     script: str = "latin"  # latin, devanagari, etc.
@@ -168,6 +179,7 @@ class TextForm:
 # TRANSLATION RESULT
 # =============================================================================
 
+
 @dataclass
 class TranslationResult:
     """
@@ -175,6 +187,7 @@ class TranslationResult:
 
     Contains all three layers for transparency.
     """
+
     success: bool
 
     # The three layers
@@ -186,7 +199,7 @@ class TranslationResult:
     # Metrics
     confidence: float = 0.0
     resonance_similarity: float = 0.0  # How similar the sounds are
-    meaning_preservation: float = 0.0   # How much meaning was preserved
+    meaning_preservation: float = 0.0  # How much meaning was preserved
 
     # Mantra CPU trace
     opcodes_used: List[str] = field(default_factory=list)
@@ -198,6 +211,7 @@ class TranslationResult:
 # =============================================================================
 # TRANSLATION PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class TranslationProtocol(Protocol):
@@ -234,11 +248,7 @@ class TranslationProtocol(Protocol):
         """
         ...
 
-    def meaning_to_resonance(
-        self,
-        meaning: MeaningGraph,
-        target_lang: NaturalLanguage
-    ) -> ResonancePattern:
+    def meaning_to_resonance(self, meaning: MeaningGraph, target_lang: NaturalLanguage) -> ResonancePattern:
         """
         Generate target resonance from meaning.
 
@@ -246,11 +256,7 @@ class TranslationProtocol(Protocol):
         """
         ...
 
-    def resonance_to_form(
-        self,
-        resonance: ResonancePattern,
-        target_lang: NaturalLanguage
-    ) -> TextForm:
+    def resonance_to_form(self, resonance: ResonancePattern, target_lang: NaturalLanguage) -> TextForm:
         """
         Write resonance to target form.
 
@@ -262,12 +268,7 @@ class TranslationProtocol(Protocol):
     # HIGH-LEVEL TRANSLATION
     # =========================================================================
 
-    def translate(
-        self,
-        text: str,
-        source_lang: NaturalLanguage,
-        target_lang: NaturalLanguage
-    ) -> TranslationResult:
+    def translate(self, text: str, source_lang: NaturalLanguage, target_lang: NaturalLanguage) -> TranslationResult:
         """
         Translate text from source to target language.
 
@@ -276,10 +277,7 @@ class TranslationProtocol(Protocol):
         ...
 
     def translate_via_resonance(
-        self,
-        text: str,
-        source_lang: NaturalLanguage,
-        target_lang: NaturalLanguage
+        self, text: str, source_lang: NaturalLanguage, target_lang: NaturalLanguage
     ) -> TranslationResult:
         """
         Translate emphasizing resonance preservation.
@@ -289,10 +287,7 @@ class TranslationProtocol(Protocol):
         ...
 
     def translate_via_meaning(
-        self,
-        text: str,
-        source_lang: NaturalLanguage,
-        target_lang: NaturalLanguage
+        self, text: str, source_lang: NaturalLanguage, target_lang: NaturalLanguage
     ) -> TranslationResult:
         """
         Translate emphasizing meaning preservation.
@@ -309,11 +304,7 @@ class TranslationProtocol(Protocol):
         """Get list of supported languages."""
         ...
 
-    def can_translate(
-        self,
-        source_lang: NaturalLanguage,
-        target_lang: NaturalLanguage
-    ) -> bool:
+    def can_translate(self, source_lang: NaturalLanguage, target_lang: NaturalLanguage) -> bool:
         """Check if translation pair is supported."""
         ...
 
@@ -321,6 +312,7 @@ class TranslationProtocol(Protocol):
 # =============================================================================
 # RESONANCE PROTOCOL (The Universal Connector)
 # =============================================================================
+
 
 @runtime_checkable
 class ResonanceProtocol(Protocol):
@@ -342,11 +334,7 @@ class ResonanceProtocol(Protocol):
         """Create resonance pattern from phonemes."""
         ...
 
-    def compare_resonance(
-        self,
-        pattern1: ResonancePattern,
-        pattern2: ResonancePattern
-    ) -> float:
+    def compare_resonance(self, pattern1: ResonancePattern, pattern2: ResonancePattern) -> float:
         """
         Compare two resonance patterns.
 
@@ -378,11 +366,11 @@ class ResonanceProtocol(Protocol):
 
 # Translation operations map to MantraOpCodes
 TRANSLATION_OPCODE_MAP: Dict[str, str] = {
-    "load_source": "load_root",       # Load source text
-    "parse_form": "resolve_req",      # Parse to resonance
-    "extract_meaning": "exec_service", # Process meaning
-    "generate_target": "exec_service", # Generate output
-    "commit_output": "commit_log",    # Write result
+    "load_source": "load_root",  # Load source text
+    "parse_form": "resolve_req",  # Parse to resonance
+    "extract_meaning": "exec_service",  # Process meaning
+    "generate_target": "exec_service",  # Generate output
+    "commit_output": "commit_log",  # Write result
 }
 
 

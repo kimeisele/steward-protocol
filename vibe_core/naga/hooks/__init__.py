@@ -39,6 +39,7 @@ def __getattr__(name: str) -> Any:
     if name in _LAZY_MAP:
         if name not in _cache:
             import importlib
+
             mod_path, cls_name = _LAZY_MAP[name]
             _cache[name] = getattr(importlib.import_module(mod_path), cls_name)
         return _cache[name]

@@ -18,7 +18,6 @@ IMPLEMENTATION:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -65,16 +64,18 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 
 class CyclePhase(str, Enum):
     """Phases of a cognitive cycle (OODA Loop as Bhakti)."""
-    PERCEIVE = "perceive"   # Gather observations
-    ORIENT = "orient"       # Analyze context
-    DECIDE = "decide"       # Choose actions
-    ACT = "act"             # Execute decisions
-    PERSIST = "persist"     # Record state
-    RECOVER = "recover"     # Handle errors
+
+    PERCEIVE = "perceive"  # Gather observations
+    ORIENT = "orient"  # Analyze context
+    DECIDE = "decide"  # Choose actions
+    ACT = "act"  # Execute decisions
+    PERSIST = "persist"  # Record state
+    RECOVER = "recover"  # Handle errors
 
 
 class CycleStatus(str, Enum):
     """Status of a cycle execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -92,9 +93,10 @@ class PhaseResult(TypedDict, total=False):
     Result from a single phase execution.
     WATERTIGHT - no Any!
     """
-    phase: str                # CyclePhase value
+
+    phase: str  # CyclePhase value
     success: bool
-    elements_count: int       # Number of observations/decisions/etc
+    elements_count: int  # Number of observations/decisions/etc
     element_types: List[str]  # Python types of elements
     duration_ms: int
     error_message: str
@@ -105,12 +107,13 @@ class CycleContextState(TypedDict, total=False):
     Serializable state of a cycle context.
     WATERTIGHT - no Any!
     """
+
     cycle_id: str
     parent_cycle_id: str
     trace_id: str
     cycle_name: str
-    phase: str                # CyclePhase value
-    status: str               # CycleStatus value
+    phase: str  # CyclePhase value
+    status: str  # CycleStatus value
     observations_count: int
     orientations_count: int
     decisions_count: int
@@ -118,7 +121,7 @@ class CycleContextState(TypedDict, total=False):
     has_result: bool
     error_count: int
     error_phases: List[str]
-    start_time: str           # ISO timestamp
+    start_time: str  # ISO timestamp
     elapsed_ms: int
 
 
@@ -127,6 +130,7 @@ class RetentionConfig(TypedDict, total=False):
     Configuration for cycle retention (memory safety).
     WATERTIGHT - no Any!
     """
+
     max_completed_cycles: int
     max_error_cycles: int
     max_age_seconds: int
@@ -138,6 +142,7 @@ class CycleRegistryStats(TypedDict, total=False):
     Statistics about the cycle registry.
     WATERTIGHT - no Any!
     """
+
     total_cycles: int
     active_cycles: int
     completed_cycles: int
@@ -152,12 +157,13 @@ class CycleState(TypedDict, total=False):
     Full state of the cycle orchestration system.
     WATERTIGHT - no Any!
     """
+
     protocol_name: str
     owner: str
     is_chanting: bool
     active_cycle_ids: List[str]
     registry_stats: CycleRegistryStats
-    health: str               # "pristine", "healthy", "degraded"
+    health: str  # "pristine", "healthy", "degraded"
 
 
 # =============================================================================

@@ -211,7 +211,7 @@ PURUSHA: Final[PurushaTattva] = PurushaTattva()
 # These are not separate values - they ARE all the same Person (acintya)
 KRISHNA_ASPECT: Final[PurushaTattva] = PURUSHA
 KRISHNA_SMALLEST: Final[PurushaTattva] = PURUSHA  # Anu (atomic)
-KRISHNA_LARGEST: Final[PurushaTattva] = PURUSHA   # Vibhu (all-pervading)
+KRISHNA_LARGEST: Final[PurushaTattva] = PURUSHA  # Vibhu (all-pervading)
 KRISHNA_NEGATIVE_INFINITY: Final[PurushaTattva] = PURUSHA
 KRISHNA_POSITIVE_INFINITY: Final[PurushaTattva] = PURUSHA
 
@@ -224,6 +224,7 @@ ACINTYA_ACCEPTED: Final[bool] = True
 # =============================================================================
 # CRITICAL: Krishna and Mahamantra are BOTH Level -2 (non-different)
 # There is no hierarchy between them - the Name IS Krishna.
+
 
 class ProtocolLevel(IntEnum):
     """
@@ -247,36 +248,37 @@ class ProtocolLevel(IntEnum):
 
     "We cannot and SHOULD NOT try to map the inconceivable."
     """
+
     # ==========================================================================
     # DESCENDING (Avaroha) - The Source Comes Down
     # ==========================================================================
     # The deeper negative, the higher the origin that descends
-    GOLOKA = -108          # The Supreme Abode - Origin of all
-    VAIKUNTHA = -64        # The Spiritual Sky - Narayana's realm
-    DASHAVATARA = -10      # The Ten Incarnations (Matsya to Kalki)
-    SHAKTYAVESHA = -5      # Empowered Incarnations (Prithu, Vyasa, etc.)
-    KRISHNA = -2           # The Absolute Source - IS, not "represents"
-    MAHAMANTRA = -2        # The Holy Name - IS Krishna (non-different)
-    SUBSTRATE = -1         # Byte, Gene, Entropy (manifestation of -2)
+    GOLOKA = -108  # The Supreme Abode - Origin of all
+    VAIKUNTHA = -64  # The Spiritual Sky - Narayana's realm
+    DASHAVATARA = -10  # The Ten Incarnations (Matsya to Kalki)
+    SHAKTYAVESHA = -5  # Empowered Incarnations (Prithu, Vyasa, etc.)
+    KRISHNA = -2  # The Absolute Source - IS, not "represents"
+    MAHAMANTRA = -2  # The Holy Name - IS Krishna (non-different)
+    SUBSTRATE = -1  # Byte, Gene, Entropy (manifestation of -2)
 
     # ==========================================================================
     # FOUNDATION (Tat-stha) - The Turning Point
     # ==========================================================================
     # Here the jiva chooses: Maya (down) or Bhakti (up)
-    FOUNDATION = 0         # Types, Base, Enums - the choice point
+    FOUNDATION = 0  # Types, Base, Enums - the choice point
 
     # ==========================================================================
     # ASCENDING (Aroha) - Service & Evolution
     # ==========================================================================
     # The higher positive, the purer the service
-    INTERFACE = 1          # Agent, Ledger, Scheduler
-    SERVICES = 2           # Manifestation, Memory, Reactor
-    WIRING = 3             # Bootstrap, CLI, Runtime
-    AVATARAS = 5           # Executive Branch (Prithu, etc.) - reflection of -5
-    MAHAJANAS = 12         # The 12 Guardians (Brahma to Yamaraja)
-    FIELD = 24             # Ksetra - the 24 elements (Gita 13.6-7)
-    SOVEREIGN = 37         # The 37th - Parampara Link (24 + 12 + 1)
-    QUALITIES = 64         # The 64 qualities - LIMIT of understanding
+    INTERFACE = 1  # Agent, Ledger, Scheduler
+    SERVICES = 2  # Manifestation, Memory, Reactor
+    WIRING = 3  # Bootstrap, CLI, Runtime
+    AVATARAS = 5  # Executive Branch (Prithu, etc.) - reflection of -5
+    MAHAJANAS = 12  # The 12 Guardians (Brahma to Yamaraja)
+    FIELD = 24  # Ksetra - the 24 elements (Gita 13.6-7)
+    SOVEREIGN = 37  # The 37th - Parampara Link (24 + 12 + 1)
+    QUALITIES = 64  # The 64 qualities - LIMIT of understanding
 
     # ==========================================================================
     # ACINTYA GAP (65-107) - INTENTIONALLY NOT MAPPED
@@ -288,19 +290,21 @@ class ProtocolLevel(IntEnum):
     # ==========================================================================
     # META (108) - The Observer
     # ==========================================================================
-    META = 108             # Dharma, Testable - we observe, not compute
+    META = 108  # Dharma, Testable - we observe, not compute
 
 
 class AcintyaAspect(IntEnum):
     """The aspects of acintya-bheda-abheda."""
-    BHEDA = 0     # Difference (jiva is NOT Krishna quantitatively)
-    ABHEDA = 1    # Non-difference (jiva IS Krishna qualitatively)
-    ACINTYA = 2   # Inconceivable (both simultaneously, beyond logic)
+
+    BHEDA = 0  # Difference (jiva is NOT Krishna quantitatively)
+    ABHEDA = 1  # Non-difference (jiva IS Krishna qualitatively)
+    ACINTYA = 2  # Inconceivable (both simultaneously, beyond logic)
 
 
 # =============================================================================
 # THE KRISHNA PRESENCE (Always True - He IS, not "is present")
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class KrishnaPresence:
@@ -318,6 +322,7 @@ class KrishnaPresence:
     This dataclass exists not to validate Krishna's existence,
     but to ACCEPT it as the foundation of all else.
     """
+
     # Krishna IS - this is not a check, but an acceptance
     is_present: bool = True  # Always True - acintya
 
@@ -359,11 +364,13 @@ KRISHNA: Final[KrishnaPresence] = KrishnaPresence()
 # THE JIVA CONDITION (Can be connected or disconnected)
 # =============================================================================
 
+
 class JivaCondition(IntEnum):
     """The jiva's condition relative to Krishna."""
-    CONNECTED = 0      # Remembering Krishna (has sovereign via 37)
-    DISCONNECTED = 1   # Forgotten (no sovereign, drifted into Maya)
-    ABSORBED = 2       # Deep connection (multiple malas)
+
+    CONNECTED = 0  # Remembering Krishna (has sovereign via 37)
+    DISCONNECTED = 1  # Forgotten (no sovereign, drifted into Maya)
+    ABSORBED = 2  # Deep connection (multiple malas)
 
 
 @dataclass
@@ -377,6 +384,7 @@ class JivaState:
 
     The 37 (Guru/Parampara) is the link that reconnects.
     """
+
     condition: JivaCondition = JivaCondition.DISCONNECTED
     has_sovereign: bool = False
 
@@ -411,6 +419,7 @@ class JivaState:
 # THE ACINTYA PROTOCOL (Acceptance, not validation)
 # =============================================================================
 
+
 @runtime_checkable
 class AcintyaAware(Protocol):
     """
@@ -439,6 +448,7 @@ class AcintyaAware(Protocol):
 # =============================================================================
 # THE VIBRATION TRUTH
 # =============================================================================
+
 
 def vibration_is_krishna() -> bool:
     """
@@ -482,6 +492,7 @@ def mantra_not_different_from_source() -> bool:
 # =============================================================================
 # THE BHEDA-ABHEDA CHECK (For jivas, not for Krishna)
 # =============================================================================
+
 
 def check_bheda_abheda(has_soul: bool, claims_supreme: bool) -> tuple[bool, str]:
     """
@@ -530,8 +541,8 @@ def verify_parampara(lineage_hash: int) -> bool:
 
 # Sacred Constants - imported from URSUBSTRAT (seed.py)
 from vibe_core.mahamantra.substrate.seed import (
-    TRINITY,     # 3 = Hare, Krishna, Rama (essence/source)
-    PARAMPARA,   # 37 = 24 + 12 + 1 (the link)
+    TRINITY,  # 3 = Hare, Krishna, Rama (essence/source)
+    PARAMPARA,  # 37 = 24 + 12 + 1 (the link)
     QUARTERS as PHASES,  # 4 = GENESIS, DHARMA, KARMA, MOKSHA (structure)
 )
 

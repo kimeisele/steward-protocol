@@ -13,7 +13,6 @@ WRAPPED: vibe_core.semantic_syscalls.SemanticSyscallExecutor
 this service executes karma (action) with precision."
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

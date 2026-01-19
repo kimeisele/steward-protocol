@@ -121,10 +121,10 @@ __all__ = [
     # Result
     "NagaCommandResult",
     # CHATUR-VYUHA Types (from real infrastructure)
-    "Avatara",      # 4 HEADs (from protocols/avataras)
-    "Mahajana",     # 12 Workers (from protocols/mahajanas/router)
-    "Owner",        # Union[Avatara, Mahajana] - derived from opcode!
-    "Phase",        # 4 Phases
+    "Avatara",  # 4 HEADs (from protocols/avataras)
+    "Mahajana",  # 12 Workers (from protocols/mahajanas/router)
+    "Owner",  # Union[Avatara, Mahajana] - derived from opcode!
+    "Phase",  # 4 Phases
     # Routing (via vyuha - "The Mahamantra links back")
     "route_opcode",
     "OPCODE_TO_OWNER",

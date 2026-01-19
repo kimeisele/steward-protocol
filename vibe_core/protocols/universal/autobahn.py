@@ -35,6 +35,7 @@ from .types import AccessDeniedError, SovereignContext, TattvaMeter
 
 class MayavadError(Exception):
     """Raised when untyped/void data detected (Anti-Mayavad enforcement)."""
+
     pass
 
 
@@ -62,6 +63,7 @@ class MantraSeal:
     A cryptographic seal for packets.
     "The packet tests itself."
     """
+
     signer_id: str
     signature: str
     timestamp: datetime
@@ -80,6 +82,7 @@ class MantraSeal:
 @dataclass
 class TransportResult:
     """Result of packet transport."""
+
     success: bool
     packet_id: str
     lane: Lane
@@ -97,6 +100,7 @@ class Packet:
     """
     Legacy Packet interface for backward compatibility.
     """
+
     id: str
     lane: Lane
     payload: Any
@@ -128,7 +132,7 @@ class VajraPacket(Generic[T_Payload]):
             return False
 
         # 2. Check payload Watertight compliance
-        if hasattr(self.payload, 'verify_seal'):
+        if hasattr(self.payload, "verify_seal"):
             if not self.payload.verify_seal():
                 return False
 

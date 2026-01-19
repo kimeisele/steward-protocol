@@ -26,8 +26,8 @@ from vibe_core.cli.naga_commands.sustain.yield_cmd import YieldCommand
 from vibe_core.cli.naga_commands.sustain.reset import ResetCommand
 
 __all__ = [
-    "CacheCommand",     # NRISIMHA - CACHE_STATE (Position 12)
+    "CacheCommand",  # NRISIMHA - CACHE_STATE (Position 12)
     "OptimizeCommand",  # BALI - OPTIMIZE (Position 13)
-    "YieldCommand",     # SHUKA - YIELD_CPU (Position 14)
-    "ResetCommand",     # YAMARAJA - RESET_IP (Position 15)
+    "YieldCommand",  # SHUKA - YIELD_CPU (Position 14)
+    "ResetCommand",  # YAMARAJA - RESET_IP (Position 15)
 ]

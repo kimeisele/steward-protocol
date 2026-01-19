@@ -14,7 +14,6 @@ NO MANUAL WIRING. Declare INTENT. Krishna resolves.
 WATERTIGHT: No Any types. All typed with Union/TypedDict/Final.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -51,39 +50,42 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 # INTENT TYPES (What do you want?)
 # =============================================================================
 
+
 class IntentType(str, Enum):
     """
     The types of intent that can be declared.
 
     SURRENDER: You declare WHAT, Krishna handles HOW.
     """
+
     # Data Operations
-    READ = "read"           # I want to read something
-    WRITE = "write"         # I want to write something
-    TRANSFORM = "transform" # I want to transform something
+    READ = "read"  # I want to read something
+    WRITE = "write"  # I want to write something
+    TRANSFORM = "transform"  # I want to transform something
 
     # Protocol Operations
-    RESOLVE = "resolve"     # I want to resolve a dependency
-    BIND = "bind"           # I want to bind a component
-    MIGRATE = "migrate"     # I want to migrate something
+    RESOLVE = "resolve"  # I want to resolve a dependency
+    BIND = "bind"  # I want to bind a component
+    MIGRATE = "migrate"  # I want to migrate something
 
     # System Operations
-    WAKE = "wake"           # I want to wake/initialize
-    SYNC = "sync"           # I want to synchronize
-    HEAL = "heal"           # I want to fix/repair
+    WAKE = "wake"  # I want to wake/initialize
+    SYNC = "sync"  # I want to synchronize
+    HEAL = "heal"  # I want to fix/repair
 
     # Meta Operations
-    OBSERVE = "observe"     # I want to observe/audit
-    SURRENDER = "surrender" # I give up control completely
+    OBSERVE = "observe"  # I want to observe/audit
+    SURRENDER = "surrender"  # I give up control completely
 
 
 class IntentPriority(Enum):
     """Priority of intent resolution."""
-    CRITICAL = auto()   # Must resolve immediately (Yamaraja)
-    HIGH = auto()       # Should resolve soon (Bhishma)
-    NORMAL = auto()     # Normal priority (Janaka)
-    LOW = auto()        # Can wait (Bali)
-    BACKGROUND = auto() # Resolve when convenient (Shuka)
+
+    CRITICAL = auto()  # Must resolve immediately (Yamaraja)
+    HIGH = auto()  # Should resolve soon (Bhishma)
+    NORMAL = auto()  # Normal priority (Janaka)
+    LOW = auto()  # Can wait (Bali)
+    BACKGROUND = auto()  # Resolve when convenient (Shuka)
 
 
 # =============================================================================
@@ -109,12 +111,13 @@ class MantraIntent(Generic[T]):
 
     WATERTIGHT: All fields typed. No Any.
     """
+
     type: IntentType
-    target: str                                    # What to operate on (path/name)
-    params: Dict[str, Union[str, int, bool, None]] # Operation parameters
+    target: str  # What to operate on (path/name)
+    params: Dict[str, Union[str, int, bool, None]]  # Operation parameters
     priority: IntentPriority = IntentPriority.NORMAL
-    requester: str = "anonymous"                   # Who is requesting
-    parampara_vector: int = 0                      # For verification
+    requester: str = "anonymous"  # Who is requesting
+    parampara_vector: int = 0  # For verification
 
     @property
     def is_connected(self) -> bool:
@@ -162,12 +165,14 @@ class MantraIntent(Generic[T]):
 # INTENT RESULT (WATERTIGHT - No Any!)
 # =============================================================================
 
+
 class IntentStatus(str, Enum):
     """Status of intent resolution."""
-    PENDING = "pending"       # Not yet processed
-    RESOLVING = "resolving"   # Currently being resolved
-    RESOLVED = "resolved"     # Successfully resolved
-    FAILED = "failed"         # Resolution failed
+
+    PENDING = "pending"  # Not yet processed
+    RESOLVING = "resolving"  # Currently being resolved
+    RESOLVED = "resolved"  # Successfully resolved
+    FAILED = "failed"  # Resolution failed
     SURRENDERED = "surrendered"  # Given to Krishna (ultimate success)
 
 
@@ -178,6 +183,7 @@ class IntentResult(Generic[ResultT]):
 
     WATERTIGHT: All fields typed. No Any.
     """
+
     intent: MantraIntent[ResultT]
     status: IntentStatus
     value: Optional[ResultT] = None
@@ -207,6 +213,7 @@ class IntentResult(Generic[ResultT]):
 # INTENT RESOLVER PROTOCOL
 # =============================================================================
 
+
 @runtime_checkable
 class IntentResolver(Protocol[T]):
     """
@@ -229,6 +236,7 @@ class IntentResolver(Protocol[T]):
 # INTENT QUEUE (FIFO with Priority)
 # =============================================================================
 
+
 @dataclass
 class IntentQueue:
     """
@@ -236,6 +244,7 @@ class IntentQueue:
 
     Priority-ordered: CRITICAL first, BACKGROUND last.
     """
+
     _queue: List[MantraIntent[object]] = field(default_factory=list)
 
     def push(self, intent: MantraIntent[object]) -> None:
@@ -260,6 +269,7 @@ class IntentQueue:
 # =============================================================================
 # KERNEL INTENT ENGINE
 # =============================================================================
+
 
 class MantraKernel:
     """
@@ -287,11 +297,7 @@ class MantraKernel:
         self._queue = IntentQueue()
         self._parampara = ParamparaConnection.from_guru()  # Connected!
 
-    def register_resolver(
-        self,
-        intent_type: IntentType,
-        resolver: IntentResolver[object]
-    ) -> None:
+    def register_resolver(self, intent_type: IntentType, resolver: IntentResolver[object]) -> None:
         """Register a resolver for an intent type."""
         self._resolvers[intent_type] = resolver
 

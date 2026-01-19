@@ -20,14 +20,16 @@ HIERARCHY:
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
+
 @dataclass
 class KalaTime:
     """The current point in Cosmic Time."""
+
     total_ticks: int
     tick_in_mantra: int  # 0-15
     mantra_in_mala: int  # 0-107
-    lila_position: int     # 0-47 (Cycle of 3 Mantras)
-    mala_count: int      # Total completed rounds
+    lila_position: int  # 0-47 (Cycle of 3 Mantras)
+    mala_count: int  # Total completed rounds
 
     @property
     def mantra_completion(self) -> float:
@@ -40,18 +42,15 @@ class KalaTime:
         return (self.mantra_in_mala * 16 + self.tick_in_mantra + 1) / 1728.0
 
     def __str__(self) -> str:
-        return (
-            f"Kala(Mala={self.mala_count}, "
-            f"Mantra={self.mantra_in_mala}, "
-            f"Tick={self.tick_in_mantra})"
-        )
+        return f"Kala(Mala={self.mala_count}, Mantra={self.mantra_in_mala}, Tick={self.tick_in_mantra})"
+
 
 @runtime_checkable
 class KalaProtocol(Protocol):
     """
     Interface for the Time Keeper.
     """
-    
+
     def advance(self) -> KalaTime:
         """Advance time by one tick."""
         ...

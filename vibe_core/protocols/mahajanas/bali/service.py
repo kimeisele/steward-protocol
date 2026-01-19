@@ -54,7 +54,7 @@ class BaliService(BaliProtocol):
             "surrender_type": "yield",
             "resources_released": 0,
             "timestamp": datetime.now().isoformat(),
-            "message": "Yielded to the Mantra"
+            "message": "Yielded to the Mantra",
         }
 
     def surrender(self, surrender_type: SurrenderType = SurrenderType.YIELD) -> SurrenderResult:
@@ -67,7 +67,7 @@ class BaliService(BaliProtocol):
             "surrender_type": surrender_type.value,
             "resources_released": 0,
             "timestamp": datetime.now().isoformat(),
-            "message": f"Bali surrendered: {surrender_type.value}"
+            "message": f"Bali surrendered: {surrender_type.value}",
         }
 
     def can_surrender(self) -> bool:
@@ -89,7 +89,7 @@ class BaliService(BaliProtocol):
             "total_yields": self._total_yields,
             "total_releases": self._total_releases,
             "last_surrender": datetime.now().isoformat(),
-            "health": "pristine"
+            "health": "pristine",
         }
 
     # --- Economic Substrate Delegation ---
@@ -99,6 +99,7 @@ class BaliService(BaliProtocol):
         if self._bank is None:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.economy import BankProtocol
+
             self._bank = ServiceRegistry.get(BankProtocol)
         return self._bank
 
@@ -107,6 +108,7 @@ class BaliService(BaliProtocol):
         if self._vault is None:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.economy import VaultProtocol
+
             self._vault = ServiceRegistry.get(VaultProtocol)
         return self._vault
 
@@ -119,7 +121,10 @@ class BaliService(BaliProtocol):
 
         if hasattr(kernel, "lineage"):
             from vibe_core.lineage import LineageEventType
-            kernel.lineage.add_block(event_type=LineageEventType.KERNEL_SHUTDOWN, agent_id=None, data={"reason": reason})
+
+            kernel.lineage.add_block(
+                event_type=LineageEventType.KERNEL_SHUTDOWN, agent_id=None, data={"reason": reason}
+            )
             kernel.lineage.close()
 
         prakriti = getattr(kernel, "prakriti", None)
@@ -132,6 +137,7 @@ class BaliService(BaliProtocol):
         # 🍎 ASYNC PERSISTENCE CLEANUP (ADR-204)
         try:
             from vibe_core.state.state_service import get_state_service
+
             workspace = getattr(kernel, "_workspace", None)
             ss = get_state_service(workspace)
             if ss._worker_task:

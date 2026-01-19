@@ -12,7 +12,6 @@ Usage:
     steward observe
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -46,6 +45,7 @@ class MahamantraObserver(PanchaTattvaProtocol):
     The Observer (Narada).
     Sees the state of the Mahamantra.
     """
+
     @property
     def __tattva__(self) -> TattvaDict:
         return {
@@ -56,6 +56,7 @@ class MahamantraObserver(PanchaTattvaProtocol):
             "srivasa": "Observability Governance",
         }
 
+
 # Singleton instance
 observer = MahamantraObserver()
 
@@ -63,8 +64,10 @@ observer = MahamantraObserver()
 # OBSERVATION TYPES
 # =============================================================================
 
+
 class FolderMapping(TypedDict):
     """Folder → Mahajana mapping status."""
+
     folder: str
     mahajana: str
     position: int
@@ -74,6 +77,7 @@ class FolderMapping(TypedDict):
 
 class ProtocolStatus(TypedDict):
     """Protocol existence and connection status."""
+
     name: str
     exists: bool
     connected: bool
@@ -82,6 +86,7 @@ class ProtocolStatus(TypedDict):
 
 class ObserveResult(TypedDict):
     """Complete observation result."""
+
     mahamantra_type: str
     can_chant: bool
     can_tick: bool
@@ -95,6 +100,7 @@ class ObserveResult(TypedDict):
 # =============================================================================
 # OBSERVATION FUNCTIONS
 # =============================================================================
+
 
 def observe_mahamantra() -> Dict:
     """Observe mahamantra singleton state."""
@@ -128,13 +134,15 @@ def observe_folder_mappings() -> tuple[List[FolderMapping], List[str]]:
         else:
             mahajana, position = "unknown", -1
 
-        mappings.append(FolderMapping(
-            folder=folder,
-            mahajana=mahajana,
-            position=position,
-            exists=exists,
-            in_map=in_map,
-        ))
+        mappings.append(
+            FolderMapping(
+                folder=folder,
+                mahajana=mahajana,
+                position=position,
+                exists=exists,
+                in_map=in_map,
+            )
+        )
 
         if exists and not in_map:
             missing.append(folder)
@@ -162,12 +170,14 @@ def observe_protocols() -> List[ProtocolStatus]:
         except ImportError:
             exists = False
 
-        protocols.append(ProtocolStatus(
-            name=name,
-            exists=exists,
-            connected=connected,  # TODO: Check actual connection
-            location=module,
-        ))
+        protocols.append(
+            ProtocolStatus(
+                name=name,
+                exists=exists,
+                connected=connected,  # TODO: Check actual connection
+                location=module,
+            )
+        )
 
     return protocols
 
@@ -210,23 +220,23 @@ def print_observation() -> None:
 
     # Folder mappings
     print("=== FOLDER_IS_WIRING ===")
-    for m in result['folder_mappings']:
-        status = "✓" if m['in_map'] else "△"  # △ = hash-based
-        exists = "exists" if m['exists'] else "MISSING"
+    for m in result["folder_mappings"]:
+        status = "✓" if m["in_map"] else "△"  # △ = hash-based
+        exists = "exists" if m["exists"] else "MISSING"
         print(f"  {status} {m['folder']:20} → {m['mahajana']:12} ({m['position']:2}) [{exists}]")
     print()
 
-    if result['missing_mappings']:
+    if result["missing_mappings"]:
         print("  ⚠ Folders using hash-based mapping (not explicit):")
-        for folder in result['missing_mappings']:
+        for folder in result["missing_mappings"]:
             print(f"    - {folder}")
         print()
 
     # Protocols
     print("=== PROTOCOLS ===")
-    for p in result['protocols']:
-        exists = "✓" if p['exists'] else "✗"
-        connected = "CONNECTED" if p['connected'] else "not connected"
+    for p in result["protocols"]:
+        exists = "✓" if p["exists"] else "✗"
+        connected = "CONNECTED" if p["connected"] else "not connected"
         print(f"  {exists} {p['name']:30} [{connected}]")
     print()
 
@@ -236,6 +246,7 @@ def print_observation() -> None:
 # =============================================================================
 # CLI ENTRY
 # =============================================================================
+
 
 def cli_observe(args: List[str] = None) -> Dict:
     """
@@ -247,6 +258,7 @@ def cli_observe(args: List[str] = None) -> Dict:
 
     # Also print human-readable if not piped
     import sys
+
     if sys.stdout.isatty():
         print_observation()
 

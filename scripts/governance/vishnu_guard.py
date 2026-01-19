@@ -12,6 +12,7 @@ Enforces the "Ring 0" Protection Policy:
 Usage:
     python3 scripts/governance/vishnu_guard.py [--json]
 """
+
 import sys
 import json
 import subprocess
@@ -26,13 +27,18 @@ try:
     from vibe_core.protocols.integrity import VishnuIntegrityGuardian
 except ImportError as e:
     # Fallback JSON output for GAD-000 compliance even on crash
-    print(json.dumps({
-        "guard": "VISHNU_GUARD",
-        "status": "CRASHED",
-        "error": str(e),
-        "solution": "Fix imports in vibe_core/protocols/integrity.py"
-    }))
+    print(
+        json.dumps(
+            {
+                "guard": "VISHNU_GUARD",
+                "status": "CRASHED",
+                "error": str(e),
+                "solution": "Fix imports in vibe_core/protocols/integrity.py",
+            }
+        )
+    )
     sys.exit(1)
+
 
 def get_current_branch() -> str:
     """Get the current git branch name."""
@@ -42,20 +48,21 @@ def get_current_branch() -> str:
     except subprocess.CalledProcessError:
         return "unknown"
 
+
 def main():
     guardian = VishnuIntegrityGuardian()
     branch = get_current_branch()
-    
+
     # 1. OBSERVABILITY (GAD-000)
     # Are we allowed to modify Ring 0?
     # Only 'main' is Sovereign. All other branches are Maya relative to Ring 0.
-    is_sovereign_context = (branch == "main")
-    
+    is_sovereign_context = branch == "main"
+
     # 2. VERIFICATION
     # Check if Ring 0 files differ from origin/main
     # Note: verify_ring_0 fetches origin/main internally
     is_intact = guardian.verify_ring_0()
-    
+
     report = {
         "guard": "VISHNU_GUARD",
         "timestamp": str(subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"])).decode().strip(),
@@ -64,7 +71,7 @@ def main():
         "ring_0_status": "INTACT" if is_intact else "MODIFIED",
         "protected_files": guardian.get_protected_files(),
         "action": "NONE",
-        "restored": []
+        "restored": [],
     }
 
     # 3. ENFORCEMENT (The Law)
@@ -72,7 +79,7 @@ def main():
         # All good. The foundation is solid.
         print(json.dumps(report, indent=2))
         sys.exit(0)
-        
+
     else:
         # Ring 0 is modified.
         if is_sovereign_context:
@@ -84,23 +91,25 @@ def main():
             sys.exit(0)
         else:
             # We are on a branch. This is Rebellion. RESTORE.
-            print(f"\n🚫 BLOCK: Ring 0 modification detected on '{branch}'. Initiating VISHNU RESTORE...", file=sys.stderr)
-            
+            print(
+                f"\n🚫 BLOCK: Ring 0 modification detected on '{branch}'. Initiating VISHNU RESTORE...", file=sys.stderr
+            )
+
             try:
                 restored_files = guardian.restore_kernel()
                 report["action"] = "NUCLEAR_RESTORE"
                 report["restored"] = restored_files
                 report["status"] = "RESTORED"
-                
+
                 print(json.dumps(report, indent=2))
-                
+
                 # Human readable trailer
                 print("\n╔══════════════════════════════════════════════════════════════╗", file=sys.stderr)
                 print("║  ☢️  NUCLEAR RESET EXECUTED (GAD-000 PROTECTION)              ║", file=sys.stderr)
                 print("║  Violations reverted to origin/main.                         ║", file=sys.stderr)
                 print(f"║  Branch '{branch}' is not authorized to touch Ring 0.       ║", file=sys.stderr)
                 print("╚══════════════════════════════════════════════════════════════╝\n", file=sys.stderr)
-                
+
                 # EXIT 1 to STOP the commit of the *modified* (now reverted) files?
                 # Actually, if we restored, the files on disk are now clean (origin/main).
                 # But the INDEX might still have the changes staged!
@@ -108,13 +117,14 @@ def main():
                 # If we exit 0, the commit proceeds with the RESTORED (old) files.
                 # If we exit 1, the commit stops, user sees the revert.
                 # Exiting 1 is safer (fail fast).
-                sys.exit(1) 
-                
+                sys.exit(1)
+
             except Exception as e:
                 report["status"] = "FAILED"
                 report["error"] = str(e)
                 print(json.dumps(report, indent=2))
                 sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

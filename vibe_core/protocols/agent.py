@@ -5,7 +5,6 @@ All agents running in VibeOS must implement this protocol.
 This is the contract between the kernel and cartridges.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

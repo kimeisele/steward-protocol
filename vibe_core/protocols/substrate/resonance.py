@@ -38,7 +38,6 @@ ARCHITECTURE:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -73,25 +72,26 @@ class PhoneticClass(str, Enum):
     Phonetic classification for resonance.
     Based on Sanskrit varnas + Western approximations.
     """
+
     # Vowels (high resonance with HARE)
-    VOWEL_A = "A"      # a, ā, अ, आ
-    VOWEL_I = "I"      # i, ī, इ, ई
-    VOWEL_U = "U"      # u, ū, उ, ऊ
-    VOWEL_E = "E"      # e, ai, ए, ऐ
-    VOWEL_O = "O"      # o, au, ओ, औ
-    VOWEL_R = "R"      # ṛ, ऋ (vocalic r - unique to Sanskrit)
+    VOWEL_A = "A"  # a, ā, अ, आ
+    VOWEL_I = "I"  # i, ī, इ, ई
+    VOWEL_U = "U"  # u, ū, उ, ऊ
+    VOWEL_E = "E"  # e, ai, ए, ऐ
+    VOWEL_O = "O"  # o, au, ओ, औ
+    VOWEL_R = "R"  # ṛ, ऋ (vocalic r - unique to Sanskrit)
 
     # Consonants by articulation point
-    GUTTURAL = "G"     # k, kh, g, gh, ṅ (throat)
-    PALATAL = "P"      # c, ch, j, jh, ñ (palate)
-    RETROFLEX = "T"    # ṭ, ṭh, ḍ, ḍh, ṇ (curled tongue)
-    DENTAL = "D"       # t, th, d, dh, n (teeth)
-    LABIAL = "B"       # p, ph, b, bh, m (lips)
+    GUTTURAL = "G"  # k, kh, g, gh, ṅ (throat)
+    PALATAL = "P"  # c, ch, j, jh, ñ (palate)
+    RETROFLEX = "T"  # ṭ, ṭh, ḍ, ḍh, ṇ (curled tongue)
+    DENTAL = "D"  # t, th, d, dh, n (teeth)
+    LABIAL = "B"  # p, ph, b, bh, m (lips)
 
     # Special
-    SEMIVOWEL = "S"    # y, r, l, v
-    SIBILANT = "X"     # ś, ṣ, s
-    ASPIRATE = "H"     # h (most important - in HARE!)
+    SEMIVOWEL = "S"  # y, r, l, v
+    SIBILANT = "X"  # ś, ṣ, s
+    ASPIRATE = "H"  # h (most important - in HARE!)
 
     # Null
     NULL = "_"
@@ -100,75 +100,87 @@ class PhoneticClass(str, Enum):
 # Phonetic mapping for common characters
 PHONETIC_MAP: Final[Dict[str, PhoneticClass]] = {
     # Vowels
-    'a': PhoneticClass.VOWEL_A, 'ā': PhoneticClass.VOWEL_A,
-    'i': PhoneticClass.VOWEL_I, 'ī': PhoneticClass.VOWEL_I,
-    'u': PhoneticClass.VOWEL_U, 'ū': PhoneticClass.VOWEL_U,
-    'e': PhoneticClass.VOWEL_E, 'ai': PhoneticClass.VOWEL_E,
-    'o': PhoneticClass.VOWEL_O, 'au': PhoneticClass.VOWEL_O,
-    'ṛ': PhoneticClass.VOWEL_R, 'ri': PhoneticClass.VOWEL_R,
-
+    "a": PhoneticClass.VOWEL_A,
+    "ā": PhoneticClass.VOWEL_A,
+    "i": PhoneticClass.VOWEL_I,
+    "ī": PhoneticClass.VOWEL_I,
+    "u": PhoneticClass.VOWEL_U,
+    "ū": PhoneticClass.VOWEL_U,
+    "e": PhoneticClass.VOWEL_E,
+    "ai": PhoneticClass.VOWEL_E,
+    "o": PhoneticClass.VOWEL_O,
+    "au": PhoneticClass.VOWEL_O,
+    "ṛ": PhoneticClass.VOWEL_R,
+    "ri": PhoneticClass.VOWEL_R,
     # Gutturals (k-class) - KRISHNA starts here
-    'k': PhoneticClass.GUTTURAL, 'kh': PhoneticClass.GUTTURAL,
-    'g': PhoneticClass.GUTTURAL, 'gh': PhoneticClass.GUTTURAL,
-    'ṅ': PhoneticClass.GUTTURAL, 'c': PhoneticClass.GUTTURAL,  # English 'c' often = k
-
+    "k": PhoneticClass.GUTTURAL,
+    "kh": PhoneticClass.GUTTURAL,
+    "g": PhoneticClass.GUTTURAL,
+    "gh": PhoneticClass.GUTTURAL,
+    "ṅ": PhoneticClass.GUTTURAL,
+    "c": PhoneticClass.GUTTURAL,  # English 'c' often = k
     # Palatals
-    'ch': PhoneticClass.PALATAL, 'j': PhoneticClass.PALATAL,
-    'jh': PhoneticClass.PALATAL, 'ñ': PhoneticClass.PALATAL,
-
+    "ch": PhoneticClass.PALATAL,
+    "j": PhoneticClass.PALATAL,
+    "jh": PhoneticClass.PALATAL,
+    "ñ": PhoneticClass.PALATAL,
     # Retroflexes
-    'ṭ': PhoneticClass.RETROFLEX, 'ṭh': PhoneticClass.RETROFLEX,
-    'ḍ': PhoneticClass.RETROFLEX, 'ḍh': PhoneticClass.RETROFLEX,
-    'ṇ': PhoneticClass.RETROFLEX,
-
+    "ṭ": PhoneticClass.RETROFLEX,
+    "ṭh": PhoneticClass.RETROFLEX,
+    "ḍ": PhoneticClass.RETROFLEX,
+    "ḍh": PhoneticClass.RETROFLEX,
+    "ṇ": PhoneticClass.RETROFLEX,
     # Dentals
-    't': PhoneticClass.DENTAL, 'th': PhoneticClass.DENTAL,
-    'd': PhoneticClass.DENTAL, 'dh': PhoneticClass.DENTAL,
-    'n': PhoneticClass.DENTAL,
-
+    "t": PhoneticClass.DENTAL,
+    "th": PhoneticClass.DENTAL,
+    "d": PhoneticClass.DENTAL,
+    "dh": PhoneticClass.DENTAL,
+    "n": PhoneticClass.DENTAL,
     # Labials
-    'p': PhoneticClass.LABIAL, 'ph': PhoneticClass.LABIAL,
-    'b': PhoneticClass.LABIAL, 'bh': PhoneticClass.LABIAL,
-    'm': PhoneticClass.LABIAL,
-
+    "p": PhoneticClass.LABIAL,
+    "ph": PhoneticClass.LABIAL,
+    "b": PhoneticClass.LABIAL,
+    "bh": PhoneticClass.LABIAL,
+    "m": PhoneticClass.LABIAL,
     # Semivowels
-    'y': PhoneticClass.SEMIVOWEL, 'l': PhoneticClass.SEMIVOWEL,
-    'v': PhoneticClass.SEMIVOWEL, 'w': PhoneticClass.SEMIVOWEL,
-
+    "y": PhoneticClass.SEMIVOWEL,
+    "l": PhoneticClass.SEMIVOWEL,
+    "v": PhoneticClass.SEMIVOWEL,
+    "w": PhoneticClass.SEMIVOWEL,
     # Sibilants
-    'ś': PhoneticClass.SIBILANT, 'ṣ': PhoneticClass.SIBILANT,
-    's': PhoneticClass.SIBILANT, 'sh': PhoneticClass.SIBILANT,
-    'z': PhoneticClass.SIBILANT,
-
+    "ś": PhoneticClass.SIBILANT,
+    "ṣ": PhoneticClass.SIBILANT,
+    "s": PhoneticClass.SIBILANT,
+    "sh": PhoneticClass.SIBILANT,
+    "z": PhoneticClass.SIBILANT,
     # Aspirate (H!) - most important
-    'h': PhoneticClass.ASPIRATE,
-
+    "h": PhoneticClass.ASPIRATE,
     # Semivowel r (important - in HARE, KRISHNA, RAMA)
-    'r': PhoneticClass.SEMIVOWEL,
+    "r": PhoneticClass.SEMIVOWEL,
 }
 
 
 # The 3 Holy Name phonetic signatures
 HARE_SIGNATURE: Final[Tuple[PhoneticClass, ...]] = (
-    PhoneticClass.ASPIRATE,    # H
-    PhoneticClass.VOWEL_A,     # a
-    PhoneticClass.SEMIVOWEL,   # r
-    PhoneticClass.VOWEL_E,     # e
+    PhoneticClass.ASPIRATE,  # H
+    PhoneticClass.VOWEL_A,  # a
+    PhoneticClass.SEMIVOWEL,  # r
+    PhoneticClass.VOWEL_E,  # e
 )
 
 KRISHNA_SIGNATURE: Final[Tuple[PhoneticClass, ...]] = (
-    PhoneticClass.GUTTURAL,    # K
-    PhoneticClass.VOWEL_R,     # ṛ (vocalic r)
-    PhoneticClass.SIBILANT,    # ṣ
-    PhoneticClass.RETROFLEX,   # ṇ
-    PhoneticClass.VOWEL_A,     # a
+    PhoneticClass.GUTTURAL,  # K
+    PhoneticClass.VOWEL_R,  # ṛ (vocalic r)
+    PhoneticClass.SIBILANT,  # ṣ
+    PhoneticClass.RETROFLEX,  # ṇ
+    PhoneticClass.VOWEL_A,  # a
 )
 
 RAMA_SIGNATURE: Final[Tuple[PhoneticClass, ...]] = (
-    PhoneticClass.SEMIVOWEL,   # R
-    PhoneticClass.VOWEL_A,     # ā
-    PhoneticClass.LABIAL,      # m
-    PhoneticClass.VOWEL_A,     # a
+    PhoneticClass.SEMIVOWEL,  # R
+    PhoneticClass.VOWEL_A,  # ā
+    PhoneticClass.LABIAL,  # m
+    PhoneticClass.VOWEL_A,  # a
 )
 
 
@@ -191,7 +203,7 @@ def to_phonetic_key(text: str) -> Tuple[PhoneticClass, ...]:
     while i < len(text):
         # Check for digraphs first (kh, gh, ch, jh, th, dh, ph, bh, sh)
         if i + 1 < len(text):
-            digraph = text[i:i+2]
+            digraph = text[i : i + 2]
             if digraph in PHONETIC_MAP:
                 result.append(PHONETIC_MAP[digraph])
                 i += 2
@@ -203,7 +215,7 @@ def to_phonetic_key(text: str) -> Tuple[PhoneticClass, ...]:
             result.append(PHONETIC_MAP[char])
         elif char.isalpha():
             # Unknown letter - try closest match
-            if char in 'aeiou':
+            if char in "aeiou":
                 result.append(PhoneticClass.VOWEL_A)
             else:
                 result.append(PhoneticClass.NULL)
@@ -243,18 +255,18 @@ def phonetic_distance(key1: Tuple[PhoneticClass, ...], key2: Tuple[PhoneticClass
 
     for i in range(1, m + 1):
         for j in range(1, n + 1):
-            if key1[i-1] == key2[j-1]:
+            if key1[i - 1] == key2[j - 1]:
                 cost = 0.0
-            elif key1[i-1].value[0] == key2[j-1].value[0]:
+            elif key1[i - 1].value[0] == key2[j - 1].value[0]:
                 # Same class category - lower cost
                 cost = 0.3
             else:
                 cost = 1.0
 
             dp[i][j] = min(
-                dp[i-1][j] + 1,      # deletion
-                dp[i][j-1] + 1,      # insertion
-                dp[i-1][j-1] + cost  # substitution
+                dp[i - 1][j] + 1,  # deletion
+                dp[i][j - 1] + 1,  # insertion
+                dp[i - 1][j - 1] + cost,  # substitution
             )
 
     # Normalize by max length
@@ -295,11 +307,12 @@ class ResonanceVector(TypedDict):
     Each dimension is resonance with one Holy Name.
     WATERTIGHT - no Any!
     """
-    hare: float      # Resonance with HARE (0.0 - 1.0)
-    krishna: float   # Resonance with KRISHNA (0.0 - 1.0)
-    rama: float      # Resonance with RAMA (0.0 - 1.0)
-    dominant: str    # Which name dominates ("hare", "krishna", "rama", or "void")
-    magnitude: float # Total resonance magnitude
+
+    hare: float  # Resonance with HARE (0.0 - 1.0)
+    krishna: float  # Resonance with KRISHNA (0.0 - 1.0)
+    rama: float  # Resonance with RAMA (0.0 - 1.0)
+    dominant: str  # Which name dominates ("hare", "krishna", "rama", or "void")
+    magnitude: float  # Total resonance magnitude
 
 
 def compute_resonance_vector(text: str) -> ResonanceVector:
@@ -324,7 +337,7 @@ def compute_resonance_vector(text: str) -> ResonanceVector:
         dominant = "rama"
 
     # Magnitude (Euclidean norm)
-    magnitude = math.sqrt(h*h + k*k + r*r)
+    magnitude = math.sqrt(h * h + k * k + r * r)
 
     return ResonanceVector(
         hare=h,
@@ -342,10 +355,11 @@ def compute_resonance_vector(text: str) -> ResonanceVector:
 
 class ResonanceEntry(TypedDict):
     """Entry in resonance matrix."""
+
     input_text: str
     vector: ResonanceVector
-    position: int      # Resolved position (0-15)
-    opcode_name: str   # MantraOpCode name
+    position: int  # Resolved position (0-15)
+    opcode_name: str  # MantraOpCode name
 
 
 class ResonanceMatrix(TypedDict):
@@ -353,10 +367,11 @@ class ResonanceMatrix(TypedDict):
     Matrix for n inputs resonating together.
     WATERTIGHT - no Any!
     """
+
     entries: List[ResonanceEntry]
-    coherence: float           # Overall coherence (how well they resonate together)
-    dominant_quarter: int      # Which quarter (0-3) dominates
-    total_magnitude: float     # Combined magnitude
+    coherence: float  # Overall coherence (how well they resonate together)
+    dominant_quarter: int  # Which quarter (0-3) dominates
+    total_magnitude: float  # Combined magnitude
 
 
 def resolve_position(vector: ResonanceVector, context_position: int = 0) -> int:
@@ -438,10 +453,22 @@ def compute_resonance_matrix(inputs: List[str]) -> ResonanceMatrix:
 
     # OpCode names for each position
     OPCODE_NAMES = [
-        "SYS_WAKE", "LOAD_ROOT", "ALLOC_MEM", "BIND_CTX",
-        "ASSERT_TRUTH", "RESOLVE_REQ", "GARBAGE_COLLECT", "PULSE_SYNC",
-        "FETCH_RES", "EXEC_SERVICE", "CHECK_DHARMA", "COMMIT_LOG",
-        "CACHE_STATE", "OPTIMIZE", "YIELD_CPU", "RESET_IP",
+        "SYS_WAKE",
+        "LOAD_ROOT",
+        "ALLOC_MEM",
+        "BIND_CTX",
+        "ASSERT_TRUTH",
+        "RESOLVE_REQ",
+        "GARBAGE_COLLECT",
+        "PULSE_SYNC",
+        "FETCH_RES",
+        "EXEC_SERVICE",
+        "CHECK_DHARMA",
+        "COMMIT_LOG",
+        "CACHE_STATE",
+        "OPTIMIZE",
+        "YIELD_CPU",
+        "RESET_IP",
     ]
 
     for i, text in enumerate(inputs):
@@ -450,12 +477,14 @@ def compute_resonance_matrix(inputs: List[str]) -> ResonanceMatrix:
         quarter = position // 4
         quarter_counts[quarter] += 1
 
-        entries.append(ResonanceEntry(
-            input_text=text,
-            vector=vector,
-            position=position,
-            opcode_name=OPCODE_NAMES[position],
-        ))
+        entries.append(
+            ResonanceEntry(
+                input_text=text,
+                vector=vector,
+                position=position,
+                opcode_name=OPCODE_NAMES[position],
+            )
+        )
 
         total_magnitude += vector["magnitude"]
 
@@ -554,10 +583,22 @@ class ResonanceEngine:
     def get_opcode(self, text: str) -> str:
         """Get OpCode name for input."""
         OPCODE_NAMES = [
-            "SYS_WAKE", "LOAD_ROOT", "ALLOC_MEM", "BIND_CTX",
-            "ASSERT_TRUTH", "RESOLVE_REQ", "GARBAGE_COLLECT", "PULSE_SYNC",
-            "FETCH_RES", "EXEC_SERVICE", "CHECK_DHARMA", "COMMIT_LOG",
-            "CACHE_STATE", "OPTIMIZE", "YIELD_CPU", "RESET_IP",
+            "SYS_WAKE",
+            "LOAD_ROOT",
+            "ALLOC_MEM",
+            "BIND_CTX",
+            "ASSERT_TRUTH",
+            "RESOLVE_REQ",
+            "GARBAGE_COLLECT",
+            "PULSE_SYNC",
+            "FETCH_RES",
+            "EXEC_SERVICE",
+            "CHECK_DHARMA",
+            "COMMIT_LOG",
+            "CACHE_STATE",
+            "OPTIMIZE",
+            "YIELD_CPU",
+            "RESET_IP",
         ]
         position = self.resolve(text)
         return OPCODE_NAMES[position]
@@ -578,7 +619,7 @@ class ResonanceEngine:
         opcode = self.get_opcode(text)
 
         lines = [
-            f"INPUT: \"{text}\"",
+            f'INPUT: "{text}"',
             f"PHONETIC KEY: {'-'.join(p.value for p in key)}",
             "",
             "RESONANCE VECTOR:",

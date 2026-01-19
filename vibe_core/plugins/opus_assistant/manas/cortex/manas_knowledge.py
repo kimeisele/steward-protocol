@@ -36,7 +36,6 @@ Usage:
     # -> {"required": ["user_database", "stripe_checkout_sdk"], ...}
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

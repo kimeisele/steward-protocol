@@ -33,7 +33,6 @@ the death of death itself."
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -62,6 +61,7 @@ from vibe_core.mahamantra import HeadProtocol, Avatara, MantraOpCode, ProtocolRe
 # NRISIMHA PROTOCOL BASE - Derives from MantraPosition 12
 # =============================================================================
 
+
 @ProtocolRegistry.register
 class NrisimhaProtocolBase(HeadProtocol):
     """
@@ -78,6 +78,7 @@ class NrisimhaProtocolBase(HeadProtocol):
         is_head()   -> True (HEAD position)
         parampara_vector() -> 481 (% 37 == 0)
     """
+
     _position_index: ClassVar[int] = 12  # THE ONLY CONFIGURATION
 
 
@@ -88,13 +89,15 @@ class NrisimhaProtocolBase(HeadProtocol):
 # WATERTIGHT STATE TYPES (No Any!)
 # =============================================================================
 
+
 class CacheLevel(str, Enum):
     """Levels of cache protection."""
-    HOT = "hot"               # Frequently accessed, in memory
-    WARM = "warm"             # Moderately accessed
-    COLD = "cold"             # Rarely accessed, may be evicted
-    PROTECTED = "protected"   # Never evict (Prahlada protection)
-    EVICTED = "evicted"       # Removed from cache
+
+    HOT = "hot"  # Frequently accessed, in memory
+    WARM = "warm"  # Moderately accessed
+    COLD = "cold"  # Rarely accessed, may be evicted
+    PROTECTED = "protected"  # Never evict (Prahlada protection)
+    EVICTED = "evicted"  # Removed from cache
 
 
 # Cache value types - WATERTIGHT
@@ -106,13 +109,14 @@ class CacheResult(TypedDict, total=False):
     Result of cache operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
     cache_key: str
-    cache_level: str          # CacheLevel value
-    hit: bool                 # Cache hit or miss
+    cache_level: str  # CacheLevel value
+    hit: bool  # Cache hit or miss
     size_bytes: int
-    timestamp: str            # ISO timestamp
-    ttl_seconds: int          # Time to live
+    timestamp: str  # ISO timestamp
+    ttl_seconds: int  # Time to live
     error_message: str
 
 
@@ -121,20 +125,22 @@ class CacheState(TypedDict, total=False):
     State of cache.
     WATERTIGHT - no Any!
     """
+
     total_entries: int
     hot_entries: int
     protected_entries: int
     total_size_bytes: int
     max_size_bytes: int
-    hit_rate: float           # 0.0-1.0
+    hit_rate: float  # 0.0-1.0
     total_hits: int
     total_misses: int
-    last_access: str          # ISO timestamp
-    health: str               # "pristine", "healthy", "degraded"
+    last_access: str  # ISO timestamp
+    health: str  # "pristine", "healthy", "degraded"
 
 
 class CacheCliResult(TypedDict):
     """Result of CLI cache operation. WATERTIGHT - no Any!"""
+
     success: bool
     key: str
     cache_level: str
@@ -347,5 +353,6 @@ def __getattr__(name: str):
     """Lazy import for NrisimhaService to avoid circular import."""
     if name == "NrisimhaService":
         from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
+
         return NrisimhaService
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

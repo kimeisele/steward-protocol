@@ -52,7 +52,6 @@ His workers are: BALI, SHUKA, YAMARAJA
 WATERTIGHT: No Any types. All typed explicitly.
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -85,13 +84,14 @@ class CacheEntry(TypedDict, total=False):
     A cached state entry.
     WATERTIGHT - no Any!
     """
-    key: str              # Cache key
-    value: str            # Cached value (serialized)
+
+    key: str  # Cache key
+    value: str  # Cached value (serialized)
     size_bytes: int
-    created_at: str       # ISO timestamp
-    expires_at: str       # ISO timestamp or empty for permanent
-    protected: bool       # Is this entry protected?
-    lineage_hash: int     # Parampara verification
+    created_at: str  # ISO timestamp
+    expires_at: str  # ISO timestamp or empty for permanent
+    protected: bool  # Is this entry protected?
+    lineage_hash: int  # Parampara verification
 
 
 class CacheResult(TypedDict, total=False):
@@ -99,10 +99,11 @@ class CacheResult(TypedDict, total=False):
     Result of a cache operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
     key: str
     value: str
-    hit: bool             # Was it a cache hit?
+    hit: bool  # Was it a cache hit?
     protected: bool
     lineage_verified: bool
     error_message: str
@@ -113,10 +114,11 @@ class ProtectionRequest(TypedDict, total=False):
     Request to protect an entity.
     WATERTIGHT - no Any!
     """
-    entity_id: str        # What to protect
-    entity_type: str      # "state", "process", "resource"
-    threat: str           # What threatens it
-    duration_seconds: int # How long (0 = permanent)
+
+    entity_id: str  # What to protect
+    entity_type: str  # "state", "process", "resource"
+    threat: str  # What threatens it
+    duration_seconds: int  # How long (0 = permanent)
     lineage_hash: int
 
 
@@ -125,11 +127,12 @@ class ProtectionResult(TypedDict, total=False):
     Result of protection.
     WATERTIGHT - no Any!
     """
+
     success: bool
     entity_id: str
-    protected_at: str     # ISO timestamp
-    protection_level: str # "standard", "elevated", "absolute"
-    expires_at: str       # ISO timestamp or empty
+    protected_at: str  # ISO timestamp
+    protection_level: str  # "standard", "elevated", "absolute"
+    expires_at: str  # ISO timestamp or empty
     lineage_verified: bool
     error_message: str
 
@@ -139,9 +142,10 @@ class PurgeRequest(TypedDict, total=False):
     Request to purge corrupt state.
     WATERTIGHT - no Any!
     """
-    target_id: str        # What to purge
-    reason: str           # Why purging
-    force: bool           # Force purge even if protected?
+
+    target_id: str  # What to purge
+    reason: str  # Why purging
+    force: bool  # Force purge even if protected?
     lineage_hash: int
 
 
@@ -150,9 +154,10 @@ class PurgeResult(TypedDict, total=False):
     Result of purge operation.
     WATERTIGHT - no Any!
     """
+
     success: bool
     target_id: str
-    purged_at: str        # ISO timestamp
+    purged_at: str  # ISO timestamp
     bytes_freed: int
     lineage_verified: bool
     error_message: str
@@ -427,6 +432,7 @@ class Nrisimha(BaseAvatara):
         expires = ""
         if duration > 0:
             from datetime import timedelta
+
             expires = (now + timedelta(seconds=duration)).isoformat()
 
         result = ProtectionResult(

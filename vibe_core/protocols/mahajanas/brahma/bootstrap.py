@@ -23,6 +23,7 @@ SHASTRA BASIS:
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
+
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -61,15 +62,17 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # BOOTSTRAP PHASE
 # =============================================================================
 
+
 class BootstrapPhase(str, Enum):
     """Phases of system bootstrap."""
-    DORMANT = "dormant"           # Before boot
-    WAKING = "waking"             # SYS_WAKE
-    DISCOVERING = "discovering"   # Finding config
-    PREPARING = "preparing"       # Allocating resources
-    INITIALIZING = "initializing" # Starting subsystems
-    READY = "ready"               # Fully operational
-    FAILED = "failed"             # Boot failed
+
+    DORMANT = "dormant"  # Before boot
+    WAKING = "waking"  # SYS_WAKE
+    DISCOVERING = "discovering"  # Finding config
+    PREPARING = "preparing"  # Allocating resources
+    INITIALIZING = "initializing"  # Starting subsystems
+    READY = "ready"  # Fully operational
+    FAILED = "failed"  # Boot failed
 
 
 # =============================================================================
@@ -82,6 +85,7 @@ BootstrapHook = Callable[[], bool]
 @dataclass
 class BootstrapStep:
     """A single step in the bootstrap sequence."""
+
     name: str
     phase: BootstrapPhase
     hook: BootstrapHook
@@ -93,6 +97,7 @@ class BootstrapStep:
 @dataclass(frozen=True)
 class BootstrapResult:
     """Result of bootstrap."""
+
     success: bool
     phase: BootstrapPhase
     duration_ms: int
@@ -104,6 +109,7 @@ class BootstrapResult:
 # =============================================================================
 # BOOTSTRAP PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class BootstrapProtocol(Protocol):
@@ -146,6 +152,7 @@ class BootstrapProtocol(Protocol):
 # =============================================================================
 # BOOTSTRAP IMPLEMENTATION
 # =============================================================================
+
 
 class Bootstrap:
     """
@@ -283,6 +290,7 @@ class Bootstrap:
 # NULL BOOTSTRAP
 # =============================================================================
 
+
 class NullBootstrap:
     """Instant bootstrap - for testing."""
 
@@ -303,8 +311,12 @@ class NullBootstrap:
 
     def boot(self, timeout_ms: int = 30000) -> BootstrapResult:
         return BootstrapResult(
-            success=True, phase=BootstrapPhase.READY, duration_ms=0,
-            steps_completed=0, steps_failed=0, message="NullBootstrap - instant ready",
+            success=True,
+            phase=BootstrapPhase.READY,
+            duration_ms=0,
+            steps_completed=0,
+            steps_failed=0,
+            message="NullBootstrap - instant ready",
         )
 
     def get_state(self) -> GenesisState:
@@ -316,7 +328,15 @@ class NullBootstrap:
 # =============================================================================
 
 __all__ = [
-    "OWNER", "LOTUS_POSITION", "LOTUS_QUARTER", "OWNED_OPCODES",
-    "BootstrapPhase", "BootstrapStep", "BootstrapResult", "BootstrapHook",
-    "BootstrapProtocol", "Bootstrap", "NullBootstrap",
+    "OWNER",
+    "LOTUS_POSITION",
+    "LOTUS_QUARTER",
+    "OWNED_OPCODES",
+    "BootstrapPhase",
+    "BootstrapStep",
+    "BootstrapResult",
+    "BootstrapHook",
+    "BootstrapProtocol",
+    "Bootstrap",
+    "NullBootstrap",
 ]

@@ -33,7 +33,6 @@ WATERTIGHT: No Any types. All typed explicitly.
 Author: The Mahamantra Itself
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -72,12 +71,12 @@ from vibe_core.mahamantra.protocols._core import (
 # =============================================================================
 
 from vibe_core.mahamantra.substrate.seed import (
-    LILA as LILA_LIMIT,           # 48 - Total Lila (16 * 3)
-    TRINITY as LILA_CYCLES,       # 3  - Trinity (Hare, Krishna, Rama)
-    NAVADVIPA as NAVADVIPA_PHASE, # 24 - Build Phase
-    PURI as PURI_PHASE,           # 24 - Runtime Phase
-    PARAMPARA,                    # 37 - Lineage verification
-    KSHETRA as KSETRA_COUNT,      # 24 - Boundary (Prakriti)
+    LILA as LILA_LIMIT,  # 48 - Total Lila (16 * 3)
+    TRINITY as LILA_CYCLES,  # 3  - Trinity (Hare, Krishna, Rama)
+    NAVADVIPA as NAVADVIPA_PHASE,  # 24 - Build Phase
+    PURI as PURI_PHASE,  # 24 - Runtime Phase
+    PARAMPARA,  # 37 - Lineage verification
+    KSHETRA as KSETRA_COUNT,  # 24 - Boundary (Prakriti)
 )
 
 # From _core.py: KSETRA_COUNT = 24 (Prakriti elements)
@@ -94,6 +93,7 @@ assert LILA_LIMIT % PARAMPARA != 0, "48 % 37 != 0 - Lila is transcendental to Pa
 # LILA PHASE - Chaitanya's Two Halves
 # =============================================================================
 
+
 class LilaPhase(str, Enum):
     """
     The two phases of Chaitanya Mahaprabhu's manifest Lila.
@@ -109,6 +109,7 @@ class LilaPhase(str, Enum):
     COMPLETE (48):
         Lila cycle finished. Reset or escalate.
     """
+
     NAVADVIPA = "navadvipa"
     PURI = "puri"
     COMPLETE = "complete"
@@ -117,9 +118,7 @@ class LilaPhase(str, Enum):
     def from_index(cls, index: int) -> "LilaPhase":
         """Derive phase from item index."""
         if index < 0:
-            raise LilaBoundaryViolation(
-                f"Negative index {index} - Maya (illusion)"
-            )
+            raise LilaBoundaryViolation(f"Negative index {index} - Maya (illusion)")
         if index < LILA_BOUNDARY:
             return cls.NAVADVIPA
         if index < LILA_LIMIT:
@@ -140,6 +139,7 @@ class LilaPhase(str, Enum):
 # EXCEPTIONS - Boundary Violations
 # =============================================================================
 
+
 class LilaBoundaryViolation(Exception):
     """
     Raised when Lila boundary is violated.
@@ -159,8 +159,7 @@ class LilaBoundaryViolation(Exception):
         self.boundary = boundary
         self.phase = phase
         super().__init__(
-            f"LILA BOUNDARY VIOLATION [{phase.value}]: {message} "
-            f"(count={current_count}, limit={boundary})"
+            f"LILA BOUNDARY VIOLATION [{phase.value}]: {message} (count={current_count}, limit={boundary})"
         )
 
 
@@ -173,10 +172,7 @@ class ParamparaDisconnection(Exception):
 
     def __init__(self, signature: int) -> None:
         self.signature = signature
-        super().__init__(
-            f"PARAMPARA DISCONNECTION: Signature {signature} % 37 = "
-            f"{signature % PARAMPARA} (expected 0)"
-        )
+        super().__init__(f"PARAMPARA DISCONNECTION: Signature {signature} % 37 = {signature % PARAMPARA} (expected 0)")
 
 
 # =============================================================================
@@ -303,16 +299,12 @@ class LilaBoundary(Generic[T]):
 
         # Check Parampara
         if self.signature % PARAMPARA != 0:
-            violations.append(
-                f"Parampara disconnected: {self.signature} % 37 != 0"
-            )
+            violations.append(f"Parampara disconnected: {self.signature} % 37 != 0")
 
         # Check boundary
         limit = LilaPhase.get_limit(self.phase)
         if len(self.items) > limit:
-            violations.append(
-                f"Boundary exceeded: {len(self.items)} > {limit} ({self.phase.value})"
-            )
+            violations.append(f"Boundary exceeded: {len(self.items)} > {limit} ({self.phase.value})")
 
         return (len(violations) == 0, violations)
 
@@ -363,6 +355,7 @@ class LilaBoundary(Generic[T]):
 # =============================================================================
 # LILA BOUNDED OUTPUT - For CLI/API responses
 # =============================================================================
+
 
 @dataclass
 class LilaBoundedOutput:
@@ -458,6 +451,7 @@ class LilaBoundedOutput:
 # =============================================================================
 # THE LILA PROTOCOL - Self-Definition
 # =============================================================================
+
 
 class LilaProtocol(MahamantraProtocolBase):
     """

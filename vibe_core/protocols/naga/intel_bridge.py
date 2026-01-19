@@ -41,18 +41,21 @@ from vibe_core.protocols.naga.flood import FloodObservation
 # INTELLIGENCE TYPES
 # =============================================================================
 
+
 class IntelCategory(str, Enum):
     """Categories of Naga intelligence."""
-    SECURITY = "security"        # Toxicity, violations
-    HEALTH = "health"            # System health, performance
-    BEHAVIOR = "behavior"        # Pattern detection, anomalies
-    CONTEXT = "context"          # Contextual awareness
-    THREAT = "threat"            # Active threats
-    SUGGESTION = "suggestion"    # Recommendations
+
+    SECURITY = "security"  # Toxicity, violations
+    HEALTH = "health"  # System health, performance
+    BEHAVIOR = "behavior"  # Pattern detection, anomalies
+    CONTEXT = "context"  # Contextual awareness
+    THREAT = "threat"  # Active threats
+    SUGGESTION = "suggestion"  # Recommendations
 
 
 class IntelPriority(str, Enum):
     """Priority levels for intelligence."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -63,6 +66,7 @@ class IntelPriority(str, Enum):
 # INTEL ITEM (What we bridge)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class IntelItem:
     """
@@ -71,13 +75,14 @@ class IntelItem:
     This is the standardized format for Naga insights
     that can be consumed by chat and other systems.
     """
+
     item_id: str
     category: IntelCategory
     priority: IntelPriority
-    summary: str                # One-line summary
-    details: str                # Full details (markdown OK)
-    source_naga: str            # Which NAGA generated this
-    relevance_score: float      # 0.0 - 1.0 (how relevant to current context)
+    summary: str  # One-line summary
+    details: str  # Full details (markdown OK)
+    source_naga: str  # Which NAGA generated this
+    relevance_score: float  # 0.0 - 1.0 (how relevant to current context)
     timestamp: datetime = field(default_factory=datetime.now)
     tags: Tuple[str, ...] = ()  # Search tags
 
@@ -105,6 +110,7 @@ class IntelItem:
 # INTEL QUERY (How we ask)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class IntelQuery:
     """
@@ -112,7 +118,8 @@ class IntelQuery:
 
     Used by chat and CLI to request relevant insights.
     """
-    context: str                # Current context (chat topic, file path, etc.)
+
+    context: str  # Current context (chat topic, file path, etc.)
     categories: Tuple[IntelCategory, ...] = ()  # Filter by category (empty = all)
     min_priority: IntelPriority = IntelPriority.LOW
     max_results: int = 5
@@ -127,6 +134,7 @@ class IntelResponse:
 
     Contains matching intelligence items.
     """
+
     items: Tuple[IntelItem, ...]
     query: IntelQuery
     total_available: int  # Total items matching (before limit)
@@ -146,6 +154,7 @@ class IntelResponse:
 # =============================================================================
 # INTEL BRIDGE PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class IntelBridgeProtocol(Protocol):
@@ -192,12 +201,7 @@ class IntelBridgeProtocol(Protocol):
         """
         ...
 
-    def query_for_chat(
-        self,
-        user_message: str,
-        chat_context: str,
-        limit: int = 3
-    ) -> IntelResponse:
+    def query_for_chat(self, user_message: str, chat_context: str, limit: int = 3) -> IntelResponse:
         """
         Query intelligence relevant to a chat message.
 
@@ -210,11 +214,7 @@ class IntelBridgeProtocol(Protocol):
     # DIRECT ACCESS
     # =========================================================================
 
-    def get_recent(
-        self,
-        limit: int = 10,
-        category: Optional[IntelCategory] = None
-    ) -> List[IntelItem]:
+    def get_recent(self, limit: int = 10, category: Optional[IntelCategory] = None) -> List[IntelItem]:
         """Get recent intel items."""
         ...
 
@@ -231,9 +231,7 @@ class IntelBridgeProtocol(Protocol):
     # =========================================================================
 
     def subscribe(
-        self,
-        callback: Callable[[IntelItem], None],
-        categories: Optional[Tuple[IntelCategory, ...]] = None
+        self, callback: Callable[[IntelItem], None], categories: Optional[Tuple[IntelCategory, ...]] = None
     ) -> str:
         """
         Subscribe to intel updates.
@@ -276,6 +274,7 @@ class IntelBridgeProtocol(Protocol):
 # NULL IMPLEMENTATION
 # =============================================================================
 
+
 class NullIntelBridge:
     """
     Null implementation of IntelBridgeProtocol.
@@ -292,29 +291,12 @@ class NullIntelBridge:
         return "shuka"
 
     def query(self, intel_query: IntelQuery) -> IntelResponse:
-        return IntelResponse(
-            items=(),
-            query=intel_query,
-            total_available=0
-        )
+        return IntelResponse(items=(), query=intel_query, total_available=0)
 
-    def query_for_chat(
-        self,
-        user_message: str,
-        chat_context: str,
-        limit: int = 3
-    ) -> IntelResponse:
-        return IntelResponse(
-            items=(),
-            query=IntelQuery(context=user_message),
-            total_available=0
-        )
+    def query_for_chat(self, user_message: str, chat_context: str, limit: int = 3) -> IntelResponse:
+        return IntelResponse(items=(), query=IntelQuery(context=user_message), total_available=0)
 
-    def get_recent(
-        self,
-        limit: int = 10,
-        category: Optional[IntelCategory] = None
-    ) -> List[IntelItem]:
+    def get_recent(self, limit: int = 10, category: Optional[IntelCategory] = None) -> List[IntelItem]:
         return []
 
     def get_critical(self) -> List[IntelItem]:
@@ -324,9 +306,7 @@ class NullIntelBridge:
         return []
 
     def subscribe(
-        self,
-        callback: Callable[[IntelItem], None],
-        categories: Optional[Tuple[IntelCategory, ...]] = None
+        self, callback: Callable[[IntelItem], None], categories: Optional[Tuple[IntelCategory, ...]] = None
     ) -> str:
         return "null-subscription"
 

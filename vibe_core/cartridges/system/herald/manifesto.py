@@ -14,7 +14,6 @@ ARCHITECTURE: Uses Kernel I/O Service when available, falls back to direct write
               for standalone execution. See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===

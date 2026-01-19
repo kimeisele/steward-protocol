@@ -33,17 +33,15 @@ __genesis__ = "0x5e296ca2"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Tuple
 
-from vibe_core.protocols.naga.cli_command import (
-    NagaCommandBase,
-    NagaCommandResult,
-    naga_command)
+from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
 
 @naga_command(
     opcode=MantraOpCode.DHARMA_TEST,
     name="flood",
-    help_text="FloodManager status and pulse sync (MANU's law - PURIFY phase)")
+    help_text="FloodManager status and pulse sync (MANU's law - PURIFY phase)",
+)
 class FloodCommand(NagaCommandBase):
     """
     Flood command implementation.
@@ -95,9 +93,9 @@ class FloodCommand(NagaCommandBase):
             output_parts.append(f"  Active:        {flood_status['active']}")
             output_parts.append(f"  Observations:  {flood_status['observations']}")
             output_parts.append(f"  Subscribers:   {flood_status['subscribers']}")
-            data.append(("active", str(flood_status['active'])))
-            data.append(("observations", str(flood_status['observations'])))
-            data.append(("subscriber_count", str(flood_status['subscribers'])))
+            data.append(("active", str(flood_status["active"])))
+            data.append(("observations", str(flood_status["observations"])))
+            data.append(("subscriber_count", str(flood_status["subscribers"])))
 
             if show_stats:
                 output_parts.append("")
@@ -109,7 +107,7 @@ class FloodCommand(NagaCommandBase):
             if show_subscribers:
                 output_parts.append("")
                 output_parts.append("  Active Subscribers:")
-                subscribers = flood_status.get('subscriber_list', [])
+                subscribers = flood_status.get("subscriber_list", [])
                 if subscribers:
                     for sub in subscribers[:10]:
                         output_parts.append(f"    • {sub}")
@@ -124,7 +122,7 @@ class FloodCommand(NagaCommandBase):
                 output_parts.append(f"    Rate:            {flood_status.get('pulse_rate', 60)} bpm")
                 output_parts.append(f"    Last Pulse:      {flood_status.get('last_pulse', 'N/A')}")
                 output_parts.append(f"    Sync Status:     {flood_status.get('sync_status', 'UNKNOWN')}")
-                data.append(("pulse_rate", str(flood_status.get('pulse_rate', 60))))
+                data.append(("pulse_rate", str(flood_status.get("pulse_rate", 60))))
 
         else:
             output_parts.append("")
@@ -143,9 +141,7 @@ class FloodCommand(NagaCommandBase):
         output_parts.append("=" * 50)
         output_parts.append("PULSE_SYNC: Rhythm maintained")
 
-        return self.success(
-            "\n".join(output_parts),
-            data=tuple(data))
+        return self.success("\n".join(output_parts), data=tuple(data))
 
     def _get_flood_status(self) -> dict:
         """Get FloodManager status from Federation."""

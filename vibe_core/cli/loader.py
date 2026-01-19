@@ -48,11 +48,13 @@ logger = logging.getLogger("CLI_LOADER")
 
 class CLILoaderError(Exception):
     """Error during CLI command discovery."""
+
     pass
 
 
 class CLICollisionError(CLILoaderError):
     """Two plugins define the same command name."""
+
     pass
 
 
@@ -209,19 +211,13 @@ class CLILoader:
         """Get all commands in a namespace."""
         if not self._discovered_commands:
             self.discover()
-        return [
-            cmd for cmd in self._discovered_commands
-            if cmd.get("namespace") == namespace
-        ]
+        return [cmd for cmd in self._discovered_commands if cmd.get("namespace") == namespace]
 
     def get_by_mode(self, mode: str) -> List[DiscoveredCommand]:
         """Get all commands with execution mode."""
         if not self._discovered_commands:
             self.discover()
-        return [
-            cmd for cmd in self._discovered_commands
-            if cmd.get("execution_mode") == mode
-        ]
+        return [cmd for cmd in self._discovered_commands if cmd.get("execution_mode") == mode]
 
     def get_command(self, full_name: str) -> Optional[DiscoveredCommand]:
         """Get a specific command by full name."""

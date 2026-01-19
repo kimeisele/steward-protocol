@@ -64,22 +64,24 @@ from typing import (
 
 class FileStatus(str, Enum):
     """Status of a scanned file."""
+
     PENDING = "pending"
     SCANNED = "scanned"
-    OWNED = "owned"           # Has mahajana declaration
-    INFERRED = "inferred"     # Heuristically identified (Census)
-    ORPHAN = "orphan"         # No declaration
-    SKIPPED = "skipped"       # Test file, __pycache__, etc.
-    ERROR = "error"           # Failed to parse
+    OWNED = "owned"  # Has mahajana declaration
+    INFERRED = "inferred"  # Heuristically identified (Census)
+    ORPHAN = "orphan"  # No declaration
+    SKIPPED = "skipped"  # Test file, __pycache__, etc.
+    ERROR = "error"  # Failed to parse
 
 
 class DeclarationType(str, Enum):
     """Types of declarations we can detect."""
-    MAHAJANA = "mahajana"           # __mahajana__ = "brahma"
-    POSITION = "position"           # __position__ = 1
-    GENESIS = "genesis"             # __genesis__ = "0x..."
-    OWNER = "owner"                 # OWNER = Mahajana.BRAHMA
-    PROTOCOL_BASE = "protocol_base" # class FooProtocolBase(WorkerProtocol)
+
+    MAHAJANA = "mahajana"  # __mahajana__ = "brahma"
+    POSITION = "position"  # __position__ = 1
+    GENESIS = "genesis"  # __genesis__ = "0x..."
+    OWNER = "owner"  # OWNER = Mahajana.BRAHMA
+    PROTOCOL_BASE = "protocol_base"  # class FooProtocolBase(WorkerProtocol)
 
 
 class ScanConfig(TypedDict, total=False):
@@ -88,68 +90,73 @@ class ScanConfig(TypedDict, total=False):
 
     Injected via protocol - NO HARDCODING.
     """
-    base_path: str                          # Root path to scan
-    include_dirs: List[str]                 # Directories to include
-    exclude_patterns: List[str]             # Patterns to skip
-    file_extensions: List[str]              # Extensions to scan (default: [".py"])
-    max_depth: int                          # Max recursion depth (0 = unlimited)
-    follow_symlinks: bool                   # Follow symbolic links
-    parse_docstrings: bool                  # Extract docstrings
-    detect_declarations: List[str]          # DeclarationType values to detect
+
+    base_path: str  # Root path to scan
+    include_dirs: List[str]  # Directories to include
+    exclude_patterns: List[str]  # Patterns to skip
+    file_extensions: List[str]  # Extensions to scan (default: [".py"])
+    max_depth: int  # Max recursion depth (0 = unlimited)
+    follow_symlinks: bool  # Follow symbolic links
+    parse_docstrings: bool  # Extract docstrings
+    detect_declarations: List[str]  # DeclarationType values to detect
 
 
 class Declaration(TypedDict, total=False):
     """
     A detected declaration. WATERTIGHT.
     """
-    type: str                   # DeclarationType value
-    name: str                   # Declaration name (e.g., "brahma")
-    value: str                  # Raw value as string
-    line_number: int            # Line in file
-    verified: bool              # Passed validation (e.g., parampara % 37 == 0)
+
+    type: str  # DeclarationType value
+    name: str  # Declaration name (e.g., "brahma")
+    value: str  # Raw value as string
+    line_number: int  # Line in file
+    verified: bool  # Passed validation (e.g., parampara % 37 == 0)
 
 
 class ScannedFile(TypedDict, total=False):
     """
     Result of scanning a single file. WATERTIGHT.
     """
-    path: str                           # Absolute file path
-    relative_path: str                  # Path relative to base
-    module_path: str                    # Python module path
-    status: str                         # FileStatus value
-    size_bytes: int                     # File size
-    declarations: List[Declaration]     # Found declarations
-    error_message: str                  # Error if status == ERROR
-    scanned_at: str                     # ISO timestamp
-    inference: Dict[str, object]        # Heuristic analysis results (identity, score)
+
+    path: str  # Absolute file path
+    relative_path: str  # Path relative to base
+    module_path: str  # Python module path
+    status: str  # FileStatus value
+    size_bytes: int  # File size
+    declarations: List[Declaration]  # Found declarations
+    error_message: str  # Error if status == ERROR
+    scanned_at: str  # ISO timestamp
+    inference: Dict[str, object]  # Heuristic analysis results (identity, score)
 
 
 class ScanResult(TypedDict, total=False):
     """
     Result of a full scan operation. WATERTIGHT.
     """
-    config: ScanConfig                      # Config used
-    files_total: int                        # Total files found
-    files_scanned: int                      # Successfully scanned
-    files_owned: int                        # With declarations
-    files_inferred: int                     # Heuristically identified
-    files_orphan: int                       # Without declarations
-    files_skipped: int                      # Skipped (tests, etc.)
-    files_error: int                        # Failed to parse
-    declarations_found: int                 # Total declarations
-    by_mahajana: Dict[str, int]            # Count per mahajana
-    by_position: Dict[int, int]            # Count per position
-    by_declaration_type: Dict[str, int]    # Count per type
-    files: List[ScannedFile]               # All scanned files
-    started_at: str                        # ISO timestamp
-    completed_at: str                      # ISO timestamp
-    duration_seconds: float                # Scan duration
+
+    config: ScanConfig  # Config used
+    files_total: int  # Total files found
+    files_scanned: int  # Successfully scanned
+    files_owned: int  # With declarations
+    files_inferred: int  # Heuristically identified
+    files_orphan: int  # Without declarations
+    files_skipped: int  # Skipped (tests, etc.)
+    files_error: int  # Failed to parse
+    declarations_found: int  # Total declarations
+    by_mahajana: Dict[str, int]  # Count per mahajana
+    by_position: Dict[int, int]  # Count per position
+    by_declaration_type: Dict[str, int]  # Count per type
+    files: List[ScannedFile]  # All scanned files
+    started_at: str  # ISO timestamp
+    completed_at: str  # ISO timestamp
+    duration_seconds: float  # Scan duration
 
 
 class ScanProgress(TypedDict, total=False):
     """
     Progress during scanning. WATERTIGHT.
     """
+
     files_total: int
     files_processed: int
     current_file: str
@@ -261,7 +268,7 @@ def _extract_assignment(
         if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
             value = node.value.value
             # Skip templates like "{mahajana}"
-            if '{' not in value and value:
+            if "{" not in value and value:
                 return Declaration(
                     type=DeclarationType.MAHAJANA.value,
                     name="mahajana",
@@ -289,7 +296,7 @@ def _extract_assignment(
             verified = False
             try:
                 int_val = int(value, 16)
-                verified = (int_val % 37 == 0)
+                verified = int_val % 37 == 0
             except ValueError:
                 pass
             return Declaration(

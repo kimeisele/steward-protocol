@@ -38,7 +38,6 @@ FRACTAL ARCHITECTURE:
     — Bhagavad Gita 7.7
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -54,8 +53,10 @@ from typing import Callable, Iterator, List, Optional, Union, Type, Dict, TYPE_C
 # WATERTIGHT TYPES
 # =============================================================================
 
+
 class TickState(TypedDict):
     """Return type for tick() - WATERTIGHT."""
+
     tick: int
     position: int
     quarter: str
@@ -66,6 +67,7 @@ class TickState(TypedDict):
     mala: int
     mantra: int
     lila: int
+
 
 # VEDA-4 PROTOCOL - Elegant Python Dunder Mapping
 from vibe_core.protocols.veda import (
@@ -118,6 +120,7 @@ if TYPE_CHECKING:
 # =============================================================================
 # DYNAMIC LOOKUP HELPERS - Derived from substrate ONLY
 # =============================================================================
+
 
 def _get_guardian_name(index: int) -> str:
     """
@@ -352,13 +355,13 @@ class ModuleRouter:
             try:
                 module_path = f"vibe_core.mahamantra.{quarter}.{name}"
                 module = importlib.import_module(module_path)
-                
+
                 # BALARAMA PROXY: Wrap if not compliant
                 if not isinstance(module, PanchaTattvaProtocol) and not hasattr(module, "__tattva__"):
                     # Find position
                     pos_idx = _get_index_by_guardian_name(name) or 0
                     module = MahamantraProxy(module, pos_idx, name)
-                
+
                 self._modules[name] = module
                 return module
             except ImportError:
@@ -367,12 +370,12 @@ class ModuleRouter:
         # 2. FALLBACK: PROTOCOLS/MAHAJANAS (legacy)
         module_path = f"vibe_core.protocols.mahajanas.{name}"
         module = importlib.import_module(module_path)
-        
+
         # BALARAMA PROXY: Wrap legacy modules too
         if not isinstance(module, PanchaTattvaProtocol) and not hasattr(module, "__tattva__"):
             pos_idx = _get_index_by_guardian_name(name) or 0
             module = MahamantraProxy(module, pos_idx, name)
-            
+
         self._modules[name] = module
         return module
 
@@ -475,7 +478,6 @@ class Mahamantra:
                 pass
 
     def __iter__(self) -> Iterator[MantraPosition]:
-
         """Iterate through all 16 positions."""
         return iter(MAHAMANTRA_POSITIONS)
 
@@ -664,7 +666,7 @@ class Mahamantra:
         Access the Shadow Reactor Factory.
 
         SANKIRTAN PATTERN: Spawn parallel reactors.
-        
+
         USAGE:
             reactor = mahamantra.shadow.spawn()
             reactor.tick(tick_state)
@@ -673,6 +675,7 @@ class Mahamantra:
         """
         if not hasattr(self, "_shadow_factory"):
             from vibe_core.mahamantra.reactor.shadow import shadow_reactor_factory
+
             self._shadow_factory = shadow_reactor_factory
         return self._shadow_factory
 
@@ -705,7 +708,7 @@ class Mahamantra:
                     module_path = f"vibe_core.protocols.mahajanas.{guardian_name}"
                     importlib.import_module(module_path)
                 except ImportError:
-                    # Fallback to loading the Mahamantra folder module 
+                    # Fallback to loading the Mahamantra folder module
                     # (which might also trigger the protocol load)
                     _ = _module_router[idx]
 
@@ -721,6 +724,7 @@ class Mahamantra:
         """
         if not hasattr(self, "_time_keeper"):
             from vibe_core.mahamantra.substrate.kala import TimeKeeper
+
             # Start from current tick counter if it exists
             self._time_keeper = TimeKeeper(start_ticks=self._tick_counter)
         return self._time_keeper
@@ -766,6 +770,7 @@ class Mahamantra:
         global _governance_bridge
         if _governance_bridge is None:
             from vibe_core.protocols.governance.bridge import ProtocolBridge
+
             _governance_bridge = ProtocolBridge
         return _governance_bridge
 
@@ -783,6 +788,7 @@ class Mahamantra:
         """
         # Need to use the router Mahajana, not source Mahajana
         from vibe_core.protocols.mahajanas.router import Mahajana as RouterMahajana
+
         owner = self.governance.get_owner(protocol_path)
         return owner
 
@@ -804,19 +810,19 @@ class Mahamantra:
     def chant(self, separator: str = " ") -> str:
         """
         Chant the COMPLETE Mahamantra (16 Words).
-        
+
         Drives the clock: 16 Ticks (4 Quarters).
-        
+
         Returns: The full mantra string.
         """
         quarters = [Quarter.GENESIS, Quarter.DHARMA, Quarter.KARMA, Quarter.MOKSHA]
         chanted_quarters = []
-        
+
         for q in quarters:
             chanted_quarters.append(self.chant_quarter(q))
-            
+
         full_chant = separator.join(chanted_quarters)
-        
+
         # Format nice output (2 lines of 8 is standard, but here we just return the string)
         # If specific formatting is needed, we can adjust, but raw string is safer for now.
         return full_chant
@@ -824,21 +830,21 @@ class Mahamantra:
     def chant_quarter(self, quarter: Union[str, Quarter]) -> str:
         """
         Chant one quarter.
-        
+
         CRITICAL: Drives the heartbeat (4 ticks).
         """
         if isinstance(quarter, str):
             quarter = Quarter[quarter.upper()]
-        
+
         positions = get_quarter_positions(quarter)
         words = []
-        
+
         for pos in positions:
             # 1. Advance Tick & Broadcast
             self.tick()
             # 2. Capture word
             words.append(pos.word.name.capitalize())
-            
+
         return " ".join(words)
 
     # =========================================================================
@@ -858,10 +864,10 @@ class Mahamantra:
         """
         # 1. Advance Time (Kala)
         time_state = self.kala.advance()
-        
+
         # Sync local counter (legacy support/caching)
         Mahamantra._tick_counter = time_state.total_ticks % WORDS
-        
+
         current = Mahamantra._tick_counter
         position = MAHAMANTRA_POSITIONS[current]
 
@@ -869,7 +875,7 @@ class Mahamantra:
         # Note: position.quarter is static based on index 0-15
         # We can also derive it from time_state.lila_position if needed
         # But for now, trust the static map for the "Word Property"
-        
+
         # Quarter based on index 0-15
         if current < 4:
             quarter = Quarter.GENESIS
@@ -890,12 +896,12 @@ class Mahamantra:
             # KALA Info
             mala=time_state.mala_count,
             mantra=time_state.mantra_in_mala,
-            lila=time_state.lila_position
+            lila=time_state.lila_position,
         )
 
         # 2. BROADCAST (Narada)
         self._broadcast(state)
-        
+
         # 3. ADVANCE (Managed by Kala above)
         # Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % WORDS
 

@@ -53,6 +53,7 @@ class OrchestratorStatus(TypedDict, total=False):
     verify_enabled: bool
     last_result: Optional[LastResultSummary]
 
+
 logger = logging.getLogger("OUROBOROS.LOOP")
 
 
@@ -256,12 +257,14 @@ class OuroborosLoopOrchestrator:
             from vibe_core.ouroboros.ananta_shesha import get_system_anchor
 
             anchor = get_system_anchor()
-            anchor.notify_violation({
-                "count": ingested_count,
-                "source": "system_ouroboros",
-                "rule_ids": list(set(v.rule_id for v in violations if v.rule_id)),
-                "files": list(set(str(v.file_path) for v in violations[:10])),  # First 10
-            })
+            anchor.notify_violation(
+                {
+                    "count": ingested_count,
+                    "source": "system_ouroboros",
+                    "rule_ids": list(set(v.rule_id for v in violations if v.rule_id)),
+                    "files": list(set(str(v.file_path) for v in violations[:10])),  # First 10
+                }
+            )
             logger.debug(f"🐍 OUROBOROS: Notified AnantaShesha of {ingested_count} violations")
         except Exception as e:
             logger.debug(f"🐍 OUROBOROS: AnantaShesha notify failed: {e}")

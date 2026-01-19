@@ -173,7 +173,7 @@ class ManifestGenerator:
         agent_info = manifest.get("agent", {})
         if not isinstance(agent_info, dict):
             agent_info = {}
-            
+
         caps = manifest.get("capabilities", [])
         if not isinstance(caps, list):
             caps = []
@@ -199,7 +199,7 @@ Capabilities: {", ".join(str(c) for c in caps) if caps else "None"}"""
         # Check required agent fields
         agent = manifest.get("agent", {})
         if not isinstance(agent, dict):
-             return ["Invalid manifest structure: 'agent' field must be a dict"]
+            return ["Invalid manifest structure: 'agent' field must be a dict"]
 
         if not agent.get("id"):
             errors.append("Missing required field: agent.id")

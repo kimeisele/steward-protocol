@@ -10,7 +10,6 @@ to the Mahajana framework. NO DUPLICATION - just delegation.
 WRAPPED: vibe_core.narasimha.NarasimhaProtocol
 """
 
-
 from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -146,10 +145,7 @@ class NrisimhaService(NrisimhaProtocolBase):
             return count
 
         # Preserve protected entries
-        to_remove = [
-            k for k, m in self._cache_meta.items()
-            if not m.get("protected")
-        ]
+        to_remove = [k for k, m in self._cache_meta.items() if not m.get("protected")]
         for key in to_remove:
             self._cache.pop(key, None)
             self._cache_meta.pop(key, None)
@@ -160,21 +156,13 @@ class NrisimhaService(NrisimhaProtocolBase):
         total = self._stats["hits"] + self._stats["misses"]
         hit_rate = self._stats["hits"] / total if total > 0 else 1.0
 
-        protected = sum(
-            1 for m in self._cache_meta.values()
-            if m.get("protected")
-        )
+        protected = sum(1 for m in self._cache_meta.values() if m.get("protected"))
 
         return CacheState(
             total_entries=len(self._cache),
-            hot_entries=sum(
-                1 for m in self._cache_meta.values()
-                if m.get("level") == CacheLevel.HOT
-            ),
+            hot_entries=sum(1 for m in self._cache_meta.values() if m.get("level") == CacheLevel.HOT),
             protected_entries=protected,
-            total_size_bytes=sum(
-                len(str(v)) for v in self._cache.values()
-            ),
+            total_size_bytes=sum(len(str(v)) for v in self._cache.values()),
             max_size_bytes=1024 * 1024 * 100,  # 100MB default
             hit_rate=hit_rate,
             total_hits=self._stats["hits"],

@@ -64,12 +64,14 @@ WORKER_LEVEL: Final[ProtocolLevel] = ProtocolLevel.MAHAJANAS
 # OPCODES
 # =============================================================================
 
+
 class GenesisOpCode:
     """Die OpCodes des Genesis Quarters."""
-    SYS_WAKE = 0      # Prithu (HEAD)
-    LOAD_ROOT = 1     # Brahma
-    ALLOC_MEM = 2     # Narada
-    INIT_THREAD = 3   # Shambhu
+
+    SYS_WAKE = 0  # Prithu (HEAD)
+    LOAD_ROOT = 1  # Brahma
+    ALLOC_MEM = 2  # Narada
+    INIT_THREAD = 3  # Shambhu
 
 
 # =============================================================================

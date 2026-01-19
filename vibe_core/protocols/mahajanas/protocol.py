@@ -41,12 +41,14 @@ from vibe_core.protocols.mahajanas.router import Mahajana, route
 # RESULT TYPES - What a Mahajana returns
 # =============================================================================
 
+
 class MahajanaVerdict(str, Enum):
     """The outcome of a Mahajana's judgment."""
-    ACCEPT = "accept"       # Request is valid, proceed
-    REJECT = "reject"       # Request is invalid, stop
-    DELEGATE = "delegate"   # Another Mahajana should handle
-    TRANSFORM = "transform" # Request needs modification first
+
+    ACCEPT = "accept"  # Request is valid, proceed
+    REJECT = "reject"  # Request is invalid, stop
+    DELEGATE = "delegate"  # Another Mahajana should handle
+    TRANSFORM = "transform"  # Request needs modification first
 
 
 @dataclass
@@ -56,11 +58,12 @@ class MahajanaResult:
 
     GAD-000: Observable, Parseable, Recoverable
     """
+
     verdict: MahajanaVerdict
-    mahajana: Mahajana          # Who made this judgment
-    opcode: MantraOpCode        # Which OpCode triggered
-    payload: Optional[Any]      # Transformed/returned data
-    reason: str                 # Human-readable explanation
+    mahajana: Mahajana  # Who made this judgment
+    opcode: MantraOpCode  # Which OpCode triggered
+    payload: Optional[Any]  # Transformed/returned data
+    reason: str  # Human-readable explanation
     delegate_to: Optional[Mahajana] = None  # If verdict is DELEGATE
 
     def is_success(self) -> bool:
@@ -116,12 +119,7 @@ class MahajanaProtocol(Protocol):
         """
         ...
 
-    def handle(
-        self,
-        opcode: MantraOpCode,
-        context: Any,
-        payload: Any
-    ) -> MahajanaResult:
+    def handle(self, opcode: MantraOpCode, context: Any, payload: Any) -> MahajanaResult:
         """
         Handle a request for the given OpCode.
 
@@ -137,6 +135,7 @@ class MahajanaProtocol(Protocol):
 # =============================================================================
 # BASE IMPLEMENTATION - The Discovered Pattern
 # =============================================================================
+
 
 class BaseMahajana:
     """
@@ -164,6 +163,7 @@ class BaseMahajana:
         """Discover OpCodes from router (lazy cached)."""
         if self._opcodes is None:
             from vibe_core.protocols.mahajanas.router import get_opcodes
+
             self._opcodes = get_opcodes(self._identity)
         return self._opcodes
 
@@ -171,12 +171,7 @@ class BaseMahajana:
         """Default: Check if opcode is in our list."""
         return opcode in self.get_opcodes()
 
-    def handle(
-        self,
-        opcode: MantraOpCode,
-        context: Any,
-        payload: Any
-    ) -> MahajanaResult:
+    def handle(self, opcode: MantraOpCode, context: Any, payload: Any) -> MahajanaResult:
         """
         Override this in subclass.
 
@@ -187,44 +182,22 @@ class BaseMahajana:
             mahajana=self._identity,
             opcode=opcode,
             payload=None,
-            reason=f"{self._identity.value} has not discovered how to handle {opcode.name}"
+            reason=f"{self._identity.value} has not discovered how to handle {opcode.name}",
         )
 
-    def _accept(
-        self,
-        opcode: MantraOpCode,
-        payload: Any,
-        reason: str
-    ) -> MahajanaResult:
+    def _accept(self, opcode: MantraOpCode, payload: Any, reason: str) -> MahajanaResult:
         """Helper: Create an ACCEPT result."""
         return MahajanaResult(
-            verdict=MahajanaVerdict.ACCEPT,
-            mahajana=self._identity,
-            opcode=opcode,
-            payload=payload,
-            reason=reason
+            verdict=MahajanaVerdict.ACCEPT, mahajana=self._identity, opcode=opcode, payload=payload, reason=reason
         )
 
-    def _reject(
-        self,
-        opcode: MantraOpCode,
-        reason: str
-    ) -> MahajanaResult:
+    def _reject(self, opcode: MantraOpCode, reason: str) -> MahajanaResult:
         """Helper: Create a REJECT result."""
         return MahajanaResult(
-            verdict=MahajanaVerdict.REJECT,
-            mahajana=self._identity,
-            opcode=opcode,
-            payload=None,
-            reason=reason
+            verdict=MahajanaVerdict.REJECT, mahajana=self._identity, opcode=opcode, payload=None, reason=reason
         )
 
-    def _delegate(
-        self,
-        opcode: MantraOpCode,
-        to: Mahajana,
-        reason: str
-    ) -> MahajanaResult:
+    def _delegate(self, opcode: MantraOpCode, to: Mahajana, reason: str) -> MahajanaResult:
         """Helper: Create a DELEGATE result."""
         return MahajanaResult(
             verdict=MahajanaVerdict.DELEGATE,
@@ -232,13 +205,14 @@ class BaseMahajana:
             opcode=opcode,
             payload=None,
             reason=reason,
-            delegate_to=to
+            delegate_to=to,
         )
 
 
 # =============================================================================
 # NULL IMPLEMENTATION - The Silent Mahajana
 # =============================================================================
+
 
 class NullMahajana(BaseMahajana):
     """
@@ -250,12 +224,7 @@ class NullMahajana(BaseMahajana):
     def __init__(self, identity: Mahajana = Mahajana.BRAHMA) -> None:
         super().__init__(identity)
 
-    def handle(
-        self,
-        opcode: MantraOpCode,
-        context: Any,
-        payload: Any
-    ) -> MahajanaResult:
+    def handle(self, opcode: MantraOpCode, context: Any, payload: Any) -> MahajanaResult:
         return self._accept(opcode, payload, "NullMahajana accepts all")
 
 

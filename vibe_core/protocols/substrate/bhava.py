@@ -33,14 +33,15 @@ class SattvikaBhava(IntEnum):
 
     Sanskrit terms with computational mappings:
     """
-    STAMBHA = 0      # 1. Being stopped as dumb (freeze/pause)
-    SVEDA = 1        # 2. Perspiration (resource heat/load)
-    ROMANCA = 2      # 3. Standing of hairs (alert state/interrupt)
+
+    STAMBHA = 0  # 1. Being stopped as dumb (freeze/pause)
+    SVEDA = 1  # 2. Perspiration (resource heat/load)
+    ROMANCA = 2  # 3. Standing of hairs (alert state/interrupt)
     SVARA_BHEDA = 3  # 4. Dislocation of voice (output transformation)
-    KAMPA = 4        # 5. Trembling (oscillation/instability)
-    VAIVARNYA = 5    # 6. Fading of body (resource release/GC)
-    ASHRU = 6        # 7. Crying in ecstasy (buffer overflow/emit)
-    PRALAYA = 7      # 8. Trance (transcendental state/suspend)
+    KAMPA = 4  # 5. Trembling (oscillation/instability)
+    VAIVARNYA = 5  # 6. Fading of body (resource release/GC)
+    ASHRU = 6  # 7. Crying in ecstasy (buffer overflow/emit)
+    PRALAYA = 7  # 8. Trance (transcendental state/suspend)
 
 
 # Sanskrit names with IAST transliteration
@@ -66,14 +67,15 @@ class BhavaState:
         state.set(SattvikaBhava.ASHRU)
         print(state.active)  # [ROMANCA, ASHRU]
     """
-    __slots__ = ['_mask']
+
+    __slots__ = ["_mask"]
 
     def __init__(self, initial: int = 0) -> None:
         self._mask = initial
 
     def set(self, bhava: SattvikaBhava) -> None:
         """Activate an ecstatic state."""
-        self._mask |= (1 << bhava.value)
+        self._mask |= 1 << bhava.value
 
     def clear(self, bhava: SattvikaBhava) -> None:
         """Deactivate an ecstatic state."""
@@ -95,7 +97,7 @@ class BhavaState:
     @property
     def count(self) -> int:
         """Number of active ecstatic states (0-8)."""
-        return bin(self._mask).count('1')
+        return bin(self._mask).count("1")
 
     @property
     def is_in_trance(self) -> bool:

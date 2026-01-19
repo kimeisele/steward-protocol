@@ -63,6 +63,7 @@ OWNED_OPCODES: Final[List[MantraOpCode]] = [
 # PROTOCOL LAYER - The Architectural Law
 # =============================================================================
 
+
 class ProtocolLayer(IntEnum):
     """
     The architectural layers of the protocol stack.
@@ -77,14 +78,15 @@ class ProtocolLayer(IntEnum):
     SAMKHYA: 24 + 12 + 1 = 37 (The Dancing Link)
     Without the 37 (Parampara), nothing works.
     """
-    KRISHNA = -2     # THE SOURCE - IS, not "represents" (acintya)
+
+    KRISHNA = -2  # THE SOURCE - IS, not "represents" (acintya)
     MAHAMANTRA = -2  # THE HOLY NAME - IS Krishna (non-different, both -2)
-    SUBSTRATE = -1   # Byte, Gene, Entropy - manifestation of -2
-    FOUNDATION = 0   # Types, Base, Enums
-    INTERFACE = 1    # Agent, Ledger, Scheduler
-    SERVICES = 2     # Manifestation, Memory, Reactor
-    WIRING = 3       # Bootstrap, CLI, Runtime
-    META = 108       # Dharma, Testable (The Observer)
+    SUBSTRATE = -1  # Byte, Gene, Entropy - manifestation of -2
+    FOUNDATION = 0  # Types, Base, Enums
+    INTERFACE = 1  # Agent, Ledger, Scheduler
+    SERVICES = 2  # Manifestation, Memory, Reactor
+    WIRING = 3  # Bootstrap, CLI, Runtime
+    META = 108  # Dharma, Testable (The Observer)
 
 
 # =============================================================================
@@ -94,17 +96,14 @@ class ProtocolLayer(IntEnum):
 PROTOCOL_MAP: Final[Dict[str, ProtocolLayer]] = {
     # LEVEL -2: THE SOURCE (The Origin of the Repository)
     "source": ProtocolLayer.KRISHNA,
-
     # LEVEL -1: SUBSTRATE (Holy Name Maths)
     "substrate/byte.py": ProtocolLayer.SUBSTRATE,
     "substrate/gene.py": ProtocolLayer.SUBSTRATE,
     "science/entropy.py": ProtocolLayer.SUBSTRATE,
-
     # LEVEL 0: FOUNDATION
     "types.py": ProtocolLayer.FOUNDATION,
     "primal.py": ProtocolLayer.FOUNDATION,
     "kernel_types.py": ProtocolLayer.FOUNDATION,
-
     # LEVEL 1: INTERFACE (The Big Three + Friends)
     "agent.py": ProtocolLayer.INTERFACE,
     "ledger.py": ProtocolLayer.INTERFACE,
@@ -113,7 +112,6 @@ PROTOCOL_MAP: Final[Dict[str, ProtocolLayer]] = {
     "synapse.py": ProtocolLayer.INTERFACE,
     "operator_protocol.py": ProtocolLayer.INTERFACE,
     "process.py": ProtocolLayer.INTERFACE,
-
     # LEVEL 2: SERVICES (The Logic)
     "manifestation.py": ProtocolLayer.SERVICES,
     "memory.py": ProtocolLayer.SERVICES,
@@ -125,12 +123,10 @@ PROTOCOL_MAP: Final[Dict[str, ProtocolLayer]] = {
     "governance/yamaraja.py": ProtocolLayer.SERVICES,
     "akashic.py": ProtocolLayer.SERVICES,
     "universal/gita.py": ProtocolLayer.INTERFACE,  # The Divine Standard
-
     # LEVEL 3: WIRING (The Action)
     "cli.py": ProtocolLayer.WIRING,
     "boot_protocol.py": ProtocolLayer.WIRING,
     "system_shell.py": ProtocolLayer.WIRING,
-
     # LEVEL 108: META
     "dharma.py": ProtocolLayer.META,
     "testable.py": ProtocolLayer.META,
@@ -141,6 +137,7 @@ PROTOCOL_MAP: Final[Dict[str, ProtocolLayer]] = {
 # =============================================================================
 # MANU'S FUNCTIONS - The Law in Action
 # =============================================================================
+
 
 def get_layer(filename: str) -> ProtocolLayer:
     """
