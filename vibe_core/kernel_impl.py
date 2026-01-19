@@ -105,6 +105,7 @@ from .runtime.unified_execution import create_unified_runtime
 from .scheduling import InMemoryScheduler, Task
 from .services.manifestation_service import ManifestationService
 from .state.schema import ExecutionRequest
+from .state.prakriti import Prakriti
 from .utils.async_logging import setup_async_logging
 from .utils.lazy_import import lazy_class
 from .security import VajraGuarded
@@ -210,7 +211,15 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         self._cognitive: OperatorCognitiveProtocol = NullCognitive()
         self._unified_router, self._unified_executor = create_unified_runtime(self)
 
-        # 5. BOOTSTRAP
+        # 5. PRAKRITI (State Engine) - KernelProtocol requirement
+        self._prakriti = Prakriti()
+        self._prakriti.inject_kernel(self)
+
+        # 6. LINEAGE (Parampara Chain) - KernelProtocol requirement
+        from vibe_core.lineage import LineageChain
+        self._lineage: LineageChain = LineageChain()
+
+        # 7. BOOTSTRAP
         if load_plugins:
             self.brahma.bootstrap(self, self._config)
 
@@ -426,6 +435,76 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     def chant_mahamantra(self, context: object) -> bool:
         """Delegate to Watchdog."""
         return self.nrisimha.chant_mahamantra(context)
+
+    # =========================================================================
+    # KERNELPROTOCOL COMPLIANCE (OPUS-FIX)
+    # =========================================================================
+
+    @property
+    def prakriti(self):
+        """Get the Prakriti state engine. KernelProtocol requirement."""
+        return self._prakriti
+
+    @property
+    def config(self):
+        """Get kernel configuration. KernelProtocol requirement."""
+        return self._config
+
+    @property
+    def lineage(self):
+        """Get the Parampara lineage chain. KernelProtocol requirement."""
+        return self._lineage
+
+    def register_cognitive(self, cognitive) -> None:
+        """Register a cognitive plugin. KernelProtocol requirement."""
+        self._cognitive = cognitive
+        logger.info("[KERNEL] Cognitive plugin registered")
+
+    async def process_operator_input(
+        self,
+        input_text: str,
+        session_id: Optional[str] = None,
+        signed_input = None,
+    ):
+        """Process natural language input from operator. KernelProtocol requirement."""
+        return await self._cognitive.process(input_text, session_id, signed_input)
+
+    def get_cognitive_capabilities(self) -> List[str]:
+        """Get capabilities of the registered cognitive layer. KernelProtocol requirement."""
+        if hasattr(self._cognitive, 'get_capabilities'):
+            return self._cognitive.get_capabilities()
+        return []
+
+    def get_system_status(self) -> Dict[str, object]:
+        """GAD-000: AI-readable system state. KernelProtocol requirement."""
+        return {
+            "status": self._status.value if hasattr(self._status, 'value') else str(self._status),
+            "agents": len(self._agent_registry),
+            "plugins": len(self._plugins),
+            "ledger_events": len(self.ledger.get_all_events()) if hasattr(self.ledger, 'get_all_events') else 0,
+        }
+
+    def get_ledger_hash(self) -> str:
+        """Get cryptographic hash of ledger state. KernelProtocol requirement."""
+        if hasattr(self.ledger, 'get_hash'):
+            return self.ledger.get_hash()
+        if hasattr(self.ledger, 'compute_hash'):
+            return self.ledger.compute_hash()
+        import hashlib
+        events = self.ledger.get_all_events() if hasattr(self.ledger, 'get_all_events') else []
+        return hashlib.sha256(str(events).encode()).hexdigest()
+
+    def get_bank(self):
+        """Get CivicBank via ServiceRegistry. KernelProtocol requirement."""
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.protocols.economy import BankProtocol
+        return ServiceRegistry.get(BankProtocol)
+
+    def get_vault(self):
+        """Get CivicVault via ServiceRegistry. KernelProtocol requirement."""
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.protocols.economy import VaultProtocol
+        return ServiceRegistry.get(VaultProtocol)
 
     # =========================================================================
     # MATHEMATICAL PROOF OF VISHNU KERNEL INTEGRITY (RAMANUJAN 1008)
