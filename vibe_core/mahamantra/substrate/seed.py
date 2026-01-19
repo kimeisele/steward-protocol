@@ -41,6 +41,12 @@ from vibe_core.mahamantra.protocols._seed import (
     LILA as _PROTO_LILA,
 )
 from vibe_core.mahamantra.protocols._seed import (
+    JIVA_QUALITIES as _PROTO_JIVA_QUALITIES,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    BHUKTI_MUKTI as _PROTO_BHUKTI_MUKTI,
+)
+from vibe_core.mahamantra.protocols._seed import (
     MALA as _PROTO_MALA,
 )
 from vibe_core.mahamantra.protocols._seed import (
@@ -380,6 +386,24 @@ assert HIDDEN_RESERVE == WORDS, "Hidden reserve must equal WORDS (16)"
 
 
 # =============================================================================
+# DERIVED: JIVA (50) - The Soul's Portion
+# =============================================================================
+# Bhakti-rasamrita-sindhu: The Jiva possesses 50 qualities in minute quantity
+# (out of Krishna's 64 qualities)
+#
+# THE FILTER: To enter Lila (48), Jiva (50) must drop 2:
+# - Bhukti (desire for material enjoyment)
+# - Mukti (desire for impersonal liberation)
+# 50 - 2 = 48
+
+JIVA_QUALITIES: Final[int] = 50  # The soul's portion
+BHUKTI_MUKTI: Final[int] = 2  # The 2 filters (material enjoyment + impersonal liberation)
+
+# Verification: Jiva (50) - Filter (2) = Lila (48)
+assert JIVA_QUALITIES - BHUKTI_MUKTI == LILA, "Jiva (50) - Filter (2) must equal Lila (48)"
+
+
+# =============================================================================
 # DERIVED: MALA (108) - Der Zyklus
 # =============================================================================
 # 108 = MAHAJANA_COUNT × NAVA = 12 × 9
@@ -422,6 +446,8 @@ assert MALA == _PROTO_MALA, "SSOT violation: MALA != protocols/_seed.py"
 assert QUALITIES == _PROTO_QUALITIES, "SSOT violation: QUALITIES != protocols/_seed.py"
 assert HIDDEN_RESERVE == _PROTO_HIDDEN_RESERVE, "SSOT violation: HIDDEN_RESERVE != protocols/_seed.py"
 assert NAVA == _PROTO_NAVA, "SSOT violation: NAVA != protocols/_seed.py"
+assert JIVA_QUALITIES == _PROTO_JIVA_QUALITIES, "SSOT violation: JIVA_QUALITIES != protocols/_seed.py"
+assert BHUKTI_MUKTI == _PROTO_BHUKTI_MUKTI, "SSOT violation: BHUKTI_MUKTI != protocols/_seed.py"
 
 # AKSARA_COUNT: 32 syllables (2 per word)
 AKSARA_COUNT: Final[int] = WORDS * 2  # 32
@@ -606,6 +632,9 @@ __all__ = [
     "HIDDEN_RESERVE",
     "QUALITIES",
     "AKSARA_COUNT",
+    # Jiva (50) + Filter (2)
+    "JIVA_QUALITIES",
+    "BHUKTI_MUKTI",
     # Mala (108)
     "MALA",
     "ROUNDS",
