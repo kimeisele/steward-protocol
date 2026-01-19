@@ -110,6 +110,7 @@ commands:
         type: int
         help: "Show last N entries (default: 10)"
         required: false
+        default: "10"
       - name: "--severity"
         type: str
         help: "Filter by severity: CRITICAL, HIGH, MEDIUM, LOW"
