@@ -17,9 +17,14 @@ __genesis__ = "0x0752f8c3"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import IntEnum, IntFlag
-from typing import NewType, List, Final, Union, Optional, Tuple
+from typing import TYPE_CHECKING, NewType, List, Final, Union, Optional, Tuple
 from datetime import datetime
 import math
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.substrate.mantra.pada import Pada
+    from vibe_core.mahamantra.substrate.mantra.aksara import Aksara
+    from vibe_core.mahamantra.substrate.mantra.routing import FractalLevel, FractalRoute
 
 # =============================================================================
 # IMPORT FROM URSUBSTRAT (seed.py)

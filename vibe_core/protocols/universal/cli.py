@@ -36,7 +36,11 @@ __genesis__ = "0xde0bbed4"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Protocol, runtime_checkable, List, Union, Dict
+from typing import TYPE_CHECKING, Optional, Protocol, runtime_checkable, List, Union, Dict
+
+if TYPE_CHECKING:
+    from vibe_core.protocols.universal.types import SovereignContext
+    from vibe_core.protocols.mahajanas.router import MahajanaRouter
 
 # IMPORTS (The Holy Trinity of Dependencies)
 from .bridge import MayavadError, SetuBandha

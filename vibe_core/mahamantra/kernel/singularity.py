@@ -47,7 +47,7 @@ __position__ = 1
 __genesis__ = "0x8dfc6e38"  # GenesisByte: parampara % 37 == 0
 
 import importlib
-from typing import Iterator, Optional, Union, Type, Dict, TYPE_CHECKING, TypedDict
+from typing import Callable, Iterator, List, Optional, Union, Type, Dict, TYPE_CHECKING, TypedDict
 
 
 # =============================================================================
@@ -110,6 +110,9 @@ _governance_bridge = None
 # Import protocol base for typing
 if TYPE_CHECKING:
     from vibe_core.mahamantra.substrate import MantraProtocol
+    from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
+    from vibe_core.mahamantra.substrate.kala import TimeKeeper
+    from vibe_core.bridge import ProtocolBridge
 
 
 # =============================================================================

@@ -188,7 +188,7 @@ def _dharma_yamaraja(proxy: "BalaramaProxy", tick: TickState) -> None:
     logger.info(f"⚖️ Yamaraja@{proxy.position}: Auditing Karma (Final Check)")
 
 
-DEFAULT_DHARMA: Dict[str, Callable[[Any, Any], None]] = {
+DEFAULT_DHARMA: Dict[str, Callable[["BalaramaProxy", TickState], None]] = {
     "prithu": _dharma_prithu,
     "janaka": _dharma_janaka,
     "bhishma": _dharma_bhishma,
@@ -275,7 +275,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         self._tick_count: int = 0  # How many times we were activated
 
         # ORBITAL REACTOR (Mounting)
-        self._reactor: Optional[Any] = None
+        self._reactor: Optional["OrbitalShadowReactor"] = None
         self._reactor_mounted: bool = False
 
         # Import the module
@@ -509,7 +509,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         """Number of times this service was activated by heartbeat."""
         return self._tick_count
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         """
         Delegate attribute access to wrapped module.
 
@@ -632,7 +632,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         self._reactor_mounted = True
         
     @property
-    def reactor(self) -> Optional[Any]:
+    def reactor(self) -> Optional["OrbitalShadowReactor"]:
         """Get the mounted reactor."""
         return self._reactor
 

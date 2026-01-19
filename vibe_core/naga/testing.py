@@ -88,6 +88,10 @@ if TYPE_CHECKING:
         CorrectionDispatcherProtocol,
     )
     from vibe_core.protocols.ledger import LedgerProtocol
+    from vibe_core.protocols.mahajanas.yamaraja.correction import (
+        DriftSource,
+        HealingStrategy,
+    )
 
 
 # =============================================================================
