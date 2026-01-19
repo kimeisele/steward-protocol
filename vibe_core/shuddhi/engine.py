@@ -192,7 +192,7 @@ class ShuddhiEngine(ShuddhiProtocol):
         if result.status == ShuddhiStatus.PURIFIED:
             try:
                 from vibe_core.di import ServiceRegistry
-                from vibe_core.protocols.mahajanas.vyasa import KnowledgeGraphProtocol
+                from vibe_core.protocols.mahajanas.prithu.knowledge import KnowledgeGraphProtocol
 
                 # Use protocol, not implementation
                 kg = ServiceRegistry.get(KnowledgeGraphProtocol)

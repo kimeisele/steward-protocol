@@ -22,5 +22,7 @@
   ".github/workflows/system-cycle.yml": "a3fb672d1797e4a541f5aea81472c5b3c6e0a8020fc483ce82842342ba67da85",
   ".pre-commit-config.yaml": "f510af9dbfc4ae191c95d1d05ba12b38f1471b12d8aa72f14e088ef49f055dc4",
   ".gitignore": "2787351a91ba738b66b45f3e19da8304410ef91175ef541850c33bab183e7320",
-  "scripts/governance/vishnu_guard.py": "98b1436638d405ede2fc082ddde086997364851737826c80862c424a2b2835a2"
+  "scripts/governance/vishnu_guard.py": "98b1436638d405ede2fc082ddde086997364851737826c80862c424a2b2835a2",
+  "vibe_core/shuddhi/engine.py": "43c71c96f71ec11e8da57fc88e7deb938e415f814861f6dd3982c14c9813168a",
+  "vibe_core/boot_orchestrator.py": "2aa909c358ed91ff2ded612850b0d0b969771cd82517526043b819ed5dab0b22"
 }
