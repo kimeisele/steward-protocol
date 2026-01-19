@@ -77,15 +77,22 @@ def main(argv: Optional[List[str]] = None) -> int:
 
         result = mahamantra.execute(command, args)
 
+        # If mahamantra didn't recognize the command (exit_code 127), fallback to UnifiedCLI
+        if result.get("exit_code") == 127:
+            from vibe_core.cli.unified_cli import UnifiedCLI
+
+            cli = UnifiedCLI()
+            return cli.run(argv)
+
         # Print output if any
-        if result["output"]:
+        if result.get("output"):
             print(result["output"], end="")
 
         # Print error if failed
-        if not result["success"] and result["error"]:
-            print(f"ERROR [{result['guardian']}@{result['position']}]: {result['error']}")
+        if not result.get("success") and result.get("error"):
+            print(f"ERROR [{result.get('guardian', '?')}@{result.get('position', '?')}]: {result['error']}")
 
-        return result["exit_code"]
+        return result.get("exit_code", EXIT_ERROR)
 
     except ImportError:
         # Mahamantra not available - direct legacy fallback

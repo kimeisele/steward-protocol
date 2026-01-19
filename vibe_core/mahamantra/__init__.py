@@ -117,8 +117,18 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 error=None,
             )
 
-        # Fallback to Narada
-        return ExecuteResult(success=False, output="No one heard your mantra.", guardian="narada", quarter="genesis")
+        # Fallback to Narada - return complete ExecuteResult
+        return ExecuteResult(
+            success=False,
+            exit_code=127,  # Command not found
+            position=2,  # Narada position
+            guardian="narada",
+            quarter="genesis",
+            guna="tamas",
+            requires_confirmation=False,
+            output="No one heard your mantra.",
+            error=None,
+        )
 
     def resolve(self, name: str) -> LotusNode:
         """Helper to find a node by guardian name."""
