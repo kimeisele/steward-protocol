@@ -158,13 +158,13 @@ rules:
   # "Any ist verboten. Wenn du Any schreibst, hast du das Datenmodell nicht verstanden."
   # ============================================================================
 
-  # TODSÜNDE: Any Usage (verboten laut PROMPT.md)
+  # TODSÜNDE: Any Usage (SATYAM - Truth, no hallucination of types)
   - id: "any_type_usage"
     target: "Name"
     match:
       name: "Any"
     severity: "MEDIUM"
-    message: "Any type usage detected. Violates PROMPT.md typing discipline."
+    message: "Any type usage detected. Violates DharmaPillar.SATYAM (truth in types)."
     fix_suggestion: "Replace Any with concrete type, Protocol, or TypeVar. Use Pydantic models for cross-module data."
     has_sattva_remedy: true  # AnyTypeRemedy removes unused Any imports
     # NOTE: Full Any replacement requires manual type inference - remedy only handles unused imports
