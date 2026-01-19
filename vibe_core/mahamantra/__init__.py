@@ -94,40 +94,44 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return 0.0, None
 
     def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
-        """Execute via resonance."""
-        score, winner = self.resonate(command)
+        """
+        Execute via cli_bridge (ROYAL DELEGATION).
 
-        if winner and score > 0:
-            guardian = winner._path.segments[-1]
-            quarter = winner._path.segments[0]
+        The Grüßaugust calls the General.
+        MahamantraLotus delegates to cli_bridge.route() which uses cli_engine.
 
-            # Simple awakening logic (Proxy/Service Hunt)
-            # In Phase 10, this will be fully decentralized
-            output = f"🕉️ {guardian.upper()} resonated with '{command}'."
+        Lazy import to prevent circular dependencies.
+        """
+        # ROYAL DELEGATION: Lazy import cli_bridge
+        from vibe_core.mahamantra.cli.bridge import cli_bridge
 
-            return ExecuteResult(
-                success=True,
-                exit_code=0,
-                position=-1,  # derived
-                guardian=guardian,
-                quarter=quarter,
-                guna="vishuddha",
-                requires_confirmation=False,
-                output=output,
-                error=None,
-            )
+        # Delegate to the real execution engine
+        bridge_result = cli_bridge.route(command, args or [])
 
-        # Fallback to Narada - return complete ExecuteResult
+        # Convert BridgeResult to ExecuteResult
+        # Get guardian info from position if available
+        guardian = "narada"  # default
+        quarter = "genesis"  # default
+        if bridge_result.position is not None:
+            try:
+                from vibe_core.mahamantra.substrate import MAHAMANTRA_POSITIONS
+                if 0 <= bridge_result.position < 16:
+                    pos = MAHAMANTRA_POSITIONS[bridge_result.position]
+                    guardian = pos.guardian.value
+                    quarter = pos.quarter.value
+            except (ImportError, IndexError):
+                pass
+
         return ExecuteResult(
-            success=False,
-            exit_code=127,  # Command not found
-            position=2,  # Narada position
-            guardian="narada",
-            quarter="genesis",
-            guna="tamas",
+            success=bridge_result.success,
+            exit_code=bridge_result.exit_code,
+            position=bridge_result.position or -1,
+            guardian=guardian,
+            quarter=quarter,
+            guna="vishuddha" if bridge_result.success else "tamas",
             requires_confirmation=False,
-            output="No one heard your mantra.",
-            error=None,
+            output=bridge_result.error or "",  # Bridge doesn't have output field, use error for now
+            error=bridge_result.error,
         )
 
     def resolve(self, name: str) -> LotusNode:
