@@ -11,7 +11,7 @@ STATEFUL: This class maintains task queues.
 
 from __future__ import annotations
 
-from typing import Callable, List, Any, TypeVar
+from typing import Callable, List, TypeVar
 
 from vibe_core.mahamantra.protocols._venu import VENU_POSITIONS
 
@@ -39,7 +39,7 @@ class MantraVoice:
         """
         self._voice_id = voice_id
         # Tasks per position: 16 lists (one per position)
-        self._tasks: List[List[Callable[[], Any]]] = [[] for _ in range(VENU_POSITIONS)]
+        self._tasks: List[List[Callable[[], object]]] = [[] for _ in range(VENU_POSITIONS)]
 
     @property
     def voice_id(self) -> int:
@@ -60,7 +60,7 @@ class MantraVoice:
             raise ValueError(f"Position must be 0-{VENU_POSITIONS - 1}, got {position}")
         self._tasks[position].append(task)
 
-    def get_tasks(self, position: int) -> List[Callable[[], Any]]:
+    def get_tasks(self, position: int) -> List[Callable[[], object]]:
         """
         Get all tasks queued for a specific position.
 

@@ -28,9 +28,10 @@ Position 12-15 (MOKSHA):  R-R-H-H = Front-loaded (Cleanup)
 This is not coincidence. This is RHYTHM.
 """
 
-from typing import Final, Protocol, Callable, List, Any, TypeVar, runtime_checkable
+from typing import Final, Protocol, Callable, List, TypeVar, TypedDict, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
+    PRANA_DURATION_S,
     WORDS,
     QUARTERS,
     MALA,
@@ -56,6 +57,12 @@ VENU_TICK_MS: Final[int] = TICK_INTERVAL_MS  # 250ms
 
 # Ticks per Mala (108 Pranas × 16 ticks = 1728)
 VENU_TICKS_PER_MALA: Final[int] = MALA * WORDS  # 1728
+
+# Tick interval in seconds (for monotonic time calculations)
+VENU_TICK_S: Final[float] = TICK_INTERVAL_MS / 1000.0  # 0.25 seconds
+
+# Maximum acceptable jitter before logging a warning (10ms)
+VENU_MAX_JITTER_MS: Final[int] = 10
 
 # =============================================================================
 # VENU PROTOCOLS (THE LAW)
@@ -127,7 +134,7 @@ class MantraVoiceProtocol(Protocol):
         """
         ...
 
-    def get_tasks(self, position: int) -> List[Callable[[], Any]]:
+    def get_tasks(self, position: int) -> List[Callable[[], object]]:
         """
         Get all tasks queued for a specific position.
 
@@ -202,6 +209,75 @@ class MantraClockProtocol(Protocol):
 
 
 # =============================================================================
+# VENU SERVICE PROTOCOL (Phase 3 - Industrial Grade Heartbeat)
+# =============================================================================
+
+
+class HeartbeatMetrics(TypedDict):
+    """Telemetry for the Venu heartbeat. WATERTIGHT."""
+
+    total_ticks: int  # Total ticks since start
+    total_cycles: int  # Total cycles (ticks // 16)
+    total_malas: int  # Total Malas (ticks // 1728)
+    cumulative_drift_ms: float  # Total accumulated drift
+    max_jitter_ms: float  # Maximum single-tick jitter observed
+    missed_ticks: int  # Ticks where jitter exceeded threshold
+    uptime_seconds: float  # Seconds since start
+
+
+@runtime_checkable
+class VenuServiceProtocol(Protocol):
+    """
+    The Venu Service - Industrial Grade Heartbeat.
+
+    This service provides:
+    1. Monotonic time (drift-compensated)
+    2. Kernel signaling (not direct execution)
+    3. Telemetry (jitter, drift, missed ticks)
+
+    The Service is the DRUMMER - it signals beats, not executes tasks.
+    The Kernel (Sudarshana) decides what happens on each beat.
+    """
+
+    @property
+    def is_running(self) -> bool:
+        """True if the heartbeat is active."""
+        ...
+
+    @property
+    def clock(self) -> MantraClockProtocol:
+        """The underlying MantraClock."""
+        ...
+
+    @property
+    def metrics(self) -> HeartbeatMetrics:
+        """Current telemetry metrics."""
+        ...
+
+    async def start(self) -> None:
+        """
+        Start the heartbeat loop.
+
+        Uses monotonic time for drift compensation.
+        Signals the kernel on each beat.
+        """
+        ...
+
+    async def stop(self) -> None:
+        """Stop the heartbeat loop gracefully."""
+        ...
+
+    def on_beat(self, callback: Callable[[int], None]) -> None:
+        """
+        Register a callback for each beat.
+
+        Args:
+            callback: Function called with position (0-15) on each beat
+        """
+        ...
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -211,9 +287,15 @@ __all__ = [
     "VENU_PHASES",
     "VENU_POSITIONS_PER_PHASE",
     "VENU_TICK_MS",
+    "VENU_TICK_S",
     "VENU_TICKS_PER_MALA",
-    # Protocols
+    "VENU_MAX_JITTER_MS",
+    # Types
+    "HeartbeatMetrics",
+    # Protocols (Phase 2 - Runtime)
     "MantraTickProtocol",
     "MantraVoiceProtocol",
     "MantraClockProtocol",
+    # Protocols (Phase 3 - Service)
+    "VenuServiceProtocol",
 ]
