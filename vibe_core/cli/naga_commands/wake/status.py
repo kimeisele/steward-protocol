@@ -69,7 +69,19 @@ class StatusCommand(NagaCommandBase):
 
             federation = ServiceRegistry.get(NagaFederationProtocol)
             if not federation:
-                return self.failure("NAGA Federation not initialized. Boot the kernel first: steward boot", exit_code=1)
+                # Status should always succeed - return NOT_INITIALIZED status
+                status_msg = (
+                    "[PRITHU] System Status - SYS_WAKE\n"
+                    "=" * 60 + "\n"
+                    "  Status: NOT INITIALIZED\n"
+                    "  NAGA Federation: Not booted\n"
+                    "  Action: Run 'steward boot' to initialize\n"
+                    "=" * 60
+                )
+                return self.success(
+                    status_msg,
+                    data=(("phase", "wake"), ("position", "0"), ("mahajana", "prithu"), ("status", "not_initialized")),
+                )
 
             if brief:
                 status = self._get_brief_status(federation)

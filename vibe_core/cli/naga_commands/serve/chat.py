@@ -217,6 +217,10 @@ class ChatCommand(NagaCommandBase):
         Returns:
             NagaCommandResult from routed command or chat response
         """
+        # Ensure all commands are discovered before routing
+        from vibe_core.cli.naga_commands import discover_commands
+        discover_commands()
+
         if not args:
             return self.failure(
                 "No message provided. Usage: naga chat <message>",
