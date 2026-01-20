@@ -20,6 +20,11 @@ THE 5 ASPECTS:
 5. SRIVASA (Rama Rama)        -> GOVERNANCE (Wer REGIERT es?)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x2d991fe3"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, TypedDict, runtime_checkable, Final
 from vibe_core.mahamantra.protocols._seed import PANCHA
 

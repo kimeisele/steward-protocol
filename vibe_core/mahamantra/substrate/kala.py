@@ -11,6 +11,11 @@ Implements the Math of Time:
 
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0x8dfd7ced"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final, Optional
 
 from vibe_core.mahamantra.protocols._kala import KalaProtocol, KalaTime

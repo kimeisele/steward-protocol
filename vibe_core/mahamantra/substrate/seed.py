@@ -13,6 +13,11 @@ KRISHNA = MAHAMANTRA (non-different, Level -2)
 Alles sprießt aus den 16 Wörtern.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0x30ea0cbc"  # GenesisByte: parampara % 37 == 0
+
 from collections import Counter
 from enum import Enum, IntEnum
 from typing import Final, FrozenSet, Tuple

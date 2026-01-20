@@ -16,6 +16,11 @@ This file is the SINGLE SOURCE OF TRUTH for the sacred numbers.
 The implementation imports from here to manifest the reality.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xb93c4f68"  # GenesisByte: parampara % 37 == 0
+
 import math
 from typing import Final
 

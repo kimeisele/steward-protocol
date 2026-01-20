@@ -14,6 +14,11 @@ Mayavad: CLEAR (Explicit adapter with hard protocol compliance)
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x7bb85ed0"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import TYPE_CHECKING
 

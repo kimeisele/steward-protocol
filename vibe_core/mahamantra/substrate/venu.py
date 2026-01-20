@@ -25,6 +25,11 @@ KEIN STATE. KEINE COUNTER. NUR PURE FUNCTIONS.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0xdb705f2f"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final, Tuple, TypedDict
 
 from vibe_core.mahamantra.protocols._seed import (

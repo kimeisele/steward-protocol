@@ -12,6 +12,11 @@ STATEFUL: This class maintains the tick counter and voices.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0x27ca5d20"  # GenesisByte: parampara % 37 == 0
+
 from typing import Callable, List
 
 from vibe_core.mahamantra.protocols._venu import (

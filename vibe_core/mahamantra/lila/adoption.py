@@ -17,6 +17,11 @@ MECHANICS:
 
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0xf3110a25"  # GenesisByte: parampara % 37 == 0
+
 import logging
 from typing import Dict, List
 

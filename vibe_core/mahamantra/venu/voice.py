@@ -11,6 +11,11 @@ STATEFUL: This class maintains task queues.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0x6a00189f"  # GenesisByte: parampara % 37 == 0
+
 from typing import Callable, List, TypeVar
 
 from vibe_core.mahamantra.protocols._venu import VENU_POSITIONS

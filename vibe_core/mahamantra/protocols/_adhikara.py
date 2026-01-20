@@ -37,6 +37,11 @@ Higher quarters (KARMA, MOKSHA) require MORE authorization because
 their operations have greater impact on the substrate.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xb98623e7"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import IntEnum
 from hashlib import sha256

@@ -14,6 +14,11 @@ Mayavad: CLEAR (Migration through explicit protocols, not magic)
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0x263ac482"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable
 
 

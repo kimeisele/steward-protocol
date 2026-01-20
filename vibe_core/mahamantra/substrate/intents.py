@@ -14,6 +14,11 @@ STRUKTUR:
 WATERTIGHT: No hardcoded intents in mahajana files.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0x50f34ca4"  # GenesisByte: parampara % 37 == 0
+
 from typing import Dict, Final, List, Tuple
 
 # =============================================================================

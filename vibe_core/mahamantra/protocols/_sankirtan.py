@@ -16,6 +16,11 @@ It replaces ad-hoc regex substitution with a Sacred Rite.
 LOCATION: vibe_core.mahamantra.protocols._sankirtan (THE LAW)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xf3018ef4"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, TypedDict, runtime_checkable, Optional
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.mahamantra.protocols._seed import PARAMPARA

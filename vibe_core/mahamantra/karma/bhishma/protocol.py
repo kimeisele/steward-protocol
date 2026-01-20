@@ -14,6 +14,11 @@ It replaces the legacy `BhishmaProtocol` in `vibe_core/protocols/mahajanas`.
 LOCATION: vibe_core.mahamantra.karma.bhishma.protocol
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "bhishma"
+__position__ = 11
+__genesis__ = "0xad738708"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable, Dict, List, Optional, TypedDict
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
