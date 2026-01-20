@@ -51,6 +51,8 @@ class ChatMode(str, Enum):
     ROUTED = "routed"  # Route to Mahajana
     SYSCALL = "syscall"  # Execute syscall
     QUERY = "query"  # Query data
+    REFINEMENT = "refinement"  # Intent negotiation required
+    SILENCE = "silence"  # No resonance - refuse to guess
 
 
 @dataclass(frozen=True)
@@ -118,6 +120,61 @@ class ChatContext:
 
     # Available capabilities
     capabilities: List[str] = field(default_factory=list)
+
+
+# =============================================================================
+# REFINEMENT TYPES (Intent Negotiation)
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class RefinementPath:
+    """
+    A possible path for intent refinement.
+
+    Discovered dynamically from Mahajana capabilities.
+    """
+
+    mahajana: str  # e.g., "kapila"
+    position: int  # 0-15
+    description: str  # e.g., "Analyse und Debugging"
+    confidence: float  # Resonance with this path
+    opcode: str  # MantraOpCode name
+
+
+@dataclass
+class RefinementRequest:
+    """
+    Request for intent negotiation when resonance is ambiguous.
+
+    RESONANCE THRESHOLDS (Gemini Architecture):
+    - > 0.8: Auto-execute (high resonance)
+    - 0.4 - 0.8: Intent Negotiation (this type)
+    - < 0.4: Silence (no resonance - refuse to guess)
+    """
+
+    original_message: str
+    paths: List[RefinementPath]  # Discovered options
+    prompt: str  # "Ich sehe zwei Pfade..."
+    resonance_magnitude: float  # Original magnitude
+    session_id: str
+
+    # For state persistence
+    created_at: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class RefinementState:
+    """
+    State for tracking active refinement in a session.
+
+    When system asks "Path A or B?", this stores the context
+    so "A" can be resolved without asking "A what?"
+    """
+
+    request: RefinementRequest
+    awaiting_response: bool = True
+    selected_path: Optional[RefinementPath] = None
 
 
 # =============================================================================
@@ -260,6 +317,10 @@ __all__ = [
     "ChatMessage",
     "ChatResponse",
     "ChatContext",
+    # Refinement Types
+    "RefinementPath",
+    "RefinementRequest",
+    "RefinementState",
     # Constants
     "CHAT_OPCODE",
     "CHAT_PHASE",
