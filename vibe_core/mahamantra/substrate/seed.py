@@ -47,6 +47,15 @@ from vibe_core.mahamantra.protocols._seed import (
     JIVA_QUALITIES as _PROTO_JIVA_QUALITIES,
 )
 from vibe_core.mahamantra.protocols._seed import (
+    PRANA_DURATION_S as _PROTO_PRANA_DURATION_S,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    PRANA_DURATION_MS as _PROTO_PRANA_DURATION_MS,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    TICK_INTERVAL_MS as _PROTO_TICK_INTERVAL_MS,
+)
+from vibe_core.mahamantra.protocols._seed import (
     MALA as _PROTO_MALA,
 )
 from vibe_core.mahamantra.protocols._seed import (
@@ -421,6 +430,28 @@ assert JIVA_CYCLE // WORDS == 27, "JIVA_CYCLE / WORDS must equal 27 (Nakshatra)"
 
 
 # =============================================================================
+# DERIVED: PRANA (The Breath - Timing Constants)
+# =============================================================================
+# "prāṇāyāma" - The regulation of breath (Yoga-Sutra 2.49)
+#
+# Yoga-Tradition: 21600 Atemzüge pro Tag (COSMIC_FRAME)
+# → 1 Prana = 4 Sekunden
+# → 1 Tick = 250ms (16 Ticks per Prana)
+#
+# Note: 1 Mala = 108 Pranas × 4s = 432 Sekunden = JIVA_CYCLE in Zeit!
+
+SECONDS_PER_DAY: Final[int] = 86400  # 24 × 60 × 60
+PRANA_DURATION_S: Final[int] = SECONDS_PER_DAY // COSMIC_FRAME  # 4 Sekunden
+PRANA_DURATION_MS: Final[int] = PRANA_DURATION_S * 1000  # 4000 ms
+TICK_INTERVAL_MS: Final[int] = PRANA_DURATION_MS // WORDS  # 250 ms
+
+# Verification: Timing consistency
+assert PRANA_DURATION_S == 4, "1 Prana must be 4 seconds"
+assert TICK_INTERVAL_MS == 250, "1 Tick must be 250ms"
+assert MALA * PRANA_DURATION_S == JIVA_CYCLE, "1 Mala in seconds must equal JIVA_CYCLE"
+
+
+# =============================================================================
 # VERIFICATION - Alle Ableitungen müssen stimmen
 # =============================================================================
 
@@ -455,6 +486,9 @@ assert HIDDEN_RESERVE == _PROTO_HIDDEN_RESERVE, "SSOT violation: HIDDEN_RESERVE 
 assert NAVA == _PROTO_NAVA, "SSOT violation: NAVA != protocols/_seed.py"
 assert JIVA_CYCLE == _PROTO_JIVA_CYCLE, "SSOT violation: JIVA_CYCLE != protocols/_seed.py"
 assert JIVA_QUALITIES == _PROTO_JIVA_QUALITIES, "SSOT violation: JIVA_QUALITIES != protocols/_seed.py"
+assert PRANA_DURATION_S == _PROTO_PRANA_DURATION_S, "SSOT violation: PRANA_DURATION_S != protocols/_seed.py"
+assert PRANA_DURATION_MS == _PROTO_PRANA_DURATION_MS, "SSOT violation: PRANA_DURATION_MS != protocols/_seed.py"
+assert TICK_INTERVAL_MS == _PROTO_TICK_INTERVAL_MS, "SSOT violation: TICK_INTERVAL_MS != protocols/_seed.py"
 
 # AKSARA_COUNT: 32 syllables (2 per word)
 AKSARA_COUNT: Final[int] = WORDS * 2  # 32
@@ -658,6 +692,11 @@ __all__ = [
     # Jiva (50) - Part and Parcel of Krishna
     "JIVA_CYCLE",
     "JIVA_QUALITIES",
+    # Prana (The Breath - Timing)
+    "SECONDS_PER_DAY",
+    "PRANA_DURATION_S",
+    "PRANA_DURATION_MS",
+    "TICK_INTERVAL_MS",
     # The Cosmic Frame (Resolution)
     "COSMIC_FRAME",
     "NAKSHATRA_UNIT",
