@@ -154,19 +154,29 @@ def observe_protocols() -> List[ProtocolStatus]:
     """Observe key protocol status."""
     protocols = []
 
-    # Check key protocols
+    # Check key protocols (name, module)
     checks = [
-        ("KalaProtocol", "vibe_core.protocols.substrate", False),
-        ("EventBusProtocol", "vibe_core.protocols.mahajanas.narada.events", False),
-        ("BroadcastProtocol", "vibe_core.protocols.mahajanas.narada.broadcast", False),
-        ("CognitiveKernelProtocol", "vibe_core.protocols.mahajanas.kapila.cognition", False),
-        ("SamskaraProtocol", "vibe_core.protocols.substrate.samskara", False),
+        ("KalaProtocol", "vibe_core.protocols.substrate"),
+        ("EventBusProtocol", "vibe_core.protocols.mahajanas.narada.events"),
+        ("BroadcastProtocol", "vibe_core.protocols.mahajanas.narada.broadcast"),
+        ("CognitiveKernelProtocol", "vibe_core.protocols.mahajanas.kapila.cognition"),
+        ("SamskaraProtocol", "vibe_core.protocols.substrate.samskara"),
     ]
 
-    for name, module, connected in checks:
+    for name, module in checks:
+        exists = False
+        connected = False
         try:
             mod = __import__(module, fromlist=[name])
             exists = hasattr(mod, name)
+            if exists:
+                # Check if protocol is registered in ServiceRegistry
+                protocol_class = getattr(mod, name)
+                try:
+                    from vibe_core.di import ServiceRegistry
+                    connected = ServiceRegistry.get(protocol_class) is not None
+                except (ImportError, Exception):
+                    connected = False
         except ImportError:
             exists = False
 
@@ -174,7 +184,7 @@ def observe_protocols() -> List[ProtocolStatus]:
             ProtocolStatus(
                 name=name,
                 exists=exists,
-                connected=connected,  # TODO: Check actual connection
+                connected=connected,
                 location=module,
             )
         )

@@ -118,6 +118,12 @@ def cli_chant(
         connected = "YES" if reactor.is_parampara_connected else "NO"
         print(f"  Parampara: {connected}")
         print("=" * 60)
+    else:
+        # Always show minimal summary (no silent failures)
+        final_pos = results[-1]["position"] if results else 0
+        final_guard = results[-1]["guardian"] if results else "unknown"
+        connected = "YES" if reactor.is_parampara_connected else "NO"
+        print(f"CHANT: {rounds}r × {total_ticks}t → [{final_guard}@{final_pos}] Parampara={connected}")
 
     return ChantResult(
         success=True,
