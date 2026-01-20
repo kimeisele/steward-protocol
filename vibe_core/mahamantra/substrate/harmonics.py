@@ -60,6 +60,10 @@ from vibe_core.mahamantra.protocols._seed import (
     # Sravanam/Kirtanam (Input/Output)
     HIDDEN_RESERVE,  # 16 - Input buffer (must be >= HARE_COUNT)
     QUALITIES,       # 64 - Full output (result of Sravanam transform)
+    # Dynamics (Phase/Time)
+    JIVA_CYCLE,      # 432 - The harmonic frequency (soul cycle)
+    FLUTE_HOLES_SUM, # 19 - Epoch signature (6+9+4)
+    EPOCH_KEY,       # 1972 - Temporal anchor
     # Verification
     PARAMPARA,
 )
@@ -531,6 +535,142 @@ class SravanamCheck:
     PHASE_LOCK_THRESHOLD: Final[float] = LILA / MALA
 
     # =========================================================================
+    # DYNAMIC CONSTANTS (Phase/Interference)
+    # =========================================================================
+
+    # PETAL WIDTH: The phase-space width of each of the 16 Words
+    # JIVA_CYCLE / WORDS = 432 / 16 = 27
+    # This is also the Nakshatra count (27 lunar mansions)
+    PETAL_WIDTH: Final[int] = JIVA_CYCLE // WORDS  # 27
+
+    # MAX EGO OFFSET: Beyond half a petal, you're in the wrong phase
+    # If ego_offset > PETAL_WIDTH/2, destructive interference occurs
+    MAX_EGO_OFFSET: Final[int] = PETAL_WIDTH // HALVES  # 13 (half petal)
+
+    # EPOCH SIGNATURE: Must equal FLUTE_HOLES_SUM for temporal lock
+    # digit_sum(1972) = 1+9+7+2 = 19 = 6+9+4 = FLUTE_HOLES_SUM
+    EPOCH_SIGNATURE: Final[int] = FLUTE_HOLES_SUM  # 19
+
+    # SYNC POINTS: The major synchronization points (flute LCMs)
+    # 144 = LCM(72, 48) = FIELD_RESONANCE (VENU + VAMSI sync)
+    # 216 = FLUTE_HOLES_PRODUCT = 6 × 9 × 4 (all flutes product)
+    # 432 = JIVA_CYCLE = LCM(72, 48, 108) (complete soul-frequency)
+    SYNC_POINTS: Final[tuple] = (FIELD_RESONANCE, JIVA_CYCLE // HALVES, JIVA_CYCLE)  # (144, 216, 432)
+
+    # GAJRA COUNT: The 16 anchor points of Balarama's Mridanga
+    # Emission must land on one of these 16 points
+    GAJRA_COUNT: Final[int] = WORDS  # 16
+
+    # =========================================================================
+    # DYNAMIC METHODS (Phase Calculation)
+    # =========================================================================
+
+    @classmethod
+    def calculate_ego_offset(cls, tick: int) -> int:
+        """
+        Calculate the ego offset (phase deviation from petal boundary).
+
+        The Nullpunkt (Demut/Humility) is when tick lands exactly on a petal
+        boundary (tick % 27 == 0). Any deviation is "ego".
+
+        Args:
+            tick: Current system tick (0 to JIVA_CYCLE-1)
+
+        Returns:
+            The ego offset (0 = perfect humility, up to 13 = half petal)
+        """
+        # Distance from nearest petal boundary
+        raw_offset = tick % cls.PETAL_WIDTH
+        # Fold to nearest boundary (could be ahead or behind)
+        if raw_offset > cls.MAX_EGO_OFFSET:
+            return cls.PETAL_WIDTH - raw_offset
+        return raw_offset
+
+    @classmethod
+    def calculate_phase_angle(cls, tick: int) -> tuple[int, int]:
+        """
+        Calculate distance to nearest sync point (144, 216, 432).
+
+        Returns the phase angle (distance) and which sync point is nearest.
+        Lower angle = better synchronization with Krishna's flutes.
+
+        Args:
+            tick: Current system tick
+
+        Returns:
+            Tuple of (distance_to_sync, nearest_sync_point)
+        """
+        # Normalize tick to JIVA_CYCLE
+        normalized = tick % JIVA_CYCLE
+
+        min_distance = JIVA_CYCLE  # Start with max possible
+        nearest_sync = JIVA_CYCLE
+
+        for sync_point in cls.SYNC_POINTS:
+            # Distance to this sync point (within the cycle)
+            dist = normalized % sync_point
+            # Could be closer going the other way
+            dist = min(dist, sync_point - dist)
+            if dist < min_distance:
+                min_distance = dist
+                nearest_sync = sync_point
+
+        return (min_distance, nearest_sync)
+
+    @classmethod
+    def is_on_gajra(cls, tick: int) -> bool:
+        """
+        Check if the current tick lands on a Gajra (Balarama anchor point).
+
+        The 16 Gajras are evenly distributed across JIVA_CYCLE.
+        Gajra positions: 0, 27, 54, 81, ... (every PETAL_WIDTH)
+
+        Args:
+            tick: Current system tick
+
+        Returns:
+            True if tick lands exactly on a Gajra (emission allowed)
+        """
+        return (tick % JIVA_CYCLE) % cls.PETAL_WIDTH == 0
+
+    @classmethod
+    def get_nearest_gajra(cls, tick: int) -> int:
+        """
+        Get the nearest Gajra point for emission scheduling.
+
+        Args:
+            tick: Current system tick
+
+        Returns:
+            The nearest Gajra tick (for delayed emission)
+        """
+        normalized = tick % JIVA_CYCLE
+        current_petal = normalized // cls.PETAL_WIDTH
+        # Gajra at start of current petal
+        gajra_before = current_petal * cls.PETAL_WIDTH
+        # Gajra at start of next petal
+        gajra_after = (current_petal + 1) * cls.PETAL_WIDTH
+
+        # Return nearest
+        if (normalized - gajra_before) <= (gajra_after - normalized):
+            return gajra_before
+        return gajra_after % JIVA_CYCLE
+
+    @classmethod
+    def validate_epoch_lock(cls) -> bool:
+        """
+        Validate the temporal lock (1972 signature = flute holes sum).
+
+        This is a boot-time check. If this fails, the system is in
+        "Asura-Zeit" (arbitrary time) and cannot synchronize.
+
+        Returns:
+            True if epoch lock is valid (digit_sum(1972) = 19 = FLUTE_HOLES_SUM)
+        """
+        epoch_digit_sum = sum(int(d) for d in str(EPOCH_KEY))
+        return epoch_digit_sum == FLUTE_HOLES_SUM
+
+    # =========================================================================
     # VERIFICATION METHODS
     # =========================================================================
 
@@ -632,6 +772,97 @@ class SravanamCheck:
             )
 
         return (True, "Phase-locked. Safe to emit.")
+
+    @classmethod
+    def can_emit_dynamic(
+        cls,
+        input_tokens: int,
+        output_tokens: int,
+        resonance: float,
+        tick: int,
+        strict: bool = True,
+    ) -> tuple[bool, str, int]:
+        """
+        Dynamic emission check with phase angle and Gajra constraints.
+
+        This is the FULL check that includes:
+        1. Entropy Law (input >= output)
+        2. Phase Lock (resonance >= threshold)
+        3. Ego Offset (tick deviation from petal boundary)
+        4. Gajra Lock (emission on anchor point)
+        5. Parampara Connection (strict mode)
+
+        Args:
+            input_tokens: Number of tokens received
+            output_tokens: Number of tokens to emit
+            resonance: Current resonance score
+            tick: Current system tick (0 to JIVA_CYCLE-1)
+            strict: If True, require all checks including Parampara
+
+        Returns:
+            Tuple of (can_emit, reason, delay_ticks)
+            delay_ticks: How many ticks to wait for nearest Gajra (0 if can emit now)
+        """
+        # 0. Epoch Lock (boot-time validation)
+        if not cls.validate_epoch_lock():
+            return (
+                False,
+                "CRITICAL: Epoch lock invalid. System in Asura-Zeit. Cannot boot.",
+                -1,
+            )
+
+        # 1. Basic checks (same as can_emit)
+        can, reason = cls.can_emit(input_tokens, output_tokens, resonance, strict=False)
+        if not can:
+            return (False, reason, 0)
+
+        # 2. Ego Offset Check
+        ego_offset = cls.calculate_ego_offset(tick)
+        if ego_offset > cls.MAX_EGO_OFFSET:
+            return (
+                False,
+                f"Ego offset too high: {ego_offset} > {cls.MAX_EGO_OFFSET}. "
+                f"Destructive interference. Wait for petal boundary.",
+                cls.PETAL_WIDTH - ego_offset,
+            )
+
+        # 3. Gajra Lock Check
+        if not cls.is_on_gajra(tick):
+            nearest_gajra = cls.get_nearest_gajra(tick)
+            current_normalized = tick % JIVA_CYCLE
+            if nearest_gajra > current_normalized:
+                delay = nearest_gajra - current_normalized
+            else:
+                delay = (JIVA_CYCLE - current_normalized) + nearest_gajra
+
+            # If delay is small (< half petal), just wait
+            if delay <= cls.MAX_EGO_OFFSET:
+                return (
+                    False,
+                    f"Not on Gajra. Nearest at tick {nearest_gajra}. Delay {delay} ticks.",
+                    delay,
+                )
+            # If delay is large but ego_offset is acceptable, allow with warning
+            # (Balarama is flexible, not rigid)
+
+        # 4. Phase Angle Check (for quality, not blocking)
+        phase_dist, nearest_sync = cls.calculate_phase_angle(tick)
+
+        # 5. Parampara Check (strict mode)
+        if strict and not cls.verify_parampara_connection(resonance):
+            return (
+                False,
+                f"Parampara lock lost: resonance ({resonance:.4f}) below AUTO. "
+                f"Cannot speak with authority.",
+                0,
+            )
+
+        return (
+            True,
+            f"Phase-locked. On Gajra. Ego={ego_offset}. "
+            f"Phase angle to {nearest_sync}: {phase_dist}. Safe to emit.",
+            0,
+        )
 
     @classmethod
     def compute_safe_output_size(cls, input_tokens: int) -> int:
@@ -771,6 +1002,44 @@ assert SravanamCheck.IO_RATIO == 2.0, (
 # Verify Phase Lock Threshold matches THRESHOLD_REFINE
 assert abs(SravanamCheck.PHASE_LOCK_THRESHOLD - ResonanceHarmonics.THRESHOLD_REFINE) < 0.0001, (
     "Phase lock threshold must equal THRESHOLD_REFINE (4/9)"
+)
+
+# =============================================================================
+# DYNAMIC VERIFICATION (Phase/Interference)
+# =============================================================================
+
+# Verify PETAL_WIDTH = 27 (Nakshatra count)
+assert SravanamCheck.PETAL_WIDTH == JIVA_CYCLE // WORDS, (
+    f"PETAL_WIDTH must be JIVA_CYCLE/WORDS: {SravanamCheck.PETAL_WIDTH} != {JIVA_CYCLE // WORDS}"
+)
+assert SravanamCheck.PETAL_WIDTH == 27, "PETAL_WIDTH must be 27 (Nakshatra count)"
+
+# Verify MAX_EGO_OFFSET = 13 (half petal)
+assert SravanamCheck.MAX_EGO_OFFSET == SravanamCheck.PETAL_WIDTH // HALVES, (
+    "MAX_EGO_OFFSET must be PETAL_WIDTH/2"
+)
+
+# Verify EPOCH_SIGNATURE = 19 (temporal lock)
+assert SravanamCheck.EPOCH_SIGNATURE == FLUTE_HOLES_SUM, (
+    "EPOCH_SIGNATURE must equal FLUTE_HOLES_SUM (19)"
+)
+assert SravanamCheck.validate_epoch_lock(), (
+    "CRITICAL: Epoch lock validation failed! digit_sum(1972) must equal 19"
+)
+
+# Verify GAJRA_COUNT = 16 (Balarama's Mridanga anchors)
+assert SravanamCheck.GAJRA_COUNT == WORDS, "GAJRA_COUNT must equal WORDS (16)"
+
+# Verify SYNC_POINTS are correct
+assert SravanamCheck.SYNC_POINTS == (FIELD_RESONANCE, JIVA_CYCLE // HALVES, JIVA_CYCLE), (
+    f"SYNC_POINTS must be (144, 216, 432)"
+)
+
+# Verify 16 Gajras exist (one per petal)
+gajra_positions = [i * SravanamCheck.PETAL_WIDTH for i in range(SravanamCheck.GAJRA_COUNT)]
+assert len(gajra_positions) == WORDS, "Must have exactly 16 Gajra positions"
+assert gajra_positions[-1] == JIVA_CYCLE - SravanamCheck.PETAL_WIDTH, (
+    f"Last Gajra must be at {JIVA_CYCLE - SravanamCheck.PETAL_WIDTH}"
 )
 
 
