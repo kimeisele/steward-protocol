@@ -55,12 +55,21 @@ logger = logging.getLogger("CHAT_SUBSTRATE")
 
 
 # =============================================================================
-# RESONANCE THRESHOLDS (From Gemini Architecture)
+# RESONANCE THRESHOLDS (Derived from Seed - Mantra Seed Math!)
 # =============================================================================
+# OLD (Asura Müll - hardcoded):
+#   THRESHOLD_MANIFEST = 0.7
+#   THRESHOLD_NEGOTIATE = 0.4
+#
+# NEW (Harmonically derived):
+#   THRESHOLD_MANIFEST = NADI/MALA = 72/108 = 2/3 ≈ 0.667
+#   THRESHOLD_NEGOTIATE = LILA/MALA = 48/108 = 4/9 ≈ 0.444
 
-THRESHOLD_MANIFEST: Final[float] = 0.7  # Auto-manifest (high energy)
-THRESHOLD_NEGOTIATE: Final[float] = 0.4  # Intent negotiation (gray zone)
-# Below 0.4 = Silence (no resonance)
+from vibe_core.mahamantra.substrate.harmonics import (
+    THRESHOLD_AUTO as THRESHOLD_MANIFEST,
+    THRESHOLD_REFINE as THRESHOLD_NEGOTIATE,
+)
+# Below LILA/MALA = Silence (no resonance)
 
 
 # =============================================================================

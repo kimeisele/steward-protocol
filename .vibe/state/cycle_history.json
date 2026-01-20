@@ -1,23 +1,26 @@
 {
   "completed": [
     {
-      "cycle_id": "d0a28c71",
+      "cycle_id": "9837d791",
       "parent_cycle_id": null,
-      "trace_id": "f3c30643",
+      "trace_id": "f665ec1c",
       "cycle_name": "boot_sequence",
       "phase": "recover",
       "observations_count": 1,
       "orientations_count": 1,
-      "decisions_count": 0,
+      "decisions_count": 1,
       "actions_count": 0,
       "errors": {
         "boot_config_valid": true,
-        "error": "'RealVibeKernel' object has no attribute 'spawn_deferred_agents'",
-        "agents_registered": 30
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "discovery_skipped": true,
+        "agents_registered": 1
       },
-      "timestamp": "2026-01-19T13:30:27.569964"
+      "timestamp": "2026-01-20T10:28:13.138954"
     }
   ],
   "errors": [],
-  "last_updated": "2026-01-19T13:30:27.569975"
+  "last_updated": "2026-01-20T10:28:13.138980"
 }
