@@ -46,12 +46,14 @@ from vibe_core.protocols.cognition import (
     CognitiveResult,
     IntentType,
 )
-from vibe_core.protocols.universal.semantic_router import (
-    SemanticRouter,
-    SemanticRouteResult,
-    get_semantic_router,
-)
 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.mahamantra.protocols._lotus import (
+    LotusHologram,
+    LotusRoute,
+    get_position_mahajana,
+    get_mahajana_position,
+    MAHAJANA_POSITIONS,
+)
 
 logger = logging.getLogger("CHAT_SERVICE")
 
@@ -68,7 +70,7 @@ class ChatService(ChatProtocol):
     """
 
     def __init__(self):
-        self._router: SemanticRouter = get_semantic_router()
+        self._lotus: LotusHologram = LotusHologram()  # O(1) routing, no ML
         self._provider = None
         self._knowledge = None
         self._cognitive = None
@@ -159,29 +161,29 @@ class ChatService(ChatProtocol):
         self._sessions[context.session_id].append(input_msg)
 
         try:
-            # Step 1: Cognitive Processing - determine intent
+            # Step 1: Cognitive Processing - determine intent (uses INTENT_MAP SSOT)
             cognitive_result = await self._process_cognitive(message)
             logger.info(f"🧠 ChatService: Intent={cognitive_result.intent_type.value}")
 
-            # Step 2: Semantic Routing - find Mahajana
-            route_result = self._router.route(cognitive_result)
+            # Step 2: Lotus Routing - find Mahajana (O(1), no ML)
+            lotus_result = self._lotus_route(message, cognitive_result)
             logger.info(
-                f"🔀 ChatService: Route={route_result.mahajana.value} "
-                f"(OpCode={route_result.opcode.name}, confidence={route_result.bridge_confidence:.2f})"
+                f"🪷 ChatService: Lotus Route → {lotus_result['mahajana'].upper()} "
+                f"(pos={lotus_result['position']}, quarter={lotus_result['quarter']})"
             )
 
             # Determine chat mode based on routing
-            mode = self._determine_mode(cognitive_result, route_result)
+            mode = self._determine_mode_lotus(cognitive_result, lotus_result)
 
             # Step 3: Get knowledge context
-            knowledge_context = self._get_knowledge_context(message, route_result)
+            knowledge_context = self._get_knowledge_context_lotus(message, lotus_result)
 
             # Step 4: Generate response via LLM
-            response_text = await self._generate_response(
+            response_text = await self._generate_response_lotus(
                 message=message,
                 context=context,
                 cognitive_result=cognitive_result,
-                route_result=route_result,
+                lotus_result=lotus_result,
                 knowledge_context=knowledge_context,
             )
 
@@ -192,8 +194,8 @@ class ChatService(ChatProtocol):
                 timestamp=datetime.now(),
                 session_id=context.session_id,
                 message_id=str(uuid.uuid4()),
-                opcode=route_result.opcode.name,
-                mahajana=route_result.mahajana.value,
+                opcode=lotus_result.get("opcode", "EXTEND_CAP"),
+                mahajana=lotus_result["mahajana"],
             )
 
             # Store response in history
@@ -204,9 +206,9 @@ class ChatService(ChatProtocol):
                 message=response_msg,
                 mode=mode,
                 intent_type=cognitive_result.intent_type,
-                opcode=route_result.opcode.name,
-                mahajana=route_result.mahajana.value,
-                confidence=route_result.bridge_confidence,
+                opcode=lotus_result.get("opcode", "EXTEND_CAP"),
+                mahajana=lotus_result["mahajana"],
+                confidence=lotus_result.get("confidence", 0.8),
             )
 
         except Exception as e:
@@ -252,56 +254,130 @@ class ChatService(ChatProtocol):
         return self._simple_intent_detection(message)
 
     def _simple_intent_detection(self, message: str) -> CognitiveResult:
-        """Fallback intent detection when cognitive not available."""
+        """
+        Intent detection using INTENT_MAP (SSOT).
+
+        Uses mahamantra/substrate/intents.py - NO ML, pure dict lookup.
+        """
+        from vibe_core.mahamantra.substrate.intents import INTENT_MAP, get_position_for_intent
+
         msg_lower = message.lower()
+        words = msg_lower.split()
 
-        # Map keywords to intent types
-        if any(w in msg_lower for w in ["create", "make", "generate", "build"]):
-            intent = IntentType.EXECUTE
-            syscall = "SPAWN_COGNITION"
-        elif any(w in msg_lower for w in ["analyze", "examine", "inspect", "review"]):
-            intent = IntentType.QUERY
-            syscall = "READ_MEM"
-        elif any(w in msg_lower for w in ["fix", "repair", "heal", "correct"]):
-            intent = IntentType.EXECUTE
-            syscall = "WRITE_MEM"
-        elif any(w in msg_lower for w in ["list", "show", "display", "get"]):
-            intent = IntentType.QUERY
-            syscall = "READ_MEM"
-        else:
-            # Default: Chat intent
-            intent = IntentType.CHAT
-            syscall = None
+        # Find matching position from INTENT_MAP (SSOT)
+        matched_position = -1
+        matched_intent = None
 
+        for word in words:
+            pos = get_position_for_intent(word)
+            if pos >= 0:
+                matched_position = pos
+                matched_intent = word
+                break
+
+        # Map position to intent type
+        if matched_position >= 0:
+            # Determine intent type from quarter
+            quarter = matched_position // 4
+            if quarter == 0:  # GENESIS - system ops
+                intent = IntentType.EXECUTE
+                syscall = "SYS_WAKE"
+            elif quarter == 1:  # DHARMA - knowledge ops
+                intent = IntentType.QUERY
+                syscall = "COMPILE_AST"
+            elif quarter == 2:  # KARMA - action ops
+                intent = IntentType.EXECUTE
+                syscall = "EXEC_OP"
+            else:  # MOKSHA - meta ops
+                intent = IntentType.QUERY
+                syscall = "YIELD_CPU"
+
+            return CognitiveResult(
+                intent_type=intent,
+                confidence=0.85,  # High confidence from SSOT match
+                syscall_type=syscall,
+                target=matched_intent,
+            )
+
+        # No match in INTENT_MAP → Default to NARADA (position 2, chat)
         return CognitiveResult(
-            intent_type=intent,
-            confidence=0.7,  # Lower confidence for simple detection
-            syscall_type=syscall,
+            intent_type=IntentType.CHAT,
+            confidence=0.6,  # Lower confidence for default
+            syscall_type=None,
         )
 
-    def _determine_mode(
-        self, cognitive: CognitiveResult, route: SemanticRouteResult
+    def _lotus_route(self, message: str, cognitive: CognitiveResult) -> Dict[str, any]:
+        """
+        Route via Lotus (O(1), no ML).
+
+        Uses INTENT_MAP for keyword → position mapping.
+        Uses LotusHologram for routing.
+        """
+        from vibe_core.mahamantra.substrate.intents import get_position_for_intent
+        from vibe_core.mahamantra.protocols._lotus import Quarter
+
+        msg_lower = message.lower()
+        words = msg_lower.split()
+
+        # Find matching position from INTENT_MAP
+        matched_position = 2  # Default: NARADA (chat)
+        matched_keyword = None
+
+        for word in words:
+            pos = get_position_for_intent(word)
+            if pos >= 0:
+                matched_position = pos
+                matched_keyword = word
+                break
+
+        # Get mahajana from position
+        mahajana = get_position_mahajana(matched_position)
+
+        # Get petal from Lotus (O(1))
+        petal = self._lotus.get_petal(mahajana)
+
+        # Determine quarter
+        quarter_idx = matched_position // 4
+        quarter_names = ["GENESIS", "DHARMA", "KARMA", "MOKSHA"]
+        quarter = quarter_names[quarter_idx]
+
+        # Determine opcode from quarter
+        opcodes = ["SYS_WAKE", "COMPILE_AST", "EXEC_OP", "YIELD_CPU"]
+        opcode = opcodes[quarter_idx]
+
+        return {
+            "mahajana": mahajana,
+            "position": matched_position,
+            "quarter": quarter,
+            "quarter_idx": quarter_idx,
+            "opcode": opcode,
+            "matched_keyword": matched_keyword,
+            "confidence": 0.85 if matched_keyword else 0.6,
+            "is_head": matched_position % 4 == 0,
+            "petal": petal,
+        }
+
+    def _determine_mode_lotus(
+        self, cognitive: CognitiveResult, lotus: Dict
     ) -> ChatMode:
-        """Determine chat mode based on routing results."""
+        """Determine chat mode based on Lotus routing."""
         if cognitive.intent_type == IntentType.CHAT:
             return ChatMode.DIRECT
         elif cognitive.intent_type == IntentType.QUERY:
             return ChatMode.QUERY
-        elif cognitive.syscall_type:
+        elif lotus.get("is_head"):
             return ChatMode.SYSCALL
         else:
             return ChatMode.ROUTED
 
-    def _get_knowledge_context(
-        self, message: str, route: SemanticRouteResult
+    def _get_knowledge_context_lotus(
+        self, message: str, lotus: Dict
     ) -> Dict[str, str]:
         """Get relevant context from KnowledgeGraph."""
         context = {}
 
         if self._knowledge:
             try:
-                # Query knowledge graph for relevant nodes
-                # TODO: Implement proper knowledge query
                 context["knowledge_available"] = "true"
             except Exception as e:
                 logger.warning(f"⚠️ Knowledge query failed: {e}")
@@ -317,20 +393,22 @@ class ChatService(ChatProtocol):
 
         return context
 
-    async def _generate_response(
+    async def _generate_response_lotus(
         self,
         message: str,
         context: ChatContext,
         cognitive_result: CognitiveResult,
-        route_result: SemanticRouteResult,
+        lotus_result: Dict,
         knowledge_context: Dict[str, str],
     ) -> str:
-        """Generate response via LLM with full context."""
+        """Generate response via LLM with Lotus context."""
+        mahajana = lotus_result["mahajana"]
+
         if not self._provider:
-            return f"[{route_result.mahajana.value}] LLM not available. Intent: {cognitive_result.intent_type.value}"
+            return f"[{mahajana.upper()}] LLM not available. Intent: {cognitive_result.intent_type.value}"
 
         # Build system prompt with Mahajana identity
-        system_prompt = self._build_system_prompt(route_result, knowledge_context)
+        system_prompt = self._build_system_prompt_lotus(lotus_result, knowledge_context)
 
         # Build messages
         messages = [
@@ -338,7 +416,7 @@ class ChatService(ChatProtocol):
         ]
 
         # Add history from context
-        for hist_msg in context.history[-5:]:  # Last 5 messages
+        for hist_msg in context.history[-5:]:
             messages.append({
                 "role": hist_msg.role,
                 "content": hist_msg.content,
@@ -360,19 +438,42 @@ class ChatService(ChatProtocol):
                 temperature=0.7,
             )
             logger.info(
-                f"✅ ChatService: LLM response generated "
+                f"✅ ChatService: LLM response "
                 f"({response.usage.output_tokens} tokens, ${response.usage.cost_usd:.4f})"
             )
             return response.content
         except Exception as e:
             logger.error(f"❌ LLM invocation failed: {e}")
-            return f"[{route_result.mahajana.value}] Response generation failed: {e}"
+            return f"[{mahajana.upper()}] Response generation failed: {e}"
 
-    def _build_system_prompt(
-        self, route: SemanticRouteResult, context: Dict[str, str]
+    def _build_system_prompt_lotus(
+        self, lotus: Dict, context: Dict[str, str]
     ) -> str:
-        """Build system prompt with Mahajana identity and context."""
-        mahajana = route.mahajana.value.upper()
+        """Build system prompt with Lotus-based Mahajana identity."""
+        mahajana = lotus["mahajana"].upper()
+        position = lotus["position"]
+        quarter = lotus["quarter"]
+
+        # Mahajana dharma descriptions (from INTENT_MAP context)
+        dharmas = {
+            "vyasa": "System Genesis, Boot, Wake",
+            "brahma": "Creation, Spawning, Genesis",
+            "narada": "Communication, Broadcast, News",
+            "shambhu": "Transformation, Dissolution, Cleanup",
+            "prithu": "Documentation, Structure, Knowledge",
+            "kumaras": "Purification, Cleansing, Formatting",
+            "kapila": "Analysis, Logic, Inference",
+            "manu": "Governance, Rules, Policy",
+            "parashurama": "Execution, Enforcement, Action",
+            "prahlada": "Protection, Devotion, Faith",
+            "janaka": "Scheduling, Tasks, Duty",
+            "bhishma": "Persistence, Ledger, Storage",
+            "nrisimha": "Security, Guarding, Termination",
+            "bali": "Resources, Allocation, Surrender",
+            "shuka": "Observation, Logging, Reports",
+            "yamaraja": "Judgment, Audit, Verdict",
+        }
+        dharma = dharmas.get(lotus["mahajana"], "Unknown")
 
         # Context block
         context_block = ""
@@ -386,16 +487,15 @@ class ChatService(ChatProtocol):
 
 ## YOUR IDENTITY
 - Mahajana: {mahajana}
-- Position: {route.position}
-- Quarter: {route.quarter}
-- OpCode: {route.opcode.name}
+- Position: {position} (of 16)
+- Quarter: {quarter}
+- Dharma: {dharma}
 
 ## YOUR ROLE
-You handle requests routed to your domain with wisdom and precision.
-Be concise, technical, and helpful.
+{dharma}
 
-## ROUTING PATH
-{' → '.join(route.processing_path)}
+You respond with the wisdom and precision of your domain.
+Be concise, technical, and helpful.
 {context_block}"""
 
     def _get_model_from_config(self) -> str:
