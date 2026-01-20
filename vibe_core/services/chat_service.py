@@ -68,8 +68,14 @@ from vibe_core.services.chat_substrate_bridge import (
     ChatSubstrateBridge,
     SubstrateRoute,
     get_substrate_bridge,
-    THRESHOLD_MANIFEST,
-    THRESHOLD_NEGOTIATE,
+)
+
+# RESONANCE HARMONICS - Derived from Seed, not hardcoded!
+# NADI/MALA = 72/108 = 2/3, LILA/MALA = 48/108 = 4/9
+from vibe_core.mahamantra.substrate.harmonics import (
+    ResonanceHarmonics,
+    THRESHOLD_AUTO as HARMONIC_AUTO,
+    THRESHOLD_REFINE as HARMONIC_REFINE,
 )
 
 # QUANTUM REACTOR - Real manifestation (energy > inertia)
@@ -120,17 +126,18 @@ class ChatService(ChatProtocol):
     - < 0.4: Silence (no resonance - refuse to guess)
     """
 
-    # Resonance thresholds loaded from config (SSOT: config/mahamantra.yaml)
-    # These are properties that read from config at runtime
+    # Resonance thresholds - DERIVED FROM SEED (Mantra Seed Math, not Asura Müll!)
+    # NADI/MALA = 72/108 = 2/3 ≈ 0.667 (was ~0.7 hardcoded)
+    # LILA/MALA = 48/108 = 4/9 ≈ 0.444 (was ~0.4 hardcoded)
     @property
     def RESONANCE_AUTO(self) -> float:
-        """Auto-execute threshold from config."""
-        return self._mahamantra_config.resonance.auto_execute if self._mahamantra_config else THRESHOLD_MANIFEST
+        """Auto-execute threshold: NADI/MALA = 2/3 (Perfect Fifth)."""
+        return HARMONIC_AUTO  # 0.666...
 
     @property
     def RESONANCE_REFINE(self) -> float:
-        """Refinement threshold from config."""
-        return self._mahamantra_config.resonance.refinement if self._mahamantra_config else THRESHOLD_NEGOTIATE
+        """Refinement threshold: LILA/MALA = 4/9 (Lila zone)."""
+        return HARMONIC_REFINE  # 0.444...
 
     def __init__(self):
         self._lotus: LotusHologram = LotusHologram()  # O(1) routing
@@ -595,22 +602,25 @@ class ChatService(ChatProtocol):
                     break
 
             # Check partial matches
+            # Partial match score = MALA/FIELD = 108/144 = 3/4 = 0.75 (Perfect Fourth)
             if best_position < 0:
+                partial_score = 108 / 144  # 0.75 - harmonic ratio
                 for pos, intents in INTENT_MAP.items():
                     for intent in intents:
                         if intent in msg_lower:
                             best_position = pos
-                            best_score = 0.8  # Partial match - still good!
+                            best_score = partial_score  # 3/4 - above AUTO, below full
                             break
                     if best_position >= 0:
                         break
 
             # =================================================================
             # STEP 2: NO MATCH = NARADA (Chat is ALWAYS possible!)
+            # Default score is EXACTLY at AUTO threshold (NADI/MALA = 2/3)
             # =================================================================
             if best_position < 0:
                 best_position = 2  # NARADA - the communicator
-                best_score = 0.7  # Good enough to AUTO! Chat should WORK!
+                best_score = HARMONIC_AUTO  # NADI/MALA = 2/3 ≈ 0.667 (AUTO!)
 
         # Get guardian info
         mahajana = ALL_GUARDIANS[best_position]
