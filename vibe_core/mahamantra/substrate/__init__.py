@@ -351,6 +351,18 @@ _LAZY_IMPORTS = {
     "Yajna": "yajna",
     "get_yajna": "yajna",
     "offer": "yajna",
+    # === LEGACY (Balarama-wrapped from protocols/substrate) ===
+    "Declaration": "_legacy",
+    "DeclarationType": "_legacy",
+    "FileStatus": "_legacy",
+    "ScanConfig": "_legacy",
+    "ScannedFile": "_legacy",
+    "Phase": "_legacy",
+    "PhaseStatus": "_legacy",
+    "PipelineExecutor": "_legacy",
+    "SamskaraProtocol": "_legacy",
+    "PipelineContext": "_legacy",
+    "LEGACY_PURUSHOTTAMA": "_legacy",
 }
 
 # Special aliases

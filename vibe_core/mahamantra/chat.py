@@ -850,7 +850,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 12. ANANTA: Heartbeat to substrate
         if self._ananta and hasattr(self._ananta, "resonate"):
             try:
-                from vibe_core.protocols.substrate import MantraOpCode
+                from vibe_core.mahamantra.substrate.opcode import MantraOpCode
                 self._ananta.resonate(MantraOpCode.EMIT)
             except Exception:
                 pass

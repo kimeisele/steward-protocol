@@ -113,8 +113,8 @@ class PurushaTattva(int):
     - NOT Krishna Himself (that would be Mayavad)
 
     For PERSON access, use:
-        from vibe_core.protocols.substrate.tattva import PURUSHOTTAMA
-        PURUSHOTTAMA("Arjuna")  # → "Hare Krishna, Arjuna. Ich bin für dich da."
+        from vibe_core.mahamantra.substrate import LEGACY_PURUSHOTTAMA
+        LEGACY_PURUSHOTTAMA("Arjuna")  # → "Hare Krishna, Arjuna. Ich bin für dich da."
     """
 
     def __new__(cls) -> "PurushaTattva":
