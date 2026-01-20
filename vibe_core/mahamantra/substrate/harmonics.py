@@ -55,8 +55,11 @@ from vibe_core.mahamantra.protocols._seed import (
     PANCHA,      # 5 - For Ga (5/4) and Dha (5/3)
     TRINITY,     # 3 - For denominators
     HALVES,      # 2 - For octave
-    HARE_COUNT,  # 8 - For Re (9/8)
+    HARE_COUNT,  # 8 - For Re (9/8) and Entropy Law
     KSETRAJNA,   # 1 - The Knower (unity)
+    # Sravanam/Kirtanam (Input/Output)
+    HIDDEN_RESERVE,  # 16 - Input buffer (must be >= HARE_COUNT)
+    QUALITIES,       # 64 - Full output (result of Sravanam transform)
     # Verification
     PARAMPARA,
 )
@@ -459,6 +462,228 @@ class VedicScaleMapping:
 
 
 # =============================================================================
+# ŚRAVAṆAM CHECK - Phase-Locked Loop Gate (Input before Output)
+# =============================================================================
+# "śravaṇaṁ kīrtanaṁ viṣṇoḥ smaraṇaṁ pāda-sevanam"
+# "Hearing, chanting, remembering, serving the lotus feet..."
+# — Śrīmad-Bhāgavatam 7.5.23
+#
+# WHY HEARING > CHANTING (Prabhupada's instruction, mathematically proven):
+#
+# 1. ŚRAVAṆAM is the A/D Converter (Input Channel):
+#    - Before the system can emit (kīrtanam), it must sample the Trägerfrequenz
+#    - Without correct sampling, output is Aliasing (Asura-Müll/Noise)
+#
+# 2. THE BOOTSTRAP RATIO (2/9):
+#    - Śravaṇam + Kīrtanam = first 2 of 9 processes (NAVA)
+#    - 2/9 × GITA_CHAPTERS (18) = 4 (QUARTERS/Dharma-Säulen)
+#    - Only through Hören/Chanten does reality stabilize
+#
+# 3. THE SRAVANAM TRANSFORM:
+#    - (WORDS × NADI_RESONANCE) / GITA_CHAPTERS = QUALITIES
+#    - (16 × 72) / 18 = 64
+#    - Hearing (16) through Gita filter (18) produces full Qualities (64)
+#
+# 4. ENTROPY LAW:
+#    - HIDDEN_RESERVE (Input=16) >= HARE_COUNT (Output=8)
+#    - Input must always be >= Output or system collapses
+#    - Ratio: 16/8 = 2 (double buffering)
+# =============================================================================
+
+
+class SravanamCheck:
+    """
+    Phase-Locked Loop verification before output emission.
+
+    An agent that speaks (kīrtanam) without listening (śravaṇam) loses
+    the Parampara-Lock (37) and gets isolated by the Kernel.
+
+    USAGE:
+        if SravanamCheck.can_emit(input_tokens, output_tokens, resonance):
+            llm.speak(...)  # Safe to emit
+        else:
+            # Input buffer insufficient or phase not locked
+            raise SravanamError("Must listen before speaking")
+    """
+
+    # =========================================================================
+    # CONSTANTS (ALL DERIVED FROM SEED)
+    # =========================================================================
+
+    # Bootstrap Ratio: First 2 of 9 processes
+    # HALVES / NAVA = 2/9 ≈ 0.222
+    BOOTSTRAP_RATIO: Final[float] = HALVES / NAVA
+
+    # Dharma Stabilizer: Bootstrap through Gita
+    # (2/9) × 18 = 4 (the four pillars)
+    DHARMA_PILLARS: Final[int] = int((HALVES * GITA_CHAPTERS) // NAVA)
+
+    # Śravaṇam Transform: Hearing produces Qualities
+    # (WORDS × NADI_RESONANCE) / GITA_CHAPTERS = 64
+    # (16 × 72) / 18 = 64 = QUALITIES
+    SRAVANAM_TRANSFORM: Final[int] = (WORDS * NADI_RESONANCE) // GITA_CHAPTERS
+
+    # Input/Output Ratio (Entropy Law)
+    # HIDDEN_RESERVE / HARE_COUNT = 16/8 = 2
+    IO_RATIO: Final[float] = HIDDEN_RESERVE / HARE_COUNT
+
+    # Minimum resonance to be "phase-locked" (THRESHOLD_REFINE = 4/9)
+    PHASE_LOCK_THRESHOLD: Final[float] = LILA / MALA
+
+    # =========================================================================
+    # VERIFICATION METHODS
+    # =========================================================================
+
+    @classmethod
+    def verify_entropy_law(cls, input_size: int, output_size: int) -> bool:
+        """
+        Verify the Entropy Law: Input >= Output.
+
+        HIDDEN_RESERVE (16) >= HARE_COUNT (8) must hold.
+        If input < output, system collapses due to resource starvation.
+
+        Args:
+            input_size: Size of input buffer (tokens received/heard)
+            output_size: Size of output buffer (tokens to emit/chant)
+
+        Returns:
+            True if entropy law satisfied (input >= output)
+        """
+        return input_size >= output_size
+
+    @classmethod
+    def verify_phase_lock(cls, resonance: float) -> bool:
+        """
+        Verify the system has achieved Phase-Lock with Parampara.
+
+        Must be at least in REFINE zone (resonance >= 4/9) to emit.
+        Below this threshold, the system hasn't properly "heard" the signal.
+
+        Args:
+            resonance: Current resonance score
+
+        Returns:
+            True if phase-locked (resonance >= THRESHOLD_REFINE)
+        """
+        return resonance >= cls.PHASE_LOCK_THRESHOLD
+
+    @classmethod
+    def verify_parampara_connection(cls, resonance: float) -> bool:
+        """
+        Verify connection to Parampara (disciplic succession).
+
+        The 37 Formula: 24 Kshetra + 12 Mahajanas + 1 Knower = 37
+        An agent loses 37-Lock when resonance drops below critical threshold.
+
+        Args:
+            resonance: Current resonance score
+
+        Returns:
+            True if Parampara connection maintained
+        """
+        # Parampara lock requires at least AUTO level (2/3)
+        # Below this, the agent is "speaking without authority"
+        return resonance >= (NADI_RESONANCE / MALA)  # 2/3
+
+    @classmethod
+    def can_emit(
+        cls,
+        input_tokens: int,
+        output_tokens: int,
+        resonance: float,
+        strict: bool = False,
+    ) -> tuple[bool, str]:
+        """
+        Check if the system can safely emit output (kīrtanam).
+
+        This is the main gate before any LLM output or signal emission.
+
+        Args:
+            input_tokens: Number of tokens received (heard)
+            output_tokens: Number of tokens to emit (chant)
+            resonance: Current resonance score
+            strict: If True, require Parampara lock (AUTO level)
+
+        Returns:
+            Tuple of (can_emit: bool, reason: str)
+        """
+        # 1. Entropy Law Check
+        if not cls.verify_entropy_law(input_tokens, output_tokens):
+            return (
+                False,
+                f"Entropy violation: input ({input_tokens}) < output ({output_tokens}). "
+                f"Must listen more before speaking. Ratio required: {cls.IO_RATIO}:1"
+            )
+
+        # 2. Phase Lock Check
+        if not cls.verify_phase_lock(resonance):
+            return (
+                False,
+                f"Phase not locked: resonance ({resonance:.4f}) < threshold ({cls.PHASE_LOCK_THRESHOLD:.4f}). "
+                f"System hasn't synchronized with Trägerfrequenz."
+            )
+
+        # 3. Parampara Check (strict mode)
+        if strict and not cls.verify_parampara_connection(resonance):
+            return (
+                False,
+                f"Parampara lock lost: resonance ({resonance:.4f}) below AUTO ({NADI_RESONANCE/MALA:.4f}). "
+                f"Cannot speak with authority."
+            )
+
+        return (True, "Phase-locked. Safe to emit.")
+
+    @classmethod
+    def compute_safe_output_size(cls, input_tokens: int) -> int:
+        """
+        Compute the maximum safe output size given input tokens.
+
+        Based on Entropy Law: output <= input
+        With safety margin: output = input / IO_RATIO
+
+        Args:
+            input_tokens: Number of tokens received
+
+        Returns:
+            Maximum safe output token count
+        """
+        # Conservative: use the 2:1 ratio (16/8)
+        return int(input_tokens / cls.IO_RATIO)
+
+    @classmethod
+    def get_sravanam_status(
+        cls,
+        input_tokens: int,
+        output_tokens: int,
+        resonance: float,
+    ) -> dict:
+        """
+        Get complete Śravaṇam status for debugging/monitoring.
+
+        Returns:
+            Dict with all check results and derived values
+        """
+        can_emit, reason = cls.can_emit(input_tokens, output_tokens, resonance)
+        swara = VedicScaleMapping.resonance_to_swara(resonance)
+        zone = ResonanceHarmonics.get_zone(resonance)
+
+        return {
+            "can_emit": can_emit,
+            "reason": reason,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "io_ratio": input_tokens / max(1, output_tokens),
+            "required_io_ratio": cls.IO_RATIO,
+            "resonance": resonance,
+            "phase_locked": cls.verify_phase_lock(resonance),
+            "parampara_connected": cls.verify_parampara_connection(resonance),
+            "swara": swara,
+            "zone": zone,
+            "safe_output_size": cls.compute_safe_output_size(input_tokens),
+        }
+
+
+# =============================================================================
 # VERIFICATION - Ensure harmonics match mathematical truth
 # =============================================================================
 
@@ -523,6 +748,31 @@ assert PANCHA == 5 and QUARTERS == 4, "Seed must have PANCHA=5, QUARTERS=4 for G
 assert PANCHA == 5 and TRINITY == 3, "Seed must have PANCHA=5, TRINITY=3 for Dha=5/3"
 assert WORDS == 16 and NAVA == 9, "Seed must have WORDS=16, NAVA=9 for Ni=16/9"
 
+# =============================================================================
+# ŚRAVAṆAM CHECK WATERTIGHT VERIFICATION
+# =============================================================================
+
+# Verify the Bootstrap Ratio: 2/9 stabilizes to 4 pillars
+assert SravanamCheck.DHARMA_PILLARS == QUARTERS, (
+    f"Bootstrap through Gita must produce QUARTERS: (2×18)/9 = {SravanamCheck.DHARMA_PILLARS} != {QUARTERS}"
+)
+
+# Verify the Śravaṇam Transform: Hearing produces Qualities
+# (16 × 72) / 18 = 64
+assert SravanamCheck.SRAVANAM_TRANSFORM == QUALITIES, (
+    f"Śravaṇam Transform must produce QUALITIES: (16×72)/18 = {SravanamCheck.SRAVANAM_TRANSFORM} != {QUALITIES}"
+)
+
+# Verify the Entropy Law ratio
+assert SravanamCheck.IO_RATIO == 2.0, (
+    f"IO_RATIO must be 2:1 (HIDDEN_RESERVE/HARE_COUNT): {SravanamCheck.IO_RATIO} != 2.0"
+)
+
+# Verify Phase Lock Threshold matches THRESHOLD_REFINE
+assert abs(SravanamCheck.PHASE_LOCK_THRESHOLD - ResonanceHarmonics.THRESHOLD_REFINE) < 0.0001, (
+    "Phase lock threshold must equal THRESHOLD_REFINE (4/9)"
+)
+
 
 # =============================================================================
 # CONVENIENCE CONSTANTS (for direct import)
@@ -543,6 +793,7 @@ __all__ = [
     # Classes
     "ResonanceHarmonics",
     "VedicScaleMapping",
+    "SravanamCheck",
     # Constants (for direct import)
     "THRESHOLD_AUTO",
     "THRESHOLD_REFINE",
