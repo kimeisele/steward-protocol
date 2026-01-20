@@ -247,9 +247,9 @@ class TestRegistryIntegration:
         names = [c.name for c in cmds]
         assert "chat" in names
 
-    def test_shuka_has_intel(self):
-        """SHUKA owns intel command."""
-        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.SHUKA)
+    def test_parashurama_has_intel(self):
+        """PARASHURAMA owns intel command (EXEC_OP = position 8)."""
+        cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(Mahajana.PARASHURAMA)
         names = [c.name for c in cmds]
         assert "intel" in names
 

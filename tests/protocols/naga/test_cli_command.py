@@ -227,9 +227,9 @@ class TestOpcodeToMahajana:
         """OPTIMIZE → BALI."""
         assert OPCODE_TO_MAHAJANA[MantraOpCode.IO_FLUSH] == Mahajana.BALI
 
-    def test_yield_cpu_to_shuka(self):
-        """YIELD_CPU → SHUKA."""
-        assert OPCODE_TO_MAHAJANA[MantraOpCode.YIELD_CPU] == Mahajana.SHUKA
+    def test_log_emit_to_shuka(self):
+        """LOG_EMIT → SHUKA."""
+        assert OPCODE_TO_MAHAJANA[MantraOpCode.LOG_EMIT] == Mahajana.SHUKA
 
     def test_reset_ip_to_yamaraja(self):
         """RESET_IP → YAMARAJA."""
