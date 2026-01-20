@@ -75,78 +75,95 @@ class VedaResult(TypedDict):
 
 
 # =============================================================================
-# INTENT KEYWORDS (Deterministic Mapping)
+# INTENT KEYWORDS (Loaded from YAML - NO HARDCODING)
 # =============================================================================
 
-# Keywords → Intent (SHABDA layer - no LLM needed)
-INTENT_KEYWORDS: Final[Dict[str, VedaIntent]] = {
-    # CHANT (KIRTANAM)
-    "chant": VedaIntent.CHANT,
-    "chanten": VedaIntent.CHANT,
-    "mantra": VedaIntent.CHANT,
-    "cycle": VedaIntent.CHANT,
-    "tick": VedaIntent.CHANT,
-    "rounds": VedaIntent.CHANT,
-    "mala": VedaIntent.CHANT,
 
-    # LISTEN (SRAVANAM)
-    "listen": VedaIntent.LISTEN,
-    "hören": VedaIntent.LISTEN,
-    "events": VedaIntent.LISTEN,
-    "violations": VedaIntent.LISTEN,
-    "logs": VedaIntent.LISTEN,
-    "syscalls": VedaIntent.LISTEN,
+def _load_intent_keywords() -> Dict[str, VedaIntent]:
+    """
+    Load intent keywords from knowledge/veda_intents.yaml.
 
-    # RESOLVE (VANDANAM)
-    "resolve": VedaIntent.RESOLVE,
-    "who": VedaIntent.RESOLVE,
-    "wer": VedaIntent.RESOLVE,
-    "lookup": VedaIntent.RESOLVE,
-    "find": VedaIntent.RESOLVE,
-    "mahajana": VedaIntent.RESOLVE,
+    NO HARDCODED KEYWORDS. Everything comes from YAML.
+    KnowledgeGraph can extend this at runtime.
+    """
+    import yaml
+    from pathlib import Path
 
-    # SERVE (PADA_SEVANAM)
-    "serve": VedaIntent.SERVE,
-    "execute": VedaIntent.SERVE,
-    "run": VedaIntent.SERVE,
-    "task": VedaIntent.SERVE,
-    "do": VedaIntent.SERVE,
-    "mach": VedaIntent.SERVE,
+    keywords: Dict[str, VedaIntent] = {}
 
-    # SCAN (SMARANAM)
-    "scan": VedaIntent.SCAN,
-    "discover": VedaIntent.SCAN,
-    "search": VedaIntent.SCAN,
+    # Find knowledge dir (relative to vibe_core)
+    knowledge_paths = [
+        Path(__file__).parent.parent.parent.parent / "knowledge" / "veda_intents.yaml",
+        Path("knowledge/veda_intents.yaml"),
+    ]
 
-    # HELP
-    "help": VedaIntent.HELP,
-    "hilfe": VedaIntent.HELP,
-    "?": VedaIntent.HELP,
-    "commands": VedaIntent.HELP,
+    yaml_path = None
+    for p in knowledge_paths:
+        if p.exists():
+            yaml_path = p
+            break
 
-    # STATUS
-    "status": VedaIntent.STATUS,
-    "health": VedaIntent.STATUS,
-    "state": VedaIntent.STATUS,
-}
+    if not yaml_path:
+        # No YAML found - return empty (will rely on mahamantra.resonate())
+        return keywords
 
-# Mahajana names for RESOLVE intent - use SSOT from scanner
+    try:
+        with open(yaml_path, "r") as f:
+            data = yaml.safe_load(f)
+
+        if not data or "intents" not in data:
+            return keywords
+
+        # Build keyword → intent mapping
+        intent_map = {
+            "chant": VedaIntent.CHANT,
+            "listen": VedaIntent.LISTEN,
+            "resolve": VedaIntent.RESOLVE,
+            "serve": VedaIntent.SERVE,
+            "scan": VedaIntent.SCAN,
+            "help": VedaIntent.HELP,
+            "status": VedaIntent.STATUS,
+        }
+
+        for intent_name, intent_data in data["intents"].items():
+            if intent_name in intent_map:
+                intent_enum = intent_map[intent_name]
+                for keyword in intent_data.get("keywords", []):
+                    keywords[keyword.lower()] = intent_enum
+
+    except Exception:
+        pass  # Fail gracefully
+
+    return keywords
+
+
+# Load at module init (cached)
+INTENT_KEYWORDS: Final[Dict[str, VedaIntent]] = _load_intent_keywords()
+
+# Mahajana names for RESOLVE intent - use SSOT (NO HARDCODING)
 def _get_all_mahajana_names() -> set:
     """Get all mahajana names and aliases from SSOT."""
+    names = set()
+
+    # PRIMARY: Use scanner aliases (includes learned aliases)
     try:
         from vibe_core.mahamantra.substrate.scanner import MAHAJANA_ALIASES
-        names = set()
-        for alias in MAHAJANA_ALIASES:  # Tuple of MahajanaAlias
+        for alias in MAHAJANA_ALIASES:
             names.add(alias.name)
             names.update(alias.aliases)
         return names
     except ImportError:
-        # Fallback if scanner not available
-        return {
-            "brahma", "narada", "shambhu", "kumaras", "kapila", "manu",
-            "prahlada", "janaka", "bhishma", "bali", "shuka", "yamaraja",
-            "vyasa", "prithu", "parashurama", "nrisimha",
-        }
+        pass
+
+    # FALLBACK: Use seed.py ALL_GUARDIANS (THE SSOT)
+    try:
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        return set(ALL_GUARDIANS)
+    except ImportError:
+        pass
+
+    # ULTIMATE FALLBACK: Empty set (mahamantra.resonate() will handle it)
+    return names
 
 MAHAJANA_NAMES: Final[set] = _get_all_mahajana_names()
 
