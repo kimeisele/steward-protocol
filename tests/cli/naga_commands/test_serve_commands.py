@@ -789,11 +789,12 @@ class TestServePhaseComplete:
 
     def test_all_mahajanas_covered(self):
         """All SERVE mahajanas have commands."""
+        # SERVE phase = positions 8-11
         serve_mahajanas = [
-            Mahajana.SHUKA,  # FETCH_RES (intel)
-            Mahajana.PRAHLADA,  # EXEC_SERVICE (chat)
-            Mahajana.JANAKA,  # CHECK_DHARMA (validate)
-            Mahajana.BHISHMA,  # COMMIT_LOG (commit)
+            Mahajana.PARASHURAMA,  # EXEC_OP (8) - intel
+            Mahajana.PRAHLADA,  # EXTEND_CAP (9) - chat
+            Mahajana.JANAKA,  # STATE_SYNC (10) - validate
+            Mahajana.BHISHMA,  # LEDGER_SIGN (11) - commit
         ]
         for mahajana in serve_mahajanas:
             cmds = NAGA_COMMAND_REGISTRY.get_by_mahajana(mahajana)
