@@ -90,6 +90,15 @@ from vibe_core.services.chat_refinement import (
     POSITION_OPCODES,
 )
 
+# NAGA INTEGRATION - The Invisible Guardians enhance chat intelligence
+# NAGAs INFORM, they don't CONTROL (GAD-000 principle)
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vibe_core.naga.cortex.cortex_main import NagaCortex
+    from vibe_core.naga.services.narada import NaradaService
+    from vibe_core.protocols.naga import NagaContext
+
 logger = logging.getLogger("CHAT_SERVICE")
 
 
@@ -111,10 +120,17 @@ class ChatService(ChatProtocol):
     - < 0.4: Silence (no resonance - refuse to guess)
     """
 
-    # Resonance thresholds (from substrate - SSOT)
-    RESONANCE_AUTO = THRESHOLD_MANIFEST  # Auto-execute (0.7)
-    RESONANCE_REFINE = THRESHOLD_NEGOTIATE  # Ask for refinement (0.4)
-    # Below 0.4 = Silence
+    # Resonance thresholds loaded from config (SSOT: config/mahamantra.yaml)
+    # These are properties that read from config at runtime
+    @property
+    def RESONANCE_AUTO(self) -> float:
+        """Auto-execute threshold from config."""
+        return self._mahamantra_config.resonance.auto_execute if self._mahamantra_config else THRESHOLD_MANIFEST
+
+    @property
+    def RESONANCE_REFINE(self) -> float:
+        """Refinement threshold from config."""
+        return self._mahamantra_config.resonance.refinement if self._mahamantra_config else THRESHOLD_NEGOTIATE
 
     def __init__(self):
         self._lotus: LotusHologram = LotusHologram()  # O(1) routing
@@ -127,6 +143,15 @@ class ChatService(ChatProtocol):
         self._refinement_states: Dict[str, "RefinementState"] = {}  # Per-session
         self._initialized = False
 
+        # NAGA Integration (The Invisible Guardians)
+        # NAGAs ENHANCE existing systems - they INFORM, not CONTROL
+        self._naga_cortex: Optional["NagaCortex"] = None  # Intelligence hub
+        self._narada: Optional["NaradaService"] = None  # Observation service
+
+        # Mahamantra Config (SSOT for holy names, thresholds, etc.)
+        # Simple injection point, max effect - NO HARDCODING!
+        self._mahamantra_config = None
+
         # Refinement Handler (extracted for modularity)
         self._refinement_handler = RefinementHandler(
             sessions=self._sessions,
@@ -138,6 +163,19 @@ class ChatService(ChatProtocol):
     def _init_dependencies(self) -> None:
         """Initialize all dependencies from protocols."""
         try:
+            # Mahamantra Config (SSOT - holy names, thresholds, chat defaults)
+            # Simple injection point, max effect - NO HARDCODING!
+            try:
+                from vibe_core.phoenix import get_config
+                config = get_config()
+                self._mahamantra_config = config.mahamantra
+                logger.info(
+                    f"✅ ChatService: MahamantraConfig loaded "
+                    f"({len(self._mahamantra_config.holy_names.seed)} holy names)"
+                )
+            except Exception as e:
+                logger.warning(f"⚠️ ChatService: MahamantraConfig not available: {e}")
+
             # Substrate Bridge initialized in __init__ (get_substrate_bridge)
             logger.info("✅ ChatService: SubstrateBridge initialized (VarnaTensor routing)")
 
@@ -166,6 +204,22 @@ class ChatService(ChatProtocol):
                 logger.info("✅ ChatService: Cognitive (Kapila) initialized")
             except Exception as e:
                 logger.warning(f"⚠️ ChatService: Cognitive not available: {e}")
+
+            # NAGA Integration (The Invisible Guardians)
+            # NAGAs ENHANCE, they don't REPLACE - GAD-000 principle
+            try:
+                from vibe_core.di import ServiceRegistry
+                from vibe_core.protocols.naga import NagaFederationProtocol
+
+                naga = ServiceRegistry.get(NagaFederationProtocol)
+                if naga:
+                    self._naga_cortex = naga.cortex
+                    self._narada = naga._narada
+                    logger.info("✅ ChatService: NAGA Federation wired (Cortex + Narada)")
+                else:
+                    logger.debug("⚠️ ChatService: NAGA Federation not available (normal for CLI)")
+            except Exception as e:
+                logger.debug(f"⚠️ ChatService: NAGA not available: {e}")
 
             self._initialized = True
 
@@ -228,6 +282,16 @@ class ChatService(ChatProtocol):
             self._sessions[session_id] = []
         self._sessions[session_id].append(input_msg)
 
+        # =================================================================
+        # NAGA OBSERVATION: Report chat start (Narada sees all)
+        # =================================================================
+        self._report_to_narada("START", message, context)
+
+        # =================================================================
+        # NAGA INTELLIGENCE: Get Cortex context (NAGAs INFORM, not CONTROL)
+        # =================================================================
+        naga_context = self._get_naga_intelligence()
+
         try:
             # =================================================================
             # CHECK: Is this a response to a previous RefinementRequest?
@@ -282,12 +346,30 @@ class ChatService(ChatProtocol):
             mode = determine_chat_mode(cognitive_result, lotus_result)
 
             # =================================================================
-            # STEP 4: CONTEXT - Live substrate context
+            # STEP 4: EXECUTION - If actionable, DO IT (not just talk!)
             # =================================================================
-            knowledge_context = self._get_knowledge_context_lotus(message, lotus_result)
+            execution_result = None
+            if cognitive_result.intent_type == IntentType.EXECUTE or mode == ChatMode.SYSCALL:
+                execution_result = await self._execute_via_bridge(message, lotus_result)
+                logger.info(f"⚡ ChatService: EXECUTED via bridge → {execution_result}")
 
             # =================================================================
-            # STEP 5: LLM - Interpreter (not brain)
+            # STEP 5: CONTEXT - Live substrate context + execution result + NAGA
+            # =================================================================
+            knowledge_context = self._get_knowledge_context_lotus(message, lotus_result)
+            if execution_result:
+                knowledge_context["execution_result"] = str(execution_result)
+
+            # Add NAGA intelligence to context (NAGAs INFORM)
+            if naga_context:
+                if naga_context.active_threats:
+                    knowledge_context["naga_threats"] = str(len(naga_context.active_threats))
+                if naga_context.anomaly_count > 0:
+                    knowledge_context["naga_anomalies"] = str(naga_context.anomaly_count)
+                knowledge_context["naga_reason"] = naga_context.reason_code.value
+
+            # =================================================================
+            # STEP 6: LLM - Interpreter (responds to execution, not decides)
             # =================================================================
             response_text = await self._generate_response_lotus(
                 message=message,
@@ -311,7 +393,7 @@ class ChatService(ChatProtocol):
             # Store response in history
             self._sessions[session_id].append(response_msg)
 
-            return ChatResponse(
+            response = ChatResponse(
                 success=True,
                 message=response_msg,
                 mode=mode,
@@ -321,6 +403,13 @@ class ChatService(ChatProtocol):
                 confidence=magnitude,  # Use resonance magnitude as confidence
             )
 
+            # =================================================================
+            # NAGA OBSERVATION: Report chat success (Narada sees all)
+            # =================================================================
+            self._report_to_narada("END", message, context, response)
+
+            return response
+
         except Exception as e:
             logger.error(f"❌ ChatService: Chat failed: {e}")
             error_msg = ChatMessage(
@@ -329,12 +418,15 @@ class ChatService(ChatProtocol):
                 timestamp=datetime.now(),
                 session_id=context.session_id,
             )
-            return ChatResponse(
+            error_response = ChatResponse(
                 success=False,
                 message=error_msg,
                 mode=ChatMode.DIRECT,
                 error=str(e),
             )
+            # NAGA OBSERVATION: Report chat error (Narada sees all)
+            self._report_to_narada("ERROR", message, context, error_response)
+            return error_response
 
     async def chat_with_routing(
         self, message: str, context: ChatContext, force_routing: bool = False
@@ -472,9 +564,15 @@ class ChatService(ChatProtocol):
 
         # =================================================================
         # STEP 0: HOLY NAMES - The Highest Resonance (NEVER silence!)
+        # Word boundary check to avoid false matches (e.g., "om" in "random")
+        # Holy names loaded from config (SSOT: config/mahamantra.yaml)
         # =================================================================
-        holy_names = {"hare", "krishna", "rama", "om", "hari", "govinda", "madhava"}
-        has_holy_name = any(name in msg_lower for name in holy_names)
+        if self._mahamantra_config:
+            holy_names = self._mahamantra_config.holy_names.get_all_names()
+        else:
+            # Fallback if config not loaded (shouldn't happen)
+            holy_names = {"hare", "krishna", "rama", "om", "hari", "govinda", "madhava"}
+        has_holy_name = any(name in words for name in holy_names)
 
         if has_holy_name:
             # Holy Names = NARADA (communication of the divine) with HIGHEST score
@@ -556,6 +654,113 @@ class ChatService(ChatProtocol):
             "krishna": 0.33 if dominant == "krishna" else 0.2,
             "rama": 0.33 if dominant == "rama" else 0.2,
         }
+
+    # ==========================================================================
+    # NAGA INTEGRATION (The Invisible Guardians)
+    # NAGAs INFORM, they don't CONTROL - GAD-000 principle
+    # ==========================================================================
+
+    def _get_naga_intelligence(self) -> Optional["NagaContext"]:
+        """
+        Get aggregated NAGA intelligence for chat decisions.
+
+        PULL-BASED: Chat calls this when it needs context.
+        NAGAs INFORM, they don't CONTROL.
+
+        Returns:
+            NagaContext with typed intelligence, or None if NAGA unavailable
+        """
+        if not self._naga_cortex:
+            return None
+
+        try:
+            context = self._naga_cortex.get_context_for_manas()
+            logger.debug(
+                f"🐍 NAGA Context: threats={len(context.active_threats)}, "
+                f"anomalies={context.anomaly_count}, reason={context.reason_code.value}"
+            )
+            return context
+        except Exception as e:
+            logger.debug(f"⚠️ NAGA intelligence unavailable: {e}")
+            return None
+
+    def _report_to_narada(
+        self,
+        event_type: str,
+        message: str,
+        context: ChatContext,
+        result: Optional[ChatResponse] = None,
+    ) -> None:
+        """
+        Report chat event to Narada for observation tracking.
+
+        NARADA SEES ALL - The cosmic journalist.
+        Every chat interaction is observed for:
+        - Audit trail (GAD-000 compliance)
+        - Pattern analysis (Cortex learning)
+        - Mahajana routing metrics
+
+        Args:
+            event_type: Type of event (CHAT_START, CHAT_END, CHAT_ERROR, etc.)
+            message: The user message
+            context: Chat context
+            result: Optional chat response (for CHAT_END events)
+        """
+        if not self._narada:
+            return
+
+        try:
+            # Build observation data
+            data = f"session={context.session_id},message_len={len(message)}"
+            if result:
+                data += f",mode={result.mode.value},success={result.success}"
+                if result.mahajana:
+                    data += f",mahajana={result.mahajana}"
+                if result.confidence:
+                    data += f",confidence={result.confidence:.3f}"
+
+            # Observe via Narada
+            observation = self._narada.observe(
+                event_type=f"CHAT_{event_type}",
+                source="chat_service",
+                data=data,
+            )
+            logger.debug(f"🐍 Narada observed: CHAT_{event_type}")
+        except Exception as e:
+            # NARADA SAFETY: Observation failure must NEVER kill the application
+            logger.debug(f"⚠️ Narada observation failed: {e}")
+
+    async def _execute_via_bridge(self, message: str, lotus_result: Dict) -> Optional[Dict]:
+        """
+        Execute command via CLI Bridge - Chat actually DOES things!
+
+        ROYAL DELEGATION: steward chat "boot" → cli_bridge.route("boot") → EXECUTION!
+        """
+        try:
+            from vibe_core.mahamantra.cli.bridge import cli_bridge
+
+            # Extract command from message (first word or matched keyword)
+            words = message.lower().split()
+            command = lotus_result.get("matched_keyword") or words[0] if words else "help"
+
+            # Extract args (remaining words)
+            args = words[1:] if len(words) > 1 else []
+
+            # EXECUTE!
+            logger.info(f"⚡ Executing: cli_bridge.route('{command}', {args})")
+            result = cli_bridge.route(command, args)
+
+            return {
+                "success": result.success,
+                "exit_code": result.exit_code,
+                "position": result.position,
+                "handler": result.handler,
+                "fallback": result.fallback,
+                "error": result.error,
+            }
+        except Exception as e:
+            logger.warning(f"⚠️ Bridge execution failed: {e}")
+            return {"success": False, "error": str(e)}
 
     async def _handle_refinement_response(
         self, message: str, context: ChatContext
@@ -807,6 +1012,12 @@ Be concise, technical, and helpful.
             "provider": type(self._provider).__name__ if self._provider else "none",
             "knowledge_available": self._knowledge is not None,
             "cognitive_available": self._cognitive is not None,
+            # NAGA Integration status
+            "naga_cortex_available": self._naga_cortex is not None,
+            "naga_narada_available": self._narada is not None,
+            # Mahamantra Config status
+            "mahamantra_config_loaded": self._mahamantra_config is not None,
+            "holy_names_count": len(self._mahamantra_config.holy_names.seed) if self._mahamantra_config else 0,
         }
 
 

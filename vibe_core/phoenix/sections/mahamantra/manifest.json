@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "mahamantra",
+  "name": "Mahamantra Configuration",
+  "version": "1.0.0",
+  "description": "Holy names, resonance thresholds, chat defaults - SSOT for Mahamantra-related config.",
+
+  "entry_point": "section_main.py",
+  "entry_class": "MahamantraConfig",
+
+  "priority": 15,
+
+  "config_file": "config/mahamantra.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "mahamantra", "resonance", "chat"]
+}

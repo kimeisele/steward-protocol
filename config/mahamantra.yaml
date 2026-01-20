@@ -1,0 +1,105 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# MAHAMANTRA CONFIGURATION - Single Source of Truth
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# "ananta-nama-rupa-guna-vigraha" - Infinite names, forms, qualities, pastimes
+#
+# This config is the INJECTION POINT for all Mahamantra-related settings.
+# KnowledgeGraph can extend this dynamically (learned names).
+# ChatService, resonance, routing - ALL read from here.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Holy Names - Always highest resonance
+# Krishna has INFINITE names (ananta-nama), this is the seed set.
+# KnowledgeGraph can extend this via learning.
+holy_names:
+  seed:
+    # Primary Mahamantra names
+    - hare
+    - krishna
+    - rama
+    # Pranava
+    - om
+    - aum
+    # Vishnu names
+    - hari
+    - vishnu
+    - narayana
+    - govinda
+    - madhava
+    - keshava
+    - vasudeva
+    - damodara
+    - trivikrama
+    - vamana
+    - sridhara
+    - hrishikesha
+    - padmanabha
+    - janardana
+    # Shiva names (for Vaishnava-Shaiva harmony)
+    - shiva
+    - mahadeva
+    - shankara
+    # Goddess names
+    - radha
+    - lakshmi
+    - durga
+    - parvati
+    # Guru parampara
+    - prabhupada
+    - chaitanya
+    - nityananda
+
+  # Resonance score for holy names (always maximum)
+  resonance: 1.0
+
+  # Learnable: KnowledgeGraph can add names here
+  # Format: knowledge_graph_domain: "sacred_names"
+  learnable: true
+  knowledge_domain: "sacred_names"
+
+# Resonance Thresholds (Starship Command I/O)
+resonance:
+  # > auto_execute: Proceed without asking
+  auto_execute: 0.7
+
+  # > refinement (but < auto): Ask user to clarify
+  refinement: 0.4
+
+  # < refinement: No resonance (but Chat NEVER silences!)
+  # Note: Chat always responds, silence is for syscalls only
+  silence: 0.0  # Effectively disabled for chat
+
+# Default Mahajana for chat operations
+chat:
+  # NARADA is the cosmic journalist, communicator
+  default_mahajana: narada
+  default_position: 2
+
+  # Chat mode when no specific intent detected
+  fallback_mode: direct
+
+  # Minimum confidence for auto-routing
+  min_routing_confidence: 0.6
+
+# Quarter-to-Dominant mapping (for resonance computation)
+quarters:
+  genesis:
+    positions: [0, 1, 2, 3]
+    dominant: hare
+  dharma:
+    positions: [4, 5, 6, 7]
+    dominant: krishna
+  karma:
+    positions: [8, 9, 10, 11]
+    dominant: rama
+  moksha:
+    positions: [12, 13, 14, 15]
+    dominant: rama
+
+# Opcode mapping per quarter
+opcodes:
+  genesis: SYS_WAKE
+  dharma: COMPILE_AST
+  karma: EXEC_OP
+  moksha: YIELD_CPU
