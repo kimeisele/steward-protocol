@@ -499,7 +499,28 @@ def cli_veda(
         return result
 
     # Process message
-    veda_result = explorer.process(message)
+    # CREATIVE MODE: Use NAGA-flooded chat (Layer -1 integration)
+    if explorer_mode == ExplorerMode.CREATIVE:
+        try:
+            from vibe_core.mahamantra.chat import flooded_routed_chat, get_guardian_for_message
+
+            # Route to appropriate guardian with NAGA flooding
+            guardian = get_guardian_for_message(message)
+            response = flooded_routed_chat(message)
+
+            veda_result = {
+                "success": True,
+                "intent": "creative",
+                "response": f"[NAGA x {guardian.upper()}] {response}",
+                "llm_used": True,
+                "naga_flooded": True,
+            }
+        except Exception as e:
+            # Fall back to regular explorer on error
+            veda_result = explorer.process(message)
+            veda_result["naga_error"] = str(e)
+    else:
+        veda_result = explorer.process(message)
 
     result = VedaCLIResult(
         success=veda_result.get("success", False),
@@ -512,10 +533,11 @@ def cli_veda(
 
     # === PRESENTATION ===
     if not json:
+        naga_status = "FLOODED" if veda_result.get("naga_flooded") else "Standard"
         print("=" * 60)
         print("VEDA EXPLORER - Atma Nivedanam")
         print("=" * 60)
-        print(f"  Mode: {explorer_mode.value.upper()}")
+        print(f"  Mode: {explorer_mode.value.upper()} ({naga_status})")
         print(f"  LLM:  {'Available' if explorer.llm_available else 'Not available'}")
         print("-" * 60)
         print(f"  Input: {message}")
@@ -524,6 +546,8 @@ def cli_veda(
         print(result["response"])
         if result["llm_used"]:
             print("  [LLM used]")
+        if veda_result.get("naga_flooded"):
+            print("  [NAGA: Chitragupta, Takshaka, Narada, Sesha]")
         print("=" * 60)
 
     return result

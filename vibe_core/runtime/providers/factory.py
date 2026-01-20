@@ -28,6 +28,25 @@ from .base import LLMProvider, NoOpProvider, ProviderNotAvailableError
 logger = logging.getLogger(__name__)
 
 
+def _get_default_model_from_config(provider_name: str) -> str:
+    """Load default model from config/llm.yaml - FAILS if not configured!"""
+    from vibe_core.phoenix import get_config
+
+    config = get_config()
+    llm_cfg = config.llm  # LLMConfig object
+
+    # Access providers dict and get ProviderEntry
+    provider_entry = llm_cfg.providers.get(provider_name)
+
+    if not provider_entry or not provider_entry.default_model:
+        raise ValueError(
+            f"❌ FATAL: No model configured for '{provider_name}'! "
+            f"Set 'providers.{provider_name}.default_model' in config/llm.yaml"
+        )
+
+    return provider_entry.default_model
+
+
 def create_provider(
     provider_name: str | None = None,
     api_key: str | None = None,
@@ -83,7 +102,9 @@ def create_provider(
         elif provider_name == "openrouter":
             from .openrouter import OpenRouterProvider  # Lazy import
 
-            logger.info(f"Creating OpenRouter provider (model: {model_name or 'anthropic/claude-3.5-sonnet'})")
+            # Get default model from config (FAILS if not configured!)
+            default_model = _get_default_model_from_config("openrouter")
+            logger.info(f"Creating OpenRouter provider (config: {model_name or default_model})")
             return OpenRouterProvider(api_key=api_key, **kwargs)
 
         elif provider_name == "local":

@@ -540,6 +540,18 @@ def get_position_mahajana(position: int) -> str:
     return POSITION_TO_MAHAJANA.get(position, "unknown")
 
 
+def get_guardian_quarter(name: str) -> str | None:
+    """
+    Get quarter name for a guardian/mahajana.
+
+    Returns: "genesis", "dharma", "karma", "moksha" or None if not found.
+    """
+    position = get_mahajana_position(name)
+    if position < 0:
+        return None
+    return get_quarter_name(position).lower()
+
+
 def get_positions_in_quarter(quarter: Quarter) -> Tuple[int, ...]:
     """Get all positions in a quarter."""
     start = quarter.value * WORDS_PER_QUARTER
@@ -663,6 +675,7 @@ __all__ = [
     "verify_parampara",
     "get_mahajana_position",
     "get_position_mahajana",
+    "get_guardian_quarter",
     # Lotus Transport
     "lotus_declaration",
     "verify_lotus",

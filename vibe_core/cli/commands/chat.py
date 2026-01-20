@@ -1,10 +1,19 @@
 """
-OPUS-310: Chat Command
+OPUS-310: Chat Command - Mahamantra Routed
 
-Routes to CognitiveProtocol.process_intent().
-CLI → CommandRegistry → ChatCommand → Kernel → CognitiveProtocol → MANAS
+Routes through mahamantra.resonate() → Guardian's chat() method.
+CLI → CommandRegistry → ChatCommand → Mahamantra → Guardian.chat()
 
-No hardcoded plugin names. No shortcuts.
+"steward chat ist nicht nur 1 chat" - Each guardian has their own chat domain.
+- Kapila handles "analyze" questions
+- Yamaraja handles "audit" questions
+- Narada handles general communication
+- etc.
+
+MAHAMANTRA ROUTING:
+    1. mahamantra.resonate(message) finds the best matching guardian
+    2. Guardian's chat() method is called
+    3. If no specific match, Narada (position 2) handles it
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -24,24 +33,24 @@ from vibe_core.protocols.command import (
 
 
 class ChatCommand(BaseCommand):
-    """Chat with the cognitive layer."""
+    """Chat routed through Mahamantra - each guardian handles their domain."""
 
     name = "chat"
-    description = "Chat with the cognitive layer (MANAS or fallback)"
+    description = "Chat with the Mahamantra (routed to appropriate guardian)"
     source = "core"
-    tags = ["cognitive", "chat", "manas"]
+    tags = ["mahamantra", "chat", "resonance"]
 
     _parameters = [
         ParameterSpec(
             name="message",
             param_type=ParameterType.STRING,
             required=True,
-            description="The message to send",
+            description="The message to send (routed via mahamantra.resonate)",
         ),
     ]
 
     async def execute(self, args: List[str], context: CommandContext) -> CommandResult:
-        """Execute chat via kernel's cognitive protocol."""
+        """Execute chat via 12-NAGA flooded mahamantra routing."""
         message = " ".join(args) if args else ""
 
         if not message:
@@ -50,81 +59,29 @@ class ChatCommand(BaseCommand):
                 error="No message provided. Usage: steward chat <message>",
             )
 
-        kernel = context.kernel
-        if not kernel:
-            return CommandResult(
-                success=False,
-                error="Kernel not available. Run 'steward boot' first.",
-            )
-
-        # Check for cognitive support
-        if not hasattr(kernel, "process_operator_input"):
-            return CommandResult(
-                success=False,
-                error="Kernel does not support cognitive processing (OPUS-309 required)",
-            )
-
         try:
-            # Import here to avoid circular dependency
-            from vibe_core.protocols.cognition import IntentType
+            # NAGA x MAHAMANTRA = BOOM
+            # Use flooded chat with all 12 NAGA genes
+            from vibe_core.mahamantra.chat import (
+                flooded_routed_chat,
+                get_guardian_for_message,
+            )
 
-            result = await kernel.process_operator_input(message, context.session_id)
+            # 1. Find the resonating guardian
+            guardian = get_guardian_for_message(message)
 
-            # Handle by intent type
-            if result.intent_type == IntentType.CHAT:
-                return CommandResult(
-                    success=True,
-                    output=f"🗣️ {result.response}",
-                    data={"intent": "chat", "confidence": result.confidence},
-                )
+            # 2. Execute through 12-NAGA flooded chat
+            response = flooded_routed_chat(message)
 
-            elif result.intent_type == IntentType.EXECUTE:
-                output = f"🎯 Execution intent: {result.syscall_type}\n"
-                if result.syscall_params:
-                    output += f"   Parameters: {result.syscall_params}\n"
-                output += f"   Confidence: {result.confidence:.0%}"
-                if result.reasoning:
-                    output += f"\n   Reasoning: {result.reasoning}"
-                return CommandResult(
-                    success=True,
-                    output=output,
-                    data={
-                        "intent": "execute",
-                        "syscall": result.syscall_type,
-                        "params": result.syscall_params,
-                    },
-                )
-
-            elif result.intent_type == IntentType.ROUTE:
-                output = f"🔀 Routing to: {result.target}"
-                if result.reasoning:
-                    output += f"\n   Reason: {result.reasoning}"
-                return CommandResult(
-                    success=True,
-                    output=output,
-                    data={"intent": "route", "target": result.target},
-                )
-
-            elif result.intent_type == IntentType.QUERY:
-                if result.query_result:
-                    import json
-
-                    return CommandResult(
-                        success=True,
-                        output=json.dumps(result.query_result, indent=2),
-                        data={"intent": "query", "result": result.query_result},
-                    )
-                return CommandResult(
-                    success=True,
-                    output=f"🔍 Query: {result.query_type}",
-                    data={"intent": "query", "type": result.query_type},
-                )
-
-            else:
-                return CommandResult(
-                    success=True,
-                    output=f"Unknown intent type: {result.intent_type}",
-                )
+            return CommandResult(
+                success=True,
+                output=f"🕉️ [NAGA x {guardian.upper()}] {response}",
+                data={
+                    "guardian": guardian,
+                    "naga_flooded": True,
+                    "naga_genes": 12,
+                },
+            )
 
         except Exception as e:
             return CommandResult(

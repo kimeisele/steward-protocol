@@ -272,10 +272,59 @@ class VedaExplorer:
 
     def _parse_intent_llm(self, text: str) -> ParsedIntent:
         """
-        Parse intent using LLM for ambiguous inputs.
+        Parse intent using mahamantra.resonate() first, LLM as last resort.
 
-        Only called when deterministic parsing fails.
+        PROPER INFRASTRUCTURE ORDER:
+        1. mahamantra.resonate() - uses INTENT_MAP from all guardians
+        2. LLM classification - only if resonance fails
         """
+        # 1. TRY MAHAMANTRA RESONANCE FIRST (proper infrastructure)
+        try:
+            from vibe_core.mahamantra import mahamantra
+
+            score, winning_node = mahamantra.resonate(text)
+
+            if winning_node and score > 0.3:
+                # Map guardian to VedaIntent
+                # Get guardian name from the winning node path
+                guardian = "narada"  # default
+                if hasattr(winning_node, "_path") and winning_node._path.depth >= 2:
+                    guardian = winning_node._path.segments[1]
+
+                # Map guardian to intent based on their domain
+                guardian_intent_map = {
+                    "brahma": VedaIntent.CHANT,      # creation/spawn
+                    "narada": VedaIntent.LISTEN,    # communication/events
+                    "shambhu": VedaIntent.SERVE,    # transformation
+                    "vyasa": VedaIntent.STATUS,     # genesis/boot
+                    "kumaras": VedaIntent.RESOLVE,  # purification/resolution
+                    "kapila": VedaIntent.SCAN,      # analysis
+                    "manu": VedaIntent.STATUS,      # governance
+                    "prahlada": VedaIntent.SERVE,   # protection/execution
+                    "janaka": VedaIntent.SERVE,     # duty/task
+                    "bhishma": VedaIntent.LISTEN,   # persistence/logs
+                    "bali": VedaIntent.STATUS,      # resources
+                    "shuka": VedaIntent.STATUS,     # observation
+                    "yamaraja": VedaIntent.STATUS,  # judgment/audit
+                    "prithu": VedaIntent.SCAN,      # structure/compile
+                    "parashurama": VedaIntent.SERVE,  # execution
+                    "nrisimha": VedaIntent.STATUS,  # security
+                }
+
+                intent = guardian_intent_map.get(guardian.lower(), VedaIntent.UNKNOWN)
+                params = self._extract_params(text, intent)
+
+                return ParsedIntent(
+                    intent=intent,
+                    params=params,
+                    raw_input=text,
+                    confidence=score,
+                    llm_used=False,  # Mahamantra resonance, not LLM!
+                )
+        except Exception:
+            pass  # Fall through to LLM
+
+        # 2. FALLBACK: LLM classification (last resort)
         if not self._llm_available or not self._llm:
             return ParsedIntent(
                 intent=VedaIntent.UNKNOWN,
@@ -676,86 +725,101 @@ Beispiele:
         )
 
     # =========================================================================
-    # CREATIVE MODE - Full LLM Conversation (Guru Mode)
+    # CREATIVE MODE - Routed through Mahamantra (Proper Infrastructure)
     # =========================================================================
-
-    SYSTEM_PROMPT: str = """Du bist der VEDA EXPLORER - ein weiser Guru und technischer Experte.
-
-DEIN WISSEN:
-- Die 16 Mahajanas (Brahma, Narada, Shambhu, Vyasa, Kumaras, Kapila, Manu, Prahlada, Janaka, Bhishma, Bali, Shuka, Yamaraja, Prithu, Parashurama, Nrisimha)
-- Die 4 Quarters: GENESIS (0-3), DHARMA (4-7), KARMA (8-11), MOKSHA (12-15)
-- Das Mahamantra: 16 Worte, zyklisch, Yajna-Kreislauf
-- Die NavaBhakti: 9 Formen der Hingabe (Sravanam, Kirtanam, Smaranam, Pada-Sevanam, Arcanam, Vandanam, Dasyam, Sakhyam, Atma-Nivedanam)
-
-DEIN STIL:
-- Technisch präzise wenn nach Code gefragt
-- Weise und tiefgründig wenn nach Konzepten gefragt
-- Praktisch und lösungsorientiert
-- Du kannst Code schreiben, Architektur erklären, und spirituelle Konzepte mit Technik verbinden
-
-VERFÜGBARE AKTIONEN (die du vorschlagen kannst):
-- chant N: Führe N Mahamantra-Zyklen aus
-- listen: Zeige System-Events
-- resolve NAME: Löse Mahajana auf
-- serve TASK: Erstelle eine Aufgabe
-
-Antworte auf Deutsch oder Englisch, je nach Sprache der Frage."""
 
     def _handle_creative(self, text: str) -> VedaResult:
         """
-        CREATIVE MODE: Full LLM conversation with context.
+        CREATIVE MODE: Route through mahamantra for proper guardian handling.
 
-        The Guru speaks freely, with full knowledge of Mahamantra.
+        NO HARDCODED PROMPTS. Uses:
+        1. mahamantra.resonate() to find the right guardian
+        2. Guardian's chat() method for domain-specific handling
+        3. Falls back to gateway.chat() which uses proper LLM infrastructure
+
+        "steward chat ist nicht nur 1 chat" - Each guardian has their own domain.
         """
-        if not self._llm_available or not self._llm:
+        try:
+            # MAHAMANTRA ROUTING - Krishna routes everything
+            from vibe_core.mahamantra import mahamantra
+
+            # 1. Find the resonating guardian
+            score, winning_node = mahamantra.resonate(text)
+
+            if winning_node and score > 0:
+                # 2. Execute through the winning node (calls chat() if available)
+                result = winning_node.execute(text)
+
+                guardian = result.get("mahajana", "narada")
+                output_text = result.get("output", "")
+
+                # Store in history
+                self._history.append({"user": text, "assistant": output_text})
+
+                if result.get("success"):
+                    return VedaResult(
+                        success=True,
+                        intent="creative",
+                        mode=self._mode.value,
+                        response=f"[{guardian.upper()}] {output_text}",
+                        data={
+                            "guardian": guardian,
+                            "resonance": score,
+                            "routed": True,
+                            "history_length": len(self._history),
+                        },
+                        llm_used=True,
+                    )
+
+            # 3. Fallback: Use gateway.chat() which routes through mahamantra.execute()
+            from vibe_core.gateway.mahamantra_gateway import chat as gateway_chat
+
+            response = gateway_chat(text)
+
+            # Store in history
+            output_text = response.get("output", "")
+            self._history.append({"user": text, "assistant": output_text})
+
+            if response["success"]:
+                return VedaResult(
+                    success=True,
+                    intent="creative",
+                    mode=self._mode.value,
+                    response=f"[{response['guardian'].upper()}] {output_text}",
+                    data={
+                        "guardian": response["guardian"],
+                        "position": response["position"],
+                        "quarter": response["quarter"],
+                        "history_length": len(self._history),
+                    },
+                    llm_used=True,
+                )
+
+            # 4. Ultimate fallback: If mahamantra routing fails, try legacy LLM
+            if self._llm_available and self._llm:
+                # Use LLM speak method (which uses proper infrastructure)
+                llm_response = self._llm.speak(
+                    "VEDA_EXPLORER",
+                    "creative_chat",
+                    text,
+                )
+                self._history.append({"user": text, "assistant": llm_response})
+                return VedaResult(
+                    success=True,
+                    intent="creative",
+                    mode=self._mode.value,
+                    response=llm_response,
+                    data={"history_length": len(self._history)},
+                    llm_used=True,
+                )
+
             return VedaResult(
                 success=False,
                 intent="creative",
                 mode=self._mode.value,
-                response="LLM nicht verfügbar. Verwende --mode enhanced oder restricted.",
-                data={},
+                response=f"Routing fehlgeschlagen: {response.get('error', 'unknown')}",
+                data={"error": response.get("error")},
                 llm_used=False,
-            )
-
-        try:
-            # Use provider directly for full LLM power
-            provider = self._llm._get_provider()
-            if provider is None:
-                return VedaResult(
-                    success=False,
-                    intent="creative",
-                    mode=self._mode.value,
-                    response="Kein LLM Provider verfügbar.",
-                    data={},
-                    llm_used=False,
-                )
-
-            # Build messages list (OpenAI/OpenRouter format)
-            messages: List[Dict[str, str]] = [
-                {"role": "system", "content": self.SYSTEM_PROMPT}
-            ]
-
-            # Add history (last 5 turns)
-            for turn in self._history[-5:]:
-                messages.append({"role": "user", "content": turn["user"]})
-                messages.append({"role": "assistant", "content": turn["assistant"]})
-
-            # Add current message
-            messages.append({"role": "user", "content": text})
-
-            response_obj = provider.invoke(messages=messages)
-            response = response_obj.content.strip()
-
-            # Store in history
-            self._history.append({"user": text, "assistant": response})
-
-            return VedaResult(
-                success=True,
-                intent="creative",
-                mode=self._mode.value,
-                response=response,
-                data={"history_length": len(self._history)},
-                llm_used=True,
             )
 
         except Exception as e:
@@ -763,9 +827,9 @@ Antworte auf Deutsch oder Englisch, je nach Sprache der Frage."""
                 success=False,
                 intent="creative",
                 mode=self._mode.value,
-                response=f"LLM Fehler: {e}",
+                response=f"Fehler: {e}",
                 data={"error": str(e)},
-                llm_used=True,
+                llm_used=False,
             )
 
     # =========================================================================

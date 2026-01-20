@@ -106,7 +106,7 @@ class OpenRouterProvider(LLMProvider):
     def invoke(
         self,
         prompt: str = "",
-        model: str = "anthropic/claude-3.5-sonnet",
+        model: str | None = None,  # NO HARDCODING - model from caller/config
         max_tokens: int = 4096,
         temperature: float = 1.0,
         max_retries: int = 3,
@@ -131,6 +131,10 @@ class OpenRouterProvider(LLMProvider):
         Raises:
             ProviderInvocationError: If all retries fail
         """
+        # Get model from config if not provided (NO HARDCODING!)
+        if model is None:
+            model = self._get_model_from_config()
+
         # Use native messages if provided, otherwise wrap prompt
         if messages is None:
             messages = [{"role": "user", "content": prompt}]
@@ -248,3 +252,21 @@ class OpenRouterProvider(LLMProvider):
     def is_available(self) -> bool:
         """Check if OpenRouter provider is available"""
         return self.api_key is not None and self.client is not None
+
+    def _get_model_from_config(self) -> str:
+        """Load default model from config/llm.yaml - FAILS if not configured!"""
+        from vibe_core.phoenix import get_config
+
+        config = get_config()
+        llm_cfg = config.llm  # LLMConfig object
+
+        # Access providers dict and get ProviderEntry
+        provider_entry = llm_cfg.providers.get("openrouter")
+
+        if not provider_entry or not provider_entry.default_model:
+            raise ValueError(
+                "❌ FATAL: No model configured! "
+                "Set 'providers.openrouter.default_model' in config/llm.yaml"
+            )
+
+        return provider_entry.default_model
