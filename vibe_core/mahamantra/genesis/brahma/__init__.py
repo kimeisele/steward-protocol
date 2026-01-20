@@ -20,7 +20,7 @@ __mahajana__ = "brahma"
 __position__ = 1
 __genesis__ = "0x96910869"  # GenesisByte
 
-from typing import Final, Any
+from typing import Final
 
 # Backward-compat constants
 POSITION: Final[int] = 1

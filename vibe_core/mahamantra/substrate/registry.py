@@ -36,7 +36,7 @@ __position__ = 4
 __genesis__ = "0x94644443"  # GenesisByte: parampara % 37 == 0
 
 import importlib
-from typing import Any, Dict, Optional, Type, Protocol as TypingProtocol, TypeVar, cast
+from typing import Dict, Optional, Type, Protocol as TypingProtocol, TypeVar, cast
 from types import ModuleType
 
 from vibe_core.mahamantra.substrate.position import MantraPosition
@@ -78,7 +78,7 @@ class GuardianRegistry:
     """
 
     _module_cache: Dict[str, ModuleType] = {}
-    _type_cache: Dict[str, Type[Any]] = {}
+    _type_cache: Dict[str, Type[object]] = {}
 
     @classmethod
     def get_position(cls, index: int) -> Optional[MantraPosition]:
@@ -181,7 +181,7 @@ class GuardianRegistry:
         position: int,
         type_name: str,
         protocol: Optional[Type[P]] = None,
-    ) -> Optional[Type[Any]]:
+    ) -> Optional[Type[object]]:
         """
         Load a type from the guardian's types module.
 
@@ -260,7 +260,7 @@ class GuardianRegistry:
 # =============================================================================
 
 
-def load_type_from_position(position: int, type_name: str) -> Optional[Type[Any]]:
+def load_type_from_position(position: int, type_name: str) -> Optional[Type[object]]:
     """
     Convenience function for loading types.
 

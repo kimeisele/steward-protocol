@@ -92,7 +92,7 @@ __mahajana__ = "{mahajana}"
 __position__ = {position}
 __genesis__ = "{genesis_hash}"  # GenesisByte
 
-from typing import Final, Any
+from typing import Final
 
 # Constants
 POSITION: Final[int] = {position}

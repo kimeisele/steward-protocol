@@ -263,9 +263,9 @@ def calculate_fractal_depth(total_nodes: int) -> int:
     """
     import math
 
-    if total_nodes <= 4:
+    if total_nodes <= QUARTER_COUNT:
         return 0
-    if total_nodes <= 16:
+    if total_nodes <= TOTAL_POSITIONS:
         return 1
     return int(math.log(total_nodes, FRACTAL_BASE)) + 1
 
