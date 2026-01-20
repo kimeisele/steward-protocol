@@ -114,11 +114,13 @@ class TestScanCommand:
 
     def test_execute_path_flag(self):
         """Execute with --path scans specific path."""
-        cmd = ScanCommand()
-        result = cmd.execute(["--path", "/some/path"])
-        assert result.success
-        data = result.to_dict()
-        assert data.get("path") == "/some/path"
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cmd = ScanCommand()
+            result = cmd.execute(["--path", tmpdir])
+            assert result.success
+            data = result.to_dict()
+            assert data.get("path") == tmpdir
 
     def test_execute_invalid_path(self):
         """Execute with invalid --path fails."""
