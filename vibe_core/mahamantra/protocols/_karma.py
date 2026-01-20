@@ -15,7 +15,7 @@ Every action produces a Log Entry (Karma Phalam).
 LOCATION: vibe_core.mahamantra.protocols._karma (THE LAW)
 """
 
-from typing import Protocol, Dict, Any, Optional, TypedDict, runtime_checkable
+from typing import Protocol, Dict, Optional, TypedDict, runtime_checkable
 from datetime import datetime
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
@@ -26,7 +26,7 @@ class KarmaPhalam(TypedDict):
     action_id: str
     timestamp: str
     status: str
-    result: Optional[Any]
+    result: Optional[object]
     error: Optional[str]
 
 
@@ -47,7 +47,7 @@ class KarmaProtocol(PanchaTattvaProtocol, Protocol):
             "srivasa": "Ledger Governance",
         }
 
-    def execute(self, action: str, params: Dict[str, Any]) -> KarmaPhalam:
+    def execute(self, action: str, params: Dict[str, object]) -> KarmaPhalam:
         """
         Execute an action and return its fruit (Karma).
         MUST be recorded in the Ledger.

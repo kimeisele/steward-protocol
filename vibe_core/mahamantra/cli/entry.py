@@ -53,6 +53,7 @@ from vibe_core.mahamantra.cli.protocol import (
     CLIState,
 )
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from vibe_core.mahamantra.protocols._seed import MALA
 
 
 class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
@@ -145,7 +146,7 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
     def check_health(self) -> CLIHealth:
         """GAD-000 Recoverability."""
         stats = cli_auto.get_stats()
-        self._health.healthy = stats["total_methods"] == 108
+        self._health.healthy = stats["total_methods"] == MALA
         self._health.last_check = datetime.now().isoformat()
         return self._health
 

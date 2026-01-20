@@ -12,6 +12,7 @@ Implements the OrbitCalculator:
 
 import hashlib
 from vibe_core.mahamantra.protocols._orbit import OrbitProtocol
+from vibe_core.mahamantra.protocols._seed import WORDS
 
 
 class OrbitCalculator(OrbitProtocol):
@@ -19,7 +20,7 @@ class OrbitCalculator(OrbitProtocol):
     Calculates orbital mechanics for entities.
     """
 
-    def get_phase_offset(self, entity_id: str, modulus: int = 16) -> int:
+    def get_phase_offset(self, entity_id: str, modulus: int = WORDS) -> int:
         """
         Calculate deterministic phase offset (Lagna).
 
@@ -35,7 +36,7 @@ class OrbitCalculator(OrbitProtocol):
         seed_int = int.from_bytes(hash_bytes[:4], byteorder="big")
         return seed_int % modulus
 
-    def should_dance(self, current_tick: int, entity_id: str, kaksha_modulus: int = 16) -> bool:
+    def should_dance(self, current_tick: int, entity_id: str, kaksha_modulus: int = WORDS) -> bool:
         """
         Determine if it's time to dance.
 
