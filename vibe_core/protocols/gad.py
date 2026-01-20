@@ -64,8 +64,10 @@ class GADCriterion(IntEnum):
     RECOVERABILITY = 5  # Can the system heal itself?
 
 
-# The 6×6 Matrix = 36 cells (Prakriti / The Field)
-KSHETRA_SIZE: Final[int] = 36
+# NOTE: KSHETRA_SIZE (36) was REMOVED from mahamantra - the "6×6 matrix" was
+# an invention without Shastra basis. Keeping here for backward compatibility
+# but deprecated. Use CRITERIA_COUNT (6) directly.
+KSHETRA_SIZE: Final[int] = 36  # DEPRECATED - use CRITERIA_COUNT
 CRITERIA_COUNT: Final[int] = 6
 
 

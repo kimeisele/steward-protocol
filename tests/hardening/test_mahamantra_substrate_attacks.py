@@ -744,9 +744,12 @@ class TestMathematicalInvariants:
         assert HARE_COUNT == 8
         assert KSHETRA == WORDS + HARE_COUNT == 24
 
-    def test_sharanagati_derivation(self):
+    def test_sharanagati_primary(self):
         """
-        INVARIANT: SHARANAGATI = KSHETRA / QUARTERS = 24 / 4 = 6
+        INVARIANT: SHARANAGATI = 6 (PRIMARY from Shastra - Bhakti-rasamrta-sindhu 1.2.234)
+
+        The 6 limbs of surrender are Krishna's teaching, not a mathematical derivation.
+        That KSHETRA//QUARTERS also equals 6 is Krishna's arrangement (Acintya).
         """
         from vibe_core.mahamantra.substrate.seed import (
             KSHETRA,
@@ -754,28 +757,35 @@ class TestMathematicalInvariants:
             SHARANAGATI,
         )
 
-        assert SHARANAGATI == KSHETRA // QUARTERS == 6
+        # SHARANAGATI is PRIMARY (6 from shastra)
+        assert SHARANAGATI == 6, "SHARANAGATI must be 6 (from Shastra)"
 
-    def test_acintya_paths(self):
+        # This is Krishna's arrangement (Acintya), NOT a derivation:
+        assert KSHETRA // QUARTERS == 6, "Numeric coincidence preserved"
+
+    def test_parampara_sankhya_path(self):
         """
-        INVARIANT: Two paths to 37 (Acintya - inconceivably one and different):
-        - Sankhya path: KSHETRA + MAHAJANA_COUNT + KSETRAJNA = 24 + 12 + 1 = 37
-        - Sharanagati path: KSHETRA_GAD + KSETRAJNA = 36 + 1 = 37
+        INVARIANT: PARAMPARA = 37 (Sankhya path ONLY)
+
+        Sankhya path (BG 13): KSHETRA + MAHAJANA_COUNT + KSETRAJNA = 24 + 12 + 1 = 37
+
+        NOTE: The "Sharanagati path" (36+1=37) was REMOVED because:
+        - KSHETRA_GAD (36) was Shaiva (Kashmir Shaivism 36 tattvas), NOT Gaudiya Vaishnava
+        - The "two paths to 37" was INVENTED, not from shastra
+        - Only the Sankhya path (24+12+1=37) is legitimate
         """
         from vibe_core.mahamantra.substrate.seed import (
             KSETRAJNA,
             KSHETRA,
-            KSHETRA_GAD,
             MAHAJANA_COUNT,
             PARAMPARA,
         )
 
         sankhya_path = KSHETRA + MAHAJANA_COUNT + KSETRAJNA
-        sharanagati_path = KSHETRA_GAD + KSETRAJNA
 
         assert sankhya_path == 37, f"Sankhya path: {sankhya_path} != 37"
-        assert sharanagati_path == 37, f"Sharanagati path: {sharanagati_path} != 37"
-        assert sankhya_path == sharanagati_path == PARAMPARA
+        assert PARAMPARA == 37, f"PARAMPARA must be 37, got {PARAMPARA}"
+        assert sankhya_path == PARAMPARA, "PARAMPARA must derive from Sankhya path"
 
 
 # =============================================================================
