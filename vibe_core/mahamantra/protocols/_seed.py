@@ -47,7 +47,12 @@ QUARTERS: Final[int] = 4
 # The 5 Pairs (Pancha Tattva)
 PANCHA: Final[int] = 5
 
-# The 6 Limbs (Sharanagati)
+# The 6 Limbs (Sharanagati) - Bhakti-rasamrta-sindhu 1.2.234
+# SHASTRA PRIMARY: anukulyasya sankalpah, pratikulyasya varjanam,
+#   raksisyatiti visvaso, goptrtve varanam tatha,
+#   atma-niksepa karpanye, sad-vidha saranagatih
+# ACINTYA HARMONY: KSHETRA / QUARTERS = 24 / 4 = 6
+#   (The Mahamantra encodes this naturally - Krishna's arrangement)
 SHARANAGATI: Final[int] = 6
 
 # The 9 Islands (Navadvipa) & 9 Processes (Navadha Bhakti)
@@ -299,6 +304,12 @@ assert COSMIC_FRAME // FIELD_RESONANCE == 150, "150 Field cycles per day"
 
 # 4. Relationship between resonances
 assert FIELD_RESONANCE == NADI_RESONANCE * 2, "Field must be 2x Nadi (144 = 72*2)"
+
+# 5. ACINTYA HARMONY - Shastra constants naturally emerge from Mahamantra
+assert SHARANAGATI == KSHETRA // QUARTERS, "Acintya: 24/4 = 6 (Sharanagati in Mahamantra)"
+assert GITA_CHAPTERS == SHARANAGATI * TRINITY, "Acintya: 6×3 = 18 (Gita chapters)"
+assert GITA_CHAPTERS == NADI_RESONANCE // QUARTERS, "Acintya: 72/4 = 18"
+assert MALA // GITA_CHAPTERS == SHARANAGATI, "Acintya: 108/18 = 6"
 
 # =============================================================================
 # THE THREE FLUTES (Persons - Expansions of Ananta)

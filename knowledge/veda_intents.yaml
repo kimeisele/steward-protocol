@@ -1,0 +1,89 @@
+# =============================================================================
+# VEDA INTENTS - Learnable Intent Keywords
+# =============================================================================
+#
+# This file is the SSOT for VedaExplorer intent mapping.
+# KnowledgeGraph can extend this at runtime.
+#
+# Structure:
+#   intent_name:
+#     bhakti: NavaBhakti mapping
+#     keywords: list of trigger words
+#     learnable: true  # KnowledgeGraph can add more keywords
+#
+# =============================================================================
+
+version: "1.0"
+learnable: true
+knowledge_domain: "veda_intents"
+
+intents:
+  chant:
+    bhakti: kirtanam
+    description: "Execute Mahamantra cycles"
+    keywords:
+      - chant
+      - chanten
+      - mantra
+      - cycle
+      - tick
+      - rounds
+      - mala
+
+  listen:
+    bhakti: sravanam
+    description: "View events, logs, violations"
+    keywords:
+      - listen
+      - "hören"
+      - events
+      - violations
+      - logs
+      - syscalls
+
+  resolve:
+    bhakti: vandanam
+    description: "Lookup mahajana by name or position"
+    keywords:
+      - resolve
+      - who
+      - wer
+      - lookup
+      - find
+      - mahajana
+
+  serve:
+    bhakti: pada_sevanam
+    description: "Execute a task"
+    keywords:
+      - serve
+      - execute
+      - run
+      - task
+      - do
+      - mach
+
+  scan:
+    bhakti: smaranam
+    description: "Scan and discover codebase"
+    keywords:
+      - scan
+      - discover
+      - search
+
+  help:
+    bhakti: null
+    description: "Show available commands"
+    keywords:
+      - help
+      - hilfe
+      - "?"
+      - commands
+
+  status:
+    bhakti: null
+    description: "System status"
+    keywords:
+      - status
+      - health
+      - state
