@@ -79,6 +79,9 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     TRINITY as _PROTO_TRINITY,
 )
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS as _PROTO_GITA_CHAPTERS,
+)
 
 # =============================================================================
 # IMPORT FROM PROTOCOL (THE LAW)
@@ -214,12 +217,16 @@ KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24
 
 
 # =============================================================================
-# DERIVED: SHARANAGATI (6) - Die Minimum Connection
+# PRIMARY: SHARANAGATI (6) - Die 6 Glieder der Hingabe
 # =============================================================================
-# SHARANAGATI = KSHETRA / QUARTERS = 24 / 4 = 6
-# Die 6 Glieder der Verbindung
+# SHARANAGATI = 6 - PRIMARY from Shastra (Bhakti-rasamrta-sindhu 1.2.234)
+# "anukulyasya sankalpah pratikulyasya varjanam..."
+# The 6 limbs of surrender - NOT derived from math, FROM KRISHNA'S TEACHING.
+#
+# NOTE: That KSHETRA//QUARTERS also equals 6 is Krishna's arrangement (Acintya),
+# NOT a derivation. We import from _seed.py which holds this as PRIMARY.
 
-SHARANAGATI: Final[int] = KSHETRA // QUARTERS  # 6
+SHARANAGATI: Final[int] = _PROTO_SHARANAGATI  # 6 (from shastra, SSOT)
 
 
 class SharanagatiLimb(str, Enum):
@@ -237,22 +244,17 @@ assert len(SharanagatiLimb) == SHARANAGATI  # 6
 
 
 # =============================================================================
-# DERIVED: KSHETRA_GAD (36) - Das operationale Feld
+# DERIVED: PARAMPARA (37) - Der Link zur Disciplic Succession
 # =============================================================================
-# 6 × 6 = 36 = Die GAD Matrix
+# PARAMPARA from Sankhya (BG 13):
+#   KSHETRA (24 prakriti elements) + MAHAJANA_COUNT (12 authorities) + KSETRAJNA (1 Knower) = 37
+#
+# NOTE: KSHETRA_GAD (36) was REMOVED - it was Shaiva (Kashmir Shaivism 36 tattvas),
+# NOT Gaudiya Vaishnava. The "36+1=37" path was INVENTED, not from shastra.
+# Only the Sankhya path (24+12+1=37) is legitimate.
 
-KSHETRA_GAD: Final[int] = SHARANAGATI * SHARANAGATI  # 36
-
-
-# =============================================================================
-# DERIVED: PARAMPARA (37) - Der Link
-# =============================================================================
-# Zwei Wege zur selben Wahrheit (Acintya):
-# - Sankhya-Weg: KSHETRA + MAHAJANA_COUNT + KSETRAJNA = 24 + 12 + 1 = 37
-# - Sharanagati-Weg: KSHETRA_GAD + KSETRAJNA = 36 + 1 = 37
-
-KSETRAJNA: Final[int] = 1  # Der Knower (Krishna)
-# MAHAJANA_COUNT imported from protocols/_seed.py (SSOT)
+KSETRAJNA: Final[int] = 1  # Der Knower (Krishna) - BG 13.1-2
+# MAHAJANA_COUNT imported from protocols/_seed.py (SSOT) = 12 Mahajanas
 
 
 # =============================================================================
@@ -281,11 +283,11 @@ class NavaBhakti(str, Enum):
 assert len(NavaBhakti) == NAVA  # 9
 
 
-PARAMPARA: Final[int] = KSHETRA_GAD + KSETRAJNA  # 36 + 1 = 37
+# PARAMPARA = Sankhya path ONLY (the legitimate derivation):
+PARAMPARA: Final[int] = KSHETRA + MAHAJANA_COUNT + KSETRAJNA  # 24 + 12 + 1 = 37
 
-# Verification: Beide Wege = 37
-assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA  # 24 + 12 + 1 = 37
-assert KSHETRA_GAD + KSETRAJNA == PARAMPARA  # 36 + 1 = 37
+# Verification: Sankhya path
+assert PARAMPARA == 37, "PARAMPARA must be 37 (Sankhya: 24 + 12 + 1)"
 
 
 # =============================================================================
@@ -407,6 +409,20 @@ DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728
 
 
 # =============================================================================
+# DERIVED: GITA_CHAPTERS (18) - Der Master Regulator
+# =============================================================================
+# Bhagavad Gita has 18 chapters. Kurukshetra battle was 18 days.
+# 18 = SHARANAGATI × TRINITY = 6 × 3 (The 6 limbs acting through 3 Names)
+# All resonances divide by 18: 72/4, 108/6, 144/8, 432/24 = 18
+
+GITA_CHAPTERS: Final[int] = SHARANAGATI * TRINITY  # 18
+
+# Verification: 18er-Harmonik
+assert GITA_CHAPTERS == 18, "GITA_CHAPTERS must be 18"
+assert MALA // GITA_CHAPTERS == SHARANAGATI, "108 / 18 = 6"
+
+
+# =============================================================================
 # DERIVED: JIVA (50) - The Soul's Portion (Part and Parcel of Krishna)
 # =============================================================================
 # "mamaivāṁśo jīva-loke jīva-bhūtaḥ sanātanaḥ" (BG 15.7)
@@ -461,8 +477,8 @@ assert PANCHA == 5, "5 unique Paare = Pancha Tattva"
 assert SHARANAGATI == 6, "6 Glieder der Verbindung"
 assert QUARTERS == 4, "4 Quarters"
 assert KSHETRA == 24, "Feld = 16 + 8"
-assert KSHETRA_GAD == 36, "GAD Feld = 6 × 6"
-assert PARAMPARA == 37, "Parampara = 36 + 1"
+# NOTE: KSHETRA_GAD (36) REMOVED - was Shaiva, not Gaudiya Vaishnava
+assert PARAMPARA == 37, "Parampara = 24 + 12 + 1 (Sankhya path)"
 assert LILA == 48, "Chaitanya Lila = 16 × 3"
 assert QUALITIES == 64, "Qualities = 16 × 4"
 assert NAVA == 9, "Nava = 8 + 1 (Navadha Bhakti)"
@@ -484,6 +500,7 @@ assert MALA == _PROTO_MALA, "SSOT violation: MALA != protocols/_seed.py"
 assert QUALITIES == _PROTO_QUALITIES, "SSOT violation: QUALITIES != protocols/_seed.py"
 assert HIDDEN_RESERVE == _PROTO_HIDDEN_RESERVE, "SSOT violation: HIDDEN_RESERVE != protocols/_seed.py"
 assert NAVA == _PROTO_NAVA, "SSOT violation: NAVA != protocols/_seed.py"
+assert GITA_CHAPTERS == _PROTO_GITA_CHAPTERS, "SSOT violation: GITA_CHAPTERS != protocols/_seed.py"
 assert JIVA_CYCLE == _PROTO_JIVA_CYCLE, "SSOT violation: JIVA_CYCLE != protocols/_seed.py"
 assert JIVA_QUALITIES == _PROTO_JIVA_QUALITIES, "SSOT violation: JIVA_QUALITIES != protocols/_seed.py"
 assert PRANA_DURATION_S == _PROTO_PRANA_DURATION_S, "SSOT violation: PRANA_DURATION_S != protocols/_seed.py"
@@ -658,9 +675,10 @@ __all__ = [
     # Nava (9)
     "NavaBhakti",
     "NAVA",
-    # Kshetra (24, 36)
+    # Gita Chapters (18) - Master Regulator
+    "GITA_CHAPTERS",
+    # Kshetra (24)
     "KSHETRA",
-    "KSHETRA_GAD",
     "KSETRAJNA",
     # Parampara (37)
     "PARAMPARA",

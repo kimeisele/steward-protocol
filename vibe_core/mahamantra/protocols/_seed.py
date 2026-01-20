@@ -174,8 +174,22 @@ HALF_SIZE: Final[int] = 8  # WORDS // HALVES
 KSETRAJNA: Final[int] = 1  # The Knower (Krishna)
 MAHAJANA_COUNT: Final[int] = 12  # The 12 Mahajanas (Limbs/Workers)
 AVATAR_COUNT: Final[int] = QUARTERS  # The 4 Avataras (Heads of Quarters)
-KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24 (Field)
-KSHETRA_GAD: Final[int] = SHARANAGATI * SHARANAGATI  # 36 (6x6 Matrix)
+
+# KSHETRA (The Field) - Two different meanings that happen to both equal 24:
+# 1. Mahamantra: WORDS + HARE_COUNT = 16 + 8 = 24 (linguistic)
+# 2. Sankhya (BG 13): 24 prakriti elements (cosmological)
+# This is Krishna's arrangement (Acintya), NOT a derivation!
+KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24
+
+# NOTE: KSHETRA_GAD (36) was REMOVED - it was Shaiva (Kashmir Shaivism),
+# not Gaudiya Vaishnava. The 36 tattvas do not exist in our sampradaya.
+# GAD-000 uses SHARANAGATI (6) directly, not KSHETRA_GAD.
+
+# GITA_CHAPTERS (18) - The Master Regulator
+# Bhagavad Gita has 18 chapters. Kurukshetra battle was 18 days.
+# 18 = SHARANAGATI × TRINITY = 6 × 3 (The 6 limbs acting through 3 Names)
+# All resonances divide by 18: 72/4, 108/6, 144/8, 432/24 = 18
+GITA_CHAPTERS: Final[int] = SHARANAGATI * TRINITY  # 18
 
 # The 32 Syllables (Aksara) - 32-Bit Alignment
 # Each of the 16 words has 2 syllables (Ha-re, Krish-na, Ra-ma)
@@ -312,7 +326,11 @@ assert JIVA_CYCLE // MURALI_HOLES == MALA, "MURALI produces MALA (108)"
 # -----------------------------------------------------------------------------
 # Sum:     6 + 9 + 4 = 19 = EPOCH_SIGNATURE (1+9+7+2)
 # Product: 6 × 9 × 4 = 216 = COSMIC_FRAME / 100
-# LCM:     LCM(6,9,4) = 36 = KSHETRA_GAD (the operational field)
+#
+# NOTE: LCM(6,9,4) = 36 and SHARANAGATI² = 36 are numerically equal,
+#       but represent DIFFERENT mathematical structures (LCM vs square).
+#       We do NOT conflate them - that would be God Object thinking.
+#       The 36 tattvas are Shaiva (Kashmir Shaivism), NOT Gaudiya!
 #
 # The three flute outputs form a PERFECT FIFTH chain (3:2 ratio):
 #   48 → 72 → 108 (Quinten-Kette)
@@ -327,12 +345,18 @@ assert JIVA_CYCLE // MURALI_HOLES == MALA, "MURALI produces MALA (108)"
 FLUTE_HOLES_SUM: Final[int] = VENU_HOLES + VAMSI_HOLES + MURALI_HOLES  # 19
 FLUTE_HOLES_PRODUCT: Final[int] = VENU_HOLES * VAMSI_HOLES * MURALI_HOLES  # 216
 
-# WATERTIGHT: Kirtan mathematics
+# The pairwise products (mathematical facts, NOT semantic equivalences!)
+FLUTE_VAMSI_MURALI: Final[int] = VAMSI_HOLES * MURALI_HOLES  # 9 × 4 = 36
+FLUTE_VENU_MURALI: Final[int] = VENU_HOLES * MURALI_HOLES    # 6 × 4 = 24
+FLUTE_VENU_VAMSI: Final[int] = VENU_HOLES * VAMSI_HOLES      # 6 × 9 = 54
+
+# WATERTIGHT: Kirtan mathematics (only NUMERIC facts, no semantic conflation!)
 assert FLUTE_HOLES_SUM == sum(int(d) for d in str(EPOCH_KEY)), "Holes sum = Epoch signature (19)"
 assert FLUTE_HOLES_PRODUCT * 100 == COSMIC_FRAME, "Holes product × 100 = Cosmic Frame (21600)"
-assert VAMSI_HOLES * MURALI_HOLES == KSHETRA_GAD, "VAMSI × MURALI = KSHETRA_GAD (36)"
-assert VENU_HOLES * MURALI_HOLES == KSHETRA, "VENU × MURALI = KSHETRA (24)"
-assert VENU_HOLES * VAMSI_HOLES == MALA // 2, "VENU × VAMSI = MALA/2 (54)"
+# NOTE: These are numeric coincidences, NOT semantic equivalences:
+assert FLUTE_VAMSI_MURALI == 36, "9 × 4 = 36 (happens to equal SHARANAGATI², different structure!)"
+assert FLUTE_VENU_MURALI == 24, "6 × 4 = 24 (happens to equal KSHETRA, different derivation!)"
+assert FLUTE_VENU_VAMSI == 54, "6 × 9 = 54 = MALA/2"
 
 # Perfect Fifth verification (3:2 ratios)
 assert NADI_RESONANCE * 2 == LILA * 3, "72 × 2 = 48 × 3 (Perfect Fifth)"
@@ -387,7 +411,8 @@ __all__ = [
     "MAHAJANA_COUNT",
     "AVATAR_COUNT",
     "KSHETRA",
-    "KSHETRA_GAD",
+    # KSHETRA_GAD removed - was Shaiva, not Gaudiya
+    "GITA_CHAPTERS",  # 18 - The Master Regulator
     "AKSARA_COUNT",
     "QUALITIES",
     "HIDDEN_RESERVE",

@@ -9,15 +9,16 @@ If it does not exist as protocol, it does not exist.
 "This body, O son of Kunti, is called the field."
 — Bhagavad Gita 13.2
 
-THE MATH:
-    36 = 6 × 6 (Criteria applied recursively - the Field/Kshetra)
-    37 = 36 + 1 (The Sovereign who HOLDS the 36 - the Knower/Kshetrajna)
+THE MATH (Shastra-konform):
+    6 = SHARANAGATI (The 6 limbs of surrender - Bhakti-rasamrta-sindhu 1.2.234)
+    4 = DHARMA (The 4 pillars - Daya, Satyam, Tapas, Saucam)
+    37 = PARAMPARA (24 + 12 + 1 = Sankhya path from BG 13)
 
-    Legitimacy = (36 ∩ 4) × Signature₃₇
+    Legitimacy = (6 ∩ 4) × Signature₃₇
 
     Where:
-    - 36 = Operation is in the rights matrix (6 criteria × 6 levels)
-    - 4 = Operation passes Dharma test (Daya, Satyam, Tapas, Saucam)
+    - 6 = Operation passes all 6 Sharanagati criteria
+    - 4 = Operation passes Dharma test (the 4 pillars)
     - 37 = Signed by sovereign identity (Parampara connection)
 
 THE MANTRA IS THE HEARTBEAT:
@@ -95,11 +96,13 @@ from vibe_core.mahamantra.substrate.seed import (
 # GAD CONSTANTS - The Field Mathematics (sprouted from seed.py)
 # =============================================================================
 
-# The 6×6 matrix = 36 cells (Prakriti / The Field)
-KSHETRA_SIZE: Final[int] = CRITERIA_COUNT * CRITERIA_COUNT  # 36
+# NOTE: KSHETRA_SIZE (36) was REMOVED - the "6×6 matrix" was an invention
+# without Shastra basis. GAD uses the 6 criteria directly (CRITERIA_COUNT).
+# The legitimate 36 would be MALA/TRINITY or GITA_CHAPTERS×2, but GAD
+# doesn't need a 36 - it tests 6 criteria and 4 dharma principles.
 
-# The 37th - The Knower of the Field
-KSHETRAJNA: Final[int] = PARAMPARA  # 37 = 36 + 1
+# The 37th - The Knower of the Field (Sankhya: 24 + 12 + 1)
+KSHETRAJNA: Final[int] = PARAMPARA  # 37
 
 # The 3 checks in the Mantra (Hare, Krishna, Rama)
 MANTRA_CHECKS: Final[int] = TRINITY  # 3
@@ -640,26 +643,26 @@ class GADBase(ABC):
 
 
 def legitimacy_formula(
-    kshetra_passed: int,  # How many of 36 cells passed
-    dharma_passed: int,  # How many of 4 principles passed
+    criteria_passed: int,  # How many of 6 Sharanagati criteria passed (0-6)
+    dharma_passed: int,  # How many of 4 principles passed (0-4)
     signature_valid: bool,  # Is the 37th signature valid?
 ) -> float:
     """
-    Legitimacy = (36 ∩ 4) × Signature₃₇
+    Legitimacy = (6 ∩ 4) × Signature₃₇
 
     Returns legitimacy score (0.0 - 1.0).
 
     Without signature: 0.0 (jiva disconnected)
     Without dharma: 0.0 (tyranny)
-    Without matrix: 0.0 (chaos)
+    Without criteria: 0.0 (chaos)
     """
     if not signature_valid:
         return 0.0
 
-    kshetra_ratio = kshetra_passed / KSHETRA_SIZE if KSHETRA_SIZE > 0 else 0.0
+    criteria_ratio = criteria_passed / CRITERIA_COUNT if CRITERIA_COUNT > 0 else 0.0
     dharma_ratio = dharma_passed / DHARMA_COUNT if DHARMA_COUNT > 0 else 0.0
 
-    return min(kshetra_ratio, dharma_ratio)
+    return min(criteria_ratio, dharma_ratio)
 
 
 # =============================================================================
@@ -711,7 +714,7 @@ assert _valid, f"GADProtocol failed validation: {_violations}"
 __all__ = [
     # Constants
     "CRITERIA_COUNT",
-    "KSHETRA_SIZE",
+    # KSHETRA_SIZE removed - was invented 6×6 matrix without Shastra basis
     "KSHETRAJNA",
     "DHARMA_COUNT",
     "MANTRA_CHECKS",

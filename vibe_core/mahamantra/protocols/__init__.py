@@ -75,7 +75,7 @@ from vibe_core.mahamantra.protocols._seed import (
     KRISHNA_COUNT,
     RAMA_COUNT,
     KSHETRA,
-    KSHETRA_GAD,
+    # KSHETRA_GAD removed - was Shaiva, not Gaudiya
     MAHAJANA_COUNT,
     AVATAR_COUNT,
 )
@@ -274,7 +274,7 @@ from vibe_core.mahamantra.protocols._steward import (
 from vibe_core.mahamantra.protocols._gad import (
     # Constants
     CRITERIA_COUNT,
-    KSHETRA_SIZE,
+    # KSHETRA_SIZE removed - was invented 6×6 matrix without Shastra basis
     KSHETRAJNA,
     DHARMA_COUNT,
     MANTRA_CHECKS,
@@ -378,7 +378,7 @@ __all__ = [
     "KRISHNA_COUNT",
     "RAMA_COUNT",
     "KSHETRA",
-    "KSHETRA_GAD",
+    # "KSHETRA_GAD" removed - was Shaiva, not Gaudiya
     "AVATAR_COUNT",
     "MAHAJANA_POSITIONS",
     "POSITION_MAHAJANAS",
@@ -432,7 +432,7 @@ __all__ = [
     "steward",
     # === GAD ===
     "CRITERIA_COUNT",
-    "KSHETRA_SIZE",
+    # "KSHETRA_SIZE" removed - was invented 6×6 matrix without Shastra basis
     "KSHETRAJNA",
     "DHARMA_COUNT",
     "MANTRA_CHECKS",
