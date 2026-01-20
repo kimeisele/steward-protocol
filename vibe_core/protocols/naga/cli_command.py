@@ -182,7 +182,7 @@ OPCODE_TO_MAHAJANA: Dict[MantraOpCode, Mahajana] = {
     MantraOpCode.LEDGER_SIGN: Mahajana.BHISHMA,
     MantraOpCode.YIELD_CPU: Mahajana.NRISIMHA,
     MantraOpCode.IO_FLUSH: Mahajana.BALI,
-    MantraOpCode.YIELD_CPU: Mahajana.SHUKA,
+    MantraOpCode.LOG_EMIT: Mahajana.SHUKA,
     MantraOpCode.AUDIT_SEAL: Mahajana.YAMARAJA,
 }
 
