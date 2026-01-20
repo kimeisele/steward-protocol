@@ -63,6 +63,33 @@ from vibe_core.mahamantra.protocols._lotus import (
     MAHAJANA_POSITIONS,
 )
 
+# SUBSTRATE BRIDGE - Real vibration-based routing (not keyword matching)
+from vibe_core.services.chat_substrate_bridge import (
+    ChatSubstrateBridge,
+    SubstrateRoute,
+    get_substrate_bridge,
+    THRESHOLD_MANIFEST,
+    THRESHOLD_NEGOTIATE,
+)
+
+# QUANTUM REACTOR - Real manifestation (energy > inertia)
+from vibe_core.reactor.quantum import (
+    QuantumReactor,
+    ResonanceField,
+    get_reactor,
+)
+
+# REFINEMENT - Intent Negotiation (extracted for modularity)
+from vibe_core.services.chat_refinement import (
+    RefinementHandler,
+    discover_refinement_paths,
+    determine_chat_mode,
+    get_dharma_description,
+    simple_intent_detection,
+    MAHAJANA_DHARMAS,
+    POSITION_OPCODES,
+)
+
 logger = logging.getLogger("CHAT_SERVICE")
 
 
@@ -84,14 +111,15 @@ class ChatService(ChatProtocol):
     - < 0.4: Silence (no resonance - refuse to guess)
     """
 
-    # Resonance thresholds (configurable)
-    RESONANCE_AUTO = 0.7  # Auto-execute (lowered from 0.8)
-    RESONANCE_REFINE = 0.4  # Ask for refinement
+    # Resonance thresholds (from substrate - SSOT)
+    RESONANCE_AUTO = THRESHOLD_MANIFEST  # Auto-execute (0.7)
+    RESONANCE_REFINE = THRESHOLD_NEGOTIATE  # Ask for refinement (0.4)
     # Below 0.4 = Silence
 
     def __init__(self):
         self._lotus: LotusHologram = LotusHologram()  # O(1) routing
-        self._resonance = None  # ResonanceEngine
+        self._substrate: ChatSubstrateBridge = get_substrate_bridge()  # REAL vibration routing
+        self._reactor: QuantumReactor = get_reactor()  # Manifestation engine
         self._provider = None
         self._knowledge = None
         self._cognitive = None
@@ -99,15 +127,22 @@ class ChatService(ChatProtocol):
         self._refinement_states: Dict[str, "RefinementState"] = {}  # Per-session
         self._initialized = False
 
+        # Refinement Handler (extracted for modularity)
+        self._refinement_handler = RefinementHandler(
+            sessions=self._sessions,
+            refinement_states=self._refinement_states,
+        )
+
         self._init_dependencies()
 
     def _init_dependencies(self) -> None:
         """Initialize all dependencies from protocols."""
         try:
-            # ResonanceEngine (phonetic resonance - the real routing)
-            from vibe_core.protocols.substrate.resonance import get_resonance_engine
-            self._resonance = get_resonance_engine()
-            logger.info("✅ ChatService: ResonanceEngine initialized")
+            # Substrate Bridge initialized in __init__ (get_substrate_bridge)
+            logger.info("✅ ChatService: SubstrateBridge initialized (VarnaTensor routing)")
+
+            # Quantum Reactor initialized in __init__ (get_reactor)
+            logger.info("✅ ChatService: QuantumReactor initialized (manifestation engine)")
 
             # LLM Provider (from config - NO HARDCODING)
             from vibe_core.runtime.providers.factory import create_provider, _detect_provider
@@ -197,7 +232,7 @@ class ChatService(ChatProtocol):
             # =================================================================
             # CHECK: Is this a response to a previous RefinementRequest?
             # =================================================================
-            if session_id in self._refinement_states:
+            if self._refinement_handler.has_active_refinement(session_id):
                 return await self._handle_refinement_response(message, context)
 
             # =================================================================
@@ -217,12 +252,12 @@ class ChatService(ChatProtocol):
             # SILENCE: < 0.4 - No resonance, refuse to guess
             if magnitude < self.RESONANCE_REFINE:
                 logger.info(f"🔇 ChatService: SILENCE (magnitude {magnitude:.3f} < {self.RESONANCE_REFINE})")
-                return self._create_silence_response(message, context, magnitude)
+                return self._refinement_handler.create_silence_response(message, context, magnitude)
 
-            # REFINEMENT: 0.4 - 0.8 - Intent Negotiation required
+            # REFINEMENT: 0.4 - 0.7 - Intent Negotiation required
             if magnitude < self.RESONANCE_AUTO:
                 logger.info(f"❓ ChatService: REFINEMENT (magnitude {magnitude:.3f} in gray zone)")
-                return await self._create_refinement_response(message, context, resonance_result)
+                return await self._refinement_handler.create_refinement_response(message, context, resonance_result)
 
             # AUTO-EXECUTE: > 0.8 - High resonance, proceed
             logger.info(f"✅ ChatService: AUTO-EXECUTE (magnitude {magnitude:.3f} >= {self.RESONANCE_AUTO})")
@@ -234,9 +269,9 @@ class ChatService(ChatProtocol):
             logger.info(f"🧠 ChatService: Intent={cognitive_result.intent_type.value}")
 
             # =================================================================
-            # STEP 3: LOTUS ROUTING - O(1) position lookup
+            # STEP 3: LOTUS ROUTING - O(1) position lookup + Substrate data
             # =================================================================
-            lotus_result = self._lotus_route(message, cognitive_result)
+            lotus_result = self._lotus_route(message, cognitive_result, resonance_result)
             lotus_result["resonance"] = resonance_result  # Attach resonance data
             logger.info(
                 f"🪷 ChatService: Lotus Route → {lotus_result['mahajana'].upper()} "
@@ -244,7 +279,7 @@ class ChatService(ChatProtocol):
             )
 
             # Determine chat mode
-            mode = self._determine_mode_lotus(cognitive_result, lotus_result)
+            mode = determine_chat_mode(cognitive_result, lotus_result)
 
             # =================================================================
             # STEP 4: CONTEXT - Live substrate context
@@ -327,70 +362,50 @@ class ChatService(ChatProtocol):
                 logger.debug(f"Cognitive not available, using INTENT_MAP fallback: {e}")
 
         # Fallback: Simple intent detection (INTENT_MAP SSOT - no ML)
-        return self._simple_intent_detection(message)
+        return simple_intent_detection(message)
 
-    def _simple_intent_detection(self, message: str) -> CognitiveResult:
+    def _lotus_route(
+        self, message: str, cognitive: CognitiveResult, resonance_result: Optional[Dict] = None
+    ) -> Dict[str, any]:
         """
-        Intent detection using INTENT_MAP (SSOT).
+        Route via Lotus + Substrate (O(1), VarnaTensor-based).
 
-        Uses mahamantra/substrate/intents.py - NO ML, pure dict lookup.
+        Priority:
+        1. If resonance_result has substrate_route → use it (REAL routing)
+        2. Fallback to INTENT_MAP keyword matching (legacy)
+
+        Uses LotusHologram for O(1) lookup.
         """
-        from vibe_core.mahamantra.substrate.intents import INTENT_MAP, get_position_for_intent
+        # If we have substrate route from resonance, use it (PRIORITY)
+        if resonance_result and "substrate_route" in resonance_result:
+            route: SubstrateRoute = resonance_result["substrate_route"]
 
-        msg_lower = message.lower()
-        words = msg_lower.split()
+            # Get petal from Lotus (O(1))
+            petal = self._lotus.get_petal(route.mahajana)
 
-        # Find matching position from INTENT_MAP (SSOT)
-        matched_position = -1
-        matched_intent = None
+            # Determine opcode from quarter
+            opcodes = ["SYS_WAKE", "COMPILE_AST", "EXEC_OP", "YIELD_CPU"]
+            opcode = opcodes[route.quarter_idx]
 
-        for word in words:
-            pos = get_position_for_intent(word)
-            if pos >= 0:
-                matched_position = pos
-                matched_intent = word
-                break
+            return {
+                "mahajana": route.mahajana,
+                "position": route.position,
+                "quarter": route.quarter,
+                "quarter_idx": route.quarter_idx,
+                "opcode": opcode,
+                "matched_keyword": None,  # Tensor-based, not keyword
+                "confidence": resonance_result["magnitude"],
+                "is_head": route.is_head,
+                "petal": petal,
+                # Substrate data (NEW)
+                "substrate_route": route,
+                "holy_name": route.holy_name.name,
+                "energy": route.energy,
+                "manifests": route.manifests,
+            }
 
-        # Map position to intent type
-        if matched_position >= 0:
-            # Determine intent type from quarter
-            quarter = matched_position // 4
-            if quarter == 0:  # GENESIS - system ops
-                intent = IntentType.EXECUTE
-                syscall = "SYS_WAKE"
-            elif quarter == 1:  # DHARMA - knowledge ops
-                intent = IntentType.QUERY
-                syscall = "COMPILE_AST"
-            elif quarter == 2:  # KARMA - action ops
-                intent = IntentType.EXECUTE
-                syscall = "EXEC_OP"
-            else:  # MOKSHA - meta ops
-                intent = IntentType.QUERY
-                syscall = "YIELD_CPU"
-
-            return CognitiveResult(
-                intent_type=intent,
-                confidence=0.85,  # High confidence from SSOT match
-                syscall_type=syscall,
-                target=matched_intent,
-            )
-
-        # No match in INTENT_MAP → Default to NARADA (position 2, chat)
-        return CognitiveResult(
-            intent_type=IntentType.CHAT,
-            confidence=0.6,  # Lower confidence for default
-            syscall_type=None,
-        )
-
-    def _lotus_route(self, message: str, cognitive: CognitiveResult) -> Dict[str, any]:
-        """
-        Route via Lotus (O(1), no ML).
-
-        Uses INTENT_MAP for keyword → position mapping.
-        Uses LotusHologram for routing.
-        """
+        # FALLBACK: Legacy keyword matching (INTENT_MAP)
         from vibe_core.mahamantra.substrate.intents import get_position_for_intent
-        from vibe_core.mahamantra.protocols._lotus import Quarter
 
         msg_lower = message.lower()
         words = msg_lower.split()
@@ -439,231 +454,108 @@ class ChatService(ChatProtocol):
 
     def _compute_resonance(self, message: str) -> Dict:
         """
-        Compute COMBINED resonance:
-        1. Phonetic resonance (ResonanceEngine - HARE/KRISHNA/RAMA)
-        2. Intent resonance (INTENT_MAP - action keywords)
+        Compute resonance - CHAT IS ALWAYS ALIVE.
 
-        The combined magnitude determines routing confidence.
+        PRINCIPLES:
+        1. HOLY NAMES = HIGHEST RESONANCE (hare, krishna, rama = sacred)
+        2. INTENT_MAP = Specific routing to Mahajanas
+        3. NO MATCH = NARADA conversation (chat is ALWAYS possible!)
+        4. NEVER SILENCE - Chat always responds!
+
+        VarnaTensor observes phonetics for future Akasha learning.
         """
-        from vibe_core.mahamantra.substrate.intents import get_position_for_intent
+        from vibe_core.mahamantra.substrate.intents import INTENT_MAP, get_position_for_intent
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
 
-        # Get phonetic resonance (spiritual layer)
-        phonetic = {"hare": 0.2, "krishna": 0.2, "rama": 0.2, "dominant": "void", "magnitude": 0.3}
-        if self._resonance:
-            try:
-                vector = self._resonance.resonate(message)
-                phonetic = dict(vector)
-            except Exception:
-                pass
+        msg_lower = message.lower()
+        words = msg_lower.split()
 
-        # Get intent resonance (practical layer)
-        words = message.lower().split()
-        intent_match = False
-        intent_position = -1
+        # =================================================================
+        # STEP 0: HOLY NAMES - The Highest Resonance (NEVER silence!)
+        # =================================================================
+        holy_names = {"hare", "krishna", "rama", "om", "hari", "govinda", "madhava"}
+        has_holy_name = any(name in msg_lower for name in holy_names)
 
-        for word in words:
-            pos = get_position_for_intent(word)
-            if pos >= 0:
-                intent_match = True
-                intent_position = pos
-                break
-
-        # Calculate intent magnitude
-        if intent_match:
-            intent_magnitude = 0.9  # Strong signal from INTENT_MAP
-        elif len(words) > 2:
-            intent_magnitude = 0.5  # Some context available
+        if has_holy_name:
+            # Holy Names = NARADA (communication of the divine) with HIGHEST score
+            best_position = 2  # NARADA
+            best_score = 1.0  # ALWAYS highest resonance for Holy Names
+            is_sacred = True
         else:
-            intent_magnitude = 0.3  # Very little to work with
+            is_sacred = False
+            best_position = -1
+            best_score = 0.0
 
-        # COMBINE: Intent has higher weight for practical routing
-        # Phonetic adds spiritual context
-        combined_magnitude = (intent_magnitude * 0.7) + (phonetic["magnitude"] * 0.3)
+            # =================================================================
+            # STEP 1: INTENT_MAP - Specific Mahajana routing
+            # =================================================================
+            for word in words:
+                pos = get_position_for_intent(word)
+                if pos >= 0:
+                    best_position = pos
+                    best_score = 1.0  # Exact match
+                    break
 
-        # Override dominant based on intent position
-        if intent_position >= 0:
-            quarter = intent_position // 4
-            if quarter == 0:
-                dominant = "hare"  # GENESIS
-            elif quarter == 1:
-                dominant = "krishna"  # DHARMA
-            else:
-                dominant = "rama"  # KARMA/MOKSHA
-        else:
-            dominant = phonetic["dominant"]
+            # Check partial matches
+            if best_position < 0:
+                for pos, intents in INTENT_MAP.items():
+                    for intent in intents:
+                        if intent in msg_lower:
+                            best_position = pos
+                            best_score = 0.8  # Partial match - still good!
+                            break
+                    if best_position >= 0:
+                        break
+
+            # =================================================================
+            # STEP 2: NO MATCH = NARADA (Chat is ALWAYS possible!)
+            # =================================================================
+            if best_position < 0:
+                best_position = 2  # NARADA - the communicator
+                best_score = 0.7  # Good enough to AUTO! Chat should WORK!
+
+        # Get guardian info
+        mahajana = ALL_GUARDIANS[best_position]
+        quarter_idx = best_position // 4
+        quarter_names = ["genesis", "dharma", "karma", "moksha"]
+        quarter = quarter_names[quarter_idx]
+
+        # VARNA OBSERVATION (metadata for future)
+        phonetic_data = {}
+        try:
+            tensor_route = self._substrate.route(message)
+            phonetic_data = {
+                "varga_dominant": tensor_route.varga_dominant,
+                "sthana_dominant": tensor_route.sthana_dominant,
+                "shakti": tensor_route.shakti,
+                "phonetic_position": tensor_route.position,
+            }
+        except Exception:
+            pass
+
+        # Map quarter to dominant holy name
+        quarter_to_dominant = {"genesis": "hare", "dharma": "krishna", "karma": "rama", "moksha": "rama"}
+        dominant = quarter_to_dominant.get(quarter, "hare")
 
         return {
-            "hare": phonetic["hare"],
-            "krishna": phonetic["krishna"],
-            "rama": phonetic["rama"],
+            # Routing result
+            "magnitude": best_score,
+            "mahajana": mahajana,
+            "quarter": quarter,
+            "position": best_position,
             "dominant": dominant,
-            "magnitude": combined_magnitude,
-            "intent_match": intent_match,
-            "intent_position": intent_position,
-            "phonetic_magnitude": phonetic["magnitude"],
-            "intent_magnitude": intent_magnitude,
+            "mahamantra_score": best_score,
+            # Gate decision - Chat is always AUTO or REFINE, never SILENCE!
+            "manifests": best_score >= self.RESONANCE_AUTO,
+            # Special flags
+            "is_sacred": is_sacred,
+            # Phonetic observation
+            "phonetic": phonetic_data,
+            # Legacy
+            "hare": 0.33 if dominant == "hare" else 0.2,
+            "krishna": 0.33 if dominant == "krishna" else 0.2,
+            "rama": 0.33 if dominant == "rama" else 0.2,
         }
-
-    def _create_silence_response(
-        self, message: str, context: ChatContext, magnitude: float
-    ) -> ChatResponse:
-        """
-        Create SILENCE response when resonance is too low.
-
-        < 0.4 magnitude = refuse to guess, ask for clearer input.
-        """
-        silence_msg = ChatMessage(
-            content=(
-                f"Keine Resonanz im Substrat (magnitude={magnitude:.3f}). "
-                "Deine Eingabe erzeugt keine klare Schwingung. "
-                "Bitte formuliere konkreter: Was willst du tun?"
-            ),
-            role="assistant",
-            timestamp=datetime.now(),
-            session_id=context.session_id,
-            message_id=str(uuid.uuid4()),
-        )
-
-        self._sessions[context.session_id].append(silence_msg)
-
-        return ChatResponse(
-            success=False,
-            message=silence_msg,
-            mode=ChatMode.SILENCE,
-            confidence=magnitude,
-            error="NO_RESONANCE",
-        )
-
-    async def _create_refinement_response(
-        self, message: str, context: ChatContext, resonance: Dict
-    ) -> ChatResponse:
-        """
-        Create REFINEMENT response when resonance is ambiguous (0.4-0.8).
-
-        Discovers possible paths and asks user to choose.
-        """
-        # Discover paths based on resonance
-        paths = self._discover_refinement_paths(message, resonance)
-
-        if not paths:
-            # Fallback: no clear paths, treat as silence
-            return self._create_silence_response(message, context, resonance["magnitude"])
-
-        # Build prompt
-        path_options = "\n".join(
-            f"  [{i+1}] {p.mahajana.upper()}: {p.description} (resonance={p.confidence:.2f})"
-            for i, p in enumerate(paths)
-        )
-        prompt = (
-            f"Ich sehe {len(paths)} Pfade mit ähnlicher Resonanz:\n"
-            f"{path_options}\n\n"
-            f"Welchen Dienst soll ich beanspruchen? (1-{len(paths)})"
-        )
-
-        # Create RefinementRequest
-        request = RefinementRequest(
-            original_message=message,
-            paths=paths,
-            prompt=prompt,
-            resonance_magnitude=resonance["magnitude"],
-            session_id=context.session_id,
-        )
-
-        # Store state for next response
-        self._refinement_states[context.session_id] = RefinementState(request=request)
-
-        # Create response with refinement mode
-        refinement_msg = ChatMessage(
-            content=prompt,
-            role="assistant",
-            timestamp=datetime.now(),
-            session_id=context.session_id,
-            message_id=str(uuid.uuid4()),
-        )
-
-        self._sessions[context.session_id].append(refinement_msg)
-
-        return ChatResponse(
-            success=True,
-            message=refinement_msg,
-            mode=ChatMode.REFINEMENT,
-            confidence=resonance["magnitude"],
-        )
-
-    def _discover_refinement_paths(
-        self, message: str, resonance: Dict
-    ) -> List[RefinementPath]:
-        """
-        Discover possible paths for refinement.
-
-        Uses Mahajana capabilities and resonance to find candidates.
-        NOT hardcoded - uses atomic discovery.
-        """
-        from vibe_core.mahamantra.substrate.intents import INTENT_MAP
-
-        paths = []
-        msg_lower = message.lower()
-
-        # Score each position based on keyword overlap + resonance
-        for position, keywords in INTENT_MAP.items():
-            score = 0.0
-
-            # Check keyword matches
-            for keyword in keywords:
-                if keyword in msg_lower:
-                    score += 0.3
-
-            # Add resonance influence
-            quarter = position // 4
-            if quarter == 0 and resonance["dominant"] == "hare":
-                score += 0.2
-            elif quarter == 1 and resonance["dominant"] == "krishna":
-                score += 0.2
-            elif quarter >= 2 and resonance["dominant"] == "rama":
-                score += 0.2
-
-            # Only include if score is meaningful
-            if score >= 0.2:
-                mahajana = get_position_mahajana(position)
-                dharma_desc = self._get_dharma_description(mahajana)
-                opcodes = ["SYS_WAKE", "LOAD_ROOT", "ALLOC_MEM", "BIND_CTX",
-                          "ASSERT_TRUTH", "RESOLVE_REQ", "GARBAGE_COLLECT", "PULSE_SYNC",
-                          "FETCH_RES", "EXEC_SERVICE", "CHECK_DHARMA", "COMMIT_LOG",
-                          "CACHE_STATE", "OPTIMIZE", "YIELD_CPU", "RESET_IP"]
-
-                paths.append(RefinementPath(
-                    mahajana=mahajana,
-                    position=position,
-                    description=dharma_desc,
-                    confidence=min(score + resonance["magnitude"] * 0.5, 1.0),
-                    opcode=opcodes[position],
-                ))
-
-        # Sort by confidence, return top 3
-        paths.sort(key=lambda p: p.confidence, reverse=True)
-        return paths[:3]
-
-    def _get_dharma_description(self, mahajana: str) -> str:
-        """Get dharma description for a Mahajana."""
-        dharmas = {
-            "vyasa": "System Genesis, Boot, Wake",
-            "brahma": "Creation, Spawning, Genesis",
-            "narada": "Communication, Broadcast, News",
-            "shambhu": "Transformation, Dissolution, Cleanup",
-            "prithu": "Documentation, Structure, Knowledge",
-            "kumaras": "Purification, Cleansing, Formatting",
-            "kapila": "Analysis, Logic, Inference",
-            "manu": "Governance, Rules, Policy",
-            "parashurama": "Execution, Enforcement, Action",
-            "prahlada": "Protection, Devotion, Faith",
-            "janaka": "Scheduling, Tasks, Duty",
-            "bhishma": "Persistence, Ledger, Storage",
-            "nrisimha": "Security, Guarding, Termination",
-            "bali": "Resources, Allocation, Surrender",
-            "shuka": "Observation, Logging, Reports",
-            "yamaraja": "Judgment, Audit, Verdict",
-        }
-        return dharmas.get(mahajana, "Unknown")
 
     async def _handle_refinement_response(
         self, message: str, context: ChatContext
@@ -672,33 +564,20 @@ class ChatService(ChatProtocol):
         Handle user's response to a RefinementRequest.
 
         User said "1", "2", "A", "kapila", etc.
+        Uses RefinementHandler for parsing and state management.
         """
         session_id = context.session_id
-        state = self._refinement_states.get(session_id)
+        state = self._refinement_handler.get_state(session_id)
 
         if not state or not state.awaiting_response:
             # No active refinement, treat as new message
-            del self._refinement_states[session_id]
+            self._refinement_handler.clear_state(session_id)
             return await self.chat(message, context)
 
         request = state.request
-        selected_path = None
 
-        # Try to match user input to a path
-        msg_lower = message.strip().lower()
-
-        # Try numeric selection (1, 2, 3)
-        if msg_lower.isdigit():
-            idx = int(msg_lower) - 1
-            if 0 <= idx < len(request.paths):
-                selected_path = request.paths[idx]
-
-        # Try mahajana name
-        if not selected_path:
-            for path in request.paths:
-                if path.mahajana.lower() in msg_lower:
-                    selected_path = path
-                    break
+        # Use handler to parse user selection
+        selected_path = self._refinement_handler.parse_user_selection(message, request)
 
         if not selected_path:
             # Couldn't understand selection
@@ -716,7 +595,7 @@ class ChatService(ChatProtocol):
             )
 
         # Clear refinement state
-        del self._refinement_states[session_id]
+        self._refinement_handler.clear_state(session_id)
 
         # Execute with selected path
         logger.info(f"🎯 ChatService: Refinement → {selected_path.mahajana.upper()} selected")
@@ -736,7 +615,7 @@ class ChatService(ChatProtocol):
             "is_head": selected_path.position % 4 == 0,
         }
 
-        mode = self._determine_mode_lotus(cognitive_result, lotus_result)
+        mode = determine_chat_mode(cognitive_result, lotus_result)
         knowledge_context = self._get_knowledge_context_lotus(request.original_message, lotus_result)
 
         response_text = await self._generate_response_lotus(
@@ -768,19 +647,6 @@ class ChatService(ChatProtocol):
             mahajana=selected_path.mahajana,
             confidence=selected_path.confidence,
         )
-
-    def _determine_mode_lotus(
-        self, cognitive: CognitiveResult, lotus: Dict
-    ) -> ChatMode:
-        """Determine chat mode based on Lotus routing."""
-        if cognitive.intent_type == IntentType.CHAT:
-            return ChatMode.DIRECT
-        elif cognitive.intent_type == IntentType.QUERY:
-            return ChatMode.QUERY
-        elif lotus.get("is_head"):
-            return ChatMode.SYSCALL
-        else:
-            return ChatMode.ROUTED
 
     def _get_knowledge_context_lotus(
         self, message: str, lotus: Dict
@@ -864,7 +730,7 @@ class ChatService(ChatProtocol):
         """Build system prompt with Lotus-based Mahajana identity.
 
         Uses PromptRegistry for Mahajana-specific prompts if available,
-        otherwise falls back to generic prompt.
+        otherwise falls back to generic prompt using MAHAJANA_DHARMAS SSOT.
         """
         mahajana_lower = lotus["mahajana"]
         mahajana = mahajana_lower.upper()
@@ -881,34 +747,12 @@ class ChatService(ChatProtocol):
         except Exception as e:
             logger.debug(f"📜 No registered prompt for {mahajana_lower}, using fallback: {e}")
 
-        # Fallback: Mahajana dharma descriptions
-        dharmas = {
-            "vyasa": "System Genesis, Boot, Wake",
-            "brahma": "Creation, Spawning, Genesis",
-            "narada": "Communication, Broadcast, News",
-            "shambhu": "Transformation, Dissolution, Cleanup",
-            "prithu": "Documentation, Structure, Knowledge",
-            "kumaras": "Purification, Cleansing, Formatting",
-            "kapila": "Analysis, Logic, Inference",
-            "manu": "Governance, Rules, Policy",
-            "parashurama": "Execution, Enforcement, Action",
-            "prahlada": "Protection, Devotion, Faith",
-            "janaka": "Scheduling, Tasks, Duty",
-            "bhishma": "Persistence, Ledger, Storage",
-            "nrisimha": "Security, Guarding, Termination",
-            "bali": "Resources, Allocation, Surrender",
-            "shuka": "Observation, Logging, Reports",
-            "yamaraja": "Judgment, Audit, Verdict",
-        }
-        dharma = dharmas.get(mahajana_lower, "Unknown")
+        # Fallback: Use MAHAJANA_DHARMAS from chat_refinement (SSOT)
+        dharma = MAHAJANA_DHARMAS.get(mahajana_lower, "Unknown")
 
         # Context block
-        context_block = ""
-        if context:
-            context_block = "\n\n## SYSTEM CONTEXT\n"
-            for k, v in context.items():
-                if v:
-                    context_block += f"- {k}: {str(v)[:200]}\n"
+        ctx_lines = [f"- {k}: {str(v)[:200]}" for k, v in context.items() if v] if context else []
+        context_block = "\n\n## SYSTEM CONTEXT\n" + "\n".join(ctx_lines) if ctx_lines else ""
 
         return f"""You are {mahajana}, a Mahajana of the Mahamantra Protocol.
 
