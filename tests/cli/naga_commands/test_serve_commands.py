@@ -134,15 +134,16 @@ class TestIntelCommand:
         cmd = IntelCommand()
         assert isinstance(cmd, INagaCommand)
 
-    def test_opcode_is_fetch_res(self):
-        """Opcode is FETCH_RES."""
+    def test_opcode_is_exec_op(self):
+        """Opcode is EXEC_OP (position 8)."""
         cmd = IntelCommand()
         assert cmd.opcode == MantraOpCode.EXEC_OP
 
-    def test_mahajana_is_shuka(self):
-        """Mahajana is SHUKA."""
+    def test_mahajana_is_parashurama(self):
+        """Mahajana is PARASHURAMA (owns position 8 / EXEC_OP)."""
+        # Note: SHUKA semantically owns intel, but PARASHURAMA owns opcode 8
         cmd = IntelCommand()
-        assert cmd.mahajana == Mahajana.SHUKA
+        assert cmd.mahajana == Mahajana.PARASHURAMA
 
     def test_name_is_intel(self):
         """Name is 'intel'."""
@@ -206,10 +207,10 @@ class TestIntelCommand:
         assert result.opcode == MantraOpCode.EXEC_OP
 
     def test_result_has_correct_mahajana(self):
-        """Result contains correct mahajana."""
+        """Result contains correct mahajana (PARASHURAMA owns EXEC_OP)."""
         cmd = IntelCommand()
         result = cmd.execute([])
-        assert result.mahajana == Mahajana.SHUKA
+        assert result.mahajana == Mahajana.PARASHURAMA
 
 
 # =============================================================================
