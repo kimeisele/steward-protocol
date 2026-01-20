@@ -49,6 +49,10 @@ def cli_chant(
     - Executes n rounds (1 round = 16 ticks = full Yajna cycle)
     - Returns machine-readable state
 
+    ŚRAVAṆAM CHECK:
+    - Before chanting (kīrtanam), system must be phase-locked
+    - Uses SravanamCheck.validate_epoch_lock() for boot validation
+
     Args:
         rounds: Number of complete cycles (default: 1)
         verbose: If True, print each tick
@@ -59,6 +63,21 @@ def cli_chant(
     # Lazy imports to keep module load fast
     from vibe_core.mahamantra import mahamantra
     from vibe_core.mahamantra.substrate.seed import WORDS
+    from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
+
+    # EPOCH LOCK CHECK (Boot validation - 1972 signature)
+    if not SravanamCheck.validate_epoch_lock():
+        return ChantResult(
+            success=False,
+            bhakti=NavaBhakti.KIRTANAM.value,
+            rounds=0,
+            ticks=0,
+            final_position=-1,
+            final_guardian="BLOCKED",
+            cycle_count=0,
+            switch_count=0,
+            parampara_connected=False,
+        )
 
     results: List[Dict[str, object]] = []
     total_ticks = rounds * WORDS  # 1 round = 16 positions
@@ -499,6 +518,36 @@ def cli_veda(
         return result
 
     # Process message
+    # ŚRAVAṆAM CHECK: Must hear before speaking
+    from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
+    import time
+
+    # Get current tick (based on system time modulo JIVA_CYCLE)
+    current_tick = int(time.time() * 1000) % 432  # ms modulo JIVA_CYCLE
+
+    # Estimate tokens (rough: 1 token ≈ 4 chars)
+    input_tokens = len(message) // 4 + 1
+    # Estimate output will be 2x input (conservative for 2:1 ratio)
+    estimated_output = input_tokens * 2
+
+    # Default resonance (will be updated by actual processing)
+    resonance = 0.5  # REFINE zone - safe default
+
+    # Dynamic emission check
+    can_emit, reason, delay = SravanamCheck.can_emit_dynamic(
+        input_tokens=input_tokens,
+        output_tokens=estimated_output,
+        resonance=resonance,
+        tick=current_tick,
+        strict=False,  # Not strict for chat
+    )
+
+    if not can_emit and delay > 0:
+        # Wait for next Gajra if delay is small
+        if delay <= SravanamCheck.MAX_EGO_OFFSET:
+            time.sleep(delay * 0.001)  # Convert to seconds (rough)
+            current_tick = (current_tick + delay) % 432
+
     # CREATIVE MODE: Use NAGA-flooded chat (Layer -1 integration)
     if explorer_mode == ExplorerMode.CREATIVE:
         try:
@@ -534,11 +583,16 @@ def cli_veda(
     # === PRESENTATION ===
     if not json:
         naga_status = "FLOODED" if veda_result.get("naga_flooded") else "Standard"
+        ego_offset = SravanamCheck.calculate_ego_offset(current_tick)
+        on_gajra = SravanamCheck.is_on_gajra(current_tick)
+        phase_dist, nearest_sync = SravanamCheck.calculate_phase_angle(current_tick)
+
         print("=" * 60)
         print("VEDA EXPLORER - Atma Nivedanam")
         print("=" * 60)
         print(f"  Mode: {explorer_mode.value.upper()} ({naga_status})")
         print(f"  LLM:  {'Available' if explorer.llm_available else 'Not available'}")
+        print(f"  Phase: tick={current_tick} ego={ego_offset} {'GAJRA' if on_gajra else ''} sync→{nearest_sync}")
         print("-" * 60)
         print(f"  Input: {message}")
         print(f"  Intent: {result['intent']}")
