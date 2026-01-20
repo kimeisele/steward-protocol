@@ -29,12 +29,12 @@ INTENT_MAP: Final[Dict[int, Tuple[str, ...]]] = {
     # === GENESIS QUARTER (0-3) ===
     0: ("boot", "wake", "start", "system", "init"),  # VYASA - System Wake (Genesis HEAD)
     1: ("create", "spawn", "genesis", "new", "born"),  # BRAHMA - Creation
-    2: ("broadcast", "message", "communicate", "narada", "news", "chat", "talk", "ask"),  # NARADA - Communication
+    2: ("broadcast", "message", "communicate", "narada", "news", "chat", "talk", "ask", "help", "hello", "hi"),  # NARADA - Communication
     3: ("destroy", "dissolve", "transform", "shiva", "cleanup"),  # SHAMBHU - Transformation
     # === DHARMA QUARTER (4-7) ===
-    4: ("scan", "compile", "document", "structure", "knowledge"),  # PRITHU - Compile/Structure (Dharma HEAD)
+    4: ("scan", "compile", "document", "structure", "knowledge", "search", "find", "locate"),  # PRITHU - Compile/Structure (Dharma HEAD)
     5: ("purify", "cleanse", "shuddhi", "format", "lint"),  # KUMARAS - Purification
-    6: ("analyze", "resolve", "enumerate", "logic", "inference"),  # KAPILA - Analysis
+    6: ("analyze", "resolve", "enumerate", "logic", "inference", "understand", "explain", "why", "how", "debug"),  # KAPILA - Analysis
     7: ("rule", "law", "govern", "manu", "policy"),  # MANU - Governance
     # === KARMA QUARTER (8-11) ===
     8: ("execute", "run", "enforce", "parashurama", "action"),  # PARASHURAMA - Execution (Karma HEAD)

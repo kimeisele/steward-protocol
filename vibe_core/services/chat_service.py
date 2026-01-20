@@ -248,9 +248,10 @@ class ChatService(ChatProtocol):
                 )
                 return result
             except Exception as e:
-                logger.warning(f"⚠️ Cognitive processing failed: {e}")
+                # Expected when KapilaService uses NullCognitive - fallback is fine
+                logger.debug(f"Cognitive not available, using INTENT_MAP fallback: {e}")
 
-        # Fallback: Simple intent detection
+        # Fallback: Simple intent detection (INTENT_MAP SSOT - no ML)
         return self._simple_intent_detection(message)
 
     def _simple_intent_detection(self, message: str) -> CognitiveResult:
@@ -449,12 +450,27 @@ class ChatService(ChatProtocol):
     def _build_system_prompt_lotus(
         self, lotus: Dict, context: Dict[str, str]
     ) -> str:
-        """Build system prompt with Lotus-based Mahajana identity."""
-        mahajana = lotus["mahajana"].upper()
+        """Build system prompt with Lotus-based Mahajana identity.
+
+        Uses PromptRegistry for Mahajana-specific prompts if available,
+        otherwise falls back to generic prompt.
+        """
+        mahajana_lower = lotus["mahajana"]
+        mahajana = mahajana_lower.upper()
         position = lotus["position"]
         quarter = lotus["quarter"]
 
-        # Mahajana dharma descriptions (from INTENT_MAP context)
+        # Try PromptRegistry first (config/prompts/genesis.yaml)
+        try:
+            from vibe_core.runtime.prompt_registry import PromptRegistry
+            prompt_key = f"mahamantra.chat.{mahajana_lower}"
+            prompt = PromptRegistry.get(prompt_key)
+            logger.debug(f"📜 Using registered prompt: {prompt_key}")
+            return prompt
+        except Exception as e:
+            logger.debug(f"📜 No registered prompt for {mahajana_lower}, using fallback: {e}")
+
+        # Fallback: Mahajana dharma descriptions
         dharmas = {
             "vyasa": "System Genesis, Boot, Wake",
             "brahma": "Creation, Spawning, Genesis",
@@ -473,7 +489,7 @@ class ChatService(ChatProtocol):
             "shuka": "Observation, Logging, Reports",
             "yamaraja": "Judgment, Audit, Verdict",
         }
-        dharma = dharmas.get(lotus["mahajana"], "Unknown")
+        dharma = dharmas.get(mahajana_lower, "Unknown")
 
         # Context block
         context_block = ""
