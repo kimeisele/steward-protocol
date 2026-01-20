@@ -37,6 +37,10 @@ from vibe_core.mahamantra.protocols._seed import (
     MALA,
     TICK_INTERVAL_MS,
     PRANA_DURATION_MS,
+    NADI_RESONANCE,
+    FIELD_RESONANCE,
+    KSHETRA,
+    MAHAJANA_COUNT,
 )
 
 # =============================================================================
@@ -63,6 +67,31 @@ VENU_TICK_S: Final[float] = TICK_INTERVAL_MS / 1000.0  # 0.25 seconds
 
 # Maximum acceptable jitter before logging a warning (10ms)
 VENU_MAX_JITTER_MS: Final[int] = 10
+
+# =============================================================================
+# HARMONIC INTERVALS (Derived from Resonances)
+# =============================================================================
+# These are the "natural checkpoint intervals" for scheduling.
+# Instead of arbitrary polling, the system breathes in harmonic cycles.
+
+# Nadi Interval: Health-check every 72 ticks (18 seconds)
+# 1728 / 24 (KSHETRA) = 72
+VENU_NADI_TICKS: Final[int] = VENU_TICKS_PER_MALA // KSHETRA  # 72
+
+# Field Interval: State-sync every 144 ticks (36 seconds)
+# 1728 / 12 (MAHAJANA_COUNT) = 144
+VENU_FIELD_TICKS: Final[int] = VENU_TICKS_PER_MALA // MAHAJANA_COUNT  # 144
+
+# Timing in seconds (for reference)
+VENU_NADI_SECONDS: Final[float] = VENU_NADI_TICKS * VENU_TICK_S  # 18.0
+VENU_FIELD_SECONDS: Final[float] = VENU_FIELD_TICKS * VENU_TICK_S  # 36.0
+
+# WATERTIGHT INTEGRITY CHECKS:
+assert VENU_NADI_TICKS == NADI_RESONANCE, "Nadi ticks must equal NADI_RESONANCE (72)"
+assert VENU_FIELD_TICKS == FIELD_RESONANCE, "Field ticks must equal FIELD_RESONANCE (144)"
+assert VENU_FIELD_TICKS == VENU_NADI_TICKS * 2, "Field must be 2x Nadi"
+assert VENU_TICKS_PER_MALA % VENU_NADI_TICKS == 0, "Mala must be divisible by Nadi"
+assert VENU_TICKS_PER_MALA % VENU_FIELD_TICKS == 0, "Mala must be divisible by Field"
 
 # =============================================================================
 # VENU PROTOCOLS (THE LAW)
@@ -290,6 +319,11 @@ __all__ = [
     "VENU_TICK_S",
     "VENU_TICKS_PER_MALA",
     "VENU_MAX_JITTER_MS",
+    # Harmonic Intervals (Derived from Seed Resonances)
+    "VENU_NADI_TICKS",
+    "VENU_FIELD_TICKS",
+    "VENU_NADI_SECONDS",
+    "VENU_FIELD_SECONDS",
     # Types
     "HeartbeatMetrics",
     # Protocols (Phase 2 - Runtime)

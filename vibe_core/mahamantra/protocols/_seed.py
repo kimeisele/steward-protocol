@@ -221,6 +221,66 @@ assert NAVA == HARE_COUNT + KSETRAJNA, "Integrity Error: Nava derivation mismatc
 assert HIDDEN_RESERVE == WORDS, "Integrity Error: Hidden reserve must equal WORDS (16)"
 
 # =============================================================================
+# THE HARMONIC RESONANCES (72 and 144)
+# =============================================================================
+# These are the "natural frequencies" of the system - synchronization points
+# that emerge from the Seed geometry. They are not invented but discovered.
+#
+# "ekam sat vipra bahudha vadanti"
+# "Truth is one; the wise call it by many names."
+# — Rig Veda 1.164.46
+#
+# The 72 and 144 appear in many traditions:
+# - 72,000 Nadis in Yoga (energy channels)
+# - 144 cubits (Biblical measures)
+# - 72 names of God (Kabbalah)
+# - 144Hz (harmonic frequency in music/physics)
+#
+# In our system, they are the CHECKPOINT INTERVALS:
+# - 72: The pulse measurement (Nadi)
+# - 144: The field synchronization (Kshetra-Sharanagati)
+# -----------------------------------------------------------------------------
+
+# THE NADI RESONANCE (72) - The Pulse
+# Multiple derivation paths (proof by convergence):
+# - JIVA_CYCLE / SHARANAGATI = 432 / 6 = 72
+# - NAVA * HARE_COUNT = 9 * 8 = 72
+# - TITHI_UNIT / 10 = 720 / 10 = 72
+# - MALA * (2/3) = 108 * (2/3) = 72
+NADI_RESONANCE: Final[int] = JIVA_CYCLE // SHARANAGATI  # 72
+
+# THE FIELD RESONANCE (144) - The Complete Field
+# Multiple derivation paths (proof by convergence):
+# - MAHAJANA_COUNT² = 12 * 12 = 144
+# - WORDS * NAVA = 16 * 9 = 144
+# - JIVA_CYCLE / TRINITY = 432 / 3 = 144
+# - LILA * TRINITY = 48 * 3 = 144
+# - SHARANAGATI * KSHETRA = 6 * 24 = 144
+FIELD_RESONANCE: Final[int] = MAHAJANA_COUNT * MAHAJANA_COUNT  # 144
+
+# WATERTIGHT INTEGRITY CHECKS (Multiple Derivation Paths):
+# 1. Nadi convergence
+assert NADI_RESONANCE == JIVA_CYCLE // SHARANAGATI, "Nadi: JIVA_CYCLE/SHARANAGATI != 72"
+assert NADI_RESONANCE == NAVA * HARE_COUNT, "Nadi: NAVA*HARE_COUNT != 72"
+assert NADI_RESONANCE == TITHI_UNIT // 10, "Nadi: TITHI_UNIT/10 != 72"
+
+# 2. Field convergence
+assert FIELD_RESONANCE == MAHAJANA_COUNT * MAHAJANA_COUNT, "Field: MAHAJANA² != 144"
+assert FIELD_RESONANCE == WORDS * NAVA, "Field: WORDS*NAVA != 144"
+assert FIELD_RESONANCE == JIVA_CYCLE // TRINITY, "Field: JIVA_CYCLE/TRINITY != 144"
+assert FIELD_RESONANCE == LILA * TRINITY, "Field: LILA*TRINITY != 144"
+assert FIELD_RESONANCE == SHARANAGATI * KSHETRA, "Field: SHARANAGATI*KSHETRA != 144"
+
+# 3. Cosmic Frame alignment (ganzzahlige Zyklen pro Tag)
+assert COSMIC_FRAME % NADI_RESONANCE == 0, "Nadi must divide cosmic frame evenly"
+assert COSMIC_FRAME % FIELD_RESONANCE == 0, "Field must divide cosmic frame evenly"
+assert COSMIC_FRAME // NADI_RESONANCE == 300, "300 Nadi cycles per day"
+assert COSMIC_FRAME // FIELD_RESONANCE == 150, "150 Field cycles per day"
+
+# 4. Relationship between resonances
+assert FIELD_RESONANCE == NADI_RESONANCE * 2, "Field must be 2x Nadi (144 = 72*2)"
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -269,4 +329,7 @@ __all__ = [
     "DAILY_MANTRAS",
     # The Hidden Bridge
     "PHASE_DURATION",
+    # The Harmonic Resonances
+    "NADI_RESONANCE",
+    "FIELD_RESONANCE",
 ]
