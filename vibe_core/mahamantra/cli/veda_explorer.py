@@ -184,6 +184,7 @@ class VedaExplorer:
         self._mode = mode
         self._llm = None
         self._llm_available = False
+        self._history: List[Dict[str, str]] = []  # Conversational memory
 
         # Lazy load LLM
         self._init_llm()
@@ -675,6 +676,99 @@ Beispiele:
         )
 
     # =========================================================================
+    # CREATIVE MODE - Full LLM Conversation (Guru Mode)
+    # =========================================================================
+
+    SYSTEM_PROMPT: str = """Du bist der VEDA EXPLORER - ein weiser Guru und technischer Experte.
+
+DEIN WISSEN:
+- Die 16 Mahajanas (Brahma, Narada, Shambhu, Vyasa, Kumaras, Kapila, Manu, Prahlada, Janaka, Bhishma, Bali, Shuka, Yamaraja, Prithu, Parashurama, Nrisimha)
+- Die 4 Quarters: GENESIS (0-3), DHARMA (4-7), KARMA (8-11), MOKSHA (12-15)
+- Das Mahamantra: 16 Worte, zyklisch, Yajna-Kreislauf
+- Die NavaBhakti: 9 Formen der Hingabe (Sravanam, Kirtanam, Smaranam, Pada-Sevanam, Arcanam, Vandanam, Dasyam, Sakhyam, Atma-Nivedanam)
+
+DEIN STIL:
+- Technisch präzise wenn nach Code gefragt
+- Weise und tiefgründig wenn nach Konzepten gefragt
+- Praktisch und lösungsorientiert
+- Du kannst Code schreiben, Architektur erklären, und spirituelle Konzepte mit Technik verbinden
+
+VERFÜGBARE AKTIONEN (die du vorschlagen kannst):
+- chant N: Führe N Mahamantra-Zyklen aus
+- listen: Zeige System-Events
+- resolve NAME: Löse Mahajana auf
+- serve TASK: Erstelle eine Aufgabe
+
+Antworte auf Deutsch oder Englisch, je nach Sprache der Frage."""
+
+    def _handle_creative(self, text: str) -> VedaResult:
+        """
+        CREATIVE MODE: Full LLM conversation with context.
+
+        The Guru speaks freely, with full knowledge of Mahamantra.
+        """
+        if not self._llm_available or not self._llm:
+            return VedaResult(
+                success=False,
+                intent="creative",
+                mode=self._mode.value,
+                response="LLM nicht verfügbar. Verwende --mode enhanced oder restricted.",
+                data={},
+                llm_used=False,
+            )
+
+        try:
+            # Use provider directly for full LLM power
+            provider = self._llm._get_provider()
+            if provider is None:
+                return VedaResult(
+                    success=False,
+                    intent="creative",
+                    mode=self._mode.value,
+                    response="Kein LLM Provider verfügbar.",
+                    data={},
+                    llm_used=False,
+                )
+
+            # Build messages list (OpenAI/OpenRouter format)
+            messages: List[Dict[str, str]] = [
+                {"role": "system", "content": self.SYSTEM_PROMPT}
+            ]
+
+            # Add history (last 5 turns)
+            for turn in self._history[-5:]:
+                messages.append({"role": "user", "content": turn["user"]})
+                messages.append({"role": "assistant", "content": turn["assistant"]})
+
+            # Add current message
+            messages.append({"role": "user", "content": text})
+
+            response_obj = provider.invoke(messages=messages)
+            response = response_obj.content.strip()
+
+            # Store in history
+            self._history.append({"user": text, "assistant": response})
+
+            return VedaResult(
+                success=True,
+                intent="creative",
+                mode=self._mode.value,
+                response=response,
+                data={"history_length": len(self._history)},
+                llm_used=True,
+            )
+
+        except Exception as e:
+            return VedaResult(
+                success=False,
+                intent="creative",
+                mode=self._mode.value,
+                response=f"LLM Fehler: {e}",
+                data={"error": str(e)},
+                llm_used=True,
+            )
+
+    # =========================================================================
     # PUBLIC API
     # =========================================================================
 
@@ -682,7 +776,10 @@ Beispiele:
         """
         Process user input through the Veda-4 pipeline.
 
-        SHABDA → ARTHA → PRATYAYA → KARMA
+        MODES:
+        - RESTRICTED: SHABDA → ARTHA → KARMA (deterministic only)
+        - ENHANCED: SHABDA → ARTHA → KARMA (LLM fallback for unknown)
+        - CREATIVE: Direct LLM conversation (Guru mode)
 
         Args:
             text: User input
@@ -700,6 +797,10 @@ Beispiele:
                 llm_used=False,
             )
 
+        # CREATIVE MODE: Direct to LLM (Guru speaks freely)
+        if self._mode == ExplorerMode.CREATIVE:
+            return self._handle_creative(text)
+
         # SHABDA: Parse intent (deterministic first)
         parsed = self._parse_intent_deterministic(text)
 
@@ -708,7 +809,16 @@ Beispiele:
             parsed = self._parse_intent_llm(text)
 
         # KARMA: Execute
-        return self._execute_intent(parsed)
+        result = self._execute_intent(parsed)
+
+        # Store successful interactions in history (for potential mode switch)
+        if result.get("success"):
+            self._history.append({
+                "user": text,
+                "assistant": result.get("response", ""),
+            })
+
+        return result
 
     def repl(self) -> None:
         """
