@@ -29,7 +29,7 @@ INTENT_MAP: Final[Dict[int, Tuple[str, ...]]] = {
     # === GENESIS QUARTER (0-3) ===
     0: ("boot", "wake", "start", "system", "init"),  # VYASA - System Wake (Genesis HEAD)
     1: ("create", "spawn", "genesis", "new", "born"),  # BRAHMA - Creation
-    2: ("broadcast", "message", "communicate", "narada", "news"),  # NARADA - Communication
+    2: ("broadcast", "message", "communicate", "narada", "news", "chat", "talk", "ask"),  # NARADA - Communication
     3: ("destroy", "dissolve", "transform", "shiva", "cleanup"),  # SHAMBHU - Transformation
     # === DHARMA QUARTER (4-7) ===
     4: ("scan", "compile", "document", "structure", "knowledge"),  # PRITHU - Compile/Structure (Dharma HEAD)
