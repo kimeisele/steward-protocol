@@ -13,6 +13,11 @@ Derived from the 3 Holy Names, but applied to Matter (Prakriti).
 LOCATION: vibe_core.mahamantra.protocols._guna (THE LAW)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x8a89fdb5"  # GenesisByte: parampara % 37 == 0
+
 from enum import IntEnum, unique
 from typing import Final, Protocol, runtime_checkable
 

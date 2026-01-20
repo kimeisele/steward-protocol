@@ -11,6 +11,11 @@ For pure calculations, use substrate/venu.py instead.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0xe5724852"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.protocols._venu import (
     VENU_POSITIONS,
     VENU_TICKS_PER_MALA,

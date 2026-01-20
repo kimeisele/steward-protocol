@@ -35,6 +35,11 @@ The higher the Bhava, the more "bandwidth" to the Singularity.
 But Bhava without Sharanagati is pretension (prakrita-sahajiya).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x2752212c"  # GenesisByte: parampara % 37 == 0
+
 from enum import IntEnum
 from typing import Final, Protocol, runtime_checkable
 

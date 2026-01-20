@@ -28,6 +28,11 @@ Position 12-15 (MOKSHA):  R-R-H-H = Front-loaded (Cleanup)
 This is not coincidence. This is RHYTHM.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x2b3b3ee0"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final, Protocol, Callable, List, TypeVar, TypedDict, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (

@@ -19,6 +19,11 @@ COMPONENTS:
     MantraClock - The master scheduler
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0xa7fe2cf6"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.venu.tick import MantraTick
 from vibe_core.mahamantra.venu.voice import MantraVoice
 from vibe_core.mahamantra.venu.clock import MantraClock

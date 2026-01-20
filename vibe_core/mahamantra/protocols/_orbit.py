@@ -21,6 +21,11 @@ CONCEPTS:
 
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x3f31a22c"  # GenesisByte: parampara % 37 == 0
+
 from typing import Protocol, runtime_checkable
 
 

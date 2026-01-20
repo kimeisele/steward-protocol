@@ -15,6 +15,11 @@ SSOT LOCATION: vibe_core/mahamantra/substrate/byte.py
 # "Wer am Seed vorbei importiert, stirbt." - MAHAPROMPT.md
 # We import the V2 definitions and expose them as V1.
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prithu"
+__position__ = 4
+__genesis__ = "0x23129dff"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.substrate.byte import (
     HolyName,
     MantraBit,

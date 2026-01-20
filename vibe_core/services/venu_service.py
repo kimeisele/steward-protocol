@@ -26,6 +26,11 @@ ARCHITECTURE:
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "janaka"
+__position__ = 10
+__genesis__ = "0x2e77ceea"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import time
