@@ -26,6 +26,12 @@ from vibe_core.protocols.substrate.scanner import (
     FileStatus,
     ScanConfig,
     ScannedFile,
+    ScannerProtocol,
+    ScanProgress,
+    ScanResult,
+    extract_declarations,
+    get_default_config,
+    path_to_module,
 )
 
 # =============================================================================
@@ -59,6 +65,12 @@ __all__ = [
     "FileStatus",
     "ScanConfig",
     "ScannedFile",
+    "ScannerProtocol",
+    "ScanProgress",
+    "ScanResult",
+    "extract_declarations",
+    "get_default_config",
+    "path_to_module",
     # samskara
     "Phase",
     "PhaseStatus",
