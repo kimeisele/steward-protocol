@@ -52,8 +52,8 @@ from vibe_core.mahamantra.lila.adoption import analyze_source
 from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 from vibe_core.mahamantra.substrate.mahajana import Avatara, Mahajana, Quarter
 
-# Import from substrate protocol - THE SOURCE OF TRUTH
-from vibe_core.protocols.substrate.scanner import (
+# Import from substrate - Balarama-wrapped legacy types
+from vibe_core.mahamantra.substrate._legacy import (
     Declaration,
     DeclarationType,
     FileStatus,

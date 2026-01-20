@@ -64,14 +64,12 @@ from vibe_core.mahamantra.substrate.wiring import (
     POSITION_BY_NAME,
 )
 
-# Import SamskaraProtocol for proper protocol-based pipeline
-from vibe_core.protocols.substrate.samskara import (
+# Import SamskaraProtocol - Balarama-wrapped legacy types
+from vibe_core.mahamantra.substrate._legacy import (
     Phase,
     PhaseStatus,
     PipelineExecutor,
     SamskaraProtocol,
-)
-from vibe_core.protocols.substrate.samskara import (
     PipelineContext as SamskaraPipelineContext,
 )
 
