@@ -1,0 +1,219 @@
+"""
+THE VENU PROTOCOL - Krishna's Flute (THE LAW)
+==============================================
+
+"venum kvanantam aravinda-dalayataksham"
+"Krishna plays His flute, with lotus-petal eyes"
+— Brahma-samhita 5.30
+
+This protocol defines the INTERFACES for the rhythmic scheduling layer.
+The Venu (flute) is not audio - it is the SCHEDULER of processes.
+
+LOCATION: vibe_core.mahamantra.protocols._venu (THE LAW)
+IMPLEMENTATION: vibe_core.mahamantra.substrate.venu (Pure Math)
+RUNTIME: vibe_core.mahamantra.venu/ (Stateful - Phase 2)
+
+TIME AS A CIRCLE, NOT A LINE:
+=============================
+Traditional OS: t=0 → t=1 → t=2 → ... → t=∞ (linear, "as fast as possible")
+Venu OS:        0 → 1 → ... → 15 → 0 → 1 → ... (cyclic, "on the beat")
+
+THE MAHAMANTRA IS THE SCHEDULER:
+================================
+Position 0-3  (GENESIS):  H-K-H-K = Alternating (IO Pattern)
+Position 4-7  (DHARMA):   K-K-H-H = Front-loaded (Burst Work)
+Position 8-11 (KARMA):    H-R-H-R = Alternating (Checkpoint)
+Position 12-15 (MOKSHA):  R-R-H-H = Front-loaded (Cleanup)
+
+This is not coincidence. This is RHYTHM.
+"""
+
+from typing import Final, Protocol, Callable, List, Any, TypeVar, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,
+    QUARTERS,
+    MALA,
+    TICK_INTERVAL_MS,
+    PRANA_DURATION_MS,
+)
+
+# =============================================================================
+# VENU CONSTANTS (Derived from Seed)
+# =============================================================================
+
+# The number of positions in one cycle (16 words of the Mahamantra)
+VENU_POSITIONS: Final[int] = WORDS  # 16
+
+# The number of phases per cycle (4 quarters)
+VENU_PHASES: Final[int] = QUARTERS  # 4
+
+# Positions per phase
+VENU_POSITIONS_PER_PHASE: Final[int] = VENU_POSITIONS // VENU_PHASES  # 4
+
+# Default tick interval (250ms = 1 Prana / 16)
+VENU_TICK_MS: Final[int] = TICK_INTERVAL_MS  # 250ms
+
+# Ticks per Mala (108 Pranas × 16 ticks = 1728)
+VENU_TICKS_PER_MALA: Final[int] = MALA * WORDS  # 1728
+
+# =============================================================================
+# VENU PROTOCOLS (THE LAW)
+# =============================================================================
+
+T = TypeVar("T")
+
+
+@runtime_checkable
+class MantraTickProtocol(Protocol):
+    """
+    The atomic unit of time in the Venu system.
+
+    A MantraTick tracks the current position in the 16-beat cycle.
+    It is the HEARTBEAT of the rhythmic OS.
+    """
+
+    @property
+    def tick_count(self) -> int:
+        """Total ticks since start (monotonically increasing)."""
+        ...
+
+    @property
+    def position(self) -> int:
+        """Current position in the cycle (0-15)."""
+        ...
+
+    @property
+    def cycle(self) -> int:
+        """Current cycle number (tick_count // 16)."""
+        ...
+
+    @property
+    def mala_count(self) -> int:
+        """Number of complete Malas (cycles of 108 Pranas)."""
+        ...
+
+    def advance(self) -> int:
+        """
+        Advance the tick by one.
+
+        Returns:
+            The new position (0-15)
+        """
+        ...
+
+
+@runtime_checkable
+class MantraVoiceProtocol(Protocol):
+    """
+    A voice is a parallel execution channel.
+
+    Like voices in music, multiple MantraVoices can play simultaneously,
+    each with their own queue of tasks per position.
+    """
+
+    @property
+    def voice_id(self) -> int:
+        """Unique identifier for this voice."""
+        ...
+
+    def submit(self, task: Callable[[], T], position: int | None = None) -> None:
+        """
+        Submit a task to be executed at a specific position.
+
+        Args:
+            task: The callable to execute
+            position: The position (0-15) to execute at, or None for next beat
+        """
+        ...
+
+    def get_tasks(self, position: int) -> List[Callable[[], Any]]:
+        """
+        Get all tasks queued for a specific position.
+
+        Args:
+            position: The position (0-15)
+
+        Returns:
+            List of tasks queued for that position
+        """
+        ...
+
+    def clear(self, position: int) -> None:
+        """Clear all tasks at a specific position after execution."""
+        ...
+
+
+@runtime_checkable
+class MantraClockProtocol(Protocol):
+    """
+    The Master Clock - The Drummer of the Venu system.
+
+    The MantraClock orchestrates MantraVoices, ticking through
+    positions and executing tasks at each beat.
+    """
+
+    @property
+    def tick(self) -> MantraTickProtocol:
+        """The underlying tick counter."""
+        ...
+
+    @property
+    def voices(self) -> List[MantraVoiceProtocol]:
+        """All registered voices."""
+        ...
+
+    @property
+    def position(self) -> int:
+        """Current position (delegated to tick)."""
+        ...
+
+    def add_voice(self) -> MantraVoiceProtocol:
+        """Create and register a new voice."""
+        ...
+
+    def on_position(self, position: int, callback: Callable[[], None]) -> None:
+        """
+        Register a callback to be called when reaching a position.
+
+        Args:
+            position: The position (0-15) to trigger on
+            callback: The function to call
+        """
+        ...
+
+    def on_mala(self, callback: Callable[[int], None]) -> None:
+        """
+        Register a callback for Mala completion.
+
+        Args:
+            callback: Function called with mala_count when a Mala completes
+        """
+        ...
+
+    def tick_once(self) -> int:
+        """
+        Execute one tick: run all tasks at current position, then advance.
+
+        Returns:
+            The new position after advancing
+        """
+        ...
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    # Constants
+    "VENU_POSITIONS",
+    "VENU_PHASES",
+    "VENU_POSITIONS_PER_PHASE",
+    "VENU_TICK_MS",
+    "VENU_TICKS_PER_MALA",
+    # Protocols
+    "MantraTickProtocol",
+    "MantraVoiceProtocol",
+    "MantraClockProtocol",
+]

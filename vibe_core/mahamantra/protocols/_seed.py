@@ -104,6 +104,34 @@ assert JIVA_QUALITIES == 50, "Derivation Error: Jiva qualities must be 50"
 assert JIVA_CYCLE == LILA * NAVA, "Integrity Error: JIVA_CYCLE must equal LILA × NAVA (48 × 9)"
 
 # =============================================================================
+# THE PRANA (The Breath - Timing Constants)
+# =============================================================================
+# "prāṇāyāma" - The regulation of breath (Yoga-Sutra 2.49)
+#
+# Yoga-Tradition: 21600 Atemzüge pro Tag (COSMIC_FRAME)
+# → 21600 / 24 Stunden = 900 Atemzüge/Stunde
+# → 900 / 60 Minuten = 15 Atemzüge/Minute
+# → 60 / 15 = 4 Sekunden pro Atemzug
+#
+# DERIVATION:
+# PRANA_DURATION = SECONDS_PER_DAY / COSMIC_FRAME = 86400 / 21600 = 4 Sekunden
+# TICK_INTERVAL = PRANA_DURATION / WORDS = 4000ms / 16 = 250ms
+#
+# Note: 1 Mala = 108 Pranas × 4s = 432 Sekunden = JIVA_CYCLE in Zeit!
+# -----------------------------------------------------------------------------
+
+SECONDS_PER_DAY: Final[int] = 86400  # 24 × 60 × 60
+PRANA_DURATION_S: Final[int] = SECONDS_PER_DAY // COSMIC_FRAME  # 4 Sekunden
+PRANA_DURATION_MS: Final[int] = PRANA_DURATION_S * 1000  # 4000 ms
+TICK_INTERVAL_MS: Final[int] = PRANA_DURATION_MS // WORDS  # 250 ms
+
+# WATERTIGHT INTEGRITY CHECKS:
+assert SECONDS_PER_DAY % COSMIC_FRAME == 0, "Day must divide evenly into Pranas"
+assert PRANA_DURATION_S == 4, "1 Prana must be 4 seconds"
+assert TICK_INTERVAL_MS == 250, "1 Tick must be 250ms"
+assert MALA * PRANA_DURATION_S == JIVA_CYCLE, "1 Mala in seconds must equal JIVA_CYCLE"
+
+# =============================================================================
 # THE EPOCH KEY (Temporal Anchor)
 # =============================================================================
 # Critical: Defines the valid runtime era for this protocol.
@@ -216,6 +244,11 @@ __all__ = [
     # The Jiva (Part and Parcel of Krishna)
     "JIVA_CYCLE",
     "JIVA_QUALITIES",
+    # The Prana (The Breath - Timing)
+    "SECONDS_PER_DAY",
+    "PRANA_DURATION_S",
+    "PRANA_DURATION_MS",
+    "TICK_INTERVAL_MS",
     # The Epoch Key (Temporal Anchor)
     "EPOCH_KEY",
     # Derived Constants

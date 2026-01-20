@@ -1,27 +1,26 @@
 """
-OPUS-310: Chat Command - Mahamantra Routed
+OPUS-310: Chat Command - Protocol-Compliant
 
-Routes through mahamantra.resonate() → Guardian's chat() method.
-CLI → CommandRegistry → ChatCommand → Mahamantra → Guardian.chat()
+Routes through ChatProtocol → SemanticRouter → Mahajana.
+CLI → CommandRegistry → ChatCommand → ChatService → SemanticRouter → LLM
 
-"steward chat ist nicht nur 1 chat" - Each guardian has their own chat domain.
-- Kapila handles "analyze" questions
-- Yamaraja handles "audit" questions
-- Narada handles general communication
-- etc.
+PROTOCOL FLOW:
+    1. ChatService.chat() receives message
+    2. OperatorCognitiveProtocol → CognitiveResult (intent)
+    3. SemanticRouter → Mahajana routing
+    4. KnowledgeGraph → Context enrichment
+    5. LLM Provider → Response generation
 
-MAHAMANTRA ROUTING:
-    1. mahamantra.resonate(message) finds the best matching guardian
-    2. Guardian's chat() method is called
-    3. If no specific match, Narada (position 2) handles it
+NO KEYWORD MATCHING. Real semantic routing.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "narada"
-__position__ = 2
+__mahajana__ = "manu"
+__position__ = 7
 __genesis__ = "0xa2c02098"  # GenesisByte: parampara % 37 == 0
 
 from typing import List
+import uuid
 
 from vibe_core.protocols.command import (
     BaseCommand,
@@ -33,24 +32,24 @@ from vibe_core.protocols.command import (
 
 
 class ChatCommand(BaseCommand):
-    """Chat routed through Mahamantra - each guardian handles their domain."""
+    """Chat via ChatProtocol with full semantic routing."""
 
     name = "chat"
-    description = "Chat with the Mahamantra (routed to appropriate guardian)"
+    description = "Chat with semantic routing (ChatProtocol → SemanticRouter → Mahajana)"
     source = "core"
-    tags = ["mahamantra", "chat", "resonance"]
+    tags = ["chat", "protocol", "semantic"]
 
     _parameters = [
         ParameterSpec(
             name="message",
             param_type=ParameterType.STRING,
             required=True,
-            description="The message to send (routed via mahamantra.resonate)",
+            description="The message to process (semantically routed)",
         ),
     ]
 
     async def execute(self, args: List[str], context: CommandContext) -> CommandResult:
-        """Execute chat via 12-NAGA flooded mahamantra routing."""
+        """Execute chat via ChatProtocol with full semantic stack."""
         message = " ".join(args) if args else ""
 
         if not message:
@@ -60,28 +59,41 @@ class ChatCommand(BaseCommand):
             )
 
         try:
-            # NAGA x MAHAMANTRA = BOOM
-            # Use flooded chat with all 12 NAGA genes
-            from vibe_core.mahamantra.chat import (
-                flooded_routed_chat,
-                get_guardian_for_message,
+            # Import ChatService (protocol-compliant)
+            from vibe_core.services.chat_service import get_chat_service
+            from vibe_core.protocols.chat import ChatContext, ChatMessage
+
+            # Get service
+            chat_service = get_chat_service()
+
+            # Create context
+            session_id = str(uuid.uuid4())
+            chat_context = ChatContext(
+                session_id=session_id,
+                history=[],
             )
 
-            # 1. Find the resonating guardian
-            guardian = get_guardian_for_message(message)
+            # Execute through protocol
+            response = await chat_service.chat(message, chat_context)
 
-            # 2. Execute through 12-NAGA flooded chat
-            response = flooded_routed_chat(message)
-
-            return CommandResult(
-                success=True,
-                output=f"🕉️ [NAGA x {guardian.upper()}] {response}",
-                data={
-                    "guardian": guardian,
-                    "naga_flooded": True,
-                    "naga_genes": 12,
-                },
-            )
+            if response.success:
+                return CommandResult(
+                    success=True,
+                    output=f"🕉️ [{response.mahajana}] {response.message.content}",
+                    data={
+                        "mahajana": response.mahajana,
+                        "opcode": response.opcode,
+                        "mode": response.mode.value,
+                        "intent": response.intent_type.value if response.intent_type else None,
+                        "confidence": response.confidence,
+                        "protocol_compliant": True,
+                    },
+                )
+            else:
+                return CommandResult(
+                    success=False,
+                    error=f"Chat failed: {response.error}",
+                )
 
         except Exception as e:
             return CommandResult(
