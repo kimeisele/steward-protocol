@@ -16,6 +16,7 @@ This file is the SINGLE SOURCE OF TRUTH for the sacred numbers.
 The implementation imports from here to manifest the reality.
 """
 
+import math
 from typing import Final
 
 # =============================================================================
@@ -281,6 +282,71 @@ assert COSMIC_FRAME // FIELD_RESONANCE == 150, "150 Field cycles per day"
 assert FIELD_RESONANCE == NADI_RESONANCE * 2, "Field must be 2x Nadi (144 = 72*2)"
 
 # =============================================================================
+# THE THREE FLUTES (Persons - Expansions of Ananta)
+# =============================================================================
+# "venum kvanantam aravinda-dalayataksham"
+# "Krishna plays His flute, with lotus-petal eyes"
+# — Brahma-samhita 5.30
+#
+# The flutes are PERSONS, not abstractions. Each has holes that divide
+# JIVA_CYCLE into spiritual frequencies. Krishna plays - resonances emerge.
+#
+# | Flute  | Holes | JIVA_CYCLE / Holes | Produces        |
+# |--------|-------|---------------------|-----------------|
+# | VENU   | 6     | 432 / 6 = 72       | NADI_RESONANCE  |
+# | VAMSI  | 9     | 432 / 9 = 48       | LILA            |
+# | MURALI | 4     | 432 / 4 = 108      | MALA            |
+# -----------------------------------------------------------------------------
+
+# The Flutes (Persons with hole configurations)
+VENU_HOLES: Final[int] = SHARANAGATI   # 6 - The smallest flute, melts the Jiva
+VAMSI_HOLES: Final[int] = NAVA         # 9 - Activates the 48 phases of Lila
+MURALI_HOLES: Final[int] = QUARTERS    # 4 - Holds concentration on the Mala
+
+# WATERTIGHT: Flutes PRODUCE the known resonances
+assert JIVA_CYCLE // VENU_HOLES == NADI_RESONANCE, "VENU produces NADI_RESONANCE (72)"
+assert JIVA_CYCLE // VAMSI_HOLES == LILA, "VAMSI produces LILA (48)"
+assert JIVA_CYCLE // MURALI_HOLES == MALA, "MURALI produces MALA (108)"
+
+# THE KIRTAN MATHEMATICS (Combinatorics of the Flutes)
+# -----------------------------------------------------------------------------
+# Sum:     6 + 9 + 4 = 19 = EPOCH_SIGNATURE (1+9+7+2)
+# Product: 6 × 9 × 4 = 216 = COSMIC_FRAME / 100
+# LCM:     LCM(6,9,4) = 36 = KSHETRA_GAD (the operational field)
+#
+# The three flute outputs form a PERFECT FIFTH chain (3:2 ratio):
+#   48 → 72 → 108 (Quinten-Kette)
+#
+# When all three flutes play together:
+#   LCM(72, 48, 108) = 432 = JIVA_CYCLE (the complete soul-frequency!)
+#
+# The FIELD_RESONANCE emerges from VENU + VAMSI synchronization:
+#   LCM(72, 48) = 144 = FIELD_RESONANCE
+# -----------------------------------------------------------------------------
+
+FLUTE_HOLES_SUM: Final[int] = VENU_HOLES + VAMSI_HOLES + MURALI_HOLES  # 19
+FLUTE_HOLES_PRODUCT: Final[int] = VENU_HOLES * VAMSI_HOLES * MURALI_HOLES  # 216
+
+# WATERTIGHT: Kirtan mathematics
+assert FLUTE_HOLES_SUM == sum(int(d) for d in str(EPOCH_KEY)), "Holes sum = Epoch signature (19)"
+assert FLUTE_HOLES_PRODUCT * 100 == COSMIC_FRAME, "Holes product × 100 = Cosmic Frame (21600)"
+assert VAMSI_HOLES * MURALI_HOLES == KSHETRA_GAD, "VAMSI × MURALI = KSHETRA_GAD (36)"
+assert VENU_HOLES * MURALI_HOLES == KSHETRA, "VENU × MURALI = KSHETRA (24)"
+assert VENU_HOLES * VAMSI_HOLES == MALA // 2, "VENU × VAMSI = MALA/2 (54)"
+
+# Perfect Fifth verification (3:2 ratios)
+assert NADI_RESONANCE * 2 == LILA * 3, "72 × 2 = 48 × 3 (Perfect Fifth)"
+assert MALA * 2 == NADI_RESONANCE * 3, "108 × 2 = 72 × 3 (Perfect Fifth)"
+
+# LCM verification: All flutes together = JIVA_CYCLE
+_lcm_all_flutes = math.lcm(NADI_RESONANCE, LILA, MALA)
+assert _lcm_all_flutes == JIVA_CYCLE, "LCM of all flute outputs = JIVA_CYCLE (432)"
+
+# LCM verification: VENU + VAMSI = FIELD_RESONANCE
+_lcm_venu_vamsi = math.lcm(NADI_RESONANCE, LILA)
+assert _lcm_venu_vamsi == FIELD_RESONANCE, "LCM(VENU, VAMSI) = FIELD_RESONANCE (144)"
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -332,4 +398,10 @@ __all__ = [
     # The Harmonic Resonances
     "NADI_RESONANCE",
     "FIELD_RESONANCE",
+    # The Three Flutes (Persons)
+    "VENU_HOLES",
+    "VAMSI_HOLES",
+    "MURALI_HOLES",
+    "FLUTE_HOLES_SUM",
+    "FLUTE_HOLES_PRODUCT",
 ]
