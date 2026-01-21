@@ -87,25 +87,84 @@ class IntelCommand(NagaCommandBase):
 
     def _get_intel(self, critical_only: bool = False, threats_only: bool = False, category: str = None) -> str:
         """
-        Fetch intelligence from NAGA bridge.
+        Fetch intelligence from Chitragupta (REAL DATA, NOT PLACEHOLDER).
 
-        This is a placeholder - actual implementation would use
-        IntelBridgeProtocol.
+        WIRED to ServiceRegistry - gets actual profiling data and anomalies.
+        This is the system "hearing" its own health through NAGA observation.
         """
-        # Placeholder: actual implementation would use:
-        # - vibe_core.protocols.naga.intel_bridge.IntelBridgeProtocol
-        # - NullIntelBridge as fallback
+        from vibe_core.di import ServiceRegistry
 
-        filters = []
-        if critical_only:
-            filters.append("critical")
-        if threats_only:
-            filters.append("threats")
-        if category:
-            filters.append(f"category:{category}")
+        lines = []
+        lines.append("[SHUKA] Intelligence Report (via Chitragupta)")
+        lines.append("=" * 55)
 
-        filter_str = ", ".join(filters) if filters else "none"
-        return f"[SHUKA] Intel query complete (filters: {filter_str})"
+        try:
+            # Try to get Chitragupta from registry
+            from vibe_core.protocols.naga import ChitraguptaProtocol
+
+            chitragupta = ServiceRegistry.get(ChitraguptaProtocol)
+
+            if chitragupta is None:
+                lines.append("")
+                lines.append("⚠️  Chitragupta not active (no profiling data)")
+                lines.append("   Run with kernel boot to enable NAGA observation")
+                return "\n".join(lines)
+
+            # Get status
+            status = chitragupta.get_status()
+            lines.append("")
+            lines.append(f"📊 NAGA Status: {'✅ HEALTHY' if status.healthy else '❌ UNHEALTHY'}")
+            lines.append(f"   Profiles:  {status.details.get('profiles', 0)}")
+            lines.append(f"   Anomalies: {status.details.get('anomalies_detected', 0)}")
+
+            # Get timing summary (extended method - may not exist on all implementations)
+            timing = {}
+            if hasattr(chitragupta, 'get_timing_summary'):
+                timing = chitragupta.get_timing_summary()
+            if timing:
+                lines.append("")
+                lines.append("⏱️  TIMING PROFILES:")
+                for component, metrics in list(timing.items())[:10]:  # Limit display
+                    for metric, stats in metrics.items():
+                        mean = stats.get('mean', 0)
+                        stddev = stats.get('stddev', 0)
+                        samples = stats.get('samples', 0)
+                        status_icon = "🔴" if mean > 100 else "🟡" if mean > 50 else "🟢"
+                        lines.append(f"   {status_icon} {component}.{metric}: {mean:.1f}ms ±{stddev:.1f} ({samples} samples)")
+
+            # Get anomalies (extended method)
+            anomalies = []
+            if hasattr(chitragupta, 'get_all_anomalies'):
+                anomalies = chitragupta.get_all_anomalies()
+            if anomalies:
+                lines.append("")
+                lines.append("🚨 ANOMALIES DETECTED:")
+                for anomaly in anomalies[:5]:  # Top 5
+                    lines.append(f"   ⚠️  {anomaly.component_id}.{anomaly.metric}")
+                    lines.append(f"       Current: {anomaly.current_value:.2f}")
+                    if anomaly.expected_range:
+                        lines.append(f"       Expected: {anomaly.expected_range[0]:.2f} - {anomaly.expected_range[1]:.2f}")
+            elif not critical_only:
+                lines.append("")
+                lines.append("✅ No anomalies detected")
+
+            # Karma log (recent actions)
+            if not critical_only and category != "performance":
+                karma = chitragupta.get_karma_log()
+                if karma:
+                    lines.append("")
+                    lines.append("📜 RECENT KARMA (last 5):")
+                    for entry in karma[-5:]:
+                        lines.append(f"   • {entry.action}: {entry.component_id}")
+
+        except Exception as e:
+            lines.append("")
+            lines.append(f"❌ Intel fetch failed: {e}")
+            lines.append("   Chitragupta may not be initialized")
+
+        lines.append("")
+        lines.append("=" * 55)
+        return "\n".join(lines)
 
 
 # Export for direct import

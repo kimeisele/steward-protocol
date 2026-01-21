@@ -349,6 +349,44 @@ class ChitraguptaService(NagaBaseService, ObserveProtocol):
         """Get the karma log of all actions."""
         return list(self._karma_log)
 
+    def list_profiles(self) -> List[str]:
+        """List all profiled component IDs."""
+        return list(self._profiles.keys())
+
+    def get_all_anomalies(self) -> List[Anomaly]:
+        """
+        Scan ALL profiles and return any anomalies found.
+
+        This is the "hearing" function - the system listens to its own health.
+        """
+        anomalies = []
+        for component_id in self._profiles:
+            anomaly = self.detect_anomaly(component_id)
+            if anomaly:
+                anomalies.append(anomaly)
+        return anomalies
+
+    def get_timing_summary(self) -> Dict[str, Dict[str, float]]:
+        """
+        Get timing summary for all components.
+
+        Returns dict of component_id -> {metric: mean_ms, ...}
+        """
+        summary = {}
+        for component_id, profile in self._profiles.items():
+            metrics = {}
+            for metric_name in profile.metrics:
+                mean = profile.get_baseline_mean(metric_name, self._window_seconds)
+                stddev = profile.get_baseline_stddev(metric_name, self._window_seconds)
+                metrics[metric_name] = {
+                    "mean": round(mean, 2),
+                    "stddev": round(stddev, 2),
+                    "samples": len(profile.metrics[metric_name].history),
+                }
+            if metrics:
+                summary[component_id] = metrics
+        return summary
+
     def _get_or_create_profile(self, component_id: str) -> ComponentProfile:
         """Get or create profile for component."""
         if component_id not in self._profiles:

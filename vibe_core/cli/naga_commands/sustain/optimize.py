@@ -23,6 +23,7 @@ Usage:
     naga optimize --analyze       # Deep analysis
     naga optimize --imports       # Optimize imports
     naga optimize --dead-code     # Find dead code
+    naga optimize --perf          # REAL performance bottlenecks (via Chitragupta)
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -73,6 +74,7 @@ class OptimizeCommand(NagaCommandBase):
         do_analyze = "--analyze" in args
         check_imports = "--imports" in args
         find_dead = "--dead-code" in args
+        check_perf = "--perf" in args or "--performance" in args
 
         # Build output
         output_parts = []
@@ -123,6 +125,13 @@ class OptimizeCommand(NagaCommandBase):
                     output_parts.append(f"    ... and {len(dead_code) - 10} more")
             else:
                 output_parts.append("    (none detected)")
+
+        if check_perf:
+            perf_findings = self._get_performance_bottlenecks()
+            output_parts.append("")
+            output_parts.append("  Performance Analysis (MEASURED via Chitragupta):")
+            for finding in perf_findings:
+                output_parts.append(f"    {finding}")
 
         output_parts.append("")
         output_parts.append("=" * 50)
@@ -239,6 +248,95 @@ class OptimizeCommand(NagaCommandBase):
             dead.append("No obvious dead code detected")
 
         return dead
+
+    def _get_performance_bottlenecks(self) -> list:
+        """
+        Get REAL performance bottlenecks from Chitragupta profiling.
+
+        WIRED to ServiceRegistry - uses actual timing data, not guesses.
+        This is German Engineering meets Vedic Architecture.
+        """
+        from vibe_core.di import ServiceRegistry
+
+        findings = []
+
+        try:
+            from vibe_core.protocols.naga import ChitraguptaProtocol
+
+            chitragupta = ServiceRegistry.get(ChitraguptaProtocol)
+
+            if chitragupta is None:
+                findings.append("⚠️  Chitragupta not active - no runtime profiling")
+                findings.append("   Enable via kernel boot for real measurements")
+                return findings
+
+            # Get timing summary (extended method - may not exist on all implementations)
+            if not hasattr(chitragupta, 'get_timing_summary'):
+                findings.append("📊 Chitragupta active but timing summary not available")
+                findings.append("   (basic protocol implementation)")
+                return findings
+
+            timing = chitragupta.get_timing_summary()
+
+            if not timing:
+                findings.append("📊 No timing profiles recorded yet")
+                findings.append("   Run operations to build baseline")
+                return findings
+
+            # Find bottlenecks (>50ms mean or high variance)
+            bottlenecks = []
+            for component, metrics in timing.items():
+                for metric, stats in metrics.items():
+                    mean = stats.get('mean', 0)
+                    stddev = stats.get('stddev', 0)
+                    samples = stats.get('samples', 0)
+
+                    # Bottleneck criteria
+                    is_slow = mean > 50  # >50ms is slow
+                    is_unstable = stddev > mean * 0.5 if mean > 0 else False  # >50% variance
+                    has_data = samples >= 5
+
+                    if has_data and (is_slow or is_unstable):
+                        severity = "🔴" if mean > 100 else "🟡"
+                        reason = []
+                        if is_slow:
+                            reason.append(f"slow ({mean:.1f}ms)")
+                        if is_unstable:
+                            reason.append(f"unstable (±{stddev:.1f}ms)")
+                        bottlenecks.append({
+                            'component': component,
+                            'metric': metric,
+                            'mean': mean,
+                            'stddev': stddev,
+                            'severity': severity,
+                            'reason': ", ".join(reason),
+                        })
+
+            # Sort by mean time (worst first)
+            bottlenecks.sort(key=lambda x: x['mean'], reverse=True)
+
+            if bottlenecks:
+                findings.append("🐢 PERFORMANCE BOTTLENECKS (measured):")
+                for b in bottlenecks[:10]:  # Top 10
+                    findings.append(f"   {b['severity']} {b['component']}.{b['metric']}")
+                    findings.append(f"      {b['mean']:.1f}ms avg - {b['reason']}")
+            else:
+                findings.append("✅ No significant bottlenecks detected")
+                findings.append(f"   Analyzed {len(timing)} components")
+
+            # Check for anomalies (extended method)
+            anomalies = []
+            if hasattr(chitragupta, 'get_all_anomalies'):
+                anomalies = chitragupta.get_all_anomalies()
+            if anomalies:
+                findings.append("")
+                findings.append(f"⚠️  {len(anomalies)} behavioral anomalies detected")
+                findings.append("   Run 'naga intel' for details")
+
+        except Exception as e:
+            findings.append(f"❌ Performance analysis failed: {e}")
+
+        return findings
 
 
 # Export for direct import
