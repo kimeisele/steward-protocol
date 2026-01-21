@@ -162,6 +162,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         from vibe_core.di import ServiceRegistry
 
         ServiceRegistry.enable_narasimha()
+        ServiceRegistry.enable_naga_blessing()  # Auto-wrap ALL services with NagaProxy
 
         self._config = config
         self._parent = parent
