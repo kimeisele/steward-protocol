@@ -23,7 +23,6 @@ class TestShuddhiDIIntegration(unittest.TestCase):
         ServiceRegistry.reset()
 
         def test_di_registration_and_usage(self):
-
             """Test that ShuddhiProtocol can be registered and retrieved via DI."""
 
             # Registration (mimics BootOrchestrator)
@@ -32,13 +31,10 @@ class TestShuddhiDIIntegration(unittest.TestCase):
 
             ServiceRegistry.register(ShuddhiProtocol, engine)
 
-            
-
             # Retrieval (mimics kernel.shuddhi)
 
             service = ServiceRegistry.require(ShuddhiProtocol)
 
-    
         self.assertIsInstance(service, ShuddhiEngine)
 
         # Usage

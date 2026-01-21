@@ -94,7 +94,7 @@ class TestIntelItem:
             summary="Test item",
             details="Details",
             source_naga="takshaka",
-            relevance_score=0.8
+            relevance_score=0.8,
         )
         with pytest.raises(Exception):
             item.summary = "Changed"
@@ -108,7 +108,7 @@ class TestIntelItem:
             summary="Security alert",
             details="",
             source_naga="takshaka",
-            relevance_score=0.8
+            relevance_score=0.8,
         )
         msg = item.to_chat_message()
         assert "🔒" in msg
@@ -123,7 +123,7 @@ class TestIntelItem:
             summary="Active threat",
             details="",
             source_naga="chitragupta",
-            relevance_score=0.9
+            relevance_score=0.9,
         )
         msg = item.to_chat_message()
         assert "⚠️" in msg
@@ -138,7 +138,7 @@ class TestIntelItem:
             summary="Critical issue",
             details="",
             source_naga="prahlad",
-            relevance_score=1.0
+            relevance_score=1.0,
         )
         msg = item.to_chat_message()
         assert "[CRITICAL]" in msg
@@ -153,7 +153,7 @@ class TestIntelItem:
             details="",
             source_naga="shuka",
             relevance_score=0.5,
-            tags=("tag1", "tag2")
+            tags=("tag1", "tag2"),
         )
         assert len(item.tags) == 2
 
@@ -180,7 +180,7 @@ class TestIntelQuery:
             context="security analysis",
             categories=(IntelCategory.SECURITY, IntelCategory.THREAT),
             min_priority=IntelPriority.HIGH,
-            max_results=10
+            max_results=10,
         )
         assert len(query.categories) == 2
         assert query.min_priority == IntelPriority.HIGH
@@ -191,21 +191,13 @@ class TestIntelResponse:
 
     def test_response_is_frozen(self):
         """IntelResponse is immutable."""
-        response = IntelResponse(
-            items=(),
-            query=IntelQuery(context="test"),
-            total_available=0
-        )
+        response = IntelResponse(items=(), query=IntelQuery(context="test"), total_available=0)
         with pytest.raises(Exception):
             response.total_available = 10
 
     def test_has_critical_false(self):
         """has_critical is False when no critical items."""
-        response = IntelResponse(
-            items=(),
-            query=IntelQuery(context="test"),
-            total_available=0
-        )
+        response = IntelResponse(items=(), query=IntelQuery(context="test"), total_available=0)
         assert not response.has_critical
 
     def test_has_critical_true(self):
@@ -217,22 +209,14 @@ class TestIntelResponse:
             summary="Critical",
             details="",
             source_naga="test",
-            relevance_score=1.0
+            relevance_score=1.0,
         )
-        response = IntelResponse(
-            items=(item,),
-            query=IntelQuery(context="test"),
-            total_available=1
-        )
+        response = IntelResponse(items=(item,), query=IntelQuery(context="test"), total_available=1)
         assert response.has_critical
 
     def test_has_threats_false(self):
         """has_threats is False when no threat items."""
-        response = IntelResponse(
-            items=(),
-            query=IntelQuery(context="test"),
-            total_available=0
-        )
+        response = IntelResponse(items=(), query=IntelQuery(context="test"), total_available=0)
         assert not response.has_threats
 
     def test_has_threats_true(self):
@@ -244,13 +228,9 @@ class TestIntelResponse:
             summary="Threat",
             details="",
             source_naga="test",
-            relevance_score=0.9
+            relevance_score=0.9,
         )
-        response = IntelResponse(
-            items=(item,),
-            query=IntelQuery(context="test"),
-            total_available=1
-        )
+        response = IntelResponse(items=(item,), query=IntelQuery(context="test"), total_available=1)
         assert response.has_threats
 
 
@@ -327,13 +307,8 @@ class TestNullIntelBridge:
         """ingest_flood_observation returns None."""
         bridge = NullIntelBridge()
         from vibe_core.protocols.naga.flood import FloodObservation
-        obs = FloodObservation(
-            observation_type="test",
-            severity="info",
-            source="test",
-            summary="Test",
-            details=()
-        )
+
+        obs = FloodObservation(observation_type="test", severity="info", source="test", summary="Test", details=())
         result = bridge.ingest_flood_observation(obs)
         assert result is None
 
@@ -367,30 +342,29 @@ class TestIntelBridgeProtocolContract:
 
     def test_protocol_is_runtime_checkable(self):
         """Protocol can be checked at runtime."""
-        assert hasattr(IntelBridgeProtocol, '__protocol_attrs__') or \
-               hasattr(IntelBridgeProtocol, '_is_protocol')
+        assert hasattr(IntelBridgeProtocol, "__protocol_attrs__") or hasattr(IntelBridgeProtocol, "_is_protocol")
 
     def test_has_query_methods(self):
         """Protocol has query methods."""
-        methods = ['query', 'query_for_chat']
+        methods = ["query", "query_for_chat"]
         for method in methods:
             assert method in dir(IntelBridgeProtocol)
 
     def test_has_direct_access_methods(self):
         """Protocol has direct access methods."""
-        methods = ['get_recent', 'get_critical', 'get_threats']
+        methods = ["get_recent", "get_critical", "get_threats"]
         for method in methods:
             assert method in dir(IntelBridgeProtocol)
 
     def test_has_subscription_methods(self):
         """Protocol has subscription methods."""
-        methods = ['subscribe', 'unsubscribe']
+        methods = ["subscribe", "unsubscribe"]
         for method in methods:
             assert method in dir(IntelBridgeProtocol)
 
     def test_has_discovery_methods(self):
         """Protocol has discovery methods."""
-        methods = ['get_available_categories', 'get_active_nagas']
+        methods = ["get_available_categories", "get_active_nagas"]
         for method in methods:
             assert method in dir(IntelBridgeProtocol)
 
@@ -401,6 +375,7 @@ class TestStrictTyping:
     def test_intel_item_no_any(self):
         """IntelItem has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(IntelItem)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"IntelItem.{field_name} uses Any"
@@ -408,6 +383,7 @@ class TestStrictTyping:
     def test_intel_query_no_any(self):
         """IntelQuery has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(IntelQuery)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"IntelQuery.{field_name} uses Any"
@@ -415,6 +391,7 @@ class TestStrictTyping:
     def test_intel_response_no_any(self):
         """IntelResponse has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(IntelResponse)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"IntelResponse.{field_name} uses Any"
@@ -432,7 +409,7 @@ class TestImmutability:
             summary="Test",
             details="",
             source_naga="test",
-            relevance_score=0.5
+            relevance_score=0.5,
         )
         with pytest.raises(Exception):
             item.item_id = "changed"
@@ -445,10 +422,6 @@ class TestImmutability:
 
     def test_intel_response_immutable(self):
         """IntelResponse is immutable."""
-        response = IntelResponse(
-            items=(),
-            query=IntelQuery(context="test"),
-            total_available=0
-        )
+        response = IntelResponse(items=(), query=IntelQuery(context="test"), total_available=0)
         with pytest.raises(Exception):
             response.items = ()

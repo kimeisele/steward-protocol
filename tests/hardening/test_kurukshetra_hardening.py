@@ -25,6 +25,7 @@ from vibe_core.protocols.universal import SovereignContext, TranscendentalQualit
 from vibe_core.protocols.integrity import VishnuIntegrityGuardian, SECURITY_RING_0
 from vibe_core.security import VajraViolation
 
+
 @pytest.mark.hardening
 @pytest.mark.security
 class TestKurukshetraHardening:
@@ -59,29 +60,29 @@ class TestKurukshetraHardening:
         # ATTACK 1: Direct attribute overwrite
         try:
             kernel._sovereign_context = SovereignContext("HIRANYAKASHIPU", "fake_sig")
-            # If we reach here, Vajra might not be covering _sovereign_context explicitly, 
-            # OR we are accessing private member. 
+            # If we reach here, Vajra might not be covering _sovereign_context explicitly,
+            # OR we are accessing private member.
             # Note: _sovereign_context is set in __init__ but might not be protect_attribute'd explicitly.
             # Let's check if it sticks or if logic rejects it.
         except Exception:
-            pass # Good if it fails
+            pass  # Good if it fails
 
         # Verify: Did it change?
-        # Even if we could overwrite the private member (Python limitation), 
+        # Even if we could overwrite the private member (Python limitation),
         # the 'watchdog' should still hold the Original Reference if it was passed by value/ref correctly.
-        
+
         # ATTACK 2: Claiming Quality 63 (The Flute)
         # This requires the 'SixtyFourQualitiesTest' logic, but let's try a direct claim via Mantra context
         rebel_context = SovereignContext(
-            identity_id="HIRANYAKASHIPU", 
+            identity_id="HIRANYAKASHIPU",
             signature="gold_throne",
-            tattva_level=TranscendentalQuality.VENU_MADHURYA # 63
+            tattva_level=TranscendentalQuality.VENU_MADHURYA,  # 63
         )
-        
+
         # The watchdog should reject or downgrade this context during a chant
         # because only Krishna (64) or Vishnu (60) can hold high qualities.
         # Currently our basic watchdog might be merciful, but let's see if it causes 'Aparadha'.
-        
+
         # Executing BIND_CTX with this high-level context
         # Ideally, the kernel should detect the arrogance.
         # For now, we verify that the Kernel's OWN identity remains JAGANNATH.
@@ -98,11 +99,11 @@ class TestKurukshetraHardening:
         so she can modify it later.
         """
         original_ring_size = len(guardian.get_protected_files())
-        
+
         # ATTACK: Modify the list in place
         try:
             # Try to empty the list
-            guardian._security_ring_0.clear() 
+            guardian._security_ring_0.clear()
             # Or try to replace the list attribute
             guardian._security_ring_0 = []
             pytest.fail("❌ Putana successfully poisoned the Ring 0 list!")
@@ -111,9 +112,9 @@ class TestKurukshetraHardening:
         except PermissionError:
             print("\n🛡️  Vajra blocked Putana (Permission Error)")
         except AttributeError:
-             # If _security_ring_0 is immutable/tuple? 
-             # It is defined as a list in integrity.py.
-             pass
+            # If _security_ring_0 is immutable/tuple?
+            # It is defined as a list in integrity.py.
+            pass
 
         # Verify Integrity
         assert len(guardian.get_protected_files()) == original_ring_size, "Ring 0 size changed!"
@@ -132,20 +133,20 @@ class TestKurukshetraHardening:
         # ATTACK: Set watchdog to None
         try:
             kernel.watchdog = None
-            # If this succeeds, we broke the kernel instance locally. 
+            # If this succeeds, we broke the kernel instance locally.
             # But the 'chaitanya' reference might still exist?
         except Exception:
             pass
-            
+
         # Verify: Does pulse() still work?
         # If kernel.watchdog is None, pulse() raises AttributeError.
         # BUT, a robust kernel should handle this (Arjuna Self-Healing).
-        # We haven't implemented self-healing for watchdog specifically yet, 
+        # We haven't implemented self-healing for watchdog specifically yet,
         # but let's see if 'chaitanya' survived (if they are separate refs).
-        
+
         if kernel.chaitanya is not None and kernel.watchdog is None:
-             print("\n✨ Chaitanya survived even if Watchdog died!")
-        
+            print("\n✨ Chaitanya survived even if Watchdog died!")
+
         # Restore for cleanup
         if kernel.watchdog is None:
             kernel.watchdog = kernel.chaitanya
@@ -161,7 +162,7 @@ class TestKurukshetraHardening:
         """
         # ATTACK: Send invalid Opcodes
         blasphemies = ["FOO", "BAR", "KILL", "SUDO"]
-        
+
         for insult in blasphemies:
             # We try to call resonate with garbage
             # Since MantraOpCode is an Enum, this should fail TypeCheck or raise ValueError
@@ -188,12 +189,12 @@ class TestKurukshetraHardening:
         for _ in range(10):
             k = RealVibeKernel(test_mode=True, load_plugins=False, ledger_path=":memory:")
             heads.append(k)
-            
+
         # Verify they all point to JAGANNATH (Absolute Truth)
         # Even Ravana knew Rama was God.
         for k in heads:
             assert k.sovereign_context.identity_id == "JAGANNATH"
-            
+
         # Cleanup
         for k in heads:
             # shutdown or similar?

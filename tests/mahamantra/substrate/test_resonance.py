@@ -157,6 +157,7 @@ class TestLotusIntegration:
         """mahamantra.resonate routes to highest-scoring guardian."""
         # Ensure fresh YAML load (pytest may have stale cache)
         from vibe_core.mahamantra.substrate.intents import reload_intents, get_intents, get_yaml_path
+
         reload_intents()
 
         # Debug: verify intents loaded
@@ -211,6 +212,7 @@ class TestLotusIntegration:
         """When multiple guardians could match, highest score wins."""
         # Ensure fresh YAML load
         from vibe_core.mahamantra.substrate.intents import reload_intents
+
         reload_intents()
 
         # Use direct protocol testing instead of Lotus
@@ -232,6 +234,7 @@ class TestLotusIntegration:
 
         # Verify keywords are in correct positions
         from vibe_core.mahamantra.substrate.intents import get_intents
+
         assert "help" in get_intents(2), "'help' should be in NARADA (position 2)"
         assert "understand" in get_intents(6), "'understand' should be in KAPILA (position 6)"
 
@@ -291,8 +294,9 @@ class TestResonanceThresholds:
 
         score = TestProtocol.get_resonance("boot")
 
-        assert score > ResonanceHarmonics.THRESHOLD_REFINE, \
+        assert score > ResonanceHarmonics.THRESHOLD_REFINE, (
             f"Single match {score} should exceed THRESHOLD_REFINE {ResonanceHarmonics.THRESHOLD_REFINE}"
+        )
 
     def test_single_match_near_auto_threshold(self):
         """Single match should be near THRESHOLD_AUTO (0.667)."""
@@ -304,5 +308,6 @@ class TestResonanceThresholds:
         score = TestProtocol.get_resonance("boot")
 
         # Should be close to but may slightly exceed due to position factor
-        assert abs(score - ResonanceHarmonics.THRESHOLD_AUTO) < 0.1, \
+        assert abs(score - ResonanceHarmonics.THRESHOLD_AUTO) < 0.1, (
             f"Single match {score} should be near THRESHOLD_AUTO {ResonanceHarmonics.THRESHOLD_AUTO}"
+        )

@@ -42,6 +42,7 @@ from vibe_core.protocols.substrate.mantra.lotus import LOTUS_PARAMPARA
 # TEST SAMKHYA → ADOPTION INTEGRATION
 # =============================================================================
 
+
 class TestSamkhyaAdoptionIntegration:
     """Test that Samkhya element analysis aligns with adoption pipeline."""
 
@@ -204,7 +205,9 @@ class TestElementCategoryAdoption:
         # MANAS, BUDDHI → Kapila, Yamaraja (DHARMA)
         samkhya = get_samkhya()
         antahkarana = samkhya.enumerate_by_category(
-            __import__('vibe_core.protocols.mahajanas.kapila.samkhya', fromlist=['PrakritiCategory']).PrakritiCategory.ANTAHKARANA
+            __import__(
+                "vibe_core.protocols.mahajanas.kapila.samkhya", fromlist=["PrakritiCategory"]
+            ).PrakritiCategory.ANTAHKARANA
         )
 
         for element in antahkarana:
@@ -216,6 +219,7 @@ class TestElementCategoryAdoption:
         """KARMENDRIYA elements (working senses) adopt to various quarters."""
         # Working senses are distributed across quarters
         from vibe_core.protocols.mahajanas.kapila.samkhya import PrakritiCategory
+
         samkhya = get_samkhya()
         karmendriya = samkhya.enumerate_by_category(PrakritiCategory.KARMENDRIYA)
 

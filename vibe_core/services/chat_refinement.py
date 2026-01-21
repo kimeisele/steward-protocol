@@ -62,10 +62,22 @@ MAHAJANA_DHARMAS: Dict[str, str] = {
 
 # OpCodes per position (16 positions)
 POSITION_OPCODES: List[str] = [
-    "SYS_WAKE", "LOAD_ROOT", "ALLOC_MEM", "BIND_CTX",
-    "ASSERT_TRUTH", "RESOLVE_REQ", "GARBAGE_COLLECT", "PULSE_SYNC",
-    "FETCH_RES", "EXEC_SERVICE", "CHECK_DHARMA", "COMMIT_LOG",
-    "CACHE_STATE", "OPTIMIZE", "YIELD_CPU", "RESET_IP"
+    "SYS_WAKE",
+    "LOAD_ROOT",
+    "ALLOC_MEM",
+    "BIND_CTX",
+    "ASSERT_TRUTH",
+    "RESOLVE_REQ",
+    "GARBAGE_COLLECT",
+    "PULSE_SYNC",
+    "FETCH_RES",
+    "EXEC_SERVICE",
+    "CHECK_DHARMA",
+    "COMMIT_LOG",
+    "CACHE_STATE",
+    "OPTIMIZE",
+    "YIELD_CPU",
+    "RESET_IP",
 ]
 
 
@@ -128,13 +140,15 @@ def discover_refinement_paths(
             mahajana = get_position_mahajana(position)
             dharma_desc = get_dharma_description(mahajana)
 
-            paths.append(RefinementPath(
-                mahajana=mahajana,
-                position=position,
-                description=dharma_desc,
-                confidence=min(score + resonance.get("magnitude", 0.5) * 0.5, 1.0),
-                opcode=POSITION_OPCODES[position],
-            ))
+            paths.append(
+                RefinementPath(
+                    mahajana=mahajana,
+                    position=position,
+                    description=dharma_desc,
+                    confidence=min(score + resonance.get("magnitude", 0.5) * 0.5, 1.0),
+                    opcode=POSITION_OPCODES[position],
+                )
+            )
 
     # Sort by confidence, return top N
     paths.sort(key=lambda p: p.confidence, reverse=True)
@@ -169,9 +183,7 @@ class RefinementHandler:
         self._sessions = sessions
         self._refinement_states = refinement_states
 
-    def create_silence_response(
-        self, message: str, context: ChatContext, magnitude: float
-    ) -> ChatResponse:
+    def create_silence_response(self, message: str, context: ChatContext, magnitude: float) -> ChatResponse:
         """
         Create SILENCE response when resonance is too low.
 
@@ -200,9 +212,7 @@ class RefinementHandler:
             error="NO_RESONANCE",
         )
 
-    async def create_refinement_response(
-        self, message: str, context: ChatContext, resonance: Dict
-    ) -> ChatResponse:
+    async def create_refinement_response(self, message: str, context: ChatContext, resonance: Dict) -> ChatResponse:
         """
         Create REFINEMENT response when resonance is ambiguous (0.4-0.7).
 
@@ -217,7 +227,7 @@ class RefinementHandler:
 
         # Build prompt
         path_options = "\n".join(
-            f"  [{i+1}] {p.mahajana.upper()}: {p.description} (resonance={p.confidence:.2f})"
+            f"  [{i + 1}] {p.mahajana.upper()}: {p.description} (resonance={p.confidence:.2f})"
             for i, p in enumerate(paths)
         )
         prompt = (
@@ -257,9 +267,7 @@ class RefinementHandler:
             confidence=resonance["magnitude"],
         )
 
-    def parse_user_selection(
-        self, message: str, request: RefinementRequest
-    ) -> Optional[RefinementPath]:
+    def parse_user_selection(self, message: str, request: RefinementRequest) -> Optional[RefinementPath]:
         """
         Parse user's response to a RefinementRequest.
 

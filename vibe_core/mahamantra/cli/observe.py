@@ -174,6 +174,7 @@ def observe_protocols() -> List[ProtocolStatus]:
                 protocol_class = getattr(mod, name)
                 try:
                     from vibe_core.di import ServiceRegistry
+
                     connected = ServiceRegistry.get(protocol_class) is not None
                 except (ImportError, Exception):
                     connected = False

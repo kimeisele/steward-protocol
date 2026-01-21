@@ -203,6 +203,7 @@ class TestSamkhyaTypes:
     def test_enforce_context_integrity(self):
         """EnforceContext defaults."""
         from vibe_core.protocols.universal.types import SovereignContext
+
         sov = SovereignContext(identity_id="test", signature="sig")
         ctx = EnforceContext("agent1", "db", "write", sovereign=sov)
         assert ctx.caller_id == "agent1"

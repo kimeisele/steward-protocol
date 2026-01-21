@@ -162,11 +162,13 @@ class ScanCommand(NagaCommandBase):
                 output_lines.append("[GAPS] Identifying protocol gaps")
                 output_lines.append("[MAHAJANA] Checking guardian assignments")
 
-            output_lines.extend([
-                "=" * 60,
-                f"    Scanned {len(py_files)} Python files",
-                "-" * 60,
-            ])
+            output_lines.extend(
+                [
+                    "=" * 60,
+                    f"    Scanned {len(py_files)} Python files",
+                    "-" * 60,
+                ]
+            )
 
             # Deep scan includes all scan types
             if deep:

@@ -2,7 +2,7 @@
 TEST SSOT INTEGRITY - seed.py connection
 ========================================
 
-Verifies that seed.py is the Single Source of Truth (SSOT) for all 
+Verifies that seed.py is the Single Source of Truth (SSOT) for all
 mathematical and ontological constants across the mahamantra protocols.
 
 "The seed is the origin of everything."
@@ -209,6 +209,7 @@ class TestKernelSingularityIntegrity:
     def test_mahamantra_instance_limits(self) -> None:
         """Mahamantra instance must use seed limits."""
         from vibe_core.mahamantra import mahamantra
+
         assert len(mahamantra) == seed.WORDS
         assert mahamantra.PARAMPARA == seed.PARAMPARA
 
@@ -219,6 +220,7 @@ class TestProtocolCompliance:
     def test_singularity_protocol_identity(self) -> None:
         """SingularityProtocol must be correctly identified."""
         from vibe_core.mahamantra.protocols._singularity import SingularityProtocol
+
         identity = SingularityProtocol.get_identity()
         assert identity.name == "SingularityProtocol"
         assert identity.position == 0
@@ -227,6 +229,7 @@ class TestProtocolCompliance:
     def test_lila_protocol_identity(self) -> None:
         """LilaProtocol must be correctly identified."""
         from vibe_core.mahamantra.protocols._lila import LilaProtocol
+
         identity = LilaProtocol.get_identity()
         assert identity.name == "LilaProtocol"
         assert identity.position == 6

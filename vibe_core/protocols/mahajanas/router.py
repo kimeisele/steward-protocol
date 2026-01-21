@@ -144,10 +144,10 @@ _VYUHA_ROUTING_TABLE: Dict[MantraOpCode, MahajanaRoute] = _derive_routing_table(
 
 # HEAD OpCodes (positions 0, 4, 8, 12 - owned by Avataras per seed.py)
 HEAD_OPCODES: set = {
-    MantraOpCode.SYS_WAKE,     # Position 0: VYASA (Genesis HEAD)
+    MantraOpCode.SYS_WAKE,  # Position 0: VYASA (Genesis HEAD)
     MantraOpCode.COMPILE_AST,  # Position 4: PRITHU (Dharma HEAD)
-    MantraOpCode.EXEC_OP,      # Position 8: PARASHURAMA (Karma HEAD)
-    MantraOpCode.YIELD_CPU,    # Position 12: NRISIMHA (Moksha HEAD)
+    MantraOpCode.EXEC_OP,  # Position 8: PARASHURAMA (Karma HEAD)
+    MantraOpCode.YIELD_CPU,  # Position 12: NRISIMHA (Moksha HEAD)
 }
 
 # -----------------------------------------------------------------------------

@@ -188,22 +188,22 @@ class TestTickToWord:
     def test_mahamantra_sequence(self) -> None:
         """The 16 words follow the Mahamantra pattern."""
         expected = [
-            HolyName.HARE,     # 0
+            HolyName.HARE,  # 0
             HolyName.KRISHNA,  # 1
-            HolyName.HARE,     # 2
+            HolyName.HARE,  # 2
             HolyName.KRISHNA,  # 3
             HolyName.KRISHNA,  # 4
             HolyName.KRISHNA,  # 5
-            HolyName.HARE,     # 6
-            HolyName.HARE,     # 7
-            HolyName.HARE,     # 8
-            HolyName.RAMA,     # 9
-            HolyName.HARE,     # 10
-            HolyName.RAMA,     # 11
-            HolyName.RAMA,     # 12
-            HolyName.RAMA,     # 13
-            HolyName.HARE,     # 14
-            HolyName.HARE,     # 15
+            HolyName.HARE,  # 6
+            HolyName.HARE,  # 7
+            HolyName.HARE,  # 8
+            HolyName.RAMA,  # 9
+            HolyName.HARE,  # 10
+            HolyName.RAMA,  # 11
+            HolyName.RAMA,  # 12
+            HolyName.RAMA,  # 13
+            HolyName.HARE,  # 14
+            HolyName.HARE,  # 15
         ]
         for pos, name in enumerate(expected):
             assert tick_to_word(pos) == name, f"Position {pos} should be {name}"

@@ -1,8 +1,10 @@
 import pytest
 import time
 from typing import List
+
 # ONE Yamaraja - all aspects in mahajanas/yamaraja (acintya)
 from vibe_core.protocols.mahajanas.yamaraja import secure_contract, YamarajaPhysics
+
 
 # 1. MOCK FUNCTION: FAST (Should Pass)
 @secure_contract(baseline_metric=100.0)
@@ -10,16 +12,19 @@ def fast_function():
     # Very fast
     return "Fast"
 
+
 # 2. MOCK FUNCTION: SLOW (Should Fail)
-@secure_contract(baseline_metric=10000000.0) # Impossible baseline
+@secure_contract(baseline_metric=10000000.0)  # Impossible baseline
 def slow_function():
-    time.sleep(0.01) # Deliberate slowdown
+    time.sleep(0.01)  # Deliberate slowdown
     return "Slow"
 
+
 # 3. TYPE SAFETY TEST
-@secure_contract(baseline_metric=0.0) # Baseline 0 always passes
+@secure_contract(baseline_metric=0.0)  # Baseline 0 always passes
 def typed_function(data: List[str]) -> str:
     return "".join(data)
+
 
 def test_contract_enforcement():
     """
@@ -35,9 +40,10 @@ def test_contract_enforcement():
     # 2. Invalid Execution (The Danda)
     with pytest.raises(SystemError) as excinfo:
         slow_function()
-    
+
     assert "YAMARAJA VIOLATION" in str(excinfo.value)
     assert "STAGNATION" in str(excinfo.value)
+
 
 def test_typing_integrity():
     """
@@ -47,7 +53,8 @@ def test_typing_integrity():
     # The Decorator ParamSpec ensures tools like MyPy would be happy.
     val: str = typed_function(["Hara", "Krishna"])
     assert val == "HaraKrishna"
-    
+
+
 def test_mock_judgment():
     """
     Directly test the logic.

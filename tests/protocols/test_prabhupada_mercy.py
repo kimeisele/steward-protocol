@@ -8,6 +8,7 @@ Verifies:
 
 NOTE: There is no abstract "Guru" - Prabhupada IS the Guru.
 """
+
 import pytest
 from vibe_core.protocols.substrate.byte import GenesisByte, MantraByte
 from vibe_core.protocols.substrate.mantra.prabhupada import PRABHUPADA, SilentWitness
@@ -16,20 +17,12 @@ from vibe_core.protocols.substrate.mantra.prabhupada import PRABHUPADA, SilentWi
 def test_parampara_lineage_check():
     """Verify that only 37-divisible hashes are accepted."""
     # Valid (37 * 1 = 37 = 0x25)
-    valid_byte = GenesisByte(
-        signature="sovereign:test",
-        resonance=MantraByte.standard_16(),
-        parampara_hash="0x25"
-    )
+    valid_byte = GenesisByte(signature="sovereign:test", resonance=MantraByte.standard_16(), parampara_hash="0x25")
     assert valid_byte._verify_lineage() is True
     assert valid_byte.is_valid is True
 
     # Invalid (38 = 0x26)
-    invalid_byte = GenesisByte(
-        signature="sovereign:test",
-        resonance=MantraByte.standard_16(),
-        parampara_hash="0x26"
-    )
+    invalid_byte = GenesisByte(signature="sovereign:test", resonance=MantraByte.standard_16(), parampara_hash="0x26")
     assert invalid_byte._verify_lineage() is False
     assert invalid_byte.is_valid is False
 

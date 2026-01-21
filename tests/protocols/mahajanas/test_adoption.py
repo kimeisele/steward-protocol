@@ -119,6 +119,7 @@ EMPTY_PROTOCOL = """
 # TEST OPCODE DETECTION
 # =============================================================================
 
+
 class TestOpcodeDetection:
     """Test MantraOpCode detection from source code."""
 
@@ -179,6 +180,7 @@ class TestOpcodeDetection:
 # TEST SHUDHI VERIFICATION
 # =============================================================================
 
+
 class TestShudhiVerification:
     """Test Shudhi (cleaning) verification."""
 
@@ -238,6 +240,7 @@ class TestShudhiVerification:
 # =============================================================================
 # TEST ADOPTION PIPELINE
 # =============================================================================
+
 
 class TestAdoptionPipeline:
     """Test the full adoption pipeline."""
@@ -317,6 +320,7 @@ class TestAdoptionPipeline:
 # TEST GLOBAL PIPELINE (SINGLETON)
 # =============================================================================
 
+
 class TestGlobalPipeline:
     """Test the global pipeline singleton."""
 
@@ -345,6 +349,7 @@ class TestGlobalPipeline:
 # =============================================================================
 # TEST BATCH OPERATIONS
 # =============================================================================
+
 
 class TestBatchOperations:
     """Test batch adoption operations."""
@@ -385,15 +390,13 @@ class TestBatchOperations:
         brahma_protocols = pipeline.get_by_mahajana(Mahajana.BRAHMA)
 
         assert len(brahma_protocols) >= 1
-        assert all(
-            r["assigned_mahajana"] == "brahma"
-            for r in brahma_protocols
-        )
+        assert all(r["assigned_mahajana"] == "brahma" for r in brahma_protocols)
 
 
 # =============================================================================
 # TEST WATERTIGHT TYPES
 # =============================================================================
+
 
 class TestWatertightTypes:
     """Test that all types are WATERTIGHT (no Any)."""
@@ -454,6 +457,7 @@ class TestWatertightTypes:
 # =============================================================================
 # TEST NO MANUAL WIRING
 # =============================================================================
+
 
 class TestNoManualWiring:
     """Test that there's NO MANUAL WIRING - Mahamantra decides everything."""

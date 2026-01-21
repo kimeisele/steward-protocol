@@ -71,10 +71,10 @@ class TestDharmaPrinciples:
 
     def test_principle_values(self):
         """Principles have correct values."""
-        assert DharmaPrinciple.DAYA == 0      # Mercy
-        assert DharmaPrinciple.SATYAM == 1   # Truthfulness
-        assert DharmaPrinciple.TAPAS == 2    # Austerity
-        assert DharmaPrinciple.SAUCAM == 3   # Cleanliness
+        assert DharmaPrinciple.DAYA == 0  # Mercy
+        assert DharmaPrinciple.SATYAM == 1  # Truthfulness
+        assert DharmaPrinciple.TAPAS == 2  # Austerity
+        assert DharmaPrinciple.SAUCAM == 3  # Cleanliness
 
 
 class TestLegitimacyFormula:
@@ -122,10 +122,18 @@ class TestGAD000Audit:
     def test_full_compliance(self):
         """Full compliance has all checks passing."""
         audit = GAD000Audit(
-            discoverability=True, observability=True, parseability=True,
-            composability=True, idempotency=True, recoverability=True,
-            sovereign_present=True, signature_valid=True,
-            daya=True, satyam=True, tapas=True, saucam=True
+            discoverability=True,
+            observability=True,
+            parseability=True,
+            composability=True,
+            idempotency=True,
+            recoverability=True,
+            sovereign_present=True,
+            signature_valid=True,
+            daya=True,
+            satyam=True,
+            tapas=True,
+            saucam=True,
         )
         assert audit.criteria_score == 6
         assert audit.dharma_score == 4
@@ -135,10 +143,18 @@ class TestGAD000Audit:
     def test_partial_compliance(self):
         """Partial compliance (4-5 criteria)."""
         audit = GAD000Audit(
-            discoverability=True, observability=True, parseability=True,
-            composability=True, idempotency=True, recoverability=False,
-            sovereign_present=True, signature_valid=True,
-            daya=True, satyam=True, tapas=True, saucam=True
+            discoverability=True,
+            observability=True,
+            parseability=True,
+            composability=True,
+            idempotency=True,
+            recoverability=False,
+            sovereign_present=True,
+            signature_valid=True,
+            daya=True,
+            satyam=True,
+            tapas=True,
+            saucam=True,
         )
         assert audit.criteria_score == 5
         assert not audit.is_compliant
@@ -147,10 +163,18 @@ class TestGAD000Audit:
     def test_fail_compliance(self):
         """Fail compliance (≤3 criteria)."""
         audit = GAD000Audit(
-            discoverability=True, observability=True, parseability=True,
-            composability=False, idempotency=False, recoverability=False,
-            sovereign_present=True, signature_valid=True,
-            daya=True, satyam=True, tapas=True, saucam=True
+            discoverability=True,
+            observability=True,
+            parseability=True,
+            composability=False,
+            idempotency=False,
+            recoverability=False,
+            sovereign_present=True,
+            signature_valid=True,
+            daya=True,
+            satyam=True,
+            tapas=True,
+            saucam=True,
         )
         assert audit.criteria_score == 3
         assert not audit.is_compliant
@@ -159,10 +183,18 @@ class TestGAD000Audit:
     def test_no_sovereign_fails(self):
         """Missing sovereign fails compliance."""
         audit = GAD000Audit(
-            discoverability=True, observability=True, parseability=True,
-            composability=True, idempotency=True, recoverability=True,
-            sovereign_present=False, signature_valid=False,
-            daya=True, satyam=True, tapas=True, saucam=True
+            discoverability=True,
+            observability=True,
+            parseability=True,
+            composability=True,
+            idempotency=True,
+            recoverability=True,
+            sovereign_present=False,
+            signature_valid=False,
+            daya=True,
+            satyam=True,
+            tapas=True,
+            saucam=True,
         )
         assert audit.criteria_score == 6
         assert not audit.is_compliant  # Because no sovereign
@@ -170,10 +202,18 @@ class TestGAD000Audit:
     def test_no_dharma_fails(self):
         """Missing dharma fails compliance."""
         audit = GAD000Audit(
-            discoverability=True, observability=True, parseability=True,
-            composability=True, idempotency=True, recoverability=True,
-            sovereign_present=True, signature_valid=True,
-            daya=False, satyam=False, tapas=False, saucam=False
+            discoverability=True,
+            observability=True,
+            parseability=True,
+            composability=True,
+            idempotency=True,
+            recoverability=True,
+            sovereign_present=True,
+            signature_valid=True,
+            daya=False,
+            satyam=False,
+            tapas=False,
+            saucam=False,
         )
         assert audit.dharma_score == 0
         assert not audit.is_compliant  # Because no dharma
@@ -181,10 +221,18 @@ class TestGAD000Audit:
     def test_marker_generation(self):
         """Audit generates valid code marker."""
         audit = GAD000Audit(
-            discoverability=True, observability=True, parseability=False,
-            composability=True, idempotency=True, recoverability=True,
-            sovereign_present=True, signature_valid=True,
-            daya=True, satyam=True, tapas=False, saucam=True
+            discoverability=True,
+            observability=True,
+            parseability=False,
+            composability=True,
+            idempotency=True,
+            recoverability=True,
+            sovereign_present=True,
+            signature_valid=True,
+            daya=True,
+            satyam=True,
+            tapas=False,
+            saucam=True,
         )
         marker = audit.to_marker()
         assert "GAD-000:" in marker
@@ -197,6 +245,7 @@ class TestGAD000Audit:
 
 class MockSovereign:
     """Mock sovereign for testing."""
+
     sovereign_id = "test_sovereign"
     public_key = b"test_key"
 
@@ -284,7 +333,7 @@ class TestMantraHeartbeat:
         # KRISHNA also passes (acintya - always present)
         assert heartbeat.chant_word(None) == True
         assert heartbeat.last_krishna_check == True  # Krishna never fails
-        assert heartbeat.krishna_present == True     # Always True
+        assert heartbeat.krishna_present == True  # Always True
 
         # But jiva is NOT connected (no sovereign)
         assert heartbeat.jiva_connected == False
@@ -332,6 +381,7 @@ class TestMantraHeartbeat:
 
         # Position 0 = HARE
         from vibe_core.protocols.substrate.byte import HolyName
+
         assert heartbeat.current_word == HolyName.HARE
         assert heartbeat.current_pada.iast == "hare"
 
@@ -369,7 +419,7 @@ class TestMantraHeartbeat:
         assert "krishna" in summary
         assert "rama" in summary
         assert "krishna_present" in summary  # Always True (acintya)
-        assert "jiva_connected" in summary   # Jiva's connection state
+        assert "jiva_connected" in summary  # Jiva's connection state
         assert "state" in summary
         assert "word_position" in summary
         assert "mantra_count" in summary
@@ -412,7 +462,7 @@ class TestConstitutionalNumbers:
 
     def test_6x6_matrix(self):
         """The 6×6 matrix of criteria."""
-        assert CRITERIA_COUNT ** 2 == KSHETRA_SIZE
+        assert CRITERIA_COUNT**2 == KSHETRA_SIZE
 
 
 class TestTheFormula:

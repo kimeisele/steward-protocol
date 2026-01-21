@@ -30,6 +30,7 @@ from vibe_core.services.brahma_service import BrahmaService
 from vibe_core.services.bhishma_service import BhishmaService
 from vibe_core.services.janaka_service import JanakaService
 
+
 class TestKernelStructure:
     """
     Structural verification of the Vishnu Kernel.
@@ -45,7 +46,7 @@ class TestKernelStructure:
         assert hasattr(kernel, "chant_mahamantra")
         assert hasattr(kernel, "chant")
         assert hasattr(kernel, "surrender")
-        
+
         # Verify signature of chant_mahamantra
         sig = inspect.signature(kernel.chant_mahamantra)
         assert "context" in sig.parameters
@@ -65,18 +66,19 @@ class TestKernelStructure:
         Verify Mahajana Services implement their protocols.
         """
         from vibe_core.ledger import InMemoryLedger
+
         ledger = InMemoryLedger()
-        
+
         # Brahma
         brahma = BrahmaService(ledger)
         assert isinstance(brahma, BrahmaProtocol)
         assert brahma.owner.name == "BRAHMA"
-        
+
         # Janaka
         janaka = JanakaService()
         assert isinstance(janaka, JanakaProtocol)
         assert janaka.owner.name == "JANAKA"
-        
+
         # Bhishma
         bhishma = BhishmaService(ledger)
         assert isinstance(bhishma, BhishmaProtocol)
@@ -91,10 +93,10 @@ class TestKernelStructure:
         kernel_path = Path("vibe_core/kernel_impl.py")
         with open(kernel_path, "r") as f:
             lines = f.readlines()
-        
+
         raw_loc = len(lines)
         print(f"\nKERNEL LOC (RAW): {raw_loc}")
-        
+
         # We don't fail yet, but we track it.
         # assert raw_loc <= 1008, f"Kernel too fat! {raw_loc} > 1008"
 
@@ -103,16 +105,16 @@ class TestKernelStructure:
         Verify Kernel has wired the Mahajanas.
         """
         kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-        
+
         assert hasattr(kernel, "brahma")
         assert isinstance(kernel.brahma, BrahmaProtocol)
-        
+
         assert hasattr(kernel, "janaka")
         assert isinstance(kernel.janaka, JanakaProtocol)
-        
+
         assert hasattr(kernel, "bhishma")
         assert isinstance(kernel.bhishma, BhishmaProtocol)
 
+
 if __name__ == "__main__":
     sys.exit(pytest.main(["-v", __file__]))
-

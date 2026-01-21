@@ -130,14 +130,14 @@ class SubstrateRoute:
 # =============================================================================
 
 # The 5 Vargas (WHERE - Articulation Points)
-VARGA_KANTHYA: Final[int] = 0   # Throat/Guttural → KERNEL
-VARGA_TALAVYA: Final[int] = 1   # Palate → COGNITION
+VARGA_KANTHYA: Final[int] = 0  # Throat/Guttural → KERNEL
+VARGA_TALAVYA: Final[int] = 1  # Palate → COGNITION
 VARGA_MURDHANYA: Final[int] = 2  # Cerebral/Retroflex → LOGIC
-VARGA_DANTYA: Final[int] = 3    # Dental → INTERFACE
-VARGA_OSHTHYA: Final[int] = 4   # Labial/Lips → OUTPUT
+VARGA_DANTYA: Final[int] = 3  # Dental → INTERFACE
+VARGA_OSHTHYA: Final[int] = 4  # Labial/Lips → OUTPUT
 
 # The 5 Sthanas (HOW - Energy/Intensity)
-STHANA_SPARSHA: Final[int] = 0   # Unvoiced stop → minimal (0.2)
+STHANA_SPARSHA: Final[int] = 0  # Unvoiced stop → minimal (0.2)
 STHANA_MAHAPRANA: Final[int] = 1  # Aspirated → expansion (0.6)
 STHANA_GHOSHAVAT: Final[int] = 2  # Voiced → active (0.8)
 STHANA_GHOSHMAHA: Final[int] = 3  # Voiced aspirated → max (1.0)
@@ -146,47 +146,80 @@ STHANA_ANUNASIKA: Final[int] = 4  # Nasal → continuous (0.5)
 # Phoneme to Varga mapping (simplified for common letters)
 PHONEME_VARGA: Final[Dict[str, int]] = {
     # Gutturals (throat) - KERNEL operations
-    'k': VARGA_KANTHYA, 'g': VARGA_KANTHYA, 'c': VARGA_KANTHYA,
-    'q': VARGA_KANTHYA, 'x': VARGA_KANTHYA,
+    "k": VARGA_KANTHYA,
+    "g": VARGA_KANTHYA,
+    "c": VARGA_KANTHYA,
+    "q": VARGA_KANTHYA,
+    "x": VARGA_KANTHYA,
     # Palatals - COGNITION
-    'j': VARGA_TALAVYA, 'y': VARGA_TALAVYA, 'ch': VARGA_TALAVYA,
+    "j": VARGA_TALAVYA,
+    "y": VARGA_TALAVYA,
+    "ch": VARGA_TALAVYA,
     # Retroflexes - LOGIC
-    't': VARGA_MURDHANYA, 'd': VARGA_MURDHANYA, 'n': VARGA_MURDHANYA,
+    "t": VARGA_MURDHANYA,
+    "d": VARGA_MURDHANYA,
+    "n": VARGA_MURDHANYA,
     # Dentals - INTERFACE
-    's': VARGA_DANTYA, 'z': VARGA_DANTYA, 'l': VARGA_DANTYA,
-    'th': VARGA_DANTYA,
+    "s": VARGA_DANTYA,
+    "z": VARGA_DANTYA,
+    "l": VARGA_DANTYA,
+    "th": VARGA_DANTYA,
     # Labials (lips) - OUTPUT
-    'p': VARGA_OSHTHYA, 'b': VARGA_OSHTHYA, 'm': VARGA_OSHTHYA,
-    'f': VARGA_OSHTHYA, 'v': VARGA_OSHTHYA, 'w': VARGA_OSHTHYA,
+    "p": VARGA_OSHTHYA,
+    "b": VARGA_OSHTHYA,
+    "m": VARGA_OSHTHYA,
+    "f": VARGA_OSHTHYA,
+    "v": VARGA_OSHTHYA,
+    "w": VARGA_OSHTHYA,
     # Vowels default to throat (origin of sound)
-    'a': VARGA_KANTHYA, 'e': VARGA_TALAVYA, 'i': VARGA_TALAVYA,
-    'o': VARGA_OSHTHYA, 'u': VARGA_OSHTHYA,
+    "a": VARGA_KANTHYA,
+    "e": VARGA_TALAVYA,
+    "i": VARGA_TALAVYA,
+    "o": VARGA_OSHTHYA,
+    "u": VARGA_OSHTHYA,
     # Special: H and R (critical for Mahamantra)
-    'h': VARGA_KANTHYA,  # Aspirate - throat
-    'r': VARGA_MURDHANYA,  # Semivowel - retroflex
+    "h": VARGA_KANTHYA,  # Aspirate - throat
+    "r": VARGA_MURDHANYA,  # Semivowel - retroflex
 }
 
 # Phoneme to Sthana (energy) mapping
 PHONEME_STHANA: Final[Dict[str, int]] = {
     # Unvoiced stops - minimal energy
-    'k': STHANA_SPARSHA, 'p': STHANA_SPARSHA, 't': STHANA_SPARSHA,
+    "k": STHANA_SPARSHA,
+    "p": STHANA_SPARSHA,
+    "t": STHANA_SPARSHA,
     # Aspirated - expansion
-    'h': STHANA_MAHAPRANA, 'kh': STHANA_MAHAPRANA, 'ph': STHANA_MAHAPRANA,
+    "h": STHANA_MAHAPRANA,
+    "kh": STHANA_MAHAPRANA,
+    "ph": STHANA_MAHAPRANA,
     # Voiced - active
-    'g': STHANA_GHOSHAVAT, 'b': STHANA_GHOSHAVAT, 'd': STHANA_GHOSHAVAT,
-    'j': STHANA_GHOSHAVAT, 'v': STHANA_GHOSHAVAT, 'z': STHANA_GHOSHAVAT,
+    "g": STHANA_GHOSHAVAT,
+    "b": STHANA_GHOSHAVAT,
+    "d": STHANA_GHOSHAVAT,
+    "j": STHANA_GHOSHAVAT,
+    "v": STHANA_GHOSHAVAT,
+    "z": STHANA_GHOSHAVAT,
     # Voiced aspirated - maximum
-    'gh': STHANA_GHOSHMAHA, 'bh': STHANA_GHOSHMAHA, 'dh': STHANA_GHOSHMAHA,
+    "gh": STHANA_GHOSHMAHA,
+    "bh": STHANA_GHOSHMAHA,
+    "dh": STHANA_GHOSHMAHA,
     # Nasals - continuous
-    'm': STHANA_ANUNASIKA, 'n': STHANA_ANUNASIKA,
+    "m": STHANA_ANUNASIKA,
+    "n": STHANA_ANUNASIKA,
     # Sibilants - medium
-    's': STHANA_GHOSHAVAT, 'sh': STHANA_GHOSHAVAT,
+    "s": STHANA_GHOSHAVAT,
+    "sh": STHANA_GHOSHAVAT,
     # Semivowels - medium-high
-    'r': STHANA_GHOSHAVAT, 'l': STHANA_GHOSHAVAT,
-    'y': STHANA_GHOSHAVAT, 'w': STHANA_GHOSHAVAT,
+    "r": STHANA_GHOSHAVAT,
+    "l": STHANA_GHOSHAVAT,
+    "y": STHANA_GHOSHAVAT,
+    "w": STHANA_GHOSHAVAT,
     # Vowels - varies by openness
-    'a': STHANA_MAHAPRANA, 'e': STHANA_GHOSHAVAT, 'i': STHANA_SPARSHA,
-    'o': STHANA_GHOSHAVAT, 'u': STHANA_SPARSHA,
+    "a": STHANA_MAHAPRANA,
+    "e": STHANA_GHOSHAVAT,
+    "i": STHANA_SPARSHA,
+    "o": STHANA_GHOSHAVAT,
+    "u": STHANA_SPARSHA,
 }
 
 # Sthana to energy multiplier
@@ -234,7 +267,7 @@ def encode_to_tensor(text: str) -> SimpleTensor:
         char = text_lower[i]
 
         # Check for digraphs first
-        digraph = text_lower[i:i+2] if i + 1 < len(text_lower) else ""
+        digraph = text_lower[i : i + 2] if i + 1 < len(text_lower) else ""
 
         if digraph in PHONEME_VARGA:
             varga = PHONEME_VARGA[digraph]
@@ -280,25 +313,23 @@ def encode_to_tensor(text: str) -> SimpleTensor:
 
 # Varga to Quarter mapping (WHERE you speak → WHERE you route)
 VARGA_TO_QUARTER: Final[Dict[int, int]] = {
-    VARGA_KANTHYA: 0,   # Throat → GENESIS (system/kernel)
-    VARGA_TALAVYA: 1,   # Palate → DHARMA (cognition/knowledge)
+    VARGA_KANTHYA: 0,  # Throat → GENESIS (system/kernel)
+    VARGA_TALAVYA: 1,  # Palate → DHARMA (cognition/knowledge)
     VARGA_MURDHANYA: 1,  # Retroflex → DHARMA (logic/analysis)
-    VARGA_DANTYA: 2,    # Dental → KARMA (interface/action)
-    VARGA_OSHTHYA: 3,   # Lips → MOKSHA (output/liberation)
+    VARGA_DANTYA: 2,  # Dental → KARMA (interface/action)
+    VARGA_OSHTHYA: 3,  # Lips → MOKSHA (output/liberation)
 }
 
 # Quarter to positions
 QUARTER_POSITIONS: Final[Dict[int, Tuple[int, ...]]] = {
-    0: (0, 1, 2, 3),    # GENESIS
-    1: (4, 5, 6, 7),    # DHARMA
+    0: (0, 1, 2, 3),  # GENESIS
+    1: (4, 5, 6, 7),  # DHARMA
     2: (8, 9, 10, 11),  # KARMA
     3: (12, 13, 14, 15),  # MOKSHA
 }
 
 # HolyName at each position (from seed.py MAHAMANTRA)
-POSITION_NAME: Final[Tuple[HolyName, ...]] = tuple(
-    HolyName(name.value) for name in MAHAMANTRA
-)
+POSITION_NAME: Final[Tuple[HolyName, ...]] = tuple(HolyName(name.value) for name in MAHAMANTRA)
 
 
 def tensor_to_position(tensor: SimpleTensor) -> Tuple[int, float]:
@@ -427,9 +458,7 @@ class ChatSubstrateBridge:
 
         return route
 
-    def get_alternative_routes(
-        self, text: str, count: int = 3
-    ) -> List[SubstrateRoute]:
+    def get_alternative_routes(self, text: str, count: int = 3) -> List[SubstrateRoute]:
         """
         Get alternative routes for negotiation.
 

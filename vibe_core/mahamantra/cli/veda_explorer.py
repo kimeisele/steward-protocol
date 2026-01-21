@@ -46,21 +46,21 @@ class ExplorerMode(str, Enum):
     """Operating mode of the Veda Explorer."""
 
     RESTRICTED = "restricted"  # No LLM, deterministic only
-    ENHANCED = "enhanced"      # LLM for intent parsing
-    CREATIVE = "creative"      # Full LLM generation
+    ENHANCED = "enhanced"  # LLM for intent parsing
+    CREATIVE = "creative"  # Full LLM generation
 
 
 class VedaIntent(str, Enum):
     """Recognized intents mapped to NavaBhakti."""
 
-    CHANT = "chant"        # KIRTANAM - Execute cycles
-    LISTEN = "listen"      # SRAVANAM - View events
-    RESOLVE = "resolve"    # VANDANAM - Lookup mahajana
-    SERVE = "serve"        # PADA_SEVANAM - Execute task
-    SCAN = "scan"          # SMARANAM - Scan codebase
-    HELP = "help"          # Show available commands
-    STATUS = "status"      # System status
-    UNKNOWN = "unknown"    # Requires LLM or clarification
+    CHANT = "chant"  # KIRTANAM - Execute cycles
+    LISTEN = "listen"  # SRAVANAM - View events
+    RESOLVE = "resolve"  # VANDANAM - Lookup mahajana
+    SERVE = "serve"  # PADA_SEVANAM - Execute task
+    SCAN = "scan"  # SMARANAM - Scan codebase
+    HELP = "help"  # Show available commands
+    STATUS = "status"  # System status
+    UNKNOWN = "unknown"  # Requires LLM or clarification
 
 
 class VedaResult(TypedDict):
@@ -140,6 +140,7 @@ def _load_intent_keywords() -> Dict[str, VedaIntent]:
 # Load at module init (cached)
 INTENT_KEYWORDS: Final[Dict[str, VedaIntent]] = _load_intent_keywords()
 
+
 # Mahajana names for RESOLVE intent - use SSOT (NO HARDCODING)
 def _get_all_mahajana_names() -> set:
     """Get all mahajana names and aliases from SSOT."""
@@ -148,6 +149,7 @@ def _get_all_mahajana_names() -> set:
     # PRIMARY: Use scanner aliases (includes learned aliases)
     try:
         from vibe_core.mahamantra.substrate.scanner import MAHAJANA_ALIASES
+
         for alias in MAHAJANA_ALIASES:
             names.add(alias.name)
             names.update(alias.aliases)
@@ -158,12 +160,14 @@ def _get_all_mahajana_names() -> set:
     # FALLBACK: Use seed.py ALL_GUARDIANS (THE SSOT)
     try:
         from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+
         return set(ALL_GUARDIANS)
     except ImportError:
         pass
 
     # ULTIMATE FALLBACK: Empty set (mahamantra.resonate() will handle it)
     return names
+
 
 MAHAJANA_NAMES: Final[set] = _get_all_mahajana_names()
 
@@ -213,6 +217,7 @@ class VedaExplorer:
 
         try:
             from vibe_core.runtime.llm_engine import LLMEngine
+
             self._llm = LLMEngine()
             self._llm_available = self._llm.provider != "mock" and self._llm.api_key
         except ImportError:
@@ -310,20 +315,20 @@ class VedaExplorer:
 
                 # Map guardian to intent based on their domain
                 guardian_intent_map = {
-                    "brahma": VedaIntent.CHANT,      # creation/spawn
-                    "narada": VedaIntent.LISTEN,    # communication/events
-                    "shambhu": VedaIntent.SERVE,    # transformation
-                    "vyasa": VedaIntent.STATUS,     # genesis/boot
+                    "brahma": VedaIntent.CHANT,  # creation/spawn
+                    "narada": VedaIntent.LISTEN,  # communication/events
+                    "shambhu": VedaIntent.SERVE,  # transformation
+                    "vyasa": VedaIntent.STATUS,  # genesis/boot
                     "kumaras": VedaIntent.RESOLVE,  # purification/resolution
-                    "kapila": VedaIntent.SCAN,      # analysis
-                    "manu": VedaIntent.STATUS,      # governance
-                    "prahlada": VedaIntent.SERVE,   # protection/execution
-                    "janaka": VedaIntent.SERVE,     # duty/task
-                    "bhishma": VedaIntent.LISTEN,   # persistence/logs
-                    "bali": VedaIntent.STATUS,      # resources
-                    "shuka": VedaIntent.STATUS,     # observation
+                    "kapila": VedaIntent.SCAN,  # analysis
+                    "manu": VedaIntent.STATUS,  # governance
+                    "prahlada": VedaIntent.SERVE,  # protection/execution
+                    "janaka": VedaIntent.SERVE,  # duty/task
+                    "bhishma": VedaIntent.LISTEN,  # persistence/logs
+                    "bali": VedaIntent.STATUS,  # resources
+                    "shuka": VedaIntent.STATUS,  # observation
                     "yamaraja": VedaIntent.STATUS,  # judgment/audit
-                    "prithu": VedaIntent.SCAN,      # structure/compile
+                    "prithu": VedaIntent.SCAN,  # structure/compile
                     "parashurama": VedaIntent.SERVE,  # execution
                     "nrisimha": VedaIntent.STATUS,  # security
                 }
@@ -622,10 +627,7 @@ Reply with ONLY the category name (lowercase, one word)."""
         shown = result.get("filtered_entries", 0)
         source = result.get("source", "all")
 
-        return (
-            f"Events empfangen (source={source}).\n"
-            f"  Total: {total} | Gezeigt: {shown}"
-        )
+        return f"Events empfangen (source={source}).\n  Total: {total} | Gezeigt: {shown}"
 
     def _format_resolve_response(self, result: Dict) -> str:
         """Format resolve result for display."""
@@ -653,11 +655,7 @@ Reply with ONLY the category name (lowercase, one word)."""
         task_id = result.get("task_id", "?")
         status = result.get("status", "?")
 
-        return (
-            f"Task erstellt.\n"
-            f"  ID: {task_id}\n"
-            f"  Status: {status}"
-        )
+        return f"Task erstellt.\n  ID: {task_id}\n  Status: {status}"
 
     def _get_help_response(self) -> str:
         """Get help text."""
@@ -894,10 +892,12 @@ Beispiele:
 
         # Store successful interactions in history (for potential mode switch)
         if result.get("success"):
-            self._history.append({
-                "user": text,
-                "assistant": result.get("response", ""),
-            })
+            self._history.append(
+                {
+                    "user": text,
+                    "assistant": result.get("response", ""),
+                }
+            )
 
         return result
 

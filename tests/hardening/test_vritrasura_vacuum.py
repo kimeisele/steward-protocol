@@ -155,10 +155,7 @@ class TestVritrasuraVakuum:
         vritra.stop()
 
         print(f"✅ Fake Heartbeat DETECTED: {health_lies}")
-        assert health_lies, (
-            "System should detect the discrepancy between "
-            "'healthy' heartbeats and zero throughput"
-        )
+        assert health_lies, "System should detect the discrepancy between 'healthy' heartbeats and zero throughput"
 
     def test_throughput_starvation_threshold(self):
         """
@@ -224,9 +221,7 @@ class TestVritrasuraVakuum:
         for i in range(100):
             vritra.consume({"event": f"large_{i}", "payload": large_payload})
 
-        final_buffer_bytes = sys.getsizeof(vritra.buffer) + sum(
-            sys.getsizeof(msg) for msg in vritra.buffer
-        )
+        final_buffer_bytes = sys.getsizeof(vritra.buffer) + sum(sys.getsizeof(msg) for msg in vritra.buffer)
 
         memory_growth = final_buffer_bytes - initial_buffer_bytes
         memory_growth_mb = memory_growth / (1024 * 1024)

@@ -33,8 +33,10 @@ from vibe_core.protocols.universal import SovereignContext
 # THE 16 GATES (HOLOGRAPHIC DEFINITION)
 # =============================================================================
 
+
 class SudarshanaGate(str, Enum):
     """The 16 Spokes of the Sudarshana Chakra."""
+
     GATE_01 = "HARE_SYS_WAKE"
     GATE_02 = "KRISHNA_LOAD_ROOT"
     GATE_03 = "HARE_ALLOC_MEM"
@@ -51,6 +53,7 @@ class SudarshanaGate(str, Enum):
     GATE_14 = "RAMA_OPTIMIZE"
     GATE_15 = "HARE_YIELD_CPU"
     GATE_16 = "HARE_RESET_IP"
+
 
 @pytest.mark.hardening
 @pytest.mark.fractal
@@ -92,34 +95,34 @@ class TestSudarshanaSingularity:
             ("Hare", MantraOpCode.YIELD_CPU),
             ("Hare", MantraOpCode.AUDIT_SEAL),
         ]
-        
+
         assert len(MAHAMANTRA_SEQUENCE) == 16
         for i, (word, opcode) in enumerate(MAHAMANTRA_SEQUENCE):
             exp_word, exp_op = expected_sequence[i]
-            assert word == exp_word, f"Gate {i+1}: Wrong Holy Name"
-            assert opcode == exp_op, f"Gate {i+1}: Wrong OpCode"
+            assert word == exp_word, f"Gate {i + 1}: Wrong Holy Name"
+            assert opcode == exp_op, f"Gate {i + 1}: Wrong OpCode"
 
     @pytest.mark.asyncio
     async def test_radial_implosion(self, kernel, sovereign):
         """
         EXECUTE THE SINGULARITY.
         We invoke the Chaitanya Pulse (Mantra) on the Kernel (Jagannath).
-        
+
         Condition: All 16 Gates must open.
         Result: True Alignment.
         """
         # 1. The Invocation
         # We call the pulse, which triggers the Watchdog (Nrisimha)
         # The Watchdog chants the Mantra.
-        
-        # We must spy on the internal execution to verify "Simultaneity" 
+
+        # We must spy on the internal execution to verify "Simultaneity"
         # (or at least correct sequential execution in time, which maps to radial unity).
-        
-        # We cannot easily test "Simultaneity" in a linear CPU, 
+
+        # We cannot easily test "Simultaneity" in a linear CPU,
         # but we can test that the COMPLETE CYCLE is atomic.
-        
+
         is_aligned = kernel.chaitanya.chant_mahamantra(sovereign)
-        
+
         if is_aligned:
             print("\n🪷 SUDARSHANA SINGULARITY ACHIEVED 🪷")
             print(f"   Identity: {sovereign.identity_id}")
@@ -134,9 +137,9 @@ class TestSudarshanaSingularity:
         """
         from vibe_core.protocols.primal import WatertightValidator
         from vibe_core.protocols.substrate import IGeneHost
-        
+
         # Check IGeneHost (The Host of Potencies)
         report = WatertightValidator.inspect(IGeneHost)
-        
+
         assert report["sealed"], f"Substrate Leaking: {report['leaks']}"
         print(f"\n💎 Substrate Integrity: {report['score']} (WATERTIGHT)")

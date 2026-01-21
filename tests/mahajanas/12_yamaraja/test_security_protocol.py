@@ -55,12 +55,14 @@ class MockLedger:
 
     def record_event(self, event_type: str, agent_id: str, details: dict) -> str:
         event_id = f"EVT-{len(self._events)}"
-        self._events.append({
-            "event_id": event_id,
-            "event_type": event_type,
-            "agent_id": agent_id,
-            "details": details,
-        })
+        self._events.append(
+            {
+                "event_id": event_id,
+                "event_type": event_type,
+                "agent_id": agent_id,
+                "details": details,
+            }
+        )
         return event_id
 
     def get_events(self, event_type: str = None, limit: int = 100):
@@ -331,6 +333,7 @@ class TestYamarajaService:
     def service(self):
         """Create YamarajaService with mock ledger."""
         from vibe_core.services.yamaraja_service import YamarajaService
+
         ledger = MockLedger()
         return YamarajaService(ledger=ledger)
 
@@ -360,6 +363,7 @@ class TestYamarajaService:
     def test_service_enforce_level_fails(self, service):
         """enforce_level raises when current level doesn't meet minimum."""
         from vibe_core.services.yamaraja_service import SecurityError
+
         # APPLICATION (4) does not meet DEFENSE (1) minimum
         with pytest.raises(SecurityError):
             service.enforce_level(SecurityLevel.DEFENSE)
@@ -464,6 +468,7 @@ class TestAjamilException:
     def service(self):
         """Create YamarajaService with mock ledger."""
         from vibe_core.services.yamaraja_service import YamarajaService
+
         return YamarajaService(ledger=MockLedger())
 
     def test_holy_name_in_karma_history(self, service):
@@ -514,29 +519,34 @@ class TestDefenseIntegration:
     def service(self):
         """Create YamarajaService with mock ledger."""
         from vibe_core.services.yamaraja_service import YamarajaService
+
         return YamarajaService(ledger=MockLedger())
 
     def test_get_sanitizer(self, service):
         """get_sanitizer returns DAYA (Mercy) implementation."""
         from vibe_core.protocols.defense import IDataSanitizer
+
         sanitizer = service.get_sanitizer()
         assert isinstance(sanitizer, IDataSanitizer)
 
     def test_get_verifier(self, service):
         """get_verifier returns SATYAM (Truth) implementation."""
         from vibe_core.protocols.defense import IOutputVerifier
+
         verifier = service.get_verifier()
         assert isinstance(verifier, IOutputVerifier)
 
     def test_get_resource_manager(self, service):
         """get_resource_manager returns TAPAS (Austerity) implementation."""
         from vibe_core.protocols.defense import IResourceManager
+
         manager = service.get_resource_manager()
         assert isinstance(manager, IResourceManager)
 
     def test_get_network_guard(self, service):
         """get_network_guard returns SAUCAM (Cleanliness) implementation."""
         from vibe_core.protocols.defense import INetworkGuard
+
         guard = service.get_network_guard()
         assert isinstance(guard, INetworkGuard)
 
@@ -552,6 +562,7 @@ class TestOwnership:
     def test_yamaraja_owns_security(self):
         """Security is owned by Yamaraja (12th Mahajana) - Position 15."""
         from vibe_core.mahamantra import mahamantra
+
         # Yamaraja is at position 15 in the Mahamantra
         pos = mahamantra[15]
         assert pos.guardian == Mahajana.YAMARAJA
@@ -562,6 +573,7 @@ class TestOwnership:
     def service(self):
         """Create YamarajaService with mock ledger."""
         from vibe_core.services.yamaraja_service import YamarajaService
+
         return YamarajaService(ledger=MockLedger())
 
     def test_service_owner(self, service):

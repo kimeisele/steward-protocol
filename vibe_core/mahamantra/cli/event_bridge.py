@@ -33,6 +33,7 @@ from typing import Dict, Final, List, Optional, TypedDict
 
 class EventEntry(TypedDict, total=False):
     """Single event entry - the clean offering to the Temple."""
+
     timestamp: str
     source: str
     severity: str
@@ -51,6 +52,7 @@ class EventEntry(TypedDict, total=False):
 
 class EventSourceConfig(TypedDict):
     """Configuration for an event source."""
+
     path: str
     parser: str  # "violations" or "syscalls"
 

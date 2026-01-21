@@ -170,6 +170,7 @@ class TestLotusBase:
 
     def test_create_lotus_subclass(self) -> None:
         """Can create a subclass of LotusBase."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 5
             LOTUS_NAME = "test_protocol"
@@ -180,6 +181,7 @@ class TestLotusBase:
 
     def test_auto_quarter_calculation(self) -> None:
         """Quarter is auto-calculated from position."""
+
         class GenesisLotus(LotusBase):
             LOTUS_POSITION = 2
             LOTUS_NAME = "genesis_test"
@@ -196,6 +198,7 @@ class TestLotusBase:
 
     def test_parampara_connection_automatic(self) -> None:
         """Parampara connection is automatic (always connected)."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 7
             LOTUS_NAME = "connected_test"
@@ -206,6 +209,7 @@ class TestLotusBase:
 
     def test_chant_advances_heartbeat(self) -> None:
         """Chanting advances the heartbeat."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 0
             LOTUS_NAME = "chanting_test"
@@ -219,6 +223,7 @@ class TestLotusBase:
 
     def test_mode_transformation(self) -> None:
         """Can transform between modes."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 0
             LOTUS_NAME = "transform_test"
@@ -234,6 +239,7 @@ class TestLotusBase:
 
     def test_routing_same_quarter(self) -> None:
         """Routing within same quarter is direct."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 1
             LOTUS_NAME = "routing_test"
@@ -246,6 +252,7 @@ class TestLotusBase:
 
     def test_routing_different_quarter(self) -> None:
         """Routing to different quarter goes via stengel."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 1
             LOTUS_NAME = "routing_test"
@@ -258,6 +265,7 @@ class TestLotusBase:
 
     def test_get_state_watertight(self) -> None:
         """get_state returns WATERTIGHT LotusNode."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 8
             LOTUS_NAME = "state_test"

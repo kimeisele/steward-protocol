@@ -56,8 +56,7 @@ class TestMantraLinearToCyclicIsomorphism:
 
             # Reconstruction
             reconstructed = (quarter * 4) + position
-            assert reconstructed == linear_index, \
-                f"Isomorphism broken at index {linear_index}"
+            assert reconstructed == linear_index, f"Isomorphism broken at index {linear_index}"
 
     def test_karatal_rhythm_semantics(self):
         """
@@ -145,16 +144,17 @@ class TestShastraAlignment:
         """
         head_indices = [0, 4, 8, 12]
         expected_types = [
-            PadaType.HARE,     # Index 0
+            PadaType.HARE,  # Index 0
             PadaType.KRISHNA,  # Index 4
-            PadaType.HARE,     # Index 8
-            PadaType.RAMA,     # Index 12
+            PadaType.HARE,  # Index 8
+            PadaType.RAMA,  # Index 12
         ]
 
         for head_idx, expected_type in zip(head_indices, expected_types):
             pada = route_index_to_pada(head_idx)
-            assert pada.pada_type == expected_type, \
+            assert pada.pada_type == expected_type, (
                 f"Head at index {head_idx} should be {expected_type}, got {pada.pada_type}"
+            )
 
     def test_quarter_1_is_hare_krishna_hare_krishna(self):
         """Quarter 1 (indices 0-3): H K H K"""
@@ -196,8 +196,7 @@ class TestCyclicConsistency:
         for index in range(16):
             expected = index // 4
             actual = get_quarter(index)
-            assert actual == expected, \
-                f"get_quarter({index}) should be {expected}, got {actual}"
+            assert actual == expected, f"get_quarter({index}) should be {expected}, got {actual}"
 
     def test_all_quarters_present(self):
         """Quarters 0, 1, 2, 3 are all present in the sequence."""
@@ -341,10 +340,7 @@ class TestExecutableTheologyProof:
         # Structure is mathematically sound
 
         assert len(MAHAMANTRA_SEQUENCE) == 16
-        assert all(
-            route_index_to_pada(i).pada_type != PadaType.VOID
-            for i in range(16)
-        )
+        assert all(route_index_to_pada(i).pada_type != PadaType.VOID for i in range(16))
 
     def test_theology_and_mathematics_are_synchronized(self):
         """
@@ -365,5 +361,4 @@ class TestExecutableTheologyProof:
 
         for index, expected_type, phase_name in theological_order:
             pada = route_index_to_pada(index)
-            assert pada.pada_type == expected_type, \
-                f"{phase_name} phase (index {index}) theological order violated"
+            assert pada.pada_type == expected_type, f"{phase_name} phase (index {index}) theological order violated"

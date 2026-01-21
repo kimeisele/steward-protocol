@@ -175,9 +175,9 @@ class TestMalaMetrics:
 
     def test_metrics_pada_counts(self):
         """Metrics has correct pada counts."""
-        assert MALA_METRICS.total_hare == 864      # 108 × 8
+        assert MALA_METRICS.total_hare == 864  # 108 × 8
         assert MALA_METRICS.total_krishna == 432  # 108 × 4
-        assert MALA_METRICS.total_rama == 432     # 108 × 4
+        assert MALA_METRICS.total_rama == 432  # 108 × 4
 
 
 class TestPhaseName:

@@ -223,9 +223,9 @@ class TestSadhanaMetrics:
 
     def test_metrics_pada_counts(self):
         """Metrics has correct pada counts."""
-        assert SADHANA_METRICS.total_hare == 13824     # 1728 × 8
+        assert SADHANA_METRICS.total_hare == 13824  # 1728 × 8
         assert SADHANA_METRICS.total_krishna == 6912  # 1728 × 4
-        assert SADHANA_METRICS.total_rama == 6912     # 1728 × 4
+        assert SADHANA_METRICS.total_rama == 6912  # 1728 × 4
 
 
 class TestIntensityName:

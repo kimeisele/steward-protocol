@@ -123,11 +123,7 @@ class TestResonancePattern:
     def test_pattern_mantra_flag(self):
         """Pattern can be marked as mantra."""
         p = Phoneme(ipa="oːm")
-        pattern = ResonancePattern(
-            phonemes=(p,),
-            is_mantra=True,
-            mantra_vibration="ascending"
-        )
+        pattern = ResonancePattern(phonemes=(p,), is_mantra=True, mantra_vibration="ascending")
         assert pattern.is_mantra
         assert pattern.mantra_vibration == "ascending"
 
@@ -147,7 +143,7 @@ class TestSemanticUnit:
             concept_id="deity.krishna",
             concept_type="noun",
             properties=("divine", "personal", "supreme"),
-            tattva="puruṣa"
+            tattva="puruṣa",
         )
         assert "divine" in unit.properties
         assert unit.tattva == "puruṣa"
@@ -166,12 +162,7 @@ class TestMeaningGraph:
     def test_graph_has_context(self):
         """Graph has context type."""
         unit = SemanticUnit(concept_id="mantra", concept_type="noun")
-        graph = MeaningGraph(
-            units=(unit,),
-            relations=(),
-            context_type="mantra",
-            mood="devotional"
-        )
+        graph = MeaningGraph(units=(unit,), relations=(), context_type="mantra", mood="devotional")
         assert graph.context_type == "mantra"
         assert graph.mood == "devotional"
 
@@ -187,11 +178,7 @@ class TestTextForm:
 
     def test_form_has_language(self):
         """Form has language specified."""
-        form = TextForm(
-            text="Hare Krishna",
-            language=NaturalLanguage.ENGLISH,
-            script="latin"
-        )
+        form = TextForm(text="Hare Krishna", language=NaturalLanguage.ENGLISH, script="latin")
         assert form.language == NaturalLanguage.ENGLISH
         assert form.script == "latin"
 
@@ -209,7 +196,7 @@ class TestTranslationResult:
             target_form=target,
             confidence=0.95,
             resonance_similarity=0.98,
-            meaning_preservation=0.99
+            meaning_preservation=0.99,
         )
         assert result.success
         assert result.confidence == 0.95
@@ -222,7 +209,7 @@ class TestTranslationResult:
             success=True,
             source_form=source,
             target_form=target,
-            opcodes_used=["load_root", "resolve_req", "exec_service", "commit_log"]
+            opcodes_used=["load_root", "resolve_req", "exec_service", "commit_log"],
         )
         assert "exec_service" in result.opcodes_used
 
@@ -290,19 +277,17 @@ class TestTranslationProtocolContract:
 
     def test_protocol_is_runtime_checkable(self):
         """Protocol can be checked at runtime."""
-        assert hasattr(TranslationProtocol, '__protocol_attrs__') or \
-               hasattr(TranslationProtocol, '_is_protocol')
+        assert hasattr(TranslationProtocol, "__protocol_attrs__") or hasattr(TranslationProtocol, "_is_protocol")
 
     def test_has_layer_transformations(self):
         """Protocol has layer transformation methods."""
-        methods = ['form_to_resonance', 'resonance_to_meaning',
-                   'meaning_to_resonance', 'resonance_to_form']
+        methods = ["form_to_resonance", "resonance_to_meaning", "meaning_to_resonance", "resonance_to_form"]
         for method in methods:
             assert method in dir(TranslationProtocol)
 
     def test_has_translate_methods(self):
         """Protocol has translate methods."""
-        methods = ['translate', 'translate_via_resonance', 'translate_via_meaning']
+        methods = ["translate", "translate_via_resonance", "translate_via_meaning"]
         for method in methods:
             assert method in dir(TranslationProtocol)
 
@@ -312,22 +297,21 @@ class TestResonanceProtocolContract:
 
     def test_protocol_is_runtime_checkable(self):
         """Protocol can be checked at runtime."""
-        assert hasattr(ResonanceProtocol, '__protocol_attrs__') or \
-               hasattr(ResonanceProtocol, '_is_protocol')
+        assert hasattr(ResonanceProtocol, "__protocol_attrs__") or hasattr(ResonanceProtocol, "_is_protocol")
 
     def test_has_phoneme_methods(self):
         """Protocol has phoneme methods."""
-        methods = ['extract_phonemes', 'create_pattern']
+        methods = ["extract_phonemes", "create_pattern"]
         for method in methods:
             assert method in dir(ResonanceProtocol)
 
     def test_has_comparison_methods(self):
         """Protocol has comparison methods."""
-        assert 'compare_resonance' in dir(ResonanceProtocol)
+        assert "compare_resonance" in dir(ResonanceProtocol)
 
     def test_has_mantra_detection(self):
         """Protocol has mantra detection."""
-        assert 'is_mantra' in dir(ResonanceProtocol)
+        assert "is_mantra" in dir(ResonanceProtocol)
 
 
 class TestStrictTyping:
@@ -336,6 +320,7 @@ class TestStrictTyping:
     def test_phoneme_no_any(self):
         """Phoneme has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(Phoneme)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"Phoneme.{field_name} uses Any"
@@ -343,6 +328,7 @@ class TestStrictTyping:
     def test_text_form_no_any(self):
         """TextForm has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(TextForm)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"TextForm.{field_name} uses Any"
@@ -366,9 +352,5 @@ class TestResonanceFirstPrinciple:
     def test_patterns_can_be_mantras(self):
         """ResonancePattern can represent mantras."""
         om = Phoneme(ipa="oːm")
-        pattern = ResonancePattern(
-            phonemes=(om,),
-            is_mantra=True,
-            mantra_vibration="ascending"
-        )
+        pattern = ResonancePattern(phonemes=(om,), is_mantra=True, mantra_vibration="ascending")
         assert pattern.is_mantra

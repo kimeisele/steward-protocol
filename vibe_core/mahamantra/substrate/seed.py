@@ -87,6 +87,7 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS as _PROTO_GITA_CHAPTERS,
 )
+
 # The Acoustic Constitution (Physics of the Emptiness)
 from vibe_core.mahamantra.protocols._seed import (
     ACOUSTIC_RATIO as _PROTO_ACOUSTIC_RATIO,
@@ -96,6 +97,7 @@ from vibe_core.mahamantra.protocols._seed import (
     VAMSI_FREQ as _PROTO_VAMSI_FREQ,
     VENU_FREQ as _PROTO_VENU_FREQ,
 )
+
 # The Three Flutes + Harmonic Resonances (direct import for re-export)
 from vibe_core.mahamantra.protocols._seed import (
     FIELD_RESONANCE,

@@ -40,8 +40,7 @@ class TestGovernanceCoverage:
         """Every protocol file must have an owner."""
         report = audit()
         assert report["ungoverned_count"] == 0, (
-            f"Found {report['ungoverned_count']} ungoverned protocols: "
-            f"{report['ungoverned_list'][:5]}..."
+            f"Found {report['ungoverned_count']} ungoverned protocols: {report['ungoverned_list'][:5]}..."
         )
 
     def test_all_mahajanas_have_protocols(self):
@@ -50,12 +49,8 @@ class TestGovernanceCoverage:
         owner_dist = report["owner_distribution"]
 
         for mahajana in Mahajana:
-            assert mahajana.value in owner_dist, (
-                f"Mahajana {mahajana.name} has no protocols"
-            )
-            assert owner_dist[mahajana.value] > 0, (
-                f"Mahajana {mahajana.name} owns 0 protocols"
-            )
+            assert mahajana.value in owner_dist, f"Mahajana {mahajana.name} has no protocols"
+            assert owner_dist[mahajana.value] > 0, f"Mahajana {mahajana.name} owns 0 protocols"
 
     def test_health_score_is_100(self):
         """Health score should be 1.0 (100%)."""

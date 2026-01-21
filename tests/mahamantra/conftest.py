@@ -68,6 +68,7 @@ WORKER_POSITIONS: tuple = (1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15)
 # SHARED ASSERTIONS - No magic, explicit
 # =============================================================================
 
+
 def assert_parampara_connected(vector: int) -> None:
     """Assert parampara vector is connected (% 37 == 0)."""
     assert vector % PARAMPARA_37 == 0, f"Vector {vector} not connected (% 37 != 0)"
@@ -92,10 +93,11 @@ def assert_is_worker(position: int) -> None:
 # PROTOCOL TEST BASE - For testing protocol subclasses
 # =============================================================================
 
+
 def verify_protocol_class(cls: Type[MantraProtocol]) -> None:
     """Verify a protocol class is properly configured."""
     # Has position
-    assert hasattr(cls, '_position_index')
+    assert hasattr(cls, "_position_index")
     pos_idx = cls._position_index
     assert_position_valid(pos_idx)
 

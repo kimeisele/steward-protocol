@@ -32,8 +32,18 @@ from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 
 # List of all 12 Mahajanas for iteration
 MAHAJANA_NAMES = [
-    "brahma", "narada", "shambhu", "kumaras", "kapila", "manu",
-    "prahlada", "janaka", "bhishma", "bali", "shuka", "yamaraja"
+    "brahma",
+    "narada",
+    "shambhu",
+    "kumaras",
+    "kapila",
+    "manu",
+    "prahlada",
+    "janaka",
+    "bhishma",
+    "bali",
+    "shuka",
+    "yamaraja",
 ]
 
 
@@ -44,6 +54,7 @@ MAHAJANA_NAMES = [
 
 class BrahmaProtocol(OwnedProtocol):
     """Protocol owned by BRAHMA → Position 1 (GENESIS)."""
+
     OWNER = Mahajana.BRAHMA
     OPCODES = [MantraOpCode.LOAD_ROOT]
     PROTOCOL_NAME = "brahma_test"
@@ -69,6 +80,7 @@ class BrahmaProtocol(OwnedProtocol):
 
 class KapilaProtocol(OwnedProtocol):
     """Protocol owned by KAPILA → Position 6 (DHARMA)."""
+
     OWNER = Mahajana.KAPILA
     OPCODES = [MantraOpCode.STATE_SYNC]
     PROTOCOL_NAME = "kapila_test"
@@ -94,6 +106,7 @@ class KapilaProtocol(OwnedProtocol):
 
 class JanakaProtocol(OwnedProtocol):
     """Protocol owned by JANAKA → Position 10 (KARMA)."""
+
     OWNER = Mahajana.JANAKA
     OPCODES = [MantraOpCode.STATE_SYNC]
     PROTOCOL_NAME = "janaka_test"
@@ -119,6 +132,7 @@ class JanakaProtocol(OwnedProtocol):
 
 class NaradaProtocol(OwnedProtocol):
     """Protocol owned by NARADA → Position 2 (GENESIS)."""
+
     OWNER = Mahajana.NARADA
     OPCODES = [MantraOpCode.DHARMA_TEST]
     PROTOCOL_NAME = "narada_test"

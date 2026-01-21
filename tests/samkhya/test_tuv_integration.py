@@ -2,6 +2,7 @@ import pytest
 from vibe_core.naga.services.tuv import TÜVService
 from vibe_core.protocols.naga.tuv import TuvBadge
 
+
 @pytest.mark.unit
 def test_badge_issuance_and_check(tmp_path):
     # 1. Instantiate Service
@@ -14,6 +15,7 @@ def test_badge_issuance_and_check(tmp_path):
 
     # 3. Verify Badge
     assert tuv.verify_badge(badge) is True
+
 
 @pytest.mark.unit
 def test_tuv_full_scan(tmp_path):

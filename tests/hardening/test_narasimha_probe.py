@@ -30,6 +30,7 @@ from vibe_core.di import ServiceRegistry
 @runtime_checkable
 class GhostProtocol(Protocol):
     """A protocol with no NAGA blessing."""
+
     def haunt(self) -> str: ...
 
 
@@ -39,6 +40,7 @@ class GhostService:
 
     If Narasimha is truly active, this should be BLOCKED from registration.
     """
+
     def haunt(self) -> str:
         return "BOO! I slipped through!"
 
@@ -50,6 +52,7 @@ class BlessedService:
     In reality, this would have @naga_governed or similar.
     For now, we test the blessing mechanism itself.
     """
+
     _naga_blessed = True  # Simulated blessing marker
 
     def haunt(self) -> str:
@@ -201,7 +204,7 @@ class TestIdentityExistence:
         assert ServiceRegistry.is_narasimha_enabled() is True
 
         # Clean up
-        if hasattr(kernel, 'shutdown'):
+        if hasattr(kernel, "shutdown"):
             kernel.shutdown(reason="Test complete")
 
     def test_naga_identity_generated_at_boot(self):
@@ -221,15 +224,15 @@ class TestIdentityExistence:
 
         if federation:
             # Identity should exist
-            assert hasattr(federation, '_identity') or hasattr(federation, 'identity')
+            assert hasattr(federation, "_identity") or hasattr(federation, "identity")
 
             # Identity should have a fingerprint
-            identity = getattr(federation, '_identity', None) or getattr(federation, 'identity', None)
+            identity = getattr(federation, "_identity", None) or getattr(federation, "identity", None)
             if identity:
-                assert hasattr(identity, 'fingerprint') or hasattr(identity, 'get_fingerprint')
+                assert hasattr(identity, "fingerprint") or hasattr(identity, "get_fingerprint")
 
         # Clean up
-        if hasattr(kernel, 'shutdown'):
+        if hasattr(kernel, "shutdown"):
             kernel.shutdown(reason="Test complete")
 
 
@@ -266,9 +269,9 @@ class TestActOneCompleteness:
         print(f"NAGA Blessing Check:  {'ENABLED' if results['blessing_enabled'] else 'DISABLED'}")
         print("=" * 60)
 
-        if results['narasimha_enabled'] and results['blessing_enabled']:
+        if results["narasimha_enabled"] and results["blessing_enabled"]:
             print("VERDICT: Act 1 COMPLETE. The 37th is truly born.")
-        elif results['narasimha_enabled']:
+        elif results["narasimha_enabled"]:
             print("VERDICT: Act 1 PARTIAL. Chaos blocked, but ghosts can still register.")
             print("         The 37th is born but has not opened its eyes.")
         else:

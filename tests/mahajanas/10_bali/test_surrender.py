@@ -28,11 +28,13 @@ from vibe_core.protocols.universal.types import SovereignContext
 # TEST PROTOCOLS (Protocol-Based, No Mock)
 # =============================================================================
 
+
 class SurrenderState(Enum):
     """States of surrender."""
-    FIGHTING = auto()      # Still arguing/processing
-    CONSIDERING = auto()   # Slowing down
-    SURRENDERED = auto()   # Complete cessation
+
+    FIGHTING = auto()  # Still arguing/processing
+    CONSIDERING = auto()  # Slowing down
+    SURRENDERED = auto()  # Complete cessation
 
 
 @runtime_checkable
@@ -55,25 +57,18 @@ class SurrenderableProtocol(Protocol):
 @dataclass
 class SurrenderContext:
     """Context with surrender intent."""
+
     identity_id: str
     signature: str
     intent: str = "NORMAL"  # Can be "SURRENDER"
 
     @classmethod
     def with_surrender(cls, identity_id: str) -> "SurrenderContext":
-        return cls(
-            identity_id=identity_id,
-            signature=f"surrender_{identity_id}",
-            intent="SURRENDER"
-        )
+        return cls(identity_id=identity_id, signature=f"surrender_{identity_id}", intent="SURRENDER")
 
     @classmethod
     def normal(cls, identity_id: str) -> "SurrenderContext":
-        return cls(
-            identity_id=identity_id,
-            signature=f"normal_{identity_id}",
-            intent="NORMAL"
-        )
+        return cls(identity_id=identity_id, signature=f"normal_{identity_id}", intent="NORMAL")
 
 
 class BaliAgent:
@@ -185,6 +180,7 @@ class VamanaDevaAgent:
 # THE TESTS (Bali's Judgment)
 # =============================================================================
 
+
 class TestBaliSurrender:
     """
     The 10th Mahajana Test Suite.
@@ -203,8 +199,7 @@ class TestBaliSurrender:
 
         agent.surrender()
 
-        assert agent.get_state() == SurrenderState.SURRENDERED, \
-            "State must be SURRENDERED after surrender()"
+        assert agent.get_state() == SurrenderState.SURRENDERED, "State must be SURRENDERED after surrender()"
 
     def test_02_surrender_stops_processing(self) -> None:
         """
@@ -240,8 +235,7 @@ class TestBaliSurrender:
         # Even calling surrender() does nothing
         agent.surrender()
 
-        assert agent.get_state() == SurrenderState.FIGHTING, \
-            "Hiranyakashipu remains FIGHTING (Asuric)"
+        assert agent.get_state() == SurrenderState.FIGHTING, "Hiranyakashipu remains FIGHTING (Asuric)"
 
     def test_04_hiranyakashipu_infinite_loop_risk(self) -> None:
         """
@@ -255,8 +249,7 @@ class TestBaliSurrender:
             result = agent.process()
             assert result is True, "Hiranyakashipu never returns False"
 
-        assert agent.get_iteration_count() == 100, \
-            "Hiranyakashipu keeps counting (infinite loop risk)"
+        assert agent.get_iteration_count() == 100, "Hiranyakashipu keeps counting (infinite loop risk)"
 
     def test_05_vamana_requests_surrender(self) -> None:
         """
@@ -278,8 +271,7 @@ class TestBaliSurrender:
         This is the surrender gate in the Mahamantra.
         """
         opcodes = list(MantraOpCode)
-        assert opcodes[14] == MantraOpCode.YIELD_CPU, \
-            "yield_cpu must be OpCode #15 (index 14)"
+        assert opcodes[14] == MantraOpCode.YIELD_CPU, "yield_cpu must be OpCode #15 (index 14)"
 
     def test_07_surrender_context_detection(self) -> None:
         """
@@ -320,6 +312,7 @@ class TestBaliSurrender:
 # GRACEFUL SHUTDOWN TESTS
 # =============================================================================
 
+
 class TestGracefulShutdown:
     """
     Test graceful shutdown patterns.
@@ -339,8 +332,7 @@ class TestGracefulShutdown:
             agent.process()
             iterations += 1
 
-        assert agent.get_state() == SurrenderState.CONSIDERING, \
-            "Agent should consider surrender after max iterations"
+        assert agent.get_state() == SurrenderState.CONSIDERING, "Agent should consider surrender after max iterations"
 
     def test_chain_of_surrender(self) -> None:
         """
@@ -358,8 +350,7 @@ class TestGracefulShutdown:
         for agent in agents:
             vamana.request_surrender(agent)
 
-        assert len(vamana.get_surrendered_agents()) == 3, \
-            "All agents should surrender"
+        assert len(vamana.get_surrendered_agents()) == 3, "All agents should surrender"
 
         # All should be in surrendered state
         for agent in agents:
@@ -369,6 +360,7 @@ class TestGracefulShutdown:
 # =============================================================================
 # YIELD PATTERN TESTS
 # =============================================================================
+
 
 class TestYieldPattern:
     """
@@ -420,5 +412,4 @@ class TestYieldPattern:
         assert result1 is False
         assert result2 is False
         assert result3 is False
-        assert agent.get_state() == SurrenderState.SURRENDERED, \
-            "Surrender is permanent"
+        assert agent.get_state() == SurrenderState.SURRENDERED, "Surrender is permanent"

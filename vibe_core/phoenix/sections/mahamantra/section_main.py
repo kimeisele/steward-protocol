@@ -37,9 +37,7 @@ class HolyNamesConfig:
     knowledge_domain: Domain in KnowledgeGraph for learned names
     """
 
-    seed: Set[str] = field(default_factory=lambda: {
-        "hare", "krishna", "rama", "om", "hari", "govinda", "madhava"
-    })
+    seed: Set[str] = field(default_factory=lambda: {"hare", "krishna", "rama", "om", "hari", "govinda", "madhava"})
     resonance: float = 1.0
     learnable: bool = True
     knowledge_domain: str = "sacred_names"
@@ -81,8 +79,8 @@ class ResonanceConfig:
     """Resonance thresholds for Starship Command I/O."""
 
     auto_execute: float = 0.7  # > this: auto-proceed
-    refinement: float = 0.4   # > this: ask user to clarify
-    silence: float = 0.0       # < refinement: no resonance (disabled for chat)
+    refinement: float = 0.4  # > this: ask user to clarify
+    silence: float = 0.0  # < refinement: no resonance (disabled for chat)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ResonanceConfig":
@@ -191,10 +189,7 @@ class MahamantraConfig:
 
         # Parse quarters
         quarters_raw = data.get("quarters", {})
-        quarters = {
-            name: QuarterConfig.from_dict(qdata)
-            for name, qdata in quarters_raw.items()
-        }
+        quarters = {name: QuarterConfig.from_dict(qdata) for name, qdata in quarters_raw.items()}
 
         # Default quarters if not provided
         if not quarters:
@@ -206,12 +201,15 @@ class MahamantraConfig:
             }
 
         # Default opcodes if not provided
-        opcodes = data.get("opcodes", {
-            "genesis": "SYS_WAKE",
-            "dharma": "COMPILE_AST",
-            "karma": "EXEC_OP",
-            "moksha": "YIELD_CPU",
-        })
+        opcodes = data.get(
+            "opcodes",
+            {
+                "genesis": "SYS_WAKE",
+                "dharma": "COMPILE_AST",
+                "karma": "EXEC_OP",
+                "moksha": "YIELD_CPU",
+            },
+        )
 
         return cls(
             holy_names=HolyNamesConfig.from_dict(data.get("holy_names", {})),
@@ -286,6 +284,7 @@ def get_mahamantra_config() -> MahamantraConfig:
     if _mahamantra_config is None:
         try:
             from vibe_core.phoenix import get_config
+
             config = get_config()
             _mahamantra_config = config.mahamantra
         except Exception:
