@@ -327,7 +327,7 @@ async def startup_event():
         # Continue without discoverer - other agents will still work
 
     # 2. Boot Kernel (Loads other agents)
-    kernel.boot()
+    await kernel.boot_async()
 
     # 3. Start Steward's Watch (if loaded successfully)
     if steward:
