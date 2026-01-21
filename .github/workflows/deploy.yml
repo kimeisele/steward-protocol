@@ -19,7 +19,8 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Skip if GCP secrets not configured (use Fly.io instead)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.GCP_SA_KEY != ''
 
     steps:
       - name: Checkout
