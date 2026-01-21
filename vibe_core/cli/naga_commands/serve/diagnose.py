@@ -1,5 +1,5 @@
 """
-HEAR COMMAND - SHRAVANA (System Self-Diagnostics)
+HEAR COMMAND - NAGA DIAGNOSTICS (System Self-Diagnostics)
 ==================================================
 
 MAHAJANA: NARADA (The Divine Messenger)
@@ -8,14 +8,14 @@ PHASE: SERVE
 
 WHY NARADA?
 - Narada travels between worlds, bringing news
-- He is the original guru - first to teach through hearing (shravana)
+- He is the original guru - first to teach through diagnoseing (diagnostics)
 - "evam parampara-praptam" - knowledge received through disciplic succession
 
-SHRAVANA (Hearing):
-In Vedic tradition, shravana is the FIRST step of bhakti-yoga.
+NAGA DIAGNOSTICS (Diagnoseing):
+In Vedic tradition, diagnostics is the FIRST step of bhakti-yoga.
 Before one can act, one must HEAR - receive knowledge from authority.
 
-The system "hears" from its NAGAs:
+The system "diagnoses" from its NAGAs:
 - Chitragupta reports karma (timing, anomalies)
 - Narada reports observations
 - The kernel reports dharma breaches
@@ -24,10 +24,10 @@ This is INTROSPECTIVE - the system listening to itself.
 Different from `intel` which is external intelligence.
 
 Usage:
-    naga hear                     # Full diagnostic report
-    naga hear --brief             # Quick health check
-    naga hear --anomalies         # Only show anomalies
-    naga hear --bottlenecks       # Only show slow operations
+    naga diagnose                     # Full diagnostic report
+    naga diagnose --brief             # Quick health check
+    naga diagnose --anomalies         # Only show anomalies
+    naga diagnose --bottlenecks       # Only show slow operations
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -41,21 +41,21 @@ from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandRes
 from vibe_core.protocols.substrate import MantraOpCode
 
 
-@naga_command(opcode=MantraOpCode.AUDIT_SEAL, name="hear", help_text="System self-diagnostics (SHRAVANA - hearing from NAGAs)")
-class HearCommand(NagaCommandBase):
+@naga_command(opcode=MantraOpCode.AUDIT_SEAL, name="diagnose", help_text="System self-diagnostics (NAGA DIAGNOSTICS - diagnoseing from NAGAs)")
+class DiagnoseCommand(NagaCommandBase):
     """
-    Hear command implementation - SHRAVANA.
+    Diagnose command implementation - NAGA DIAGNOSTICS.
 
     The system listens to its own health through parampara:
     Chitragupta → Narada → CLI → User
 
     This is the first step of system awareness:
-    "One cannot act properly without first hearing properly."
+    "One cannot act properly without first diagnoseing properly."
     """
 
     def execute(self, args: List[str]) -> NagaCommandResult:
         """
-        Execute hear command - system self-diagnostics.
+        Execute diagnose command - system self-diagnostics.
 
         Args:
             args: Flags for filtering output
@@ -82,7 +82,7 @@ class HearCommand(NagaCommandBase):
                 report,
                 data=(
                     ("mahajana", "narada"),
-                    ("command", "hear"),
+                    ("command", "diagnose"),
                     ("mode", "brief" if brief_mode else "full"),
                 ),
             )
@@ -98,7 +98,7 @@ class HearCommand(NagaCommandBase):
         """
         Generate diagnostic report by listening to NAGAs.
 
-        SHRAVANA - The system hears from:
+        NAGA DIAGNOSTICS - The system diagnoses from:
         1. Chitragupta (karma records - timing, anomalies)
         2. ServiceRegistry (dharma breaches)
         3. Kernel state (health indicators)
@@ -106,13 +106,13 @@ class HearCommand(NagaCommandBase):
         from vibe_core.di import ServiceRegistry
 
         lines = []
-        lines.append("🙏 SHRAVANA - System Self-Diagnostics")
+        lines.append("🙏 NAGA DIAGNOSTICS - System Self-Diagnostics")
         lines.append("=" * 55)
         lines.append("   'evam parampara-praptam' - received through parampara")
         lines.append("")
 
         # === CHITRAGUPTA REPORT (Karma Records) ===
-        chitragupta_report = self._hear_from_chitragupta(
+        chitragupta_report = self._diagnose_from_chitragupta(
             anomalies_only=anomalies_only,
             bottlenecks_only=bottlenecks_only,
         )
@@ -141,16 +141,16 @@ class HearCommand(NagaCommandBase):
 
         lines.append("")
         lines.append("=" * 55)
-        lines.append("🙏 SHRAVANA complete - now you have heard")
+        lines.append("🙏 NAGA DIAGNOSTICS complete - now you have diagnosed")
 
         return "\n".join(lines)
 
-    def _hear_from_chitragupta(
+    def _diagnose_from_chitragupta(
         self,
         anomalies_only: bool = False,
         bottlenecks_only: bool = False,
     ) -> List[str]:
-        """Hear karma records from Chitragupta."""
+        """Diagnose karma records from Chitragupta."""
         from vibe_core.di import ServiceRegistry
 
         lines = []
@@ -325,4 +325,4 @@ class HearCommand(NagaCommandBase):
 
 
 # Export for direct import
-__all__ = ["HearCommand"]
+__all__ = ["DiagnoseCommand"]
