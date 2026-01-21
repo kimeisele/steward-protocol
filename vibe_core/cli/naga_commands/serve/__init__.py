@@ -24,8 +24,10 @@ from vibe_core.cli.naga_commands.serve.chat import ChatCommand
 from vibe_core.cli.naga_commands.serve.intel import IntelCommand
 from vibe_core.cli.naga_commands.serve.validate import ValidateCommand
 from vibe_core.cli.naga_commands.serve.commit import CommitCommand
+from vibe_core.cli.naga_commands.serve.hear import HearCommand
 
 __all__ = [
+    "HearCommand",  # NARADA - OBSERVE (Position 1) - SHRAVANA self-diagnostics
     "IntelCommand",  # SHUKA - FETCH_RES (Position 8)
     "ChatCommand",  # PRAHLADA - EXEC_SERVICE (Position 9)
     "ValidateCommand",  # JANAKA - CHECK_DHARMA (Position 10)
