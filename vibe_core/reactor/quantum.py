@@ -308,18 +308,36 @@ class QuantumReactor:
 
 
 # =============================================================================
-# Convenience functions
+# SINGLETON - VIA SERVICE REGISTRY (WIRED, NOT ISLAND!)
 # =============================================================================
-
-_global_reactor: Optional[QuantumReactor] = None
 
 
 def get_reactor() -> QuantumReactor:
-    """Get or create global reactor instance."""
-    global _global_reactor
-    if _global_reactor is None:
-        _global_reactor = QuantumReactor()
-    return _global_reactor
+    """
+    Get QuantumReactor through ServiceRegistry (WIRED).
+
+    CRITICAL FIX: Was an ISLAND - created directly, bypassing DI.
+    Now goes through ServiceRegistry for NagaProxy wrapping.
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Try to get from registry first
+    try:
+        existing = ServiceRegistry.get(QuantumReactor)
+        if existing is not None:
+            return existing
+    except Exception:
+        pass  # Not registered yet
+
+    # Create and register
+    import logging
+    logger = logging.getLogger("QUANTUM_REACTOR")
+
+    instance = QuantumReactor()
+    ServiceRegistry.register(QuantumReactor, instance)
+    logger.info("✅ QuantumReactor registered via ServiceRegistry (WIRED)")
+
+    return ServiceRegistry.get(QuantumReactor)
 
 
 def compute_resonance(text1: str, text2: str, salt: str = "") -> float:

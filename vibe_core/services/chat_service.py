@@ -1031,18 +1031,42 @@ Be concise, technical, and helpful.
 
 
 # =============================================================================
-# SINGLETON
+# SINGLETON - VIA SERVICE REGISTRY (WIRED, NOT ISLAND!)
 # =============================================================================
-
-_chat_service: Optional[ChatService] = None
 
 
 def get_chat_service() -> ChatService:
-    """Get the global ChatService instance."""
-    global _chat_service
-    if _chat_service is None:
-        _chat_service = ChatService()
-    return _chat_service
+    """
+    Get ChatService through ServiceRegistry (WIRED).
+
+    CRITICAL FIX: ChatService was an ISLAND - created directly via standalone
+    factory, bypassing kernel boot, DI, and NagaProxy wrapping.
+
+    Now it goes through ServiceRegistry:
+    1. First call: Create + Register + Return (with NagaProxy if enabled)
+    2. Subsequent calls: Return registered instance
+
+    This ensures:
+    - NagaProxy can observe/guard all chat operations
+    - Proper DI integration with kernel
+    - No more silent cascade failures
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Try to get from registry first (may already be registered by kernel/plugin)
+    try:
+        existing = ServiceRegistry.get(ChatProtocol)
+        if existing is not None:
+            return existing
+    except Exception:
+        pass  # Not registered yet, we'll create and register
+
+    # Create and register - this triggers NagaProxy wrapping if enabled!
+    instance = ChatService()
+    ServiceRegistry.register(ChatProtocol, instance)
+    logger.info("✅ ChatService registered via ServiceRegistry (WIRED, not island)")
+
+    return ServiceRegistry.get(ChatProtocol)  # Return wrapped version!
 
 
 # =============================================================================
