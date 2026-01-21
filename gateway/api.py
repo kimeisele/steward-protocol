@@ -11,6 +11,7 @@ from fastapi import (
     Header,
     HTTPException,
     Query,
+    Request,
     WebSocket,
     WebSocketDisconnect,
 )
@@ -144,7 +145,59 @@ class YagyaRequest(BaseModel):
     depth: Optional[str] = "advanced"
 
 
-# --- ENDPOINT ---
+class PublicChatRequest(BaseModel):
+    """Simple public chat - no signature required, rate-limited."""
+    message: str = Field(..., max_length=2000, description="Message (max 2KB)")
+
+
+# --- RATE LIMITING (simple in-memory) ---
+_rate_limit_cache: dict = {}  # IP -> (count, window_start)
+RATE_LIMIT_WINDOW = 60  # seconds
+RATE_LIMIT_MAX = 10  # requests per window
+
+
+def _check_rate_limit(client_ip: str) -> bool:
+    """Returns True if allowed, False if rate limited."""
+    import time
+    now = time.time()
+    if client_ip in _rate_limit_cache:
+        count, window_start = _rate_limit_cache[client_ip]
+        if now - window_start > RATE_LIMIT_WINDOW:
+            _rate_limit_cache[client_ip] = (1, now)
+            return True
+        if count >= RATE_LIMIT_MAX:
+            return False
+        _rate_limit_cache[client_ip] = (count + 1, window_start)
+        return True
+    _rate_limit_cache[client_ip] = (1, now)
+    return True
+
+
+# --- PUBLIC CHAT ENDPOINT ---
+@app.post("/v1/public-chat")
+async def public_chat(request: Request, body: PublicChatRequest):
+    """
+    Public chat endpoint - no signature required.
+    Rate-limited to prevent abuse.
+    """
+    client_ip = request.client.host if request.client else "unknown"
+
+    if not _check_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
+
+    try:
+        # Use provider to route and execute
+        if provider is None:
+            raise HTTPException(status_code=503, detail="Service starting up...")
+
+        result = await provider.route_and_execute(body.message)
+        return {"status": "success", "data": result}
+    except Exception as e:
+        logger.error(f"Public chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- SIGNED CHAT ENDPOINT ---
 @app.post("/v1/chat")
 async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(None)):
     """
