@@ -59,7 +59,7 @@ class FeaturesConfig:
     """
 
     oauth_enforcement: bool = True
-    live_fire_enabled: bool = False
+    live_fire_enabled: bool = True  # OPUS-076: NO PUSSY MODE - default ON
     performance_metrics: bool = True
     debug_mode: bool = False
 

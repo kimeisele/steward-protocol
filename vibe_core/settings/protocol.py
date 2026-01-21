@@ -58,7 +58,7 @@ class SectionContext:
     config: Dict[str, Any] = field(default_factory=dict)
 
     # Current settings state
-    live_fire_enabled: bool = False
+    live_fire_enabled: bool = True  # OPUS-076: NO PUSSY MODE - default ON
     provider_name: str = "unknown"
     provider_info: Dict[str, str] = field(default_factory=dict)
 
