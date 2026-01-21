@@ -1,0 +1,220 @@
+# =============================================================================
+# GUARDIAN INTENTS - Position-to-Keywords Mapping (SSOT)
+# =============================================================================
+#
+# "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+# — Bhagavad Gita 10.8
+#
+# This file is the SSOT for MantraProtocol.get_resonance().
+# Loaded at runtime by intents.py - NO HARDCODED PYTHON DICTS.
+#
+# Structure:
+#   positions:
+#     <position_index>:
+#       guardian: <guardian_name>
+#       quarter: <quarter_name>
+#       keywords: [list of trigger words]
+#       learnable: true  # KnowledgeGraph can extend at runtime
+#
+# =============================================================================
+
+version: "1.0"
+learnable: true
+knowledge_domain: "guardian_intents"
+
+# Aligned with seed.py ALL_GUARDIANS (SSOT)
+positions:
+  # === GENESIS QUARTER (0-3) ===
+  0:
+    guardian: vyasa
+    quarter: genesis
+    role: "System Wake"
+    keywords:
+      - boot
+      - wake
+      - start
+      - system
+      - init
+
+  1:
+    guardian: brahma
+    quarter: genesis
+    role: "Creation"
+    keywords:
+      - create
+      - spawn
+      - genesis
+      - new
+      - born
+
+  2:
+    guardian: narada
+    quarter: genesis
+    role: "Communication"
+    keywords:
+      - broadcast
+      - message
+      - communicate
+      - narada
+      - news
+      - chat
+      - talk
+      - ask
+      - help
+      - hello
+      - hi
+
+  3:
+    guardian: shambhu
+    quarter: genesis
+    role: "Transformation"
+    keywords:
+      - destroy
+      - dissolve
+      - transform
+      - shiva
+      - cleanup
+
+  # === DHARMA QUARTER (4-7) ===
+  4:
+    guardian: prithu
+    quarter: dharma
+    role: "Compile/Structure"
+    keywords:
+      - scan
+      - compile
+      - document
+      - structure
+      - knowledge
+      - search
+      - find
+      - locate
+
+  5:
+    guardian: kumaras
+    quarter: dharma
+    role: "Purification"
+    keywords:
+      - purify
+      - cleanse
+      - shuddhi
+      - format
+      - lint
+
+  6:
+    guardian: kapila
+    quarter: dharma
+    role: "Analysis"
+    keywords:
+      - analyze
+      - resolve
+      - enumerate
+      - logic
+      - inference
+      - understand
+      - explain
+      - why
+      - how
+      - debug
+
+  7:
+    guardian: manu
+    quarter: dharma
+    role: "Governance"
+    keywords:
+      - rule
+      - law
+      - govern
+      - manu
+      - policy
+
+  # === KARMA QUARTER (8-11) ===
+  8:
+    guardian: parashurama
+    quarter: karma
+    role: "Execution"
+    keywords:
+      - execute
+      - run
+      - enforce
+      - parashurama
+      - action
+
+  9:
+    guardian: prahlada
+    quarter: karma
+    role: "Protection"
+    keywords:
+      - protect
+      - defend
+      - prahlada
+      - devotion
+      - faith
+
+  10:
+    guardian: janaka
+    quarter: karma
+    role: "Scheduling"
+    keywords:
+      - schedule
+      - task
+      - janaka
+      - dharma
+      - duty
+
+  11:
+    guardian: bhishma
+    quarter: karma
+    role: "Persistence"
+    keywords:
+      - persist
+      - commit
+      - ledger
+      - bhishma
+      - store
+
+  # === MOKSHA QUARTER (12-15) ===
+  12:
+    guardian: nrisimha
+    quarter: moksha
+    role: "Security"
+    keywords:
+      - guard
+      - kill
+      - security
+      - nrisimha
+      - terminate
+
+  13:
+    guardian: bali
+    quarter: moksha
+    role: "Resources"
+    keywords:
+      - resource
+      - allocate
+      - bali
+      - give
+      - surrender
+
+  14:
+    guardian: shuka
+    quarter: moksha
+    role: "Observation"
+    keywords:
+      - observe
+      - log
+      - shuka
+      - report
+      - narrate
+      - status
+
+  15:
+    guardian: yamaraja
+    quarter: moksha
+    role: "Judgment"
+    keywords:
+      - judge
+      - audit
+      - yamaraja
+      - verdict
+      - death
