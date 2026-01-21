@@ -637,18 +637,37 @@ class ResonanceEngine:
 
 
 # =============================================================================
-# GLOBAL ENGINE (Singleton)
 # =============================================================================
-
-_resonance_engine: Optional[ResonanceEngine] = None
+# SINGLETON - VIA SERVICE REGISTRY (WIRED, NOT ISLAND!)
+# =============================================================================
 
 
 def get_resonance_engine() -> ResonanceEngine:
-    """Get the global resonance engine."""
-    global _resonance_engine
-    if _resonance_engine is None:
-        _resonance_engine = ResonanceEngine()
-    return _resonance_engine
+    """
+    Get ResonanceEngine through ServiceRegistry (WIRED).
+
+    CRITICAL FIX: Was an ISLAND - created directly, bypassing DI.
+    Now goes through ServiceRegistry for NagaProxy wrapping.
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Try to get from registry first
+    try:
+        existing = ServiceRegistry.get(ResonanceEngine)
+        if existing is not None:
+            return existing
+    except Exception:
+        pass  # Not registered yet
+
+    # Create and register
+    import logging
+    logger = logging.getLogger("RESONANCE_ENGINE")
+
+    instance = ResonanceEngine()
+    ServiceRegistry.register(ResonanceEngine, instance)
+    logger.info("✅ ResonanceEngine registered via ServiceRegistry (WIRED)")
+
+    return ServiceRegistry.get(ResonanceEngine)
 
 
 def resonate(text: str) -> ResonanceVector:

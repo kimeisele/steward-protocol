@@ -513,16 +513,36 @@ class ChatSubstrateBridge:
 # =============================================================================
 # SINGLETON
 # =============================================================================
-
-_bridge: Optional[ChatSubstrateBridge] = None
+# SINGLETON - VIA SERVICE REGISTRY (WIRED, NOT ISLAND!)
+# =============================================================================
 
 
 def get_substrate_bridge() -> ChatSubstrateBridge:
-    """Get the global substrate bridge."""
-    global _bridge
-    if _bridge is None:
-        _bridge = ChatSubstrateBridge()
-    return _bridge
+    """
+    Get ChatSubstrateBridge through ServiceRegistry (WIRED).
+
+    CRITICAL FIX: Was an ISLAND - created directly, bypassing DI.
+    Now goes through ServiceRegistry for NagaProxy wrapping.
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Try to get from registry first
+    try:
+        existing = ServiceRegistry.get(ChatSubstrateBridge)
+        if existing is not None:
+            return existing
+    except Exception:
+        pass  # Not registered yet
+
+    # Create and register
+    import logging
+    logger = logging.getLogger("SUBSTRATE_BRIDGE")
+
+    instance = ChatSubstrateBridge()
+    ServiceRegistry.register(ChatSubstrateBridge, instance)
+    logger.info("✅ ChatSubstrateBridge registered via ServiceRegistry (WIRED)")
+
+    return ServiceRegistry.get(ChatSubstrateBridge)
 
 
 # =============================================================================
