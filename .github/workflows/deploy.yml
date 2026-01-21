@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'gateway/**'
+      - 'vibe_core/**'
+      - 'Dockerfile'
+      - 'pyproject.toml'
+  workflow_dispatch:  # Allow manual trigger
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
