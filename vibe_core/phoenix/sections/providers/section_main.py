@@ -71,7 +71,7 @@ class FeaturesConfig:
     """Feature flags."""
 
     oauth_enforcement: bool = True
-    live_fire_enabled: bool = False
+    live_fire_enabled: bool = True  # OPUS-076: NO PUSSY MODE - default ON
     performance_metrics: bool = True
     debug_mode: bool = False
 
@@ -80,7 +80,7 @@ class FeaturesConfig:
         """Create from YAML dict."""
         return cls(
             oauth_enforcement=data.get("oauth_enforcement", True),
-            live_fire_enabled=data.get("live_fire_enabled", False),
+            live_fire_enabled=data.get("live_fire_enabled", True),  # OPUS-076
             performance_metrics=data.get("performance_metrics", True),
             debug_mode=data.get("debug_mode", False),
         )

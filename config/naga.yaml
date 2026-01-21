@@ -1,6 +1,6 @@
 sesha:
   enabled: true
-  gossip_enabled: false
+  gossip_enabled: true  # OPUS-076: NO PUSSY MODE - gossip ON
   block_size: 100
   sync_interval_seconds: 60
 vasuki:

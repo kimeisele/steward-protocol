@@ -304,16 +304,20 @@ class NagaProxy(Generic[T]):
             takshaka = object.__getattribute__(proxy_self, "_takshaka")
             if takshaka:
                 service_name = object.__getattribute__(proxy_self, "_service_name")
-                subject = Subject(
-                    subject_type="method_call", identifier=f"{service_name}.{name}", context=f"args={len(args)}"
-                )
-                try:
-                    verdict = takshaka.intercept(subject)
-                    if verdict in (Verdict.DENY, Verdict.QUARANTINE, Verdict.ESCALATE):
-                        raise PermissionError(f"Takshaka denied access to {service_name}.{name}: {verdict.value}")
-                except AttributeError:
-                    # Takshaka implementation might be partial during boot
-                    pass
+                # Skip security check if WE ARE Takshaka (prevent infinite recursion)
+                if service_name != "TakshakaService":
+                    subject = Subject(
+                        subject_type="method_call", identifier=f"{service_name}.{name}", context=f"args={len(args)}"
+                    )
+                    try:
+                        # Unwrap takshaka if it's a NagaProxy to prevent recursion
+                        raw_takshaka = getattr(takshaka, "_wrapped", takshaka)
+                        verdict = raw_takshaka.intercept(subject)
+                        if verdict in (Verdict.DENY, Verdict.QUARANTINE, Verdict.ESCALATE):
+                            raise PermissionError(f"Takshaka denied access to {service_name}.{name}: {verdict.value}")
+                    except AttributeError:
+                        # Takshaka implementation might be partial during boot
+                        pass
 
             # Track timing for Chitragupta
             start_time = time.perf_counter()

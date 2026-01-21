@@ -54,7 +54,7 @@ class SettingsRenderState:
     execution_history: List[Dict[str, object]]
     # UI Enhancement: Phoenix config state
     provider_info: Optional[Dict[str, str]] = None  # Provider name, models, etc.
-    live_fire_enabled: bool = False  # Execution mode
+    live_fire_enabled: bool = False  # Display state - reads from config
 
 
 @dataclass
