@@ -23,10 +23,8 @@ from vibe_core.cli.naga_commands import (
     wake,  # noqa: F401
 )
 from vibe_core.cli.naga_commands.serve.chat import (
-    INTENT_PATTERNS,
     ChatCommand,
-    detect_intent,
-    extract_args,
+    GUARDIAN_COMMANDS,
 )
 from vibe_core.cli.naga_commands.serve.commit import CommitCommand
 from vibe_core.cli.naga_commands.serve.intel import IntelCommand
@@ -304,83 +302,10 @@ class TestImmutability:
 
 
 # =============================================================================
-# INTENT DETECTION TESTS
+# CHAT ROUTING TESTS (via mahamantra.resonate())
 # =============================================================================
-
-
-class TestIntentDetection:
-    """Test intent detection for chat routing."""
-
-    def test_detect_status_intent(self):
-        """Detect status intent."""
-        assert detect_intent("What's the system status?") == "status"
-        assert detect_intent("how is the system") == "status"
-        assert detect_intent("are you alive?") == "status"
-
-    def test_detect_scan_intent(self):
-        """Detect scan intent."""
-        assert detect_intent("scan for vulnerabilities") == "scan"
-        assert detect_intent("check the codebase") == "scan"
-        assert detect_intent("verify integrity") == "scan"
-
-    def test_detect_intel_intent(self):
-        """Detect intel intent."""
-        assert detect_intent("any recent intel?") == "intel"
-        assert detect_intent("show me threats") == "intel"
-        assert detect_intent("what's happening?") == "intel"
-
-    def test_no_intent_for_greeting(self):
-        """No command intent for greetings."""
-        assert detect_intent("hello there") is None
-        assert detect_intent("good morning") is None
-
-    def test_no_intent_for_general(self):
-        """No command intent for general chat."""
-        assert detect_intent("tell me a joke") is None
-        assert detect_intent("what is krishna consciousness") is None
-
-
-# =============================================================================
-# ARGUMENT EXTRACTION TESTS
-# =============================================================================
-
-
-class TestArgumentExtraction:
-    """Test argument extraction from natural language."""
-
-    def test_extract_status_brief(self):
-        """Extract --brief for status."""
-        args = extract_args("quick status check", "status")
-        assert "--brief" in args
-
-    def test_extract_status_nagas(self):
-        """Extract --nagas for status."""
-        args = extract_args("how are the nagas doing", "status")
-        assert "--nagas" in args
-
-    def test_extract_scan_deep(self):
-        """Extract --deep for scan."""
-        args = extract_args("do a deep scan", "scan")
-        assert "--deep" in args
-
-    def test_extract_scan_toxicity(self):
-        """Extract --toxicity for scan."""
-        args = extract_args("check for security vulnerabilities", "scan")
-        assert "--toxicity" in args
-
-    def test_extract_intel_critical(self):
-        """Extract --critical for intel."""
-        args = extract_args("show critical intel", "intel")
-        assert "--critical" in args
-
-    def test_extract_intel_threats(self):
-        """Extract --threats for intel."""
-        args = extract_args("any active threats?", "intel")
-        assert "--threats" in args
-
-
-# =============================================================================
-# CHAT ROUTING TESTS
+# NOTE: Intent detection and argument extraction moved to core (intents.py).
+# These tests verify the ChatCommand routes via mahamantra.resonate().
 # =============================================================================
 
 

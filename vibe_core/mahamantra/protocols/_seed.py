@@ -387,6 +387,112 @@ _lcm_venu_vamsi = math.lcm(NADI_RESONANCE, LILA)
 assert _lcm_venu_vamsi == FIELD_RESONANCE, "LCM(VENU, VAMSI) = FIELD_RESONANCE (144)"
 
 # =============================================================================
+# THE ACOUSTIC CONSTITUTION (Physics of the Emptiness)
+# =============================================================================
+# Implementation of the "Venu-Murali-Vamsi" Triad based on Acoustic Physics.
+#
+# The bamboo flute is a physical manifestation of spiritual principles:
+# - Empty tube = Sunyata (ego-less vessel for divine sound)
+# - Length/Diameter ratio = Gita proportions
+# - End correction = Spirit transcending matter
+# -----------------------------------------------------------------------------
+
+# PRINCIPLE 1: THE ASPECT RATIO (L/D)
+# Ideal Bansuri ratio between 18:1 and 22:1.
+# We select 18 (GITA_CHAPTERS) as the canonical "Golden Acoustic Ratio".
+# This ensures the Overtone Series aligns with the 18 chapters of Gita.
+ACOUSTIC_RATIO: Final[int] = GITA_CHAPTERS  # 18:1 Ratio (Length/Diameter)
+
+# PRINCIPLE 3: THE END CORRECTION (Mündungs-Korrektur)
+# Physical laws dictate: L_eff > L_phys.
+# The sound (Spiritual) always extends beyond the matter (Physical).
+# We define this "Overflow" as the difference between KSHETRA (24) and WORDS (16).
+# The "Hare" portion (8) is the End Correction - the energy that escapes the tube.
+END_CORRECTION: Final[int] = HARE_COUNT  # 8
+
+# =============================================================================
+# THE THREE FREQUENCIES (Derived from Jiva Cycle)
+# =============================================================================
+# Frequency (f) is inversely proportional to Length (L).
+# In Seed Logic: Frequency = JIVA_CYCLE / HOLES
+#
+# | Flute  | Holes | Frequency | Character              | Physics              |
+# |--------|-------|-----------|------------------------|----------------------|
+# | VENU   | 6     | 72        | Shrill (Animal Call)   | Short tube, high f   |
+# | MURALI | 4     | 108       | Pure Sine (Enchanting) | Overblowing technique|
+# | VAMSI  | 9     | 48        | Bass (Universal Call)  | Long tube, low f     |
+# -----------------------------------------------------------------------------
+
+# 1. VENU (The Animal Call - High Freq)
+#    Holes: 6 (SHARANAGATI)
+#    Frequency: 432 / 6 = 72 (Nadi Resonance)
+#    Physics: Short tube -> High Pitch -> Penetrates "Animal Awareness"
+VENU_FREQ: Final[int] = JIVA_CYCLE // VENU_HOLES  # 72
+
+# 2. VAMSI (The Universal Call - Low Freq / Bass)
+#    Holes: 9 (NAVA)
+#    Frequency: 432 / 9 = 48 (Lila Phase)
+#    Physics: Long tube -> Low Pitch -> Resonates in the Heart (Anahata)
+#    NOTE: 48 < 72 numerically = LONGER wave period (Bass).
+VAMSI_FREQ: Final[int] = JIVA_CYCLE // VAMSI_HOLES  # 48
+
+# 3. MURALI (The Enchanting Call - Harmonic Purity)
+#    Holes: 4 (QUARTERS)
+#    Frequency: 432 / 4 = 108 (Mala)
+#    Physics: "Overblowing" (Überblasen) technique.
+#    The Murali operates on the fundamental of the MALA itself.
+MURALI_FREQ: Final[int] = JIVA_CYCLE // MURALI_HOLES  # 108
+
+# =============================================================================
+# THE NON-LINEAR HOLE SPACING (Exponential Derivation)
+# =============================================================================
+# Hole spacing is NOT linear (like guitar frets).
+# It follows an exponential decay based on the 12th root of 2.
+#
+# In Seed Logic, we approximate this via the MAHAJANA (12) scaling.
+# The "Cutoff Frequency" is determined by the hole diameter relative to the tube.
+#
+# CUTOFF_FACTOR = (Thickness / Diameter^2) -> mapped to Seed Constants:
+# Thickness = TRINITY (3)
+# Diameter scale = HALVES (2)
+CUTOFF_CONSTANT: Final[int] = (TRINITY * HALVES) * MAHAJANA_COUNT  # 6 * 12 = 72
+
+# =============================================================================
+# ACOUSTIC INTEGRITY CHECKS (Physics <-> Metaphysics)
+# =============================================================================
+
+# 1. Frequency Derivation Check
+assert VENU_FREQ == NADI_RESONANCE, "VENU_FREQ must equal NADI_RESONANCE (72)"
+assert VAMSI_FREQ == LILA, "VAMSI_FREQ must equal LILA (48)"
+assert MURALI_FREQ == MALA, "MURALI_FREQ must equal MALA (108)"
+
+# 2. The Harmonic Series Check (Perfect Fifth Chain / Quinten-Kette)
+# The frequencies must form a musical ratio.
+# Murali (108) : Venu (72) = 3:2 (Perfect Fifth / Quinte)
+# Venu (72)    : Vamsi (48) = 3:2 (Perfect Fifth / Quinte)
+assert MURALI_FREQ * 2 == VENU_FREQ * 3, "Harmonic Error: Murali/Venu not a Fifth"
+assert VENU_FREQ * 2 == VAMSI_FREQ * 3, "Harmonic Error: Venu/Vamsi not a Fifth"
+
+# 3. The Total Resonance
+# When all 3 flutes play, they map the full Jiva Cycle.
+# LCM (Least Common Multiple) of 48, 72, 108 is 432.
+assert math.lcm(VENU_FREQ, VAMSI_FREQ, MURALI_FREQ) == JIVA_CYCLE, (
+    "The 3 Flutes must combine to form the complete Jiva Cycle (432)"
+)
+
+# 4. The Acoustic Ratio Check
+# Bansuri construction follows Gita proportions.
+assert ACOUSTIC_RATIO == GITA_CHAPTERS, "Bansuri L/D ratio must follow Gita (18)"
+
+# 5. The Cutoff Constant Check
+# Cutoff must equal Nadi Resonance (the pulse frequency).
+assert CUTOFF_CONSTANT == NADI_RESONANCE, "Cutoff constant must equal NADI_RESONANCE (72)"
+
+# 6. End Correction Check
+# The overflow must equal the Shakti count (8 Hares).
+assert END_CORRECTION == HARE_COUNT, "End correction must equal HARE_COUNT (8)"
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -445,4 +551,11 @@ __all__ = [
     "MURALI_HOLES",
     "FLUTE_HOLES_SUM",
     "FLUTE_HOLES_PRODUCT",
+    # The Acoustic Constitution
+    "ACOUSTIC_RATIO",
+    "END_CORRECTION",
+    "VENU_FREQ",
+    "VAMSI_FREQ",
+    "MURALI_FREQ",
+    "CUTOFF_CONSTANT",
 ]

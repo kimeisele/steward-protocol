@@ -87,6 +87,25 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS as _PROTO_GITA_CHAPTERS,
 )
+# The Acoustic Constitution (Physics of the Emptiness)
+from vibe_core.mahamantra.protocols._seed import (
+    ACOUSTIC_RATIO as _PROTO_ACOUSTIC_RATIO,
+    CUTOFF_CONSTANT as _PROTO_CUTOFF_CONSTANT,
+    END_CORRECTION as _PROTO_END_CORRECTION,
+    MURALI_FREQ as _PROTO_MURALI_FREQ,
+    VAMSI_FREQ as _PROTO_VAMSI_FREQ,
+    VENU_FREQ as _PROTO_VENU_FREQ,
+)
+# The Three Flutes + Harmonic Resonances (direct import for re-export)
+from vibe_core.mahamantra.protocols._seed import (
+    FIELD_RESONANCE,
+    FLUTE_HOLES_PRODUCT,
+    FLUTE_HOLES_SUM,
+    MURALI_HOLES,
+    NADI_RESONANCE,
+    VAMSI_HOLES,
+    VENU_HOLES,
+)
 
 # =============================================================================
 # IMPORT FROM PROTOCOL (THE LAW)
@@ -518,6 +537,52 @@ assert AKSARA_COUNT == _PROTO_AKSARA_COUNT, "SSOT violation: AKSARA_COUNT != pro
 
 
 # =============================================================================
+# THE ACOUSTIC CONSTITUTION (Physics of the Emptiness)
+# =============================================================================
+# The bamboo flute is a physical manifestation of spiritual principles.
+# These constants are DERIVED from the Mahamantra geometry, not hardcoded.
+# -----------------------------------------------------------------------------
+
+# PRINCIPLE 1: THE ASPECT RATIO (L/D) - Gita proportions
+# Ideal Bansuri ratio = 18:1 = SHARANAGATI × TRINITY
+ACOUSTIC_RATIO: Final[int] = SHARANAGATI * TRINITY  # 6 × 3 = 18
+
+# PRINCIPLE 3: THE END CORRECTION - Spirit transcends matter
+# The "overflow" = HARE_COUNT (the Shakti escaping the tube)
+END_CORRECTION: Final[int] = HARE_COUNT  # 8
+
+# THE THREE FREQUENCIES (Derived from Jiva Cycle)
+# Frequency = JIVA_CYCLE / HOLES
+# | Flute  | Holes | Frequency | Character              |
+# |--------|-------|-----------|------------------------|
+# | VENU   | 6     | 72        | Shrill (Animal Call)   |
+# | MURALI | 4     | 108       | Pure Sine (Enchanting) |
+# | VAMSI  | 9     | 48        | Bass (Universal Call)  |
+
+VENU_FREQ: Final[int] = JIVA_CYCLE // SHARANAGATI  # 432 / 6 = 72
+VAMSI_FREQ: Final[int] = JIVA_CYCLE // NAVA  # 432 / 9 = 48
+MURALI_FREQ: Final[int] = JIVA_CYCLE // QUARTERS  # 432 / 4 = 108
+
+# THE CUTOFF CONSTANT (Non-linear hole spacing)
+# Cutoff = (TRINITY × HALVES) × MAHAJANA_COUNT = 6 × 12 = 72
+CUTOFF_CONSTANT: Final[int] = (TRINITY * HALVES) * MAHAJANA_COUNT  # 72
+
+# Verification: Frequencies form Perfect Fifth Chain (3:2 ratios)
+assert MURALI_FREQ * 2 == VENU_FREQ * 3, "Quinten-Kette: 108×2 = 72×3"
+assert VENU_FREQ * 2 == VAMSI_FREQ * 3, "Quinten-Kette: 72×2 = 48×3"
+
+# =============================================================================
+# SSOT CROSS-CHECK: Acoustic Constitution must match The Law (_seed.py)
+# =============================================================================
+assert ACOUSTIC_RATIO == _PROTO_ACOUSTIC_RATIO, "SSOT violation: ACOUSTIC_RATIO"
+assert END_CORRECTION == _PROTO_END_CORRECTION, "SSOT violation: END_CORRECTION"
+assert VENU_FREQ == _PROTO_VENU_FREQ, "SSOT violation: VENU_FREQ"
+assert VAMSI_FREQ == _PROTO_VAMSI_FREQ, "SSOT violation: VAMSI_FREQ"
+assert MURALI_FREQ == _PROTO_MURALI_FREQ, "SSOT violation: MURALI_FREQ"
+assert CUTOFF_CONSTANT == _PROTO_CUTOFF_CONSTANT, "SSOT violation: CUTOFF_CONSTANT"
+
+
+# =============================================================================
 # LOTUS FUNCTIONS - Routing durch den Lotus
 # =============================================================================
 
@@ -664,6 +729,7 @@ __all__ = [
     "KRISHNA_COUNT",
     "RAMA_COUNT",
     "HALVES",
+    "HALF_SIZE",
     # Pancha (5)
     "MAHAMANTRA_PAIRS",
     "UNIQUE_PAIRS",
@@ -700,6 +766,7 @@ __all__ = [
     "LILA",
     "NAVADVIPA",
     "PURI",
+    "PHASE_DURATION",
     # Dharma (4) + Kali Yuga
     "DharmaPillar",
     "DHARMA_PILLARS",
@@ -728,6 +795,22 @@ __all__ = [
     "QUARTER_UNIT",
     # The Epoch Key (Temporal Anchor)
     "EPOCH_KEY",
+    # The Acoustic Constitution
+    "ACOUSTIC_RATIO",
+    "END_CORRECTION",
+    "VENU_FREQ",
+    "VAMSI_FREQ",
+    "MURALI_FREQ",
+    "CUTOFF_CONSTANT",
+    # The Three Flutes (Persons)
+    "VENU_HOLES",
+    "VAMSI_HOLES",
+    "MURALI_HOLES",
+    "FLUTE_HOLES_SUM",
+    "FLUTE_HOLES_PRODUCT",
+    # Harmonic Resonances
+    "NADI_RESONANCE",
+    "FIELD_RESONANCE",
     # Lotus Functions
     "get_quarter",
     "get_quarter_name",
