@@ -45,6 +45,7 @@ from vibe_core.protocols.substrate.mantra.lotus import LOTUS_PARAMPARA
 # TEST 24 ELEMENTS ENUMERATION
 # =============================================================================
 
+
 class TestPrakritiElements:
     """Test the 24 Prakriti element enumeration."""
 
@@ -72,44 +73,45 @@ class TestPrakritiElements:
         assert len(elements) == 5
         assert PrakritiElement.SHABDA in elements  # Sound
         assert PrakritiElement.SPARSHA in elements  # Touch
-        assert PrakritiElement.RUPA in elements     # Form
-        assert PrakritiElement.RASA in elements     # Taste
-        assert PrakritiElement.GANDHA in elements   # Smell
+        assert PrakritiElement.RUPA in elements  # Form
+        assert PrakritiElement.RASA in elements  # Taste
+        assert PrakritiElement.GANDHA in elements  # Smell
 
     def test_jnanendriya_elements(self) -> None:
         """JNANENDRIYA has 5 knowledge senses (10-14)."""
         elements = [e for e in PrakritiElement if 10 <= e.value <= 14]
         assert len(elements) == 5
         assert PrakritiElement.SHROTRA in elements  # Ear
-        assert PrakritiElement.TVAK in elements     # Skin
-        assert PrakritiElement.CHAKSHUS in elements # Eye
-        assert PrakritiElement.RASANA in elements   # Tongue
-        assert PrakritiElement.GHRANA in elements   # Nose
+        assert PrakritiElement.TVAK in elements  # Skin
+        assert PrakritiElement.CHAKSHUS in elements  # Eye
+        assert PrakritiElement.RASANA in elements  # Tongue
+        assert PrakritiElement.GHRANA in elements  # Nose
 
     def test_karmendriya_elements(self) -> None:
         """KARMENDRIYA has 5 working senses (15-19)."""
         elements = [e for e in PrakritiElement if 15 <= e.value <= 19]
         assert len(elements) == 5
-        assert PrakritiElement.VAK in elements      # Speech
-        assert PrakritiElement.PANI in elements     # Hands
-        assert PrakritiElement.PADA in elements     # Feet
-        assert PrakritiElement.PAYU in elements     # Excretion
+        assert PrakritiElement.VAK in elements  # Speech
+        assert PrakritiElement.PANI in elements  # Hands
+        assert PrakritiElement.PADA in elements  # Feet
+        assert PrakritiElement.PAYU in elements  # Excretion
         assert PrakritiElement.UPASTHA in elements  # Generation
 
     def test_mahabhuta_elements(self) -> None:
         """MAHABHUTA has 5 gross elements (20-24)."""
         elements = [e for e in PrakritiElement if 20 <= e.value <= 24]
         assert len(elements) == 5
-        assert PrakritiElement.AKASHA in elements   # Ether
-        assert PrakritiElement.VAYU in elements     # Air
-        assert PrakritiElement.TEJAS in elements    # Fire
-        assert PrakritiElement.APAS in elements     # Water
+        assert PrakritiElement.AKASHA in elements  # Ether
+        assert PrakritiElement.VAYU in elements  # Air
+        assert PrakritiElement.TEJAS in elements  # Fire
+        assert PrakritiElement.APAS in elements  # Water
         assert PrakritiElement.PRITHVI in elements  # Earth
 
 
 # =============================================================================
 # TEST ELEMENT → GUARDIAN MAPPING
 # =============================================================================
+
 
 class TestElementGuardianMapping:
     """Test element to Mahajana guardian mapping."""
@@ -145,6 +147,7 @@ class TestElementGuardianMapping:
 # TEST ELEMENT → OPCODE MAPPING
 # =============================================================================
 
+
 class TestElementOpcodeMapping:
     """Test element to MantraOpCode mapping."""
 
@@ -174,6 +177,7 @@ class TestElementOpcodeMapping:
 # =============================================================================
 # TEST SAMKHYA PROTOCOL
 # =============================================================================
+
 
 class TestSamkhyaProtocol:
     """Test the SamkhyaProtocol implementation."""
@@ -205,30 +209,39 @@ class TestElementAnalysis:
 
     def test_analyze_chat_protocol(self) -> None:
         """Chat protocol maps to VAK (speech)."""
-        analysis = analyze_prakriti_element("test_chat", """
+        analysis = analyze_prakriti_element(
+            "test_chat",
+            """
 def chat(message: str) -> str:
     return translate(speak(message))
-""")
+""",
+        )
         assert analysis["element"] == "VAK"
         assert analysis["protocol_layer"] == "speech"
         assert analysis["guardian"] == "narada"
 
     def test_analyze_storage_protocol(self) -> None:
         """Storage protocol maps to PRITHVI (earth)."""
-        analysis = analyze_prakriti_element("test_storage", """
+        analysis = analyze_prakriti_element(
+            "test_storage",
+            """
 def persist(data: bytes) -> str:
     return storage.save(data, disk=True)
-""")
+""",
+        )
         assert analysis["element"] == "PRITHVI"
         assert analysis["protocol_layer"] == "storage"
         assert analysis["guardian"] == "brahma"
 
     def test_analyze_cognition_protocol(self) -> None:
         """Cognition protocol maps to MANAS (mind)."""
-        analysis = analyze_prakriti_element("test_cognition", """
+        analysis = analyze_prakriti_element(
+            "test_cognition",
+            """
 def think(input: str) -> str:
     return cognitive_process(reason(input))
-""")
+""",
+        )
         assert analysis["element"] == "MANAS"
         assert analysis["protocol_layer"] == "cognition"
         assert analysis["guardian"] == "kapila"
@@ -260,7 +273,8 @@ class TestEntropyAnalysis:
         # Create a hash that's divisible by 37
         parampara_hash = 37 * 100
         report = analyze_protocol_entropy(
-            "connected_test", "def foo(): pass",
+            "connected_test",
+            "def foo(): pass",
             has_owner=True,
             parampara_hash=parampara_hash,
         )
@@ -285,17 +299,23 @@ class TestWildProtocolRouting:
 
     def test_route_chat_to_narada(self) -> None:
         """Chat protocol routes to NARADA."""
-        guardian, position, path = route_wild_protocol("test_chat", """
+        guardian, position, path = route_wild_protocol(
+            "test_chat",
+            """
 def chat(msg): return speak(msg)
-""")
+""",
+        )
         assert guardian == Mahajana.NARADA
         assert "narada" in path
 
     def test_route_storage_to_brahma(self) -> None:
         """Storage protocol routes to BRAHMA."""
-        guardian, position, path = route_wild_protocol("test_storage", """
+        guardian, position, path = route_wild_protocol(
+            "test_storage",
+            """
 def persist(data): return storage.save(data)
-""")
+""",
+        )
         assert guardian == Mahajana.BRAHMA
         assert "brahma" in path
 
@@ -348,12 +368,14 @@ class TestEnumerateFunctions:
 # TEST INTEGRATION WITH OWNED PROTOCOL
 # =============================================================================
 
+
 class TestOwnedProtocolIntegration:
     """Test integration with OwnedProtocol base class."""
 
     def test_samkhya_is_owned_protocol(self) -> None:
         """SamkhyaProtocol inherits from OwnedProtocol."""
         from vibe_core.protocols.mahajanas.owned_protocol import OwnedProtocol
+
         samkhya = get_samkhya()
         assert isinstance(samkhya, OwnedProtocol)
 
@@ -388,6 +410,7 @@ class TestOwnedProtocolIntegration:
 # =============================================================================
 # TEST THE 37 FORMULA
 # =============================================================================
+
 
 class TestParamparaFormula:
     """Test the 37 formula (24 + 12 + 1)."""

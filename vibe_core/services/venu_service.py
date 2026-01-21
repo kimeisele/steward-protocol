@@ -165,10 +165,7 @@ class VenuService(PanchaTattvaProtocol):
                 if sleep_time > 0:
                     # Normal case: wait until target time
                     try:
-                        await asyncio.wait_for(
-                            self._stop_event.wait(),
-                            timeout=sleep_time
-                        )
+                        await asyncio.wait_for(self._stop_event.wait(), timeout=sleep_time)
                         # If we get here, stop was called
                         break
                     except asyncio.TimeoutError:
@@ -179,10 +176,7 @@ class VenuService(PanchaTattvaProtocol):
                     jitter_ms = abs(sleep_time) * 1000
                     if jitter_ms > VENU_MAX_JITTER_MS:
                         self._missed_ticks += 1
-                        logger.warning(
-                            f"⚠️ Missed tick! Jitter: {jitter_ms:.2f}ms "
-                            f"(threshold: {VENU_MAX_JITTER_MS}ms)"
-                        )
+                        logger.warning(f"⚠️ Missed tick! Jitter: {jitter_ms:.2f}ms (threshold: {VENU_MAX_JITTER_MS}ms)")
 
                 # 4. Check if stopped during wait
                 if not self._running:

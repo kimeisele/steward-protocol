@@ -60,12 +60,12 @@ class TestFractalLevel:
 
     def test_level_order(self):
         """Levels are ordered from finest to coarsest."""
-        assert FractalLevel.VARNA == 0     # Letter
-        assert FractalLevel.AKSARA == 1    # Syllable
-        assert FractalLevel.PADA == 2      # Word
-        assert FractalLevel.VAKYA == 3     # Mantra
-        assert FractalLevel.MALA == 4      # Round
-        assert FractalLevel.SADHANA == 5   # Session
+        assert FractalLevel.VARNA == 0  # Letter
+        assert FractalLevel.AKSARA == 1  # Syllable
+        assert FractalLevel.PADA == 2  # Word
+        assert FractalLevel.VAKYA == 3  # Mantra
+        assert FractalLevel.MALA == 4  # Round
+        assert FractalLevel.SADHANA == 5  # Session
 
 
 # =============================================================================
@@ -304,10 +304,10 @@ class TestInstruction:
     def test_instruction_has_correct_owner(self):
         """Each instruction has its expected owner."""
         # 4 HEADs
-        assert INSTRUCTION_SET[0].owner_name == "PRITHU"       # Q1 HEAD
-        assert INSTRUCTION_SET[4].owner_name == "VYASA"        # Q2 HEAD
+        assert INSTRUCTION_SET[0].owner_name == "PRITHU"  # Q1 HEAD
+        assert INSTRUCTION_SET[4].owner_name == "VYASA"  # Q2 HEAD
         assert INSTRUCTION_SET[8].owner_name == "PARASHURAMA"  # Q3 HEAD
-        assert INSTRUCTION_SET[12].owner_name == "NRISIMHA"    # Q4 HEAD
+        assert INSTRUCTION_SET[12].owner_name == "NRISIMHA"  # Q4 HEAD
 
     def test_instruction_quarter_assignment(self):
         """Each instruction knows its quarter."""

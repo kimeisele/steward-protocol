@@ -94,9 +94,7 @@ class TestFloodStats:
         assert stats.uptime_seconds == 0.0
 
         # With started_at, uptime is positive
-        stats_with_time = FloodStats(
-            started_at=datetime(2024, 1, 1, 0, 0, 0)
-        )
+        stats_with_time = FloodStats(started_at=datetime(2024, 1, 1, 0, 0, 0))
         assert stats_with_time.uptime_seconds > 0
 
     def test_events_per_second(self):
@@ -123,11 +121,7 @@ class TestFloodConfig:
 
     def test_custom_config(self):
         """Custom configuration."""
-        config = FloodConfig(
-            max_analysis_queue=500,
-            analysis_timeout_ms=100,
-            enabled=False
-        )
+        config = FloodConfig(max_analysis_queue=500, analysis_timeout_ms=100, enabled=False)
         assert config.max_analysis_queue == 500
         assert config.analysis_timeout_ms == 100
         assert config.enabled is False
@@ -139,11 +133,7 @@ class TestFloodSignal:
     def test_signal_is_frozen(self):
         """FloodSignal is immutable."""
         signal = FloodSignal(
-            source_id="test",
-            event_type="TEST",
-            agent_id="agent-1",
-            toxicity_score=0.5,
-            patterns_detected=()
+            source_id="test", event_type="TEST", agent_id="agent-1", toxicity_score=0.5, patterns_detected=()
         )
         with pytest.raises(Exception):
             signal.toxicity_score = 0.9
@@ -155,7 +145,7 @@ class TestFloodSignal:
             event_type="CHAT_MESSAGE",
             agent_id="opus",
             toxicity_score=0.2,
-            patterns_detected=("pattern_1", "pattern_2")
+            patterns_detected=("pattern_1", "pattern_2"),
         )
         assert signal.source_id == "flood_manager"
         assert signal.toxicity_score == 0.2
@@ -172,7 +162,7 @@ class TestFloodObservation:
             severity="warning",
             source="takshaka",
             summary="Toxic pattern detected",
-            details=()
+            details=(),
         )
         with pytest.raises(Exception):
             obs.severity = "critical"
@@ -184,7 +174,7 @@ class TestFloodObservation:
             severity="info",
             source="chitragupta",
             summary="Unusual activity",
-            details=(("key1", "value1"), ("key2", "value2"))
+            details=(("key1", "value1"), ("key2", "value2")),
         )
         d = obs.details_dict
         assert d["key1"] == "value1"
@@ -194,13 +184,7 @@ class TestFloodObservation:
         """Various severity levels work."""
         severities = ["info", "warning", "critical"]
         for sev in severities:
-            obs = FloodObservation(
-                observation_type="test",
-                severity=sev,
-                source="test",
-                summary="Test",
-                details=()
-            )
+            obs = FloodObservation(observation_type="test", severity=sev, source="test", summary="Test", details=())
             assert obs.severity == sev
 
 
@@ -211,10 +195,10 @@ class TestNullFlood:
         """NullFlood satisfies FloodProtocol."""
         flood = NullFlood()
         # Check key methods exist
-        assert hasattr(flood, 'start')
-        assert hasattr(flood, 'stop')
-        assert hasattr(flood, 'get_stats')
-        assert hasattr(flood, 'opcode')
+        assert hasattr(flood, "start")
+        assert hasattr(flood, "stop")
+        assert hasattr(flood, "get_stats")
+        assert hasattr(flood, "opcode")
 
     def test_opcode_is_pulse_sync(self):
         """NullFlood uses PULSE_SYNC opcode."""
@@ -237,7 +221,7 @@ class TestNullFlood:
         flood.start()
         flood.start()  # No error
         flood.stop()
-        flood.stop()   # No error
+        flood.stop()  # No error
 
     def test_get_stats_returns_empty(self):
         """NullFlood returns empty stats."""
@@ -299,30 +283,29 @@ class TestFloodProtocolContract:
 
     def test_protocol_is_runtime_checkable(self):
         """Protocol can be checked at runtime."""
-        assert hasattr(FloodProtocol, '__protocol_attrs__') or \
-               hasattr(FloodProtocol, '_is_protocol')
+        assert hasattr(FloodProtocol, "__protocol_attrs__") or hasattr(FloodProtocol, "_is_protocol")
 
     def test_protocol_has_lifecycle_methods(self):
         """Protocol has lifecycle methods."""
-        methods = ['start', 'stop']
+        methods = ["start", "stop"]
         for method in methods:
             assert method in dir(FloodProtocol)
 
     def test_protocol_has_observation_methods(self):
         """Protocol has observation methods."""
-        methods = ['get_stats', 'get_layers', 'get_recent_observations']
+        methods = ["get_stats", "get_layers", "get_recent_observations"]
         for method in methods:
             assert method in dir(FloodProtocol)
 
     def test_protocol_has_subscription_methods(self):
         """Protocol has subscription methods."""
-        methods = ['subscribe_observations', 'unsubscribe_observations']
+        methods = ["subscribe_observations", "unsubscribe_observations"]
         for method in methods:
             assert method in dir(FloodProtocol)
 
     def test_protocol_has_cortex_integration(self):
         """Protocol has Cortex integration."""
-        assert 'set_cortex_callback' in dir(FloodProtocol)
+        assert "set_cortex_callback" in dir(FloodProtocol)
 
 
 class TestFloodConsumerProtocolContract:
@@ -330,16 +313,15 @@ class TestFloodConsumerProtocolContract:
 
     def test_protocol_is_runtime_checkable(self):
         """Protocol can be checked at runtime."""
-        assert hasattr(FloodConsumerProtocol, '__protocol_attrs__') or \
-               hasattr(FloodConsumerProtocol, '_is_protocol')
+        assert hasattr(FloodConsumerProtocol, "__protocol_attrs__") or hasattr(FloodConsumerProtocol, "_is_protocol")
 
     def test_has_on_flood_observation(self):
         """Protocol has on_flood_observation method."""
-        assert 'on_flood_observation' in dir(FloodConsumerProtocol)
+        assert "on_flood_observation" in dir(FloodConsumerProtocol)
 
     def test_has_get_relevant_observations(self):
         """Protocol has get_relevant_observations method."""
-        assert 'get_relevant_observations' in dir(FloodConsumerProtocol)
+        assert "get_relevant_observations" in dir(FloodConsumerProtocol)
 
 
 class TestStrictTyping:
@@ -348,6 +330,7 @@ class TestStrictTyping:
     def test_flood_stats_no_any(self):
         """FloodStats has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(FloodStats)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"FloodStats.{field_name} uses Any"
@@ -355,6 +338,7 @@ class TestStrictTyping:
     def test_flood_config_no_any(self):
         """FloodConfig has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(FloodConfig)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"FloodConfig.{field_name} uses Any"
@@ -362,6 +346,7 @@ class TestStrictTyping:
     def test_flood_signal_no_any(self):
         """FloodSignal has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(FloodSignal)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"FloodSignal.{field_name} uses Any"
@@ -369,6 +354,7 @@ class TestStrictTyping:
     def test_flood_observation_no_any(self):
         """FloodObservation has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(FloodObservation)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"FloodObservation.{field_name} uses Any"
@@ -392,23 +378,13 @@ class TestImmutability:
     def test_flood_signal_immutable(self):
         """FloodSignal is immutable."""
         signal = FloodSignal(
-            source_id="test",
-            event_type="TEST",
-            agent_id=None,
-            toxicity_score=0.0,
-            patterns_detected=()
+            source_id="test", event_type="TEST", agent_id=None, toxicity_score=0.0, patterns_detected=()
         )
         with pytest.raises(Exception):
             signal.source_id = "changed"
 
     def test_flood_observation_immutable(self):
         """FloodObservation is immutable."""
-        obs = FloodObservation(
-            observation_type="test",
-            severity="info",
-            source="test",
-            summary="Test",
-            details=()
-        )
+        obs = FloodObservation(observation_type="test", severity="info", source="test", summary="Test", details=())
         with pytest.raises(Exception):
             obs.summary = "Changed"

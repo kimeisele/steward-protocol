@@ -201,6 +201,7 @@ class TestChaitanyaShellReport:
     def test_report_returns_json(self, shell):
         """Report returns valid JSON."""
         import json
+
         report = shell.report(format="json")
         data = json.loads(report)
         assert "session" in data
@@ -209,6 +210,7 @@ class TestChaitanyaShellReport:
     def test_report_contains_mahamantra(self, shell):
         """Report contains the Mahamantra."""
         import json
+
         report = shell.report()
         data = json.loads(report)
         assert "Hare Kṛṣṇa" in data["mahamantra"]
@@ -219,6 +221,7 @@ class TestChaitanyaShellReport:
         shell.chant_with_grace("invalid2", "cmd2")
 
         import json
+
         report = shell.report()
         data = json.loads(report)
 
@@ -255,11 +258,11 @@ class TestAcintyaPrinciple:
     def test_both_implement_shell_protocol(self):
         """Both shells implement ShellProtocol."""
         # AnantaShesha has chant method
-        assert hasattr(ANANTA_SHESHA, 'chant')
+        assert hasattr(ANANTA_SHESHA, "chant")
         assert callable(ANANTA_SHESHA.chant)
 
         # ChaitanyaShell has chant method
-        assert hasattr(CHAITANYA_SHELL, 'chant')
+        assert hasattr(CHAITANYA_SHELL, "chant")
         assert callable(CHAITANYA_SHELL.chant)
 
     def test_user_can_choose(self):
@@ -298,43 +301,26 @@ class TestCommandResult:
 
     def test_command_result_success(self):
         """CommandResult tracks success state."""
-        result = CommandResult(
-            success=True,
-            opcode="exec_service",
-            message="Executed successfully"
-        )
+        result = CommandResult(success=True, opcode="exec_service", message="Executed successfully")
         assert result.success is True
         assert bool(result) is True
 
     def test_command_result_failure(self):
         """CommandResult tracks failure state."""
-        result = CommandResult(
-            success=False,
-            opcode="exec_service",
-            message="Execution failed"
-        )
+        result = CommandResult(success=False, opcode="exec_service", message="Execution failed")
         assert result.success is False
         assert bool(result) is False
 
     def test_command_result_with_data(self):
         """CommandResult can carry typed data."""
-        result = CommandResult(
-            success=True,
-            opcode="cache_state",
-            message="Cached",
-            data={"key": "value", "count": 42}
-        )
+        result = CommandResult(success=True, opcode="cache_state", message="Cached", data={"key": "value", "count": 42})
         assert result.data is not None
         assert result.data["key"] == "value"
         assert result.data["count"] == 42
 
     def test_command_result_has_timestamp(self):
         """CommandResult has a timestamp."""
-        result = CommandResult(
-            success=True,
-            opcode="sys_wake",
-            message="Awake"
-        )
+        result = CommandResult(success=True, opcode="sys_wake", message="Awake")
         assert result.timestamp is not None
         assert isinstance(result.timestamp, datetime)
 
@@ -357,7 +343,7 @@ class TestCommandHelp:
             parseability="E_NO_CTX, E_UNSIGNED",
             composability="vibe parse | vibe exec",
             idempotency="Same intent_hash → cached result",
-            recoverability="vibe gc && vibe reset"
+            recoverability="vibe gc && vibe reset",
         )
         # D-O-P-C-I-R
         assert help_info.discoverability is not None
@@ -382,7 +368,7 @@ class TestCommandHelp:
             parseability="E_ALREADY_AWAKE",
             composability="vibe wake | vibe identity",
             idempotency="Idempotent - multiple calls safe",
-            recoverability="vibe reset"
+            recoverability="vibe reset",
         )
         assert help_info.phase == "WAKE"
         assert help_info.word == "HARE"
@@ -394,6 +380,7 @@ class TestICliCommand:
 
     def test_protocol_is_runtime_checkable(self):
         """ICliCommand is runtime checkable."""
+
         # Create a minimal implementation
         class TestCommand:
             @property
@@ -429,7 +416,7 @@ class TestICliCommand:
                     parseability="test",
                     composability="test",
                     idempotency="test",
-                    recoverability="test"
+                    recoverability="test",
                 )
 
         cmd = TestCommand()
@@ -438,12 +425,12 @@ class TestICliCommand:
     def test_protocol_has_required_methods(self):
         """ICliCommand requires opcode, name, phase, word, execute, help."""
         # Verify protocol has expected attributes
-        assert hasattr(ICliCommand, 'opcode')
-        assert hasattr(ICliCommand, 'name')
-        assert hasattr(ICliCommand, 'phase')
-        assert hasattr(ICliCommand, 'word')
-        assert hasattr(ICliCommand, 'execute')
-        assert hasattr(ICliCommand, 'help')
+        assert hasattr(ICliCommand, "opcode")
+        assert hasattr(ICliCommand, "name")
+        assert hasattr(ICliCommand, "phase")
+        assert hasattr(ICliCommand, "word")
+        assert hasattr(ICliCommand, "execute")
+        assert hasattr(ICliCommand, "help")
 
 
 class TestCliResult:
@@ -451,11 +438,7 @@ class TestCliResult:
 
     def test_cli_result_can_be_command_result(self):
         """CliResult accepts CommandResult."""
-        result: CliResult = CommandResult(
-            success=True,
-            opcode="exec_service",
-            message="OK"
-        )
+        result: CliResult = CommandResult(success=True, opcode="exec_service", message="OK")
         assert isinstance(result, CommandResult)
 
     def test_cli_result_can_be_mahamantra_grace(self):
@@ -465,16 +448,8 @@ class TestCliResult:
 
     def test_cli_result_both_truthy_patterns(self):
         """CliResult types have consistent truthiness."""
-        success: CliResult = CommandResult(
-            success=True,
-            opcode="test",
-            message="OK"
-        )
-        failure: CliResult = CommandResult(
-            success=False,
-            opcode="test",
-            message="Failed"
-        )
+        success: CliResult = CommandResult(success=True, opcode="test", message="OK")
+        failure: CliResult = CommandResult(success=False, opcode="test", message="Failed")
         grace: CliResult = MahamantraGrace()
 
         assert bool(success) is True
@@ -498,10 +473,22 @@ class TestMantraProcessor:
         """Each command maps to a MantraOpCode."""
         # Test all 16 commands
         command_names = [
-            "wake", "identity", "alloc", "bind",
-            "verify", "parse", "gc", "pulse",
-            "fetch", "exec", "check", "commit",
-            "cache", "optimize", "yield", "reset"
+            "wake",
+            "identity",
+            "alloc",
+            "bind",
+            "verify",
+            "parse",
+            "gc",
+            "pulse",
+            "fetch",
+            "exec",
+            "check",
+            "commit",
+            "cache",
+            "optimize",
+            "yield",
+            "reset",
         ]
         for cmd in command_names:
             opcode = processor.get_opcode(cmd)
@@ -572,7 +559,7 @@ class TestMantraProcessorResult:
             quarter=3,
             position=10,
             is_head=False,
-            result=MahamantraGrace()
+            result=MahamantraGrace(),
         )
         assert result.command == "exec"
         assert result.opcode == "exec_service"
@@ -590,7 +577,7 @@ class TestMantraProcessorResult:
             quarter=1,
             position=1,
             is_head=True,
-            result=MahamantraGrace()
+            result=MahamantraGrace(),
         )
         worker_result = MantraProcessorResult(
             command="exec",
@@ -599,7 +586,7 @@ class TestMantraProcessorResult:
             quarter=3,
             position=10,
             is_head=False,
-            result=CommandResult(success=True, opcode="exec_service", message="OK")
+            result=CommandResult(success=True, opcode="exec_service", message="OK"),
         )
 
         assert head_result.is_head is True

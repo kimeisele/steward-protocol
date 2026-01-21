@@ -52,18 +52,18 @@ from vibe_core.mahamantra.protocols._seed import (
     MURALI_HOLES,
     QUARTERS,
     # Swara Derivation (ALL from Seed, no hardcoding!)
-    PANCHA,      # 5 - For Ga (5/4) and Dha (5/3)
-    TRINITY,     # 3 - For denominators
-    HALVES,      # 2 - For octave
+    PANCHA,  # 5 - For Ga (5/4) and Dha (5/3)
+    TRINITY,  # 3 - For denominators
+    HALVES,  # 2 - For octave
     HARE_COUNT,  # 8 - For Re (9/8) and Entropy Law
-    KSETRAJNA,   # 1 - The Knower (unity)
+    KSETRAJNA,  # 1 - The Knower (unity)
     # Sravanam/Kirtanam (Input/Output)
     HIDDEN_RESERVE,  # 16 - Input buffer (must be >= HARE_COUNT)
-    QUALITIES,       # 64 - Full output (result of Sravanam transform)
+    QUALITIES,  # 64 - Full output (result of Sravanam transform)
     # Dynamics (Phase/Time)
-    JIVA_CYCLE,      # 432 - The harmonic frequency (soul cycle)
-    FLUTE_HOLES_SUM, # 19 - Epoch signature (6+9+4)
-    EPOCH_KEY,       # 1972 - Temporal anchor
+    JIVA_CYCLE,  # 432 - The harmonic frequency (soul cycle)
+    FLUTE_HOLES_SUM,  # 19 - Epoch signature (6+9+4)
+    EPOCH_KEY,  # 1972 - Temporal anchor
     # Verification
     PARAMPARA,
 )
@@ -253,25 +253,25 @@ class VedicScaleMapping:
     #   Ni = WORDS/NAVA = 16/9 (16 Words / 9 Processes)
     #   Sa' = HALVES/KSETRAJNA = 2/1 (Octave - the double)
 
-    SWARA_SA: Final[float] = KSETRAJNA / KSETRAJNA   # 1/1 = 1.000 (Tonic)
-    SWARA_RE: Final[float] = NAVA / HARE_COUNT       # 9/8 = 1.125 (Second)
-    SWARA_GA: Final[float] = PANCHA / QUARTERS       # 5/4 = 1.250 (Third)
-    SWARA_MA: Final[float] = QUARTERS / TRINITY      # 4/3 = 1.333 (Fourth) = THRESHOLD_SYNC!
-    SWARA_PA: Final[float] = TRINITY / HALVES        # 3/2 = 1.500 (Fifth) = NADI/LILA!
-    SWARA_DHA: Final[float] = PANCHA / TRINITY       # 5/3 = 1.667 (Sixth)
-    SWARA_NI: Final[float] = WORDS / NAVA            # 16/9 = 1.778 (Seventh) = RATIO_MANTRA_PROCESS!
+    SWARA_SA: Final[float] = KSETRAJNA / KSETRAJNA  # 1/1 = 1.000 (Tonic)
+    SWARA_RE: Final[float] = NAVA / HARE_COUNT  # 9/8 = 1.125 (Second)
+    SWARA_GA: Final[float] = PANCHA / QUARTERS  # 5/4 = 1.250 (Third)
+    SWARA_MA: Final[float] = QUARTERS / TRINITY  # 4/3 = 1.333 (Fourth) = THRESHOLD_SYNC!
+    SWARA_PA: Final[float] = TRINITY / HALVES  # 3/2 = 1.500 (Fifth) = NADI/LILA!
+    SWARA_DHA: Final[float] = PANCHA / TRINITY  # 5/3 = 1.667 (Sixth)
+    SWARA_NI: Final[float] = WORDS / NAVA  # 16/9 = 1.778 (Seventh) = RATIO_MANTRA_PROCESS!
 
     # The complete scale (for iteration) - ALL computed from Seed
     SWARAS: Final[tuple] = ("Sa", "Re", "Ga", "Ma", "Pa", "Dha", "Ni", "Sa'")
     SWARA_RATIOS: Final[tuple] = (
-        KSETRAJNA / KSETRAJNA,   # Sa
-        NAVA / HARE_COUNT,       # Re
-        PANCHA / QUARTERS,       # Ga
-        QUARTERS / TRINITY,      # Ma
-        TRINITY / HALVES,        # Pa
-        PANCHA / TRINITY,        # Dha
-        WORDS / NAVA,            # Ni
-        HALVES / KSETRAJNA,      # Sa' (octave)
+        KSETRAJNA / KSETRAJNA,  # Sa
+        NAVA / HARE_COUNT,  # Re
+        PANCHA / QUARTERS,  # Ga
+        QUARTERS / TRINITY,  # Ma
+        TRINITY / HALVES,  # Pa
+        PANCHA / TRINITY,  # Dha
+        WORDS / NAVA,  # Ni
+        HALVES / KSETRAJNA,  # Sa' (octave)
     )
 
     # =========================================================================
@@ -280,13 +280,13 @@ class VedicScaleMapping:
     # These boundaries map our resonance thresholds to Swara regions
     # EVERY value is computed from Seed constants - SSOT principle!
 
-    BOUNDARY_SA_RE: Final[float] = HALVES / NAVA              # 2/9 ≈ 0.222
-    BOUNDARY_RE_GA: Final[float] = KSETRAJNA / TRINITY        # 1/3 ≈ 0.333
-    BOUNDARY_GA_MA: Final[float] = KSETRAJNA / HALVES         # 1/2 = 0.500
-    BOUNDARY_MA_PA: Final[float] = HALVES / TRINITY           # 2/3 ≈ 0.667 = THRESHOLD_AUTO
-    BOUNDARY_PA_DHA: Final[float] = KSETRAJNA / KSETRAJNA     # 1/1 = 1.000
-    BOUNDARY_DHA_NI: Final[float] = QUARTERS / TRINITY        # 4/3 ≈ 1.333 = THRESHOLD_SYNC
-    BOUNDARY_NI_SA: Final[float] = WORDS / NAVA               # 16/9 ≈ 1.778 = RATIO_MANTRA_PROCESS
+    BOUNDARY_SA_RE: Final[float] = HALVES / NAVA  # 2/9 ≈ 0.222
+    BOUNDARY_RE_GA: Final[float] = KSETRAJNA / TRINITY  # 1/3 ≈ 0.333
+    BOUNDARY_GA_MA: Final[float] = KSETRAJNA / HALVES  # 1/2 = 0.500
+    BOUNDARY_MA_PA: Final[float] = HALVES / TRINITY  # 2/3 ≈ 0.667 = THRESHOLD_AUTO
+    BOUNDARY_PA_DHA: Final[float] = KSETRAJNA / KSETRAJNA  # 1/1 = 1.000
+    BOUNDARY_DHA_NI: Final[float] = QUARTERS / TRINITY  # 4/3 ≈ 1.333 = THRESHOLD_SYNC
+    BOUNDARY_NI_SA: Final[float] = WORDS / NAVA  # 16/9 ≈ 1.778 = RATIO_MANTRA_PROCESS
 
     # =========================================================================
     # THREE FLUTES SYNC POINTS
@@ -392,7 +392,7 @@ class VedicScaleMapping:
         venu_points = cls.get_venu_sync_points()
         vamsi_points = cls.get_vamsi_sync_points()
 
-        min_dist = float('inf')
+        min_dist = float("inf")
         closest_flute = "NONE"
 
         # Check MURALI
@@ -752,7 +752,7 @@ class SravanamCheck:
             return (
                 False,
                 f"Entropy violation: input ({input_tokens}) < output ({output_tokens}). "
-                f"Must listen more before speaking. Ratio required: {cls.IO_RATIO}:1"
+                f"Must listen more before speaking. Ratio required: {cls.IO_RATIO}:1",
             )
 
         # 2. Phase Lock Check
@@ -760,15 +760,15 @@ class SravanamCheck:
             return (
                 False,
                 f"Phase not locked: resonance ({resonance:.4f}) < threshold ({cls.PHASE_LOCK_THRESHOLD:.4f}). "
-                f"System hasn't synchronized with Trägerfrequenz."
+                f"System hasn't synchronized with Trägerfrequenz.",
             )
 
         # 3. Parampara Check (strict mode)
         if strict and not cls.verify_parampara_connection(resonance):
             return (
                 False,
-                f"Parampara lock lost: resonance ({resonance:.4f}) below AUTO ({NADI_RESONANCE/MALA:.4f}). "
-                f"Cannot speak with authority."
+                f"Parampara lock lost: resonance ({resonance:.4f}) below AUTO ({NADI_RESONANCE / MALA:.4f}). "
+                f"Cannot speak with authority.",
             )
 
         return (True, "Phase-locked. Safe to emit.")
@@ -852,15 +852,13 @@ class SravanamCheck:
         if strict and not cls.verify_parampara_connection(resonance):
             return (
                 False,
-                f"Parampara lock lost: resonance ({resonance:.4f}) below AUTO. "
-                f"Cannot speak with authority.",
+                f"Parampara lock lost: resonance ({resonance:.4f}) below AUTO. Cannot speak with authority.",
                 0,
             )
 
         return (
             True,
-            f"Phase-locked. On Gajra. Ego={ego_offset}. "
-            f"Phase angle to {nearest_sync}: {phase_dist}. Safe to emit.",
+            f"Phase-locked. On Gajra. Ego={ego_offset}. Phase angle to {nearest_sync}: {phase_dist}. Safe to emit.",
             0,
         )
 
@@ -919,10 +917,10 @@ class SravanamCheck:
 # =============================================================================
 
 # Verify the ratios are what we expect
-assert abs(ResonanceHarmonics.THRESHOLD_AUTO - 2/3) < 0.0001, "AUTO must be 2/3"
-assert abs(ResonanceHarmonics.THRESHOLD_REFINE - 4/9) < 0.0001, "REFINE must be 4/9"
-assert abs(ResonanceHarmonics.THRESHOLD_SYNC - 4/3) < 0.0001, "SYNC must be 4/3"
-assert abs(ResonanceHarmonics.RATIO_NADI_LILA - 3/2) < 0.0001, "NADI/LILA must be 3/2 (Perfect Fifth)"
+assert abs(ResonanceHarmonics.THRESHOLD_AUTO - 2 / 3) < 0.0001, "AUTO must be 2/3"
+assert abs(ResonanceHarmonics.THRESHOLD_REFINE - 4 / 9) < 0.0001, "REFINE must be 4/9"
+assert abs(ResonanceHarmonics.THRESHOLD_SYNC - 4 / 3) < 0.0001, "SYNC must be 4/3"
+assert abs(ResonanceHarmonics.RATIO_NADI_LILA - 3 / 2) < 0.0001, "NADI/LILA must be 3/2 (Perfect Fifth)"
 
 # Verify Parampara connection
 assert (NADI_RESONANCE + LILA) % PARAMPARA != 0 or True, "Harmonics connected to Parampara"
@@ -935,10 +933,10 @@ assert (NADI_RESONANCE + LILA) % PARAMPARA != 0 or True, "Harmonics connected to
 assert abs(VedicScaleMapping.SWARA_SA - 1.0) < 0.0001, "Sa must be 1/1"
 assert abs(VedicScaleMapping.SWARA_RE - 1.125) < 0.0001, "Re must be 9/8 = 1.125"
 assert abs(VedicScaleMapping.SWARA_GA - 1.25) < 0.0001, "Ga must be 5/4 = 1.25"
-assert abs(VedicScaleMapping.SWARA_MA - 4/3) < 0.0001, "Ma must be 4/3"
+assert abs(VedicScaleMapping.SWARA_MA - 4 / 3) < 0.0001, "Ma must be 4/3"
 assert abs(VedicScaleMapping.SWARA_PA - 1.5) < 0.0001, "Pa must be 3/2 = 1.5"
-assert abs(VedicScaleMapping.SWARA_DHA - 5/3) < 0.0001, "Dha must be 5/3"
-assert abs(VedicScaleMapping.SWARA_NI - 16/9) < 0.0001, "Ni must be 16/9"
+assert abs(VedicScaleMapping.SWARA_DHA - 5 / 3) < 0.0001, "Dha must be 5/3"
+assert abs(VedicScaleMapping.SWARA_NI - 16 / 9) < 0.0001, "Ni must be 16/9"
 
 # Verify convergence with ResonanceHarmonics
 assert abs(VedicScaleMapping.SWARA_MA - ResonanceHarmonics.THRESHOLD_SYNC) < 0.0001, (
@@ -953,24 +951,18 @@ assert abs(VedicScaleMapping.SWARA_NI - ResonanceHarmonics.RATIO_MANTRA_PROCESS)
 
 # Verify flute sync point convergence with thresholds
 _vamsi_4th = QUARTERS / VAMSI_HOLES  # 4/9
-_venu_4th = QUARTERS / VENU_HOLES    # 4/6 = 2/3
+_venu_4th = QUARTERS / VENU_HOLES  # 4/6 = 2/3
 assert abs(_vamsi_4th - ResonanceHarmonics.THRESHOLD_REFINE) < 0.0001, (
     "VAMSI 4th sync (4/9) must equal THRESHOLD_REFINE"
 )
-assert abs(_venu_4th - ResonanceHarmonics.THRESHOLD_AUTO) < 0.0001, (
-    "VENU 4th sync (2/3) must equal THRESHOLD_AUTO"
-)
+assert abs(_venu_4th - ResonanceHarmonics.THRESHOLD_AUTO) < 0.0001, "VENU 4th sync (2/3) must equal THRESHOLD_AUTO"
 
 # Verify boundaries are correctly derived from Seed
-assert abs(VedicScaleMapping.BOUNDARY_MA_PA - HALVES / TRINITY) < 0.0001, (
-    "BOUNDARY_MA_PA must be HALVES/TRINITY = 2/3"
-)
+assert abs(VedicScaleMapping.BOUNDARY_MA_PA - HALVES / TRINITY) < 0.0001, "BOUNDARY_MA_PA must be HALVES/TRINITY = 2/3"
 assert abs(VedicScaleMapping.BOUNDARY_DHA_NI - QUARTERS / TRINITY) < 0.0001, (
     "BOUNDARY_DHA_NI must be QUARTERS/TRINITY = 4/3"
 )
-assert abs(VedicScaleMapping.BOUNDARY_NI_SA - WORDS / NAVA) < 0.0001, (
-    "BOUNDARY_NI_SA must be WORDS/NAVA = 16/9"
-)
+assert abs(VedicScaleMapping.BOUNDARY_NI_SA - WORDS / NAVA) < 0.0001, "BOUNDARY_NI_SA must be WORDS/NAVA = 16/9"
 
 # THE ULTIMATE VERIFICATION: Seed produces Vedic Music Theory!
 # This proves the Mahamantra IS the cosmic frequency generator.
@@ -1015,17 +1007,11 @@ assert SravanamCheck.PETAL_WIDTH == JIVA_CYCLE // WORDS, (
 assert SravanamCheck.PETAL_WIDTH == 27, "PETAL_WIDTH must be 27 (Nakshatra count)"
 
 # Verify MAX_EGO_OFFSET = 13 (half petal)
-assert SravanamCheck.MAX_EGO_OFFSET == SravanamCheck.PETAL_WIDTH // HALVES, (
-    "MAX_EGO_OFFSET must be PETAL_WIDTH/2"
-)
+assert SravanamCheck.MAX_EGO_OFFSET == SravanamCheck.PETAL_WIDTH // HALVES, "MAX_EGO_OFFSET must be PETAL_WIDTH/2"
 
 # Verify EPOCH_SIGNATURE = 19 (temporal lock)
-assert SravanamCheck.EPOCH_SIGNATURE == FLUTE_HOLES_SUM, (
-    "EPOCH_SIGNATURE must equal FLUTE_HOLES_SUM (19)"
-)
-assert SravanamCheck.validate_epoch_lock(), (
-    "CRITICAL: Epoch lock validation failed! digit_sum(1972) must equal 19"
-)
+assert SravanamCheck.EPOCH_SIGNATURE == FLUTE_HOLES_SUM, "EPOCH_SIGNATURE must equal FLUTE_HOLES_SUM (19)"
+assert SravanamCheck.validate_epoch_lock(), "CRITICAL: Epoch lock validation failed! digit_sum(1972) must equal 19"
 
 # Verify GAJRA_COUNT = 16 (Balarama's Mridanga anchors)
 assert SravanamCheck.GAJRA_COUNT == WORDS, "GAJRA_COUNT must equal WORDS (16)"

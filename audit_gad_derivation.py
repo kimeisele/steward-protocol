@@ -14,6 +14,7 @@ print("=== RECON AUDIT: Can _gad.py sprout from seed.py? ===\n")
 failures = []
 successes = []
 
+
 def check(condition, message):
     if condition:
         successes.append(message)
@@ -21,6 +22,7 @@ def check(condition, message):
     else:
         failures.append(message)
         print(f"❌ {message}")
+
 
 # 1. Check Numerical Constants
 print("--- 1. Numerical Constants ---")
@@ -33,15 +35,18 @@ print("--- 1. Numerical Constants ---")
 # 12 / 2 = 6 (MAHAJANAS / 2)
 # But is it *explicit*?
 derived_6 = seed.KSHETRA // seed.QUARTERS
-check(_gad.CRITERIA_COUNT == derived_6, f"CRITERIA_COUNT (6) derived from KSHETRA/QUARTERS ({seed.KSHETRA}/{seed.QUARTERS})")
+check(
+    _gad.CRITERIA_COUNT == derived_6,
+    f"CRITERIA_COUNT (6) derived from KSHETRA/QUARTERS ({seed.KSHETRA}/{seed.QUARTERS})",
+)
 
 # DHARMA_COUNT = 4
 check(_gad.DHARMA_COUNT == seed.QUARTERS, f"DHARMA_COUNT (4) matches QUARTERS ({seed.QUARTERS})")
 
 # KSHETRA_SIZE = 36
-# 6*6 = 36. 
-# seed.PARAMPARA = 37. 
-# _gad defines KSHETRAJNA = PARAMPARA (37). 
+# 6*6 = 36.
+# seed.PARAMPARA = 37.
+# _gad defines KSHETRAJNA = PARAMPARA (37).
 # _gad defines KSHETRA_SIZE = 36.
 # 36 + 1 = 37. This logic holds.
 check(_gad.KSHETRA_SIZE == (derived_6 * derived_6), "KSHETRA_SIZE (36) is CRITERIA^2")

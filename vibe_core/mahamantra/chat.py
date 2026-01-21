@@ -170,6 +170,7 @@ class MahajanaChat:
 
             # Initialize PromptContext for runtime context resolution
             from vibe_core.runtime.prompt_context import get_prompt_context
+
             self._prompt_context = get_prompt_context()
             logger.debug("✅ MahajanaChat: PromptContext initialized")
 
@@ -258,12 +259,12 @@ class MahajanaChat:
 
 ## YOUR IDENTITY
 - Position: {self.position} (of 16)
-- Quarter: {GUARDIAN_QUARTERS.get(self.guardian, 'UNKNOWN')}
-- Word: {GUARDIAN_WORDS.get(self.guardian, 'UNKNOWN')}
-- Dharma: {GUARDIAN_DHARMA.get(self.guardian, 'Unknown')}
+- Quarter: {GUARDIAN_QUARTERS.get(self.guardian, "UNKNOWN")}
+- Word: {GUARDIAN_WORDS.get(self.guardian, "UNKNOWN")}
+- Dharma: {GUARDIAN_DHARMA.get(self.guardian, "Unknown")}
 
 ## YOUR ROLE
-{GUARDIAN_DHARMA.get(self.guardian, 'Serve the protocol with wisdom and precision.')}
+{GUARDIAN_DHARMA.get(self.guardian, "Serve the protocol with wisdom and precision.")}
 
 You respond with the personality and expertise of your domain.
 Be concise, technical, and helpful.
@@ -329,7 +330,7 @@ Be concise, technical, and helpful.
             # Try provider.invoke() with model from config
             invoke_kwargs = {
                 "prompt": user_prompt,  # Fallback for providers that don't support messages
-                "messages": messages,   # Native format for OpenRouter/OpenAI
+                "messages": messages,  # Native format for OpenRouter/OpenAI
                 "max_tokens": 1024,
                 "temperature": 0.7,
             }
@@ -488,10 +489,18 @@ class FloodedMahajanaChat(MahajanaChat):
     _naga_flooded: bool = True
     _naga_genes: List[str] = [
         # Infrastructure Layer (8)
-        "sesha", "vasuki", "takshaka", "kaliya",
-        "karkotaka", "kulika", "padma", "shankha",
+        "sesha",
+        "vasuki",
+        "takshaka",
+        "kaliya",
+        "karkotaka",
+        "kulika",
+        "padma",
+        "shankha",
         # Governance Layer (3)
-        "narada", "chitragupta", "prahlad",
+        "narada",
+        "chitragupta",
+        "prahlad",
         # Substrate (1)
         "ananta",
     ]
@@ -536,6 +545,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 1. Sesha (foundation - must be first)
         try:
             from vibe_core.naga import SeshaService
+
             self._sesha = SeshaService()
         except Exception:
             pass
@@ -543,6 +553,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 2. Takshaka (security - needs Sesha)
         try:
             from vibe_core.naga import TakshakaService
+
             self._takshaka = TakshakaService(sesha=self._sesha)
         except Exception:
             pass
@@ -550,6 +561,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 3. Vasuki (network - needs Sesha and Takshaka)
         try:
             from vibe_core.naga import VasukiService
+
             self._vasuki = VasukiService(sesha=self._sesha, takshaka=self._takshaka)
         except Exception:
             pass
@@ -557,6 +569,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 4. Kaliya (resilience - optional deps)
         try:
             from vibe_core.naga import KaliyaService
+
             self._kaliya = KaliyaService()
         except Exception:
             pass
@@ -564,6 +577,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 5. Karkotaka (secrets)
         try:
             from vibe_core.naga import KarkotakaService
+
             self._karkotaka = KarkotakaService()
         except Exception:
             pass
@@ -571,6 +585,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 6. Kulika (wiring)
         try:
             from vibe_core.naga import KulikaService
+
             self._kulika = KulikaService()
         except Exception:
             pass
@@ -578,6 +593,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 7. Padma (purity/cache)
         try:
             from vibe_core.naga import PadmaService
+
             self._padma = PadmaService()
         except Exception:
             pass
@@ -585,6 +601,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 8. Shankha (signals/pubsub)
         try:
             from vibe_core.naga import ShankhaService
+
             self._shankha = ShankhaService()
         except Exception:
             pass
@@ -594,6 +611,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 9. Narada (events/discovery)
         try:
             from vibe_core.naga import NaradaService
+
             self._narada = NaradaService()
         except Exception:
             pass
@@ -601,6 +619,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 10. Chitragupta (audit/metrics)
         try:
             from vibe_core.naga import ChitraguptaService
+
             self._chitragupta = ChitraguptaService()
         except Exception:
             pass
@@ -608,6 +627,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 11. Prahlad (protection/veto)
         try:
             from vibe_core.naga import PrahladService
+
             self._prahlad = PrahladService()
         except Exception:
             pass
@@ -617,6 +637,7 @@ class FloodedMahajanaChat(MahajanaChat):
         # 12. Ananta (the host - binds all genes)
         try:
             from vibe_core.naga.services.ananta import AnantaService
+
             self._ananta = AnantaService()
         except Exception:
             pass
@@ -665,14 +686,16 @@ class FloodedMahajanaChat(MahajanaChat):
         """GAD-000: Health status."""
         self._init_naga()
         # Healthy if at least 6 NAGAs are active (50%)
-        active = sum([
-            self._sesha is not None,
-            self._takshaka is not None,
-            self._chitragupta is not None,
-            self._narada is not None,
-            self._prahlad is not None,
-            self._ananta is not None,
-        ])
+        active = sum(
+            [
+                self._sesha is not None,
+                self._takshaka is not None,
+                self._chitragupta is not None,
+                self._narada is not None,
+                self._prahlad is not None,
+                self._ananta is not None,
+            ]
+        )
         return active >= 3
 
     def chant(self) -> bool:
@@ -840,10 +863,13 @@ class FloodedMahajanaChat(MahajanaChat):
         # 11. SHANKHA: Signal completion
         if self._shankha and hasattr(self._shankha, "signal"):
             try:
-                self._shankha.signal("chat_complete", {
-                    "guardian": self.guardian,
-                    "success": result.success,
-                })
+                self._shankha.signal(
+                    "chat_complete",
+                    {
+                        "guardian": self.guardian,
+                        "success": result.success,
+                    },
+                )
             except Exception:
                 pass
 
@@ -851,6 +877,7 @@ class FloodedMahajanaChat(MahajanaChat):
         if self._ananta and hasattr(self._ananta, "resonate"):
             try:
                 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
                 self._ananta.resonate(MantraOpCode.EMIT)
             except Exception:
                 pass
@@ -861,9 +888,7 @@ class FloodedMahajanaChat(MahajanaChat):
         return result
 
 
-def flooded_guardian_chat(
-    message: str, *, guardian: str, position: Optional[int] = None
-) -> str:
+def flooded_guardian_chat(message: str, *, guardian: str, position: Optional[int] = None) -> str:
     """
     Chat with NAGA flooding - audited, secured, broadcast, persisted.
 

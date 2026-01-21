@@ -89,9 +89,7 @@ class TestSankirtanSamskaraGenesis:
     def test_genesis_with_existing_file(self):
         """Should load file and determine mahajana."""
         # Create a temp Python file
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('"""Test module."""\n\ndef hello():\n    pass\n')
             temp_path = Path(f.name)
 
@@ -116,9 +114,7 @@ class TestSankirtanSamskaraGenesis:
 
     def test_genesis_accepts_string_path(self):
         """Should accept string path and convert to Path."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("# test\n")
             temp_path = f.name
 
@@ -136,9 +132,7 @@ class TestSankirtanSamskaraDharma:
 
     def test_dharma_valid_python_file(self):
         """Should return True for valid Python file without declaration."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('"""Module."""\n\ndef foo():\n    return 42\n')
             temp_path = Path(f.name)
 
@@ -162,9 +156,7 @@ __genesis__ = "0x00000000"
 def test():
     pass
 '''
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(content)
             temp_path = Path(f.name)
 
@@ -185,9 +177,7 @@ def test():
 def broken(
     # Missing closing paren and body
 '''
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(content)
             temp_path = Path(f.name)
 
@@ -208,9 +198,7 @@ class TestSankirtanSamskaraKarma:
 
     def test_karma_would_inject(self):
         """Should return 'Would inject' result in dry-run mode."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('"""Module."""\n\ndef foo(): pass\n')
             temp_path = Path(f.name)
 
@@ -234,9 +222,7 @@ __mahajana__ = "yamaraja"
 __position__ = 15
 __genesis__ = "0x00000000"
 '''
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(content)
             temp_path = Path(f.name)
 
@@ -276,9 +262,7 @@ class TestSankirtanSamskaraWithExecutor:
 
     def test_full_pipeline_new_file(self):
         """Should execute all 4 phases for new file."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write('"""New module."""\n\ndef test(): pass\n')
             temp_path = Path(f.name)
 
@@ -305,9 +289,7 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x00000000"
 '''
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(content)
             temp_path = Path(f.name)
 
@@ -324,9 +306,7 @@ __genesis__ = "0x00000000"
 
     def test_iterate_pipeline(self):
         """Should iterate through all phases."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write("# test\n")
             temp_path = Path(f.name)
 

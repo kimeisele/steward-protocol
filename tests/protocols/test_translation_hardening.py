@@ -39,6 +39,7 @@ from vibe_core.protocols.translation import (
 # PHONEME HARDENING TESTS
 # =============================================================================
 
+
 class TestPhonemeEdgeCases:
     """Edge cases for Phoneme dataclass."""
 
@@ -141,6 +142,7 @@ class TestPhonemeVedicClassification:
 # RESONANCE PATTERN HARDENING TESTS
 # =============================================================================
 
+
 class TestResonancePatternEdgeCases:
     """Edge cases for ResonancePattern."""
 
@@ -181,11 +183,7 @@ class TestResonancePatternEdgeCases:
         """Mantra patterns have vibration classes."""
         p = Phoneme(ipa="oːm")
         for vibration in ["ascending", "descending", "cyclic", "stable"]:
-            pattern = ResonancePattern(
-                phonemes=(p,),
-                is_mantra=True,
-                mantra_vibration=vibration
-            )
+            pattern = ResonancePattern(phonemes=(p,), is_mantra=True, mantra_vibration=vibration)
             assert pattern.mantra_vibration == vibration
 
     def test_stress_patterns(self):
@@ -193,7 +191,7 @@ class TestResonancePatternEdgeCases:
         p = Phoneme(ipa="a")
         pattern = ResonancePattern(
             phonemes=(p, p),
-            stress_pattern="10"  # First syllable stressed
+            stress_pattern="10",  # First syllable stressed
         )
         assert pattern.stress_pattern == "10"
 
@@ -201,16 +199,14 @@ class TestResonancePatternEdgeCases:
         """Rhythm types work."""
         p = Phoneme(ipa="a")
         for rhythm in ["iambic", "trochaic", "mantra", "prose"]:
-            pattern = ResonancePattern(
-                phonemes=(p,),
-                rhythm=rhythm
-            )
+            pattern = ResonancePattern(phonemes=(p,), rhythm=rhythm)
             assert pattern.rhythm == rhythm
 
 
 # =============================================================================
 # SEMANTIC UNIT HARDENING TESTS
 # =============================================================================
+
 
 class TestSemanticUnitEdgeCases:
     """Edge cases for SemanticUnit."""
@@ -223,19 +219,13 @@ class TestSemanticUnitEdgeCases:
     def test_many_properties(self):
         """Many properties."""
         props = tuple(f"prop_{i}" for i in range(100))
-        unit = SemanticUnit(
-            concept_id="test",
-            concept_type="noun",
-            properties=props
-        )
+        unit = SemanticUnit(concept_id="test", concept_type="noun", properties=props)
         assert len(unit.properties) == 100
 
     def test_nested_relations(self):
         """Nested relation strings."""
         unit = SemanticUnit(
-            concept_id="test",
-            concept_type="noun",
-            relations=("part_of:deity:vishnu", "instance_of:person:divine")
+            concept_id="test", concept_type="noun", relations=("part_of:deity:vishnu", "instance_of:person:divine")
         )
         assert "deity:vishnu" in unit.relations[0]
 
@@ -250,17 +240,14 @@ class TestSemanticUnitEdgeCases:
         """Vedic tattva categories work."""
         tattvas = ["puruṣa", "prakṛti", "mahat", "ahaṅkāra", "manas"]
         for tattva in tattvas:
-            unit = SemanticUnit(
-                concept_id="test",
-                concept_type="noun",
-                tattva=tattva
-            )
+            unit = SemanticUnit(concept_id="test", concept_type="noun", tattva=tattva)
             assert unit.tattva == tattva
 
 
 # =============================================================================
 # MEANING GRAPH HARDENING TESTS
 # =============================================================================
+
 
 class TestMeaningGraphEdgeCases:
     """Edge cases for MeaningGraph."""
@@ -286,9 +273,9 @@ class TestMeaningGraphEdgeCases:
         graph = MeaningGraph(
             units=(u1, u2, u3),
             relations=(
-                (0, "agent", 2),   # Krishna is agent of plays
+                (0, "agent", 2),  # Krishna is agent of plays
                 (2, "object", 1),  # plays has object flute
-            )
+            ),
         )
         assert len(graph.relations) == 2
 
@@ -297,11 +284,7 @@ class TestMeaningGraphEdgeCases:
         unit = SemanticUnit(concept_id="test", concept_type="noun")
         contexts = ["greeting", "instruction", "mantra", "narrative", "dialogue"]
         for ctx in contexts:
-            graph = MeaningGraph(
-                units=(unit,),
-                relations=(),
-                context_type=ctx
-            )
+            graph = MeaningGraph(units=(unit,), relations=(), context_type=ctx)
             assert graph.context_type == ctx
 
     def test_mood_types(self):
@@ -309,17 +292,14 @@ class TestMeaningGraphEdgeCases:
         unit = SemanticUnit(concept_id="test", concept_type="noun")
         moods = ["devotional", "imperative", "declarative", "interrogative"]
         for mood in moods:
-            graph = MeaningGraph(
-                units=(unit,),
-                relations=(),
-                mood=mood
-            )
+            graph = MeaningGraph(units=(unit,), relations=(), mood=mood)
             assert graph.mood == mood
 
 
 # =============================================================================
 # TEXT FORM HARDENING TESTS
 # =============================================================================
+
 
 class TestTextFormEdgeCases:
     """Edge cases for TextForm."""
@@ -331,29 +311,17 @@ class TestTextFormEdgeCases:
 
     def test_unicode_text(self):
         """Unicode text (Sanskrit)."""
-        form = TextForm(
-            text="हरे कृष्ण",
-            language=NaturalLanguage.SANSKRIT,
-            script="devanagari"
-        )
+        form = TextForm(text="हरे कृष्ण", language=NaturalLanguage.SANSKRIT, script="devanagari")
         assert "कृष्ण" in form.text
 
     def test_diacritics_text(self):
         """IAST diacritics text."""
-        form = TextForm(
-            text="Hare Kṛṣṇa",
-            language=NaturalLanguage.SANSKRIT,
-            script="iast"
-        )
+        form = TextForm(text="Hare Kṛṣṇa", language=NaturalLanguage.SANSKRIT, script="iast")
         assert "ṛṣṇ" in form.text
 
     def test_german_text(self):
         """German text with umlauts."""
-        form = TextForm(
-            text="Über die Brücke",
-            language=NaturalLanguage.GERMAN,
-            script="latin"
-        )
+        form = TextForm(text="Über die Brücke", language=NaturalLanguage.GERMAN, script="latin")
         assert "Ü" in form.text
 
     def test_all_languages(self):
@@ -366,17 +334,14 @@ class TestTextFormEdgeCases:
         """Various script types work."""
         scripts = ["latin", "devanagari", "cyrillic", "arabic"]
         for script in scripts:
-            form = TextForm(
-                text="test",
-                language=NaturalLanguage.ENGLISH,
-                script=script
-            )
+            form = TextForm(text="test", language=NaturalLanguage.ENGLISH, script=script)
             assert form.script == script
 
 
 # =============================================================================
 # TRANSLATION RESULT HARDENING TESTS
 # =============================================================================
+
 
 class TestTranslationResultEdgeCases:
     """Edge cases for TranslationResult."""
@@ -385,12 +350,7 @@ class TestTranslationResultEdgeCases:
         """Failed translation with error."""
         source = TextForm(text="test", language=NaturalLanguage.ENGLISH)
         target = TextForm(text="", language=NaturalLanguage.GERMAN)
-        result = TranslationResult(
-            success=False,
-            source_form=source,
-            target_form=target,
-            error="Unknown word"
-        )
+        result = TranslationResult(success=False, source_form=source, target_form=target, error="Unknown word")
         assert not result.success
         assert result.error == "Unknown word"
 
@@ -404,7 +364,7 @@ class TestTranslationResultEdgeCases:
             target_form=target,
             confidence=1.0,
             resonance_similarity=1.0,
-            meaning_preservation=1.0
+            meaning_preservation=1.0,
         )
         assert result.confidence == 1.0
 
@@ -412,12 +372,7 @@ class TestTranslationResultEdgeCases:
         """Zero confidence translation."""
         source = TextForm(text="xyz", language=NaturalLanguage.ENGLISH)
         target = TextForm(text="???", language=NaturalLanguage.GERMAN)
-        result = TranslationResult(
-            success=True,
-            source_form=source,
-            target_form=target,
-            confidence=0.0
-        )
+        result = TranslationResult(success=True, source_form=source, target_form=target, confidence=0.0)
         assert result.confidence == 0.0
 
     def test_opcodes_chain(self):
@@ -428,7 +383,7 @@ class TestTranslationResultEdgeCases:
             success=True,
             source_form=source,
             target_form=target,
-            opcodes_used=["load_root", "resolve_req", "exec_service", "commit_log"]
+            opcodes_used=["load_root", "resolve_req", "exec_service", "commit_log"],
         )
         assert len(result.opcodes_used) == 4
         assert result.opcodes_used[0] == "load_root"
@@ -438,6 +393,7 @@ class TestTranslationResultEdgeCases:
 # =============================================================================
 # LANGUAGE PHONEME TABLE HARDENING
 # =============================================================================
+
 
 class TestGermanPhonemesComplete:
     """Complete German phoneme coverage."""
@@ -481,6 +437,7 @@ class TestEnglishPhonemesComplete:
 # OPCODE MAP HARDENING
 # =============================================================================
 
+
 class TestOpcodeMapCompleteness:
     """Opcode map completeness and consistency."""
 
@@ -499,10 +456,22 @@ class TestOpcodeMapCompleteness:
     def test_opcodes_match_mantra_names(self):
         """Opcodes match MantraOpCode names."""
         valid_opcodes = [
-            "sys_wake", "load_root", "alloc_mem", "bind_ctx",
-            "assert_truth", "resolve_req", "garbage_collect", "pulse_sync",
-            "fetch_res", "exec_service", "check_dharma", "commit_log",
-            "cache_state", "optimize", "yield_cpu", "reset_ip"
+            "sys_wake",
+            "load_root",
+            "alloc_mem",
+            "bind_ctx",
+            "assert_truth",
+            "resolve_req",
+            "garbage_collect",
+            "pulse_sync",
+            "fetch_res",
+            "exec_service",
+            "check_dharma",
+            "commit_log",
+            "cache_state",
+            "optimize",
+            "yield_cpu",
+            "reset_ip",
         ]
         for step, opcode in TRANSLATION_OPCODE_MAP.items():
             assert opcode in valid_opcodes, f"{opcode} not a valid MantraOpCode"
@@ -512,21 +481,22 @@ class TestOpcodeMapCompleteness:
 # PROTOCOL CONTRACT HARDENING
 # =============================================================================
 
+
 class TestTranslationProtocolContract:
     """TranslationProtocol contract enforcement."""
 
     def test_protocol_methods_exist(self):
         """All required methods exist in protocol."""
         required = [
-            'form_to_resonance',
-            'resonance_to_meaning',
-            'meaning_to_resonance',
-            'resonance_to_form',
-            'translate',
-            'translate_via_resonance',
-            'translate_via_meaning',
-            'supported_languages',
-            'can_translate',
+            "form_to_resonance",
+            "resonance_to_meaning",
+            "meaning_to_resonance",
+            "resonance_to_form",
+            "translate",
+            "translate_via_resonance",
+            "translate_via_meaning",
+            "supported_languages",
+            "can_translate",
         ]
         for method in required:
             assert hasattr(TranslationProtocol, method)
@@ -534,8 +504,7 @@ class TestTranslationProtocolContract:
     def test_protocol_is_abstract(self):
         """Protocol cannot be directly instantiated."""
         # Protocols are abstract by nature
-        assert hasattr(TranslationProtocol, '__protocol_attrs__') or \
-               hasattr(TranslationProtocol, '_is_protocol')
+        assert hasattr(TranslationProtocol, "__protocol_attrs__") or hasattr(TranslationProtocol, "_is_protocol")
 
 
 class TestResonanceProtocolContract:
@@ -544,11 +513,11 @@ class TestResonanceProtocolContract:
     def test_protocol_methods_exist(self):
         """All required methods exist in protocol."""
         required = [
-            'extract_phonemes',
-            'create_pattern',
-            'compare_resonance',
-            'is_mantra',
-            'get_vibration_class',
+            "extract_phonemes",
+            "create_pattern",
+            "compare_resonance",
+            "is_mantra",
+            "get_vibration_class",
         ]
         for method in required:
             assert hasattr(ResonanceProtocol, method)
@@ -557,6 +526,7 @@ class TestResonanceProtocolContract:
 # =============================================================================
 # IMMUTABILITY HARDENING
 # =============================================================================
+
 
 class TestImmutabilityEnforced:
     """All dataclasses are properly frozen."""
@@ -602,22 +572,25 @@ class TestImmutabilityEnforced:
 # NO ANY TYPE HARDENING
 # =============================================================================
 
+
 class TestNoAnyTypes:
     """Verify no Any types are used anywhere."""
 
     def test_phoneme_strict_types(self):
         """Phoneme uses only strict types."""
         from typing import get_type_hints, Any, get_origin
+
         hints = get_type_hints(Phoneme)
         for field_name, field_type in hints.items():
             assert field_type is not Any, f"Phoneme.{field_name} uses Any"
             # Check if it's a generic with Any inside
             if get_origin(field_type):
-                assert Any not in getattr(field_type, '__args__', ())
+                assert Any not in getattr(field_type, "__args__", ())
 
     def test_resonance_pattern_strict_types(self):
         """ResonancePattern uses only strict types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(ResonancePattern)
         for field_name, field_type in hints.items():
             assert field_type is not Any
@@ -625,6 +598,7 @@ class TestNoAnyTypes:
     def test_translation_result_strict_types(self):
         """TranslationResult uses only strict types."""
         from typing import get_type_hints, Any, get_origin, Union
+
         hints = get_type_hints(TranslationResult)
         for field_name, field_type in hints.items():
             # Check direct Any
@@ -632,13 +606,14 @@ class TestNoAnyTypes:
             # Check Any inside Optional/Union
             origin = get_origin(field_type)
             if origin is Union:
-                args = getattr(field_type, '__args__', ())
+                args = getattr(field_type, "__args__", ())
                 assert Any not in args
 
 
 # =============================================================================
 # CROSS-LANGUAGE HARDENING
 # =============================================================================
+
 
 class TestCrossLanguageScenarios:
     """Cross-language translation scenarios."""
@@ -647,12 +622,7 @@ class TestCrossLanguageScenarios:
         """Same language should work (identity)."""
         source = TextForm(text="Hello", language=NaturalLanguage.ENGLISH)
         target = TextForm(text="Hello", language=NaturalLanguage.ENGLISH)
-        result = TranslationResult(
-            success=True,
-            source_form=source,
-            target_form=target,
-            confidence=1.0
-        )
+        result = TranslationResult(success=True, source_form=source, target_form=target, confidence=1.0)
         assert result.source_form.text == result.target_form.text
 
     def test_english_to_german_scenario(self):
@@ -663,7 +633,7 @@ class TestCrossLanguageScenarios:
             success=True,
             source_form=source,
             target_form=target,
-            resonance_similarity=0.9  # Similar sound
+            resonance_similarity=0.9,  # Similar sound
         )
         assert result.resonance_similarity > 0.8
 
@@ -675,7 +645,7 @@ class TestCrossLanguageScenarios:
             success=True,
             source_form=source,
             target_form=target,
-            meaning_preservation=1.0  # Same meaning
+            meaning_preservation=1.0,  # Same meaning
         )
         assert result.meaning_preservation == 1.0
 
@@ -687,7 +657,7 @@ class TestCrossLanguageScenarios:
             success=True,
             source_form=source,
             target_form=target,
-            opcodes_used=["load_root", "resolve_req", "exec_service", "exec_service", "commit_log"]
+            opcodes_used=["load_root", "resolve_req", "exec_service", "exec_service", "commit_log"],
         )
         # Double exec_service for intermediate step
         assert result.opcodes_used.count("exec_service") == 2
@@ -697,38 +667,28 @@ class TestCrossLanguageScenarios:
 # MANTRA DETECTION HARDENING
 # =============================================================================
 
+
 class TestMantraDetection:
     """Mantra detection edge cases."""
 
     def test_om_is_mantra(self):
         """Om should be detected as mantra."""
         om = Phoneme(ipa="oːm")
-        pattern = ResonancePattern(
-            phonemes=(om,),
-            is_mantra=True,
-            mantra_vibration="ascending"
-        )
+        pattern = ResonancePattern(phonemes=(om,), is_mantra=True, mantra_vibration="ascending")
         assert pattern.is_mantra
 
     def test_mahamantra_is_mantra(self):
         """Mahamantra should be detected as mantra."""
         # Simplified representation
         h, a, r, e = Phoneme(ipa="h"), Phoneme(ipa="a"), Phoneme(ipa="r"), Phoneme(ipa="e")
-        pattern = ResonancePattern(
-            phonemes=(h, a, r, e),
-            is_mantra=True,
-            rhythm="mantra"
-        )
+        pattern = ResonancePattern(phonemes=(h, a, r, e), is_mantra=True, rhythm="mantra")
         assert pattern.is_mantra
         assert pattern.rhythm == "mantra"
 
     def test_regular_text_not_mantra(self):
         """Regular text should not be mantra."""
         h, e, l, o = Phoneme(ipa="h"), Phoneme(ipa="e"), Phoneme(ipa="l"), Phoneme(ipa="o")
-        pattern = ResonancePattern(
-            phonemes=(h, e, l, l, o),
-            is_mantra=False
-        )
+        pattern = ResonancePattern(phonemes=(h, e, l, l, o), is_mantra=False)
         assert not pattern.is_mantra
 
     def test_vibration_classes(self):
@@ -736,9 +696,5 @@ class TestMantraDetection:
         vibrations = ["ascending", "descending", "cyclic", "stable"]
         p = Phoneme(ipa="a")
         for vib in vibrations:
-            pattern = ResonancePattern(
-                phonemes=(p,),
-                is_mantra=True,
-                mantra_vibration=vib
-            )
+            pattern = ResonancePattern(phonemes=(p,), is_mantra=True, mantra_vibration=vib)
             assert pattern.mantra_vibration == vib

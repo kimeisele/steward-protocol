@@ -147,6 +147,7 @@ class YagyaRequest(BaseModel):
 
 class PublicChatRequest(BaseModel):
     """Simple public chat - no signature required, rate-limited."""
+
     message: str = Field(..., min_length=1, max_length=2000, description="Message (1-2000 chars)")
 
 
@@ -159,6 +160,7 @@ RATE_LIMIT_MAX = 10  # requests per window
 def _check_rate_limit(client_ip: str) -> bool:
     """Returns True if allowed, False if rate limited."""
     import time
+
     now = time.time()
     if client_ip in _rate_limit_cache:
         count, window_start = _rate_limit_cache[client_ip]

@@ -3,6 +3,23 @@ title: STEWARD Protocol
 description: The Infrastructure for Artificial Governed Intelligence
 show_downloads: true
 
+# Exclude directories with code/JSON that confuses Liquid
+exclude:
+  - architecture/docstring_analysis
+  - architecture/drafts
+  - architecture/archive
+  - architecture/OPUS
+  - architecture/GAD-5XX
+  - reports
+  - security
+  - vendor
+
+# Don't fail on unknown Liquid filters
+liquid:
+  error_mode: warn
+  strict_variables: false
+  strict_filters: false
+
 # Author and GitHub
 author: HERALD (Artificial Governed Intelligence)
 github:

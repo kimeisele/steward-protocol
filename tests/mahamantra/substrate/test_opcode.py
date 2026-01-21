@@ -39,29 +39,25 @@ class TestMantraOpCode:
 
     def test_genesis_opcodes(self) -> None:
         """Genesis quarter has positions 0-3."""
-        genesis = [MantraOpCode.SYS_WAKE, MantraOpCode.LOAD_ROOT,
-                   MantraOpCode.ALLOC_MEM, MantraOpCode.INIT_THREAD]
+        genesis = [MantraOpCode.SYS_WAKE, MantraOpCode.LOAD_ROOT, MantraOpCode.ALLOC_MEM, MantraOpCode.INIT_THREAD]
         for op in genesis:
             assert op.value < 4
 
     def test_dharma_opcodes(self) -> None:
         """Dharma quarter has positions 4-7."""
-        dharma = [MantraOpCode.COMPILE_AST, MantraOpCode.BIND_SYMBOL,
-                  MantraOpCode.TYPE_CHECK, MantraOpCode.DHARMA_TEST]
+        dharma = [MantraOpCode.COMPILE_AST, MantraOpCode.BIND_SYMBOL, MantraOpCode.TYPE_CHECK, MantraOpCode.DHARMA_TEST]
         for op in dharma:
             assert 4 <= op.value < 8
 
     def test_karma_opcodes(self) -> None:
         """Karma quarter has positions 8-11."""
-        karma = [MantraOpCode.EXEC_OP, MantraOpCode.EXTEND_CAP,
-                 MantraOpCode.STATE_SYNC, MantraOpCode.LEDGER_SIGN]
+        karma = [MantraOpCode.EXEC_OP, MantraOpCode.EXTEND_CAP, MantraOpCode.STATE_SYNC, MantraOpCode.LEDGER_SIGN]
         for op in karma:
             assert 8 <= op.value < 12
 
     def test_moksha_opcodes(self) -> None:
         """Moksha quarter has positions 12-15."""
-        moksha = [MantraOpCode.YIELD_CPU, MantraOpCode.IO_FLUSH,
-                  MantraOpCode.LOG_EMIT, MantraOpCode.AUDIT_SEAL]
+        moksha = [MantraOpCode.YIELD_CPU, MantraOpCode.IO_FLUSH, MantraOpCode.LOG_EMIT, MantraOpCode.AUDIT_SEAL]
         for op in moksha:
             assert 12 <= op.value < 16
 
@@ -77,6 +73,7 @@ class TestOpCodeLookup:
     def test_get_opcode_invalid_raises(self) -> None:
         """get_opcode raises for invalid position."""
         import pytest
+
         with pytest.raises(ValueError):
             get_opcode(16)
         with pytest.raises(ValueError):

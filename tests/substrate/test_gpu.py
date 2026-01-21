@@ -251,7 +251,7 @@ class TestGPUBlock:
         block = GPUBlock(block_id=0)
         assert block.get_state()["mala_progress"] == 0.0
         block.run_warp(0)
-        assert block.get_state()["mala_progress"] == pytest.approx(1/108, abs=0.01)
+        assert block.get_state()["mala_progress"] == pytest.approx(1 / 108, abs=0.01)
 
     def test_reset(self):
         """reset() clears all warps."""

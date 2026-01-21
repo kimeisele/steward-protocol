@@ -66,11 +66,11 @@ class TestPhoneticClass:
 
     def test_consonant_classes(self):
         """All articulation points are represented."""
-        assert PhoneticClass.GUTTURAL.value == "G"   # Throat
-        assert PhoneticClass.PALATAL.value == "P"    # Palate
+        assert PhoneticClass.GUTTURAL.value == "G"  # Throat
+        assert PhoneticClass.PALATAL.value == "P"  # Palate
         assert PhoneticClass.RETROFLEX.value == "T"  # Curled tongue
-        assert PhoneticClass.DENTAL.value == "D"     # Teeth
-        assert PhoneticClass.LABIAL.value == "B"     # Lips
+        assert PhoneticClass.DENTAL.value == "D"  # Teeth
+        assert PhoneticClass.LABIAL.value == "B"  # Lips
 
     def test_special_classes(self):
         """Special phonetic classes exist."""
@@ -85,32 +85,32 @@ class TestPhoneticMap:
 
     def test_map_has_vowels(self):
         """Map includes vowels."""
-        assert PHONETIC_MAP['a'] == PhoneticClass.VOWEL_A
-        assert PHONETIC_MAP['i'] == PhoneticClass.VOWEL_I
-        assert PHONETIC_MAP['e'] == PhoneticClass.VOWEL_E
+        assert PHONETIC_MAP["a"] == PhoneticClass.VOWEL_A
+        assert PHONETIC_MAP["i"] == PhoneticClass.VOWEL_I
+        assert PHONETIC_MAP["e"] == PhoneticClass.VOWEL_E
 
     def test_map_has_holy_name_sounds(self):
         """Map includes sounds critical for Holy Names."""
         # HARE: H-A-R-E
-        assert PHONETIC_MAP['h'] == PhoneticClass.ASPIRATE
-        assert PHONETIC_MAP['r'] == PhoneticClass.SEMIVOWEL
+        assert PHONETIC_MAP["h"] == PhoneticClass.ASPIRATE
+        assert PHONETIC_MAP["r"] == PhoneticClass.SEMIVOWEL
         # KRISHNA: K-R-I-S-N-A
-        assert PHONETIC_MAP['k'] == PhoneticClass.GUTTURAL
-        assert PHONETIC_MAP['s'] == PhoneticClass.SIBILANT
-        assert PHONETIC_MAP['n'] == PhoneticClass.DENTAL
+        assert PHONETIC_MAP["k"] == PhoneticClass.GUTTURAL
+        assert PHONETIC_MAP["s"] == PhoneticClass.SIBILANT
+        assert PHONETIC_MAP["n"] == PhoneticClass.DENTAL
         # RAMA: R-A-M-A
-        assert PHONETIC_MAP['m'] == PhoneticClass.LABIAL
+        assert PHONETIC_MAP["m"] == PhoneticClass.LABIAL
 
     def test_map_has_digraphs(self):
         """Map includes digraphs (two-letter sounds)."""
-        assert PHONETIC_MAP['kh'] == PhoneticClass.GUTTURAL
-        assert PHONETIC_MAP['sh'] == PhoneticClass.SIBILANT
+        assert PHONETIC_MAP["kh"] == PhoneticClass.GUTTURAL
+        assert PHONETIC_MAP["sh"] == PhoneticClass.SIBILANT
 
     def test_map_has_iast_characters(self):
         """Map includes IAST diacritics."""
-        assert PHONETIC_MAP['ā'] == PhoneticClass.VOWEL_A
-        assert PHONETIC_MAP['ṛ'] == PhoneticClass.VOWEL_R
-        assert PHONETIC_MAP['ṇ'] == PhoneticClass.RETROFLEX
+        assert PHONETIC_MAP["ā"] == PhoneticClass.VOWEL_A
+        assert PHONETIC_MAP["ṛ"] == PhoneticClass.VOWEL_R
+        assert PHONETIC_MAP["ṇ"] == PhoneticClass.RETROFLEX
 
 
 # =============================================================================
@@ -130,7 +130,7 @@ class TestToPhoneticKey:
         """'krishna' converts correctly."""
         key = to_phonetic_key("krishna")
         # K-R-I-S-H-N-A  (note: "ri" may be treated as vocalic r)
-        assert key[0] == PhoneticClass.GUTTURAL     # k
+        assert key[0] == PhoneticClass.GUTTURAL  # k
         # "ri" maps to vocalic r (VOWEL_R) in Sanskrit phonetics
         assert key[1] in (PhoneticClass.VOWEL_R, PhoneticClass.SEMIVOWEL)  # r/ri
         # Note: "sh" is a digraph
@@ -140,9 +140,9 @@ class TestToPhoneticKey:
         """'rama' converts correctly."""
         key = to_phonetic_key("rama")
         assert key[0] == PhoneticClass.SEMIVOWEL  # r
-        assert key[1] == PhoneticClass.VOWEL_A    # a
-        assert key[2] == PhoneticClass.LABIAL     # m
-        assert key[3] == PhoneticClass.VOWEL_A    # a
+        assert key[1] == PhoneticClass.VOWEL_A  # a
+        assert key[2] == PhoneticClass.LABIAL  # m
+        assert key[3] == PhoneticClass.VOWEL_A  # a
 
     def test_case_insensitive(self):
         """Conversion is case insensitive."""
@@ -162,13 +162,13 @@ class TestToPhoneticKey:
         # "Harry" should resonate with HARE
         key = to_phonetic_key("harry")
         assert key[0] == PhoneticClass.ASPIRATE  # h
-        assert key[1] == PhoneticClass.VOWEL_A   # a
+        assert key[1] == PhoneticClass.VOWEL_A  # a
 
     def test_iast_input(self):
         """IAST transliteration works."""
         key = to_phonetic_key("kṛṣṇa")
         assert key[0] == PhoneticClass.GUTTURAL  # k
-        assert key[1] == PhoneticClass.VOWEL_R   # ṛ (vocalic r)
+        assert key[1] == PhoneticClass.VOWEL_R  # ṛ (vocalic r)
 
     def test_digraph_priority(self):
         """Digraphs are detected before single characters."""
@@ -207,7 +207,7 @@ class TestPhoneticDistance:
     def test_different_class_higher_cost(self):
         """Different phonetic classes have higher cost."""
         key1 = (PhoneticClass.ASPIRATE,)  # h
-        key2 = (PhoneticClass.LABIAL,)    # m
+        key2 = (PhoneticClass.LABIAL,)  # m
         assert phonetic_distance(key1, key2) > 0.0
 
     def test_empty_vs_empty(self):
@@ -322,7 +322,7 @@ class TestComputeResonanceVector:
         """Magnitude is the Euclidean norm of (H, K, R)."""
         vector = compute_resonance_vector("hare")
         h, k, r = vector["hare"], vector["krishna"], vector["rama"]
-        expected = math.sqrt(h*h + k*k + r*r)
+        expected = math.sqrt(h * h + k * k + r * r)
         assert vector["magnitude"] == pytest.approx(expected, abs=0.001)
 
     def test_values_in_range(self):
@@ -481,10 +481,22 @@ class TestResonanceEngine:
         """get_opcode() returns valid opcode name."""
         opcode = engine.get_opcode("hare")
         valid_opcodes = [
-            "SYS_WAKE", "LOAD_ROOT", "ALLOC_MEM", "BIND_CTX",
-            "ASSERT_TRUTH", "RESOLVE_REQ", "GARBAGE_COLLECT", "PULSE_SYNC",
-            "FETCH_RES", "EXEC_SERVICE", "CHECK_DHARMA", "COMMIT_LOG",
-            "CACHE_STATE", "OPTIMIZE", "YIELD_CPU", "RESET_IP",
+            "SYS_WAKE",
+            "LOAD_ROOT",
+            "ALLOC_MEM",
+            "BIND_CTX",
+            "ASSERT_TRUTH",
+            "RESOLVE_REQ",
+            "GARBAGE_COLLECT",
+            "PULSE_SYNC",
+            "FETCH_RES",
+            "EXEC_SERVICE",
+            "CHECK_DHARMA",
+            "COMMIT_LOG",
+            "CACHE_STATE",
+            "OPTIMIZE",
+            "YIELD_CPU",
+            "RESET_IP",
         ]
         assert opcode in valid_opcodes
 
@@ -603,24 +615,24 @@ class TestHolyNameSignatures:
     def test_hare_signature_structure(self):
         """HARE_SIGNATURE has correct structure."""
         assert len(HARE_SIGNATURE) == 4
-        assert HARE_SIGNATURE[0] == PhoneticClass.ASPIRATE   # H
-        assert HARE_SIGNATURE[1] == PhoneticClass.VOWEL_A    # a
+        assert HARE_SIGNATURE[0] == PhoneticClass.ASPIRATE  # H
+        assert HARE_SIGNATURE[1] == PhoneticClass.VOWEL_A  # a
         assert HARE_SIGNATURE[2] == PhoneticClass.SEMIVOWEL  # r
-        assert HARE_SIGNATURE[3] == PhoneticClass.VOWEL_E    # e
+        assert HARE_SIGNATURE[3] == PhoneticClass.VOWEL_E  # e
 
     def test_krishna_signature_structure(self):
         """KRISHNA_SIGNATURE has correct structure."""
         assert len(KRISHNA_SIGNATURE) == 5
-        assert KRISHNA_SIGNATURE[0] == PhoneticClass.GUTTURAL   # K
-        assert KRISHNA_SIGNATURE[1] == PhoneticClass.VOWEL_R    # ṛ
-        assert KRISHNA_SIGNATURE[2] == PhoneticClass.SIBILANT   # ṣ
+        assert KRISHNA_SIGNATURE[0] == PhoneticClass.GUTTURAL  # K
+        assert KRISHNA_SIGNATURE[1] == PhoneticClass.VOWEL_R  # ṛ
+        assert KRISHNA_SIGNATURE[2] == PhoneticClass.SIBILANT  # ṣ
         assert KRISHNA_SIGNATURE[3] == PhoneticClass.RETROFLEX  # ṇ
-        assert KRISHNA_SIGNATURE[4] == PhoneticClass.VOWEL_A    # a
+        assert KRISHNA_SIGNATURE[4] == PhoneticClass.VOWEL_A  # a
 
     def test_rama_signature_structure(self):
         """RAMA_SIGNATURE has correct structure."""
         assert len(RAMA_SIGNATURE) == 4
         assert RAMA_SIGNATURE[0] == PhoneticClass.SEMIVOWEL  # R
-        assert RAMA_SIGNATURE[1] == PhoneticClass.VOWEL_A    # ā
-        assert RAMA_SIGNATURE[2] == PhoneticClass.LABIAL     # m
-        assert RAMA_SIGNATURE[3] == PhoneticClass.VOWEL_A    # a
+        assert RAMA_SIGNATURE[1] == PhoneticClass.VOWEL_A  # ā
+        assert RAMA_SIGNATURE[2] == PhoneticClass.LABIAL  # m
+        assert RAMA_SIGNATURE[3] == PhoneticClass.VOWEL_A  # a

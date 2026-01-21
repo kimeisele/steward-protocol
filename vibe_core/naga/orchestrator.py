@@ -102,6 +102,7 @@ class NagaOrchestrator:
 
         # 5. Register in ServiceRegistry for protocol-based access
         from vibe_core.di import ServiceRegistry
+
         ServiceRegistry.register(NagaFederationProtocol, orchestrator)
 
         sys.stderr.write(">>> BOOTSTRAP: Operation Trimurti Complete. Vishnu reigns.\n")

@@ -174,6 +174,7 @@ class ChatService(ChatProtocol):
             # Simple injection point, max effect - NO HARDCODING!
             try:
                 from vibe_core.phoenix import get_config
+
                 config = get_config()
                 self._mahamantra_config = config.mahamantra
                 logger.info(
@@ -191,6 +192,7 @@ class ChatService(ChatProtocol):
 
             # LLM Provider (from config - NO HARDCODING)
             from vibe_core.runtime.providers.factory import create_provider, _detect_provider
+
             provider_name = _detect_provider()
             if provider_name != "noop":
                 self._provider = create_provider(provider_name=provider_name)
@@ -199,6 +201,7 @@ class ChatService(ChatProtocol):
             # Knowledge Graph
             try:
                 from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
                 self._knowledge = UnifiedKnowledgeGraph()
                 logger.info("✅ ChatService: KnowledgeGraph initialized")
             except Exception as e:
@@ -207,6 +210,7 @@ class ChatService(ChatProtocol):
             # Cognitive Protocol (for intent recognition)
             try:
                 from vibe_core.services.kapila_service import KapilaService
+
                 self._cognitive = KapilaService()
                 logger.info("✅ ChatService: Cognitive (Kapila) initialized")
             except Exception as e:
@@ -312,8 +316,7 @@ class ChatService(ChatProtocol):
             resonance_result = self._compute_resonance(message)
             magnitude = resonance_result["magnitude"]
             logger.info(
-                f"🔊 ChatService: Resonance magnitude={magnitude:.3f} "
-                f"(dominant={resonance_result['dominant']})"
+                f"🔊 ChatService: Resonance magnitude={magnitude:.3f} (dominant={resonance_result['dominant']})"
             )
 
             # =================================================================
@@ -435,9 +438,7 @@ class ChatService(ChatProtocol):
             self._report_to_narada("ERROR", message, context, error_response)
             return error_response
 
-    async def chat_with_routing(
-        self, message: str, context: ChatContext, force_routing: bool = False
-    ) -> ChatResponse:
+    async def chat_with_routing(self, message: str, context: ChatContext, force_routing: bool = False) -> ChatResponse:
         """Chat with explicit Mahajana routing."""
         # For now, same as chat() - routing is always semantic
         return await self.chat(message, context)
@@ -772,9 +773,7 @@ class ChatService(ChatProtocol):
             logger.warning(f"⚠️ Bridge execution failed: {e}")
             return {"success": False, "error": str(e)}
 
-    async def _handle_refinement_response(
-        self, message: str, context: ChatContext
-    ) -> ChatResponse:
+    async def _handle_refinement_response(self, message: str, context: ChatContext) -> ChatResponse:
         """
         Handle user's response to a RefinementRequest.
 
@@ -863,9 +862,7 @@ class ChatService(ChatProtocol):
             confidence=selected_path.confidence,
         )
 
-    def _get_knowledge_context_lotus(
-        self, message: str, lotus: Dict
-    ) -> Dict[str, str]:
+    def _get_knowledge_context_lotus(self, message: str, lotus: Dict) -> Dict[str, str]:
         """Get relevant context from KnowledgeGraph."""
         context = {}
 
@@ -878,6 +875,7 @@ class ChatService(ChatProtocol):
         # Add runtime context
         try:
             from vibe_core.runtime.prompt_context import get_prompt_context
+
             prompt_ctx = get_prompt_context()
             runtime = prompt_ctx.resolve(["git_status", "current_branch", "kernel_status"])
             context.update(runtime)
@@ -910,10 +908,12 @@ class ChatService(ChatProtocol):
 
         # Add history from context
         for hist_msg in context.history[-5:]:
-            messages.append({
-                "role": hist_msg.role,
-                "content": hist_msg.content,
-            })
+            messages.append(
+                {
+                    "role": hist_msg.role,
+                    "content": hist_msg.content,
+                }
+            )
 
         # Add current message
         messages.append({"role": "user", "content": message})
@@ -931,17 +931,14 @@ class ChatService(ChatProtocol):
                 temperature=0.7,
             )
             logger.info(
-                f"✅ ChatService: LLM response "
-                f"({response.usage.output_tokens} tokens, ${response.usage.cost_usd:.4f})"
+                f"✅ ChatService: LLM response ({response.usage.output_tokens} tokens, ${response.usage.cost_usd:.4f})"
             )
             return response.content
         except Exception as e:
             logger.error(f"❌ LLM invocation failed: {e}")
             return f"[{mahajana.upper()}] Response generation failed: {e}"
 
-    def _build_system_prompt_lotus(
-        self, lotus: Dict, context: Dict[str, str]
-    ) -> str:
+    def _build_system_prompt_lotus(self, lotus: Dict, context: Dict[str, str]) -> str:
         """Build system prompt with Lotus-based Mahajana identity.
 
         Uses PromptRegistry for Mahajana-specific prompts if available,
@@ -955,6 +952,7 @@ class ChatService(ChatProtocol):
         # Try PromptRegistry first (config/prompts/genesis.yaml)
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
+
             prompt_key = f"mahamantra.chat.{mahajana_lower}"
             prompt = PromptRegistry.get(prompt_key)
             logger.debug(f"📜 Using registered prompt: {prompt_key}")
@@ -988,6 +986,7 @@ Be concise, technical, and helpful.
         """Get chat model from config."""
         try:
             from vibe_core.phoenix import get_config
+
             config = get_config()
             model = config.steward.cognitive_policy.model_preferences.efficiency
             if not model:

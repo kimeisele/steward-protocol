@@ -115,6 +115,7 @@ class TestScanCommand:
     def test_execute_path_flag(self):
         """Execute with --path scans specific path."""
         import tempfile
+
         with tempfile.TemporaryDirectory() as tmpdir:
             cmd = ScanCommand()
             result = cmd.execute(["--path", tmpdir])

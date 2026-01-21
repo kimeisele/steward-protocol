@@ -83,6 +83,7 @@ class TestSamskaraProtocol:
     def test_owner_is_yamaraja(self) -> None:
         """ANTI-MAYAVAD: Samskara is owned by YAMARAJA (Position 15)."""
         from vibe_core.mahamantra import mahamantra
+
         assert mahamantra[15].guardian == Mahajana.YAMARAJA
 
     def test_null_samskara_implements_protocol(self) -> None:

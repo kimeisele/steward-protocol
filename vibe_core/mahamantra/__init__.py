@@ -115,6 +115,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         if bridge_result.position is not None:
             try:
                 from vibe_core.mahamantra.substrate import MAHAMANTRA_POSITIONS
+
                 if 0 <= bridge_result.position < 16:
                     pos = MAHAMANTRA_POSITIONS[bridge_result.position]
                     guardian = pos.guardian.value
@@ -194,6 +195,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Lazy-load the Singularity for tick/listener operations."""
         if not hasattr(self, "_singularity_instance"):
             from vibe_core.mahamantra.kernel.singularity import Mahamantra as MahamantraSingularity
+
             self._singularity_instance = MahamantraSingularity()
         return self._singularity_instance
 

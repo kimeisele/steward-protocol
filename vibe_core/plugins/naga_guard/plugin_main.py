@@ -149,7 +149,9 @@ class NagaGuardPlugin(KernelPlugin):
                 logger.warning("[NAGA.GUARD] No NAGA in kernel - guard disabled")
                 return HookResult(HookStatus.SUCCESS)
 
-            logger.info(f"[NAGA.GUARD] Connected to kernel's NAGA - identity: {self._orchestrator._identity.fingerprint}")
+            logger.info(
+                f"[NAGA.GUARD] Connected to kernel's NAGA - identity: {self._orchestrator._identity.fingerprint}"
+            )
 
             # 2. Wire EventBus -> FloodManager -> Cortex
             self._wire_eventbus(kernel)

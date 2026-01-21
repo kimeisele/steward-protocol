@@ -234,24 +234,23 @@ class TestLanguageProtocolContract:
 
     def test_protocol_is_runtime_checkable(self):
         """LanguageProtocol can be checked at runtime."""
-        assert hasattr(LanguageProtocol, '__protocol_attrs__') or \
-               hasattr(LanguageProtocol, '_is_protocol')
+        assert hasattr(LanguageProtocol, "__protocol_attrs__") or hasattr(LanguageProtocol, "_is_protocol")
 
     def test_protocol_has_translate(self):
         """Protocol requires translate method."""
-        assert 'translate' in dir(LanguageProtocol)
+        assert "translate" in dir(LanguageProtocol)
 
     def test_protocol_has_detect_level(self):
         """Protocol requires detect_level method."""
-        assert 'detect_level' in dir(LanguageProtocol)
+        assert "detect_level" in dir(LanguageProtocol)
 
     def test_protocol_has_validate_mapping(self):
         """Protocol requires validate_mapping method."""
-        assert 'validate_mapping' in dir(LanguageProtocol)
+        assert "validate_mapping" in dir(LanguageProtocol)
 
     def test_protocol_has_get_word(self):
         """Protocol requires get_word method."""
-        assert 'get_word' in dir(LanguageProtocol)
+        assert "get_word" in dir(LanguageProtocol)
 
 
 class TestStrictTyping:
@@ -260,18 +259,18 @@ class TestStrictTyping:
     def test_character_mapping_no_any(self):
         """CharacterMapping has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(CharacterMapping)
         for field_name, field_type in hints.items():
-            assert field_type is not Any, \
-                f"CharacterMapping.{field_name} uses Any"
+            assert field_type is not Any, f"CharacterMapping.{field_name} uses Any"
 
     def test_multilevel_word_no_any(self):
         """MultiLevelWord has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(MultiLevelWord)
         for field_name, field_type in hints.items():
-            assert field_type is not Any, \
-                f"MultiLevelWord.{field_name} uses Any"
+            assert field_type is not Any, f"MultiLevelWord.{field_name} uses Any"
 
 
 class TestFractalMapping:

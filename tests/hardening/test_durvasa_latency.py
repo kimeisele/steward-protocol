@@ -197,9 +197,7 @@ class TestDurvasaLatency:
         print(f"   Final state: {system.state}")
 
         # System should be in a valid state (not corrupted)
-        assert system.state in ["RUNNING", "SHUTTING_DOWN", "SHUTDOWN"], (
-            f"INVALID STATE: {system.state}"
-        )
+        assert system.state in ["RUNNING", "SHUTTING_DOWN", "SHUTDOWN"], f"INVALID STATE: {system.state}"
 
         # State counts should be consistent
         assert system.shutdown_initiated >= system.shutdown_cancelled, (
@@ -407,9 +405,7 @@ class TestDurvasaLatency:
             print(f"   Chain integrity: {'OK' if not integrity['corrupted'] else 'CORRUPTED'}")
 
             # Key assertion: Even with partial chains, the DB is consistent
-            assert not integrity["corrupted"], (
-                "DURVASA VICTORY: Cascading timeouts corrupted the ledger!"
-            )
+            assert not integrity["corrupted"], "DURVASA VICTORY: Cascading timeouts corrupted the ledger!"
 
             print("✅ Cascading Timeout SURVIVED: Ledger intact despite partials")
 

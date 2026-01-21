@@ -329,9 +329,9 @@ assert MALA // GITA_CHAPTERS == SHARANAGATI, "Acintya: 108/18 = 6"
 # -----------------------------------------------------------------------------
 
 # The Flutes (Persons with hole configurations)
-VENU_HOLES: Final[int] = SHARANAGATI   # 6 - The smallest flute, melts the Jiva
-VAMSI_HOLES: Final[int] = NAVA         # 9 - Activates the 48 phases of Lila
-MURALI_HOLES: Final[int] = QUARTERS    # 4 - Holds concentration on the Mala
+VENU_HOLES: Final[int] = SHARANAGATI  # 6 - The smallest flute, melts the Jiva
+VAMSI_HOLES: Final[int] = NAVA  # 9 - Activates the 48 phases of Lila
+MURALI_HOLES: Final[int] = QUARTERS  # 4 - Holds concentration on the Mala
 
 # WATERTIGHT: Flutes PRODUCE the known resonances
 assert JIVA_CYCLE // VENU_HOLES == NADI_RESONANCE, "VENU produces NADI_RESONANCE (72)"
@@ -363,8 +363,8 @@ FLUTE_HOLES_PRODUCT: Final[int] = VENU_HOLES * VAMSI_HOLES * MURALI_HOLES  # 216
 
 # The pairwise products (mathematical facts, NOT semantic equivalences!)
 FLUTE_VAMSI_MURALI: Final[int] = VAMSI_HOLES * MURALI_HOLES  # 9 × 4 = 36
-FLUTE_VENU_MURALI: Final[int] = VENU_HOLES * MURALI_HOLES    # 6 × 4 = 24
-FLUTE_VENU_VAMSI: Final[int] = VENU_HOLES * VAMSI_HOLES      # 6 × 9 = 54
+FLUTE_VENU_MURALI: Final[int] = VENU_HOLES * MURALI_HOLES  # 6 × 4 = 24
+FLUTE_VENU_VAMSI: Final[int] = VENU_HOLES * VAMSI_HOLES  # 6 × 9 = 54
 
 # WATERTIGHT: Kirtan mathematics (only NUMERIC facts, no semantic conflation!)
 assert FLUTE_HOLES_SUM == sum(int(d) for d in str(EPOCH_KEY)), "Holes sum = Epoch signature (19)"

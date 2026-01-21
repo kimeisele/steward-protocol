@@ -86,6 +86,7 @@ class TestOmSubProtocolsWork:
         assert om._yamaraja is not None
         # NullYamaraja is merciful - always passes judgment
         from vibe_core.protocols.mahajanas.yamaraja import Verdict
+
         assert om._yamaraja.judge(None) in (Verdict.ALLOW, Verdict.MERCY)
 
     def test_bhagavan_works_in_mahamantra_mode(self):

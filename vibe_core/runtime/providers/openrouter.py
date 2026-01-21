@@ -265,8 +265,7 @@ class OpenRouterProvider(LLMProvider):
 
         if not provider_entry or not provider_entry.default_model:
             raise ValueError(
-                "❌ FATAL: No model configured! "
-                "Set 'providers.openrouter.default_model' in config/llm.yaml"
+                "❌ FATAL: No model configured! Set 'providers.openrouter.default_model' in config/llm.yaml"
             )
 
         return provider_entry.default_model

@@ -28,6 +28,7 @@ class TestEventBusProtocol:
     def test_owner_is_narada(self) -> None:
         """ANTI-MAYAVAD: EventBus is owned by NARADA (Position 2)."""
         from vibe_core.mahamantra import mahamantra
+
         assert mahamantra[2].guardian == Mahajana.NARADA
 
     def test_null_event_bus_implements_protocol(self) -> None:

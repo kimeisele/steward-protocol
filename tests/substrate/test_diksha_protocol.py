@@ -321,8 +321,7 @@ class TestMahamantraAlwaysAccessible:
             else:
                 cert = create_brahminical_diksha("Test", 1)
 
-            assert cert.can_access_mahamantra is True, \
-                f"Mahamantra must ALWAYS be accessible, even for {level.name}"
+            assert cert.can_access_mahamantra is True, f"Mahamantra must ALWAYS be accessible, even for {level.name}"
 
 
 class TestOmVsMahamantra:

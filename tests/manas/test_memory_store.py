@@ -35,7 +35,6 @@ def clean_state_service():
     reset_state_service()
 
 
-
 def test_implements_akashic_protocol():
     """
     YAMARAJA TEST: MemoryStore must satisfy AkashicProtocol.

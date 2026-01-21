@@ -38,22 +38,22 @@ from vibe_core.protocols.substrate import MantraOpCode
 # This is WIRING, not INTELLIGENCE.
 
 GUARDIAN_COMMANDS = {
-    "vyasa": "boot",        # Position 0 - System Wake
-    "brahma": "spawn",      # Position 1 - Creation
-    "narada": "chat",       # Position 2 - Communication (fallback to self)
-    "shambhu": "purge",     # Position 3 - Destruction
-    "prithu": "scan",       # Position 4 - Compile/Structure
-    "kumaras": "purify",    # Position 5 - Purification
-    "kapila": "analyze",    # Position 6 - Analysis
-    "manu": "govern",       # Position 7 - Governance
+    "vyasa": "boot",  # Position 0 - System Wake
+    "brahma": "spawn",  # Position 1 - Creation
+    "narada": "chat",  # Position 2 - Communication (fallback to self)
+    "shambhu": "purge",  # Position 3 - Destruction
+    "prithu": "scan",  # Position 4 - Compile/Structure
+    "kumaras": "purify",  # Position 5 - Purification
+    "kapila": "analyze",  # Position 6 - Analysis
+    "manu": "govern",  # Position 7 - Governance
     "parashurama": "execute",  # Position 8 - Execution
-    "prahlada": None,       # Position 9 - Chat (self - no routing)
-    "janaka": "schedule",   # Position 10 - Scheduling
-    "bhishma": "persist",   # Position 11 - Persistence
-    "nrisimha": "guard",    # Position 12 - Security
-    "bali": "allocate",     # Position 13 - Resources
-    "shuka": "intel",       # Position 14 - Observation
-    "yamaraja": "audit",    # Position 15 - Judgment
+    "prahlada": None,  # Position 9 - Chat (self - no routing)
+    "janaka": "schedule",  # Position 10 - Scheduling
+    "bhishma": "persist",  # Position 11 - Persistence
+    "nrisimha": "guard",  # Position 12 - Security
+    "bali": "allocate",  # Position 13 - Resources
+    "shuka": "intel",  # Position 14 - Observation
+    "yamaraja": "audit",  # Position 15 - Judgment
 }
 
 
@@ -80,6 +80,7 @@ class ChatCommand(NagaCommandBase):
     def execute(self, args: List[str]) -> NagaCommandResult:
         """Execute chat via mahamantra.resonate() - no local intelligence."""
         from vibe_core.cli.naga_commands import discover_commands
+
         discover_commands()
 
         if not args:
@@ -105,6 +106,7 @@ class ChatCommand(NagaCommandBase):
         # === ROUTING DECISION ===
         # Threshold from ResonanceHarmonics: LILA/MALA = 4/9 ≈ 0.444
         from vibe_core.mahamantra.substrate.harmonics import ResonanceHarmonics
+
         threshold = ResonanceHarmonics.THRESHOLD_REFINE
 
         if score >= threshold and guardian:
@@ -117,18 +119,13 @@ class ChatCommand(NagaCommandBase):
         # Fallback: PRAHLADA responds directly (no routing)
         return self._chat_response(message, score, guardian)
 
-    def _route_to_command(
-        self, command_name: str, guardian: str, message: str, score: float
-    ) -> NagaCommandResult:
+    def _route_to_command(self, command_name: str, guardian: str, message: str, score: float) -> NagaCommandResult:
         """Route to another command based on resonance."""
         command = NAGA_COMMAND_REGISTRY.get(command_name)
 
         if not command:
             # Command not found - fall back to chat response
-            return self._chat_response(
-                message, score, guardian,
-                note=f"(Command '{command_name}' not registered)"
-            )
+            return self._chat_response(message, score, guardian, note=f"(Command '{command_name}' not registered)")
 
         # Execute routed command
         result = command.execute([])  # No args extraction - keep it simple
@@ -142,16 +139,15 @@ class ChatCommand(NagaCommandBase):
             output=header + result.output,
             error=result.error,
             opcode=result.opcode,
-            data=result.data + (
+            data=result.data
+            + (
                 ("routed_by", "prahlada"),
                 ("resonance_score", score),
                 ("guardian", guardian),
             ),
         )
 
-    def _chat_response(
-        self, message: str, score: float, guardian: Optional[str], note: str = ""
-    ) -> NagaCommandResult:
+    def _chat_response(self, message: str, score: float, guardian: Optional[str], note: str = "") -> NagaCommandResult:
         """
         Direct response when resonance too low for routing.
 

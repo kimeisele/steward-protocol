@@ -167,8 +167,8 @@ class TestByteMapping:
     def test_tattva_to_trit(self) -> None:
         """tattva_to_trit returns correct trit values."""
         assert tattva_to_trit(PanchaTattva.CHAITANYA) == HolyName.KRISHNA.value  # 1
-        assert tattva_to_trit(PanchaTattva.NITYANANDA) == HolyName.HARE.value    # 0
-        assert tattva_to_trit(PanchaTattva.SRIVASA) == HolyName.RAMA.value       # 2
+        assert tattva_to_trit(PanchaTattva.NITYANANDA) == HolyName.HARE.value  # 0
+        assert tattva_to_trit(PanchaTattva.SRIVASA) == HolyName.RAMA.value  # 2
 
 
 class TestTattvaGates:
@@ -245,7 +245,7 @@ class TestParamparaConnection:
         assert verify_pancha_tattva_parampara(37)
         assert verify_pancha_tattva_parampara(74)
         assert verify_pancha_tattva_parampara(185)  # 5 * 37
-        assert verify_pancha_tattva_parampara(0)    # 0 % 37 == 0
+        assert verify_pancha_tattva_parampara(0)  # 0 % 37 == 0
 
     def test_verify_parampara_negative(self) -> None:
         """Values not divisible by 37 are disconnected."""

@@ -479,6 +479,7 @@ def _create_test_gene(test_name: str, markers: list):
 
     # Create gene with standard Mahamantra shield
     import random
+
     return iGene(
         entropy_load=entropy,
         mantra_shield=MantraByte.standard_16(),
@@ -640,6 +641,7 @@ def _get_mahamantra_sequence():
     """Lazy import to avoid circular dependencies."""
     try:
         from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, MantraOpCode
+
         return MAHAMANTRA_SEQUENCE, MantraOpCode
     except ImportError:
         return None, None
@@ -657,7 +659,7 @@ def _emit_mantra_step(step: int, phase: str, test_name: str):
     word, opcode = sequence[step]
     # Log at DEBUG level - visible with pytest -v or --log-level=DEBUG
     logger = logging.getLogger("MAHAMANTRA")
-    logger.debug(f"[{phase}] Step {step+1}/16: {word} → {opcode.value} | {test_name}")
+    logger.debug(f"[{phase}] Step {step + 1}/16: {word} → {opcode.value} | {test_name}")
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -908,6 +910,7 @@ def _get_testable_registry():
     if _testable_registry is None:
         try:
             from vibe_core.protocols.testable_registry import get_global_registry
+
             _testable_registry = get_global_registry()
         except ImportError:
             return None
@@ -949,6 +952,7 @@ def discovered_test_cases(testable_registry, request):
     # This is session-scoped, so discovery happens once
     try:
         from vibe_core.kernel_impl import RealVibeKernel
+
         kernel = RealVibeKernel(test_mode=True, load_plugins=False, ledger_path=":memory:")
         testable_registry.discover_from_kernel(kernel)
     except Exception as e:
@@ -981,6 +985,7 @@ def pytest_generate_tests(metafunc):
         if len(registry.testables) == 0:
             try:
                 from vibe_core.kernel_impl import RealVibeKernel
+
                 kernel = RealVibeKernel(test_mode=True, load_plugins=False, ledger_path=":memory:")
                 registry.discover_from_kernel(kernel)
             except Exception:
@@ -1032,6 +1037,7 @@ def run_registry_test(fresh_kernel, test_gene):
     def _run(test_case):
         """Execute a TestCase and return result."""
         import time
+
         start = time.time()
 
         try:
@@ -1048,9 +1054,7 @@ def run_registry_test(fresh_kernel, test_gene):
                     asyncio.set_event_loop(loop)
 
                 coro = test_func(fresh_kernel, {"gene": test_gene})
-                result = loop.run_until_complete(
-                    asyncio.wait_for(coro, timeout=timeout_s)
-                )
+                result = loop.run_until_complete(asyncio.wait_for(coro, timeout=timeout_s))
             else:
                 # Sync test
                 result = test_func(fresh_kernel, {"gene": test_gene})
@@ -1087,8 +1091,7 @@ def pytest_report_header(config):
         summary = registry.get_summary()
         if summary["total_testables"] > 0:
             return [
-                f"TestableRegistry: {summary['total_testables']} components, "
-                f"{summary['total_tests']} generated tests"
+                f"TestableRegistry: {summary['total_testables']} components, {summary['total_tests']} generated tests"
             ]
     except Exception:
         pass

@@ -47,6 +47,7 @@ from vibe_core.protocols.substrate import MantraOpCode
 # MAHAJANA ENUM TESTS
 # =============================================================================
 
+
 class TestMahajana:
     """Test the 16 Mahajanas (12 workers + 4 avataras)."""
 
@@ -127,6 +128,7 @@ class TestMahajana:
 # PHASE ENUM TESTS
 # =============================================================================
 
+
 class TestPhase:
     """Test the 4 phases of the Mahamantra CPU."""
 
@@ -154,6 +156,7 @@ class TestPhase:
 # =============================================================================
 # OPCODE → MAHAJANA MAPPING TESTS
 # =============================================================================
+
 
 class TestOpcodeToMahajana:
     """Test the 16-fold OpCode to Mahajana mapping."""
@@ -240,6 +243,7 @@ class TestOpcodeToMahajana:
 # OPCODE → PHASE MAPPING TESTS
 # =============================================================================
 
+
 class TestOpcodeToPhase:
     """Test OpCode to Phase mapping."""
 
@@ -295,6 +299,7 @@ class TestOpcodeToPhase:
 # =============================================================================
 # NAGA COMMAND RESULT TESTS
 # =============================================================================
+
 
 class TestNagaCommandResult:
     """Test NagaCommandResult dataclass."""
@@ -364,42 +369,43 @@ class TestNagaCommandResult:
 # INAGA COMMAND PROTOCOL TESTS
 # =============================================================================
 
+
 class TestINagaCommandProtocol:
     """Test INagaCommand protocol contract."""
 
     def test_protocol_is_runtime_checkable(self):
         """Protocol can be checked at runtime."""
-        assert hasattr(INagaCommand, '__protocol_attrs__') or \
-               hasattr(INagaCommand, '_is_protocol')
+        assert hasattr(INagaCommand, "__protocol_attrs__") or hasattr(INagaCommand, "_is_protocol")
 
     def test_has_opcode_property(self):
         """Protocol has opcode property."""
-        assert 'opcode' in dir(INagaCommand)
+        assert "opcode" in dir(INagaCommand)
 
     def test_has_mahajana_property(self):
         """Protocol has mahajana property."""
-        assert 'mahajana' in dir(INagaCommand)
+        assert "mahajana" in dir(INagaCommand)
 
     def test_has_name_property(self):
         """Protocol has name property."""
-        assert 'name' in dir(INagaCommand)
+        assert "name" in dir(INagaCommand)
 
     def test_has_help_text_property(self):
         """Protocol has help_text property."""
-        assert 'help_text' in dir(INagaCommand)
+        assert "help_text" in dir(INagaCommand)
 
     def test_has_phase_property(self):
         """Protocol has phase property."""
-        assert 'phase' in dir(INagaCommand)
+        assert "phase" in dir(INagaCommand)
 
     def test_has_execute_method(self):
         """Protocol has execute method."""
-        assert 'execute' in dir(INagaCommand)
+        assert "execute" in dir(INagaCommand)
 
 
 # =============================================================================
 # NAGA COMMAND BASE TESTS
 # =============================================================================
+
 
 class TestNagaCommandBase:
     """Test NagaCommandBase implementation."""
@@ -459,11 +465,13 @@ class TestNagaCommandBase:
 # CUSTOM COMMAND TESTS
 # =============================================================================
 
+
 class TestCustomCommand:
     """Test creating custom commands."""
 
     def test_custom_command_implementation(self):
         """Custom command implements protocol."""
+
         class MyCommand(NagaCommandBase):
             _opcode = MantraOpCode.EXTEND_CAP
             _mahajana = Mahajana.PRAHLADA
@@ -486,6 +494,7 @@ class TestCustomCommand:
 # =============================================================================
 # NAGA COMMAND REGISTRY TESTS
 # =============================================================================
+
 
 class TestNagaCommandRegistry:
     """Test NagaCommandRegistry (Balarama pattern)."""
@@ -594,6 +603,7 @@ class TestNagaCommandRegistry:
 # NAGA COMMAND DECORATOR TESTS
 # =============================================================================
 
+
 class TestNagaCommandDecorator:
     """Test @naga_command decorator."""
 
@@ -621,12 +631,14 @@ class TestNagaCommandDecorator:
 # STRICT TYPING TESTS
 # =============================================================================
 
+
 class TestStrictTyping:
     """Test that no Any types are used."""
 
     def test_result_no_any(self):
         """NagaCommandResult has no Any types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(NagaCommandResult)
         for field_name, field_type in hints.items():
             # Check that field type is not Any
@@ -636,6 +648,7 @@ class TestStrictTyping:
 # =============================================================================
 # IMMUTABILITY TESTS
 # =============================================================================
+
 
 class TestImmutability:
     """Test that dataclasses are frozen."""
@@ -667,6 +680,7 @@ class TestImmutability:
 # GLOBAL REGISTRY TESTS
 # =============================================================================
 
+
 class TestGlobalRegistry:
     """Test the global NAGA_COMMAND_REGISTRY."""
 
@@ -682,6 +696,7 @@ class TestGlobalRegistry:
 # =============================================================================
 # INTEGRATION TESTS
 # =============================================================================
+
 
 class TestIntegration:
     """Integration tests for the command system."""
@@ -716,6 +731,7 @@ class TestIntegration:
 
     def test_command_failure_flow(self):
         """Command failure returns proper result."""
+
         class FailCommand(NagaCommandBase):
             _opcode = MantraOpCode.AUDIT_SEAL
             _mahajana = Mahajana.YAMARAJA

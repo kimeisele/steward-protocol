@@ -60,25 +60,26 @@ class TestKurukshetra:
     async def test_identity_spoofing_attack(self, kernel):
         """
         SCENARIO: An Asura tries to chant the Mantra with a fake Identity.
-        
+
         OLD EXPECTATION (Karma): The Watchdog bites (returns False).
         NEW EXPECTATION (Mercy): The Holy Name is Absolute. Even an Asura chanting
         is purified. The system does NOT reject the chant, but it does not
         grant administrative rights. It returns TRUE (Aligned) because the
         act of chanting itself aligns the entity.
-        
+
         "The Holy Name > All Other Dharma" - Chaitanya Mahaprabhu
         """
         # 1. Create Fake Identity (Asura)
         asura_ctx = SovereignContext(identity_id="ASURA_KING", signature="FAKE_SIG", roles=["impostor"])
-    
+
         # 2. Try to Chant
         # The Mantra itself is the purifier.
         is_aligned = kernel.watchdog.chant_mahamantra(asura_ctx)
-    
+
         # 3. Verify Mercy (The Chaitanya Singularity)
         # We assert TRUE because the chant itself is valid, regardless of the chanter.
         assert is_aligned is True, "MERCY FAILED: The Holy Name was rejected!"
+
     @pytest.mark.asyncio
     async def test_broken_vow_auditor_failure(self, kernel):
         """

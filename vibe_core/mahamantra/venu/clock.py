@@ -53,9 +53,7 @@ class MantraClock:
         self._voices: List[MantraVoice] = []
         self._next_voice_id = 0
         # Callbacks per position
-        self._position_callbacks: List[List[Callable[[], None]]] = [
-            [] for _ in range(VENU_POSITIONS)
-        ]
+        self._position_callbacks: List[List[Callable[[], None]]] = [[] for _ in range(VENU_POSITIONS)]
         # Mala completion callbacks
         self._mala_callbacks: List[Callable[[int], None]] = []
 

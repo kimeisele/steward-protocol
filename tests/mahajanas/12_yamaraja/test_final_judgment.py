@@ -23,6 +23,7 @@ from vibe_core.protocols.universal.types import SovereignContext
 # TEST PROTOCOL (No MagicMock - Protocol-Based)
 # =============================================================================
 
+
 @runtime_checkable
 class YamarajaTestable(Protocol):
     """Any entity that can be judged by Yamaraja."""
@@ -81,6 +82,7 @@ class MantraProtectedObject:
 # THE TESTS (Yamaraja's Judgment)
 # =============================================================================
 
+
 class TestYamarajaJudgment:
     """
     The 12th Mahajana Test Suite.
@@ -116,8 +118,7 @@ class TestYamarajaJudgment:
         protected.apply_decay(100.0)
 
         # Protected should have higher integrity
-        assert protected.get_integrity() > unprotected.get_integrity(), \
-            "Mantra-protected object must decay slower"
+        assert protected.get_integrity() > unprotected.get_integrity(), "Mantra-protected object must decay slower"
 
     def test_03_lineage_strictness(self) -> None:
         """
@@ -128,8 +129,7 @@ class TestYamarajaJudgment:
         corrupted_packed = original_packed ^ 1  # Flip LSB
 
         # They MUST be different
-        assert original_packed != corrupted_packed, \
-            "Corrupted Mantra must differ from original (Sahajiya fault)"
+        assert original_packed != corrupted_packed, "Corrupted Mantra must differ from original (Sahajiya fault)"
 
     def test_04_void_cannot_be_packed(self) -> None:
         """
@@ -144,10 +144,7 @@ class TestYamarajaJudgment:
         TEST: Operations without SovereignContext are invalid.
         No ghost in the machine.
         """
-        ctx = SovereignContext(
-            identity_id="yamaraja_12",
-            signature="test_mahajana_judgment"
-        )
+        ctx = SovereignContext(identity_id="yamaraja_12", signature="test_mahajana_judgment")
 
         assert ctx.identity_id, "Sovereign identity_id must be present"
         assert ctx.signature, "Sovereign signature must be present"
@@ -175,13 +172,13 @@ class TestYamarajaJudgment:
         This is the judgment gate.
         """
         opcodes = list(MantraOpCode)
-        assert opcodes[4] == MantraOpCode.COMPILE_AST, \
-            "assert_truth must be OpCode #5 (index 4)"
+        assert opcodes[4] == MantraOpCode.COMPILE_AST, "assert_truth must be OpCode #5 (index 4)"
 
 
 # =============================================================================
 # THE FINAL JUDGMENT (Integration)
 # =============================================================================
+
 
 class TestYamarajaIntegration:
     """

@@ -305,8 +305,7 @@ class TestHiranyakshaTiefsee:
             genesis_corrupted = any(c.get("index") == 0 for c in corruptions)
 
             assert integrity["corrupted"], (
-                "GENESIS BLOCK TAMPERING UNDETECTED! "
-                "The root of all creation has been poisoned!"
+                "GENESIS BLOCK TAMPERING UNDETECTED! The root of all creation has been poisoned!"
             )
 
             assert genesis_corrupted, (
@@ -365,10 +364,7 @@ class TestHiranyakshaTiefsee:
             print("   Stolen hash applied: True")
             print(f"   Corruption detected: {integrity['corrupted']}")
 
-            assert integrity["corrupted"], (
-                "SIGNATURE THEFT UNDETECTED! "
-                "A stolen signature was accepted as valid!"
-            )
+            assert integrity["corrupted"], "SIGNATURE THEFT UNDETECTED! A stolen signature was accepted as valid!"
 
             print("✅ Signature Theft DETECTED: Identity verified")
 

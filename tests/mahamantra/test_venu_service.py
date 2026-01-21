@@ -217,13 +217,9 @@ class TestVenuServiceMonotonicTime:
         # Cumulative jitter should be reasonable (< 200ms for 10 ticks)
         # This tests monotonic time (no unbounded drift like naive sleep would cause)
         # In test environments with other processes, some jitter is expected
-        assert metrics["cumulative_drift_ms"] < 200.0, (
-            f"Drift too high: {metrics['cumulative_drift_ms']}ms"
-        )
+        assert metrics["cumulative_drift_ms"] < 200.0, f"Drift too high: {metrics['cumulative_drift_ms']}ms"
         # More importantly: we should NOT have missed ticks under normal conditions
-        assert metrics["missed_ticks"] == 0, (
-            f"Unexpected missed ticks: {metrics['missed_ticks']}"
-        )
+        assert metrics["missed_ticks"] == 0, f"Unexpected missed ticks: {metrics['missed_ticks']}"
 
     @pytest.mark.asyncio
     async def test_metrics_track_jitter(self) -> None:

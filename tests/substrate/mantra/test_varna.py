@@ -72,11 +72,11 @@ class TestVyanjana:
 
     def test_vargas(self):
         """Each varga has 5 consonants."""
-        assert len(KAVARGA) == 5   # ka-varga
-        assert len(CAVARGA) == 5   # ca-varga
-        assert len(TAVARGA) == 5   # ṭa-varga (retroflex)
+        assert len(KAVARGA) == 5  # ka-varga
+        assert len(CAVARGA) == 5  # ca-varga
+        assert len(TAVARGA) == 5  # ṭa-varga (retroflex)
         assert len(TAVARGA2) == 5  # ta-varga (dental)
-        assert len(PAVARGA) == 5   # pa-varga
+        assert len(PAVARGA) == 5  # pa-varga
 
     def test_semi_vowels(self):
         """There are 4 semi-vowels (antahstha)."""

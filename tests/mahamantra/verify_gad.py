@@ -1,4 +1,3 @@
-
 """
 VERIFY GAD - The Audit of The Law
 =================================
@@ -26,14 +25,15 @@ sys.path.append(".")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("GAD_VERIFIER")
 
+
 def verify_component(name: str, instance: Any) -> bool:
     """Verify a component for GAD-000 compliance."""
     logger.info(f"\nAUDITING: {name}")
     logger.info("=" * 40)
-    
+
     # Check 1: GAD Protocol Implementation
     from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
-    
+
     if not isinstance(instance, GADProtocol):
         logger.error(f"❌ {name} does NOT implement GADProtocol!")
         return False
@@ -55,10 +55,10 @@ def verify_component(name: str, instance: Any) -> bool:
     # Check 3: Observability
     try:
         state = instance.get_state()
-        logger.info(f"✅ State: {state.keys()}") # Just show keys for brevity
+        logger.info(f"✅ State: {state.keys()}")  # Just show keys for brevity
         if "heartbeat" not in state:
-             logger.error("❌ State missing 'heartbeat'!")
-             return False
+            logger.error("❌ State missing 'heartbeat'!")
+            return False
     except Exception as e:
         logger.error(f"❌ Get State Failed: {e}")
         return False
@@ -68,36 +68,40 @@ def verify_component(name: str, instance: Any) -> bool:
         audit = instance.audit()
         logger.info(f"✅ Audit Result: {audit}")
         if not audit.is_compliant:
-             logger.warning(f"⚠️ Audit Warn: Needs Improvement (Status: {audit.status})")
+            logger.warning(f"⚠️ Audit Warn: Needs Improvement (Status: {audit.status})")
         else:
-             logger.info(f"✅ Compliant: {audit.is_compliant}")
+            logger.info(f"✅ Compliant: {audit.is_compliant}")
     except Exception as e:
         logger.error(f"❌ Audit Failed: {e}")
         return False
-        
+
     logger.info(f"✨ {name} is GAD-000 Compliant!")
     return True
 
+
 def main():
     logger.info("🕉️  GAD-000 COMPLIANCE CHECK STARTED")
-    
+
     all_passed = True
-    
+
     # 1. Verify MahamantraLotus
     from vibe_core.mahamantra import mahamantra
+
     if not verify_component("MahamantraLotus", mahamantra):
         all_passed = False
-        
+
     # 2. Verify ShadowReactor
     from vibe_core.mahamantra.reactor.shadow import ShadowReactor
+
     reactor = ShadowReactor(auto_discover=False, reactor_id="gad_test_reactor")
     if not verify_component("ShadowReactor", reactor):
         all_passed = False
-        
+
     # 3. Verify BalaramaProxy (Wrap a dummy)
     from vibe_core.mahamantra.substrate.proxy import BalaramaProxy
+
     # Wrap logging as a dummy service since it's already there
-    proxy = BalaramaProxy("logging", silent=True) 
+    proxy = BalaramaProxy("logging", silent=True)
     if not verify_component("BalaramaProxy", proxy):
         all_passed = False
 
@@ -106,6 +110,7 @@ def main():
     else:
         logger.error("\n❌ COMPLIANCE FAILED")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

@@ -26,6 +26,7 @@ from vibe_core.mahamantra.substrate.seed import NavaBhakti
 
 class ChantResult(TypedDict):
     """Typed result for cli_chant command (KIRTANAM - Chanting)."""
+
     success: bool
     bhakti: str  # NavaBhakti.KIRTANAM
     rounds: int
@@ -148,6 +149,7 @@ from vibe_core.mahamantra.cli.event_bridge import EventEntry, get_events
 
 class ListenResult(TypedDict):
     """Typed result for cli_listen command (SRAVANAM - Hearing)."""
+
     success: bool
     bhakti: str  # NavaBhakti.SRAVANAM
     source: str
@@ -233,6 +235,7 @@ def cli_listen(
 
 class ResolveResult(TypedDict):
     """Typed result for cli_resolve command (VANDANAM - Praying)."""
+
     success: bool
     bhakti: str  # NavaBhakti.VANDANAM
     name: str
@@ -261,6 +264,7 @@ def cli_resolve(
     """
     # SSOT imports from seed.py
     from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, get_quarter_name
+
     # Core logic from scanner.py (Separation of Concerns)
     from vibe_core.mahamantra.substrate.scanner import resolve_mahajana
 
@@ -329,6 +333,7 @@ def cli_resolve(
 
 class ServeResult(TypedDict):
     """Typed result for cli_serve command (PADA_SEVANAM - Execution)."""
+
     success: bool
     bhakti: str  # NavaBhakti.PADA_SEVANAM
     task_id: str
@@ -443,6 +448,7 @@ def cli_serve(
 
 class VedaCLIResult(TypedDict):
     """Typed result for cli_veda command (ATMA_NIVEDANAM - Self-Surrender)."""
+
     success: bool
     bhakti: str  # NavaBhakti.ATMA_NIVEDANAM
     mode: str  # "restricted", "enhanced", "creative"
@@ -614,9 +620,15 @@ def cli_veda(
 
 
 __all__ = [
-    "cli_chant", "ChantResult",
-    "cli_listen", "ListenResult", "EventEntry",
-    "cli_resolve", "ResolveResult",
-    "cli_serve", "ServeResult",
-    "cli_veda", "VedaCLIResult",
+    "cli_chant",
+    "ChantResult",
+    "cli_listen",
+    "ListenResult",
+    "EventEntry",
+    "cli_resolve",
+    "ResolveResult",
+    "cli_serve",
+    "ServeResult",
+    "cli_veda",
+    "VedaCLIResult",
 ]

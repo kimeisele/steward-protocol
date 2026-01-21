@@ -26,6 +26,7 @@ def clean_registry():
     """Ensure registry and cli_auto are clean."""
     ProtocolRegistry.clear()
     from vibe_core.mahamantra.cli.auto import cli_auto
+
     # Reset cli_auto state
     cli_auto._methods = {}
     cli_auto._nulls = {}
@@ -42,6 +43,7 @@ def clean_registry():
 # =============================================================================
 # PROTOCOL COMPLIANCE TESTS
 # =============================================================================
+
 
 class TestCLIEntryProtocolContract:
     """Test that CLIEntryProtocol defines the correct contract."""
@@ -64,6 +66,7 @@ class TestCLIEntryProtocolContract:
 
     def test_protocol_is_runtime_checkable(self):
         """Protocol MUST be runtime_checkable for isinstance()."""
+
         # Create a minimal implementation
         class MinimalEntry:
             def run(self, args: List[str]) -> int:
@@ -85,6 +88,7 @@ class TestCLIEntryProtocolContract:
 # =============================================================================
 # MAHAMANTRA CLI ENTRY TESTS
 # =============================================================================
+
 
 class TestMahamantraCLIEntry:
     """
@@ -164,6 +168,7 @@ class TestMahamantraCLIEntry:
 # ZERO MANUAL WIRING TESTS
 # =============================================================================
 
+
 class TestZeroManualWiring:
     """
     Tests that verify ZERO manual wiring.
@@ -210,6 +215,7 @@ class TestZeroManualWiring:
 # =============================================================================
 # GAD-000 COMPLIANCE TESTS
 # =============================================================================
+
 
 class TestGAD000Compliance:
     """
@@ -265,6 +271,7 @@ class TestGAD000Compliance:
 # PARAMPARA CONNECTION TESTS
 # =============================================================================
 
+
 class TestParamparaConnection:
     """
     Test that CLI is connected to Parampara (37 formula).
@@ -278,9 +285,7 @@ class TestParamparaConnection:
         from vibe_core.mahamantra.substrate import PARAMPARA
 
         for pos in mahamantra.positions:
-            assert pos.parampara_vector % PARAMPARA == 0, (
-                f"Position {pos.index} not connected to Parampara"
-            )
+            assert pos.parampara_vector % PARAMPARA == 0, f"Position {pos.index} not connected to Parampara"
 
     def test_parampara_is_37(self):
         """PARAMPARA constant MUST be 37."""

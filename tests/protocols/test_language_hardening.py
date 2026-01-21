@@ -34,6 +34,7 @@ from vibe_core.protocols.language import (
 # CHARACTER MAPPING HARDENING
 # =============================================================================
 
+
 class TestCharacterMappingEdgeCases:
     """Edge cases for CharacterMapping."""
 
@@ -176,6 +177,7 @@ class TestConsonantMappingsComplete:
 # MULTI-LEVEL WORD HARDENING
 # =============================================================================
 
+
 class TestMultiLevelWordEdgeCases:
     """Edge cases for MultiLevelWord."""
 
@@ -208,18 +210,12 @@ class TestMultiLevelWordEdgeCases:
 
     def test_word_with_meaning(self):
         """Word with meaning field."""
-        word = MultiLevelWord(
-            "Krishna", "कृष्ण", "Kṛṣṇa",
-            meaning="The All-Attractive One"
-        )
+        word = MultiLevelWord("Krishna", "कृष्ण", "Kṛṣṇa", meaning="The All-Attractive One")
         assert "Attractive" in word.meaning
 
     def test_word_with_etymology(self):
         """Word with etymology field."""
-        word = MultiLevelWord(
-            "Krishna", "कृष्ण", "Kṛṣṇa",
-            etymology="kṛṣ (to attract) + ṇa"
-        )
+        word = MultiLevelWord("Krishna", "कृष्ण", "Kṛṣṇa", etymology="kṛṣ (to attract) + ṇa")
         assert "kṛṣ" in word.etymology
 
     def test_word_equality(self):
@@ -238,6 +234,7 @@ class TestMultiLevelWordEdgeCases:
 # =============================================================================
 # HOLY NAME HARDENING
 # =============================================================================
+
 
 class TestHolyNamesComplete:
     """Complete Holy Name coverage."""
@@ -288,6 +285,7 @@ class TestHolyNamesComplete:
 # =============================================================================
 # MAHAMANTRA HARDENING
 # =============================================================================
+
 
 class TestMahamantraStructure:
     """Mahamantra structure validation."""
@@ -408,6 +406,7 @@ class TestMahamantraWordMapping:
 # LANGUAGE LEVEL HARDENING
 # =============================================================================
 
+
 class TestLanguageLevelCompleteness:
     """Language level completeness."""
 
@@ -446,34 +445,35 @@ class TestScriptTypeCompleteness:
 # PROTOCOL CONTRACT HARDENING
 # =============================================================================
 
+
 class TestLanguageProtocolContract:
     """LanguageProtocol contract enforcement."""
 
     def test_protocol_has_translate(self):
         """Protocol has translate method."""
-        assert hasattr(LanguageProtocol, 'translate')
+        assert hasattr(LanguageProtocol, "translate")
 
     def test_protocol_has_detect_level(self):
         """Protocol has detect_level method."""
-        assert hasattr(LanguageProtocol, 'detect_level')
+        assert hasattr(LanguageProtocol, "detect_level")
 
     def test_protocol_has_validate_mapping(self):
         """Protocol has validate_mapping method."""
-        assert hasattr(LanguageProtocol, 'validate_mapping')
+        assert hasattr(LanguageProtocol, "validate_mapping")
 
     def test_protocol_has_get_word(self):
         """Protocol has get_word method."""
-        assert hasattr(LanguageProtocol, 'get_word')
+        assert hasattr(LanguageProtocol, "get_word")
 
     def test_protocol_is_runtime_checkable(self):
         """Protocol is runtime checkable."""
-        assert hasattr(LanguageProtocol, '__protocol_attrs__') or \
-               hasattr(LanguageProtocol, '_is_protocol')
+        assert hasattr(LanguageProtocol, "__protocol_attrs__") or hasattr(LanguageProtocol, "_is_protocol")
 
 
 # =============================================================================
 # IMMUTABILITY HARDENING
 # =============================================================================
+
 
 class TestImmutabilityEnforced:
     """All dataclasses are properly frozen."""
@@ -495,12 +495,14 @@ class TestImmutabilityEnforced:
 # NO ANY TYPE HARDENING
 # =============================================================================
 
+
 class TestNoAnyTypes:
     """Verify no Any types are used."""
 
     def test_character_mapping_no_any(self):
         """CharacterMapping uses strict types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(CharacterMapping)
         for field_name, field_type in hints.items():
             assert field_type is not Any
@@ -508,6 +510,7 @@ class TestNoAnyTypes:
     def test_multilevel_word_no_any(self):
         """MultiLevelWord uses strict types."""
         from typing import get_type_hints, Any
+
         hints = get_type_hints(MultiLevelWord)
         for field_name, field_type in hints.items():
             assert field_type is not Any
@@ -516,6 +519,7 @@ class TestNoAnyTypes:
 # =============================================================================
 # UNICODE HANDLING HARDENING
 # =============================================================================
+
 
 class TestUnicodeHandling:
     """Unicode edge cases."""
@@ -555,6 +559,7 @@ class TestUnicodeHandling:
 # =============================================================================
 # FRACTAL MAPPING HARDENING
 # =============================================================================
+
 
 class TestFractalMappingConsistency:
     """1:1 fractal mapping consistency."""
