@@ -20,11 +20,6 @@ def test_narada_envoy_alignment():
     pos = mahamantra[2]
     assert pos.guardian.value == "narada"
 
-    # Check if we can find the Envoy class via the mod router
-    # (Relies on the lazy loader in mahamantra.genesis.narada)
-    # Since we haven't patched narada/__init__.py yet, this might still
-    # point to the old location, but the identity in the file is already updated.
-    pass
 
 
 def test_bhishma_archivist_alignment():

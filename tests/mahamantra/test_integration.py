@@ -26,31 +26,6 @@ from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
 # But "Integration" means testing with real components.
 
 
-@pytest.mark.skip(reason="LEGACY: mahamantra.mod API removed. New API: mahamantra.genesis.brahma")
-def test_router_access_core_service():
-    """Test accessing a core service via mahamantra router."""
-    # LEGACY TEST: mahamantra.mod.* API no longer exists
-    # NEW API: mahamantra.genesis.brahma, mahamantra.shadow, etc.
-    pass
-
-
-@pytest.mark.skip(reason="LEGACY: mahamantra.mod API removed. Proxy wrapping architecture changed")
-def test_router_wraps_legacy_module():
-    """
-    Test that a legacy module (if any exist) gets wrapped.
-    LEGACY TEST: No longer applicable with new Lotus architecture.
-    """
-    pass
-
-
-@pytest.mark.skip(reason="LEGACY: Rewrite needed for Lotus API (mahamantra.genesis.*, etc.)")
-def test_one_import_promise():
-    """Test the sacred promise: one import gives access to everything."""
-    # LEGACY TEST: Needs rewrite for new Lotus-based navigation
-    # NEW: mahamantra.genesis.brahma, mahamantra.shadow.spawn(), etc.
-    pass
-
-
 def test_proxy_transparency():
     """Test that the proxy forwards calls correctly."""
 
