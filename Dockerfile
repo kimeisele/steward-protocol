@@ -17,7 +17,8 @@ RUN pip install --no-cache-dir \
     cryptography \
     jinja2 \
     tomlkit \
-    psutil
+    psutil \
+    ecdsa
 
 # Copy project files FIRST (as root)
 COPY . .
