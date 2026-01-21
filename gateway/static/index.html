@@ -13,6 +13,21 @@
             <div class="subtitle">Agent City Gateway - Governed AI Infrastructure</div>
         </header>
 
+        <!-- CHAT -->
+        <div class="chat-section" style="margin: 2rem 0; padding: 1.5rem; background: var(--bg-card, #1a1a2e); border-radius: 8px; border: 1px solid var(--border, #333);">
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="chatInput" placeholder="Ask the Steward..."
+                    style="flex: 1; padding: 0.75rem 1rem; font-size: 1rem; background: var(--bg, #0f0f1a); color: var(--text, #e0e0e0); border: 1px solid var(--border, #444); border-radius: 4px; outline: none;"
+                    onkeypress="if(event.key==='Enter')sendChat()">
+                <button onclick="sendChat()"
+                    style="padding: 0.75rem 1.5rem; font-size: 1rem; background: var(--accent, #6366f1); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Send
+                </button>
+            </div>
+            <div id="chatResponse" style="margin-top: 1rem; padding: 1rem; background: var(--bg, #0f0f1a); border-radius: 4px; min-height: 60px; white-space: pre-wrap; font-family: monospace; display: none;"></div>
+            <div id="chatStatus" style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-dim, #888);"></div>
+        </div>
+
         <div class="status-bar">
             <div class="status-item">
                 <div class="label">Gateway</div>
@@ -63,7 +78,8 @@
                 <li><span class="method">GET</span> <code>/api/agents</code> - List registered agents</li>
                 <li><span class="method">GET</span> <code>/api/ledger</code> - Public audit ledger</li>
                 <li><span class="method">GET</span> <code>/api/pulse</code> - System pulse snapshot</li>
-                <li><span class="method">POST</span> <code>/v1/chat</code> - Send commands (requires auth)</li>
+                <li><span class="method">POST</span> <code>/v1/public-chat</code> - Public chat (rate-limited)</li>
+                <li><span class="method">POST</span> <code>/v1/chat</code> - Agent chat (requires signature)</li>
             </ul>
         </div>
 
@@ -80,6 +96,40 @@
     </div>
 
     <script>
+        // Chat function
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            const response = document.getElementById('chatResponse');
+            const status = document.getElementById('chatStatus');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            status.textContent = 'Sending...';
+            response.style.display = 'none';
+
+            try {
+                const res = await fetch('/v1/public-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    response.style.display = 'block';
+                    response.textContent = JSON.stringify(data.data, null, 2);
+                    status.textContent = 'OK';
+                    input.value = '';
+                } else {
+                    status.textContent = 'Error: ' + (data.detail || res.status);
+                }
+            } catch (e) {
+                status.textContent = 'Error: ' + e.message;
+            }
+        }
+
         // Simple health checks
         async function checkStatus() {
             const gatewayEl = document.getElementById('gatewayStatus');
