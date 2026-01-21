@@ -147,7 +147,7 @@ class YagyaRequest(BaseModel):
 
 class PublicChatRequest(BaseModel):
     """Simple public chat - no signature required, rate-limited."""
-    message: str = Field(..., max_length=2000, description="Message (max 2KB)")
+    message: str = Field(..., min_length=1, max_length=2000, description="Message (1-2000 chars)")
 
 
 # --- RATE LIMITING (simple in-memory) ---
@@ -185,13 +185,15 @@ async def public_chat(request: Request, body: PublicChatRequest):
     if not _check_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
 
-    try:
-        # Use provider to route and execute
-        if provider is None:
-            raise HTTPException(status_code=503, detail="Service starting up...")
+    # Check provider is ready
+    if provider is None:
+        raise HTTPException(status_code=503, detail="Service starting up...")
 
+    try:
         result = await provider.route_and_execute(body.message)
         return {"status": "success", "data": result}
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
         logger.error(f"Public chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
