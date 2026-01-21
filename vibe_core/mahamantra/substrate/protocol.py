@@ -105,7 +105,7 @@ class MantraProtocol(ABC):
     _intents: ClassVar[List[str]] = []  # List of keywords/intents this protocol handles
 
     # =========================================================================
-    # INTENT DISCOVERY - Resonance Routing
+    # INTENT DISCOVERY - Resonance Routing (HARMONIC COMPUTATION)
     # =========================================================================
 
     @classmethod
@@ -113,29 +113,82 @@ class MantraProtocol(ABC):
         """
         Calculate resonance score for a given phrase.
 
-        1.0 = Exact Match (or phrase contains intent as a whole word)
-        0.5 = Partial Match
-        0.0 = No Resonance
+        HARMONIC COMPUTATION (not discrete 1.0/0.5/0.0):
+            - Keywords are ENTRY POINTS (trigger potential resonance)
+            - Score is CONTINUOUS based on Seed math
+            - Uses Three Flutes (NADI/LILA/MALA) for scaling
 
-        SSOT: Reads from central INTENT_MAP, falls back to _intents for legacy.
+        THRESHOLDS (from ResonanceHarmonics):
+            - THRESHOLD_AUTO = 72/108 = 2/3 ≈ 0.667 (high confidence)
+            - THRESHOLD_REFINE = 48/108 = 4/9 ≈ 0.444 (medium confidence)
+
+        SSOT: Reads from knowledge/guardian_intents.yaml via intents.py
         """
         from vibe_core.mahamantra.substrate.intents import get_intents
+        from vibe_core.mahamantra.protocols._seed import (
+            JIVA_CYCLE,
+            LILA,
+            MALA,
+            NADI_RESONANCE,
+            WORDS,
+        )
 
-        # Get intents from CENTRAL map (SSOT), fallback to class-level _intents
+        # Get intents from YAML (SSOT)
         intents = get_intents(cls._position_index) or tuple(cls._intents)
 
+        if not intents:
+            return 0.0
+
         phrase_lower = phrase.lower()
-        phrase_words = phrase_lower.split()
+        phrase_words = set(phrase_lower.split())
+
+        # =====================================================================
+        # HARMONIC SCORING (not boolean matching)
+        # =====================================================================
+        # ONLY exact word matches count. No substring matching.
+        # Substring matching causes false positives ("hi" in "this").
+        # Keywords in YAML are specific enough for exact matching.
+
+        exact_matches = 0
 
         for intent in intents:
             intent_lower = intent.lower()
-            # Exact Match or Word Match
-            if intent_lower == phrase_lower or intent_lower in phrase_words:
-                return 1.0
-            # Partial Match
-            if intent_lower in phrase_lower:
-                return 0.5
-        return 0.0
+            # Exact word match only (no substring matching)
+            if intent_lower in phrase_words:
+                exact_matches += 1
+
+        if exact_matches == 0:
+            return 0.0
+
+        # =====================================================================
+        # THREE FLUTES COMPUTATION
+        # =====================================================================
+        # Each match contributes to the resonance based on the Flute math:
+        # - First match: NADI level (72/108 = 0.667)
+        # - Additional matches: LILA increments (48/108 / total_intents)
+        #
+        # The position modulates the base frequency:
+        # - Position frequency = JIVA_CYCLE / (position + WORDS)
+        # - This creates unique "overtones" per guardian
+
+        # Base resonance: First match gives NADI, additional matches add LILA increments
+        nadi_base = NADI_RESONANCE / MALA  # 0.667 base for first match
+        lila_increment = (LILA / MALA) / len(intents)  # Diminishing returns per additional match
+
+        base_resonance = nadi_base + (exact_matches - 1) * lila_increment if exact_matches > 0 else 0.0
+
+        # Position-specific modulation (overtone)
+        # Each position has a unique frequency in the JIVA_CYCLE
+        position = cls._position_index if cls._position_index >= 0 else 0
+        position_frequency = JIVA_CYCLE / (position + WORDS)  # Ranges from 27 to 14.4
+
+        # Normalize position influence (subtle modulation, not dominant)
+        position_factor = 1.0 + (position_frequency / JIVA_CYCLE) * 0.1  # 1.0 to 1.1
+
+        # Final resonance (capped at 1.0)
+        resonance = min(1.0, base_resonance * position_factor)
+
+        return resonance
 
     # =========================================================================
     # DERIVED PROPERTIES - All from truth table
