@@ -1,0 +1,22 @@
+# Kernel Configuration - Core system component wiring
+# SSOT for kernel implementation bindings
+#
+# This replaces the system.kernel section from phoenix.yaml
+
+system:
+  kernel:
+    ledger: "vibe_core.kernel_impl:VibeLedgerImpl"
+    scheduler: "vibe_core.kernel_impl:VibeSchedulerImpl"
+    registry: "vibe_core.kernel_impl:ManifestRegistryImpl"
+    kernel: "vibe_core.kernel_impl:VibeKernelImpl"
+
+# Tick configuration
+tick:
+  interval_ms: 250  # TICK_INTERVAL_MS from seed.py
+  heartbeat_every: 16  # Every 16 ticks = 1 Prana (4 seconds)
+
+# Timeouts
+timeouts:
+  boot_timeout_s: 30
+  shutdown_timeout_s: 10
+  plugin_load_timeout_s: 5
