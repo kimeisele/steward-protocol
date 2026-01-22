@@ -629,18 +629,27 @@ class ChatService(ChatProtocol):
         quarter_names = ["genesis", "dharma", "karma", "moksha"]
         quarter = quarter_names[quarter_idx]
 
-        # VARNA OBSERVATION (metadata for future)
+        # VARNA OBSERVATION + REAL SUBSTRATE ROUTING
+        # The SubstrateRoute is the BRAIN, not just metadata!
         phonetic_data = {}
+        substrate_route = None  # Will be set if substrate routing succeeds
         try:
             tensor_route = self._substrate.route(message)
+            substrate_route = tensor_route  # REAL ROUTING - not just metadata!
             phonetic_data = {
                 "varga_dominant": tensor_route.varga_dominant,
                 "sthana_dominant": tensor_route.sthana_dominant,
                 "shakti": tensor_route.shakti,
                 "phonetic_position": tensor_route.position,
             }
-        except Exception:
-            pass
+            # If substrate routing succeeds, USE IT for routing (not INTENT_MAP!)
+            if tensor_route.manifests:
+                best_position = tensor_route.position
+                best_score = tensor_route.energy
+                mahajana = tensor_route.mahajana
+                quarter = tensor_route.quarter.lower()
+        except Exception as e:
+            logger.debug(f"Substrate routing failed (fallback to INTENT_MAP): {e}")
 
         # Map quarter to dominant holy name
         quarter_to_dominant = {"genesis": "hare", "dharma": "krishna", "karma": "rama", "moksha": "rama"}
@@ -660,6 +669,10 @@ class ChatService(ChatProtocol):
             "is_sacred": is_sacred,
             # Phonetic observation
             "phonetic": phonetic_data,
+            # CRITICAL: SubstrateRoute for REAL Mahamantra routing!
+            # This enables _lotus_route() to use VarnaTensor-based routing
+            # instead of falling back to INTENT_MAP keyword matching
+            "substrate_route": substrate_route,
             # Legacy
             "hare": 0.33 if dominant == "hare" else 0.2,
             "krishna": 0.33 if dominant == "krishna" else 0.2,
