@@ -45,6 +45,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+# PROTOCOL IMPORT: Plugin uses Protocol (correct direction!)
+from vibe_core.mahamantra.protocols._dhyana import LotusTask
+
 logger = logging.getLogger("MANAS.Cortex.Sankalpa")
 
 
@@ -694,6 +697,29 @@ class SankalpaPlanner:
             intent_type=strategy.intent_type,
             params=template,
             priority=mission.priority.value,
+        )
+
+    def create_lotus_task(self, intent: SankalpaIntent) -> LotusTask[SankalpaIntent]:
+        """
+        Wrap a SankalpaIntent in a LotusTask for meditation/recursive processing.
+
+        PROTOCOL INTEGRATION: Plugin uses Protocol (correct direction!)
+
+        The LotusTask provides:
+        - fold()/unfold() for recursive depth
+        - Japa tracking (108 reps = Siddhi/Mastery)
+        - Kshetra tracking (which Tattvas are active)
+
+        Usage:
+            intent = planner._create_intent(mission, strategy)
+            task = planner.create_lotus_task(intent)
+            task.fold()  # Go deeper
+            task.do_japa(success=True)  # Track progress
+        """
+        return LotusTask.create(
+            task_id=intent.id,
+            payload=intent,
+            enable_japa=True,  # Missions benefit from Siddhi tracking
         )
 
 

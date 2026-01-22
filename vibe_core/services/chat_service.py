@@ -58,9 +58,20 @@ from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.mahamantra.protocols._lotus import (
     LotusHologram,
     LotusRoute,
+    LotusMode,
+    LotusState,
+    LotusBase,
     get_position_mahajana,
     get_mahajana_position,
     MAHAJANA_POSITIONS,
+)
+
+# KSHETRA - The 24 Tattvas (BG 13.6-7)
+# Chat invokes: SHROTRA (hear), VAK (speak), MANAS (think), BUDDHI (understand)
+from vibe_core.mahamantra.substrate.tattva import (
+    KshetraElement,
+    JNANENDRIYAS,
+    KARMENDRIYAS,
 )
 
 # SUBSTRATE BRIDGE - Real vibration-based routing (not keyword matching)
@@ -108,23 +119,37 @@ if TYPE_CHECKING:
 logger = logging.getLogger("CHAT_SERVICE")
 
 
-class ChatService(ChatProtocol):
+class ChatService(ChatProtocol, LotusBase):
     """
-    Protocol-compliant Chat Service.
+    Protocol-compliant Chat Service - LOTUS WRAPPED.
 
-    Implements ChatProtocol with:
+    Implements ChatProtocol AND LotusProtocol:
     - ResonanceEngine for phonetic resonance routing (no ML)
     - LotusHologram for O(1) position lookup
     - KnowledgeGraph for context enrichment
     - LLM Provider for response generation
     - Refinement Gate for intent negotiation
     - Full GAD-000 compliance
+    - LOTUS LIFECYCLE: SEED → STEM → BLOOM → GARUDA
+    - KSHETRA INTEGRATION: All 24 Tattvas involved in chat
 
     RESONANCE THRESHOLDS (Starship Command I/O):
     - > 0.8: Auto-execute (high resonance)
     - 0.4 - 0.8: Intent Negotiation (refinement)
     - < 0.4: Silence (no resonance - refuse to guess)
+
+    LOTUS POSITION: 9 (PRAHLADA - protected devotee, resilient communication)
+    KSHETRA ELEMENTS ACTIVE IN CHAT:
+    - SHROTRA (10): Hearing - receive user input
+    - VAK (14): Speaking - send response
+    - MANAS (19): Mind - process message
+    - BUDDHI (7): Intelligence - understand intent
+    - AHANKARA (6): Ego - identity of responder (Mahajana)
     """
+
+    # LOTUS POSITION: PRAHLADA (9) - Protected devotee, resilient communication
+    LOTUS_POSITION = CHAT_POSITION  # 9 = PRAHLADA
+    LOTUS_NAME = "chat_service"
 
     # Resonance thresholds - DERIVED FROM SEED (Mantra Seed Math, not Asura Müll!)
     # NADI/MALA = 72/108 = 2/3 ≈ 0.667 (was ~0.7 hardcoded)
@@ -140,6 +165,9 @@ class ChatService(ChatProtocol):
         return HARMONIC_REFINE  # 0.444...
 
     def __init__(self):
+        # LOTUS BASE INIT - Position 7 (MANU)
+        LotusBase.__init__(self)
+
         self._lotus: LotusHologram = LotusHologram()  # O(1) routing
         self._substrate: ChatSubstrateBridge = get_substrate_bridge()  # REAL vibration routing
         self._reactor: QuantumReactor = get_reactor()  # Manifestation engine
@@ -168,6 +196,10 @@ class ChatService(ChatProtocol):
             sessions=self._sessions,
             refinement_states=self._refinement_states,
         )
+
+        # KSHETRA TRACKING - Which Tattvas are active during chat
+        # Chat involves multiple senses working together (like human interaction!)
+        self._active_kshetra: List[KshetraElement] = []
 
         self._init_dependencies()
 
@@ -275,6 +307,78 @@ class ChatService(ChatProtocol):
         return CHAT_POSITION
 
     # ==========================================================================
+    # LOTUS LIFECYCLE (SEED → STEM → BLOOM → GARUDA)
+    # ==========================================================================
+
+    def _lotus_seed(self, message: str) -> None:
+        """
+        SEED MODE: Receive input - template mode.
+
+        Activates KSHETRA elements for reception:
+        - SHROTRA (10): Hearing the user input
+        - MANAS (19): Mind receives the message
+        """
+        self._state.mode = LotusMode.SEED
+        self._active_kshetra = [
+            KshetraElement.SHROTRA,  # Hearing
+            KshetraElement.MANAS,  # Mind
+        ]
+        logger.debug(f"🌱 LOTUS SEED: Receiving '{message[:30]}...' (SHROTRA + MANAS)")
+
+    def _lotus_stem(self, resonance_result: Dict) -> None:
+        """
+        STEM MODE: Route to Mahajana - bridge mode.
+
+        Activates KSHETRA elements for understanding:
+        - BUDDHI (7): Intelligence/discrimination - understand intent
+        - AHANKARA (6): Ego - identify which Mahajana responds
+        """
+        self._state.mode = LotusMode.STEM
+        self._active_kshetra.extend([
+            KshetraElement.BUDDHI,  # Intelligence
+            KshetraElement.AHANKARA,  # Identity (which Mahajana?)
+        ])
+        mahajana = resonance_result.get("mahajana", "narada")
+        logger.debug(f"🌿 LOTUS STEM: Routing to {mahajana.upper()} (BUDDHI + AHANKARA)")
+
+    def _lotus_bloom(self, lotus_result: Dict) -> None:
+        """
+        BLOOM MODE: Unfold response - manifesting 1 → N.
+
+        Activates KSHETRA elements for response generation:
+        - VAK (14): Speaking - generate response
+        - All 5 TANMATRAS for rich output (SHABDA, SPARSHA, RUPA, RASA, GANDHA)
+        """
+        self._state.mode = LotusMode.BLOOM
+        self._active_kshetra.extend([
+            KshetraElement.VAK,  # Speaking
+            KshetraElement.SHABDA,  # Sound tanmatra (response text)
+        ])
+        logger.debug(f"🌸 LOTUS BLOOM: Unfolding response (VAK + SHABDA)")
+
+    def _lotus_garuda(self, executed: bool) -> None:
+        """
+        GARUDA MODE: Execute action - transport mode.
+
+        If action required (PARASHURAMA/BRAHMA routing), activates:
+        - PANI (15): Hands - execution/manipulation
+        - PADA (16): Feet - navigation through codebase
+        """
+        self._state.mode = LotusMode.GARUDA
+        if executed:
+            self._active_kshetra.extend([
+                KshetraElement.PANI,  # Hands (execution)
+                KshetraElement.PADA,  # Feet (navigation)
+            ])
+        # Complete the cycle - chant!
+        self.chant()
+        logger.debug(f"🦅 LOTUS GARUDA: Cycle complete (kshetra={len(self._active_kshetra)} tattvas)")
+
+    def get_active_kshetra(self) -> List[KshetraElement]:
+        """Get currently active Kshetra elements in this chat cycle."""
+        return self._active_kshetra.copy()
+
+    # ==========================================================================
     # CHAT OPERATIONS (Starship Command I/O)
     # ==========================================================================
 
@@ -308,6 +412,11 @@ class ChatService(ChatProtocol):
         if session_id not in self._sessions:
             self._sessions[session_id] = []
         self._sessions[session_id].append(input_msg)
+
+        # =================================================================
+        # LOTUS LIFECYCLE: SEED - Receive input (SHROTRA + MANAS)
+        # =================================================================
+        self._lotus_seed(message)
 
         # =================================================================
         # NAGA OBSERVATION: Report chat start (Narada sees all)
@@ -351,6 +460,11 @@ class ChatService(ChatProtocol):
 
             # AUTO-EXECUTE: > 0.8 - High resonance, proceed
             logger.info(f"✅ ChatService: AUTO-EXECUTE (magnitude {magnitude:.3f} >= {self.RESONANCE_AUTO})")
+
+            # =================================================================
+            # LOTUS LIFECYCLE: STEM - Route to Mahajana (BUDDHI + AHANKARA)
+            # =================================================================
+            self._lotus_stem(resonance_result)
 
             # =================================================================
             # STEP 2: COGNITIVE - Intent from INTENT_MAP
@@ -407,6 +521,11 @@ class ChatService(ChatProtocol):
                 knowledge_context["naga_reason"] = naga_context.reason_code.value
 
             # =================================================================
+            # LOTUS LIFECYCLE: BLOOM - Unfold response (VAK + SHABDA)
+            # =================================================================
+            self._lotus_bloom(lotus_result)
+
+            # =================================================================
             # STEP 6: LLM - Interpreter (responds to execution, not decides)
             # =================================================================
             response_text = await self._generate_response_lotus(
@@ -442,9 +561,18 @@ class ChatService(ChatProtocol):
             )
 
             # =================================================================
+            # LOTUS LIFECYCLE: GARUDA - Complete cycle (PANI + PADA if executed)
+            # =================================================================
+            self._lotus_garuda(executed=execution_result is not None)
+
+            # =================================================================
             # NAGA OBSERVATION: Report chat success (Narada sees all)
             # =================================================================
             self._report_to_narada("END", message, context, response)
+
+            # Log complete Kshetra involvement
+            kshetra_names = [e.name for e in self._active_kshetra]
+            logger.info(f"🕉️ ChatService: Lotus cycle complete - {len(self._active_kshetra)} Tattvas active: {kshetra_names}")
 
             return response
 
