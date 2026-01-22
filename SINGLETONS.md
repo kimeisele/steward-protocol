@@ -1,6 +1,6 @@
 # SINGLETONS AUDIT - P0 Technical Debt
 
-**Status:** IN PROGRESS
+**Status:** COMPLETE ✅
 **Problem:** ~50+ Singletons bypass ServiceRegistry = NAGA-invisible islands
 **Solution:** All singletons → ServiceRegistry.register() → NagaProxy wrapping
 
@@ -94,22 +94,28 @@ so they don't have `_naga_flooded = True`).
 | `plugins/opus_assistant/manas/akshara.py` | `Varnamala._instance` | `Varnamala` | ✅ DONE |
 | `plugins/opus_assistant/manas/triggers.py` | `SynapseVocabulary._instance` | `SynapseVocabulary` | ✅ DONE |
 
-### 7. PROTOCOLS & GOVERNANCE (P2)
+### 7. PROTOCOLS & GOVERNANCE (P2 - DONE!)
 
 | File | Singleton | Protocol | Status |
 |------|-----------|----------|--------|
-| `protocols/om.py` | `OM._instance` | `OMProtocol` | TODO |
-| `protocols/governance/bridge.py` | `ProtocolBridge._instance` | `ProtocolBridgeProtocol` | TODO |
-| `protocols/universal/types.py` | `_instance` | varies | TODO |
-| `genesis/templates.py` | `TemplateRegistry._instance` | `TemplateRegistryProtocol` | TODO |
+| `protocols/om.py` | `OM._instance` | `OM` | ✅ DONE |
+| `protocols/governance/bridge.py` | `ProtocolBridge._instance` | `ProtocolBridge` | ✅ DONE |
+| `protocols/universal/types.py` | `SovereignPrerogative._instance` | - | ✅ OK (anti-singleton guard) |
+| `genesis/templates.py` | `TemplateRegistry._instance` | `TemplateRegistry` | ✅ DONE |
 
-### 8. TOOLS & CARTRIDGES (P2)
+**NOTE**: `SovereignPrerogative._instance` is NOT a singleton pattern! It's a guard that prevents
+instantiation entirely (raises AccessDeniedError). This is intentional design.
+
+### 8. TOOLS & CARTRIDGES (P2 - DONE!)
 
 | File | Singleton | Protocol | Status |
 |------|-----------|----------|--------|
-| `cartridges/system/auditor/tools/invariant_tool.py` | `_judge_instance` | `InvariantEngineProtocol` | TODO |
-| `loaders/code_module_loader.py` | `_instance_cache` | `CodeRegistryProtocol` | TODO |
-| `factory.py` | `_kernel_instance` | `KernelProtocol` | TODO |
+| `cartridges/system/auditor/tools/invariant_tool.py` | `_judge_instance` | `InvariantEngine` | ✅ DONE |
+| `loaders/code_module_loader.py` | `_instance_cache` | - | ✅ OK (class-level cache) |
+| `factory.py` | `_kernel_instance` | `KernelProtocol` | ✅ DONE |
+
+**NOTE**: `CodeModuleLoader._instance_cache` is a class-level cache for discovery results,
+not a singleton accessor pattern. It caches discovered modules, not a single service instance.
 
 ---
 
@@ -164,10 +170,10 @@ def get_my_service() -> MyService:
 - [x] Phase 4: Core Services (6 singletons) - DONE
 - [x] Phase 5: CLI & Registry (4 singletons) - DONE
 - [x] Phase 6: State & Cognitive (5 singletons) - DONE
-- [ ] Phase 7: Protocols & Governance (4 singletons)
-- [ ] Phase 8: Tools & Cartridges (3 singletons)
+- [x] Phase 7: Protocols & Governance (4 singletons) - DONE
+- [x] Phase 8: Tools & Cartridges (3 singletons) - DONE
 
-**Total: ~7 singletons remaining** (was 43, 31 done so far)
+**Total: ALL DONE!** (was 43, 36 converted + 5 OK as-is + 2 class-level caches)
 
 ---
 

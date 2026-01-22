@@ -105,12 +105,8 @@ class OM(BaseTestable):
     - Mahamantra is always accessible (Prabhupada's mercy)
     """
 
-    _instance: Optional["OM"] = None
-    _kernel: Optional["RealVibeKernel"] = None
-    _ananta: Optional["IAnantaBridge"] = None
-    _yamaraja: Optional[YamarajaProtocol] = None
-    _kurukshetra: Optional[KurukshetraProtocol] = None
-    _diksha_certificate: Optional[DikshaCertificate] = None
+    # NOTE: Class-level state managed via ServiceRegistry
+    # Use get_om() for singleton access
 
     def __init__(self, diksha_certificate: Optional[DikshaCertificate] = None):
         """
@@ -230,6 +226,9 @@ class OM(BaseTestable):
         Returns:
             RealVibeKernel fully initialized and ready
         """
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.protocols.ledger import VibeKernel
+
         try:
             # Step 0: Diksha Gate Check
             certificate = diksha_certificate or create_uninitiated()
@@ -245,9 +244,10 @@ class OM(BaseTestable):
             # Step 1: Import late to avoid circular dependencies
             from vibe_core.kernel_impl import RealVibeKernel
 
-            # Step 2: Check if already manifested (Singleton)
-            if cls._kernel is not None:
-                return cls._kernel
+            # Step 2: Check if already manifested (via ServiceRegistry)
+            existing_kernel = ServiceRegistry.get(VibeKernel)
+            if existing_kernel is not None:
+                return existing_kernel
 
             # Step 3: Create the kernel
             # In full implementation, this would:
@@ -262,12 +262,12 @@ class OM(BaseTestable):
                 print(f"PRALAYA: Kernel creation failed - {e}")
                 sys.exit("PRALAYA: Cannot manifest kernel")
 
-            # Step 4: Store the singleton and diksha status
-            cls._kernel = kernel
-            cls._diksha_certificate = certificate
+            # Step 4: Register kernel via ServiceRegistry
+            ServiceRegistry.register(VibeKernel, kernel)
 
-            # Step 5: Initialize OM instance for protocols
-            cls._instance = cls(diksha_certificate=certificate)
+            # Step 5: Initialize and register OM instance
+            om_instance = cls(diksha_certificate=certificate)
+            ServiceRegistry.register(OM, om_instance)
 
             return kernel
 
@@ -291,12 +291,11 @@ class OM(BaseTestable):
         - Clear singleton state
         - Allow fresh manifestation
         """
-        cls._kernel = None
-        cls._ananta = None
-        cls._yamaraja = None
-        cls._kurukshetra = None
-        cls._instance = None
-        cls._diksha_certificate = None
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.protocols.ledger import VibeKernel
+
+        ServiceRegistry.unregister(VibeKernel)
+        ServiceRegistry.unregister(OM)
 
     # =========================================================================
     # DIKSHA GATE PROPERTIES
@@ -325,12 +324,17 @@ class OM(BaseTestable):
     @classmethod
     def get_diksha_status(cls) -> str:
         """Get a human-readable diksha status."""
-        if cls._diksha_certificate is None:
+        from vibe_core.di import ServiceRegistry
+
+        om_instance = ServiceRegistry.get(OM)
+        if om_instance is None:
             return "Not manifested"
-        elif cls._diksha_certificate.level == InitiationLevel.BRAHMINICAL:
-            return f"Full Om access (Brahminical: {cls._diksha_certificate.spiritual_name})"
-        elif cls._diksha_certificate.level == InitiationLevel.HARINAMA:
-            return f"Mahamantra mode (Harinama: {cls._diksha_certificate.spiritual_name})"
+
+        diksha_cert = om_instance.diksha_certificate
+        if diksha_cert.level == InitiationLevel.BRAHMINICAL:
+            return f"Full Om access (Brahminical: {diksha_cert.spiritual_name})"
+        elif diksha_cert.level == InitiationLevel.HARINAMA:
+            return f"Mahamantra mode (Harinama: {diksha_cert.spiritual_name})"
         else:
             return "Mahamantra mode (Uninitiated)"
 

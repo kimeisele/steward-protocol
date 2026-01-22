@@ -43,9 +43,9 @@ class TemplateRegistry:
 
     Provides default templates for each module type.
     Allows custom template registration.
-    """
 
-    _instance: Optional["TemplateRegistry"] = None
+    NOTE: Use get_template_registry() to access via ServiceRegistry.
+    """
 
     def __init__(self, templates_dir: Optional[Path] = None):
         """Initialize template registry."""
@@ -55,10 +55,8 @@ class TemplateRegistry:
 
     @classmethod
     def get_instance(cls) -> "TemplateRegistry":
-        """Get singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """Get singleton instance (backward compat - use get_template_registry())."""
+        return get_template_registry()
 
     def get_templates(self, module_type: ModuleType) -> Dict[str, ModuleTemplate]:
         """Get all templates for a module type."""
@@ -498,3 +496,41 @@ class ${class_name}Action(BaseAction):
 """,
             ),
         }
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_template_registry() -> TemplateRegistry:
+    """
+    Get TemplateRegistry through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        TemplateRegistry → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees template operations)
+    - NAGA profiling (Chitragupta tracks template rendering)
+    - NAGA isolation (Kaliya handles template errors)
+
+    Returns:
+        TemplateRegistry wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(TemplateRegistry)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = TemplateRegistry()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(TemplateRegistry, instance)
+    logger.info("✅ TemplateRegistry registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(TemplateRegistry)  # type: ignore

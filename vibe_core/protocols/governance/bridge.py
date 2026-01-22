@@ -658,17 +658,16 @@ class ProtocolBridge:
     - Mahajanas/ folder stays pure (no wild imports)
     - Wild protocols remain where they are (no forced migration)
     - Ownership is established through this registry
+
+    NOTE: Use get_protocol_bridge() to access via ServiceRegistry.
     """
 
-    _instance: Optional["ProtocolBridge"] = None
     _protocols_root: Path = Path(__file__).parent.parent  # protocols/
 
     @classmethod
     def get_instance(cls) -> "ProtocolBridge":
-        """Singleton access."""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """Singleton access (backward compat - use get_protocol_bridge())."""
+        return get_protocol_bridge()
 
     @classmethod
     def get_owner(cls, protocol_path: str) -> Optional[Mahajana]:
@@ -938,12 +937,55 @@ def audit() -> GovernanceAudit:
 
 
 # =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_protocol_bridge() -> ProtocolBridge:
+    """
+    Get ProtocolBridge through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        ProtocolBridge → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees governance queries)
+    - NAGA profiling (Chitragupta tracks audit timing)
+    - NAGA isolation (Kaliya handles governance errors)
+
+    Returns:
+        ProtocolBridge wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    import logging
+
+    logger = logging.getLogger("GOVERNANCE.BRIDGE")
+
+    # Check if already registered
+    existing = ServiceRegistry.get(ProtocolBridge)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = ProtocolBridge()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(ProtocolBridge, instance)
+    logger.info("✅ ProtocolBridge registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(ProtocolBridge)  # type: ignore
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
 __all__ = [
     # Bridge
     "ProtocolBridge",
+    "get_protocol_bridge",
     # Types
     "ProtocolEntry",
     "ProtocolCategory",
