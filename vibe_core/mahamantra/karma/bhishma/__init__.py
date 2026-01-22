@@ -31,13 +31,18 @@ PARAMPARA_VECTOR: Final[int] = 444
 
 def __getattr__(name: str) -> object:
     """
-    Lazy load BhishmaService from the services layer.
-    Prevents circular imports (Mahamantra -> Service -> Mahamantra).
+    Lazy load BhishmaService and NullBhishma.
+    NO MANUAL WIRING - auto-discovery needs these exports.
     """
     if name == "BhishmaService":
         from vibe_core.services.bhishma_service import BhishmaService
 
         return BhishmaService
+
+    if name == "NullBhishma":
+        from vibe_core.protocols.mahajanas.bhishma import NullBhishma
+
+        return NullBhishma
 
     # Fallback to protocol definitions if needed (for types)
     try:

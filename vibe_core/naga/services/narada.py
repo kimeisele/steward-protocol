@@ -40,6 +40,9 @@ from vibe_core.protocols.naga import NagaStatus, NagaType
 from vibe_core.protocols.naga.groups import Observation, ObserveProtocol
 from vibe_core.protocols.naga.types import ObservationDict
 
+# Re-export NullNarada for CLI auto-discovery (NO MANUAL WIRING)
+from vibe_core.protocols.mahajanas.narada import NullNarada
+
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
     from vibe_core.naga.identity import NagaIdentity

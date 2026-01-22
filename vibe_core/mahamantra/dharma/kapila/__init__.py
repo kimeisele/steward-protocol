@@ -23,12 +23,17 @@ __genesis__ = "0x25d36ba1"  # GenesisByte
 
 def __getattr__(name: str) -> object:
     """
-    Lazy load KapilaService from the services layer.
-    Unification of Kernel and Mahamantra.
+    Lazy load KapilaService and NullKapila.
+    NO MANUAL WIRING - auto-discovery needs these exports.
     """
     if name == "KapilaService":
         from vibe_core.services.kapila_service import KapilaService
 
         return KapilaService
+
+    if name == "NullKapila":
+        from vibe_core.protocols.mahajanas.kapila import NullKapila
+
+        return NullKapila
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

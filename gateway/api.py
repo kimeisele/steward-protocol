@@ -181,21 +181,38 @@ async def public_chat(request: Request, body: PublicChatRequest):
     """
     Public chat endpoint - no signature required.
     Rate-limited to prevent abuse.
+
+    Routes through MAHAMANTRA GATEWAY (the real Lotus routing).
     """
     client_ip = request.client.host if request.client else "unknown"
 
     if not _check_rate_limit(client_ip):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
 
-    # Check provider is ready
-    if provider is None:
-        raise HTTPException(status_code=503, detail="Service starting up...")
-
     try:
-        result = await provider.route_and_execute(body.message)
-        return {"status": "success", "data": result}
+        # USE MAHAMANTRA GATEWAY (not the broken UniversalProvider)
+        from vibe_core.gateway.mahamantra_gateway import chat as mahamantra_chat
+
+        # mahamantra_chat is sync, run in threadpool
+        import asyncio
+
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, mahamantra_chat, body.message)
+
+        # GatewayResponse is a TypedDict
+        return {
+            "status": "success" if result["success"] else "error",
+            "data": {
+                "output": result["output"],
+                "guardian": result["guardian"],
+                "quarter": result["quarter"],
+                "position": result["position"],
+                "guna": result["guna"],
+            },
+            "error": result.get("error"),
+        }
     except HTTPException:
-        raise  # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
         logger.error(f"Public chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

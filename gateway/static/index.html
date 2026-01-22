@@ -3,181 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STEWARD PROTOCOL - Agent City Gateway</title>
-    <link rel="stylesheet" href="steward-theme.css">
+    <title>STEWARD Gateway</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        h1 { color: #7dd3fc; margin-bottom: 0.5rem; }
+        .subtitle { color: #666; margin-bottom: 2rem; }
+
+        /* Chat Box */
+        .chat-box {
+            width: 100%;
+            max-width: 600px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        .chat-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            background: #0a0a0f;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+        .chat-input input:focus { outline: none; border-color: #7dd3fc; }
+        .chat-input button {
+            padding: 0.75rem 1.5rem;
+            background: #7dd3fc;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .chat-input button:hover { background: #5bb8e8; }
+        .chat-input button:disabled { background: #444; cursor: wait; }
+        #response {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #0a0a0f;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #status { font-size: 0.8rem; color: #666; margin-top: 0.5rem; }
+
+        /* Links */
+        .links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .links a {
+            color: #7dd3fc;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+        .links a:hover { background: #111; }
+
+        footer {
+            margin-top: auto;
+            padding-top: 2rem;
+            color: #444;
+            font-size: 0.8rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>STEWARD PROTOCOL</h1>
-            <div class="subtitle">Agent City Gateway - Governed AI Infrastructure</div>
-        </header>
+    <h1>STEWARD</h1>
+    <p class="subtitle">Agent Operating System Gateway</p>
 
-        <!-- CHAT -->
-        <div class="chat-section" style="margin: 2rem 0; padding: 1.5rem; background: var(--bg-card, #1a1a2e); border-radius: 8px; border: 1px solid var(--border, #333);">
-            <div style="display: flex; gap: 0.5rem;">
-                <input type="text" id="chatInput" placeholder="Ask the Steward..."
-                    style="flex: 1; padding: 0.75rem 1rem; font-size: 1rem; background: var(--bg, #0f0f1a); color: var(--text, #e0e0e0); border: 1px solid var(--border, #444); border-radius: 4px; outline: none;"
-                    onkeypress="if(event.key==='Enter')sendChat()">
-                <button onclick="sendChat()"
-                    style="padding: 0.75rem 1.5rem; font-size: 1rem; background: var(--accent, #6366f1); color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    Send
-                </button>
-            </div>
-            <div id="chatResponse" style="margin-top: 1rem; padding: 1rem; background: var(--bg, #0f0f1a); border-radius: 4px; min-height: 60px; white-space: pre-wrap; font-family: monospace; display: none;"></div>
-            <div id="chatStatus" style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-dim, #888);"></div>
+    <div class="chat-box">
+        <div class="chat-input">
+            <input type="text" id="msg" placeholder="Ask the Steward..." autocomplete="off">
+            <button id="send">Send</button>
         </div>
-
-        <div class="status-bar">
-            <div class="status-item">
-                <div class="label">Gateway</div>
-                <div class="value" id="gatewayStatus">Checking...</div>
-            </div>
-            <div class="status-item">
-                <div class="label">API</div>
-                <div class="value" id="apiStatus">Checking...</div>
-            </div>
-            <div class="status-item">
-                <div class="label">Docs</div>
-                <div class="value" id="docsStatus">Checking...</div>
-            </div>
-        </div>
-
-        <div class="cards">
-            <div class="card">
-                <h2>Documentation</h2>
-                <p>Browse auto-generated documentation for the STEWARD Protocol system.</p>
-                <a href="/docs.html">Open Docs Viewer</a>
-            </div>
-
-            <div class="card">
-                <h2>Agent Registry</h2>
-                <p>View all registered agents and their capabilities.</p>
-                <a href="/api/agents" target="_blank">View Agents (JSON)</a>
-            </div>
-
-            <div class="card">
-                <h2>System Health</h2>
-                <p>Check the current health status of the gateway.</p>
-                <a href="/health" target="_blank">Health Check</a>
-            </div>
-
-            <div class="card">
-                <h2>Public Ledger</h2>
-                <p>Transparent audit trail of all system events.</p>
-                <a href="/api/ledger?limit=50" target="_blank">View Ledger</a>
-            </div>
-        </div>
-
-        <div class="endpoints">
-            <h3>API Endpoints</h3>
-            <ul>
-                <li><span class="method">GET</span> <code>/health</code> - System health check</li>
-                <li><span class="method">GET</span> <code>/api/docs</code> - List auto-generated docs</li>
-                <li><span class="method">GET</span> <code>/api/docs/{name}</code> - Get doc content</li>
-                <li><span class="method">GET</span> <code>/api/agents</code> - List registered agents</li>
-                <li><span class="method">GET</span> <code>/api/ledger</code> - Public audit ledger</li>
-                <li><span class="method">GET</span> <code>/api/pulse</code> - System pulse snapshot</li>
-                <li><span class="method">POST</span> <code>/v1/public-chat</code> - Public chat (rate-limited)</li>
-                <li><span class="method">POST</span> <code>/v1/chat</code> - Agent chat (requires signature)</li>
-            </ul>
-        </div>
-
-        <div class="quick-links">
-            <a href="https://github.com/kimeisele/steward-protocol" target="_blank">GitHub</a>
-            <a href="/docs.html">Documentation</a>
-            <a href="/api/docs" target="_blank">Docs API</a>
-        </div>
-
-        <footer>
-            <p>STEWARD PROTOCOL - The Immutable Kernel for Governed Artificial Intelligence</p>
-            <p><a href="https://github.com/kimeisele/steward-protocol">github.com/kimeisele/steward-protocol</a></p>
-        </footer>
+        <div id="response"></div>
+        <div id="status"></div>
     </div>
 
+    <div class="links">
+        <a href="/health">Health</a>
+        <a href="/api/agents">Agents</a>
+        <a href="/api/docs">Docs</a>
+        <a href="https://github.com/kimeisele/steward-protocol">GitHub</a>
+    </div>
+
+    <footer>STEWARD Protocol</footer>
+
     <script>
-        // Chat function
-        async function sendChat() {
-            const input = document.getElementById('chatInput');
-            const response = document.getElementById('chatResponse');
-            const status = document.getElementById('chatStatus');
-            const message = input.value.trim();
+        const msg = document.getElementById('msg');
+        const send = document.getElementById('send');
+        const response = document.getElementById('response');
+        const status = document.getElementById('status');
 
-            if (!message) return;
+        async function chat() {
+            const text = msg.value.trim();
+            if (!text) return;
 
+            send.disabled = true;
             status.textContent = 'Sending...';
             response.style.display = 'none';
 
             try {
                 const res = await fetch('/v1/public-chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: text})
                 });
-
                 const data = await res.json();
 
-                if (res.ok) {
+                if (res.ok && data.data) {
                     response.style.display = 'block';
-                    response.textContent = JSON.stringify(data.data, null, 2);
-                    status.textContent = 'OK';
-                    input.value = '';
+                    // Extract the summary if available
+                    const summary = data.data?.data?.summary || JSON.stringify(data.data, null, 2);
+                    response.textContent = summary;
+                    status.textContent = '';
+                    msg.value = '';
                 } else {
                     status.textContent = 'Error: ' + (data.detail || res.status);
                 }
             } catch (e) {
                 status.textContent = 'Error: ' + e.message;
             }
+            send.disabled = false;
         }
 
-        // Simple health checks
-        async function checkStatus() {
-            const gatewayEl = document.getElementById('gatewayStatus');
-            const apiEl = document.getElementById('apiStatus');
-            const docsEl = document.getElementById('docsStatus');
-
-            // Gateway is online if this page loads
-            gatewayEl.textContent = 'ONLINE';
-            gatewayEl.className = 'value online';
-
-            // Check API health
-            try {
-                const healthRes = await fetch('/health');
-                if (healthRes.ok) {
-                    apiEl.textContent = 'ONLINE';
-                    apiEl.className = 'value online';
-                } else {
-                    apiEl.textContent = 'ERROR';
-                    apiEl.className = 'value offline';
-                }
-            } catch (e) {
-                apiEl.textContent = 'OFFLINE';
-                apiEl.className = 'value offline';
-            }
-
-            // Check docs API
-            try {
-                const docsRes = await fetch('/api/docs');
-                if (docsRes.ok) {
-                    const data = await docsRes.json();
-                    const available = data.docs.filter(d => d.available).length;
-                    docsEl.textContent = `${available}/10`;
-                    docsEl.className = 'value online';
-                } else {
-                    docsEl.textContent = 'ERROR';
-                    docsEl.className = 'value offline';
-                }
-            } catch (e) {
-                docsEl.textContent = 'N/A';
-                docsEl.className = 'value offline';
-            }
-        }
-
-        // Run on load
-        checkStatus();
-        // Refresh every 30 seconds
-        setInterval(checkStatus, 30000);
+        send.onclick = chat;
+        msg.onkeypress = (e) => { if (e.key === 'Enter') chat(); };
     </script>
-    <script src="theme-switcher.js"></script>
 </body>
 </html>
