@@ -64,16 +64,16 @@ ServiceRegistry lookups per-instance (`self._*_instance`), which is correct patt
 **NOTE**: All Mahajana services get auto-wrapped with NagaProxy (they're not infrastructure,
 so they don't have `_naga_flooded = True`).
 
-### 4. CORE SERVICES (P1)
+### 4. CORE SERVICES (P1 - DONE!)
 
 | File | Singleton | Protocol | Status |
 |------|-----------|----------|--------|
-| `plugin_service.py` | `PluginService._instance` | `PluginServiceProtocol` | TODO |
-| `section_service.py` | `SectionService._instance` | `SectionServiceProtocol` | TODO |
-| `cartridge_service.py` | `CartridgeService._instance` | `CartridgeServiceProtocol` | TODO |
-| `circuit_service.py` | `CircuitService._instance` | `CircuitServiceProtocol` | TODO |
-| `genesis/service.py` | `GenesisService._instance` | `GenesisServiceProtocol` | TODO |
-| `services/learning_loop.py` | `LearningLoop._instance` | `LearningLoopProtocol` | TODO |
+| `plugin_service.py` | `PluginService._instance` | `PluginServiceProtocol` | ✅ DONE |
+| `section_service.py` | `SectionService._instance` | `SectionServiceProtocol` | ✅ DONE |
+| `cartridge_service.py` | `CartridgeService._instance` | `CartridgeProtocol` | ✅ DONE |
+| `circuit_service.py` | `CircuitService._instance` | `CircuitServiceProtocol` | ✅ DONE |
+| `genesis/service.py` | `GenesisService._instance` | `GenesisService` | ✅ DONE |
+| `services/learning_loop.py` | `LearningLoop._instance` | `LearningLoop` | ✅ DONE |
 
 ### 5. CLI & REGISTRY (P1)
 
@@ -161,13 +161,13 @@ def get_my_service() -> MyService:
 - [x] Phase 1: NAGA Infrastructure (3 real singletons + 3 OK mixins) - DONE
 - [x] Phase 2: Mahamantra Substrate (5 singletons) - DONE
 - [x] Phase 3: Mahajana Protocols (5 singletons) - DONE
-- [ ] Phase 4: Core Services (6 singletons)
+- [x] Phase 4: Core Services (6 singletons) - DONE
 - [ ] Phase 5: CLI & Registry (4 singletons)
 - [ ] Phase 6: State & Cognitive (5 singletons)
 - [ ] Phase 7: Protocols & Governance (4 singletons)
 - [ ] Phase 8: Tools & Cartridges (3 singletons)
 
-**Total: ~27 singletons remaining** (was 43, 16 done so far)
+**Total: ~21 singletons remaining** (was 43, 22 done so far)
 
 ---
 

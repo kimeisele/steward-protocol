@@ -40,9 +40,9 @@ class PluginService(NagaBaseService, PluginServiceProtocol):
     - Lazy loading (classes imported on demand)
     - Single cache for Kernel and CLI
     - Priority/dependency-based ordering
-    """
 
-    _instance: Optional["PluginService"] = None
+    NOTE: Use get_plugin_service() to access via ServiceRegistry.
+    """
 
     def __init__(self, workspace: Optional[Path] = None):
         super().__init__(service_name="PluginService")
@@ -53,15 +53,15 @@ class PluginService(NagaBaseService, PluginServiceProtocol):
 
     @classmethod
     def get_instance(cls, workspace: Optional[Path] = None) -> "PluginService":
-        """Get singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls(workspace)
-        return cls._instance
+        """Get singleton instance (backward compat - use get_plugin_service())."""
+        return get_plugin_service(workspace)
 
     @classmethod
     def reset_instance(cls) -> None:
         """Reset singleton (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(PluginServiceProtocol)
 
     @naga_governed(operation="plugin_scan", log_args=True)
     def scan(self, force: bool = False) -> int:
@@ -165,3 +165,44 @@ class PluginService(NagaBaseService, PluginServiceProtocol):
     def list_loaded(self) -> List[Any]:
         """List all loaded plugin instances."""
         return list(self._instances.values())
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_plugin_service(workspace: Optional[Path] = None) -> PluginService:
+    """
+    Get PluginService through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        PluginService → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees plugin operations)
+    - NAGA profiling (Chitragupta tracks scan/load timing)
+    - NAGA isolation (Kaliya handles plugin errors)
+
+    Args:
+        workspace: Optional workspace path (only used on first creation)
+
+    Returns:
+        PluginService wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(PluginServiceProtocol)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = PluginService(workspace)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(PluginServiceProtocol, instance)
+    logger.info("✅ PluginService registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(PluginServiceProtocol)  # type: ignore

@@ -32,9 +32,9 @@ class CartridgeService(CartridgeProtocol):
     - Lazy loading (classes imported on demand)
     - Single cache for CLI and Kernel
     - Tool discovery and instantiation
-    """
 
-    _instance: Optional["CartridgeService"] = None
+    NOTE: Use get_cartridge_service() to access via ServiceRegistry.
+    """
 
     def __init__(self, workspace: Optional[Path] = None):
         self._workspace = workspace or Path.cwd()
@@ -45,15 +45,15 @@ class CartridgeService(CartridgeProtocol):
 
     @classmethod
     def get_instance(cls, workspace: Optional[Path] = None) -> "CartridgeService":
-        """Get singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls(workspace)
-        return cls._instance
+        """Get singleton instance (backward compat - use get_cartridge_service())."""
+        return get_cartridge_service(workspace)
 
     @classmethod
     def reset_instance(cls) -> None:
         """Reset singleton (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(CartridgeProtocol)
 
     def scan(self, force: bool = False) -> int:
         """Scan for cartridge manifests (YAML only, no imports)."""
@@ -241,3 +241,44 @@ class CartridgeService(CartridgeProtocol):
         except Exception as e:
             logger.error(f"Failed to instantiate {cartridge_id}: {e}")
             return None
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_cartridge_service(workspace: Optional[Path] = None) -> CartridgeService:
+    """
+    Get CartridgeService through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        CartridgeService → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees cartridge operations)
+    - NAGA profiling (Chitragupta tracks scan/load timing)
+    - NAGA isolation (Kaliya handles cartridge errors)
+
+    Args:
+        workspace: Optional workspace path (only used on first creation)
+
+    Returns:
+        CartridgeService wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(CartridgeProtocol)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = CartridgeService(workspace)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(CartridgeProtocol, instance)
+    logger.info("✅ CartridgeService registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(CartridgeProtocol)  # type: ignore

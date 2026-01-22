@@ -32,9 +32,9 @@ class GenesisService:
 
     This is what MANAS and Engineer call.
     The Front Desk of the Stadtamt.
-    """
 
-    _instance: Optional["GenesisService"] = None
+    NOTE: Use get_genesis_service() to access via ServiceRegistry.
+    """
 
     # Path patterns for module type detection
     PATH_PATTERNS: List[Tuple[str, ModuleType]] = [
@@ -88,15 +88,15 @@ class GenesisService:
 
     @classmethod
     def get_instance(cls, workspace: Optional[Path] = None) -> "GenesisService":
-        """Get singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls(workspace=workspace)
-        return cls._instance
+        """Get singleton instance (backward compat - use get_genesis_service())."""
+        return get_genesis_service(workspace)
 
     @classmethod
     def reset_instance(cls) -> None:
         """Reset singleton instance (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(GenesisService)
 
     @property
     def compliance(self) -> ComplianceBureau:
@@ -280,3 +280,44 @@ class GenesisService:
     def get_required_files(self, module_type: ModuleType) -> List[str]:
         """Get list of required files for a module type."""
         return self._templates.get_required_files(module_type)
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_genesis_service(workspace: Optional[Path] = None) -> GenesisService:
+    """
+    Get GenesisService through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        GenesisService → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees genesis operations)
+    - NAGA profiling (Chitragupta tracks build timing)
+    - NAGA isolation (Kaliya handles genesis errors)
+
+    Args:
+        workspace: Optional workspace path (only used on first creation)
+
+    Returns:
+        GenesisService wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(GenesisService)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = GenesisService(workspace=workspace)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(GenesisService, instance)
+    logger.info("✅ GenesisService registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(GenesisService)  # type: ignore

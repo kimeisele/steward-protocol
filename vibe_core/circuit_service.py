@@ -29,9 +29,9 @@ class CircuitService(CircuitServiceProtocol):
     - Lazy scanning
     - Single cache for all consumers
     - DI integration
-    """
 
-    _instance: Optional["CircuitService"] = None
+    NOTE: Use get_circuit_service() to access via ServiceRegistry.
+    """
 
     def __init__(self, workspace: Optional[Path] = None):
         self._workspace = workspace or Path.cwd()
@@ -41,15 +41,15 @@ class CircuitService(CircuitServiceProtocol):
 
     @classmethod
     def get_instance(cls, workspace: Optional[Path] = None) -> "CircuitService":
-        """Get singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls(workspace)
-        return cls._instance
+        """Get singleton instance (backward compat - use get_circuit_service())."""
+        return get_circuit_service(workspace)
 
     @classmethod
     def reset_instance(cls) -> None:
         """Reset singleton (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(CircuitServiceProtocol)
 
     def scan(self, force: bool = False) -> int:
         """Scan for circuits."""
@@ -102,3 +102,44 @@ class CircuitService(CircuitServiceProtocol):
         if not self._scanned:
             self.scan()
         return self._definitions.get(circuit_id)
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_circuit_service(workspace: Optional[Path] = None) -> CircuitService:
+    """
+    Get CircuitService through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        CircuitService → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees circuit operations)
+    - NAGA profiling (Chitragupta tracks scan/load timing)
+    - NAGA isolation (Kaliya handles circuit errors)
+
+    Args:
+        workspace: Optional workspace path (only used on first creation)
+
+    Returns:
+        CircuitService wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(CircuitServiceProtocol)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = CircuitService(workspace)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(CircuitServiceProtocol, instance)
+    logger.info("✅ CircuitService registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(CircuitServiceProtocol)  # type: ignore

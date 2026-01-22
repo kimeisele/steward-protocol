@@ -29,9 +29,9 @@ class SectionService(SectionServiceProtocol):
     - Lazy scanning
     - Single cache for all consumers
     - DI integration
-    """
 
-    _instance: Optional["SectionService"] = None
+    NOTE: Use get_section_service() to access via ServiceRegistry.
+    """
 
     def __init__(self, workspace: Optional[Path] = None):
         self._workspace = workspace or Path.cwd()
@@ -41,15 +41,15 @@ class SectionService(SectionServiceProtocol):
 
     @classmethod
     def get_instance(cls, workspace: Optional[Path] = None) -> "SectionService":
-        """Get singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls(workspace)
-        return cls._instance
+        """Get singleton instance (backward compat - use get_section_service())."""
+        return get_section_service(workspace)
 
     @classmethod
     def reset_instance(cls) -> None:
         """Reset singleton (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(SectionServiceProtocol)
 
     def scan(self, force: bool = False) -> int:
         """Scan for sections."""
@@ -98,3 +98,44 @@ class SectionService(SectionServiceProtocol):
         if not self._scanned:
             self.scan()
         return self._instances.get(section_id)
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_section_service(workspace: Optional[Path] = None) -> SectionService:
+    """
+    Get SectionService through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        SectionService → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees section operations)
+    - NAGA profiling (Chitragupta tracks scan/load timing)
+    - NAGA isolation (Kaliya handles section errors)
+
+    Args:
+        workspace: Optional workspace path (only used on first creation)
+
+    Returns:
+        SectionService wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(SectionServiceProtocol)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = SectionService(workspace)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(SectionServiceProtocol, instance)
+    logger.info("✅ SectionService registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(SectionServiceProtocol)  # type: ignore
