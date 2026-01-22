@@ -423,27 +423,31 @@ class ChatIndriya(GADBase):
         # Classify intent from text
         intent = self._classify_intent(text)
 
-        # === CONSCIENCE CHECK (Buddhi function) ===
-        # Is this intent dharmic? Check before delegating to ChatService.
-        # Map TanmatraIntent to intent_type for permission check
-        intent_type = self._map_intent_to_type(intent, text)
+        # === CONSCIENCE CHECK (Buddhi function via VarnaTensor) ===
+        # Analyze VIBRATION to determine intent_type (no string matching!)
+        intent_type, position, quarter = self._analyze_vibration(text)
         conscience = check_conscience(intent_type, ashrama=Ashrama.GRIHASTHA)
 
         if not conscience.is_dharmic:
-            # TAMASIC - Block the action
-            logger.warning(f"🚫 CONSCIENCE BLOCKED: {intent_type} - {conscience.reason}")
+            # TAMASIC - The Steward blocks with care, not coldness
+            logger.warning(f"🚫 STEWARD BLOCKS: {intent_type} (quarter={quarter})")
             self.transition(Vrtti.VIPARYAYA)  # Error state
+
+            # Steward speaks with personality, not "Error 403"
+            steward_message = self._steward_block_message(intent_type, conscience, quarter)
 
             blocked_tanmatra = TanmatraMessage(
                 message_id=f"tm_{uuid4().hex[:8]}",
                 tanmatra=Tanmatra.SABDA,
                 intent=TanmatraIntent.RESPONSE,
-                content=f"🚫 Action blocked (Tamasic): {conscience.reason}",
+                content=steward_message,
                 source_indriya=self._vak,
                 timestamp=datetime.now(),
                 metadata={
                     "blocked": True,
                     "guna": conscience.guna.value,
+                    "quarter": quarter,
+                    "position": position,
                     "reason": conscience.reason,
                 },
             )
@@ -453,7 +457,7 @@ class ChatIndriya(GADBase):
 
         # Conscience passed (Sattvic or Rajasic)
         if conscience.guna == GunaState.RAJASIC:
-            logger.info(f"⚠️ CONSCIENCE CAUTION: {intent_type} - {conscience.reason}")
+            logger.info(f"⚠️ STEWARD CAUTION: {intent_type} (quarter={quarter})")
 
         # Create input TanmatraMessage
         input_tanmatra = TanmatraMessage(
@@ -608,37 +612,89 @@ class ChatIndriya(GADBase):
 
         return tanmatra
 
-    def _map_intent_to_type(self, intent: TanmatraIntent, text: str) -> str:
+    def _steward_block_message(
+        self,
+        intent_type: str,
+        conscience: "ConscienceVerdict",
+        quarter: str,
+    ) -> str:
         """
-        Map TanmatraIntent + text to permission-checkable intent_type.
+        Generate a friendly Steward message when blocking an action.
 
-        Used by Conscience to determine required permissions.
+        The Steward is not a cold gatekeeper. He's a friend and helper
+        who explains WHY something is blocked.
         """
-        text_lower = text.lower()
+        from vibe_core.mahamantra.protocols.sankalpa import ConscienceVerdict
 
-        # Check for dangerous actions in text
-        if any(word in text_lower for word in ["delete", "remove", "destroy"]):
-            return "delete_file"
-        if any(word in text_lower for word in ["shutdown", "stop", "kill"]):
-            return "shutdown"
-        if any(word in text_lower for word in ["push", "deploy"]):
-            return "git_push"
-        if any(word in text_lower for word in ["commit"]):
-            return "commit_and_push"
-        if any(word in text_lower for word in ["create", "generate", "make"]):
-            return "genesis_action"
-        if any(word in text_lower for word in ["refactor", "rewrite"]):
-            return "refactor_major"
+        # Quarter-specific advice
+        quarter_advice = {
+            "GENESIS": "Creation requires genesis permissions. Perhaps start smaller?",
+            "DHARMA": "This modifies code structure. Build trust first through safer actions.",
+            "KARMA": "Execution actions need careful consideration. What's the urgency?",
+            "MOKSHA": "Even cleanup needs permission. Let's review together.",
+        }
 
-        # Default based on intent type
-        if intent == TanmatraIntent.COMMAND:
-            return "code_modify"  # Commands may modify
-        if intent == TanmatraIntent.QUERY:
-            return "review_todos"  # Queries are safe
-        if intent == TanmatraIntent.PRAYER:
-            return "review_todos"  # Requests are safe
+        advice = quarter_advice.get(quarter, "Let's discuss this further.")
 
-        return "review_todos"  # Default: safe
+        # Missing permissions as readable list
+        missing = ", ".join(conscience.missing_permissions) if conscience.missing_permissions else "none specific"
+
+        return f"""🛡️ **Steward Protocol**
+
+Mein Freund, ich kann diese Aktion nicht ausführen.
+
+**Warum?** {conscience.reason}
+**Guna:** {conscience.guna.value.upper()} (nicht im Einklang mit Dharma)
+**Missing:** {missing}
+
+**Mein Rat:** {advice}
+
+Frag mich gerne, wenn du verstehen willst warum - ich bin hier um zu helfen, nicht zu blockieren.
+"""
+
+    def _analyze_vibration(self, text: str) -> tuple[str, int, str]:
+        """
+        Analyze the VIBRATION of text using VarnaTensor/Substrate.
+
+        Returns:
+            tuple of (intent_type, position, quarter)
+
+        MAHAMANTRA ROUTING:
+        - Position 0-3 (GENESIS): Creation → needs genesis permission
+        - Position 4-7 (DHARMA): Compilation → needs code_modify
+        - Position 8-11 (KARMA): Execution → needs exec permission
+        - Position 12-15 (MOKSHA): Audit/Cleanup → generally safe
+        """
+        from vibe_core.services.chat_substrate_bridge import get_substrate_bridge
+
+        try:
+            # Use the REAL substrate routing (VarnaTensor)
+            bridge = get_substrate_bridge()
+            route = bridge.route(text)
+
+            position = route.position
+            quarter = route.quarter.upper()
+
+            # Map quarter to intent_type (permission requirement)
+            quarter_to_intent = {
+                "GENESIS": "genesis_action",   # Creation needs genesis
+                "DHARMA": "code_modify",       # Compilation needs code_modify
+                "KARMA": "refactor_major",     # Execution needs exec
+                "MOKSHA": "review_todos",      # Audit is safe
+            }
+
+            intent_type = quarter_to_intent.get(quarter, "review_todos")
+
+            logger.debug(
+                f"🔊 Vibration: '{text[:30]}...' → pos={position}, "
+                f"quarter={quarter}, intent={intent_type}"
+            )
+
+            return intent_type, position, quarter
+
+        except Exception as e:
+            logger.warning(f"Substrate routing failed, defaulting to safe: {e}")
+            return "review_todos", 2, "GENESIS"  # Safe default: Narada/Query
 
     def _classify_intent(self, text: str) -> TanmatraIntent:
         """
