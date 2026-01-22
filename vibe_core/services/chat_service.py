@@ -814,6 +814,51 @@ class ChatService(ChatProtocol):
             logger.warning(f"⚠️ Bridge execution failed: {e}")
             return {"success": False, "error": str(e)}
 
+    async def _await_fold(
+        self,
+        bridge: "SamanaBridge",
+        dispatch_id: str,
+        timeout_ms: int = 5000,
+    ) -> Optional["SamanaFold"]:
+        """
+        MOKSHA: Await the fold (result) from TaskKernel.
+
+        VEDA-4 PATTERN:
+        - GENESIS: Message received
+        - DHARMA: Routed to Mahajana
+        - KARMA: Dispatched to TaskKernel
+        - MOKSHA: Fold returns here ← WE ARE HERE
+
+        Args:
+            bridge: SamanaBridge to poll
+            dispatch_id: The dispatch to wait for
+            timeout_ms: Max wait time (default 5s)
+
+        Returns:
+            SamanaFold if completed, None if timeout
+        """
+        import asyncio
+
+        poll_interval_ms = 100  # Check every 100ms
+        elapsed = 0
+
+        while elapsed < timeout_ms:
+            # Check for completed fold
+            fold = bridge.get_fold(dispatch_id)
+            if fold is not None:
+                logger.info(f"🕉️ MOKSHA: Fold received for {dispatch_id} (status={fold.status})")
+                return fold
+
+            # Also receive any pending folds from Nadi
+            bridge.receive_folds()
+
+            # Wait and retry
+            await asyncio.sleep(poll_interval_ms / 1000)
+            elapsed += poll_interval_ms
+
+        logger.warning(f"⏰ MOKSHA: Timeout waiting for fold {dispatch_id}")
+        return None
+
     async def _execute_via_shadow(
         self,
         message: str,
@@ -821,21 +866,21 @@ class ChatService(ChatProtocol):
         context: ChatContext,
     ) -> Optional[Dict]:
         """
-        Execute task via ShadowReactor - The Yajna Cycle (Living City).
+        Execute task via ShadowReactor - The Yajna Cycle.
+
+        VEDA-4 PATTERN (Complete Cycle):
+        - GENESIS: Task created from message
+        - DHARMA: Routed to position (PARASHURAMA/BRAHMA)
+        - KARMA: Dispatched to TaskKernel
+        - MOKSHA: Fold awaited and returned
 
         WHEN TO USE:
         - Position 8 (PARASHURAMA) = Execute/Transform
         - Position 1 (BRAHMA) = Create/Generate
-        - Complex tasks that should outlive the chat response
-
-        FLOW:
-        1. Create Bija (task seed) from chat message + routing
-        2. Dispatch to SamanaBridge → TaskKernel
-        3. Execute in ShadowReactor (Yajna Cycle)
-        4. Fold results back (async or via callback)
+        - Complex tasks that benefit from isolation
 
         Returns:
-            Dict with dispatch_id for tracking, or None if not supported
+            Dict with execution result, or None if not supported
         """
         if self._shadow_reactor is None:
             logger.debug("ShadowReactor not available, falling back to cli_bridge")
@@ -870,19 +915,42 @@ class ChatService(ChatProtocol):
 
             if dispatch_id:
                 logger.info(
-                    f"🔥 ShadowReactor: Dispatched {task_id} → {dispatch_id} "
+                    f"🔥 KARMA: Dispatched {task_id} → {dispatch_id} "
                     f"(position={position}, phase={'bhoga' if position < 8 else 'prasadam'})"
                 )
-                return {
-                    "success": True,
-                    "dispatch_id": dispatch_id,
-                    "task_id": task_id,
-                    "position": position,
-                    "mode": "shadow_reactor",
-                    "note": "Task dispatched to Yajna Cycle. Results will fold back.",
-                }
+
+                # =============================================================
+                # MOKSHA: Await the fold (Complete the Yajna Cycle)
+                # =============================================================
+                fold = await self._await_fold(bridge, dispatch_id, timeout_ms=5000)
+
+                if fold:
+                    # Full cycle complete: GENESIS → DHARMA → KARMA → MOKSHA
+                    return {
+                        "success": fold.status == "completed",
+                        "dispatch_id": dispatch_id,
+                        "task_id": task_id,
+                        "position": position,
+                        "mode": "shadow_reactor",
+                        "veda_cycle": "complete",
+                        "fold_status": fold.status,
+                        "output": fold.output,
+                        "duration_ms": fold.duration_ms,
+                        "reinforcement": fold.reinforcement_signal,
+                    }
+                else:
+                    # Timeout - task still running (async continuation)
+                    return {
+                        "success": True,
+                        "dispatch_id": dispatch_id,
+                        "task_id": task_id,
+                        "position": position,
+                        "mode": "shadow_reactor",
+                        "veda_cycle": "karma_only",  # Moksha pending
+                        "note": "Task running in Yajna Cycle. Check back later.",
+                    }
             else:
-                logger.warning("⚠️ ShadowReactor: Dispatch failed (no capacity?)")
+                logger.warning("⚠️ KARMA: Dispatch failed (no capacity?)")
                 return None
 
         except Exception as e:
