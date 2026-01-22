@@ -401,7 +401,10 @@ def guardian_chat(message: str, *, guardian: str, position: Optional[int] = None
 
 def get_guardian_for_message(message: str) -> str:
     """
-    Use mahamantra.resonate() to find the best guardian for a message.
+    Use ChatService substrate routing to find the best guardian for a message.
+
+    UNIFIED ROUTING: Uses VarnaTensor/SubstrateRoute (computational)
+    instead of old mahamantra.resonate() tree.
 
     Args:
         message: User message
@@ -410,17 +413,13 @@ def get_guardian_for_message(message: str) -> str:
         Guardian name
     """
     try:
-        from vibe_core.mahamantra import mahamantra
+        # Use ChatService's substrate routing (THE ONE TRUTH)
+        from vibe_core.services.chat_service import get_chat_service
 
-        score, winning_node = mahamantra.resonate(message)
+        service = get_chat_service()
+        resonance = service._compute_resonance(message)
 
-        if winning_node and score > 0:
-            # Extract guardian from node path
-            if hasattr(winning_node, "_path") and winning_node._path.depth >= 2:
-                return winning_node._path.segments[1]
-
-        # Default to Narada (the messenger)
-        return "narada"
+        return resonance.get("mahajana", "narada")
 
     except Exception:
         return "narada"
