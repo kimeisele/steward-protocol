@@ -110,6 +110,18 @@ from vibe_core.mahamantra.substrate.position import (
     MantraPosition,
 )
 
+# =============================================================================
+# SAMANA BRIDGE INTEGRATION (TaskKernel ↔ ShadowReactor via Nadi)
+# =============================================================================
+from vibe_core.mahamantra.substrate.samana_bridge import (
+    SamanaBridge,
+    SamanaDispatch,
+    SamanaFold,
+    create_samana_bridge,
+    MAX_KERNELS_PER_REACTOR,
+    DISPATCH_BATCH_SIZE,
+)
+
 
 # =============================================================================
 # SHADOW REACTOR - The Core Engine (SPAWNBAR)
@@ -207,6 +219,18 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # =====================================================================
         # Current authorization bundle (starts empty)
         self._authorization: AuthorizationBundle | None = None
+
+        # =====================================================================
+        # SAMANA BRIDGE (TaskKernel ↔ ShadowReactor via Nadi)
+        # =====================================================================
+        # Create bridge for this reactor's kernel communication
+        self._samana_bridge: SamanaBridge = create_samana_bridge(self._reactor_id)
+
+        # Task queue for dispatch during BHOGA phase
+        self._task_queue: List[Dict[str, object]] = []
+
+        # Fold results collected during PRASADAM phase
+        self._fold_results: List[SamanaFold] = []
 
     # =========================================================================
     # PROTOCOL PROPERTIES
@@ -460,13 +484,39 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         return state
 
     def _trigger_bhoga(self, state: ShadowState) -> None:
-        """Trigger on_bhoga for all reactors at current position."""
+        """
+        Trigger on_bhoga for all reactors at current position.
+
+        SAMANA INTEGRATION:
+        Dispatches queued tasks to TaskKernels via SamanaBridge.
+        """
         if not self.is_authorized():
             return  # BLOCKED
 
         position = state["position"]
         listeners = self._listeners.get(position, [])
 
+        # =====================================================================
+        # SAMANA DISPATCH - Send queued tasks to TaskKernels
+        # =====================================================================
+        if self._task_queue:
+            # Convert queue to dispatch format
+            tasks_to_dispatch = [
+                (t["task_id"], t["description"], t["payload"])
+                for t in self._task_queue[:DISPATCH_BATCH_SIZE]
+            ]
+
+            # Dispatch batch via SAMANA bridge
+            dispatch_ids = self._samana_bridge.dispatch_batch(
+                tasks=tasks_to_dispatch,
+                position=position,
+                phase="BHOGA",
+            )
+
+            # Remove dispatched tasks from queue
+            self._task_queue = self._task_queue[len(dispatch_ids):]
+
+        # Trigger listener callbacks
         for reactor in listeners:
             if hasattr(reactor, "on_bhoga"):
                 try:
@@ -487,11 +537,24 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
                     state["dissonance_report"] = f"APARADHA [SWITCH]: {str(e)}"
 
     def _trigger_prasadam(self, state: ShadowState) -> None:
-        """Trigger on_prasadam for all reactors at current position."""
+        """
+        Trigger on_prasadam for all reactors at current position.
+
+        SAMANA INTEGRATION:
+        Collects fold results from TaskKernels via SamanaBridge.
+        """
         if not self.is_authorized():
             return  # BLOCKED
 
         position = state["position"]
+
+        # =====================================================================
+        # SAMANA FOLD - Collect results from TaskKernels
+        # =====================================================================
+        folds = self._samana_bridge.receive_folds()
+        self._fold_results.extend(folds)
+
+        # Trigger listener callbacks
         for reactor in self._listeners.get(position, []):
             if hasattr(reactor, "on_prasadam"):
                 try:
@@ -546,6 +609,57 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     @property
     def discovered_count(self) -> int:
         return sum(len(r) for r in self._listeners.values())
+
+    # =========================================================================
+    # SAMANA BRIDGE PROPERTIES
+    # =========================================================================
+
+    @property
+    def samana_bridge(self) -> SamanaBridge:
+        """Access the Samana bridge for TaskKernel integration."""
+        return self._samana_bridge
+
+    @property
+    def pending_tasks(self) -> int:
+        """Number of tasks waiting to be dispatched."""
+        return len(self._task_queue)
+
+    @property
+    def active_kernels(self) -> int:
+        """Number of active TaskKernels processing dispatches."""
+        return self._samana_bridge.active_kernel_count
+
+    def queue_task(
+        self,
+        task_id: str,
+        description: str,
+        payload: Optional[Dict[str, object]] = None,
+    ) -> None:
+        """
+        Queue a task for dispatch during next BHOGA phase.
+
+        Tasks are held until _trigger_bhoga dispatches them.
+        """
+        self._task_queue.append({
+            "task_id": task_id,
+            "description": description,
+            "payload": payload or {},
+        })
+
+    def get_fold_results(self, clear: bool = True) -> List[SamanaFold]:
+        """
+        Get collected fold results from PRASADAM phase.
+
+        Args:
+            clear: If True, clear the results after returning
+
+        Returns:
+            List of SamanaFold results
+        """
+        results = list(self._fold_results)
+        if clear:
+            self._fold_results.clear()
+        return results
 
     # =========================================================================
     # BHAVA STATE (Intent Vector - Grace Scaling)
@@ -651,6 +765,8 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             "listeners": {pos: [str(l) for l in listeners] for pos, listeners in self._listeners.items()},
             "discovered_count": self.discovered_count,
             "lagna": self._lagna,
+            # SAMANA integration
+            "samana_bridge": self._samana_bridge.discover(),
         }
 
     def test_satyam(self) -> bool:
@@ -841,6 +957,15 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             # We need to expose if there was a report?
             # State is transient.
         )
+
+    def get_samana_state(self) -> Dict[str, object]:
+        """Get Samana bridge state for observability."""
+        return {
+            "pending_tasks": self.pending_tasks,
+            "active_kernels": self.active_kernels,
+            "fold_results_count": len(self._fold_results),
+            "bridge_state": self._samana_bridge.get_state(),
+        }
 
     def __repr__(self) -> str:
         return f"OrbitalShadowReactor(id={self._reactor_id}, lagna={self._lagna}, position={self._position})"
