@@ -772,45 +772,42 @@ class EventBus(EventBusProtocol):
         logger.info("🗑️  Event history cleared")
 
 
-# Module-level singleton
-_event_bus_instance: Optional[EventBus] = None
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
 
 
 def get_event_bus() -> EventBus:
     """
-    Get the global event bus singleton.
+    Get EventBus through ServiceRegistry (WIRED + NAGA-wrapped).
 
-    OPUS-311: Now integrates with ServiceRegistry for DI.
-    Priority: 1. ServiceRegistry, 2. Module singleton, 3. Create new.
+    ARCHITECTURE:
+        EventBus → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees all events - meta!)
+    - NAGA profiling (Chitragupta tracks event latency)
+    - NAGA isolation (Kaliya handles event errors)
+
+    Returns:
+        EventBus wrapped with NagaProxy (if NAGA blessing enabled)
     """
-    global _event_bus_instance
+    from vibe_core.di import ServiceRegistry
 
-    # OPUS-311: Try ServiceRegistry first (if kernel registered it)
-    try:
-        from vibe_core.di import ServiceRegistry
+    # Check if already registered
+    existing = ServiceRegistry.get(EventBusProtocol)
+    if existing is not None:
+        return existing  # type: ignore
 
-        registered = ServiceRegistry.get(EventBusProtocol)  # noqa: F823 (EventBusProtocol is module-level import)
-        if registered is not None:
-            return registered
-    except ImportError:
-        pass  # DI not available
+    # Create new instance
+    instance = EventBus()
 
-    # Fallback to module singleton
-    if _event_bus_instance is None:
-        _event_bus_instance = EventBus()
-        # OPUS-311: Auto-register so get_event_bus_safe() also finds it
-        try:
-            from vibe_core.di import ServiceRegistry
-            # NOTE: EventBusProtocol is already module-level imported (line 49)
-            # DO NOT re-import here - causes UnboundLocalError on line 784
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(EventBusProtocol, instance)
+    logger.info("✅ EventBus registered via ServiceRegistry (NAGA-observed)")
 
-            ServiceRegistry.register(EventBusProtocol, _event_bus_instance)
-        except ImportError as e:
-            # OPUS-312: Log DI unavailability at debug (optional feature)
-            import logging
-
-            logging.getLogger("EVENT_BUS").debug(f"ServiceRegistry unavailable, skipping registration: {e}")
-    return _event_bus_instance
+    return ServiceRegistry.get(EventBusProtocol)  # type: ignore
 
 
 async def emit_event(

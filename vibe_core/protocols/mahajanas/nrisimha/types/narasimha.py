@@ -375,16 +375,42 @@ class NarasimhaProtocol:
         return f"NarasimhaProtocol({status}, threats={len(self.threats)})"
 
 
-# Global instance
-_narasimha_instance: Optional[NarasimhaProtocol] = None
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
 
 
 def get_narasimha() -> NarasimhaProtocol:
-    """Get or create the global Narasimha instance."""
-    global _narasimha_instance
-    if _narasimha_instance is None:
-        _narasimha_instance = NarasimhaProtocol()
-    return _narasimha_instance
+    """
+    Get NarasimhaProtocol through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        NarasimhaProtocol → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees threat events)
+    - NAGA profiling (Chitragupta tracks threat handling)
+    - NAGA isolation (Kaliya handles threat errors)
+
+    Returns:
+        NarasimhaProtocol wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(NarasimhaProtocol)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = NarasimhaProtocol()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(NarasimhaProtocol, instance)
+    logger.info("✅ NarasimhaProtocol registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(NarasimhaProtocol)  # type: ignore
 
 
 def activate_emergency_protocol(reason: str) -> None:

@@ -85,20 +85,11 @@ class PulseManager:
     Non-blocking: Runs on separate asyncio task
     Fault-tolerant: Continues even if subscribers fail
     Efficient: Small payloads, minimal overhead
+
+    NOTE: Use get_pulse_manager() to access via ServiceRegistry.
     """
 
-    _instance: Optional["PulseManager"] = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
     def __init__(self):
-        if hasattr(self, "_initialized"):
-            return
-
-        self._initialized = True
         self._cycle_id = 0
         self._frequency = PulseFrequency.ACTIVE
         self._system_state = SystemState.HEALTHY
@@ -109,7 +100,7 @@ class PulseManager:
         self._subscribers: List[callable] = []
         self._last_packet: Optional[PulsePacket] = None
 
-        logger.info("🫀 PulseManager initialized (Singleton)")
+        logger.info("🫀 PulseManager initialized")
 
     async def start(self):
         """Start the heartbeat loop"""
@@ -253,5 +244,33 @@ class PulseManager:
 
 # Module-level convenience function
 def get_pulse_manager() -> PulseManager:
-    """Get the global pulse manager singleton"""
-    return PulseManager()
+    """
+    Get PulseManager through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        PulseManager → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees heartbeats)
+    - NAGA profiling (Chitragupta tracks pulse timing)
+    - NAGA isolation (Kaliya handles pulse errors)
+
+    Returns:
+        PulseManager wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(PulseManager)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = PulseManager()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(PulseManager, instance)
+    logger.info("✅ PulseManager registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(PulseManager)  # type: ignore
