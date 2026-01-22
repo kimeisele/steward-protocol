@@ -102,6 +102,31 @@ class BridgeResult:
 
 
 # =============================================================================
+# LEGACY SYSTEM COMMANDS (Handled by UnifiedCLI/StewardCLI)
+# =============================================================================
+
+# These are commands that exist in the "Old King" (StewardCLI)
+# and haven't been migrated to Mahajanas yet.
+# We route them to UnifiedCLI which wraps them with Balarama.
+LEGACY_SYSTEM_COMMANDS: Final[Set[str]] = {
+    "status",
+    "boot",
+    "stop",
+    "ps",
+    "verify",
+    "lineage",
+    "discover",
+    "introspect",
+    "install-llm",
+    "install-semantic",
+    "extensions",
+    "delegate",
+    "do",
+    "init",
+}
+
+
+# =============================================================================
 # THE BRIDGE - Krishna Routes Everything
 # =============================================================================
 
@@ -109,7 +134,7 @@ class BridgeResult:
 class MahamantraCLIBridge:
     """
     CLI Bridge - ONE entry point, Krishna routes.
-
+    
     Usage:
         from vibe_core.mahamantra import cli_bridge
 
@@ -189,7 +214,7 @@ class MahamantraCLIBridge:
 
         Flow:
         1. Try cli_auto.execute() (auto-discovered from Protocols - NO MANUAL WIRING)
-        2. If not implemented, fallback to CLIRegistry (legacy handlers)
+        2. If not implemented, fallback to Legacy System (UnifiedCLI) or Registry
         3. Return BridgeResult
 
         ROYAL DELEGATION: Krishna discovers, Krishna routes, Krishna executes.
@@ -210,7 +235,7 @@ class MahamantraCLIBridge:
             and result.error
             and result.error.code in (CLIErrorCode.NOT_IMPLEMENTED, CLIErrorCode.UNKNOWN_COMMAND)
         ):
-            return self._fallback_to_registry(command, args, position)
+            return self._execute_fallback(command, args, position)
 
         return BridgeResult(
             success=result.success,
@@ -220,6 +245,43 @@ class MahamantraCLIBridge:
             fallback=False,
             error=result.error.message if result.error else None,
         )
+
+    def _execute_fallback(self, command: str, args: List[str], position: int) -> BridgeResult:
+        """
+        Fallback execution:
+        1. Check Legacy System Commands (UnifiedCLI)
+        2. Check CLIRegistry (Plugins)
+        """
+        # 1. Legacy System Commands (StewardCLI wrapped in UnifiedCLI)
+        # This honors Balarama because UnifiedCLI wraps StewardCLI with Balarama
+        if command in LEGACY_SYSTEM_COMMANDS:
+            try:
+                from vibe_core.cli.unified_cli import UnifiedCLI
+                
+                # We assume UnifiedCLI handles the Balarama wrapping internally
+                unified = UnifiedCLI()
+                
+                # UnifiedCLI expects [command, *args]
+                exit_code = unified.run([command] + args)
+                
+                return BridgeResult(
+                    success=exit_code == 0,
+                    exit_code=exit_code,
+                    position=position,
+                    handler=f"UnifiedCLI[{command}]",
+                    fallback=True,
+                )
+            except Exception as e:
+                return BridgeResult(
+                    success=False,
+                    exit_code=1,
+                    position=position,
+                    error=f"UnifiedCLI execution failed: {e}",
+                    fallback=True,
+                )
+
+        # 2. CLIRegistry (Plugins/Cartridges)
+        return self._fallback_to_registry(command, args, position)
 
     def _fallback_to_registry(self, command: str, args: List[str], position: int) -> BridgeResult:
         """
