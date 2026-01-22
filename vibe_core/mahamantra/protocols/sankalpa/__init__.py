@@ -18,6 +18,7 @@ __position__ = 9
 __genesis__ = "0xebbc13e9"
 
 from .types import (
+    # Mission types
     MissionPriority,
     MissionStatus,
     SankalpaIntent,
@@ -28,6 +29,12 @@ from .types import (
     SankalpaTrigger,
     StrategyFrequency,
     TriggerType,
+    # Conscience types (extracted from DharmaSense)
+    Ashrama,
+    GunaState,
+    ConscienceVerdict,
+    ASHRAMA_PERMISSIONS,
+    INTENT_PERMISSION_MAP,
 )
 from .will import (
     SankalpaOrchestrator,
@@ -36,10 +43,12 @@ from .will import (
     get_sankalpa,
     handle_sankalpa_query,
     get_sankalpa_status_for_chat,
+    # Conscience function
+    check_conscience,
 )
 
 __all__ = [
-    # Types
+    # Mission types
     "MissionPriority",
     "MissionStatus",
     "SankalpaIntent",
@@ -50,6 +59,13 @@ __all__ = [
     "SankalpaTrigger",
     "StrategyFrequency",
     "TriggerType",
+    # Conscience (Buddhi function)
+    "Ashrama",
+    "GunaState",
+    "ConscienceVerdict",
+    "ASHRAMA_PERMISSIONS",
+    "INTENT_PERMISSION_MAP",
+    "check_conscience",
     # Logic
     "SankalpaOrchestrator",
     "SankalpaPlanner",

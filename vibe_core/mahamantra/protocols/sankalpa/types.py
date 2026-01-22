@@ -29,6 +29,89 @@ from uuid import UUID, uuid4
 # =============================================================================
 
 
+# =============================================================================
+# GUNA - The Three Modes of Nature (BG 14.5)
+# =============================================================================
+
+
+class GunaState(Enum):
+    """
+    The three Gunas (modes of material nature).
+    Used for ethical classification of actions.
+    """
+    SATTVIC = "sattvic"  # Pure, righteous, aligned with Dharma
+    RAJASIC = "rajasic"  # Passionate, needs review, borderline
+    TAMASIC = "tamasic"  # Dark, adharmic, must be blocked
+
+
+# =============================================================================
+# ASHRAMA - Life Stages (Permissions based on maturity)
+# =============================================================================
+
+
+class Ashrama(Enum):
+    """
+    The four Ashramas (life stages).
+    Determines what an agent is permitted to do.
+    """
+    BRAHMACHARI = "brahmachari"  # Student - learning, limited permissions
+    GRIHASTHA = "grihastha"      # Householder - productive, full permissions
+    VANAPRASTHA = "vanaprastha"  # Elder - mentoring, reduced action
+    SANNYASI = "sannyasi"        # Renunciate - governance, override authority
+
+
+# Permission grants by Ashrama
+ASHRAMA_PERMISSIONS: dict[Ashrama, list[str]] = {
+    Ashrama.BRAHMACHARI: ["test_create", "doc_modify", "review"],
+    Ashrama.GRIHASTHA: [
+        "code_modify", "git_commit", "git_push", "git_modify",
+        "pr_create", "pr_merge", "test_create", "doc_modify",
+        "review", "state_heal", "genesis",
+    ],
+    Ashrama.VANAPRASTHA: [
+        "code_modify", "doc_modify", "review", "mentor", "pr_create",
+    ],
+    Ashrama.SANNYASI: [
+        "review", "mentor", "admin", "system_control", "pr_merge", "genesis",
+    ],
+}
+
+
+# =============================================================================
+# INTENT PERMISSIONS - What each action requires
+# =============================================================================
+
+
+INTENT_PERMISSION_MAP: dict[str, list[str]] = {
+    # Dangerous (require admin)
+    "delete_file": ["file_delete", "admin"],
+    "shutdown": ["system_control", "admin"],
+    "ledger_modify": ["ledger_admin"],
+    # Genesis (creation)
+    "genesis_action": ["genesis", "code_modify"],
+    "genesis_code": ["genesis", "code_modify"],
+    "create_action": ["genesis", "code_modify"],
+    "create_module": ["genesis", "code_modify"],
+    # Medium risk
+    "refactor_major": ["refactor", "code_modify"],
+    "contract_import_fix": ["code_modify"],
+    "update_documentation": ["doc_modify"],
+    "commit_and_push": ["git_commit", "git_push"],
+    "git_push": ["git_push"],
+    "create_pr": ["git_push", "pr_create"],
+    "merge_pr": ["pr_merge"],
+    # Safe
+    "review_todos": [],
+    "test_create": ["test_create"],
+    "doc_update": ["doc_modify"],
+}
+
+
+# =============================================================================
+# MISSION PRIORITY
+# =============================================================================
+
+
 class MissionPriority(Enum):
     """Priority of a mission (Sattva → Tamas)."""
     CRITICAL = "critical"  # Sattva - Must be done (security, stability)
@@ -180,3 +263,32 @@ class SankalpaStatus:
     total_strategies: int
     enabled_strategies: int
     missions: List[SankalpaMission]
+
+
+# =============================================================================
+# CONSCIENCE - Dharmic Alignment Check (extracted from DharmaSense)
+# =============================================================================
+
+
+@dataclass
+class ConscienceVerdict:
+    """
+    Result of checking Dharmic alignment.
+
+    The Conscience is part of Buddhi (intelligence).
+    It answers: "Is this action righteous?"
+    """
+    guna: GunaState                      # Sattvic/Rajasic/Tamasic
+    is_permitted: bool                   # Can proceed?
+    ashrama: Ashrama                     # Agent's life stage
+    bhakti: int                          # Trust level (0-200)
+    reason: str                          # Human-readable explanation
+    required_permissions: List[str]      # What the action needs
+    missing_permissions: List[str]       # What's lacking
+
+    @property
+    def is_dharmic(self) -> bool:
+        """True if action is Dharma-aligned."""
+        return self.guna == GunaState.SATTVIC or (
+            self.guna == GunaState.RAJASIC and self.is_permitted
+        )
