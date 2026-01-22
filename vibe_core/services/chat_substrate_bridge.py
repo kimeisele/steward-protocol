@@ -126,29 +126,32 @@ class SubstrateRoute:
 
 
 # =============================================================================
-# VARNA TENSOR - SSOT DERIVED FROM varna.py (NOT HARDCODED!)
+# VARNA TENSOR - DERIVED FROM UNIVERSAL PHONETIC BRIDGE
 # =============================================================================
 # "shabda-brahma" - Sound is reality. The mapping is PHYSICAL.
 # 5 Vargas → 4 Quarters via LOTUS algorithm (SWARA_GA = 5/4)
+#
+# ALL MAPPINGS DERIVED FROM PROTOCOLS:
+# - varna.py (Sanskrit phonetics)
+# - language.py (character mappings with IPA)
+# - translation.py (phonemes with sthana)
+#
+# NO HARDCODED VOWEL/WESTERN MAPPINGS - Universal Phonetic Bridge handles all!
 
-# Import SSOT from protocols/substrate/mantra/varna.py
-from vibe_core.protocols.substrate.mantra.varna import (
-    KAVARGA,   # Guttural (throat)
-    CAVARGA,   # Palatal (palate)
-    TAVARGA,   # Retroflex (cerebral)
-    TAVARGA2,  # Dental (teeth)
-    PAVARGA,   # Labial (lips)
-    ANTAHSTHA, # Semi-vowels
-    USHMAN,    # Sibilants + aspirate
-    SVARA,     # Vowels
+# Import from Universal Phonetic Bridge (the unified SSOT)
+from vibe_core.mahamantra.substrate.phonetic_bridge import (
+    VargaIndex,
+    PHONEME_TO_VARGA as _PHONEME_TO_VARGA,
+    VARGA_TO_QUARTER,
+    get_phonetic_bridge,
 )
 
-# The 5 Vargas (WHERE - Articulation Points) - INDICES, not hardcoded
-VARGA_KANTHYA: Final[int] = 0   # Throat/Guttural (KAVARGA) → GENESIS
-VARGA_TALAVYA: Final[int] = 1   # Palate (CAVARGA) → DHARMA
-VARGA_MURDHANYA: Final[int] = 2 # Retroflex (TAVARGA) → DHARMA (LOTUS MERGE!)
-VARGA_DANTYA: Final[int] = 3    # Dental (TAVARGA2) → KARMA
-VARGA_OSHTHYA: Final[int] = 4   # Labial (PAVARGA) → MOKSHA
+# Re-export Varga indices as int constants (backward compatibility)
+VARGA_KANTHYA: Final[int] = VargaIndex.KANTHYA.value   # 0 - Throat → GENESIS
+VARGA_TALAVYA: Final[int] = VargaIndex.TALAVYA.value   # 1 - Palate → DHARMA
+VARGA_MURDHANYA: Final[int] = VargaIndex.MURDHANYA.value # 2 - Retroflex → DHARMA
+VARGA_DANTYA: Final[int] = VargaIndex.DANTYA.value     # 3 - Teeth → KARMA
+VARGA_OSHTHYA: Final[int] = VargaIndex.OSHTHYA.value   # 4 - Lips → MOKSHA
 
 # The 5 Sthanas (HOW - Energy/Intensity) - Position within Varga
 # Each Varga has 5 consonants: unvoiced, aspirated, voiced, voiced-aspirated, nasal
@@ -158,90 +161,8 @@ STHANA_GHOSHAVAT: Final[int] = 2  # Voiced → active (0.8)
 STHANA_GHOSHMAHA: Final[int] = 3  # Voiced aspirated → max (1.0)
 STHANA_ANUNASIKA: Final[int] = 4  # Nasal → continuous (0.5)
 
-
-def _build_phoneme_varga_from_ssot() -> Dict[str, int]:
-    """
-    Build PHONEME_VARGA mapping from SSOT (varna.py).
-
-    LOTUS ALGORITHM: Derives mapping from actual Varna definitions.
-    No hardcoded values - all from seed.
-    """
-    mapping: Dict[str, int] = {}
-
-    # Map each VARGA tuple to its index
-    varga_tuples = [
-        (KAVARGA, VARGA_KANTHYA),    # k, kh, g, gh, ṅ
-        (CAVARGA, VARGA_TALAVYA),    # c, ch, j, jh, ñ
-        (TAVARGA, VARGA_MURDHANYA),  # ṭ, ṭh, ḍ, ḍh, ṇ (retroflex)
-        (TAVARGA2, VARGA_DANTYA),    # t, th, d, dh, n (dental)
-        (PAVARGA, VARGA_OSHTHYA),    # p, ph, b, bh, m
-    ]
-
-    for varga_tuple, varga_idx in varga_tuples:
-        for varna in varga_tuple:
-            # Use .roman field (Western approximation)
-            roman = varna.roman.lower()
-            if roman and roman not in mapping:
-                mapping[roman] = varga_idx
-            # Also add IAST for precise matching
-            iast = varna.iast.lower()
-            if iast and iast not in mapping:
-                mapping[iast] = varga_idx
-
-    # Semi-vowels (ANTAHSTHA): y=palatal, r=retroflex, l=dental, v=labial
-    antahstha_mapping = [
-        (0, VARGA_TALAVYA),   # य (y) - palatal
-        (1, VARGA_MURDHANYA), # र (r) - retroflex
-        (2, VARGA_DANTYA),    # ल (l) - dental
-        (3, VARGA_OSHTHYA),   # व (v) - labial
-    ]
-    for idx, varga_idx in antahstha_mapping:
-        if idx < len(ANTAHSTHA):
-            varna = ANTAHSTHA[idx]
-            mapping[varna.roman.lower()] = varga_idx
-            mapping[varna.iast.lower()] = varga_idx
-
-    # Sibilants + Aspirate (USHMAN): ś=palatal, ṣ=retroflex, s=dental, h=guttural
-    ushman_mapping = [
-        (0, VARGA_TALAVYA),   # श (ś) - palatal sibilant
-        (1, VARGA_MURDHANYA), # ष (ṣ) - retroflex sibilant
-        (2, VARGA_DANTYA),    # स (s) - dental sibilant
-        (3, VARGA_KANTHYA),   # ह (h) - guttural aspirate
-    ]
-    for idx, varga_idx in ushman_mapping:
-        if idx < len(USHMAN):
-            varna = USHMAN[idx]
-            mapping[varna.roman.lower()] = varga_idx
-            mapping[varna.iast.lower()] = varga_idx
-
-    # Vowels: origin based on articulation point
-    # a, ā = throat (KANTHYA), i, ī = palate (TALAVYA), u, ū = lips (OSHTHYA)
-    # e, ai = palate, o, au = lips
-    vowel_mapping = {
-        "a": VARGA_KANTHYA, "aa": VARGA_KANTHYA, "ā": VARGA_KANTHYA,
-        "i": VARGA_TALAVYA, "ee": VARGA_TALAVYA, "ī": VARGA_TALAVYA,
-        "u": VARGA_OSHTHYA, "oo": VARGA_OSHTHYA, "ū": VARGA_OSHTHYA,
-        "e": VARGA_TALAVYA, "ai": VARGA_TALAVYA,
-        "o": VARGA_OSHTHYA, "au": VARGA_OSHTHYA,
-    }
-    mapping.update(vowel_mapping)
-
-    # Western additions (not in Sanskrit but needed for English input)
-    western_extras = {
-        "c": VARGA_KANTHYA,  # Hard C = K (guttural)
-        "q": VARGA_KANTHYA,  # Q = K (guttural)
-        "x": VARGA_KANTHYA,  # X = KS (guttural start)
-        "f": VARGA_OSHTHYA,  # F = labio-dental (lips)
-        "w": VARGA_OSHTHYA,  # W = labial
-        "z": VARGA_DANTYA,   # Z = dental
-    }
-    mapping.update(western_extras)
-
-    return mapping
-
-
-# PHONEME_VARGA: DERIVED FROM SSOT, NOT HARDCODED!
-PHONEME_VARGA: Final[Dict[str, int]] = _build_phoneme_varga_from_ssot()
+# PHONEME_VARGA: Derived from Universal Phonetic Bridge (converts VargaIndex to int)
+PHONEME_VARGA: Final[Dict[str, int]] = {k: v.value for k, v in _PHONEME_TO_VARGA.items()}
 
 def _build_phoneme_sthana_from_ssot() -> Dict[str, int]:
     """
