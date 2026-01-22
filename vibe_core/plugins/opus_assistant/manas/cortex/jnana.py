@@ -57,7 +57,7 @@ from .dharma import check_drift_for_chat
 from .kriya import KriyaBridge, KriyaExtractor
 from .mandala import get_mandala_for_chat
 from .samvada import SamvadaMessage, SamvadaResponse
-from .sankalpa import handle_sankalpa_query
+from vibe_core.mahamantra.protocols.sankalpa import handle_sankalpa_query
 from .shell import ShellCortex
 from .silpa import handle_silpa_query
 from .sutra import handle_sutra_query

@@ -131,8 +131,8 @@ from vibe_core.plugins.opus_assistant.manas.cortex.samvada_handler import (
     create_manas_handler,
 )
 
-# OPUS-055: SANKALPA (The Will)
-from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+# OPUS-055: SANKALPA (The Will) - Now in mahamantra/protocols/
+from vibe_core.mahamantra.protocols.sankalpa import (
     SankalpaOrchestrator,
 )
 from vibe_core.plugins.opus_assistant.manas.cortex.shell import (
