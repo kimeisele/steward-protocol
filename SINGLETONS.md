@@ -51,15 +51,18 @@ ServiceRegistry lookups per-instance (`self._*_instance`), which is correct patt
 **NOTE**: All MAHAMANTRA substrate services are marked with `_naga_flooded = True`
 (core infrastructure, no NagaProxy auto-wrap).
 
-### 3. MAHAJANA PROTOCOLS (P0)
+### 3. MAHAJANA PROTOCOLS (P0 - DONE!)
 
 | File | Singleton | Protocol | Status |
 |------|-----------|----------|--------|
-| `protocols/mahajanas/narada/types/event_bus.py` | `_event_bus_instance` | `EventBusProtocol` | TODO |
-| `protocols/mahajanas/brahma/types/sarga.py` | `_sarga_instance` | `SargaProtocol` | TODO |
-| `protocols/mahajanas/manu/types/pulse.py` | `PulseManager._instance` | `PulseProtocol` | TODO |
-| `protocols/mahajanas/kapila/types/topology.py` | `_topology_instance` | `TopologyProtocol` | TODO |
-| `protocols/mahajanas/nrisimha/types/narasimha.py` | `_narasimha_instance` | `NarasimhaProtocol` | TODO |
+| `protocols/mahajanas/narada/types/event_bus.py` | `_event_bus_instance` | `EventBusProtocol` | ✅ DONE |
+| `protocols/mahajanas/brahma/types/sarga.py` | `_sarga_instance` | `SargaBootSequence` | ✅ DONE |
+| `protocols/mahajanas/manu/types/pulse.py` | `PulseManager._instance` | `PulseManager` | ✅ DONE |
+| `protocols/mahajanas/kapila/types/topology.py` | `_topology_instance` | `BhuMandalaTopology` | ✅ DONE |
+| `protocols/mahajanas/nrisimha/types/narasimha.py` | `_narasimha_instance` | `NarasimhaProtocol` | ✅ DONE |
+
+**NOTE**: All Mahajana services get auto-wrapped with NagaProxy (they're not infrastructure,
+so they don't have `_naga_flooded = True`).
 
 ### 4. CORE SERVICES (P1)
 
@@ -157,14 +160,14 @@ def get_my_service() -> MyService:
 - [x] Phase 0: ChatService dependencies (LLM, Knowledge, Kapila) - DONE
 - [x] Phase 1: NAGA Infrastructure (3 real singletons + 3 OK mixins) - DONE
 - [x] Phase 2: Mahamantra Substrate (5 singletons) - DONE
-- [ ] Phase 3: Mahajana Protocols (5 singletons)
+- [x] Phase 3: Mahajana Protocols (5 singletons) - DONE
 - [ ] Phase 4: Core Services (6 singletons)
 - [ ] Phase 5: CLI & Registry (4 singletons)
 - [ ] Phase 6: State & Cognitive (5 singletons)
 - [ ] Phase 7: Protocols & Governance (4 singletons)
 - [ ] Phase 8: Tools & Cartridges (3 singletons)
 
-**Total: ~32 singletons remaining** (was 43, 11 done so far)
+**Total: ~27 singletons remaining** (was 43, 16 done so far)
 
 ---
 

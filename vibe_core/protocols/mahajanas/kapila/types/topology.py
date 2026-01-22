@@ -566,26 +566,52 @@ class BhuMandalaTopology:
         return f"BhuMandalaTopology({len(self.agents)} agents, {len(self.get_critical_agents())} critical)"
 
 
-# Module-level convenience functions
-_topology_instance: Optional[BhuMandalaTopology] = None
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
 
 
 def get_topology(kernel=None, refresh: bool = False) -> BhuMandalaTopology:
-    """Get or create the global topology instance.
+    """
+    Get BhuMandalaTopology through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        BhuMandalaTopology → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees topology changes)
+    - NAGA profiling (Chitragupta tracks topology ops)
+    - NAGA isolation (Kaliya handles topology errors)
 
     Args:
         kernel: Optional kernel for dynamic agent discovery
-        refresh: If True, refresh the topology even if it exists
+        refresh: If True, recreate and re-register topology
+
+    Returns:
+        BhuMandalaTopology wrapped with NagaProxy (if NAGA blessing enabled)
     """
-    global _topology_instance
-    if _topology_instance is None or refresh:
-        _topology_instance = BhuMandalaTopology(kernel=kernel)
-        is_valid, errors = _topology_instance.validate_topology()
-        if not is_valid:
-            logger.warning(f"Topology validation errors: {errors}")
-        else:
-            logger.info(f"Topology initialized with {len(_topology_instance.agents)} agents")
-    return _topology_instance
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered (and not refreshing)
+    if not refresh:
+        existing = ServiceRegistry.get(BhuMandalaTopology)
+        if existing is not None:
+            return existing
+
+    # Create new instance
+    instance = BhuMandalaTopology(kernel=kernel)
+    is_valid, errors = instance.validate_topology()
+    if not is_valid:
+        logger.warning(f"Topology validation errors: {errors}")
+    else:
+        logger.info(f"Topology initialized with {len(instance.agents)} agents")
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(BhuMandalaTopology, instance)
+    logger.info("✅ BhuMandalaTopology registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(BhuMandalaTopology)  # type: ignore
 
 
 def refresh_topology(kernel=None) -> BhuMandalaTopology:

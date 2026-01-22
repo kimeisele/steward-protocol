@@ -342,16 +342,42 @@ class SargaBootSequence:
         return f"SargaBootSequence({status})"
 
 
-# Global instance
-_sarga_instance: Optional[SargaBootSequence] = None
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
 
 
 def get_sarga() -> SargaBootSequence:
-    """Get or create the global Sarga boot sequence."""
-    global _sarga_instance
-    if _sarga_instance is None:
-        _sarga_instance = SargaBootSequence()
-    return _sarga_instance
+    """
+    Get SargaBootSequence through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        SargaBootSequence → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees boot phases)
+    - NAGA profiling (Chitragupta tracks boot timing)
+    - NAGA isolation (Kaliya handles boot errors)
+
+    Returns:
+        SargaBootSequence wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(SargaBootSequence)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = SargaBootSequence()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(SargaBootSequence, instance)
+    logger.info("✅ SargaBootSequence registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(SargaBootSequence)  # type: ignore
 
 
 if __name__ == "__main__":
