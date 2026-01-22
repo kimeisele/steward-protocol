@@ -24,16 +24,19 @@ Observable services (Narada sees all)
 
 ## SINGLETON CATEGORIES
 
-### 1. NAGA INFRASTRUCTURE (P0 - fix first!)
+### 1. NAGA INFRASTRUCTURE (P0 - DONE!)
 
 | File | Singleton | Protocol | Status |
 |------|-----------|----------|--------|
-| `naga/kulika.py` | `KulikaRegistry._instance` | `KulikaProtocol` | TODO |
-| `naga/identity.py` | `NagaFederationIdentity._instance` | `NagaIdentityProtocol` | TODO |
-| `naga/mixins/vasuki.py` | `_vasuki_instance` | `VasukiProtocol` | TODO |
-| `naga/mixins/takshaka.py` | `_takshaka_instance` | `TakshakaProtocol` | TODO |
-| `naga/mixins/sesha.py` | `_sesha_instance` | `SeshaProtocol` | TODO |
-| `plugins/opus_assistant/events/syscall_listener.py` | `_syscall_listener_instance` | `SyscallListenerProtocol` | TODO |
+| `naga/kulika.py` | `KulikaRegistry._instance` | `KulikaProtocol` | ✅ DONE |
+| `naga/identity.py` | `NagaFederationIdentity._instance` | `NagaFederationIdentity` | ✅ DONE |
+| `naga/mixins/vasuki.py` | `_vasuki_instance` | - | ✅ OK (per-instance cache) |
+| `naga/mixins/takshaka.py` | `_takshaka_instance` | - | ✅ OK (per-instance cache) |
+| `naga/mixins/sesha.py` | `_sesha_instance` | - | ✅ OK (per-instance cache) |
+| `plugins/opus_assistant/events/syscall_listener.py` | `_syscall_listener_instance` | `SyscallListener` | ✅ DONE |
+
+**NOTE**: The mixins (Vasuki, Takshaka, Sesha) are NOT global singletons! They cache
+ServiceRegistry lookups per-instance (`self._*_instance`), which is correct pattern.
 
 ### 2. MAHAMANTRA SUBSTRATE (P0)
 
@@ -149,7 +152,7 @@ def get_my_service() -> MyService:
 ## PROGRESS TRACKER
 
 - [x] Phase 0: ChatService dependencies (LLM, Knowledge, Kapila) - DONE
-- [ ] Phase 1: NAGA Infrastructure (6 singletons)
+- [x] Phase 1: NAGA Infrastructure (3 real singletons + 3 OK mixins) - DONE
 - [ ] Phase 2: Mahamantra Substrate (5 singletons)
 - [ ] Phase 3: Mahajana Protocols (5 singletons)
 - [ ] Phase 4: Core Services (6 singletons)
@@ -158,7 +161,7 @@ def get_my_service() -> MyService:
 - [ ] Phase 7: Protocols & Governance (4 singletons)
 - [ ] Phase 8: Tools & Cartridges (3 singletons)
 
-**Total: ~43 singletons remaining**
+**Total: ~37 singletons remaining** (was 43, 6 done so far)
 
 ---
 

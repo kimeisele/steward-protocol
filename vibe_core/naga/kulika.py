@@ -448,29 +448,24 @@ class KulikaRegistry:
     Kulika VALIDATES and REGISTERS them.
 
     This is the Agentic replacement for manual ServiceRegistry.register().
+
+    NOTE: KulikaRegistry itself is NAGA infrastructure - it should NOT be
+    wrapped with NagaProxy (it IS the thing that manages NAGA services).
+    Use get_kulika() to access via ServiceRegistry.
     """
 
-    _instance: Optional["KulikaRegistry"] = None
-
-    def __new__(cls) -> "KulikaRegistry":
-        """Singleton pattern - only one Kulika."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
+    # NAGA INFRASTRUCTURE: Already blessed, no auto-wrap needed
+    _naga_flooded: bool = True
+    _naga_gene: str = "kulika"
 
     def __init__(self) -> None:
         """Initialize the registry."""
-        if self._initialized:
-            return
-
         self._services: Dict[str, NagaManifest] = {}
         self._classes: Dict[str, Type] = {}
         # ADVAITA: No _instances - ServiceRegistry is the single source of truth
         self._by_lord: Dict[NagaLord, List[str]] = {lord: [] for lord in NagaLord}
         self._by_domain: Dict[NagaDomain, List[str]] = {domain: [] for domain in NagaDomain}
         self._by_drift_source: Dict[str, List[str]] = {}
-        self._initialized = True
 
         logger.info("Kulika Registry initialized - Order established")
 
@@ -666,8 +661,33 @@ class KulikaRegistry:
 
 
 def get_kulika() -> KulikaRegistry:
-    """Get the Kulika Registry singleton."""
-    return KulikaRegistry()
+    """
+    Get KulikaRegistry through ServiceRegistry.
+
+    ARCHITECTURE:
+        KulikaRegistry is NAGA infrastructure - it manages other NAGA services.
+        It uses ServiceRegistry for singleton pattern but is NOT auto-wrapped
+        with NagaProxy (marked with _naga_flooded = True).
+
+    Returns:
+        KulikaRegistry instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+    from vibe_core.protocols.naga.kulika import KulikaProtocol
+
+    # Check if already registered
+    existing = ServiceRegistry.get(KulikaProtocol)
+    if existing is not None:
+        return existing  # type: ignore
+
+    # Create new instance
+    instance = KulikaRegistry()
+
+    # Register with ServiceRegistry (no NagaProxy wrap - _naga_flooded = True)
+    ServiceRegistry.register(KulikaProtocol, instance)
+    logger.info("✅ KulikaRegistry registered via ServiceRegistry (NAGA infrastructure)")
+
+    return ServiceRegistry.get(KulikaProtocol)  # type: ignore
 
 
 # =============================================================================

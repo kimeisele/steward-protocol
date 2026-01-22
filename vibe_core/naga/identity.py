@@ -181,27 +181,17 @@ class NagaFederationIdentity:
 
     All NAGAs in a federation share the same signing key.
     This simplifies verification while maintaining sovereignty.
+
+    NOTE: This is NAGA infrastructure - use get_federation_identity() to access
+    via ServiceRegistry. The class itself is marked as already-blessed.
     """
 
-    _instance: Optional["NagaFederationIdentity"] = None
+    # NAGA INFRASTRUCTURE: Already blessed, no auto-wrap needed
+    _naga_flooded: bool = True
+    _naga_gene: str = "federation"
 
     def __init__(self, identity: NagaIdentity):
         self._identity = identity
-
-    @classmethod
-    def initialize(cls, identity: Optional[NagaIdentity] = None) -> "NagaFederationIdentity":
-        """Initialize the federation identity (singleton)."""
-        if cls._instance is None:
-            if identity is None:
-                identity = NagaIdentity.generate("naga_federation")
-            cls._instance = cls(identity)
-            logger.info(f"🐍 NAGA Federation Identity: {identity.fingerprint}")
-        return cls._instance
-
-    @classmethod
-    def get(cls) -> Optional["NagaFederationIdentity"]:
-        """Get the federation identity if initialized."""
-        return cls._instance
 
     @property
     def identity(self) -> NagaIdentity:
@@ -215,3 +205,40 @@ class NagaFederationIdentity:
     def verify(self, payload: bytes, signature: bytes) -> bool:
         """Verify with federation identity."""
         return self._identity.verify(payload, signature)
+
+
+def get_federation_identity(identity: Optional[NagaIdentity] = None) -> NagaFederationIdentity:
+    """
+    Get NagaFederationIdentity through ServiceRegistry.
+
+    ARCHITECTURE:
+        NagaFederationIdentity is NAGA infrastructure - it provides the shared
+        signing key for all NAGAs. Uses ServiceRegistry for singleton pattern
+        but is NOT auto-wrapped with NagaProxy (marked with _naga_flooded = True).
+
+    Args:
+        identity: Optional NagaIdentity to initialize with. If None and first call,
+                  generates a new identity automatically.
+
+    Returns:
+        NagaFederationIdentity instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(NagaFederationIdentity)
+    if existing is not None:
+        return existing
+
+    # Create new instance - generate identity if not provided
+    if identity is None:
+        identity = NagaIdentity.generate("naga_federation")
+
+    instance = NagaFederationIdentity(identity)
+    logger.info(f"🐍 NAGA Federation Identity: {identity.fingerprint}")
+
+    # Register with ServiceRegistry (no NagaProxy wrap - _naga_flooded = True)
+    ServiceRegistry.register(NagaFederationIdentity, instance)
+    logger.info("✅ NagaFederationIdentity registered via ServiceRegistry (NAGA infrastructure)")
+
+    return ServiceRegistry.get(NagaFederationIdentity)  # type: ignore
