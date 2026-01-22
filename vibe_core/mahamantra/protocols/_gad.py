@@ -379,6 +379,12 @@ class GADAudit:
     sovereign_present: bool = False
     signature_valid: bool = False
 
+    # The 4 Dharma Principles
+    daya: bool = False      # Mercy
+    satyam: bool = False    # Truthfulness
+    tapas: bool = False     # Austerity
+    saucam: bool = False    # Cleanliness
+
     # Mercy Mode (The Gaurabda Clause)
     mercy_mode: bool = False
 
