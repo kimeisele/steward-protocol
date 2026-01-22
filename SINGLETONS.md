@@ -75,14 +75,14 @@ so they don't have `_naga_flooded = True`).
 | `genesis/service.py` | `GenesisService._instance` | `GenesisService` | ✅ DONE |
 | `services/learning_loop.py` | `LearningLoop._instance` | `LearningLoop` | ✅ DONE |
 
-### 5. CLI & REGISTRY (P1)
+### 5. CLI & REGISTRY (P1 - DONE!)
 
 | File | Singleton | Protocol | Status |
 |------|-----------|----------|--------|
-| `cli/command_registry.py` | `CommandRegistry._instance` | `CommandRegistryProtocol` | TODO |
-| `cli/cartridge_bridge.py` | `LazyCartridgeRegistry._instance` | `CartridgeRegistryProtocol` | TODO |
-| `cli/ci_cli.py` | `CIManifest._instance` | `CIManifestProtocol` | TODO |
-| `unified_registry.py` | `UnifiedRegistry._instance` | `UnifiedRegistryProtocol` | TODO |
+| `cli/command_registry.py` | `CommandRegistry._instance` | `CommandRegistry` | ✅ DONE |
+| `cli/cartridge_bridge.py` | `LazyCartridgeRegistry._instance` | `LazyCartridgeRegistry` | ✅ DONE |
+| `cli/ci_cli.py` | `CIManifest._instance` | `CIManifest` | ✅ DONE |
+| `unified_registry.py` | `UnifiedRegistry._instance` | `UnifiedRegistry` | ✅ DONE |
 
 ### 6. STATE & COGNITIVE (P1)
 
@@ -162,12 +162,12 @@ def get_my_service() -> MyService:
 - [x] Phase 2: Mahamantra Substrate (5 singletons) - DONE
 - [x] Phase 3: Mahajana Protocols (5 singletons) - DONE
 - [x] Phase 4: Core Services (6 singletons) - DONE
-- [ ] Phase 5: CLI & Registry (4 singletons)
+- [x] Phase 5: CLI & Registry (4 singletons) - DONE
 - [ ] Phase 6: State & Cognitive (5 singletons)
 - [ ] Phase 7: Protocols & Governance (4 singletons)
 - [ ] Phase 8: Tools & Cartridges (3 singletons)
 
-**Total: ~21 singletons remaining** (was 43, 22 done so far)
+**Total: ~17 singletons remaining** (was 43, 26 done so far)
 
 ---
 

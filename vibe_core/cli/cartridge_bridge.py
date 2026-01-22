@@ -82,9 +82,9 @@ class LazyCartridgeRegistry:
 
     CRITICAL: Scans manifests and file listings ONLY.
     Never imports Python until tool execution.
-    """
 
-    _instance: Optional["LazyCartridgeRegistry"] = None
+    NOTE: Use get_lazy_cartridge_registry() to access via ServiceRegistry.
+    """
 
     CARTRIDGE_PATHS = [
         "vibe_core/cartridges/system",
@@ -98,15 +98,15 @@ class LazyCartridgeRegistry:
 
     @classmethod
     def get_instance(cls, root_path: Path = None) -> "LazyCartridgeRegistry":
-        """Singleton access."""
-        if cls._instance is None:
-            cls._instance = cls(root_path)
-        return cls._instance
+        """Singleton access (backward compat - use get_lazy_cartridge_registry())."""
+        return get_lazy_cartridge_registry(root_path)
 
     @classmethod
     def reset(cls):
         """Reset singleton (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(LazyCartridgeRegistry)
 
     def scan_manifests(self, force: bool = False) -> int:
         """
@@ -638,6 +638,47 @@ def main():
     """Entry point for testing."""
     cli = CartridgesCLI()
     sys.exit(cli.run(sys.argv[1:]))
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_lazy_cartridge_registry(root_path: Path = None) -> LazyCartridgeRegistry:
+    """
+    Get LazyCartridgeRegistry through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        LazyCartridgeRegistry → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees cartridge registrations)
+    - NAGA profiling (Chitragupta tracks tool loading)
+    - NAGA isolation (Kaliya handles tool errors)
+
+    Args:
+        root_path: Optional root path (only used on first creation)
+
+    Returns:
+        LazyCartridgeRegistry wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(LazyCartridgeRegistry)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = LazyCartridgeRegistry(root_path)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(LazyCartridgeRegistry, instance)
+    logger.info("✅ LazyCartridgeRegistry registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(LazyCartridgeRegistry)  # type: ignore
 
 
 if __name__ == "__main__":

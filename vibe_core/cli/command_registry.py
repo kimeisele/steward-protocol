@@ -269,9 +269,9 @@ class CommandRegistry:
     - list() → List[CommandInfo]
     - search(query) → List[CommandInfo]
     - execute(name, args, context) → CommandResult
-    """
 
-    _instance: Optional["CommandRegistry"] = None
+    NOTE: Use get_command_registry() to access via ServiceRegistry.
+    """
 
     def __init__(self):
         import warnings
@@ -289,15 +289,15 @@ class CommandRegistry:
 
     @classmethod
     def get_instance(cls) -> "CommandRegistry":
-        """Singleton access."""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """Singleton access (backward compat - use get_command_registry())."""
+        return get_command_registry()
 
     @classmethod
     def reset(cls) -> None:
         """Reset singleton (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(CommandRegistry)
 
     def register(self, command: CommandProtocol, replace: bool = False) -> bool:
         """
@@ -1159,3 +1159,45 @@ class CommandRegistry:
 
         logger.info(f"[COMMAND.REGISTRY] Registered {count} core commands")
         return count
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_command_registry() -> CommandRegistry:
+    """
+    Get CommandRegistry through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        CommandRegistry → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees command registrations)
+    - NAGA profiling (Chitragupta tracks command execution)
+    - NAGA isolation (Kaliya handles command errors)
+
+    Returns:
+        CommandRegistry wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(CommandRegistry)
+    if existing is not None:
+        return existing
+
+    # Suppress the deprecation warning for internal usage
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        instance = CommandRegistry()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(CommandRegistry, instance)
+    logger.info("✅ CommandRegistry registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(CommandRegistry)  # type: ignore

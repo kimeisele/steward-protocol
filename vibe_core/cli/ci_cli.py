@@ -72,24 +72,19 @@ class CIManifest:
 
     Pattern: Same as LazyCartridgeRegistry.
     Loads YAML once, no Python imports until execution.
+
+    NOTE: Use get_ci_manifest() to access via ServiceRegistry.
     """
 
-    _instance: Optional["CIManifest"] = None
-    _hooks: Dict[str, CIHookMeta] = {}
-    _phases: List[str] = []
-    _loaded: bool = False
-
-    def __new__(cls) -> "CIManifest":
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._hooks = {}
-            cls._instance._phases = []
-            cls._instance._loaded = False
-        return cls._instance
+    def __init__(self):
+        self._hooks: Dict[str, CIHookMeta] = {}
+        self._phases: List[str] = []
+        self._loaded: bool = False
 
     @classmethod
     def get_instance(cls) -> "CIManifest":
-        return cls()
+        """Singleton access (backward compat - use get_ci_manifest())."""
+        return get_ci_manifest()
 
     def load(self) -> bool:
         """Load manifest from YAML."""
@@ -358,3 +353,41 @@ Add hooks to scripts/ci/ci.yaml - no workflow changes needed.
         print("⚠️  CI Status: Not implemented yet")
         print("   Last run results will be stored in Prakriti")
         return 1  # HONEST: Return failure for unimplemented command
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_ci_manifest() -> CIManifest:
+    """
+    Get CIManifest through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        CIManifest → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees CI hook loading)
+    - NAGA profiling (Chitragupta tracks CI timing)
+    - NAGA isolation (Kaliya handles CI errors)
+
+    Returns:
+        CIManifest wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(CIManifest)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = CIManifest()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(CIManifest, instance)
+    logger.info("✅ CIManifest registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(CIManifest)  # type: ignore
