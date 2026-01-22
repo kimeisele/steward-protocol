@@ -88,6 +88,13 @@ from vibe_core.mahamantra.substrate.seed import (
 # GAD compliance
 from vibe_core.mahamantra.protocols._gad import GADBase
 
+# CONSCIENCE - Dharmic alignment check (Buddhi function)
+from vibe_core.mahamantra.protocols.sankalpa import (
+    check_conscience,
+    Ashrama,
+    GunaState,
+)
+
 logger = logging.getLogger("CHAT_INDRIYA")
 
 
@@ -416,6 +423,38 @@ class ChatIndriya(GADBase):
         # Classify intent from text
         intent = self._classify_intent(text)
 
+        # === CONSCIENCE CHECK (Buddhi function) ===
+        # Is this intent dharmic? Check before delegating to ChatService.
+        # Map TanmatraIntent to intent_type for permission check
+        intent_type = self._map_intent_to_type(intent, text)
+        conscience = check_conscience(intent_type, ashrama=Ashrama.GRIHASTHA)
+
+        if not conscience.is_dharmic:
+            # TAMASIC - Block the action
+            logger.warning(f"🚫 CONSCIENCE BLOCKED: {intent_type} - {conscience.reason}")
+            self.transition(Vrtti.VIPARYAYA)  # Error state
+
+            blocked_tanmatra = TanmatraMessage(
+                message_id=f"tm_{uuid4().hex[:8]}",
+                tanmatra=Tanmatra.SABDA,
+                intent=TanmatraIntent.RESPONSE,
+                content=f"🚫 Action blocked (Tamasic): {conscience.reason}",
+                source_indriya=self._vak,
+                timestamp=datetime.now(),
+                metadata={
+                    "blocked": True,
+                    "guna": conscience.guna.value,
+                    "reason": conscience.reason,
+                },
+            )
+            session.add_tanmatra(blocked_tanmatra)
+            self.transition(Vrtti.NIDRA)  # Recover
+            return blocked_tanmatra
+
+        # Conscience passed (Sattvic or Rajasic)
+        if conscience.guna == GunaState.RAJASIC:
+            logger.info(f"⚠️ CONSCIENCE CAUTION: {intent_type} - {conscience.reason}")
+
         # Create input TanmatraMessage
         input_tanmatra = TanmatraMessage(
             message_id=f"tm_{uuid4().hex[:8]}",
@@ -568,6 +607,38 @@ class ChatIndriya(GADBase):
         logger.info(f"Response sent: session={session_id}")
 
         return tanmatra
+
+    def _map_intent_to_type(self, intent: TanmatraIntent, text: str) -> str:
+        """
+        Map TanmatraIntent + text to permission-checkable intent_type.
+
+        Used by Conscience to determine required permissions.
+        """
+        text_lower = text.lower()
+
+        # Check for dangerous actions in text
+        if any(word in text_lower for word in ["delete", "remove", "destroy"]):
+            return "delete_file"
+        if any(word in text_lower for word in ["shutdown", "stop", "kill"]):
+            return "shutdown"
+        if any(word in text_lower for word in ["push", "deploy"]):
+            return "git_push"
+        if any(word in text_lower for word in ["commit"]):
+            return "commit_and_push"
+        if any(word in text_lower for word in ["create", "generate", "make"]):
+            return "genesis_action"
+        if any(word in text_lower for word in ["refactor", "rewrite"]):
+            return "refactor_major"
+
+        # Default based on intent type
+        if intent == TanmatraIntent.COMMAND:
+            return "code_modify"  # Commands may modify
+        if intent == TanmatraIntent.QUERY:
+            return "review_todos"  # Queries are safe
+        if intent == TanmatraIntent.PRAYER:
+            return "review_todos"  # Requests are safe
+
+        return "review_todos"  # Default: safe
 
     def _classify_intent(self, text: str) -> TanmatraIntent:
         """
