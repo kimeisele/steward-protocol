@@ -179,7 +179,7 @@ KRISHNA_COUNT: Final[int] = 4  # 4 Krishnas
 RAMA_COUNT: Final[int] = 4  # 4 Ramas
 
 HALVES: Final[int] = 2  # 2 Halves
-HALF_SIZE: Final[int] = 8  # WORDS // HALVES
+HALF_SIZE: Final[int] = WORDS // HALVES  # 16 // 2 = 8
 
 KSETRAJNA: Final[int] = 1  # The Knower (Krishna)
 MAHAJANA_COUNT: Final[int] = 12  # The 12 Mahajanas (Limbs/Workers)
