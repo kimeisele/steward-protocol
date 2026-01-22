@@ -551,7 +551,13 @@ class UniversalPhoneticBridge:
     - IPA transcription OR
     - Category/Sthana classification OR
     - Roman/ASCII approximation
+
+    NOTE: Use get_phonetic_bridge() to access via ServiceRegistry.
     """
+
+    # MAHAMANTRA SUBSTRATE: Core infrastructure, no auto-wrap needed
+    _naga_flooded: bool = True
+    _naga_gene: str = "phonetic_bridge"
 
     def __init__(self) -> None:
         """Initialize with derived mappings."""
@@ -663,18 +669,41 @@ class UniversalPhoneticBridge:
 
 
 # =============================================================================
-# SINGLETON
+# SERVICEREGISTRY FACTORY
 # =============================================================================
 
-_bridge_instance: Optional[UniversalPhoneticBridge] = None
+import logging
+
+logger = logging.getLogger("PHONETIC_BRIDGE")
 
 
 def get_phonetic_bridge() -> UniversalPhoneticBridge:
-    """Get singleton UniversalPhoneticBridge instance."""
-    global _bridge_instance
-    if _bridge_instance is None:
-        _bridge_instance = UniversalPhoneticBridge()
-    return _bridge_instance
+    """
+    Get UniversalPhoneticBridge through ServiceRegistry.
+
+    ARCHITECTURE:
+        UniversalPhoneticBridge is MAHAMANTRA SUBSTRATE - routes phonetics to Varga.
+        Uses ServiceRegistry for singleton pattern but is NOT auto-wrapped
+        with NagaProxy (marked with _naga_flooded = True).
+
+    Returns:
+        UniversalPhoneticBridge instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(UniversalPhoneticBridge)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = UniversalPhoneticBridge()
+
+    # Register with ServiceRegistry (no NagaProxy wrap - _naga_flooded = True)
+    ServiceRegistry.register(UniversalPhoneticBridge, instance)
+    logger.info("✅ UniversalPhoneticBridge registered via ServiceRegistry (MAHAMANTRA substrate)")
+
+    return ServiceRegistry.get(UniversalPhoneticBridge)  # type: ignore
 
 
 # =============================================================================
