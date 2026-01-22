@@ -17,7 +17,13 @@ If the signature matches, the connection is BONA FIDE.
 
 from typing import Optional
 from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
-from vibe_core.mahamantra.protocols._seed import PARAMPARA, MAHAJANA_COUNT
+from vibe_core.mahamantra.protocols._seed import (
+    PARAMPARA,
+    MAHAJANA_COUNT,
+    HARE_COUNT,
+    WORDS,
+    END_CORRECTION,
+)
 
 
 class Prabhupada(PrabhupadaProtocol):
@@ -75,6 +81,31 @@ class Prabhupada(PrabhupadaProtocol):
         Transmit the instruction As It Is.
         """
         return seed
+
+    def transmit_shakti(self, component: object) -> float:
+        """
+        Measure and transmit Shakti through the transparent via medium.
+
+        DERIVATION (from _seed.py):
+        - BASE_SHAKTI = HARE_COUNT / WORDS = 8/16 = 0.5
+        - This is the natural Shakti ratio in the Mahamantra itself
+        - END_CORRECTION = HARE_COUNT = "the energy escaping the tube"
+
+        Returns:
+            0.0 if channel blocked (no valid link)
+            BASE_SHAKTI if channel open (valid Parampara connection)
+        """
+        # 1. Check if channel is open (Parampara connection)
+        if not self.verify_link(component):
+            return 0.0  # Blocked channel = no Shakti transmission
+
+        # 2. Calculate BASE_SHAKTI from Seed (NOT hardcoded!)
+        # HARE_COUNT / WORDS = 8/16 = the natural Shakti proportion
+        base_shakti = HARE_COUNT / WORDS
+
+        # 3. Return base Shakti (channel is open, energy flows)
+        # Future: modulate by Guna state, VarnaTensor resonance, etc.
+        return base_shakti
 
 
 # =============================================================================

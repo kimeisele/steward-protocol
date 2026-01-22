@@ -50,6 +50,15 @@ from vibe_core.protocols.chat import (
     CHAT_POSITION,
     DEFAULT_CHAT_CAPABILITIES,
 )
+
+# NADI - Energy channels (User ↔ System via PRANA)
+from vibe_core.mahamantra.substrate.nadi import (
+    get_nadi,
+    NadiType,
+    NadiOp,
+    NadiMessage,
+    NadiProtocol,
+)
 from vibe_core.protocols.cognition import (
     CognitiveResult,
     IntentType,
@@ -187,6 +196,11 @@ class ChatService(ChatProtocol, LotusBase):
         # When routing to PARASHURAMA (pos 8), spawn tasks that outlive the response
         self._shadow_reactor: Optional["ShadowReactor"] = None
 
+        # NADI - Energy channel for receiving chat requests via message passing
+        # Instead of direct function calls, ChatIndriya sends via PRANA Nadi
+        self._nadi: Optional[NadiProtocol] = None
+        self._nadi_subscription_id: Optional[str] = None
+
         # Mahamantra Config (SSOT for holy names, thresholds, etc.)
         # Simple injection point, max effect - NO HARDCODING!
         self._mahamantra_config = None
@@ -285,6 +299,89 @@ class ChatService(ChatProtocol, LotusBase):
         except Exception as e:
             logger.error(f"❌ ChatService: Initialization failed: {e}")
             self._initialized = False
+
+    # ==========================================================================
+    # NADI METHODS (Message Passing Interface)
+    # ==========================================================================
+
+    def _boot_nadi(self) -> None:
+        """
+        Boot Nadi endpoint and subscribe to chat requests.
+
+        This enables ChatIndriya to send messages via PRANA channel
+        instead of direct function calls. Message passing > method calls.
+        """
+        try:
+            self._nadi = get_nadi("chat_service", nadi_type=NadiType.PRANA)
+
+            # Subscribe to REQUEST operations from ChatIndriya
+            self._nadi_subscription_id = self._nadi.subscribe(
+                NadiOp.REQUEST,
+                self._handle_nadi_request
+            )
+            logger.info("✅ ChatService Nadi booted (PRANA channel: chat_service)")
+        except Exception as e:
+            logger.warning(f"⚠️ ChatService Nadi boot failed: {e}")
+            self._nadi = None
+
+    def _handle_nadi_request(self, message: NadiMessage) -> None:
+        """
+        Handle incoming chat requests via Nadi.
+
+        Called by Nadi subscription when REQUEST operation received.
+        Processes async and sends response back via Nadi.respond().
+        """
+        import asyncio
+
+        payload = message.payload
+        text = payload.get("text", "")
+        context_data = payload.get("context", {})
+
+        # Reconstruct ChatContext
+        context = ChatContext(
+            session_id=context_data.get("session_id", "nadi"),
+            history=[],
+        )
+
+        # Process async - handle both running and new event loops
+        try:
+            loop = asyncio.get_running_loop()
+            # Already in async context - schedule and let it complete
+            future = asyncio.ensure_future(self.chat(text, context))
+            future.add_done_callback(
+                lambda f: self._send_nadi_response(message, f.result())
+            )
+        except RuntimeError:
+            # No running loop - create one
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                response = loop.run_until_complete(self.chat(text, context))
+                self._send_nadi_response(message, response)
+            finally:
+                loop.close()
+
+    def _send_nadi_response(self, original: NadiMessage, response: ChatResponse) -> None:
+        """
+        Send response back via Nadi.
+
+        Packages ChatResponse into Nadi-friendly dict payload.
+        Uses correlation_id from original message for matching.
+        """
+        if self._nadi is None:
+            logger.warning("Cannot send Nadi response: Nadi not booted")
+            return
+
+        try:
+            self._nadi.respond(original, {
+                "success": response.success,
+                "content": response.message.content if response.message else "",
+                "mahajana": response.mahajana,
+                "mode": response.mode.value if response.mode else None,
+                "confidence": response.confidence,
+            })
+        except Exception as e:
+            logger.error(f"Failed to send Nadi response: {e}")
 
     # ==========================================================================
     # MANTRA PROPERTIES (ICliCommand compliance)
@@ -1413,8 +1510,12 @@ def get_chat_service() -> ChatService:
 
     # Create and register - this triggers NagaProxy wrapping if enabled!
     instance = ChatService()
+
+    # NADI BOOT: Enable message passing from ChatIndriya
+    instance._boot_nadi()
+
     ServiceRegistry.register(ChatProtocol, instance)
-    logger.info("✅ ChatService registered via ServiceRegistry (WIRED, not island)")
+    logger.info("✅ ChatService registered via ServiceRegistry (WIRED + NADI-enabled)")
 
     return ServiceRegistry.get(ChatProtocol)  # Return wrapped version!
 
