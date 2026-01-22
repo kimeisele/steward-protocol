@@ -227,6 +227,59 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             self._shadow_factory = shadow_reactor_factory
         return self._shadow_factory
 
+    # === GOVERNANCE SCAN ===
+    def scan(self, base_path: Optional[str] = None) -> dict:
+        """
+        Scan the codebase for Mahajana governance.
+
+        Returns governance stats: coverage, by_mahajana, orphans, etc.
+
+        Usage:
+            result = mahamantra.scan()
+            print(f"Coverage: {result['coverage']:.1f}%")
+            print(f"Orphans: {result['files_orphan']}")
+        """
+        from pathlib import Path
+        from vibe_core.mahamantra.substrate.scanner import scan_all
+
+        path = Path(base_path) if base_path else None
+        result = scan_all(base_path=path)
+
+        # Add convenience coverage field
+        if result.get("files_scanned", 0) > 0:
+            result["coverage"] = (result["files_owned"] / result["files_scanned"]) * 100
+        else:
+            result["coverage"] = 0.0
+
+        return result
+
+    def scan_report(self) -> str:
+        """
+        Generate a human-readable governance scan report.
+
+        Usage:
+            print(mahamantra.scan_report())
+        """
+        result = self.scan()
+        lines = [
+            "═══════════════════════════════════════════",
+            "       MAHAMANTRA GOVERNANCE SCAN",
+            "═══════════════════════════════════════════",
+            f"  Total files:  {result.get('files_total', 0):>6}",
+            f"  Scanned:      {result.get('files_scanned', 0):>6}",
+            f"  Owned:        {result.get('files_owned', 0):>6}",
+            f"  Orphan:       {result.get('files_orphan', 0):>6}",
+            f"  Coverage:     {result.get('coverage', 0):>5.1f}%",
+            "───────────────────────────────────────────",
+            "  By Mahajana:",
+        ]
+
+        for m, count in sorted(result.get("by_mahajana", {}).items(), key=lambda x: -x[1])[:8]:
+            lines.append(f"    {m:12}: {count:4}")
+
+        lines.append("═══════════════════════════════════════════")
+        return "\n".join(lines)
+
     # === VEDA-4 ===
     def __call__(self, cmd: Optional[str] = None) -> Union[str, ExecuteResult]:
         if cmd is None:
