@@ -1,30 +1,23 @@
 """
-OPUS-311 Sprint 3: Synapse Protocol
+SYNAPSE PROTOCOL (DEPRECATED) → Use vibe_core.mahamantra.substrate.nadi
+=========================================================================
 
-The Nadi (Neural Channel) for inter-agent communication.
+⚠️  DEPRECATION NOTICE ⚠️
+This module is DEPRECATED and will be removed in a future version.
+Use vibe_core.mahamantra.substrate.nadi instead.
 
-Direct agent-to-agent messaging without going through kernel.
-Enables emergent coordination and swarm behavior.
+Migration Guide:
+    OLD:
+        from vibe_core.protocols.synapse import SynapseProtocol, LocalSynapse
+        synapse = LocalSynapse("my_agent")
+        synapse.send(SynapseMessage(...))
 
-Usage:
-    # Via ServiceRegistry
-    synapse: SynapseProtocol = ServiceRegistry.get(SynapseProtocol) or NullSynapse()
+    NEW:
+        from vibe_core.mahamantra.substrate.nadi import NadiProtocol, LocalNadi, NadiType
+        nadi = LocalNadi("my_agent", NadiType.APANA)
+        nadi.send(NadiMessage(...))
 
-    # Connect to another agent
-    synapse.connect("herald")
-
-    # Send message
-    msg = SynapseMessage(
-        sender="archivist",
-        receiver="herald",
-        topic="audit_complete",
-        payload={"issues": 3}
-    )
-    synapse.send(msg)
-
-    # Receive messages
-    while msg := synapse.receive():
-        process(msg)
+The new Nadi protocol is SSOT-compliant and derives all constants from NADI_RESONANCE (72).
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -32,44 +25,109 @@ __mahajana__ = "brahma"
 __position__ = 1
 __genesis__ = "0x460bbe68"  # GenesisByte: parampara % 37 == 0
 
+import warnings
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Protocol, Set, runtime_checkable
+from typing import Any, Callable, Dict, List, Optional, Protocol, runtime_checkable
 
+# =============================================================================
+# IMPORT FROM NEW NADI PROTOCOL (THE FUTURE)
+# =============================================================================
+from vibe_core.mahamantra.substrate.nadi import (
+    LocalNadi as _LocalNadi,
+    NadiConnection,
+    NadiMessage,
+    NadiOp,
+    NadiPriority,
+    NadiProtocol,
+    NadiStats,
+    NadiType,
+    NullNadi as _NullNadi,
+    get_nadi,
+)
+
+
+def _deprecation_warning(old_name: str, new_name: str) -> None:
+    """Issue deprecation warning."""
+    warnings.warn(
+        f"{old_name} is deprecated. Use {new_name} from "
+        f"vibe_core.mahamantra.substrate.nadi instead.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+
+
+# =============================================================================
+# LEGACY ENUMS (map to Nadi equivalents)
+# =============================================================================
 
 class MessagePriority(str, Enum):
-    """Priority levels for synapse messages."""
+    """
+    DEPRECATED: Use NadiPriority instead.
 
-    LOW = "low"
-    NORMAL = "normal"
-    HIGH = "high"
-    CRITICAL = "critical"
+    Priority levels for synapse messages.
+    """
+    LOW = "low"        # → NadiPriority.TAMAS
+    NORMAL = "normal"  # → NadiPriority.RAJAS
+    HIGH = "high"      # → NadiPriority.SATTVA
+    CRITICAL = "critical"  # → NadiPriority.SUDDHA
+
+
+# Mapping from old to new
+_PRIORITY_MAP = {
+    MessagePriority.LOW: NadiPriority.TAMAS,
+    MessagePriority.NORMAL: NadiPriority.RAJAS,
+    MessagePriority.HIGH: NadiPriority.SATTVA,
+    MessagePriority.CRITICAL: NadiPriority.SUDDHA,
+}
+
+_PRIORITY_REVERSE = {v: k for k, v in _PRIORITY_MAP.items()}
 
 
 class MessageType(str, Enum):
-    """Types of synapse messages."""
+    """
+    DEPRECATED: Use NadiOp instead.
 
-    REQUEST = "request"  # Expecting response
-    RESPONSE = "response"  # Reply to request
-    EVENT = "event"  # Fire and forget
-    BROADCAST = "broadcast"  # To all connected
-    HEARTBEAT = "heartbeat"  # Keep-alive
+    Types of synapse messages.
+    """
+    REQUEST = "request"      # → NadiOp.REQUEST
+    RESPONSE = "response"    # → NadiOp.RECEIVE
+    EVENT = "event"          # → NadiOp.SEND
+    BROADCAST = "broadcast"  # → NadiOp.SEND (with target="*")
+    HEARTBEAT = "heartbeat"  # → NadiOp.VALIDATE
 
+
+# Mapping from old to new
+_TYPE_MAP = {
+    MessageType.REQUEST: NadiOp.REQUEST,
+    MessageType.RESPONSE: NadiOp.RECEIVE,
+    MessageType.EVENT: NadiOp.SEND,
+    MessageType.BROADCAST: NadiOp.SEND,
+    MessageType.HEARTBEAT: NadiOp.VALIDATE,
+}
+
+
+# =============================================================================
+# LEGACY DATA STRUCTURES
+# =============================================================================
 
 @dataclass
 class SynapseMessage:
-    """A message between agents."""
+    """
+    DEPRECATED: Use NadiMessage instead.
 
+    A message between agents.
+    """
     sender: str
     receiver: str  # Use "*" for broadcast
     topic: str
     payload: Dict[str, Any] = field(default_factory=dict)
     message_type: MessageType = MessageType.EVENT
     priority: MessagePriority = MessagePriority.NORMAL
-    correlation_id: Optional[str] = None  # For request/response pairing
+    correlation_id: Optional[str] = None
     timestamp: datetime = field(default_factory=datetime.now)
-    ttl_seconds: Optional[int] = None  # Time to live
+    ttl_seconds: Optional[int] = None
 
     @property
     def is_broadcast(self) -> bool:
@@ -79,15 +137,55 @@ class SynapseMessage:
     def is_expired(self) -> bool:
         if self.ttl_seconds is None:
             return False
-        from datetime import timedelta
-
         return datetime.now() > self.timestamp + timedelta(seconds=self.ttl_seconds)
+
+    def to_nadi_message(self) -> NadiMessage:
+        """Convert to NadiMessage."""
+        return NadiMessage(
+            source=self.sender,
+            target=self.receiver,
+            nadi_type=NadiType.APANA,  # Agent-to-agent
+            operation=_TYPE_MAP.get(self.message_type, NadiOp.SEND),
+            payload={"topic": self.topic, **self.payload},
+            priority=_PRIORITY_MAP.get(self.priority, NadiPriority.RAJAS),
+            correlation_id=self.correlation_id,
+            timestamp=self.timestamp,
+            ttl_ms=(self.ttl_seconds * 1000) if self.ttl_seconds else 0,
+        )
+
+    @classmethod
+    def from_nadi_message(cls, msg: NadiMessage) -> "SynapseMessage":
+        """Convert from NadiMessage."""
+        payload = msg.payload.copy()
+        topic = payload.pop("topic", "unknown")
+
+        # Reverse map operation to message type
+        msg_type = MessageType.EVENT
+        for old_type, new_op in _TYPE_MAP.items():
+            if new_op == msg.operation:
+                msg_type = old_type
+                break
+
+        return cls(
+            sender=msg.source,
+            receiver=msg.target,
+            topic=topic,
+            payload=payload,
+            message_type=msg_type,
+            priority=_PRIORITY_REVERSE.get(msg.priority, MessagePriority.NORMAL),
+            correlation_id=msg.correlation_id,
+            timestamp=msg.timestamp,
+            ttl_seconds=(msg.ttl_ms // 1000) if msg.ttl_ms > 0 else None,
+        )
 
 
 @dataclass
 class Connection:
-    """A connection to another agent."""
+    """
+    DEPRECATED: Use NadiConnection instead.
 
+    A connection to another agent.
+    """
     agent_id: str
     connected_at: datetime = field(default_factory=datetime.now)
     last_heartbeat: Optional[datetime] = None
@@ -98,8 +196,11 @@ class Connection:
 
 @dataclass
 class SynapseStats:
-    """Statistics about synapse activity."""
+    """
+    DEPRECATED: Use NadiStats instead.
 
+    Statistics about synapse activity.
+    """
     agent_id: str
     connections: int = 0
     messages_sent: int = 0
@@ -109,80 +210,44 @@ class SynapseStats:
     connected_agents: List[str] = field(default_factory=list)
 
 
+# =============================================================================
+# LEGACY PROTOCOL (interface)
+# =============================================================================
+
 @runtime_checkable
 class SynapseProtocol(Protocol):
     """
+    DEPRECATED: Use NadiProtocol instead.
+
     OPUS-311: Inter-agent neural messaging.
-
-    The Nadi - "channels" through which prana (energy/messages) flows.
-
-    Features:
-    - Direct agent-to-agent messaging
-    - Broadcast to all connected agents
-    - Request/response pairing
-    - Priority queuing
-    - TTL-based message expiration
     """
 
     @property
     def agent_id(self) -> str:
-        """Get the ID of the agent using this synapse."""
         ...
 
     def connect(self, agent_id: str) -> bool:
-        """
-        Establish connection to another agent.
-
-        Returns True if connection successful.
-        """
         ...
 
     def disconnect(self, agent_id: str) -> bool:
-        """
-        Disconnect from an agent.
-
-        Returns True if was connected.
-        """
         ...
 
     def is_connected(self, agent_id: str) -> bool:
-        """Check if connected to an agent."""
         ...
 
     def get_connections(self) -> List[Connection]:
-        """Get all active connections."""
         ...
 
     def send(self, message: SynapseMessage) -> bool:
-        """
-        Send a message to an agent.
-
-        Returns True if message was queued.
-        """
         ...
 
     def receive(self, timeout_ms: Optional[int] = None) -> Optional[SynapseMessage]:
-        """
-        Receive the next message from the queue.
-
-        Args:
-            timeout_ms: Optional timeout (None = non-blocking)
-
-        Returns:
-            Next message or None if queue empty/timeout
-        """
         ...
 
     def receive_all(self) -> List[SynapseMessage]:
-        """Receive all pending messages."""
         ...
 
     def broadcast(self, topic: str, payload: Dict[str, Any]) -> int:
-        """
-        Broadcast a message to all connected agents.
-
-        Returns number of agents messaged.
-        """
         ...
 
     def subscribe(
@@ -190,15 +255,9 @@ class SynapseProtocol(Protocol):
         topic: str,
         handler: Callable[[SynapseMessage], None],
     ) -> str:
-        """
-        Subscribe to messages on a topic.
-
-        Returns subscription ID.
-        """
         ...
 
     def unsubscribe(self, subscription_id: str) -> bool:
-        """Unsubscribe from a topic."""
         ...
 
     def request(
@@ -208,18 +267,6 @@ class SynapseProtocol(Protocol):
         payload: Dict[str, Any],
         timeout_ms: int = 5000,
     ) -> Optional[SynapseMessage]:
-        """
-        Send a request and wait for response.
-
-        Args:
-            receiver: Target agent
-            topic: Request topic
-            payload: Request data
-            timeout_ms: How long to wait
-
-        Returns:
-            Response message or None if timeout
-        """
         ...
 
     def respond(
@@ -227,47 +274,45 @@ class SynapseProtocol(Protocol):
         original: SynapseMessage,
         payload: Dict[str, Any],
     ) -> bool:
-        """
-        Respond to a request message.
-
-        Uses correlation_id from original.
-        """
         ...
 
     def get_stats(self) -> SynapseStats:
-        """Get synapse statistics."""
         ...
 
 
+# =============================================================================
+# LEGACY IMPLEMENTATIONS (wrappers around Nadi)
+# =============================================================================
+
 class NullSynapse:
     """
-    Arjuna Pattern: No-op synapse.
+    DEPRECATED: Use NullNadi instead.
 
-    No connections, all messages dropped.
-    Use when synapse service is not available.
+    Arjuna Pattern: No-op synapse.
     """
 
     def __init__(self, agent_id: str = "anonymous"):
-        self._agent_id = agent_id
+        _deprecation_warning("NullSynapse", "NullNadi")
+        self._nadi = _NullNadi(agent_id, NadiType.APANA)
 
     @property
     def agent_id(self) -> str:
-        return self._agent_id
+        return self._nadi.endpoint_id
 
     def connect(self, agent_id: str) -> bool:
-        return False
+        return self._nadi.connect(agent_id)
 
     def disconnect(self, agent_id: str) -> bool:
-        return False
+        return self._nadi.disconnect(agent_id)
 
     def is_connected(self, agent_id: str) -> bool:
-        return False
+        return self._nadi.is_connected(agent_id)
 
     def get_connections(self) -> List[Connection]:
         return []
 
     def send(self, message: SynapseMessage) -> bool:
-        return False
+        return self._nadi.send(message.to_nadi_message())
 
     def receive(self, timeout_ms: Optional[int] = None) -> Optional[SynapseMessage]:
         return None
@@ -305,177 +350,76 @@ class NullSynapse:
         return False
 
     def get_stats(self) -> SynapseStats:
-        return SynapseStats(agent_id=self._agent_id)
+        return SynapseStats(agent_id=self.agent_id)
 
 
 class LocalSynapse:
     """
-    OPUS-311: Local implementation of SynapseProtocol.
+    DEPRECATED: Use LocalNadi instead.
 
-    In-process messaging for single-machine deployment.
-    Uses a shared message hub for routing.
+    OPUS-311: Local implementation of SynapseProtocol.
+    Now wraps LocalNadi for SSOT compliance.
     """
 
-    # Shared message hub for all local synapses
-    _hub: Dict[str, "LocalSynapse"] = {}
-    _hub_lock = None  # Set on first use
-
-    @classmethod
-    def _get_lock(cls):
-        if cls._hub_lock is None:
-            import threading
-
-            cls._hub_lock = threading.Lock()
-        return cls._hub_lock
-
     def __init__(self, agent_id: str):
-        from collections import deque
-        from uuid import uuid4
-
-        self._agent_id = agent_id
-        self._connections: Dict[str, Connection] = {}
-        self._inbox: deque = deque(maxlen=1000)
-        self._subscriptions: Dict[str, Callable] = {}
-        self._pending_requests: Dict[str, SynapseMessage] = {}
-        self._uuid = uuid4
-        self._stats = {
-            "sent": 0,
-            "received": 0,
-            "broadcasts": 0,
-        }
-
-        # Register with hub
-        with self._get_lock():
-            self._hub[agent_id] = self
+        _deprecation_warning("LocalSynapse", "LocalNadi")
+        self._nadi = _LocalNadi(agent_id, NadiType.APANA)
 
     @property
     def agent_id(self) -> str:
-        return self._agent_id
+        return self._nadi.endpoint_id
 
     def connect(self, agent_id: str) -> bool:
-        if agent_id == self._agent_id:
-            return False  # Can't connect to self
-
-        if agent_id in self._connections:
-            return True  # Already connected
-
-        # Check if target exists in hub
-        with self._get_lock():
-            if agent_id not in self._hub:
-                return False
-
-        self._connections[agent_id] = Connection(agent_id=agent_id)
-        return True
+        return self._nadi.connect(agent_id)
 
     def disconnect(self, agent_id: str) -> bool:
-        if agent_id in self._connections:
-            del self._connections[agent_id]
-            return True
-        return False
+        return self._nadi.disconnect(agent_id)
 
     def is_connected(self, agent_id: str) -> bool:
-        return agent_id in self._connections
+        return self._nadi.is_connected(agent_id)
 
     def get_connections(self) -> List[Connection]:
-        return list(self._connections.values())
+        nadi_conns = self._nadi.get_connections()
+        return [
+            Connection(
+                agent_id=c.target,
+                connected_at=c.established_at,
+                last_heartbeat=c.last_activity,
+                messages_sent=c.messages_sent,
+                messages_received=c.messages_received,
+                is_active=c.is_active,
+            )
+            for c in nadi_conns
+        ]
 
     def send(self, message: SynapseMessage) -> bool:
-        if message.is_broadcast:
-            self.broadcast(message.topic, message.payload)
-            return True
-
-        # Check connection
-        if not self.is_connected(message.receiver):
-            return False
-
-        # Route via hub
-        with self._get_lock():
-            target = self._hub.get(message.receiver)
-            if target is None:
-                return False
-
-            target._deliver(message)
-            self._stats["sent"] += 1
-            self._connections[message.receiver].messages_sent += 1
-
-        return True
-
-    def _deliver(self, message: SynapseMessage) -> None:
-        """Internal: Deliver a message to this synapse."""
-        # Check if expired
-        if message.is_expired:
-            return
-
-        # Check for response to pending request
-        if message.message_type == MessageType.RESPONSE and message.correlation_id:
-            if message.correlation_id in self._pending_requests:
-                self._pending_requests[message.correlation_id] = message
-                return
-
-        # Check topic subscriptions
-        for sub_id, handler in list(self._subscriptions.items()):
-            try:
-                handler(message)
-            except Exception:
-                pass  # Don't let handler errors break delivery
-
-        # Add to inbox
-        self._inbox.append(message)
-        self._stats["received"] += 1
-
-        # Update connection stats
-        if message.sender in self._connections:
-            self._connections[message.sender].messages_received += 1
+        return self._nadi.send(message.to_nadi_message())
 
     def receive(self, timeout_ms: Optional[int] = None) -> Optional[SynapseMessage]:
-        if not self._inbox:
-            if timeout_ms and timeout_ms > 0:
-                import time
-
-                time.sleep(timeout_ms / 1000)
-            if not self._inbox:
-                return None
-
-        return self._inbox.popleft()
+        nadi_msg = self._nadi.receive(timeout_ms)
+        if nadi_msg is None:
+            return None
+        return SynapseMessage.from_nadi_message(nadi_msg)
 
     def receive_all(self) -> List[SynapseMessage]:
-        messages = list(self._inbox)
-        self._inbox.clear()
-        return messages
+        return [SynapseMessage.from_nadi_message(m) for m in self._nadi.receive_all()]
 
     def broadcast(self, topic: str, payload: Dict[str, Any]) -> int:
-        message = SynapseMessage(
-            sender=self._agent_id,
-            receiver="*",
-            topic=topic,
-            payload=payload,
-            message_type=MessageType.BROADCAST,
-        )
-
-        count = 0
-        with self._get_lock():
-            for agent_id, synapse in self._hub.items():
-                if agent_id != self._agent_id and agent_id in self._connections:
-                    synapse._deliver(message)
-                    count += 1
-
-        self._stats["broadcasts"] += 1
-        return count
+        return self._nadi.broadcast(NadiOp.SEND, {"topic": topic, **payload})
 
     def subscribe(
         self,
         topic: str,
         handler: Callable[[SynapseMessage], None],
     ) -> str:
-        sub_id = f"{topic}_{self._uuid()}"
-        self._subscriptions[sub_id] = lambda m: handler(m) if m.topic == topic else None
-        return sub_id
+        def wrapped(msg: NadiMessage):
+            if msg.payload.get("topic") == topic:
+                handler(SynapseMessage.from_nadi_message(msg))
+
+        return self._nadi.subscribe(NadiOp.SEND, wrapped)
 
     def unsubscribe(self, subscription_id: str) -> bool:
-        if subscription_id in self._subscriptions:
-            del self._subscriptions[subscription_id]
-            return True
-        return False
+        return self._nadi.unsubscribe(subscription_id)
 
     def request(
         self,
@@ -484,83 +428,44 @@ class LocalSynapse:
         payload: Dict[str, Any],
         timeout_ms: int = 5000,
     ) -> Optional[SynapseMessage]:
-        correlation_id = str(self._uuid())
-
-        message = SynapseMessage(
-            sender=self._agent_id,
-            receiver=receiver,
-            topic=topic,
-            payload=payload,
-            message_type=MessageType.REQUEST,
-            correlation_id=correlation_id,
+        response = self._nadi.request(
+            receiver,
+            NadiOp.REQUEST,
+            {"topic": topic, **payload},
+            timeout_ms,
         )
-
-        # Register pending request
-        self._pending_requests[correlation_id] = None
-
-        # Send request
-        if not self.send(message):
-            del self._pending_requests[correlation_id]
+        if response is None:
             return None
-
-        # Wait for response
-        import time
-
-        start = time.time()
-        while time.time() - start < timeout_ms / 1000:
-            response = self._pending_requests.get(correlation_id)
-            if response is not None:
-                del self._pending_requests[correlation_id]
-                return response
-            time.sleep(0.01)
-
-        # Timeout
-        del self._pending_requests[correlation_id]
-        return None
+        return SynapseMessage.from_nadi_message(response)
 
     def respond(
         self,
         original: SynapseMessage,
         payload: Dict[str, Any],
     ) -> bool:
-        if not original.correlation_id:
-            return False
-
-        response = SynapseMessage(
-            sender=self._agent_id,
-            receiver=original.sender,
-            topic=original.topic,
-            payload=payload,
-            message_type=MessageType.RESPONSE,
-            correlation_id=original.correlation_id,
-        )
-
-        return self.send(response)
+        nadi_original = original.to_nadi_message()
+        return self._nadi.respond(nadi_original, payload)
 
     def get_stats(self) -> SynapseStats:
+        nadi_stats = self._nadi.get_stats()
         return SynapseStats(
-            agent_id=self._agent_id,
-            connections=len(self._connections),
-            messages_sent=self._stats["sent"],
-            messages_received=self._stats["received"],
-            broadcasts_sent=self._stats["broadcasts"],
-            pending_messages=len(self._inbox),
-            connected_agents=list(self._connections.keys()),
+            agent_id=nadi_stats.endpoint_id,
+            connections=nadi_stats.connections,
+            messages_sent=nadi_stats.messages_sent,
+            messages_received=nadi_stats.messages_received,
+            broadcasts_sent=0,  # Not tracked in Nadi
+            pending_messages=nadi_stats.messages_pending,
+            connected_agents=nadi_stats.connected_endpoints,
         )
-
-    def __del__(self):
-        # Unregister from hub
-        with self._get_lock():
-            if self._agent_id in self._hub:
-                del self._hub[self._agent_id]
 
 
 def get_synapse_safe(agent_id: str = "anonymous") -> SynapseProtocol:
     """
-    Get Synapse via ServiceRegistry with NullSynapse fallback.
+    DEPRECATED: Use get_nadi() instead.
 
-    OPUS-311: Use this for guaranteed non-None return.
+    Get Synapse via ServiceRegistry with NullSynapse fallback.
     """
+    _deprecation_warning("get_synapse_safe", "get_nadi")
     try:
         from vibe_core.di import ServiceRegistry
 
@@ -571,3 +476,30 @@ def get_synapse_safe(agent_id: str = "anonymous") -> SynapseProtocol:
         pass
 
     return NullSynapse(agent_id)
+
+
+# =============================================================================
+# EXPORTS - Backward compatible
+# =============================================================================
+
+__all__ = [
+    # Legacy (deprecated)
+    "MessagePriority",
+    "MessageType",
+    "SynapseMessage",
+    "Connection",
+    "SynapseStats",
+    "SynapseProtocol",
+    "NullSynapse",
+    "LocalSynapse",
+    "get_synapse_safe",
+    # New (preferred)
+    "NadiProtocol",
+    "NadiMessage",
+    "NadiConnection",
+    "NadiStats",
+    "NadiType",
+    "NadiOp",
+    "NadiPriority",
+    "get_nadi",
+]
