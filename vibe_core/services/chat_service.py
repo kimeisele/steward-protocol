@@ -155,6 +155,10 @@ class ChatService(ChatProtocol):
         self._naga_cortex: Optional["NagaCortex"] = None  # Intelligence hub
         self._narada: Optional["NaradaService"] = None  # Observation service
 
+        # Shadow Reactor (Living City - Task Execution beyond chat)
+        # When routing to PARASHURAMA (pos 8), spawn tasks that outlive the response
+        self._shadow_reactor: Optional["ShadowReactor"] = None
+
         # Mahamantra Config (SSOT for holy names, thresholds, etc.)
         # Simple injection point, max effect - NO HARDCODING!
         self._mahamantra_config = None
@@ -215,6 +219,18 @@ class ChatService(ChatProtocol):
                 logger.info("✅ ChatService: Cognitive (Kapila) initialized [NAGA-observed]")
             except Exception as e:
                 logger.warning(f"⚠️ ChatService: Cognitive not available: {e}")
+
+            # Shadow Reactor (Living City - Task Execution via Yajna Cycle)
+            # When routing to PARASHURAMA (pos 8), we can spawn tasks that
+            # live beyond the chat response. This is the path to Living City.
+            try:
+                from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor
+
+                self._shadow_reactor = get_shadow_reactor()
+                logger.info("✅ ChatService: ShadowReactor initialized (Yajna Cycle enabled)")
+            except Exception as e:
+                self._shadow_reactor = None
+                logger.warning(f"⚠️ ChatService: ShadowReactor not available: {e}")
 
             # NAGA Integration (The Invisible Guardians)
             # NAGAs ENHANCE, they don't REPLACE - GAD-000 principle
@@ -357,11 +373,23 @@ class ChatService(ChatProtocol):
 
             # =================================================================
             # STEP 4: EXECUTION - If actionable, DO IT (not just talk!)
+            # Living City: Try ShadowReactor for PARASHURAMA/BRAHMA positions,
+            # fall back to cli_bridge for simple commands.
             # =================================================================
             execution_result = None
             if cognitive_result.intent_type == IntentType.EXECUTE or mode == ChatMode.SYSCALL:
-                execution_result = await self._execute_via_bridge(message, lotus_result)
-                logger.info(f"⚡ ChatService: EXECUTED via bridge → {execution_result}")
+                # Try Shadow Reactor first for PARASHURAMA (8) / BRAHMA (1) positions
+                # These benefit from the Yajna Cycle (task isolation, async execution)
+                position = lotus_result.get("position", 2)
+                if position in [1, 8]:
+                    execution_result = await self._execute_via_shadow(message, lotus_result, context)
+                    if execution_result:
+                        logger.info(f"🔥 ChatService: EXECUTED via ShadowReactor → {execution_result}")
+
+                # Fall back to cli_bridge for other positions or if Shadow unavailable
+                if execution_result is None:
+                    execution_result = await self._execute_via_bridge(message, lotus_result)
+                    logger.info(f"⚡ ChatService: EXECUTED via cli_bridge → {execution_result}")
 
             # =================================================================
             # STEP 5: CONTEXT - Live substrate context + execution result + NAGA
@@ -785,6 +813,81 @@ class ChatService(ChatProtocol):
         except Exception as e:
             logger.warning(f"⚠️ Bridge execution failed: {e}")
             return {"success": False, "error": str(e)}
+
+    async def _execute_via_shadow(
+        self,
+        message: str,
+        lotus_result: Dict,
+        context: ChatContext,
+    ) -> Optional[Dict]:
+        """
+        Execute task via ShadowReactor - The Yajna Cycle (Living City).
+
+        WHEN TO USE:
+        - Position 8 (PARASHURAMA) = Execute/Transform
+        - Position 1 (BRAHMA) = Create/Generate
+        - Complex tasks that should outlive the chat response
+
+        FLOW:
+        1. Create Bija (task seed) from chat message + routing
+        2. Dispatch to SamanaBridge → TaskKernel
+        3. Execute in ShadowReactor (Yajna Cycle)
+        4. Fold results back (async or via callback)
+
+        Returns:
+            Dict with dispatch_id for tracking, or None if not supported
+        """
+        if self._shadow_reactor is None:
+            logger.debug("ShadowReactor not available, falling back to cli_bridge")
+            return None
+
+        try:
+            position = lotus_result.get("position", 2)
+
+            # Only use Shadow for PARASHURAMA (8) or BRAHMA (1) positions
+            # These are "action" positions that benefit from task isolation
+            if position not in [1, 8]:
+                return None
+
+            bridge = self._shadow_reactor.samana_bridge
+
+            # Create task from message
+            task_id = f"chat_{context.session_id[:8]}_{position}"
+            task_description = f"Execute: {message[:50]}"
+
+            # Dispatch to TaskKernel via SamanaBridge
+            dispatch_id = bridge.dispatch(
+                task_id=task_id,
+                task_description=task_description,
+                position=position,
+                phase="bhoga" if position < 8 else "prasadam",
+                payload={
+                    "message": message,
+                    "mahajana": lotus_result.get("mahajana"),
+                    "session_id": context.session_id,
+                },
+            )
+
+            if dispatch_id:
+                logger.info(
+                    f"🔥 ShadowReactor: Dispatched {task_id} → {dispatch_id} "
+                    f"(position={position}, phase={'bhoga' if position < 8 else 'prasadam'})"
+                )
+                return {
+                    "success": True,
+                    "dispatch_id": dispatch_id,
+                    "task_id": task_id,
+                    "position": position,
+                    "mode": "shadow_reactor",
+                    "note": "Task dispatched to Yajna Cycle. Results will fold back.",
+                }
+            else:
+                logger.warning("⚠️ ShadowReactor: Dispatch failed (no capacity?)")
+                return None
+
+        except Exception as e:
+            logger.warning(f"⚠️ Shadow execution failed: {e}")
+            return None
 
     async def _handle_refinement_response(self, message: str, context: ChatContext) -> ChatResponse:
         """
