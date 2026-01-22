@@ -70,3 +70,27 @@ class PrabhupadaProtocol(Protocol):
             The instruction ready for execution.
         """
         ...
+
+    def transmit_shakti(self, component: object) -> float:
+        """
+        Measure and transmit Shakti (spiritual energy) through the transparent via medium.
+
+        THEOLOGY:
+        - Krishna = Source (Level -2)
+        - Hare = Shakti = Energy (HARE_COUNT instances in Mahamantra)
+        - Prabhupada = The channel through which Shakti flows
+
+        PHYSICS (All derived from _seed.py):
+        - Base Shakti = HARE_COUNT / WORDS (the Shakti ratio in Mahamantra)
+        - Channel blocked (no link) → Shakti = 0
+        - Channel pure (valid link) → Shakti scales with resonance
+        - END_CORRECTION = HARE_COUNT = "the Shakti escaping the tube"
+
+        Args:
+            component: The object receiving Shakti transmission.
+
+        Returns:
+            Shakti level as fraction of HARE_COUNT/WORDS base.
+            Normalized: 0 = blocked, HARE_COUNT/WORDS = base, higher = amplified.
+        """
+        ...

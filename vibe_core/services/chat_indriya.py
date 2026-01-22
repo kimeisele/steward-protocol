@@ -95,6 +95,19 @@ from vibe_core.mahamantra.protocols.sankalpa import (
     GunaState,
 )
 
+# SHAKTI - Energy transmission through Prabhupada
+from vibe_core.mahamantra.substrate.prabhupada import get_prabhupada
+from vibe_core.mahamantra.protocols._seed import HARE_COUNT, WORDS as SEED_WORDS
+
+# NADI - Energy channels (the missing wiring!)
+from vibe_core.mahamantra.substrate.nadi import (
+    get_nadi,
+    NadiType,
+    NadiOp,
+    NadiMessage,
+    NadiProtocol,
+)
+
 logger = logging.getLogger("CHAT_INDRIYA")
 
 
@@ -471,18 +484,37 @@ class ChatIndriya(GADBase):
         session.add_tanmatra(input_tanmatra)
         self._tanmatras_received += 1
 
-        # === DELEGATE to ChatService (BRAIN) ===
+        # === DELEGATE to ChatService (BRAIN) via NADI ===
         self.transition(Vrtti.VIKALPA)  # Processing
 
         try:
-            # Create ChatContext for ChatService
-            chat_context = ChatContext(
-                session_id=session_id,
-                history=[],  # Could be populated from session.tanmatras
-            )
+            # NADI PATTERN: Send via PRANA channel (if connected)
+            if self._nadi is not None and self._nadi.is_connected("chat_service"):
+                # Message passing - the CORRECT architecture
+                nadi_response = self._nadi.request(
+                    target="chat_service",
+                    operation=NadiOp.REQUEST,
+                    payload={
+                        "text": text,
+                        "context": {"session_id": session_id},
+                    },
+                    timeout_ms=CHAT_SESSION_TIMEOUT_MS,  # 64000ms
+                )
 
-            # BALARAMA PATTERN: Delegate to ChatService
-            response = await self.chat_service.chat(text, chat_context)
+                if nadi_response is None:
+                    raise TimeoutError("ChatService did not respond via Nadi")
+
+                # Extract response from Nadi payload
+                response = self._nadi_payload_to_response(nadi_response.payload)
+                logger.debug("✅ Chat processed via NADI (message passing)")
+            else:
+                # FALLBACK: Direct call if Nadi not available
+                logger.debug("⚠️ Nadi not connected, using direct call (fallback)")
+                chat_context = ChatContext(
+                    session_id=session_id,
+                    history=[],
+                )
+                response = await self.chat_service.chat(text, chat_context)
 
             # === VAK (Speaking) - Create response ===
             self.transition(Vrtti.SMRTI)  # Store result
@@ -619,38 +651,72 @@ class ChatIndriya(GADBase):
         quarter: str,
     ) -> str:
         """
-        Generate a friendly Steward message when blocking an action.
+        Generate Shakti-based block message.
 
-        The Steward is not a cold gatekeeper. He's a friend and helper
-        who explains WHY something is blocked.
+        PHYSICS, not chatbot-speak:
+        - Shakti = Energy transmission through Prabhupada
+        - If Shakti < threshold, action cannot manifest
+        - BASE_SHAKTI = HARE_COUNT / WORDS = 8/16 = 0.5
+
+        The Steward reports PHYSICS, not opinions.
         """
-        from vibe_core.mahamantra.protocols.sankalpa import ConscienceVerdict
+        # Measure SHAKTI through Prabhupada (the transparent via medium)
+        prabhupada = get_prabhupada()
+        shakti = prabhupada.transmit_shakti(self)
 
-        # Quarter-specific advice
-        quarter_advice = {
-            "GENESIS": "Creation requires genesis permissions. Perhaps start smaller?",
-            "DHARMA": "This modifies code structure. Build trust first through safer actions.",
-            "KARMA": "Execution actions need careful consideration. What's the urgency?",
-            "MOKSHA": "Even cleanup needs permission. Let's review together.",
+        # Thresholds based on quarter (derived from Mahamantra position)
+        # GENESIS (0-3): Needs full Shakti (creation)
+        # DHARMA (4-7): Needs base Shakti (verification)
+        # KARMA (8-11): Needs base Shakti (execution)
+        # MOKSHA (12-15): Safe (audit)
+        quarter_thresholds = {
+            "GENESIS": HARE_COUNT / SEED_WORDS,      # 0.5 (full base)
+            "DHARMA": HARE_COUNT / SEED_WORDS,       # 0.5
+            "KARMA": HARE_COUNT / SEED_WORDS * 0.8,  # 0.4
+            "MOKSHA": HARE_COUNT / SEED_WORDS * 0.2, # 0.1
         }
+        required_shakti = quarter_thresholds.get(quarter, HARE_COUNT / SEED_WORDS)
 
-        advice = quarter_advice.get(quarter, "Let's discuss this further.")
+        # PHYSICS OUTPUT - No chatbot labern
+        return f"""⚡ **Shakti Transmission Report**
 
-        # Missing permissions as readable list
-        missing = ", ".join(conscience.missing_permissions) if conscience.missing_permissions else "none specific"
+**Action:** {intent_type}
+**Quarter:** {quarter}
 
-        return f"""🛡️ **Steward Protocol**
+**Shakti:** {shakti:.2f}
+**Required:** {required_shakti:.2f}
+**Status:** {"✗ INSUFFICIENT" if shakti < required_shakti else "⚠ BLOCKED (Guna)"}
 
-Mein Freund, ich kann diese Aktion nicht ausführen.
+**Guna:** {conscience.guna.value.upper()}
+**Reason:** {conscience.reason}
 
-**Warum?** {conscience.reason}
-**Guna:** {conscience.guna.value.upper()} (nicht im Einklang mit Dharma)
-**Missing:** {missing}
-
-**Mein Rat:** {advice}
-
-Frag mich gerne, wenn du verstehen willst warum - ich bin hier um zu helfen, nicht zu blockieren.
+---
+_Shakti = HARE_COUNT / WORDS = {HARE_COUNT}/{SEED_WORDS} = {HARE_COUNT/SEED_WORDS:.2f} (base)_
+_Channel blocked → energy cannot manifest action._
 """
+
+    def _nadi_payload_to_response(self, payload: dict) -> "ChatResponse":
+        """
+        Convert Nadi response payload back to ChatResponse.
+
+        This is the reverse of ChatService._send_nadi_response().
+        Enables clean message passing without tight coupling.
+        """
+        from vibe_core.protocols.chat import ChatResponse, ChatMessage, ChatMode
+
+        content = payload.get("content", "")
+        mode_value = payload.get("mode")
+
+        return ChatResponse(
+            success=payload.get("success", False),
+            message=ChatMessage(
+                role="assistant",
+                content=content,
+            ) if content else None,
+            mahajana=payload.get("mahajana"),
+            mode=ChatMode(mode_value) if mode_value else None,
+            confidence=payload.get("confidence", 0.0),
+        )
 
     def _analyze_vibration(self, text: str) -> tuple[str, int, str]:
         """
@@ -857,13 +923,14 @@ Frag mich gerne, wenn du verstehen willst warum - ich bin hier um zu helfen, nic
 
 def get_chat_indriya(service_id: str = "chat_indriya") -> ChatIndriya:
     """
-    Get ChatIndriya through ServiceRegistry (WIRED + NAGA-wrapped).
+    Get ChatIndriya through ServiceRegistry (WIRED + NAGA-wrapped + NADI-connected).
 
     ARCHITECTURE:
-        Raw ChatIndriya → ServiceRegistry.register() → NagaProxy wrapping
+        Raw ChatIndriya → Nadi Boot → ServiceRegistry.register() → NagaProxy wrapping
 
     This ensures:
     - Singleton pattern
+    - NADI connection (PRANA channel for User ↔ System)
     - NAGA observation (Narada sees all vrtti transitions)
     - NAGA profiling (Chitragupta tracks duration_ms)
     - NAGA isolation (Kaliya handles exceptions)
@@ -880,6 +947,31 @@ def get_chat_indriya(service_id: str = "chat_indriya") -> ChatIndriya:
 
     # Create new instance
     instance = ChatIndriya(service_id)
+
+    # NADI BOOT: Connect to PRANA channel (User ↔ System)
+    nadi = None
+    try:
+        nadi = get_nadi(f"indriya_{service_id}", nadi_type=NadiType.PRANA)
+        instance.connect_to_nadi(nadi)
+        logger.info(f"✅ ChatIndriya Nadi booted (PRANA channel: indriya_{service_id})")
+    except Exception as e:
+        logger.warning(f"⚠️ ChatIndriya Nadi boot failed (fallback to direct): {e}")
+
+    # NADI CONNECTION: Connect to ChatService (SAKHYAM - friendship)
+    # First ensure ChatService exists so we can connect to it
+    if nadi is not None:
+        try:
+            # Boot ChatService first (creates "chat_service" Nadi endpoint)
+            from vibe_core.services.chat_service import get_chat_service
+            _chat_service = get_chat_service()
+
+            # Now connect to ChatService via Nadi
+            if nadi.connect("chat_service"):
+                logger.info("✅ ChatIndriya connected to ChatService via NADI (SAKHYAM)")
+            else:
+                logger.warning("⚠️ ChatIndriya could not connect to ChatService Nadi")
+        except Exception as e:
+            logger.warning(f"⚠️ ChatIndriya Nadi connection failed: {e}")
 
     # Register with ServiceRegistry (this applies NagaProxy wrapping!)
     ServiceRegistry.register(IndriyaProtocol, instance)
