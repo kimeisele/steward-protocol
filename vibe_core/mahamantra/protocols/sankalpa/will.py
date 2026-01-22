@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from .types import (
+    # Mission types
     MissionPriority,
     MissionStatus,
     SankalpaIntent,
@@ -33,6 +34,12 @@ from .types import (
     SankalpaTrigger,
     StrategyFrequency,
     TriggerType,
+    # Conscience types (extracted from DharmaSense)
+    Ashrama,
+    GunaState,
+    ConscienceVerdict,
+    ASHRAMA_PERMISSIONS,
+    INTENT_PERMISSION_MAP,
 )
 
 logger = logging.getLogger("SANKALPA")
@@ -332,6 +339,81 @@ class SankalpaPlanner:
             params=strategy.intent_template,
             priority=mission.priority,
         )
+
+
+# =============================================================================
+# CONSCIENCE - Dharmic Alignment Check (Buddhi function)
+# =============================================================================
+
+
+def check_conscience(
+    intent_type: str,
+    ashrama: Ashrama = Ashrama.GRIHASTHA,
+    bhakti: int = 0,
+) -> ConscienceVerdict:
+    """
+    Check if an action is Dharma-aligned.
+
+    This is the CONSCIENCE - part of Buddhi (intelligence), not a "sense".
+    Extracted from DharmaSense for theological correctness.
+
+    Args:
+        intent_type: Type of action to check
+        ashrama: Agent's life stage (default: Grihastha/productive)
+        bhakti: Trust level 0-200 (default: 0)
+
+    Returns:
+        ConscienceVerdict with alignment status
+    """
+    # Get required permissions for this intent
+    required_perms = INTENT_PERMISSION_MAP.get(intent_type, [])
+
+    # Get permissions granted by Ashrama
+    granted_perms = set(ASHRAMA_PERMISSIONS.get(ashrama, []))
+
+    # Check for missing permissions
+    missing_perms = [p for p in required_perms if p not in granted_perms]
+
+    # Determine Guna status
+    if not required_perms:
+        # No special permissions needed - Sattvic
+        guna = GunaState.SATTVIC
+        reason = "No special permissions required"
+        is_permitted = True
+
+    elif not missing_perms:
+        # All permissions granted - Sattvic
+        guna = GunaState.SATTVIC
+        reason = f"Ashrama {ashrama.value} has all required permissions"
+        is_permitted = True
+
+    elif bhakti >= 50 and len(missing_perms) == 1:
+        # High Bhakti can compensate for one missing permission - Rajasic
+        guna = GunaState.RAJASIC
+        reason = f"High Bhakti ({bhakti}) grants provisional access for {missing_perms}"
+        is_permitted = True
+
+    elif ashrama == Ashrama.SANNYASI:
+        # Sannyasi has governance override - Rajasic
+        guna = GunaState.RAJASIC
+        reason = "Sannyasi has governance authority"
+        is_permitted = True
+
+    else:
+        # Insufficient permissions - Tamasic
+        guna = GunaState.TAMASIC
+        reason = f"Missing permissions: {missing_perms}. Bhakti {bhakti} < 50 for override."
+        is_permitted = False
+
+    return ConscienceVerdict(
+        guna=guna,
+        is_permitted=is_permitted,
+        ashrama=ashrama,
+        bhakti=bhakti,
+        reason=reason,
+        required_permissions=required_perms,
+        missing_permissions=missing_perms,
+    )
 
 
 # =============================================================================
