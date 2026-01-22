@@ -50,6 +50,7 @@ from vibe_core.mahamantra.protocols._lotus import (
     get_position_mahajana,
     MAHAJANA_POSITIONS,
 )
+from vibe_core.mahamantra.protocols._gad import GADBase
 
 logger = logging.getLogger("CHAT_SUBSTRATE")
 
@@ -346,9 +347,14 @@ def tensor_to_position(tensor: SimpleTensor) -> Tuple[int, float]:
 # =============================================================================
 
 
-class ChatSubstrateBridge:
+class ChatSubstrateBridge(GADBase):
     """
     The bridge between User Input (vibration) and Substrate (machine code).
+
+    GAD-000 COMPLIANT:
+        - Inherits MantraHeartbeat (Japa-Loop)
+        - Implements discover() and get_state()
+        - 6 Criteria + 4 Dharma tests
 
     FLOW:
         encode() → tensor → position → manifest decision → route
@@ -363,8 +369,79 @@ class ChatSubstrateBridge:
         Args:
             inertia: Minimum energy for manifestation (default 0.3)
         """
+        super().__init__()  # Initialize GADBase (MantraHeartbeat)
         self._inertia = inertia
         self._routes: List[SubstrateRoute] = []  # History for learning
+
+    # =========================================================================
+    # GAD-000 COMPLIANCE - Required Methods
+    # =========================================================================
+
+    def discover(self) -> Dict[str, object]:
+        """
+        GAD Discoverability: Return machine-readable capability description.
+        """
+        return {
+            "service": "chat_substrate_bridge",
+            "mahajana": __mahajana__,
+            "position": __position__,
+            "capabilities": [
+                "phonetic_routing",
+                "varna_tensor_encoding",
+                "mahajana_dispatch",
+                "alternative_routing",
+            ],
+            "config": {
+                "inertia": self._inertia,
+                "phoneme_varga_count": len(PHONEME_VARGA),
+                "phoneme_sthana_count": len(PHONEME_STHANA),
+            },
+            "thresholds": {
+                "manifest": THRESHOLD_MANIFEST,
+                "negotiate": THRESHOLD_NEGOTIATE,
+            },
+        }
+
+    def get_state(self) -> Dict[str, object]:
+        """
+        GAD Observability: Return current state in structured format.
+        """
+        return {
+            "inertia": self._inertia,
+            "route_count": len(self._routes),
+            "last_route": self._routes[-1].mahajana if self._routes else None,
+            "heartbeat": self.heartbeat.get_summary(),
+        }
+
+    def detect_drift(self) -> List[str]:
+        """
+        GAD Recoverability: Detect deviations from expected behavior.
+        """
+        drifts: List[str] = []
+
+        # Check if inertia is in valid range
+        if not (0.0 <= self._inertia <= 1.0):
+            drifts.append(f"inertia out of range: {self._inertia}")
+
+        # Check if route history is growing unboundedly
+        if len(self._routes) > 10000:
+            drifts.append(f"route history too large: {len(self._routes)}")
+
+        return drifts
+
+    def test_tapas(self) -> bool:
+        """
+        GAD Dharma - Austerity: Are resources constrained?
+        Route history should not grow unboundedly.
+        """
+        return len(self._routes) <= 10000
+
+    def test_saucam(self) -> bool:
+        """
+        GAD Dharma - Cleanliness: Is the data clean?
+        Inertia must be in valid range.
+        """
+        return 0.0 <= self._inertia <= 1.0
 
     def route(self, text: str) -> SubstrateRoute:
         """
