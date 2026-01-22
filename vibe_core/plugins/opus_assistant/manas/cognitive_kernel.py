@@ -206,14 +206,15 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
     """
 
     # =========================================================================
-    # OPUS-167: SINGLETON PATTERN (Workspace-Keyed)
+    # OPUS-167: SINGLETON PATTERN via ServiceRegistry
     # =========================================================================
     # "The mind is one. Multiple heads is madness." - Sankhya Philosophy
     #
     # Each workspace gets ONE CognitiveKernel instance.
     # Tool discovery happens ONCE, not 8 times during boot.
+    #
+    # NOTE: Use get_instance() to access via ServiceRegistry.
     # =========================================================================
-    _instances: Dict[Path, "CognitiveKernel"] = {}
 
     @classmethod
     def get_instance(
@@ -241,30 +242,33 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         Returns:
             CognitiveKernel singleton for the workspace
         """
+        # Check ServiceRegistry first
+        existing = ServiceRegistry.get(CognitiveKernelProtocol)
+        if existing is not None:
+            logger.debug("🧠 MANAS: Reusing singleton instance from ServiceRegistry")
+            return existing
+
         ws = workspace or Path.cwd()
         ws = ws.resolve()  # Normalize path for consistent keying
 
-        if ws not in cls._instances:
-            logger.info(f"🧠 MANAS: Creating singleton instance for {ws}")
-            # Step 1: Create instance (minimal init)
-            instance = cls(
-                workspace=ws,
-                config=config,
-                trace=trace,
-                event_bus=event_bus,
-            )
-            # Step 2: Register IMMEDIATELY before booting to break recursion
-            cls._instances[ws] = instance
-            ServiceRegistry.register(CognitiveKernelProtocol, instance)
+        logger.info(f"🧠 MANAS: Creating singleton instance for {ws}")
+        # Step 1: Create instance (minimal init)
+        instance = cls(
+            workspace=ws,
+            config=config,
+            trace=trace,
+            event_bus=event_bus,
+        )
+        # Step 2: Register IMMEDIATELY before booting to break recursion
+        ServiceRegistry.register(CognitiveKernelProtocol, instance)
+        logger.info("✅ CognitiveKernel registered via ServiceRegistry (NAGA-observed)")
 
-            # OPUS-306: Boot deferred to first use (tick/perceive/etc.)
-            # This saves ~17 seconds of boot time during kernel startup.
-            # The boot() will be called lazily via _ensure_booted().
-            logger.debug("🧠 MANAS: Instance created (boot deferred)")
-        else:
-            logger.debug(f"🧠 MANAS: Reusing singleton instance for {ws}")
+        # OPUS-306: Boot deferred to first use (tick/perceive/etc.)
+        # This saves ~17 seconds of boot time during kernel startup.
+        # The boot() will be called lazily via _ensure_booted().
+        logger.debug("🧠 MANAS: Instance created (boot deferred)")
 
-        return cls._instances[ws]
+        return ServiceRegistry.get(CognitiveKernelProtocol)  # type: ignore
 
     @classmethod
     def reset_instance(cls, workspace: Optional[Path] = None) -> None:
@@ -272,16 +276,10 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         Reset singleton instance (for testing).
 
         Args:
-            workspace: Workspace to reset (None = reset all)
+            workspace: Workspace to reset (ignored - ServiceRegistry is global)
         """
-        if workspace is None:
-            cls._instances.clear()
-            logger.info("🧠 MANAS: All singleton instances reset")
-        else:
-            ws = workspace.resolve()
-            if ws in cls._instances:
-                del cls._instances[ws]
-                logger.info(f"🧠 MANAS: Singleton instance reset for {ws}")
+        ServiceRegistry.unregister(CognitiveKernelProtocol)
+        logger.info("🧠 MANAS: Singleton instance reset via ServiceRegistry")
 
     @classmethod
     def has_instance(cls, workspace: Optional[Path] = None) -> bool:
@@ -291,13 +289,12 @@ class CognitiveKernel(CognitiveCycle, CognitiveKernelProtocol):
         Useful to avoid triggering expensive initialization when just checking.
 
         Args:
-            workspace: Workspace to check (defaults to cwd)
+            workspace: Workspace to check (ignored - ServiceRegistry is global)
 
         Returns:
             True if instance already exists
         """
-        ws = (workspace or Path.cwd()).resolve()
-        return ws in cls._instances
+        return ServiceRegistry.get(CognitiveKernelProtocol) is not None
 
     def __init__(
         self,

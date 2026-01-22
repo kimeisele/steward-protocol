@@ -346,15 +346,14 @@ class ContextLoader(UnifiedLoader):
     Unified Loader for Project Context.
 
     Treats the entire Project as a single 'Context Item'.
+
+    NOTE: Use get_context_manager() to access via ServiceRegistry.
     """
 
     # === UNIFIED LOADER CONFIG ===
     item_type = "context"
     scan_paths = []  # Dynamic, uses project root
     entry_suffix = "project_manifest.json"
-
-    # === CLASS STATE ===
-    _context_instance: Optional[ContextManager] = None
 
     @classmethod
     def discover_and_load(
@@ -368,9 +367,13 @@ class ContextLoader(UnifiedLoader):
 
         Returns singleton dict: {"project": ContextManager}
         """
-        if not force_refresh and cls._context_instance:
-            # Re-wrap existing instance
-            return {"project": cls._context_instance}, {}
+        from vibe_core.di import ServiceRegistry
+
+        # Check ServiceRegistry first
+        if not force_refresh:
+            existing = ServiceRegistry.get(ContextManager)
+            if existing is not None:
+                return {"project": existing}, {}
 
         project_root = Path.cwd()
         if scan_paths and len(scan_paths) > 0:
@@ -398,7 +401,10 @@ class ContextLoader(UnifiedLoader):
                 sources=list(context_data.keys()),
             )
 
-            cls._context_instance = manager
+            # Register with ServiceRegistry (NAGA-observed!)
+            ServiceRegistry.register(ContextManager, manager)
+            logger.info("✅ ContextManager registered via ServiceRegistry (NAGA-observed)")
+
             return {"project": manager}, {"project": meta}
 
         except Exception as e:
