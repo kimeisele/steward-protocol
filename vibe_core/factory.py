@@ -40,9 +40,9 @@ class VibeFactory:
 
     All entry points (CLI, boot, services) MUST use this factory.
     Direct import of RealVibeKernel is a Protocol violation.
-    """
 
-    _kernel_instance: Optional[KernelProtocol] = None
+    NOTE: Kernel singleton is managed via ServiceRegistry.
+    """
 
     @classmethod
     def get_kernel(
@@ -52,7 +52,7 @@ class VibeFactory:
         test_mode: bool = False,
     ) -> KernelProtocol:
         """
-        Singleton Access to the Kernel.
+        Singleton Access to the Kernel via ServiceRegistry.
 
         Ensures we don't spawn multiple kernels in one process.
         The kernel is born HERE, with its full anatomy (__init__ is complete).
@@ -65,17 +65,27 @@ class VibeFactory:
         Returns:
             KernelProtocol - the living, breathing kernel
         """
-        if cls._kernel_instance is None:
-            # Hier findet die "Geburt" statt
-            # Lazy Import to break Ouroboros
-            from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.di import ServiceRegistry
 
-            cls._kernel_instance = RealVibeKernel(
-                ledger_path=ledger_path,
-                load_plugins=load_plugins,
-                test_mode=test_mode,
-            )
-        return cls._kernel_instance
+        # Check ServiceRegistry first
+        existing = ServiceRegistry.get(KernelProtocol)
+        if existing is not None:
+            return existing
+
+        # Hier findet die "Geburt" statt
+        # Lazy Import to break Ouroboros
+        from vibe_core.kernel_impl import RealVibeKernel
+
+        kernel = RealVibeKernel(
+            ledger_path=ledger_path,
+            load_plugins=load_plugins,
+            test_mode=test_mode,
+        )
+
+        # Register via ServiceRegistry (NAGA-observed!)
+        ServiceRegistry.register(KernelProtocol, kernel)
+
+        return ServiceRegistry.get(KernelProtocol)  # type: ignore
 
     @classmethod
     def reset_kernel(cls) -> None:
@@ -85,7 +95,9 @@ class VibeFactory:
         WARNING: This kills the current kernel instance.
         Use only in test teardown.
         """
-        cls._kernel_instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(KernelProtocol)
 
     @staticmethod
     def create_ledger(path: str = ":memory:") -> VibeLedger:

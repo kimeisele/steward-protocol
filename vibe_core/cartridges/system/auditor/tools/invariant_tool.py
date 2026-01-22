@@ -682,16 +682,42 @@ class InvariantEngine(Tool):
         return report
 
 
-# Singleton instance
-_judge_instance: Optional[InvariantEngine] = None
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
 
 
 def get_judge() -> InvariantEngine:
-    """Get or create the singleton Judge instance"""
-    global _judge_instance
-    if _judge_instance is None:
-        _judge_instance = InvariantEngine()
-    return _judge_instance
+    """
+    Get InvariantEngine through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        InvariantEngine → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees invariant checks)
+    - NAGA profiling (Chitragupta tracks verification timing)
+    - NAGA isolation (Kaliya handles verification errors)
+
+    Returns:
+        InvariantEngine wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(InvariantEngine)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = InvariantEngine()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(InvariantEngine, instance)
+    logger.info("✅ InvariantEngine registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(InvariantEngine)  # type: ignore
 
 
 __all__ = [
