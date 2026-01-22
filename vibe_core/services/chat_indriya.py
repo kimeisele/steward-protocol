@@ -68,12 +68,14 @@ from vibe_core.mahamantra.substrate.nadi import (
     NadiType,
 )
 
-# Import ChatSubstrateBridge for routing
-from vibe_core.services.chat_substrate_bridge import (
-    ChatSubstrateBridge,
-    SubstrateRoute,
-    get_substrate_bridge,
-)
+# Import ChatService (BRAIN) - ChatIndriya wraps this (Balarama Pattern)
+from vibe_core.services.chat_substrate_bridge import SubstrateRoute  # For type hints only
+
+# Lazy import to avoid circular dependency
+def _get_chat_service():
+    """Lazy import of ChatService to avoid circular imports."""
+    from vibe_core.services.chat_service import get_chat_service
+    return get_chat_service()
 
 # Import seed constants
 from vibe_core.mahamantra.substrate.seed import (
@@ -172,7 +174,6 @@ class ChatIndriya(GADBase):
     def __init__(
         self,
         service_id: str = "chat_indriya",
-        bridge: Optional[ChatSubstrateBridge] = None,
     ):
         super().__init__()  # Initialize GADBase
 
@@ -186,8 +187,9 @@ class ChatIndriya(GADBase):
         self._srotra_state = IndriyaState(indriya=self._srotra)
         self._vak_state = IndriyaState(indriya=self._vak)
 
-        # Use provided bridge or get default
-        self._bridge = bridge or get_substrate_bridge()
+        # ChatService (BRAIN) - lazy loaded to avoid circular imports
+        # ChatIndriya WRAPS ChatService (Balarama Pattern)
+        self._chat_service = None  # Lazy init
 
         # Session tracking
         self._sessions: Dict[str, ChatSession] = {}
@@ -222,6 +224,13 @@ class ChatIndriya(GADBase):
     def vrtti(self) -> Vrtti:
         """Get current engagement mode."""
         return self._srotra_state.vrtti
+
+    @property
+    def chat_service(self):
+        """Lazy-load ChatService (Balarama Pattern: wrap, don't own)."""
+        if self._chat_service is None:
+            self._chat_service = _get_chat_service()
+        return self._chat_service
 
     def transition(self, new_vrtti: Vrtti) -> bool:
         """
@@ -381,15 +390,112 @@ class ChatIndriya(GADBase):
     # CHAT-SPECIFIC METHODS
     # =========================================================================
 
+    async def chat(self, text: str, session_id: str) -> TanmatraMessage:
+        """
+        Process user input through complete Vrtti cycle (Balarama Pattern).
+
+        WRAPS ChatService.chat() with sense organ state management:
+        1. SROTRA receives (NIDRA → PRAMANA)
+        2. Create TanmatraMessage with intent
+        3. DELEGATE to ChatService (PRAMANA → VIKALPA)
+        4. VAK speaks response (VIKALPA → SMRTI → NIDRA)
+        5. Return response TanmatraMessage
+
+        This is the Balarama Pattern: ChatIndriya wraps ChatService
+        without modifying it, adding Vrtti state management.
+        """
+        from vibe_core.protocols.chat import ChatContext
+
+        # Get/create session
+        session = self._get_or_create_session(session_id)
+
+        # === SROTRA (Hearing) - Wake up ===
+        if self.vrtti == Vrtti.NIDRA:
+            self.transition(Vrtti.PRAMANA)
+
+        # Classify intent from text
+        intent = self._classify_intent(text)
+
+        # Create input TanmatraMessage
+        input_tanmatra = TanmatraMessage(
+            message_id=f"tm_{uuid4().hex[:8]}",
+            tanmatra=Tanmatra.SABDA,  # Text = sound
+            intent=intent,
+            content=text,
+            source_indriya=self._srotra,
+            timestamp=datetime.now(),
+        )
+        session.add_tanmatra(input_tanmatra)
+        self._tanmatras_received += 1
+
+        # === DELEGATE to ChatService (BRAIN) ===
+        self.transition(Vrtti.VIKALPA)  # Processing
+
+        try:
+            # Create ChatContext for ChatService
+            chat_context = ChatContext(
+                session_id=session_id,
+                history=[],  # Could be populated from session.tanmatras
+            )
+
+            # BALARAMA PATTERN: Delegate to ChatService
+            response = await self.chat_service.chat(text, chat_context)
+
+            # === VAK (Speaking) - Create response ===
+            self.transition(Vrtti.SMRTI)  # Store result
+
+            response_tanmatra = TanmatraMessage(
+                message_id=f"tm_{uuid4().hex[:8]}",
+                tanmatra=Tanmatra.SABDA,
+                intent=TanmatraIntent.RESPONSE,
+                content=response.message.content if response.message else "",
+                source_indriya=self._vak,
+                timestamp=datetime.now(),
+                metadata={
+                    "success": response.success,
+                    "mahajana": response.mahajana,
+                    "in_response_to": input_tanmatra.message_id,
+                },
+            )
+            session.add_tanmatra(response_tanmatra)
+            self._tanmatras_sent += 1
+
+            logger.info(
+                f"Chat: intent={intent.name}, mahajana={response.mahajana}, "
+                f"success={response.success}"
+            )
+
+        except Exception as e:
+            # Error handling - transition to VIPARYAYA
+            self.transition(Vrtti.VIPARYAYA)
+            logger.error(f"Chat error: {e}")
+
+            response_tanmatra = TanmatraMessage(
+                message_id=f"tm_{uuid4().hex[:8]}",
+                tanmatra=Tanmatra.SABDA,
+                intent=TanmatraIntent.RESPONSE,
+                content=f"Error: {e}",
+                source_indriya=self._vak,
+                timestamp=datetime.now(),
+                metadata={"error": str(e), "in_response_to": input_tanmatra.message_id},
+            )
+            session.add_tanmatra(response_tanmatra)
+
+            # Recover from error
+            self.transition(Vrtti.NIDRA)
+            return response_tanmatra
+
+        # Return to idle
+        self.transition(Vrtti.NIDRA)
+
+        return response_tanmatra
+
     def process_user_input(self, text: str, session_id: str) -> TanmatraMessage:
         """
-        Process user input through the complete vrtti cycle.
+        DEPRECATED: Use chat() instead (async).
 
-        1. Wake up (NIDRA → PRAMANA)
-        2. Classify intent
-        3. Create TanmatraMessage
-        4. Route through substrate
-        5. Return routed message
+        Sync version that only classifies intent and creates TanmatraMessage.
+        Does NOT call ChatService (use chat() for full processing).
         """
         # Get/create session
         session = self._get_or_create_session(session_id)
@@ -411,24 +517,13 @@ class ChatIndriya(GADBase):
             timestamp=datetime.now(),
         )
 
-        # Route through substrate
-        route = self._bridge.route(text)
-        tanmatra.metadata["route"] = {
-            "position": route.position,
-            "mahajana": route.mahajana,
-            "energy": route.energy,
-        }
-
         # Store in session
         session.add_tanmatra(tanmatra)
 
         # Transition to processing
         self.transition(Vrtti.VIKALPA)
 
-        logger.info(
-            f"User input: intent={intent.name}, route={route.mahajana}, "
-            f"energy={route.energy:.3f}"
-        )
+        logger.info(f"User input: intent={intent.name}")
 
         return tanmatra
 
