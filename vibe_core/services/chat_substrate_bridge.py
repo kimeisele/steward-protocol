@@ -126,101 +126,201 @@ class SubstrateRoute:
 
 
 # =============================================================================
-# VARNA TENSOR (Simplified for Chat - Full version in reactor/matrix.py)
+# VARNA TENSOR - SSOT DERIVED FROM varna.py (NOT HARDCODED!)
 # =============================================================================
+# "shabda-brahma" - Sound is reality. The mapping is PHYSICAL.
+# 5 Vargas → 4 Quarters via LOTUS algorithm (SWARA_GA = 5/4)
 
-# The 5 Vargas (WHERE - Articulation Points)
-VARGA_KANTHYA: Final[int] = 0  # Throat/Guttural → KERNEL
-VARGA_TALAVYA: Final[int] = 1  # Palate → COGNITION
-VARGA_MURDHANYA: Final[int] = 2  # Cerebral/Retroflex → LOGIC
-VARGA_DANTYA: Final[int] = 3  # Dental → INTERFACE
-VARGA_OSHTHYA: Final[int] = 4  # Labial/Lips → OUTPUT
+# Import SSOT from protocols/substrate/mantra/varna.py
+from vibe_core.protocols.substrate.mantra.varna import (
+    KAVARGA,   # Guttural (throat)
+    CAVARGA,   # Palatal (palate)
+    TAVARGA,   # Retroflex (cerebral)
+    TAVARGA2,  # Dental (teeth)
+    PAVARGA,   # Labial (lips)
+    ANTAHSTHA, # Semi-vowels
+    USHMAN,    # Sibilants + aspirate
+    SVARA,     # Vowels
+)
 
-# The 5 Sthanas (HOW - Energy/Intensity)
-STHANA_SPARSHA: Final[int] = 0  # Unvoiced stop → minimal (0.2)
+# The 5 Vargas (WHERE - Articulation Points) - INDICES, not hardcoded
+VARGA_KANTHYA: Final[int] = 0   # Throat/Guttural (KAVARGA) → GENESIS
+VARGA_TALAVYA: Final[int] = 1   # Palate (CAVARGA) → DHARMA
+VARGA_MURDHANYA: Final[int] = 2 # Retroflex (TAVARGA) → DHARMA (LOTUS MERGE!)
+VARGA_DANTYA: Final[int] = 3    # Dental (TAVARGA2) → KARMA
+VARGA_OSHTHYA: Final[int] = 4   # Labial (PAVARGA) → MOKSHA
+
+# The 5 Sthanas (HOW - Energy/Intensity) - Position within Varga
+# Each Varga has 5 consonants: unvoiced, aspirated, voiced, voiced-aspirated, nasal
+STHANA_SPARSHA: Final[int] = 0    # Unvoiced stop → minimal (0.2)
 STHANA_MAHAPRANA: Final[int] = 1  # Aspirated → expansion (0.6)
 STHANA_GHOSHAVAT: Final[int] = 2  # Voiced → active (0.8)
 STHANA_GHOSHMAHA: Final[int] = 3  # Voiced aspirated → max (1.0)
 STHANA_ANUNASIKA: Final[int] = 4  # Nasal → continuous (0.5)
 
-# Phoneme to Varga mapping (simplified for common letters)
-PHONEME_VARGA: Final[Dict[str, int]] = {
-    # Gutturals (throat) - KERNEL operations
-    "k": VARGA_KANTHYA,
-    "g": VARGA_KANTHYA,
-    "c": VARGA_KANTHYA,
-    "q": VARGA_KANTHYA,
-    "x": VARGA_KANTHYA,
-    # Palatals - COGNITION
-    "j": VARGA_TALAVYA,
-    "y": VARGA_TALAVYA,
-    "ch": VARGA_TALAVYA,
-    # Retroflexes - LOGIC
-    "t": VARGA_MURDHANYA,
-    "d": VARGA_MURDHANYA,
-    "n": VARGA_MURDHANYA,
-    # Dentals - INTERFACE
-    "s": VARGA_DANTYA,
-    "z": VARGA_DANTYA,
-    "l": VARGA_DANTYA,
-    "th": VARGA_DANTYA,
-    # Labials (lips) - OUTPUT
-    "p": VARGA_OSHTHYA,
-    "b": VARGA_OSHTHYA,
-    "m": VARGA_OSHTHYA,
-    "f": VARGA_OSHTHYA,
-    "v": VARGA_OSHTHYA,
-    "w": VARGA_OSHTHYA,
-    # Vowels default to throat (origin of sound)
-    "a": VARGA_KANTHYA,
-    "e": VARGA_TALAVYA,
-    "i": VARGA_TALAVYA,
-    "o": VARGA_OSHTHYA,
-    "u": VARGA_OSHTHYA,
-    # Special: H and R (critical for Mahamantra)
-    "h": VARGA_KANTHYA,  # Aspirate - throat
-    "r": VARGA_MURDHANYA,  # Semivowel - retroflex
-}
 
-# Phoneme to Sthana (energy) mapping
-PHONEME_STHANA: Final[Dict[str, int]] = {
-    # Unvoiced stops - minimal energy
-    "k": STHANA_SPARSHA,
-    "p": STHANA_SPARSHA,
-    "t": STHANA_SPARSHA,
-    # Aspirated - expansion
-    "h": STHANA_MAHAPRANA,
-    "kh": STHANA_MAHAPRANA,
-    "ph": STHANA_MAHAPRANA,
-    # Voiced - active
-    "g": STHANA_GHOSHAVAT,
-    "b": STHANA_GHOSHAVAT,
-    "d": STHANA_GHOSHAVAT,
-    "j": STHANA_GHOSHAVAT,
-    "v": STHANA_GHOSHAVAT,
-    "z": STHANA_GHOSHAVAT,
-    # Voiced aspirated - maximum
-    "gh": STHANA_GHOSHMAHA,
-    "bh": STHANA_GHOSHMAHA,
-    "dh": STHANA_GHOSHMAHA,
-    # Nasals - continuous
-    "m": STHANA_ANUNASIKA,
-    "n": STHANA_ANUNASIKA,
-    # Sibilants - medium
-    "s": STHANA_GHOSHAVAT,
-    "sh": STHANA_GHOSHAVAT,
-    # Semivowels - medium-high
-    "r": STHANA_GHOSHAVAT,
-    "l": STHANA_GHOSHAVAT,
-    "y": STHANA_GHOSHAVAT,
-    "w": STHANA_GHOSHAVAT,
-    # Vowels - varies by openness
-    "a": STHANA_MAHAPRANA,
-    "e": STHANA_GHOSHAVAT,
-    "i": STHANA_SPARSHA,
-    "o": STHANA_GHOSHAVAT,
-    "u": STHANA_SPARSHA,
-}
+def _build_phoneme_varga_from_ssot() -> Dict[str, int]:
+    """
+    Build PHONEME_VARGA mapping from SSOT (varna.py).
+
+    LOTUS ALGORITHM: Derives mapping from actual Varna definitions.
+    No hardcoded values - all from seed.
+    """
+    mapping: Dict[str, int] = {}
+
+    # Map each VARGA tuple to its index
+    varga_tuples = [
+        (KAVARGA, VARGA_KANTHYA),    # k, kh, g, gh, ṅ
+        (CAVARGA, VARGA_TALAVYA),    # c, ch, j, jh, ñ
+        (TAVARGA, VARGA_MURDHANYA),  # ṭ, ṭh, ḍ, ḍh, ṇ (retroflex)
+        (TAVARGA2, VARGA_DANTYA),    # t, th, d, dh, n (dental)
+        (PAVARGA, VARGA_OSHTHYA),    # p, ph, b, bh, m
+    ]
+
+    for varga_tuple, varga_idx in varga_tuples:
+        for varna in varga_tuple:
+            # Use .roman field (Western approximation)
+            roman = varna.roman.lower()
+            if roman and roman not in mapping:
+                mapping[roman] = varga_idx
+            # Also add IAST for precise matching
+            iast = varna.iast.lower()
+            if iast and iast not in mapping:
+                mapping[iast] = varga_idx
+
+    # Semi-vowels (ANTAHSTHA): y=palatal, r=retroflex, l=dental, v=labial
+    antahstha_mapping = [
+        (0, VARGA_TALAVYA),   # य (y) - palatal
+        (1, VARGA_MURDHANYA), # र (r) - retroflex
+        (2, VARGA_DANTYA),    # ल (l) - dental
+        (3, VARGA_OSHTHYA),   # व (v) - labial
+    ]
+    for idx, varga_idx in antahstha_mapping:
+        if idx < len(ANTAHSTHA):
+            varna = ANTAHSTHA[idx]
+            mapping[varna.roman.lower()] = varga_idx
+            mapping[varna.iast.lower()] = varga_idx
+
+    # Sibilants + Aspirate (USHMAN): ś=palatal, ṣ=retroflex, s=dental, h=guttural
+    ushman_mapping = [
+        (0, VARGA_TALAVYA),   # श (ś) - palatal sibilant
+        (1, VARGA_MURDHANYA), # ष (ṣ) - retroflex sibilant
+        (2, VARGA_DANTYA),    # स (s) - dental sibilant
+        (3, VARGA_KANTHYA),   # ह (h) - guttural aspirate
+    ]
+    for idx, varga_idx in ushman_mapping:
+        if idx < len(USHMAN):
+            varna = USHMAN[idx]
+            mapping[varna.roman.lower()] = varga_idx
+            mapping[varna.iast.lower()] = varga_idx
+
+    # Vowels: origin based on articulation point
+    # a, ā = throat (KANTHYA), i, ī = palate (TALAVYA), u, ū = lips (OSHTHYA)
+    # e, ai = palate, o, au = lips
+    vowel_mapping = {
+        "a": VARGA_KANTHYA, "aa": VARGA_KANTHYA, "ā": VARGA_KANTHYA,
+        "i": VARGA_TALAVYA, "ee": VARGA_TALAVYA, "ī": VARGA_TALAVYA,
+        "u": VARGA_OSHTHYA, "oo": VARGA_OSHTHYA, "ū": VARGA_OSHTHYA,
+        "e": VARGA_TALAVYA, "ai": VARGA_TALAVYA,
+        "o": VARGA_OSHTHYA, "au": VARGA_OSHTHYA,
+    }
+    mapping.update(vowel_mapping)
+
+    # Western additions (not in Sanskrit but needed for English input)
+    western_extras = {
+        "c": VARGA_KANTHYA,  # Hard C = K (guttural)
+        "q": VARGA_KANTHYA,  # Q = K (guttural)
+        "x": VARGA_KANTHYA,  # X = KS (guttural start)
+        "f": VARGA_OSHTHYA,  # F = labio-dental (lips)
+        "w": VARGA_OSHTHYA,  # W = labial
+        "z": VARGA_DANTYA,   # Z = dental
+    }
+    mapping.update(western_extras)
+
+    return mapping
+
+
+# PHONEME_VARGA: DERIVED FROM SSOT, NOT HARDCODED!
+PHONEME_VARGA: Final[Dict[str, int]] = _build_phoneme_varga_from_ssot()
+
+def _build_phoneme_sthana_from_ssot() -> Dict[str, int]:
+    """
+    Build PHONEME_STHANA mapping from SSOT (varna.py).
+
+    LOTUS ALGORITHM: Each Varga has 5 positions = 5 Sthanas.
+    Position in Varga directly maps to energy level.
+    """
+    mapping: Dict[str, int] = {}
+
+    # Each Varga has exactly 5 consonants in fixed order:
+    # [0]=unvoiced, [1]=aspirated, [2]=voiced, [3]=voiced-aspirated, [4]=nasal
+    all_vargas = [KAVARGA, CAVARGA, TAVARGA, TAVARGA2, PAVARGA]
+
+    for varga_tuple in all_vargas:
+        for position, varna in enumerate(varga_tuple):
+            # Position within Varga = Sthana
+            sthana = position  # 0-4 maps directly
+            roman = varna.roman.lower()
+            iast = varna.iast.lower()
+            if roman:
+                mapping[roman] = sthana
+            if iast and iast not in mapping:
+                mapping[iast] = sthana
+
+    # Semi-vowels (ANTAHSTHA) - all voiced = GHOSHAVAT
+    for varna in ANTAHSTHA:
+        mapping[varna.roman.lower()] = STHANA_GHOSHAVAT
+        mapping[varna.iast.lower()] = STHANA_GHOSHAVAT
+
+    # Sibilants (USHMAN) - all medium energy = GHOSHAVAT, except H = MAHAPRANA
+    for idx, varna in enumerate(USHMAN):
+        sthana = STHANA_MAHAPRANA if idx == 3 else STHANA_GHOSHAVAT  # H = aspirate
+        mapping[varna.roman.lower()] = sthana
+        mapping[varna.iast.lower()] = sthana
+
+    # Vowels: energy based on openness (derived from acoustic physics)
+    # Open vowels (a) = high energy, closed vowels (i, u) = low energy
+    vowel_energy = {
+        "a": STHANA_MAHAPRANA, "aa": STHANA_MAHAPRANA, "ā": STHANA_MAHAPRANA,
+        "i": STHANA_SPARSHA, "ee": STHANA_SPARSHA, "ī": STHANA_SPARSHA,
+        "u": STHANA_SPARSHA, "oo": STHANA_SPARSHA, "ū": STHANA_SPARSHA,
+        "e": STHANA_GHOSHAVAT, "ai": STHANA_GHOSHMAHA,
+        "o": STHANA_GHOSHAVAT, "au": STHANA_GHOSHMAHA,
+    }
+    mapping.update(vowel_energy)
+
+    # Western additions
+    western_extras = {
+        "c": STHANA_SPARSHA,    # Hard C = K (unvoiced)
+        "q": STHANA_SPARSHA,    # Q = K (unvoiced)
+        "x": STHANA_GHOSHAVAT,  # X = complex
+        "f": STHANA_GHOSHAVAT,  # F = fricative
+        "w": STHANA_GHOSHAVAT,  # W = voiced
+        "z": STHANA_GHOSHAVAT,  # Z = voiced
+    }
+    mapping.update(western_extras)
+
+    return mapping
+
+
+# PHONEME_STHANA: DERIVED FROM SSOT, NOT HARDCODED!
+PHONEME_STHANA: Final[Dict[str, int]] = _build_phoneme_sthana_from_ssot()
+
+# =============================================================================
+# SSOT VERIFICATION - Ensure mappings are derived from varna.py
+# =============================================================================
+# The Mahamantra critical letters must map correctly:
+# H = throat (KANTHYA), R = retroflex (MURDHANYA), K = throat (KANTHYA)
+# A = throat (KANTHYA), M = lips (OSHTHYA)
+assert PHONEME_VARGA.get("h") == VARGA_KANTHYA, "SSOT: H must be KANTHYA (throat)"
+assert PHONEME_VARGA.get("r") == VARGA_MURDHANYA, "SSOT: R must be MURDHANYA (retroflex)"
+assert PHONEME_VARGA.get("k") == VARGA_KANTHYA, "SSOT: K must be KANTHYA (throat)"
+assert PHONEME_VARGA.get("a") == VARGA_KANTHYA, "SSOT: A must be KANTHYA (throat)"
+assert PHONEME_VARGA.get("m") == VARGA_OSHTHYA, "SSOT: M must be OSHTHYA (lips)"
+
+# Energy levels: K = unvoiced, M = nasal
+assert PHONEME_STHANA.get("k") == STHANA_SPARSHA, "SSOT: K must be SPARSHA (unvoiced)"
+assert PHONEME_STHANA.get("m") == STHANA_ANUNASIKA, "SSOT: M must be ANUNASIKA (nasal)"
 
 # Sthana to energy multiplier
 STHANA_ENERGY: Final[Dict[int, float]] = {

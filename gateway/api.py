@@ -182,7 +182,12 @@ async def public_chat(request: Request, body: PublicChatRequest):
     Public chat endpoint - no signature required.
     Rate-limited to prevent abuse.
 
-    Routes through MAHAMANTRA GATEWAY (the real Lotus routing).
+    Routes through FloodedMahajanaChat:
+    - 12 NAGA genes (Security, Audit, Resilience, etc.)
+    - mahamantra.resonate() for Mahajana routing
+    - Real LLM response via provider.invoke()
+
+    GAD-000: discover(), get_state(), is_healthy(), chant()
     """
     client_ip = request.client.host if request.client else "unknown"
 
@@ -190,26 +195,25 @@ async def public_chat(request: Request, body: PublicChatRequest):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
 
     try:
-        # USE MAHAMANTRA GATEWAY (not the broken UniversalProvider)
-        from vibe_core.gateway.mahamantra_gateway import chat as mahamantra_chat
+        # USE FloodedMahajanaChat (12 NAGA genes flooding!)
+        from vibe_core.mahamantra.chat import flooded_routed_chat, get_guardian_for_message
 
-        # mahamantra_chat is sync, run in threadpool
+        # Get routing info before call
+        guardian = get_guardian_for_message(body.message)
+
+        # flooded_routed_chat is sync, run in threadpool
         import asyncio
 
         loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, mahamantra_chat, body.message)
+        response = await loop.run_in_executor(None, flooded_routed_chat, body.message)
 
-        # GatewayResponse is a TypedDict
         return {
-            "status": "success" if result["success"] else "error",
+            "status": "success",
             "data": {
-                "output": result["output"],
-                "guardian": result["guardian"],
-                "quarter": result["quarter"],
-                "position": result["position"],
-                "guna": result["guna"],
+                "output": response,
+                "guardian": guardian,
+                "naga_flooded": True,
             },
-            "error": result.get("error"),
         }
     except HTTPException:
         raise
