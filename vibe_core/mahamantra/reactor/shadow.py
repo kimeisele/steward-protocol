@@ -1022,8 +1022,54 @@ class ShadowReactorFactory:
         )
 
 
-# Default factory instance
+# Default factory instance (DEPRECATED: Use get_shadow_reactor_factory())
 shadow_reactor_factory = ShadowReactorFactory()
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY
+# =============================================================================
+
+import logging
+
+logger = logging.getLogger("SHADOW_REACTOR")
+
+
+def get_shadow_reactor_factory() -> ShadowReactorFactory:
+    """
+    Get ShadowReactorFactory through ServiceRegistry.
+
+    ARCHITECTURE:
+        ShadowReactorFactory is the DI entry point for spawning reactors.
+        Uses ServiceRegistry for singleton pattern.
+
+    Usage:
+        # CORRECT (DI pattern):
+        factory = get_shadow_reactor_factory()
+        reactor = factory.spawn()
+
+        # WRONG (direct import):
+        from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
+        factory = ShadowReactorFactory()
+
+    Returns:
+        ShadowReactorFactory instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(ShadowReactorFactoryProtocol)
+    if existing is not None:
+        return existing  # type: ignore
+
+    # Create new instance
+    instance = ShadowReactorFactory()
+
+    # Register with ServiceRegistry
+    ServiceRegistry.register(ShadowReactorFactoryProtocol, instance)
+    logger.info("✅ ShadowReactorFactory registered via ServiceRegistry")
+
+    return ServiceRegistry.get(ShadowReactorFactoryProtocol)  # type: ignore
 
 
 # =============================================================================
@@ -1068,7 +1114,9 @@ __all__ = [
     # Implementation
     "ShadowReactor",
     "ShadowReactorFactory",
-    "shadow_reactor_factory",
+    "shadow_reactor_factory",  # DEPRECATED: Use get_shadow_reactor_factory()
+    # ServiceRegistry Factory (RECOMMENDED)
+    "get_shadow_reactor_factory",
     # Utility
     "get_shadow_reactor",
     "shadow",
