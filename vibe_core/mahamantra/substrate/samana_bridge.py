@@ -307,12 +307,11 @@ class SamanaBridge(GADBase):
         self._completed_folds: Dict[str, SamanaFold] = {}  # dispatch_id → fold
 
         # =====================================================================
-        # JIVA SHADOW POOL - "The Riders" (Qualified Workers)
+        # SHADOW REGISTRY - "The Ashrama" (Where Servants Live)
         # =====================================================================
-        # Each dispatch is matched with a JivaShadow that has the required
-        # qualities (Adhikara) for the target position.
-        # Type: Dict[str, JivaShadow] - using Any to avoid circular import
-        self._shadow_pool: Dict[str, Any] = {}  # shadow_id → shadow
+        # Shadows are reused, not spawned-and-discarded.
+        # Registry is lazy-loaded to avoid circular imports.
+        self._registry: Optional[Any] = None  # ShadowRegistry
         self._dispatch_shadows: Dict[str, str] = {}  # dispatch_id → shadow_id
 
         # Callbacks
@@ -321,8 +320,8 @@ class SamanaBridge(GADBase):
         # Stats
         self._dispatches_sent = 0
         self._folds_received = 0
-        self._shadows_spawned = 0
-        self._adhikara_rejections = 0
+        self._shadows_manifested = 0  # New shadows created
+        self._shadows_reused = 0      # Existing shadows reused
 
     # =========================================================================
     # PROPERTIES
@@ -369,8 +368,16 @@ class SamanaBridge(GADBase):
             ],
         }
 
+    def _get_registry(self) -> Any:
+        """Lazy-load the ShadowRegistry singleton."""
+        if self._registry is None:
+            from vibe_core.mahamantra.lila.registry import get_registry
+            self._registry = get_registry()
+        return self._registry
+
     def get_state(self) -> Dict[str, object]:
         """GAD Observability."""
+        registry = self._get_registry()
         return {
             "reactor_id": self._reactor_id,
             "active_kernels": self.active_kernel_count,
@@ -380,10 +387,12 @@ class SamanaBridge(GADBase):
             "folds_received": self._folds_received,
             "can_dispatch": self.can_dispatch,
             "heartbeat": self.heartbeat.get_summary(),
-            # Shadow pool stats
-            "shadow_pool_size": len(self._shadow_pool),
-            "shadows_spawned": self._shadows_spawned,
-            "adhikara_rejections": self._adhikara_rejections,
+            # Registry stats (sustainable)
+            "registry_count": registry.count,
+            "registry_idle": registry.idle_count,
+            "registry_busy": registry.busy_count,
+            "shadows_manifested": self._shadows_manifested,
+            "shadows_reused": self._shadows_reused,
         }
 
     def detect_drift(self) -> List[str]:
@@ -495,6 +504,9 @@ class SamanaBridge(GADBase):
         self._dispatch_shadows[dispatch_id] = shadow.shadow_id
         self._dispatches_sent += 1
 
+        # Mark shadow as BUSY in Registry
+        self._mark_shadow_busy(shadow.shadow_id, dispatch_id)
+
         # Create Nadi message
         message = NadiMessage(
             source=self._nadi.endpoint_id,
@@ -516,16 +528,17 @@ class SamanaBridge(GADBase):
         shadow_seed: Optional[bytes] = None,
     ) -> Any:  # Returns JivaShadow (always succeeds)
         """
-        Manifest a JivaShadow qualified for the given position.
+        Get a qualified JivaShadow - REUSE first, MANIFEST if needed.
 
-        VARNASHRAMA PRINCIPLE:
-        ======================
-        A Shadow is not randomly spawned and filtered (lottery).
-        A Shadow is MANIFESTED for the position (destiny).
+        ASHRAMA PRINCIPLE:
+        ==================
+        A Vaishnava wastes nothing. If an idle qualified shadow exists
+        in the Registry (Ashrama), reuse it. Only manifest new if needed.
 
         STRATEGY:
-        1. Check pool for existing qualified shadow (reuse)
-        2. If none: Manifest new shadow FOR this position (guaranteed)
+        1. Check Registry for idle qualified shadow (REUSE)
+        2. If none: Manifest new shadow FOR this position (VARNASHRAMA)
+        3. Mark shadow as BUSY in Registry
 
         Args:
             position: Mahamantra position (0-15) - the DESTINATION
@@ -534,34 +547,38 @@ class SamanaBridge(GADBase):
         Returns:
             JivaShadow guaranteed to be qualified (never None)
         """
-        # Lazy imports to avoid circular dependency
-        from vibe_core.mahamantra.lila.adhikara import (
-            find_best_shadow, spawn_shadow_for_position,
-        )
+        registry = self._get_registry()
 
-        # Option 1: Reuse qualified shadow from pool
-        if self._shadow_pool:
-            pool_shadows = list(self._shadow_pool.values())
-            best = find_best_shadow(pool_shadows, position)
-            if best is not None:
-                return best
+        # Option 1: REUSE - Find idle qualified shadow in Ashrama
+        entry = registry.find_idle(position)
+        if entry is not None:
+            self._shadows_reused += 1
+            return entry.shadow
 
-        # Option 2: VARNASHRAMA - Manifest shadow FOR this position
-        # Context = reactor_id + position + optional seed
+        # Option 2: MANIFEST - Create new shadow FOR this position (Varnashrama)
+        from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+
         context = f"{self._reactor_id}_{position}".encode()
         if shadow_seed:
             context = context + b"_" + shadow_seed
 
         shadow = spawn_shadow_for_position(position, context)
-        self._register_shadow(shadow)
-        self._shadows_spawned += 1
+
+        # Register in Ashrama with known qualification
+        registry.register(shadow, qualified_positions={position})
+        self._shadows_manifested += 1
 
         return shadow  # Guaranteed qualified
 
-    def _register_shadow(self, shadow: Any) -> None:  # shadow: JivaShadow
-        """Register a shadow in the pool."""
-        if shadow.shadow_id not in self._shadow_pool:
-            self._shadow_pool[shadow.shadow_id] = shadow
+    def _mark_shadow_busy(self, shadow_id: str, dispatch_id: str) -> None:
+        """Mark shadow as busy in Registry."""
+        registry = self._get_registry()
+        registry.mark_busy(shadow_id, dispatch_id)
+
+    def _mark_shadow_idle(self, shadow_id: str) -> None:
+        """Mark shadow as idle in Registry (ready for reuse)."""
+        registry = self._get_registry()
+        registry.mark_idle(shadow_id)
 
     def dispatch_batch(
         self,
@@ -618,6 +635,7 @@ class SamanaBridge(GADBase):
         Receive a fold result from a kernel.
 
         Returns True if fold was accepted.
+        Also marks the shadow as IDLE (ready for reuse).
         """
         dispatch_id = fold.dispatch_id
 
@@ -628,6 +646,12 @@ class SamanaBridge(GADBase):
         # Store fold
         self._completed_folds[dispatch_id] = fold
         self._folds_received += 1
+
+        # Mark shadow as IDLE (ready for reuse in Ashrama)
+        shadow_id = self._dispatch_shadows.get(dispatch_id)
+        if shadow_id:
+            self._mark_shadow_idle(shadow_id)
+            del self._dispatch_shadows[dispatch_id]
 
         # Remove from pending
         del self._pending_dispatches[dispatch_id]
