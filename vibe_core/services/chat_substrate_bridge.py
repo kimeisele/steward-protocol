@@ -161,71 +161,21 @@ STHANA_GHOSHAVAT: Final[int] = 2  # Voiced → active (0.8)
 STHANA_GHOSHMAHA: Final[int] = 3  # Voiced aspirated → max (1.0)
 STHANA_ANUNASIKA: Final[int] = 4  # Nasal → continuous (0.5)
 
+# =============================================================================
+# PHONEME MAPPINGS - ALL FROM UNIVERSAL PHONETIC BRIDGE (NO HARDCODING!)
+# =============================================================================
 # PHONEME_VARGA: Derived from Universal Phonetic Bridge (converts VargaIndex to int)
 PHONEME_VARGA: Final[Dict[str, int]] = {k: v.value for k, v in _PHONEME_TO_VARGA.items()}
 
-def _build_phoneme_sthana_from_ssot() -> Dict[str, int]:
-    """
-    Build PHONEME_STHANA mapping from SSOT (varna.py).
+# Import PHONEME_TO_STHANA from phonetic_bridge (already derived from protocols)
+from vibe_core.mahamantra.substrate.phonetic_bridge import (
+    PHONEME_TO_STHANA as _PHONEME_TO_STHANA,
+    STHANA_ENERGY as _STHANA_ENERGY,
+    SthanaIndex,
+)
 
-    LOTUS ALGORITHM: Each Varga has 5 positions = 5 Sthanas.
-    Position in Varga directly maps to energy level.
-    """
-    mapping: Dict[str, int] = {}
-
-    # Each Varga has exactly 5 consonants in fixed order:
-    # [0]=unvoiced, [1]=aspirated, [2]=voiced, [3]=voiced-aspirated, [4]=nasal
-    all_vargas = [KAVARGA, CAVARGA, TAVARGA, TAVARGA2, PAVARGA]
-
-    for varga_tuple in all_vargas:
-        for position, varna in enumerate(varga_tuple):
-            # Position within Varga = Sthana
-            sthana = position  # 0-4 maps directly
-            roman = varna.roman.lower()
-            iast = varna.iast.lower()
-            if roman:
-                mapping[roman] = sthana
-            if iast and iast not in mapping:
-                mapping[iast] = sthana
-
-    # Semi-vowels (ANTAHSTHA) - all voiced = GHOSHAVAT
-    for varna in ANTAHSTHA:
-        mapping[varna.roman.lower()] = STHANA_GHOSHAVAT
-        mapping[varna.iast.lower()] = STHANA_GHOSHAVAT
-
-    # Sibilants (USHMAN) - all medium energy = GHOSHAVAT, except H = MAHAPRANA
-    for idx, varna in enumerate(USHMAN):
-        sthana = STHANA_MAHAPRANA if idx == 3 else STHANA_GHOSHAVAT  # H = aspirate
-        mapping[varna.roman.lower()] = sthana
-        mapping[varna.iast.lower()] = sthana
-
-    # Vowels: energy based on openness (derived from acoustic physics)
-    # Open vowels (a) = high energy, closed vowels (i, u) = low energy
-    vowel_energy = {
-        "a": STHANA_MAHAPRANA, "aa": STHANA_MAHAPRANA, "ā": STHANA_MAHAPRANA,
-        "i": STHANA_SPARSHA, "ee": STHANA_SPARSHA, "ī": STHANA_SPARSHA,
-        "u": STHANA_SPARSHA, "oo": STHANA_SPARSHA, "ū": STHANA_SPARSHA,
-        "e": STHANA_GHOSHAVAT, "ai": STHANA_GHOSHMAHA,
-        "o": STHANA_GHOSHAVAT, "au": STHANA_GHOSHMAHA,
-    }
-    mapping.update(vowel_energy)
-
-    # Western additions
-    western_extras = {
-        "c": STHANA_SPARSHA,    # Hard C = K (unvoiced)
-        "q": STHANA_SPARSHA,    # Q = K (unvoiced)
-        "x": STHANA_GHOSHAVAT,  # X = complex
-        "f": STHANA_GHOSHAVAT,  # F = fricative
-        "w": STHANA_GHOSHAVAT,  # W = voiced
-        "z": STHANA_GHOSHAVAT,  # Z = voiced
-    }
-    mapping.update(western_extras)
-
-    return mapping
-
-
-# PHONEME_STHANA: DERIVED FROM SSOT, NOT HARDCODED!
-PHONEME_STHANA: Final[Dict[str, int]] = _build_phoneme_sthana_from_ssot()
+# PHONEME_STHANA: Derived from Universal Phonetic Bridge (converts SthanaIndex to int)
+PHONEME_STHANA: Final[Dict[str, int]] = {k: v.value for k, v in _PHONEME_TO_STHANA.items()}
 
 # =============================================================================
 # SSOT VERIFICATION - Ensure mappings are derived from varna.py
@@ -243,14 +193,8 @@ assert PHONEME_VARGA.get("m") == VARGA_OSHTHYA, "SSOT: M must be OSHTHYA (lips)"
 assert PHONEME_STHANA.get("k") == STHANA_SPARSHA, "SSOT: K must be SPARSHA (unvoiced)"
 assert PHONEME_STHANA.get("m") == STHANA_ANUNASIKA, "SSOT: M must be ANUNASIKA (nasal)"
 
-# Sthana to energy multiplier
-STHANA_ENERGY: Final[Dict[int, float]] = {
-    STHANA_SPARSHA: 0.2,
-    STHANA_MAHAPRANA: 0.6,
-    STHANA_GHOSHAVAT: 0.8,
-    STHANA_GHOSHMAHA: 1.0,
-    STHANA_ANUNASIKA: 0.5,
-}
+# Sthana to energy multiplier (from phonetic_bridge, converted to int keys)
+STHANA_ENERGY: Final[Dict[int, float]] = {k.value: v for k, v in _STHANA_ENERGY.items()}
 
 
 @dataclass
@@ -479,13 +423,25 @@ class ChatSubstrateBridge:
 
         return route
 
-    def get_alternative_routes(self, text: str, count: int = 3) -> List[SubstrateRoute]:
+    def get_alternative_routes(self, text: str, count: Optional[int] = None) -> List[SubstrateRoute]:
         """
         Get alternative routes for negotiation.
 
         When energy is in gray zone, offer alternatives based on
         adjacent quarters and positions.
+
+        CONFIG: Reads max_alternatives and energy_factor from config/chat.yaml
         """
+        # Get config values
+        try:
+            from vibe_core.phoenix.sections.chat import get_chat_config
+            chat_config = get_chat_config()
+            max_alternatives = count or chat_config.routing.max_alternatives
+            energy_factor = chat_config.routing.alternative_energy_factor
+        except Exception:
+            max_alternatives = count or 3
+            energy_factor = 0.8
+
         primary = self.route(text)
         alternatives = [primary]
 
@@ -496,7 +452,7 @@ class ChatSubstrateBridge:
         ]
 
         for q in adjacent_quarters:
-            if len(alternatives) >= count:
+            if len(alternatives) >= max_alternatives:
                 break
 
             positions = QUARTER_POSITIONS[q]
@@ -508,7 +464,7 @@ class ChatSubstrateBridge:
                 mahajana=get_position_mahajana(alt_pos),
                 holy_name=POSITION_NAME[alt_pos],
                 quarter=["GENESIS", "DHARMA", "KARMA", "MOKSHA"][q],
-                energy=primary.energy * 0.8,  # Slightly lower energy
+                energy=primary.energy * energy_factor,  # From config
                 manifests=False,  # Alternative, not primary
                 varga_dominant=primary.varga_dominant,
                 sthana_dominant=primary.sthana_dominant,
@@ -517,7 +473,7 @@ class ChatSubstrateBridge:
             )
             alternatives.append(alt_route)
 
-        return alternatives[:count]
+        return alternatives[:max_alternatives]
 
     @property
     def inertia(self) -> float:
@@ -544,6 +500,8 @@ def get_substrate_bridge() -> ChatSubstrateBridge:
 
     CRITICAL FIX: Was an ISLAND - created directly, bypassing DI.
     Now goes through ServiceRegistry for NagaProxy wrapping.
+
+    CONFIG: Reads inertia from config/chat.yaml via ChatSectionConfig.
     """
     from vibe_core.di import ServiceRegistry
 
@@ -559,7 +517,17 @@ def get_substrate_bridge() -> ChatSubstrateBridge:
     import logging
     logger = logging.getLogger("SUBSTRATE_BRIDGE")
 
-    instance = ChatSubstrateBridge()
+    # Read inertia from ChatSectionConfig (Phoenix config pattern)
+    try:
+        from vibe_core.phoenix.sections.chat import get_chat_config
+        chat_config = get_chat_config()
+        inertia = chat_config.substrate.inertia
+        logger.info(f"📋 ChatSubstrateBridge: inertia={inertia} from config/chat.yaml")
+    except Exception as e:
+        logger.warning(f"Could not load chat config, using default: {e}")
+        inertia = 0.3
+
+    instance = ChatSubstrateBridge(inertia=inertia)
     ServiceRegistry.register(ChatSubstrateBridge, instance)
     logger.info("✅ ChatSubstrateBridge registered via ServiceRegistry (WIRED)")
 

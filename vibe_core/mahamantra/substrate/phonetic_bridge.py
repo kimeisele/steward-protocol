@@ -240,6 +240,36 @@ def _build_phoneme_varga_from_protocols() -> Dict[str, VargaIndex]:
             if varna.roman:
                 mapping[varna.roman.lower()] = VargaIndex(varga_idx)
 
+    # 6. ANTAHSTHA (Semivowels) - Override generic "semivowel" category
+    # Each semivowel has a specific articulation point in Sanskrit phonetics:
+    # य (ya) = palatal → TALAVYA
+    # र (ra) = retroflex → MURDHANYA
+    # ल (la) = dental → DANTYA
+    # व (va) = labial → OSHTHYA
+    semivowel_varga = {
+        "y": VargaIndex.TALAVYA,    # Palatal
+        "r": VargaIndex.MURDHANYA,  # Retroflex
+        "l": VargaIndex.DANTYA,     # Dental
+        "v": VargaIndex.OSHTHYA,    # Labial
+        "w": VargaIndex.OSHTHYA,    # W is labial (Western approximation of व)
+    }
+    mapping.update(semivowel_varga)
+
+    # 7. USHMAN (Sibilants + H) - From varna.py
+    # श (śa) = palatal → TALAVYA
+    # ष (ṣa) = retroflex → MURDHANYA
+    # स (sa) = dental → DANTYA
+    # ह (ha) = glottal → KANTHYA
+    sibilant_varga = {
+        "ś": VargaIndex.TALAVYA,    # Palatal sibilant
+        "sh": VargaIndex.TALAVYA,   # Western approximation
+        "ṣ": VargaIndex.MURDHANYA,  # Retroflex sibilant
+        "shh": VargaIndex.MURDHANYA,  # Retroflex (alternative)
+        "s": VargaIndex.DANTYA,     # Dental sibilant
+        "h": VargaIndex.KANTHYA,    # Glottal aspirate
+    }
+    mapping.update(sibilant_varga)
+
     return mapping
 
 
