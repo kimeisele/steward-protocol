@@ -35,6 +35,8 @@ from .types import (
     ConscienceVerdict,
     ASHRAMA_PERMISSIONS,
     INTENT_PERMISSION_MAP,
+    # Protocol
+    SankalpaOrchestratorProtocol,
 )
 from .will import (
     SankalpaOrchestrator,
@@ -66,6 +68,8 @@ __all__ = [
     "ASHRAMA_PERMISSIONS",
     "INTENT_PERMISSION_MAP",
     "check_conscience",
+    # Protocol
+    "SankalpaOrchestratorProtocol",
     # Logic
     "SankalpaOrchestrator",
     "SankalpaPlanner",
