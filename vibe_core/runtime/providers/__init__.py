@@ -36,7 +36,7 @@ from .base import (
     ProviderInvocationError,
     ProviderNotAvailableError,
 )
-from .factory import create_provider, get_default_provider
+from .factory import create_provider, get_default_provider, get_llm_provider
 
 __all__ = [
     # Base classes (lightweight)
@@ -50,4 +50,6 @@ __all__ = [
     # Factory functions (lazy load providers)
     "create_provider",
     "get_default_provider",
+    # ServiceRegistry factory (NAGA-observed!)
+    "get_llm_provider",
 ]

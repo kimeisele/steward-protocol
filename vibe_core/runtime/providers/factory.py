@@ -247,3 +247,41 @@ def _get_api_key_for_provider(provider_name: str) -> str | None:
     if env_var:
         return os.environ.get(env_var)
     return None
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+def get_llm_provider() -> LLMProvider:
+    """
+    Get LLMProvider through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        Raw LLMProvider → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees all LLM calls)
+    - NAGA profiling (Chitragupta tracks token usage/latency)
+    - NAGA isolation (Kaliya handles API errors)
+
+    Returns:
+        LLMProvider wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(LLMProvider)
+    if existing is not None:
+        return existing
+
+    # Create provider via auto-detection
+    provider_name = _detect_provider()
+    instance = create_provider(provider_name=provider_name)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(LLMProvider, instance)
+    logger.info(f"✅ LLMProvider ({provider_name}) registered via ServiceRegistry (WIRED + NAGA-observed)")
+
+    return ServiceRegistry.get(LLMProvider)  # type: ignore
