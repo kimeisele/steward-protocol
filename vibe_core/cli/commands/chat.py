@@ -1,17 +1,19 @@
 """
-OPUS-310: Chat Command - Protocol-Compliant
+OPUS-310: Chat Command - Indriya-Compliant (Gemini Critique Fixed)
 
-Routes through ChatProtocol → SemanticRouter → Mahajana.
-CLI → CommandRegistry → ChatCommand → ChatService → SemanticRouter → LLM
+NATURAL FLOW (Living Entity Architecture):
+    CLI (Vishaya/World) → ChatIndriya (Sense Organ) → ChatService (Brain) → LLM
 
-PROTOCOL FLOW:
-    1. ChatService.chat() receives message
-    2. OperatorCognitiveProtocol → CognitiveResult (intent)
-    3. SemanticRouter → Mahajana routing
-    4. KnowledgeGraph → Context enrichment
-    5. LLM Provider → Response generation
+VRTTI STATE MACHINE:
+    1. User input → NIDRA → PRAMANA (wake up, perceive)
+    2. Processing → PRAMANA → VIKALPA (inference)
+    3. Response → VIKALPA → SMRTI (memory)
+    4. Idle → SMRTI → NIDRA (sleep)
 
-NO KEYWORD MATCHING. Real semantic routing.
+The CLI is the external world. It must touch the SENSES (Indriya),
+not the SOUL (Service) directly. This is the natural order.
+
+NO BYPASS SURGERY. Signal flows through proper channels.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -49,7 +51,14 @@ class ChatCommand(BaseCommand):
     ]
 
     async def execute(self, args: List[str], context: CommandContext) -> CommandResult:
-        """Execute chat via ChatProtocol with full semantic stack."""
+        """Execute chat via ChatIndriya with Vrtti state management.
+
+        NATURAL FLOW (Gemini Critique Compliant):
+            CLI (Vishaya) → ChatIndriya (Sense Organ) → ChatService (Brain)
+
+        The Indriya manages Vrtti state transitions:
+            NIDRA → PRAMANA → VIKALPA → SMRTI → NIDRA
+        """
         message = " ".join(args) if args else ""
 
         if not message:
@@ -59,40 +68,40 @@ class ChatCommand(BaseCommand):
             )
 
         try:
-            # Import ChatService (protocol-compliant)
-            from vibe_core.services.chat_service import get_chat_service
-            from vibe_core.protocols.chat import ChatContext, ChatMessage
+            # Import ChatIndriya (THE SENSE ORGAN - not ChatService directly!)
+            from vibe_core.services.chat_indriya import get_chat_indriya
 
-            # Get service
-            chat_service = get_chat_service()
+            # Get sense organ (via ServiceRegistry, NAGA-wrapped)
+            indriya = get_chat_indriya()
 
-            # Create context
+            # Create session ID
             session_id = str(uuid.uuid4())
-            chat_context = ChatContext(
-                session_id=session_id,
-                history=[],
-            )
 
-            # Execute through protocol
-            response = await chat_service.chat(message, chat_context)
+            # Execute through INDRIYA (not Service!)
+            # This triggers: NIDRA → PRAMANA → VIKALPA → SMRTI → NIDRA
+            response_tanmatra = await indriya.chat(message, session_id)
 
-            if response.success:
+            # Extract response data from TanmatraMessage
+            metadata = response_tanmatra.metadata or {}
+            success = metadata.get("success", True)
+            mahajana = metadata.get("mahajana", "narada")
+
+            if success:
                 return CommandResult(
                     success=True,
-                    output=f"🕉️ [{response.mahajana}] {response.message.content}",
+                    output=f"🕉️ [{mahajana}] {response_tanmatra.content}",
                     data={
-                        "mahajana": response.mahajana,
-                        "opcode": response.opcode,
-                        "mode": response.mode.value,
-                        "intent": response.intent_type.value if response.intent_type else None,
-                        "confidence": response.confidence,
-                        "protocol_compliant": True,
+                        "mahajana": mahajana,
+                        "intent": response_tanmatra.intent.value,
+                        "tanmatra": response_tanmatra.tanmatra.value,
+                        "message_id": response_tanmatra.message_id,
+                        "vrtti_compliant": True,  # Went through proper state machine
                     },
                 )
             else:
                 return CommandResult(
                     success=False,
-                    error=f"Chat failed: {response.error}",
+                    error=f"Chat failed: {response_tanmatra.content}",
                 )
 
         except Exception as e:
