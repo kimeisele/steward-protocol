@@ -66,6 +66,13 @@ from vibe_core.mahamantra.protocols._lotus import (
     MAHAJANA_POSITIONS,
 )
 
+# DHYANA - Meditation Protocol (LotusTask injection from Sankalpa/Cron/Events)
+from vibe_core.mahamantra.protocols._dhyana import (
+    LotusTask,
+    DhyanaState,
+    FoldDepth,
+)
+
 # KSHETRA - The 24 Tattvas (BG 13.6-7)
 # Chat invokes: SHROTRA (hear), VAK (speak), MANAS (think), BUDDHI (understand)
 from vibe_core.mahamantra.substrate.tattva import (
@@ -377,6 +384,160 @@ class ChatService(ChatProtocol, LotusBase):
     def get_active_kshetra(self) -> List[KshetraElement]:
         """Get currently active Kshetra elements in this chat cycle."""
         return self._active_kshetra.copy()
+
+    # ==========================================================================
+    # LOTUS TASK INJECTION (Antaryami - The Inner Voice)
+    # ==========================================================================
+
+    async def inject_task(self, lotus_task: "LotusTask") -> Dict:
+        """
+        Inject an external LotusTask into ChatService.
+
+        ANTARYAMI - The Inner Voice (BG 18.61):
+        Not all tasks come from user input. Some arise from:
+        - Sankalpa (proactive intent/will)
+        - Cron/Scheduled tasks
+        - External events (webhooks, triggers)
+        - System health checks
+
+        This is the INJECTION PORT for such tasks.
+
+        LOTUS LIFECYCLE (same as chat, but internal):
+        1. SEED: Receive task (no user input - internal!)
+        2. STEM: Route to Mahajana based on task metadata
+        3. BLOOM: Execute/unfold
+        4. GARUDA: Complete + fold deeper (Japa)
+
+        Args:
+            lotus_task: LotusTask[T] from Sankalpa or other sources
+
+        Returns:
+            Dict with execution result + Dhyana state
+        """
+        logger.info(f"🪷 INJECT: Receiving LotusTask {lotus_task.task_id} (depth={lotus_task.fold_depth.name})")
+
+        # =================================================================
+        # SEED: Internal task reception (no SHROTRA - internal voice!)
+        # =================================================================
+        self._state.mode = LotusMode.SEED
+        self._active_kshetra = [
+            KshetraElement.MANAS,     # Mind receives internal task
+            KshetraElement.AVYAKTA,   # Unmanifested (subconscious - where Sankalpa arises)
+        ]
+
+        # Extract task metadata
+        payload = lotus_task.payload
+        task_id = lotus_task.task_id
+
+        # Determine message/intent from payload
+        # Payload can be SankalpaIntent, str, or dict
+        if hasattr(payload, "description"):
+            # SankalpaIntent
+            message = payload.description
+            intent_type = getattr(payload, "intent_type", "sankalpa")
+        elif isinstance(payload, str):
+            message = payload
+            intent_type = "injected"
+        elif isinstance(payload, dict):
+            message = payload.get("message", payload.get("description", str(payload)))
+            intent_type = payload.get("intent_type", "injected")
+        else:
+            message = str(payload)
+            intent_type = "unknown"
+
+        # =================================================================
+        # STEM: Route to Mahajana (BUDDHI active)
+        # =================================================================
+        self._state.mode = LotusMode.STEM
+        self._active_kshetra.append(KshetraElement.BUDDHI)
+
+        # Get routing from payload metadata or compute fresh
+        resonance_result = self._compute_resonance(message)
+        mahajana = resonance_result["mahajana"]
+        position = resonance_result["position"]
+
+        logger.info(f"🌿 INJECT STEM: {task_id} → {mahajana.upper()} (pos={position})")
+
+        # Update LotusTask state
+        lotus_task.dhyana_state = DhyanaState.DHARANA  # Concentration begins
+
+        # =================================================================
+        # BLOOM: Execute the task
+        # =================================================================
+        self._state.mode = LotusMode.BLOOM
+        self._active_kshetra.extend([
+            KshetraElement.VAK,      # Speaking (if response needed)
+            KshetraElement.AHANKARA, # Identity of executor
+        ])
+
+        execution_result = None
+        try:
+            # Build context for execution
+            context = ChatContext(
+                session_id=f"inject_{task_id}",
+                history=[],
+            )
+
+            # Execute via appropriate path
+            lotus_result = {
+                "mahajana": mahajana,
+                "position": position,
+                "quarter": ["GENESIS", "DHARMA", "KARMA", "MOKSHA"][position // 4],
+            }
+
+            # Try Shadow Reactor for action positions
+            if position in [1, 8]:
+                execution_result = await self._execute_via_shadow(message, lotus_result, context)
+
+            # Fallback to bridge
+            if execution_result is None:
+                execution_result = await self._execute_via_bridge(message, lotus_result)
+
+            lotus_task.dhyana_state = DhyanaState.DHYANA  # Deep meditation (execution)
+
+        except Exception as e:
+            logger.error(f"❌ INJECT BLOOM failed: {e}")
+            execution_result = {"success": False, "error": str(e)}
+
+        # =================================================================
+        # GARUDA: Complete cycle + Fold deeper (Japa progression)
+        # =================================================================
+        self._state.mode = LotusMode.GARUDA
+
+        # Fold the task deeper (recursive introspection)
+        if execution_result and execution_result.get("success"):
+            new_depth = lotus_task.fold()  # Fold deeper!
+            logger.info(f"🦅 INJECT GARUDA: Fold → {new_depth.name}")
+
+            # If Japa enabled, increment
+            if lotus_task.japa:
+                lotus_task.japa.current_count += 1
+                if lotus_task.japa.is_complete():
+                    lotus_task.dhyana_state = DhyanaState.SAMADHI
+                    logger.info(f"🕉️ SIDDHI! Task {task_id} reached SAMADHI after {lotus_task.japa.current_count} repetitions")
+
+        # Complete Lotus cycle
+        self.chant()
+
+        # Build result
+        result = {
+            "task_id": task_id,
+            "success": execution_result.get("success", False) if execution_result else False,
+            "mahajana": mahajana,
+            "position": position,
+            "dhyana_state": lotus_task.dhyana_state.value,
+            "fold_depth": lotus_task.fold_depth.value,
+            "execution": execution_result,
+            "kshetra_active": [e.name for e in self._active_kshetra],
+            "japa_progress": f"{lotus_task.japa.current_count}/{lotus_task.japa.target_count}" if lotus_task.japa else None,
+        }
+
+        logger.info(
+            f"🪷 INJECT COMPLETE: {task_id} → {lotus_task.dhyana_state.name} "
+            f"(depth={lotus_task.fold_depth.name}, kshetra={len(self._active_kshetra)})"
+        )
+
+        return result
 
     # ==========================================================================
     # CHAT OPERATIONS (Starship Command I/O)
