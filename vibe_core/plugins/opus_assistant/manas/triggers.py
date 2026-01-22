@@ -353,16 +353,14 @@ class SynapseVocabulary:
         vocab = SynapseVocabulary.get()
         trigger = vocab.normalize_trigger(intent)
         action = vocab.get_action_for_intent(intent_type)
-    """
 
-    _instance: Optional["SynapseVocabulary"] = None
+    NOTE: Use get_synapse_vocabulary() to access via ServiceRegistry.
+    """
 
     @classmethod
     def get(cls) -> "SynapseVocabulary":
-        """Get singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """Get singleton instance (backward compat - use get_synapse_vocabulary())."""
+        return get_synapse_vocabulary()
 
     def normalize_trigger(self, intent: Any) -> Optional[str]:
         """Normalize intent to canonical trigger string."""
@@ -908,3 +906,41 @@ class SynapticMemory(StoreRecallProtocol):
             # self._get_store().delete_trigger(key)
             return True
         return False
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_synapse_vocabulary() -> SynapseVocabulary:
+    """
+    Get SynapseVocabulary through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        SynapseVocabulary → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees vocabulary lookups)
+    - NAGA profiling (Chitragupta tracks normalization)
+    - NAGA isolation (Kaliya handles vocabulary errors)
+
+    Returns:
+        SynapseVocabulary wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(SynapseVocabulary)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = SynapseVocabulary()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(SynapseVocabulary, instance)
+    logger.info("✅ SynapseVocabulary registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(SynapseVocabulary)  # type: ignore

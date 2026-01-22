@@ -84,15 +84,15 @@ so they don't have `_naga_flooded = True`).
 | `cli/ci_cli.py` | `CIManifest._instance` | `CIManifest` | ✅ DONE |
 | `unified_registry.py` | `UnifiedRegistry._instance` | `UnifiedRegistry` | ✅ DONE |
 
-### 6. STATE & COGNITIVE (P1)
+### 6. STATE & COGNITIVE (P1 - DONE!)
 
 | File | Singleton | Protocol | Status |
 |------|-----------|----------|--------|
-| `state/cognitive_weaver.py` | `_weaver_instance` | `CognitiveWeaverProtocol` | TODO |
-| `runtime/context_loader.py` | `_context_instance` | `ContextManagerProtocol` | TODO |
-| `plugins/opus_assistant/manas/cognitive_kernel.py` | class-level | `CognitiveKernelProtocol` | TODO |
-| `plugins/opus_assistant/manas/akshara.py` | `Varnamala._instance` | `VarnamalaProtocol` | TODO |
-| `plugins/opus_assistant/manas/triggers.py` | `SynapseVocabulary._instance` | `SynapseProtocol` | TODO |
+| `state/cognitive_weaver.py` | `_weaver_instance` | `CognitiveWeaver` | ✅ DONE |
+| `runtime/context_loader.py` | `_context_instance` | `ContextManager` | ✅ DONE |
+| `plugins/opus_assistant/manas/cognitive_kernel.py` | class-level | `CognitiveKernelProtocol` | ✅ DONE |
+| `plugins/opus_assistant/manas/akshara.py` | `Varnamala._instance` | `Varnamala` | ✅ DONE |
+| `plugins/opus_assistant/manas/triggers.py` | `SynapseVocabulary._instance` | `SynapseVocabulary` | ✅ DONE |
 
 ### 7. PROTOCOLS & GOVERNANCE (P2)
 
@@ -163,11 +163,11 @@ def get_my_service() -> MyService:
 - [x] Phase 3: Mahajana Protocols (5 singletons) - DONE
 - [x] Phase 4: Core Services (6 singletons) - DONE
 - [x] Phase 5: CLI & Registry (4 singletons) - DONE
-- [ ] Phase 6: State & Cognitive (5 singletons)
+- [x] Phase 6: State & Cognitive (5 singletons) - DONE
 - [ ] Phase 7: Protocols & Governance (4 singletons)
 - [ ] Phase 8: Tools & Cartridges (3 singletons)
 
-**Total: ~17 singletons remaining** (was 43, 26 done so far)
+**Total: ~7 singletons remaining** (was 43, 31 done so far)
 
 ---
 

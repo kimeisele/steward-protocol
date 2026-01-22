@@ -702,18 +702,41 @@ class CognitiveWeaver:
 
 
 # =============================================================================
-# Singleton Access
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
 # =============================================================================
-
-_weaver_instance: Optional[CognitiveWeaver] = None
 
 
 def get_cognitive_weaver() -> CognitiveWeaver:
-    """Get or create the global CognitiveWeaver instance."""
-    global _weaver_instance
-    if _weaver_instance is None:
-        _weaver_instance = CognitiveWeaver()
-    return _weaver_instance
+    """
+    Get CognitiveWeaver through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        CognitiveWeaver → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees cognitive weaving)
+    - NAGA profiling (Chitragupta tracks weaving timing)
+    - NAGA isolation (Kaliya handles weaving errors)
+
+    Returns:
+        CognitiveWeaver wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(CognitiveWeaver)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = CognitiveWeaver()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(CognitiveWeaver, instance)
+    logger.info("✅ CognitiveWeaver registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(CognitiveWeaver)  # type: ignore
 
 
 # =============================================================================

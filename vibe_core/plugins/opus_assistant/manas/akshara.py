@@ -171,9 +171,9 @@ class Varnamala:
     मूर्धन्य ट      ठ      ड      ढ      ण    (Cerebrum)
     दन्त्य   त      थ      द      ध      न    (Teeth)
     ओष्ठ्य   प      फ      ब      भ      म    (Lips)
-    """
 
-    _instance: Optional["Varnamala"] = None
+    NOTE: Use get_varnamala() to access via ServiceRegistry.
+    """
 
     def __init__(self):
         """Initialize the Varnamala matrix."""
@@ -184,10 +184,8 @@ class Varnamala:
 
     @classmethod
     def get(cls) -> "Varnamala":
-        """Get singleton instance."""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """Get singleton instance (backward compat - use get_varnamala())."""
+        return get_varnamala()
 
     def _build_matrix(self) -> None:
         """Build the complete Varnamala matrix."""
@@ -1047,3 +1045,41 @@ def print_resonance_matrix() -> str:
         lines.append(row)
 
     return "\n".join(lines)
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_varnamala() -> Varnamala:
+    """
+    Get Varnamala through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        Varnamala → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees Akshara operations)
+    - NAGA profiling (Chitragupta tracks resonance calculations)
+    - NAGA isolation (Kaliya handles computation errors)
+
+    Returns:
+        Varnamala wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(Varnamala)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = Varnamala()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(Varnamala, instance)
+    logger.info("✅ Varnamala registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(Varnamala)  # type: ignore
