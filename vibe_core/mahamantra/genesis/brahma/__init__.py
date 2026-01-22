@@ -31,15 +31,19 @@ PARAMPARA_VECTOR: Final[int] = 74
 
 def __getattr__(name: str) -> object:
     """
-    Lazy load BrahmaService from the services layer.
-    Unification of Kernel and Mahamantra.
+    Lazy load BrahmaService and NullBrahma.
+    NO MANUAL WIRING - auto-discovery needs these exports.
     """
     if name == "BrahmaService":
         from vibe_core.services.brahma_service import BrahmaService
 
         return BrahmaService
 
-    # Legacy fallbacks might be needed for types, handled by static imports above
+    if name == "NullBrahma":
+        from vibe_core.protocols.mahajanas.brahma import NullBrahma
+
+        return NullBrahma
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
