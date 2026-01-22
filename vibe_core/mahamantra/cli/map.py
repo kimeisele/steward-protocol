@@ -86,6 +86,12 @@ def get_all_cli_commands() -> Dict[str, int]:
     """
     commands: Dict[str, int] = {}
 
+    # Import Bridge Mappings for Correct Position Attribution
+    try:
+        from vibe_core.mahamantra.cli.bridge import _KEYWORD_TO_POSITION
+    except ImportError:
+        _KEYWORD_TO_POSITION = {}
+
     try:
         # Get UnifiedCLI commands (cmd_* methods)
         from vibe_core.cli.unified_cli import UnifiedCLI
@@ -95,9 +101,15 @@ def get_all_cli_commands() -> Dict[str, int]:
         for attr in dir(cli):
             if attr.startswith("cmd_"):
                 cmd_name = attr[4:]  # Remove "cmd_" prefix
-                # Hash command to position (same as mahamantra.route)
-                mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(cmd_name.lower()))
-                position = mutation_vector % 16
+                
+                # 1. Try Bridge Mapping (Correct Domain)
+                if cmd_name in _KEYWORD_TO_POSITION:
+                    position = _KEYWORD_TO_POSITION[cmd_name]
+                else:
+                    # 2. Fallback to Parampara Hash
+                    mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(cmd_name.lower()))
+                    position = mutation_vector % 16
+                
                 commands[cmd_name] = position
     except ImportError:
         pass
