@@ -71,6 +71,8 @@ class LearningLoop:
     - MIN_FREQUENCY: Alias candidate must be used >= 3 times
     - MIN_SUCCESS_RATE: Alias candidate must have >= 80% success rate
     - AUTO_APPROVE_THRESHOLD: Auto-approve if confidence >= 90%
+
+    NOTE: Use get_learning_loop() to access via ServiceRegistry.
     """
 
     # Thresholds
@@ -78,8 +80,6 @@ class LearningLoop:
     MIN_SUCCESS_RATE = 0.8
     AUTO_APPROVE_THRESHOLD = 0.9
     TICK_INTERVAL_SECONDS = 60  # Don't run more than once per minute
-
-    _instance: Optional["LearningLoop"] = None
 
     def __init__(
         self,
@@ -103,15 +103,15 @@ class LearningLoop:
 
     @classmethod
     def get_instance(cls) -> "LearningLoop":
-        """Singleton access."""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """Singleton access (backward compat - use get_learning_loop())."""
+        return get_learning_loop()
 
     @classmethod
     def reset(cls) -> None:
         """Reset singleton (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(LearningLoop)
 
     def _get_command_registry(self):
         """Lazy load CommandRegistry to avoid circular imports."""
@@ -372,3 +372,41 @@ class LearningLoop:
             )
 
         return sorted(suggestions, key=lambda x: x["frequency"], reverse=True)
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_learning_loop() -> LearningLoop:
+    """
+    Get LearningLoop through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        LearningLoop → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees learning operations)
+    - NAGA profiling (Chitragupta tracks tick timing)
+    - NAGA isolation (Kaliya handles learning errors)
+
+    Returns:
+        LearningLoop wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(LearningLoop)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = LearningLoop()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(LearningLoop, instance)
+    logger.info("✅ LearningLoop registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(LearningLoop)  # type: ignore
