@@ -900,6 +900,12 @@ class ChatService(ChatProtocol):
             task_id = f"chat_{context.session_id[:8]}_{position}"
             task_description = f"Execute: {message[:50]}"
 
+            # Parse action from message for TaskKernel execution
+            # TaskKernel checks for 'action' or 'tool_call' in metadata
+            words = message.lower().split()
+            action = words[0] if words else "unknown"
+            action_args = words[1:] if len(words) > 1 else []
+
             # Dispatch to TaskKernel via SamanaBridge
             dispatch_id = bridge.dispatch(
                 task_id=task_id,
@@ -907,9 +913,15 @@ class ChatService(ChatProtocol):
                 position=position,
                 phase="bhoga" if position < 8 else "prasadam",
                 payload={
-                    "message": message,
-                    "mahajana": lotus_result.get("mahajana"),
-                    "session_id": context.session_id,
+                    # Action spec for TaskKernel execution
+                    "action": action,
+                    "context": {
+                        "args": action_args,
+                        "message": message,
+                        "mahajana": lotus_result.get("mahajana"),
+                        "session_id": context.session_id,
+                        "position": position,
+                    },
                 },
             )
 
