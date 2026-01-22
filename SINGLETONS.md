@@ -38,15 +38,18 @@ Observable services (Narada sees all)
 **NOTE**: The mixins (Vasuki, Takshaka, Sesha) are NOT global singletons! They cache
 ServiceRegistry lookups per-instance (`self._*_instance`), which is correct pattern.
 
-### 2. MAHAMANTRA SUBSTRATE (P0)
+### 2. MAHAMANTRA SUBSTRATE (P0 - DONE!)
 
 | File | Singleton | Protocol | Status |
 |------|-----------|----------|--------|
-| `mahamantra/substrate/prabhupada.py` | `_instance` | `PrabhupadaProtocol` | TODO |
-| `mahamantra/substrate/phonetic_bridge.py` | `_bridge_instance` | `PhoneticBridgeProtocol` | TODO |
-| `mahamantra/protocols/_declaration.py` | `DeclarationRegistry._instance` | `DeclarationProtocol` | TODO |
-| `mahamantra/protocols/_bridge.py` | `BridgeRegistry._instance` | `BridgeProtocol` | TODO |
-| `mahamantra/protocols/_steward.py` | `StewardSystem._instance` | `StewardProtocol` | TODO |
+| `mahamantra/substrate/prabhupada.py` | `_instance` | `PrabhupadaProtocol` | ✅ DONE |
+| `mahamantra/substrate/phonetic_bridge.py` | `_bridge_instance` | `UniversalPhoneticBridge` | ✅ DONE |
+| `mahamantra/protocols/_declaration.py` | `DeclarationRegistry._instance` | `DeclarationRegistry` | ✅ DONE |
+| `mahamantra/protocols/_bridge.py` | `BridgeRegistry._instance` | `BridgeRegistry` | ✅ DONE |
+| `mahamantra/protocols/_steward.py` | `StewardSystem._instance` | `StewardSystem` | ✅ DONE |
+
+**NOTE**: All MAHAMANTRA substrate services are marked with `_naga_flooded = True`
+(core infrastructure, no NagaProxy auto-wrap).
 
 ### 3. MAHAJANA PROTOCOLS (P0)
 
@@ -153,7 +156,7 @@ def get_my_service() -> MyService:
 
 - [x] Phase 0: ChatService dependencies (LLM, Knowledge, Kapila) - DONE
 - [x] Phase 1: NAGA Infrastructure (3 real singletons + 3 OK mixins) - DONE
-- [ ] Phase 2: Mahamantra Substrate (5 singletons)
+- [x] Phase 2: Mahamantra Substrate (5 singletons) - DONE
 - [ ] Phase 3: Mahajana Protocols (5 singletons)
 - [ ] Phase 4: Core Services (6 singletons)
 - [ ] Phase 5: CLI & Registry (4 singletons)
@@ -161,7 +164,7 @@ def get_my_service() -> MyService:
 - [ ] Phase 7: Protocols & Governance (4 singletons)
 - [ ] Phase 8: Tools & Cartridges (3 singletons)
 
-**Total: ~37 singletons remaining** (was 43, 6 done so far)
+**Total: ~32 singletons remaining** (was 43, 11 done so far)
 
 ---
 

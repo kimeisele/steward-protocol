@@ -45,6 +45,7 @@ __mahajana__ = "vyasa"
 __position__ = 4
 __genesis__ = "0x3d990745"  # GenesisByte: parampara % 37 == 0
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -92,6 +93,8 @@ from vibe_core.mahamantra.protocols._graph import (
 from vibe_core.mahamantra.protocols._bridge import (
     BridgeRegistry,
 )
+
+_logger = logging.getLogger("STEWARD")
 
 
 # =============================================================================
@@ -264,26 +267,27 @@ class StewardSystem:
     - DeclarationRegistry (identities)
 
     All accessed through ONE interface.
+
+    NOTE: Use get_steward() to access via ServiceRegistry.
     """
 
-    _instance: ClassVar[Optional["StewardSystem"]] = None
+    # MAHAMANTRA SUBSTRATE: Core infrastructure, no auto-wrap needed
+    _naga_flooded: bool = True
+    _naga_gene: str = "steward"
 
-    def __new__(cls) -> "StewardSystem":
-        """Singleton pattern - there is only ONE Steward."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialize()
-        return cls._instance
-
-    def _initialize(self) -> None:
+    def __init__(self) -> None:
         """Initialize the system."""
+        from vibe_core.mahamantra.protocols._bridge import get_bridge_registry
+        from vibe_core.mahamantra.protocols._declaration import get_declaration_registry
+
         self._state = StewardState()
         self._lotus_tree: LotusTree[Type[MahamantraProtocol]] = LotusTree()
         self._lotus_hologram = LotusHologram()
         self._vedic_graph = VedicGraph()
         self._protocol_graph = ProtocolGraph()
-        self._bridge_registry = BridgeRegistry()
-        self._declaration_registry = DeclarationRegistry()
+        # Use ServiceRegistry-based factories for sub-registries
+        self._bridge_registry = get_bridge_registry()
+        self._declaration_registry = get_declaration_registry()
         self._protocols: Dict[str, Type[MahamantraProtocol]] = {}
 
     @property
@@ -503,11 +507,33 @@ assert _valid, f"StewardProtocol failed validation: {_violations}"
 
 def get_steward() -> StewardSystem:
     """
-    Get THE Steward system.
+    Get StewardSystem through ServiceRegistry.
+
+    ARCHITECTURE:
+        StewardSystem is THE MAHAMANTRA manifesting in code.
+        Uses ServiceRegistry for singleton pattern but is NOT auto-wrapped
+        with NagaProxy (marked with _naga_flooded = True).
 
     There is only ONE Steward - like Krishna, one without a second.
+
+    Returns:
+        StewardSystem instance (singleton via ServiceRegistry)
     """
-    return StewardSystem()
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(StewardSystem)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = StewardSystem()
+
+    # Register with ServiceRegistry (no NagaProxy wrap - _naga_flooded = True)
+    ServiceRegistry.register(StewardSystem, instance)
+    _logger.info("✅ StewardSystem registered via ServiceRegistry (MAHAMANTRA substrate)")
+
+    return ServiceRegistry.get(StewardSystem)  # type: ignore
 
 
 def steward() -> StewardSystem:

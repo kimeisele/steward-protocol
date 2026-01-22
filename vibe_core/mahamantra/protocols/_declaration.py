@@ -322,40 +322,29 @@ class DeclarationRegistry:
     The Mahamantra scanner populates this registry.
     Other components query it to find things.
 
-    SINGLETON: Only one registry exists.
+    SINGLETON: Use get_declaration_registry() for ServiceRegistry access.
 
     EXTENDED (Senior Architect):
         Also caches module exports for cross-codebase routing.
         resolve_export() provides O(1) lookup for Lotus fallback.
+
+    NOTE: Use get_declaration_registry() to access via ServiceRegistry.
     """
 
-    _instance: ClassVar[Optional["DeclarationRegistry"]] = None
-
-    def __new__(cls) -> "DeclarationRegistry":
-        """Singleton pattern."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._cards = {}
-            cls._instance._by_mahajana = {}
-            cls._instance._by_position = {}
-            cls._instance._by_capability = {}
-            # Extended: module exports cache for Lotus routing
-            cls._instance._mahajana_modules: Dict[str, List[str]] = {}  # mahajana → [module_paths]
-            cls._instance._export_cache: Dict[str, object] = {}  # "mahajana.ExportName" → object
-            cls._instance._scanner_loaded = False
-        return cls._instance
+    # MAHAMANTRA SUBSTRATE: Core infrastructure, no auto-wrap needed
+    _naga_flooded: bool = True
+    _naga_gene: str = "declaration"
 
     def __init__(self) -> None:
-        # Already initialized in __new__
-        pass
-
-    _cards: Dict[str, MahajanaCard]
-    _by_mahajana: Dict[str, List[MahajanaCard]]
-    _by_position: Dict[int, List[MahajanaCard]]
-    _by_capability: Dict[str, List[MahajanaCard]]
-    _mahajana_modules: Dict[str, List[str]]
-    _export_cache: Dict[str, object]
-    _scanner_loaded: bool
+        """Initialize the registry."""
+        self._cards: Dict[str, MahajanaCard] = {}
+        self._by_mahajana: Dict[str, List[MahajanaCard]] = {}
+        self._by_position: Dict[int, List[MahajanaCard]] = {}
+        self._by_capability: Dict[str, List[MahajanaCard]] = {}
+        # Extended: module exports cache for Lotus routing
+        self._mahajana_modules: Dict[str, List[str]] = {}  # mahajana → [module_paths]
+        self._export_cache: Dict[str, object] = {}  # "mahajana.ExportName" → object
+        self._scanner_loaded: bool = False
 
     def register(self, card: MahajanaCard) -> None:
         """Register a mahajana card."""
@@ -559,6 +548,44 @@ def read_declaration(module_path: str) -> Optional[MahajanaCard]:
 
 
 # =============================================================================
+# SERVICEREGISTRY FACTORY
+# =============================================================================
+
+import logging
+
+_logger = logging.getLogger("DECLARATION")
+
+
+def get_declaration_registry() -> DeclarationRegistry:
+    """
+    Get DeclarationRegistry through ServiceRegistry.
+
+    ARCHITECTURE:
+        DeclarationRegistry is MAHAMANTRA SUBSTRATE - manages mahajana cards.
+        Uses ServiceRegistry for singleton pattern but is NOT auto-wrapped
+        with NagaProxy (marked with _naga_flooded = True).
+
+    Returns:
+        DeclarationRegistry instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(DeclarationRegistry)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = DeclarationRegistry()
+
+    # Register with ServiceRegistry (no NagaProxy wrap - _naga_flooded = True)
+    ServiceRegistry.register(DeclarationRegistry, instance)
+    _logger.info("✅ DeclarationRegistry registered via ServiceRegistry (MAHAMANTRA substrate)")
+
+    return ServiceRegistry.get(DeclarationRegistry)  # type: ignore
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -571,6 +598,7 @@ __all__ = [
     "ModuleDeclaration",
     # Registry
     "DeclarationRegistry",
+    "get_declaration_registry",
     # Protocol
     "DeclarationProtocol",
     # Helper

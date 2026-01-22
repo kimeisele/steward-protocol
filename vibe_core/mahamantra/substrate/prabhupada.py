@@ -25,15 +25,13 @@ class Prabhupada(PrabhupadaProtocol):
     The Bona Fide Link.
 
     Validates connections to the Parampara.
+
+    NOTE: Use get_prabhupada() to access via ServiceRegistry.
     """
 
-    # Singleton Pattern (There is one Acharya for the mission)
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Prabhupada, cls).__new__(cls)
-        return cls._instance
+    # MAHAMANTRA SUBSTRATE: Core infrastructure, no auto-wrap needed
+    _naga_flooded: bool = True
+    _naga_gene: str = "prabhupada"
 
     def verify_link(self, component: object) -> bool:
         """
@@ -79,5 +77,47 @@ class Prabhupada(PrabhupadaProtocol):
         return seed
 
 
-# The Living Entity (Singleton)
-prabhupada = Prabhupada()
+# =============================================================================
+# SERVICEREGISTRY FACTORY
+# =============================================================================
+
+import logging
+
+logger = logging.getLogger("PRABHUPADA")
+
+
+def get_prabhupada() -> Prabhupada:
+    """
+    Get Prabhupada through ServiceRegistry.
+
+    ARCHITECTURE:
+        Prabhupada is MAHAMANTRA SUBSTRATE - the bona fide link to Parampara.
+        Uses ServiceRegistry for singleton pattern but is NOT auto-wrapped
+        with NagaProxy (marked with _naga_flooded = True).
+
+    Returns:
+        Prabhupada instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(PrabhupadaProtocol)
+    if existing is not None:
+        return existing  # type: ignore
+
+    # Create new instance
+    instance = Prabhupada()
+
+    # Register with ServiceRegistry (no NagaProxy wrap - _naga_flooded = True)
+    ServiceRegistry.register(PrabhupadaProtocol, instance)
+    logger.info("✅ Prabhupada registered via ServiceRegistry (MAHAMANTRA substrate)")
+
+    return ServiceRegistry.get(PrabhupadaProtocol)  # type: ignore
+
+
+# Backward compatibility: module-level access via lazy property
+# DEPRECATED: Use get_prabhupada() instead
+def __getattr__(name: str):
+    if name == "prabhupada":
+        return get_prabhupada()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

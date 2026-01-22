@@ -359,20 +359,18 @@ class BridgeRegistry:
     - Lookup by name
     - Routing through bridges
     - Health monitoring
+
+    NOTE: Use get_bridge_registry() to access via ServiceRegistry.
     """
 
-    _instance: ClassVar[Optional["BridgeRegistry"]] = None
+    # MAHAMANTRA SUBSTRATE: Core infrastructure, no auto-wrap needed
+    _naga_flooded: bool = True
+    _naga_gene: str = "bridge"
 
-    def __new__(cls) -> "BridgeRegistry":
-        """Singleton pattern."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._bridges = {}
-            cls._instance._by_type = {}
-        return cls._instance
-
-    _bridges: Dict[str, Bridge]
-    _by_type: Dict[BridgeType, List[str]]
+    def __init__(self) -> None:
+        """Initialize the registry."""
+        self._bridges: Dict[str, Bridge] = {}
+        self._by_type: Dict[BridgeType, List[str]] = {}
 
     def register(self, bridge: Bridge) -> None:
         """Register a bridge."""
@@ -598,13 +596,41 @@ assert _valid, f"BridgeProtocol failed validation: {_violations}"
 
 
 # =============================================================================
-# CONVENIENCE: Get the global registry
+# SERVICEREGISTRY FACTORY
 # =============================================================================
+
+import logging
+
+_logger = logging.getLogger("BRIDGE")
 
 
 def get_bridge_registry() -> BridgeRegistry:
-    """Get the global bridge registry."""
-    return BridgeRegistry()
+    """
+    Get BridgeRegistry through ServiceRegistry.
+
+    ARCHITECTURE:
+        BridgeRegistry is MAHAMANTRA SUBSTRATE - manages protocol bridges.
+        Uses ServiceRegistry for singleton pattern but is NOT auto-wrapped
+        with NagaProxy (marked with _naga_flooded = True).
+
+    Returns:
+        BridgeRegistry instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(BridgeRegistry)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = BridgeRegistry()
+
+    # Register with ServiceRegistry (no NagaProxy wrap - _naga_flooded = True)
+    ServiceRegistry.register(BridgeRegistry, instance)
+    _logger.info("✅ BridgeRegistry registered via ServiceRegistry (MAHAMANTRA substrate)")
+
+    return ServiceRegistry.get(BridgeRegistry)  # type: ignore
 
 
 # =============================================================================
