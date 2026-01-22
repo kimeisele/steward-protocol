@@ -115,6 +115,14 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     WORDS as _PROTO_WORDS,
 )
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES as _PROTO_HALVES,
+    HALF_SIZE as _PROTO_HALF_SIZE,
+    HARE_COUNT as _PROTO_HARE_COUNT,
+    KRISHNA_COUNT as _PROTO_KRISHNA_COUNT,
+    RAMA_COUNT as _PROTO_RAMA_COUNT,
+    SECONDS_PER_DAY as _PROTO_SECONDS_PER_DAY,
+)
 
 # =============================================================================
 # LEVEL -2: KRISHNA = MAHAMANTRA (The Source - Acintya)
@@ -532,6 +540,12 @@ assert JIVA_QUALITIES == _PROTO_JIVA_QUALITIES, "SSOT violation: JIVA_QUALITIES 
 assert PRANA_DURATION_S == _PROTO_PRANA_DURATION_S, "SSOT violation: PRANA_DURATION_S != protocols/_seed.py"
 assert PRANA_DURATION_MS == _PROTO_PRANA_DURATION_MS, "SSOT violation: PRANA_DURATION_MS != protocols/_seed.py"
 assert TICK_INTERVAL_MS == _PROTO_TICK_INTERVAL_MS, "SSOT violation: TICK_INTERVAL_MS != protocols/_seed.py"
+assert HALVES == _PROTO_HALVES, "SSOT violation: HALVES != protocols/_seed.py"
+assert HALF_SIZE == _PROTO_HALF_SIZE, "SSOT violation: HALF_SIZE != protocols/_seed.py"
+assert HARE_COUNT == _PROTO_HARE_COUNT, "SSOT violation: HARE_COUNT != protocols/_seed.py"
+assert KRISHNA_COUNT == _PROTO_KRISHNA_COUNT, "SSOT violation: KRISHNA_COUNT != protocols/_seed.py"
+assert RAMA_COUNT == _PROTO_RAMA_COUNT, "SSOT violation: RAMA_COUNT != protocols/_seed.py"
+assert SECONDS_PER_DAY == _PROTO_SECONDS_PER_DAY, "SSOT violation: SECONDS_PER_DAY != protocols/_seed.py"
 
 # AKSARA_COUNT: 32 syllables (2 per word)
 AKSARA_COUNT: Final[int] = WORDS * 2  # 32
