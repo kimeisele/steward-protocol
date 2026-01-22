@@ -173,7 +173,7 @@ class UnifiedRegistry:
     The user shouldn't need to know the implementation type.
 
     Usage:
-        registry = UnifiedRegistry.get_instance()
+        registry = get_unified_registry()
         registry.discover_all()
 
         # Get capability (don't care if tool or circuit)
@@ -183,9 +183,9 @@ class UnifiedRegistry:
         # List all capabilities
         for meta in registry.list_all():
             print(meta.capability_id, meta.capability_type)
-    """
 
-    _instance: Optional["UnifiedRegistry"] = None
+    NOTE: Use get_unified_registry() to access via ServiceRegistry.
+    """
 
     def __init__(self):
         self._capabilities: Dict[str, Any] = {}
@@ -194,15 +194,15 @@ class UnifiedRegistry:
 
     @classmethod
     def get_instance(cls) -> "UnifiedRegistry":
-        """Singleton access."""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """Singleton access (backward compat - use get_unified_registry())."""
+        return get_unified_registry()
 
     @classmethod
     def reset(cls) -> None:
         """Reset singleton (for testing)."""
-        cls._instance = None
+        from vibe_core.di import ServiceRegistry
+
+        ServiceRegistry.unregister(UnifiedRegistry)
 
     def discover_all(self, force: bool = False) -> int:
         """
@@ -330,3 +330,41 @@ class UnifiedRegistry:
     def exists(self, capability_id: str) -> bool:
         """Check if a capability exists."""
         return self.get(capability_id) is not None
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+
+def get_unified_registry() -> UnifiedRegistry:
+    """
+    Get UnifiedRegistry through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        UnifiedRegistry → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees capability discovery)
+    - NAGA profiling (Chitragupta tracks discovery timing)
+    - NAGA isolation (Kaliya handles capability errors)
+
+    Returns:
+        UnifiedRegistry wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(UnifiedRegistry)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = UnifiedRegistry()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(UnifiedRegistry, instance)
+    logger.info("✅ UnifiedRegistry registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(UnifiedRegistry)  # type: ignore
