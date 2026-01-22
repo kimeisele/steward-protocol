@@ -47,6 +47,10 @@ from vibe_core.mahamantra.reactor.shadow import (
     ShadowState,
     # Protocol
     ShadowReactorProtocol,
+    ShadowReactorFactoryProtocol,
+    # Factory (ServiceRegistry)
+    ShadowReactorFactory,
+    get_shadow_reactor_factory,
     # Reactor
     ShadowReactor,
     get_shadow_reactor,
@@ -66,6 +70,10 @@ __all__ = [
     "ShadowState",
     # Protocol
     "ShadowReactorProtocol",
+    "ShadowReactorFactoryProtocol",
+    # Factory (ServiceRegistry - RECOMMENDED)
+    "ShadowReactorFactory",
+    "get_shadow_reactor_factory",
     # Reactor
     "ShadowReactor",
     "get_shadow_reactor",
