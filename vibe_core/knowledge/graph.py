@@ -614,19 +614,44 @@ class UnifiedKnowledgeGraph:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SINGLETON
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
 # ═══════════════════════════════════════════════════════════════════════════
-
-_graph_instance: Optional[UnifiedKnowledgeGraph] = None
 
 
 def get_knowledge_graph() -> UnifiedKnowledgeGraph:
-    """Get or create the global knowledge graph instance."""
-    global _graph_instance
-    if _graph_instance is None:
-        _graph_instance = UnifiedKnowledgeGraph()
-        # Load from default location
-        knowledge_dir = Path(__file__).parent.parent.parent / "knowledge"
-        if knowledge_dir.exists():
-            _graph_instance.load(knowledge_dir)
-    return _graph_instance
+    """
+    Get UnifiedKnowledgeGraph through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        Raw UnifiedKnowledgeGraph → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees all knowledge queries)
+    - NAGA profiling (Chitragupta tracks query latency)
+    - NAGA isolation (Kaliya handles graph errors)
+
+    Returns:
+        UnifiedKnowledgeGraph wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+    from vibe_core.protocols.mahajanas.prithu.knowledge import KnowledgeGraphProtocol
+
+    # Check if already registered
+    existing = ServiceRegistry.get(KnowledgeGraphProtocol)
+    if existing is not None:
+        return existing  # type: ignore
+
+    # Create new instance
+    instance = UnifiedKnowledgeGraph()
+
+    # Load from default location
+    knowledge_dir = Path(__file__).parent.parent.parent / "knowledge"
+    if knowledge_dir.exists():
+        instance.load(knowledge_dir)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(KnowledgeGraphProtocol, instance)
+    logger.info("✅ UnifiedKnowledgeGraph registered via ServiceRegistry (WIRED + NAGA-observed)")
+
+    return ServiceRegistry.get(KnowledgeGraphProtocol)  # type: ignore

@@ -190,29 +190,29 @@ class ChatService(ChatProtocol):
             # Quantum Reactor initialized in __init__ (get_reactor)
             logger.info("✅ ChatService: QuantumReactor initialized (manifestation engine)")
 
-            # LLM Provider (from config - NO HARDCODING)
-            from vibe_core.runtime.providers.factory import create_provider, _detect_provider
+            # LLM Provider (via ServiceRegistry - NAGA OBSERVED!)
+            from vibe_core.runtime.providers.factory import get_llm_provider, _detect_provider
 
             provider_name = _detect_provider()
             if provider_name != "noop":
-                self._provider = create_provider(provider_name=provider_name)
-                logger.info(f"✅ ChatService: LLM Provider initialized ({provider_name})")
+                self._provider = get_llm_provider()  # ServiceRegistry-wrapped!
+                logger.info(f"✅ ChatService: LLM Provider initialized ({provider_name}) [NAGA-observed]")
 
-            # Knowledge Graph
+            # Knowledge Graph (via ServiceRegistry - NAGA OBSERVED!)
             try:
-                from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+                from vibe_core.knowledge.graph import get_knowledge_graph
 
-                self._knowledge = UnifiedKnowledgeGraph()
-                logger.info("✅ ChatService: KnowledgeGraph initialized")
+                self._knowledge = get_knowledge_graph()  # ServiceRegistry-wrapped!
+                logger.info("✅ ChatService: KnowledgeGraph initialized [NAGA-observed]")
             except Exception as e:
                 logger.warning(f"⚠️ ChatService: KnowledgeGraph not available: {e}")
 
-            # Cognitive Protocol (for intent recognition)
+            # Cognitive Protocol (via ServiceRegistry - NAGA OBSERVED!)
             try:
-                from vibe_core.services.kapila_service import KapilaService
+                from vibe_core.services.kapila_service import get_kapila_service
 
-                self._cognitive = KapilaService()
-                logger.info("✅ ChatService: Cognitive (Kapila) initialized")
+                self._cognitive = get_kapila_service()  # ServiceRegistry-wrapped!
+                logger.info("✅ ChatService: Cognitive (Kapila) initialized [NAGA-observed]")
             except Exception as e:
                 logger.warning(f"⚠️ ChatService: Cognitive not available: {e}")
 

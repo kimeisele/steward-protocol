@@ -142,3 +142,50 @@ class KapilaService(KapilaProtocol, PanchaTattvaProtocol):
             result.metadata["analyzer"] = "kapila"
 
         return result
+
+
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
+
+def get_kapila_service() -> KapilaService:
+    """
+    Get KapilaService through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        Raw KapilaService → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees all cognitive operations)
+    - NAGA profiling (Chitragupta tracks analysis latency)
+    - NAGA isolation (Kaliya handles cognitive errors)
+
+    Returns:
+        KapilaService wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered (use KapilaProtocol as the key)
+    existing = ServiceRegistry.get(KapilaProtocol)
+    if existing is not None:
+        return existing  # type: ignore
+
+    # Create new instance
+    instance = KapilaService()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(KapilaProtocol, instance)
+    logger.info("✅ KapilaService registered via ServiceRegistry (WIRED + NAGA-observed)")
+
+    return ServiceRegistry.get(KapilaProtocol)  # type: ignore
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    "KapilaService",
+    "get_kapila_service",
+]
