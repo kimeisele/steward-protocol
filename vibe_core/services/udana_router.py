@@ -665,22 +665,34 @@ class UdanaRouter(GADBase):
 # FACTORY FUNCTION
 # =============================================================================
 
-_udana_router_instance: Optional[UdanaRouter] = None
-
-
 def get_udana_router(router_id: str = "udana_router") -> UdanaRouter:
     """
-    Get or create the UdanaRouter instance.
+    Get UdanaRouter through ServiceRegistry (WIRED + NAGA-wrapped).
 
-    Singleton pattern for the main UDANA router.
+    ARCHITECTURE:
+        Raw UdanaRouter → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees all Agent→Mahajana routing)
+    - NAGA profiling (Chitragupta tracks routing latency)
+    - NAGA isolation (Kaliya handles routing failures)
     """
-    global _udana_router_instance
+    from vibe_core.di import ServiceRegistry
 
-    if _udana_router_instance is None:
-        _udana_router_instance = UdanaRouter(router_id)
-        logger.info(f"UdanaRouter created: {router_id}")
+    # Use UdanaRouter type as protocol (GADBase compliant)
+    existing = ServiceRegistry.get(UdanaRouter)
+    if existing is not None:
+        return existing
 
-    return _udana_router_instance
+    # Create new instance
+    instance = UdanaRouter(router_id)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(UdanaRouter, instance)
+    logger.info("✅ UdanaRouter registered via ServiceRegistry (WIRED + NAGA-observed)")
+
+    return ServiceRegistry.get(UdanaRouter)  # type: ignore
 
 
 # =============================================================================
