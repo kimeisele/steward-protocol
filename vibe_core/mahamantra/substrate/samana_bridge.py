@@ -85,6 +85,16 @@ from vibe_core.mahamantra.substrate.seed import (
 # GAD compliance
 from vibe_core.mahamantra.protocols._gad import GADBase
 
+# =============================================================================
+# JIVA SHADOW + ADHIKARA (The Rider and the Horse)
+# =============================================================================
+# NOTE: Imports are lazy (inside methods) to avoid circular dependency:
+# samana_bridge → lila.__init__ → adoption → reactor.shadow → samana_bridge
+# We use TYPE_CHECKING for type hints only.
+from typing import TYPE_CHECKING as _TC
+if _TC:
+    from vibe_core.mahamantra.lila.jiva_shadow import JivaShadow as _JivaShadow
+
 # Protocol types (TYPE_CHECKING to avoid circular imports)
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -296,12 +306,23 @@ class SamanaBridge(GADBase):
         self._pending_dispatches: Dict[str, SamanaDispatch] = {}  # dispatch_id → dispatch
         self._completed_folds: Dict[str, SamanaFold] = {}  # dispatch_id → fold
 
+        # =====================================================================
+        # JIVA SHADOW POOL - "The Riders" (Qualified Workers)
+        # =====================================================================
+        # Each dispatch is matched with a JivaShadow that has the required
+        # qualities (Adhikara) for the target position.
+        # Type: Dict[str, JivaShadow] - using Any to avoid circular import
+        self._shadow_pool: Dict[str, Any] = {}  # shadow_id → shadow
+        self._dispatch_shadows: Dict[str, str] = {}  # dispatch_id → shadow_id
+
         # Callbacks
         self._on_fold: Optional[Callable[[SamanaFold], None]] = None
 
         # Stats
         self._dispatches_sent = 0
         self._folds_received = 0
+        self._shadows_spawned = 0
+        self._adhikara_rejections = 0
 
     # =========================================================================
     # PROPERTIES
@@ -340,9 +361,11 @@ class SamanaBridge(GADBase):
             "max_kernels": self._max_kernels,
             "capabilities": [
                 "dispatch",
+                "dispatch_with_shadow",  # JivaShadow matching
                 "fold",
                 "batch_dispatch",
                 "batch_fold",
+                "adhikara_check",  # Qualification verification
             ],
         }
 
@@ -357,6 +380,10 @@ class SamanaBridge(GADBase):
             "folds_received": self._folds_received,
             "can_dispatch": self.can_dispatch,
             "heartbeat": self.heartbeat.get_summary(),
+            # Shadow pool stats
+            "shadow_pool_size": len(self._shadow_pool),
+            "shadows_spawned": self._shadows_spawned,
+            "adhikara_rejections": self._adhikara_rejections,
         }
 
     def detect_drift(self) -> List[str]:
@@ -388,7 +415,7 @@ class SamanaBridge(GADBase):
         return self._nadi.nadi_type == NadiType.SAMANA
 
     # =========================================================================
-    # DISPATCH - Shadow → Kernel
+    # DISPATCH - Shadow → Kernel (with JivaShadow Matching)
     # =========================================================================
 
     def dispatch(
@@ -399,16 +426,60 @@ class SamanaBridge(GADBase):
         phase: str,
         priority: NadiPriority = NadiPriority.RAJAS,
         payload: Optional[Dict[str, Any]] = None,
+        shadow_seed: Optional[bytes] = None,
     ) -> Optional[str]:
         """
-        Dispatch a task to an available kernel.
+        Dispatch a task to an available kernel WITH qualified JivaShadow.
 
-        Returns dispatch_id if queued, None if no capacity.
+        THE RIDER AND THE HORSE:
+        ========================
+        Every task dispatch is matched with a JivaShadow (the Rider) that has
+        the required qualities (Adhikara) for the target position (the Horse).
+
+        FLOW:
+        1. Check dispatch capacity
+        2. Find or spawn qualified JivaShadow via Adhikara
+        3. Verify shadow can execute at this position
+        4. Attach shadow context to payload
+        5. Dispatch via Nadi
+
+        Args:
+            task_id: Unique task identifier
+            task_description: Human-readable description
+            position: Mahamantra position (0-15) - determines required qualities
+            phase: Current phase (BHOGA/PRASADAM/RETURN)
+            priority: Nadi priority level
+            payload: Additional task data
+            shadow_seed: Optional seed for deterministic shadow spawning
+
+        Returns:
+            dispatch_id if queued successfully
+            None if no capacity OR no qualified shadow (Adhikara rejection)
         """
         if not self.can_dispatch:
             return None
 
+        # Lazy import for shadow_match_score
+        from vibe_core.mahamantra.lila.adhikara import shadow_match_score
+
+        # =====================================================================
+        # VARNASHRAMA - Manifest qualified JivaShadow for position
+        # =====================================================================
+        # No lottery, no rejection - shadow is born FOR this position
+        shadow = self._get_qualified_shadow(position, shadow_seed)
+
+        # =====================================================================
+        # BUILD DISPATCH WITH SHADOW CONTEXT
+        # =====================================================================
         dispatch_id = f"dispatch_{uuid4().hex[:8]}"
+
+        # Enrich payload with shadow context
+        enriched_payload = payload or {}
+        enriched_payload["shadow_id"] = shadow.shadow_id
+        enriched_payload["shadow_bitmap"] = shadow.quality_bitmap
+        enriched_payload["shadow_guna"] = shadow.dominant_guna.value
+        enriched_payload["adhikara_score"] = shadow_match_score(shadow, position)
+
         dispatch = SamanaDispatch(
             dispatch_id=dispatch_id,
             task_id=task_id,
@@ -416,11 +487,12 @@ class SamanaBridge(GADBase):
             position=position,
             phase=phase,
             priority=priority,
-            payload=payload or {},
+            payload=enriched_payload,
         )
 
-        # Queue the dispatch
+        # Track dispatch → shadow mapping
         self._pending_dispatches[dispatch_id] = dispatch
+        self._dispatch_shadows[dispatch_id] = shadow.shadow_id
         self._dispatches_sent += 1
 
         # Create Nadi message
@@ -437,6 +509,59 @@ class SamanaBridge(GADBase):
         self._nadi.broadcast(NadiOp.DELEGATE, dispatch.to_nadi_payload())
 
         return dispatch_id
+
+    def _get_qualified_shadow(
+        self,
+        position: int,
+        shadow_seed: Optional[bytes] = None,
+    ) -> Any:  # Returns JivaShadow (always succeeds)
+        """
+        Manifest a JivaShadow qualified for the given position.
+
+        VARNASHRAMA PRINCIPLE:
+        ======================
+        A Shadow is not randomly spawned and filtered (lottery).
+        A Shadow is MANIFESTED for the position (destiny).
+
+        STRATEGY:
+        1. Check pool for existing qualified shadow (reuse)
+        2. If none: Manifest new shadow FOR this position (guaranteed)
+
+        Args:
+            position: Mahamantra position (0-15) - the DESTINATION
+            shadow_seed: Optional context for uniqueness
+
+        Returns:
+            JivaShadow guaranteed to be qualified (never None)
+        """
+        # Lazy imports to avoid circular dependency
+        from vibe_core.mahamantra.lila.adhikara import (
+            find_best_shadow, spawn_shadow_for_position,
+        )
+
+        # Option 1: Reuse qualified shadow from pool
+        if self._shadow_pool:
+            pool_shadows = list(self._shadow_pool.values())
+            best = find_best_shadow(pool_shadows, position)
+            if best is not None:
+                return best
+
+        # Option 2: VARNASHRAMA - Manifest shadow FOR this position
+        # Context = reactor_id + position + optional seed
+        context = f"{self._reactor_id}_{position}".encode()
+        if shadow_seed:
+            context = context + b"_" + shadow_seed
+
+        shadow = spawn_shadow_for_position(position, context)
+        self._register_shadow(shadow)
+        self._shadows_spawned += 1
+
+        return shadow  # Guaranteed qualified
+
+    def _register_shadow(self, shadow: Any) -> None:  # shadow: JivaShadow
+        """Register a shadow in the pool."""
+        if shadow.shadow_id not in self._shadow_pool:
+            self._shadow_pool[shadow.shadow_id] = shadow
 
     def dispatch_batch(
         self,

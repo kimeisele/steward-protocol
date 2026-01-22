@@ -375,6 +375,70 @@ def verify_adhikara_determinism() -> bool:
 
 
 # =============================================================================
+# VARNASHRAMA SPAWN - Shadow für seinen Zweck manifestiert
+# =============================================================================
+
+
+def spawn_shadow_for_position(
+    position: int,
+    context: bytes = b"",
+) -> JivaShadow:
+    """
+    Spawn a JivaShadow QUALIFIED for the given position.
+
+    VARNASHRAMA PRINCIPLE:
+    ======================
+    A Jiva is not born randomly and then searches for work.
+    A Jiva is born FOR the work - his Guna-Karma determines his position.
+
+    This function manifests a shadow with GUARANTEED qualification
+    for the target position. No lottery, no filtering.
+
+    ALGORITHM:
+    1. Compute required bitmap for position (Adhikara)
+    2. Shadow receives ALL required qualities (minimum qualification)
+    3. Context adds personality/uniqueness (extra qualities)
+    4. Result: Qualified shadow with individual character
+
+    Args:
+        position: Mahamantra position (0-15) - the DESTINATION
+        context: Optional bytes for uniqueness (session, timestamp, etc.)
+
+    Returns:
+        JivaShadow guaranteed to pass shadow_can_execute(shadow, position)
+    """
+    import hashlib
+    from uuid import uuid4
+
+    # 1. Get the required qualities for this position (Adhikara)
+    required_bitmap = compute_required_bitmap(position)
+
+    # 2. Derive additional qualities from context (personality)
+    if context:
+        context_hash = hashlib.sha256(context).digest()
+        extra_bitmap = int.from_bytes(context_hash[:7], "big") & ((1 << JIVA_QUALITIES) - 1)
+    else:
+        extra_bitmap = 0
+
+    # 3. Final bitmap = required OR extra (guaranteed qualified + unique)
+    final_bitmap = required_bitmap | extra_bitmap
+
+    # 4. Create deterministic seed_hash for traceability
+    seed_material = f"varnashrama_pos{position}_{context.hex() if context else 'pure'}".encode()
+    seed_hash = hashlib.sha256(seed_material).digest()
+
+    # 5. Create shadow_id from position + uniqueness
+    holy_name = MAHAMANTRA[position]
+    shadow_id = f"shadow_{holy_name.name.lower()}_{position}_{uuid4().hex[:6]}"
+
+    return JivaShadow(
+        quality_bitmap=final_bitmap,
+        seed_hash=seed_hash,
+        shadow_id=shadow_id,
+    )
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -387,6 +451,8 @@ __all__ = [
     "shadow_can_execute",
     "shadow_match_score",
     "find_best_shadow",
+    # Varnashrama spawn (THE CORRECT WAY)
+    "spawn_shadow_for_position",
     # Reporting
     "get_position_adhikara_report",
     # Verification
