@@ -511,18 +511,49 @@ class SankalpaOrchestrator:
 
 
 # =============================================================================
-# SINGLETON
+# SERVICEREGISTRY FACTORY
 # =============================================================================
 
-_orchestrator: Optional[SankalpaOrchestrator] = None
+from .types import SankalpaOrchestratorProtocol
 
 
-def get_sankalpa() -> SankalpaOrchestrator:
-    """Get or create the Sankalpa orchestrator."""
-    global _orchestrator
-    if _orchestrator is None:
-        _orchestrator = SankalpaOrchestrator()
-    return _orchestrator
+def get_sankalpa(workspace: Optional[Path] = None) -> SankalpaOrchestrator:
+    """
+    Get SankalpaOrchestrator through ServiceRegistry.
+
+    ARCHITECTURE:
+        SankalpaOrchestrator is the Will Protocol's main entry point.
+        Uses ServiceRegistry for singleton pattern.
+
+    Usage:
+        # CORRECT (DI pattern):
+        orchestrator = get_sankalpa()
+
+        # WRONG (direct import):
+        from vibe_core.mahamantra.protocols.sankalpa.will import SankalpaOrchestrator
+        orchestrator = SankalpaOrchestrator()
+
+    Args:
+        workspace: Optional workspace path (defaults to cwd)
+
+    Returns:
+        SankalpaOrchestrator instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(SankalpaOrchestratorProtocol)
+    if existing is not None:
+        return existing  # type: ignore
+
+    # Create new instance
+    instance = SankalpaOrchestrator(workspace=workspace)
+
+    # Register with ServiceRegistry
+    ServiceRegistry.register(SankalpaOrchestratorProtocol, instance)
+    logger.info("✅ SankalpaOrchestrator registered via ServiceRegistry")
+
+    return ServiceRegistry.get(SankalpaOrchestratorProtocol)  # type: ignore
 
 
 # =============================================================================

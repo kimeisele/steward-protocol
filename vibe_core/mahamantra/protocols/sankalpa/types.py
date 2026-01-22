@@ -292,3 +292,44 @@ class ConscienceVerdict:
         return self.guna == GunaState.SATTVIC or (
             self.guna == GunaState.RAJASIC and self.is_permitted
         )
+
+
+# =============================================================================
+# SANKALPA ORCHESTRATOR PROTOCOL
+# =============================================================================
+
+from typing import Protocol, runtime_checkable
+
+
+@runtime_checkable
+class SankalpaOrchestratorProtocol(Protocol):
+    """
+    Protocol for the Sankalpa Orchestrator.
+
+    The Will Protocol's main entry point.
+    Manages missions, strategies, and intent generation.
+
+    Usage:
+        # CORRECT (DI pattern):
+        orchestrator = get_sankalpa()
+
+        # WRONG (direct import):
+        from vibe_core.mahamantra.protocols.sankalpa.will import SankalpaOrchestrator
+        orchestrator = SankalpaOrchestrator()
+    """
+
+    def think(
+        self,
+        idle_minutes: int = 0,
+        pending_intents: int = 0,
+        ci_green: bool = True,
+    ) -> List["SankalpaIntent"]:
+        """
+        Perform a strategic thinking cycle.
+        Evaluates missions and generates intents.
+        """
+        ...
+
+    def get_status(self) -> "SankalpaStatus":
+        """Get typed status report."""
+        ...
