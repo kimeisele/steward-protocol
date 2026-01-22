@@ -181,16 +181,42 @@ class SyscallListener:
         return self._event_count
 
 
-# Singleton instance for easy access
-_syscall_listener_instance: Optional[SyscallListener] = None
+# =============================================================================
+# SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
+# =============================================================================
 
 
 def get_syscall_listener() -> SyscallListener:
-    """Get or create the singleton SyscallListener instance."""
-    global _syscall_listener_instance
-    if _syscall_listener_instance is None:
-        _syscall_listener_instance = SyscallListener()
-    return _syscall_listener_instance
+    """
+    Get SyscallListener through ServiceRegistry (WIRED + NAGA-wrapped).
+
+    ARCHITECTURE:
+        Raw SyscallListener → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees all syscall events)
+    - NAGA profiling (Chitragupta tracks event processing)
+    - NAGA isolation (Kaliya handles listener errors)
+
+    Returns:
+        SyscallListener wrapped with NagaProxy (if NAGA blessing enabled)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(SyscallListener)
+    if existing is not None:
+        return existing
+
+    # Create new instance
+    instance = SyscallListener()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(SyscallListener, instance)
+    logger.info("✅ SyscallListener registered via ServiceRegistry (NAGA-observed)")
+
+    return ServiceRegistry.get(SyscallListener)  # type: ignore
 
 
 def subscribe_syscall_listener() -> bool:
