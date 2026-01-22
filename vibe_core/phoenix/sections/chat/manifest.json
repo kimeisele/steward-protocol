@@ -1,0 +1,13 @@
+{
+  "id": "chat",
+  "type": "section",
+  "entry_point": "section_main.py",
+  "entry_class": "ChatSectionConfig",
+  "config_file": "config/chat.yaml",
+  "priority": 50,
+  "enabled": true,
+  "version": "1.0.0",
+  "description": "Fractal chat configuration - substrate bridge, routing, phonetic, refinement",
+  "mahajana": "narada",
+  "dependencies": ["mahamantra"]
+}

@@ -1,0 +1,109 @@
+# =============================================================================
+# CHAT CONFIGURATION - Fractal Phoenix Section
+# =============================================================================
+# This file is the SSOT for all chat-related settings.
+# Loaded by: vibe_core/phoenix/sections/chat/section_main.py
+#
+# PRINCIPLE: All chat behavior is configurable here.
+# NO hardcoded values in code - everything derives from this file.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# SUBSTRATE BRIDGE - Vibration to Machine Code
+# -----------------------------------------------------------------------------
+# Controls how text is converted to substrate routing via VarnaTensor.
+substrate:
+  # Minimum energy for manifestation (0.0 - 1.0)
+  # Lower = more permissive, Higher = more selective
+  inertia: 0.3
+
+  # Override mahamantra resonance thresholds (null = use mahamantra defaults)
+  # threshold_manifest: NADI/MALA = 72/108 ≈ 0.667
+  # threshold_negotiate: LILA/MALA = 48/108 ≈ 0.444
+  threshold_manifest: null
+  threshold_negotiate: null
+
+  # Tensor analysis settings
+  digraph_priority: true    # Check digraphs (ch, th, sh) before single chars
+  normalize_vectors: true   # Normalize varga/sthana vectors to sum=1
+
+# -----------------------------------------------------------------------------
+# ROUTING - Where messages go
+# -----------------------------------------------------------------------------
+routing:
+  # Routing mode:
+  #   "mahajana" - Route through substrate to appropriate Mahajana
+  #   "direct"   - Bypass routing, send directly to LLM
+  mode: mahajana
+
+  # Fallback Mahajana when routing fails
+  default_mahajana: narada
+  default_position: 2
+
+  # Confidence thresholds
+  min_routing_confidence: 0.6
+  fallback_on_low_confidence: true
+
+  # Alternative routes (for gray zone)
+  max_alternatives: 3
+  alternative_energy_factor: 0.8  # Alternatives get 80% of primary energy
+
+# -----------------------------------------------------------------------------
+# PHONETIC - VarnaTensor Analysis
+# -----------------------------------------------------------------------------
+phonetic:
+  # Enable/disable phonetic routing (false = skip substrate, use keywords)
+  enabled: true
+
+  # Weight of Varga (WHERE - articulation point) in routing
+  varga_weight: 0.6
+
+  # Weight of Sthana (HOW - energy/intensity) in routing
+  sthana_weight: 0.4
+
+  # Energy calculation formula:
+  #   "weighted" - Use varga_weight + sthana_weight
+  #   "dominant" - Use only dominant varga
+  energy_formula: weighted
+
+  # Language settings
+  default_language: null  # null = auto-detect
+  supported_languages:
+    - en   # English
+    - de   # German
+    - sa   # Sanskrit
+    - hi   # Hindi
+
+# -----------------------------------------------------------------------------
+# REFINEMENT - Gray Zone Handling
+# -----------------------------------------------------------------------------
+refinement:
+  # Enable refinement prompts when energy is in gray zone
+  enabled: true
+
+  # Maximum refinement attempts before fallback
+  max_attempts: 3
+
+  # Refinement strategy:
+  #   "clarify"      - Ask user to clarify intent
+  #   "alternatives" - Present alternative routes
+  #   "escalate"     - Escalate to higher Mahajana
+  strategy: clarify
+
+  # Timeout for user response (seconds)
+  timeout_seconds: 30.0
+
+# -----------------------------------------------------------------------------
+# PROVIDER - LLM Settings for Chat
+# -----------------------------------------------------------------------------
+provider:
+  # Provider override (null = use default from llm section)
+  provider: null
+  model: null
+
+  # Generation settings
+  temperature: 0.7
+  max_tokens: 4096
+
+  # Enable streaming responses
+  stream: true
