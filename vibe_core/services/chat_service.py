@@ -670,8 +670,10 @@ class ChatService(ChatProtocol):
                 "shakti": tensor_route.shakti,
                 "phonetic_position": tensor_route.position,
             }
-            # If substrate routing succeeds, USE IT for routing (not INTENT_MAP!)
-            if tensor_route.manifests:
+            # If substrate routing succeeds AND it's not a sacred message,
+            # USE IT for routing (not INTENT_MAP!)
+            # HOLY NAMES have priority - they're always highest resonance!
+            if tensor_route.manifests and not is_sacred:
                 best_position = tensor_route.position
                 best_score = tensor_route.energy
                 mahajana = tensor_route.mahajana
