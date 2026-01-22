@@ -25,7 +25,7 @@ class TestMissionPriority:
 
     def test_all_priorities_exist(self):
         """Verify all priority levels are defined."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import MissionPriority
+        from vibe_core.mahamantra.protocols.sankalpa import MissionPriority
 
         assert MissionPriority.CRITICAL.value == "critical"
         assert MissionPriority.HIGH.value == "high"
@@ -38,7 +38,7 @@ class TestMissionStatus:
 
     def test_all_statuses_exist(self):
         """Verify all status values are defined."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import MissionStatus
+        from vibe_core.mahamantra.protocols.sankalpa import MissionStatus
 
         assert MissionStatus.ACTIVE.value == "active"
         assert MissionStatus.PAUSED.value == "paused"
@@ -51,7 +51,7 @@ class TestTriggerType:
 
     def test_all_trigger_types_exist(self):
         """Verify all trigger types are defined."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import TriggerType
+        from vibe_core.mahamantra.protocols.sankalpa import TriggerType
 
         assert TriggerType.TIME_BASED.value == "time_based"
         assert TriggerType.EVENT_BASED.value == "event_based"
@@ -64,7 +64,7 @@ class TestSankalpaTrigger:
 
     def test_create_idle_trigger(self):
         """Test creating an idle-based trigger."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaTrigger,
             TriggerType,
         )
@@ -79,7 +79,7 @@ class TestSankalpaTrigger:
 
     def test_create_time_trigger(self):
         """Test creating a time-based trigger."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaTrigger,
             TriggerType,
         )
@@ -96,7 +96,7 @@ class TestSankalpaTrigger:
 
     def test_trigger_to_dict(self):
         """Test trigger serialization."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaTrigger,
             TriggerType,
         )
@@ -112,7 +112,7 @@ class TestSankalpaTrigger:
 
     def test_trigger_from_dict(self):
         """Test trigger deserialization."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaTrigger
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaTrigger
 
         data = {
             "trigger_type": "idle_based",
@@ -128,7 +128,7 @@ class TestSankalpaStrategy:
 
     def test_create_strategy(self):
         """Test creating a strategy."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaStrategy,
             SankalpaTrigger,
             StrategyFrequency,
@@ -153,7 +153,7 @@ class TestSankalpaStrategy:
 
     def test_strategy_to_dict(self):
         """Test strategy serialization."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaStrategy,
             SankalpaTrigger,
             StrategyFrequency,
@@ -178,7 +178,7 @@ class TestSankalpaStrategy:
 
     def test_strategy_from_dict(self):
         """Test strategy deserialization."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaStrategy
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaStrategy
 
         data = {
             "id": "test",
@@ -200,7 +200,7 @@ class TestSankalpaMission:
 
     def test_create_mission(self):
         """Test creating a mission."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             MissionPriority,
             MissionStatus,
             SankalpaMission,
@@ -221,7 +221,7 @@ class TestSankalpaMission:
 
     def test_mission_to_dict(self):
         """Test mission serialization."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             MissionPriority,
             MissionStatus,
             SankalpaMission,
@@ -241,7 +241,7 @@ class TestSankalpaMission:
 
     def test_mission_from_dict(self):
         """Test mission deserialization."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaMission
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaMission
 
         data = {
             "id": "m1",
@@ -263,7 +263,7 @@ class TestSankalpaIntent:
 
     def test_create_intent(self):
         """Test creating an intent."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaIntent
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaIntent
 
         intent = SankalpaIntent(
             id="intent_1",
@@ -280,7 +280,7 @@ class TestSankalpaIntent:
 
     def test_intent_to_dict(self):
         """Test intent serialization."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaIntent
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaIntent
 
         intent = SankalpaIntent(
             id="i1",
@@ -306,7 +306,7 @@ class TestSankalpaRegistry:
 
     def test_registry_initialization(self):
         """Test registry initializes with defaults."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -317,7 +317,7 @@ class TestSankalpaRegistry:
 
     def test_registry_loads_defaults(self):
         """Test registry loads default missions."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -329,7 +329,7 @@ class TestSankalpaRegistry:
 
     def test_get_active_missions(self):
         """Test getting only active missions."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -340,7 +340,7 @@ class TestSankalpaRegistry:
 
     def test_add_mission(self):
         """Test adding a new mission."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             MissionPriority,
             MissionStatus,
             SankalpaMission,
@@ -366,7 +366,7 @@ class TestSankalpaRegistry:
 
     def test_update_mission(self):
         """Test updating a mission."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             MissionStatus,
             SankalpaRegistry,
         )
@@ -383,7 +383,7 @@ class TestSankalpaRegistry:
 
     def test_remove_mission(self):
         """Test removing a mission."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -396,7 +396,7 @@ class TestSankalpaRegistry:
 
     def test_get_strategy(self):
         """Test getting a specific strategy."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -407,7 +407,7 @@ class TestSankalpaRegistry:
 
     def test_get_all_strategies(self):
         """Test getting all strategies."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -421,7 +421,7 @@ class TestSankalpaRegistry:
 
     def test_persistence(self):
         """Test registry persists to disk."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             MissionPriority,
             MissionStatus,
             SankalpaMission,
@@ -457,7 +457,7 @@ class TestSankalpaPlanner:
 
     def test_planner_initialization(self):
         """Test planner initializes."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaPlanner,
             SankalpaRegistry,
         )
@@ -470,7 +470,7 @@ class TestSankalpaPlanner:
 
     def test_evaluate_idle_trigger(self):
         """Test evaluating idle-based triggers."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaPlanner,
             SankalpaRegistry,
         )
@@ -491,7 +491,7 @@ class TestSankalpaPlanner:
 
     def test_evaluate_respects_ci_constraint(self):
         """Test planner respects CI green constraint."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaPlanner,
             SankalpaRegistry,
         )
@@ -513,7 +513,7 @@ class TestSankalpaPlanner:
 
     def test_evaluate_respects_pending_intents(self):
         """Test planner respects pending intents constraint."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaPlanner,
             SankalpaRegistry,
         )
@@ -533,7 +533,7 @@ class TestSankalpaPlanner:
 
     def test_evaluate_respects_max_executions(self):
         """Test planner respects max executions per day."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             SankalpaPlanner,
             SankalpaRegistry,
         )
@@ -572,7 +572,7 @@ class TestSankalpaOrchestrator:
 
     def test_orchestrator_initialization(self):
         """Test orchestrator initializes."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaOrchestrator
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaOrchestrator
 
         with tempfile.TemporaryDirectory() as tmpdir:
             orch = SankalpaOrchestrator(workspace=Path(tmpdir))
@@ -582,7 +582,7 @@ class TestSankalpaOrchestrator:
 
     def test_orchestrator_think(self):
         """Test orchestrator think cycle."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaOrchestrator
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaOrchestrator
 
         with tempfile.TemporaryDirectory() as tmpdir:
             orch = SankalpaOrchestrator(workspace=Path(tmpdir))
@@ -597,7 +597,7 @@ class TestSankalpaOrchestrator:
 
     def test_orchestrator_get_status(self):
         """Test getting orchestrator status."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaOrchestrator
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaOrchestrator
 
         with tempfile.TemporaryDirectory() as tmpdir:
             orch = SankalpaOrchestrator(workspace=Path(tmpdir))
@@ -688,7 +688,7 @@ class TestJnanaSankalpaIntegration:
 
     def test_handle_sankalpa_query_status(self):
         """Test handling sankalpa status query."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import handle_sankalpa_query
+        from vibe_core.mahamantra.protocols.sankalpa import handle_sankalpa_query
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = handle_sankalpa_query("sankalpa status", workspace=Path(tmpdir))
@@ -698,7 +698,7 @@ class TestJnanaSankalpaIntegration:
 
     def test_handle_sankalpa_query_list_missions(self):
         """Test handling list missions query."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import handle_sankalpa_query
+        from vibe_core.mahamantra.protocols.sankalpa import handle_sankalpa_query
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = handle_sankalpa_query("list missions", workspace=Path(tmpdir))
@@ -708,7 +708,7 @@ class TestJnanaSankalpaIntegration:
 
     def test_get_sankalpa_for_chat(self):
         """Test getting SANKALPA status for chat."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import get_sankalpa_for_chat
+        from vibe_core.mahamantra.protocols.sankalpa import get_sankalpa_for_chat
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = get_sankalpa_for_chat(workspace=Path(tmpdir))
@@ -740,7 +740,7 @@ class TestSankalpaSingleton:
 
     def test_get_sankalpa_orchestrator(self):
         """Test get_sankalpa_orchestrator returns instance."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+        from vibe_core.mahamantra.protocols.sankalpa import (
             get_sankalpa_orchestrator,
         )
 
@@ -770,7 +770,7 @@ class TestStrategyFrequency:
 
     def test_all_frequencies_exist(self):
         """Verify all frequency values are defined."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import StrategyFrequency
+        from vibe_core.mahamantra.protocols.sankalpa import StrategyFrequency
 
         assert StrategyFrequency.ONCE.value == "once"
         assert StrategyFrequency.HOURLY.value == "hourly"
@@ -789,7 +789,7 @@ class TestDefaultMissions:
 
     def test_code_health_mission_exists(self):
         """Test 'Maintain Code Health' mission exists by default."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -800,7 +800,7 @@ class TestDefaultMissions:
 
     def test_code_health_has_strategies(self):
         """Test code health mission has strategies."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -810,7 +810,7 @@ class TestDefaultMissions:
 
     def test_daily_hygiene_strategy(self):
         """Test daily hygiene strategy configuration."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -822,7 +822,7 @@ class TestDefaultMissions:
 
     def test_self_improvement_mission(self):
         """Test self-improvement mission exists."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaRegistry
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaRegistry
 
         with tempfile.TemporaryDirectory() as tmpdir:
             registry = SankalpaRegistry(workspace=Path(tmpdir))
@@ -841,7 +841,7 @@ class TestIntentGeneration:
 
     def test_intent_has_required_fields(self):
         """Test generated intents have all required fields."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaOrchestrator
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaOrchestrator
 
         with tempfile.TemporaryDirectory() as tmpdir:
             orch = SankalpaOrchestrator(workspace=Path(tmpdir))
@@ -862,7 +862,7 @@ class TestIntentGeneration:
 
     def test_intent_includes_mission_reference(self):
         """Test intents reference their source mission."""
-        from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import SankalpaOrchestrator
+        from vibe_core.mahamantra.protocols.sankalpa import SankalpaOrchestrator
 
         with tempfile.TemporaryDirectory() as tmpdir:
             orch = SankalpaOrchestrator(workspace=Path(tmpdir))
