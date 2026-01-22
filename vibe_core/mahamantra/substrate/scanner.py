@@ -659,18 +659,52 @@ class MahajanaScanner:
 
 
 # =============================================================================
-# SINGLETON & CONVENIENCE FUNCTIONS
+# SERVICEREGISTRY FACTORY
 # =============================================================================
 
-_scanner: Optional[MahajanaScanner] = None
+import logging
+
+logger = logging.getLogger("MAHAJANA_SCANNER")
 
 
 def get_scanner(config: Optional[ScanConfig] = None) -> MahajanaScanner:
-    """Get the global scanner instance."""
-    global _scanner
-    if _scanner is None or config is not None:
-        _scanner = MahajanaScanner(config)
-    return _scanner
+    """
+    Get MahajanaScanner through ServiceRegistry.
+
+    ARCHITECTURE:
+        MahajanaScanner is the codebase scanning infrastructure.
+        Uses ServiceRegistry for singleton pattern.
+
+    Usage:
+        # CORRECT (DI pattern):
+        scanner = get_scanner()
+        result = scanner.scan()
+
+        # WRONG (direct import):
+        from vibe_core.mahamantra.substrate.scanner import MahajanaScanner
+        scanner = MahajanaScanner()
+
+    Args:
+        config: Optional scan configuration (only used on first call)
+
+    Returns:
+        MahajanaScanner instance (singleton via ServiceRegistry)
+    """
+    from vibe_core.di import ServiceRegistry
+
+    # Check if already registered
+    existing = ServiceRegistry.get(ScannerProtocol)
+    if existing is not None:
+        return existing  # type: ignore
+
+    # Create new instance
+    instance = MahajanaScanner(config)
+
+    # Register with ServiceRegistry
+    ServiceRegistry.register(ScannerProtocol, instance)
+    logger.info("✅ MahajanaScanner registered via ServiceRegistry (ScannerProtocol)")
+
+    return ServiceRegistry.get(ScannerProtocol)  # type: ignore
 
 
 def scan_all(base_path: Optional[Path] = None) -> ScanResult:
