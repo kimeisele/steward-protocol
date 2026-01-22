@@ -520,22 +520,34 @@ class ChatNadi(GADBase):
 # FACTORY FUNCTION
 # =============================================================================
 
-_chat_nadi_instance: Optional[ChatNadi] = None
-
-
 def get_chat_nadi(service_id: str = "chat_service") -> ChatNadi:
     """
-    Get or create the ChatNadi instance.
+    Get ChatNadi through ServiceRegistry (WIRED + NAGA-wrapped).
 
-    Singleton pattern for the main chat service.
+    ARCHITECTURE:
+        Raw ChatNadi → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry
+    - NAGA observation (Narada sees all Nadi operations)
+    - NAGA profiling (Chitragupta tracks message latency)
+    - NAGA isolation (Kaliya handles transport errors)
     """
-    global _chat_nadi_instance
+    from vibe_core.di import ServiceRegistry
 
-    if _chat_nadi_instance is None:
-        _chat_nadi_instance = ChatNadi(service_id)
-        logger.info(f"✅ ChatNadi created: {service_id}")
+    # Use ChatNadi type as protocol (GADBase compliant)
+    existing = ServiceRegistry.get(ChatNadi)
+    if existing is not None:
+        return existing
 
-    return _chat_nadi_instance
+    # Create new instance
+    instance = ChatNadi(service_id)
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(ChatNadi, instance)
+    logger.info("✅ ChatNadi registered via ServiceRegistry (WIRED + NAGA-observed)")
+
+    return ServiceRegistry.get(ChatNadi)  # type: ignore
 
 
 # =============================================================================
