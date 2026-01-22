@@ -113,7 +113,17 @@ VIRAMA: Final[Varna] = Varna("्", "", "", VarnaType.VIRAMA, 0)
 # VYANJANA (Consonants) - 33 consonants in 5 vargas + 4 semi-vowels + 3 sibilants + 1 aspirate
 # =============================================================================
 
-# Kavarga (guttural - throat)
+# =============================================================================
+# THE 5 VARGA GROUPS (PANCHA) - Articulation Points
+# =============================================================================
+# Sanskrit names by articulation point:
+# - KANTHYA (कण्ठ्य) = Guttural/Throat = KAVARGA
+# - TALAVYA (तालव्य) = Palatal/Palate = CAVARGA
+# - MURDHANYA (मूर्धन्य) = Retroflex/Cerebral = TAVARGA (ट-वर्ग)
+# - DANTYA (दन्त्य) = Dental/Teeth = DANTYA_VARGA (त-वर्ग)
+# - OSHTHYA (ओष्ठ्य) = Labial/Lips = PAVARGA
+
+# Kavarga (guttural - throat) - कवर्ग = KANTHYA
 KAVARGA: Final[Tuple[Varna, ...]] = (
     Varna("क", "k", "k", VarnaType.VYANJANA, 1),
     Varna("ख", "kh", "kh", VarnaType.VYANJANA, 2),
@@ -140,14 +150,17 @@ TAVARGA: Final[Tuple[Varna, ...]] = (
     Varna("ण", "ṇ", "n", VarnaType.VYANJANA, 15),
 )
 
-# Tavarga2 (dental - teeth)
-TAVARGA2: Final[Tuple[Varna, ...]] = (
+# Dantya Varga (dental - teeth) - तवर्ग
+# NOTE: This is the DENTAL त-varga, distinct from retroflex ट-varga above
+# Using DANTYA_VARGA as proper Sanskrit name (TAVARGA2 kept for backward compat)
+DANTYA_VARGA: Final[Tuple[Varna, ...]] = (
     Varna("त", "t", "t", VarnaType.VYANJANA, 16),
     Varna("थ", "th", "th", VarnaType.VYANJANA, 17),
     Varna("द", "d", "d", VarnaType.VYANJANA, 18),
     Varna("ध", "dh", "dh", VarnaType.VYANJANA, 19),
     Varna("न", "n", "n", VarnaType.VYANJANA, 20),
 )
+TAVARGA2 = DANTYA_VARGA  # Backward compatibility alias
 
 # Pavarga (labial - lips)
 PAVARGA: Final[Tuple[Varna, ...]] = (
@@ -175,7 +188,37 @@ USHMAN: Final[Tuple[Varna, ...]] = (
 )
 
 # All consonants combined
-VYANJANA: Final[Tuple[Varna, ...]] = KAVARGA + CAVARGA + TAVARGA + TAVARGA2 + PAVARGA + ANTAHSTHA + USHMAN
+VYANJANA: Final[Tuple[Varna, ...]] = KAVARGA + CAVARGA + TAVARGA + DANTYA_VARGA + PAVARGA + ANTAHSTHA + USHMAN
+
+# =============================================================================
+# ARTICULATION POINT ALIASES (Proper Sanskrit Names)
+# =============================================================================
+# These are the canonical names based on WHERE in the mouth the sound originates
+
+KANTHYA_VARGA = KAVARGA      # Throat/Guttural (क-वर्ग)
+TALAVYA_VARGA = CAVARGA      # Palate/Palatal (च-वर्ग)
+MURDHANYA_VARGA = TAVARGA    # Retroflex/Cerebral (ट-वर्ग)
+OSHTHYA_VARGA = PAVARGA      # Lips/Labial (प-वर्ग)
+# DANTYA_VARGA already defined above (त-वर्ग)
+
+# =============================================================================
+# PANCHA VARGA - The 5 Consonant Groups (SSOT from seed.py PANCHA = 5)
+# =============================================================================
+# This is THE canonical ordering of the 5 articulation points
+# Index 0-4 maps to positions in phonetic analysis
+
+from vibe_core.mahamantra.protocols._seed import PANCHA
+
+PANCHA_VARGA: Final[Tuple[Tuple[Varna, ...], ...]] = (
+    KANTHYA_VARGA,   # 0: Throat  → AKASHA (Ether)  → SHABDA (Sound)
+    TALAVYA_VARGA,   # 1: Palate  → TEJAS (Fire)    → RUPA (Form)
+    MURDHANYA_VARGA, # 2: Cerebral → VAYU (Air)     → SPARSHA (Touch)
+    DANTYA_VARGA,    # 3: Teeth   → JALA (Water)    → RASA (Taste)
+    OSHTHYA_VARGA,   # 4: Lips    → PRITHVI (Earth) → GANDHA (Smell)
+)
+
+# SSOT verification: 5 Vargas = PANCHA Tattvas
+assert len(PANCHA_VARGA) == PANCHA, f"PANCHA_VARGA must have exactly {PANCHA} groups"
 
 # =============================================================================
 # LOOKUP FUNCTIONS
@@ -209,19 +252,32 @@ def decompose_devanagari(text: str) -> List[Varna]:
 
 
 __all__ = [
+    # Types
     "VarnaType",
     "Varna",
+    # Vowels
     "SVARA",
     "MATRA",
     "VIRAMA",
+    # 5 Vargas (original names)
     "KAVARGA",
     "CAVARGA",
     "TAVARGA",
-    "TAVARGA2",
+    "TAVARGA2",  # Deprecated, use DANTYA_VARGA
+    "DANTYA_VARGA",
     "PAVARGA",
+    # Articulation Point Aliases (proper Sanskrit)
+    "KANTHYA_VARGA",
+    "TALAVYA_VARGA",
+    "MURDHANYA_VARGA",
+    "OSHTHYA_VARGA",
+    # PANCHA VARGA (the 5 groups as tuple)
+    "PANCHA_VARGA",
+    # Other consonants
     "ANTAHSTHA",
     "USHMAN",
     "VYANJANA",
+    # Functions
     "get_varna_by_devanagari",
     "get_varna_by_iast",
     "decompose_devanagari",
