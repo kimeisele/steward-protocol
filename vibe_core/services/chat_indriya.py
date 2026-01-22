@@ -728,22 +728,38 @@ class ChatIndriya(GADBase):
 # FACTORY FUNCTION
 # =============================================================================
 
-_chat_indriya_instance: Optional[ChatIndriya] = None
-
-
 def get_chat_indriya(service_id: str = "chat_indriya") -> ChatIndriya:
     """
-    Get or create the ChatIndriya instance.
+    Get ChatIndriya through ServiceRegistry (WIRED + NAGA-wrapped).
 
-    Singleton pattern for the main chat sense organ.
+    ARCHITECTURE:
+        Raw ChatIndriya → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern
+    - NAGA observation (Narada sees all vrtti transitions)
+    - NAGA profiling (Chitragupta tracks duration_ms)
+    - NAGA isolation (Kaliya handles exceptions)
+
+    Like ChatService, ChatIndriya becomes part of the observed infrastructure.
     """
-    global _chat_indriya_instance
+    from vibe_core.di import ServiceRegistry
+    from vibe_core.mahamantra.protocols._indriya import IndriyaProtocol
 
-    if _chat_indriya_instance is None:
-        _chat_indriya_instance = ChatIndriya(service_id)
-        logger.info(f"ChatIndriya created: {service_id}")
+    # Check if already registered
+    existing = ServiceRegistry.get(IndriyaProtocol)
+    if existing is not None:
+        return existing  # Return existing (possibly wrapped) instance
 
-    return _chat_indriya_instance
+    # Create new instance
+    instance = ChatIndriya(service_id)
+
+    # Register with ServiceRegistry (this applies NagaProxy wrapping!)
+    ServiceRegistry.register(IndriyaProtocol, instance)
+    logger.info("✅ ChatIndriya registered via ServiceRegistry (WIRED + NAGA-observed)")
+
+    # Return the wrapped version from registry
+    return ServiceRegistry.get(IndriyaProtocol)  # type: ignore
 
 
 # =============================================================================
