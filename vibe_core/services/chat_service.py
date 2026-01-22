@@ -1059,7 +1059,14 @@ class ChatService(ChatProtocol):
         )
 
     def _get_knowledge_context_lotus(self, message: str, lotus: Dict) -> Dict[str, str]:
-        """Get relevant context from KnowledgeGraph."""
+        """
+        Get relevant context - makes Chat SELF-AWARE.
+
+        Includes:
+        - Available CLI commands (from cli_bridge)
+        - Runtime context (git, kernel)
+        - Mahajana capabilities
+        """
         context = {}
 
         if self._knowledge:
@@ -1077,6 +1084,23 @@ class ChatService(ChatProtocol):
             context.update(runtime)
         except Exception:
             pass
+
+        # Add CLI capabilities - SELF-AWARENESS
+        # Chat needs to know what commands it can execute
+        try:
+            from vibe_core.mahamantra.cli.bridge import cli_bridge
+
+            routes = cli_bridge.list_routes()
+            # Group by mahajana for relevance
+            current_mahajana = lotus.get("mahajana", "narada")
+            relevant_commands = [r[0] for r in routes if r[2] == current_mahajana][:10]
+            all_commands = [r[0] for r in routes][:20]
+
+            context["available_commands"] = ", ".join(all_commands)
+            context["mahajana_commands"] = ", ".join(relevant_commands) if relevant_commands else "general"
+            context["total_commands"] = str(len(routes))
+        except Exception as e:
+            logger.debug(f"CLI discovery failed: {e}")
 
         return context
 
