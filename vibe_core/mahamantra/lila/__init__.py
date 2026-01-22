@@ -42,6 +42,19 @@ from vibe_core.mahamantra.lila.jiva_shadow import (
     QUALITY_DESCRIPTIONS,
 )
 
+from vibe_core.mahamantra.lila.adhikara import (
+    # Core computation
+    compute_required_bitmap,
+    get_required_qualities,
+    get_required_count,
+    # Shadow matching
+    shadow_can_execute,
+    shadow_match_score,
+    find_best_shadow,
+    # Reporting
+    get_position_adhikara_report,
+)
+
 __all__ = [
     # Adoption
     "analyze_source",
@@ -53,4 +66,12 @@ __all__ = [
     "spawn_shadow_from_string",
     "verify_shadow_lineage",
     "QUALITY_DESCRIPTIONS",
+    # Adhikara (Mahamantra-derived qualification)
+    "compute_required_bitmap",
+    "get_required_qualities",
+    "get_required_count",
+    "shadow_can_execute",
+    "shadow_match_score",
+    "find_best_shadow",
+    "get_position_adhikara_report",
 ]
