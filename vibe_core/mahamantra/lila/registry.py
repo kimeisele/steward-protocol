@@ -351,27 +351,39 @@ class ShadowRegistry:
 
 
 # =============================================================================
-# SINGLETON REGISTRY
+# SERVICEREG WIRING (No more global singleton anti-pattern)
 # =============================================================================
-
-_global_registry: Optional[ShadowRegistry] = None
-_registry_lock = Lock()
 
 
 def get_registry() -> ShadowRegistry:
     """
-    Get the global ShadowRegistry singleton.
+    Get the ShadowRegistry through ServiceRegistry (WIRED + NAGA-observed).
 
-    Thread-safe lazy initialization.
+    ARCHITECTURE:
+        Raw ShadowRegistry → ServiceRegistry.register() → NagaProxy wrapping
+
+    This ensures:
+    - Singleton pattern via ServiceRegistry (not global variable)
+    - NAGA observation (Narada sees all registry operations)
+    - NAGA profiling (Chitragupta tracks shadow lifecycle)
+    - NAGA isolation (Kaliya handles registry errors)
+
+    Migrated from global singleton anti-pattern as per SINGLETONS.md
     """
-    global _global_registry
+    from vibe_core.di import ServiceRegistry
 
-    if _global_registry is None:
-        with _registry_lock:
-            if _global_registry is None:
-                _global_registry = ShadowRegistry()
+    # Use ShadowRegistry type as protocol (GADBase compliant)
+    existing = ServiceRegistry.get(ShadowRegistry)
+    if existing is not None:
+        return existing
 
-    return _global_registry
+    # Create new instance
+    instance = ShadowRegistry()
+
+    # Register with ServiceRegistry (applies NagaProxy wrapping!)
+    ServiceRegistry.register(ShadowRegistry, instance)
+
+    return ServiceRegistry.get(ShadowRegistry)  # type: ignore
 
 
 # =============================================================================
