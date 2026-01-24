@@ -37,19 +37,18 @@ __genesis__ = "0xe3b8a7c1"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Final, List, Optional, Set
 from threading import Lock
+from typing import Any, Dict, Final, List, Optional, Set
 
 # SSOT: Constants from seed
 from vibe_core.mahamantra.protocols._seed import (
     JIVA_QUALITIES,  # 50
-    PARAMPARA,       # 37
+    PARAMPARA,  # 37
 )
 from vibe_core.mahamantra.substrate.seed import (
+    COSMIC_FRAME,  # 21600
     NADI_RESONANCE,  # 72
-    COSMIC_FRAME,    # 21600
 )
-
 
 # =============================================================================
 # DERIVED CONSTANTS
@@ -71,16 +70,19 @@ assert RETIRE_AFTER_SERVICES == 432, "Retire after 432 services"
 # SHADOW STATUS
 # =============================================================================
 
+
 class ShadowStatus(Enum):
     """Status of a shadow in the registry."""
-    IDLE = "idle"      # Available for service
-    BUSY = "busy"      # Currently serving
+
+    IDLE = "idle"  # Available for service
+    BUSY = "busy"  # Currently serving
     RETIRED = "retired"  # Too old, pending removal
 
 
 # =============================================================================
 # REGISTRY ENTRY
 # =============================================================================
+
 
 @dataclass
 class RegistryEntry:
@@ -89,6 +91,7 @@ class RegistryEntry:
 
     Tracks the shadow's lifecycle and service history.
     """
+
     shadow: Any  # JivaShadow (Any to avoid circular import)
     status: ShadowStatus = ShadowStatus.IDLE
 
@@ -132,6 +135,7 @@ class RegistryEntry:
 # =============================================================================
 # SHADOW REGISTRY - The Ashrama
 # =============================================================================
+
 
 class ShadowRegistry:
     """
@@ -186,10 +190,7 @@ class ShadowRegistry:
         """
         with self._lock:
             # Check capacity
-            active_count = sum(
-                1 for e in self._entries.values()
-                if e.status != ShadowStatus.RETIRED
-            )
+            active_count = sum(1 for e in self._entries.values() if e.status != ShadowStatus.RETIRED)
             if active_count >= self._max_shadows:
                 return False
 
@@ -282,10 +283,7 @@ class ShadowRegistry:
             Number of shadows removed
         """
         with self._lock:
-            retired_ids = [
-                sid for sid, entry in self._entries.items()
-                if entry.status == ShadowStatus.RETIRED
-            ]
+            retired_ids = [sid for sid, entry in self._entries.items() if entry.status == ShadowStatus.RETIRED]
 
             for sid in retired_ids:
                 del self._entries[sid]
@@ -322,6 +320,7 @@ class ShadowRegistry:
             for entry in self._entries.values():
                 status_counts[entry.status.value] += 1
 
+            busy = status_counts[ShadowStatus.BUSY.value]
             return {
                 "total_registered": self._total_registered,
                 "total_retired": self._total_retired,
@@ -329,7 +328,7 @@ class ShadowRegistry:
                 "current_count": len(self._entries),
                 "max_shadows": self._max_shadows,
                 "status_distribution": status_counts,
-                "utilization": self.busy_count / max(1, len(self._entries)),
+                "utilization": busy / max(1, len(self._entries)),
             }
 
     def discover(self) -> Dict[str, Any]:
