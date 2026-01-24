@@ -94,11 +94,14 @@ Evidence:
 
 ### Action Items
 
-- [ ] **P0.1**: Fix SettingsSync command parser (ignore markdown separators)
+- [x] **P0.1**: Fix SettingsSync command parser (ignore markdown separators)
+  - **Fixed 2025-01-24**: Parser now ignores lines containing only dashes
 - [ ] **P0.2**: Audit all `agent.report_status()` implementations
 - [ ] **P0.3**: Fix OPERATIONS.md/SETTINGS.md error handling
-- [ ] **P0.4**: Update tests to use `kernel.governance.*` not `kernel._paused_agents`
-- [ ] **P0.5**: Grep codebase for `kernel._paused_agents` references
+- [x] **P0.4**: Update tests to use `kernel.governance.*` not `kernel._paused_agents`
+  - **Status 2025-01-24**: Already fixed. All code uses `kernel.governance.get_paused_agents()`
+- [x] **P0.5**: Grep codebase for `kernel._paused_agents` references
+  - **Verified 2025-01-24**: No direct references in code, only in docs. All access via governance plugin.
 
 **Discovery Method**: Booted system with `python boot.py`, analyzed logs vs reported metrics
 
