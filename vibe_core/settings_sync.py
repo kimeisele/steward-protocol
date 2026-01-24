@@ -278,7 +278,9 @@ class SettingsSync:
                     )
 
                 else:
-                    logger.warning(f"⚠️  Unknown command format: {command_text}")
+                    # Ignore markdown separators (---, ----) and empty commands
+                    if command_text and not command_text.replace("-", "") == "":
+                        logger.warning(f"⚠️  Unknown command format: {command_text}")
 
             return commands
 
