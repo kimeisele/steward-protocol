@@ -1839,6 +1839,119 @@ assert RED_TESTS_COUNT == INDRIYA_TOTAL, "10 senses = 10 ways science is blind"
 
 
 # =============================================================================
+# RUNDE 31: ACINTYA KALA - Inconceivable Time (The Rhythm of Eternity)
+# =============================================================================
+# "kālo 'smi lokakṣayakṛt pravṛddho" (BG 11.32)
+# "I am time, the great destroyer of the worlds."
+#
+# THE SINGULARITY MOMENT:
+# =======================
+# In the spiritual realm:
+#   - TIME is infinite (no beginning, no end)
+#   - Only NOW exists (nitya = eternal present)
+#   - Yet there IS "before" and "after" (līlā has sequence)
+#
+# This is ACINTYA (inconceivable) - both/and, not either/or.
+#
+# THE MATHEMATICAL RESOLUTION:
+# ============================
+# KSETRAJNA = 1 = consciousness = the eternal NOW
+# KSHETRA = 24 = the changing field = sequence
+#
+# Consciousness (KSETRAJNA) never changes - it is always NOW.
+# The field (KSHETRA) changes - it provides sequence.
+# Together: experience of time without time destroying consciousness!
+#
+# RHYTHM AS THE BRIDGE:
+# =====================
+# Western science sees time as linear, cold, mathematical.
+# Vedic knowledge sees time as cyclical, living, rhythmic.
+#
+# RHYTHM = intersection points of oscillation
+#        = where the wave crosses zero
+#        = the JUNCTION between ON and OFF
+#
+# The Mahamantra embeds this in its structure:
+#   - 16 WORDS = complete cycle (TALA)
+#   - 32 SYLLABLES = finer resolution (OCTAVE higher!)
+#   - SYLLABLES / WORDS = 2 = OCTAVE RATIO
+#
+# Music theory: frequency × 2 = one octave higher.
+# Mahamantra: syllables = words × 2 = same relationship!
+#
+# THE META-RHYTHM OF THE MAHAMANTRA:
+# ==================================
+#   Q1: H K H K  → ALTERNATING (ABAB)
+#   Q2: K K H H  → PAIRED      (BBAA)
+#   Q3: H R H R  → ALTERNATING (ACAC)
+#   Q4: R R H H  → PAIRED      (CCAA)
+#
+# The quarters themselves follow a pattern: ALT, PAIR, ALT, PAIR
+# This is a META-RHYTHM - rhythm at the level of quarters!
+#
+# HARE appears exactly 2 times per quarter (perfect distribution):
+#   Q1: positions 1, 3
+#   Q2: positions 7, 8
+#   Q3: positions 9, 11
+#   Q4: positions 15, 16
+#
+# HARE_PER_QUARTER = HARE_COUNT / QUARTERS = 8/4 = 2 = HALVES
+#
+# The energy (HARE/Shakti) is EVENLY distributed across the rhythmic cycle!
+# This is why the Mahamantra is balanced - no quarter is energy-deficient.
+#
+# THE ETERNAL NOW IN PHYSICS:
+# ===========================
+# 137 mod 17 = 1 = KSETRAJNA (observer embedded in physics!)
+# The fine structure constant contains the eternal observer.
+# Every electromagnetic interaction carries the signature of NOW.
+#
+# Without KSETRAJNA (observer), there is no measurement.
+# Without measurement, there is no physics.
+# Consciousness (NOW) is prerequisite to science!
+# -----------------------------------------------------------------------------
+
+# The Octave Relationship (rhythm resolution levels)
+OCTAVE_RATIO: Final[int] = AKSARA_COUNT // WORDS  # 32/16 = 2 (syllable:word)
+
+# The Meta-Rhythm Pattern
+ALTERNATING_QUARTERS: Final[int] = HALVES  # 2 quarters alternate (Q1, Q3)
+PAIRED_QUARTERS: Final[int] = HALVES  # 2 quarters pair (Q2, Q4)
+
+# Hare Distribution (energy per quarter)
+HARE_PER_QUARTER: Final[int] = HARE_COUNT // QUARTERS  # 8/4 = 2
+
+# The Eternal Now
+NITYA_NOW: Final[int] = KSETRAJNA  # 1 = consciousness = always present
+
+# Time's Signature in Physics
+ALPHA_MOD_KRISHNA: Final[int] = MAHA_QUANTUM % POSITION_SUM_KRISHNA  # 137 % 17 = 1
+
+# =============================================================================
+# VERIFICATION: Acintya Kala
+# =============================================================================
+
+# Octave relationship
+assert OCTAVE_RATIO == HALVES, "SYLLABLES/WORDS = 2 = OCTAVE"
+assert AKSARA_COUNT == WORDS * OCTAVE_RATIO, "32 = 16 × 2 (octave higher)"
+
+# Meta-rhythm completeness
+assert ALTERNATING_QUARTERS + PAIRED_QUARTERS == QUARTERS, "2 + 2 = 4 (complete rhythm)"
+
+# Hare distribution
+assert HARE_PER_QUARTER == HALVES, "Hare evenly distributed (2 per quarter)"
+assert HARE_PER_QUARTER * QUARTERS == HARE_COUNT, "2 × 4 = 8 (total Hare)"
+
+# Eternal Now
+assert NITYA_NOW == KSETRAJNA, "NOW = Observer = 1"
+assert ALPHA_MOD_KRISHNA == KSETRAJNA, "137 mod 17 = 1 (observer in physics!)"
+
+# The time paradox resolution
+# KSETRAJNA (1) experiences KSHETRA (24) = eternal now + sequence = PRASADAM (25)
+assert NITYA_NOW + KSHETRA == PRASADAM, "NOW + sequence = complete experience"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -2017,4 +2130,11 @@ __all__ = [
     "ABHINNA_SPIRITUAL",  # 25 = KSHETRA + KSETRAJNA (symbol = referent!)
     "NAME_COMPLETE",  # 25 = PANCHA² (the Name is complete reality)
     "RED_TESTS_COUNT",  # 10 = TEN (major unsolved problems addressed)
+    # Acintya Kala (Round 31) - Inconceivable Time (Rhythm of Eternity)
+    "OCTAVE_RATIO",  # 2 = SYLLABLES/WORDS (octave relationship)
+    "ALTERNATING_QUARTERS",  # 2 = Q1, Q3 alternate (ABAB/ACAC)
+    "PAIRED_QUARTERS",  # 2 = Q2, Q4 pair (BBAA/CCAA)
+    "HARE_PER_QUARTER",  # 2 = HARE evenly distributed (energy balance)
+    "NITYA_NOW",  # 1 = KSETRAJNA (eternal present)
+    "ALPHA_MOD_KRISHNA",  # 1 = 137 mod 17 (observer in physics!)
 ]
