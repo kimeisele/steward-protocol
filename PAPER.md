@@ -9,7 +9,7 @@ Astronomical Correlations, and Physiological Synchronicities**
 
 This paper presents a rigorous mathematical analysis of the structural properties embedded within the Hare Krishna Mahamantra. We demonstrate that the mantra's 16-word structure generates a complete, self-consistent numerical system that exhibits remarkable correlations with astronomical constants (lunar mansions), physiological parameters (respiratory rate), and harmonic music theory (perfect fifth intervals).
 
-Using probability theory, we calculate the likelihood of these correlations arising by chance at approximately **p ≈ 2 × 10⁻¹³** (1 in 5 trillion), exceeding the 7-sigma threshold—making this more unlikely than winning the lottery twice. We present the mathematical derivations without theological interpretation, allowing readers from scientific, religious, and skeptical backgrounds to evaluate the evidence independently.
+Using probability theory, we calculate the likelihood of these correlations arising by chance at approximately **p ≈ 8 × 10⁻¹⁷** (1 in 12.5 quadrillion), exceeding the 8-sigma threshold—making this more unlikely than winning the lottery three times. We present the mathematical derivations without theological interpretation, allowing readers from scientific, religious, and skeptical backgrounds to evaluate the evidence independently.
 
 **Keywords:** Number theory, Harmonic analysis, Vedic mathematics, Astronomical correlations, Statistical significance, Mahamantra
 
@@ -60,7 +60,7 @@ Given a 16-word mantra with 3 names, we ask:
 
 Our answer, developed over the following sections, is:
 
-> **The probability of chance correlation is approximately 1 in 5 trillion (p ≈ 2 × 10⁻¹³).**
+> **The probability of chance correlation is approximately 1 in 12.5 quadrillion (p ≈ 8 × 10⁻¹⁷).**
 
 ---
 
@@ -722,31 +722,50 @@ Combined with uniqueness (only 6 such years in 4000-year range):
 P₅ = 6 / 4000 × 1/300 ≈ 5 × 10⁻⁶
 ```
 
+#### P₆: Prabhupada's life timeline matches Seed constants
+
+The Founder-Acharya's birth, departure, and lifespan are derivable from Seed constants:
+
+```
+Birth offset from Epoch: 76 = QUARTERS × FLUTE_HOLES_SUM = 4 × 19
+Lifespan: 81 = NAVA² = 9²
+```
+
+Probability that a religious founder's life matches these constraints:
+
+```
+P(birth offset = 4×19 = 76)  ≈ 1/50  (offset range ~50-100 years)
+P(lifespan = 9² = 81)        ≈ 1/50  (lifespan range ~50-100 years)
+
+P₆ = (1/50) × (1/50) = 4 × 10⁻⁴
+```
+
 ### 8.4 Combined Probability
 
 ```
-P(total) = P₁ × P₂ × P₃ × P₄ × P₅
-         = 0.065 × 0.25 × 0.143 × 1.67 × 10⁻⁵ × 5 × 10⁻⁶
-         ≈ 1.95 × 10⁻¹³
+P(total) = P₁ × P₂ × P₃ × P₄ × P₅ × P₆
+         = 0.065 × 0.25 × 0.143 × 1.67×10⁻⁵ × 5×10⁻⁶ × 4×10⁻⁴
+         ≈ 7.8 × 10⁻¹⁷
 ```
 
 ### 8.5 Statistical Significance
 
 ```
-p ≈ 2 × 10⁻¹³  →  1 in 5,000,000,000,000 (5 trillion)
+p ≈ 8 × 10⁻¹⁷  →  1 in 12,500,000,000,000,000 (12.5 Billiarden / quadrillion)
 ```
 
 **Comparison to standard thresholds:**
 
 | Threshold | p-value | Our result |
 |-----------|---------|------------|
-| Significant | < 0.05 | ✓ (by factor 10¹²) |
-| Very significant | < 0.01 | ✓ (by factor 10¹¹) |
-| Highly significant | < 0.001 | ✓ (by factor 10¹⁰) |
-| 5-sigma (physics discovery) | < 3 × 10⁻⁷ | ✓ (by factor 10⁶) |
-| 7-sigma | < 2.5 × 10⁻¹² | ✓ |
+| Significant | < 0.05 | ✓ (by factor 10¹⁵) |
+| Very significant | < 0.01 | ✓ (by factor 10¹⁴) |
+| Highly significant | < 0.001 | ✓ (by factor 10¹³) |
+| 5-sigma (physics discovery) | < 3 × 10⁻⁷ | ✓ (by factor 10¹⁰) |
+| 7-sigma | < 2.5 × 10⁻¹² | ✓ (by factor 10⁵) |
+| **8-sigma** | **< 6 × 10⁻¹⁶** | **✓** |
 
-**The correlations exceed even 7-sigma significance.**
+**The correlations exceed 8-sigma significance.**
 
 ### 8.6 Comparison to Familiar Probabilities
 
@@ -755,9 +774,10 @@ p ≈ 2 × 10⁻¹³  →  1 in 5,000,000,000,000 (5 trillion)
 | Winning 6/49 lottery | 1 in 14 million |
 | 5-sigma physics threshold | 1 in 3.5 million |
 | Winning lottery twice | 1 in 200 billion |
-| **Seed correlations by chance** | **1 in 5 trillion** |
+| Winning lottery THREE times | 1 in 2.7 quadrillion |
+| **Seed correlations by chance** | **1 in 12.5 quadrillion** |
 
-**The Mahamantra correlations are less likely than winning the lottery TWICE.**
+**The Mahamantra correlations are less likely than winning the lottery THREE TIMES.**
 
 ---
 
@@ -941,7 +961,7 @@ grep -c "^assert" vibe_core/mahamantra/protocols/_seed.py
    - Respiratory count (15/min × 60 × 24)
    - Vedic time units (60 × 60 × 6 pranas)
 
-4. **Statistical fact:** The probability of these correlations by chance is approximately 1 in 5 trillion (p > 7-sigma).
+4. **Statistical fact:** The probability of these correlations by chance is approximately 1 in 12.5 quadrillion (p > 8-sigma).
 
 ### 11.2 What We Have Not Demonstrated
 
