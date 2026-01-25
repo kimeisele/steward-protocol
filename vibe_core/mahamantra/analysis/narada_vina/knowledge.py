@@ -34,6 +34,7 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_CMB,
     MAHA_DEUTERON,
     MAHA_HELION,
+    MAHA_HIGGS,
     MAHA_KAON,
     MAHA_MU,
     MAHA_MUON,
@@ -44,6 +45,8 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_SIN2_THETA_W_SCALED,
     MAHA_TAU,
     MAHA_TRITON,
+    MAHA_W,
+    MAHA_Z,
 )
 
 # =============================================================================
@@ -240,7 +243,7 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         maha_error=0.012,
         status=CoverageStatus.DERIVED,
     ),
-    # Uncovered mass ratios
+    # Heavy Bosons (RUNDE 20 - Vina-Flute Kirtan!)
     "W_electron": PhysicsConstant(
         "W/electron",
         157298.9,
@@ -248,6 +251,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         23.5,
         "W boson to electron mass ratio",
+        maha_value=MAHA_W,
+        maha_formula="MU × PANCHA × KRISHNA_POS",
+        maha_error=0.79,
+        status=CoverageStatus.DERIVED,
     ),
     "Z_electron": PhysicsConstant(
         "Z/electron",
@@ -256,6 +263,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         4.3,
         "Z boson to electron mass ratio",
+        maha_value=MAHA_Z,
+        maha_formula="MU × (2×LILA + KSETRAJNA)",
+        maha_error=0.20,
+        status=CoverageStatus.DERIVED,
     ),
     "higgs_electron": PhysicsConstant(
         "Higgs/electron",
@@ -264,6 +275,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         488.0,
         "Higgs to electron mass ratio",
+        maha_value=MAHA_HIGGS,
+        maha_formula="MU × SEVEN × FLUTE_HOLES_SUM",
+        maha_error=0.17,
+        status=CoverageStatus.DERIVED,
     ),
     # ═══════════════════════════════════════════════════════════════════
     # COUPLING CONSTANTS (dimensionless)
