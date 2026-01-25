@@ -32,6 +32,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 # The Three Flutes + Harmonic Resonances (direct import for re-export)
+# The Maha-Algorithm (Round 14) - Universal Generator
 from vibe_core.mahamantra.protocols._seed import (
     AVATAR_COUNT,  # 4 Avataras
     # The Cosmic Frame (Resolution)
@@ -41,6 +42,13 @@ from vibe_core.mahamantra.protocols._seed import (
     FIELD_RESONANCE,
     FLUTE_HOLES_PRODUCT,
     FLUTE_HOLES_SUM,
+    MAHA_CLASSICAL_1,
+    MAHA_CLASSICAL_2,
+    MAHA_CLASSICAL_3,
+    MAHA_CLASSICAL_4,
+    MAHA_MU,
+    MAHA_QUANTUM,
+    MAHA_TRITON,
     MAHAJANA_COUNT,  # 12 Mahajanas
     MURALI_HOLES,
     NADI_RESONANCE,
@@ -52,6 +60,8 @@ from vibe_core.mahamantra.protocols._seed import (
     TITHI_UNIT,
     VAMSI_HOLES,
     VENU_HOLES,
+    maha_classical,
+    maha_quantum,
 )
 from vibe_core.mahamantra.protocols._seed import (
     CUTOFF_CONSTANT as _PROTO_CUTOFF_CONSTANT,
@@ -103,6 +113,18 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 from vibe_core.mahamantra.protocols._seed import (
     PARAMPARA as _PROTO_PARAMPARA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    POSITION_SUM_HARE as _PROTO_POSITION_SUM_HARE,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    POSITION_SUM_KRISHNA as _PROTO_POSITION_SUM_KRISHNA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    POSITION_SUM_RAMA as _PROTO_POSITION_SUM_RAMA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    POSITION_SUM_TOTAL as _PROTO_POSITION_SUM_TOTAL,
 )
 from vibe_core.mahamantra.protocols._seed import (
     PRANA_DURATION_MS as _PROTO_PRANA_DURATION_MS,
@@ -254,6 +276,12 @@ assert POSITION_SUM_TOTAL == _triangular_16, "Position sum = Triangular(16)"
 assert POSITION_SUM_HARE % 7 == 0, "70 is divisible by 7"
 assert POSITION_SUM_RAMA == 7 * 7, "49 = 7²"
 # Note: 17 is prime - Krishna is indivisible
+
+# SSOT CROSS-CHECK: Position Sums must match The Law (_seed.py)
+assert POSITION_SUM_HARE == _PROTO_POSITION_SUM_HARE, "SSOT: POSITION_SUM_HARE"
+assert POSITION_SUM_KRISHNA == _PROTO_POSITION_SUM_KRISHNA, "SSOT: POSITION_SUM_KRISHNA"
+assert POSITION_SUM_RAMA == _PROTO_POSITION_SUM_RAMA, "SSOT: POSITION_SUM_RAMA"
+assert POSITION_SUM_TOTAL == _PROTO_POSITION_SUM_TOTAL, "SSOT: POSITION_SUM_TOTAL"
 
 
 # =============================================================================
@@ -908,6 +936,16 @@ __all__ = [
     "POSITION_SUM_KRISHNA",
     "POSITION_SUM_RAMA",
     "POSITION_SUM_TOTAL",
+    # The Maha-Algorithm (Universal Generator)
+    "maha_quantum",
+    "maha_classical",
+    "MAHA_QUANTUM",  # 137 = T(16) + KSETRAJNA
+    "MAHA_MU",  # 1836 = MALA × KRISHNA_POS
+    "MAHA_TRITON",  # 5508 = KRISHNA_POS × GITA²
+    "MAHA_CLASSICAL_1",
+    "MAHA_CLASSICAL_2",
+    "MAHA_CLASSICAL_3",
+    "MAHA_CLASSICAL_4",
     # Lotus Functions
     "get_quarter",
     "get_quarter_name",

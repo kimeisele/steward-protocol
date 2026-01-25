@@ -1,0 +1,47 @@
+{
+  "timestamp": 1769363390.1312928,
+  "git": {
+    "is_repo": true,
+    "branch": "claude/review-seed-py-analysis-5lakB",
+    "sha": "e12bbc1",
+    "dirty": true,
+    "workspace": "/home/user/steward-protocol"
+  },
+  "files": {
+    "workspace": "/home/user/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 3.5171618461608887,
+    "agent_count": 1,
+    "queue_pending": 0,
+    "plugins_loaded": 24
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/home/user/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "test-8f18",
+    "boot_time": 1769363387.9659219,
+    "commit_count": 0
+  }
+}

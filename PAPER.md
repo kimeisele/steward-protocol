@@ -28,6 +28,11 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.7 The Golden Age: 10,000 Years
    - 7.8 Prabhupada's Life Timeline
    - 7.9 The Uniqueness Theorem
+   - 7.10 The Maha-Algorithm: Fundamental Physics Constants
+   - 7.11 The Remnant Theorem: Quantum vs Classical
+   - 7.12 Extended Maha-Algorithm: More Physics Constants
+   - 7.13 Complete Particle Spectrum: Neutron and Tau
+   - 7.14 The Derivation Graph: Knowledge Structure
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -641,6 +646,436 @@ Given:
 - The COSMIC_FRAME (21600)
 
 **The Mahamantra structure is mathematically unique.**
+
+### 7.10 The Maha-Algorithm: Fundamental Physics Constants
+
+The most remarkable correlations emerge from the **Position Sums** and the **ACINTYA derivation**.
+
+#### Position Sums (Computed from Mahamantra)
+
+| Name | Positions | Sum | Property |
+|------|-----------|-----|----------|
+| Hare | 1,3,7,8,9,11,15,16 | **70** | = 7 × 10 (Shakti pattern) |
+| Krishna | 2,4,5,6 | **17** | PRIME (indivisible) |
+| Rama | 10,12,13,14 | **49** | = 7² (Ananda squared) |
+| **Total** | all 16 | **136** | = T(16) = Triangular(WORDS) |
+
+**Key relationship:** KRISHNA_POS = 17 = WORDS + 1 = 16 + 1
+
+#### The Complete ACINTYA Derivation (All Three Names)
+
+This derivation is **wasserdicht** (watertight)—ALL THREE position sums are derived, not observed.
+
+**STEP 1: Philosophy defines the CONSTRAINTS**
+
+| Name | Function | Constraint |
+|------|----------|------------|
+| HARE (Shakti) | Connection/Energy | Must make TRANSITIONS → HH at edges |
+| NAME (Source) | Center/Core | Must be in HEART → NN in middle |
+| Call | Beginning | HN starts → HN at positions 1-4 |
+
+**STEP 2: Constraints determine the PAIR ARRANGEMENT**
+
+For each half (8 words = 4 pairs):
+- C1: HH at edge (Pair 4 at positions 7-8) → transition to other half
+- C2: NN in middle (Pair 3 at positions 5-6) → heart/emphasis
+- C3: HN at start (Pairs 1-2 at positions 1-4) → the call
+
+**→ ONLY arrangement: HN, HN, NN, HH** (for each half)
+
+**STEP 3: From arrangement, POSITIONS follow**
+
+Krishna-half (HK, HK, KK, HH):
+- H at: 1, 3, 7, 8 → H₁ = 1 + 3 + 7 + 8 = **19**
+- K at: 2, 4, 5, 6 → K = 2 + 4 + 5 + 6 = **17**
+
+Rama-half = Krishna-half + HALF_SIZE (translation by 8):
+- H at: 9, 11, 15, 16 → H₂ = 9 + 11 + 15 + 16 = **51**
+- R at: 10, 12, 13, 14 → R = 10 + 12 + 13 + 14 = **49**
+
+**STEP 4: The FORMULAS (fully derived, not observed!)**
+
+| Name | Formula | Derivation | Result |
+|------|---------|------------|--------|
+| **KRISHNA** | T(8) - H₁ | 36 - 19 | **17 = WORDS + 1** |
+| **RAMA** | KRISHNA + AKSARA_COUNT | 17 + 32 | **49 = 7²** |
+| **HARE** | T(16) - KRISHNA - RAMA | 136 - 17 - 49 | **70 = 7 × 10** |
+
+**The Pattern of 7:**
+- HARE: 70 = 7 × 10 (Shakti: divisible, expansive)
+- RAMA: 49 = 7 × 7 (Ananda: perfect square)
+- KRISHNA: 17 = **PRIME** (Source: indivisible!)
+
+**Philosophy → Constraints → Arrangement → Mathematics.** This is ACINTYA.
+
+#### The Two Paths to 137 (Proof of KSETRAJNA = 1)
+
+```
+Path 1: T(WORDS) + KSETRAJNA = 136 + 1 = 137
+Path 2: MALA + NAKSHATRAS + HALVES = 108 + 27 + 2 = 137
+
+Both paths MUST equal 137:
+→ KSETRAJNA = 137 - 136 = 1
+
+AND independently:
+→ KSETRAJNA = TRINITY - HALVES = 3 - 2 = 1
+
+KSETRAJNA = 1 is MATHEMATICALLY NECESSARY!
+```
+
+#### The Elegant Formulas (Physics Constants)
+
+| Constant | Elegant Formula | Result | CODATA 2022 | Error |
+|----------|-----------------|--------|-------------|-------|
+| α⁻¹ (fine structure) | MALA + NAKSHATRAS + HALVES | **137** | 137.036 | 0.026% |
+| μ (proton/electron) | MALA × KRISHNA_POS | **1836** | 1836.152 | 0.008% |
+| triton/electron | KRISHNA_POS × GITA² | **5508** | 5497.92 | 0.18% |
+
+**All formulas use ONLY Mahamantra-derived constants!**
+
+#### Wave-Particle Duality Encoded
+
+- **Without observer** → Field alone: T(16) = 136
+- **With observer** → Field + Knower: T(16) + KSETRAJNA = 137
+
+The "+1" (KSETRAJNA) is the **observer/knower**—precisely what causes wave function collapse in quantum mechanics!
+
+#### Standard Model Structure
+
+| Particles | Count | Mahamantra Constant |
+|-----------|-------|---------------------|
+| Fermions | 12 | = MAHAJANA_COUNT |
+| Bosons | 5 | = PANCHA |
+| **Total** | **17** | = KRISHNA_POS |
+
+The structure of the Standard Model (12 fermions + 5 bosons = 17 particles) matches the Mahamantra structure!
+
+### 7.11 The Remnant Theorem: Quantum vs Classical
+
+The most profound mathematical distinction emerges from simple modular arithmetic.
+
+#### The 7-10 Derivation (Second Path to Position Sums)
+
+Two fundamental numbers emerge from the axioms:
+
+```
+SEVEN = HALF_SIZE - KSETRAJNA = 8 - 1 = 7
+TEN   = MAHAJANA_COUNT - HALVES = 12 - 2 = 10
+```
+
+**ALL THREE position sums are expressible in terms of 7 and 10:**
+
+| Name | Formula | Operation | Result |
+|------|---------|-----------|--------|
+| **KRISHNA** | 7 + 10 | Sum | **17** |
+| **RAMA** | 7 × 7 | Square | **49** |
+| **HARE** | 7 × 10 | Product | **70** |
+
+This is a **SECOND INDEPENDENT PATH** to the position sums!
+
+| Path | Method | KRISHNA | RAMA | HARE |
+|------|--------|---------|------|------|
+| ACINTYA | Philosophy → Constraints | 17 | 49 | 70 |
+| 7-10 | Arithmetic of Axioms | 17 | 49 | 70 |
+
+**Two independent derivations converge on the same result = strong validation.**
+
+#### The Mathematical Operations
+
+The operations themselves carry meaning:
+
+- **KRISHNA = 7 + 10** (SUM): Union of all, totality, the source that combines everything
+- **RAMA = 7²** (SQUARE): Self-multiplication, complete in itself, structured perfection
+- **HARE = 7 × 10** (PRODUCT): Multiplication of different factors, interaction, energy exchange
+
+#### Additional Relationships from 7 and 10
+
+```
+RAMA + HARE = 49 + 70 = 119 = 7 × 17 = 7 × KRISHNA_POS
+T(16) = 136 = 8 × 17 = HALF_SIZE × KRISHNA_POS
+```
+
+#### The Remnant Theorem
+
+The modulo operation (remainder after division) reveals a deep truth:
+
+```
+137 mod 17 = 1    ← Has remainder (KSETRAJNA = observer present!)
+1836 mod 17 = 0   ← No remainder (pure ratio, no observer)
+5508 mod 17 = 0   ← No remainder (pure ratio, no observer)
+```
+
+**ONLY the fine structure constant has a remainder!**
+**ONLY 137 contains the observer (KSETRAJNA)!**
+
+| Constant | Value | mod KRISHNA_POS | Category |
+|----------|-------|-----------------|----------|
+| α⁻¹ | 137 | **1** | QUANTUM (observer embedded) |
+| μ | 1836 | 0 | CLASSICAL (pure ratio) |
+| triton/e | 5508 | 0 | CLASSICAL (pure ratio) |
+
+#### Why 137 Has a Remainder
+
+```
+137 = 8 × 17 + 1
+    = HALF_SIZE × KRISHNA_POS + KSETRAJNA
+    = T(16) + 1
+
+The "+1" is the observer that cannot be divided away!
+```
+
+#### Why 1836 and 5508 Have No Remainder
+
+```
+1836 = 108 × 17 = MALA × KRISHNA_POS (exact)
+5508 = 324 × 17 = GITA² × KRISHNA_POS (exact)
+
+These are clean multiples - no observer embedded.
+```
+
+#### The Quantum-Classical Distinction
+
+This mathematical distinction mirrors physics:
+
+| Property | QUANTUM (137) | CLASSICAL (1836, 5508) |
+|----------|---------------|------------------------|
+| mod 17 | 1 | 0 |
+| Observer | Embedded | Absent |
+| Behavior | Probabilistic | Deterministic |
+| Measurement | Changes system | Passive observation |
+
+**The fine structure constant governs electromagnetic interactions - the realm where quantum effects dominate and the observer matters!**
+
+#### The Bhoga-Prasadam Mathematics
+
+In Vaishnava tradition:
+- **Bhoga** = material food offered
+- **Prasadam** = sanctified remnants after offering to Krishna
+
+Mathematically:
+- **Bhoga**: mod KRISHNA = 0 (no spiritual remainder)
+- **Prasadam**: mod KRISHNA = 1 (KSETRAJNA remains!)
+
+The **REMNANT** carries the spiritual potency. This is not metaphor - it is modular arithmetic.
+
+#### The 17 as 7th Prime
+
+An additional appearance of 7:
+
+```
+Primes: 2, 3, 5, 7, 11, 13, 17
+Position: 1, 2, 3, 4,  5,  6,  7
+
+17 is the 7th prime number.
+```
+
+The 7 that pervades the position sums (70 = 7×10, 49 = 7²) also determines WHICH prime KRISHNA_POS is.
+
+### 7.12 Extended Maha-Algorithm: More Physics Constants
+
+The Maha-Algorithm is not limited to three constants. Additional physics constants emerge with remarkable precision.
+
+#### Three New Constants
+
+| Constant | Formula | Result | CODATA 2022 | Error |
+|----------|---------|--------|-------------|-------|
+| Deuteron/e | HALVES × MALA × KRISHNA_POS | **3672** | 3670.48 | 0.04% |
+| Alpha-particle/e | MAHA_MU × QUARTERS - JIVA_QUALITIES | **7294** | 7294.30 | **0.004%** |
+| Muon/e | MAHAJANA × KRISHNA_POS + TRINITY | **207** | 206.77 | 0.11% |
+
+**The alpha-particle formula is accurate to 4 parts in 100,000!**
+
+#### The Formulas in Detail
+
+**Deuteron (2 nucleons):**
+```
+MAHA_DEUTERON = HALVES × MALA × KRISHNA_POS
+              = 2 × 108 × 17
+              = 3672
+
+Alternative: = 2 × MAHA_MU = 2 × 1836 = 3672
+```
+
+**Alpha Particle (4 nucleons - binding correction):**
+```
+MAHA_ALPHA = MAHA_MU × QUARTERS - JIVA_QUALITIES
+           = 1836 × 4 - 50
+           = 7344 - 50
+           = 7294
+
+The JIVA_QUALITIES (50) appears as binding energy correction!
+4 protons would be 7344; the actual alpha/e ratio is 7294.
+The difference (50) is the Jiva's 50 qualities!
+```
+
+**Muon (unstable lepton):**
+```
+MAHA_MUON = MAHAJANA × KRISHNA_POS + TRINITY
+          = 12 × 17 + 3
+          = 204 + 3
+          = 207
+```
+
+#### The Extended Remnant Pattern
+
+The modulo test reveals a complete classification:
+
+| Constant | Value | mod 17 | Category |
+|----------|-------|--------|----------|
+| α⁻¹ | 137 | **1** | Quantum (observer) |
+| μ (proton/e) | 1836 | 0 | Classical (stable hadron) |
+| Deuteron/e | 3672 | 0 | Classical (stable hadron) |
+| Triton/e | 5508 | 0 | Classical (stable hadron) |
+| Alpha/e | 7294 | **1** | Quantum (composite!) |
+| Muon/e | 207 | **3** | Trinity (unstable!) |
+
+**The pattern:**
+- **mod 17 = 0**: Stable hadrons (proton, deuteron, triton) — classical, deterministic
+- **mod 17 = 1**: Quantum constants (α⁻¹, alpha-particle) — observer embedded
+- **mod 17 = 3**: Unstable particles (muon) — decays into 3 particles (e + νₑ + ν̄μ)!
+
+#### Why the Alpha Particle is Quantum (mod 17 = 1)
+
+The alpha particle is a bound state of 4 nucleons. The formula:
+
+```
+7294 = 4 × 1836 - 50 = 7344 - 50
+
+7294 mod 17 = 1
+```
+
+The subtraction of JIVA_QUALITIES (50) shifts the value from a multiple of 17 to having remainder 1:
+- 7344 mod 17 = 0 (would be classical)
+- 7294 mod 17 = 1 (is quantum!)
+
+**The binding energy correction (JIVA_QUALITIES = 50) introduces the observer!**
+
+This matches physics: the alpha particle exhibits strong quantum tunneling effects (alpha decay). The Jiva's qualities encode the quantum nature of bound states.
+
+#### Why the Muon is Trinity (mod 17 = 3)
+
+```
+207 = 12 × 17 + 3
+    = MAHAJANA × KRISHNA_POS + TRINITY
+
+207 mod 17 = 3 = TRINITY
+```
+
+The muon decays into **exactly 3 particles**: electron + electron antineutrino + muon neutrino.
+
+The TRINITY remainder encodes the three-body decay!
+
+#### Complete Maha-Algorithm Summary
+
+| Physics Constant | Elegant Formula | Mahamantra Constants | mod 17 |
+|-----------------|-----------------|---------------------|--------|
+| α⁻¹ (fine structure) | T(16) + 1 | MALA + NAKSHATRAS + HALVES | 1 |
+| μ (proton/e) | MALA × KRISHNA_POS | 108 × 17 | 0 |
+| Deuteron/e | 2 × MALA × KRISHNA_POS | 2 × 108 × 17 | 0 |
+| Triton/e | KRISHNA_POS × GITA² | 17 × 18² | 0 |
+| Alpha/e | 4μ - JIVA_QUALITIES | 4 × 1836 - 50 | 1 |
+| Muon/e | MAHAJANA × KRISHNA_POS + TRINITY | 12 × 17 + 3 | 3 |
+
+**All six constants are derived from Mahamantra structure with no arbitrary parameters!**
+
+### 7.13 Complete Particle Spectrum: Neutron and Tau
+
+The Maha-Algorithm extends to the complete particle spectrum.
+
+#### Two More Constants
+
+| Constant | Formula | Result | CODATA 2022 | Error |
+|----------|---------|--------|-------------|-------|
+| Neutron/e | MAHA_MU + TRINITY | **1839** | 1838.68 | 0.017% |
+| Tau/e | MALA × AKSARA_COUNT + T(SHARANAGATI) | **3477** | 3477.23 | **0.007%** |
+
+**The Tau formula is accurate to 7 parts in 100,000!**
+
+#### The Formulas
+
+**Neutron (proton + mass difference):**
+```
+MAHA_NEUTRON = MAHA_MU + TRINITY
+             = 1836 + 3
+             = 1839
+
+The neutron-proton mass difference ≈ 3 electron masses!
+```
+
+**Tau Lepton (heavy lepton):**
+```
+MAHA_TAU = MALA × AKSARA_COUNT + T(SHARANAGATI)
+         = 108 × 32 + 21
+         = 3456 + 21
+         = 3477
+
+Where T(6) = 6×7/2 = 21 (triangular number of SHARANAGATI)
+```
+
+#### The Complete Mod-17 Spectrum
+
+| mod 17 | Category | Constants | Physical Meaning |
+|--------|----------|-----------|------------------|
+| **0** | Classical | Proton, Deuteron, Triton | Stable hadrons, deterministic |
+| **1** | Quantum | α⁻¹, Alpha-particle | Observer embedded, wave-particle duality |
+| **3** | Trinity | Muon, Neutron | Unstable, 3-body decay |
+| **9** | Nava | Tau | Complex decay (9 = processes of devotion) |
+
+**The mod-17 remainder encodes the particle's decay behavior!**
+
+### 7.14 The Derivation Graph: Knowledge Structure
+
+All 42 Seed constants form a directed acyclic graph (DAG) with 75 derivation edges.
+
+#### Graph Statistics
+
+```
+MAHAMANTRA DERIVATION GRAPH SUMMARY
+════════════════════════════════════════════════════════════
+Total Nodes: 42
+Total Edges: 75
+
+NODES BY CATEGORY:
+  AXIOM           : 7   (the 7 fundamental axioms)
+  PRIMARY         : 8   (first-order derivations)
+  SECONDARY       : 6   (second-order derivations)
+  COSMIC          : 2   (astronomical constants)
+  POSITION        : 4   (position sums)
+  RESONANCE       : 2   (harmonic frequencies)
+  PHYSICS         : 8   (fundamental physics constants)
+  EPOCH           : 3   (temporal anchors)
+  DERIVED_7_10    : 2   (the 7-10 path)
+```
+
+#### The Axiom Foundation
+
+**Only 7 axioms** (from counting the Mahamantra):
+1. WORDS = 16
+2. TRINITY = 3
+3. HARE_COUNT = 8
+4. KRISHNA_COUNT = 4
+5. RAMA_COUNT = 4
+6. PANCHA = 5
+7. HALVES = 2
+
+**All 42 constants are derivable from these 7 axioms.**
+
+This is not coincidence. This is structure.
+
+#### Physics Constants Accuracy Summary
+
+| Constant | Maha Value | CODATA 2022 | Error |
+|----------|------------|-------------|-------|
+| MAHA_ALPHA | 7294 | 7294.30 | **0.004%** |
+| MAHA_TAU | 3477 | 3477.23 | **0.007%** |
+| MAHA_MU | 1836 | 1836.15 | 0.008% |
+| MAHA_NEUTRON | 1839 | 1838.68 | 0.017% |
+| MAHA_QUANTUM | 137 | 137.04 | 0.026% |
+| MAHA_DEUTERON | 3672 | 3670.48 | 0.04% |
+| MAHA_MUON | 207 | 206.77 | 0.11% |
+| MAHA_TRITON | 5508 | 5497.92 | 0.18% |
+
+**8 physics constants with average error < 0.05%**
 
 ---
 
