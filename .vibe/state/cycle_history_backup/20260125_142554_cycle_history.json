@@ -1,9 +1,9 @@
 {
   "completed": [
     {
-      "cycle_id": "5de2077e",
+      "cycle_id": "cc1485dd",
       "parent_cycle_id": null,
-      "trace_id": "<MagicMock name='mock.start()' id='139409080541904'>",
+      "trace_id": "<MagicMock name='mock.start()' id='139459395688848'>",
       "cycle_name": "boot_sequence",
       "phase": "recover",
       "observations_count": 1,
@@ -18,9 +18,9 @@
         "error": "Takshaka denied access to GenesisService.quick_check: deny",
         "agents_registered": 2
       },
-      "timestamp": "2026-01-25T14:25:54.614666"
+      "timestamp": "2026-01-25T14:25:20.970635"
     }
   ],
   "errors": [],
-  "last_updated": "2026-01-25T14:25:54.614674"
+  "last_updated": "2026-01-25T14:25:20.970651"
 }
