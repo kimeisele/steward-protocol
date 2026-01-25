@@ -331,6 +331,7 @@ def get_reactor() -> QuantumReactor:
 
     # Create and register
     import logging
+
     logger = logging.getLogger("QUANTUM_REACTOR")
 
     instance = QuantumReactor()

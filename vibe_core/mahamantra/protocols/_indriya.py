@@ -76,25 +76,25 @@ from typing import (
 # IMPORT FROM SEED (SSOT)
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
-    PANCHA,
     HALVES,
     NAVA,
+    PANCHA,
 )
 
 # =============================================================================
 # IMPORT FROM _SENSE.PY (No Redundancy)
 # =============================================================================
 from vibe_core.mahamantra.protocols._sense import (
-    # Enums (reuse, don't duplicate)
-    Tanmatra,
-    Mahabhuta,
-    Jnanendriya,
     # Constants
     JNANENDRIYA_COUNT,
-    TANMATRA_COUNT,
     MAHABHUTA_COUNT,
+    TANMATRA_COUNT,
+    Jnanendriya,
+    Mahabhuta,
     # Data classes
     SensePerception,
+    # Enums (reuse, don't duplicate)
+    Tanmatra,
 )
 
 # =============================================================================
@@ -367,6 +367,7 @@ class TanmatraMessage:
     ) -> "TanmatraMessage":
         """Create a SABDA (sound/text) tanmatra from text."""
         from uuid import uuid4
+
         return cls(
             message_id=message_id or f"tm_{uuid4().hex[:8]}",
             tanmatra=Tanmatra.SABDA,  # Text = sound

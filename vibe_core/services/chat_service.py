@@ -32,70 +32,75 @@ __genesis__ = "0xa8f3c901"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.reactor.shadow import ShadowReactor
+    from vibe_core.mahamantra.substrate.samana_bridge import SamanaBridge, SamanaFold
 import uuid
 
-from vibe_core.protocols.chat import (
-    ChatProtocol,
-    ChatMode,
-    ChatMessage,
-    ChatResponse,
-    ChatContext,
-    RefinementPath,
-    RefinementRequest,
-    RefinementState,
-    CHAT_OPCODE,
-    CHAT_PHASE,
-    CHAT_WORD,
-    CHAT_POSITION,
-    DEFAULT_CHAT_CAPABILITIES,
-)
+# NAGA INTEGRATION - The Invisible Guardians enhance chat intelligence
+# NAGAs INFORM, they don't CONTROL (GAD-000 principle)
+from typing import TYPE_CHECKING
 
-# NADI - Energy channels (User ↔ System via PRANA)
-from vibe_core.mahamantra.substrate.nadi import (
-    get_nadi,
-    NadiType,
-    NadiOp,
-    NadiMessage,
-    NadiProtocol,
-)
-from vibe_core.protocols.cognition import (
-    CognitiveResult,
-    IntentType,
-)
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 from vibe_core.mahamantra.protocols._lotus import (
-    LotusHologram,
-    LotusRoute,
-    LotusMode,
-    LotusState,
-    LotusBase,
-    get_position_mahajana,
-    get_mahajana_position,
     MAHAJANA_POSITIONS,
+    LotusBase,
+    LotusHologram,
+    LotusMode,
+    LotusRoute,
+    LotusState,
+    get_mahajana_position,
+    get_position_mahajana,
 )
-
-# KSHETRA - The 24 Tattvas (BG 13.6-7)
-# Chat invokes: SHROTRA (hear), VAK (speak), MANAS (think), BUDDHI (understand)
-from vibe_core.mahamantra.substrate.tattva import (
-    KshetraElement,
-    JNANENDRIYAS,
-    KARMENDRIYAS,
+from vibe_core.mahamantra.substrate.harmonics import (
+    THRESHOLD_AUTO as HARMONIC_AUTO,
 )
-
-# SUBSTRATE BRIDGE - Real vibration-based routing (not keyword matching)
-from vibe_core.services.chat_substrate_bridge import (
-    ChatSubstrateBridge,
-    SubstrateRoute,
-    get_substrate_bridge,
+from vibe_core.mahamantra.substrate.harmonics import (
+    THRESHOLD_REFINE as HARMONIC_REFINE,
 )
 
 # RESONANCE HARMONICS - Derived from Seed, not hardcoded!
 # NADI/MALA = 72/108 = 2/3, LILA/MALA = 48/108 = 4/9
 from vibe_core.mahamantra.substrate.harmonics import (
     ResonanceHarmonics,
-    THRESHOLD_AUTO as HARMONIC_AUTO,
-    THRESHOLD_REFINE as HARMONIC_REFINE,
+)
+
+# NADI - Energy channels (User ↔ System via PRANA)
+from vibe_core.mahamantra.substrate.nadi import (
+    NadiMessage,
+    NadiOp,
+    NadiProtocol,
+    NadiType,
+    get_nadi,
+)
+from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
+# KSHETRA - The 24 Tattvas (BG 13.6-7)
+# Chat invokes: SHROTRA (hear), VAK (speak), MANAS (think), BUDDHI (understand)
+from vibe_core.mahamantra.substrate.tattva import (
+    JNANENDRIYAS,
+    KARMENDRIYAS,
+    KshetraElement,
+)
+from vibe_core.protocols.chat import (
+    CHAT_OPCODE,
+    CHAT_PHASE,
+    CHAT_POSITION,
+    CHAT_WORD,
+    DEFAULT_CHAT_CAPABILITIES,
+    ChatContext,
+    ChatMessage,
+    ChatMode,
+    ChatProtocol,
+    ChatResponse,
+    RefinementPath,
+    RefinementRequest,
+    RefinementState,
+)
+from vibe_core.protocols.cognition import (
+    CognitiveResult,
+    IntentType,
 )
 
 # QUANTUM REACTOR - Real manifestation (energy > inertia)
@@ -107,18 +112,21 @@ from vibe_core.reactor.quantum import (
 
 # REFINEMENT - Intent Negotiation (extracted for modularity)
 from vibe_core.services.chat_refinement import (
-    RefinementHandler,
-    discover_refinement_paths,
-    determine_chat_mode,
-    get_dharma_description,
-    simple_intent_detection,
     MAHAJANA_DHARMAS,
     POSITION_OPCODES,
+    RefinementHandler,
+    determine_chat_mode,
+    discover_refinement_paths,
+    get_dharma_description,
+    simple_intent_detection,
 )
 
-# NAGA INTEGRATION - The Invisible Guardians enhance chat intelligence
-# NAGAs INFORM, they don't CONTROL (GAD-000 principle)
-from typing import TYPE_CHECKING
+# SUBSTRATE BRIDGE - Real vibration-based routing (not keyword matching)
+from vibe_core.services.chat_substrate_bridge import (
+    ChatSubstrateBridge,
+    SubstrateRoute,
+    get_substrate_bridge,
+)
 
 if TYPE_CHECKING:
     from vibe_core.naga.cortex.cortex_main import NagaCortex
@@ -241,7 +249,7 @@ class ChatService(ChatProtocol, LotusBase):
             logger.info("✅ ChatService: QuantumReactor initialized (manifestation engine)")
 
             # LLM Provider (via ServiceRegistry - NAGA OBSERVED!)
-            from vibe_core.runtime.providers.factory import get_llm_provider, _detect_provider
+            from vibe_core.runtime.providers.factory import _detect_provider, get_llm_provider
 
             provider_name = _detect_provider()
             if provider_name != "noop":
@@ -315,10 +323,7 @@ class ChatService(ChatProtocol, LotusBase):
             self._nadi = get_nadi("chat_service", nadi_type=NadiType.PRANA)
 
             # Subscribe to REQUEST operations from ChatIndriya
-            self._nadi_subscription_id = self._nadi.subscribe(
-                NadiOp.REQUEST,
-                self._handle_nadi_request
-            )
+            self._nadi_subscription_id = self._nadi.subscribe(NadiOp.REQUEST, self._handle_nadi_request)
             logger.info("✅ ChatService Nadi booted (PRANA channel: chat_service)")
         except Exception as e:
             logger.warning(f"⚠️ ChatService Nadi boot failed: {e}")
@@ -348,9 +353,7 @@ class ChatService(ChatProtocol, LotusBase):
             loop = asyncio.get_running_loop()
             # Already in async context - schedule and let it complete
             future = asyncio.ensure_future(self.chat(text, context))
-            future.add_done_callback(
-                lambda f: self._send_nadi_response(message, f.result())
-            )
+            future.add_done_callback(lambda f: self._send_nadi_response(message, f.result()))
         except RuntimeError:
             # No running loop - create one
             loop = asyncio.new_event_loop()
@@ -373,13 +376,16 @@ class ChatService(ChatProtocol, LotusBase):
             return
 
         try:
-            self._nadi.respond(original, {
-                "success": response.success,
-                "content": response.message.content if response.message else "",
-                "mahajana": response.mahajana,
-                "mode": response.mode.value if response.mode else None,
-                "confidence": response.confidence,
-            })
+            self._nadi.respond(
+                original,
+                {
+                    "success": response.success,
+                    "content": response.message.content if response.message else "",
+                    "mahajana": response.mahajana,
+                    "mode": response.mode.value if response.mode else None,
+                    "confidence": response.confidence,
+                },
+            )
         except Exception as e:
             logger.error(f"Failed to send Nadi response: {e}")
 
@@ -431,10 +437,12 @@ class ChatService(ChatProtocol, LotusBase):
         - AHANKARA (6): Ego - identify which Mahajana responds
         """
         self._state.mode = LotusMode.STEM
-        self._active_kshetra.extend([
-            KshetraElement.BUDDHI,  # Intelligence
-            KshetraElement.AHANKARA,  # Identity (which Mahajana?)
-        ])
+        self._active_kshetra.extend(
+            [
+                KshetraElement.BUDDHI,  # Intelligence
+                KshetraElement.AHANKARA,  # Identity (which Mahajana?)
+            ]
+        )
         mahajana = resonance_result.get("mahajana", "narada")
         logger.debug(f"🌿 LOTUS STEM: Routing to {mahajana.upper()} (BUDDHI + AHANKARA)")
 
@@ -447,11 +455,13 @@ class ChatService(ChatProtocol, LotusBase):
         - All 5 TANMATRAS for rich output (SHABDA, SPARSHA, RUPA, RASA, GANDHA)
         """
         self._state.mode = LotusMode.BLOOM
-        self._active_kshetra.extend([
-            KshetraElement.VAK,  # Speaking
-            KshetraElement.SHABDA,  # Sound tanmatra (response text)
-        ])
-        logger.debug(f"🌸 LOTUS BLOOM: Unfolding response (VAK + SHABDA)")
+        self._active_kshetra.extend(
+            [
+                KshetraElement.VAK,  # Speaking
+                KshetraElement.SHABDA,  # Sound tanmatra (response text)
+            ]
+        )
+        logger.debug("🌸 LOTUS BLOOM: Unfolding response (VAK + SHABDA)")
 
     def _lotus_garuda(self, executed: bool) -> None:
         """
@@ -463,10 +473,12 @@ class ChatService(ChatProtocol, LotusBase):
         """
         self._state.mode = LotusMode.GARUDA
         if executed:
-            self._active_kshetra.extend([
-                KshetraElement.PANI,  # Hands (execution)
-                KshetraElement.PADA,  # Feet (navigation)
-            ])
+            self._active_kshetra.extend(
+                [
+                    KshetraElement.PANI,  # Hands (execution)
+                    KshetraElement.PADA,  # Feet (navigation)
+                ]
+            )
         # Complete the cycle - chant!
         self.chant()
         logger.debug(f"🦅 LOTUS GARUDA: Cycle complete (kshetra={len(self._active_kshetra)} tattvas)")
@@ -669,7 +681,9 @@ class ChatService(ChatProtocol, LotusBase):
 
             # Log complete Kshetra involvement
             kshetra_names = [e.name for e in self._active_kshetra]
-            logger.info(f"🕉️ ChatService: Lotus cycle complete - {len(self._active_kshetra)} Tattvas active: {kshetra_names}")
+            logger.info(
+                f"🕉️ ChatService: Lotus cycle complete - {len(self._active_kshetra)} Tattvas active: {kshetra_names}"
+            )
 
             return response
 

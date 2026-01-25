@@ -101,7 +101,7 @@ def get_all_cli_commands() -> Dict[str, int]:
         for attr in dir(cli):
             if attr.startswith("cmd_"):
                 cmd_name = attr[4:]  # Remove "cmd_" prefix
-                
+
                 # 1. Try Bridge Mapping (Correct Domain)
                 if cmd_name in _KEYWORD_TO_POSITION:
                     position = _KEYWORD_TO_POSITION[cmd_name]
@@ -109,7 +109,7 @@ def get_all_cli_commands() -> Dict[str, int]:
                     # 2. Fallback to Parampara Hash
                     mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(cmd_name.lower()))
                     position = mutation_vector % 16
-                
+
                 commands[cmd_name] = position
     except ImportError:
         pass

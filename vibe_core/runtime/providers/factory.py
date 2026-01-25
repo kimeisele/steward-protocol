@@ -253,6 +253,7 @@ def _get_api_key_for_provider(provider_name: str) -> str | None:
 # SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
 # =============================================================================
 
+
 def get_llm_provider() -> LLMProvider:
     """
     Get LLMProvider through ServiceRegistry (WIRED + NAGA-wrapped).

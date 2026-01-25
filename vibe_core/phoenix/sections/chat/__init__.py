@@ -1,11 +1,12 @@
 """Chat Configuration Section - Fractal Phoenix Pattern."""
+
 from .section_main import (
     ChatSectionConfig,
-    SubstrateBridgeConfig,
-    RoutingConfig,
     PhoneticConfig,
-    RefinementConfig,
     ProviderConfig,
+    RefinementConfig,
+    RoutingConfig,
+    SubstrateBridgeConfig,
     get_chat_config,
 )
 

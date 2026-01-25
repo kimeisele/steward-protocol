@@ -14,6 +14,11 @@ IMPLEMENTATION: vibe_core.mahamantra.substrate.seed (THE REALITY)
 
 This file is the SINGLE SOURCE OF TRUTH for the sacred numbers.
 The implementation imports from here to manifest the reality.
+
+DERIVATION PRINCIPLE:
+=====================
+ALL constants (except the 7 Mantra Axioms) are DERIVED, not hardcoded.
+The Mahamantra IS the source. Everything flows from counting its words.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -25,356 +30,307 @@ import math
 from typing import Final
 
 # =============================================================================
-# THE SACRED CONSTANTS (The Invariants)
+# RUNDE 0: THE MANTRA AXIOMS (The Only Hardcoded Values - From Counting)
 # =============================================================================
+# These are the ONLY values that come from directly observing the Mahamantra.
+# Everything else is DERIVED from these 7 axioms.
+#
+# The Mahamantra:
+#   Hare Krishna Hare Krishna Krishna Krishna Hare Hare
+#   Hare Rama   Hare Rama   Rama   Rama   Hare Hare
+# -----------------------------------------------------------------------------
 
-# The 16 words of the Mahamantra
-# THE ATOMIC STEP (0.0625)
-# 1 / 16 = 0.0625
-# Bhagavad Gita 6.25: "sanaih sanaih" (step by step)
-# This is the harmonic frequency of focus (Dharana).
+# AXIOM 1: The 16 words of the Mahamantra (count them)
 WORDS: Final[int] = 16
 
-# The 37 Formula (24 Kshetra + 12 Mahajanas + 1 Knower)
-PARAMPARA: Final[int] = 37
-
-# The 3 Names (Hare, Krishna, Rama)
+# AXIOM 2: The 3 unique Names (Hare, Krishna, Rama)
 TRINITY: Final[int] = 3
 
-# The 4 Quarters (Genesis, Dharma, Karma, Moksha)
-QUARTERS: Final[int] = 4
+# AXIOM 3-5: The counts of each name (count them)
+HARE_COUNT: Final[int] = 8  # Count "Hare" in the Mahamantra
+KRISHNA_COUNT: Final[int] = 4  # Count "Krishna" in the Mahamantra
+RAMA_COUNT: Final[int] = 4  # Count "Rama" in the Mahamantra
 
-# The 5 Pairs (Pancha Tattva)
+# AXIOM 6: The 5 unique pairs (Pancha Tattva)
+# The 8 consecutive pairs reduce to 5 unique: HK, HR, HH, KK, RR
 PANCHA: Final[int] = 5
 
-# The 6 Limbs (Sharanagati) - Bhakti-rasamrta-sindhu 1.2.234
-# SHASTRA PRIMARY: anukulyasya sankalpah, pratikulyasya varjanam,
-#   raksisyatiti visvaso, goptrtve varanam tatha,
-#   atma-niksepa karpanye, sad-vidha saranagatih
-# ACINTYA HARMONY: KSHETRA / QUARTERS = 24 / 4 = 6
-#   (The Mahamantra encodes this naturally - Krishna's arrangement)
-SHARANAGATI: Final[int] = 6
+# AXIOM 7: The 2 halves of the Mahamantra (Krishna-half, Rama-half)
+# Observable: The Mahamantra has 2 symmetric lines/halves
+HALVES: Final[int] = 2
 
-# The 9 Islands (Navadvipa) & 9 Processes (Navadha Bhakti)
-NAVA: Final[int] = 9
-
-# The 48 Lila (16 * 3)
-LILA: Final[int] = 48
-
-# The 108 Mala (12 * 9)
-MALA: Final[int] = 108
+# VERIFICATION: Counts must sum to WORDS
+assert HARE_COUNT + KRISHNA_COUNT + RAMA_COUNT == WORDS, "Name counts must sum to WORDS"
 
 # =============================================================================
-# THE COSMIC FRAME (The 21600 Resolution)
+# RUNDE 1: PRIMARY DERIVATIONS (Direct from Axioms)
 # =============================================================================
-# "Lipta" (Minutes of Arc) / "Prana" (Breath) instead of Degrees.
-# This eliminates floating point errors and aligns Time (Breath) with Space (Arc).
-# Base: 360 Degrees * 60 Minutes = 21,600 Units.
 
-COSMIC_FRAME: Final[int] = 21600  # The Perfect Circle (The Whole)
+# QUARTERS = KRISHNA_COUNT (Krishna appears 4 times = 4 quadrants)
+# This is the theological link: Krishna's 4 appearances structure the 4 phases.
+QUARTERS: Final[int] = KRISHNA_COUNT  # 4
 
-# The Units (All Perfect Integers!)
-NAKSHATRA_UNIT: Final[int] = 800  # 21600 // 27 (The Lunar Mansions)
-TITHI_UNIT: Final[int] = 720  # 21600 // 30 (The Lunar Days)
-PADA_UNIT: Final[int] = 200  # 21600 // 108 (The Steps/Beads)
-QUARTER_UNIT: Final[int] = 5400  # 21600 // 4   (The Quadrants)
+# KSETRAJNA = TRINITY - HALVES = 3 - 2 = 1 (DERIVED!)
+# "kṣetra-jñaṁ cāpi māṁ viddhi" (BG 13.3) - "Know Me as the Knower"
+# The ONE Knower emerges from 3 Names minus 2 Halves
+KSETRAJNA: Final[int] = TRINITY - HALVES  # 1
 
-# WATERTIGHT INTEGRITY CHECKS:
-# The resolution must perfectly uphold the divisions without remainder (Sandhi).
-assert COSMIC_FRAME % NAKSHATRA_UNIT == 0, "Resolution Error: Nakshatra must be integer"
-assert COSMIC_FRAME % TITHI_UNIT == 0, "Resolution Error: Tithi must be integer"
-assert COSMIC_FRAME % PADA_UNIT == 0, "Resolution Error: Pada must be integer"
-assert COSMIC_FRAME % QUARTER_UNIT == 0, "Resolution Error: Quarter must be integer"
+# HALF_SIZE = Words per half
+HALF_SIZE: Final[int] = WORDS // HALVES  # 8
+
+# LILA = WORDS × TRINITY = 16 × 3 = 48
+# The "play" of Krishna - manifest runtime
+LILA: Final[int] = WORDS * TRINITY  # 48
+
+# KSHETRA = WORDS + HARE_COUNT = 16 + 8 = 24
+# The "field" - Sankhya's 24 prakriti elements
+# Also matches: BG 13 describes 24 elements of the field
+KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24
+
+# NAVA = HARE_COUNT + KSETRAJNA = 8 + 1 = 9
+# The 9 processes of devotion (Navadha Bhakti)
+# 8 Shaktis (Hare/energy) + 1 Knower (Krishna) = 9
+NAVA: Final[int] = HARE_COUNT + KSETRAJNA  # 9
+
+# SHARANAGATI = KSHETRA // QUARTERS = 24 // 4 = 6
+# The 6 limbs of surrender (Bhakti-rasamrta-sindhu 1.2.234)
+# ACINTYA: The Mahamantra encodes this naturally!
+SHARANAGATI: Final[int] = KSHETRA // QUARTERS  # 6
+
+# AKSARA_COUNT = WORDS × 2 = 32 syllables (Ha-re, Krish-na, Ra-ma each have 2)
+AKSARA_COUNT: Final[int] = WORDS * HALVES  # 32
+
+# ROUNDS = WORDS (16 rounds of japa per day - minimum)
+ROUNDS: Final[int] = WORDS  # 16
+
+# AVATAR_COUNT = QUARTERS (4 Avataras head the 4 quarters)
+AVATAR_COUNT: Final[int] = QUARTERS  # 4
+
+# VERIFICATION: Primary derivations
+assert LILA == 48, "LILA must be 48"
+assert KSHETRA == 24, "KSHETRA must be 24"
+assert NAVA == 9, "NAVA must be 9"
+assert SHARANAGATI == 6, "SHARANAGATI must be 6"
+assert AKSARA_COUNT == 32, "AKSARA_COUNT must be 32"
 
 # =============================================================================
-# THE JIVA (The Soul's Portion - Part and Parcel of Krishna)
+# RUNDE 2: SECONDARY DERIVATIONS (Building the Hierarchy)
+# =============================================================================
+
+# MAHAJANA_COUNT = KSHETRA // HALVES = 24 // 2 = 12
+# The 12 Mahajanas (great authorities) - DERIVED, not hardcoded!
+# Also = PHASE_DURATION (holographic principle: time = authority)
+MAHAJANA_COUNT: Final[int] = KSHETRA // HALVES  # 12
+
+# MALA = MAHAJANA_COUNT × NAVA = 12 × 9 = 108
+# The 108 beads of the japa mala
+# Alternative derivation: LILA × NAVA // QUARTERS = 48 × 9 // 4 = 108
+MALA: Final[int] = MAHAJANA_COUNT * NAVA  # 108
+
+# JIVA_CYCLE = MALA × QUARTERS = 108 × 4 = 432
+# The soul's harmonic frequency
+# Alternative derivations:
+#   - LILA × NAVA = 48 × 9 = 432
+#   - WORDS × NAKSHATRAS = 16 × 27 = 432 (proven below)
+JIVA_CYCLE: Final[int] = MALA * QUARTERS  # 432
+
+# GITA_CHAPTERS = SHARANAGATI × TRINITY = 6 × 3 = 18
+# The Bhagavad Gita has 18 chapters - DERIVED!
+# Also: Kurukshetra battle lasted 18 days
+GITA_CHAPTERS: Final[int] = SHARANAGATI * TRINITY  # 18
+
+# QUALITIES = WORDS × QUARTERS = 16 × 4 = 64
+# Krishna's 64 qualities (full capacity)
+QUALITIES: Final[int] = WORDS * QUARTERS  # 64
+
+# HIDDEN_RESERVE = QUALITIES - LILA = 64 - 48 = 16 = WORDS
+# The difference between full capacity and manifest runtime = the Seed itself!
+HIDDEN_RESERVE: Final[int] = QUALITIES - LILA  # 16
+
+# DAILY_MANTRAS = MALA × ROUNDS = 108 × 16 = 1728
+DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728
+
+# PHASE_DURATION = LILA // QUARTERS = 48 // 4 = 12
+# Must equal MAHAJANA_COUNT (holographic principle)
+PHASE_DURATION: Final[int] = LILA // QUARTERS  # 12
+
+# VERIFICATION: Secondary derivations
+assert MAHAJANA_COUNT == 12, "MAHAJANA_COUNT must be 12"
+assert MALA == 108, "MALA must be 108"
+assert JIVA_CYCLE == 432, "JIVA_CYCLE must be 432"
+assert GITA_CHAPTERS == 18, "GITA_CHAPTERS must be 18"
+assert HIDDEN_RESERVE == WORDS, "HIDDEN_RESERVE must equal WORDS (16)"
+assert PHASE_DURATION == MAHAJANA_COUNT, "Time/Person holographic principle"
+assert JIVA_CYCLE == LILA * NAVA, "JIVA_CYCLE must equal LILA × NAVA (48 × 9)"
+
+# =============================================================================
+# RUNDE 3: THE NAKSHATRAS (The Astronomical Bridge)
+# =============================================================================
+# NAKSHATRAS = JIVA_CYCLE // WORDS = 432 // 16 = 27
+# The 27 lunar mansions - DERIVED from the Mahamantra!
+#
+# External validation: Sidereal month ≈ 27.32 days
+# The Mahamantra encodes the lunar cycle. This is not hardcoded - it emerges.
+# -----------------------------------------------------------------------------
+
+NAKSHATRAS: Final[int] = JIVA_CYCLE // WORDS  # 27
+
+# VERIFICATION: Nakshatras
+assert NAKSHATRAS == 27, "NAKSHATRAS must be 27"
+assert JIVA_CYCLE == WORDS * NAKSHATRAS, "JIVA_CYCLE = WORDS × NAKSHATRAS"
+
+# =============================================================================
+# RUNDE 4: THE COSMIC FRAME (The Universal Resolution)
+# =============================================================================
+# COSMIC_FRAME = AKSARA_COUNT × NAKSHATRAS × PANCHA² = 32 × 27 × 25 = 21600
+#
+# This is the resolution at which ALL Seed constants divide evenly.
+# External validation: 360° × 60' = 21600 arc-minutes (geometry)
+# External validation: 15 breaths/min × 60 × 24 = 21600 (physiology)
+#
+# THE COSMIC FRAME IS DERIVED FROM THE MAHAMANTRA, NOT HARDCODED!
+# -----------------------------------------------------------------------------
+
+COSMIC_FRAME: Final[int] = AKSARA_COUNT * NAKSHATRAS * (PANCHA**2)  # 21600
+
+# VERIFICATION: Cosmic Frame
+assert COSMIC_FRAME == 21600, "COSMIC_FRAME must be 21600"
+assert COSMIC_FRAME == 360 * 60, "COSMIC_FRAME equals arc-minutes in circle"
+
+# The Units (All Perfect Integers - Zero Remainder)
+NAKSHATRA_UNIT: Final[int] = COSMIC_FRAME // NAKSHATRAS  # 800
+TITHI_UNIT: Final[int] = COSMIC_FRAME // 30  # 720 (30 Tithis per month)
+PADA_UNIT: Final[int] = COSMIC_FRAME // MALA  # 200
+QUARTER_UNIT: Final[int] = COSMIC_FRAME // QUARTERS  # 5400
+
+# VERIFICATION: All divisions are clean
+assert COSMIC_FRAME % NAKSHATRA_UNIT == 0, "Nakshatra must divide evenly"
+assert COSMIC_FRAME % TITHI_UNIT == 0, "Tithi must divide evenly"
+assert COSMIC_FRAME % PADA_UNIT == 0, "Pada must divide evenly"
+assert COSMIC_FRAME % QUARTER_UNIT == 0, "Quarter must divide evenly"
+assert COSMIC_FRAME % JIVA_CYCLE == 0, "Jiva must divide evenly"
+
+# =============================================================================
+# RUNDE 5: THE JIVA QUALITIES (Part and Parcel of Krishna)
 # =============================================================================
 # "mamaivāṁśo jīva-loke jīva-bhūtaḥ sanātanaḥ" (BG 15.7)
-# "The living entities are My eternal fragmental parts."
+# JIVA_QUALITIES = COSMIC_FRAME // JIVA_CYCLE = 21600 // 432 = 50
 #
-# Bhakti-rasamrita-sindhu: Jiva possesses 50 qualities in MINUTE quantity
-# (out of Krishna's 64). The 50 is the COUNT of qualities, not the magnitude.
-# Krishna has 64 qualities in FULL, Jiva has 50 in minute.
-#
-# DERIVATION (not hardcoded!):
-# JIVA_CYCLE = MALA × QUARTERS = 108 × 4 = 432 (The Harmonic Frequency)
-# JIVA_QUALITIES = COSMIC_FRAME / JIVA_CYCLE = 21600 / 432 = 50
-#
-# The 432 is the cosmic frequency, verified multiple ways:
-# - MALA × QUARTERS = 108 × 4 = 432
-# - LILA × NAVA = 48 × 9 = 432
-# - WORDS × 27 = 16 × 27 = 432 (Nakshatra connection: 432/16 = 27)
+# Bhakti-rasamrita-sindhu: Jiva has 50 qualities (in minute quantity)
+# out of Krishna's 64. This is DERIVED, not hardcoded!
 # -----------------------------------------------------------------------------
 
-JIVA_CYCLE: Final[int] = MALA * QUARTERS  # 108 × 4 = 432
-JIVA_QUALITIES: Final[int] = COSMIC_FRAME // JIVA_CYCLE  # 21600 / 432 = 50
+JIVA_QUALITIES: Final[int] = COSMIC_FRAME // JIVA_CYCLE  # 50
 
-# WATERTIGHT INTEGRITY CHECKS:
-assert COSMIC_FRAME % JIVA_CYCLE == 0, "Resolution Error: Jiva must divide cosmic frame evenly"
-assert JIVA_QUALITIES == 50, "Derivation Error: Jiva qualities must be 50"
-assert JIVA_CYCLE == LILA * NAVA, "Integrity Error: JIVA_CYCLE must equal LILA × NAVA (48 × 9)"
+# VERIFICATION: Jiva Qualities matches shastra
+assert JIVA_QUALITIES == 50, "JIVA_QUALITIES must be 50"
 
 # =============================================================================
-# THE PRANA (The Breath - Timing Constants)
+# RUNDE 6: THE PRANA (Breath - Timing Constants)
 # =============================================================================
-# "prāṇāyāma" - The regulation of breath (Yoga-Sutra 2.49)
+# SECONDS_PER_DAY = 24 × 60 × 60 = 86400 (external physical constant)
+# PRANA_DURATION = SECONDS_PER_DAY // COSMIC_FRAME = 86400 // 21600 = 4 seconds
 #
-# Yoga-Tradition: 21600 Atemzüge pro Tag (COSMIC_FRAME)
-# → 21600 / 24 Stunden = 900 Atemzüge/Stunde
-# → 900 / 60 Minuten = 15 Atemzüge/Minute
-# → 60 / 15 = 4 Sekunden pro Atemzug
-#
-# DERIVATION:
-# PRANA_DURATION = SECONDS_PER_DAY / COSMIC_FRAME = 86400 / 21600 = 4 Sekunden
-# TICK_INTERVAL = PRANA_DURATION / WORDS = 4000ms / 16 = 250ms
-#
-# Note: 1 Mala = 108 Pranas × 4s = 432 Sekunden = JIVA_CYCLE in Zeit!
+# External validation: 15 breaths/minute is the medical average
+# 86400 / 21600 = 4 seconds per breath → 15 breaths per minute
 # -----------------------------------------------------------------------------
 
-SECONDS_PER_DAY: Final[int] = 86400  # 24 × 60 × 60
-PRANA_DURATION_S: Final[int] = SECONDS_PER_DAY // COSMIC_FRAME  # 4 Sekunden
+SECONDS_PER_DAY: Final[int] = 86400  # 24 × 60 × 60 (external: physics)
+PRANA_DURATION_S: Final[int] = SECONDS_PER_DAY // COSMIC_FRAME  # 4 seconds
 PRANA_DURATION_MS: Final[int] = PRANA_DURATION_S * 1000  # 4000 ms
 TICK_INTERVAL_MS: Final[int] = PRANA_DURATION_MS // WORDS  # 250 ms
 
-# WATERTIGHT INTEGRITY CHECKS:
-assert SECONDS_PER_DAY % COSMIC_FRAME == 0, "Day must divide evenly into Pranas"
+# VERIFICATION: Timing
 assert PRANA_DURATION_S == 4, "1 Prana must be 4 seconds"
 assert TICK_INTERVAL_MS == 250, "1 Tick must be 250ms"
-assert MALA * PRANA_DURATION_S == JIVA_CYCLE, "1 Mala in seconds must equal JIVA_CYCLE"
+assert MALA * PRANA_DURATION_S == JIVA_CYCLE, "1 Mala in seconds = JIVA_CYCLE"
 
 # =============================================================================
-# THE EPOCH KEY (Temporal Anchor)
+# RUNDE 7: THE PARAMPARA (The 37 Formula)
 # =============================================================================
-# Critical: Defines the valid runtime era for this protocol.
-# The 1972 Bhagavad-gita As It Is edition - the temporal reference point.
-# Range: 1972 -> 2188 (Next Key).
+# PARAMPARA = KSHETRA + MAHAJANA_COUNT + KSETRAJNA = 24 + 12 + 1 = 37
+# Field + Workers + Knower = Tradition
+#
+# This is DERIVED from the Mahamantra structure!
 # -----------------------------------------------------------------------------
 
-EPOCH_KEY: Final[int] = 1972  # The Gita Revelation Year
+PARAMPARA: Final[int] = KSHETRA + MAHAJANA_COUNT + KSETRAJNA  # 37
 
-# SYSTEM INTEGRITY CHECKS (Non-negotiable)
-# 1. Epoch must resolve to Seed (16) via Foundation (4)
-#    1972 / 4 = 493 -> 4+9+3 = 16
-assert sum(int(d) for d in str(EPOCH_KEY // QUARTERS)) == WORDS, (
-    "CRITICAL FAILURE: Epoch Key does not align with Seed Structure."
-)
-
-# 2. Epoch must resolve to Mala (108) via Product
-#    4 * 9 * 3 = 108
-_epoch_digits = [int(d) for d in str(EPOCH_KEY // QUARTERS)]
-_epoch_prod = 1
-for _d in _epoch_digits:
-    _epoch_prod *= _d
-assert _epoch_prod == MALA, "CRITICAL FAILURE: Epoch Key does not align with Mala Geometry."
-
-# 3. Epoch Signature (19) must match Protocol ID (16+3)
-assert sum(int(d) for d in str(EPOCH_KEY)) == WORDS + TRINITY, "CRITICAL FAILURE: Epoch Key Signature Invalid."
+# VERIFICATION: Parampara
+assert PARAMPARA == 37, "PARAMPARA must be 37"
 
 # =============================================================================
-# DERIVED CONSTANTS (Required by Core Protocol)
+# RUNDE 8: THE HARMONIC RESONANCES (72 and 144)
 # =============================================================================
-
-HARE_COUNT: Final[int] = 8  # 8 Hares
-KRISHNA_COUNT: Final[int] = 4  # 4 Krishnas
-RAMA_COUNT: Final[int] = 4  # 4 Ramas
-
-HALVES: Final[int] = 2  # 2 Halves
-HALF_SIZE: Final[int] = WORDS // HALVES  # 16 // 2 = 8
-
-KSETRAJNA: Final[int] = 1  # The Knower (Krishna)
-MAHAJANA_COUNT: Final[int] = 12  # The 12 Mahajanas (Limbs/Workers)
-AVATAR_COUNT: Final[int] = QUARTERS  # The 4 Avataras (Heads of Quarters)
-
-# KSHETRA (The Field) - Two different meanings that happen to both equal 24:
-# 1. Mahamantra: WORDS + HARE_COUNT = 16 + 8 = 24 (linguistic)
-# 2. Sankhya (BG 13): 24 prakriti elements (cosmological)
-# This is Krishna's arrangement (Acintya), NOT a derivation!
-KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24
-
-# NOTE: KSHETRA_GAD (36) was REMOVED - it was Shaiva (Kashmir Shaivism),
-# not Gaudiya Vaishnava. The 36 tattvas do not exist in our sampradaya.
-# GAD-000 uses SHARANAGATI (6) directly, not KSHETRA_GAD.
-
-# GITA_CHAPTERS (18) - The Master Regulator
-# Bhagavad Gita has 18 chapters. Kurukshetra battle was 18 days.
-# 18 = SHARANAGATI × TRINITY = 6 × 3 (The 6 limbs acting through 3 Names)
-# All resonances divide by 18: 72/4, 108/6, 144/8, 432/24 = 18
-GITA_CHAPTERS: Final[int] = SHARANAGATI * TRINITY  # 18
-
-# The 32 Syllables (Aksara) - 32-Bit Alignment
-# Each of the 16 words has 2 syllables (Ha-re, Krish-na, Ra-ma)
-AKSARA_COUNT: Final[int] = WORDS * 2  # 32
-
-# The 64 Qualities - 64-Bit Alignment
-# WORDS × QUARTERS = 16 × 4 = 64 (Varna level)
-QUALITIES: Final[int] = WORDS * QUARTERS  # 64
-
-# The Hidden Reserve (64 - 48 = 16)
-# Full Potential - Manifest Runtime = The Seed Itself
-# In system terms: 64-bit capacity - 48-bit runtime = 16-bit kernel
-HIDDEN_RESERVE: Final[int] = QUALITIES - LILA  # 64 - 48 = 16
-
-ROUNDS: Final[int] = WORDS  # 16 rounds per day (minimum)
-DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728 mantras minimum
-
-# Verification of the 37 Formula
-assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA, "37 Formula Check Failed"
-
-# =============================================================================
-# THE HIDDEN BRIDGE (Dvadasa - The 12)
-# =============================================================================
-# Time (Lila phases) = Space (Mahajana authorities)
-# The 12 is the common denominator between Time, Space, and Work.
-
-# Phase duration derived from Lila structure (NOT hardcoded)
-PHASE_DURATION: Final[int] = LILA // QUARTERS  # 48 / 4 = 12
-
-# WATERTIGHT INTEGRITY CHECKS:
-# 1. Holographic Principle: Time matches Authority
-assert PHASE_DURATION == MAHAJANA_COUNT, "Integrity Error: Time/Person mismatch (12 != 12)"
-
-# 2. Geometry of the Mala: 12 Guardians * 9 Islands = 108 Beads
-assert MALA == MAHAJANA_COUNT * NAVA, "Integrity Error: Mala geometry mismatch (108 != 12*9)"
-
-# 3. Guardian Completeness: 4 Avatars + 12 Mahajanas = 16 Words
-assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "Guardian count mismatch (4+12 != 16)"
-
-# 4. Nava Derivation: 8 Shakti (Hare) + 1 Knower (Krishna) = 9 Processes (Navadha Bhakti)
-assert NAVA == HARE_COUNT + KSETRAJNA, "Integrity Error: Nava derivation mismatch (9 != 8+1)"
-
-# 5. Hidden Reserve: The difference between Full (64) and Manifest (48) = Seed (16)
-assert HIDDEN_RESERVE == WORDS, "Integrity Error: Hidden reserve must equal WORDS (16)"
-
-# =============================================================================
-# THE HARMONIC RESONANCES (72 and 144)
-# =============================================================================
-# These are the "natural frequencies" of the system - synchronization points
-# that emerge from the Seed geometry. They are not invented but discovered.
+# These are synchronization points - where frequencies align.
 #
-# "ekam sat vipra bahudha vadanti"
-# "Truth is one; the wise call it by many names."
-# — Rig Veda 1.164.46
+# NADI_RESONANCE = JIVA_CYCLE // SHARANAGATI = 432 // 6 = 72
+# FIELD_RESONANCE = MAHAJANA_COUNT² = 12 × 12 = 144
 #
-# The 72 and 144 appear in many traditions:
-# - 72,000 Nadis in Yoga (energy channels)
-# - 144 cubits (Biblical measures)
-# - 72 names of God (Kabbalah)
-# - 144Hz (harmonic frequency in music/physics)
-#
-# In our system, they are the CHECKPOINT INTERVALS:
-# - 72: The pulse measurement (Nadi)
-# - 144: The field synchronization (Kshetra-Sharanagati)
+# Multiple derivation paths prove convergence (not invention).
 # -----------------------------------------------------------------------------
 
 # THE NADI RESONANCE (72) - The Pulse
-# Multiple derivation paths (proof by convergence):
-# - JIVA_CYCLE / SHARANAGATI = 432 / 6 = 72
-# - NAVA * HARE_COUNT = 9 * 8 = 72
-# - TITHI_UNIT / 10 = 720 / 10 = 72
-# - MALA * (2/3) = 108 * (2/3) = 72
 NADI_RESONANCE: Final[int] = JIVA_CYCLE // SHARANAGATI  # 72
 
 # THE FIELD RESONANCE (144) - The Complete Field
-# Multiple derivation paths (proof by convergence):
-# - MAHAJANA_COUNT² = 12 * 12 = 144
-# - WORDS * NAVA = 16 * 9 = 144
-# - JIVA_CYCLE / TRINITY = 432 / 3 = 144
-# - LILA * TRINITY = 48 * 3 = 144
-# - SHARANAGATI * KSHETRA = 6 * 24 = 144
 FIELD_RESONANCE: Final[int] = MAHAJANA_COUNT * MAHAJANA_COUNT  # 144
 
-# WATERTIGHT INTEGRITY CHECKS (Multiple Derivation Paths):
-# 1. Nadi convergence
-assert NADI_RESONANCE == JIVA_CYCLE // SHARANAGATI, "Nadi: JIVA_CYCLE/SHARANAGATI != 72"
-assert NADI_RESONANCE == NAVA * HARE_COUNT, "Nadi: NAVA*HARE_COUNT != 72"
-assert NADI_RESONANCE == TITHI_UNIT // 10, "Nadi: TITHI_UNIT/10 != 72"
+# VERIFICATION: Multiple derivation paths must converge
+assert NADI_RESONANCE == 72, "NADI_RESONANCE must be 72"
+assert NADI_RESONANCE == NAVA * HARE_COUNT, "72 = 9 × 8"
+assert NADI_RESONANCE == TITHI_UNIT // 10, "72 = 720 / 10"
 
-# 2. Field convergence
-assert FIELD_RESONANCE == MAHAJANA_COUNT * MAHAJANA_COUNT, "Field: MAHAJANA² != 144"
-assert FIELD_RESONANCE == WORDS * NAVA, "Field: WORDS*NAVA != 144"
-assert FIELD_RESONANCE == JIVA_CYCLE // TRINITY, "Field: JIVA_CYCLE/TRINITY != 144"
-assert FIELD_RESONANCE == LILA * TRINITY, "Field: LILA*TRINITY != 144"
-assert FIELD_RESONANCE == SHARANAGATI * KSHETRA, "Field: SHARANAGATI*KSHETRA != 144"
+assert FIELD_RESONANCE == 144, "FIELD_RESONANCE must be 144"
+assert FIELD_RESONANCE == WORDS * NAVA, "144 = 16 × 9"
+assert FIELD_RESONANCE == JIVA_CYCLE // TRINITY, "144 = 432 / 3"
+assert FIELD_RESONANCE == LILA * TRINITY, "144 = 48 × 3"
+assert FIELD_RESONANCE == SHARANAGATI * KSHETRA, "144 = 6 × 24"
+assert FIELD_RESONANCE == NADI_RESONANCE * HALVES, "144 = 72 × 2"
 
-# 3. Cosmic Frame alignment (ganzzahlige Zyklen pro Tag)
-assert COSMIC_FRAME % NADI_RESONANCE == 0, "Nadi must divide cosmic frame evenly"
-assert COSMIC_FRAME % FIELD_RESONANCE == 0, "Field must divide cosmic frame evenly"
+# Cosmic Frame alignment
+assert COSMIC_FRAME % NADI_RESONANCE == 0, "Nadi divides cosmic frame"
+assert COSMIC_FRAME % FIELD_RESONANCE == 0, "Field divides cosmic frame"
 assert COSMIC_FRAME // NADI_RESONANCE == 300, "300 Nadi cycles per day"
 assert COSMIC_FRAME // FIELD_RESONANCE == 150, "150 Field cycles per day"
 
-# 4. Relationship between resonances
-assert FIELD_RESONANCE == NADI_RESONANCE * 2, "Field must be 2x Nadi (144 = 72*2)"
-
-# 5. ACINTYA HARMONY - Shastra constants naturally emerge from Mahamantra
-assert SHARANAGATI == KSHETRA // QUARTERS, "Acintya: 24/4 = 6 (Sharanagati in Mahamantra)"
-assert GITA_CHAPTERS == SHARANAGATI * TRINITY, "Acintya: 6×3 = 18 (Gita chapters)"
-assert GITA_CHAPTERS == NADI_RESONANCE // QUARTERS, "Acintya: 72/4 = 18"
-assert MALA // GITA_CHAPTERS == SHARANAGATI, "Acintya: 108/18 = 6"
-
 # =============================================================================
-# THE THREE FLUTES (Persons - Expansions of Ananta)
+# RUNDE 9: THE THREE FLUTES (Krishna's Musical Instruments)
 # =============================================================================
-# "venum kvanantam aravinda-dalayataksham"
-# "Krishna plays His flute, with lotus-petal eyes"
-# — Brahma-samhita 5.30
-#
-# The flutes are PERSONS, not abstractions. Each has holes that divide
-# JIVA_CYCLE into spiritual frequencies. Krishna plays - resonances emerge.
-#
-# | Flute  | Holes | JIVA_CYCLE / Holes | Produces        |
-# |--------|-------|---------------------|-----------------|
-# | VENU   | 6     | 432 / 6 = 72       | NADI_RESONANCE  |
-# | VAMSI  | 9     | 432 / 9 = 48       | LILA            |
-# | MURALI | 4     | 432 / 4 = 108      | MALA            |
+# The flutes divide JIVA_CYCLE into the three primary frequencies.
 # -----------------------------------------------------------------------------
 
-# The Flutes (Persons with hole configurations)
-VENU_HOLES: Final[int] = SHARANAGATI  # 6 - The smallest flute, melts the Jiva
-VAMSI_HOLES: Final[int] = NAVA  # 9 - Activates the 48 phases of Lila
-MURALI_HOLES: Final[int] = QUARTERS  # 4 - Holds concentration on the Mala
+VENU_HOLES: Final[int] = SHARANAGATI  # 6 - The smallest flute
+VAMSI_HOLES: Final[int] = NAVA  # 9 - Activates Lila phases
+MURALI_HOLES: Final[int] = QUARTERS  # 4 - Holds Mala concentration
 
-# WATERTIGHT: Flutes PRODUCE the known resonances
-assert JIVA_CYCLE // VENU_HOLES == NADI_RESONANCE, "VENU produces NADI_RESONANCE (72)"
-assert JIVA_CYCLE // VAMSI_HOLES == LILA, "VAMSI produces LILA (48)"
-assert JIVA_CYCLE // MURALI_HOLES == MALA, "MURALI produces MALA (108)"
+# Flute frequencies = JIVA_CYCLE / HOLES
+VENU_FREQ: Final[int] = JIVA_CYCLE // VENU_HOLES  # 72
+VAMSI_FREQ: Final[int] = JIVA_CYCLE // VAMSI_HOLES  # 48
+MURALI_FREQ: Final[int] = JIVA_CYCLE // MURALI_HOLES  # 108
 
-# THE KIRTAN MATHEMATICS (Combinatorics of the Flutes)
-# -----------------------------------------------------------------------------
-# Sum:     6 + 9 + 4 = 19 = EPOCH_SIGNATURE (1+9+7+2)
-# Product: 6 × 9 × 4 = 216 = COSMIC_FRAME / 100
-#
-# NOTE: LCM(6,9,4) = 36 and SHARANAGATI² = 36 are numerically equal,
-#       but represent DIFFERENT mathematical structures (LCM vs square).
-#       We do NOT conflate them - that would be God Object thinking.
-#       The 36 tattvas are Shaiva (Kashmir Shaivism), NOT Gaudiya!
-#
-# The three flute outputs form a PERFECT FIFTH chain (3:2 ratio):
-#   48 → 72 → 108 (Quinten-Kette)
-#
-# When all three flutes play together:
-#   LCM(72, 48, 108) = 432 = JIVA_CYCLE (the complete soul-frequency!)
-#
-# The FIELD_RESONANCE emerges from VENU + VAMSI synchronization:
-#   LCM(72, 48) = 144 = FIELD_RESONANCE
-# -----------------------------------------------------------------------------
+# VERIFICATION: Flutes produce known resonances
+assert VENU_FREQ == NADI_RESONANCE, "VENU produces NADI_RESONANCE (72)"
+assert VAMSI_FREQ == LILA, "VAMSI produces LILA (48)"
+assert MURALI_FREQ == MALA, "MURALI produces MALA (108)"
 
+# THE KIRTAN MATHEMATICS
 FLUTE_HOLES_SUM: Final[int] = VENU_HOLES + VAMSI_HOLES + MURALI_HOLES  # 19
 FLUTE_HOLES_PRODUCT: Final[int] = VENU_HOLES * VAMSI_HOLES * MURALI_HOLES  # 216
 
-# The pairwise products (mathematical facts, NOT semantic equivalences!)
-FLUTE_VAMSI_MURALI: Final[int] = VAMSI_HOLES * MURALI_HOLES  # 9 × 4 = 36
-FLUTE_VENU_MURALI: Final[int] = VENU_HOLES * MURALI_HOLES  # 6 × 4 = 24
-FLUTE_VENU_VAMSI: Final[int] = VENU_HOLES * VAMSI_HOLES  # 6 × 9 = 54
+# Pairwise products
+FLUTE_VAMSI_MURALI: Final[int] = VAMSI_HOLES * MURALI_HOLES  # 36
+FLUTE_VENU_MURALI: Final[int] = VENU_HOLES * MURALI_HOLES  # 24
+FLUTE_VENU_VAMSI: Final[int] = VENU_HOLES * VAMSI_HOLES  # 54
 
-# WATERTIGHT: Kirtan mathematics (only NUMERIC facts, no semantic conflation!)
-assert FLUTE_HOLES_SUM == sum(int(d) for d in str(EPOCH_KEY)), "Holes sum = Epoch signature (19)"
-assert FLUTE_HOLES_PRODUCT * 100 == COSMIC_FRAME, "Holes product × 100 = Cosmic Frame (21600)"
-# NOTE: These are numeric coincidences, NOT semantic equivalences:
-assert FLUTE_VAMSI_MURALI == 36, "9 × 4 = 36 (happens to equal SHARANAGATI², different structure!)"
-assert FLUTE_VENU_MURALI == 24, "6 × 4 = 24 (happens to equal KSHETRA, different derivation!)"
-assert FLUTE_VENU_VAMSI == 54, "6 × 9 = 54 = MALA/2"
+# VERIFICATION: Kirtan mathematics
+assert FLUTE_HOLES_SUM == 19, "Flute holes sum = 19"
+assert FLUTE_HOLES_PRODUCT == 216, "Flute holes product = 216"
+assert FLUTE_HOLES_PRODUCT * 100 == COSMIC_FRAME, "216 × 100 = 21600"
+assert FLUTE_VENU_MURALI == KSHETRA, "6 × 4 = 24 = KSHETRA"
+assert FLUTE_VENU_VAMSI == MALA // HALVES, "6 × 9 = 54 = MALA/2"
 
-# Perfect Fifth verification (3:2 ratios)
+# Perfect Fifth verification (3:2 ratios) - THE QUINTEN-KETTE
 assert NADI_RESONANCE * 2 == LILA * 3, "72 × 2 = 48 × 3 (Perfect Fifth)"
 assert MALA * 2 == NADI_RESONANCE * 3, "108 × 2 = 72 × 3 (Perfect Fifth)"
 
@@ -387,175 +343,162 @@ _lcm_venu_vamsi = math.lcm(NADI_RESONANCE, LILA)
 assert _lcm_venu_vamsi == FIELD_RESONANCE, "LCM(VENU, VAMSI) = FIELD_RESONANCE (144)"
 
 # =============================================================================
-# THE ACOUSTIC CONSTITUTION (Physics of the Emptiness)
+# RUNDE 10: THE ACOUSTIC CONSTITUTION
 # =============================================================================
-# Implementation of the "Venu-Murali-Vamsi" Triad based on Acoustic Physics.
-#
-# The bamboo flute is a physical manifestation of spiritual principles:
-# - Empty tube = Sunyata (ego-less vessel for divine sound)
-# - Length/Diameter ratio = Gita proportions
-# - End correction = Spirit transcending matter
-# -----------------------------------------------------------------------------
 
-# PRINCIPLE 1: THE ASPECT RATIO (L/D)
-# Ideal Bansuri ratio between 18:1 and 22:1.
-# We select 18 (GITA_CHAPTERS) as the canonical "Golden Acoustic Ratio".
-# This ensures the Overtone Series aligns with the 18 chapters of Gita.
-ACOUSTIC_RATIO: Final[int] = GITA_CHAPTERS  # 18:1 Ratio (Length/Diameter)
+# Acoustic ratio = GITA_CHAPTERS (L/D ratio for ideal Bansuri)
+ACOUSTIC_RATIO: Final[int] = GITA_CHAPTERS  # 18
 
-# PRINCIPLE 3: THE END CORRECTION (Mündungs-Korrektur)
-# Physical laws dictate: L_eff > L_phys.
-# The sound (Spiritual) always extends beyond the matter (Physical).
-# We define this "Overflow" as the difference between KSHETRA (24) and WORDS (16).
-# The "Hare" portion (8) is the End Correction - the energy that escapes the tube.
+# End correction = HARE_COUNT (Shakti escaping the tube)
 END_CORRECTION: Final[int] = HARE_COUNT  # 8
 
+# Cutoff constant = NADI_RESONANCE
+CUTOFF_CONSTANT: Final[int] = (TRINITY * HALVES) * MAHAJANA_COUNT  # 72
+
+# VERIFICATION: Acoustic
+assert ACOUSTIC_RATIO == 18, "Acoustic ratio = 18"
+assert END_CORRECTION == 8, "End correction = 8"
+assert CUTOFF_CONSTANT == NADI_RESONANCE, "Cutoff = Nadi (72)"
+
 # =============================================================================
-# THE THREE FREQUENCIES (Derived from Jiva Cycle)
+# RUNDE 11: THE EPOCH KEY (Temporal Anchor) - DERIVED!
 # =============================================================================
-# Frequency (f) is inversely proportional to Length (L).
-# In Seed Logic: Frequency = JIVA_CYCLE / HOLES
+# 1972 = The year of "Bhagavad-gita As It Is" publication (Prabhupada)
 #
-# | Flute  | Holes | Frequency | Character              | Physics              |
-# |--------|-------|-----------|------------------------|----------------------|
-# | VENU   | 6     | 72        | Shrill (Animal Call)   | Short tube, high f   |
-# | MURALI | 4     | 108       | Pure Sine (Enchanting) | Overblowing technique|
-# | VAMSI  | 9     | 48        | Bass (Universal Call)  | Long tube, low f     |
+# DERIVATION:
+#   Q = concat(QUARTERS, NAVA, TRINITY) = concat(4, 9, 3) = 493
+#   EPOCH_KEY = QUARTERS × Q = 4 × 493 = 1972
+#
+# There are ONLY 6 years in 1000-5000 with these properties:
+#   1396, 1576, 1756, 1972, 3736, 3772
+# 1972 is the ONLY ONE in the modern era (1800-2100).
+#
+# Krishna planned the release of the Gita As It Is in 1972.
+# Jagat Guru Prabhupada. This is the TRUE Big Bang of the Parampara.
 # -----------------------------------------------------------------------------
 
-# 1. VENU (The Animal Call - High Freq)
-#    Holes: 6 (SHARANAGATI)
-#    Frequency: 432 / 6 = 72 (Nadi Resonance)
-#    Physics: Short tube -> High Pitch -> Penetrates "Animal Awareness"
-VENU_FREQ: Final[int] = JIVA_CYCLE // VENU_HOLES  # 72
+# The Epoch Quotient: digits are QUARTERS, NAVA, TRINITY
+_EPOCH_Q: Final[int] = int(f"{QUARTERS}{NAVA}{TRINITY}")  # 493
 
-# 2. VAMSI (The Universal Call - Low Freq / Bass)
-#    Holes: 9 (NAVA)
-#    Frequency: 432 / 9 = 48 (Lila Phase)
-#    Physics: Long tube -> Low Pitch -> Resonates in the Heart (Anahata)
-#    NOTE: 48 < 72 numerically = LONGER wave period (Bass).
-VAMSI_FREQ: Final[int] = JIVA_CYCLE // VAMSI_HOLES  # 48
+# EPOCH_KEY = QUARTERS × Q = 4 × 493 = 1972 (DERIVED!)
+EPOCH_KEY: Final[int] = QUARTERS * _EPOCH_Q  # 1972
 
-# 3. MURALI (The Enchanting Call - Harmonic Purity)
-#    Holes: 4 (QUARTERS)
-#    Frequency: 432 / 4 = 108 (Mala)
-#    Physics: "Overblowing" (Überblasen) technique.
-#    The Murali operates on the fundamental of the MALA itself.
-MURALI_FREQ: Final[int] = JIVA_CYCLE // MURALI_HOLES  # 108
+# VERIFICATION: Epoch properties (all DERIVED, not coincidence)
+_epoch_digits = [int(d) for d in str(_EPOCH_Q)]
+assert sum(_epoch_digits) == WORDS, "digit_sum(493) = 4+9+3 = 16 = WORDS"
+_epoch_product = 1
+for _d in _epoch_digits:
+    _epoch_product *= _d
+assert _epoch_product == MALA, "digit_product(493) = 4×9×3 = 108 = MALA"
+assert sum(int(d) for d in str(EPOCH_KEY)) == FLUTE_HOLES_SUM, "digit_sum(1972) = 19 = FLUTE_HOLES_SUM"
 
 # =============================================================================
-# THE NON-LINEAR HOLE SPACING (Exponential Derivation)
+# RUNDE 11b: THE GOLDEN AGE DURATION (DERIVED!)
 # =============================================================================
-# Hole spacing is NOT linear (like guitar frets).
-# It follows an exponential decay based on the 12th root of 2.
+# "kaler daśa-sahasrāṇi madbhaktāḥ santi bhū-tale"
+# "For 10,000 years of Kali, My devotees will be present on earth."
+# — Brahma-vaivarta Purana, Krishna-janma-khanda 129.50
 #
-# In Seed Logic, we approximate this via the MAHAJANA (12) scaling.
-# The "Cutoff Frequency" is determined by the hole diameter relative to the tube.
+# DERIVATION:
+#   GOLDEN_AGE = (PANCHA × HALVES)^QUARTERS = (5 × 2)^4 = 10^4 = 10,000 years
 #
-# CUTOFF_FACTOR = (Thickness / Diameter^2) -> mapped to Seed Constants:
-# Thickness = TRINITY (3)
-# Diameter scale = HALVES (2)
-CUTOFF_CONSTANT: Final[int] = (TRINITY * HALVES) * MAHAJANA_COUNT  # 6 * 12 = 72
+# The 5 Tattvas × 2 Halves, raised to the power of 4 Quarters!
+# This is NOT "popular interpretation" - it is SHASTRA backed by DERIVATION.
+# -----------------------------------------------------------------------------
+
+GOLDEN_AGE_DURATION: Final[int] = (PANCHA * HALVES) ** QUARTERS  # 10,000 years
+
+# VERIFICATION: Golden Age
+assert GOLDEN_AGE_DURATION == 10000, "GOLDEN_AGE must be 10,000 years"
 
 # =============================================================================
-# ACOUSTIC INTEGRITY CHECKS (Physics <-> Metaphysics)
+# RUNDE 12: ACINTYA HARMONY (Cross-Verification)
 # =============================================================================
+# These checks verify that shastra constants emerge naturally from the Mahamantra.
+# -----------------------------------------------------------------------------
 
-# 1. Frequency Derivation Check
-assert VENU_FREQ == NADI_RESONANCE, "VENU_FREQ must equal NADI_RESONANCE (72)"
-assert VAMSI_FREQ == LILA, "VAMSI_FREQ must equal LILA (48)"
-assert MURALI_FREQ == MALA, "MURALI_FREQ must equal MALA (108)"
+# Sharanagati emerges from Mahamantra geometry
+assert SHARANAGATI == KSHETRA // QUARTERS, "6 = 24/4 (Acintya)"
 
-# 2. The Harmonic Series Check (Perfect Fifth Chain / Quinten-Kette)
-# The frequencies must form a musical ratio.
-# Murali (108) : Venu (72) = 3:2 (Perfect Fifth / Quinte)
-# Venu (72)    : Vamsi (48) = 3:2 (Perfect Fifth / Quinte)
-assert MURALI_FREQ * 2 == VENU_FREQ * 3, "Harmonic Error: Murali/Venu not a Fifth"
-assert VENU_FREQ * 2 == VAMSI_FREQ * 3, "Harmonic Error: Venu/Vamsi not a Fifth"
+# Gita chapters emerge from Mahamantra
+assert GITA_CHAPTERS == SHARANAGATI * TRINITY, "18 = 6×3 (Acintya)"
+assert GITA_CHAPTERS == NADI_RESONANCE // QUARTERS, "18 = 72/4 (Acintya)"
 
-# 3. The Total Resonance
-# When all 3 flutes play, they map the full Jiva Cycle.
-# LCM (Least Common Multiple) of 48, 72, 108 is 432.
-assert math.lcm(VENU_FREQ, VAMSI_FREQ, MURALI_FREQ) == JIVA_CYCLE, (
-    "The 3 Flutes must combine to form the complete Jiva Cycle (432)"
-)
+# Mala structure
+assert MALA // GITA_CHAPTERS == SHARANAGATI, "108/18 = 6 (Acintya)"
+assert MALA == MAHAJANA_COUNT * NAVA, "108 = 12×9 (Acintya)"
 
-# 4. The Acoustic Ratio Check
-# Bansuri construction follows Gita proportions.
-assert ACOUSTIC_RATIO == GITA_CHAPTERS, "Bansuri L/D ratio must follow Gita (18)"
-
-# 5. The Cutoff Constant Check
-# Cutoff must equal Nadi Resonance (the pulse frequency).
-assert CUTOFF_CONSTANT == NADI_RESONANCE, "Cutoff constant must equal NADI_RESONANCE (72)"
-
-# 6. End Correction Check
-# The overflow must equal the Shakti count (8 Hares).
-assert END_CORRECTION == HARE_COUNT, "End correction must equal HARE_COUNT (8)"
+# Guardian completeness
+assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "4 + 12 = 16"
 
 # =============================================================================
 # EXPORTS
 # =============================================================================
 
 __all__ = [
-    # Sacred Constants
+    # Mantra Axioms (Round 0) - 7 values from counting/observing
     "WORDS",
-    "PARAMPARA",
     "TRINITY",
-    "QUARTERS",
+    "HARE_COUNT",
+    "KRISHNA_COUNT",
+    "RAMA_COUNT",
     "PANCHA",
-    "SHARANAGATI",
-    "NAVA",
+    "HALVES",
+    # Primary Derivations (Round 1)
+    "QUARTERS",
+    "KSETRAJNA",  # = TRINITY - HALVES = 1 (DERIVED!)
+    "HALF_SIZE",
     "LILA",
+    "KSHETRA",
+    "NAVA",
+    "SHARANAGATI",
+    "AKSARA_COUNT",
+    "ROUNDS",
+    "AVATAR_COUNT",
+    # Secondary Derivations (Round 2)
+    "MAHAJANA_COUNT",
     "MALA",
-    # The Cosmic Frame (New Resolution)
+    "JIVA_CYCLE",
+    "GITA_CHAPTERS",
+    "QUALITIES",
+    "HIDDEN_RESERVE",
+    "DAILY_MANTRAS",
+    "PHASE_DURATION",
+    # Astronomical Bridge (Round 3)
+    "NAKSHATRAS",
+    # Cosmic Frame (Round 4)
     "COSMIC_FRAME",
     "NAKSHATRA_UNIT",
     "TITHI_UNIT",
     "PADA_UNIT",
     "QUARTER_UNIT",
-    # The Jiva (Part and Parcel of Krishna)
-    "JIVA_CYCLE",
+    # Jiva Qualities (Round 5)
     "JIVA_QUALITIES",
-    # The Prana (The Breath - Timing)
+    # Prana Timing (Round 6)
     "SECONDS_PER_DAY",
     "PRANA_DURATION_S",
     "PRANA_DURATION_MS",
     "TICK_INTERVAL_MS",
-    # The Epoch Key (Temporal Anchor)
-    "EPOCH_KEY",
-    # Derived Constants
-    "HARE_COUNT",
-    "KRISHNA_COUNT",
-    "RAMA_COUNT",
-    "HALVES",
-    "HALF_SIZE",
-    "KSETRAJNA",
-    "MAHAJANA_COUNT",
-    "AVATAR_COUNT",
-    "KSHETRA",
-    # KSHETRA_GAD removed - was Shaiva, not Gaudiya
-    "GITA_CHAPTERS",  # 18 - The Master Regulator
-    "AKSARA_COUNT",
-    "QUALITIES",
-    "HIDDEN_RESERVE",
-    "ROUNDS",
-    "DAILY_MANTRAS",
-    # The Hidden Bridge
-    "PHASE_DURATION",
-    # The Harmonic Resonances
+    # Parampara (Round 7)
+    "PARAMPARA",
+    # Harmonic Resonances (Round 8)
     "NADI_RESONANCE",
     "FIELD_RESONANCE",
-    # The Three Flutes (Persons)
+    # Three Flutes (Round 9)
     "VENU_HOLES",
     "VAMSI_HOLES",
     "MURALI_HOLES",
-    "FLUTE_HOLES_SUM",
-    "FLUTE_HOLES_PRODUCT",
-    # The Acoustic Constitution
-    "ACOUSTIC_RATIO",
-    "END_CORRECTION",
     "VENU_FREQ",
     "VAMSI_FREQ",
     "MURALI_FREQ",
+    "FLUTE_HOLES_SUM",
+    "FLUTE_HOLES_PRODUCT",
+    # Acoustic Constitution (Round 10)
+    "ACOUSTIC_RATIO",
+    "END_CORRECTION",
     "CUTOFF_CONSTANT",
+    # Epoch Key (Round 11)
+    "EPOCH_KEY",
+    # Golden Age (Round 11b)
+    "GOLDEN_AGE_DURATION",
 ]
