@@ -427,9 +427,9 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         0.007,
         "Matter density parameter",
         maha_value=MAHA_OMEGA_M_SCALED,
-        maha_formula="(AKSARA_COUNT - KSETRAJNA) / 100",
-        maha_error=1.59,
-        status=CoverageStatus.CANDIDATE,
+        maha_formula="(QUALITIES - KSETRAJNA) / HALVES / 100",
+        maha_error=0.00,
+        status=CoverageStatus.DERIVED,
     ),
     "omega_lambda": PhysicsConstant(
         "Omega_Lambda",
@@ -439,9 +439,9 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         0.007,
         "Dark energy density parameter",
         maha_value=MAHA_OMEGA_L_SCALED,
-        maha_formula="(NADI_RESONANCE - SHARANAGATI) / 100",
-        maha_error=3.65,
-        status=CoverageStatus.CANDIDATE,
+        maha_formula="(QUALITIES + QUARTERS) / 100",
+        maha_error=0.73,
+        status=CoverageStatus.DERIVED,
     ),
     # ═══════════════════════════════════════════════════════════════════
     # ATOMIC PHYSICS
