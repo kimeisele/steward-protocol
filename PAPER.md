@@ -1752,6 +1752,49 @@ HARE_PER_QUARTER = HARE_COUNT // QUARTERS  # 8/4 = 2 = HALVES
 
 The energy (HARE/Shakti) is **EVENLY distributed** across the rhythmic cycle!
 
+#### The Pancha Tattva in the Pair Structure
+
+The Mahamantra has **8 consecutive word-pairs**:
+
+| Pair | Positions | Content | Type |
+|------|-----------|---------|------|
+| 1 | 1-2 | H-K | HK |
+| 2 | 3-4 | H-K | HK |
+| 3 | 5-6 | K-K | KK |
+| 4 | 7-8 | H-H | HH |
+| 5 | 9-10 | H-R | HR |
+| 6 | 11-12 | H-R | HR |
+| 7 | 13-14 | R-R | RR |
+| 8 | 15-16 | H-H | HH |
+
+**8 pairs reduce to 5 UNIQUE: HK, KK, HH, HR, RR = PANCHA!**
+
+```python
+CONSECUTIVE_PAIRS = WORDS // HALVES  # 16/2 = 8 pairs
+PAIR_REDUNDANCY = CONSECUTIVE_PAIRS - PANCHA  # 8 - 5 = 3 = TRINITY!
+```
+
+**The Redundancy Pattern:**
+- **HK** appears 2× (pairs 1-2) → 1 duplicate
+- **HR** appears 2× (pairs 5-6) → 1 duplicate
+- **HH** appears 2× (pairs 4, 8) → 1 duplicate
+- **KK** appears 1× (pair 3) → 0 duplicates
+- **RR** appears 1× (pair 7) → 0 duplicates
+
+**Total duplicates: 1 + 1 + 1 = 3 = TRINITY!**
+
+**The Deep Insight:**
+- Pairs **WITH Hare** (HK, HR, HH) have duplicates → **HARE CONNECTS!**
+- Pairs **WITHOUT Hare** (KK, RR) are unique → **the Names stand alone**
+
+```python
+# THE COMPLETE RHYTHM FORMULA:
+assert PANCHA + TRINITY == HARE_COUNT  # 5 + 3 = 8
+# The Pancha Tattva manifests through the Trinity to create Shakti!
+```
+
+This is the mathematical structure of the **PANCHA TATTVA** (the 5 forms of the Lord in Gaura-lila): Sri Chaitanya, Nityananda, Advaita, Gadadhara, Srivasa = 5 unique personalities who manifest together repeatedly in **Sankirtan** (congregational chanting)!
+
 #### The Eternal NOW in Physics
 
 ```python
