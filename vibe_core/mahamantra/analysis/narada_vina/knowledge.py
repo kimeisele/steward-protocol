@@ -243,6 +243,20 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         maha_error=0.012,
         status=CoverageStatus.DERIVED,
     ),
+    # Strange Quark (discovered in engine.py, promoted to DERIVED)
+    # TODO: Add MAHA_STRANGE = MALA + NADI_RESONANCE + TRINITY = 183 to _seed.py
+    "strange_quark_electron": PhysicsConstant(
+        "strange/electron",
+        182.78,
+        ConstantCategory.MASS_RATIO,
+        "dimensionless",
+        7.6,  # PDG 2022: 93.4+8.6-3.4 MeV uncertainty
+        "Strange quark to electron mass ratio",
+        maha_value=183,  # MALA + NADI_RESONANCE + TRINITY = 108 + 72 + 3
+        maha_formula="MALA + NADI + TRINITY",
+        maha_error=0.12,
+        status=CoverageStatus.DERIVED,
+    ),
     # Heavy Bosons (RUNDE 20 - Vina-Flute Kirtan!)
     "W_electron": PhysicsConstant(
         "W/electron",

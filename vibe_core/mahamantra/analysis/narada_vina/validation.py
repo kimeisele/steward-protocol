@@ -41,16 +41,29 @@ from vibe_core.mahamantra.protocols._seed import (
 from .knowledge import KNOWN_CONSTANTS, CoverageStatus, PhysicsConstant
 
 # =============================================================================
-# MOD-17 SPECTRUM MEANINGS
+# MOD-17 SPECTRUM MEANINGS (The Complete Classification)
 # =============================================================================
+# The MOD-17 spectrum classifies physics constants by their remainder when
+# divided by POSITION_SUM_KRISHNA (17). Each remainder has meaning:
 
 MOD17_MEANINGS: Final[Dict[int, str]] = {
-    0: "Classical/Stable",
-    KSETRAJNA: "Quantum/Observer",  # 1
-    TRINITY: "Trinity/Decay",  # 3
-    SHARANAGATI: "Surrender",  # 6
-    NAVA: "Complex/Nava",  # 9
-    WORDS: "Complete/Words",  # 16
+    0: "Classical/Stable",  # Exact multiple of Krishna - pure ratio
+    KSETRAJNA: "Quantum/Observer",  # 1 - Observer embedded (α⁻¹, α-particle)
+    2: "Duality/Halves",  # HALVES - symmetric structures
+    TRINITY: "Trinity/Decay",  # 3 - Unstable, decays to 3 (muon, neutron)
+    4: "Quarters/Manifest",  # QUARTERS - CMB, 4 spacetime dimensions
+    5: "Pancha/Tattva",  # PANCHA - Helion (5 particles?)
+    SHARANAGATI: "Surrender/Weak",  # 6 - sin²θW (weak mixing angle)
+    7: "Seven/Axioms",  # SEVEN - The axiom count
+    8: "Shakti/Hare",  # HARE_COUNT - Energy patterns
+    NAVA: "Nava/Complex",  # 9 - Complex decay (tau)
+    10: "Ten/Completion",  # TEN - Base completion
+    11: "Eleven/Transcend",  # Beyond 10 - transcendental
+    12: "Mahajana/Authority",  # MAHAJANA_COUNT - authoritative structures
+    13: "Thirteen/Transform",  # BG 13 - Field and Knower chapter
+    14: "Fourteen/Kaon",  # Kaon mod 17 = 14
+    15: "Fifteen/Prana",  # 15 breaths/minute
+    WORDS: "Words/Complete",  # 16 - Complete manifest form (αs)
 }
 
 
@@ -103,14 +116,22 @@ def validate_consistency(derived: List[PhysicsConstant]) -> List[Tuple[str, str]
 
     RAKSISYATITI VISVASA - Faith that Krishna will protect.
     Trust that the formulas are consistent.
+
+    Error tolerance levels:
+    - < 1% = DERIVED (verified derivations)
+    - 1-5% = CANDIDATE (awaiting verification)
+    - > 5% = NUMEROLOGY (should be rejected)
     """
     issues = []
 
     for c in derived:
         if c.maha_value is not None and c.maha_error is not None:
-            # Check for excessive error
-            if c.maha_error > 1.0:
-                issues.append((c.name, f"Error > 1%: {c.maha_error:.2f}%"))
+            # Check for excessive error (>5% is numerology, not derivation)
+            if c.maha_error > 5.0:
+                issues.append((c.name, f"NUMEROLOGY: Error > 5%: {c.maha_error:.2f}%"))
+            # Check for CANDIDATE status (1-5% error - flag for review)
+            elif c.maha_error > 1.0:
+                issues.append((c.name, f"CANDIDATE: Error {c.maha_error:.2f}% (needs verification)"))
             # Check for formula present
             if not c.maha_formula:
                 issues.append((c.name, "Missing formula"))
