@@ -658,25 +658,51 @@ The most remarkable correlations emerge from the **Position Sums** and the **ACI
 
 **Key relationship:** KRISHNA_POS = 17 = WORDS + 1 = 16 + 1
 
-#### The ACINTYA Derivation of KRISHNA_POS = 17
+#### The Complete ACINTYA Derivation (All Three Names)
 
-This is NOT arbitrary—it follows from structural constraints:
+This derivation is **wasserdicht** (watertight)—ALL THREE position sums are derived, not observed.
 
-1. **Functions of Names** (from Shastra):
-   - HARE (Shakti) = Connection/Energy → must make TRANSITIONS
-   - KRISHNA (Source) = Center → must be in the HEART
-   - Call = HK ("Hare Krishna") → must be at BEGINNING
+**STEP 1: Philosophy defines the CONSTRAINTS**
 
-2. **Constraints that follow:**
-   - C1: HH at edge (positions 7-8) - Shakti connects the halves
-   - C2: KK in middle (positions 5-6) - Krishna is the heart
-   - C3: HK at start (positions 1-2, 3-4) - The call comes first
+| Name | Function | Constraint |
+|------|----------|------------|
+| HARE (Shakti) | Connection/Energy | Must make TRANSITIONS → HH at edges |
+| NAME (Source) | Center/Core | Must be in HEART → NN in middle |
+| Call | Beginning | HN starts → HN at positions 1-4 |
 
-3. **ONLY arrangement satisfying all constraints:**
-   - HK, HK, KK, HH → Krishna at positions 2, 4, 5, 6
-   - Sum: 2 + 4 + 5 + 6 = **17 = WORDS + 1**
+**STEP 2: Constraints determine the PAIR ARRANGEMENT**
 
-**Philosophy → Constraints → Mathematics.** This is ACINTYA (inconceivable yet logical).
+For each half (8 words = 4 pairs):
+- C1: HH at edge (Pair 4 at positions 7-8) → transition to other half
+- C2: NN in middle (Pair 3 at positions 5-6) → heart/emphasis
+- C3: HN at start (Pairs 1-2 at positions 1-4) → the call
+
+**→ ONLY arrangement: HN, HN, NN, HH** (for each half)
+
+**STEP 3: From arrangement, POSITIONS follow**
+
+Krishna-half (HK, HK, KK, HH):
+- H at: 1, 3, 7, 8 → H₁ = 1 + 3 + 7 + 8 = **19**
+- K at: 2, 4, 5, 6 → K = 2 + 4 + 5 + 6 = **17**
+
+Rama-half = Krishna-half + HALF_SIZE (translation by 8):
+- H at: 9, 11, 15, 16 → H₂ = 9 + 11 + 15 + 16 = **51**
+- R at: 10, 12, 13, 14 → R = 10 + 12 + 13 + 14 = **49**
+
+**STEP 4: The FORMULAS (fully derived, not observed!)**
+
+| Name | Formula | Derivation | Result |
+|------|---------|------------|--------|
+| **KRISHNA** | T(8) - H₁ | 36 - 19 | **17 = WORDS + 1** |
+| **RAMA** | KRISHNA + AKSARA_COUNT | 17 + 32 | **49 = 7²** |
+| **HARE** | T(16) - KRISHNA - RAMA | 136 - 17 - 49 | **70 = 7 × 10** |
+
+**The Pattern of 7:**
+- HARE: 70 = 7 × 10 (Shakti: divisible, expansive)
+- RAMA: 49 = 7 × 7 (Ananda: perfect square)
+- KRISHNA: 17 = **PRIME** (Source: indivisible!)
+
+**Philosophy → Constraints → Arrangement → Mathematics.** This is ACINTYA.
 
 #### The Two Paths to 137 (Proof of KSETRAJNA = 1)
 
