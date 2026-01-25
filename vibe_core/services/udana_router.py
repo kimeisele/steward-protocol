@@ -39,8 +39,13 @@ from datetime import datetime
 from typing import Any, Callable, Dict, Final, List, Optional
 from uuid import uuid4
 
+# GAD compliance
+from vibe_core.mahamantra.protocols._gad import GADBase
+
 # Import Nadi infrastructure
 from vibe_core.mahamantra.substrate.nadi import (
+    NADI_CAPACITY,
+    NADI_TIMEOUT_MS,
     LocalNadi,
     NadiConnection,
     NadiMessage,
@@ -48,16 +53,6 @@ from vibe_core.mahamantra.substrate.nadi import (
     NadiPriority,
     NadiProtocol,
     NadiType,
-    NADI_CAPACITY,
-    NADI_TIMEOUT_MS,
-)
-
-# Import MahajanaRouter for routing decisions
-from vibe_core.protocols.mahajanas.router import (
-    MahajanaRouter,
-    MahajanaRoute,
-    Mahajana,
-    get_router,
 )
 
 # Import OpCodes for routing
@@ -66,13 +61,18 @@ from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 # Import seed constants
 from vibe_core.mahamantra.substrate.seed import (
     NADI_RESONANCE,
+    NAVA,
     PRANA_DURATION_MS,
     SHARANAGATI,
-    NAVA,
 )
 
-# GAD compliance
-from vibe_core.mahamantra.protocols._gad import GADBase
+# Import MahajanaRouter for routing decisions
+from vibe_core.protocols.mahajanas.router import (
+    Mahajana,
+    MahajanaRoute,
+    MahajanaRouter,
+    get_router,
+)
 
 logger = logging.getLogger("UDANA_ROUTER")
 
@@ -100,6 +100,7 @@ assert UDANA_MAX_ATTEMPTS == 9, "Max attempts = NAVA"
 # UDANA REQUEST - Agent → Mahajana
 # =============================================================================
 
+
 @dataclass
 class UdanaRequest:
     """
@@ -107,6 +108,7 @@ class UdanaRequest:
 
     The Agent "ascends" (udana) to seek guidance from a Mahajana.
     """
+
     request_id: str
     agent_id: str
     opcode: MantraOpCode  # The operation to route
@@ -161,11 +163,13 @@ class UdanaRequest:
 # UDANA RESPONSE - Mahajana → Agent
 # =============================================================================
 
+
 @dataclass
 class UdanaResponse:
     """
     A routing response from Mahajana back to Agent.
     """
+
     response_id: str
     request_id: str  # Links to original request
     agent_id: str
@@ -221,6 +225,7 @@ class UdanaResponse:
 # =============================================================================
 # UDANA ROUTER - The Ascending Channel
 # =============================================================================
+
 
 class UdanaRouter(GADBase):
     """
@@ -400,7 +405,9 @@ class UdanaRouter(GADBase):
     # ROUTING CORE
     # =========================================================================
 
-    def route_opcode(self, agent_id: str, opcode: MantraOpCode, payload: Optional[Dict[str, Any]] = None) -> UdanaRequest:
+    def route_opcode(
+        self, agent_id: str, opcode: MantraOpCode, payload: Optional[Dict[str, Any]] = None
+    ) -> UdanaRequest:
         """
         Route an OpCode from an agent to the appropriate Mahajana.
 
@@ -448,7 +455,9 @@ class UdanaRouter(GADBase):
 
         return request
 
-    def complete_request(self, request_id: str, result: Dict[str, Any], success: bool = True, error: Optional[str] = None) -> Optional[UdanaResponse]:
+    def complete_request(
+        self, request_id: str, result: Dict[str, Any], success: bool = True, error: Optional[str] = None
+    ) -> Optional[UdanaResponse]:
         """
         Complete a pending request with a response.
 
@@ -485,10 +494,7 @@ class UdanaRouter(GADBase):
         if self._on_response:
             self._on_response(response)
 
-        logger.info(
-            f"UDANA response: request={request_id}, success={success}, "
-            f"mahajana={response.mahajana.value}"
-        )
+        logger.info(f"UDANA response: request={request_id}, success={success}, mahajana={response.mahajana.value}")
 
         return response
 
@@ -664,6 +670,7 @@ class UdanaRouter(GADBase):
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
+
 
 def get_udana_router(router_id: str = "udana_router") -> UdanaRouter:
     """

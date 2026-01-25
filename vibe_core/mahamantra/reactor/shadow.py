@@ -45,6 +45,7 @@ WATERTIGHT: No Any types. Protocol statt Klassen.
 
 from __future__ import annotations
 
+import importlib
 import uuid
 from pathlib import Path
 from typing import (
@@ -53,21 +54,28 @@ from typing import (
     List,
     Optional,
 )
-import importlib
 
-# Import types from protocol (SSOT)
-from vibe_core.mahamantra.reactor.shadow_protocol import (
-    YajnaPhase,
-    SWITCH_POSITION,
-    RETURN_POSITION,
-    get_phase,
-    TickStateInput,
-    ShadowState,
-    ShadowReactorResult,
-    ShadowReactorListenerProtocol,
-    ShadowReactorProtocol,
-    ShadowReactorFactoryProtocol,
-    __genesis__,
+# Adhikara Protocol - Authorization Chain (Mahajana Signatures)
+from vibe_core.mahamantra.protocols._adhikara import (
+    QUARTER_MAHAJANAS,
+    SIGNATURES_REQUIRED,
+    AuthorizationBundle,
+    Mahajana,
+    MahajanaSignature,
+    create_signature,
+    verify_authorization,
+)
+from vibe_core.mahamantra.protocols._adhikara import (
+    Quarter as AdhikaraQuarter,
+)
+
+# Bhava Protocol - Intent Vector (Grace Scaling) - WATERTIGHT INTEGER VERSION
+from vibe_core.mahamantra.protocols._bhava import (
+    SHARANAGATI_UNIT,
+    Bhava,
+    SharanagatiLimb,
+    calculate_grace_scaled,  # Integer version, no float drift
+    get_bhava_multiplier,
 )
 
 # Import GAD Base
@@ -79,31 +87,21 @@ from vibe_core.mahamantra.protocols._gad import (
 # =============================================================================
 # SSOT IMPORTS - The Law (_seed.py) governs the Reality (shadow.py)
 # =============================================================================
-from vibe_core.mahamantra.protocols._seed import PARAMPARA, COSMIC_FRAME
+from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PARAMPARA
 
-# Bhava Protocol - Intent Vector (Grace Scaling) - WATERTIGHT INTEGER VERSION
-from vibe_core.mahamantra.protocols._bhava import (
-    Bhava,
-    SharanagatiLimb,
-    calculate_grace_scaled,  # Integer version, no float drift
-    SHARANAGATI_UNIT,
-    get_bhava_multiplier,
-)
-
-# Adhikara Protocol - Authorization Chain (Mahajana Signatures)
-from vibe_core.mahamantra.protocols._adhikara import (
-    Mahajana,
-    Quarter as AdhikaraQuarter,
-    QUARTER_MAHAJANAS,
-    SIGNATURES_REQUIRED,
-    create_signature,
-    verify_authorization,
-    AuthorizationBundle,
-    MahajanaSignature,
-)
-
-from vibe_core.mahamantra.substrate.wiring import (
-    get_position_by_index,
+# Import types from protocol (SSOT)
+from vibe_core.mahamantra.reactor.shadow_protocol import (
+    RETURN_POSITION,
+    SWITCH_POSITION,
+    ShadowReactorFactoryProtocol,
+    ShadowReactorListenerProtocol,
+    ShadowReactorProtocol,
+    ShadowReactorResult,
+    ShadowState,
+    TickStateInput,
+    YajnaPhase,
+    __genesis__,
+    get_phase,
 )
 from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
@@ -114,14 +112,16 @@ from vibe_core.mahamantra.substrate.position import (
 # SAMANA BRIDGE INTEGRATION (TaskKernel ↔ ShadowReactor via Nadi)
 # =============================================================================
 from vibe_core.mahamantra.substrate.samana_bridge import (
+    DISPATCH_BATCH_SIZE,
+    MAX_KERNELS_PER_REACTOR,
     SamanaBridge,
     SamanaDispatch,
     SamanaFold,
     create_samana_bridge,
-    MAX_KERNELS_PER_REACTOR,
-    DISPATCH_BATCH_SIZE,
 )
-
+from vibe_core.mahamantra.substrate.wiring import (
+    get_position_by_index,
+)
 
 # =============================================================================
 # SHADOW REACTOR - The Core Engine (SPAWNBAR)
@@ -502,8 +502,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         if self._task_queue:
             # Convert queue to dispatch format
             tasks_to_dispatch = [
-                (t["task_id"], t["description"], t["payload"])
-                for t in self._task_queue[:DISPATCH_BATCH_SIZE]
+                (t["task_id"], t["description"], t["payload"]) for t in self._task_queue[:DISPATCH_BATCH_SIZE]
             ]
 
             # Dispatch batch via SAMANA bridge
@@ -514,7 +513,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             )
 
             # Remove dispatched tasks from queue
-            self._task_queue = self._task_queue[len(dispatch_ids):]
+            self._task_queue = self._task_queue[len(dispatch_ids) :]
 
         # Trigger listener callbacks
         for reactor in listeners:
@@ -640,11 +639,13 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
         Tasks are held until _trigger_bhoga dispatches them.
         """
-        self._task_queue.append({
-            "task_id": task_id,
-            "description": description,
-            "payload": payload or {},
-        })
+        self._task_queue.append(
+            {
+                "task_id": task_id,
+                "description": description,
+                "payload": payload or {},
+            }
+        )
 
     def get_fold_results(self, clear: bool = True) -> List[SamanaFold]:
         """

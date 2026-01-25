@@ -271,7 +271,7 @@ class OptimizeCommand(NagaCommandBase):
                 return findings
 
             # Get timing summary (extended method - may not exist on all implementations)
-            if not hasattr(chitragupta, 'get_timing_summary'):
+            if not hasattr(chitragupta, "get_timing_summary"):
                 findings.append("📊 Chitragupta active but timing summary not available")
                 findings.append("   (basic protocol implementation)")
                 return findings
@@ -287,9 +287,9 @@ class OptimizeCommand(NagaCommandBase):
             bottlenecks = []
             for component, metrics in timing.items():
                 for metric, stats in metrics.items():
-                    mean = stats.get('mean', 0)
-                    stddev = stats.get('stddev', 0)
-                    samples = stats.get('samples', 0)
+                    mean = stats.get("mean", 0)
+                    stddev = stats.get("stddev", 0)
+                    samples = stats.get("samples", 0)
 
                     # Bottleneck criteria
                     is_slow = mean > 50  # >50ms is slow
@@ -303,17 +303,19 @@ class OptimizeCommand(NagaCommandBase):
                             reason.append(f"slow ({mean:.1f}ms)")
                         if is_unstable:
                             reason.append(f"unstable (±{stddev:.1f}ms)")
-                        bottlenecks.append({
-                            'component': component,
-                            'metric': metric,
-                            'mean': mean,
-                            'stddev': stddev,
-                            'severity': severity,
-                            'reason': ", ".join(reason),
-                        })
+                        bottlenecks.append(
+                            {
+                                "component": component,
+                                "metric": metric,
+                                "mean": mean,
+                                "stddev": stddev,
+                                "severity": severity,
+                                "reason": ", ".join(reason),
+                            }
+                        )
 
             # Sort by mean time (worst first)
-            bottlenecks.sort(key=lambda x: x['mean'], reverse=True)
+            bottlenecks.sort(key=lambda x: x["mean"], reverse=True)
 
             if bottlenecks:
                 findings.append("🐢 PERFORMANCE BOTTLENECKS (measured):")
@@ -326,7 +328,7 @@ class OptimizeCommand(NagaCommandBase):
 
             # Check for anomalies (extended method)
             anomalies = []
-            if hasattr(chitragupta, 'get_all_anomalies'):
+            if hasattr(chitragupta, "get_all_anomalies"):
                 anomalies = chitragupta.get_all_anomalies()
             if anomalies:
                 findings.append("")

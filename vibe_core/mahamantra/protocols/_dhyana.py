@@ -72,7 +72,6 @@ from vibe_core.mahamantra.protocols._seed import MALA as SIDDHI_THRESHOLD
 from vibe_core.mahamantra.substrate.seed import KSHETRA
 from vibe_core.mahamantra.substrate.tattva import KshetraElement
 
-
 # =============================================================================
 # DHYANA STATES - The Meditation State Machine
 # =============================================================================
@@ -351,6 +350,7 @@ class LotusTask(Generic[T]):
     async def execute_async(self, fn: Callable[[T], R]) -> R:
         """Execute async task function."""
         import asyncio
+
         if asyncio.iscoroutinefunction(fn):
             result = await fn(self.payload)
         else:
@@ -377,7 +377,9 @@ class LotusTask(Generic[T]):
                 "successful": self.japa.successful,
                 "progress": round(self.japa.progress, 3),
                 "siddhi": self.japa.siddhi_achieved,
-            } if self.japa else None,
+            }
+            if self.japa
+            else None,
         }
 
 

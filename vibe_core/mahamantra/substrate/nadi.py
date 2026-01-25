@@ -42,21 +42,21 @@ from datetime import datetime, timedelta
 from enum import IntEnum, StrEnum
 from typing import Any, Callable, Dict, Final, List, Optional, Protocol, Tuple, runtime_checkable
 
+from vibe_core.mahamantra.protocols._gad import GADBase
+
 # =============================================================================
 # IMPORT FROM SEED (SSOT - THE LAW)
 # =============================================================================
 from vibe_core.mahamantra.substrate.seed import (
-    NADI_RESONANCE,      # 72 - The channel frequency
-    NAVA,                # 9 - The operations count
-    PRANA_DURATION_MS,   # 4000 - Breath interval
-    TICK_INTERVAL_MS,    # 250 - Time quantum
-    SHARANAGATI,         # 6 - Connection integrity
-    NavaBhakti,          # The 9 processes
-    MALA,                # 108 - Full cycle
-    COSMIC_FRAME,        # 21600 - Daily resolution
+    COSMIC_FRAME,  # 21600 - Daily resolution
+    MALA,  # 108 - Full cycle
+    NADI_RESONANCE,  # 72 - The channel frequency
+    NAVA,  # 9 - The operations count
+    PRANA_DURATION_MS,  # 4000 - Breath interval
+    SHARANAGATI,  # 6 - Connection integrity
+    TICK_INTERVAL_MS,  # 250 - Time quantum
+    NavaBhakti,  # The 9 processes
 )
-from vibe_core.mahamantra.protocols._gad import GADBase
-
 
 # =============================================================================
 # DERIVED CONSTANTS - All from NADI_RESONANCE (72)
@@ -94,6 +94,7 @@ assert NADI_DAILY_CYCLES == 300, "300 Nadi cycles per day"
 # NADI TYPES - The 5 Connection Categories (Pancha)
 # =============================================================================
 
+
 class NadiType(IntEnum):
     """
     The 5 types of Nadi connections.
@@ -105,18 +106,19 @@ class NadiType(IntEnum):
     - UDANA    = Agent ↔ Mahajana (upward = escalation/routing)
     - SAMANA   = Kernel ↔ Shadow (balancing = task distribution)
     """
-    PRANA = 0    # User ↔ System (Chat/UI)
-    APANA = 1    # Agent ↔ Agent (Synapse compatibility)
-    VYANA = 2    # Service ↔ Service (IPC)
-    UDANA = 3    # Agent ↔ Mahajana (Routing)
-    SAMANA = 4   # Kernel ↔ Shadow (TaskKernel)
+
+    PRANA = 0  # User ↔ System (Chat/UI)
+    APANA = 1  # Agent ↔ Agent (Synapse compatibility)
+    VYANA = 2  # Service ↔ Service (IPC)
+    UDANA = 3  # Agent ↔ Mahajana (Routing)
+    SAMANA = 4  # Kernel ↔ Shadow (TaskKernel)
 
 
 NADI_TYPE_NAMES: Final[Tuple[str, ...]] = (
-    "prana",   # User connection
-    "apana",   # Agent connection
-    "vyana",   # Service connection
-    "udana",   # Mahajana routing
+    "prana",  # User connection
+    "apana",  # Agent connection
+    "vyana",  # Service connection
+    "udana",  # Mahajana routing
     "samana",  # Kernel dispatch
 )
 
@@ -127,21 +129,23 @@ assert len(NadiType) == 5, "Pancha Nadi types"
 # NADI OPERATIONS - The 9 Actions (Navadha)
 # =============================================================================
 
+
 class NadiOp(StrEnum):
     """
     The 9 Nadi operations mapped from NavaBhakti.
 
     Each operation has a corresponding devotional process.
     """
-    RECEIVE = "receive"     # SRAVANAM - Hearing
-    SEND = "send"           # KIRTANAM - Chanting
-    CACHE = "cache"         # SMARANAM - Remembering
-    PROCESS = "process"     # PADA_SEVANAM - Serving
-    VALIDATE = "validate"   # ARCANAM - Worshiping
-    REQUEST = "request"     # VANDANAM - Praying
-    DELEGATE = "delegate"   # DASYAM - Servitude
-    CONNECT = "connect"     # SAKHYAM - Friendship
-    COMMIT = "commit"       # ATMA_NIVEDANAM - Surrender
+
+    RECEIVE = "receive"  # SRAVANAM - Hearing
+    SEND = "send"  # KIRTANAM - Chanting
+    CACHE = "cache"  # SMARANAM - Remembering
+    PROCESS = "process"  # PADA_SEVANAM - Serving
+    VALIDATE = "validate"  # ARCANAM - Worshiping
+    REQUEST = "request"  # VANDANAM - Praying
+    DELEGATE = "delegate"  # DASYAM - Servitude
+    CONNECT = "connect"  # SAKHYAM - Friendship
+    COMMIT = "commit"  # ATMA_NIVEDANAM - Surrender
 
 
 # Map NadiOp to NavaBhakti
@@ -164,6 +168,7 @@ assert len(NadiOp) == NAVA, f"Navadha: 9 operations, got {len(NadiOp)}"
 # NADI PRIORITY - Message Urgency (Guna-based)
 # =============================================================================
 
+
 class NadiPriority(IntEnum):
     """
     Priority levels based on Gunas.
@@ -173,15 +178,17 @@ class NadiPriority(IntEnum):
     - SATTVA (2) = Important, should process soon
     - SUDDHA (3) = Pure/Critical, immediate processing
     """
-    TAMAS = 0    # Background
-    RAJAS = 1    # Normal
-    SATTVA = 2   # Important
-    SUDDHA = 3   # Critical
+
+    TAMAS = 0  # Background
+    RAJAS = 1  # Normal
+    SATTVA = 2  # Important
+    SUDDHA = 3  # Critical
 
 
 # =============================================================================
 # DATA STRUCTURES
 # =============================================================================
+
 
 @dataclass
 class NadiMessage:
@@ -190,10 +197,11 @@ class NadiMessage:
 
     The prana (energy) that flows through the nadi (channel).
     """
-    source: str          # Sender ID
-    target: str          # Receiver ID ("*" = broadcast)
+
+    source: str  # Sender ID
+    target: str  # Receiver ID ("*" = broadcast)
     nadi_type: NadiType  # Type of connection
-    operation: NadiOp    # What operation
+    operation: NadiOp  # What operation
     payload: Dict[str, Any] = field(default_factory=dict)
     priority: NadiPriority = NadiPriority.RAJAS
     correlation_id: Optional[str] = None  # For request/response
@@ -223,6 +231,7 @@ class NadiConnection:
 
     The actual nadi (channel) through which prana flows.
     """
+
     connection_id: str
     source: str
     target: str
@@ -252,6 +261,7 @@ class NadiConnection:
 @dataclass
 class NadiStats:
     """Statistics for a Nadi endpoint."""
+
     endpoint_id: str
     nadi_type: NadiType
     connections: int = 0
@@ -278,6 +288,7 @@ class NadiStats:
 # =============================================================================
 # NADI PROTOCOL - The Interface
 # =============================================================================
+
 
 @runtime_checkable
 class NadiProtocol(Protocol):
@@ -378,6 +389,7 @@ class NadiProtocol(Protocol):
 # NULL NADI - Arjuna Pattern (No-op fallback)
 # =============================================================================
 
+
 class NullNadi:
     """
     Arjuna Pattern: No-op Nadi.
@@ -462,6 +474,7 @@ class NullNadi:
 # LOCAL NADI - In-process implementation (GAD-compliant)
 # =============================================================================
 
+
 class LocalNadi(GADBase):
     """
     Local Nadi implementation with GAD-000 compliance.
@@ -478,6 +491,7 @@ class LocalNadi(GADBase):
     def _get_lock(cls):
         if cls._hub_lock is None:
             import threading
+
             cls._hub_lock = threading.Lock()
         return cls._hub_lock
 
@@ -697,6 +711,7 @@ class LocalNadi(GADBase):
         if not self._inbox:
             if timeout_ms and timeout_ms > 0:
                 import time
+
                 time.sleep(timeout_ms / 1000)
             if not self._inbox:
                 return None
@@ -736,6 +751,7 @@ class LocalNadi(GADBase):
             return None
 
         import time
+
         start = time.time()
         while time.time() - start < timeout_ms / 1000:
             response = self._pending_requests.get(correlation_id)
@@ -817,6 +833,7 @@ class LocalNadi(GADBase):
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
+
 
 def get_nadi(
     endpoint_id: str,

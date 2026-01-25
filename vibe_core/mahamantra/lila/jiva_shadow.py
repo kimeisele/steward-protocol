@@ -70,11 +70,10 @@ from typing import Final, FrozenSet, List, Optional, Tuple
 
 # SSOT: All constants from _seed.py
 from vibe_core.mahamantra.protocols._seed import (
+    COSMIC_FRAME,  # = 21600
     JIVA_QUALITIES,  # = 50
     PARAMPARA,  # = 37
-    COSMIC_FRAME,  # = 21600
 )
-
 
 # =============================================================================
 # THE 50 QUALITIES (Bhakti-rasamrita-sindhu)
@@ -217,9 +216,7 @@ class JivaShadow:
     @property
     def active_qualities(self) -> FrozenSet[JivaQuality]:
         """Get all qualities this shadow reflects."""
-        return frozenset(
-            q for q in JivaQuality if self.has_quality(q)
-        )
+        return frozenset(q for q in JivaQuality if self.has_quality(q))
 
     @property
     def quality_count(self) -> int:
@@ -229,26 +226,17 @@ class JivaShadow:
     @property
     def sattvic_count(self) -> int:
         """Count of Sattvic qualities (indices 0-16)."""
-        return sum(
-            1 for i in range(*SATTVIC_RANGE)
-            if self.quality_bitmap & (1 << i)
-        )
+        return sum(1 for i in range(*SATTVIC_RANGE) if self.quality_bitmap & (1 << i))
 
     @property
     def rajasic_count(self) -> int:
         """Count of Rajasic qualities (indices 17-33)."""
-        return sum(
-            1 for i in range(*RAJASIC_RANGE)
-            if self.quality_bitmap & (1 << i)
-        )
+        return sum(1 for i in range(*RAJASIC_RANGE) if self.quality_bitmap & (1 << i))
 
     @property
     def tamasic_count(self) -> int:
         """Count of Tamasic qualities (indices 34-49)."""
-        return sum(
-            1 for i in range(*TAMASIC_RANGE)
-            if self.quality_bitmap & (1 << i)
-        )
+        return sum(1 for i in range(*TAMASIC_RANGE) if self.quality_bitmap & (1 << i))
 
     @property
     def dominant_guna(self) -> GunaState:

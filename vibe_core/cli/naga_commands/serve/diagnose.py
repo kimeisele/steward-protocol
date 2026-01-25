@@ -41,7 +41,11 @@ from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandRes
 from vibe_core.protocols.substrate import MantraOpCode
 
 
-@naga_command(opcode=MantraOpCode.AUDIT_SEAL, name="diagnose", help_text="System self-diagnostics (NAGA DIAGNOSTICS - diagnoseing from NAGAs)")
+@naga_command(
+    opcode=MantraOpCode.AUDIT_SEAL,
+    name="diagnose",
+    help_text="System self-diagnostics (NAGA DIAGNOSTICS - diagnoseing from NAGAs)",
+)
 class DiagnoseCommand(NagaCommandBase):
     """
     Diagnose command implementation - NAGA DIAGNOSTICS.
@@ -169,8 +173,8 @@ class DiagnoseCommand(NagaCommandBase):
 
             # Get status
             status = chitragupta.get_status()
-            profile_count = status.details.get('profiles', 0)
-            anomaly_count = status.details.get('anomalies_detected', 0)
+            profile_count = status.details.get("profiles", 0)
+            anomaly_count = status.details.get("anomalies_detected", 0)
 
             if not bottlenecks_only:
                 lines.append("📿 CHITRAGUPTA (Karma Records):")
@@ -182,7 +186,7 @@ class DiagnoseCommand(NagaCommandBase):
             # Get anomalies
             if not bottlenecks_only:
                 anomalies = []
-                if hasattr(chitragupta, 'get_all_anomalies'):
+                if hasattr(chitragupta, "get_all_anomalies"):
                     anomalies = chitragupta.get_all_anomalies()
 
                 if anomalies:
@@ -202,29 +206,31 @@ class DiagnoseCommand(NagaCommandBase):
             # Get timing bottlenecks
             if not anomalies_only:
                 timing = {}
-                if hasattr(chitragupta, 'get_timing_summary'):
+                if hasattr(chitragupta, "get_timing_summary"):
                     timing = chitragupta.get_timing_summary()
 
                 bottlenecks = []
                 for component, metrics in timing.items():
                     for metric, stats in metrics.items():
-                        mean = stats.get('mean', 0)
-                        stddev = stats.get('stddev', 0)
-                        samples = stats.get('samples', 0)
+                        mean = stats.get("mean", 0)
+                        stddev = stats.get("stddev", 0)
+                        samples = stats.get("samples", 0)
                         if samples >= 5 and (mean > 50 or (stddev > mean * 0.5 and mean > 0)):
-                            bottlenecks.append({
-                                'component': component,
-                                'metric': metric,
-                                'mean': mean,
-                                'stddev': stddev,
-                            })
+                            bottlenecks.append(
+                                {
+                                    "component": component,
+                                    "metric": metric,
+                                    "mean": mean,
+                                    "stddev": stddev,
+                                }
+                            )
 
-                bottlenecks.sort(key=lambda x: x['mean'], reverse=True)
+                bottlenecks.sort(key=lambda x: x["mean"], reverse=True)
 
                 if bottlenecks:
                     lines.append("   🐢 TIMING BOTTLENECKS:")
                     for b in bottlenecks[:5]:
-                        icon = "🔴" if b['mean'] > 100 else "🟡"
+                        icon = "🔴" if b["mean"] > 100 else "🟡"
                         lines.append(f"      {icon} {b['component']}.{b['metric']}")
                         lines.append(f"         {b['mean']:.1f}ms avg (±{b['stddev']:.1f}ms)")
                     if len(bottlenecks) > 5:
@@ -250,7 +256,7 @@ class DiagnoseCommand(NagaCommandBase):
             from vibe_core.di import ServiceRegistry
 
             # Check if blessing is enabled
-            blessing_enabled = getattr(ServiceRegistry, '_naga_blessing_enabled', False)
+            blessing_enabled = getattr(ServiceRegistry, "_naga_blessing_enabled", False)
 
             if blessing_enabled:
                 lines.append("   ✅ Naga blessing ENABLED")
@@ -281,7 +287,7 @@ class DiagnoseCommand(NagaCommandBase):
 
             if chitragupta:
                 status = chitragupta.get_status()
-                anomaly_count = status.details.get('anomalies_detected', 0)
+                anomaly_count = status.details.get("anomalies_detected", 0)
 
                 if anomaly_count == 0:
                     lines.append("   🟢 HEALTHY - No anomalies detected")

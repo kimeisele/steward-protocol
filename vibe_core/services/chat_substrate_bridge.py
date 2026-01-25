@@ -33,24 +33,25 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Final, List, Optional, Tuple
 
+from vibe_core.mahamantra.protocols._gad import GADBase
+from vibe_core.mahamantra.protocols._lotus import (
+    MAHAJANA_POSITIONS,
+    get_position_mahajana,
+)
+
 # Substrate imports
 from vibe_core.mahamantra.substrate.byte import (
+    MANTRA_SEQUENCE,
     HolyName,
     MantraBit,
     MantraByte,
-    MANTRA_SEQUENCE,
 )
 from vibe_core.mahamantra.substrate.seed import (
     MAHAMANTRA,
-    WORDS,
     PARAMPARA,
+    WORDS,
     Quarter,
 )
-from vibe_core.mahamantra.protocols._lotus import (
-    get_position_mahajana,
-    MAHAJANA_POSITIONS,
-)
-from vibe_core.mahamantra.protocols._gad import GADBase
 
 logger = logging.getLogger("CHAT_SUBSTRATE")
 
@@ -68,8 +69,11 @@ logger = logging.getLogger("CHAT_SUBSTRATE")
 
 from vibe_core.mahamantra.substrate.harmonics import (
     THRESHOLD_AUTO as THRESHOLD_MANIFEST,
+)
+from vibe_core.mahamantra.substrate.harmonics import (
     THRESHOLD_REFINE as THRESHOLD_NEGOTIATE,
 )
+
 # Below LILA/MALA = Silence (no resonance)
 
 
@@ -141,22 +145,24 @@ class SubstrateRoute:
 
 # Import from Universal Phonetic Bridge (the unified SSOT)
 from vibe_core.mahamantra.substrate.phonetic_bridge import (
-    VargaIndex,
     PHONEME_TO_VARGA as _PHONEME_TO_VARGA,
+)
+from vibe_core.mahamantra.substrate.phonetic_bridge import (
     VARGA_TO_QUARTER,
+    VargaIndex,
     get_phonetic_bridge,
 )
 
 # Re-export Varga indices as int constants (backward compatibility)
-VARGA_KANTHYA: Final[int] = VargaIndex.KANTHYA.value   # 0 - Throat → GENESIS
-VARGA_TALAVYA: Final[int] = VargaIndex.TALAVYA.value   # 1 - Palate → DHARMA
-VARGA_MURDHANYA: Final[int] = VargaIndex.MURDHANYA.value # 2 - Retroflex → DHARMA
-VARGA_DANTYA: Final[int] = VargaIndex.DANTYA.value     # 3 - Teeth → KARMA
-VARGA_OSHTHYA: Final[int] = VargaIndex.OSHTHYA.value   # 4 - Lips → MOKSHA
+VARGA_KANTHYA: Final[int] = VargaIndex.KANTHYA.value  # 0 - Throat → GENESIS
+VARGA_TALAVYA: Final[int] = VargaIndex.TALAVYA.value  # 1 - Palate → DHARMA
+VARGA_MURDHANYA: Final[int] = VargaIndex.MURDHANYA.value  # 2 - Retroflex → DHARMA
+VARGA_DANTYA: Final[int] = VargaIndex.DANTYA.value  # 3 - Teeth → KARMA
+VARGA_OSHTHYA: Final[int] = VargaIndex.OSHTHYA.value  # 4 - Lips → MOKSHA
 
 # The 5 Sthanas (HOW - Energy/Intensity) - Position within Varga
 # Each Varga has 5 consonants: unvoiced, aspirated, voiced, voiced-aspirated, nasal
-STHANA_SPARSHA: Final[int] = 0    # Unvoiced stop → minimal (0.2)
+STHANA_SPARSHA: Final[int] = 0  # Unvoiced stop → minimal (0.2)
 STHANA_MAHAPRANA: Final[int] = 1  # Aspirated → expansion (0.6)
 STHANA_GHOSHAVAT: Final[int] = 2  # Voiced → active (0.8)
 STHANA_GHOSHMAHA: Final[int] = 3  # Voiced aspirated → max (1.0)
@@ -171,7 +177,11 @@ PHONEME_VARGA: Final[Dict[str, int]] = {k: v.value for k, v in _PHONEME_TO_VARGA
 # Import PHONEME_TO_STHANA from phonetic_bridge (already derived from protocols)
 from vibe_core.mahamantra.substrate.phonetic_bridge import (
     PHONEME_TO_STHANA as _PHONEME_TO_STHANA,
+)
+from vibe_core.mahamantra.substrate.phonetic_bridge import (
     STHANA_ENERGY as _STHANA_ENERGY,
+)
+from vibe_core.mahamantra.substrate.phonetic_bridge import (
     SthanaIndex,
 )
 
@@ -512,6 +522,7 @@ class ChatSubstrateBridge(GADBase):
         # Get config values
         try:
             from vibe_core.phoenix.sections.chat import get_chat_config
+
             chat_config = get_chat_config()
             max_alternatives = count or chat_config.routing.max_alternatives
             energy_factor = chat_config.routing.alternative_energy_factor
@@ -592,11 +603,13 @@ def get_substrate_bridge() -> ChatSubstrateBridge:
 
     # Create and register
     import logging
+
     logger = logging.getLogger("SUBSTRATE_BRIDGE")
 
     # Read inertia from ChatSectionConfig (Phoenix config pattern)
     try:
         from vibe_core.phoenix.sections.chat import get_chat_config
+
         chat_config = get_chat_config()
         inertia = chat_config.substrate.inertia
         logger.info(f"📋 ChatSubstrateBridge: inertia={inertia} from config/chat.yaml")

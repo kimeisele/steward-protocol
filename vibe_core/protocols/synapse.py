@@ -36,6 +36,8 @@ from typing import Any, Callable, Dict, List, Optional, Protocol, runtime_checka
 # =============================================================================
 from vibe_core.mahamantra.substrate.nadi import (
     LocalNadi as _LocalNadi,
+)
+from vibe_core.mahamantra.substrate.nadi import (
     NadiConnection,
     NadiMessage,
     NadiOp,
@@ -43,16 +45,17 @@ from vibe_core.mahamantra.substrate.nadi import (
     NadiProtocol,
     NadiStats,
     NadiType,
-    NullNadi as _NullNadi,
     get_nadi,
+)
+from vibe_core.mahamantra.substrate.nadi import (
+    NullNadi as _NullNadi,
 )
 
 
 def _deprecation_warning(old_name: str, new_name: str) -> None:
     """Issue deprecation warning."""
     warnings.warn(
-        f"{old_name} is deprecated. Use {new_name} from "
-        f"vibe_core.mahamantra.substrate.nadi instead.",
+        f"{old_name} is deprecated. Use {new_name} from vibe_core.mahamantra.substrate.nadi instead.",
         DeprecationWarning,
         stacklevel=3,
     )
@@ -62,15 +65,17 @@ def _deprecation_warning(old_name: str, new_name: str) -> None:
 # LEGACY ENUMS (map to Nadi equivalents)
 # =============================================================================
 
+
 class MessagePriority(str, Enum):
     """
     DEPRECATED: Use NadiPriority instead.
 
     Priority levels for synapse messages.
     """
-    LOW = "low"        # → NadiPriority.TAMAS
+
+    LOW = "low"  # → NadiPriority.TAMAS
     NORMAL = "normal"  # → NadiPriority.RAJAS
-    HIGH = "high"      # → NadiPriority.SATTVA
+    HIGH = "high"  # → NadiPriority.SATTVA
     CRITICAL = "critical"  # → NadiPriority.SUDDHA
 
 
@@ -91,9 +96,10 @@ class MessageType(str, Enum):
 
     Types of synapse messages.
     """
-    REQUEST = "request"      # → NadiOp.REQUEST
-    RESPONSE = "response"    # → NadiOp.RECEIVE
-    EVENT = "event"          # → NadiOp.SEND
+
+    REQUEST = "request"  # → NadiOp.REQUEST
+    RESPONSE = "response"  # → NadiOp.RECEIVE
+    EVENT = "event"  # → NadiOp.SEND
     BROADCAST = "broadcast"  # → NadiOp.SEND (with target="*")
     HEARTBEAT = "heartbeat"  # → NadiOp.VALIDATE
 
@@ -112,6 +118,7 @@ _TYPE_MAP = {
 # LEGACY DATA STRUCTURES
 # =============================================================================
 
+
 @dataclass
 class SynapseMessage:
     """
@@ -119,6 +126,7 @@ class SynapseMessage:
 
     A message between agents.
     """
+
     sender: str
     receiver: str  # Use "*" for broadcast
     topic: str
@@ -186,6 +194,7 @@ class Connection:
 
     A connection to another agent.
     """
+
     agent_id: str
     connected_at: datetime = field(default_factory=datetime.now)
     last_heartbeat: Optional[datetime] = None
@@ -201,6 +210,7 @@ class SynapseStats:
 
     Statistics about synapse activity.
     """
+
     agent_id: str
     connections: int = 0
     messages_sent: int = 0
@@ -214,6 +224,7 @@ class SynapseStats:
 # LEGACY PROTOCOL (interface)
 # =============================================================================
 
+
 @runtime_checkable
 class SynapseProtocol(Protocol):
     """
@@ -223,42 +234,31 @@ class SynapseProtocol(Protocol):
     """
 
     @property
-    def agent_id(self) -> str:
-        ...
+    def agent_id(self) -> str: ...
 
-    def connect(self, agent_id: str) -> bool:
-        ...
+    def connect(self, agent_id: str) -> bool: ...
 
-    def disconnect(self, agent_id: str) -> bool:
-        ...
+    def disconnect(self, agent_id: str) -> bool: ...
 
-    def is_connected(self, agent_id: str) -> bool:
-        ...
+    def is_connected(self, agent_id: str) -> bool: ...
 
-    def get_connections(self) -> List[Connection]:
-        ...
+    def get_connections(self) -> List[Connection]: ...
 
-    def send(self, message: SynapseMessage) -> bool:
-        ...
+    def send(self, message: SynapseMessage) -> bool: ...
 
-    def receive(self, timeout_ms: Optional[int] = None) -> Optional[SynapseMessage]:
-        ...
+    def receive(self, timeout_ms: Optional[int] = None) -> Optional[SynapseMessage]: ...
 
-    def receive_all(self) -> List[SynapseMessage]:
-        ...
+    def receive_all(self) -> List[SynapseMessage]: ...
 
-    def broadcast(self, topic: str, payload: Dict[str, Any]) -> int:
-        ...
+    def broadcast(self, topic: str, payload: Dict[str, Any]) -> int: ...
 
     def subscribe(
         self,
         topic: str,
         handler: Callable[[SynapseMessage], None],
-    ) -> str:
-        ...
+    ) -> str: ...
 
-    def unsubscribe(self, subscription_id: str) -> bool:
-        ...
+    def unsubscribe(self, subscription_id: str) -> bool: ...
 
     def request(
         self,
@@ -266,23 +266,21 @@ class SynapseProtocol(Protocol):
         topic: str,
         payload: Dict[str, Any],
         timeout_ms: int = 5000,
-    ) -> Optional[SynapseMessage]:
-        ...
+    ) -> Optional[SynapseMessage]: ...
 
     def respond(
         self,
         original: SynapseMessage,
         payload: Dict[str, Any],
-    ) -> bool:
-        ...
+    ) -> bool: ...
 
-    def get_stats(self) -> SynapseStats:
-        ...
+    def get_stats(self) -> SynapseStats: ...
 
 
 # =============================================================================
 # LEGACY IMPLEMENTATIONS (wrappers around Nadi)
 # =============================================================================
+
 
 class NullSynapse:
     """

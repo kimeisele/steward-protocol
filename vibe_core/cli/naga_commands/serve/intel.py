@@ -119,22 +119,24 @@ class IntelCommand(NagaCommandBase):
 
             # Get timing summary (extended method - may not exist on all implementations)
             timing = {}
-            if hasattr(chitragupta, 'get_timing_summary'):
+            if hasattr(chitragupta, "get_timing_summary"):
                 timing = chitragupta.get_timing_summary()
             if timing:
                 lines.append("")
                 lines.append("⏱️  TIMING PROFILES:")
                 for component, metrics in list(timing.items())[:10]:  # Limit display
                     for metric, stats in metrics.items():
-                        mean = stats.get('mean', 0)
-                        stddev = stats.get('stddev', 0)
-                        samples = stats.get('samples', 0)
+                        mean = stats.get("mean", 0)
+                        stddev = stats.get("stddev", 0)
+                        samples = stats.get("samples", 0)
                         status_icon = "🔴" if mean > 100 else "🟡" if mean > 50 else "🟢"
-                        lines.append(f"   {status_icon} {component}.{metric}: {mean:.1f}ms ±{stddev:.1f} ({samples} samples)")
+                        lines.append(
+                            f"   {status_icon} {component}.{metric}: {mean:.1f}ms ±{stddev:.1f} ({samples} samples)"
+                        )
 
             # Get anomalies (extended method)
             anomalies = []
-            if hasattr(chitragupta, 'get_all_anomalies'):
+            if hasattr(chitragupta, "get_all_anomalies"):
                 anomalies = chitragupta.get_all_anomalies()
             if anomalies:
                 lines.append("")
@@ -143,7 +145,9 @@ class IntelCommand(NagaCommandBase):
                     lines.append(f"   ⚠️  {anomaly.component_id}.{anomaly.metric}")
                     lines.append(f"       Current: {anomaly.current_value:.2f}")
                     if anomaly.expected_range:
-                        lines.append(f"       Expected: {anomaly.expected_range[0]:.2f} - {anomaly.expected_range[1]:.2f}")
+                        lines.append(
+                            f"       Expected: {anomaly.expected_range[0]:.2f} - {anomaly.expected_range[1]:.2f}"
+                        )
             elif not critical_only:
                 lines.append("")
                 lines.append("✅ No anomalies detected")

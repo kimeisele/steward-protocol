@@ -58,31 +58,29 @@ import hashlib
 from functools import lru_cache
 from typing import Final, FrozenSet, Tuple
 
+from vibe_core.mahamantra.lila.jiva_shadow import (
+    RAJASIC_RANGE,
+    SATTVIC_RANGE,
+    TAMASIC_RANGE,
+    JivaQuality,
+    JivaShadow,
+)
+
 # SSOT: All from _seed.py
 from vibe_core.mahamantra.protocols._seed import (
-    JIVA_QUALITIES,  # 50
-    PARAMPARA,  # 37
-    WORDS,  # 16
     HARE_COUNT,  # 8
+    JIVA_QUALITIES,  # 50
     KRISHNA_COUNT,  # 4
+    PARAMPARA,  # 37
     RAMA_COUNT,  # 4
+    WORDS,  # 16
 )
-
 from vibe_core.mahamantra.substrate.seed import (
     MAHAMANTRA,
+    QUARTERS,
     HolyName,
     Quarter,
-    QUARTERS,
 )
-
-from vibe_core.mahamantra.lila.jiva_shadow import (
-    JivaShadow,
-    JivaQuality,
-    SATTVIC_RANGE,
-    RAJASIC_RANGE,
-    TAMASIC_RANGE,
-)
-
 
 # =============================================================================
 # HOLY NAME → GUNA AFFINITY (Derived, not hardcoded)
@@ -104,6 +102,7 @@ RAMA_AFFINITY: Final[float] = RAMA_COUNT / WORDS  # 4/16 = 0.25
 # Each Quarter naturally aligns with a portion of the 50 qualities
 # This is computed, not hardcoded
 
+
 def _compute_quarter_range(quarter: int) -> Tuple[int, int]:
     """
     Compute the base quality range for a quarter.
@@ -124,9 +123,7 @@ def _compute_quarter_range(quarter: int) -> Tuple[int, int]:
     return (start, min(end, JIVA_QUALITIES))
 
 
-QUARTER_RANGES: Final[dict[int, Tuple[int, int]]] = {
-    q: _compute_quarter_range(q) for q in range(QUARTERS)
-}
+QUARTER_RANGES: Final[dict[int, Tuple[int, int]]] = {q: _compute_quarter_range(q) for q in range(QUARTERS)}
 
 
 # =============================================================================
@@ -153,7 +150,7 @@ def compute_required_bitmap(position: int) -> int:
         50-bit bitmap of required qualities
     """
     if not 0 <= position < WORDS:
-        raise ValueError(f"Position must be 0-{WORDS-1}, got {position}")
+        raise ValueError(f"Position must be 0-{WORDS - 1}, got {position}")
 
     # 1. Get HolyName at this position
     holy_name = MAHAMANTRA[position]
@@ -184,7 +181,7 @@ def compute_required_bitmap(position: int) -> int:
     num_required = max(1, PARAMPARA % (quarter_end - quarter_start + 1))
     for i in range(num_required):
         idx = quarter_start + (seed_value + i) % (quarter_end - quarter_start)
-        quarter_mask |= (1 << idx)
+        quarter_mask |= 1 << idx
 
     # Combine: base bitmap OR quarter emphasis
     final_bitmap = base_bitmap | quarter_mask
@@ -205,10 +202,7 @@ def get_required_qualities(position: int) -> FrozenSet[JivaQuality]:
         FrozenSet of JivaQuality enums
     """
     bitmap = compute_required_bitmap(position)
-    return frozenset(
-        JivaQuality(i) for i in range(JIVA_QUALITIES)
-        if bitmap & (1 << i)
-    )
+    return frozenset(JivaQuality(i) for i in range(JIVA_QUALITIES) if bitmap & (1 << i))
 
 
 def get_required_count(position: int) -> int:
@@ -300,11 +294,7 @@ def find_best_shadow(
     Returns:
         Best matching shadow, or None if none qualify
     """
-    qualified = [
-        (s, shadow_match_score(s, position))
-        for s in shadows
-        if shadow_can_execute(s, position)
-    ]
+    qualified = [(s, shadow_match_score(s, position)) for s in shadows if shadow_can_execute(s, position)]
 
     if not qualified:
         return None
