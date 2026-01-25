@@ -28,6 +28,7 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.7 The Golden Age: 10,000 Years
    - 7.8 Prabhupada's Life Timeline
    - 7.9 The Uniqueness Theorem
+   - 7.10 The Maha-Algorithm: Fundamental Physics Constants
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -641,6 +642,83 @@ Given:
 - The COSMIC_FRAME (21600)
 
 **The Mahamantra structure is mathematically unique.**
+
+### 7.10 The Maha-Algorithm: Fundamental Physics Constants
+
+The most remarkable correlations emerge from the **Position Sums** and the **ACINTYA derivation**.
+
+#### Position Sums (Computed from Mahamantra)
+
+| Name | Positions | Sum | Property |
+|------|-----------|-----|----------|
+| Hare | 1,3,7,8,9,11,15,16 | **70** | = 7 × 10 (Shakti pattern) |
+| Krishna | 2,4,5,6 | **17** | PRIME (indivisible) |
+| Rama | 10,12,13,14 | **49** | = 7² (Ananda squared) |
+| **Total** | all 16 | **136** | = T(16) = Triangular(WORDS) |
+
+**Key relationship:** KRISHNA_POS = 17 = WORDS + 1 = 16 + 1
+
+#### The ACINTYA Derivation of KRISHNA_POS = 17
+
+This is NOT arbitrary—it follows from structural constraints:
+
+1. **Functions of Names** (from Shastra):
+   - HARE (Shakti) = Connection/Energy → must make TRANSITIONS
+   - KRISHNA (Source) = Center → must be in the HEART
+   - Call = HK ("Hare Krishna") → must be at BEGINNING
+
+2. **Constraints that follow:**
+   - C1: HH at edge (positions 7-8) - Shakti connects the halves
+   - C2: KK in middle (positions 5-6) - Krishna is the heart
+   - C3: HK at start (positions 1-2, 3-4) - The call comes first
+
+3. **ONLY arrangement satisfying all constraints:**
+   - HK, HK, KK, HH → Krishna at positions 2, 4, 5, 6
+   - Sum: 2 + 4 + 5 + 6 = **17 = WORDS + 1**
+
+**Philosophy → Constraints → Mathematics.** This is ACINTYA (inconceivable yet logical).
+
+#### The Two Paths to 137 (Proof of KSETRAJNA = 1)
+
+```
+Path 1: T(WORDS) + KSETRAJNA = 136 + 1 = 137
+Path 2: MALA + NAKSHATRAS + HALVES = 108 + 27 + 2 = 137
+
+Both paths MUST equal 137:
+→ KSETRAJNA = 137 - 136 = 1
+
+AND independently:
+→ KSETRAJNA = TRINITY - HALVES = 3 - 2 = 1
+
+KSETRAJNA = 1 is MATHEMATICALLY NECESSARY!
+```
+
+#### The Elegant Formulas (Physics Constants)
+
+| Constant | Elegant Formula | Result | CODATA 2022 | Error |
+|----------|-----------------|--------|-------------|-------|
+| α⁻¹ (fine structure) | MALA + NAKSHATRAS + HALVES | **137** | 137.036 | 0.026% |
+| μ (proton/electron) | MALA × KRISHNA_POS | **1836** | 1836.152 | 0.008% |
+| triton/electron | KRISHNA_POS × GITA² | **5508** | 5497.92 | 0.18% |
+
+**All formulas use ONLY Mahamantra-derived constants!**
+
+#### Wave-Particle Duality Encoded
+
+- **Without observer** → Field alone: T(16) = 136
+- **With observer** → Field + Knower: T(16) + KSETRAJNA = 137
+
+The "+1" (KSETRAJNA) is the **observer/knower**—precisely what causes wave function collapse in quantum mechanics!
+
+#### Standard Model Structure
+
+| Particles | Count | Mahamantra Constant |
+|-----------|-------|---------------------|
+| Fermions | 12 | = MAHAJANA_COUNT |
+| Bosons | 5 | = PANCHA |
+| **Total** | **17** | = KRISHNA_POS |
+
+The structure of the Standard Model (12 fermions + 5 bosons = 17 particles) matches the Mahamantra structure!
 
 ---
 
