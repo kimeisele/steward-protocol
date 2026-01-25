@@ -39,8 +39,12 @@ from datetime import datetime
 from typing import Any, Callable, Dict, Final, List, Optional
 from uuid import uuid4
 
+# GAD compliance
+from vibe_core.mahamantra.protocols._gad import GADBase
+
 # Import Nadi infrastructure
 from vibe_core.mahamantra.substrate.nadi import (
+    NADI_TIMEOUT_MS,
     LocalNadi,
     NadiConnection,
     NadiMessage,
@@ -48,14 +52,6 @@ from vibe_core.mahamantra.substrate.nadi import (
     NadiPriority,
     NadiProtocol,
     NadiType,
-    NADI_TIMEOUT_MS,
-)
-
-# Import ChatSubstrateBridge for routing
-from vibe_core.services.chat_substrate_bridge import (
-    ChatSubstrateBridge,
-    SubstrateRoute,
-    get_substrate_bridge,
 )
 
 # Import seed constants
@@ -65,8 +61,12 @@ from vibe_core.mahamantra.substrate.seed import (
     WORDS,
 )
 
-# GAD compliance
-from vibe_core.mahamantra.protocols._gad import GADBase
+# Import ChatSubstrateBridge for routing
+from vibe_core.services.chat_substrate_bridge import (
+    ChatSubstrateBridge,
+    SubstrateRoute,
+    get_substrate_bridge,
+)
 
 logger = logging.getLogger("CHAT_NADI")
 
@@ -90,6 +90,7 @@ assert CHAT_MESSAGE_BUFFER == 72, "Buffer = NADI_RESONANCE"
 # CHAT MESSAGE - User ↔ System
 # =============================================================================
 
+
 @dataclass
 class ChatMessage:
     """
@@ -98,6 +99,7 @@ class ChatMessage:
     This is the high-level chat abstraction that gets
     converted to/from NadiMessage for transport.
     """
+
     message_id: str
     session_id: str
     role: str  # "user" or "assistant"
@@ -122,7 +124,9 @@ class ChatMessage:
                     "position": self.route.position,
                     "mahajana": self.route.mahajana,
                     "energy": self.route.energy,
-                } if self.route else None,
+                }
+                if self.route
+                else None,
                 "metadata": self.metadata,
             },
             priority=NadiPriority.RAJAS,
@@ -147,11 +151,13 @@ class ChatMessage:
 # CHAT SESSION
 # =============================================================================
 
+
 @dataclass
 class ChatSession:
     """
     A chat session tracking conversation state.
     """
+
     session_id: str
     started_at: datetime = field(default_factory=datetime.now)
     last_activity: datetime = field(default_factory=datetime.now)
@@ -172,6 +178,7 @@ class ChatSession:
 # =============================================================================
 # CHAT NADI - The PRANA Channel
 # =============================================================================
+
 
 class ChatNadi(GADBase):
     """
@@ -377,8 +384,7 @@ class ChatNadi(GADBase):
             self._on_message(message)
 
         logger.info(
-            f"💬 User message routed: session={session_id}, "
-            f"mahajana={route.mahajana}, energy={route.energy:.3f}"
+            f"💬 User message routed: session={session_id}, mahajana={route.mahajana}, energy={route.energy:.3f}"
         )
 
         return message
@@ -519,6 +525,7 @@ class ChatNadi(GADBase):
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
+
 
 def get_chat_nadi(service_id: str = "chat_service") -> ChatNadi:
     """

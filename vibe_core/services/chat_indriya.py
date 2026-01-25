@@ -42,21 +42,25 @@ __genesis__ = "0x9a3b7c02"  # GenesisByte: parampara % 37 == 0
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, Final, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Final, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.protocols.sankalpa.types import ConscienceVerdict
+    from vibe_core.protocols.chat import ChatResponse
 from uuid import uuid4
 
 # Import Indriya infrastructure
 from vibe_core.mahamantra.protocols._indriya import (
+    VRTTI_COUNT,
     IndriyaProtocol,
     IndriyaState,
     IndriyaType,
     Jnanendriya,
     Karmendriya,
+    Tanmatra,
     TanmatraIntent,
     TanmatraMessage,
     Vrtti,
-    Tanmatra,
-    VRTTI_COUNT,
 )
 
 # Import Nadi infrastructure (for interfacing, not owning)
@@ -71,41 +75,40 @@ from vibe_core.mahamantra.substrate.nadi import (
 # Import ChatService (BRAIN) - ChatIndriya wraps this (Balarama Pattern)
 from vibe_core.services.chat_substrate_bridge import SubstrateRoute  # For type hints only
 
+
 # Lazy import to avoid circular dependency
 def _get_chat_service():
     """Lazy import of ChatService to avoid circular imports."""
     from vibe_core.services.chat_service import get_chat_service
+
     return get_chat_service()
 
-# Import seed constants
-from vibe_core.mahamantra.substrate.seed import (
-    NADI_RESONANCE,
-    PRANA_DURATION_MS,
-    WORDS,
-    NAVA,
-)
 
+# Import seed constants
 # GAD compliance
 from vibe_core.mahamantra.protocols._gad import GADBase
+from vibe_core.mahamantra.protocols._seed import HARE_COUNT
+from vibe_core.mahamantra.protocols._seed import WORDS as SEED_WORDS
 
 # CONSCIENCE - Dharmic alignment check (Buddhi function)
 from vibe_core.mahamantra.protocols.sankalpa import (
-    check_conscience,
     Ashrama,
     GunaState,
+    check_conscience,
 )
-
-# SHAKTI - Energy transmission through Prabhupada
-from vibe_core.mahamantra.substrate.prabhupada import get_prabhupada
-from vibe_core.mahamantra.protocols._seed import HARE_COUNT, WORDS as SEED_WORDS
 
 # NADI - Energy channels (the missing wiring!)
 from vibe_core.mahamantra.substrate.nadi import (
     get_nadi,
-    NadiType,
-    NadiOp,
-    NadiMessage,
-    NadiProtocol,
+)
+
+# SHAKTI - Energy transmission through Prabhupada
+from vibe_core.mahamantra.substrate.prabhupada import get_prabhupada
+from vibe_core.mahamantra.substrate.seed import (
+    NADI_RESONANCE,
+    NAVA,
+    PRANA_DURATION_MS,
+    WORDS,
 )
 
 logger = logging.getLogger("CHAT_INDRIYA")
@@ -133,6 +136,7 @@ assert CHAT_MESSAGE_BUFFER == 72, "Buffer = NADI_RESONANCE"
 # CHAT SESSION - Stateful conversation tracking
 # =============================================================================
 
+
 @dataclass
 class ChatSession:
     """
@@ -144,6 +148,7 @@ class ChatSession:
     - Processing transitions to VIKALPA (inference)
     - Response transitions to SMRTI (memory) or back to NIDRA
     """
+
     session_id: str
     started_at: datetime = field(default_factory=datetime.now)
     last_activity: datetime = field(default_factory=datetime.now)
@@ -171,6 +176,7 @@ class ChatSession:
 # =============================================================================
 # CHAT INDRIYA - The Hearing/Speaking Sense Organ
 # =============================================================================
+
 
 class ChatIndriya(GADBase):
     """
@@ -535,10 +541,7 @@ class ChatIndriya(GADBase):
             session.add_tanmatra(response_tanmatra)
             self._tanmatras_sent += 1
 
-            logger.info(
-                f"Chat: intent={intent.name}, mahajana={response.mahajana}, "
-                f"success={response.success}"
-            )
+            logger.info(f"Chat: intent={intent.name}, mahajana={response.mahajana}, success={response.success}")
 
         except Exception as e:
             # Error handling - transition to VIPARYAYA
@@ -670,10 +673,10 @@ class ChatIndriya(GADBase):
         # KARMA (8-11): Needs base Shakti (execution)
         # MOKSHA (12-15): Safe (audit)
         quarter_thresholds = {
-            "GENESIS": HARE_COUNT / SEED_WORDS,      # 0.5 (full base)
-            "DHARMA": HARE_COUNT / SEED_WORDS,       # 0.5
+            "GENESIS": HARE_COUNT / SEED_WORDS,  # 0.5 (full base)
+            "DHARMA": HARE_COUNT / SEED_WORDS,  # 0.5
             "KARMA": HARE_COUNT / SEED_WORDS * 0.8,  # 0.4
-            "MOKSHA": HARE_COUNT / SEED_WORDS * 0.2, # 0.1
+            "MOKSHA": HARE_COUNT / SEED_WORDS * 0.2,  # 0.1
         }
         required_shakti = quarter_thresholds.get(quarter, HARE_COUNT / SEED_WORDS)
 
@@ -691,7 +694,7 @@ class ChatIndriya(GADBase):
 **Reason:** {conscience.reason}
 
 ---
-_Shakti = HARE_COUNT / WORDS = {HARE_COUNT}/{SEED_WORDS} = {HARE_COUNT/SEED_WORDS:.2f} (base)_
+_Shakti = HARE_COUNT / WORDS = {HARE_COUNT}/{SEED_WORDS} = {HARE_COUNT / SEED_WORDS:.2f} (base)_
 _Channel blocked → energy cannot manifest action._
 """
 
@@ -702,7 +705,7 @@ _Channel blocked → energy cannot manifest action._
         This is the reverse of ChatService._send_nadi_response().
         Enables clean message passing without tight coupling.
         """
-        from vibe_core.protocols.chat import ChatResponse, ChatMessage, ChatMode
+        from vibe_core.protocols.chat import ChatMessage, ChatMode, ChatResponse
 
         content = payload.get("content", "")
         mode_value = payload.get("mode")
@@ -712,7 +715,9 @@ _Channel blocked → energy cannot manifest action._
             message=ChatMessage(
                 role="assistant",
                 content=content,
-            ) if content else None,
+            )
+            if content
+            else None,
             mahajana=payload.get("mahajana"),
             mode=ChatMode(mode_value) if mode_value else None,
             confidence=payload.get("confidence", 0.0),
@@ -743,18 +748,15 @@ _Channel blocked → energy cannot manifest action._
 
             # Map quarter to intent_type (permission requirement)
             quarter_to_intent = {
-                "GENESIS": "genesis_action",   # Creation needs genesis
-                "DHARMA": "code_modify",       # Compilation needs code_modify
-                "KARMA": "refactor_major",     # Execution needs exec
-                "MOKSHA": "review_todos",      # Audit is safe
+                "GENESIS": "genesis_action",  # Creation needs genesis
+                "DHARMA": "code_modify",  # Compilation needs code_modify
+                "KARMA": "refactor_major",  # Execution needs exec
+                "MOKSHA": "review_todos",  # Audit is safe
             }
 
             intent_type = quarter_to_intent.get(quarter, "review_todos")
 
-            logger.debug(
-                f"🔊 Vibration: '{text[:30]}...' → pos={position}, "
-                f"quarter={quarter}, intent={intent_type}"
-            )
+            logger.debug(f"🔊 Vibration: '{text[:30]}...' → pos={position}, quarter={quarter}, intent={intent_type}")
 
             return intent_type, position, quarter
 
@@ -790,8 +792,21 @@ _Channel blocked → energy cannot manifest action._
 
         # Check for command (starts with imperative)
         command_starters = [
-            "run", "execute", "do", "create", "delete", "update", "show",
-            "list", "get", "set", "make", "build", "start", "stop", "find",
+            "run",
+            "execute",
+            "do",
+            "create",
+            "delete",
+            "update",
+            "show",
+            "list",
+            "get",
+            "set",
+            "make",
+            "build",
+            "start",
+            "stop",
+            "find",
         ]
         first_word = text_lower.split()[0] if text_lower.split() else ""
         if first_word in command_starters:
@@ -921,6 +936,7 @@ _Channel blocked → energy cannot manifest action._
 # FACTORY FUNCTION
 # =============================================================================
 
+
 def get_chat_indriya(service_id: str = "chat_indriya") -> ChatIndriya:
     """
     Get ChatIndriya through ServiceRegistry (WIRED + NAGA-wrapped + NADI-connected).
@@ -938,7 +954,6 @@ def get_chat_indriya(service_id: str = "chat_indriya") -> ChatIndriya:
     Like ChatService, ChatIndriya becomes part of the observed infrastructure.
     """
     from vibe_core.di import ServiceRegistry
-    from vibe_core.mahamantra.protocols._indriya import IndriyaProtocol
 
     # Check if already registered
     existing = ServiceRegistry.get(IndriyaProtocol)
@@ -963,6 +978,7 @@ def get_chat_indriya(service_id: str = "chat_indriya") -> ChatIndriya:
         try:
             # Boot ChatService first (creates "chat_service" Nadi endpoint)
             from vibe_core.services.chat_service import get_chat_service
+
             _chat_service = get_chat_service()
 
             # Now connect to ChatService via Nadi

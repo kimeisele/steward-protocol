@@ -24,9 +24,9 @@ __mahajana__ = "prithu"
 __position__ = 0
 __genesis__ = "0x321c4a3e"  # GenesisByte: parampara % 37 == 0
 
-from enum import Enum, auto
 from dataclasses import dataclass
-from typing import Final, Tuple, Optional, List
+from enum import Enum, auto
+from typing import Final, List, Optional, Tuple
 
 
 class VarnaType(Enum):
@@ -195,10 +195,10 @@ VYANJANA: Final[Tuple[Varna, ...]] = KAVARGA + CAVARGA + TAVARGA + DANTYA_VARGA 
 # =============================================================================
 # These are the canonical names based on WHERE in the mouth the sound originates
 
-KANTHYA_VARGA = KAVARGA      # Throat/Guttural (क-वर्ग)
-TALAVYA_VARGA = CAVARGA      # Palate/Palatal (च-वर्ग)
-MURDHANYA_VARGA = TAVARGA    # Retroflex/Cerebral (ट-वर्ग)
-OSHTHYA_VARGA = PAVARGA      # Lips/Labial (प-वर्ग)
+KANTHYA_VARGA = KAVARGA  # Throat/Guttural (क-वर्ग)
+TALAVYA_VARGA = CAVARGA  # Palate/Palatal (च-वर्ग)
+MURDHANYA_VARGA = TAVARGA  # Retroflex/Cerebral (ट-वर्ग)
+OSHTHYA_VARGA = PAVARGA  # Lips/Labial (प-वर्ग)
 # DANTYA_VARGA already defined above (त-वर्ग)
 
 # =============================================================================
@@ -210,11 +210,11 @@ OSHTHYA_VARGA = PAVARGA      # Lips/Labial (प-वर्ग)
 from vibe_core.mahamantra.protocols._seed import PANCHA
 
 PANCHA_VARGA: Final[Tuple[Tuple[Varna, ...], ...]] = (
-    KANTHYA_VARGA,   # 0: Throat  → AKASHA (Ether)  → SHABDA (Sound)
-    TALAVYA_VARGA,   # 1: Palate  → TEJAS (Fire)    → RUPA (Form)
-    MURDHANYA_VARGA, # 2: Cerebral → VAYU (Air)     → SPARSHA (Touch)
-    DANTYA_VARGA,    # 3: Teeth   → JALA (Water)    → RASA (Taste)
-    OSHTHYA_VARGA,   # 4: Lips    → PRITHVI (Earth) → GANDHA (Smell)
+    KANTHYA_VARGA,  # 0: Throat  → AKASHA (Ether)  → SHABDA (Sound)
+    TALAVYA_VARGA,  # 1: Palate  → TEJAS (Fire)    → RUPA (Form)
+    MURDHANYA_VARGA,  # 2: Cerebral → VAYU (Air)     → SPARSHA (Touch)
+    DANTYA_VARGA,  # 3: Teeth   → JALA (Water)    → RASA (Taste)
+    OSHTHYA_VARGA,  # 4: Lips    → PRITHVI (Earth) → GANDHA (Smell)
 )
 
 # SSOT verification: 5 Vargas = PANCHA Tattvas

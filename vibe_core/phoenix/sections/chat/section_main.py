@@ -336,6 +336,7 @@ def get_chat_config() -> ChatSectionConfig:
     if _chat_config is None:
         try:
             from vibe_core.phoenix import get_config
+
             config = get_config()
             _chat_config = config.chat
         except Exception:

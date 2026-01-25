@@ -2,4 +2,3 @@
 __mahajana__ = "janaka"
 __position__ = 10
 __genesis__ = "0x664ef781"  # GenesisByte: parampara % 37 == 0
-

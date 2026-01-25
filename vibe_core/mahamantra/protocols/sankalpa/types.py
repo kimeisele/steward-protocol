@@ -23,7 +23,6 @@ from enum import Enum
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-
 # =============================================================================
 # ENUMS - The Gunas of Strategy
 # =============================================================================
@@ -39,6 +38,7 @@ class GunaState(Enum):
     The three Gunas (modes of material nature).
     Used for ethical classification of actions.
     """
+
     SATTVIC = "sattvic"  # Pure, righteous, aligned with Dharma
     RAJASIC = "rajasic"  # Passionate, needs review, borderline
     TAMASIC = "tamasic"  # Dark, adharmic, must be blocked
@@ -54,25 +54,43 @@ class Ashrama(Enum):
     The four Ashramas (life stages).
     Determines what an agent is permitted to do.
     """
+
     BRAHMACHARI = "brahmachari"  # Student - learning, limited permissions
-    GRIHASTHA = "grihastha"      # Householder - productive, full permissions
+    GRIHASTHA = "grihastha"  # Householder - productive, full permissions
     VANAPRASTHA = "vanaprastha"  # Elder - mentoring, reduced action
-    SANNYASI = "sannyasi"        # Renunciate - governance, override authority
+    SANNYASI = "sannyasi"  # Renunciate - governance, override authority
 
 
 # Permission grants by Ashrama
 ASHRAMA_PERMISSIONS: dict[Ashrama, list[str]] = {
     Ashrama.BRAHMACHARI: ["test_create", "doc_modify", "review"],
     Ashrama.GRIHASTHA: [
-        "code_modify", "git_commit", "git_push", "git_modify",
-        "pr_create", "pr_merge", "test_create", "doc_modify",
-        "review", "state_heal", "genesis",
+        "code_modify",
+        "git_commit",
+        "git_push",
+        "git_modify",
+        "pr_create",
+        "pr_merge",
+        "test_create",
+        "doc_modify",
+        "review",
+        "state_heal",
+        "genesis",
     ],
     Ashrama.VANAPRASTHA: [
-        "code_modify", "doc_modify", "review", "mentor", "pr_create",
+        "code_modify",
+        "doc_modify",
+        "review",
+        "mentor",
+        "pr_create",
     ],
     Ashrama.SANNYASI: [
-        "review", "mentor", "admin", "system_control", "pr_merge", "genesis",
+        "review",
+        "mentor",
+        "admin",
+        "system_control",
+        "pr_merge",
+        "genesis",
     ],
 }
 
@@ -114,34 +132,38 @@ INTENT_PERMISSION_MAP: dict[str, list[str]] = {
 
 class MissionPriority(Enum):
     """Priority of a mission (Sattva → Tamas)."""
+
     CRITICAL = "critical"  # Sattva - Must be done (security, stability)
-    HIGH = "high"          # Rajas - Important for health
-    MEDIUM = "medium"      # Mixed - Nice to have
-    LOW = "low"            # Tamas - Optional improvement
+    HIGH = "high"  # Rajas - Important for health
+    MEDIUM = "medium"  # Mixed - Nice to have
+    LOW = "low"  # Tamas - Optional improvement
 
 
 class MissionStatus(Enum):
     """Status of a mission lifecycle."""
-    ACTIVE = "active"        # Mission is being pursued
-    PAUSED = "paused"        # Temporarily paused
+
+    ACTIVE = "active"  # Mission is being pursued
+    PAUSED = "paused"  # Temporarily paused
     COMPLETED = "completed"  # Goal achieved (Siddhi)
     ABANDONED = "abandoned"  # Given up
 
 
 class TriggerType(Enum):
     """Types of triggers that activate a strategy."""
-    TIME_BASED = "time_based"          # Cron-like (daily, weekly)
-    EVENT_BASED = "event_based"        # On specific events
+
+    TIME_BASED = "time_based"  # Cron-like (daily, weekly)
+    EVENT_BASED = "event_based"  # On specific events
     CONDITION_BASED = "condition_based"  # When conditions met
-    IDLE_BASED = "idle_based"          # When system is idle
+    IDLE_BASED = "idle_based"  # When system is idle
 
 
 class StrategyFrequency(Enum):
     """How often a strategy should run."""
-    ONCE = "once"            # Run once when triggered
-    HOURLY = "hourly"        # Every hour
-    DAILY = "daily"          # Once per day
-    WEEKLY = "weekly"        # Once per week
+
+    ONCE = "once"  # Run once when triggered
+    HOURLY = "hourly"  # Every hour
+    DAILY = "daily"  # Once per day
+    WEEKLY = "weekly"  # Once per week
     CONTINUOUS = "continuous"  # Always active
 
 
@@ -156,11 +178,12 @@ class SankalpaTrigger:
     Trigger condition for a strategy.
     Defines WHEN a strategy should activate.
     """
+
     trigger_type: TriggerType
-    hour: Optional[int] = None          # Hour of day (0-23) for time-based
-    day_of_week: Optional[int] = None   # 0=Monday, 6=Sunday
-    condition: Optional[str] = None     # Condition expression
-    idle_minutes: int = 30              # Minimum idle time for idle-based
+    hour: Optional[int] = None  # Hour of day (0-23) for time-based
+    day_of_week: Optional[int] = None  # 0=Monday, 6=Sunday
+    condition: Optional[str] = None  # Condition expression
+    idle_minutes: int = 30  # Minimum idle time for idle-based
 
 
 @dataclass
@@ -169,13 +192,14 @@ class SankalpaStrategy:
     Strategy for achieving a mission.
     Defines HOW and WHEN to act toward a mission.
     """
+
     id: str
     name: str
     description: str
     trigger: SankalpaTrigger
     frequency: StrategyFrequency
-    intent_type: str                          # Type of intent to generate
-    intent_template: dict                     # Template for intent params (structured)
+    intent_type: str  # Type of intent to generate
+    intent_template: dict  # Template for intent params (structured)
     requires_ci_green: bool = True
     requires_no_pending_intents: bool = True
     max_executions_per_day: int = 3
@@ -190,6 +214,7 @@ class SankalpaMission:
     A long-term goal for the system.
     Missions are the WHY - the purpose that drives action.
     """
+
     id: str
     name: str
     description: str
@@ -207,6 +232,7 @@ class SankalpaIntent:
     An intent generated by Sankalpa for execution.
     This goes through ChatProtocol (Advaita - one entrance).
     """
+
     id: UUID
     mission_id: str
     strategy_id: str
@@ -247,17 +273,19 @@ class SankalpaResult:
     Result of executing a SankalpaIntent.
     Strict contract - no Any types.
     """
+
     success: bool
     intent_id: UUID
-    mahajana: str                    # Who executed (routed by ChatProtocol)
-    response: Optional[str] = None   # Response content if any
-    error: Optional[str] = None      # Error message if failed
-    execution_time_ms: int = 0       # How long it took
+    mahajana: str  # Who executed (routed by ChatProtocol)
+    response: Optional[str] = None  # Response content if any
+    error: Optional[str] = None  # Error message if failed
+    execution_time_ms: int = 0  # How long it took
 
 
 @dataclass
 class SankalpaStatus:
     """Status report for the Sankalpa system."""
+
     total_missions: int
     active_missions: int
     total_strategies: int
@@ -278,20 +306,19 @@ class ConscienceVerdict:
     The Conscience is part of Buddhi (intelligence).
     It answers: "Is this action righteous?"
     """
-    guna: GunaState                      # Sattvic/Rajasic/Tamasic
-    is_permitted: bool                   # Can proceed?
-    ashrama: Ashrama                     # Agent's life stage
-    bhakti: int                          # Trust level (0-200)
-    reason: str                          # Human-readable explanation
-    required_permissions: List[str]      # What the action needs
-    missing_permissions: List[str]       # What's lacking
+
+    guna: GunaState  # Sattvic/Rajasic/Tamasic
+    is_permitted: bool  # Can proceed?
+    ashrama: Ashrama  # Agent's life stage
+    bhakti: int  # Trust level (0-200)
+    reason: str  # Human-readable explanation
+    required_permissions: List[str]  # What the action needs
+    missing_permissions: List[str]  # What's lacking
 
     @property
     def is_dharmic(self) -> bool:
         """True if action is Dharma-aligned."""
-        return self.guna == GunaState.SATTVIC or (
-            self.guna == GunaState.RAJASIC and self.is_permitted
-        )
+        return self.guna == GunaState.SATTVIC or (self.guna == GunaState.RAJASIC and self.is_permitted)
 
 
 # =============================================================================

@@ -61,7 +61,6 @@ from typing import (
 
 from vibe_core.protocols.substrate.byte import HolyName, MantraByte
 
-
 # =============================================================================
 # PHONETIC KEY SYSTEM (Sanskrit-aware Soundex)
 # =============================================================================
@@ -661,6 +660,7 @@ def get_resonance_engine() -> ResonanceEngine:
 
     # Create and register
     import logging
+
     logger = logging.getLogger("RESONANCE_ENGINE")
 
     instance = ResonanceEngine()

@@ -23,6 +23,12 @@ from pathlib import Path
 from typing import List, Optional
 
 from .types import (
+    ASHRAMA_PERMISSIONS,
+    INTENT_PERMISSION_MAP,
+    # Conscience types (extracted from DharmaSense)
+    Ashrama,
+    ConscienceVerdict,
+    GunaState,
     # Mission types
     MissionPriority,
     MissionStatus,
@@ -34,12 +40,6 @@ from .types import (
     SankalpaTrigger,
     StrategyFrequency,
     TriggerType,
-    # Conscience types (extracted from DharmaSense)
-    Ashrama,
-    GunaState,
-    ConscienceVerdict,
-    ASHRAMA_PERMISSIONS,
-    INTENT_PERMISSION_MAP,
 )
 
 logger = logging.getLogger("SANKALPA")
@@ -463,10 +463,11 @@ class SankalpaOrchestrator:
         ADVAITA: Same entrance for all voices.
         No bypass. Protocol handles routing.
         """
-        from vibe_core.services.chat_service import get_chat_service
-        from vibe_core.protocols.chat import ChatContext
-
         import time
+
+        from vibe_core.protocols.chat import ChatContext
+        from vibe_core.services.chat_service import get_chat_service
+
         start = time.time()
 
         chat_service = get_chat_service()

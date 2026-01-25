@@ -58,8 +58,7 @@
   "violations": {
     "test_component": 0,
     "comp_001": 8,
-    "bad_comp": 2,
-    "EventBus": 2
+    "bad_comp": 2
   },
   "cycles": {
     "bad_agent_001": 1,
@@ -70,8 +69,8 @@
     "criminal_agent_007": 1
   },
   "escalated": [
-    "comp_001",
     "bad_comp",
-    "test_component"
+    "test_component",
+    "comp_001"
   ]
 }
