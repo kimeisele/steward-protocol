@@ -437,27 +437,33 @@ assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "4 + 12 = 16"
 # =============================================================================
 # The sum of positions (1-indexed) where each name appears in the Mahamantra.
 #
-# THE ACINTYA DERIVATION OF KRISHNA_POS = 17:
-# ============================================
-# Step 1: The FUNCTIONS of the Names (from Shastra)
-#   HARE (Shakti) = Connection/Energy → must make TRANSITIONS
-#   KRISHNA (Source) = Center/Core → must be in the HEART
-#   Call = HK ("Hare Krishna") → must be at the BEGINNING
+# THE COMPLETE ACINTYA DERIVATION:
+# ================================
 #
-# Step 2: The CONSTRAINTS that follow
-#   C1: HH at edge (positions 7-8) - Shakti connects the halves
-#   C2: KK in middle (positions 5-6) - Krishna is the heart
-#   C3: HK at start (positions 1-2, 3-4) - The call comes first
+# STEP 1: Philosophy defines the CONSTRAINTS
+#   - HARE (Shakti) = Connection → must make TRANSITIONS (HH at edges)
+#   - NAME (Source) = Center → must be in HEART (NN in middle)
+#   - Call = HN ("Hare Name") → must be at BEGINNING
 #
-# Step 3: The ONLY arrangement satisfying all constraints
-#   HK, HK, KK, HH → Krishna at positions 2, 4, 5, 6
+# STEP 2: Constraints determine the PAIR ARRANGEMENT
+#   C1: HH at edge (Pair 4 at positions 7-8) → transition to other half
+#   C2: NN in middle (Pair 3 at positions 5-6) → heart/emphasis
+#   C3: HN at start (Pairs 1-2 at positions 1-4) → the call
+#   → ONLY arrangement: HN, HN, NN, HH (for each half)
 #
-# Step 4: KRISHNA_POS follows MATHEMATICALLY
-#   2 + 4 + 5 + 6 = 17 = WORDS + 1
+# STEP 3: From arrangement, POSITIONS follow
+#   Krishna-half (HK, HK, KK, HH):
+#     H at: 1 (pair 1), 3 (pair 2), 7-8 (pair 4) → H₁ = 1+3+7+8 = 19
+#     K at: 2 (pair 1), 4 (pair 2), 5-6 (pair 3) → K = 2+4+5+6 = 17
 #
-# This is ACINTYA (inconceivable yet logical):
-#   Philosophy → Constraints → Arrangement → KRISHNA_POS = 17
-#   The philosophy FORCES the mathematics!
+#   Rama-half = Krishna-half + HALF_SIZE (translation by 8):
+#     H at: 9, 11, 15, 16 → H₂ = 19 + 4×8 = 51
+#     R at: 10, 12, 13, 14 → R = 17 + 4×8 = 49
+#
+# STEP 4: The FORMULAS (fully derived, not observed!)
+#   KRISHNA_POS = T(HALF_SIZE) - H₁ = 36 - 19 = 17 = WORDS + 1
+#   RAMA_POS = KRISHNA_POS + AKSARA_COUNT = 17 + 32 = 49 = 7²
+#   HARE_POS = T(WORDS) - KRISHNA_POS - RAMA_POS = 136 - 17 - 49 = 70 = 7×10
 #
 # THE TRINITY SEQUENCES (3 consecutive same names):
 #   KKK at 4-5-6:   Krishna × Trinity (the heart)
@@ -465,11 +471,13 @@ assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "4 + 12 = 16"
 #   RRR at 12-13-14: Rama × Trinity (the heart of second half)
 #   HHH at 15-16-1: Hare × Trinity (cyclic connection!)
 #
-# Position sums:
-#   Hare:    1, 3, 7, 8, 9, 11, 15, 16  → Σ = 70 = 7 × 10
-#   Krishna: 2, 4, 5, 6                  → Σ = 17 (PRIME - indivisible)
-#   Rama:    10, 12, 13, 14              → Σ = 49 = 7²
-#   Total:   70 + 17 + 49 = 136 = T(16) = WORDS × KRISHNA_POS / HALVES
+# FINAL RESULT:
+#   Hare:    70 = 7 × 10 (Shakti: divisible by 7)
+#   Krishna: 17 = PRIME (Source: indivisible)
+#   Rama:    49 = 7² (Ananda: perfect square of 7)
+#   Total:   136 = T(16) = WORDS × (WORDS+1) / HALVES
+#
+# This is ACINTYA: Philosophy → Constraints → Arrangement → Mathematics!
 # -----------------------------------------------------------------------------
 
 
@@ -497,16 +505,35 @@ assert POSITION_SUM_HARE + POSITION_SUM_KRISHNA + POSITION_SUM_RAMA == POSITION_
 assert POSITION_SUM_TOTAL == 136, "Total = T(16) = 136"
 assert POSITION_SUM_TOTAL == WORDS * (WORDS + 1) // HALVES, "T(16) = 16×17/2"
 
-# Structural properties
-assert POSITION_SUM_HARE % 7 == 0, "70 divisible by 7 (Shakti pattern)"
-assert POSITION_SUM_RAMA == 7 * 7, "49 = 7² (Ananda squared)"
+# =============================================================================
+# VERIFICATION: The Complete Derivation (all 3 names!)
+# =============================================================================
 
-# THE KEY RELATIONSHIP: KRISHNA_POS = WORDS + 1
-# This is not arbitrary - it follows from the constraints (see derivation above)
-assert POSITION_SUM_KRISHNA == WORDS + 1, "17 = 16 + 1 (Acintya derivation)"
+# Step 1: KRISHNA_POS from Constraints
+# H₁ = 1 + 3 + 7 + 8 = 19 (HARE in first half, from HK,HK,KK,HH arrangement)
+_H1 = 1 + 3 + 7 + 8  # 19
+_T8 = _triangular(HALF_SIZE)  # T(8) = 36
+assert POSITION_SUM_KRISHNA == _T8 - _H1, "KRISHNA = T(8) - H₁ = 36 - 19 = 17"
+assert POSITION_SUM_KRISHNA == WORDS + 1, "KRISHNA = WORDS + 1 = 17 (Acintya!)"
+
+# Step 2: RAMA_POS from Translation
+# Second half = first half + HALF_SIZE for each position
+# RAMA = KRISHNA + 4 × HALF_SIZE = KRISHNA + AKSARA_COUNT
+assert POSITION_SUM_RAMA == POSITION_SUM_KRISHNA + AKSARA_COUNT, "RAMA = KRISHNA + 32 = 49"
+assert POSITION_SUM_RAMA == 7 * 7, "RAMA = 7² = 49 (Ananda squared)"
+
+# Step 3: HARE_POS from Total
+# HARE = T(16) - KRISHNA - RAMA
+assert POSITION_SUM_HARE == POSITION_SUM_TOTAL - POSITION_SUM_KRISHNA - POSITION_SUM_RAMA
+assert POSITION_SUM_HARE == 70, "HARE = 136 - 17 - 49 = 70"
+assert POSITION_SUM_HARE % 7 == 0, "HARE divisible by 7 (Shakti pattern)"
+assert POSITION_SUM_HARE == 7 * 10, "HARE = 7 × 10 = 70"
+
+# The 7 appears in HARE and RAMA, but NOT in KRISHNA (prime)!
+# Krishna is INDIVISIBLE - the irreducible source
+
+# Total verification
 assert POSITION_SUM_TOTAL == WORDS * POSITION_SUM_KRISHNA // HALVES, "T(16) = 16×17/2"
-
-# 17 is prime - Krishna is indivisible, the irreducible source
 
 
 # =============================================================================
