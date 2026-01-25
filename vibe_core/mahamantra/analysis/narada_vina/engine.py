@@ -107,15 +107,12 @@ def predict_charm_quark() -> Prediction:
 
 def predict_strange_quark() -> Prediction:
     """
-    SHOULD BE DERIVED: Strange quark / electron ratio.
+    NOTE: This is now DERIVED in knowledge.py (MAHA_STRANGE in _seed.py).
+    Kept here for reference - will be removed in future cleanup.
 
     Actual value: ~183 (PDG 2022: m_s = 93.4 MeV)
-    Predicted: 183 = 108 + 72 + 3
-    Error: ~0% (should be promoted to DERIVED!)
-
-    Formula: Mala + Nadi + Trinity (devotion + pulse + names)
-
-    TODO: Add to knowledge.py as CoverageStatus.DERIVED
+    Predicted: 183 = 108 + 72 + 3 = MALA + NADI + TRINITY
+    Error: 0.12% (DERIVED!)
     """
     value = MALA + NADI_RESONANCE + TRINITY  # 183
     return Prediction(
@@ -123,7 +120,7 @@ def predict_strange_quark() -> Prediction:
         formula="MALA + NADI + TRINITY",
         value=value,
         components=["MALA", "NADI_RESONANCE", "TRINITY"],
-        description="Strange quark mass ratio (~0% error - should be DERIVED!)",
+        description="Strange quark mass ratio (0.12% - NOW DERIVED in _seed.py)",
     )
 
 
@@ -179,8 +176,8 @@ def predict_down_quark() -> Prediction:
 GENERATORS: Final[List[callable]] = [
     predict_bottom_quark,  # 1.66% error (CANDIDATE)
     predict_charm_quark,  # 4.06% error (CANDIDATE)
-    predict_strange_quark,  # ~0% error (TODO: promote to DERIVED)
     predict_down_quark,  # 1.1% error (CANDIDATE)
+    # predict_strange_quark removed - now DERIVED in _seed.py (MAHA_STRANGE)
 ]
 
 # NOTE: We no longer enforce NAVA = 9. Quality > quantity.
