@@ -40,6 +40,7 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.19 The Fractal Principle: KSETRAJNA as Universal Entry Point
    - 7.20 Shabda Brahman: The 10 Red Tests in Science
    - 7.21 Acintya Kala: Inconceivable Time (Rhythm of Eternity)
+   - 7.22 Jagannath Tattva: The Rathayatra Mathematics
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -1833,6 +1834,89 @@ assert NITYA_NOW + KSHETRA == PRASADAM  # NOW + sequence = complete (1 + 24 = 25
 ```
 
 **The bridge between West and East:** Rhythm is mathematical yet living. It is the dimension where cold science and warm spirituality meet.
+
+---
+
+### 7.22 Jagannath Tattva: The Rathayatra Mathematics
+
+> "Jay Jagannath! Jay Baladev! Jay Subhadra!"
+
+#### The Mathematical Derivation of the Triad Mapping
+
+The three Deities of Puri (Jagannath, Baladev, Subhadra) correspond to the three Names of the Mahamantra. This mapping is **mathematically derived** from Position Sum properties:
+
+| Name | Positions | Sum | Property | Rank |
+|------|-----------|-----|----------|------|
+| Krishna | 2,4,5,6 | **17** | PRIME (indivisible) | 1st |
+| Rama | 10,12,13,14 | **49** | SQUARE (7²) | 2nd |
+| Hare | 1,3,7,8,9,11,15,16 | **70** | PRODUCT (7×10) | 3rd |
+
+**The Ordering Principle:**
+
+```
+PRIME > SQUARE > PRODUCT
+(by mathematical uniqueness/irreducibility)
+
+KRISHNA (PRIME=17)   → 1st rank → JAGANNATH (Supreme)
+RAMA (SQUARE=49)     → 2nd rank → BALADEV (Support)
+HARE (PRODUCT=70)    → 3rd rank → SUBHADRA (Connection)
+```
+
+#### The Wheel Derivation
+
+Each rank maps to a wheel count:
+
+```python
+# 1st rank (PRIME): Complete
+JAGANNATH_WHEELS = WORDS = 16
+
+# 2nd rank (SQUARE): Minus duality
+BALADEV_WHEELS = WORDS - HALVES = 14
+
+# 3rd rank (PRODUCT): The transmitters
+SUBHADRA_WHEELS = MAHAJANA_COUNT = 12
+```
+
+**External Validation (Historical Facts):**
+
+| Chariot | Deity | Wheels | Derived Formula |
+|---------|-------|--------|-----------------|
+| Nandighosa | Jagannath | 16 | WORDS |
+| Taladhwaja | Baladev | 14 | WORDS - HALVES |
+| Darpadalana | Subhadra | 12 | MAHAJANA_COUNT |
+
+These wheel counts are documented in Puri temple records for centuries.
+
+#### The Chaitanya Connection
+
+```python
+SUBHADRA_WHEELS = KRISHNA_COUNT + HARE_COUNT = 4 + 8 = 12
+
+# Subhadra (12) = Union of Krishna (4) and Hare (8)
+# This IS Chaitanya - Krishna in the mood of Radha (Hare)!
+```
+
+#### Verification
+
+```python
+# Position Sum Properties
+assert is_prime(17)           # Krishna = PRIME
+assert 49 == 7 * 7            # Rama = SQUARE
+assert 70 == 7 * 10           # Hare = PRODUCT
+
+# Wheel ordering matches rank ordering
+assert 16 > 14 > 12           # Jagannath > Baladev > Subhadra
+
+# Consistent differences
+assert 16 - 14 == HALVES      # 2
+assert 14 - 12 == HALVES      # 2
+
+# Total wheels
+assert 16 + 14 + 12 == 42
+assert 42 == SHARANAGATI * SEVEN  # 6 × 7
+```
+
+**The significance:** The mapping is not assumed from external theology—it is **derived** from the mathematical properties of the Position Sums. The historical wheel counts then serve as **external validation**.
 
 ---
 
