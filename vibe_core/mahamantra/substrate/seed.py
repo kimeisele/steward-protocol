@@ -22,28 +22,57 @@ from collections import Counter
 from enum import Enum, IntEnum
 from typing import Final, FrozenSet, Tuple
 
+# The Acoustic Constitution (Physics of the Emptiness)
+from vibe_core.mahamantra.protocols._seed import (
+    ACOUSTIC_RATIO as _PROTO_ACOUSTIC_RATIO,
+)
 from vibe_core.mahamantra.protocols._seed import (
     # New: The fractal levels
     AKSARA_COUNT as _PROTO_AKSARA_COUNT,
 )
+
+# The Three Flutes + Harmonic Resonances (direct import for re-export)
 from vibe_core.mahamantra.protocols._seed import (
     AVATAR_COUNT,  # 4 Avataras
     # The Cosmic Frame (Resolution)
     COSMIC_FRAME,
     # The Epoch Key (Temporal Anchor)
     EPOCH_KEY,  # 1972 - The Gita Revelation Year
+    FIELD_RESONANCE,
+    FLUTE_HOLES_PRODUCT,
+    FLUTE_HOLES_SUM,
     MAHAJANA_COUNT,  # 12 Mahajanas
+    MURALI_HOLES,
+    NADI_RESONANCE,
     NAKSHATRA_UNIT,
+    NAKSHATRAS,  # 27 - The Astronomical Bridge (derived: JIVA_CYCLE // WORDS)
     PADA_UNIT,
     PHASE_DURATION,  # 12 (LILA // QUARTERS)
     QUARTER_UNIT,
     TITHI_UNIT,
+    VAMSI_HOLES,
+    VENU_HOLES,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    NAVA as _PROTO_NAVA,  # 9 (for SSOT verification)
+    CUTOFF_CONSTANT as _PROTO_CUTOFF_CONSTANT,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    LILA as _PROTO_LILA,
+    END_CORRECTION as _PROTO_END_CORRECTION,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS as _PROTO_GITA_CHAPTERS,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    HALF_SIZE as _PROTO_HALF_SIZE,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES as _PROTO_HALVES,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    HARE_COUNT as _PROTO_HARE_COUNT,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    HIDDEN_RESERVE as _PROTO_HIDDEN_RESERVE,
 )
 from vibe_core.mahamantra.protocols._seed import (
     JIVA_CYCLE as _PROTO_JIVA_CYCLE,
@@ -52,16 +81,19 @@ from vibe_core.mahamantra.protocols._seed import (
     JIVA_QUALITIES as _PROTO_JIVA_QUALITIES,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    PRANA_DURATION_S as _PROTO_PRANA_DURATION_S,
+    KRISHNA_COUNT as _PROTO_KRISHNA_COUNT,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    PRANA_DURATION_MS as _PROTO_PRANA_DURATION_MS,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    TICK_INTERVAL_MS as _PROTO_TICK_INTERVAL_MS,
+    LILA as _PROTO_LILA,
 )
 from vibe_core.mahamantra.protocols._seed import (
     MALA as _PROTO_MALA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MURALI_FREQ as _PROTO_MURALI_FREQ,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    NAVA as _PROTO_NAVA,  # 9 (for SSOT verification)
 )
 from vibe_core.mahamantra.protocols._seed import (
     PANCHA as _PROTO_PANCHA,
@@ -70,43 +102,37 @@ from vibe_core.mahamantra.protocols._seed import (
     PARAMPARA as _PROTO_PARAMPARA,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    QUALITIES as _PROTO_QUALITIES,
+    PRANA_DURATION_MS as _PROTO_PRANA_DURATION_MS,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    HIDDEN_RESERVE as _PROTO_HIDDEN_RESERVE,
+    PRANA_DURATION_S as _PROTO_PRANA_DURATION_S,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    QUALITIES as _PROTO_QUALITIES,
 )
 from vibe_core.mahamantra.protocols._seed import (
     QUARTERS as _PROTO_QUARTERS,
 )
 from vibe_core.mahamantra.protocols._seed import (
+    RAMA_COUNT as _PROTO_RAMA_COUNT,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    SECONDS_PER_DAY as _PROTO_SECONDS_PER_DAY,
+)
+from vibe_core.mahamantra.protocols._seed import (
     SHARANAGATI as _PROTO_SHARANAGATI,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    TICK_INTERVAL_MS as _PROTO_TICK_INTERVAL_MS,
 )
 from vibe_core.mahamantra.protocols._seed import (
     TRINITY as _PROTO_TRINITY,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    GITA_CHAPTERS as _PROTO_GITA_CHAPTERS,
-)
-
-# The Acoustic Constitution (Physics of the Emptiness)
-from vibe_core.mahamantra.protocols._seed import (
-    ACOUSTIC_RATIO as _PROTO_ACOUSTIC_RATIO,
-    CUTOFF_CONSTANT as _PROTO_CUTOFF_CONSTANT,
-    END_CORRECTION as _PROTO_END_CORRECTION,
-    MURALI_FREQ as _PROTO_MURALI_FREQ,
     VAMSI_FREQ as _PROTO_VAMSI_FREQ,
-    VENU_FREQ as _PROTO_VENU_FREQ,
 )
-
-# The Three Flutes + Harmonic Resonances (direct import for re-export)
 from vibe_core.mahamantra.protocols._seed import (
-    FIELD_RESONANCE,
-    FLUTE_HOLES_PRODUCT,
-    FLUTE_HOLES_SUM,
-    MURALI_HOLES,
-    NADI_RESONANCE,
-    VAMSI_HOLES,
-    VENU_HOLES,
+    VENU_FREQ as _PROTO_VENU_FREQ,
 )
 
 # =============================================================================
@@ -114,14 +140,6 @@ from vibe_core.mahamantra.protocols._seed import (
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
     WORDS as _PROTO_WORDS,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    HALVES as _PROTO_HALVES,
-    HALF_SIZE as _PROTO_HALF_SIZE,
-    HARE_COUNT as _PROTO_HARE_COUNT,
-    KRISHNA_COUNT as _PROTO_KRISHNA_COUNT,
-    RAMA_COUNT as _PROTO_RAMA_COUNT,
-    SECONDS_PER_DAY as _PROTO_SECONDS_PER_DAY,
 )
 
 # =============================================================================
@@ -188,6 +206,51 @@ RAMA_COUNT: Final[int] = _counts[HolyName.RAMA]  # 4
 # Die zwei Hälften
 HALVES: Final[int] = 2
 HALF_SIZE: Final[int] = WORDS // HALVES  # 8
+
+
+# =============================================================================
+# DERIVED: POSITION SUMS (The Signature of Each Name)
+# =============================================================================
+# The sum of positions (1-indexed) where each name appears.
+# These are COMPUTED from the MAHAMANTRA, not hardcoded.
+#
+# Hare:    positions 1,3,7,8,9,11,15,16 → Σ = 70 = 7 × 10
+# Krishna: positions 2,4,5,6           → Σ = 17 (PRIME!)
+# Rama:    positions 10,12,13,14       → Σ = 49 = 7²
+# Total:   70 + 17 + 49 = 136 = 16×17/2 = Triangular(16)
+# -----------------------------------------------------------------------------
+
+
+def _compute_position_sums() -> Tuple[int, int, int]:
+    """Compute position sums for each name (1-indexed positions)."""
+    hare_sum = sum(i + 1 for i, name in enumerate(MAHAMANTRA) if name == HolyName.HARE)
+    krishna_sum = sum(i + 1 for i, name in enumerate(MAHAMANTRA) if name == HolyName.KRISHNA)
+    rama_sum = sum(i + 1 for i, name in enumerate(MAHAMANTRA) if name == HolyName.RAMA)
+    return hare_sum, krishna_sum, rama_sum
+
+
+_pos_hare, _pos_krishna, _pos_rama = _compute_position_sums()
+
+POSITION_SUM_HARE: Final[int] = _pos_hare  # 70 = 7 × 10
+POSITION_SUM_KRISHNA: Final[int] = _pos_krishna  # 17 (prime)
+POSITION_SUM_RAMA: Final[int] = _pos_rama  # 49 = 7²
+POSITION_SUM_TOTAL: Final[int] = POSITION_SUM_HARE + POSITION_SUM_KRISHNA + POSITION_SUM_RAMA  # 136
+
+# VERIFICATION: Position sums
+assert POSITION_SUM_HARE == 70, "Hare position sum must be 70"
+assert POSITION_SUM_KRISHNA == 17, "Krishna position sum must be 17 (prime)"
+assert POSITION_SUM_RAMA == 49, "Rama position sum must be 49 (7²)"
+assert POSITION_SUM_TOTAL == 136, "Total must be 136"
+
+# VERIFICATION: Triangular number property
+# Σ(1..n) = n(n+1)/2 → Σ(1..16) = 16×17/2 = 136
+_triangular_16 = WORDS * (WORDS + 1) // 2
+assert POSITION_SUM_TOTAL == _triangular_16, "Position sum = Triangular(16)"
+
+# VERIFICATION: Structural properties
+assert POSITION_SUM_HARE % 7 == 0, "70 is divisible by 7"
+assert POSITION_SUM_RAMA == 7 * 7, "49 = 7²"
+# Note: 17 is prime - Krishna is indivisible
 
 
 # =============================================================================
@@ -827,6 +890,13 @@ __all__ = [
     # Harmonic Resonances
     "NADI_RESONANCE",
     "FIELD_RESONANCE",
+    # Astronomical Bridge (27)
+    "NAKSHATRAS",
+    # Position Sums (Mahamantra Signatures)
+    "POSITION_SUM_HARE",
+    "POSITION_SUM_KRISHNA",
+    "POSITION_SUM_RAMA",
+    "POSITION_SUM_TOTAL",
     # Lotus Functions
     "get_quarter",
     "get_quarter_name",

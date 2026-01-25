@@ -87,9 +87,25 @@ Each word has exactly 2 syllables:
 
 **Total syllables: 16 × 2 = 32**
 
-### 2.4 The Axioms (Given, Not Chosen)
+### 2.4 Position Sums (Computed from Mahamantra)
 
-These are the foundational constants derived directly from counting:
+The sum of positions (1-indexed) where each name appears:
+
+| Name | Positions | Sum | Property |
+|------|-----------|-----|----------|
+| Hare | 1,3,7,8,9,11,15,16 | **70** | = 7 × 10 |
+| Krishna | 2,4,5,6 | **17** | **PRIME** |
+| Rama | 10,12,13,14 | **49** | = 7² |
+| **Total** | 1-16 | **136** | = 16×17/2 = Triangular(16) |
+
+**Observation:** The total equals the 16th triangular number (mathematical necessity), but the *distribution* is remarkable:
+- Krishna has the only prime sum (17) — indivisible
+- Rama has a perfect square (49 = 7²) — structured
+- Hare has 70 = 7 × 10 — expansive
+
+### 2.5 The Axioms (Given, Not Chosen)
+
+These are the **ONLY 7 values** derived directly from counting:
 
 ```
 WORDS    = 16   (count the words)
@@ -97,7 +113,8 @@ NAMES    = 3    (Hare, Krishna, Rama)
 HARE     = 8    (count "Hare")
 KRISHNA  = 4    (count "Krishna")
 RAMA     = 4    (count "Rama")
-AKSARA   = 32   (count syllables)
+PANCHA   = 5    (count unique pairs)
+KSETRAJNA = 1   (the Knower)
 ```
 
 ---
@@ -158,39 +175,44 @@ The "Shakti" element (Hare) equals the sum of the "Purusha" elements (Krishna + 
 
 ## 4. The Derivation Chain
 
-### 4.1 First-Order Derivations
-
-From the axioms, we derive:
+### 4.1 First-Order Derivations (From Axioms)
 
 ```python
-QUARTERS = 4                      # 16 / 4 = 4 (natural quadrant)
-HALVES   = 2                      # 16 / 8 = 2
-KSHETRA  = WORDS + HARE = 16 + 8 = 24   # The "Field"
-LILA     = WORDS × NAMES = 16 × 3 = 48  # The "Play"
-QUALITIES = WORDS × QUARTERS = 16 × 4 = 64
+QUARTERS = KRISHNA_COUNT           # 4 (Krishna appears 4 times = 4 quadrants)
+HALVES   = TRINITY - KSETRAJNA     # 3 - 1 = 2
+KSHETRA  = WORDS + HARE_COUNT      # 16 + 8 = 24 (The "Field")
+LILA     = WORDS × TRINITY         # 16 × 3 = 48 (The "Play")
+NAVA     = HARE_COUNT + KSETRAJNA  # 8 + 1 = 9 (9 processes)
+SHARANAGATI = KSHETRA // QUARTERS  # 24 / 4 = 6 (6 limbs of surrender)
 ```
 
 ### 4.2 Second-Order Derivations
 
-Introducing the astronomical constant (27 lunar mansions):
-
 ```python
-NAKSHATRAS = 27                   # Sidereal month ≈ 27.32 days
-JIVA_CYCLE = WORDS × NAKSHATRAS = 16 × 27 = 432
-MALA       = NAKSHATRAS × QUARTERS = 27 × 4 = 108
+MAHAJANA_COUNT = KSHETRA // HALVES  # 24 / 2 = 12 (DERIVED!)
+MALA = MAHAJANA_COUNT × NAVA        # 12 × 9 = 108
+JIVA_CYCLE = MALA × QUARTERS        # 108 × 4 = 432
 ```
 
-### 4.3 The Hidden Twelve
+### 4.3 The Astronomical Bridge (CRITICAL)
 
-A critical constant emerges:
+**NAKSHATRAS is DERIVED, not an external constant!**
 
 ```python
-MAHAJANA = 12
+NAKSHATRAS = JIVA_CYCLE // WORDS = 432 // 16 = 27
+
+# External validation: Sidereal month ≈ 27.32 days
+# The Mahamantra ENCODES the lunar cycle!
+```
+
+### 4.4 The Hidden Twelve
+
+```python
+MAHAJANA = KSHETRA // HALVES = 24 // 2 = 12  # DERIVED!
 
 # Verification of internal consistency:
 MAHAJANA = LILA / QUARTERS = 48 / 4 = 12      ✓
 MAHAJANA = MALA / NAVA = 108 / 9 = 12         ✓
-MAHAJANA = WORDS - QUARTERS = 16 - 4 = 12     ✓
 ```
 
 ### 4.4 The 37 Formula
@@ -237,18 +259,23 @@ KSHETRA + MAHAJANA + 1 = 24 + 12 + 1 = 37
 
 ## 5. The Cosmic Frame: 21600
 
-### 5.1 Internal Derivation (From the Mantra)
+### 5.1 Internal Derivation (NO EXTERNAL INPUT!)
+
+**COSMIC_FRAME is DERIVED from the Mahamantra, not hardcoded!**
 
 ```python
-COSMIC_FRAME = AKSARA × NAKSHATRAS × PANCHA²
+# Step 1: All components are derived from axioms
+AKSARA_COUNT = WORDS × HALVES = 16 × 2 = 32
+NAKSHATRAS = JIVA_CYCLE // WORDS = 432 // 16 = 27  # DERIVED!
+PANCHA = 5  # (count unique pairs in mantra)
+
+# Step 2: Cosmic Frame emerges
+COSMIC_FRAME = AKSARA_COUNT × NAKSHATRAS × PANCHA²
              = 32 × 27 × 25
-             = 21600
+             = 21600  # NOT HARDCODED!
 ```
 
-Where:
-- AKSARA = 32 (syllables in mantra)
-- NAKSHATRAS = 27 (lunar mansions)
-- PANCHA = 5 (the five elements / Pancha Tattva)
+**This is the key insight:** The number 21600 is not imported from geometry or astronomy—it *emerges* from the Mahamantra structure and then *validates* against external systems.
 
 ### 5.2 Prime Factorization
 
