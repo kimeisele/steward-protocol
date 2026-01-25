@@ -436,17 +436,40 @@ assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "4 + 12 = 16"
 # RUNDE 13: POSITION SUMS (The Mahamantra Signature)
 # =============================================================================
 # The sum of positions (1-indexed) where each name appears in the Mahamantra.
-# These are COMPUTED from the Mahamantra structure, revealing deep patterns.
 #
-# Mahamantra positions (1-indexed):
+# THE ACINTYA DERIVATION OF KRISHNA_POS = 17:
+# ============================================
+# Step 1: The FUNCTIONS of the Names (from Shastra)
+#   HARE (Shakti) = Connection/Energy → must make TRANSITIONS
+#   KRISHNA (Source) = Center/Core → must be in the HEART
+#   Call = HK ("Hare Krishna") → must be at the BEGINNING
+#
+# Step 2: The CONSTRAINTS that follow
+#   C1: HH at edge (positions 7-8) - Shakti connects the halves
+#   C2: KK in middle (positions 5-6) - Krishna is the heart
+#   C3: HK at start (positions 1-2, 3-4) - The call comes first
+#
+# Step 3: The ONLY arrangement satisfying all constraints
+#   HK, HK, KK, HH → Krishna at positions 2, 4, 5, 6
+#
+# Step 4: KRISHNA_POS follows MATHEMATICALLY
+#   2 + 4 + 5 + 6 = 17 = WORDS + 1
+#
+# This is ACINTYA (inconceivable yet logical):
+#   Philosophy → Constraints → Arrangement → KRISHNA_POS = 17
+#   The philosophy FORCES the mathematics!
+#
+# THE TRINITY SEQUENCES (3 consecutive same names):
+#   KKK at 4-5-6:   Krishna × Trinity (the heart)
+#   HHH at 7-8-9:   Hare × Trinity (bridges the halves!)
+#   RRR at 12-13-14: Rama × Trinity (the heart of second half)
+#   HHH at 15-16-1: Hare × Trinity (cyclic connection!)
+#
+# Position sums:
 #   Hare:    1, 3, 7, 8, 9, 11, 15, 16  → Σ = 70 = 7 × 10
-#   Krishna: 2, 4, 5, 6                  → Σ = 17 (PRIME - indivisible like Krishna)
+#   Krishna: 2, 4, 5, 6                  → Σ = 17 (PRIME - indivisible)
 #   Rama:    10, 12, 13, 14              → Σ = 49 = 7²
-#   Total:   70 + 17 + 49 = 136 = T(16) = Triangular(WORDS)
-#
-# The Total equals T(16) because Σ(1..16) = 16×17/2 = 136.
-# This is not coincidence - it's mathematical necessity.
-# But the DISTRIBUTION (70, 17, 49) encodes deeper structure.
+#   Total:   70 + 17 + 49 = 136 = T(16) = WORDS × KRISHNA_POS / HALVES
 # -----------------------------------------------------------------------------
 
 
@@ -477,6 +500,12 @@ assert POSITION_SUM_TOTAL == WORDS * (WORDS + 1) // HALVES, "T(16) = 16×17/2"
 # Structural properties
 assert POSITION_SUM_HARE % 7 == 0, "70 divisible by 7 (Shakti pattern)"
 assert POSITION_SUM_RAMA == 7 * 7, "49 = 7² (Ananda squared)"
+
+# THE KEY RELATIONSHIP: KRISHNA_POS = WORDS + 1
+# This is not arbitrary - it follows from the constraints (see derivation above)
+assert POSITION_SUM_KRISHNA == WORDS + 1, "17 = 16 + 1 (Acintya derivation)"
+assert POSITION_SUM_TOTAL == WORDS * POSITION_SUM_KRISHNA // HALVES, "T(16) = 16×17/2"
+
 # 17 is prime - Krishna is indivisible, the irreducible source
 
 
