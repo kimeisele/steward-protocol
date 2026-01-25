@@ -895,6 +895,65 @@ assert MAHA_CMB % POSITION_SUM_KRISHNA == QUARTERS, "CMB mod 17 = 4 (4 dimension
 
 
 # =============================================================================
+# RUNDE 19: COUPLING CONSTANTS (Dimensionless Ratios of Nature)
+# =============================================================================
+# The fundamental forces are governed by dimensionless coupling constants.
+# These emerge naturally from the Mahamantra structure.
+#
+# STRONG COUPLING (αs):
+# =====================
+# αs(MZ) = 0.1179 ± 0.0010 (PDG 2022)
+# MAHA_ALPHA_S_SCALED = MALA + TEN = 108 + 10 = 118
+# Actual × 1000 = 117.9 → Error: 0.08% (THE BEST COUPLING MATCH!)
+#
+# THE FORMULA: The 108 beads of devotion + the 10 (completion number)
+# The strong force that binds quarks = the complete Mala cycle!
+#
+# WEAK MIXING ANGLE (sin²θW):
+# ===========================
+# sin²θW = 0.23122 ± 0.00004 (PDG 2022) - The Weinberg angle
+# MAHA_SIN2_THETA_W_SCALED = KSHETRA - KSETRAJNA = 24 - 1 = 23
+# Actual × 100 = 23.12 → Error: 0.53%
+#
+# THE FORMULA: Field minus Knower = the ratio of weak to electromagnetic
+# The 24 elements of material nature minus the 1 observer!
+#
+# MOD-17 ANALYSIS:
+# ================
+# MAHA_ALPHA_S_SCALED mod 17 = 118 mod 17 = 16 = WORDS
+# MAHA_SIN2_THETA_W_SCALED mod 17 = 23 mod 17 = 6 = SHARANAGATI
+#
+# The strong coupling carries the WORDS signature (complete manifest form)
+# The weak angle carries the SHARANAGATI signature (surrender, transformation)
+# -----------------------------------------------------------------------------
+
+
+# Strong coupling αs (scaled by 1000)
+MAHA_ALPHA_S_SCALED: Final[int] = MALA + TEN  # 118
+
+# Weak mixing angle sin²θW (scaled by 100)
+MAHA_SIN2_THETA_W_SCALED: Final[int] = KSHETRA - KSETRAJNA  # 23
+
+# =============================================================================
+# VERIFICATION: Coupling Constants
+# =============================================================================
+
+# Strong coupling
+assert MAHA_ALPHA_S_SCALED == 118, "αs × 1000 = MALA + TEN = 118"
+assert MAHA_ALPHA_S_SCALED == 108 + 10, "αs × 1000 = 108 + 10"
+assert MAHA_ALPHA_S_SCALED % POSITION_SUM_KRISHNA == WORDS, "αs mod 17 = 16 (WORDS - complete)"
+
+# Weak mixing angle
+assert MAHA_SIN2_THETA_W_SCALED == 23, "sin²θW × 100 = KSHETRA - KSETRAJNA = 23"
+assert MAHA_SIN2_THETA_W_SCALED == 24 - 1, "sin²θW × 100 = 24 - 1"
+assert MAHA_SIN2_THETA_W_SCALED % POSITION_SUM_KRISHNA == SHARANAGATI, "sin²θW mod 17 = 6 (SHARANAGATI)"
+
+# The coupling constants reveal a beautiful duality:
+# - Strong force (αs): MALA + TEN (108 beads of complete devotion + completion)
+# - Weak force (sin²θW): KSHETRA - KSETRAJNA (matter without observer = weakness)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -995,4 +1054,7 @@ __all__ = [
     "MAHA_PION_NEUTRAL",  # 264 = WORDS² + HARE (pion⁰/electron)
     "MAHA_KAON",  # 966 = (2+136) × 7 (kaon/electron)
     "MAHA_CMB",  # 2724 = KSHETRA × PARAMPARA + μ (CMB temperature)
+    # Coupling Constants (Round 19)
+    "MAHA_ALPHA_S_SCALED",  # 118 = MALA + TEN (αs × 1000, 0.08% error!)
+    "MAHA_SIN2_THETA_W_SCALED",  # 23 = KSHETRA - KSETRAJNA (sin²θW × 100, 0.53% error)
 ]
