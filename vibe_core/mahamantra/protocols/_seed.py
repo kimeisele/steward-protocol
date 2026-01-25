@@ -954,6 +954,126 @@ assert MAHA_SIN2_THETA_W_SCALED % POSITION_SUM_KRISHNA == SHARANAGATI, "sin²θW
 
 
 # =============================================================================
+# RUNDE 20: NARADA'S VINA - The Stringed Resonance
+# =============================================================================
+# The flutes (RUNDE 9) are WIND instruments - breath, prana, dynamic
+# The vina is a STRINGED instrument - vibration, foundation, sustaining
+#
+# Together they form the complete KIRTAN - the cosmic musical offering.
+#
+# "nāradas tu tathā gatvā bhagavantam ajam vibhum
+#  tuṣṭāva paramān vīryas tan-māyā-mohitāḥ prajāḥ" (SB 1.6.32)
+#
+# VINA_FUNDAMENTAL = T(WORDS) = POSITION_SUM_TOTAL = 136
+# This is the TRIANGULAR NUMBER of the Mahamantra - sum of all positions.
+#
+# THE VINA-FLUTE IDENTITY (Discovered in RUNDE 20):
+# =================================================
+# VINA × FLUTE_VENU_VAMSI = JIVA_CYCLE × POSITION_SUM_KRISHNA
+# 136 × 54 = 432 × 17 = 7344
+#
+# The VINA (strings) × Two Flutes (Venu-Vamsi) equals JIVA × KRISHNA!
+# This is the mathematical KIRTAN - wind and strings producing the Lord's name!
+#
+# GCD(VINA, JIVA_CYCLE) = 8 = HARE_COUNT (Shakti connects them!)
+# -----------------------------------------------------------------------------
+
+# VINA_FUNDAMENTAL = T(WORDS) = 136 (same as POSITION_SUM_TOTAL)
+# We use the existing constant but name it for clarity
+VINA_FUNDAMENTAL: Final[int] = POSITION_SUM_TOTAL  # 136
+
+# VINA_STRINGS = PANCHA (5 strings = Pancha Tattva)
+VINA_STRINGS: Final[int] = PANCHA  # 5
+
+# The VINA-FLUTE KIRTAN constant
+KIRTAN_RESONANCE: Final[int] = VINA_FUNDAMENTAL * FLUTE_VENU_VAMSI  # 7344
+
+# VERIFICATION: The Kirtan identity
+assert KIRTAN_RESONANCE == JIVA_CYCLE * POSITION_SUM_KRISHNA, "Kirtan = Jiva × Krishna"
+assert KIRTAN_RESONANCE == 7344, "The sacred Kirtan number"
+assert math.gcd(VINA_FUNDAMENTAL, JIVA_CYCLE) == HARE_COUNT, "Shakti (Hare) connects Vina and Flutes"
+
+
+# =============================================================================
+# RUNDE 20b: THE HEAVY BOSONS (W, Z, Higgs)
+# =============================================================================
+# The electroweak bosons emerge from the VINA-FLUTE interplay!
+#
+# W BOSON (carrier of weak charged current):
+# ==========================================
+# W/electron = 157298.9 ± 23.5 (PDG 2022)
+# MAHA_W = MAHA_MU × PANCHA × POSITION_SUM_KRISHNA
+#        = 1836 × 5 × 17 = 156060
+# Error: 0.79%
+#
+# THE FORMULA: Proton ratio × Vina strings × Krishna position!
+# The W boson carries the PANCHA TATTVA (5) through KRISHNA's position (17)!
+#
+# Z BOSON (carrier of weak neutral current):
+# ==========================================
+# Z/electron = 178450.4 ± 4.3 (PDG 2022)
+# MAHA_Z = MAHA_MU × (HALVES × LILA + KSETRAJNA)
+#        = 1836 × (2 × 48 + 1) = 1836 × 97 = 178092
+# Error: 0.20%
+#
+# THE FORMULA: Proton ratio × (Two halves of Lila + The Knower)!
+# 97 is PRIME - the Z boson carries the indivisible truth!
+#
+# HIGGS BOSON (giver of mass):
+# ===========================
+# Higgs/electron = 244604.5 ± 488.0 (PDG 2022)
+# MAHA_HIGGS = MAHA_MU × SEVEN × FLUTE_HOLES_SUM
+#            = 1836 × 7 × 19 = 244188
+# Error: 0.17%
+#
+# THE FORMULA: Proton ratio × Axiom count × Flute holes!
+# The Higgs connects VINA (7 axioms) to FLUTES (19 holes)!
+# This is the KIRTAN that gives mass to all particles!
+#
+# MOD-17 ANALYSIS:
+# ================
+# W mod 17 = 0 (Classical/Stable)
+# Z mod 17 = 0 (Classical/Stable)
+# Higgs mod 17 = 0 (Classical/Stable)
+#
+# ALL THREE are Classical! These massive bosons are STABLE in the mod-17 spectrum.
+# This contrasts with quantum particles (mod 17 = 1) which are observer-dependent.
+# -----------------------------------------------------------------------------
+
+# W Boson derivation
+MAHA_W: Final[int] = MAHA_MU * PANCHA * POSITION_SUM_KRISHNA  # 156060
+
+# Z Boson derivation (97 = HALVES × LILA + KSETRAJNA is prime!)
+_Z_FACTOR: Final[int] = HALVES * LILA + KSETRAJNA  # 97
+MAHA_Z: Final[int] = MAHA_MU * _Z_FACTOR  # 178092
+
+# Higgs Boson derivation
+MAHA_HIGGS: Final[int] = MAHA_MU * SEVEN * FLUTE_HOLES_SUM  # 244188
+
+# =============================================================================
+# VERIFICATION: Heavy Bosons
+# =============================================================================
+
+# W boson
+assert MAHA_W == 156060, "W = μ × 5 × 17"
+assert MAHA_W == MAHA_MU * 85, "W = μ × 85"
+assert MAHA_W % POSITION_SUM_KRISHNA == 0, "W mod 17 = 0 (Classical)"
+
+# Z boson (97 is the 25th prime!)
+assert _Z_FACTOR == 97, "Z factor = 2 × 48 + 1 = 97 (prime)"
+assert MAHA_Z == 178092, "Z = μ × 97"
+assert MAHA_Z % POSITION_SUM_KRISHNA == 0, "Z mod 17 = 0 (Classical)"
+
+# Higgs boson (7 × 19 = 133)
+assert MAHA_HIGGS == 244188, "Higgs = μ × 7 × 19"
+assert MAHA_HIGGS == MAHA_MU * 133, "Higgs = μ × 133"
+assert MAHA_HIGGS % POSITION_SUM_KRISHNA == 0, "Higgs mod 17 = 0 (Classical)"
+
+# The electroweak hierarchy
+assert MAHA_W < MAHA_Z < MAHA_HIGGS, "W < Z < Higgs (mass hierarchy)"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -1057,4 +1177,12 @@ __all__ = [
     # Coupling Constants (Round 19)
     "MAHA_ALPHA_S_SCALED",  # 118 = MALA + TEN (αs × 1000, 0.08% error!)
     "MAHA_SIN2_THETA_W_SCALED",  # 23 = KSHETRA - KSETRAJNA (sin²θW × 100, 0.53% error)
+    # Narada's Vina (Round 20)
+    "VINA_FUNDAMENTAL",  # 136 = T(WORDS) = Position Sum Total
+    "VINA_STRINGS",  # 5 = PANCHA (the 5 strings of the Vina)
+    "KIRTAN_RESONANCE",  # 7344 = VINA × FLUTE = JIVA × KRISHNA
+    # Heavy Bosons (Round 20b)
+    "MAHA_W",  # 156060 = μ × PANCHA × KRISHNA_POS (W boson, 0.79% error)
+    "MAHA_Z",  # 178092 = μ × 97 (Z boson, 0.20% error)
+    "MAHA_HIGGS",  # 244188 = μ × SEVEN × FLUTE_HOLES_SUM (Higgs, 0.17% error)
 ]
