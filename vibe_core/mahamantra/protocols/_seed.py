@@ -1098,6 +1098,46 @@ KARTALS_PAIR: Final[int] = HALVES  # 2 (a pair of hand cymbals)
 
 
 # =============================================================================
+# RUNDE 22: TALA - The Rhythmic Cycle (TEENTAL)
+# =============================================================================
+# TEENTAL is the most common Tala in North Indian classical music and kirtan.
+# It has 16 beats (Matra) - the SAME as the number of words in the Mahamantra!
+#
+# Structure of Teental:
+#   Vibhag 1: Dha Dhin Dhin Dha  (beats 1-4)   ← SAM (main beat)
+#   Vibhag 2: Dha Dhin Dhin Dha  (beats 5-8)
+#   Vibhag 3: Dha Tin  Tin  Ta   (beats 9-12)  ← KHALI (empty beat)
+#   Vibhag 4: Ta  Dhin Dhin Dha  (beats 13-16)
+#
+# THE MAHAMANTRA IS A COMPLETE TALA CYCLE:
+# Each word falls on one beat. One recitation = one rhythmic cycle!
+#
+# SAM POSITIONS: 1, 5, 9, 13 (beginning of each Vibhag)
+# Sum of SAM positions = 1 + 5 + 9 + 13 = 28 = T(7) = T(SEVEN)
+# This is NOT trivial - it connects rhythm to the axiom count!
+# -----------------------------------------------------------------------------
+
+# TEENTAL structure (genuine derivation - Teental IS used for kirtan)
+TEENTAL_MATRA: Final[int] = WORDS  # 16 beats = 16 words
+VIBHAG_COUNT: Final[int] = QUARTERS  # 4 sections
+MATRA_PER_VIBHAG: Final[int] = QUARTERS  # 4 beats per section
+
+# SAM (main beat) positions: 1, 5, 9, 13
+# SAM_POSITION(n) = KSETRAJNA + n × QUARTERS for n = 0,1,2,3
+SAM_SUM: Final[int] = _triangular(SEVEN)  # 28 = T(7) = 1+5+9+13
+
+# KHALI (empty/unaccented beat) position
+KHALI_POSITION: Final[int] = NAVA  # 9 (beat 9 is the khali in Teental)
+
+# VERIFICATION: Tala structure
+assert TEENTAL_MATRA == WORDS, "Teental Matra = WORDS = 16"
+assert TEENTAL_MATRA == VIBHAG_COUNT * MATRA_PER_VIBHAG, "16 = 4 × 4"
+assert SAM_SUM == 28, "SAM positions sum = T(7) = 28"
+assert SAM_SUM == sum(KSETRAJNA + i * QUARTERS for i in range(QUARTERS)), "SAM = 1+5+9+13"
+assert KHALI_POSITION == NAVA, "KHALI at beat 9 = NAVA"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -1212,4 +1252,10 @@ __all__ = [
     # Kirtan Instruments (Round 21) - Physical facts only
     "MRIDANGA_HEADS",  # 2 = HALVES (two drum heads - physical fact)
     "KARTALS_PAIR",  # 2 = HALVES (pair of cymbals - physical fact)
+    # Tala - Rhythmic Cycle (Round 22)
+    "TEENTAL_MATRA",  # 16 = WORDS (beats in Teental = words in Mahamantra)
+    "VIBHAG_COUNT",  # 4 = QUARTERS (sections in Teental)
+    "MATRA_PER_VIBHAG",  # 4 = QUARTERS (beats per section)
+    "SAM_SUM",  # 28 = T(SEVEN) (sum of SAM beat positions)
+    "KHALI_POSITION",  # 9 = NAVA (the unaccented beat)
 ]
