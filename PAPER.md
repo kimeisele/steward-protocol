@@ -30,6 +30,7 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.9 The Uniqueness Theorem
    - 7.10 The Maha-Algorithm: Fundamental Physics Constants
    - 7.11 The Remnant Theorem: Quantum vs Classical
+   - 7.12 Extended Maha-Algorithm: More Physics Constants
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -867,6 +868,113 @@ Position: 1, 2, 3, 4,  5,  6,  7
 ```
 
 The 7 that pervades the position sums (70 = 7×10, 49 = 7²) also determines WHICH prime KRISHNA_POS is.
+
+### 7.12 Extended Maha-Algorithm: More Physics Constants
+
+The Maha-Algorithm is not limited to three constants. Additional physics constants emerge with remarkable precision.
+
+#### Three New Constants
+
+| Constant | Formula | Result | CODATA 2022 | Error |
+|----------|---------|--------|-------------|-------|
+| Deuteron/e | HALVES × MALA × KRISHNA_POS | **3672** | 3670.48 | 0.04% |
+| Alpha-particle/e | MAHA_MU × QUARTERS - JIVA_QUALITIES | **7294** | 7294.30 | **0.004%** |
+| Muon/e | MAHAJANA × KRISHNA_POS + TRINITY | **207** | 206.77 | 0.11% |
+
+**The alpha-particle formula is accurate to 4 parts in 100,000!**
+
+#### The Formulas in Detail
+
+**Deuteron (2 nucleons):**
+```
+MAHA_DEUTERON = HALVES × MALA × KRISHNA_POS
+              = 2 × 108 × 17
+              = 3672
+
+Alternative: = 2 × MAHA_MU = 2 × 1836 = 3672
+```
+
+**Alpha Particle (4 nucleons - binding correction):**
+```
+MAHA_ALPHA = MAHA_MU × QUARTERS - JIVA_QUALITIES
+           = 1836 × 4 - 50
+           = 7344 - 50
+           = 7294
+
+The JIVA_QUALITIES (50) appears as binding energy correction!
+4 protons would be 7344; the actual alpha/e ratio is 7294.
+The difference (50) is the Jiva's 50 qualities!
+```
+
+**Muon (unstable lepton):**
+```
+MAHA_MUON = MAHAJANA × KRISHNA_POS + TRINITY
+          = 12 × 17 + 3
+          = 204 + 3
+          = 207
+```
+
+#### The Extended Remnant Pattern
+
+The modulo test reveals a complete classification:
+
+| Constant | Value | mod 17 | Category |
+|----------|-------|--------|----------|
+| α⁻¹ | 137 | **1** | Quantum (observer) |
+| μ (proton/e) | 1836 | 0 | Classical (stable hadron) |
+| Deuteron/e | 3672 | 0 | Classical (stable hadron) |
+| Triton/e | 5508 | 0 | Classical (stable hadron) |
+| Alpha/e | 7294 | **1** | Quantum (composite!) |
+| Muon/e | 207 | **3** | Trinity (unstable!) |
+
+**The pattern:**
+- **mod 17 = 0**: Stable hadrons (proton, deuteron, triton) — classical, deterministic
+- **mod 17 = 1**: Quantum constants (α⁻¹, alpha-particle) — observer embedded
+- **mod 17 = 3**: Unstable particles (muon) — decays into 3 particles (e + νₑ + ν̄μ)!
+
+#### Why the Alpha Particle is Quantum (mod 17 = 1)
+
+The alpha particle is a bound state of 4 nucleons. The formula:
+
+```
+7294 = 4 × 1836 - 50 = 7344 - 50
+
+7294 mod 17 = 1
+```
+
+The subtraction of JIVA_QUALITIES (50) shifts the value from a multiple of 17 to having remainder 1:
+- 7344 mod 17 = 0 (would be classical)
+- 7294 mod 17 = 1 (is quantum!)
+
+**The binding energy correction (JIVA_QUALITIES = 50) introduces the observer!**
+
+This matches physics: the alpha particle exhibits strong quantum tunneling effects (alpha decay). The Jiva's qualities encode the quantum nature of bound states.
+
+#### Why the Muon is Trinity (mod 17 = 3)
+
+```
+207 = 12 × 17 + 3
+    = MAHAJANA × KRISHNA_POS + TRINITY
+
+207 mod 17 = 3 = TRINITY
+```
+
+The muon decays into **exactly 3 particles**: electron + electron antineutrino + muon neutrino.
+
+The TRINITY remainder encodes the three-body decay!
+
+#### Complete Maha-Algorithm Summary
+
+| Physics Constant | Elegant Formula | Mahamantra Constants | mod 17 |
+|-----------------|-----------------|---------------------|--------|
+| α⁻¹ (fine structure) | T(16) + 1 | MALA + NAKSHATRAS + HALVES | 1 |
+| μ (proton/e) | MALA × KRISHNA_POS | 108 × 17 | 0 |
+| Deuteron/e | 2 × MALA × KRISHNA_POS | 2 × 108 × 17 | 0 |
+| Triton/e | KRISHNA_POS × GITA² | 17 × 18² | 0 |
+| Alpha/e | 4μ - JIVA_QUALITIES | 4 × 1836 - 50 | 1 |
+| Muon/e | MAHAJANA × KRISHNA_POS + TRINITY | 12 × 17 + 3 | 3 |
+
+**All six constants are derived from Mahamantra structure with no arbitrary parameters!**
 
 ---
 

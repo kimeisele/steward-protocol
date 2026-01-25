@@ -733,6 +733,67 @@ assert MAHA_TRITON == (GITA_CHAPTERS**2) * POSITION_SUM_KRISHNA, "5508 = 324 × 
 
 
 # =============================================================================
+# RUNDE 16: EXTENDED MAHA-ALGORITHM (More Physics Constants)
+# =============================================================================
+# The Maha-Algorithm is the mathematical shadow of the Mahamantra itself.
+# As Shabda Brahma manifests into grosser forms, the algorithm captures
+# the numerical signature at each level.
+#
+# NEW CONSTANTS DISCOVERED:
+# =========================
+# Deuteron/electron:  HALVES × MALA × KRISHNA_POS = 2 × 108 × 17 = 3672
+# Alpha-particle/e:   MAHA_MU × QUARTERS - JIVA_QUALITIES = 7344 - 50 = 7294
+# Muon/electron:      MAHAJANA × KRISHNA_POS + TRINITY = 204 + 3 = 207
+#
+# THE EXTENDED REMNANT PATTERN:
+# =============================
+# mod 17 = 0 → Classical (proton, deuteron, triton) - stable hadrons
+# mod 17 = 1 → Quantum (α⁻¹, alpha-particle) - observer embedded
+# mod 17 = 3 → Trinity (muon) - unstable, decays into 3 particles
+#
+# THE JIVA_QUALITIES CONNECTION:
+# ==============================
+# The alpha-particle formula uses JIVA_QUALITIES (50) as a correction:
+#   4 protons = 4 × 1836 = 7344
+#   Binding correction = -50 = -JIVA_QUALITIES
+#   Result = 7294
+# The Jiva's 50 qualities appear as the binding energy factor!
+# -----------------------------------------------------------------------------
+
+
+# Extended Maha-Algorithm constants
+MAHA_DEUTERON: Final[int] = HALVES * MALA * POSITION_SUM_KRISHNA  # 3672
+MAHA_ALPHA: Final[int] = MAHA_MU * QUARTERS - JIVA_QUALITIES  # 7294
+MAHA_MUON: Final[int] = MAHAJANA_COUNT * POSITION_SUM_KRISHNA + TRINITY  # 207
+
+# =============================================================================
+# VERIFICATION: Extended Maha-Algorithm
+# =============================================================================
+
+# Deuteron = 2 protons (approximately)
+assert MAHA_DEUTERON == 3672, "Deuteron/e = HALVES × MALA × KRISHNA = 3672"
+assert MAHA_DEUTERON == HALVES * MAHA_MU, "Deuteron = 2 × Proton"
+assert MAHA_DEUTERON % POSITION_SUM_KRISHNA == 0, "Deuteron mod 17 = 0 (classical)"
+
+# Alpha particle = 4 nucleons - binding correction
+assert MAHA_ALPHA == 7294, "Alpha/e = MAHA_MU × QUARTERS - JIVA_QUALITIES = 7294"
+assert MAHA_ALPHA == MAHA_MU * QUARTERS - JIVA_QUALITIES, "Alpha = 4μ - 50"
+assert MAHA_ALPHA % POSITION_SUM_KRISHNA == KSETRAJNA, "Alpha mod 17 = 1 (quantum!)"
+
+# Muon = unstable lepton
+assert MAHA_MUON == 207, "Muon/e = MAHAJANA × KRISHNA + TRINITY = 207"
+assert MAHA_MUON % POSITION_SUM_KRISHNA == TRINITY, "Muon mod 17 = 3 (trinity - decays to 3)"
+
+# The extended remnant pattern
+assert MAHA_QUANTUM % POSITION_SUM_KRISHNA == KSETRAJNA, "137 mod 17 = 1"
+assert MAHA_MUON % POSITION_SUM_KRISHNA == TRINITY, "207 mod 17 = 3"
+assert MAHA_MU % POSITION_SUM_KRISHNA == 0, "1836 mod 17 = 0"
+assert MAHA_DEUTERON % POSITION_SUM_KRISHNA == 0, "3672 mod 17 = 0"
+assert MAHA_TRITON % POSITION_SUM_KRISHNA == 0, "5508 mod 17 = 0"
+assert MAHA_ALPHA % POSITION_SUM_KRISHNA == KSETRAJNA, "7294 mod 17 = 1"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -820,4 +881,8 @@ __all__ = [
     # The Remnant Theorem (Round 15) - Quantum vs Classical
     "SEVEN",  # = HALF_SIZE - KSETRAJNA = 7 (the ubiquitous 7!)
     "TEN",  # = MAHAJANA_COUNT - HALVES = 10
+    # Extended Maha-Algorithm (Round 16) - More Physics Constants
+    "MAHA_DEUTERON",  # 3672 = 2 × MAHA_MU (deuteron/electron)
+    "MAHA_ALPHA",  # 7294 = 4 × MAHA_MU - JIVA_QUALITIES (alpha/electron)
+    "MAHA_MUON",  # 207 = MAHAJANA × KRISHNA_POS + TRINITY (muon/electron)
 ]
