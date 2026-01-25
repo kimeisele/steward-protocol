@@ -43,6 +43,7 @@ from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 # From endpoints.py (GADADHARA - the API)
 from .endpoints import (
     generate_text_report,
+    get_axiom_tree_report,
     get_axioms,
     get_constant,
     get_coverage,
@@ -76,8 +77,11 @@ from .knowledge import (
 # From tattvas.py (CHAITANYA - the 5 strings)
 from .tattvas import (
     STRING_FUNCTIONS,
+    AxiomNode,
     CoverageReport,
     ValidationReport,
+    get_axiom_count_derivation,
+    get_axiom_tree,
     string_advaita,
     string_chaitanya,
     string_gadadhara,
@@ -120,15 +124,18 @@ __all__ = [
     "Prediction",
     "GENERATORS",
     "generate_all_predictions",
-    # Tattvas (CHAITANYA - 5 strings)
+    # Tattvas (CHAITANYA - 5 strings + Axiom Tree)
     "CoverageReport",
     "ValidationReport",
+    "AxiomNode",
     "STRING_FUNCTIONS",
     "string_chaitanya",
     "string_nityananda",
     "string_advaita",
     "string_gadadhara",
     "string_srivasa",
+    "get_axiom_tree",
+    "get_axiom_count_derivation",
     # Validation (SRIVASA)
     "MOD17_MEANINGS",
     "VALIDATORS",
@@ -136,6 +143,7 @@ __all__ = [
     "run_full_validation",
     # Endpoints (GADADHARA)
     "get_axioms",
+    "get_axiom_tree_report",
     "get_derived",
     "get_remaining",
     "get_coverage",
