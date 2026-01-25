@@ -84,6 +84,9 @@ from vibe_core.mahamantra.protocols._seed import (
     KRISHNA_COUNT as _PROTO_KRISHNA_COUNT,
 )
 from vibe_core.mahamantra.protocols._seed import (
+    KSETRAJNA as _PROTO_KSETRAJNA,
+)
+from vibe_core.mahamantra.protocols._seed import (
     LILA as _PROTO_LILA,
 )
 from vibe_core.mahamantra.protocols._seed import (
@@ -341,6 +344,15 @@ assert len(SharanagatiLimb) == SHARANAGATI  # 6
 
 
 # =============================================================================
+# DERIVED: KSETRAJNA (1) - Der Knower (DERIVED!)
+# =============================================================================
+# "kṣetra-jñaṁ cāpi māṁ viddhi" (BG 13.3) - "Know Me as the Knower"
+# KSETRAJNA = TRINITY - HALVES = 3 - 2 = 1
+# The ONE Knower emerges from 3 Names minus 2 Halves
+
+KSETRAJNA: Final[int] = TRINITY - HALVES  # 3 - 2 = 1 (DERIVED!)
+
+# =============================================================================
 # DERIVED: PARAMPARA (37) - Der Link zur Disciplic Succession
 # =============================================================================
 # PARAMPARA from Sankhya (BG 13):
@@ -349,8 +361,6 @@ assert len(SharanagatiLimb) == SHARANAGATI  # 6
 # NOTE: KSHETRA_GAD (36) was REMOVED - it was Shaiva (Kashmir Shaivism 36 tattvas),
 # NOT Gaudiya Vaishnava. The "36+1=37" path was INVENTED, not from shastra.
 # Only the Sankhya path (24+12+1=37) is legitimate.
-
-KSETRAJNA: Final[int] = 1  # Der Knower (Krishna) - BG 13.1-2
 # MAHAJANA_COUNT imported from protocols/_seed.py (SSOT) = 12 Mahajanas
 
 
@@ -607,6 +617,7 @@ assert HALVES == _PROTO_HALVES, "SSOT violation: HALVES != protocols/_seed.py"
 assert HALF_SIZE == _PROTO_HALF_SIZE, "SSOT violation: HALF_SIZE != protocols/_seed.py"
 assert HARE_COUNT == _PROTO_HARE_COUNT, "SSOT violation: HARE_COUNT != protocols/_seed.py"
 assert KRISHNA_COUNT == _PROTO_KRISHNA_COUNT, "SSOT violation: KRISHNA_COUNT != protocols/_seed.py"
+assert KSETRAJNA == _PROTO_KSETRAJNA, "SSOT violation: KSETRAJNA != protocols/_seed.py"
 assert RAMA_COUNT == _PROTO_RAMA_COUNT, "SSOT violation: RAMA_COUNT != protocols/_seed.py"
 assert SECONDS_PER_DAY == _PROTO_SECONDS_PER_DAY, "SSOT violation: SECONDS_PER_DAY != protocols/_seed.py"
 
