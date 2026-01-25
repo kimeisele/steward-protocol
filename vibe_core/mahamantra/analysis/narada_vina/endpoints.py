@@ -34,8 +34,11 @@ from .engine import Prediction, generate_all_predictions
 from .knowledge import KNOWN_CONSTANTS, CoverageStatus, PhysicsConstant
 from .tattvas import (
     STRING_FUNCTIONS,
+    AxiomNode,
     CoverageReport,
     ValidationReport,
+    get_axiom_count_derivation,
+    get_axiom_tree,
     string_advaita,
     string_chaitanya,
     string_gadadhara,
@@ -106,6 +109,16 @@ def validation_to_dict(v: ValidationReport) -> Dict[str, Any]:
     }
 
 
+def axiom_to_dict(a: AxiomNode) -> Dict[str, Any]:
+    """Convert AxiomNode to JSON-serializable dict."""
+    return {
+        "name": a.name,
+        "value": a.value,
+        "description": a.description,
+        "first_derivations": a.first_derivations,
+    }
+
+
 # =============================================================================
 # API ENDPOINTS
 # =============================================================================
@@ -121,6 +134,29 @@ def get_axioms() -> Dict[str, Any]:
         "string": "CHAITANYA",
         "meaning": "The Source (Identity)",
         "axioms": string_chaitanya(),
+    }
+
+
+def get_axiom_tree_report() -> Dict[str, Any]:
+    """
+    Endpoint: GET /axiom-tree
+
+    Returns the complete derivation tree of the 7 Mahamantra axioms.
+
+    ABHINNA PRINCIPLE: Everything derived from the Mahamantra IS
+    Chaitanya Mahaprabhu - non-different from the Source.
+
+    "sarvasya cāhaṁ hṛdi sanniviṣṭo" (BG 15.15)
+    "I am seated in everyone's heart"
+    """
+    tree = get_axiom_tree()
+    return {
+        "title": "THE CHAITANYA EXPANSION",
+        "principle": "ABHINNA - All derivations are non-different from Chaitanya",
+        "quote": "yad yad vibhūtimat sattvaṁ... mama tejo-'ṁśa-sambhavam (BG 10.41)",
+        "axiom_count_derivation": get_axiom_count_derivation(),
+        "note": "SEVEN = PANCHA + HALVES - Even the axiom count is DERIVED!",
+        "axioms": [axiom_to_dict(a) for a in tree],
     }
 
 
@@ -341,8 +377,10 @@ __all__ = [
     "prediction_to_dict",
     "coverage_to_dict",
     "validation_to_dict",
+    "axiom_to_dict",
     # Endpoints
     "get_axioms",
+    "get_axiom_tree_report",
     "get_derived",
     "get_remaining",
     "get_coverage",
