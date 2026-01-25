@@ -1361,6 +1361,59 @@ assert MAHA_VCB_SCALED * _VCB_DIVISOR == POSITION_SUM_KRISHNA * 10000, "V_cb pre
 
 
 # =============================================================================
+# RUNDE 26: COSMOLOGICAL CONSTANTS (Matter and Dark Energy)
+# =============================================================================
+# The universe's composition parameters Ω_m and Ω_Λ can be approximated.
+# These are CANDIDATES (1-5% error) not full derivations.
+#
+# NOTE: The flatness constraint Ω_m + Ω_Λ ≈ 1.0 comes from inflation theory.
+#
+# MATTER DENSITY (Ω_m):
+# =====================
+# Ω_m = 0.315 ± 0.007 (Planck 2018)
+# CANDIDATE:
+#   MAHA_OMEGA_M_SCALED = AKSARA_COUNT - KSETRAJNA = 32 - 1 = 31
+#   Actual × 100 = 31.5
+#   Error: 1.59%
+#
+# THE FORMULA: Syllables (32) minus Observer (1) = dark matter without consciousness!
+#
+# DARK ENERGY (Ω_Λ):
+# ==================
+# Ω_Λ = 0.685 ± 0.007 (Planck 2018)
+# CANDIDATE:
+#   MAHA_OMEGA_L_SCALED = QUALITIES + TRINITY - KSETRAJNA = 64 + 3 - 1 = 66
+#   Actual × 100 = 68.5
+#   Error: 3.65%
+#
+# ALTERNATIVE:
+#   MAHA_OMEGA_L_SCALED = NADI_RESONANCE - SHARANAGATI = 72 - 6 = 66
+#   Same result, different path!
+#
+# NOTE: These are CANDIDATES pending better derivations.
+# -----------------------------------------------------------------------------
+
+# Matter density (scaled by 100)
+MAHA_OMEGA_M_SCALED: Final[int] = AKSARA_COUNT - KSETRAJNA  # 31
+
+# Dark energy density (scaled by 100)
+MAHA_OMEGA_L_SCALED: Final[int] = NADI_RESONANCE - SHARANAGATI  # 66
+
+# =============================================================================
+# VERIFICATION: Cosmological Constants
+# =============================================================================
+
+# Matter density
+assert MAHA_OMEGA_M_SCALED == 31, "Ω_m × 100 = AKSARA - KSETRAJNA = 31"
+
+# Dark energy
+assert MAHA_OMEGA_L_SCALED == 66, "Ω_Λ × 100 = NADI - SHARANAGATI = 66"
+
+# Flatness check: 31 + 66 = 97 (not 100, but close)
+# The difference (3) = TRINITY - error from the approximation
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -1498,4 +1551,7 @@ __all__ = [
     "MAHA_VUS_SCALED",  # 225 = same as Cabibbo (V_us, 0.31% error)
     "MAHA_VCB_SCALED",  # 425 = 17×10000/400 (V_cb, 0.71% error)
     "MAHA_VUB_SCALED",  # 393 = 17×100000/4320 (V_ub, 0.12% error)
+    # Cosmological Constants (Round 26) - CANDIDATES (1-5% error)
+    "MAHA_OMEGA_M_SCALED",  # 31 = AKSARA - KSETRAJNA (Ω_m, 1.59% error)
+    "MAHA_OMEGA_L_SCALED",  # 66 = NADI - SHARANAGATI (Ω_Λ, 3.65% error)
 ]

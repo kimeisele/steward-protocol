@@ -41,6 +41,8 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_MU,
     MAHA_MUON,
     MAHA_NEUTRON,
+    MAHA_OMEGA_L_SCALED,
+    MAHA_OMEGA_M_SCALED,
     MAHA_PION_CHARGED,
     MAHA_PION_NEUTRAL,
     MAHA_QUANTUM,
@@ -424,6 +426,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         0.007,
         "Matter density parameter",
+        maha_value=MAHA_OMEGA_M_SCALED,
+        maha_formula="(AKSARA_COUNT - KSETRAJNA) / 100",
+        maha_error=1.59,
+        status=CoverageStatus.CANDIDATE,
     ),
     "omega_lambda": PhysicsConstant(
         "Omega_Lambda",
@@ -432,6 +438,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         0.007,
         "Dark energy density parameter",
+        maha_value=MAHA_OMEGA_L_SCALED,
+        maha_formula="(NADI_RESONANCE - SHARANAGATI) / 100",
+        maha_error=3.65,
+        status=CoverageStatus.CANDIDATE,
     ),
     # ═══════════════════════════════════════════════════════════════════
     # ATOMIC PHYSICS
