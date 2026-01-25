@@ -44,43 +44,42 @@ from typing import Dict, Final, List, Optional, Tuple
 # =============================================================================
 # SSOT IMPORTS - Everything derived from protocols!
 # =============================================================================
-
 # From seed.py (THE LAW)
 from vibe_core.mahamantra.protocols._seed import PANCHA, QUARTERS
 
+# From language.py (Character mappings with IPA)
+from vibe_core.protocols.language import (
+    CONSONANT_MAPPINGS,
+    VOWEL_MAPPINGS,
+    CharacterMapping,
+)
+
 # From varna.py (Sanskrit phonetics SSOT)
 from vibe_core.protocols.substrate.mantra.varna import (
-    PANCHA_VARGA,
-    KANTHYA_VARGA,
-    TALAVYA_VARGA,
-    MURDHANYA_VARGA,
-    DANTYA_VARGA,
-    OSHTHYA_VARGA,
-    SVARA,
     ANTAHSTHA,
+    DANTYA_VARGA,
+    KANTHYA_VARGA,
+    MURDHANYA_VARGA,
+    OSHTHYA_VARGA,
+    PANCHA_VARGA,
+    SVARA,
+    TALAVYA_VARGA,
     USHMAN,
     Varna,
 )
 
-# From language.py (Character mappings with IPA)
-from vibe_core.protocols.language import (
-    CharacterMapping,
-    VOWEL_MAPPINGS,
-    CONSONANT_MAPPINGS,
-)
-
 # From translation.py (Phoneme with sthana)
 from vibe_core.protocols.translation import (
-    Phoneme,
-    NaturalLanguage,
-    GERMAN_PHONEMES,
     ENGLISH_PHONEMES,
+    GERMAN_PHONEMES,
+    NaturalLanguage,
+    Phoneme,
 )
-
 
 # =============================================================================
 # VARGA INDEX (Derived from PANCHA_VARGA ordering)
 # =============================================================================
+
 
 class VargaIndex(IntEnum):
     """
@@ -88,11 +87,12 @@ class VargaIndex(IntEnum):
 
     DERIVED from the ordering in varna.py, NOT hardcoded!
     """
-    KANTHYA = 0    # Throat   → PANCHA_VARGA[0]
-    TALAVYA = 1    # Palate   → PANCHA_VARGA[1]
+
+    KANTHYA = 0  # Throat   → PANCHA_VARGA[0]
+    TALAVYA = 1  # Palate   → PANCHA_VARGA[1]
     MURDHANYA = 2  # Retroflex → PANCHA_VARGA[2]
-    DANTYA = 3     # Teeth    → PANCHA_VARGA[3]
-    OSHTHYA = 4    # Lips     → PANCHA_VARGA[4]
+    DANTYA = 3  # Teeth    → PANCHA_VARGA[3]
+    OSHTHYA = 4  # Lips     → PANCHA_VARGA[4]
 
 
 # Verify against PANCHA from seed.py
@@ -109,21 +109,17 @@ STHANA_TO_VARGA: Final[Dict[str, VargaIndex]] = {
     "kaṇṭha": VargaIndex.KANTHYA,
     "kantha": VargaIndex.KANTHYA,
     "kaṇṭhya": VargaIndex.KANTHYA,
-
     # Palate/Palatal
     "tālu": VargaIndex.TALAVYA,
     "talu": VargaIndex.TALAVYA,
     "tālavya": VargaIndex.TALAVYA,
-
     # Retroflex/Cerebral
     "mūrdha": VargaIndex.MURDHANYA,
     "murdha": VargaIndex.MURDHANYA,
     "mūrdhanya": VargaIndex.MURDHANYA,
-
     # Dental/Teeth
     "danta": VargaIndex.DANTYA,
     "dantya": VargaIndex.DANTYA,
-
     # Labial/Lips
     "oṣṭha": VargaIndex.OSHTHYA,
     "ostha": VargaIndex.OSHTHYA,
@@ -142,44 +138,39 @@ CATEGORY_TO_VARGA: Final[Dict[str, VargaIndex]] = {
     "velar_aspirated": VargaIndex.KANTHYA,
     "glottal": VargaIndex.KANTHYA,
     "uvular": VargaIndex.KANTHYA,
-
     # Palate/Palatal (TALAVYA)
     "palatal": VargaIndex.TALAVYA,
     "palatal_aspirated": VargaIndex.TALAVYA,
     "palato-alveolar": VargaIndex.TALAVYA,
-
     # Retroflex/Cerebral (MURDHANYA)
     "retroflex": VargaIndex.MURDHANYA,
     "retroflex_sibilant": VargaIndex.MURDHANYA,
     "retroflex_aspirated": VargaIndex.MURDHANYA,
-
     # Dental/Teeth (DANTYA)
     "dental": VargaIndex.DANTYA,
     "dental_aspirated": VargaIndex.DANTYA,
     "dental_nasal": VargaIndex.DANTYA,
     "alveolar": VargaIndex.DANTYA,
     "sibilant": VargaIndex.DANTYA,  # s is dental sibilant
-
     # Labial/Lips (OSHTHYA)
     "labial": VargaIndex.OSHTHYA,
     "labial_aspirated": VargaIndex.OSHTHYA,
     "labial_nasal": VargaIndex.OSHTHYA,
     "bilabial": VargaIndex.OSHTHYA,
-
     # Semivowels (by articulation point)
     "semivowel": VargaIndex.TALAVYA,  # Default, but should check specific
-
     # Vowels (by quality)
     "short_vowel": VargaIndex.KANTHYA,  # 'a' is guttural
-    "long_vowel": VargaIndex.KANTHYA,   # Default
-    "diphthong": VargaIndex.TALAVYA,    # ai, au involve palate
-    "vowel_r": VargaIndex.MURDHANYA,    # ṛ is retroflex
+    "long_vowel": VargaIndex.KANTHYA,  # Default
+    "diphthong": VargaIndex.TALAVYA,  # ai, au involve palate
+    "vowel_r": VargaIndex.MURDHANYA,  # ṛ is retroflex
 }
 
 
 # =============================================================================
 # BUILD PHONEME → VARGA FROM EXISTING PROTOCOL DATA
 # =============================================================================
+
 
 def _build_phoneme_varga_from_protocols() -> Dict[str, VargaIndex]:
     """
@@ -247,11 +238,11 @@ def _build_phoneme_varga_from_protocols() -> Dict[str, VargaIndex]:
     # ल (la) = dental → DANTYA
     # व (va) = labial → OSHTHYA
     semivowel_varga = {
-        "y": VargaIndex.TALAVYA,    # Palatal
+        "y": VargaIndex.TALAVYA,  # Palatal
         "r": VargaIndex.MURDHANYA,  # Retroflex
-        "l": VargaIndex.DANTYA,     # Dental
-        "v": VargaIndex.OSHTHYA,    # Labial
-        "w": VargaIndex.OSHTHYA,    # W is labial (Western approximation of व)
+        "l": VargaIndex.DANTYA,  # Dental
+        "v": VargaIndex.OSHTHYA,  # Labial
+        "w": VargaIndex.OSHTHYA,  # W is labial (Western approximation of व)
     }
     mapping.update(semivowel_varga)
 
@@ -261,12 +252,12 @@ def _build_phoneme_varga_from_protocols() -> Dict[str, VargaIndex]:
     # स (sa) = dental → DANTYA
     # ह (ha) = glottal → KANTHYA
     sibilant_varga = {
-        "ś": VargaIndex.TALAVYA,    # Palatal sibilant
-        "sh": VargaIndex.TALAVYA,   # Western approximation
+        "ś": VargaIndex.TALAVYA,  # Palatal sibilant
+        "sh": VargaIndex.TALAVYA,  # Western approximation
         "ṣ": VargaIndex.MURDHANYA,  # Retroflex sibilant
         "shh": VargaIndex.MURDHANYA,  # Retroflex (alternative)
-        "s": VargaIndex.DANTYA,     # Dental sibilant
-        "h": VargaIndex.KANTHYA,    # Glottal aspirate
+        "s": VargaIndex.DANTYA,  # Dental sibilant
+        "h": VargaIndex.KANTHYA,  # Glottal aspirate
     }
     mapping.update(sibilant_varga)
 
@@ -284,17 +275,19 @@ PHONEME_TO_VARGA: Final[Dict[str, VargaIndex]] = _build_phoneme_varga_from_proto
 # Each Varga has 5 consonants in fixed order:
 #   [0] unvoiced stop, [1] aspirated, [2] voiced, [3] voiced-aspirated, [4] nasal
 
+
 class SthanaIndex(IntEnum):
     """
     Position within Varga = Energy/Intensity level.
 
     DERIVED from the 5-position structure in PANCHA_VARGA!
     """
-    SPARSHA = 0     # Unvoiced stop → minimal energy (0.2)
-    MAHAPRANA = 1   # Aspirated → expansion energy (0.6)
-    GHOSHAVAT = 2   # Voiced → active energy (0.8)
-    GHOSHMAHA = 3   # Voiced aspirated → maximum energy (1.0)
-    ANUNASIKA = 4   # Nasal → continuous energy (0.5)
+
+    SPARSHA = 0  # Unvoiced stop → minimal energy (0.2)
+    MAHAPRANA = 1  # Aspirated → expansion energy (0.6)
+    GHOSHAVAT = 2  # Voiced → active energy (0.8)
+    GHOSHMAHA = 3  # Voiced aspirated → maximum energy (1.0)
+    ANUNASIKA = 4  # Nasal → continuous energy (0.5)
 
 
 # Verify against PANCHA from seed.py
@@ -302,11 +295,11 @@ assert len(SthanaIndex) == PANCHA, f"SthanaIndex must have {PANCHA} values"
 
 # Sthana to energy multiplier (DERIVED from acoustic physics)
 STHANA_ENERGY: Final[Dict[SthanaIndex, float]] = {
-    SthanaIndex.SPARSHA: 0.2,      # Minimal contact = low energy
-    SthanaIndex.MAHAPRANA: 0.6,    # Aspiration = expansion
-    SthanaIndex.GHOSHAVAT: 0.8,    # Voicing = active
-    SthanaIndex.GHOSHMAHA: 1.0,    # Voiced + aspirated = maximum
-    SthanaIndex.ANUNASIKA: 0.5,    # Continuous nasal = medium
+    SthanaIndex.SPARSHA: 0.2,  # Minimal contact = low energy
+    SthanaIndex.MAHAPRANA: 0.6,  # Aspiration = expansion
+    SthanaIndex.GHOSHAVAT: 0.8,  # Voicing = active
+    SthanaIndex.GHOSHMAHA: 1.0,  # Voiced + aspirated = maximum
+    SthanaIndex.ANUNASIKA: 0.5,  # Continuous nasal = medium
 }
 
 
@@ -317,22 +310,18 @@ STHANA_ENERGY: Final[Dict[SthanaIndex, float]] = {
 
 PRAYATNA_TO_STHANA: Final[Dict[str, SthanaIndex]] = {
     # Contact types
-    "spṛṣṭa": SthanaIndex.SPARSHA,       # Full contact = unvoiced stop
+    "spṛṣṭa": SthanaIndex.SPARSHA,  # Full contact = unvoiced stop
     "sprsta": SthanaIndex.SPARSHA,
     "sparsha": SthanaIndex.SPARSHA,
-
     # Slight contact (fricatives) - map to voiced (medium-high energy)
     "īṣat-spṛṣṭa": SthanaIndex.GHOSHAVAT,
     "isat-sprsta": SthanaIndex.GHOSHAVAT,
-
     # Open (vowels) - map to expansion
     "vivṛta": SthanaIndex.MAHAPRANA,
     "vivrta": SthanaIndex.MAHAPRANA,
-
     # Closed (high vowels) - map to minimal
     "saṁvṛta": SthanaIndex.SPARSHA,
     "samvrta": SthanaIndex.SPARSHA,
-
     # Nasal
     "anunāsika": SthanaIndex.ANUNASIKA,
     "anunasika": SthanaIndex.ANUNASIKA,
@@ -346,32 +335,30 @@ PRAYATNA_TO_STHANA: Final[Dict[str, SthanaIndex]] = {
 
 CATEGORY_TO_STHANA: Final[Dict[str, SthanaIndex]] = {
     # Base categories (unvoiced/neutral) → SPARSHA or GHOSHAVAT
-    "velar": SthanaIndex.SPARSHA,              # k = unvoiced
+    "velar": SthanaIndex.SPARSHA,  # k = unvoiced
     "velar_aspirated": SthanaIndex.MAHAPRANA,  # kh = aspirated
-    "palatal": SthanaIndex.GHOSHAVAT,          # c/j = voiced in common use
+    "palatal": SthanaIndex.GHOSHAVAT,  # c/j = voiced in common use
     "palatal_aspirated": SthanaIndex.GHOSHMAHA,
     "retroflex": SthanaIndex.GHOSHAVAT,
     "retroflex_aspirated": SthanaIndex.GHOSHMAHA,
     "retroflex_sibilant": SthanaIndex.GHOSHAVAT,
-    "dental": SthanaIndex.SPARSHA,             # t = unvoiced
+    "dental": SthanaIndex.SPARSHA,  # t = unvoiced
     "dental_aspirated": SthanaIndex.MAHAPRANA,
-    "dental_nasal": SthanaIndex.ANUNASIKA,     # n = nasal
+    "dental_nasal": SthanaIndex.ANUNASIKA,  # n = nasal
     "alveolar": SthanaIndex.GHOSHAVAT,
-    "sibilant": SthanaIndex.GHOSHAVAT,         # s/sh = fricative
-    "labial": SthanaIndex.SPARSHA,             # p = unvoiced
+    "sibilant": SthanaIndex.GHOSHAVAT,  # s/sh = fricative
+    "labial": SthanaIndex.SPARSHA,  # p = unvoiced
     "labial_aspirated": SthanaIndex.MAHAPRANA,
-    "labial_nasal": SthanaIndex.ANUNASIKA,     # m = nasal
+    "labial_nasal": SthanaIndex.ANUNASIKA,  # m = nasal
     "bilabial": SthanaIndex.GHOSHAVAT,
-    "glottal": SthanaIndex.MAHAPRANA,          # h = aspirate
+    "glottal": SthanaIndex.MAHAPRANA,  # h = aspirate
     "uvular": SthanaIndex.GHOSHAVAT,
-    "semivowel": SthanaIndex.GHOSHAVAT,        # y/r/l/v = voiced
-
+    "semivowel": SthanaIndex.GHOSHAVAT,  # y/r/l/v = voiced
     # Vowel categories (derived from acoustic openness)
-    "short_vowel": SthanaIndex.SPARSHA,        # i/u = closed = minimal
-    "long_vowel": SthanaIndex.MAHAPRANA,       # ā/ī/ū = sustained = expansion
-    "diphthong": SthanaIndex.GHOSHMAHA,        # ai/au = complex = maximum
-    "vowel_r": SthanaIndex.GHOSHAVAT,          # ṛ = retroflex vowel = active
-
+    "short_vowel": SthanaIndex.SPARSHA,  # i/u = closed = minimal
+    "long_vowel": SthanaIndex.MAHAPRANA,  # ā/ī/ū = sustained = expansion
+    "diphthong": SthanaIndex.GHOSHMAHA,  # ai/au = complex = maximum
+    "vowel_r": SthanaIndex.GHOSHAVAT,  # ṛ = retroflex vowel = active
     # Special
     "anusvara": SthanaIndex.ANUNASIKA,
     "visarga": SthanaIndex.MAHAPRANA,
@@ -381,6 +368,7 @@ CATEGORY_TO_STHANA: Final[Dict[str, SthanaIndex]] = {
 # =============================================================================
 # BUILD PHONEME → STHANA FROM EXISTING PROTOCOL DATA
 # =============================================================================
+
 
 def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
     """
@@ -499,11 +487,11 @@ PHONEME_TO_STHANA: Final[Dict[str, SthanaIndex]] = _build_phoneme_sthana_from_pr
 # TALAVYA + MURDHANYA merge → DHARMA (cognitive quarter)
 
 VARGA_TO_QUARTER: Final[Dict[VargaIndex, int]] = {
-    VargaIndex.KANTHYA: 0,    # Throat → GENESIS (system/kernel)
-    VargaIndex.TALAVYA: 1,    # Palate → DHARMA (cognition)
+    VargaIndex.KANTHYA: 0,  # Throat → GENESIS (system/kernel)
+    VargaIndex.TALAVYA: 1,  # Palate → DHARMA (cognition)
     VargaIndex.MURDHANYA: 1,  # Retroflex → DHARMA (LOTUS MERGE: 5→4)
-    VargaIndex.DANTYA: 2,     # Teeth → KARMA (interface/action)
-    VargaIndex.OSHTHYA: 3,    # Lips → MOKSHA (output/liberation)
+    VargaIndex.DANTYA: 2,  # Teeth → KARMA (interface/action)
+    VargaIndex.OSHTHYA: 3,  # Lips → MOKSHA (output/liberation)
 }
 
 # Verify the Lotus algorithm
@@ -514,6 +502,7 @@ assert len(set(VARGA_TO_QUARTER.values())) == QUARTERS, f"Must map to {QUARTERS}
 # PHONETIC TENSOR (Result of analysis)
 # =============================================================================
 
+
 @dataclass
 class PhoneticTensor:
     """
@@ -523,8 +512,9 @@ class PhoneticTensor:
     - 5 Vargas (WHERE - articulation points)
     - 5 Sthanas (HOW - energy/intensity levels)
     """
-    varga_vector: Tuple[float, ...]    # 5 values, one per Varga (WHERE)
-    sthana_vector: Tuple[float, ...]   # 5 values, one per Sthana (HOW)
+
+    varga_vector: Tuple[float, ...]  # 5 values, one per Varga (WHERE)
+    sthana_vector: Tuple[float, ...]  # 5 values, one per Sthana (HOW)
     dominant_varga: VargaIndex
     dominant_sthana: SthanaIndex
     quarter: int  # 0-3 (Mahamantra quarter)
@@ -537,6 +527,7 @@ class PhoneticTensor:
 # =============================================================================
 # UNIVERSAL PHONETIC BRIDGE
 # =============================================================================
+
 
 class UniversalPhoneticBridge:
     """
@@ -585,7 +576,7 @@ class UniversalPhoneticBridge:
 
             # Try digraphs first (ch, th, etc.)
             if i + 2 <= len(text_lower):
-                digraph = text_lower[i:i+2]
+                digraph = text_lower[i : i + 2]
                 if digraph in self._phoneme_to_varga:
                     varga = self._phoneme_to_varga[digraph]
                     sthana = PHONEME_TO_STHANA.get(digraph, SthanaIndex.GHOSHAVAT)

@@ -134,7 +134,7 @@ LEGACY_SYSTEM_COMMANDS: Final[Set[str]] = {
 class MahamantraCLIBridge:
     """
     CLI Bridge - ONE entry point, Krishna routes.
-    
+
     Usage:
         from vibe_core.mahamantra import cli_bridge
 
@@ -257,13 +257,13 @@ class MahamantraCLIBridge:
         if command in LEGACY_SYSTEM_COMMANDS:
             try:
                 from vibe_core.cli.unified_cli import UnifiedCLI
-                
+
                 # We assume UnifiedCLI handles the Balarama wrapping internally
                 unified = UnifiedCLI()
-                
+
                 # UnifiedCLI expects [command, *args]
                 exit_code = unified.run([command] + args)
-                
+
                 return BridgeResult(
                     success=exit_code == 0,
                     exit_code=exit_code,

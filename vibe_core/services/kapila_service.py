@@ -14,20 +14,20 @@ __position__ = 6
 __genesis__ = "0xc30db303"  # GenesisByte: parampara % 37 == 0
 
 import logging
-from typing import Dict, List, Optional, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from vibe_core.protocols.cognition import CognitiveResult, NullCognitive, OperatorCognitiveProtocol, SignedOperatorInput
 from vibe_core.protocols.mahajanas.kapila import (
-    KapilaProtocol,
     AnalysisInput,
     AnalysisResult,
-    OptimizationResult,
-    MetricsResult,
     AnalysisState,
+    KapilaProtocol,
+    MetricsResult,
+    OptimizationResult,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
-from vibe_core.protocols.cognition import OperatorCognitiveProtocol, CognitiveResult, SignedOperatorInput, NullCognitive
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 logger = logging.getLogger("KAPILA_SERVICE")
 
@@ -147,6 +147,7 @@ class KapilaService(KapilaProtocol, PanchaTattvaProtocol):
 # =============================================================================
 # SERVICEREGISTRY FACTORY (NAGA-OBSERVED!)
 # =============================================================================
+
 
 def get_kapila_service() -> KapilaService:
     """

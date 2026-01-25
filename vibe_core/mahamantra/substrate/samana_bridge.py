@@ -53,37 +53,6 @@ __genesis__ = "0xd2f4c898"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, Final, List, Optional, Tuple
-from uuid import uuid4
-
-# =============================================================================
-# IMPORT FROM NADI (SSOT)
-# =============================================================================
-from vibe_core.mahamantra.substrate.nadi import (
-    LocalNadi,
-    NadiConnection,
-    NadiMessage,
-    NadiOp,
-    NadiPriority,
-    NadiProtocol,
-    NadiStats,
-    NadiType,
-    NADI_CAPACITY,
-    NADI_TIMEOUT_MS,
-    get_nadi,
-)
-
-# Import from seed for derived constants
-from vibe_core.mahamantra.substrate.seed import (
-    NADI_RESONANCE,
-    PRANA_DURATION_MS,
-    TICK_INTERVAL_MS,
-    SHARANAGATI,
-    WORDS,
-)
-
-# GAD compliance
-from vibe_core.mahamantra.protocols._gad import GADBase
 
 # =============================================================================
 # JIVA SHADOW + ADHIKARA (The Rider and the Horse)
@@ -92,19 +61,52 @@ from vibe_core.mahamantra.protocols._gad import GADBase
 # samana_bridge → lila.__init__ → adoption → reactor.shadow → samana_bridge
 # We use TYPE_CHECKING for type hints only.
 from typing import TYPE_CHECKING as _TC
+from typing import Any, Callable, Dict, Final, List, Optional, Tuple
+from uuid import uuid4
+
+# GAD compliance
+from vibe_core.mahamantra.protocols._gad import GADBase
+
+# =============================================================================
+# IMPORT FROM NADI (SSOT)
+# =============================================================================
+from vibe_core.mahamantra.substrate.nadi import (
+    NADI_CAPACITY,
+    NADI_TIMEOUT_MS,
+    LocalNadi,
+    NadiConnection,
+    NadiMessage,
+    NadiOp,
+    NadiPriority,
+    NadiProtocol,
+    NadiStats,
+    NadiType,
+    get_nadi,
+)
+
+# Import from seed for derived constants
+from vibe_core.mahamantra.substrate.seed import (
+    NADI_RESONANCE,
+    PRANA_DURATION_MS,
+    SHARANAGATI,
+    TICK_INTERVAL_MS,
+    WORDS,
+)
+
 if _TC:
     from vibe_core.mahamantra.lila.jiva_shadow import JivaShadow as _JivaShadow
 
 # Protocol types (TYPE_CHECKING to avoid circular imports)
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
-    from vibe_core.protocols.task_kernel_protocol import (
-        TaskKernelProtocol,
-        TaskKernelResult,
-    )
     from vibe_core.mahamantra.reactor.shadow_protocol import (
         ShadowReactorProtocol,
         ShadowState,
+    )
+    from vibe_core.protocols.task_kernel_protocol import (
+        TaskKernelProtocol,
+        TaskKernelResult,
     )
 
 
@@ -139,33 +141,36 @@ assert SAMANA_HEARTBEAT_MS == 2000, "Heartbeat = 2 seconds"
 # SAMANA MESSAGE TYPES
 # =============================================================================
 
+
 class SamanaMessageType:
     """
     Message types for Samana bridge.
 
     Not an enum to allow extensibility.
     """
+
     # Dispatch operations
-    DISPATCH = "dispatch"        # Shadow → Kernel: Execute this task
+    DISPATCH = "dispatch"  # Shadow → Kernel: Execute this task
     DISPATCH_BATCH = "dispatch_batch"  # Shadow → Kernel: Execute batch
 
     # Fold operations
-    FOLD = "fold"                # Kernel → Shadow: Here's my result
-    FOLD_BATCH = "fold_batch"    # Kernel → Shadow: Here are batch results
+    FOLD = "fold"  # Kernel → Shadow: Here's my result
+    FOLD_BATCH = "fold_batch"  # Kernel → Shadow: Here are batch results
 
     # Lifecycle
-    SPAWN = "spawn"              # Shadow → Kernel: Spawn new kernel
-    TERMINATE = "terminate"      # Either → Other: Shutdown gracefully
-    HEARTBEAT = "heartbeat"      # Bidirectional: I'm alive
+    SPAWN = "spawn"  # Shadow → Kernel: Spawn new kernel
+    TERMINATE = "terminate"  # Either → Other: Shutdown gracefully
+    HEARTBEAT = "heartbeat"  # Bidirectional: I'm alive
 
     # Control
-    PAUSE = "pause"              # Shadow → Kernel: Pause execution
-    RESUME = "resume"            # Shadow → Kernel: Resume execution
+    PAUSE = "pause"  # Shadow → Kernel: Pause execution
+    RESUME = "resume"  # Shadow → Kernel: Resume execution
 
 
 # =============================================================================
 # SAMANA DISPATCH REQUEST
 # =============================================================================
+
 
 @dataclass
 class SamanaDispatch:
@@ -174,11 +179,12 @@ class SamanaDispatch:
 
     Contains task info and context for execution.
     """
+
     dispatch_id: str
     task_id: str
     task_description: str
     position: int  # Lotus position (0-15)
-    phase: str     # bhoga/prasadam/return
+    phase: str  # bhoga/prasadam/return
     priority: NadiPriority = NadiPriority.RAJAS
     timeout_ms: int = FOLD_TIMEOUT_MS
     payload: Dict[str, Any] = field(default_factory=dict)
@@ -217,6 +223,7 @@ class SamanaDispatch:
 # SAMANA FOLD RESULT
 # =============================================================================
 
+
 @dataclass
 class SamanaFold:
     """
@@ -224,6 +231,7 @@ class SamanaFold:
 
     Contains execution result and reinforcement signal.
     """
+
     fold_id: str
     dispatch_id: str  # Links back to dispatch
     kernel_id: str
@@ -268,6 +276,7 @@ class SamanaFold:
 # =============================================================================
 # SAMANA BRIDGE - The Integration Layer
 # =============================================================================
+
 
 class SamanaBridge(GADBase):
     """
@@ -321,7 +330,7 @@ class SamanaBridge(GADBase):
         self._dispatches_sent = 0
         self._folds_received = 0
         self._shadows_manifested = 0  # New shadows created
-        self._shadows_reused = 0      # Existing shadows reused
+        self._shadows_reused = 0  # Existing shadows reused
 
     # =========================================================================
     # PROPERTIES
@@ -372,6 +381,7 @@ class SamanaBridge(GADBase):
         """Lazy-load the ShadowRegistry singleton."""
         if self._registry is None:
             from vibe_core.mahamantra.lila.registry import get_registry
+
             self._registry = get_registry()
         return self._registry
 
@@ -753,6 +763,7 @@ class SamanaBridge(GADBase):
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
+
 
 def create_samana_bridge(
     reactor_id: str,
