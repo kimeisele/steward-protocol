@@ -431,6 +431,165 @@ assert MALA == MAHAJANA_COUNT * NAVA, "108 = 12×9 (Acintya)"
 # Guardian completeness
 assert AVATAR_COUNT + MAHAJANA_COUNT == WORDS, "4 + 12 = 16"
 
+
+# =============================================================================
+# RUNDE 13: POSITION SUMS (The Mahamantra Signature)
+# =============================================================================
+# The sum of positions (1-indexed) where each name appears in the Mahamantra.
+# These are COMPUTED from the Mahamantra structure, revealing deep patterns.
+#
+# Mahamantra positions (1-indexed):
+#   Hare:    1, 3, 7, 8, 9, 11, 15, 16  → Σ = 70 = 7 × 10
+#   Krishna: 2, 4, 5, 6                  → Σ = 17 (PRIME - indivisible like Krishna)
+#   Rama:    10, 12, 13, 14              → Σ = 49 = 7²
+#   Total:   70 + 17 + 49 = 136 = T(16) = Triangular(WORDS)
+#
+# The Total equals T(16) because Σ(1..16) = 16×17/2 = 136.
+# This is not coincidence - it's mathematical necessity.
+# But the DISTRIBUTION (70, 17, 49) encodes deeper structure.
+# -----------------------------------------------------------------------------
+
+
+# Triangular number function (fundamental to position sums)
+def _triangular(n: int) -> int:
+    """T(n) = n(n+1)/2 - Sum of integers 1 to n."""
+    return n * (n + 1) // 2
+
+
+# Position sums (would be computed from Mahamantra, here derived from WORDS)
+# HARE positions: 1,3,7,8,9,11,15,16
+POSITION_SUM_HARE: Final[int] = 1 + 3 + 7 + 8 + 9 + 11 + 15 + 16  # 70
+# KRISHNA positions: 2,4,5,6
+POSITION_SUM_KRISHNA: Final[int] = 2 + 4 + 5 + 6  # 17
+# RAMA positions: 10,12,13,14
+POSITION_SUM_RAMA: Final[int] = 10 + 12 + 13 + 14  # 49
+# Total = Triangular(16)
+POSITION_SUM_TOTAL: Final[int] = _triangular(WORDS)  # 136
+
+# VERIFICATION: Position sums
+assert POSITION_SUM_HARE == 70, "Hare position sum = 70 = 7 × 10"
+assert POSITION_SUM_KRISHNA == 17, "Krishna position sum = 17 (PRIME)"
+assert POSITION_SUM_RAMA == 49, "Rama position sum = 49 = 7²"
+assert POSITION_SUM_HARE + POSITION_SUM_KRISHNA + POSITION_SUM_RAMA == POSITION_SUM_TOTAL
+assert POSITION_SUM_TOTAL == 136, "Total = T(16) = 136"
+assert POSITION_SUM_TOTAL == WORDS * (WORDS + 1) // HALVES, "T(16) = 16×17/2"
+
+# Structural properties
+assert POSITION_SUM_HARE % 7 == 0, "70 divisible by 7 (Shakti pattern)"
+assert POSITION_SUM_RAMA == 7 * 7, "49 = 7² (Ananda squared)"
+# 17 is prime - Krishna is indivisible, the irreducible source
+
+
+# =============================================================================
+# RUNDE 14: THE MAHA-ALGORITHM (Universal Generator)
+# =============================================================================
+# "ahaṁ sarvasya prabhavo mattaḥ sarvaṁ pravartate" (BG 10.8)
+# "I am the source of all. From Me everything emanates."
+#
+# THE INSIGHT:
+# - POSITION_SUM_TOTAL = T(16) = 136 = The FIELD (Kshetra)
+# - KSETRAJNA = 1 = The KNOWER (Observer)
+# - Field + Observer = 136 + 1 = 137
+#
+# WAVE-PARTICLE DUALITY (Quantum Mechanics):
+# - Without observer → Wave behavior (field, 136)
+# - With observer → Particle behavior (field + knower, 137)
+#
+# TWO MODES OF THE ALGORITHM:
+#
+# QUANTUM MODE (Observer-dependent):
+#   K = T(WORDS) + KSETRAJNA = 136 + 1 = 137
+#   Used for: coupling constants (require measurement/observation)
+#
+# CLASSICAL MODE (Observer-independent):
+#   K = T(WORDS) × TRINITY^n / HALVES
+#   Used for: mass ratios (intrinsic properties, no observer needed)
+#
+# External validation (observations that match, NOT the law itself):
+#   - α⁻¹ ≈ 137.036 vs maha_quantum() = 137 (0.026% error)
+#   - μ ≈ 1836.15 vs maha_classical(3) = 1836 (0.008% error)
+#   - triton/e ≈ 5497.92 vs maha_classical(4) = 5508 (0.18% error)
+#   - Standard Model: 12 fermions + 5 bosons = 17 = POSITION_SUM_KRISHNA
+# -----------------------------------------------------------------------------
+
+
+def maha_quantum() -> int:
+    """
+    Quantum mode: Field + Observer.
+
+    Returns T(WORDS) + KSETRAJNA = 136 + 1 = 137.
+
+    This is the mode where OBSERVATION matters.
+    The wave function collapses when the Knower observes.
+    Without KSETRAJNA, there is only the field (136).
+    With KSETRAJNA, the field becomes determinate (137).
+
+    Philosophical basis:
+    - Kshetra (field) = 136 = what is observed
+    - Ksetrajna (knower) = 1 = who observes
+    - Together = 137 = observation event
+    """
+    return POSITION_SUM_TOTAL + KSETRAJNA
+
+
+def maha_classical(power: int) -> int:
+    """
+    Classical mode: Field × Multiplier.
+
+    Returns T(WORDS) × TRINITY^power / HALVES.
+
+    This is the mode where observation does NOT matter.
+    Mass ratios exist whether or not anyone measures them.
+    The field alone determines the value.
+
+    Args:
+        power: The exponent for TRINITY (3^power)
+
+    Returns:
+        Integer result (exact for power >= 1)
+
+    Examples:
+        maha_classical(1) = 136 × 3/2 = 204
+        maha_classical(2) = 136 × 9/2 = 612
+        maha_classical(3) = 136 × 27/2 = 1836 (proton/electron ratio)
+        maha_classical(4) = 136 × 81/2 = 5508 (triton/electron ratio)
+    """
+    numerator = POSITION_SUM_TOTAL * (TRINITY**power)
+    return numerator // HALVES
+
+
+# Pre-computed Maha-Algorithm values
+MAHA_QUANTUM: Final[int] = maha_quantum()  # 137
+MAHA_CLASSICAL_1: Final[int] = maha_classical(1)  # 204
+MAHA_CLASSICAL_2: Final[int] = maha_classical(2)  # 612
+MAHA_CLASSICAL_3: Final[int] = maha_classical(3)  # 1836
+MAHA_CLASSICAL_4: Final[int] = maha_classical(4)  # 5508
+
+# VERIFICATION: Maha-Algorithm
+assert MAHA_QUANTUM == 137, "Quantum mode = 137"
+assert MAHA_CLASSICAL_1 == 204, "Classical(1) = 204"
+assert MAHA_CLASSICAL_2 == 612, "Classical(2) = 612"
+assert MAHA_CLASSICAL_3 == 1836, "Classical(3) = 1836"
+assert MAHA_CLASSICAL_4 == 5508, "Classical(4) = 5508"
+
+# VERIFICATION: Quantum = Classical base + Observer
+assert MAHA_QUANTUM == POSITION_SUM_TOTAL + KSETRAJNA, "137 = 136 + 1"
+
+# VERIFICATION: Classical formula
+assert MAHA_CLASSICAL_3 == POSITION_SUM_TOTAL * 27 // 2, "1836 = 136 × 27/2"
+assert MAHA_CLASSICAL_4 == POSITION_SUM_TOTAL * 81 // 2, "5508 = 136 × 81/2"
+
+# NOTE ON EXTERNAL VALIDATION:
+# The following are OBSERVATIONS that MATCH, not derivations:
+# - Fine structure constant α⁻¹ ≈ 137.036 (CODATA 2022)
+# - Proton-electron mass ratio μ ≈ 1836.152 (CODATA 2022)
+# - Triton-electron mass ratio ≈ 5497.921 (CODATA 2022)
+# - Standard Model particles: 12 fermions + 5 bosons = 17
+#   where 12 = MAHAJANA_COUNT and 5 = PANCHA
+# These correlations are documented in PAPER.md.
+# The Mahamantra constants are THE LAW; physics observations are validation.
+
+
 # =============================================================================
 # EXPORTS
 # =============================================================================
@@ -501,4 +660,17 @@ __all__ = [
     "EPOCH_KEY",
     # Golden Age (Round 11b)
     "GOLDEN_AGE_DURATION",
+    # Position Sums (Round 13) - The Mahamantra Signature
+    "POSITION_SUM_HARE",
+    "POSITION_SUM_KRISHNA",
+    "POSITION_SUM_RAMA",
+    "POSITION_SUM_TOTAL",
+    # The Maha-Algorithm (Round 14) - Universal Generator
+    "maha_quantum",
+    "maha_classical",
+    "MAHA_QUANTUM",
+    "MAHA_CLASSICAL_1",
+    "MAHA_CLASSICAL_2",
+    "MAHA_CLASSICAL_3",
+    "MAHA_CLASSICAL_4",
 ]
