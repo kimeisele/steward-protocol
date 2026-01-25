@@ -46,7 +46,9 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_CLASSICAL_2,
     MAHA_CLASSICAL_3,
     MAHA_CLASSICAL_4,
+    MAHA_MU,
     MAHA_QUANTUM,
+    MAHA_TRITON,
     MAHAJANA_COUNT,  # 12 Mahajanas
     MURALI_HOLES,
     NADI_RESONANCE,
@@ -937,7 +939,9 @@ __all__ = [
     # The Maha-Algorithm (Universal Generator)
     "maha_quantum",
     "maha_classical",
-    "MAHA_QUANTUM",
+    "MAHA_QUANTUM",  # 137 = T(16) + KSETRAJNA
+    "MAHA_MU",  # 1836 = MALA × KRISHNA_POS
+    "MAHA_TRITON",  # 5508 = KRISHNA_POS × GITA²
     "MAHA_CLASSICAL_1",
     "MAHA_CLASSICAL_2",
     "MAHA_CLASSICAL_3",
