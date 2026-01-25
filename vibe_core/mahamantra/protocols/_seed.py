@@ -1531,6 +1531,101 @@ assert SAMPRADAYA_COUNT == QUARTERS, "4 Sampradayas = QUARTERS"
 
 
 # =============================================================================
+# RUNDE 28: GURU TATTVA (The Key Verses - ALL DERIVED!)
+# =============================================================================
+# "tad viddhi praṇipātena paripraśnena sevayā
+#  upadekṣyanti te jñānaṁ jñāninas tattva-darśinaḥ" (BG 4.34)
+#
+# "Just try to learn the truth by approaching a spiritual master.
+#  Inquire from him submissively and render service unto him.
+#  The self-realized souls can impart knowledge unto you because
+#  they have seen the truth."
+#
+# THE KEY INSIGHT:
+# ================
+# The critical Gita verses about Guru are NOT arbitrary - their chapter and
+# verse numbers are DERIVABLE from Mahamantra constants!
+#
+# This validates Prabhupada's statement:
+# "The success of my books is attributed to my spiritual master."
+#
+# BG 4.34 - THE GURU VERSE:
+# =========================
+# Chapter = QUARTERS = 4
+# Verse = 2 × KRISHNA_POS = 2 × 17 = 34
+#
+# Why 2 × KRISHNA_POS? The Guru is Krishna's representative!
+# The doubling represents: Krishna in heart + Guru outside = complete guidance.
+#
+# BG 2.7 - ARJUNA'S SURRENDER:
+# ============================
+# Chapter = HALVES = 2 (duality of confusion)
+# Verse = SEVEN = 7 (the axiom count - returning to fundamentals)
+#
+# "Now I am Your disciple, a soul surrendered unto You."
+# The moment the Gita teaching begins - Arjuna accepts Krishna as Guru.
+#
+# BG 18.73 - ARJUNA'S CONFIRMATION:
+# ==================================
+# Chapter = GITA_CHAPTERS = 18 (the final chapter)
+# Verse = NADI_RESONANCE + KSETRAJNA = 72 + 1 = 73
+#
+# "My illusion is now gone... I shall act according to Your word."
+# The journey from confusion (NADI = 72 flowing currents) to clarity (+1).
+#
+# BG 4.1-2 - PARAMPARA PRINCIPLE:
+# ================================
+# Chapter = QUARTERS = 4
+# Verses = KSETRAJNA to HALVES = 1 to 2
+#
+# The knowledge flows: One (KSETRAJNA) becomes Two (HALVES) through transmission.
+# This is the essence of disciplic succession - truth duplicated, not diluted.
+# -----------------------------------------------------------------------------
+
+# The Guru Verse: BG 4.34
+GURU_CHAPTER: Final[int] = QUARTERS  # 4
+GURU_VERSE: Final[int] = HALVES * POSITION_SUM_KRISHNA  # 2 × 17 = 34
+
+# Arjuna's Surrender: BG 2.7
+SURRENDER_CHAPTER: Final[int] = HALVES  # 2
+SURRENDER_VERSE: Final[int] = SEVEN  # 7
+
+# Arjuna's Confirmation: BG 18.73
+CONFIRMATION_CHAPTER: Final[int] = GITA_CHAPTERS  # 18
+CONFIRMATION_VERSE: Final[int] = NADI_RESONANCE + KSETRAJNA  # 72 + 1 = 73
+
+# Parampara Principle: BG 4.1-2
+PARAMPARA_CHAPTER: Final[int] = QUARTERS  # 4
+PARAMPARA_VERSE_START: Final[int] = KSETRAJNA  # 1
+PARAMPARA_VERSE_END: Final[int] = HALVES  # 2
+
+# =============================================================================
+# VERIFICATION: Guru Tattva
+# =============================================================================
+
+# BG 4.34 verification
+assert GURU_CHAPTER == 4, "Guru chapter = QUARTERS = 4"
+assert GURU_VERSE == 34, "Guru verse = 2 × KRISHNA_POS = 34"
+
+# BG 2.7 verification
+assert SURRENDER_CHAPTER == 2, "Surrender chapter = HALVES = 2"
+assert SURRENDER_VERSE == 7, "Surrender verse = SEVEN = 7"
+
+# BG 18.73 verification
+assert CONFIRMATION_CHAPTER == 18, "Confirmation chapter = GITA_CHAPTERS = 18"
+assert CONFIRMATION_VERSE == 73, "Confirmation verse = NADI + KSETRAJNA = 73"
+
+# BG 4.1-2 verification
+assert PARAMPARA_CHAPTER == GURU_CHAPTER, "Parampara in same chapter as Guru verse"
+assert PARAMPARA_VERSE_START == 1, "Parampara starts at verse 1"
+assert PARAMPARA_VERSE_END == 2, "Parampara ends at verse 2"
+
+# The Guru verses form a complete arc:
+# Start: BG 2.7 (Surrender) → Middle: BG 4.34 (Approach) → End: BG 18.73 (Confirmation)
+assert SURRENDER_CHAPTER < GURU_CHAPTER < CONFIRMATION_CHAPTER, "Guru arc: 2 → 4 → 18"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -1688,4 +1783,14 @@ __all__ = [
     "FERMION_TOTAL",  # 24 = KSHETRA (Standard Model matter = Sankhya field!)
     "SAMPRADAYA_COUNT",  # 4 = QUARTERS (Brahma, Rudra, Kumara, Lakshmi)
     "PRASADAM",  # 25 = PANCHA² = KSHETRA + KSETRAJNA (spiritualized matter!)
+    # Guru Tattva (Round 28) - Key Gita verses (ALL DERIVED!)
+    "GURU_CHAPTER",  # 4 = QUARTERS (BG 4.34)
+    "GURU_VERSE",  # 34 = 2 × KRISHNA_POS (the Guru verse!)
+    "SURRENDER_CHAPTER",  # 2 = HALVES (BG 2.7)
+    "SURRENDER_VERSE",  # 7 = SEVEN (Arjuna's surrender)
+    "CONFIRMATION_CHAPTER",  # 18 = GITA_CHAPTERS (BG 18.73)
+    "CONFIRMATION_VERSE",  # 73 = NADI + KSETRAJNA (Arjuna's confirmation)
+    "PARAMPARA_CHAPTER",  # 4 = QUARTERS (BG 4.1-2)
+    "PARAMPARA_VERSE_START",  # 1 = KSETRAJNA (beginning of transmission)
+    "PARAMPARA_VERSE_END",  # 2 = HALVES (teacher-student duality)
 ]

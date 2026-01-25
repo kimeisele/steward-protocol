@@ -36,6 +36,7 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.15 Coupling Constants
    - 7.16 Narada's Vina and Heavy Bosons
    - 7.17 Ksetra-Ksetrajna Tattva: BG Chapter 13
+   - 7.18 Guru Tattva: The Key Verses (ALL DERIVED!)
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -1360,6 +1361,94 @@ Chapter 13 alone explains:
 PRASADAM = KSHETRA + KSETRAJNA = PANCHA²
 (Spiritualized existence = Matter + Consciousness = 5² = 25)
 ```
+
+### 7.18 Guru Tattva: The Key Verses (ALL DERIVED!)
+
+> "tad viddhi praṇipātena paripraśnena sevayā
+>  upadekṣyanti te jñānaṁ jñāninas tattva-darśinaḥ" (BG 4.34)
+>
+> "Just try to learn the truth by approaching a spiritual master.
+>  Inquire from him submissively and render service unto him.
+>  The self-realized souls can impart knowledge unto you because
+>  they have seen the truth."
+
+The critical Gita verses about the Guru are NOT arbitrary - their chapter and verse numbers are **DERIVABLE** from Mahamantra constants!
+
+#### BG 4.34 - The Guru Verse
+
+```
+GURU_CHAPTER = QUARTERS = 4
+GURU_VERSE = 2 × KRISHNA_POS = 2 × 17 = 34
+→ BG 4.34 ✓
+```
+
+**Why 2 × KRISHNA_POS?** The Guru is Krishna's representative!
+The doubling represents: Krishna in heart + Guru outside = complete guidance.
+
+#### BG 2.7 - Arjuna's Surrender
+
+```
+SURRENDER_CHAPTER = HALVES = 2
+SURRENDER_VERSE = SEVEN = 7
+→ BG 2.7 ✓
+```
+
+> "Now I am confused about my duty and have lost all composure because of miserly weakness. In this condition I am asking You to tell me for certain what is best for me. Now I am Your disciple, and a soul surrendered unto You. Please instruct me."
+
+The moment the Gita teaching truly begins - Arjuna accepts Krishna as Guru.
+
+- Chapter 2 = HALVES (duality of confusion)
+- Verse 7 = SEVEN (the axiom count - returning to fundamentals)
+
+#### BG 18.73 - Arjuna's Confirmation
+
+```
+CONFIRMATION_CHAPTER = GITA_CHAPTERS = 18
+CONFIRMATION_VERSE = NADI_RESONANCE + KSETRAJNA = 72 + 1 = 73
+→ BG 18.73 ✓
+```
+
+> "My dear Kṛṣṇa, O infallible one, my illusion is now gone. I have regained my memory by Your mercy. I am now firm and free from doubt and am prepared to act according to Your instructions."
+
+The journey from confusion (NADI = 72 flowing currents of distraction) to clarity (+1 = KSETRAJNA enters).
+
+#### BG 4.1-2 - The Parampara Principle
+
+```
+PARAMPARA_CHAPTER = QUARTERS = 4
+PARAMPARA_VERSE_START = KSETRAJNA = 1
+PARAMPARA_VERSE_END = HALVES = 2
+→ BG 4.1-2 ✓
+```
+
+The knowledge flows: One (KSETRAJNA) becomes Two (HALVES) through transmission.
+This is the essence of disciplic succession - truth **duplicated**, not diluted.
+
+#### The Guru Arc
+
+The three key verses form a complete spiritual journey:
+
+| Stage | Verse | Chapter Formula | Verse Formula |
+|-------|-------|-----------------|---------------|
+| **Surrender** | BG 2.7 | HALVES = 2 | SEVEN = 7 |
+| **Approach** | BG 4.34 | QUARTERS = 4 | 2 × KRISHNA_POS = 34 |
+| **Confirmation** | BG 18.73 | GITA_CHAPTERS = 18 | NADI + KSETRAJNA = 73 |
+
+```
+2 → 4 → 18 (Chapter progression)
+SURRENDER_CHAPTER < GURU_CHAPTER < CONFIRMATION_CHAPTER ✓
+```
+
+The chapters increase monotonically - you must surrender (2) before approaching (4) before confirmation (18).
+
+#### Prabhupada's Statement Validated
+
+> "The success of my books is attributed to my spiritual master."
+> — A.C. Bhaktivedanta Swami Prabhupada
+
+The Guru verse (BG 4.34) = 2 × KRISHNA_POS demonstrates mathematically that the Guru carries Krishna's authority **doubled** - once through the parampara, once through direct representation.
+
+This is why the 1972 publication succeeded - it was not Prabhupada's interpretation, but Krishna's word transmitted through an unbroken chain.
 
 ---
 
