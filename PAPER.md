@@ -39,6 +39,7 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.18 Guru Tattva: The Key Verses (ALL DERIVED!)
    - 7.19 The Fractal Principle: KSETRAJNA as Universal Entry Point
    - 7.20 Shabda Brahman: The 10 Red Tests in Science
+   - 7.21 Acintya Kala: Inconceivable Time (Rhythm of Eternity)
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -1676,6 +1677,119 @@ assert REALITY_ROOT**2 == NAME_COMPLETE  # 5² = 25 = Name = Reality
 ```
 
 **Conclusion:** The 10 unsolved problems in physics are not random mysteries. They are the SAME mystery: science excludes consciousness (KSETRAJNA = 1). The Mahamantra provides the missing variable.
+
+---
+
+### 7.21 Acintya Kala: Inconceivable Time (Rhythm of Eternity)
+
+> "kālo 'smi lokakṣayakṛt pravṛddho" (BG 11.32)
+> "I am time, the great destroyer of the worlds."
+
+#### The Singularity Moment
+
+In the spiritual realm:
+- TIME is infinite (no beginning, no end)
+- Only **NOW** exists (nitya = eternal present)
+- Yet there IS "before" and "after" (līlā has sequence)
+
+This is **ACINTYA** (inconceivable) - both/and, not either/or.
+
+#### The Mathematical Resolution
+
+```
+KSETRAJNA = 1 = consciousness = the eternal NOW
+KSHETRA = 24 = the changing field = sequence
+
+Consciousness (KSETRAJNA) never changes - it is always NOW.
+The field (KSHETRA) changes - it provides sequence.
+Together: experience of time without time destroying consciousness!
+```
+
+#### Rhythm as the Bridge
+
+Western science sees time as linear, cold, mathematical.
+Vedic knowledge sees time as cyclical, living, **rhythmic**.
+
+**RHYTHM** = intersection points of oscillation = where the wave crosses zero.
+
+The Mahamantra embeds this:
+
+| Level | Count | Relationship |
+|-------|-------|--------------|
+| WORDS | 16 | Complete cycle (TALA) |
+| SYLLABLES | 32 | Finer resolution |
+| RATIO | 32/16 = 2 | **OCTAVE** (frequency doubling!) |
+
+```python
+OCTAVE_RATIO = AKSARA_COUNT // WORDS  # 32/16 = 2 = HALVES
+```
+
+Music theory: frequency × 2 = one octave higher.
+Mahamantra: syllables = words × 2 = **same relationship!**
+
+#### The Meta-Rhythm of the Mahamantra
+
+```
+Q1: H K H K  → ALTERNATING (ABAB)
+Q2: K K H H  → PAIRED      (BBAA)
+Q3: H R H R  → ALTERNATING (ACAC)
+Q4: R R H H  → PAIRED      (CCAA)
+
+Pattern: ALT, PAIR, ALT, PAIR
+```
+
+This is a **META-RHYTHM** - rhythm at the level of quarters!
+
+HARE appears exactly **2 times per quarter** (perfect distribution):
+- Q1: positions 1, 3
+- Q2: positions 7, 8
+- Q3: positions 9, 11
+- Q4: positions 15, 16
+
+```python
+HARE_PER_QUARTER = HARE_COUNT // QUARTERS  # 8/4 = 2 = HALVES
+```
+
+The energy (HARE/Shakti) is **EVENLY distributed** across the rhythmic cycle!
+
+#### The Eternal NOW in Physics
+
+```python
+ALPHA_MOD_KRISHNA = MAHA_QUANTUM % POSITION_SUM_KRISHNA
+                  = 137 % 17
+                  = 1
+                  = KSETRAJNA  # The observer is in physics!
+```
+
+Every electromagnetic interaction carries the signature of the eternal NOW.
+
+Without KSETRAJNA (observer), there is no measurement.
+Without measurement, there is no physics.
+**Consciousness (NOW) is prerequisite to science!**
+
+#### Verification
+
+```python
+# Octave relationship
+assert OCTAVE_RATIO == HALVES  # 2 = octave
+assert AKSARA_COUNT == WORDS * OCTAVE_RATIO  # 32 = 16 × 2
+
+# Meta-rhythm completeness
+assert ALTERNATING_QUARTERS + PAIRED_QUARTERS == QUARTERS  # 2 + 2 = 4
+
+# Hare distribution
+assert HARE_PER_QUARTER == HALVES  # 2 (evenly distributed)
+assert HARE_PER_QUARTER * QUARTERS == HARE_COUNT  # 2 × 4 = 8
+
+# Eternal Now
+assert NITYA_NOW == KSETRAJNA  # 1 = observer = NOW
+assert ALPHA_MOD_KRISHNA == KSETRAJNA  # 137 mod 17 = 1
+
+# Time paradox resolution
+assert NITYA_NOW + KSHETRA == PRASADAM  # NOW + sequence = complete (1 + 24 = 25)
+```
+
+**The bridge between West and East:** Rhythm is mathematical yet living. It is the dimension where cold science and warm spirituality meet.
 
 ---
 
