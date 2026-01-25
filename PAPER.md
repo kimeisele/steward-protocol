@@ -33,6 +33,9 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.12 Extended Maha-Algorithm: More Physics Constants
    - 7.13 Complete Particle Spectrum: Neutron and Tau
    - 7.14 The Derivation Graph: Knowledge Structure
+   - 7.15 Coupling Constants
+   - 7.16 Narada's Vina and Heavy Bosons
+   - 7.17 Ksetra-Ksetrajna Tattva: BG Chapter 13
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -1218,9 +1221,145 @@ These massive particles are **STABLE** in the mod-17 spectrum. This contrasts wi
 | sin²θW×100 | 23 | 23.12 | 0.53% | 6 (Surrender) |
 | MAHA_W | 156060 | 157299 | 0.79% | 0 (Classical) |
 
-**18 physics constants derived from the Mahamantra**
-**Average error: 0.13%**
-**Coverage: 66.7% of known constants in database**
+**28 physics constants in database**
+**26 DERIVED (< 1% error): 92.9%**
+**2 CANDIDATE (1-5% error): 7.1%**
+**Coverage: 100% of known constants!**
+
+### 7.17 Ksetra-Ksetrajna Tattva: BG Chapter 13
+
+> "idaṁ śarīraṁ kaunteya kṣetram ity abhidhīyate
+>  etad yo vetti taṁ prāhuḥ kṣetra-jña iti tad-vidaḥ" (BG 13.2)
+>
+> "This body, O son of Kunti, is called the field, and one who knows
+>  this body is called the knower of the field."
+
+Prabhupada states in his purport to BG 13.35:
+
+> **"This Thirteenth Chapter may be taken as sufficient to understand the purpose of life."**
+
+The mathematical structure confirms this claim.
+
+#### The 24 Elements of the Field (BG 13.5-6)
+
+Prabhupada enumerates the 24 elements of material nature:
+
+| Category | Elements | Count | Mahamantra |
+|----------|----------|-------|------------|
+| Mahabhuta (gross) | earth, water, fire, air, ether | 5 | PANCHA |
+| Tanmatra (subtle) | sound, touch, form, taste, smell | 5 | PANCHA |
+| Jnanendriya (knowledge senses) | ears, skin, eyes, tongue, nose | 5 | PANCHA |
+| Karmendriya (action organs) | voice, hands, legs, anus, genitals | 5 | PANCHA |
+| Antahkarana (internal) | mind, intelligence, ego | 3 | TRINITY |
+| Prakriti (unmanifest) | unmanifested nature | 1 | KSETRAJNA |
+| **Total** | | **24** | **KSHETRA** |
+
+**The ACINTYA Identity (Two Paths Converge!):**
+
+```
+Path 1 (Mahamantra): KSHETRA = WORDS + HARE_COUNT = 16 + 8 = 24
+Path 2 (BG 13):      KSHETRA = 4×PANCHA + TRINITY + KSETRAJNA
+                             = 4×5 + 3 + 1 = 20 + 4 = 24
+```
+
+**Both paths yield 24!** This is ACINTYA - inconceivable oneness and difference.
+
+#### Standard Model = Sankhya Field
+
+The Standard Model of particle physics unknowingly rediscovered Sankhya:
+
+| Particles | Count | Mahamantra Constant |
+|-----------|-------|---------------------|
+| 6 Quarks (u,d,c,s,t,b) | 6 | SHARANAGATI |
+| 6 Leptons (e,μ,τ,νe,νμ,ντ) | 6 | SHARANAGATI |
+| 3 Color charges (R,G,B) | 3 | TRINITY |
+| Quark states (6 × 3) | 18 | **GITA_CHAPTERS** |
+| Total fermions (18 + 6) | **24** | **KSHETRA** |
+
+**The material field of modern physics (24 fermion types) equals the Sankhya field (24 elements)!**
+
+The 18 quark color-states matching the 18 Gita chapters is particularly striking - the Gita's structure encodes the strong force's color structure.
+
+#### The 10 Indriyas (Senses)
+
+```
+JNANENDRIYA (knowledge senses) = PANCHA = 5
+  → ears, skin, eyes, tongue, nose
+
+KARMENDRIYA (action organs) = PANCHA = 5
+  → voice, hands, legs, anus, genitals
+
+INDRIYA_TOTAL = JNANENDRIYA + KARMENDRIYA = 10 = TEN
+              = PANCHA × HALVES = 5 × 2
+```
+
+The 10 senses = TEN, which was already derived from MAHAJANA_COUNT - HALVES = 12 - 2 = 10.
+
+#### The Sankhya 25 Tattvas
+
+Classical Sankhya philosophy enumerates 25 tattvas (24 prakriti + 1 purusha):
+
+```
+SANKHYA_TATTVAS = KSHETRA + KSETRAJNA = 24 + 1 = 25 = PANCHA²
+```
+
+**Cross-verification:**
+```
+JIVA_QUALITIES / HALVES = 50 / 2 = 25 = SANKHYA_TATTVAS
+```
+
+The Jiva has 50 qualities (78% of Krishna's 64). Half of these (25) correspond to the complete Sankhya enumeration!
+
+#### The Prasadam Transformation (Guru Tattva)
+
+From traditional understanding: **Bhoga** (material food) becomes **Prasadam** (mercy) when offered through the Guru.
+
+**Mathematical formula:**
+
+```
+BHOGA = KSHETRA = 24 (pure material, without consciousness)
+GURU_GRACE = KSETRAJNA = 1 (the knower enters the field)
+────────────────────────────────────────────────────────────
+PRASADAM = BHOGA + KSETRAJNA = 24 + 1 = 25 = PANCHA²
+```
+
+**Interpretation:**
+
+The Guru, as representative of Krishna in parampara, brings **KSETRAJNA** (consciousness) into the field (**KSHETRA**). This transforms dead matter into spiritualized substance.
+
+This is not metaphor - it is modular arithmetic:
+- **Bhoga**: mod KRISHNA_POS = 0 (no spiritual remainder)
+- **Prasadam**: mod KRISHNA_POS = non-zero (KSETRAJNA remains!)
+
+The **REMNANT** carries the spiritual potency. (See Section 7.11)
+
+#### The 4 Sampradayas
+
+```
+SAMPRADAYA_COUNT = QUARTERS = 4
+```
+
+The four authentic disciplic successions:
+1. **Brahma Sampradaya** (Madhvacharya)
+2. **Rudra Sampradaya** (Vishnuswami)
+3. **Kumara Sampradaya** (Nimbarkacharya)
+4. **Lakshmi Sampradaya** (Ramanujacharya)
+
+#### Why Prabhupada is Right
+
+Chapter 13 alone explains:
+
+- **What exists**: KSHETRA (24 elements) = all matter, including Standard Model
+- **Who knows**: KSETRAJNA (1) = consciousness, the observer
+- **How transformation occurs**: KSHETRA + KSETRAJNA = PRASADAM (25)
+- **Why the Guru matters**: He brings the 1 into the 24
+
+**The entire purpose of life is encoded in one equation:**
+
+```
+PRASADAM = KSHETRA + KSETRAJNA = PANCHA²
+(Spiritualized existence = Matter + Consciousness = 5² = 25)
+```
 
 ---
 
