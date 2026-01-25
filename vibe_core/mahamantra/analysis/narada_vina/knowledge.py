@@ -31,10 +31,12 @@ from vibe_core.mahamantra.protocols._seed import (
     KSHETRA,
     MAHA_ALPHA,
     MAHA_ALPHA_S_SCALED,
+    MAHA_CABIBBO_SCALED,
     MAHA_CMB,
     MAHA_DEUTERON,
     MAHA_HELION,
     MAHA_HIGGS,
+    MAHA_HUBBLE,
     MAHA_KAON,
     MAHA_MU,
     MAHA_MUON,
@@ -42,7 +44,9 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_PION_CHARGED,
     MAHA_PION_NEUTRAL,
     MAHA_QUANTUM,
+    MAHA_RYDBERG_SCALED,
     MAHA_SIN2_THETA_W_SCALED,
+    MAHA_STRANGE,
     MAHA_TAU,
     MAHA_TRITON,
     MAHA_W,
@@ -243,8 +247,7 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         maha_error=0.012,
         status=CoverageStatus.DERIVED,
     ),
-    # Strange Quark (discovered in engine.py, promoted to DERIVED)
-    # TODO: Add MAHA_STRANGE = MALA + NADI_RESONANCE + TRINITY = 183 to _seed.py
+    # Strange Quark (discovered via systematic search, promoted to DERIVED)
     "strange_quark_electron": PhysicsConstant(
         "strange/electron",
         182.78,
@@ -252,7 +255,7 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         7.6,  # PDG 2022: 93.4+8.6-3.4 MeV uncertainty
         "Strange quark to electron mass ratio",
-        maha_value=183,  # MALA + NADI_RESONANCE + TRINITY = 108 + 72 + 3
+        maha_value=MAHA_STRANGE,
         maha_formula="MALA + NADI + TRINITY",
         maha_error=0.12,
         status=CoverageStatus.DERIVED,
@@ -343,6 +346,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         0.00067,
         "Cabibbo angle sine",
+        maha_value=MAHA_CABIBBO_SCALED,
+        maha_formula="NAVA / (JIVA_QUALITIES - TEN) × 1000",
+        maha_error=0.00,
+        status=CoverageStatus.DERIVED,
     ),
     "V_us": PhysicsConstant(
         "V_us",
@@ -390,6 +397,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "km/s/Mpc",
         0.5,
         "Hubble constant",
+        maha_value=MAHA_HUBBLE,
+        maha_formula="QUALITIES + TRINITY",
+        maha_error=0.59,
+        status=CoverageStatus.DERIVED,
     ),
     "omega_matter": PhysicsConstant(
         "Omega_m",
@@ -417,6 +428,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "eV",
         0.000000000015,
         "Rydberg energy",
+        maha_value=MAHA_RYDBERG_SCALED,
+        maha_formula="T(16) / 10",
+        maha_error=0.04,
+        status=CoverageStatus.DERIVED,
     ),
     "bohr_radius_ratio": PhysicsConstant(
         "a0/lambda_C",
