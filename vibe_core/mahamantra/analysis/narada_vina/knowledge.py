@@ -411,6 +411,11 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         0.000000021,
         "Bohr radius / Compton wavelength",
+        # a0/λC = 1/α (physically identical to fine structure constant inverse!)
+        maha_value=MAHA_QUANTUM,
+        maha_formula="T(16) + KSETRAJNA = 1/α",
+        maha_error=0.026,
+        status=CoverageStatus.DERIVED,
     ),
 }
 
