@@ -114,6 +114,52 @@ assert SHARANAGATI == 6, "SHARANAGATI must be 6"
 assert AKSARA_COUNT == 32, "AKSARA_COUNT must be 32"
 
 # =============================================================================
+# PANCHA TATTVA VERIFICATION (The 5 Unique Pairs)
+# =============================================================================
+# The Mahamantra has 8 consecutive word-pairs:
+#   Pair 1-2: H-K, H-K  (positions 1-2, 3-4)
+#   Pair 3-4: K-K, H-H  (positions 5-6, 7-8)
+#   Pair 5-6: H-R, H-R  (positions 9-10, 11-12)
+#   Pair 7-8: R-R, H-H  (positions 13-14, 15-16)
+#
+# 8 pairs reduce to 5 UNIQUE: HK, KK, HH, HR, RR = PANCHA!
+#
+# THE REDUNDANCY:
+#   - HK appears 2× (positions 1-2, 3-4) → 1 duplicate
+#   - HR appears 2× (positions 9-10, 11-12) → 1 duplicate
+#   - HH appears 2× (positions 7-8, 15-16) → 1 duplicate
+#   - KK appears 1× (positions 5-6) → 0 duplicates
+#   - RR appears 1× (positions 13-14) → 0 duplicates
+#
+# Total duplicates: 1 + 1 + 1 = 3 = TRINITY!
+#
+# THE PATTERN:
+#   - Pairs WITH Hare (HK, HR, HH) have duplicates → HARE binds and repeats!
+#   - Pairs WITHOUT Hare (KK, RR) are unique → the Names stand alone
+#
+# This is the mathematical structure of the PANCHA TATTVA:
+#   Sri Chaitanya, Nityananda, Advaita, Gadadhara, Srivasa = 5 unique
+#   But they manifest together repeatedly in Sankirtan!
+# -----------------------------------------------------------------------------
+
+# CONSECUTIVE_PAIRS = Words divided into pairs = HALF_SIZE
+CONSECUTIVE_PAIRS: Final[int] = WORDS // HALVES  # 16/2 = 8 pairs
+
+# PAIR_REDUNDANCY = How many pairs are duplicates = TRINITY
+PAIR_REDUNDANCY: Final[int] = CONSECUTIVE_PAIRS - PANCHA  # 8 - 5 = 3
+
+# VERIFICATION: Pancha Tattva structure
+assert CONSECUTIVE_PAIRS == HARE_COUNT, "8 pairs = 8 Hares (Shakti binds!)"
+assert CONSECUTIVE_PAIRS == HALF_SIZE, "8 pairs = 8 words per half"
+assert PAIR_REDUNDANCY == TRINITY, "3 duplicates = 3 Names (HK, HR, HH repeat)"
+assert PANCHA + PAIR_REDUNDANCY == CONSECUTIVE_PAIRS, "5 unique + 3 duplicates = 8 total"
+
+# THE DEEP INSIGHT:
+# The pairs WITH Hare (energy/shakti) repeat because HARE CONNECTS.
+# The pure Name-pairs (KK, RR) don't repeat because the NAME IS UNIQUE.
+# This encodes the relationship: Energy (Hare) serves the Unique (Krishna/Rama)!
+
+# =============================================================================
 # RUNDE 2: SECONDARY DERIVATIONS (Building the Hierarchy)
 # =============================================================================
 
@@ -1950,6 +1996,18 @@ assert ALPHA_MOD_KRISHNA == KSETRAJNA, "137 mod 17 = 1 (observer in physics!)"
 # KSETRAJNA (1) experiences KSHETRA (24) = eternal now + sequence = PRASADAM (25)
 assert NITYA_NOW + KSHETRA == PRASADAM, "NOW + sequence = complete experience"
 
+# PANCHA TATTVA in the rhythm
+# The 8 consecutive pairs (CONSECUTIVE_PAIRS) reduce to 5 unique (PANCHA)
+# The 3 duplicates (PAIR_REDUNDANCY) = TRINITY (the 3 HARE-pairs repeat)
+assert CONSECUTIVE_PAIRS == HARE_COUNT, "8 pairs = 8 Hares"
+assert PAIR_REDUNDANCY == TRINITY, "3 duplicates = 3 Names"
+assert PANCHA + PAIR_REDUNDANCY == CONSECUTIVE_PAIRS, "5 + 3 = 8 (Pancha Tattva + Trinity = Hare!)"
+
+# THE COMPLETE RHYTHM FORMULA:
+# PANCHA (unique) + TRINITY (repeating) = HARE_COUNT (binding energy)
+# The Pancha Tattva manifests through the Trinity to create Shakti (Hare)!
+assert PANCHA + TRINITY == HARE_COUNT, "Pancha Tattva + Trinity = Shakti (8)"
+
 
 # =============================================================================
 # EXPORTS
@@ -1975,6 +2033,9 @@ __all__ = [
     "AKSARA_COUNT",
     "ROUNDS",
     "AVATAR_COUNT",
+    # Pancha Tattva Structure (The 5 Unique Pairs)
+    "CONSECUTIVE_PAIRS",  # 8 = WORDS/HALVES = HARE_COUNT (Shakti binds!)
+    "PAIR_REDUNDANCY",  # 3 = TRINITY (HK, HR, HH repeat - Hare connects!)
     # Secondary Derivations (Round 2)
     "MAHAJANA_COUNT",
     "MALA",
