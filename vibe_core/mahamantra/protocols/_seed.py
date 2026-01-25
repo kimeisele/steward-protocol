@@ -642,6 +642,97 @@ assert MAHA_TRITON == 5508, "triton/e integer = 5508"
 
 
 # =============================================================================
+# RUNDE 15: THE REMNANT THEOREM (Quantum vs Classical)
+# =============================================================================
+# "prakṛtiṁ puruṣaṁ caiva viddhy anādī ubhāv api" (BG 13.20)
+# "Material nature and the living entities are beginningless."
+#
+# THE 7-10 DERIVATION:
+# ====================
+# Two fundamental numbers emerge from the axioms:
+#   SEVEN = HALF_SIZE - KSETRAJNA = 8 - 1 = 7
+#   TEN   = MAHAJANA_COUNT - HALVES = 12 - 2 = 10
+#
+# ALL THREE position sums are expressible in terms of 7 and 10:
+#   KRISHNA = 7 + 10 = 17  (sum)
+#   RAMA    = 7 × 7  = 49  (square)
+#   HARE    = 7 × 10 = 70  (product)
+#
+# This is a SECOND INDEPENDENT PATH to the position sums!
+# (The first path: ACINTYA derivation from philosophical constraints)
+#
+# THE REMNANT THEOREM:
+# ====================
+# The modulo operation (remainder after division) reveals a deep truth:
+#
+#   137 mod 17 = 1   ← Has remainder (KSETRAJNA = observer present)
+#   1836 mod 17 = 0  ← No remainder (pure ratio, no observer)
+#   5508 mod 17 = 0  ← No remainder (pure ratio, no observer)
+#
+# ONLY the fine structure constant has a remainder!
+# ONLY 137 contains the observer (KSETRAJNA)!
+#
+# This is the mathematical distinction between:
+#   QUANTUM (mod KRISHNA = 1): Observer embedded → wave-particle duality
+#   CLASSICAL (mod KRISHNA = 0): Pure ratio → deterministic
+#
+# BHOGA vs PRASADAM:
+# ==================
+# Bhoga (material offering) → mod KRISHNA = 0 (no spiritual remainder)
+# Prasadam (sanctified food) → mod KRISHNA = 1 (KSETRAJNA remains!)
+#
+# The REMNANT (what's left over) carries the spiritual potency.
+# This is not metaphor - it's mathematics!
+# -----------------------------------------------------------------------------
+
+
+# The two fundamental numbers
+SEVEN: Final[int] = HALF_SIZE - KSETRAJNA  # 8 - 1 = 7
+TEN: Final[int] = MAHAJANA_COUNT - HALVES  # 12 - 2 = 10
+
+# =============================================================================
+# VERIFICATION: The 7-10 Derivation (Second Path to Position Sums)
+# =============================================================================
+
+# Derivation of 7 and 10
+assert SEVEN == 7, "SEVEN = HALF_SIZE - KSETRAJNA = 8 - 1 = 7"
+assert TEN == 10, "TEN = MAHAJANA_COUNT - HALVES = 12 - 2 = 10"
+
+# SECOND PATH to position sums (independent of ACINTYA derivation!)
+assert POSITION_SUM_KRISHNA == SEVEN + TEN, "KRISHNA = 7 + 10 = 17"
+assert POSITION_SUM_RAMA == SEVEN * SEVEN, "RAMA = 7² = 49"
+assert POSITION_SUM_HARE == SEVEN * TEN, "HARE = 7 × 10 = 70"
+
+# Cross-verification with ACINTYA path
+assert POSITION_SUM_KRISHNA == WORDS + KSETRAJNA, "KRISHNA = 16 + 1 = 17 (both paths agree)"
+
+# Additional relationships
+assert POSITION_SUM_RAMA + POSITION_SUM_HARE == SEVEN * POSITION_SUM_KRISHNA, "RAMA + HARE = 7 × KRISHNA"
+assert POSITION_SUM_TOTAL == HALF_SIZE * POSITION_SUM_KRISHNA, "T(16) = 8 × 17 = 136"
+
+# =============================================================================
+# VERIFICATION: The Remnant Theorem (Quantum vs Classical)
+# =============================================================================
+
+# The Modulo Test: Does the constant contain the observer?
+assert MAHA_QUANTUM % POSITION_SUM_KRISHNA == KSETRAJNA, "137 mod 17 = 1 (QUANTUM: observer present)"
+assert MAHA_MU % POSITION_SUM_KRISHNA == 0, "1836 mod 17 = 0 (CLASSICAL: no observer)"
+assert MAHA_TRITON % POSITION_SUM_KRISHNA == 0, "5508 mod 17 = 0 (CLASSICAL: no observer)"
+
+# Why 137 has a remainder: 137 = 8 × 17 + 1 = HALF_SIZE × KRISHNA + KSETRAJNA
+assert MAHA_QUANTUM == HALF_SIZE * POSITION_SUM_KRISHNA + KSETRAJNA, "137 = 8×17 + 1"
+
+# Why 1836 has no remainder: 1836 = 108 × 17 = MALA × KRISHNA (exact)
+assert MAHA_MU == MALA * POSITION_SUM_KRISHNA, "1836 = 108 × 17 (exact)"
+
+# Why 5508 has no remainder: 5508 = 324 × 17 = GITA² × KRISHNA (exact)
+assert MAHA_TRITON == (GITA_CHAPTERS**2) * POSITION_SUM_KRISHNA, "5508 = 324 × 17 (exact)"
+
+# The 17 is the 7th prime (another appearance of 7!)
+# Primes: 2, 3, 5, 7, 11, 13, 17 (17 is the 7th)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -726,4 +817,7 @@ __all__ = [
     "MAHA_CLASSICAL_2",
     "MAHA_CLASSICAL_3",
     "MAHA_CLASSICAL_4",
+    # The Remnant Theorem (Round 15) - Quantum vs Classical
+    "SEVEN",  # = HALF_SIZE - KSETRAJNA = 7 (the ubiquitous 7!)
+    "TEN",  # = MAHAJANA_COUNT - HALVES = 10
 ]
