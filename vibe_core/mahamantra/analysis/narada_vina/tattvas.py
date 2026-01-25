@@ -225,18 +225,6 @@ def get_tattva_description(tattva: PanchaTattva) -> TattvaAspect:
 
 
 # =============================================================================
-# LEGACY COMPATIBILITY (old function names -> new names)
-# =============================================================================
-
-# These map the old fake Sanskrit names to the proper Pancha Tattva names
-kim_jnatam = string_nityananda  # "What is known?" -> NITYANANDA (derived)
-kim_avashishtam = string_advaita  # "What remains?" -> ADVAITA (remaining)
-kim_bhavishyati = generate_all_predictions  # "What will be?" -> Engine predictions
-kati_avrtam = string_gadadhara  # "How much covered?" -> GADADHARA (coverage)
-kim_pramanam = string_srivasa  # "What is the proof?" -> SRIVASA (validation)
-
-
-# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -244,7 +232,7 @@ __all__ = [
     # Reports
     "CoverageReport",
     "ValidationReport",
-    # The 5 strings (proper names)
+    # The 5 strings (Pancha Tattva)
     "string_chaitanya",
     "string_nityananda",
     "string_advaita",
@@ -253,10 +241,4 @@ __all__ = [
     # Registry
     "STRING_FUNCTIONS",
     "get_tattva_description",
-    # Legacy compatibility
-    "kim_jnatam",
-    "kim_avashishtam",
-    "kim_bhavishyati",
-    "kati_avrtam",
-    "kim_pramanam",
 ]

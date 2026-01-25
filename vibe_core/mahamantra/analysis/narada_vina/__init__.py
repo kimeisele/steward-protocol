@@ -78,13 +78,6 @@ from .tattvas import (
     STRING_FUNCTIONS,
     CoverageReport,
     ValidationReport,
-    # Legacy compatibility
-    kati_avrtam,
-    kim_avashishtam,
-    kim_bhavishyati,
-    kim_jnatam,
-    kim_pramanam,
-    # The proper Pancha Tattva names
     string_advaita,
     string_chaitanya,
     string_gadadhara,
@@ -153,10 +146,4 @@ __all__ = [
     "get_mod17_analysis",
     "generate_text_report",
     "play_vina",
-    # Legacy compatibility
-    "kim_jnatam",
-    "kim_avashishtam",
-    "kim_bhavishyati",
-    "kati_avrtam",
-    "kim_pramanam",
 ]
