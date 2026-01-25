@@ -39,10 +39,15 @@ from vibe_core.mahamantra.protocols._seed import (
     KSHETRA,
     LILA,
     MAHA_ALPHA,
+    MAHA_CMB,
     MAHA_DEUTERON,
+    MAHA_HELION,
+    MAHA_KAON,
     MAHA_MU,
     MAHA_MUON,
     MAHA_NEUTRON,
+    MAHA_PION_CHARGED,
+    MAHA_PION_NEUTRAL,
     # Physics
     MAHA_QUANTUM,
     MAHA_TAU,
@@ -290,6 +295,21 @@ class DerivationGraph:
         )
         self._add_physics_node("MAHA_TAU", MAHA_TAU, "Tau/electron mass ratio", "MALA × AKSARA + T(6)", 3477.23, 0.007)
 
+        # ═══════════════════════════════════════════════════════════════
+        # VISHVARUPA DISCOVERIES (Round 18) - Universal Generator
+        # ═══════════════════════════════════════════════════════════════
+        self._add_physics_node(
+            "MAHA_HELION", MAHA_HELION, "Helion (He-3)/electron mass ratio", "3μ - MAHAJANA", 5495.885, 0.002
+        )
+        self._add_physics_node(
+            "MAHA_PION_CHARGED", MAHA_PION_CHARGED, "Charged pion/electron mass ratio", "T(16) + α⁻¹", 273.13, 0.048
+        )
+        self._add_physics_node(
+            "MAHA_PION_NEUTRAL", MAHA_PION_NEUTRAL, "Neutral pion/electron mass ratio", "WORDS² + HARE", 264.14, 0.053
+        )
+        self._add_physics_node("MAHA_KAON", MAHA_KAON, "Kaon/electron mass ratio", "(2 + T(16)) × 7", 966.12, 0.012)
+        self._add_physics_node("MAHA_CMB", MAHA_CMB, "CMB temperature ratio", "KSHETRA × PARAMPARA + μ", 2725.0, 0.037)
+
     def _add_node(self, name: str, value: int, category: NodeCategory, description: str, formula: str = ""):
         """Add a constant node to the graph."""
         mod_17 = value % POSITION_SUM_KRISHNA
@@ -409,6 +429,38 @@ class DerivationGraph:
             "GOLDEN_AGE_DURATION",
             EdgeType.POWER,
             "GOLDEN_AGE = (PANCHA × HALVES)^QUARTERS",
+        )
+
+        # Vishvarupa discoveries (Round 18)
+        self._add_edge(
+            ["MAHA_MU", "TRINITY", "MAHAJANA_COUNT"],
+            "MAHA_HELION",
+            EdgeType.SUBTRACTS,
+            "helion = 3μ - MAHAJANA",
+        )
+        self._add_edge(
+            ["POSITION_SUM_TOTAL", "MAHA_QUANTUM"],
+            "MAHA_PION_CHARGED",
+            EdgeType.ADDS,
+            "pion± = T(16) + α⁻¹",
+        )
+        self._add_edge(
+            ["WORDS", "HARE_COUNT"],
+            "MAHA_PION_NEUTRAL",
+            EdgeType.ADDS,
+            "pion⁰ = WORDS² + HARE",
+        )
+        self._add_edge(
+            ["HALVES", "POSITION_SUM_TOTAL", "SEVEN"],
+            "MAHA_KAON",
+            EdgeType.MULTIPLIES,
+            "kaon = (2 + T(16)) × 7",
+        )
+        self._add_edge(
+            ["KSHETRA", "PARAMPARA", "MAHA_MU"],
+            "MAHA_CMB",
+            EdgeType.ADDS,
+            "CMB = KSHETRA × PARAMPARA + μ",
         )
 
     def _add_edge(self, sources: List[str], target: str, edge_type: EdgeType, formula: str):
