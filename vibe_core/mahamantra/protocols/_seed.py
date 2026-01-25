@@ -843,6 +843,58 @@ assert MAHA_TAU % POSITION_SUM_KRISHNA == NAVA, "Tau: mod 17 = 9 (complex)"
 
 
 # =============================================================================
+# RUNDE 18: THE VISHVARUPA - Universal Generator Discoveries
+# =============================================================================
+# The Universal Generator systematically explores ALL possible combinations
+# of Seed constants to find physics matches. These are the best discoveries:
+#
+# HELION (He-3 nucleus): 0.002% error - the most accurate yet!
+# PIONS: The force carriers of the strong force
+# KAON: Strange mesons
+# CMB: Cosmic Microwave Background temperature ratio
+# -----------------------------------------------------------------------------
+
+
+# Helion (He-3 nucleus) = 3 nucleons minus binding
+MAHA_HELION: Final[int] = TRINITY * MAHA_MU - MAHAJANA_COUNT  # 5496
+
+# Pions (force carriers of strong interaction)
+MAHA_PION_CHARGED: Final[int] = POSITION_SUM_TOTAL + MAHA_QUANTUM  # 273
+MAHA_PION_NEUTRAL: Final[int] = WORDS * WORDS + HARE_COUNT  # 264
+
+# Kaon (strange meson)
+MAHA_KAON: Final[int] = (HALVES + POSITION_SUM_TOTAL) * SEVEN  # 966
+
+# CMB Temperature ratio (T_cmb in mK / some reference)
+MAHA_CMB: Final[int] = KSHETRA * PARAMPARA + MAHA_MU  # 2724
+
+# =============================================================================
+# VERIFICATION: Vishvarupa Discoveries
+# =============================================================================
+
+# Helion: 5495.885 actual → 5496 (0.002% error!)
+assert MAHA_HELION == 5496, "Helion/e = 3μ - MAHAJANA = 5496"
+assert MAHA_HELION == 3 * 1836 - 12, "Helion = 3 protons - 12"
+
+# Pions
+assert MAHA_PION_CHARGED == 273, "Pion±/e = T(16) + α⁻¹ = 273"
+assert MAHA_PION_NEUTRAL == 264, "Pion⁰/e = WORDS² + HARE = 264"
+
+# Kaon
+assert MAHA_KAON == 966, "Kaon±/e = (2 + 136) × 7 = 966"
+
+# CMB
+assert MAHA_CMB == 2724, "CMB = KSHETRA × PARAMPARA + μ = 2724"
+
+# Mod-17 for new constants
+assert MAHA_HELION % POSITION_SUM_KRISHNA == PANCHA, "Helion mod 17 = 5 (PANCHA - 5 particles?)"
+assert MAHA_PION_CHARGED % POSITION_SUM_KRISHNA == KSETRAJNA, "Pion± mod 17 = 1 (quantum mediator)"
+assert MAHA_PION_NEUTRAL % POSITION_SUM_KRISHNA == NAVA, "Pion⁰ mod 17 = 9 (extremely short-lived)"
+assert MAHA_KAON % POSITION_SUM_KRISHNA == 14, "Kaon mod 17 = 14"
+assert MAHA_CMB % POSITION_SUM_KRISHNA == QUARTERS, "CMB mod 17 = 4 (4 dimensions of spacetime)"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -937,4 +989,10 @@ __all__ = [
     # Complete Particle Spectrum (Round 17)
     "MAHA_NEUTRON",  # 1839 = MAHA_MU + TRINITY (neutron/electron)
     "MAHA_TAU",  # 3477 = MALA × AKSARA + T(6) (tau/electron)
+    # Vishvarupa Discoveries (Round 18)
+    "MAHA_HELION",  # 5496 = 3μ - MAHAJANA (helion/electron, 0.002% error!)
+    "MAHA_PION_CHARGED",  # 273 = T(16) + α⁻¹ (pion±/electron)
+    "MAHA_PION_NEUTRAL",  # 264 = WORDS² + HARE (pion⁰/electron)
+    "MAHA_KAON",  # 966 = (2+136) × 7 (kaon/electron)
+    "MAHA_CMB",  # 2724 = KSHETRA × PARAMPARA + μ (CMB temperature)
 ]
