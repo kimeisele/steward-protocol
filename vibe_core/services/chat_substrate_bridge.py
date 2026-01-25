@@ -287,14 +287,8 @@ def encode_to_tensor(text: str) -> SimpleTensor:
 # TENSOR TO POSITION MAPPING
 # =============================================================================
 
-# Varga to Quarter mapping (WHERE you speak → WHERE you route)
-VARGA_TO_QUARTER: Final[Dict[int, int]] = {
-    VARGA_KANTHYA: 0,  # Throat → GENESIS (system/kernel)
-    VARGA_TALAVYA: 1,  # Palate → DHARMA (cognition/knowledge)
-    VARGA_MURDHANYA: 1,  # Retroflex → DHARMA (logic/analysis)
-    VARGA_DANTYA: 2,  # Dental → KARMA (interface/action)
-    VARGA_OSHTHYA: 3,  # Lips → MOKSHA (output/liberation)
-}
+# VARGA_TO_QUARTER is imported from phonetic_bridge.py (SSOT)
+# Maps: Throat→GENESIS, Palate→DHARMA, Retroflex→DHARMA, Dental→KARMA, Lips→MOKSHA
 
 # Quarter to positions
 QUARTER_POSITIONS: Final[Dict[int, Tuple[int, ...]]] = {

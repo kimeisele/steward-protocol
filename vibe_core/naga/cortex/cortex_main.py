@@ -58,6 +58,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.identity import NagaIdentity
     from vibe_core.naga.orchestrator import NagaOrchestrator
     from vibe_core.naga.ouroboros import NagaOuroboros
+    from vibe_core.naga.services.narada import NaradaObservation
     from vibe_core.protocols.naga import ManasFeedback, NagaContext, VajraViolation
 
 logger = logging.getLogger("NAGA.CORTEX")
@@ -337,6 +338,25 @@ class NagaCortex:
             dharma_principles=tuple(dharma_principles or []),
         )
         self.receive_signal(signal)
+
+    def receive_narada_observation(self, observation: "NaradaObservation") -> None:
+        """
+        Receive an observation from Narada (the Cosmic Journalist).
+
+        Narada observes function calls without modifying behavior.
+        The Cortex stores these observations for pattern analysis.
+
+        Args:
+            observation: A NaradaObservation with function call metadata
+        """
+        if not self._config.enabled:
+            return
+
+        # For now, just log. Future: correlate with other signals
+        logger.debug(
+            f"[CORTEX] Narada observation: {observation.function_name} "
+            f"(duration={observation.duration_ms:.1f}ms)"
+        )
 
     # =========================================================================
     # CORRELATION

@@ -59,7 +59,7 @@
     "test_component": 0,
     "comp_001": 8,
     "bad_comp": 2,
-    "EventBus": 2
+    "EventBus": 1
   },
   "cycles": {
     "bad_agent_001": 1,
