@@ -47,19 +47,22 @@ class TestEventBusAsyncDelivery:
         async def handler(event):
             received.append(event)
 
-        # Subscribe to KERNEL_TICK
-        bus.subscribe(handler, EventType.KERNEL_TICK)
+        # Subscribe to KERNEL_TICK (new API returns subscriber_id)
+        sub_id = bus.subscribe(handler, event_types=[EventType.KERNEL_TICK])
 
         try:
             # Emit in async context (the target state)
             await bus.emit(Event(event_type=EventType.KERNEL_TICK, agent_id="test", message="test"))
 
+            # Give async handler time to execute
+            await asyncio.sleep(0.1)
+
             # Handler should have been called
             assert len(received) == 1, f"Expected 1 event, got {len(received)}"
             assert received[0].agent_id == "test"
         finally:
-            # Cleanup
-            bus.unsubscribe(handler, EventType.KERNEL_TICK)
+            # Cleanup (new API takes subscriber_id)
+            bus.unsubscribe(sub_id)
 
     @pytest.mark.asyncio
     async def test_multiple_handlers_all_called(self):
@@ -78,20 +81,23 @@ class TestEventBusAsyncDelivery:
         def handler_c_sync(event):
             calls["c"] += 1
 
-        bus.subscribe(handler_a, EventType.KERNEL_TICK)
-        bus.subscribe(handler_b, EventType.KERNEL_TICK)
-        bus.subscribe(handler_c_sync, EventType.KERNEL_TICK)
+        sub_a = bus.subscribe(handler_a, event_types=[EventType.KERNEL_TICK])
+        sub_b = bus.subscribe(handler_b, event_types=[EventType.KERNEL_TICK])
+        sub_c = bus.subscribe(handler_c_sync, event_types=[EventType.KERNEL_TICK])
 
         try:
             await bus.emit(Event(event_type=EventType.KERNEL_TICK, agent_id="test", message="test"))
+
+            # Give async handlers time to execute
+            await asyncio.sleep(0.1)
 
             assert calls["a"] == 1, "Handler A not called"
             assert calls["b"] == 1, "Handler B not called"
             assert calls["c"] == 1, "Handler C (sync) not called"
         finally:
-            bus.unsubscribe(handler_a, EventType.KERNEL_TICK)
-            bus.unsubscribe(handler_b, EventType.KERNEL_TICK)
-            bus.unsubscribe(handler_c_sync, EventType.KERNEL_TICK)
+            bus.unsubscribe(sub_a)
+            bus.unsubscribe(sub_b)
+            bus.unsubscribe(sub_c)
 
 
 class TestKernelCodeQuality:

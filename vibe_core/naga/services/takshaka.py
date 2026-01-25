@@ -480,12 +480,23 @@ class TakshakaService(NagaBaseService, TakshakaProtocol, SecurityProtocol):
     # SecurityProtocol Implementation (Interface Group - Seva for Prahlad)
     # =========================================================================
 
+    # Safe internal methods that bypass security (read-only, boot-time)
+    _WHITELISTED_METHODS: set = {
+        "GenesisService.quick_check",
+        "GenesisService.get_instance",
+        "GenesisService.check",
+    }
+
     def intercept(self, subject: Subject) -> Verdict:
         """
         Judge a subject - ALLOW, DENY, ESCALATE, QUARANTINE (SecurityProtocol).
 
         SEVA: Intercepts threats FÜR Prahlad, not because protocol says so.
         """
+        # Whitelist: Allow safe internal methods (read-only, boot-time)
+        if subject.identifier in self._WHITELISTED_METHODS:
+            return Verdict.ALLOW
+
         # Check if already quarantined
         if self.is_quarantined(subject.identifier):
             return Verdict.QUARANTINE
