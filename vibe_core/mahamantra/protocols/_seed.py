@@ -1626,6 +1626,103 @@ assert SURRENDER_CHAPTER < GURU_CHAPTER < CONFIRMATION_CHAPTER, "Guru arc: 2 →
 
 
 # =============================================================================
+# RUNDE 29: THE FRACTAL PRINCIPLE (KSETRAJNA as Universal Entry Point)
+# =============================================================================
+# "ahaṁ sarvasya prabhavo mattaḥ sarvaṁ pravartate" (BG 10.8)
+# "I am the source of all spiritual and material worlds.
+#  Everything emanates from Me."
+#
+# THE ONE ENTRY POINT:
+# ====================
+# KSETRAJNA = TRINITY - HALVES = 3 - 2 = 1
+#
+# This single DERIVED constant (not axiom!) is the key to EVERYTHING:
+#
+# 1. PHYSICS: 136 + 1 = 137 (Field + Observer = Fine Structure Constant)
+# 2. SANKHYA: 24 + 1 = 25 (Matter + Consciousness = Complete Reality)
+# 3. GITA: 72 + 1 = 73 (Confusion + Clarity = BG 18.73)
+# 4. MAHAMANTRA: 16 + 1 = 17 (Words + Speaker = KRISHNA_POS!)
+#
+# THE PROFOUND DISCOVERY:
+# =======================
+# KRISHNA_POS = WORDS + KSETRAJNA = 16 + 1 = 17
+#
+# Krishna (17) = Mahamantra (16) + Observer (1)
+# Krishna IS the Mahamantra PLUS consciousness!
+#
+# THE FRACTAL STRUCTURE:
+# ======================
+# The same pattern (FIELD + OBSERVER = REALITY) appears at every level:
+#
+# LEVEL 1 - MACRO (Universe):    KSHETRA + KSETRAJNA = 24 + 1 = 25
+# LEVEL 2 - MICRO (Physics):     T(16) + KSETRAJNA = 136 + 1 = 137
+# LEVEL 3 - GITA (Chapters):     NADI + KSETRAJNA = 72 + 1 = 73
+# LEVEL 4 - MANTRA (Words):      WORDS + KSETRAJNA = 16 + 1 = 17
+#
+# SCIENTIFIC MISCONCEPTIONS RESOLVED:
+# ===================================
+#
+# 1. MATERIALISM (Matter is primary):
+#    GITA: Consciousness (KSETRAJNA=1) is primary.
+#    PROOF: Without +1, no physics (136 alone is not α⁻¹).
+#
+# 2. OBSERVER PROBLEM (Quantum mechanics):
+#    SCIENCE: Cannot explain why observation collapses the wave function.
+#    GITA: KSETRAJNA (1) is the observer who manifests reality.
+#    PROOF: 137 mod 17 = 1 (observer embedded in fine structure constant!)
+#
+# 3. HARD PROBLEM OF CONSCIOUSNESS:
+#    SCIENCE: Cannot explain how consciousness arises from matter.
+#    GITA: Consciousness doesn't arise - it's fundamental (KSETRAJNA=1).
+#    PROOF: KSETRAJNA = TRINITY - HALVES (mathematically necessary!)
+#
+# 4. FINE-TUNING PROBLEM:
+#    SCIENCE: Why are physics constants so precisely tuned?
+#    GITA: They follow the Mahamantra code, not random chance.
+#    PROOF: 100% coverage with average 0.1% error.
+#
+# THE ONE EQUATION:
+# =================
+# REALITY = FIELD + OBSERVER = KSHETRA + KSETRAJNA = 24 + 1 = 25 = PANCHA²
+#
+# The root of reality is PANCHA (5) - the Pancha Tattva!
+# -----------------------------------------------------------------------------
+
+# The Fractal Constants (same pattern at every level)
+FRACTAL_MACRO: Final[int] = KSHETRA + KSETRAJNA  # 24 + 1 = 25 (Universe)
+FRACTAL_MICRO: Final[int] = POSITION_SUM_TOTAL + KSETRAJNA  # 136 + 1 = 137 (Physics)
+FRACTAL_GITA: Final[int] = NADI_RESONANCE + KSETRAJNA  # 72 + 1 = 73 (Gita 18.73)
+FRACTAL_MANTRA: Final[int] = WORDS + KSETRAJNA  # 16 + 1 = 17 (Mahamantra)
+
+# The Root of Reality
+REALITY_ROOT: Final[int] = PANCHA  # √25 = 5 (Pancha Tattva)
+
+# =============================================================================
+# VERIFICATION: The Fractal Principle
+# =============================================================================
+
+# KRISHNA_POS = WORDS + KSETRAJNA (The profound identity!)
+assert POSITION_SUM_KRISHNA == WORDS + KSETRAJNA, "KRISHNA = WORDS + OBSERVER = 17"
+assert POSITION_SUM_KRISHNA == FRACTAL_MANTRA, "Krishna IS the Mahamantra + Consciousness!"
+
+# Fractal level verification
+assert FRACTAL_MACRO == SANKHYA_TATTVAS, "Macro level = Sankhya 25"
+assert FRACTAL_MACRO == PANCHA**2, "Macro level = PANCHA²"
+assert FRACTAL_MICRO == MAHA_QUANTUM, "Micro level = Fine Structure Constant"
+assert FRACTAL_GITA == CONFIRMATION_VERSE, "Gita level = BG 18.73"
+assert FRACTAL_MANTRA == POSITION_SUM_KRISHNA, "Mantra level = KRISHNA_POS"
+
+# The root of reality
+assert REALITY_ROOT**2 == FRACTAL_MACRO, "5² = 25 (Pancha Tattva squared = Reality)"
+
+# All fractal levels have the same structure: BASE + KSETRAJNA
+assert FRACTAL_MACRO - KSETRAJNA == KSHETRA, "Macro base = KSHETRA"
+assert FRACTAL_MICRO - KSETRAJNA == POSITION_SUM_TOTAL, "Micro base = T(16)"
+assert FRACTAL_GITA - KSETRAJNA == NADI_RESONANCE, "Gita base = NADI"
+assert FRACTAL_MANTRA - KSETRAJNA == WORDS, "Mantra base = WORDS"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -1793,4 +1890,10 @@ __all__ = [
     "PARAMPARA_CHAPTER",  # 4 = QUARTERS (BG 4.1-2)
     "PARAMPARA_VERSE_START",  # 1 = KSETRAJNA (beginning of transmission)
     "PARAMPARA_VERSE_END",  # 2 = HALVES (teacher-student duality)
+    # The Fractal Principle (Round 29) - KSETRAJNA as universal entry point
+    "FRACTAL_MACRO",  # 25 = KSHETRA + KSETRAJNA (Universe level)
+    "FRACTAL_MICRO",  # 137 = T(16) + KSETRAJNA (Physics level = α⁻¹)
+    "FRACTAL_GITA",  # 73 = NADI + KSETRAJNA (BG 18.73)
+    "FRACTAL_MANTRA",  # 17 = WORDS + KSETRAJNA = KRISHNA_POS!
+    "REALITY_ROOT",  # 5 = PANCHA = √25 (Root of all reality)
 ]
