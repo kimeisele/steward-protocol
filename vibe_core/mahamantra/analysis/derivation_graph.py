@@ -39,6 +39,8 @@ from vibe_core.mahamantra.protocols._seed import (
     KSHETRA,
     LILA,
     MAHA_ALPHA,
+    # Coupling Constants (Round 19)
+    MAHA_ALPHA_S_SCALED,
     MAHA_CMB,
     MAHA_DEUTERON,
     MAHA_HELION,
@@ -50,6 +52,7 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_PION_NEUTRAL,
     # Physics
     MAHA_QUANTUM,
+    MAHA_SIN2_THETA_W_SCALED,
     MAHA_TAU,
     MAHA_TRITON,
     # Secondary
@@ -310,6 +313,21 @@ class DerivationGraph:
         self._add_physics_node("MAHA_KAON", MAHA_KAON, "Kaon/electron mass ratio", "(2 + T(16)) × 7", 966.12, 0.012)
         self._add_physics_node("MAHA_CMB", MAHA_CMB, "CMB temperature ratio", "KSHETRA × PARAMPARA + μ", 2725.0, 0.037)
 
+        # ═══════════════════════════════════════════════════════════════
+        # COUPLING CONSTANTS (Round 19) - Dimensionless Force Ratios
+        # ═══════════════════════════════════════════════════════════════
+        self._add_physics_node(
+            "MAHA_ALPHA_S_SCALED", MAHA_ALPHA_S_SCALED, "Strong coupling αs × 1000", "MALA + TEN", 117.9, 0.08
+        )
+        self._add_physics_node(
+            "MAHA_SIN2_THETA_W_SCALED",
+            MAHA_SIN2_THETA_W_SCALED,
+            "Weinberg angle sin²θW × 100",
+            "KSHETRA - KSETRAJNA",
+            23.12,
+            0.53,
+        )
+
     def _add_node(self, name: str, value: int, category: NodeCategory, description: str, formula: str = ""):
         """Add a constant node to the graph."""
         mod_17 = value % POSITION_SUM_KRISHNA
@@ -461,6 +479,20 @@ class DerivationGraph:
             "MAHA_CMB",
             EdgeType.ADDS,
             "CMB = KSHETRA × PARAMPARA + μ",
+        )
+
+        # Coupling constants (Round 19)
+        self._add_edge(
+            ["MALA", "TEN"],
+            "MAHA_ALPHA_S_SCALED",
+            EdgeType.ADDS,
+            "αs × 1000 = MALA + TEN",
+        )
+        self._add_edge(
+            ["KSHETRA", "KSETRAJNA"],
+            "MAHA_SIN2_THETA_W_SCALED",
+            EdgeType.SUBTRACTS,
+            "sin²θW × 100 = KSHETRA - KSETRAJNA",
         )
 
     def _add_edge(self, sources: List[str], target: str, edge_type: EdgeType, formula: str):
