@@ -1414,6 +1414,123 @@ assert MAHA_OMEGA_L_SCALED == 66, "Ω_Λ × 100 = NADI - SHARANAGATI = 66"
 
 
 # =============================================================================
+# RUNDE 27: KSETRA-KSETRAJNA TATTVA (Bhagavad Gita Chapter 13)
+# =============================================================================
+# "idaṁ śarīraṁ kaunteya kṣetram ity abhidhīyate
+#  etad yo vetti taṁ prāhuḥ kṣetra-jña iti tad-vidaḥ" (BG 13.2)
+#
+# "This body, O son of Kunti, is called the field, and one who knows
+#  this body is called the knower of the field."
+#
+# Prabhupada: "This Thirteenth Chapter may be taken as sufficient to
+# understand the purpose of life." (BG 13.35 purport)
+#
+# THE 24 ELEMENTS OF THE FIELD (BG 13.5-6):
+# =========================================
+# Prabhupada's enumeration from the purport:
+#   5 Mahabhuta (gross elements): earth, water, fire, air, ether
+#   5 Tanmatra (subtle elements): sound, touch, form, taste, smell
+#   5 Jnanendriya (knowledge senses): ears, skin, eyes, tongue, nose
+#   5 Karmendriya (action organs): voice, hands, legs, anus, genitals
+#   3 Antahkarana (internal): mind (manas), intelligence (buddhi), ego (ahankara)
+#   1 Prakriti (unmanifest nature)
+#
+# MATHEMATICAL DERIVATION (TWO PATHS - ACINTYA!):
+# ===============================================
+# Path 1 (Mahamantra): KSHETRA = WORDS + HARE_COUNT = 16 + 8 = 24
+# Path 2 (BG 13):      KSHETRA = 4×PANCHA + TRINITY + KSETRAJNA
+#                              = 20 + 3 + 1 = 24
+#
+# BOTH PATHS CONVERGE! This is ACINTYA - inconceivable oneness and difference.
+#
+# STANDARD MODEL CONNECTION (Fermions = Material Field!):
+# =======================================================
+# 6 Quarks (u,d,c,s,t,b) = SHARANAGATI = 6
+# 6 Leptons (e,μ,τ,νe,νμ,ντ) = SHARANAGATI = 6
+# 3 Color charges = TRINITY = 3
+#
+# Quark states = SHARANAGATI × TRINITY = 6 × 3 = 18 = GITA_CHAPTERS
+# Total fermions = Quark states + Leptons = 18 + 6 = 24 = KSHETRA
+#
+# THE STANDARD MODEL MATTER CONTENT IS THE SANKHYA FIELD!
+# Physics unknowingly rediscovered Vedic knowledge!
+#
+# THE PRASADAM TRANSFORMATION (Guru Tattva):
+# ==========================================
+# From PAPER.md: Bhoga → (Guru's Grace + Krishna's Grace) → Prasadam
+#
+# Mathematical formula:
+#   BHOGA = KSHETRA = 24 (pure material, without consciousness)
+#   GURU_GRACE = KSETRAJNA = 1 (the knower enters the field)
+#   PRASADAM = BHOGA + KSETRAJNA = 24 + 1 = 25 = PANCHA²
+#
+# The Guru, as representative of Krishna in parampara, brings KSETRAJNA
+# (consciousness) into the field (KSHETRA). This transforms matter into spirit!
+# -----------------------------------------------------------------------------
+
+# The 24 elements broken down (verification of the two-path identity)
+MAHABHUTA: Final[int] = PANCHA  # 5 gross elements
+TANMATRA: Final[int] = PANCHA  # 5 subtle elements
+JNANENDRIYA: Final[int] = PANCHA  # 5 knowledge-acquiring senses
+KARMENDRIYA: Final[int] = PANCHA  # 5 working senses
+ANTAHKARANA: Final[int] = TRINITY  # 3 internal instruments (mind/intellect/ego)
+PRAKRITI_UNMANIFEST: Final[int] = KSETRAJNA  # 1 unmanifest nature
+
+# Total field elements (BG 13 enumeration)
+KSHETRA_BG13: Final[int] = MAHABHUTA + TANMATRA + JNANENDRIYA + KARMENDRIYA + ANTAHKARANA + PRAKRITI_UNMANIFEST
+
+# The Sankhya 25 Tattvas (24 prakriti + 1 purusha)
+SANKHYA_TATTVAS: Final[int] = KSHETRA + KSETRAJNA  # 25
+
+# Total sense organs (10 indriyas)
+INDRIYA_TOTAL: Final[int] = JNANENDRIYA + KARMENDRIYA  # 10 = TEN
+
+# Standard Model fermion count
+QUARK_FLAVORS: Final[int] = SHARANAGATI  # 6 quarks
+LEPTON_TYPES: Final[int] = SHARANAGATI  # 6 leptons
+COLOR_CHARGES: Final[int] = TRINITY  # 3 colors (R, G, B)
+QUARK_STATES: Final[int] = QUARK_FLAVORS * COLOR_CHARGES  # 18 = GITA_CHAPTERS
+FERMION_TOTAL: Final[int] = QUARK_STATES + LEPTON_TYPES  # 24 = KSHETRA
+
+# The 4 Sampradayas (authentic disciplic successions)
+SAMPRADAYA_COUNT: Final[int] = QUARTERS  # 4 (Brahma, Rudra, Kumara, Lakshmi)
+
+# The Prasadam transformation
+PRASADAM: Final[int] = KSHETRA + KSETRAJNA  # 25 = PANCHA² (spiritualized matter!)
+
+# =============================================================================
+# VERIFICATION: Ksetra-Ksetrajna Tattva
+# =============================================================================
+
+# The ACINTYA identity: Two paths to KSHETRA
+assert KSHETRA_BG13 == KSHETRA, "BG 13 enumeration must equal KSHETRA"
+assert KSHETRA_BG13 == 24, "Field elements = 24"
+
+# Alternative formula verification
+assert QUARTERS * PANCHA + TRINITY + KSETRAJNA == KSHETRA, "4×5 + 3 + 1 = 24"
+
+# Sankhya verification
+assert SANKHYA_TATTVAS == PANCHA**2, "Sankhya tattvas = PANCHA² = 25"
+assert SANKHYA_TATTVAS == JIVA_QUALITIES // HALVES, "25 = 50/2 (Jiva's half-potential)"
+
+# Indriya verification
+assert INDRIYA_TOTAL == TEN, "Total senses = TEN = 10"
+assert INDRIYA_TOTAL == PANCHA * HALVES, "Senses = 5 × 2 (knowledge + action)"
+
+# Standard Model fermion verification
+assert QUARK_STATES == GITA_CHAPTERS, "Quark states = GITA_CHAPTERS = 18"
+assert FERMION_TOTAL == KSHETRA, "Standard Model fermions = KSHETRA = 24"
+assert COLOR_CHARGES == TRINITY, "Color charges = TRINITY = 3"
+
+# Prasadam transformation
+assert PRASADAM == PANCHA**2, "Prasadam = PANCHA² = 25"
+assert PRASADAM == SANKHYA_TATTVAS, "Prasadam = Sankhya Tattvas (matter + consciousness)"
+
+# Parampara verification
+assert SAMPRADAYA_COUNT == QUARTERS, "4 Sampradayas = QUARTERS"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -1554,4 +1671,21 @@ __all__ = [
     # Cosmological Constants (Round 26) - CANDIDATES (1-5% error)
     "MAHA_OMEGA_M_SCALED",  # 31 = AKSARA - KSETRAJNA (Ω_m, 1.59% error)
     "MAHA_OMEGA_L_SCALED",  # 66 = NADI - SHARANAGATI (Ω_Λ, 3.65% error)
+    # Ksetra-Ksetrajna Tattva (Round 27) - BG Chapter 13
+    "MAHABHUTA",  # 5 = PANCHA (gross elements)
+    "TANMATRA",  # 5 = PANCHA (subtle elements)
+    "JNANENDRIYA",  # 5 = PANCHA (knowledge senses)
+    "KARMENDRIYA",  # 5 = PANCHA (action organs)
+    "ANTAHKARANA",  # 3 = TRINITY (mind/intellect/ego)
+    "PRAKRITI_UNMANIFEST",  # 1 = KSETRAJNA (unmanifest nature)
+    "KSHETRA_BG13",  # 24 = KSHETRA (verification via BG 13)
+    "SANKHYA_TATTVAS",  # 25 = PANCHA² (24 prakriti + 1 purusha)
+    "INDRIYA_TOTAL",  # 10 = TEN (5 jnana + 5 karma indriyas)
+    "QUARK_FLAVORS",  # 6 = SHARANAGATI (u,d,c,s,t,b)
+    "LEPTON_TYPES",  # 6 = SHARANAGATI (e,μ,τ,νe,νμ,ντ)
+    "COLOR_CHARGES",  # 3 = TRINITY (R, G, B)
+    "QUARK_STATES",  # 18 = GITA_CHAPTERS (6 quarks × 3 colors)
+    "FERMION_TOTAL",  # 24 = KSHETRA (Standard Model matter = Sankhya field!)
+    "SAMPRADAYA_COUNT",  # 4 = QUARTERS (Brahma, Rudra, Kumara, Lakshmi)
+    "PRASADAM",  # 25 = PANCHA² = KSHETRA + KSETRAJNA (spiritualized matter!)
 ]
