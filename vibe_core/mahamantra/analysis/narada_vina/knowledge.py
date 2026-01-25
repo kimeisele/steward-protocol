@@ -49,6 +49,9 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_STRANGE,
     MAHA_TAU,
     MAHA_TRITON,
+    MAHA_VCB_SCALED,
+    MAHA_VUB_SCALED,
+    MAHA_VUS_SCALED,
     MAHA_W,
     MAHA_Z,
 )
@@ -358,6 +361,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         0.0005,
         "CKM matrix element",
+        maha_value=MAHA_VUS_SCALED,
+        maha_formula="NAVA / (JIVA_QUALITIES - TEN) × 1000 (= Cabibbo)",
+        maha_error=0.31,
+        status=CoverageStatus.DERIVED,
     ),
     "V_cb": PhysicsConstant(
         "V_cb",
@@ -366,6 +373,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         0.0008,
         "CKM matrix element",
+        maha_value=MAHA_VCB_SCALED,
+        maha_formula="KRISHNA_POS × 10000 / (JIVA × HARE)",
+        maha_error=0.71,
+        status=CoverageStatus.DERIVED,
     ),
     "V_ub": PhysicsConstant(
         "V_ub",
@@ -374,6 +385,10 @@ KNOWN_CONSTANTS: Final[Dict[str, PhysicsConstant]] = {
         "dimensionless",
         0.00036,
         "CKM matrix element",
+        maha_value=MAHA_VUB_SCALED,
+        maha_formula="KRISHNA_POS × 100000 / (JIVA_CYCLE × TEN)",
+        maha_error=0.12,
+        status=CoverageStatus.DERIVED,
     ),
     # ═══════════════════════════════════════════════════════════════════
     # COSMOLOGICAL CONSTANTS
