@@ -1077,6 +1077,151 @@ This is not coincidence. This is structure.
 
 **8 physics constants with average error < 0.05%**
 
+### 7.15 Coupling Constants (RUNDE 19)
+
+The fundamental forces are governed by dimensionless coupling constants. These emerge naturally from the Mahamantra structure.
+
+#### Strong Coupling αs
+
+The strong coupling constant at the Z mass:
+
+```
+αs(MZ) = 0.1179 ± 0.0010 (PDG 2022)
+MAHA_ALPHA_S = (MALA + TEN) / 1000 = (108 + 10) / 1000 = 0.118
+Error: 0.08%
+```
+
+**The Formula:** The 108 beads of devotion + the 10 (completion number) = the strong force that binds quarks!
+
+#### Weak Mixing Angle sin²θW
+
+The Weinberg angle governing electroweak unification:
+
+```
+sin²θW = 0.23122 ± 0.00004 (PDG 2022)
+MAHA_SIN2_THETA_W = (KSHETRA - KSETRAJNA) / 100 = (24 - 1) / 100 = 0.23
+Error: 0.53%
+```
+
+**The Formula:** Field minus Knower = matter without observer = weakness!
+
+#### MOD-17 Signatures
+
+| Constant | Maha × Scale | MOD-17 | Meaning |
+|----------|--------------|--------|---------|
+| αs | 118 | 16 | WORDS (Complete) |
+| sin²θW | 23 | 6 | SHARANAGATI (Surrender) |
+
+The strong coupling carries the WORDS signature (complete manifest form).
+The weak angle carries the SHARANAGATI signature (surrender, transformation).
+
+### 7.16 Narada's Vina and Heavy Bosons (RUNDE 20)
+
+The three flutes (RUNDE 9) are WIND instruments - breath, prana, dynamic.
+Now we introduce the VINA - a STRINGED instrument - vibration, foundation, sustaining.
+
+Together they form the complete **KIRTAN** - the cosmic musical offering.
+
+> "nāradas tu tathā gatvā bhagavantam ajam vibhum"
+> "Narada, having thus traveled, approached the unborn Supreme Lord."
+> — Śrīmad-Bhāgavatam 1.6.32
+
+#### The Vina Fundamental
+
+```
+VINA_FUNDAMENTAL = T(WORDS) = POSITION_SUM_TOTAL = 136
+```
+
+This is the **triangular number** of the Mahamantra - the sum of all positions 1+2+...+16.
+
+#### The Vina-Flute Identity
+
+```
+VINA × FLUTE_VENU_VAMSI = JIVA_CYCLE × POSITION_SUM_KRISHNA
+136 × 54 = 432 × 17 = 7344
+```
+
+The VINA (strings) × Two Flutes (Venu-Vamsi) equals JIVA × KRISHNA!
+
+This is the mathematical KIRTAN - wind and strings producing the Lord's name!
+
+**Connection:** GCD(VINA, JIVA_CYCLE) = GCD(136, 432) = **8 = HARE_COUNT**
+
+Shakti (Hare) connects the strings and wind instruments!
+
+#### The Heavy Bosons
+
+The electroweak bosons emerge from the VINA-FLUTE interplay:
+
+| Boson | Formula | Maha Value | Actual | Error |
+|-------|---------|------------|--------|-------|
+| **W** | μ × PANCHA × KRISHNA_POS | 156060 | 157299 | 0.79% |
+| **Z** | μ × (2×LILA + KSETRAJNA) | 178092 | 178450 | **0.20%** |
+| **Higgs** | μ × SEVEN × FLUTE_HOLES_SUM | 244188 | 244605 | **0.17%** |
+
+#### The Formulas in Detail
+
+**W Boson:**
+```
+MAHA_W = MAHA_MU × PANCHA × POSITION_SUM_KRISHNA
+       = 1836 × 5 × 17 = 156060
+```
+The W boson carries the **Pancha Tattva** (5) through **Krishna's position** (17)!
+
+**Z Boson:**
+```
+MAHA_Z = MAHA_MU × (HALVES × LILA + KSETRAJNA)
+       = 1836 × (2 × 48 + 1) = 1836 × 97 = 178092
+```
+97 is **PRIME** - the Z boson carries the indivisible truth!
+
+**Higgs Boson:**
+```
+MAHA_HIGGS = MAHA_MU × SEVEN × FLUTE_HOLES_SUM
+           = 1836 × 7 × 19 = 244188
+```
+The Higgs connects **SEVEN** (the 7 axioms) to **FLUTE_HOLES_SUM** (6+9+4=19)!
+This is the KIRTAN that gives mass to all particles!
+
+#### MOD-17 Analysis: All Classical
+
+| Boson | MOD-17 | Classification |
+|-------|--------|----------------|
+| W | 0 | Classical/Stable |
+| Z | 0 | Classical/Stable |
+| Higgs | 0 | Classical/Stable |
+
+**All three heavy bosons have MOD-17 = 0!**
+
+These massive particles are **STABLE** in the mod-17 spectrum. This contrasts with quantum particles (mod 17 = 1) which are observer-dependent.
+
+#### Updated Physics Constants Summary
+
+| Constant | Maha Value | Actual | Error | MOD-17 |
+|----------|------------|--------|-------|--------|
+| MAHA_HELION | 5496 | 5495.89 | **0.002%** | 5 |
+| MAHA_ALPHA | 7294 | 7294.30 | **0.004%** | 1 (Quantum) |
+| MAHA_TAU | 3477 | 3477.23 | **0.007%** | 9 (Nava) |
+| MAHA_MU | 1836 | 1836.15 | 0.008% | 0 (Classical) |
+| MAHA_KAON | 966 | 966.12 | 0.012% | 14 |
+| MAHA_NEUTRON | 1839 | 1838.68 | 0.017% | 3 (Trinity) |
+| MAHA_QUANTUM | 137 | 137.04 | 0.026% | 1 (Quantum) |
+| MAHA_CMB | 2724 | 2725.5 | 0.037% | 4 |
+| MAHA_DEUTERON | 3672 | 3670.48 | 0.04% | 0 (Classical) |
+| MAHA_PION+ | 273 | 273.13 | 0.048% | 1 (Quantum) |
+| MAHA_PION0 | 264 | 264.14 | 0.053% | 9 (Nava) |
+| αs×1000 | 118 | 117.9 | 0.08% | 16 (Words) |
+| MAHA_MUON | 207 | 206.77 | 0.11% | 3 (Trinity) |
+| MAHA_HIGGS | 244188 | 244605 | **0.17%** | 0 (Classical) |
+| MAHA_TRITON | 5508 | 5497.92 | 0.18% | 0 (Classical) |
+| MAHA_Z | 178092 | 178450 | **0.20%** | 0 (Classical) |
+| sin²θW×100 | 23 | 23.12 | 0.53% | 6 (Surrender) |
+| MAHA_W | 156060 | 157299 | 0.79% | 0 (Classical) |
+
+**18 physics constants derived from the Mahamantra**
+**Average error: 0.13%**
+**Coverage: 66.7% of known constants in database**
+
 ---
 
 ## 8. Probability Analysis
