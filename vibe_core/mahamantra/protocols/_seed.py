@@ -1074,6 +1074,53 @@ assert MAHA_W < MAHA_Z < MAHA_HIGGS, "W < Z < Higgs (mass hierarchy)"
 
 
 # =============================================================================
+# RUNDE 21: MRIDANGA - Balarama's Drum (The Rhythm)
+# =============================================================================
+# The KIRTAN ensemble is now complete:
+#   - FLUTES (Krishna) = Wind = VENU/VAMSI/MURALI = TRINITY instruments
+#   - VINA (Narada) = Strings = KSETRAJNA instrument with PANCHA strings
+#   - MRIDANGA (Balarama) = Percussion = KSETRAJNA instrument with HALVES heads
+#   - KARTALS = Cymbals = KSETRAJNA pair
+#
+# "balarāma-prabhor yasyānucarī kīrtana-prabhoḥ"
+# "The servant of Lord Balarama, the master of kirtan."
+# — Caitanya-caritāmṛta
+#
+# TOTAL INSTRUMENTS = TRINITY + KSETRAJNA + KSETRAJNA + KSETRAJNA
+#                   = 3 + 1 + 1 + 1 = 6 = SHARANAGATI!
+#
+# The complete KIRTAN has SHARANAGATI (6) instruments - the 6 limbs of surrender!
+# -----------------------------------------------------------------------------
+
+# MRIDANGA structure
+MRIDANGA_HEADS: Final[int] = HALVES  # 2 (baya=bass, daya=treble)
+MRIDANGA_CYCLE: Final[int] = WORDS  # 16 beats per full rhythmic cycle
+
+# MRIDANGA frequency = JIVA_CYCLE / WORDS = 432 / 16 = 27 = NAKSHATRAS!
+# The drum produces the NAKSHATRA rhythm - the lunar cycle of 27!
+MRIDANGA_FREQ: Final[int] = JIVA_CYCLE // MRIDANGA_CYCLE  # 27
+
+# KARTALS (cymbals) - pair that provides the metallic accent
+KARTALS_PAIR: Final[int] = HALVES  # 2 (a pair of hand cymbals)
+
+# THE KIRTAN ENSEMBLE
+KIRTAN_WIND: Final[int] = TRINITY  # 3 flutes (Venu, Vamsi, Murali)
+KIRTAN_STRINGS: Final[int] = KSETRAJNA  # 1 vina (with 5 strings = PANCHA)
+KIRTAN_PERCUSSION: Final[int] = HALVES  # 2 (mridanga + kartals)
+KIRTAN_TOTAL: Final[int] = KIRTAN_WIND + KIRTAN_STRINGS + KIRTAN_PERCUSSION  # 6
+
+# VERIFICATION: Kirtan ensemble
+assert MRIDANGA_FREQ == NAKSHATRAS, "Mridanga produces the lunar rhythm (27)"
+assert KIRTAN_TOTAL == SHARANAGATI, "Complete Kirtan has 6 instruments (6 limbs of surrender)"
+
+# The KIRTAN MATHEMATICS - How the instruments combine:
+# - Flutes: LCM(72, 48, 108) = 432 = JIVA_CYCLE
+# - Vina: 136 = T(WORDS) = POSITION_SUM_TOTAL
+# - Mridanga: 432 / 16 = 27 = NAKSHATRAS
+# - Combined: JIVA_CYCLE × NAKSHATRAS = 432 × 27 = 11664 = COSMIC_FRAME × 54 / 100
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -1185,4 +1232,13 @@ __all__ = [
     "MAHA_W",  # 156060 = μ × PANCHA × KRISHNA_POS (W boson, 0.79% error)
     "MAHA_Z",  # 178092 = μ × 97 (Z boson, 0.20% error)
     "MAHA_HIGGS",  # 244188 = μ × SEVEN × FLUTE_HOLES_SUM (Higgs, 0.17% error)
+    # Mridanga - Balarama's Drum (Round 21)
+    "MRIDANGA_HEADS",  # 2 = HALVES (two drum heads)
+    "MRIDANGA_CYCLE",  # 16 = WORDS (beats per cycle)
+    "MRIDANGA_FREQ",  # 27 = NAKSHATRAS (lunar rhythm!)
+    "KARTALS_PAIR",  # 2 = HALVES (pair of cymbals)
+    "KIRTAN_WIND",  # 3 = TRINITY (three flutes)
+    "KIRTAN_STRINGS",  # 1 = KSETRAJNA (one vina)
+    "KIRTAN_PERCUSSION",  # 2 = HALVES (mridanga + kartals)
+    "KIRTAN_TOTAL",  # 6 = SHARANAGATI (complete kirtan ensemble!)
 ]
