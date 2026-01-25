@@ -9,13 +9,17 @@ ADVAITA STRING - The Logic (Inference/Bridge)
 ADVAITA = The bridge between material and spiritual.
 Maha-Vishnu - he who CALLS Krishna to the material world.
 
-This module contains the NAVA (9) inference functions:
-- Prediction generation
-- Formula discovery
-- Pattern recognition
+This module contains CANDIDATE predictions (1-5% error):
+- Formula discovery for not-yet-verified constants
+- Pattern recognition for potential matches
 
-CONSTRAINT: NAVA = 9 maximum generator functions
-(The 9 processes of devotional service - Navadha Bhakti)
+QUALITY STANDARDS:
+- < 1% error → Should be DERIVED (move to knowledge.py)
+- 1-5% error → CANDIDATE (belongs here as predictions)
+- > 5% error → NUMEROLOGY (rejected, not included)
+
+NOTE: Previous versions forced NAVA = 9 generators, which led to
+keeping predictions with >50% error (numerology). Quality > quantity.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -27,8 +31,6 @@ from dataclasses import dataclass
 from typing import Final, List
 
 from vibe_core.mahamantra.protocols._seed import (
-    COSMIC_FRAME,
-    HALF_SIZE,
     HALVES,
     KSHETRA,
     MAHA_MU,
@@ -36,7 +38,6 @@ from vibe_core.mahamantra.protocols._seed import (
     NADI_RESONANCE,
     NAVA,
     QUARTERS,
-    SEVEN,
     TRINITY,
 )
 
@@ -57,95 +58,84 @@ class Prediction:
 
 
 # =============================================================================
-# THE NAVA GENERATOR FUNCTIONS (Maximum 9)
+# CANDIDATE PREDICTIONS (1-5% error - awaiting verification)
 # =============================================================================
-
-
-def predict_top_quark() -> Prediction:
-    """
-    Generator 1: Top quark / electron ratio.
-
-    Pattern: Heavy quarks follow COSMIC_FRAME relationships.
-    """
-    value = COSMIC_FRAME * SEVEN + MAHA_MU * HALF_SIZE
-    return Prediction(
-        name="top_quark/electron",
-        formula="COSMIC * SEVEN + MU * HALF_SIZE",
-        value=value,
-        components=["COSMIC_FRAME", "SEVEN", "MAHA_MU", "HALF_SIZE"],
-        description="Top quark mass ratio prediction",
-    )
+# These are predictions that match physics constants within 1-5% error.
+# Constants with <1% error should be promoted to DERIVED in knowledge.py.
+# Constants with >5% error are numerology and are not included.
 
 
 def predict_bottom_quark() -> Prediction:
     """
-    Generator 2: Bottom quark / electron ratio.
+    CANDIDATE: Bottom quark / electron ratio.
 
-    Actual value ~8194.
+    Actual value: ~8180 (PDG 2022: m_b = 4.18 GeV)
+    Predicted: 8316 = 4×μ + 108×9 = 7344 + 972
+    Error: 1.66% (CANDIDATE)
+
+    Formula: 4 protons + Mala × Nava (devotion × processes)
     """
-    value = MAHA_MU * QUARTERS + MALA * NAVA
+    value = MAHA_MU * QUARTERS + MALA * NAVA  # 8316
     return Prediction(
         name="bottom_quark/electron",
-        formula="4 * MU + MALA * NAVA",
+        formula="4×μ + MALA×NAVA",
         value=value,
         components=["MAHA_MU", "QUARTERS", "MALA", "NAVA"],
-        description="Bottom quark mass ratio prediction",
+        description="Bottom quark mass ratio (1.66% error)",
     )
 
 
 def predict_charm_quark() -> Prediction:
     """
-    Generator 3: Charm quark / electron ratio.
+    CANDIDATE: Charm quark / electron ratio.
 
-    Actual value ~2493.
+    Actual value: ~2485 (PDG 2022: m_c = 1.27 GeV)
+    Predicted: 2586 = 108×24 - 3×2 = 2592 - 6
+    Error: 4.06% (CANDIDATE)
+
+    Formula: Mala × Field - Trinity × Halves
     """
-    value = MALA * KSHETRA - TRINITY * HALVES
+    value = MALA * KSHETRA - TRINITY * HALVES  # 2586
     return Prediction(
         name="charm_quark/electron",
-        formula="MALA * KSHETRA - TRINITY * HALVES",
+        formula="MALA×KSHETRA - TRINITY×HALVES",
         value=value,
         components=["MALA", "KSHETRA", "TRINITY", "HALVES"],
-        description="Charm quark mass ratio prediction",
+        description="Charm quark mass ratio (4.06% error)",
     )
 
 
 def predict_strange_quark() -> Prediction:
     """
-    Generator 4: Strange quark / electron ratio.
+    SHOULD BE DERIVED: Strange quark / electron ratio.
 
-    Actual value ~183.
+    Actual value: ~183 (PDG 2022: m_s = 93.4 MeV)
+    Predicted: 183 = 108 + 72 + 3
+    Error: ~0% (should be promoted to DERIVED!)
+
+    Formula: Mala + Nadi + Trinity (devotion + pulse + names)
+
+    TODO: Add to knowledge.py as CoverageStatus.DERIVED
     """
-    value = MALA + NADI_RESONANCE + TRINITY
+    value = MALA + NADI_RESONANCE + TRINITY  # 183
     return Prediction(
         name="strange_quark/electron",
         formula="MALA + NADI + TRINITY",
         value=value,
         components=["MALA", "NADI_RESONANCE", "TRINITY"],
-        description="Strange quark mass ratio prediction",
-    )
-
-
-def predict_up_quark() -> Prediction:
-    """
-    Generator 5: Up quark / electron ratio.
-
-    Actual value ~4.3.
-    """
-    value = QUARTERS + TRINITY  # 7
-    return Prediction(
-        name="up_quark/electron",
-        formula="QUARTERS + TRINITY",
-        value=value,
-        components=["QUARTERS", "TRINITY"],
-        description="Up quark mass ratio prediction (order of magnitude)",
+        description="Strange quark mass ratio (~0% error - should be DERIVED!)",
     )
 
 
 def predict_down_quark() -> Prediction:
     """
-    Generator 6: Down quark / electron ratio.
+    CANDIDATE: Down quark / electron ratio.
 
-    Actual value ~9.4.
+    Actual value: ~9.1 (PDG 2022: m_d = 4.67 MeV)
+    Predicted: 9 = NAVA (the 9 processes of devotion)
+    Error: 1.1% (CANDIDATE)
+
+    Formula: Simply NAVA (9) - elegantly simple!
     """
     value = NAVA  # 9
     return Prediction(
@@ -153,76 +143,48 @@ def predict_down_quark() -> Prediction:
         formula="NAVA",
         value=value,
         components=["NAVA"],
-        description="Down quark mass ratio prediction (order of magnitude)",
-    )
-
-
-def predict_w_boson() -> Prediction:
-    """
-    Generator 7: W boson / electron ratio.
-
-    Actual value ~157299.
-    """
-    value = MAHA_MU * MALA - COSMIC_FRAME // QUARTERS
-    return Prediction(
-        name="W_boson/electron",
-        formula="MU * MALA - COSMIC/4",
-        value=value,
-        components=["MAHA_MU", "MALA", "COSMIC_FRAME", "QUARTERS"],
-        description="W boson mass ratio prediction",
-    )
-
-
-def predict_z_boson() -> Prediction:
-    """
-    Generator 8: Z boson / electron ratio.
-
-    Actual value ~178450.
-    """
-    value = MAHA_MU * MALA - NADI_RESONANCE
-    return Prediction(
-        name="Z_boson/electron",
-        formula="MU * MALA - NADI",
-        value=value,
-        components=["MAHA_MU", "MALA", "NADI_RESONANCE"],
-        description="Z boson mass ratio prediction",
-    )
-
-
-def predict_higgs() -> Prediction:
-    """
-    Generator 9: Higgs boson / electron ratio.
-
-    Actual value ~244605.
-    """
-    value = MAHA_MU * MALA + COSMIC_FRAME * HALF_SIZE
-    return Prediction(
-        name="Higgs/electron",
-        formula="MU * MALA + COSMIC * HALF",
-        value=value,
-        components=["MAHA_MU", "MALA", "COSMIC_FRAME", "HALF_SIZE"],
-        description="Higgs boson mass ratio prediction",
+        description="Down quark mass ratio (1.1% error)",
     )
 
 
 # =============================================================================
-# THE GENERATOR REGISTRY (Exactly NAVA = 9 functions)
+# REJECTED PREDICTIONS (kept for documentation)
 # =============================================================================
+# The following were previously included but are NUMEROLOGY (>5% error):
+#
+# predict_up_quark: QUARTERS + TRINITY = 7
+#   Actual: ~4.2, Error: 67% (REJECTED)
+#
+# predict_top_quark: COSMIC_FRAME × SEVEN + MAHA_MU × HALF_SIZE = 165888
+#   Actual: ~338000, Error: 51% (REJECTED)
+#
+# predict_w_boson: MAHA_MU × MALA - COSMIC_FRAME/4 = 192888
+#   Actual: ~157299, Error: 23% (REJECTED - also already DERIVED in _seed.py)
+#
+# predict_z_boson: MAHA_MU × MALA - NADI = 198216
+#   Actual: ~178450, Error: 11% (REJECTED - also already DERIVED in _seed.py)
+#
+# predict_higgs: MAHA_MU × MALA + COSMIC × HALF = 371088
+#   Actual: ~244605, Error: 52% (REJECTED - also already DERIVED in _seed.py)
+#
+
+
+# =============================================================================
+# THE GENERATOR REGISTRY (Quality over Quantity)
+# =============================================================================
+# Only CANDIDATE predictions (1-5% error) are included.
+# DERIVED constants (< 1% error) should be in knowledge.py
+# NUMEROLOGY (> 5% error) is rejected.
 
 GENERATORS: Final[List[callable]] = [
-    predict_top_quark,
-    predict_bottom_quark,
-    predict_charm_quark,
-    predict_strange_quark,
-    predict_up_quark,
-    predict_down_quark,
-    predict_w_boson,
-    predict_z_boson,
-    predict_higgs,
+    predict_bottom_quark,  # 1.66% error (CANDIDATE)
+    predict_charm_quark,  # 4.06% error (CANDIDATE)
+    predict_strange_quark,  # ~0% error (TODO: promote to DERIVED)
+    predict_down_quark,  # 1.1% error (CANDIDATE)
 ]
 
-# Verify NAVA constraint
-assert len(GENERATORS) == NAVA, f"Generators must equal NAVA (9): {len(GENERATORS)}"
+# NOTE: We no longer enforce NAVA = 9. Quality > quantity.
+# The previous constraint forced inclusion of predictions with >50% error.
 
 
 def generate_all_predictions() -> List[Prediction]:
@@ -238,14 +200,9 @@ __all__ = [
     "Prediction",
     "GENERATORS",
     "generate_all_predictions",
-    # Individual generators
-    "predict_top_quark",
+    # Individual generators (CANDIDATE predictions only)
     "predict_bottom_quark",
     "predict_charm_quark",
     "predict_strange_quark",
-    "predict_up_quark",
     "predict_down_quark",
-    "predict_w_boson",
-    "predict_z_boson",
-    "predict_higgs",
 ]
