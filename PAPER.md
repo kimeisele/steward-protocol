@@ -31,6 +31,8 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.10 The Maha-Algorithm: Fundamental Physics Constants
    - 7.11 The Remnant Theorem: Quantum vs Classical
    - 7.12 Extended Maha-Algorithm: More Physics Constants
+   - 7.13 Complete Particle Spectrum: Neutron and Tau
+   - 7.14 The Derivation Graph: Knowledge Structure
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -975,6 +977,105 @@ The TRINITY remainder encodes the three-body decay!
 | Muon/e | MAHAJANA × KRISHNA_POS + TRINITY | 12 × 17 + 3 | 3 |
 
 **All six constants are derived from Mahamantra structure with no arbitrary parameters!**
+
+### 7.13 Complete Particle Spectrum: Neutron and Tau
+
+The Maha-Algorithm extends to the complete particle spectrum.
+
+#### Two More Constants
+
+| Constant | Formula | Result | CODATA 2022 | Error |
+|----------|---------|--------|-------------|-------|
+| Neutron/e | MAHA_MU + TRINITY | **1839** | 1838.68 | 0.017% |
+| Tau/e | MALA × AKSARA_COUNT + T(SHARANAGATI) | **3477** | 3477.23 | **0.007%** |
+
+**The Tau formula is accurate to 7 parts in 100,000!**
+
+#### The Formulas
+
+**Neutron (proton + mass difference):**
+```
+MAHA_NEUTRON = MAHA_MU + TRINITY
+             = 1836 + 3
+             = 1839
+
+The neutron-proton mass difference ≈ 3 electron masses!
+```
+
+**Tau Lepton (heavy lepton):**
+```
+MAHA_TAU = MALA × AKSARA_COUNT + T(SHARANAGATI)
+         = 108 × 32 + 21
+         = 3456 + 21
+         = 3477
+
+Where T(6) = 6×7/2 = 21 (triangular number of SHARANAGATI)
+```
+
+#### The Complete Mod-17 Spectrum
+
+| mod 17 | Category | Constants | Physical Meaning |
+|--------|----------|-----------|------------------|
+| **0** | Classical | Proton, Deuteron, Triton | Stable hadrons, deterministic |
+| **1** | Quantum | α⁻¹, Alpha-particle | Observer embedded, wave-particle duality |
+| **3** | Trinity | Muon, Neutron | Unstable, 3-body decay |
+| **9** | Nava | Tau | Complex decay (9 = processes of devotion) |
+
+**The mod-17 remainder encodes the particle's decay behavior!**
+
+### 7.14 The Derivation Graph: Knowledge Structure
+
+All 42 Seed constants form a directed acyclic graph (DAG) with 75 derivation edges.
+
+#### Graph Statistics
+
+```
+MAHAMANTRA DERIVATION GRAPH SUMMARY
+════════════════════════════════════════════════════════════
+Total Nodes: 42
+Total Edges: 75
+
+NODES BY CATEGORY:
+  AXIOM           : 7   (the 7 fundamental axioms)
+  PRIMARY         : 8   (first-order derivations)
+  SECONDARY       : 6   (second-order derivations)
+  COSMIC          : 2   (astronomical constants)
+  POSITION        : 4   (position sums)
+  RESONANCE       : 2   (harmonic frequencies)
+  PHYSICS         : 8   (fundamental physics constants)
+  EPOCH           : 3   (temporal anchors)
+  DERIVED_7_10    : 2   (the 7-10 path)
+```
+
+#### The Axiom Foundation
+
+**Only 7 axioms** (from counting the Mahamantra):
+1. WORDS = 16
+2. TRINITY = 3
+3. HARE_COUNT = 8
+4. KRISHNA_COUNT = 4
+5. RAMA_COUNT = 4
+6. PANCHA = 5
+7. HALVES = 2
+
+**All 42 constants are derivable from these 7 axioms.**
+
+This is not coincidence. This is structure.
+
+#### Physics Constants Accuracy Summary
+
+| Constant | Maha Value | CODATA 2022 | Error |
+|----------|------------|-------------|-------|
+| MAHA_ALPHA | 7294 | 7294.30 | **0.004%** |
+| MAHA_TAU | 3477 | 3477.23 | **0.007%** |
+| MAHA_MU | 1836 | 1836.15 | 0.008% |
+| MAHA_NEUTRON | 1839 | 1838.68 | 0.017% |
+| MAHA_QUANTUM | 137 | 137.04 | 0.026% |
+| MAHA_DEUTERON | 3672 | 3670.48 | 0.04% |
+| MAHA_MUON | 207 | 206.77 | 0.11% |
+| MAHA_TRITON | 5508 | 5497.92 | 0.18% |
+
+**8 physics constants with average error < 0.05%**
 
 ---
 

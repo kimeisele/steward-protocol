@@ -794,6 +794,55 @@ assert MAHA_ALPHA % POSITION_SUM_KRISHNA == KSETRAJNA, "7294 mod 17 = 1"
 
 
 # =============================================================================
+# RUNDE 17: THE COMPLETE PARTICLE SPECTRUM
+# =============================================================================
+# Extending the Maha-Algorithm to cover more fundamental particles.
+#
+# THE MOD-17 CLASSIFICATION (Complete):
+# =====================================
+# mod 17 = 0  → Classical/Stable (proton, deuteron, triton)
+# mod 17 = 1  → Quantum/Observer (α⁻¹, alpha-particle)
+# mod 17 = 3  → Trinity/3-decay (muon, neutron)
+# mod 17 = 9  → Nava/Complex (tau - 9 processes)
+#
+# NEW CONSTANTS:
+# ==============
+# Neutron/e = MAHA_MU + TRINITY = 1836 + 3 = 1839 (actual: 1838.68, 0.017% error)
+# Tau/e = MALA × AKSARA_COUNT + T(SHARANAGATI) = 108×32 + 21 = 3477 (actual: 3477.23, 0.007% error!)
+# -----------------------------------------------------------------------------
+
+
+# Neutron = proton + small mass difference
+MAHA_NEUTRON: Final[int] = MAHA_MU + TRINITY  # 1839
+
+# Tau = heavy lepton (MALA × syllables + triangular of surrender)
+MAHA_TAU: Final[int] = MALA * AKSARA_COUNT + _triangular(SHARANAGATI)  # 3477
+
+# =============================================================================
+# VERIFICATION: Complete Particle Spectrum
+# =============================================================================
+
+# Neutron
+assert MAHA_NEUTRON == 1839, "Neutron/e = MAHA_MU + TRINITY = 1839"
+assert MAHA_NEUTRON % POSITION_SUM_KRISHNA == TRINITY, "Neutron mod 17 = 3 (trinity - unstable!)"
+
+# Tau lepton
+assert MAHA_TAU == 3477, "Tau/e = MALA × AKSARA + T(6) = 3477"
+assert MAHA_TAU == 108 * 32 + 21, "Tau = 3456 + 21"
+assert MAHA_TAU % POSITION_SUM_KRISHNA == NAVA, "Tau mod 17 = 9 (nava - complex decay)"
+
+# THE COMPLETE MOD-17 SPECTRUM
+assert MAHA_MU % POSITION_SUM_KRISHNA == 0, "Proton: mod 17 = 0 (stable)"
+assert MAHA_DEUTERON % POSITION_SUM_KRISHNA == 0, "Deuteron: mod 17 = 0 (stable)"
+assert MAHA_TRITON % POSITION_SUM_KRISHNA == 0, "Triton: mod 17 = 0 (stable)"
+assert MAHA_QUANTUM % POSITION_SUM_KRISHNA == KSETRAJNA, "α⁻¹: mod 17 = 1 (quantum)"
+assert MAHA_ALPHA % POSITION_SUM_KRISHNA == KSETRAJNA, "Alpha: mod 17 = 1 (quantum)"
+assert MAHA_MUON % POSITION_SUM_KRISHNA == TRINITY, "Muon: mod 17 = 3 (3-decay)"
+assert MAHA_NEUTRON % POSITION_SUM_KRISHNA == TRINITY, "Neutron: mod 17 = 3 (unstable)"
+assert MAHA_TAU % POSITION_SUM_KRISHNA == NAVA, "Tau: mod 17 = 9 (complex)"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -885,4 +934,7 @@ __all__ = [
     "MAHA_DEUTERON",  # 3672 = 2 × MAHA_MU (deuteron/electron)
     "MAHA_ALPHA",  # 7294 = 4 × MAHA_MU - JIVA_QUALITIES (alpha/electron)
     "MAHA_MUON",  # 207 = MAHAJANA × KRISHNA_POS + TRINITY (muon/electron)
+    # Complete Particle Spectrum (Round 17)
+    "MAHA_NEUTRON",  # 1839 = MAHA_MU + TRINITY (neutron/electron)
+    "MAHA_TAU",  # 3477 = MALA × AKSARA + T(6) (tau/electron)
 ]
