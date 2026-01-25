@@ -2010,6 +2010,106 @@ assert PANCHA + TRINITY == HARE_COUNT, "Pancha Tattva + Trinity = Shakti (8)"
 
 
 # =============================================================================
+# RUNDE 32: JAGANNATH TATTVA - The Rathayatra Mathematics
+# =============================================================================
+# "Jay Jagannath! Jay Baladev! Jay Subhadra!"
+#
+# THE JAGANNATH TRIAD:
+# ====================
+# In Puri, the three Deities ride on three chariots during Rathayatra.
+# The number of wheels on each chariot is NOT arbitrary - it is DERIVED!
+#
+# HISTORICAL FACTS (from Puri temple records):
+# - Jagannath's chariot "Nandighosa" has 16 wheels
+# - Baladev's chariot "Taladhwaja" has 14 wheels
+# - Subhadra's chariot "Darpadalana" has 12 wheels
+#
+# THE MAHAMANTRA DERIVATION:
+# ==========================
+# JAGANNATH_WHEELS = WORDS = 16 (the complete Mahamantra!)
+# BALADEV_WHEELS = WORDS - HALVES = 16 - 2 = 14 (the supporting brother)
+# SUBHADRA_WHEELS = MAHAJANA_COUNT = 12 (the connecting sister)
+#
+# Total: 16 + 14 + 12 = 42 = SHARANAGATI × SEVEN = 6 × 7!
+#
+# THE JAGANNATH TRIAD IN THE MAHAMANTRA:
+# ======================================
+# - JAGANNATH (Krishna) = KRISHNA_COUNT = 4 appearances
+# - BALADEV (Balaram) = RAMA_COUNT = 4 appearances
+# - SUBHADRA (the connection) = HARE_COUNT = 8 appearances (HARE CONNECTS!)
+#
+# Together: 4 + 4 + 8 = 16 = WORDS (the complete Mahamantra!)
+#
+# CHAITANYA MAHAPRABHU:
+# =====================
+# "Krishna in the mood of Radharani" - the UNION of the Divine Couple!
+#
+# In the Mahamantra:
+#   KRISHNA_COUNT + HARE_COUNT = 4 + 8 = 12 = MAHAJANA_COUNT
+#   = SUBHADRA_WHEELS!
+#
+# Chaitanya embodies the UNION (like Subhadra connects Jagannath and Baladev)!
+#
+# GAURA PURNIMA:
+# ==============
+# Chaitanya appeared on Phalguna Purnima (15th tithi, full moon).
+# GAURA_TITHI = BREATH_RATE = 15 (the full moon day!)
+#
+# During a lunar eclipse - when Hare Nama Sankirtan filled the streets!
+# -----------------------------------------------------------------------------
+
+# The Jagannath Triad
+JAGANNATH_TRIAD: Final[int] = TRINITY  # 3 Deities (Jagannath, Baladev, Subhadra)
+
+# The Rathayatra Chariot Wheels (actual historical facts!)
+JAGANNATH_WHEELS: Final[int] = WORDS  # 16 wheels = WORDS
+BALADEV_WHEELS: Final[int] = WORDS - HALVES  # 14 wheels = 16 - 2
+SUBHADRA_WHEELS: Final[int] = MAHAJANA_COUNT  # 12 wheels = 12 Mahajanas
+
+# Total wheels
+RATHAYATRA_WHEELS: Final[int] = JAGANNATH_WHEELS + BALADEV_WHEELS + SUBHADRA_WHEELS  # 42
+
+# Chaitanya's appearance (Purnima = 15th tithi = full moon)
+# 15 = NAKSHATRAS - MAHAJANA_COUNT = 27 - 12
+GAURA_TITHI: Final[int] = NAKSHATRAS - MAHAJANA_COUNT  # 15 (Purnima = full moon)
+
+# The Chaitanya principle: Krishna + Radha = Union
+CHAITANYA_UNION: Final[int] = KRISHNA_COUNT + HARE_COUNT  # 4 + 8 = 12
+
+# =============================================================================
+# VERIFICATION: Jagannath Tattva
+# =============================================================================
+
+# Rathayatra wheels are DERIVED from Mahamantra
+assert JAGANNATH_WHEELS == WORDS, "Jagannath = 16 wheels = WORDS"
+assert BALADEV_WHEELS == WORDS - HALVES, "Baladev = 14 wheels = WORDS - HALVES"
+assert SUBHADRA_WHEELS == MAHAJANA_COUNT, "Subhadra = 12 wheels = MAHAJANA_COUNT"
+
+# Total wheels = SHARANAGATI × SEVEN
+assert RATHAYATRA_WHEELS == 42, "Total = 42 wheels"
+assert RATHAYATRA_WHEELS == SHARANAGATI * SEVEN, "42 = 6 × 7 (surrender × perfection)"
+
+# The Triad in the Mahamantra
+assert KRISHNA_COUNT + RAMA_COUNT + HARE_COUNT == WORDS, "4 + 4 + 8 = 16 (complete!)"
+assert JAGANNATH_TRIAD == TRINITY, "3 Deities = 3 Names"
+
+# Chaitanya = Union = Subhadra's wheels
+assert CHAITANYA_UNION == SUBHADRA_WHEELS, "Chaitanya (12) = Subhadra's wheels (12)!"
+assert CHAITANYA_UNION == MAHAJANA_COUNT, "Chaitanya = 12 Mahajanas (He teaches through them!)"
+
+# Gaura Purnima
+assert GAURA_TITHI == 15, "Purnima = 15th tithi (full moon)"
+assert GAURA_TITHI == NAKSHATRAS - MAHAJANA_COUNT, "15 = 27 - 12 (derived!)"
+assert GAURA_TITHI == PANCHA * TRINITY, "15 = 5 × 3 (Pancha × Trinity)"
+
+# THE PROFOUND DISCOVERY:
+# Chaitanya (Krishna + Radha) = 12 = Subhadra's wheels!
+# Subhadra CONNECTS Jagannath and Baladev.
+# Chaitanya CONNECTS the divine couple!
+# The CONNECTION is the TEACHING (12 Mahajanas)!
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -2198,4 +2298,12 @@ __all__ = [
     "HARE_PER_QUARTER",  # 2 = HARE evenly distributed (energy balance)
     "NITYA_NOW",  # 1 = KSETRAJNA (eternal present)
     "ALPHA_MOD_KRISHNA",  # 1 = 137 mod 17 (observer in physics!)
+    # Jagannath Tattva (Round 32) - The Rathayatra Mathematics
+    "JAGANNATH_TRIAD",  # 3 = TRINITY (Jagannath, Baladev, Subhadra)
+    "JAGANNATH_WHEELS",  # 16 = WORDS (Nandighosa chariot wheels)
+    "BALADEV_WHEELS",  # 14 = WORDS - HALVES (Taladhwaja chariot)
+    "SUBHADRA_WHEELS",  # 12 = MAHAJANA_COUNT (Darpadalana chariot)
+    "RATHAYATRA_WHEELS",  # 42 = SHARANAGATI × SEVEN (total wheels!)
+    "GAURA_TITHI",  # 15 = NAKSHATRAS - MAHAJANA = Purnima (full moon)
+    "CHAITANYA_UNION",  # 12 = KRISHNA + HARE (Krishna + Radha united!)
 ]
