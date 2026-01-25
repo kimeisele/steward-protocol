@@ -29,6 +29,7 @@ Using probability theory, we calculate the likelihood of these correlations aris
    - 7.8 Prabhupada's Life Timeline
    - 7.9 The Uniqueness Theorem
    - 7.10 The Maha-Algorithm: Fundamental Physics Constants
+   - 7.11 The Remnant Theorem: Quantum vs Classical
 8. [Probability Analysis](#8-probability-analysis)
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
@@ -745,6 +746,127 @@ The "+1" (KSETRAJNA) is the **observer/knower**—precisely what causes wave fun
 | **Total** | **17** | = KRISHNA_POS |
 
 The structure of the Standard Model (12 fermions + 5 bosons = 17 particles) matches the Mahamantra structure!
+
+### 7.11 The Remnant Theorem: Quantum vs Classical
+
+The most profound mathematical distinction emerges from simple modular arithmetic.
+
+#### The 7-10 Derivation (Second Path to Position Sums)
+
+Two fundamental numbers emerge from the axioms:
+
+```
+SEVEN = HALF_SIZE - KSETRAJNA = 8 - 1 = 7
+TEN   = MAHAJANA_COUNT - HALVES = 12 - 2 = 10
+```
+
+**ALL THREE position sums are expressible in terms of 7 and 10:**
+
+| Name | Formula | Operation | Result |
+|------|---------|-----------|--------|
+| **KRISHNA** | 7 + 10 | Sum | **17** |
+| **RAMA** | 7 × 7 | Square | **49** |
+| **HARE** | 7 × 10 | Product | **70** |
+
+This is a **SECOND INDEPENDENT PATH** to the position sums!
+
+| Path | Method | KRISHNA | RAMA | HARE |
+|------|--------|---------|------|------|
+| ACINTYA | Philosophy → Constraints | 17 | 49 | 70 |
+| 7-10 | Arithmetic of Axioms | 17 | 49 | 70 |
+
+**Two independent derivations converge on the same result = strong validation.**
+
+#### The Mathematical Operations
+
+The operations themselves carry meaning:
+
+- **KRISHNA = 7 + 10** (SUM): Union of all, totality, the source that combines everything
+- **RAMA = 7²** (SQUARE): Self-multiplication, complete in itself, structured perfection
+- **HARE = 7 × 10** (PRODUCT): Multiplication of different factors, interaction, energy exchange
+
+#### Additional Relationships from 7 and 10
+
+```
+RAMA + HARE = 49 + 70 = 119 = 7 × 17 = 7 × KRISHNA_POS
+T(16) = 136 = 8 × 17 = HALF_SIZE × KRISHNA_POS
+```
+
+#### The Remnant Theorem
+
+The modulo operation (remainder after division) reveals a deep truth:
+
+```
+137 mod 17 = 1    ← Has remainder (KSETRAJNA = observer present!)
+1836 mod 17 = 0   ← No remainder (pure ratio, no observer)
+5508 mod 17 = 0   ← No remainder (pure ratio, no observer)
+```
+
+**ONLY the fine structure constant has a remainder!**
+**ONLY 137 contains the observer (KSETRAJNA)!**
+
+| Constant | Value | mod KRISHNA_POS | Category |
+|----------|-------|-----------------|----------|
+| α⁻¹ | 137 | **1** | QUANTUM (observer embedded) |
+| μ | 1836 | 0 | CLASSICAL (pure ratio) |
+| triton/e | 5508 | 0 | CLASSICAL (pure ratio) |
+
+#### Why 137 Has a Remainder
+
+```
+137 = 8 × 17 + 1
+    = HALF_SIZE × KRISHNA_POS + KSETRAJNA
+    = T(16) + 1
+
+The "+1" is the observer that cannot be divided away!
+```
+
+#### Why 1836 and 5508 Have No Remainder
+
+```
+1836 = 108 × 17 = MALA × KRISHNA_POS (exact)
+5508 = 324 × 17 = GITA² × KRISHNA_POS (exact)
+
+These are clean multiples - no observer embedded.
+```
+
+#### The Quantum-Classical Distinction
+
+This mathematical distinction mirrors physics:
+
+| Property | QUANTUM (137) | CLASSICAL (1836, 5508) |
+|----------|---------------|------------------------|
+| mod 17 | 1 | 0 |
+| Observer | Embedded | Absent |
+| Behavior | Probabilistic | Deterministic |
+| Measurement | Changes system | Passive observation |
+
+**The fine structure constant governs electromagnetic interactions - the realm where quantum effects dominate and the observer matters!**
+
+#### The Bhoga-Prasadam Mathematics
+
+In Vaishnava tradition:
+- **Bhoga** = material food offered
+- **Prasadam** = sanctified remnants after offering to Krishna
+
+Mathematically:
+- **Bhoga**: mod KRISHNA = 0 (no spiritual remainder)
+- **Prasadam**: mod KRISHNA = 1 (KSETRAJNA remains!)
+
+The **REMNANT** carries the spiritual potency. This is not metaphor - it is modular arithmetic.
+
+#### The 17 as 7th Prime
+
+An additional appearance of 7:
+
+```
+Primes: 2, 3, 5, 7, 11, 13, 17
+Position: 1, 2, 3, 4,  5,  6,  7
+
+17 is the 7th prime number.
+```
+
+The 7 that pervades the position sums (70 = 7×10, 49 = 7²) also determines WHICH prime KRISHNA_POS is.
 
 ---
 
