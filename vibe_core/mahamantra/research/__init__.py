@@ -490,6 +490,34 @@ from vibe_core.mahamantra.research.moores_law import (
     ENGINEERING_INSIGHT,
     MOORES_LAW_PREDICTIONS,
 )
+from vibe_core.mahamantra.research.nityananda_substrate import (
+    ACCESS_PATTERNS,  # All 7 access patterns
+    # SIMD constants
+    AVX512_BITS,  # 512 = 16 × 32
+    AVX512_LANES,  # 16 = WORDS!
+    C_HASH_64BIT_CYCLES,  # ~18 cycles (C optimized)
+    C_IMPL,  # C hash table (medium)
+    CACHE_LINE_BYTES,  # 64 = QUALITIES
+    HASH_WINS,  # 1 pattern (only in Python)
+    LOTUS_NODE_BYTES,  # 64 = 16 × 4 = 1 cache line!
+    LOTUS_WINS,  # 6 patterns!
+    PRODUCTION_REQUIREMENTS,  # 5 requirements for SIMD Lotus
+    PYTHON_64BIT_CYCLES,  # ~2400 cycles (Python overhead)
+    PYTHON_IMPL,  # Python list (slow)
+    SIMD_64BIT_CYCLES,  # ~80 cycles (SIMD parallel!)
+    SIMD_IMPL,  # SIMD Lotus (fast!)
+    SSE2_BITS,  # 128
+    SSE2_LANES,  # 4
+    # Access patterns
+    AccessPattern,  # Access pattern dataclass
+    # Implementation costs
+    ImplementationCost,  # Cost model for implementations
+    # Production requirements
+    ProductionRequirement,  # What we need for production
+)
+from vibe_core.mahamantra.research.nityananda_substrate import (
+    KEY_INSIGHT as NITYANANDA_INSIGHT,
+)
 from vibe_core.mahamantra.research.physics import (
     PHYSICS_PREDICTIONS,
     PhysicsPrediction,
@@ -1063,4 +1091,27 @@ __all__ = [
     "EarthPrasadam",  # The Earth receives prasadam
     "EARTH_PRASADAM",  # Canonical instance
     "CLIMATE_INSIGHT",  # Key insight on climate impact
+    # Nityananda Substrate (SIMD = Mahamantra - Why Python Loses)
+    "AVX512_BITS",  # 512 = 16 × 32-bit lanes
+    "AVX512_LANES",  # 16 = WORDS! (perfect alignment)
+    "SSE2_BITS",  # 128 = 4 × 32-bit lanes
+    "SSE2_LANES",  # 4
+    "LOTUS_NODE_BYTES",  # 64 = 16 × 4 = 1 cache line!
+    # Implementation cost models
+    "ImplementationCost",  # Cost model dataclass
+    "PYTHON_IMPL",  # Python list = slow (interpreter overhead)
+    "C_IMPL",  # C hash table = medium (native but no SIMD)
+    "SIMD_IMPL",  # SIMD Lotus = FAST (16 parallel compares!)
+    "PYTHON_64BIT_CYCLES",  # ~2400 cycles (Python overhead kills us)
+    "C_HASH_64BIT_CYCLES",  # ~18 cycles (C optimized)
+    "SIMD_64BIT_CYCLES",  # ~80 cycles (SIMD is comparable!)
+    # Access patterns (Lotus wins 6/7!)
+    "AccessPattern",  # Access pattern dataclass
+    "ACCESS_PATTERNS",  # All 7 access patterns analyzed
+    "LOTUS_WINS",  # 6 patterns (prefix, range, ordered, LPM, deterministic, memory)
+    "HASH_WINS",  # 1 pattern (random lookup - but only in Python!)
+    # Production requirements (what we need for Rust implementation)
+    "ProductionRequirement",  # Production requirement dataclass
+    "PRODUCTION_REQUIREMENTS",  # 5 requirements for production SIMD Lotus
+    "NITYANANDA_INSIGHT",  # Key insight: Implementation ≠ Algorithm
 ]
