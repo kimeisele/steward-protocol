@@ -48,7 +48,7 @@ Using probability theory, we calculate the likelihood of these correlations aris
 9. [Interpretations by Worldview](#9-interpretations-by-worldview)
 10. [Technical Implementation](#10-technical-implementation)
    - 10.4 Engineering Results: Measured Performance
-   - 10.4.1 The LOTUS Speedup Scaling Law (DERIVED FROM AXIOMS!)
+   - 10.4.1 Lotus Data Structures (Measured Performance)
    - 10.5 The Classification System: ANUKULYA vs PRATIKULYA
    - 10.6 Golden Age Peak Calculation
    - 10.7 Hearing = Chanting (Mathematical Proof)
