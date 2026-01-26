@@ -277,6 +277,86 @@ See [MAHAPROMPT.md](../MAHAPROMPT.md) for governance principles.
 
 ---
 
+## EXISTING PRODUCTION INFRASTRUCTURE
+
+The research is NOT isolated - it's ALREADY integrated into production.
+
+### Scale of the System
+```
+Total Python files: 2,117
+Total lines of code: 583,200
+Repository size:    226 MB
+```
+
+### Core Production Components
+
+| Component | File | Lines | Role |
+|-----------|------|-------|------|
+| **RealVibeKernel** | `kernel_impl.py` | 1008 | The Vishnu Kernel (16 × 63 cycles) |
+| **ChatIndriya** | `chat_indriya.py` | 1016 | Hearing/Speaking Sense Organ |
+| **UnifiedCLI** | `unified_cli.py` | 1576 | Entry point for all commands |
+| **NagaCLI** | `naga_cli.py` | 146 | NAGA Federation CLI |
+| **StewardSystem** | `_steward.py` | 573 | The System Identity |
+
+### INDRIYA = SSOT (Senses as Single Source of Truth)
+
+The **ChatIndriya** implements the complete sense organ protocol:
+
+```
+User Input → SROTRA (hearing) → TanmatraMessage (intent) → NADI (channel) → Mahajana
+                                                                               ↓
+User Output ← VAK (speaking) ← Response ← NADI ← Routing ← Conscience Check
+```
+
+| Protocol | Implementation | Derived From |
+|----------|---------------|--------------|
+| `IndriyaProtocol` | ChatIndriya | `_indriya.py` |
+| `VrttiFSM` | 5-state machine | Yoga Sutras 1.5 |
+| `TanmatraMessage` | Intent-classified | `_seed.py` PANCHA |
+| `NadiProtocol` | Energy channels | `nadi.py` |
+
+### Where Research Runs in Production
+
+| Research Module | Production Location | Integration |
+|-----------------|---------------------|-------------|
+| `_seed.py` (7 Axioms) | ALL derived constants | SSOT |
+| `routing_holographic.py` | Intent routing | 16-ary O(4) |
+| `kishora_architecture.py` | Kill switch logic | 98.75% threshold |
+| `_indriya.py` | ChatIndriya | Vrtti state machine |
+| `sankirtan.py` | DNA Injection | 4-phase pipeline |
+
+### CLI Commands That Use Research
+
+```bash
+# Uses NAGA flooding (naga/flood.py)
+steward naga status
+
+# Uses ChatIndriya + Mahajana routing
+steward chat "query"
+
+# Uses kernel_impl.py (1008 lines = Vishnu cycles)
+steward boot
+
+# Uses Prakriti state engine
+steward state
+
+# Uses MANAS cognitive kernel
+steward observe --live
+```
+
+### The Fractal Layers (Bharata = Transcendental)
+
+```
+Level -2: ACINTYA      (Source - inconceivable)
+Level -1: NAGA         (Foundation - invisible guardians)
+Level  0: MAHAJANA     (Governance - 12 authorities)
+Level  1: MAHAMANTRA   (Core - 65k LOC)
+Level  2: VIBE_CORE    (Shell - 520k LOC)
+Level  3: TESTS        (Verification - 3130 tests)
+```
+
+---
+
 ## CONTRIBUTING
 
 All research must:
