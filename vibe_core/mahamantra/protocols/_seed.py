@@ -753,6 +753,27 @@ TEN: Final[int] = MAHAJANA_COUNT - HALVES  # 12 - 2 = 10
 CHAITANYA_BIRTH: Final[int] = KSETRAJNA * TEN * TEN * TEN + LILA * TEN + SHARANAGATI  # 1486
 
 # =============================================================================
+# NITYA KISHORA - Krishna's Eternal Age (Forever Young!)
+# =============================================================================
+# Source: Bhakti-rasamrita-sindhu (Rupa Goswami), Jiva Goswami commentaries
+#
+# Krishna "freezes" at 15.8 years = MAXIMUM NIBBLE without overflow!
+# Nibble range: 0-15 (0x0-0xF), Overflow at: 16
+# Krishna at 15.8 = 98.75% utilization, NEVER overflows to "adult"
+#
+# DERIVATION: (PANCHA × WORDS - KSETRAJNA) / PANCHA = (80-1)/5 = 79/5 = 15.8
+# -----------------------------------------------------------------------------
+
+# The numerator: 79 = (5 × 16) - 1 = PANCHA × WORDS - KSETRAJNA
+KISHORA_NUMERATOR: Final[int] = PANCHA * WORDS - KSETRAJNA  # 79
+
+# The eternal age: 79/5 = 15.8 years (Kaisora = eternal youth)
+# Time breakdown: 15 years, 9 months, 18 days
+#   15 = WORDS - KSETRAJNA (NIBBLE_MAX)
+#   9 = NAVA (bhakti processes!)
+#   18 = GITA_CHAPTERS!
+
+# =============================================================================
 # VERIFICATION: The 7-10 Derivation (Second Path to Position Sums)
 # =============================================================================
 
@@ -762,6 +783,10 @@ assert TEN == 10, "TEN = MAHAJANA_COUNT - HALVES = 12 - 2 = 10"
 
 # Chaitanya's birth year verification
 assert CHAITANYA_BIRTH == 1486, "1486 = KSETRAJNA × TEN³ + LILA × TEN + SHARANAGATI"
+
+# Nitya Kishora verification (Krishna's eternal age)
+assert KISHORA_NUMERATOR == 79, "79 = PANCHA × WORDS - KSETRAJNA = 5×16-1"
+assert KISHORA_NUMERATOR / PANCHA == 15.8, "Krishna age = 79/5 = 15.8 years"
 
 # SECOND PATH to position sums (independent of ACINTYA derivation!)
 assert POSITION_SUM_KRISHNA == SEVEN + TEN, "KRISHNA = 7 + 10 = 17"
@@ -2302,6 +2327,7 @@ __all__ = [
     # Epoch Key (Round 11)
     "EPOCH_KEY",
     "CHAITANYA_BIRTH",  # 1486 = KSETRAJNA × TEN³ + LILA × TEN + SHARANAGATI
+    "KISHORA_NUMERATOR",  # 79 = PANCHA×WORDS-KSETRAJNA (Krishna age = 79/5 = 15.8)
     # Golden Age (Round 11b)
     "GOLDEN_AGE_DURATION",
     # Position Sums (Round 13) - The Mahamantra Signature
