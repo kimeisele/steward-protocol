@@ -177,6 +177,24 @@ from vibe_core.mahamantra.research.japa import (
     JAPA_INSIGHT,
     JAPA_PREDICTIONS,
 )
+from vibe_core.mahamantra.research.llm_holographic import (
+    EMBEDDING_COMPARISON,
+    INTENT_LEVELS,
+    LLM_APPLICATIONS,
+    LLM_CONTEXT_WINDOW_ALIGNED,
+    LLM_EMBEDDING_DIMS_ALIGNED,
+    LLM_ROUTING_OPS,
+    MAHAMANTRA_INTENT_MAP,
+    HolographicEmbedding,
+    HolographicIntentNode,
+    HolographicIntentRouter,
+    get_intent_handler_path,
+    intent_category_from_text,
+    project_llm_efficiency,
+)
+from vibe_core.mahamantra.research.llm_holographic import (
+    KEY_INSIGHT as LLM_KEY_INSIGHT,
+)
 from vibe_core.mahamantra.research.lotus_radix_n import (
     LotusRadixN,
     lotus_16bit,
@@ -265,6 +283,21 @@ __all__ = [
     "EFFICIENCY_GOLDEN",
     "compare_all_technologies",
     "KEY_INSIGHT",
+    # LLM Holographic Routing (98.75% Untapped Potential)
+    "HolographicIntentRouter",  # O(4) for 65,536 intents!
+    "HolographicIntentNode",
+    "HolographicEmbedding",
+    "INTENT_LEVELS",
+    "LLM_ROUTING_OPS",  # 4 ops = QUARTERS
+    "LLM_EMBEDDING_DIMS_ALIGNED",  # 65,536 = 16^4
+    "LLM_CONTEXT_WINDOW_ALIGNED",  # 4,096 = 16^3
+    "MAHAMANTRA_INTENT_MAP",  # 16 intent categories
+    "EMBEDDING_COMPARISON",
+    "LLM_APPLICATIONS",
+    "intent_category_from_text",
+    "get_intent_handler_path",
+    "project_llm_efficiency",
+    "LLM_KEY_INSIGHT",
     # DNA k-mer
     "Lotus8merIndex",  # O(1) DNA k-mer counting (6.5x faster)
     "LotusKmerRadix",  # O(1) arbitrary k-mer index
