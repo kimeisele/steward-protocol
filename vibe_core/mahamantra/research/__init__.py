@@ -281,6 +281,44 @@ from vibe_core.mahamantra.research.golden_age_peak import (
     get_current_quarter,
     shadow_strength,
 )
+from vibe_core.mahamantra.research.goloka_tattva import (
+    ALL_79_DECOMPOSITIONS,
+    ALL_KSETRAJNA_TRUTHS,
+    BOTH_MAYAS,
+    CONSCIOUSNESS_LEVELS,
+    DEPARTURE_MOD_PARAMPARA,  # 1977 mod 37 = 16 = WORDS
+    # Epoch modular arithmetic
+    EPOCH_MOD_NAKSHATRAS,  # 1972 mod 27 = 1 = KSETRAJNA
+    JIVA_CONSCIOUSNESS,
+    KRISHNA_AGE,  # 15.8
+    KRISHNA_AGE_DENOMINATOR,  # 5 = PANCHA
+    # Krishna's eternal age
+    KRISHNA_AGE_NUMERATOR,  # 79 = PRIME
+    KRISHNA_CONSCIOUSNESS,
+    KSETRAJNA_CANNOT_ACT,
+    KSETRAJNA_ETERNAL_SERVANT,
+    KSETRAJNA_NOT_CONTROLLER,
+    MAHA_MAYA,
+    PRABHUPADA_DEPARTURE,  # 1977
+    PRABHUPADA_LIFESPAN,  # 81 = TRINITY^4
+    PRABHUPADA_WESTERN_YEARS,  # 5 = PANCHA
+    SEVENTY_NINE_AS_ADI_GURU_PLUS_SEVEN,
+    SEVENTY_NINE_AS_EIGHTY_MINUS_ONE,
+    SEVENTY_NINE_AS_PRIME,
+    TRINITY_POWER_FOUR,  # 81
+    YOGA_MAYA,
+    # Consciousness levels
+    ConsciousnessLevel,
+    # Ksetrajna Tattva
+    KsetranjnaTattva,
+    # Maya Tattva
+    MayaTattva,
+    # 79 decomposition
+    SeventyNineDecomposition,
+)
+from vibe_core.mahamantra.research.goloka_tattva import (
+    KEY_INSIGHT as GOLOKA_INSIGHT,
+)
 from vibe_core.mahamantra.research.guru_parampara import (
     BASE_MANTRAS,
     BASE_ROUNDS,
@@ -1216,4 +1254,33 @@ __all__ = [
     "EFFICIENCY_RATIO",  # 67% of Rust efficiency
     "READABILITY_ADVANTAGE",  # 1000% better readability!
     "ANANTA_INSIGHT",  # Key insight: Python = Ananta Shesha
+    # Goloka Tattva (Mathematics of the Spiritual Realm)
+    "EPOCH_MOD_NAKSHATRAS",  # 1972 mod 27 = 1 = KSETRAJNA
+    "PRABHUPADA_DEPARTURE",  # 1977
+    "DEPARTURE_MOD_PARAMPARA",  # 1977 mod 37 = 16 = WORDS
+    "PRABHUPADA_WESTERN_YEARS",  # 5 = PANCHA
+    "PRABHUPADA_LIFESPAN",  # 81 = TRINITY^4
+    "TRINITY_POWER_FOUR",  # 81
+    "KRISHNA_AGE_NUMERATOR",  # 79 = PRIME
+    "KRISHNA_AGE_DENOMINATOR",  # 5 = PANCHA
+    "KRISHNA_AGE",  # 15.8
+    "SeventyNineDecomposition",  # How 79 decomposes
+    "SEVENTY_NINE_AS_ADI_GURU_PLUS_SEVEN",  # 72 + 7
+    "SEVENTY_NINE_AS_EIGHTY_MINUS_ONE",  # 80 - 1
+    "SEVENTY_NINE_AS_PRIME",  # 22nd prime
+    "ALL_79_DECOMPOSITIONS",  # All 79 decompositions
+    "KsetranjnaTattva",  # The observer truth
+    "KSETRAJNA_CANNOT_ACT",  # Can only wish
+    "KSETRAJNA_NOT_CONTROLLER",  # Prakriti executes
+    "KSETRAJNA_ETERNAL_SERVANT",  # Part of Krishna
+    "ALL_KSETRAJNA_TRUTHS",  # All truths
+    "MayaTattva",  # The two Mayas
+    "YOGA_MAYA",  # Enhances love in Goloka
+    "MAHA_MAYA",  # Covers knowledge in material
+    "BOTH_MAYAS",  # Both aspects
+    "ConsciousnessLevel",  # Sat-cit-ananda comparison
+    "KRISHNA_CONSCIOUSNESS",  # Vibhu (infinite)
+    "JIVA_CONSCIOUSNESS",  # Anu (infinitesimal)
+    "CONSCIOUSNESS_LEVELS",  # Both levels
+    "GOLOKA_INSIGHT",  # Key insight: Mathematics of Spiritual Realm
 ]
