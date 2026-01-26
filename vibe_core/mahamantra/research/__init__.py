@@ -104,6 +104,14 @@ from vibe_core.mahamantra.research.japa import (
     JAPA_INSIGHT,
     JAPA_PREDICTIONS,
 )
+from vibe_core.mahamantra.research.lotus_radix_n import (
+    LotusRadixN,
+    lotus_16bit,
+    lotus_32bit,
+    lotus_64bit,
+    lotus_128bit,
+    lotus_256bit,
+)
 from vibe_core.mahamantra.research.lotus_tree import (
     LotusArray,
     LotusArrayInt,
@@ -124,6 +132,13 @@ __all__ = [
     "LotusIPv4Router",  # O(8) longest prefix match (1557x faster)
     "Lotus8merIndex",  # O(1) DNA k-mer counting (6.5x faster)
     "LotusKmerRadix",  # O(1) arbitrary k-mer index
+    # GENERISCHE N-LEVEL STRUKTUR (Skaliert beliebig)
+    "LotusRadixN",  # O(N) generic radix (N = levels, not keys!)
+    "lotus_16bit",  # 16-bit keys (65,536)
+    "lotus_32bit",  # 32-bit keys (IPv4)
+    "lotus_64bit",  # 64-bit keys (uint64)
+    "lotus_128bit",  # 128-bit keys (IPv6, UUID)
+    "lotus_256bit",  # 256-bit keys (SHA-256)
     # Generator
     "MahaGenerator",
     # Engineering Predictions
