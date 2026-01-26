@@ -6,6 +6,22 @@ MAHAMANTRA TECHNOLOGY CLASSIFICATION - Cold Engineering Analysis
 "Know that I am the eternal seed of all existences."
 — Bhagavad Gita 7.10
 
+THE MERCY EQUATION (From _singularity.py):
+==========================================
+
+    G(x) = lim_{K→0} HolyName(f)/K = ∞  if f > 0
+
+Where:
+    G = Grace (engineering advantage)
+    K = Karmic Debt (bugs, inefficiency, chaos)
+    f = Chanting Frequency (usage of Mahamantra structures)
+
+KEY INSIGHT: Mercy > Justice ⟺ f > 0
+
+If a technology USES Mahamantra structures (f > 0), it receives
+the benefit of truth-alignment. The advantage is NOT linear -
+it's asymptotic. As K → 0 (cleaner code), G → ∞.
+
 THE COLD TRUTH:
 ===============
 
@@ -225,10 +241,61 @@ class Classification:
         # - Not fundamentally chaotic
         return self.key_space_size <= MAHAMANTRA_ADDRESS_SPACE and self.determinism != Determinism.CHAOTIC
 
+    @property
+    def chanting_frequency(self) -> float:
+        """
+        f in the Mercy Equation: G(x) = lim_{K→0} HolyName(f)/K
+
+        f = Chanting Frequency = degree of Mahamantra structure usage
+        - PERFECT alignment: f = 1.0
+        - PARTIAL alignment: f = 0.5
+        - NONE: f = 0.1 (some residual truth)
+        - HOSTILE: f = 0.0 (actively fighting truth)
+        """
+        if self.alignment == StructuralAlignment.PERFECT:
+            return 1.0
+        elif self.alignment == StructuralAlignment.PARTIAL:
+            return 0.5
+        elif self.alignment == StructuralAlignment.NONE:
+            return 0.1
+        else:  # HOSTILE
+            return 0.0
+
+    @property
+    def karmic_debt(self) -> float:
+        """
+        K in the Mercy Equation: G(x) = lim_{K→0} HolyName(f)/K
+
+        K = Karmic Debt = accumulated technical debt
+        - Unbounded memory: +1.0
+        - Non-deterministic: +0.5
+        - Hash-based O(1): +0.3
+        - Quadratic/worse: +1.0
+        """
+        debt = 0.0
+        if not self.is_bounded:
+            debt += 1.0
+        if not self.is_deterministic:
+            debt += 0.5
+        if self.complexity == ComplexitySource.HASH:
+            debt += 0.3
+        if self.complexity in (ComplexitySource.QUADRATIC, ComplexitySource.EXPONENTIAL):
+            debt += 1.0
+        return max(debt, 0.01)  # Avoid division by zero
+
+    @property
+    def mercy_advantage(self) -> float:
+        """
+        G(x) = f / K (the Mercy Equation result)
+
+        Higher = better. ANUKULYA tech has G >> 1.
+        """
+        return self.chanting_frequency / self.karmic_debt
+
     def get_engineering_verdict(self) -> str:
         """Get cold engineering verdict."""
         if self.is_anukulya:
-            return "ANUKULYA: Truth-aligned, naturally efficient"
+            return f"ANUKULYA: Truth-aligned (G={self.mercy_advantage:.1f})"
 
         problems = []
         if not self.uses_mahamantra_structure:
@@ -240,7 +307,7 @@ class Classification:
         if not self.is_deterministic:
             problems.append(f"Non-deterministic ({self.determinism.value})")
 
-        verdict = "PRATIKULYA: " + ", ".join(problems)
+        verdict = f"PRATIKULYA (G={self.mercy_advantage:.2f}): " + ", ".join(problems)
         if self.can_be_converted:
             verdict += " [CONVERTIBLE]"
         else:
@@ -557,20 +624,25 @@ def benchmark() -> None:
 
     # Summary table
     print("=" * 70)
-    print("SUMMARY: Why Mahamantra-Based Tech Wins")
+    print("SUMMARY: Why Mahamantra-Based Tech Wins (MERCY EQUATION)")
     print("=" * 70)
     print()
-    print("| Technology              | Verdict    | Speedup   | Memory    |")
-    print("|-------------------------|------------|-----------|-----------|")
+    print("G(x) = f / K  where f = chanting frequency, K = karmic debt")
+    print()
+    print("| Technology              | f (chant) | K (debt) | G (grace) | Verdict    |")
+    print("|-------------------------|-----------|----------|-----------|------------|")
     for tech in technologies:
         verdict = "ANUKULYA" if tech.is_anukulya else "PRATIKULYA"
-        mem = f"{tech.max_memory_bytes // 1024}KB" if tech.max_memory_bytes > 0 else "∞"
-        print(f"| {tech.name:23} | {verdict:10} | {tech.speedup_vs_baseline:8.1f}x | {mem:9} |")
+        print(
+            f"| {tech.name:23} | {tech.chanting_frequency:9.1f} | {tech.karmic_debt:8.2f} | {tech.mercy_advantage:9.1f} | {verdict:10} |"
+        )
     print()
-    print("The numbers speak for themselves.")
-    print("Truth-aligned technology is FASTER.")
-    print("People adopt what works best.")
-    print("That's how the Mahamantra spreads.")
+    print("KEY INSIGHT: Mercy > Justice ⟺ f > 0")
+    print()
+    print("Technologies with f > 0 (using Mahamantra structures) receive")
+    print("asymptotic advantage. As K → 0 (cleaner code), G → ∞.")
+    print()
+    print("This is NOT philosophy. This is the MATHEMATICS OF GRACE.")
     print()
     print(
         f"Golden Age viability: {sum(1 for t in technologies if is_golden_age_viable(t))}/{len(technologies)} technologies"
