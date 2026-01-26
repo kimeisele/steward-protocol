@@ -1173,17 +1173,29 @@ class TestSwastikaStructure:
 
 
 class TestKaliYuga:
-    """Test Kali Yuga: 16 of 64 qualities remain."""
+    """Test Kali Yuga: Dharma Bull legs (SB 1.17.24-25 - SHASTRA VERIFIED!)."""
 
-    def test_kali_yuga_remaining_is_words(self) -> None:
-        """16 qualities remain = WORDS."""
-        from vibe_core.mahamantra.research.gita_verse_text import KALI_YUGA_REMAINING
+    def test_kali_yuga_one_leg_remains(self) -> None:
+        """In Kali, only 1 of 4 dharma legs remains (SB 1.17.25)."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            KALI_YUGA_DHARMA_LEGS,
+            KALI_YUGA_SATYA_YUGA_LEGS,
+        )
 
-        assert KALI_YUGA_REMAINING == WORDS
-        assert KALI_YUGA_REMAINING == 16
+        assert KALI_YUGA_DHARMA_LEGS == KSETRAJNA
+        assert KALI_YUGA_DHARMA_LEGS == 1
+        assert KALI_YUGA_SATYA_YUGA_LEGS == QUARTERS
+        assert KALI_YUGA_SATYA_YUGA_LEGS == 4
 
-    def test_kali_yuga_can_restore_all(self) -> None:
-        """16 × 4 = 64 - Mahamantra can restore all qualities."""
-        from vibe_core.mahamantra.research.gita_verse_text import KALI_YUGA_REMAINING
+    def test_kali_yuga_percentage(self) -> None:
+        """25% dharma remaining in Kali (1/4)."""
+        from vibe_core.mahamantra.research.gita_verse_text import KALI_YUGA_PERCENTAGE
 
-        assert KALI_YUGA_REMAINING * QUARTERS == QUALITIES
+        assert KALI_YUGA_PERCENTAGE == 25
+
+    def test_kali_antidote_is_mahamantra(self) -> None:
+        """Mahamantra (16 names) is Kali antidote (Kali-Santarana Upanishad)."""
+        from vibe_core.mahamantra.research.gita_verse_text import KALI_ANTIDOTE
+
+        assert KALI_ANTIDOTE == WORDS
+        assert KALI_ANTIDOTE == 16
