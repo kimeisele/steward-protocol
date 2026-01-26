@@ -21,6 +21,7 @@ from vibe_core.mahamantra.protocols._seed import (
     NAVA,
     PANCHA,
     PARAMPARA,
+    POSITION_SUM_KRISHNA,
     QUALITIES,
     QUARTERS,
     SEVEN,
@@ -598,3 +599,425 @@ class TestMahamantraBinaryEncoding:
             "HARE",
         )
         assert MAHAMANTRA_WORD_TABLE == expected
+
+
+class TestBG1866OpCodeDerivation:
+    """Test BG 18.66 as 16-step OpCode algorithm!"""
+
+    def test_four_segments_equal_quarters(self) -> None:
+        """4 semantic segments = QUARTERS."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_SEGMENTS
+
+        assert len(BG_18_66_SEGMENTS) == QUARTERS
+
+    def test_segment_words_sum_to_seven(self) -> None:
+        """Segment word counts sum to SEVEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_SEGMENT_WORDS
+
+        assert sum(BG_18_66_SEGMENT_WORDS) == SEVEN
+
+    def test_genesis_is_pancha(self) -> None:
+        """GENESIS quarter binary = 5 = PANCHA (Pancha Tattva initiates!)."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_GENESIS_DECIMAL
+
+        assert BG_18_66_GENESIS_DECIMAL == PANCHA
+
+    def test_dharma_is_mahajana(self) -> None:
+        """DHARMA quarter binary = 12 = MAHAJANA (12 authorities judge!)."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_DHARMA_DECIMAL
+
+        assert BG_18_66_DHARMA_DECIMAL == MAHAJANA_COUNT
+
+    def test_karma_is_pancha(self) -> None:
+        """KARMA quarter binary = 5 = PANCHA (5-fold action!)."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_KARMA_DECIMAL
+
+        assert BG_18_66_KARMA_DECIMAL == PANCHA
+
+    def test_moksha_is_mahajana(self) -> None:
+        """MOKSHA quarter binary = 12 = MAHAJANA (12 witnesses seal!)."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_MOKSHA_DECIMAL
+
+        assert BG_18_66_MOKSHA_DECIMAL == MAHAJANA_COUNT
+
+    def test_quarter_sum_is_twice_krishna(self) -> None:
+        """All quarters sum = 34 = 2 × POSITION_SUM_KRISHNA."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_QUARTER_SUM
+
+        assert BG_18_66_QUARTER_SUM == 34
+        assert BG_18_66_QUARTER_SUM == HALVES * POSITION_SUM_KRISHNA
+
+    def test_action_phases_equal_ten(self) -> None:
+        """GENESIS + KARMA (action) = TEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            BG_18_66_GENESIS_DECIMAL,
+            BG_18_66_KARMA_DECIMAL,
+        )
+
+        assert BG_18_66_GENESIS_DECIMAL + BG_18_66_KARMA_DECIMAL == TEN
+
+    def test_analysis_phases_equal_kshetra(self) -> None:
+        """DHARMA + MOKSHA (analysis) = KSHETRA = 24."""
+        from vibe_core.mahamantra.protocols._seed import KSHETRA
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            BG_18_66_DHARMA_DECIMAL,
+            BG_18_66_MOKSHA_DECIMAL,
+        )
+
+        assert BG_18_66_DHARMA_DECIMAL + BG_18_66_MOKSHA_DECIMAL == KSHETRA
+
+
+class TestSiksastakam512_1096FullStack:
+    """Test full stack: Siksastakam + 512 + 1096 compatibility."""
+
+    def test_opcodes_per_siksastakam_half(self) -> None:
+        """16 OpCodes = 2 × 8 = HALVES × SIKSASTAKAM_VERSES."""
+        from vibe_core.mahamantra.research.gita_verse_text import OPCODES_PER_SIKSASTAKAM_HALF
+
+        assert OPCODES_PER_SIKSASTAKAM_HALF == HARE_COUNT
+        assert WORDS == HALVES * OPCODES_PER_SIKSASTAKAM_HALF
+
+    def test_siksastakam_to_bg_18_66(self) -> None:
+        """56 + 10 = 66 = BG 18.66!"""
+        from vibe_core.mahamantra.research.gita_verse_text import SIKSASTAKAM_TO_BG_18_66
+
+        assert SIKSASTAKAM_TO_BG_18_66 == 66
+        assert SIKSASTAKAM_TO_BG_18_66 == QUALITIES + HALVES
+
+    def test_maha_compression_512(self) -> None:
+        """512 = WORDS × AKSARA = QUALITIES × OCTET = 2^9."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_COMPRESSION_512
+
+        assert MAHA_COMPRESSION_512 == 512
+        assert MAHA_COMPRESSION_512 == WORDS * AKSARA_COUNT
+        assert MAHA_COMPRESSION_512 == QUALITIES * HARE_COUNT
+        assert MAHA_COMPRESSION_512 == HALVES**NAVA
+
+    def test_states_per_opcode(self) -> None:
+        """Each OpCode addresses 32 states = AKSARA_COUNT."""
+        from vibe_core.mahamantra.research.gita_verse_text import STATES_PER_OPCODE
+
+        assert STATES_PER_OPCODE == AKSARA_COUNT
+        assert STATES_PER_OPCODE == 32
+
+    def test_maha_transcendental_1096(self) -> None:
+        """1096 = 8 × 137 = 1024 + 72."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, NADI_RESONANCE
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_TRANSCENDENTAL_1096
+
+        assert MAHA_TRANSCENDENTAL_1096 == 1096
+        assert MAHA_TRANSCENDENTAL_1096 == HARE_COUNT * MAHA_QUANTUM
+        assert MAHA_TRANSCENDENTAL_1096 == HALVES**TEN + NADI_RESONANCE
+
+    def test_adsr_quarters(self) -> None:
+        """ADSR envelope = 4 phases = QUARTERS."""
+        from vibe_core.mahamantra.research.gita_verse_text import ADSR_QUARTERS
+
+        assert len(ADSR_QUARTERS) == QUARTERS
+        assert ADSR_QUARTERS == ("ATTACK", "DECAY", "SUSTAIN", "RELEASE")
+
+    def test_adsr_phase_duration(self) -> None:
+        """Each ADSR phase = 4 OpCodes."""
+        from vibe_core.mahamantra.research.gita_verse_text import ADSR_PHASE_DURATION
+
+        assert ADSR_PHASE_DURATION == QUARTERS
+        assert WORDS // ADSR_PHASE_DURATION == QUARTERS
+
+    def test_maha_1096_bytes(self) -> None:
+        """1096 bits = 137 bytes = MAHA_QUANTUM = α⁻¹."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_1096_BYTES
+
+        assert MAHA_1096_BYTES == MAHA_QUANTUM
+        assert MAHA_1096_BYTES == 137
+
+
+class TestKishoraAgeDerivation:
+    """Test Krishna's eternal age (Kishora = 15.8) - THREE independent paths!"""
+
+    def test_kishora_scaled_path_1(self) -> None:
+        """158 = MAHA_QUANTUM + PARAMPARA - WORDS = 137 + 37 - 16."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, PARAMPARA
+        from vibe_core.mahamantra.research.gita_verse_text import KISHORA_AGE_SCALED
+
+        assert KISHORA_AGE_SCALED == 158
+        assert KISHORA_AGE_SCALED == MAHA_QUANTUM + PARAMPARA - WORDS
+
+    def test_kishora_scaled_path_2(self) -> None:
+        """158 = WORDS × TEN - HALVES = 160 - 2 (ACINTYA!)."""
+        from vibe_core.mahamantra.research.gita_verse_text import KISHORA_AGE_SCALED
+
+        assert KISHORA_AGE_SCALED == WORDS * TEN - HALVES
+
+    def test_kishora_real_age(self) -> None:
+        """15.8 = 158 / 10 = Krishna's eternal youth."""
+        from vibe_core.mahamantra.research.gita_verse_text import KISHORA_AGE_SCALED
+
+        kishora_age = KISHORA_AGE_SCALED / TEN
+        assert kishora_age == 15.8
+
+    def test_kishora_gap_is_21(self) -> None:
+        """21 = PARAMPARA - WORDS = NAKSHATRAS - SHARANAGATI."""
+        from vibe_core.mahamantra.protocols._seed import NAKSHATRAS, PARAMPARA, SHARANAGATI
+        from vibe_core.mahamantra.research.gita_verse_text import KISHORA_GAP
+
+        assert KISHORA_GAP == 21
+        assert KISHORA_GAP == PARAMPARA - WORDS
+        assert KISHORA_GAP == NAKSHATRAS - SHARANAGATI
+
+
+class TestADSRMathematicalProof:
+    """Test ADSR envelope mathematical derivation from binary patterns."""
+
+    def test_attack_equals_sustain(self) -> None:
+        """ATTACK = SUSTAIN = PANCHA = 5 (active phases)."""
+        from vibe_core.mahamantra.research.gita_verse_text import ADSR_ATTACK, ADSR_SUSTAIN
+
+        assert ADSR_ATTACK == PANCHA
+        assert ADSR_SUSTAIN == PANCHA
+        assert ADSR_ATTACK == ADSR_SUSTAIN
+
+    def test_decay_equals_release(self) -> None:
+        """DECAY = RELEASE = MAHAJANA = 12 (passive phases)."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import ADSR_DECAY, ADSR_RELEASE
+
+        assert ADSR_DECAY == MAHAJANA_COUNT
+        assert ADSR_RELEASE == MAHAJANA_COUNT
+        assert ADSR_DECAY == ADSR_RELEASE
+
+    def test_adsr_sum_is_twice_krishna(self) -> None:
+        """5 + 12 + 5 + 12 = 34 = 2 × POSITION_SUM_KRISHNA."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            ADSR_ATTACK,
+            ADSR_DECAY,
+            ADSR_RELEASE,
+            ADSR_SUSTAIN,
+        )
+
+        total = ADSR_ATTACK + ADSR_DECAY + ADSR_SUSTAIN + ADSR_RELEASE
+        assert total == 34
+        assert total == HALVES * POSITION_SUM_KRISHNA
+
+    def test_active_transitions_is_trinity(self) -> None:
+        """Active phases have 3 transitions = TRINITY."""
+        from vibe_core.mahamantra.research.gita_verse_text import ADSR_ACTIVE_TRANSITIONS
+
+        assert ADSR_ACTIVE_TRANSITIONS == TRINITY
+
+    def test_passive_transitions_is_ksetrajna(self) -> None:
+        """Passive phases have 1 transition = KSETRAJNA."""
+        from vibe_core.mahamantra.research.gita_verse_text import ADSR_PASSIVE_TRANSITIONS
+
+        assert ADSR_PASSIVE_TRANSITIONS == KSETRAJNA
+
+
+class TestDynamicUnfolding:
+    """Test dynamic unfolding - quarter position sums derived from axioms."""
+
+    def test_genesis_sum_is_ten(self) -> None:
+        """GENESIS positions 1-4 sum to TEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import QUARTER_SUM_GENESIS
+
+        assert QUARTER_SUM_GENESIS == TEN
+        assert QUARTER_SUM_GENESIS == sum(range(1, 5))
+
+    def test_dharma_sum_is_kshetra_plus_halves(self) -> None:
+        """DHARMA positions 5-8 sum to KSHETRA + HALVES = 26."""
+        from vibe_core.mahamantra.protocols._seed import KSHETRA
+        from vibe_core.mahamantra.research.gita_verse_text import QUARTER_SUM_DHARMA
+
+        assert QUARTER_SUM_DHARMA == 26
+        assert QUARTER_SUM_DHARMA == KSHETRA + HALVES
+
+    def test_karma_sum_is_sharanagati_times_seven(self) -> None:
+        """KARMA positions 9-12 sum to SHARANAGATI × SEVEN = 42."""
+        from vibe_core.mahamantra.protocols._seed import SEVEN, SHARANAGATI
+        from vibe_core.mahamantra.research.gita_verse_text import QUARTER_SUM_KARMA
+
+        assert QUARTER_SUM_KARMA == 42
+        assert QUARTER_SUM_KARMA == SHARANAGATI * SEVEN
+
+    def test_moksha_sum_is_jiva_plus_hare(self) -> None:
+        """MOKSHA positions 13-16 sum to JIVA_QUALITIES + HARE_COUNT = 58."""
+        from vibe_core.mahamantra.protocols._seed import JIVA_QUALITIES
+        from vibe_core.mahamantra.research.gita_verse_text import QUARTER_SUM_MOKSHA
+
+        assert QUARTER_SUM_MOKSHA == 58
+        assert QUARTER_SUM_MOKSHA == JIVA_QUALITIES + HARE_COUNT
+
+
+class TestStep11Emergence:
+    """Test Step 11 = 66 = BG 18.66 emergence."""
+
+    def test_step_66_position_is_11(self) -> None:
+        """Position 11 = MAHAJANA - KSETRAJNA = 12 - 1."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import STEP_66_POSITION
+
+        assert STEP_66_POSITION == 11
+        assert STEP_66_POSITION == MAHAJANA_COUNT - KSETRAJNA
+
+    def test_step_66_acintya_paths(self) -> None:
+        """11 has THREE independent derivations (ACINTYA!)."""
+        from vibe_core.mahamantra.research.gita_verse_text import STEP_66_POSITION
+
+        assert STEP_66_POSITION == NAVA + HALVES  # 9 + 2
+        assert STEP_66_POSITION == HARE_COUNT + TRINITY  # 8 + 3
+        assert STEP_66_POSITION == (GITA_CHAPTERS + QUARTERS) // HALVES  # 22 / 2
+
+    def test_triangular_11_is_66(self) -> None:
+        """T(11) = 66 = QUALITIES + HALVES."""
+        from vibe_core.mahamantra.research.gita_verse_text import TRIANGULAR_11
+
+        assert TRIANGULAR_11 == 66
+        assert TRIANGULAR_11 == QUALITIES + HALVES
+
+
+class TestBhogaPrasadamTransformation:
+    """Test bhoga → prasadam transformation through guru's grace."""
+
+    def test_triangular_16_is_136(self) -> None:
+        """T(16) = 136 = raw accumulation (bhoga)."""
+        from vibe_core.mahamantra.research.gita_verse_text import TRIANGULAR_16
+
+        assert TRIANGULAR_16 == 136
+        assert TRIANGULAR_16 == (WORDS * (WORDS + KSETRAJNA)) // HALVES
+
+    def test_prasadam_is_maha_quantum(self) -> None:
+        """T(16) + KSETRAJNA = 137 = α⁻¹ (prasadam!)."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+        from vibe_core.mahamantra.research.gita_verse_text import TRIANGULAR_16
+
+        assert TRIANGULAR_16 + KSETRAJNA == MAHA_QUANTUM
+
+    def test_prasadam_ratio_is_ksetrajna(self) -> None:
+        """Guru's grace = KSETRAJNA = 1."""
+        from vibe_core.mahamantra.research.gita_verse_text import PRASADAM_RATIO
+
+        assert PRASADAM_RATIO == KSETRAJNA
+        assert PRASADAM_RATIO == 1
+
+    def test_bg_kishora_gap(self) -> None:
+        """18.66 - 15.8 = 2.86 → 286 = PARAMPARA × HARE_COUNT - TEN."""
+        from vibe_core.mahamantra.protocols._seed import PARAMPARA
+        from vibe_core.mahamantra.research.gita_verse_text import BG_KISHORA_GAP_SCALED
+
+        assert BG_KISHORA_GAP_SCALED == 286
+        assert BG_KISHORA_GAP_SCALED == PARAMPARA * HARE_COUNT - TEN
+
+
+class TestMirrorVerses:
+    """Test BG 2.7 and 7.2 mirror verse derivations."""
+
+    def test_bg_2_7_is_nakshatras(self) -> None:
+        """2.7 → 27 = NAKSHATRAS (lunar mansions)."""
+        from vibe_core.mahamantra.protocols._seed import NAKSHATRAS
+        from vibe_core.mahamantra.research.gita_verse_text import BG_2_7_COORDINATE
+
+        assert BG_2_7_COORDINATE == 27
+        assert BG_2_7_COORDINATE == NAKSHATRAS
+        assert BG_2_7_COORDINATE == HALVES * TEN + SEVEN
+
+    def test_bg_7_2_is_nadi_resonance(self) -> None:
+        """7.2 → 72 = NADI_RESONANCE (pulse)."""
+        from vibe_core.mahamantra.protocols._seed import NADI_RESONANCE
+        from vibe_core.mahamantra.research.gita_verse_text import BG_7_2_COORDINATE
+
+        assert BG_7_2_COORDINATE == 72
+        assert BG_7_2_COORDINATE == NADI_RESONANCE
+        assert BG_7_2_COORDINATE == SEVEN * TEN + HALVES
+
+    def test_mirror_sum_is_mala_minus_nava(self) -> None:
+        """27 + 72 = 99 = MALA - NAVA."""
+        from vibe_core.mahamantra.protocols._seed import MALA, NAVA
+        from vibe_core.mahamantra.research.gita_verse_text import MIRROR_SUM
+
+        assert MIRROR_SUM == 99
+        assert MIRROR_SUM == MALA - NAVA
+
+    def test_mirror_diff_is_triangular_9(self) -> None:
+        """72 - 27 = 45 = T(9) = NAVA × PANCHA."""
+        from vibe_core.mahamantra.protocols._seed import NAVA
+        from vibe_core.mahamantra.research.gita_verse_text import MIRROR_DIFF, TRIANGULAR_9
+
+        assert MIRROR_DIFF == 45
+        assert MIRROR_DIFF == NAVA * PANCHA
+        assert MIRROR_DIFF == TRIANGULAR_9
+
+
+class TestMahaSequencer:
+    """Test 16-step Mahamantra sequencer model."""
+
+    def test_sequencer_steps_is_words(self) -> None:
+        """Sequencer has 16 steps = WORDS."""
+        from vibe_core.mahamantra.research.gita_verse_text import SEQUENCER_STEPS
+
+        assert SEQUENCER_STEPS == WORDS
+        assert SEQUENCER_STEPS == 16
+
+    def test_bpm_is_kshetra_times_ten(self) -> None:
+        """BPM = 240 = KSHETRA × TEN."""
+        from vibe_core.mahamantra.protocols._seed import KSHETRA
+        from vibe_core.mahamantra.research.gita_verse_text import SEQUENCER_BPM
+
+        assert SEQUENCER_BPM == 240
+        assert SEQUENCER_BPM == KSHETRA * TEN
+
+    def test_cycle_is_prana(self) -> None:
+        """Full cycle = 4000ms = PRANA."""
+        from vibe_core.mahamantra.research.gita_verse_text import CYCLE_DURATION_MS
+
+        assert CYCLE_DURATION_MS == 4000
+
+    def test_polyrhythm_lcm(self) -> None:
+        """LCM(2,4,5,8,16) = 80 = WORDS × PANCHA."""
+        from vibe_core.mahamantra.research.gita_verse_text import POLYRHYTHM_LCM
+
+        assert POLYRHYTHM_LCM == 80
+        assert POLYRHYTHM_LCM == WORDS * PANCHA
+
+
+class TestStringResonance:
+    """Test string resonance / harmonic series derivations."""
+
+    def test_harmonic_sum_8_is_36(self) -> None:
+        """T(8) = 36 = NAVA × QUARTERS."""
+        from vibe_core.mahamantra.protocols._seed import NAVA
+        from vibe_core.mahamantra.research.gita_verse_text import HARMONIC_SUM_8
+
+        assert HARMONIC_SUM_8 == 36
+        assert HARMONIC_SUM_8 == NAVA * QUARTERS
+
+
+class TestTranscendentalFrequencies:
+    """Test 1096 Hz transcendental frequency integration."""
+
+    def test_base_freq_is_jiva_cycle(self) -> None:
+        """Base frequency = 432 Hz = JIVA_CYCLE."""
+        from vibe_core.mahamantra.protocols._seed import JIVA_CYCLE
+        from vibe_core.mahamantra.research.gita_verse_text import FREQ_BASE_HZ
+
+        assert FREQ_BASE_HZ == 432
+        assert FREQ_BASE_HZ == JIVA_CYCLE
+
+    def test_transcendental_freq_is_1096(self) -> None:
+        """Transcendental = 1096 Hz = HARE × MAHA_QUANTUM."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+        from vibe_core.mahamantra.research.gita_verse_text import FREQ_TRANSCENDENTAL_HZ
+
+        assert FREQ_TRANSCENDENTAL_HZ == 1096
+        assert FREQ_TRANSCENDENTAL_HZ == HARE_COUNT * MAHA_QUANTUM
+
+    def test_freq_ratio_factor_is_hare(self) -> None:
+        """Both frequencies share factor HARE_COUNT = 8."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, MALA
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            FREQ_BASE_HZ,
+            FREQ_TRANSCENDENTAL_HZ,
+        )
+
+        assert FREQ_TRANSCENDENTAL_HZ // HARE_COUNT == MAHA_QUANTUM  # 137
+        assert FREQ_BASE_HZ // HARE_COUNT == MALA // HALVES  # 54
