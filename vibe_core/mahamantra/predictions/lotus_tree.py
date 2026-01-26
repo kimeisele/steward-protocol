@@ -45,7 +45,7 @@ from __future__ import annotations
 
 from typing import Final, Generic, TypeVar
 
-from .protocols._seed import QUALITIES, QUARTERS, WORDS
+from ..protocols._seed import QUALITIES, QUARTERS, WORDS
 
 # =============================================================================
 # CONSTANTS
