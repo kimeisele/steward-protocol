@@ -396,6 +396,28 @@ from vibe_core.mahamantra.research.lotus_acintya import (
 from vibe_core.mahamantra.research.lotus_acintya import (
     KEY_INSIGHT as LOTUS_ACINTYA_INSIGHT,
 )
+from vibe_core.mahamantra.research.lotus_full_spectrum import (
+    # Efficiency scaling
+    BASELINE_32BIT_SPEEDUP,  # 1557x (our measured baseline)
+    EFFICIENCY_BY_LEVEL,  # Efficiency at each level
+    # The FULL potential
+    FULL_POTENTIAL_256BIT,  # 30,720,000× for crypto!
+    # Spectrum levels (8-bit to 512-bit)
+    LOTUS_SPECTRUM,  # All Mahamantra-aligned levels
+    MAX_256BIT_SPEEDUP,  # 10,000× at QUALITIES level
+    # Real-world applications (11 applications!)
+    REAL_WORLD_APPLICATIONS,  # IPv4, LLM, IPv6, crypto, etc.
+    TOTAL_POTENTIAL,  # All applications combined
+    EfficiencyComparison,
+    LotusLevel,
+    RealWorldApplication,
+)
+from vibe_core.mahamantra.research.lotus_full_spectrum import (
+    HARDWARE_ALIGNMENT as SPECTRUM_HARDWARE_ALIGNMENT,  # 3072× hardware factor
+)
+from vibe_core.mahamantra.research.lotus_full_spectrum import (
+    KEY_INSIGHT as SPECTRUM_INSIGHT,
+)
 from vibe_core.mahamantra.research.lotus_radix_n import (
     LotusRadixN,
     lotus_16bit,
@@ -987,4 +1009,19 @@ __all__ = [
     "BridgeStep",  # A step to build the bridge
     "BRIDGE_STEPS",  # All 4 bridge steps
     "BRIDGE_INSIGHT",  # Key insight on the bridge
+    # Lotus Full Spectrum (8-bit to 512-bit)
+    "LotusLevel",  # A level in the spectrum
+    "LOTUS_SPECTRUM",  # All 7 levels (HALVES to QUALITIES×HALVES)
+    "EfficiencyComparison",  # Compare Lotus vs Hash at each level
+    "EFFICIENCY_BY_LEVEL",  # Efficiency for all levels
+    "BASELINE_32BIT_SPEEDUP",  # 1557x (our measured baseline)
+    # Real-world applications
+    "RealWorldApplication",  # A real-world use case
+    "REAL_WORLD_APPLICATIONS",  # 11 applications across all bit widths
+    # The FULL potential
+    "MAX_256BIT_SPEEDUP",  # 10,000× at QUALITIES level
+    "SPECTRUM_HARDWARE_ALIGNMENT",  # 3072× hardware factor
+    "FULL_POTENTIAL_256BIT",  # 30,720,000× for crypto!
+    "TOTAL_POTENTIAL",  # All applications combined
+    "SPECTRUM_INSIGHT",  # Key insight on full spectrum
 ]
