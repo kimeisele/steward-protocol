@@ -347,6 +347,38 @@ from vibe_core.mahamantra.research.shabda_translation import (
     translate_via_vibration,
     vibration_to_sanskrit,
 )
+from vibe_core.mahamantra.research.spiritual_tdd import (
+    # Derived constants
+    DERIVED_CONSTANTS,
+    # Efficiency derivations
+    IPV4_EFFICIENCY,
+    LLM_EFFICIENCY,
+    # Pancha Tattva
+    MAHAMANTRA_TATTVA,
+    # Axioms
+    SPIRITUAL_TESTS,
+    # Trojan Horse
+    TROJAN_HORSE_LAYERS,
+    WEB3_MALA_OS,
+    DerivedConstant,
+    MantraAxiom,
+    PanchaTattvaSpec,
+    SpiritualTest,
+    TattvaAnswer,
+    TattvaQuestion,
+    # Test runner
+    TestResult,
+    TrojanHorseLayer,
+    TrojanHorseOS,
+    derive_intent_space,
+    derive_routing_levels,
+    derive_text_capacity,
+    run_spiritual_tests,
+    verify_all_derived,
+)
+from vibe_core.mahamantra.research.spiritual_tdd import (
+    KEY_INSIGHT as SPIRITUAL_TDD_INSIGHT,
+)
 from vibe_core.mahamantra.research.unified_compute import (
     MEMORY_HIERARCHY_MAP,
     PARALLELISM_INSIGHT,
@@ -576,4 +608,27 @@ __all__ = [
     "CONSCIOUSNESS_FRACTAL_LEVELS",  # All fractal levels
     "transform_dead_to_living",  # Add KSETRAJNA to dead matter
     "CONSCIOUSNESS_INSIGHT",  # Key insight on consciousness mathematics
+    # Spiritual TDD (7 Axioms + Pancha Tattva Framework)
+    "MantraAxiom",  # The 7 Mantra Axioms
+    "SpiritualTest",  # A spiritual test that material science must pass
+    "SPIRITUAL_TESTS",  # All 7 spiritual tests
+    "TattvaQuestion",  # The 5 Pancha Tattva questions
+    "TattvaAnswer",  # An answer to a Tattva question
+    "PanchaTattvaSpec",  # Complete Pancha Tattva specification
+    "MAHAMANTRA_TATTVA",  # Tattva spec for Mahamantra itself
+    "DerivedConstant",  # A constant derived from axioms
+    "DERIVED_CONSTANTS",  # All derived constants with formulas
+    "derive_routing_levels",  # Derive levels from key bits
+    "derive_text_capacity",  # Derive capacity (not hardcoded!)
+    "derive_intent_space",  # Derive intent space from levels
+    "IPV4_EFFICIENCY",  # 125,000x (DERIVED from axioms!)
+    "LLM_EFFICIENCY",  # 16,384x (DERIVED from axioms!)
+    "TrojanHorseLayer",  # A layer of the Trojan Horse architecture
+    "TROJAN_HORSE_LAYERS",  # All Trojan Horse layers
+    "TrojanHorseOS",  # Web 3.0 × 108 Operating System
+    "WEB3_MALA_OS",  # The complete Trojan Horse specification
+    "TestResult",  # Result of running a spiritual test
+    "run_spiritual_tests",  # Run all 7 spiritual tests
+    "verify_all_derived",  # Verify no hardcoding
+    "SPIRITUAL_TDD_INSIGHT",  # Key insight on Spiritual TDD
 ]
