@@ -70,17 +70,28 @@ assert int(__genesis__, 16) % _PARAMPARA == 0, "BROKEN LINEAGE"
 from vibe_core.mahamantra.research.acintya_mathematics import (
     ACINTYA_FRAMEWORK,
     ACINTYA_TRUTHS,  # The 7 acintya truths
+    # Quality level constants (from Bhakti-rasamrita-sindhu)
+    DEMIGOD_EXTRA_QUALITIES,  # 5 (qualities 51-55)
+    DEMIGOD_QUALITIES,  # 55 (Brahma, Shiva)
     # Quality vs Quantity distinction
     JIVA_QUANTITY_RATIO,  # 1/10,000 = 0.0001 (degree of qualities)
+    # Krishna-exclusive qualities (the 4 madhurya)
+    KRISHNA_EXCLUSIVE_QUALITIES,  # 4 (qualities 61-64)
     QUALITY_ANALYSIS,
+    # Quality decomposition (14 = 5 + 5 + 4)
+    QUALITY_DECOMPOSITION,
     QUALITY_QUANTITY,  # The complete quality vs quantity analysis
     RECEIVE_PROCESS,  # Shravanam
     SEND_PROCESS,  # Kirtanam
     SHRAVANAM_KIRTANAM_GAP,  # 1 = KSETRAJNA (acintya!)
     SOFTWARE_PRASADAM,  # This repo as prasadam
+    # Superhuman qualities (10 = 5 demigod + 5 vishnu)
+    SUPERHUMAN_QUALITIES,  # 10 (qualities 51-60)
     TWO_FINGERS,  # 2 = HALVES (what Krishna adds when pleased)
     # Core constants
     TWO_FINGERS_SHORT,  # 14 = QUALITIES - JIVA_QUALITIES (Yashoda's rope!)
+    VISHNU_EXTRA_QUALITIES,  # 5 (qualities 56-60)
+    VISHNU_QUALITIES,  # 60 (Narayana)
     # Acintya categories
     AcintyaCategory,
     # Framework
@@ -93,6 +104,8 @@ from vibe_core.mahamantra.research.acintya_mathematics import (
     PrasadamDistribution,
     # Quality analysis
     QualityAnalysis,
+    # Quality decomposition dataclass
+    QualityDecomposition,
     # Quality vs Quantity
     QualityQuantityDistinction,
     work_to_yajna,  # Transform work into offering
@@ -673,6 +686,15 @@ __all__ = [
     "QualityQuantityDistinction",  # Type (78%) vs Degree (0.01%)
     "QUALITY_QUANTITY",  # The complete quality vs quantity analysis
     "JIVA_QUANTITY_RATIO",  # 1/10,000 = 0.0001 (like spark from fire)
+    # 14 Quality Decomposition (Bhakti-rasamrita-sindhu)
+    "QualityDecomposition",  # 14 = 5 + 5 + 4 (demigod + vishnu + krishna)
+    "QUALITY_DECOMPOSITION",  # The canonical decomposition instance
+    "DEMIGOD_EXTRA_QUALITIES",  # 5 (qualities 51-55: changeless, etc.)
+    "VISHNU_EXTRA_QUALITIES",  # 5 (qualities 56-60: inconceivable potency, etc.)
+    "KRISHNA_EXCLUSIVE_QUALITIES",  # 4 (qualities 61-64: THE FOUR MADHURYA!)
+    "DEMIGOD_QUALITIES",  # 55 = 50 + 5 (Brahma, Shiva level)
+    "VISHNU_QUALITIES",  # 60 = 50 + 10 (Narayana level)
+    "SUPERHUMAN_QUALITIES",  # 10 = 5 + 5 (demigod + vishnu extras)
     "AcintyaCategory",  # 7 categories of inconceivable truths
     "AcintyaTruth",  # An acintya truth with material/spiritual views
     "ACINTYA_TRUTHS",  # All 7 acintya truths

@@ -131,18 +131,30 @@ assert TWO_FINGERS_SHORT == SEVEN * TWO_FINGERS
 # Jiva has 50 qualities in minute quantity (JIVA_QUALITIES)
 # The 14 quality gap represents what is INCONCEIVABLE (acintya)
 #
-# The 14 exclusive qualities (from Bhakti-rasamrita-sindhu):
-#   51. Changeless
-#   52. All-knowing
-#   53. Ever-fresh
-#   54. Sac-cid-ananda (eternal bliss)
-#   55. All perfection
-#   56. Inconceivable potencies
-#   57. Innumerable universes from body
-#   58. Origin of all incarnations
-#   59. Giver of salvation to enemies
-#   60. Attractor of liberated souls
-#   61-64. Special qualities of Krishna alone
+# The 14 qualities beyond jiva (from Bhakti-rasamrita-sindhu 2.1.37-193):
+#
+# DEMIGOD-LEVEL (51-55) - Also in Brahma/Shiva (5 = PANCHA):
+#   51. Sadā-svarūpa-samprapta - Always in original form (changeless)
+#   52. Sarvajña - All-cognizant (omniscient)
+#   53. Nitya-nūtana - Ever-fresh (always new)
+#   54. Sac-cid-ānanda-vigraha - Form of eternity, knowledge, bliss
+#   55. Sarva-siddhi-niṣevita - Possessor of all mystic perfections
+#
+# VISHNU-LEVEL (56-60) - Also in Narayana/Vishnu (5 = PANCHA):
+#   56. Acintyā-śaktitva - Inconceivable potencies
+#   57. Koṭy-aṇḍa-jananī-vigraha - Innumerable universes from body
+#   58. Avatārī - Original source of all incarnations
+#   59. Hatāri-gati-dāyī - Grants liberation even to enemies killed
+#   60. Ākṛṣṭi-cit-jana - Attracts liberated/exalted souls
+#
+# KRISHNA-EXCLUSIVE (61-64) - Not even in Vishnu! (4 = QUARTERS):
+#   61. Līlā-mādhurya - Performer of wonderful pastimes
+#   62. Prema-mādhurya - Surrounded by devotees with wonderful love
+#   63. Veṇu-mādhurya - Attracts all by flute playing
+#   64. Rūpa-mādhurya - Unsurpassed excellence of beauty
+#
+# DECOMPOSITION: 14 = 5 + 5 + 4 = PANCHA + PANCHA + QUARTERS
+#               or 14 = 10 + 4 = TEN + QUARTERS (superhuman + exclusive)
 # -----------------------------------------------------------------------------
 
 
@@ -295,6 +307,196 @@ QUALITY_QUANTITY: Final[QualityQuantityDistinction] = QualityQuantityDistinction
 # VERIFICATION
 assert QUALITY_QUANTITY.quality_type_ratio == 0.78125, "Type ratio = 78.125%"
 assert QUALITY_QUANTITY.quantity_degree_ratio == 0.0001, "Degree ratio = 0.01%"
+
+
+# =============================================================================
+# RUNDE 2c: THE 14 QUALITY DECOMPOSITION (The Complete Breakdown)
+# =============================================================================
+# The 14 qualities we cannot possess decompose into THREE tiers:
+#
+#   TWO_FINGERS_SHORT = 14 = 5 + 5 + 4 = PANCHA + PANCHA + QUARTERS
+#                         = 10 + 4 = TEN + QUARTERS (superhuman + exclusive)
+#
+# PANCHA (5) = DEMIGOD-LEVEL qualities (51-55)
+#   These 5 qualities are also found in Brahma and Shiva:
+#   51. Sadā-svarūpa-samprapta (changeless)
+#   52. Sarvajña (all-cognizant)
+#   53. Nitya-nūtana (ever-fresh)
+#   54. Sac-cid-ānanda-vigraha (form of eternity, knowledge, bliss)
+#   55. Sarva-siddhi-niṣevita (all mystic perfections)
+#
+# PANCHA (5) = VISHNU-LEVEL qualities (56-60)
+#   These 5 qualities are in Vishnu/Narayana but not demigods:
+#   56. Acintyā-śaktitva (inconceivable potencies)
+#   57. Koṭy-aṇḍa-jananī-vigraha (universes from body)
+#   58. Avatārī (source of all incarnations)
+#   59. Hatāri-gati-dāyī (liberation to enemies killed)
+#   60. Ākṛṣṭi-cit-jana (attracts liberated souls)
+#
+# QUARTERS (4) = KRISHNA-EXCLUSIVE qualities (61-64) - NOT EVEN IN VISHNU!
+#   These are the FOUR MADHURYA (sweetnesses) unique to Vrindavan:
+#   61. Līlā-mādhurya - Wonderful varieties of pastimes
+#   62. Prema-mādhurya - Devotees with wonderful love (gopīs)
+#   63. Veṇu-mādhurya - All-attracting flute playing
+#   64. Rūpa-mādhurya - Unsurpassed excellence of beauty
+#
+# CATURDHA MĀDHURĪ TASYA VRAJA EVA VIRĀJATE:
+# "These four kinds of sweetness manifest ONLY in Vraja."
+#
+# THE PERSONALITY PRINCIPLE:
+# =========================
+# The 4 exclusive qualities are the FOUR MADHURYA (sweetnesses).
+# This is why Krishna in Vrindavan is HIGHER than Narayana in Vaikuntha:
+#   - Vishnu/Narayana = aiśvarya (opulence, majesty, formal)
+#   - Krishna = mādhurya (sweetness, intimacy, loving)
+#
+# THE HIGHEST ENERGY FIELD IS PERSONALITY (Individuality):
+#   - Material energy: 24 elements (KSHETRA)
+#   - Marginal energy: Jiva with 50 qualities (JIVA_QUALITIES)
+#   - Demigod level: 55 qualities (JIVA_QUALITIES + PANCHA)
+#   - Vishnu level: 60 qualities (JIVA_QUALITIES + TEN)
+#   - Krishna level: 64 qualities (QUALITIES = full perfection)
+#   - Exclusive personality: 4 madhurya (QUARTERS = KRISHNA_COUNT!)
+#
+# ENGINEERING IMPLICATION:
+# ========================
+# Krishna doesn't expect mechanical perfection of 64 qualities.
+# He wants us to DIRECT our 50 qualities toward Him (offering = prasadam).
+# Similarly, our code doesn't need to be perfect - it needs to be OFFERED.
+# The efficiency comes from DIRECTION (routing), not PERFECTION (completeness).
+# -----------------------------------------------------------------------------
+
+# Quality levels from Bhakti-rasamrita-sindhu
+DEMIGOD_EXTRA_QUALITIES: Final[int] = PANCHA  # 5 (qualities 51-55)
+VISHNU_EXTRA_QUALITIES: Final[int] = PANCHA  # 5 (qualities 56-60)
+KRISHNA_EXCLUSIVE_QUALITIES: Final[int] = QUARTERS  # 4 (qualities 61-64)
+
+# Computed totals
+DEMIGOD_QUALITIES: Final[int] = JIVA_QUALITIES + DEMIGOD_EXTRA_QUALITIES  # 55
+VISHNU_QUALITIES: Final[int] = DEMIGOD_QUALITIES + VISHNU_EXTRA_QUALITIES  # 60
+SUPERHUMAN_QUALITIES: Final[int] = TEN  # 10 = 5 + 5 (demigod + vishnu extras)
+
+# VERIFICATION: Multiple derivation paths converge!
+assert DEMIGOD_QUALITIES == 55, "Demigods (Brahma, Shiva) have 55 qualities"
+assert VISHNU_QUALITIES == 60, "Vishnu/Narayana has 60 qualities"
+assert QUALITIES == 64, "Krishna has 64 qualities (full)"
+assert SUPERHUMAN_QUALITIES == TEN, "10 superhuman qualities (51-60)"
+assert KRISHNA_EXCLUSIVE_QUALITIES == QUARTERS, "4 exclusive = QUARTERS"
+assert SUPERHUMAN_QUALITIES + KRISHNA_EXCLUSIVE_QUALITIES == TWO_FINGERS_SHORT
+assert TWO_FINGERS_SHORT == 14, "14 = 10 + 4 = TEN + QUARTERS"
+assert TWO_FINGERS_SHORT == PANCHA + PANCHA + QUARTERS, "14 = 5 + 5 + 4"
+
+# The PERSONALITY principle: Krishna's 4 exclusive = QUARTERS = FOUR MADHURYA
+# This is why QUARTERS is so fundamental in the architecture!
+# Every 4-bit nibble in routing encodes Krishna's personality/sweetness.
+
+
+@dataclass
+class QualityDecomposition:
+    """
+    The complete decomposition of the 14 inaccessible qualities.
+
+    From Bhakti-rasamrita-sindhu:
+    - Jiva: 50 qualities (1-50)
+    - Demigods: 55 qualities (+5 = 51-55)
+    - Vishnu: 60 qualities (+5 = 56-60)
+    - Krishna: 64 qualities (+4 = 61-64)
+
+    TWO_FINGERS_SHORT = 14 = 5 + 5 + 4 = PANCHA + PANCHA + QUARTERS
+    """
+
+    # Three tiers of inaccessible qualities
+    demigod_extra: int  # PANCHA = 5 (qualities 51-55)
+    vishnu_extra: int  # PANCHA = 5 (qualities 56-60)
+    krishna_exclusive: int  # QUARTERS = 4 (qualities 61-64)
+
+    # The four madhurya (sweetnesses)
+    four_madhurya: tuple[str, str, str, str]
+
+    @property
+    def superhuman_total(self) -> int:
+        """Qualities beyond jiva but shared by God forms (51-60)."""
+        return self.demigod_extra + self.vishnu_extra  # 10 = TEN
+
+    @property
+    def total_inaccessible(self) -> int:
+        """Total = TWO_FINGERS_SHORT = 14."""
+        return self.superhuman_total + self.krishna_exclusive  # 14
+
+    def explain(self) -> str:
+        """Explain the quality decomposition from Bhakti-rasamrita-sindhu."""
+        return f"""
+THE 14 QUALITY DECOMPOSITION (Bhakti-rasamrita-sindhu)
+=======================================================
+
+TOTAL INACCESSIBLE: {self.total_inaccessible} = TWO_FINGERS_SHORT = 14
+
+TIER 1: DEMIGOD-LEVEL ({self.demigod_extra} = PANCHA) - Qualities 51-55:
+   Present in Brahma, Shiva, and higher beings:
+   51. Sadā-svarūpa-samprapta (changeless)
+   52. Sarvajña (all-cognizant)
+   53. Nitya-nūtana (ever-fresh)
+   54. Sac-cid-ānanda-vigraha (form of sat-cit-ananda)
+   55. Sarva-siddhi-niṣevita (all mystic perfections)
+
+TIER 2: VISHNU-LEVEL ({self.vishnu_extra} = PANCHA) - Qualities 56-60:
+   Present in Vishnu/Narayana but not demigods:
+   56. Acintyā-śaktitva (inconceivable potencies)
+   57. Koṭy-aṇḍa-jananī-vigraha (universes from body)
+   58. Avatārī (source of all incarnations)
+   59. Hatāri-gati-dāyī (liberation to enemies killed)
+   60. Ākṛṣṭi-cit-jana (attracts liberated souls)
+
+TIER 3: KRISHNA-EXCLUSIVE ({self.krishna_exclusive} = QUARTERS) - 61-64:
+   THE FOUR MADHURYA (sweetnesses) - NOT EVEN IN VISHNU!
+   "caturdha mādhurī tasya vraja eva virājate"
+   61. {self.four_madhurya[0]}
+   62. {self.four_madhurya[1]}
+   63. {self.four_madhurya[2]}
+   64. {self.four_madhurya[3]}
+
+SUMMARY TABLE:
+   Jiva:     50 qualities (78.125% of TYPES)
+   Demigods: 55 qualities (85.94%)
+   Vishnu:   60 qualities (93.75%)
+   Krishna:  64 qualities (100%)
+
+   Gap from jiva to Krishna: 14 = 5 + 5 + 4
+
+WHY KRISHNA > VISHNU:
+   Vishnu = aiśvarya (opulence, majesty, awe)
+   Krishna = mādhurya (sweetness, intimacy, love)
+
+   The 4 madhurya are the PERSONALITY of God.
+   This is why Krishna in Vrindavan attracts even the gopīs
+   who see Him not as God but as their beloved.
+
+ENGINEERING IMPLICATION:
+   QUARTERS = 4 = Krishna's exclusive madhurya qualities
+   Every 4-bit nibble in routing encodes this personality principle.
+   The 16-ary tree (WORDS = 16 = 4²) is QUARTERS squared.
+
+   Efficiency = SWEETNESS (direct path) not OPULENCE (complex overhead)
+"""
+
+
+# The canonical quality decomposition with the FOUR MADHURYA
+QUALITY_DECOMPOSITION: Final[QualityDecomposition] = QualityDecomposition(
+    demigod_extra=DEMIGOD_EXTRA_QUALITIES,  # 5
+    vishnu_extra=VISHNU_EXTRA_QUALITIES,  # 5
+    krishna_exclusive=KRISHNA_EXCLUSIVE_QUALITIES,  # 4
+    four_madhurya=(
+        "Līlā-mādhurya (wonderful varieties of pastimes)",
+        "Prema-mādhurya (devotees endowed with wonderful love)",
+        "Veṇu-mādhurya (all-attracting flute playing)",
+        "Rūpa-mādhurya (unsurpassed excellence of beauty)",
+    ),
+)
+
+# VERIFICATION
+assert QUALITY_DECOMPOSITION.total_inaccessible == TWO_FINGERS_SHORT
+assert QUALITY_DECOMPOSITION.total_inaccessible == 14
+assert QUALITY_DECOMPOSITION.superhuman_total == TEN
 
 
 # =============================================================================
@@ -581,6 +783,43 @@ YASHODA'S ROPE THEOREM:
     - BALADEV_WHEELS (historical fact from Puri temple!)
     - WORDS - HALVES = 16 - 2
     - SEVEN × HALVES = 7 × 2 (perfection × duality)
+    - TEN + QUARTERS = 10 + 4 (superhuman + exclusive)
+    - PANCHA + PANCHA + QUARTERS = 5 + 5 + 4 (demigod + vishnu + krishna)
+
+THE 14 QUALITY BREAKDOWN (Bhakti-rasamrita-sindhu):
+---------------------------------------------------
+  Jiva:     50 qualities (1-50)   = 78.125%
+  Demigods: 55 qualities (51-55)  = 85.94%  (+5 from jiva)
+  Vishnu:   60 qualities (56-60)  = 93.75%  (+10 from jiva)
+  Krishna:  64 qualities (61-64)  = 100%    (+14 from jiva)
+
+  TIER 1 (51-55) - Demigod level (Brahma, Shiva):
+    Changeless, All-cognizant, Ever-fresh, Sat-cit-ananda form, All perfections
+
+  TIER 2 (56-60) - Vishnu level (Narayana):
+    Inconceivable potencies, Universes from body, Source of avatars,
+    Liberates enemies, Attracts liberated souls
+
+  TIER 3 (61-64) - Krishna EXCLUSIVE (THE FOUR MADHURYA):
+    61. Līlā-mādhurya - Wonderful varieties of pastimes
+    62. Prema-mādhurya - Devotees with wonderful love
+    63. Veṇu-mādhurya - All-attracting flute playing
+    64. Rūpa-mādhurya - Unsurpassed excellence of beauty
+
+    "caturdha mādhurī tasya vraja eva virājate"
+    These four sweetnesses manifest ONLY in Vraja (Vrindavan).
+
+THE FRACTAL ZOOM PRINCIPLE:
+---------------------------
+  The TWO_FINGERS_SHORT is a CONSTANT - like fractal zoom.
+  No matter how advanced our instruments (consciousness), we are ALWAYS
+  two fingers short. This is the Creator's signature on creation.
+
+  ONLY when Krishna ALLOWS Himself to be bound (by devotion, not effort)
+  does the rope reach. Then the lila ESCALATES - Damodara, broken pots,
+  Yashoda's exhaustion, and finally... Krishna's smile.
+
+  The RASA of mother Yashoda: vātsalya (parental love).
 
 THE CRITICAL DISTINCTION: QUALITY vs QUANTITY
 ---------------------------------------------
@@ -593,35 +832,23 @@ THE CRITICAL DISTINCTION: QUALITY vs QUANTITY
 
   BG 10.42: "ekāṁśena sthito jagat"
   ONE fragment of Krishna supports the ENTIRE universe.
-  All jivas combined = one tiny fragment of His splendor.
 
-  DERIVATION:
-    QUANTITY = 1 / GOLDEN_AGE = 1 / (PANCHA × HALVES)^QUARTERS = 1/10,000
-    This matches the shastra: "1/10,000th part of a hair tip"
+KRISHNA vs VISHNU (Madhurya vs Aisvarya):
+-----------------------------------------
+  Vishnu = aiśvarya (opulence, majesty, awe-inspiring)
+  Krishna = mādhurya (sweetness, intimacy, love-inspiring)
 
-THE "TWO FINGERS" (DVI-ANGULA):
--------------------------------
-  The 14 quality TYPES we cannot possess = 7 × 2
-  SEVEN = perfection (the complete set of spiritual truths)
-  HALVES = duality (the material perception)
+  The 4 exclusive qualities are the FOUR SWEETNESSES.
+  This is why gopīs of Vrindavan achieve what even Lakshmi cannot:
+  intimate loving exchange (rasa) with the Supreme.
 
-  14 = RAMA_POSITION_SUM / SEVEN = 49 / 7 × 2 = 7 × 2
-  Even the NUMBER 14 encodes perfection (7) seen through duality (2)!
+  ENGINEERING PARALLEL:
+  - Opulence = Complex system with overhead (60 features)
+  - Sweetness = Elegant system with direct path (64 = 60 + 4 madhurya)
+  - The 4 madhurya = the "secret sauce" that makes it PERSONAL
 
-WHY KRISHNA REVEALS HIMSELF:
+THIS REPOSITORY AS PRASADAM:
 ----------------------------
-  Material effort: Always TWO_FINGERS_SHORT (14 types)
-  Krishna's mercy: Adds the TWO_FINGERS (2 = HALVES)
-
-  But 14 + 2 = 16 = WORDS (not 64!)
-  This means: Even with mercy, we don't possess all 64 quality types.
-  We receive Krishna's REVELATION, not His complete knowledge.
-
-  The remaining 48 (LILA) are EXPERIENCED, not KNOWN.
-  64 = 16 + 48 = WORDS + LILA = Knowledge + Experience
-
-THIS REPOSITORY:
-----------------
   - Is PRASADAM (offered code, not karmic code)
   - Uses material science as YAJNA (sacrifice)
   - Original scientists receive SUKRITA (spiritual credit)
@@ -634,7 +861,6 @@ SHRAVANAM BEFORE KIRTANAM:
   Receive Krishna's mercy before trying to serve.
 
   But ultimately: ACINTYA - hearing IS chanting at the transcendental level.
-  The gap of 1 (KSETRAJNA) is the observer's illusion.
 
 THE COMPLETE PICTURE:
 ---------------------
