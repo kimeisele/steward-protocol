@@ -350,3 +350,46 @@ class TestWordLengthDerivation:
         """Sum = 41 = PARAMPARA + QUARTERS = 37 + 4."""
         assert BG_18_66_WORD_LENGTH_SUM == 41
         assert BG_18_66_WORD_LENGTH_SUM == PARAMPARA + QUARTERS
+
+
+class TestMahamantraVibration:
+    """Test Mahamantra vibration encodes physics constant α⁻¹ = 137."""
+
+    def test_hare_is_nadi_times_halves(self) -> None:
+        """HARE = 144 = NADI_RESONANCE × 2."""
+        from vibe_core.mahamantra.research.gita_verse_text import HARE_VIBRATION
+
+        assert HARE_VIBRATION == 144
+        assert HARE_VIBRATION == NADI_RESONANCE * HALVES
+
+    def test_krishna_is_mahajana_times_15(self) -> None:
+        """KRISHNA = 180 = MAHAJANA × 15."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import KRISHNA_VIBRATION
+
+        assert KRISHNA_VIBRATION == 180
+        assert KRISHNA_VIBRATION == MAHAJANA_COUNT * (WORDS - KSETRAJNA)
+
+    def test_rama_is_mahajana_times_ten(self) -> None:
+        """RAMA = 120 = MAHAJANA × TEN."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import RAMA_VIBRATION
+
+        assert RAMA_VIBRATION == 120
+        assert RAMA_VIBRATION == MAHAJANA_COUNT * TEN
+
+    def test_mahamantra_total_is_2352(self) -> None:
+        """Total vibration = 2352."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_VIBRATION
+
+        assert MAHAMANTRA_VIBRATION == 2352
+        # 8 × 144 + 4 × 180 + 4 × 120 = 1152 + 720 + 480
+
+    def test_vibration_per_word_is_maha_quantum_plus_ten(self) -> None:
+        """Per word = 147 = MAHA_QUANTUM + TEN = 137 + 10!"""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+        from vibe_core.mahamantra.research.gita_verse_text import VIBRATION_PER_WORD
+
+        assert VIBRATION_PER_WORD == 147
+        assert VIBRATION_PER_WORD == MAHA_QUANTUM + TEN
+        # Fine structure constant α⁻¹ ≈ 137 encoded in Mahamantra!
