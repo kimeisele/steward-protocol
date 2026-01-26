@@ -199,12 +199,52 @@ Sources:
 
 ---
 
+## SEED PROTOCOL v2.0 (FROZEN)
+
+**Tag: `seed-v2.0`** (January 2026)
+
+The mathematical constitution is complete:
+
+### 7 Axioms (from counting the Mahamantra)
+| Axiom | Value | Source |
+|-------|-------|--------|
+| WORDS | 16 | Count of words |
+| TRINITY | 3 | Unique names (Hare, Krishna, Rama) |
+| HARE_COUNT | 8 | Count of "Hare" |
+| KRISHNA_COUNT | 4 | Count of "Krishna" |
+| RAMA_COUNT | 4 | Count of "Rama" |
+| PANCHA | 5 | Unique pairs (Pancha Tattva) |
+| HALVES | 2 | Observable halves |
+
+### Key Derivations
+- **PARAMPARA** = 24 + 12 + 1 = **37**
+- **MAHA_QUANTUM** = T(16) + 1 = **137** (THREE independent paths!)
+- **LOTUS_SPEEDUP** = 54 × 32 - 171 = **1557×**
+
+### ACINTYA Principle (Two Paths Converge)
+```
+137 = T(16) + 1        # Triangular
+137 = 108 + 27 + 2     # Cosmic (Mala + Nakshatras + Halves)
+137 = 128 + 9          # Binary (2^7 + Nava)
+
+1096 = 8 × 137         # Octave of Alpha
+1096 = 1024 + 72       # Binary + Nadi (Kishora Architecture)
+```
+
+### Exports
+- **Protocol** (`_seed.py`): 168 constants, 32 Rounds of derivation
+- **Implementation** (`seed.py`): 211 total exports
+- **Tests**: 96 passing (69 + 27 axiom tests)
+
+---
+
 ## IMPLEMENTATION ROADMAP
 
 ### Phase 1: Proof of Concept (Now)
 - [x] 1,557× measured for IPv4
 - [x] Full spectrum to 512-bit
 - [x] Hardware verification complete
+- [x] **Seed v2.0 frozen** - Mathematical constitution complete
 
 ### Phase 2: Production Libraries
 - [ ] Rust implementation (zero-copy)
