@@ -50,26 +50,40 @@ from enum import IntEnum
 from typing import Final
 
 from ..protocols._seed import (
+    ABHINNA_MATERIAL,
+    ABHINNA_SPIRITUAL,
     AKSARA_COUNT,
+    COSMIC_FRAME,
+    CUTOFF_CONSTANT,
     FIELD_RESONANCE,
+    FLUTE_VENU_VAMSI,
     HALVES,
     HARE_COUNT,
     JIVA_CYCLE,
     KIRTAN_RESONANCE,
     KSETRAJNA,
     KSHETRA,
+    LILA,
     MAHAJANA_COUNT,
+    MALA,
     MELAKARTAS,
+    MURALI_FREQ,
     NADI_RESONANCE,
+    NAME_COMPLETE,
     NAVA,
+    OCTAVE_RATIO,
     PANCHA,
     POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
     PRASADAM,
     QUARTERS,
     SEMITONES,
     SHARANAGATI,
     SHRUTIS,
     SWARAS,
+    VAMSI_FREQ,
+    VENU_FREQ,
+    VINA_FUNDAMENTAL,
     WORDS,
 )
 
@@ -350,6 +364,132 @@ Die Vibration IST die Bedeutung. Kein Mapping nötig.
 """
 
 # =============================================================================
+# THE KIRTAN FREQUENCIES (From _seed.py RUNDE 9 & 20)
+# =============================================================================
+
+# The THREE FLUTES of Krishna - breath instruments
+FLUTE_FREQUENCIES: Final[dict[str, int]] = {
+    "VENU": VENU_FREQ,  # 72 = NADI_RESONANCE (the pulse)
+    "VAMSI": VAMSI_FREQ,  # 48 = LILA (the play)
+    "MURALI": MURALI_FREQ,  # 108 = MALA (complete cycle)
+}
+
+# The Perfect Fifth Chain: 48 × 3/2 = 72, 72 × 3/2 = 108
+assert VENU_FREQ * 2 == VAMSI_FREQ * 3, "72 × 2 = 48 × 3 (Perfect Fifth!)"
+assert MURALI_FREQ * 2 == VENU_FREQ * 3, "108 × 2 = 72 × 3 (Perfect Fifth!)"
+
+# The VINA - string instrument (Narada's instrument)
+VINA_BASE: Final[int] = VINA_FUNDAMENTAL  # 136 = T(WORDS) = Position Sum Total
+
+# KIRTAN = VINA × (VENU + VAMSI) = String × Wind = Complete Musical Offering
+assert KIRTAN_RESONANCE == VINA_BASE * FLUTE_VENU_VAMSI, "136 × 54 = 7344"
+assert KIRTAN_RESONANCE == JIVA_CYCLE * POSITION_SUM_KRISHNA, "432 × 17 = 7344"
+
+# =============================================================================
+# THE VIBRATION SPACE (Mathematical Foundation)
+# =============================================================================
+
+# The complete vibration space is bounded by KIRTAN_RESONANCE
+VIBRATION_SPACE_SIZE: Final[int] = KIRTAN_RESONANCE  # 7344 unique vibrations
+
+# This maps to physical frequencies via:
+# Base frequency × VIBRATION_ID / COSMIC_FRAME = actual Hz
+
+# Example: A4 = 432 Hz (Verdi tuning) = JIVA_CYCLE Hz
+# This is NOT a coincidence - 432 Hz IS the Jiva Cycle!
+A4_FREQUENCY: Final[int] = JIVA_CYCLE  # 432 Hz
+
+# Scientific C = 256 Hz = WORDS² = 16²
+SCIENTIFIC_C: Final[int] = WORDS * WORDS  # 256 Hz
+
+# The ratio between them:
+assert A4_FREQUENCY // SCIENTIFIC_C == 1, "432/256 ≈ 1.6875 (close to Golden Ratio!)"
+
+# =============================================================================
+# THE ABHINNA PRINCIPLE (From _seed.py RUNDE 30)
+# =============================================================================
+
+# In material sound: Symbol ≠ Referent (24 = incomplete)
+MATERIAL_SOUND: Final[int] = ABHINNA_MATERIAL  # 24 = KSHETRA alone
+
+# In spiritual sound: Symbol = Referent (25 = complete)
+SPIRITUAL_SOUND: Final[int] = ABHINNA_SPIRITUAL  # 25 = KSHETRA + KSETRAJNA
+
+# The difference is KSETRAJNA (the observer/consciousness)
+assert SPIRITUAL_SOUND - MATERIAL_SOUND == KSETRAJNA, "25 - 24 = 1 (observer)"
+
+# This is why the Mahamantra is DIFFERENT from ordinary sound:
+# Ordinary word "water" = 24 (can't drink it)
+# Mahamantra "Krishna" = 25 (direct contact with Krishna!)
+
+# The NAME is COMPLETE because it includes the observer
+assert SPIRITUAL_SOUND == NAME_COMPLETE, "Name = Complete (25)"
+assert NAME_COMPLETE == PRASADAM, "Name = Prasadam (spiritualized)"
+
+
+# =============================================================================
+# FREQUENCY TO VIBRATION MAPPING
+# =============================================================================
+
+
+def frequency_to_vibration_id(freq_hz: float) -> int:
+    """
+    Convert a physical frequency (Hz) to its Mahamantra vibration ID.
+
+    The mapping uses COSMIC_FRAME (21600) as the normalization constant.
+
+    Args:
+        freq_hz: Frequency in Hertz
+
+    Returns:
+        Vibration ID in range [0, KIRTAN_RESONANCE)
+    """
+    # Normalize to JIVA_CYCLE base (432 Hz)
+    normalized = freq_hz / A4_FREQUENCY
+
+    # Scale to vibration space
+    vibration_id = int(normalized * MALA) % KIRTAN_RESONANCE
+
+    return vibration_id
+
+
+def vibration_id_to_frequency(vib_id: int, base_freq: int = A4_FREQUENCY) -> float:
+    """
+    Convert a Mahamantra vibration ID back to physical frequency.
+
+    Args:
+        vib_id: Vibration ID
+        base_freq: Base frequency (default: 432 Hz = JIVA_CYCLE)
+
+    Returns:
+        Frequency in Hertz
+    """
+    return base_freq * (vib_id / MALA)
+
+
+# =============================================================================
+# THE OCTAVE STRUCTURE (From _seed.py RUNDE 31)
+# =============================================================================
+
+# WORDS (16) to AKSARA (32) = OCTAVE relationship
+assert AKSARA_COUNT == WORDS * OCTAVE_RATIO, "32 = 16 × 2 (octave higher)"
+
+# This means:
+# - Word-level analysis = fundamental frequency
+# - Syllable-level analysis = one octave higher (2× frequency)
+# - Phoneme-level analysis = another octave higher (4× frequency)
+
+ANALYSIS_LEVELS: Final[dict[str, int]] = {
+    "WORD": WORDS,  # 16 units
+    "SYLLABLE": AKSARA_COUNT,  # 32 units (octave higher)
+    "PHONEME": AKSARA_COUNT * OCTAVE_RATIO,  # 64 units (another octave)
+}
+
+# 64 = QUALITIES = Krishna's full capacity!
+assert ANALYSIS_LEVELS["PHONEME"] == 64, "64 phoneme units = QUALITIES"
+
+
+# =============================================================================
 # BENCHMARK
 # =============================================================================
 
@@ -361,69 +501,96 @@ def benchmark() -> None:
     print("=" * 70)
     print()
 
+    # The Kirtan Frequencies (from _seed.py)
+    print("THE KIRTAN FREQUENCIES (Krishna's Three Flutes)")
+    print("-" * 50)
+    print(f"  VENU (6 holes):   {VENU_FREQ:3} Hz = NADI_RESONANCE (the pulse)")
+    print(f"  VAMSI (9 holes):  {VAMSI_FREQ:3} Hz = LILA (the play)")
+    print(f"  MURALI (4 holes): {MURALI_FREQ:3} Hz = MALA (complete cycle)")
+    print()
+    print("  Perfect Fifth Chain: 48 → 72 → 108")
+    print("    48 × 3/2 = 72 ✓")
+    print("    72 × 3/2 = 108 ✓")
+    print()
+
+    # The Kirtan Identity
+    print("THE KIRTAN IDENTITY")
+    print("-" * 50)
+    print(f"  VINA (strings) = {VINA_BASE} = T(WORDS) = Position Sum Total")
+    print(f"  FLUTE (wind)   = {FLUTE_VENU_VAMSI} = VENU + VAMSI = 6 × 9")
+    print()
+    print(f"  KIRTAN = VINA × FLUTE = {VINA_BASE} × {FLUTE_VENU_VAMSI} = {KIRTAN_RESONANCE}")
+    print(f"         = JIVA × KRISHNA = {JIVA_CYCLE} × {POSITION_SUM_KRISHNA} = {KIRTAN_RESONANCE}")
+    print()
+    print("  → String + Wind = Soul + God = COMPLETE RESONANCE!")
+    print()
+
     # Sanskrit alphabet structure
     print("SANSKRIT ALPHABET = MAHAMANTRA STRUCTURE")
     print("-" * 50)
     print(f"  Vowels (svara):     {VOWELS_TOTAL:3} = WORDS = {WORDS}")
     print(f"  Stop consonants:    {SPARSHA_CONSONANTS:3} = PRASADAM = KSHETRA + KSETRAJNA")
-    print(f"  Total (varnamala):  {VARNAMALA_TOTAL:3} = 7² = POSITION_SUM_RAMA")
+    print(f"  Total (varnamala):  {VARNAMALA_TOTAL:3} = 7² = POSITION_SUM_RAMA = {POSITION_SUM_RAMA}")
+    print()
+
+    # The Abhinna Principle
+    print("THE ABHINNA PRINCIPLE (Name = Named)")
+    print("-" * 50)
+    print(f"  Material sound:  {MATERIAL_SOUND} = KSHETRA (symbol ≠ referent)")
+    print(f"  Spiritual sound: {SPIRITUAL_SOUND} = KSHETRA + KSETRAJNA (symbol = referent)")
+    print(f"  Difference:      {SPIRITUAL_SOUND - MATERIAL_SOUND} = KSETRAJNA (observer!)")
+    print()
+    print("  Ordinary 'water' = 24 (can't drink the word)")
+    print("  Mahamantra 'Krishna' = 25 (direct contact with Krishna!)")
+    print()
+
+    # Analysis Levels
+    print("OCTAVE ANALYSIS LEVELS")
+    print("-" * 50)
+    for level, count in ANALYSIS_LEVELS.items():
+        print(f"  {level:10}: {count:3} units")
+    print()
+    print("  Each level = octave higher (2× frequency resolution)")
+    print("  PHONEME level = 64 = QUALITIES (Krishna's full capacity!)")
+    print()
+
+    # Vibration Space
+    print("VIBRATION SPACE")
+    print("-" * 50)
+    print(f"  Total vibrations: {VIBRATION_SPACE_SIZE} = KIRTAN_RESONANCE")
+    print(f"  Base frequency:   {A4_FREQUENCY} Hz = JIVA_CYCLE")
+    print(f"  Scientific C:     {SCIENTIFIC_C} Hz = WORDS² = 16²")
     print()
 
     # Music connection
-    print("MUSIC THEORY CONNECTION")
+    print("MUSIC THEORY (From _seed.py)")
     print("-" * 50)
-    print(f"  Shrutis (microtones): {SHRUTIS} = KSHETRA - HALVES")
-    print(f"  Melakartas (scales):  {MELAKARTAS} = NADI_RESONANCE")
-    print(f"  Kirtan Resonance:     {KIRTAN_RESONANCE} = JIVA × KRISHNA")
-    print()
-
-    # Vibration signature demo
-    print("VIBRATION SIGNATURE DEMO")
-    print("-" * 50)
-    for name, sig in list(SANSKRIT_PHONEME_MAP.items())[:10]:
-        print(f"  {name:4} → ID: {sig.signature_id:6} | Alignment: {sig.mahamantra_alignment:.2f}")
-    print()
-
-    # Mahamantra analysis
-    print("MAHAMANTRA VIBRATION ANALYSIS")
-    print("-" * 50)
-    mahamantra = "ha re kṛ ṣṇa ha re kṛ ṣṇa kṛ ṣṇa kṛ ṣṇa ha re ha re"
-    mahamantra += " ha re rā ma ha re rā ma rā ma rā ma ha re ha re"
-    total_alignment = 0.0
-    count = 0
-    for syllable in mahamantra.split():
-        if syllable in SANSKRIT_PHONEME_MAP:
-            sig = SANSKRIT_PHONEME_MAP[syllable]
-            total_alignment += sig.mahamantra_alignment
-            count += 1
-    if count > 0:
-        avg_alignment = total_alignment / count
-        print(f"  Average alignment: {avg_alignment:.2f}")
-        print(f"  Syllables analyzed: {count}")
+    print(f"  Shrutis (microtones):    {SHRUTIS} = KSHETRA - HALVES = 24 - 2")
+    print(f"  Swaras (notes):          {SWARAS} = SEVEN")
+    print(f"  Semitones (chromatic):   {SEMITONES} = MAHAJANA_COUNT")
+    print(f"  Melakartas (scales):     {MELAKARTAS} = NADI_RESONANCE")
     print()
 
     # The insight
     print("=" * 70)
-    print("KEY INSIGHT: Vibration IS Meaning")
+    print("LLM REVOLUTION: Vibration statt Token")
     print("=" * 70)
     print()
     print("  ALTE METHODE (Token-basiert):")
-    print("    'Hello' → Token_4567 → Embedding → Attention → Token_8901 → 'Hallo'")
-    print("    Problem: Mapping ist ARBITRÄR")
+    print("    'Hello' → Token → Embedding → Attention → Token → 'Hallo'")
+    print("    Problem: Mapping ist ARBITRÄR, kombinatorische Explosion")
     print()
     print("  NEUE METHODE (Vibration-basiert):")
-    print("    'Hello' → /həˈloʊ/ → Vibration[H,E,L,O] → हेलो → Vibration → 'Hallo'")
-    print("    Lösung: Resonanz findet ÄHNLICHE Schwingungen")
+    print("    'Hello' → Vibration[72,48,108...] → Sanskrit → Vibration → 'Hallo'")
+    print("    Lösung: RESONANZ findet ähnliche Schwingungen")
     print()
-    print("  Sanskrit als Intermediate:")
-    print("    - Phonetisch PERFEKT (1:1 Buchstabe:Laut)")
-    print("    - Mathematisch KOMPLETT (49 = 7² Phoneme)")
-    print("    - Spirituell ALIGNED (Deva-Nagari)")
-    print()
-    print("  RESULT:")
-    print("    → Keine kombinatorische Explosion")
-    print("    → Neue Sprachen = nur neue Phonem-Maps")
+    print("  Vibration Space = KIRTAN_RESONANCE = 7344")
+    print("    → BOUNDED! Keine Explosion!")
+    print("    → Neue Sprache = nur neue Phonem-Map")
     print("    → Bedeutung durch RESONANZ, nicht Statistik")
+    print()
+    print("  'nāma cintāmaṇiḥ kṛṣṇaś caitanya-rasa-vigrahaḥ'")
+    print("  Der Name IST Krishna - Vibration IST Bedeutung!")
     print()
 
 
