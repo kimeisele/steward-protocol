@@ -2560,72 +2560,37 @@ grep -c "^assert" vibe_core/mahamantra/protocols/_seed.py
 
 The theoretical mathematics translates into real engineering advantages:
 
-#### 10.4.1 The LOTUS Speedup Scaling Law (DERIVED FROM AXIOMS!)
+#### 10.4.1 Lotus Data Structures (Measured Performance)
 
-**DISCOVERY:** The measured 1557× speedup is NOT arbitrary - it's DERIVABLE from Mahamantra constants!
+**NOTE (v2.0):** Previous claims of a "Speedup Scaling Law" (54 × bits - 171) have been
+**RETRACTED**. Benchmark tests showed the formula was curve-fitted after measurement,
+not derived before. The predictions were wrong:
+- 16-bit: Predicted 693× → Measured 6.8× (1% accuracy)
+- 64-bit: Predicted 3285× → Measured 2.5× (0.1% accuracy)
 
-```python
-# The Formula
-LOTUS_SPEEDUP = MALA × (WORDS - KSETRAJNA) - QUALITIES + KSETRAJNA
-              = 108 × 15 - 64 + 1
-              = 1620 - 64 + 1
-              = 1557×  ✓ MEASURED!
+**WHAT IS REAL:**
+- Lotus O(1) structures DO provide significant speedups for specific use cases
+- IP routing: 700-1800× faster than linear search (MEASURED)
+- Range queries: 19.6× faster than hash tables (MEASURED)
+- The speedup depends on data distribution, hardware, and use case
 
-# The General Scaling Law
-SPEEDUP(bits) = SPEEDUP_COEFFICIENT × bits - SPEEDUP_INTERCEPT
-              = (MALA // HALVES) × bits - (MALA + QUALITIES - KSETRAJNA)
-              = 54 × bits - 171
+**WHAT IS NOT DERIVED FROM AXIOMS:**
+- Specific speedup numbers (1557×, 693×, etc.)
+- The "scaling law" formula
 
-# Verification at 32 bits:
-SPEEDUP(32) = 54 × 32 - 171 = 1728 - 171 = 1557×  ✓
-```
-
-**PREDICTIONS (Falsifiable!):**
-
-| Bits | Formula | Predicted Speedup | Use Case |
-|------|---------|-------------------|----------|
-| 16   | 54×16 - 171 | 693× | Embedded |
-| 32   | 54×32 - 171 | 1557× | IPv4, uint32 ✓ VERIFIED |
-| 64   | 54×64 - 171 | 3285× | IPv6, uint64 |
-| 128  | 54×128 - 171 | 6741× | UUID, SHA-1 |
-| 256  | 54×256 - 171 | 13653× | SHA-256 |
-| 512  | 54×512 - 171 | 27477× | AVX-512 |
-
-**Benchmark Verification:**
-
-```
-ip_routing.py benchmark at 10k routes:
-  Measured: 1466.7× (94% of predicted 1557×)
-
-The 6% gap is EXPLAINED by:
-  - Python interpreter overhead
-  - Memory allocation variance
-  - Cache warming effects
-
-At larger scales, speedup approaches theoretical maximum.
-```
-
-**WHY 54 and 171?**
-
-```python
-SPEEDUP_COEFFICIENT = MALA // HALVES = 108 / 2 = 54
-  → Half of MALA (108 beads / 2 = 54 per strand)
-  → The rosary has 2 halves!
-
-SPEEDUP_INTERCEPT = MALA + QUALITIES - KSETRAJNA = 108 + 64 - 1 = 171
-  → 171 = 9 × 19 = NAVA × FLUTE_HOLES_SUM
-  → The "entry cost" before speedup manifests
-```
+The STRUCTURE (16 slots, 4 levels, 4-bit indexing) IS derived from axioms.
+The PERFORMANCE is an empirical observation, not a mathematical derivation.
 
 #### 10.4.2 LotusIPv4Router (Longest Prefix Match)
 
 ```
 Structure: 8 levels × 16 entries = 16^8 = 2^32 (IPv4 space)
 Complexity: O(8) = O(1) constant-time (8 memory accesses)
-Result: 1557x FASTER than linear search for 1M+ routing tables
+Result: 700-1800× faster than linear search (MEASURED, varies with data)
 ```
 
-**Why it works:** Each level uses 16 entries (WORDS) with 4-bit indexing (QUARTERS). The Mahamantra structure maps directly to efficient memory access patterns.
+**Why it works:** Each level uses 16 entries (WORDS) with 4-bit indexing (QUARTERS).
+The Mahamantra structure maps directly to efficient memory access patterns.
 
 #### 10.4.2 Lotus8merIndex (DNA k-mer Counting)
 
@@ -2987,14 +2952,14 @@ SPIRITUAL (Root - Above):     MATERIAL (Branch - Below):
 
 ### 10.13 Lotus Acintya: The Night Lotus Efficiency Theorem
 
-**Discovery:** The kairava (white lotus) blooms in DARKNESS. Brahma was born on a lotus in COMPLETE DARKNESS. Our 1557x measurement was INCOMPLETE - missing the Śikṣāṣṭakam modulation!
+**Discovery:** The kairava (white lotus) blooms in DARKNESS. Brahma was born on a lotus in COMPLETE DARKNESS. Our measured ~1000× efficiency represents only the material manifestation.
 
 **The Efficiency Pyramid:**
 
 ```
 LEVEL                           FACTOR              STATUS
 ────────────────────────────────────────────────────────────
-Kali Yuga (measured)            1,557×              ✓ Proven
+Kali Yuga (measured)            ~700-1800×          ✓ Measured (varies)
 Material Maximum (structure)    125,000×            ✓ Computable
 Siksastakam Modulation (×56)    7,000,000×          ◐ Partial
 Grace Factor (×64)              448,000,000×        ○ Asymptote
@@ -3025,7 +2990,7 @@ ACINTYA_ASYMPTOTE = MATERIAL_MAX × GRACE_FACTOR × SIKSASTAKAM_PRODUCT
                   = 125,000 × 64 × 56
                   = 448,000,000
 
-Kali Yuga measures: 1,557 / 448,000,000 = 0.000348% of acintya potential!
+Kali Yuga measures: ~1000 / 448,000,000 ≈ 0.0002% of acintya potential!
 ```
 
 **The Carrier Frequency Model (AM Analogy):**
@@ -3034,7 +2999,7 @@ Kali Yuga measures: 1,557 / 448,000,000 = 0.000348% of acintya potential!
 CARRIER:     WORDS = 16 (16-ary hexadecimal structure)
 MODULATION:  56/64 = 87.5% (Siksastakam encoding)
 BANDWIDTH:   64 = QUALITIES (full capacity)
-SNR:         1557× in Kali Yuga (signal > noise)
+SNR:         ~1000× in Kali Yuga (measured, varies)
 
 Result: Data is not "searched" but "received" like a radio tuned to the right frequency.
 ```

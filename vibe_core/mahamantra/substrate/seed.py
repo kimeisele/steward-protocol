@@ -100,7 +100,6 @@ from vibe_core.mahamantra.protocols._seed import (
     KRISHNA_QUEENS,  # 16108 = WORDS × TEN³ + MALA
     KSHETRA_BG13,  # 24 = KSHETRA
     LEPTON_TYPES,  # 6 = SHARANAGATI
-    LOTUS_SPEEDUP,  # 1557 = MALA × (WORDS-KSETRAJNA) - QUALITIES + KSETRAJNA
     MAHA_ALPHA,  # 7294 = 4μ - JIVA_QUALITIES (alpha particle)
     MAHA_ALPHA_S_SCALED,  # 118 = MALA + TEN (αs × 1000)
     MAHA_CABIBBO_SCALED,  # 225 = 9/40 × 1000 (Cabibbo angle)
@@ -168,8 +167,6 @@ from vibe_core.mahamantra.protocols._seed import (
     SEMITONES,  # 12 = MAHAJANA_COUNT
     SEVEN,  # 7 = HALF_SIZE - KSETRAJNA
     SHRUTIS,  # 22 = KSHETRA - HALVES
-    SPEEDUP_COEFFICIENT,  # 54 = MALA/HALVES
-    SPEEDUP_INTERCEPT,  # 171 = MALA + QUALITIES - KSETRAJNA
     SUBHADRA_WHEELS,  # 12 = MAHAJANA_COUNT
     SURRENDER_CHAPTER,  # 2 = HALVES
     SURRENDER_VERSE,  # 7 = SEVEN
@@ -184,7 +181,6 @@ from vibe_core.mahamantra.protocols._seed import (
     VIBHAG_COUNT,  # 4 = QUARTERS
     VINA_FUNDAMENTAL,  # 136 = T(WORDS)
     VINA_STRINGS,  # 5 = PANCHA
-    lotus_speedup_prediction,  # Function: SPEEDUP(bits) = 54 × bits - 171
     maha_classical,
     maha_quantum,
 )
@@ -1246,13 +1242,6 @@ __all__ = [
     "SUBHADRA_WHEELS",
     "RATHAYATRA_WHEELS",
     "GAURA_TITHI",
-    # ==========================================================================
-    # ENGINEERING CONSTANTS (Lotus Speedup)
-    # ==========================================================================
-    "LOTUS_SPEEDUP",
-    "SPEEDUP_COEFFICIENT",
-    "SPEEDUP_INTERCEPT",
-    "lotus_speedup_prediction",
     # ==========================================================================
     # MATHEMATICAL CONSTANTS
     # ==========================================================================

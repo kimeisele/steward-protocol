@@ -82,7 +82,6 @@ from vibe_core.mahamantra.protocols._seed import (
 
 # Import from substrate for additional constants
 from vibe_core.mahamantra.substrate.seed import (
-    LOTUS_SPEEDUP,
     MAHAJANAS,
 )
 
@@ -204,13 +203,6 @@ DERIVATIONS: List[Derivation] = [
     Derivation("DASHA", 10, "PANCHA × HALVES", ["PANCHA", "HALVES"], 2),
     Derivation("MALA", 108, "NADI_RESONANCE + AKSARA + QUARTERS", ["NADI_RESONANCE", "AKSARA", "QUARTERS"], 6),
     Derivation("NAKSHATRAS", 27, "PARAMPARA - DASHA", ["PARAMPARA", "DASHA"], 5),
-    Derivation(
-        "LOTUS_SPEEDUP",
-        1557,
-        "(WORDS+WORDS+WORDS+PANCHA+KSETRAJNA) × AKSARA - (MALA+QUALITIES-KSETRAJNA)",
-        ["WORDS", "PANCHA", "KSETRAJNA", "AKSARA", "MALA", "QUALITIES"],
-        10,
-    ),
     Derivation(
         "PRANA_DURATION_MS", 4000, "MALA × PARAMPARA - (PARAMPARA - KSETRAJNA)", ["MALA", "PARAMPARA", "KSETRAJNA"], 8
     ),
