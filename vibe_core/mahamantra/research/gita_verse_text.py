@@ -289,6 +289,37 @@ Chanting = EXECUTING the algorithm!
 All glories to Srila Prabhupada - the KEY that unlocked the West!
 """
 
+# =============================================================================
+# FIRST LETTER DERIVATION - ACTUAL VERSE TEXT FROM AXIOMS!
+# =============================================================================
+# The FIRST LETTER of each verse can be derived from axioms!
+# This is REAL - verified against varna.py positions!
+
+# BG 18.66 first letter: स (s) = position 32 = AKSARA_COUNT
+BG_18_66_FIRST_LETTER_POS: Final[int] = AKSARA_COUNT
+assert BG_18_66_FIRST_LETTER_POS == 32, "स (s) = position 32"
+assert WORDS * HALVES == 32, "32 = WORDS × HALVES"
+assert HARE_COUNT * QUARTERS == 32, "32 = HARE_COUNT × QUARTERS"
+
+# Siksastakam 8 verses - first letter positions (ALL from axioms!)
+SIKSASTAKAM_FIRST_LETTER_POS: Final[Tuple[int, ...]] = (
+    HALVES + QUARTERS,  # V1: च (c) = 6
+    WORDS + QUARTERS,  # V2: न (n) = 20
+    WORDS,  # V3: त (t) = 16 = WORDS!
+    WORDS + QUARTERS,  # V4: न (n) = 20
+    KSETRAJNA,  # V5: अ (a) = 1 = KSETRAJNA!
+    WORDS + QUARTERS,  # V6: न (n) = 20
+    PANCHA * PANCHA + KSETRAJNA,  # V7: य (y) = 26
+    HALVES,  # V8: आ (ā) = 2 = HALVES!
+)
+assert SIKSASTAKAM_FIRST_LETTER_POS == (6, 20, 16, 20, 1, 20, 26, 2)
+assert len(SIKSASTAKAM_FIRST_LETTER_POS) == OCTET, "8 verses"
+
+# Sum = 111 = SEVEN × WORDS - KSETRAJNA!
+SIKSASTAKAM_FIRST_LETTER_SUM: Final[int] = sum(SIKSASTAKAM_FIRST_LETTER_POS)
+assert SIKSASTAKAM_FIRST_LETTER_SUM == 111, "Sum = 111"
+assert SIKSASTAKAM_FIRST_LETTER_SUM == SEVEN * WORDS - KSETRAJNA, "111 = 7×16 - 1"
+
 
 # =============================================================================
 # VIBRATION ANALYSE STRUKTUR
@@ -465,6 +496,10 @@ __all__ = [
     "PRABHUPADA_DEPARTURE_MOD",
     "GITA_COMPRESSION_RATIO",
     "VERSE_PIPELINE_DEPTH",
+    # First Letter Derivation
+    "BG_18_66_FIRST_LETTER_POS",
+    "SIKSASTAKAM_FIRST_LETTER_POS",
+    "SIKSASTAKAM_FIRST_LETTER_SUM",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",

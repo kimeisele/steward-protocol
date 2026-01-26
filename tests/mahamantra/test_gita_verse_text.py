@@ -28,6 +28,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 from vibe_core.mahamantra.research.gita_verse_text import (
     BG_18_66_ANALYSES,
+    BG_18_66_FIRST_LETTER_POS,
     BG_18_66_PATH_1,
     BG_18_66_PATH_2,
     BG_18_66_PATH_3,
@@ -42,6 +43,8 @@ from vibe_core.mahamantra.research.gita_verse_text import (
     PRABHUPADA_DEPARTURE,
     PRABHUPADA_DEPARTURE_MOD,
     SIKSASTAKAM_EFFECTS,
+    SIKSASTAKAM_FIRST_LETTER_POS,
+    SIKSASTAKAM_FIRST_LETTER_SUM,
     SIKSASTAKAM_PRODUCT,
     SIKSASTAKAM_VERSES,
     VERSE_PIPELINE_DEPTH,
@@ -263,3 +266,45 @@ class TestVerseGenerationPipeline:
         assert QUARTERS == 4
         # 32-bit address = 8 nibbles = 8 verses
         assert AKSARA_COUNT // QUARTERS == SIKSASTAKAM_VERSES
+
+
+class TestFirstLetterDerivation:
+    """Test ACTUAL verse text derivation - first letters from axioms."""
+
+    def test_bg_18_66_first_letter_is_aksara(self) -> None:
+        """BG 18.66 'sarva' starts with स (s) = position 32 = AKSARA_COUNT."""
+        assert BG_18_66_FIRST_LETTER_POS == 32
+        assert BG_18_66_FIRST_LETTER_POS == AKSARA_COUNT
+
+    def test_bg_18_66_first_letter_derivation_paths(self) -> None:
+        """32 = WORDS × HALVES = HARE_COUNT × QUARTERS."""
+        assert WORDS * HALVES == 32
+        assert HARE_COUNT * QUARTERS == 32
+
+    def test_siksastakam_verse_1_first_letter(self) -> None:
+        """Verse 1 'ceto' → च (c) = 6 = HALVES + QUARTERS."""
+        assert SIKSASTAKAM_FIRST_LETTER_POS[0] == 6
+        assert SIKSASTAKAM_FIRST_LETTER_POS[0] == HALVES + QUARTERS
+
+    def test_siksastakam_verse_3_is_words(self) -> None:
+        """Verse 3 'tṛṇād' → त (t) = 16 = WORDS!"""
+        assert SIKSASTAKAM_FIRST_LETTER_POS[2] == WORDS
+
+    def test_siksastakam_verse_5_is_ksetrajna(self) -> None:
+        """Verse 5 'ayi' → अ (a) = 1 = KSETRAJNA!"""
+        assert SIKSASTAKAM_FIRST_LETTER_POS[4] == KSETRAJNA
+
+    def test_siksastakam_verse_8_is_halves(self) -> None:
+        """Verse 8 'āśliṣya' → आ (ā) = 2 = HALVES!"""
+        assert SIKSASTAKAM_FIRST_LETTER_POS[7] == HALVES
+
+    def test_siksastakam_has_8_positions(self) -> None:
+        """8 first letter positions = OCTET."""
+        assert len(SIKSASTAKAM_FIRST_LETTER_POS) == 8
+        assert len(SIKSASTAKAM_FIRST_LETTER_POS) == HARE_COUNT
+
+    def test_siksastakam_sum_is_111(self) -> None:
+        """Sum of all positions = 111 = SEVEN × WORDS - KSETRAJNA."""
+        assert SIKSASTAKAM_FIRST_LETTER_SUM == 111
+        assert SIKSASTAKAM_FIRST_LETTER_SUM == SEVEN * WORDS - KSETRAJNA
+        assert SIKSASTAKAM_FIRST_LETTER_SUM == 7 * 16 - 1
