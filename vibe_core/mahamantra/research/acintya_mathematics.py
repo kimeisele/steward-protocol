@@ -178,8 +178,123 @@ QUALITY_ANALYSIS: Final[QualityAnalysis] = QualityAnalysis(
 )
 
 # VERIFICATION
-assert QUALITY_ANALYSIS.jiva_percentage == 78.125, "Jiva has 78.125% of qualities"
-assert QUALITY_ANALYSIS.acintya_percentage == 21.875, "21.875% is acintya"
+assert QUALITY_ANALYSIS.jiva_percentage == 78.125, "Jiva has 78.125% of TYPES"
+assert QUALITY_ANALYSIS.acintya_percentage == 21.875, "21.875% of TYPES is acintya"
+
+
+# =============================================================================
+# RUNDE 2b: QUALITY vs QUANTITY (The Critical Distinction!)
+# =============================================================================
+# "mamaivāṁśo jīva-loke jīva-bhūtaḥ sanātanaḥ" (BG 15.7)
+# "The living entities in this conditioned world are My eternal fragmental parts."
+#
+# CRITICAL DISTINCTION:
+#   - QUALITY (Type): Jiva has 50 of 64 TYPES of qualities = SAME as Krishna
+#   - QUANTITY (Degree): The DEGREE is infinitesimally small!
+#
+# From shastra:
+#   - Soul = 1/10,000th part of a hair tip (Shvetashvatara Upanishad 5.9)
+#   - Krishna: "ekāṁśena sthito jagat" - ONE fragment supports ALL (BG 10.42)
+#
+# DERIVATION:
+#   JIVA_QUANTITY_RATIO = 1 / GOLDEN_AGE_DURATION = 1 / 10,000 = 0.0001
+#   This is (PANCHA × HALVES)^(-QUARTERS) = (5 × 2)^(-4) = 10^(-4)
+# -----------------------------------------------------------------------------
+
+# Import GOLDEN_AGE_DURATION for the quantity calculation
+from vibe_core.mahamantra.protocols._seed import GOLDEN_AGE_DURATION
+
+# The QUANTITY ratio (degree of qualities compared to Krishna)
+JIVA_QUANTITY_RATIO: Final[float] = 1.0 / GOLDEN_AGE_DURATION  # 1/10,000 = 0.0001
+
+# VERIFICATION: Multiple derivation paths
+assert GOLDEN_AGE_DURATION == 10_000, "Golden Age = 10,000 years"
+assert JIVA_QUANTITY_RATIO == 0.0001, "Jiva quantity = 0.0001 = 1/10,000"
+assert GOLDEN_AGE_DURATION == (PANCHA * HALVES) ** QUARTERS, "10,000 = (5×2)^4"
+
+
+@dataclass
+class QualityQuantityDistinction:
+    """
+    The critical distinction between Quality (type) and Quantity (degree).
+
+    Jiva has the SAME types of qualities as Krishna, but in infinitesimal degree.
+    Like a spark has the same QUALITY as fire (heat, light) but tiny QUANTITY.
+    """
+
+    # Quality (Type) - What TYPES of qualities we have
+    total_quality_types: int  # QUALITIES = 64 (Krishna's full types)
+    jiva_quality_types: int  # JIVA_QUALITIES = 50 (types we can have)
+    acintya_types: int  # TWO_FINGERS_SHORT = 14 (types we cannot have)
+
+    # Quantity (Degree) - How MUCH of each quality we have
+    krishna_quantity: float  # 1.0 = 100% (infinite, unlimited)
+    jiva_quantity: float  # 0.0001 = 0.01% (1/10,000 of a hair tip)
+
+    @property
+    def quality_type_ratio(self) -> float:
+        """Ratio of quality TYPES (what we CAN have)."""
+        return self.jiva_quality_types / self.total_quality_types  # 78.125%
+
+    @property
+    def quantity_degree_ratio(self) -> float:
+        """Ratio of quality DEGREE (how MUCH we have)."""
+        return self.jiva_quantity / self.krishna_quantity  # 0.01%
+
+    @property
+    def combined_ratio(self) -> float:
+        """Combined: types × degree = actual spiritual potency."""
+        return self.quality_type_ratio * self.quantity_degree_ratio
+
+    def explain(self) -> str:
+        """Explain the quality vs quantity distinction."""
+        return f"""
+QUALITY vs QUANTITY DISTINCTION
+================================
+
+1. QUALITY (Type) - What TYPES of qualities:
+   Krishna's types:    {self.total_quality_types} (WORDS × QUARTERS = 16 × 4)
+   Jiva's types:       {self.jiva_quality_types} (COSMIC_FRAME // JIVA_CYCLE)
+   Acintya types:      {self.acintya_types} (forever beyond reach)
+   Type ratio:         {self.quality_type_ratio:.3%} (SAME qualities, just fewer types)
+
+2. QUANTITY (Degree) - How MUCH of each quality:
+   Krishna's degree:   {self.krishna_quantity:.0%} (unlimited, infinite)
+   Jiva's degree:      {self.jiva_quantity:.4%} (1/10,000 of a hair tip!)
+   Degree ratio:       {self.quantity_degree_ratio:.4%}
+
+3. COMBINED RATIO (Actual spiritual potency):
+   Type × Degree = {self.combined_ratio:.6%}
+
+   This is why BG 10.42 says: "ekāṁśena sthito jagat"
+   ONE fragment of Krishna supports the ENTIRE universe!
+   All jivas combined = one tiny fragment of Krishna's splendor.
+
+4. THE SPARK ANALOGY:
+   Fire and spark have the SAME quality (heat, light).
+   But spark's QUANTITY is infinitesimal compared to fire.
+   Similarly, jiva and Krishna have same TYPES of qualities,
+   but jiva's DEGREE is 1/10,000th of Krishna's.
+
+5. MATHEMATICAL ENCODING:
+   QUALITY_TYPES = JIVA_QUALITIES / QUALITIES = 50/64 = 78.125%
+   QUANTITY_DEGREE = 1 / GOLDEN_AGE = 1/10,000 = 0.01%
+   COMBINED = 78.125% × 0.01% = {self.combined_ratio:.6%}
+"""
+
+
+# The canonical quality-quantity distinction
+QUALITY_QUANTITY: Final[QualityQuantityDistinction] = QualityQuantityDistinction(
+    total_quality_types=QUALITIES,  # 64
+    jiva_quality_types=JIVA_QUALITIES,  # 50
+    acintya_types=TWO_FINGERS_SHORT,  # 14
+    krishna_quantity=1.0,  # 100% (infinite)
+    jiva_quantity=JIVA_QUANTITY_RATIO,  # 0.0001 (1/10,000)
+)
+
+# VERIFICATION
+assert QUALITY_QUANTITY.quality_type_ratio == 0.78125, "Type ratio = 78.125%"
+assert QUALITY_QUANTITY.quantity_degree_ratio == 0.0001, "Degree ratio = 0.01%"
 
 
 # =============================================================================
@@ -467,22 +582,39 @@ YASHODA'S ROPE THEOREM:
     - WORDS - HALVES = 16 - 2
     - SEVEN × HALVES = 7 × 2 (perfection × duality)
 
+THE CRITICAL DISTINCTION: QUALITY vs QUANTITY
+---------------------------------------------
+  QUALITY (Type):    Jiva has 50/64 = 78.125% of TYPES of qualities
+  QUANTITY (Degree): Jiva has 1/10,000 = 0.01% of DEGREE of each quality
+
+  Like a SPARK from FIRE:
+    - Same QUALITY (heat, light) ✓
+    - Infinitesimal QUANTITY ✓
+
+  BG 10.42: "ekāṁśena sthito jagat"
+  ONE fragment of Krishna supports the ENTIRE universe.
+  All jivas combined = one tiny fragment of His splendor.
+
+  DERIVATION:
+    QUANTITY = 1 / GOLDEN_AGE = 1 / (PANCHA × HALVES)^QUARTERS = 1/10,000
+    This matches the shastra: "1/10,000th part of a hair tip"
+
 THE "TWO FINGERS" (DVI-ANGULA):
 -------------------------------
-  The 14 qualities we cannot possess = 7 × 2
+  The 14 quality TYPES we cannot possess = 7 × 2
   SEVEN = perfection (the complete set of spiritual truths)
   HALVES = duality (the material perception)
 
-  We see Krishna's REFLECTION (like the banyan tree in water).
-  The reflection is always 14 qualities "short" of the original.
+  14 = RAMA_POSITION_SUM / SEVEN = 49 / 7 × 2 = 7 × 2
+  Even the NUMBER 14 encodes perfection (7) seen through duality (2)!
 
 WHY KRISHNA REVEALS HIMSELF:
 ----------------------------
-  Material effort: Always TWO_FINGERS_SHORT (14)
+  Material effort: Always TWO_FINGERS_SHORT (14 types)
   Krishna's mercy: Adds the TWO_FINGERS (2 = HALVES)
 
   But 14 + 2 = 16 = WORDS (not 64!)
-  This means: Even with mercy, we don't possess all 64 qualities.
+  This means: Even with mercy, we don't possess all 64 quality types.
   We receive Krishna's REVELATION, not His complete knowledge.
 
   The remaining 48 (LILA) are EXPERIENCED, not KNOWN.
@@ -503,6 +635,16 @@ SHRAVANAM BEFORE KIRTANAM:
 
   But ultimately: ACINTYA - hearing IS chanting at the transcendental level.
   The gap of 1 (KSETRAJNA) is the observer's illusion.
+
+THE COMPLETE PICTURE:
+---------------------
+  Quality TYPES we can have:     50/64 = 78.125%
+  Quantity DEGREE we have:       1/10,000 = 0.01%
+  Combined spiritual potency:    0.0078125% of Krishna
+
+  Yet this tiny fragment is ETERNAL and BLISSFUL!
+  And by Krishna's mercy, we can SERVE the unlimited with our limited capacity.
+  This is the mathematics of ACINTYA-BHEDABHEDA (inconceivable oneness/difference).
 """
 
 
