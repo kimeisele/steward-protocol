@@ -219,7 +219,6 @@ The mathematical constitution is complete:
 ### Key Derivations
 - **PARAMPARA** = 24 + 12 + 1 = **37**
 - **MAHA_QUANTUM** = T(16) + 1 = **137** (THREE independent paths!)
-- **LOTUS_SPEEDUP** = 54 × 32 - 171 = **1557×**
 
 ### ACINTYA Principle (Two Paths Converge)
 ```

@@ -26,8 +26,6 @@ from vibe_core.mahamantra.protocols._seed import (
     # Primary Derivations
     KSETRAJNA,
     KSHETRA,
-    # Engineering
-    LOTUS_SPEEDUP,
     # Physics
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
@@ -44,13 +42,10 @@ from vibe_core.mahamantra.protocols._seed import (
     RAMA_COUNT,  # 4 = count of "Rama"
     # SEVEN and TEN
     SEVEN,
-    SPEEDUP_COEFFICIENT,
-    SPEEDUP_INTERCEPT,
     TEN,
     TRINITY,  # 3 = count of unique names (Hare, Krishna, Rama)
     # The 7 AXIOMS (Round 0) - from counting the Mahamantra
     WORDS,  # 16 = count of words
-    lotus_speedup_prediction,
 )
 
 # =============================================================================
@@ -171,42 +166,6 @@ class TestAcintyaPrinciple:
 
         # TEN = MAHAJANA_COUNT - HALVES = 12 - 2 = 10
         assert TEN == MAHAJANA_COUNT - HALVES == 10
-
-
-# =============================================================================
-# LOTUS SPEEDUP - Engineering Constants from Axioms
-# =============================================================================
-
-
-class TestLotusSpeedup:
-    """Test the LOTUS Speedup Scaling Law - DERIVED from axioms."""
-
-    def test_speedup_coefficient_derived(self) -> None:
-        """SPEEDUP_COEFFICIENT = MALA / HALVES = 108 / 2 = 54."""
-        assert SPEEDUP_COEFFICIENT == MALA // HALVES == 54
-
-    def test_speedup_intercept_derived(self) -> None:
-        """SPEEDUP_INTERCEPT = MALA + QUALITIES - KSETRAJNA = 108 + 64 - 1 = 171."""
-        assert SPEEDUP_INTERCEPT == MALA + QUALITIES - KSETRAJNA == 171
-
-    def test_lotus_speedup_at_32_bit(self) -> None:
-        """LOTUS_SPEEDUP(32) = 54 × 32 - 171 = 1557."""
-        expected = SPEEDUP_COEFFICIENT * 32 - SPEEDUP_INTERCEPT
-        assert LOTUS_SPEEDUP == expected == 1557
-
-    def test_lotus_speedup_formula_consistency(self) -> None:
-        """Test the speedup formula at various bit widths."""
-        # 8-bit: 54 × 8 - 171 = 261
-        assert lotus_speedup_prediction(8) == 261
-
-        # 16-bit: 54 × 16 - 171 = 693
-        assert lotus_speedup_prediction(16) == 693
-
-        # 32-bit: 54 × 32 - 171 = 1557
-        assert lotus_speedup_prediction(32) == 1557
-
-        # 64-bit: 54 × 64 - 171 = 3285
-        assert lotus_speedup_prediction(64) == 3285
 
 
 # =============================================================================
