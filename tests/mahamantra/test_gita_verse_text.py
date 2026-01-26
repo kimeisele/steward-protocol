@@ -21,6 +21,7 @@ from vibe_core.mahamantra.protocols._seed import (
     NAVA,
     PANCHA,
     PARAMPARA,
+    POSITION_SUM_KRISHNA,
     QUALITIES,
     QUARTERS,
     SEVEN,
@@ -598,3 +599,71 @@ class TestMahamantraBinaryEncoding:
             "HARE",
         )
         assert MAHAMANTRA_WORD_TABLE == expected
+
+
+class TestBG1866OpCodeDerivation:
+    """Test BG 18.66 as 16-step OpCode algorithm!"""
+
+    def test_four_segments_equal_quarters(self) -> None:
+        """4 semantic segments = QUARTERS."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_SEGMENTS
+
+        assert len(BG_18_66_SEGMENTS) == QUARTERS
+
+    def test_segment_words_sum_to_seven(self) -> None:
+        """Segment word counts sum to SEVEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_SEGMENT_WORDS
+
+        assert sum(BG_18_66_SEGMENT_WORDS) == SEVEN
+
+    def test_genesis_is_pancha(self) -> None:
+        """GENESIS quarter binary = 5 = PANCHA (Pancha Tattva initiates!)."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_GENESIS_DECIMAL
+
+        assert BG_18_66_GENESIS_DECIMAL == PANCHA
+
+    def test_dharma_is_mahajana(self) -> None:
+        """DHARMA quarter binary = 12 = MAHAJANA (12 authorities judge!)."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_DHARMA_DECIMAL
+
+        assert BG_18_66_DHARMA_DECIMAL == MAHAJANA_COUNT
+
+    def test_karma_is_pancha(self) -> None:
+        """KARMA quarter binary = 5 = PANCHA (5-fold action!)."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_KARMA_DECIMAL
+
+        assert BG_18_66_KARMA_DECIMAL == PANCHA
+
+    def test_moksha_is_mahajana(self) -> None:
+        """MOKSHA quarter binary = 12 = MAHAJANA (12 witnesses seal!)."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_MOKSHA_DECIMAL
+
+        assert BG_18_66_MOKSHA_DECIMAL == MAHAJANA_COUNT
+
+    def test_quarter_sum_is_twice_krishna(self) -> None:
+        """All quarters sum = 34 = 2 × POSITION_SUM_KRISHNA."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_QUARTER_SUM
+
+        assert BG_18_66_QUARTER_SUM == 34
+        assert BG_18_66_QUARTER_SUM == HALVES * POSITION_SUM_KRISHNA
+
+    def test_action_phases_equal_ten(self) -> None:
+        """GENESIS + KARMA (action) = TEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            BG_18_66_GENESIS_DECIMAL,
+            BG_18_66_KARMA_DECIMAL,
+        )
+
+        assert BG_18_66_GENESIS_DECIMAL + BG_18_66_KARMA_DECIMAL == TEN
+
+    def test_analysis_phases_equal_kshetra(self) -> None:
+        """DHARMA + MOKSHA (analysis) = KSHETRA = 24."""
+        from vibe_core.mahamantra.protocols._seed import KSHETRA
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            BG_18_66_DHARMA_DECIMAL,
+            BG_18_66_MOKSHA_DECIMAL,
+        )
+
+        assert BG_18_66_DHARMA_DECIMAL + BG_18_66_MOKSHA_DECIMAL == KSHETRA

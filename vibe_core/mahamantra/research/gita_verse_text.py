@@ -44,6 +44,7 @@ from vibe_core.mahamantra.protocols._seed import (
     HARE_COUNT,
     KRISHNA_COUNT,
     KSETRAJNA,
+    KSHETRA,
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
     MALA,
@@ -516,6 +517,101 @@ assert MAHAMANTRA_WORD_TABLE.count("RAMA") == RAMA_COUNT, "4 RAMAs"
 
 
 # =============================================================================
+# BG 18.66 OPCODE DERIVATION - The Verse AS Algorithm!
+# =============================================================================
+# "sarva-dharmān parityajya mām ekaṃ śaraṇaṃ vraja"
+# = "Abandon all dharmas, take refuge in Me alone"
+#
+# The 16 OpCodes (4 Quarters × 4 Steps) map to the verse structure:
+#
+# GENESIS Quarter (0-3): "sarva-dharmān" = All duties = System Boot
+#   - Position 0: SYS_WAKE (HARE) = Consciousness awakens
+#   - Position 1: LOAD_ROOT (KRISHNA) = Load all dharmas
+#   - Position 2: ALLOC_MEM (HARE) = Allocate for processing
+#   - Position 3: INIT_THREAD (KRISHNA) = Initialize evaluation
+#
+# DHARMA Quarter (4-7): "parityajya" = Abandoning = Analysis Complete
+#   - Position 4: COMPILE_AST (KRISHNA) = Compile understanding
+#   - Position 5: BIND_SYMBOL (KRISHNA) = Bind to truth
+#   - Position 6: TYPE_CHECK (HARE) = Check dharma validity
+#   - Position 7: DHARMA_TEST (HARE) = Test: abandon material dharmas
+#
+# KARMA Quarter (8-11): "mām ekam" = Unto Me alone = Action Phase
+#   - Position 8: EXEC_OP (HARE) = Execute surrender
+#   - Position 9: EXTEND_CAP (RAMA) = Extend to Lord
+#   - Position 10: STATE_SYNC (HARE) = Sync with Supreme
+#   - Position 11: LEDGER_SIGN (RAMA) = Sign commitment to One
+#
+# MOKSHA Quarter (12-15): "śaraṇam vraja" = Take refuge = Liberation
+#   - Position 12: YIELD_CPU (RAMA) = Yield ego control
+#   - Position 13: IO_FLUSH (RAMA) = Release attachments
+#   - Position 14: LOG_EMIT (HARE) = Emit devotion
+#   - Position 15: AUDIT_SEAL (HARE) = Seal: moksha achieved
+# -----------------------------------------------------------------------------
+
+# The 4 semantic segments of BG 18.66 (first half = 7 words)
+BG_18_66_SEGMENTS: Final[Tuple[str, ...]] = (
+    "sarva-dharmān",  # GENESIS: All duties (2 words: sarva + dharmān)
+    "parityajya",  # DHARMA: Abandoning (1 word)
+    "mām ekam",  # KARMA: Unto Me alone (2 words: mām + ekam)
+    "śaraṇam vraja",  # MOKSHA: Take refuge (2 words: śaraṇam + vraja)
+)
+assert len(BG_18_66_SEGMENTS) == QUARTERS, "4 segments = 4 Quarters"
+
+# Words per segment
+BG_18_66_SEGMENT_WORDS: Final[Tuple[int, ...]] = (
+    HALVES,  # GENESIS: 2 words
+    KSETRAJNA,  # DHARMA: 1 word
+    HALVES,  # KARMA: 2 words
+    HALVES,  # MOKSHA: 2 words
+)
+assert sum(BG_18_66_SEGMENT_WORDS) == SEVEN, "Total = 7 words in first half"
+
+# The ALGORITHM encoded in BG 18.66:
+# Step 0-3 (GENESIS): Load sarva-dharmān (all dharmas)
+# Step 4-7 (DHARMA): Analyze and parityajya (abandon)
+# Step 8-11 (KARMA): Execute mām ekam (unto Me alone)
+# Step 12-15 (MOKSHA): Complete śaraṇam vraja (take refuge)
+
+# Binary pattern per Quarter (from MAHAMANTRA_HALF_BINARY, 2 bits each)
+BG_18_66_GENESIS_BINARY: Final[Tuple[int, ...]] = (0, 1, 0, 1)  # H-K-H-K
+BG_18_66_DHARMA_BINARY: Final[Tuple[int, ...]] = (1, 1, 0, 0)  # K-K-H-H
+BG_18_66_KARMA_BINARY: Final[Tuple[int, ...]] = (0, 1, 0, 1)  # H-R-H-R
+BG_18_66_MOKSHA_BINARY: Final[Tuple[int, ...]] = (1, 1, 0, 0)  # R-R-H-H
+
+# Decimal values per Quarter
+BG_18_66_GENESIS_DECIMAL: Final[int] = sum(
+    b * (HALVES ** (TRINITY - i)) for i, b in enumerate(BG_18_66_GENESIS_BINARY)
+)  # 0101 = 5 = PANCHA!
+BG_18_66_DHARMA_DECIMAL: Final[int] = sum(
+    b * (HALVES ** (TRINITY - i)) for i, b in enumerate(BG_18_66_DHARMA_BINARY)
+)  # 1100 = 12 = MAHAJANA!
+BG_18_66_KARMA_DECIMAL: Final[int] = sum(
+    b * (HALVES ** (TRINITY - i)) for i, b in enumerate(BG_18_66_KARMA_BINARY)
+)  # 0101 = 5 = PANCHA!
+BG_18_66_MOKSHA_DECIMAL: Final[int] = sum(
+    b * (HALVES ** (TRINITY - i)) for i, b in enumerate(BG_18_66_MOKSHA_BINARY)
+)  # 1100 = 12 = MAHAJANA!
+
+assert BG_18_66_GENESIS_DECIMAL == PANCHA, "GENESIS = 5 = PANCHA (Pancha Tattva initiates!)"
+assert BG_18_66_DHARMA_DECIMAL == MAHAJANA_COUNT, "DHARMA = 12 = MAHAJANA (12 authorities judge!)"
+assert BG_18_66_KARMA_DECIMAL == PANCHA, "KARMA = 5 = PANCHA (5-fold action!)"
+assert BG_18_66_MOKSHA_DECIMAL == MAHAJANA_COUNT, "MOKSHA = 12 = MAHAJANA (12 witnesses seal!)"
+
+# The sum of all Quarters
+BG_18_66_QUARTER_SUM: Final[int] = (
+    BG_18_66_GENESIS_DECIMAL + BG_18_66_DHARMA_DECIMAL + BG_18_66_KARMA_DECIMAL + BG_18_66_MOKSHA_DECIMAL
+)
+assert BG_18_66_QUARTER_SUM == 34, "Quarter sum = 34"
+assert BG_18_66_QUARTER_SUM == HALVES * POSITION_SUM_KRISHNA, "34 = 2 × 17!"
+
+# THE KEY INSIGHT: GENESIS + KARMA = PANCHA + PANCHA = TEN (action phases)
+#                  DHARMA + MOKSHA = MAHAJANA + MAHAJANA = 24 = KSHETRA (analysis phases)
+assert BG_18_66_GENESIS_DECIMAL + BG_18_66_KARMA_DECIMAL == TEN, "Action phases = 10"
+assert BG_18_66_DHARMA_DECIMAL + BG_18_66_MOKSHA_DECIMAL == KSHETRA, "Analysis phases = 24"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -722,6 +818,18 @@ __all__ = [
     "MAHAMANTRA_HALF_DECIMAL",
     "MAHAMANTRA_FULL_DECIMAL",
     "MAHAMANTRA_WORD_TABLE",
+    # BG 18.66 OpCode Derivation (Verse AS Algorithm!)
+    "BG_18_66_SEGMENTS",
+    "BG_18_66_SEGMENT_WORDS",
+    "BG_18_66_GENESIS_BINARY",
+    "BG_18_66_DHARMA_BINARY",
+    "BG_18_66_KARMA_BINARY",
+    "BG_18_66_MOKSHA_BINARY",
+    "BG_18_66_GENESIS_DECIMAL",
+    "BG_18_66_DHARMA_DECIMAL",
+    "BG_18_66_KARMA_DECIMAL",
+    "BG_18_66_MOKSHA_DECIMAL",
+    "BG_18_66_QUARTER_SUM",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
