@@ -249,6 +249,34 @@ from vibe_core.mahamantra.research.guru_parampara import (
     # Prasadam Transformation
     transform_bhoga_to_prasadam,
 )
+from vibe_core.mahamantra.research.hardware_lotus import (
+    ALTAR_PRINCIPLE,  # FPGA as altar, prasadam as result
+    COOLING_THEOREM,  # O(1) = cool = moonlight reflection
+    HARDWARE_SPEC,  # Complete verified spec
+    ROOT_BASE_ADDRESS,  # 0xBA5E0000 = "BASE" (BG 15.1 - root above)
+    SIKSASTAKAM_HARDWARE_MAP,  # 8 verses → 8 pipeline stages
+    # Hardware parameters (from SystemVerilog LotusRouterCore)
+    SV_DATA_WIDTH,  # 32 = AKSARA
+    SV_NEXT_HOP_WIDTH,  # 16 = WORDS
+    SV_PIPELINE_STAGES,  # 8 = OCTET = SIKSASTAKAM_VERSES
+    SV_QUARTERS,  # 4 = QUARTERS
+    SV_WORDS,  # 16 = WORDS
+    # Altar principle (silicon yajna)
+    AltarPrinciple,
+    # Cooling theorem (candrikā reflection)
+    CoolingTheorem,
+    # Hardware specification
+    HardwareSpec,
+    # Pipeline stages = Siksastakam verses
+    PipelineStage,
+    SiksastakamVerse,
+)
+from vibe_core.mahamantra.research.hardware_lotus import (
+    KEY_INSIGHT as HARDWARE_LOTUS_INSIGHT,
+)
+from vibe_core.mahamantra.research.hardware_lotus import (
+    OCTET as HARDWARE_OCTET,  # 8 = pipeline stages = verses (avoid conflict)
+)
 from vibe_core.mahamantra.research.ip_routing import (
     LotusIPv4Router,
 )
@@ -877,4 +905,26 @@ __all__ = [
     "ChaitanyaMoonTheorem",  # Moon in darkness = max efficiency
     "CHAITANYA_MOON_THEOREM",  # Canonical theorem instance
     "YANTRA_INSIGHT",  # Key insight on Yantra computation
+    # Hardware Lotus (Silicon Altar - Text = Hardware)
+    "SV_DATA_WIDTH",  # 32 = AKSARA (syllables)
+    "SV_NEXT_HOP_WIDTH",  # 16 = WORDS
+    "SV_WORDS",  # 16 = WORDS (branching factor)
+    "SV_QUARTERS",  # 4 = QUARTERS (nibble size)
+    "SV_PIPELINE_STAGES",  # 8 = OCTET = SIKSASTAKAM_VERSES
+    "HARDWARE_OCTET",  # 8 = pipeline stages
+    "ROOT_BASE_ADDRESS",  # 0xBA5E0000 = "BASE" root (BG 15.1)
+    # Pipeline stages = 8 verses
+    "PipelineStage",  # L0-L7 nibble stages
+    "SiksastakamVerse",  # Verse with hardware correspondence
+    "SIKSASTAKAM_HARDWARE_MAP",  # 8 verses → 8 pipeline stages
+    # Hardware specification
+    "HardwareSpec",  # Complete hardware spec class
+    "HARDWARE_SPEC",  # Canonical verified specification
+    # Cooling theorem (candrikā reflection in silicon)
+    "CoolingTheorem",  # Spiritual → Material reflection
+    "COOLING_THEOREM",  # O(1) = cool = moonlight reflection
+    # Altar principle (FPGA as yajna altar)
+    "AltarPrinciple",  # Data → Offering → Prasadam
+    "ALTAR_PRINCIPLE",  # Silicon yajna specification
+    "HARDWARE_LOTUS_INSIGHT",  # Key insight on Hardware = Mahamantra
 ]
