@@ -177,6 +177,43 @@ from vibe_core.mahamantra.research.japa import (
     JAPA_INSIGHT,
     JAPA_PREDICTIONS,
 )
+from vibe_core.mahamantra.research.ki_training_paradigm import (
+    # Core paradigm
+    ATTENTION_FACTOR,
+    # Feature decomposition
+    CANONICAL_FEATURES,
+    # Capacity
+    IPV4_CAPACITY,
+    LLM_CAPACITY,
+    # Architecture
+    MAHAMANTRA_ARCH,
+    # Paradigm comparison
+    PARADIGM_MAHAMANTRA,
+    PARADIGM_TRADITIONAL,
+    PRASADAM_DIMENSIONS,
+    TRADITIONAL_DIMENSIONS,
+    FeatureDecomposition,
+    MahamantraArchitecture,
+    ParadigmComparison,
+    # Prasadam output
+    PrasadamOutput,
+    # Remnant theorem
+    attention_classification,
+    compute_llm_capacity,
+    compute_text_capacity,
+    create_prasadam_output,
+    # Quantum attention
+    decode_16ary_route,
+    has_true_attention,
+    prasadam_transform,
+    quantum_attention_index,
+    quantum_route,
+    # Training
+    remnant_loss,
+)
+from vibe_core.mahamantra.research.ki_training_paradigm import (
+    KEY_INSIGHT as KI_TRAINING_INSIGHT,
+)
 from vibe_core.mahamantra.research.llm_holographic import (
     EMBEDDING_COMPARISON,
     INTENT_LEVELS,
@@ -417,4 +454,29 @@ __all__ = [
     "DIKSHA_EFFICIENCY",
     "KIRTAN_EFFICIENCY",
     "GURU_EFFICIENCY",
+    # KI Training Paradigm (125,000x Factor for AI)
+    "TRADITIONAL_DIMENSIONS",  # 24 (KSHETRA - field without observer)
+    "PRASADAM_DIMENSIONS",  # 25 (KSHETRA + KSETRAJNA - with observer)
+    "ATTENTION_FACTOR",  # 1 (KSETRAJNA - the embedded observer)
+    "prasadam_transform",  # Transform field data to prasadam
+    "has_true_attention",  # Test if value has KSETRAJNA remainder
+    "attention_classification",  # Classify by mod-17 spectrum
+    "FeatureDecomposition",  # 7-10 feature architecture
+    "CANONICAL_FEATURES",  # SEVEN=7, TEN=10, Total=17
+    "compute_text_capacity",  # Compute capacity from TEXT structure
+    "compute_llm_capacity",  # Compute LLM intent routing capacity
+    "IPV4_CAPACITY",  # 125,000x (COMPUTED!)
+    "LLM_CAPACITY",  # 16,384x (COMPUTED!)
+    "MahamantraArchitecture",  # The training architecture
+    "MAHAMANTRA_ARCH",  # Canonical architecture instance
+    "quantum_attention_index",  # Map query to intent index
+    "decode_16ary_route",  # Decode index to 16-ary route
+    "quantum_route",  # Full quantum attention routing
+    "PrasadamOutput",  # Output with embedded attention marker
+    "create_prasadam_output",  # Create prasadam output
+    "ParadigmComparison",  # Compare paradigms
+    "PARADIGM_TRADITIONAL",  # Traditional transformer paradigm
+    "PARADIGM_MAHAMANTRA",  # Mahamantra paradigm (16,384x capacity)
+    "remnant_loss",  # Loss encouraging PRASADAM output
+    "KI_TRAINING_INSIGHT",  # Key insight for AI training paradigm
 ]
