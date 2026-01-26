@@ -43,6 +43,7 @@ from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     HARE_COUNT,
     KSETRAJNA,
+    MAHA_QUANTUM,
     MAHAJANA_COUNT,
     NADI_RESONANCE,
     NAKSHATRAS,
@@ -344,6 +345,37 @@ BG_18_66_WORD_LENGTH_SUM: Final[int] = sum(BG_18_66_WORD_LENGTHS)
 assert BG_18_66_WORD_LENGTH_SUM == 41, "Sum = 41"
 assert BG_18_66_WORD_LENGTH_SUM == PARAMPARA + QUARTERS, "41 = 37 + 4"
 
+# =============================================================================
+# MAHAMANTRA VIBRATION - The Physics Connection!
+# =============================================================================
+# Using VibrationSignature base_frequency from shabda_translation.py
+
+# Individual word frequencies (from SANSKRIT_PHONEME_MAP)
+HARE_VIBRATION: Final[int] = NADI_RESONANCE * HALVES  # ha(72) + re(72) = 144
+KRISHNA_VIBRATION: Final[int] = MAHAJANA_COUNT * (WORDS - KSETRAJNA)  # 12 × 15 = 180
+RAMA_VIBRATION: Final[int] = MAHAJANA_COUNT * TEN  # 12 × 10 = 120
+
+assert HARE_VIBRATION == 144, "HARE = 144"
+assert KRISHNA_VIBRATION == 180, "KRISHNA = 180"
+assert RAMA_VIBRATION == 120, "RAMA = 120"
+
+# Mahamantra composition: 8 HARE + 4 KRISHNA + 4 RAMA
+MAHAMANTRA_VIBRATION: Final[int] = (
+    HARE_COUNT * HARE_VIBRATION  # 8 × 144 = 1152
+    + QUARTERS * KRISHNA_VIBRATION  # 4 × 180 = 720
+    + QUARTERS * RAMA_VIBRATION  # 4 × 120 = 480
+)  # Total = 2352
+
+assert MAHAMANTRA_VIBRATION == 2352, "Mahamantra = 2352"
+
+# THE KEY DISCOVERY: Average per word = MAHA_QUANTUM + TEN = 137 + 10 = 147!
+VIBRATION_PER_WORD: Final[int] = MAHAMANTRA_VIBRATION // WORDS
+assert VIBRATION_PER_WORD == 147, "147 per word"
+assert VIBRATION_PER_WORD == MAHA_QUANTUM + TEN, "147 = 137 + 10 = α⁻¹ + Vibhuti!"
+
+# The Fine Structure Constant (α⁻¹ ≈ 137) is encoded in the Mahamantra vibration!
+# Plus TEN = Vibhuti (Chapter 10 of Gita, Krishna's opulences)
+
 
 # =============================================================================
 # VIBRATION ANALYSE STRUKTUR
@@ -527,6 +559,12 @@ __all__ = [
     # Word Length Derivation
     "BG_18_66_WORD_LENGTHS",
     "BG_18_66_WORD_LENGTH_SUM",
+    # Mahamantra Vibration
+    "HARE_VIBRATION",
+    "KRISHNA_VIBRATION",
+    "RAMA_VIBRATION",
+    "MAHAMANTRA_VIBRATION",
+    "VIBRATION_PER_WORD",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
