@@ -203,6 +203,25 @@ from vibe_core.mahamantra.research.physics import (
 from vibe_core.mahamantra.research.physics import (
     calculate_statistics as physics_statistics,
 )
+from vibe_core.mahamantra.research.routing_holographic import (
+    EFFICIENCY_GOLDEN,
+    EFFICIENCY_MIDPOINT,
+    EFFICIENCY_NOW,
+    GEIGER_SATURATION,
+    HOLOGRAPHIC_LEVELS,
+    KALI_YUGA_MEASURED,
+    KEY_INSIGHT,
+    MINIMUM_STRUCTURAL_ADVANTAGE,
+    ROUTING_TECHNOLOGIES,
+    STRUCTURE_ADVANTAGES,
+    THEORETICAL_MAX_IPV4,
+    RoutingTechnology,
+    StructureAdvantage,
+    compare_all_technologies,
+    holographic_identity,
+    holographic_routing_ops,
+    project_routing_efficiency,
+)
 from vibe_core.mahamantra.research.shabda_translation import (
     ABHINNA_INSIGHT,
     SANSKRIT_PHONEME_MAP,
@@ -228,6 +247,25 @@ __all__ = [
     "LotusArrayInt",  # O(1) integer-optimized
     "LotusRadix",  # O(1) sparse data structure
     "LotusIPv4Router",  # O(8) longest prefix match (1557x faster)
+    # Holographic Routing Research (Geiger Counter Analysis)
+    "RoutingTechnology",
+    "ROUTING_TECHNOLOGIES",
+    "HOLOGRAPHIC_LEVELS",
+    "holographic_identity",
+    "holographic_routing_ops",
+    "KALI_YUGA_MEASURED",  # 1557x (Geiger saturated)
+    "THEORETICAL_MAX_IPV4",  # 125,000x (full potential)
+    "GEIGER_SATURATION",  # 1.25% (only 1.25% measured!)
+    "StructureAdvantage",
+    "STRUCTURE_ADVANTAGES",
+    "MINIMUM_STRUCTURAL_ADVANTAGE",
+    "project_routing_efficiency",
+    "EFFICIENCY_NOW",
+    "EFFICIENCY_MIDPOINT",
+    "EFFICIENCY_GOLDEN",
+    "compare_all_technologies",
+    "KEY_INSIGHT",
+    # DNA k-mer
     "Lotus8merIndex",  # O(1) DNA k-mer counting (6.5x faster)
     "LotusKmerRadix",  # O(1) arbitrary k-mer index
     # GENERISCHE N-LEVEL STRUKTUR (Skaliert beliebig)
