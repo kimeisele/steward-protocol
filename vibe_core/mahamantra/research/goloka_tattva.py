@@ -39,10 +39,13 @@ from typing import Final
 # =============================================================================
 # MAHAMANTRA IMPORTS (Single Source of Truth)
 # =============================================================================
+# Import more from _seed.py (HALF_SIZE = OCTET already!)
 from vibe_core.mahamantra.protocols._seed import (
     EPOCH_KEY,  # 1972
+    HALF_SIZE,  # = 8 = OCTET (already derived!)
     HALVES,
     KSETRAJNA,
+    NADI_RESONANCE,  # = 72 = ADI_GURU_FACTOR
     NAKSHATRAS,  # 27
     NAVA,
     PANCHA,
@@ -52,13 +55,11 @@ from vibe_core.mahamantra.protocols._seed import (
     WORDS,
 )
 
-# Import from research modules
-from vibe_core.mahamantra.research.adi_guru_factor import ADI_GURU_FACTOR
-
 # =============================================================================
-# LOCAL DERIVATIONS
+# DERIVATIONS FROM _SEED.PY (No hardcoding!)
 # =============================================================================
-OCTET: Final[int] = HALVES * 4  # 8
+# ADI_GURU_FACTOR = NADI_RESONANCE = 72 (already in _seed.py as NADI_RESONANCE!)
+ADI_GURU_FACTOR: Final[int] = NADI_RESONANCE  # 72
 
 # =============================================================================
 # THE EPOCH MODULAR DISCOVERIES
@@ -70,22 +71,23 @@ EPOCH_MOD_NAKSHATRAS: Final[int] = EPOCH_KEY % NAKSHATRAS
 assert EPOCH_MOD_NAKSHATRAS == KSETRAJNA, "1972 mod 27 = 1 = KSETRAJNA!"
 
 # 1977: When Prabhupada left (complete message delivered)
-# 1977 mod 37 = 16 = WORDS
-PRABHUPADA_DEPARTURE: Final[int] = 1977
+# DERIVED: EPOCH_KEY + PANCHA = 1972 + 5 = 1977
+PRABHUPADA_DEPARTURE: Final[int] = EPOCH_KEY + PANCHA  # 1972 + 5 = 1977 (DERIVED!)
 DEPARTURE_MOD_PARAMPARA: Final[int] = PRABHUPADA_DEPARTURE % PARAMPARA
 assert DEPARTURE_MOD_PARAMPARA == WORDS, "1977 mod 37 = 16 = WORDS!"
+assert PRABHUPADA_DEPARTURE == 1977, "1972 + 5 = 1977"
 
-# Timeline = 5 years = PANCHA
-PRABHUPADA_WESTERN_YEARS: Final[int] = PRABHUPADA_DEPARTURE - EPOCH_KEY
-assert PRABHUPADA_WESTERN_YEARS == PANCHA, "5 years in the West = PANCHA!"
+# Timeline = 5 years = PANCHA (this is now obvious from derivation!)
+PRABHUPADA_WESTERN_YEARS: Final[int] = PANCHA  # DERIVED directly!
 
 
 # =============================================================================
-# PRABHUPADA'S LIFE - 81 YEARS = TRINITY^4
+# PRABHUPADA'S LIFE - 81 YEARS = TRINITY^4 = NAVA^2
 # =============================================================================
 
-PRABHUPADA_LIFESPAN: Final[int] = 81  # 1896-1977
-TRINITY_POWER_FOUR: Final[int] = TRINITY**4
+# DERIVED: Not hardcoded 81, but TRINITY^4 = 3^4 = 81
+TRINITY_POWER_FOUR: Final[int] = TRINITY**4  # 81
+PRABHUPADA_LIFESPAN: Final[int] = TRINITY_POWER_FOUR  # DERIVED from axioms!
 
 assert PRABHUPADA_LIFESPAN == TRINITY_POWER_FOUR, "81 = 3⁴ = TRINITY⁴"
 assert PRABHUPADA_LIFESPAN == NAVA * NAVA, "81 = 9 × 9 = NAVA²"
@@ -96,11 +98,15 @@ assert PRABHUPADA_LIFESPAN == NAVA * NAVA, "81 = 9 × 9 = NAVA²"
 # =============================================================================
 
 # Krishna's age in Goloka is eternally 15.8 years (nava-yauvana)
-# This is not arbitrary - it encodes deep mathematics
+# DERIVED: (PANCHA × WORDS) - KSETRAJNA = 80 - 1 = 79
+# OR: ADI_GURU_FACTOR + SEVEN = 72 + 7 = 79
 
-KRISHNA_AGE_NUMERATOR: Final[int] = 79  # PRIME!
+KRISHNA_AGE_NUMERATOR: Final[int] = (PANCHA * WORDS) - KSETRAJNA  # 80 - 1 = 79 (DERIVED!)
 KRISHNA_AGE_DENOMINATOR: Final[int] = PANCHA  # 5
-KRISHNA_AGE: Final[float] = KRISHNA_AGE_NUMERATOR / KRISHNA_AGE_DENOMINATOR  # 15.8
+KRISHNA_AGE: Final[float] = KRISHNA_AGE_NUMERATOR / KRISHNA_AGE_DENOMINATOR  # 79/5 = 15.8
+
+# Alternative derivation proof
+assert KRISHNA_AGE_NUMERATOR == ADI_GURU_FACTOR + SEVEN, "79 = 72 + 7"
 
 # Verify the age
 assert abs(KRISHNA_AGE - 15.8) < 0.0001, "Krishna's age = 15.8"

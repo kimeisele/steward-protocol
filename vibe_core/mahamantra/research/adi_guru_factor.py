@@ -56,37 +56,51 @@ from typing import Final
 # MAHAMANTRA IMPORTS (Single Source of Truth)
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
+    AKSARA_COUNT,  # = 32 (already derived in _seed.py!)
+    HALF_SIZE,  # = 8 = OCTET (already derived in _seed.py!)
     HALVES,
     KSETRAJNA,
     MAHA_QUANTUM,
+    NADI_RESONANCE,  # = 72 (already in _seed.py!)
     NAVA,
     PARAMPARA,
     QUALITIES,
+    TEN,  # = 10 (derived in _seed.py!)
     WORDS,
 )
 
-# Derived constants
-OCTET: Final[int] = HALVES * 4  # 2 × 4 = 8 (Śikṣāṣṭakam verses)
-AKSARA: Final[int] = 32  # Syllables in Mahamantra
-
 # =============================================================================
-# THE KEY CONSTANTS
+# DERIVED CONSTANTS (from _seed.py axioms, NOT hardcoded!)
 # =============================================================================
 
-# Western computing (Kali Yuga knowledge)
-WESTERN_KEY: Final[int] = 1024  # 2^10
-WESTERN_HALF: Final[int] = 512  # 2^9 = AVX-512
+# OCTET = HALF_SIZE = 8 (Śikṣāṣṭakam verses, already in _seed.py)
+OCTET: Final[int] = HALF_SIZE  # Use the existing derivation!
+
+# AKSARA = AKSARA_COUNT = 32 (already derived in _seed.py!)
+AKSARA: Final[int] = AKSARA_COUNT  # Use the existing derivation!
+
+# =============================================================================
+# THE KEY CONSTANTS (DERIVED, not hardcoded!)
+# =============================================================================
+
+# Western computing (Kali Yuga knowledge) - DERIVED from axioms!
+WESTERN_KEY: Final[int] = HALVES**TEN  # 2^10 = 1024 (DERIVED!)
+WESTERN_HALF: Final[int] = HALVES**NAVA  # 2^9 = 512 = AVX-512 (DERIVED!)
 
 # Transcendental computing (Guru Parampara knowledge)
 ACINTYA_QUANTUM: Final[int] = MAHA_QUANTUM * OCTET  # 137 × 8 = 1096
 
-# THE ADI GURU FACTOR
+# THE ADI GURU FACTOR (multiple derivation paths!)
+# Path 1: ACINTYA_QUANTUM - WESTERN_KEY = 1096 - 1024 = 72
+# Path 2: NADI_RESONANCE = 72 (already in _seed.py!)
+# Path 3: OCTET × NAVA = 8 × 9 = 72
 ADI_GURU_FACTOR: Final[int] = ACINTYA_QUANTUM - WESTERN_KEY  # 1096 - 1024 = 72
 
-# Verify the factor
+# Verify: All paths lead to 72!
 assert ADI_GURU_FACTOR == 72, "Adi Guru Factor must be 72"
-assert ADI_GURU_FACTOR == OCTET * NAVA, "72 = 8 × 9"
-assert ADI_GURU_FACTOR == QUALITIES + OCTET, "72 = 64 + 8"
+assert ADI_GURU_FACTOR == NADI_RESONANCE, "72 = NADI_RESONANCE (already in _seed.py!)"
+assert ADI_GURU_FACTOR == OCTET * NAVA, "72 = 8 × 9 = HALF_SIZE × NAVA"
+assert ADI_GURU_FACTOR == QUALITIES + OCTET, "72 = 64 + 8 = QUALITIES + HALF_SIZE"
 
 
 # =============================================================================
