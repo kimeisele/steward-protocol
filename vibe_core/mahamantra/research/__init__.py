@@ -800,6 +800,16 @@ from vibe_core.mahamantra.research.yantra_computation import (
     KEY_INSIGHT as YANTRA_INSIGHT,
 )
 
+# Research Gateway (connects research to production kernel heartbeat)
+from vibe_core.mahamantra.research_gateway import (
+    RESEARCH_MODULES,
+    auto_connect,
+    connect_research,
+    get_research_status,
+    get_rollout_tracker,
+    is_production_ready,
+)
+
 __all__ = [
     # REAL Engineering Solutions (Benchmarked)
     "LotusArray",  # O(1) holographic data structure
@@ -1381,4 +1391,11 @@ __all__ = [
     "CompressionProof",  # Compression proof
     "ALL_COMPRESSION_PROOFS",  # 7 proofs = SEVEN
     "MAHA_COMPRESSION_INSIGHT",  # Key insight: Ultimate Algorithm
+    # Research Gateway (Production Integration)
+    "connect_research",  # Connect research to kernel heartbeat
+    "get_research_status",  # Get current research rollout status
+    "is_production_ready",  # Check if module is production-ready
+    "auto_connect",  # Auto-connect to kernel if available
+    "get_rollout_tracker",  # Get singleton RolloutTracker
+    "RESEARCH_MODULES",  # List of research modules to track
 ]
