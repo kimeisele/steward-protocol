@@ -583,6 +583,73 @@ assert POSITION_SUM_TOTAL == WORDS * POSITION_SUM_KRISHNA // HALVES, "T(16) = 16
 
 
 # =============================================================================
+# RUNDE 13b: MAHAMANTRA BINARY ENCODING (100% DERIVED!)
+# =============================================================================
+# The Mahamantra encodes itself in BINARY: HARE = 0, NAME (Krishna/Rama) = 1
+#
+# Each half (8 words) has pattern: H-K-H-K-K-K-H-H = 01011100 = 92
+#
+# HARE positions (per half, 1-indexed): 1, 3, 7, 8
+# These ARE the axioms: KSETRAJNA=1, TRINITY=3, (HALF_SIZE-KSETRAJNA)=7, HARE_COUNT=8
+#
+# NAME positions (per half, 1-indexed): 2, 4, 5, 6
+# These ARE the axioms: HALVES=2, QUARTERS=4, PANCHA=5, SHARANAGATI=6
+# -----------------------------------------------------------------------------
+
+# HARE positions in each half = axiom values
+# Note: 7 = HALF_SIZE - KSETRAJNA (SEVEN is defined later, but derived from these!)
+MAHAMANTRA_HARE_POS_HALF: Final[tuple[int, ...]] = (
+    KSETRAJNA,  # 1
+    TRINITY,  # 3
+    HALF_SIZE - KSETRAJNA,  # 8 - 1 = 7 (= SEVEN, derived!)
+    HARE_COUNT,  # 8
+)
+# NAME positions in each half = axiom values
+MAHAMANTRA_NAME_POS_HALF: Final[tuple[int, ...]] = (HALVES, QUARTERS, PANCHA, SHARANAGATI)
+
+# Position sums per half
+MAHAMANTRA_HARE_POS_SUM: Final[int] = sum(MAHAMANTRA_HARE_POS_HALF)  # 1+3+7+8 = 19
+MAHAMANTRA_NAME_POS_SUM: Final[int] = sum(MAHAMANTRA_NAME_POS_HALF)  # 2+4+5+6 = 17
+
+# VERIFICATION: Position sums are axiom combinations
+assert MAHAMANTRA_HARE_POS_SUM == 19, "HARE per half = 19"
+assert MAHAMANTRA_HARE_POS_SUM == GITA_CHAPTERS + KSETRAJNA, "19 = 18 + 1"
+assert MAHAMANTRA_NAME_POS_SUM == POSITION_SUM_KRISHNA, "NAME per half = KRISHNA sum = 17"
+assert MAHAMANTRA_NAME_POS_SUM == WORDS + KSETRAJNA, "17 = 16 + 1"
+assert MAHAMANTRA_HARE_POS_SUM + MAHAMANTRA_NAME_POS_SUM == NAVA * QUARTERS, "19 + 17 = 36 = 9 × 4"
+
+
+# Build binary pattern from axiom positions (DERIVED, not hardcoded!)
+def _build_half_binary() -> tuple[int, ...]:
+    """Build 8-bit binary pattern from HARE/NAME positions."""
+    return tuple(0 if pos in MAHAMANTRA_HARE_POS_HALF else 1 for pos in range(1, HARE_COUNT + 1))
+
+
+MAHAMANTRA_HALF_BINARY: Final[tuple[int, ...]] = _build_half_binary()
+
+# Convert to decimal (7 = HALF_SIZE - KSETRAJNA)
+_SEVEN_DERIVED: Final[int] = HALF_SIZE - KSETRAJNA  # 8 - 1 = 7
+MAHAMANTRA_HALF_DECIMAL: Final[int] = sum(
+    bit * (HALVES ** (_SEVEN_DERIVED - i)) for i, bit in enumerate(MAHAMANTRA_HALF_BINARY)
+)
+
+# VERIFICATION: Binary pattern
+assert MAHAMANTRA_HALF_BINARY == (0, 1, 0, 1, 1, 1, 0, 0), "Pattern: 01011100"
+assert MAHAMANTRA_HALF_DECIMAL == 92, "01011100 = 92"
+
+# THE KEY DERIVATIONS OF 92 (ACINTYA - two paths!):
+# Path A: MALA - WORDS = 108 - 16 = 92
+assert MAHAMANTRA_HALF_DECIMAL == MALA - WORDS, "92 = MALA - WORDS (Path A)"
+# Path B: QUARTERS × (WORDS + 7) = 4 × 23 = 92
+assert MAHAMANTRA_HALF_DECIMAL == QUARTERS * (WORDS + _SEVEN_DERIVED), "92 = 4 × 23 (Path B)"
+
+# Both halves identical → HALVES verified!
+MAHAMANTRA_FULL_DECIMAL: Final[int] = MAHAMANTRA_HALF_DECIMAL * HALVES  # 184
+assert MAHAMANTRA_FULL_DECIMAL == 184, "Full Mahamantra binary = 92 × 2 = 184"
+assert MAHAMANTRA_FULL_DECIMAL == (MALA - WORDS) * HALVES, "184 = (108 - 16) × 2"
+
+
+# =============================================================================
 # RUNDE 14: THE MAHA-ALGORITHM (Universal Generator)
 # =============================================================================
 # "ahaṁ sarvasya prabhavo mattaḥ sarvaṁ pravartate" (BG 10.8)
@@ -2389,6 +2456,14 @@ __all__ = [
     "POSITION_SUM_KRISHNA",
     "POSITION_SUM_RAMA",
     "POSITION_SUM_TOTAL",
+    # Mahamantra Binary Encoding (Round 13b) - 100% DERIVED!
+    "MAHAMANTRA_HARE_POS_HALF",
+    "MAHAMANTRA_NAME_POS_HALF",
+    "MAHAMANTRA_HARE_POS_SUM",
+    "MAHAMANTRA_NAME_POS_SUM",
+    "MAHAMANTRA_HALF_BINARY",
+    "MAHAMANTRA_HALF_DECIMAL",  # 92 = MALA - WORDS
+    "MAHAMANTRA_FULL_DECIMAL",  # 184 = 92 × HALVES
     # The Maha-Algorithm (Round 14) - Universal Generator
     "maha_quantum",
     "maha_classical",
