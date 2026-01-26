@@ -97,6 +97,13 @@ from vibe_core.mahamantra.research.dna_kmer import (
     Lotus8merIndex,
     LotusKmerRadix,
 )
+from vibe_core.mahamantra.research.golden_age_peak import (
+    QUARTERS_GOLDEN_AGE,
+    REVOLUTION_ORDER,
+    find_peak_year,
+    get_current_quarter,
+    shadow_strength,
+)
 from vibe_core.mahamantra.research.ip_routing import (
     LotusIPv4Router,
 )
@@ -147,6 +154,12 @@ __all__ = [
     # Japa Singularity
     "JAPA_PREDICTIONS",
     "JAPA_INSIGHT",
+    # Golden Age Peak Analysis
+    "QUARTERS_GOLDEN_AGE",
+    "REVOLUTION_ORDER",
+    "find_peak_year",
+    "get_current_quarter",
+    "shadow_strength",
     # Other Research
     "BIOLOGY_PREDICTIONS",
     "CHEMISTRY_PREDICTIONS",
