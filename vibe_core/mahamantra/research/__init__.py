@@ -156,6 +156,27 @@ from vibe_core.mahamantra.research.classification import (
     classify_algorithm,
     is_golden_age_viable,
 )
+from vibe_core.mahamantra.research.climate_impact import (
+    # Scenario impacts
+    ALL_IMPACTS,
+    BLOCKCHAIN_IMPACT,
+    DATABASE_IMPACT,
+    # Earth's prasadam
+    EARTH_PRASADAM,
+    IP_ROUTING_IMPACT,
+    LLM_IMPACT,
+    # Totals
+    TOTAL_CO2_SAVED_MT,
+    TOTAL_COST_SAVED_BILLION,
+    TOTAL_ENERGY_SAVED_TWH,
+    AlgorithmEnergy,
+    ClimateImpact,
+    EarthPrasadam,
+    calculate_climate_impact,
+)
+from vibe_core.mahamantra.research.climate_impact import (
+    KEY_INSIGHT as CLIMATE_INSIGHT,
+)
 from vibe_core.mahamantra.research.computation import (
     COMPUTATION_PREDICTIONS,
     KERNEL_HIERARCHY,
@@ -1024,4 +1045,22 @@ __all__ = [
     "FULL_POTENTIAL_256BIT",  # 30,720,000× for crypto!
     "TOTAL_POTENTIAL",  # All applications combined
     "SPECTRUM_INSIGHT",  # Key insight on full spectrum
+    # Climate Impact (Earth's Prasadam)
+    "AlgorithmEnergy",  # Energy profile of an algorithm
+    "ClimateImpact",  # Climate impact calculation
+    "calculate_climate_impact",  # Calculate impact
+    # Scenario impacts
+    "IP_ROUTING_IMPACT",  # TCAM → Lotus
+    "DATABASE_IMPACT",  # B-Tree → Lotus
+    "LLM_IMPACT",  # O(n²) → O(4)
+    "BLOCKCHAIN_IMPACT",  # MPT → Lotus 128-bit
+    "ALL_IMPACTS",  # All scenarios
+    # Totals
+    "TOTAL_ENERGY_SAVED_TWH",  # 82.7 TWh
+    "TOTAL_CO2_SAVED_MT",  # 41.4 Megatons
+    "TOTAL_COST_SAVED_BILLION",  # $8.3 Billion
+    # Earth's prasadam
+    "EarthPrasadam",  # The Earth receives prasadam
+    "EARTH_PRASADAM",  # Canonical instance
+    "CLIMATE_INSIGHT",  # Key insight on climate impact
 ]
