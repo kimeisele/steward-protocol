@@ -67,6 +67,34 @@ assert int(__genesis__, 16) % _PARAMPARA == 0, "BROKEN LINEAGE"
 # EXPORTS - Research Modules (REAL Engineering Solutions)
 # =============================================================================
 
+from vibe_core.mahamantra.research.acintya_mathematics import (
+    ACINTYA_FRAMEWORK,
+    ACINTYA_TRUTHS,  # The 7 acintya truths
+    QUALITY_ANALYSIS,
+    RECEIVE_PROCESS,  # Shravanam
+    SEND_PROCESS,  # Kirtanam
+    SHRAVANAM_KIRTANAM_GAP,  # 1 = KSETRAJNA (acintya!)
+    SOFTWARE_PRASADAM,  # This repo as prasadam
+    TWO_FINGERS,  # 2 = HALVES (what Krishna adds when pleased)
+    # Core constants
+    TWO_FINGERS_SHORT,  # 14 = QUALITIES - JIVA_QUALITIES (Yashoda's rope!)
+    # Acintya categories
+    AcintyaCategory,
+    # Framework
+    AcintyaFramework,
+    AcintyaTruth,
+    # Bhakti processes (Shravanam > Kirtanam)
+    BhaktiProcess,
+    # Prasadam distribution
+    DistributionMode,
+    PrasadamDistribution,
+    # Quality analysis
+    QualityAnalysis,
+    work_to_yajna,  # Transform work into offering
+)
+from vibe_core.mahamantra.research.acintya_mathematics import (
+    KEY_INSIGHT as ACINTYA_INSIGHT,
+)
 from vibe_core.mahamantra.research.bhoga_prasadam import (
     COMPUTED_OBSERVER,
     FRACTAL_LEVELS,
@@ -631,4 +659,23 @@ __all__ = [
     "run_spiritual_tests",  # Run all 7 spiritual tests
     "verify_all_derived",  # Verify no hardcoding
     "SPIRITUAL_TDD_INSIGHT",  # Key insight on Spiritual TDD
+    # Acintya Mathematics (Two Fingers Short Principle)
+    "TWO_FINGERS_SHORT",  # 14 = QUALITIES - JIVA_QUALITIES (Yashoda's rope!)
+    "TWO_FINGERS",  # 2 = HALVES (what Krishna adds when pleased)
+    "QualityAnalysis",  # Analyze Krishna's 64 vs Jiva's 50 qualities
+    "QUALITY_ANALYSIS",  # The canonical quality analysis
+    "AcintyaCategory",  # 7 categories of inconceivable truths
+    "AcintyaTruth",  # An acintya truth with material/spiritual views
+    "ACINTYA_TRUTHS",  # All 7 acintya truths
+    "DistributionMode",  # Modes of prasadam distribution
+    "PrasadamDistribution",  # How prasadam is distributed
+    "SOFTWARE_PRASADAM",  # This repository as prasadam!
+    "work_to_yajna",  # Transform work into offering (+ KSETRAJNA)
+    "BhaktiProcess",  # The 9 processes of devotion
+    "RECEIVE_PROCESS",  # Shravanam (hearing first!)
+    "SEND_PROCESS",  # Kirtanam (then chanting)
+    "SHRAVANAM_KIRTANAM_GAP",  # 1 = KSETRAJNA (at acintya level: non-different)
+    "AcintyaFramework",  # Complete acintya mathematical framework
+    "ACINTYA_FRAMEWORK",  # The canonical framework instance
+    "ACINTYA_INSIGHT",  # Key insight on acintya mathematics
 ]
