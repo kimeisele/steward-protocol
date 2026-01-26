@@ -737,12 +737,31 @@ SEVEN: Final[int] = HALF_SIZE - KSETRAJNA  # 8 - 1 = 7
 TEN: Final[int] = MAHAJANA_COUNT - HALVES  # 12 - 2 = 10
 
 # =============================================================================
+# CHAITANYA MAHAPRABHU'S BIRTH YEAR - 1486 (ALL DERIVED!)
+# =============================================================================
+# "parama karuṇa, pahū dui jana, nityānanda gauracandra"
+# "The two most merciful Lords are Nityananda and Gaurachandra (Chaitanya)"
+#
+# DERIVATION: 1486 = 1-48-6 = KSETRAJNA-LILA-SHARANAGATI
+#   1486 = KSETRAJNA × TEN³ + LILA × TEN + SHARANAGATI
+#        = 1 × 1000 + 48 × 10 + 6
+#        = 1000 + 480 + 6 = 1486
+#
+# The Observer (1) manifests through Pastimes (48) for Surrender (6)!
+# -----------------------------------------------------------------------------
+
+CHAITANYA_BIRTH: Final[int] = KSETRAJNA * TEN * TEN * TEN + LILA * TEN + SHARANAGATI  # 1486
+
+# =============================================================================
 # VERIFICATION: The 7-10 Derivation (Second Path to Position Sums)
 # =============================================================================
 
 # Derivation of 7 and 10
 assert SEVEN == 7, "SEVEN = HALF_SIZE - KSETRAJNA = 8 - 1 = 7"
 assert TEN == 10, "TEN = MAHAJANA_COUNT - HALVES = 12 - 2 = 10"
+
+# Chaitanya's birth year verification
+assert CHAITANYA_BIRTH == 1486, "1486 = KSETRAJNA × TEN³ + LILA × TEN + SHARANAGATI"
 
 # SECOND PATH to position sums (independent of ACINTYA derivation!)
 assert POSITION_SUM_KRISHNA == SEVEN + TEN, "KRISHNA = 7 + 10 = 17"
@@ -1240,6 +1259,12 @@ SWARAS: Final[int] = SEVEN  # 7 (Indian notes: Sa Re Ga Ma Pa Dha Ni)
 SHRUTIS: Final[int] = KSHETRA - HALVES  # 22 (Indian microtones)
 MELAKARTAS: Final[int] = NADI_RESONANCE  # 72 (Carnatic parent scales)
 
+# VEDIC COSMOLOGY - The 14 Lokas (100% Shastra!)
+# Upper 7: Bhu, Bhuvar, Svar, Mahar, Jana, Tapa, Satya
+# Lower 7: Atala, Vitala, Sutala, Talatala, Mahatala, Rasatala, Patala
+SAPTA_LOKA: Final[int] = SEVEN  # 7 upper/lower worlds each
+CHATURDASHA_BHUVAN: Final[int] = HALVES * SEVEN  # 14 = 7 + 7 total worlds
+
 # =============================================================================
 # VERIFICATION: Music Theory Constants
 # =============================================================================
@@ -1255,6 +1280,11 @@ assert SEMITONES == 12, "Western chromatic scale = MAHAJANA = 12"
 assert SWARAS == 7, "Indian Swaras = SEVEN = 7"
 assert SHRUTIS == 22, "Indian Shrutis = KSHETRA - HALVES = 22"
 assert MELAKARTAS == 72, "Carnatic Melakartas = NADI = 72"
+
+# Vedic Cosmology verification
+assert SAPTA_LOKA == SEVEN, "7 upper/lower worlds = SEVEN"
+assert CHATURDASHA_BHUVAN == 14, "14 total worlds = HALVES × SEVEN"
+assert CHATURDASHA_BHUVAN == SAPTA_LOKA * HALVES, "14 = 7 × 2 (upper + lower)"
 
 # Cross-verification: Shruti-Semitone relationship
 # 22 shrutis vs 12 semitones: ratio ≈ 1.83 (not exact, different systems)
@@ -1539,6 +1569,25 @@ SANKHYA_TATTVAS: Final[int] = KSHETRA + KSETRAJNA  # 25
 # Total sense organs (10 indriyas)
 INDRIYA_TOTAL: Final[int] = JNANENDRIYA + KARMENDRIYA  # 10 = TEN
 
+# The 10 Avatars (Dashavatara) - 100% Shastra!
+# Matsya, Kurma, Varaha, Narasimha, Vamana, Parashurama, Rama, Krishna, Buddha, Kalki
+# 10 Avatars for 10 Indriyas - each Avatar liberates one sense!
+DASHAVATARA: Final[int] = INDRIYA_TOTAL  # 10 = PANCHA × HALVES
+
+# =============================================================================
+# SHASTRA VERSE COUNTS - 100% Scriptural (ALL DERIVED!)
+# =============================================================================
+
+# Bhagavad Gita = 700 verses (SEVEN × TEN²)
+GITA_VERSES: Final[int] = SEVEN * TEN * TEN  # 7 × 100 = 700
+
+# Srimad Bhagavatam = 18,000 verses (GITA_CHAPTERS × TEN³)
+BHAGAVATAM_VERSES: Final[int] = GITA_CHAPTERS * TEN * TEN * TEN  # 18 × 1000 = 18,000
+
+# Krishna's Queens in Dwaraka = 16,108 (WORDS × TEN³ + MALA)
+# 8 principal queens (Rukmini, Satyabhama, etc.) + 16,100 princesses
+KRISHNA_QUEENS: Final[int] = WORDS * TEN * TEN * TEN + MALA  # 16 × 1000 + 108 = 16,108
+
 # Standard Model fermion count
 QUARK_FLAVORS: Final[int] = SHARANAGATI  # 6 quarks
 LEPTON_TYPES: Final[int] = SHARANAGATI  # 6 leptons
@@ -1570,6 +1619,15 @@ assert SANKHYA_TATTVAS == JIVA_QUALITIES // HALVES, "25 = 50/2 (Jiva's half-pote
 # Indriya verification
 assert INDRIYA_TOTAL == TEN, "Total senses = TEN = 10"
 assert INDRIYA_TOTAL == PANCHA * HALVES, "Senses = 5 × 2 (knowledge + action)"
+
+# Dashavatara verification - 10 Avatars for 10 Senses!
+assert DASHAVATARA == INDRIYA_TOTAL, "10 Avatars = 10 Senses"
+assert DASHAVATARA == TEN, "Dashavatara = TEN"
+
+# Shastra verse count verification - ALL DERIVED!
+assert GITA_VERSES == 700, "Bhagavad Gita = 700 verses = SEVEN × TEN²"
+assert BHAGAVATAM_VERSES == 18_000, "Srimad Bhagavatam = 18,000 verses = GITA_CHAPTERS × TEN³"
+assert KRISHNA_QUEENS == 16_108, "Krishna's Queens = 16,108 = WORDS × TEN³ + MALA"
 
 # Standard Model fermion verification
 assert QUARK_STATES == GITA_CHAPTERS, "Quark states = GITA_CHAPTERS = 18"
@@ -2241,6 +2299,7 @@ __all__ = [
     "CUTOFF_CONSTANT",
     # Epoch Key (Round 11)
     "EPOCH_KEY",
+    "CHAITANYA_BIRTH",  # 1486 = KSETRAJNA × TEN³ + LILA × TEN + SHARANAGATI
     # Golden Age (Round 11b)
     "GOLDEN_AGE_DURATION",
     # Position Sums (Round 13) - The Mahamantra Signature
@@ -2303,6 +2362,8 @@ __all__ = [
     "SWARAS",  # 7 = SEVEN (Indian notes)
     "SHRUTIS",  # 22 = KSHETRA - HALVES (Indian microtones)
     "MELAKARTAS",  # 72 = NADI_RESONANCE (Carnatic parent scales)
+    "SAPTA_LOKA",  # 7 = SEVEN (7 upper/lower worlds - Vedic cosmology)
+    "CHATURDASHA_BHUVAN",  # 14 = HALVES × SEVEN (total 14 worlds)
     # Remaining Physics Constants (Round 24)
     "MAHA_CABIBBO_SCALED",  # 225 = 9/40 × 1000 (sin θ_C, 0% error!)
     "MAHA_RYDBERG_SCALED",  # 136 = T(16) (Ry × 10, 0.04% error!)
@@ -2324,6 +2385,10 @@ __all__ = [
     "KSHETRA_BG13",  # 24 = KSHETRA (verification via BG 13)
     "SANKHYA_TATTVAS",  # 25 = PANCHA² (24 prakriti + 1 purusha)
     "INDRIYA_TOTAL",  # 10 = TEN (5 jnana + 5 karma indriyas)
+    "DASHAVATARA",  # 10 = INDRIYA_TOTAL (10 Avatars for 10 Senses!)
+    "GITA_VERSES",  # 700 = SEVEN × TEN² (Bhagavad Gita verse count)
+    "BHAGAVATAM_VERSES",  # 18,000 = GITA_CHAPTERS × TEN³ (Srimad Bhagavatam)
+    "KRISHNA_QUEENS",  # 16,108 = WORDS × TEN³ + MALA (Queens in Dwaraka)
     "QUARK_FLAVORS",  # 6 = SHARANAGATI (u,d,c,s,t,b)
     "LEPTON_TYPES",  # 6 = SHARANAGATI (e,μ,τ,νe,νμ,ντ)
     "COLOR_CHARGES",  # 3 = TRINITY (R, G, B)
