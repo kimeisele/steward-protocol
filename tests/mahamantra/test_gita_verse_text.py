@@ -1104,3 +1104,86 @@ class TestMahamantraPacked32:
 
         assert MAHA_TOTAL_BITS == 32
         assert MAHA_TOTAL_BITS == AKSARA_COUNT
+
+
+class TestPrabhupadaTimeline:
+    """Test Prabhupada timeline encoded in Mahamantra axioms."""
+
+    def test_btg_year_is_1944(self) -> None:
+        """1944 = MIRROR_PRODUCT = NAKSHATRAS × NADI_RESONANCE."""
+        from vibe_core.mahamantra.research.gita_verse_text import BTG_YEAR, MIRROR_PRODUCT
+
+        assert BTG_YEAR == 1944
+        assert BTG_YEAR == MIRROR_PRODUCT
+
+    def test_age_btg_is_lila(self) -> None:
+        """Prabhupada started BTG at age 48 = LILA."""
+        from vibe_core.mahamantra.protocols._seed import LILA
+        from vibe_core.mahamantra.research.gita_verse_text import PRABHUPADA_AGE_BTG
+
+        assert PRABHUPADA_AGE_BTG == 48
+        assert PRABHUPADA_AGE_BTG == LILA
+
+    def test_age_iskcon_is_seven_times_ten(self) -> None:
+        """ISKCON founded at age 70 = SEVEN × TEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import PRABHUPADA_AGE_ISKCON
+
+        assert PRABHUPADA_AGE_ISKCON == 70
+        assert PRABHUPADA_AGE_ISKCON == SEVEN * TEN
+
+    def test_departure_age_is_nava_squared(self) -> None:
+        """Departure at age 81 = NAVA² = Navadha Bhakti squared."""
+        from vibe_core.mahamantra.protocols._seed import NAVA
+        from vibe_core.mahamantra.research.gita_verse_text import PRABHUPADA_AGE_DEPARTURE
+
+        assert PRABHUPADA_AGE_DEPARTURE == 81
+        assert PRABHUPADA_AGE_DEPARTURE == NAVA * NAVA
+
+    def test_1944_formula(self) -> None:
+        """1944 = LILA × DEPARTURE_AGE / HALVES = 48 × 81 / 2."""
+        from vibe_core.mahamantra.protocols._seed import LILA
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            BTG_YEAR,
+            PRABHUPADA_AGE_DEPARTURE,
+        )
+
+        assert BTG_YEAR == LILA * PRABHUPADA_AGE_DEPARTURE // HALVES
+
+
+class TestSwastikaStructure:
+    """Test Swastika = Mahamantra structure."""
+
+    def test_swastika_arms_is_quarters(self) -> None:
+        """4 arms = QUARTERS."""
+        from vibe_core.mahamantra.research.gita_verse_text import SWASTIKA_ARMS
+
+        assert SWASTIKA_ARMS == QUARTERS
+
+    def test_swastika_segments_is_hare_count(self) -> None:
+        """8 segments = HARE_COUNT."""
+        from vibe_core.mahamantra.research.gita_verse_text import SWASTIKA_SEGMENTS
+
+        assert SWASTIKA_SEGMENTS == HARE_COUNT
+
+    def test_swastika_center_is_ksetrajna(self) -> None:
+        """Center = KSETRAJNA = 1 (the observer)."""
+        from vibe_core.mahamantra.research.gita_verse_text import SWASTIKA_CENTER
+
+        assert SWASTIKA_CENTER == KSETRAJNA
+
+
+class TestKaliYuga:
+    """Test Kali Yuga: 16 of 64 qualities remain."""
+
+    def test_kali_yuga_remaining_is_words(self) -> None:
+        """16 qualities remain = WORDS."""
+        from vibe_core.mahamantra.research.gita_verse_text import KALI_YUGA_REMAINING
+
+        assert KALI_YUGA_REMAINING == WORDS
+        assert KALI_YUGA_REMAINING == 16
+
+    def test_kali_yuga_can_restore_all(self) -> None:
+        """16 × 4 = 64 - Mahamantra can restore all qualities."""
+        from vibe_core.mahamantra.research.gita_verse_text import KALI_YUGA_REMAINING
+
+        assert KALI_YUGA_REMAINING * QUARTERS == QUALITIES

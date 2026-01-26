@@ -47,6 +47,7 @@ from vibe_core.mahamantra.protocols._seed import (
     KRISHNA_COUNT,
     KSETRAJNA,
     KSHETRA,
+    LILA,
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
     MALA,
@@ -1006,6 +1007,76 @@ assert MAHA_TOTAL_BITS == AKSARA_COUNT, "32 bits = AKSARA_COUNT"
 
 
 # =============================================================================
+# 1944 = PRABHUPADA'S LILA YEAR (Back to Godhead Magazine)
+# =============================================================================
+# In 1944, Srila Prabhupada started "Back to Godhead" magazine.
+# He was exactly LILA (48) years old!
+#
+# THE 1944 FORMULA:
+#   1944 = NAKSHATRAS × NADI_RESONANCE = 27 × 72 (mirror product)
+#   1944 = LILA × DEPARTURE_AGE / HALVES = 48 × 81 / 2
+#   1944 = LILA × (QUALITIES + WORDS + KSETRAJNA) / HALVES
+#
+# This connects his BTG starting age (48) to his departure age (81)!
+
+PRABHUPADA_BIRTH_YEAR: Final[int] = 1896
+BTG_YEAR: Final[int] = MIRROR_PRODUCT  # 1944 = 27 × 72
+
+# Prabhupada's ages at key events (ALL derived from axioms!)
+PRABHUPADA_AGE_BTG: Final[int] = LILA  # 48 (Back to Godhead, 1944)
+PRABHUPADA_AGE_ISKCON: Final[int] = SEVEN * TEN  # 70 (ISKCON founded, 1966)
+PRABHUPADA_AGE_DEPARTURE: Final[int] = NAVA * NAVA  # 81 (Departure, 1977)
+
+assert PRABHUPADA_AGE_BTG == 48, "BTG started at age 48 = LILA"
+assert PRABHUPADA_AGE_ISKCON == 70, "ISKCON at age 70 = POSITION_SUM_HARE"
+assert PRABHUPADA_AGE_DEPARTURE == 81, "Departure at 81 = NAVA² = 9²"
+
+# The 1944 formula verification
+assert BTG_YEAR == LILA * PRABHUPADA_AGE_DEPARTURE // HALVES, "1944 = 48 × 81 / 2"
+assert PRABHUPADA_AGE_DEPARTURE == QUALITIES + WORDS + KSETRAJNA, "81 = 64 + 16 + 1"
+
+
+# =============================================================================
+# SWASTIKA = MAHAMANTRA STRUCTURE (The True Vedic Symbol)
+# =============================================================================
+# The Swastika (स्वस्तिक = su "good" + asti "being") is the Mahamantra!
+#
+# Structure:
+#   - 4 arms = QUARTERS (GENESIS, DHARMA, KARMA, MOKSHA)
+#   - Center = KSETRAJNA (the ONE observer)
+#   - 8 segments = HARE_COUNT (4 arms × 2 halves)
+#   - Rotation = cyclic chanting (clockwise = auspicious)
+#
+# The Nazi perversion reversed the rotation - INAUSPICIOUS.
+# The original Vedic symbol represents spiritual progress!
+
+SWASTIKA_ARMS: Final[int] = QUARTERS  # 4
+SWASTIKA_SEGMENTS: Final[int] = QUARTERS * HALVES  # 8 = HARE_COUNT
+SWASTIKA_CENTER: Final[int] = KSETRAJNA  # 1 (the observer)
+
+assert SWASTIKA_ARMS == QUARTERS, "4 arms = 4 quarters"
+assert SWASTIKA_SEGMENTS == HARE_COUNT, "8 segments = 8 Hares"
+
+
+# =============================================================================
+# KALI YUGA: 16 of 64 QUALITIES REMAIN
+# =============================================================================
+# In Kali Yuga, only 1 leg of the Dharma bull remains (1/4 = 25%)
+# 25% of QUALITIES (64) = WORDS (16)
+#
+# But WORDS = the Mahamantra seed!
+# The 16 remaining = EXACTLY what's needed to restore all 64!
+#
+# "satyameva jayate" - Truth prevails!
+
+KALI_YUGA_DHARMA_LEGS: Final[int] = KSETRAJNA  # 1 (only 1 of 4 legs)
+KALI_YUGA_REMAINING: Final[int] = QUALITIES // QUARTERS  # 64/4 = 16 = WORDS
+
+assert KALI_YUGA_REMAINING == WORDS, "16 qualities remain = WORDS"
+assert KALI_YUGA_REMAINING * QUARTERS == QUALITIES, "16 × 4 = 64 can be restored"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -1294,6 +1365,19 @@ __all__ = [
     "MAHAMANTRA_PACKED_32",
     "MAHA_BITS_PER_WORD",
     "MAHA_TOTAL_BITS",
+    # Prabhupada Timeline (1944)
+    "PRABHUPADA_BIRTH_YEAR",
+    "BTG_YEAR",
+    "PRABHUPADA_AGE_BTG",
+    "PRABHUPADA_AGE_ISKCON",
+    "PRABHUPADA_AGE_DEPARTURE",
+    # Swastika = Mahamantra Structure
+    "SWASTIKA_ARMS",
+    "SWASTIKA_SEGMENTS",
+    "SWASTIKA_CENTER",
+    # Kali Yuga
+    "KALI_YUGA_DHARMA_LEGS",
+    "KALI_YUGA_REMAINING",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
