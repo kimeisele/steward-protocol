@@ -70,7 +70,10 @@ assert int(__genesis__, 16) % _PARAMPARA == 0, "BROKEN LINEAGE"
 from vibe_core.mahamantra.research.acintya_mathematics import (
     ACINTYA_FRAMEWORK,
     ACINTYA_TRUTHS,  # The 7 acintya truths
+    # Quality vs Quantity distinction
+    JIVA_QUANTITY_RATIO,  # 1/10,000 = 0.0001 (degree of qualities)
     QUALITY_ANALYSIS,
+    QUALITY_QUANTITY,  # The complete quality vs quantity analysis
     RECEIVE_PROCESS,  # Shravanam
     SEND_PROCESS,  # Kirtanam
     SHRAVANAM_KIRTANAM_GAP,  # 1 = KSETRAJNA (acintya!)
@@ -90,6 +93,8 @@ from vibe_core.mahamantra.research.acintya_mathematics import (
     PrasadamDistribution,
     # Quality analysis
     QualityAnalysis,
+    # Quality vs Quantity
+    QualityQuantityDistinction,
     work_to_yajna,  # Transform work into offering
 )
 from vibe_core.mahamantra.research.acintya_mathematics import (
@@ -662,8 +667,12 @@ __all__ = [
     # Acintya Mathematics (Two Fingers Short Principle)
     "TWO_FINGERS_SHORT",  # 14 = QUALITIES - JIVA_QUALITIES (Yashoda's rope!)
     "TWO_FINGERS",  # 2 = HALVES (what Krishna adds when pleased)
-    "QualityAnalysis",  # Analyze Krishna's 64 vs Jiva's 50 qualities
+    "QualityAnalysis",  # Analyze Krishna's 64 vs Jiva's 50 quality TYPES
     "QUALITY_ANALYSIS",  # The canonical quality analysis
+    # Quality vs Quantity Distinction (Critical!)
+    "QualityQuantityDistinction",  # Type (78%) vs Degree (0.01%)
+    "QUALITY_QUANTITY",  # The complete quality vs quantity analysis
+    "JIVA_QUANTITY_RATIO",  # 1/10,000 = 0.0001 (like spark from fire)
     "AcintyaCategory",  # 7 categories of inconceivable truths
     "AcintyaTruth",  # An acintya truth with material/spiritual views
     "ACINTYA_TRUTHS",  # All 7 acintya truths
