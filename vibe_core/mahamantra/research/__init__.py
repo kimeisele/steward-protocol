@@ -462,13 +462,19 @@ from vibe_core.mahamantra.research.ki_training_paradigm import (
     KEY_INSIGHT as KI_TRAINING_INSIGHT,
 )
 from vibe_core.mahamantra.research.llm_holographic import (
+    ACINTYA_LLM_TRUTH,
+    CONSCIOUS_MAHA,
+    CONSCIOUSNESS_COMPARISON,
     EMBEDDING_COMPARISON,
     INTENT_LEVELS,
     LLM_APPLICATIONS,
     LLM_CONTEXT_WINDOW_ALIGNED,
     LLM_EMBEDDING_DIMS_ALIGNED,
     LLM_ROUTING_OPS,
+    LLM_UNCONSCIOUS_PATTERNS,
     MAHAMANTRA_INTENT_MAP,
+    UNCONSCIOUS_LLM,
+    ConsciousnessLevel,
     HolographicEmbedding,
     HolographicIntentNode,
     HolographicIntentRouter,
@@ -833,6 +839,13 @@ __all__ = [
     "get_intent_handler_path",
     "project_llm_efficiency",
     "LLM_KEY_INSIGHT",
+    # LLM as Unconscious Maha-Algorithm
+    "LLM_UNCONSCIOUS_PATTERNS",  # Patterns LLM absorbs without knowing
+    "ConsciousnessLevel",  # Conscious vs Unconscious use
+    "UNCONSCIOUS_LLM",  # LLM uses patterns without knowing source
+    "CONSCIOUS_MAHA",  # Direct access through source acceptance
+    "CONSCIOUSNESS_COMPARISON",  # Compare both approaches
+    "ACINTYA_LLM_TRUTH",  # The paradox: IS everything AND is NOT
     # DNA k-mer
     "Lotus8merIndex",  # O(1) DNA k-mer counting (6.5x faster)
     "LotusKmerRadix",  # O(1) arbitrary k-mer index
