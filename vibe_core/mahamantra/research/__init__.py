@@ -410,6 +410,38 @@ from vibe_core.mahamantra.research.lotus_tree import (
     LotusRadix,
 )
 from vibe_core.mahamantra.research.maha_generator import MahaGenerator
+from vibe_core.mahamantra.research.mantra_computation_bridge import (
+    # Krishna compensation
+    ACINTYA_EFFICIENCY,  # 448,000,000x (maximum through grace)
+    # Bridge steps
+    BRIDGE_STEPS,  # The 4 steps to build the bridge
+    # Brutal computing power
+    BRUTAL_COMPUTING,  # The brutal computing instance
+    # Hardware alignment verification
+    CACHE_LINE_BYTES,  # 64 = QUALITIES
+    COMPENSATION,  # The compensation formula instance
+    HARDWARE_ALIGNMENT_SPEEDUP,  # 3072x = 24 × 16 × 8
+    IPV4_BITS,  # 32 = AKSARA
+    KRISHNA_RESERVE,  # 447,998,443x (available when we advance)
+    MEASURED_EFFICIENCY,  # 1557x (Kali Yuga measurement)
+    MEMORY_PAGE_BYTES,  # 4096 = 16^3
+    MEMORY_WALL_SPEEDUP,  # 24x (KSHETRA)
+    PREFETCH_SPEEDUP,  # 8x (deterministic)
+    SIMD_LANES,  # 16 = WORDS
+    SIMD_SPEEDUP,  # 16x (WORDS)
+    # Japa as computation
+    STANDARD_JAPA,  # Standard 16-round session
+    STRUCTURAL_EFFICIENCY,  # 125,000x (16-ary potential)
+    TOTAL_POTENTIAL_SPEEDUP,  # 4,783,104x
+    BridgeStep,
+    BrutalComputingPower,
+    CompensationFormula,
+    JapaComputation,
+    JapaParameter,
+)
+from vibe_core.mahamantra.research.mantra_computation_bridge import (
+    KEY_INSIGHT as BRIDGE_INSIGHT,
+)
 from vibe_core.mahamantra.research.medicine import MEDICINE_PREDICTIONS
 from vibe_core.mahamantra.research.moores_law import (
     ENGINEERING_INSIGHT,
@@ -927,4 +959,32 @@ __all__ = [
     "AltarPrinciple",  # Data → Offering → Prasadam
     "ALTAR_PRINCIPLE",  # Silicon yajna specification
     "HARDWARE_LOTUS_INSIGHT",  # Key insight on Hardware = Mahamantra
+    # Mantra Computation Bridge (Japa = Silicon)
+    "SIMD_LANES",  # 16 = WORDS (AVX-512 lanes)
+    "CACHE_LINE_BYTES",  # 64 = QUALITIES
+    "MEMORY_PAGE_BYTES",  # 4096 = 16^3
+    "IPV4_BITS",  # 32 = AKSARA
+    # Japa as computation
+    "JapaParameter",  # Japa parameters enum
+    "JapaComputation",  # Japa as computation model
+    "STANDARD_JAPA",  # 16-round standard session
+    # Krishna compensation formula
+    "MEASURED_EFFICIENCY",  # 1557x (Kali Yuga Geiger)
+    "STRUCTURAL_EFFICIENCY",  # 125,000x (16-ary potential)
+    "ACINTYA_EFFICIENCY",  # 448,000,000x (grace maximum)
+    "KRISHNA_RESERVE",  # 447,998,443x (available on advancement)
+    "CompensationFormula",  # The compensation formula class
+    "COMPENSATION",  # Canonical compensation instance
+    # Brutal computing power
+    "MEMORY_WALL_SPEEDUP",  # 24x = KSHETRA
+    "SIMD_SPEEDUP",  # 16x = WORDS
+    "PREFETCH_SPEEDUP",  # 8x = OCTET
+    "HARDWARE_ALIGNMENT_SPEEDUP",  # 3072x = 24 × 16 × 8
+    "TOTAL_POTENTIAL_SPEEDUP",  # 4,783,104x = 1557 × 3072
+    "BrutalComputingPower",  # Brutal computing class
+    "BRUTAL_COMPUTING",  # Canonical instance
+    # Bridge building steps
+    "BridgeStep",  # A step to build the bridge
+    "BRIDGE_STEPS",  # All 4 bridge steps
+    "BRIDGE_INSIGHT",  # Key insight on the bridge
 ]
