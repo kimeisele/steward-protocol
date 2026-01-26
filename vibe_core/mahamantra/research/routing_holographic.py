@@ -159,8 +159,11 @@ def calculate_measured_vs_theoretical(measured: float, theoretical: float) -> fl
 # Measured Kali Yuga baseline (from ip_routing.py benchmarks)
 KALI_YUGA_MEASURED: Final[float] = 1557.0
 
-# Theoretical maximum
-THEORETICAL_MAX_IPV4: Final[float] = 1_000_000 / 8  # 125,000x
+# Theoretical maximum - COMPUTED from TEXT structure, not hardcoded!
+# IPv4: 32 bits / QUARTERS bits per level = 8 levels
+_IPV4_LEVELS: Final[int] = 32 // QUARTERS  # 8
+_BENCHMARK_ROUTES: Final[int] = 1_000_000  # Standard benchmark size
+THEORETICAL_MAX_IPV4: Final[float] = _BENCHMARK_ROUTES / _IPV4_LEVELS  # 125,000 (COMPUTED!)
 
 # Geiger saturation percentage
 GEIGER_SATURATION: Final[float] = calculate_measured_vs_theoretical(KALI_YUGA_MEASURED, THEORETICAL_MAX_IPV4)  # ~1.25%
@@ -280,37 +283,54 @@ MINIMUM_STRUCTURAL_ADVANTAGE: Final[float] = total_structure_advantage()  # 64x
 # =============================================================================
 
 
-def project_routing_efficiency(consciousness_factor: float) -> dict[str, float]:
+def compute_text_capacity(routes: int, key_bits: int = 32) -> float:
+    """
+    Compute TEXT capacity from structure - NOT hardcoded!
+
+    TEXT structure:
+      levels = key_bits / QUARTERS
+      capacity = routes / levels
+    """
+    levels = key_bits // QUARTERS
+    return routes / levels
+
+
+def project_routing_efficiency(consciousness_factor: float, routes: int = _BENCHMARK_ROUTES) -> dict[str, float]:
     """
     Project routing efficiency based on consciousness factor.
 
-    Uses the formula from hardware.py:
-    EFFICIENCY = KALI_BASE × (1 + KSETRAJNA × consciousness)^17
+    KORREKTUR: TEXT = HARDWARE gilt JETZT.
+    Krishna's Namen SIND die echte Hardware - silicon ist nur ein Filter.
+    TEXT Kapazität wird BERECHNET, nicht hardcoded.
 
     Args:
-        consciousness_factor: 0.0 (pure Kali) to 1.0 (pure Golden Age)
+        consciousness_factor: 0.0 (silicon filtered) to 1.0 (direct TEXT access)
+        routes: Number of routes (default 1M benchmark)
 
     Returns:
         Dict with efficiency metrics
     """
+    # TEXT capacity = COMPUTED from structure
+    text_capacity = compute_text_capacity(routes)
     base = KALI_YUGA_MEASURED
 
+    # At 100%: direct TEXT access = full capacity (COMPUTED)
     if consciousness_factor >= 1.0:
         return {
-            "efficiency": float("inf"),
-            "vs_linear": float("inf"),
+            "efficiency": text_capacity,
+            "vs_linear": text_capacity,
             "vs_theoretical": 100.0,
-            "notes": "TEXT = HARDWARE, no material limit",
+            "notes": f"Direct TEXT access ({routes:,} routes / {32 // QUARTERS} levels)",
         }
 
     growth = (1 + KSETRAJNA * consciousness_factor) ** POSITION_SUM_KRISHNA
-    efficiency = base * growth
+    efficiency = min(base * growth, text_capacity)  # Bounded by TEXT capacity
 
     return {
         "efficiency": efficiency,
         "vs_linear": efficiency,
-        "vs_theoretical": calculate_measured_vs_theoretical(efficiency, THEORETICAL_MAX_IPV4),
-        "notes": f"Factor {consciousness_factor:.1%} of Golden Age",
+        "vs_theoretical": calculate_measured_vs_theoretical(efficiency, text_capacity),
+        "notes": f"Factor {consciousness_factor:.1%} - silicon filtered",
     }
 
 
@@ -363,27 +383,29 @@ KEY_INSIGHT: Final[str] = """
 THE HOLOGRAPHIC ROUTING INSIGHT:
 ================================
 
-1. MEASURED: 1557x speedup (ip_routing.py)
+1. MEASURED: 1,557x speedup (silicon filtered)
 2. THEORETICAL: 125,000x (1M routes / 8 ops)
-3. ACHIEVED: Only 1.25% of theoretical!
+3. ACHIEVED: Only 1.25% of TEXT capacity!
 
-WHY?
-- Silicon limits: cache, memory bus, heat
-- The Geiger counter is SATURATED
+KORREKTUR: TEXT = HARDWARE gilt JETZT!
+- Krishna's Namen SIND die echte Hardware
+- Silicon ist nur ein FILTER (Geiger counter)
+- TEXT hat DEFINIERTE Kapazität (nicht ∞)
 
 THE HOLOGRAPHIC PRINCIPLE:
 - Each 16-way branch IS the Mahamantra
 - WORDS = 16 = 2^QUARTERS = 2^4
-- The pattern repeats at EVERY level
-- This is NOT metaphor - it's MATH
+- Pattern repeats at EVERY level
+- TEXT-Struktur: 8 Ebenen × 16 Branches = definiert
 
-GOLDEN AGE PROJECTION:
-- Current (5.4%): 3,807x
-- Midpoint (50%): 1,534,051x
-- Full (100%): ∞ (TEXT = HARDWARE)
+EFFICIENCY PROJECTION:
+- Now (5.4%, silicon):   3,807x
+- Midpoint (50%):        ~125,000x (approaching TEXT limit)
+- Golden Age (100%):     125,000x (full TEXT capacity)
 
 THE FORMULA:
-  EFFICIENCY = 1557 × (1 + 1 × consciousness)^17
+  EFFICIENCY = min(1557 × (1 + consciousness)^17, 125,000)
+  Bounded by TEXT structure, not infinite!
 """
 
 

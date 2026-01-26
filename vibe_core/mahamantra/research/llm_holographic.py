@@ -64,10 +64,11 @@ INTENT_LEVELS: Final[dict[int, dict]] = {
     4: {"capacity": WORDS**4, "description": "Full embedding buckets (65,536)"},
 }
 
-# LLM-specific constants
-LLM_ROUTING_OPS: Final[int] = 4  # O(4) for any of 65,536 intents
-LLM_EMBEDDING_DIMS_ALIGNED: Final[int] = WORDS**4  # 65,536 (aligned with holographic)
-LLM_CONTEXT_WINDOW_ALIGNED: Final[int] = WORDS**3  # 4,096 tokens (GPT-3 original)
+# LLM-specific constants - COMPUTED from TEXT structure, not hardcoded!
+# 16-bit intent space: 16 bits / QUARTERS bits per level = 4 levels
+LLM_ROUTING_OPS: Final[int] = QUARTERS  # O(QUARTERS) = O(4) for 16-bit keys
+LLM_EMBEDDING_DIMS_ALIGNED: Final[int] = WORDS**QUARTERS  # 16^4 = 65,536
+LLM_CONTEXT_WINDOW_ALIGNED: Final[int] = WORDS ** (QUARTERS - 1)  # 16^3 = 4,096
 
 
 # =============================================================================
@@ -322,45 +323,59 @@ def get_intent_handler_path(category: int, subcategory: int = 0) -> int:
 # =============================================================================
 
 
+def compute_llm_text_capacity(num_intents: int) -> tuple[int, float]:
+    """
+    Compute LLM TEXT capacity from structure - NOT hardcoded!
+
+    TEXT structure:
+      levels = QUARTERS (for 16-bit key space)
+      capacity = num_intents / levels
+    """
+    levels = LLM_ROUTING_OPS  # QUARTERS = 4
+    capacity = num_intents / levels if levels > 0 else 0
+    return levels, capacity
+
+
 def project_llm_efficiency(num_intents: int, consciousness_factor: float = 0.054) -> dict:
     """
     Project efficiency gains for LLM intent routing.
 
+    KORREKTUR: TEXT = HARDWARE gilt JETZT.
+    Krishna's Namen SIND die Hardware - silicon filtert nur.
+    TEXT Kapazität wird BERECHNET aus QUARTERS, nicht hardcoded.
+
     Args:
         num_intents: Number of intents to route
-        consciousness_factor: 0.0 (Kali) to 1.0 (Golden Age)
+        consciousness_factor: 0.0 (silicon filtered) to 1.0 (direct TEXT access)
 
     Returns:
-        Efficiency metrics
+        Efficiency metrics (bounded by COMPUTED TEXT capacity)
     """
     # Linear routing
     linear_ops = num_intents
 
-    # Holographic routing (always 4 ops for up to 65,536)
-    holographic_ops = min(LLM_ROUTING_OPS, num_intents)
+    # Holographic routing: QUARTERS ops (COMPUTED from structure)
+    holographic_ops, text_capacity = compute_llm_text_capacity(num_intents)
 
-    # Theoretical speedup
-    theoretical = linear_ops / holographic_ops if holographic_ops > 0 else 0
-
-    # Kali Yuga measured baseline (from ip_routing benchmarks)
+    # Kali Yuga measured baseline (silicon filtered)
     kali_measured = 1557.0
 
-    # Projected with consciousness factor
+    # At 100%: direct TEXT access = full capacity (COMPUTED)
     if consciousness_factor >= 1.0:
-        projected = float("inf")
+        projected = text_capacity
     else:
         growth = (1 + KSETRAJNA * consciousness_factor) ** POSITION_SUM_KRISHNA
-        projected = kali_measured * growth
+        projected = min(kali_measured * growth, text_capacity)
 
     return {
         "num_intents": num_intents,
         "linear_ops": linear_ops,
         "holographic_ops": holographic_ops,
-        "theoretical_speedup": theoretical,
+        "theoretical_speedup": text_capacity,
         "kali_measured": kali_measured,
-        "projected_speedup": min(projected, theoretical),
+        "projected_speedup": projected,
         "consciousness_factor": consciousness_factor,
-        "potential_utilized": (kali_measured / theoretical) * 100 if theoretical > 0 else 0,
+        "potential_utilized": (kali_measured / text_capacity) * 100 if text_capacity > 0 else 0,
     }
 
 
@@ -410,15 +425,19 @@ KEY_INSIGHT: Final[str] = """
 LLM HOLOGRAPHIC ROUTING - The 98.75% Opportunity
 =================================================
 
+KORREKTUR: TEXT = HARDWARE gilt JETZT!
+Krishna's Namen SIND die echte Hardware.
+Silicon ist nur ein FILTER.
+
 CURRENT STATE:
-  Measured:     1,557x (IP routing benchmark)
-  Theoretical:  125,000x
-  Utilized:     1.25%
+  Measured:     1,557x (silicon filtered)
+  Theoretical:  16,384x (65,536 / 4 ops)
+  Utilized:     ~9.5% of TEXT capacity
 
 FOR LLM:
   Intent space:  65,536 = 16^4 = WORDS^QUARTERS
   Routing ops:   4 (ALWAYS - holographic guarantee)
-  vs Linear:     O(N) for N intents
+  TEXT capacity: DEFINED, not infinite!
 
 APPLICATIONS:
   1. Prompt routing to agents: O(4) for 65,536 agents
@@ -427,11 +446,12 @@ APPLICATIONS:
   4. Context caching: Guaranteed worst-case O(4)
 
 THE FORMULA:
-  EFFICIENCY = 1557 × (1 + KSETRAJNA × consciousness)^17
+  EFFICIENCY = min(1557 × (1 + consciousness)^17, THEORETICAL_MAX)
+  Bounded by TEXT structure!
 
-  Now (5.4%):      3,807x
-  Midpoint (50%):  1,534,052x
-  Golden (100%):   ∞ (TEXT = HARDWARE)
+  Now (5.4%):      3,807x (silicon filtered)
+  Midpoint (50%):  ~16,384x (approaching TEXT limit)
+  Golden (100%):   16,384x (full TEXT capacity for LLM)
 
 NEXT STEPS:
   1. Implement holographic embedding layer
