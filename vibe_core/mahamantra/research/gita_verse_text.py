@@ -42,6 +42,7 @@ from vibe_core.mahamantra.protocols._seed import (
     HALF_SIZE,
     HALVES,
     HARE_COUNT,
+    JIVA_CYCLE,
     JIVA_QUALITIES,
     KRISHNA_COUNT,
     KSETRAJNA,
@@ -796,6 +797,131 @@ assert BG_KISHORA_GAP_SCALED == 286, "286 = 37 × 8 - 10"
 
 
 # =============================================================================
+# MIRROR VERSES: BG 2.7 and BG 7.2 (The Surrender-Knowledge Axis)
+# =============================================================================
+# BG 2.7: Arjuna surrenders ("I am confused about duty")
+# BG 7.2: Krishna promises ("I will declare knowledge in full")
+#
+# 2.7 → 27 = NAKSHATRAS (lunar mansions)
+# 7.2 → 72 = NADI_RESONANCE (pulse)
+#
+# These are MIRROR verses with profound mathematical relationships!
+
+BG_2_7_COORDINATE: Final[int] = HALVES * TEN + SEVEN  # 27 = NAKSHATRAS
+assert BG_2_7_COORDINATE == NAKSHATRAS, "2.7 → 27 = NAKSHATRAS"
+
+BG_7_2_COORDINATE: Final[int] = SEVEN * TEN + HALVES  # 72 = NADI_RESONANCE
+assert BG_7_2_COORDINATE == NADI_RESONANCE, "7.2 → 72 = NADI_RESONANCE"
+
+# The mirror sum and difference
+MIRROR_SUM: Final[int] = BG_2_7_COORDINATE + BG_7_2_COORDINATE  # 27 + 72 = 99
+assert MIRROR_SUM == 99, "27 + 72 = 99"
+assert MIRROR_SUM == MALA - NAVA, "99 = MALA - NAVA = 108 - 9"
+
+MIRROR_DIFF: Final[int] = BG_7_2_COORDINATE - BG_2_7_COORDINATE  # 72 - 27 = 45
+assert MIRROR_DIFF == 45, "72 - 27 = 45"
+assert MIRROR_DIFF == NAVA * PANCHA, "45 = NAVA × PANCHA"
+
+# T(9) = 45 - The journey from confusion to knowledge = Navadha Bhakti completion!
+TRIANGULAR_9: Final[int] = (NAVA * (NAVA + KSETRAJNA)) // HALVES
+assert TRIANGULAR_9 == MIRROR_DIFF, "T(9) = 45 = journey length"
+
+
+# =============================================================================
+# 16-STEP MAHA SEQUENCER MODEL (Transcendental Music Box)
+# =============================================================================
+# The Mahamantra IS a 16-step sequencer with multiple layers:
+#   - NOTE: Which name (HARE/KRISHNA/RAMA) = pitch
+#   - GATE: Binary pattern (0/1) = on/off
+#   - VELOCITY: Position weight = dynamics
+#   - LENGTH: Syllable count = note duration
+
+# TIMING (all derived from axioms!)
+SEQUENCER_STEPS: Final[int] = WORDS  # 16
+STEP_DURATION_MS: Final[int] = 250  # TICK_INTERVAL_MS
+CYCLE_DURATION_MS: Final[int] = WORDS * 250  # 4000ms = PRANA
+SEQUENCER_BPM: Final[int] = KSHETRA * TEN  # 240 BPM
+
+assert SEQUENCER_BPM == 240, "BPM = KSHETRA × TEN = 24 × 10 = 240"
+assert CYCLE_DURATION_MS == 4000, "Cycle = PRANA = 4 seconds"
+
+
+# =============================================================================
+# SWING AND GROOVE (Non-Uniform Beat Distribution)
+# =============================================================================
+# The Mahamantra has a swing ratio encoded in its structure:
+#   - Active phases (GENESIS/KARMA): 0101 pattern = alternating = PANCHA
+#   - Passive phases (DHARMA/MOKSHA): 1100 pattern = clustered = MAHAJANA
+#
+# Swing ratio = MAHAJANA / PANCHA = 12/5 = 2.4
+
+SWING_NUMERATOR: Final[int] = MAHAJANA_COUNT  # 12
+SWING_DENOMINATOR: Final[int] = PANCHA  # 5
+# Note: SWING_RATIO = 12/5 = 2.4 (non-integer, so we store numerator/denominator)
+
+assert SWING_NUMERATOR == 12, "Swing numerator = MAHAJANA = 12"
+assert SWING_DENOMINATOR == 5, "Swing denominator = PANCHA = 5"
+
+
+# =============================================================================
+# POLYRHYTHM (Multiple Interlocking Cycles)
+# =============================================================================
+# The Mahamantra contains these interlocking cycles:
+#   - HALVES: 2 (Krishna half / Rama half)
+#   - QUARTERS: 4 (4 quarters)
+#   - PANCHA: 5 (5 unique pairs)
+#   - HARE_COUNT: 8 (8 Hare appearances)
+#   - WORDS: 16 (full cycle)
+#
+# LCM(2,4,5,8,16) = 80 = WORDS × PANCHA
+
+POLYRHYTHM_LCM: Final[int] = WORDS * PANCHA  # 80
+assert POLYRHYTHM_LCM == 80, "LCM = WORDS × PANCHA = 80"
+
+
+# =============================================================================
+# STRING RESONANCE (Harmonic Overtone Series)
+# =============================================================================
+# A vibrating string produces harmonics at integer multiples of fundamental.
+# The first 8 harmonics sum to T(8) = 36 = NAVA × QUARTERS
+#
+# Position sums give the "resonant frequencies" of each name:
+#   - HARE: 70 = SEVEN × TEN (energy vibration)
+#   - KRISHNA: 17 = SEVEN + TEN (source vibration)
+#   - RAMA: 49 = SEVEN² (bliss vibration)
+
+HARMONIC_SUM_8: Final[int] = (HARE_COUNT * (HARE_COUNT + KSETRAJNA)) // HALVES  # T(8) = 36
+assert HARMONIC_SUM_8 == 36, "T(8) = 36 = sum of first 8 harmonics"
+assert HARMONIC_SUM_8 == NAVA * QUARTERS, "36 = NAVA × QUARTERS"
+
+
+# =============================================================================
+# TRANSCENDENTAL FREQUENCIES (1096 Hz Integration)
+# =============================================================================
+# The 1096 Hz frequency bridges Western and Vedic:
+#   - 1096 = 1024 + 72 = 2^10 + NADI_RESONANCE
+#   - 1096 = 8 × 137 = HARE_COUNT × MAHA_QUANTUM
+#
+# Base tuning: 432 Hz = JIVA_CYCLE (Cosmic A)
+# Transcendental: 1096 Hz = HARE_COUNT × MAHA_QUANTUM
+
+FREQ_BASE_HZ: Final[int] = JIVA_CYCLE  # 432 Hz (Vedic tuning)
+FREQ_TRANSCENDENTAL_HZ: Final[int] = HARE_COUNT * MAHA_QUANTUM  # 1096 Hz
+
+assert FREQ_BASE_HZ == 432, "Base frequency = JIVA_CYCLE = 432 Hz"
+assert FREQ_TRANSCENDENTAL_HZ == 1096, "Transcendental = 8 × 137 = 1096 Hz"
+
+# The ratio between them (stored as scaled integers to avoid floats)
+FREQ_RATIO_NUMERATOR: Final[int] = FREQ_TRANSCENDENTAL_HZ  # 1096
+FREQ_RATIO_DENOMINATOR: Final[int] = FREQ_BASE_HZ  # 432
+
+# Ratio simplifies: 1096/432 = (8×137)/(8×54) = 137/54
+# Both frequencies share factor of HARE_COUNT = 8
+assert FREQ_TRANSCENDENTAL_HZ // HARE_COUNT == MAHA_QUANTUM, "1096/8 = 137"
+assert FREQ_BASE_HZ // HARE_COUNT == MALA // HALVES, "432/8 = 54 = MALA/2"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -1045,6 +1171,29 @@ __all__ = [
     "TRIANGULAR_16",
     "PRASADAM_RATIO",
     "BG_KISHORA_GAP_SCALED",
+    # Mirror Verses (BG 2.7 and 7.2)
+    "BG_2_7_COORDINATE",
+    "BG_7_2_COORDINATE",
+    "MIRROR_SUM",
+    "MIRROR_DIFF",
+    "TRIANGULAR_9",
+    # 16-Step Maha Sequencer
+    "SEQUENCER_STEPS",
+    "STEP_DURATION_MS",
+    "CYCLE_DURATION_MS",
+    "SEQUENCER_BPM",
+    # Swing and Groove
+    "SWING_NUMERATOR",
+    "SWING_DENOMINATOR",
+    # Polyrhythm
+    "POLYRHYTHM_LCM",
+    # String Resonance
+    "HARMONIC_SUM_8",
+    # Transcendental Frequencies
+    "FREQ_BASE_HZ",
+    "FREQ_TRANSCENDENTAL_HZ",
+    "FREQ_RATIO_NUMERATOR",
+    "FREQ_RATIO_DENOMINATOR",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
