@@ -648,6 +648,8 @@ def maha_classical(power: int) -> int:
 # α⁻¹: Two paths, one result (PROOF that KSETRAJNA = 1 is necessary)
 MAHA_QUANTUM: Final[int] = POSITION_SUM_TOTAL + KSETRAJNA  # 136 + 1 = 137
 _MAHA_QUANTUM_ALT: Final[int] = MALA + NAKSHATRAS + HALVES  # 108 + 27 + 2 = 137
+# Third path: Binary + Bhakti (explains WHY 1096 = 8×137 = 1024+72!)
+_MAHA_QUANTUM_BINARY: Final[int] = HALVES ** (HALF_SIZE - KSETRAJNA) + NAVA  # 2^7 + 9 = 128 + 9 = 137
 
 # μ (proton/electron): MALA × KRISHNA_POS = 108 × 17 = 1836
 MAHA_MU: Final[int] = MALA * POSITION_SUM_KRISHNA  # 1836
@@ -666,7 +668,7 @@ MAHA_CLASSICAL_4: Final[int] = maha_classical(4)  # 5508
 # =============================================================================
 
 # PROOF 1: KSETRAJNA = 1 is mathematically necessary
-assert MAHA_QUANTUM == _MAHA_QUANTUM_ALT == 137, "Both paths to 137 must match"
+assert MAHA_QUANTUM == _MAHA_QUANTUM_ALT == _MAHA_QUANTUM_BINARY == 137, "Three paths to 137 must match"
 assert KSETRAJNA == MAHA_QUANTUM - POSITION_SUM_TOTAL, "KSETRAJNA = 137 - 136 = 1"
 assert KSETRAJNA == TRINITY - HALVES, "KSETRAJNA = 3 - 2 = 1"
 
