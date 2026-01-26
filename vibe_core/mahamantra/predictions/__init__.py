@@ -29,6 +29,7 @@ from .computation import (
     OCTET,
     PACKED_MAHAMANTRA,
 )
+from .japa import JAPA_INSIGHT, JAPA_PREDICTIONS
 from .maha_generator import MahaGenerator
 from .medicine import MEDICINE_PREDICTIONS
 from .moores_law import ENGINEERING_INSIGHT, MOORES_LAW_PREDICTIONS
@@ -39,6 +40,9 @@ __all__ = [
     # REAL Engineering (Moore's Law)
     "MOORES_LAW_PREDICTIONS",
     "ENGINEERING_INSIGHT",
+    # Japa Singularity
+    "JAPA_PREDICTIONS",
+    "JAPA_INSIGHT",
     # Other Predictions
     "BIOLOGY_PREDICTIONS",
     "CHEMISTRY_PREDICTIONS",
