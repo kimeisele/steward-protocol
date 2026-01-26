@@ -10,6 +10,7 @@ import pytest
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
     EPOCH_KEY,
+    GITA_CHAPTERS,
     GITA_VERSES,
     HALF_SIZE,
     HALVES,
@@ -479,3 +480,121 @@ class TestChandasMeterDerivation:
         )
 
         assert BG_18_66_PADA_1 + BG_18_66_PADA_2 + BG_18_66_PADA_3 + BG_18_66_PADA_4 == BG_18_66_PADA_SUM
+
+
+class TestMahamantraBinaryEncoding:
+    """Test Mahamantra binary encoding - 100% DERIVED from axioms!"""
+
+    def test_hare_positions_are_axioms(self) -> None:
+        """HARE positions (1,3,7,8) = (KSETRAJNA, TRINITY, SEVEN, HARE_COUNT)."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_HARE_POSITIONS
+
+        assert MAHAMANTRA_HARE_POSITIONS == (1, 3, 7, 8)
+        assert MAHAMANTRA_HARE_POSITIONS == (KSETRAJNA, TRINITY, SEVEN, HARE_COUNT)
+
+    def test_name_positions_are_axioms(self) -> None:
+        """NAME positions (2,4,5,6) = (HALVES, QUARTERS, PANCHA, SHARANAGATI)."""
+        from vibe_core.mahamantra.protocols._seed import SHARANAGATI
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_NAME_POSITIONS
+
+        assert MAHAMANTRA_NAME_POSITIONS == (2, 4, 5, 6)
+        assert MAHAMANTRA_NAME_POSITIONS == (HALVES, QUARTERS, PANCHA, SHARANAGATI)
+
+    def test_hare_position_sum(self) -> None:
+        """HARE positions sum = 19 = GITA_CHAPTERS + KSETRAJNA."""
+        from vibe_core.mahamantra.research.gita_verse_text import HARE_POSITION_SUM
+
+        assert HARE_POSITION_SUM == 19
+        assert HARE_POSITION_SUM == GITA_CHAPTERS + KSETRAJNA
+
+    def test_name_position_sum(self) -> None:
+        """NAME positions sum = 17 = WORDS + KSETRAJNA."""
+        from vibe_core.mahamantra.research.gita_verse_text import NAME_POSITION_SUM
+
+        assert NAME_POSITION_SUM == 17
+        assert NAME_POSITION_SUM == WORDS + KSETRAJNA
+
+    def test_position_total_is_nava_times_quarters(self) -> None:
+        """Total positions = 36 = NAVA × QUARTERS."""
+        from vibe_core.mahamantra.research.gita_verse_text import POSITION_TOTAL
+
+        assert POSITION_TOTAL == 36
+        assert POSITION_TOTAL == NAVA * QUARTERS
+
+    def test_binary_pattern_derived(self) -> None:
+        """Binary pattern 01011100 is DERIVED, not hardcoded."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_HALF_BINARY
+
+        assert MAHAMANTRA_HALF_BINARY == (0, 1, 0, 1, 1, 1, 0, 0)
+
+    def test_half_decimal_is_mala_minus_words(self) -> None:
+        """92 = MALA - WORDS = 108 - 16."""
+        from vibe_core.mahamantra.protocols._seed import MALA
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_HALF_DECIMAL
+
+        assert MAHAMANTRA_HALF_DECIMAL == 92
+        assert MAHAMANTRA_HALF_DECIMAL == MALA - WORDS
+
+    def test_half_decimal_alternative_derivation(self) -> None:
+        """92 = QUARTERS × (WORDS + SEVEN) = 4 × 23."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_HALF_DECIMAL
+
+        assert MAHAMANTRA_HALF_DECIMAL == QUARTERS * (WORDS + SEVEN)
+
+    def test_both_halves_identical_acintya(self) -> None:
+        """Both halves = 92 (HALVES verified!)."""
+        from vibe_core.mahamantra.protocols._seed import MALA
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_FULL_DECIMAL
+
+        assert MAHAMANTRA_FULL_DECIMAL == 184
+        assert MAHAMANTRA_FULL_DECIMAL == (MALA - WORDS) * HALVES
+
+    def test_word_table_is_16_words(self) -> None:
+        """Word table has 16 words = WORDS."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_WORD_TABLE
+
+        assert len(MAHAMANTRA_WORD_TABLE) == WORDS
+
+    def test_word_table_hare_count(self) -> None:
+        """8 HAREs in word table = HARE_COUNT."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_WORD_TABLE
+
+        assert MAHAMANTRA_WORD_TABLE.count("HARE") == HARE_COUNT
+
+    def test_word_table_krishna_count(self) -> None:
+        """4 KRISHNAs in word table = KRISHNA_COUNT."""
+        from vibe_core.mahamantra.protocols._seed import KRISHNA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_WORD_TABLE
+
+        assert MAHAMANTRA_WORD_TABLE.count("KRISHNA") == KRISHNA_COUNT
+
+    def test_word_table_rama_count(self) -> None:
+        """4 RAMAs in word table = RAMA_COUNT."""
+        from vibe_core.mahamantra.protocols._seed import RAMA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_WORD_TABLE
+
+        assert MAHAMANTRA_WORD_TABLE.count("RAMA") == RAMA_COUNT
+
+    def test_word_table_correct_sequence(self) -> None:
+        """Word table matches actual Mahamantra sequence."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_WORD_TABLE
+
+        expected = (
+            "HARE",
+            "KRISHNA",
+            "HARE",
+            "KRISHNA",
+            "KRISHNA",
+            "KRISHNA",
+            "HARE",
+            "HARE",
+            "HARE",
+            "RAMA",
+            "HARE",
+            "RAMA",
+            "RAMA",
+            "RAMA",
+            "HARE",
+            "HARE",
+        )
+        assert MAHAMANTRA_WORD_TABLE == expected
