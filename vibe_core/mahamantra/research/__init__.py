@@ -177,6 +177,34 @@ from vibe_core.mahamantra.research.japa import (
     JAPA_INSIGHT,
     JAPA_PREDICTIONS,
 )
+from vibe_core.mahamantra.research.karma_mathematics import (
+    KARMA_COMPARISON,
+    # Yajna types
+    PANCHA_RINA,
+    TRANSFORMATION_PROOF,
+    # Complete analysis
+    CompleteKarmaAnalysis,
+    # Consumption karma
+    ConsumptionKarma,
+    # Karma account
+    KarmaAccount,
+    # Neutralization
+    KarmaNeutralization,
+    KarmicDebt,
+    # Surrender
+    SharanagatiLimb,
+    YajnaType,
+    compute_daily_karma,
+    # Efficiency
+    compute_karma_efficiency,
+    compute_system_efficiency,
+    # Transformation proof
+    karma_transformation_proof,
+    surrender_multiplier,
+)
+from vibe_core.mahamantra.research.karma_mathematics import (
+    KEY_INSIGHT as KARMA_INSIGHT,
+)
 from vibe_core.mahamantra.research.ki_training_paradigm import (
     # Core paradigm
     ATTENTION_FACTOR,
@@ -479,4 +507,21 @@ __all__ = [
     "PARADIGM_MAHAMANTRA",  # Mahamantra paradigm (16,384x capacity)
     "remnant_loss",  # Loss encouraging PRASADAM output
     "KI_TRAINING_INSIGHT",  # Key insight for AI training paradigm
+    # Karma Mathematics (BHOGA vs PRASADAM Proof)
+    "YajnaType",  # Five daily sacrifices (Pancha Maha Yajna)
+    "KarmicDebt",  # The five debts (Pancha Rina)
+    "PANCHA_RINA",  # List of five karmic debts
+    "KarmaAccount",  # Track karma accumulation/neutralization
+    "compute_daily_karma",  # Compute daily karma from consumption
+    "ConsumptionKarma",  # Karma by food type
+    "KARMA_COMPARISON",  # Compare karma across food types
+    "karma_transformation_proof",  # Mathematical proof of transformation
+    "TRANSFORMATION_PROOF",  # The proof constants
+    "KarmaNeutralization",  # How offering neutralizes karma
+    "compute_karma_efficiency",  # Efficiency from prasadam ratio
+    "compute_system_efficiency",  # System efficiency from karma
+    "SharanagatiLimb",  # Six limbs of surrender
+    "surrender_multiplier",  # Neutralization power from surrender
+    "CompleteKarmaAnalysis",  # Full karma analysis
+    "KARMA_INSIGHT",  # Key insight on karma mathematics
 ]
