@@ -1259,9 +1259,11 @@ SWARAS: Final[int] = SEVEN  # 7 (Indian notes: Sa Re Ga Ma Pa Dha Ni)
 SHRUTIS: Final[int] = KSHETRA - HALVES  # 22 (Indian microtones)
 MELAKARTAS: Final[int] = NADI_RESONANCE  # 72 (Carnatic parent scales)
 
-# VEDIC COSMOLOGY - The 14 Lokas (100% Shastra!)
-# Upper 7: Bhu, Bhuvar, Svar, Mahar, Jana, Tapa, Satya
-# Lower 7: Atala, Vitala, Sutala, Talatala, Mahatala, Rasatala, Patala
+# VEDIC COSMOLOGY - The 14 Lokas (SB Canto 5.20-24)
+# Upper 7 (SB 5.20): Bhu, Bhuvar, Svar, Mahar, Jana, Tapa, Satya
+# Lower 7 (SB 5.24): Atala, Vitala, Sutala, Talatala, Mahatala, Rasatala, Patala
+# Bhu-mandala / Bharata-varsha (SB 5.16-19): Best place for heart transformation
+# Prabhupada: Demigods desire human birth here (mode of passion enables surrender)
 SAPTA_LOKA: Final[int] = SEVEN  # 7 upper/lower worlds each
 CHATURDASHA_BHUVAN: Final[int] = HALVES * SEVEN  # 14 = 7 + 7 total worlds
 
@@ -1569,9 +1571,9 @@ SANKHYA_TATTVAS: Final[int] = KSHETRA + KSETRAJNA  # 25
 # Total sense organs (10 indriyas)
 INDRIYA_TOTAL: Final[int] = JNANENDRIYA + KARMENDRIYA  # 10 = TEN
 
-# The 10 Avatars (Dashavatara) - 100% Shastra!
+# The 10 Avatars (Dashavatara) - Srimad Bhagavatam 1.3.26
 # Matsya, Kurma, Varaha, Narasimha, Vamana, Parashurama, Rama, Krishna, Buddha, Kalki
-# 10 Avatars for 10 Indriyas - each Avatar liberates one sense!
+# NOTE: Mathematical equality DASHAVATARA == INDRIYA_TOTAL, not a causal claim!
 DASHAVATARA: Final[int] = INDRIYA_TOTAL  # 10 = PANCHA × HALVES
 
 # =============================================================================
@@ -1620,9 +1622,9 @@ assert SANKHYA_TATTVAS == JIVA_QUALITIES // HALVES, "25 = 50/2 (Jiva's half-pote
 assert INDRIYA_TOTAL == TEN, "Total senses = TEN = 10"
 assert INDRIYA_TOTAL == PANCHA * HALVES, "Senses = 5 × 2 (knowledge + action)"
 
-# Dashavatara verification - 10 Avatars for 10 Senses!
-assert DASHAVATARA == INDRIYA_TOTAL, "10 Avatars = 10 Senses"
-assert DASHAVATARA == TEN, "Dashavatara = TEN"
+# Dashavatara verification (mathematical equality, not causal)
+assert DASHAVATARA == INDRIYA_TOTAL, "DASHAVATARA == INDRIYA_TOTAL (both = 10)"
+assert DASHAVATARA == TEN, "Dashavatara = TEN = 10"
 
 # Shastra verse count verification - ALL DERIVED!
 assert GITA_VERSES == 700, "Bhagavad Gita = 700 verses = SEVEN × TEN²"

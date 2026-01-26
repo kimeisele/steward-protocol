@@ -89,11 +89,19 @@ from vibe_core.mahamantra.protocols._seed import (
     KSETRAJNA,
     MAHA_QUANTUM,
     NAVA,
+    PANCHA,
     PARAMPARA,
     QUALITIES,
     SEVEN,
+    TEN,
     TRINITY,
     WORDS,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    BHAGAVATAM_VERSES as _BHAGAVATAM_VERSES,  # 18,000 (from _seed.py!)
+)
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_VERSES as _GITA_VERSES,  # 700 (from _seed.py!)
 )
 
 # =============================================================================
@@ -105,10 +113,10 @@ MAHA_WORDS: Final[int] = WORDS  # 16 words
 MAHA_SYLLABLES: Final[int] = AKSARA_COUNT  # 32 syllables
 MAHA_CHARACTERS: Final[int] = QUALITIES  # 64 characters (approx)
 
-# Derivable output (conservative estimates)
-GITA_VERSES: Final[int] = 700
-BHAGAVATAM_VERSES: Final[int] = 18_000
-VEDA_VERSES: Final[int] = 100_000  # Approximate total
+# Derivable output (ALL FROM _SEED.PY!)
+GITA_VERSES: Final[int] = _GITA_VERSES  # 700 = SEVEN × TEN²
+BHAGAVATAM_VERSES: Final[int] = _BHAGAVATAM_VERSES  # 18,000 = GITA_CHAPTERS × TEN³
+VEDA_VERSES: Final[int] = TEN**PANCHA  # 100,000 = 10^5 (approximate total)
 
 # The compression is INFINITE because output is unbounded
 # But we can calculate finite ratios
