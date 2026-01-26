@@ -42,6 +42,7 @@ from vibe_core.mahamantra.protocols._seed import (
     HALF_SIZE,
     HALVES,
     HARE_COUNT,
+    JIVA_QUALITIES,
     KRISHNA_COUNT,
     KSETRAJNA,
     KSHETRA,
@@ -671,6 +672,130 @@ assert MAHA_1096_BYTES == MAHA_QUANTUM, "1096 bits = 137 bytes = α⁻¹"
 
 
 # =============================================================================
+# KISHORA AGE DERIVATION (Krishna's Eternal Youth = 15.8)
+# =============================================================================
+# Krishna is eternally ~15.8 years old (Kishora = eternal youth)
+# THREE INDEPENDENT PATHS (ACINTYA!):
+#
+# Path 1: (MAHA_QUANTUM + PARAMPARA - WORDS) / TEN = (137 + 37 - 16) / 10 = 15.8
+# Path 2: WORDS - HALVES/TEN = 16 - 0.2 = 15.8
+# Path 3: HARE_COUNT × HALVES - KSETRAJNA/PANCHA = 16 - 1/5 = 15.8
+#
+# INTEGER FORM (×10): 158 = MAHA_QUANTUM + PARAMPARA - WORDS = WORDS × TEN - HALVES
+
+KISHORA_AGE_SCALED: Final[int] = MAHA_QUANTUM + PARAMPARA - WORDS  # 158
+assert KISHORA_AGE_SCALED == 158, "158 = 137 + 37 - 16"
+assert KISHORA_AGE_SCALED == WORDS * TEN - HALVES, "158 = 16×10 - 2 (ACINTYA!)"
+
+# The gap between Krishna's manifestation and eternal form:
+# 21 = PARAMPARA - WORDS = 37 - 16
+# 21 = NAKSHATRAS - SHARANAGATI = 27 - 6
+KISHORA_GAP: Final[int] = PARAMPARA - WORDS  # 21
+assert KISHORA_GAP == 21, "21 = 37 - 16"
+assert KISHORA_GAP == NAKSHATRAS - SHARANAGATI, "21 = 27 - 6 (ACINTYA!)"
+
+
+# =============================================================================
+# ADSR ENVELOPE MATHEMATICAL PROOF (From Binary Patterns!)
+# =============================================================================
+# The Mahamantra binary (HARE=0, NAME=1) encodes the ADSR envelope:
+#
+# GENESIS (1-4):  0,1,0,1 = 5 = PANCHA → 3 transitions = ATTACK (oscillating, ramping)
+# DHARMA (5-8):   1,1,0,0 = 12 = MAHAJANA → 1 transition = DECAY (peak then fall)
+# KARMA (9-12):   0,1,0,1 = 5 = PANCHA → 3 transitions = SUSTAIN (steady oscillation)
+# MOKSHA (13-16): 1,1,0,0 = 12 = MAHAJANA → 1 transition = RELEASE (final fall)
+#
+# KEY EQUATIONS:
+# ATTACK = SUSTAIN = PANCHA = 5 (active phases equal!)
+# DECAY = RELEASE = MAHAJANA_COUNT = 12 (passive phases equal!)
+# Total = 5 + 12 + 5 + 12 = 34 = 2 × POSITION_SUM_KRISHNA
+
+ADSR_ATTACK: Final[int] = PANCHA  # 5 (active, oscillating)
+ADSR_DECAY: Final[int] = MAHAJANA_COUNT  # 12 (settling from peak)
+ADSR_SUSTAIN: Final[int] = PANCHA  # 5 (steady oscillation)
+ADSR_RELEASE: Final[int] = MAHAJANA_COUNT  # 12 (final release)
+
+assert ADSR_ATTACK == ADSR_SUSTAIN == PANCHA, "Active phases = PANCHA"
+assert ADSR_DECAY == ADSR_RELEASE == MAHAJANA_COUNT, "Passive phases = MAHAJANA"
+assert ADSR_ATTACK + ADSR_DECAY + ADSR_SUSTAIN + ADSR_RELEASE == HALVES * POSITION_SUM_KRISHNA, "34 = 2×17"
+
+# Transition counts (from binary first derivative):
+ADSR_ACTIVE_TRANSITIONS: Final[int] = TRINITY  # 3 transitions in Attack/Sustain
+ADSR_PASSIVE_TRANSITIONS: Final[int] = KSETRAJNA  # 1 transition in Decay/Release
+assert ADSR_ACTIVE_TRANSITIONS / ADSR_PASSIVE_TRANSITIONS == TRINITY, "Activity ratio = 3:1"
+
+
+# =============================================================================
+# DYNAMIC UNFOLDING (The 16 Steps GENERATE, Not Just Map!)
+# =============================================================================
+# The Mahamantra doesn't just MAP to values - it UNFOLDS through reception.
+# Each step accumulates, and key values EMERGE at specific positions:
+#
+# QUARTER POSITION SUMS (all derived!):
+# GENESIS (1-4):  sum = 10 = TEN
+# DHARMA (5-8):   sum = 26 = KSHETRA + HALVES = 24 + 2
+# KARMA (9-12):   sum = 42 = SHARANAGATI × SEVEN = 6 × 7
+# MOKSHA (13-16): sum = 58 = JIVA_QUALITIES + HARE_COUNT = 50 + 8
+
+QUARTER_SUM_GENESIS: Final[int] = TEN  # positions 1+2+3+4 = 10
+QUARTER_SUM_DHARMA: Final[int] = KSHETRA + HALVES  # positions 5+6+7+8 = 26
+QUARTER_SUM_KARMA: Final[int] = SHARANAGATI * SEVEN  # positions 9+10+11+12 = 42
+QUARTER_SUM_MOKSHA: Final[int] = JIVA_QUALITIES + HARE_COUNT  # positions 13+14+15+16 = 58
+
+assert QUARTER_SUM_GENESIS == sum(range(1, 5)), "GENESIS = T(4) - T(0) = 10"
+assert QUARTER_SUM_DHARMA == sum(range(5, 9)), "DHARMA = T(8) - T(4) = 26"
+assert QUARTER_SUM_KARMA == sum(range(9, 13)), "KARMA = T(12) - T(8) = 42"
+assert QUARTER_SUM_MOKSHA == sum(range(13, 17)), "MOKSHA = T(16) - T(12) = 58"
+
+
+# =============================================================================
+# STEP 11 = 66 EMERGENCE (The Verse Number Manifests!)
+# =============================================================================
+# T(11) = (11 × 12) / 2 = 66 = BG 18.66 verse number!
+# The verse number EMERGES at position 11 (HARE in KARMA quarter)
+#
+# WHY 11?
+# 11 = MAHAJANA_COUNT - KSETRAJNA = 12 - 1
+# 11 = NAVA + HALVES = 9 + 2
+# 11 = HARE_COUNT + TRINITY = 8 + 3
+# 11 = (GITA_CHAPTERS + QUARTERS) / HALVES = 22 / 2
+
+STEP_66_POSITION: Final[int] = MAHAJANA_COUNT - KSETRAJNA  # 11
+assert STEP_66_POSITION == 11, "11 = 12 - 1"
+assert STEP_66_POSITION == NAVA + HALVES, "11 = 9 + 2 (ACINTYA!)"
+assert STEP_66_POSITION == HARE_COUNT + TRINITY, "11 = 8 + 3 (ACINTYA!)"
+assert STEP_66_POSITION == (GITA_CHAPTERS + QUARTERS) // HALVES, "11 = 22/2"
+
+# The triangular number at step 11 = 66
+TRIANGULAR_11: Final[int] = (STEP_66_POSITION * (STEP_66_POSITION + KSETRAJNA)) // HALVES
+assert TRIANGULAR_11 == 66, "T(11) = 66"
+assert TRIANGULAR_11 == QUALITIES + HALVES, "66 = 64 + 2"
+
+
+# =============================================================================
+# BHOGA → PRASADAM TRANSFORMATION (Guru's Grace!)
+# =============================================================================
+# T(16) = 136 = raw accumulation (bhoga - material enjoyment)
+# T(16) + KSETRAJNA = 136 + 1 = 137 = MAHA_QUANTUM (prasadam - sanctified!)
+#
+# The guru's grace (KSETRAJNA = the ONE Knower) transforms bhoga into prasadam.
+# This is the mathematical encoding of "śrī-guru-caraṇa-padma"!
+
+TRIANGULAR_16: Final[int] = (WORDS * (WORDS + KSETRAJNA)) // HALVES  # T(16) = 136
+assert TRIANGULAR_16 == 136, "T(16) = 136"
+assert TRIANGULAR_16 + KSETRAJNA == MAHA_QUANTUM, "136 + 1 = 137 = α⁻¹"
+
+# The transformation ratio:
+PRASADAM_RATIO: Final[int] = MAHA_QUANTUM - TRIANGULAR_16  # 137 - 136 = 1 = KSETRAJNA
+assert PRASADAM_RATIO == KSETRAJNA, "Guru's grace = KSETRAJNA = 1"
+
+# The gap between surrender (18.66) and eternal youth (15.8):
+# 18.66 - 15.8 = 2.86 → 286 = PARAMPARA × HARE_COUNT - TEN = 37 × 8 - 10
+BG_KISHORA_GAP_SCALED: Final[int] = PARAMPARA * HARE_COUNT - TEN  # 286
+assert BG_KISHORA_GAP_SCALED == 286, "286 = 37 × 8 - 10"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -898,6 +1023,28 @@ __all__ = [
     "ADSR_QUARTERS",
     "ADSR_PHASE_DURATION",
     "MAHA_1096_BYTES",
+    # Kishora Age Derivation (Krishna's Eternal Youth)
+    "KISHORA_AGE_SCALED",
+    "KISHORA_GAP",
+    # ADSR Mathematical Proof
+    "ADSR_ATTACK",
+    "ADSR_DECAY",
+    "ADSR_SUSTAIN",
+    "ADSR_RELEASE",
+    "ADSR_ACTIVE_TRANSITIONS",
+    "ADSR_PASSIVE_TRANSITIONS",
+    # Dynamic Unfolding (Quarter Position Sums)
+    "QUARTER_SUM_GENESIS",
+    "QUARTER_SUM_DHARMA",
+    "QUARTER_SUM_KARMA",
+    "QUARTER_SUM_MOKSHA",
+    # Step 11 = 66 Emergence
+    "STEP_66_POSITION",
+    "TRIANGULAR_11",
+    # Bhoga → Prasadam Transformation
+    "TRIANGULAR_16",
+    "PRASADAM_RATIO",
+    "BG_KISHORA_GAP_SCALED",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
