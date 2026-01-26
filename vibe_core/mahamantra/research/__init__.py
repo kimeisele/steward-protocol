@@ -130,6 +130,15 @@ from vibe_core.mahamantra.research.moores_law import (
     ENGINEERING_INSIGHT,
     MOORES_LAW_PREDICTIONS,
 )
+from vibe_core.mahamantra.research.unified_compute import (
+    MEMORY_HIERARCHY_MAP,
+    PARALLELISM_INSIGHT,
+    SIMD_LANES,
+    UnifiedComputeUnit,
+    calculate_optimal_lotus_depth,
+    estimate_cache_hit_rate,
+    get_memory_tier,
+)
 
 __all__ = [
     # REAL Engineering Solutions (Benchmarked)
@@ -151,6 +160,14 @@ __all__ = [
     # Engineering Predictions
     "MOORES_LAW_PREDICTIONS",
     "ENGINEERING_INSIGHT",
+    # Unified Compute (Hardware Revolution)
+    "UnifiedComputeUnit",
+    "SIMD_LANES",
+    "PARALLELISM_INSIGHT",
+    "MEMORY_HIERARCHY_MAP",
+    "calculate_optimal_lotus_depth",
+    "get_memory_tier",
+    "estimate_cache_hit_rate",
     # Japa Singularity
     "JAPA_PREDICTIONS",
     "JAPA_INSIGHT",
