@@ -376,6 +376,43 @@ assert VIBRATION_PER_WORD == MAHA_QUANTUM + TEN, "147 = 137 + 10 = α⁻¹ + Vib
 # The Fine Structure Constant (α⁻¹ ≈ 137) is encoded in the Mahamantra vibration!
 # Plus TEN = Vibhuti (Chapter 10 of Gita, Krishna's opulences)
 
+# =============================================================================
+# CHANDAS (METER) DERIVATION - BG 18.66 Binary Pattern!
+# =============================================================================
+# Sanskrit prosody is BINARY: laghu (short=0) and guru (long=1)
+# BG 18.66 is in ANUSHTUBH meter: 4 padas × 8 syllables = 32
+
+# Syllable counts
+BG_18_66_TOTAL_SYLLABLES: Final[int] = AKSARA_COUNT  # 32
+BG_18_66_GURU_COUNT: Final[int] = WORDS + QUARTERS  # 20 long syllables
+BG_18_66_LAGHU_COUNT: Final[int] = MAHAJANA_COUNT  # 12 short syllables
+
+assert BG_18_66_TOTAL_SYLLABLES == 32, "32 syllables"
+assert BG_18_66_GURU_COUNT == 20, "20 guru = WORDS + QUARTERS"
+assert BG_18_66_LAGHU_COUNT == 12, "12 laghu = MAHAJANA"
+assert BG_18_66_GURU_COUNT + BG_18_66_LAGHU_COUNT == BG_18_66_TOTAL_SYLLABLES
+
+# Each pada as binary (G=1, L=0) converted to decimal
+# Pada 1: GLGGLLGG = 10110011 = 179
+# Pada 2: GGGLLGGL = 11100110 = 230
+# Pada 3: LGGGLGGG = 01110111 = 119
+# Pada 4: GLLGLGLG = 10010101 = 149
+
+BG_18_66_PADA_1: Final[int] = MAHA_QUANTUM + PARAMPARA + PANCHA  # 137+37+5 = 179
+BG_18_66_PADA_2: Final[int] = NADI_RESONANCE * TRINITY + HALVES * SEVEN  # 72×3+2×7 = 230
+BG_18_66_PADA_3: Final[int] = MAHA_QUANTUM - WORDS - HALVES  # 137-16-2 = 119
+BG_18_66_PADA_4: Final[int] = MAHA_QUANTUM + MAHAJANA_COUNT  # 137+12 = 149
+
+assert BG_18_66_PADA_1 == 179, "Pada 1 = 179"
+assert BG_18_66_PADA_2 == 230, "Pada 2 = 230"
+assert BG_18_66_PADA_3 == 119, "Pada 3 = 119"
+assert BG_18_66_PADA_4 == 149, "Pada 4 = 149"
+
+# Sum of all padas = GITA_VERSES - WORDS - SEVEN!
+BG_18_66_PADA_SUM: Final[int] = BG_18_66_PADA_1 + BG_18_66_PADA_2 + BG_18_66_PADA_3 + BG_18_66_PADA_4
+assert BG_18_66_PADA_SUM == 677, "Sum = 677"
+assert BG_18_66_PADA_SUM == GITA_VERSES - WORDS - SEVEN, "677 = 700 - 16 - 7"
+
 
 # =============================================================================
 # VIBRATION ANALYSE STRUKTUR
@@ -565,6 +602,15 @@ __all__ = [
     "RAMA_VIBRATION",
     "MAHAMANTRA_VIBRATION",
     "VIBRATION_PER_WORD",
+    # Chandas (Meter) Derivation
+    "BG_18_66_TOTAL_SYLLABLES",
+    "BG_18_66_GURU_COUNT",
+    "BG_18_66_LAGHU_COUNT",
+    "BG_18_66_PADA_1",
+    "BG_18_66_PADA_2",
+    "BG_18_66_PADA_3",
+    "BG_18_66_PADA_4",
+    "BG_18_66_PADA_SUM",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
