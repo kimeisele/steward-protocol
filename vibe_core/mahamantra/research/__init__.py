@@ -393,6 +393,34 @@ from vibe_core.mahamantra.research.shabda_translation import (
     translate_via_vibration,
     vibration_to_sanskrit,
 )
+from vibe_core.mahamantra.research.siksastakam_engineering import (
+    ENGINEERING_EFFECTS,  # The 7 effects as engineering principles
+    KAIRAVA_LOTUS,  # White lotus blooms under moonlight (for conditioned soul)
+    KALI_YUGA_OPTIMIZATION,  # Maximum efficiency for minimum capacity
+    MOONLIGHT,  # O(1) direct access = cool = mādhurya
+    PADMA_LOTUS,  # Day lotus blooms under sunlight
+    REFLECTION_PRINCIPLES,  # Material reflects spiritual (inverted tree)
+    REMAINING_VERSES,  # 7 = SEVEN (verses 2-8)
+    # Structure constants
+    SIKSASTAKAM_VERSES,  # 8 = OCTET (Chaitanya's only written verses)
+    SUNLIGHT,  # O(n) brute force = heat = aiśvarya
+    VERSE_ONE_EFFECTS,  # 7 = SEVEN (effects in verse 1)
+    # Engineering effects
+    EngineeringEffect,
+    # Illumination types (Moonlight vs Sunlight)
+    IlluminationType,
+    # Kali Yuga optimization
+    KaliYugaOptimization,
+    # Lotus types (Night lotus vs Day lotus)
+    LotusType,
+    # Reflection principle (BG 15.1)
+    ReflectionPrinciple,
+    # Effect enumeration
+    SankirtanaEffect,
+)
+from vibe_core.mahamantra.research.siksastakam_engineering import (
+    KEY_INSIGHT as SIKSASTAKAM_INSIGHT,
+)
 from vibe_core.mahamantra.research.spiritual_tdd import (
     # Derived constants
     DERIVED_CONSTANTS,
@@ -709,4 +737,25 @@ __all__ = [
     "AcintyaFramework",  # Complete acintya mathematical framework
     "ACINTYA_FRAMEWORK",  # The canonical framework instance
     "ACINTYA_INSIGHT",  # Key insight on acintya mathematics
+    # Śikṣāṣṭakam Engineering (8 Verses = Computing Principles)
+    "SIKSASTAKAM_VERSES",  # 8 = OCTET (Chaitanya's only written verses!)
+    "VERSE_ONE_EFFECTS",  # 7 = SEVEN (effects in verse 1)
+    "REMAINING_VERSES",  # 7 = SEVEN (verses 2-8)
+    "SankirtanaEffect",  # The 7 effects enumeration
+    "EngineeringEffect",  # Engineering translation of spiritual effect
+    "ENGINEERING_EFFECTS",  # All 7 effects as engineering principles
+    # Moonlight Principle (candrikā for conditioned soul)
+    "IlluminationType",  # Sun vs Moon illumination
+    "SUNLIGHT",  # O(n) brute force = heat = aiśvarya (burns!)
+    "MOONLIGHT",  # O(1) direct access = cool = mādhurya (soothes)
+    "LotusType",  # Day lotus vs Night lotus
+    "KAIRAVA_LOTUS",  # White lotus blooms under MOONLIGHT (for conditioned)
+    "PADMA_LOTUS",  # Day lotus blooms under sunlight
+    # Kali Yuga Maximum Efficiency
+    "KaliYugaOptimization",  # Max effect for min capacity
+    "KALI_YUGA_OPTIMIZATION",  # The optimization theorem
+    # Reflection Principle (BG 15.1 - Inverted Tree)
+    "ReflectionPrinciple",  # Material reflects spiritual (not derives!)
+    "REFLECTION_PRINCIPLES",  # All 7 reflection mappings
+    "SIKSASTAKAM_INSIGHT",  # Key insight on Siksastakam engineering
 ]
