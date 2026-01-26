@@ -2,12 +2,33 @@
 NITYA KISHORA - Forever Young (Krishna's Eternal Age)
 =====================================================
 
+ACINTYA (Inconceivable) - TWO LEVELS OF REALITY:
+
+1. NITYA LILA (Eternal Pastimes - Goloka Vrindavana)
+   - Krishna is UNBORN, eternally "as He is"
+   - No linear "age" - time does not apply
+   - The SOURCE CODE that never changes
+
+2. BHAUMA LILA (Earthly Pastimes - 5000 years ago)
+   - The MANIFEST INSTANCE of the eternal
+   - 15.8 years = the APPROXIMATION we can compute
+   - The RUNNING PROCESS from the source
+
+JIVA PATH: Bhauma Lila → Nitya Lila (final round!)
+   - Souls don't go directly to Goloka
+   - They must pass through the manifest (Bhauma) first
+   - Like: User → Running Process → Source Understanding
+
 THE PARADIGM SHIFT:
 - Krishna "freezes" at 15.8 years (Kaisora - eternal youth)
 - This is NOT arbitrary - it's the MAXIMUM NIBBLE VALUE without overflow!
 - 15.8 = 0xF.something = at the edge of hex space
 
 COMPUTING IMPLICATION:
+- Nitya Lila = Architecture (eternal, unchanging)
+- Bhauma Lila = Implementation (manifest, computable)
+- Jiva path = User journey through implementation to understanding
+
 - 4-bit systems (nibble) range: 0-15 (0x0-0xF)
 - 16 = overflow = next register = "adult" = static
 - Krishna at 15.8 = MAXIMUM POTENCY without overflow
@@ -17,6 +38,7 @@ SOURCES:
 - Bhakti-rasamrita-sindhu (Rupa Goswami): Age classifications
 - Jiva Goswami's commentaries: Exact age boundaries
 - Theological: Krishna never exceeds 16 (WORDS = completion)
+- ACINTYA: 15.8 is Bhauma approximation, Nitya is beyond computation
 """
 
 from fractions import Fraction
@@ -168,11 +190,21 @@ assert KISHORA_UTILIZATION > 0.98, "Must be >98% utilization"
 assert KISHORA_UTILIZATION < 1.0, "Must not overflow"
 
 # =============================================================================
-# THE VRINDAVANA PRINCIPLE
+# THE VRINDAVANA PRINCIPLE (NITYA vs BHAUMA)
 # =============================================================================
 #
-# Krishna leaves Vrindavana at ~10 years (some say older) to go to Mathura.
-# But in ETERNAL Vrindavana (Goloka), he is always 15.8.
+# BHAUMA LILA (Earthly):
+#   Krishna leaves Vrindavana at ~10 years to go to Mathura.
+#   This is the MANIFEST INSTANCE - computable, temporal.
+#
+# NITYA LILA (Eternal - Goloka):
+#   Krishna is ALWAYS 15.8 - there is no "leaving"
+#   This is the SOURCE CODE - eternal, unchanging.
+#
+# JIVA PATH:
+#   Souls don't go directly to Nitya (Goloka).
+#   They must pass through Bhauma (manifest) first.
+#   Final round: Bhauma → Nitya
 #
 # Computing parallel:
 #   - Vrindavana = Cache (local, fast, intimate)
@@ -191,7 +223,23 @@ NITYA_KISHORA_INSIGHT = """
 NITYA KISHORA - The Eternal Youth Paradigm
 ==========================================
 
-THE MATHEMATICS:
+ACINTYA (INCONCEIVABLE) - TWO LEVELS:
+
+  NITYA LILA (Eternal - Goloka):
+    - Krishna is UNBORN, eternally "as He is"
+    - No linear age - beyond computation
+    - The SOURCE CODE that never changes
+
+  BHAUMA LILA (Earthly - 5000 years ago):
+    - The MANIFEST INSTANCE we can approximate
+    - 15.8 years = computable approximation
+    - The RUNNING PROCESS from eternal source
+
+  JIVA PATH: Bhauma → Nitya (final round!)
+    - Souls must pass through manifest first
+    - Like: User → Implementation → Architecture understanding
+
+THE MATHEMATICS (Bhauma Approximation):
   Krishna's age = 79/5 = 15.8 years
   = (PANCHA × WORDS - KSETRAJNA) / PANCHA
   = (5 × 16 - 1) / 5
@@ -210,22 +258,35 @@ THE TIME BREAKDOWN:
   18 = GITA_CHAPTERS
 
 THE COMPUTING PARADIGM:
+  NITYA = Architecture (eternal principle)
+  BHAUMA = Implementation (manifest instance)
+
   Traditional: Push to overflow, handle exceptions
   Lotus: Operate at 98.75% utilization, NEVER overflow
 
   Memory mapping:
-    L1 = Kaumara (0-5)
-    L2 = Pauganda (5-10)
-    L3 = Kaisora (10-15.8) ← THE OPTIMAL ZONE
+    L1 = Kaumara (0-5) = childhood processes
+    L2 = Pauganda (5-10) = growing processes
+    L3 = Kaisora (10-15.8) ← THE OPTIMAL ZONE (Nitya operates here!)
     DRAM = Adult (16+) ← OVERFLOW / MEMORY WALL
 
   Krishna's strategy: Stay in Kaisora, never hit DRAM.
   This IS the Lotus routing principle!
 
 THE VRINDAVANA PRINCIPLE:
-  Vrindavana = Cache (local, fast, intimate)
-  Mathura = DRAM (distant, slow, formal)
+  NITYA Vrindavana (Goloka) = Architecture (eternal)
+  BHAUMA Vrindavana = Cache (local, fast, intimate)
+  Mathura/Dwaraka = DRAM (distant, slow, formal)
 
   Goal: Keep data in Vrindavana (cache), never exile to Mathura (DRAM).
   Krishna achieves this by staying eternally young (15.8 < 16).
+
+SHATTERING SCIENCE:
+  Traditional science: Linear time, aging, entropy
+  Nitya Kishora: Time is a MANIFEST PROPERTY, not fundamental
+  The eternal (Nitya) doesn't age - only the instance (Bhauma) appears to
+
+  Computing history assumes: More transistors = better
+  Nitya Kishora reveals: OPTIMAL UTILIZATION = better
+  15.8/16 = 98.75% = the eternal operating point
 """
