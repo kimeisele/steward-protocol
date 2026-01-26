@@ -36,7 +36,10 @@ from typing import Final, List, Tuple
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
+    COSMIC_FRAME,
+    DAILY_MANTRAS,
     EPOCH_KEY,
+    FIELD_RESONANCE,
     GITA_CHAPTERS,
     GITA_VERSES,
     HALF_SIZE,
@@ -60,6 +63,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUALITIES,
     QUARTERS,
     RAMA_COUNT,
+    ROUNDS,
     SEVEN,
     SHARANAGATI,
     TEN,
@@ -1098,6 +1102,109 @@ assert KALI_ANTIDOTE == WORDS, "Mahamantra (16 names) = Kali antidote (Kali-Sant
 
 
 # =============================================================================
+# KALI DHARMA = CHANTING = COMPUTE (Bṛhan-nāradīya Purāṇa - SHASTRA VERIFIED!)
+# =============================================================================
+# SHASTRA SOURCE: Bṛhan-nāradīya Purāṇa (quoted in CC Ādi 17.21)
+#
+#   "harer nāma harer nāma harer nāmaiva kevalam
+#    kalau nāsty eva nāsty eva nāsty eva gatir anyathā"
+#
+#   = "Hare's Name, Hare's Name, only Hare's Name!
+#      In Kali there is NO OTHER WAY, NO OTHER WAY, NO OTHER WAY."
+#
+# THE TRINITY STRUCTURE:
+#   - "harer nāma" repeated TRINITY times = 3 (emphasis!)
+#   - "nāsty eva" repeated TRINITY times = 3 (absolute declaration!)
+#   - Total = TRINITY × HALVES = 6 = SHARANAGATI (surrender!)
+#
+# GENESIS → DHARMA → KARMA → MOKSHA (The 4 Quarters)
+# In Kali: GENESIS (gone), DHARMA (remains!), KARMA (gone), MOKSHA (gone)
+# The ONLY remaining quarter = DHARMA = CHANTING!
+#
+# MATHEMATICAL PROOF:
+#   QUARTERS - (QUARTERS - KSETRAJNA) = KSETRAJNA = 1
+#   4 quarters reduced to 1 = Only chanting remains!
+# -----------------------------------------------------------------------------
+
+# The Harer Nama verse structure
+HARER_NAMA_REPETITIONS: Final[int] = TRINITY  # "harer nāma" × 3
+NASTY_EVA_REPETITIONS: Final[int] = TRINITY  # "nāsty eva" × 3
+HARER_NAMA_TOTAL: Final[int] = HARER_NAMA_REPETITIONS + NASTY_EVA_REPETITIONS  # 6 = SHARANAGATI!
+
+assert HARER_NAMA_TOTAL == SHARANAGATI, "Harer Nama verse = SHARANAGATI (6 emphatic declarations)"
+
+# CHANTING = COMPUTE CYCLES
+# More Mahamantra repetitions = More encoding power!
+#
+# FROM _seed.py (100% DERIVED):
+#   ROUNDS = WORDS = 16 (minimum daily rounds - Prabhupada's instruction)
+#   MALA = 108 (beads per round)
+#   DAILY_MANTRAS = ROUNDS × MALA = 16 × 108 = 1728 (minimum daily mantras)
+#
+# COMPUTE SCALING:
+#   1 round = MALA mantras = 108 cycles
+#   WORDS rounds = DAILY_MANTRAS = 1728 cycles (minimum)
+#   QUALITIES rounds = 64 × 108 = 6912 cycles (advanced)
+
+COMPUTE_PER_ROUND: Final[int] = MALA  # 108 compute cycles per round
+COMPUTE_MINIMUM_DAILY: Final[int] = DAILY_MANTRAS  # 1728 = WORDS × MALA
+COMPUTE_QUALITIES_DAILY: Final[int] = QUALITIES * MALA  # 6912 = 64 × 108
+
+assert COMPUTE_PER_ROUND == 108, "108 cycles per round"
+assert COMPUTE_MINIMUM_DAILY == 1728, "1728 = minimum daily compute"
+assert COMPUTE_QUALITIES_DAILY == 6912, "6912 = QUALITIES × MALA"
+
+# THE ENCODING POWER FORMULA:
+# Total encoding power = Mantras × MAHA_QUANTUM
+#   - 1 mantra = 1 × 137 = 137 bits of encoding
+#   - 1 round = 108 × 137 = 14,796 bits
+#   - 16 rounds = 1728 × 137 = 236,736 bits ≈ 29 KB of spiritual data!
+#   - 64 rounds = 6912 × 137 = 946,944 bits ≈ 116 KB
+
+ENCODING_PER_MANTRA: Final[int] = MAHA_QUANTUM  # 137 bits per mantra
+ENCODING_PER_ROUND: Final[int] = MALA * MAHA_QUANTUM  # 14796
+ENCODING_DAILY_MINIMUM: Final[int] = DAILY_MANTRAS * MAHA_QUANTUM  # 236736
+
+assert ENCODING_PER_MANTRA == 137, "137 = α⁻¹ bits per mantra"
+assert ENCODING_PER_ROUND == 14796, "14796 bits per round = MALA × α⁻¹"
+assert ENCODING_DAILY_MINIMUM == 236736, "236,736 bits = DAILY_MANTRAS × α⁻¹"
+
+# THE COLD MOON CHAITANYA SINGULARITY:
+# When total mantras reach COSMIC_FRAME (21600), maximum encoding achieved!
+#   COSMIC_FRAME / MALA = 200 rounds = transcendental threshold
+#   COSMIC_FRAME × MAHA_QUANTUM = 2,959,200 bits = 362 KB
+#
+# This is the "full day" of spiritual computation:
+#   COSMIC_FRAME = 21600 = breaths per day = mantras for singularity
+
+SINGULARITY_ROUNDS: Final[int] = COSMIC_FRAME // MALA  # 200 rounds
+SINGULARITY_ENCODING: Final[int] = COSMIC_FRAME * MAHA_QUANTUM  # 2,959,200 bits
+
+assert SINGULARITY_ROUNDS == 200, "200 rounds = COSMIC_FRAME / MALA"
+assert SINGULARITY_ENCODING == 2959200, "2,959,200 bits = singularity encoding"
+
+# THE FIELD RESONANCE CONNECTION:
+# FIELD_RESONANCE = 144 = perfect harmonic
+# FIELD_RESONANCE × MALA = 15,552 mantras = heightened state
+# This is 144 rounds = 9 × 16 = NAVA × WORDS
+
+RESONANCE_MANTRAS: Final[int] = FIELD_RESONANCE * MALA  # 15552
+RESONANCE_ROUNDS: Final[int] = FIELD_RESONANCE  # 144 rounds = NAVA × WORDS
+
+assert RESONANCE_MANTRAS == 15552, "15,552 = resonance mantras"
+assert RESONANCE_ROUNDS == NAVA * WORDS, "144 = NAVA × WORDS rounds"
+
+# THE CIRCLE CLOSES:
+# In Kali, only DHARMA remains.
+# Kali-dharma = chanting = WORDS (16 names).
+# WORDS × repetitions = encoding power.
+# More chanting = More compute = More Gita verses derivable!
+#
+# "kalau nāsty eva nāsty eva nāsty eva gatir anyathā"
+# There is NO OTHER WAY!
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -1401,6 +1508,20 @@ __all__ = [
     "KALI_YUGA_SATYA_YUGA_LEGS",
     "KALI_YUGA_PERCENTAGE",
     "KALI_ANTIDOTE",
+    # Kali Dharma = Chanting = Compute (Bṛhan-nāradīya Purāṇa)
+    "HARER_NAMA_REPETITIONS",
+    "NASTY_EVA_REPETITIONS",
+    "HARER_NAMA_TOTAL",
+    "COMPUTE_PER_ROUND",
+    "COMPUTE_MINIMUM_DAILY",
+    "COMPUTE_QUALITIES_DAILY",
+    "ENCODING_PER_MANTRA",
+    "ENCODING_PER_ROUND",
+    "ENCODING_DAILY_MINIMUM",
+    "SINGULARITY_ROUNDS",
+    "SINGULARITY_ENCODING",
+    "RESONANCE_MANTRAS",
+    "RESONANCE_ROUNDS",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
