@@ -543,6 +543,50 @@ from vibe_core.mahamantra.research.lotus_tree import (
     LotusArrayInt,
     LotusRadix,
 )
+from vibe_core.mahamantra.research.maha_compression import (
+    ALL_COMPRESSION_PROOFS,
+    ALL_INTENT_LEVELS,
+    ALL_OBSERVERS,
+    ALL_PHYSICS_CONSTANTS,
+    ALL_SAMSKARA_LEVELS,
+    BHAGAVAN_CAPACITY,
+    BHAGAVATAM_COMPRESSION_RATIO,
+    BHAGAVATAM_VERSES,
+    COLLECTIVE_SAMSKARA,
+    ELECTRON_MASS_RATIO,
+    FINE_STRUCTURE,
+    GITA_COMPRESSION_RATIO,
+    GITA_VERSES,
+    INDIVIDUAL_SAMSKARA,
+    KSETRAJNA_CAPACITY,
+    MAHA_ALGORITHM_STEPS,
+    MAHA_CHARACTERS,
+    MAHA_STEP_1,
+    MAHA_STEP_2,
+    MAHA_STEP_3,
+    MAHA_STEP_4,
+    MAHA_SYLLABLES,
+    MAHA_WORDS,
+    PARAMATMA_CAPACITY,
+    PLANCK_CONSTANT,
+    RAJAS_INTENT,
+    SATTVA_INTENT,
+    SPEED_OF_LIGHT,
+    SUDDHA_BHAKTI_INTENT,
+    TAMAS_INTENT,
+    UNIVERSAL_SAMSKARA,
+    VEDA_COMPRESSION_RATIO,
+    VEDA_VERSES,
+    CompressionProof,
+    IntentLevel,
+    MahaAlgorithm,
+    ObserverCapacity,
+    PhysicsConstant,
+    SamskaraLevel,
+)
+from vibe_core.mahamantra.research.maha_compression import (
+    KEY_INSIGHT as MAHA_COMPRESSION_INSIGHT,
+)
 from vibe_core.mahamantra.research.maha_generator import MahaGenerator
 from vibe_core.mahamantra.research.mantra_computation_bridge import (
     # Krishna compensation
@@ -1283,4 +1327,45 @@ __all__ = [
     "JIVA_CONSCIOUSNESS",  # Anu (infinitesimal)
     "CONSCIOUSNESS_LEVELS",  # Both levels
     "GOLOKA_INSIGHT",  # Key insight: Mathematics of Spiritual Realm
+    # Maha Compression (Ultimate Algorithm)
+    "MAHA_WORDS",  # 16 words
+    "MAHA_SYLLABLES",  # 32 syllables
+    "MAHA_CHARACTERS",  # 64 characters
+    "GITA_VERSES",  # 700
+    "BHAGAVATAM_VERSES",  # 18,000
+    "VEDA_VERSES",  # 100,000
+    "GITA_COMPRESSION_RATIO",  # 43.75x
+    "BHAGAVATAM_COMPRESSION_RATIO",  # 1,125x
+    "VEDA_COMPRESSION_RATIO",  # 6,250x
+    "IntentLevel",  # Intent purity level
+    "TAMAS_INTENT",  # Impure (ignorance)
+    "RAJAS_INTENT",  # Mixed (passion)
+    "SATTVA_INTENT",  # Pure (goodness)
+    "SUDDHA_BHAKTI_INTENT",  # Transcendental
+    "ALL_INTENT_LEVELS",  # 4 levels = QUARTERS
+    "PhysicsConstant",  # Physics constant with samskara
+    "FINE_STRUCTURE",  # α⁻¹ ≈ 137
+    "PLANCK_CONSTANT",  # h
+    "SPEED_OF_LIGHT",  # c
+    "ELECTRON_MASS_RATIO",  # mp/me
+    "ALL_PHYSICS_CONSTANTS",  # 4 constants
+    "SamskaraLevel",  # Samskara level
+    "INDIVIDUAL_SAMSKARA",  # Previous lives
+    "COLLECTIVE_SAMSKARA",  # Cultural karma
+    "UNIVERSAL_SAMSKARA",  # Previous kalpas → physics!
+    "ALL_SAMSKARA_LEVELS",  # 3 levels = TRINITY
+    "ObserverCapacity",  # Observer capacity
+    "KSETRAJNA_CAPACITY",  # Individual (anu)
+    "PARAMATMA_CAPACITY",  # Supersoul
+    "BHAGAVAN_CAPACITY",  # Supreme (vibhu)
+    "ALL_OBSERVERS",  # 3 observers = TRINITY
+    "MahaAlgorithm",  # Algorithm step
+    "MAHA_STEP_1",  # Ksetrajna: generate intent
+    "MAHA_STEP_2",  # Krishna: sanction
+    "MAHA_STEP_3",  # Prakriti: execute
+    "MAHA_STEP_4",  # Karma: record samskara
+    "MAHA_ALGORITHM_STEPS",  # 4 steps = QUARTERS
+    "CompressionProof",  # Compression proof
+    "ALL_COMPRESSION_PROOFS",  # 7 proofs = SEVEN
+    "MAHA_COMPRESSION_INSIGHT",  # Key insight: Ultimate Algorithm
 ]
