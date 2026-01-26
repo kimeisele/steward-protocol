@@ -59,16 +59,20 @@ from typing import Final
 # MAHAMANTRA IMPORTS (Single Source of Truth)
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
+    FIELD_RESONANCE,  # = 144 = CHAITANYA_SINGULARITY!
+    HALF_SIZE,  # = 8 = OCTET
     HALVES,
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
     MALA,
     MURALI_FREQ,
     MURALI_HOLES,
+    NADI_RESONANCE,  # = 72 = ADI_GURU_FACTOR
     NAVA,
     PANCHA,
     PARAMPARA,
     QUALITIES,
+    QUARTERS,  # = 4 (already in _seed.py!)
     SEMITONES,
     SHARANAGATI,
     SHRUTIS,
@@ -82,10 +86,11 @@ from vibe_core.mahamantra.protocols._seed import (
     VINA_STRINGS,
 )
 
-# Derived constants
-OCTET: Final[int] = 8
-QUARTERS: Final[int] = 4
-ADI_GURU_FACTOR: Final[int] = 72
+# =============================================================================
+# DERIVED CONSTANTS (from _seed.py, NOT hardcoded!)
+# =============================================================================
+OCTET: Final[int] = HALF_SIZE  # = 8 (Śikṣāṣṭakam verses)
+ADI_GURU_FACTOR: Final[int] = NADI_RESONANCE  # = 72 (already in _seed.py!)
 
 
 # =============================================================================
