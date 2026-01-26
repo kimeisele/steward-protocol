@@ -130,6 +130,13 @@ from vibe_core.mahamantra.research.moores_law import (
     ENGINEERING_INSIGHT,
     MOORES_LAW_PREDICTIONS,
 )
+from vibe_core.mahamantra.research.physics import (
+    PHYSICS_PREDICTIONS,
+    PhysicsPrediction,
+)
+from vibe_core.mahamantra.research.physics import (
+    calculate_statistics as physics_statistics,
+)
 from vibe_core.mahamantra.research.shabda_translation import (
     ABHINNA_INSIGHT,
     SANSKRIT_PHONEME_MAP,
@@ -199,6 +206,10 @@ __all__ = [
     "CHEMISTRY_PREDICTIONS",
     "COMPUTATION_PREDICTIONS",
     "MEDICINE_PREDICTIONS",
+    # Physics Predictions (17 constants, 0.135% avg error)
+    "PHYSICS_PREDICTIONS",
+    "PhysicsPrediction",
+    "physics_statistics",
     # 16-bit Kernel Paradigm
     "MAHABYTE",
     "OCTET",
