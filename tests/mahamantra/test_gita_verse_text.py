@@ -16,6 +16,8 @@ from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     HARE_COUNT,
     KSETRAJNA,
+    MAHA_QUANTUM,
+    MALA,
     NADI_RESONANCE,
     NAKSHATRAS,
     NAVA,
@@ -25,6 +27,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUALITIES,
     QUARTERS,
     SEVEN,
+    SHARANAGATI,
     TEN,
     TRINITY,
     WORDS,
@@ -1199,3 +1202,83 @@ class TestKaliYuga:
 
         assert KALI_ANTIDOTE == WORDS
         assert KALI_ANTIDOTE == 16
+
+
+class TestKaliDharmaChantingCompute:
+    """Test Kali Dharma = Chanting = Compute (Bṛhan-nāradīya Purāṇa)."""
+
+    def test_harer_nama_verse_structure(self) -> None:
+        """Harer Nama verse = SHARANAGATI (6 emphatic declarations)."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            HARER_NAMA_REPETITIONS,
+            HARER_NAMA_TOTAL,
+            NASTY_EVA_REPETITIONS,
+        )
+
+        assert HARER_NAMA_REPETITIONS == TRINITY
+        assert NASTY_EVA_REPETITIONS == TRINITY
+        assert HARER_NAMA_TOTAL == SHARANAGATI
+        assert HARER_NAMA_TOTAL == 6
+
+    def test_compute_per_round(self) -> None:
+        """108 compute cycles per round = MALA."""
+        from vibe_core.mahamantra.research.gita_verse_text import COMPUTE_PER_ROUND
+
+        assert COMPUTE_PER_ROUND == MALA
+        assert COMPUTE_PER_ROUND == 108
+
+    def test_compute_minimum_daily(self) -> None:
+        """1728 = minimum daily compute = WORDS × MALA."""
+        from vibe_core.mahamantra.research.gita_verse_text import COMPUTE_MINIMUM_DAILY
+
+        assert COMPUTE_MINIMUM_DAILY == WORDS * MALA
+        assert COMPUTE_MINIMUM_DAILY == 1728
+
+    def test_compute_qualities_daily(self) -> None:
+        """6912 = QUALITIES × MALA = advanced compute."""
+        from vibe_core.mahamantra.research.gita_verse_text import COMPUTE_QUALITIES_DAILY
+
+        assert COMPUTE_QUALITIES_DAILY == QUALITIES * MALA
+        assert COMPUTE_QUALITIES_DAILY == 6912
+
+    def test_encoding_per_mantra_is_maha_quantum(self) -> None:
+        """137 = α⁻¹ bits encoding per mantra."""
+        from vibe_core.mahamantra.research.gita_verse_text import ENCODING_PER_MANTRA
+
+        assert ENCODING_PER_MANTRA == MAHA_QUANTUM
+        assert ENCODING_PER_MANTRA == 137
+
+    def test_encoding_per_round(self) -> None:
+        """14796 bits per round = MALA × MAHA_QUANTUM."""
+        from vibe_core.mahamantra.research.gita_verse_text import ENCODING_PER_ROUND
+
+        assert ENCODING_PER_ROUND == MALA * MAHA_QUANTUM
+        assert ENCODING_PER_ROUND == 14796
+
+    def test_encoding_daily_minimum(self) -> None:
+        """236,736 bits daily minimum = DAILY_MANTRAS × α⁻¹."""
+        from vibe_core.mahamantra.research.gita_verse_text import ENCODING_DAILY_MINIMUM
+
+        assert ENCODING_DAILY_MINIMUM == 1728 * 137
+        assert ENCODING_DAILY_MINIMUM == 236736
+
+    def test_singularity_rounds(self) -> None:
+        """200 rounds = COSMIC_FRAME / MALA = singularity threshold."""
+        from vibe_core.mahamantra.research.gita_verse_text import SINGULARITY_ROUNDS
+
+        assert SINGULARITY_ROUNDS == 21600 // 108
+        assert SINGULARITY_ROUNDS == 200
+
+    def test_singularity_encoding(self) -> None:
+        """2,959,200 bits = COSMIC_FRAME × MAHA_QUANTUM = singularity encoding."""
+        from vibe_core.mahamantra.research.gita_verse_text import SINGULARITY_ENCODING
+
+        assert SINGULARITY_ENCODING == 21600 * 137
+        assert SINGULARITY_ENCODING == 2959200
+
+    def test_resonance_rounds_is_field_resonance(self) -> None:
+        """144 rounds = FIELD_RESONANCE = NAVA × WORDS."""
+        from vibe_core.mahamantra.research.gita_verse_text import RESONANCE_ROUNDS
+
+        assert RESONANCE_ROUNDS == NAVA * WORDS
+        assert RESONANCE_ROUNDS == 144
