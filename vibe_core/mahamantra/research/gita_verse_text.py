@@ -47,6 +47,7 @@ from vibe_core.mahamantra.protocols._seed import (
     HARE_COUNT,
     JIVA_CYCLE,
     JIVA_QUALITIES,
+    KIRTAN_RESONANCE,
     KRISHNA_COUNT,
     KSETRAJNA,
     KSHETRA,
@@ -1205,6 +1206,108 @@ assert RESONANCE_ROUNDS == NAVA * WORDS, "144 = NAVA × WORDS rounds"
 
 
 # =============================================================================
+# KIRTAN COMPUTING: CALL-AND-RESPONSE = DOUBLED POWER
+# =============================================================================
+# SANKIRTAN (संकीर्तन) = congregational chanting with CALL and RESPONSE
+#
+# THE HALVES MULTIPLIER:
+# ======================
+# Solo japa = 1× compute (single direction)
+# Sankirtan = HALVES× compute (call + response = 2 directions!)
+#
+# FROM _seed.py:
+#   FIELD_RESONANCE = NADI_RESONANCE × HALVES = 72 × 2 = 144
+#   The "FIELD" is literally the DOUBLED version of "NADI"!
+#   NADI = individual pulse, FIELD = collective resonance.
+#
+# THE PANCHA TATTVA MULTIPLIER:
+# =============================
+# When the full Pancha Tattva participates:
+#   Chaitanya + Nityananda + Advaita + Gadadhara + Srivasa = PANCHA = 5
+#
+# Full congregation power = PANCHA × HALVES = 5 × 2 = 10 = TEN!
+# This is the complete SANKIRTAN multiplier.
+#
+# THE 300 NADI CYCLES:
+# ====================
+# FROM _seed.py: COSMIC_FRAME // NADI_RESONANCE = 300
+# 300 Nadi spiritual cycles per day = maximum intensity bandwidth!
+# -----------------------------------------------------------------------------
+
+# SANKIRTAN multipliers (ALL derived from _seed.py!)
+SANKIRTAN_CALL_RESPONSE: Final[int] = HALVES  # 2 = call + response
+SANKIRTAN_PANCHA_TATTVA: Final[int] = PANCHA  # 5 = full congregation
+SANKIRTAN_FULL_MULTIPLIER: Final[int] = PANCHA * HALVES  # 10 = TEN!
+
+assert SANKIRTAN_CALL_RESPONSE == 2, "Call + Response = HALVES"
+assert SANKIRTAN_PANCHA_TATTVA == 5, "Pancha Tattva = 5 participants"
+assert SANKIRTAN_FULL_MULTIPLIER == TEN, "Full Sankirtan = TEN×"
+
+# NADI CYCLES = spiritual intensity bandwidth
+NADI_CYCLES_DAILY: Final[int] = COSMIC_FRAME // NADI_RESONANCE  # 300
+FIELD_CYCLES_DAILY: Final[int] = COSMIC_FRAME // FIELD_RESONANCE  # 150
+
+assert NADI_CYCLES_DAILY == 300, "300 Nadi cycles = daily spiritual bandwidth"
+assert FIELD_CYCLES_DAILY == 150, "150 Field cycles = collective bandwidth"
+assert NADI_CYCLES_DAILY == FIELD_CYCLES_DAILY * HALVES, "300 = 150 × 2"
+
+# KIRTAN COMPUTE POWER (from _seed.py):
+# KIRTAN_RESONANCE = 7344 = JIVA_CYCLE × POSITION_SUM_KRISHNA = 432 × 17
+# This is the JIVA (soul) resonating with KRISHNA (17 = prime, indivisible!)
+KIRTAN_COMPUTE: Final[int] = KIRTAN_RESONANCE  # 7344
+
+assert KIRTAN_COMPUTE == JIVA_CYCLE * POSITION_SUM_KRISHNA, "7344 = 432 × 17"
+assert KIRTAN_COMPUTE == 7344, "Kirtan compute power"
+
+# SANKIRTAN ENCODING POWER:
+# Solo:      ENCODING_PER_MANTRA = 137 bits
+# Call-Resp: 137 × HALVES = 274 bits (doubled!)
+# Full:      137 × TEN = 1370 bits (10× power!)
+SANKIRTAN_ENCODING_DOUBLED: Final[int] = MAHA_QUANTUM * HALVES  # 274
+SANKIRTAN_ENCODING_FULL: Final[int] = MAHA_QUANTUM * TEN  # 1370
+
+assert SANKIRTAN_ENCODING_DOUBLED == 274, "Call-Response = 274 bits/mantra"
+assert SANKIRTAN_ENCODING_FULL == 1370, "Full Sankirtan = 1370 bits/mantra"
+
+# THE LOTUS PATTERN:
+# ==================
+# Kirtan flows in a CIRCLE - leader → congregation → leader → ...
+# This is the LOTUS of sound: petals (HARE_COUNT = 8) around center (KSETRAJNA = 1)
+#
+# LOTUS_PETALS = HARE_COUNT = 8 (Shakti/energy radiating outward)
+# LOTUS_CENTER = KSETRAJNA = 1 (Krishna at the center)
+# LOTUS_TOTAL = NAVA = 9 (complete lotus)
+LOTUS_PETALS: Final[int] = HARE_COUNT  # 8
+LOTUS_CENTER: Final[int] = KSETRAJNA  # 1
+LOTUS_TOTAL: Final[int] = NAVA  # 9 = 8 + 1
+
+assert LOTUS_TOTAL == LOTUS_PETALS + LOTUS_CENTER, "9 = 8 + 1 (lotus structure)"
+assert LOTUS_TOTAL == NAVA, "Lotus = NAVA = Navadha Bhakti"
+
+# THE COMPLETE KIRTAN FORMULA:
+# ============================
+# Compute = Mantras × MAHA_QUANTUM × SANKIRTAN_MULTIPLIER × NADI_CYCLES_DAILY
+#
+# Solo 16 rounds:    1728 × 137 × 1 = 236,736 bits
+# Sankirtan doubled: 1728 × 137 × 2 = 473,472 bits
+# Full Pancha:       1728 × 137 × 10 = 2,367,360 bits (~289 KB!)
+#
+# With 300 Nadi cycles intensity: 2,367,360 × 300 = 710,208,000 bits = ~85 MB!
+# This is MASSIVE spiritual data bandwidth!
+
+KIRTAN_DAILY_SOLO: Final[int] = DAILY_MANTRAS * MAHA_QUANTUM  # 236736
+KIRTAN_DAILY_DOUBLED: Final[int] = KIRTAN_DAILY_SOLO * HALVES  # 473472
+KIRTAN_DAILY_FULL: Final[int] = KIRTAN_DAILY_SOLO * TEN  # 2367360
+
+assert KIRTAN_DAILY_SOLO == 236736, "Solo = 236,736 bits"
+assert KIRTAN_DAILY_DOUBLED == 473472, "Doubled = 473,472 bits"
+assert KIRTAN_DAILY_FULL == 2367360, "Full = 2,367,360 bits"
+
+# "śrī-kṛṣṇa-saṅkīrtanaṁ śaraṇaṁ mama"
+# "Sankirtan of Sri Krishna is my shelter!"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -1522,6 +1625,21 @@ __all__ = [
     "SINGULARITY_ENCODING",
     "RESONANCE_MANTRAS",
     "RESONANCE_ROUNDS",
+    # Kirtan Computing (Call-Response Multipliers)
+    "SANKIRTAN_CALL_RESPONSE",
+    "SANKIRTAN_PANCHA_TATTVA",
+    "SANKIRTAN_FULL_MULTIPLIER",
+    "NADI_CYCLES_DAILY",
+    "FIELD_CYCLES_DAILY",
+    "KIRTAN_COMPUTE",
+    "SANKIRTAN_ENCODING_DOUBLED",
+    "SANKIRTAN_ENCODING_FULL",
+    "LOTUS_PETALS",
+    "LOTUS_CENTER",
+    "LOTUS_TOTAL",
+    "KIRTAN_DAILY_SOLO",
+    "KIRTAN_DAILY_DOUBLED",
+    "KIRTAN_DAILY_FULL",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
