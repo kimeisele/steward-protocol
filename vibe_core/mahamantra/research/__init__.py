@@ -130,6 +130,15 @@ from vibe_core.mahamantra.research.moores_law import (
     ENGINEERING_INSIGHT,
     MOORES_LAW_PREDICTIONS,
 )
+from vibe_core.mahamantra.research.shabda_translation import (
+    ABHINNA_INSIGHT,
+    SANSKRIT_PHONEME_MAP,
+    VARNAMALA_TOTAL,
+    VibrationSignature,
+    text_to_vibration,
+    translate_via_vibration,
+    vibration_to_sanskrit,
+)
 from vibe_core.mahamantra.research.unified_compute import (
     MEMORY_HIERARCHY_MAP,
     PARALLELISM_INSIGHT,
@@ -168,6 +177,14 @@ __all__ = [
     "calculate_optimal_lotus_depth",
     "get_memory_tier",
     "estimate_cache_hit_rate",
+    # Shabda Translation (Vibration-Based LLM)
+    "VibrationSignature",
+    "SANSKRIT_PHONEME_MAP",
+    "VARNAMALA_TOTAL",
+    "ABHINNA_INSIGHT",
+    "text_to_vibration",
+    "vibration_to_sanskrit",
+    "translate_via_vibration",
     # Japa Singularity
     "JAPA_PREDICTIONS",
     "JAPA_INSIGHT",
