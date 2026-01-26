@@ -2294,6 +2294,31 @@ assert QUALITIES - VISHNU_QUALITIES == QUARTERS, "Krishna - Vishnu = 4 = MADHURY
 
 
 # =============================================================================
+# MATHEMATICAL CONSTANTS (DERIVED FROM PANCHA TATTVA!)
+# =============================================================================
+#
+# The first 5 numbers (1,2,3,4,5) = PANCHA TATTVA = structure everything.
+
+# GOLDEN RATIO φ = (1 + √5) / 2 = (KSETRAJNA + √PANCHA) / HALVES
+# DERIVATION: The formula itself uses only KSETRAJNA (1), PANCHA (5), HALVES (2)
+# This is EXACT - φ emerges from PANCHA TATTVA!
+import math as _math
+
+GOLDEN_RATIO: Final[float] = (KSETRAJNA + _math.sqrt(PANCHA)) / HALVES  # 1.618033988749895
+assert abs(GOLDEN_RATIO - 1.6180339887) < 1e-9, "Golden ratio = (1 + √5) / 2"
+
+# DNA CODONS = QUARTERS^TRINITY = 4³ = 64 = QUALITIES!
+# DERIVATION: 4 nucleotides, 3 per codon = 4³ = 64 codons
+DNA_CODONS: Final[int] = QUARTERS**TRINITY  # 64
+assert DNA_CODONS == QUALITIES, "64 codons = 64 qualities (Krishna has ALL codons!)"
+
+# AMINO ACIDS = QUARTERS × PANCHA = 4 × 5 = 20
+# DERIVATION: 4 elements × 5 types = 20 (EXACTLY 20 standard amino acids!)
+AMINO_ACIDS: Final[int] = QUARTERS * PANCHA  # 20
+assert AMINO_ACIDS == 20, "20 amino acids = QUARTERS × PANCHA"
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -2505,4 +2530,8 @@ __all__ = [
     "MADHURYA_NUMERATOR",  # 15 = WORDS - KSETRAJNA (selfless giving ratio)
     "MADHURYA_DENOMINATOR",  # 16 = WORDS
     "VISHNU_QUALITIES",  # 60 = JIVA_QUALITIES + TEN
+    # Mathematical Constants (DERIVED FROM PANCHA TATTVA!)
+    "GOLDEN_RATIO",  # φ = (KSETRAJNA + √PANCHA) / HALVES = 1.618...
+    "DNA_CODONS",  # 64 = QUARTERS³ = QUALITIES (Krishna has ALL codons!)
+    "AMINO_ACIDS",  # 20 = QUARTERS × PANCHA (the 20 standard amino acids)
 ]
