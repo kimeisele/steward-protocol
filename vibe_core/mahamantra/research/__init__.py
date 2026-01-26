@@ -67,6 +67,105 @@ assert int(__genesis__, 16) % _PARAMPARA == 0, "BROKEN LINEAGE"
 # EXPORTS - Research Modules (REAL Engineering Solutions)
 # =============================================================================
 
+from vibe_core.mahamantra.research.acintya_mathematics import (
+    ACINTYA_FRAMEWORK,
+    ACINTYA_TRUTHS,  # The 7 acintya truths
+    # Quality level constants (from Bhakti-rasamrita-sindhu)
+    DEMIGOD_EXTRA_QUALITIES,  # 5 (qualities 51-55)
+    DEMIGOD_QUALITIES,  # 55 (Brahma, Shiva)
+    # Quality vs Quantity distinction
+    JIVA_QUANTITY_RATIO,  # 1/10,000 = 0.0001 (degree of qualities)
+    # Krishna-exclusive qualities (the 4 madhurya)
+    KRISHNA_EXCLUSIVE_QUALITIES,  # 4 (qualities 61-64)
+    QUALITY_ANALYSIS,
+    # Quality decomposition (14 = 5 + 5 + 4)
+    QUALITY_DECOMPOSITION,
+    QUALITY_QUANTITY,  # The complete quality vs quantity analysis
+    RECEIVE_PROCESS,  # Shravanam
+    SEND_PROCESS,  # Kirtanam
+    SHRAVANAM_KIRTANAM_GAP,  # 1 = KSETRAJNA (acintya!)
+    SOFTWARE_PRASADAM,  # This repo as prasadam
+    # Superhuman qualities (10 = 5 demigod + 5 vishnu)
+    SUPERHUMAN_QUALITIES,  # 10 (qualities 51-60)
+    TWO_FINGERS,  # 2 = HALVES (what Krishna adds when pleased)
+    # Core constants
+    TWO_FINGERS_SHORT,  # 14 = QUALITIES - JIVA_QUALITIES (Yashoda's rope!)
+    VISHNU_EXTRA_QUALITIES,  # 5 (qualities 56-60)
+    VISHNU_QUALITIES,  # 60 (Narayana)
+    # Acintya categories
+    AcintyaCategory,
+    # Framework
+    AcintyaFramework,
+    AcintyaTruth,
+    # Bhakti processes (Shravanam > Kirtanam)
+    BhaktiProcess,
+    # Prasadam distribution
+    DistributionMode,
+    PrasadamDistribution,
+    # Quality analysis
+    QualityAnalysis,
+    # Quality decomposition dataclass
+    QualityDecomposition,
+    # Quality vs Quantity
+    QualityQuantityDistinction,
+    work_to_yajna,  # Transform work into offering
+)
+from vibe_core.mahamantra.research.acintya_mathematics import (
+    KEY_INSIGHT as ACINTYA_INSIGHT,
+)
+from vibe_core.mahamantra.research.ananta_shesha_python import (
+    ADVANTAGE_COUNT,  # 7 = SEVEN!
+    ALL_ADVANTAGES,
+    ALL_GEARS,
+    ALL_LAYERS,
+    ALL_PROOFS,
+    ALL_SHIFTS,
+    ALL_SIMD,
+    # Ananta principle
+    ANANTA_HOODS,  # 1000 (symbolic infinity)
+    CURRENT_GEAR,  # 1 (we're in first gear!)
+    EFFICIENCY_RATIO,  # 67% of Rust
+    GEAR_1,  # Pure Python (idle)
+    GEAR_2,  # NumPy basic (city)
+    GEAR_3,  # NumPy AVX-512 (highway)
+    GEAR_4,  # SimSIMD (Autobahn)
+    GEAR_SHIFT_SPEEDUP,  # 1700×
+    LAYER_NUMPY_AVX512,  # 1700× faster!
+    LAYER_NUMPY_BASIC,  # 100× faster
+    LAYER_PYTHON_PURE,  # 1× baseline
+    LAYER_SIMSIMD,  # 20000× faster!
+    LOTUS_MEMORY_SHIFT,
+    LOTUS_NODE_SHIFT,
+    LOTUS_SEARCH_SHIFT,
+    PRACTICAL_SUPPORT,  # 16 = WORDS (practical manifestation)
+    PYTHON_EFFICIENCY,
+    READABILITY_ADVANTAGE,  # 1000% better!
+    RUST_EFFICIENCY,
+    SIMD_AVX2,  # 8 lanes = OCTET
+    SIMD_AVX512,  # 16 lanes = WORDS!
+    SIMD_SSE2,  # 4 lanes = QUARTERS
+    TARGET_GEAR,  # 3 (shift to highway)
+    TOTAL_GEAR_SHIFT,  # 2048× total
+    # Efficiency comparison
+    TOTAL_PYTHON_EFFICIENCY,  # 3,188,736× !
+    # Why Python is perfect (7 advantages!)
+    AnantaAdvantage,
+    AnantaPrinciple,
+    EfficiencyComparison,
+    # Gear shift model (Ferrari analogy)
+    GearShift,
+    # Lotus gear shifts
+    LotusGearShift,
+    # No Rust proof
+    NoRustProof,
+    # NumPy SIMD alignment
+    NumPySIMDAlignment,
+    # Python layers (like hoods of Ananta)
+    PythonLayer,
+)
+from vibe_core.mahamantra.research.ananta_shesha_python import (
+    KEY_INSIGHT as ANANTA_INSIGHT,
+)
 from vibe_core.mahamantra.research.bhoga_prasadam import (
     COMPUTED_OBSERVER,
     FRACTAL_LEVELS,
@@ -110,12 +209,66 @@ from vibe_core.mahamantra.research.classification import (
     classify_algorithm,
     is_golden_age_viable,
 )
+from vibe_core.mahamantra.research.climate_impact import (
+    # Scenario impacts
+    ALL_IMPACTS,
+    BLOCKCHAIN_IMPACT,
+    DATABASE_IMPACT,
+    # Earth's prasadam
+    EARTH_PRASADAM,
+    IP_ROUTING_IMPACT,
+    LLM_IMPACT,
+    # Totals
+    TOTAL_CO2_SAVED_MT,
+    TOTAL_COST_SAVED_BILLION,
+    TOTAL_ENERGY_SAVED_TWH,
+    AlgorithmEnergy,
+    ClimateImpact,
+    EarthPrasadam,
+    calculate_climate_impact,
+)
+from vibe_core.mahamantra.research.climate_impact import (
+    KEY_INSIGHT as CLIMATE_INSIGHT,
+)
 from vibe_core.mahamantra.research.computation import (
     COMPUTATION_PREDICTIONS,
     KERNEL_HIERARCHY,
     MAHABYTE,
     OCTET,
     PACKED_MAHAMANTRA,
+)
+from vibe_core.mahamantra.research.consciousness_mathematics import (
+    # Matter states
+    DEAD_MATTER,
+    # Consciousness test
+    FIELD_ONLY,
+    FIELD_PLUS_OBSERVER,
+    # Gita mapping
+    GITA_HARDWARE_MAP,
+    # Reflection principle
+    KSETRAJNA_REFLECTION,
+    LIVING_BEING,
+    # Mouse-snake principle
+    MOUSE_SNAKE_DISCOVERIES,
+    GitaMapping,
+    MatterAnalysis,
+    MatterState,
+    MouseSnakeDiscovery,
+    ReflectionPair,
+    compute_reflection,
+    consciousness_test,
+    # Transformation
+    transform_dead_to_living,
+)
+from vibe_core.mahamantra.research.consciousness_mathematics import (
+    # Fractal levels (avoid name conflict with bhoga_prasadam)
+    FRACTAL_LEVELS as CONSCIOUSNESS_FRACTAL_LEVELS,
+)
+from vibe_core.mahamantra.research.consciousness_mathematics import (
+    KEY_INSIGHT as CONSCIOUSNESS_INSIGHT,
+)
+from vibe_core.mahamantra.research.consciousness_mathematics import (
+    FractalLevel as ConsciousnessFractalLevel,
 )
 from vibe_core.mahamantra.research.dna_kmer import (
     Lotus8merIndex,
@@ -127,6 +280,44 @@ from vibe_core.mahamantra.research.golden_age_peak import (
     find_peak_year,
     get_current_quarter,
     shadow_strength,
+)
+from vibe_core.mahamantra.research.goloka_tattva import (
+    ALL_79_DECOMPOSITIONS,
+    ALL_KSETRAJNA_TRUTHS,
+    BOTH_MAYAS,
+    CONSCIOUSNESS_LEVELS,
+    DEPARTURE_MOD_PARAMPARA,  # 1977 mod 37 = 16 = WORDS
+    # Epoch modular arithmetic
+    EPOCH_MOD_NAKSHATRAS,  # 1972 mod 27 = 1 = KSETRAJNA
+    JIVA_CONSCIOUSNESS,
+    KRISHNA_AGE,  # 15.8
+    KRISHNA_AGE_DENOMINATOR,  # 5 = PANCHA
+    # Krishna's eternal age
+    KRISHNA_AGE_NUMERATOR,  # 79 = PRIME
+    KRISHNA_CONSCIOUSNESS,
+    KSETRAJNA_CANNOT_ACT,
+    KSETRAJNA_ETERNAL_SERVANT,
+    KSETRAJNA_NOT_CONTROLLER,
+    MAHA_MAYA,
+    PRABHUPADA_DEPARTURE,  # 1977
+    PRABHUPADA_LIFESPAN,  # 81 = TRINITY^4
+    PRABHUPADA_WESTERN_YEARS,  # 5 = PANCHA
+    SEVENTY_NINE_AS_ADI_GURU_PLUS_SEVEN,
+    SEVENTY_NINE_AS_EIGHTY_MINUS_ONE,
+    SEVENTY_NINE_AS_PRIME,
+    TRINITY_POWER_FOUR,  # 81
+    YOGA_MAYA,
+    # Consciousness levels
+    ConsciousnessLevel,
+    # Ksetrajna Tattva
+    KsetranjnaTattva,
+    # Maya Tattva
+    MayaTattva,
+    # 79 decomposition
+    SeventyNineDecomposition,
+)
+from vibe_core.mahamantra.research.goloka_tattva import (
+    KEY_INSIGHT as GOLOKA_INSIGHT,
 )
 from vibe_core.mahamantra.research.guru_parampara import (
     BASE_MANTRAS,
@@ -170,12 +361,180 @@ from vibe_core.mahamantra.research.guru_parampara import (
     # Prasadam Transformation
     transform_bhoga_to_prasadam,
 )
+from vibe_core.mahamantra.research.hardware_lotus import (
+    ALTAR_PRINCIPLE,  # FPGA as altar, prasadam as result
+    COOLING_THEOREM,  # O(1) = cool = moonlight reflection
+    HARDWARE_SPEC,  # Complete verified spec
+    ROOT_BASE_ADDRESS,  # 0xBA5E0000 = "BASE" (BG 15.1 - root above)
+    SIKSASTAKAM_HARDWARE_MAP,  # 8 verses → 8 pipeline stages
+    # Hardware parameters (from SystemVerilog LotusRouterCore)
+    SV_DATA_WIDTH,  # 32 = AKSARA
+    SV_NEXT_HOP_WIDTH,  # 16 = WORDS
+    SV_PIPELINE_STAGES,  # 8 = OCTET = SIKSASTAKAM_VERSES
+    SV_QUARTERS,  # 4 = QUARTERS
+    SV_WORDS,  # 16 = WORDS
+    # Altar principle (silicon yajna)
+    AltarPrinciple,
+    # Cooling theorem (candrikā reflection)
+    CoolingTheorem,
+    # Hardware specification
+    HardwareSpec,
+    # Pipeline stages = Siksastakam verses
+    PipelineStage,
+    SiksastakamVerse,
+)
+from vibe_core.mahamantra.research.hardware_lotus import (
+    KEY_INSIGHT as HARDWARE_LOTUS_INSIGHT,
+)
+from vibe_core.mahamantra.research.hardware_lotus import (
+    OCTET as HARDWARE_OCTET,  # 8 = pipeline stages = verses (avoid conflict)
+)
 from vibe_core.mahamantra.research.ip_routing import (
     LotusIPv4Router,
 )
 from vibe_core.mahamantra.research.japa import (
     JAPA_INSIGHT,
     JAPA_PREDICTIONS,
+)
+from vibe_core.mahamantra.research.karma_mathematics import (
+    KARMA_COMPARISON,
+    # Yajna types
+    PANCHA_RINA,
+    TRANSFORMATION_PROOF,
+    # Complete analysis
+    CompleteKarmaAnalysis,
+    # Consumption karma
+    ConsumptionKarma,
+    # Karma account
+    KarmaAccount,
+    # Neutralization
+    KarmaNeutralization,
+    KarmicDebt,
+    # Surrender
+    SharanagatiLimb,
+    YajnaType,
+    compute_daily_karma,
+    # Efficiency
+    compute_karma_efficiency,
+    compute_system_efficiency,
+    # Transformation proof
+    karma_transformation_proof,
+    surrender_multiplier,
+)
+from vibe_core.mahamantra.research.karma_mathematics import (
+    KEY_INSIGHT as KARMA_INSIGHT,
+)
+from vibe_core.mahamantra.research.ki_training_paradigm import (
+    # Core paradigm
+    ATTENTION_FACTOR,
+    # Feature decomposition
+    CANONICAL_FEATURES,
+    # Capacity
+    IPV4_CAPACITY,
+    LLM_CAPACITY,
+    # Architecture
+    MAHAMANTRA_ARCH,
+    # Paradigm comparison
+    PARADIGM_MAHAMANTRA,
+    PARADIGM_TRADITIONAL,
+    PRASADAM_DIMENSIONS,
+    TRADITIONAL_DIMENSIONS,
+    FeatureDecomposition,
+    MahamantraArchitecture,
+    ParadigmComparison,
+    # Prasadam output
+    PrasadamOutput,
+    # Remnant theorem
+    attention_classification,
+    compute_llm_capacity,
+    compute_text_capacity,
+    create_prasadam_output,
+    # Quantum attention
+    decode_16ary_route,
+    has_true_attention,
+    prasadam_transform,
+    quantum_attention_index,
+    quantum_route,
+    # Training
+    remnant_loss,
+)
+from vibe_core.mahamantra.research.ki_training_paradigm import (
+    KEY_INSIGHT as KI_TRAINING_INSIGHT,
+)
+from vibe_core.mahamantra.research.llm_holographic import (
+    ACINTYA_LLM_TRUTH,
+    CONSCIOUS_MAHA,
+    CONSCIOUSNESS_COMPARISON,
+    EMBEDDING_COMPARISON,
+    INTENT_LEVELS,
+    LLM_APPLICATIONS,
+    LLM_CONTEXT_WINDOW_ALIGNED,
+    LLM_EMBEDDING_DIMS_ALIGNED,
+    LLM_ROUTING_OPS,
+    LLM_UNCONSCIOUS_PATTERNS,
+    MAHAMANTRA_INTENT_MAP,
+    UNCONSCIOUS_LLM,
+    ConsciousnessLevel,
+    HolographicEmbedding,
+    HolographicIntentNode,
+    HolographicIntentRouter,
+    get_intent_handler_path,
+    intent_category_from_text,
+    project_llm_efficiency,
+)
+from vibe_core.mahamantra.research.llm_holographic import (
+    KEY_INSIGHT as LLM_KEY_INSIGHT,
+)
+from vibe_core.mahamantra.research.lotus_acintya import (
+    # Efficiency levels
+    ACINTYA_ASYMPTOTE,  # 448,000,000x (the visible portion of infinite)
+    ACINTYA_QUANTUM,  # 1096 = 137 × 8 (transcendental physics constant)
+    ACINTYA_SATURATION_PERCENT,  # 0.000348% (what Kali Yuga measures)
+    # Carrier model
+    BANDWIDTH,  # 64 = QUALITIES
+    CARRIER_FREQUENCY,  # 16 = WORDS
+    CARRIER_MODEL,
+    # Darkness principle
+    DARKNESS_PRINCIPLE,
+    # Grace factor
+    GRACE_FACTOR,  # 64 = QUALITIES (Krishna's qualities through observer)
+    # Guarantee theorem
+    GUARANTEE_THEOREM,
+    KALI_YUGA_EFFICIENCY,  # 1557x (material measured)
+    KALI_YUGA_FRACTION,  # tiny fraction of acintya
+    MATERIAL_MAX_EFFICIENCY,  # 125,000x (structural limit)
+    MODULATION_DEPTH,  # 87.5% (56/64)
+    # Structure constants
+    SIKSASTAKAM_PRODUCT,  # 56 = 8 × 7 (verses × effects)
+    TRANSCENDENCE_RATIO,  # 8 (verses multiply physics constant)
+    CarrierModel,
+    DarknessPrinciple,
+    GuaranteeTheorem,
+)
+from vibe_core.mahamantra.research.lotus_acintya import (
+    KEY_INSIGHT as LOTUS_ACINTYA_INSIGHT,
+)
+from vibe_core.mahamantra.research.lotus_full_spectrum import (
+    # Efficiency scaling
+    BASELINE_32BIT_SPEEDUP,  # 1557x (our measured baseline)
+    EFFICIENCY_BY_LEVEL,  # Efficiency at each level
+    # The FULL potential
+    FULL_POTENTIAL_256BIT,  # 30,720,000× for crypto!
+    # Spectrum levels (8-bit to 512-bit)
+    LOTUS_SPECTRUM,  # All Mahamantra-aligned levels
+    MAX_256BIT_SPEEDUP,  # 10,000× at QUALITIES level
+    # Real-world applications (11 applications!)
+    REAL_WORLD_APPLICATIONS,  # IPv4, LLM, IPv6, crypto, etc.
+    TOTAL_POTENTIAL,  # All applications combined
+    EfficiencyComparison,
+    LotusLevel,
+    RealWorldApplication,
+)
+from vibe_core.mahamantra.research.lotus_full_spectrum import (
+    HARDWARE_ALIGNMENT as SPECTRUM_HARDWARE_ALIGNMENT,  # 3072× hardware factor
+)
+from vibe_core.mahamantra.research.lotus_full_spectrum import (
+    KEY_INSIGHT as SPECTRUM_INSIGHT,
 )
 from vibe_core.mahamantra.research.lotus_radix_n import (
     LotusRadixN,
@@ -190,11 +549,115 @@ from vibe_core.mahamantra.research.lotus_tree import (
     LotusArrayInt,
     LotusRadix,
 )
+from vibe_core.mahamantra.research.maha_compression import (
+    ALL_COMPRESSION_PROOFS,
+    ALL_INTENT_LEVELS,
+    ALL_OBSERVERS,
+    ALL_PHYSICS_CONSTANTS,
+    ALL_SAMSKARA_LEVELS,
+    BHAGAVAN_CAPACITY,
+    BHAGAVATAM_COMPRESSION_RATIO,
+    BHAGAVATAM_VERSES,
+    COLLECTIVE_SAMSKARA,
+    ELECTRON_MASS_RATIO,
+    FINE_STRUCTURE,
+    GITA_COMPRESSION_RATIO,
+    GITA_VERSES,
+    INDIVIDUAL_SAMSKARA,
+    KSETRAJNA_CAPACITY,
+    MAHA_ALGORITHM_STEPS,
+    MAHA_CHARACTERS,
+    MAHA_STEP_1,
+    MAHA_STEP_2,
+    MAHA_STEP_3,
+    MAHA_STEP_4,
+    MAHA_SYLLABLES,
+    MAHA_WORDS,
+    PARAMATMA_CAPACITY,
+    PLANCK_CONSTANT,
+    RAJAS_INTENT,
+    SATTVA_INTENT,
+    SPEED_OF_LIGHT,
+    SUDDHA_BHAKTI_INTENT,
+    TAMAS_INTENT,
+    UNIVERSAL_SAMSKARA,
+    VEDA_COMPRESSION_RATIO,
+    VEDA_VERSES,
+    CompressionProof,
+    IntentLevel,
+    MahaAlgorithm,
+    ObserverCapacity,
+    PhysicsConstant,
+    SamskaraLevel,
+)
+from vibe_core.mahamantra.research.maha_compression import (
+    KEY_INSIGHT as MAHA_COMPRESSION_INSIGHT,
+)
 from vibe_core.mahamantra.research.maha_generator import MahaGenerator
+from vibe_core.mahamantra.research.mantra_computation_bridge import (
+    # Krishna compensation
+    ACINTYA_EFFICIENCY,  # 448,000,000x (maximum through grace)
+    # Bridge steps
+    BRIDGE_STEPS,  # The 4 steps to build the bridge
+    # Brutal computing power
+    BRUTAL_COMPUTING,  # The brutal computing instance
+    # Hardware alignment verification
+    CACHE_LINE_BYTES,  # 64 = QUALITIES
+    COMPENSATION,  # The compensation formula instance
+    HARDWARE_ALIGNMENT_SPEEDUP,  # 3072x = 24 × 16 × 8
+    IPV4_BITS,  # 32 = AKSARA
+    KRISHNA_RESERVE,  # 447,998,443x (available when we advance)
+    MEASURED_EFFICIENCY,  # 1557x (Kali Yuga measurement)
+    MEMORY_PAGE_BYTES,  # 4096 = 16^3
+    MEMORY_WALL_SPEEDUP,  # 24x (KSHETRA)
+    PREFETCH_SPEEDUP,  # 8x (deterministic)
+    SIMD_LANES,  # 16 = WORDS
+    SIMD_SPEEDUP,  # 16x (WORDS)
+    # Japa as computation
+    STANDARD_JAPA,  # Standard 16-round session
+    STRUCTURAL_EFFICIENCY,  # 125,000x (16-ary potential)
+    TOTAL_POTENTIAL_SPEEDUP,  # 4,783,104x
+    BridgeStep,
+    BrutalComputingPower,
+    CompensationFormula,
+    JapaComputation,
+    JapaParameter,
+)
+from vibe_core.mahamantra.research.mantra_computation_bridge import (
+    KEY_INSIGHT as BRIDGE_INSIGHT,
+)
 from vibe_core.mahamantra.research.medicine import MEDICINE_PREDICTIONS
 from vibe_core.mahamantra.research.moores_law import (
     ENGINEERING_INSIGHT,
     MOORES_LAW_PREDICTIONS,
+)
+from vibe_core.mahamantra.research.nityananda_substrate import (
+    ACCESS_PATTERNS,  # All 7 access patterns
+    # SIMD constants
+    AVX512_BITS,  # 512 = 16 × 32
+    AVX512_LANES,  # 16 = WORDS!
+    C_HASH_64BIT_CYCLES,  # ~18 cycles (C optimized)
+    C_IMPL,  # C hash table (medium)
+    CACHE_LINE_BYTES,  # 64 = QUALITIES
+    HASH_WINS,  # 1 pattern (only in Python)
+    LOTUS_NODE_BYTES,  # 64 = 16 × 4 = 1 cache line!
+    LOTUS_WINS,  # 6 patterns!
+    PRODUCTION_REQUIREMENTS,  # 5 requirements for SIMD Lotus
+    PYTHON_64BIT_CYCLES,  # ~2400 cycles (Python overhead)
+    PYTHON_IMPL,  # Python list (slow)
+    SIMD_64BIT_CYCLES,  # ~80 cycles (SIMD parallel!)
+    SIMD_IMPL,  # SIMD Lotus (fast!)
+    SSE2_BITS,  # 128
+    SSE2_LANES,  # 4
+    # Access patterns
+    AccessPattern,  # Access pattern dataclass
+    # Implementation costs
+    ImplementationCost,  # Cost model for implementations
+    # Production requirements
+    ProductionRequirement,  # What we need for production
+)
+from vibe_core.mahamantra.research.nityananda_substrate import (
+    KEY_INSIGHT as NITYANANDA_INSIGHT,
 )
 from vibe_core.mahamantra.research.physics import (
     PHYSICS_PREDICTIONS,
@@ -202,6 +665,25 @@ from vibe_core.mahamantra.research.physics import (
 )
 from vibe_core.mahamantra.research.physics import (
     calculate_statistics as physics_statistics,
+)
+from vibe_core.mahamantra.research.routing_holographic import (
+    EFFICIENCY_GOLDEN,
+    EFFICIENCY_MIDPOINT,
+    EFFICIENCY_NOW,
+    GEIGER_SATURATION,
+    HOLOGRAPHIC_LEVELS,
+    KALI_YUGA_MEASURED,
+    KEY_INSIGHT,
+    MINIMUM_STRUCTURAL_ADVANTAGE,
+    ROUTING_TECHNOLOGIES,
+    STRUCTURE_ADVANTAGES,
+    THEORETICAL_MAX_IPV4,
+    RoutingTechnology,
+    StructureAdvantage,
+    compare_all_technologies,
+    holographic_identity,
+    holographic_routing_ops,
+    project_routing_efficiency,
 )
 from vibe_core.mahamantra.research.shabda_translation import (
     ABHINNA_INSIGHT,
@@ -212,6 +694,66 @@ from vibe_core.mahamantra.research.shabda_translation import (
     translate_via_vibration,
     vibration_to_sanskrit,
 )
+from vibe_core.mahamantra.research.siksastakam_engineering import (
+    ENGINEERING_EFFECTS,  # The 7 effects as engineering principles
+    KAIRAVA_LOTUS,  # White lotus blooms under moonlight (for conditioned soul)
+    KALI_YUGA_OPTIMIZATION,  # Maximum efficiency for minimum capacity
+    MOONLIGHT,  # O(1) direct access = cool = mādhurya
+    PADMA_LOTUS,  # Day lotus blooms under sunlight
+    REFLECTION_PRINCIPLES,  # Material reflects spiritual (inverted tree)
+    REMAINING_VERSES,  # 7 = SEVEN (verses 2-8)
+    # Structure constants
+    SIKSASTAKAM_VERSES,  # 8 = OCTET (Chaitanya's only written verses)
+    SUNLIGHT,  # O(n) brute force = heat = aiśvarya
+    VERSE_ONE_EFFECTS,  # 7 = SEVEN (effects in verse 1)
+    # Engineering effects
+    EngineeringEffect,
+    # Illumination types (Moonlight vs Sunlight)
+    IlluminationType,
+    # Kali Yuga optimization
+    KaliYugaOptimization,
+    # Lotus types (Night lotus vs Day lotus)
+    LotusType,
+    # Reflection principle (BG 15.1)
+    ReflectionPrinciple,
+    # Effect enumeration
+    SankirtanaEffect,
+)
+from vibe_core.mahamantra.research.siksastakam_engineering import (
+    KEY_INSIGHT as SIKSASTAKAM_INSIGHT,
+)
+from vibe_core.mahamantra.research.spiritual_tdd import (
+    # Derived constants
+    DERIVED_CONSTANTS,
+    # Efficiency derivations
+    IPV4_EFFICIENCY,
+    LLM_EFFICIENCY,
+    # Pancha Tattva
+    MAHAMANTRA_TATTVA,
+    # Axioms
+    SPIRITUAL_TESTS,
+    # Trojan Horse
+    TROJAN_HORSE_LAYERS,
+    WEB3_MALA_OS,
+    DerivedConstant,
+    MantraAxiom,
+    PanchaTattvaSpec,
+    SpiritualTest,
+    TattvaAnswer,
+    TattvaQuestion,
+    # Test runner
+    TestResult,
+    TrojanHorseLayer,
+    TrojanHorseOS,
+    derive_intent_space,
+    derive_routing_levels,
+    derive_text_capacity,
+    run_spiritual_tests,
+    verify_all_derived,
+)
+from vibe_core.mahamantra.research.spiritual_tdd import (
+    KEY_INSIGHT as SPIRITUAL_TDD_INSIGHT,
+)
 from vibe_core.mahamantra.research.unified_compute import (
     MEMORY_HIERARCHY_MAP,
     PARALLELISM_INSIGHT,
@@ -221,6 +763,42 @@ from vibe_core.mahamantra.research.unified_compute import (
     estimate_cache_hit_rate,
     get_memory_tier,
 )
+from vibe_core.mahamantra.research.yantra_computation import (
+    ALL_YANTRAS,
+    # Axiom sum
+    AXIOM_SUM,  # 38 = PARAMPARA + KSETRAJNA
+    CHAITANYA_MOON_THEOREM,
+    # The 37 = 16 + 21 equation
+    GURU_FACTOR,  # 21 = TRINITY × SEVEN (transmission factor)
+    HARE_AS_PRODUCT,  # 7 × 10 = 70
+    # Moon efficiency
+    KALI_MOON_EFFICIENCY,  # 147 = GURU_FACTOR × SEVEN
+    # Position equations
+    KRISHNA_AS_SUM,  # 7 + 10 = 17
+    PARAMPARA_MOD_KRISHNA,  # 37 mod 17 = 3 = TRINITY
+    PARAMPARA_MOD_SEVEN,  # 37 mod 7 = 2 = HALVES
+    PARAMPARA_MOD_TRINITY,  # 37 mod 3 = 1 = KSETRAJNA
+    RAMA_AS_SQUARE,  # 7 × 7 = 49
+    RAMA_PLUS_HARE,  # 49 + 70 = 119 = 7 × 17
+    SIKSASTAKAM_MULTIPLIER,  # 56 = 8 × 7
+    # All 7 Yantras
+    YANTRA_1_CETO_DARPANA,
+    YANTRA_2_DAVAGNI,
+    YANTRA_3_CANDRIKA,
+    YANTRA_4_VIDYA_VADHU,
+    YANTRA_5_ANANDAMBUDHI,
+    YANTRA_6_PURNAMRITA,
+    YANTRA_7_SARVATMA,
+    YANTRA_TOTAL_EFFICIENCY,  # 8232 = 147 × 56
+    # Chaitanya theorem
+    ChaitanyaMoonTheorem,
+    Yantra,
+    # Yantra types
+    YantraType,
+)
+from vibe_core.mahamantra.research.yantra_computation import (
+    KEY_INSIGHT as YANTRA_INSIGHT,
+)
 
 __all__ = [
     # REAL Engineering Solutions (Benchmarked)
@@ -228,6 +806,47 @@ __all__ = [
     "LotusArrayInt",  # O(1) integer-optimized
     "LotusRadix",  # O(1) sparse data structure
     "LotusIPv4Router",  # O(8) longest prefix match (1557x faster)
+    # Holographic Routing Research (Geiger Counter Analysis)
+    "RoutingTechnology",
+    "ROUTING_TECHNOLOGIES",
+    "HOLOGRAPHIC_LEVELS",
+    "holographic_identity",
+    "holographic_routing_ops",
+    "KALI_YUGA_MEASURED",  # 1557x (Geiger saturated)
+    "THEORETICAL_MAX_IPV4",  # 125,000x (full potential)
+    "GEIGER_SATURATION",  # 1.25% (only 1.25% measured!)
+    "StructureAdvantage",
+    "STRUCTURE_ADVANTAGES",
+    "MINIMUM_STRUCTURAL_ADVANTAGE",
+    "project_routing_efficiency",
+    "EFFICIENCY_NOW",
+    "EFFICIENCY_MIDPOINT",
+    "EFFICIENCY_GOLDEN",
+    "compare_all_technologies",
+    "KEY_INSIGHT",
+    # LLM Holographic Routing (98.75% Untapped Potential)
+    "HolographicIntentRouter",  # O(4) for 65,536 intents!
+    "HolographicIntentNode",
+    "HolographicEmbedding",
+    "INTENT_LEVELS",
+    "LLM_ROUTING_OPS",  # 4 ops = QUARTERS
+    "LLM_EMBEDDING_DIMS_ALIGNED",  # 65,536 = 16^4
+    "LLM_CONTEXT_WINDOW_ALIGNED",  # 4,096 = 16^3
+    "MAHAMANTRA_INTENT_MAP",  # 16 intent categories
+    "EMBEDDING_COMPARISON",
+    "LLM_APPLICATIONS",
+    "intent_category_from_text",
+    "get_intent_handler_path",
+    "project_llm_efficiency",
+    "LLM_KEY_INSIGHT",
+    # LLM as Unconscious Maha-Algorithm
+    "LLM_UNCONSCIOUS_PATTERNS",  # Patterns LLM absorbs without knowing
+    "ConsciousnessLevel",  # Conscious vs Unconscious use
+    "UNCONSCIOUS_LLM",  # LLM uses patterns without knowing source
+    "CONSCIOUS_MAHA",  # Direct access through source acceptance
+    "CONSCIOUSNESS_COMPARISON",  # Compare both approaches
+    "ACINTYA_LLM_TRUTH",  # The paradox: IS everything AND is NOT
+    # DNA k-mer
     "Lotus8merIndex",  # O(1) DNA k-mer counting (6.5x faster)
     "LotusKmerRadix",  # O(1) arbitrary k-mer index
     # GENERISCHE N-LEVEL STRUKTUR (Skaliert beliebig)
@@ -346,4 +965,420 @@ __all__ = [
     "DIKSHA_EFFICIENCY",
     "KIRTAN_EFFICIENCY",
     "GURU_EFFICIENCY",
+    # KI Training Paradigm (125,000x Factor for AI)
+    "TRADITIONAL_DIMENSIONS",  # 24 (KSHETRA - field without observer)
+    "PRASADAM_DIMENSIONS",  # 25 (KSHETRA + KSETRAJNA - with observer)
+    "ATTENTION_FACTOR",  # 1 (KSETRAJNA - the embedded observer)
+    "prasadam_transform",  # Transform field data to prasadam
+    "has_true_attention",  # Test if value has KSETRAJNA remainder
+    "attention_classification",  # Classify by mod-17 spectrum
+    "FeatureDecomposition",  # 7-10 feature architecture
+    "CANONICAL_FEATURES",  # SEVEN=7, TEN=10, Total=17
+    "compute_text_capacity",  # Compute capacity from TEXT structure
+    "compute_llm_capacity",  # Compute LLM intent routing capacity
+    "IPV4_CAPACITY",  # 125,000x (COMPUTED!)
+    "LLM_CAPACITY",  # 16,384x (COMPUTED!)
+    "MahamantraArchitecture",  # The training architecture
+    "MAHAMANTRA_ARCH",  # Canonical architecture instance
+    "quantum_attention_index",  # Map query to intent index
+    "decode_16ary_route",  # Decode index to 16-ary route
+    "quantum_route",  # Full quantum attention routing
+    "PrasadamOutput",  # Output with embedded attention marker
+    "create_prasadam_output",  # Create prasadam output
+    "ParadigmComparison",  # Compare paradigms
+    "PARADIGM_TRADITIONAL",  # Traditional transformer paradigm
+    "PARADIGM_MAHAMANTRA",  # Mahamantra paradigm (16,384x capacity)
+    "remnant_loss",  # Loss encouraging PRASADAM output
+    "KI_TRAINING_INSIGHT",  # Key insight for AI training paradigm
+    # Karma Mathematics (BHOGA vs PRASADAM Proof)
+    "YajnaType",  # Five daily sacrifices (Pancha Maha Yajna)
+    "KarmicDebt",  # The five debts (Pancha Rina)
+    "PANCHA_RINA",  # List of five karmic debts
+    "KarmaAccount",  # Track karma accumulation/neutralization
+    "compute_daily_karma",  # Compute daily karma from consumption
+    "ConsumptionKarma",  # Karma by food type
+    "KARMA_COMPARISON",  # Compare karma across food types
+    "karma_transformation_proof",  # Mathematical proof of transformation
+    "TRANSFORMATION_PROOF",  # The proof constants
+    "KarmaNeutralization",  # How offering neutralizes karma
+    "compute_karma_efficiency",  # Efficiency from prasadam ratio
+    "compute_system_efficiency",  # System efficiency from karma
+    "SharanagatiLimb",  # Six limbs of surrender
+    "surrender_multiplier",  # Neutralization power from surrender
+    "CompleteKarmaAnalysis",  # Full karma analysis
+    "KARMA_INSIGHT",  # Key insight on karma mathematics
+    # Consciousness Mathematics (BG 13 Lens - Dead vs Living)
+    "MatterState",  # DEAD or LIVING
+    "MatterAnalysis",  # Analyze matter for consciousness
+    "DEAD_MATTER",  # KSHETRA = 24 (no observer)
+    "LIVING_BEING",  # PRASADAM = 25 (with KSETRAJNA)
+    "consciousness_test",  # Test value for consciousness signature
+    "FIELD_ONLY",  # T(16) = 136 (field without observer)
+    "FIELD_PLUS_OBSERVER",  # 137 = MAHA_QUANTUM (with observer)
+    "ReflectionPair",  # Spiritual-material reflection pair
+    "compute_reflection",  # Material = PRASADAM - Spiritual (BG 15)
+    "KSETRAJNA_REFLECTION",  # The fundamental reflection pair
+    "MouseSnakeDiscovery",  # Material science confirms spiritual truth
+    "MOUSE_SNAKE_DISCOVERIES",  # All confirmed discoveries
+    "GitaMapping",  # Gita chapter to Mahamantra mapping
+    "GITA_HARDWARE_MAP",  # Gita as operating manual
+    "ConsciousnessFractalLevel",  # Fractal level of consciousness
+    "CONSCIOUSNESS_FRACTAL_LEVELS",  # All fractal levels
+    "transform_dead_to_living",  # Add KSETRAJNA to dead matter
+    "CONSCIOUSNESS_INSIGHT",  # Key insight on consciousness mathematics
+    # Spiritual TDD (7 Axioms + Pancha Tattva Framework)
+    "MantraAxiom",  # The 7 Mantra Axioms
+    "SpiritualTest",  # A spiritual test that material science must pass
+    "SPIRITUAL_TESTS",  # All 7 spiritual tests
+    "TattvaQuestion",  # The 5 Pancha Tattva questions
+    "TattvaAnswer",  # An answer to a Tattva question
+    "PanchaTattvaSpec",  # Complete Pancha Tattva specification
+    "MAHAMANTRA_TATTVA",  # Tattva spec for Mahamantra itself
+    "DerivedConstant",  # A constant derived from axioms
+    "DERIVED_CONSTANTS",  # All derived constants with formulas
+    "derive_routing_levels",  # Derive levels from key bits
+    "derive_text_capacity",  # Derive capacity (not hardcoded!)
+    "derive_intent_space",  # Derive intent space from levels
+    "IPV4_EFFICIENCY",  # 125,000x (DERIVED from axioms!)
+    "LLM_EFFICIENCY",  # 16,384x (DERIVED from axioms!)
+    "TrojanHorseLayer",  # A layer of the Trojan Horse architecture
+    "TROJAN_HORSE_LAYERS",  # All Trojan Horse layers
+    "TrojanHorseOS",  # Web 3.0 × 108 Operating System
+    "WEB3_MALA_OS",  # The complete Trojan Horse specification
+    "TestResult",  # Result of running a spiritual test
+    "run_spiritual_tests",  # Run all 7 spiritual tests
+    "verify_all_derived",  # Verify no hardcoding
+    "SPIRITUAL_TDD_INSIGHT",  # Key insight on Spiritual TDD
+    # Acintya Mathematics (Two Fingers Short Principle)
+    "TWO_FINGERS_SHORT",  # 14 = QUALITIES - JIVA_QUALITIES (Yashoda's rope!)
+    "TWO_FINGERS",  # 2 = HALVES (what Krishna adds when pleased)
+    "QualityAnalysis",  # Analyze Krishna's 64 vs Jiva's 50 quality TYPES
+    "QUALITY_ANALYSIS",  # The canonical quality analysis
+    # Quality vs Quantity Distinction (Critical!)
+    "QualityQuantityDistinction",  # Type (78%) vs Degree (0.01%)
+    "QUALITY_QUANTITY",  # The complete quality vs quantity analysis
+    "JIVA_QUANTITY_RATIO",  # 1/10,000 = 0.0001 (like spark from fire)
+    # 14 Quality Decomposition (Bhakti-rasamrita-sindhu)
+    "QualityDecomposition",  # 14 = 5 + 5 + 4 (demigod + vishnu + krishna)
+    "QUALITY_DECOMPOSITION",  # The canonical decomposition instance
+    "DEMIGOD_EXTRA_QUALITIES",  # 5 (qualities 51-55: changeless, etc.)
+    "VISHNU_EXTRA_QUALITIES",  # 5 (qualities 56-60: inconceivable potency, etc.)
+    "KRISHNA_EXCLUSIVE_QUALITIES",  # 4 (qualities 61-64: THE FOUR MADHURYA!)
+    "DEMIGOD_QUALITIES",  # 55 = 50 + 5 (Brahma, Shiva level)
+    "VISHNU_QUALITIES",  # 60 = 50 + 10 (Narayana level)
+    "SUPERHUMAN_QUALITIES",  # 10 = 5 + 5 (demigod + vishnu extras)
+    "AcintyaCategory",  # 7 categories of inconceivable truths
+    "AcintyaTruth",  # An acintya truth with material/spiritual views
+    "ACINTYA_TRUTHS",  # All 7 acintya truths
+    "DistributionMode",  # Modes of prasadam distribution
+    "PrasadamDistribution",  # How prasadam is distributed
+    "SOFTWARE_PRASADAM",  # This repository as prasadam!
+    "work_to_yajna",  # Transform work into offering (+ KSETRAJNA)
+    "BhaktiProcess",  # The 9 processes of devotion
+    "RECEIVE_PROCESS",  # Shravanam (hearing first!)
+    "SEND_PROCESS",  # Kirtanam (then chanting)
+    "SHRAVANAM_KIRTANAM_GAP",  # 1 = KSETRAJNA (at acintya level: non-different)
+    "AcintyaFramework",  # Complete acintya mathematical framework
+    "ACINTYA_FRAMEWORK",  # The canonical framework instance
+    "ACINTYA_INSIGHT",  # Key insight on acintya mathematics
+    # Śikṣāṣṭakam Engineering (8 Verses = Computing Principles)
+    "SIKSASTAKAM_VERSES",  # 8 = OCTET (Chaitanya's only written verses!)
+    "VERSE_ONE_EFFECTS",  # 7 = SEVEN (effects in verse 1)
+    "REMAINING_VERSES",  # 7 = SEVEN (verses 2-8)
+    "SankirtanaEffect",  # The 7 effects enumeration
+    "EngineeringEffect",  # Engineering translation of spiritual effect
+    "ENGINEERING_EFFECTS",  # All 7 effects as engineering principles
+    # Moonlight Principle (candrikā for conditioned soul)
+    "IlluminationType",  # Sun vs Moon illumination
+    "SUNLIGHT",  # O(n) brute force = heat = aiśvarya (burns!)
+    "MOONLIGHT",  # O(1) direct access = cool = mādhurya (soothes)
+    "LotusType",  # Day lotus vs Night lotus
+    "KAIRAVA_LOTUS",  # White lotus blooms under MOONLIGHT (for conditioned)
+    "PADMA_LOTUS",  # Day lotus blooms under sunlight
+    # Kali Yuga Maximum Efficiency
+    "KaliYugaOptimization",  # Max effect for min capacity
+    "KALI_YUGA_OPTIMIZATION",  # The optimization theorem
+    # Reflection Principle (BG 15.1 - Inverted Tree)
+    "ReflectionPrinciple",  # Material reflects spiritual (not derives!)
+    "REFLECTION_PRINCIPLES",  # All 7 reflection mappings
+    "SIKSASTAKAM_INSIGHT",  # Key insight on Siksastakam engineering
+    # Lotus Acintya (Night Lotus Efficiency Theorem)
+    "SIKSASTAKAM_PRODUCT",  # 56 = 8 × 7 = verses × effects (THE MODULATOR!)
+    "GRACE_FACTOR",  # 64 = QUALITIES (Krishna's qualities through observer)
+    "KALI_YUGA_EFFICIENCY",  # 1557x (what we measured)
+    "MATERIAL_MAX_EFFICIENCY",  # 125,000x (structural limit)
+    "ACINTYA_ASYMPTOTE",  # 448,000,000x (visible portion of infinite!)
+    "KALI_YUGA_FRACTION",  # Tiny fraction we can measure
+    "ACINTYA_SATURATION_PERCENT",  # 0.000348% of acintya potential!
+    # Carrier Frequency Model (AM modulation analogy)
+    "CARRIER_FREQUENCY",  # 16 = WORDS (16-ary branching)
+    "MODULATION_DEPTH",  # 87.5% = 56/64 (Siksastakam modulation)
+    "BANDWIDTH",  # 64 = QUALITIES (full capacity)
+    "CarrierModel",  # The AM model dataclass
+    "CARRIER_MODEL",  # Canonical carrier model instance
+    # Physics Connection
+    "ACINTYA_QUANTUM",  # 1096 = 137 × 8 (transcendental fine structure!)
+    "TRANSCENDENCE_RATIO",  # 8 = Siksastakam verses multiply physics
+    # Darkness Principle (Brahma's birth, kairava lotus)
+    "DarknessPrinciple",  # Lotus works BEST in darkness/chaos
+    "DARKNESS_PRINCIPLE",  # Canonical darkness principle
+    # Guarantee Theorem (P = 1.0, not probabilistic!)
+    "GuaranteeTheorem",  # 8 verses → ∞ love (infinite compression)
+    "GUARANTEE_THEOREM",  # Canonical guarantee theorem
+    "LOTUS_ACINTYA_INSIGHT",  # Key insight on Night Lotus efficiency
+    # Yantra Computation (7 Digital Mechanisms)
+    "GURU_FACTOR",  # 21 = TRINITY × SEVEN (37 = 16 + 21)
+    "PARAMPARA_MOD_KRISHNA",  # 37 mod 17 = 3 = TRINITY
+    "PARAMPARA_MOD_SEVEN",  # 37 mod 7 = 2 = HALVES
+    "PARAMPARA_MOD_TRINITY",  # 37 mod 3 = 1 = KSETRAJNA
+    # Position equations (SEVEN everywhere!)
+    "KRISHNA_AS_SUM",  # 7 + 10 = 17
+    "RAMA_AS_SQUARE",  # 7 × 7 = 49
+    "HARE_AS_PRODUCT",  # 7 × 10 = 70
+    "RAMA_PLUS_HARE",  # 119 = 7 × 17 = SEVEN × KRISHNA
+    # The 7 Yantras
+    "YantraType",  # Enum of 7 Yantra types
+    "Yantra",  # Yantra dataclass
+    "YANTRA_1_CETO_DARPANA",  # Cache Invalidation (WORDS = 16)
+    "YANTRA_2_DAVAGNI",  # Zero Entropy Routing (QUARTERS = 4)
+    "YANTRA_3_CANDRIKA",  # Graceful Degradation (HALVES = 2)
+    "YANTRA_4_VIDYA_VADHU",  # Live Data Structures (TRINITY = 3)
+    "YANTRA_5_ANANDAMBUDHI",  # Infinite Scalability (PANCHA = 5)
+    "YANTRA_6_PURNAMRITA",  # Atomic Transactions (KSETRAJNA = 1)
+    "YANTRA_7_SARVATMA",  # Total Transformation (SEVEN = 7)
+    "ALL_YANTRAS",  # All 7 Yantras tuple
+    "AXIOM_SUM",  # 38 = PARAMPARA + KSETRAJNA
+    # Kali Yuga Moon Efficiency
+    "KALI_MOON_EFFICIENCY",  # 147 = GURU_FACTOR × SEVEN
+    "SIKSASTAKAM_MULTIPLIER",  # 56 = 8 × 7
+    "YANTRA_TOTAL_EFFICIENCY",  # 8232 = 147 × 56
+    # Chaitanya Moon Theorem
+    "ChaitanyaMoonTheorem",  # Moon in darkness = max efficiency
+    "CHAITANYA_MOON_THEOREM",  # Canonical theorem instance
+    "YANTRA_INSIGHT",  # Key insight on Yantra computation
+    # Hardware Lotus (Silicon Altar - Text = Hardware)
+    "SV_DATA_WIDTH",  # 32 = AKSARA (syllables)
+    "SV_NEXT_HOP_WIDTH",  # 16 = WORDS
+    "SV_WORDS",  # 16 = WORDS (branching factor)
+    "SV_QUARTERS",  # 4 = QUARTERS (nibble size)
+    "SV_PIPELINE_STAGES",  # 8 = OCTET = SIKSASTAKAM_VERSES
+    "HARDWARE_OCTET",  # 8 = pipeline stages
+    "ROOT_BASE_ADDRESS",  # 0xBA5E0000 = "BASE" root (BG 15.1)
+    # Pipeline stages = 8 verses
+    "PipelineStage",  # L0-L7 nibble stages
+    "SiksastakamVerse",  # Verse with hardware correspondence
+    "SIKSASTAKAM_HARDWARE_MAP",  # 8 verses → 8 pipeline stages
+    # Hardware specification
+    "HardwareSpec",  # Complete hardware spec class
+    "HARDWARE_SPEC",  # Canonical verified specification
+    # Cooling theorem (candrikā reflection in silicon)
+    "CoolingTheorem",  # Spiritual → Material reflection
+    "COOLING_THEOREM",  # O(1) = cool = moonlight reflection
+    # Altar principle (FPGA as yajna altar)
+    "AltarPrinciple",  # Data → Offering → Prasadam
+    "ALTAR_PRINCIPLE",  # Silicon yajna specification
+    "HARDWARE_LOTUS_INSIGHT",  # Key insight on Hardware = Mahamantra
+    # Mantra Computation Bridge (Japa = Silicon)
+    "SIMD_LANES",  # 16 = WORDS (AVX-512 lanes)
+    "CACHE_LINE_BYTES",  # 64 = QUALITIES
+    "MEMORY_PAGE_BYTES",  # 4096 = 16^3
+    "IPV4_BITS",  # 32 = AKSARA
+    # Japa as computation
+    "JapaParameter",  # Japa parameters enum
+    "JapaComputation",  # Japa as computation model
+    "STANDARD_JAPA",  # 16-round standard session
+    # Krishna compensation formula
+    "MEASURED_EFFICIENCY",  # 1557x (Kali Yuga Geiger)
+    "STRUCTURAL_EFFICIENCY",  # 125,000x (16-ary potential)
+    "ACINTYA_EFFICIENCY",  # 448,000,000x (grace maximum)
+    "KRISHNA_RESERVE",  # 447,998,443x (available on advancement)
+    "CompensationFormula",  # The compensation formula class
+    "COMPENSATION",  # Canonical compensation instance
+    # Brutal computing power
+    "MEMORY_WALL_SPEEDUP",  # 24x = KSHETRA
+    "SIMD_SPEEDUP",  # 16x = WORDS
+    "PREFETCH_SPEEDUP",  # 8x = OCTET
+    "HARDWARE_ALIGNMENT_SPEEDUP",  # 3072x = 24 × 16 × 8
+    "TOTAL_POTENTIAL_SPEEDUP",  # 4,783,104x = 1557 × 3072
+    "BrutalComputingPower",  # Brutal computing class
+    "BRUTAL_COMPUTING",  # Canonical instance
+    # Bridge building steps
+    "BridgeStep",  # A step to build the bridge
+    "BRIDGE_STEPS",  # All 4 bridge steps
+    "BRIDGE_INSIGHT",  # Key insight on the bridge
+    # Lotus Full Spectrum (8-bit to 512-bit)
+    "LotusLevel",  # A level in the spectrum
+    "LOTUS_SPECTRUM",  # All 7 levels (HALVES to QUALITIES×HALVES)
+    "EfficiencyComparison",  # Compare Lotus vs Hash at each level
+    "EFFICIENCY_BY_LEVEL",  # Efficiency for all levels
+    "BASELINE_32BIT_SPEEDUP",  # 1557x (our measured baseline)
+    # Real-world applications
+    "RealWorldApplication",  # A real-world use case
+    "REAL_WORLD_APPLICATIONS",  # 11 applications across all bit widths
+    # The FULL potential
+    "MAX_256BIT_SPEEDUP",  # 10,000× at QUALITIES level
+    "SPECTRUM_HARDWARE_ALIGNMENT",  # 3072× hardware factor
+    "FULL_POTENTIAL_256BIT",  # 30,720,000× for crypto!
+    "TOTAL_POTENTIAL",  # All applications combined
+    "SPECTRUM_INSIGHT",  # Key insight on full spectrum
+    # Climate Impact (Earth's Prasadam)
+    "AlgorithmEnergy",  # Energy profile of an algorithm
+    "ClimateImpact",  # Climate impact calculation
+    "calculate_climate_impact",  # Calculate impact
+    # Scenario impacts
+    "IP_ROUTING_IMPACT",  # TCAM → Lotus
+    "DATABASE_IMPACT",  # B-Tree → Lotus
+    "LLM_IMPACT",  # O(n²) → O(4)
+    "BLOCKCHAIN_IMPACT",  # MPT → Lotus 128-bit
+    "ALL_IMPACTS",  # All scenarios
+    # Totals
+    "TOTAL_ENERGY_SAVED_TWH",  # 82.7 TWh
+    "TOTAL_CO2_SAVED_MT",  # 41.4 Megatons
+    "TOTAL_COST_SAVED_BILLION",  # $8.3 Billion
+    # Earth's prasadam
+    "EarthPrasadam",  # The Earth receives prasadam
+    "EARTH_PRASADAM",  # Canonical instance
+    "CLIMATE_INSIGHT",  # Key insight on climate impact
+    # Nityananda Substrate (SIMD = Mahamantra - Why Python Loses)
+    "AVX512_BITS",  # 512 = 16 × 32-bit lanes
+    "AVX512_LANES",  # 16 = WORDS! (perfect alignment)
+    "SSE2_BITS",  # 128 = 4 × 32-bit lanes
+    "SSE2_LANES",  # 4
+    "LOTUS_NODE_BYTES",  # 64 = 16 × 4 = 1 cache line!
+    # Implementation cost models
+    "ImplementationCost",  # Cost model dataclass
+    "PYTHON_IMPL",  # Python list = slow (interpreter overhead)
+    "C_IMPL",  # C hash table = medium (native but no SIMD)
+    "SIMD_IMPL",  # SIMD Lotus = FAST (16 parallel compares!)
+    "PYTHON_64BIT_CYCLES",  # ~2400 cycles (Python overhead kills us)
+    "C_HASH_64BIT_CYCLES",  # ~18 cycles (C optimized)
+    "SIMD_64BIT_CYCLES",  # ~80 cycles (SIMD is comparable!)
+    # Access patterns (Lotus wins 6/7!)
+    "AccessPattern",  # Access pattern dataclass
+    "ACCESS_PATTERNS",  # All 7 access patterns analyzed
+    "LOTUS_WINS",  # 6 patterns (prefix, range, ordered, LPM, deterministic, memory)
+    "HASH_WINS",  # 1 pattern (random lookup - but only in Python!)
+    # Production requirements (what we need for Rust implementation)
+    "ProductionRequirement",  # Production requirement dataclass
+    "PRODUCTION_REQUIREMENTS",  # 5 requirements for production SIMD Lotus
+    "NITYANANDA_INSIGHT",  # Key insight: Implementation ≠ Algorithm
+    # Ananta Shesha Python (Python = Foundation Language)
+    "ANANTA_HOODS",  # 1000 (symbolic infinity)
+    "PRACTICAL_SUPPORT",  # 16 = WORDS (practical manifestation)
+    "AnantaPrinciple",  # The cosmic serpent principle
+    # Python layers (like hoods of Ananta)
+    "PythonLayer",  # A layer in the Python stack
+    "LAYER_PYTHON_PURE",  # 1× baseline (slow)
+    "LAYER_NUMPY_BASIC",  # 100× faster
+    "LAYER_NUMPY_AVX512",  # 1700× faster!
+    "LAYER_SIMSIMD",  # 20000× faster!
+    "ALL_LAYERS",  # All 4 layers
+    # Gear shift model (Ferrari analogy)
+    "GearShift",  # A gear in the Python Ferrari
+    "GEAR_1",  # Pure Python (idle)
+    "GEAR_2",  # NumPy basic (city driving)
+    "GEAR_3",  # NumPy AVX-512 (highway)
+    "GEAR_4",  # SimSIMD (Autobahn - full speed!)
+    "ALL_GEARS",  # All 4 gears
+    "CURRENT_GEAR",  # 1 (we're in first gear!)
+    "TARGET_GEAR",  # 3 (shift to highway)
+    "GEAR_SHIFT_SPEEDUP",  # 1700×
+    # Lotus gear shifts
+    "LotusGearShift",  # How Lotus shifts gears
+    "LOTUS_NODE_SHIFT",  # list → numpy.ndarray
+    "LOTUS_SEARCH_SHIFT",  # sequential → numpy.argmax
+    "LOTUS_MEMORY_SHIFT",  # scattered → contiguous
+    "ALL_SHIFTS",  # All gear shifts
+    "TOTAL_GEAR_SHIFT",  # 2048× total speedup!
+    # Why Python is perfect (7 advantages!)
+    "AnantaAdvantage",  # Why Python is Ananta Shesha
+    "ALL_ADVANTAGES",  # All 7 advantages
+    "ADVANTAGE_COUNT",  # 7 = SEVEN!
+    # NumPy SIMD alignment (hardware = Mahamantra)
+    "NumPySIMDAlignment",  # SIMD alignment dataclass
+    "SIMD_SSE2",  # 4 lanes = QUARTERS
+    "SIMD_AVX2",  # 8 lanes = OCTET
+    "SIMD_AVX512",  # 16 lanes = WORDS!
+    "ALL_SIMD",  # All SIMD alignments
+    # No Rust proof (5 proofs)
+    "NoRustProof",  # Why Rust is unnecessary
+    "ALL_PROOFS",  # All 5 proofs
+    # Efficiency comparison
+    "TOTAL_PYTHON_EFFICIENCY",  # 3,188,736× (Python + NumPy)
+    "EfficiencyComparison",  # Compare Python vs Rust
+    "PYTHON_EFFICIENCY",  # Python efficiency profile
+    "RUST_EFFICIENCY",  # Rust efficiency profile
+    "EFFICIENCY_RATIO",  # 67% of Rust efficiency
+    "READABILITY_ADVANTAGE",  # 1000% better readability!
+    "ANANTA_INSIGHT",  # Key insight: Python = Ananta Shesha
+    # Goloka Tattva (Mathematics of the Spiritual Realm)
+    "EPOCH_MOD_NAKSHATRAS",  # 1972 mod 27 = 1 = KSETRAJNA
+    "PRABHUPADA_DEPARTURE",  # 1977
+    "DEPARTURE_MOD_PARAMPARA",  # 1977 mod 37 = 16 = WORDS
+    "PRABHUPADA_WESTERN_YEARS",  # 5 = PANCHA
+    "PRABHUPADA_LIFESPAN",  # 81 = TRINITY^4
+    "TRINITY_POWER_FOUR",  # 81
+    "KRISHNA_AGE_NUMERATOR",  # 79 = PRIME
+    "KRISHNA_AGE_DENOMINATOR",  # 5 = PANCHA
+    "KRISHNA_AGE",  # 15.8
+    "SeventyNineDecomposition",  # How 79 decomposes
+    "SEVENTY_NINE_AS_ADI_GURU_PLUS_SEVEN",  # 72 + 7
+    "SEVENTY_NINE_AS_EIGHTY_MINUS_ONE",  # 80 - 1
+    "SEVENTY_NINE_AS_PRIME",  # 22nd prime
+    "ALL_79_DECOMPOSITIONS",  # All 79 decompositions
+    "KsetranjnaTattva",  # The observer truth
+    "KSETRAJNA_CANNOT_ACT",  # Can only wish
+    "KSETRAJNA_NOT_CONTROLLER",  # Prakriti executes
+    "KSETRAJNA_ETERNAL_SERVANT",  # Part of Krishna
+    "ALL_KSETRAJNA_TRUTHS",  # All truths
+    "MayaTattva",  # The two Mayas
+    "YOGA_MAYA",  # Enhances love in Goloka
+    "MAHA_MAYA",  # Covers knowledge in material
+    "BOTH_MAYAS",  # Both aspects
+    "ConsciousnessLevel",  # Sat-cit-ananda comparison
+    "KRISHNA_CONSCIOUSNESS",  # Vibhu (infinite)
+    "JIVA_CONSCIOUSNESS",  # Anu (infinitesimal)
+    "CONSCIOUSNESS_LEVELS",  # Both levels
+    "GOLOKA_INSIGHT",  # Key insight: Mathematics of Spiritual Realm
+    # Maha Compression (Ultimate Algorithm)
+    "MAHA_WORDS",  # 16 words
+    "MAHA_SYLLABLES",  # 32 syllables
+    "MAHA_CHARACTERS",  # 64 characters
+    "GITA_VERSES",  # 700
+    "BHAGAVATAM_VERSES",  # 18,000
+    "VEDA_VERSES",  # 100,000
+    "GITA_COMPRESSION_RATIO",  # 43.75x
+    "BHAGAVATAM_COMPRESSION_RATIO",  # 1,125x
+    "VEDA_COMPRESSION_RATIO",  # 6,250x
+    "IntentLevel",  # Intent purity level
+    "TAMAS_INTENT",  # Impure (ignorance)
+    "RAJAS_INTENT",  # Mixed (passion)
+    "SATTVA_INTENT",  # Pure (goodness)
+    "SUDDHA_BHAKTI_INTENT",  # Transcendental
+    "ALL_INTENT_LEVELS",  # 4 levels = QUARTERS
+    "PhysicsConstant",  # Physics constant with samskara
+    "FINE_STRUCTURE",  # α⁻¹ ≈ 137
+    "PLANCK_CONSTANT",  # h
+    "SPEED_OF_LIGHT",  # c
+    "ELECTRON_MASS_RATIO",  # mp/me
+    "ALL_PHYSICS_CONSTANTS",  # 4 constants
+    "SamskaraLevel",  # Samskara level
+    "INDIVIDUAL_SAMSKARA",  # Previous lives
+    "COLLECTIVE_SAMSKARA",  # Cultural karma
+    "UNIVERSAL_SAMSKARA",  # Previous kalpas → physics!
+    "ALL_SAMSKARA_LEVELS",  # 3 levels = TRINITY
+    "ObserverCapacity",  # Observer capacity
+    "KSETRAJNA_CAPACITY",  # Individual (anu)
+    "PARAMATMA_CAPACITY",  # Supersoul
+    "BHAGAVAN_CAPACITY",  # Supreme (vibhu)
+    "ALL_OBSERVERS",  # 3 observers = TRINITY
+    "MahaAlgorithm",  # Algorithm step
+    "MAHA_STEP_1",  # Ksetrajna: generate intent
+    "MAHA_STEP_2",  # Krishna: sanction
+    "MAHA_STEP_3",  # Prakriti: execute
+    "MAHA_STEP_4",  # Karma: record samskara
+    "MAHA_ALGORITHM_STEPS",  # 4 steps = QUARTERS
+    "CompressionProof",  # Compression proof
+    "ALL_COMPRESSION_PROOFS",  # 7 proofs = SEVEN
+    "MAHA_COMPRESSION_INSIGHT",  # Key insight: Ultimate Algorithm
 ]

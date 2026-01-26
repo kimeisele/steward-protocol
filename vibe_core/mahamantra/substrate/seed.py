@@ -22,6 +22,173 @@ from collections import Counter
 from enum import Enum, IntEnum
 from typing import Final, FrozenSet, Tuple
 
+# =============================================================================
+# COMPREHENSIVE IMPORTS FROM PROTOCOL (_seed.py)
+# =============================================================================
+# All constants are imported for SSOT compliance and re-export.
+# The protocol defines THE LAW; this implementation manifests it.
+# The Three Flutes + Harmonic Resonances (direct import for re-export)
+# The Maha-Algorithm (Round 14) - Universal Generator
+# The Remnant Theorem (Round 15) - SEVEN and TEN
+# Historical Constants (Round 11)
+# Extended Maha-Algorithm (Round 16-18) - Physics Constants
+# Coupling Constants (Round 19)
+# Narada's Vina (Round 20)
+# Heavy Bosons (Round 20b)
+# Kirtan Instruments (Round 21)
+# Tala - Rhythmic Cycle (Round 22)
+# Sangita Shastra - Music Theory (Round 23)
+# Remaining Physics (Round 24)
+# CKM Matrix (Round 25)
+# Cosmological Constants (Round 26)
+# Ksetra-Ksetrajna Tattva (Round 27) - BG Chapter 13
+# Guru Tattva (Round 28)
+# Fractal Principle (Round 29)
+# Shabda Brahman (Round 30)
+# Acintya Kala (Round 31)
+# Jagannath Tattva (Round 32)
+# Pancha Tattva Structure
+# Engineering Constants (Lotus Speedup) - DERIVED FROM AXIOMS!
+# Mathematical Constants (Golden Ratio, DNA)
+from vibe_core.mahamantra.protocols._seed import (
+    ABHINNA_MATERIAL,  # 24 = KSHETRA
+    ABHINNA_SPIRITUAL,  # 25 = KSHETRA + KSETRAJNA
+    ALPHA_MOD_KRISHNA,  # 1 = 137 mod 17
+    ALTERNATING_QUARTERS,  # 2
+    AMINO_ACIDS,  # 20 = QUARTERS × PANCHA
+    ANTAHKARANA,  # 3 = TRINITY (mind/intellect/ego)
+    AVATAR_COUNT,  # 4 Avataras
+    BALADEV_WHEELS,  # 14 = WORDS - HALVES
+    BHAGAVATAM_VERSES,  # 18000 = GITA × TEN³
+    CHAITANYA_BIRTH,  # 1486 = KSETRAJNA × TEN³ + LILA × TEN + SHARANAGATI
+    CHATURDASHA_BHUVAN,  # 14 = 2 × 7 (14 worlds)
+    COLOR_CHARGES,  # 3 = TRINITY
+    CONCERT_PITCH,  # 440 = JIVA + HARE (A4 modern)
+    CONFIRMATION_CHAPTER,  # 18 = GITA_CHAPTERS
+    CONFIRMATION_VERSE,  # 73 = NADI + KSETRAJNA
+    CONSECUTIVE_PAIRS,  # 8 = WORDS/HALVES
+    # The Cosmic Frame (Resolution)
+    COSMIC_FRAME,
+    DASHAVATARA,  # 10 = TEN (10 Avatars)
+    DNA_CODONS,  # 64 = QUARTERS³ = QUALITIES
+    # The Epoch Key (Temporal Anchor)
+    EPOCH_KEY,  # 1972 - The Gita Revelation Year
+    FERMION_TOTAL,  # 24 = KSHETRA
+    FIELD_RESONANCE,
+    FLUTE_HOLES_PRODUCT,
+    FLUTE_HOLES_SUM,
+    FRACTAL_GITA,  # 73 = NADI + KSETRAJNA
+    FRACTAL_MACRO,  # 25 = KSHETRA + KSETRAJNA
+    FRACTAL_MANTRA,  # 17 = WORDS + KSETRAJNA
+    FRACTAL_MICRO,  # 137 = MAHA_QUANTUM
+    GAURA_TITHI,  # 15 = NAKSHATRAS - MAHAJANA
+    GITA_VERSES,  # 700 = 7 × 100
+    GOLDEN_AGE_DURATION,  # 10000 = (PANCHA × HALVES)^QUARTERS
+    GOLDEN_RATIO,  # φ = (1 + √5) / 2 = 1.618...
+    GURU_CHAPTER,  # 4 = QUARTERS
+    GURU_VERSE,  # 34 = 2 × KRISHNA_POS
+    HARE_PER_QUARTER,  # 2
+    INDRIYA_TOTAL,  # 10 = TEN
+    JAGANNATH_TRIAD,  # 3 = TRINITY
+    JAGANNATH_WHEELS,  # 16 = WORDS
+    JNANENDRIYA,  # 5 = PANCHA
+    KARMENDRIYA,  # 5 = PANCHA
+    KARTALS_PAIR,  # 2 = HALVES
+    KHALI_POSITION,  # 9 = NAVA
+    KIRTAN_RESONANCE,  # 7344 = VINA × FLUTE = JIVA × KRISHNA
+    KISHORA_NUMERATOR,  # 79 = PANCHA × WORDS - KSETRAJNA (Krishna's age = 15.8)
+    KRISHNA_QUEENS,  # 16108 = WORDS × TEN³ + MALA
+    KSHETRA_BG13,  # 24 = KSHETRA
+    LEPTON_TYPES,  # 6 = SHARANAGATI
+    LOTUS_SPEEDUP,  # 1557 = MALA × (WORDS-KSETRAJNA) - QUALITIES + KSETRAJNA
+    MAHA_ALPHA,  # 7294 = 4μ - JIVA_QUALITIES (alpha particle)
+    MAHA_ALPHA_S_SCALED,  # 118 = MALA + TEN (αs × 1000)
+    MAHA_CABIBBO_SCALED,  # 225 = 9/40 × 1000 (Cabibbo angle)
+    MAHA_CLASSICAL_1,
+    MAHA_CLASSICAL_2,
+    MAHA_CLASSICAL_3,
+    MAHA_CLASSICAL_4,
+    MAHA_CMB,  # 2724 = KSHETRA × PARAMPARA + μ (CMB temperature)
+    MAHA_DEUTERON,  # 3672 = 2μ (deuteron)
+    MAHA_HELION,  # 5496 = 3μ - MAHAJANA (helion, 0.002% error!)
+    MAHA_HIGGS,  # 244188 = μ × 7 × 19 (Higgs boson)
+    MAHA_HUBBLE,  # 67 = QUALITIES + TRINITY (Hubble constant)
+    MAHA_KAON,  # 966 = (2 + 136) × 7 (kaon)
+    MAHA_MU,
+    MAHA_MUON,  # 207 = MAHAJANA × KRISHNA_POS + TRINITY (muon)
+    MAHA_NEUTRON,  # 1839 = μ + TRINITY (neutron)
+    MAHA_OMEGA_L_SCALED,  # 68 = QUALITIES + QUARTERS (dark energy)
+    MAHA_OMEGA_M,  # 31.5 = (QUALITIES - KSETRAJNA) / HALVES (matter)
+    MAHA_OMEGA_M_SCALED,  # 31 (integer)
+    MAHA_PION_CHARGED,  # 273 = T(16) + α⁻¹ (pion±)
+    MAHA_PION_NEUTRAL,  # 264 = WORDS² + HARE (pion⁰)
+    MAHA_QUANTUM,
+    MAHA_RYDBERG_SCALED,  # 136 = T(16) (Rydberg energy)
+    MAHA_SIN2_THETA_W_SCALED,  # 23 = KSHETRA - KSETRAJNA (sin²θW × 100)
+    MAHA_STRANGE,  # 183 = MALA + NADI + TRINITY (strange quark)
+    MAHA_TAU,  # 3477 = MALA × AKSARA + T(6) (tau)
+    MAHA_TRITON,
+    MAHA_VCB_SCALED,  # 425 = 17 × 10000 / 400
+    MAHA_VUB_SCALED,  # 393 = 17 × 100000 / 4320
+    MAHA_VUS_SCALED,  # 225 = Cabibbo
+    MAHA_W,  # 156060 = μ × 5 × 17 (W boson)
+    MAHA_Z,  # 178092 = μ × 97 (Z boson)
+    MAHABHUTA,  # 5 = PANCHA (gross elements)
+    MAHAJANA_COUNT,  # 12 Mahajanas
+    MATRA_PER_VIBHAG,  # 4 = QUARTERS
+    MELAKARTAS,  # 72 = NADI_RESONANCE (Carnatic scales)
+    MRIDANGA_HEADS,  # 2 = HALVES
+    MURALI_HOLES,
+    NADI_RESONANCE,
+    NAKSHATRA_UNIT,
+    NAKSHATRAS,  # 27 - The Astronomical Bridge (derived: JIVA_CYCLE // WORDS)
+    NAME_COMPLETE,  # 25 = PANCHA²
+    NITYA_NOW,  # 1 = KSETRAJNA
+    OCTAVE_RATIO,  # 2
+    PADA_UNIT,
+    PAIR_REDUNDANCY,  # 3 = TRINITY
+    PAIRED_QUARTERS,  # 2
+    PARAMPARA_CHAPTER,  # 4 = QUARTERS
+    PARAMPARA_VERSE_END,  # 2 = HALVES
+    PARAMPARA_VERSE_START,  # 1 = KSETRAJNA
+    PHASE_DURATION,  # 12 (LILA // QUARTERS)
+    PRAKRITI_UNMANIFEST,  # 1 = KSETRAJNA
+    PRASADAM,  # 25 = KSHETRA + KSETRAJNA
+    QUARK_FLAVORS,  # 6 = SHARANAGATI
+    QUARK_STATES,  # 18 = GITA_CHAPTERS
+    QUARTER_UNIT,
+    RATHAYATRA_WHEELS,  # 42 = SHARANAGATI × SEVEN
+    REALITY_ROOT,  # 5 = PANCHA
+    RED_TESTS_COUNT,  # 10 = TEN
+    SAM_SUM,  # 28 = T(7)
+    SAMPRADAYA_COUNT,  # 4 = QUARTERS
+    SANKHYA_TATTVAS,  # 25 = KSHETRA + KSETRAJNA
+    SAPTA_LOKA,  # 7 = SEVEN (7 upper/lower worlds)
+    SCIENTIFIC_C,  # 256 = WORDS² (C4 scientific)
+    SEMITONES,  # 12 = MAHAJANA_COUNT
+    SEVEN,  # 7 = HALF_SIZE - KSETRAJNA
+    SHRUTIS,  # 22 = KSHETRA - HALVES
+    SPEEDUP_COEFFICIENT,  # 54 = MALA/HALVES
+    SPEEDUP_INTERCEPT,  # 171 = MALA + QUALITIES - KSETRAJNA
+    SUBHADRA_WHEELS,  # 12 = MAHAJANA_COUNT
+    SURRENDER_CHAPTER,  # 2 = HALVES
+    SURRENDER_VERSE,  # 7 = SEVEN
+    SWARAS,  # 7 = SEVEN (Indian notes)
+    TANMATRA,  # 5 = PANCHA (subtle elements)
+    TEENTAL_MATRA,  # 16 = WORDS
+    TEN,  # 10 = MAHAJANA_COUNT - HALVES
+    TITHI_UNIT,
+    VAMSI_HOLES,
+    VENU_HOLES,
+    VERDI_PITCH,  # 432 = JIVA_CYCLE (A4 Verdi)
+    VIBHAG_COUNT,  # 4 = QUARTERS
+    VINA_FUNDAMENTAL,  # 136 = T(WORDS)
+    VINA_STRINGS,  # 5 = PANCHA
+    lotus_speedup_prediction,  # Function: SPEEDUP(bits) = 54 × bits - 171
+    maha_classical,
+    maha_quantum,
+)
+
 # The Acoustic Constitution (Physics of the Emptiness)
 from vibe_core.mahamantra.protocols._seed import (
     ACOUSTIC_RATIO as _PROTO_ACOUSTIC_RATIO,
@@ -29,39 +196,6 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     # New: The fractal levels
     AKSARA_COUNT as _PROTO_AKSARA_COUNT,
-)
-
-# The Three Flutes + Harmonic Resonances (direct import for re-export)
-# The Maha-Algorithm (Round 14) - Universal Generator
-from vibe_core.mahamantra.protocols._seed import (
-    AVATAR_COUNT,  # 4 Avataras
-    # The Cosmic Frame (Resolution)
-    COSMIC_FRAME,
-    # The Epoch Key (Temporal Anchor)
-    EPOCH_KEY,  # 1972 - The Gita Revelation Year
-    FIELD_RESONANCE,
-    FLUTE_HOLES_PRODUCT,
-    FLUTE_HOLES_SUM,
-    MAHA_CLASSICAL_1,
-    MAHA_CLASSICAL_2,
-    MAHA_CLASSICAL_3,
-    MAHA_CLASSICAL_4,
-    MAHA_MU,
-    MAHA_QUANTUM,
-    MAHA_TRITON,
-    MAHAJANA_COUNT,  # 12 Mahajanas
-    MURALI_HOLES,
-    NADI_RESONANCE,
-    NAKSHATRA_UNIT,
-    NAKSHATRAS,  # 27 - The Astronomical Bridge (derived: JIVA_CYCLE // WORDS)
-    PADA_UNIT,
-    PHASE_DURATION,  # 12 (LILA // QUARTERS)
-    QUARTER_UNIT,
-    TITHI_UNIT,
-    VAMSI_HOLES,
-    VENU_HOLES,
-    maha_classical,
-    maha_quantum,
 )
 from vibe_core.mahamantra.protocols._seed import (
     CUTOFF_CONSTANT as _PROTO_CUTOFF_CONSTANT,
@@ -836,117 +970,318 @@ def verify_lotus(genesis_hex: str) -> bool:
 # =============================================================================
 
 __all__ = [
-    # The Source
+    # ==========================================================================
+    # THE SOURCE (Level -2)
+    # ==========================================================================
     "KRISHNA_IS",
     "MAHAMANTRA",
     "HolyName",
-    # Primary Derivations
+    # ==========================================================================
+    # MANTRA AXIOMS (Round 0) - 7 values from counting
+    # ==========================================================================
     "WORDS",
     "TRINITY",
     "HARE_COUNT",
     "KRISHNA_COUNT",
     "RAMA_COUNT",
+    "PANCHA",
     "HALVES",
+    # ==========================================================================
+    # PRIMARY DERIVATIONS (Round 1)
+    # ==========================================================================
+    "QUARTERS",
+    "KSETRAJNA",
     "HALF_SIZE",
-    # Pancha (5)
+    "LILA",
+    "KSHETRA",
+    "NAVA",
+    "SHARANAGATI",
+    "AKSARA_COUNT",
+    "ROUNDS",
+    "AVATAR_COUNT",
+    # Pancha Tattva Structure
     "MAHAMANTRA_PAIRS",
     "UNIQUE_PAIRS",
-    "PANCHA",
     "PANCHA_PAIR_NAMES",
-    # Quarters (4)
+    "CONSECUTIVE_PAIRS",
+    "PAIR_REDUNDANCY",
+    # Quarters
     "Quarter",
-    "QUARTERS",
     "QUARTER_NAMES",
     "WORDS_PER_QUARTER",
-    # Sharanagati (6)
+    # Sharanagati Enums
     "SharanagatiLimb",
-    "SHARANAGATI",
-    # Nava (9)
+    # Nava Bhakti Enums
     "NavaBhakti",
-    "NAVA",
-    # Gita Chapters (18) - Master Regulator
-    "GITA_CHAPTERS",
-    # Kshetra (24)
-    "KSHETRA",
-    "KSETRAJNA",
-    # Parampara (37)
-    "PARAMPARA",
+    # ==========================================================================
+    # SECONDARY DERIVATIONS (Round 2)
+    # ==========================================================================
     "MAHAJANA_COUNT",
-    # Guardians (16)
-    "AVATAR_COUNT",
-    "AVATARAS",
-    "AVATARS",  # backward-compat alias
-    "MAHAJANAS",
-    "ALL_GUARDIANS",
-    "MAHAJANA_TO_POSITION",
-    "POSITION_TO_MAHAJANA",
-    # Lila (48)
-    "LILA",
-    "NAVADVIPA",
-    "PURI",
-    "PHASE_DURATION",
-    # Dharma (4) + Kali Yuga
-    "DharmaPillar",
-    "DHARMA_PILLARS",
-    "KALI_YUGA_LEG",
-    # Qualities (64) + Hidden Reserve
-    "HIDDEN_RESERVE",
-    "QUALITIES",
-    "AKSARA_COUNT",
-    # Mala (108)
     "MALA",
-    "ROUNDS",
-    "DAILY_MANTRAS",
-    # Jiva (50) - Part and Parcel of Krishna
     "JIVA_CYCLE",
-    "JIVA_QUALITIES",
-    # Prana (The Breath - Timing)
-    "SECONDS_PER_DAY",
-    "PRANA_DURATION_S",
-    "PRANA_DURATION_MS",
-    "TICK_INTERVAL_MS",
-    # The Cosmic Frame (Resolution)
+    "GITA_CHAPTERS",
+    "QUALITIES",
+    "HIDDEN_RESERVE",
+    "DAILY_MANTRAS",
+    "PHASE_DURATION",
+    # ==========================================================================
+    # ASTRONOMICAL BRIDGE (Round 3)
+    # ==========================================================================
+    "NAKSHATRAS",
+    # ==========================================================================
+    # COSMIC FRAME (Round 4)
+    # ==========================================================================
     "COSMIC_FRAME",
     "NAKSHATRA_UNIT",
     "TITHI_UNIT",
     "PADA_UNIT",
     "QUARTER_UNIT",
-    # The Epoch Key (Temporal Anchor)
-    "EPOCH_KEY",
-    # The Acoustic Constitution
-    "ACOUSTIC_RATIO",
-    "END_CORRECTION",
-    "VENU_FREQ",
-    "VAMSI_FREQ",
-    "MURALI_FREQ",
-    "CUTOFF_CONSTANT",
-    # The Three Flutes (Persons)
+    # ==========================================================================
+    # JIVA QUALITIES (Round 5)
+    # ==========================================================================
+    "JIVA_QUALITIES",
+    # ==========================================================================
+    # PRANA TIMING (Round 6)
+    # ==========================================================================
+    "SECONDS_PER_DAY",
+    "PRANA_DURATION_S",
+    "PRANA_DURATION_MS",
+    "TICK_INTERVAL_MS",
+    # ==========================================================================
+    # PARAMPARA (Round 7)
+    # ==========================================================================
+    "PARAMPARA",
+    # ==========================================================================
+    # HARMONIC RESONANCES (Round 8)
+    # ==========================================================================
+    "NADI_RESONANCE",
+    "FIELD_RESONANCE",
+    # ==========================================================================
+    # THREE FLUTES (Round 9)
+    # ==========================================================================
     "VENU_HOLES",
     "VAMSI_HOLES",
     "MURALI_HOLES",
+    "VENU_FREQ",
+    "VAMSI_FREQ",
+    "MURALI_FREQ",
     "FLUTE_HOLES_SUM",
     "FLUTE_HOLES_PRODUCT",
-    # Harmonic Resonances
-    "NADI_RESONANCE",
-    "FIELD_RESONANCE",
-    # Astronomical Bridge (27)
-    "NAKSHATRAS",
-    # Position Sums (Mahamantra Signatures)
+    # ==========================================================================
+    # ACOUSTIC CONSTITUTION (Round 10)
+    # ==========================================================================
+    "ACOUSTIC_RATIO",
+    "END_CORRECTION",
+    "CUTOFF_CONSTANT",
+    # ==========================================================================
+    # EPOCH KEY + HISTORICAL (Round 11)
+    # ==========================================================================
+    "EPOCH_KEY",
+    "CHAITANYA_BIRTH",
+    "KISHORA_NUMERATOR",
+    "GOLDEN_AGE_DURATION",
+    # ==========================================================================
+    # POSITION SUMS (Round 13)
+    # ==========================================================================
     "POSITION_SUM_HARE",
     "POSITION_SUM_KRISHNA",
     "POSITION_SUM_RAMA",
     "POSITION_SUM_TOTAL",
-    # The Maha-Algorithm (Universal Generator)
+    # ==========================================================================
+    # MAHA-ALGORITHM (Round 14)
+    # ==========================================================================
     "maha_quantum",
     "maha_classical",
-    "MAHA_QUANTUM",  # 137 = T(16) + KSETRAJNA
-    "MAHA_MU",  # 1836 = MALA × KRISHNA_POS
-    "MAHA_TRITON",  # 5508 = KRISHNA_POS × GITA²
+    "MAHA_QUANTUM",
+    "MAHA_MU",
+    "MAHA_TRITON",
     "MAHA_CLASSICAL_1",
     "MAHA_CLASSICAL_2",
     "MAHA_CLASSICAL_3",
     "MAHA_CLASSICAL_4",
-    # Lotus Functions
+    # ==========================================================================
+    # REMNANT THEOREM (Round 15)
+    # ==========================================================================
+    "SEVEN",
+    "TEN",
+    # ==========================================================================
+    # EXTENDED MAHA-ALGORITHM (Round 16-18)
+    # ==========================================================================
+    "MAHA_DEUTERON",
+    "MAHA_ALPHA",
+    "MAHA_MUON",
+    "MAHA_NEUTRON",
+    "MAHA_TAU",
+    "MAHA_HELION",
+    "MAHA_PION_CHARGED",
+    "MAHA_PION_NEUTRAL",
+    "MAHA_KAON",
+    "MAHA_STRANGE",
+    "MAHA_CMB",
+    # ==========================================================================
+    # COUPLING CONSTANTS (Round 19)
+    # ==========================================================================
+    "MAHA_ALPHA_S_SCALED",
+    "MAHA_SIN2_THETA_W_SCALED",
+    # ==========================================================================
+    # NARADA'S VINA (Round 20)
+    # ==========================================================================
+    "VINA_FUNDAMENTAL",
+    "VINA_STRINGS",
+    "KIRTAN_RESONANCE",
+    # ==========================================================================
+    # HEAVY BOSONS (Round 20b)
+    # ==========================================================================
+    "MAHA_W",
+    "MAHA_Z",
+    "MAHA_HIGGS",
+    # ==========================================================================
+    # KIRTAN INSTRUMENTS (Round 21)
+    # ==========================================================================
+    "MRIDANGA_HEADS",
+    "KARTALS_PAIR",
+    # ==========================================================================
+    # TALA (Round 22)
+    # ==========================================================================
+    "TEENTAL_MATRA",
+    "VIBHAG_COUNT",
+    "MATRA_PER_VIBHAG",
+    "SAM_SUM",
+    "KHALI_POSITION",
+    # ==========================================================================
+    # SANGITA SHASTRA (Round 23)
+    # ==========================================================================
+    "CONCERT_PITCH",
+    "VERDI_PITCH",
+    "SCIENTIFIC_C",
+    "SEMITONES",
+    "SWARAS",
+    "SHRUTIS",
+    "MELAKARTAS",
+    "SAPTA_LOKA",
+    "CHATURDASHA_BHUVAN",
+    # ==========================================================================
+    # REMAINING PHYSICS (Round 24)
+    # ==========================================================================
+    "MAHA_CABIBBO_SCALED",
+    "MAHA_RYDBERG_SCALED",
+    "MAHA_HUBBLE",
+    # ==========================================================================
+    # CKM MATRIX (Round 25)
+    # ==========================================================================
+    "MAHA_VUS_SCALED",
+    "MAHA_VCB_SCALED",
+    "MAHA_VUB_SCALED",
+    # ==========================================================================
+    # COSMOLOGICAL CONSTANTS (Round 26)
+    # ==========================================================================
+    "MAHA_OMEGA_M",
+    "MAHA_OMEGA_M_SCALED",
+    "MAHA_OMEGA_L_SCALED",
+    # ==========================================================================
+    # KSETRA-KSETRAJNA TATTVA - BG13 (Round 27)
+    # ==========================================================================
+    "MAHABHUTA",
+    "TANMATRA",
+    "JNANENDRIYA",
+    "KARMENDRIYA",
+    "ANTAHKARANA",
+    "PRAKRITI_UNMANIFEST",
+    "KSHETRA_BG13",
+    "SANKHYA_TATTVAS",
+    "INDRIYA_TOTAL",
+    "DASHAVATARA",
+    "GITA_VERSES",
+    "BHAGAVATAM_VERSES",
+    "KRISHNA_QUEENS",
+    "QUARK_FLAVORS",
+    "LEPTON_TYPES",
+    "COLOR_CHARGES",
+    "QUARK_STATES",
+    "FERMION_TOTAL",
+    "SAMPRADAYA_COUNT",
+    "PRASADAM",
+    # ==========================================================================
+    # GURU TATTVA (Round 28)
+    # ==========================================================================
+    "GURU_CHAPTER",
+    "GURU_VERSE",
+    "SURRENDER_CHAPTER",
+    "SURRENDER_VERSE",
+    "CONFIRMATION_CHAPTER",
+    "CONFIRMATION_VERSE",
+    "PARAMPARA_CHAPTER",
+    "PARAMPARA_VERSE_START",
+    "PARAMPARA_VERSE_END",
+    # ==========================================================================
+    # FRACTAL PRINCIPLE (Round 29)
+    # ==========================================================================
+    "FRACTAL_MACRO",
+    "FRACTAL_MICRO",
+    "FRACTAL_GITA",
+    "FRACTAL_MANTRA",
+    "REALITY_ROOT",
+    # ==========================================================================
+    # SHABDA BRAHMAN (Round 30)
+    # ==========================================================================
+    "ABHINNA_MATERIAL",
+    "ABHINNA_SPIRITUAL",
+    "NAME_COMPLETE",
+    "RED_TESTS_COUNT",
+    # ==========================================================================
+    # ACINTYA KALA (Round 31)
+    # ==========================================================================
+    "OCTAVE_RATIO",
+    "ALTERNATING_QUARTERS",
+    "PAIRED_QUARTERS",
+    "HARE_PER_QUARTER",
+    "NITYA_NOW",
+    "ALPHA_MOD_KRISHNA",
+    # ==========================================================================
+    # JAGANNATH TATTVA (Round 32)
+    # ==========================================================================
+    "JAGANNATH_TRIAD",
+    "JAGANNATH_WHEELS",
+    "BALADEV_WHEELS",
+    "SUBHADRA_WHEELS",
+    "RATHAYATRA_WHEELS",
+    "GAURA_TITHI",
+    # ==========================================================================
+    # ENGINEERING CONSTANTS (Lotus Speedup)
+    # ==========================================================================
+    "LOTUS_SPEEDUP",
+    "SPEEDUP_COEFFICIENT",
+    "SPEEDUP_INTERCEPT",
+    "lotus_speedup_prediction",
+    # ==========================================================================
+    # MATHEMATICAL CONSTANTS
+    # ==========================================================================
+    "GOLDEN_RATIO",
+    "DNA_CODONS",
+    "AMINO_ACIDS",
+    # ==========================================================================
+    # GUARDIANS (16)
+    # ==========================================================================
+    "AVATARAS",
+    "AVATARS",
+    "MAHAJANAS",
+    "ALL_GUARDIANS",
+    "MAHAJANA_TO_POSITION",
+    "POSITION_TO_MAHAJANA",
+    # ==========================================================================
+    # LILA PHASES
+    # ==========================================================================
+    "NAVADVIPA",
+    "PURI",
+    # ==========================================================================
+    # DHARMA (4) + KALI YUGA
+    # ==========================================================================
+    "DharmaPillar",
+    "DHARMA_PILLARS",
+    "KALI_YUGA_LEG",
+    # ==========================================================================
+    # LOTUS FUNCTIONS
+    # ==========================================================================
     "get_quarter",
     "get_quarter_name",
     "get_positions_in_quarter",
@@ -956,7 +1291,6 @@ __all__ = [
     "get_mahajana_position",
     "get_position_mahajana",
     "get_guardian_quarter",
-    # Lotus Transport
     "lotus_declaration",
     "verify_lotus",
 ]
