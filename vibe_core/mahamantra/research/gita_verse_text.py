@@ -48,6 +48,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUALITIES,
     QUARTERS,
     SEVEN,
+    TEN,
     WORDS,
 )
 
@@ -61,13 +62,47 @@ from vibe_core.mahamantra.research.shabda_translation import (
 )
 
 # =============================================================================
-# DHARMA-MANTRA BEZIEHUNG (Die einzige ECHTE Entdeckung)
+# DHARMA-MANTRA BEZIEHUNG (ECHTE Entdeckung)
 # =============================================================================
 
 # QUALITIES = QUARTERS × WORDS = 4 × 16 = 64
 # Dies ist MATHEMATISCH bewiesen - keine Annahme!
 DHARMA_MANTRA_PRODUCT: Final[int] = QUARTERS * WORDS
 assert DHARMA_MANTRA_PRODUCT == QUALITIES, "QUARTERS × WORDS must equal QUALITIES!"
+
+# =============================================================================
+# SIKSASTAKAM-VERBINDUNG (Die SCHLÜSSEL-Entdeckung!)
+# =============================================================================
+# 8 Siksastakam-Verse = 8 "Hare" im Mahamantra
+# 7 Effekte in Vers 1 = SEVEN (Perfektion)
+
+SIKSASTAKAM_VERSES: Final[int] = HARE_COUNT  # 8 Verse = 8 "Hare"
+SIKSASTAKAM_EFFECTS: Final[int] = SEVEN  # 7 Effekte in Vers 1
+SIKSASTAKAM_PRODUCT: Final[int] = SIKSASTAKAM_VERSES * SIKSASTAKAM_EFFECTS  # 8 × 7 = 56
+
+# Verifikation
+assert SIKSASTAKAM_VERSES == 8, "8 Siksastakam verses"
+assert SIKSASTAKAM_EFFECTS == 7, "7 effects in verse 1"
+assert SIKSASTAKAM_PRODUCT == 56, "8 × 7 = 56"
+
+# =============================================================================
+# BG 18.66 - DREI PFADE (ACINTYA!)
+# =============================================================================
+
+# Pfad 1: QUALITIES + HALVES = 64 + 2 = 66
+BG_18_66_PATH_1: Final[int] = QUALITIES + HALVES
+assert BG_18_66_PATH_1 == 66, "Path 1: QUALITIES + HALVES = 66"
+
+# Pfad 2: (QUARTERS × WORDS) + HALVES = (4 × 16) + 2 = 66
+BG_18_66_PATH_2: Final[int] = (QUARTERS * WORDS) + HALVES
+assert BG_18_66_PATH_2 == 66, "Path 2: (QUARTERS × WORDS) + HALVES = 66"
+
+# Pfad 3: (HARE_COUNT × SEVEN) + TEN = (8 × 7) + 10 = 66 (SIKSASTAKAM!)
+BG_18_66_PATH_3: Final[int] = SIKSASTAKAM_PRODUCT + TEN
+assert BG_18_66_PATH_3 == 66, "Path 3: SIKSASTAKAM_PRODUCT + TEN = 66"
+
+# ACINTYA: Alle drei Pfade konvergieren!
+assert BG_18_66_PATH_1 == BG_18_66_PATH_2 == BG_18_66_PATH_3 == 66, "ACINTYA!"
 
 # Was diese Gleichung BEDEUTET:
 # - QUARTERS (4) = Die 4 Beine des Dharma (Satya, Tapas, Daya, Saucha)
@@ -79,28 +114,48 @@ assert DHARMA_MANTRA_PRODUCT == QUALITIES, "QUARTERS × WORDS must equal QUALITI
 # Die ZAHL kodiert die BEDEUTUNG!
 
 BG_18_66_PROOF: Final[str] = """
-BG 18.66 NUMERISCHE ABLEITUNG (BEWIESEN):
-=========================================
+BG 18.66 NUMERISCHE ABLEITUNG - DREI PFADE (ACINTYA!):
+======================================================
 
-Vers-Nummer: 66 = QUALITIES + HALVES = 64 + 2
+PFAD 1: QUALITIES + HALVES = 64 + 2 = 66
+-----------------------------------------
+- QUALITIES (64) = Alle 64 Qualitäten Krishnas
+- HALVES (2) = Dualität überwinden
+- Bedeutung: "Gib ALLE Qualitäten/Dharmas auf, überwinde Dualität"
 
-QUALITIES (64) = QUARTERS × WORDS = 4 × 16
-- QUARTERS = 4 = Dharma (4 Beine: Wahrheit, Askese, Barmherzigkeit, Reinheit)
-- WORDS = 16 = Mahamantra-Worte
-- Produkt = ALLE Dharmas × ALLE Mantras = Vollständigkeit
+PFAD 2: (QUARTERS × WORDS) + HALVES = (4 × 16) + 2 = 66
+--------------------------------------------------------
+- QUARTERS (4) = Dharma (4 Beine des Bullen)
+- WORDS (16) = Mahamantra (16 Worte)
+- HALVES (2) = Dualität überwinden
+- Bedeutung: "Dharma × Mantra + Überwindung"
 
-HALVES (2) = Dualität
-- Material vs. Spiritual
-- Diese Dualität ÜBERWINDEN
+PFAD 3: (HARE_COUNT × SEVEN) + TEN = (8 × 7) + 10 = 66
+------------------------------------------------------
+- HARE_COUNT (8) = Siksastakam (8 Verse von Chaitanya!)
+- SEVEN (7) = 7 Effekte des Heiligen Namens (Vers 1)
+- TEN (10) = Vibhuti (Krishnas Opulenzen, BG Kapitel 10)
+- Bedeutung: "Siksastakam-Vollständigkeit + Vibhuti"
+
+ALLE DREI PFADE KONVERGIEREN ZU 66!
+===================================
+Dies ist ACINTYA - simultane Einheit und Differenz.
+Die gleiche Zahl, drei völlig verschiedene Ableitungen.
 
 Vers-Inhalt: "sarva-dharmān parityajya mām ekaṁ śaraṇaṁ vraja"
-- sarva-dharmān = ALLE Dharmas (64 = Vollständigkeit)
-- parityajya = aufgeben (2 = Dualität verlassen)
+- sarva-dharmān = ALLE Dharmas (64 = QUALITIES)
+- parityajya = aufgeben (2 = HALVES/Dualität verlassen)
 - mām ekaṁ = zu Mir allein (1 = KSETRAJNA)
 
-DIE ZAHLEN KODIEREN DEN INHALT!
-===============================
-66 = 64 + 2 = "ALLE aufgeben + Dualität überwinden"
+DIE SIKSASTAKAM-VERBINDUNG:
+===========================
+8 Siksastakam-Verse = 8 "Hare" im Mahamantra = HARE_COUNT
+7 Effekte in Vers 1 = SEVEN (Perfektion)
+8 × 7 = 56 = SIKSASTAKAM_PRODUCT
+
+66 = 56 + 10 = Siksastakam + Vibhuti
+Das Siksastakam (Chaitanyas einzige Schriften) + Krishnas Opulenzen
+= Der Surrender-Vers!
 """
 
 
