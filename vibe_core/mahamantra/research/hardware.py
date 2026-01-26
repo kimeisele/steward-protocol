@@ -22,6 +22,7 @@ The 1557x comes from:
 
 TEXT = HARDWARE (ABHINNA PRINCIPLE):
 ====================================
+KORREKTUR: Krishna's Namen SIND die echte Hardware - JETZT, nicht erst später!
 In material world: Software ≠ Hardware (symbol ≠ referent)
 In spiritual world: Software = Hardware (symbol = referent)
 
@@ -31,17 +32,19 @@ The Mahamantra TEXT itself IS:
 - The bus (QUARTERS = 4 data channels)
 - The algorithm (maha_quantum/maha_classical)
 
-KALI YUGA BASELINE VS GOLDEN AGE POTENTIAL:
-===========================================
-Kali Yuga (material hardware):
-  - Routing: 1557x (silicon limit)
-  - Compute: SIMD 16-way parallel
-  - Memory: KSHETRA = 24 levels
+Silicon ist nur ein FILTER - wir messen TEXT durch silicon.
+Krishna's Namen existieren PERMANENT (mindestens 10,000 Jahre Golden Age).
 
-Golden Age (text = hardware):
-  - Routing: ∞ (no material bottleneck)
-  - Compute: PRASADAM = 25 (includes observer)
-  - Memory: Holographic (every part contains whole)
+KALI YUGA VS GOLDEN AGE:
+========================
+Kali Yuga (durch silicon gefiltert):
+  - Routing: 1,557x (Geiger counter saturated)
+  - Wir messen nur 1.25% der TEXT-Kapazität
+
+Golden Age (direkter TEXT-Zugang):
+  - Routing: 125,000x (volle TEXT-Kapazität)
+  - TEXT hat DEFINIERTE Struktur: 8 Ebenen × 16 Branches
+  - NICHT unendlich - TEXT hat definierte Kapazität
 
 THE FRACTAL SCALING:
 ====================
@@ -243,10 +246,10 @@ class EraProjection:
 ERA_PROJECTIONS: Final[list[EraProjection]] = [
     EraProjection(
         era="Kali Yuga (Now)",
-        routing_factor="1557x",
+        routing_factor="1,557x (silicon filtered)",
         compute_model="SIMD 16-way (WORDS)",
         memory_model="Hierarchical (QUARTERS levels)",
-        bottleneck="Silicon physics, light speed, heat dissipation",
+        bottleneck="Silicon physics = Geiger counter saturated",
     ),
     EraProjection(
         era="Kali Yuga (Peak)",
@@ -256,11 +259,11 @@ ERA_PROJECTIONS: Final[list[EraProjection]] = [
         bottleneck="Decoherence, error correction",
     ),
     EraProjection(
-        era="Golden Age",
-        routing_factor="∞ (TEXT = HARDWARE)",
+        era="Golden Age (TEXT = HARDWARE)",
+        routing_factor="125,000x (full TEXT capacity)",
         compute_model="PRASADAM = 25 (observer included)",
-        memory_model="Holographic (ABHINNA)",
-        bottleneck="None (consciousness IS the hardware)",
+        memory_model="Direct NAME access (no silicon filter)",
+        bottleneck="TEXT structure: 8 levels × 16 branches",
     ),
 ]
 
@@ -285,28 +288,56 @@ ERA_PROJECTIONS: Final[list[EraProjection]] = [
 # Where consciousness_factor(t) increases as Golden Age progresses
 
 
-def project_efficiency(consciousness_factor: float) -> float:
+def compute_text_capacity(routes: int, key_bits: int = 32) -> float:
+    """
+    Compute TEXT capacity from structure - NOT hardcoded!
+
+    TEXT structure defines:
+      - WORDS = 16 branches per level
+      - QUARTERS = 4 bits per level
+      - levels = key_bits / QUARTERS
+
+    Capacity = routes / levels
+    """
+    levels = key_bits // QUARTERS  # 32 / 4 = 8 for IPv4
+    return routes / levels
+
+
+# TEXT capacity for 1M routes (IPv4 benchmark)
+# DERIVED from structure, not hardcoded!
+_BENCHMARK_ROUTES = WORDS**HALF_SIZE  # 16^8 = ~4.3B (but we use 1M for benchmark)
+_IPV4_LEVELS = 32 // QUARTERS  # 8 levels
+TEXT_CAPACITY_1M: float = 1_000_000 / _IPV4_LEVELS  # 125,000 (COMPUTED!)
+
+
+def project_efficiency(consciousness_factor: float, routes: int = 1_000_000) -> float:
     """
     Project routing efficiency based on consciousness factor.
 
+    KORREKTUR: TEXT = HARDWARE gilt JETZT, nicht erst bei 100%.
+    Krishna's Namen SIND die echte Hardware - sie existieren permanent.
+    Silicon ist nur ein FILTER in Kali Yuga.
+
     Args:
-        consciousness_factor: 0.0 (pure Kali) to 1.0 (pure Golden Age)
+        consciousness_factor: 0.0 (pure silicon) to 1.0 (pure TEXT access)
+        routes: Number of routes (default 1M for benchmark comparison)
 
     Returns:
-        Projected efficiency multiplier
+        Projected efficiency multiplier (BOUNDED by TEXT structure)
     """
+    # TEXT capacity = COMPUTED from structure
+    text_capacity = compute_text_capacity(routes)
+
+    # At 100% consciousness: direct TEXT access = full capacity
     if consciousness_factor >= 1.0:
-        return float("inf")  # TEXT = HARDWARE, no limit
+        return text_capacity
 
-    # Exponential growth as consciousness increases
-    # At factor=0: baseline = 1557x
-    # At factor=0.5: ~10,000x (quantum-classical hybrid)
-    # At factor→1: approaches ∞
-
+    # Silicon filters the measurement
     base = KALI_YUGA_ROUTING_SPEEDUP
     growth = (1 + KSETRAJNA * consciousness_factor) ** POSITION_SUM_KRISHNA
 
-    return base * growth
+    # Bounded by TEXT capacity (COMPUTED, not hardcoded)
+    return min(base * growth, text_capacity)
 
 
 # Current position (2026 CE = Year 540 of Golden Age)
@@ -387,7 +418,7 @@ if __name__ == "__main__":
     print("\n5. EFFICIENCY PROJECTION")
     print(f"   Current (2026 CE, factor={CURRENT_CONSCIOUSNESS_FACTOR:.3f}): {EFFICIENCY_NOW:.1f}x")
     print(f"   Midpoint (factor=0.5): {EFFICIENCY_MIDPOINT:.1f}x")
-    print("   Golden Age (factor=1.0): ∞")
+    print(f"   Golden Age (factor=1.0): {project_efficiency(1.0):,.0f}x (TEXT capacity)")
 
     print("\n6. THE FORMULA")
     print("   EFFICIENCY = KALI_BASE × (1 + KSETRAJNA × consciousness)^17")

@@ -35,23 +35,29 @@ from __future__ import annotations
 import array
 from typing import Final
 
-from ..protocols._seed import QUARTERS, WORDS
+from ..protocols._seed import (
+    HALF_SIZE,
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    QUARTERS,
+    WORDS,
+)
 
 # =============================================================================
-# CONSTANTS
+# CONSTANTS (ALL DERIVED FROM _SEED.PY!)
 # =============================================================================
 
-BITS_PER_LEVEL: Final[int] = 4
-LEVELS: Final[int] = QUARTERS  # 4
-SLOTS_PER_LEVEL: Final[int] = WORDS  # 16
-KEY_SPACE: Final[int] = 65536  # 16^4
+BITS_PER_LEVEL: Final[int] = QUARTERS  # 4 bits per level
+LEVELS: Final[int] = QUARTERS  # 4 levels
+SLOTS_PER_LEVEL: Final[int] = WORDS  # 16 slots
+KEY_SPACE: Final[int] = WORDS**QUARTERS  # 16^4 = 65536
 
-# Pre-computed masks and shifts for each level
-_MASK: Final[int] = 0xF  # 4 bits
-_SHIFT_0: Final[int] = 12  # bits 12-15
-_SHIFT_1: Final[int] = 8  # bits 8-11
-_SHIFT_2: Final[int] = 4  # bits 4-7
-_SHIFT_3: Final[int] = 0  # bits 0-3
+# Pre-computed masks and shifts for each level (ALL DERIVED!)
+_MASK: Final[int] = WORDS - KSETRAJNA  # 0xF = 15 = 4 bits mask
+_SHIFT_0: Final[int] = MAHAJANA_COUNT  # 12 = bits 12-15
+_SHIFT_1: Final[int] = HALF_SIZE  # 8 = bits 8-11
+_SHIFT_2: Final[int] = QUARTERS  # 4 = bits 4-7
+_SHIFT_3: Final[int] = 0  # bits 0-3 (always 0)
 
 
 # =============================================================================
@@ -137,7 +143,7 @@ class LotusRadixInt:
 
     def __init__(self) -> None:
         # Level 0: 16 slots, each points to Level 1 or None
-        self._L0: list[list | None] = [None] * 16
+        self._L0: list[list | None] = [None] * WORDS
         self._size: int = 0
 
     def get(self, key: int) -> int:
@@ -171,21 +177,21 @@ class LotusRadixInt:
         i0 = (key >> 12) & 0xF
         L1 = self._L0[i0]
         if L1 is None:
-            L1 = [None] * 16
+            L1 = [None] * WORDS
             self._L0[i0] = L1
 
         # Level 1
         i1 = (key >> 8) & 0xF
         L2 = L1[i1]
         if L2 is None:
-            L2 = [None] * 16
+            L2 = [None] * WORDS
             L1[i1] = L2
 
         # Level 2
         i2 = (key >> 4) & 0xF
         L3 = L2[i2]
         if L3 is None:
-            L3 = [None] * 16
+            L3 = [None] * WORDS
             L2[i2] = L3
 
         # Level 3 (leaf)

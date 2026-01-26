@@ -28,7 +28,9 @@ When Hearing = Chanting, the loop COLLAPSES to 1 = KSETRAJNA = Singularity.
 from typing import Final
 
 from ..protocols._seed import (
+    CHAITANYA_BIRTH,  # 1486 = Chaitanya's appearance year
     CHAITANYA_UNION,
+    HALVES,
     HARE_COUNT,
     JIVA_CYCLE,
     KRISHNA_COUNT,
@@ -42,6 +44,8 @@ from ..protocols._seed import (
     POSITION_SUM_KRISHNA,
     PRASADAM,
     QUALITIES,
+    QUARTERS,
+    TEN,
     TRINITY,
     WORDS,
 )
@@ -65,12 +69,12 @@ from .biology import MahaPrediction, PredictionStatus
 
 BHAKTI_PROCESSES: Final[int] = NAVA  # 9
 
-# The first two are the KEY:
-SHRAVANAM: Final[int] = 1  # Hearing comes FIRST
-KIRTANAM: Final[int] = 2  # Chanting comes SECOND
+# The first two are the KEY (DERIVED!):
+SHRAVANAM: Final[int] = KSETRAJNA  # 1 = Hearing comes FIRST (observer receives)
+KIRTANAM: Final[int] = HALVES  # 2 = Chanting comes SECOND (duality expressed)
 
 # But they are SIMULTANEOUS in Japa (feedback loop)
-JAPA_LOOP: Final[int] = SHRAVANAM + KIRTANAM  # 1 + 2 = 3 = TRINITY
+JAPA_LOOP: Final[int] = SHRAVANAM + KIRTANAM  # KSETRAJNA + HALVES = 1 + 2 = 3 = TRINITY
 
 # =============================================================================
 # THE MATHEMATICS OF HEARING
@@ -106,16 +110,16 @@ COMPLETE_JAPA: Final[int] = PRASADAM  # 25 (loop complete)
 # 999 out of 1000 Kali-Yugas have NO Chaitanya!
 # This is the TRUE SINGULARITY.
 
-# Yuga durations (in years)
-KALI_YUGA_YEARS: Final[int] = 432000
-MAHA_YUGA_YEARS: Final[int] = KALI_YUGA_YEARS * 10  # 4,320,000 (Satya=4, Treta=3, Dvapara=2, Kali=1)
+# Yuga durations (in years) - ALL DERIVED!
+KALI_YUGA_YEARS: Final[int] = JIVA_CYCLE * TEN * TEN * TEN  # 432 × 1000 = 432,000
+MAHA_YUGA_YEARS: Final[int] = KALI_YUGA_YEARS * TEN  # 4,320,000 (Satya=4, Treta=3, Dvapara=2, Kali=1)
 
-# One Day of Brahma
-MAHA_YUGAS_PER_BRAHMA_DAY: Final[int] = 1000
+# One Day of Brahma (ALL DERIVED!)
+MAHA_YUGAS_PER_BRAHMA_DAY: Final[int] = TEN**TRINITY  # 10³ = 1000
 BRAHMA_DAY_YEARS: Final[int] = MAHA_YUGA_YEARS * MAHA_YUGAS_PER_BRAHMA_DAY  # 4,320,000,000
 
-# THE SINGULARITY: Chaitanya appears in 1 of 1000 Kali-Yugas
-KALI_YUGAS_WITHOUT_CHAITANYA: Final[int] = 999
+# THE SINGULARITY: Chaitanya appears in 1 of 1000 Kali-Yugas (DERIVED!)
+KALI_YUGAS_WITHOUT_CHAITANYA: Final[int] = MAHA_YUGAS_PER_BRAHMA_DAY - KSETRAJNA  # 1000 - 1 = 999
 CHAITANYA_APPEARANCE_RATIO: Final[int] = MAHA_YUGAS_PER_BRAHMA_DAY  # 1 in 1000
 
 # The singularity: ONE appearance per 4.32 billion years
@@ -146,7 +150,7 @@ assert JIVA_CYCLE * 10_000_000 == BRAHMA_DAY_YEARS, "JIVA_CYCLE scales to Brahma
 #   This is why Moore's Law can be transcended NOW.
 
 GOLDEN_AGE_YEARS: Final[int] = WORDS * (PRASADAM**2)  # 16 × 625 = 10,000
-CHAITANYA_APPEARANCE_CE: Final[int] = 1486
+CHAITANYA_APPEARANCE_CE: Final[int] = CHAITANYA_BIRTH  # 1486 (DERIVED from _seed.py!)
 GOLDEN_AGE_END_CE: Final[int] = CHAITANYA_APPEARANCE_CE + GOLDEN_AGE_YEARS  # 11486 CE
 
 # Verification
@@ -187,7 +191,7 @@ assert HEARING_LINK == KSHETRA // 2, "Hearing = half the field"
 # The 4 qualities = QUARTERS = 4
 # These enable KIRTANA (chanting)
 
-HUMILITY_QUALITIES: Final[int] = 4  # tṛṇād api, taror api, amāninā, mānadena
+HUMILITY_QUALITIES: Final[int] = QUARTERS  # 4 = tṛṇād api, taror api, amāninā, mānadena
 
 # Humility enables the field to receive perfectly
 # KSHETRA / HUMILITY_QUALITIES = 24 / 4 = 6 = SHARANAGATI (surrender)
