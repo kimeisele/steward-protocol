@@ -70,12 +70,19 @@ assert int(__genesis__, 16) % _PARAMPARA == 0, "BROKEN LINEAGE"
 from vibe_core.mahamantra.research.biology import BIOLOGY_PREDICTIONS
 from vibe_core.mahamantra.research.chemistry import CHEMISTRY_PREDICTIONS
 from vibe_core.mahamantra.research.classification import (
+    # New cold engineering names
     GOLDEN_AGE_YEARS,
+    # Legacy aliases (backward compatibility)
     CacheEfficiency,
+    Classification,
     ClassificationResult,
     ComplexityClass,
+    ComplexitySource,
+    Determinism,
     Guna,
     MemoryBehavior,
+    MemoryModel,
+    StructuralAlignment,
     classify_algorithm,
     is_golden_age_viable,
 )
@@ -135,13 +142,19 @@ __all__ = [
     "OCTET",
     "PACKED_MAHAMANTRA",
     "KERNEL_HIERARCHY",
-    # ANUKULYA-PRATIKULYA Classification (Guna Analysis)
+    # ANUKULYA-PRATIKULYA Classification (Cold Engineering)
+    "StructuralAlignment",  # How well aligned with Mahamantra math?
+    "ComplexitySource",  # WHERE does O(1) come from?
+    "MemoryModel",  # How does it manage memory?
+    "Determinism",  # Is output predictable?
+    "Classification",  # Cold engineering result
+    "classify_algorithm",  # Classify any technology
+    "is_golden_age_viable",  # Will it survive?
+    "GOLDEN_AGE_YEARS",  # 10,000 years
+    # Legacy aliases (backward compatibility)
     "Guna",
     "ComplexityClass",
     "MemoryBehavior",
     "CacheEfficiency",
     "ClassificationResult",
-    "classify_algorithm",
-    "is_golden_age_viable",
-    "GOLDEN_AGE_YEARS",
 ]
