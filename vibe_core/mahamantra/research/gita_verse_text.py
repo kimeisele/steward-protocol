@@ -1059,21 +1059,42 @@ assert SWASTIKA_SEGMENTS == HARE_COUNT, "8 segments = 8 Hares"
 
 
 # =============================================================================
-# KALI YUGA: 16 of 64 QUALITIES REMAIN
+# KALI YUGA: DHARMA BULL (SB 1.17.24-25 - SHASTRA VERIFIED!)
 # =============================================================================
-# In Kali Yuga, only 1 leg of the Dharma bull remains (1/4 = 25%)
-# 25% of QUALITIES (64) = WORDS (16)
+# SHASTRA SOURCE: Srimad Bhagavatam 1.17.24-25
 #
-# But WORDS = the Mahamantra seed!
-# The 16 remaining = EXACTLY what's needed to restore all 64!
+# "tapaḥ śaucaṁ dayā satyam iti pādāḥ kṛte kṛtāḥ"
+# "In Satya-yuga, the bull of dharma has four legs: austerity, cleanliness,
+#  mercy and truthfulness."
 #
-# "satyameva jayate" - Truth prevails!
+# In each subsequent yuga, one leg is destroyed:
+#   - Satya-yuga: 4 legs (QUARTERS) = 100%
+#   - Treta-yuga: 3 legs (TRINITY) = 75%
+#   - Dvapara-yuga: 2 legs (HALVES) = 50%
+#   - Kali-yuga: 1 leg (KSETRAJNA) = 25%
+#
+# The remaining leg in Kali = SATYA (truthfulness)
+# "satyameva jayate" - Truth alone prevails!
 
 KALI_YUGA_DHARMA_LEGS: Final[int] = KSETRAJNA  # 1 (only 1 of 4 legs)
-KALI_YUGA_REMAINING: Final[int] = QUALITIES // QUARTERS  # 64/4 = 16 = WORDS
+KALI_YUGA_SATYA_YUGA_LEGS: Final[int] = QUARTERS  # 4 (full dharma)
+KALI_YUGA_PERCENTAGE: Final[int] = (KSETRAJNA * 100) // QUARTERS  # 1/4 = 25%
 
-assert KALI_YUGA_REMAINING == WORDS, "16 qualities remain = WORDS"
-assert KALI_YUGA_REMAINING * QUARTERS == QUALITIES, "16 × 4 = 64 can be restored"
+assert KALI_YUGA_DHARMA_LEGS == 1, "Only 1 leg in Kali (SB 1.17.25)"
+assert KALI_YUGA_SATYA_YUGA_LEGS == 4, "4 legs in Satya (SB 1.17.24)"
+assert KALI_YUGA_PERCENTAGE == 25, "25% dharma remaining"
+
+# THE MAHAMANTRA CONNECTION (MATHEMATICALLY DERIVED):
+# The Mahamantra has 16 WORDS = perfect remedy for Kali!
+# Kali-Santarana Upanishad explicitly prescribes the Mahamantra:
+#   "hare kṛṣṇa hare kṛṣṇa kṛṣṇa kṛṣṇa hare hare
+#    hare rāma hare rāma rāma rāma hare hare
+#    iti ṣoḍaśakaṁ nāmnāṁ kali-kalmaṣa-nāśanam"
+#   = "These 16 names destroy the evil of Kali"
+#
+# SHARANAGATI (6 limbs) + TEN = 16 = WORDS (Mahamantra antidote!)
+KALI_ANTIDOTE: Final[int] = SHARANAGATI + TEN  # 6 + 10 = 16 = WORDS
+assert KALI_ANTIDOTE == WORDS, "Mahamantra (16 names) = Kali antidote (Kali-Santarana)"
 
 
 # =============================================================================
@@ -1375,9 +1396,11 @@ __all__ = [
     "SWASTIKA_ARMS",
     "SWASTIKA_SEGMENTS",
     "SWASTIKA_CENTER",
-    # Kali Yuga
+    # Kali Yuga (SB 1.17.24-25 - Shastra Verified!)
     "KALI_YUGA_DHARMA_LEGS",
-    "KALI_YUGA_REMAINING",
+    "KALI_YUGA_SATYA_YUGA_LEGS",
+    "KALI_YUGA_PERCENTAGE",
+    "KALI_ANTIDOTE",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
