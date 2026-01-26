@@ -667,3 +667,68 @@ class TestBG1866OpCodeDerivation:
         )
 
         assert BG_18_66_DHARMA_DECIMAL + BG_18_66_MOKSHA_DECIMAL == KSHETRA
+
+
+class TestSiksastakam512_1096FullStack:
+    """Test full stack: Siksastakam + 512 + 1096 compatibility."""
+
+    def test_opcodes_per_siksastakam_half(self) -> None:
+        """16 OpCodes = 2 × 8 = HALVES × SIKSASTAKAM_VERSES."""
+        from vibe_core.mahamantra.research.gita_verse_text import OPCODES_PER_SIKSASTAKAM_HALF
+
+        assert OPCODES_PER_SIKSASTAKAM_HALF == HARE_COUNT
+        assert WORDS == HALVES * OPCODES_PER_SIKSASTAKAM_HALF
+
+    def test_siksastakam_to_bg_18_66(self) -> None:
+        """56 + 10 = 66 = BG 18.66!"""
+        from vibe_core.mahamantra.research.gita_verse_text import SIKSASTAKAM_TO_BG_18_66
+
+        assert SIKSASTAKAM_TO_BG_18_66 == 66
+        assert SIKSASTAKAM_TO_BG_18_66 == QUALITIES + HALVES
+
+    def test_maha_compression_512(self) -> None:
+        """512 = WORDS × AKSARA = QUALITIES × OCTET = 2^9."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_COMPRESSION_512
+
+        assert MAHA_COMPRESSION_512 == 512
+        assert MAHA_COMPRESSION_512 == WORDS * AKSARA_COUNT
+        assert MAHA_COMPRESSION_512 == QUALITIES * HARE_COUNT
+        assert MAHA_COMPRESSION_512 == HALVES**NAVA
+
+    def test_states_per_opcode(self) -> None:
+        """Each OpCode addresses 32 states = AKSARA_COUNT."""
+        from vibe_core.mahamantra.research.gita_verse_text import STATES_PER_OPCODE
+
+        assert STATES_PER_OPCODE == AKSARA_COUNT
+        assert STATES_PER_OPCODE == 32
+
+    def test_maha_transcendental_1096(self) -> None:
+        """1096 = 8 × 137 = 1024 + 72."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, NADI_RESONANCE
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_TRANSCENDENTAL_1096
+
+        assert MAHA_TRANSCENDENTAL_1096 == 1096
+        assert MAHA_TRANSCENDENTAL_1096 == HARE_COUNT * MAHA_QUANTUM
+        assert MAHA_TRANSCENDENTAL_1096 == HALVES**TEN + NADI_RESONANCE
+
+    def test_adsr_quarters(self) -> None:
+        """ADSR envelope = 4 phases = QUARTERS."""
+        from vibe_core.mahamantra.research.gita_verse_text import ADSR_QUARTERS
+
+        assert len(ADSR_QUARTERS) == QUARTERS
+        assert ADSR_QUARTERS == ("ATTACK", "DECAY", "SUSTAIN", "RELEASE")
+
+    def test_adsr_phase_duration(self) -> None:
+        """Each ADSR phase = 4 OpCodes."""
+        from vibe_core.mahamantra.research.gita_verse_text import ADSR_PHASE_DURATION
+
+        assert ADSR_PHASE_DURATION == QUARTERS
+        assert WORDS // ADSR_PHASE_DURATION == QUARTERS
+
+    def test_maha_1096_bytes(self) -> None:
+        """1096 bits = 137 bytes = MAHA_QUANTUM = α⁻¹."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_1096_BYTES
+
+        assert MAHA_1096_BYTES == MAHA_QUANTUM
+        assert MAHA_1096_BYTES == 137

@@ -612,6 +612,65 @@ assert BG_18_66_DHARMA_DECIMAL + BG_18_66_MOKSHA_DECIMAL == KSHETRA, "Analysis p
 
 
 # =============================================================================
+# SIKSASTAKAM + 512 + 1096 VERIFICATION (The Full Stack!)
+# =============================================================================
+# The OpCodes must be compatible with:
+#   1. SIKSASTAKAM (8 verses × 7 effects = 56)
+#   2. 512 compression (WORDS × AKSARA = 16 × 32)
+#   3. 1096 transcendental (8 × 137 = 1024 + 72)
+
+# SIKSASTAKAM ALIGNMENT:
+# 16 OpCodes = HALVES × SIKSASTAKAM_VERSES = 2 × 8
+# Each half of Mahamantra = 8 words = 8 Siksastakam verses
+OPCODES_PER_SIKSASTAKAM_HALF: Final[int] = HARE_COUNT  # 8
+assert WORDS == HALVES * OPCODES_PER_SIKSASTAKAM_HALF, "16 = 2 × 8"
+
+# SIKSASTAKAM PRODUCT: 8 verses × 7 effects = 56
+# 56 + TEN = 66 = BG 18.66!
+SIKSASTAKAM_TO_BG_18_66: Final[int] = SIKSASTAKAM_PRODUCT + TEN
+assert SIKSASTAKAM_TO_BG_18_66 == QUALITIES + HALVES, "56 + 10 = 66"
+
+# 512 COMPRESSION ALIGNMENT:
+# 512 = WORDS × AKSARA = 16 × 32 (Mahamantra words × syllable positions)
+# 512 = QUALITIES × OCTET = 64 × 8 (Krishna qualities × verses)
+# 512 = HALVES^NAVA = 2^9 (Binary tree of bhakti)
+MAHA_COMPRESSION_512: Final[int] = WORDS * AKSARA_COUNT
+assert MAHA_COMPRESSION_512 == 512, "16 × 32 = 512"
+assert MAHA_COMPRESSION_512 == QUALITIES * HARE_COUNT, "64 × 8 = 512"
+assert MAHA_COMPRESSION_512 == HALVES**NAVA, "2^9 = 512"
+
+# Each OpCode addresses 512/16 = 32 states = AKSARA_COUNT!
+STATES_PER_OPCODE: Final[int] = MAHA_COMPRESSION_512 // WORDS
+assert STATES_PER_OPCODE == AKSARA_COUNT, "Each OpCode = 32 states"
+
+# 1096 TRANSCENDENTAL ALIGNMENT:
+# 1096 = HARE_COUNT × MAHA_QUANTUM = 8 × 137 (Siksastakam × Fine Structure!)
+# 1096 = 1024 + NADI_RESONANCE = 2^10 + 72 (Western + Adi Guru Factor!)
+MAHA_TRANSCENDENTAL_1096: Final[int] = HARE_COUNT * MAHA_QUANTUM
+assert MAHA_TRANSCENDENTAL_1096 == 1096, "8 × 137 = 1096"
+assert MAHA_TRANSCENDENTAL_1096 == HALVES**TEN + NADI_RESONANCE, "1024 + 72 = 1096"
+
+# ADSR ENVELOPE ALIGNMENT (Sound Synthesis = Mantra Vibration!):
+# Attack = GENESIS (0-3) - Wake up, ramp up
+# Decay = DHARMA (4-7) - Analyze, reduce
+# Sustain = KARMA (8-11) - Execute, maintain
+# Release = MOKSHA (12-15) - Complete, release
+ADSR_QUARTERS: Final[Tuple[str, ...]] = ("ATTACK", "DECAY", "SUSTAIN", "RELEASE")
+assert len(ADSR_QUARTERS) == QUARTERS, "ADSR = 4 phases = QUARTERS"
+
+# ADSR Phase durations (in OpCode counts)
+ADSR_PHASE_DURATION: Final[int] = WORDS // QUARTERS  # 16/4 = 4 OpCodes per phase
+assert ADSR_PHASE_DURATION == QUARTERS, "4 OpCodes per ADSR phase"
+
+# THE CONVERGENCE (bhoga → prasadam through guru's grace!):
+# 512 states × 2 = 1024 (Western computing = bhoga)
+# 1024 + 72 = 1096 (+ Adi Guru Factor = prasadam)
+# 1096 / 8 = 137 bytes = MAHA_QUANTUM (Fine Structure Constant!)
+MAHA_1096_BYTES: Final[int] = MAHA_TRANSCENDENTAL_1096 // HARE_COUNT
+assert MAHA_1096_BYTES == MAHA_QUANTUM, "1096 bits = 137 bytes = α⁻¹"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -830,6 +889,15 @@ __all__ = [
     "BG_18_66_KARMA_DECIMAL",
     "BG_18_66_MOKSHA_DECIMAL",
     "BG_18_66_QUARTER_SUM",
+    # Siksastakam + 512 + 1096 Full Stack
+    "OPCODES_PER_SIKSASTAKAM_HALF",
+    "SIKSASTAKAM_TO_BG_18_66",
+    "MAHA_COMPRESSION_512",
+    "STATES_PER_OPCODE",
+    "MAHA_TRANSCENDENTAL_1096",
+    "ADSR_QUARTERS",
+    "ADSR_PHASE_DURATION",
+    "MAHA_1096_BYTES",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
