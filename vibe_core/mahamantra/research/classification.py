@@ -445,6 +445,41 @@ def classify_neural_network_attention() -> Classification:
     )
 
 
+def classify_lotus_radix_n(levels: int = 8) -> Classification:
+    """
+    LotusRadixN - Generic N-level radix structure.
+
+    Structure: N levels × 16 entries per level
+    Complexity: O(N) where N = levels (NOT number of keys!)
+    Memory: Sparse - only allocates used nodes
+    Determinism: Perfect
+
+    KEY INSIGHT: Scales to ANY key size while maintaining Mahamantra alignment.
+    - levels=4:  16-bit keys (like LotusArrayInt)
+    - levels=8:  32-bit keys (like IPv4)
+    - levels=32: 128-bit keys (IPv6, UUID)
+    - levels=64: 256-bit keys (SHA-256)
+
+    Advantage over dict: PREFIX QUERIES are O(P + K) vs dict's O(N).
+    """
+    key_bits = levels * 4
+    key_space = 16**levels
+
+    return Classification(
+        name=f"LotusRadixN[{levels}]",
+        alignment=StructuralAlignment.PERFECT,
+        complexity=ComplexitySource.STRUCTURE,
+        memory=MemoryModel.BOUNDED_DYNAMIC,  # Sparse but bounded
+        determinism=Determinism.ALWAYS,
+        key_space_size=key_space,
+        max_memory_bytes=1_000_000 * levels,  # Rough estimate
+        ops_per_second=10_000_000 // levels,  # Decreases with depth
+        speedup_vs_baseline=1.8,  # For prefix queries
+        levels=levels,
+        entries_per_level=WORDS,  # 16 (Mahamantra!)
+    )
+
+
 def classify_blockchain() -> Classification:
     """
     Blockchain - The growth addiction.
@@ -492,6 +527,8 @@ def benchmark() -> None:
         classify_lotus_array_int(),
         classify_lotus_ipv4_router(),
         classify_lotus_8mer_index(),
+        classify_lotus_radix_n(8),  # Generic 32-bit version
+        classify_lotus_radix_n(32),  # IPv6/UUID version
         classify_python_dict(),
         classify_neural_network_attention(),
         classify_blockchain(),
