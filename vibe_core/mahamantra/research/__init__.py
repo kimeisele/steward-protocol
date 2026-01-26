@@ -117,6 +117,39 @@ from vibe_core.mahamantra.research.computation import (
     OCTET,
     PACKED_MAHAMANTRA,
 )
+from vibe_core.mahamantra.research.consciousness_mathematics import (
+    # Matter states
+    DEAD_MATTER,
+    # Consciousness test
+    FIELD_ONLY,
+    FIELD_PLUS_OBSERVER,
+    # Gita mapping
+    GITA_HARDWARE_MAP,
+    # Reflection principle
+    KSETRAJNA_REFLECTION,
+    LIVING_BEING,
+    # Mouse-snake principle
+    MOUSE_SNAKE_DISCOVERIES,
+    GitaMapping,
+    MatterAnalysis,
+    MatterState,
+    MouseSnakeDiscovery,
+    ReflectionPair,
+    compute_reflection,
+    consciousness_test,
+    # Transformation
+    transform_dead_to_living,
+)
+from vibe_core.mahamantra.research.consciousness_mathematics import (
+    # Fractal levels (avoid name conflict with bhoga_prasadam)
+    FRACTAL_LEVELS as CONSCIOUSNESS_FRACTAL_LEVELS,
+)
+from vibe_core.mahamantra.research.consciousness_mathematics import (
+    KEY_INSIGHT as CONSCIOUSNESS_INSIGHT,
+)
+from vibe_core.mahamantra.research.consciousness_mathematics import (
+    FractalLevel as ConsciousnessFractalLevel,
+)
 from vibe_core.mahamantra.research.dna_kmer import (
     Lotus8merIndex,
     LotusKmerRadix,
@@ -524,4 +557,23 @@ __all__ = [
     "surrender_multiplier",  # Neutralization power from surrender
     "CompleteKarmaAnalysis",  # Full karma analysis
     "KARMA_INSIGHT",  # Key insight on karma mathematics
+    # Consciousness Mathematics (BG 13 Lens - Dead vs Living)
+    "MatterState",  # DEAD or LIVING
+    "MatterAnalysis",  # Analyze matter for consciousness
+    "DEAD_MATTER",  # KSHETRA = 24 (no observer)
+    "LIVING_BEING",  # PRASADAM = 25 (with KSETRAJNA)
+    "consciousness_test",  # Test value for consciousness signature
+    "FIELD_ONLY",  # T(16) = 136 (field without observer)
+    "FIELD_PLUS_OBSERVER",  # 137 = MAHA_QUANTUM (with observer)
+    "ReflectionPair",  # Spiritual-material reflection pair
+    "compute_reflection",  # Material = PRASADAM - Spiritual (BG 15)
+    "KSETRAJNA_REFLECTION",  # The fundamental reflection pair
+    "MouseSnakeDiscovery",  # Material science confirms spiritual truth
+    "MOUSE_SNAKE_DISCOVERIES",  # All confirmed discoveries
+    "GitaMapping",  # Gita chapter to Mahamantra mapping
+    "GITA_HARDWARE_MAP",  # Gita as operating manual
+    "ConsciousnessFractalLevel",  # Fractal level of consciousness
+    "CONSCIOUSNESS_FRACTAL_LEVELS",  # All fractal levels
+    "transform_dead_to_living",  # Add KSETRAJNA to dead matter
+    "CONSCIOUSNESS_INSIGHT",  # Key insight on consciousness mathematics
 ]
