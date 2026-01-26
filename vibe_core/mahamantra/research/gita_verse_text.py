@@ -54,6 +54,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     SEVEN,
     TEN,
+    TRINITY,
     WORDS,
 )
 
@@ -320,6 +321,29 @@ SIKSASTAKAM_FIRST_LETTER_SUM: Final[int] = sum(SIKSASTAKAM_FIRST_LETTER_POS)
 assert SIKSASTAKAM_FIRST_LETTER_SUM == 111, "Sum = 111"
 assert SIKSASTAKAM_FIRST_LETTER_SUM == SEVEN * WORDS - KSETRAJNA, "111 = 7×16 - 1"
 
+# =============================================================================
+# WORD LENGTH DERIVATION - BG 18.66 word lengths are ALL axioms!
+# =============================================================================
+# Every single word length in BG 18.66 first half = an axiom!
+
+# BG 18.66 first half: "sarva-dharmān parityajya mām ekam śaraṇam vraja"
+BG_18_66_WORD_LENGTHS: Final[Tuple[int, ...]] = (
+    PANCHA,  # sarva = 5
+    SEVEN,  # dharmān = 7
+    TEN,  # parityajya = 10
+    TRINITY,  # mām = 3
+    QUARTERS,  # ekam = 4
+    SEVEN,  # śaraṇam = 7
+    PANCHA,  # vraja = 5
+)
+assert BG_18_66_WORD_LENGTHS == (5, 7, 10, 3, 4, 7, 5), "Word lengths"
+assert len(BG_18_66_WORD_LENGTHS) == SEVEN, "7 words in first half!"
+
+# Sum = 41 = PARAMPARA + QUARTERS = 37 + 4!
+BG_18_66_WORD_LENGTH_SUM: Final[int] = sum(BG_18_66_WORD_LENGTHS)
+assert BG_18_66_WORD_LENGTH_SUM == 41, "Sum = 41"
+assert BG_18_66_WORD_LENGTH_SUM == PARAMPARA + QUARTERS, "41 = 37 + 4"
+
 
 # =============================================================================
 # VIBRATION ANALYSE STRUKTUR
@@ -500,6 +524,9 @@ __all__ = [
     "BG_18_66_FIRST_LETTER_POS",
     "SIKSASTAKAM_FIRST_LETTER_POS",
     "SIKSASTAKAM_FIRST_LETTER_SUM",
+    # Word Length Derivation
+    "BG_18_66_WORD_LENGTHS",
+    "BG_18_66_WORD_LENGTH_SUM",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",

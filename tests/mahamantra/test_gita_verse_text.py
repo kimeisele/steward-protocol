@@ -24,6 +24,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     SEVEN,
     TEN,
+    TRINITY,
     WORDS,
 )
 from vibe_core.mahamantra.research.gita_verse_text import (
@@ -32,6 +33,8 @@ from vibe_core.mahamantra.research.gita_verse_text import (
     BG_18_66_PATH_1,
     BG_18_66_PATH_2,
     BG_18_66_PATH_3,
+    BG_18_66_WORD_LENGTH_SUM,
+    BG_18_66_WORD_LENGTHS,
     BG_18_66_WORDS,
     CHAITANYA_512_PATH_A,
     CHAITANYA_512_PATH_B,
@@ -308,3 +311,42 @@ class TestFirstLetterDerivation:
         assert SIKSASTAKAM_FIRST_LETTER_SUM == 111
         assert SIKSASTAKAM_FIRST_LETTER_SUM == SEVEN * WORDS - KSETRAJNA
         assert SIKSASTAKAM_FIRST_LETTER_SUM == 7 * 16 - 1
+
+
+class TestWordLengthDerivation:
+    """Test BG 18.66 word lengths - ALL are axioms!"""
+
+    def test_word_lengths_are_axioms(self) -> None:
+        """Each word length = an axiom constant."""
+        assert BG_18_66_WORD_LENGTHS == (5, 7, 10, 3, 4, 7, 5)
+        # sarva=PANCHA, dharmān=SEVEN, parityajya=TEN, mām=TRINITY,
+        # ekam=QUARTERS, śaraṇam=SEVEN, vraja=PANCHA
+
+    def test_seven_words_in_first_half(self) -> None:
+        """7 words in first half = SEVEN."""
+        assert len(BG_18_66_WORD_LENGTHS) == SEVEN
+
+    def test_sarva_is_pancha(self) -> None:
+        """sarva = 5 = PANCHA."""
+        assert BG_18_66_WORD_LENGTHS[0] == PANCHA
+
+    def test_dharman_is_seven(self) -> None:
+        """dharmān = 7 = SEVEN."""
+        assert BG_18_66_WORD_LENGTHS[1] == SEVEN
+
+    def test_parityajya_is_ten(self) -> None:
+        """parityajya = 10 = TEN."""
+        assert BG_18_66_WORD_LENGTHS[2] == TEN
+
+    def test_mam_is_trinity(self) -> None:
+        """mām = 3 = TRINITY."""
+        assert BG_18_66_WORD_LENGTHS[3] == TRINITY
+
+    def test_ekam_is_quarters(self) -> None:
+        """ekam = 4 = QUARTERS."""
+        assert BG_18_66_WORD_LENGTHS[4] == QUARTERS
+
+    def test_sum_is_parampara_plus_quarters(self) -> None:
+        """Sum = 41 = PARAMPARA + QUARTERS = 37 + 4."""
+        assert BG_18_66_WORD_LENGTH_SUM == 41
+        assert BG_18_66_WORD_LENGTH_SUM == PARAMPARA + QUARTERS
