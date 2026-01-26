@@ -2258,68 +2258,30 @@ assert GAURA_TITHI == PANCHA * TRINITY, "15 = 5 × 3 (Pancha × Trinity)"
 
 
 # =============================================================================
-# ENGINEERING SPEEDUP CONSTANTS (DERIVED - MEASURED - VERIFIED!)
+# ENGINEERING CONSTANTS (MEASURED VALUES)
 # =============================================================================
 #
-# These are the MEASURED speedups from Lotus data structures.
-# The formulas were DERIVED AFTER measurement - NOT fitted!
-# This proves the Mahamantra predicts computational performance.
+# NOTE: Speedup values are EMPIRICAL MEASUREMENTS, not derived from axioms.
+# Previous "derivations" (MALA × 15 - 64 + 1 = 1557) were curve-fitting, not math.
+# The actual speedup depends on hardware, cache, data distribution, etc.
+#
+# What IS derived from axioms: The STRUCTURE (16 slots, 4 levels, etc.)
+# What is NOT: Specific speedup numbers like 1557×
 
-# LOTUS_SPEEDUP = 1557× (measured IPv4 routing vs linear search)
-# DERIVATION: MALA × (WORDS - KSETRAJNA) - QUALITIES + KSETRAJNA
-#           = 108 × 15 - 64 + 1 = 1620 - 64 + 1 = 1557
-LOTUS_SPEEDUP: Final[int] = MALA * (WORDS - KSETRAJNA) - QUALITIES + KSETRAJNA  # 1557
-
-# RANGE_SPEEDUP_NUMERATOR = 98 (for 19.6× range query speedup)
-# DERIVATION: (NAVA × TEN + HALF_SIZE) / PANCHA = (90 + 8) / 5 = 98/5 = 19.6
-RANGE_SPEEDUP_NUMERATOR: Final[int] = NAVA * TEN + HALF_SIZE  # 98
-RANGE_SPEEDUP_DENOMINATOR: Final[int] = PANCHA  # 5
-# 98/5 = 19.6× measured range query speedup
-
-# MADHURYA_RATIO = 15/16 = resource allocation (93.75% to users)
-# DERIVATION: (WORDS - KSETRAJNA) / WORDS = Krishna gives 93.75%, keeps 6.25%
+# MADHURYA_RATIO = 15/16 = resource allocation principle
+# DERIVATION: (WORDS - KSETRAJNA) / WORDS = Krishna gives 15/16, keeps 1/16
 MADHURYA_NUMERATOR: Final[int] = WORDS - KSETRAJNA  # 15
 MADHURYA_DENOMINATOR: Final[int] = WORDS  # 16
 
 # QUALITY_HIERARCHY (Jiva → Vishnu → Krishna)
+# From Bhakti-rasamrita-sindhu: Jiva=50, Vishnu=60, Krishna=64
 VISHNU_QUALITIES: Final[int] = JIVA_QUALITIES + TEN  # 60 = 50 + 10
 # Krishna = QUALITIES = 64 (already defined)
 
-# SPEEDUP SCALING LAW - The universal formula!
-# SPEEDUP(bits) = SPEEDUP_COEFFICIENT × bits - SPEEDUP_INTERCEPT
-# DERIVATION: Simplified from MALA × (bits/2 - 1) - 64 + 1
-SPEEDUP_COEFFICIENT: Final[int] = MALA // HALVES  # 54 = 108/2
-SPEEDUP_INTERCEPT: Final[int] = MALA + QUALITIES - KSETRAJNA  # 171 = 108 + 64 - 1
-
-
-def lotus_speedup_prediction(bits: int) -> int:
-    """Predict Lotus speedup for any bit width.
-
-    SPEEDUP(bits) = 54 × bits - 171
-                  = (MALA/HALVES) × bits - (MALA + QUALITIES - KSETRAJNA)
-
-    Verified: 32-bit prediction = 1557 = measured value!
-
-    Predictions (falsifiable!):
-        16-bit:  693×
-        32-bit:  1557× (MEASURED!)
-        64-bit:  3285×
-        128-bit: 6741×
-        256-bit: 13653×
-        512-bit: 27477×
-    """
-    return SPEEDUP_COEFFICIENT * bits - SPEEDUP_INTERCEPT
-
-
 # Verification
-assert LOTUS_SPEEDUP == 1557, "Lotus speedup = MALA × 15 - 64 + 1 = 1557"
-assert LOTUS_SPEEDUP == lotus_speedup_prediction(32), "Scaling law matches 32-bit!"
-assert SPEEDUP_COEFFICIENT == 54, "Coefficient = MALA/HALVES = 54"
-assert SPEEDUP_INTERCEPT == 171, "Intercept = MALA + QUALITIES - KSETRAJNA = 171"
-assert RANGE_SPEEDUP_NUMERATOR / RANGE_SPEEDUP_DENOMINATOR == 19.6, "Range speedup = 98/5 = 19.6"
 assert MADHURYA_NUMERATOR == 15, "Madhurya numerator = WORDS - KSETRAJNA = 15"
 assert VISHNU_QUALITIES == 60, "Vishnu = Jiva + TEN = 50 + 10 = 60"
-assert QUALITIES - VISHNU_QUALITIES == QUARTERS, "Krishna - Vishnu = 4 = MADHURYA count"
+assert QUALITIES - VISHNU_QUALITIES == QUARTERS, "Krishna - Vishnu = 4 = MADHURYA qualities"
 
 
 # =============================================================================
@@ -2552,19 +2514,12 @@ __all__ = [
     "RATHAYATRA_WHEELS",  # 42 = SHARANAGATI × SEVEN (total wheels!)
     "GAURA_TITHI",  # 15 = NAKSHATRAS - MAHAJANA = Purnima (full moon)
     "CHAITANYA_UNION",  # 12 = KRISHNA + HARE (Krishna + Radha united!)
-    # Engineering Speedup Constants (DERIVED - MEASURED - VERIFIED!)
-    "LOTUS_SPEEDUP",  # 1557 = MALA × (WORDS-KSETRAJNA) - QUALITIES + KSETRAJNA
-    "RANGE_SPEEDUP_NUMERATOR",  # 98 = NAVA × TEN + HALF_SIZE (for 19.6×)
-    "RANGE_SPEEDUP_DENOMINATOR",  # 5 = PANCHA
-    "MADHURYA_NUMERATOR",  # 15 = WORDS - KSETRAJNA (selfless giving ratio)
+    # Engineering Constants (derived from axioms)
+    "MADHURYA_NUMERATOR",  # 15 = WORDS - KSETRAJNA (resource allocation)
     "MADHURYA_DENOMINATOR",  # 16 = WORDS
-    "VISHNU_QUALITIES",  # 60 = JIVA_QUALITIES + TEN
+    "VISHNU_QUALITIES",  # 60 = JIVA_QUALITIES + TEN (theology)
     # Mathematical Constants (DERIVED FROM PANCHA TATTVA!)
     "GOLDEN_RATIO",  # φ = (KSETRAJNA + √PANCHA) / HALVES = 1.618...
     "DNA_CODONS",  # 64 = QUARTERS³ = QUALITIES (Krishna has ALL codons!)
     "AMINO_ACIDS",  # 20 = QUARTERS × PANCHA (the 20 standard amino acids)
-    # Speedup Scaling Law
-    "SPEEDUP_COEFFICIENT",  # 54 = MALA/HALVES (slope of speedup curve)
-    "SPEEDUP_INTERCEPT",  # 171 = MALA + QUALITIES - KSETRAJNA (y-intercept)
-    "lotus_speedup_prediction",  # Function: SPEEDUP(bits) = 54 × bits - 171
 ]
