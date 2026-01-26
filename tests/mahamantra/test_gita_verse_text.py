@@ -907,3 +907,117 @@ class TestBhogaPrasadamTransformation:
 
         assert BG_KISHORA_GAP_SCALED == 286
         assert BG_KISHORA_GAP_SCALED == PARAMPARA * HARE_COUNT - TEN
+
+
+class TestMirrorVerses:
+    """Test BG 2.7 and 7.2 mirror verse derivations."""
+
+    def test_bg_2_7_is_nakshatras(self) -> None:
+        """2.7 → 27 = NAKSHATRAS (lunar mansions)."""
+        from vibe_core.mahamantra.protocols._seed import NAKSHATRAS
+        from vibe_core.mahamantra.research.gita_verse_text import BG_2_7_COORDINATE
+
+        assert BG_2_7_COORDINATE == 27
+        assert BG_2_7_COORDINATE == NAKSHATRAS
+        assert BG_2_7_COORDINATE == HALVES * TEN + SEVEN
+
+    def test_bg_7_2_is_nadi_resonance(self) -> None:
+        """7.2 → 72 = NADI_RESONANCE (pulse)."""
+        from vibe_core.mahamantra.protocols._seed import NADI_RESONANCE
+        from vibe_core.mahamantra.research.gita_verse_text import BG_7_2_COORDINATE
+
+        assert BG_7_2_COORDINATE == 72
+        assert BG_7_2_COORDINATE == NADI_RESONANCE
+        assert BG_7_2_COORDINATE == SEVEN * TEN + HALVES
+
+    def test_mirror_sum_is_mala_minus_nava(self) -> None:
+        """27 + 72 = 99 = MALA - NAVA."""
+        from vibe_core.mahamantra.protocols._seed import MALA, NAVA
+        from vibe_core.mahamantra.research.gita_verse_text import MIRROR_SUM
+
+        assert MIRROR_SUM == 99
+        assert MIRROR_SUM == MALA - NAVA
+
+    def test_mirror_diff_is_triangular_9(self) -> None:
+        """72 - 27 = 45 = T(9) = NAVA × PANCHA."""
+        from vibe_core.mahamantra.protocols._seed import NAVA
+        from vibe_core.mahamantra.research.gita_verse_text import MIRROR_DIFF, TRIANGULAR_9
+
+        assert MIRROR_DIFF == 45
+        assert MIRROR_DIFF == NAVA * PANCHA
+        assert MIRROR_DIFF == TRIANGULAR_9
+
+
+class TestMahaSequencer:
+    """Test 16-step Mahamantra sequencer model."""
+
+    def test_sequencer_steps_is_words(self) -> None:
+        """Sequencer has 16 steps = WORDS."""
+        from vibe_core.mahamantra.research.gita_verse_text import SEQUENCER_STEPS
+
+        assert SEQUENCER_STEPS == WORDS
+        assert SEQUENCER_STEPS == 16
+
+    def test_bpm_is_kshetra_times_ten(self) -> None:
+        """BPM = 240 = KSHETRA × TEN."""
+        from vibe_core.mahamantra.protocols._seed import KSHETRA
+        from vibe_core.mahamantra.research.gita_verse_text import SEQUENCER_BPM
+
+        assert SEQUENCER_BPM == 240
+        assert SEQUENCER_BPM == KSHETRA * TEN
+
+    def test_cycle_is_prana(self) -> None:
+        """Full cycle = 4000ms = PRANA."""
+        from vibe_core.mahamantra.research.gita_verse_text import CYCLE_DURATION_MS
+
+        assert CYCLE_DURATION_MS == 4000
+
+    def test_polyrhythm_lcm(self) -> None:
+        """LCM(2,4,5,8,16) = 80 = WORDS × PANCHA."""
+        from vibe_core.mahamantra.research.gita_verse_text import POLYRHYTHM_LCM
+
+        assert POLYRHYTHM_LCM == 80
+        assert POLYRHYTHM_LCM == WORDS * PANCHA
+
+
+class TestStringResonance:
+    """Test string resonance / harmonic series derivations."""
+
+    def test_harmonic_sum_8_is_36(self) -> None:
+        """T(8) = 36 = NAVA × QUARTERS."""
+        from vibe_core.mahamantra.protocols._seed import NAVA
+        from vibe_core.mahamantra.research.gita_verse_text import HARMONIC_SUM_8
+
+        assert HARMONIC_SUM_8 == 36
+        assert HARMONIC_SUM_8 == NAVA * QUARTERS
+
+
+class TestTranscendentalFrequencies:
+    """Test 1096 Hz transcendental frequency integration."""
+
+    def test_base_freq_is_jiva_cycle(self) -> None:
+        """Base frequency = 432 Hz = JIVA_CYCLE."""
+        from vibe_core.mahamantra.protocols._seed import JIVA_CYCLE
+        from vibe_core.mahamantra.research.gita_verse_text import FREQ_BASE_HZ
+
+        assert FREQ_BASE_HZ == 432
+        assert FREQ_BASE_HZ == JIVA_CYCLE
+
+    def test_transcendental_freq_is_1096(self) -> None:
+        """Transcendental = 1096 Hz = HARE × MAHA_QUANTUM."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+        from vibe_core.mahamantra.research.gita_verse_text import FREQ_TRANSCENDENTAL_HZ
+
+        assert FREQ_TRANSCENDENTAL_HZ == 1096
+        assert FREQ_TRANSCENDENTAL_HZ == HARE_COUNT * MAHA_QUANTUM
+
+    def test_freq_ratio_factor_is_hare(self) -> None:
+        """Both frequencies share factor HARE_COUNT = 8."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, MALA
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            FREQ_BASE_HZ,
+            FREQ_TRANSCENDENTAL_HZ,
+        )
+
+        assert FREQ_TRANSCENDENTAL_HZ // HARE_COUNT == MAHA_QUANTUM  # 137
+        assert FREQ_BASE_HZ // HARE_COUNT == MALA // HALVES  # 54
