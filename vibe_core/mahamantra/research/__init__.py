@@ -69,6 +69,16 @@ assert int(__genesis__, 16) % _PARAMPARA == 0, "BROKEN LINEAGE"
 
 from vibe_core.mahamantra.research.biology import BIOLOGY_PREDICTIONS
 from vibe_core.mahamantra.research.chemistry import CHEMISTRY_PREDICTIONS
+from vibe_core.mahamantra.research.classification import (
+    GOLDEN_AGE_YEARS,
+    CacheEfficiency,
+    ClassificationResult,
+    ComplexityClass,
+    Guna,
+    MemoryBehavior,
+    classify_algorithm,
+    is_golden_age_viable,
+)
 from vibe_core.mahamantra.research.computation import (
     COMPUTATION_PREDICTIONS,
     KERNEL_HIERARCHY,
@@ -125,4 +135,13 @@ __all__ = [
     "OCTET",
     "PACKED_MAHAMANTRA",
     "KERNEL_HIERARCHY",
+    # ANUKULYA-PRATIKULYA Classification (Guna Analysis)
+    "Guna",
+    "ComplexityClass",
+    "MemoryBehavior",
+    "CacheEfficiency",
+    "ClassificationResult",
+    "classify_algorithm",
+    "is_golden_age_viable",
+    "GOLDEN_AGE_YEARS",
 ]
