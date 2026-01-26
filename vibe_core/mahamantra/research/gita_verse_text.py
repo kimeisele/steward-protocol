@@ -42,9 +42,11 @@ from vibe_core.mahamantra.protocols._seed import (
     HALF_SIZE,
     HALVES,
     HARE_COUNT,
+    KRISHNA_COUNT,
     KSETRAJNA,
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
+    MALA,
     NADI_RESONANCE,
     NAKSHATRAS,
     NAVA,
@@ -53,7 +55,9 @@ from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_KRISHNA,
     QUALITIES,
     QUARTERS,
+    RAMA_COUNT,
     SEVEN,
+    SHARANAGATI,
     TEN,
     TRINITY,
     WORDS,
@@ -415,6 +419,103 @@ assert BG_18_66_PADA_SUM == GITA_VERSES - WORDS - SEVEN, "677 = 700 - 16 - 7"
 
 
 # =============================================================================
+# MAHAMANTRA BINARY ENCODING - THE SOURCE OF ALL (100% DERIVED!)
+# =============================================================================
+# The Mahamantra pattern itself encodes everything!
+#
+# Hare Krishna Hare Krishna Krishna Krishna Hare Hare  (Line 1)
+# Hare Rama   Hare Rama   Rama   Rama   Hare Hare     (Line 2)
+#
+# Binary encoding: HARE = 0, NAME (Krishna/Rama) = 1
+# Pattern per half: H N H N N N H H = 0 1 0 1 1 1 0 0
+
+# STEP 1: DERIVE the HARE positions (where 0s appear)
+# Positions 1, 3, 7, 8 have HARE - these ARE axioms!
+MAHAMANTRA_HARE_POSITIONS: Final[Tuple[int, ...]] = (
+    KSETRAJNA,  # Position 1 = 1
+    TRINITY,  # Position 3 = 3
+    SEVEN,  # Position 7 = 7
+    HARE_COUNT,  # Position 8 = 8 (= HALF_SIZE)
+)
+assert MAHAMANTRA_HARE_POSITIONS == (1, 3, 7, 8), "HARE at positions 1,3,7,8"
+
+# STEP 2: DERIVE the NAME positions (where 1s appear)
+# Positions 2, 4, 5, 6 have NAME - these ARE axioms!
+MAHAMANTRA_NAME_POSITIONS: Final[Tuple[int, ...]] = (
+    HALVES,  # Position 2 = 2
+    QUARTERS,  # Position 4 = 4
+    PANCHA,  # Position 5 = 5
+    SHARANAGATI,  # Position 6 = 6
+)
+assert MAHAMANTRA_NAME_POSITIONS == (2, 4, 5, 6), "NAME at positions 2,4,5,6"
+
+# STEP 3: Verify the position sums
+HARE_POSITION_SUM: Final[int] = sum(MAHAMANTRA_HARE_POSITIONS)
+NAME_POSITION_SUM: Final[int] = sum(MAHAMANTRA_NAME_POSITIONS)
+assert HARE_POSITION_SUM == 19, "HARE positions sum = 19"
+assert NAME_POSITION_SUM == 17, "NAME positions sum = 17"
+
+# DERIVED: 19 = GITA_CHAPTERS + KSETRAJNA = 18 + 1
+assert HARE_POSITION_SUM == GITA_CHAPTERS + KSETRAJNA, "19 = 18 + 1"
+
+# DERIVED: 17 = WORDS + KSETRAJNA = 16 + 1
+assert NAME_POSITION_SUM == WORDS + KSETRAJNA, "17 = 16 + 1"
+
+# DERIVED: Total = 36 = NAVA × QUARTERS = 9 × 4
+POSITION_TOTAL: Final[int] = HARE_POSITION_SUM + NAME_POSITION_SUM
+assert POSITION_TOTAL == 36, "Total = 36"
+assert POSITION_TOTAL == NAVA * QUARTERS, "36 = 9 × 4"
+
+
+# STEP 4: BUILD the binary pattern from derived positions
+def _build_mahamantra_binary() -> Tuple[int, ...]:
+    """Build the 8-bit pattern from DERIVED positions (not hardcoded!)."""
+    pattern = []
+    for pos in range(1, HARE_COUNT + 1):  # positions 1-8
+        if pos in MAHAMANTRA_HARE_POSITIONS:
+            pattern.append(0)  # HARE = 0
+        else:
+            pattern.append(1)  # NAME = 1
+    return tuple(pattern)
+
+
+MAHAMANTRA_HALF_BINARY: Final[Tuple[int, ...]] = _build_mahamantra_binary()
+assert MAHAMANTRA_HALF_BINARY == (0, 1, 0, 1, 1, 1, 0, 0), "Pattern: 01011100"
+
+# STEP 5: Convert to decimal (DERIVED, not hardcoded 92!)
+MAHAMANTRA_HALF_DECIMAL: Final[int] = sum(bit * (HALVES ** (SEVEN - i)) for i, bit in enumerate(MAHAMANTRA_HALF_BINARY))
+assert MAHAMANTRA_HALF_DECIMAL == 92, "01011100 = 92"
+
+# THE KEY DERIVATIONS OF 92:
+# Path A: MALA - WORDS = 108 - 16 = 92
+assert MAHAMANTRA_HALF_DECIMAL == MALA - WORDS, "92 = MALA - WORDS"
+
+# Path B: QUARTERS × (WORDS + SEVEN) = 4 × 23 = 92
+assert MAHAMANTRA_HALF_DECIMAL == QUARTERS * (WORDS + SEVEN), "92 = 4 × 23"
+
+# BOTH HALVES ARE IDENTICAL (HALVES verified!)
+# Line 1 (Krishna) = 92, Line 2 (Rama) = 92
+MAHAMANTRA_FULL_DECIMAL: Final[int] = MAHAMANTRA_HALF_DECIMAL * HALVES
+assert MAHAMANTRA_FULL_DECIMAL == 184, "Full = 92 × 2 = 184"
+assert MAHAMANTRA_FULL_DECIMAL == (MALA - WORDS) * HALVES, "184 = (108-16) × 2"
+
+# STEP 6: The complete 16-word lookup table (DERIVED!)
+MAHAMANTRA_WORD_TABLE: Final[Tuple[str, ...]] = tuple(
+    "HARE" if i in (pos - 1 for pos in MAHAMANTRA_HARE_POSITIONS) else "KRISHNA" for i in range(HARE_COUNT)
+) + tuple("HARE" if i in (pos - 1 for pos in MAHAMANTRA_HARE_POSITIONS) else "RAMA" for i in range(HARE_COUNT))
+assert len(MAHAMANTRA_WORD_TABLE) == WORDS, "16 words"
+assert MAHAMANTRA_WORD_TABLE[0] == "HARE", "Starts with HARE"
+assert MAHAMANTRA_WORD_TABLE[1] == "KRISHNA", "Second is KRISHNA"
+assert MAHAMANTRA_WORD_TABLE[8] == "HARE", "Ninth is HARE"
+assert MAHAMANTRA_WORD_TABLE[9] == "RAMA", "Tenth is RAMA"
+
+# Count verification (from axioms!)
+assert MAHAMANTRA_WORD_TABLE.count("HARE") == HARE_COUNT, "8 HAREs"
+assert MAHAMANTRA_WORD_TABLE.count("KRISHNA") == KRISHNA_COUNT, "4 KRISHNAs"
+assert MAHAMANTRA_WORD_TABLE.count("RAMA") == RAMA_COUNT, "4 RAMAs"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -611,6 +712,16 @@ __all__ = [
     "BG_18_66_PADA_3",
     "BG_18_66_PADA_4",
     "BG_18_66_PADA_SUM",
+    # Mahamantra Binary Encoding (100% DERIVED!)
+    "MAHAMANTRA_HARE_POSITIONS",
+    "MAHAMANTRA_NAME_POSITIONS",
+    "HARE_POSITION_SUM",
+    "NAME_POSITION_SUM",
+    "POSITION_TOTAL",
+    "MAHAMANTRA_HALF_BINARY",
+    "MAHAMANTRA_HALF_DECIMAL",
+    "MAHAMANTRA_FULL_DECIMAL",
+    "MAHAMANTRA_WORD_TABLE",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
