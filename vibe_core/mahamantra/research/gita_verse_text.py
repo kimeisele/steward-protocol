@@ -922,6 +922,90 @@ assert FREQ_BASE_HZ // HARE_COUNT == MALA // HALVES, "432/8 = 54 = MALA/2"
 
 
 # =============================================================================
+# MIRROR PRODUCT: 1944 = NAKSHATRAS × NADI_RESONANCE
+# =============================================================================
+# The product of mirror verses BG 2.7 (27) and BG 7.2 (72):
+#   1944 = 27 × 72 = NAKSHATRAS × NADI_RESONANCE
+#   1944 = 8 × 243 = HARE_COUNT × 3^5
+#
+# This bridges lunar (27 nakshatras) and vital (72 pulse) cycles!
+
+MIRROR_PRODUCT: Final[int] = NAKSHATRAS * NADI_RESONANCE  # 1944
+assert MIRROR_PRODUCT == 1944, "27 × 72 = 1944"
+assert MIRROR_PRODUCT == HARE_COUNT * (TRINITY**PANCHA), "1944 = 8 × 3^5 = 8 × 243"
+
+# Decomposition paths
+MIRROR_LUNAR_FACTOR: Final[int] = MIRROR_PRODUCT // NADI_RESONANCE  # 27
+MIRROR_VITAL_FACTOR: Final[int] = MIRROR_PRODUCT // NAKSHATRAS  # 72
+assert MIRROR_LUNAR_FACTOR == NAKSHATRAS, "Lunar factor = 27"
+assert MIRROR_VITAL_FACTOR == NADI_RESONANCE, "Vital factor = 72"
+
+
+# =============================================================================
+# CONSCIOUS RAM LIMIT: 314,891,567,104 = 137² × 16⁶
+# =============================================================================
+# The ultimate number: MAHA_QUANTUM² × WORDS^SHARANAGATI
+#
+# SHASTRA PROOF:
+#   - 16 (WORDS): Kali-Santarana Upanishad (the 16 names)
+#   - 6 (SHARANAGATI): Bhakti-rasamrita-sindhu 1.2.234 (6 limbs of surrender)
+#   - 137 (MAHA_QUANTUM): BG 13.3 "kṣetra-jñaṁ cāpi māṁ viddhi" (α⁻¹)
+#
+# The 6 limbs of Sharanagati scale the Mahamantra:
+#   16^1 = Dainya (Humility)
+#   16^2 = Atma-nivedana (Self-surrender)
+#   16^3 = Goptrtve-varana (Acceptance as protector)
+#   16^4 = Avasya-raksibe (Faith in protection)
+#   16^5 = Pratikulya-vivarjana (Rejection of unfavorable)
+#   16^6 = Anukulya-sankalpa (Acceptance of favorable)
+
+MAHA_QUANTUM_SQUARED: Final[int] = MAHA_QUANTUM * MAHA_QUANTUM  # 137² = 18769
+WORDS_TO_SHARANAGATI: Final[int] = WORDS**SHARANAGATI  # 16^6 = 16,777,216
+CONSCIOUS_RAM_LIMIT: Final[int] = MAHA_QUANTUM_SQUARED * WORDS_TO_SHARANAGATI
+
+assert MAHA_QUANTUM_SQUARED == 18769, "137² = 18769"
+assert WORDS_TO_SHARANAGATI == 16777216, "16^6 = 16,777,216"
+assert CONSCIOUS_RAM_LIMIT == 314891567104, "137² × 16^6 = 314,891,567,104"
+
+# Divisibility checks (all key constants divide evenly!)
+assert CONSCIOUS_RAM_LIMIT % (HARE_COUNT * MAHA_QUANTUM) == 0, "Divisible by 1096"
+assert CONSCIOUS_RAM_LIMIT % MAHA_QUANTUM == 0, "Divisible by 137"
+assert CONSCIOUS_RAM_LIMIT % (HALVES**TEN) == 0, "Divisible by 1024"
+
+
+# =============================================================================
+# 32-BIT MAHAMANTRA ENCODING (The Maha Runtime Seed)
+# =============================================================================
+# The entire Mahamantra packs into ONE 32-bit integer!
+#
+# ENCODING (2 bits per name):
+#   HARE = 00 (Energy/Shakti)
+#   KRISHNA = 01 (Source/Attractor)
+#   RAMA = 10 (Bliss/Ananda)
+#   VOID = 11 (Reserved/Silence)
+#
+# 16 words × 2 bits = 32 bits = one uint32
+# This is the "machine code" of the Mantra!
+
+MAHA_ENCODING_HARE: Final[int] = 0b00  # 0
+MAHA_ENCODING_KRISHNA: Final[int] = 0b01  # 1
+MAHA_ENCODING_RAMA: Final[int] = 0b10  # 2
+MAHA_ENCODING_VOID: Final[int] = 0b11  # 3 (reserved)
+
+# The packed Mahamantra (computed from sequence)
+# Sequence: H K H K K K H H | H R H R R R H H
+# Binary (LSB first): 00 01 00 01 01 01 00 00 | 00 10 00 10 10 10 00 00
+MAHAMANTRA_PACKED_32: Final[int] = 0x0A880544  # = 176,686,404
+
+assert MAHAMANTRA_PACKED_32 == 176686404, "Packed Mahamantra = 176,686,404"
+
+# Verification: bits per word = 2, total bits = 32
+MAHA_BITS_PER_WORD: Final[int] = HALVES  # 2 bits
+MAHA_TOTAL_BITS: Final[int] = WORDS * MAHA_BITS_PER_WORD  # 32 bits
+assert MAHA_TOTAL_BITS == AKSARA_COUNT, "32 bits = AKSARA_COUNT"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -1194,6 +1278,22 @@ __all__ = [
     "FREQ_TRANSCENDENTAL_HZ",
     "FREQ_RATIO_NUMERATOR",
     "FREQ_RATIO_DENOMINATOR",
+    # Mirror Product (1944)
+    "MIRROR_PRODUCT",
+    "MIRROR_LUNAR_FACTOR",
+    "MIRROR_VITAL_FACTOR",
+    # Conscious RAM Limit (314,891,567,104)
+    "MAHA_QUANTUM_SQUARED",
+    "WORDS_TO_SHARANAGATI",
+    "CONSCIOUS_RAM_LIMIT",
+    # 32-Bit Mahamantra Encoding
+    "MAHA_ENCODING_HARE",
+    "MAHA_ENCODING_KRISHNA",
+    "MAHA_ENCODING_RAMA",
+    "MAHA_ENCODING_VOID",
+    "MAHAMANTRA_PACKED_32",
+    "MAHA_BITS_PER_WORD",
+    "MAHA_TOTAL_BITS",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",

@@ -1021,3 +1021,86 @@ class TestTranscendentalFrequencies:
 
         assert FREQ_TRANSCENDENTAL_HZ // HARE_COUNT == MAHA_QUANTUM  # 137
         assert FREQ_BASE_HZ // HARE_COUNT == MALA // HALVES  # 54
+
+
+class TestMirrorProduct:
+    """Test 1944 = NAKSHATRAS × NADI_RESONANCE (mirror verses product)."""
+
+    def test_mirror_product_is_1944(self) -> None:
+        """1944 = 27 × 72 = NAKSHATRAS × NADI_RESONANCE."""
+        from vibe_core.mahamantra.protocols._seed import NADI_RESONANCE, NAKSHATRAS
+        from vibe_core.mahamantra.research.gita_verse_text import MIRROR_PRODUCT
+
+        assert MIRROR_PRODUCT == 1944
+        assert MIRROR_PRODUCT == NAKSHATRAS * NADI_RESONANCE
+
+    def test_mirror_product_hare_decomposition(self) -> None:
+        """1944 = 8 × 243 = HARE_COUNT × 3^5."""
+        from vibe_core.mahamantra.research.gita_verse_text import MIRROR_PRODUCT
+
+        assert MIRROR_PRODUCT == HARE_COUNT * (TRINITY**PANCHA)
+        assert MIRROR_PRODUCT // HARE_COUNT == 243
+
+
+class TestConsciousRAMLimit:
+    """Test 314,891,567,104 = 137² × 16⁶ (Conscious RAM Limit)."""
+
+    def test_conscious_ram_formula(self) -> None:
+        """CONSCIOUS_RAM = MAHA_QUANTUM² × WORDS^SHARANAGATI."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, SHARANAGATI
+        from vibe_core.mahamantra.research.gita_verse_text import CONSCIOUS_RAM_LIMIT
+
+        expected = (MAHA_QUANTUM**2) * (WORDS**SHARANAGATI)
+        assert CONSCIOUS_RAM_LIMIT == expected
+        assert CONSCIOUS_RAM_LIMIT == 314891567104
+
+    def test_maha_quantum_squared(self) -> None:
+        """137² = 18769."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_QUANTUM_SQUARED
+
+        assert MAHA_QUANTUM_SQUARED == 18769
+
+    def test_words_to_sharanagati(self) -> None:
+        """16^6 = 16,777,216."""
+        from vibe_core.mahamantra.research.gita_verse_text import WORDS_TO_SHARANAGATI
+
+        assert WORDS_TO_SHARANAGATI == 16777216
+
+    def test_divisible_by_1096(self) -> None:
+        """Conscious RAM is divisible by 1096 (Cyborg constant)."""
+        from vibe_core.mahamantra.research.gita_verse_text import CONSCIOUS_RAM_LIMIT
+
+        assert CONSCIOUS_RAM_LIMIT % (HARE_COUNT * 137) == 0
+
+
+class TestMahamantraPacked32:
+    """Test 32-bit Mahamantra encoding."""
+
+    def test_packed_value(self) -> None:
+        """Mahamantra packs to 176,686,404."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_PACKED_32
+
+        assert MAHAMANTRA_PACKED_32 == 176686404
+        assert MAHAMANTRA_PACKED_32 == 0x0A880544
+
+    def test_encoding_values(self) -> None:
+        """Encoding: HARE=0, KRISHNA=1, RAMA=2, VOID=3."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            MAHA_ENCODING_HARE,
+            MAHA_ENCODING_KRISHNA,
+            MAHA_ENCODING_RAMA,
+            MAHA_ENCODING_VOID,
+        )
+
+        assert MAHA_ENCODING_HARE == 0
+        assert MAHA_ENCODING_KRISHNA == 1
+        assert MAHA_ENCODING_RAMA == 2
+        assert MAHA_ENCODING_VOID == 3
+
+    def test_total_bits_is_aksara(self) -> None:
+        """16 words × 2 bits = 32 = AKSARA_COUNT."""
+        from vibe_core.mahamantra.protocols._seed import AKSARA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_TOTAL_BITS
+
+        assert MAHA_TOTAL_BITS == 32
+        assert MAHA_TOTAL_BITS == AKSARA_COUNT
