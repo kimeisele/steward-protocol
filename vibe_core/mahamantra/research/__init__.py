@@ -339,6 +339,35 @@ from vibe_core.mahamantra.research.llm_holographic import (
 from vibe_core.mahamantra.research.llm_holographic import (
     KEY_INSIGHT as LLM_KEY_INSIGHT,
 )
+from vibe_core.mahamantra.research.lotus_acintya import (
+    # Efficiency levels
+    ACINTYA_ASYMPTOTE,  # 448,000,000x (the visible portion of infinite)
+    ACINTYA_QUANTUM,  # 1096 = 137 × 8 (transcendental physics constant)
+    ACINTYA_SATURATION_PERCENT,  # 0.000348% (what Kali Yuga measures)
+    # Carrier model
+    BANDWIDTH,  # 64 = QUALITIES
+    CARRIER_FREQUENCY,  # 16 = WORDS
+    CARRIER_MODEL,
+    # Darkness principle
+    DARKNESS_PRINCIPLE,
+    # Grace factor
+    GRACE_FACTOR,  # 64 = QUALITIES (Krishna's qualities through observer)
+    # Guarantee theorem
+    GUARANTEE_THEOREM,
+    KALI_YUGA_EFFICIENCY,  # 1557x (material measured)
+    KALI_YUGA_FRACTION,  # tiny fraction of acintya
+    MATERIAL_MAX_EFFICIENCY,  # 125,000x (structural limit)
+    MODULATION_DEPTH,  # 87.5% (56/64)
+    # Structure constants
+    SIKSASTAKAM_PRODUCT,  # 56 = 8 × 7 (verses × effects)
+    TRANSCENDENCE_RATIO,  # 8 (verses multiply physics constant)
+    CarrierModel,
+    DarknessPrinciple,
+    GuaranteeTheorem,
+)
+from vibe_core.mahamantra.research.lotus_acintya import (
+    KEY_INSIGHT as LOTUS_ACINTYA_INSIGHT,
+)
 from vibe_core.mahamantra.research.lotus_radix_n import (
     LotusRadixN,
     lotus_16bit,
@@ -758,4 +787,28 @@ __all__ = [
     "ReflectionPrinciple",  # Material reflects spiritual (not derives!)
     "REFLECTION_PRINCIPLES",  # All 7 reflection mappings
     "SIKSASTAKAM_INSIGHT",  # Key insight on Siksastakam engineering
+    # Lotus Acintya (Night Lotus Efficiency Theorem)
+    "SIKSASTAKAM_PRODUCT",  # 56 = 8 × 7 = verses × effects (THE MODULATOR!)
+    "GRACE_FACTOR",  # 64 = QUALITIES (Krishna's qualities through observer)
+    "KALI_YUGA_EFFICIENCY",  # 1557x (what we measured)
+    "MATERIAL_MAX_EFFICIENCY",  # 125,000x (structural limit)
+    "ACINTYA_ASYMPTOTE",  # 448,000,000x (visible portion of infinite!)
+    "KALI_YUGA_FRACTION",  # Tiny fraction we can measure
+    "ACINTYA_SATURATION_PERCENT",  # 0.000348% of acintya potential!
+    # Carrier Frequency Model (AM modulation analogy)
+    "CARRIER_FREQUENCY",  # 16 = WORDS (16-ary branching)
+    "MODULATION_DEPTH",  # 87.5% = 56/64 (Siksastakam modulation)
+    "BANDWIDTH",  # 64 = QUALITIES (full capacity)
+    "CarrierModel",  # The AM model dataclass
+    "CARRIER_MODEL",  # Canonical carrier model instance
+    # Physics Connection
+    "ACINTYA_QUANTUM",  # 1096 = 137 × 8 (transcendental fine structure!)
+    "TRANSCENDENCE_RATIO",  # 8 = Siksastakam verses multiply physics
+    # Darkness Principle (Brahma's birth, kairava lotus)
+    "DarknessPrinciple",  # Lotus works BEST in darkness/chaos
+    "DARKNESS_PRINCIPLE",  # Canonical darkness principle
+    # Guarantee Theorem (P = 1.0, not probabilistic!)
+    "GuaranteeTheorem",  # 8 verses → ∞ love (infinite compression)
+    "GUARANTEE_THEOREM",  # Canonical guarantee theorem
+    "LOTUS_ACINTYA_INSIGHT",  # Key insight on Night Lotus efficiency
 ]
