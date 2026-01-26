@@ -9,15 +9,24 @@ import pytest
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
+    HARE_COUNT,
     NADI_RESONANCE,
     QUALITIES,
     QUARTERS,
+    SEVEN,
+    TEN,
     WORDS,
 )
 from vibe_core.mahamantra.research.gita_verse_text import (
     BG_18_66_ANALYSES,
+    BG_18_66_PATH_1,
+    BG_18_66_PATH_2,
+    BG_18_66_PATH_3,
     BG_18_66_WORDS,
     DHARMA_MANTRA_PRODUCT,
+    SIKSASTAKAM_EFFECTS,
+    SIKSASTAKAM_PRODUCT,
+    SIKSASTAKAM_VERSES,
     analyze_sanskrit_word,
     get_verse_vibration_summary,
 )
@@ -48,6 +57,49 @@ class TestDharmaMantraRelation:
     def test_mantra_words(self) -> None:
         """WORDS = 16 = The sixteen words of Mahamantra."""
         assert WORDS == 16
+
+
+class TestSiksastakamConnection:
+    """Test the Siksastakam → BG 18.66 connection."""
+
+    def test_siksastakam_verses_equals_hare_count(self) -> None:
+        """8 Siksastakam verses = 8 Hare in Mahamantra."""
+        assert SIKSASTAKAM_VERSES == HARE_COUNT == 8
+
+    def test_siksastakam_effects_equals_seven(self) -> None:
+        """7 effects in verse 1 = SEVEN."""
+        assert SIKSASTAKAM_EFFECTS == SEVEN == 7
+
+    def test_siksastakam_product(self) -> None:
+        """8 × 7 = 56 = SIKSASTAKAM_PRODUCT."""
+        assert SIKSASTAKAM_PRODUCT == 56
+        assert SIKSASTAKAM_PRODUCT == HARE_COUNT * SEVEN
+
+    def test_three_paths_to_66(self) -> None:
+        """Three independent paths converge to 66 (ACINTYA!)."""
+        # All three paths must equal 66
+        assert BG_18_66_PATH_1 == 66
+        assert BG_18_66_PATH_2 == 66
+        assert BG_18_66_PATH_3 == 66
+
+    def test_path_1_qualities_halves(self) -> None:
+        """Path 1: QUALITIES + HALVES = 64 + 2 = 66."""
+        assert QUALITIES + HALVES == 66
+        assert BG_18_66_PATH_1 == QUALITIES + HALVES
+
+    def test_path_2_dharma_mantra(self) -> None:
+        """Path 2: (QUARTERS × WORDS) + HALVES = 66."""
+        assert (QUARTERS * WORDS) + HALVES == 66
+        assert BG_18_66_PATH_2 == (QUARTERS * WORDS) + HALVES
+
+    def test_path_3_siksastakam(self) -> None:
+        """Path 3: SIKSASTAKAM_PRODUCT + TEN = 56 + 10 = 66."""
+        assert SIKSASTAKAM_PRODUCT + TEN == 66
+        assert BG_18_66_PATH_3 == SIKSASTAKAM_PRODUCT + TEN
+
+    def test_acintya_convergence(self) -> None:
+        """All three paths are equal (ACINTYA principle)."""
+        assert BG_18_66_PATH_1 == BG_18_66_PATH_2 == BG_18_66_PATH_3
 
 
 class TestSanskritAlphabetStructure:
