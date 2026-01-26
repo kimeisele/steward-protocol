@@ -8,9 +8,18 @@ Tests for Gita Verse Text - Vibration Analysis
 import pytest
 
 from vibe_core.mahamantra.protocols._seed import (
+    AKSARA_COUNT,
+    EPOCH_KEY,
+    GITA_VERSES,
+    HALF_SIZE,
     HALVES,
     HARE_COUNT,
+    KSETRAJNA,
     NADI_RESONANCE,
+    NAKSHATRAS,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
     QUALITIES,
     QUARTERS,
     SEVEN,
@@ -23,10 +32,19 @@ from vibe_core.mahamantra.research.gita_verse_text import (
     BG_18_66_PATH_2,
     BG_18_66_PATH_3,
     BG_18_66_WORDS,
+    CHAITANYA_512_PATH_A,
+    CHAITANYA_512_PATH_B,
+    CHAITANYA_512_PATH_C,
     DHARMA_MANTRA_PRODUCT,
+    GITA_COMPRESSION_RATIO,
+    OCTET,
+    PRABHUPADA_ARRIVAL_MOD,
+    PRABHUPADA_DEPARTURE,
+    PRABHUPADA_DEPARTURE_MOD,
     SIKSASTAKAM_EFFECTS,
     SIKSASTAKAM_PRODUCT,
     SIKSASTAKAM_VERSES,
+    VERSE_PIPELINE_DEPTH,
     analyze_sanskrit_word,
     get_verse_vibration_summary,
 )
@@ -172,3 +190,76 @@ class TestHonesty:
         # These are for investigation, not claims
         assert "signature_mod_nadi" in summary
         assert "signature_mod_qualities" in summary
+
+
+class TestMahaCompression512:
+    """Test the 512 MAHA COMPRESSION verse generation principle."""
+
+    def test_512_path_a_binary(self) -> None:
+        """Path A: HALVES^NAVA = 2^9 = 512."""
+        assert CHAITANYA_512_PATH_A == 512
+        assert HALVES**NAVA == 512
+
+    def test_512_path_b_mahamantra_syllables(self) -> None:
+        """Path B: WORDS × AKSARA = 16 × 32 = 512."""
+        assert CHAITANYA_512_PATH_B == 512
+        assert WORDS * AKSARA_COUNT == 512
+
+    def test_512_path_c_qualities_octet(self) -> None:
+        """Path C: QUALITIES × OCTET = 64 × 8 = 512."""
+        assert CHAITANYA_512_PATH_C == 512
+        assert QUALITIES * HALF_SIZE == 512
+
+    def test_512_three_paths_converge(self) -> None:
+        """All three paths converge to 512 (ACINTYA!)."""
+        assert CHAITANYA_512_PATH_A == CHAITANYA_512_PATH_B == CHAITANYA_512_PATH_C == 512
+
+    def test_octet_equals_siksastakam(self) -> None:
+        """OCTET = HARE_COUNT = 8 Siksastakam verses."""
+        assert OCTET == 8
+        assert OCTET == HARE_COUNT
+        assert OCTET == SIKSASTAKAM_VERSES
+
+
+class TestPrabhupadaIsKey:
+    """Test that Prabhupada is the KEY decoder for verse generation."""
+
+    def test_1972_mod_27_equals_ksetrajna(self) -> None:
+        """1972 mod 27 = 1 = KSETRAJNA (observer arrived!)."""
+        assert PRABHUPADA_ARRIVAL_MOD == KSETRAJNA
+        assert EPOCH_KEY % NAKSHATRAS == 1
+
+    def test_1977_mod_37_equals_words(self) -> None:
+        """1977 mod 37 = 16 = WORDS (message complete!)."""
+        assert PRABHUPADA_DEPARTURE_MOD == WORDS
+        assert (EPOCH_KEY + PANCHA) % PARAMPARA == 16
+
+    def test_prabhupada_departure_is_1977(self) -> None:
+        """1972 + 5 = 1977 (PANCHA years)."""
+        assert PRABHUPADA_DEPARTURE == 1977
+        assert PRABHUPADA_DEPARTURE == EPOCH_KEY + PANCHA
+
+    def test_five_years_timeline(self) -> None:
+        """Timeline = 5 years = PANCHA."""
+        assert PRABHUPADA_DEPARTURE - EPOCH_KEY == PANCHA
+
+
+class TestVerseGenerationPipeline:
+    """Test the verse generation pipeline structure."""
+
+    def test_pipeline_depth_equals_octet(self) -> None:
+        """32 bits / 4 bits per nibble = 8 stages = OCTET."""
+        assert VERSE_PIPELINE_DEPTH == 8
+        assert VERSE_PIPELINE_DEPTH == OCTET
+        assert AKSARA_COUNT // QUARTERS == 8
+
+    def test_gita_compression_ratio(self) -> None:
+        """Gita compression = 700/16 = 43.75×."""
+        assert GITA_COMPRESSION_RATIO > 40
+        assert GITA_COMPRESSION_RATIO == GITA_VERSES / WORDS
+
+    def test_nibble_is_quarters(self) -> None:
+        """One nibble = 4 bits = QUARTERS."""
+        assert QUARTERS == 4
+        # 32-bit address = 8 nibbles = 8 verses
+        assert AKSARA_COUNT // QUARTERS == SIKSASTAKAM_VERSES
