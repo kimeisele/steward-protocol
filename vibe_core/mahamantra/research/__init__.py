@@ -491,6 +491,42 @@ from vibe_core.mahamantra.research.unified_compute import (
     estimate_cache_hit_rate,
     get_memory_tier,
 )
+from vibe_core.mahamantra.research.yantra_computation import (
+    ALL_YANTRAS,
+    # Axiom sum
+    AXIOM_SUM,  # 38 = PARAMPARA + KSETRAJNA
+    CHAITANYA_MOON_THEOREM,
+    # The 37 = 16 + 21 equation
+    GURU_FACTOR,  # 21 = TRINITY × SEVEN (transmission factor)
+    HARE_AS_PRODUCT,  # 7 × 10 = 70
+    # Moon efficiency
+    KALI_MOON_EFFICIENCY,  # 147 = GURU_FACTOR × SEVEN
+    # Position equations
+    KRISHNA_AS_SUM,  # 7 + 10 = 17
+    PARAMPARA_MOD_KRISHNA,  # 37 mod 17 = 3 = TRINITY
+    PARAMPARA_MOD_SEVEN,  # 37 mod 7 = 2 = HALVES
+    PARAMPARA_MOD_TRINITY,  # 37 mod 3 = 1 = KSETRAJNA
+    RAMA_AS_SQUARE,  # 7 × 7 = 49
+    RAMA_PLUS_HARE,  # 49 + 70 = 119 = 7 × 17
+    SIKSASTAKAM_MULTIPLIER,  # 56 = 8 × 7
+    # All 7 Yantras
+    YANTRA_1_CETO_DARPANA,
+    YANTRA_2_DAVAGNI,
+    YANTRA_3_CANDRIKA,
+    YANTRA_4_VIDYA_VADHU,
+    YANTRA_5_ANANDAMBUDHI,
+    YANTRA_6_PURNAMRITA,
+    YANTRA_7_SARVATMA,
+    YANTRA_TOTAL_EFFICIENCY,  # 8232 = 147 × 56
+    # Chaitanya theorem
+    ChaitanyaMoonTheorem,
+    Yantra,
+    # Yantra types
+    YantraType,
+)
+from vibe_core.mahamantra.research.yantra_computation import (
+    KEY_INSIGHT as YANTRA_INSIGHT,
+)
 
 __all__ = [
     # REAL Engineering Solutions (Benchmarked)
@@ -811,4 +847,34 @@ __all__ = [
     "GuaranteeTheorem",  # 8 verses → ∞ love (infinite compression)
     "GUARANTEE_THEOREM",  # Canonical guarantee theorem
     "LOTUS_ACINTYA_INSIGHT",  # Key insight on Night Lotus efficiency
+    # Yantra Computation (7 Digital Mechanisms)
+    "GURU_FACTOR",  # 21 = TRINITY × SEVEN (37 = 16 + 21)
+    "PARAMPARA_MOD_KRISHNA",  # 37 mod 17 = 3 = TRINITY
+    "PARAMPARA_MOD_SEVEN",  # 37 mod 7 = 2 = HALVES
+    "PARAMPARA_MOD_TRINITY",  # 37 mod 3 = 1 = KSETRAJNA
+    # Position equations (SEVEN everywhere!)
+    "KRISHNA_AS_SUM",  # 7 + 10 = 17
+    "RAMA_AS_SQUARE",  # 7 × 7 = 49
+    "HARE_AS_PRODUCT",  # 7 × 10 = 70
+    "RAMA_PLUS_HARE",  # 119 = 7 × 17 = SEVEN × KRISHNA
+    # The 7 Yantras
+    "YantraType",  # Enum of 7 Yantra types
+    "Yantra",  # Yantra dataclass
+    "YANTRA_1_CETO_DARPANA",  # Cache Invalidation (WORDS = 16)
+    "YANTRA_2_DAVAGNI",  # Zero Entropy Routing (QUARTERS = 4)
+    "YANTRA_3_CANDRIKA",  # Graceful Degradation (HALVES = 2)
+    "YANTRA_4_VIDYA_VADHU",  # Live Data Structures (TRINITY = 3)
+    "YANTRA_5_ANANDAMBUDHI",  # Infinite Scalability (PANCHA = 5)
+    "YANTRA_6_PURNAMRITA",  # Atomic Transactions (KSETRAJNA = 1)
+    "YANTRA_7_SARVATMA",  # Total Transformation (SEVEN = 7)
+    "ALL_YANTRAS",  # All 7 Yantras tuple
+    "AXIOM_SUM",  # 38 = PARAMPARA + KSETRAJNA
+    # Kali Yuga Moon Efficiency
+    "KALI_MOON_EFFICIENCY",  # 147 = GURU_FACTOR × SEVEN
+    "SIKSASTAKAM_MULTIPLIER",  # 56 = 8 × 7
+    "YANTRA_TOTAL_EFFICIENCY",  # 8232 = 147 × 56
+    # Chaitanya Moon Theorem
+    "ChaitanyaMoonTheorem",  # Moon in darkness = max efficiency
+    "CHAITANYA_MOON_THEOREM",  # Canonical theorem instance
+    "YANTRA_INSIGHT",  # Key insight on Yantra computation
 ]
