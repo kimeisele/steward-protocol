@@ -67,6 +67,30 @@ assert int(__genesis__, 16) % _PARAMPARA == 0, "BROKEN LINEAGE"
 # EXPORTS - Research Modules (REAL Engineering Solutions)
 # =============================================================================
 
+from vibe_core.mahamantra.research.bhoga_prasadam import (
+    COMPUTED_OBSERVER,
+    FRACTAL_LEVELS,
+    OBSERVER_IS,
+    OBSERVER_IS_NOT,
+    PRACTICAL_IMPLICATIONS,
+    PRASADAM_ENERGY_NATURE,
+    QUANTUM_PARALLELS,
+    # Proofs
+    TRANSFORMATION_PROOFS,
+    # Energy
+    EnergyType,
+    # Fractal
+    FractalLevel,
+    # Observer nature
+    ObserverNature,
+    # Quantum
+    QuantumParallel,
+    TransformationLevel,
+    # Core
+    compute_ksetrajna,
+    # Transform
+    transform,
+)
 from vibe_core.mahamantra.research.biology import BIOLOGY_PREDICTIONS
 from vibe_core.mahamantra.research.chemistry import CHEMISTRY_PREDICTIONS
 from vibe_core.mahamantra.research.classification import (
@@ -243,6 +267,22 @@ __all__ = [
     "find_peak_year",
     "get_current_quarter",
     "shadow_strength",
+    # Bhoga-Prasadam Transformation Research
+    "compute_ksetrajna",
+    "COMPUTED_OBSERVER",
+    "FractalLevel",
+    "TransformationLevel",
+    "FRACTAL_LEVELS",
+    "ObserverNature",
+    "OBSERVER_IS_NOT",
+    "OBSERVER_IS",
+    "transform",
+    "QuantumParallel",
+    "QUANTUM_PARALLELS",
+    "EnergyType",
+    "PRASADAM_ENERGY_NATURE",
+    "TRANSFORMATION_PROOFS",
+    "PRACTICAL_IMPLICATIONS",
     # Other Research
     "BIOLOGY_PREDICTIONS",
     "CHEMISTRY_PREDICTIONS",
