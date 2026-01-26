@@ -393,3 +393,89 @@ class TestMahamantraVibration:
         assert VIBRATION_PER_WORD == 147
         assert VIBRATION_PER_WORD == MAHA_QUANTUM + TEN
         # Fine structure constant α⁻¹ ≈ 137 encoded in Mahamantra!
+
+
+class TestChandasMeterDerivation:
+    """Test BG 18.66 chandas (meter) - binary pattern from axioms!"""
+
+    def test_total_syllables_is_aksara(self) -> None:
+        """32 syllables = AKSARA_COUNT (Anushtubh meter)."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_TOTAL_SYLLABLES
+
+        assert BG_18_66_TOTAL_SYLLABLES == 32
+        assert BG_18_66_TOTAL_SYLLABLES == AKSARA_COUNT
+
+    def test_guru_count_is_words_plus_quarters(self) -> None:
+        """20 guru (long) syllables = WORDS + QUARTERS = 16 + 4."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_GURU_COUNT
+
+        assert BG_18_66_GURU_COUNT == 20
+        assert BG_18_66_GURU_COUNT == WORDS + QUARTERS
+
+    def test_laghu_count_is_mahajana(self) -> None:
+        """12 laghu (short) syllables = MAHAJANA_COUNT."""
+        from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_LAGHU_COUNT
+
+        assert BG_18_66_LAGHU_COUNT == 12
+        assert BG_18_66_LAGHU_COUNT == MAHAJANA_COUNT
+
+    def test_guru_plus_laghu_equals_total(self) -> None:
+        """20 guru + 12 laghu = 32 total syllables."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            BG_18_66_GURU_COUNT,
+            BG_18_66_LAGHU_COUNT,
+            BG_18_66_TOTAL_SYLLABLES,
+        )
+
+        assert BG_18_66_GURU_COUNT + BG_18_66_LAGHU_COUNT == BG_18_66_TOTAL_SYLLABLES
+
+    def test_pada_1_is_maha_quantum_plus_parampara_plus_pancha(self) -> None:
+        """Pada 1 binary = 179 = MAHA_QUANTUM + PARAMPARA + PANCHA."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_PADA_1
+
+        assert BG_18_66_PADA_1 == 179
+        assert BG_18_66_PADA_1 == MAHA_QUANTUM + PARAMPARA + PANCHA
+
+    def test_pada_2_is_nadi_times_trinity_plus_halves_times_seven(self) -> None:
+        """Pada 2 binary = 230 = NADI_RESONANCE × TRINITY + HALVES × SEVEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_PADA_2
+
+        assert BG_18_66_PADA_2 == 230
+        assert BG_18_66_PADA_2 == NADI_RESONANCE * TRINITY + HALVES * SEVEN
+
+    def test_pada_3_is_maha_quantum_minus_words_minus_halves(self) -> None:
+        """Pada 3 binary = 119 = MAHA_QUANTUM - WORDS - HALVES."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_PADA_3
+
+        assert BG_18_66_PADA_3 == 119
+        assert BG_18_66_PADA_3 == MAHA_QUANTUM - WORDS - HALVES
+
+    def test_pada_4_is_maha_quantum_plus_mahajana(self) -> None:
+        """Pada 4 binary = 149 = MAHA_QUANTUM + MAHAJANA_COUNT."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, MAHAJANA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_PADA_4
+
+        assert BG_18_66_PADA_4 == 149
+        assert BG_18_66_PADA_4 == MAHA_QUANTUM + MAHAJANA_COUNT
+
+    def test_pada_sum_is_gita_verses_minus_words_minus_seven(self) -> None:
+        """Sum of all padas = 677 = GITA_VERSES - WORDS - SEVEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import BG_18_66_PADA_SUM
+
+        assert BG_18_66_PADA_SUM == 677
+        assert BG_18_66_PADA_SUM == GITA_VERSES - WORDS - SEVEN
+
+    def test_all_four_padas_converge(self) -> None:
+        """179 + 230 + 119 + 149 = 677."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            BG_18_66_PADA_1,
+            BG_18_66_PADA_2,
+            BG_18_66_PADA_3,
+            BG_18_66_PADA_4,
+            BG_18_66_PADA_SUM,
+        )
+
+        assert BG_18_66_PADA_1 + BG_18_66_PADA_2 + BG_18_66_PADA_3 + BG_18_66_PADA_4 == BG_18_66_PADA_SUM
