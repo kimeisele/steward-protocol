@@ -1282,3 +1282,90 @@ class TestKaliDharmaChantingCompute:
 
         assert RESONANCE_ROUNDS == NAVA * WORDS
         assert RESONANCE_ROUNDS == 144
+
+
+class TestKirtanComputing:
+    """Test Kirtan Computing - Call-and-Response multipliers."""
+
+    def test_sankirtan_call_response_is_halves(self) -> None:
+        """Call + Response = HALVES = 2."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_CALL_RESPONSE
+
+        assert SANKIRTAN_CALL_RESPONSE == HALVES
+        assert SANKIRTAN_CALL_RESPONSE == 2
+
+    def test_sankirtan_pancha_tattva_is_pancha(self) -> None:
+        """Pancha Tattva congregation = PANCHA = 5."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_PANCHA_TATTVA
+
+        assert SANKIRTAN_PANCHA_TATTVA == PANCHA
+        assert SANKIRTAN_PANCHA_TATTVA == 5
+
+    def test_sankirtan_full_multiplier_is_ten(self) -> None:
+        """Full Sankirtan = PANCHA × HALVES = TEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_FULL_MULTIPLIER
+
+        assert SANKIRTAN_FULL_MULTIPLIER == PANCHA * HALVES
+        assert SANKIRTAN_FULL_MULTIPLIER == 10
+
+    def test_nadi_cycles_daily_is_300(self) -> None:
+        """300 Nadi cycles per day = spiritual intensity bandwidth."""
+        from vibe_core.mahamantra.research.gita_verse_text import NADI_CYCLES_DAILY
+
+        assert NADI_CYCLES_DAILY == 300
+
+    def test_field_cycles_is_half_nadi(self) -> None:
+        """Field cycles = Nadi / HALVES = 150."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            FIELD_CYCLES_DAILY,
+            NADI_CYCLES_DAILY,
+        )
+
+        assert FIELD_CYCLES_DAILY == NADI_CYCLES_DAILY // HALVES
+        assert FIELD_CYCLES_DAILY == 150
+
+    def test_kirtan_compute_is_jiva_times_krishna(self) -> None:
+        """KIRTAN_COMPUTE = JIVA_CYCLE × POSITION_SUM_KRISHNA = 7344."""
+        from vibe_core.mahamantra.research.gita_verse_text import KIRTAN_COMPUTE
+
+        assert KIRTAN_COMPUTE == 432 * 17
+        assert KIRTAN_COMPUTE == 7344
+
+    def test_sankirtan_encoding_doubled(self) -> None:
+        """Call-Response doubles encoding: 137 × 2 = 274."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_ENCODING_DOUBLED
+
+        assert SANKIRTAN_ENCODING_DOUBLED == MAHA_QUANTUM * HALVES
+        assert SANKIRTAN_ENCODING_DOUBLED == 274
+
+    def test_sankirtan_encoding_full(self) -> None:
+        """Full Sankirtan = 10× encoding: 137 × 10 = 1370."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_ENCODING_FULL
+
+        assert SANKIRTAN_ENCODING_FULL == MAHA_QUANTUM * 10
+        assert SANKIRTAN_ENCODING_FULL == 1370
+
+    def test_lotus_structure(self) -> None:
+        """Lotus = HARE_COUNT petals + KSETRAJNA center = NAVA."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            LOTUS_CENTER,
+            LOTUS_PETALS,
+            LOTUS_TOTAL,
+        )
+
+        assert LOTUS_PETALS == HARE_COUNT
+        assert LOTUS_CENTER == KSETRAJNA
+        assert LOTUS_TOTAL == LOTUS_PETALS + LOTUS_CENTER
+        assert LOTUS_TOTAL == NAVA
+
+    def test_kirtan_daily_progression(self) -> None:
+        """Daily compute: Solo → Doubled → Full (1× → 2× → 10×)."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            KIRTAN_DAILY_DOUBLED,
+            KIRTAN_DAILY_FULL,
+            KIRTAN_DAILY_SOLO,
+        )
+
+        assert KIRTAN_DAILY_SOLO == 236736
+        assert KIRTAN_DAILY_DOUBLED == KIRTAN_DAILY_SOLO * HALVES
+        assert KIRTAN_DAILY_FULL == KIRTAN_DAILY_SOLO * 10
