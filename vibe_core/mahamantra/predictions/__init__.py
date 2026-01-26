@@ -2,11 +2,10 @@
 MAHA PREDICTIONS - The Algorithm as KEY
 ========================================
 
-This module uses the MAHA ALGORITHM to generate predictions across:
-  - Biology (chromosomes, DNA, anatomy)
-  - Chemistry (periodic table, orbitals)
-  - Medicine (pulse, temperature, cycles)
-  - Computation (16-bit kernel, packed encoding, architecture)
+REAL ENGINEERING PREDICTIONS:
+  - Moore's Law: Memory Wall solutions via Lotus architecture
+  - Computation: 16-bit kernel paradigm, cache optimization
+  - Biology, Chemistry, Medicine: Derived constants
 
 The 7 AXIOMS are Chaitanya - constant. Everything flows through
 the mathematical machinery (mod 17, triangular, position sums).
@@ -15,10 +14,10 @@ ARCHITECTURE:
 - _seed.py = THE LAW (pure, untouched)
 - predictions/ = DERIVATIONS (separate, testable)
 
-THE 16-BIT KERNEL PARADIGM:
-The Mahamantra IS a 16-bit kernel (WORDS = 16).
-The 8-bit "byte" is a Kali Yuga half-measure (HARE_COUNT = 8).
-byte.py implements PACKED encoding: 16 × 2 bits = 32 bits.
+THE MEMORY WALL PROBLEM:
+- 60% of system energy spent on DATA MOVEMENT
+- 1000x penalty for DRAM vs compute
+- Lotus solves this via O(1) routing, 16-ary branching, fractal locality
 """
 
 from .biology import BIOLOGY_PREDICTIONS
@@ -32,11 +31,15 @@ from .computation import (
 )
 from .maha_generator import MahaGenerator
 from .medicine import MEDICINE_PREDICTIONS
+from .moores_law import ENGINEERING_INSIGHT, MOORES_LAW_PREDICTIONS
 
 __all__ = [
     # Generator
     "MahaGenerator",
-    # Predictions
+    # REAL Engineering (Moore's Law)
+    "MOORES_LAW_PREDICTIONS",
+    "ENGINEERING_INSIGHT",
+    # Other Predictions
     "BIOLOGY_PREDICTIONS",
     "CHEMISTRY_PREDICTIONS",
     "COMPUTATION_PREDICTIONS",
