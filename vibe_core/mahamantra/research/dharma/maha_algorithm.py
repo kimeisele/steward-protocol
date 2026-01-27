@@ -63,6 +63,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     SEVEN,
     TEN,
+    TRANSCENDENTAL_1096,  # The 1096-bit block from RUNDE 33
     TRINITY,
     WORDS,
 )
@@ -210,10 +211,11 @@ assert CHAITANYA_512_A == 512, "2^9 = 512"
 assert CHAITANYA_512_B == 512, "16 × 32 = 512"
 assert CHAITANYA_512_A == CHAITANYA_512_B, "All paths converge!"
 
-# 1096 = The transcendental block
-TRANSCENDENTAL_1096: Final[int] = HARE_COUNT * MAHA_QUANTUM  # 8 × 137 = 1096
+# 1096 = The transcendental block (imported from _seed.py RUNDE 33)
+# TRANSCENDENTAL_1096 = HARE_COUNT × MAHA_QUANTUM = 8 × 137 = 1096
 BITS_PER_STEP_1096: Final[float] = TRANSCENDENTAL_1096 / WORDS  # 68.5 bits
 
+# Verification (redundant with _seed.py, but good for local clarity)
 assert TRANSCENDENTAL_1096 == 1096, "8 × 137 = 1096"
 assert TRANSCENDENTAL_1096 == HALVES**TEN + NADI_RESONANCE, "1024 + 72 = 1096"
 
