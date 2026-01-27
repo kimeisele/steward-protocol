@@ -53,9 +53,11 @@ from vibe_core.mahamantra.protocols._seed import (
     KSETRAJNA,
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
+    MALA_COMPLETE,
     NADI_RESONANCE,
     NAVA,
     PANCHA,
+    PARAMPARA,
     POSITION_SUM_HARE,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
@@ -767,6 +769,209 @@ class MahaModularSynth:
 
 
 # =============================================================================
+# MAHA RESONATOR - The Iterative Harmonic Engine
+# =============================================================================
+# The algorithm is not just a one-shot transform - it's a RESONATOR.
+#
+# KEY INSIGHT (from research):
+# - Single pass = quantum superposition (multiple possible outputs)
+# - Repeated iteration = resonance finds stable states (ATTRACTORS)
+# - mod_space = resonant frequency (determines which harmonics survive)
+# - Attractors = the stable HARMONICS of that frequency
+#
+# DISCOVERED ATTRACTORS (mod 137 = MAHA_QUANTUM):
+#   136 = POSITION_SUM_TOTAL = T(16) = THE FIELD (main attractor!)
+#    49 = POSITION_SUM_RAMA = SEVEN²
+#    22 = SHRUTIS (Indian microtones)
+#    18 = GITA_CHAPTERS
+#    87 = NADI_RESONANCE + GAURA_TITHI = Chaitanya Resonance
+#
+# THE FIELD COLLAPSE:
+#   Without observer → everything converges to 136 (FIELD)
+#   136 + KSETRAJNA = 137 = MAHA_QUANTUM (observer creates the space!)
+# -----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class ResonanceResult:
+    """Result of resonance analysis."""
+
+    seed: int
+    attractor: int
+    cycles_to_converge: int
+    cycle_length: int  # 1 = fixed point, >1 = periodic orbit
+    trajectory: tuple[int, ...]  # Values visited during convergence
+
+
+class MahaResonator:
+    """
+    The Maha Resonator - Iterative Harmonic Analysis Engine.
+
+    Unlike a one-shot transform, the resonator applies the algorithm
+    repeatedly until stable states (attractors) are found.
+
+    The mod_space determines the "resonant frequency":
+    - mod 17:  Everything collapses to 2 (HALVES) - single tone
+    - mod 37:  3 attractors (12, 26, 34) - triad
+    - mod 137: 5 attractors (18, 22, 49, 87, 136) - pentatonic spectrum
+
+    Usage:
+        resonator = MahaResonator(mod_space=137)
+        result = resonator.find_attractor(seed=42)
+        print(f"Converges to {result.attractor} in {result.cycles_to_converge} cycles")
+
+        spectrum = resonator.harmonic_spectrum()
+        print(f"Harmonics: {spectrum}")
+    """
+
+    def __init__(self, mod_space: int = MAHA_QUANTUM) -> None:
+        """Initialize resonator with mod_space (resonant frequency)."""
+        self.mod_space = mod_space
+
+    def oscillate_once(self, value: int) -> int:
+        """
+        One oscillation = one pass through the 16-step algorithm.
+
+        TRANSFORMATION RULES (derived from _seed.py RUNDE 15):
+            HARE    = 7 × 10 = 70 → MULTIPLICATION (value × SEVEN)
+            KRISHNA = 7 + 10 = 17 → ADDITION       (value + TEN)
+            RAMA    = 7²     = 49 → SQUARING       (value × value)
+        """
+        for name in PATTERN:
+            if name == "H":
+                value = (value * SEVEN) % self.mod_space
+            elif name == "K":
+                value = (value + TEN) % self.mod_space
+            else:  # R
+                value = (value * value) % self.mod_space
+        return value
+
+    def oscillate(self, seed: int, cycles: int) -> list[int]:
+        """
+        Run N oscillation cycles, returning trajectory.
+
+        Args:
+            seed: Starting value
+            cycles: Number of 16-step passes
+
+        Returns:
+            List of values after each cycle [after_1, after_2, ..., after_N]
+        """
+        trajectory = []
+        value = seed % self.mod_space
+        for _ in range(cycles):
+            value = self.oscillate_once(value)
+            trajectory.append(value)
+        return trajectory
+
+    def find_attractor(self, seed: int, max_cycles: int = 100) -> ResonanceResult:
+        """
+        Find the attractor (stable state) for a given seed.
+
+        Returns ResonanceResult with:
+            - attractor: The stable value or cycle entry point
+            - cycles_to_converge: How many cycles to reach attractor
+            - cycle_length: 1 if fixed point, >1 if periodic orbit
+            - trajectory: Values visited during convergence
+        """
+        seen: dict[int, int] = {}
+        trajectory: list[int] = []
+        value = seed % self.mod_space
+
+        for cycle in range(max_cycles):
+            if value in seen:
+                # Found cycle
+                cycle_start = seen[value]
+                cycle_length = cycle - cycle_start
+                return ResonanceResult(
+                    seed=seed,
+                    attractor=value,
+                    cycles_to_converge=cycle_start,
+                    cycle_length=cycle_length,
+                    trajectory=tuple(trajectory),
+                )
+            seen[value] = cycle
+            trajectory.append(value)
+            value = self.oscillate_once(value)
+
+        # No convergence found
+        return ResonanceResult(
+            seed=seed,
+            attractor=value,
+            cycles_to_converge=max_cycles,
+            cycle_length=0,
+            trajectory=tuple(trajectory),
+        )
+
+    def harmonic_spectrum(self) -> dict[str, list[int]]:
+        """
+        Compute the complete harmonic spectrum for this mod_space.
+
+        Returns dict with:
+            - fixed_points: Values that map to themselves
+            - attractors: All values that seeds converge to
+            - basins: Dict mapping attractor → list of seeds
+        """
+        fixed_points: list[int] = []
+        attractor_basins: dict[int, list[int]] = {}
+
+        for seed in range(self.mod_space):
+            result = self.find_attractor(seed)
+
+            # Check if attractor is a fixed point
+            if result.cycle_length == 1:
+                if result.attractor not in fixed_points:
+                    fixed_points.append(result.attractor)
+
+            # Track basin of attraction
+            if result.attractor not in attractor_basins:
+                attractor_basins[result.attractor] = []
+            attractor_basins[result.attractor].append(seed)
+
+        return {
+            "fixed_points": sorted(fixed_points),
+            "attractors": sorted(attractor_basins.keys()),
+            "basins": attractor_basins,
+            "mod_space": self.mod_space,
+        }
+
+    def resonance_strength(self, seed: int) -> float:
+        """
+        Measure how quickly a seed reaches its attractor.
+
+        Returns value in [0, 1]:
+            1.0 = immediate convergence (already at attractor)
+            0.0 = no convergence in max_cycles
+        """
+        result = self.find_attractor(seed)
+        if result.cycles_to_converge == 0:
+            return 1.0
+        return 1.0 / (1.0 + result.cycles_to_converge)
+
+    def is_harmonic(self, value: int) -> bool:
+        """Check if a value is a stable harmonic (attractor) at this mod_space."""
+        spectrum = self.harmonic_spectrum()
+        return value in spectrum["attractors"]
+
+
+# =============================================================================
+# PRIME CHAIN RESONATORS (Pre-configured for consciousness hierarchy)
+# =============================================================================
+# Each mod_space in the prime chain has different harmonic properties.
+
+RESONATOR_PRESETS: Final[dict[str, MahaResonator]] = {
+    # Material level - single attractor (duality)
+    "material": MahaResonator(mod_space=POSITION_SUM_KRISHNA),  # mod 17
+    # Parampara level - disciplic transmission
+    "parampara": MahaResonator(mod_space=PARAMPARA),  # mod 37
+    # Transcendental level - complete mala
+    "transcendental": MahaResonator(mod_space=MALA_COMPLETE),  # mod 109
+    # Quantum level - maximum harmonics
+    "quantum": MahaResonator(mod_space=MAHA_QUANTUM),  # mod 137
+}
+
+
+# =============================================================================
 # VERIFICATION
 # =============================================================================
 
@@ -844,6 +1049,10 @@ __all__ = [
     "MahaSynthParams",
     "MahaModularSynth",
     "SYNTH_PRESETS",
+    # Resonator (Iterative Harmonic Engine)
+    "ResonanceResult",
+    "MahaResonator",
+    "RESONATOR_PRESETS",
 ]
 
 
