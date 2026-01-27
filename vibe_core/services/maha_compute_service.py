@@ -56,6 +56,11 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     WORDS,
 )
+from vibe_core.mahamantra.protocols._simd_bridge import (
+    SiksastakamStage,
+    get_siksastakam_stage,
+    get_stage_info,
+)
 
 logger = logging.getLogger("MAHA_COMPUTE")
 
@@ -143,6 +148,14 @@ class MahaComputeService(MahaComputeProtocol, PanchaTattvaProtocol):
 
         # 6. Update state
         self._update_state(result)
+
+        # 7. Log Siksastakam stage (the spiritual dimension)
+        stage = get_siksastakam_stage(position)
+        stage_info = get_stage_info(position)
+        logger.debug(
+            f"Tick {position}: {stage.name} ({stage_info.sanskrit_key}) "
+            f"→ Attractor {attractor} ({attractor_type.value})"
+        )
 
         return result
 
@@ -240,6 +253,61 @@ class MahaComputeService(MahaComputeProtocol, PanchaTattvaProtocol):
             "fixed_ratio": self._state.fixed_point_count / total,
             "cycle_ratio": self._state.cycle_count / total,
             "histogram": dict(self._state.attractor_histogram),
+        }
+
+    def get_siksastakam_context(self, position: int) -> Dict[str, Any]:
+        """
+        Get Siksastakam spiritual context for a tick position.
+
+        This bridges MahaCompute (mathematical) with Siksastakam (spiritual).
+
+        Args:
+            position: 0-15 tick position
+
+        Returns:
+            Dict with stage name, verse number, Sanskrit key, hardware effect
+        """
+        stage = get_siksastakam_stage(position)
+        info = get_stage_info(position)
+
+        return {
+            "position": position,
+            "stage": stage.value,
+            "stage_name": stage.name,
+            "verse_number": info.verse_number,
+            "sanskrit_key": info.sanskrit_key,
+            "hardware_effect": info.hardware_effect,
+            "half": "first" if position < 8 else "second",
+        }
+
+    def compute_with_context(self, seed: int) -> Dict[str, Any]:
+        """
+        Compute with full spiritual + mathematical context.
+
+        Combines MahaCompute result with Siksastakam context.
+
+        Args:
+            seed: Input seed value
+
+        Returns:
+            Dict with both MahaCompute result and Siksastakam context
+        """
+        result = self.compute_now(seed)
+        context = self.get_siksastakam_context(result.tick_position)
+
+        return {
+            # MahaCompute (mathematical)
+            "seed": result.seed,
+            "attractor": result.attractor,
+            "attractor_type": result.attractor_type.value,
+            "iterations": result.iterations,
+            "gita_chapter": result.gita_chapter,
+            "gita_insight": result.gita_insight,
+            # Siksastakam (spiritual)
+            "siksastakam_stage": context["stage_name"],
+            "siksastakam_verse": context["verse_number"],
+            "siksastakam_sanskrit": context["sanskrit_key"],
+            "hardware_effect": context["hardware_effect"],
         }
 
     # =========================================================================

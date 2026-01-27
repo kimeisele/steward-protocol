@@ -225,6 +225,46 @@ def full_pipeline_transform(value: int) -> Tuple[int, ...]:
     return tuple(extract_nibble(value, stage) for stage in SiksastakamStage)
 
 
+def get_siksastakam_stage(tick_position: int) -> SiksastakamStage:
+    """
+    Get Siksastakam stage for a tick position.
+
+    The 16 positions map to 8 stages (each stage appears twice):
+        Position 0, 8  → Stage 0 (CLEANSE)
+        Position 1, 9  → Stage 1 (FLEXIBLE)
+        ...
+        Position 7, 15 → Stage 7 (UNCONDITIONAL)
+
+    This reflects the structure: 16 WORDS = 2 HALVES × 8 STAGES
+
+    Args:
+        tick_position: 0-15 position in Mahamantra
+
+    Returns:
+        SiksastakamStage for this tick
+    """
+    return SiksastakamStage(tick_position % SIKSASTAKAM_VERSES)
+
+
+def get_stage_info(tick_position: int) -> StageMapping:
+    """
+    Get full stage mapping info for a tick position.
+
+    Args:
+        tick_position: 0-15 position in Mahamantra
+
+    Returns:
+        StageMapping with verse number, hardware effect, etc.
+    """
+    stage = get_siksastakam_stage(tick_position)
+    return STAGE_MAPPINGS[stage.value]
+
+
+def get_stage_name(tick_position: int) -> str:
+    """Get human-readable stage name for a tick position."""
+    return get_siksastakam_stage(tick_position).name
+
+
 # =============================================================================
 # RUNDE 5: VERIFICATION
 # =============================================================================
@@ -325,6 +365,9 @@ __all__ = [
     "extract_nibble",
     "compute_stage_index",
     "full_pipeline_transform",
+    "get_siksastakam_stage",
+    "get_stage_info",
+    "get_stage_name",
     "verify_bridge",
     # Insight
     "KEY_INSIGHT",
