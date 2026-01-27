@@ -414,6 +414,46 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return LotusIPRouter()
 
+    def synth(self, preset: str = "quantum") -> "MahaSynth":
+        """
+        Create a MahaSynth 16-Step Modular Sequencer.
+
+        THIS IS NOT AUDIO SYNTHESIS.
+        THIS IS A COMPUTATIONAL STEP SEQUENCER.
+
+        ARCHITECTURE:
+            16-STEP MAIN SEQUENCER = KSHETRA (The Field)
+                H (HARE)    = value × 7
+                K (KRISHNA) = value + 10
+                R (RAMA)    = value × value
+
+            7-BEAT OBSERVER LAYER = KSHETRAJNA (The Knower)
+                Overlays on 16 steps, creates perception rhythm
+
+        PRESETS:
+            classical - Converges to fixed point (mod 17)
+            quantum   - Moderate diversity (mod 137, default)
+            trinity   - 3-state output
+            pancha    - 5-way classification
+            nava      - 9-state output
+            wide      - Maximum diversity (mod 512)
+
+        USAGE:
+            synth = mahamantra.synth(preset="quantum")
+            cycle = synth.cycle(seed=42)     # Full 16-step cycle
+            attractor = synth.resonate(42)   # Find stable state
+            spectrum = synth.spectrum()       # All attractors
+
+        Args:
+            preset: Named preset ("quantum", "classical", "wide", etc.)
+
+        Returns:
+            MahaSynth step sequencer
+        """
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        return MahaSynth(preset=preset)
+
     @property
     def attention(self) -> "MahaAttention":
         """
