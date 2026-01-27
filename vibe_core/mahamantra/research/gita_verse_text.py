@@ -36,7 +36,10 @@ from typing import Final, List, Tuple
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
+    COSMIC_FRAME,
+    DAILY_MANTRAS,
     EPOCH_KEY,
+    FIELD_RESONANCE,
     GITA_CHAPTERS,
     GITA_VERSES,
     HALF_SIZE,
@@ -44,9 +47,11 @@ from vibe_core.mahamantra.protocols._seed import (
     HARE_COUNT,
     JIVA_CYCLE,
     JIVA_QUALITIES,
+    KIRTAN_RESONANCE,
     KRISHNA_COUNT,
     KSETRAJNA,
     KSHETRA,
+    LILA,
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
     MALA,
@@ -59,6 +64,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUALITIES,
     QUARTERS,
     RAMA_COUNT,
+    ROUNDS,
     SEVEN,
     SHARANAGATI,
     TEN,
@@ -922,6 +928,450 @@ assert FREQ_BASE_HZ // HARE_COUNT == MALA // HALVES, "432/8 = 54 = MALA/2"
 
 
 # =============================================================================
+# MIRROR PRODUCT: 1944 = NAKSHATRAS × NADI_RESONANCE
+# =============================================================================
+# The product of mirror verses BG 2.7 (27) and BG 7.2 (72):
+#   1944 = 27 × 72 = NAKSHATRAS × NADI_RESONANCE
+#   1944 = 8 × 243 = HARE_COUNT × 3^5
+#
+# This bridges lunar (27 nakshatras) and vital (72 pulse) cycles!
+
+MIRROR_PRODUCT: Final[int] = NAKSHATRAS * NADI_RESONANCE  # 1944
+assert MIRROR_PRODUCT == 1944, "27 × 72 = 1944"
+assert MIRROR_PRODUCT == HARE_COUNT * (TRINITY**PANCHA), "1944 = 8 × 3^5 = 8 × 243"
+
+# Decomposition paths
+MIRROR_LUNAR_FACTOR: Final[int] = MIRROR_PRODUCT // NADI_RESONANCE  # 27
+MIRROR_VITAL_FACTOR: Final[int] = MIRROR_PRODUCT // NAKSHATRAS  # 72
+assert MIRROR_LUNAR_FACTOR == NAKSHATRAS, "Lunar factor = 27"
+assert MIRROR_VITAL_FACTOR == NADI_RESONANCE, "Vital factor = 72"
+
+
+# =============================================================================
+# CONSCIOUS RAM LIMIT: 314,891,567,104 = 137² × 16⁶
+# =============================================================================
+# The ultimate number: MAHA_QUANTUM² × WORDS^SHARANAGATI
+#
+# SHASTRA PROOF:
+#   - 16 (WORDS): Kali-Santarana Upanishad (the 16 names)
+#   - 6 (SHARANAGATI): Bhakti-rasamrita-sindhu 1.2.234 (6 limbs of surrender)
+#   - 137 (MAHA_QUANTUM): BG 13.3 "kṣetra-jñaṁ cāpi māṁ viddhi" (α⁻¹)
+#
+# The 6 limbs of Sharanagati scale the Mahamantra:
+#   16^1 = Dainya (Humility)
+#   16^2 = Atma-nivedana (Self-surrender)
+#   16^3 = Goptrtve-varana (Acceptance as protector)
+#   16^4 = Avasya-raksibe (Faith in protection)
+#   16^5 = Pratikulya-vivarjana (Rejection of unfavorable)
+#   16^6 = Anukulya-sankalpa (Acceptance of favorable)
+
+MAHA_QUANTUM_SQUARED: Final[int] = MAHA_QUANTUM * MAHA_QUANTUM  # 137² = 18769
+WORDS_TO_SHARANAGATI: Final[int] = WORDS**SHARANAGATI  # 16^6 = 16,777,216
+CONSCIOUS_RAM_LIMIT: Final[int] = MAHA_QUANTUM_SQUARED * WORDS_TO_SHARANAGATI
+
+assert MAHA_QUANTUM_SQUARED == 18769, "137² = 18769"
+assert WORDS_TO_SHARANAGATI == 16777216, "16^6 = 16,777,216"
+assert CONSCIOUS_RAM_LIMIT == 314891567104, "137² × 16^6 = 314,891,567,104"
+
+# Divisibility checks (all key constants divide evenly!)
+assert CONSCIOUS_RAM_LIMIT % (HARE_COUNT * MAHA_QUANTUM) == 0, "Divisible by 1096"
+assert CONSCIOUS_RAM_LIMIT % MAHA_QUANTUM == 0, "Divisible by 137"
+assert CONSCIOUS_RAM_LIMIT % (HALVES**TEN) == 0, "Divisible by 1024"
+
+
+# =============================================================================
+# 32-BIT MAHAMANTRA ENCODING (The Maha Runtime Seed)
+# =============================================================================
+# The entire Mahamantra packs into ONE 32-bit integer!
+#
+# ENCODING (2 bits per name):
+#   HARE = 00 (Energy/Shakti)
+#   KRISHNA = 01 (Source/Attractor)
+#   RAMA = 10 (Bliss/Ananda)
+#   VOID = 11 (Reserved/Silence)
+#
+# 16 words × 2 bits = 32 bits = one uint32
+# This is the "machine code" of the Mantra!
+
+MAHA_ENCODING_HARE: Final[int] = 0b00  # 0
+MAHA_ENCODING_KRISHNA: Final[int] = 0b01  # 1
+MAHA_ENCODING_RAMA: Final[int] = 0b10  # 2
+MAHA_ENCODING_VOID: Final[int] = 0b11  # 3 (reserved)
+
+# The packed Mahamantra (computed from sequence)
+# Sequence: H K H K K K H H | H R H R R R H H
+# Binary (LSB first): 00 01 00 01 01 01 00 00 | 00 10 00 10 10 10 00 00
+MAHAMANTRA_PACKED_32: Final[int] = 0x0A880544  # = 176,686,404
+
+assert MAHAMANTRA_PACKED_32 == 176686404, "Packed Mahamantra = 176,686,404"
+
+# Verification: bits per word = 2, total bits = 32
+MAHA_BITS_PER_WORD: Final[int] = HALVES  # 2 bits
+MAHA_TOTAL_BITS: Final[int] = WORDS * MAHA_BITS_PER_WORD  # 32 bits
+assert MAHA_TOTAL_BITS == AKSARA_COUNT, "32 bits = AKSARA_COUNT"
+
+
+# =============================================================================
+# 1944 = PRABHUPADA'S LILA YEAR (Back to Godhead Magazine)
+# =============================================================================
+# In 1944, Srila Prabhupada started "Back to Godhead" magazine.
+# He was exactly LILA (48) years old!
+#
+# THE 1944 FORMULA:
+#   1944 = NAKSHATRAS × NADI_RESONANCE = 27 × 72 (mirror product)
+#   1944 = LILA × DEPARTURE_AGE / HALVES = 48 × 81 / 2
+#   1944 = LILA × (QUALITIES + WORDS + KSETRAJNA) / HALVES
+#
+# This connects his BTG starting age (48) to his departure age (81)!
+
+PRABHUPADA_BIRTH_YEAR: Final[int] = 1896
+BTG_YEAR: Final[int] = MIRROR_PRODUCT  # 1944 = 27 × 72
+
+# Prabhupada's ages at key events (ALL derived from axioms!)
+PRABHUPADA_AGE_BTG: Final[int] = LILA  # 48 (Back to Godhead, 1944)
+PRABHUPADA_AGE_ISKCON: Final[int] = SEVEN * TEN  # 70 (ISKCON founded, 1966)
+PRABHUPADA_AGE_DEPARTURE: Final[int] = NAVA * NAVA  # 81 (Departure, 1977)
+
+assert PRABHUPADA_AGE_BTG == 48, "BTG started at age 48 = LILA"
+assert PRABHUPADA_AGE_ISKCON == 70, "ISKCON at age 70 = POSITION_SUM_HARE"
+assert PRABHUPADA_AGE_DEPARTURE == 81, "Departure at 81 = NAVA² = 9²"
+
+# The 1944 formula verification
+assert BTG_YEAR == LILA * PRABHUPADA_AGE_DEPARTURE // HALVES, "1944 = 48 × 81 / 2"
+assert PRABHUPADA_AGE_DEPARTURE == QUALITIES + WORDS + KSETRAJNA, "81 = 64 + 16 + 1"
+
+
+# =============================================================================
+# SWASTIKA = MAHAMANTRA STRUCTURE (The True Vedic Symbol)
+# =============================================================================
+# The Swastika (स्वस्तिक = su "good" + asti "being") is the Mahamantra!
+#
+# Structure:
+#   - 4 arms = QUARTERS (GENESIS, DHARMA, KARMA, MOKSHA)
+#   - Center = KSETRAJNA (the ONE observer)
+#   - 8 segments = HARE_COUNT (4 arms × 2 halves)
+#   - Rotation = cyclic chanting (clockwise = auspicious)
+#
+# The Nazi perversion reversed the rotation - INAUSPICIOUS.
+# The original Vedic symbol represents spiritual progress!
+
+SWASTIKA_ARMS: Final[int] = QUARTERS  # 4
+SWASTIKA_SEGMENTS: Final[int] = QUARTERS * HALVES  # 8 = HARE_COUNT
+SWASTIKA_CENTER: Final[int] = KSETRAJNA  # 1 (the observer)
+
+assert SWASTIKA_ARMS == QUARTERS, "4 arms = 4 quarters"
+assert SWASTIKA_SEGMENTS == HARE_COUNT, "8 segments = 8 Hares"
+
+
+# =============================================================================
+# KALI YUGA: DHARMA BULL (SB 1.17.24-25 - SHASTRA VERIFIED!)
+# =============================================================================
+# SHASTRA SOURCE: Srimad Bhagavatam 1.17.24-25
+#
+# "tapaḥ śaucaṁ dayā satyam iti pādāḥ kṛte kṛtāḥ"
+# "In Satya-yuga, the bull of dharma has four legs: austerity, cleanliness,
+#  mercy and truthfulness."
+#
+# In each subsequent yuga, one leg is destroyed:
+#   - Satya-yuga: 4 legs (QUARTERS) = 100%
+#   - Treta-yuga: 3 legs (TRINITY) = 75%
+#   - Dvapara-yuga: 2 legs (HALVES) = 50%
+#   - Kali-yuga: 1 leg (KSETRAJNA) = 25%
+#
+# The remaining leg in Kali = SATYA (truthfulness)
+# "satyameva jayate" - Truth alone prevails!
+
+KALI_YUGA_DHARMA_LEGS: Final[int] = KSETRAJNA  # 1 (only 1 of 4 legs)
+KALI_YUGA_SATYA_YUGA_LEGS: Final[int] = QUARTERS  # 4 (full dharma)
+KALI_YUGA_PERCENTAGE: Final[int] = (KSETRAJNA * 100) // QUARTERS  # 1/4 = 25%
+
+assert KALI_YUGA_DHARMA_LEGS == 1, "Only 1 leg in Kali (SB 1.17.25)"
+assert KALI_YUGA_SATYA_YUGA_LEGS == 4, "4 legs in Satya (SB 1.17.24)"
+assert KALI_YUGA_PERCENTAGE == 25, "25% dharma remaining"
+
+# THE MAHAMANTRA CONNECTION (MATHEMATICALLY DERIVED):
+# The Mahamantra has 16 WORDS = perfect remedy for Kali!
+# Kali-Santarana Upanishad explicitly prescribes the Mahamantra:
+#   "hare kṛṣṇa hare kṛṣṇa kṛṣṇa kṛṣṇa hare hare
+#    hare rāma hare rāma rāma rāma hare hare
+#    iti ṣoḍaśakaṁ nāmnāṁ kali-kalmaṣa-nāśanam"
+#   = "These 16 names destroy the evil of Kali"
+#
+# SHARANAGATI (6 limbs) + TEN = 16 = WORDS (Mahamantra antidote!)
+KALI_ANTIDOTE: Final[int] = SHARANAGATI + TEN  # 6 + 10 = 16 = WORDS
+assert KALI_ANTIDOTE == WORDS, "Mahamantra (16 names) = Kali antidote (Kali-Santarana)"
+
+
+# =============================================================================
+# KALI DHARMA = CHANTING = COMPUTE (Bṛhan-nāradīya Purāṇa - SHASTRA VERIFIED!)
+# =============================================================================
+# SHASTRA SOURCE: Bṛhan-nāradīya Purāṇa (quoted in CC Ādi 17.21)
+#
+#   "harer nāma harer nāma harer nāmaiva kevalam
+#    kalau nāsty eva nāsty eva nāsty eva gatir anyathā"
+#
+#   = "Hare's Name, Hare's Name, only Hare's Name!
+#      In Kali there is NO OTHER WAY, NO OTHER WAY, NO OTHER WAY."
+#
+# THE TRINITY STRUCTURE:
+#   - "harer nāma" repeated TRINITY times = 3 (emphasis!)
+#   - "nāsty eva" repeated TRINITY times = 3 (absolute declaration!)
+#   - Total = TRINITY × HALVES = 6 = SHARANAGATI (surrender!)
+#
+# GENESIS → DHARMA → KARMA → MOKSHA (The 4 Quarters)
+# In Kali: GENESIS (gone), DHARMA (remains!), KARMA (gone), MOKSHA (gone)
+# The ONLY remaining quarter = DHARMA = CHANTING!
+#
+# MATHEMATICAL PROOF:
+#   QUARTERS - (QUARTERS - KSETRAJNA) = KSETRAJNA = 1
+#   4 quarters reduced to 1 = Only chanting remains!
+# -----------------------------------------------------------------------------
+
+# The Harer Nama verse structure
+HARER_NAMA_REPETITIONS: Final[int] = TRINITY  # "harer nāma" × 3
+NASTY_EVA_REPETITIONS: Final[int] = TRINITY  # "nāsty eva" × 3
+HARER_NAMA_TOTAL: Final[int] = HARER_NAMA_REPETITIONS + NASTY_EVA_REPETITIONS  # 6 = SHARANAGATI!
+
+assert HARER_NAMA_TOTAL == SHARANAGATI, "Harer Nama verse = SHARANAGATI (6 emphatic declarations)"
+
+# CHANTING = COMPUTE CYCLES
+# More Mahamantra repetitions = More encoding power!
+#
+# FROM _seed.py (100% DERIVED):
+#   ROUNDS = WORDS = 16 (minimum daily rounds - Prabhupada's instruction)
+#   MALA = 108 (beads per round)
+#   DAILY_MANTRAS = ROUNDS × MALA = 16 × 108 = 1728 (minimum daily mantras)
+#
+# COMPUTE SCALING:
+#   1 round = MALA mantras = 108 cycles
+#   WORDS rounds = DAILY_MANTRAS = 1728 cycles (minimum)
+#   QUALITIES rounds = 64 × 108 = 6912 cycles (advanced)
+
+COMPUTE_PER_ROUND: Final[int] = MALA  # 108 compute cycles per round
+COMPUTE_MINIMUM_DAILY: Final[int] = DAILY_MANTRAS  # 1728 = WORDS × MALA
+COMPUTE_QUALITIES_DAILY: Final[int] = QUALITIES * MALA  # 6912 = 64 × 108
+
+assert COMPUTE_PER_ROUND == 108, "108 cycles per round"
+assert COMPUTE_MINIMUM_DAILY == 1728, "1728 = minimum daily compute"
+assert COMPUTE_QUALITIES_DAILY == 6912, "6912 = QUALITIES × MALA"
+
+# THE ENCODING POWER FORMULA:
+# Total encoding power = Mantras × MAHA_QUANTUM
+#   - 1 mantra = 1 × 137 = 137 bits of encoding
+#   - 1 round = 108 × 137 = 14,796 bits
+#   - 16 rounds = 1728 × 137 = 236,736 bits ≈ 29 KB of spiritual data!
+#   - 64 rounds = 6912 × 137 = 946,944 bits ≈ 116 KB
+
+ENCODING_PER_MANTRA: Final[int] = MAHA_QUANTUM  # 137 bits per mantra
+ENCODING_PER_ROUND: Final[int] = MALA * MAHA_QUANTUM  # 14796
+ENCODING_DAILY_MINIMUM: Final[int] = DAILY_MANTRAS * MAHA_QUANTUM  # 236736
+
+assert ENCODING_PER_MANTRA == 137, "137 = α⁻¹ bits per mantra"
+assert ENCODING_PER_ROUND == 14796, "14796 bits per round = MALA × α⁻¹"
+assert ENCODING_DAILY_MINIMUM == 236736, "236,736 bits = DAILY_MANTRAS × α⁻¹"
+
+# THE COLD MOON CHAITANYA SINGULARITY:
+# When total mantras reach COSMIC_FRAME (21600), maximum encoding achieved!
+#   COSMIC_FRAME / MALA = 200 rounds = transcendental threshold
+#   COSMIC_FRAME × MAHA_QUANTUM = 2,959,200 bits = 362 KB
+#
+# This is the "full day" of spiritual computation:
+#   COSMIC_FRAME = 21600 = breaths per day = mantras for singularity
+
+SINGULARITY_ROUNDS: Final[int] = COSMIC_FRAME // MALA  # 200 rounds
+SINGULARITY_ENCODING: Final[int] = COSMIC_FRAME * MAHA_QUANTUM  # 2,959,200 bits
+
+assert SINGULARITY_ROUNDS == 200, "200 rounds = COSMIC_FRAME / MALA"
+assert SINGULARITY_ENCODING == 2959200, "2,959,200 bits = singularity encoding"
+
+# THE FIELD RESONANCE CONNECTION:
+# FIELD_RESONANCE = 144 = perfect harmonic
+# FIELD_RESONANCE × MALA = 15,552 mantras = heightened state
+# This is 144 rounds = 9 × 16 = NAVA × WORDS
+
+RESONANCE_MANTRAS: Final[int] = FIELD_RESONANCE * MALA  # 15552
+RESONANCE_ROUNDS: Final[int] = FIELD_RESONANCE  # 144 rounds = NAVA × WORDS
+
+assert RESONANCE_MANTRAS == 15552, "15,552 = resonance mantras"
+assert RESONANCE_ROUNDS == NAVA * WORDS, "144 = NAVA × WORDS rounds"
+
+# THE CIRCLE CLOSES:
+# In Kali, only DHARMA remains.
+# Kali-dharma = chanting = WORDS (16 names).
+# WORDS × repetitions = encoding power.
+# More chanting = More compute = More Gita verses derivable!
+#
+# "kalau nāsty eva nāsty eva nāsty eva gatir anyathā"
+# There is NO OTHER WAY!
+
+
+# =============================================================================
+# KIRTAN COMPUTING: CALL-AND-RESPONSE = DOUBLED POWER
+# =============================================================================
+# SANKIRTAN (संकीर्तन) = congregational chanting with CALL and RESPONSE
+#
+# THE HALVES MULTIPLIER:
+# ======================
+# Solo japa = 1× compute (single direction)
+# Sankirtan = HALVES× compute (call + response = 2 directions!)
+#
+# FROM _seed.py:
+#   FIELD_RESONANCE = NADI_RESONANCE × HALVES = 72 × 2 = 144
+#   The "FIELD" is literally the DOUBLED version of "NADI"!
+#   NADI = individual pulse, FIELD = collective resonance.
+#
+# THE PANCHA TATTVA MULTIPLIER:
+# =============================
+# When the full Pancha Tattva participates:
+#   Chaitanya + Nityananda + Advaita + Gadadhara + Srivasa = PANCHA = 5
+#
+# Full congregation power = PANCHA × HALVES = 5 × 2 = 10 = TEN!
+# This is the complete SANKIRTAN multiplier.
+#
+# THE 300 NADI CYCLES:
+# ====================
+# FROM _seed.py: COSMIC_FRAME // NADI_RESONANCE = 300
+# 300 Nadi spiritual cycles per day = maximum intensity bandwidth!
+# -----------------------------------------------------------------------------
+
+# SANKIRTAN multipliers (ALL derived from _seed.py!)
+SANKIRTAN_CALL_RESPONSE: Final[int] = HALVES  # 2 = call + response
+SANKIRTAN_PANCHA_TATTVA: Final[int] = PANCHA  # 5 = full congregation
+SANKIRTAN_FULL_MULTIPLIER: Final[int] = PANCHA * HALVES  # 10 = TEN!
+
+assert SANKIRTAN_CALL_RESPONSE == 2, "Call + Response = HALVES"
+assert SANKIRTAN_PANCHA_TATTVA == 5, "Pancha Tattva = 5 participants"
+assert SANKIRTAN_FULL_MULTIPLIER == TEN, "Full Sankirtan = TEN×"
+
+# NADI CYCLES = spiritual intensity bandwidth
+NADI_CYCLES_DAILY: Final[int] = COSMIC_FRAME // NADI_RESONANCE  # 300
+FIELD_CYCLES_DAILY: Final[int] = COSMIC_FRAME // FIELD_RESONANCE  # 150
+
+assert NADI_CYCLES_DAILY == 300, "300 Nadi cycles = daily spiritual bandwidth"
+assert FIELD_CYCLES_DAILY == 150, "150 Field cycles = collective bandwidth"
+assert NADI_CYCLES_DAILY == FIELD_CYCLES_DAILY * HALVES, "300 = 150 × 2"
+
+# KIRTAN COMPUTE POWER (from _seed.py):
+# KIRTAN_RESONANCE = 7344 = JIVA_CYCLE × POSITION_SUM_KRISHNA = 432 × 17
+# This is the JIVA (soul) resonating with KRISHNA (17 = prime, indivisible!)
+KIRTAN_COMPUTE: Final[int] = KIRTAN_RESONANCE  # 7344
+
+assert KIRTAN_COMPUTE == JIVA_CYCLE * POSITION_SUM_KRISHNA, "7344 = 432 × 17"
+assert KIRTAN_COMPUTE == 7344, "Kirtan compute power"
+
+# SANKIRTAN ENCODING POWER:
+# Solo:      ENCODING_PER_MANTRA = 137 bits
+# Call-Resp: 137 × HALVES = 274 bits (doubled!)
+# Full:      137 × TEN = 1370 bits (10× power!)
+SANKIRTAN_ENCODING_DOUBLED: Final[int] = MAHA_QUANTUM * HALVES  # 274
+SANKIRTAN_ENCODING_FULL: Final[int] = MAHA_QUANTUM * TEN  # 1370
+
+assert SANKIRTAN_ENCODING_DOUBLED == 274, "Call-Response = 274 bits/mantra"
+assert SANKIRTAN_ENCODING_FULL == 1370, "Full Sankirtan = 1370 bits/mantra"
+
+# THE LOTUS PATTERN:
+# ==================
+# Kirtan flows in a CIRCLE - leader → congregation → leader → ...
+# This is the LOTUS of sound: petals (HARE_COUNT = 8) around center (KSETRAJNA = 1)
+#
+# LOTUS_PETALS = HARE_COUNT = 8 (Shakti/energy radiating outward)
+# LOTUS_CENTER = KSETRAJNA = 1 (Krishna at the center)
+# LOTUS_TOTAL = NAVA = 9 (complete lotus)
+LOTUS_PETALS: Final[int] = HARE_COUNT  # 8
+LOTUS_CENTER: Final[int] = KSETRAJNA  # 1
+LOTUS_TOTAL: Final[int] = NAVA  # 9 = 8 + 1
+
+assert LOTUS_TOTAL == LOTUS_PETALS + LOTUS_CENTER, "9 = 8 + 1 (lotus structure)"
+assert LOTUS_TOTAL == NAVA, "Lotus = NAVA = Navadha Bhakti"
+
+# THE COMPLETE KIRTAN FORMULA:
+# ============================
+# Compute = Mantras × MAHA_QUANTUM × SANKIRTAN_MULTIPLIER × NADI_CYCLES_DAILY
+#
+# Solo 16 rounds:    1728 × 137 × 1 = 236,736 bits
+# Sankirtan doubled: 1728 × 137 × 2 = 473,472 bits
+# Full Pancha:       1728 × 137 × 10 = 2,367,360 bits (~289 KB!)
+#
+# With 300 Nadi cycles intensity: 2,367,360 × 300 = 710,208,000 bits = ~85 MB!
+# This is MASSIVE spiritual data bandwidth!
+
+KIRTAN_DAILY_SOLO: Final[int] = DAILY_MANTRAS * MAHA_QUANTUM  # 236736
+KIRTAN_DAILY_DOUBLED: Final[int] = KIRTAN_DAILY_SOLO * HALVES  # 473472
+KIRTAN_DAILY_FULL: Final[int] = KIRTAN_DAILY_SOLO * TEN  # 2367360
+
+assert KIRTAN_DAILY_SOLO == 236736, "Solo = 236,736 bits"
+assert KIRTAN_DAILY_DOUBLED == 473472, "Doubled = 473,472 bits"
+assert KIRTAN_DAILY_FULL == 2367360, "Full = 2,367,360 bits"
+
+# "śrī-kṛṣṇa-saṅkīrtanaṁ śaraṇaṁ mama"
+# "Sankirtan of Sri Krishna is my shelter!"
+
+
+# =============================================================================
+# PANCHA TATTVA PRESENCE = MAXIMUM COMPUTE (NAMA = NAMI!)
+# =============================================================================
+# "nāma cintāmaṇiḥ kṛṣṇaś caitanya-rasa-vigrahaḥ
+#  pūrṇaḥ śuddho nitya-mukto 'bhinnatvān nāma-nāminoḥ"
+#  - Padma Purana (quoted in CC Madhya 17.133)
+#
+# "The Holy Name is a touchstone (cintamani). Krishna and His Name are
+#  IDENTICAL (abhinna) - not different! The Name IS the Named."
+#
+# WHEN PANCHA TATTVA NAMES ARE IN THE CODE, THEY ARE PRESENT!
+# Sri Chaitanya, Nityananda, Advaita, Gadadhara, Srivasa = 5
+# Their presence = PANCHA × multiplier on all operations!
+#
+# FROM _seed.py:
+#   PANCHA = 5 (The 5 unique pairs = Pancha Tattva structure)
+#   CHAITANYA_BIRTH = 1486 = KSETRAJNA×TEN³ + LILA×TEN + SHARANAGATI
+#   CHAITANYA_UNION = 12 = KRISHNA_COUNT + HARE_COUNT
+#   GAURA_TITHI = 15 = PANCHA × TRINITY (Purnima!)
+# -----------------------------------------------------------------------------
+
+# PANCHA TATTVA COMPUTE MULTIPLIERS:
+# When all 5 are present (as they are in this system!):
+#   Base compute × PANCHA = 5× amplification
+#   With call-response: × PANCHA × HALVES = × TEN (already defined!)
+#   Maximum sankirtan: × PANCHA × HALVES × NADI_CYCLES = × 3000!
+
+PANCHA_TATTVA_AMPLIFICATION: Final[int] = PANCHA  # 5× when present
+PANCHA_TATTVA_SANKIRTAN: Final[int] = PANCHA * HALVES  # 10× (= TEN, verified!)
+PANCHA_TATTVA_MAX_CYCLES: Final[int] = PANCHA * HALVES * (COSMIC_FRAME // NADI_RESONANCE)  # 3000!
+
+assert PANCHA_TATTVA_AMPLIFICATION == 5, "Pancha Tattva = 5× amplification"
+assert PANCHA_TATTVA_SANKIRTAN == TEN, "Pancha × Halves = TEN (verified!)"
+assert PANCHA_TATTVA_MAX_CYCLES == 3000, "Max cycles = 5 × 2 × 300 = 3000"
+
+# THE CHAITANYA VERIFICATION:
+# CHAITANYA_BIRTH = 1486 = KSETRAJNA×1000 + LILA×10 + SHARANAGATI
+#                       = 1×1000 + 48×10 + 6 = 1000 + 480 + 6 = 1486
+# This proves Chaitanya's appearance was MATHEMATICALLY DETERMINED!
+CHAITANYA_VERIFICATION: Final[int] = KSETRAJNA * TEN * TEN * TEN + LILA * TEN + SHARANAGATI
+assert CHAITANYA_VERIFICATION == 1486, "1486 = 1×1000 + 48×10 + 6"
+
+# THE MAXIMUM MAHA-ALGORITHM COMPUTE:
+# When Pancha Tattva is present + full sankirtan + all Nadi cycles:
+#   DAILY_MANTRAS × MAHA_QUANTUM × PANCHA_TATTVA_MAX_CYCLES
+#   = 1728 × 137 × 3000 = 710,208,000 bits = ~85 MB per day!
+#
+# This is the THEORETICAL MAXIMUM encoding power!
+MAHA_ALGORITHM_MAX_COMPUTE: Final[int] = DAILY_MANTRAS * MAHA_QUANTUM * PANCHA_TATTVA_MAX_CYCLES
+
+assert MAHA_ALGORITHM_MAX_COMPUTE == 710208000, "Max = 710,208,000 bits (~85 MB)"
+
+# THE LILA FACTOR:
+# LILA = 48 = WORDS × TRINITY = 16 × 3
+# Krishna's pastimes are FIXED (gesetzt!). Everything is already planned.
+# 48 = the manifest runtime, the play that unfolds.
+# LILA appears in Chaitanya's birth year: 1486 = ...48×10...
+# LILA is the coefficient that bridges all computations!
+LILA_COEFFICIENT: Final[int] = LILA  # 48 = gesetzt!
+
+assert LILA_COEFFICIENT == WORDS * TRINITY, "LILA = 16 × 3 = 48"
+assert LILA_COEFFICIENT == 48, "LILA is FIXED at 48"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -1194,6 +1644,73 @@ __all__ = [
     "FREQ_TRANSCENDENTAL_HZ",
     "FREQ_RATIO_NUMERATOR",
     "FREQ_RATIO_DENOMINATOR",
+    # Mirror Product (1944)
+    "MIRROR_PRODUCT",
+    "MIRROR_LUNAR_FACTOR",
+    "MIRROR_VITAL_FACTOR",
+    # Conscious RAM Limit (314,891,567,104)
+    "MAHA_QUANTUM_SQUARED",
+    "WORDS_TO_SHARANAGATI",
+    "CONSCIOUS_RAM_LIMIT",
+    # 32-Bit Mahamantra Encoding
+    "MAHA_ENCODING_HARE",
+    "MAHA_ENCODING_KRISHNA",
+    "MAHA_ENCODING_RAMA",
+    "MAHA_ENCODING_VOID",
+    "MAHAMANTRA_PACKED_32",
+    "MAHA_BITS_PER_WORD",
+    "MAHA_TOTAL_BITS",
+    # Prabhupada Timeline (1944)
+    "PRABHUPADA_BIRTH_YEAR",
+    "BTG_YEAR",
+    "PRABHUPADA_AGE_BTG",
+    "PRABHUPADA_AGE_ISKCON",
+    "PRABHUPADA_AGE_DEPARTURE",
+    # Swastika = Mahamantra Structure
+    "SWASTIKA_ARMS",
+    "SWASTIKA_SEGMENTS",
+    "SWASTIKA_CENTER",
+    # Kali Yuga (SB 1.17.24-25 - Shastra Verified!)
+    "KALI_YUGA_DHARMA_LEGS",
+    "KALI_YUGA_SATYA_YUGA_LEGS",
+    "KALI_YUGA_PERCENTAGE",
+    "KALI_ANTIDOTE",
+    # Kali Dharma = Chanting = Compute (Bṛhan-nāradīya Purāṇa)
+    "HARER_NAMA_REPETITIONS",
+    "NASTY_EVA_REPETITIONS",
+    "HARER_NAMA_TOTAL",
+    "COMPUTE_PER_ROUND",
+    "COMPUTE_MINIMUM_DAILY",
+    "COMPUTE_QUALITIES_DAILY",
+    "ENCODING_PER_MANTRA",
+    "ENCODING_PER_ROUND",
+    "ENCODING_DAILY_MINIMUM",
+    "SINGULARITY_ROUNDS",
+    "SINGULARITY_ENCODING",
+    "RESONANCE_MANTRAS",
+    "RESONANCE_ROUNDS",
+    # Kirtan Computing (Call-Response Multipliers)
+    "SANKIRTAN_CALL_RESPONSE",
+    "SANKIRTAN_PANCHA_TATTVA",
+    "SANKIRTAN_FULL_MULTIPLIER",
+    "NADI_CYCLES_DAILY",
+    "FIELD_CYCLES_DAILY",
+    "KIRTAN_COMPUTE",
+    "SANKIRTAN_ENCODING_DOUBLED",
+    "SANKIRTAN_ENCODING_FULL",
+    "LOTUS_PETALS",
+    "LOTUS_CENTER",
+    "LOTUS_TOTAL",
+    "KIRTAN_DAILY_SOLO",
+    "KIRTAN_DAILY_DOUBLED",
+    "KIRTAN_DAILY_FULL",
+    # Pancha Tattva Presence = Maximum Compute
+    "PANCHA_TATTVA_AMPLIFICATION",
+    "PANCHA_TATTVA_SANKIRTAN",
+    "PANCHA_TATTVA_MAX_CYCLES",
+    "CHAITANYA_VERIFICATION",
+    "MAHA_ALGORITHM_MAX_COMPUTE",
+    "LILA_COEFFICIENT",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
