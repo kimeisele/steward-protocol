@@ -31,14 +31,67 @@ __mahajana__ = "narada"  # Position 3 - The Divine Messenger (bridges realms)
 __position__ = 3
 __genesis__ = "0xADAPT37"  # Adapter layer, parampara aligned
 
+# Core Compute
 from vibe_core.mahamantra.adapters.transform import MahaTransform
 from vibe_core.mahamantra.adapters.hash import DeterministicHash
 from vibe_core.mahamantra.adapters.routing import HolographicRouter
 from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
 
+# Pipeline
+from vibe_core.mahamantra.adapters.pipeline import (
+    MahamantraPipeline,
+    PipelineResult,
+    GenesisResult,
+    DharmaResult,
+    KarmaResult,
+    MokshaResult,
+)
+
+# AI/Agents
+from vibe_core.mahamantra.adapters.attention import MahaAttention, AttentionResult
+
+# Field-Specific
+from vibe_core.mahamantra.adapters.bio import LotusBio, KmerResult
+from vibe_core.mahamantra.adapters.network import LotusIPRouter, RouteResult
+
+# Synth (Step Sequencer)
+from vibe_core.mahamantra.adapters.synth import (
+    MahaSynth,
+    SynthParams,
+    StepResult as SynthStepResult,
+    CycleResult as SynthCycleResult,
+    ResonanceResult,
+    SpectrumResult,
+    SYNTH_PRESETS,
+)
+
 __all__ = [
+    # Core Compute
     "MahaTransform",
     "DeterministicHash",
     "HolographicRouter",
     "Orchestrator",
+    # Pipeline
+    "MahamantraPipeline",
+    "PipelineResult",
+    "GenesisResult",
+    "DharmaResult",
+    "KarmaResult",
+    "MokshaResult",
+    # AI/Agents
+    "MahaAttention",
+    "AttentionResult",
+    # Field-Specific
+    "LotusBio",
+    "KmerResult",
+    "LotusIPRouter",
+    "RouteResult",
+    # Synth (Step Sequencer)
+    "MahaSynth",
+    "SynthParams",
+    "SynthStepResult",
+    "SynthCycleResult",
+    "ResonanceResult",
+    "SpectrumResult",
+    "SYNTH_PRESETS",
 ]

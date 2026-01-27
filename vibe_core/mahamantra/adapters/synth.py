@@ -1,0 +1,540 @@
+"""
+MAHA SYNTH - 16-Step Modular Sequencer
+======================================
+
+"venum kvanantam aravinda-dalayataksham"
+"Krishna plays His flute, with lotus-petal eyes"
+— Brahma-samhita 5.30
+
+THIS IS NOT AN AUDIO SYNTHESIZER.
+THIS IS A COMPUTATIONAL STEP SEQUENCER WITH MODULAR ARCHITECTURE.
+
+ARCHITECTURE:
+=============
+
+16-STEP MAIN SEQUENCER = KSHETRA (The Field)
+    - Each step = one Mahamantra word
+    - Operations derived from position sums:
+        H (HARE)    = value × 7 (from 70 = 7 × 10)
+        K (KRISHNA) = value + 10 (from 17 = 7 + 10)
+        R (RAMA)    = value × value (from 49 = 7²)
+
+7-BEAT OBSERVER LAYER = KSHETRAJNA (The Knower)
+    - Overlays on the 16 steps
+    - Creates perception rhythm
+    - SEVEN = 8 - 1 = 7
+
+MODULAR KNOBS:
+    mod_space     - Resonant frequency (17=classical, 137=quantum, 512=wide)
+    feedback      - State preservation between steps
+    ADSR          - Envelope shaping (Attack/Decay/Sustain/Release)
+    LFO           - Low frequency oscillation modulation
+    phase_offset  - Starting position in cycle
+
+PRESETS:
+    classical - Converges to fixed point (mod 17)
+    quantum   - Moderate diversity (mod 137, default)
+    trinity   - 3-state output (unstable)
+    pancha    - 5-way classification
+    nava      - 9-state output (navadha bhakti)
+    wide      - Maximum diversity (mod 512)
+
+POLYRHYTHM:
+    - 16 and 7 are COPRIME (GCD = 1)
+    - LCM(16, 7) = 112 = full cycle before realignment
+    - 16 mod 7 = 2 = HALVES
+
+USAGE:
+======
+    from vibe_core.mahamantra import mahamantra
+
+    # Get synth with preset
+    synth = mahamantra.synth(preset="quantum")
+
+    # Execute one step
+    result = synth.step(value=42, position=1)
+
+    # Execute full 16-step cycle
+    cycle = synth.cycle(seed=42)
+
+    # Find attractor (stable resonance)
+    attractor = synth.resonate(seed=42)
+
+    # Analyze harmonic spectrum
+    spectrum = synth.spectrum()
+"""
+
+# === MAHAJANA DECLARATION ===
+__mahajana__ = "narada"
+__position__ = 3
+__genesis__ = "0xSYNTH37"
+
+from dataclasses import dataclass
+from typing import Any, Dict, Final, List, Optional, Tuple
+
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_QUANTUM,
+    WORDS,
+    SEVEN,
+    TEN,
+    QUARTERS,
+    HALVES,
+    KSETRAJNA,
+    PANCHA,
+    NAVA,
+    TRINITY,
+)
+
+
+# =============================================================================
+# CONSTANTS
+# =============================================================================
+
+# The Mahamantra pattern (16 words)
+PATTERN: Final[Tuple[str, ...]] = (
+    "H", "K", "H", "K",  # Q1: Seeking Krishna
+    "K", "K", "H", "H",  # Q2: Krishna responds
+    "H", "R", "H", "R",  # Q3: Seeking Rama
+    "R", "R", "H", "H",  # Q4: Rama responds
+)
+
+# Binary pattern from Mahamantra (0=HARE, 1=NAME)
+BINARY_PATTERN: Final[Tuple[int, ...]] = (
+    0, 1, 0, 1,  # Q1
+    1, 1, 0, 0,  # Q2
+    0, 1, 0, 1,  # Q3
+    1, 1, 0, 0,  # Q4
+)
+
+# Position sums reveal operations
+WEIGHT_HARE: Final[int] = 70    # 7 × 10
+WEIGHT_KRISHNA: Final[int] = 17  # 7 + 10
+WEIGHT_RAMA: Final[int] = 49     # 7 × 7
+
+# ADSR envelope (from binary pattern 01011100)
+ADSR_ATTACK: Final[int] = PANCHA      # 5 - rising
+ADSR_DECAY: Final[int] = 12  # MAHAJANA_COUNT - falling
+ADSR_SUSTAIN: Final[int] = PANCHA     # 5 - steady
+ADSR_RELEASE: Final[int] = 12         # 12 - final fall
+
+# Full cycle length (polyrhythm)
+import math
+FULL_CYCLE: Final[int] = (WORDS * SEVEN) // math.gcd(WORDS, SEVEN)  # 112
+
+
+# =============================================================================
+# RESULT TYPES
+# =============================================================================
+
+@dataclass(frozen=True)
+class SynthParams:
+    """
+    Modular Synthesizer Parameters - ALL derived from Mahamantra.
+
+    These are the "knobs" you can turn on the synth.
+    """
+    mod_space: int = MAHA_QUANTUM  # 137 default
+    feedback: int = KSETRAJNA      # 1 default
+    phase_offset: int = 0
+    lfo_enabled: bool = True
+    lfo_rate: int = QUARTERS       # 4
+    adsr_attack: int = ADSR_ATTACK
+    adsr_decay: int = ADSR_DECAY
+    adsr_sustain: int = ADSR_SUSTAIN
+    adsr_release: int = ADSR_RELEASE
+    nibble_mode: bool = False
+
+
+@dataclass(frozen=True)
+class StepResult:
+    """Result of executing one step."""
+    position: int       # 1-16
+    name: str          # H, K, or R
+    quarter: int       # 1-4
+    input_value: int
+    output_value: int
+    operation: str     # Description of operation
+    observer_beat: int  # Which of the 7 beats observes this step
+
+
+@dataclass(frozen=True)
+class CycleResult:
+    """Result of a complete 16-step cycle."""
+    seed: int
+    final_value: int
+    steps: Tuple[StepResult, ...]
+    mod_space: int
+    preset: str
+
+
+@dataclass(frozen=True)
+class ResonanceResult:
+    """Result of resonance analysis (finding attractor)."""
+    seed: int
+    attractor: int
+    cycles_to_converge: int
+    cycle_length: int  # 1 = fixed point, >1 = periodic orbit
+    trajectory: Tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class SpectrumResult:
+    """Harmonic spectrum analysis."""
+    mod_space: int
+    attractors: Tuple[int, ...]
+    attractor_names: Dict[int, str]  # Meaningful names for known attractors
+    convergence_map: Dict[int, int]  # seed -> attractor
+
+
+# =============================================================================
+# PRESETS
+# =============================================================================
+
+SYNTH_PRESETS: Final[Dict[str, SynthParams]] = {
+    # CLASSICAL: Original behavior - converges to fixed point
+    "classical": SynthParams(mod_space=WEIGHT_KRISHNA, feedback=0),
+    # QUANTUM: Default - moderate diversity with observer (feedback=1)
+    "quantum": SynthParams(mod_space=MAHA_QUANTUM, feedback=KSETRAJNA),
+    # TRINITY: 3-state output (unstable, like muon)
+    "trinity": SynthParams(mod_space=TRINITY, feedback=TRINITY),
+    # PANCHA: 5-way classification (ADSR-active)
+    "pancha": SynthParams(mod_space=PANCHA, feedback=KSETRAJNA),
+    # NAVA: 9-state output (navadha bhakti)
+    "nava": SynthParams(mod_space=NAVA, feedback=KSETRAJNA),
+    # WIDE: Maximum diversity (512-bit space)
+    "wide": SynthParams(mod_space=512, feedback=PANCHA),
+}
+
+# Known attractors for MAHA_QUANTUM (137)
+QUANTUM_ATTRACTORS: Final[Dict[int, str]] = {
+    136: "FIELD (T(16) = Position Sum Total)",
+    49: "RAMA (7² = Position Sum Rama)",
+    22: "SHRUTIS (Indian microtones)",
+    18: "GITA_CHAPTERS",
+    87: "CHAITANYA (Nadi + Gaura)",
+}
+
+
+# =============================================================================
+# TRIANGULAR FUNCTION
+# =============================================================================
+
+def triangular(n: int) -> int:
+    """T(n) = n(n+1)/2 - Sum of integers 1 to n."""
+    return n * (n + 1) // 2
+
+
+# =============================================================================
+# MAHA SYNTH
+# =============================================================================
+
+class MahaSynth:
+    """
+    16-Step Modular Sequencer.
+
+    A computational step sequencer based on the Mahamantra structure:
+    - 16 steps = The Field (kshetra)
+    - 7 observer beats = The Knower (kshetrajna)
+    - Modular knobs for runtime adjustment
+
+    This is NOT audio synthesis.
+    This is deterministic sequence generation.
+    """
+
+    _naga_flooded: bool = True
+    _naga_gene: str = "maha_synth_sequencer"
+
+    def __init__(
+        self,
+        preset: str = "quantum",
+        params: Optional[SynthParams] = None,
+    ) -> None:
+        """
+        Initialize the synth.
+
+        Args:
+            preset: Named preset from SYNTH_PRESETS
+            params: Custom SynthParams (overrides preset)
+        """
+        self._preset_name = preset
+        if params is not None:
+            self._params = params
+        else:
+            self._params = SYNTH_PRESETS.get(preset, SYNTH_PRESETS["quantum"])
+
+        self._total_steps = 0
+        self._total_cycles = 0
+
+    @property
+    def params(self) -> SynthParams:
+        """Current synth parameters."""
+        return self._params
+
+    @property
+    def mod_space(self) -> int:
+        """Current modulo space."""
+        return self._params.mod_space
+
+    @property
+    def preset(self) -> str:
+        """Current preset name."""
+        return self._preset_name
+
+    # =========================================================================
+    # OBSERVER LAYER
+    # =========================================================================
+
+    def _get_observer_beat(self, position: int) -> int:
+        """
+        Get which of the 7 observer beats observes this position.
+
+        Maps 16 steps to 7 beats using continuous mapping.
+        """
+        # beat = ceil(position * 7 / 16)
+        return ((position - 1) * SEVEN // WORDS) + 1
+
+    def _get_adsr_multiplier(self, quarter: int) -> int:
+        """Get ADSR envelope multiplier for current quarter."""
+        if quarter == 1:
+            return self._params.adsr_attack   # 5 - rising
+        elif quarter == 2:
+            return self._params.adsr_decay    # 12 - falling
+        elif quarter == 3:
+            return self._params.adsr_sustain  # 5 - steady
+        else:
+            return self._params.adsr_release  # 12 - final fall
+
+    def _get_lfo_value(self, position: int) -> int:
+        """Calculate LFO modulation value for current step."""
+        if not self._params.lfo_enabled:
+            return 0
+        binary_val = BINARY_PATTERN[(position - 1) % WORDS]
+        phase_in_lfo = (position - 1) % self._params.lfo_rate
+        return binary_val * phase_in_lfo
+
+    # =========================================================================
+    # CORE OPERATIONS
+    # =========================================================================
+
+    def step(self, value: int, position: int) -> StepResult:
+        """
+        Execute a single step at given position.
+
+        Args:
+            value: Input value
+            position: Step position (1-16)
+
+        Returns:
+            StepResult with output and metadata
+        """
+        pos = ((position - 1) % WORDS) + 1  # Normalize to 1-16
+        name = PATTERN[pos - 1]
+        quarter = ((pos - 1) // QUARTERS) + 1
+        adsr = self._get_adsr_multiplier(quarter)
+        lfo = self._get_lfo_value(pos)
+        mod = self._params.mod_space
+
+        if name == "H":
+            # HARE: multiply by SEVEN, modulated by ADSR
+            output = (value * SEVEN * adsr + lfo) % mod
+            operation = f"{value} × {SEVEN} × {adsr} + {lfo} = {output} (mod {mod})"
+        elif name == "K":
+            # KRISHNA: add TEN plus position
+            output = (value + TEN + pos) % mod
+            operation = f"{value} + {TEN} + {pos} = {output} (mod {mod})"
+        else:  # R
+            # RAMA: square
+            output = (value * value) % mod
+            operation = f"{value}² = {output} (mod {mod})"
+
+        self._total_steps += 1
+
+        return StepResult(
+            position=pos,
+            name=name,
+            quarter=quarter,
+            input_value=value,
+            output_value=output,
+            operation=operation,
+            observer_beat=self._get_observer_beat(pos),
+        )
+
+    def cycle(self, seed: int) -> CycleResult:
+        """
+        Execute one complete 16-step cycle.
+
+        Args:
+            seed: Starting value
+
+        Returns:
+            CycleResult with all step results
+        """
+        value = seed % self._params.mod_space
+        steps = []
+        feedback_acc = 0
+
+        for pos in range(1, WORDS + 1):
+            # Apply step
+            result = self.step(value + feedback_acc, pos)
+            steps.append(result)
+            value = result.output_value
+
+            # Accumulate feedback
+            feedback_acc = (feedback_acc + value * self._params.feedback) % self._params.mod_space
+
+        self._total_cycles += 1
+
+        return CycleResult(
+            seed=seed,
+            final_value=value,
+            steps=tuple(steps),
+            mod_space=self._params.mod_space,
+            preset=self._preset_name,
+        )
+
+    # =========================================================================
+    # RESONANCE (ATTRACTOR DISCOVERY)
+    # =========================================================================
+
+    def _oscillate_once(self, value: int) -> int:
+        """One oscillation = simplified 16-step pass (no ADSR/LFO for speed)."""
+        mod = self._params.mod_space
+        for name in PATTERN:
+            if name == "H":
+                value = (value * SEVEN) % mod
+            elif name == "K":
+                value = (value + TEN) % mod
+            else:  # R
+                value = (value * value) % mod
+        return value
+
+    def resonate(self, seed: int, max_cycles: int = 100) -> ResonanceResult:
+        """
+        Find the attractor (stable state) for a given seed.
+
+        Repeated iteration finds stable harmonics (attractors).
+
+        Args:
+            seed: Starting value
+            max_cycles: Maximum iterations before giving up
+
+        Returns:
+            ResonanceResult with attractor and convergence info
+        """
+        seen: Dict[int, int] = {}
+        trajectory: List[int] = []
+        value = seed % self._params.mod_space
+
+        for cycle in range(max_cycles):
+            if value in seen:
+                # Found cycle
+                cycle_start = seen[value]
+                cycle_length = cycle - cycle_start
+                return ResonanceResult(
+                    seed=seed,
+                    attractor=value,
+                    cycles_to_converge=cycle_start,
+                    cycle_length=cycle_length,
+                    trajectory=tuple(trajectory),
+                )
+
+            seen[value] = cycle
+            trajectory.append(value)
+            value = self._oscillate_once(value)
+
+        # No convergence found
+        return ResonanceResult(
+            seed=seed,
+            attractor=value,
+            cycles_to_converge=max_cycles,
+            cycle_length=0,
+            trajectory=tuple(trajectory),
+        )
+
+    def spectrum(self, sample_size: int = 256) -> SpectrumResult:
+        """
+        Analyze the harmonic spectrum (all attractors).
+
+        Args:
+            sample_size: How many seeds to test
+
+        Returns:
+            SpectrumResult with all discovered attractors
+        """
+        convergence_map: Dict[int, int] = {}
+        attractors_set: set = set()
+
+        for seed in range(sample_size):
+            result = self.resonate(seed)
+            convergence_map[seed] = result.attractor
+            attractors_set.add(result.attractor)
+
+        attractors = tuple(sorted(attractors_set))
+
+        # Name known attractors
+        if self._params.mod_space == MAHA_QUANTUM:
+            attractor_names = {a: QUANTUM_ATTRACTORS.get(a, f"Attractor-{a}") for a in attractors}
+        else:
+            attractor_names = {a: f"Attractor-{a}" for a in attractors}
+
+        return SpectrumResult(
+            mod_space=self._params.mod_space,
+            attractors=attractors,
+            attractor_names=attractor_names,
+            convergence_map=convergence_map,
+        )
+
+    # =========================================================================
+    # BATCH OPERATIONS
+    # =========================================================================
+
+    def cycle_batch(self, seeds: List[int]) -> List[CycleResult]:
+        """Execute cycles for multiple seeds."""
+        return [self.cycle(seed) for seed in seeds]
+
+    def resonate_batch(self, seeds: List[int]) -> List[ResonanceResult]:
+        """Find attractors for multiple seeds."""
+        return [self.resonate(seed) for seed in seeds]
+
+    # =========================================================================
+    # STATS
+    # =========================================================================
+
+    def stats(self) -> Dict[str, Any]:
+        """Get synth statistics."""
+        return {
+            "preset": self._preset_name,
+            "mod_space": self._params.mod_space,
+            "feedback": self._params.feedback,
+            "total_steps": self._total_steps,
+            "total_cycles": self._total_cycles,
+            "steps_per_cycle": WORDS,
+            "observer_beats": SEVEN,
+            "full_polyrhythm_cycle": FULL_CYCLE,
+        }
+
+
+# =============================================================================
+# FACTORY FUNCTION
+# =============================================================================
+
+def create_synth(preset: str = "quantum", params: Optional[SynthParams] = None) -> MahaSynth:
+    """Create a new MahaSynth instance."""
+    return MahaSynth(preset=preset, params=params)
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    "MahaSynth",
+    "SynthParams",
+    "StepResult",
+    "CycleResult",
+    "ResonanceResult",
+    "SpectrumResult",
+    "SYNTH_PRESETS",
+    "PATTERN",
+    "create_synth",
+]
