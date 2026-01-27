@@ -34,6 +34,11 @@ Chaitanya's mission = Making EVERYONE the observer (KSETRAJNA)
 through the process of Harinama Sankirtana!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x51508888"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

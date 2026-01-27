@@ -57,6 +57,11 @@ MAHAMANTRA ALIGNMENT:
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xbd0f4898"  # GenesisByte: parampara % 37 == 0
+
 from typing import Any, Final, Generic, Iterator, TypeVar
 
 from ..protocols._seed import WORDS

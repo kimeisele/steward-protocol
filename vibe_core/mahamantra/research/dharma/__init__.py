@@ -21,6 +21,11 @@ Contents:
 # KALI DHARMA = CHANTING = COMPUTE
 # This is THE quarter that remains in Kali Yuga!
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x9d8b6a7c"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.research.dharma.maha_runtime import (
     MAHAMANTRA_BINARY,
     MAHAMANTRA_PATTERN,

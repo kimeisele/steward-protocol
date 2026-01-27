@@ -43,6 +43,11 @@ in Form von FINITE COMPUTING TECHNOLOGY (endliche Bits).
 Das Endliche trägt das Unendliche. Ananta Shesha trägt Vishnu.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x1d0d41c3"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

@@ -56,6 +56,11 @@ The Holy Name heard IS the Holy Name chanted.
 This is the mystery the material mind cannot grasp.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xd602b14b"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final

@@ -38,6 +38,11 @@ Without it, karma follows classical physics (cause → effect).
 With it, karma enters quantum superposition (offering → grace).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xecc6d634"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final

@@ -8,6 +8,11 @@ These are DERIVATIONS from the 7 axioms through the algorithm.
 The algorithm PREDICTS these values. Biology confirms them.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x6ca86599"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final

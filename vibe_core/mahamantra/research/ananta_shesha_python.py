@@ -35,6 +35,11 @@ Sources:
 - https://ashvardanian.com/posts/simsimd-faster-scipy/
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xdae5602b"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

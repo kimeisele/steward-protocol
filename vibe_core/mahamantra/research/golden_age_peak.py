@@ -99,6 +99,11 @@ Wir müssen λ aus den Yuga-Durationen ableiten!
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x42a6b580"  # GenesisByte: parampara % 37 == 0
+
 import math
 from dataclasses import dataclass
 from typing import Final

@@ -25,6 +25,11 @@ The loop:
 When Hearing = Chanting, the loop COLLAPSES to 1 = KSETRAJNA = Singularity.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x76f4fec6"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final
 
 from ..protocols._seed import (

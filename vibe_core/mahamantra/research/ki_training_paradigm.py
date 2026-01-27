@@ -37,6 +37,11 @@ This is the PARADIGM SHIFT:
   - Based on KSETRAJNA (observer) embedded in structure
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xa09239b4"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

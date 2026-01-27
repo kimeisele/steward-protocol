@@ -81,6 +81,11 @@ These numbers are NOT claims. They are MEASUREMENTS.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x11ba030f"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 from typing import Final

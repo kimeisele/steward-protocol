@@ -51,6 +51,11 @@ MATHEMATICALLY:
   Reflection formula: MATERIAL = INVERT(SPIRITUAL)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x7a71c4c9"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final
