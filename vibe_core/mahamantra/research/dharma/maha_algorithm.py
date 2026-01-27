@@ -6,26 +6,41 @@ MAHA ALGORITHM - The 16-Step Execution Model
 "Abandon all dharmas and surrender unto Me alone."
 — Bhagavad Gita 18.66
 
-THE ALGORITHM:
-==============
-4 phases × 4 positions = 16 steps = WORDS
+DERIVATION FROM MAHAMANTRA:
+===========================
+The OPERATIONS are derived from the NAME at each position (not arbitrary labels!)
 
-Each phase from maha_compression.py:
-    1. KSETRAJNA  → generate_intent()   (Q1: positions 1-4)
-    2. KRISHNA    → sanction()          (Q2: positions 5-8)
-    3. PRAKRITI   → execute()           (Q3: positions 9-12)
-    4. KARMA      → record()            (Q4: positions 13-16)
+3 OPERATIONS (TRINITY):
+    HARE    → INPUT   → call_energy()      (8 steps = HARE_COUNT)
+    KRISHNA → COMPUTE → attract_process()  (4 steps = KRISHNA_COUNT)
+    RAMA    → OUTPUT  → return_bliss()     (4 steps = RAMA_COUNT)
 
-VERIFICATION:
-    16 steps × 32 bits = 512 = CHAITANYA_512
-    16 steps × 68.5 bits ≈ 1096 = TRANSCENDENTAL_BLOCK
+4 PHASES (QUARTERS):
+    Q1 (1-4):   KSETRAJNA  - generate_intent()   - H K H K
+    Q2 (5-8):   KRISHNA    - sanction()          - K K H H
+    Q3 (9-12):  PRAKRITI   - execute()           - H R H R
+    Q4 (13-16): KARMA      - record()            - R R H H
+
+Each step has:
+    - POSITION (1-16) from Mahamantra word order
+    - PHASE (1-4) from quarter structure
+    - OPERATION (INPUT/COMPUTE/OUTPUT) from NAME meaning
+
+LOTUS FEET FOUNDATION:
+    2 feet = HALVES
+    5 toes each = PANCHA
+    10 total = TEN = HALVES × PANCHA = FULL_SANKIRTAN_MULTIPLIER
+
+BIT MODELS:
+    512-bit:  WORDS × AKSARA = 16 × 32 = HALVES^NAVA
+    1096-bit: HARE_COUNT × MAHA_QUANTUM = 8 × 137
 
 USAGE:
     from vibe_core.mahamantra.research.dharma.maha_algorithm import MahaAlgorithm16
 
     algo = MahaAlgorithm16()
     for step in algo.execute():
-        print(step)
+        print(f"{step.position}: {step.name} → {step.operation.value}")
 """
 
 from dataclasses import dataclass
@@ -106,6 +121,39 @@ assert len(PATTERN) == WORDS, f"Pattern must be {WORDS}"
 
 
 # =============================================================================
+# OPERATION TYPES (Derived from NAME meaning!)
+# =============================================================================
+# The operation at each step is determined by the NAME, not the phase!
+# This is derived from the actual meaning of each name in the Mahamantra.
+
+
+class Operation(Enum):
+    """Operations derived from the 3 Names (TRINITY)."""
+
+    HARE = "INPUT"  # Hare = Energy/Shakti = calling, requesting, receiving
+    KRISHNA = "COMPUTE"  # Krishna = All-attractive = processing, transforming
+    RAMA = "OUTPUT"  # Rama = Pleasure reservoir = returning, delighting
+
+
+# Operation meanings
+OPERATION_MEANING: Final[dict[Operation, str]] = {
+    Operation.HARE: "call_energy()",  # Calling the internal energy
+    Operation.KRISHNA: "attract_process()",  # All-attractive processing
+    Operation.RAMA: "return_bliss()",  # Return the reservoir of pleasure
+}
+
+# Name to Operation mapping
+NAME_TO_OPERATION: Final[dict[str, Operation]] = {
+    "H": Operation.HARE,
+    "K": Operation.KRISHNA,
+    "R": Operation.RAMA,
+}
+
+# Verify TRINITY operations
+assert len(Operation) == 3, "3 operations = TRINITY"
+
+
+# =============================================================================
 # THE 16 STEPS
 # =============================================================================
 
@@ -115,9 +163,19 @@ class AlgorithmStep:
     """One of the 16 steps in the Maha Algorithm."""
 
     position: int  # 1-16
-    phase: Phase  # Which of the 4 phases
+    phase: Phase  # Which of the 4 phases (quarter)
     name: str  # H, K, or R
     phase_position: int  # 1-4 within the phase
+
+    @property
+    def operation(self) -> Operation:
+        """The operation type, derived from the NAME."""
+        return NAME_TO_OPERATION[self.name]
+
+    @property
+    def function(self) -> str:
+        """The function call for this step."""
+        return OPERATION_MEANING[self.operation]
 
     @property
     def bits_32(self) -> int:
@@ -287,10 +345,13 @@ __all__ = [
     "BITS_PER_STEP_1096",
     # Types
     "Phase",
+    "Operation",
     "AlgorithmStep",
     # Data
     "PHASE_SANSKRIT",
     "PHASE_FUNCTION",
+    "OPERATION_MEANING",
+    "NAME_TO_OPERATION",
     "PATTERN",
     "MAHA_16_STEPS",
     # Class
@@ -310,19 +371,34 @@ if __name__ == "__main__":
 
     algo = MahaAlgorithm16()
 
-    print("THE 4 PHASES:")
+    print("THE 3 OPERATIONS (derived from NAME meaning):")
+    for op in Operation:
+        print(f"  {op.name:8} → {op.value:7} → {OPERATION_MEANING[op]}")
+    print()
+
+    print("THE 4 PHASES (quarter structure):")
     for phase in Phase:
         print(f"  {phase.value}. {phase.name:10} → {PHASE_FUNCTION[phase]}")
     print()
 
     print("THE 16 STEPS:")
-    print("-" * 50)
+    print("-" * 60)
     current_phase = None
     for step in algo.execute():
         if step.phase != current_phase:
             current_phase = step.phase
-            print(f"\n  [{current_phase.name}] {PHASE_SANSKRIT[current_phase]}")
-        print(f"    Step {step.position:2}: {step.name} (phase pos {step.phase_position})")
+            print(f"\n  [{current_phase.name}]")
+        print(f"    {step.position:2}: {step.name} → {step.operation.value:7} → {step.function}")
+    print()
+
+    # Count operations
+    hare_ops = sum(1 for s in algo.execute() if s.name == "H")
+    krishna_ops = sum(1 for s in algo.execute() if s.name == "K")
+    rama_ops = sum(1 for s in algo.execute() if s.name == "R")
+    print("OPERATION COUNTS (from Mahamantra):")
+    print(f"  HARE (INPUT):    {hare_ops} steps = HARE_COUNT")
+    print(f"  KRISHNA (COMPUTE): {krishna_ops} steps = KRISHNA_COUNT")
+    print(f"  RAMA (OUTPUT):   {rama_ops} steps = RAMA_COUNT")
     print()
 
     print("BIT MODELS:")
