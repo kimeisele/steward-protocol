@@ -36,7 +36,45 @@ from enum import Enum, auto
 from typing import Dict, Final, List, Optional, Tuple
 
 # =============================================================================
-# CORE CONSTANTS (From Seed)
+# SEED IMPORTS (Single Source of Truth)
+# =============================================================================
+from vibe_core.mahamantra.protocols._seed import (
+    # Axioms
+    HALVES,
+    HARE_COUNT,
+    KARTALS_PAIR,
+    # Derived constants
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    # Binary encoding (rhythm foundation!)
+    MRIDANGA_HEADS,
+    NAVA,
+    # Structural
+    PARAMPARA,
+    QUARTERS,
+    SEVEN,
+    TEN,
+    TRINITY,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_QUANTUM as MODULO_QUANTUM,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MALA_COMPLETE as MODULO_MALA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    # Position sums (weights)
+    POSITION_SUM_HARE as WEIGHT_HARE,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    POSITION_SUM_KRISHNA as WEIGHT_KRISHNA,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    POSITION_SUM_RAMA as WEIGHT_RAMA,
+)
+
+# =============================================================================
+# CORE CONSTANTS (Derived from Seed)
 # =============================================================================
 
 BUILD_YEAR: Final[int] = 1896  # Srila Prabhupada's appearance
@@ -46,33 +84,26 @@ RUNTIME_YEARS: Final[int] = RUNTIME_END - BUILD_YEAR + 1  # 82 years (inclusive)
 # Janmashtami connection: 1896 was day after Janmashtami (Nandotsava)
 NANDOTSAVA_ENCODED: Final[bool] = True
 
-# The 37 - Parampara count (from _seed.py)
-PARAMPARA: Final[int] = 37
-
 # =============================================================================
 # MULTI-VCO CONSTANTS (The Prime Chain from MahaAlgorithm)
 # =============================================================================
 # Like a synthesizer with multiple VCOs - each modulo is an oscillator
 # Overlapping resonances = Chladni figures in time!
 
-MODULO_KRISHNA: Final[int] = 17  # Position sum Krishna
-MODULO_PARAMPARA: Final[int] = 37  # Disciplic succession
-MODULO_NADI: Final[int] = 73  # 72 Nadis + 1
-MODULO_MALA: Final[int] = 109  # Complete Mala
-MODULO_QUANTUM: Final[int] = 137  # Fine structure constant (α⁻¹)
+MODULO_KRISHNA: Final[int] = WEIGHT_KRISHNA  # 17 - Position sum Krishna
+MODULO_PARAMPARA: Final[int] = PARAMPARA  # 37 - Disciplic succession
+MODULO_NADI: Final[int] = PARAMPARA + NAVA * QUARTERS  # 37 + 36 = 73 (72 Nadis + 1)
+# MODULO_MALA = 109 (imported as MALA_COMPLETE)
+# MODULO_QUANTUM = 137 (imported as MAHA_QUANTUM)
 
 # The Prime Chain
-PRIME_CHAIN: Final[Tuple[int, ...]] = (17, 37, 73, 109, 137)
-
-# Position Weights from MahaAlgorithm
-WEIGHT_HARE: Final[int] = 70  # Position sum HARE
-WEIGHT_KRISHNA: Final[int] = 17  # Position sum KRISHNA
-WEIGHT_RAMA: Final[int] = 49  # Position sum RAMA
-
-# Mahamantra constants
-SEVEN: Final[int] = 7
-NAVA: Final[int] = 9
-HARE_COUNT: Final[int] = 8
+PRIME_CHAIN: Final[Tuple[int, ...]] = (
+    MODULO_KRISHNA,
+    MODULO_PARAMPARA,
+    MODULO_NADI,
+    MODULO_MALA,
+    MODULO_QUANTUM,
+)
 
 
 def triangular(n: int) -> int:
@@ -619,20 +650,56 @@ KEY_EVENTS: Final[Dict[int, str]] = {
 
 
 # =============================================================================
-# DOUBLE-DIGIT YEARS: THE SEVEN BEATS
+# DOUBLE-DIGIT YEARS: THE SEVEN BEATS (100% DERIVED FROM SEED!)
 # =============================================================================
 # DISCOVERY: Years 1911, 1922, 1933, 1944, 1955, 1966, 1977 are significant!
-# They follow an ARITHMETIC SEQUENCE: Δ(n) = 4 + 11×n for n=1,2,3,4,5,6,7
+# They follow an ARITHMETIC SEQUENCE: Δ(n) = QUARTERS + STEP_INTERVAL × n
 #
-# STEP = 11 (years between beats)
-# OFFSET = 4 (starting delta adjustment)
-# 7 BEATS = SEVEN axioms
+# STEP_INTERVAL = 11 has THREE independent derivations (ACINTYA!):
+#   Path 1: MAHAJANA_COUNT - KSETRAJNA = 12 - 1 = 11
+#   Path 2: NAVA + HALVES = 9 + 2 = 11
+#   Path 3: TEN + KSETRAJNA = 10 + 1 = 11
 #
-# This is like a KIRTAN RHYTHM with 7 beats!
+# STEP_OFFSET = QUARTERS = 4 (n=0 corresponds to 1900 = BUILD + QUARTERS!)
+#
+# BINARY RHYTHM FOUNDATION:
+#   - MRIDANGA_HEADS = HALVES = 2 (two-headed drum: baya + daya)
+#   - KARTALS_PAIR = HALVES = 2 (pair of hand cymbals)
+#   - Chanting is binary: HARE=0, NAME(Krishna/Rama)=1
+#   - Rhythm is inherently binary (on/off, beat/rest)
+#
+# 7 BEATS = SEVEN axioms = KIRTAN RHYTHM!
 
-DOUBLE_DIGIT_YEARS: Final[Tuple[int, ...]] = (1911, 1922, 1933, 1944, 1955, 1966, 1977)
-STEP_INTERVAL: Final[int] = 11  # Years between beats
-STEP_OFFSET: Final[int] = 4  # Formula: Δ = OFFSET + INTERVAL × beat_number
+# STEP_INTERVAL: Three paths to 11 (ACINTYA - inconceivable oneness!)
+_INTERVAL_PATH_1: Final[int] = MAHAJANA_COUNT - KSETRAJNA  # 12 - 1 = 11
+_INTERVAL_PATH_2: Final[int] = NAVA + HALVES  # 9 + 2 = 11
+_INTERVAL_PATH_3: Final[int] = TEN + KSETRAJNA  # 10 + 1 = 11
+
+# Verify all three paths converge
+assert _INTERVAL_PATH_1 == _INTERVAL_PATH_2 == _INTERVAL_PATH_3, "Three paths to 11 must match!"
+
+STEP_INTERVAL: Final[int] = _INTERVAL_PATH_1  # 11 - years between beats
+STEP_OFFSET: Final[int] = QUARTERS  # 4 - Formula: Δ = QUARTERS + STEP_INTERVAL × n
+
+# PRE-BUILD DOUBLE-DIGIT YEARS (outside runtime but mathematically significant!)
+# 1888 = BUILD - HARE_COUNT = 1896 - 8 → double 8!
+# 1899 = BUILD + TRINITY = 1896 + 3 → double 9!
+# 1900 = BUILD + QUARTERS = 1896 + 4 → n=0 in the formula!
+_PRE_BUILD_88: Final[int] = BUILD_YEAR - HARE_COUNT  # 1888
+_PRE_BUILD_99: Final[int] = BUILD_YEAR + TRINITY  # 1899
+_FORMULA_N_ZERO: Final[int] = BUILD_YEAR + QUARTERS  # 1900 (n=0!)
+
+# Verify pre-build derivations
+assert _PRE_BUILD_88 == 1888, "BUILD - HARE_COUNT = 1888 (double 8!)"
+assert _PRE_BUILD_99 == 1899, "BUILD + TRINITY = 1899 (double 9!)"
+assert _FORMULA_N_ZERO == 1900, "BUILD + QUARTERS = 1900 (n=0 in formula!)"
+
+# Generate DOUBLE_DIGIT_YEARS from formula: year = BUILD + QUARTERS + STEP_INTERVAL × n
+DOUBLE_DIGIT_YEARS: Final[Tuple[int, ...]] = tuple(
+    BUILD_YEAR + STEP_OFFSET + STEP_INTERVAL * n for n in range(1, SEVEN + 1)
+)
+# Verify: (1911, 1922, 1933, 1944, 1955, 1966, 1977)
+assert DOUBLE_DIGIT_YEARS == (1911, 1922, 1933, 1944, 1955, 1966, 1977), "Generated years must match!"
 
 # The 7 beats as deltas from BUILD_YEAR
 SEVEN_BEATS_DELTAS: Final[Tuple[int, ...]] = tuple(year - BUILD_YEAR for year in DOUBLE_DIGIT_YEARS)
