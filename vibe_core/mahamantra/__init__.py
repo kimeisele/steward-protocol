@@ -385,6 +385,35 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return LotusBio(k=k)
 
+    def network(self) -> "LotusIPRouter":
+        """
+        Create a LotusIPRouter for O(1) IPv4 routing with LPM.
+
+        THE PROBLEM:
+            IPv4 routing requires Longest Prefix Match (LPM).
+            Hash tables CANNOT do efficient LPM - must check ALL routes = O(N).
+
+        THE INSIGHT:
+            IPv4 = 32 bits = 8 × 4 bits = 8 levels × 16 slots
+            This is a perfect Lotus Tree structure!
+
+        THE SOLUTION:
+            O(8) = O(1) constant time LPM, regardless of table size.
+            BGP tables with 1,000,000+ routes: SAME speed!
+
+        USAGE:
+            router = mahamantra.network()
+            router.insert("192.168.0.0", 16, "gateway_a")
+            router.insert("192.168.1.0", 24, "gateway_b")
+            next_hop = router.lookup("192.168.1.100")  # "gateway_b" (LPM)
+
+        Returns:
+            LotusIPRouter with O(1) longest prefix match
+        """
+        from vibe_core.mahamantra.adapters.network import LotusIPRouter
+
+        return LotusIPRouter()
+
     @property
     def attention(self) -> "MahaAttention":
         """
