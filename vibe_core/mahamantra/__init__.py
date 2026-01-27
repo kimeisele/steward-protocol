@@ -292,6 +292,43 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return HolographicRouter(levels=levels)
 
+    @property
+    def orchestrator(self) -> "Orchestrator":
+        """
+        Access the Orchestrator adapter (rhythmic compute engine).
+
+        ENTERPRISE USAGE:
+            result = mahamantra.orchestrator.tick(seed=42)
+            round_result = mahamantra.orchestrator.round(seed=42)
+            mala_result = mahamantra.orchestrator.mala(seed=42)
+
+        7-beat rhythmic compute orchestrator.
+        7 = SEVEN (coprime with 16, LCM = 112)
+        108 rounds per mala = complete devotional cycle.
+        """
+        if not hasattr(self, "_orchestrator"):
+            from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+
+            self._orchestrator = Orchestrator()
+        return self._orchestrator
+
+    @property
+    def gita(self):
+        """
+        Access the Gita module (Source Code of Reality).
+
+        USAGE:
+            chapter_18 = mahamantra.gita.CHAPTER_18_VERSE
+            is_valid = mahamantra.gita.verify_fixed_point()
+
+        Chapter 18 is THE FIXED POINT - the North Star (Dhruva).
+        """
+        if not hasattr(self, "_gita"):
+            from vibe_core.mahamantra.research import gita
+
+            self._gita = gita
+        return self._gita
+
     # === GOVERNANCE SCAN ===
     def scan(self, base_path: Optional[str] = None) -> dict:
         """

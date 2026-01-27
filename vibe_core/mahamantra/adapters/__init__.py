@@ -34,9 +34,11 @@ __genesis__ = "0xADAPT37"  # Adapter layer, parampara aligned
 from vibe_core.mahamantra.adapters.transform import MahaTransform
 from vibe_core.mahamantra.adapters.hash import DeterministicHash
 from vibe_core.mahamantra.adapters.routing import HolographicRouter
+from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
 
 __all__ = [
     "MahaTransform",
     "DeterministicHash",
     "HolographicRouter",
+    "Orchestrator",
 ]
