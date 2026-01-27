@@ -360,6 +360,26 @@ _LAZY_IMPORTS = {
     "get_lila_chronology": "lila_chronology",
     "get_phase": "lila_chronology",
     "PHASE_BOUNDARIES": "lila_chronology",
+    # Step Sequencer
+    "DOUBLE_DIGIT_YEARS": "lila_chronology",
+    "STEP_INTERVAL": "lila_chronology",
+    "STEP_OFFSET": "lila_chronology",
+    "SEVEN_BEATS_DELTAS": "lila_chronology",
+    "StepBeat": "lila_chronology",
+    "LilaStepSequencer": "lila_chronology",
+    "get_step_sequencer": "lila_chronology",
+    # Kirtan Runtime
+    "KirtanState": "lila_chronology",
+    "KirtanRuntime": "lila_chronology",
+    "get_kirtan_runtime": "lila_chronology",
+    # Flute Sync
+    "FluteSync": "lila_chronology",
+    # Synth Presets
+    "LilaSynthParams": "lila_chronology",
+    "LILA_SYNTH_PRESETS": "lila_chronology",
+    # Analysis API
+    "analyze_year": "lila_chronology",
+    "get_arithmetic_sequence": "lila_chronology",
     # === LEGACY (Balarama-wrapped from protocols/substrate) ===
     "Declaration": "_legacy",
     "DeclarationType": "_legacy",
