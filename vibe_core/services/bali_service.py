@@ -14,14 +14,14 @@ __position__ = 10
 __genesis__ = "0x1b8c8432"  # GenesisByte: parampara % 37 == 0
 
 import logging
-from typing import Dict, Optional, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from vibe_core.protocols.mahajanas.bali import (
     BaliProtocol,
-    SurrenderType,
     SurrenderResult,
     SurrenderState,
+    SurrenderType,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
 
@@ -46,13 +46,14 @@ class BaliService(BaliProtocol):
         return Mahajana.BALI  # Position 13
 
     def yield_cpu(self, duration_ms: int = 0) -> SurrenderResult:
-        """YIELD_CPU: Yield control."""
+        """Yield control for the specified duration."""
         self._total_yields += 1
-        # In a real impl, this might asyncio.sleep()
+
+        # In a real impl, this would asyncio.sleep(duration_ms / 1000)
         return {
             "success": True,
             "surrender_type": "yield",
-            "resources_released": 0,
+            "resources_released": duration_ms,
             "timestamp": datetime.now().isoformat(),
             "message": "Yielded to the Mantra",
         }
@@ -115,6 +116,7 @@ class BaliService(BaliProtocol):
     async def shutdown_orchestration(self, kernel: object, reason: str) -> None:
         """🛑 THE ASYNC SHUTDOWN ORCHESTRATION (Surrender). Delegated from Kernel."""
         import asyncio
+
         from vibe_core.ledger import SQLiteLedger
 
         logger.critical(f"🛑 BALI: Shutting down system (Reason: {reason})")
