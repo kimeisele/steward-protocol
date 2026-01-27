@@ -1053,6 +1053,11 @@ __all__ = [
     "ResonanceResult",
     "MahaResonator",
     "RESONATOR_PRESETS",
+    # Oracle (Intent-to-Resonance Interface)
+    "OracleLens",
+    "OracleReading",
+    "ORACLE_LENSES",
+    "MahaOracle",
 ]
 
 
@@ -1114,6 +1119,329 @@ __all__ = [
 # mod 137: MAXIMUM     → 8 states (quantum consciousness achieved)
 #
 # =============================================================================
+
+
+# =============================================================================
+# MAHA ORACLE - The Intent-to-Resonance Interface
+# =============================================================================
+# "Like a prompt that gets encoded" - Intent in, Resonance out.
+#
+# The Oracle uses MULTIPLE MOD-SPACES as "lenses" to view the same intent:
+#   - mod 2:   BINARY (Mridanga/Kartals - rhythm foundation)
+#   - mod 7:   ANNIHILATOR (axioms alone = void)
+#   - mod 10:  PERFECT TETRAD (Gita connection: 0+4+5+9=18)
+#   - mod 17:  KRISHNA (material/classical)
+#   - mod 37:  PARAMPARA (disciplic channel)
+#   - mod 109: MALA COMPLETE (transcendental)
+#   - mod 137: QUANTUM (maximum diversity)
+#
+# HOLOGRAPHIC PRINCIPLE: Each mod-space reveals different aspects of the
+# same underlying truth. The intent is ONE, the readings are MANY.
+# -----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class OracleLens:
+    """A single lens (mod-space) for viewing an intent."""
+
+    name: str
+    mod_space: int
+    meaning: str
+    resonance: int  # The transformed value in this mod-space
+    is_fixed_point: bool  # Is this value stable under iteration?
+    attractor: int  # What it converges to
+    cycles: int  # How many cycles to converge
+
+
+@dataclass(frozen=True)
+class OracleReading:
+    """Complete oracle reading for an intent."""
+
+    intent: str  # Original intent string
+    seed: int  # Intent encoded as integer
+    lenses: tuple[OracleLens, ...]  # All lens readings
+    gita_resonance: int  # Sum of tetrad-active lenses (relates to 18)
+    primary_attractor: int  # Main attractor at mod 137
+    holographic_factors: tuple[int, ...]  # Factors that appear across lenses
+    interpretation: str  # Human-readable interpretation
+
+
+# The sacred lenses (mod-spaces) and their meanings
+ORACLE_LENSES: Final[tuple[tuple[str, int, str], ...]] = (
+    ("BINARY", HALVES, "Mridanga rhythm - on/off, beat/rest"),
+    ("AXIOM", SEVEN, "Pure structure - annihilates content"),
+    ("TETRAD", TEN, "Embodied senses - perfect 4 fixed points"),
+    ("KRISHNA", POSITION_SUM_KRISHNA, "All-attractive - material lens"),
+    ("PARAMPARA", PARAMPARA, "Disciplic channel - 5 states open"),
+    ("MALA", MALA_COMPLETE, "Complete japa - 8 transcendental states"),
+    ("QUANTUM", MAHA_QUANTUM, "Maximum diversity - 8 quantum states"),
+)
+
+
+class MahaOracle:
+    """
+    The Maha Oracle - Intent-to-Resonance Interface.
+
+    Like an oracle that receives a question (intent) and returns a reading
+    by viewing it through multiple sacred lenses (mod-spaces).
+
+    USAGE:
+        oracle = MahaOracle()
+        reading = oracle.consult("What is the nature of consciousness?")
+        print(reading.interpretation)
+
+        # Or with a numeric seed directly:
+        reading = oracle.consult_seed(42)
+
+    The oracle encodes the intent using Mahamantra weights, then
+    analyzes it through 7 different mod-spaces, revealing the
+    holographic structure of the intent.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the oracle with pre-built resonators."""
+        self._resonators: dict[int, MahaResonator] = {}
+        for _name, mod_space, _meaning in ORACLE_LENSES:
+            self._resonators[mod_space] = MahaResonator(mod_space)
+
+    def encode_intent(self, intent: str) -> int:
+        """
+        Encode an intent string to an integer using Mahamantra weights.
+
+        ENCODING (derived from position sums):
+            - Each character position i contributes: char_value × T(i % 16 + 1)
+            - T(n) = triangular number = n(n+1)/2
+            - Final value modulated by Mahamantra pattern (H=×7, K=+10, R=×7²)
+
+        This creates a deterministic but non-trivial mapping from
+        any string to an integer in the quantum space [0, 137).
+        """
+        if not intent:
+            return 0
+
+        # Phase 1: Position-weighted character sum
+        value = 0
+        for i, char in enumerate(intent):
+            char_val = ord(char)
+            pos = (i % WORDS) + 1  # 1-16 cycle
+            t_pos = triangular(pos)
+            # Apply Mahamantra pattern at this position
+            pattern_char = PATTERN[i % WORDS]
+            if pattern_char == "H":
+                contribution = (char_val * t_pos * SEVEN) % MAHA_QUANTUM
+            elif pattern_char == "K":
+                contribution = (char_val + t_pos + TEN) % MAHA_QUANTUM
+            else:  # R
+                contribution = (char_val * t_pos) % MAHA_QUANTUM
+            value = (value + contribution) % MAHA_QUANTUM
+
+        # Phase 2: One full Maha transform
+        resonator = self._resonators[MAHA_QUANTUM]
+        return resonator.oscillate_once(value)
+
+    def _analyze_lens(self, seed: int, name: str, mod_space: int, meaning: str) -> OracleLens:
+        """Analyze seed through a single lens."""
+        resonator = self._resonators[mod_space]
+        result = resonator.find_attractor(seed)
+
+        return OracleLens(
+            name=name,
+            mod_space=mod_space,
+            meaning=meaning,
+            resonance=seed % mod_space,
+            is_fixed_point=result.cycle_length == 1 and result.cycles_to_converge == 0,
+            attractor=result.attractor,
+            cycles=result.cycles_to_converge,
+        )
+
+    def _find_holographic_factors(self, lenses: tuple[OracleLens, ...]) -> tuple[int, ...]:
+        """
+        Find numbers that appear as resonances across multiple lenses.
+
+        These "holographic factors" indicate deep structural patterns.
+        """
+        resonances = [l.resonance for l in lenses if l.resonance > 0]
+        attractors = [l.attractor for l in lenses if l.attractor > 0]
+        all_values = resonances + attractors
+
+        # Count occurrences
+        counts: dict[int, int] = {}
+        for v in all_values:
+            counts[v] = counts.get(v, 0) + 1
+
+        # Return values appearing more than once
+        factors = sorted([v for v, count in counts.items() if count > 1])
+        return tuple(factors)
+
+    def _interpret(self, reading_data: dict) -> str:
+        """
+        Generate human-readable interpretation of the reading.
+
+        Based on which lenses show fixed points, attractors, and patterns.
+        """
+        lines = []
+
+        # Check annihilation
+        axiom_lens = reading_data["lenses_by_name"].get("AXIOM")
+        if axiom_lens and axiom_lens.attractor == 0:
+            lines.append("AXIOM: Intent dissolves into void when viewed through pure structure.")
+
+        # Check binary preservation
+        binary_lens = reading_data["lenses_by_name"].get("BINARY")
+        if binary_lens:
+            if binary_lens.attractor == 1:
+                lines.append("BINARY: Observer (Ksetrajna) preserved - consciousness present.")
+            elif binary_lens.attractor == 0:
+                lines.append("BINARY: Returns to void - material manifestation.")
+
+        # Check tetrad (Gita connection)
+        tetrad_lens = reading_data["lenses_by_name"].get("TETRAD")
+        if tetrad_lens:
+            tetrad_meaning = {
+                0: "Void (sunya) - emptiness before creation",
+                4: "Quarters (phases) - time's structure",
+                5: "Pancha (elements) - material foundation",
+                9: "Nava (bhakti) - devotional essence",
+            }
+            if tetrad_lens.attractor in tetrad_meaning:
+                lines.append(f"TETRAD: {tetrad_meaning[tetrad_lens.attractor]}")
+
+        # Check parampara channel
+        parampara_lens = reading_data["lenses_by_name"].get("PARAMPARA")
+        if parampara_lens:
+            lines.append(
+                f"PARAMPARA: Resonates at {parampara_lens.attractor} "
+                f"(channel {parampara_lens.attractor % PANCHA + 1} of {PANCHA})"
+            )
+
+        # Check quantum attractor
+        quantum_lens = reading_data["lenses_by_name"].get("QUANTUM")
+        if quantum_lens:
+            # Known quantum attractors and their meanings
+            quantum_meanings = {
+                136: "T(16) = The Field - all positions unified",
+                49: "SEVEN² = Rama's power - bliss complete",
+                22: "Shrutis - microtonal harmony",
+                18: "Gita chapters - divine song resonance",
+                87: "Chaitanya resonance - golden avatar",
+            }
+            if quantum_lens.attractor in quantum_meanings:
+                lines.append(f"QUANTUM: {quantum_meanings[quantum_lens.attractor]}")
+            else:
+                lines.append(f"QUANTUM: Unique resonance at {quantum_lens.attractor}")
+
+        # Holographic factors
+        if reading_data["holographic_factors"]:
+            lines.append(
+                f"HOLOGRAPHIC: Factors {reading_data['holographic_factors']} "
+                "appear across multiple lenses - deep structural pattern."
+            )
+
+        return "\n".join(lines) if lines else "No significant patterns detected."
+
+    def consult_seed(self, seed: int) -> OracleReading:
+        """
+        Consult the oracle with a numeric seed directly.
+
+        Returns a complete OracleReading with all lens analyses.
+        """
+        lenses = []
+        lenses_by_name = {}
+
+        for name, mod_space, meaning in ORACLE_LENSES:
+            lens = self._analyze_lens(seed, name, mod_space, meaning)
+            lenses.append(lens)
+            lenses_by_name[name] = lens
+
+        lenses_tuple = tuple(lenses)
+
+        # Calculate Gita resonance (sum of tetrad fixed points active)
+        tetrad_lens = lenses_by_name.get("TETRAD")
+        gita_resonance = tetrad_lens.attractor if tetrad_lens else 0
+
+        # Primary attractor at quantum level
+        quantum_lens = lenses_by_name.get("QUANTUM")
+        primary_attractor = quantum_lens.attractor if quantum_lens else seed % MAHA_QUANTUM
+
+        # Find holographic factors
+        holographic = self._find_holographic_factors(lenses_tuple)
+
+        # Generate interpretation
+        reading_data = {
+            "lenses_by_name": lenses_by_name,
+            "holographic_factors": holographic,
+        }
+        interpretation = self._interpret(reading_data)
+
+        return OracleReading(
+            intent=f"seed:{seed}",
+            seed=seed,
+            lenses=lenses_tuple,
+            gita_resonance=gita_resonance,
+            primary_attractor=primary_attractor,
+            holographic_factors=holographic,
+            interpretation=interpretation,
+        )
+
+    def consult(self, intent: str) -> OracleReading:
+        """
+        Consult the oracle with an intent string.
+
+        The intent is encoded using Mahamantra weights, then analyzed
+        through all sacred lenses.
+
+        Usage:
+            oracle = MahaOracle()
+            reading = oracle.consult("What is truth?")
+            print(reading.interpretation)
+        """
+        seed = self.encode_intent(intent)
+        reading = self.consult_seed(seed)
+
+        # Return with updated intent field
+        return OracleReading(
+            intent=intent,
+            seed=seed,
+            lenses=reading.lenses,
+            gita_resonance=reading.gita_resonance,
+            primary_attractor=reading.primary_attractor,
+            holographic_factors=reading.holographic_factors,
+            interpretation=reading.interpretation,
+        )
+
+    def compare_intents(self, intent_a: str, intent_b: str) -> dict:
+        """
+        Compare two intents to find resonance similarity.
+
+        Returns dict with:
+            - shared_attractors: Attractors common to both
+            - divergent_lenses: Lenses where they differ significantly
+            - resonance_distance: How "far apart" the intents are
+        """
+        reading_a = self.consult(intent_a)
+        reading_b = self.consult(intent_b)
+
+        shared = []
+        divergent = []
+        total_distance = 0
+
+        for lens_a, lens_b in zip(reading_a.lenses, reading_b.lenses):
+            if lens_a.attractor == lens_b.attractor:
+                shared.append((lens_a.name, lens_a.attractor))
+            else:
+                divergent.append((lens_a.name, lens_a.attractor, lens_b.attractor))
+                total_distance += abs(lens_a.attractor - lens_b.attractor)
+
+        return {
+            "intent_a": intent_a,
+            "intent_b": intent_b,
+            "seed_a": reading_a.seed,
+            "seed_b": reading_b.seed,
+            "shared_attractors": shared,
+            "divergent_lenses": divergent,
+            "resonance_distance": total_distance,
+            "similarity": len(shared) / len(reading_a.lenses),
+        }
 
 
 # =============================================================================
