@@ -173,6 +173,26 @@ MAHAJANA_COUNT: Final[int] = KSHETRA // HALVES  # 12
 # Alternative derivation: LILA × NAVA // QUARTERS = 48 × 9 // 4 = 108
 MALA: Final[int] = MAHAJANA_COUNT * NAVA  # 108
 
+# MALA_COMPLETE = MALA + KSETRAJNA = 108 + 1 = 109
+# The COMPLETE japa mala: 108 counting beads + 1 sumeru (guru/Krishna) bead
+#
+# SHASTRA REFERENCE:
+# The sumeru bead (also called guru bead or Krishna bead) is the 109th bead
+# that marks the beginning and end of the mala. It is NOT counted during japa
+# but completes the physical mala. When reached, the devotee turns around
+# without crossing the sumeru - representing that one does not "step over" the guru.
+#
+# DERIVATION PATHS:
+#   Path 1: MALA + KSETRAJNA = 108 + 1 = 109 (counting beads + observer)
+#   Path 2: MAHA_QUANTUM - NAKSHATRAS - KSETRAJNA = 137 - 27 - 1 = 109
+#
+# MATHEMATICAL PROPERTIES:
+#   - 109 is PRIME (like 17, 37, 73, 137 - all observer-related primes)
+#   - Part of the prime chain: 17 → 37 → 73 → 109 → 137
+#   - Differences: 20 = TEN×2, 36 = T(8), 36 = T(8), 28 = T(7)
+#
+MALA_COMPLETE: Final[int] = MALA + KSETRAJNA  # 109
+
 # JIVA_CYCLE = MALA × QUARTERS = 108 × 4 = 432
 # The soul's harmonic frequency
 # Alternative derivations:
@@ -203,6 +223,8 @@ PHASE_DURATION: Final[int] = LILA // QUARTERS  # 12
 # VERIFICATION: Secondary derivations
 assert MAHAJANA_COUNT == 12, "MAHAJANA_COUNT must be 12"
 assert MALA == 108, "MALA must be 108"
+assert MALA_COMPLETE == 109, "MALA_COMPLETE must be 109"
+assert MALA_COMPLETE == MALA + KSETRAJNA, "MALA_COMPLETE = MALA + Observer"
 assert JIVA_CYCLE == 432, "JIVA_CYCLE must be 432"
 assert GITA_CHAPTERS == 18, "GITA_CHAPTERS must be 18"
 assert HIDDEN_RESERVE == WORDS, "HIDDEN_RESERVE must equal WORDS (16)"
@@ -2406,6 +2428,7 @@ __all__ = [
     # Secondary Derivations (Round 2)
     "MAHAJANA_COUNT",
     "MALA",
+    "MALA_COMPLETE",  # 109 = MALA + KSETRAJNA (complete mala with sumeru bead)
     "JIVA_CYCLE",
     "GITA_CHAPTERS",
     "QUALITIES",
