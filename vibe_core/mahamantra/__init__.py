@@ -329,6 +329,37 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             self._gita = gita
         return self._gita
 
+    @property
+    def pipeline(self) -> "MahamantraPipeline":
+        """
+        Access the 4-Phase Pipeline.
+
+        THE ARCHITECTURE:
+            Genesis → Dharma → Karma → Moksha
+            (hash)    (transform)  (route)  (complete)
+
+        ENTERPRISE USAGE:
+            # Full pipeline
+            result = mahamantra.pipeline.execute("my input")
+
+            # Step by step
+            intent = mahamantra.pipeline.genesis("input")
+            processed = mahamantra.pipeline.dharma(intent.hash_value)
+            routed = mahamantra.pipeline.karma(processed.value)
+            complete = mahamantra.pipeline.moksha(routed)
+
+        Each phase maps to a quarter of the Mahamantra:
+        - GENESIS: Hare Krishna Hare Krishna (Brahma Sampradaya)
+        - DHARMA: Krishna Krishna Hare Hare (Kumara Sampradaya)
+        - KARMA: Hare Rama Hare Rama (Sri Sampradaya)
+        - MOKSHA: Rama Rama Hare Hare (Rudra Sampradaya)
+        """
+        if not hasattr(self, "_pipeline"):
+            from vibe_core.mahamantra.adapters.pipeline import MahamantraPipeline
+
+            self._pipeline = MahamantraPipeline()
+        return self._pipeline
+
     # === GOVERNANCE SCAN ===
     def scan(self, base_path: Optional[str] = None) -> dict:
         """
