@@ -26,6 +26,23 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x9d8b6a7c"  # GenesisByte: parampara % 37 == 0
 
+from vibe_core.mahamantra.research.dharma.maha_algorithm import (
+    SYNTH_PRESETS,
+    KirtanComputeResult,
+    MahaAlgorithm16,
+    MahaKirtan,
+    MahaModularSynth,
+    MahaResonator,
+)
+from vibe_core.mahamantra.research.dharma.maha_operator import (
+    CODEWORT_EXIT,
+    CODEWORT_PARAMPARA,
+    LiveMetricsDisplay,
+    MahaOperator,
+    OperatorMode,
+    OperatorState,
+    get_maha_operator,
+)
 from vibe_core.mahamantra.research.dharma.maha_runtime import (
     MAHAMANTRA_BINARY,
     MAHAMANTRA_PATTERN,
@@ -34,8 +51,24 @@ from vibe_core.mahamantra.research.dharma.maha_runtime import (
 )
 
 __all__ = [
+    # Runtime
     "MAHAMANTRA_PATTERN",
     "MAHAMANTRA_BINARY",
     "ChantResult",
     "MahaRuntime",
+    # Algorithm
+    "MahaAlgorithm16",
+    "MahaKirtan",
+    "MahaModularSynth",
+    "MahaResonator",
+    "KirtanComputeResult",
+    "SYNTH_PRESETS",
+    # Operator
+    "MahaOperator",
+    "OperatorMode",
+    "OperatorState",
+    "LiveMetricsDisplay",
+    "CODEWORT_EXIT",
+    "CODEWORT_PARAMPARA",
+    "get_maha_operator",
 ]
