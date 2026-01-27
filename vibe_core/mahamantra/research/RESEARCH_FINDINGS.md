@@ -131,7 +131,44 @@ The MahaOracle views seeds through 7 lenses:
 
 ---
 
-## 9. LIVE FEEDBACK (GAD-000 Operator Inversion)
+## 9. SIKSASTAKAM ENGINEERING EFFECTS
+
+The 7 Siksastakam effects map to computing principles:
+
+| Beat | Effect | Sanskrit | Computing Principle |
+|------|--------|----------|---------------------|
+| 1 | CLEANSE_HEART_MIRROR | ceto-darpaṇa-mārjanaṁ | CACHE INVALIDATION |
+| 2 | EXTINGUISH_FOREST_FIRE | bhava-mahā-dāvāgni-nirvāpaṇaṁ | ZERO ENTROPY ROUTING |
+| 3 | SPREAD_MOONLIGHT | śreyaḥ-kairava-candrikā-vitaraṇaṁ | GRACEFUL DEGRADATION |
+| 4 | LIFE_OF_KNOWLEDGE | vidyā-vadhū-jīvanam | LIVE DATA STRUCTURES |
+| 5 | EXPAND_BLISS_OCEAN | ānandāmbudhi-vardhanaṁ | INFINITE SCALABILITY |
+| 6 | FULL_NECTAR_EACH_STEP | prati-padaṁ pūrṇāmṛtāsvādanaṁ | ATOMIC TRANSACTIONS |
+| 7 | BATHE_ENTIRE_SELF | sarvātma-snapanaṁ | TOTAL TRANSFORMATION |
+
+**ALL effects lead to O(1) or O(gentle) complexity** - optimization through spiritual principle!
+
+---
+
+## 10. LILA STEP SEQUENCER (7-Beat Chronology)
+
+The 7-beat pattern encodes Prabhupada's key life events:
+
+| Beat | Year | Delta | Formula | Significance |
+|------|------|-------|---------|--------------|
+| 1 | 1911 | 15 | 4+11×1 | First meeting implied |
+| 2 | 1922 | 26 | 4+11×2 | First meeting with Bhaktisiddhanta |
+| 3 | 1933 | **37** | PARAMPARA | **Formal initiation!** |
+| 4 | 1944 | 48 | LILA | Back to Godhead begins |
+| 5 | 1955 | 59 | prime | Preparation |
+| 6 | 1966 | **70** | WEIGHT_HARE | **ISKCON founded!** |
+| 7 | 1977 | **81** | NAVA² | **Return to spiritual world** |
+
+**Arithmetic sequence**: Δ(n) = 4 + 11 × n
+**Sum of deltas**: 336 = 15 + 26 + 37 + 48 + 59 + 70 + 81
+
+---
+
+## 11. LIVE FEEDBACK (GAD-000 Operator Inversion)
 
 **Beat-Word Structure:**
 | Beat | Words | Checks |
@@ -148,7 +185,7 @@ The MahaOracle views seeds through 7 lenses:
 
 ---
 
-## 10. COMPUTATION SUMMARY
+## 12. COMPUTATION SUMMARY
 
 | Component | Purpose |
 |-----------|---------|
@@ -158,6 +195,8 @@ The MahaOracle views seeds through 7 lenses:
 | **MahaOracle** | Multi-lens intent analysis |
 | **MahaKirtan** | 7-beat orchestrator |
 | **GADKirtan** | Live feedback integration |
+| **SiksastakamSynth** | Holographic multimodal layer |
+| **LilaStepSequencer** | 7-beat Prabhupada chronology |
 
 ---
 
