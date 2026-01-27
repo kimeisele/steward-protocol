@@ -26,10 +26,9 @@ Each step has:
     - PHASE (1-4) from quarter structure
     - OPERATION (INPUT/COMPUTE/OUTPUT) from NAME meaning
 
-LOTUS FEET FOUNDATION:
-    2 feet = HALVES
-    5 toes each = PANCHA
-    10 total = TEN = HALVES × PANCHA = FULL_SANKIRTAN_MULTIPLIER
+DERIVED CONSTANTS (from _seed.py):
+    TEN = MAHAJANA_COUNT - HALVES = 12 - 2 = 10
+    (see _seed.py RUNDE 15 for full derivation)
 
 BIT MODELS:
     512-bit:  WORDS × AKSARA = 16 × 32 = HALVES^NAVA
