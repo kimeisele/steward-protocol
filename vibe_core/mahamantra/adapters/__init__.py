@@ -72,6 +72,15 @@ _LAZY_IMPORTS = {
     "PipelineStageInfo": "hardware",
     "VerificationResult": "hardware",
     "PipelineStage": "hardware",
+    # compression.py
+    "MahaCompression": "compression",
+    "CompressionResult": "compression",
+    "SamskaraResult": "compression",
+    "PhysicsVerification": "compression",
+    "IntentLevel": "compression",
+    "IntentGuna": "compression",
+    "SamskaraLevel": "compression",
+    "SamskaraScope": "compression",
 }
 
 
