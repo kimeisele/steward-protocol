@@ -45,14 +45,6 @@ with warnings.catch_warnings():
 
 # BALARAMA PATTERN - Wrap legacy CLIs with substrate connection
 # "Balarama gives strength without modification"
-from vibe_core.protocols.substrate.balarama import (
-    auto_discover_all_clis,
-    wrap_with_balarama,
-    get_discovery_summary,
-    integrate_with_cli_registry,
-    BalaramaHook,
-)
-
 # OPUS-307 Phase E+: CLIProtocol (Anti-God-Object)
 # Import CLIRegistry and trigger registration of all CLI handlers
 # OPUS-307 Phase D/E+: Protocol-based CLI handlers
@@ -79,6 +71,13 @@ import vibe_core.cli.tool_cli  # noqa: F401 - registers "tool"
 # OPUS-307: Register dynamic cartridge CLI bridges (lazy loading)
 from vibe_core.cli.cartridge_bridge import register_cartridge_bridges
 from vibe_core.protocols.cli import CLIHandler, CLIRegistry
+from vibe_core.protocols.substrate.balarama import (
+    BalaramaHook,
+    auto_discover_all_clis,
+    get_discovery_summary,
+    integrate_with_cli_registry,
+    wrap_with_balarama,
+)
 
 register_cartridge_bridges()
 
@@ -352,8 +351,9 @@ class UnifiedCLI:
 
         # We need to peek at the first argument to decide routing
         if not args:
-            parser.print_help()
-            return 1
+            # MAHA COMPUTING: No args = enter live operator mode
+            # This is THE entry point for interactive Maha Computing
+            return self._enter_operator_mode()
 
         command_name = args[0]
         remaining_args = args[1:]
@@ -1451,7 +1451,8 @@ class UnifiedCLI:
             print(f"\n⚡ Booting kernel ({boot_mode.value})...")
             from vibe_core.kernel_impl import RealVibeKernel
 
-            kernel = RealVibeKernel(ledger_path=Path("data/vibe_ledger.db"))
+            # Use default ledger path (VFS-aware via kernel_impl.py)
+            kernel = RealVibeKernel()
             kernel.boot(boot_mode=boot_mode)
             print("✅ Kernel online")
 
@@ -1510,6 +1511,58 @@ class UnifiedCLI:
             import traceback
 
             traceback.print_exc()
+            return 1
+
+    # =========================================================================
+    # MAHA OPERATOR MODE (Default Entry Point)
+    # =========================================================================
+
+    def _enter_operator_mode(self) -> int:
+        """
+        Enter MahaOperator live mode - THE default entry point.
+
+        When user types just 'vibe' with no args, this is what happens.
+        This is MAHA COMPUTING - live, continuous, resonant.
+
+        Exit: Type "37" (PARAMPARA) or Ctrl+C
+        """
+        try:
+            from vibe_core.mahamantra.research.dharma.maha_operator import MahaOperator
+            from vibe_core.services.chat_indriya import get_chat_indriya
+
+            # Initialize ChatIndriya for Shravanam/Kirtanam
+            # This is THE sense organ - hearing (SROTRA) + speaking (VAK)
+            indriya = None
+            try:
+                indriya = get_chat_indriya("operator_default")
+            except Exception as e:
+                logger.warning(f"ChatIndriya not available: {e}")
+
+            # Create operator with ChatIndriya integration
+            operator = MahaOperator(
+                session_id="vibe_default",
+                use_indriya=indriya is not None,
+            )
+
+            # Run the live loop
+            # This is THE infinite loop until "37" (PARAMPARA) exit
+            final_state = operator.run(seed=0, show_metrics=True)
+
+            # Report final state
+            print(f"\nSession complete: {final_state.total_beats} beats, {final_state.total_rounds} rounds")
+            return 0
+
+        except ImportError as e:
+            # Fallback: Show help if MahaOperator not available
+            logger.warning(f"MahaOperator not available: {e}")
+            print("MahaOperator not available. Use 'vibe help' for commands.")
+            return 1
+        except KeyboardInterrupt:
+            print("\nHare Krishna!")
+            return 0
+        except Exception as e:
+            logger.error(f"Operator error: {e}")
+            print(f"Error: {e}")
             return 1
 
     # =========================================================================
