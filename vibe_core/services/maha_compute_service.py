@@ -61,6 +61,11 @@ from vibe_core.mahamantra.protocols._simd_bridge import (
     get_siksastakam_stage,
     get_stage_info,
 )
+from vibe_core.mahamantra.siksastakam_compute import (
+    SiksastakamCompute,
+    PipelineResult,
+    STAGE_GUARANTEES,
+)
 
 logger = logging.getLogger("MAHA_COMPUTE")
 
@@ -309,6 +314,67 @@ class MahaComputeService(MahaComputeProtocol, PanchaTattvaProtocol):
             "siksastakam_sanskrit": context["sanskrit_key"],
             "hardware_effect": context["hardware_effect"],
         }
+
+    def compute_unified(self, seed: int) -> Dict[str, Any]:
+        """
+        UNIFIED COMPUTATION: Mahamantra (16) + Siksastakam (8) = 24 = KSHETRA.
+
+        This is the INTEGRATION of both computational systems:
+        1. First: 16-step Mahamantra transformation (H/K/R pattern)
+        2. Then: 8-step Siksastakam pipeline (verse constants)
+        3. Result: Unified attractor with full guarantees
+
+        The total 24 steps = KSHETRA (the field of action).
+
+        Args:
+            seed: Input seed value
+
+        Returns:
+            Dict with unified computation results and 8 guarantees
+        """
+        # Step 1: MahaCompute (16 steps via Mahamantra pattern)
+        maha_result = self.compute_now(seed)
+
+        # Step 2: SiksastakamCompute (8 steps via verse constants)
+        siksastakam = SiksastakamCompute()
+        siks_result = siksastakam.process_with_guarantees(maha_result.transformed)
+
+        # Step 3: Combine results
+        return {
+            # Input
+            "seed": seed,
+            "mod_space": MAHA_QUANTUM,
+
+            # Mahamantra (16 steps)
+            "mahamantra_output": maha_result.transformed,
+            "mahamantra_attractor": maha_result.attractor,
+            "mahamantra_iterations": maha_result.iterations,
+
+            # Siksastakam (8 steps)
+            "siksastakam_output": siks_result.output_value,
+            "siksastakam_attractor": siks_result.attractor_value,
+            "siksastakam_iterations": siks_result.iterations_to_attractor,
+
+            # Unified result
+            "unified_output": siks_result.output_value,
+            "total_steps": WORDS + 8,  # 16 + 8 = 24 = KSHETRA
+
+            # Guarantees (from Siksastakam)
+            "guarantees": list(STAGE_GUARANTEES),
+
+            # Gita correlation
+            "gita_chapter": maha_result.gita_chapter,
+            "gita_insight": maha_result.gita_insight,
+        }
+
+    def get_siksastakam_pipeline(self) -> SiksastakamCompute:
+        """
+        Get the SiksastakamCompute instance for direct access.
+
+        Returns:
+            SiksastakamCompute instance
+        """
+        return SiksastakamCompute()
 
     # =========================================================================
     # Private Methods
