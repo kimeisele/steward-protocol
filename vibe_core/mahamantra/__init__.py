@@ -550,6 +550,48 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return MahaCompute()
 
+    def llm(self) -> "MahaLLM":
+        """
+        Create a MahaLLM holographic intent router.
+
+        THE PROBLEM:
+            Vector Search: O(N) - Scans every option
+            Dict Lookup: O(1) avg, O(N) worst (collisions)
+
+        THE SOLUTION:
+            Holographic: O(4) ALWAYS - Calculates the address
+            65,536 agents/tools in exactly 4 memory accesses.
+
+        THE 16 INTENT CATEGORIES:
+            0: OBSERVE     4: EXECUTE     8: EXPAND     12: GUIDE
+            1: CREATE      5: TRANSFORM   9: INTEGRATE  13: SURRENDER
+            2: CONNECT     6: INVOKE     10: VALIDATE   14: COMPLETE
+            3: ANALYZE     7: SUSTAIN    11: PROTECT    15: TRANSCEND
+
+        USAGE:
+            llm = mahamantra.llm()
+
+            # Register agents
+            llm.register("devops", category=IntentCategory.EXECUTE)
+            llm.register("coder", category=IntentCategory.CREATE)
+
+            # Route compressed intent → agent (O(4))
+            compression = mahamantra.compression()
+            result = compression.compress("Fix the server!")
+            route = llm.route_seed(result.seed)
+            print(route.agent)  # "devops"
+
+            # Or route text directly
+            route = llm.route_text("Write me a poem")
+            print(route.agent)  # "coder"
+
+        Returns:
+            MahaLLM router instance
+        """
+        from vibe_core.mahamantra.adapters.llm import MahaLLM
+
+        return MahaLLM()
+
     def japa(self) -> "MahaJapa":
         """
         Create a MahaJapa engine for hearing and chanting mathematics.

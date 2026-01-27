@@ -88,6 +88,12 @@ _LAZY_IMPORTS = {
     "GoldenAgeStatus": "japa",
     "CollapseResult": "japa",
     "JapaState": "japa",
+    # llm.py
+    "MahaLLM": "llm",
+    "RouteResult": "llm",
+    "RegistrationResult": "llm",
+    "RouterStats": "llm",
+    "IntentCategory": "llm",
 }
 
 
