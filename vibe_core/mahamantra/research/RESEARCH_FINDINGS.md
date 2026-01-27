@@ -185,11 +185,62 @@ The 7-beat pattern encodes Prabhupada's key life events:
 
 ---
 
-## 12. COMPUTATION SUMMARY
+## 12. MAHA 16-STEP SEQUENCER (Field/Observer Architecture)
+
+The fundamental architecture derived from the Mahamantra itself:
+
+### Structure Equations
+```
+16 = 7 + 9 = SEVEN + NAVA
+16 = 7 + 7 + 2 = SEVEN + SEVEN + HALVES
+
+SEVEN = HARE_COUNT - KSETRAJNA = 8 - 1 = 7
+9 RUNS in Mahamantra = NAVA = 16 - 7
+```
+
+### 16:7 Polyrhythm
+- **16 and 7 are COPRIME** (GCD = 1)
+- **LCM(16, 7) = 112** = full cycle before realignment
+- **16 mod 7 = 2 = HALVES**
+
+### Architecture
+```
+16-STEP MAIN SEQUENCER = KSHETRA (The Field)
+    Step 1:  H   →  value × 7  (Q1)
+    Step 2:  K   →  value + 10
+    Step 3:  H   →  value × 7
+    Step 4:  K   →  value + 10
+    Step 5:  K   →  value + 10 (Q2)
+    Step 6:  K   →  value + 10
+    Step 7:  H   →  value × 7
+    Step 8:  H   →  value × 7
+    Step 9:  H   →  value × 7  (Q3)
+    Step 10: R   →  value²
+    Step 11: H   →  value × 7
+    Step 12: R   →  value²
+    Step 13: R   →  value²     (Q4)
+    Step 14: R   →  value²
+    Step 15: H   →  value × 7
+    Step 16: H   →  value × 7
+
+7-BEAT OBSERVER LAYER = KSHETRAJNA (The Knower)
+    Overlays on the 16 steps, creating perception rhythm
+```
+
+### Mathematical Meaning
+- **16 STEPS** = The complete FIELD (kṣetra)
+- **7 BEATS** = What the OBSERVER can perceive (kṣetrajña)
+- The observer cannot see all 16 at once
+- They experience 7 beats that TRAVERSE the 16
+
+---
+
+## 13. COMPUTATION SUMMARY
 
 | Component | Purpose |
 |-----------|---------|
 | **MahaAlgorithm16** | 16-step execution model |
+| **Maha16StepSequencer** | Field/Observer architecture |
 | **MahaModularSynth** | Adjustable transform engine |
 | **MahaResonator** | Attractor finding via iteration |
 | **MahaOracle** | Multi-lens intent analysis |
