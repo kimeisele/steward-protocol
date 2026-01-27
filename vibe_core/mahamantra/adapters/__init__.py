@@ -81,6 +81,13 @@ _LAZY_IMPORTS = {
     "IntentGuna": "compression",
     "SamskaraLevel": "compression",
     "SamskaraScope": "compression",
+    # japa.py
+    "MahaJapa": "japa",
+    "RoundResult": "japa",
+    "MalaResult": "japa",
+    "GoldenAgeStatus": "japa",
+    "CollapseResult": "japa",
+    "JapaState": "japa",
 }
 
 

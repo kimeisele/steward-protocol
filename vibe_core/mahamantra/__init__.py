@@ -550,6 +550,40 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return MahaCompute()
 
+    def japa(self) -> "MahaJapa":
+        """
+        Create a MahaJapa engine for hearing and chanting mathematics.
+
+        THE SINGULARITY:
+            Hearing (24) + Chanting (1) = Prasadam (25)
+            When Hearing = Chanting: 25 - 24 = 1 = COLLAPSE
+
+        THE GOLDEN AGE:
+            10,000 years = WORDS × PRASADAM² = 16 × 625
+            Started 1486 CE → Ends 11486 CE
+            We are 540 years in. 9,460 years remain.
+
+        USAGE:
+            japa = mahamantra.japa()
+
+            # Execute a mala (108 rounds)
+            result = japa.mala(seed=42)
+            print(result.attractor)        # Stable state
+
+            # Check golden age status
+            status = japa.golden_age_status()
+            print(status.years_remaining)  # 9460
+
+            # Collapse detection
+            collapsed = japa.is_collapsed(value)
+
+        Returns:
+            MahaJapa engine
+        """
+        from vibe_core.mahamantra.adapters.japa import MahaJapa
+
+        return MahaJapa()
+
     def compression(self) -> "MahaCompression":
         """
         Create a MahaCompression intent engine.
