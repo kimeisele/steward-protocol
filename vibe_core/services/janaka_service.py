@@ -16,8 +16,9 @@ __genesis__ = "0x8f947260"  # GenesisByte: parampara % 37 == 0
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.protocols.mahajanas.janaka import (
     ExecutionResult,
     ExecutionState,
@@ -28,7 +29,6 @@ from vibe_core.protocols.mahajanas.janaka import (
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.scheduling.in_memory import InMemoryScheduler
 from vibe_core.scheduling.task import Task as SchedulerTask
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 logger = logging.getLogger("JANAKA_SERVICE")
 
@@ -90,6 +90,7 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
 
         task_id = self._scheduler.submit_task(task)
         logger.info(f"👑 JANAKA: Accepted task {name} ({task_id})")
+
         return task_id
 
     def execute(self, task_id: str) -> ExecutionResult:

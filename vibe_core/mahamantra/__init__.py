@@ -178,16 +178,30 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """
         Initialize the Mahamantra system (Sharanagati Gate).
 
-        Called by kernel during startup. Currently a no-op as the
-        system is initialized on import.
+        Called by kernel during startup. Initializes:
+        1. MahaComputeService (Listener Pattern integration)
+        2. Future services via same pattern
 
         Args:
             silent: If True, suppress logging.
         """
-        if not silent:
-            import logging
+        import logging
 
-            logging.getLogger("MAHAMANTRA").info("🙏 Mahamantra bootstrap complete")
+        _log = logging.getLogger("MAHAMANTRA")
+
+        # === MAHA COMPUTE SERVICE (Listener Pattern) ===
+        # Import triggers auto-registration with ServiceRegistry and as tick listener
+        try:
+            from vibe_core.services import maha_compute_service  # noqa: F401
+
+            if not silent:
+                _log.info("🧮 MahaComputeService activated")
+        except ImportError as e:
+            if not silent:
+                _log.debug(f"MahaComputeService not available: {e}")
+
+        if not silent:
+            _log.info("🙏 Mahamantra bootstrap complete")
 
     # === SINGULARITY ACCESS (Tick System) ===
     @property
@@ -240,6 +254,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             print(f"Orphans: {result['files_orphan']}")
         """
         from pathlib import Path
+
         from vibe_core.mahamantra.substrate.scanner import scan_all
 
         path = Path(base_path) if base_path else None
