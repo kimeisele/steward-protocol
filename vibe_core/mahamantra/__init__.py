@@ -505,6 +505,51 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return MahaClassifier()
 
+    def compute(self) -> "MahaCompute":
+        """
+        Create a MahaCompute unified compute analyzer.
+
+        THE THESIS:
+            Modern computing has a fundamental division (CPU/GPU/RAM).
+            The Mahamantra structure UNIFIES these through:
+                1. NATURAL PARALLELISM: WORDS = 16 = SIMD lanes
+                2. HIERARCHICAL LOCALITY: QUARTERS = 4 = Memory levels
+                3. DETERMINISTIC PATHS: No hashes, no collisions
+                4. BOUNDED MEMORY: Everything fits in cache
+
+        THE KILLER INSIGHT:
+            Modern CPUs already have 16 SIMD lanes (AVX-512).
+            This IS the Mahamantra structure in silicon!
+            With 16-ary structures, GPU becomes unnecessary.
+
+        USAGE:
+            compute = mahamantra.compute()
+
+            # Analyze data structure for optimal caching
+            analysis = compute.analyze(entries=50000)
+            print(analysis.memory_tier)      # "L2"
+            print(analysis.cache_hit_rate)   # 0.92
+
+            # Analyze CPU alignment
+            cpu = compute.analyze_cpu()
+            print(cpu.alignment)             # 1.0 (perfect)
+            print(cpu.is_unified)            # True
+
+            # SIMD guidance
+            batch_size = compute.simd_batch_size()  # 16
+            aligned = compute.align_for_simd(100)   # 112
+
+            # Memory tiers
+            for tier in compute.memory_tiers():
+                print(f"{tier.name}: {tier.lotus_entries} entries")
+
+        Returns:
+            MahaCompute analyzer instance
+        """
+        from vibe_core.mahamantra.adapters.compute import MahaCompute
+
+        return MahaCompute()
+
     @property
     def attention(self) -> "MahaAttention":
         """

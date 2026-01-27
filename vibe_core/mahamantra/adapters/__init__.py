@@ -72,6 +72,14 @@ from vibe_core.mahamantra.adapters.classification import (
     ComparisonResult,
 )
 
+# Compute (Unified Hardware Analysis)
+from vibe_core.mahamantra.adapters.compute import (
+    MahaCompute,
+    DataAnalysis,
+    ComputeUnit,
+    MemoryTier,
+)
+
 __all__ = [
     # Core Compute
     "MahaTransform",
@@ -105,4 +113,9 @@ __all__ = [
     "MahaClassifier",
     "ClassificationResult",
     "ComparisonResult",
+    # Compute
+    "MahaCompute",
+    "DataAnalysis",
+    "ComputeUnit",
+    "MemoryTier",
 ]
