@@ -46,6 +46,11 @@ PHYSICS VERIFICATION:
     Quantum = HALVES^(TRINITY/HALVES) = 2^1.5 = 2√2 ✓ EXACT!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x6b09188e"  # GenesisByte: parampara % 37 == 0
+
 import math
 from dataclasses import dataclass
 from fractions import Fraction

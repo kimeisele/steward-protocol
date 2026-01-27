@@ -45,6 +45,11 @@ MATERIAL (Shadow):
 The Verilog code proves: Hardware REFLECTS the Spiritual!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xf45ff58d"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Final

@@ -49,6 +49,11 @@ YANTRA (digital mechanism) for achieving that effect in computation.
 This is the bridge from spiritual principle to engineering implementation.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xf72a7b6f"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, Callable, Final, TypeVar

@@ -41,6 +41,11 @@ SOURCES:
 - ACINTYA: 15.8 is Bhauma approximation, Nitya is beyond computation
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xe3c5ed48"  # GenesisByte: parampara % 37 == 0
+
 from fractions import Fraction
 from typing import Final
 

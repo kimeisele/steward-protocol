@@ -49,6 +49,11 @@ Where SIKSASTAKAM_MODULATION encodes the GUARANTEE:
   - This is not probability - it's CERTAINTY (acintya guarantee)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xff8ceb72"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

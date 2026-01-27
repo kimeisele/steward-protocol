@@ -37,6 +37,11 @@ The material CPU cooling is a REFLECTION of the spiritual cooling.
 The spiritual is the ORIGINAL, the material is the SHADOW (BG 15.1).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xbf879742"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Final

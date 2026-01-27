@@ -49,6 +49,11 @@ Python schläft auf NumPy (C/SIMD), aber:
 - Er wirkt ohne direkt zu rechnen
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x36120cde"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

@@ -37,6 +37,11 @@ Alle semantischen Mappings aus _seed.py Strukturen abgeleitet.
 Keine hardcoded Vers-Texte!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xf253cd26"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final, List, Tuple
 

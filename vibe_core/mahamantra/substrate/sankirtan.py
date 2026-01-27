@@ -54,6 +54,17 @@ from vibe_core.mahamantra.protocols._sankirtan import (
     WiringStats,
 )
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
+
+# Import SamskaraProtocol - Balarama-wrapped legacy types
+from vibe_core.mahamantra.substrate._legacy import (
+    Phase,
+    PhaseStatus,
+    PipelineExecutor,
+    SamskaraProtocol,
+)
+from vibe_core.mahamantra.substrate._legacy import (
+    PipelineContext as SamskaraPipelineContext,
+)
 from vibe_core.mahamantra.substrate.mahajana import Quarter
 from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
@@ -62,15 +73,6 @@ from vibe_core.mahamantra.substrate.position import (
 from vibe_core.mahamantra.substrate.wiring import (
     POSITION_BY_INDEX,
     POSITION_BY_NAME,
-)
-
-# Import SamskaraProtocol - Balarama-wrapped legacy types
-from vibe_core.mahamantra.substrate._legacy import (
-    Phase,
-    PhaseStatus,
-    PipelineExecutor,
-    SamskaraProtocol,
-    PipelineContext as SamskaraPipelineContext,
 )
 
 logger = logging.getLogger("SANKIRTAN")
@@ -177,6 +179,13 @@ FOLDER_MAHAJANA_MAP: Final[Dict[str, str]] = {
     "phoenix/sections/steward": "janaka",  # Steward config
     "phoenix/sections/manas": "kapila",  # Mind/analysis config
     "phoenix/sections/city": "janaka",  # City/matrix config
+    # === RESEARCH (Knowledge/Discovery) ===
+    # FOLDER IS WIRING: research/quarter → quarter HEAD
+    "mahamantra/research": "vyasa",  # Research = Knowledge = Vyasa
+    "mahamantra/research/genesis": "brahma",  # Genesis quarter research
+    "mahamantra/research/dharma": "vyasa",  # Dharma quarter research
+    "mahamantra/research/karma": "narada",  # Karma quarter research
+    "mahamantra/research/moksha": "kapila",  # Moksha quarter research (Analysis)
 }
 
 

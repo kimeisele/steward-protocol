@@ -33,6 +33,11 @@ sat-cit-ānanda vigraha = KRISHNA (vollständig)
 sat-cit-ānanda = JIVA (gleiche Natur, nicht gleiche Macht)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xed06e8e9"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

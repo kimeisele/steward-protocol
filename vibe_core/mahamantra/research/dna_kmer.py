@@ -28,6 +28,11 @@ PERFORMANCE:
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xbe5ddc45"  # GenesisByte: parampara % 37 == 0
+
 import array
 from typing import Final
 

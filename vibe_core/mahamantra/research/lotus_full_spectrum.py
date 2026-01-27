@@ -55,6 +55,11 @@ ABER Hash-Tables für diese Key-Größen sind KATASTROPHAL!
 DER VORTEIL WÄCHST MIT DER KEY-GRÖSSE!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xe1955897"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 
