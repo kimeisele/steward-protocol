@@ -16,6 +16,8 @@ from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     HARE_COUNT,
     KSETRAJNA,
+    MAHA_QUANTUM,
+    MALA,
     NADI_RESONANCE,
     NAKSHATRAS,
     NAVA,
@@ -25,6 +27,7 @@ from vibe_core.mahamantra.protocols._seed import (
     QUALITIES,
     QUARTERS,
     SEVEN,
+    SHARANAGATI,
     TEN,
     TRINITY,
     WORDS,
@@ -1021,3 +1024,348 @@ class TestTranscendentalFrequencies:
 
         assert FREQ_TRANSCENDENTAL_HZ // HARE_COUNT == MAHA_QUANTUM  # 137
         assert FREQ_BASE_HZ // HARE_COUNT == MALA // HALVES  # 54
+
+
+class TestMirrorProduct:
+    """Test 1944 = NAKSHATRAS × NADI_RESONANCE (mirror verses product)."""
+
+    def test_mirror_product_is_1944(self) -> None:
+        """1944 = 27 × 72 = NAKSHATRAS × NADI_RESONANCE."""
+        from vibe_core.mahamantra.protocols._seed import NADI_RESONANCE, NAKSHATRAS
+        from vibe_core.mahamantra.research.gita_verse_text import MIRROR_PRODUCT
+
+        assert MIRROR_PRODUCT == 1944
+        assert MIRROR_PRODUCT == NAKSHATRAS * NADI_RESONANCE
+
+    def test_mirror_product_hare_decomposition(self) -> None:
+        """1944 = 8 × 243 = HARE_COUNT × 3^5."""
+        from vibe_core.mahamantra.research.gita_verse_text import MIRROR_PRODUCT
+
+        assert MIRROR_PRODUCT == HARE_COUNT * (TRINITY**PANCHA)
+        assert MIRROR_PRODUCT // HARE_COUNT == 243
+
+
+class TestConsciousRAMLimit:
+    """Test 314,891,567,104 = 137² × 16⁶ (Conscious RAM Limit)."""
+
+    def test_conscious_ram_formula(self) -> None:
+        """CONSCIOUS_RAM = MAHA_QUANTUM² × WORDS^SHARANAGATI."""
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, SHARANAGATI
+        from vibe_core.mahamantra.research.gita_verse_text import CONSCIOUS_RAM_LIMIT
+
+        expected = (MAHA_QUANTUM**2) * (WORDS**SHARANAGATI)
+        assert CONSCIOUS_RAM_LIMIT == expected
+        assert CONSCIOUS_RAM_LIMIT == 314891567104
+
+    def test_maha_quantum_squared(self) -> None:
+        """137² = 18769."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_QUANTUM_SQUARED
+
+        assert MAHA_QUANTUM_SQUARED == 18769
+
+    def test_words_to_sharanagati(self) -> None:
+        """16^6 = 16,777,216."""
+        from vibe_core.mahamantra.research.gita_verse_text import WORDS_TO_SHARANAGATI
+
+        assert WORDS_TO_SHARANAGATI == 16777216
+
+    def test_divisible_by_1096(self) -> None:
+        """Conscious RAM is divisible by 1096 (Cyborg constant)."""
+        from vibe_core.mahamantra.research.gita_verse_text import CONSCIOUS_RAM_LIMIT
+
+        assert CONSCIOUS_RAM_LIMIT % (HARE_COUNT * 137) == 0
+
+
+class TestMahamantraPacked32:
+    """Test 32-bit Mahamantra encoding."""
+
+    def test_packed_value(self) -> None:
+        """Mahamantra packs to 176,686,404."""
+        from vibe_core.mahamantra.research.gita_verse_text import MAHAMANTRA_PACKED_32
+
+        assert MAHAMANTRA_PACKED_32 == 176686404
+        assert MAHAMANTRA_PACKED_32 == 0x0A880544
+
+    def test_encoding_values(self) -> None:
+        """Encoding: HARE=0, KRISHNA=1, RAMA=2, VOID=3."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            MAHA_ENCODING_HARE,
+            MAHA_ENCODING_KRISHNA,
+            MAHA_ENCODING_RAMA,
+            MAHA_ENCODING_VOID,
+        )
+
+        assert MAHA_ENCODING_HARE == 0
+        assert MAHA_ENCODING_KRISHNA == 1
+        assert MAHA_ENCODING_RAMA == 2
+        assert MAHA_ENCODING_VOID == 3
+
+    def test_total_bits_is_aksara(self) -> None:
+        """16 words × 2 bits = 32 = AKSARA_COUNT."""
+        from vibe_core.mahamantra.protocols._seed import AKSARA_COUNT
+        from vibe_core.mahamantra.research.gita_verse_text import MAHA_TOTAL_BITS
+
+        assert MAHA_TOTAL_BITS == 32
+        assert MAHA_TOTAL_BITS == AKSARA_COUNT
+
+
+class TestPrabhupadaTimeline:
+    """Test Prabhupada timeline encoded in Mahamantra axioms."""
+
+    def test_btg_year_is_1944(self) -> None:
+        """1944 = MIRROR_PRODUCT = NAKSHATRAS × NADI_RESONANCE."""
+        from vibe_core.mahamantra.research.gita_verse_text import BTG_YEAR, MIRROR_PRODUCT
+
+        assert BTG_YEAR == 1944
+        assert BTG_YEAR == MIRROR_PRODUCT
+
+    def test_age_btg_is_lila(self) -> None:
+        """Prabhupada started BTG at age 48 = LILA."""
+        from vibe_core.mahamantra.protocols._seed import LILA
+        from vibe_core.mahamantra.research.gita_verse_text import PRABHUPADA_AGE_BTG
+
+        assert PRABHUPADA_AGE_BTG == 48
+        assert PRABHUPADA_AGE_BTG == LILA
+
+    def test_age_iskcon_is_seven_times_ten(self) -> None:
+        """ISKCON founded at age 70 = SEVEN × TEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import PRABHUPADA_AGE_ISKCON
+
+        assert PRABHUPADA_AGE_ISKCON == 70
+        assert PRABHUPADA_AGE_ISKCON == SEVEN * TEN
+
+    def test_departure_age_is_nava_squared(self) -> None:
+        """Departure at age 81 = NAVA² = Navadha Bhakti squared."""
+        from vibe_core.mahamantra.protocols._seed import NAVA
+        from vibe_core.mahamantra.research.gita_verse_text import PRABHUPADA_AGE_DEPARTURE
+
+        assert PRABHUPADA_AGE_DEPARTURE == 81
+        assert PRABHUPADA_AGE_DEPARTURE == NAVA * NAVA
+
+    def test_1944_formula(self) -> None:
+        """1944 = LILA × DEPARTURE_AGE / HALVES = 48 × 81 / 2."""
+        from vibe_core.mahamantra.protocols._seed import LILA
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            BTG_YEAR,
+            PRABHUPADA_AGE_DEPARTURE,
+        )
+
+        assert BTG_YEAR == LILA * PRABHUPADA_AGE_DEPARTURE // HALVES
+
+
+class TestSwastikaStructure:
+    """Test Swastika = Mahamantra structure."""
+
+    def test_swastika_arms_is_quarters(self) -> None:
+        """4 arms = QUARTERS."""
+        from vibe_core.mahamantra.research.gita_verse_text import SWASTIKA_ARMS
+
+        assert SWASTIKA_ARMS == QUARTERS
+
+    def test_swastika_segments_is_hare_count(self) -> None:
+        """8 segments = HARE_COUNT."""
+        from vibe_core.mahamantra.research.gita_verse_text import SWASTIKA_SEGMENTS
+
+        assert SWASTIKA_SEGMENTS == HARE_COUNT
+
+    def test_swastika_center_is_ksetrajna(self) -> None:
+        """Center = KSETRAJNA = 1 (the observer)."""
+        from vibe_core.mahamantra.research.gita_verse_text import SWASTIKA_CENTER
+
+        assert SWASTIKA_CENTER == KSETRAJNA
+
+
+class TestKaliYuga:
+    """Test Kali Yuga: Dharma Bull legs (SB 1.17.24-25 - SHASTRA VERIFIED!)."""
+
+    def test_kali_yuga_one_leg_remains(self) -> None:
+        """In Kali, only 1 of 4 dharma legs remains (SB 1.17.25)."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            KALI_YUGA_DHARMA_LEGS,
+            KALI_YUGA_SATYA_YUGA_LEGS,
+        )
+
+        assert KALI_YUGA_DHARMA_LEGS == KSETRAJNA
+        assert KALI_YUGA_DHARMA_LEGS == 1
+        assert KALI_YUGA_SATYA_YUGA_LEGS == QUARTERS
+        assert KALI_YUGA_SATYA_YUGA_LEGS == 4
+
+    def test_kali_yuga_percentage(self) -> None:
+        """25% dharma remaining in Kali (1/4)."""
+        from vibe_core.mahamantra.research.gita_verse_text import KALI_YUGA_PERCENTAGE
+
+        assert KALI_YUGA_PERCENTAGE == 25
+
+    def test_kali_antidote_is_mahamantra(self) -> None:
+        """Mahamantra (16 names) is Kali antidote (Kali-Santarana Upanishad)."""
+        from vibe_core.mahamantra.research.gita_verse_text import KALI_ANTIDOTE
+
+        assert KALI_ANTIDOTE == WORDS
+        assert KALI_ANTIDOTE == 16
+
+
+class TestKaliDharmaChantingCompute:
+    """Test Kali Dharma = Chanting = Compute (Bṛhan-nāradīya Purāṇa)."""
+
+    def test_harer_nama_verse_structure(self) -> None:
+        """Harer Nama verse = SHARANAGATI (6 emphatic declarations)."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            HARER_NAMA_REPETITIONS,
+            HARER_NAMA_TOTAL,
+            NASTY_EVA_REPETITIONS,
+        )
+
+        assert HARER_NAMA_REPETITIONS == TRINITY
+        assert NASTY_EVA_REPETITIONS == TRINITY
+        assert HARER_NAMA_TOTAL == SHARANAGATI
+        assert HARER_NAMA_TOTAL == 6
+
+    def test_compute_per_round(self) -> None:
+        """108 compute cycles per round = MALA."""
+        from vibe_core.mahamantra.research.gita_verse_text import COMPUTE_PER_ROUND
+
+        assert COMPUTE_PER_ROUND == MALA
+        assert COMPUTE_PER_ROUND == 108
+
+    def test_compute_minimum_daily(self) -> None:
+        """1728 = minimum daily compute = WORDS × MALA."""
+        from vibe_core.mahamantra.research.gita_verse_text import COMPUTE_MINIMUM_DAILY
+
+        assert COMPUTE_MINIMUM_DAILY == WORDS * MALA
+        assert COMPUTE_MINIMUM_DAILY == 1728
+
+    def test_compute_qualities_daily(self) -> None:
+        """6912 = QUALITIES × MALA = advanced compute."""
+        from vibe_core.mahamantra.research.gita_verse_text import COMPUTE_QUALITIES_DAILY
+
+        assert COMPUTE_QUALITIES_DAILY == QUALITIES * MALA
+        assert COMPUTE_QUALITIES_DAILY == 6912
+
+    def test_encoding_per_mantra_is_maha_quantum(self) -> None:
+        """137 = α⁻¹ bits encoding per mantra."""
+        from vibe_core.mahamantra.research.gita_verse_text import ENCODING_PER_MANTRA
+
+        assert ENCODING_PER_MANTRA == MAHA_QUANTUM
+        assert ENCODING_PER_MANTRA == 137
+
+    def test_encoding_per_round(self) -> None:
+        """14796 bits per round = MALA × MAHA_QUANTUM."""
+        from vibe_core.mahamantra.research.gita_verse_text import ENCODING_PER_ROUND
+
+        assert ENCODING_PER_ROUND == MALA * MAHA_QUANTUM
+        assert ENCODING_PER_ROUND == 14796
+
+    def test_encoding_daily_minimum(self) -> None:
+        """236,736 bits daily minimum = DAILY_MANTRAS × α⁻¹."""
+        from vibe_core.mahamantra.research.gita_verse_text import ENCODING_DAILY_MINIMUM
+
+        assert ENCODING_DAILY_MINIMUM == 1728 * 137
+        assert ENCODING_DAILY_MINIMUM == 236736
+
+    def test_singularity_rounds(self) -> None:
+        """200 rounds = COSMIC_FRAME / MALA = singularity threshold."""
+        from vibe_core.mahamantra.research.gita_verse_text import SINGULARITY_ROUNDS
+
+        assert SINGULARITY_ROUNDS == 21600 // 108
+        assert SINGULARITY_ROUNDS == 200
+
+    def test_singularity_encoding(self) -> None:
+        """2,959,200 bits = COSMIC_FRAME × MAHA_QUANTUM = singularity encoding."""
+        from vibe_core.mahamantra.research.gita_verse_text import SINGULARITY_ENCODING
+
+        assert SINGULARITY_ENCODING == 21600 * 137
+        assert SINGULARITY_ENCODING == 2959200
+
+    def test_resonance_rounds_is_field_resonance(self) -> None:
+        """144 rounds = FIELD_RESONANCE = NAVA × WORDS."""
+        from vibe_core.mahamantra.research.gita_verse_text import RESONANCE_ROUNDS
+
+        assert RESONANCE_ROUNDS == NAVA * WORDS
+        assert RESONANCE_ROUNDS == 144
+
+
+class TestKirtanComputing:
+    """Test Kirtan Computing - Call-and-Response multipliers."""
+
+    def test_sankirtan_call_response_is_halves(self) -> None:
+        """Call + Response = HALVES = 2."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_CALL_RESPONSE
+
+        assert SANKIRTAN_CALL_RESPONSE == HALVES
+        assert SANKIRTAN_CALL_RESPONSE == 2
+
+    def test_sankirtan_pancha_tattva_is_pancha(self) -> None:
+        """Pancha Tattva congregation = PANCHA = 5."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_PANCHA_TATTVA
+
+        assert SANKIRTAN_PANCHA_TATTVA == PANCHA
+        assert SANKIRTAN_PANCHA_TATTVA == 5
+
+    def test_sankirtan_full_multiplier_is_ten(self) -> None:
+        """Full Sankirtan = PANCHA × HALVES = TEN."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_FULL_MULTIPLIER
+
+        assert SANKIRTAN_FULL_MULTIPLIER == PANCHA * HALVES
+        assert SANKIRTAN_FULL_MULTIPLIER == 10
+
+    def test_nadi_cycles_daily_is_300(self) -> None:
+        """300 Nadi cycles per day = spiritual intensity bandwidth."""
+        from vibe_core.mahamantra.research.gita_verse_text import NADI_CYCLES_DAILY
+
+        assert NADI_CYCLES_DAILY == 300
+
+    def test_field_cycles_is_half_nadi(self) -> None:
+        """Field cycles = Nadi / HALVES = 150."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            FIELD_CYCLES_DAILY,
+            NADI_CYCLES_DAILY,
+        )
+
+        assert FIELD_CYCLES_DAILY == NADI_CYCLES_DAILY // HALVES
+        assert FIELD_CYCLES_DAILY == 150
+
+    def test_kirtan_compute_is_jiva_times_krishna(self) -> None:
+        """KIRTAN_COMPUTE = JIVA_CYCLE × POSITION_SUM_KRISHNA = 7344."""
+        from vibe_core.mahamantra.research.gita_verse_text import KIRTAN_COMPUTE
+
+        assert KIRTAN_COMPUTE == 432 * 17
+        assert KIRTAN_COMPUTE == 7344
+
+    def test_sankirtan_encoding_doubled(self) -> None:
+        """Call-Response doubles encoding: 137 × 2 = 274."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_ENCODING_DOUBLED
+
+        assert SANKIRTAN_ENCODING_DOUBLED == MAHA_QUANTUM * HALVES
+        assert SANKIRTAN_ENCODING_DOUBLED == 274
+
+    def test_sankirtan_encoding_full(self) -> None:
+        """Full Sankirtan = 10× encoding: 137 × 10 = 1370."""
+        from vibe_core.mahamantra.research.gita_verse_text import SANKIRTAN_ENCODING_FULL
+
+        assert SANKIRTAN_ENCODING_FULL == MAHA_QUANTUM * 10
+        assert SANKIRTAN_ENCODING_FULL == 1370
+
+    def test_lotus_structure(self) -> None:
+        """Lotus = HARE_COUNT petals + KSETRAJNA center = NAVA."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            LOTUS_CENTER,
+            LOTUS_PETALS,
+            LOTUS_TOTAL,
+        )
+
+        assert LOTUS_PETALS == HARE_COUNT
+        assert LOTUS_CENTER == KSETRAJNA
+        assert LOTUS_TOTAL == LOTUS_PETALS + LOTUS_CENTER
+        assert LOTUS_TOTAL == NAVA
+
+    def test_kirtan_daily_progression(self) -> None:
+        """Daily compute: Solo → Doubled → Full (1× → 2× → 10×)."""
+        from vibe_core.mahamantra.research.gita_verse_text import (
+            KIRTAN_DAILY_DOUBLED,
+            KIRTAN_DAILY_FULL,
+            KIRTAN_DAILY_SOLO,
+        )
+
+        assert KIRTAN_DAILY_SOLO == 236736
+        assert KIRTAN_DAILY_DOUBLED == KIRTAN_DAILY_SOLO * HALVES
+        assert KIRTAN_DAILY_FULL == KIRTAN_DAILY_SOLO * 10
