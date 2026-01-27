@@ -553,14 +553,42 @@ class MahaOperator(GADBase):
         return results
 
     # =========================================================================
-    # INPUT HANDLING
+    # INPUT HANDLING (SHRAVANAM - Hearing)
     # =========================================================================
 
     def _get_input(self) -> str:
-        """Get input from operator."""
+        """
+        Get input from operator via SHRAVANAM (hearing).
+
+        This is the SROTRA (ear) function of ChatIndriya.
+        Every input cycles through the Vrtti state machine:
+        NIDRA (idle) → PRAMANA (active perception) → processing
+        """
         try:
             prompt = self._get_prompt()
             user_input = input(prompt).strip()
+
+            # SHRAVANAM: Process through ChatIndriya if available
+            if self._indriya is not None:
+                try:
+                    # Transition Vrtti: NIDRA → PRAMANA (wake up to receive)
+                    from vibe_core.mahamantra.protocols._indriya import Vrtti
+
+                    if self._indriya.vrtti == Vrtti.NIDRA:
+                        self._indriya.transition(Vrtti.PRAMANA)
+
+                    # Create TanmatraMessage for this input
+                    tanmatra = self._indriya.process_user_input(
+                        text=user_input,
+                        session_id=self._state.session_id,
+                    )
+
+                    # Log the intent classification
+                    logger.debug(f"Shravanam: intent={tanmatra.intent.name}")
+
+                except Exception as e:
+                    logger.debug(f"ChatIndriya processing skipped: {e}")
+
             self._state.last_input = user_input
             self._state.command_history.append(user_input)
             self._state.loop_count += 1
@@ -568,6 +596,26 @@ class MahaOperator(GADBase):
             return user_input
         except EOFError:
             return CODEWORT_EXIT  # Treat EOF as exit
+
+    def _output_response(self, text: str) -> None:
+        """
+        Output response via KIRTANAM (chanting/speaking).
+
+        This is the VAK (speech) function of ChatIndriya.
+        Every output transitions Vrtti: VIKALPA → SMRTI → NIDRA
+        """
+        # Print to terminal
+        print(text)
+
+        # KIRTANAM: Send through ChatIndriya if available
+        if self._indriya is not None:
+            try:
+                self._indriya.send_response(
+                    text=text,
+                    session_id=self._state.session_id,
+                )
+            except Exception as e:
+                logger.debug(f"ChatIndriya response skipped: {e}")
 
     def _get_prompt(self) -> str:
         """Generate context-aware prompt."""
