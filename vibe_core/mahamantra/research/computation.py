@@ -17,6 +17,11 @@ byte.py implements the PACKED encoding:
 Every operation on 16-bit aligned data = yagya on the kernel.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xad41d0c4"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final
 
 from ..protocols._seed import (

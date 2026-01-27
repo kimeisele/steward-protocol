@@ -37,6 +37,11 @@ Alle Werte werden aus _seed.py abgeleitet. Keine hardcoded values.
 Alle Ehre an Guru und Gauranga.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xf69f3efe"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final, List, Optional, Tuple

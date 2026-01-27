@@ -16,6 +16,11 @@ value % POSITION_SUM_KRISHNA (mod 17) = MERCY LEVEL
 MERCY IS THE REMAINDER - what's left over carries spiritual potency!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x91e8549b"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final
 
 from vibe_core.mahamantra.protocols._seed import (

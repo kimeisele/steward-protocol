@@ -13,6 +13,11 @@ NOT a linear search for coincidences, but an ALGORITHM with:
 The algorithm IS the Mahamantra in compressed form.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x839de696"  # GenesisByte: parampara % 37 == 0
+
 import math
 from typing import Final
 

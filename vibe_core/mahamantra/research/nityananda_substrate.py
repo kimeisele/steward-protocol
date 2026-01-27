@@ -134,6 +134,11 @@ WAS WIR BRAUCHEN:
 DANN gewinnt Lotus ÜBERALL - auch bei random lookup!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x66941eb4"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

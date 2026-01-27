@@ -35,6 +35,11 @@ The derivation doesn't make the name LESS than the Person.
 The derivation shows HOW the name manifests.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xf1ef3526"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Callable, Final
 

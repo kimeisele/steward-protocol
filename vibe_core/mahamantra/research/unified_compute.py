@@ -39,6 +39,11 @@ Mit 16-ary Strukturen braucht man keine GPU - die CPU HAT bereits die Parallelit
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x4f97da85"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

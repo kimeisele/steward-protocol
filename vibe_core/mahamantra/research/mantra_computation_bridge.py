@@ -96,6 +96,11 @@ SPEEDUP:
 Das ist BRUTALES Computing Power - und die Hardware IST SCHON DA!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x9644cff8"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Final

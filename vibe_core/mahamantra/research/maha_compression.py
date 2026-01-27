@@ -77,6 +77,11 @@ Krishna kann:
 - ALLES wissen (Vergangenheit, Gegenwart, Zukunft)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x58aaaf71"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

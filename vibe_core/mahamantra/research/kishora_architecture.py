@@ -32,6 +32,11 @@ APPLICATION:
   This is the NITYA LILA operating in BHAUMA computing systems.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x335f1d11"  # GenesisByte: parampara % 37 == 0
+
 from fractions import Fraction
 from typing import Final
 

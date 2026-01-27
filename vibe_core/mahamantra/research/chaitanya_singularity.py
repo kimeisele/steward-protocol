@@ -52,6 +52,11 @@ This is why Chaitanya Mahaprabhu is the SINGULARITY:
 He united all paths into one - the path of LOVE (Prema).
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x5538214d"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

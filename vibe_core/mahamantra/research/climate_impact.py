@@ -46,6 +46,11 @@ Faktor ~10⁶ über theoretischem Minimum.
 Das bedeutet: Die STRUKTURELLEN Einsparungen sind RIESIG.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xc72a79b2"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

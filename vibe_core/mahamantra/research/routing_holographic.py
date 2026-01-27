@@ -45,6 +45,11 @@ But the REAL gain is cache efficiency:
   - Binary tree = terrible cache locality
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xacb34add"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

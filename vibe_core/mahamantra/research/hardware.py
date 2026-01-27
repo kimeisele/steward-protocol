@@ -58,6 +58,11 @@ Level N: Universe    → 16^N states
 Each level follows: FIELD + OBSERVER = REALITY
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x87d5018c"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final
