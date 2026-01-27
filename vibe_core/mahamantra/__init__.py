@@ -360,6 +360,44 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             self._pipeline = MahamantraPipeline()
         return self._pipeline
 
+    @property
+    def veda(self) -> "VedaExplorer":
+        """
+        Access the VedaExplorer (Neuro-Symbolic Chat Interface).
+
+        THE VEDA-4 PIPELINE:
+            SHABDA (Word)     → Intent parsing
+            ARTHA (Meaning)   → Parameter extraction
+            PRATYAYA (Trust)  → Validation
+            KARMA (Action)    → Execution
+
+        NOW INTEGRATED WITH MahamantraPipeline:
+            SHABDA  → GENESIS (hash intent)
+            ARTHA   → DHARMA (transform/validate)
+            PRATYAYA → KARMA (route/trust)
+            KARMA   → MOKSHA (execute/complete)
+
+        ENTERPRISE USAGE:
+            # Process input
+            result = mahamantra.veda.process("chant 108")
+
+            # Process with full pipeline tracking
+            result = mahamantra.veda.process_with_pipeline("who is brahma?")
+
+            # Interactive REPL
+            mahamantra.veda.repl()
+
+        MODES:
+            RESTRICTED - Deterministic only (cost-free)
+            ENHANCED   - LLM fallback for unknown
+            CREATIVE   - Full LLM conversation
+        """
+        if not hasattr(self, "_veda"):
+            from vibe_core.mahamantra.cli.veda_explorer import VedaExplorer
+
+            self._veda = VedaExplorer()
+        return self._veda
+
     # === GOVERNANCE SCAN ===
     def scan(self, base_path: Optional[str] = None) -> dict:
         """
