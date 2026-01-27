@@ -35,128 +35,127 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     # MAHAJANA
-    from vibe_core.mahamantra.substrate.mahajana import (
-        Mahajana,
-        MAHAJANA_COUNT,
-        Avatara,
-        AVATARA_COUNT,
-        Quarter,
-        Sampradaya,
-        TOTAL_POSITIONS,
-    )
-
-    # TATTVA
-    from vibe_core.mahamantra.substrate.tattva import (
-        Purushottama,
-        PURUSHOTTAMA,
-        KshetraElement,
-        GuruTattva,
-        GuruConnection,
-        JIVA,
-    )
-
     # ACINTYA
     from vibe_core.mahamantra.substrate.acintya import (
-        SYSTEM_MANIFESTATION,
         ACINTYA_ACCEPTED,
-        TRINITY,
-        PARAMPARA,
-        PHASES,
         GURU_ENTROPY,
-        PARAMPARA_VECTOR,
-        PurushaTattva,
-        PURUSHA,
-        KRISHNA_ASPECT,
-        KRISHNA_SMALLEST,
-        KRISHNA_LARGEST,
-        ProtocolLevel,
-        AcintyaAspect,
-        KrishnaPresence,
         KRISHNA,
+        KRISHNA_ASPECT,
+        KRISHNA_LARGEST,
+        KRISHNA_SMALLEST,
+        PARAMPARA,
+        PARAMPARA_VECTOR,
+        PHASES,
+        PURUSHA,
+        SYSTEM_MANIFESTATION,
+        TRINITY,
+        AcintyaAspect,
+        AcintyaAware,
         JivaCondition,
         JivaState,
-        AcintyaAware,
-        ParamparaProtocol,
+        KrishnaPresence,
         ParamparaConnection,
+        ParamparaProtocol,
+        ProtocolLevel,
+        PurushaTattva,
     )
 
     # BYTE
     from vibe_core.mahamantra.substrate.byte import (
-        HolyName,
-        MantraTrit,
-        MantraByte,
         GenesisByte,
+        HolyName,
+        MantraByte,
+        MantraTrit,
+    )
+
+    # GUNA
+    from vibe_core.mahamantra.substrate.guna import (
+        OPCODE_GUNA,
+        RAJAS_OPCODES,
+        SATTVA_OPCODES,
+        TAMAS_OPCODES,
+        VISHUDDHA_SATTVA,
+        Guna,
+        GunaQoS,
+    )
+    from vibe_core.mahamantra.substrate.mahajana import (
+        AVATARA_COUNT,
+        MAHAJANA_COUNT,
+        TOTAL_POSITIONS,
+        Avatara,
+        Mahajana,
+        Quarter,
+        Sampradaya,
+    )
+
+    # OPCODE
+    from vibe_core.mahamantra.substrate.opcode import (
+        DHARMA_OPCODES,
+        GENESIS_OPCODES,
+        KARMA_OPCODES,
+        MAHAJANA_OPCODES,
+        MOKSHA_OPCODES,
+        OPCODE_NAMES,
+        OPCODE_PARAMPARA,
+        QUARTER_OPCODES,
+        MantraOpCode,
+    )
+
+    # POSITION
+    from vibe_core.mahamantra.substrate.position import (
+        MAHAMANTRA_POSITIONS,
+        Guardian,
+        MantraPosition,
+    )
+
+    # PROTOCOL
+    from vibe_core.mahamantra.substrate.protocol import (
+        HeadProtocol,
+        MantraAware,
+        MantraProtocol,
+        ProtocolRegistry,
+        WorkerProtocol,
+    )
+
+    # TATTVA
+    from vibe_core.mahamantra.substrate.tattva import (
+        JIVA,
+        PURUSHOTTAMA,
+        GuruConnection,
+        GuruTattva,
+        KshetraElement,
+        Purushottama,
     )
 
     # WIRING
     from vibe_core.mahamantra.substrate.wiring import (
         FOLDER_IS_WIRING,
+        FRACTAL_BASE,
         NO_FOLDER_NO_EXISTENCE,
+        POSITION_BY_FOLDER,
+        POSITION_BY_INDEX,
+        POSITION_BY_NAME,
+        POSITION_MAPPINGS,
         POSITIONS_PER_QUARTER,
         QUARTER_COUNT,
-        FRACTAL_BASE,
         PositionMapping,
-        POSITION_MAPPINGS,
-        POSITION_BY_FOLDER,
-        POSITION_BY_NAME,
-        POSITION_BY_INDEX,
         WiringProtocol,
         WiringVerification,
     )
 
-    # OPCODE
-    from vibe_core.mahamantra.substrate.opcode import (
-        MantraOpCode,
-        OPCODE_NAMES,
-        MAHAJANA_OPCODES,
-        GENESIS_OPCODES,
-        DHARMA_OPCODES,
-        KARMA_OPCODES,
-        MOKSHA_OPCODES,
-        QUARTER_OPCODES,
-        OPCODE_PARAMPARA,
-    )
-
-    # POSITION
-    from vibe_core.mahamantra.substrate.position import (
-        Guardian,
-        MantraPosition,
-        MAHAMANTRA_POSITIONS,
-    )
-
-    # PROTOCOL
-    from vibe_core.mahamantra.substrate.protocol import (
-        MantraProtocol,
-        WorkerProtocol,
-        HeadProtocol,
-        MantraAware,
-        ProtocolRegistry,
-    )
-
-    # GUNA
-    from vibe_core.mahamantra.substrate.guna import (
-        Guna,
-        VISHUDDHA_SATTVA,
-        SATTVA_OPCODES,
-        RAJAS_OPCODES,
-        TAMAS_OPCODES,
-        OPCODE_GUNA,
-        GunaQoS,
-    )
-
     # YAJNA
     from vibe_core.mahamantra.substrate.yajna import (
-        PRIME_SIGNATURE,
         MAHA_POSITIONS,
         MALA_ROUNDS,
+        PRIME_SIGNATURE,
         STD_MANTRA_PATTERN,
-        DissonanceError,
-        TamasBlockError,
-        ParamparaBreakError,
         Bhoga,
+        DissonanceError,
+        ParamparaBreakError,
         Prasadam,
-        YajnaProtocol,
+        TamasBlockError,
         Yajna,
+        YajnaProtocol,
     )
 
 
@@ -351,6 +350,16 @@ _LAZY_IMPORTS = {
     "Yajna": "yajna",
     "get_yajna": "yajna",
     "offer": "yajna",
+    # === LILA CHRONOLOGY ===
+    "BUILD_YEAR": "lila_chronology",
+    "RUNTIME_END": "lila_chronology",
+    "RUNTIME_YEARS": "lila_chronology",
+    "LilaPhase": "lila_chronology",
+    "YearFrequency": "lila_chronology",
+    "LilaChronology": "lila_chronology",
+    "get_lila_chronology": "lila_chronology",
+    "get_phase": "lila_chronology",
+    "PHASE_BOUNDARIES": "lila_chronology",
     # === LEGACY (Balarama-wrapped from protocols/substrate) ===
     "Declaration": "_legacy",
     "DeclarationType": "_legacy",
