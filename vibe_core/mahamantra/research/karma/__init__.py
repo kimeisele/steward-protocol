@@ -14,4 +14,9 @@ Contents:
     - Bhoga → Prasadam transformation
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xa4fcb268"  # GenesisByte: parampara % 37 == 0
+
 __all__: list[str] = []

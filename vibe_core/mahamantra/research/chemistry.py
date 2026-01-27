@@ -6,6 +6,11 @@ These are DERIVATIONS from the 7 axioms, not coincidences.
 The algorithm GENERATES; chemistry confirms.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x018f1924"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

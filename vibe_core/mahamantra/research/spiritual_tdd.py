@@ -54,6 +54,11 @@ Reality: Every operation is routed through the Holy Name structure
  but the snake protects nothing - it simply inhabits the mouse's tunnel."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x5030044b"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final

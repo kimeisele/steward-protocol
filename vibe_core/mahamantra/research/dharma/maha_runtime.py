@@ -21,6 +21,11 @@ PANCHA TATTVA PRESENCE:
     Maximum compute = 710,208,000 bits/day (~85 MB!)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x5a61926c"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final
 

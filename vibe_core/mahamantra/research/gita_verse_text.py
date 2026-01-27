@@ -28,6 +28,11 @@ VibrationSignature-System. KEINE willkürlichen Zuordnungen!
 Hare Krishna - All honor to the Mahamantra!
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x5dc5fcec"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from typing import Final, List, Tuple
 

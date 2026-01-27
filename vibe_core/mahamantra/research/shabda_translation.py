@@ -45,6 +45,11 @@ Diese Eigenschaft nutzen wir für die Übersetzung!
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x29832ba8"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Final

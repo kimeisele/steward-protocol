@@ -17,6 +17,11 @@ THE LOTUS SOLUTION:
 This is HARD ENGINEERING, not metaphor.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x072a8f12"  # GenesisByte: parampara % 37 == 0
+
 from typing import Final
 
 from ..protocols._seed import (
