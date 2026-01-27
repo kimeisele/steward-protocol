@@ -241,6 +241,57 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             self._shadow_factory = shadow_reactor_factory
         return self._shadow_factory
 
+    # === ADAPTER ACCESS (Enterprise/Science Interface) ===
+    @property
+    def transform(self) -> "MahaTransform":
+        """
+        Access the MahaTransform adapter.
+
+        ENTERPRISE USAGE:
+            result = mahamantra.transform.compute(seed=42)
+            attractor = mahamantra.transform.find_attractor(42)
+
+        Standard CS interface for the 16-step transformation algorithm.
+        """
+        if not hasattr(self, "_transform"):
+            from vibe_core.mahamantra.adapters.transform import MahaTransform
+
+            self._transform = MahaTransform()
+        return self._transform
+
+    @property
+    def hash(self) -> "DeterministicHash":
+        """
+        Access the DeterministicHash adapter.
+
+        ENTERPRISE USAGE:
+            h = mahamantra.hash.hash("my_intent")
+            reading = mahamantra.hash.analyze("my_intent")
+
+        Deterministic intent-to-integer encoding with multi-lens analysis.
+        """
+        if not hasattr(self, "_hash"):
+            from vibe_core.mahamantra.adapters.hash import DeterministicHash
+
+            self._hash = DeterministicHash()
+        return self._hash
+
+    def router(self, levels: int = 4) -> "HolographicRouter":
+        """
+        Create a HolographicRouter instance.
+
+        ENTERPRISE USAGE:
+            router = mahamantra.router(levels=4)  # 16-bit key space
+            router.insert(0x1234, "value")
+            value = router.get(0x1234)
+            results = router.range_query(0x1200, 0x12FF)
+
+        O(1) holographic key-value routing with O(k) range queries.
+        """
+        from vibe_core.mahamantra.adapters.routing import HolographicRouter
+
+        return HolographicRouter(levels=levels)
+
     # === GOVERNANCE SCAN ===
     def scan(self, base_path: Optional[str] = None) -> dict:
         """
