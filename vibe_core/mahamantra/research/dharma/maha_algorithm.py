@@ -384,27 +384,35 @@ class MahaAlgorithm16:
         """
         Apply the 16-step Maha transformation to a seed value.
 
-        TRANSFORMATION RULES (derived from Mahamantra):
-        - HARE (INPUT):    value += T(position) mod WEIGHT_HARE
-        - KRISHNA (COMPUTE): value *= position mod WEIGHT_KRISHNA
-        - RAMA (OUTPUT):   value = value mod WEIGHT_RAMA × SEVEN
+        TRANSFORMATION RULES (derived from _seed.py RUNDE 15 - The 7-10 Derivation):
+        ============================================================================
+        SEVEN = HALF_SIZE - KSETRAJNA = 8 - 1 = 7
+        TEN   = MAHAJANA_COUNT - HALVES = 12 - 2 = 10
+
+        The position sums reveal the OPERATIONS:
+        - HARE    = 7 × 10 = 70 → MULTIPLICATION (value × SEVEN)
+        - KRISHNA = 7 + 10 = 17 → ADDITION       (value + TEN)
+        - RAMA    = 7²     = 49 → SQUARING       (value × value)
+
+        Mod space = MAHA_QUANTUM (137) to prevent aggressive convergence.
 
         Returns the transformed value.
         """
-        value = seed
+        value = seed % MAHA_QUANTUM  # Normalize to quantum space
 
         for step in self.execute():
-            t_pos = triangular(step.position)
-
             if step.name == "H":
-                # HARE = INPUT = expansion (add triangular, mod 70)
-                value = (value + t_pos) % WEIGHT_HARE
+                # HARE = 7 × 10 = 70 → MULTIPLICATION operation
+                # Shakti multiplies, expands, connects
+                value = (value * SEVEN) % MAHA_QUANTUM
             elif step.name == "K":
-                # KRISHNA = COMPUTE = transformation (multiply, mod 17)
-                value = (value * step.position) % WEIGHT_KRISHNA
+                # KRISHNA = 7 + 10 = 17 → ADDITION operation
+                # Krishna adds, attracts, accumulates
+                value = (value + TEN) % MAHA_QUANTUM
             else:  # R
-                # RAMA = OUTPUT = completion (mod 49, scale by 7)
-                value = (value % WEIGHT_RAMA) * SEVEN
+                # RAMA = 7² = 49 → SQUARING operation
+                # Rama squares, intensifies, completes (power of HALVES)
+                value = (value * value) % MAHA_QUANTUM
 
         return value
 
@@ -668,10 +676,17 @@ class MahaModularSynth:
         Returns:
             Transformed value in range [0, mod_space)
 
-        Transformation rules (derived from Mahamantra):
-            HARE (INPUT):    value = (value + T(pos) × adsr) mod mod_space
-            KRISHNA (COMPUTE): value = (value × pos + lfo + feedback) mod mod_space
-            RAMA (OUTPUT):   value = (value × SEVEN + feedback) mod mod_space
+        TRANSFORMATION RULES (derived from _seed.py RUNDE 15 - The 7-10 Derivation):
+        ============================================================================
+        SEVEN = HALF_SIZE - KSETRAJNA = 8 - 1 = 7
+        TEN   = MAHAJANA_COUNT - HALVES = 12 - 2 = 10
+
+        The position sums reveal the OPERATIONS:
+            HARE    = 7 × 10 = 70 → MULTIPLICATION (value × SEVEN × adsr)
+            KRISHNA = 7 + 10 = 17 → ADDITION       (value + TEN + pos)
+            RAMA    = 7²     = 49 → SQUARING       (value × value)
+
+        ADSR envelope (from binary pattern 01011100) modulates the operations.
         """
         # Resolve parameters
         if params is not None:
@@ -692,14 +707,17 @@ class MahaModularSynth:
             lfo = self.get_lfo_value(step.position, p)
 
             if step.name == "H":
-                # HARE = INPUT = expansion (add triangular scaled by ADSR)
-                value = (value + t_pos * adsr) % p.mod_space
+                # HARE = 7 × 10 = 70 → MULTIPLICATION (derived from _seed.py RUNDE 15)
+                # ADSR modulates the multiplier (5 or 12)
+                value = (value * SEVEN * adsr + lfo) % p.mod_space
             elif step.name == "K":
-                # KRISHNA = COMPUTE = transformation (multiply + LFO + feedback)
-                value = (value * effective_pos + lfo + feedback_acc) % p.mod_space
+                # KRISHNA = 7 + 10 = 17 → ADDITION (derived from _seed.py RUNDE 15)
+                # Position adds structure, feedback preserves state
+                value = (value + TEN + effective_pos + feedback_acc) % p.mod_space
             else:  # R
-                # RAMA = OUTPUT = completion (scale by SEVEN + feedback)
-                value = (value * SEVEN + feedback_acc) % p.mod_space
+                # RAMA = 7² = 49 → SQUARING (derived from _seed.py RUNDE 15)
+                # Squaring = power of HALVES (2)
+                value = (value * value + feedback_acc) % p.mod_space
 
             # Accumulate feedback
             feedback_acc = (feedback_acc + value * p.feedback) % p.mod_space
