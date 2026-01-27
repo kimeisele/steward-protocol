@@ -80,6 +80,15 @@ from vibe_core.mahamantra.adapters.compute import (
     MemoryTier,
 )
 
+# Hardware (Silicon Altar - FPGA/ASIC Parameters)
+from vibe_core.mahamantra.adapters.hardware import (
+    MahaHardware,
+    HardwareSpec,
+    PipelineStageInfo,
+    VerificationResult,
+    PipelineStage,
+)
+
 __all__ = [
     # Core Compute
     "MahaTransform",
@@ -118,4 +127,10 @@ __all__ = [
     "DataAnalysis",
     "ComputeUnit",
     "MemoryTier",
+    # Hardware
+    "MahaHardware",
+    "HardwareSpec",
+    "PipelineStageInfo",
+    "VerificationResult",
+    "PipelineStage",
 ]
