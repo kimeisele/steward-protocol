@@ -11,8 +11,7 @@ FALSCH: Protocol-per-Service     → 100 Services = 100 Protocols = TOTGEBURT
 FALSCH: Capability-as-Tags       → Keine Typsicherheit, nur Runtime
 FALSCH: Domain-Cluster-Protocols → Zu breit, nicht komponierbar
 
-RICHTIG: Atomic Verb Proto
-cols   → Wie NAGA groups.py
+RICHTIG: Atomic Verb Protocols   → Wie NAGA groups.py
 ```
 
 **Golden Solution:**
@@ -650,22 +649,22 @@ class VishnuKernel(MantraProtocol):
             (MantraOpCode.SYS_WAKE,        "Hare"),
             (MantraOpCode.LOAD_ROOT,       "Krishna"),
             (MantraOpCode.ALLOC_MEM,       "Hare"),
-            (MantraOpCode.INIT_THREAD,        "Krishna"),
+            (MantraOpCode.BIND_CTX,        "Krishna"),
             # --- Quarter 1 Complete ---
-            (MantraOpCode.COMPILE_AST,    "Krishna"),
-            (MantraOpCode.BIND_SYMBOL,     "Krishna"),
-            (MantraOpCode.TYPE_CHECK, "Hare"),
-            (MantraOpCode.DHARMA_TEST,      "Hare"),
+            (MantraOpCode.ASSERT_TRUTH,    "Krishna"),
+            (MantraOpCode.RESOLVE_REQ,     "Krishna"),
+            (MantraOpCode.GARBAGE_COLLECT, "Hare"),
+            (MantraOpCode.PULSE_SYNC,      "Hare"),
             # --- Quarter 2 Complete ---
-            (MantraOpCode.EXEC_OP,       "Hare"),
+            (MantraOpCode.FETCH_RES,       "Hare"),
             (MantraOpCode.RAMA_EXEC,       "Rama"),
-            (MantraOpCode.STATE_SYNC,    "Hare"),
-            (MantraOpCode.LEDGER_SIGN,      "Rama"),
+            (MantraOpCode.CHECK_DHARMA,    "Hare"),
+            (MantraOpCode.COMMIT_LOG,      "Rama"),
             # --- Quarter 3 Complete ---
-            (MantraOpCode.YIELD_CPU,     "Rama"),
-            (MantraOpCode.IO_FLUSH,        "Rama"),
+            (MantraOpCode.CACHE_STATE,     "Rama"),
+            (MantraOpCode.OPTIMIZE,        "Rama"),
             (MantraOpCode.YIELD_CPU,       "Hare"),
-            (MantraOpCode.AUDIT_SEAL,        "Hare")
+            (MantraOpCode.RESET_IP,        "Hare")
             # --- Quarter 4 Complete ---
         ]
         
