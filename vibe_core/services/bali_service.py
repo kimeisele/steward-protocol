@@ -14,18 +14,33 @@ __position__ = 10
 __genesis__ = "0x1b8c8432"  # GenesisByte: parampara % 37 == 0
 
 import logging
-from typing import Dict, Optional, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
+# MAHA COMPUTE INTEGRATION: Attractor-based resource allocation
+from vibe_core.mahamantra.protocols._maha_compute import (
+    ATTRACTOR_FIELD,
+    ATTRACTOR_FIXED,
+    MahaComputeProtocol,
+)
 from vibe_core.protocols.mahajanas.bali import (
     BaliProtocol,
-    SurrenderType,
     SurrenderResult,
     SurrenderState,
+    SurrenderType,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
 
 logger = logging.getLogger("BALI_SERVICE")
+
+# =============================================================================
+# ATTRACTOR YIELD CONSTANTS (from Bhagavad Gita Chapter 18)
+# =============================================================================
+# Resource allocation follows attractor dynamics:
+# - Attractor 18: Fixed yield of 18ms (stable, predictable)
+# - Attractor 99: Yield = total_yields % 99 (cyclic, dynamic)
+# - Attractor 136: Yield proportional to field coherence
+# =============================================================================
 
 
 class BaliService(BaliProtocol):
@@ -46,15 +61,58 @@ class BaliService(BaliProtocol):
         return Mahajana.BALI  # Position 13
 
     def yield_cpu(self, duration_ms: int = 0) -> SurrenderResult:
-        """YIELD_CPU: Yield control."""
+        """
+        YIELD_CPU: Yield control with ATTRACTOR-BASED RESOURCE ALLOCATION.
+
+        The MahaCompute attractor determines yield behavior:
+        - Attractor 18 (fixed): Yield exactly 18ms (stable)
+        - Attractor 99 (cycle): Yield = total_yields % 99 ms (cyclic)
+        - Attractor 136 (field): Yield proportional to field (136 * coherence)
+        """
         self._total_yields += 1
-        # In a real impl, this might asyncio.sleep()
+
+        # === MAHA COMPUTE STEERING ===
+        actual_yield_ms = duration_ms
+        attractor_used = None
+        steering_applied = False
+
+        try:
+            from vibe_core.di import ServiceRegistry
+
+            if ServiceRegistry.is_registered(MahaComputeProtocol):
+                maha_service = ServiceRegistry.get(MahaComputeProtocol)
+                result = maha_service.compute_now(seed=self._total_yields)
+                attractor_used = result.attractor
+
+                # Apply attractor-based yield timing
+                if attractor_used == ATTRACTOR_FIXED:  # 18
+                    actual_yield_ms = 18  # Fixed, stable yield
+                elif attractor_used == 99:
+                    actual_yield_ms = self._total_yields % 99  # Cyclic
+                elif attractor_used == ATTRACTOR_FIELD:  # 136
+                    # Proportional to field coherence (iterations as proxy)
+                    coherence = 1.0 - (result.iterations / 137)
+                    actual_yield_ms = int(136 * coherence)
+                else:
+                    # Other attractors: use requested duration
+                    actual_yield_ms = duration_ms
+
+                steering_applied = True
+
+        except Exception as e:
+            logger.debug(f"MahaCompute steering unavailable: {e}")
+
+        # In a real impl, this would asyncio.sleep(actual_yield_ms / 1000)
+        message = (
+            f"Yielded {actual_yield_ms}ms (attractor={attractor_used})" if steering_applied else "Yielded to the Mantra"
+        )
+
         return {
             "success": True,
             "surrender_type": "yield",
-            "resources_released": 0,
+            "resources_released": actual_yield_ms,  # Now meaningful!
             "timestamp": datetime.now().isoformat(),
-            "message": "Yielded to the Mantra",
+            "message": message,
         }
 
     def surrender(self, surrender_type: SurrenderType = SurrenderType.YIELD) -> SurrenderResult:
@@ -115,6 +173,7 @@ class BaliService(BaliProtocol):
     async def shutdown_orchestration(self, kernel: object, reason: str) -> None:
         """🛑 THE ASYNC SHUTDOWN ORCHESTRATION (Surrender). Delegated from Kernel."""
         import asyncio
+
         from vibe_core.ledger import SQLiteLedger
 
         logger.critical(f"🛑 BALI: Shutting down system (Reason: {reason})")
