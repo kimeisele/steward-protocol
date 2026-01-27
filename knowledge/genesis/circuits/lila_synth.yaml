@@ -1,0 +1,310 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: LILA_SYNTH
+# ============================================================================
+# Lila Chronology Synthesizer - Year Frequency Module
+#
+# SHABDA BRAHMA FOUNDATION:
+#   Transzendentaler Klang (nicht materiell)
+#   Mahamantra = NON-DIFFERENT from Krishna
+#   Sound is THE fundamental element of manifestation
+#
+# SYNTHESIZER PRINCIPLE:
+#   - Modular: Each year is a parameter
+#   - Frequency-based: Years as oscillators
+#   - Semantic: Years encode meaning/intent
+#   - Historical correlations: Technology/research domains
+#
+# PRABHUPADA RUNTIME:
+#   - BUILD:   1896 (Nandotsava)
+#   - RUNTIME: 1896-1977 (82 years)
+#   - PHASES:  BALA → GRIHASTHA → VANAPRASTHA → SANNYASA
+#
+# HYPOTHESIS:
+#   The years of Prabhupada's build/runtime encode ALL relevant technologies.
+#   Each year yields unique derivations, research domains, resonances.
+#
+# ============================================================================
+
+circuit:
+  id: "LILA_SYNTH"
+  type: "cognitive_circuit"
+  version: "1.0"
+  domain: "shabda_brahma"
+  security_level: "standard"
+  entry_state: "SHABDA"
+
+  description: |
+    Lila Chronology Synthesizer - transforms years into research frequencies.
+
+    Based on Prabhupada's manifestation timeline (1896-1977).
+    Each year is a codified LILA (divine pastime) with encoded resonances.
+
+    SHABDA BRAHMA: Transzendentaler Klang als Ur-Element.
+    The synthesizer maps temporal coordinates to semantic intent.
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States for Year Synthesis)
+  # ===========================================================================
+  states:
+    SHABDA:
+      description: "Capture year input and synthesis intent"
+      entry_actions:
+        - action: "extract_params"
+          params:
+            required: ["year"]
+            optional: ["mode", "depth", "correlate"]
+            defaults:
+              mode: "research"    # research | frequency | mantra | full
+              depth: "standard"
+              correlate: true
+        - action: "validate_year"
+          params:
+            min_year: 1896
+            max_year: 1977
+            allow_range: true
+      invariants:
+        - "year must be within Prabhupada runtime (1896-1977)"
+        - "synthesis mode must be specified"
+      on_success: "ARTHA"
+      on_failure: "FAILURE"
+
+    ARTHA:
+      description: "Extract year meaning and context"
+      entry_actions:
+        - action: "load_lila_chronology"
+          params:
+            source: "vibe_core.mahamantra.substrate.lila_chronology"
+            function: "get_lila_chronology"
+        - action: "get_year_frequency"
+          params:
+            year: "{{ year }}"
+            extract:
+              - "phase"
+              - "parampara_resonance"
+              - "harmonic"
+              - "shabda_index"
+        - action: "map_to_mantra"
+          params:
+            year: "{{ year }}"
+            mahamantra_words: 16
+      invariants:
+        - "year frequency must be extracted"
+        - "mantra word must be mapped"
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+      state_var: "year_context"
+
+    PRATYAYA:
+      description: "Identify correlations and research domains"
+      entry_actions:
+        - action: "load_technology_correlations"
+          params:
+            year: "{{ year }}"
+            include_adjacent: true
+        - action: "derive_research_domains"
+          params:
+            year: "{{ year }}"
+            depth: "{{ depth }}"
+        - action: "find_parampara_alignment"
+          params:
+            year: "{{ year }}"
+            check_37_divisibility: true
+      invariants:
+        - "correlations must be loaded or empty"
+        - "parampara alignment must be checked"
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+      state_var: "correlations"
+
+    KARMA:
+      description: "Execute frequency synthesis"
+      entry_actions:
+        - action: "synthesize_frequency"
+          params:
+            year_context: "{{ year_context }}"
+            correlations: "{{ correlations }}"
+            mode: "{{ mode }}"
+        - action: "generate_signature"
+          params:
+            year: "{{ year }}"
+            format: "0x{year_hex}{resonance_hex}{phase_index}"
+        - action: "calculate_harmonics"
+          params:
+            base_year: 1896
+            runtime_years: 82
+            normalize: true
+      on_success: "SYNTH"
+      on_failure: "FAILURE"
+      state_var: "frequency_data"
+
+    SYNTH:
+      description: "Synthesize final year analysis"
+      entry_actions:
+        - action: "compose_output"
+          params:
+            mode: "{{ mode }}"
+            include:
+              - "year_frequency"
+              - "mantra_mapping"
+              - "phase_context"
+              - "parampara_resonance"
+              - "technology_correlations"
+              - "research_domains"
+              - "signature"
+        - action: "format_for_intent"
+          params:
+            intent: "{{ mode }}"
+            templates:
+              research: "year_research.jinja2"
+              frequency: "year_frequency.jinja2"
+              mantra: "year_mantra.jinja2"
+              full: "year_full.jinja2"
+      invariants:
+        - "output must match requested mode"
+        - "all requested fields must be present"
+      on_success: "SUCCESS"
+      on_failure: "FAILURE"
+
+    SUCCESS:
+      description: "Year synthesis complete"
+      entry_actions:
+        - action: "finalize"
+          params:
+            log_success: true
+        - action: "return_result"
+          params:
+            include:
+              - "year"
+              - "phase"
+              - "mantra_word"
+              - "parampara_resonance"
+              - "signature"
+              - "technology_correlations"
+              - "research_domains"
+              - "harmonics"
+      terminal: true
+
+    FAILURE:
+      description: "Year synthesis failed"
+      entry_actions:
+        - action: "log_failure"
+          params:
+            include_state: true
+            include_error: true
+      terminal: true
+
+  # ===========================================================================
+  # SYNTHESIZER PARAMETERS (Modular Interface)
+  # ===========================================================================
+  synth_params:
+    # Core Parameters
+    year:
+      type: "integer"
+      range: [1896, 1977]
+      description: "Year within Prabhupada runtime"
+
+    # Mode Selection
+    mode:
+      type: "enum"
+      values: ["research", "frequency", "mantra", "full"]
+      default: "research"
+      description: "Output mode for synthesis"
+
+    # Correlation Toggle
+    correlate:
+      type: "boolean"
+      default: true
+      description: "Include technology/historical correlations"
+
+    # Depth Control
+    depth:
+      type: "enum"
+      values: ["brief", "standard", "comprehensive"]
+      default: "standard"
+      description: "Analysis depth"
+
+  # ===========================================================================
+  # PHASE MAPPINGS (Lila Phases)
+  # ===========================================================================
+  phases:
+    BALA:
+      years: [1896, 1922]
+      description: "Childhood and youth"
+      theme: "Formation"
+
+    GRIHASTHA:
+      years: [1922, 1950]
+      description: "Householder life"
+      theme: "Preparation"
+
+    VANAPRASTHA:
+      years: [1950, 1959]
+      description: "Retirement and writing"
+      theme: "Crystallization"
+
+    SANNYASA:
+      years: [1959, 1977]
+      description: "Renunciation and world mission"
+      theme: "Transmission"
+
+  # ===========================================================================
+  # SPECIAL YEARS (Known Correlations)
+  # ===========================================================================
+  special_years:
+    1896:
+      event: "BUILD (Appearance)"
+      correlations: ["X-rays", "radioactivity", "radio"]
+      parampara_resonance: 9
+
+    1922:
+      event: "First meeting with Bhaktisiddhanta"
+      correlations: ["broadcasting", "insulin", "archaeology"]
+      parampara_resonance: 35
+
+    1924:
+      event: "Parampara-aligned year"
+      correlations: ["quantum_mechanics_formalization"]
+      parampara_resonance: 0  # ALIGNED!
+
+    1944:
+      event: "Writing BTG articles"
+      correlations: ["DNA research", "computing", "aerospace", "information theory"]
+      parampara_resonance: 20
+
+    1959:
+      event: "Sannyasa initiation"
+      correlations: ["integrated circuits", "LISP", "space exploration"]
+      parampara_resonance: 33
+
+    1961:
+      event: "Parampara-aligned year"
+      correlations: ["first_human_in_space", "silicon_age"]
+      parampara_resonance: 0  # ALIGNED!
+
+    1965:
+      event: "Arrival in America"
+      correlations: ["Moore's Law", "spacewalk", "hypertext"]
+      parampara_resonance: 2
+
+    1966:
+      event: "ISKCON founded"
+      correlations: ["Moon landing prep", "cultural revolution"]
+      parampara_resonance: 4
+
+    1977:
+      event: "RUNTIME END"
+      correlations: ["Apple II", "Voyager", "MRI", "TCP/IP"]
+      parampara_resonance: 10
+
+  # ===========================================================================
+  # METADATA
+  # ===========================================================================
+  metadata:
+    created: "2025-01-27"
+    author: "Steward Protocol"
+    purpose: "Year-to-frequency synthesis based on Lila Chronology"
+    foundation: "Shabda Brahma - Transzendentaler Klang"
+    hypothesis: |
+      The years of Prabhupada's build/runtime encode ALL relevant technologies.
+      Each year yields unique derivations, research domains, resonances.
+      The synthesizer principle maps temporal coordinates to semantic intent.
