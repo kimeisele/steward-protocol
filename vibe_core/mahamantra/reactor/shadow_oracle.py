@@ -26,14 +26,18 @@ DERIVATION FROM MAHAMANTRA:
 ===========================
 
     PARAMPARA = 37 = KSHETRA + MAHAJANA + KSETRAJNA = 24 + 12 + 1
-    The 5 attractors at mod 37 represent the 5 PANCHA channels.
+    The TRINITY (3) attractors at mod 37 represent the Parampara channels:
+      - 12 = MAHAJANA_COUNT (the 12 authorities)
+      - 26 = 2 × Chapter 13 (transmission doubled)
+      - 34 = GURU_VERSE (stable principle)
 
-    SEVEN = 7 (axioms)
-    TEN = 10 (senses)
+    SEVEN = 7 (axioms) - from _seed.py
+    TEN = 10 (senses) - from _seed.py
 
-    The transform: HARE (×7), KRISHNA (+10), RAMA (×value)
+    The transform: HARE (×SEVEN), KRISHNA (+TEN), RAMA (×value)
 
 WATERTIGHT: No Any types. Protocol statt Klassen.
+ALL CONSTANTS FROM SSOT (_seed.py) - NO HARDCODING!
 """
 
 from __future__ import annotations
@@ -44,18 +48,24 @@ from typing import (
     Optional,
 )
 
-# Import SSOT constants
+# =============================================================================
+# SSOT IMPORTS - All constants from single source of truth
+# =============================================================================
+# Core constants from _seed.py (THE LAW)
 from vibe_core.mahamantra.protocols._seed import (
     COSMIC_FRAME,
+    KSETRA_KSETRAJNA_CHAPTER,
+    KSETRA_KSETRAJNA_VERSE,
     KSETRAJNA,
     MAHA_QUANTUM,
     PARAMPARA,
     SEVEN,
     TEN,
+    TRINITY,
     WORDS,
 )
 
-# Import protocol types
+# Parampara channels from _seed.py (via shadow_protocol)
 from vibe_core.mahamantra.reactor.shadow_protocol import (
     PARAMPARA_CHANNEL_NAMES,
     PARAMPARA_CHANNELS,
@@ -64,48 +74,18 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
     ShadowState,
 )
 
-# =============================================================================
-# MAHAMANTRA PATTERN (for transform)
-# =============================================================================
-# H = Hare (energy), K = Krishna, R = Rama
-PATTERN: Final[tuple[str, ...]] = (
-    "H",
-    "K",
-    "H",
-    "K",  # Q1: KSETRAJNA
-    "K",
-    "K",
-    "H",
-    "H",  # Q2: KRISHNA
-    "H",
-    "R",
-    "H",
-    "R",  # Q3: PRAKRITI
-    "R",
-    "R",
-    "H",
-    "H",  # Q4: KARMA
+# Mahamantra pattern from research module (SSOT for pattern)
+from vibe_core.mahamantra.research.dharma.maha_algorithm import (
+    PATTERN,
+    PRABHUPADA_BUILD,
+    PRABHUPADA_KEY_YEARS,
+    PRABHUPADA_RUNTIME_END,
 )
 
-
 # =============================================================================
-# PRABHUPADA RUNTIME CONSTANTS (Lila Chronology)
+# DERIVED CONSTANTS (computed from SSOT, not hardcoded)
 # =============================================================================
-PRABHUPADA_BUILD: Final[int] = 1896
-PRABHUPADA_RUNTIME_END: Final[int] = 1977
 PRABHUPADA_RUNTIME_YEARS: Final[int] = PRABHUPADA_RUNTIME_END - PRABHUPADA_BUILD + 1  # 82
-
-# Key years with special significance
-PRABHUPADA_KEY_YEARS: Final[tuple[int, ...]] = (
-    1896,  # BUILD - Δ=0
-    1922,  # First meeting Bhaktisiddhanta - Δ=26
-    1932,  # DIKSHA - Δ=36 = T(8)
-    1944,  # BTG first issue - Δ=48
-    1959,  # Sannyasa - Δ=63
-    1965,  # Jaladuta - Δ=69
-    1966,  # ISKCON founded - Δ=70
-    1977,  # RUNTIME END - Δ=81
-)
 
 
 # =============================================================================
@@ -370,11 +350,8 @@ __all__ = [
     "ShadowOracle",
     # Factory
     "get_shadow_oracle",
-    # Constants (re-exported from protocol)
-    "PARAMPARA_CHANNELS",
-    "PARAMPARA_CHANNEL_NAMES",
-    # Prabhupada constants
-    "PRABHUPADA_BUILD",
-    "PRABHUPADA_RUNTIME_END",
-    "PRABHUPADA_KEY_YEARS",
+    # NOTE: Constants are NOT re-exported here!
+    # Import PARAMPARA_CHANNELS from _seed.py or shadow_protocol.py
+    # Import PRABHUPADA_* from maha_algorithm.py
+    # This is SSOT - no duplication!
 ]

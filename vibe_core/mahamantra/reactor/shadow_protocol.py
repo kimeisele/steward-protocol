@@ -403,7 +403,7 @@ class OracleValidationResult(TypedDict):
     """
 
     parampara_validated: bool  # True if in valid disciplic channel (Gita 13.35)
-    parampara_channel: int  # Which of 5 PANCHA channels (-1 if void)
+    parampara_channel: int  # Which of TRINITY (3) channels (-1 if void)
     parampara_attractor: int  # The attractor value at mod 37
     coherence: int  # Integer coherence (scaled by COSMIC_FRAME)
     prabhupada_year: Optional[int]  # Resonant year in Lila (1896-1977) or None
@@ -481,19 +481,21 @@ class MahaOracleProtocol(Protocol):
         ...
 
 
-# The 5 PANCHA channels of Parampara (mod 37 attractors)
-# These represent the 5 lines of disciplic transmission
-PARAMPARA_CHANNELS: Final[tuple[int, ...]] = (12, 26, 34, 5, 19)
-
-# Channel names (Gaudiya Vaishnava parampara)
-PARAMPARA_CHANNEL_NAMES: Final[tuple[str, ...]] = (
-    "Brahma",  # Channel 0 - Creator
-    "Narada",  # Channel 1 - Divine Messenger
-    "Vyasa",  # Channel 2 - Compiler
-    "Madhva",  # Channel 3 - Acharya
-    "Chaitanya",  # Channel 4 - Golden Avatar
+# =============================================================================
+# PARAMPARA CHANNELS - IMPORTED FROM SSOT (_seed.py)
+# =============================================================================
+# The channels are MATHEMATICALLY DERIVED (mod 37 attractors), not hardcoded!
+# See _seed.py RUNDE 28b for the complete derivation.
+#
+# TRINITY (3) attractors, not PANCHA (5) as previously hardcoded:
+#   12 = MAHAJANA_COUNT (the 12 authorities)
+#   26 = 2 × 13 = Chapter 13 doubled (transmission)
+#   34 = PARAMPARA - TRINITY = GURU_VERSE (stability)
+# -----------------------------------------------------------------------------
+from vibe_core.mahamantra.protocols._seed import (
+    PARAMPARA_CHANNEL_NAMES,
+    PARAMPARA_CHANNELS,
 )
-
 
 __all__ = [
     # Phase

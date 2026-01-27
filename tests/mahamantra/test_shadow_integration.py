@@ -206,7 +206,8 @@ def test_shadow_oracle_prabhupada_year_resonance():
 
     Key years: 1896, 1922, 1932, 1944, 1959, 1965, 1966, 1977
     """
-    from vibe_core.mahamantra.reactor.shadow_oracle import PRABHUPADA_BUILD, ShadowOracle
+    from vibe_core.mahamantra.reactor.shadow_oracle import ShadowOracle
+    from vibe_core.mahamantra.research.dharma.maha_algorithm import PRABHUPADA_BUILD
 
     oracle = ShadowOracle()
 
