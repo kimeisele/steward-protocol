@@ -550,6 +550,58 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return MahaCompute()
 
+    def hardware(self) -> "MahaHardware":
+        """
+        Create a MahaHardware specification engine.
+
+        THE SILICON ALTAR:
+            Hardware parameters are NOT arbitrary design choices.
+            They are the Mahamantra structure REFLECTED in silicon!
+
+            DATA_WIDTH = 32       = AKSARA (syllables)
+            NEXT_HOP_WIDTH = 16   = WORDS
+            BRANCHING_FACTOR = 16 = WORDS
+            NIBBLE_SIZE = 4       = QUARTERS
+            PIPELINE_STAGES = 8   = OCTET (Siksastakam verses)
+
+        THE 8 PIPELINE STAGES = 8 SIKSASTAKAM VERSES:
+            L0: ceto-darpaṇa-mārjanaṁ (cleanse - initialize)
+            L1: nāmnām akāri (flexible - accept any nibble)
+            L2: tṛṇād api sunīcena (humble - no comparison)
+            L3: na dhanaṁ na janaṁ (desireless - no caching)
+            L4: ayi nanda-tanuja (service - process next)
+            L5: nayanam galad-aśru (flow - unobstructed)
+            L6: yugāyitaṁ nimeṣeṇa (timing - deterministic)
+            L7: āśliṣya vā pada-ratāṁ (unconditional - return)
+
+        USAGE:
+            hw = mahamantra.hardware()
+
+            # Get hardware specification
+            spec = hw.spec()
+            print(spec.data_width)        # 32
+            print(spec.pipeline_stages)   # 8
+
+            # Pipeline stages with verse mapping
+            for stage in hw.pipeline_stages():
+                print(f"{stage.name}: {stage.sanskrit}")
+
+            # Generate HDL code
+            verilog = hw.generate_verilog_params()
+            vhdl = hw.generate_vhdl_params()
+            c_code = hw.generate_c_defines()
+
+            # Verify custom design
+            result = hw.verify(data_width=32, branching_factor=16)
+            print(result.summary)
+
+        Returns:
+            MahaHardware engine instance
+        """
+        from vibe_core.mahamantra.adapters.hardware import MahaHardware
+
+        return MahaHardware()
+
     @property
     def attention(self) -> "MahaAttention":
         """
