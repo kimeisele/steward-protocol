@@ -313,6 +313,36 @@ from vibe_core.mahamantra.substrate.opcode import (
 )
 
 # =============================================================================
+# VEDA & GOVERNANCE - Lazy loaded to avoid circular imports
+# =============================================================================
+# These are loaded on first access to prevent:
+# mahamantra -> protocols -> veda -> protocols.mahajanas -> mahamantra (cycle)
+
+_LAZY_VEDA = {
+    "VedaProtocol": "veda",
+    "VedaMixin": "veda",
+    "is_vedic": "veda",
+    "veda_audit": "veda",
+    "ShabdaProtocol": "veda",
+    "ArthaProtocol": "veda",
+    "PratyayaProtocol": "veda",
+    "KarmaProtocol": "veda",
+    "ProtocolBridge": "governance.bridge",
+}
+
+
+def __getattr__(name: str):
+    """Lazy load veda and governance to avoid circular imports."""
+    if name in _LAZY_VEDA:
+        module_path = _LAZY_VEDA[name]
+        import importlib
+
+        module = importlib.import_module(f"vibe_core.protocols.{module_path}")
+        return getattr(module, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -453,4 +483,15 @@ __all__ = [
     "get_opcode",
     "get_opcode_name",
     "get_mahajana_opcode",
+    # === VEDA (from protocols/veda.py) ===
+    "VedaProtocol",
+    "VedaMixin",
+    "is_vedic",
+    "veda_audit",
+    "ShabdaProtocol",
+    "ArthaProtocol",
+    "PratyayaProtocol",
+    "KarmaProtocol",
+    # === GOVERNANCE ===
+    "ProtocolBridge",
 ]

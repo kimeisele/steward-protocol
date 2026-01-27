@@ -240,6 +240,20 @@ class NullYamaraja(YamarajaBase):
 
 
 # =============================================================================
+# SAMSKARA TYPES (re-export from protocols/mahajanas/yamaraja/samskara)
+# =============================================================================
+
+from vibe_core.protocols.mahajanas.yamaraja.samskara import (
+    SamskaraType,
+    SamskaraState,
+    MigrationVerdict,
+    MigrationStatus,
+    WildProtocol,
+    MigrationManifest,
+)
+
+
+# =============================================================================
 # SAMSKARA SERVICE - Migration Engine
 # =============================================================================
 
@@ -261,6 +275,13 @@ __all__ = [
     "YamarajaProtocol",
     "YamarajaBase",
     "NullYamaraja",
+    # Samskara Types
+    "SamskaraType",
+    "SamskaraState",
+    "MigrationVerdict",
+    "MigrationStatus",
+    "WildProtocol",
+    "MigrationManifest",
     # Samskara (Migration)
     "SamskaraService",
 ]

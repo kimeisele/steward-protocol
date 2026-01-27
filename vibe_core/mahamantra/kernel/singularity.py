@@ -70,7 +70,7 @@ class TickState(TypedDict):
 
 
 # VEDA-4 PROTOCOL - Elegant Python Dunder Mapping
-from vibe_core.protocols.veda import (
+from vibe_core.mahamantra.protocols import (
     VedaProtocol,
     VedaMixin,
     is_vedic,
@@ -769,7 +769,7 @@ class Mahamantra:
         """
         global _governance_bridge
         if _governance_bridge is None:
-            from vibe_core.protocols.governance.bridge import ProtocolBridge
+            from vibe_core.mahamantra.protocols import ProtocolBridge
 
             _governance_bridge = ProtocolBridge
         return _governance_bridge
@@ -786,9 +786,7 @@ class Mahamantra:
         Returns:
             Mahajana owner or None if ungoverned
         """
-        # Need to use the router Mahajana, not source Mahajana
-        from vibe_core.protocols.mahajanas.router import Mahajana as RouterMahajana
-
+        # Mahajana enum from mahamantra
         owner = self.governance.get_owner(protocol_path)
         return owner
 
