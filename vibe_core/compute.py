@@ -4,24 +4,15 @@ VIBE COMPUTE - Headless Mahamantra Computation
 
 "paraṁ vijayate śrī-kṛṣṇa-saṅkīrtanam"
 
-THE RESONANCE BODY:
-    Input → Mahamantra (16) → Siksastakam (8) → Output
-    24 steps = KSHETRA = The Field
+DELEGIERT ZU MAHAMANTRA (MAHAPROMPT.md GESETZ):
+    from vibe_core.mahamantra import mahamantra
+    mahamantra.vibe(108)
 
-USAGE:
-    # CLI
+CLI:
     python -m vibe_core.compute 108
     python -m vibe_core.compute 42 --verbose
 
-    # Python
-    from vibe_core.compute import vibe
-    result = vibe(108)  # → int
-
-    # With trace
-    from vibe_core.compute import vibe_full
-    result = vibe_full(42)  # → dict with guarantees
-
-NO KERNEL REQUIRED. Pure computation.
+NO KERNEL REQUIRED. Krishna routet alles.
 """
 
 # === MAHAJANA DECLARATION ===
@@ -30,21 +21,13 @@ __position__ = 6
 __genesis__ = "0xf1a2b3c4"
 
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
+# DELEGATION: Alles durch mahamantra
+from vibe_core.mahamantra import mahamantra
 from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, WORDS
-from vibe_core.mahamantra.protocols._maha_compute import (
-    PATTERN,
-    apply_operation,
-    get_operation,
-    ATTRACTOR_FIXED,
-    ATTRACTOR_CYCLE,
-)
-from vibe_core.mahamantra.siksastakam_compute import (
-    SiksastakamCompute,
-    STAGE_GUARANTEES,
-    VERSE_CONSTANTS,
-)
+from vibe_core.mahamantra.protocols._maha_compute import PATTERN, ATTRACTOR_FIXED, ATTRACTOR_CYCLE
+from vibe_core.mahamantra.siksastakam_compute import STAGE_GUARANTEES, VERSE_CONSTANTS
 
 
 # =============================================================================
@@ -55,78 +38,24 @@ def vibe(value: int) -> int:
     """
     THE VIBRATION: Input → Resonance → Output.
 
-    24-step transformation:
-    - 16 Mahamantra steps (H×7, K+10, R×²)
-    - 8 Siksastakam steps (verse constants)
+    DELEGIERT ZU: mahamantra.vibe()
 
     Args:
         value: Any integer
 
     Returns:
         Transformed value (mod 137)
-
-    Example:
-        >>> vibe(108)
-        133
     """
-    # Mahamantra: 16 steps
-    v = value % MAHA_QUANTUM
-    for pos in range(WORDS):
-        op = get_operation(pos)
-        v = apply_operation(v, op)
-
-    # Siksastakam: 8 steps
-    compute = SiksastakamCompute()
-    return compute.process(v)
+    return mahamantra.vibe(value)
 
 
 def vibe_full(value: int) -> Dict[str, Any]:
     """
     Full vibration with trace and guarantees.
 
-    Args:
-        value: Any integer
-
-    Returns:
-        Dict with:
-        - input, output
-        - mahamantra_trace (16 steps)
-        - siksastakam_trace (8 steps)
-        - attractor, gita_chapter
-        - guarantees (8)
+    DELEGIERT ZU: mahamantra.vibe_full()
     """
-    v = value % MAHA_QUANTUM
-    maha_trace = [v]
-
-    # Mahamantra: 16 steps
-    for pos in range(WORDS):
-        op = get_operation(pos)
-        v = apply_operation(v, op)
-        maha_trace.append(v)
-
-    # Siksastakam: 8 steps
-    compute = SiksastakamCompute()
-    siks_result = compute.process_with_guarantees(v)
-
-    # Find attractor
-    attractor = siks_result.attractor_value
-    if attractor == ATTRACTOR_FIXED:
-        gita = 18
-    elif attractor in ATTRACTOR_CYCLE:
-        gita = (attractor % 17) + 1
-    else:
-        gita = 0
-
-    return {
-        "input": value % MAHA_QUANTUM,
-        "output": siks_result.output_value,
-        "mahamantra_trace": maha_trace,
-        "siksastakam_output": siks_result.output_value,
-        "attractor": attractor,
-        "gita_chapter": gita,
-        "guarantees": list(STAGE_GUARANTEES),
-        "total_steps": 24,
-    }
+    return mahamantra.vibe_full(value)
 
 
 def vibe_batch(values: List[int]) -> List[int]:
@@ -220,20 +149,14 @@ def main() -> None:
 
     if verbose:
         result = vibe_full(value)
-        print(f"INPUT:  {result['input']}")
+        print(f"INPUT:  {result['seed']}")
         print()
-        print("MAHAMANTRA (16 steps):")
-        trace = result['mahamantra_trace']
-        for i in range(WORDS):
-            op = PATTERN[i]
-            print(f"  {i:2d}. {op} : {trace[i]:3d} → {trace[i+1]:3d}")
+        print(f"MAHAMANTRA (16 steps) → {result['mahamantra_output']}")
+        print(f"SIKSASTAKAM (8 steps) → {result['siksastakam_output']}")
+        print(f"TOTAL: {result['total_steps']} steps = KSHETRA")
         print()
-        print("SIKSASTAKAM (8 steps):")
-        for i, (const, guarantee) in enumerate(zip(VERSE_CONSTANTS, STAGE_GUARANTEES)):
-            print(f"  L{i}: const={const} | {guarantee}")
-        print()
-        print(f"OUTPUT: {result['output']}")
-        print(f"ATTRACTOR: {result['attractor']} (Gita {result['gita_chapter']})")
+        print(f"OUTPUT: {result['unified_output']}")
+        print(f"ATTRACTOR: {result['mahamantra_attractor']} (Gita {result['gita_chapter']})")
         print()
         print("GUARANTEES:")
         for g in result['guarantees']:
