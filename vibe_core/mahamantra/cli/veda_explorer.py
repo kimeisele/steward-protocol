@@ -60,7 +60,58 @@ class VedaIntent(str, Enum):
     SCAN = "scan"  # SMARANAM - Scan codebase
     HELP = "help"  # Show available commands
     STATUS = "status"  # System status
+    ADAPTER = "adapter"  # Auto-discovered adapters
     UNKNOWN = "unknown"  # Requires LLM or clarification
+
+
+# =============================================================================
+# ADAPTER AUTO-DISCOVERY (Folder IS Wiring)
+# =============================================================================
+
+def _discover_adapters() -> Dict[str, tuple]:
+    """
+    Auto-discover adapters from mahamantra factory methods.
+
+    NO HARDCODING. Introspects mahamantra for callable factories.
+    Returns: {keyword: (factory_name, method_name, description)}
+    """
+    adapters: Dict[str, tuple] = {}
+
+    try:
+        from vibe_core.mahamantra import mahamantra
+
+        # Known adapter factories and their primary methods
+        # Format: factory_name -> (keywords, primary_method)
+        ADAPTER_METHODS = {
+            "compression": (["compress", "samskara"], "compress", "Intent compression"),
+            "japa": (["japa", "mala", "round"], "mala", "108 rounds"),
+            "llm": (["route", "llm"], "route_text", "O(4) intent routing"),
+            "hardware": (["hardware", "verilog", "vhdl"], "spec", "Hardware specs"),
+            "compute": (["compute", "cpu", "gpu", "simd"], "analyze", "Compute analysis"),
+            "classifier": (["classify", "grace"], "classify", "Engineering classification"),
+            "transform": (["transform"], "compute", "16-step transform"),
+            "hash": (["hash"], "hash", "Deterministic hash"),
+            "pipeline": (["pipeline"], "execute", "4-phase pipeline"),
+            "synth": (["synth"], "cycle", "Step sequencer"),
+            "bio": (["bio", "kmer", "dna"], "index_sequence", "K-mer indexing"),
+            "network": (["network", "ipv4", "lpm"], "lookup", "IPv4 routing"),
+            "attention": (["attention", "memorize"], "memorize", "O(1) attention"),
+            "orchestrator": (["orchestrate", "tick"], "tick", "7-beat rhythm"),
+            "router": (["holographic"], "insert", "Holographic router"),
+        }
+
+        for factory_name, (keywords, method, desc) in ADAPTER_METHODS.items():
+            # Check if factory exists on mahamantra
+            if hasattr(mahamantra, factory_name) and callable(getattr(mahamantra, factory_name)):
+                for kw in keywords:
+                    adapters[kw] = (factory_name, method, desc)
+    except ImportError:
+        pass
+
+    return adapters
+
+
+ADAPTER_REGISTRY: Dict[str, tuple] = _discover_adapters()
 
 
 class VedaResult(TypedDict):
@@ -283,6 +334,21 @@ class VedaExplorer:
         """
         text_lower = text.lower().strip()
         words = text_lower.split()
+
+        # Check for ADAPTER keywords first (auto-discovered)
+        for word in words:
+            clean_word = word.strip("?!.,;:")
+            if clean_word in ADAPTER_REGISTRY:
+                factory, method, desc = ADAPTER_REGISTRY[clean_word]
+                # Extract remaining text as argument
+                arg_text = text.replace(word, "").strip()
+                return ParsedIntent(
+                    intent=VedaIntent.ADAPTER,
+                    params={"factory": factory, "method": method, "arg": arg_text, "desc": desc},
+                    raw_input=text,
+                    confidence=1.0,
+                    llm_used=False,
+                )
 
         # Check for direct intent keywords
         for word in words:
@@ -609,6 +675,10 @@ Reply with ONLY the category name (lowercase, one word)."""
                     llm_used=parsed.llm_used,
                 )
 
+            elif intent == VedaIntent.ADAPTER:
+                # AUTO-DISCOVERED ADAPTER EXECUTION
+                return self._execute_adapter(parsed)
+
             elif intent == VedaIntent.HELP:
                 return VedaResult(
                     success=True,
@@ -634,6 +704,97 @@ Reply with ONLY the category name (lowercase, one word)."""
                 data={"error": str(e)},
                 llm_used=parsed.llm_used,
             )
+
+    # =========================================================================
+    # ADAPTER EXECUTION (Auto-Discovered)
+    # =========================================================================
+
+    def _execute_adapter(self, parsed: ParsedIntent) -> VedaResult:
+        """
+        Execute auto-discovered adapter method.
+
+        FOLDER IS WIRING - adapters discovered from mahamantra factories.
+        """
+        from vibe_core.mahamantra import mahamantra
+
+        factory_name = parsed.params.get("factory", "")
+        method_name = parsed.params.get("method", "")
+        arg = parsed.params.get("arg", "")
+        desc = parsed.params.get("desc", "")
+
+        try:
+            # Get factory
+            factory_fn = getattr(mahamantra, factory_name, None)
+            if not factory_fn or not callable(factory_fn):
+                return VedaResult(
+                    success=False,
+                    intent="adapter",
+                    mode=self._mode.value,
+                    response=f"Adapter '{factory_name}' nicht gefunden.",
+                    data={},
+                    llm_used=False,
+                )
+
+            # Create adapter instance
+            adapter = factory_fn()
+
+            # Get method
+            method = getattr(adapter, method_name, None)
+            if not method or not callable(method):
+                return VedaResult(
+                    success=False,
+                    intent="adapter",
+                    mode=self._mode.value,
+                    response=f"Methode '{method_name}' auf {factory_name} nicht gefunden.",
+                    data={},
+                    llm_used=False,
+                )
+
+            # Execute with argument
+            if arg:
+                result = method(arg)
+            else:
+                result = method()
+
+            # Format result
+            response = self._format_adapter_response(factory_name, method_name, result, desc)
+
+            return VedaResult(
+                success=True,
+                intent="adapter",
+                mode=self._mode.value,
+                response=response,
+                data={"factory": factory_name, "method": method_name, "result": str(result)[:500]},
+                llm_used=False,
+            )
+
+        except Exception as e:
+            return VedaResult(
+                success=False,
+                intent="adapter",
+                mode=self._mode.value,
+                response=f"Adapter-Fehler: {e}",
+                data={"error": str(e)},
+                llm_used=False,
+            )
+
+    def _format_adapter_response(self, factory: str, method: str, result: object, desc: str) -> str:
+        """Format adapter result for display."""
+        lines = [f"ADAPTER: {factory}.{method}()", f"DESC: {desc}", ""]
+
+        # Handle different result types
+        if hasattr(result, "__dict__"):
+            # Dataclass or object with attributes
+            for key, value in vars(result).items():
+                if not key.startswith("_"):
+                    lines.append(f"  {key}: {value}")
+        elif isinstance(result, dict):
+            for key, value in result.items():
+                lines.append(f"  {key}: {value}")
+        else:
+            lines.append(f"  Result: {result}")
+
+        return "\n".join(lines)
 
     # =========================================================================
     # RESPONSE FORMATTERS
