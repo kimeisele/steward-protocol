@@ -18,13 +18,6 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-# MAHA COMPUTE INTEGRATION: Attractor-based steering
-from vibe_core.mahamantra.protocols._maha_compute import (
-    ATTRACTOR_FIELD,
-    ATTRACTOR_FIXED,
-    AttractorType,
-    MahaComputeProtocol,
-)
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.protocols.mahajanas.janaka import (
     ExecutionResult,
@@ -38,23 +31,6 @@ from vibe_core.scheduling.in_memory import InMemoryScheduler
 from vibe_core.scheduling.task import Task as SchedulerTask
 
 logger = logging.getLogger("JANAKA_SERVICE")
-
-# =============================================================================
-# ATTRACTOR STEERING CONSTANTS (from Bhagavad Gita Chapter 18)
-# =============================================================================
-# Attractor 18 = Fixed Point = "sarva-dharmān parityajya" (BG 18.66)
-#   → STABLE: Keep current priority (no change)
-# Attractor 99 = Dominant Cycle = Activity, movement
-#   → ACCELERATE: Boost priority by 1 (faster execution)
-# Attractor 136 = Field (T(16)) = Material nature without observer
-#   → DELIBERATE: Lower priority by 1 (more thoughtful execution)
-# =============================================================================
-
-_ATTRACTOR_PRIORITY_DELTA = {
-    ATTRACTOR_FIXED: 0,  # 18: Stable - no change
-    99: -1,  # 99: Accelerate - boost priority (lower number = higher prio)
-    ATTRACTOR_FIELD: 1,  # 136: Deliberate - lower priority (higher number = lower prio)
-}
 
 
 class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
@@ -95,14 +71,7 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
         priority: TaskPriority = TaskPriority.NORMAL,
         sovereign_id: str = "",
     ) -> str:
-        """
-        Submit a task for execution with ATTRACTOR-BASED STEERING.
-
-        The MahaCompute attractor influences priority:
-        - Attractor 18 (fixed): Stable execution, no priority change
-        - Attractor 99 (cycle): Accelerate, boost priority by 1
-        - Attractor 136 (field): Deliberate, lower priority by 1
-        """
+        """Submit a task for execution."""
         prio_map = {
             TaskPriority.CRITICAL: 0,
             TaskPriority.HIGH: 1,
@@ -112,28 +81,6 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
         }
         int_priority = prio_map.get(priority, 2)
 
-        # === MAHA COMPUTE STEERING ===
-        # Compute attractor and adjust priority dynamically
-        steering_applied = False
-        attractor_used = None
-        try:
-            from vibe_core.di import ServiceRegistry
-
-            if ServiceRegistry.is_registered(MahaComputeProtocol):
-                maha_service = ServiceRegistry.get(MahaComputeProtocol)
-                # Compute with task-derived seed for deterministic yet varied results
-                seed = hash(name) % 137
-                result = maha_service.compute_now(seed=seed)
-                attractor_used = result.attractor
-
-                # Apply attractor-based priority delta
-                delta = _ATTRACTOR_PRIORITY_DELTA.get(attractor_used, 0)
-                int_priority = max(0, min(3, int_priority + delta))  # Clamp to 0-3
-                steering_applied = True
-
-        except Exception as e:
-            logger.debug(f"MahaCompute steering unavailable: {e}")
-
         task = SchedulerTask(
             task_id=f"task_{int(datetime.now().timestamp() * 1000)}",
             agent_id=sovereign_id or "system",
@@ -142,11 +89,7 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
         )
 
         task_id = self._scheduler.submit_task(task)
-
-        if steering_applied:
-            logger.info(f"👑 JANAKA: Task {name} ({task_id}) | attractor={attractor_used} → priority={int_priority}")
-        else:
-            logger.info(f"👑 JANAKA: Accepted task {name} ({task_id})")
+        logger.info(f"👑 JANAKA: Accepted task {name} ({task_id})")
 
         return task_id
 
