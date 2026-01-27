@@ -89,10 +89,19 @@ from vibe_core.mahamantra.protocols._gad import (
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PARAMPARA
 
+# =============================================================================
+# GITA 13.35 INTEGRATION - ShadowOracle (MANDATORY PRE-FILTER)
+# =============================================================================
+from vibe_core.mahamantra.reactor.shadow_oracle import (
+    ShadowOracle,
+    get_shadow_oracle,
+)
+
 # Import types from protocol (SSOT)
 from vibe_core.mahamantra.reactor.shadow_protocol import (
     RETURN_POSITION,
     SWITCH_POSITION,
+    OracleValidationResult,
     ShadowReactorFactoryProtocol,
     ShadowReactorListenerProtocol,
     ShadowReactorProtocol,
@@ -231,6 +240,14 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
         # Fold results collected during PRASADAM phase
         self._fold_results: List[SamanaFold] = []
+
+        # =====================================================================
+        # GITA 13.35 INTEGRATION - ShadowOracle (MANDATORY PRE-FILTER)
+        # =====================================================================
+        # The Oracle validates Parampara BEFORE every computation.
+        # "Without authentic Guru, true knowledge is not possible."
+        self._oracle: ShadowOracle = get_shadow_oracle()
+        self._latest_validation: OracleValidationResult | None = None
 
     # =========================================================================
     # PROTOCOL PROPERTIES
@@ -411,6 +428,19 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         position = effective_position
 
         # =====================================================================
+        # GITA 13.35: MANDATORY PRE-FILTER (ShadowOracle)
+        # =====================================================================
+        # "kṣetra-kṣetrajñayor evam antaraṁ jñāna-cakṣuṣā"
+        # "Those who see with eyes of knowledge the difference..."
+        #
+        # The Oracle validates Parampara BEFORE any computation.
+        # This is HARDCODED - cannot be bypassed. The seed is derived
+        # from tick position and cycle for deterministic validation.
+        # =====================================================================
+        oracle_seed = (tick_state["tick"] * 37 + effective_position) % 137
+        self._latest_validation = self._oracle.validate(oracle_seed)
+
+        # =====================================================================
         # PARAMPARA VERIFICATION (CHAITANYA SINGULARITY)
         # =====================================================================
         # Verified against EFFECTIVE position (Personal Parampara)
@@ -541,11 +571,24 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
         SAMANA INTEGRATION:
         Collects fold results from TaskKernels via SamanaBridge.
+
+        GITA 13.35 INTEGRATION:
+        Backfolds Oracle validation into state during PRASADAM phase.
         """
         if not self.is_authorized():
             return  # BLOCKED
 
         position = state["position"]
+
+        # =====================================================================
+        # GITA 13.35: ORACLE BACKFOLD (Knowledge integration)
+        # =====================================================================
+        # During PRASADAM (grace phase), fold Oracle insight into state.
+        # This completes the Yajna cycle: Bhoga → Validation → Prasadam
+        if self._latest_validation is not None:
+            folded_state = self._oracle.backfold(self._latest_validation, state)
+            # Update mutable state with backfolded dissonance_report
+            state["dissonance_report"] = folded_state["dissonance_report"]
 
         # =====================================================================
         # SAMANA FOLD - Collect results from TaskKernels
@@ -666,6 +709,38 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     # BHAVA STATE (Intent Vector - Grace Scaling)
     # =========================================================================
 
+    # =========================================================================
+    # GITA 13.35 STATE (Oracle Validation)
+    # =========================================================================
+
+    @property
+    def oracle(self) -> ShadowOracle:
+        """Access the ShadowOracle for manual validation."""
+        return self._oracle
+
+    @property
+    def latest_validation(self) -> OracleValidationResult | None:
+        """Get the latest Oracle validation result."""
+        return self._latest_validation
+
+    @property
+    def is_parampara_validated(self) -> bool:
+        """Check if latest tick was Parampara-validated (Gita 13.35)."""
+        if self._latest_validation is None:
+            return False
+        return self._latest_validation["parampara_validated"]
+
+    @property
+    def parampara_channel(self) -> int:
+        """Get the Parampara channel from latest validation (-1 if void)."""
+        if self._latest_validation is None:
+            return -1
+        return self._latest_validation["parampara_channel"]
+
+    # =========================================================================
+    # BHAVA STATE (Intent Vector - Grace Scaling)
+    # =========================================================================
+
     @property
     def bhava(self) -> Bhava:
         return self._bhava
@@ -768,6 +843,13 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             "lagna": self._lagna,
             # SAMANA integration
             "samana_bridge": self._samana_bridge.discover(),
+            # GITA 13.35 integration
+            "oracle": {
+                "enabled": True,
+                "principle": "Gita 13.35 - Parampara mandatory pre-filter",
+                "latest_validated": self.is_parampara_validated,
+                "latest_channel": self.parampara_channel,
+            },
         }
 
     def test_satyam(self) -> bool:
@@ -1123,4 +1205,8 @@ __all__ = [
     "shadow",
     # Orbital Alias
     "OrbitalShadowReactor",
+    # Gita 13.35 Integration (ShadowOracle)
+    "ShadowOracle",
+    "get_shadow_oracle",
+    "OracleValidationResult",
 ]

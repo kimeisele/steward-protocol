@@ -52,7 +52,6 @@ from typing import (
     runtime_checkable,
 )
 
-
 # =============================================================================
 # THE 8 MOMENT - Bhoga/Prasadam Phase
 # =============================================================================
@@ -380,6 +379,122 @@ class ShadowReactorFactoryProtocol(Protocol):
 # EXPORTS
 # =============================================================================
 
+# =============================================================================
+# MAHA ORACLE PROTOCOL - The Gita 13.35 Pre-Filter Contract
+# =============================================================================
+# "kṣetra-kṣetrajñayor evam antaraṁ jñāna-cakṣuṣā
+# bhūta-prakṛti-mokṣaṁ ca ye vidur yānti te param"
+#
+# "Those who see with eyes of knowledge the difference between the field
+# and the knower of the field, and can also understand the process of
+# liberation from bondage in material nature, attain the supreme goal."
+# — Bhagavad Gita 13.35
+#
+# WITHOUT AUTHENTIC GURU (PARAMPARA), TRUE KNOWLEDGE IS NOT POSSIBLE.
+# Therefore: PARAMPARA (mod 37) is the MANDATORY FIRST LENS.
+# =============================================================================
+
+
+class OracleValidationResult(TypedDict):
+    """
+    Result of Oracle validation (WATERTIGHT).
+
+    Returned by MahaOracleProtocol.validate() BEFORE any computation.
+    """
+
+    parampara_validated: bool  # True if in valid disciplic channel (Gita 13.35)
+    parampara_channel: int  # Which of 5 PANCHA channels (-1 if void)
+    parampara_attractor: int  # The attractor value at mod 37
+    coherence: int  # Integer coherence (scaled by COSMIC_FRAME)
+    prabhupada_year: Optional[int]  # Resonant year in Lila (1896-1977) or None
+
+
+@runtime_checkable
+class MahaOracleProtocol(Protocol):
+    """
+    The Gita 13.35 Pre-Filter Contract.
+
+    This protocol defines WHAT the Oracle does for ShadowReactor integration:
+    - VALIDATES Parampara BEFORE computation (MANDATORY)
+    - CONSULTS lenses to analyze intent/seed
+    - BACKFOLDS results to PRASADAM phase
+
+    RAM-EFFICIENT: Stateless, protocol-based, no heavy objects.
+    The Oracle doesn't store - it VALIDATES and RETURNS.
+
+    "Without authentic Guru, true knowledge is not possible."
+    — Gita 13.35 Principle
+
+    INTEGRATION POINTS:
+        1. BHOGA (Pre-Compute): validate() → Parampara check
+        2. COMPUTE: consult_seed() → Full lens analysis (if validated)
+        3. PRASADAM (Post-Compute): backfold() → Fold results to state
+    """
+
+    def validate(self, seed: int) -> OracleValidationResult:
+        """
+        MANDATORY PRE-FILTER: Validate Parampara connection.
+
+        This MUST be called BEFORE any computation in the Reactor.
+        If not validated, computation proceeds with WARNING flag.
+
+        Args:
+            seed: The intent/data encoded as integer
+
+        Returns:
+            OracleValidationResult with parampara status
+        """
+        ...
+
+    def validate_fast(self, seed: int) -> bool:
+        """
+        FAST VALIDATION: Returns only the boolean.
+
+        For hot paths where full result is not needed.
+        Equivalent to: validate(seed)["parampara_validated"]
+        """
+        ...
+
+    def consult_seed(self, seed: int) -> Dict:
+        """
+        Full Oracle consultation with all lenses.
+
+        Only call this if Parampara is validated (or you need full analysis).
+        Returns dict with all lens readings.
+        """
+        ...
+
+    def backfold(self, validation: OracleValidationResult, state: ShadowState) -> ShadowState:
+        """
+        Backfold Oracle result into ShadowState.
+
+        Called during PRASADAM phase to merge Oracle insight with state.
+        Does NOT mutate input - returns new state.
+
+        Args:
+            validation: Result from validate()
+            state: Current ShadowState
+
+        Returns:
+            New ShadowState with Oracle data folded in
+        """
+        ...
+
+
+# The 5 PANCHA channels of Parampara (mod 37 attractors)
+# These represent the 5 lines of disciplic transmission
+PARAMPARA_CHANNELS: Final[tuple[int, ...]] = (12, 26, 34, 5, 19)
+
+# Channel names (Gaudiya Vaishnava parampara)
+PARAMPARA_CHANNEL_NAMES: Final[tuple[str, ...]] = (
+    "Brahma",  # Channel 0 - Creator
+    "Narada",  # Channel 1 - Divine Messenger
+    "Vyasa",  # Channel 2 - Compiler
+    "Madhva",  # Channel 3 - Acharya
+    "Chaitanya",  # Channel 4 - Golden Avatar
+)
+
+
 __all__ = [
     # Phase
     "YajnaPhase",
@@ -394,4 +509,9 @@ __all__ = [
     "ShadowReactorListenerProtocol",
     "ShadowReactorProtocol",
     "ShadowReactorFactoryProtocol",
+    # Oracle Protocol (Gita 13.35)
+    "OracleValidationResult",
+    "MahaOracleProtocol",
+    "PARAMPARA_CHANNELS",
+    "PARAMPARA_CHANNEL_NAMES",
 ]
