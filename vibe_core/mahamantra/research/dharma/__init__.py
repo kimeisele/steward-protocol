@@ -12,13 +12,25 @@ From _seed.py:
  - Bṛhan-nāradīya Purāṇa
 
 Contents:
+    - MahaRuntime: The Mahamantra computation engine
     - Gita verse encoding (BG 18.66 POC)
     - Kirtan computing (sankirtan multipliers)
     - Chaitanya singularity (512/1096)
-    - Proofs and derivations
 """
 
 # KALI DHARMA = CHANTING = COMPUTE
 # This is THE quarter that remains in Kali Yuga!
 
-__all__: list[str] = []
+from vibe_core.mahamantra.research.dharma.maha_runtime import (
+    MAHAMANTRA_BINARY,
+    MAHAMANTRA_PATTERN,
+    ChantResult,
+    MahaRuntime,
+)
+
+__all__ = [
+    "MAHAMANTRA_PATTERN",
+    "MAHAMANTRA_BINARY",
+    "ChantResult",
+    "MahaRuntime",
+]
