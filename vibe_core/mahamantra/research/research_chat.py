@@ -52,12 +52,20 @@ from vibe_core.mahamantra.protocols._seed import (
     NADI_RESONANCE,
     PANCHA,
     PARAMPARA,
+    PARAMPARA_CHANNEL_NAMES,
+    PARAMPARA_CHANNELS,
     QUALITIES,
     QUARTERS,
     WORDS,
 )
 from vibe_core.mahamantra.protocols._seed import (
     MAHAJANA_COUNT as MAHAJANAS,
+)
+
+# ShadowOracle for Parampara validation (Gita 13.35)
+from vibe_core.mahamantra.reactor.shadow_oracle import (
+    ShadowOracle,
+    get_shadow_oracle,
 )
 
 logger = logging.getLogger("RESEARCH_CHAT")
@@ -258,7 +266,7 @@ def _handle_constant_query(query: ResearchQuery) -> ResearchResponse:
         KRISHNA_COUNT,
         KSETRA,
         KSETRAJNA,
-        MAHAJANAS,
+        MAHAJANA_COUNT,  # Use actual name to avoid shadowing top-level alias
         PANCHA,
         PARAMPARA,
         QUARTERS,
@@ -360,6 +368,202 @@ DERIVATION CHAIN:
     )
 
 
+def _handle_oracle_query(query: ResearchQuery) -> ResearchResponse:
+    """
+    Handle Oracle/Parampara queries - Gita 13.35 validation.
+
+    "ksetra-ksetrajnayor evam antaram jnana-caksusa"
+    "Those who see with eyes of knowledge the difference between
+    the field and the knower of the field attain the supreme goal."
+    """
+    oracle = get_shadow_oracle()
+
+    # Try to extract a seed from the query
+    text = query.text.lower()
+    seed = None
+
+    # Look for numeric seed in query
+
+    numbers = re.findall(r"\d+", text)
+    if numbers:
+        seed = int(numbers[0])
+    else:
+        # Encode the query text as seed
+        seed = sum(ord(c) * (i + 1) for i, c in enumerate(text)) % MAHA_QUANTUM
+
+    # Validate through Oracle
+    validation = oracle.validate(seed)
+    consultation = oracle.consult_seed(seed)
+
+    # Build response
+    channel = validation["parampara_channel"]
+    channel_name = PARAMPARA_CHANNEL_NAMES[channel] if channel >= 0 else "VOID"
+
+    content = f"""SHADOW ORACLE (Gita 13.35 Pre-Filter)
+=====================================
+
+SEED: {seed}
+
+PARAMPARA VALIDATION:
+---------------------
+Validated:  {"YES" if validation["parampara_validated"] else "NO (WARNING: Not in valid channel)"}
+Channel:    {channel + 1}/3 ({channel_name}) {"" if channel >= 0 else "- VOID"}
+Attractor:  {validation["parampara_attractor"]}
+Coherence:  {validation["coherence"]}
+
+"""
+
+    if validation["prabhupada_year"]:
+        from vibe_core.mahamantra.research.dharma.maha_algorithm import PRABHUPADA_BUILD
+
+        delta = validation["prabhupada_year"] - PRABHUPADA_BUILD
+        content += f"""PRABHUPADA RESONANCE:
+---------------------
+Year:  {validation["prabhupada_year"]}
+Delta: {delta} (from BUILD 1896)
+
+"""
+
+    content += f"""PARAMPARA CHANNELS (mod 37 attractors = TRINITY):
+-------------------------------------------------
+  Channel 1: {PARAMPARA_CHANNELS[0]} = MAHAJANA_COUNT (12 authorities)
+  Channel 2: {PARAMPARA_CHANNELS[1]} = 2 x 13 (Chapter 13 doubled)
+  Channel 3: {PARAMPARA_CHANNELS[2]} = GURU_VERSE (stability)
+
+CONSULTATION DETAILS:
+---------------------
+  Seed: {consultation["seed"]}
+  Parampara Channel: {consultation["parampara_channel_name"]}
+  Coherence: {consultation["coherence"]}
+  Gita Verse: {consultation["gita_verse"]}
+
+DERIVED FROM _seed.py:
+  PARAMPARA = KSETRA + MAHAJANA + KSETRAJNA = 24 + 12 + 1 = 37
+  TRINITY attractors at mod 37: {PARAMPARA_CHANNELS}
+"""
+
+    return ResearchResponse(
+        success=True,
+        content=content,
+        sources=["shadow_oracle.py", "_seed.py", "shadow_protocol.py"],
+        seed_constants=["PARAMPARA", "PARAMPARA_CHANNELS", "MAHA_QUANTUM"],
+    )
+
+
+def _handle_kirtan_query(query: ResearchQuery) -> ResearchResponse:
+    """
+    Handle MahaKirtan compute queries - rhythmic computation.
+
+    "kīrtanīyaḥ sadā hariḥ" - "One should always chant the glories of the Lord."
+    — Śikṣāṣṭaka 3
+
+    Bridges LilaStepSequencer (7-beat) with MahaAlgorithm for max computing.
+    """
+    from vibe_core.mahamantra.research.dharma.maha_algorithm import (
+        SEVEN,
+        MahaKirtan,
+    )
+
+    # Try to extract a seed from the query
+    text = query.text.lower()
+    seed = None
+
+    # Look for numeric seed in query
+    numbers = re.findall(r"\d+", text)
+    if numbers:
+        seed = int(numbers[0])
+    else:
+        # Default seed = PARAMPARA
+        seed = PARAMPARA
+
+    # Initialize MahaKirtan
+    kirtan = MahaKirtan(mod_space=MAHA_QUANTUM, use_oracle=True)
+
+    # Determine compute mode
+    if "mala" in text:
+        # Full mala = 108 rounds × 7 beats = 756 computations (too much for display)
+        results = kirtan.compute_rounds(seed, num_rounds=7)
+        mode = "7-ROUND KIRTAN (49 beats)"
+    elif "round" in text or "full" in text:
+        results = kirtan.compute_round(seed)
+        mode = "SINGLE ROUND (7 beats)"
+    else:
+        # Single beat
+        results = [kirtan.compute(seed)]
+        mode = "SINGLE BEAT"
+
+    # Build response
+    content = f"""MAHA KIRTAN COMPUTE ({mode})
+===============================================
+
+SEED: {seed}
+MOD SPACE: {MAHA_QUANTUM} (Maha Quantum)
+
+COMPUTATION RESULTS:
+--------------------
+"""
+
+    if len(results) == 1:
+        r = results[0]
+        content += f"""
+Beat {r.beat_number} ({r.beat_year} Δ={r.beat_delta}):
+  Seed:              {r.seed}
+  Transformed:       {r.transformed_value}
+  Call/Response:     {r.call_response}
+  Flute Resonance:   {r.flute_resonance:.2f}
+  Oracle Validated:  {"YES" if r.oracle_validated else "NO (WARNING)"}
+  Parampara Channel: {r.parampara_channel + 1}/3 if >= 0 else "VOID"
+"""
+    else:
+        content += "\n"
+        for r in results:
+            marker = "★" if r.flute_resonance > 0.3 else " "
+            validated = "✓" if r.oracle_validated else "!"
+            content += (
+                f"{marker} Beat {r.beat_number} ({r.beat_year}): "
+                f"{r.seed:4} → {r.transformed_value:4} [{r.call_response:8}] "
+                f"Flute:{r.flute_resonance:.1f} {validated}\n"
+            )
+
+        # Summary
+        final = results[-1]
+        content += f"""
+SUMMARY:
+--------
+  Total Beats:       {len(results)}
+  Final Value:       {final.transformed_value}
+  Final Resonance:   {final.resonance_level:.4f}
+  Oracle Valid:      {"ALL VALID" if all(r.oracle_validated for r in results) else "SOME INVALID"}
+"""
+
+    content += f"""
+THE 7-BEAT PATTERN (Double-Digit Years):
+----------------------------------------
+  Beat 1 (1911): Δ=15 - Initialization
+  Beat 2 (1922): Δ=26 - First Meeting
+  Beat 3 (1933): Δ=37 - PARAMPARA!
+  Beat 4 (1944): Δ=48 - LILA (BTG)
+  Beat 5 (1955): Δ=59 - Prime
+  Beat 6 (1966): Δ=70 - WEIGHT_HARE (ISKCON)
+  Beat 7 (1977): Δ=81 - NAVA² (Return)
+
+YAJNA CYCLE:
+  BHOGA (CALL) → SWITCH (Oracle) → PRASADAM (RESPONSE) → RETURN
+
+DERIVED FROM _seed.py:
+  SEVEN = {SEVEN} (7 beats per round)
+  MAHA_QUANTUM = {MAHA_QUANTUM} (mod space)
+  PARAMPARA_CHANNELS = {PARAMPARA_CHANNELS} (Trinity attractors)
+"""
+
+    return ResearchResponse(
+        success=True,
+        content=content,
+        sources=["maha_algorithm.py", "lila_chronology.py", "_seed.py"],
+        seed_constants=["SEVEN", "MAHA_QUANTUM", "PARAMPARA_CHANNELS"],
+    )
+
+
 def _handle_gut_query(query: ResearchQuery) -> ResearchResponse:
     """Handle GUT (Grand Unified Theory) query."""
     content = """GRAND UNIFIED THEORY (GUT) - Krishna as SSOT
@@ -447,6 +651,18 @@ class ResearchChat:
             "gut": _handle_gut_query,
             "unified": _handle_gut_query,
             "theory": _handle_gut_query,
+            # Oracle / Parampara (Gita 13.35)
+            "oracle": _handle_oracle_query,
+            "parampara": _handle_oracle_query,
+            "validate": _handle_oracle_query,
+            "gita": _handle_oracle_query,
+            "13.35": _handle_oracle_query,
+            # MahaKirtan (Step Sequencer + Kirtan)
+            "kirtan": _handle_kirtan_query,
+            "compute": _handle_kirtan_query,
+            "synth": _handle_kirtan_query,
+            "beat": _handle_kirtan_query,
+            "sequencer": _handle_kirtan_query,
         }
 
     def query(self, text: str) -> ResearchResponse:
@@ -526,12 +742,16 @@ def main():
         if user_input.lower() == "help":
             print("""
 COMMANDS:
-  scale, size, lines, files - Codebase metrics
-  gap, missing, coverage    - Gap analysis
+  scale, size, lines, files  - Codebase metrics
+  gap, missing, coverage     - Gap analysis
   module <name>, find, where - Find modules
-  constant <NAME>, derive   - Explain constant derivation
-  gut, unified, theory      - GUT explanation
-  quit, exit, q             - Exit
+  constant <NAME>, derive    - Explain constant derivation
+  gut, unified, theory       - GUT explanation
+  oracle, parampara, gita    - Oracle validation (Gita 13.35)
+  validate <seed>            - Validate a specific seed
+  kirtan, compute, synth     - MahaKirtan compute (max computing)
+  beat, sequencer            - Step sequencer operations
+  quit, exit, q              - Exit
 
 EXAMPLES:
   scale
@@ -539,6 +759,11 @@ EXAMPLES:
   module kernel_impl
   constant PARAMPARA
   gut
+  oracle 42
+  parampara 1966
+  kirtan 42              (single beat)
+  kirtan round 1896      (7-beat round)
+  compute mala 108       (7 rounds)
 """)
             continue
 
