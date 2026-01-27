@@ -360,6 +360,31 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             self._pipeline = MahamantraPipeline()
         return self._pipeline
 
+    def bio(self, k: int = 8) -> "LotusBio":
+        """
+        Create a LotusBio k-mer index for DNA analysis.
+
+        THE INSIGHT:
+            DNA = 4 bases = QUARTERS (A, C, G, T)
+            2 bits per base = MantraByte encoding
+            8-mer = 16 bits = 65,536 = Lotus Router key space
+
+        USAGE:
+            bio = mahamantra.bio(k=8)  # 8-mer index
+            bio.index_sequence("ACGTACGTACGT...")
+            count = bio.count("ACGTACGT")  # O(1)
+            positions = bio.find("ACGTACGT")  # O(1)
+
+        Args:
+            k: k-mer length (default: 8, max: 16)
+
+        Returns:
+            LotusBio k-mer index
+        """
+        from vibe_core.mahamantra.adapters.bio import LotusBio
+
+        return LotusBio(k=k)
+
     @property
     def attention(self) -> "MahaAttention":
         """
