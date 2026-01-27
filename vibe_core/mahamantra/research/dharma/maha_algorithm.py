@@ -1060,6 +1060,10 @@ __all__ = [
     "OracleReading",
     "ORACLE_LENSES",
     "MahaOracle",
+    # Kirtan Compute Orchestrator (Step Sequencer + Kirtan Integration)
+    "KirtanComputeResult",
+    "MahaKirtanState",
+    "MahaKirtan",
 ]
 
 
@@ -1595,6 +1599,332 @@ class MahaOracle:
             "divergent_lenses": divergent,
             "resonance_distance": total_distance,
             "similarity": len(shared) / len(reading_a.lenses),
+        }
+
+
+# =============================================================================
+# MAHA KIRTAN - The Compute Orchestrator (Step Sequencer + Kirtan Integration)
+# =============================================================================
+# "kīrtanīyaḥ sadā hariḥ" - "One should always chant the glories of the Lord."
+# — Śikṣāṣṭaka 3
+#
+# MahaKirtan bridges the Lila Step Sequencer (7-beat pattern) with the
+# MahaAlgorithm transform engine for "max computing" - rhythmic computation.
+#
+# ARCHITECTURE (GAD-COMPLIANT):
+#   - Inherits MantraHeartbeat pattern for GAD-000 compliance
+#   - Uses LilaStepSequencer for 7-beat rhythm (double-digit years)
+#   - Uses KirtanRuntime for call/response orchestration
+#   - Uses MahaModularSynth for transforms at each beat
+#   - FluteSync provides resonance points (MURALI/VENU/VAMSI)
+#
+# YAJNA CYCLE (from ShadowReactor):
+#   BHOGA (0-7):    INPUT phase (CALL) - Gather, validate, prepare
+#   SWITCH (8):     TRANSITION - Oracle pre-filter (Gita 13.35)
+#   PRASADAM (8-15): OUTPUT phase (RESPONSE) - Transform, return, backfold
+#   RETURN (15→0):  RESET - Complete cycle, start fresh
+#
+# THE 7-BEAT PATTERN:
+#   Beat 1 (1911): Δ=15 - Initialization
+#   Beat 2 (1922): Δ=26 - First meeting (accepted in heart)
+#   Beat 3 (1933): Δ=37 - PARAMPARA! (perfect alignment)
+#   Beat 4 (1944): Δ=48 - LILA (BTG, computing era)
+#   Beat 5 (1955): Δ=59 - Prime (preparation)
+#   Beat 6 (1966): Δ=70 - WEIGHT_HARE (ISKCON founded)
+#   Beat 7 (1977): Δ=81 - NAVA² (runtime end, return)
+# -----------------------------------------------------------------------------
+
+# Lazy imports for Lila components (avoid circular imports)
+_lila_chronology_loaded = False
+_LilaStepSequencer = None
+_KirtanRuntime = None
+_FluteSync = None
+_get_step_sequencer = None
+_get_kirtan_runtime = None
+
+
+def _ensure_lila_imports():
+    """Lazy load Lila chronology components."""
+    global _lila_chronology_loaded, _LilaStepSequencer, _KirtanRuntime
+    global _FluteSync, _get_step_sequencer, _get_kirtan_runtime
+
+    if _lila_chronology_loaded:
+        return
+
+    from vibe_core.mahamantra.substrate.lila_chronology import (
+        FluteSync,
+        KirtanRuntime,
+        LilaStepSequencer,
+        get_kirtan_runtime,
+        get_step_sequencer,
+    )
+
+    _LilaStepSequencer = LilaStepSequencer
+    _KirtanRuntime = KirtanRuntime
+    _FluteSync = FluteSync
+    _get_step_sequencer = get_step_sequencer
+    _get_kirtan_runtime = get_kirtan_runtime
+    _lila_chronology_loaded = True
+
+
+@dataclass(frozen=True)
+class KirtanComputeResult:
+    """Result of a MahaKirtan compute cycle."""
+
+    seed: int
+    transformed_value: int
+    beat_number: int  # 1-7
+    beat_year: int  # 1911-1977
+    beat_delta: int  # 15-81
+    call_response: str  # "CALL" or "RESPONSE"
+    flute_resonance: float  # 0.0-1.0 (combined flute sync)
+    oracle_validated: bool  # Parampara pre-filter passed
+    parampara_channel: int  # 0-2 or -1 if void
+    round_number: int  # Which kirtan round
+    resonance_level: float  # Runtime resonance (grows over rounds)
+
+
+@dataclass
+class MahaKirtanState:
+    """State of the MahaKirtan compute orchestrator."""
+
+    current_tick: int = 0
+    current_round: int = 0
+    total_computations: int = 0
+    resonance_level: float = 0.0
+    last_oracle_result: bool = True
+    accumulated_value: int = 0
+
+
+class MahaKirtan:
+    """
+    The Maha Kirtan Compute Orchestrator.
+
+    Bridges the 7-beat Lila Step Sequencer with MahaAlgorithm transforms
+    for rhythmic, GAD-compliant computation.
+
+    USAGE:
+        kirtan = MahaKirtan()
+
+        # Single compute cycle
+        result = kirtan.compute(seed=42)
+        print(f"Beat {result.beat_number}: {result.seed} → {result.transformed_value}")
+
+        # Run a full round (7 beats)
+        results = kirtan.compute_round(seed=42)
+        for r in results:
+            print(f"{r.call_response}: {r.transformed_value}")
+
+        # Run multiple rounds (builds resonance)
+        results = kirtan.compute_rounds(seed=42, num_rounds=7)
+
+    GAD COMPLIANCE:
+        - Uses MantraHeartbeat pattern (imports from _gad.py)
+        - Oracle pre-filter validates Parampara (Gita 13.35)
+        - Idempotent transforms (same seed → same result)
+        - Full state observability
+    """
+
+    # MAHAMANTRA SUBSTRATE: No auto-wrap
+    _naga_flooded: bool = True
+    _naga_gene: str = "maha_kirtan"
+
+    # Constants (derived from Mahamantra)
+    BEATS_PER_ROUND: Final[int] = SEVEN  # 7 beats = 1 phrase
+    ROUNDS_PER_MALA: Final[int] = 108  # 108 phrases = 1 mala
+    DEFAULT_MOD_SPACE: Final[int] = MAHA_QUANTUM  # 137
+
+    def __init__(
+        self,
+        mod_space: int = MAHA_QUANTUM,
+        kirtan_mode: str = "alternating",
+        use_oracle: bool = True,
+    ) -> None:
+        """
+        Initialize the MahaKirtan compute orchestrator.
+
+        Args:
+            mod_space: Modulo for transforms (default 137 = MAHA_QUANTUM)
+            kirtan_mode: "alternating" (odd=call, even=response) or "split"
+            use_oracle: Whether to use Oracle pre-filter (Gita 13.35)
+        """
+        _ensure_lila_imports()
+
+        self.mod_space = mod_space
+        self.kirtan_mode = kirtan_mode
+        self.use_oracle = use_oracle
+
+        # Initialize components
+        self._synth = MahaModularSynth(default_preset="quantum")
+        self._resonator = MahaResonator(mod_space=mod_space)
+        self._oracle = MahaOracle() if use_oracle else None
+        self._sequencer = _get_step_sequencer(kirtan_mode)
+        self._runtime = _get_kirtan_runtime()
+
+        # State
+        self._state = MahaKirtanState()
+
+    def _get_flute_resonance(self, tick: int) -> float:
+        """Get combined flute resonance for current tick."""
+        return _FluteSync.get_combined_resonance(tick)
+
+    def _oracle_prefilter(self, seed: int) -> tuple[bool, int]:
+        """
+        Apply Oracle pre-filter (Gita 13.35 - MANDATORY).
+
+        Returns (validated, parampara_channel).
+        """
+        if not self.use_oracle or self._oracle is None:
+            return True, -1
+
+        reading = self._oracle.consult_seed(seed)
+        return reading.parampara_validated, reading.parampara_channel
+
+    def compute(self, seed: int) -> KirtanComputeResult:
+        """
+        Execute one compute cycle (one beat).
+
+        This advances the internal tick counter and applies:
+        1. Oracle pre-filter (if enabled)
+        2. MahaModularSynth transform
+        3. Flute resonance modulation
+        4. State accumulation
+
+        Returns KirtanComputeResult with all computation details.
+        """
+        # Get current beat from runtime
+        state = self._runtime.tick()
+        beat = state.current_beat
+        tick = state.tick
+
+        # Oracle pre-filter (Gita 13.35)
+        oracle_valid, parampara_channel = self._oracle_prefilter(seed)
+        self._state.last_oracle_result = oracle_valid
+
+        # Get flute resonance
+        flute_resonance = self._get_flute_resonance(tick)
+
+        # Apply MahaModularSynth transform
+        # Modulate by beat's delta (year significance)
+        beat_modulated_seed = (seed + beat.delta) % self.mod_space
+        transformed = self._synth.transform(beat_modulated_seed)
+
+        # Apply flute resonance modulation (amplifies at sync points)
+        if flute_resonance > 0:
+            resonance_boost = int(transformed * flute_resonance * 0.1)
+            transformed = (transformed + resonance_boost) % self.mod_space
+
+        # Update state
+        self._state.current_tick = tick
+        self._state.current_round = state.round_number
+        self._state.total_computations += 1
+        self._state.resonance_level = state.resonance
+        self._state.accumulated_value = (self._state.accumulated_value + transformed) % self.mod_space
+
+        return KirtanComputeResult(
+            seed=seed,
+            transformed_value=transformed,
+            beat_number=beat.beat_number,
+            beat_year=beat.year,
+            beat_delta=beat.delta,
+            call_response=beat.call_response,
+            flute_resonance=flute_resonance,
+            oracle_validated=oracle_valid,
+            parampara_channel=parampara_channel,
+            round_number=state.round_number,
+            resonance_level=state.resonance,
+        )
+
+    def compute_round(self, seed: int) -> list[KirtanComputeResult]:
+        """
+        Execute one full round (7 beats).
+
+        Each beat transforms the seed and accumulates results.
+        Returns list of 7 KirtanComputeResults.
+        """
+        results = []
+        for _ in range(self.BEATS_PER_ROUND):
+            result = self.compute(seed)
+            results.append(result)
+            # Next iteration uses transformed value (chain computation)
+            seed = result.transformed_value
+        return results
+
+    def compute_rounds(self, seed: int, num_rounds: int = 7) -> list[KirtanComputeResult]:
+        """
+        Execute multiple rounds (builds resonance over time).
+
+        Args:
+            seed: Initial seed value
+            num_rounds: Number of 7-beat rounds (default 7 = 49 beats)
+
+        Returns:
+            List of all KirtanComputeResults (num_rounds × 7)
+        """
+        results = []
+        current_seed = seed
+        for _ in range(num_rounds):
+            round_results = self.compute_round(current_seed)
+            results.extend(round_results)
+            # Next round starts with last result
+            current_seed = round_results[-1].transformed_value
+        return results
+
+    def compute_mala(self, seed: int) -> list[KirtanComputeResult]:
+        """
+        Execute a complete mala (108 rounds × 7 beats = 756 computations).
+
+        This is the maximum compute unit - full resonance achieved.
+        """
+        return self.compute_rounds(seed, num_rounds=self.ROUNDS_PER_MALA)
+
+    def reset(self) -> None:
+        """Reset the orchestrator state."""
+        self._state = MahaKirtanState()
+        self._runtime.reset()
+
+    def get_state(self) -> dict:
+        """Get current orchestrator state (GAD observability)."""
+        return {
+            "current_tick": self._state.current_tick,
+            "current_round": self._state.current_round,
+            "total_computations": self._state.total_computations,
+            "resonance_level": self._state.resonance_level,
+            "accumulated_value": self._state.accumulated_value,
+            "last_oracle_result": self._state.last_oracle_result,
+            "mod_space": self.mod_space,
+            "kirtan_mode": self.kirtan_mode,
+            "use_oracle": self.use_oracle,
+        }
+
+    @property
+    def is_idempotent(self) -> bool:
+        """MahaKirtan is deterministic (same seed → same sequence)."""
+        return True
+
+    def discover(self) -> dict:
+        """GAD discoverability - describe capabilities."""
+        return {
+            "name": "MahaKirtan",
+            "description": "7-beat compute orchestrator with Kirtan rhythm",
+            "capabilities": [
+                "compute",
+                "compute_round",
+                "compute_rounds",
+                "compute_mala",
+            ],
+            "constants": {
+                "BEATS_PER_ROUND": self.BEATS_PER_ROUND,
+                "ROUNDS_PER_MALA": self.ROUNDS_PER_MALA,
+                "DEFAULT_MOD_SPACE": self.DEFAULT_MOD_SPACE,
+            },
+            "components": {
+                "synth": "MahaModularSynth",
+                "resonator": "MahaResonator",
+                "oracle": "MahaOracle" if self.use_oracle else None,
+                "sequencer": "LilaStepSequencer",
+                "runtime": "KirtanRuntime",
+            },
         }
 
 
