@@ -50,10 +50,18 @@ from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
     HALVES,
     HARE_COUNT,
+    KSETRAJNA,
     MAHA_QUANTUM,
+    MAHAJANA_COUNT,
     NADI_RESONANCE,
     NAVA,
+    PANCHA,
+    POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
+    POSITION_SUM_TOTAL,
     QUARTERS,
+    SEVEN,
     TEN,
     WORDS,
 )
@@ -210,6 +218,79 @@ assert TRANSCENDENTAL_1096 == HALVES**TEN + NADI_RESONANCE, "1024 + 72 = 1096"
 
 
 # =============================================================================
+# ADSR ENVELOPE (Derived from binary pattern - gita_verse_text.py)
+# =============================================================================
+# Binary: HARE=0, NAME=1 → Pattern 01011100 01011100
+#
+# GENESIS (1-4):  0,1,0,1 = 5 = PANCHA → 3 transitions = ATTACK
+# DHARMA (5-8):   1,1,0,0 = 12 = MAHAJANA → 1 transition = DECAY
+# KARMA (9-12):   0,1,0,1 = 5 = PANCHA → 3 transitions = SUSTAIN
+# MOKSHA (13-16): 1,1,0,0 = 12 = MAHAJANA → 1 transition = RELEASE
+
+# Binary pattern (derived, not hardcoded)
+BINARY_PATTERN: Final[tuple[int, ...]] = tuple(0 if name == "H" else 1 for name in PATTERN)
+
+# ADSR values from binary decimal conversion
+ADSR_ATTACK: Final[int] = PANCHA  # 5 (0101 binary = oscillating)
+ADSR_DECAY: Final[int] = MAHAJANA_COUNT  # 12 (1100 binary = settling)
+ADSR_SUSTAIN: Final[int] = PANCHA  # 5 (0101 binary = oscillating)
+ADSR_RELEASE: Final[int] = MAHAJANA_COUNT  # 12 (1100 binary = settling)
+
+# Verify ADSR derivation
+assert ADSR_ATTACK == ADSR_SUSTAIN == PANCHA, "Active phases = PANCHA"
+assert ADSR_DECAY == ADSR_RELEASE == MAHAJANA_COUNT, "Passive phases = MAHAJANA"
+
+# ADSR phase mapping
+PHASE_TO_ADSR: Final[dict[Phase, str]] = {
+    Phase.KSETRAJNA: "ATTACK",
+    Phase.KRISHNA: "DECAY",
+    Phase.PRAKRITI: "SUSTAIN",
+    Phase.KARMA: "RELEASE",
+}
+
+
+# =============================================================================
+# POSITION SUM WEIGHTS (The transformation weights from _seed.py)
+# =============================================================================
+# These are DERIVED from counting positions in Mahamantra where each name appears:
+#   HARE:    positions 1,3,7,8,9,11,15,16 → sum = 70 = SEVEN × TEN
+#   KRISHNA: positions 2,4,5,6           → sum = 17 = PRIME
+#   RAMA:    positions 10,12,13,14       → sum = 49 = SEVEN²
+
+WEIGHT_HARE: Final[int] = POSITION_SUM_HARE  # 70
+WEIGHT_KRISHNA: Final[int] = POSITION_SUM_KRISHNA  # 17
+WEIGHT_RAMA: Final[int] = POSITION_SUM_RAMA  # 49
+
+# Verify weights
+assert WEIGHT_HARE == SEVEN * TEN, "HARE weight = 7 × 10 = 70"
+assert WEIGHT_KRISHNA == POSITION_SUM_KRISHNA, "KRISHNA weight = 17 (prime)"
+assert WEIGHT_RAMA == SEVEN * SEVEN, "RAMA weight = 7² = 49"
+assert WEIGHT_HARE + WEIGHT_KRISHNA + WEIGHT_RAMA == POSITION_SUM_TOTAL, "Total = 136"
+
+# Operation to weight mapping
+OPERATION_WEIGHT: Final[dict[Operation, int]] = {
+    Operation.HARE: WEIGHT_HARE,
+    Operation.KRISHNA: WEIGHT_KRISHNA,
+    Operation.RAMA: WEIGHT_RAMA,
+}
+
+
+# =============================================================================
+# TRIANGULAR NUMBER FUNCTION (T(n) = n(n+1)/2)
+# =============================================================================
+
+
+def triangular(n: int) -> int:
+    """Compute triangular number T(n) = n(n+1)/2."""
+    return n * (n + KSETRAJNA) // HALVES
+
+
+# Verify key triangular numbers
+assert triangular(WORDS) == POSITION_SUM_TOTAL, "T(16) = 136"
+assert triangular(WORDS) + KSETRAJNA == MAHA_QUANTUM, "T(16) + 1 = 137"
+
+
+# =============================================================================
 # THE MAHA ALGORITHM (16 Steps)
 # =============================================================================
 
@@ -294,6 +375,102 @@ class MahaAlgorithm16:
         """Total bits in 1096-bit model."""
         return self.TOTAL_BITS_1096
 
+    # =========================================================================
+    # TRANSFORMATION METHODS (The actual algorithm!)
+    # =========================================================================
+
+    def transform(self, seed: int) -> int:
+        """
+        Apply the 16-step Maha transformation to a seed value.
+
+        TRANSFORMATION RULES (derived from Mahamantra):
+        - HARE (INPUT):    value += T(position) mod WEIGHT_HARE
+        - KRISHNA (COMPUTE): value *= position mod WEIGHT_KRISHNA
+        - RAMA (OUTPUT):   value = value mod WEIGHT_RAMA × SEVEN
+
+        Returns the transformed value.
+        """
+        value = seed
+
+        for step in self.execute():
+            t_pos = triangular(step.position)
+
+            if step.name == "H":
+                # HARE = INPUT = expansion (add triangular, mod 70)
+                value = (value + t_pos) % WEIGHT_HARE
+            elif step.name == "K":
+                # KRISHNA = COMPUTE = transformation (multiply, mod 17)
+                value = (value * step.position) % WEIGHT_KRISHNA
+            else:  # R
+                # RAMA = OUTPUT = completion (mod 49, scale by 7)
+                value = (value % WEIGHT_RAMA) * SEVEN
+
+        return value
+
+    def transform_with_trace(self, seed: int) -> tuple[int, list[dict]]:
+        """
+        Transform with full trace of each step.
+
+        Returns (final_value, trace) where trace is a list of step details.
+        """
+        value = seed
+        trace: list[dict] = []
+
+        for step in self.execute():
+            t_pos = triangular(step.position)
+            prev_value = value
+            adsr = PHASE_TO_ADSR[step.phase]
+
+            if step.name == "H":
+                value = (value + t_pos) % WEIGHT_HARE
+                op_desc = f"+T({step.position})={t_pos} mod {WEIGHT_HARE}"
+            elif step.name == "K":
+                value = (value * step.position) % WEIGHT_KRISHNA
+                op_desc = f"×{step.position} mod {WEIGHT_KRISHNA}"
+            else:  # R
+                value = (value % WEIGHT_RAMA) * SEVEN
+                op_desc = f"mod {WEIGHT_RAMA} × {SEVEN}"
+
+            trace.append(
+                {
+                    "position": step.position,
+                    "name": step.name,
+                    "phase": step.phase.name,
+                    "adsr": adsr,
+                    "operation": step.operation.value,
+                    "t_pos": t_pos,
+                    "before": prev_value,
+                    "after": value,
+                    "formula": op_desc,
+                }
+            )
+
+        return value, trace
+
+    def classify(self, value: int) -> str:
+        """
+        Classify a value using mod 17 (POSITION_SUM_KRISHNA).
+
+        Returns classification based on remainder:
+        - 0: CLASSICAL (stable, like proton)
+        - 1: QUANTUM (observer present, like α⁻¹)
+        - 3: TRINITY (unstable, 3-decay)
+        - 9: NAVA (complex processes)
+        - other: MIXED
+        """
+        remainder = value % WEIGHT_KRISHNA
+
+        if remainder == 0:
+            return "CLASSICAL"
+        elif remainder == KSETRAJNA:
+            return "QUANTUM"
+        elif remainder == 3:  # TRINITY
+            return "TRINITY"
+        elif remainder == NAVA:
+            return "NAVA"
+        else:
+            return f"MIXED({remainder})"
+
 
 # =============================================================================
 # VERIFICATION
@@ -342,6 +519,20 @@ __all__ = [
     "TRANSCENDENTAL_1096",
     "BITS_PER_STEP_512",
     "BITS_PER_STEP_1096",
+    # ADSR Envelope
+    "BINARY_PATTERN",
+    "ADSR_ATTACK",
+    "ADSR_DECAY",
+    "ADSR_SUSTAIN",
+    "ADSR_RELEASE",
+    "PHASE_TO_ADSR",
+    # Position Weights
+    "WEIGHT_HARE",
+    "WEIGHT_KRISHNA",
+    "WEIGHT_RAMA",
+    "OPERATION_WEIGHT",
+    # Functions
+    "triangular",
     # Types
     "Phase",
     "Operation",
@@ -363,46 +554,68 @@ __all__ = [
 # =============================================================================
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("MAHA ALGORITHM - The 16-Step Execution Model")
-    print("=" * 60)
+    print("=" * 70)
+    print("MAHA ALGORITHM v2.0 - The 16-Step Transformation Engine")
+    print("=" * 70)
     print()
 
     algo = MahaAlgorithm16()
 
-    print("THE 3 OPERATIONS (derived from NAME meaning):")
-    for op in Operation:
-        print(f"  {op.name:8} → {op.value:7} → {OPERATION_MEANING[op]}")
+    print("POSITION WEIGHTS (derived from Mahamantra position sums):")
+    print(f"  HARE:    {WEIGHT_HARE} = SEVEN × TEN = 7 × 10")
+    print(f"  KRISHNA: {WEIGHT_KRISHNA} = PRIME (indivisible)")
+    print(f"  RAMA:    {WEIGHT_RAMA} = SEVEN² = 7 × 7")
+    print(f"  TOTAL:   {WEIGHT_HARE + WEIGHT_KRISHNA + WEIGHT_RAMA} = T(16)")
     print()
 
-    print("THE 4 PHASES (quarter structure):")
+    print("ADSR ENVELOPE (derived from binary pattern):")
     for phase in Phase:
-        print(f"  {phase.value}. {phase.name:10} → {PHASE_FUNCTION[phase]}")
+        adsr = PHASE_TO_ADSR[phase]
+        print(f"  {phase.name:10} → {adsr:8}")
     print()
 
-    print("THE 16 STEPS:")
-    print("-" * 60)
+    print("BINARY PATTERN: ", "".join(str(b) for b in BINARY_PATTERN))
+    print(f"  First half:  01011100 = {ADSR_ATTACK} (PANCHA)")
+    print(f"  Second half: 01011100 = {ADSR_SUSTAIN} (PANCHA)")
+    print()
+
+    print("THE 16 STEPS WITH TRANSFORMATION:")
+    print("-" * 70)
     current_phase = None
     for step in algo.execute():
         if step.phase != current_phase:
             current_phase = step.phase
-            print(f"\n  [{current_phase.name}]")
-        print(f"    {step.position:2}: {step.name} → {step.operation.value:7} → {step.function}")
+            adsr = PHASE_TO_ADSR[current_phase]
+            print(f"\n  [{current_phase.name}] - {adsr}")
+        weight = OPERATION_WEIGHT[step.operation]
+        t_pos = triangular(step.position)
+        print(
+            f"    {step.position:2}: {step.name} → {step.operation.value:7} "
+            f"(weight={weight:2}, T({step.position})={t_pos:3})"
+        )
     print()
 
-    # Count operations
-    hare_ops = sum(1 for s in algo.execute() if s.name == "H")
-    krishna_ops = sum(1 for s in algo.execute() if s.name == "K")
-    rama_ops = sum(1 for s in algo.execute() if s.name == "R")
-    print("OPERATION COUNTS (from Mahamantra):")
-    print(f"  HARE (INPUT):    {hare_ops} steps = HARE_COUNT")
-    print(f"  KRISHNA (COMPUTE): {krishna_ops} steps = KRISHNA_COUNT")
-    print(f"  RAMA (OUTPUT):   {rama_ops} steps = RAMA_COUNT")
+    print("TRANSFORMATION DEMO:")
+    print("-" * 70)
+    test_seeds = [0, 1, 17, 137, 1836]
+    for seed in test_seeds:
+        result = algo.transform(seed)
+        classification = algo.classify(result)
+        print(f"  transform({seed:4}) = {result:4}  [{classification}]")
+    print()
+
+    print("DETAILED TRACE (seed=137):")
+    print("-" * 70)
+    final, trace = algo.transform_with_trace(137)
+    for t in trace[:8]:  # First 8 steps
+        print(f"  Step {t['position']:2} [{t['adsr']:8}]: {t['before']:4} {t['formula']:20} → {t['after']:4}")
+    print("  ...")
+    print(f"  Final result: {final} [{algo.classify(final)}]")
     print()
 
     print("BIT MODELS:")
-    print(f"  512-bit model:  {algo.total_bits_512} bits = 16 × 32")
-    print(f"  1096-bit model: {algo.total_bits_1096} bits = 8 × 137")
+    print(f"  512-bit:  {algo.total_bits_512} = 16 × 32 = 2^9")
+    print(f"  1096-bit: {algo.total_bits_1096} = 8 × 137 = 1024 + 72")
     print()
 
     print("Hare Krishna!")
