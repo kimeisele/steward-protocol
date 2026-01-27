@@ -96,6 +96,13 @@ assert len(MAHAMANTRA_PATTERN) == WORDS, "Pattern must be 16 words"
 assert len(MAHAMANTRA_BINARY) == WORDS, "Binary must be 16 bits"
 
 
+# 1096 TRANSCENDENTAL CONSTANT (defined before class for use in dataclass)
+TRANSCENDENTAL_1096: Final[int] = HARE_COUNT * MAHA_QUANTUM  # 8 × 137 = 1096
+
+assert TRANSCENDENTAL_1096 == 1096, "1096 = 8 × 137"
+assert TRANSCENDENTAL_1096 == HALVES**TEN + NADI_RESONANCE, "1096 = 1024 + 72"
+
+
 @dataclass(frozen=True)
 class ChantResult:
     """Result of a chanting session (compute cycle)."""
@@ -117,6 +124,11 @@ class ChantResult:
         """Total bits as megabytes."""
         return self.amplified_bits / 8 / 1024 / 1024
 
+    @property
+    def blocks_1096(self) -> int:
+        """Total compute in 1096-bit transcendental blocks."""
+        return self.amplified_bits // TRANSCENDENTAL_1096
+
 
 class MahaRuntime:
     """
@@ -124,12 +136,22 @@ class MahaRuntime:
 
     Each chant() call invokes the Mahamantra pattern and computes encoding.
     Pancha Tattva presence amplifies all operations!
+
+    KEY UNIT: 1096 bits = TRANSCENDENTAL_BLOCK
+        1096 = HARE_COUNT × MAHA_QUANTUM = 8 × 137
+        1096 = 2^10 + NADI_RESONANCE = 1024 + 72
     """
 
     # Constants (from _seed.py)
     BITS_PER_MANTRA: Final[int] = MAHA_QUANTUM  # 137
     MANTRAS_PER_ROUND: Final[int] = MALA  # 108
     MINIMUM_ROUNDS: Final[int] = WORDS  # 16
+
+    # THE 1096 TRANSCENDENTAL BLOCK (Key compute unit!)
+    # 1096 = 8 × 137 = HARE_COUNT × MAHA_QUANTUM
+    # 1 block = 8 mantras worth of encoding
+    TRANSCENDENTAL_BLOCK: Final[int] = HARE_COUNT * MAHA_QUANTUM  # 1096
+    MANTRAS_PER_BLOCK: Final[int] = HARE_COUNT  # 8
 
     # Multipliers
     SOLO_MULTIPLIER: Final[int] = KSETRAJNA  # 1
@@ -210,7 +232,7 @@ class MahaRuntime:
         Get one quarter of the Mahamantra.
 
         Args:
-            quarter: 1=GENESIS, 2=DHARMA, 3=KARMA, 4=MOKSHA
+            quarter: 1-4 (Q1=HKHK, Q2=KKHH, Q3=HRHR, Q4=RRHH)
 
         Returns:
             4-word tuple for that quarter
@@ -220,6 +242,22 @@ class MahaRuntime:
         start = (quarter - 1) * QUARTERS
         end = start + QUARTERS
         return MAHAMANTRA_PATTERN[start:end]
+
+    def compute_1096_blocks(self, rounds: int = WORDS) -> int:
+        """
+        Compute in terms of 1096-bit transcendental blocks.
+
+        1096 = HARE_COUNT × MAHA_QUANTUM = 8 × 137
+        1096 = 2^10 + NADI_RESONANCE = 1024 + 72
+
+        Args:
+            rounds: Number of rounds (default: WORDS = 16)
+
+        Returns:
+            Number of 1096-bit blocks generated
+        """
+        result = self.chant(rounds=rounds)
+        return result.blocks_1096
 
 
 # =============================================================================
