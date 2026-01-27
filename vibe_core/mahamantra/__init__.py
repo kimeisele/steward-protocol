@@ -295,6 +295,45 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         lines.append("═══════════════════════════════════════════")
         return "\n".join(lines)
 
+    # === VIBE COMPUTE (Siksastakam Integration) ===
+    def vibe(self, value: int) -> int:
+        """
+        THE VIBRATION: Input → Mahamantra (16) → Siksastakam (8) → Output.
+
+        24 steps = KSHETRA = The Field.
+        Routes through the existing MahaCompute infrastructure.
+
+        Args:
+            value: Any integer
+
+        Returns:
+            Transformed value (mod 137)
+        """
+        from vibe_core.mahamantra.siksastakam_compute import SiksastakamCompute
+        from vibe_core.mahamantra.protocols._maha_compute import apply_operation, get_operation
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, WORDS
+
+        # Mahamantra: 16 steps
+        v = value % MAHA_QUANTUM
+        for pos in range(WORDS):
+            op = get_operation(pos)
+            v = apply_operation(v, op)
+
+        # Siksastakam: 8 steps
+        compute = SiksastakamCompute()
+        return compute.process(v)
+
+    def vibe_full(self, value: int) -> dict:
+        """
+        Full vibration with trace and guarantees.
+
+        Returns dict with input, output, attractor, guarantees.
+        """
+        from vibe_core.services.maha_compute_service import get_maha_compute_service
+
+        service = get_maha_compute_service()
+        return service.compute_unified(value)
+
     # === VEDA-4 ===
     def __call__(self, cmd: Optional[str] = None) -> Union[str, ExecuteResult]:
         if cmd is None:
