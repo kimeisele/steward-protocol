@@ -195,6 +195,10 @@ class VedaExplorer:
     Deterministic first, LLM fallback.
     Routes to existing CLI commands (no duplication).
 
+    NOW INTEGRATED WITH:
+    - MahamantraPipeline (Genesis → Dharma → Karma → Moksha)
+    - ChatIndriya (Srotra/Vak sense organs for IO)
+
     Usage:
         explorer = VedaExplorer()
         result = explorer.process("chant 108 times")
@@ -207,8 +211,16 @@ class VedaExplorer:
         self._llm_available = False
         self._history: List[Dict[str, str]] = []  # Conversational memory
 
+        # === NEW: Pipeline Integration ===
+        self._pipeline = None
+        self._indriya = None
+
         # Lazy load LLM
         self._init_llm()
+
+        # Lazy load pipeline and indriya
+        self._init_pipeline()
+        self._init_indriya()
 
     def _init_llm(self) -> None:
         """Initialize LLM if available."""
@@ -222,6 +234,32 @@ class VedaExplorer:
             self._llm_available = self._llm.provider != "mock" and self._llm.api_key
         except ImportError:
             self._llm_available = False
+
+    def _init_pipeline(self) -> None:
+        """Initialize MahamantraPipeline for core processing."""
+        try:
+            from vibe_core.mahamantra.adapters.pipeline import MahamantraPipeline
+            self._pipeline = MahamantraPipeline()
+        except ImportError:
+            self._pipeline = None
+
+    def _init_indriya(self) -> None:
+        """Initialize ChatIndriya for IO with Vrtti tracking."""
+        try:
+            from vibe_core.services.chat_indriya import get_chat_indriya
+            self._indriya = get_chat_indriya("veda_explorer")
+        except ImportError:
+            self._indriya = None
+
+    @property
+    def pipeline(self):
+        """Access the MahamantraPipeline."""
+        return self._pipeline
+
+    @property
+    def indriya(self):
+        """Access the ChatIndriya sense organ."""
+        return self._indriya
 
     @property
     def mode(self) -> ExplorerMode:
@@ -843,6 +881,101 @@ Beispiele:
                 intent="creative",
                 mode=self._mode.value,
                 response=f"Fehler: {e}",
+                data={"error": str(e)},
+                llm_used=False,
+            )
+
+    # =========================================================================
+    # PIPELINE-ENHANCED PROCESSING
+    # =========================================================================
+
+    def process_with_pipeline(self, text: str) -> VedaResult:
+        """
+        Process input through the full MahamantraPipeline.
+
+        UNIFIED FLOW:
+            Input → Genesis(hash) → Dharma(transform) → Karma(route) → Moksha(complete)
+
+        This maps to Veda-4:
+            SHABDA → GENESIS (intent hashing)
+            ARTHA  → DHARMA (meaning extraction)
+            PRATYAYA → KARMA (trust/validation)
+            KARMA  → MOKSHA (action execution)
+
+        Args:
+            text: User input
+
+        Returns:
+            VedaResult with pipeline data
+        """
+        if not self._pipeline:
+            # Fallback to standard processing
+            return self.process(text)
+
+        try:
+            # === GENESIS: Hash the intent ===
+            genesis = self._pipeline.genesis(text)
+
+            # === DHARMA: Transform to find attractor ===
+            dharma = self._pipeline.dharma(genesis.hash_value)
+
+            # === KARMA: Route based on hash (determine intent) ===
+            # Use hash to determine action
+            intent_key = genesis.hash_value % 7  # Map to 7 intents
+            intent_map = {
+                0: VedaIntent.CHANT,
+                1: VedaIntent.LISTEN,
+                2: VedaIntent.RESOLVE,
+                3: VedaIntent.SERVE,
+                4: VedaIntent.SCAN,
+                5: VedaIntent.STATUS,
+                6: VedaIntent.HELP,
+            }
+
+            # But first, try deterministic parsing (it's more accurate)
+            parsed = self._parse_intent_deterministic(text)
+            if parsed.intent == VedaIntent.UNKNOWN:
+                # Use pipeline-derived intent as fallback
+                parsed = ParsedIntent(
+                    intent=intent_map.get(intent_key, VedaIntent.UNKNOWN),
+                    params=self._extract_params(text, intent_map.get(intent_key, VedaIntent.UNKNOWN)),
+                    raw_input=text,
+                    confidence=0.5,  # Pipeline confidence
+                    llm_used=False,
+                )
+
+            # Store routing info
+            karma = self._pipeline.karma(dharma.attractor, payload={
+                "input": text,
+                "intent": parsed.intent.value,
+                "hash": genesis.hash_value,
+                "attractor": dharma.attractor,
+            })
+
+            # === MOKSHA: Execute and complete ===
+            # Execute the intent
+            result = self._execute_intent(parsed)
+
+            # Record completion
+            moksha = self._pipeline.moksha(dharma.attractor)
+
+            # Enrich result with pipeline data
+            result["data"]["pipeline"] = {
+                "genesis_hash": genesis.hash_value,
+                "dharma_attractor": dharma.attractor,
+                "karma_key": karma.key,
+                "moksha_beat": moksha.beat,
+                "moksha_resonance": moksha.resonance,
+            }
+
+            return result
+
+        except Exception as e:
+            return VedaResult(
+                success=False,
+                intent="pipeline_error",
+                mode=self._mode.value,
+                response=f"Pipeline-Fehler: {e}",
                 data={"error": str(e)},
                 llm_used=False,
             )
