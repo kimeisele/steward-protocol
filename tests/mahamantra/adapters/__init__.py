@@ -1,1 +1,1 @@
-"""Adapter Tests - The Contract."""
+"""Tests for Mahamantra adapters."""
