@@ -65,6 +65,13 @@ from vibe_core.mahamantra.adapters.synth import (
     SYNTH_PRESETS,
 )
 
+# Classification (Cold Engineering Analysis)
+from vibe_core.mahamantra.adapters.classification import (
+    MahaClassifier,
+    ClassificationResult,
+    ComparisonResult,
+)
+
 __all__ = [
     # Core Compute
     "MahaTransform",
@@ -94,4 +101,8 @@ __all__ = [
     "ResonanceResult",
     "SpectrumResult",
     "SYNTH_PRESETS",
+    # Classification
+    "MahaClassifier",
+    "ClassificationResult",
+    "ComparisonResult",
 ]

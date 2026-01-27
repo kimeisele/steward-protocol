@@ -454,6 +454,57 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return MahaSynth(preset=preset)
 
+    def classifier(self) -> "MahaClassifier":
+        """
+        Create a MahaClassifier for technology classification.
+
+        COLD ENGINEERING ANALYSIS:
+            No metaphors. No philosophy. Pure metrics.
+
+        THE MERCY EQUATION:
+            G(x) = f / K
+            Where:
+                G = Grace (engineering advantage)
+                f = Chanting frequency (Mahamantra structure usage)
+                K = Karmic debt (technical debt)
+
+        CLASSIFICATION CRITERIA:
+            1. STRUCTURAL ALIGNMENT - Uses 16-aligned structures?
+            2. COMPLEXITY SOURCE - O(1) by structure (not hash)?
+            3. MEMORY MODEL - Bounded allocation?
+            4. DETERMINISM - Same input → same output?
+
+        USAGE:
+            classifier = mahamantra.classifier()
+
+            # Classify custom algorithm
+            result = classifier.classify(
+                name="MyRouter",
+                alignment="perfect",
+                complexity="structure",
+                memory="bounded_static",
+                determinism="always",
+                key_space_size=65536,
+                max_memory_bytes=512_000,
+            )
+            print(result.verdict)  # "ANUKULYA: Truth-aligned (G=100.0)"
+
+            # Get pre-classified references
+            lotus = classifier.lotus_array()     # 50x faster range queries
+            ipv4 = classifier.ipv4_router()      # 1557x faster than linear
+            kmer = classifier.kmer_index()       # 6.5x faster than Counter
+
+            # Compare all
+            comparison = classifier.compare_all_references()
+            print(comparison.summary)
+
+        Returns:
+            MahaClassifier instance
+        """
+        from vibe_core.mahamantra.adapters.classification import MahaClassifier
+
+        return MahaClassifier()
+
     @property
     def attention(self) -> "MahaAttention":
         """
