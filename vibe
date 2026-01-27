@@ -23,5 +23,5 @@ fi
 # Get Python version
 PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 
-# Run the launcher with all arguments passed through
-exec python3 vibe_launcher.py "$@"
+# Run the boot entry point with all arguments passed through
+exec python3 boot.py "$@"
