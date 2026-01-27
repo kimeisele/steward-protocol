@@ -550,6 +550,62 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return MahaCompute()
 
+    def compression(self) -> "MahaCompression":
+        """
+        Create a MahaCompression intent engine.
+
+        THE CONTEXT WINDOW SOLUTION:
+            Silicon Valley compresses BITS (Shannon entropy).
+            Maha compresses MEANING (Kolmogorov complexity).
+
+            K(x) = shortest program that GENERATES x
+
+        THE KILLER USE-CASE:
+            AI Agent context windows are EXPENSIVE.
+            100,000 tokens = slow, costly, "lost in the middle"
+
+            MahaCompression extracts the INTENT:
+            - Input: 100,000 lines of logs (chaos)
+            - Output: "System failure due to Rajasic intent" (1 sentence)
+
+        COMPRESSION RATIOS (FROM SCRIPTURE):
+            - Gita: 700 verses / 16 words = 43.75×
+            - Bhagavatam: 18,000 verses / 16 words = 1,125×
+            - All Vedas: 100,000+ verses / 16 words = 6,250×+
+
+        INTENT LEVELS (THE CLASSIFIER):
+            1. TAMAS    - Ignorance → Corrupted execution
+            2. RAJAS    - Passion   → Partial execution
+            3. SATTVA   - Goodness  → Clean execution
+            4. SUDDHA   - Pure      → Divine execution
+
+        USAGE:
+            compressor = mahamantra.compression()
+
+            # Compress text to intent
+            result = compressor.compress("...100k log lines...")
+            print(result.intent_level)        # "RAJAS"
+            print(result.seed)                # 42 (deterministic hash)
+            print(result.compression_ratio)   # 1547.3
+
+            # Encode system state as samskara
+            samskara = compressor.encode_samskara({
+                "user_id": 123,
+                "session_events": [...1000 events...],
+            })
+            print(samskara.seed)              # Compact representation
+
+            # Verify against physics constants
+            verified = compressor.verify_physics(seed=137)
+            print(verified.is_aligned)        # True
+
+        Returns:
+            MahaCompression intent engine
+        """
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+
+        return MahaCompression()
+
     def hardware(self) -> "MahaHardware":
         """
         Create a MahaHardware specification engine.
