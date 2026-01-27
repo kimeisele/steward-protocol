@@ -1199,9 +1199,11 @@ PRABHUPADA_RUNTIME_END: Final[int] = 1977  # Return to spiritual world
 PRABHUPADA_RUNTIME_YEARS: Final[int] = PRABHUPADA_RUNTIME_END - PRABHUPADA_BUILD + 1  # 82
 
 # Key years with special significance (mod resonances)
+# NOTE: 1932 Diksha = T(8) - Prabhupada accepted Guru in heart 1922, formal 1932
 PRABHUPADA_KEY_YEARS: Final[tuple[int, ...]] = (
     1896,  # BUILD - Δ=0 (all VCOs aligned!)
-    1922,  # First meeting Bhaktisiddhanta - Δ=26
+    1922,  # First meeting Bhaktisiddhanta - Δ=26 (accepted in heart)
+    1932,  # DIKSHA (formal initiation) - Δ=36 = T(8) = Triangular of HARE_COUNT!
     1944,  # BTG first issue - Δ=48 = LILA
     1959,  # Sannyasa - Δ=63 = 7×9
     1965,  # Jaladuta - Δ=69
