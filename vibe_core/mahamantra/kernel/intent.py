@@ -43,7 +43,7 @@ from vibe_core.mahamantra.substrate.acintya import (
     ParamparaConnection,
     verify_parampara,
 )
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+from vibe_core.mahamantra import Mahajana, MantraOpCode
 
 
 # =============================================================================

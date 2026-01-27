@@ -223,7 +223,7 @@ class FractalTree(Generic[T]):
         - 16 words (PADA level)
         - Variable aksaras (AKSARA level)
         """
-        from vibe_core.protocols.mahajanas.router import Mahajana
+        from vibe_core.mahamantra import Mahajana
 
         # All 12 Mahajanas
         all_mahajanas = tuple(m.value for m in Mahajana)

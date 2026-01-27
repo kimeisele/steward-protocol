@@ -32,9 +32,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Set
 
-from vibe_core.mahamantra.moksha.yamaraja import YamarajaBase
-from vibe_core.protocols.mahajanas.router import Mahajana
-from vibe_core.protocols.mahajanas.yamaraja.samskara import (
+from vibe_core.mahamantra import Mahajana
+from vibe_core.mahamantra.moksha.yamaraja import (
+    YamarajaBase,
     MigrationManifest,
     MigrationStatus,
     MigrationVerdict,

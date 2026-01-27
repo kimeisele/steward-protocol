@@ -370,7 +370,7 @@ def cli_serve(
     from datetime import datetime
 
     from vibe_core.services.janaka_service import JanakaService
-    from vibe_core.protocols.mahajanas.janaka import TaskPriority
+    from vibe_core.mahamantra.karma.janaka import TaskPriority
 
     # Map priority string to enum (default to normal if empty)
     priority = priority or "normal"

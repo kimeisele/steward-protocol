@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 from vibe_core.mahamantra.moksha.yamaraja import SamskaraService
-from vibe_core.protocols.mahajanas.router import Mahajana
+from vibe_core.mahamantra import Mahajana
 
 
 def main() -> int:
