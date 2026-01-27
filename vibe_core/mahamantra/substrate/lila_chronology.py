@@ -31,7 +31,6 @@ the incarnation of Godhead who constantly sings the names of Krishna."
 — Srimad Bhagavatam 11.5.32
 """
 
-import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, Final, List, Optional, Tuple
@@ -49,6 +48,48 @@ NANDOTSAVA_ENCODED: Final[bool] = True
 
 # The 37 - Parampara count (from _seed.py)
 PARAMPARA: Final[int] = 37
+
+# =============================================================================
+# MULTI-VCO CONSTANTS (The Prime Chain from MahaAlgorithm)
+# =============================================================================
+# Like a synthesizer with multiple VCOs - each modulo is an oscillator
+# Overlapping resonances = Chladni figures in time!
+
+MODULO_KRISHNA: Final[int] = 17  # Position sum Krishna
+MODULO_PARAMPARA: Final[int] = 37  # Disciplic succession
+MODULO_NADI: Final[int] = 73  # 72 Nadis + 1
+MODULO_MALA: Final[int] = 109  # Complete Mala
+MODULO_QUANTUM: Final[int] = 137  # Fine structure constant (α⁻¹)
+
+# The Prime Chain
+PRIME_CHAIN: Final[Tuple[int, ...]] = (17, 37, 73, 109, 137)
+
+# Position Weights from MahaAlgorithm
+WEIGHT_HARE: Final[int] = 70  # Position sum HARE
+WEIGHT_KRISHNA: Final[int] = 17  # Position sum KRISHNA
+WEIGHT_RAMA: Final[int] = 49  # Position sum RAMA
+
+# Mahamantra constants
+SEVEN: Final[int] = 7
+NAVA: Final[int] = 9
+HARE_COUNT: Final[int] = 8
+
+
+def triangular(n: int) -> int:
+    """Compute triangular number T(n) = n(n+1)/2."""
+    return n * (n + 1) // 2
+
+
+def is_triangular(num: int) -> Optional[int]:
+    """Check if num is triangular. Returns n if T(n)=num, else None."""
+    # T(n) = num → n² + n - 2*num = 0 → n = (-1 + sqrt(1 + 8*num)) / 2
+    discriminant = 1 + 8 * num
+    sqrt_disc = int(discriminant**0.5)
+    if sqrt_disc * sqrt_disc == discriminant:
+        n = (-1 + sqrt_disc) // 2
+        if triangular(n) == num:
+            return n
+    return None
 
 
 class LilaPhase(Enum):
@@ -378,6 +419,204 @@ class LilaChronology:
             result.append((year, self.year_to_mantra_word(year)))
         return result
 
+    # =========================================================================
+    # MULTI-VCO SYNTHESIZER INTERFACE
+    # =========================================================================
+    # Like a synthesizer with multiple oscillators - each modulo is a VCO
+    # Overlapping resonances create Chladni figures in time!
+
+    def get_delta(self, year: int) -> int:
+        """Get year delta from BUILD (1896)."""
+        return year - BUILD_YEAR
+
+    def get_multi_vco_resonances(self, year: int) -> Dict[str, int]:
+        """
+        Get resonances for all VCOs (modulos) for a year.
+
+        Returns dict mapping modulo name to remainder.
+        Remainder == 0 means ALIGNED (resonant).
+        """
+        delta = self.get_delta(year)
+        return {
+            "KRISHNA_17": delta % MODULO_KRISHNA,
+            "PARAMPARA_37": delta % MODULO_PARAMPARA,
+            "NADI_73": delta % MODULO_NADI,
+            "MALA_109": delta % MODULO_MALA,
+            "QUANTUM_137": delta % MODULO_QUANTUM,
+        }
+
+    def get_vco_aligned_years(self, modulo: int) -> List[int]:
+        """Get all years where delta % modulo == 0."""
+        return [year for year in range(BUILD_YEAR, RUNTIME_END + 1) if (year - BUILD_YEAR) % modulo == 0]
+
+    def get_triangular_year(self, year: int) -> Optional[int]:
+        """
+        Check if year's delta is a triangular number.
+
+        Returns n if delta = T(n), else None.
+
+        DISCOVERED:
+        - 1924: Δ=28 = T(7)
+        - 1962: Δ=66 = T(11) (First SB volume!)
+        """
+        delta = self.get_delta(year)
+        return is_triangular(delta)
+
+    def get_all_triangular_years(self) -> List[Tuple[int, int]]:
+        """Get all years with triangular deltas. Returns [(year, n), ...]."""
+        result = []
+        for year in range(BUILD_YEAR, RUNTIME_END + 1):
+            n = self.get_triangular_year(year)
+            if n is not None:
+                result.append((year, n))
+        return result
+
+    def get_year_formula(self, year: int) -> Dict[str, object]:
+        """
+        Analyze a year's delta for mathematical patterns.
+
+        DISCOVERED FORMULAS:
+        - 1924: Δ=28 = T(7) = 4×7 = QUARTERS × SEVEN
+        - 1959: Δ=63 = 7×9 = SEVEN × NAVA
+        - 1961: Δ=65 = 37 + 28 = PARAMPARA + T(7)
+        - 1962: Δ=66 = T(11)
+        - 1966: Δ=70 = WEIGHT_HARE
+        - 1968: Δ=72 = 8×9 = HARE_COUNT × NAVA
+        - 1977: Δ=81 = 9² = NAVA²
+        """
+        delta = self.get_delta(year)
+        formulas = []
+
+        # Check triangular
+        n = is_triangular(delta)
+        if n is not None:
+            formulas.append(f"T({n})")
+
+        # Check known weight matches
+        if delta == WEIGHT_HARE:
+            formulas.append("WEIGHT_HARE (70)")
+        if delta == WEIGHT_KRISHNA:
+            formulas.append("WEIGHT_KRISHNA (17)")
+        if delta == WEIGHT_RAMA:
+            formulas.append("WEIGHT_RAMA (49)")
+
+        # Check simple products
+        products = [
+            (SEVEN, NAVA, "SEVEN × NAVA"),
+            (HARE_COUNT, NAVA, "HARE_COUNT × NAVA"),
+            (4, SEVEN, "QUARTERS × SEVEN"),
+        ]
+        for a, b, name in products:
+            if delta == a * b:
+                formulas.append(f"{a} × {b} = {name}")
+
+        # Check squares
+        for base in [SEVEN, HARE_COUNT, NAVA]:
+            if delta == base * base:
+                formulas.append(f"{base}² = {base * base}")
+
+        # Check PARAMPARA combinations
+        if delta > PARAMPARA:
+            remainder = delta - PARAMPARA
+            r_n = is_triangular(remainder)
+            if r_n is not None:
+                formulas.append(f"PARAMPARA + T({r_n}) = 37 + {remainder}")
+
+        return {
+            "year": year,
+            "delta": delta,
+            "formulas": formulas,
+            "factors": [i for i in range(1, delta + 1) if delta % i == 0] if delta > 0 else [0],
+        }
+
+    def maha_transform(self, year: int, mod_space: int = 137) -> int:
+        """
+        Apply MahaAlgorithm 16-step transform to year's delta.
+
+        PATTERN: H K H K | K K H H | H R H R | R R H H
+
+        TRANSFORMATION RULES (derived from _seed.py):
+        - HARE:    value × 7 (SEVEN)
+        - KRISHNA: value + 10 (TEN)
+        - RAMA:    value × value (SQUARING)
+
+        DISCOVERED:
+        - Δ63 (1959 Sannyasa) → 136 = T(16) = THE FIELD!
+        """
+        pattern = "HKHKKKHHHRHRRRHH"
+        ten = 10  # TEN from seed
+        value = self.get_delta(year) % mod_space
+
+        for name in pattern:
+            if name == "H":
+                value = (value * SEVEN) % mod_space
+            elif name == "K":
+                value = (value + ten) % mod_space
+            else:  # R
+                value = (value * value) % mod_space
+
+        return value
+
+    def get_chladni_analysis(self, year: int) -> Dict[str, object]:
+        """
+        Complete Chladni-figure analysis for a year.
+
+        Like sand on a vibrating plate - shows where resonances overlap.
+        """
+        yf = self.get_year(year)
+        if not yf:
+            raise ValueError(f"Year {year} not in chronology")
+
+        delta = self.get_delta(year)
+        resonances = self.get_multi_vco_resonances(year)
+        aligned_vcos = [name for name, rem in resonances.items() if rem == 0]
+
+        return {
+            "year": year,
+            "delta": delta,
+            "phase": yf.phase.name,
+            "mantra_word": self.year_to_mantra_word(year),
+            "vco_resonances": resonances,
+            "aligned_vcos": aligned_vcos,
+            "alignment_count": len(aligned_vcos),
+            "triangular_n": self.get_triangular_year(year),
+            "formulas": self.get_year_formula(year)["formulas"],
+            "maha_transform_137": self.maha_transform(year, 137),
+            "maha_transform_37": self.maha_transform(year, 37),
+        }
+
+
+# =============================================================================
+# HARD DATA: Book Publication Dates (Verifiable Coordinates)
+# =============================================================================
+
+BOOK_PUBLICATIONS: Final[Dict[int, str]] = {
+    1944: "Back to Godhead Magazine (first issue)",
+    1962: "Srimad Bhagavatam Vol 1 (First Canto, Part 1) - Δ=66=T(11)",
+    1963: "Srimad Bhagavatam Vol 2 (First Canto, Part 2)",
+    1964: "Srimad Bhagavatam Vol 3 (First Canto, Part 3)",
+    1968: "Bhagavad-gita As It Is (Macmillan abridged) - Δ=72=8×9",
+    1969: "Teachings of Lord Caitanya, Sri Isopanisad",
+    1970: "KRSNA Book Vol 1, Nectar of Devotion",
+    1972: "Bhagavad-gita As It Is (Complete Edition)",
+    1974: "Sri Caitanya-caritamrta (began)",
+    1975: "Sri Caitanya-caritamrta (completed)",
+}
+
+KEY_EVENTS: Final[Dict[int, str]] = {
+    1896: "BUILD (Appearance - Nandotsava) - Δ=0 (all VCOs aligned!)",
+    1922: "First meeting Bhaktisiddhanta - Δ=26",
+    1924: "Parampara Year 1 - Δ=28=T(7)",
+    1944: "BTG first issue - Δ=48",
+    1959: "Sannyasa initiation - Δ=63=7×9",
+    1961: "Parampara Year 2 - Δ=65=37+T(7)",
+    1962: "SB Vol 1 published - Δ=66=T(11)",
+    1965: "Jaladuta departure/arrival - Δ=69",
+    1966: "ISKCON founded NYC - Δ=70=WEIGHT_HARE",
+    1968: "Gita (Macmillan) - Δ=72=8×9",
+    1977: "RUNTIME END (Vrindavan) - Δ=81=9²",
+}
+
 
 # =============================================================================
 # SINGLETON ACCESS
@@ -405,14 +644,37 @@ def get_lila_chronology() -> LilaChronology:
 # =============================================================================
 
 __all__ = [
+    # Core Constants
     "BUILD_YEAR",
     "RUNTIME_END",
     "RUNTIME_YEARS",
     "PARAMPARA",
+    # Multi-VCO Constants (Prime Chain)
+    "MODULO_KRISHNA",
+    "MODULO_PARAMPARA",
+    "MODULO_NADI",
+    "MODULO_MALA",
+    "MODULO_QUANTUM",
+    "PRIME_CHAIN",
+    # Weights
+    "WEIGHT_HARE",
+    "WEIGHT_KRISHNA",
+    "WEIGHT_RAMA",
+    # Mahamantra Constants
+    "SEVEN",
+    "NAVA",
+    "HARE_COUNT",
+    # Functions
+    "triangular",
+    "is_triangular",
+    "get_phase",
+    # Types
     "LilaPhase",
     "YearFrequency",
     "LilaChronology",
     "get_lila_chronology",
-    "get_phase",
+    # Data
     "PHASE_BOUNDARIES",
+    "BOOK_PUBLICATIONS",
+    "KEY_EVENTS",
 ]
