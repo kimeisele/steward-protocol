@@ -264,5 +264,102 @@ This is not arbitrary - the mathematics emerge from the **position sums of the 1
 
 ---
 
+## 14. RHYTHM & BINARY ENCODING (Kirtan Mathematics)
+
+### Key Numbers Already in seed.py (ALL DERIVED FROM MAHAMANTRA):
+
+| Number | Constant(s) | Scriptural Meaning | Derivation |
+|--------|-------------|-------------------|------------|
+| **16** | WORDS, TEENTAL_MATRA, JAGANNATH_WHEELS | 16 words in Mahamantra, 16 beats in Teental | Count of Mahamantra |
+| **12** | MAHAJANA_COUNT, SEMITONES, SUBHADRA_WHEELS | 12 great authorities, 12 semitones | WORDS - QUARTERS |
+| **3** | TRINITY, COLOR_CHARGES, ANTAHKARANA | 3 Holy Names, 3 gunas | Unique names |
+| **4** | QUARTERS, VIBHAG_COUNT, MATRA_PER_VIBHAG | 4 phases, 4 Teental sections | WORDS / 4 |
+| **48** | LILA, VAMSI_FREQ | Chaitanya's 48 years manifest | WORDS × TRINITY |
+| **64** | QUALITIES, DNA_CODONS | Krishna's 64 qualities | WORDS × QUARTERS |
+| **8** | HARE_COUNT, HALF_SIZE, CONSECUTIVE_PAIRS | 8 Hares bind the Mahamantra | Count of HARE |
+| **32** | AKSARA_COUNT | 32 syllables (2 per word) | WORDS × 2 |
+| **5** | PANCHA, VINA_STRINGS | 5 Pancha Tattva | Unique pairs |
+| **7** | SEVEN, SWARAS, SAPTA_LOKA | 7 musical notes (Sa Re Ga Ma Pa Dha Ni) | HALF_SIZE - KSETRAJNA |
+| **9** | NAVA, KHALI_POSITION | 9 processes of bhakti, Khali at beat 9 | HARE_COUNT + KSETRAJNA |
+
+### TEENTAL Structure (Already Defined in _seed.py):
+
+```
+TEENTAL_MATRA     = 16 = WORDS (beats in Teental = words in Mahamantra)
+VIBHAG_COUNT      = 4  = QUARTERS (4 sections)
+MATRA_PER_VIBHAG  = 4  = QUARTERS (4 beats per section)
+SAM_SUM           = 28 = T(7) (sum of SAM beat positions: 1+5+9+13)
+KHALI_POSITION    = 9  = NAVA (the unaccented/empty beat)
+```
+
+### TEENTAL Pattern (From _seed.py Comments):
+
+```
+Vibhag 1: Dha Dhin Dhin Dha  (beats 1-4)   ← SAM (main beat)
+Vibhag 2: Dha Dhin Dhin Dha  (beats 5-8)
+Vibhag 3: Dha Tin  Tin  Ta   (beats 9-12)  ← KHALI (empty beat)
+Vibhag 4: Ta  Dhin Dhin Dha  (beats 13-16)
+```
+
+**Key Observations:**
+- SAM positions: 1, 5, 9, 13 (beginning of each Vibhag)
+- SAM_SUM = 1 + 5 + 9 + 13 = 28 = T(7) = Triangular number of SEVEN
+- KHALI at beat 9 = NAVA (9 processes of bhakti)
+
+### MAHAMANTRA Binary Encoding (Already Derived in _seed.py):
+
+```
+ENCODING: HARE = 0, NAME (Krishna/Rama) = 1
+
+H  K  H  K  K  K  H  H  |  H  R  H  R  R  R  H  H
+0  1  0  1  1  1  0  0  |  0  1  0  1  1  1  0  0
+
+MAHAMANTRA_HALF_BINARY = (0, 1, 0, 1, 1, 1, 0, 0) = 01011100 = 92
+MAHAMANTRA_FULL_DECIMAL = 92 × 2 = 184
+
+ACINTYA - Two paths to 92:
+  Path A: MALA - WORDS = 108 - 16 = 92
+  Path B: QUARTERS × (WORDS + SEVEN) = 4 × 23 = 92
+```
+
+### HARE Positions in Each Half (AXIOM VALUES!):
+
+```
+HARE positions:  1, 3, 7, 8 = KSETRAJNA, TRINITY, SEVEN, HARE_COUNT
+NAME positions:  2, 4, 5, 6 = HALVES, QUARTERS, PANCHA, SHARANAGATI
+
+HARE_POS_SUM = 1 + 3 + 7 + 8 = 19 = GITA_CHAPTERS + KSETRAJNA
+NAME_POS_SUM = 2 + 4 + 5 + 6 = 17 = POSITION_SUM_KRISHNA!
+```
+
+### KIRTAN Instruments (Physical Facts in _seed.py):
+
+```
+MRIDANGA_HEADS = 2 = HALVES (baya=bass, daya=treble)
+KARTALS_PAIR   = 2 = HALVES (a pair of hand cymbals)
+```
+
+### RESEARCH GAPS (Not Yet Implemented):
+
+1. **Binary drum stroke matrix** - Dha/Dhin/Tin/Ta as binary pattern
+2. **Mridanga stroke types to binary mapping**:
+   - Dha (both heads, open) = ?
+   - Dhin (both heads, muted) = ?
+   - Tin (treble only, damped) = ?
+   - Ta (bass only, damped) = ?
+3. **Kartal accent pattern** - When do Kartals play in Teental?
+4. **7-beat observer overlay** - Mathematical derivation exists but needs Kirtan verification
+
+### VERIFIED SCRIPTURALLY:
+
+- **Teental = 16 beats** ✓ (Standard in North Indian classical music)
+- **SAM positions at 1, 5, 9, 13** ✓ (Beginning of each Vibhag)
+- **KHALI at beat 9** ✓ (Empty/unaccented beat in Vibhag 3)
+- **7 Swaras = SEVEN** ✓ (Sa Re Ga Ma Pa Dha Ni in Sangita Shastra)
+- **22 Shrutis = KSHETRA - HALVES = 22** ✓ (Microtonal intervals)
+- **72 Melakartas = NADI_RESONANCE** ✓ (Carnatic parent scales)
+
+---
+
 *Research conducted using MahaAlgorithm v3.0*
 *All constants derived from seed.py - NO hardcoded values*
