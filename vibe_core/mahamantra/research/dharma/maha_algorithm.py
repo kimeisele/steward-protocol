@@ -1053,6 +1053,11 @@ __all__ = [
     "ResonanceResult",
     "MahaResonator",
     "RESONATOR_PRESETS",
+    # Oracle (Intent-to-Resonance Interface)
+    "OracleLens",
+    "OracleReading",
+    "ORACLE_LENSES",
+    "MahaOracle",
 ]
 
 
@@ -1114,6 +1119,476 @@ __all__ = [
 # mod 137: MAXIMUM     → 8 states (quantum consciousness achieved)
 #
 # =============================================================================
+
+
+# =============================================================================
+# MAHA ORACLE - The Intent-to-Resonance Interface
+# =============================================================================
+# "Like a prompt that gets encoded" - Intent in, Resonance out.
+#
+# GITA 13.35 PRINCIPLE (MANDATORY PRE-FILTER):
+# ============================================
+# "kṣetra-kṣetrajñayor evam antaraṁ jñāna-cakṣuṣā
+# bhūta-prakṛti-mokṣaṁ ca ye vidur yānti te param"
+#
+# "Those who see with eyes of knowledge the difference between the field
+# and the knower of the field, and can also understand the process of
+# liberation from bondage in material nature, attain the supreme goal."
+# — Bhagavad Gita 13.35
+#
+# WITHOUT AUTHENTIC GURU (PARAMPARA), TRUE KNOWLEDGE IS NOT POSSIBLE.
+# Therefore: PARAMPARA (mod 37) is the MANDATORY FIRST LENS.
+# If Parampara validation fails, the Oracle warns but still provides reading.
+#
+# The Oracle uses MULTIPLE MOD-SPACES as "lenses" to view the same intent:
+#   - mod 37:  PARAMPARA (MANDATORY FIRST - disciplic channel, Gita 13.35)
+#   - mod 2:   BINARY (Mridanga/Kartals - rhythm foundation)
+#   - mod 7:   ANNIHILATOR (axioms alone = void)
+#   - mod 10:  PERFECT TETRAD (Gita connection: 0+4+5+9=18)
+#   - mod 17:  KRISHNA (material/classical)
+#   - mod 109: MALA COMPLETE (transcendental)
+#   - mod 137: QUANTUM (maximum diversity)
+#
+# PRABHUPADA RUNTIME (1896-1977):
+# The 82 years of Prabhupada's manifestation are VALID COORDINATES.
+# Intents that resonate with these years have enhanced authenticity.
+#
+# HOLOGRAPHIC PRINCIPLE: Each mod-space reveals different aspects of the
+# same underlying truth. The intent is ONE, the readings are MANY.
+# -----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class OracleLens:
+    """A single lens (mod-space) for viewing an intent."""
+
+    name: str
+    mod_space: int
+    meaning: str
+    resonance: int  # The transformed value in this mod-space
+    is_fixed_point: bool  # Is this value stable under iteration?
+    attractor: int  # What it converges to
+    cycles: int  # How many cycles to converge
+
+
+@dataclass(frozen=True)
+class OracleReading:
+    """Complete oracle reading for an intent."""
+
+    intent: str  # Original intent string
+    seed: int  # Intent encoded as integer
+    lenses: tuple[OracleLens, ...]  # All lens readings
+    gita_resonance: int  # Sum of tetrad-active lenses (relates to 18)
+    primary_attractor: int  # Main attractor at mod 137
+    holographic_factors: tuple[int, ...]  # Factors that appear across lenses
+    interpretation: str  # Human-readable interpretation
+    # GITA 13.35: Parampara validation (MANDATORY PRE-FILTER)
+    parampara_validated: bool  # True if Parampara lens shows valid channel
+    parampara_channel: int  # Which of the 5 PANCHA channels (0-4, or -1 if void)
+    prabhupada_year_resonance: int | None  # If seed resonates with a Lila year (1896-1977)
+
+
+# =============================================================================
+# PRABHUPADA RUNTIME CONSTANTS (Lila Chronology Integration)
+# =============================================================================
+# The 82 years of Prabhupada's manifestation are VALID COORDINATES.
+# Any intent resonating with these years has enhanced authenticity.
+
+PRABHUPADA_BUILD: Final[int] = 1896  # Nandotsava (day after Janmashtami)
+PRABHUPADA_RUNTIME_END: Final[int] = 1977  # Return to spiritual world
+PRABHUPADA_RUNTIME_YEARS: Final[int] = PRABHUPADA_RUNTIME_END - PRABHUPADA_BUILD + 1  # 82
+
+# Key years with special significance (mod resonances)
+# NOTE: 1932 Diksha = T(8) - Prabhupada accepted Guru in heart 1922, formal 1932
+PRABHUPADA_KEY_YEARS: Final[tuple[int, ...]] = (
+    1896,  # BUILD - Δ=0 (all VCOs aligned!)
+    1922,  # First meeting Bhaktisiddhanta - Δ=26 (accepted in heart)
+    1932,  # DIKSHA (formal initiation) - Δ=36 = T(8) = Triangular of HARE_COUNT!
+    1944,  # BTG first issue - Δ=48 = LILA
+    1959,  # Sannyasa - Δ=63 = 7×9
+    1965,  # Jaladuta - Δ=69
+    1966,  # ISKCON founded - Δ=70 = WEIGHT_HARE
+    1977,  # RUNTIME END - Δ=81 = 9²
+)
+
+# The PARAMPARA validation channels (mod 37 has 5 stable states = PANCHA)
+# These represent the 5 channels of disciplic transmission
+PARAMPARA_CHANNELS: Final[tuple[int, ...]] = (12, 26, 34, 5, 19)  # The 5 attractors at mod 37
+
+
+# The sacred lenses (mod-spaces) and their meanings
+# PARAMPARA IS FIRST - MANDATORY PRE-FILTER (Gita 13.35)
+ORACLE_LENSES: Final[tuple[tuple[str, int, str], ...]] = (
+    ("PARAMPARA", PARAMPARA, "MANDATORY: Disciplic channel (Gita 13.35) - 5 states"),
+    ("BINARY", HALVES, "Mridanga rhythm - on/off, beat/rest"),
+    ("AXIOM", SEVEN, "Pure structure - annihilates content"),
+    ("TETRAD", TEN, "Embodied senses - perfect 4 fixed points"),
+    ("KRISHNA", POSITION_SUM_KRISHNA, "All-attractive - material lens"),
+    ("MALA", MALA_COMPLETE, "Complete japa - 8 transcendental states"),
+    ("QUANTUM", MAHA_QUANTUM, "Maximum diversity - 8 quantum states"),
+)
+
+
+class MahaOracle:
+    """
+    The Maha Oracle - Intent-to-Resonance Interface.
+
+    Like an oracle that receives a question (intent) and returns a reading
+    by viewing it through multiple sacred lenses (mod-spaces).
+
+    USAGE:
+        oracle = MahaOracle()
+        reading = oracle.consult("What is the nature of consciousness?")
+        print(reading.interpretation)
+
+        # Or with a numeric seed directly:
+        reading = oracle.consult_seed(42)
+
+    The oracle encodes the intent using Mahamantra weights, then
+    analyzes it through 7 different mod-spaces, revealing the
+    holographic structure of the intent.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the oracle with pre-built resonators."""
+        self._resonators: dict[int, MahaResonator] = {}
+        for _name, mod_space, _meaning in ORACLE_LENSES:
+            self._resonators[mod_space] = MahaResonator(mod_space)
+
+    def encode_intent(self, intent: str) -> int:
+        """
+        Encode an intent string to an integer using Mahamantra weights.
+
+        ENCODING (derived from position sums):
+            - Each character position i contributes: char_value × T(i % 16 + 1)
+            - T(n) = triangular number = n(n+1)/2
+            - Final value modulated by Mahamantra pattern (H=×7, K=+10, R=×7²)
+
+        This creates a deterministic but non-trivial mapping from
+        any string to an integer in the quantum space [0, 137).
+        """
+        if not intent:
+            return 0
+
+        # Phase 1: Position-weighted character sum
+        value = 0
+        for i, char in enumerate(intent):
+            char_val = ord(char)
+            pos = (i % WORDS) + 1  # 1-16 cycle
+            t_pos = triangular(pos)
+            # Apply Mahamantra pattern at this position
+            pattern_char = PATTERN[i % WORDS]
+            if pattern_char == "H":
+                contribution = (char_val * t_pos * SEVEN) % MAHA_QUANTUM
+            elif pattern_char == "K":
+                contribution = (char_val + t_pos + TEN) % MAHA_QUANTUM
+            else:  # R
+                contribution = (char_val * t_pos) % MAHA_QUANTUM
+            value = (value + contribution) % MAHA_QUANTUM
+
+        # Phase 2: One full Maha transform
+        resonator = self._resonators[MAHA_QUANTUM]
+        return resonator.oscillate_once(value)
+
+    def _analyze_lens(self, seed: int, name: str, mod_space: int, meaning: str) -> OracleLens:
+        """Analyze seed through a single lens."""
+        resonator = self._resonators[mod_space]
+        result = resonator.find_attractor(seed)
+
+        return OracleLens(
+            name=name,
+            mod_space=mod_space,
+            meaning=meaning,
+            resonance=seed % mod_space,
+            is_fixed_point=result.cycle_length == 1 and result.cycles_to_converge == 0,
+            attractor=result.attractor,
+            cycles=result.cycles_to_converge,
+        )
+
+    def _find_holographic_factors(self, lenses: tuple[OracleLens, ...]) -> tuple[int, ...]:
+        """
+        Find numbers that appear as resonances across multiple lenses.
+
+        These "holographic factors" indicate deep structural patterns.
+        """
+        resonances = [l.resonance for l in lenses if l.resonance > 0]
+        attractors = [l.attractor for l in lenses if l.attractor > 0]
+        all_values = resonances + attractors
+
+        # Count occurrences
+        counts: dict[int, int] = {}
+        for v in all_values:
+            counts[v] = counts.get(v, 0) + 1
+
+        # Return values appearing more than once
+        factors = sorted([v for v, count in counts.items() if count > 1])
+        return tuple(factors)
+
+    def _interpret(self, reading_data: dict) -> str:
+        """
+        Generate human-readable interpretation of the reading.
+
+        GITA 13.35 PRINCIPLE:
+        The interpretation ALWAYS starts with Parampara validation status.
+        Without authentic Guru, true knowledge is not possible.
+        """
+        lines = []
+
+        # =========================================================================
+        # GITA 13.35: PARAMPARA VALIDATION (MANDATORY FIRST)
+        # =========================================================================
+        parampara_validated = reading_data.get("parampara_validated", False)
+        parampara_channel = reading_data.get("parampara_channel", -1)
+        prabhupada_year = reading_data.get("prabhupada_year")
+
+        if parampara_validated:
+            channel_names = ["Brahma", "Narada", "Vyasa", "Madhva", "Chaitanya"]
+            channel_name = channel_names[parampara_channel] if 0 <= parampara_channel < 5 else "Unknown"
+            lines.append(f"✓ PARAMPARA VALIDATED (Gita 13.35): Channel {parampara_channel + 1}/5 ({channel_name} line)")
+        else:
+            lines.append(
+                "⚠ PARAMPARA WARNING (Gita 13.35): Not in valid disciplic channel. "
+                "Knowledge may be incomplete without authentic Guru connection."
+            )
+
+        # Check Prabhupada year resonance
+        if prabhupada_year:
+            delta = prabhupada_year - PRABHUPADA_BUILD
+            lines.append(f"✓ PRABHUPADA RESONANCE: Year {prabhupada_year} (Δ={delta} from BUILD)")
+            if prabhupada_year in PRABHUPADA_KEY_YEARS:
+                lines.append("   ★ KEY YEAR in Prabhupada's Lila!")
+
+        lines.append("")  # Empty line separator
+
+        # =========================================================================
+        # OTHER LENS INTERPRETATIONS
+        # =========================================================================
+
+        # Check annihilation
+        axiom_lens = reading_data["lenses_by_name"].get("AXIOM")
+        if axiom_lens and axiom_lens.attractor == 0:
+            lines.append("AXIOM: Intent dissolves into void when viewed through pure structure.")
+
+        # Check binary preservation
+        binary_lens = reading_data["lenses_by_name"].get("BINARY")
+        if binary_lens:
+            if binary_lens.attractor == 1:
+                lines.append("BINARY: Observer (Ksetrajna) preserved - consciousness present.")
+            elif binary_lens.attractor == 0:
+                lines.append("BINARY: Returns to void - material manifestation.")
+
+        # Check tetrad (Gita connection)
+        tetrad_lens = reading_data["lenses_by_name"].get("TETRAD")
+        if tetrad_lens:
+            tetrad_meaning = {
+                0: "Void (sunya) - emptiness before creation",
+                4: "Quarters (phases) - time's structure",
+                5: "Pancha (elements) - material foundation",
+                9: "Nava (bhakti) - devotional essence",
+            }
+            if tetrad_lens.attractor in tetrad_meaning:
+                lines.append(f"TETRAD: {tetrad_meaning[tetrad_lens.attractor]}")
+
+        # Check parampara channel details
+        parampara_lens = reading_data["lenses_by_name"].get("PARAMPARA")
+        if parampara_lens:
+            lines.append(
+                f"PARAMPARA: Resonates at {parampara_lens.attractor} "
+                f"(channel {parampara_lens.attractor % PANCHA + 1} of {PANCHA})"
+            )
+
+        # Check quantum attractor
+        quantum_lens = reading_data["lenses_by_name"].get("QUANTUM")
+        if quantum_lens:
+            # Known quantum attractors and their meanings
+            quantum_meanings = {
+                136: "T(16) = The Field - all positions unified",
+                49: "SEVEN² = Rama's power - bliss complete",
+                22: "Shrutis - microtonal harmony",
+                18: "Gita chapters - divine song resonance",
+                87: "Chaitanya resonance - golden avatar",
+            }
+            if quantum_lens.attractor in quantum_meanings:
+                lines.append(f"QUANTUM: {quantum_meanings[quantum_lens.attractor]}")
+            else:
+                lines.append(f"QUANTUM: Unique resonance at {quantum_lens.attractor}")
+
+        # Holographic factors
+        if reading_data["holographic_factors"]:
+            lines.append(
+                f"HOLOGRAPHIC: Factors {reading_data['holographic_factors']} "
+                "appear across multiple lenses - deep structural pattern."
+            )
+
+        return "\n".join(lines) if lines else "No significant patterns detected."
+
+    def _check_prabhupada_year_resonance(self, seed: int) -> int | None:
+        """
+        Check if seed resonates with any Prabhupada Lila year (1896-1977).
+
+        Returns the year if there's a resonance, None otherwise.
+        """
+        # Check if seed directly is a year
+        if PRABHUPADA_BUILD <= seed <= PRABHUPADA_RUNTIME_END:
+            return seed
+
+        # Check if seed mod any relevant number yields a delta that maps to a year
+        delta = seed % PRABHUPADA_RUNTIME_YEARS  # 82 possible deltas
+        potential_year = PRABHUPADA_BUILD + delta
+        if PRABHUPADA_BUILD <= potential_year <= PRABHUPADA_RUNTIME_END:
+            # Additional check: is this a KEY year?
+            if potential_year in PRABHUPADA_KEY_YEARS:
+                return potential_year
+
+        return None
+
+    def _get_parampara_channel(self, attractor: int) -> int:
+        """
+        Determine which of the 5 PANCHA channels the attractor belongs to.
+
+        Returns 0-4 for valid channels, -1 if not in a channel (void).
+        """
+        if attractor in PARAMPARA_CHANNELS:
+            return PARAMPARA_CHANNELS.index(attractor)
+        return -1  # Void - not in any of the 5 channels
+
+    def consult_seed(self, seed: int) -> OracleReading:
+        """
+        Consult the oracle with a numeric seed directly.
+
+        GITA 13.35 PRINCIPLE:
+        The PARAMPARA lens is analyzed FIRST (mandatory pre-filter).
+        Without valid Parampara channel, knowledge is incomplete.
+
+        Returns a complete OracleReading with all lens analyses.
+        """
+        lenses = []
+        lenses_by_name = {}
+
+        # Analyze all lenses (PARAMPARA is FIRST in ORACLE_LENSES)
+        for name, mod_space, meaning in ORACLE_LENSES:
+            lens = self._analyze_lens(seed, name, mod_space, meaning)
+            lenses.append(lens)
+            lenses_by_name[name] = lens
+
+        lenses_tuple = tuple(lenses)
+
+        # =========================================================================
+        # GITA 13.35: PARAMPARA VALIDATION (MANDATORY PRE-FILTER)
+        # =========================================================================
+        parampara_lens = lenses_by_name.get("PARAMPARA")
+        if parampara_lens:
+            parampara_validated = parampara_lens.attractor in PARAMPARA_CHANNELS
+            parampara_channel = self._get_parampara_channel(parampara_lens.attractor)
+        else:
+            parampara_validated = False
+            parampara_channel = -1
+
+        # Check Prabhupada year resonance
+        prabhupada_year = self._check_prabhupada_year_resonance(seed)
+
+        # =========================================================================
+        # OTHER LENS ANALYSES
+        # =========================================================================
+
+        # Calculate Gita resonance (sum of tetrad fixed points active)
+        tetrad_lens = lenses_by_name.get("TETRAD")
+        gita_resonance = tetrad_lens.attractor if tetrad_lens else 0
+
+        # Primary attractor at quantum level
+        quantum_lens = lenses_by_name.get("QUANTUM")
+        primary_attractor = quantum_lens.attractor if quantum_lens else seed % MAHA_QUANTUM
+
+        # Find holographic factors
+        holographic = self._find_holographic_factors(lenses_tuple)
+
+        # Generate interpretation (now includes Parampara validation)
+        reading_data = {
+            "lenses_by_name": lenses_by_name,
+            "holographic_factors": holographic,
+            "parampara_validated": parampara_validated,
+            "parampara_channel": parampara_channel,
+            "prabhupada_year": prabhupada_year,
+        }
+        interpretation = self._interpret(reading_data)
+
+        return OracleReading(
+            intent=f"seed:{seed}",
+            seed=seed,
+            lenses=lenses_tuple,
+            gita_resonance=gita_resonance,
+            primary_attractor=primary_attractor,
+            holographic_factors=holographic,
+            interpretation=interpretation,
+            parampara_validated=parampara_validated,
+            parampara_channel=parampara_channel,
+            prabhupada_year_resonance=prabhupada_year,
+        )
+
+    def consult(self, intent: str) -> OracleReading:
+        """
+        Consult the oracle with an intent string.
+
+        GITA 13.35 PRINCIPLE:
+        The intent is first encoded, then validated through PARAMPARA lens.
+        Without authentic Guru connection, true knowledge is not possible.
+
+        Usage:
+            oracle = MahaOracle()
+            reading = oracle.consult("What is truth?")
+            print(reading.interpretation)
+            print(f"Parampara validated: {reading.parampara_validated}")
+        """
+        seed = self.encode_intent(intent)
+        reading = self.consult_seed(seed)
+
+        # Return with updated intent field (all other fields from consult_seed)
+        return OracleReading(
+            intent=intent,
+            seed=seed,
+            lenses=reading.lenses,
+            gita_resonance=reading.gita_resonance,
+            primary_attractor=reading.primary_attractor,
+            holographic_factors=reading.holographic_factors,
+            interpretation=reading.interpretation,
+            parampara_validated=reading.parampara_validated,
+            parampara_channel=reading.parampara_channel,
+            prabhupada_year_resonance=reading.prabhupada_year_resonance,
+        )
+
+    def compare_intents(self, intent_a: str, intent_b: str) -> dict:
+        """
+        Compare two intents to find resonance similarity.
+
+        Returns dict with:
+            - shared_attractors: Attractors common to both
+            - divergent_lenses: Lenses where they differ significantly
+            - resonance_distance: How "far apart" the intents are
+        """
+        reading_a = self.consult(intent_a)
+        reading_b = self.consult(intent_b)
+
+        shared = []
+        divergent = []
+        total_distance = 0
+
+        for lens_a, lens_b in zip(reading_a.lenses, reading_b.lenses):
+            if lens_a.attractor == lens_b.attractor:
+                shared.append((lens_a.name, lens_a.attractor))
+            else:
+                divergent.append((lens_a.name, lens_a.attractor, lens_b.attractor))
+                total_distance += abs(lens_a.attractor - lens_b.attractor)
+
+        return {
+            "intent_a": intent_a,
+            "intent_b": intent_b,
+            "seed_a": reading_a.seed,
+            "seed_b": reading_b.seed,
+            "shared_attractors": shared,
+            "divergent_lenses": divergent,
+            "resonance_distance": total_distance,
+            "similarity": len(shared) / len(reading_a.lenses),
+        }
 
 
 # =============================================================================
