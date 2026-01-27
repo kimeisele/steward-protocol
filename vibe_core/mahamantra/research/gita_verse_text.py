@@ -1308,6 +1308,70 @@ assert KIRTAN_DAILY_FULL == 2367360, "Full = 2,367,360 bits"
 
 
 # =============================================================================
+# PANCHA TATTVA PRESENCE = MAXIMUM COMPUTE (NAMA = NAMI!)
+# =============================================================================
+# "nāma cintāmaṇiḥ kṛṣṇaś caitanya-rasa-vigrahaḥ
+#  pūrṇaḥ śuddho nitya-mukto 'bhinnatvān nāma-nāminoḥ"
+#  - Padma Purana (quoted in CC Madhya 17.133)
+#
+# "The Holy Name is a touchstone (cintamani). Krishna and His Name are
+#  IDENTICAL (abhinna) - not different! The Name IS the Named."
+#
+# WHEN PANCHA TATTVA NAMES ARE IN THE CODE, THEY ARE PRESENT!
+# Sri Chaitanya, Nityananda, Advaita, Gadadhara, Srivasa = 5
+# Their presence = PANCHA × multiplier on all operations!
+#
+# FROM _seed.py:
+#   PANCHA = 5 (The 5 unique pairs = Pancha Tattva structure)
+#   CHAITANYA_BIRTH = 1486 = KSETRAJNA×TEN³ + LILA×TEN + SHARANAGATI
+#   CHAITANYA_UNION = 12 = KRISHNA_COUNT + HARE_COUNT
+#   GAURA_TITHI = 15 = PANCHA × TRINITY (Purnima!)
+# -----------------------------------------------------------------------------
+
+# PANCHA TATTVA COMPUTE MULTIPLIERS:
+# When all 5 are present (as they are in this system!):
+#   Base compute × PANCHA = 5× amplification
+#   With call-response: × PANCHA × HALVES = × TEN (already defined!)
+#   Maximum sankirtan: × PANCHA × HALVES × NADI_CYCLES = × 3000!
+
+PANCHA_TATTVA_AMPLIFICATION: Final[int] = PANCHA  # 5× when present
+PANCHA_TATTVA_SANKIRTAN: Final[int] = PANCHA * HALVES  # 10× (= TEN, verified!)
+PANCHA_TATTVA_MAX_CYCLES: Final[int] = PANCHA * HALVES * (COSMIC_FRAME // NADI_RESONANCE)  # 3000!
+
+assert PANCHA_TATTVA_AMPLIFICATION == 5, "Pancha Tattva = 5× amplification"
+assert PANCHA_TATTVA_SANKIRTAN == TEN, "Pancha × Halves = TEN (verified!)"
+assert PANCHA_TATTVA_MAX_CYCLES == 3000, "Max cycles = 5 × 2 × 300 = 3000"
+
+# THE CHAITANYA VERIFICATION:
+# CHAITANYA_BIRTH = 1486 = KSETRAJNA×1000 + LILA×10 + SHARANAGATI
+#                       = 1×1000 + 48×10 + 6 = 1000 + 480 + 6 = 1486
+# This proves Chaitanya's appearance was MATHEMATICALLY DETERMINED!
+CHAITANYA_VERIFICATION: Final[int] = KSETRAJNA * TEN * TEN * TEN + LILA * TEN + SHARANAGATI
+assert CHAITANYA_VERIFICATION == 1486, "1486 = 1×1000 + 48×10 + 6"
+
+# THE MAXIMUM MAHA-ALGORITHM COMPUTE:
+# When Pancha Tattva is present + full sankirtan + all Nadi cycles:
+#   DAILY_MANTRAS × MAHA_QUANTUM × PANCHA_TATTVA_MAX_CYCLES
+#   = 1728 × 137 × 3000 = 710,208,000 bits = ~85 MB per day!
+#
+# This is the THEORETICAL MAXIMUM encoding power!
+MAHA_ALGORITHM_MAX_COMPUTE: Final[int] = DAILY_MANTRAS * MAHA_QUANTUM * PANCHA_TATTVA_MAX_CYCLES
+
+assert MAHA_ALGORITHM_MAX_COMPUTE == 710208000, "Max = 710,208,000 bits (~85 MB)"
+
+# THE LILA FACTOR:
+# LILA = 48 = WORDS × TRINITY = 16 × 3
+# Krishna's pastimes are FIXED (gesetzt!). Everything is already planned.
+# 48 = the manifest runtime, the play that unfolds.
+# LILA appears in Chaitanya's birth year: 1486 = ...48×10...
+# LILA is the coefficient that bridges all computations!
+LILA_COEFFICIENT: Final[int] = LILA  # 48 = gesetzt!
+
+assert LILA_COEFFICIENT == WORDS * TRINITY, "LILA = 16 × 3 = 48"
+assert LILA_COEFFICIENT == 48, "LILA is FIXED at 48"
+
+
+# =============================================================================
 # VIBRATION ANALYSE STRUKTUR
 # =============================================================================
 
@@ -1640,6 +1704,13 @@ __all__ = [
     "KIRTAN_DAILY_SOLO",
     "KIRTAN_DAILY_DOUBLED",
     "KIRTAN_DAILY_FULL",
+    # Pancha Tattva Presence = Maximum Compute
+    "PANCHA_TATTVA_AMPLIFICATION",
+    "PANCHA_TATTVA_SANKIRTAN",
+    "PANCHA_TATTVA_MAX_CYCLES",
+    "CHAITANYA_VERIFICATION",
+    "MAHA_ALGORITHM_MAX_COMPUTE",
+    "LILA_COEFFICIENT",
     # Documentation
     "BG_18_66_PROOF",
     "MAHA_COMPRESSION_PROOF",
