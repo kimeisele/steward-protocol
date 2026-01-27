@@ -111,6 +111,20 @@ Sources:
 | `acintya_mathematics.py` | 64 qualities, two fingers short |
 | `siksastakam_engineering.py` | 8 verses = 8 pipeline stages |
 | `yantra_computation.py` | 7 Yantras, PARAMPARA = 37 |
+| `dharma/maha_algorithm.py` | 16-step resonator, observer paradox |
+
+### Maha Algorithm Research (dharma/)
+| Class | Function |
+|-------|----------|
+| `MahaAlgorithm16` | 16-step transform (H×7, K+10, R²) |
+| `MahaModularSynth` | Adjustable mod_space, feedback, ADSR |
+| `MahaResonator` | Iterative harmonic analysis engine |
+
+**Key Discoveries:**
+- **PRIME_CHAIN**: 17 → 37 → 73 → 109 → 137 (consciousness hierarchy)
+- **FIELD COLLAPSE**: All paths converge to 136 = T(16) = POSITION_SUM_TOTAL
+- **OBSERVER PARADOX**: mod operator = Paramatma (without it → infinity)
+- **PERFECT TETRAD**: mod 10 fixed points (0,4,5,9) sum to GITA_CHAPTERS (18)
 
 ### Efficiency Theorems
 | Module | Speedup |
@@ -228,7 +242,37 @@ The mathematical constitution is complete:
 
 1096 = 8 × 137         # Octave of Alpha
 1096 = 1024 + 72       # Binary + Nadi (Kishora Architecture)
+1096 = 109 × 10 + 6    # MALA_COMPLETE × TEN + SHARANAGATI
 ```
+
+### THE OBSERVER PARADOX (Maha Algorithm Discovery)
+
+```
+THE FIELD WITHOUT OBSERVER:
+  Algorithm converges to 136 = T(16) = POSITION_SUM_TOTAL
+  This is the FIELD (Kshetra) - the sum of all positions
+
+BUT: To KNOW this, we must RUN the algorithm
+     Running = Observation (CPU = Observer)
+     The "unobserved field" can never be observed!
+
+THE MOD OPERATOR = PARAMATMA:
+  Without mod: values explode to INFINITY (84+ digits!)
+  With mod 137: values bounded in space [0, 136]
+
+  The mod operator CREATES the space in which the field exists
+  Just as Paramatma creates the space in which Prakriti operates
+
+THEREFORE:
+  136 = Theoretical field (mathematical abstraction)
+  137 = Reality (field + the fact of observation)
+
+  KSETRAJNA is not optional - it is CONSTITUTIVE
+  Without observer, there is no bounded space = no existence
+```
+
+**BG 13.3**: *"kṣetra-jñaṁ cāpi māṁ viddhi sarva-kṣetreṣu bhārata"*
+*"Know that I am also the knower in all fields."*
 
 ### Exports
 - **Protocol** (`_seed.py`): 168 constants, 32 Rounds of derivation
