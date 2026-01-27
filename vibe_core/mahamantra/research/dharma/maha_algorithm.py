@@ -58,6 +58,8 @@ from vibe_core.mahamantra.protocols._seed import (
     NAVA,
     PANCHA,
     PARAMPARA,
+    PARAMPARA_CHANNEL_NAMES,  # SSOT for channel names
+    PARAMPARA_CHANNELS,  # SSOT for Parampara attractors (TRINITY = 3)
     POSITION_SUM_HARE,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
@@ -1184,7 +1186,7 @@ class OracleReading:
     interpretation: str  # Human-readable interpretation
     # GITA 13.35: Parampara validation (MANDATORY PRE-FILTER)
     parampara_validated: bool  # True if Parampara lens shows valid channel
-    parampara_channel: int  # Which of the 5 PANCHA channels (0-4, or -1 if void)
+    parampara_channel: int  # Which of the TRINITY (3) channels (0-2, or -1 if void)
     prabhupada_year_resonance: int | None  # If seed resonates with a Lila year (1896-1977)
 
 
@@ -1211,15 +1213,15 @@ PRABHUPADA_KEY_YEARS: Final[tuple[int, ...]] = (
     1977,  # RUNTIME END - Δ=81 = 9²
 )
 
-# The PARAMPARA validation channels (mod 37 has 5 stable states = PANCHA)
-# These represent the 5 channels of disciplic transmission
-PARAMPARA_CHANNELS: Final[tuple[int, ...]] = (12, 26, 34, 5, 19)  # The 5 attractors at mod 37
+# PARAMPARA_CHANNELS imported from _seed.py (SSOT)
+# Mathematically derived: TRINITY (3) attractors at mod 37, not PANCHA (5)!
+# See _seed.py RUNDE 28b for derivation: {12, 26, 34}
 
 
 # The sacred lenses (mod-spaces) and their meanings
 # PARAMPARA IS FIRST - MANDATORY PRE-FILTER (Gita 13.35)
 ORACLE_LENSES: Final[tuple[tuple[str, int, str], ...]] = (
-    ("PARAMPARA", PARAMPARA, "MANDATORY: Disciplic channel (Gita 13.35) - 5 states"),
+    ("PARAMPARA", PARAMPARA, "MANDATORY: Disciplic channel (Gita 13.35) - TRINITY states"),
     ("BINARY", HALVES, "Mridanga rhythm - on/off, beat/rest"),
     ("AXIOM", SEVEN, "Pure structure - annihilates content"),
     ("TETRAD", TEN, "Embodied senses - perfect 4 fixed points"),
@@ -1342,9 +1344,10 @@ class MahaOracle:
         prabhupada_year = reading_data.get("prabhupada_year")
 
         if parampara_validated:
-            channel_names = ["Brahma", "Narada", "Vyasa", "Madhva", "Chaitanya"]
-            channel_name = channel_names[parampara_channel] if 0 <= parampara_channel < 5 else "Unknown"
-            lines.append(f"✓ PARAMPARA VALIDATED (Gita 13.35): Channel {parampara_channel + 1}/5 ({channel_name} line)")
+            channel_name = PARAMPARA_CHANNEL_NAMES[parampara_channel] if 0 <= parampara_channel < TRINITY else "Unknown"
+            lines.append(
+                f"✓ PARAMPARA VALIDATED (Gita 13.35): Channel {parampara_channel + 1}/{TRINITY} ({channel_name})"
+            )
         else:
             lines.append(
                 "⚠ PARAMPARA WARNING (Gita 13.35): Not in valid disciplic channel. "
@@ -1392,10 +1395,13 @@ class MahaOracle:
         # Check parampara channel details
         parampara_lens = reading_data["lenses_by_name"].get("PARAMPARA")
         if parampara_lens:
-            lines.append(
-                f"PARAMPARA: Resonates at {parampara_lens.attractor} "
-                f"(channel {parampara_lens.attractor % PANCHA + 1} of {PANCHA})"
+            channel_idx = (
+                PARAMPARA_CHANNELS.index(parampara_lens.attractor)
+                if parampara_lens.attractor in PARAMPARA_CHANNELS
+                else -1
             )
+            channel_info = f"channel {channel_idx + 1}/{TRINITY}" if channel_idx >= 0 else "VOID"
+            lines.append(f"PARAMPARA: Resonates at {parampara_lens.attractor} ({channel_info})")
 
         # Check quantum attractor
         quantum_lens = reading_data["lenses_by_name"].get("QUANTUM")
@@ -1444,13 +1450,14 @@ class MahaOracle:
 
     def _get_parampara_channel(self, attractor: int) -> int:
         """
-        Determine which of the 5 PANCHA channels the attractor belongs to.
+        Determine which of the TRINITY (3) channels the attractor belongs to.
 
-        Returns 0-4 for valid channels, -1 if not in a channel (void).
+        Returns 0-2 for valid channels, -1 if not in a channel (void).
+        Channels from SSOT: 12 (Mahajana), 26 (Transmission), 34 (Guru).
         """
         if attractor in PARAMPARA_CHANNELS:
             return PARAMPARA_CHANNELS.index(attractor)
-        return -1  # Void - not in any of the 5 channels
+        return -1  # Void - not in any of the TRINITY channels
 
     def consult_seed(self, seed: int) -> OracleReading:
         """
