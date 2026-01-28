@@ -50,7 +50,7 @@ from pathlib import Path
 from typing import Dict, Final, List, Optional, Tuple
 import sys
 
-# Use existing infrastructure
+# Use existing infrastructure - NO REIMPLEMENTATION!
 from vibe_core.protocols.substrate.resonance import (
     PhoneticClass,
     to_phonetic_key,
@@ -60,20 +60,12 @@ from vibe_core.protocols.substrate.resonance import (
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
     MAHA_QUANTUM,
-    SEVEN,
-    TEN,
     WORDS,
 )
+from vibe_core.mahamantra.research.dharma import MahaResonator
 
-
-# =============================================================================
-# CONSTANTS
-# =============================================================================
-
-PATTERN: Final[Tuple[str, ...]] = (
-    "H", "K", "H", "K", "K", "K", "H", "H",
-    "H", "R", "H", "R", "R", "R", "H", "H",
-)
+# Global resonator instance (reuse, don't recreate)
+_RESONATOR = MahaResonator(mod_space=MAHA_QUANTUM)
 
 
 # =============================================================================
@@ -184,33 +176,12 @@ def compute_guna(text: str) -> Tuple[str, int]:
 
 def compute_attractor(seed: int) -> int:
     """
-    Find attractor in mod 137 space using MahaAlgorithm.
+    Find attractor in mod 137 space using MahaResonator.
 
-    H (HARE)    → seed × 7 (mod 137)
-    K (KRISHNA) → seed + 10 (mod 137)
-    R (RAMA)    → seed² (mod 137)
+    USES EXISTING INFRASTRUCTURE - no reimplementation!
     """
-    value = seed % MAHA_QUANTUM
-
-    # Apply 16-step transform
-    for i in range(WORDS):
-        op = PATTERN[i]
-        if op == "H":
-            value = (value * SEVEN) % MAHA_QUANTUM
-        elif op == "K":
-            value = (value + TEN) % MAHA_QUANTUM
-        elif op == "R":
-            value = (value * value) % MAHA_QUANTUM
-
-    # Iterate to attractor
-    seen = set()
-    for _ in range(MAHA_QUANTUM):
-        if value in seen:
-            break
-        seen.add(value)
-        value = (value * value) % MAHA_QUANTUM
-
-    return value
+    result = _RESONATOR.find_attractor(seed)
+    return result.attractor
 
 
 def extract_verse_signature(
