@@ -36,7 +36,7 @@ MAHAMANTRA CONSTRAINTS:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 5
-__genesis__ = "0xa7e3f194"
+__genesis__ = "0xacbe0a4e"  # GenesisByte: parampara % 37 == 0
 
 from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 

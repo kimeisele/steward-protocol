@@ -48,7 +48,7 @@ USAGE:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"  # The compiler of the Gita
 __position__ = 0
-__genesis__ = "0xGITA1866"  # BG 18.66 - The Fixed Point
+__genesis__ = "0x545fe2f1"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, Optional
 from dataclasses import dataclass

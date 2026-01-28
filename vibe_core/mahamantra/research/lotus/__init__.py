@@ -59,7 +59,7 @@ FILES:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0xL0TU5137"
+__genesis__ = "0x6013ddeb"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # PRODUCTION EXPORTS

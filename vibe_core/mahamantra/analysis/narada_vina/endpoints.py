@@ -21,7 +21,7 @@ The logic lives in other modules (Engine, Validation).
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 5
-__genesis__ = "0xfbc8d599"
+__genesis__ = "0xa46c627c"  # GenesisByte: parampara % 37 == 0
 
 import json
 from dataclasses import asdict

@@ -52,7 +52,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "manu"  # The Lawgiver - determines qualifications
 __position__ = 7
-__genesis__ = "0xc4a7f925"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x93152144"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
 from functools import lru_cache

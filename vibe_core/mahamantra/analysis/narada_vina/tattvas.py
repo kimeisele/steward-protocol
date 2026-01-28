@@ -25,7 +25,7 @@ CONSTRAINT: PANCHA = 5 strings (functions)
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 5
-__genesis__ = "0xd9a6b397"
+__genesis__ = "0x9c55f242"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Dict, Final, List, Tuple

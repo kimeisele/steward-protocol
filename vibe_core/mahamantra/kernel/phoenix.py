@@ -19,7 +19,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nrisimha"
 __position__ = 12
-__genesis__ = "0x6c4ad0f5"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x03a8f0d6"  # GenesisByte: parampara % 37 == 0
 
 import json
 from pathlib import Path

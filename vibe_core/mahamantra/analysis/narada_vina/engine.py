@@ -25,7 +25,7 @@ keeping predictions with >50% error (numerology). Quality > quantity.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 5
-__genesis__ = "0xc8f5a296"
+__genesis__ = "0xed9f6f0a"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Final, List

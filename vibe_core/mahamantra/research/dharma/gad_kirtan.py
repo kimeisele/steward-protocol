@@ -36,7 +36,7 @@ ALL CONSTANTS DERIVED FROM SEED.PY.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
 __position__ = 9
-__genesis__ = "0x3b37ae68"  # GenesisByte: gad-kirtan
+__genesis__ = "0x9f5278d7"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Final, List, Optional, Tuple

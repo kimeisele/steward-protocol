@@ -32,7 +32,7 @@ DERIVED FROM SEED:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"  # The eternal servant who never tires
 __position__ = 11
-__genesis__ = "0xe3b8a7c1"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x87249182"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from datetime import datetime

@@ -24,7 +24,7 @@ CONSTRAINT: SHARANAGATI = 6 maximum validation functions
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 5
-__genesis__ = "0xeab7c498"
+__genesis__ = "0x98c41daa"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Dict, Final, List, Tuple

@@ -16,7 +16,7 @@ the Mahamantra structure.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0xc4a7b29d"
+__genesis__ = "0x05038211"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, auto
