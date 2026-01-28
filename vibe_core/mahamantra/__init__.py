@@ -35,8 +35,14 @@ from vibe_core.mahamantra._types import (
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
 from vibe_core.mahamantra.substrate.position import get_position
 
-# Substrate
-from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, PARAMPARA, WORDS
+# Substrate - ALL constants from _seed (SSOT)
+from vibe_core.mahamantra.substrate.seed import (
+    ALL_GUARDIANS,
+    MAHA_QUANTUM,
+    PARAMPARA,
+    SEVEN,
+    WORDS,
+)
 
 logger = logging.getLogger("MAHAMANTRA")
 
@@ -122,15 +128,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Update the Akash field (136) with new vibration.
 
         The field absorbs every computation. Nothing is lost.
+        ALL CONSTANTS FROM _seed - no hardcoding!
         """
         cls._akash["resonance_level"] = min(
             1.0, cls._akash["resonance_level"] + vibration["resonance"] * 0.01
         )
         cls._akash["accumulated_value"] = (
             cls._akash["accumulated_value"] + vibration["transformed"]
-        ) % 137  # mod MAHA_QUANTUM
+        ) % MAHA_QUANTUM  # 137 - from _seed
         cls._akash["total_beats"] += 1
-        if vibration["beat"] == 7:  # End of round
+        if vibration["beat"] == SEVEN:  # 7 - End of round
             cls._akash["total_rounds"] += 1
 
         # Track attractor distribution (PANCHA)
@@ -210,26 +217,36 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         bridge_result = cli_bridge.route(command, args or [])
 
         # Get guardian info from vibration-derived position
-        position = vibration["transformed"] % WORDS  # Position from vibration!
+        position = vibration["transformed"] % WORDS  # Position from vibration! (WORDS from _seed)
         guardian = "narada"
         quarter = "genesis"
         try:
             from vibe_core.mahamantra.substrate import MAHAMANTRA_POSITIONS
 
-            if 0 <= position < 16:
+            if 0 <= position < WORDS:  # WORDS from _seed, not hardcoded 16
                 pos = MAHAMANTRA_POSITIONS[position]
                 guardian = pos.guardian.value
                 quarter = pos.quarter.value
         except (ImportError, IndexError):
             pass
 
-        # Determine guna from vibration
+        # Determine guna from vibration - GITA LOGIC:
+        # - Oracle validated + high resonance = SUDDHA (transcendental)
+        # - Oracle validated = SATTVA (goodness)
+        # - Parampara channel valid = RAJAS (active, needs guidance)
+        # - Otherwise = TAMAS (ignorance, needs EXTRA MERCY - Chapter 12 style!)
+        # NOTHING IS REJECTED. Tamas gets most merciful routing.
         if vibration["oracle_validated"]:
+            # Resonance threshold: 0.5 = half the flutes in sync
             guna = "suddha" if vibration["resonance"] > 0.5 else "sattva"
+        elif vibration["parampara_channel"] >= 0:
+            guna = "rajas"
         else:
-            guna = "rajas" if bridge_result.success else "tamas"
+            guna = "tamas"  # Extra mercy needed, not rejection!
 
         # 4. RETURN WITH VIBRATION - Nothing is lost!
+        # requires_confirmation = False ALWAYS. Nothing is rejected.
+        # Tamas means EXTRA MERCY (Bhakti Yoga, Chapter 12), not rejection.
         return ExecuteResult(
             success=bridge_result.success,
             exit_code=bridge_result.exit_code,
@@ -237,7 +254,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             guardian=guardian,
             quarter=quarter,
             guna=guna,
-            requires_confirmation=guna == "tamas",
+            requires_confirmation=False,  # NEVER reject - mercy flows to all
             output=bridge_result.error or "",
             error=bridge_result.error,
             vibration=vibration,  # +1 Fokus
