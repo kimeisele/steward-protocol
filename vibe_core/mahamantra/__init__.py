@@ -787,9 +787,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return MahaSynth(preset=preset)
 
+    @property
     def classifier(self) -> "MahaClassifier":
         """
-        Create a MahaClassifier for technology classification.
+        Access the MahaClassifier for technology classification.
 
         COLD ENGINEERING ANALYSIS:
             No metaphors. No philosophy. Pure metrics.
@@ -808,10 +809,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             4. DETERMINISM - Same input → same output?
 
         USAGE:
-            classifier = mahamantra.classifier()
-
             # Classify custom algorithm
-            result = classifier.classify(
+            result = mahamantra.classifier.classify(
                 name="MyRouter",
                 alignment="perfect",
                 complexity="structure",
@@ -823,24 +822,27 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             print(result.verdict)  # "ANUKULYA: Truth-aligned (G=100.0)"
 
             # Get pre-classified references
-            lotus = classifier.lotus_array()     # 50x faster range queries
-            ipv4 = classifier.ipv4_router()      # 1557x faster than linear
-            kmer = classifier.kmer_index()       # 6.5x faster than Counter
+            lotus = mahamantra.classifier.lotus_array()     # 50x faster range queries
+            ipv4 = mahamantra.classifier.ipv4_router()      # 1557x faster than linear
+            kmer = mahamantra.classifier.kmer_index()       # 6.5x faster than Counter
 
             # Compare all
-            comparison = classifier.compare_all_references()
+            comparison = mahamantra.classifier.compare_all_references()
             print(comparison.summary)
 
         Returns:
             MahaClassifier instance
         """
-        from vibe_core.mahamantra.adapters.classification import MahaClassifier
+        if not hasattr(self, "_classifier"):
+            from vibe_core.mahamantra.adapters.classification import MahaClassifier
 
-        return MahaClassifier()
+            self._classifier = MahaClassifier()
+        return self._classifier
 
+    @property
     def compute(self) -> "MahaCompute":
         """
-        Create a MahaCompute unified compute analyzer.
+        Access the MahaCompute unified compute analyzer.
 
         THE THESIS:
             Modern computing has a fundamental division (CPU/GPU/RAM).
@@ -856,36 +858,37 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             With 16-ary structures, GPU becomes unnecessary.
 
         USAGE:
-            compute = mahamantra.compute()
-
             # Analyze data structure for optimal caching
-            analysis = compute.analyze(entries=50000)
+            analysis = mahamantra.compute.analyze(entries=50000)
             print(analysis.memory_tier)      # "L2"
             print(analysis.cache_hit_rate)   # 0.92
 
             # Analyze CPU alignment
-            cpu = compute.analyze_cpu()
+            cpu = mahamantra.compute.analyze_cpu()
             print(cpu.alignment)             # 1.0 (perfect)
             print(cpu.is_unified)            # True
 
             # SIMD guidance
-            batch_size = compute.simd_batch_size()  # 16
-            aligned = compute.align_for_simd(100)   # 112
+            batch_size = mahamantra.compute.simd_batch_size()  # 16
+            aligned = mahamantra.compute.align_for_simd(100)   # 112
 
             # Memory tiers
-            for tier in compute.memory_tiers():
+            for tier in mahamantra.compute.memory_tiers():
                 print(f"{tier.name}: {tier.lotus_entries} entries")
 
         Returns:
             MahaCompute analyzer instance
         """
-        from vibe_core.mahamantra.adapters.compute import MahaCompute
+        if not hasattr(self, "_compute"):
+            from vibe_core.mahamantra.adapters.compute import MahaCompute
 
-        return MahaCompute()
+            self._compute = MahaCompute()
+        return self._compute
 
+    @property
     def llm(self) -> "MahaLLM":
         """
-        Create a MahaLLM holographic intent router.
+        Access the MahaLLM holographic intent router.
 
         THE PROBLEM:
             Vector Search: O(N) - Scans every option
@@ -902,32 +905,32 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             3: ANALYZE     7: SUSTAIN    11: PROTECT    15: TRANSCEND
 
         USAGE:
-            llm = mahamantra.llm()
-
             # Register agents
-            llm.register("devops", category=IntentCategory.EXECUTE)
-            llm.register("coder", category=IntentCategory.CREATE)
+            mahamantra.llm.register("devops", category=IntentCategory.EXECUTE)
+            mahamantra.llm.register("coder", category=IntentCategory.CREATE)
 
             # Route compressed intent → agent (O(4))
-            compression = mahamantra.compression()
-            result = compression.compress("Fix the server!")
-            route = llm.route_seed(result.seed)
+            result = mahamantra.compression.compress("Fix the server!")
+            route = mahamantra.llm.route_seed(result.seed)
             print(route.agent)  # "devops"
 
             # Or route text directly
-            route = llm.route_text("Write me a poem")
+            route = mahamantra.llm.route_text("Write me a poem")
             print(route.agent)  # "coder"
 
         Returns:
             MahaLLM router instance
         """
-        from vibe_core.mahamantra.adapters.llm import MahaLLM
+        if not hasattr(self, "_llm"):
+            from vibe_core.mahamantra.adapters.llm import MahaLLM
 
-        return MahaLLM()
+            self._llm = MahaLLM()
+        return self._llm
 
+    @property
     def japa(self) -> "MahaJapa":
         """
-        Create a MahaJapa engine for hearing and chanting mathematics.
+        Access the MahaJapa engine for hearing and chanting mathematics.
 
         THE SINGULARITY:
             Hearing (24) + Chanting (1) = Prasadam (25)
@@ -939,29 +942,30 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             We are 540 years in. 9,460 years remain.
 
         USAGE:
-            japa = mahamantra.japa()
-
             # Execute a mala (108 rounds)
-            result = japa.mala(seed=42)
+            result = mahamantra.japa.mala(seed=42)
             print(result.attractor)        # Stable state
 
             # Check golden age status
-            status = japa.golden_age_status()
+            status = mahamantra.japa.golden_age_status()
             print(status.years_remaining)  # 9460
 
             # Collapse detection
-            collapsed = japa.is_collapsed(value)
+            collapsed = mahamantra.japa.is_collapsed(value)
 
         Returns:
             MahaJapa engine
         """
-        from vibe_core.mahamantra.adapters.japa import MahaJapa
+        if not hasattr(self, "_japa"):
+            from vibe_core.mahamantra.adapters.japa import MahaJapa
 
-        return MahaJapa()
+            self._japa = MahaJapa()
+        return self._japa
 
+    @property
     def compression(self) -> "MahaCompression":
         """
-        Create a MahaCompression intent engine.
+        Access the MahaCompression intent engine.
 
         THE CONTEXT WINDOW SOLUTION:
             Silicon Valley compresses BITS (Shannon entropy).
@@ -989,35 +993,36 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             4. SUDDHA   - Pure      → Divine execution
 
         USAGE:
-            compressor = mahamantra.compression()
-
             # Compress text to intent
-            result = compressor.compress("...100k log lines...")
+            result = mahamantra.compression.compress("...100k log lines...")
             print(result.intent_level)        # "RAJAS"
             print(result.seed)                # 42 (deterministic hash)
             print(result.compression_ratio)   # 1547.3
 
             # Encode system state as samskara
-            samskara = compressor.encode_samskara({
+            samskara = mahamantra.compression.encode_samskara({
                 "user_id": 123,
                 "session_events": [...1000 events...],
             })
             print(samskara.seed)              # Compact representation
 
             # Verify against physics constants
-            verified = compressor.verify_physics(seed=137)
+            verified = mahamantra.compression.verify_physics(seed=137)
             print(verified.is_aligned)        # True
 
         Returns:
             MahaCompression intent engine
         """
-        from vibe_core.mahamantra.adapters.compression import MahaCompression
+        if not hasattr(self, "_compression"):
+            from vibe_core.mahamantra.adapters.compression import MahaCompression
 
-        return MahaCompression()
+            self._compression = MahaCompression()
+        return self._compression
 
+    @property
     def hardware(self) -> "MahaHardware":
         """
-        Create a MahaHardware specification engine.
+        Access the MahaHardware specification engine.
 
         THE SILICON ALTAR:
             Hardware parameters are NOT arbitrary design choices.
@@ -1040,32 +1045,32 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             L7: āśliṣya vā pada-ratāṁ (unconditional - return)
 
         USAGE:
-            hw = mahamantra.hardware()
-
             # Get hardware specification
-            spec = hw.spec()
+            spec = mahamantra.hardware.spec()
             print(spec.data_width)        # 32
             print(spec.pipeline_stages)   # 8
 
             # Pipeline stages with verse mapping
-            for stage in hw.pipeline_stages():
+            for stage in mahamantra.hardware.pipeline_stages():
                 print(f"{stage.name}: {stage.sanskrit}")
 
             # Generate HDL code
-            verilog = hw.generate_verilog_params()
-            vhdl = hw.generate_vhdl_params()
-            c_code = hw.generate_c_defines()
+            verilog = mahamantra.hardware.generate_verilog_params()
+            vhdl = mahamantra.hardware.generate_vhdl_params()
+            c_code = mahamantra.hardware.generate_c_defines()
 
             # Verify custom design
-            result = hw.verify(data_width=32, branching_factor=16)
+            result = mahamantra.hardware.verify(data_width=32, branching_factor=16)
             print(result.summary)
 
         Returns:
             MahaHardware engine instance
         """
-        from vibe_core.mahamantra.adapters.hardware import MahaHardware
+        if not hasattr(self, "_hardware"):
+            from vibe_core.mahamantra.adapters.hardware import MahaHardware
 
-        return MahaHardware()
+            self._hardware = MahaHardware()
+        return self._hardware
 
     @property
     def attention(self) -> "MahaAttention":
@@ -1240,6 +1245,45 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def __len__(self) -> int:
         return 16
+
+    # === AUTO-DELEGATE TO ADAPTERS (folder IS wiring) ===
+    # Mapping: adapter module name → main class name
+    _ADAPTER_CLASSES: Dict[str, str] = {
+        "transform": "MahaTransform",
+        "hash": "DeterministicHash",
+        "routing": "HolographicRouter",
+        "orchestrator": "Orchestrator",
+        "pipeline": "MahamantraPipeline",
+        "attention": "MahaAttention",
+        "bio": "LotusBio",
+        "network": "LotusIPRouter",
+        "synth": "MahaSynth",
+        "classification": "MahaClassifier",
+        "compute": "MahaCompute",
+        "hardware": "MahaHardware",
+        "compression": "MahaCompression",
+        "japa": "MahaJapa",
+        "llm": "MahaLLM",
+    }
+
+    def __getattr__(self, name: str):
+        """
+        Auto-delegate adapter access: mahamantra.compression → MahaCompression()
+
+        FOLDER IS WIRING - should NEVER fail.
+        """
+        # Check if it's an adapter module name
+        if name in self._ADAPTER_CLASSES:
+            cache_name = f"_adapter_{name}"
+            if not hasattr(self, cache_name):
+                import importlib
+                class_name = self._ADAPTER_CLASSES[name]
+                module = importlib.import_module(f"vibe_core.mahamantra.adapters.{name}")
+                adapter_cls = getattr(module, class_name)
+                # Cache the instance
+                object.__setattr__(self, cache_name, adapter_cls())
+            return getattr(self, cache_name)
+        raise AttributeError(f"'{type(self).__name__}' has no attribute '{name}'")
 
 
 # =============================================================================
