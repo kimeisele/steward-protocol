@@ -28,6 +28,8 @@ __genesis__ = "0x3f31a22c"  # GenesisByte: parampara % 37 == 0
 
 from typing import Protocol, runtime_checkable
 
+from vibe_core.mahamantra.protocols._seed import WORDS
+
 
 @runtime_checkable
 class OrbitProtocol(Protocol):
@@ -36,7 +38,7 @@ class OrbitProtocol(Protocol):
     Determines if an entity should act at a given cosmic moment.
     """
 
-    def should_dance(self, current_tick: int, entity_id: str, kaksha_modulus: int = 16) -> bool:
+    def should_dance(self, current_tick: int, entity_id: str, kaksha_modulus: int = WORDS) -> bool:
         """
         Determine if it's time to dance.
 
@@ -44,13 +46,13 @@ class OrbitProtocol(Protocol):
             current_tick: The absolute cosmic tick count.
             entity_id: Unique string ID of the entity (for Phase Shift).
             kaksha_modulus: The frequency orbit (16=Mantra, 48=Lila, etc).
-                            Default is 16 (Every Mantra).
+                            Default is WORDS (Every Mantra).
 
         Returns:
             True if (current_tick + hash(entity_id)) % kaksha_modulus == 0
         """
         ...
 
-    def get_phase_offset(self, entity_id: str, modulus: int = 16) -> int:
+    def get_phase_offset(self, entity_id: str, modulus: int = WORDS) -> int:
         """Get the calculated phase offset for an entity."""
         ...
