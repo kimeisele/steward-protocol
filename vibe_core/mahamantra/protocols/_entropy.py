@@ -57,7 +57,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "parashurama"
 __position__ = 8
-__genesis__ = "0xa4c83800"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x60b19acb"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
 from dataclasses import dataclass, field

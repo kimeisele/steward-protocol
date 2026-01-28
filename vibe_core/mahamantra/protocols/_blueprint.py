@@ -1,7 +1,7 @@
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "manu"
 __position__ = 7
-__genesis__ = "0x8c1f3d2a"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x00b8cbf8"  # GenesisByte: parampara % 37 == 0
 
 """
 BLUEPRINT PROTOCOL - The Divine Plan

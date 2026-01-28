@@ -25,7 +25,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "narada"  # The Carrier of the Message
 __position__ = 2
-__genesis__ = "0xLINK3737"
+__genesis__ = "0x98b94c03"  # GenesisByte: parampara % 37 == 0
 
 from typing import Protocol, runtime_checkable
 

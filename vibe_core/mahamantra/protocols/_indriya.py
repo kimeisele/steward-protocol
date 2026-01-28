@@ -53,7 +53,7 @@ DERIVED FROM SEED.PY:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0xc4a7e312"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x1c3dc0e4"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
 from dataclasses import dataclass, field

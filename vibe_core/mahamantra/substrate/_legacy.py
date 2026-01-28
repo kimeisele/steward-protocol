@@ -14,7 +14,7 @@ NICHT NEU SCHREIBEN - nur wrappen.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nityananda"
 __position__ = 1
-__genesis__ = "0xc7d3a91e"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x3658b02f"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # RE-EXPORTS FROM protocols/substrate/scanner

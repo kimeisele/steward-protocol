@@ -52,7 +52,7 @@ USAGE:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0xP1P3L1N3"
+__genesis__ = "0xc1739dcf"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Any, Final, Optional

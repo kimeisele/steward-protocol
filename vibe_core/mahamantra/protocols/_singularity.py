@@ -39,7 +39,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "chaitanya"
 __position__ = 0
-__genesis__ = "0x19a4c300"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xbcb3ba1b"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum

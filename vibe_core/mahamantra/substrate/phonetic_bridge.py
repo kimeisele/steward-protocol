@@ -35,7 +35,7 @@ CATEGORY (English) ↔ VARGA:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0x5c7a2e1d"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xea72176b"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import IntEnum

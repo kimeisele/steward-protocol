@@ -35,7 +35,7 @@ The 9 NADI OPERATIONS map to NavaBhakti:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
 __position__ = 1
-__genesis__ = "0x250d3752"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x646fe98f"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta

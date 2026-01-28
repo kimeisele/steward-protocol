@@ -51,7 +51,7 @@ USAGE:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0xNET0137"
+__genesis__ = "0xa248b7a8"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Final, List, Optional, Tuple
