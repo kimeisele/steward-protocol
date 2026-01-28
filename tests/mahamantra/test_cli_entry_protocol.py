@@ -147,9 +147,9 @@ class TestMahamantraCLIEntry:
         pos = cli_auto._get_position("judge")
         assert pos == 15, f"judge should route to position 15 (Yamaraja), got {pos}"
 
-        # bootstrap -> Prithu (position 0)
+        # bootstrap -> Prithu (position 4) - Prithu is DHARMA HEAD, infra foundation
         pos = cli_auto._get_position("bootstrap")
-        assert pos == 0, f"bootstrap should route to position 0 (Prithu), got {pos}"
+        assert pos == 4, f"bootstrap should route to position 4 (Prithu), got {pos}"
 
     def test_cli_auto_capabilities_returns_list(self):
         """cli_auto.get_capabilities() MUST return List[CLICapability]."""

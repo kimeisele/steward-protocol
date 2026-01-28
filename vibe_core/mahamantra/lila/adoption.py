@@ -42,7 +42,7 @@ logger = logging.getLogger("MAHAMANTRA.ADOPTION")
 
 OP_CODES: Dict[str, List[str]] = {
     # GENESIS (0-3)
-    "prithu": ["write", "disk", "path", "db", "file", "mount", "infra", "foundation"],
+    "prithu": ["write", "disk", "path", "db", "file", "mount", "infra", "foundation", "bootstrap"],
     "brahma": ["create", "spawn", "init", "new", "factory", "construct", "allocate"],
     "narada": ["msg", "send", "api", "http", "request", "broadcast", "notify", "event"],
     "shambhu": ["delete", "kill", "clean", "remove", "destroy", "gc", "garbage", "close"],

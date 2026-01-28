@@ -367,8 +367,21 @@ class BridgeRegistry:
     _naga_flooded: bool = True
     _naga_gene: str = "bridge"
 
+    # Singleton pattern
+    _instance: ClassVar[Optional["BridgeRegistry"]] = None
+
+    def __new__(cls) -> "BridgeRegistry":
+        """Singleton: return existing instance or create new."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self) -> None:
-        """Initialize the registry."""
+        """Initialize the registry (only once)."""
+        if getattr(self, "_initialized", False):
+            return
+        self._initialized = True
         self._bridges: Dict[str, Bridge] = {}
         self._by_type: Dict[BridgeType, List[str]] = {}
 
