@@ -523,6 +523,61 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Execute one tick of the Mahamantra clock. Delegates to Singularity."""
         return self._singularity.tick()
 
+    # === VIBRATION API (Call-Response) ===
+
+    def vibrate(self, command: str) -> "VibrationState":
+        """
+        Compute vibration state for a command.
+
+        THE CALL-RESPONSE LOOP:
+            command → MahaCompression → seed → MahaKirtan.compute() → VibrationState
+
+        Args:
+            command: Any string input (query, intent, data)
+
+        Returns:
+            VibrationState with seed, attractor, resonance, etc.
+
+        Example:
+            state = mahamantra.vibrate("deploy to production")
+            print(state.attractor)      # Gita chapter
+            print(state.resonance)      # Flute resonance 0.0-1.0
+            print(state.parampara_channel)  # 1-5
+        """
+        return self._compute_vibration(command)
+
+    def kirtan(self, seed: int) -> "KirtanComputeResult":
+        """
+        Direct MahaKirtan computation - the 16-step × 7-beat algorithm.
+
+        THE CALL-RESPONSE:
+            seed → 16 steps (HKHR pattern) → call_response = 'CALL' or 'RESPONSE'
+
+        Args:
+            seed: Integer seed value
+
+        Returns:
+            KirtanComputeResult with:
+                - call_response: 'CALL' or 'RESPONSE'
+                - flute_resonance: 0.0-1.0
+                - transformed_value: Final output
+                - beat_number, beat_year, beat_delta
+                - oracle_validated: True/False
+                - parampara_channel: 1-5
+
+        Example:
+            result = mahamantra.kirtan(42)
+            print(result.call_response)    # 'CALL'
+            print(result.flute_resonance)  # 0.666...
+        """
+        from vibe_core.mahamantra.research.dharma import MahaKirtan
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+
+        if not hasattr(self, "_kirtan_instance"):
+            self._kirtan_instance = MahaKirtan(mod_space=MAHA_QUANTUM)
+
+        return self._kirtan_instance.compute(seed)
+
     # === SHUDDHI INTEGRATION (CST-based healing) ===
 
     def _heal_file_with_shuddhi(self, file_path: "Path") -> bool:
@@ -1098,6 +1153,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         from vibe_core.mahamantra.protocols import _seed
         if hasattr(_seed, name):
             return getattr(_seed, name)
+
+        # 0.5. Check if it's a module-level import (ATTRACTOR_FIXED, VibrationState, etc.)
+        import sys
+        current_module = sys.modules[__name__]
+        if name in dir(current_module) and not name.startswith("_"):
+            val = getattr(current_module, name, None)
+            if val is not None:
+                return val
 
         mahamantra_root = Path(__file__).parent
 
