@@ -193,18 +193,30 @@ class NagaProxy(Generic[T]):
 
         # IDENTITY INTROSPECTION (Vedic Stack)
         # NagaProxy "sees" the identity of its target if wrapped by MahamantraProxy
-        # or if target has __mahajana__/__position__ declarations.
+        # MAHAMANTRA DEFINES IDENTITY - FOLDER IS TRUTH
         position = getattr(wrapped, "_position", -1)
         guardian = getattr(wrapped, "_guardian", "unknown")
         genesis = getattr(wrapped, "_genesis", "")
 
-        # Also check module-level declarations (__mahajana__, __position__)
-        if position == -1 and hasattr(wrapped, "__position__"):
-            position = wrapped.__position__
-        if guardian == "unknown" and hasattr(wrapped, "__mahajana__"):
-            guardian = wrapped.__mahajana__
-        if not genesis and hasattr(wrapped, "__genesis__"):
-            genesis = wrapped.__genesis__
+        # If not set by MahamantraProxy, DERIVE from folder (not labels!)
+        # "Manual Labor ist Maya" - MAHAPROMPT.md
+        if position == -1 or guardian == "unknown":
+            from pathlib import Path
+            from vibe_core.mahamantra.substrate.sankirtan import get_mahajana_for_path
+
+            # Try to get module file path
+            wrapped_module = getattr(wrapped, "__module__", None)
+            wrapped_file = None
+            if wrapped_module:
+                import sys
+                mod = sys.modules.get(wrapped_module)
+                if mod:
+                    wrapped_file = getattr(mod, "__file__", None)
+
+            if wrapped_file:
+                mapping = get_mahajana_for_path(Path(wrapped_file))
+                if mapping:
+                    guardian, position = mapping
 
         object.__setattr__(self, "_position", position)
         object.__setattr__(self, "_guardian", guardian)

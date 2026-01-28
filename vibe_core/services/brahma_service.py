@@ -245,9 +245,28 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol):
         """
         agent_id = getattr(raw_agent, "agent_id", "unknown")
 
-        # Extract identity from agent (if declared)
-        position = getattr(raw_agent, "__position__", -1)
-        guardian = getattr(raw_agent, "__mahajana__", "unknown")
+        # MAHAMANTRA DEFINES IDENTITY - FOLDER IS TRUTH
+        # "Manual Labor ist Maya" - MAHAPROMPT.md
+        from pathlib import Path
+        from vibe_core.mahamantra.substrate.sankirtan import get_mahajana_for_path
+
+        # Derive identity from agent's module path
+        agent_module = getattr(raw_agent, "__module__", None)
+        agent_file = None
+        if agent_module:
+            import sys
+            mod = sys.modules.get(agent_module)
+            if mod:
+                agent_file = getattr(mod, "__file__", None)
+
+        if agent_file:
+            mapping = get_mahajana_for_path(Path(agent_file))
+            if mapping:
+                guardian, position = mapping
+            else:
+                guardian, position = "unknown", -1
+        else:
+            guardian, position = "unknown", -1
 
         # If no identity, assign "Gastarbeiter" status (Tamas lane, position -1)
         if position == -1:

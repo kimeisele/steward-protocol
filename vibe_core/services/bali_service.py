@@ -9,8 +9,10 @@ Manages Economic Substrate (Bank/Vault).
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
+# TODO: This should be DERIVED from mahamantra, not declared manually!
+# "Manual Labor ist Maya" - MAHAPROMPT.md
+__mahajana__ = "bali"
+__position__ = 13
 __genesis__ = "0x1b8c8432"  # GenesisByte: parampara % 37 == 0
 
 import logging
