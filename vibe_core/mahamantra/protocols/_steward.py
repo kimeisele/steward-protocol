@@ -275,8 +275,22 @@ class StewardSystem:
     _naga_flooded: bool = True
     _naga_gene: str = "steward"
 
+    # Singleton pattern
+    _instance: ClassVar[Optional["StewardSystem"]] = None
+
+    def __new__(cls) -> "StewardSystem":
+        """Singleton: return existing instance or create new."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self) -> None:
-        """Initialize the system."""
+        """Initialize the system (only once)."""
+        if getattr(self, "_initialized", False):
+            return
+        self._initialized = True
+
         from vibe_core.mahamantra.protocols._bridge import get_bridge_registry
         from vibe_core.mahamantra.protocols._declaration import get_declaration_registry
 

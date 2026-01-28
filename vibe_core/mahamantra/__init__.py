@@ -1085,6 +1085,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         "yad yad ācarati śreṣṭhas" - The filesystem leads, we follow.
 
         PRIORITY:
+        0. Seed constants (PARAMPARA, WORDS, etc.)
         1. Subpackages (genesis, dharma, karma, moksha, substrate, etc.)
         2. Adapter files (adapters/{name}.py)
 
@@ -1092,6 +1093,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """
         from pathlib import Path
         import importlib
+
+        # 0. Check if it's a seed constant
+        from vibe_core.mahamantra.protocols import _seed
+        if hasattr(_seed, name):
+            return getattr(_seed, name)
 
         mahamantra_root = Path(__file__).parent
 

@@ -466,17 +466,28 @@ class CLIAutoDiscovery:
 
     def _get_position(self, command: str) -> Optional[int]:
         """
-        Get position using MahaKirtan orchestration - ALWAYS.
+        Get position using semantic keyword mapping first, then MahaKirtan.
 
         Flow:
+            0. Check KEYWORD_TO_MAHAJANA for semantic match
             1. MahaCompression.compress(command) → seed, guna
             2. MahaKirtan.compute(seed) → KirtanComputeResult
             3. transformed_value % WORDS → position (0-15)
 
-        This IS the 512-bit Chaitanya Computing. Everything vibrates.
-        Not a fallback. Not an optimization. THE computation.
+        Semantic mapping preserves intent. MahaKirtan handles unknown commands.
         """
-        # THE KING - MahaKirtan orchestrates everything
+        # 0. Semantic keyword mapping first (PARAMPARA wisdom)
+        from vibe_core.mahamantra.lila.adoption import OP_CODES
+        from vibe_core.mahamantra.substrate.seed import get_mahajana_position
+
+        cmd_lower = command.lower()
+        for mahajana_name, keywords in OP_CODES.items():
+            if cmd_lower in keywords:
+                position = get_mahajana_position(mahajana_name)
+                if position >= 0:
+                    return position
+
+        # THE KING - MahaKirtan orchestrates everything (for unknown commands)
         compressor, kirtan = _get_kirtan_orchestrator()
 
         # 1. Extract intent (Kolmogorov complexity)
