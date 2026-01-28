@@ -23,6 +23,11 @@ If p < 0.001, the correlation is NOT random.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"  # Position 0 - Mathematical Proof/Documentation
+__position__ = 0
+__genesis__ = "0xcc8960a0"  # GenesisByte: parampara % 37 == 0
+
 import math
 from dataclasses import dataclass
 from fractions import Fraction

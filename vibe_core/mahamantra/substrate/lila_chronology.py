@@ -31,6 +31,11 @@ the incarnation of Godhead who constantly sings the names of Krishna."
 — Srimad Bhagavatam 11.5.32
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"  # Position 0 - History/Chronology
+__position__ = 0
+__genesis__ = "0x4eb13b87"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, Final, List, Optional, Tuple
