@@ -276,6 +276,142 @@ def calculate_total_nodes(depth: int) -> int:
 
 
 # =============================================================================
+# FRACTAL __getattr__ FACTORY (Pure Discovery)
+# =============================================================================
+
+
+def fractal_getattr(caller_file: str):
+    """
+    Create a __getattr__ function for fractal folder discovery.
+
+    PURE FRACTAL: The filesystem IS the configuration.
+
+    Args:
+        caller_file: Pass __file__ from the calling module
+
+    Returns:
+        A __getattr__ function that discovers submodules dynamically
+
+    Usage:
+        # In vibe_core/mahamantra/genesis/__init__.py:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
+        __getattr__ = fractal_getattr(__file__)
+
+        # Now: from vibe_core.mahamantra.genesis import brahma  # JUST WORKS
+    """
+    from pathlib import Path
+
+    caller_path = Path(caller_file).resolve()
+    caller_dir = caller_path.parent
+
+    def _getattr(name: str):
+        """
+        Dynamic module/package discovery.
+
+        Priority:
+        1. Subpackage (folder with __init__.py)
+        2. Module (.py file)
+        3. Class discovery within module
+        """
+        import importlib
+
+        # Skip private/dunder names
+        if name.startswith("_"):
+            raise AttributeError(f"module has no attribute '{name}'")
+
+        # 1. Check for subpackage (folder with __init__.py)
+        subpackage_dir = caller_dir / name
+        if subpackage_dir.is_dir():
+            init_file = subpackage_dir / "__init__.py"
+            if init_file.exists():
+                module_path = _compute_module_path(subpackage_dir)
+                if module_path:
+                    return importlib.import_module(module_path)
+
+        # 2. Check for module (.py file)
+        module_file = caller_dir / f"{name}.py"
+        if module_file.exists():
+            module_path = _compute_module_path(module_file)
+            if module_path:
+                module = importlib.import_module(module_path)
+
+                # 3. Try to discover main class (same logic as adapters)
+                main_class = _discover_main_class(module, name)
+                if main_class:
+                    return main_class
+
+                return module
+
+        raise AttributeError(f"module has no attribute '{name}'")
+
+    def _compute_module_path(path: Path) -> Optional[str]:
+        """Compute the full module path from filesystem path."""
+        path = path.resolve()
+        parts = path.parts
+        try:
+            vibe_idx = parts.index("vibe_core")
+        except ValueError:
+            return None
+
+        module_parts = list(parts[vibe_idx:])
+        if module_parts and module_parts[-1].endswith(".py"):
+            module_parts[-1] = module_parts[-1][:-3]
+
+        return ".".join(module_parts)
+
+    def _discover_main_class(module, name: str):
+        """Discover the main class in a module."""
+        # 1. Try __all__
+        if hasattr(module, "__all__") and module.__all__:
+            first = module.__all__[0]
+            if hasattr(module, first):
+                obj = getattr(module, first)
+                if isinstance(obj, type):
+                    return obj()
+
+        # 2. Try naming conventions
+        name_cap = name.capitalize()
+        candidates = [
+            f"Maha{name_cap}",
+            f"{name_cap}Service",
+            f"{name_cap}",
+            f"Lotus{name_cap}",
+        ]
+        for candidate in candidates:
+            if hasattr(module, candidate):
+                obj = getattr(module, candidate)
+                if isinstance(obj, type):
+                    return obj()
+
+        # 3. First public class defined in this module
+        for attr_name in dir(module):
+            if attr_name.startswith("_"):
+                continue
+            if "Result" in attr_name or "State" in attr_name:
+                continue
+            obj = getattr(module, attr_name)
+            if isinstance(obj, type) and getattr(obj, "__module__", None) == module.__name__:
+                return obj()
+
+        return None
+
+    return _getattr
+
+
+def enable_fractal_discovery(caller_globals: dict, caller_file: str) -> None:
+    """
+    Enable fractal discovery for a module.
+
+    EVEN SIMPLER USAGE:
+        from vibe_core.mahamantra.substrate.wiring import enable_fractal_discovery
+        enable_fractal_discovery(globals(), __file__)
+
+        # Done. No __getattr__ assignment needed.
+    """
+    caller_globals["__getattr__"] = fractal_getattr(caller_file)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -302,4 +438,7 @@ __all__ = [
     # Fractal
     "calculate_fractal_depth",
     "calculate_total_nodes",
+    # FRACTAL DISCOVERY
+    "fractal_getattr",
+    "enable_fractal_discovery",
 ]

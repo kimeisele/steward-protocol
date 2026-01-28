@@ -75,6 +75,22 @@ class DharmaOpCode:
 
 
 # =============================================================================
+# FRACTAL DISCOVERY - Folder IS Wiring
+# =============================================================================
+
+_fractal_getattr_fn = None
+
+
+def __getattr__(name: str):
+    """Lazy fractal discovery to avoid circular imports."""
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
+
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 

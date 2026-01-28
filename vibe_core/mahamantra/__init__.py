@@ -976,17 +976,24 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         "yad yad ācarati śreṣṭhas" - The filesystem leads, we follow.
 
-        1. Check if adapters/{name}.py exists
-        2. Import it
-        3. DISCOVER main class (via __all__ or convention)
-        4. Instantiate & cache
+        PRIORITY:
+        1. Subpackages (genesis, dharma, karma, moksha, substrate, etc.)
+        2. Adapter files (adapters/{name}.py)
 
         NO HARDCODED MAPPING. NO MANUAL LABOR.
         """
         from pathlib import Path
+        import importlib
 
-        # Check if adapter file exists in filesystem
-        adapters_path = Path(__file__).parent / "adapters" / f"{name}.py"
+        mahamantra_root = Path(__file__).parent
+
+        # 1. Check if it's a subpackage (folder with __init__.py)
+        subpackage_path = mahamantra_root / name
+        if subpackage_path.is_dir() and (subpackage_path / "__init__.py").exists():
+            return importlib.import_module(f"vibe_core.mahamantra.{name}")
+
+        # 2. Check if adapter file exists in filesystem
+        adapters_path = mahamantra_root / "adapters" / f"{name}.py"
         if adapters_path.exists():
             cache_name = f"_adapter_{name}"
             if not object.__getattribute__(self, "__dict__").get(cache_name):
