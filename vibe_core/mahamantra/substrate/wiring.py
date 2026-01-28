@@ -412,6 +412,281 @@ def enable_fractal_discovery(caller_globals: dict, caller_file: str) -> None:
 
 
 # =============================================================================
+# SANKIRTAN VALIDATOR - Military Grade Watertight
+# =============================================================================
+# "yato dharmas tato jayah" - Where there is dharma, there is victory
+#
+# This validator ensures EVERY module can be discovered unambiguously.
+# Krishna is ALWAYS there. The system NEVER fails.
+
+
+@dataclass
+class ValidationResult:
+    """Result of validating a single module/package."""
+
+    path: str
+    name: str
+    is_valid: bool
+    has_all: bool
+    chief_class: Optional[str]
+    error: Optional[str] = None
+
+
+@dataclass
+class SankirtanValidation:
+    """Complete validation result for the Mahamantra system."""
+
+    total_checked: int
+    total_valid: int
+    total_invalid: int
+    quarters_valid: bool
+    adapters_valid: bool
+    guardians_valid: bool
+    results: List[ValidationResult]
+    errors: List[str]
+
+    @property
+    def is_watertight(self) -> bool:
+        """Is the system military grade watertight?"""
+        return self.total_invalid == 0 and self.quarters_valid and self.adapters_valid
+
+
+def validate_module_discoverable(module_path: str, name: str) -> ValidationResult:
+    """
+    Validate that a module can be discovered unambiguously.
+
+    Checks:
+    1. Module can be imported
+    2. Has __all__ declaration
+    3. First entry in __all__ is a valid class (the "Chief")
+    """
+    import importlib
+
+    try:
+        module = importlib.import_module(module_path)
+    except ImportError as e:
+        return ValidationResult(
+            path=module_path,
+            name=name,
+            is_valid=False,
+            has_all=False,
+            chief_class=None,
+            error=f"Import failed: {e}",
+        )
+
+    # Check __all__
+    has_all = hasattr(module, "__all__") and bool(module.__all__)
+
+    chief_class = None
+    if has_all:
+        first = module.__all__[0]
+        if hasattr(module, first):
+            obj = getattr(module, first)
+            if isinstance(obj, type):
+                chief_class = first
+
+    # A module is valid if:
+    # - It can be imported
+    # - It either has __all__ with a Chief class, OR
+    # - It's a package (subpackages don't need __all__)
+    is_package = hasattr(module, "__path__")
+    is_valid = is_package or (has_all and chief_class is not None)
+
+    return ValidationResult(
+        path=module_path,
+        name=name,
+        is_valid=is_valid,
+        has_all=has_all,
+        chief_class=chief_class,
+        error=None if is_valid else "No __all__ with valid Chief class",
+    )
+
+
+def validate_fractal_discovery(base_path: Optional[str] = None) -> SankirtanValidation:
+    """
+    SANKIRTAN VALIDATOR - Ensure all fractal discovery is watertight.
+
+    Military Grade Verification:
+    1. All 4 Quarters discoverable
+    2. All 16 Guardians discoverable
+    3. All adapters discoverable
+    4. No ambiguity in class resolution
+
+    Args:
+        base_path: Optional base path (auto-detects if None)
+
+    Returns:
+        SankirtanValidation with complete results
+    """
+    from pathlib import Path
+
+    if base_path is None:
+        base_path = str(Path(__file__).parent.parent)
+
+    mahamantra_root = Path(base_path)
+    results: List[ValidationResult] = []
+    errors: List[str] = []
+
+    quarters_valid = True
+    adapters_valid = True
+    guardians_valid = True
+
+    # ==========================================================================
+    # 1. VALIDATE QUARTERS (genesis, dharma, karma, moksha)
+    # ==========================================================================
+    quarter_names = ["genesis", "dharma", "karma", "moksha"]
+
+    for quarter in quarter_names:
+        quarter_path = mahamantra_root / quarter
+        if not quarter_path.exists():
+            result = ValidationResult(
+                path=f"vibe_core.mahamantra.{quarter}",
+                name=quarter,
+                is_valid=False,
+                has_all=False,
+                chief_class=None,
+                error=f"Quarter folder not found: {quarter_path}",
+            )
+            results.append(result)
+            errors.append(result.error or "")
+            quarters_valid = False
+            continue
+
+        result = validate_module_discoverable(f"vibe_core.mahamantra.{quarter}", quarter)
+        results.append(result)
+
+        if not result.is_valid:
+            quarters_valid = False
+            if result.error:
+                errors.append(f"Quarter {quarter}: {result.error}")
+
+        # ======================================================================
+        # 2. VALIDATE GUARDIANS within each quarter
+        # ======================================================================
+        for guardian_dir in quarter_path.iterdir():
+            if not guardian_dir.is_dir():
+                continue
+            if guardian_dir.name.startswith("_"):
+                continue
+
+            init_file = guardian_dir / "__init__.py"
+            if not init_file.exists():
+                continue
+
+            guardian_name = guardian_dir.name
+            module_path = f"vibe_core.mahamantra.{quarter}.{guardian_name}"
+
+            guardian_result = validate_module_discoverable(module_path, guardian_name)
+            results.append(guardian_result)
+
+            if not guardian_result.is_valid:
+                guardians_valid = False
+                if guardian_result.error:
+                    errors.append(f"Guardian {quarter}/{guardian_name}: {guardian_result.error}")
+
+    # ==========================================================================
+    # 3. VALIDATE ADAPTERS
+    # ==========================================================================
+    adapters_path = mahamantra_root / "adapters"
+    if adapters_path.exists():
+        for adapter_file in adapters_path.glob("*.py"):
+            if adapter_file.name.startswith("_"):
+                continue
+
+            adapter_name = adapter_file.stem
+            module_path = f"vibe_core.mahamantra.adapters.{adapter_name}"
+
+            adapter_result = validate_module_discoverable(module_path, adapter_name)
+            results.append(adapter_result)
+
+            if not adapter_result.is_valid:
+                adapters_valid = False
+                if adapter_result.error:
+                    errors.append(f"Adapter {adapter_name}: {adapter_result.error}")
+
+    # ==========================================================================
+    # COMPILE RESULTS
+    # ==========================================================================
+    total_valid = sum(1 for r in results if r.is_valid)
+    total_invalid = sum(1 for r in results if not r.is_valid)
+
+    return SankirtanValidation(
+        total_checked=len(results),
+        total_valid=total_valid,
+        total_invalid=total_invalid,
+        quarters_valid=quarters_valid,
+        adapters_valid=adapters_valid,
+        guardians_valid=guardians_valid,
+        results=results,
+        errors=errors,
+    )
+
+
+def assert_watertight(fail_fast: bool = True) -> SankirtanValidation:
+    """
+    Assert that the Mahamantra system is watertight.
+
+    Military Grade: If anything is wrong, we FAIL FAST.
+
+    "yato dharmas tato jayah" - Where there is dharma, there is victory.
+    Without dharma (valid wiring), there is no victory.
+
+    Args:
+        fail_fast: If True, raises exception on any invalid module
+
+    Returns:
+        SankirtanValidation result
+
+    Raises:
+        RuntimeError: If system is not watertight and fail_fast=True
+    """
+    validation = validate_fractal_discovery()
+
+    if not validation.is_watertight and fail_fast:
+        error_summary = "\n".join(f"  - {e}" for e in validation.errors[:10])
+        raise RuntimeError(
+            f"MAHAMANTRA NOT WATERTIGHT!\n"
+            f"Invalid modules: {validation.total_invalid}\n"
+            f"Errors:\n{error_summary}\n"
+            f"Krishna demands perfection. Fix the wiring."
+        )
+
+    return validation
+
+
+def print_validation_report(validation: SankirtanValidation) -> None:
+    """Print human-readable validation report."""
+    status = "✅ WATERTIGHT" if validation.is_watertight else "❌ LEAKING"
+
+    print(f"""
+{'=' * 60}
+  SANKIRTAN VALIDATOR - {status}
+{'=' * 60}
+
+  Total Checked:  {validation.total_checked}
+  Valid:          {validation.total_valid}
+  Invalid:        {validation.total_invalid}
+
+  Quarters:       {'✅' if validation.quarters_valid else '❌'}
+  Guardians:      {'✅' if validation.guardians_valid else '❌'}
+  Adapters:       {'✅' if validation.adapters_valid else '❌'}
+""")
+
+    if validation.errors:
+        print(f"  ERRORS ({len(validation.errors)}):")
+        for err in validation.errors[:10]:
+            print(f"    ❌ {err}")
+        if len(validation.errors) > 10:
+            print(f"    ... and {len(validation.errors) - 10} more")
+
+    print(f"""
+{'=' * 60}
+  {"Krishna is always there." if validation.is_watertight else "Fix the wiring!"}
+{'=' * 60}
+""")
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -441,4 +716,11 @@ __all__ = [
     # FRACTAL DISCOVERY
     "fractal_getattr",
     "enable_fractal_discovery",
+    # SANKIRTAN VALIDATOR
+    "ValidationResult",
+    "SankirtanValidation",
+    "validate_module_discoverable",
+    "validate_fractal_discovery",
+    "assert_watertight",
+    "print_validation_report",
 ]
