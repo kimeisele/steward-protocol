@@ -523,6 +523,50 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Execute one tick of the Mahamantra clock. Delegates to Singularity."""
         return self._singularity.tick()
 
+    # === SHUDDHI INTEGRATION (CST-based healing) ===
+
+    def _heal_file_with_shuddhi(self, file_path: "Path") -> bool:
+        """
+        Heal a file using ShuddhiEngine (CST-based, safe).
+
+        SAFETY PROTOCOL (Watertight):
+            1. Pre-Flight: CST parse (abort on syntax error)
+            2. Transform: CSTRemedy visitor pattern
+            3. Verify: compile() before write
+            4. Commit: Only write if all checks pass
+
+        Args:
+            file_path: Path to file to heal
+
+        Returns:
+            True if any healing was applied, False otherwise
+        """
+        from vibe_core.shuddhi.engine import ShuddhiEngine
+        from vibe_core.protocols.shuddhi import ShuddhiStatus
+
+        try:
+            engine = ShuddhiEngine()
+            healed = False
+
+            # Try each available remedy
+            for rule_id in engine.list_remedies():
+                result = engine.purify(file_path, rule_id)
+
+                if result.status == ShuddhiStatus.PURIFIED:
+                    # SAFETY: ShuddhiEngine already verified with compile()
+                    # Now write the purified code
+                    if result.purified_code:
+                        file_path.write_text(result.purified_code)
+                        healed = True
+                        # Log success (optional, for debugging)
+                        # print(f"[SHUDDHI] Healed {file_path.name}: {rule_id}")
+
+            return healed
+
+        except Exception:
+            # Graceful failure - don't break the tick loop
+            return False
+
     # === CONTINUOUS SANKIRTAN ===
     def start_sankirtan(self) -> None:
         """
@@ -545,12 +589,31 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             return  # Already chanting
 
         def sankirtan_on_tick(tick_state: TickState) -> None:
-            """Process codebase at each tick - CONTINUOUS KIRTAN."""
+            """
+            Process codebase at each tick - CONTINUOUS KIRTAN.
+
+            QUARTER-BASED DHARMA:
+                GENESIS (0-3):  Discovery - Scanner finds violations
+                DHARMA (4-7):   Healing - ShuddhiEngine purifies (CST-based)
+                KARMA (8-11):   Identity - Sankirtan injects __mahajana__
+                MOKSHA (12-15): Audit - Verify and report
+
+            SAFETY PROTOCOL (Watertight):
+                1. Pre-Flight: CST parse (abort on syntax error)
+                2. Transform: CSTRemedy visitor pattern
+                3. Verify: compile() before write
+                4. Commit: Only write if all checks pass
+            """
+            from pathlib import Path
             from vibe_core.mahamantra.substrate.scanner import get_scanner
-            from vibe_core.mahamantra.substrate.sankirtan import process_file_pipeline
+            from vibe_core.mahamantra.substrate.sankirtan import (
+                process_file_pipeline,
+                has_declaration,
+            )
 
             position = tick_state["position"]
             quarter = tick_state["quarter"]
+            mala = tick_state.get("mala", 0)
 
             # Get scanner instance
             scanner = get_scanner()
@@ -561,16 +624,35 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 return
 
             # Process ONE file per tick (gradual, not overwhelming)
-            # Use mala count to rotate through files
-            mala = tick_state.get("mala", 0)
             file_index = mala % len(files)
             file_info = files[file_index]
-            file_path = file_info.get("path", "")
+            file_path_str = file_info.get("path", "")
 
-            if file_path:
-                from pathlib import Path
-                # Process through 4-phase pipeline (dry_run for now)
-                process_file_pipeline(Path(file_path), dry_run=True)
+            if not file_path_str:
+                return
+
+            file_path = Path(file_path_str)
+            if not file_path.exists():
+                return
+
+            # === QUARTER-BASED PROCESSING ===
+
+            if quarter == "DHARMA":
+                # DHARMA: Healing via ShuddhiEngine (CST-based, safe)
+                # Uses closure to access self._heal_file_with_shuddhi
+                self._heal_file_with_shuddhi(file_path)
+
+            elif quarter == "KARMA":
+                # KARMA: Identity injection via Sankirtan
+                # Only inject if file doesn't have __mahajana__
+                try:
+                    content = file_path.read_text()
+                    if not has_declaration(content):
+                        process_file_pipeline(file_path, dry_run=True)
+                except Exception:
+                    pass  # Graceful on read errors
+
+            # GENESIS and MOKSHA: Discovery/Audit (passive for now)
 
         self._singularity.register_listener(sankirtan_on_tick)
         self._sankirtan_active = True
