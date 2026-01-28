@@ -117,10 +117,12 @@ class LilaState(TypedDict):
 
 class GitaRoute(TypedDict):
     """
-    Gita routing result - VERSE POINTERS via attractor.
+    Gita routing result - VERSE POINTERS via attractor + SEMANTIC MEANING.
 
     THE RADIO MODEL: We transmit frequencies (attractor), not text.
     The receiver (user) tunes to the verse via the pointer.
+
+    THE SEMANTIC BRIDGE: Attractor → Meaning (from AxiomSemantics).
 
     ATTRACTOR → VERSES:
         136 (AKASH)  = 544 verses (dominant field)
@@ -135,6 +137,11 @@ class GitaRoute(TypedDict):
     verse_ids: list  # Matching verse IDs (e.g., ["BG.18.66", "BG.12.8"])
     guna_filter: Optional[str]  # If filtered by guna
     dominant_guna: str  # Most common guna in matched verses
+
+    # SEMANTIC BRIDGE (from AxiomSemantics)
+    semantic_name: str  # e.g., "SURRENDER_ALL" for attractor 66
+    semantic_theme: str  # e.g., "Surrender All Dharmas"
+    semantic_keywords: tuple  # e.g., ("surrender", "all", "dharma")
 
 
 # =============================================================================
