@@ -40,6 +40,9 @@ class AnyTypeRemedy(CSTRemedy):
     make changes we can verify are safe.
     """
 
+    # Required for get_metadata() to work with PositionProvider
+    METADATA_DEPENDENCIES = (cst.metadata.PositionProvider,)
+
     @property
     def rule_id(self) -> str:
         return "any_type_usage"
@@ -103,15 +106,22 @@ class AnyTypeRemedy(CSTRemedy):
     # =========================================================================
     # PASS 2: Transform (remove unused imports)
     # =========================================================================
+    #
+    # NOTE: We can't use leave_ImportFrom because it's called BEFORE the rest
+    # of the code is visited, so _any_usages would be empty.
+    #
+    # Instead, we override leave_Module to do a second pass AFTER all info
+    # has been collected.
+    # =========================================================================
 
-    def leave_ImportFrom(
-        self, original_node: cst.ImportFrom, updated_node: cst.ImportFrom
-    ) -> Union[cst.ImportFrom, cst.RemovalSentinel]:
-        """Remove Any from typing imports if unused."""
+    def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:
+        """
+        Transform the module AFTER collecting all usage info.
+
+        This is called after the entire module is visited, so _any_usages
+        is fully populated.
+        """
         if not self._any_imported:
-            return updated_node
-
-        if original_node is not self._any_import_node:
             return updated_node
 
         # If Any is actually used, mark as found but don't remove
@@ -124,33 +134,51 @@ class AnyTypeRemedy(CSTRemedy):
         self.violation_found = True
         self.applied = True
 
-        if isinstance(updated_node.names, cst.ImportStar):
-            return updated_node
+        # Find and transform the import statement
+        new_body = []
+        for statement in updated_node.body:
+            if isinstance(statement, cst.SimpleStatementLine):
+                new_stmts = []
+                for stmt in statement.body:
+                    if isinstance(stmt, cst.ImportFrom):
+                        # Check if this is the Any import
+                        if (isinstance(stmt.module, cst.Name) and
+                            stmt.module.value == "typing" and
+                            not isinstance(stmt.names, cst.ImportStar)):
 
-        # Filter out Any from the import names
-        new_names = []
-        for name in updated_node.names:
-            if isinstance(name, cst.ImportAlias):
-                name_value = name.name.value if isinstance(name.name, cst.Name) else None
-                if name_value != "Any":
-                    new_names.append(name)
+                            # Filter out Any from imports
+                            new_names = []
+                            for name in stmt.names:
+                                if isinstance(name, cst.ImportAlias):
+                                    name_val = name.name.value if isinstance(name.name, cst.Name) else None
+                                    if name_val != "Any":
+                                        new_names.append(name)
 
-        # If no names left, remove the entire import
-        if not new_names:
-            return cst.RemovalSentinel.REMOVE
+                            if not new_names:
+                                # All names removed, skip this statement
+                                continue
+                            else:
+                                # Rebuild with remaining names
+                                rebuilt_names = []
+                                for i, name in enumerate(new_names):
+                                    if i < len(new_names) - 1:
+                                        rebuilt_names.append(name.with_changes(
+                                            comma=cst.Comma(whitespace_after=cst.SimpleWhitespace(" "))))
+                                    else:
+                                        rebuilt_names.append(name.with_changes(
+                                            comma=cst.MaybeSentinel.DEFAULT))
 
-        # Rebuild the import with remaining names
-        # Need to handle trailing comma
-        rebuilt_names = []
-        for i, name in enumerate(new_names):
-            if i < len(new_names) - 1:
-                # Add comma after all but last
-                rebuilt_names.append(name.with_changes(comma=cst.Comma(whitespace_after=cst.SimpleWhitespace(" "))))
+                                new_stmts.append(stmt.with_changes(names=rebuilt_names))
+                                continue
+
+                    new_stmts.append(stmt)
+
+                if new_stmts:
+                    new_body.append(statement.with_changes(body=new_stmts))
             else:
-                # Last element - no trailing comma
-                rebuilt_names.append(name.with_changes(comma=cst.MaybeSentinel.DEFAULT))
+                new_body.append(statement)
 
-        return updated_node.with_changes(names=rebuilt_names)
+        return updated_node.with_changes(body=new_body)
 
 
 class AnyTypeUsageDetector(CSTRemedy):
@@ -163,6 +191,9 @@ class AnyTypeUsageDetector(CSTRemedy):
     Use this to generate a report of all Any violations
     that need manual intervention.
     """
+
+    # Required for get_metadata() to work with PositionProvider
+    METADATA_DEPENDENCIES = (cst.metadata.PositionProvider,)
 
     @property
     def rule_id(self) -> str:
