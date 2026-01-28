@@ -56,7 +56,7 @@ __genesis__ = "0xf72a7b6f"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Callable, Final, TypeVar
+from typing import Callable, Final, TypeVar
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
