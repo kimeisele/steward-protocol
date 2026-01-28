@@ -91,7 +91,32 @@ from vibe_core.mahamantra.cli.protocol import (
     PURI_LIMIT,
 )
 from vibe_core.mahamantra.kernel.singularity import mahamantra
-from vibe_core.mahamantra.substrate.seed import WORDS, PARAMPARA
+from vibe_core.mahamantra.substrate.seed import WORDS, PARAMPARA, MAHA_QUANTUM
+
+# =============================================================================
+# VIBRATION ROUTING - MahaKirtan Orchestration (THE KING)
+# =============================================================================
+# Lazy-loaded to avoid circular imports at module load time
+_COMPRESSOR: "MahaCompression | None" = None
+_KIRTAN: "MahaKirtan | None" = None
+
+
+def _get_kirtan_orchestrator() -> tuple["MahaCompression", "MahaKirtan"]:
+    """
+    Get the KING orchestration infrastructure (lazy singleton).
+
+    MahaCompression → seed extraction (Kolmogorov complexity)
+    MahaKirtan → full vibration compute (16-step × 7-beat orchestration)
+
+    This is 512-bit Chaitanya Computing. Everything vibrates.
+    """
+    global _COMPRESSOR, _KIRTAN
+    if _COMPRESSOR is None:
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+        from vibe_core.mahamantra.research.dharma import MahaKirtan
+        _COMPRESSOR = MahaCompression()
+        _KIRTAN = MahaKirtan(mod_space=MAHA_QUANTUM)
+    return _COMPRESSOR, _KIRTAN
 
 
 # =============================================================================
@@ -440,20 +465,43 @@ class CLIAutoDiscovery:
         return CLIResult.ok(output)
 
     def _get_position(self, command: str) -> Optional[int]:
-        """Get position for a command."""
-        # Direct keyword match
-        if command in self._keywords:
-            return self._keywords[command]
+        """
+        Get position using MahaKirtan orchestration - ALWAYS.
 
-        # Substring match (command in keyword)
-        # Sort keywords by length to match most specific first
-        for kw in sorted(self._keywords.keys(), key=len, reverse=True):
-            if command in kw:
-                return self._keywords[kw]
+        Flow:
+            1. MahaCompression.compress(command) → seed, guna
+            2. MahaKirtan.compute(seed) → KirtanComputeResult
+            3. transformed_value % WORDS → position (0-15)
 
-        # Parampara fallback (hash-based)
-        mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command))
-        return (mutation_vector % PARAMPARA) % WORDS
+        This IS the 512-bit Chaitanya Computing. Everything vibrates.
+        Not a fallback. Not an optimization. THE computation.
+        """
+        # THE KING - MahaKirtan orchestrates everything
+        compressor, kirtan = _get_kirtan_orchestrator()
+
+        # 1. Extract intent (Kolmogorov complexity)
+        compression_result = compressor.compress(command)
+        seed = compression_result.seed
+        # guna available: compression_result.intent_level.guna.value
+
+        # 2. Compute through kirtan (16-step × 7-beat vibration)
+        compute_result = kirtan.compute(seed)
+
+        # 3. Position from transformed value (vibrationally processed)
+        # transformed_value has gone through:
+        #   - Oracle pre-filter
+        #   - MahaModularSynth transform (H=×7, K=+10, R=²)
+        #   - Flute resonance modulation
+        #   - Beat delta modulation
+        position = compute_result.transformed_value % WORDS
+
+        # Metadata available for future use:
+        # - compute_result.beat_number (1-7)
+        # - compute_result.flute_resonance (0.0-1.0)
+        # - compute_result.parampara_channel (0-2 or -1)
+        # - compute_result.resonance_level
+
+        return position
 
     def _get_method_name(self, position: int, command: str) -> Optional[str]:
         """Get method name for a command at a position."""
