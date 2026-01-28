@@ -173,3 +173,57 @@ class TestMahamantraVibration:
         cycle = mahamantra.ATTRACTOR_CYCLE
         assert isinstance(cycle, tuple)
         assert len(cycle) == 4
+
+
+class TestResearchFractalRouting:
+    """Test research fractal routing: folder IS wiring."""
+
+    @pytest.fixture
+    def mahamantra(self):
+        from vibe_core.mahamantra import mahamantra
+        return mahamantra
+
+    @pytest.fixture
+    def research_root(self) -> Path:
+        """Get research package root."""
+        import vibe_core.mahamantra.research
+        return Path(vibe_core.mahamantra.research.__file__).parent
+
+    def test_all_research_modules_route(self, mahamantra, research_root):
+        """All research .py files must be accessible via fractal routing."""
+        research_modules = [
+            f.stem for f in research_root.glob("*.py")
+            if f.stem != "__init__"
+            and not f.stem.startswith("_")
+        ]
+
+        for name in research_modules:
+            obj = getattr(mahamantra.research, name, None)
+            assert obj is not None, f"mahamantra.research.{name} should route but returns None"
+
+    def test_all_research_subpackages_route(self, mahamantra, research_root):
+        """All research subpackages must be accessible via fractal routing."""
+        subpackages = [
+            d.name for d in research_root.iterdir()
+            if d.is_dir()
+            and (d / "__init__.py").exists()
+            and not d.name.startswith("_")
+        ]
+
+        for name in subpackages:
+            obj = getattr(mahamantra.research, name, None)
+            assert obj is not None, f"mahamantra.research.{name} should route but returns None"
+
+    def test_research_dharma_routes(self, mahamantra):
+        """mahamantra.research.dharma must route."""
+        dharma = mahamantra.research.dharma
+        assert dharma is not None
+        assert hasattr(dharma, "MahaKirtan")
+
+    def test_research_module_count(self, research_root):
+        """Must have at least 30 research modules."""
+        research_modules = [
+            f.stem for f in research_root.glob("*.py")
+            if f.stem != "__init__" and not f.stem.startswith("_")
+        ]
+        assert len(research_modules) >= 30, f"Expected >= 30 research modules, got {len(research_modules)}"
