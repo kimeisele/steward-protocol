@@ -24,7 +24,12 @@ if TYPE_CHECKING:
     from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
 
 from vibe_core.mahamantra._lotus import LotusNode, LotusPath
-from vibe_core.mahamantra._types import ExecuteResult, RouteResult
+from vibe_core.mahamantra._types import (
+    AkashState,
+    ExecuteResult,
+    RouteResult,
+    VibrationState,
+)
 
 # Core Protocols
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
@@ -45,11 +50,99 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     The Root of the Lotus.
 
     This is the only node that knows HOW to execute and resonate.
+    Now with AKASH CACHE (136 = FIELD) - Always vibrating!
     """
+
+    # Class-level Akash state (the 136 FIELD - persistent across instances)
+    _akash: AkashState = {
+        "resonance_level": 0.0,
+        "accumulated_value": 0,
+        "total_beats": 0,
+        "total_rounds": 0,
+        "attractor_counts": {},  # Will track PANCHA distribution
+    }
+
+    # Lazy-loaded MahaKirtan orchestrator
+    _kirtan = None
+    _compressor = None
 
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
         GADBase.__init__(self)
+
+    @classmethod
+    def _get_kirtan(cls):
+        """Lazy-load MahaKirtan orchestrator."""
+        if cls._kirtan is None:
+            from vibe_core.mahamantra.adapters.compression import MahaCompression
+            from vibe_core.mahamantra.research.dharma import MahaKirtan
+            from vibe_core.mahamantra.substrate.seed import MAHA_QUANTUM
+
+            cls._compressor = MahaCompression()
+            cls._kirtan = MahaKirtan(mod_space=MAHA_QUANTUM)
+        return cls._compressor, cls._kirtan
+
+    @classmethod
+    def _compute_vibration(cls, command: str) -> VibrationState:
+        """
+        Compute vibration state for a command.
+
+        MahaCompression → seed → MahaKirtan.compute() → VibrationState
+        This is the +1 FOKUS (Lichtpunkt).
+        """
+        compressor, kirtan = cls._get_kirtan()
+
+        # 1. Extract intent (Kolmogorov complexity)
+        comp_result = compressor.compress(command)
+        seed = comp_result.seed
+
+        # 2. Compute through kirtan (16-step × 7-beat)
+        result = kirtan.compute(seed)
+
+        # 3. Find attractor (for classification)
+        from vibe_core.mahamantra.research.dharma import MahaResonator
+        from vibe_core.mahamantra.substrate.seed import MAHA_QUANTUM
+
+        resonator = MahaResonator(mod_space=MAHA_QUANTUM)
+        attractor = resonator.find_attractor(seed).attractor
+
+        return VibrationState(
+            seed=seed,
+            transformed=result.transformed_value,
+            beat=result.beat_number,
+            resonance=result.flute_resonance,
+            attractor=attractor,
+            parampara_channel=result.parampara_channel,
+            oracle_validated=result.oracle_validated,
+        )
+
+    @classmethod
+    def _update_akash(cls, vibration: VibrationState) -> None:
+        """
+        Update the Akash field (136) with new vibration.
+
+        The field absorbs every computation. Nothing is lost.
+        """
+        cls._akash["resonance_level"] = min(
+            1.0, cls._akash["resonance_level"] + vibration["resonance"] * 0.01
+        )
+        cls._akash["accumulated_value"] = (
+            cls._akash["accumulated_value"] + vibration["transformed"]
+        ) % 137  # mod MAHA_QUANTUM
+        cls._akash["total_beats"] += 1
+        if vibration["beat"] == 7:  # End of round
+            cls._akash["total_rounds"] += 1
+
+        # Track attractor distribution (PANCHA)
+        attractor = vibration["attractor"]
+        if attractor not in cls._akash["attractor_counts"]:
+            cls._akash["attractor_counts"][attractor] = 0
+        cls._akash["attractor_counts"][attractor] += 1
+
+    @classmethod
+    def get_akash(cls) -> AkashState:
+        """Get current Akash field state."""
+        return cls._akash.copy()
 
     # === Resonance & Routing (Root Intelligence) ===
 
@@ -95,44 +188,60 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
         """
-        Execute via cli_bridge (ROYAL DELEGATION).
+        Execute via cli_bridge WITH VIBRATION (ROYAL DELEGATION).
 
-        The Grüßaugust calls the General.
-        MahamantraLotus delegates to cli_bridge.route() which uses cli_engine.
+        Flow:
+            1. Compute vibration (MahaKirtan)
+            2. Update Akash field (136)
+            3. Route via cli_bridge
+            4. Return with vibration state
 
-        Lazy import to prevent circular dependencies.
+        Nothing is silent. Everything vibrates.
         """
-        # ROYAL DELEGATION: Lazy import cli_bridge
+        # 1. COMPUTE VIBRATION (+1 Fokus)
+        vibration = self._compute_vibration(command)
+
+        # 2. UPDATE AKASH FIELD (136)
+        self._update_akash(vibration)
+
+        # 3. ROUTE via cli_bridge
         from vibe_core.mahamantra.cli.bridge import cli_bridge
 
-        # Delegate to the real execution engine
         bridge_result = cli_bridge.route(command, args or [])
 
-        # Convert BridgeResult to ExecuteResult
-        # Get guardian info from position if available
-        guardian = "narada"  # default
-        quarter = "genesis"  # default
-        if bridge_result.position is not None:
-            try:
-                from vibe_core.mahamantra.substrate import MAHAMANTRA_POSITIONS
+        # Get guardian info from vibration-derived position
+        position = vibration["transformed"] % WORDS  # Position from vibration!
+        guardian = "narada"
+        quarter = "genesis"
+        try:
+            from vibe_core.mahamantra.substrate import MAHAMANTRA_POSITIONS
 
-                if 0 <= bridge_result.position < 16:
-                    pos = MAHAMANTRA_POSITIONS[bridge_result.position]
-                    guardian = pos.guardian.value
-                    quarter = pos.quarter.value
-            except (ImportError, IndexError):
-                pass
+            if 0 <= position < 16:
+                pos = MAHAMANTRA_POSITIONS[position]
+                guardian = pos.guardian.value
+                quarter = pos.quarter.value
+        except (ImportError, IndexError):
+            pass
 
+        # Determine guna from vibration
+        if vibration["oracle_validated"]:
+            guna = "suddha" if vibration["resonance"] > 0.5 else "sattva"
+        else:
+            guna = "rajas" if bridge_result.success else "tamas"
+
+        # 4. RETURN WITH VIBRATION - Nothing is lost!
         return ExecuteResult(
             success=bridge_result.success,
             exit_code=bridge_result.exit_code,
-            position=bridge_result.position or -1,
+            position=position,
             guardian=guardian,
             quarter=quarter,
-            guna="vishuddha" if bridge_result.success else "tamas",
-            requires_confirmation=False,
-            output=bridge_result.error or "",  # Bridge doesn't have output field, use error for now
+            guna=guna,
+            requires_confirmation=guna == "tamas",
+            output=bridge_result.error or "",
             error=bridge_result.error,
+            vibration=vibration,  # +1 Fokus
+            akash=self.get_akash(),  # 136 Feld
         )
 
     def resolve(self, name: str) -> LotusNode:
