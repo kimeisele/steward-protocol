@@ -134,3 +134,42 @@ class TestMahamantraRoutingCount:
         ]
 
         assert len(adapters) >= 10, f"Expected >= 10 adapters, got {len(adapters)}"
+
+
+class TestMahamantraVibration:
+    """Test vibration API (Call-Response)."""
+
+    @pytest.fixture
+    def mahamantra(self):
+        from vibe_core.mahamantra import mahamantra
+        return mahamantra
+
+    def test_vibrate_returns_dict(self, mahamantra):
+        """vibrate() returns VibrationState dict."""
+        result = mahamantra.vibrate("test query")
+        assert isinstance(result, dict)
+        assert "seed" in result
+        assert "attractor" in result
+        assert "resonance" in result
+
+    def test_kirtan_returns_result(self, mahamantra):
+        """kirtan() returns KirtanComputeResult."""
+        result = mahamantra.kirtan(42)
+        assert hasattr(result, "call_response")
+        assert hasattr(result, "flute_resonance")
+        assert hasattr(result, "transformed_value")
+
+    def test_kirtan_call_response(self, mahamantra):
+        """kirtan() has CALL or RESPONSE."""
+        result = mahamantra.kirtan(42)
+        assert result.call_response in ("CALL", "RESPONSE")
+
+    def test_attractor_fixed_accessible(self, mahamantra):
+        """ATTRACTOR_FIXED is accessible."""
+        assert mahamantra.ATTRACTOR_FIXED == 18
+
+    def test_attractor_cycle_accessible(self, mahamantra):
+        """ATTRACTOR_CYCLE is accessible."""
+        cycle = mahamantra.ATTRACTOR_CYCLE
+        assert isinstance(cycle, tuple)
+        assert len(cycle) == 4
