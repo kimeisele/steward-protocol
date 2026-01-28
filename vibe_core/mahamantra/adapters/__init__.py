@@ -94,6 +94,13 @@ _LAZY_IMPORTS = {
     "RegistrationResult": "llm",
     "RouterStats": "llm",
     "IntentCategory": "llm",
+    # vibrational_engine.py - THE BIDIRECTIONAL LOOP
+    "VibrationalEngine": "vibrational_engine",
+    "VibrationalResult": "vibrational_engine",
+    "VibrationalState": "vibrational_engine",
+    "vibrate": "vibrational_engine",
+    "vibrate_batch": "vibrational_engine",
+    "get_engine": "vibrational_engine",
 }
 
 
