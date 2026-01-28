@@ -15,7 +15,7 @@ math: `genesis_byte % 37 == 0`
 If the signature matches, the connection is BONA FIDE.
 """
 
-from typing import Optional
+from typing import ClassVar, Optional
 from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
 from vibe_core.mahamantra.protocols._seed import (
     PARAMPARA,
@@ -38,6 +38,15 @@ class Prabhupada(PrabhupadaProtocol):
     # MAHAMANTRA SUBSTRATE: Core infrastructure, no auto-wrap needed
     _naga_flooded: bool = True
     _naga_gene: str = "prabhupada"
+
+    # Singleton pattern
+    _instance: ClassVar[Optional["Prabhupada"]] = None
+
+    def __new__(cls) -> "Prabhupada":
+        """Singleton: return existing instance or create new."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def verify_link(self, component: object) -> bool:
         """
