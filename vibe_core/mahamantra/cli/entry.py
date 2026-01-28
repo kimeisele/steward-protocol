@@ -53,7 +53,7 @@ from vibe_core.mahamantra.cli.protocol import (
     CLIState,
 )
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
-from vibe_core.mahamantra.protocols._seed import MALA
+from vibe_core.mahamantra.protocols._seed import MALA, WORDS
 
 
 class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
@@ -214,7 +214,7 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
 
         from vibe_core.mahamantra import mahamantra
 
-        for pos in range(16):
+        for pos in range(WORDS):
             position = mahamantra[pos]
             guardian = position.guardian.value.upper()
             opcode = position.opcode.value

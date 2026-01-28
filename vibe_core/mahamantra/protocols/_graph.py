@@ -73,6 +73,7 @@ from vibe_core.mahamantra.protocols._lotus import (
     LOTUS_PETALS,
     get_mahajana_position,
 )
+from vibe_core.mahamantra.protocols._seed import LILA
 
 
 # =============================================================================
@@ -82,8 +83,8 @@ from vibe_core.mahamantra.protocols._lotus import (
 # The 24 Prakriti elements (Ksetra - the Field)
 PRAKRITI_COUNT: Final[int] = KSETRA_COUNT  # 24
 
-# The purification cycle: LCM(16, 24) = 48
-PURIFICATION_CYCLE: Final[int] = 48
+# The purification cycle: LCM(16, 24) = 48 = LILA
+PURIFICATION_CYCLE: Final[int] = LILA
 
 # Mantra cycles in purification: 48 / 16 = 3
 MANTRA_CYCLES: Final[int] = PURIFICATION_CYCLE // LOTUS_PETALS

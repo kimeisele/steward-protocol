@@ -51,6 +51,7 @@ from typing import (
 from vibe_core.mahamantra.lila.adoption import analyze_source
 from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 from vibe_core.mahamantra.substrate.mahajana import Avatara, Mahajana, Quarter
+from vibe_core.mahamantra.protocols._seed import WORDS
 
 # Import from substrate - Balarama-wrapped legacy types
 from vibe_core.mahamantra.substrate._legacy import (
@@ -772,7 +773,7 @@ def print_scan_report() -> None:
 """)
 
     by_mahajana = result.get("by_mahajana", {})
-    for pos in range(16):
+    for pos in range(WORDS):
         alias = _POSITION_TO_ALIAS[pos]
         count = by_mahajana.get(alias.name, 0)
         bar = "#" * min(count, 30)

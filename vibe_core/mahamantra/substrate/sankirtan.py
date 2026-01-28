@@ -53,7 +53,7 @@ from vibe_core.mahamantra.protocols._sankirtan import (
     SankirtanProtocol,
     WiringStats,
 )
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
+from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
 
 # Import SamskaraProtocol - Balarama-wrapped legacy types
 from vibe_core.mahamantra.substrate._legacy import (
@@ -1030,7 +1030,7 @@ def print_sankirtan_report(result: SankirtanResult) -> None:
   BY MAHAJANA:
 """)
 
-    for pos in range(16):
+    for pos in range(WORDS):
         mapping = MAHAMANTRA_POSITIONS[pos]
         guardian_name = mapping.guardian.value
         count = result.by_mahajana.get(guardian_name, 0)

@@ -54,6 +54,7 @@ from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
     PARAMPARA,
 )
+from vibe_core.mahamantra.protocols._seed import WORDS
 
 
 # =============================================================================
@@ -504,12 +505,12 @@ class ProtocolRegistry:
 
         Returns (registered_count, total_positions).
         """
-        return len(cls._registry), 16
+        return len(cls._registry), WORDS
 
     @classmethod
     def missing_positions(cls) -> List[int]:
         """Get list of positions without registered protocols."""
-        return [i for i in range(16) if i not in cls._registry]
+        return [i for i in range(WORDS) if i not in cls._registry]
 
     @classmethod
     def clear(cls) -> None:
