@@ -497,6 +497,63 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Execute one tick of the Mahamantra clock. Delegates to Singularity."""
         return self._singularity.tick()
 
+    # === CONTINUOUS SANKIRTAN ===
+    def start_sankirtan(self) -> None:
+        """
+        Start CONTINUOUS sankirtan - the mass chanting.
+
+        "sankirtan ist nicht verschieden von mahamantra selbst krishna"
+
+        This registers a listener that processes files at each tick.
+        Each position has its dharma:
+            GENESIS (0-3):  Discovery, initialize
+            DHARMA (4-7):   Validation, type-check
+            KARMA (8-11):   Transformation, execution
+            MOKSHA (12-15): Audit, release
+
+        Usage:
+            mahamantra.start_sankirtan()
+            # Now every tick() also processes codebase
+        """
+        if hasattr(self, "_sankirtan_active") and self._sankirtan_active:
+            return  # Already chanting
+
+        def sankirtan_on_tick(tick_state: TickState) -> None:
+            """Process codebase at each tick - CONTINUOUS KIRTAN."""
+            from vibe_core.mahamantra.substrate.scanner import get_scanner
+            from vibe_core.mahamantra.substrate.sankirtan import process_file_pipeline
+
+            position = tick_state["position"]
+            quarter = tick_state["quarter"]
+
+            # Get scanner instance
+            scanner = get_scanner()
+
+            # Get files for this position
+            files = scanner.get_by_position(position)
+            if not files:
+                return
+
+            # Process ONE file per tick (gradual, not overwhelming)
+            # Use mala count to rotate through files
+            mala = tick_state.get("mala", 0)
+            file_index = mala % len(files)
+            file_info = files[file_index]
+            file_path = file_info.get("path", "")
+
+            if file_path:
+                from pathlib import Path
+                # Process through 4-phase pipeline (dry_run for now)
+                process_file_pipeline(Path(file_path), dry_run=True)
+
+        self._singularity.register_listener(sankirtan_on_tick)
+        self._sankirtan_active = True
+
+    def stop_sankirtan(self) -> None:
+        """Stop continuous sankirtan."""
+        self._sankirtan_active = False
+        # Note: Listener remains registered but becomes no-op
+
     # === SHADOW REACTOR ACCESS ===
     @property
     def shadow(self) -> "ShadowReactorFactory":
