@@ -12,6 +12,11 @@ We benchmark against SARS-CoV-2 genome (29,903 nucleotides).
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"  # Position 6 - Analysis/Biology
+__position__ = 6
+__genesis__ = "0x33b8c1e2"  # GenesisByte: parampara % 37 == 0
+
 import time
 from dataclasses import dataclass
 from typing import Final, Dict, List, Set, Optional

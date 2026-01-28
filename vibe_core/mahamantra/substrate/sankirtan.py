@@ -36,6 +36,11 @@ NO MANUAL WIRING. The folder structure IS the wiring.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"  # Position 2 - Communication/Broadcast
+__position__ = 2
+__genesis__ = "0x2c80316d"  # GenesisByte: parampara % 37 == 0
+
 import ast
 import logging
 import re
