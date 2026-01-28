@@ -75,12 +75,15 @@ class ShuddhiEngine(ShuddhiProtocol):
             source_code = file_path.read_text()
             module = cst.parse_module(source_code)
 
-            # 2. Transform
+            # 2. Transform (with MetadataWrapper for position tracking)
             remedy_class = self._remedies[rule_id]
             transformer = remedy_class()
 
             try:
-                modified_module = module.visit(transformer)
+                # Use MetadataWrapper if remedy needs position metadata
+                # This enables get_metadata() calls in remedies
+                wrapper = cst.MetadataWrapper(module)
+                modified_module = wrapper.visit(transformer)
             except ShuddhiScopeError as e:
                 return ShuddhiResult(
                     status=ShuddhiStatus.OUT_OF_SCOPE,
