@@ -16,6 +16,8 @@ from typing import get_type_hints
 from vibe_core.mahamantra._types import (
     TickState,
     RouteResult,
+    VibrationState,
+    AkashState,
     ExecuteResult,
     LilaState,
 )
@@ -81,16 +83,17 @@ class TestExecuteResult:
     """Test ExecuteResult TypedDict."""
 
     def test_execute_result_keys(self):
-        """ExecuteResult has correct keys."""
+        """ExecuteResult has correct keys including vibration state."""
         hints = get_type_hints(ExecuteResult)
         expected_keys = {
             "success", "exit_code", "position", "guardian",
-            "quarter", "guna", "requires_confirmation", "output", "error"
+            "quarter", "guna", "requires_confirmation", "output", "error",
+            "vibration", "akash",  # Vibration flows through!
         }
         assert set(hints.keys()) == expected_keys
 
     def test_execute_result_can_be_created(self):
-        """ExecuteResult can be instantiated."""
+        """ExecuteResult can be instantiated with vibration."""
         result: ExecuteResult = {
             "success": True,
             "exit_code": 0,
@@ -101,6 +104,8 @@ class TestExecuteResult:
             "requires_confirmation": False,
             "output": "executed",
             "error": None,
+            "vibration": None,  # Optional vibration state
+            "akash": None,  # Optional akash state
         }
         assert result["success"] is True
         assert result["guna"] == "rajas"
@@ -117,6 +122,8 @@ class TestExecuteResult:
             "requires_confirmation": True,
             "output": "",
             "error": "Requires user confirmation",
+            "vibration": None,
+            "akash": None,
         }
         assert result["guna"] == "tamas"
         assert result["requires_confirmation"] is True
