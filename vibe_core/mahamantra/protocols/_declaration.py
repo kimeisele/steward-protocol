@@ -335,8 +335,21 @@ class DeclarationRegistry:
     _naga_flooded: bool = True
     _naga_gene: str = "declaration"
 
+    # Singleton pattern
+    _instance: ClassVar[Optional["DeclarationRegistry"]] = None
+
+    def __new__(cls) -> "DeclarationRegistry":
+        """Singleton: return existing instance or create new."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self) -> None:
-        """Initialize the registry."""
+        """Initialize the registry (only once)."""
+        if getattr(self, "_initialized", False):
+            return
+        self._initialized = True
         self._cards: Dict[str, MahajanaCard] = {}
         self._by_mahajana: Dict[str, List[MahajanaCard]] = {}
         self._by_position: Dict[int, List[MahajanaCard]] = {}

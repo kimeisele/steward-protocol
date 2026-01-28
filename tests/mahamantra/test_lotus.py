@@ -87,22 +87,19 @@ class TestPositionModuleExports:
 
     def test_position_constants(self) -> None:
         """Position modules have POSITION constant."""
-        brahma = mahamantra.genesis.brahma._get_module()
-        assert brahma is not None
+        from vibe_core.mahamantra.genesis import brahma
         assert hasattr(brahma, "POSITION")
         assert brahma.POSITION == 1
 
     def test_opcode_constants(self) -> None:
         """Position modules have OPCODE constant."""
-        yamaraja = mahamantra.moksha.yamaraja._get_module()
-        assert yamaraja is not None
+        from vibe_core.mahamantra.moksha import yamaraja
         assert hasattr(yamaraja, "OPCODE")
         assert yamaraja.OPCODE == "AUDIT_SEAL"
 
     def test_parampara_vectors(self) -> None:
         """Position modules have correct PARAMPARA_VECTOR."""
-        bali = mahamantra.moksha.bali._get_module()
-        assert bali is not None
+        from vibe_core.mahamantra.moksha import bali
         assert hasattr(bali, "PARAMPARA_VECTOR")
         # Position 13: (13+1) * 37 = 518
         assert bali.PARAMPARA_VECTOR == 518
