@@ -115,6 +115,28 @@ class LilaState(TypedDict):
     is_puri: bool  # True for 24-47
 
 
+class GitaRoute(TypedDict):
+    """
+    Gita routing result - VERSE POINTERS via attractor.
+
+    THE RADIO MODEL: We transmit frequencies (attractor), not text.
+    The receiver (user) tunes to the verse via the pointer.
+
+    ATTRACTOR → VERSES:
+        136 (AKASH)  = 544 verses (dominant field)
+        22 (VAYU)    = 43 verses
+        18 (AGNI)    = 39 verses
+        87 (JALA)    = 38 verses
+        49 (PRITHVI) = 36 verses
+    """
+
+    attractor: int  # The computed attractor (PANCHA)
+    verse_count: int  # How many verses match this attractor
+    verse_ids: list  # Matching verse IDs (e.g., ["BG.18.66", "BG.12.8"])
+    guna_filter: Optional[str]  # If filtered by guna
+    dominant_guna: str  # Most common guna in matched verses
+
+
 # =============================================================================
 # EXPORTS
 # =============================================================================
@@ -126,4 +148,5 @@ __all__ = [
     "AkashState",
     "ExecuteResult",
     "LilaState",
+    "GitaRoute",
 ]

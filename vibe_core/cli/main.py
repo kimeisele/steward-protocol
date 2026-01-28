@@ -59,6 +59,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     if guardian_result is not None:
         return guardian_result
 
+    # NOTE: "gita" command REMOVED - semantic queries now flow through execute()
+    # steward "how do I surrender?" → vibration compute → Gita routing (automatic)
+
     # =========================================================================
     # DISCOVERY - Populate the Registry (Balarama Injection)
     # =========================================================================
@@ -174,6 +177,12 @@ COMMON COMMANDS:
     steward help      → This help
     steward chat      → Semantic routing
 
+SEMANTIC QUERIES (vibration → Gita routing):
+    steward "how do I surrender?"    → Routes through Gita via attractor
+    steward "what is the soul?"      → 700 verses, 5 attractors (PANCHA)
+    steward "why do I suffer?"       → MahaKirtan → attractor → verses
+
+ONE ENTRY POINT. Mahamantra routes everything.
 The mantra chants. The guardians execute.
 """)
     return EXIT_SUCCESS

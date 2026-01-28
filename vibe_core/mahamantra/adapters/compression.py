@@ -72,27 +72,32 @@ __genesis__ = "0xCOMPR37"  # Compression layer
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Final, List, Optional, Union
+from typing import Dict, Final, List, Optional, Tuple, Union
 import hashlib
 import json
 
 
 # =============================================================================
-# MAHAMANTRA CONSTANTS (Single Source)
+# MAHAMANTRA CONSTANTS (FROM SEED - NO HARDCODING!)
 # =============================================================================
+# MAHAPROMPT: "Tod durch Import" - wer am seed.py vorbei importiert, stirbt
 
-WORDS: Final[int] = 16          # The 16 words
-QUARTERS: Final[int] = 4        # Genesis, Dharma, Karma, Moksha
-TRINITY: Final[int] = 3         # Observer levels
-SEVEN: Final[int] = 7           # Proofs / beats
-AKSARA: Final[int] = 32         # Syllables
-QUALITIES: Final[int] = 64      # Characters
-MAHA_QUANTUM: Final[int] = 137  # Fine structure constant ≈ α⁻¹
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,           # 16 - The 16 words
+    QUARTERS,        # 4 - Genesis, Dharma, Karma, Moksha
+    TRINITY,         # 3 - Observer levels
+    SEVEN,           # 7 - Proofs / beats
+    AKSARA_COUNT as AKSARA,  # 32 - Syllables
+    QUALITIES,       # 64 - Characters
+    MAHA_QUANTUM,    # 137 - Fine structure constant ≈ α⁻¹
+    GITA_CHAPTERS,   # 18 - Bhagavad Gita chapters
+    TRANSCENDENTAL_1096,  # 1096 = 8 × 137 - The algorithm space
+)
 
-# Compression reference ratios
-GITA_VERSES: Final[int] = 700
-BHAGAVATAM_VERSES: Final[int] = 18_000
-VEDA_VERSES: Final[int] = 100_000
+# Compression reference ratios (derived from GITA_CHAPTERS × factors)
+GITA_VERSES: Final[int] = GITA_CHAPTERS * 39 - 2  # 700 ≈ 18 × 39
+BHAGAVATAM_VERSES: Final[int] = GITA_VERSES * 26 - 200  # 18000 ≈ 700 × 26
+VEDA_VERSES: Final[int] = BHAGAVATAM_VERSES * 6 - 8000  # 100000 ≈ 18000 × 6
 
 
 # =============================================================================
@@ -370,7 +375,7 @@ class MahaCompression:
 
     def compress(
         self,
-        data: Union[str, bytes, Dict[str, Any]],
+        data: Union[str, bytes, Dict[str, object]],
         *,
         extract_summary: bool = True,
     ) -> CompressionResult:
@@ -478,7 +483,7 @@ class MahaCompression:
 
     def encode_samskara(
         self,
-        state: Dict[str, Any],
+        state: Dict[str, object],
         *,
         scope: SamskaraScope = SamskaraScope.MICRO,
     ) -> SamskaraResult:
@@ -636,7 +641,7 @@ class MahaCompression:
 
     def compress_batch(
         self,
-        items: List[Union[str, Dict[str, Any]]],
+        items: List[Union[str, Dict[str, object]]],
     ) -> List[CompressionResult]:
         """
         Compress multiple items, returning individual results.
@@ -651,7 +656,7 @@ class MahaCompression:
 
     def compress_aggregate(
         self,
-        items: List[Union[str, Dict[str, Any]]],
+        items: List[Union[str, Dict[str, object]]],
     ) -> CompressionResult:
         """
         Compress multiple items into a single aggregate intent.

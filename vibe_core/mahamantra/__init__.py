@@ -27,6 +27,7 @@ from vibe_core.mahamantra._lotus import LotusNode, LotusPath
 from vibe_core.mahamantra._types import (
     AkashState,
     ExecuteResult,
+    GitaRoute,
     RouteResult,
     VibrationState,
 )
@@ -71,6 +72,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     # Lazy-loaded MahaKirtan orchestrator
     _kirtan = None
     _compressor = None
+
+    # Lazy-loaded Gita resonance index (extracted vibration signatures)
+    _gita_index = None
+    _gita_by_attractor = None  # Pre-indexed by attractor for O(1) routing
 
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
@@ -151,6 +156,119 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Get current Akash field state."""
         return cls._akash.copy()
 
+    # === GITA ROUTING (The Prabhupada Lens) ===
+
+    @classmethod
+    def _load_gita_index(cls) -> None:
+        """Load Gita resonance index and pre-index by attractor."""
+        if cls._gita_index is not None:
+            return
+
+        import json
+        from pathlib import Path
+
+        gita_path = Path(__file__).parent / "data" / "gita_resonance_index.json"
+        if not gita_path.exists():
+            cls._gita_index = {"verses": []}
+            cls._gita_by_attractor = {}
+            return
+
+        with open(gita_path, "r", encoding="utf-8") as f:
+            cls._gita_index = json.load(f)
+
+        # Pre-index by attractor for O(1) routing
+        cls._gita_by_attractor = {}
+        for verse in cls._gita_index.get("verses", []):
+            attractor = verse.get("attractor")
+            if attractor not in cls._gita_by_attractor:
+                cls._gita_by_attractor[attractor] = []
+            cls._gita_by_attractor[attractor].append(verse)
+
+    @classmethod
+    def route_gita(
+        cls, vibration: VibrationState, guna_filter: Optional[str] = None, limit: int = 5
+    ) -> GitaRoute:
+        """
+        Route vibration to Gita verses via attractor.
+
+        THE RADIO MODEL:
+            Attractor tunes the frequency → matching verses resonate.
+            We return POINTERS, not copyrighted text.
+
+        GUNA FILTER (Extra Mercy):
+            - None: All verses for this attractor
+            - "tamas": Chapter 12 style (most merciful, bhakti yoga)
+            - "rajas": Action-focused verses
+            - "sattva": Knowledge-focused verses
+            - "suddha": Transcendental (devotional) verses
+
+        Args:
+            vibration: The computed VibrationState (+1 Fokus)
+            guna_filter: Optional guna to filter by
+            limit: Max verses to return (default 5)
+
+        Returns:
+            GitaRoute with matching verse pointers
+        """
+        cls._load_gita_index()
+
+        attractor = vibration["attractor"]
+        seed = vibration["seed"]
+        matching = cls._gita_by_attractor.get(attractor, [])
+
+        # Apply guna filter if specified
+        if guna_filter:
+            matching = [v for v in matching if v.get("guna") == guna_filter]
+
+        # Use seed to deterministically select varied verses (not always first ones)
+        # This ensures same query → same verses, but different queries → different verses
+        # NOTE: Only use seed for determinism (transformed varies with Kirtan beat state)
+        if matching:
+            n = len(matching)
+            # Start and step both derived from seed for full determinism
+            start = seed % n
+            step = max(1, (seed // n) % (n // 3 + 1) + 1)
+            selected = []
+            for i in range(min(limit, n)):
+                idx = (start + i * step) % n
+                selected.append(matching[idx])
+            verse_ids = [v["verse_id"] for v in selected]
+        else:
+            verse_ids = []
+
+        # Find dominant guna in matched verses
+        guna_counts: Dict[str, int] = {}
+        for v in matching:
+            g = v.get("guna", "sattva")
+            guna_counts[g] = guna_counts.get(g, 0) + 1
+        dominant_guna = max(guna_counts, key=guna_counts.get) if guna_counts else "sattva"
+
+        return GitaRoute(
+            attractor=attractor,
+            verse_count=len(matching),
+            verse_ids=verse_ids,
+            guna_filter=guna_filter,
+            dominant_guna=dominant_guna,
+        )
+
+    @classmethod
+    def query_gita(cls, query: str, limit: int = 5) -> GitaRoute:
+        """
+        Query Gita with natural language - full vibration → routing pipeline.
+
+        This is the ONE METHOD for Gita consultation:
+            query → MahaCompression → MahaKirtan → attractor → verses
+
+        Args:
+            query: Natural language question (e.g., "how do I surrender?")
+            limit: Max verses to return
+
+        Returns:
+            GitaRoute with matching verse pointers
+        """
+        vibration = cls._compute_vibration(query)
+        return cls.route_gita(vibration, limit=limit)
+
     # === Resonance & Routing (Root Intelligence) ===
 
     def resonate(self, command: str) -> tuple[float, Optional[LotusNode]]:
@@ -200,10 +318,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Flow:
             1. Compute vibration (MahaKirtan)
             2. Update Akash field (136)
-            3. Route via cli_bridge
-            4. Return with vibration state
+            3. Check if semantic query → route through Gita
+            4. Route via cli_bridge (for system commands)
+            5. Return with vibration state + Gita verses
 
         Nothing is silent. Everything vibrates.
+        steward "whatever" → ONE ENTRY POINT.
         """
         # 1. COMPUTE VIBRATION (+1 Fokus)
         vibration = self._compute_vibration(command)
@@ -211,10 +331,40 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # 2. UPDATE AKASH FIELD (136)
         self._update_akash(vibration)
 
-        # 3. ROUTE via cli_bridge
+        # 3. SEMANTIC QUERY DETECTION
+        # If command looks like a question, route through Gita
+        is_semantic = (
+            command.strip().endswith("?")
+            or command.lower().startswith(("what", "why", "how", "who", "when", "where"))
+            or any(
+                q in command.lower()
+                for q in ["should i", "can i", "will i", "is it", "do i"]
+            )
+        )
+
+        # 4. ROUTE via cli_bridge (for system commands) or Gita (for semantic)
         from vibe_core.mahamantra.cli.bridge import cli_bridge
 
-        bridge_result = cli_bridge.route(command, args or [])
+        if is_semantic:
+            # Semantic query → route through Gita via attractor
+            gita_route = self.route_gita(vibration, limit=5)
+            # Build output with Gita verses
+            verse_output = f"GITA ROUTING via attractor {gita_route['attractor']}\n"
+            verse_output += f"Verses ({gita_route['verse_count']} matching):\n"
+            for i, v in enumerate(gita_route["verse_ids"], 1):
+                verse_output += f"  {i}. {v}\n"
+            verse_output += f"Dominant: {gita_route['dominant_guna'].upper()}"
+            # Create a synthetic bridge result for Gita routing
+            from vibe_core.mahamantra.cli.bridge import BridgeResult
+            bridge_result = BridgeResult(
+                success=True,
+                exit_code=0,
+                position=vibration["attractor"] % WORDS,
+                handler="gita_routing",
+                error=verse_output,  # Using error field for output (legacy)
+            )
+        else:
+            bridge_result = cli_bridge.route(command, args or [])
 
         # Get guardian info from vibration-derived position
         position = vibration["transformed"] % WORDS  # Position from vibration! (WORDS from _seed)
@@ -981,6 +1131,44 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         lines.append("═══════════════════════════════════════════")
         return "\n".join(lines)
+
+    # === SANKIRTAN (Scanner → Chant) ===
+    def chant(self, dry_run: bool = True, base_path: Optional[str] = None) -> dict:
+        """
+        SANKIRTAN: Scanner discovers orphans → Sankirtan chants over them.
+
+        SSOT FLOW:
+            1. MahajanaScanner.get_orphans() → files without __mahajana__
+            2. Sankirtan.chant_over_files() → inject DNA into orphans
+            3. Return results
+
+        Usage:
+            # Dry run (see what would be injected)
+            result = mahamantra.chant()
+            print(f"Would inject: {result['files_injected']}")
+
+            # Live injection
+            result = mahamantra.chant(dry_run=False)
+            print(f"Injected: {result['files_injected']}")
+        """
+        from pathlib import Path
+
+        from vibe_core.mahamantra.substrate.sankirtan import perform_sankirtan
+
+        path = Path(base_path) if base_path else None
+        result = perform_sankirtan(base_path=path, dry_run=dry_run, use_scanner=True)
+
+        return {
+            "success": True,
+            "dry_run": result.was_dry_run,
+            "files_scanned": result.files_scanned,
+            "files_injected": result.files_injected,
+            "files_skipped": result.files_skipped,
+            "files_already_owned": result.files_already_owned,
+            "files_failed": result.files_failed,
+            "by_mahajana": result.by_mahajana,
+            "errors": result.errors[:10] if result.errors else [],
+        }
 
     # === VEDA-4 ===
     def __call__(self, cmd: Optional[str] = None) -> Union[str, ExecuteResult]:
