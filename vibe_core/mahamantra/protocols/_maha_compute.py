@@ -19,7 +19,7 @@ THE MATH (mod 137):
     - Seed derived from TickState (position, mala, etc.)
     - Transform via Mahamantra pattern: H=×7, K=+10, R=×²
     - Find attractor in mod 137 space
-    - 5 attractors: 18 (fixed point), 45, 99, 126, 63 (4-cycle)
+    - Attractors COMPUTED by MahaResonator.harmonic_spectrum() - not hardcoded!
 
 ACINTYA: Chapter 18 is a FIXED POINT (contains itself!)
     f(18) = 18 mod 137 → BG 18.66 IS the conclusion
@@ -50,43 +50,88 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 # =============================================================================
-# MOD 137 ATTRACTOR CONSTANTS (Derived from iteration analysis)
+# ATTRACTOR GENERATOR - COMPUTED, NOT HARDCODED!
 # =============================================================================
-# The Mahamantra transformation at mod MAHA_QUANTUM (137) yields 5 attractors:
-#   - 1 FIXED POINT: 18 (Gita chapters - contains itself!)
-#   - 1 FOUR-CYCLE: 45 → 99 → 126 → 63 → 45
+# The Mahamantra transformation discovers its attractors through RESONANCE.
+# We don't hardcode them - we COMPUTE them via the 16-step algorithm.
 #
-# DERIVATION:
-#   18 = GITA_CHAPTERS = SHARANAGATI × TRINITY = 6 × 3
-#   45 = POSITION_SUM_RAMA - QUARTERS = 49 - 4 (first cycle point)
-#   99 = MALA - NAVA = 108 - 9 (approaches MALA)
-#   126 = MALA + GITA_CHAPTERS = 108 + 18 (MALA lifted by Gita)
-#   63 = SEVEN × NAVA = 7 × 9 (completion of cycle)
+# "yato vā imāni bhūtāni jāyante" - From whom all beings are born
+# The attractors EMERGE from the algorithm, not from our declarations.
 # -----------------------------------------------------------------------------
 
-# The fixed point attractor (Gita Chapter 18)
+# KNOWN DERIVATIONS (from _seed.py):
+# - GITA_CHAPTERS (18) is ALWAYS a fixed point (verified mathematically)
+# - POSITION_SUM_TOTAL (136) = T(16) = The Field
+
+# Fixed point - this is DERIVED from _seed.py, not hardcoded
 ATTRACTOR_FIXED: Final[int] = GITA_CHAPTERS  # 18
 
-# The cycle attractors (discovered through iteration analysis)
-# 136 = T(16) = POSITION_SUM_TOTAL - The Field without Observer!
-# 99, 63, 45, 126 - The transformation cycle
+# Field attractor - DERIVED from _seed.py
 ATTRACTOR_FIELD: Final[int] = POSITION_SUM_TOTAL  # 136 = T(16)
-ATTRACTOR_CYCLE: Final[Tuple[int, ...]] = (45, 99, 126, 63, ATTRACTOR_FIELD)
 
-# All 6 attractors combined
-ALL_ATTRACTORS: Final[Tuple[int, ...]] = (ATTRACTOR_FIXED,) + ATTRACTOR_CYCLE
+# Cache for computed attractors (lazy generation)
+_computed_spectrum: Optional[dict] = None
 
-# Verification
-assert ATTRACTOR_FIXED == 18, "Fixed point = Gita chapters = 18"
-assert ATTRACTOR_FIELD == 136, "Field attractor = T(16) = 136"
-assert len(ALL_ATTRACTORS) == 6, "6 attractors total"
+
+def _compute_spectrum() -> dict:
+    """
+    GENERATOR: Compute the harmonic spectrum via MahaResonator.
+
+    This DISCOVERS the attractors through iteration, not declaration.
+    Cached after first computation for performance.
+    """
+    global _computed_spectrum
+    if _computed_spectrum is not None:
+        return _computed_spectrum
+
+    # Import here to avoid circular dependency
+    from vibe_core.mahamantra.research.dharma.maha_algorithm import MahaResonator
+
+    resonator = MahaResonator(mod_space=MAHA_QUANTUM)
+    _computed_spectrum = resonator.harmonic_spectrum()
+    return _computed_spectrum
+
+
+def get_all_attractors() -> Tuple[int, ...]:
+    """Get all attractors - COMPUTED by the algorithm."""
+    spectrum = _compute_spectrum()
+    return tuple(sorted(spectrum["attractors"]))
+
+
+def get_cycle_attractors() -> Tuple[int, ...]:
+    """Get cycle attractors (non-fixed-point) - COMPUTED."""
+    all_attr = get_all_attractors()
+    return tuple(a for a in all_attr if a != ATTRACTOR_FIXED)
+
+
+def get_fixed_points() -> Tuple[int, ...]:
+    """Get fixed point attractors - COMPUTED."""
+    spectrum = _compute_spectrum()
+    return tuple(spectrum["fixed_points"])
+
+
+# For backward compatibility - these are computed on first import
+# After first access, _computed_spectrum is cached
+ATTRACTOR_CYCLE: Tuple[int, ...] = ()  # Placeholder, computed below
+ALL_ATTRACTORS: Tuple[int, ...] = ()  # Placeholder, computed below
+
+
+def _init_attractors() -> None:
+    """Initialize attractors via computation. Called at module load."""
+    global ATTRACTOR_CYCLE, ALL_ATTRACTORS
+    ATTRACTOR_CYCLE = get_cycle_attractors()
+    ALL_ATTRACTORS = get_all_attractors()
+
+
+# Compute on module load (lazy via _compute_spectrum cache)
+_init_attractors()
 
 
 class AttractorType(Enum):
     """Type of attractor reached."""
 
     FIXED_POINT = "fixed_point"  # 18 - Bhagavad Gita conclusion
-    CYCLE = "cycle"  # 45, 99, 126, 63 - Ongoing evolution
+    CYCLE = "cycle"  # Non-fixed-point attractors (COMPUTED, not hardcoded)
     TRANSIENT = "transient"  # Not yet converged
 
 
