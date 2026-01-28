@@ -59,9 +59,10 @@ __genesis__ = "0x23493400"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final
 
-# Verify Parampara connection
-_PARAMPARA: Final[int] = 37
-assert int(__genesis__, 16) % _PARAMPARA == 0, "BROKEN LINEAGE"
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
+
+# Verify Parampara connection (DERIVED from _seed.py!)
+assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
 
 # =============================================================================

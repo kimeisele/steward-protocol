@@ -560,7 +560,7 @@ class LilaChronology:
             "factors": [i for i in range(1, delta + 1) if delta % i == 0] if delta > 0 else [0],
         }
 
-    def maha_transform(self, year: int, mod_space: int = 137) -> int:
+    def maha_transform(self, year: int, mod_space: int = MODULO_QUANTUM) -> int:
         """
         Apply MahaAlgorithm 16-step transform to year's delta.
 
@@ -575,14 +575,13 @@ class LilaChronology:
         - Δ63 (1959 Sannyasa) → 136 = T(16) = THE FIELD!
         """
         pattern = "HKHKKKHHHRHRRRHH"
-        ten = 10  # TEN from seed
         value = self.get_delta(year) % mod_space
 
         for name in pattern:
             if name == "H":
                 value = (value * SEVEN) % mod_space
             elif name == "K":
-                value = (value + ten) % mod_space
+                value = (value + TEN) % mod_space
             else:  # R
                 value = (value * value) % mod_space
 
