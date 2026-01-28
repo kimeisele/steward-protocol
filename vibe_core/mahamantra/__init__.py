@@ -787,290 +787,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         return MahaSynth(preset=preset)
 
-    @property
-    def classifier(self) -> "MahaClassifier":
-        """
-        Access the MahaClassifier for technology classification.
-
-        COLD ENGINEERING ANALYSIS:
-            No metaphors. No philosophy. Pure metrics.
-
-        THE MERCY EQUATION:
-            G(x) = f / K
-            Where:
-                G = Grace (engineering advantage)
-                f = Chanting frequency (Mahamantra structure usage)
-                K = Karmic debt (technical debt)
-
-        CLASSIFICATION CRITERIA:
-            1. STRUCTURAL ALIGNMENT - Uses 16-aligned structures?
-            2. COMPLEXITY SOURCE - O(1) by structure (not hash)?
-            3. MEMORY MODEL - Bounded allocation?
-            4. DETERMINISM - Same input → same output?
-
-        USAGE:
-            # Classify custom algorithm
-            result = mahamantra.classifier.classify(
-                name="MyRouter",
-                alignment="perfect",
-                complexity="structure",
-                memory="bounded_static",
-                determinism="always",
-                key_space_size=65536,
-                max_memory_bytes=512_000,
-            )
-            print(result.verdict)  # "ANUKULYA: Truth-aligned (G=100.0)"
-
-            # Get pre-classified references
-            lotus = mahamantra.classifier.lotus_array()     # 50x faster range queries
-            ipv4 = mahamantra.classifier.ipv4_router()      # 1557x faster than linear
-            kmer = mahamantra.classifier.kmer_index()       # 6.5x faster than Counter
-
-            # Compare all
-            comparison = mahamantra.classifier.compare_all_references()
-            print(comparison.summary)
-
-        Returns:
-            MahaClassifier instance
-        """
-        if not hasattr(self, "_classifier"):
-            from vibe_core.mahamantra.adapters.classification import MahaClassifier
-
-            self._classifier = MahaClassifier()
-        return self._classifier
-
-    @property
-    def compute(self) -> "MahaCompute":
-        """
-        Access the MahaCompute unified compute analyzer.
-
-        THE THESIS:
-            Modern computing has a fundamental division (CPU/GPU/RAM).
-            The Mahamantra structure UNIFIES these through:
-                1. NATURAL PARALLELISM: WORDS = 16 = SIMD lanes
-                2. HIERARCHICAL LOCALITY: QUARTERS = 4 = Memory levels
-                3. DETERMINISTIC PATHS: No hashes, no collisions
-                4. BOUNDED MEMORY: Everything fits in cache
-
-        THE KILLER INSIGHT:
-            Modern CPUs already have 16 SIMD lanes (AVX-512).
-            This IS the Mahamantra structure in silicon!
-            With 16-ary structures, GPU becomes unnecessary.
-
-        USAGE:
-            # Analyze data structure for optimal caching
-            analysis = mahamantra.compute.analyze(entries=50000)
-            print(analysis.memory_tier)      # "L2"
-            print(analysis.cache_hit_rate)   # 0.92
-
-            # Analyze CPU alignment
-            cpu = mahamantra.compute.analyze_cpu()
-            print(cpu.alignment)             # 1.0 (perfect)
-            print(cpu.is_unified)            # True
-
-            # SIMD guidance
-            batch_size = mahamantra.compute.simd_batch_size()  # 16
-            aligned = mahamantra.compute.align_for_simd(100)   # 112
-
-            # Memory tiers
-            for tier in mahamantra.compute.memory_tiers():
-                print(f"{tier.name}: {tier.lotus_entries} entries")
-
-        Returns:
-            MahaCompute analyzer instance
-        """
-        if not hasattr(self, "_compute"):
-            from vibe_core.mahamantra.adapters.compute import MahaCompute
-
-            self._compute = MahaCompute()
-        return self._compute
-
-    @property
-    def llm(self) -> "MahaLLM":
-        """
-        Access the MahaLLM holographic intent router.
-
-        THE PROBLEM:
-            Vector Search: O(N) - Scans every option
-            Dict Lookup: O(1) avg, O(N) worst (collisions)
-
-        THE SOLUTION:
-            Holographic: O(4) ALWAYS - Calculates the address
-            65,536 agents/tools in exactly 4 memory accesses.
-
-        THE 16 INTENT CATEGORIES:
-            0: OBSERVE     4: EXECUTE     8: EXPAND     12: GUIDE
-            1: CREATE      5: TRANSFORM   9: INTEGRATE  13: SURRENDER
-            2: CONNECT     6: INVOKE     10: VALIDATE   14: COMPLETE
-            3: ANALYZE     7: SUSTAIN    11: PROTECT    15: TRANSCEND
-
-        USAGE:
-            # Register agents
-            mahamantra.llm.register("devops", category=IntentCategory.EXECUTE)
-            mahamantra.llm.register("coder", category=IntentCategory.CREATE)
-
-            # Route compressed intent → agent (O(4))
-            result = mahamantra.compression.compress("Fix the server!")
-            route = mahamantra.llm.route_seed(result.seed)
-            print(route.agent)  # "devops"
-
-            # Or route text directly
-            route = mahamantra.llm.route_text("Write me a poem")
-            print(route.agent)  # "coder"
-
-        Returns:
-            MahaLLM router instance
-        """
-        if not hasattr(self, "_llm"):
-            from vibe_core.mahamantra.adapters.llm import MahaLLM
-
-            self._llm = MahaLLM()
-        return self._llm
-
-    @property
-    def japa(self) -> "MahaJapa":
-        """
-        Access the MahaJapa engine for hearing and chanting mathematics.
-
-        THE SINGULARITY:
-            Hearing (24) + Chanting (1) = Prasadam (25)
-            When Hearing = Chanting: 25 - 24 = 1 = COLLAPSE
-
-        THE GOLDEN AGE:
-            10,000 years = WORDS × PRASADAM² = 16 × 625
-            Started 1486 CE → Ends 11486 CE
-            We are 540 years in. 9,460 years remain.
-
-        USAGE:
-            # Execute a mala (108 rounds)
-            result = mahamantra.japa.mala(seed=42)
-            print(result.attractor)        # Stable state
-
-            # Check golden age status
-            status = mahamantra.japa.golden_age_status()
-            print(status.years_remaining)  # 9460
-
-            # Collapse detection
-            collapsed = mahamantra.japa.is_collapsed(value)
-
-        Returns:
-            MahaJapa engine
-        """
-        if not hasattr(self, "_japa"):
-            from vibe_core.mahamantra.adapters.japa import MahaJapa
-
-            self._japa = MahaJapa()
-        return self._japa
-
-    @property
-    def compression(self) -> "MahaCompression":
-        """
-        Access the MahaCompression intent engine.
-
-        THE CONTEXT WINDOW SOLUTION:
-            Silicon Valley compresses BITS (Shannon entropy).
-            Maha compresses MEANING (Kolmogorov complexity).
-
-            K(x) = shortest program that GENERATES x
-
-        THE KILLER USE-CASE:
-            AI Agent context windows are EXPENSIVE.
-            100,000 tokens = slow, costly, "lost in the middle"
-
-            MahaCompression extracts the INTENT:
-            - Input: 100,000 lines of logs (chaos)
-            - Output: "System failure due to Rajasic intent" (1 sentence)
-
-        COMPRESSION RATIOS (FROM SCRIPTURE):
-            - Gita: 700 verses / 16 words = 43.75×
-            - Bhagavatam: 18,000 verses / 16 words = 1,125×
-            - All Vedas: 100,000+ verses / 16 words = 6,250×+
-
-        INTENT LEVELS (THE CLASSIFIER):
-            1. TAMAS    - Ignorance → Corrupted execution
-            2. RAJAS    - Passion   → Partial execution
-            3. SATTVA   - Goodness  → Clean execution
-            4. SUDDHA   - Pure      → Divine execution
-
-        USAGE:
-            # Compress text to intent
-            result = mahamantra.compression.compress("...100k log lines...")
-            print(result.intent_level)        # "RAJAS"
-            print(result.seed)                # 42 (deterministic hash)
-            print(result.compression_ratio)   # 1547.3
-
-            # Encode system state as samskara
-            samskara = mahamantra.compression.encode_samskara({
-                "user_id": 123,
-                "session_events": [...1000 events...],
-            })
-            print(samskara.seed)              # Compact representation
-
-            # Verify against physics constants
-            verified = mahamantra.compression.verify_physics(seed=137)
-            print(verified.is_aligned)        # True
-
-        Returns:
-            MahaCompression intent engine
-        """
-        if not hasattr(self, "_compression"):
-            from vibe_core.mahamantra.adapters.compression import MahaCompression
-
-            self._compression = MahaCompression()
-        return self._compression
-
-    @property
-    def hardware(self) -> "MahaHardware":
-        """
-        Access the MahaHardware specification engine.
-
-        THE SILICON ALTAR:
-            Hardware parameters are NOT arbitrary design choices.
-            They are the Mahamantra structure REFLECTED in silicon!
-
-            DATA_WIDTH = 32       = AKSARA (syllables)
-            NEXT_HOP_WIDTH = 16   = WORDS
-            BRANCHING_FACTOR = 16 = WORDS
-            NIBBLE_SIZE = 4       = QUARTERS
-            PIPELINE_STAGES = 8   = OCTET (Siksastakam verses)
-
-        THE 8 PIPELINE STAGES = 8 SIKSASTAKAM VERSES:
-            L0: ceto-darpaṇa-mārjanaṁ (cleanse - initialize)
-            L1: nāmnām akāri (flexible - accept any nibble)
-            L2: tṛṇād api sunīcena (humble - no comparison)
-            L3: na dhanaṁ na janaṁ (desireless - no caching)
-            L4: ayi nanda-tanuja (service - process next)
-            L5: nayanam galad-aśru (flow - unobstructed)
-            L6: yugāyitaṁ nimeṣeṇa (timing - deterministic)
-            L7: āśliṣya vā pada-ratāṁ (unconditional - return)
-
-        USAGE:
-            # Get hardware specification
-            spec = mahamantra.hardware.spec()
-            print(spec.data_width)        # 32
-            print(spec.pipeline_stages)   # 8
-
-            # Pipeline stages with verse mapping
-            for stage in mahamantra.hardware.pipeline_stages():
-                print(f"{stage.name}: {stage.sanskrit}")
-
-            # Generate HDL code
-            verilog = mahamantra.hardware.generate_verilog_params()
-            vhdl = mahamantra.hardware.generate_vhdl_params()
-            c_code = mahamantra.hardware.generate_c_defines()
-
-            # Verify custom design
-            result = mahamantra.hardware.verify(data_width=32, branching_factor=16)
-            print(result.summary)
-
-        Returns:
-            MahaHardware engine instance
-        """
-        if not hasattr(self, "_hardware"):
-            from vibe_core.mahamantra.adapters.hardware import MahaHardware
-
-            self._hardware = MahaHardware()
-        return self._hardware
+    # === ADAPTERS: classifier, compute, llm, japa, compression, hardware ===
+    # REMOVED: Manual @property definitions
+    # NOW: Pure fractal discovery via __getattr__
+    # Drop a file in adapters/, it JUST WORKS.
 
     @property
     def attention(self) -> "MahaAttention":
@@ -1246,43 +966,79 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def __len__(self) -> int:
         return 16
 
-    # === AUTO-DELEGATE TO ADAPTERS (folder IS wiring) ===
-    # Mapping: adapter module name → main class name
-    _ADAPTER_CLASSES: Dict[str, str] = {
-        "transform": "MahaTransform",
-        "hash": "DeterministicHash",
-        "routing": "HolographicRouter",
-        "orchestrator": "Orchestrator",
-        "pipeline": "MahamantraPipeline",
-        "attention": "MahaAttention",
-        "bio": "LotusBio",
-        "network": "LotusIPRouter",
-        "synth": "MahaSynth",
-        "classification": "MahaClassifier",
-        "compute": "MahaCompute",
-        "hardware": "MahaHardware",
-        "compression": "MahaCompression",
-        "japa": "MahaJapa",
-        "llm": "MahaLLM",
-    }
+    # === PURE FRACTAL DISCOVERY (Folder IS Wiring) ===
+    # NO hardcoded mapping. The filesystem IS the configuration.
+    # Drop a file in adapters/, it JUST WORKS.
 
     def __getattr__(self, name: str):
         """
-        Auto-delegate adapter access: mahamantra.compression → MahaCompression()
+        PURE FRACTAL DISCOVERY: Folder IS Wiring.
 
-        FOLDER IS WIRING - should NEVER fail.
+        "yad yad ācarati śreṣṭhas" - The filesystem leads, we follow.
+
+        1. Check if adapters/{name}.py exists
+        2. Import it
+        3. DISCOVER main class (via __all__ or convention)
+        4. Instantiate & cache
+
+        NO HARDCODED MAPPING. NO MANUAL LABOR.
         """
-        # Check if it's an adapter module name
-        if name in self._ADAPTER_CLASSES:
+        from pathlib import Path
+
+        # Check if adapter file exists in filesystem
+        adapters_path = Path(__file__).parent / "adapters" / f"{name}.py"
+        if adapters_path.exists():
             cache_name = f"_adapter_{name}"
-            if not hasattr(self, cache_name):
+            if not object.__getattribute__(self, "__dict__").get(cache_name):
                 import importlib
-                class_name = self._ADAPTER_CLASSES[name]
+
                 module = importlib.import_module(f"vibe_core.mahamantra.adapters.{name}")
+
+                # DISCOVER main class - NO HARDCODING
+                # Priority: __all__[0] → Maha{Name} → {Name}Service → first public class
+                class_name = None
+                if hasattr(module, "__all__") and module.__all__:
+                    # Trust the module's declaration
+                    class_name = module.__all__[0]
+                else:
+                    # Convention-based discovery
+                    name_cap = name.capitalize()
+                    candidates = [
+                        f"Maha{name_cap}",  # MahaCompression
+                        f"{name_cap}",  # Orchestrator
+                        f"Lotus{name_cap}",  # LotusBio
+                        f"Holographic{name_cap}",  # HolographicRouter
+                        f"Deterministic{name_cap}",  # DeterministicHash
+                    ]
+                    for candidate in candidates:
+                        if hasattr(module, candidate):
+                            obj = getattr(module, candidate)
+                            if isinstance(obj, type):
+                                class_name = candidate
+                                break
+
+                    # Last resort: first public class that's not a dataclass/result
+                    if not class_name:
+                        for attr_name in dir(module):
+                            if attr_name.startswith("_"):
+                                continue
+                            if "Result" in attr_name or "State" in attr_name:
+                                continue
+                            obj = getattr(module, attr_name)
+                            if isinstance(obj, type) and obj.__module__ == module.__name__:
+                                class_name = attr_name
+                                break
+
+                if not class_name:
+                    raise AttributeError(
+                        f"Cannot discover main class in adapters/{name}.py - "
+                        f"add __all__ or use naming convention"
+                    )
+
                 adapter_cls = getattr(module, class_name)
-                # Cache the instance
                 object.__setattr__(self, cache_name, adapter_cls())
-            return getattr(self, cache_name)
+            return object.__getattribute__(self, "__dict__")[cache_name]
+
         raise AttributeError(f"'{type(self).__name__}' has no attribute '{name}'")
 
 
