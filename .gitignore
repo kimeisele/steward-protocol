@@ -326,3 +326,4 @@ __pycache__/
 # File exists = agent is alive. Deleted on shutdown = agent is offline.
 # NOT tracked in git - this is presence, not memory.
 **/node.json
+temp/
