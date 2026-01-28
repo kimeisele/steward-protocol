@@ -51,15 +51,16 @@ from typing import (
 
 from vibe_core.mahamantra.substrate.acintya import PARAMPARA
 from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION, HolyName
+from vibe_core.mahamantra.protocols._seed import MALA, TRINITY
 
 # =============================================================================
-# CONSTANTS - The Sacred Numbers (derived from SSOT: byte.py, acintya.py)
+# CONSTANTS - The Sacred Numbers (DERIVED FROM _seed.py SSOT)
 # =============================================================================
 
 PRIME_SIGNATURE: Final[int] = PARAMPARA  # Shcherbak's Arithmetic - The Key (from SSOT)
 MAHA_POSITIONS: Final[int] = MAHAMANTRA_DIMENSION  # 16 words (from SSOT)
-MALA_ROUNDS: Final[int] = 108  # Beads in a mala
-TRINITY: Final[int] = 3  # Hare, Krishna, Rama
+MALA_ROUNDS: Final[int] = MALA  # 108 - Beads in a mala (from SSOT)
+# TRINITY already imported from _seed.py  # 3 - Hare, Krishna, Rama
 
 # Standard Mahamantra pattern (packed as 2 bits per name)
 # H K H K | K K H H | H R H R | R R H H

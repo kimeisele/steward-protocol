@@ -19,12 +19,12 @@ __genesis__ = "0x8dfd7ced"  # GenesisByte: parampara % 37 == 0
 from typing import Final, Optional
 
 from vibe_core.mahamantra.protocols._kala import KalaProtocol, KalaTime
-from vibe_core.mahamantra.protocols._seed import WORDS  # 16
+from vibe_core.mahamantra.protocols._seed import WORDS, TRINITY, MALA  # SSOT
 
-# --- CONSTANTS ---
-LILA_TICKS: Final[int] = WORDS * 3  # 48
-MALA_MANTRAS: Final[int] = 108  # 108
-MALA_TICKS: Final[int] = WORDS * 108  # 1728
+# --- CONSTANTS (DERIVED FROM _seed.py) ---
+LILA_TICKS: Final[int] = WORDS * TRINITY  # 16 × 3 = 48
+MALA_MANTRAS: Final[int] = MALA  # 108
+MALA_TICKS: Final[int] = WORDS * MALA  # 16 × 108 = 1728
 
 
 class TimeKeeper(KalaProtocol):
