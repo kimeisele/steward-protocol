@@ -30,7 +30,7 @@ MUSICAL RELATIONSHIPS (Vedic Tuning):
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0x4a7c2e91"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x66a053e7"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final
 

@@ -71,7 +71,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0xb8d1f000"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x633fe12b"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
 from dataclasses import dataclass, field

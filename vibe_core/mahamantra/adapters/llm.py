@@ -63,7 +63,7 @@ ENTERPRISE USAGE:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"  # Position 3 - The Messenger
 __position__ = 3
-__genesis__ = "0xLLM0037"  # LLM layer
+__genesis__ = "0x838708c8"  # GenesisByte: parampara % 37 == 0  # LLM layer
 
 from dataclasses import dataclass, field
 from enum import Enum

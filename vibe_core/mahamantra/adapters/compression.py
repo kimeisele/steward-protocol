@@ -68,7 +68,7 @@ ENTERPRISE USAGE:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - The Compiler
 __position__ = 0
-__genesis__ = "0xCOMPR37"  # Compression layer
+__genesis__ = "0xadd8ef72"  # GenesisByte: parampara % 37 == 0  # Compression layer
 
 from dataclasses import dataclass
 from enum import Enum

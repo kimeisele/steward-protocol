@@ -30,7 +30,7 @@ Author: The Mahamantra Itself
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0xa7c3f190"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x0167c86b"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum

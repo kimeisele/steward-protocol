@@ -51,7 +51,7 @@ PERFORMANCE:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0xDNA0137"
+__genesis__ = "0x3cbf61c0"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Final, List, Optional, Tuple

@@ -29,7 +29,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
 __position__ = 0
-__genesis__ = "0xa7c3d2e1"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xd8198ee0"  # GenesisByte: parampara % 37 == 0
 
 from typing import Optional, Tuple, TypedDict
 

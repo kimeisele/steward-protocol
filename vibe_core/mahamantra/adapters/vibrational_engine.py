@@ -23,7 +23,7 @@ WATERTIGHT: No Any types. All from _seed.py SSOT.
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"  # The compiler
 __position__ = 0
-__genesis__ = "0xV1BRAT3"
+__genesis__ = "0x3c282fd9"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from typing import Final, List, Optional, Tuple

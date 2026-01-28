@@ -18,7 +18,7 @@ USAGE:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"  # Position 3 - The Divine Messenger
 __position__ = 3
-__genesis__ = "0xADAPT37"  # Adapter layer
+__genesis__ = "0x141280cf"  # GenesisByte: parampara % 37 == 0  # Adapter layer
 
 # =============================================================================
 # LAZY IMPORT REGISTRY - Folder IS wiring

@@ -23,7 +23,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 4
-__genesis__ = "0x4a7c2e91"
+__genesis__ = "0x179ce6cb"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from pathlib import Path

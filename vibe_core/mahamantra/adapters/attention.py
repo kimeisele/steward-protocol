@@ -60,7 +60,7 @@ For N=1,000,000 intents: 250,000x speedup (with 32-bit router)
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0xATTN137"
+__genesis__ = "0x11aaa682"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Final, List, Optional, Tuple

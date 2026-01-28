@@ -48,7 +48,7 @@ ENTERPRISE USAGE:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"  # Position 3 - The Divine Musician
 __position__ = 3
-__genesis__ = "0xJAPA037"  # Japa layer
+__genesis__ = "0x8c1456c3"  # GenesisByte: parampara % 37 == 0  # Japa layer
 
 from dataclasses import dataclass
 from datetime import datetime
