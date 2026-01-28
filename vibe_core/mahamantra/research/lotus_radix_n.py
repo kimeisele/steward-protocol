@@ -287,8 +287,13 @@ class LotusRadixN(Generic[V]):
                 return  # No keys with this prefix
             node = next_node
 
+        # Convert positioned prefix to raw nibble accumulator
+        # e.g., prefix=0x1200 with prefix_bits=8 in a 16-bit tree:
+        # key_prefix = 0x1200 >> (16 - 8) = 0x12
+        key_prefix = prefix >> (self.key_bits - prefix_bits)
+
         # Now recursively yield all keys under this node
-        yield from self._iter_subtree(node, prefix, prefix_levels)
+        yield from self._iter_subtree(node, key_prefix, prefix_levels)
 
     def _iter_subtree(self, node: list[Any], key_prefix: int, current_level: int) -> Iterator[tuple[int, V]]:
         """Recursively iterate all keys in subtree."""
