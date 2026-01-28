@@ -817,12 +817,91 @@ def iterate_sankirtan(
 # =============================================================================
 
 
-def perform_sankirtan(
-    base_path: Optional[Path] = None,
+def chant_over_files(
+    files: List[Path],
     dry_run: bool = True,
 ) -> SankirtanResult:
     """
+    SANKIRTAN: Chant over specific files (4-phase pipeline).
+
+    SSOT INTEGRATION:
+        Scanner discovers → Sankirtan transforms.
+        This function takes files from Scanner.get_orphans().
+
+    THE CHATUH-SUTRA (4-Phase Pipeline):
+        GENESIS → DHARMA → KARMA → MOKSHA
+
+    Args:
+        files: List of file paths to process (from Scanner)
+        dry_run: If True, only report what would be done.
+
+    Returns:
+        SankirtanResult with counts and details.
+    """
+    result = SankirtanResult(was_dry_run=dry_run)
+    phase_counts: Dict[str, int] = {q.value: 0 for q in Quarter}
+
+    logger.info(f"SANKIRTAN chanting over {len(files)} files (dry_run={dry_run})")
+    logger.info("=" * 60)
+
+    for file_path in files:
+        result.files_scanned += 1
+
+        # === THE 4-PHASE PIPELINE ===
+        ctx = process_file_pipeline(file_path, dry_run=dry_run)
+
+        # Track phase progression
+        for phase_result in ctx.phases:
+            phase_counts[phase_result.phase.value] += 1
+
+        # Categorize result
+        if ctx.was_already_owned:
+            result.files_already_owned += 1
+        elif ctx.all_phases_ok and ctx.is_valid:
+            karma_phases = [p for p in ctx.phases if p.phase == Quarter.KARMA]
+            if karma_phases and "inject" in karma_phases[0].message.lower():
+                result.files_injected += 1
+                if ctx.mahajana:
+                    result.by_mahajana[ctx.mahajana] = result.by_mahajana.get(ctx.mahajana, 0) + 1
+
+                result.injections.append(
+                    InjectionResult(
+                        file_path=str(file_path),
+                        mahajana=ctx.mahajana or "unknown",
+                        position=ctx.position or 0,
+                        success=True,
+                        was_dry_run=dry_run,
+                        message=f"{'Would inject' if dry_run else 'Injected'} {ctx.mahajana}",
+                    )
+                )
+            else:
+                result.files_skipped += 1
+        elif ctx.error:
+            result.files_failed += 1
+            result.errors.append(f"{file_path}: {ctx.error}")
+        else:
+            result.files_skipped += 1
+
+    logger.info("=" * 60)
+    logger.info(
+        f"SANKIRTAN complete: {result.files_injected} injected, "
+        f"{result.files_already_owned} owned, {result.files_failed} failed"
+    )
+
+    return result
+
+
+def perform_sankirtan(
+    base_path: Optional[Path] = None,
+    dry_run: bool = True,
+    use_scanner: bool = True,
+) -> SankirtanResult:
+    """
     SANKIRTAN: Mass DNA injection using 4-phase pipeline.
+
+    SSOT ARCHITECTURE:
+        use_scanner=True  → MahajanaScanner discovers orphans → chant_over_files()
+        use_scanner=False → Legacy rglob scanning (deprecated)
 
     THE CHATUH-SUTRA (4-Phase Pipeline):
         GENESIS → DHARMA → KARMA → MOKSHA
@@ -840,18 +919,34 @@ def perform_sankirtan(
     Args:
         base_path: Base path to scan (default: vibe_core/)
         dry_run: If True, only report what would be done.
+        use_scanner: If True (default), use MahajanaScanner SSOT.
 
     Returns:
         SankirtanResult with counts and details.
     """
     if base_path is None:
-        # Default to vibe_core directory
         base_path = Path(__file__).parent.parent.parent
 
+    # === SSOT: Use MahajanaScanner for discovery ===
+    if use_scanner:
+        from vibe_core.mahamantra.substrate.scanner import get_scanner
+
+        scanner = get_scanner()
+        scan_result = scanner.scan(str(base_path))
+
+        # Get orphan files (files without __mahajana__)
+        orphan_files = scanner.get_orphans()
+        file_paths = [Path(f.get("path", "")) for f in orphan_files if f.get("path")]
+
+        logger.info(f"Scanner found {len(file_paths)} orphan files to chant over")
+
+        return chant_over_files(file_paths, dry_run=dry_run)
+
+    # === LEGACY: Own rglob scanning (deprecated) ===
     result = SankirtanResult(was_dry_run=dry_run)
     phase_counts: Dict[str, int] = {q.value: 0 for q in Quarter}
 
-    logger.info(f"SANKIRTAN begins (dry_run={dry_run})")
+    logger.info(f"SANKIRTAN begins (dry_run={dry_run}) [LEGACY MODE]")
     logger.info("=" * 60)
 
     # Scan directories
@@ -1248,7 +1343,7 @@ __all__ = [
     # Protocol-Based Implementation
     "FilePayload",
     "SankirtanSamskara",
-    # 4-Phase Pipeline (Legacy)
+    # 4-Phase Pipeline
     "PhaseResult",
     "PipelineContext",
     "process_file_pipeline",
@@ -1256,12 +1351,13 @@ __all__ = [
     # Result types
     "InjectionResult",
     "SankirtanResult",
-    # Functions
+    # Functions (SSOT)
+    "chant_over_files",  # NEW: Takes files from Scanner
+    "perform_sankirtan",  # Uses Scanner by default
     "get_mahajana_for_path",
     "has_declaration",
     "inject_declaration",
     "inject_file",
-    "perform_sankirtan",
     "print_sankirtan_report",
     # CLI Entry Point
     "cli_sankirtan",

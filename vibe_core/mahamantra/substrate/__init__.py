@@ -380,6 +380,26 @@ _LAZY_IMPORTS = {
     # Analysis API
     "analyze_year": "lila_chronology",
     "get_arithmetic_sequence": "lila_chronology",
+    # === SANKIRTAN (The Mass Chanting) ===
+    # "sankirtan ist nicht verschieden von mahamantra selbst krishna"
+    "FilePayload": "sankirtan",
+    "SankirtanSamskara": "sankirtan",
+    "PhaseResult": "sankirtan",
+    "SankirtanPipelineContext": "sankirtan",  # Alias to avoid collision with _legacy
+    "process_file_pipeline": "sankirtan",
+    "iterate_sankirtan": "sankirtan",
+    "InjectionResult": "sankirtan",
+    "SankirtanResult": "sankirtan",
+    "chant_over_files": "sankirtan",
+    "perform_sankirtan": "sankirtan",
+    "get_mahajana_for_path": "sankirtan",
+    "has_declaration": "sankirtan",
+    "inject_declaration": "sankirtan",
+    "inject_file": "sankirtan",
+    "print_sankirtan_report": "sankirtan",
+    "cli_sankirtan": "sankirtan",
+    "FOLDER_MAHAJANA_MAP": "sankirtan",
+    "heal_wiring": "sankirtan",
     # === LEGACY (Balarama-wrapped from protocols/substrate) ===
     "Declaration": "_legacy",
     "DeclarationType": "_legacy",
@@ -403,6 +423,8 @@ _LAZY_ALIASES = {
     "get_mahajana_position": ("scanner", "get_position"),
     "get_mahajana_name": ("scanner", "get_name"),
     "get_wiring_by_index": ("wiring", "get_position_by_index"),  # Alias for old wiring func
+    # Sankirtan aliases
+    "SankirtanPipelineContext": ("sankirtan", "PipelineContext"),
 }
 
 
