@@ -183,7 +183,7 @@ class MahaTransform:
             mod_space=self.mod_space,
         )
 
-    def find_attractor(self, seed: int, max_iterations: int = 137) -> AttractorResult:
+    def find_attractor(self, seed: int, max_iterations: int = MAHA_QUANTUM) -> AttractorResult:
         """
         Iterate transformation until stable state (attractor) reached.
 
