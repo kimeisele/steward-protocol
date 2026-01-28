@@ -55,6 +55,8 @@ class Prabhupada(PrabhupadaProtocol):
             True if signature is valid and mathematical.
         """
         # 1. Identity Check
+        # NOTE: Identity should have been SET by MahamantraProxy using folder-is-truth.
+        # Here we just verify the component HAS identity (labels were populated by proxy).
         if not hasattr(component, "__mahajana__") and not hasattr(component, "mahajana"):
             return False  # No identity claim
 

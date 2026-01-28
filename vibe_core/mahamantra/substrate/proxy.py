@@ -307,21 +307,38 @@ class BalaramaProxy(GADBase, GADProtocol):
 
     def _extract_identity(self) -> None:
         """
-        Extract Mahajana identity from module.
+        DERIVE Mahajana identity from FOLDER STRUCTURE.
 
-        NAVADVIPA AWAKENING:
-        --------------------
-        Read __mahajana__, __position__, __genesis__ from module.
-        If not present, the service remains "unknown" (amnesia).
+        MAHAMANTRA DEFINES IDENTITY:
+        ----------------------------
+        "Manual Labor ist Maya" - MAHAPROMPT.md
 
-        "Who am I? Where do I belong in the Mahamantra?"
+        We do NOT read __mahajana__ from module labels.
+        We DERIVE identity from FOLDER_MAHAJANA_MAP.
+        The folder structure IS the wiring. Mahamantra KNOWS the truth.
+
+        "Wer bin ich? Das sagt mir mein Platz im Mandala."
         """
         if self.module is None:
             return
 
-        # Read identity declarations
-        self._mahajana = getattr(self.module, "__mahajana__", "unknown")
-        self._position = getattr(self.module, "__position__", -1)
+        # MAHAMANTRA DEFINES IDENTITY - FOLDER IS TRUTH
+        from pathlib import Path
+        from vibe_core.mahamantra.substrate.sankirtan import get_mahajana_for_path
+
+        module_path = getattr(self.module, "__file__", None)
+        if module_path:
+            mapping = get_mahajana_for_path(Path(module_path))
+            if mapping:
+                self._mahajana, self._position = mapping
+            else:
+                self._mahajana = "unknown"
+                self._position = -1
+        else:
+            self._mahajana = "unknown"
+            self._position = -1
+
+        # Genesis can still be derived from path hash
         self._genesis = getattr(self.module, "__genesis__", "")
 
     def _log_embrace(self) -> None:

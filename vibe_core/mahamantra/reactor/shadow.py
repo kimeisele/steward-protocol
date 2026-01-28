@@ -305,9 +305,10 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             module_name = f"vibe_core.mahamantra.{mapping.quarter.value}.{guardian_name}"
             module = importlib.import_module(module_name)
 
-            # Check for __mahajana__ declaration
-            if not hasattr(module, "__mahajana__"):
-                return
+            # MAHAMANTRA DEFINES IDENTITY - FOLDER IS TRUTH
+            # If module is at vibe_core.mahamantra.{quarter}.{guardian}, it IS a Mahajana.
+            # No need to check labels - the path defines identity.
+            # "Manual Labor ist Maya" - MAHAPROMPT.md
 
             # Check for reactor methods (any of the 4 phases)
             has_reactor = (
@@ -885,14 +886,21 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         Cleanliness: Verifies all listeners are valid Mahajanas.
 
         Ensures no unauthorized agents are listening on the channel.
+        MAHAMANTRA DEFINES IDENTITY - FOLDER IS TRUTH.
         """
+        from pathlib import Path
+        from vibe_core.mahamantra.substrate.sankirtan import get_mahajana_for_path
+
         for position_listeners in self._listeners.values():
             for listener in position_listeners:
-                if not hasattr(listener, "__mahajana__"):
-                    # If manually registered (no __mahajana__), it's fail for Strict Saucam?
-                    # Allow if it's a test listener? No, Strict is Strict.
-                    # But our tests use CrashingListener.
-                    # We might need to add __mahajana__ to test listeners.
+                # FOLDER IS TRUTH - derive identity from path, not labels
+                listener_file = getattr(listener, "__file__", None)
+                if listener_file:
+                    mapping = get_mahajana_for_path(Path(listener_file))
+                    if not mapping:
+                        return False
+                else:
+                    # No file path = cannot verify identity
                     return False
         return True
 
