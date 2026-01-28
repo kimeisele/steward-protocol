@@ -1106,6 +1106,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         if subpackage_path.is_dir() and (subpackage_path / "__init__.py").exists():
             return importlib.import_module(f"vibe_core.mahamantra.{name}")
 
+        # 1.5. Check if it's a root-level module (chat.py, commands.py, etc.)
+        root_module_path = mahamantra_root / f"{name}.py"
+        if root_module_path.exists():
+            return importlib.import_module(f"vibe_core.mahamantra.{name}")
+
         # 2. Check if adapter file exists in filesystem
         adapters_path = mahamantra_root / "adapters" / f"{name}.py"
         if adapters_path.exists():
