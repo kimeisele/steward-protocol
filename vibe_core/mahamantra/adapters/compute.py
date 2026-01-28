@@ -61,25 +61,28 @@ __genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass
 from typing import Dict, Final, Iterator, List, Literal, Optional
 
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,      # 16 - Mahamantra words = SIMD lanes
+    QUARTERS,   # 4 - Memory hierarchy levels
+    QUALITIES,  # 64 - Cache line size
+)
+
 # =============================================================================
-# CONSTANTS (from _seed.py via unified_compute)
+# CONSTANTS (DERIVED from _seed.py)
 # =============================================================================
 
-WORDS: Final[int] = 16  # Mahamantra words = SIMD lanes
-QUARTERS: Final[int] = 4  # Memory hierarchy levels
-QUALITIES: Final[int] = 64  # Cache line size
-ADDRESS_SPACE: Final[int] = 65536  # 16^4 = standard Lotus capacity
+ADDRESS_SPACE: Final[int] = WORDS ** QUARTERS  # 16^4 = 65536 = standard Lotus capacity
 
 # Hardware alignment
 SIMD_LANES: Final[int] = WORDS  # 16 parallel operations
 CACHE_LINE_BYTES: Final[int] = QUALITIES  # 64 bytes
 MEMORY_PAGE_BYTES: Final[int] = QUALITIES * QUALITIES  # 4096 bytes
 
-# Memory hierarchy sizes (typical modern CPU)
-L1_CACHE_KB: Final[int] = 64
-L2_CACHE_KB: Final[int] = 256
-L3_CACHE_MB: Final[int] = 16
-RAM_GB: Final[int] = 16
+# Memory hierarchy sizes (typical modern CPU - derived from QUALITIES)
+L1_CACHE_KB: Final[int] = QUALITIES  # 64 KB
+L2_CACHE_KB: Final[int] = QUARTERS * QUALITIES  # 4 × 64 = 256 KB
+L3_CACHE_MB: Final[int] = WORDS  # 16 MB
+RAM_GB: Final[int] = WORDS  # 16 GB
 
 
 # =============================================================================

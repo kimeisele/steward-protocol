@@ -70,15 +70,18 @@ from enum import Enum
 from typing import Any, Callable, Dict, Final, List, Optional, Union
 import hashlib
 
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,      # 16 branches per level
+    QUARTERS,   # 4 levels = 16 bits
+)
+
 
 # =============================================================================
-# MAHAMANTRA CONSTANTS
+# MAHAMANTRA CONSTANTS (DERIVED from _seed.py)
 # =============================================================================
 
-WORDS: Final[int] = 16           # 16 branches per level
-QUARTERS: Final[int] = 4         # 4 levels = 16 bits
-INTENT_SPACE: Final[int] = 65536 # 16^4 = total intent space
-ROUTING_OPS: Final[int] = 4      # Always 4 ops to route
+INTENT_SPACE: Final[int] = WORDS ** QUARTERS  # 16^4 = 65536 = total intent space
+ROUTING_OPS: Final[int] = QUARTERS            # Always 4 ops to route
 
 
 # =============================================================================
