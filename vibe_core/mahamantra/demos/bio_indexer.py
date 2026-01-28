@@ -17,13 +17,18 @@ from dataclasses import dataclass
 from typing import Final, Dict, List, Set, Optional
 import random
 
+from vibe_core.mahamantra.protocols._seed import (
+    QUARTERS,   # 4 - A, C, G, T
+    WORDS,      # 16 - 16 bits = 8-mer
+    HARE_COUNT, # 8 - bases per k-mer (fits in 16 bits)
+)
+
 # =============================================================================
-# MAHAMANTRA CONSTANTS (For DNA)
+# MAHAMANTRA CONSTANTS (For DNA) - DERIVED FROM _seed.py SSOT
 # =============================================================================
 
-QUARTERS: Final[int] = 4     # A, C, G, T
-WORDS: Final[int] = 16       # 16 bits = 8-mer
-HALF_SIZE: Final[int] = 8    # 8 bases per k-mer (fits in 16 bits)
+# Alias for clarity in DNA context
+HALF_SIZE: Final[int] = HARE_COUNT  # 8 bases per k-mer
 
 # DNA base encoding (2 bits each = QUARTERS options)
 BASE_TO_BITS: Final[Dict[str, int]] = {

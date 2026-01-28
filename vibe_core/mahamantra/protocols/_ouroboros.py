@@ -72,17 +72,18 @@ from vibe_core.mahamantra.protocols._core import (
     ProtocolIdentity,
     ProtocolCapability,
 )
+from vibe_core.mahamantra.protocols._seed import MALA, TRINITY
 
 
 # =============================================================================
-# OUROBOROS CONSTANTS - The Eternal Mathematics
+# OUROBOROS CONSTANTS - The Eternal Mathematics (DERIVED FROM _seed.py)
 # =============================================================================
 
 # The serpent has no beginning or end - but we count in cycles
-OUROBOROS_CYCLE: Final[int] = 108  # One mala = one complete cycle
+OUROBOROS_CYCLE: Final[int] = MALA  # 108 = One mala = one complete cycle
 
 # Three Bodies (Tri-Deha)
-BODY_COUNT: Final[int] = 3
+BODY_COUNT: Final[int] = TRINITY  # 3
 
 # Layer positions
 LAYER_PRAKRITI: Final[int] = -2  # State Substrate

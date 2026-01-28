@@ -51,19 +51,24 @@ from vibe_core.mahamantra.substrate.acintya import (
     ParamparaConnection,
 )
 from vibe_core.mahamantra.substrate.fractal import FractalLevel
+from vibe_core.mahamantra.protocols._seed import (
+    KSHETRA,        # 24 - Field elements
+    MAHAJANA_COUNT, # 12 - Guardians
+    KSETRAJNA,      # 1 - Knower/Soul
+)
 
 
 # =============================================================================
-# FRACTAL CONSTANTS
+# FRACTAL CONSTANTS (DERIVED FROM _seed.py SSOT)
 # =============================================================================
 
 # The fractal base: at every level, 37 appears
 FRACTAL_BASE: Final[int] = PARAMPARA  # 37
 
-# The three components at each level
-KSETRA_COUNT: Final[int] = 24  # Field elements
-MAHAJANA_COUNT: Final[int] = 12  # Guardians
-KSETRAJNA_COUNT: Final[int] = 1  # Knower/Soul
+# The three components at each level (aliases for clarity)
+KSETRA_COUNT: Final[int] = KSHETRA  # 24 - Field elements
+# MAHAJANA_COUNT already imported = 12 - Guardians
+KSETRAJNA_COUNT: Final[int] = KSETRAJNA  # 1 - Knower/Soul
 
 # Verify the formula
 assert KSETRA_COUNT + MAHAJANA_COUNT + KSETRAJNA_COUNT == FRACTAL_BASE
