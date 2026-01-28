@@ -55,20 +55,24 @@ from datetime import datetime
 from enum import Enum
 from typing import Final, List, Optional
 
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,           # 16 - The 16 words
+    QUARTERS,        # 4 - 4 quarters
+    KSHETRA,         # 24 - The field (prakriti elements)
+    KSETRAJNA,       # 1 - The observer
+    PRASADAM,        # 25 - KSHETRA + KSETRAJNA
+    MALA,            # 108 - Rounds per mala
+    NAVA,            # 9 - Nava-vidha bhakti processes
+    TRINITY,         # 3 - Observer levels
+    CHAITANYA_BIRTH, # 1486 - Appearance year CE
+)
 
 # =============================================================================
-# MAHAMANTRA CONSTANTS (from seed)
+# MAHAMANTRA CONSTANTS (DERIVED FROM _seed.py SSOT)
 # =============================================================================
 
-WORDS: Final[int] = 16           # The 16 words
-QUARTERS: Final[int] = 4         # 4 quarters
-KSHETRA: Final[int] = 24         # The field (prakriti elements)
-KSETRAJNA: Final[int] = 1        # The observer
-PRASADAM: Final[int] = 25        # KSHETRA + KSETRAJNA
-MALA_ROUNDS: Final[int] = 108    # Rounds per mala
-NAVA: Final[int] = 9             # Nava-vidha bhakti processes
-TRINITY: Final[int] = 3          # Observer levels
-CHAITANYA_BIRTH: Final[int] = 1486  # Appearance year CE
+# Alias for backward compatibility and clarity
+MALA_ROUNDS: Final[int] = MALA   # 108 rounds per mala
 
 
 # =============================================================================
