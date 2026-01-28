@@ -42,6 +42,11 @@ ALL CONSTANTS FROM SSOT (_seed.py) - NO HARDCODING!
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shuka"  # Position 14 - Vision/Narration
+__position__ = 14
+__genesis__ = "0xcdd640f9"  # GenesisByte: parampara % 37 == 0
+
 from typing import (
     Dict,
     Final,

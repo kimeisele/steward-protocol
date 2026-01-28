@@ -45,6 +45,11 @@ WATERTIGHT: No Any types. Protocol statt Klassen.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"  # Position 8 - Execution/Action
+__position__ = 8
+__genesis__ = "0x16671abd"  # GenesisByte: parampara % 37 == 0
+
 import importlib
 import uuid
 from pathlib import Path

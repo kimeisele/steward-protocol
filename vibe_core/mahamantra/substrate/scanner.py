@@ -35,6 +35,11 @@ NO HARDCODING: Config from ScannerProtocol.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"  # Position 6 - Analysis (Samkhya)
+__position__ = 6
+__genesis__ = "0xb3b1797d"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path

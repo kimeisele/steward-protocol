@@ -11,6 +11,11 @@ This demo proves MahaCompression works on REAL messy data.
 
 from __future__ import annotations
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"  # Position 6 - Analysis
+__position__ = 6
+__genesis__ = "0x492456cb"  # GenesisByte: parampara % 37 == 0
+
 import random
 import time
 from dataclasses import dataclass
