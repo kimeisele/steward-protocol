@@ -57,24 +57,24 @@ from dataclasses import dataclass
 from typing import Final, List, Optional, Tuple
 
 from vibe_core.mahamantra.adapters.routing import HolographicRouter
-from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS
+from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS, HALVES, HARE_COUNT
 
 
 # =============================================================================
-# CONSTANTS
+# CONSTANTS (DERIVED from _seed.py)
 # =============================================================================
 
-# DNA base encoding: 2 bits each
+# DNA base encoding: 2 bits each = HALVES bits per base
 BASE_A: Final[int] = 0b00  # 0
 BASE_C: Final[int] = 0b01  # 1
 BASE_G: Final[int] = 0b10  # 2
 BASE_T: Final[int] = 0b11  # 3
 
-BITS_PER_BASE: Final[int] = 2
+BITS_PER_BASE: Final[int] = HALVES  # 2 bits per base (A/C/G/T = 4 = 2^2)
 BASES_PER_BYTE: Final[int] = QUARTERS  # 4 bases = 8 bits = 1 byte
 
-# Default k-mer size: 8 (fits in 16 bits = Lotus 4-level)
-DEFAULT_K: Final[int] = 8
+# Default k-mer size: 8 (fits in 16 bits = Lotus 4-level) = HARE_COUNT
+DEFAULT_K: Final[int] = HARE_COUNT  # 8-mer = 8 Hares in Mahamantra!
 DEFAULT_KEY_BITS: Final[int] = WORDS  # 16
 
 # Lookup table for fast encoding

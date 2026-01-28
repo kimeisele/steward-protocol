@@ -254,7 +254,7 @@ class MahaAttention:
     # FUZZY MATCHING (Range Query)
     # =========================================================================
 
-    def attend_fuzzy(self, query: str, radius: int = 16) -> List[AttentionResult]:
+    def attend_fuzzy(self, query: str, radius: int = WORDS) -> List[AttentionResult]:
         """
         Perform fuzzy attention using range query.
 

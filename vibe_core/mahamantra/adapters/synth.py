@@ -83,11 +83,12 @@ from vibe_core.mahamantra.protocols._seed import (
     PANCHA,
     NAVA,
     TRINITY,
+    MAHAJANA_COUNT,
 )
 
 
 # =============================================================================
-# CONSTANTS
+# CONSTANTS (DERIVED from _seed.py)
 # =============================================================================
 
 # The Mahamantra pattern (16 words)
@@ -106,16 +107,16 @@ BINARY_PATTERN: Final[Tuple[int, ...]] = (
     1, 1, 0, 0,  # Q4
 )
 
-# Position sums reveal operations
-WEIGHT_HARE: Final[int] = 70    # 7 × 10
-WEIGHT_KRISHNA: Final[int] = 17  # 7 + 10
-WEIGHT_RAMA: Final[int] = 49     # 7 × 7
+# Position sums reveal operations (DERIVED!)
+WEIGHT_HARE: Final[int] = SEVEN * TEN      # 7 × 10 = 70
+WEIGHT_KRISHNA: Final[int] = SEVEN + TEN   # 7 + 10 = 17
+WEIGHT_RAMA: Final[int] = SEVEN * SEVEN    # 7 × 7 = 49
 
 # ADSR envelope (from binary pattern 01011100)
-ADSR_ATTACK: Final[int] = PANCHA      # 5 - rising
-ADSR_DECAY: Final[int] = 12  # MAHAJANA_COUNT - falling
-ADSR_SUSTAIN: Final[int] = PANCHA     # 5 - steady
-ADSR_RELEASE: Final[int] = 12         # 12 - final fall
+ADSR_ATTACK: Final[int] = PANCHA           # 5 - rising
+ADSR_DECAY: Final[int] = MAHAJANA_COUNT    # 12 - falling
+ADSR_SUSTAIN: Final[int] = PANCHA          # 5 - steady
+ADSR_RELEASE: Final[int] = MAHAJANA_COUNT  # 12 - final fall
 
 # Full cycle length (polyrhythm)
 import math

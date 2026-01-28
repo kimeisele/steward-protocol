@@ -56,6 +56,9 @@ from vibe_core.mahamantra.protocols._seed import (
     WORDS,
     SEVEN,
     TEN,
+    TRINITY,
+    HALVES,
+    NAVA,
 )
 
 
@@ -124,12 +127,12 @@ class MahaTransform:
     _naga_flooded: bool = True
     _naga_gene: str = "maha_transform_adapter"
 
-    # Presets map to mod spaces
+    # Presets map to mod spaces (DERIVED from _seed.py)
     PRESETS: Final[dict] = {
-        "classical": 17,    # Prime, fast convergence
-        "quantum": 137,     # Maha Quantum, balanced
-        "wide": 512,        # Large space, more diversity
-        "trinity": 3,       # Minimal (H, K, R only)
+        "classical": SEVEN + TEN,      # 17 - Prime, fast convergence
+        "quantum": MAHA_QUANTUM,       # 137 - Maha Quantum, balanced
+        "wide": HALVES ** NAVA,        # 2^9 = 512 - Large space, more diversity
+        "trinity": TRINITY,            # 3 - Minimal (H, K, R only)
     }
 
     def __init__(

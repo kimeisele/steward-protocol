@@ -56,19 +56,19 @@ __genesis__ = "0xNET0137"
 from dataclasses import dataclass
 from typing import Final, List, Optional, Tuple
 
-from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS
+from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS, AKSARA_COUNT
 
 
 # =============================================================================
-# CONSTANTS
+# CONSTANTS (DERIVED from _seed.py)
 # =============================================================================
 
 BITS_PER_LEVEL: Final[int] = QUARTERS  # 4 bits per level
 SLOTS_PER_LEVEL: Final[int] = WORDS  # 16 slots per level
-IPV4_BITS: Final[int] = 32
-IPV4_LEVELS: Final[int] = IPV4_BITS // BITS_PER_LEVEL  # 8 levels
+IPV4_BITS: Final[int] = AKSARA_COUNT  # 32 bits = 32 syllables in Mahamantra!
+IPV4_LEVELS: Final[int] = IPV4_BITS // BITS_PER_LEVEL  # 8 levels = HARE_COUNT
 
-_MASK: Final[int] = 0xF  # 4-bit mask
+_MASK: Final[int] = (1 << QUARTERS) - 1  # 4-bit mask = 0xF
 
 
 # =============================================================================
