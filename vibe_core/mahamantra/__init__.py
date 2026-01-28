@@ -45,6 +45,14 @@ from vibe_core.mahamantra.substrate.seed import (
     WORDS,
 )
 
+# Semantic Bridge - DERIVED via MahaCompute (not invented!)
+from vibe_core.mahamantra.protocols._maha_compute import (
+    get_gita_chapter,
+    get_gita_insight,
+    ATTRACTOR_FIXED,
+    ATTRACTOR_CYCLE,
+)
+
 logger = logging.getLogger("MAHAMANTRA")
 
 # =============================================================================
@@ -243,12 +251,30 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             guna_counts[g] = guna_counts.get(g, 0) + 1
         dominant_guna = max(guna_counts, key=guna_counts.get) if guna_counts else "sattva"
 
+        # === SEMANTIC BRIDGE (DERIVED, NOT INVENTED!) ===
+        # Attractor → Chapter (via MahaCompute math)
+        # Chapter → Insight (via Gita structure)
+        gita_chapter = get_gita_chapter(attractor)
+        gita_insight = get_gita_insight(gita_chapter)
+
+        # Attractor type (FIXED=18, CYCLE=others, FIELD=136)
+        if attractor == ATTRACTOR_FIXED:
+            attractor_type = "FIXED_POINT"
+        elif attractor in ATTRACTOR_CYCLE:
+            attractor_type = "CYCLE"
+        else:
+            attractor_type = "TRANSIENT"
+
         return GitaRoute(
             attractor=attractor,
             verse_count=len(matching),
             verse_ids=verse_ids,
             guna_filter=guna_filter,
             dominant_guna=dominant_guna,
+            # Semantic Bridge fields (DERIVED via MahaCompute!)
+            semantic_name=attractor_type,
+            semantic_theme=gita_insight,
+            semantic_keywords=(f"chapter_{gita_chapter}",),
         )
 
     @classmethod
