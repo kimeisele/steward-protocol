@@ -16,7 +16,7 @@ SOURCE: Caitanya Caritāmṛta, Antya Līlā Chapter 20
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0xd8e2f741"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x3ccab85f"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import IntEnum

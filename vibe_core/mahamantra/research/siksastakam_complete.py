@@ -44,7 +44,7 @@ Author: Research Division, Mahamantra Protocol
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "chaitanya"  # Position 0 - The Author Himself
 __position__ = 0
-__genesis__ = "0xSIKSA8888"  # 8 verses, infinite depth
+__genesis__ = "0x7cd5bb8e"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import IntEnum

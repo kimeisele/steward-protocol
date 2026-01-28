@@ -22,7 +22,7 @@ LEVEL: +1 (Application Logic)
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"  # The divine musician who facilitates Lila
 __position__ = 2
-__genesis__ = "0xb1c9f8d3"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xe6ae6e5a"  # GenesisByte: parampara % 37 == 0
 
 from vibe_core.mahamantra.lila.adhikara import (
     # Core computation

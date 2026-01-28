@@ -22,7 +22,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "yamaraja"
 __position__ = 15
-__genesis__ = "0x3c7f9a12"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x84539983"  # GenesisByte: parampara % 37 == 0
 
 import ast
 import json

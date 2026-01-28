@@ -61,7 +61,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"  # Sankhya philosophy - analysis of matter/spirit
 __position__ = 5
-__genesis__ = "0xd5c7e3a2"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xd4e79076"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
 from dataclasses import dataclass, field

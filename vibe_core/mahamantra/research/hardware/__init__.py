@@ -46,7 +46,7 @@ FILES:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0xHARD137"
+__genesis__ = "0x26787dd2"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final
 

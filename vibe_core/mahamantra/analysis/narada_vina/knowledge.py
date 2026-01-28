@@ -21,7 +21,7 @@ CONSTRAINT: KSHETRA = 24 maximum constant categories
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 5
-__genesis__ = "0xb7e4f195"
+__genesis__ = "0xe0f89577"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, auto

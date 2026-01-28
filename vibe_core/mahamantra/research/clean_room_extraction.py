@@ -40,7 +40,7 @@ Usage:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0xCLEAN137"
+__genesis__ = "0x4f35578d"  # GenesisByte: parampara % 37 == 0
 
 import json
 import sqlite3

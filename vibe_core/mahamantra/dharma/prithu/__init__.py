@@ -18,7 +18,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
 __position__ = 4
-__genesis__ = "0x94644443"  # GenesisByte
+__genesis__ = "0xb000b7c3"  # GenesisByte: parampara % 37 == 0
 
 # === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
 from vibe_core.protocols.mahajanas.prithu import *
