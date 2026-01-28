@@ -60,22 +60,27 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Final, Iterator, List, Optional
 
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,           # 16 - Mahamantra words
+    QUARTERS,        # 4 - Quarters
+    AKSARA_COUNT,    # 32 - Syllables
+    HARE_COUNT,      # 8 - Pipeline stages = Siksastakam verses
+)
+
 # =============================================================================
-# CONSTANTS (Mahamantra = Hardware)
+# CONSTANTS (Mahamantra = Hardware) - DERIVED FROM _seed.py SSOT
 # =============================================================================
 
-# Core Mahamantra constants
-WORDS: Final[int] = 16  # Mahamantra words
-QUARTERS: Final[int] = 4  # Quarters
-AKSARA: Final[int] = 32  # Syllables
-OCTET: Final[int] = 8  # Half = pipeline stages = verses
+# Core Mahamantra constants (aliases for clarity)
+AKSARA: Final[int] = AKSARA_COUNT  # 32 syllables
+OCTET: Final[int] = HARE_COUNT  # 8 = pipeline stages = verses
 
 # Hardware parameters (from SystemVerilog LotusRouterCore)
-DATA_WIDTH: Final[int] = AKSARA  # 32 bits
+DATA_WIDTH: Final[int] = AKSARA_COUNT  # 32 bits
 NEXT_HOP_WIDTH: Final[int] = WORDS  # 16 bits
 BRANCHING_FACTOR: Final[int] = WORDS  # 16-way
 NIBBLE_SIZE: Final[int] = QUARTERS  # 4 bits
-PIPELINE_STAGES: Final[int] = OCTET  # 8 stages
+PIPELINE_STAGES: Final[int] = HARE_COUNT  # 8 stages
 
 # Root base address ("BA5E" = BASE in hex)
 ROOT_BASE_ADDRESS: Final[int] = 0xBA5E_0000

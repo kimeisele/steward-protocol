@@ -294,7 +294,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         best_guardian = None
 
         # 2. Flat Poll
-        for idx in range(16):
+        for idx in range(WORDS):
             guardian = ALL_GUARDIANS[idx]
             protocol_cls = ProtocolRegistry.get(idx)
 

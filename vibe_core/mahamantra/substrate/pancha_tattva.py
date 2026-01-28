@@ -52,7 +52,9 @@ from vibe_core.mahamantra.substrate.byte import (
     MAHAMANTRA_DIMENSION,
     LILA_CYCLES as _LILA_CYCLES,
     LILA_LIMIT,
+    PARAMPARA,
 )
+from vibe_core.mahamantra.protocols._seed import HALVES
 
 
 # =============================================================================
@@ -429,11 +431,13 @@ LILA_CYCLES: Final[int] = _LILA_CYCLES  # SSOT: byte.py
 CHAITANYA_LILA: Final[int] = LILA_LIMIT  # SSOT: byte.py
 
 # The two symmetric phases of Chaitanya's life
-NAVADVIPA_PHASE: Final[int] = 24  # First 24 years: Householder, Study, Build
-PURI_PHASE: Final[int] = 24  # Last 24 years: Sannyasa, Distribution, Runtime
+# DERIVED: LILA_LIMIT / HALVES = 48 / 2 = 24 (perfect symmetry)
+NAVADVIPA_PHASE: Final[int] = LILA_LIMIT // HALVES  # First 24 years: Householder, Study, Build
+PURI_PHASE: Final[int] = LILA_LIMIT // HALVES  # Last 24 years: Sannyasa, Distribution, Runtime
 
 # Rudra number (connects Parampara to Chaitanya)
-RUDRA_BRIDGE: Final[int] = 11  # 37 + 11 = 48
+# DERIVED: LILA_LIMIT - PARAMPARA = 48 - 37 = 11
+RUDRA_BRIDGE: Final[int] = LILA_LIMIT - PARAMPARA  # 37 + 11 = 48
 
 
 def get_lila_phase(tick: int) -> str:

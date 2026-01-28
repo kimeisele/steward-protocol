@@ -699,9 +699,9 @@ class Mahamantra:
 
     def _ensure_all_registered(self) -> None:
         """Load all mahajana protocol modules to trigger @ProtocolRegistry.register decorators."""
-        if ProtocolRegistry.coverage()[0] < 16:
+        if ProtocolRegistry.coverage()[0] < WORDS:
             # Load all protocol modules - this is where the intents and registration live
-            for idx in range(16):
+            for idx in range(WORDS):
                 guardian_name = _get_guardian_name(idx)
                 try:
                     # Load the protocol module (contains the base class with intents)
