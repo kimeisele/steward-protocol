@@ -23,7 +23,7 @@ MAHA-COMPUTING:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 2
-__genesis__ = "0x5a8e7c00"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xf950ff6c"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum

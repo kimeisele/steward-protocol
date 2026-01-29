@@ -23,7 +23,7 @@ WATERTIGHT: Only transforms __init__.py files missing __getattr__.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0x8a4c7e00"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x3da84200"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Sequence, Union
 

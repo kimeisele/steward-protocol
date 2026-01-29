@@ -14,6 +14,11 @@ Usage:
     python scripts/wiring/synaptogenesis.py --generate-circuits
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x34cf5718"  # GenesisByte: parampara % 37 == 0
+
 import argparse
 from collections import defaultdict
 from pathlib import Path

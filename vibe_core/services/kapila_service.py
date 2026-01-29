@@ -11,7 +11,7 @@ Handles Operator Input Processing and Cognition.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0xc30db303"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xbb8638ed"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from datetime import datetime

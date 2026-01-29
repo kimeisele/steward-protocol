@@ -79,6 +79,10 @@ class ShuddhiEngine(ShuddhiProtocol):
             remedy_class = self._remedies[rule_id]
             transformer = remedy_class()
 
+            # PANCHA TATTVA: Pass file_path to remedies that need it (e.g., BrokenGenesisRemedy)
+            if hasattr(transformer, "set_file_path"):
+                transformer.set_file_path(str(file_path))
+
             try:
                 # Use MetadataWrapper if remedy needs position metadata
                 # This enables get_metadata() calls in remedies

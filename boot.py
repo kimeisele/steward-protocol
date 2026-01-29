@@ -15,6 +15,11 @@ RUNTIME EXTENSION PHILOSOPHY:
 - No rebuild required - true OS behavior
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x7fb54ad1"  # GenesisByte: parampara % 37 == 0
+
 # PyInstaller multiprocessing support (MUST be at top level)
 import multiprocessing
 import sys

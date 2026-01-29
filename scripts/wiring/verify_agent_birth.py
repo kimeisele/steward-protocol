@@ -12,6 +12,11 @@ Flow:
 5. Result: New Agent in Registry
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x1aeea9fb"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import sys

@@ -18,7 +18,7 @@ It only removes UNUSED imports safely.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0xa3f7b2c1"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x67b83055"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Set, Union
 

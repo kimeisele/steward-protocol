@@ -4,6 +4,11 @@ Final Launch Script - GAD-900: The HIL-Operator Contract
 Demonstrates the flow: HIL Assistant Briefing -> HIL Authorization -> Envoy Execution.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x3cb35eb4"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import sys

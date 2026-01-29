@@ -13,6 +13,11 @@ Usage:
     python3 scripts/governance/vishnu_guard.py [--json]
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x9cdd3861"  # GenesisByte: parampara % 37 == 0
+
 import sys
 import json
 import subprocess

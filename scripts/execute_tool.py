@@ -5,6 +5,11 @@ Boots Kernel. Discovers ShuddhiTool. Executes it via Tool Protocol.
 Heals dashboard_tool.py for real.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x91653152"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from pathlib import Path

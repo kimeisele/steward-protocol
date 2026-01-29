@@ -12,6 +12,11 @@ This script performs the Research Yagya - a coordinated operation where:
 No mocks. No fakes. Only real work.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xd2764677"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import os

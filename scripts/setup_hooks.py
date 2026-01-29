@@ -6,6 +6,11 @@ Checks if git hooks are installed and installs them if missing.
 Runs automatically in CI/CD and can be triggered manually.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xcf956ed4"  # GenesisByte: parampara % 37 == 0
+
 import os
 import subprocess
 import sys

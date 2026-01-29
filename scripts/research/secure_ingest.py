@@ -20,6 +20,11 @@ Philosophy:
 "Secrets are not environment variables. Secrets are ASSETS managed by the collective."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x9376a4b4"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import sys
