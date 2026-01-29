@@ -216,13 +216,13 @@ class NullKumaras(KumarasProtocolBase):
     def is_pure(self) -> bool:
         return True  # Always pure
 
-    def purify(self, data: PurifiableData) -> PurifiableData:
+    def purify(self, data: PurifiableData = None) -> PurifiableData:
         return data  # Already pure
 
     def get_purity_level(self) -> PurityLevel:
         return PurityLevel.PRISTINE
 
-    def validate(self, data: PurifiableData) -> bool:
+    def validate(self, data: PurifiableData = None) -> bool:
         return True  # All data is valid
 
     def get_state(self) -> PurityState:

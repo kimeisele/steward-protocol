@@ -276,7 +276,7 @@ class NullWatchman(YamarajaProtocolBase):
             should_fail_build=False,
         )
 
-    def inspect_file(self, file_path: Path) -> List[Violation]:
+    def inspect_file(self, file_path: Path = None) -> List[Violation]:
         return []
 
     def check_health(self) -> HealthResult:
@@ -291,7 +291,7 @@ class NullWatchman(YamarajaProtocolBase):
     def get_violations(self, severity: Optional[ViolationSeverity] = None) -> List[Violation]:
         return []
 
-    def record_violation(self, violation: Violation) -> bool:
+    def record_violation(self, violation: Violation = None) -> bool:
         return True
 
     def get_state(self) -> WatchmanState:

@@ -237,7 +237,7 @@ class NullShuddhi(ShuddhiProtocolBase):
     Inherits from ShuddhiProtocolBase → position 5 → KUMARAS.
     """
 
-    def purify(self, file_path: Path, rule_id: str) -> ShuddhiResult:
+    def purify(self, file_path: Path = None, rule_id: str = "") -> ShuddhiResult:
         """No purification needed - already pure."""
         return ShuddhiResult(
             status=ShuddhiStatus.SKIPPED,
@@ -249,7 +249,7 @@ class NullShuddhi(ShuddhiProtocolBase):
     def list_remedies(self) -> List[str]:
         return []
 
-    def can_heal(self, rule_id: str) -> bool:
+    def can_heal(self, rule_id: str = "") -> bool:
         return True  # Everything is already healed
 
 

@@ -389,24 +389,24 @@ class NullValidator:
     def owner(self) -> Mahajana:
         return Mahajana.KUMARAS
 
-    def add_rule(self, field: str, rule: ValidationRule) -> bool:
+    def add_rule(self, field: str = "", rule: ValidationRule = None) -> bool:
         return True
 
-    def remove_rule(self, field: str, rule_name: str) -> bool:
+    def remove_rule(self, field: str = "", rule_name: str = "") -> bool:
         return True
 
-    def get_rules(self, field: str) -> List[ValidationRule]:
+    def get_rules(self, field: str = "") -> List[ValidationRule]:
         return []
 
-    def validate(self, field: str, data: PurifiableData) -> ValidationResult:
+    def validate(self, field: str = "", data: PurifiableData = None) -> ValidationResult:
         return ValidationResult(
             valid=True, field=field, value_type=type(data).__name__, errors=[], purity_level=PurityLevel.PRISTINE
         )
 
-    def validate_all(self, data: Dict[str, PurifiableData]) -> Dict[str, ValidationResult]:
+    def validate_all(self, data: Dict[str, PurifiableData] = None) -> Dict[str, ValidationResult]:
         return {k: self.validate(k, v) for k, v in data.items()}
 
-    def is_valid(self, field: str, data: PurifiableData) -> bool:
+    def is_valid(self, field: str = "", data: PurifiableData = None) -> bool:
         return True
 
 

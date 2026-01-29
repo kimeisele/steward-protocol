@@ -454,16 +454,16 @@ class NullSmriti:
     def size(self) -> int:
         return 0
 
-    def store(self, key: str, value: MemoryValue, ttl_seconds: Optional[int] = None) -> bool:
+    def store(self, key: str = "", value: MemoryValue = None, ttl_seconds: Optional[int] = None) -> bool:
         return True
 
-    def retrieve(self, key: str) -> Optional[MemoryValue]:
+    def retrieve(self, key: str = "") -> Optional[MemoryValue]:
         return None
 
-    def delete(self, key: str) -> bool:
+    def delete(self, key: str = "") -> bool:
         return False
 
-    def exists(self, key: str) -> bool:
+    def exists(self, key: str = "") -> bool:
         return False
 
     def clear(self) -> int:

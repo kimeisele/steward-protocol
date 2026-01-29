@@ -211,7 +211,7 @@ class NullParashurama(ParashuramaProtocolBase):
     Inherits from ParashuramaProtocolBase -> position 8 -> PARASHURAMA.
     """
 
-    def fetch(self, resource_id: str, timeout_ms: int = 5000) -> FetchResult:
+    def fetch(self, resource_id: str = "", timeout_ms: int = 5000) -> FetchResult:
         return FetchResult(
             success=True,
             status=FetchStatus.SUCCESS.value,
@@ -222,22 +222,22 @@ class NullParashurama(ParashuramaProtocolBase):
             latency_ms=0,
         )
 
-    def fetch_batch(self, resource_ids: List[str]) -> List[FetchResult]:
+    def fetch_batch(self, resource_ids: List[str] = None) -> List[FetchResult]:
         return [self.fetch(rid) for rid in resource_ids]
 
-    def get_resource(self, resource_id: str) -> Optional[ResourceValue]:
+    def get_resource(self, resource_id: str = "") -> Optional[ResourceValue]:
         return None
 
-    def is_available(self, resource_id: str) -> bool:
+    def is_available(self, resource_id: str = "") -> bool:
         return False
 
-    def prefetch(self, resource_ids: List[str]) -> int:
+    def prefetch(self, resource_ids: List[str] = None) -> int:
         return 0
 
-    def invalidate(self, resource_id: str) -> bool:
+    def invalidate(self, resource_id: str = "") -> bool:
         return False
 
-    def get_status(self, resource_id: str) -> FetchStatus:
+    def get_status(self, resource_id: str = "") -> FetchStatus:
         return FetchStatus.PENDING
 
     def get_state(self) -> FetchState:

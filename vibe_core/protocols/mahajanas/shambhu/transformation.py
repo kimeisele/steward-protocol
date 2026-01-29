@@ -275,7 +275,7 @@ class NullTransformation:
     def owner(self) -> Mahajana:
         return Mahajana.SHAMBHU
 
-    def analyze_file(self, file_path: str) -> TransformationPlan:
+    def analyze_file(self, file_path: str = "") -> TransformationPlan:
         return TransformationPlan(
             source_file=file_path,
             concerns_found=0,
@@ -285,13 +285,13 @@ class NullTransformation:
             blockers=["Transformation disabled"],
         )
 
-    def find_concerns(self, file_path: str) -> List[MixedConcern]:
+    def find_concerns(self, file_path: str = "") -> List[MixedConcern]:
         return []
 
-    def identify_owner(self, concern_name: str, concern_type: ConcernType) -> Mahajana:
+    def identify_owner(self, concern_name: str = "", concern_type: ConcernType = None) -> Mahajana:
         return Mahajana.SHAMBHU  # Default to self
 
-    def split_file(self, file_path: str, plan: TransformationPlan) -> TransformationResult:
+    def split_file(self, file_path: str = "", plan: TransformationPlan = None) -> TransformationResult:
         return TransformationResult(
             success=False,
             transformation_type="split",
@@ -303,7 +303,7 @@ class NullTransformation:
             error_message="Transformation disabled",
         )
 
-    def route_concern(self, concern: MixedConcern) -> TransformationResult:
+    def route_concern(self, concern: MixedConcern = None) -> TransformationResult:
         return TransformationResult(
             success=False,
             transformation_type="route",
@@ -315,7 +315,7 @@ class NullTransformation:
             error_message="Transformation disabled",
         )
 
-    def purge_obsolete(self, file_path: str) -> TransformationResult:
+    def purge_obsolete(self, file_path: str = "") -> TransformationResult:
         return TransformationResult(
             success=False,
             transformation_type="purge",
@@ -330,7 +330,7 @@ class NullTransformation:
     def get_mixed_files(self) -> Dict[str, Dict[str, str]]:
         return dict(MIXED_FILE_REGISTRY)
 
-    def register_mixed_file(self, file_path: str, concern_mapping: Dict[str, str]) -> bool:
+    def register_mixed_file(self, file_path: str = "", concern_mapping: Dict[str, str] = None) -> bool:
         return False
 
     def get_state(self) -> TransformationState:

@@ -383,7 +383,7 @@ class NullCognitive:
     Routes everything directly to Envoy.
     """
 
-    async def process_intent(self, intent: str, context: CognitiveContext) -> CognitiveResult:
+    async def process_intent(self, intent: str = "", context: CognitiveContext = None) -> CognitiveResult:
         """Fallback: Route everything to Envoy."""
         return CognitiveResult(
             intent_type=IntentType.ROUTE,
@@ -392,7 +392,7 @@ class NullCognitive:
             reasoning="No cognitive plugin registered, routing to Envoy",
         )
 
-    async def generate_response(self, prompt: str, context: CognitiveContext) -> str:
+    async def generate_response(self, prompt: str = "", context: CognitiveContext = None) -> str:
         """Fallback: Cannot generate without cognitive layer."""
         return "[No cognitive layer available]"
 

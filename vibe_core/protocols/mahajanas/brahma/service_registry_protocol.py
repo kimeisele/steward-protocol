@@ -228,22 +228,22 @@ class NullServiceRegistry:
 
     _services: Dict[str, object] = {}
 
-    def register(self, protocol_type: Type[T], instance: T) -> None:
+    def register(self, protocol_type: Type[T] = None, instance: T = None) -> None:
         self._services[str(protocol_type)] = instance
 
-    def register_factory(self, protocol_type: Type[T], factory: Callable[[], T]) -> None:
+    def register_factory(self, protocol_type: Type[T] = None, factory: Callable[[], T] = None) -> None:
         pass  # No-op
 
-    def get(self, protocol_type: Type[T]) -> Optional[T]:
+    def get(self, protocol_type: Type[T] = None) -> Optional[T]:
         return self._services.get(str(protocol_type))  # type: ignore
 
-    def require(self, protocol_type: Type[T]) -> T:
+    def require(self, protocol_type: Type[T] = None) -> T:
         result = self.get(protocol_type)
         if result is None:
             raise KeyError(f"Service not found: {protocol_type}")
         return result
 
-    def has(self, protocol_type: Type[T]) -> bool:
+    def has(self, protocol_type: Type[T] = None) -> bool:
         return str(protocol_type) in self._services
 
     def reset(self) -> None:

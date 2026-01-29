@@ -465,7 +465,7 @@ class NullLedger:
     def head(self) -> Optional[str]:
         return None
 
-    def commit(self, payload: CommitEntry, sovereign_id: str) -> CommitResult:
+    def commit(self, payload: CommitEntry = None, sovereign_id: str = "") -> CommitResult:
         return CommitResult(
             success=True,
             commit_id="null_commit",
@@ -474,13 +474,13 @@ class NullLedger:
             error_message="",
         )
 
-    def get(self, commit_id: str) -> Optional[LedgerEntry]:
+    def get(self, commit_id: str = "") -> Optional[LedgerEntry]:
         return None
 
-    def get_by_sequence(self, sequence: int) -> Optional[LedgerEntry]:
+    def get_by_sequence(self, sequence: int = 0) -> Optional[LedgerEntry]:
         return None
 
-    def verify(self, commit_id: str) -> VerificationResult:
+    def verify(self, commit_id: str = "") -> VerificationResult:
         return VerificationResult(valid=True, commit_id=commit_id, lineage_intact=True, error_message="")
 
     def verify_chain(self) -> VerificationResult:

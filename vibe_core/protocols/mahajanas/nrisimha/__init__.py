@@ -219,7 +219,7 @@ class NullNrisimha(NrisimhaProtocolBase):
     Inherits from NrisimhaProtocolBase -> position 12 -> NRISIMHA.
     """
 
-    def cache(self, key: str, value: CacheValue, ttl_seconds: int = 3600) -> CacheResult:
+    def cache(self, key: str = "", value: CacheValue = None, ttl_seconds: int = 3600) -> CacheResult:
         return CacheResult(
             success=True,
             cache_key=key,
@@ -230,10 +230,10 @@ class NullNrisimha(NrisimhaProtocolBase):
             ttl_seconds=ttl_seconds,
         )
 
-    def get(self, key: str) -> Optional[CacheValue]:
+    def get(self, key: str = "") -> Optional[CacheValue]:
         return None  # Always miss in null mode
 
-    def protect(self, key: str) -> CacheResult:
+    def protect(self, key: str = "") -> CacheResult:
         return CacheResult(
             success=True,
             cache_key=key,
@@ -242,7 +242,7 @@ class NullNrisimha(NrisimhaProtocolBase):
             timestamp=datetime.now().isoformat(),
         )
 
-    def unprotect(self, key: str) -> CacheResult:
+    def unprotect(self, key: str = "") -> CacheResult:
         return CacheResult(
             success=True,
             cache_key=key,
@@ -251,13 +251,13 @@ class NullNrisimha(NrisimhaProtocolBase):
             timestamp=datetime.now().isoformat(),
         )
 
-    def evict(self, key: str) -> bool:
+    def evict(self, key: str = "") -> bool:
         return True  # Always succeeds in null mode
 
-    def get_level(self, key: str) -> CacheLevel:
+    def get_level(self, key: str = "") -> CacheLevel:
         return CacheLevel.EVICTED
 
-    def warm_up(self, keys: List[str]) -> int:
+    def warm_up(self, keys: List[str] = None) -> int:
         return 0
 
     def clear(self, include_protected: bool = False) -> int:
