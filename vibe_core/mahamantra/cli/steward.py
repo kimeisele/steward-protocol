@@ -98,10 +98,12 @@ class StewardResponse:
     """
     Response from the Steward.
 
-    DUAL INSTRUMENT RESONANCE (Watertight from _seed.py):
-        resonance (flute): Krishna's 3 flutes - WHEN (rhythmic)
-        vina_resonance: Narada's 5 strings - WHAT TYPE (harmonic)
-        vina_string: Which Pancha Tattva string (1-5)
+    TRIPLE RESONANCE ARCHITECTURE (Watertight from _seed.py):
+        1. resonance (flute): Krishna's 3 flutes - WHEN (rhythmic)
+        2. vina_resonance: Narada's 5 strings - WHAT TYPE (harmonic)
+        3. shadow_phase: ShadowReactor phase - TRANSFORMATION (bhoga/prasadam/return)
+
+    FLOW: Input → MahaCompression → MahaKirtan → ShadowReactor → Route → Execute
     """
     input: str
     seed: int
@@ -112,6 +114,8 @@ class StewardResponse:
     resonance: float  # Krishna's flute resonance (WHEN)
     vina_resonance: float  # Narada's vina resonance (WHAT TYPE)
     vina_string: int  # 1-5: CHAITANYA/NITYANANDA/ADVAITA/GADADHARA/SRIVASA
+    shadow_phase: str  # "bhoga", "prasadam", or "return" (TRANSFORMATION)
+    shadow_position: int  # 0-15 position in yajna cycle
     result: Optional[Any] = None
     message: str = ""
 
@@ -171,9 +175,16 @@ class Steward:
 
         Any input → Resonance → Route → Execute → Response
 
-        DUAL INSTRUMENT RESONANCE:
+        TRIPLE RESONANCE ARCHITECTURE:
             1. Krishna's Flute (resonance) - WHEN (rhythmic, tick-based)
             2. Narada's Vina (vina_resonance) - WHAT TYPE (harmonic, seed-based)
+            3. Shadow Reactor (shadow_phase) - TRANSFORMATION (bhoga/prasadam/return)
+
+        COMPLETE FLOW:
+            Input → MahaCompression → Seed
+            Seed → MahaKirtan → Vibration (dual resonance)
+            Vibration → ShadowReactor.tick() → ShadowState (yajna transformation)
+            ShadowState + Chapter → Route → Execute
         """
         # 1. SRAVANAM: Receive input
         # 2. MANANAM: Compress to seed (includes dual instrument resonance!)
@@ -188,6 +199,30 @@ class Steward:
         kirtan = self.mahamantra.kirtan(seed)
         call_response = kirtan.call_response
 
+        # 4. SHADOW REACTOR: Yajna Transformation (Bhoga → Prasadam → Return)
+        # Derive position from seed (0-15)
+        from vibe_core.mahamantra.protocols._seed import WORDS
+        position = seed % WORDS  # 0-15
+
+        # Get tick state for shadow reactor
+        tick_state = self.mahamantra.tick()
+
+        # Override position with seed-derived position for this invocation
+        tick_state_for_shadow = {
+            "tick": seed % 1728,  # Map to tick space (108 × 16)
+            "position": position,
+            "quarter": tick_state["quarter"],
+            "guardian": tick_state["guardian"],
+            "word": tick_state["word"],
+            "opcode": tick_state["opcode"],
+        }
+
+        # Spawn reactor and process through yajna cycle
+        reactor = self.mahamantra.shadow.spawn(initial_position=position)
+        shadow_state = reactor.tick(tick_state_for_shadow)
+        shadow_phase = shadow_state["phase"]
+        shadow_position = shadow_state["position"]
+
         # Get Gita chapter from attractor
         from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
         chapter = get_gita_chapter(attractor)
@@ -195,7 +230,7 @@ class Steward:
         # Get the route
         route = RESONANCE_MAP.get(chapter, RESONANCE_MAP[18])  # Default to Moksha
 
-        # 4. KIRTANAM: Execute through resonant module
+        # 5. KIRTANAM: Execute through resonant module
         handler = self._module_handlers.get(route.module_hint)
         result = None
         message = ""
@@ -203,13 +238,13 @@ class Steward:
         if handler:
             try:
                 result = handler(input_text, vibration, kirtan)
-                message = f"Routed to {route.module_hint} via Chapter {chapter} ({route.insight})"
+                message = f"Routed to {route.module_hint} via Chapter {chapter} ({route.insight}) [Shadow: {shadow_phase}]"
             except Exception as e:
                 message = f"Handler error: {e}"
         else:
             message = f"No handler for {route.module_hint}"
 
-        # 5. Build response with DUAL RESONANCE
+        # 6. Build response with TRIPLE RESONANCE
         return StewardResponse(
             input=input_text,
             seed=seed,
@@ -220,6 +255,8 @@ class Steward:
             resonance=resonance,
             vina_resonance=vina_resonance,
             vina_string=vina_string,
+            shadow_phase=shadow_phase,
+            shadow_position=shadow_position,
             result=result,
             message=message,
         )
@@ -372,9 +409,10 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
         steward "heal this code"
         steward "chat with me"
 
-    DUAL INSTRUMENT RESONANCE:
+    TRIPLE RESONANCE ARCHITECTURE:
         flute_resonance: Krishna's 3 flutes - WHEN
         vina_resonance: Narada's 5 strings - WHAT TYPE
+        shadow_phase: Yajna transformation - BHOGA/PRASADAM/RETURN
     """
     steward = get_steward()
     response = steward.invoke(input_text)
@@ -396,9 +434,10 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
 ║  Quarter:    {response.route.quarter.value:40} ║
 ║  Mode:       {response.call_response:40} ║
 ╠══════════════════════════════════════════════════════════════╣
-║  DUAL RESONANCE:                                             ║
+║  TRIPLE RESONANCE:                                           ║
 ║  Flute:      {response.resonance:40.3f} ║
 ║  Vina:       {response.vina_resonance:.3f} (String {response.vina_string}: {vina_name:21}) ║
+║  Shadow:     {response.shadow_phase:8} at position {response.shadow_position:2} (Yajna cycle)   ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  {response.message[:58]:58} ║
 ╚══════════════════════════════════════════════════════════════╝
@@ -416,6 +455,8 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
         "vina_resonance": response.vina_resonance,
         "vina_string": response.vina_string,
         "vina_name": vina_name,
+        "shadow_phase": response.shadow_phase,
+        "shadow_position": response.shadow_position,
         "result": response.result,
         "message": response.message,
     }
