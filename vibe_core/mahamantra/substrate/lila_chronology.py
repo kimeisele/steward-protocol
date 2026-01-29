@@ -1041,14 +1041,48 @@ class FluteSync:
         """
         Calculate combined flute resonance (0.0 to 1.0).
 
-        More flutes in sync = higher resonance.
-        VAMSI alone = 0.33
-        VENU + VAMSI = 0.66
-        All three = 1.0
+        FIXED: Computes CONTINUOUS resonance based on proximity to sync points.
+        Each flute contributes based on how close the tick is to its sync.
+
+        OLD (BROKEN): Boolean sync only → mostly 0.0
+        NEW (WATERTIGHT): Wave-like resonance → always meaningful
+
+        RESONANCE FORMULA (per flute):
+            distance = min(tick % period, period - (tick % period))
+            resonance = 1.0 - (distance / (period / 2.0))
+
+        This creates smooth oscillation: 1.0 at sync → 0.0 at midpoint → 1.0 at next sync
+
+        Combined resonance = weighted average of all three flutes:
+            MURALI (4): Closest quarters, highest weight (0.4)
+            VENU (6): Sharanagati rhythm (0.35)
+            VAMSI (9): Nava expansion (0.25)
         """
-        status = cls.get_flute_resonance(tick)
-        count = sum(1 for v in status.values() if v)
-        return count / 3.0
+        # Continuous resonance per flute (wave approaching sync points)
+        def flute_resonance(tick_value: int, period: int) -> float:
+            """Compute continuous resonance: 1.0 at sync, 0.0 at midpoint."""
+            if period == 0:
+                return 0.0
+            remainder = tick_value % period
+            distance = min(remainder, period - remainder)
+            half_period = period / 2.0
+            return 1.0 - (distance / half_period)
+
+        # MURALI uses (tick + 1) for 1-indexed beats
+        murali_res = flute_resonance(tick + 1, MURALI_HOLES)
+        venu_res = flute_resonance(tick, VENU_HOLES)
+        vamsi_res = flute_resonance(tick, VAMSI_HOLES)
+
+        # Weighted combination (MURALI strongest - quarters foundation)
+        # Weights derived from relative periods: 4, 6, 9
+        # Smaller period = faster oscillation = more influence
+        combined = (
+            0.40 * murali_res +   # MURALI (4) - foundation rhythm
+            0.35 * venu_res +     # VENU (6) - sharanagati flow
+            0.25 * vamsi_res      # VAMSI (9) - nava expansion
+        )
+
+        return combined
 
     @classmethod
     def get_sync_years(cls) -> Dict[str, List[int]]:
@@ -1148,23 +1182,46 @@ class VinaSync:
         """
         Calculate Vina resonance (0.0 to 1.0).
 
-        Based on:
-        - String resonance (how well seed maps to string)
-        - Fundamental sync (is tick at Vina fundamental?)
+        FIXED: Uses CONTINUOUS resonance based on seed's harmonic position.
+
+        VINA RESONANCE COMPONENTS:
+        1. String resonance: Which Pancha Tattva string (always contributes)
+        2. Harmonic position: Seed's position in VINA_FUNDAMENTAL (136) space
+        3. Fundamental proximity: How close tick is to fundamental sync
+
+        The Vina measures WHAT TYPE (harmonic), complementing Flute's WHEN (rhythmic).
         """
-        # Base resonance from string mapping (always some resonance)
-        base = 0.2
-
-        # String harmony - seeds divisible by string number resonate more
+        # 1. String resonance (Pancha Tattva): 0.2 base
         string_num = cls.get_string_for_seed(seed)
-        if seed % (string_num * VINA_STRINGS) == 0:
-            base += 0.3
+        string_base = 0.20
 
-        # Fundamental sync bonus
-        if cls.is_vina_sync(tick):
-            base += 0.5
+        # String harmony bonus: seeds with strong string alignment
+        # (divisible by string_num gives +0.1)
+        if seed > 0 and seed % string_num == 0:
+            string_base += 0.10
 
-        return min(1.0, base)
+        # 2. Harmonic position in VINA_FUNDAMENTAL (136) space
+        # Resonance peaks at attractor positions (136, 22, 18, 87, 49)
+        harmonic = seed % VINA_FUNDAMENTAL
+        # Distance to closest attractor (normalized to 0-1)
+        # The 5 Pancha attractors from Akash field
+        attractors = [136 % VINA_FUNDAMENTAL, 22, 18, 87, 49]  # 0, 22, 18, 87, 49
+        min_dist = min(abs(harmonic - a) for a in attractors)
+        # Normalize: 0 distance = 0.30, max distance (~68) = 0.0
+        harmonic_res = 0.30 * (1.0 - min_dist / (VINA_FUNDAMENTAL / 2.0))
+        harmonic_res = max(0.0, harmonic_res)
+
+        # 3. Fundamental proximity: continuous approach to 136 sync
+        # (instead of boolean 0/1)
+        fund_remainder = tick % VINA_FUNDAMENTAL
+        fund_distance = min(fund_remainder, VINA_FUNDAMENTAL - fund_remainder)
+        fund_half = VINA_FUNDAMENTAL / 2.0
+        fundamental_res = 0.20 * (1.0 - fund_distance / fund_half)
+
+        # Combined resonance
+        combined = string_base + harmonic_res + fundamental_res
+
+        return min(1.0, max(0.0, combined))
 
 
 # =============================================================================
