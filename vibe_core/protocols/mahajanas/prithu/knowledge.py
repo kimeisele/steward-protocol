@@ -258,21 +258,21 @@ class NullKnowledgeGraph(KnowledgeGraphProtocolBase):
     def __init__(self) -> None:
         self._violations: Dict[str, ViolationNode] = {}
 
-    def add_node(self, node_id: str, node_type: NodeType, properties: Dict[str, str | int | bool]) -> None:
+    def add_node(self, node_id: str = "", node_type: NodeType = None, properties: Dict[str, str | int | bool] = None) -> None:
         pass
 
-    def get_node(self, node_id: str) -> Optional[ViolationNode]:
+    def get_node(self, node_id: str = "") -> Optional[ViolationNode]:
         return self._violations.get(node_id)
 
     def query_nodes(
-        self, node_type: NodeType, filters: Optional[Dict[str, str | int | bool]] = None
+        self, node_type: NodeType = None, filters: Optional[Dict[str, str | int | bool]] = None
     ) -> List[ViolationNode]:
         return []
 
-    def add_edge(self, source_id: str, target_id: str, relation: RelationType) -> None:
+    def add_edge(self, source_id: str = "", target_id: str = "", relation: RelationType = None) -> None:
         pass
 
-    def get_edges(self, node_id: str, direction: str = "outgoing") -> List[str]:
+    def get_edges(self, node_id: str = "", direction: str = "outgoing") -> List[str]:
         return []
 
     def get_violations(
@@ -282,17 +282,17 @@ class NullKnowledgeGraph(KnowledgeGraphProtocolBase):
     ) -> List[ViolationNode]:
         return []
 
-    def mark_violation_healed(self, violation_id: str, remedy_id: str) -> None:
+    def mark_violation_healed(self, violation_id: str = "", remedy_id: str = "") -> None:
         if violation_id in self._violations:
             self._violations[violation_id].healed = True
 
     def add_violation(
         self,
-        file_path: str,
-        line: int,
-        column: int,
-        rule_id: str,
-        message: str,
+        file_path: str = "",
+        line: int = 0,
+        column: int = 0,
+        rule_id: str = "",
+        message: str = "",
         severity: str = "MEDIUM",
     ) -> str:
         violation_id = f"v_{len(self._violations)}"
@@ -307,7 +307,7 @@ class NullKnowledgeGraph(KnowledgeGraphProtocolBase):
         )
         return violation_id
 
-    def load(self, knowledge_dir: Path) -> None:
+    def load(self, knowledge_dir: Path = None) -> None:
         pass
 
     @property

@@ -306,7 +306,7 @@ class NullBootstrap:
     def is_ready(self) -> bool:
         return True
 
-    def register_step(self, step: BootstrapStep) -> bool:
+    def register_step(self, step: BootstrapStep = None) -> bool:
         return True
 
     def boot(self, timeout_ms: int = 30000) -> BootstrapResult:

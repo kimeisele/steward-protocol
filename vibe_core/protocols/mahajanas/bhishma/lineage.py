@@ -473,16 +473,16 @@ class NullLineage:
     def owner(self) -> Mahajana:
         return Mahajana.BHISHMA
 
-    def add_node(self, node: LineageNode) -> bool:
+    def add_node(self, node: LineageNode = None) -> bool:
         return True
 
-    def get_node(self, node_id: str) -> Optional[LineageNode]:
+    def get_node(self, node_id: str = "") -> Optional[LineageNode]:
         return None
 
-    def has_node(self, node_id: str) -> bool:
+    def has_node(self, node_id: str = "") -> bool:
         return False
 
-    def verify(self, node_id: str) -> LineageVerification:
+    def verify(self, node_id: str = "") -> LineageVerification:
         return LineageVerification(
             status=LineageStatus.VALID,
             node_id=node_id,
@@ -493,16 +493,16 @@ class NullLineage:
             message="NullLineage - always valid",
         )
 
-    def get_ancestors(self, node_id: str, limit: int = 100) -> List[str]:
+    def get_ancestors(self, node_id: str = "", limit: int = 100) -> List[str]:
         return []
 
-    def get_depth(self, node_id: str) -> int:
+    def get_depth(self, node_id: str = "") -> int:
         return 0
 
-    def compute_parampara_hash(self, node_id: str) -> int:
+    def compute_parampara_hash(self, node_id: str = "") -> int:
         return 0  # % 37 == 0
 
-    def is_connected(self, node_id: str) -> bool:
+    def is_connected(self, node_id: str = "") -> bool:
         return True
 
 

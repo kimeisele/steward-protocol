@@ -182,13 +182,13 @@ class NullBrahma(BrahmaProtocolBase):
     Inherits from BrahmaProtocolBase -> position 1 -> BRAHMA.
     """
 
-    def wake(self, sovereign_id: str) -> bool:
+    def wake(self, sovereign_id: str = "") -> bool:
         return True
 
-    def load_root(self, root_path: str) -> bool:
+    def load_root(self, root_path: str = "") -> bool:
         return True
 
-    def alloc_mem(self, size_bytes: int) -> AllocationResult:
+    def alloc_mem(self, size_bytes: int = 0) -> AllocationResult:
         return AllocationResult(
             success=True,
             allocated_bytes=size_bytes,

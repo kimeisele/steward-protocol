@@ -409,22 +409,22 @@ class NullGC:
     def strategy(self) -> GCStrategy:
         return GCStrategy.MANUAL
 
-    def track(self, object_id: str, size_bytes: int, destructor: Optional[Callable[[], None]] = None) -> bool:
+    def track(self, object_id: str = "", size_bytes: int = 0, destructor: Optional[Callable[[], None]] = None) -> bool:
         return True
 
-    def untrack(self, object_id: str) -> bool:
+    def untrack(self, object_id: str = "") -> bool:
         return True
 
-    def add_reference(self, object_id: str) -> bool:
+    def add_reference(self, object_id: str = "") -> bool:
         return True
 
-    def release_reference(self, object_id: str) -> bool:
+    def release_reference(self, object_id: str = "") -> bool:
         return True
 
     def collect(self) -> GCResult:
         return GCResult(objects_collected=0, bytes_freed=0, duration_ms=0, strategy=GCStrategy.MANUAL, message="NullGC")
 
-    def collect_generation(self, generation: int) -> GCResult:
+    def collect_generation(self, generation: int = 0) -> GCResult:
         return self.collect()
 
     def get_stats(self) -> GCStats:

@@ -145,13 +145,13 @@ class NullManu(ManuProtocolBase):
     Inherits from ManuProtocolBase -> position 7 -> MANU.
     """
 
-    def bind_context(self, context: DharmaContext) -> bool:
+    def bind_context(self, context: DharmaContext = None) -> bool:
         return True
 
-    def check_dharma(self, action: str, context: DharmaContext) -> ManuVerdict:
+    def check_dharma(self, action: str = "", context: DharmaContext = None) -> ManuVerdict:
         return ManuVerdict(is_dharmic=True, reason="NullManu permits all")
 
-    def get_ruling(self, action: str) -> Optional[str]:
+    def get_ruling(self, action: str = "") -> Optional[str]:
         return None
 
     def sync(self, target: str = "all") -> SyncResult:

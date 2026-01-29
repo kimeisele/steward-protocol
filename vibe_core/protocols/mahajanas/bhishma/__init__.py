@@ -185,7 +185,7 @@ class NullBhishma(BhishmaProtocolBase):
     Inherits from BhishmaProtocolBase → position 11 → BHISHMA.
     """
 
-    def commit(self, entry: CommitEntry, sovereign_id: str) -> CommitResult:
+    def commit(self, entry: CommitEntry = None, sovereign_id: str = "") -> CommitResult:
         return CommitResult(
             success=True,
             commit_id="null_commit",
@@ -194,7 +194,7 @@ class NullBhishma(BhishmaProtocolBase):
             error_message="",
         )
 
-    def verify(self, commit_id: str) -> VerificationResult:
+    def verify(self, commit_id: str = "") -> VerificationResult:
         return VerificationResult(
             valid=True,
             commit_id=commit_id,

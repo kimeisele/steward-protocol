@@ -378,26 +378,26 @@ class NullEventBus:
     def owner(self) -> Mahajana:
         return Mahajana.NARADA
 
-    def emit(self, event: Event) -> bool:
+    def emit(self, event: Event = None) -> bool:
         return True
 
     def emit_sync(
         self,
-        event_type: EventType,
-        agent_id: str,
-        message: str,
+        event_type: EventType = None,
+        agent_id: str = "",
+        message: str = "",
         data: Optional[EventData] = None,
     ) -> str:
         return "null-event-id"
 
     def subscribe(
         self,
-        callback: EventCallback,
+        callback: EventCallback = None,
         event_types: Optional[List[EventType]] = None,
     ) -> str:
         return "null-subscriber-id"
 
-    def unsubscribe(self, subscriber_id: str) -> bool:
+    def unsubscribe(self, subscriber_id: str = "") -> bool:
         return False
 
     def get_subscribers(self) -> List[SubscriberInfo]:
@@ -430,10 +430,10 @@ class NullEventBus:
             health="pristine",
         )
 
-    def is_rate_limited(self, agent_id: str) -> bool:
+    def is_rate_limited(self, agent_id: str = "") -> bool:
         return False
 
-    def reset_rate_limit(self, agent_id: str) -> None:
+    def reset_rate_limit(self, agent_id: str = "") -> None:
         pass
 
 

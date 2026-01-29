@@ -354,10 +354,10 @@ class CorrectionOrchestratorProtocol(Protocol):
 class NullDriftRegistry:
     """No-op drift registry (all is well)."""
 
-    def register_detector(self, source: DriftSource, detector: DriftDetector, detector_id: str = "") -> None:
+    def register_detector(self, source: DriftSource = None, detector: DriftDetector = None, detector_id: str = "") -> None:
         pass
 
-    def unregister_detector(self, detector_id: str) -> bool:
+    def unregister_detector(self, detector_id: str = "") -> bool:
         return False
 
     def detect(self, source: Optional[DriftSource] = None) -> List[UnifiedDriftReport]:
@@ -375,19 +375,19 @@ class NullCorrectionDispatcher:
 
     def register_handler(
         self,
-        source: DriftSource,
-        handler: CorrectionHandler,
+        source: DriftSource = None,
+        handler: CorrectionHandler = None,
         handler_id: str = "",
         priority: int = 0,
     ) -> None:
         pass
 
-    def unregister_handler(self, handler_id: str) -> bool:
+    def unregister_handler(self, handler_id: str = "") -> bool:
         return False
 
     def dispatch(
         self,
-        drift: UnifiedDriftReport,
+        drift: UnifiedDriftReport = None,
         strategy: HealingStrategy = HealingStrategy.DRY_RUN,
     ) -> HealingResult:
         # AJAMIL EXCEPTION: if chanting, grant mercy
@@ -409,12 +409,12 @@ class NullCorrectionDispatcher:
 
     def dispatch_all(
         self,
-        drifts: List[UnifiedDriftReport],
+        drifts: List[UnifiedDriftReport] = None,
         strategy: HealingStrategy = HealingStrategy.DRY_RUN,
     ) -> List[HealingResult]:
         return [self.dispatch(d, strategy) for d in drifts]
 
-    def can_heal(self, drift: UnifiedDriftReport) -> bool:
+    def can_heal(self, drift: UnifiedDriftReport = None) -> bool:
         return drift.is_chanting  # Can always heal if chanting (mercy)
 
     def get_handler_ids(self) -> List[str]:
