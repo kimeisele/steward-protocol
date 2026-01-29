@@ -14,6 +14,11 @@ from vibe_core.shuddhi.remedies.base import CSTRemedy, ShuddhiScopeError
 from vibe_core.shuddhi.remedies.silent_except import SilentExceptRemedy
 from vibe_core.shuddhi.remedies.subprocess_timeout import SubprocessTimeoutRemedy
 from vibe_core.shuddhi.remedies.unsafe_io_write import UnsafeIOWriteRemedy
+from vibe_core.shuddhi.remedies.null_signature import (
+    NullSignatureRemedy,
+    heal_null_signatures,
+    heal_all_null_signatures,
+)
 
 __all__ = [
     "CSTRemedy",
@@ -21,4 +26,7 @@ __all__ = [
     "UnsafeIOWriteRemedy",
     "SubprocessTimeoutRemedy",
     "SilentExceptRemedy",
+    "NullSignatureRemedy",
+    "heal_null_signatures",
+    "heal_all_null_signatures",
 ]
