@@ -107,6 +107,14 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.substrate.protocol import WorkerProtocol
         return WorkerProtocol
 
+    if name == "HeadProtocol":
+        from vibe_core.mahamantra.substrate.protocol import HeadProtocol
+        return HeadProtocol
+
+    if name == "MantraProtocol":
+        from vibe_core.mahamantra.substrate.protocol import MantraProtocol
+        return MantraProtocol
+
     if name == "ProtocolRegistry":
         from vibe_core.mahamantra.substrate.protocol import ProtocolRegistry
         return ProtocolRegistry
@@ -114,6 +122,10 @@ def __getattr__(name: str):
     if name == "Mahajana":
         from vibe_core.mahamantra.substrate.mahajana import Mahajana
         return Mahajana
+
+    if name == "Avatara":
+        from vibe_core.mahamantra.substrate.mahajana import Avatara
+        return Avatara
 
     if name == "MantraOpCode":
         from vibe_core.mahamantra.substrate.opcode import MantraOpCode
@@ -146,4 +158,8 @@ __all__ = [
     "GADBase", "GADProtocol",
     # MahaCell
     "MahaCell", "MahaHeader",
+    # Substrate (for backwards compat)
+    "HeadProtocol", "MantraProtocol", "WorkerProtocol",
+    "ProtocolRegistry", "Mahajana", "Avatara", "MantraOpCode",
 ]
+
