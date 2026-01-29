@@ -10,6 +10,11 @@ HYPOTHESIS:
 - Expected: All actions MUST go through kernel.ledger.record()
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xceaf2c56"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import sys

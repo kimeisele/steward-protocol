@@ -13,6 +13,11 @@ Tests:
 5. Scribe agent has repo symlink
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x0b314892"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import sys

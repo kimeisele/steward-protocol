@@ -38,6 +38,14 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAJANA_COUNT,  # 12 - the mahajanas
 )
 
+# =============================================================================
+# MAHA CELL - Universal Data Format (AUTO-WRAPPING AT THE GATE)
+# =============================================================================
+# ONE import here = EVERYTHING flows through MahaCell automatically
+# No manual imports needed anywhere else (Balarama Pattern)
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+from vibe_core.mahamantra.protocols._payload import MahaPayload, PayloadType
+
 # Import functions from substrate.seed (THE REALITY)
 from vibe_core.mahamantra.substrate.seed import (
     MAHAJANA_TO_POSITION,  # Name → Position mapping
@@ -56,6 +64,17 @@ from vibe_core.mahamantra.substrate.seed import (
 # NO INTEGER LITERALS. All positions come from seed.py.
 
 PURPOSE_MAP: Final[Dict[str, int]] = {
+    # ==========================================================================
+    # NAVABHAKTI OPERATIONS (9 processes - SRAVANAM first!)
+    # ==========================================================================
+    # SRAVANAM: Hearing - THE ENTRY POINT (Narada = communication)
+    "hearing": get_mahajana_position("narada"),     # Position 2 - SRAVANAM
+    "sravanam": get_mahajana_position("narada"),    # Position 2 - SRAVANAM (alias)
+    "receive": get_mahajana_position("narada"),     # Position 2 - SRAVANAM (alias)
+    # KIRTANAM: Chanting - Output/Response
+    "chanting": get_mahajana_position("narada"),    # Position 2 - KIRTANAM
+    "kirtanam": get_mahajana_position("narada"),    # Position 2 - KIRTANAM (alias)
+    # ==========================================================================
     # STATE OPERATIONS
     "state_update": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
     "state_read": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
@@ -187,6 +206,76 @@ def offer(
         word=declaration["word"],
         error=None,
     )
+
+
+# =============================================================================
+# WRAP CELL - Auto-wrap ANY content into MahaCell (TOP-DOWN ENTRY)
+# =============================================================================
+
+
+def wrap_cell(
+    content: Union[str, bytes, Dict[str, object], object],
+    purpose: str,
+    source_id: int = 0,
+    target_id: int = 0,
+) -> Optional[MahaCell]:
+    """
+    Auto-wrap ANY content into a MahaCell.
+
+    BALARAMA PATTERN: This is the SINGLE GATE for data wrapping.
+    Call this once, content flows through system as MahaCell.
+    No manual MahaHeader/MahaPayload imports needed elsewhere!
+
+    Args:
+        content: Any data (str, bytes, dict, object)
+        purpose: Purpose string (determines PayloadType via quarter)
+        source_id: Source identifier (default 0)
+        target_id: Target identifier (default 0)
+
+    Returns:
+        MahaCell with 72-byte header + typed payload, or None if purpose unknown
+    """
+    # Get routing info
+    if purpose not in PURPOSE_MAP:
+        return None
+
+    position = PURPOSE_MAP[purpose]
+    declaration = lotus_declaration(position)
+    quarter = declaration["quarter_name"]
+
+    # Map quarter → PayloadType (GENESIS/DHARMA/KARMA/MOKSHA)
+    quarter_to_type = {
+        "genesis": PayloadType.ARJUNA_VISHADA,  # Ch.1 - Raw input
+        "dharma": PayloadType.JNANA_VIJNANA,    # Ch.7 - Typed/validated
+        "karma": PayloadType.VIBHUTI,           # Ch.10 - Execution
+        "moksha": PayloadType.MOKSA_SANNYASA,   # Ch.18 - Output
+    }
+    payload_type = quarter_to_type.get(quarter.lower(), PayloadType.ARJUNA_VISHADA)
+
+    # Convert content to bytes
+    if isinstance(content, bytes):
+        content_bytes = content
+    elif isinstance(content, str):
+        content_bytes = content.encode("utf-8")
+    else:
+        import json
+        content_bytes = json.dumps(content, default=str).encode("utf-8")
+
+    # Create typed payload
+    payload = MahaPayload(
+        payload_type=payload_type,
+        data=content_bytes,
+        position=position,
+    )
+
+    # Create header with routing
+    header = MahaHeader.create(
+        source=source_id,
+        target=target_id,
+        operation=position,
+    )
+
+    return MahaCell(header=header, payload=payload.to_bytes())
 
 
 # =============================================================================

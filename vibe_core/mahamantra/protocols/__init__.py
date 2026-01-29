@@ -333,12 +333,34 @@ _LAZY_VEDA = {
 
 def __getattr__(name: str):
     """Lazy load veda and governance to avoid circular imports."""
+    # 1. Check explicit class/function exports
     if name in _LAZY_VEDA:
         module_path = _LAZY_VEDA[name]
         import importlib
 
         module = importlib.import_module(f"vibe_core.protocols.{module_path}")
         return getattr(module, name)
+
+    # ==========================================================================
+    # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
+    # Any .py file or subpackage in protocols/ is auto-discoverable
+    # ==========================================================================
+    from pathlib import Path
+    import importlib
+
+    protocols_root = Path(__file__).parent
+
+    # 2. Check for subpackage (folder with __init__.py)
+    subpkg_path = protocols_root / name
+    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
+        return importlib.import_module(f"{__name__}.{name}")
+
+    # 3. Check for module (.py file) - handle _prefix modules too
+    for module_name in [name, f"_{name}"]:
+        module_path = protocols_root / f"{module_name}.py"
+        if module_path.exists():
+            return importlib.import_module(f"{__name__}.{module_name}")
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 

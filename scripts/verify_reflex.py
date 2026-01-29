@@ -27,6 +27,11 @@ EXPECTED OUTCOME:
 [RESULT]  ✅ State is SATTVA (clean/synced)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x26723e95"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import subprocess

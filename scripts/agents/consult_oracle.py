@@ -11,6 +11,11 @@ Usage:
     python3 scripts/consult_oracle.py --health
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x10a1b042"  # GenesisByte: parampara % 37 == 0
+
 import argparse
 import json
 import sys

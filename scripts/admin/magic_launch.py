@@ -22,6 +22,11 @@ NO IPs. NO Keys. NO Config. Just magic.
 ================================================================================
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0x1dca5703"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import subprocess
 import sys

@@ -8,6 +8,11 @@ This script is the entry point for the 15-minute system pulse in GitHub Actions.
 It uses the SystemHeartbeat plugin discovered via DI to orchestrate the pulse.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xab4f3f63"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import sys

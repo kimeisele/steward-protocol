@@ -45,7 +45,7 @@ ALL CONSTANTS DERIVED FROM SEED.PY.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 2
-__genesis__ = "0x9a3b7c04"  # GenesisByte: kirtan-cli
+__genesis__ = "0xc8bad21b"  # GenesisByte: kirtan-cli
 
 import logging
 import sys

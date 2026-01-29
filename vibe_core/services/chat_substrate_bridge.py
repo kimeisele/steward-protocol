@@ -26,7 +26,7 @@ WATERTIGHT: No Any types. All typed explicitly.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 2
-__genesis__ = "0x9a3b7c01"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x1f2e36d7"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from dataclasses import dataclass, field

@@ -9,6 +9,11 @@
 ╚════════════════════════════════════════════════════════════════════════════╝
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xcfc6a329"  # GenesisByte: parampara % 37 == 0
+
 import os
 import sys
 import time

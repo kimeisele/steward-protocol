@@ -92,7 +92,7 @@ from vibe_core.mahamantra.protocols._gad import (
 # =============================================================================
 # SSOT IMPORTS - The Law (_seed.py) governs the Reality (shadow.py)
 # =============================================================================
-from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PARAMPARA
+from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PARAMPARA, WORDS
 
 # =============================================================================
 # GITA 13.35 INTEGRATION - ShadowOracle (MANDATORY PRE-FILTER)
@@ -133,6 +133,11 @@ from vibe_core.mahamantra.substrate.samana_bridge import (
     SamanaFold,
     create_samana_bridge,
 )
+
+# =============================================================================
+# MAHA CELL INTEGRATION (72-byte Header + Payload - Universal Data Format)
+# =============================================================================
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
 from vibe_core.mahamantra.substrate.wiring import (
     get_position_by_index,
 )
@@ -253,6 +258,12 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # "Without authentic Guru, true knowledge is not possible."
         self._oracle: ShadowOracle = get_shadow_oracle()
         self._latest_validation: OracleValidationResult | None = None
+
+        # =====================================================================
+        # MAHA CELL TRACKING (72-byte Header + Payload Flow)
+        # =====================================================================
+        # Track MahaCell through Yajna cycle. Entry cell flows through.
+        self._maha_cell: MahaCell | None = None
 
     # =========================================================================
     # PROTOCOL PROPERTIES
@@ -657,6 +668,99 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     @property
     def discovered_count(self) -> int:
         return sum(len(r) for r in self._listeners.values())
+
+    # =========================================================================
+    # MAHA CELL INTEGRATION (72-byte Header + Payload)
+    # =========================================================================
+
+    @property
+    def maha_cell(self) -> MahaCell | None:
+        """Get the current MahaCell flowing through this reactor."""
+        return self._maha_cell
+
+    def set_maha_cell(self, cell: MahaCell | None) -> None:
+        """Set the MahaCell for this reactor (entry point tracking)."""
+        self._maha_cell = cell
+
+    def to_maha_cell(self, source_id: int = 0, target_id: int = 0) -> MahaCell:
+        """
+        Create MahaCell from current reactor state.
+
+        YAJNA STATE → MAHA CELL:
+            - Header encodes position, phase, cycle info
+            - Payload contains serialized ShadowState
+
+        Args:
+            source_id: Source identifier (default: reactor hash)
+            target_id: Target identifier (default: 0)
+
+        Returns:
+            MahaCell with 72-byte header + ShadowState payload
+        """
+        import json
+
+        # Use reactor ID hash as default source
+        if source_id == 0:
+            source_id = hash(self._reactor_id) & 0xFFFFFFFFFFFFFFFF
+
+        # Get current state
+        state = self.get_state()
+
+        # Encode phase as intent (BHOGA=0, PRASADAM=1, RETURN=2)
+        phase_intent = {"BHOGA": 0, "PRASADAM": 1, "RETURN": 2}.get(state["phase"], 0)
+
+        # Create header with Yajna routing
+        header = MahaHeader.create(
+            source=source_id,
+            target=target_id,
+            operation=self._position,  # Position is the operation
+            link=self._cycle_count,  # Chain via cycle
+            intent=phase_intent,
+            ttl=300,  # Default daily cycles
+            state=self._switch_count,
+        )
+
+        # Serialize state to JSON payload
+        payload_bytes = json.dumps(state, default=str).encode("utf-8")
+
+        return MahaCell(header=header, payload=payload_bytes)
+
+    def process_maha_cell(self, cell: MahaCell) -> MahaCell:
+        """
+        Process incoming MahaCell through Yajna cycle.
+
+        TOP-DOWN FLOW:
+            1. Receive MahaCell at entry (SRAVANAM)
+            2. Track through tick() cycle
+            3. Return enriched MahaCell at exit
+
+        Args:
+            cell: Incoming MahaCell
+
+        Returns:
+            Processed MahaCell with updated header/payload
+        """
+        # Track the cell
+        self._maha_cell = cell
+
+        # Create tick state from cell header
+        tick_state = {
+            "tick": cell.header.pada_sevanam,  # Operation = tick
+            "position": cell.header.pada_sevanam % WORDS,
+            "quarter": self.get_state()["quarter"],
+            "guardian": self.get_state()["guardian"],
+            "word": "HARE",  # Placeholder
+            "opcode": None,
+        }
+
+        # Process through tick
+        shadow_state = self.tick(tick_state)
+
+        # Return new cell with processed state
+        return self.to_maha_cell(
+            source_id=cell.header.kirtanam,  # Swap: their target = our source
+            target_id=cell.header.sravanam,  # Swap: their source = our target
+        )
 
     # =========================================================================
     # SAMANA BRIDGE PROPERTIES

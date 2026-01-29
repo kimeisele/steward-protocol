@@ -20,7 +20,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 4
-__genesis__ = "0x8c4e2f91"
+__genesis__ = "0x30983307"
 
 from typing import Dict, List, Optional
 

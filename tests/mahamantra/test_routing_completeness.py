@@ -134,3 +134,178 @@ class TestMahamantraRoutingCount:
         ]
 
         assert len(adapters) >= 10, f"Expected >= 10 adapters, got {len(adapters)}"
+
+
+class TestMahamantraVibration:
+    """Test vibration API (Call-Response)."""
+
+    @pytest.fixture
+    def mahamantra(self):
+        from vibe_core.mahamantra import mahamantra
+        return mahamantra
+
+    def test_vibrate_returns_dict(self, mahamantra):
+        """vibrate() returns VibrationState dict."""
+        result = mahamantra.vibrate("test query")
+        assert isinstance(result, dict)
+        assert "seed" in result
+        assert "attractor" in result
+        assert "resonance" in result
+
+    def test_kirtan_returns_result(self, mahamantra):
+        """kirtan() returns KirtanComputeResult."""
+        result = mahamantra.kirtan(42)
+        assert hasattr(result, "call_response")
+        assert hasattr(result, "flute_resonance")
+        assert hasattr(result, "transformed_value")
+
+    def test_kirtan_call_response(self, mahamantra):
+        """kirtan() has CALL or RESPONSE."""
+        result = mahamantra.kirtan(42)
+        assert result.call_response in ("CALL", "RESPONSE")
+
+    def test_attractor_fixed_accessible(self, mahamantra):
+        """ATTRACTOR_FIXED is accessible."""
+        assert mahamantra.ATTRACTOR_FIXED == 18
+
+    def test_attractor_cycle_accessible(self, mahamantra):
+        """ATTRACTOR_CYCLE is accessible."""
+        cycle = mahamantra.ATTRACTOR_CYCLE
+        assert isinstance(cycle, tuple)
+        assert len(cycle) == 4
+
+
+class TestResearchFractalRouting:
+    """Test research fractal routing: folder IS wiring."""
+
+    @pytest.fixture
+    def mahamantra(self):
+        from vibe_core.mahamantra import mahamantra
+        return mahamantra
+
+    @pytest.fixture
+    def research_root(self) -> Path:
+        """Get research package root."""
+        import vibe_core.mahamantra.research
+        return Path(vibe_core.mahamantra.research.__file__).parent
+
+    def test_all_research_modules_route(self, mahamantra, research_root):
+        """All research .py files must be accessible via fractal routing."""
+        research_modules = [
+            f.stem for f in research_root.glob("*.py")
+            if f.stem != "__init__"
+            and not f.stem.startswith("_")
+        ]
+
+        for name in research_modules:
+            obj = getattr(mahamantra.research, name, None)
+            assert obj is not None, f"mahamantra.research.{name} should route but returns None"
+
+    def test_all_research_subpackages_route(self, mahamantra, research_root):
+        """All research subpackages must be accessible via fractal routing."""
+        subpackages = [
+            d.name for d in research_root.iterdir()
+            if d.is_dir()
+            and (d / "__init__.py").exists()
+            and not d.name.startswith("_")
+        ]
+
+        for name in subpackages:
+            obj = getattr(mahamantra.research, name, None)
+            assert obj is not None, f"mahamantra.research.{name} should route but returns None"
+
+    def test_research_dharma_routes(self, mahamantra):
+        """mahamantra.research.dharma must route."""
+        dharma = mahamantra.research.dharma
+        assert dharma is not None
+        assert hasattr(dharma, "MahaKirtan")
+
+    def test_research_module_count(self, research_root):
+        """Must have at least 30 research modules."""
+        research_modules = [
+            f.stem for f in research_root.glob("*.py")
+            if f.stem != "__init__" and not f.stem.startswith("_")
+        ]
+        assert len(research_modules) >= 30, f"Expected >= 30 research modules, got {len(research_modules)}"
+
+
+class TestAdaptersFractalRouting:
+    """Test adapters fractal routing: folder IS wiring."""
+
+    @pytest.fixture
+    def mahamantra(self):
+        from vibe_core.mahamantra import mahamantra
+        return mahamantra
+
+    @pytest.fixture
+    def adapters_root(self) -> Path:
+        """Get adapters package root."""
+        import vibe_core.mahamantra.adapters
+        return Path(vibe_core.mahamantra.adapters.__file__).parent
+
+    def test_all_adapter_modules_route(self, mahamantra, adapters_root):
+        """All adapter .py files must be accessible via fractal routing."""
+        adapter_modules = [
+            f.stem for f in adapters_root.glob("*.py")
+            if f.stem != "__init__"
+            and not f.stem.startswith("_")
+        ]
+
+        for name in adapter_modules:
+            obj = getattr(mahamantra.adapters, name, None)
+            assert obj is not None, f"mahamantra.adapters.{name} should route but returns None"
+
+
+class TestSubstrateFractalRouting:
+    """Test substrate fractal routing: folder IS wiring."""
+
+    @pytest.fixture
+    def mahamantra(self):
+        from vibe_core.mahamantra import mahamantra
+        return mahamantra
+
+    @pytest.fixture
+    def substrate_root(self) -> Path:
+        """Get substrate package root."""
+        import vibe_core.mahamantra.substrate
+        return Path(vibe_core.mahamantra.substrate.__file__).parent
+
+    def test_all_substrate_modules_route(self, mahamantra, substrate_root):
+        """All substrate .py files must be accessible via fractal routing."""
+        substrate_modules = [
+            f.stem for f in substrate_root.glob("*.py")
+            if f.stem != "__init__"
+            and not f.stem.startswith("_")
+        ]
+
+        for name in substrate_modules:
+            obj = getattr(mahamantra.substrate, name, None)
+            assert obj is not None, f"mahamantra.substrate.{name} should route but returns None"
+
+
+class TestProtocolsFractalRouting:
+    """Test protocols fractal routing: folder IS wiring."""
+
+    @pytest.fixture
+    def mahamantra(self):
+        from vibe_core.mahamantra import mahamantra
+        return mahamantra
+
+    @pytest.fixture
+    def protocols_root(self) -> Path:
+        """Get protocols package root."""
+        import vibe_core.mahamantra.protocols
+        return Path(vibe_core.mahamantra.protocols.__file__).parent
+
+    def test_protocols_subpackages_route(self, mahamantra, protocols_root):
+        """All protocols subpackages must be accessible via fractal routing."""
+        subpackages = [
+            d.name for d in protocols_root.iterdir()
+            if d.is_dir()
+            and (d / "__init__.py").exists()
+            and not d.name.startswith("_")
+        ]
+
+        for name in subpackages:
+            obj = getattr(mahamantra.protocols, name, None)
+            assert obj is not None, f"mahamantra.protocols.{name} should route but returns None"

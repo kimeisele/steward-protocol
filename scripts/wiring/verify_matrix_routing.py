@@ -13,6 +13,11 @@ Flow:
 6. Verify the new route is active.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x8ddf5411"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import shutil
 import sys

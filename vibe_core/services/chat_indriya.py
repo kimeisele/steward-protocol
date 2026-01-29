@@ -37,7 +37,7 @@ ALL CONSTANTS DERIVED FROM SEED.PY.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 2
-__genesis__ = "0x9a3b7c02"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x36ef3256"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from dataclasses import dataclass, field

@@ -15,6 +15,11 @@ Philosophy:
 Broadcast is a privilege, not a right. Work or starve."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xf8373da8"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import sys
 from pathlib import Path
