@@ -49,6 +49,12 @@ from vibe_core.mahamantra.protocols._maha_compute import (
     get_gita_insight,  # SSOT for chapter → insight
 )
 
+# =============================================================================
+# MAHA CELL - Universal Data Format (TOP-DOWN INTEGRATION)
+# =============================================================================
+# ONE import at the TOP entry point. Everything flows through MahaCell.
+from vibe_core.mahamantra.substrate.bridge import wrap_cell
+
 
 # Lazy imports to avoid circular dependencies
 def _get_mahamantra():
@@ -408,6 +414,10 @@ class Steward:
         # Check for large input - apply full MahaCompression with Guna filtering
         if len(input_text) > self.LARGE_INPUT_THRESHOLD:
             input_text = self._compress_large_input(input_text)
+
+        # MAHA CELL: Wrap input in universal 72-byte header format
+        # This is TOP-DOWN: entry point wraps, everything flows through MahaCell
+        maha_cell = wrap_cell(input_text, purpose="execute")
 
         vibration = self.mahamantra.vibrate(input_text)
         seed = vibration["seed"]
