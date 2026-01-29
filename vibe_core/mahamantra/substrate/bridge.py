@@ -64,6 +64,17 @@ from vibe_core.mahamantra.substrate.seed import (
 # NO INTEGER LITERALS. All positions come from seed.py.
 
 PURPOSE_MAP: Final[Dict[str, int]] = {
+    # ==========================================================================
+    # NAVABHAKTI OPERATIONS (9 processes - SRAVANAM first!)
+    # ==========================================================================
+    # SRAVANAM: Hearing - THE ENTRY POINT (Narada = communication)
+    "hearing": get_mahajana_position("narada"),     # Position 2 - SRAVANAM
+    "sravanam": get_mahajana_position("narada"),    # Position 2 - SRAVANAM (alias)
+    "receive": get_mahajana_position("narada"),     # Position 2 - SRAVANAM (alias)
+    # KIRTANAM: Chanting - Output/Response
+    "chanting": get_mahajana_position("narada"),    # Position 2 - KIRTANAM
+    "kirtanam": get_mahajana_position("narada"),    # Position 2 - KIRTANAM (alias)
+    # ==========================================================================
     # STATE OPERATIONS
     "state_update": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
     "state_read": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
