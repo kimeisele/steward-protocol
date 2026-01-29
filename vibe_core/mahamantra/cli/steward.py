@@ -26,9 +26,29 @@ __position__ = 2
 __genesis__ = "0xf950ff6c"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from enum import Enum
-from pathlib import Path
-from typing import Any, Callable, Dict, Final, Optional, Tuple
+from typing import Any, Dict, Final, Optional
+
+# =============================================================================
+# SSOT IMPORTS - NO DUPLICATION!
+# =============================================================================
+from vibe_core.mahamantra.substrate.seed import (
+    Quarter,  # The 4 quarters (GENESIS, DHARMA, KARMA, MOKSHA)
+    QUARTERS,
+    WORDS,
+    HALVES,  # 2
+    MALA,  # 108 = japa beads (completion boundary)
+)
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS,
+    PARAMPARA,  # 37 = the lineage number
+    TRANSCENDENTAL_1096,  # 8 × 137 = HARE_COUNT × MAHA_QUANTUM
+)
+from vibe_core.mahamantra.protocols._maha_compute import (
+    GITA_INSIGHTS,  # SSOT for chapter descriptions
+    get_gita_chapter,  # SSOT for attractor → chapter
+    get_gita_insight,  # SSOT for chapter → insight
+)
+
 
 # Lazy imports to avoid circular dependencies
 def _get_mahamantra():
@@ -37,56 +57,116 @@ def _get_mahamantra():
 
 
 # =============================================================================
-# GITA CHAPTER → MODULE ROUTING (The Resonance Map)
+# GITA CHAPTER → MODULE ROUTING
+# =============================================================================
+# SEMANTIC MAPPINGS that cannot be derived mathematically.
+# These define WHAT each Gita chapter DOES in the system.
+# TODO: Move to protocol file (_gita_route.py) as proper SSOT.
 # =============================================================================
 
-class ResonanceQuarter(Enum):
-    """The four quarters of the Mahamantra."""
-    GENESIS = "genesis"   # Chapters 1-4: Creation, Setup
-    DHARMA = "dharma"     # Chapters 5-9: Law, Structure, Knowledge
-    KARMA = "karma"       # Chapters 10-14: Action, Manifestation
-    MOKSHA = "moksha"     # Chapters 15-18: Liberation, Transcendence
+# Chapter → Module hint (SEMANTIC - which adapter resonates)
+# This is the SSOT for module routing until a better location is found.
+_CHAPTER_MODULE: Final[Dict[int, str]] = {
+    1: "analysis",      # Arjuna's Dilemma → needs analysis
+    2: "transform",     # Sankhya Yoga → eternal truth transforms
+    3: "compute",       # Karma Yoga → action = compute
+    4: "research",      # Jnana Yoga → knowledge = research
+    5: "classification",  # Karma Sannyasa → classify actions
+    6: "attention",     # Dhyana Yoga → meditation = attention
+    7: "compression",   # Jnana Vijnana → knowledge compression
+    8: "hash",          # Aksara Brahma → imperishable = hash
+    9: "kernel",        # Raja Vidya → king of knowledge = kernel
+    10: "synth",        # Vibhuti → manifestations = synthesis
+    11: "network",      # Visvarupa → universal form = network
+    12: "chat",         # Bhakti Yoga → devotion = dialog
+    13: "hardware",     # Ksetra Ksetrajna → field/knower = hardware
+    14: "pipeline",     # Gunatraya → three modes = pipeline
+    15: "bio",          # Purusottama → supreme person = bio
+    16: "japa",         # Daivasura → divine/demonic = purify via japa
+    17: "llm",          # Sraddhatraya → faith types = LLM routing
+    18: "reactor",      # Moksha Sannyasa → liberation = healing reactor
+}
+
+# Chapter → Guna (SEMANTIC - dominant mode of the chapter)
+_CHAPTER_GUNA: Final[Dict[int, str]] = {
+    1: "tamas",   # Confusion
+    2: "sattva",  # Eternal truth
+    3: "rajas",   # Action
+    4: "sattva",  # Knowledge
+    5: "sattva",  # Renunciation
+    6: "sattva",  # Meditation
+    7: "sattva",  # Knowledge
+    8: "sattva",  # Imperishable
+    9: "sattva",  # King of knowledge
+    10: "rajas",  # Manifestations
+    11: "rajas",  # Universal form
+    12: "sattva", # Devotion
+    13: "rajas",  # Field/Knower
+    14: "rajas",  # Three modes
+    15: "sattva", # Supreme person
+    16: "tamas",  # Divine/Demonic
+    17: "rajas",  # Faith types
+    18: "sattva", # Liberation
+}
 
 
 @dataclass(frozen=True)
 class ResonanceRoute:
-    """A route determined by resonance."""
+    """A route determined by resonance - built from SSOTs."""
     chapter: int
-    quarter: ResonanceQuarter
+    quarter: Quarter
     insight: str
-    module_hint: str  # Which adapter/module resonates
-    guna: str  # sattva/rajas/tamas
+    module_hint: str
+    guna: str
 
 
-# The Resonance Map - Gita Chapter → Module Routing
-# This is DERIVED from the Gita's meaning, not hardcoded arbitrarily
-RESONANCE_MAP: Final[Dict[int, ResonanceRoute]] = {
-    # GENESIS QUARTER (Chapters 1-4): Creation, Setup, Foundation
-    1: ResonanceRoute(1, ResonanceQuarter.GENESIS, "Arjuna's Dilemma", "analysis", "tamas"),      # Confusion → Analysis needed
-    2: ResonanceRoute(2, ResonanceQuarter.GENESIS, "Sankhya Yoga", "transform", "sattva"),        # Eternal truth → Transform
-    3: ResonanceRoute(3, ResonanceQuarter.GENESIS, "Karma Yoga", "compute", "rajas"),             # Action → Compute
-    4: ResonanceRoute(4, ResonanceQuarter.GENESIS, "Jnana Yoga", "research", "sattva"),           # Knowledge → Research
+def _get_quarter_for_chapter(chapter: int) -> Quarter:
+    """
+    Derive quarter from chapter using SSOT constants.
 
-    # DHARMA QUARTER (Chapters 5-9): Law, Structure, Knowledge
-    5: ResonanceRoute(5, ResonanceQuarter.DHARMA, "Karma Sannyasa", "classification", "sattva"),  # Renunciation → Classify
-    6: ResonanceRoute(6, ResonanceQuarter.DHARMA, "Dhyana Yoga", "attention", "sattva"),          # Meditation → Attention
-    7: ResonanceRoute(7, ResonanceQuarter.DHARMA, "Jnana Vijnana", "compression", "sattva"),      # Knowledge → Compress
-    8: ResonanceRoute(8, ResonanceQuarter.DHARMA, "Aksara Brahma", "hash", "sattva"),             # Imperishable → Hash
-    9: ResonanceRoute(9, ResonanceQuarter.DHARMA, "Raja Vidya", "kernel", "sattva"),              # King of knowledge → Kernel
+    DERIVATION:
+    - Chapters 1-4 (indices 0-3) → GENESIS (index 0)
+    - Chapters 5-9 (indices 4-8) → DHARMA (index 1)  [5 chapters!]
+    - Chapters 10-14 (indices 9-13) → KARMA (index 2) [5 chapters!]
+    - Chapters 15-18 (indices 14-17) → MOKSHA (index 3) [4 chapters!]
 
-    # KARMA QUARTER (Chapters 10-14): Action, Manifestation
-    10: ResonanceRoute(10, ResonanceQuarter.KARMA, "Vibhuti", "synth", "rajas"),                  # Manifestations → Synth
-    11: ResonanceRoute(11, ResonanceQuarter.KARMA, "Visvarupa", "network", "rajas"),              # Universal form → Network
-    12: ResonanceRoute(12, ResonanceQuarter.KARMA, "Bhakti Yoga", "chat", "sattva"),              # Devotion → Chat
-    13: ResonanceRoute(13, ResonanceQuarter.KARMA, "Ksetra Ksetrajna", "hardware", "rajas"),      # Field/Knower → Hardware
-    14: ResonanceRoute(14, ResonanceQuarter.KARMA, "Gunatraya", "pipeline", "rajas"),             # Three modes → Pipeline
+    NOTE: Gita quarters are NOT equal size (4+5+5+4=18).
+    This is SEMANTIC, not derivable from equal division.
+    """
+    if chapter <= 4:
+        return Quarter.GENESIS
+    elif chapter <= 9:
+        return Quarter.DHARMA
+    elif chapter <= 14:
+        return Quarter.KARMA
+    else:
+        return Quarter.MOKSHA
 
-    # MOKSHA QUARTER (Chapters 15-18): Liberation, Transcendence
-    15: ResonanceRoute(15, ResonanceQuarter.MOKSHA, "Purusottama", "bio", "sattva"),              # Supreme person → Bio
-    16: ResonanceRoute(16, ResonanceQuarter.MOKSHA, "Daivasura", "japa", "tamas"),                # Divine/Demonic → Japa (purify)
-    17: ResonanceRoute(17, ResonanceQuarter.MOKSHA, "Sraddhatraya", "llm", "rajas"),              # Faith types → LLM routing
-    18: ResonanceRoute(18, ResonanceQuarter.MOKSHA, "Moksha Sannyasa", "reactor", "sattva"),      # Liberation → Reactor (healing)
-}
+
+def _build_resonance_map() -> Dict[int, ResonanceRoute]:
+    """
+    Build RESONANCE_MAP from SSOTs.
+
+    Uses:
+    - GITA_INSIGHTS for insight strings (SSOT)
+    - _get_quarter_for_chapter for quarter derivation
+    - _CHAPTER_MODULE for module hints (semantic, local SSOT)
+    - _CHAPTER_GUNA for guna (semantic, local SSOT)
+    """
+    result = {}
+    for chapter in range(1, GITA_CHAPTERS + 1):
+        result[chapter] = ResonanceRoute(
+            chapter=chapter,
+            quarter=_get_quarter_for_chapter(chapter),
+            insight=get_gita_insight(chapter),
+            module_hint=_CHAPTER_MODULE.get(chapter, "unknown"),
+            guna=_CHAPTER_GUNA.get(chapter, "sattva"),
+        )
+    return result
+
+
+# Built from SSOTs at module load time
+RESONANCE_MAP: Final[Dict[int, ResonanceRoute]] = _build_resonance_map()
 
 
 # =============================================================================
@@ -259,15 +339,15 @@ class Steward:
             # TAMAS lines are discarded (noise)
 
         # Combine: SATTVA first (truth), then RAJAS (actions)
-        # Limit to reasonable size for processing
-        max_lines = 100
-        compressed_lines = sattva_lines[:max_lines // 2] + rajas_lines[:max_lines // 2]
+        # Limit to MALA lines (108 = japa beads, natural completion boundary)
+        max_lines = MALA  # 108, derived from _seed.py
+        compressed_lines = sattva_lines[:max_lines // HALVES] + rajas_lines[:max_lines // HALVES]
 
         if compressed_lines:
             return '\n'.join(compressed_lines)
         else:
             # If all was noise, take first line as summary
-            return lines[0] if lines else input_text[:100]
+            return lines[0] if lines else input_text[:256]  # Fallback truncation (UI concern, not derived)
 
     @property
     def mahamantra(self):
@@ -276,8 +356,10 @@ class Steward:
             self._mahamantra = _get_mahamantra()
         return self._mahamantra
 
-    # Threshold for applying MahaCompression on large inputs (1KB)
-    LARGE_INPUT_THRESHOLD: int = 1024
+    # Threshold for applying MahaCompression on large inputs
+    # DERIVED: TRANSCENDENTAL_1096 = 8 × 137 = HARE_COUNT × MAHA_QUANTUM
+    # This is the natural "algorithm space" boundary from _seed.py
+    LARGE_INPUT_THRESHOLD: int = TRANSCENDENTAL_1096  # 1096 bytes
 
     def invoke(self, input_text: str) -> StewardResponse:
         """
@@ -547,7 +629,7 @@ class Steward:
             content=content,
             purpose=purpose,
             actor=f"steward:jiva:{jiva_shadow_id[:8]}",
-            parampara_vector=vibration["seed"] % 37 * 37,  # Ensure % 37 == 0
+            parampara_vector=vibration["seed"] % PARAMPARA * PARAMPARA,  # Ensure % 37 == 0
         )
 
         return result
@@ -654,7 +736,7 @@ __all__ = [
     "Steward",
     "StewardResponse",
     "ResonanceRoute",
-    "ResonanceQuarter",
+    "Quarter",  # Re-exported from substrate.seed
     "RESONANCE_MAP",
     "get_steward",
     "cli_steward",
