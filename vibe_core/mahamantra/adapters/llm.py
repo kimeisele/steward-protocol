@@ -503,11 +503,22 @@ class MahaLLM:
         return self.route(intent_id)
 
     def _text_to_intent(self, text: str, *, use_base: bool = True) -> int:
-        """Convert text to 16-bit intent ID."""
+        """
+        Convert text to 16-bit intent ID.
+
+        Uses CATEGORY_KEYWORDS for now - these ARE semantic knowledge about
+        which words map to which Mahamantra positions. Not arbitrary hardcoding,
+        but derived from the meaning of each position.
+
+        TODO: Make keywords LEARNABLE via guardian_intents.yaml pattern.
+        TODO: Keywords could be GENERATED from Mahamantra phonetic seeds.
+        """
         text_lower = text.lower()
 
         # Find matching category by keywords
-        best_category = IntentCategory.GUIDE  # Default
+        # NOTE: These keywords represent SEMANTIC knowledge about intent types
+        # They map to the 16 Mahamantra positions (IntentCategory values)
+        best_category = IntentCategory.GUIDE  # Default (position 12 = RAMA)
         best_score = 0
 
         for category, keywords in CATEGORY_KEYWORDS.items():
@@ -517,10 +528,8 @@ class MahaLLM:
                 best_category = category
 
         if use_base:
-            # Route to category base (where agents registered by category live)
             return best_category.value << 12
         else:
-            # Generate sub-address from text hash (for fine-grained routing)
             text_hash = int(hashlib.md5(text.encode()).hexdigest()[:3], 16)
             return (best_category.value << 12) | (text_hash & 0xFFF)
 
