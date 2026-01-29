@@ -111,8 +111,8 @@ class StewardResponse:
     chapter: int
     route: ResonanceRoute
     call_response: str  # "CALL" or "RESPONSE"
-    resonance: float  # Krishna's flute resonance (WHEN)
-    vina_resonance: float  # Narada's vina resonance (WHAT TYPE)
+    resonance: int  # Flute resonance = tick % mod_space (integer!)
+    vina_resonance: int  # Vina resonance = seed % mod_space (integer!)
     vina_string: int  # 1-5: CHAITANYA/NITYANANDA/ADVAITA/GADADHARA/SRIVASA
     shadow_phase: str  # "bhoga", "prasadam", or "return" (TRANSFORMATION)
     shadow_position: int  # 0-15 position in yajna cycle

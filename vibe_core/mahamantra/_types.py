@@ -53,16 +53,18 @@ class VibrationState(TypedDict):
     This is the focused computation result that flows through.
     Every operation vibrates. No silent failures.
 
-    DUAL INSTRUMENT RESONANCE (Watertight from _seed.py):
-        resonance (flute): Krishna's 3 flutes - WHEN (rhythmic, tick-based)
-        vina_resonance: Narada's 5 strings - WHAT TYPE (harmonic, seed-based)
+    INTEGER RESONANCE (no floats - quantum switchable mod_space):
+        resonance (flute): tick % mod_space (WHEN - rhythmic position)
+        vina_resonance: seed % mod_space (WHAT TYPE - harmonic position)
+
+    mod_space is switchable (default 137 = MAHA_QUANTUM).
     """
 
     seed: int  # Input seed from MahaCompression
     transformed: int  # Output after 16-step transform
     beat: int  # Beat number (1-7)
-    resonance: float  # Flute resonance (0.0-1.0) - MURALI/VENU/VAMSI
-    vina_resonance: float  # Vina resonance (0.0-1.0) - 5 Pancha Tattva strings
+    resonance: int  # Flute resonance = tick % mod_space (integer!)
+    vina_resonance: int  # Vina resonance = seed % mod_space (integer!)
     vina_string: int  # Which string (1-5): CHAITANYA/NITYANANDA/ADVAITA/GADADHARA/SRIVASA
     attractor: int  # Converged attractor (1 of 5 = PANCHA)
     parampara_channel: int  # Validation channel (0-2 or -1)
@@ -75,9 +77,10 @@ class AkashState(TypedDict):
 
     This is the persistent background vibration.
     Always exists. Always accumulating. The ether.
+    All integers - no floats!
     """
 
-    resonance_level: float  # Accumulated resonance (grows over time)
+    resonance_level: int  # Accumulated resonance % mod_space (integer!)
     accumulated_value: int  # Sum of all transforms
     total_beats: int  # How many times vibrated
     total_rounds: int  # Complete 7-beat rounds

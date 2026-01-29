@@ -74,6 +74,7 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     TRANSCENDENTAL_1096,  # The 1096-bit block from RUNDE 33
     TRINITY,
+    VINA_STRINGS,  # 5 = PANCHA (Narada's Vina strings)
     WORDS,
 )
 
@@ -1950,9 +1951,12 @@ class KirtanComputeResult:
     """
     Result of a MahaKirtan compute cycle.
 
-    DUAL INSTRUMENT RESONANCE (Watertight from _seed.py):
-        flute_resonance: Krishna's 3 flutes (MURALI/VENU/VAMSI) - WHEN (rhythmic)
-        vina_resonance: Narada's 5 strings (Pancha Tattva) - WHAT TYPE (harmonic)
+    INTEGER RESONANCE (no floats - quantum switchable mod_space):
+        flute_resonance: tick % mod_space (WHEN - rhythmic position)
+        vina_resonance: seed % mod_space (WHAT TYPE - harmonic position)
+
+    mod_space is switchable (default 137 = MAHA_QUANTUM).
+    For shruti mode, set mod_space=22.
     """
 
     seed: int
@@ -1961,13 +1965,13 @@ class KirtanComputeResult:
     beat_year: int  # 1911-1977
     beat_delta: int  # 15-81
     call_response: str  # "CALL" or "RESPONSE"
-    flute_resonance: float  # 0.0-1.0 (combined flute sync - MURALI/VENU/VAMSI)
-    vina_resonance: float  # 0.0-1.0 (Narada's Vina - 5 strings)
+    flute_resonance: int  # tick % mod_space (0 to mod_space-1)
+    vina_resonance: int  # seed % mod_space (0 to mod_space-1)
     vina_string: int  # 1-5 (which Pancha Tattva string resonates)
     oracle_validated: bool  # Parampara pre-filter passed
     parampara_channel: int  # 0-2 or -1 if void
     round_number: int  # Which kirtan round
-    resonance_level: float  # Runtime resonance (grows over rounds)
+    resonance_level: int  # accumulated % mod_space
 
 
 @dataclass
@@ -1977,7 +1981,7 @@ class MahaKirtanState:
     current_tick: int = 0
     current_round: int = 0
     total_computations: int = 0
-    resonance_level: float = 0.0
+    resonance_level: int = 0  # accumulated % mod_space (integer!)
     last_oracle_result: bool = True
     accumulated_value: int = 0
 
@@ -2050,24 +2054,33 @@ class MahaKirtan:
         # State
         self._state = MahaKirtanState()
 
-    def _get_flute_resonance(self, tick: int) -> float:
-        """Get combined flute resonance for current tick."""
-        return _FluteSync.get_combined_resonance(tick)
-
-    def _get_vina_resonance(self, seed: int, tick: int) -> tuple[float, int]:
+    def _get_flute_resonance(self, tick: int) -> int:
         """
-        Get Vina resonance for seed (Narada's 5-string instrument).
+        Get flute resonance as INTEGER position in mod_space.
+
+        NO FLOATS. NO DELEGATION. Direct computation.
+        Flute = WHEN (tick-based, rhythmic).
+
+        Returns: tick % mod_space (0 to mod_space-1)
+        """
+        return tick % self.mod_space
+
+    def _get_vina_resonance(self, seed: int, tick: int) -> tuple[int, int]:
+        """
+        Get Vina resonance as INTEGER position in mod_space.
+
+        NO FLOATS. NO DELEGATION. Direct computation.
+        Vina = WHAT TYPE (seed-based, harmonic).
 
         Returns (resonance, string_number) where:
-            - resonance: 0.0-1.0 combined vina resonance
+            - resonance: seed % mod_space (0 to mod_space-1)
             - string_number: 1-5 (which Pancha Tattva string)
 
-        VINA-FLUTE IDENTITY (from _seed.py RUNDE 20):
-            VINA × FLUTE_VENU_VAMSI = JIVA_CYCLE × KRISHNA
+        String = (seed % VINA_STRINGS) + 1 where VINA_STRINGS=5
         """
-        vina_info = _VinaSync.get_vina_resonance(seed)
-        vina_resonance = _VinaSync.get_combined_resonance(seed, tick)
-        return vina_resonance, vina_info["string"]
+        vina_resonance = seed % self.mod_space
+        vina_string = (seed % VINA_STRINGS) + 1
+        return vina_resonance, vina_string
 
     def _oracle_prefilter(self, seed: int) -> tuple[bool, int]:
         """
@@ -2113,21 +2126,26 @@ class MahaKirtan:
         beat_modulated_seed = (seed + beat.delta) % self.mod_space
         transformed = self._synth.transform(beat_modulated_seed)
 
-        # Apply flute resonance modulation (amplifies at sync points)
+        # Apply flute resonance modulation (INTEGER arithmetic - no floats!)
+        # Boost = (transformed × flute_position) // mod_space
+        # This scales the boost proportionally to position in mod_space
         if flute_resonance > 0:
-            resonance_boost = int(transformed * flute_resonance * 0.1)
+            resonance_boost = (transformed * flute_resonance) // self.mod_space
             transformed = (transformed + resonance_boost) % self.mod_space
 
-        # Apply vina resonance modulation (string-based harmonic boost)
-        if vina_resonance > 0.3:  # Only boost when string strongly resonates
-            vina_boost = int(transformed * vina_resonance * 0.05)
+        # Apply vina resonance modulation (INTEGER arithmetic - no floats!)
+        # Only boost when vina position is in upper third of mod_space
+        threshold = self.mod_space // 3
+        if vina_resonance > threshold:
+            vina_boost = (transformed * vina_resonance) // (self.mod_space * 2)
             transformed = (transformed + vina_boost) % self.mod_space
 
-        # Update state
+        # Update state (all integers!)
         self._state.current_tick = tick
         self._state.current_round = state.round_number
         self._state.total_computations += 1
-        self._state.resonance_level = state.resonance
+        # Resonance level = accumulated position in mod_space
+        self._state.resonance_level = (self._state.resonance_level + flute_resonance + vina_resonance) % self.mod_space
         self._state.accumulated_value = (self._state.accumulated_value + transformed) % self.mod_space
 
         return KirtanComputeResult(
@@ -2143,7 +2161,7 @@ class MahaKirtan:
             oracle_validated=oracle_valid,
             parampara_channel=parampara_channel,
             round_number=state.round_number,
-            resonance_level=state.resonance,
+            resonance_level=self._state.resonance_level,
         )
 
     def compute_round(self, seed: int) -> list[KirtanComputeResult]:
