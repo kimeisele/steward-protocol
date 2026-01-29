@@ -137,7 +137,7 @@ class PromptRegistry:
             GovernanceLoadError: If Guardian Directives can't be loaded
             ContextEnrichmentError: If workspace context enrichment fails
         """
-        logger.info(f"Composing prompt: agent={agent}, task={task}, workspace={workspace}")
+        logger.debug(f"Composing prompt: agent={agent}, task={task}, workspace={workspace}")
 
         # Initialize context if not provided
         if context is None:
@@ -200,7 +200,7 @@ class PromptRegistry:
         final_prompt = "\n\n".join(layers + [base_prompt])
 
         prompt_size = len(final_prompt)
-        logger.info(f"Prompt composed successfully: {prompt_size:,} chars")
+        logger.debug(f"Prompt composed successfully: {prompt_size:,} chars")
 
         return final_prompt
 
@@ -217,7 +217,7 @@ class PromptRegistry:
             prompt: The prompt template or content
         """
         cls._prompts[key] = prompt
-        logger.info(f"Registered prompt: {key} ({len(prompt)} chars)")
+        logger.debug(f"Registered prompt: {key} ({len(prompt)} chars)")
 
     @classmethod
     def get(cls, key: str, context: dict[str, Any] | None = None) -> str:
@@ -534,7 +534,7 @@ Await further instructions.
                 cls.register(key, prompt)
                 count += 1
 
-        logger.info(f"Loaded {count} prompts from {yaml_path.name}")
+        logger.debug(f"Loaded {count} prompts from {yaml_path.name}")
         return count
 
     @classmethod
@@ -690,7 +690,7 @@ Think like a consultant delivering findings to a client - they need to understan
 """,
         )
 
-        logger.info("✅ Initialized default prompts in registry")
+        logger.debug("✅ Initialized default prompts in registry")
 
 
 # Initialize defaults on module load
