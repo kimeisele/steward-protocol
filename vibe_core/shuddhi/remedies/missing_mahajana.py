@@ -91,6 +91,8 @@ class MissingMahajanaRemedy(CSTRemedy):
         self._inferred_mahajana: Optional[str] = None
         self._inferred_position: Optional[int] = None
         self._source_code: str = ""
+        # NOTE: Cognitive awareness is in ShuddhiEngine, not here!
+        # Remedies are DUMB transformers. Engine vibrates to Akash.
 
     def set_file_path(self, path: str) -> None:
         """Set the file path for inference."""
@@ -125,6 +127,7 @@ class MissingMahajanaRemedy(CSTRemedy):
         LILA PHASES: INFERENCE → COMPUTATION → INJECTION.
 
         If no __mahajana__ exists, inject the full DNA block.
+        Engine handles vibration to Akash - remedy stays DUMB.
         """
         # Already has declaration - no healing needed
         if self._has_mahajana:
@@ -134,7 +137,7 @@ class MissingMahajanaRemedy(CSTRemedy):
         self._infer_mahajana()
 
         if self._inferred_mahajana is None:
-            # Could not infer - skip this file
+            # Could not infer - skip
             return updated_node
 
         self.violation_found = True
