@@ -1,13 +1,4 @@
 """
-DEPRECATED - MOVED TO PRODUCTION
-=================================
-USE: from vibe_core.mahamantra.substrate import LotusRadixN
-
-This file is kept for reference only. Production version at:
-    vibe_core/mahamantra/substrate/lotus_radix.py
-
----
-
 LOTUS RADIX[N] - Generische N-Level Struktur (Skaliert beliebig)
 ================================================================
 
@@ -62,6 +53,14 @@ MAHAMANTRA ALIGNMENT:
     Each nibble indexes into 16-slot array
 
     This IS the Mahamantra structure, just repeated N times.
+
+PRODUCTION USE:
+===============
+
+    - CLI routing backbone (Balarama Pattern)
+    - Command prefix matching O(P + K)
+    - Vibrational seed → handler mapping
+    - Future: IPv6/UUID indexing
 """
 
 from __future__ import annotations
@@ -354,157 +353,3 @@ def lotus_128bit(default: V | None = None) -> LotusRadixN[V]:
 def lotus_256bit(default: V | None = None) -> LotusRadixN[V]:
     """Create 256-bit key structure (SHA-256 hashes)."""
     return LotusRadixN[V](levels=64, default=default)
-
-
-# =============================================================================
-# BENCHMARK
-# =============================================================================
-
-
-def benchmark() -> None:
-    """Benchmark LotusRadixN against dict and specialized implementations."""
-    import random
-    import time
-
-    print("=" * 70)
-    print("LOTUS RADIX[N] BENCHMARK")
-    print("Generische N-Level Struktur - Skaliert beliebig")
-    print("=" * 70)
-    print()
-
-    # Test different key sizes
-    configs = [
-        (4, 60000, "16-bit (like LotusArrayInt)"),
-        (8, 100000, "32-bit (like IPv4)"),
-        (16, 100000, "64-bit (uint64)"),
-    ]
-
-    for levels, n_keys, description in configs:
-        print(f"\n### {description} - {levels} levels ###")
-        print(f"Key space: 16^{levels} = {16**levels:,}")
-        print(f"Testing with {n_keys:,} random keys")
-        print("-" * 50)
-
-        max_key = (1 << (levels * 4)) - 1
-        random.seed(42)
-        keys = [random.randint(0, min(max_key, 10**9)) for _ in range(n_keys)]
-
-        # --- LotusRadixN ---
-        lotus = LotusRadixN[int](levels=levels, default=-1)
-
-        start = time.perf_counter()
-        for k in keys:
-            lotus[k] = k
-        lotus_insert = (time.perf_counter() - start) * 1000
-
-        start = time.perf_counter()
-        lotus_sum = sum(lotus[k] for k in keys)
-        lotus_read = (time.perf_counter() - start) * 1000
-
-        # --- Dict ---
-        d: dict[int, int] = {}
-
-        start = time.perf_counter()
-        for k in keys:
-            d[k] = k
-        dict_insert = (time.perf_counter() - start) * 1000
-
-        start = time.perf_counter()
-        dict_sum = sum(d[k] for k in keys)
-        dict_read = (time.perf_counter() - start) * 1000
-
-        # Results
-        print(f"INSERT: Lotus {lotus_insert:.1f}ms, Dict {dict_insert:.1f}ms")
-        insert_ratio = dict_insert / lotus_insert if lotus_insert > 0 else 0
-        print(f"  → {'Lotus' if insert_ratio > 1 else 'Dict'} is {max(insert_ratio, 1 / insert_ratio):.1f}x faster")
-
-        print(f"READ:   Lotus {lotus_read:.1f}ms, Dict {dict_read:.1f}ms")
-        read_ratio = dict_read / lotus_read if lotus_read > 0 else 0
-        print(f"  → {'Lotus' if read_ratio > 1 else 'Dict'} is {max(read_ratio, 1 / read_ratio):.1f}x faster")
-
-        print(f"Memory: Lotus stores {len(lotus):,} keys")
-
-    # PREFIX QUERY BENCHMARK (THE KILLER FEATURE)
-    print()
-    print("=" * 70)
-    print("PREFIX QUERIES (where LotusRadixN WINS)")
-    print("=" * 70)
-
-    # Use 32-bit keys (like IPv4)
-    levels = 8
-    n_keys = 100000
-    max_key = (1 << 32) - 1
-
-    random.seed(42)
-
-    # Create keys with common prefixes (like IP subnets)
-    # Simulate 192.168.x.x (prefix = 192.168.0.0, prefix_bits = 16)
-    base_prefix = (192 << 24) | (168 << 16)
-    keys_in_prefix = [base_prefix | random.randint(0, 65535) for _ in range(10000)]
-    other_keys = [random.randint(0, max_key) for _ in range(n_keys - 10000)]
-    all_keys = keys_in_prefix + other_keys
-    random.shuffle(all_keys)
-
-    # Build structures
-    lotus = LotusRadixN[int](levels=8, default=-1)
-    d: dict[int, int] = {}
-
-    for k in all_keys:
-        lotus[k] = k
-        d[k] = k
-
-    print(f"\nTest: Find all keys with prefix 192.168.x.x ({len(keys_in_prefix):,} keys)")
-    print(f"Total keys: {len(all_keys):,}")
-    print("-" * 50)
-
-    # LotusRadixN: O(P + K) where P = prefix levels, K = matching keys
-    start = time.perf_counter()
-    lotus_count = lotus.count_prefix(base_prefix, 16)
-    lotus_prefix_time = (time.perf_counter() - start) * 1000
-
-    # Dict: O(N) must scan ALL keys
-    start = time.perf_counter()
-    dict_count = sum(1 for k in d if (k >> 16) == (base_prefix >> 16))
-    dict_prefix_time = (time.perf_counter() - start) * 1000
-
-    print(f"LotusRadixN: {lotus_prefix_time:.2f}ms (found {lotus_count:,} keys)")
-    print(f"Dict:        {dict_prefix_time:.2f}ms (found {dict_count:,} keys)")
-    speedup = dict_prefix_time / lotus_prefix_time if lotus_prefix_time > 0 else 0
-    print(f"→ LotusRadixN is {speedup:.1f}x FASTER for prefix queries!")
-
-    # Summary
-    print()
-    print("=" * 70)
-    print("KEY INSIGHT:")
-    print("=" * 70)
-    print("""
-LotusRadixN provides:
-
-1. ARBITRARY KEY SIZES
-   - 16-bit, 32-bit, 64-bit, 128-bit, 256-bit
-   - All with same O(N) complexity where N = levels
-
-2. MAHAMANTRA ALIGNMENT
-   - Every level has exactly 16 entries
-   - 16 = WORDS = Mahamantra alignment
-
-3. SPARSE ALLOCATION
-   - Only allocates nodes that are used
-   - Memory grows with actual keys, not key space
-
-4. DETERMINISTIC
-   - Same input → same output
-   - No hashing, no collisions, no randomization
-
-TRADE-OFF:
-- Dict may be faster for small key counts (< 10,000)
-- LotusRadixN wins for:
-  - Large key spaces (IPv6, SHA-256)
-  - Prefix-based operations (routing, search)
-  - Deterministic requirements
-  - Memory predictability
-""")
-
-
-if __name__ == "__main__":
-    benchmark()
