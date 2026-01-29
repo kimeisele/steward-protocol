@@ -150,9 +150,43 @@ class Steward:
         """
         Initialize the Steward.
 
-        NO hardcoded handlers. All execution via Balarama Bridge pattern.
+        THE PERSON-ANCHORED PATTERN:
+        1. Prabhupada.verify_link() - Validate connection to Parampara
+        2. GADKirtan with PERSON backing - Not impersonal checks
+        3. All traces back to the 37th (Sovereign)
+
+        "We cannot jump to Krishna. We must go through the Link."
         """
         self._mahamantra = None
+        self._prabhupada = None
+        self._link_verified = False
+
+    @property
+    def prabhupada(self):
+        """Lazy load Prabhupada - THE LINK."""
+        if self._prabhupada is None:
+            from vibe_core.mahamantra.substrate.prabhupada import Prabhupada
+            self._prabhupada = Prabhupada()
+        return self._prabhupada
+
+    def _verify_parampara_link(self) -> bool:
+        """
+        Verify connection to Parampara via Prabhupada.
+
+        THE 37TH PRINCIPLE:
+        Code without crypto chain to a PERSON doesn't exist.
+
+        Returns:
+            True if link is valid (signature % 37 == 0)
+        """
+        if self._link_verified:
+            return True
+
+        # Verify THIS MODULE's link to parampara
+        # The module has __mahajana__ and __genesis__, not the class
+        import vibe_core.mahamantra.cli.steward as steward_module
+        self._link_verified = self.prabhupada.verify_link(steward_module)
+        return self._link_verified
 
     def _compress_large_input(self, input_text: str) -> str:
         """
@@ -240,6 +274,26 @@ class Steward:
             Uses MahaCompression with Guna classification (like Log Sentinel).
             Extracts INTENT not BYTES. Discards TAMAS (noise).
         """
+        # 0. PRAPADYETA: Verify Parampara Link via Prabhupada (THE PERSON)
+        # "We cannot jump to Krishna. We must go through the Link."
+        if not self._verify_parampara_link():
+            # MAYAVAD - No connection to sovereign
+            return StewardResponse(
+                input=input_text,
+                seed=0,
+                attractor=0,
+                chapter=0,
+                route=RESONANCE_MAP[18],  # Moksha (surrender needed)
+                call_response="CALL",
+                resonance=0,
+                vina_resonance=0,
+                vina_string=0,
+                shadow_phase="blocked",
+                shadow_position=0,
+                result={"success": False, "error": "MAYAVAD: No parampara link"},
+                message="MAYAVAD: Connection to Parampara not verified. Check __genesis__ signature.",
+            )
+
         # 1. SRAVANAM: Receive input
         # 2. MANANAM: Compress to seed
 
