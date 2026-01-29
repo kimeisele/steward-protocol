@@ -31,6 +31,11 @@ def __getattr__(name: str) -> object:
 
         return KapilaService
 
+    if name == "get_kapila_service":
+        from vibe_core.services.kapila_service import get_kapila_service
+
+        return get_kapila_service
+
     if name == "NullKapila":
         from vibe_core.protocols.mahajanas.kapila import NullKapila
 

@@ -21,6 +21,8 @@ __genesis__ = "0x7c5f43fc"  # GenesisByte: parampara % 37 == 0
 
 from typing import Optional, TypedDict
 
+from vibe_core.mahamantra.protocols._header import MahaCell
+
 
 # =============================================================================
 # WATERTIGHT TYPES - No Any allowed
@@ -102,6 +104,8 @@ class ExecuteResult(TypedDict):
     # VIBRATION - The compute result flows through!
     vibration: Optional[VibrationState]  # Current computation (+1 Fokus)
     akash: Optional[AkashState]  # Field state (136 Feld)
+    # UNIVERSAL CELL - Entry-Existence-Exit
+    maha_cell: Optional[MahaCell]  # The carrier of the vibration
 
 
 class LilaState(TypedDict):
