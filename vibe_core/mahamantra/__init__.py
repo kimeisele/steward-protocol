@@ -53,6 +53,10 @@ from vibe_core.mahamantra.protocols._maha_compute import (
     ATTRACTOR_CYCLE,
 )
 
+# MahaCell - THE UNIVERSAL DATA FORMAT
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+from vibe_core.mahamantra.protocols._payload import PayloadType, PayloadQuarter, SiksastakamOp
+
 logger = logging.getLogger("MAHAMANTRA")
 
 # =============================================================================
@@ -531,6 +535,90 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def tick(self):
         """Execute one tick of the Mahamantra clock. Delegates to Singularity."""
         return self._singularity.tick()
+
+    # === MAHA CELL API (72-byte Header + Payload) ===
+
+    def to_maha_cell(self, payload: bytes = b"", source_id: int = 0, target_id: int = 0):
+        """
+        Create MahaCell from current state. Delegates to Singularity.
+
+        Args:
+            payload: Content to wrap in the cell
+            source_id: Source identifier
+            target_id: Target identifier
+
+        Returns:
+            MahaCell with 72-byte header + payload
+        """
+        return self._singularity.to_maha_cell(payload, source_id, target_id)
+
+    def tick_with_cell(self, payload: bytes = b""):
+        """
+        Advance tick and return both TickState and MahaCell. Delegates to Singularity.
+
+        Args:
+            payload: Optional payload for the cell
+
+        Returns:
+            Tuple of (TickState, MahaCell)
+        """
+        return self._singularity.tick_with_cell(payload)
+
+    def wrap(
+        self,
+        content: Union[str, bytes, Dict, object],
+        purpose: str = "state_update",
+    ) -> Optional[MahaCell]:
+        """
+        Wrap ANY content into MahaCell - THE UNIVERSAL DATA FORMAT.
+
+        THE GATE: External "dirty" world → Internal Mahamantra senses.
+        All data enters through this gate and becomes MahaCell.
+
+        Args:
+            content: Any data (str, bytes, dict, object)
+            purpose: Purpose string for routing (see bridge.PURPOSE_MAP)
+
+        Returns:
+            MahaCell with 72-byte header + typed payload, or None if invalid
+
+        Example:
+            cell = mahamantra.wrap("analyze this", purpose="hearing")
+            cell = mahamantra.wrap({"key": "value"}, purpose="state_update")
+            cell = mahamantra.wrap(b"raw bytes", purpose="file_flush")
+        """
+        from vibe_core.mahamantra.substrate.bridge import wrap_cell
+        return wrap_cell(content, purpose)
+
+    def unwrap(self, cell: MahaCell) -> bytes:
+        """
+        Unwrap MahaCell to extract payload.
+
+        THE EXIT: Internal Mahamantra senses → External world.
+
+        Args:
+            cell: MahaCell to unwrap
+
+        Returns:
+            Payload bytes
+
+        Example:
+            cell = mahamantra.wrap("hello", purpose="hearing")
+            data = mahamantra.unwrap(cell)  # b"hello"
+        """
+        return cell.payload
+
+    def validate_cell(self, cell: MahaCell) -> bool:
+        """
+        Validate a MahaCell (parampara + checksum).
+
+        Args:
+            cell: MahaCell to validate
+
+        Returns:
+            True if cell is valid (parampara % 37 == 0 and checksum matches)
+        """
+        return cell.is_valid()
 
     # === VIBRATION API (Call-Response) ===
 
