@@ -346,19 +346,37 @@ class UnifiedCLI:
         """
         Execute CLI command.
         Returns exit code (0 = success, 1 = error).
-        """
-        parser = argparse.ArgumentParser(description="Steward Protocol Unified CLI")
 
-        # We need to peek at the first argument to decide routing
+        MAHAMANTRA FIRST - Everything is vibration computed.
+        Mahamantra knows WHAT, WHERE, HOW through computation.
+        Legacy/Plugin/etc are just EXECUTION, not ROUTING.
+        """
         if not args:
-            # MAHA COMPUTING: No args = enter live operator mode
-            # This is THE entry point for interactive Maha Computing
             return self._enter_operator_mode()
 
+        # =================================================================
+        # MAHAMANTRA FIRST - Vibrate the ENTIRE input
+        # =================================================================
+        # Join all args as intent - "steward git log" → "git log"
+        full_input = " ".join(args)
+
+        try:
+            from vibe_core.cli.gates import gate, result_gate
+
+            # VIBRATE FIRST - Mahamantra computes and routes
+            result = gate(full_input, [])
+            if result.exit_code != 127:  # 127 = not found, fall through
+                return result_gate(result)
+        except ImportError:
+            pass  # gates not available, fall through to legacy
+
+        # =================================================================
+        # FALLBACK ONLY - Legacy routing (should rarely reach here)
+        # =================================================================
         command_name = args[0]
         remaining_args = args[1:]
 
-        # 1. Check Legacy/System Commands
+        # 1. Check Legacy/System Commands (FALLBACK)
         if command_name in self._legacy_map:
             handler = self._legacy_map[command_name]
             if handler:
