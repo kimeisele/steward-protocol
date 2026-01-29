@@ -60,6 +60,13 @@ from vibe_core.mahamantra.protocols._seed import (
     SEVEN,
     TEN,
     TRINITY,
+    # Flute holes (DERIVED from axioms - NOT hardcoded!)
+    VENU_HOLES,
+    VAMSI_HOLES,
+    MURALI_HOLES,
+    # Vina constants (DERIVED from axioms!)
+    VINA_FUNDAMENTAL,
+    VINA_STRINGS,
 )
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM as MODULO_QUANTUM,
@@ -973,45 +980,48 @@ class FluteSync:
     """
     Integration of Krishna's three flutes with the step sequencer.
 
-    Each flute creates different sync points:
-    - MURALI (4 holes): Syncs every 4th beat
-    - VENU (6 holes): Syncs every 6th beat
-    - VAMSI (9 holes): Syncs every 9th beat
+    Each flute creates different sync points (DERIVED from _seed.py!):
+    - MURALI (QUARTERS = 4 holes): Syncs every 4th beat
+    - VENU (SHARANAGATI = 6 holes): Syncs every 6th beat
+    - VAMSI (NAVA = 9 holes): Syncs every 9th beat
 
     Within our 7-beat sequence:
     - MURALI syncs at beat 4 (1944 = DNA/computing!)
     - VENU would sync at beat 6 (but we have 7), closest = beat 6 (1966 = ISKCON)
     - VAMSI: 9 > 7, so no sync in single phrase, but every 9th tick in runtime
+
+    WATERTIGHT: All values derived from _seed.py axioms - NO HARDCODING!
     """
 
-    MURALI_HOLES: Final[int] = 4
-    VENU_HOLES: Final[int] = 6
-    VAMSI_HOLES: Final[int] = 9
+    # DERIVED FROM _seed.py (NOT hardcoded!)
+    # MURALI = QUARTERS = 4
+    # VENU = SHARANAGATI = 6
+    # VAMSI = NAVA = 9
 
     @classmethod
     def get_murali_sync_beat(cls) -> int:
         """Get beat where MURALI syncs (4th beat)."""
-        return cls.MURALI_HOLES  # Beat 4
+        return MURALI_HOLES  # Beat 4 = QUARTERS
 
     @classmethod
     def get_venu_sync_beat(cls) -> int:
         """Get beat closest to VENU sync (6th beat)."""
-        return cls.VENU_HOLES  # Beat 6
+        return VENU_HOLES  # Beat 6 = SHARANAGATI
 
     @classmethod
     def is_murali_sync(cls, beat: int) -> bool:
         """Check if beat syncs with MURALI (every 4th)."""
-        return beat % cls.MURALI_HOLES == 0
+        return beat % MURALI_HOLES == 0
 
     @classmethod
     def is_venu_sync(cls, tick: int) -> bool:
         """Check if tick syncs with VENU (every 6th)."""
-        return tick % cls.VENU_HOLES == 0
+        return tick % VENU_HOLES == 0
 
     @classmethod
     def is_vamsi_sync(cls, tick: int) -> bool:
         """Check if tick syncs with VAMSI (every 9th)."""
-        return tick % cls.VAMSI_HOLES == 0
+        return tick % VAMSI_HOLES == 0
 
     @classmethod
     def get_flute_resonance(cls, tick: int) -> Dict[str, bool]:
@@ -1050,9 +1060,159 @@ class FluteSync:
         No VAMSI sync within 7 beats
         """
         return {
-            "MURALI": [DOUBLE_DIGIT_YEARS[cls.MURALI_HOLES - 1]],  # 1944
-            "VENU": [DOUBLE_DIGIT_YEARS[cls.VENU_HOLES - 1]],  # 1966
+            "MURALI": [DOUBLE_DIGIT_YEARS[MURALI_HOLES - 1]],  # 1944
+            "VENU": [DOUBLE_DIGIT_YEARS[VENU_HOLES - 1]],  # 1966
             "VAMSI": [],  # 9 > 7, no sync in single sequence
+        }
+
+
+# =============================================================================
+# NARADA'S VINA - The Five Strings (RUNDE 20 from _seed.py)
+# =============================================================================
+
+class VinaSync:
+    """
+    Integration of Narada's Vina (stringed instrument) with the step sequencer.
+
+    THE VINA-FLUTE DISTINCTION:
+    - FLUTE (Venu): Air vibration, rhythmic, tick-based (WHEN)
+    - VINA: String vibration, harmonic, frequency-based (WHAT TYPE)
+
+    FIVE STRINGS = PANCHA TATTVA (from _seed.py):
+    1. CHAITANYA   - Identity/Source queries
+    2. NITYANANDA  - Foundation/Storage queries
+    3. ADVAITA     - Logic/Inference queries
+    4. GADADHARA   - Connection/API queries
+    5. SRIVASA     - Validation/Governance queries
+
+    VINA-FLUTE IDENTITY (Discovered in _seed.py RUNDE 20):
+        VINA × FLUTE_VENU_VAMSI = JIVA_CYCLE × KRISHNA
+        136 × 54 = 7344 = 432 × 17
+        The stringed instrument and the flutes are mathematically coupled!
+
+    WATERTIGHT: All values derived from _seed.py axioms - NO HARDCODING!
+    """
+
+    @classmethod
+    def get_string_for_seed(cls, seed: int) -> int:
+        """
+        Get which Vina string resonates with this seed.
+
+        String = (seed % VINA_STRINGS) + 1
+        Returns 1-5 (Pancha Tattva string number)
+        """
+        return (seed % VINA_STRINGS) + 1
+
+    @classmethod
+    def get_string_name(cls, string_num: int) -> str:
+        """Get the Pancha Tattva name for a string number."""
+        names = {
+            1: "CHAITANYA",    # The Source - Identity
+            2: "NITYANANDA",   # The Foundation - Storage
+            3: "ADVAITA",      # The Bridge - Logic
+            4: "GADADHARA",    # The Connection - API
+            5: "SRIVASA",      # The Enforcer - Validation
+        }
+        return names.get(string_num, "UNKNOWN")
+
+    @classmethod
+    def get_vina_resonance(cls, seed: int) -> Dict[str, object]:
+        """
+        Get Vina resonance for a seed.
+
+        Returns dict with:
+        - string: 1-5 (which string resonates)
+        - name: Pancha Tattva name
+        - fundamental: VINA_FUNDAMENTAL (136)
+        - harmonic: seed position in fundamental space
+        """
+        string_num = cls.get_string_for_seed(seed)
+        return {
+            "string": string_num,
+            "name": cls.get_string_name(string_num),
+            "fundamental": VINA_FUNDAMENTAL,
+            "harmonic": seed % VINA_FUNDAMENTAL,
+        }
+
+    @classmethod
+    def is_vina_sync(cls, tick: int) -> bool:
+        """
+        Check if tick syncs with Vina fundamental.
+
+        Syncs every VINA_FUNDAMENTAL (136) ticks.
+        """
+        return tick > 0 and tick % VINA_FUNDAMENTAL == 0
+
+    @classmethod
+    def get_combined_resonance(cls, seed: int, tick: int) -> float:
+        """
+        Calculate Vina resonance (0.0 to 1.0).
+
+        Based on:
+        - String resonance (how well seed maps to string)
+        - Fundamental sync (is tick at Vina fundamental?)
+        """
+        # Base resonance from string mapping (always some resonance)
+        base = 0.2
+
+        # String harmony - seeds divisible by string number resonate more
+        string_num = cls.get_string_for_seed(seed)
+        if seed % (string_num * VINA_STRINGS) == 0:
+            base += 0.3
+
+        # Fundamental sync bonus
+        if cls.is_vina_sync(tick):
+            base += 0.5
+
+        return min(1.0, base)
+
+
+# =============================================================================
+# KIRTAN SYNC - Combined Flute + Vina Resonance
+# =============================================================================
+
+class KirtanSync:
+    """
+    Combined resonance from both Flutes and Vina.
+
+    "sankirtan is not different from the mahamantra itself - Krishna"
+
+    ARCHITECTURE:
+        Flutes (FluteSync) = WHEN (rhythmic, tick-based)
+        Vina (VinaSync) = WHAT TYPE (harmonic, seed-based)
+        Combined = Full resonance picture
+
+    WATERTIGHT: Uses FluteSync + VinaSync, both derived from _seed.py.
+    """
+
+    @classmethod
+    def get_full_resonance(cls, seed: int, tick: int) -> Dict[str, object]:
+        """
+        Get combined resonance from all instruments.
+
+        Returns complete resonance state.
+        """
+        flute_status = FluteSync.get_flute_resonance(tick)
+        vina_status = VinaSync.get_vina_resonance(seed)
+
+        flute_resonance = FluteSync.get_combined_resonance(tick)
+        vina_resonance = VinaSync.get_combined_resonance(seed, tick)
+
+        # Combined resonance (weighted average - flute is rhythm, vina is type)
+        combined = 0.6 * flute_resonance + 0.4 * vina_resonance
+
+        return {
+            "flute": {
+                "status": flute_status,
+                "resonance": flute_resonance,
+            },
+            "vina": {
+                "status": vina_status,
+                "resonance": vina_resonance,
+            },
+            "combined_resonance": combined,
+            "seed": seed,
+            "tick": tick,
         }
 
 
@@ -1299,6 +1459,10 @@ __all__ = [
     "get_kirtan_runtime",
     # Flute Sync
     "FluteSync",
+    # Vina Sync (Narada's stringed instrument)
+    "VinaSync",
+    # Combined Kirtan Sync (Flute + Vina)
+    "KirtanSync",
     # Synth Presets
     "LilaSynthParams",
     "LILA_SYNTH_PRESETS",
