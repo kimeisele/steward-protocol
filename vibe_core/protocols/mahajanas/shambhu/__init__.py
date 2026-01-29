@@ -186,7 +186,7 @@ class NullShambhu(ShambhuProtocolBase):
             error_message="",
         )
 
-    def destroy(self, target_id: str) -> bool:
+    def destroy(self, target_id: str = "") -> bool:
         return True  # Pretend success
 
     def is_destroyed(self) -> bool:
@@ -195,7 +195,7 @@ class NullShambhu(ShambhuProtocolBase):
     def can_destroy(self) -> bool:
         return False  # Cannot be destroyed
 
-    def schedule_destruction(self, target_id: str, delay_ms: int) -> bool:
+    def schedule_destruction(self, target_id: str = "", delay_ms: int = 0) -> bool:
         return True
 
     def get_state(self) -> DestructionState:

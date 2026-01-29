@@ -393,16 +393,16 @@ class NullSamskara:
     def owner(self) -> Mahajana:
         return Mahajana.YAMARAJA
 
-    def discover_wild(self, search_paths: List[str]) -> List[WildProtocol]:
+    def discover_wild(self, search_paths: List[str] = None) -> List[WildProtocol]:
         return []
 
     def get_wild_protocols(self) -> List[WildProtocol]:
         return self._wild
 
-    def get_wild_by_status(self, status: MigrationStatus) -> List[WildProtocol]:
+    def get_wild_by_status(self, status: MigrationStatus = None) -> List[WildProtocol]:
         return [w for w in self._wild if w.get("status") == status.value]
 
-    def judge(self, protocol_path: str) -> MigrationVerdict:
+    def judge(self, protocol_path: str = "") -> MigrationVerdict:
         # Null always grants MERCY (Ajamil Exception in full force)
         return MigrationVerdict(
             protocol_path=protocol_path,
@@ -414,42 +414,42 @@ class NullSamskara:
             gad_compliant=True,
         )
 
-    def check_gad_compliance(self, protocol_path: str) -> float:
+    def check_gad_compliance(self, protocol_path: str = "") -> float:
         return 1.0  # Perfect compliance in null mode
 
-    def check_chanting(self, protocol_path: str) -> bool:
+    def check_chanting(self, protocol_path: str = "") -> bool:
         return True  # Assume chanting
 
-    def identify_mahajana(self, protocol_path: str) -> Optional[Mahajana]:
+    def identify_mahajana(self, protocol_path: str = "") -> Optional[Mahajana]:
         return None  # Unknown
 
     def begin_samskara(
         self,
-        protocol_path: str,
-        samskara_type: SamskaraType,
+        protocol_path: str = "",
+        samskara_type: SamskaraType = None,
     ) -> bool:
         return True
 
     def complete_samskara(
         self,
-        protocol_path: str,
-        samskara_type: SamskaraType,
+        protocol_path: str = "",
+        samskara_type: SamskaraType = None,
     ) -> bool:
         return True
 
-    def get_required_samskaras(self, protocol_path: str) -> List[SamskaraType]:
+    def get_required_samskaras(self, protocol_path: str = "") -> List[SamskaraType]:
         return []
 
     def migrate(
         self,
-        protocol_path: str,
-        target_mahajana: Mahajana,
-        target_name: str,
+        protocol_path: str = "",
+        target_mahajana: Mahajana = None,
+        target_name: str = "",
     ) -> bool:
         self._migrated.append(protocol_path)
         return True
 
-    def rollback(self, protocol_path: str) -> bool:
+    def rollback(self, protocol_path: str = "") -> bool:
         if protocol_path in self._migrated:
             self._migrated.remove(protocol_path)
             return True

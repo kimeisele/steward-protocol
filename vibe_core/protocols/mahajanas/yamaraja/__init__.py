@@ -283,17 +283,17 @@ class NullYamaraja(YamarajaProtocolBase):
     Inherits from YamarajaProtocolBase -> position 15 -> YAMARAJA.
     """
 
-    def judge(self, subject: Union[Judgeable, object]) -> Verdict:
+    def judge(self, subject: Union[Judgeable, object] = None) -> Verdict:
         # Always check Holy Name first (Ajamil exception)
         if self.check_holy_name(subject):
             return Verdict.MERCY
         return Verdict.ALLOW
 
-    def check_holy_name(self, subject: Union[Judgeable, object]) -> bool:
+    def check_holy_name(self, subject: Union[Judgeable, object] = None) -> bool:
         """NullYamaraja always grants mercy."""
         return True  # Maximum mercy in Kali Yuga
 
-    def assert_truth(self, condition: bool, reason: str) -> None:
+    def assert_truth(self, condition: bool = False, reason: str = "") -> None:
         pass  # No assertion
 
     def get_karma_balance(self) -> float:
@@ -352,7 +352,7 @@ class NullYamaraja(YamarajaProtocolBase):
             ],
         )
 
-    def samskara_judge(self, path: str) -> "SamskaraJudgeResult":
+    def samskara_judge(self, path: str = "") -> "SamskaraJudgeResult":
         """Judge a protocol for migration."""
         svc = self._get_samskara_service()
         v = svc.judge(path)
@@ -362,7 +362,7 @@ class NullYamaraja(YamarajaProtocolBase):
             target_path=v.get("target_path", ""),
         )
 
-    def samskara_migrate(self, path: str) -> "SamskaraMigrateResult":
+    def samskara_migrate(self, path: str = "") -> "SamskaraMigrateResult":
         """Migrate a protocol to its mahajana folder."""
         from pathlib import Path as P
 

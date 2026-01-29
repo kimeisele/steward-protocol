@@ -442,13 +442,13 @@ class NullShuka(ShukaProtocolBase):
     Inherits from ShukaProtocolBase -> position 14 -> SHUKA.
     """
 
-    def cache(self, key: str, value: CachedValue) -> bool:
+    def cache(self, key: str = "", value: CachedValue = None) -> bool:
         return True  # Pretend we cached
 
-    def view(self, key: str) -> Optional[CachedValue]:
+    def view(self, key: str = "") -> Optional[CachedValue]:
         return None  # Nothing cached
 
-    def invalidate(self, key: str) -> bool:
+    def invalidate(self, key: str = "") -> bool:
         return False  # Nothing to invalidate
 
     def reflect(self) -> ReflectionResult:

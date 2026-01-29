@@ -419,18 +419,18 @@ class NullSecurityProtocol:
     def active_level(self) -> SecurityLevel:
         return self._active_level
 
-    def set_level(self, level: SecurityLevel, reason: str) -> bool:
+    def set_level(self, level: SecurityLevel = None, reason: str = "") -> bool:
         self._active_level = level
         return True
 
-    def enforce_level(self, minimum: SecurityLevel) -> None:
+    def enforce_level(self, minimum: SecurityLevel = None) -> None:
         pass  # Always passes
 
     def grant_capability(
         self,
-        subject_id: str,
-        capability: str,
-        granter_id: str,
+        subject_id: str = "",
+        capability: str = "",
+        granter_id: str = "",
         expires_at: Optional[str] = None,
     ) -> SecurityCapability:
         return SecurityCapability(
@@ -444,26 +444,26 @@ class NullSecurityProtocol:
 
     def revoke_capability(
         self,
-        subject_id: str,
-        capability: str,
-        revoker_id: str,
-        reason: str,
+        subject_id: str = "",
+        capability: str = "",
+        revoker_id: str = "",
+        reason: str = "",
     ) -> bool:
         return True
 
-    def check_capability(self, subject_id: str, capability: str) -> bool:
+    def check_capability(self, subject_id: str = "", capability: str = "") -> bool:
         return True  # Maximum mercy
 
-    def list_capabilities(self, subject_id: str) -> List[SecurityCapability]:
+    def list_capabilities(self, subject_id: str = "") -> List[SecurityCapability]:
         return []
 
-    def judge(self, subject: Union[Judgeable, object]) -> Verdict:
+    def judge(self, subject: Union[Judgeable, object] = None) -> Verdict:
         return Verdict.MERCY  # Ajamil exception always
 
-    def check_holy_name(self, subject: Union[Judgeable, object]) -> bool:
+    def check_holy_name(self, subject: Union[Judgeable, object] = None) -> bool:
         return True  # Always grant mercy
 
-    def assert_truth(self, condition: bool, reason: str) -> None:
+    def assert_truth(self, condition: bool = False, reason: str = "") -> None:
         pass  # No assertion
 
     def get_karma_balance(self) -> float:
@@ -491,11 +491,11 @@ class NullSecurityProtocol:
 
     def record_violation(
         self,
-        level: SecurityLevel,
-        source: str,
-        target: str,
-        violation_type: str,
-        details: str,
+        level: SecurityLevel = None,
+        source: str = "",
+        target: str = "",
+        violation_type: str = "",
+        details: str = "",
     ) -> SecurityViolation:
         return SecurityViolation(
             violation_id="null",
@@ -526,13 +526,13 @@ class NullSecurityProtocol:
             health_score=1.0,
         )
 
-    def escalate(self, violation: SecurityViolation, to_level: SecurityLevel) -> None:
+    def escalate(self, violation: SecurityViolation = None, to_level: SecurityLevel = None) -> None:
         pass
 
     def quarantine(
         self,
-        subject_id: str,
-        reason: str,
+        subject_id: str = "",
+        reason: str = "",
         duration_seconds: int = 3600,
     ) -> bool:
         return True

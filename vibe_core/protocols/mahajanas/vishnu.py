@@ -328,7 +328,7 @@ class NullVishnu:
     Used when observation is disabled.
     """
 
-    def get_position_health(self, position: int) -> PositionHealth:
+    def get_position_health(self, position: int = 0) -> PositionHealth:
         return PositionHealth(
             position=position,
             name=LOTUS_POSITIONS.get(position, "unknown"),
@@ -344,7 +344,7 @@ class NullVishnu:
             health="unknown",
         )
 
-    def get_quarter_health(self, quarter: int) -> QuarterHealth:
+    def get_quarter_health(self, quarter: int = 0) -> QuarterHealth:
         return QuarterHealth(
             quarter_index=quarter,
             quarter_name=QUARTER_NAMES.get(quarter, "unknown"),
@@ -371,7 +371,7 @@ class NullVishnu:
             overall_health="unknown",
         )
 
-    def get_chanting_strength(self, position: int) -> ChantingStrength:
+    def get_chanting_strength(self, position: int = 0) -> ChantingStrength:
         return ChantingStrength.SILENT
 
     def find_silent_positions(self) -> List[int]:
@@ -383,7 +383,7 @@ class NullVishnu:
     def find_kirtan_positions(self) -> List[int]:
         return []
 
-    def get_prakriti_coverage(self, element: PrakritiElement) -> PrakritiCoverage:
+    def get_prakriti_coverage(self, element: PrakritiElement = None) -> PrakritiCoverage:
         return PrakritiCoverage(
             element=element.value,
             is_materialized=False,

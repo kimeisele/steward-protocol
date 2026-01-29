@@ -315,14 +315,14 @@ class NullJanaka(JanakaProtocolBase):
 
     def submit(
         self,
-        name: str,
-        task_input: TaskValue,
+        name: str = "",
+        task_input: TaskValue = None,
         priority: TaskPriority = TaskPriority.NORMAL,
         sovereign_id: str = "",
     ) -> str:
         return "null-task-0"
 
-    def execute(self, task_id: str) -> ExecutionResult:
+    def execute(self, task_id: str = "") -> ExecutionResult:
         return ExecutionResult(
             success=True,
             task_id=task_id,
@@ -332,13 +332,13 @@ class NullJanaka(JanakaProtocolBase):
             error_message="",
         )
 
-    def cancel(self, task_id: str) -> bool:
+    def cancel(self, task_id: str = "") -> bool:
         return False  # Nothing to cancel
 
-    def get_task(self, task_id: str) -> Optional[Task]:
+    def get_task(self, task_id: str = "") -> Optional[Task]:
         return None
 
-    def get_result(self, task_id: str) -> Optional[ExecutionResult]:
+    def get_result(self, task_id: str = "") -> Optional[ExecutionResult]:
         return None
 
     def is_busy(self) -> bool:

@@ -298,13 +298,13 @@ class NullNarada(NaradaProtocolBase):
     - broadcasts succeed silently
     """
 
-    def observe(self, source: str, event_type: str, details: str) -> bool:
+    def observe(self, source: str = "", event_type: str = "", details: str = "") -> bool:
         return True  # Accept but don't record
 
     def get_observations(self, limit: int = 100) -> List[Observation]:
         return []  # Nothing observed
 
-    def broadcast(self, message_type: MessageType, payload: MessagePayload) -> BroadcastResult:
+    def broadcast(self, message_type: MessageType = None, payload: MessagePayload = None) -> BroadcastResult:
         return BroadcastResult(
             success=True,
             recipients_count=0,
@@ -312,13 +312,13 @@ class NullNarada(NaradaProtocolBase):
             message_id="null",
         )
 
-    def whisper(self, target: str, message_type: MessageType, payload: MessagePayload) -> bool:
+    def whisper(self, target: str = "", message_type: MessageType = None, payload: MessagePayload = None) -> bool:
         return True  # Silently succeed
 
-    def subscribe(self, listener_id: str, callback: ListenerCallback) -> bool:
+    def subscribe(self, listener_id: str = "", callback: ListenerCallback = None) -> bool:
         return True  # Accept but don't store
 
-    def unsubscribe(self, listener_id: str) -> bool:
+    def unsubscribe(self, listener_id: str = "") -> bool:
         return False  # Nothing to unsubscribe
 
     def pulse(self) -> str:

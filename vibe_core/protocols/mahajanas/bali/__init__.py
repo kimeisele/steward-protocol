@@ -200,7 +200,7 @@ class NullBali(BaliProtocolBase):
     def is_surrendered(self) -> bool:
         return False  # Never
 
-    def release(self, resource_id: str) -> bool:
+    def release(self, resource_id: str = "") -> bool:
         return False  # Cannot release
 
     def get_state(self) -> SurrenderState:

@@ -369,7 +369,7 @@ class NullReflector:
     def owner(self) -> Mahajana:
         return Mahajana.SHUKA
 
-    def register_health_check(self, name: str, checker: HealthChecker) -> bool:
+    def register_health_check(self, name: str = "", checker: HealthChecker = None) -> bool:
         return True
 
     def check_health(self, component: Optional[str] = None) -> List[HealthCheck]:
@@ -378,19 +378,19 @@ class NullReflector:
     def get_overall_health(self) -> HealthStatus:
         return HealthStatus.PRISTINE
 
-    def register_capability(self, capability: Capability) -> bool:
+    def register_capability(self, capability: Capability = None) -> bool:
         return True
 
     def list_capabilities(self, owner: Optional[str] = None) -> List[Capability]:
         return []
 
-    def has_capability(self, name: str) -> bool:
+    def has_capability(self, name: str = "") -> bool:
         return True
 
-    def register_dependency(self, dependency: Dependency) -> bool:
+    def register_dependency(self, dependency: Dependency = None) -> bool:
         return True
 
-    def get_dependencies(self, component: str) -> List[Dependency]:
+    def get_dependencies(self, component: str = "") -> List[Dependency]:
         return []
 
     def take_snapshot(self) -> SystemSnapshot:

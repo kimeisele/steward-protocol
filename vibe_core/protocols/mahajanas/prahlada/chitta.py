@@ -641,25 +641,25 @@ class NullChitta:
 
     def remember(
         self,
-        key: str,
-        value: MemoryValue,
+        key: str = "",
+        value: MemoryValue = None,
         ttl_seconds: Optional[int] = None,
     ) -> bool:
         return True  # Accept but don't store
 
-    def recall(self, key: str) -> Optional[MemoryValue]:
+    def recall(self, key: str = "") -> Optional[MemoryValue]:
         return None
 
-    def forget(self, key: str) -> bool:
+    def forget(self, key: str = "") -> bool:
         return False
 
-    def has_memory(self, key: str) -> bool:
+    def has_memory(self, key: str = "") -> bool:
         return False
 
     def clear(self) -> int:
         return 0
 
-    def survive(self, attack_type: AttackType, severity: float = 1.0) -> SurvivalResult:
+    def survive(self, attack_type: AttackType = None, severity: float = 1.0) -> SurvivalResult:
         return SurvivalResult(
             survived=True,
             attack_type=attack_type.value,
@@ -686,7 +686,7 @@ class NullChitta:
             health="pristine",
         )
 
-    def get_entry(self, key: str) -> Optional[MemoryEntry]:
+    def get_entry(self, key: str = "") -> Optional[MemoryEntry]:
         return None
 
 
