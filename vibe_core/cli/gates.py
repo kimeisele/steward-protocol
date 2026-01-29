@@ -187,53 +187,26 @@ def route_gate(command: str) -> Tuple[int, str]:
     Routes command to mahamantra position.
 
     Routing priority:
-    1. Exact opcode match (analyze → 6) - O(1) dict lookup
-    2. RADIX TREE vibration lookup - O(N) where N=levels (FAST)
-    3. Keyword match (legacy fallback) - O(n) scan
-    4. Parampara hash (deterministic fallback)
+    1. Exact opcode match (analyze → 6)
+    2. Keyword in command (analyze_system → 6)
+    3. Parampara hash (deterministic fallback)
 
     Returns (position, matched_opcode).
     """
     cmd_lower = command.lower()
 
-    # 1. Exact match (fastest - O(1))
+    # 1. Exact match
     if cmd_lower in OPCODE_TO_POSITION:
         pos = OPCODE_TO_POSITION[cmd_lower]
         return pos, cmd_lower
 
-    # 2. RADIX TREE - Vibration-based routing (Gita Ch.13: Know the Field)
-    # Vibrate command → seed → Radix lookup → position
-    try:
-        from vibe_core.mahamantra import mahamantra
-        from vibe_core.mahamantra.substrate import lotus_16bit
-
-        # Get or create global Radix Tree (initialized once)
-        if not hasattr(route_gate, '_radix'):
-            route_gate._radix = lotus_16bit()
-            # Pre-populate with opcodes by their vibration seeds
-            for opcode, pos in OPCODE_TO_POSITION.items():
-                vibe = mahamantra.vibrate(opcode)
-                key = vibe['seed'] % 65536
-                route_gate._radix[key] = (pos, opcode)
-
-        # Vibrate the command and check Radix
-        vibe = mahamantra.vibrate(cmd_lower)
-        radix_key = vibe['seed'] % 65536
-        radix_match = route_gate._radix[radix_key]
-
-        if radix_match:
-            pos, opcode = radix_match
-            return pos, opcode
-
-    except ImportError:
-        pass  # Mahamantra not available, fall through
-
-    # 3. Keyword match (legacy fallback - O(n) scan)
+    # 2. Keyword match (command contains opcode)
     for opcode, pos in OPCODE_TO_POSITION.items():
         if opcode in cmd_lower or cmd_lower.startswith(opcode):
             return pos, opcode
 
-    # 4. Parampara hash (deterministic fallback)
+    # 3. Parampara hash (deterministic fallback)
+    # Same formula as _cli_auto.py
     mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(cmd_lower))
     position = (mutation_vector % PARAMPARA) % LOTUS_POSITIONS
 
