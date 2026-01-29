@@ -206,7 +206,7 @@ class NullKapila(KapilaProtocolBase):
     Inherits from KapilaProtocolBase -> position 6 -> KAPILA.
     """
 
-    def analyze(self, target: AnalysisInput) -> AnalysisResult:
+    def analyze(self, target: AnalysisInput = None) -> AnalysisResult:
         return AnalysisResult(
             success=True,
             analysis_type="resolution",
@@ -216,10 +216,10 @@ class NullKapila(KapilaProtocolBase):
             error_message="",
         )
 
-    def resolve(self, query: str) -> AnalysisResult:
+    def resolve(self, query: str = "") -> AnalysisResult:
         return self.analyze(query)
 
-    def optimize(self, target: str, metric: str) -> OptimizationResult:
+    def optimize(self, target: str = "", metric: str = "") -> OptimizationResult:
         return OptimizationResult(
             success=True,
             improvement_percent=0.0,
@@ -229,7 +229,7 @@ class NullKapila(KapilaProtocolBase):
             error_message="",
         )
 
-    def enumerate(self, domain: str) -> List[str]:
+    def enumerate(self, domain: str = "") -> List[str]:
         return []
 
     def get_metrics(self) -> MetricsResult:

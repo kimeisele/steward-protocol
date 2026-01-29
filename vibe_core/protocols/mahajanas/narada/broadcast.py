@@ -328,27 +328,27 @@ class NullBroadcaster:
     def owner(self) -> Mahajana:
         return Mahajana.NARADA
 
-    def create_channel(self, name: str) -> bool:
+    def create_channel(self, name: str = "") -> bool:
         return True
 
-    def delete_channel(self, name: str) -> bool:
+    def delete_channel(self, name: str = "") -> bool:
         return True
 
     def list_channels(self) -> List[str]:
         return []
 
-    def subscribe(self, channel: str, subscriber_id: str, handler: BroadcastHandler) -> bool:
+    def subscribe(self, channel: str = "", subscriber_id: str = "", handler: BroadcastHandler = None) -> bool:
         return True
 
-    def unsubscribe(self, channel: str, subscriber_id: str) -> bool:
+    def unsubscribe(self, channel: str = "", subscriber_id: str = "") -> bool:
         return True
 
     def broadcast(
-        self, channel: str, payload: MessagePayload, mode: DeliveryMode = DeliveryMode.AT_MOST_ONCE
+        self, channel: str = "", payload: MessagePayload = None, mode: DeliveryMode = DeliveryMode.AT_MOST_ONCE
     ) -> BroadcastResult:
         return BroadcastResult(success=True, recipients_count=0, failed_count=0, message_id="null")
 
-    def broadcast_all(self, payload: MessagePayload) -> BroadcastResult:
+    def broadcast_all(self, payload: MessagePayload = None) -> BroadcastResult:
         return BroadcastResult(success=True, recipients_count=0, failed_count=0, message_id="null")
 
 

@@ -224,7 +224,7 @@ class NullMahajana(BaseMahajana):
     def __init__(self, identity: Mahajana = Mahajana.BRAHMA) -> None:
         super().__init__(identity)
 
-    def handle(self, opcode: MantraOpCode, context: Any, payload: Any) -> MahajanaResult:
+    def handle(self, opcode: MantraOpCode = None, context: Any = None, payload: Any = None) -> MahajanaResult:
         return self._accept(opcode, payload, "NullMahajana accepts all")
 
 

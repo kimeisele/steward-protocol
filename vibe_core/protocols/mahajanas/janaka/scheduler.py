@@ -423,18 +423,18 @@ class NullScheduler:
 
     def schedule(
         self,
-        name: str,
-        executor: TaskExecutor,
-        input_value: TaskValue,
+        name: str = "",
+        executor: TaskExecutor = None,
+        input_value: TaskValue = None,
         priority: TaskPriority = TaskPriority.NORMAL,
         deadline: Optional[datetime] = None,
     ) -> str:
         return "null-task"
 
-    def cancel(self, task_id: str) -> bool:
+    def cancel(self, task_id: str = "") -> bool:
         return True
 
-    def get_task(self, task_id: str) -> Optional[ScheduledTask]:
+    def get_task(self, task_id: str = "") -> Optional[ScheduledTask]:
         return None
 
     def run_next(self) -> Optional[ExecutionResult]:

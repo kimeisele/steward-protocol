@@ -258,19 +258,19 @@ class NullPrahlada(PrahladaProtocolBase):
     - returns None for recalls (nothing to remember)
     """
 
-    def remember(self, key: str, value: MemoryValue) -> bool:
+    def remember(self, key: str = "", value: MemoryValue = None) -> bool:
         return True  # Accept but don't store
 
-    def recall(self, key: str) -> Optional[MemoryValue]:
+    def recall(self, key: str = "") -> Optional[MemoryValue]:
         return None  # Nothing to recall
 
-    def forget(self, key: str) -> bool:
+    def forget(self, key: str = "") -> bool:
         return False  # Nothing to forget
 
-    def has_memory(self, key: str) -> bool:
+    def has_memory(self, key: str = "") -> bool:
         return False
 
-    def survive(self, attack_type: AttackType, severity: float = 1.0) -> SurvivalResult:
+    def survive(self, attack_type: AttackType = None, severity: float = 1.0) -> SurvivalResult:
         # Prahlada ALWAYS survives
         return SurvivalResult(
             survived=True,
@@ -293,7 +293,7 @@ class NullPrahlada(PrahladaProtocolBase):
             health="pristine",
         )
 
-    def get_entry(self, key: str) -> Optional[MemoryEntry]:
+    def get_entry(self, key: str = "") -> Optional[MemoryEntry]:
         return None
 
     def execute_cli(self, service: str = "memory") -> ExecuteCliResult:

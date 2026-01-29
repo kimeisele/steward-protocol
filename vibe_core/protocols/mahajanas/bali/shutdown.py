@@ -515,21 +515,21 @@ class NullShutdown:
 
     def register_hook(
         self,
-        name: str,
-        hook: ShutdownHook,
+        name: str = "",
+        hook: ShutdownHook = None,
         phase: ShutdownPhase = ShutdownPhase.RELEASE,
         priority: int = 0,
         timeout_ms: int = 5000,
     ) -> bool:
         return True
 
-    def unregister_hook(self, name: str) -> bool:
+    def unregister_hook(self, name: str = "") -> bool:
         return True
 
-    def track_resource(self, resource_id: str, release_hook: Callable[[], bool]) -> bool:
+    def track_resource(self, resource_id: str = "", release_hook: Callable[[], bool] = None) -> bool:
         return True
 
-    def untrack_resource(self, resource_id: str) -> bool:
+    def untrack_resource(self, resource_id: str = "") -> bool:
         return True
 
     def get_state(self) -> SurrenderState:

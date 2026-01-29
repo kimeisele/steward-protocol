@@ -515,10 +515,10 @@ class NullYield:
     def force_yield(self) -> YieldResult:
         return self.yield_cpu(0)
 
-    def set_policy(self, policy: YieldPolicy) -> None:
+    def set_policy(self, policy: YieldPolicy = None) -> None:
         pass
 
-    def set_cooperative_interval(self, operations: int) -> None:
+    def set_cooperative_interval(self, operations: int = 0) -> None:
         pass
 
     def tick(self) -> Optional[YieldResult]:

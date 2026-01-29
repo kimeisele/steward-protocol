@@ -193,7 +193,7 @@ class NullPrithu(PrithuProtocolBase):
     Inherits from PrithuProtocolBase -> position 4 -> PRITHU.
     """
 
-    def assert_truth(self, claim: str, evidence: str) -> AssertionResult:
+    def assert_truth(self, claim: str = "", evidence: str = "") -> AssertionResult:
         return AssertionResult(
             valid=True,
             truth_level=TruthLevel.ASSERTED.value,
@@ -202,7 +202,7 @@ class NullPrithu(PrithuProtocolBase):
             violations=[],
         )
 
-    def verify(self, assertion_id: str) -> AssertionResult:
+    def verify(self, assertion_id: str = "") -> AssertionResult:
         return AssertionResult(
             valid=True,
             truth_level=TruthLevel.VERIFIED.value,
@@ -211,16 +211,16 @@ class NullPrithu(PrithuProtocolBase):
             violations=[],
         )
 
-    def compile(self, truths: List[str]) -> str:
+    def compile(self, truths: List[str] = None) -> str:
         return "null_compilation"
 
-    def divide(self, compilation_id: str) -> List[str]:
+    def divide(self, compilation_id: str = "") -> List[str]:
         return []
 
-    def get_truth_level(self, assertion_id: str) -> TruthLevel:
+    def get_truth_level(self, assertion_id: str = "") -> TruthLevel:
         return TruthLevel.ASSERTED
 
-    def challenge(self, assertion_id: str, counter_evidence: str) -> AssertionResult:
+    def challenge(self, assertion_id: str = "", counter_evidence: str = "") -> AssertionResult:
         return AssertionResult(
             valid=True,  # Challenge always accepted in null mode
             truth_level=TruthLevel.DISPUTED.value,

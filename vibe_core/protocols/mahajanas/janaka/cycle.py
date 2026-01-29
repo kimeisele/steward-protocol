@@ -414,7 +414,7 @@ class NullCognitiveCycle:
             error_message="",
         )
 
-    def orient(self, observations_count: int) -> PhaseResult:
+    def orient(self, observations_count: int = 0) -> PhaseResult:
         return PhaseResult(
             phase="orient",
             success=True,
@@ -424,7 +424,7 @@ class NullCognitiveCycle:
             error_message="",
         )
 
-    def decide(self, orientations_count: int) -> PhaseResult:
+    def decide(self, orientations_count: int = 0) -> PhaseResult:
         return PhaseResult(
             phase="decide",
             success=True,
@@ -434,7 +434,7 @@ class NullCognitiveCycle:
             error_message="",
         )
 
-    def act(self, decisions_count: int) -> PhaseResult:
+    def act(self, decisions_count: int = 0) -> PhaseResult:
         return PhaseResult(
             phase="act",
             success=True,
@@ -454,7 +454,7 @@ class NullCognitiveCycle:
             error_message="",
         )
 
-    def recover(self, error_phases: List[str]) -> bool:
+    def recover(self, error_phases: List[str] = None) -> bool:
         return True
 
     def orchestrate(self, force: bool = False) -> Optional[CycleContextState]:
@@ -508,13 +508,13 @@ class NullCycleRegistry:
     Tracks nothing.
     """
 
-    def register_cycle(self, context_state: CycleContextState) -> None:
+    def register_cycle(self, context_state: CycleContextState = None) -> None:
         pass
 
-    def complete_cycle(self, cycle_id: str) -> None:
+    def complete_cycle(self, cycle_id: str = "") -> None:
         pass
 
-    def error_cycle(self, cycle_id: str, error_phases: List[str]) -> None:
+    def error_cycle(self, cycle_id: str = "", error_phases: List[str] = None) -> None:
         pass
 
     def get_active_cycles(self) -> List[CycleContextState]:
