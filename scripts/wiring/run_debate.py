@@ -11,6 +11,11 @@ This script demonstrates the "Power of the System" by:
 4. Generating Thesis, Antithesis, and Synthesis using AGENTIC SYSCALLS.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x299eb981"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import sys

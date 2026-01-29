@@ -346,6 +346,8 @@ class GADKirtan(GADBase):
                 beat_delta=result.beat_delta,
                 call_response=result.call_response,
                 flute_resonance=result.flute_resonance,
+                vina_resonance=result.vina_resonance,
+                vina_string=result.vina_string,
                 oracle_validated=result.oracle_validated,
                 parampara_channel=result.parampara_channel,
                 round_number=result.round_number,

@@ -53,6 +53,10 @@ from vibe_core.mahamantra.protocols._maha_compute import (
     ATTRACTOR_CYCLE,
 )
 
+# MahaCell - THE UNIVERSAL DATA FORMAT
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+from vibe_core.mahamantra.protocols._payload import PayloadType, PayloadQuarter, SiksastakamOp
+
 logger = logging.getLogger("MAHAMANTRA")
 
 # =============================================================================
@@ -69,8 +73,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     """
 
     # Class-level Akash state (the 136 FIELD - persistent across instances)
+    # ALL INTEGERS - no floats!
     _akash: AkashState = {
-        "resonance_level": 0.0,
+        "resonance_level": 0,  # Integer! Accumulated % mod_space
         "accumulated_value": 0,
         "total_beats": 0,
         "total_rounds": 0,
@@ -108,6 +113,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         MahaCompression → seed → MahaKirtan.compute() → VibrationState
         This is the +1 FOKUS (Lichtpunkt).
+
+        DUAL INSTRUMENT RESONANCE (Watertight from _seed.py):
+            flute_resonance: Krishna's 3 flutes - WHEN (rhythmic)
+            vina_resonance: Narada's 5 strings - WHAT TYPE (harmonic)
         """
         compressor, kirtan = cls._get_kirtan()
 
@@ -116,6 +125,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         seed = comp_result.seed
 
         # 2. Compute through kirtan (16-step × 7-beat)
+        # Now includes both flute_resonance AND vina_resonance!
         result = kirtan.compute(seed)
 
         # 3. Find attractor (for classification)
@@ -129,7 +139,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             seed=seed,
             transformed=result.transformed_value,
             beat=result.beat_number,
-            resonance=result.flute_resonance,
+            resonance=result.flute_resonance,  # Krishna's flutes (WHEN)
+            vina_resonance=result.vina_resonance,  # Narada's vina (WHAT TYPE)
+            vina_string=result.vina_string,  # Which Pancha Tattva string (1-5)
             attractor=attractor,
             parampara_channel=result.parampara_channel,
             oracle_validated=result.oracle_validated,
@@ -141,11 +153,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Update the Akash field (136) with new vibration.
 
         The field absorbs every computation. Nothing is lost.
-        ALL CONSTANTS FROM _seed - no hardcoding!
+        ALL INTEGERS - no floats! ALL CONSTANTS FROM _seed.
         """
-        cls._akash["resonance_level"] = min(
-            1.0, cls._akash["resonance_level"] + vibration["resonance"] * 0.01
-        )
+        # Integer resonance accumulation (mod_space)
+        cls._akash["resonance_level"] = (
+            cls._akash["resonance_level"] + vibration["resonance"] + vibration["vina_resonance"]
+        ) % MAHA_QUANTUM  # 137 - from _seed
         cls._akash["accumulated_value"] = (
             cls._akash["accumulated_value"] + vibration["transformed"]
         ) % MAHA_QUANTUM  # 137 - from _seed
@@ -522,6 +535,145 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def tick(self):
         """Execute one tick of the Mahamantra clock. Delegates to Singularity."""
         return self._singularity.tick()
+
+    # === MAHA CELL API (72-byte Header + Payload) ===
+
+    def to_maha_cell(self, payload: bytes = b"", source_id: int = 0, target_id: int = 0):
+        """
+        Create MahaCell from current state. Delegates to Singularity.
+
+        Args:
+            payload: Content to wrap in the cell
+            source_id: Source identifier
+            target_id: Target identifier
+
+        Returns:
+            MahaCell with 72-byte header + payload
+        """
+        return self._singularity.to_maha_cell(payload, source_id, target_id)
+
+    def tick_with_cell(self, payload: bytes = b""):
+        """
+        Advance tick and return both TickState and MahaCell. Delegates to Singularity.
+
+        Args:
+            payload: Optional payload for the cell
+
+        Returns:
+            Tuple of (TickState, MahaCell)
+        """
+        return self._singularity.tick_with_cell(payload)
+
+    def wrap(
+        self,
+        content: Union[str, bytes, Dict, object],
+        purpose: str = "state_update",
+    ) -> Optional[MahaCell]:
+        """
+        Wrap ANY content into MahaCell - THE UNIVERSAL DATA FORMAT.
+
+        THE GATE: External "dirty" world → Internal Mahamantra senses.
+        All data enters through this gate and becomes MahaCell.
+
+        Args:
+            content: Any data (str, bytes, dict, object)
+            purpose: Purpose string for routing (see bridge.PURPOSE_MAP)
+
+        Returns:
+            MahaCell with 72-byte header + typed payload, or None if invalid
+
+        Example:
+            cell = mahamantra.wrap("analyze this", purpose="hearing")
+            cell = mahamantra.wrap({"key": "value"}, purpose="state_update")
+            cell = mahamantra.wrap(b"raw bytes", purpose="file_flush")
+        """
+        from vibe_core.mahamantra.substrate.bridge import wrap_cell
+        return wrap_cell(content, purpose)
+
+    def unwrap(self, cell: MahaCell) -> bytes:
+        """
+        Unwrap MahaCell to extract payload.
+
+        THE EXIT: Internal Mahamantra senses → External world.
+
+        Args:
+            cell: MahaCell to unwrap
+
+        Returns:
+            Payload bytes
+
+        Example:
+            cell = mahamantra.wrap("hello", purpose="hearing")
+            data = mahamantra.unwrap(cell)  # b"hello"
+        """
+        return cell.payload
+
+    def validate_cell(self, cell: MahaCell) -> bool:
+        """
+        Validate a MahaCell (parampara + checksum).
+
+        Args:
+            cell: MahaCell to validate
+
+        Returns:
+            True if cell is valid (parampara % 37 == 0 and checksum matches)
+        """
+        return cell.is_valid()
+
+    # === VIBRATION API (Call-Response) ===
+
+    def vibrate(self, command: str) -> "VibrationState":
+        """
+        Compute vibration state for a command.
+
+        THE CALL-RESPONSE LOOP:
+            command → MahaCompression → seed → MahaKirtan.compute() → VibrationState
+
+        Args:
+            command: Any string input (query, intent, data)
+
+        Returns:
+            VibrationState with seed, attractor, resonance, etc.
+
+        Example:
+            state = mahamantra.vibrate("deploy to production")
+            print(state.attractor)      # Gita chapter
+            print(state.resonance)      # Flute resonance 0.0-1.0
+            print(state.parampara_channel)  # 1-5
+        """
+        return self._compute_vibration(command)
+
+    def kirtan(self, seed: int) -> "KirtanComputeResult":
+        """
+        Direct MahaKirtan computation - the 16-step × 7-beat algorithm.
+
+        THE CALL-RESPONSE:
+            seed → 16 steps (HKHR pattern) → call_response = 'CALL' or 'RESPONSE'
+
+        Args:
+            seed: Integer seed value
+
+        Returns:
+            KirtanComputeResult with:
+                - call_response: 'CALL' or 'RESPONSE'
+                - flute_resonance: 0.0-1.0
+                - transformed_value: Final output
+                - beat_number, beat_year, beat_delta
+                - oracle_validated: True/False
+                - parampara_channel: 1-5
+
+        Example:
+            result = mahamantra.kirtan(42)
+            print(result.call_response)    # 'CALL'
+            print(result.flute_resonance)  # 0.666...
+        """
+        from vibe_core.mahamantra.research.dharma import MahaKirtan
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
+
+        if not hasattr(self, "_kirtan_instance"):
+            self._kirtan_instance = MahaKirtan(mod_space=MAHA_QUANTUM)
+
+        return self._kirtan_instance.compute(seed)
 
     # === SHUDDHI INTEGRATION (CST-based healing) ===
 
@@ -931,6 +1083,38 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return self._attention
 
     @property
+    def steward(self) -> "Steward":
+        """
+        Access the Steward (Universal Resonance Router).
+
+        "EIN MANTRA. KRISHNA ROUTET ALLES."
+
+        THE GITA-18 ROUTING:
+            Chapter 1-4 (GENESIS):   diagnose, core, execute, teach
+            Chapter 5-9 (DHARMA):    delegate, meditate, analyze, transcend, secret
+            Chapter 10-14 (KARMA):   synth, vision, devotion, field, qualify
+            Chapter 15-18 (MOKSHA):  tree, divine, faith, surrender
+
+        TRIPLE RESONANCE:
+            1. Flute (resonance)   → WHEN (tick % mod_space)
+            2. Vina (vina_resonance) → WHAT TYPE (seed % mod_space)
+            3. Shadow (shadow_phase) → TRANSFORMATION (bhoga/prasadam/return)
+
+        USAGE:
+            response = mahamantra.steward.invoke("optimize the network")
+            # Automatically routes to network adapter via resonance
+
+            # Or directly:
+            from vibe_core.mahamantra import mahamantra
+            response = mahamantra.steward.invoke("any input")
+        """
+        if not hasattr(self, "_steward"):
+            from vibe_core.mahamantra.cli.steward import Steward
+
+            self._steward = Steward()
+        return self._steward
+
+    @property
     def veda(self) -> "VedaExplorer":
         """
         Access the VedaExplorer (Neuro-Symbolic Chat Interface).
@@ -1098,6 +1282,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         from vibe_core.mahamantra.protocols import _seed
         if hasattr(_seed, name):
             return getattr(_seed, name)
+
+        # 0.5. Check if it's a module-level import (ATTRACTOR_FIXED, VibrationState, etc.)
+        import sys
+        current_module = sys.modules[__name__]
+        if name in dir(current_module) and not name.startswith("_"):
+            val = getattr(current_module, name, None)
+            if val is not None:
+                return val
 
         mahamantra_root = Path(__file__).parent
 

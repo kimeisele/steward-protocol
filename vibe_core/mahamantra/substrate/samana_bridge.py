@@ -93,6 +93,15 @@ from vibe_core.mahamantra.substrate.seed import (
     WORDS,
 )
 
+# =============================================================================
+# MAHA HEADER INTEGRATION (The Universal 72-Byte Cell Header)
+# =============================================================================
+from vibe_core.mahamantra.protocols._header import (
+    HEADER_DAILY_CYCLES,
+    MahaCell,
+    MahaHeader,
+)
+
 if _TC:
     from vibe_core.mahamantra.lila.jiva_shadow import JivaShadow as _JivaShadow
 
@@ -178,6 +187,7 @@ class SamanaDispatch:
     A dispatch request from ShadowReactor to TaskKernel.
 
     Contains task info and context for execution.
+    Now includes MahaHeader for universal routing/validation.
     """
 
     dispatch_id: str
@@ -218,6 +228,49 @@ class SamanaDispatch:
             timestamp=datetime.fromisoformat(payload["timestamp"]),
         )
 
+    # =========================================================================
+    # MAHA HEADER INTEGRATION (72-byte universal cell)
+    # =========================================================================
+
+    def to_maha_header(self, source_id: int, target_id: int, link: int = 0) -> MahaHeader:
+        """
+        Create MahaHeader from dispatch.
+
+        NavaBhakti mapping:
+            SRAVANAM (source) → source_id (reactor)
+            KIRTANAM (target) → target_id (kernel)
+            SMARANAM (link) → previous dispatch chain
+            PADA_SEVANAM (operation) → position (0-15)
+            ARCANAM (signature) → auto-computed (parampara valid)
+            VANDANAM (intent) → phase encoded
+            DASYAM (TTL) → timeout cycles
+            SAKHYAM (state) → priority
+            ATMA_NIVEDANAM (checksum) → auto-computed
+        """
+        # Encode phase as intent (bhoga=0, prasadam=1, return=2)
+        phase_map = {"bhoga": 0, "prasadam": 1, "return": 2}
+        intent = phase_map.get(self.phase, 0)
+
+        # Convert timeout_ms to cycles (each cycle = 1 day / 300)
+        ttl_cycles = min(self.timeout_ms // (86400000 // HEADER_DAILY_CYCLES), HEADER_DAILY_CYCLES)
+
+        return MahaHeader.create(
+            source=source_id,
+            target=target_id,
+            operation=self.position,
+            link=link,
+            intent=intent,
+            ttl=max(1, ttl_cycles),
+            state=self.priority.value,
+        )
+
+    def to_maha_cell(self, source_id: int, target_id: int, link: int = 0) -> MahaCell:
+        """Create MahaCell with JSON payload."""
+        import json
+        header = self.to_maha_header(source_id, target_id, link)
+        payload_bytes = json.dumps(self.to_nadi_payload()).encode("utf-8")
+        return MahaCell(header=header, payload=payload_bytes)
+
 
 # =============================================================================
 # SAMANA FOLD RESULT
@@ -230,6 +283,7 @@ class SamanaFold:
     A fold result from TaskKernel to ShadowReactor.
 
     Contains execution result and reinforcement signal.
+    Now includes MahaHeader for universal routing/validation.
     """
 
     fold_id: str
@@ -271,6 +325,52 @@ class SamanaFold:
             reinforcement_signal=payload.get("reinforcement_signal", 0.0),
             timestamp=datetime.fromisoformat(payload["timestamp"]),
         )
+
+    # =========================================================================
+    # MAHA HEADER INTEGRATION (72-byte universal cell - PRASADAM phase)
+    # =========================================================================
+
+    def to_maha_header(self, source_id: int, target_id: int, dispatch_link: int = 0) -> MahaHeader:
+        """
+        Create MahaHeader from fold result.
+
+        NavaBhakti mapping:
+            SRAVANAM (source) → source_id (kernel)
+            KIRTANAM (target) → target_id (reactor)
+            SMARANAM (link) → dispatch_link (connects to dispatch header)
+            PADA_SEVANAM (operation) → status encoded
+            ARCANAM (signature) → auto-computed (parampara valid)
+            VANDANAM (intent) → reinforcement signal scaled to int
+            DASYAM (TTL) → remaining cycles
+            SAKHYAM (state) → duration encoded
+            ATMA_NIVEDANAM (checksum) → auto-computed
+        """
+        # Encode status (completed=0, failed=1, timeout=2)
+        status_map = {"completed": 0, "failed": 1, "timeout": 2}
+        operation = status_map.get(self.status, 0)
+
+        # Encode reinforcement signal as uint64 (scale: -1..+1 → 0..1000)
+        intent = int((self.reinforcement_signal + 1.0) * 500)
+
+        # Encode duration_ms as state (capped at max uint16 range for readability)
+        state = min(int(self.duration_ms), 65535)
+
+        return MahaHeader.create(
+            source=source_id,
+            target=target_id,
+            operation=operation,
+            link=dispatch_link,
+            intent=intent,
+            ttl=HEADER_DAILY_CYCLES,  # Full day TTL for results
+            state=state,
+        )
+
+    def to_maha_cell(self, source_id: int, target_id: int, dispatch_link: int = 0) -> MahaCell:
+        """Create MahaCell with JSON payload."""
+        import json
+        header = self.to_maha_header(source_id, target_id, dispatch_link)
+        payload_bytes = json.dumps(self.to_nadi_payload()).encode("utf-8")
+        return MahaCell(header=header, payload=payload_bytes)
 
 
 # =============================================================================

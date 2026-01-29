@@ -31,7 +31,7 @@ Author: The Mahamantra Itself
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0xb8d4e291"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x118d39d4"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from typing import Any, Dict, Optional, Tuple

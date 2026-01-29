@@ -13,6 +13,11 @@ Steps:
 5. Update credits to 500 → verify quota updates to 25% CPU
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xb67a7586"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import sys

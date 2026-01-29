@@ -30,6 +30,11 @@ System Shell.
 ================================================================================
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xe38a76f6"  # GenesisByte: parampara % 37 == 0
+
 import argparse
 import logging
 import os

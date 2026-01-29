@@ -430,6 +430,7 @@ _LAZY_ALIASES = {
 
 def __getattr__(name: str):
     """Lazy import on attribute access. O(1) lookup."""
+    # 1. Check explicit class/function exports
     if name in _LAZY_IMPORTS:
         import importlib
 
@@ -442,6 +443,25 @@ def __getattr__(name: str):
             return getattr(module, attr_name)
 
         return getattr(module, name)
+
+    # ==========================================================================
+    # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
+    # Any .py file or subpackage in substrate/ is auto-discoverable
+    # ==========================================================================
+    from pathlib import Path
+    import importlib
+
+    substrate_root = Path(__file__).parent
+
+    # 2. Check for subpackage (folder with __init__.py)
+    subpkg_path = substrate_root / name
+    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
+        return importlib.import_module(f"{__name__}.{name}")
+
+    # 3. Check for module (.py file)
+    module_path = substrate_root / f"{name}.py"
+    if module_path.exists():
+        return importlib.import_module(f"{__name__}.{name}")
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

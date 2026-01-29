@@ -116,6 +116,25 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.research import dharma as _dharma
         return _dharma
 
+    # ==========================================================================
+    # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
+    # Any .py file or subpackage in research/ is auto-discoverable
+    # ==========================================================================
+    from pathlib import Path
+    import importlib
+
+    research_root = Path(__file__).parent
+
+    # 1. Check for subpackage (folder with __init__.py)
+    subpkg_path = research_root / name
+    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
+        return importlib.import_module(f"vibe_core.mahamantra.research.{name}")
+
+    # 2. Check for module (.py file)
+    module_path = research_root / f"{name}.py"
+    if module_path.exists():
+        return importlib.import_module(f"vibe_core.mahamantra.research.{name}")
+
     raise AttributeError(f"module 'research' has no attribute '{name}'")
 
 

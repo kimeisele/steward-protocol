@@ -1,3 +1,8 @@
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "shambhu"
+__position__ = 3
+__genesis__ = "0xdb3ac27f"  # GenesisByte: parampara % 37 == 0
 import os
 import sqlite3
 import sys

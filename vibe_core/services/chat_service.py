@@ -28,7 +28,7 @@ The Substrate IS the brain.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "manu"
 __position__ = 7
-__genesis__ = "0xa8f3c901"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xa2d91d8c"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from datetime import datetime

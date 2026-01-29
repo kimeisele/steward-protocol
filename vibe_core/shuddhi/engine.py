@@ -3,6 +3,14 @@ OPUS-212: ShuddhiEngine - The Surgical Orchestrator.
 
 OPUS-307: No more hardcoded remedies!
 Remedies are auto-discovered via RemedyLoader (VEDA-4 pattern).
+
+VIBRATIONAL INTEGRATION (Top-Down Architecture):
+    Mahamantra is the SINGULARITY - all intelligence flows from there.
+    ShuddhiEngine EMITS vibrations to Mahamantra after each operation.
+    Remedies are DUMB transformers - no cognition in leaves!
+    Akash accumulates ALL operations - nothing is silent.
+
+    Engine.purify() → result → _emit_vibration() → mahamantra → Akash
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -32,12 +40,63 @@ class ShuddhiEngine(ShuddhiProtocol):
 
     OPUS-307: Remedies are auto-discovered from vibe_core/shuddhi/remedies/
     No hardcoded imports - scales to hundreds of remedies.
+
+    VIBRATIONAL COMPUTING:
+        Every operation VIBRATES through Mahamantra.
+        Nothing is silent. Akash accumulates all.
     """
 
     def __init__(self):
         self._remedies: Dict[str, Type[CSTRemedy]] = {}
         self._loader = get_remedy_loader()
         self._discover_remedies()
+        self._mahamantra = None  # Lazy-loaded
+
+    def _get_mahamantra(self):
+        """Lazy-load Mahamantra singleton for vibration emission."""
+        if self._mahamantra is None:
+            try:
+                from vibe_core.mahamantra import mahamantra
+                self._mahamantra = mahamantra
+            except ImportError:
+                logger.debug("[SHUDDHI] Mahamantra not available for vibration")
+        return self._mahamantra
+
+    def _emit_vibration(self, result: ShuddhiResult) -> None:
+        """
+        VIBRATIONAL COMPUTING: Emit operation result to Mahamantra.
+
+        Every Shuddhi operation vibrates:
+            - PURIFIED: Healing succeeded - positive resonance
+            - SKIPPED: No violation found - neutral
+            - FAILED: Error occurred - needs attention
+            - OUT_OF_SCOPE: Beyond remedy capability
+
+        The vibration is computed from:
+            rule_id + status + file_path → seed → attractor → Akash
+
+        This is the Shabda Brahma principle:
+            "In the beginning was the Word" - all operations are vibrations.
+        """
+        maha = self._get_mahamantra()
+        if maha is None:
+            return
+
+        # Construct vibration message from operation
+        vibration_msg = f"shuddhi:{result.rule_id}:{result.status.name}:{result.file_path}"
+
+        try:
+            # Compute vibration and update Akash
+            vibration = maha._compute_vibration(vibration_msg)
+            maha._update_akash(vibration)
+
+            logger.debug(
+                f"[SHUDDHI→AKASH] {result.rule_id} {result.status.name} "
+                f"→ attractor={vibration['attractor']} resonance={vibration['resonance']:.3f}"
+            )
+        except Exception as e:
+            # Don't fail operations if vibration fails
+            logger.debug(f"[SHUDDHI] Vibration emission failed: {e}")
 
     def _discover_remedies(self):
         """Auto-discover all remedies via RemedyLoader."""
@@ -53,22 +112,30 @@ class ShuddhiEngine(ShuddhiProtocol):
         logger.debug(f"[SHUDDHI] Registered remedy: {remedy.rule_id}")
 
     def purify(self, file_path: Path, rule_id: str) -> ShuddhiResult:
-        """Heals a specific structural violation in a file."""
+        """
+        Heals a specific structural violation in a file.
+
+        VIBRATIONAL: Every outcome vibrates to Akash.
+        """
         if rule_id not in self._remedies:
-            return ShuddhiResult(
+            result = ShuddhiResult(
                 status=ShuddhiStatus.FAILED,
                 file_path=file_path,
                 rule_id=rule_id,
                 message=f"No remedy registered for rule '{rule_id}'",
             )
+            self._emit_vibration(result)
+            return result
 
         if not file_path.exists():
-            return ShuddhiResult(
+            result = ShuddhiResult(
                 status=ShuddhiStatus.FAILED,
                 file_path=file_path,
                 rule_id=rule_id,
                 message="File not found",
             )
+            self._emit_vibration(result)
+            return result
 
         try:
             # 1. Read and Parse
@@ -79,27 +146,35 @@ class ShuddhiEngine(ShuddhiProtocol):
             remedy_class = self._remedies[rule_id]
             transformer = remedy_class()
 
+            # PANCHA TATTVA: Pass file_path to remedies that need it (e.g., BrokenGenesisRemedy)
+            if hasattr(transformer, "set_file_path"):
+                transformer.set_file_path(str(file_path))
+
             try:
                 # Use MetadataWrapper if remedy needs position metadata
                 # This enables get_metadata() calls in remedies
                 wrapper = cst.MetadataWrapper(module)
                 modified_module = wrapper.visit(transformer)
             except ShuddhiScopeError as e:
-                return ShuddhiResult(
+                result = ShuddhiResult(
                     status=ShuddhiStatus.OUT_OF_SCOPE,
                     file_path=file_path,
                     rule_id=rule_id,
                     message=str(e),
                 )
+                self._emit_vibration(result)
+                return result
 
             # 3. Check if any changes were made
             if not transformer.applied:
-                return ShuddhiResult(
+                result = ShuddhiResult(
                     status=ShuddhiStatus.SKIPPED,
                     file_path=file_path,
                     rule_id=rule_id,
                     message="No violations found in the file structure.",
                 )
+                self._emit_vibration(result)
+                return result
 
             new_code = modified_module.code
 
@@ -116,7 +191,7 @@ class ShuddhiEngine(ShuddhiProtocol):
                 )
 
             # 5. Success
-            return ShuddhiResult(
+            result = ShuddhiResult(
                 status=ShuddhiStatus.PURIFIED,
                 file_path=file_path,
                 rule_id=rule_id,
@@ -124,15 +199,21 @@ class ShuddhiEngine(ShuddhiProtocol):
                 diff=transformer.get_diff(source_code, new_code),
                 purified_code=new_code,
             )
+            # VIBRATE: Emit to Akash
+            self._emit_vibration(result)
+            return result
 
         except Exception as e:
             logger.exception(f"[SHUDDHI] Unexpected error purifying {file_path}: {e}")
-            return ShuddhiResult(
+            result = ShuddhiResult(
                 status=ShuddhiStatus.FAILED,
                 file_path=file_path,
                 rule_id=rule_id,
                 message=f"Internal error: {str(e)}",
             )
+            # VIBRATE: Even failures vibrate!
+            self._emit_vibration(result)
+            return result
 
     def list_remedies(self) -> List[str]:
         """Returns list of registered remedy rule_ids."""

@@ -12,6 +12,11 @@ Output:
     ARCHITECTURE.md (auto-generated from live introspection)
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0xb404f9f3"  # GenesisByte: parampara % 37 == 0
+
 import sys
 from pathlib import Path
 

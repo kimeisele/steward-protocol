@@ -23,6 +23,11 @@ The Builder Agent should call this after every code change.
 This keeps git repo state synchronized with live kernel state.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xa643e6a6"  # GenesisByte: parampara % 37 == 0
+
 import json
 import logging
 import sys

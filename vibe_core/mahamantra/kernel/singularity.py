@@ -106,6 +106,11 @@ from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
 from vibe_core.mahamantra.protocols._kala import KalaTime
 
+# =============================================================================
+# MAHA CELL INTEGRATION (72-byte Header + Payload - Universal Data Format)
+# =============================================================================
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+
 # Governance Bridge (lazy import to avoid circular deps)
 _governance_bridge = None
 
@@ -920,6 +925,65 @@ class Mahamantra:
             return Quarter.KARMA
         else:
             return Quarter.MOKSHA
+
+    # =========================================================================
+    # MAHA CELL INTEGRATION (72-byte Header + Payload)
+    # =========================================================================
+
+    def to_maha_cell(self, payload: bytes = b"", source_id: int = 0, target_id: int = 0) -> MahaCell:
+        """
+        Create MahaCell from current Mahamantra state.
+
+        SINGULARITY → MAHA CELL:
+            - Header encodes current tick position, quarter, time
+            - Payload is the content to wrap (default empty)
+
+        Args:
+            payload: Content to wrap in the cell
+            source_id: Source identifier (default: 0 = Mahamantra)
+            target_id: Target identifier
+
+        Returns:
+            MahaCell with 72-byte header + payload
+        """
+        tick_state = self.tick()
+
+        # Encode quarter as intent (GENESIS=0, DHARMA=1, KARMA=2, MOKSHA=3)
+        quarter_intent = {"genesis": 0, "dharma": 1, "karma": 2, "moksha": 3}.get(
+            tick_state["quarter"], 0
+        )
+
+        # Create header with Mahamantra routing
+        header = MahaHeader.create(
+            source=source_id,
+            target=target_id,
+            operation=tick_state["position"],  # Position is the operation
+            link=tick_state["mala"],  # Chain via mala count
+            intent=quarter_intent,
+            ttl=300,  # Default daily cycles
+            state=tick_state["mantra"],
+        )
+
+        return MahaCell(header=header, payload=payload)
+
+    def tick_with_cell(self, payload: bytes = b"") -> tuple[TickState, MahaCell]:
+        """
+        Advance tick and return both TickState and MahaCell.
+
+        UNIFIED FLOW:
+            1. tick() advances the Mahamantra
+            2. State is captured in both TickState AND MahaCell
+            3. Both can be used downstream
+
+        Args:
+            payload: Optional payload for the cell
+
+        Returns:
+            Tuple of (TickState, MahaCell)
+        """
+        state = self.tick()
+        cell = self.to_maha_cell(payload=payload)
+        return state, cell
 
     # =========================================================================
     # VERIFY

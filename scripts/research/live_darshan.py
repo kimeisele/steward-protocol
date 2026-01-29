@@ -15,6 +15,11 @@ Usage:
     python scripts/live_darshan.py [--url ws://localhost:8000/v1/pulse]
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0xcbdb31b3"  # GenesisByte: parampara % 37 == 0
+
 import argparse
 import asyncio
 import json

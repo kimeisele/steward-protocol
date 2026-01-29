@@ -9,6 +9,11 @@ Report violations to ledger.
 "The guardian stands watch. Justice is swift."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x0859579d"  # GenesisByte: parampara % 37 == 0
+
 import sys
 from pathlib import Path
 

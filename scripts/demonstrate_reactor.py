@@ -11,6 +11,11 @@ This script proves the computational paradigm shift:
 Run: python scripts/demonstrate_reactor.py
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x1c0299c6"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.reactor import (
     QuantumReactor,
     Varga,

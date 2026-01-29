@@ -9,6 +9,11 @@ Usage:
     python verify_agent_birth.py
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x0520a450"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 from pathlib import Path
