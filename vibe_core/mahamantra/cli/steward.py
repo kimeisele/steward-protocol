@@ -55,6 +55,9 @@ from vibe_core.mahamantra.protocols._maha_compute import (
 # ONE import at the TOP entry point. Everything flows through MahaCell.
 from vibe_core.mahamantra.substrate.bridge import wrap_cell
 
+# PayloadType for SSOT chapter references (NO HARDCODED NUMBERS!)
+from vibe_core.mahamantra.protocols._payload import PayloadType
+
 
 # Lazy imports to avoid circular dependencies
 def _get_mahamantra():
@@ -71,48 +74,49 @@ def _get_mahamantra():
 # =============================================================================
 
 # Chapter → Module hint (SEMANTIC - which adapter resonates)
-# This is the SSOT for module routing until a better location is found.
+# Keys use PayloadType.value (SSOT-derived from Mahamantra constants!)
 _CHAPTER_MODULE: Final[Dict[int, str]] = {
-    1: "analysis",      # Arjuna's Dilemma → needs analysis
-    2: "transform",     # Sankhya Yoga → eternal truth transforms
-    3: "compute",       # Karma Yoga → action = compute
-    4: "research",      # Jnana Yoga → knowledge = research
-    5: "classification",  # Karma Sannyasa → classify actions
-    6: "attention",     # Dhyana Yoga → meditation = attention
-    7: "compression",   # Jnana Vijnana → knowledge compression
-    8: "hash",          # Aksara Brahma → imperishable = hash
-    9: "kernel",        # Raja Vidya → king of knowledge = kernel
-    10: "synth",        # Vibhuti → manifestations = synthesis
-    11: "network",      # Visvarupa → universal form = network
-    12: "chat",         # Bhakti Yoga → devotion = dialog
-    13: "hardware",     # Ksetra Ksetrajna → field/knower = hardware
-    14: "pipeline",     # Gunatraya → three modes = pipeline
-    15: "bio",          # Purusottama → supreme person = bio
-    16: "japa",         # Daivasura → divine/demonic = purify via japa
-    17: "llm",          # Sraddhatraya → faith types = LLM routing
-    18: "reactor",      # Moksha Sannyasa → liberation = healing reactor
+    PayloadType.ARJUNA_VISHADA.value: "analysis",      # Ch.1 → needs analysis
+    PayloadType.SANKHYA.value: "transform",            # Ch.2 → transforms
+    PayloadType.KARMA_YOGA.value: "compute",           # Ch.3 → action = compute
+    PayloadType.JNANA_YOGA.value: "research",          # Ch.4 → knowledge = research
+    PayloadType.KARMA_SANNYASA.value: "classification",  # Ch.5 → classify
+    PayloadType.DHYANA.value: "attention",             # Ch.6 → meditation = attention
+    PayloadType.JNANA_VIJNANA.value: "compression",    # Ch.7 → compression
+    PayloadType.AKSARA_BRAHMA.value: "hash",           # Ch.8 → imperishable = hash
+    PayloadType.RAJA_VIDYA.value: "kernel",            # Ch.9 → king = kernel
+    PayloadType.VIBHUTI.value: "synth",                # Ch.10 → synthesis
+    PayloadType.VISVARUPA.value: "network",            # Ch.11 → universal = network
+    PayloadType.BHAKTI.value: "chat",                  # Ch.12 → devotion = dialog
+    PayloadType.KSETRA.value: "hardware",              # Ch.13 → field = hardware
+    PayloadType.GUNA_TRAYA.value: "pipeline",          # Ch.14 → modes = pipeline
+    PayloadType.PURUSOTTAMA.value: "bio",              # Ch.15 → supreme = bio
+    PayloadType.DAIVASURA.value: "japa",               # Ch.16 → purify via japa
+    PayloadType.SRADDHA_TRAYA.value: "llm",            # Ch.17 → faith = LLM
+    PayloadType.MOKSA_SANNYASA.value: "reactor",       # Ch.18 → liberation = reactor
 }
 
 # Chapter → Guna (SEMANTIC - dominant mode of the chapter)
+# Keys use PayloadType.value (SSOT-derived!)
 _CHAPTER_GUNA: Final[Dict[int, str]] = {
-    1: "tamas",   # Confusion
-    2: "sattva",  # Eternal truth
-    3: "rajas",   # Action
-    4: "sattva",  # Knowledge
-    5: "sattva",  # Renunciation
-    6: "sattva",  # Meditation
-    7: "sattva",  # Knowledge
-    8: "sattva",  # Imperishable
-    9: "sattva",  # King of knowledge
-    10: "rajas",  # Manifestations
-    11: "rajas",  # Universal form
-    12: "sattva", # Devotion
-    13: "rajas",  # Field/Knower
-    14: "rajas",  # Three modes
-    15: "sattva", # Supreme person
-    16: "tamas",  # Divine/Demonic
-    17: "rajas",  # Faith types
-    18: "sattva", # Liberation
+    PayloadType.ARJUNA_VISHADA.value: "tamas",   # Confusion
+    PayloadType.SANKHYA.value: "sattva",         # Eternal truth
+    PayloadType.KARMA_YOGA.value: "rajas",       # Action
+    PayloadType.JNANA_YOGA.value: "sattva",      # Knowledge
+    PayloadType.KARMA_SANNYASA.value: "sattva",  # Renunciation
+    PayloadType.DHYANA.value: "sattva",          # Meditation
+    PayloadType.JNANA_VIJNANA.value: "sattva",   # Knowledge
+    PayloadType.AKSARA_BRAHMA.value: "sattva",   # Imperishable
+    PayloadType.RAJA_VIDYA.value: "sattva",      # King of knowledge
+    PayloadType.VIBHUTI.value: "rajas",          # Manifestations
+    PayloadType.VISVARUPA.value: "rajas",        # Universal form
+    PayloadType.BHAKTI.value: "sattva",          # Devotion
+    PayloadType.KSETRA.value: "rajas",           # Field/Knower
+    PayloadType.GUNA_TRAYA.value: "rajas",       # Three modes
+    PayloadType.PURUSOTTAMA.value: "sattva",     # Supreme person
+    PayloadType.DAIVASURA.value: "tamas",        # Divine/Demonic
+    PayloadType.SRADDHA_TRAYA.value: "rajas",    # Faith types
+    PayloadType.MOKSA_SANNYASA.value: "sattva",  # Liberation
 }
 
 
