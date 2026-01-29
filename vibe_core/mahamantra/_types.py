@@ -52,12 +52,18 @@ class VibrationState(TypedDict):
 
     This is the focused computation result that flows through.
     Every operation vibrates. No silent failures.
+
+    DUAL INSTRUMENT RESONANCE (Watertight from _seed.py):
+        resonance (flute): Krishna's 3 flutes - WHEN (rhythmic, tick-based)
+        vina_resonance: Narada's 5 strings - WHAT TYPE (harmonic, seed-based)
     """
 
     seed: int  # Input seed from MahaCompression
     transformed: int  # Output after 16-step transform
     beat: int  # Beat number (1-7)
-    resonance: float  # Flute resonance (0.0-1.0)
+    resonance: float  # Flute resonance (0.0-1.0) - MURALI/VENU/VAMSI
+    vina_resonance: float  # Vina resonance (0.0-1.0) - 5 Pancha Tattva strings
+    vina_string: int  # Which string (1-5): CHAITANYA/NITYANANDA/ADVAITA/GADADHARA/SRIVASA
     attractor: int  # Converged attractor (1 of 5 = PANCHA)
     parampara_channel: int  # Validation channel (0-2 or -1)
     oracle_validated: bool  # Parampara pre-filter passed
