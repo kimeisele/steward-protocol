@@ -108,6 +108,36 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "oracle_validated": result.oracle_validated,
         }
 
+    def vibrate(self, input_data: Union[str, MahaCell]) -> VibrationState:
+        """
+        Public API for vibration.
+
+        Delegates to _compute_vibration (internal logic).
+        """
+        return self._compute_vibration(input_data)
+
+    def tick(self) -> Dict[str, Union[str, int]]:
+        """
+        Get current tick state (Lazy).
+        
+        Required by Steward for Shadow Reactor timing.
+        """
+        import time
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        
+        t = int(time.time())
+        pos = t % 16
+        guardian = ALL_GUARDIANS[pos]
+        
+        return {
+            "quarter": "karma" if pos > 8 else "dharma", 
+            "guardian": guardian,
+            "word": "hare" if pos % 2 == 0 else "krishna",
+            "opcode": "EXECUTE",
+            "position": pos,
+            "tick": t
+        }
+
     _bootstrapped: bool = False
 
     def bootstrap(self, *, silent: bool = False, lazy: bool = True) -> None:
@@ -171,7 +201,25 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "vibration": vibration,
             "exit_code": bridge_result.exit_code,
             "handler": bridge_result.handler,
+            # Keys expected by Steward
+            "guardian": "unknown", # Improved later via position lookup if needed
+            "quarter": "unknown",
+            "guna": "unknown",
+            "output": f"Exit Code: {bridge_result.exit_code}"
         }
+
+    @property
+    def steward(self):
+        """Lazy access to the Steward resonance router."""
+        from vibe_core.mahamantra.cli.steward import get_steward
+        return get_steward()
+
+    @property
+    def shadow(self):
+        """Lazy access to Shadow Reactor Factory."""
+        from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
+        return get_shadow_reactor_factory()
+
 
     # === Quarter Properties (Lazy) ===
 
