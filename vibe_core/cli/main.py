@@ -1,24 +1,11 @@
 """
-CLI MAIN - The Single Gate
-==========================
+CLI MAIN - Routes to Mahamantra CLI Entry
+=========================================
 
 "ekam evādvitīyam" - One without a second.
 
-THE SIMPLEST INTERFACE:
-    steward "whatever"
-
-FLOW:
-    main() → UnifiedCLI.run() → Full dispatch chain → Gates → Vibration
-
-UnifiedCLI handles:
-1. Legacy commands (system)
-2. CLIRegistry (protocol-based)
-3. Plugin commands (discovered)
-4. PRAKRITI/MANAS/Conductor
-5. GATES (Pancha Tattva = Mahamantra vibration)
-6. Unknown → Error
-
-NO SPAGHETTI. One entry. Unified routing.
+This file ONLY delegates to MahamantraCLIEntry.
+NO logic here. Just the bridge.
 """
 
 from __future__ import annotations
@@ -29,42 +16,28 @@ __position__ = 2
 __genesis__ = "0x03936f7f"  # GenesisByte: parampara % 37 == 0
 
 import sys
-from typing import Final, List, Optional
-
-# Exit codes
-EXIT_SUCCESS: Final[int] = 0
-EXIT_ERROR: Final[int] = 1
+from typing import List, Optional
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    """
-    Main CLI entry point - delegates to UnifiedCLI.
-
-    UnifiedCLI has the full dispatch chain including:
-    - CommandRegistry (exact matches)
-    - Gates (Pancha Tattva vibration routing)
-    - Everything else
-    """
+    """Delegate to MahamantraCLIEntry - the REAL entry point."""
     if argv is None:
         argv = sys.argv[1:]
 
     try:
-        from vibe_core.cli.unified_cli import UnifiedCLI
+        from vibe_core.mahamantra.cli.entry import MahamantraCLIEntry
 
-        cli = UnifiedCLI()
-        return cli.run(argv)
+        entry = MahamantraCLIEntry()
+        result = entry.run(argv)
+        return result.exit_code if hasattr(result, 'exit_code') else (0 if result else 1)
 
-    except ImportError as e:
-        print(f"ERROR: CLI not available ({e})")
-        return EXIT_ERROR
     except Exception as e:
         print(f"ERROR: {e}")
-        return EXIT_ERROR
+        return 1
 
 
 def cli_entry() -> None:
-    """Console script entry point (pyproject.toml)."""
-    # Configure logging before imports
+    """Console script entry point."""
     import logging
     import os
 
