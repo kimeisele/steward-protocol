@@ -78,7 +78,7 @@ semantic = ["sentence-transformers>=2.2.0", "numpy>=1.24.0"]
 full = ["sentence-transformers>=2.2.0", "numpy>=1.24.0", "llama-cpp-python>=0.2.0", "huggingface-hub>=0.20.0"]
 
 [project.scripts]
-steward = "vibe_core.cli.bootstrap:main"
+steward = "vibe_core.cli:cli_entry"
 
 [project.urls]
 Documentation = "https://github.com/kimeisele/steward-protocol#readme"
