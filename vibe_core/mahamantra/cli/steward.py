@@ -147,9 +147,12 @@ class Steward:
     """
 
     def __init__(self):
+        """
+        Initialize the Steward.
+
+        NO hardcoded handlers. All execution via Balarama Bridge pattern.
+        """
         self._mahamantra = None
-        self._module_handlers: Dict[str, Callable] = {}
-        self._register_default_handlers()
 
     @property
     def mahamantra(self):
@@ -157,30 +160,6 @@ class Steward:
         if self._mahamantra is None:
             self._mahamantra = _get_mahamantra()
         return self._mahamantra
-
-    def _register_default_handlers(self):
-        """Register default handlers for each module hint."""
-        # These are lazy-loaded when needed
-        self._module_handlers = {
-            "analysis": self._handle_analysis,
-            "transform": self._handle_transform,
-            "compute": self._handle_compute,
-            "research": self._handle_research,
-            "classification": self._handle_classification,
-            "attention": self._handle_attention,
-            "compression": self._handle_compression,
-            "hash": self._handle_hash,
-            "kernel": self._handle_kernel,
-            "synth": self._handle_synth,
-            "network": self._handle_network,
-            "chat": self._handle_chat,
-            "hardware": self._handle_hardware,
-            "pipeline": self._handle_pipeline,
-            "bio": self._handle_bio,
-            "japa": self._handle_japa,
-            "llm": self._handle_llm,
-            "reactor": self._handle_reactor,
-        }
 
     def invoke(self, input_text: str) -> StewardResponse:
         """
@@ -266,30 +245,38 @@ class Steward:
         jiva_quality_count = jiva_shadow.quality_count
 
         # =====================================================================
-        # 7. KIRTANAM: Execute through resonant module with JivaAgent context
+        # 7. KIRTANAM: Execute via Balarama Bridge (Universal - No Hardcoding!)
         # =====================================================================
-        handler = self._module_handlers.get(route.module_hint)
+        # All execution flows through bridge.offer() - Balarama Pattern
+        # Intent → Purpose → Position → Mahajana → Execute
         result = None
         message = ""
 
-        if handler:
-            try:
-                result = handler(input_text, vibration, kirtan)
+        try:
+            result = self._execute_via_bridge(
+                input_text=input_text,
+                vibration=vibration,
+                intent_category=intent_category,
+                jiva_shadow_id=jiva_shadow_id,
+            )
+
+            # Build message from bridge result
+            if result.get("success"):
                 message = (
                     f"Gita {chapter} ({route.insight}) → "
                     f"Intent {intent_category} → "
-                    f"Jiva {jiva_shadow_id[:12]}... ({jiva_guna}, {jiva_quality_count} qualities) "
-                    f"[Shadow: {shadow_phase}]"
+                    f"Bridge → {result.get('mahajana', '?')}@{result.get('position', '?')} "
+                    f"[{result.get('quarter', '?')}] "
+                    f"Jiva {jiva_shadow_id[:8]}... ({jiva_guna})"
                 )
-            except Exception as e:
-                message = f"Handler error: {e}"
-        else:
-            message = (
-                f"Gita {chapter} ({route.insight}) → "
-                f"Intent {intent_category} → "
-                f"Jiva {jiva_shadow_id[:12]}... ({jiva_guna}) "
-                f"[No handler for {route.module_hint}]"
-            )
+            else:
+                message = (
+                    f"Gita {chapter} → Intent {intent_category} → "
+                    f"Bridge REJECTED: {result.get('error', 'unknown')}"
+                )
+        except Exception as e:
+            message = f"Bridge error: {e}"
+            result = {"success": False, "error": str(e)}
 
         # 8. Build response with COMPLETE RESONANCE
         return StewardResponse(
@@ -328,109 +315,87 @@ class Steward:
         return response
 
     # =========================================================================
-    # MODULE HANDLERS - Each routes to the appropriate adapter
+    # UNIVERSAL EXECUTE - Via Balarama Bridge (No Hardcoded Handlers!)
+    # =========================================================================
+    #
+    # "balarāmaḥ prathamaḥ sarva-saṅkarṣaṇaḥ"
+    # "Balarama is the first, the Supreme Attractor."
+    #
+    # ALL execution flows through bridge.offer() - NO hardcoded handlers.
+    # MahaLLM Intent → Bridge Purpose → Position → Mahajana → Execute
     # =========================================================================
 
-    def _handle_analysis(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 1: Arjuna's Dilemma → Analysis needed."""
-        return {"action": "analyze", "input": input_text, "vibration": vibration}
+    # MahaLLM 16 Intents → Bridge Purposes
+    INTENT_TO_PURPOSE: Dict[str, str] = {
+        "OBSERVE": "state_read",
+        "CREATE": "state_update",
+        "CONNECT": "state_update",
+        "ANALYZE": "verify",
+        "EXECUTE": "execute",
+        "TRANSFORM": "state_update",
+        "INVOKE": "execute",
+        "SUSTAIN": "state_update",
+        "EXPAND": "state_update",
+        "INTEGRATE": "state_update",
+        "VALIDATE": "verify",
+        "PROTECT": "verify",
+        "GUIDE": "state_read",
+        "SURRENDER": "execute",
+        "COMPLETE": "execute",
+        "TRANSCEND": "execute",
+    }
 
-    def _handle_transform(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 2: Sankhya Yoga → Transform."""
-        adapter = self.mahamantra.adapters.transform
-        return {"action": "transform", "adapter": adapter.__name__}
+    def _execute_via_bridge(
+        self,
+        input_text: str,
+        vibration: dict,
+        intent_category: str,
+        jiva_shadow_id: str,
+    ) -> Any:
+        """
+        Universal execution via Balarama Bridge pattern.
 
-    def _handle_compute(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 3: Karma Yoga → Compute."""
-        from vibe_core.mahamantra.adapters.compute import MahaCompute
-        compute = MahaCompute()
-        return {"action": "compute", "seed": vibration["seed"]}
+        NO hardcoded handlers. Everything flows through bridge.offer().
 
-    def _handle_research(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 4: Jnana Yoga → Research."""
-        return {"action": "research", "dharma": self.mahamantra.research.dharma}
+        Flow:
+            1. Intent → Purpose (via INTENT_TO_PURPOSE)
+            2. bridge.offer(content, purpose) → Position → Mahajana
+            3. Return structured result
 
-    def _handle_classification(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 5: Karma Sannyasa → Classification."""
-        from vibe_core.mahamantra.adapters.classification import MahaClassifier
-        return {"action": "classify", "input": input_text}
+        Args:
+            input_text: The user input
+            vibration: Full vibration state (seed, attractor, etc.)
+            intent_category: MahaLLM intent (OBSERVE, CREATE, etc.)
+            jiva_shadow_id: The spawned JivaShadow identifier
 
-    def _handle_attention(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 6: Dhyana Yoga → Attention/Focus."""
-        from vibe_core.mahamantra.adapters.attention import MahaAttention
-        attention = MahaAttention()
-        return {"action": "attend", "input": input_text}
+        Returns:
+            Bridge result with position, mahajana, success status
+        """
+        from vibe_core.mahamantra.substrate.bridge import offer
 
-    def _handle_compression(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 7: Jnana Vijnana → Compression."""
-        from vibe_core.mahamantra.adapters.compression import MahaCompression
-        compressor = MahaCompression()
-        result = compressor.compress(input_text)
-        return {"action": "compress", "result": result}
+        # Map intent to bridge purpose
+        purpose = self.INTENT_TO_PURPOSE.get(intent_category, "execute")
 
-    def _handle_hash(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 8: Aksara Brahma → Hash (Imperishable)."""
-        from vibe_core.mahamantra.adapters.hash import DeterministicHash
-        return {"action": "hash", "seed": vibration["seed"]}
-
-    def _handle_kernel(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 9: Raja Vidya → Kernel (King of Knowledge)."""
-        return {"action": "kernel", "quarter": "dharma"}
-
-    def _handle_synth(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 10: Vibhuti → Synth (Manifestations)."""
-        from vibe_core.mahamantra.adapters.synth import MahaSynth
-        synth = MahaSynth()
-        return {"action": "synth", "seed": vibration["seed"]}
-
-    def _handle_network(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 11: Visvarupa → Network (Universal Form)."""
-        from vibe_core.mahamantra.adapters.network import LotusIPRouter
-        return {"action": "network", "universal": True}
-
-    def _handle_chat(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 12: Bhakti Yoga → Chat (Devotion/Relationship)."""
-        # This is the INDRIYA - sensory interface
-        return {
-            "action": "chat",
-            "call_response": kirtan.call_response,
-            "message": input_text,
-            "bhakti": True,
+        # Build content payload with full resonance context
+        content = {
+            "input": input_text,
+            "seed": vibration["seed"],
+            "attractor": vibration["attractor"],
+            "intent": intent_category,
+            "jiva": jiva_shadow_id,
+            "resonance": vibration["resonance"],
+            "vina_resonance": vibration["vina_resonance"],
         }
 
-    def _handle_hardware(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 13: Ksetra Ksetrajna → Hardware (Field/Knower)."""
-        from vibe_core.mahamantra.adapters.hardware import MahaHardware
-        hw = MahaHardware()
-        return {"action": "hardware", "silicon_altar": hw.silicon_altar}
+        # Offer to bridge - Balarama routes to correct Position/Mahajana
+        result = offer(
+            content=content,
+            purpose=purpose,
+            actor=f"steward:jiva:{jiva_shadow_id[:8]}",
+            parampara_vector=vibration["seed"] % 37 * 37,  # Ensure % 37 == 0
+        )
 
-    def _handle_pipeline(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 14: Gunatraya → Pipeline (Three Modes)."""
-        return {"action": "pipeline", "guna": vibration.get("guna", "rajas")}
-
-    def _handle_bio(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 15: Purusottama → Bio (Supreme Person/Life)."""
-        from vibe_core.mahamantra.adapters.bio import LotusBio
-        return {"action": "bio", "life": True}
-
-    def _handle_japa(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 16: Daivasura → Japa (Purification)."""
-        from vibe_core.mahamantra.adapters.japa import MahaJapa
-        japa = MahaJapa()
-        return {"action": "japa", "purify": True}
-
-    def _handle_llm(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 17: Sraddhatraya → LLM (Faith Types/Routing)."""
-        return {"action": "llm", "route": True, "input": input_text}
-
-    def _handle_reactor(self, input_text: str, vibration: dict, kirtan) -> Any:
-        """Chapter 18: Moksha Sannyasa → Reactor (Liberation/Healing)."""
-        # The Shadow Reactor handles self-healing
-        return {
-            "action": "reactor",
-            "moksha": True,
-            "liberation": kirtan.call_response == "RESPONSE",
-        }
+        return result
 
 
 # =============================================================================
