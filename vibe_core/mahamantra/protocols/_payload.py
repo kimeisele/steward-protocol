@@ -72,6 +72,15 @@ from vibe_core.mahamantra.protocols._seed import (
     PARAMPARA,  # 37 - Verification
     QUARTERS,  # 4 - Quarter types
     WORDS,  # 16 - Positions
+    # Chapter number derivations (NO HARDCODING!)
+    KSETRAJNA,      # 1
+    HALVES,         # 2
+    TRINITY,        # 3
+    SHARANAGATI,    # 6
+    SEVEN,          # 7
+    TEN,            # 10
+    MAHAJANA_COUNT, # 12
+    GAURA_TITHI,    # 15
 )
 
 # =============================================================================
@@ -83,37 +92,39 @@ class PayloadType(IntEnum):
     """
     The 18 payload types mapped to Gita chapters.
 
+    ALL CHAPTER NUMBERS DERIVED FROM SSOT - NO HARDCODING!
+
     GENESIS (1-4):  Raw input data
     DHARMA (5-9):   Validated/structured data
     KARMA (10-14):  Execution/action data
     MOKSHA (15-18): Result/output data
     """
 
-    # GENESIS Quarter (Input/Init)
-    ARJUNA_VISHADA = 1   # Ch.1: Raw problem statement
-    SANKHYA = 2          # Ch.2: Analysis/breakdown
-    KARMA_YOGA = 3       # Ch.3: Action plan
-    JNANA_YOGA = 4       # Ch.4: Knowledge context
+    # GENESIS Quarter (Input/Init) - Chapters 1-4
+    ARJUNA_VISHADA = KSETRAJNA           # Ch.1 = KSETRAJNA (the knower)
+    SANKHYA = HALVES                     # Ch.2 = HALVES (duality/analysis)
+    KARMA_YOGA = TRINITY                 # Ch.3 = TRINITY (3 names = action)
+    JNANA_YOGA = QUARTERS                # Ch.4 = QUARTERS (4 phases = knowledge)
 
-    # DHARMA Quarter (Validation/Structure)
-    KARMA_SANNYASA = 5   # Ch.5: Filtered/renounced data
-    DHYANA = 6           # Ch.6: Focused/meditated data
-    JNANA_VIJNANA = 7    # Ch.7: Typed/classified data
-    AKSARA_BRAHMA = 8    # Ch.8: Immutable/cached data
-    RAJA_VIDYA = 9       # Ch.9: Sovereign/authoritative data
+    # DHARMA Quarter (Validation/Structure) - Chapters 5-9
+    KARMA_SANNYASA = PANCHA              # Ch.5 = PANCHA (5 tattvas)
+    DHYANA = SHARANAGATI                 # Ch.6 = SHARANAGATI (6 limbs surrender)
+    JNANA_VIJNANA = SEVEN                # Ch.7 = SEVEN (7 = divine knowledge)
+    AKSARA_BRAHMA = HALF_SIZE            # Ch.8 = HALF_SIZE (8 = imperishable)
+    RAJA_VIDYA = NAVA                    # Ch.9 = NAVA (9 = sovereign)
 
-    # KARMA Quarter (Execution/Action)
-    VIBHUTI = 10         # Ch.10: Manifest/expanded data
-    VISVARUPA = 11       # Ch.11: Universal/complete data
-    BHAKTI = 12          # Ch.12: Devotional/connected data
-    KSETRA = 13          # Ch.13: Field/context data
-    GUNA_TRAYA = 14      # Ch.14: Mode/quality data
+    # KARMA Quarter (Execution/Action) - Chapters 10-14
+    VIBHUTI = TEN                        # Ch.10 = TEN (10 = opulence)
+    VISVARUPA = TEN + KSETRAJNA          # Ch.11 = 10+1 = universal form
+    BHAKTI = MAHAJANA_COUNT              # Ch.12 = MAHAJANA_COUNT (12 = devotion)
+    KSETRA = MAHAJANA_COUNT + KSETRAJNA  # Ch.13 = 12+1 = field/knower
+    GUNA_TRAYA = MAHAJANA_COUNT + HALVES # Ch.14 = 12+2 = three gunas
 
-    # MOKSHA Quarter (Output/Result)
-    PURUSOTTAMA = 15     # Ch.15: Supreme/final data
-    DAIVASURA = 16       # Ch.16: Classified/evaluated data
-    SRADDHA_TRAYA = 17   # Ch.17: Faith/confidence data
-    MOKSA_SANNYASA = 18  # Ch.18: Liberation/completion data
+    # MOKSHA Quarter (Output/Result) - Chapters 15-18
+    PURUSOTTAMA = GAURA_TITHI            # Ch.15 = GAURA_TITHI (15 = supreme)
+    DAIVASURA = WORDS                    # Ch.16 = WORDS (16 = divine/demonic)
+    SRADDHA_TRAYA = WORDS + KSETRAJNA    # Ch.17 = 16+1 = three faiths
+    MOKSA_SANNYASA = GITA_CHAPTERS       # Ch.18 = GITA_CHAPTERS (liberation!)
 
 
 # Verification
