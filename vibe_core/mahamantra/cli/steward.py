@@ -437,26 +437,22 @@ class Steward:
         route = RESONANCE_MAP.get(chapter, RESONANCE_MAP[18])  # Default to Moksha
 
         # =====================================================================
-        # 5. KAPILA COGNITION (Surrendered Logic - No Heavy Brain)
+        # 5. KAPILA COGNITION (Siksastakam Registry - 512-bit Cache)
         # =====================================================================
-        # We derive intent directly from the Seed (Chaitanya Computing).
-        # No need to instantiate MahaLLM or load KapilaService here.
-        # "tezāṁ satata-yuktānāṁ bhajatāṁ prīti-pūrvakam" (BG 10.10)
+        # Utilizing the 512-slot Siksastakam Cache (8 verses x 64 qualities)
+        # for O(1) Routing. This is the "Literal 512-bit Siksastakam Computing".
+        # We do not speculate. We query the Siksastakam Registry.
+        from vibe_core.mahamantra.substrate import siksastakam_registry
         
-        # Logic: Category = Top 4 bits of Seed (Semantic Routing)
-        # This matches cli_auto.py logic but without the import weight.
-        category_id = (seed >> 24) & 0xF
+        # Route via Registry (Uses MahaCompression internal cache)
+        reg_position = siksastakam_registry.route_to_position(input_text)
+        reg_entry = siksastakam_registry.get_entry(reg_position)
+        
+        # The Guardian IS the Intent.
+        # We align fully with the Registry's Truth Table.
+        category_id = reg_position
         intent_id = (seed & 0xFFFF)
-        
-        # Simple map for display (Mirroring IntentCategory from adapters/llm.py)
-        # We map 0-15 to the standard categories.
-        _CATEGORIES = [
-            "OBSERVE", "CREATE", "CONNECT", "ANALYZE", 
-            "EXECUTE", "TRANSFORM", "INVOKE", "SUSTAIN",
-            "EXPAND", "INTEGRATE", "VALIDATE", "PROTECT",
-            "GUIDE", "SURRENDER", "COMPLETE", "TRANSCEND"
-        ]
-        intent_category = _CATEGORIES[category_id] if category_id < 16 else "UNKNOWN"
+        intent_category = reg_entry.guardian.upper() if reg_entry else "UNKNOWN"
 
         # =====================================================================
         # 6. JIVASHADOW SPAWN (50 qualities - WER)
