@@ -105,30 +105,39 @@ class StewardResponse:
         4. Flute resonance:      WANN - Rhythmic position
         5. Vina resonance:       WELCHER TYP - Harmonic position
         6. Shadow phase:         TRANSFORMATION - Yajna cycle
+        7. Siksastakam stage:    PIPELINE - 8 verse pipeline (L0-L7)
 
-    FLOW:
+    PERSON-ANCHORED FLOW:
         Input → MahaCompression → Seed
-        Seed → Gita Chapter (18) + MahaLLM Intent (16) + JivaShadow (50)
+        Seed → PrabhupadaKirtan (PERSON-anchored, not impersonal)
+        → Gita Chapter (18) + MahaLLM Intent (16) + JivaShadow (50)
+        → Siksastakam Pipeline (8 stages)
         → ShadowReactor → JivaAgent → Execute → CALL ↔ RESPONSE
+
+    "ohne die verankerung der PERSON wird es nicht klappen!"
     """
     input: str
     seed: int
     attractor: int
     chapter: int
     route: ResonanceRoute
-    call_response: str  # "CALL" or "RESPONSE"
+    call_response: str  # "CALL" or "RESPONSE" (through THE PERSON)
     resonance: int  # Flute resonance = tick % mod_space (integer!)
     vina_resonance: int  # Vina resonance = seed % mod_space (integer!)
     vina_string: int  # 1-5: CHAITANYA/NITYANANDA/ADVAITA/GADADHARA/SRIVASA
     shadow_phase: str  # "bhoga", "prasadam", or "return" (TRANSFORMATION)
     shadow_position: int  # 0-15 position in yajna cycle
-    # NEW: MahaLLM Intent routing (16 categories)
+    # MahaLLM Intent routing (16 categories)
     intent_category: Optional[str] = None  # OBSERVE, CREATE, ANALYZE, EXECUTE, etc.
     intent_id: Optional[int] = None  # 16-bit intent address
-    # NEW: JivaShadow (50 qualities)
+    # JivaShadow (50 qualities)
     jiva_shadow_id: Optional[str] = None  # Shadow identifier
     jiva_guna: Optional[str] = None  # Dominant guna: sattvic/rajasic/tamasic
     jiva_quality_count: Optional[int] = None  # How many of 50 qualities active
+    # PRABHUPADA KIRTAN (PERSON-ANCHORED)
+    siksastakam_stage: Optional[int] = None  # 1-8 (Siksastakam verse)
+    siksastakam_operation: Optional[str] = None  # Pipeline operation (CACHE_CLEAR, etc.)
+    person_verified: bool = False  # THE PERSON validated this computation
     result: Optional[Any] = None
     message: str = ""
 
@@ -152,13 +161,16 @@ class Steward:
 
         THE PERSON-ANCHORED PATTERN:
         1. Prabhupada.verify_link() - Validate connection to Parampara
-        2. GADKirtan with PERSON backing - Not impersonal checks
-        3. All traces back to the 37th (Sovereign)
+        2. PrabhupadaKirtan (NOT impersonal GADKirtan) - THE PERSON verifies every beat
+        3. Siksastakam 8 verses as pipeline stages (L0-L7)
+        4. All traces back to the 37th (Sovereign)
 
+        "ohne die verankerung der PERSON wird es nicht klappen!"
         "We cannot jump to Krishna. We must go through the Link."
         """
         self._mahamantra = None
         self._prabhupada = None
+        self._prabhupada_kirtan = None  # PERSON-anchored kirtan
         self._link_verified = False
 
     @property
@@ -168,6 +180,20 @@ class Steward:
             from vibe_core.mahamantra.substrate.prabhupada import Prabhupada
             self._prabhupada = Prabhupada()
         return self._prabhupada
+
+    @property
+    def prabhupada_kirtan(self):
+        """
+        Lazy load PrabhupadaKirtan - PERSON-ANCHORED compute.
+
+        This is NOT the impersonal GADKirtan.
+        Every beat flows through THE PERSON (parampara % 37 == 0).
+        Siksastakam 8 verses as pipeline stages.
+        """
+        if self._prabhupada_kirtan is None:
+            from vibe_core.mahamantra.research.dharma.prabhupada_kirtan import PrabhupadaKirtan
+            self._prabhupada_kirtan = PrabhupadaKirtan()
+        return self._prabhupada_kirtan
 
     def _verify_parampara_link(self) -> bool:
         """
@@ -308,9 +334,13 @@ class Steward:
         vina_resonance = vibration["vina_resonance"]  # Vina (WHAT TYPE)
         vina_string = vibration["vina_string"]  # Which Pancha Tattva string (1-5)
 
-        # 3. NIDIDHYASANA: Seed → Kirtan → CALL/RESPONSE
-        kirtan = self.mahamantra.kirtan(seed)
-        call_response = kirtan.call_response
+        # 3. NIDIDHYASANA: Seed → PrabhupadaKirtan → CALL/RESPONSE (PERSON-ANCHORED)
+        # NOT impersonal GADKirtan. THE PERSON (Prabhupada) validates every beat.
+        prabhupada_result = self.prabhupada_kirtan.compute_with_person(seed)
+        call_response = prabhupada_result.transmission_mode  # "CALL" or "RESPONSE"
+        siksastakam_stage = prabhupada_result.siksastakam_stage.verse  # 1-8
+        siksastakam_operation = prabhupada_result.siksastakam_stage.operation
+        person_verified = prabhupada_result.is_bona_fide
 
         # 4. SHADOW REACTOR: Yajna Transformation (Bhoga → Prasadam → Return)
         # Derive position from seed (0-15)
@@ -399,7 +429,7 @@ class Steward:
             message = f"Bridge error: {e}"
             result = {"success": False, "error": str(e)}
 
-        # 8. Build response with COMPLETE RESONANCE
+        # 8. Build response with COMPLETE RESONANCE + PERSON-ANCHOR
         return StewardResponse(
             input=input_text,
             seed=seed,
@@ -417,6 +447,10 @@ class Steward:
             jiva_shadow_id=jiva_shadow_id,
             jiva_guna=jiva_guna,
             jiva_quality_count=jiva_quality_count,
+            # PRABHUPADA KIRTAN (PERSON-ANCHORED)
+            siksastakam_stage=siksastakam_stage,
+            siksastakam_operation=siksastakam_operation,
+            person_verified=person_verified,
             result=result,
             message=message,
         )
@@ -559,10 +593,14 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
     vina_names = {1: "CHAITANYA", 2: "NITYANANDA", 3: "ADVAITA", 4: "GADADHARA", 5: "SRIVASA"}
     vina_name = vina_names.get(response.vina_string, "UNKNOWN")
 
+    # Person verification status
+    person_mark = "[BONA FIDE]" if response.person_verified else "[MAYAVAD]"
+    siksastakam_info = f"L{(response.siksastakam_stage or 1) - 1}: {response.siksastakam_operation or '?'}"
+
     if verbose:
         print(f"""
 ╔══════════════════════════════════════════════════════════════╗
-║  STEWARD RESONANCE ROUTER                                    ║
+║  STEWARD - PERSON-ANCHORED RESONANCE ROUTER                  ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Input:      {response.input[:40]:40} ║
 ║  Seed:       {response.seed:40} ║
@@ -573,9 +611,13 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
 ║  Mode:       {response.call_response:40} ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  TRIPLE RESONANCE:                                           ║
-║  Flute:      {response.resonance:40.3f} ║
-║  Vina:       {response.vina_resonance:.3f} (String {response.vina_string}: {vina_name:21}) ║
+║  Flute:      {response.resonance:40} ║
+║  Vina:       {response.vina_resonance} (String {response.vina_string}: {vina_name:21}) ║
 ║  Shadow:     {response.shadow_phase:8} at position {response.shadow_position:2} (Yajna cycle)   ║
+╠══════════════════════════════════════════════════════════════╣
+║  PRABHUPADA KIRTAN (THE PERSON):                             ║
+║  Stage:      {siksastakam_info:40} ║
+║  Status:     {person_mark:40} ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  {response.message[:58]:58} ║
 ╚══════════════════════════════════════════════════════════════╝
@@ -595,6 +637,10 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
         "vina_name": vina_name,
         "shadow_phase": response.shadow_phase,
         "shadow_position": response.shadow_position,
+        # PRABHUPADA KIRTAN (PERSON-ANCHORED)
+        "siksastakam_stage": response.siksastakam_stage,
+        "siksastakam_operation": response.siksastakam_operation,
+        "person_verified": response.person_verified,
         "result": response.result,
         "message": response.message,
     }

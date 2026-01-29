@@ -90,9 +90,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         vina_names = {1: "CHAITANYA", 2: "NITYANANDA", 3: "ADVAITA", 4: "GADADHARA", 5: "SRIVASA"}
         vina_name = vina_names.get(response.vina_string, "?")
 
+        # PERSON verification status
+        person_mark = "BONA FIDE" if getattr(response, 'person_verified', False) else "MAYAVAD"
+        siksastakam_stage = getattr(response, 'siksastakam_stage', 1) or 1
+        siksastakam_op = getattr(response, 'siksastakam_operation', '?') or '?'
+
         print(f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
-║  STEWARD - Universal Resonance Router                                 ║
+║  STEWARD - PERSON-Anchored Resonance Router                           ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  INPUT: {response.input[:60]:60s} ║
 ║  SEED:  {response.seed:<60} ║
@@ -112,8 +117,12 @@ def main(argv: Optional[List[str]] = None) -> int:
 ║    Flute (WHEN):  {response.resonance:>5}  (tick % mod_space)                       ║
 ║    Vina (WHAT):   {response.vina_resonance:>5}  (seed % mod_space)  String: {vina_name:10s}    ║
 ╠═══════════════════════════════════════════════════════════════════════╣
+║  PRABHUPADA KIRTAN (8 Siksastakam Stages):                            ║
+║    Stage:    L{siksastakam_stage-1} - {siksastakam_op:15s}  Mode: {response.call_response:10s}           ║
+║    PERSON:   {person_mark:10s}  (parampara % 37 == 0)                        ║
+╠═══════════════════════════════════════════════════════════════════════╣
 ║  SHADOW REACTOR:                                                      ║
-║    Phase:    {response.shadow_phase:10s}  Position: {response.shadow_position:>2}  Mode: {response.call_response:10s}    ║
+║    Phase:    {response.shadow_phase:10s}  Position: {response.shadow_position:>2}                            ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  {response.message[:67]:67s} ║
 ╚═══════════════════════════════════════════════════════════════════════╝
