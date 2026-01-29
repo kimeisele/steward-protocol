@@ -98,12 +98,18 @@ class StewardResponse:
     """
     Response from the Steward.
 
-    TRIPLE RESONANCE ARCHITECTURE (Watertight from _seed.py):
-        1. resonance (flute): Krishna's 3 flutes - WHEN (rhythmic)
-        2. vina_resonance: Narada's 5 strings - WHAT TYPE (harmonic)
-        3. shadow_phase: ShadowReactor phase - TRANSFORMATION (bhoga/prasadam/return)
+    COMPLETE RESONANCE ARCHITECTURE (Watertight from _seed.py):
+        1. Gita Chapter (18):    WAS - Domain/Field (Kshetra)
+        2. MahaLLM Intent (16):  WIE - Action/Operation type
+        3. JivaShadow (50):      WER - Agent qualities
+        4. Flute resonance:      WANN - Rhythmic position
+        5. Vina resonance:       WELCHER TYP - Harmonic position
+        6. Shadow phase:         TRANSFORMATION - Yajna cycle
 
-    FLOW: Input → MahaCompression → MahaKirtan → ShadowReactor → Route → Execute
+    FLOW:
+        Input → MahaCompression → Seed
+        Seed → Gita Chapter (18) + MahaLLM Intent (16) + JivaShadow (50)
+        → ShadowReactor → JivaAgent → Execute → CALL ↔ RESPONSE
     """
     input: str
     seed: int
@@ -116,6 +122,13 @@ class StewardResponse:
     vina_string: int  # 1-5: CHAITANYA/NITYANANDA/ADVAITA/GADADHARA/SRIVASA
     shadow_phase: str  # "bhoga", "prasadam", or "return" (TRANSFORMATION)
     shadow_position: int  # 0-15 position in yajna cycle
+    # NEW: MahaLLM Intent routing (16 categories)
+    intent_category: Optional[str] = None  # OBSERVE, CREATE, ANALYZE, EXECUTE, etc.
+    intent_id: Optional[int] = None  # 16-bit intent address
+    # NEW: JivaShadow (50 qualities)
+    jiva_shadow_id: Optional[str] = None  # Shadow identifier
+    jiva_guna: Optional[str] = None  # Dominant guna: sattvic/rajasic/tamasic
+    jiva_quality_count: Optional[int] = None  # How many of 50 qualities active
     result: Optional[Any] = None
     message: str = ""
 
@@ -230,7 +243,31 @@ class Steward:
         # Get the route
         route = RESONANCE_MAP.get(chapter, RESONANCE_MAP[18])  # Default to Moksha
 
-        # 5. KIRTANAM: Execute through resonant module
+        # =====================================================================
+        # 5. MAHALLM INTENT ROUTING (16 categories - WIE)
+        # =====================================================================
+        # MahaLLM routes seed → Intent category (OBSERVE, CREATE, ANALYZE, etc.)
+        # This complements Gita chapter (WAS) with action type (WIE)
+        from vibe_core.mahamantra.adapters.llm import MahaLLM
+        llm_router = MahaLLM()
+        intent_route = llm_router.route_seed(seed)
+        intent_category = intent_route.category_name if intent_route.category else "GUIDE"
+        intent_id = intent_route.intent_id
+
+        # =====================================================================
+        # 6. JIVASHADOW SPAWN (50 qualities - WER)
+        # =====================================================================
+        # Spawn a JivaShadow with qualities determined by the seed
+        # This is the AGENT that will participate
+        from vibe_core.mahamantra.lila.jiva_shadow import spawn_shadow
+        jiva_shadow = spawn_shadow(seed.to_bytes(8, 'big'))
+        jiva_shadow_id = jiva_shadow.shadow_id
+        jiva_guna = jiva_shadow.dominant_guna.value
+        jiva_quality_count = jiva_shadow.quality_count
+
+        # =====================================================================
+        # 7. KIRTANAM: Execute through resonant module with JivaAgent context
+        # =====================================================================
         handler = self._module_handlers.get(route.module_hint)
         result = None
         message = ""
@@ -238,13 +275,23 @@ class Steward:
         if handler:
             try:
                 result = handler(input_text, vibration, kirtan)
-                message = f"Routed to {route.module_hint} via Chapter {chapter} ({route.insight}) [Shadow: {shadow_phase}]"
+                message = (
+                    f"Gita {chapter} ({route.insight}) → "
+                    f"Intent {intent_category} → "
+                    f"Jiva {jiva_shadow_id[:12]}... ({jiva_guna}, {jiva_quality_count} qualities) "
+                    f"[Shadow: {shadow_phase}]"
+                )
             except Exception as e:
                 message = f"Handler error: {e}"
         else:
-            message = f"No handler for {route.module_hint}"
+            message = (
+                f"Gita {chapter} ({route.insight}) → "
+                f"Intent {intent_category} → "
+                f"Jiva {jiva_shadow_id[:12]}... ({jiva_guna}) "
+                f"[No handler for {route.module_hint}]"
+            )
 
-        # 6. Build response with TRIPLE RESONANCE
+        # 8. Build response with COMPLETE RESONANCE
         return StewardResponse(
             input=input_text,
             seed=seed,
@@ -257,6 +304,11 @@ class Steward:
             vina_string=vina_string,
             shadow_phase=shadow_phase,
             shadow_position=shadow_position,
+            intent_category=intent_category,
+            intent_id=intent_id,
+            jiva_shadow_id=jiva_shadow_id,
+            jiva_guna=jiva_guna,
+            jiva_quality_count=jiva_quality_count,
             result=result,
             message=message,
         )

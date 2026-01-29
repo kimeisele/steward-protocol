@@ -72,6 +72,15 @@ from vibe_core.mahamantra.cli.auto import (
     capabilities,
 )
 
+# Steward (Universal Resonance Router)
+from vibe_core.mahamantra.cli.steward import (
+    Steward,
+    StewardResponse,
+    ResonanceRoute,
+    ResonanceQuarter,
+    RESONANCE_MAP,
+)
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.
@@ -130,4 +139,10 @@ __all__ = [
     "discover",
     "execute",
     "capabilities",
+    # Steward (Universal Resonance Router)
+    "Steward",
+    "StewardResponse",
+    "ResonanceRoute",
+    "ResonanceQuarter",
+    "RESONANCE_MAP",
 ]

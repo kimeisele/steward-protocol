@@ -995,6 +995,38 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return self._attention
 
     @property
+    def steward(self) -> "Steward":
+        """
+        Access the Steward (Universal Resonance Router).
+
+        "EIN MANTRA. KRISHNA ROUTET ALLES."
+
+        THE GITA-18 ROUTING:
+            Chapter 1-4 (GENESIS):   diagnose, core, execute, teach
+            Chapter 5-9 (DHARMA):    delegate, meditate, analyze, transcend, secret
+            Chapter 10-14 (KARMA):   synth, vision, devotion, field, qualify
+            Chapter 15-18 (MOKSHA):  tree, divine, faith, surrender
+
+        TRIPLE RESONANCE:
+            1. Flute (resonance)   → WHEN (tick % mod_space)
+            2. Vina (vina_resonance) → WHAT TYPE (seed % mod_space)
+            3. Shadow (shadow_phase) → TRANSFORMATION (bhoga/prasadam/return)
+
+        USAGE:
+            response = mahamantra.steward.invoke("optimize the network")
+            # Automatically routes to network adapter via resonance
+
+            # Or directly:
+            from vibe_core.mahamantra import mahamantra
+            response = mahamantra.steward.invoke("any input")
+        """
+        if not hasattr(self, "_steward"):
+            from vibe_core.mahamantra.cli.steward import Steward
+
+            self._steward = Steward()
+        return self._steward
+
+    @property
     def veda(self) -> "VedaExplorer":
         """
         Access the VedaExplorer (Neuro-Symbolic Chat Interface).
