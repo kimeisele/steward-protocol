@@ -107,9 +107,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return cls._compressor, cls._kirtan
 
     @classmethod
-    def _compute_vibration(cls, command: str) -> VibrationState:
+    def _compute_vibration(cls, input_data: Union[str, MahaCell]) -> VibrationState:
         """
-        Compute vibration state for a command.
+        Compute vibration state for a command or cell.
 
         MahaCompression → seed → MahaKirtan.compute() → VibrationState
         This is the +1 FOKUS (Lichtpunkt).
@@ -120,13 +120,20 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """
         compressor, kirtan = cls._get_kirtan()
 
-        # 1. Extract intent (Kolmogorov complexity)
-        comp_result = compressor.compress(command)
-        seed = comp_result.seed
+        cell = None
+        if isinstance(input_data, MahaCell):
+            cell = input_data
+            seed = cell.header.sravanam
+        else:
+            # 1. Extract intent (Kolmogorov complexity)
+            command = input_data
+            comp_result = compressor.compress(command)
+            seed = comp_result.seed
 
         # 2. Compute through kirtan (16-step × 7-beat)
         # Now includes both flute_resonance AND vina_resonance!
-        result = kirtan.compute(seed)
+        # Accepts cell or seed. If cell provided, it flows through.
+        result = kirtan.compute(cell if cell else seed)
 
         # 3. Compute resonance (SINGLE PASS - preserves diversity!)
         # NOTE: find_attractor() COLLAPSES 77% to 136 - that's a FUNNEL not RESONATOR!
@@ -358,19 +365,31 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Execute via cli_bridge WITH VIBRATION (ROYAL DELEGATION).
 
         Flow:
-            1. Compute vibration (MahaKirtan)
-            2. Update Akash field (136)
-            3. Check if semantic query → route through Gita
-            4. Route via cli_bridge (for system commands)
-            5. Return with vibration state + Gita verses
+            1. ENTRY: Wrap in MahaCell (The Universal Data Format)
+            2. EXISTENCE: Compute vibration (MahaKirtan)
+            3. Update Akash field (136)
+            4. Check if semantic query → route through Gita
+            5. Route via cli_bridge (for system commands)
+            6. EXIT: Return with vibration state + Gita verses + MahaCell
 
         Nothing is silent. Everything vibrates.
         steward "whatever" → ONE ENTRY POINT.
         """
-        # 1. COMPUTE VIBRATION (+1 Fokus)
-        vibration = self._compute_vibration(command)
+        # 1. ENTRY: Wrap in MahaCell (Entry)
+        # Compute seed first using MahaCompression (Entry Intent)
+        compressor, _ = self._get_kirtan()
+        comp_result = compressor.compress(command)
+        seed = comp_result.seed
 
-        # 2. UPDATE AKASH FIELD (136)
+        # Using "hearing" (Sravanam) as purpose for initial input
+        # Pass seed as source_id so it flows through the cell header
+        cell = self.wrap(command, purpose="hearing", source_id=seed)
+
+        # 2. COMPUTE VIBRATION (+1 Fokus)
+        # Pass cell if created, otherwise fallback to command (should not happen if wrap works)
+        vibration = self._compute_vibration(cell if cell else command)
+
+        # 3. UPDATE AKASH FIELD (136)
         self._update_akash(vibration)
 
         # 3. SEMANTIC QUERY DETECTION
@@ -451,6 +470,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             error=bridge_result.error,
             vibration=vibration,  # +1 Fokus
             akash=self.get_akash(),  # 136 Feld
+            maha_cell=cell,  # The Universal Carrier (Exit)
         )
 
     def resolve(self, name: str) -> LotusNode:
@@ -571,6 +591,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         self,
         content: Union[str, bytes, Dict, object],
         purpose: str = "state_update",
+        source_id: int = 0,
+        target_id: int = 0,
     ) -> Optional[MahaCell]:
         """
         Wrap ANY content into MahaCell - THE UNIVERSAL DATA FORMAT.
@@ -581,17 +603,19 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Args:
             content: Any data (str, bytes, dict, object)
             purpose: Purpose string for routing (see bridge.PURPOSE_MAP)
+            source_id: Source identifier (default 0)
+            target_id: Target identifier (default 0)
 
         Returns:
             MahaCell with 72-byte header + typed payload, or None if invalid
 
         Example:
-            cell = mahamantra.wrap("analyze this", purpose="hearing")
+            cell = mahamantra.wrap("analyze this", purpose="hearing", source_id=123)
             cell = mahamantra.wrap({"key": "value"}, purpose="state_update")
             cell = mahamantra.wrap(b"raw bytes", purpose="file_flush")
         """
         from vibe_core.mahamantra.substrate.bridge import wrap_cell
-        return wrap_cell(content, purpose)
+        return wrap_cell(content, purpose, source_id=source_id, target_id=target_id)
 
     def unwrap(self, cell: MahaCell) -> bytes:
         """
