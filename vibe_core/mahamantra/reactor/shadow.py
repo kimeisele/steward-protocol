@@ -95,6 +95,13 @@ from vibe_core.mahamantra.protocols._gad import (
 from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PARAMPARA, WORDS
 
 # =============================================================================
+# PRABHUPADA KIRTAN INTEGRATION - THE PERSON (SANKIRTAN = UNLIMITED MERCY)
+# =============================================================================
+# "tasmād guruṁ prapadyeta" - Therefore one must approach the spiritual master
+# SANKIRTAN PRINCIPLE: Everyone benefits from chanting, unlimited grace!
+from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
+
+# =============================================================================
 # GITA 13.35 INTEGRATION - ShadowOracle (MANDATORY PRE-FILTER)
 # =============================================================================
 from vibe_core.mahamantra.reactor.shadow_oracle import (
@@ -264,6 +271,15 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # =====================================================================
         # Track MahaCell through Yajna cycle. Entry cell flows through.
         self._maha_cell: MahaCell | None = None
+
+        # =====================================================================
+        # PRABHUPADA INTEGRATION - THE PERSON (SANKIRTAN = UNLIMITED MERCY)
+        # =====================================================================
+        # "tasmād guruṁ prapadyeta" - Seek bona fide spiritual master
+        # SANKIRTAN PRINCIPLE: Everyone benefits, more chanting = more grace!
+        # Unlike Adhikara (signatures required), Prabhupada provides MERCY.
+        self._prabhupada: Prabhupada = get_prabhupada()
+        self._sankirtan_shakti: float = 0.0  # Accumulated grace through chanting
 
     # =========================================================================
     # PROTOCOL PROPERTIES
@@ -878,6 +894,60 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         return get_bhava_multiplier(self._bhava)
 
     # =========================================================================
+    # PRABHUPADA STATE (SANKIRTAN = UNLIMITED MERCY)
+    # =========================================================================
+    # "kīrtanīyaḥ sadā hariḥ" - Always chant the Holy Name!
+    # SANKIRTAN PRINCIPLE: More chanting = more grace. Everyone benefits!
+
+    @property
+    def prabhupada(self) -> Prabhupada:
+        """THE PERSON - source of bona fide transmission."""
+        return self._prabhupada
+
+    @property
+    def sankirtan_shakti(self) -> float:
+        """Accumulated Shakti through SANKIRTAN (chanting grace)."""
+        return self._sankirtan_shakti
+
+    def chant(self, component: object = None) -> float:
+        """
+        Perform SANKIRTAN - accumulate grace through chanting.
+
+        SANKIRTAN PRINCIPLE:
+        - Everyone benefits from chanting
+        - More chanting = more accumulated Shakti
+        - Even without formal Adhikara, MERCY flows
+
+        Returns:
+            Shakti transmitted this chant (0.5 if valid link, accumulated anyway)
+        """
+        # Use self if no component provided
+        target = component or self
+
+        # Get Shakti from THE PERSON
+        shakti = self._prabhupada.transmit_shakti(target)
+
+        # SANKIRTAN: Even if blocked, some grace accumulates (mercy!)
+        # "api cet su-durācāro" - even if one commits most abominable action
+        mercy_factor = 0.1  # Minimum mercy for ANY chanting
+        effective_shakti = max(shakti, mercy_factor)
+
+        # Accumulate grace
+        self._sankirtan_shakti += effective_shakti
+
+        return effective_shakti
+
+    def is_sankirtan_authorized(self) -> bool:
+        """
+        Check SANKIRTAN-based authorization (MERCY path).
+
+        Unlike Adhikara (strict signatures), SANKIRTAN provides mercy:
+        - Accumulated shakti >= 1.0 = authorized through chanting
+        - This is the INCLUSIVE path - everyone can participate!
+        """
+        return self._sankirtan_shakti >= 1.0
+
+    # =========================================================================
     # ADHIKARA STATE (Authorization Chain - Mahajana Signatures)
     # =========================================================================
 
@@ -1110,7 +1180,25 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             return False
 
     def is_authorized(self) -> bool:
-        """Check if current authorization bundle has sufficient signatures."""
+        """
+        Check authorization via ADHIKARA or SANKIRTAN path.
+
+        TWO PATHS TO AUTHORIZATION:
+        1. ADHIKARA (strict): Mahajana signatures required
+        2. SANKIRTAN (mercy): Accumulated shakti >= 1.0 through chanting
+
+        "api cet su-durācāro bhajate mām ananya-bhāk
+        sādhur eva sa mantavyaḥ samyag vyavasito hi saḥ"
+        "Even if one commits the most abominable action, if engaged in devotional
+        service he is to be considered saintly." — Gita 9.30
+
+        SANKIRTAN = UNLIMITED MERCY = EVERYONE BENEFITS!
+        """
+        # PATH 1: SANKIRTAN MERCY (accumulated grace through chanting)
+        if self.is_sankirtan_authorized():
+            return True
+
+        # PATH 2: ADHIKARA (strict Mahajana signatures)
         if self._authorization is None:
             return False
 
