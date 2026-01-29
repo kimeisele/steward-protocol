@@ -466,28 +466,16 @@ class CLIAutoDiscovery:
 
     def _get_position(self, command: str) -> Optional[int]:
         """
-        Get position using semantic keyword mapping first, then MahaKirtan.
+        Get position via MahaKirtan - THE ONLY ROUTING.
 
-        Flow:
-            0. Check KEYWORD_TO_MAHAJANA for semantic match
-            1. MahaCompression.compress(command) → seed, guna
-            2. MahaKirtan.compute(seed) → KirtanComputeResult
-            3. transformed_value % WORDS → position (0-15)
+        NO HARDCODED KEYWORDS. NO OP_CODES. NO YAML LOOKUP.
+        PURE MATHEMATICAL ROUTING:
 
-        Semantic mapping preserves intent. MahaKirtan handles unknown commands.
+            Input → MahaCompression → Seed → MahaKirtan → Position
+
+        Same input = Same seed = Same position = DETERMINISTIC.
         """
-        # 0. Semantic keyword mapping first (PARAMPARA wisdom)
-        from vibe_core.mahamantra.lila.adoption import OP_CODES
-        from vibe_core.mahamantra.substrate.seed import get_mahajana_position
-
-        cmd_lower = command.lower()
-        for mahajana_name, keywords in OP_CODES.items():
-            if cmd_lower in keywords:
-                position = get_mahajana_position(mahajana_name)
-                if position >= 0:
-                    return position
-
-        # THE KING - MahaKirtan orchestrates everything (for unknown commands)
+        # THE KING - MahaKirtan IS the routing (not fallback!)
         compressor, kirtan = _get_kirtan_orchestrator()
 
         # 1. Extract intent (Kolmogorov complexity)
