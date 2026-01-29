@@ -416,8 +416,9 @@ class Steward:
             input_text = self._compress_large_input(input_text)
 
         # MAHA CELL: Wrap input in universal 72-byte header format
-        # This is TOP-DOWN: entry point wraps, everything flows through MahaCell
-        maha_cell = wrap_cell(input_text, purpose="execute")
+        # SRAVANAM (hearing) first! Not execute. Entry point = HEARING.
+        # "śravaṇaṁ kīrtanaṁ viṣṇoḥ" - First hearing, then chanting
+        maha_cell = wrap_cell(input_text, purpose="hearing")
 
         vibration = self.mahamantra.vibrate(input_text)
         seed = vibration["seed"]
