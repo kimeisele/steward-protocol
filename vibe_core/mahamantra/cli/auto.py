@@ -466,51 +466,35 @@ class CLIAutoDiscovery:
 
     def _get_position(self, command: str) -> Optional[int]:
         """
-        Get position using semantic keyword mapping first, then MahaKirtan.
+        Get position via FULL MAHA COMPUTING PIPELINE.
 
-        Flow:
-            0. Check KEYWORD_TO_MAHAJANA for semantic match
-            1. MahaCompression.compress(command) → seed, guna
-            2. MahaKirtan.compute(seed) → KirtanComputeResult
-            3. transformed_value % WORDS → position (0-15)
+        THE REAL FLOW:
+            Input → MahaCompression (with MahaLLM + MahaKirtan + MahaResonator)
+                  → Seed with embedded SEMANTIC CATEGORY
+                  → Position = Category (semantic routing!)
 
-        Semantic mapping preserves intent. MahaKirtan handles unknown commands.
+        Same semantic intent = Same category = Same position.
+        "analyze this" and "please analyze" → BOTH to ANALYZE position!
         """
-        # 0. Semantic keyword mapping first (PARAMPARA wisdom)
-        from vibe_core.mahamantra.lila.adoption import OP_CODES
-        from vibe_core.mahamantra.substrate.seed import get_mahajana_position
-
-        cmd_lower = command.lower()
-        for mahajana_name, keywords in OP_CODES.items():
-            if cmd_lower in keywords:
-                position = get_mahajana_position(mahajana_name)
-                if position >= 0:
-                    return position
-
-        # THE KING - MahaKirtan orchestrates everything (for unknown commands)
         compressor, kirtan = _get_kirtan_orchestrator()
 
-        # 1. Extract intent (Kolmogorov complexity)
+        # 1. FULL MAHA COMPRESSION (now uses MahaLLM + MahaKirtan + MahaResonator!)
         compression_result = compressor.compress(command)
         seed = compression_result.seed
-        # guna available: compression_result.intent_level.guna.value
 
-        # 2. Compute through kirtan (16-step × 7-beat vibration)
-        compute_result = kirtan.compute(seed)
+        # 2. Extract SEMANTIC CATEGORY from seed (embedded in top 8 bits)
+        # Category comes from MahaLLM.route_text() - SEMANTIC classification!
+        category = (seed >> 24) & 0xF  # Top 4 bits = category (0-15)
 
-        # 3. Position from transformed value (vibrationally processed)
-        # transformed_value has gone through:
-        #   - Oracle pre-filter
-        #   - MahaModularSynth transform (H=×7, K=+10, R=²)
-        #   - Flute resonance modulation
-        #   - Beat delta modulation
-        position = compute_result.transformed_value % WORDS
+        # 3. Position = Category (SEMANTIC ROUTING!)
+        # MahaKirtan transform adds nuance but Category determines PRIMARY routing
+        position = category % WORDS
 
-        # Metadata available for future use:
-        # - compute_result.beat_number (1-7)
-        # - compute_result.flute_resonance (0.0-1.0)
-        # - compute_result.parampara_channel (0-2 or -1)
-        # - compute_result.resonance_level
+        # The full pipeline is:
+        # - MahaLLM classifies intent → Category (SEMANTIC)
+        # - MahaKirtan transforms → adds harmonic texture
+        # - MahaResonator finds attractor → adds stability
+        # - Category determines Position → CONSISTENT SEMANTIC ROUTING
 
         return position
 

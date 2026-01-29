@@ -503,24 +503,41 @@ class MahaLLM:
         return self.route(intent_id)
 
     def _text_to_intent(self, text: str, *, use_base: bool = True) -> int:
-        """Convert text to 16-bit intent ID."""
-        text_lower = text.lower()
+        """
+        Convert text to 16-bit intent ID via VIBRATION SIGNATURES.
 
-        # Find matching category by keywords
-        best_category = IntentCategory.GUIDE  # Default
-        best_score = 0
+        NO HARDCODED KEYWORDS! Uses shabda_translation.py:
+        1. text_to_vibration() → VibrationSignatures
+        2. signature_id computed from articulation, voicing, frequency
+        3. Total vibration % WORDS → Mahamantra position (0-15)
 
-        for category, keywords in CATEGORY_KEYWORDS.items():
-            score = sum(1 for kw in keywords if kw in text_lower)
-            if score > best_score:
-                best_score = score
-                best_category = category
+        English → Vibration → Sanskrit (intermediate) → Position
+        ALL DERIVED FROM _seed.py CONSTANTS!
+        """
+        from vibe_core.mahamantra.research.shabda_translation import (
+            text_to_vibration,
+            SANSKRIT_PHONEME_MAP,
+        )
+
+        # 1. Convert text to vibration signatures
+        vibrations = text_to_vibration(text, source_lang="en")
+
+        if vibrations:
+            # 2. Sum all signature_ids to get total vibration
+            total_vibration = sum(sig.signature_id for sig in vibrations)
+
+            # 3. Map to 16 Mahamantra positions
+            category_value = total_vibration % WORDS
+        else:
+            # Fallback: use character sum (still mathematical, not hardcoded!)
+            char_sum = sum(ord(c) for c in text.lower() if c.isalpha())
+            category_value = char_sum % WORDS
+
+        best_category = IntentCategory(category_value)
 
         if use_base:
-            # Route to category base (where agents registered by category live)
             return best_category.value << 12
         else:
-            # Generate sub-address from text hash (for fine-grained routing)
             text_hash = int(hashlib.md5(text.encode()).hexdigest()[:3], 16)
             return (best_category.value << 12) | (text_hash & 0xFFF)
 

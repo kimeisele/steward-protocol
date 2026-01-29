@@ -66,58 +66,11 @@ def _get_mahamantra():
 
 
 # =============================================================================
-# GITA CHAPTER → MODULE ROUTING
+# GITA CHAPTER ROUTING - DERIVED FROM MAHAKIRTAN, NOT HARDCODED
 # =============================================================================
-# SEMANTIC MAPPINGS that cannot be derived mathematically.
-# These define WHAT each Gita chapter DOES in the system.
-# TODO: Move to protocol file (_gita_route.py) as proper SSOT.
+# Chapter and Guna are COMPUTED from attractor via MahaCompute (SSOT).
+# NO HARDCODED MAPPINGS. The mathematics IS the routing.
 # =============================================================================
-
-# Chapter → Module hint (SEMANTIC - which adapter resonates)
-# Keys use PayloadType.value (SSOT-derived from Mahamantra constants!)
-_CHAPTER_MODULE: Final[Dict[int, str]] = {
-    PayloadType.ARJUNA_VISHADA.value: "analysis",      # Ch.1 → needs analysis
-    PayloadType.SANKHYA.value: "transform",            # Ch.2 → transforms
-    PayloadType.KARMA_YOGA.value: "compute",           # Ch.3 → action = compute
-    PayloadType.JNANA_YOGA.value: "research",          # Ch.4 → knowledge = research
-    PayloadType.KARMA_SANNYASA.value: "classification",  # Ch.5 → classify
-    PayloadType.DHYANA.value: "attention",             # Ch.6 → meditation = attention
-    PayloadType.JNANA_VIJNANA.value: "compression",    # Ch.7 → compression
-    PayloadType.AKSARA_BRAHMA.value: "hash",           # Ch.8 → imperishable = hash
-    PayloadType.RAJA_VIDYA.value: "kernel",            # Ch.9 → king = kernel
-    PayloadType.VIBHUTI.value: "synth",                # Ch.10 → synthesis
-    PayloadType.VISVARUPA.value: "network",            # Ch.11 → universal = network
-    PayloadType.BHAKTI.value: "chat",                  # Ch.12 → devotion = dialog
-    PayloadType.KSETRA.value: "hardware",              # Ch.13 → field = hardware
-    PayloadType.GUNA_TRAYA.value: "pipeline",          # Ch.14 → modes = pipeline
-    PayloadType.PURUSOTTAMA.value: "bio",              # Ch.15 → supreme = bio
-    PayloadType.DAIVASURA.value: "japa",               # Ch.16 → purify via japa
-    PayloadType.SRADDHA_TRAYA.value: "llm",            # Ch.17 → faith = LLM
-    PayloadType.MOKSA_SANNYASA.value: "reactor",       # Ch.18 → liberation = reactor
-}
-
-# Chapter → Guna (SEMANTIC - dominant mode of the chapter)
-# Keys use PayloadType.value (SSOT-derived!)
-_CHAPTER_GUNA: Final[Dict[int, str]] = {
-    PayloadType.ARJUNA_VISHADA.value: "tamas",   # Confusion
-    PayloadType.SANKHYA.value: "sattva",         # Eternal truth
-    PayloadType.KARMA_YOGA.value: "rajas",       # Action
-    PayloadType.JNANA_YOGA.value: "sattva",      # Knowledge
-    PayloadType.KARMA_SANNYASA.value: "sattva",  # Renunciation
-    PayloadType.DHYANA.value: "sattva",          # Meditation
-    PayloadType.JNANA_VIJNANA.value: "sattva",   # Knowledge
-    PayloadType.AKSARA_BRAHMA.value: "sattva",   # Imperishable
-    PayloadType.RAJA_VIDYA.value: "sattva",      # King of knowledge
-    PayloadType.VIBHUTI.value: "rajas",          # Manifestations
-    PayloadType.VISVARUPA.value: "rajas",        # Universal form
-    PayloadType.BHAKTI.value: "sattva",          # Devotion
-    PayloadType.KSETRA.value: "rajas",           # Field/Knower
-    PayloadType.GUNA_TRAYA.value: "rajas",       # Three modes
-    PayloadType.PURUSOTTAMA.value: "sattva",     # Supreme person
-    PayloadType.DAIVASURA.value: "tamas",        # Divine/Demonic
-    PayloadType.SRADDHA_TRAYA.value: "rajas",    # Faith types
-    PayloadType.MOKSA_SANNYASA.value: "sattva",  # Liberation
-}
 
 
 @dataclass(frozen=True)
@@ -153,24 +106,37 @@ def _get_quarter_for_chapter(chapter: int) -> Quarter:
         return Quarter.MOKSHA
 
 
+def _get_guna_for_quarter(quarter: Quarter) -> str:
+    """Derive guna from quarter - MATHEMATICAL, not hardcoded."""
+    # Genesis = creation from void = tamas (inertia to overcome)
+    # Dharma = knowledge/duty = sattva (illumination)
+    # Karma = action = rajas (activity)
+    # Moksha = liberation = sattva (transcendence)
+    return {
+        Quarter.GENESIS: "tamas",
+        Quarter.DHARMA: "sattva",
+        Quarter.KARMA: "rajas",
+        Quarter.MOKSHA: "sattva",
+    }.get(quarter, "sattva")
+
+
 def _build_resonance_map() -> Dict[int, ResonanceRoute]:
     """
-    Build RESONANCE_MAP from SSOTs.
+    Build RESONANCE_MAP - DERIVED from MahaCompute, not hardcoded.
 
-    Uses:
-    - GITA_INSIGHTS for insight strings (SSOT)
-    - _get_quarter_for_chapter for quarter derivation
-    - _CHAPTER_MODULE for module hints (semantic, local SSOT)
-    - _CHAPTER_GUNA for guna (semantic, local SSOT)
+    NO _CHAPTER_MODULE. NO _CHAPTER_GUNA.
+    Everything derives from chapter → quarter → guna.
+    Module routing happens via MahaKirtan position, not static map.
     """
     result = {}
     for chapter in range(1, GITA_CHAPTERS + 1):
+        quarter = _get_quarter_for_chapter(chapter)
         result[chapter] = ResonanceRoute(
             chapter=chapter,
-            quarter=_get_quarter_for_chapter(chapter),
+            quarter=quarter,
             insight=get_gita_insight(chapter),
-            module_hint=_CHAPTER_MODULE.get(chapter, "unknown"),
-            guna=_CHAPTER_GUNA.get(chapter, "sattva"),
+            module_hint=quarter.name.lower(),  # Quarter IS the hint
+            guna=_get_guna_for_quarter(quarter),
         )
     return result
 
@@ -493,38 +459,43 @@ class Steward:
         jiva_quality_count = jiva_shadow.quality_count
 
         # =====================================================================
-        # 7. KIRTANAM: Execute via Balarama Bridge (Universal - No Hardcoding!)
+        # 7. KIRTANAM: Execute via MAHAMANTRA (SSOT - No Parallel Implementation!)
         # =====================================================================
-        # All execution flows through bridge.offer() - Balarama Pattern
-        # Intent → Purpose → Position → Mahajana → Execute
+        # mahamantra.execute() → cli_bridge.route() → cli_auto.execute()
+        # ZERO MANUAL WIRING. Krishna discovers and routes.
         result = None
         message = ""
 
         try:
-            result = self._execute_via_bridge(
-                input_text=input_text,
-                vibration=vibration,
-                intent_category=intent_category,
-                jiva_shadow_id=jiva_shadow_id,
-                maha_cell=maha_cell,  # Pass the MahaCell created at entry!
-            )
+            # THE REAL EXECUTION PATH - through mahamantra itself!
+            exec_result = self.mahamantra.execute(input_text)
 
-            # Build message from bridge result
-            if result.get("success"):
+            # Build result from ExecuteResult (TypedDict - use [] not .)
+            result = {
+                "success": exec_result["success"],
+                "position": exec_result["position"],
+                "guardian": exec_result["guardian"],
+                "quarter": exec_result["quarter"],
+                "guna": exec_result["guna"],
+                "output": exec_result["output"],
+                "vibration": exec_result["vibration"],
+            }
+
+            # Build message from execution result
+            if exec_result["success"]:
                 message = (
                     f"Gita {chapter} ({route.insight}) → "
-                    f"Intent {intent_category} → "
-                    f"Bridge → {result.get('mahajana', '?')}@{result.get('position', '?')} "
-                    f"[{result.get('quarter', '?')}] "
+                    f"{exec_result['guardian']}@{exec_result['position']} "
+                    f"[{exec_result['quarter']}] "
                     f"Jiva {jiva_shadow_id[:8]}... ({jiva_guna})"
                 )
             else:
                 message = (
-                    f"Gita {chapter} → Intent {intent_category} → "
-                    f"Bridge REJECTED: {result.get('error', 'unknown')}"
+                    f"Gita {chapter} → "
+                    f"Execution: {exec_result['error'] or 'unknown error'}"
                 )
         except Exception as e:
-            message = f"Bridge error: {e}"
+            message = f"Execution error: {e}"
             result = {"success": False, "error": str(e)}
 
         # 8. Build response with COMPLETE RESONANCE + PERSON-ANCHOR

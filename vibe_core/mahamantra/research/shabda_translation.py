@@ -220,7 +220,10 @@ class VibrationSignature:
 # This is the LOOKUP TABLE the user mentioned!
 
 SANSKRIT_PHONEME_MAP: Final[dict[str, VibrationSignature]] = {
-    # Vowels (svara) - pure resonance, no obstruction
+    # ==========================================================================
+    # VOWELS (svara) - pure resonance, no obstruction
+    # Frequency derived from NADI_RESONANCE (72) and its multiples
+    # ==========================================================================
     "a": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 72, 1),
     "ā": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 72, 2),
     "i": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 72, 1),
@@ -231,13 +234,50 @@ SANSKRIT_PHONEME_MAP: Final[dict[str, VibrationSignature]] = {
     "ai": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 144, 2),
     "o": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 108, 2),
     "au": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 144, 2),
-    # Guttural consonants (ka-varga)
+    # ==========================================================================
+    # ENGLISH CONSONANTS - Mapped to Sanskrit equivalents by articulation
+    # Articulation point determines the consonant class (ka/ca/ṭa/ta/pa-varga)
+    # Frequency = NADI_RESONANCE / 1.5 = 48 (consonants are "blocked" resonance)
+    # ==========================================================================
+    # Gutturals (ka-varga): k, g, c(hard), q
+    "k": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 48, 1),
+    "g": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 48, 1),
+    "c": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 48, 1),
+    "q": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 48, 1),
+    # Palatals (ca-varga): ch, j
+    "j": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 48, 1),
+    # Retroflexes (ṭa-varga): r, l
+    "r": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 48, 1),
+    "l": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 48, 1),
+    # Dentals (ta-varga): t, d, n, s, z
+    "t": VibrationSignature(ArticulationPoint.DANTA, VoicingType.UNVOICED, 48, 1),
+    "d": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 48, 1),
+    "n": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 48, 1),
+    "s": VibrationSignature(ArticulationPoint.DANTA, VoicingType.UNVOICED, 36, 1),  # sibilant
+    "z": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 36, 1),    # sibilant
+    # Labials (pa-varga): p, b, m, f, v, w
+    "p": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.UNVOICED, 48, 1),
+    "b": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
+    "m": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
+    "f": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.UNVOICED, 48, 1),
+    "v": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
+    "w": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
+    # Semivowels: y
+    "y": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 54, 1),
+    # Aspirate: h (CRITICAL - appears in HARE!)
+    "h": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED_ASPIRATED, 72, 1),
+    # Remaining: x
+    "x": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 36, 1),
+    # ==========================================================================
+    # SANSKRIT SYLLABLES (traditional combinations)
+    # ==========================================================================
     "ka": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 48, 1),
     "kha": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED_ASPIRATED, 48, 2),
     "ga": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 48, 1),
     "gha": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED_ASPIRATED, 48, 2),
-    # ... (remaining consonants follow same pattern)
-    # The key Mahamantra syllables
+    # ==========================================================================
+    # MAHAMANTRA SYLLABLES (the key signatures!)
+    # ==========================================================================
     "ha": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED_ASPIRATED, 72, 1),
     "re": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 72, 1),
     "kṛ": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 108, 1),

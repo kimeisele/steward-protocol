@@ -400,6 +400,16 @@ _LAZY_IMPORTS = {
     "cli_sankirtan": "sankirtan",
     "FOLDER_MAHAJANA_MAP": "sankirtan",
     "heal_wiring": "sankirtan",
+    # === LOTUS RADIX (CLI backbone, prefix routing) ===
+    "LotusRadixN": "lotus_radix",
+    "SLOTS_PER_LEVEL": "lotus_radix",
+    "BITS_PER_LEVEL": "lotus_radix",
+    "NIBBLE_MASK": "lotus_radix",
+    "lotus_16bit": "lotus_radix",
+    "lotus_32bit": "lotus_radix",
+    "lotus_64bit": "lotus_radix",
+    "lotus_128bit": "lotus_radix",
+    "lotus_256bit": "lotus_radix",
     # === LEGACY (Balarama-wrapped from protocols/substrate) ===
     "Declaration": "_legacy",
     "DeclarationType": "_legacy",

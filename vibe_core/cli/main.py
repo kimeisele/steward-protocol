@@ -95,36 +95,56 @@ def main(argv: Optional[List[str]] = None) -> int:
         siksastakam_stage = getattr(response, 'siksastakam_stage', 1) or 1
         siksastakam_op = getattr(response, 'siksastakam_operation', '?') or '?'
 
+        # Safe string conversion
+        inp = str(response.input)[:60]
+        seed = str(response.seed)
+        ch = str(response.chapter)
+        insight = str(response.route.insight)[:25]
+        attr = str(response.attractor)
+        qtr = str(response.route.quarter.value)[:10]
+        guna = str(response.route.guna)[:10]
+        intent = str(response.intent_category or 'GUIDE')[:12]
+        iid = response.intent_id or 0
+        shadow = str(response.jiva_shadow_id or '')[:20]
+        jguna = str(response.jiva_guna or '?')[:10]
+        qcount = response.jiva_quality_count or 0
+        res = response.resonance
+        vres = response.vina_resonance
+        cr = str(response.call_response)[:10]
+        sp = str(response.shadow_phase)[:10]
+        spos = response.shadow_position
+        msg = str(response.message)[:67]
+
         print(f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  STEWARD - PERSON-Anchored Resonance Router                           ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  INPUT: {response.input[:60]:60s} ║
-║  SEED:  {response.seed:<60} ║
+║  INPUT: {inp:60s} ║
+║  SEED:  {seed:<60s} ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  GITA (18 chapters) - WAS/DOMAIN:                                     ║
-║    Chapter:  {response.chapter:2} - {response.route.insight:25s}  Attractor: {response.attractor:<3}     ║
-║    Quarter:  {response.route.quarter.value:10s}  Guna: {response.route.guna:10s}                   ║
+║    Chapter:  {ch:>2s} - {insight:25s}  Attractor: {attr:<3s}     ║
+║    Quarter:  {qtr:10s}  Guna: {guna:10s}                   ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  MAHALLM (16 intents) - WIE/ACTION:                                   ║
-║    Intent:   {response.intent_category or 'GUIDE':12s}  (0x{response.intent_id or 0:04X})                          ║
+║    Intent:   {intent:12s}  (0x{iid:04X})                          ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  JIVASHADOW (50 qualities) - WER/AGENT:                               ║
-║    Shadow:   {(response.jiva_shadow_id or '')[:20]:20s}                               ║
-║    Guna:     {response.jiva_guna or '?':10s}  Qualities: {response.jiva_quality_count or 0:2}/50                  ║
+║    Shadow:   {shadow:20s}                               ║
+║    Guna:     {jguna:10s}  Qualities: {qcount:2d}/50                  ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  TRIPLE RESONANCE (Integer):                                          ║
-║    Flute (WHEN):  {response.resonance:>5}  (tick % mod_space)                       ║
-║    Vina (WHAT):   {response.vina_resonance:>5}  (seed % mod_space)  String: {vina_name:10s}    ║
+║    Flute (WHEN):  {res:>5}  (tick % mod_space)                       ║
+║    Vina (WHAT):   {vres:>5}  (seed % mod_space)  String: {vina_name:10s}    ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  PRABHUPADA KIRTAN (8 Siksastakam Stages):                            ║
-║    Stage:    L{siksastakam_stage-1} - {siksastakam_op:15s}  Mode: {response.call_response:10s}           ║
+║    Stage:    L{siksastakam_stage-1} - {siksastakam_op:15s}  Mode: {cr:10s}           ║
 ║    PERSON:   {person_mark:10s}  (parampara % 37 == 0)                        ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  SHADOW REACTOR:                                                      ║
-║    Phase:    {response.shadow_phase:10s}  Position: {response.shadow_position:>2}                            ║
+║    Phase:    {sp:10s}  Position: {spos:>2}                            ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  {response.message[:67]:67s} ║
+║  {msg:67s} ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 """)
 
