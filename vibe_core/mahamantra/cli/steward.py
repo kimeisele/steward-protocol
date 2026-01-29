@@ -493,38 +493,43 @@ class Steward:
         jiva_quality_count = jiva_shadow.quality_count
 
         # =====================================================================
-        # 7. KIRTANAM: Execute via Balarama Bridge (Universal - No Hardcoding!)
+        # 7. KIRTANAM: Execute via MAHAMANTRA (SSOT - No Parallel Implementation!)
         # =====================================================================
-        # All execution flows through bridge.offer() - Balarama Pattern
-        # Intent → Purpose → Position → Mahajana → Execute
+        # mahamantra.execute() → cli_bridge.route() → cli_auto.execute()
+        # ZERO MANUAL WIRING. Krishna discovers and routes.
         result = None
         message = ""
 
         try:
-            result = self._execute_via_bridge(
-                input_text=input_text,
-                vibration=vibration,
-                intent_category=intent_category,
-                jiva_shadow_id=jiva_shadow_id,
-                maha_cell=maha_cell,  # Pass the MahaCell created at entry!
-            )
+            # THE REAL EXECUTION PATH - through mahamantra itself!
+            exec_result = self.mahamantra.execute(input_text)
 
-            # Build message from bridge result
-            if result.get("success"):
+            # Build result from ExecuteResult (TypedDict - use [] not .)
+            result = {
+                "success": exec_result["success"],
+                "position": exec_result["position"],
+                "guardian": exec_result["guardian"],
+                "quarter": exec_result["quarter"],
+                "guna": exec_result["guna"],
+                "output": exec_result["output"],
+                "vibration": exec_result["vibration"],
+            }
+
+            # Build message from execution result
+            if exec_result["success"]:
                 message = (
                     f"Gita {chapter} ({route.insight}) → "
-                    f"Intent {intent_category} → "
-                    f"Bridge → {result.get('mahajana', '?')}@{result.get('position', '?')} "
-                    f"[{result.get('quarter', '?')}] "
+                    f"{exec_result['guardian']}@{exec_result['position']} "
+                    f"[{exec_result['quarter']}] "
                     f"Jiva {jiva_shadow_id[:8]}... ({jiva_guna})"
                 )
             else:
                 message = (
-                    f"Gita {chapter} → Intent {intent_category} → "
-                    f"Bridge REJECTED: {result.get('error', 'unknown')}"
+                    f"Gita {chapter} → "
+                    f"Execution: {exec_result['error'] or 'unknown error'}"
                 )
         except Exception as e:
-            message = f"Bridge error: {e}"
+            message = f"Execution error: {e}"
             result = {"success": False, "error": str(e)}
 
         # 8. Build response with COMPLETE RESONANCE + PERSON-ANCHOR
