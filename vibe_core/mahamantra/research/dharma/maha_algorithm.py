@@ -49,8 +49,9 @@ __genesis__ = "0x672435f8"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Final, Iterator
+from typing import Final, Iterator, Union
 
+from vibe_core.mahamantra.protocols._header import MahaCell
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
     HALVES,
@@ -1972,6 +1973,7 @@ class KirtanComputeResult:
     parampara_channel: int  # 0-2 or -1 if void
     round_number: int  # Which kirtan round
     resonance_level: int  # accumulated % mod_space
+    cell: Union[MahaCell, None] = None  # The carrier cell (Entry-Existence-Exit)
 
 
 @dataclass
@@ -2094,9 +2096,12 @@ class MahaKirtan:
         reading = self._oracle.consult_seed(seed)
         return reading.parampara_validated, reading.parampara_channel
 
-    def compute(self, seed: int) -> KirtanComputeResult:
+    def compute(self, input_data: Union[int, MahaCell]) -> KirtanComputeResult:
         """
         Execute one compute cycle (one beat).
+
+        Accepts either an integer seed OR a MahaCell (Entry-Existence-Exit).
+        If MahaCell is provided, it is carried through to the result.
 
         This advances the internal tick counter and applies:
         1. Oracle pre-filter (if enabled)
@@ -2106,6 +2111,17 @@ class MahaKirtan:
 
         Returns KirtanComputeResult with all computation details.
         """
+        # Resolve input
+        if isinstance(input_data, int):
+            seed = input_data
+            cell = None
+        else:
+            cell = input_data
+            # Extract seed from cell header (Source ID = sravanam)
+            # OR operation code (pada_sevanam) depending on intent
+            # For now, we use sravanam (hearing) as the seed source
+            seed = cell.header.sravanam
+
         # Get current beat from runtime
         state = self._runtime.tick()
         beat = state.current_beat
@@ -2162,6 +2178,7 @@ class MahaKirtan:
             parampara_channel=parampara_channel,
             round_number=state.round_number,
             resonance_level=self._state.resonance_level,
+            cell=cell,
         )
 
     def compute_round(self, seed: int) -> list[KirtanComputeResult]:
