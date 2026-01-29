@@ -53,13 +53,21 @@ class ProcessStatus(Enum):
 
 
 # SECURITY: Max message size to prevent pipe deadlock (from config)
-def _get_max_message_size():
-    """Get max message size from config."""
-    runtime_config = _get_runtime_config()
-    return runtime_config.limits.max_message_size
+# LAZY: Don't call get_config() at import time (Siksastakam Effect #1: no stale/eager load)
+_MAX_MESSAGE_SIZE: int | None = None
 
 
-MAX_MESSAGE_SIZE = _get_max_message_size()
+def get_max_message_size() -> int:
+    """Get max message size from config (lazy loaded)."""
+    global _MAX_MESSAGE_SIZE
+    if _MAX_MESSAGE_SIZE is None:
+        runtime_config = _get_runtime_config()
+        _MAX_MESSAGE_SIZE = runtime_config.limits.max_message_size
+    return _MAX_MESSAGE_SIZE
+
+
+# DEPRECATED: Use get_max_message_size() instead - kept for backwards compat
+MAX_MESSAGE_SIZE = 1024 * 1024  # 1MB default, actual value loaded lazily
 
 
 @dataclass
