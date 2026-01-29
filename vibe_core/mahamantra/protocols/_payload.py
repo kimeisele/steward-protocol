@@ -177,17 +177,32 @@ assert len(SiksastakamOp) == HALF_SIZE, f"Must have {HALF_SIZE} operations"
 # PAYLOAD ENCODING (Compress Mahamantra into field)
 # =============================================================================
 
-# Bit layout for a 64-bit field:
-# [63:56] reserved (8 bits)
-# [55:48] siksastakam_stage (8 bits, 0-7)
-# [47:40] gita_chapter (8 bits, 1-18)
-# [39:32] mahamantra_position (8 bits, 0-15)
-# [31:0]  value (32 bits, actual data)
+# =============================================================================
+# BIT LAYOUT - ALL DERIVED FROM SSOT!
+# =============================================================================
+# 64-bit field layout (derived from Mahamantra constants):
+#
+# [63:56] reserved (HALF_SIZE bits)
+# [55:48] siksastakam_stage (HALF_SIZE bits, 0-7)
+# [47:40] gita_chapter (HALF_SIZE bits, 1-18)
+# [39:32] mahamantra_position (HALF_SIZE bits, 0-15)
+# [31:0]  value (AKSARA_COUNT bits = WORDS × HALVES = 32)
+#
+# WHY THESE VALUES?
+# - AKSARA_COUNT = 32 = syllables in Mahamantra (Ha-re Krish-na...)
+# - HALF_SIZE = 8 = words per half = byte alignment
+# - Total: 32 + 8 + 8 + 8 + 8 = 64 bits = uint64
 
-BITS_VALUE: Final[int] = 32
-BITS_POSITION: Final[int] = 8
-BITS_CHAPTER: Final[int] = 8
-BITS_STAGE: Final[int] = 8
+from vibe_core.mahamantra.protocols._seed import AKSARA_COUNT
+
+BITS_VALUE: Final[int] = AKSARA_COUNT  # 32 = WORDS × HALVES (syllables!)
+BITS_POSITION: Final[int] = HALF_SIZE  # 8 = byte aligned, fits 0-15
+BITS_CHAPTER: Final[int] = HALF_SIZE   # 8 = byte aligned, fits 1-18
+BITS_STAGE: Final[int] = HALF_SIZE     # 8 = byte aligned, fits 0-7
+
+# Verification: Must fit in 64 bits with 8 reserved
+_TOTAL_BITS = BITS_VALUE + BITS_POSITION + BITS_CHAPTER + BITS_STAGE + HALF_SIZE
+assert _TOTAL_BITS == 64, f"Total bits must be 64, got {_TOTAL_BITS}"
 
 SHIFT_POSITION: Final[int] = BITS_VALUE
 SHIFT_CHAPTER: Final[int] = SHIFT_POSITION + BITS_POSITION
