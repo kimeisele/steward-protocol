@@ -128,12 +128,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # Now includes both flute_resonance AND vina_resonance!
         result = kirtan.compute(seed)
 
-        # 3. Find attractor (for classification)
+        # 3. Compute resonance (SINGLE PASS - preserves diversity!)
+        # NOTE: find_attractor() COLLAPSES 77% to 136 - that's a FUNNEL not RESONATOR!
+        # oscillate_once() does single 16-step pass, preserving input diversity
         from vibe_core.mahamantra.research.dharma import MahaResonator
         from vibe_core.mahamantra.substrate.seed import MAHA_QUANTUM
 
         resonator = MahaResonator(mod_space=MAHA_QUANTUM)
-        attractor = resonator.find_attractor(seed).attractor
+        # FIXED: Use single pass instead of convergence
+        attractor = resonator.oscillate_once(seed % MAHA_QUANTUM)
 
         return VibrationState(
             seed=seed,
