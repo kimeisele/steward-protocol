@@ -39,7 +39,7 @@ SUSPICIOUS PATTERNS:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "manu"  # Position 7 - Laws and Policies (SSOT = THE LAW)
 __position__ = 7
-__genesis__ = "0x2c801314"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xea2c91d7"  # GenesisByte: parampara % 37 == 0
 
 # === PANCHA TATTVA DECLARATION ===
 __tattva__ = {

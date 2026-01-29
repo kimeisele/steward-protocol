@@ -23,14 +23,14 @@ Wir verbieten keine falschen Imports. Wir machen sie **unmöglich**.
 ## DER KÖNIGSWEG (CLI IS THE THRONE)
 
 ```bash
-steward chat "Mache X"
+steward "Mache X. Was ist Y? Wann müssen wir wieder Z?"
 ```
 
 * **Der Thron**: Das Terminal.
 * **Das Zepter**: `mahamantra.execute()`.
 * **Die Diener**: 700k LOC, die im Hintergrund laufen.
 
-**Manual Labor ist Maya.** Befiehl dem Mantra.
+**Manual Labor ist Maya.** Gib deinen Intent dem Mantra.
 
 ---
 
