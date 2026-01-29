@@ -437,21 +437,26 @@ class Steward:
         route = RESONANCE_MAP.get(chapter, RESONANCE_MAP[18])  # Default to Moksha
 
         # =====================================================================
-        # 5. KAPILA COGNITION (Cognition Protocol - WIE)
+        # 5. KAPILA COGNITION (Surrendered Logic - No Heavy Brain)
         # =====================================================================
-        # Use Kapila (Position 6) to THINK about the input.
-        # It is already wired with MahaLLM during Mahamantra.bootstrap().
-        from vibe_core.mahamantra.adapters.llm import MahaLLM
+        # We derive intent directly from the Seed (Chaitanya Computing).
+        # No need to instantiate MahaLLM or load KapilaService here.
+        # "tezāṁ satata-yuktānāṁ bhajatāṁ prīti-pūrvakam" (BG 10.10)
         
-        # Resolve Kapila Service (via fractal routing)
-        kapila = self.mahamantra.dharma.kapila.get_kapila_service()
-            
-        # Route via MahaLLM (which is Kapila's brain)
-        # Note: We still use MahaLLM logic for category extraction
-        llm_router = MahaLLM()
-        intent_route = llm_router.route_seed(seed)
-        intent_category = intent_route.category_name if intent_route.category else "GUIDE"
-        intent_id = intent_route.intent_id
+        # Logic: Category = Top 4 bits of Seed (Semantic Routing)
+        # This matches cli_auto.py logic but without the import weight.
+        category_id = (seed >> 24) & 0xF
+        intent_id = (seed & 0xFFFF)
+        
+        # Simple map for display (Mirroring IntentCategory from adapters/llm.py)
+        # We map 0-15 to the standard categories.
+        _CATEGORIES = [
+            "OBSERVE", "CREATE", "CONNECT", "ANALYZE", 
+            "EXECUTE", "TRANSFORM", "INVOKE", "SUSTAIN",
+            "EXPAND", "INTEGRATE", "VALIDATE", "PROTECT",
+            "GUIDE", "SURRENDER", "COMPLETE", "TRANSCEND"
+        ]
+        intent_category = _CATEGORIES[category_id] if category_id < 16 else "UNKNOWN"
 
         # =====================================================================
         # 6. JIVASHADOW SPAWN (50 qualities - WER)
