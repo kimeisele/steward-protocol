@@ -69,8 +69,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     """
 
     # Class-level Akash state (the 136 FIELD - persistent across instances)
+    # ALL INTEGERS - no floats!
     _akash: AkashState = {
-        "resonance_level": 0.0,
+        "resonance_level": 0,  # Integer! Accumulated % mod_space
         "accumulated_value": 0,
         "total_beats": 0,
         "total_rounds": 0,
@@ -148,11 +149,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Update the Akash field (136) with new vibration.
 
         The field absorbs every computation. Nothing is lost.
-        ALL CONSTANTS FROM _seed - no hardcoding!
+        ALL INTEGERS - no floats! ALL CONSTANTS FROM _seed.
         """
-        cls._akash["resonance_level"] = min(
-            1.0, cls._akash["resonance_level"] + vibration["resonance"] * 0.01
-        )
+        # Integer resonance accumulation (mod_space)
+        cls._akash["resonance_level"] = (
+            cls._akash["resonance_level"] + vibration["resonance"] + vibration["vina_resonance"]
+        ) % MAHA_QUANTUM  # 137 - from _seed
         cls._akash["accumulated_value"] = (
             cls._akash["accumulated_value"] + vibration["transformed"]
         ) % MAHA_QUANTUM  # 137 - from _seed
