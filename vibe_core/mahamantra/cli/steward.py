@@ -506,6 +506,7 @@ class Steward:
                 vibration=vibration,
                 intent_category=intent_category,
                 jiva_shadow_id=jiva_shadow_id,
+                maha_cell=maha_cell,  # Pass the MahaCell created at entry!
             )
 
             # Build message from bridge result
@@ -603,25 +604,28 @@ class Steward:
         vibration: dict,
         intent_category: str,
         jiva_shadow_id: str,
+        maha_cell: "MahaCell" = None,  # NOW USES MAHA_CELL!
     ) -> Any:
         """
         Universal execution via Balarama Bridge pattern.
 
-        NO hardcoded handlers. Everything flows through bridge.offer().
+        NO hardcoded handlers. Everything flows through MahaCell + bridge.offer().
 
         Flow:
             1. Intent → Purpose (via INTENT_TO_PURPOSE)
-            2. bridge.offer(content, purpose) → Position → Mahajana
-            3. Return structured result
+            2. wrap_cell() → MahaCell (72b header + payload)
+            3. bridge.offer(content, purpose) → Position → Mahajana
+            4. Return structured result with MahaCell info
 
         Args:
             input_text: The user input
             vibration: Full vibration state (seed, attractor, etc.)
             intent_category: MahaLLM intent (OBSERVE, CREATE, etc.)
             jiva_shadow_id: The spawned JivaShadow identifier
+            maha_cell: Optional pre-created MahaCell (from entry point)
 
         Returns:
-            Bridge result with position, mahajana, success status
+            Bridge result with position, mahajana, success status, maha_cell_size
         """
         from vibe_core.mahamantra.substrate.bridge import offer
 
@@ -639,6 +643,10 @@ class Steward:
             "vina_resonance": vibration["vina_resonance"],
         }
 
+        # Create MahaCell if not provided (wrap content in 72-byte header)
+        if maha_cell is None:
+            maha_cell = wrap_cell(content, purpose=purpose)
+
         # Offer to bridge - Balarama routes to correct Position/Mahajana
         result = offer(
             content=content,
@@ -646,6 +654,11 @@ class Steward:
             actor=f"steward:jiva:{jiva_shadow_id[:8]}",
             parampara_vector=vibration["seed"] % PARAMPARA * PARAMPARA,  # Ensure % 37 == 0
         )
+
+        # Add MahaCell info to result
+        if maha_cell:
+            result["maha_cell_size"] = maha_cell.size
+            result["maha_cell_valid"] = maha_cell.is_valid()
 
         return result
 
