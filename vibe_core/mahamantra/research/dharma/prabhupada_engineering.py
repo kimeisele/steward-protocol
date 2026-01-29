@@ -28,6 +28,11 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     SEVEN,
     TEN,
+    TRINITY,
+    QUARTERS,
+    PANCHA,
+    SHARANAGATI,
+    JIVA_QUALITIES,
 )
 
 
@@ -163,7 +168,7 @@ class NoSpeculation:
     security: str = "SPECTRE_IMMUNE"
 
     # 3 = TRINITY (Brahma-Vishnu-Shiva)
-    encoded_value: int = 3
+    encoded_value: int = TRINITY  # 3 = the 3 Names (humility)
 
 
 # =============================================================================
@@ -202,7 +207,7 @@ class NoSideEffects:
     purity: str = "FUNCTIONAL"
 
     # 4 = QUARTERS (the 4 things not desired)
-    encoded_value: int = 4
+    encoded_value: int = QUARTERS  # 4 = the 4 things rejected
 
 
 # =============================================================================
@@ -239,7 +244,7 @@ class ServiceOriented:
     architecture: str = "SERVICE_ORIENTED"
 
     # 5 = PANCHA (Pancha-tattva)
-    encoded_value: int = 5
+    encoded_value: int = PANCHA  # 5 = Pancha Tattva (service)
 
 
 # =============================================================================
@@ -277,7 +282,7 @@ class UnobstructedFlow:
     architecture: str = "STREAMING"
 
     # 6 = SHARANAGATI (6 limbs of surrender)
-    encoded_value: int = 6
+    encoded_value: int = SHARANAGATI  # 6 = limbs of surrender
 
 
 # =============================================================================
@@ -381,12 +386,29 @@ class PipelineStage(IntEnum):
     L7_RETURN_UNCONDITIONAL = 7  # Verse 8: āśliṣya vā
 
 
-# The constants encoded in each verse
-VERSE_CONSTANTS: Final[Tuple[int, ...]] = (7, 10, 3, 4, 5, 6, 7, 8)
+# The constants encoded in each verse - ALL DERIVED FROM _seed.py!
+# Verse 1: SEVEN (7) = HALF_SIZE - 1 = cache clear cycles
+# Verse 2: TEN (10) = MAHAJANA_COUNT - HALVES = input acceptance
+# Verse 3: TRINITY (3) = the 3 Names = humility
+# Verse 4: QUARTERS (4) = the 4 desires rejected
+# Verse 5: PANCHA (5) = the 5 Tattvas = service
+# Verse 6: SHARANAGATI (6) = 6 limbs of surrender = flow
+# Verse 7: SEVEN (7) = cycles of time perception
+# Verse 8: HALF_SIZE (8) = complete half = unconditional return
+VERSE_CONSTANTS: Final[Tuple[int, ...]] = (
+    SEVEN,       # Verse 1: 7 = HALF_SIZE - 1
+    TEN,         # Verse 2: 10 = MAHAJANA_COUNT - HALVES
+    TRINITY,     # Verse 3: 3 = the 3 Names
+    QUARTERS,    # Verse 4: 4 = the 4 quarters
+    PANCHA,      # Verse 5: 5 = the 5 Tattvas
+    SHARANAGATI, # Verse 6: 6 = limbs of surrender
+    SEVEN,       # Verse 7: 7 = cycles (time)
+    HALF_SIZE,   # Verse 8: 8 = complete half
+)
 
-# Sum = 50 = JIVA_QUALITIES
+# Sum = 50 = JIVA_QUALITIES - DERIVED!
 TOTAL_SUM: Final[int] = sum(VERSE_CONSTANTS)
-assert TOTAL_SUM == 50, "Sum of Siksastakam constants = 50 = JIVA_QUALITIES"
+assert TOTAL_SUM == JIVA_QUALITIES, f"Sum of Siksastakam constants = {JIVA_QUALITIES} = JIVA_QUALITIES"
 
 # Verses 1+2 = 7+10 = 17, +1 (observer) = 18 = GITA_CHAPTERS
 VERSE_1_2_SUM: Final[int] = VERSE_CONSTANTS[0] + VERSE_CONSTANTS[1]

@@ -44,16 +44,16 @@ from typing import Callable, Dict, Final, List, Optional, Tuple
 from vibe_core.mahamantra.substrate.seed import (
     MAHA_QUANTUM,
     PARAMPARA,
-    SEVEN,
     WORDS,
     HALF_SIZE,
+    JIVA_QUALITIES,
 )
 from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
 
+# SSOT: Import from prabhupada_engineering - NO DUPLICATION!
 from .prabhupada_engineering import (
     PipelineStage,
     VERSE_CONSTANTS,
-    VERSE_ONE_EFFECTS,
     ENGINEERING_SUMMARY,
 )
 from .maha_algorithm import (
@@ -63,7 +63,7 @@ from .maha_algorithm import (
 
 
 # =============================================================================
-# SIKSASTAKAM PIPELINE STAGES (PERSON-ANCHORED)
+# SIKSASTAKAM PIPELINE STAGES - DERIVED FROM SSOT (prabhupada_engineering.py)
 # =============================================================================
 
 @dataclass(frozen=True)
@@ -72,7 +72,6 @@ class SiksastakamStage:
 
     verse: int  # 1-8
     sanskrit: str
-    translation: str
     operation: str
     encoded_value: int
 
@@ -82,20 +81,34 @@ class SiksastakamStage:
         return self.verse - 1
 
 
-# The 8 verses as stages (from prabhupada_engineering.py)
-SIKSASTAKAM_STAGES: Final[Tuple[SiksastakamStage, ...]] = (
-    SiksastakamStage(1, "ceto-darpaṇa-mārjanam", "cleansing the mirror", "CACHE_CLEAR", 7),
-    SiksastakamStage(2, "nāmnām akāri bahudhā", "many names with potencies", "ACCEPT_INPUT", 10),
-    SiksastakamStage(3, "tṛṇād api sunīcena", "humbler than grass", "NO_SPECULATION", 3),
-    SiksastakamStage(4, "na dhanaṁ na janam", "not wealth, not followers", "NO_SIDE_EFFECTS", 4),
-    SiksastakamStage(5, "ayi nanda-tanuja kiṅkaraṁ", "I am Your servant", "SERVE_NEXT", 5),
-    SiksastakamStage(6, "nayanam galad-aśru", "eyes with flowing tears", "FLOW_DATA", 6),
-    SiksastakamStage(7, "yugāyitaṁ nimeṣeṇa", "moment seems like age", "TIMING_DETERMINISTIC", 7),
-    SiksastakamStage(8, "āśliṣya vā pāda-ratāṁ", "embrace me or trample", "RETURN_UNCONDITIONAL", 8),
-)
+def _build_siksastakam_stages() -> Tuple["SiksastakamStage", ...]:
+    """
+    Build SIKSASTAKAM_STAGES from SSOT (ENGINEERING_SUMMARY).
 
+    NO HARDCODED VALUES. Everything derived from prabhupada_engineering.py.
+    """
+    stages_data = ENGINEERING_SUMMARY["stages"]
+    stages = []
+
+    for stage_num in range(HALF_SIZE):  # 0-7
+        data = stages_data[stage_num]
+        stages.append(SiksastakamStage(
+            verse=data["verse"],
+            sanskrit=data["sanskrit"],
+            operation=data["op"],
+            encoded_value=VERSE_CONSTANTS[stage_num],  # From SSOT!
+        ))
+
+    return tuple(stages)
+
+
+# The 8 verses as stages - DERIVED FROM SSOT!
+SIKSASTAKAM_STAGES: Final[Tuple[SiksastakamStage, ...]] = _build_siksastakam_stages()
+
+# Verification using SSOT constants
 assert len(SIKSASTAKAM_STAGES) == HALF_SIZE, f"8 verses = HALF_SIZE ({HALF_SIZE})"
-assert sum(s.encoded_value for s in SIKSASTAKAM_STAGES) == 50, "Sum of constants = 50 = JIVA_QUALITIES"
+assert sum(s.encoded_value for s in SIKSASTAKAM_STAGES) == JIVA_QUALITIES, \
+    f"Sum of constants = {JIVA_QUALITIES} = JIVA_QUALITIES"
 
 
 # =============================================================================

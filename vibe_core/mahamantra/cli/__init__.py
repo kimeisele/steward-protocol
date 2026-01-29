@@ -77,7 +77,7 @@ from vibe_core.mahamantra.cli.steward import (
     Steward,
     StewardResponse,
     ResonanceRoute,
-    ResonanceQuarter,
+    Quarter,  # Re-exported from substrate.seed (was ResonanceQuarter)
     RESONANCE_MAP,
 )
 
@@ -143,6 +143,6 @@ __all__ = [
     "Steward",
     "StewardResponse",
     "ResonanceRoute",
-    "ResonanceQuarter",
+    "Quarter",  # Re-exported from substrate.seed
     "RESONANCE_MAP",
 ]
