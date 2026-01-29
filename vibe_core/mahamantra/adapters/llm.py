@@ -504,28 +504,36 @@ class MahaLLM:
 
     def _text_to_intent(self, text: str, *, use_base: bool = True) -> int:
         """
-        Convert text to 16-bit intent ID.
+        Convert text to 16-bit intent ID via VIBRATION SIGNATURES.
 
-        Uses CATEGORY_KEYWORDS for now - these ARE semantic knowledge about
-        which words map to which Mahamantra positions. Not arbitrary hardcoding,
-        but derived from the meaning of each position.
+        NO HARDCODED KEYWORDS! Uses shabda_translation.py:
+        1. text_to_vibration() → VibrationSignatures
+        2. signature_id computed from articulation, voicing, frequency
+        3. Total vibration % WORDS → Mahamantra position (0-15)
 
-        TODO: Make keywords LEARNABLE via guardian_intents.yaml pattern.
-        TODO: Keywords could be GENERATED from Mahamantra phonetic seeds.
+        English → Vibration → Sanskrit (intermediate) → Position
+        ALL DERIVED FROM _seed.py CONSTANTS!
         """
-        text_lower = text.lower()
+        from vibe_core.mahamantra.research.shabda_translation import (
+            text_to_vibration,
+            SANSKRIT_PHONEME_MAP,
+        )
 
-        # Find matching category by keywords
-        # NOTE: These keywords represent SEMANTIC knowledge about intent types
-        # They map to the 16 Mahamantra positions (IntentCategory values)
-        best_category = IntentCategory.GUIDE  # Default (position 12 = RAMA)
-        best_score = 0
+        # 1. Convert text to vibration signatures
+        vibrations = text_to_vibration(text, source_lang="en")
 
-        for category, keywords in CATEGORY_KEYWORDS.items():
-            score = sum(1 for kw in keywords if kw in text_lower)
-            if score > best_score:
-                best_score = score
-                best_category = category
+        if vibrations:
+            # 2. Sum all signature_ids to get total vibration
+            total_vibration = sum(sig.signature_id for sig in vibrations)
+
+            # 3. Map to 16 Mahamantra positions
+            category_value = total_vibration % WORDS
+        else:
+            # Fallback: use character sum (still mathematical, not hardcoded!)
+            char_sum = sum(ord(c) for c in text.lower() if c.isalpha())
+            category_value = char_sum % WORDS
+
+        best_category = IntentCategory(category_value)
 
         if use_base:
             return best_category.value << 12
