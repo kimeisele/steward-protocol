@@ -27,12 +27,27 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0x03936f7f"  # GenesisByte: parampara % 37 == 0
 
+import logging
 import sys
 from typing import Final, List, Optional
 
 # Exit codes
 EXIT_SUCCESS: Final[int] = 0
 EXIT_ERROR: Final[int] = 1
+
+# =============================================================================
+# SILENCE THE NOISE - Only errors/warnings by default
+# Use --verbose or STEWARD_DEBUG=1 for debug output
+# =============================================================================
+def _configure_logging(verbose: bool = False) -> None:
+    """Configure logging - suppress INFO spam by default."""
+    import os
+    level = logging.DEBUG if (verbose or os.environ.get("STEWARD_DEBUG")) else logging.WARNING
+    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+    # Suppress noisy libraries
+    logging.getLogger("vibe_core.runtime.prompt_registry").setLevel(level)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -49,6 +64,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     """
     if argv is None:
         argv = sys.argv[1:]
+
+    # Silence logging spam (use --verbose or STEWARD_DEBUG=1 for debug)
+    verbose = "--verbose" in argv or "-v" in argv
+    if verbose:
+        argv = [a for a in argv if a not in ("--verbose", "-v")]
+    _configure_logging(verbose)
 
     # No command = help
     if not argv:
@@ -95,36 +116,56 @@ def main(argv: Optional[List[str]] = None) -> int:
         siksastakam_stage = getattr(response, 'siksastakam_stage', 1) or 1
         siksastakam_op = getattr(response, 'siksastakam_operation', '?') or '?'
 
+        # Safe string conversion for display
+        input_str = str(response.input)[:60]
+        seed_str = str(response.seed)
+        chapter_str = str(response.chapter)
+        insight_str = str(response.route.insight)[:25]
+        attractor_str = str(response.attractor)
+        quarter_str = str(response.route.quarter.value)[:10]
+        guna_str = str(response.route.guna)[:10]
+        intent_str = str(response.intent_category or 'GUIDE')[:12]
+        intent_id = response.intent_id or 0
+        shadow_id_str = str(response.jiva_shadow_id or '')[:20]
+        jiva_guna_str = str(response.jiva_guna or '?')[:10]
+        quality_count = response.jiva_quality_count or 0
+        resonance = response.resonance
+        vina_resonance = response.vina_resonance
+        call_response_str = str(response.call_response)[:10]
+        shadow_phase_str = str(response.shadow_phase)[:10]
+        shadow_pos = response.shadow_position
+        message_str = str(response.message)[:67]
+
         print(f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  STEWARD - PERSON-Anchored Resonance Router                           ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  INPUT: {response.input[:60]:60s} ║
-║  SEED:  {response.seed:<60} ║
+║  INPUT: {input_str:60s} ║
+║  SEED:  {seed_str:<60s} ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  GITA (18 chapters) - WAS/DOMAIN:                                     ║
-║    Chapter:  {response.chapter:2} - {response.route.insight:25s}  Attractor: {response.attractor:<3}     ║
-║    Quarter:  {response.route.quarter.value:10s}  Guna: {response.route.guna:10s}                   ║
+║    Chapter:  {chapter_str:>2s} - {insight_str:25s}  Attractor: {attractor_str:<3s}     ║
+║    Quarter:  {quarter_str:10s}  Guna: {guna_str:10s}                   ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  MAHALLM (16 intents) - WIE/ACTION:                                   ║
-║    Intent:   {response.intent_category or 'GUIDE':12s}  (0x{response.intent_id or 0:04X})                          ║
+║    Intent:   {intent_str:12s}  (0x{intent_id:04X})                          ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  JIVASHADOW (50 qualities) - WER/AGENT:                               ║
-║    Shadow:   {(response.jiva_shadow_id or '')[:20]:20s}                               ║
-║    Guna:     {response.jiva_guna or '?':10s}  Qualities: {response.jiva_quality_count or 0:2}/50                  ║
+║    Shadow:   {shadow_id_str:20s}                               ║
+║    Guna:     {jiva_guna_str:10s}  Qualities: {quality_count:2d}/50                  ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  TRIPLE RESONANCE (Integer):                                          ║
-║    Flute (WHEN):  {response.resonance:>5}  (tick % mod_space)                       ║
-║    Vina (WHAT):   {response.vina_resonance:>5}  (seed % mod_space)  String: {vina_name:10s}    ║
+║    Flute (WHEN):  {resonance:>5}  (tick % mod_space)                       ║
+║    Vina (WHAT):   {vina_resonance:>5}  (seed % mod_space)  String: {vina_name:10s}    ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  PRABHUPADA KIRTAN (8 Siksastakam Stages):                            ║
-║    Stage:    L{siksastakam_stage-1} - {siksastakam_op:15s}  Mode: {response.call_response:10s}           ║
+║    Stage:    L{siksastakam_stage-1} - {siksastakam_op:15s}  Mode: {call_response_str:10s}           ║
 ║    PERSON:   {person_mark:10s}  (parampara % 37 == 0)                        ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  SHADOW REACTOR:                                                      ║
-║    Phase:    {response.shadow_phase:10s}  Position: {response.shadow_position:>2}                            ║
+║    Phase:    {shadow_phase_str:10s}  Position: {shadow_pos:>2}                            ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  {response.message[:67]:67s} ║
+║  {message_str:67s} ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 """)
 
@@ -213,6 +254,16 @@ CALL ↔ RESPONSE. No hardcoding. Pure vibration.
 
 def cli_entry() -> None:
     """Console script entry point (pyproject.toml)."""
+    # FIRST: Silence logging before ANY other imports happen
+    import os
+    verbose = "--verbose" in sys.argv or "-v" in sys.argv or os.environ.get("STEWARD_DEBUG")
+    level = logging.DEBUG if verbose else logging.WARNING
+    logging.basicConfig(level=level, format="%(levelname)s: %(message)s", force=True)
+    # Suppress all vibe_core loggers
+    for name in list(logging.Logger.manager.loggerDict.keys()):
+        if "vibe_core" in name or name in ("CARTRIDGE_BRIDGE", "CARTRIDGE_SERVICE"):
+            logging.getLogger(name).setLevel(level)
+
     sys.exit(main())
 
 

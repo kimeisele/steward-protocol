@@ -81,7 +81,7 @@ class CartridgeService(CartridgeProtocol):
                 self._scan_cartridge(cartridge_dir)
 
         self._scanned = True
-        logger.info(f"Scanned {len(self._cartridges)} cartridges")
+        logger.debug(f"Scanned {len(self._cartridges)} cartridges")
         return len(self._cartridges)
 
     def _scan_cartridge(self, cartridge_dir: Path) -> None:
@@ -279,6 +279,6 @@ def get_cartridge_service(workspace: Optional[Path] = None) -> CartridgeService:
 
     # Register with ServiceRegistry (applies NagaProxy wrapping!)
     ServiceRegistry.register(CartridgeProtocol, instance)
-    logger.info("✅ CartridgeService registered via ServiceRegistry (NAGA-observed)")
+    logger.debug("✅ CartridgeService registered via ServiceRegistry (NAGA-observed)")
 
     return ServiceRegistry.get(CartridgeProtocol)  # type: ignore
