@@ -151,7 +151,7 @@ class LazyCartridgeRegistry:
             self._cartridges[info.cartridge_id] = stub
 
         self._scanned = True
-        logger.info(
+        logger.debug(
             f"Lazy scan complete: {len(self._cartridges)} cartridges, "
             f"{sum(len(c.tool_stubs) for c in self._cartridges.values())} tool stubs"
         )
@@ -631,7 +631,7 @@ def register_cartridge_bridges():
         CLIRegistry._instances[cartridge.cartridge_id] = bridge
         registered += 1
 
-    logger.info(f"Registered {registered} cartridge CLI bridges (lazy loading)")
+    logger.debug(f"Registered {registered} cartridge CLI bridges (lazy loading)")
 
 
 def main():
@@ -676,7 +676,7 @@ def get_lazy_cartridge_registry(root_path: Path = None) -> LazyCartridgeRegistry
 
     # Register with ServiceRegistry (applies NagaProxy wrapping!)
     ServiceRegistry.register(LazyCartridgeRegistry, instance)
-    logger.info("✅ LazyCartridgeRegistry registered via ServiceRegistry (NAGA-observed)")
+    logger.debug("✅ LazyCartridgeRegistry registered via ServiceRegistry (NAGA-observed)")
 
     return ServiceRegistry.get(LazyCartridgeRegistry)  # type: ignore
 
