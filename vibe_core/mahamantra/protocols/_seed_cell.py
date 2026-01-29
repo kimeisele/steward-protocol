@@ -116,6 +116,10 @@ _MAHA_CELL: dict = {
     # === EPOCH ===
     "EPOCH_KEY": 1972,
     "GOLDEN_AGE_DURATION": 10000,
+
+    # === TRANSCENDENTAL CELL ===
+    # 1096 = 8 × 137 = 1024 + 72 (Header + Payload)
+    "TRANSCENDENTAL_1096": 1096,
 }
 
 # =============================================================================
@@ -152,6 +156,8 @@ COSMIC_FRAME: Final[int] = _MAHA_CELL["COSMIC_FRAME"]
 JIVA_CYCLE: Final[int] = _MAHA_CELL["JIVA_CYCLE"]
 NADI_RESONANCE: Final[int] = _MAHA_CELL["NADI_RESONANCE"]
 POSITION_SUM_TOTAL: Final[int] = _MAHA_CELL["POSITION_SUM_TOTAL"]
+SHARANAGATI: Final[int] = _MAHA_CELL["SHARANAGATI"]
+TRANSCENDENTAL_1096: Final[int] = _MAHA_CELL["TRANSCENDENTAL_1096"]
 
 # =============================================================================
 # VERIFICATION (Only runs with MAHA_VERIFY=1)

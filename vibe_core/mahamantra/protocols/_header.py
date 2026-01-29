@@ -51,9 +51,11 @@ from enum import IntEnum
 from typing import Final, Tuple
 
 # =============================================================================
-# IMPORT FROM SEED (SSOT - THE LAW)
+# IMPORT FROM SEED CELL (FAST PATH - O(1) LOAD)
 # =============================================================================
-from vibe_core.mahamantra.protocols._seed import (
+# SIKSASTAKAM: Use pre-computed constants instead of 3000-line derivation.
+# Import time: ~5ms (vs 105ms from _seed.py)
+from vibe_core.mahamantra.protocols._seed_cell import (
     COSMIC_FRAME,  # 21600 - Daily resolution
     HALF_SIZE,  # 8 - Bytes per field
     JIVA_CYCLE,  # 432 - Harmonic frequency
