@@ -213,20 +213,27 @@ class MahamantraCLIBridge:
         Route and execute a CLI command.
 
         Flow:
-        1. Try cli_auto.execute() (auto-discovered from Protocols - NO MANUAL WIRING)
-        2. If not implemented, fallback to Legacy System (UnifiedCLI) or Registry
-        3. Return BridgeResult
+        1. Get position via Siksastakam (O(1) cached) OR fallback to self.get_position
+        2. Execute via cli_auto (has the method matching logic)
+        3. Fallback to Legacy if needed
 
-        ROYAL DELEGATION: Krishna discovers, Krishna routes, Krishna executes.
+        SIKSASTAKAM: Position routing is cached. Method matching via cli_auto.
         """
-        # Import cli_auto (NOT cli_engine) - auto-discovery is the way
-        from vibe_core.mahamantra.cli.auto import cli_auto
         from vibe_core.mahamantra.cli.protocol import CLIErrorCode
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
-        # Get position for reporting
-        position = self.get_position(command)
+        # =================================================================
+        # POSITION ROUTING - Siksastakam (O(1) cached) or fallback
+        # =================================================================
+        try:
+            from vibe_core.mahamantra.substrate.siksastakam_registry import route_to_position
+            position = route_to_position(command)
+        except Exception:
+            position = self.get_position(command)
 
-        # Execute via cli_auto (Krishna discovers and does the work)
+        # =================================================================
+        # EXECUTION - cli_auto (has method matching)
+        # =================================================================
         result = cli_auto.execute(command, args)
 
         # If not implemented in cli_engine, try legacy fallback

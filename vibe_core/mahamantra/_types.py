@@ -19,9 +19,11 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0x7c5f43fc"  # GenesisByte: parampara % 37 == 0
 
-from typing import Optional, TypedDict
+from typing import TYPE_CHECKING, Optional, TypedDict
 
-from vibe_core.mahamantra.protocols._header import MahaCell
+# LAZY: Avoid circular import chain (_types → _header → ...)
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.protocols._header import MahaCell
 
 
 # =============================================================================

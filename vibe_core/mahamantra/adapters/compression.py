@@ -72,6 +72,7 @@ __genesis__ = "0xadd8ef72"  # GenesisByte: parampara % 37 == 0  # Compression la
 
 from dataclasses import dataclass
 from enum import Enum
+from functools import lru_cache
 from typing import Dict, Final, List, Optional, Tuple, Union
 import hashlib
 import json
@@ -327,6 +328,82 @@ class PhysicsVerification:
 
 
 # =============================================================================
+# SIKSASTAKAM CACHE - Effect #1: ceto-darpaṇa-mārjanaṁ (Cache Invalidation)
+# 512 = OCTET (8 verses) × QUALITIES (64) = Siksastakam Cache Structure
+# =============================================================================
+
+_SIKSASTAKAM_CACHE_SIZE: Final[int] = 512  # 8 × 64 = OCTET × QUALITIES
+
+# Lazy singletons - initialized once, reused forever
+_MAHA_LLM: Optional["MahaLLM"] = None  # noqa: F821
+_MAHA_KIRTAN: Optional["MahaKirtan"] = None  # noqa: F821
+_MAHA_RESONATOR: Optional["MahaResonator"] = None  # noqa: F821
+
+
+def _get_maha_llm() -> "MahaLLM":  # noqa: F821
+    """Singleton MahaLLM - O(1) after first call."""
+    global _MAHA_LLM
+    if _MAHA_LLM is None:
+        from vibe_core.mahamantra.adapters.llm import MahaLLM
+        _MAHA_LLM = MahaLLM()
+    return _MAHA_LLM
+
+
+def _get_maha_kirtan() -> "MahaKirtan":  # noqa: F821
+    """Singleton MahaKirtan - O(1) after first call."""
+    global _MAHA_KIRTAN
+    if _MAHA_KIRTAN is None:
+        from vibe_core.mahamantra.research.dharma import MahaKirtan
+        _MAHA_KIRTAN = MahaKirtan(mod_space=MAHA_QUANTUM)
+    return _MAHA_KIRTAN
+
+
+def _get_maha_resonator() -> "MahaResonator":  # noqa: F821
+    """Singleton MahaResonator - O(1) after first call."""
+    global _MAHA_RESONATOR
+    if _MAHA_RESONATOR is None:
+        from vibe_core.mahamantra.research.dharma import MahaResonator
+        _MAHA_RESONATOR = MahaResonator(mod_space=MAHA_QUANTUM)
+    return _MAHA_RESONATOR
+
+
+@lru_cache(maxsize=_SIKSASTAKAM_CACHE_SIZE)
+def _compute_seed_cached(text: str) -> int:
+    """
+    Cached seed computation - Siksastakam Effect #1.
+
+    512-slot LRU cache = 8 × 64 = OCTET × QUALITIES.
+    Same text → Same seed → O(1) lookup after first compute.
+    """
+    # Use singletons instead of creating new instances
+    llm = _get_maha_llm()
+    kirtan = _get_maha_kirtan()
+    resonator = _get_maha_resonator()
+
+    # 1. SEMANTIC CLASSIFICATION via MahaLLM
+    route = llm.route_text(text)
+    category = route.category.value if route.category else 0
+
+    # 2. Create base seed from category + text entropy
+    text_hash = int.from_bytes(
+        hashlib.sha256(text.encode("utf-8")).digest()[:2], "big"
+    )
+    base_seed = (category * MAHA_QUANTUM) + (text_hash % MAHA_QUANTUM)
+
+    # 3. TRANSFORM via MahaKirtan (16-step × 7-beat)
+    kirtan_result = kirtan.compute(base_seed)
+    transformed = kirtan_result.transformed_value
+
+    # 4. ATTRACTOR via MahaResonator
+    attractor = resonator.oscillate_once(transformed)
+
+    # 5. Final seed combines all three layers
+    final_seed = (category << 24) | (transformed << 12) | attractor
+
+    return final_seed & 0xFFFFFFFF
+
+
+# =============================================================================
 # MAHA COMPRESSION ENGINE
 # =============================================================================
 
@@ -436,44 +513,13 @@ class MahaCompression:
         """
         Compute deterministic seed using REAL Maha Computing.
 
-        NOT SHA256! Uses the full Maha Algorithm pipeline:
-        1. MahaLLM → Semantic intent classification (0-15)
-        2. MahaKirtan → 16-step × 7-beat transform
-        3. MahaResonator → Attractor finding (PANCHA)
+        CACHED via Siksastakam 512-slot LRU (Effect #1: ceto-darpaṇa-mārjanaṁ).
+        Uses singleton instances - NO NEW OBJECTS PER CALL.
 
-        Same semantic intent → Same seed → Same routing.
-        "analyze this" and "please analyze" → SAME category → SAME routing!
+        Pipeline: MahaLLM → MahaKirtan → MahaResonator → Seed
+        Same text → Same seed → O(1) after first compute.
         """
-        from vibe_core.mahamantra.adapters.llm import MahaLLM, IntentCategory
-        from vibe_core.mahamantra.research.dharma import MahaKirtan, MahaResonator
-
-        # 1. SEMANTIC CLASSIFICATION via MahaLLM
-        llm = MahaLLM()
-        route = llm.route_text(text)
-        category = route.category.value if route.category else 0
-
-        # 2. Create base seed from category + text entropy
-        # Category provides SEMANTIC grounding (0-15)
-        # Text hash provides UNIQUENESS within category
-        text_hash = int.from_bytes(
-            hashlib.sha256(text.encode("utf-8")).digest()[:2], "big"
-        )  # 16-bit for uniqueness
-        base_seed = (category * MAHA_QUANTUM) + (text_hash % MAHA_QUANTUM)
-
-        # 3. TRANSFORM via MahaKirtan (16-step × 7-beat)
-        kirtan = MahaKirtan(mod_space=MAHA_QUANTUM)
-        kirtan_result = kirtan.compute(base_seed)
-        transformed = kirtan_result.transformed_value
-
-        # 4. ATTRACTOR via MahaResonator (finds stable state)
-        resonator = MahaResonator(mod_space=MAHA_QUANTUM)
-        attractor = resonator.oscillate_once(transformed)
-
-        # 5. Final seed combines all three layers
-        # Category (semantic) + Transform (algorithmic) + Attractor (harmonic)
-        final_seed = (category << 24) | (transformed << 12) | attractor
-
-        return final_seed & 0xFFFFFFFF  # 32-bit
+        return _compute_seed_cached(text)
 
     def _classify_intent(self, text: str) -> IntentLevel:
         """Classify text into one of 4 intent levels."""
