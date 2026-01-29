@@ -108,6 +108,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         MahaCompression → seed → MahaKirtan.compute() → VibrationState
         This is the +1 FOKUS (Lichtpunkt).
+
+        DUAL INSTRUMENT RESONANCE (Watertight from _seed.py):
+            flute_resonance: Krishna's 3 flutes - WHEN (rhythmic)
+            vina_resonance: Narada's 5 strings - WHAT TYPE (harmonic)
         """
         compressor, kirtan = cls._get_kirtan()
 
@@ -116,6 +120,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         seed = comp_result.seed
 
         # 2. Compute through kirtan (16-step × 7-beat)
+        # Now includes both flute_resonance AND vina_resonance!
         result = kirtan.compute(seed)
 
         # 3. Find attractor (for classification)
@@ -129,7 +134,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             seed=seed,
             transformed=result.transformed_value,
             beat=result.beat_number,
-            resonance=result.flute_resonance,
+            resonance=result.flute_resonance,  # Krishna's flutes (WHEN)
+            vina_resonance=result.vina_resonance,  # Narada's vina (WHAT TYPE)
+            vina_string=result.vina_string,  # Which Pancha Tattva string (1-5)
             attractor=attractor,
             parampara_channel=result.parampara_channel,
             oracle_validated=result.oracle_validated,

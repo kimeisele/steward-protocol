@@ -1914,6 +1914,7 @@ _lila_chronology_loaded = False
 _LilaStepSequencer = None
 _KirtanRuntime = None
 _FluteSync = None
+_VinaSync = None  # Narada's Vina (RUNDE 20)
 _get_step_sequencer = None
 _get_kirtan_runtime = None
 
@@ -1921,7 +1922,7 @@ _get_kirtan_runtime = None
 def _ensure_lila_imports():
     """Lazy load Lila chronology components."""
     global _lila_chronology_loaded, _LilaStepSequencer, _KirtanRuntime
-    global _FluteSync, _get_step_sequencer, _get_kirtan_runtime
+    global _FluteSync, _VinaSync, _get_step_sequencer, _get_kirtan_runtime
 
     if _lila_chronology_loaded:
         return
@@ -1930,6 +1931,7 @@ def _ensure_lila_imports():
         FluteSync,
         KirtanRuntime,
         LilaStepSequencer,
+        VinaSync,  # Narada's Vina - 5 strings (Pancha Tattva)
         get_kirtan_runtime,
         get_step_sequencer,
     )
@@ -1937,6 +1939,7 @@ def _ensure_lila_imports():
     _LilaStepSequencer = LilaStepSequencer
     _KirtanRuntime = KirtanRuntime
     _FluteSync = FluteSync
+    _VinaSync = VinaSync
     _get_step_sequencer = get_step_sequencer
     _get_kirtan_runtime = get_kirtan_runtime
     _lila_chronology_loaded = True
@@ -1944,7 +1947,13 @@ def _ensure_lila_imports():
 
 @dataclass(frozen=True)
 class KirtanComputeResult:
-    """Result of a MahaKirtan compute cycle."""
+    """
+    Result of a MahaKirtan compute cycle.
+
+    DUAL INSTRUMENT RESONANCE (Watertight from _seed.py):
+        flute_resonance: Krishna's 3 flutes (MURALI/VENU/VAMSI) - WHEN (rhythmic)
+        vina_resonance: Narada's 5 strings (Pancha Tattva) - WHAT TYPE (harmonic)
+    """
 
     seed: int
     transformed_value: int
@@ -1952,7 +1961,9 @@ class KirtanComputeResult:
     beat_year: int  # 1911-1977
     beat_delta: int  # 15-81
     call_response: str  # "CALL" or "RESPONSE"
-    flute_resonance: float  # 0.0-1.0 (combined flute sync)
+    flute_resonance: float  # 0.0-1.0 (combined flute sync - MURALI/VENU/VAMSI)
+    vina_resonance: float  # 0.0-1.0 (Narada's Vina - 5 strings)
+    vina_string: int  # 1-5 (which Pancha Tattva string resonates)
     oracle_validated: bool  # Parampara pre-filter passed
     parampara_channel: int  # 0-2 or -1 if void
     round_number: int  # Which kirtan round
@@ -2043,6 +2054,21 @@ class MahaKirtan:
         """Get combined flute resonance for current tick."""
         return _FluteSync.get_combined_resonance(tick)
 
+    def _get_vina_resonance(self, seed: int, tick: int) -> tuple[float, int]:
+        """
+        Get Vina resonance for seed (Narada's 5-string instrument).
+
+        Returns (resonance, string_number) where:
+            - resonance: 0.0-1.0 combined vina resonance
+            - string_number: 1-5 (which Pancha Tattva string)
+
+        VINA-FLUTE IDENTITY (from _seed.py RUNDE 20):
+            VINA × FLUTE_VENU_VAMSI = JIVA_CYCLE × KRISHNA
+        """
+        vina_info = _VinaSync.get_vina_resonance(seed)
+        vina_resonance = _VinaSync.get_combined_resonance(seed, tick)
+        return vina_resonance, vina_info["string"]
+
     def _oracle_prefilter(self, seed: int) -> tuple[bool, int]:
         """
         Apply Oracle pre-filter (Gita 13.35 - MANDATORY).
@@ -2076,8 +2102,11 @@ class MahaKirtan:
         oracle_valid, parampara_channel = self._oracle_prefilter(seed)
         self._state.last_oracle_result = oracle_valid
 
-        # Get flute resonance
+        # Get flute resonance (Krishna's 3 flutes - WHEN)
         flute_resonance = self._get_flute_resonance(tick)
+
+        # Get vina resonance (Narada's 5 strings - WHAT TYPE)
+        vina_resonance, vina_string = self._get_vina_resonance(seed, tick)
 
         # Apply MahaModularSynth transform
         # Modulate by beat's delta (year significance)
@@ -2088,6 +2117,11 @@ class MahaKirtan:
         if flute_resonance > 0:
             resonance_boost = int(transformed * flute_resonance * 0.1)
             transformed = (transformed + resonance_boost) % self.mod_space
+
+        # Apply vina resonance modulation (string-based harmonic boost)
+        if vina_resonance > 0.3:  # Only boost when string strongly resonates
+            vina_boost = int(transformed * vina_resonance * 0.05)
+            transformed = (transformed + vina_boost) % self.mod_space
 
         # Update state
         self._state.current_tick = tick
@@ -2104,6 +2138,8 @@ class MahaKirtan:
             beat_delta=beat.delta,
             call_response=beat.call_response,
             flute_resonance=flute_resonance,
+            vina_resonance=vina_resonance,
+            vina_string=vina_string,
             oracle_validated=oracle_valid,
             parampara_channel=parampara_channel,
             round_number=state.round_number,

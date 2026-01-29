@@ -95,14 +95,23 @@ RESONANCE_MAP: Final[Dict[int, ResonanceRoute]] = {
 
 @dataclass
 class StewardResponse:
-    """Response from the Steward."""
+    """
+    Response from the Steward.
+
+    DUAL INSTRUMENT RESONANCE (Watertight from _seed.py):
+        resonance (flute): Krishna's 3 flutes - WHEN (rhythmic)
+        vina_resonance: Narada's 5 strings - WHAT TYPE (harmonic)
+        vina_string: Which Pancha Tattva string (1-5)
+    """
     input: str
     seed: int
     attractor: int
     chapter: int
     route: ResonanceRoute
     call_response: str  # "CALL" or "RESPONSE"
-    resonance: float
+    resonance: float  # Krishna's flute resonance (WHEN)
+    vina_resonance: float  # Narada's vina resonance (WHAT TYPE)
+    vina_string: int  # 1-5: CHAITANYA/NITYANANDA/ADVAITA/GADADHARA/SRIVASA
     result: Optional[Any] = None
     message: str = ""
 
@@ -161,13 +170,19 @@ class Steward:
         The universal invocation.
 
         Any input → Resonance → Route → Execute → Response
+
+        DUAL INSTRUMENT RESONANCE:
+            1. Krishna's Flute (resonance) - WHEN (rhythmic, tick-based)
+            2. Narada's Vina (vina_resonance) - WHAT TYPE (harmonic, seed-based)
         """
         # 1. SRAVANAM: Receive input
-        # 2. MANANAM: Compress to seed
+        # 2. MANANAM: Compress to seed (includes dual instrument resonance!)
         vibration = self.mahamantra.vibrate(input_text)
         seed = vibration["seed"]
         attractor = vibration["attractor"]
-        resonance = vibration["resonance"]
+        resonance = vibration["resonance"]  # Flute (WHEN)
+        vina_resonance = vibration["vina_resonance"]  # Vina (WHAT TYPE)
+        vina_string = vibration["vina_string"]  # Which Pancha Tattva string (1-5)
 
         # 3. NIDIDHYASANA: Seed → Kirtan → CALL/RESPONSE
         kirtan = self.mahamantra.kirtan(seed)
@@ -194,7 +209,7 @@ class Steward:
         else:
             message = f"No handler for {route.module_hint}"
 
-        # 5. Build response
+        # 5. Build response with DUAL RESONANCE
         return StewardResponse(
             input=input_text,
             seed=seed,
@@ -203,6 +218,8 @@ class Steward:
             route=route,
             call_response=call_response,
             resonance=resonance,
+            vina_resonance=vina_resonance,
+            vina_string=vina_string,
             result=result,
             message=message,
         )
@@ -354,9 +371,17 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
         steward "optimize the network"
         steward "heal this code"
         steward "chat with me"
+
+    DUAL INSTRUMENT RESONANCE:
+        flute_resonance: Krishna's 3 flutes - WHEN
+        vina_resonance: Narada's 5 strings - WHAT TYPE
     """
     steward = get_steward()
     response = steward.invoke(input_text)
+
+    # Map vina string to Pancha Tattva name
+    vina_names = {1: "CHAITANYA", 2: "NITYANANDA", 3: "ADVAITA", 4: "GADADHARA", 5: "SRIVASA"}
+    vina_name = vina_names.get(response.vina_string, "UNKNOWN")
 
     if verbose:
         print(f"""
@@ -370,7 +395,10 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
 ║  Module:     {response.route.module_hint:40} ║
 ║  Quarter:    {response.route.quarter.value:40} ║
 ║  Mode:       {response.call_response:40} ║
-║  Resonance:  {response.resonance:40.3f} ║
+╠══════════════════════════════════════════════════════════════╣
+║  DUAL RESONANCE:                                             ║
+║  Flute:      {response.resonance:40.3f} ║
+║  Vina:       {response.vina_resonance:.3f} (String {response.vina_string}: {vina_name:21}) ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  {response.message[:58]:58} ║
 ╚══════════════════════════════════════════════════════════════╝
@@ -385,6 +413,9 @@ def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
         "quarter": response.route.quarter.value,
         "call_response": response.call_response,
         "resonance": response.resonance,
+        "vina_resonance": response.vina_resonance,
+        "vina_string": response.vina_string,
+        "vina_name": vina_name,
         "result": response.result,
         "message": response.message,
     }
