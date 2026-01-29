@@ -14,6 +14,11 @@ Usage:
 "Ein Gehirn, das nie handelt, lernt nie."
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xc171f121"  # GenesisByte: parampara % 37 == 0
+
 import json
 import sys
 from pathlib import Path

@@ -1,3 +1,8 @@
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0xc775f155"  # GenesisByte: parampara % 37 == 0
 import asyncio
 import json
 import logging

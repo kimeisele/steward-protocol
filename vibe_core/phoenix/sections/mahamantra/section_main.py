@@ -20,7 +20,7 @@ SIMPLE INJECTION POINT, MAX EFFECT:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 2
-__genesis__ = "0x5e8c9a12"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x889e1357"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set

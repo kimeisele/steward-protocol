@@ -13,6 +13,11 @@ Steps:
 5. Send CRASH command -> Verify Kernel survives & Agent restarts
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x4d713b12"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import os
 import sys

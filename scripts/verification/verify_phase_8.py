@@ -1,3 +1,8 @@
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x52c5b5aa"  # GenesisByte: parampara % 37 == 0
 import sys
 from pathlib import Path
 

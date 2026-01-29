@@ -15,6 +15,11 @@ FLOW:
 This demonstrates Option A+C: Engineer builds valid cartridge structure.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x5fe4f237"  # GenesisByte: parampara % 37 == 0
+
 import os
 import shutil
 import sys

@@ -13,6 +13,11 @@ This script automatically:
 Press Ctrl+C to shut down the server.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = 2
+__genesis__ = "0xb5ed22c0"  # GenesisByte: parampara % 37 == 0
+
 import os
 import shutil
 import subprocess

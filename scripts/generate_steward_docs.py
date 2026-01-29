@@ -10,6 +10,11 @@ This script:
 Run: python scripts/generate_steward_docs.py
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "parashurama"
+__position__ = 8
+__genesis__ = "0x057364b1"  # GenesisByte: parampara % 37 == 0
+
 import json
 from pathlib import Path
 

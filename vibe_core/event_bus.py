@@ -28,7 +28,7 @@ Will be removed in future version.
 # Position 2 determines ownership dynamically
 __mahajana__ = "dynamic"  # Resolved at runtime from SSOT
 __position__ = 2
-__genesis__ = "0x000000aa"  # GenesisByte (Position 2)
+__genesis__ = "0x83127fa7"  # GenesisByte (Position 2)
 
 from vibe_core.mahamantra.substrate.registry import GuardianRegistry
 

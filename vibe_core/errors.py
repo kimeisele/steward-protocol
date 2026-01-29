@@ -24,7 +24,7 @@ Will be removed in future version.
 # Position 4 determines ownership dynamically
 __mahajana__ = "dynamic"  # Resolved at runtime from SSOT
 __position__ = 4
-__genesis__ = "0x94644443"  # GenesisByte (Position 4)
+__genesis__ = "0xbdf3586d"  # GenesisByte (Position 4)
 
 from typing import Any
 

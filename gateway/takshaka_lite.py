@@ -16,6 +16,11 @@ PROMPT.md Compliance:
 - "Ein Paket ohne valide kryptografische Signatur wird verworfen, BEVOR der Payload deserialisiert wird"
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x7e4609ac"  # GenesisByte: parampara % 37 == 0
+
 import logging
 import re
 import time

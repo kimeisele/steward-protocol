@@ -17,7 +17,7 @@ NO SPAGHETTI. PROTOCOL FIRST. SSOT.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "yamaraja"
 __position__ = 15
-__genesis__ = "0x8a3c5f92"
+__genesis__ = "0x65597f7c"
 
 import ast
 from typing import Dict, List

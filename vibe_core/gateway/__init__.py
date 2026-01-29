@@ -22,7 +22,7 @@ Protocol-first. SSOT. No manual wiring.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 4
-__genesis__ = "0x7d3e1a82"
+__genesis__ = "0x28eed02b"
 
 from vibe_core.gateway.mahamantra_gateway import (
     MahamantraGateway,

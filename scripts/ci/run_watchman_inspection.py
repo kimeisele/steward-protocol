@@ -16,6 +16,11 @@ The kernel machinery was causing hangs due to tight coupling.
 The tool itself runs in <1 second.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x2c0f1f93"  # GenesisByte: parampara % 37 == 0
+
 import json
 import sys
 from pathlib import Path

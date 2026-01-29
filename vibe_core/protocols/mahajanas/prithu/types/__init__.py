@@ -9,7 +9,7 @@ Types for records, lineage, ledger, and compliance.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
 __position__ = 4
-__genesis__ = "0x94644443"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xa3e52f02"  # GenesisByte: parampara % 37 == 0
 
 from vibe_core.protocols.mahajanas.prithu.types.errors import (
     ErrorCategory,

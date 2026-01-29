@@ -12,6 +12,11 @@ Scenario:
 5. Verify routing and execution flow.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "yamaraja"
+__position__ = 15
+__genesis__ = "0x5740eee6"  # GenesisByte: parampara % 37 == 0
+
 import asyncio
 import logging
 import sys
