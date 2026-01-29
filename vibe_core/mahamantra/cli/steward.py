@@ -437,11 +437,17 @@ class Steward:
         route = RESONANCE_MAP.get(chapter, RESONANCE_MAP[18])  # Default to Moksha
 
         # =====================================================================
-        # 5. MAHALLM INTENT ROUTING (16 categories - WIE)
+        # 5. KAPILA COGNITION (Cognition Protocol - WIE)
         # =====================================================================
-        # MahaLLM routes seed → Intent category (OBSERVE, CREATE, ANALYZE, etc.)
-        # This complements Gita chapter (WAS) with action type (WIE)
+        # Use Kapila (Position 6) to THINK about the input.
+        # It is already wired with MahaLLM during Mahamantra.bootstrap().
         from vibe_core.mahamantra.adapters.llm import MahaLLM
+        
+        # Resolve Kapila Service (via fractal routing)
+        kapila = self.mahamantra.dharma.kapila.get_kapila_service()
+            
+        # Route via MahaLLM (which is Kapila's brain)
+        # Note: We still use MahaLLM logic for category extraction
         llm_router = MahaLLM()
         intent_route = llm_router.route_seed(seed)
         intent_category = intent_route.category_name if intent_route.category else "GUIDE"

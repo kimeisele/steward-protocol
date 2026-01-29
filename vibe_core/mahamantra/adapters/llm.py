@@ -70,6 +70,14 @@ from enum import Enum
 from typing import Any, Callable, Dict, Final, List, Optional, Union
 import hashlib
 
+from vibe_core.protocols.mahajanas.kapila.cognition import (
+    OperatorCognitiveProtocol,
+    CognitiveResult,
+    CognitiveContext,
+    IntentType,
+    SignedOperatorInput,
+)
+
 from vibe_core.mahamantra.protocols._seed import (
     WORDS,      # 16 branches per level
     QUARTERS,   # 4 levels = 16 bits
@@ -560,6 +568,56 @@ class MahaLLM:
         """
         seed = getattr(compression_result, "seed", 0)
         return self.route_seed(seed)
+
+    # =========================================================================
+    # OPERATOR COGNITIVE PROTOCOL IMPLEMENTATION (KAPILA COMPLIANCE)
+    # =========================================================================
+
+    async def process_intent(
+        self,
+        intent: str,
+        context: Optional[CognitiveContext] = None,
+        session_id: Optional[str] = None,
+        signed_input: Optional[SignedOperatorInput] = None,
+    ) -> CognitiveResult:
+        """
+        Process natural language intent (OperatorCognitiveProtocol).
+
+        Routes input via holographic tree and returns CognitiveResult.
+        Maps 16-ary Maha categories to 4-ary Kapila IntentTypes.
+        """
+        # Route the text to find category and potential agent
+        route = self.route_text(intent)
+        
+        # Map 16 Maha Categories to 4 Kapila IntentTypes
+        # This is the translation from "Vedic" (16) to "Sankhya" (4)
+        intent_type = IntentType.EXECUTE  # Default
+        if route.category in [IntentCategory.GUIDE, IntentCategory.ANALYZE, IntentCategory.OBSERVE]:
+            intent_type = IntentType.QUERY
+        elif route.category in [IntentCategory.CONNECT, IntentCategory.INVOKE]:
+            intent_type = IntentType.CHAT
+        elif route.category in [IntentCategory.SURRENDER, IntentCategory.TRANSFORM]:
+            intent_type = IntentType.ROUTE
+        
+        return CognitiveResult(
+            intent_type=intent_type,
+            confidence=1.0,  # Holographic routing is deterministic
+            target=route.agent,
+            reasoning=f"Routed to {route.category_name} (0x{route.intent_id:04X}) via MahaLLM",
+            syscall_type=route.category_name,  # Use category as abstract syscall
+        )
+
+    async def generate_response(self, prompt: str, context: Optional[CognitiveContext] = None) -> str:
+        """
+        Generate intelligent response.
+        For MahaLLM, this is just a router, so it returns routing info.
+        """
+        route = self.route_text(prompt)
+        return f"Routing '{prompt}' to {route.category_name} (Agent: {route.agent or 'None'})"
+
+    def get_capabilities(self) -> List[str]:
+        """Return list of capabilities (registered agents/categories)."""
+        return [c.name for c in IntentCategory]
 
     # =========================================================================
     # UTILITIES
