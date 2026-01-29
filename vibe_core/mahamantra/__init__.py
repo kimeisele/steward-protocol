@@ -518,7 +518,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         Called by kernel during startup. Initializes:
         1. MahaComputeService (Listener Pattern integration)
-        2. Future services via same pattern
+        2. Kapila Cognition (Brain Wiring)
+        3. Future services via same pattern
 
         Args:
             silent: If True, suppress logging.
@@ -537,6 +538,21 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         except ImportError as e:
             if not silent:
                 _log.debug(f"MahaComputeService not available: {e}")
+
+        # === KAPILA COGNITION (Brain Wiring) ===
+        try:
+            from vibe_core.mahamantra.adapters.llm import MahaLLM
+
+            # Resolve Kapila through fractal routing
+            kapila = self.dharma.kapila.get_kapila_service()
+
+            # Register MahaLLM as the cognitive brain
+            kapila.register_cognitive(MahaLLM())
+            if not silent:
+                _log.info("🧠 Kapila cognition wired with MahaLLM")
+        except Exception as e:
+            if not silent:
+                _log.debug(f"Kapila cognition wiring failed: {e}")
 
         if not silent:
             _log.info("🙏 Mahamantra bootstrap complete")
