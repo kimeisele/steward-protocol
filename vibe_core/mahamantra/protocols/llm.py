@@ -65,13 +65,17 @@ class IntentCategory(Enum):
 class RouteResult:
     """Result of a routing operation."""
     intent_id: int
-    agent: Optional[str]
-    category: Optional[IntentCategory]
-    category_name: str
-    ops: int
-    found: bool
-    address: Tuple[int, ...]
+    category_name: str = ""
+    found: bool = False
+    agent: Optional[str] = None
+    category: Optional[IntentCategory] = None
+    ops: int = 4  # Always 4 (holographic guarantee)
+    address: Tuple[int, ...] = ()
     handler: Optional[Callable[..., object]] = None
+
+    @property
+    def is_routed(self) -> bool:
+        return self.found and self.agent is not None
 
 @dataclass(frozen=True)
 class RegistrationResult:
@@ -87,10 +91,19 @@ class RegistrationResult:
         """Hex address string (e.g. 0xBEAF)."""
         return f"0x{self.intent_id:04X}"
 
-@dataclass(frozen=True)
+@dataclass
 class RouterStats:
     """Router statistics."""
-    total_agents: int
-    total_intents: int
-    depth: int
-    collisions: int
+    total_agents: int = 0
+    agents_by_category: Dict[str, int] = None  # type: ignore
+    total_routes: int = 0
+    routes_found: int = 0
+    routes_missed: int = 0
+
+    def __post_init__(self) -> None:
+        if self.agents_by_category is None:
+            object.__setattr__(self, 'agents_by_category', {})
+
+    @property
+    def hit_rate(self) -> float:
+        return self.routes_found / self.total_routes if self.total_routes > 0 else 0.0
