@@ -77,6 +77,11 @@ from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
     VINA_STRINGS,  # 5 = PANCHA (Narada's Vina strings)
     WORDS,
+    # SSOT for name symbols and pattern
+    MAHAMANTRA_WORD_PATTERN,
+    MAHAMANTRA_NAME_HARE,
+    MAHAMANTRA_NAME_KRISHNA,
+    MAHAMANTRA_NAME_RAMA,
 )
 
 # =============================================================================
@@ -114,29 +119,11 @@ assert len(Phase) == QUARTERS, f"Phases must be {QUARTERS}"
 
 
 # =============================================================================
-# MAHAMANTRA PATTERN (from maha_runtime.py)
+# MAHAMANTRA PATTERN - FROM _seed.py SSOT!
 # =============================================================================
+# NO HARDCODING - All symbols from _seed.py
 
-# H = Hare (energy), K = Krishna, R = Rama
-PATTERN: Final[tuple[str, ...]] = (
-    "H",
-    "K",
-    "H",
-    "K",  # Q1: KSETRAJNA phase
-    "K",
-    "K",
-    "H",
-    "H",  # Q2: KRISHNA phase
-    "H",
-    "R",
-    "H",
-    "R",  # Q3: PRAKRITI phase
-    "R",
-    "R",
-    "H",
-    "H",  # Q4: KARMA phase
-)
-
+PATTERN: Final[tuple[str, ...]] = MAHAMANTRA_WORD_PATTERN
 assert len(PATTERN) == WORDS, f"Pattern must be {WORDS}"
 
 
@@ -162,11 +149,11 @@ OPERATION_MEANING: Final[dict[Operation, str]] = {
     Operation.RAMA: "return_bliss()",  # Return the reservoir of pleasure
 }
 
-# Name to Operation mapping
+# Name to Operation mapping - USING SSOT SYMBOLS!
 NAME_TO_OPERATION: Final[dict[str, Operation]] = {
-    "H": Operation.HARE,
-    "K": Operation.KRISHNA,
-    "R": Operation.RAMA,
+    MAHAMANTRA_NAME_HARE: Operation.HARE,
+    MAHAMANTRA_NAME_KRISHNA: Operation.KRISHNA,
+    MAHAMANTRA_NAME_RAMA: Operation.RAMA,
 }
 
 # Verify TRINITY operations
