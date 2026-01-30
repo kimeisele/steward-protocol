@@ -108,6 +108,36 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "oracle_validated": result.oracle_validated,
         }
 
+    def vibrate(self, input_data: Union[str, MahaCell]) -> VibrationState:
+        """
+        Public API for vibration.
+
+        Delegates to _compute_vibration (internal logic).
+        """
+        return self._compute_vibration(input_data)
+
+    def tick(self) -> Dict[str, Union[str, int]]:
+        """
+        Get current tick state (Lazy).
+        
+        Required by Steward for Shadow Reactor timing.
+        """
+        import time
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        
+        t = int(time.time())
+        pos = t % 16
+        guardian = ALL_GUARDIANS[pos]
+        
+        return {
+            "quarter": "karma" if pos > 8 else "dharma", 
+            "guardian": guardian,
+            "word": "hare" if pos % 2 == 0 else "krishna",
+            "opcode": "EXECUTE",
+            "position": pos,
+            "tick": t
+        }
+
     _bootstrapped: bool = False
 
     def bootstrap(self, *, silent: bool = False, lazy: bool = True) -> None:
@@ -171,7 +201,139 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "vibration": vibration,
             "exit_code": bridge_result.exit_code,
             "handler": bridge_result.handler,
+            # Keys expected by Steward
+            "guardian": "unknown", # Improved later via position lookup if needed
+            "quarter": "unknown",
+            "guna": "unknown",
+            "output": f"Exit Code: {bridge_result.exit_code}"
         }
+
+    def __call__(self, input_text: str) -> ExecuteResult:
+        """
+        THE ONE ENTRY POINT - SSOT.
+
+        mahamantra("anything") → understands, routes, EXECUTES, responds.
+
+        FLOW:
+        =====
+        1. VIBRATION: Input → Seed → Attractor (what frequency?)
+        2. INTENT:    MahaLLM routing (what action?)
+        3. EXECUTE:   CLI Bridge → Mahajana handler (DO IT!)
+        4. RESONATE:  Gita verse + guardian context (what wisdom?)
+
+        This is NOT a chatbot. This is NOT analysis-only.
+        Krishna routes AND acts.
+
+        Args:
+            input_text: Any input (command, question, action)
+
+        Returns:
+            ExecuteResult with success, output, vibration, and resonance data
+        """
+        from vibe_core.mahamantra.protocols._seed_core import WORDS
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+
+        # =====================================================================
+        # 1. VIBRATION - Compute resonance state
+        # =====================================================================
+        vibration = self._compute_vibration(input_text)
+        seed = vibration.get("seed", 0)
+        attractor = vibration.get("attractor", 0)
+        position = attractor % WORDS
+        guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
+
+        # Quarter from position
+        if position < 4:
+            quarter = "genesis"
+        elif position < 8:
+            quarter = "dharma"
+        elif position < 12:
+            quarter = "karma"
+        else:
+            quarter = "moksha"
+
+        # Guna from quarter
+        guna_map = {"genesis": "tamas", "dharma": "sattva", "karma": "rajas", "moksha": "sattva"}
+        guna = guna_map.get(quarter, "sattva")
+
+        # =====================================================================
+        # 2. INTENT - Route via MahaLLM (O(4) holographic)
+        # =====================================================================
+        intent_category = "UNKNOWN"
+        try:
+            from vibe_core.mahamantra.adapters.llm import MahaLLM
+            llm = MahaLLM()
+            route_result = llm.route_text(input_text)
+            intent_category = route_result.category_name if route_result.category else "UNKNOWN"
+        except Exception:
+            pass
+
+        # =====================================================================
+        # 3. EXECUTE - via CLI Bridge (THE ACTION!)
+        # =====================================================================
+        from vibe_core.mahamantra.cli.bridge import cli_bridge
+
+        bridge_result = cli_bridge.route(input_text, [])
+
+        success = bridge_result.success
+        exit_code = bridge_result.exit_code
+        handler = bridge_result.handler or f"{guardian}@{position}"
+        error_msg = bridge_result.error
+
+        # Build output message
+        if success:
+            output = f"[{intent_category}] {guardian.upper()}@{position} → OK"
+        else:
+            output = f"[{intent_category}] {guardian.upper()}@{position} → FAILED: {error_msg or 'unknown'}"
+
+        # =====================================================================
+        # 4. RESONATE - Gita wisdom (optional enhancement)
+        # =====================================================================
+        verse_info = None
+        try:
+            from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
+            from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+
+            verse_result = match_attractor(attractor)
+            chapter = get_gita_chapter(attractor)
+
+            if verse_result.best_match:
+                v = verse_result.best_match
+                verse_info = f"BG.{v.chapter}.{v.verse} ({v.guna})"
+                output = f"{output} | {verse_info}"
+        except Exception:
+            pass
+
+        # =====================================================================
+        # 5. RETURN - Complete ExecuteResult
+        # =====================================================================
+        return {
+            "success": success,
+            "exit_code": exit_code,
+            "position": position,
+            "guardian": guardian,
+            "quarter": quarter,
+            "guna": guna,
+            "requires_confirmation": guna == "tamas",
+            "output": output,
+            "error": error_msg,
+            "vibration": vibration,
+            "akash": self._akash,
+            "maha_cell": None,  # Created on demand if needed
+        }
+
+    @property
+    def steward(self):
+        """Lazy access to the Steward resonance router (LEGACY - use __call__ instead)."""
+        from vibe_core.mahamantra.cli.steward import get_steward
+        return get_steward()
+
+    @property
+    def shadow(self):
+        """Lazy access to Shadow Reactor Factory."""
+        from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
+        return get_shadow_reactor_factory()
+
 
     # === Quarter Properties (Lazy) ===
 
