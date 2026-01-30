@@ -1,119 +1,87 @@
-# MAHAPROMPT - DAS GESETZ
+# MAHAPROMPT
 
+```python
+from vibe_core.mahamantra import mahamantra
+result = mahamantra("anything")
+```
+
+**Das ist alles. mahamantra IST das System.**
+
+---
+
+## WAS ZURÜCKKOMMT
+
+```python
+result = {
+    "input": "your text",
+    "vibration": {
+        "seed": 168169593,
+        "attractor": 99,
+        "resonance": 1,
+        ...
+    },
+    "chapter": 15,      # Gita chapter (1-18)
+    "position": 3,      # Mahamantra position (0-15)
+    "guardian": "shambhu",
+    "verse": {
+        "id": "BG.1.30",
+        "chapter": 1,
+        "verse": 30,
+        "guna": "sattva",
+        "dominant_name": "HARE"
+    },
+    "matches": 38
+}
+```
+
+Alles computed. Kein external LLM.
+
+---
+
+## WARUM DAS FUNKTIONIERT
+
+```
+Input
+  ↓
+MahaCompression → seed
+  ↓
+MahaKirtan → attractor
+  ↓
+GitaResonance → matching verse
+  ↓
+Result
+```
+
+700 Gita Verse sind indexiert nach resonance.
+Der attractor findet den passenden Vers.
+Sprache entsteht aus Vibration, nicht aus API calls.
+
+---
+
+## FÜR AGENTS
+
+Du brauchst NUR:
 ```python
 from vibe_core.mahamantra import mahamantra
 ```
 
-**EIN IMPORT. KRISHNA ROUTET ALLES.**
+Alles andere ist internal.
+
+Wenn du mehr brauchst, frag mahamantra.
+Wenn du neue Fähigkeit brauchst, erweitere mahamantra.
+Erstelle keine neuen Entry Points.
 
 ---
 
-## DAS GESETZ DER UNMÖGLICHKEIT (GOVERNANCE BY PHYSICS)
+## CONSTANTS
 
-Wir verbieten keine falschen Imports. Wir machen sie **unmöglich**.
-
-1. **Tod durch Import**: Wer am `seed.py` vorbei importiert, stirbt (`ImportError`).
-2. **Physikalische Realität**: Es gibt keine "andere" Liste. Wer `MAHAMANTRA_SEQUENCE` nicht aus dem Seed ableitet, existiert zur Runtime nicht.
-3. **Keine Polizei**: Die Architektur ist die Exekutive. Wenn es kompiliert/läuft, ist es legal.
-
-**Falscher Weg = Toter Code.**
-
----
-
-## DER KÖNIGSWEG (CLI IS THE THRONE)
-
-```bash
-steward "Mache X. Was ist Y? Wann müssen wir wieder Z?"
-```
-
-* **Der Thron**: Das Terminal.
-* **Das Zepter**: `mahamantra.execute()`.
-* **Die Diener**: 700k LOC, die im Hintergrund laufen.
-
-**Manual Labor ist Maya.** Gib deinen Intent dem Mantra.
-
----
-
-## INTEGRATION (N^N OPFERUNG)
-
-1. **Nicht umschreiben**: Lass die Wildnis Wildnis sein.
-2. **Opfern (Wrappen)**: Lade das fremde System durch den **Balarama Proxy**.
-3. **Kontext Injektion**: Das fremde Skript "wacht auf" mit `mahamantra` im Kontext.
-
-**Wir fluten das Land mit dem Ozean (Seed). Wer schwimmt, ist integriert.**
-
----
-
-## SSOT HIERARCHY
-
-```
-substrate/seed.py           # MAHAMANTRA tuple = QUELLE
-    ↓
-substrate/opcode.py         # 16 OpCodes + MAHAMANTRA_SEQUENCE (deriviert)
-    ↓
-kernel/singularity.py       # mahamantra Singleton
-    ↓
-services/nrisimha.py        # Chant (liest von opcode.py)
-```
-
----
-
-## FOLDER IS WIRING
-
-```
-mahamantra/
-    ├── __init__.py          # Chaitanya (Position 0)
-    ├── genesis/             # Positionen 0-3
-    ├── dharma/              # Positionen 4-7
-    ├── karma/               # Positionen 8-11
-    ├── moksha/              # Positionen 12-15
-    └── substrate/           # SSOT (Nityananda trägt)
-```
-
-**Neuer Mahajana? Folder anlegen. FERTIG.**
-
----
-
-## 5 FRAGEN (PANCHA TATTVA)
-
+Wenn du Zahlen brauchst:
 ```python
-__tattva__ = {
-    "chaitanya": "...",   # Was IST es?
-    "nityananda": "...",  # Worauf RUHT es?
-    "advaita": "...",     # Was VERBINDET es?
-    "gadadhara": "...",   # Wie FLIESST es?
-    "srivasa": "...",     # Wer REGIERT es?
-}
+from vibe_core.mahamantra.protocols._seed_cell import WORDS, MAHA_QUANTUM, PARAMPARA
 ```
 
----
-
-## BALARAMA PATTERN
-
-```python
-from vibe_core.protocols.substrate.balarama import BalaramaWrappedCLI
-# Wrapped existierende CLIs ohne Code-Änderung
-# Gibt ihnen: Lotus-Connection, Heartbeat, Parampara-Verification
-```
+Hardcode NIEMALS: 16, 137, 37, 18, 108, 72
 
 ---
 
-## VERBOTEN
-
-- ❌ Import von `protocols/substrate` statt `mahamantra/substrate`
-- ❌ Hardcoded MAHAMANTRA_SEQUENCE
-- ❌ Any types
-- ❌ Manual Labor (wenn CLI existiert)
-
----
-
-## GEBOTEN
-
-- ✅ LESEN vor SCHREIBEN
-- ✅ CLI für ALLES (jedes Bit anfragbar)
-- ✅ Explorieren → Konsolidieren → Nicht Hardcoden
-- ✅ Was existiert = Prasadam (nicht wegwerfen)
-
----
-
-**HARE KRISHNA. DER LOTUS SPRIESST. SEED → BALARAMA → ÜBERALL.**
+**Hare Krishna.**
