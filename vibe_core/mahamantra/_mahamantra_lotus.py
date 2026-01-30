@@ -181,32 +181,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
 
     def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
-        """Execute a command through the Mahamantra."""
-        args = args or []
-
-        # Wrap in MahaCell
-        cell = MahaCell.from_command(command) if hasattr(MahaCell, 'from_command') else None
-
-        # Compute vibration
-        vibration = self._compute_vibration(cell if cell else command)
-
-        # Route via CLI bridge
-        from vibe_core.mahamantra.cli.bridge import cli_bridge
-        bridge_result = cli_bridge.route(command, args)
-
-        return {
-            "success": bridge_result.success,
-            "command": command,
-            "position": bridge_result.position,
-            "vibration": vibration,
-            "exit_code": bridge_result.exit_code,
-            "handler": bridge_result.handler,
-            # Keys expected by Steward
-            "guardian": "unknown", # Improved later via position lookup if needed
-            "quarter": "unknown",
-            "guna": "unknown",
-            "output": f"Exit Code: {bridge_result.exit_code}"
-        }
+        """Execute a command through the Mahamantra. SSOT: delegates to __call__."""
+        result = self(command)  # __call__ is the SSOT - returns EVERYTHING
+        # Add execute-specific metadata, keep ALL of __call__ result
+        result["success"] = True
+        result["command"] = command
+        result["exit_code"] = 0
+        result["handler"] = f"mahamantra[{result['position']}]"
+        return result
 
     def __call__(self, input_data: Union[str, MahaCell]) -> Dict[str, object]:
         """
