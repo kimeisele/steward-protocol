@@ -617,6 +617,119 @@ def run_sequencer():
             print(f"    ** MAHAMANTRA CONSTANTS: {constants_found}")
     
     print()
+    
+    # THE KEY TEST: Register-Switch proves first phonemes
+    print("3. REGISTER-SWITCH PROOF (Quarter → First Phoneme)")
+    print("-" * 50)
+    print()
+    print("  The KEY insight: Each Quarter selects a REGISTER (MIDI channel)")
+    print("  Q1 = Vowels (0-15), Q2/Q3 = Consonants (16-40), Q4 = Antastha (41-48)")
+    print()
+    
+    # Build the phoneme lookup for first consonants
+    first_consonants = {
+        16: "ka", 17: "kha", 18: "ga", 19: "gha", 20: "ṅa",
+        21: "ca", 22: "cha", 23: "ja", 24: "jha", 25: "ña",
+        26: "ṭa", 27: "ṭha", 28: "ḍa", 29: "ḍha", 30: "ṇa",
+        31: "ta", 32: "tha", 33: "da", 34: "dha", 35: "na",
+        36: "pa", 37: "pha", 38: "ba", 39: "bha", 40: "ma",
+    }
+    
+    # All 16 positions with expected first phoneme
+    positions_to_test = [
+        # Q1 Genesis (Vowel register)
+        (1, "vyasa", "v", 1),      # v is actually antastha
+        (2, "brahma", "b", 1),      
+        (3, "narada", "na", 1),
+        (4, "shambhu", "sha", 1),
+        # Q2 Dharma (Consonant register)
+        (5, "prithu", "p", 2),
+        (6, "kumaras", "k", 2),
+        (7, "kapila", "ka", 2),     # THE KEY TEST!
+        (8, "manu", "ma", 2),
+        # Q3 Karma (Consonant register)
+        (9, "parashurama", "pa", 3),
+        (10, "prahlada", "p", 3),
+        (11, "janaka", "ja", 3),
+        (12, "bhishma", "bha", 3),
+        # Q4 Moksha (Antastha register)
+        (13, "nrisimha", "n", 4),
+        (14, "bali", "ba", 4),
+        (15, "shuka", "sha", 4),
+        (16, "yamaraja", "ya", 4),
+    ]
+    
+    print("  Position | Name        | Quarter | Expected | Derived | Match")
+    print("  " + "-" * 60)
+    
+    matches = 0
+    for pos, name, expected_first, quarter in positions_to_test:
+        # Calculate RAMA coordinate via KRISHNA routing
+        base_coord = krishna_route(pos - 1)
+        
+        # Apply register shift based on Quarter
+        if quarter == 1:
+            # Genesis = Vowel register (but some names start with consonants!)
+            register = REGISTER_VOWEL
+        elif quarter in (2, 3):
+            # Dharma/Karma = Consonant register
+            register = REGISTER_SPARSHA
+        else:
+            # Moksha = Antastha register
+            register = REGISTER_OTHER
+        
+        # Map to register
+        derived_idx = register.map(base_coord)
+        derived_phoneme = rama_to_phoneme(derived_idx)
+        
+        # Check match
+        match = derived_phoneme.startswith(expected_first[0])
+        if match:
+            matches += 1
+        
+        status = "✓" if match else " "
+        print(f"  {status} {pos:2}     | {name:11} | Q{quarter}      | {expected_first:8} | {derived_phoneme:8} | {'YES' if match else 'NO'}")
+    
+    print()
+    print(f"  MATCHES: {matches}/16")
+    print()
+    
+    # Special analysis for KAPILA
+    print("  KAPILA DEEP DIVE:")
+    print("  " + "-" * 40)
+    kapila_pos = 7
+    kapila_base = krishna_route(kapila_pos - 1)  # (6 * 17) % 49 = 102 % 49 = 4
+    print(f"    Position: {kapila_pos}")
+    print(f"    Krishna Route: ({kapila_pos-1} × 17) mod 49 = {kapila_base}")
+    print(f"    Without register: RAMA[{kapila_base}] = '{rama_to_phoneme(kapila_base)}' (VOWEL!)")
+    
+    # Apply Q2 register (consonants)
+    kapila_in_register = REGISTER_SPARSHA.map(kapila_base)
+    print(f"    With Q2 register: SPARSHA[{kapila_base} mod 25] + 16 = RAMA[{kapila_in_register}]")
+    print(f"    Result: '{rama_to_phoneme(kapila_in_register)}'")
+    
+    # The REAL mapping: position within quarter
+    quarter_pos = (kapila_pos - 1) % QUARTERS  # 7 in Q2 = position 2 within quarter
+    print(f"    Position within Q2: {quarter_pos}")
+    
+    # Ka is the FIRST consonant (index 16 = position 0 in consonant register)
+    # Kapila is position 7 = Q2, position 2 within quarter
+    # If we use: consonant_idx = (KRISHNA_SUM * quarter_pos) % 25
+    kapila_consonant_idx = (POSITION_SUM_KRISHNA * quarter_pos) % 25
+    print(f"    Formula: (17 × {quarter_pos}) mod 25 = {kapila_consonant_idx}")
+    print(f"    Maps to: RAMA[{16 + kapila_consonant_idx}] = '{rama_to_phoneme(16 + kapila_consonant_idx)}'")
+    print()
+    
+    # Try different formulas
+    print("  FORMULA EXPLORATION FOR KAPILA:")
+    for mult in [1, 7, 10, 16, 17, 37]:
+        for offset in range(5):
+            idx = (mult * quarter_pos + offset) % 25
+            phoneme = rama_to_phoneme(16 + idx)
+            if phoneme.startswith("ka"):
+                print(f"    ✓ FOUND: ({mult} × {quarter_pos} + {offset}) mod 25 = {idx} → '{phoneme}'")
+    
+    print()
     print("=" * 70)
     print("CONCLUSION")
     print("=" * 70)
