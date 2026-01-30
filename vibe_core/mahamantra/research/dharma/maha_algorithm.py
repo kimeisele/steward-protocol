@@ -229,7 +229,7 @@ assert TRANSCENDENTAL_1096 == HALVES**TEN + NADI_RESONANCE, "1024 + 72 = 1096"
 # MOKSHA (13-16): 1,1,0,0 = 12 = MAHAJANA → 1 transition = RELEASE
 
 # Binary pattern (derived, not hardcoded)
-BINARY_PATTERN: Final[tuple[int, ...]] = tuple(0 if name == "H" else 1 for name in PATTERN)
+BINARY_PATTERN: Final[tuple[int, ...]] = tuple(0 if name == MAHAMANTRA_NAME_HARE else 1 for name in PATTERN)
 
 # ADSR values from binary decimal conversion
 ADSR_ATTACK: Final[int] = PANCHA  # 5 (0101 binary = oscillating)
@@ -401,11 +401,11 @@ class MahaAlgorithm16:
         value = seed % MAHA_QUANTUM  # Normalize to quantum space
 
         for step in self.execute():
-            if step.name == "H":
+            if step.name == MAHAMANTRA_NAME_HARE:
                 # HARE = 7 × 10 = 70 → MULTIPLICATION operation
                 # Shakti multiplies, expands, connects
                 value = (value * SEVEN) % MAHA_QUANTUM
-            elif step.name == "K":
+            elif step.name == MAHAMANTRA_NAME_KRISHNA:
                 # KRISHNA = 7 + 10 = 17 → ADDITION operation
                 # Krishna adds, attracts, accumulates
                 value = (value + TEN) % MAHA_QUANTUM
@@ -430,10 +430,10 @@ class MahaAlgorithm16:
             prev_value = value
             adsr = PHASE_TO_ADSR[step.phase]
 
-            if step.name == "H":
+            if step.name == MAHAMANTRA_NAME_HARE:
                 value = (value + t_pos) % WEIGHT_HARE
                 op_desc = f"+T({step.position})={t_pos} mod {WEIGHT_HARE}"
-            elif step.name == "K":
+            elif step.name == MAHAMANTRA_NAME_KRISHNA:
                 value = (value * step.position) % WEIGHT_KRISHNA
                 op_desc = f"×{step.position} mod {WEIGHT_KRISHNA}"
             else:  # R
@@ -706,11 +706,11 @@ class MahaModularSynth:
             adsr = self.get_adsr_multiplier(step.phase, p)
             lfo = self.get_lfo_value(step.position, p)
 
-            if step.name == "H":
+            if step.name == MAHAMANTRA_NAME_HARE:
                 # HARE = 7 × 10 = 70 → MULTIPLICATION (derived from _seed.py RUNDE 15)
                 # ADSR modulates the multiplier (5 or 12)
                 value = (value * SEVEN * adsr + lfo) % p.mod_space
-            elif step.name == "K":
+            elif step.name == MAHAMANTRA_NAME_KRISHNA:
                 # KRISHNA = 7 + 10 = 17 → ADDITION (derived from _seed.py RUNDE 15)
                 # Position adds structure, feedback preserves state
                 value = (value + TEN + effective_pos + feedback_acc) % p.mod_space
@@ -834,9 +834,9 @@ class MahaResonator:
             RAMA    = 7²     = 49 → SQUARING       (value × value)
         """
         for name in PATTERN:
-            if name == "H":
+            if name == MAHAMANTRA_NAME_HARE:
                 value = (value * SEVEN) % self.mod_space
-            elif name == "K":
+            elif name == MAHAMANTRA_NAME_KRISHNA:
                 value = (value + TEN) % self.mod_space
             else:  # R
                 value = (value * value) % self.mod_space
@@ -1284,9 +1284,9 @@ class MahaOracle:
             t_pos = triangular(pos)
             # Apply Mahamantra pattern at this position
             pattern_char = PATTERN[i % WORDS]
-            if pattern_char == "H":
+            if pattern_char == MAHAMANTRA_NAME_HARE:
                 contribution = (char_val * t_pos * SEVEN) % MAHA_QUANTUM
-            elif pattern_char == "K":
+            elif pattern_char == MAHAMANTRA_NAME_KRISHNA:
                 contribution = (char_val + t_pos + TEN) % MAHA_QUANTUM
             else:  # R
                 contribution = (char_val * t_pos) % MAHA_QUANTUM
