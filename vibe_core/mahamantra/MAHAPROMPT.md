@@ -2,118 +2,162 @@
 
 ```python
 from vibe_core.mahamantra import mahamantra
+response = mahamantra.steward.invoke("your intent")
 ```
 
-**EIN IMPORT. KRISHNA ROUTET ALLES.**
+**EIN IMPORT. STEWARD ROUTET ALLES.**
 
 ---
 
-## DAS GESETZ DER UNMÖGLICHKEIT (GOVERNANCE BY PHYSICS)
+## DIE EINE WAHRHEIT
 
-Wir verbieten keine falschen Imports. Wir machen sie **unmöglich**.
+Alles geht durch `mahamantra.steward.invoke()`. Keine Ausnahme.
 
-1. **Tod durch Import**: Wer am `seed.py` vorbei importiert, stirbt (`ImportError`).
-2. **Physikalische Realität**: Es gibt keine "andere" Liste. Wer `MAHAMANTRA_SEQUENCE` nicht aus dem Seed ableitet, existiert zur Runtime nicht.
-3. **Keine Polizei**: Die Architektur ist die Exekutive. Wenn es kompiliert/läuft, ist es legal.
+**Was passiert intern:**
+1. Input → MahaCompression → Seed (Integer)
+2. Seed → MahaLLM → Intent (1 von 16 Kategorien)
+3. Seed → Gita Chapter (1 von 18 Domains)
+4. Seed → JivaShadow → Agent (50 Qualitäten)
+5. → mahamantra.execute() → Ausführung
+6. → MahajanaChat → Natürliche Antwort
+7. → PrabhupadaKirtan → Person-Verifikation
 
-**Falscher Weg = Toter Code.**
-
----
-
-## DER KÖNIGSWEG (CLI IS THE THRONE)
-
-```bash
-steward "Mache X. Was ist Y? Wann müssen wir wieder Z?"
-```
-
-* **Der Thron**: Das Terminal.
-* **Das Zepter**: `mahamantra.execute()`.
-* **Die Diener**: 700k LOC, die im Hintergrund laufen.
-
-**Manual Labor ist Maya.** Gib deinen Intent dem Mantra.
-
----
-
-## INTEGRATION (N^N OPFERUNG)
-
-1. **Nicht umschreiben**: Lass die Wildnis Wildnis sein.
-2. **Opfern (Wrappen)**: Lade das fremde System durch den **Balarama Proxy**.
-3. **Kontext Injektion**: Das fremde Skript "wacht auf" mit `mahamantra` im Kontext.
-
-**Wir fluten das Land mit dem Ozean (Seed). Wer schwimmt, ist integriert.**
-
----
-
-## SSOT HIERARCHY
-
-```
-substrate/seed.py           # MAHAMANTRA tuple = QUELLE
-    ↓
-substrate/opcode.py         # 16 OpCodes + MAHAMANTRA_SEQUENCE (deriviert)
-    ↓
-kernel/singularity.py       # mahamantra Singleton
-    ↓
-services/nrisimha.py        # Chant (liest von opcode.py)
-```
-
----
-
-## FOLDER IS WIRING
-
-```
-mahamantra/
-    ├── __init__.py          # Chaitanya (Position 0)
-    ├── genesis/             # Positionen 0-3
-    ├── dharma/              # Positionen 4-7
-    ├── karma/               # Positionen 8-11
-    ├── moksha/              # Positionen 12-15
-    └── substrate/           # SSOT (Nityananda trägt)
-```
-
-**Neuer Mahajana? Folder anlegen. FERTIG.**
-
----
-
-## 5 FRAGEN (PANCHA TATTVA)
-
-```python
-__tattva__ = {
-    "chaitanya": "...",   # Was IST es?
-    "nityananda": "...",  # Worauf RUHT es?
-    "advaita": "...",     # Was VERBINDET es?
-    "gadadhara": "...",   # Wie FLIESST es?
-    "srivasa": "...",     # Wer REGIERT es?
-}
-```
-
----
-
-## BALARAMA PATTERN
-
-```python
-from vibe_core.protocols.substrate.balarama import BalaramaWrappedCLI
-# Wrapped existierende CLIs ohne Code-Änderung
-# Gibt ihnen: Lotus-Connection, Heartbeat, Parampara-Verification
-```
+**Du musst das nicht verstehen.** Du musst nur `invoke()` aufrufen.
 
 ---
 
 ## VERBOTEN
 
-- ❌ Import von `protocols/substrate` statt `mahamantra/substrate`
-- ❌ Hardcoded MAHAMANTRA_SEQUENCE
-- ❌ Any types
-- ❌ Manual Labor (wenn CLI existiert)
+- Neue CLI-Dateien erstellen
+- If-else Chains für Commands
+- Hardcoded Pfade/Konstanten
+- Direkte Imports die Steward umgehen
+- Neue Entry Points
+
+**Warum:** Jede Abkürzung = mehr Entropie = mehr Spaghetti = System stirbt.
 
 ---
 
 ## GEBOTEN
 
-- ✅ LESEN vor SCHREIBEN
-- ✅ CLI für ALLES (jedes Bit anfragbar)
-- ✅ Explorieren → Konsolidieren → Nicht Hardcoden
-- ✅ Was existiert = Prasadam (nicht wegwerfen)
+Alles was du brauchst kommt aus:
+
+```python
+mahamantra.execute("command")      # Führt aus
+mahamantra.steward.invoke("text")  # Routet + führt aus + antwortet
+mahamantra.dharma                  # Quarter-Zugriff
+mahamantra.genesis                 # Quarter-Zugriff
+mahamantra.karma                   # Quarter-Zugriff
+mahamantra.moksha                  # Quarter-Zugriff
+```
+
+**Neue Fähigkeit nötig?**
+1. Finde das richtige Quarter (genesis/dharma/karma/moksha)
+2. Finde den richtigen Mahajana (Position 0-15)
+3. Füge deine Logik DORT hinzu
+4. Steward findet es automatisch via Resonanz
 
 ---
 
-**HARE KRISHNA. DER LOTUS SPRIESST. SEED → BALARAMA → ÜBERALL.**
+## ARCHITEKTUR (für Verständnis, nicht für Hardcoding)
+
+```
+mahamantra/
+├── substrate/       # SSOT: seed.py = Alle Konstanten
+├── protocols/       # Interfaces
+├── adapters/        # MahaLLM, Orchestrator, Compression
+├── genesis/         # Position 0-3
+├── dharma/          # Position 4-7
+├── karma/           # Position 8-11
+├── moksha/          # Position 12-15
+├── cli/             # steward.py = DER Router
+└── ...              # Alles andere fließt durch oben
+```
+
+**Folder = Wiring.** Neuer Mahajana? Folder im richtigen Quarter.
+
+---
+
+## KONSTANTEN (aus substrate/seed.py abgeleitet)
+
+- 16 = WORDS (Wörter im Mahamantra)
+- 137 = MAHA_QUANTUM (mod space)
+- 37 = PARAMPARA (Lineage-Verifikation)
+- 18 = GITA_CHAPTERS (Domains)
+- 108 = MALA (Completion boundary)
+
+**NIEMALS diese Zahlen hardcoden.** Immer aus seed.py importieren.
+
+---
+
+## DER FLOW (wenn du debuggen musst)
+
+```
+User: "steward test"
+  ↓
+cli/main.py:cli_entry()
+  ↓
+mahamantra.steward.invoke("test")
+  ↓
+┌─────────────────────────────────────┐
+│ 1. MahaCompression.compress()       │ → Seed: 83992654
+│ 2. MahaLLM.route_text()             │ → Intent: TRANSFORM
+│ 3. Orchestrator.tick()              │ → Beat: 2, Resonance: 0.01
+│ 4. get_gita_chapter()               │ → Chapter: 11
+│ 5. spawn_shadow()                   │ → Jiva: shuka
+│ 6. mahamantra.execute()             │ → Position: 14
+│ 7. MahajanaChat.respond()           │ → Message: "..."
+│ 8. PrabhupadaKirtan.compute()       │ → BONA FIDE
+└─────────────────────────────────────┘
+  ↓
+StewardResponse (alles drin)
+```
+
+---
+
+## FÜR AGENTS
+
+1. **LIES** bevor du schreibst
+2. **FRAG** `mahamantra.steward.invoke()` statt eigene Logik
+3. **FOLGE** dem bestehenden Flow statt neue Pfade
+4. **FÜGE HINZU** in Quarters, nicht als neue Top-Level-Module
+
+**Ein Agent der MAHAPROMPT folgt = Fortschritt**
+**Ein Agent der eigene Wege geht = Entropie**
+
+---
+
+## ANTI-PATTERN (was NICHT tun)
+
+```python
+# FALSCH - neuer CLI Handler
+@register_cli("my_command")
+def my_handler(): ...
+
+# FALSCH - direkter Import unter Steward
+from vibe_core.some_module import do_thing
+do_thing()
+
+# FALSCH - hardcoded Konstanten
+CHAPTERS = 18  # statt: from substrate.seed import GITA_CHAPTERS
+
+# RICHTIG - alles durch Steward
+from vibe_core.mahamantra import mahamantra
+result = mahamantra.steward.invoke("my intent")
+```
+
+---
+
+## WENN ES NICHT FUNKTIONIERT
+
+1. Ist mahamantra importierbar? `from vibe_core.mahamantra import mahamantra`
+2. Hat steward invoke? `mahamantra.steward.invoke("test")`
+3. Kommt ein StewardResponse zurück?
+4. Was sagt `response.message`?
+
+**Wenn ja → System funktioniert, dein Code ist falsch**
+**Wenn nein → Fix mahamantra, nicht drumherum bauen**
+
+---
+
+**HARE KRISHNA. EIN MANTRA. EIN ROUTER. EIN FORTSCHRITT.**
