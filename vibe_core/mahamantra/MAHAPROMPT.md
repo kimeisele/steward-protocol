@@ -56,7 +56,8 @@ r = mahamantra("dein input")
 # r["verse"]     → Gita-Kontext
 ```
 
-**SSOT**: `protocols/_seed_core.py` (Konstanten) + `substrate/seed.py` (Guardians).
+**SSOT**: `protocols/_seed.py` (Konstanten, Ableitungen) + `substrate/seed.py` (AVATARAS, MAHAJANAS).
+> 4 Avataras + 12 Mahajanas = 16 Positionen. *Nicht* "Guardians" (kein Shastra).
 
 ---
 
