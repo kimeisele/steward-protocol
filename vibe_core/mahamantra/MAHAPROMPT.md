@@ -1,59 +1,45 @@
 # MAHAPROMPT
 
-## DER ALGORITHMUS
+## ALGORITHMUS
 
 ```
 position = attractor % 16
+quarter = position // 4
 ```
-
-Das ist die Essenz. Attractor kommt aus Vibration des Inputs. Position bestimmt alles.
 
 ---
 
-## DIE 4 QUARTERS (= 4 PHASEN DES MAHAMANTRA)
+## QUARTERS (aus seed.py)
 
-```
-Hare Krishna Hare Krishna  →  Position 0-3   →  KSETRAJNA (Input)
-Krishna Krishna Hare Hare  →  Position 4-7   →  KRISHNA (Compute)
-Hare Rama Hare Rama        →  Position 8-11  →  PRAKRITI (Transform)
-Rama Rama Hare Hare        →  Position 12-15 →  MOKSHA (Output)
-```
-
-Jede Phase hat 4 Guardians. 4 × 4 = 16 = Mahamantra.
+| Quarter | Pos | Phase | Operations |
+|---------|-----|-------|------------|
+| GENESIS | 0-3 | INPUT | Boot, Load, Alloc, Spawn |
+| DHARMA | 4-7 | VERIFY | Parse, Link, Check, Test |
+| KARMA | 8-11 | EXECUTE | Run, Scale, Sync, Commit |
+| MOKSHA | 12-15 | OUTPUT | Yield, Flush, Log, Exit |
 
 ---
 
-## GUARDIANS = OPERATIONEN
+## GUARDIANS (aus seed.py)
 
-| Phase | Pos | Guardian | Operation |
-|-------|-----|----------|-----------|
-| KSETRAJNA | 0 | vyasa | init |
-| | 1 | brahma | create |
-| | 2 | narada | notify |
-| | 3 | shambhu | destroy |
-| KRISHNA | 4 | prithu | scan |
-| | 5 | kumaras | resolve |
-| | 6 | kapila | analyze |
-| | 7 | manu | config |
-| PRAKRITI | 8 | parashurama | execute |
-| | 9 | prahlada | cache |
-| | 10 | janaka | cycle |
-| | 11 | bhishma | commit |
-| MOKSHA | 12 | nrisimha | guard |
-| | 13 | bali | optimize |
-| | 14 | shuka | status |
-| | 15 | yamaraja | judge |
-
----
-
-## GITA = WEISHEIT FÜR POSITION
-
-Attractor matcht auch einen Gita-Vers (700 indexiert). Der Vers gibt Kontext zur Operation.
-
-```
-attractor → position (% 16) → guardian → WAS tun
-attractor → GitaResonance   → verse    → WARUM/WIE
-```
+| Pos | Guardian | Op |
+|-----|----------|-----|
+| 0 | vyasa | Boot |
+| 1 | brahma | Load |
+| 2 | narada | Alloc |
+| 3 | shambhu | Spawn |
+| 4 | prithu | Parse |
+| 5 | kumaras | Link |
+| 6 | kapila | Check |
+| 7 | manu | Test |
+| 8 | parashurama | Run |
+| 9 | prahlada | Scale |
+| 10 | janaka | Sync |
+| 11 | bhishma | Commit |
+| 12 | nrisimha | Yield |
+| 13 | bali | Flush |
+| 14 | shuka | Log |
+| 15 | yamaraja | Exit |
 
 ---
 
@@ -61,28 +47,22 @@ attractor → GitaResonance   → verse    → WARUM/WIE
 
 ```python
 from vibe_core.mahamantra import mahamantra
+r = mahamantra("input")
 
-r = mahamantra("dein input")
-
-# r["position"] = 0-15 = welche Operation
-# r["guardian"] = wer zuständig
-# r["quarter"] = welche Phase
-# r["chapter"] = Gita-Kapitel
-# r["verse"] = konkrete Weisheit
+# r["position"] → Guardian → Operation
+# r["quarter"] → Phase
+# r["verse"] → Gita-Kontext
 ```
 
-**Folge dem Ergebnis. Das Ergebnis IST die Entscheidung.**
+**Das Ergebnis IST die Entscheidung.**
 
 ---
 
-## CONSTANTS
+## QUELLE
 
-```python
-from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM
-```
-
-WORDS = 16 (Mahamantra), MAHA_QUANTUM = 137 (Attractor-Range)
-
----
+Alles aus `vibe_core/mahamantra/substrate/seed.py`:
+- `class Quarter` definiert die 4 Phasen
+- `ALL_GUARDIANS` definiert die 16 Guardians
+- Operations stehen in den Quarter-Kommentaren
 
 **Hare Krishna.**
