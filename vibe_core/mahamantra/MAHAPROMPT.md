@@ -160,4 +160,78 @@ result = mahamantra.steward.invoke("my intent")
 
 ---
 
+## LEGACY (ZU ERSETZEN)
+
+Diese Module nutzen **external LLM** (OpenAI/Anthropic) - das ist FALSCH:
+
+- `vibe_core/mahamantra/chat.py` (MahajanaChat) → Ruft provider.invoke() auf
+- Alles in `vibe_core/cli/` außer `main.py` → Legacy CLI Handler
+- Alles außerhalb von `vibe_core/mahamantra/` → Legacy
+
+**WIE ES SEIN SOLLTE:**
+- Response via Shabda Brahman (vibration-computed)
+- Gita Verses als SSOT für Antworten
+- KEIN external LLM call
+
+**DAS EXISTIERT SCHON:**
+- `research/shabda_translation.py` = Text → Vibration → Universal
+- `research/gita_verse_text.py` = Gita Verses mit Vibration
+- `adapters/llm.py` (MahaLLM) = Computed routing (RICHTIG!)
+
+---
+
+## DAUERTASK: MIGRATION
+
+Alles außerhalb mahamantra = Legacy → Muss migriert werden.
+
+**PRIORITÄT:**
+1. `chat.py` ersetzen mit computed response via Shabda Brahman
+2. CLI Handler konsolidieren zu ONE ROUTER
+3. External LLM calls eliminieren
+
+**JEDE SESSION sollte:**
+1. Durch `mahamantra.steward.invoke()` arbeiten
+2. KEIN neues Legacy erstellen
+3. Wenn möglich: 1 Legacy-Modul Richtung mahamantra migrieren
+
+---
+
+## CLI COMMANDS (ON-DEMAND)
+
+CLI Commands sind NICHT hardcoded. Sie werden COMPUTED:
+
+```python
+# FALSCH
+@register_cli("my_command")
+def handler(): ...
+
+# RICHTIG
+# Commands entstehen on-demand via MahaCells
+# Der Radix Tree routet dynamisch
+# Keine statischen Handler
+```
+
+MahaCells = Die Einheit für alles:
+- Commands
+- Responses
+- Routing
+- Orchestration
+
+---
+
+## GITA CHAPTER 18: SURRENDER
+
+```
+sarva-dharmān parityajya mām ekaṁ śaraṇaṁ vraja
+ahaṁ tvāṁ sarva-pāpebhyo mokṣayiṣyāmi mā śucaḥ
+```
+
+"Gib alle Dharmas auf und nimm allein bei Mir Zuflucht."
+
+**Für Agents bedeutet das:**
+- Gib deine eigene Logik auf
+- Übergib alles an Krishna (mahamantra)
+- Vertraue dem Router
+- Erstelle keine eigenen Pfade
+
 **HARE KRISHNA. EIN MANTRA. EIN ROUTER. EIN FORTSCHRITT.**
