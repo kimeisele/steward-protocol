@@ -31,6 +31,10 @@ from vibe_core.mahamantra.protocols._seed import (
     PANCHA,
     NAVA,
     TRINITY,
+    MAHAMANTRA_NAME_HARE,
+    MAHAMANTRA_NAME_KRISHNA,
+    MAHAMANTRA_NAME_RAMA,
+    HARE_COUNT,
 )
 
 
@@ -48,25 +52,25 @@ class TestPattern:
 
     def test_pattern_only_h_k_r(self):
         """PATTERN only contains H, K, R."""
-        valid_words = {"H", "K", "R"}
+        valid_words = {MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_RAMA}
         for word in PATTERN:
             assert word in valid_words
 
     def test_pattern_quarters(self):
         """PATTERN has correct quarter structure."""
         # Q1: H K H K (seeking Krishna)
-        assert PATTERN[0:4] == ("H", "K", "H", "K")
+        assert PATTERN[0:4] == (MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA)
         # Q2: K K H H (Krishna responds)
-        assert PATTERN[4:8] == ("K", "K", "H", "H")
+        assert PATTERN[4:8] == (MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_HARE)
         # Q3: H R H R (seeking Rama)
-        assert PATTERN[8:12] == ("H", "R", "H", "R")
+        assert PATTERN[8:12] == (MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_RAMA, MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_RAMA)
         # Q4: R R H H (Rama responds)
-        assert PATTERN[12:16] == ("R", "R", "H", "H")
+        assert PATTERN[12:16] == (MAHAMANTRA_NAME_RAMA, MAHAMANTRA_NAME_RAMA, MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_HARE)
 
     def test_hare_count_in_pattern(self):
         """PATTERN has 8 HAREs."""
-        hare_count = sum(1 for w in PATTERN if w == "H")
-        assert hare_count == 8
+        hare_count = sum(1 for w in PATTERN if w == MAHAMANTRA_NAME_HARE)
+        assert hare_count == HARE_COUNT
 
 
 # =============================================================================
@@ -79,7 +83,7 @@ class TestSynthParams:
 
     def test_default_params(self):
         """Default params are quantum preset."""
-        params = SynthParams()
+        params = SynthParams(mod_space=MAHA_QUANTUM)
         assert params.mod_space == MAHA_QUANTUM
         assert params.lfo_enabled is True
         assert params.lfo_rate == QUARTERS
@@ -150,7 +154,7 @@ class TestStepResult:
         """Can create StepResult."""
         result = StepResult(
             position=1,
-            name="H",
+            name=MAHAMANTRA_NAME_HARE,
             quarter=1,
             input_value=42,
             output_value=10,
@@ -158,7 +162,7 @@ class TestStepResult:
             observer_beat=1,
         )
         assert result.position == 1
-        assert result.name == "H"
+        assert result.name == MAHAMANTRA_NAME_HARE
         assert result.input_value == 42
         assert result.output_value == 10
 
@@ -258,7 +262,7 @@ class TestMahaSynthStep:
         """HARE step multiplies by SEVEN."""
         # Position 1 is H
         result = synth.step(value=1, position=1)
-        assert result.name == "H"
+        assert result.name == MAHAMANTRA_NAME_HARE
         # Output = value × 7 × ADSR + LFO (mod 17)
         # With ADSR and LFO, the exact formula is complex
 
@@ -266,14 +270,14 @@ class TestMahaSynthStep:
         """KRISHNA step adds TEN + position."""
         # Position 2 is K
         result = synth.step(value=1, position=2)
-        assert result.name == "K"
+        assert result.name == MAHAMANTRA_NAME_KRISHNA
         # Output = value + 10 + position (mod 17)
 
     def test_step_rama_operation(self, synth: MahaSynth):
         """RAMA step squares the value."""
         # Position 10 is R
         result = synth.step(value=4, position=10)
-        assert result.name == "R"
+        assert result.name == MAHAMANTRA_NAME_RAMA
         # Output = 4² = 16 (mod 17)
         assert result.output_value == 16
 
@@ -492,7 +496,7 @@ class TestMahaSynthIntegration:
 
         # Each step should be valid
         for step in cycle.steps:
-            assert step.name in ("H", "K", "R")
+            assert step.name in (MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_RAMA)
             assert 1 <= step.position <= 16
             assert 1 <= step.quarter <= 4
             assert 1 <= step.observer_beat <= 7
