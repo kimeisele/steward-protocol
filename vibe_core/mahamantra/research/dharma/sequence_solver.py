@@ -12,6 +12,19 @@ Transition: Target[i] -> Target[i+1] must be explained by Op[i+1] (H/K/R).
 
 from typing import List
 
+# SSOT IMPORTS - NO HARDCODING!
+from vibe_core.mahamantra.protocols._seed import (
+    MAHAMANTRA_WORD_PATTERN,
+    SEVEN,
+    TEN,
+    POSITION_SUM_KRISHNA,
+    GITA_CHAPTERS,
+    KSHETRA,
+    PRASADAM,
+    NAKSHATRAS,
+    PARAMPARA,
+)
+
 # Target indices in RAMA grid (49)
 TARGETS = [
     44, # 1: Vyasa (va)
@@ -32,21 +45,21 @@ TARGETS = [
     41  # 16: Yamaraja (ya)
 ]
 
-# The Mantra Pattern
-PATTERN = "HKHKKKHHHRHRRRHH"
+# The Mantra Pattern - DERIVED FROM SSOT!
+PATTERN = "".join(MAHAMANTRA_WORD_PATTERN)
 
-# Candidate Constants
+# Candidate Constants - FROM _seed.py SSOT!
 CONSTANTS = {
-    "SEVEN": 7,
-    "TEN": 10,
-    "KRISHNA": 17,
-    "GITA": 18,
-    "KSHETRA": 24,
-    "PRASADAM": 25,
-    "NAKSHATRA": 27,
-    "TEN_3": 30,
-    "PARAMPARA": 37,
-    "LILA": 48
+    "SEVEN": SEVEN,  # 7
+    "TEN": TEN,  # 10
+    "KRISHNA": POSITION_SUM_KRISHNA,  # 17
+    "GITA": GITA_CHAPTERS,  # 18
+    "KSHETRA": KSHETRA,  # 24
+    "PRASADAM": PRASADAM,  # 25
+    "NAKSHATRA": NAKSHATRAS,  # 27
+    "TEN_3": TEN * 3,  # 30 = 10 × 3
+    "PARAMPARA": PARAMPARA,  # 37
+    "LILA": SEVEN * SEVEN - 1,  # 48 = 7² - 1
 }
 
 def analyze_transitions():
