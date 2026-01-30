@@ -867,32 +867,53 @@ def verify_parampara(value: int) -> bool:
 
 
 # =============================================================================
-# POSITION MAPPING - Mahajana zu Position
+# POSITION MAPPING - DERIVED from AVATARAS + MAHAJANAS (NOT HARDCODED!)
+# =============================================================================
+# Structure: Each Quarter has 1 Avatara (Head) + 3 Mahajanas (Workers)
+#   Quarter 0 (Genesis):  AVATARAS[0] + MAHAJANAS[0:3]
+#   Quarter 1 (Dharma):   AVATARAS[1] + MAHAJANAS[3:6]
+#   Quarter 2 (Karma):    AVATARAS[2] + MAHAJANAS[6:9]
+#   Quarter 3 (Moksha):   AVATARAS[3] + MAHAJANAS[9:12]
+#
+# This is the ONLY legitimate way to build the 16 positions.
+# EVERYTHING FLOWS FROM THE MAHAMANTRA.
 # =============================================================================
 
-# Alle 16 Guardians in Order
-ALL_GUARDIANS: Final[Tuple[str, ...]] = (
-    # Genesis Quarter (0-3)
-    "vyasa",
-    "brahma",
-    "narada",
-    "shambhu",
-    # Dharma Quarter (4-7)
-    "prithu",
-    "kumaras",
-    "kapila",
-    "manu",
-    # Karma Quarter (8-11)
-    "parashurama",
-    "prahlada",
-    "janaka",
-    "bhishma",
-    # Moksha Quarter (12-15)
-    "nrisimha",
-    "bali",
-    "shuka",
-    "yamaraja",
-)
+
+def _derive_all_positions() -> Tuple[str, ...]:
+    """
+    DERIVE the 16 positions from AVATARAS and MAHAJANAS.
+    
+    NOT hardcoded. COMPUTED.
+    Structure: [Avatara₀, M₀, M₁, M₂, Avatara₁, M₃, M₄, M₅, ...]
+    """
+    result: list[str] = []
+    workers_per_quarter = MAHAJANA_COUNT // QUARTERS  # 12 / 4 = 3
+    
+    for q in range(QUARTERS):  # 0, 1, 2, 3
+        # HEAD: The Avatara for this quarter
+        result.append(AVATARAS[q])
+        # WORKERS: 3 Mahajanas per quarter
+        start_idx = q * workers_per_quarter
+        end_idx = start_idx + workers_per_quarter
+        result.extend(MAHAJANAS[start_idx:end_idx])
+    
+    return tuple(result)
+
+
+# THE 16 POSITIONS - DERIVED FROM MAHAMANTRA (4 AVATARAS + 12 MAHAJANAS)
+ALL_POSITIONS: Final[Tuple[str, ...]] = _derive_all_positions()
+
+# VERIFICATION: Must equal WORDS
+assert len(ALL_POSITIONS) == WORDS, f"ALL_POSITIONS must have {WORDS} elements, got {len(ALL_POSITIONS)}"
+
+# VERIFICATION: Structure is [Avatara, M, M, M] × 4
+for q in range(QUARTERS):
+    head_idx = q * (WORDS // QUARTERS)  # 0, 4, 8, 12
+    assert ALL_POSITIONS[head_idx] == AVATARAS[q], f"Position {head_idx} must be {AVATARAS[q]}"
+
+# BACKWARD COMPATIBILITY: Alias (will be deprecated)
+ALL_GUARDIANS: Final[Tuple[str, ...]] = ALL_POSITIONS
 
 MAHAJANA_TO_POSITION: Final[dict] = {name: pos for pos, name in enumerate(ALL_GUARDIANS)}
 
