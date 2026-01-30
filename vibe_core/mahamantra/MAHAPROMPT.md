@@ -56,7 +56,7 @@ r = mahamantra("dein input")
 # r["verse"]     → Gita-Kontext
 ```
 
-Guardians, Quarters, Konstanten: aus `substrate/seed.py` importieren (= SSOT, siehe oben).
+**SSOT**: `protocols/_seed_core.py` (Konstanten) + `substrate/seed.py` (Guardians).
 
 ---
 
