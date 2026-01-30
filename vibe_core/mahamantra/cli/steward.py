@@ -300,15 +300,15 @@ class Steward:
 
     def invoke(self, input_text: str) -> StewardResponse:
         """
-        The Universal Invocation (Official Adapter Flow).
+        THIN WRAPPER - Delegates to mahamantra().
 
-        1. SRAVANAM (Input) -> MahaLLM (Intent Routing)
-        2. KIRTANAM (Rhythm) -> Orchestrator (Resonance Tick)
-        3. SMARANAM (Context) -> MahaCompression (Seed/Attractor)
-        4. PADA-SEVANAM (Service) -> ShadowSpawn (Jiva Agent)
-        5. ARCANAM (Execution) -> Mahamantra (Result)
+        mahamantra is the SSOT. Steward just formats.
 
-        "Das bringt die echten 16 Kategorien via Vibration Analysis."
+        1. PARAMPARA: Verify link (THE PERSON)
+        2. DELEGATE:  mahamantra(input_text) → ExecuteResult
+        3. FORMAT:    Convert to StewardResponse for CLI output
+
+        "mahamantra is KING. Steward is the messenger."
         """
         # 0. PRAPADYETA: Parampara Verification
         if not self._verify_parampara_link():
@@ -320,140 +320,52 @@ class Steward:
                 message="MAYAVAD: Connection to Parampara not verified.",
             )
 
-        # 1. MANANAM: Compress to Seed (The Foundation)
-        if len(input_text) > self.LARGE_INPUT_THRESHOLD:
-            input_text = self._compress_large_input(input_text)
-        
-        from vibe_core.mahamantra.adapters.compression import MahaCompression
-        compressor = MahaCompression()
-        comp_result = compressor.compress(input_text)
-        seed = comp_result.seed
-        # Attractor is packed in lower 12 bits of seed (see compression.py)
-        attractor = seed & 0xFFF
+        # 1. DELEGATE: mahamantra() is the SSOT
+        exec_result = self.mahamantra(input_text)
 
-        # 2. MAHA LLM: Holographic Intent Routing (The "What")
-        # "Das bringt die echten 16 Kategorien via Vibration Analysis"
-        route_result = self.llm.route_text(input_text)
-        intent_category = route_result.category.name if route_result.category else "UNKNOWN"
-        intent_id = route_result.intent_id
-        agent_name = route_result.agent
+        # Extract values
+        success = exec_result.get("success", False)
+        position = exec_result.get("position", 0)
+        guardian = exec_result.get("guardian", "unknown")
+        quarter = exec_result.get("quarter", "genesis")
+        guna = exec_result.get("guna", "sattva")
+        output = exec_result.get("output", "")
+        vibration = exec_result.get("vibration", {})
+        seed = vibration.get("seed", 0) if vibration else 0
+        attractor = vibration.get("attractor", 0) if vibration else 0
 
-        # 3. ORCHESTRATOR: Rhythmic Resonance (The "When")
-        # "2. Resonance... GO wie auch immer du denkst"
-        tick_result = self.orchestrator.tick(seed)
-        resonance = int(tick_result.resonance * 100) # Scale to integer for display
-        beat = tick_result.beat
-        round_num = tick_result.round_num
-
-        # 4. GITA MAPPING (The "Why")
+        # Get chapter from attractor
         chapter = get_gita_chapter(attractor)
         route = RESONANCE_MAP.get(chapter, RESONANCE_MAP[18])
 
-        # 5. JIVA SHADOW: The Agent (The "Who")
-        from vibe_core.mahamantra.lila.jiva_shadow import spawn_shadow
-        jiva_shadow = spawn_shadow(seed.to_bytes(8, 'big'), shadow_id=agent_name)
-        jiva_shadow_id = jiva_shadow.shadow_id
-        jiva_guna = jiva_shadow.dominant_guna.value
-        jiva_quality_count = jiva_shadow.quality_count
+        # Resonance values from vibration
+        resonance = vibration.get("resonance", 0) if vibration else 0
+        vina_resonance = vibration.get("vina_resonance", 0) if vibration else 0
+        vina_string = vibration.get("vina_string", 1) if vibration else 1
 
-        # 6. EXECUTION: Mahamantra (The "Action")
-        # Currently we invoke the full mahamantra pipeline via execute
-        # This implicitly handles the "Exchange"
-        try:
-            exec_result = self.mahamantra.execute(input_text)
-            
-            # Enrich result
-            result_payload = {
-                "success": exec_result["success"],
-                "position": exec_result["position"],
-                "guardian": exec_result["guardian"],
-                "quarter": exec_result["quarter"],
-                "guna": exec_result["guna"],
-                "output": exec_result["output"],
-                "vibration": exec_result["vibration"],
-                "llm_route": {
-                    "category": intent_category,
-                    "address": f"0x{intent_id:04X}",
-                    "agent": agent_name
-                },
-                "orchestrator": {
-                    "beat": beat,
-                    "round": round_num,
-                    "resonance": tick_result.resonance
-                }
-            }
-            
-            message = (
-                f"[{intent_category}] {jiva_shadow_id[:8]}... "
-                f"| Beat {beat}/{round_num} (Res: {tick_result.resonance:.2f}) "
-                f"| {exec_result['guardian']}@{exec_result['position']}"
-            )
-
-        except Exception as e:
-            result_payload = {"success": False, "error": str(e)}
-            message = f"Execution Error: {str(e)}"
-
-        # 7. RESOLVE IDENTITY & CHAT (Connecting the Loop)
-        # "Wir müssen das 'Unbekannte' bekannt machen"
-        from vibe_core.mahamantra.substrate import siksastakam_registry as registry
-        
-        # Resolve Guardian Name from Position (Authority: Registry)
-        # If exec_result has "unknown", we fix it here.
-        final_position = exec_result.get("position", 0)
-        guardian_name = registry.get_guardian(final_position) or "unknown"
-        
-        # Inject Guardian Name back into result payload
-        result_payload["guardian"] = guardian_name
-
-        # 8. MAHAJANA CHAT: The Voice (Connecting Indriya)
-        # "Verbinde mahamantra/chat.py... natürliche Antwort"
-        from vibe_core.mahamantra.chat import MahajanaChat
-        
-        # If execution failed, use Narada (Communicator) to explain why.
-        # If success, use the routed Guardian to confirm.
-        chat_guardian = "narada" if not exec_result["success"] else guardian_name
-        chat_pos = registry.route_to_position(f"chat with {chat_guardian}") # Resolve position just to be safe
-        
-        # Generate Natural Response
-        # We pass the execution output as context if needed, but here we just respond to the intent
-        try:
-            # Contextual message: "I executed X. Result: Y."
-            context_msg = (
-                f"User asked: '{input_text}'. "
-                f"Action taken by {guardian_name.upper()}@{final_position}. "
-                f"Result: {exec_result.get('output', 'Success')}"
-            )
-            chat = MahajanaChat(position=chat_pos, guardian=chat_guardian)
-            chat_result = chat.respond(context_msg)
-            natural_message = chat_result.response
-        except Exception as e:
-            natural_message = f"[{guardian_name.upper()}] Execution complete. (Voice offline: {e})"
-
-        # 9. PRABHUPADA KIRTAN Check (Person Anchor)
-        prabhupada_result = self.prabhupada_kirtan.compute_with_person(seed)
-
+        # 2. FORMAT: Build StewardResponse
         return StewardResponse(
             input=input_text,
             seed=seed,
             attractor=attractor,
             chapter=chapter,
             route=route,
-            call_response=prabhupada_result.transmission_mode,
+            call_response="RESPONSE" if success else "CALL",
             resonance=resonance,
-            vina_resonance=tick_result.value % 108, # Derived from tick value
-            vina_string=1 + (tick_result.value % 5),
-            shadow_phase="active",
-            shadow_position=tick_result.beat, # Sync shadow with beat
-            intent_category=intent_category,
-            intent_id=intent_id,
-            jiva_shadow_id=jiva_shadow_id,
-            jiva_guna=jiva_guna,
-            jiva_quality_count=jiva_quality_count,
-            siksastakam_stage=prabhupada_result.siksastakam_stage.verse,
-            siksastakam_operation=prabhupada_result.siksastakam_stage.operation,
-            person_verified=prabhupada_result.is_bona_fide,
-            result=result_payload,
-            message=natural_message,
+            vina_resonance=vina_resonance,
+            vina_string=vina_string,
+            shadow_phase="active" if success else "blocked",
+            shadow_position=position,
+            intent_category=None,  # Already in output string
+            intent_id=None,
+            jiva_shadow_id=None,
+            jiva_guna=guna,
+            jiva_quality_count=None,
+            siksastakam_stage=None,
+            siksastakam_operation=None,
+            person_verified=self._link_verified,
+            result=exec_result,
+            message=output,
         )
 
     def ask(self, input_text: str) -> StewardResponse:
