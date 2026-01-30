@@ -89,6 +89,8 @@ from vibe_core.mahamantra.protocols._seed import (
     NAVA,
     TRINITY,
     MAHAJANA_COUNT,
+    MAHAMANTRA_NAME_HARE,
+    MAHAMANTRA_NAME_KRISHNA,
 )
 
 
@@ -276,11 +278,11 @@ class MahaSynth(MahaSynthProtocol):
         lfo = self._get_lfo_value(pos)
         mod = self._params.mod_space
 
-        if name == "H":
+        if name == MAHAMANTRA_NAME_HARE:
             # HARE: multiply by SEVEN, modulated by ADSR
             output = (value * SEVEN * adsr + lfo) % mod
             operation = f"{value} × {SEVEN} × {adsr} + {lfo} = {output} (mod {mod})"
-        elif name == "K":
+        elif name == MAHAMANTRA_NAME_KRISHNA:
             # KRISHNA: add TEN plus position
             output = (value + TEN + pos) % mod
             operation = f"{value} + {TEN} + {pos} = {output} (mod {mod})"
@@ -342,9 +344,9 @@ class MahaSynth(MahaSynthProtocol):
         """One oscillation = simplified 16-step pass (no ADSR/LFO for speed)."""
         mod = self._params.mod_space
         for name in PATTERN:
-            if name == "H":
+            if name == MAHAMANTRA_NAME_HARE:
                 value = (value * SEVEN) % mod
-            elif name == "K":
+            elif name == MAHAMANTRA_NAME_KRISHNA:
                 value = (value + TEN) % mod
             else:  # R
                 value = (value * value) % mod
