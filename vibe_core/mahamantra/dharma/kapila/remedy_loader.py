@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 logger = logging.getLogger("SHUDDHI.LOADER")
 

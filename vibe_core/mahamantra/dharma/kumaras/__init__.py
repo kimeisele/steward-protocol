@@ -20,41 +20,33 @@ __mahajana__ = "kumaras"
 __position__ = 5
 __genesis__ = "0xfe9a70b8"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-from vibe_core.protocols.mahajanas.kumaras import *
+# =============================================================================
+# FRACTAL DISCOVERY - Folder IS Wiring
+# =============================================================================
 
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.kumaras import __all__
+_fractal_getattr_fn = None
 
-# Backward-compat constants
-from typing import Final
-
-POSITION: Final[int] = 5
-QUARTER: Final[str] = "dharma"
-OPCODE: Final[str] = "BIND_SYMBOL"
-PARAMPARA_VECTOR: Final[int] = 222
-
-# KumarasBase alias for backward compat
-KumarasBase = KumarasProtocolBase
 
 def __getattr__(name: str):
-    """
-    Fractal routing: folder IS wiring.
-    "EIN IMPORT. KRISHNA ROUTET ALLES."
-    """
-    from pathlib import Path
-    import importlib
+    """Lazy fractal discovery to avoid circular imports."""
+    
+    # Map Protocol types to protocol.py
+    if name in (
+        "KumarasProtocol", "KumarasProtocolBase", "NullKumaras", 
+        "ShuddhiProtocol", "ShuddhiResult", "ShuddhiStatus",
+        "PurityLevel", "PurificationResult", "ResetResult", "PurityState"
+    ):
+        from . import protocol
+        return getattr(protocol, name)
 
-    pkg_root = Path(__file__).parent
+    # Map Validation types to validation.py
+    if name.startswith("Validation") or name.endswith("check"):
+        from . import validation
+        return getattr(validation, name)
+        
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)

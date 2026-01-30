@@ -24,9 +24,9 @@ from typing import Dict, List, Optional, Type
 
 import libcst as cst
 
-from vibe_core.protocols.shuddhi import ShuddhiProtocol, ShuddhiResult, ShuddhiStatus
-from vibe_core.shuddhi.remedies.base import CSTRemedy, ShuddhiScopeError
-from vibe_core.shuddhi.remedy_loader import get_remedy_loader
+from vibe_core.mahamantra.substrate.shuddhi import ShuddhiProtocol, ShuddhiResult, ShuddhiStatus
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy, ShuddhiScopeError
+from vibe_core.mahamantra.dharma.kapila.remedy_loader import get_remedy_loader
 
 logger = logging.getLogger("SHUDDHI")
 
