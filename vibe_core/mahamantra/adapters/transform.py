@@ -65,6 +65,8 @@ from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
     HALVES,
     NAVA,
+    MAHAMANTRA_NAME_HARE,
+    MAHAMANTRA_NAME_KRISHNA,
 )
 
 
@@ -139,10 +141,10 @@ class MahaTransform(MahaTransformProtocol):
         for i, op in enumerate(PATTERN):
             position = i + 1  # 1-indexed
 
-            if op == "H":
+            if op == MAHAMANTRA_NAME_HARE:
                 # HARE: Multiply by SEVEN
                 value = (value * SEVEN + self._feedback_acc) % self.mod_space
-            elif op == "K":
+            elif op == MAHAMANTRA_NAME_KRISHNA:
                 # KRISHNA: Add TEN + position
                 value = (value + TEN + position + self._feedback_acc) % self.mod_space
             else:
