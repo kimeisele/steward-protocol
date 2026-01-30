@@ -11,42 +11,42 @@ Transition: Target[i] -> Target[i+1] must be explained by Op[i+1] (H/K/R).
 """
 
 from typing import List
+from vibe_core.mahamantra.protocols._seed import (
+    SEVEN,
+    TEN,
+    POSITION_SUM_KRISHNA,
+    GITA_CHAPTERS,
+    KSHETRA,
+    PRASADAM,
+    NAKSHATRAS,
+    PARAMPARA,
+    MAHAMANTRA_WORD_PATTERN,
+)
 
-# Target indices in RAMA grid (49)
-TARGETS = [
-    44, # 1: Vyasa (va)
-    38, # 2: Brahma (ba)
-    35, # 3: Narada (na)
-    45, # 4: Shambhu (śa)
-    36, # 5: Prithu (pa)
-    16, # 6: Kumaras (ka)
-    16, # 7: Kapila (ka)
-    40, # 8: Manu (ma)
-    36, # 9: Parashurama (pa)
-    36, # 10: Prahlada (pa)
-    23, # 11: Janaka (ja)
-    39, # 12: Bhishma (bha)
-    35, # 13: Nrisimha (na)
-    38, # 14: Bali (ba)
-    45, # 15: Shuka (śa)
-    41  # 16: Yamaraja (ya)
-]
+# IMPL-PHONETIC-ROUTER: Use the Standard Adapter
+from vibe_core.mahamantra.adapters.rama_router import get_phonetic_router
 
-# The Mantra Pattern
-PATTERN = "HKHKKKHHHRHRRRHH"
+# Get the router service
+router = get_phonetic_router()
 
-# Candidate Constants
+# Calculate targets using the Protocol (The True Algorithm)
+TARGETS = [router.route_to_rama(pos) for pos in range(1, 17)]
+
+# The Mantra Pattern - DERIVED FROM SSOT!
+PATTERN = "".join(MAHAMANTRA_WORD_PATTERN)
+
+# Candidate Constants - FROM _seed.py SSOT!
 CONSTANTS = {
-    "SEVEN": 7,
-    "TEN": 10,
-    "KRISHNA": 17,
-    "GITA": 18,
-    "KSHETRA": 24,
-    "PRASADAM": 25,
-    "NAKSHATRA": 27,
-    "TEN_3": 30,
-    "PARAMPARA": 37,
-    "LILA": 48
+    "SEVEN": SEVEN,  # 7
+    "TEN": TEN,  # 10
+    "KRISHNA": POSITION_SUM_KRISHNA,  # 17
+    "GITA": GITA_CHAPTERS,  # 18
+    "KSHETRA": KSHETRA,  # 24
+    "PRASADAM": PRASADAM,  # 25
+    "NAKSHATRA": NAKSHATRAS,  # 27
+    "TEN_3": TEN * 3,  # 30 = 10 × 3
+    "PARAMPARA": PARAMPARA,  # 37
+    "LILA": SEVEN * SEVEN - 1,  # 48 = 7² - 1
 }
 
 def analyze_transitions():

@@ -46,17 +46,27 @@ EXAMPLE:
 from typing import Set, Dict, Tuple, Optional, List
 from functools import lru_cache
 
+from vibe_core.mahamantra.protocols._seed import (
+    WORDS,
+    TRINITY,
+    HARE_COUNT,
+    KRISHNA_COUNT,
+    RAMA_COUNT,
+    PANCHA,
+    HALVES,
+)
+
 # =============================================================================
 # THE 7 AXIOMS (The only hardcoded values - everything else is derived)
 # =============================================================================
 AXIOMS = {
-    "WORDS": 16,
-    "TRINITY": 3,
-    "HARE_COUNT": 8,
-    "KRISHNA_COUNT": 4,
-    "RAMA_COUNT": 4,
-    "PANCHA": 5,
-    "HALVES": 2,
+    "WORDS": WORDS,
+    "TRINITY": TRINITY,
+    "HARE_COUNT": HARE_COUNT,
+    "KRISHNA_COUNT": KRISHNA_COUNT,
+    "RAMA_COUNT": RAMA_COUNT,
+    "PANCHA": PANCHA,
+    "HALVES": HALVES,
 }
 
 # Derived values (1 step from axioms)
