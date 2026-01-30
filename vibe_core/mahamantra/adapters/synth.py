@@ -64,6 +64,8 @@ USAGE:
     spectrum = synth.spectrum()
 """
 
+from typing import Final, Tuple, Dict, Optional, List, Any
+
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "narada"
 __position__ = 3
@@ -89,8 +91,9 @@ from vibe_core.mahamantra.protocols._seed import (
     NAVA,
     TRINITY,
     MAHAJANA_COUNT,
-    MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
+    MAHAMANTRA_WORD_PATTERN,
+    MAHAMANTRA_NAME_HARE,
 )
 
 
@@ -99,19 +102,13 @@ from vibe_core.mahamantra.protocols._seed import (
 # =============================================================================
 
 # The Mahamantra pattern (16 words)
-PATTERN: Final[Tuple[str, ...]] = (
-    "H", "K", "H", "K",  # Q1: Seeking Krishna
-    "K", "K", "H", "H",  # Q2: Krishna responds
-    "H", "R", "H", "R",  # Q3: Seeking Rama
-    "R", "R", "H", "H",  # Q4: Rama responds
-)
+# The Mahamantra pattern (16 words)
+PATTERN: Final[Tuple[str, ...]] = MAHAMANTRA_WORD_PATTERN
 
 # Binary pattern from Mahamantra (0=HARE, 1=NAME)
-BINARY_PATTERN: Final[Tuple[int, ...]] = (
-    0, 1, 0, 1,  # Q1
-    1, 1, 0, 0,  # Q2
-    0, 1, 0, 1,  # Q3
-    1, 1, 0, 0,  # Q4
+# Derived: 0 if Name is HARE, else 1
+BINARY_PATTERN: Final[Tuple[int, ...]] = tuple(
+    0 if name == MAHAMANTRA_NAME_HARE else 1 for name in PATTERN
 )
 
 # Position sums reveal operations (DERIVED!)

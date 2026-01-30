@@ -50,15 +50,15 @@ class MahaSynthProtocol(Protocol):
 class SynthParams:
     """Modular Synthesizer Parameters."""
     mod_space: int
-    feedback: int
-    phase_offset: int
-    lfo_enabled: bool
-    lfo_rate: int
-    adsr_attack: int
-    adsr_decay: int
-    adsr_sustain: int
-    adsr_release: int
-    nibble_mode: bool
+    feedback: int = 0
+    phase_offset: int = 0
+    lfo_enabled: bool = True
+    lfo_rate: int = 4  # QUARTERS
+    adsr_attack: int = 5  # PANCHA
+    adsr_decay: int = 12  # MAHAJANA_COUNT
+    adsr_sustain: int = 5  # PANCHA
+    adsr_release: int = 12  # MAHAJANA_COUNT
+    nibble_mode: bool = False
 
 @dataclass(frozen=True)
 class StepResult:

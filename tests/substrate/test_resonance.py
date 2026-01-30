@@ -45,6 +45,7 @@ from vibe_core.protocols.substrate.resonance import (
     resolve,
 )
 from vibe_core.protocols.substrate.byte import HolyName
+from vibe_core.mahamantra.protocols._seed import MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_RAMA
 
 
 # =============================================================================
@@ -55,6 +56,7 @@ from vibe_core.protocols.substrate.byte import HolyName
 class TestPhoneticClass:
     """Test the PhoneticClass enum."""
 
+
     def test_vowels_exist(self):
         """All Sanskrit vowels are represented."""
         assert PhoneticClass.VOWEL_A.value == "A"
@@ -62,7 +64,8 @@ class TestPhoneticClass:
         assert PhoneticClass.VOWEL_U.value == "U"
         assert PhoneticClass.VOWEL_E.value == "E"
         assert PhoneticClass.VOWEL_O.value == "O"
-        assert PhoneticClass.VOWEL_R.value == "R"  # Vocalic r (ṛ)
+        # "R" is unique because it is both a vowel (ṛ) and part of RAMA
+        assert PhoneticClass.VOWEL_R.value == MAHAMANTRA_NAME_RAMA  # Vocalic r (ṛ) matches RAMA symbol
 
     def test_consonant_classes(self):
         """All articulation points are represented."""
@@ -76,7 +79,7 @@ class TestPhoneticClass:
         """Special phonetic classes exist."""
         assert PhoneticClass.SEMIVOWEL.value == "S"
         assert PhoneticClass.SIBILANT.value == "X"
-        assert PhoneticClass.ASPIRATE.value == "H"  # Most important - in HARE
+        assert PhoneticClass.ASPIRATE.value == MAHAMANTRA_NAME_HARE  # HARE
         assert PhoneticClass.NULL.value == "_"
 
 
