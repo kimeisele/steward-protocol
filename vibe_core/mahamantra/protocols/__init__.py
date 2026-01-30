@@ -10,7 +10,7 @@ SIKSASTAKAM OPTIMIZED:
     Import time: ~10ms instead of ~200ms.
 
     Use direct imports for best performance:
-        from vibe_core.mahamantra.protocols._seed_core import WORDS
+        from vibe_core.mahamantra.protocols._seed import WORDS
         from vibe_core.mahamantra.protocols._core import Quarter
 
 USAGE:
@@ -28,11 +28,11 @@ __genesis__ = "0xbe27e031"  # GenesisByte: parampara % 37 == 0
 from typing import TYPE_CHECKING
 
 # =============================================================================
-# FAST CONSTANTS (from _seed_core - 10ms)
+# FAST CONSTANTS (from _seed - SSOT)
 # =============================================================================
 # These are the most commonly used constants - imported eagerly for convenience.
 
-from vibe_core.mahamantra.protocols._seed_core import (
+from vibe_core.mahamantra.protocols._seed import (
     WORDS,
     TRINITY,
     QUARTERS,
@@ -184,7 +184,7 @@ def __getattr__(name: str):
 # =============================================================================
 
 __all__ = [
-    # Fast constants (from _seed_core)
+    # Fast constants (from _seed - SSOT)
     "WORDS", "TRINITY", "QUARTERS", "PANCHA", "HALVES",
     "HARE_COUNT", "KRISHNA_COUNT", "RAMA_COUNT",
     "KSETRAJNA", "HALF_SIZE", "LILA", "KSHETRA", "NAVA", "SHARANAGATI",

@@ -68,7 +68,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         if cls._kirtan is None:
             from vibe_core.mahamantra.research.dharma import MahaKirtan
             from vibe_core.mahamantra.adapters.compression import MahaCompression
-            from vibe_core.mahamantra.protocols._seed_core import MAHA_QUANTUM
+            from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
             cls._kirtan = MahaKirtan(mod_space=MAHA_QUANTUM)
             cls._compressor = MahaCompression()
@@ -91,7 +91,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         result = kirtan.compute(cell if cell else seed)
 
         from vibe_core.mahamantra.research.dharma import MahaResonator
-        from vibe_core.mahamantra.protocols._seed_core import MAHA_QUANTUM
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
         resonator = MahaResonator(mod_space=MAHA_QUANTUM)
         attractor = resonator.oscillate_once(result.transformed_value)
@@ -231,7 +231,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         Everything computed. No external LLM. No hardcoded routing.
         """
-        from vibe_core.mahamantra.protocols._seed_core import WORDS, PARAMPARA, MAHA_QUANTUM
+        from vibe_core.mahamantra.protocols._seed import WORDS, PARAMPARA, MAHA_QUANTUM
         from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
 
         # =====================================================================
