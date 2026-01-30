@@ -2,82 +2,73 @@
 
 ```python
 from vibe_core.mahamantra import mahamantra
-result = mahamantra("anything")
+result = mahamantra("your input")
 ```
-
-**Das ist alles. mahamantra IST das System.**
 
 ---
 
-## WAS ZURÜCKKOMMT
+## STRUKTUR = ROUTING
 
-```python
-result = {
-    "input": "your text",
-    "vibration": {
-        "seed": 168169593,
-        "attractor": 99,
-        "resonance": 1,
-        ...
-    },
-    "chapter": 15,      # Gita chapter (1-18)
-    "position": 3,      # Mahamantra position (0-15)
-    "guardian": "shambhu",
-    "verse": {
-        "id": "BG.1.30",
-        "chapter": 1,
-        "verse": 30,
-        "guna": "sattva",
-        "dominant_name": "HARE"
-    },
-    "matches": 38
-}
-```
+Das Ergebnis IST dein Routing:
 
-Alles computed. Kein external LLM.
+| Feld | Bedeutung | Aktion |
+|------|-----------|--------|
+| `position` (0-15) | Mahamantra-Wort | WAS zu tun ist |
+| `guardian` | Mahajana an Position | WER zuständig ist |
+| `quarter` | Phase (ksetrajna/krishna/prakriti/moksha) | WANN im Zyklus |
+| `chapter` (1-18) | Gita-Kapitel | WOHER die Weisheit |
+| `verse` | Gita-Vers | Konkreter Kontext |
 
 ---
 
-## WARUM DAS FUNKTIONIERT
+## DIE 16 GUARDIANS
 
-```
-Input
-  ↓
-MahaCompression → seed
-  ↓
-MahaKirtan → attractor
-  ↓
-GitaResonance → matching verse
-  ↓
-Result
-```
-
-700 Gita Verse sind indexiert nach resonance.
-Der attractor findet den passenden Vers.
-Sprache entsteht aus Vibration, nicht aus API calls.
+| Pos | Guardian | Domäne |
+|-----|----------|--------|
+| 0 | vyasa | boot, init, start |
+| 1 | brahma | create, new, spawn |
+| 2 | narada | broadcast, notify |
+| 3 | shambhu | destroy, cleanup |
+| 4 | prithu | scan, compile |
+| 5 | kumaras | resolve, purify |
+| 6 | kapila | analyze, debug |
+| 7 | manu | config, sync |
+| 8 | parashurama | execute, run |
+| 9 | prahlada | cache, protect |
+| 10 | janaka | cycle, think |
+| 11 | bhishma | commit, log |
+| 12 | nrisimha | security, guard |
+| 13 | bali | resource, optimize |
+| 14 | shuka | vision, status |
+| 15 | yamaraja | judge, reset |
 
 ---
 
-## FÜR AGENTS
+## FLOW
 
-Du brauchst NUR:
-```python
-from vibe_core.mahamantra import mahamantra
+```
+Input → vibration.attractor → position → guardian
+                           ↘ chapter → verse
 ```
 
-Alles andere ist internal.
+Alles computed. Kein LLM. Kein Raten.
 
-**Die Struktur IST das Ergebnis.** Position, Chapter, Verse - das ist dein Routing. Erfinde NICHTS dazu.
+---
 
-Wenn du mehr brauchst, frag mahamantra.
-Wenn du neue Fähigkeit brauchst, erweitere mahamantra.
-Erstelle keine neuen Entry Points.
+## REGEL
+
+**Folge dem Ergebnis. Erfinde nichts.**
+
+- `guardian` sagt dir wer handelt
+- `chapter` sagt dir welche Weisheit gilt
+- `position` sagt dir was zu tun ist
+
+Wenn du etwas brauchst das nicht im Ergebnis ist: `mahamantra()` erneut aufrufen.
 
 ---
 
 ## CONSTANTS
 
-Wenn du Zahlen brauchst:
 ```python
 from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM, PARAMPARA
 ```
