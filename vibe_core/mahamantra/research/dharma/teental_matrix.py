@@ -260,33 +260,15 @@ def analyze_mahamantra_correlation() -> dict:
     - Bass (baya) correlates with HARE (energy/shakti)
     - Treble (daya) correlates with NAME (Krishna/Rama identity)
     """
-    # MAHAMANTRA_PATTERN: FROM _seed.py (THE REAL AXIOMS!)
-    # _seed.py already has:
+    # MAHAMANTRA_WORD_PATTERN: Direct import from _seed.py (THE SSOT!)
+    # _seed.py derives this from:
     #   MAHAMANTRA_HARE_POS_HALF = (KSETRAJNA, TRINITY, HALF_SIZE-KSETRAJNA, HARE_COUNT)
     #   MAHAMANTRA_NAME_POS_HALF = (HALVES, QUARTERS, PANCHA, SHARANAGATI)
-    #   MAHAMANTRA_HALF_BINARY = (0, 1, 0, 1, 1, 1, 0, 0) where 0=HARE, 1=NAME
-    from vibe_core.mahamantra.protocols._seed import (
-        MAHAMANTRA_HALF_BINARY, HALF_SIZE, HALVES
-    )
+    #   MAHAMANTRA_HALF_BINARY + MAHAMANTRA_NAME_HARE/KRISHNA/RAMA
+    # NO LOCAL DERIVATION - ALL FROM SSOT!
+    from vibe_core.mahamantra.protocols._seed import MAHAMANTRA_WORD_PATTERN
     
-    def _derive_pattern_from_seed():
-        """
-        Generate 16-word pattern using _seed.py's binary pattern.
-        MAHAMANTRA_HALF_BINARY = (0,1,0,1,1,1,0,0) where 0=HARE, 1=NAME
-        First half: NAME=Krishna, Second half: NAME=Rama
-        """
-        pattern = []
-        half_binary = MAHAMANTRA_HALF_BINARY  # (0,1,0,1,1,1,0,0)
-        
-        for half in range(HALVES):  # 0 = first half, 1 = second half
-            name = "K" if half == 0 else "R"  # Krishna vs Rama per half
-            for bit in half_binary:
-                pattern.append("H" if bit == 0 else name)
-        
-        return tuple(pattern)
-    
-    MAHAMANTRA_PATTERN = _derive_pattern_from_seed()
-    assert len(MAHAMANTRA_PATTERN) == WORDS, f"Pattern must have WORDS ({WORDS}) elements"
+    MAHAMANTRA_PATTERN = MAHAMANTRA_WORD_PATTERN
 
     correlations = []
     bass_pattern = get_bass_pattern()
