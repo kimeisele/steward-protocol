@@ -54,7 +54,6 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0xc1739dcf"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
 from typing import Any, Final, Optional
 
 from vibe_core.mahamantra.substrate.mahajana import Quarter, Sampradaya
@@ -63,22 +62,20 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     WORDS,
 )
+from vibe_core.mahamantra.protocols.pipeline import (
+    MahaPipelineProtocol,
+    PipelineResult,
+    GenesisResult,
+    DharmaResult,
+    KarmaResult,
+    MokshaResult,
+    PhaseSpec,
+)
 
 
 # =============================================================================
 # PHASE METADATA
 # =============================================================================
-
-@dataclass(frozen=True)
-class PhaseSpec:
-    """Specification for a pipeline phase."""
-    quarter: Quarter
-    sampradaya: Sampradaya
-    sounds: str
-    positions: tuple[int, ...]
-    function: str
-    adapter_name: str
-
 
 PHASE_SPECS: Final[dict[Quarter, PhaseSpec]] = {
     Quarter.GENESIS: PhaseSpec(
@@ -120,63 +117,10 @@ assert len(PHASE_SPECS) == QUARTERS, f"Must have {QUARTERS} phases"
 
 
 # =============================================================================
-# PHASE RESULTS
-# =============================================================================
-
-@dataclass(frozen=True)
-class GenesisResult:
-    """Result of Genesis phase (intent determination)."""
-    input_value: Any
-    hash_value: int
-    lens_scores: tuple[int, ...]
-    quarter: Quarter = Quarter.GENESIS
-
-
-@dataclass(frozen=True)
-class DharmaResult:
-    """Result of Dharma phase (transformation)."""
-    input_value: int
-    output_value: int
-    attractor: int
-    steps: int
-    quarter: Quarter = Quarter.DHARMA
-
-
-@dataclass(frozen=True)
-class KarmaResult:
-    """Result of Karma phase (routing/action)."""
-    key: int
-    value: Any
-    routed: bool
-    quarter: Quarter = Quarter.KARMA
-
-
-@dataclass(frozen=True)
-class MokshaResult:
-    """Result of Moksha phase (completion)."""
-    input_value: int
-    beat: int
-    round_num: int
-    resonance: float
-    quarter: Quarter = Quarter.MOKSHA
-
-
-@dataclass(frozen=True)
-class PipelineResult:
-    """Complete pipeline execution result."""
-    genesis: GenesisResult
-    dharma: DharmaResult
-    karma: KarmaResult
-    moksha: MokshaResult
-    final_value: int
-    total_resonance: float
-
-
-# =============================================================================
 # THE PIPELINE
 # =============================================================================
 
-class MahamantraPipeline:
+class MahamantraPipeline(MahaPipelineProtocol):
     """
     The 4-Phase Pipeline: Genesis → Dharma → Karma → Moksha
 

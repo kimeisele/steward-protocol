@@ -49,8 +49,14 @@ __position__ = 3
 __genesis__ = "0x7085cf9a"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from typing import Final, List, Optional, Tuple
+from typing import Final, List, Optional, Tuple, Dict
 
+from vibe_core.mahamantra.protocols.transform import (
+    MahaTransformProtocol,
+    TransformResult,
+    AttractorResult,
+    BatchResult,
+)
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     WORDS,
@@ -60,37 +66,6 @@ from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     NAVA,
 )
-
-
-# =============================================================================
-# RESULT TYPES (Standard CS naming)
-# =============================================================================
-
-@dataclass(frozen=True)
-class TransformResult:
-    """Result of a single transformation."""
-    seed: int
-    value: int
-    mod_space: int
-    iterations: int = 1
-
-
-@dataclass(frozen=True)
-class AttractorResult:
-    """Result of attractor discovery."""
-    seed: int
-    stable_value: int
-    cycles_to_converge: int
-    is_fixed_point: bool
-    trajectory: Tuple[int, ...]
-
-
-@dataclass(frozen=True)
-class BatchResult:
-    """Result of batch transformation."""
-    results: Tuple[TransformResult, ...]
-    unique_outputs: int
-    entropy: float  # diversity measure
 
 
 # =============================================================================
@@ -111,7 +86,7 @@ DEFAULT_MOD: Final[int] = MAHA_QUANTUM
 # THE ADAPTER
 # =============================================================================
 
-class MahaTransform:
+class MahaTransform(MahaTransformProtocol):
     """
     Deterministic 16-Step Transformation Engine.
 
@@ -246,7 +221,7 @@ class MahaTransform:
             entropy=entropy,
         )
 
-    def analyze_distribution(self, sample_size: int = 1000) -> dict:
+    def analyze_distribution(self, sample_size: int = 1000) -> Dict[str, object]:
         """
         Analyze output distribution over sample space.
 

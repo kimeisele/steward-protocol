@@ -136,6 +136,51 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.kernel import singularity
         return singularity
 
+    # === BootMode (Vyasa) ===
+    if name == "BootMode":
+        from vibe_core.mahamantra.substrate import boot
+        return boot.BootMode
+
+    # === ProcessManager (Vyasa) ===
+    if name in ("ProcessManager", "ProcessStatus"):
+        from vibe_core.mahamantra.substrate import process_manager
+        return getattr(process_manager, name)
+
+    # === Errors (Prithu) ===
+    if name in ("ErrorCode", "StructuredError", "ErrorCategory", "kernel_fault"):
+        from vibe_core.mahamantra.substrate import errors
+        return getattr(errors, name)
+
+    # === Lineage (Prithu) ===
+    if name in ("LineageBlock", "LineageChain", "LineageEventType"):
+        from vibe_core.mahamantra.substrate import lineage
+        return getattr(lineage, name)
+
+    # === Ledger (Prithu) ===
+    if name in ("VibeLedger", "InMemoryLedger", "SQLiteLedger"):
+        from vibe_core.mahamantra.substrate import ledger
+        return getattr(ledger, name)
+
+    # === EventBus (Narada) ===
+    if name in ("EventBus", "Event", "EventType", "EventColor", "EventBusProtocol", "get_event_bus"):
+        from vibe_core.mahamantra.substrate import event_bus
+        return getattr(event_bus, name)
+
+    # === Shuddhi (Kapila/Kumaras) ===
+    if name in ("ShuddhiProtocol", "ShuddhiStatus", "ShuddhiResult", "RemedyProtocol", "NullShuddhi", "ShuddhiProtocolBase"):
+        from vibe_core.mahamantra.substrate import shuddhi
+        return getattr(shuddhi, name)
+
+    # === Config (Brahma) ===
+    if name in ("PhoenixConfig", "get_config", "reset_config", "set_config"):
+        from vibe_core.mahamantra.substrate import config
+        return getattr(config, name)
+
+    # === Samskara (Prithu) ===
+    if name in ("SamskaraProtocol", "Phase", "PhaseStatus", "PhaseResult", "PipelineContext", "PipelineExecutor"):
+        from vibe_core.mahamantra.substrate import samskara
+        return getattr(samskara, name)
+
     raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute '{name}'")
 
 
@@ -161,5 +206,16 @@ __all__ = [
     # Substrate (for backwards compat)
     "HeadProtocol", "MantraProtocol", "WorkerProtocol",
     "ProtocolRegistry", "Mahajana", "Avatara", "MantraOpCode",
+    # Substrate (SSOT)
+    "BootMode", "ProcessManager", "ProcessStatus",
+    "ErrorCode", "StructuredError", "ErrorCategory",
+    "LineageBlock", "LineageChain", "LineageEventType",
+    "VibeLedger", "InMemoryLedger", "SQLiteLedger",
+    "EventBus", "Event", "EventType", "EventColor",
+    "EventBusProtocol", "get_event_bus",
+    "ShuddhiProtocol", "ShuddhiStatus", "ShuddhiResult", "RemedyProtocol",
+    "NullShuddhi", "ShuddhiProtocolBase",
+    "PhoenixConfig", "get_config", "reset_config", "set_config",
+    "SamskaraProtocol", "Phase", "PhaseStatus", "PhaseResult", "PipelineContext", "PipelineExecutor",
 ]
 

@@ -38,16 +38,37 @@ __genesis__ = "0x8a2b4c6d"
 
 import json
 import os
-from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Tuple
 
-from vibe_core.mahamantra.protocols._seed_cell import (
-    GITA_CHAPTERS,
-    MAHA_QUANTUM,
-    PARAMPARA,
+from vibe_core.mahamantra.protocols.gita import (
+    GitaResonanceProtocol,
+    VerseResult,
+    ChapterResult,
+    ResonanceStats,
 )
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_QUANTUM,
+    WORDS,
+    QUARTERS,
+    GITA_CHAPTERS,
+)
+
+
+# =============================================================================
+# MAHAMANTRA CONSTANTS (DERIVED FROM _seed.py SSOT)
+# =============================================================================
+
+# Gita = 18 chapters = 700 verses
+TOTAL_VERSES: Final[int] = 700
+
+# Chapter verse counts (Standard Srimad Bhagavad-gita)
+CHAPTER_VERSES: Final[Tuple[int, ...]] = (
+    47, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78
+)
+assert len(CHAPTER_VERSES) == GITA_CHAPTERS, "18 chapters in Gita"
+assert sum(CHAPTER_VERSES) == TOTAL_VERSES, "700 verses in Gita"
 
 
 # =============================================================================
@@ -64,25 +85,6 @@ _INDEX_FILE: Final[Path] = _DATA_DIR / "gita_resonance_index.json"
 
 
 @dataclass(frozen=True, slots=True)
-class VerseMatch:
-    """
-    A matched verse from the resonance index.
-
-    This is the EXIT POINT - all data flows out through this.
-    """
-    verse_id: str           # "BG.1.1"
-    chapter: int            # 1-18
-    verse: int              # verse number
-    attractor: int          # computed attractor value
-    guna: str               # sattva/rajas/tamas/suddha
-    dominant_name: str      # HARE/KRISHNA/RAMA
-    resonance_hare: float
-    resonance_krishna: float
-    resonance_rama: float
-    phonetic_hash: str
-    position: int           # 0-699
-
-    # Future fields (Level 3+)
     text: Optional[str] = None
     purport: Optional[str] = None
     technical: Optional[str] = None
@@ -127,7 +129,7 @@ class MatchResult:
 # =============================================================================
 
 
-class GitaResonance:
+class GitaResonance(GitaResonanceProtocol):
     """
     Computed response via Gita verse resonance matching.
 
