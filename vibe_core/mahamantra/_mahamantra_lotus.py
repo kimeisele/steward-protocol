@@ -208,161 +208,172 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "output": f"Exit Code: {bridge_result.exit_code}"
         }
 
-    def __call__(self, input_text: str) -> ExecuteResult:
+    def __call__(self, input_data: Union[str, MahaCell]) -> Dict[str, object]:
         """
-        THE ONE ENTRY POINT - SSOT.
+        MANTRA-BASED COMPUTING.
 
-        mahamantra("anything") → understands, routes, EXECUTES, responds.
+        mahamantra("anything") → READS. UNDERSTANDS. COMPUTES. RESPONDS.
 
-        FLOW (Theologically Correct & RESONANCE BASED):
-        ===============================================
-        1. PRABHUPADA: Transmit input (blessing)
-        2. RESONANCE:  MahaCompression extracts seed/intent/position via MahaKirtan
-        3. DISCOVERY:  Resolve Mahajana Service class directly (no string matching!)
-        4. POLYMORPHISM: Dispatch based on capability (Cognitive vs Executable)
-           - process_intent() -> for Kapila/Cognitive types
-           - execute()        -> for Prithu/Worker types
-           - Default          -> Error
+        NO registry. NO services. NO delegation.
+        Pure computation from the 16 words.
 
-        FOLDER IS TRUTH: Identity derived from filesystem structure.
+        FLOW (9 NavaBhakti = 72 bytes):
+        ================================
+        1. SRAVANAM:       Receive input (hearing)
+        2. KIRTANAM:       MahaCompression → seed (chanting)
+        3. SMARANAM:       MahaKirtan → vibration state (remembering)
+        4. PADA_SEVANAM:   MahaResonator → attractor (serving)
+        5. ARCANAM:        Parampara verification (worshiping)
+        6. VANDANAM:       GitaResonance → verse match (praying)
+        7. DASYAM:         Position/Quarter determination (servitude)
+        8. SAKHYAM:        MahaCell creation (friendship)
+        9. ATMA_NIVEDANAM: Complete response (surrender)
+
+        Everything computed. No external LLM. No hardcoded routing.
         """
-        import asyncio
-        import importlib
-        from vibe_core.mahamantra.substrate.prabhupada import get_prabhupada
-        from vibe_core.mahamantra.adapters.compression import MahaCompression
-        from vibe_core.mahamantra.substrate.siksastakam_registry import get_entry, get_guardian
+        from vibe_core.mahamantra.protocols._seed_core import WORDS, PARAMPARA, MAHA_QUANTUM
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
 
-        # 1. PRABHUPADA (The Link)
-        prabhupada = get_prabhupada()
-        transmitted = prabhupada.transmit(input_text)
-
-        # 2. RESONANCE (The Algorithm)
-        # Uses MahaLLM + MahaKirtan + MahaResonator internally
-        compressor = MahaCompression()
-        comp_result = compressor.compress(transmitted)
-
-        seed = comp_result.seed
-        position = comp_result.position
-        guna = comp_result.intent_level.guna.value
-
-        # 3. DISCOVERY (The Registry Lookup - O(1))
-        # We use the registry ONLY to find the class path, NOT for execution logic
-        entry = get_entry(position)
-        
-        service_instance = None
-        error_msg = None
-        output = ""
-        success = False
-        exit_code = 1
-
-        if entry:
-            try:
-                # Lazy load the actual service module
-                module = importlib.import_module(entry.module_path)
-                # Try to get the Service class (e.g. KapilaService)
-                service_cls = getattr(module, entry.service_class, None)
-                if not service_cls:
-                    # Fallback to Null class if Service not found (e.g. NullKapila)
-                    service_cls = getattr(module, entry.null_class, None)
-                
-                if service_cls:
-                    service_instance = service_cls()
-            except ImportError:
-                error_msg = f"Could not load module {entry.module_path}"
+        # =====================================================================
+        # 1. SRAVANAM - Receive input (Entry point)
+        # =====================================================================
+        if isinstance(input_data, MahaCell):
+            cell = input_data
+            input_text = cell.payload.decode("utf-8", errors="replace")
+            seed = cell.header.sravanam
         else:
-            error_msg = f"No registry entry for position {position}"
+            input_text = str(input_data)
+            cell = None
+            seed = None
 
-        # 4. POLYMORPHISM (The Execution)
-        if service_instance:
-            try:
-                # A) COGNITIVE INTERFACE (Kapila style)
-                if hasattr(service_instance, "process_intent"):
-                    # Create minimal valid context
-                    # import CognitiveContext only if needed to avoid circular imports? 
-                    # For now pass None or mock if strictly typed. 
-                    # Assuming optional context or tolerant implementation.
-                    
-                    # Async handling
-                    if asyncio.iscoroutinefunction(service_instance.process_intent):
-                        # We are likely in sync context here, so we need a runner
-                        # or we rely on the service to handle sync calls if designed well
-                        # For now, let's assume we can run it:
-                        try:
-                            # Simple sync wrapper for async call
-                            cognition = asyncio.run(service_instance.process_intent(transmitted, None))
-                            output = str(cognition)
-                            success = True
-                            exit_code = 0
-                        except RuntimeError:
-                            # Loop already running? 
-                            output = "Async execution failed (loop running)"
-                            success = False
-                    else:
-                        output = str(service_instance.process_intent(transmitted, None))
-                        success = True
-                        exit_code = 0
+        # =====================================================================
+        # 2. KIRTANAM - MahaCompression → seed
+        # =====================================================================
+        compressor, kirtan = self._get_kirtan()
 
-                # B) EXECUTABLE INTERFACE (Prithu style)
-                elif hasattr(service_instance, "execute"):
-                    # Standard execute pattern
-                    # Some take (command, args), some take (command)
-                    # We try to inspect or be robust
-                    try:
-                        res = service_instance.execute(transmitted, [])
-                        if isinstance(res, dict):
-                            output = res.get("output", str(res))
-                            success = res.get("success", True)
-                            exit_code = res.get("exit_code", 0)
-                        else:
-                            output = str(res)
-                            success = True
-                            exit_code = 0
-                    except TypeError:
-                         # Maybe it expects just command?
-                        res = service_instance.execute(transmitted)
-                        output = str(res)
-                        success = True
-                        exit_code = 0
-                
-                # C) ANALYTIC INTERFACE (Null/Stub style)
-                elif hasattr(service_instance, "analyze"):
-                    res = service_instance.analyze(transmitted)
-                    output = str(res)
-                    success = True
-                    exit_code = 0
+        if seed is None:
+            comp_result = compressor.compress(input_text)
+            seed = comp_result.seed
 
-                else:
-                    error_msg = f"Service {service_instance.__class__.__name__} has no known interface (process_intent/execute/analyze)"
-            
-            except Exception as e:
-                error_msg = f"Execution failed: {str(e)}"
-                success = False
+        # =====================================================================
+        # 3. SMARANAM - MahaKirtan → vibration state
+        # =====================================================================
+        kirtan_result = kirtan.compute(cell if cell else seed)
 
-        # Derive quarter for result
-        if position < 4: quarter = "genesis"
-        elif position < 8: quarter = "dharma"
-        elif position < 12: quarter = "karma"
-        else: quarter = "moksha"
+        # =====================================================================
+        # 4. PADA_SEVANAM - MahaResonator → attractor (stable harmonic)
+        # =====================================================================
+        from vibe_core.mahamantra.research.dharma import MahaResonator
+        resonator = MahaResonator(mod_space=MAHA_QUANTUM)
+        attractor = resonator.oscillate_once(kirtan_result.transformed_value)
 
-        # 5. RETURN
+        # =====================================================================
+        # 5. ARCANAM - Parampara verification (% 37 == 0)
+        # =====================================================================
+        parampara_verified = (seed % PARAMPARA == 0)
+        parampara_channel = kirtan_result.parampara_channel
+        oracle_validated = kirtan_result.oracle_validated
+
+        # =====================================================================
+        # 6. VANDANAM - GitaResonance → verse match
+        # =====================================================================
+        from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
+        from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+
+        verse_result = match_attractor(attractor)
+        chapter = get_gita_chapter(attractor)
+
+        verse_info = None
+        if verse_result.best_match:
+            v = verse_result.best_match
+            verse_info = {
+                "id": v.verse_id,
+                "chapter": v.chapter,
+                "verse": v.verse,
+                "guna": v.guna,
+                "dominant_name": v.dominant_name,
+            }
+
+        # =====================================================================
+        # 7. DASYAM - Position/Quarter determination
+        # =====================================================================
+        position = attractor % WORDS  # 0-15
+
+        if position < 4:
+            quarter = "genesis"
+        elif position < 8:
+            quarter = "dharma"
+        elif position < 12:
+            quarter = "karma"
+        else:
+            quarter = "moksha"
+
+        guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
+
+        # =====================================================================
+        # 8. SAKHYAM - MahaCell creation (universal format)
+        # =====================================================================
+        payload = input_text.encode("utf-8")
+        result_cell = MahaCell.create(
+            payload=payload,
+            source=seed,
+            target=attractor,
+            operation=position,
+            intent=parampara_channel if parampara_channel >= 0 else 0,
+            ttl=300,  # Daily cycles
+        )
+
+        # =====================================================================
+        # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
+        # =====================================================================
+        # Update Akash state (persistent field)
+        self._akash["total_beats"] += 1
+        self._akash["accumulated_value"] = (self._akash["accumulated_value"] + attractor) % MAHA_QUANTUM
+        self._akash["attractor_counts"][attractor] = self._akash["attractor_counts"].get(attractor, 0) + 1
+
         return {
-            "success": success,
-            "exit_code": exit_code,
-            "position": position,
-            "guardian": entry.guardian if entry else get_guardian(position),
-            "quarter": quarter,
-            "guna": guna,
-            "requires_confirmation": guna == "tamas",
-            "output": output,
-            "error": error_msg,
+            # Input
+            "input": input_text,
+
+            # Vibration (KIRTANAM + SMARANAM + PADA_SEVANAM)
             "vibration": {
                 "seed": seed,
-                "intent_level": guna,
-                "compression_ratio": comp_result.compression_ratio,
-                "service": service_instance.__class__.__name__ if service_instance else "None"
+                "transformed_value": kirtan_result.transformed_value,
+                "beat": kirtan_result.beat_number,
+                "flute_resonance": kirtan_result.flute_resonance,
+                "vina_resonance": kirtan_result.vina_resonance,
+                "vina_string": kirtan_result.vina_string,
+                "attractor": attractor,
             },
+
+            # Parampara (ARCANAM)
+            "parampara": {
+                "verified": parampara_verified,
+                "channel": parampara_channel,
+                "oracle_validated": oracle_validated,
+            },
+
+            # Gita (VANDANAM)
+            "chapter": chapter,
+            "verse": verse_info,
+            "matches": len(verse_result.matches),
+
+            # Position (DASYAM)
+            "position": position,
+            "guardian": guardian,
+            "quarter": quarter,
+
+            # MahaCell (SAKHYAM)
+            "cell": {
+                "header_size": 72,
+                "payload_size": len(payload),
+                "total_size": result_cell.size,
+                "valid": result_cell.is_valid(),
+                "parampara_verified": result_cell.header.verify_parampara(),
+            },
+
+            # Akash (persistent state)
             "akash": self._akash,
-            "maha_cell": None,
         }
 
     @property

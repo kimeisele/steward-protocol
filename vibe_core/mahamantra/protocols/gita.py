@@ -43,6 +43,23 @@ class MatchResult:
     query_attractor: int
     query_type: str
     matches: Tuple[VerseMatch, ...]
-    
+
     @property
-    def best_match(self) -> Optional[VerseMatch]: ...
+    def best_match(self) -> Optional[VerseMatch]:
+        return self.matches[0] if self.matches else None
+
+
+# Aliases for backward compatibility
+VerseResult = VerseMatch
+ChapterResult = MatchResult
+
+
+@dataclass(frozen=True)
+class ResonanceStats:
+    """Statistics about the resonance index."""
+    total_verses: int = 700
+    total_chapters: int = 18
+    unique_attractors: int = 0
+    avg_resonance_hare: float = 0.0
+    avg_resonance_krishna: float = 0.0
+    avg_resonance_rama: float = 0.0
