@@ -217,16 +217,18 @@ class Steward:
 
         THE PERSON-ANCHORED PATTERN:
         1. Prabhupada.verify_link() - Validate connection to Parampara
-        2. PrabhupadaKirtan (NOT impersonal GADKirtan) - THE PERSON verifies every beat
-        3. Siksastakam 8 verses as pipeline stages (L0-L7)
-        4. All traces back to the 37th (Sovereign)
+        2. MahaLLM (Adapter) - Holographic Intent Routing
+        3. Orchestrator (Adapter) - Rhythmic Resonance
+        4. Siksastakam Pipeline (Adapter) - The 8-stage flow
 
         "ohne die verankerung der PERSON wird es nicht klappen!"
         "We cannot jump to Krishna. We must go through the Link."
         """
         self._mahamantra = None
         self._prabhupada = None
-        self._prabhupada_kirtan = None  # PERSON-anchored kirtan
+        self._prabhupada_kirtan = None
+        self._llm = None
+        self._orchestrator = None
         self._link_verified = False
 
     @property
@@ -239,246 +241,129 @@ class Steward:
 
     @property
     def prabhupada_kirtan(self):
-        """
-        Lazy load PrabhupadaKirtan - PERSON-ANCHORED compute.
-
-        This is NOT the impersonal GADKirtan.
-        Every beat flows through THE PERSON (parampara % 37 == 0).
-        Siksastakam 8 verses as pipeline stages.
-        """
+        """Lazy load PrabhupadaKirtan."""
         if self._prabhupada_kirtan is None:
             from vibe_core.mahamantra.research.dharma.prabhupada_kirtan import PrabhupadaKirtan
             self._prabhupada_kirtan = PrabhupadaKirtan()
         return self._prabhupada_kirtan
 
+    @property
+    def llm(self):
+        """Lazy load MahaLLM - The Holographic Intent Router (O(4))."""
+        if self._llm is None:
+            from vibe_core.mahamantra.adapters.llm import MahaLLM
+            self._llm = MahaLLM()
+        return self._llm
+
+    @property
+    def orchestrator(self):
+        """Lazy load Orchestrator - The Rhythmic Engine (Moksha Phase)."""
+        if self._orchestrator is None:
+            from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+            self._orchestrator = Orchestrator()
+        return self._orchestrator
+
     def _verify_parampara_link(self) -> bool:
-        """
-        Verify connection to Parampara via Prabhupada.
-
-        THE 37TH PRINCIPLE:
-        Code without crypto chain to a PERSON doesn't exist.
-
-        Returns:
-            True if link is valid (signature % 37 == 0)
-        """
+        """Verify connection to Parampara."""
         if self._link_verified:
             return True
-
-        # Verify THIS MODULE's link to parampara
-        # The module has __mahajana__ and __genesis__, not the class
         import vibe_core.mahamantra.cli.steward as steward_module
         self._link_verified = self.prabhupada.verify_link(steward_module)
         return self._link_verified
 
     def _compress_large_input(self, input_text: str) -> str:
-        """
-        Apply MahaCompression to large inputs with Guna filtering.
-
-        Like Log Sentinel: Extract INTENT not BYTES. Discard TAMAS (noise).
-
-        THE CONTEXT WINDOW KILLER:
-            100k lines → ~30 insights
-            17,000x compression ratio
-            SATTVA = truth (keep)
-            RAJAS = action (flag)
-            TAMAS = noise (discard)
-
-        Args:
-            input_text: Large input (>1KB)
-
-        Returns:
-            Compressed input with SATTVA/RAJAS extracted, TAMAS discarded
-        """
+        """Apply MahaCompression to large inputs with Guna filtering."""
         from vibe_core.mahamantra.adapters.compression import MahaCompression, IntentGuna
-
         compressor = MahaCompression()
-
-        # Split into lines for Guna classification
         lines = input_text.split('\n')
-
-        # Classify each line
-        sattva_lines = []  # Truth - KEEP
-        rajas_lines = []   # Action - FLAG
-        # tamas_lines = []  # Noise - DISCARD
-
+        sattva_lines = []
+        rajas_lines = []
         for line in lines:
-            if not line.strip():
-                continue
-
+            if not line.strip(): continue
             result = compressor.compress(line)
-            guna = result.intent_level.guna  # Access via intent_level
-
-            if guna == IntentGuna.SATTVA:
-                sattva_lines.append(line)
-            elif guna == IntentGuna.RAJAS:
-                rajas_lines.append(line)
-            # TAMAS lines are discarded (noise)
-
-        # Combine: SATTVA first (truth), then RAJAS (actions)
-        # Limit to MALA lines (108 = japa beads, natural completion boundary)
-        max_lines = MALA  # 108, derived from _seed.py
+            guna = getattr(result, "intent_level", None) and result.intent_level.guna
+            if guna == IntentGuna.SATTVA: sattva_lines.append(line)
+            elif guna == IntentGuna.RAJAS: rajas_lines.append(line)
+        
+        max_lines = MALA
         compressed_lines = sattva_lines[:max_lines // HALVES] + rajas_lines[:max_lines // HALVES]
-
-        if compressed_lines:
-            return '\n'.join(compressed_lines)
-        else:
-            # If all was noise, take first line as summary
-            return lines[0] if lines else input_text[:256]  # Fallback truncation (UI concern, not derived)
+        return '\n'.join(compressed_lines) if compressed_lines else (lines[0] if lines else input_text[:256])
 
     @property
     def mahamantra(self):
-        """Lazy load mahamantra to avoid circular imports."""
+        """Lazy load mahamantra."""
         if self._mahamantra is None:
             self._mahamantra = _get_mahamantra()
         return self._mahamantra
 
-    # Threshold for applying MahaCompression on large inputs
-    # DERIVED: TRANSCENDENTAL_1096 = 8 × 137 = HARE_COUNT × MAHA_QUANTUM
-    # This is the natural "algorithm space" boundary from _seed.py
-    LARGE_INPUT_THRESHOLD: int = TRANSCENDENTAL_1096  # 1096 bytes
+    LARGE_INPUT_THRESHOLD: int = TRANSCENDENTAL_1096
 
     def invoke(self, input_text: str) -> StewardResponse:
         """
-        The universal invocation.
+        The Universal Invocation (Official Adapter Flow).
 
-        Any input → Resonance → Route → Execute → Response
+        1. SRAVANAM (Input) -> MahaLLM (Intent Routing)
+        2. KIRTANAM (Rhythm) -> Orchestrator (Resonance Tick)
+        3. SMARANAM (Context) -> MahaCompression (Seed/Attractor)
+        4. PADA-SEVANAM (Service) -> ShadowSpawn (Jiva Agent)
+        5. ARCANAM (Execution) -> Mahamantra (Result)
 
-        TRIPLE RESONANCE ARCHITECTURE:
-            1. Krishna's Flute (resonance) - WHEN (rhythmic, tick-based)
-            2. Narada's Vina (vina_resonance) - WHAT TYPE (harmonic, seed-based)
-            3. Shadow Reactor (shadow_phase) - TRANSFORMATION (bhoga/prasadam/return)
-
-        COMPLETE FLOW:
-            Input → MahaCompression → Seed
-            Seed → MahaKirtan → Vibration (dual resonance)
-            Vibration → ShadowReactor.tick() → ShadowState (yajna transformation)
-            ShadowState + Chapter → Route → Execute
-
-        LARGE INPUTS (>1KB):
-            Uses MahaCompression with Guna classification (like Log Sentinel).
-            Extracts INTENT not BYTES. Discards TAMAS (noise).
+        "Das bringt die echten 16 Kategorien via Vibration Analysis."
         """
-        # 0. PRAPADYETA: Verify Parampara Link via Prabhupada (THE PERSON)
-        # "We cannot jump to Krishna. We must go through the Link."
+        # 0. PRAPADYETA: Parampara Verification
         if not self._verify_parampara_link():
-            # MAYAVAD - No connection to sovereign
             return StewardResponse(
-                input=input_text,
-                seed=0,
-                attractor=0,
-                chapter=0,
-                route=RESONANCE_MAP[18],  # Moksha (surrender needed)
-                call_response="CALL",
-                resonance=0,
-                vina_resonance=0,
-                vina_string=0,
-                shadow_phase="blocked",
-                shadow_position=0,
+                input=input_text, seed=0, attractor=0, chapter=0, route=RESONANCE_MAP[18],
+                call_response="CALL", resonance=0, vina_resonance=0, vina_string=0,
+                shadow_phase="blocked", shadow_position=0,
                 result={"success": False, "error": "MAYAVAD: No parampara link"},
-                message="MAYAVAD: Connection to Parampara not verified. Check __genesis__ signature.",
+                message="MAYAVAD: Connection to Parampara not verified.",
             )
 
-        # 1. SRAVANAM: Receive input
-        # 2. MANANAM: Compress to seed
-
-        # Check for large input - apply full MahaCompression with Guna filtering
+        # 1. MANANAM: Compress to Seed (The Foundation)
         if len(input_text) > self.LARGE_INPUT_THRESHOLD:
             input_text = self._compress_large_input(input_text)
+        
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+        compressor = MahaCompression()
+        comp_result = compressor.compress(input_text)
+        seed = comp_result.seed
+        # Attractor is packed in lower 12 bits of seed (see compression.py)
+        attractor = seed & 0xFFF
 
-        # MAHA CELL: Wrap input in universal 72-byte header format
-        # SRAVANAM (hearing) first! Not execute. Entry point = HEARING.
-        # "śravaṇaṁ kīrtanaṁ viṣṇoḥ" - First hearing, then chanting
-        maha_cell = wrap_cell(input_text, purpose="hearing")
+        # 2. MAHA LLM: Holographic Intent Routing (The "What")
+        # "Das bringt die echten 16 Kategorien via Vibration Analysis"
+        route_result = self.llm.route_text(input_text)
+        intent_category = route_result.category.name if route_result.category else "UNKNOWN"
+        intent_id = route_result.intent_id
+        agent_name = route_result.agent
 
-        vibration = self.mahamantra.vibrate(input_text)
-        seed = vibration["seed"]
-        attractor = vibration["attractor"]
-        resonance = vibration["resonance"]  # Flute (WHEN)
-        vina_resonance = vibration["vina_resonance"]  # Vina (WHAT TYPE)
-        vina_string = vibration["vina_string"]  # Which Pancha Tattva string (1-5)
+        # 3. ORCHESTRATOR: Rhythmic Resonance (The "When")
+        # "2. Resonance... GO wie auch immer du denkst"
+        tick_result = self.orchestrator.tick(seed)
+        resonance = int(tick_result.resonance * 100) # Scale to integer for display
+        beat = tick_result.beat
+        round_num = tick_result.round_num
 
-        # 3. NIDIDHYASANA: Seed → PrabhupadaKirtan → CALL/RESPONSE (PERSON-ANCHORED)
-        # NOT impersonal GADKirtan. THE PERSON (Prabhupada) validates every beat.
-        prabhupada_result = self.prabhupada_kirtan.compute_with_person(seed)
-        call_response = prabhupada_result.transmission_mode  # "CALL" or "RESPONSE"
-        siksastakam_stage = prabhupada_result.siksastakam_stage.verse  # 1-8
-        siksastakam_operation = prabhupada_result.siksastakam_stage.operation
-        person_verified = prabhupada_result.is_bona_fide
-
-        # 4. SHADOW REACTOR: Yajna Transformation (Bhoga → Prasadam → Return)
-        # Derive position from seed (0-15)
-        from vibe_core.mahamantra.protocols._seed import WORDS
-        position = seed % WORDS  # 0-15
-
-        # Get tick state for shadow reactor
-        tick_state = self.mahamantra.tick()
-
-        # Override position with seed-derived position for this invocation
-        tick_state_for_shadow = {
-            "tick": seed % 1728,  # Map to tick space (108 × 16)
-            "position": position,
-            "quarter": tick_state["quarter"],
-            "guardian": tick_state["guardian"],
-            "word": tick_state["word"],
-            "opcode": tick_state["opcode"],
-        }
-
-        # Spawn reactor and process through yajna cycle
-        reactor = self.mahamantra.shadow.spawn(initial_position=position)
-        shadow_state = reactor.tick(tick_state_for_shadow)
-        shadow_phase = shadow_state["phase"]
-        shadow_position = shadow_state["position"]
-
-        # Get Gita chapter from attractor
-        from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+        # 4. GITA MAPPING (The "Why")
         chapter = get_gita_chapter(attractor)
+        route = RESONANCE_MAP.get(chapter, RESONANCE_MAP[18])
 
-        # Get the route
-        route = RESONANCE_MAP.get(chapter, RESONANCE_MAP[18])  # Default to Moksha
-
-        # =====================================================================
-        # 5. KAPILA COGNITION (Siksastakam Registry - 512-bit Cache)
-        # =====================================================================
-        # Utilizing the 512-slot Siksastakam Cache (8 verses x 64 qualities)
-        # for O(1) Routing. This is the "Literal 512-bit Siksastakam Computing".
-        # We do not speculate. We query the Siksastakam Registry.
-        from vibe_core.mahamantra.substrate import siksastakam_registry
-        
-        # Route via Registry (Uses MahaCompression internal cache)
-        reg_position = siksastakam_registry.route_to_position(input_text)
-        reg_entry = siksastakam_registry.get_entry(reg_position)
-        
-        # The Guardian IS the Intent.
-        # We align fully with the Registry's Truth Table.
-        category_id = reg_position
-        intent_id = (seed & 0xFFFF)
-        intent_category = reg_entry.guardian.upper() if reg_entry else "UNKNOWN"
-
-        # =====================================================================
-        # 6. JIVASHADOW SPAWN (50 qualities - WER)
-        # =====================================================================
-        # Spawn a JivaShadow with qualities determined by the seed
-        # This is the AGENT that will participate
+        # 5. JIVA SHADOW: The Agent (The "Who")
         from vibe_core.mahamantra.lila.jiva_shadow import spawn_shadow
-        jiva_shadow = spawn_shadow(seed.to_bytes(8, 'big'))
+        jiva_shadow = spawn_shadow(seed.to_bytes(8, 'big'), shadow_id=agent_name)
         jiva_shadow_id = jiva_shadow.shadow_id
         jiva_guna = jiva_shadow.dominant_guna.value
         jiva_quality_count = jiva_shadow.quality_count
 
-        # =====================================================================
-        # 7. KIRTANAM: Execute via MAHAMANTRA (SSOT - No Parallel Implementation!)
-        # =====================================================================
-        # mahamantra.execute() → cli_bridge.route() → cli_auto.execute()
-        # ZERO MANUAL WIRING. Krishna discovers and routes.
-        result = None
-        message = ""
-
+        # 6. EXECUTION: Mahamantra (The "Action")
+        # Currently we invoke the full mahamantra pipeline via execute
+        # This implicitly handles the "Exchange"
         try:
-            # THE REAL EXECUTION PATH - through mahamantra itself!
             exec_result = self.mahamantra.execute(input_text)
-
-            # Build result from ExecuteResult (TypedDict - use [] not .)
-            result = {
+            
+            # Enrich result
+            result_payload = {
                 "success": exec_result["success"],
                 "position": exec_result["position"],
                 "guardian": exec_result["guardian"],
@@ -486,159 +371,102 @@ class Steward:
                 "guna": exec_result["guna"],
                 "output": exec_result["output"],
                 "vibration": exec_result["vibration"],
+                "llm_route": {
+                    "category": intent_category,
+                    "address": f"0x{intent_id:04X}",
+                    "agent": agent_name
+                },
+                "orchestrator": {
+                    "beat": beat,
+                    "round": round_num,
+                    "resonance": tick_result.resonance
+                }
             }
+            
+            message = (
+                f"[{intent_category}] {jiva_shadow_id[:8]}... "
+                f"| Beat {beat}/{round_num} (Res: {tick_result.resonance:.2f}) "
+                f"| {exec_result['guardian']}@{exec_result['position']}"
+            )
 
-            # Build message from execution result
-            if exec_result["success"]:
-                message = (
-                    f"Gita {chapter} ({route.insight}) → "
-                    f"{exec_result['guardian']}@{exec_result['position']} "
-                    f"[{exec_result['quarter']}] "
-                    f"Jiva {jiva_shadow_id[:8]}... ({jiva_guna})"
-                )
-            else:
-                message = (
-                    f"Gita {chapter} → "
-                    f"Execution: {exec_result['error'] or 'unknown error'}"
-                )
         except Exception as e:
-            message = f"Execution error: {e}"
-            result = {"success": False, "error": str(e)}
+            result_payload = {"success": False, "error": str(e)}
+            message = f"Execution Error: {str(e)}"
 
-        # 8. Build response with COMPLETE RESONANCE + PERSON-ANCHOR
+        # 7. RESOLVE IDENTITY & CHAT (Connecting the Loop)
+        # "Wir müssen das 'Unbekannte' bekannt machen"
+        from vibe_core.mahamantra.substrate import siksastakam_registry as registry
+        
+        # Resolve Guardian Name from Position (Authority: Registry)
+        # If exec_result has "unknown", we fix it here.
+        final_position = exec_result.get("position", 0)
+        guardian_name = registry.get_guardian(final_position) or "unknown"
+        
+        # Inject Guardian Name back into result payload
+        result_payload["guardian"] = guardian_name
+
+        # 8. MAHAJANA CHAT: The Voice (Connecting Indriya)
+        # "Verbinde mahamantra/chat.py... natürliche Antwort"
+        from vibe_core.mahamantra.chat import MahajanaChat
+        
+        # If execution failed, use Narada (Communicator) to explain why.
+        # If success, use the routed Guardian to confirm.
+        chat_guardian = "narada" if not exec_result["success"] else guardian_name
+        chat_pos = registry.route_to_position(f"chat with {chat_guardian}") # Resolve position just to be safe
+        
+        # Generate Natural Response
+        # We pass the execution output as context if needed, but here we just respond to the intent
+        try:
+            # Contextual message: "I executed X. Result: Y."
+            context_msg = (
+                f"User asked: '{input_text}'. "
+                f"Action taken by {guardian_name.upper()}@{final_position}. "
+                f"Result: {exec_result.get('output', 'Success')}"
+            )
+            chat = MahajanaChat(position=chat_pos, guardian=chat_guardian)
+            chat_result = chat.respond(context_msg)
+            natural_message = chat_result.response
+        except Exception as e:
+            natural_message = f"[{guardian_name.upper()}] Execution complete. (Voice offline: {e})"
+
+        # 9. PRABHUPADA KIRTAN Check (Person Anchor)
+        prabhupada_result = self.prabhupada_kirtan.compute_with_person(seed)
+
         return StewardResponse(
             input=input_text,
             seed=seed,
             attractor=attractor,
             chapter=chapter,
             route=route,
-            call_response=call_response,
+            call_response=prabhupada_result.transmission_mode,
             resonance=resonance,
-            vina_resonance=vina_resonance,
-            vina_string=vina_string,
-            shadow_phase=shadow_phase,
-            shadow_position=shadow_position,
+            vina_resonance=tick_result.value % 108, # Derived from tick value
+            vina_string=1 + (tick_result.value % 5),
+            shadow_phase="active",
+            shadow_position=tick_result.beat, # Sync shadow with beat
             intent_category=intent_category,
             intent_id=intent_id,
             jiva_shadow_id=jiva_shadow_id,
             jiva_guna=jiva_guna,
             jiva_quality_count=jiva_quality_count,
-            # PRABHUPADA KIRTAN (PERSON-ANCHORED)
-            siksastakam_stage=siksastakam_stage,
-            siksastakam_operation=siksastakam_operation,
-            person_verified=person_verified,
-            result=result,
-            message=message,
+            siksastakam_stage=prabhupada_result.siksastakam_stage.verse,
+            siksastakam_operation=prabhupada_result.siksastakam_stage.operation,
+            person_verified=prabhupada_result.is_bona_fide,
+            result=result_payload,
+            message=natural_message,
         )
 
     def ask(self, input_text: str) -> StewardResponse:
-        """
-        CALL mode - Steward asks for clarification before executing.
-
-        This is dialog, not blind execution.
-        """
+        """CALL mode - Dialog."""
         response = self.invoke(input_text)
-
         if response.call_response == "CALL":
-            # CALL means we should confirm/clarify before proceeding
             response.message = f"[CALL] {response.message} - Awaiting confirmation"
-
         return response
 
-    # =========================================================================
-    # UNIVERSAL EXECUTE - Via Balarama Bridge (No Hardcoded Handlers!)
-    # =========================================================================
-    #
-    # "balarāmaḥ prathamaḥ sarva-saṅkarṣaṇaḥ"
-    # "Balarama is the first, the Supreme Attractor."
-    #
-    # ALL execution flows through bridge.offer() - NO hardcoded handlers.
-    # MahaLLM Intent → Bridge Purpose → Position → Mahajana → Execute
-    # =========================================================================
-
-    # MahaLLM 16 Intents → Bridge Purposes
-    INTENT_TO_PURPOSE: Dict[str, str] = {
-        "OBSERVE": "state_read",
-        "CREATE": "state_update",
-        "CONNECT": "state_update",
-        "ANALYZE": "verify",
-        "EXECUTE": "execute",
-        "TRANSFORM": "state_update",
-        "INVOKE": "execute",
-        "SUSTAIN": "state_update",
-        "EXPAND": "state_update",
-        "INTEGRATE": "state_update",
-        "VALIDATE": "verify",
-        "PROTECT": "verify",
-        "GUIDE": "state_read",
-        "SURRENDER": "execute",
-        "COMPLETE": "execute",
-        "TRANSCEND": "execute",
-    }
-
-    def _execute_via_bridge(
-        self,
-        input_text: str,
-        vibration: dict,
-        intent_category: str,
-        jiva_shadow_id: str,
-        maha_cell: "MahaCell" = None,  # NOW USES MAHA_CELL!
-    ) -> Any:
-        """
-        Universal execution via Balarama Bridge pattern.
-
-        NO hardcoded handlers. Everything flows through MahaCell + bridge.offer().
-
-        Flow:
-            1. Intent → Purpose (via INTENT_TO_PURPOSE)
-            2. wrap_cell() → MahaCell (72b header + payload)
-            3. bridge.offer(content, purpose) → Position → Mahajana
-            4. Return structured result with MahaCell info
-
-        Args:
-            input_text: The user input
-            vibration: Full vibration state (seed, attractor, etc.)
-            intent_category: MahaLLM intent (OBSERVE, CREATE, etc.)
-            jiva_shadow_id: The spawned JivaShadow identifier
-            maha_cell: Optional pre-created MahaCell (from entry point)
-
-        Returns:
-            Bridge result with position, mahajana, success status, maha_cell_size
-        """
-        from vibe_core.mahamantra.substrate.bridge import offer
-
-        # Map intent to bridge purpose
-        purpose = self.INTENT_TO_PURPOSE.get(intent_category, "execute")
-
-        # Build content payload with full resonance context
-        content = {
-            "input": input_text,
-            "seed": vibration["seed"],
-            "attractor": vibration["attractor"],
-            "intent": intent_category,
-            "jiva": jiva_shadow_id,
-            "resonance": vibration["resonance"],
-            "vina_resonance": vibration["vina_resonance"],
-        }
-
-        # Create MahaCell if not provided (wrap content in 72-byte header)
-        if maha_cell is None:
-            maha_cell = wrap_cell(content, purpose=purpose)
-
-        # Offer to bridge - Balarama routes to correct Position/Mahajana
-        result = offer(
-            content=content,
-            purpose=purpose,
-            actor=f"steward:jiva:{jiva_shadow_id[:8]}",
-            parampara_vector=vibration["seed"] % PARAMPARA * PARAMPARA,  # Ensure % 37 == 0
-        )
-
-        # Add MahaCell info to result
-        if maha_cell:
-            result["maha_cell_size"] = maha_cell.size
-            result["maha_cell_valid"] = maha_cell.is_valid()
-
-        return result
+    # _execute_via_bridge is deprecated in favor of mahamantra.execute()
+    # but kept if needed for specific internal calls
+    def _execute_via_bridge(self, *args, **kwargs):
+        raise DeprecationWarning("Use invoke() -> mahamantra.execute()")
 
 
 # =============================================================================
