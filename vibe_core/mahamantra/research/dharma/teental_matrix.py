@@ -260,7 +260,15 @@ def analyze_mahamantra_correlation() -> dict:
     - Bass (baya) correlates with HARE (energy/shakti)
     - Treble (daya) correlates with NAME (Krishna/Rama identity)
     """
-    from vibe_core.mahamantra.research.dharma.maha_sequencer import MAHAMANTRA_PATTERN
+    # MAHAMANTRA_WORD_PATTERN: Direct import from _seed.py (THE SSOT!)
+    # _seed.py derives this from:
+    #   MAHAMANTRA_HARE_POS_HALF = (KSETRAJNA, TRINITY, HALF_SIZE-KSETRAJNA, HARE_COUNT)
+    #   MAHAMANTRA_NAME_POS_HALF = (HALVES, QUARTERS, PANCHA, SHARANAGATI)
+    #   MAHAMANTRA_HALF_BINARY + MAHAMANTRA_NAME_HARE/KRISHNA/RAMA
+    # NO LOCAL DERIVATION - ALL FROM SSOT!
+    from vibe_core.mahamantra.protocols._seed import MAHAMANTRA_WORD_PATTERN
+    
+    MAHAMANTRA_PATTERN = MAHAMANTRA_WORD_PATTERN
 
     correlations = []
     bass_pattern = get_bass_pattern()

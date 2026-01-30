@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 # These imports are needed for class definition
 from vibe_core.mahamantra._lotus import LotusNode, LotusPath
-from vibe_core.mahamantra.protocols._gad_base import GADBase, GADProtocol
+from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
 from vibe_core.mahamantra._types import (
     AkashState,
     ExecuteResult,
@@ -68,7 +68,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         if cls._kirtan is None:
             from vibe_core.mahamantra.research.dharma import MahaKirtan
             from vibe_core.mahamantra.adapters.compression import MahaCompression
-            from vibe_core.mahamantra.protocols._seed_core import MAHA_QUANTUM
+            from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
             cls._kirtan = MahaKirtan(mod_space=MAHA_QUANTUM)
             cls._compressor = MahaCompression()
@@ -91,7 +91,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         result = kirtan.compute(cell if cell else seed)
 
         from vibe_core.mahamantra.research.dharma import MahaResonator
-        from vibe_core.mahamantra.protocols._seed_core import MAHA_QUANTUM
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
         resonator = MahaResonator(mod_space=MAHA_QUANTUM)
         attractor = resonator.oscillate_once(result.transformed_value)
@@ -181,68 +181,106 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
 
     def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
-        """Execute a command through the Mahamantra."""
-        args = args or []
+        """Execute a command through the Mahamantra. SSOT: delegates to __call__."""
+        result = self(command)  # __call__ is the SSOT - returns EVERYTHING
+        # Add execute-specific metadata, keep ALL of __call__ result
+        result["success"] = True
+        result["command"] = command
+        result["exit_code"] = 0
+        result["handler"] = f"mahamantra[{result['position']}]"
+        return result
 
-        # Wrap in MahaCell
-        cell = MahaCell.from_command(command) if hasattr(MahaCell, 'from_command') else None
-
-        # Compute vibration
-        vibration = self._compute_vibration(cell if cell else command)
-
-        # Route via CLI bridge
-        from vibe_core.mahamantra.cli.bridge import cli_bridge
-        bridge_result = cli_bridge.route(command, args)
-
-        return {
-            "success": bridge_result.success,
-            "command": command,
-            "position": bridge_result.position,
-            "vibration": vibration,
-            "exit_code": bridge_result.exit_code,
-            "handler": bridge_result.handler,
-            # Keys expected by Steward
-            "guardian": "unknown", # Improved later via position lookup if needed
-            "quarter": "unknown",
-            "guna": "unknown",
-            "output": f"Exit Code: {bridge_result.exit_code}"
-        }
-
-    def __call__(self, input_text: str) -> ExecuteResult:
+    def __call__(self, input_data: Union[str, MahaCell]) -> Dict[str, object]:
         """
-        THE ONE ENTRY POINT - SSOT.
+        MANTRA-BASED COMPUTING.
 
-        mahamantra("anything") → understands, routes, EXECUTES, responds.
+        mahamantra("anything") → READS. UNDERSTANDS. COMPUTES. RESPONDS.
 
-        FLOW:
-        =====
-        1. VIBRATION: Input → Seed → Attractor (what frequency?)
-        2. INTENT:    MahaLLM routing (what action?)
-        3. EXECUTE:   CLI Bridge → Mahajana handler (DO IT!)
-        4. RESONATE:  Gita verse + guardian context (what wisdom?)
+        NO registry. NO services. NO delegation.
+        Pure computation from the 16 words.
 
-        This is NOT a chatbot. This is NOT analysis-only.
-        Krishna routes AND acts.
+        FLOW (9 NavaBhakti = 72 bytes):
+        ================================
+        1. SRAVANAM:       Receive input (hearing)
+        2. KIRTANAM:       MahaCompression → seed (chanting)
+        3. SMARANAM:       MahaKirtan → vibration state (remembering)
+        4. PADA_SEVANAM:   MahaResonator → attractor (serving)
+        5. ARCANAM:        Parampara verification (worshiping)
+        6. VANDANAM:       GitaResonance → verse match (praying)
+        7. DASYAM:         Position/Quarter determination (servitude)
+        8. SAKHYAM:        MahaCell creation (friendship)
+        9. ATMA_NIVEDANAM: Complete response (surrender)
 
-        Args:
-            input_text: Any input (command, question, action)
-
-        Returns:
-            ExecuteResult with success, output, vibration, and resonance data
+        Everything computed. No external LLM. No hardcoded routing.
         """
-        from vibe_core.mahamantra.protocols._seed_core import WORDS
+        from vibe_core.mahamantra.protocols._seed import WORDS, PARAMPARA, MAHA_QUANTUM
         from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
 
         # =====================================================================
-        # 1. VIBRATION - Compute resonance state
+        # 1. SRAVANAM - Receive input (Entry point)
         # =====================================================================
-        vibration = self._compute_vibration(input_text)
-        seed = vibration.get("seed", 0)
-        attractor = vibration.get("attractor", 0)
-        position = attractor % WORDS
-        guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
+        if isinstance(input_data, MahaCell):
+            cell = input_data
+            input_text = cell.payload.decode("utf-8", errors="replace")
+            seed = cell.header.sravanam
+        else:
+            input_text = str(input_data)
+            cell = None
+            seed = None
 
-        # Quarter from position
+        # =====================================================================
+        # 2. KIRTANAM - MahaCompression → seed
+        # =====================================================================
+        compressor, kirtan = self._get_kirtan()
+
+        if seed is None:
+            comp_result = compressor.compress(input_text)
+            seed = comp_result.seed
+
+        # =====================================================================
+        # 3. SMARANAM - MahaKirtan → vibration state
+        # =====================================================================
+        kirtan_result = kirtan.compute(cell if cell else seed)
+
+        # =====================================================================
+        # 4. PADA_SEVANAM - MahaResonator → attractor (stable harmonic)
+        # =====================================================================
+        from vibe_core.mahamantra.research.dharma import MahaResonator
+        resonator = MahaResonator(mod_space=MAHA_QUANTUM)
+        attractor = resonator.oscillate_once(kirtan_result.transformed_value)
+
+        # =====================================================================
+        # 5. ARCANAM - Parampara verification (% 37 == 0)
+        # =====================================================================
+        parampara_verified = (seed % PARAMPARA == 0)
+        parampara_channel = kirtan_result.parampara_channel
+        oracle_validated = kirtan_result.oracle_validated
+
+        # =====================================================================
+        # 6. VANDANAM - GitaResonance → verse match
+        # =====================================================================
+        from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
+        from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+
+        verse_result = match_attractor(attractor)
+        chapter = get_gita_chapter(attractor)
+
+        verse_info = None
+        if verse_result.best_match:
+            v = verse_result.best_match
+            verse_info = {
+                "id": v.verse_id,
+                "chapter": v.chapter,
+                "verse": v.verse,
+                "guna": v.guna,
+                "dominant_name": v.dominant_name,
+            }
+
+        # =====================================================================
+        # 7. DASYAM - Position/Quarter determination
+        # =====================================================================
+        position = attractor % WORDS  # 0-15
+
         if position < 4:
             quarter = "genesis"
         elif position < 8:
@@ -252,74 +290,72 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         else:
             quarter = "moksha"
 
-        # Guna from quarter
-        guna_map = {"genesis": "tamas", "dharma": "sattva", "karma": "rajas", "moksha": "sattva"}
-        guna = guna_map.get(quarter, "sattva")
+        guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
 
         # =====================================================================
-        # 2. INTENT - Route via MahaLLM (O(4) holographic)
+        # 8. SAKHYAM - MahaCell creation (universal format)
         # =====================================================================
-        intent_category = "UNKNOWN"
-        try:
-            from vibe_core.mahamantra.adapters.llm import MahaLLM
-            llm = MahaLLM()
-            route_result = llm.route_text(input_text)
-            intent_category = route_result.category_name if route_result.category else "UNKNOWN"
-        except Exception:
-            pass
-
-        # =====================================================================
-        # 3. EXECUTE - via CLI Bridge (THE ACTION!)
-        # =====================================================================
-        from vibe_core.mahamantra.cli.bridge import cli_bridge
-
-        bridge_result = cli_bridge.route(input_text, [])
-
-        success = bridge_result.success
-        exit_code = bridge_result.exit_code
-        handler = bridge_result.handler or f"{guardian}@{position}"
-        error_msg = bridge_result.error
-
-        # Build output message
-        if success:
-            output = f"[{intent_category}] {guardian.upper()}@{position} → OK"
-        else:
-            output = f"[{intent_category}] {guardian.upper()}@{position} → FAILED: {error_msg or 'unknown'}"
+        payload = input_text.encode("utf-8")
+        result_cell = MahaCell.create(
+            payload=payload,
+            source=seed,
+            target=attractor,
+            operation=position,
+            intent=parampara_channel if parampara_channel >= 0 else 0,
+            ttl=300,  # Daily cycles
+        )
 
         # =====================================================================
-        # 4. RESONATE - Gita wisdom (optional enhancement)
+        # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
         # =====================================================================
-        verse_info = None
-        try:
-            from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
-            from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+        # Update Akash state (persistent field)
+        self._akash["total_beats"] += 1
+        self._akash["accumulated_value"] = (self._akash["accumulated_value"] + attractor) % MAHA_QUANTUM
+        self._akash["attractor_counts"][attractor] = self._akash["attractor_counts"].get(attractor, 0) + 1
 
-            verse_result = match_attractor(attractor)
-            chapter = get_gita_chapter(attractor)
-
-            if verse_result.best_match:
-                v = verse_result.best_match
-                verse_info = f"BG.{v.chapter}.{v.verse} ({v.guna})"
-                output = f"{output} | {verse_info}"
-        except Exception:
-            pass
-
-        # =====================================================================
-        # 5. RETURN - Complete ExecuteResult
-        # =====================================================================
         return {
-            "success": success,
-            "exit_code": exit_code,
+            # Input
+            "input": input_text,
+
+            # Vibration (KIRTANAM + SMARANAM + PADA_SEVANAM)
+            "vibration": {
+                "seed": seed,
+                "transformed_value": kirtan_result.transformed_value,
+                "beat": kirtan_result.beat_number,
+                "flute_resonance": kirtan_result.flute_resonance,
+                "vina_resonance": kirtan_result.vina_resonance,
+                "vina_string": kirtan_result.vina_string,
+                "attractor": attractor,
+            },
+
+            # Parampara (ARCANAM)
+            "parampara": {
+                "verified": parampara_verified,
+                "channel": parampara_channel,
+                "oracle_validated": oracle_validated,
+            },
+
+            # Gita (VANDANAM)
+            "chapter": chapter,
+            "verse": verse_info,
+            "matches": len(verse_result.matches),
+
+            # Position (DASYAM)
             "position": position,
             "guardian": guardian,
             "quarter": quarter,
-            "guna": guna,
-            "requires_confirmation": guna == "tamas",
-            "output": output,
-            "error": error_msg,
-            "vibration": vibration,
+
+            # MahaCell (SAKHYAM)
+            "cell": {
+                "header_size": 72,
+                "payload_size": len(payload),
+                "total_size": result_cell.size,
+                "valid": result_cell.is_valid(),
+                "parampara_verified": result_cell.header.verify_parampara(),
+            },
+
+            # Akash (persistent state)
             "akash": self._akash,
-            "maha_cell": None,  # Created on demand if needed
         }
 
     @property

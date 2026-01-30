@@ -44,8 +44,14 @@ __position__ = 3
 __genesis__ = "0x36552212"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from typing import Final, Tuple
+from typing import Final, Tuple, Optional
 
+from vibe_core.mahamantra.protocols.hash import (
+    MahaHashProtocol,
+    HashResult,
+    LensReading,
+    MultiLensReading,
+)
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     PARAMPARA,
@@ -53,37 +59,6 @@ from vibe_core.mahamantra.protocols._seed import (
     PANCHA,
     SEVEN,
 )
-
-
-# =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-@dataclass(frozen=True)
-class HashResult:
-    """Simple hash result."""
-    input: str
-    value: int
-    mod_space: int
-
-
-@dataclass(frozen=True)
-class LensReading:
-    """Single lens reading."""
-    name: str
-    mod_space: int
-    value: int
-
-
-@dataclass(frozen=True)
-class MultiLensReading:
-    """Full multi-lens analysis."""
-    input: str
-    seed: int  # Raw encoded value before mod
-    primary_hash: int  # mod MAHA_QUANTUM
-    lenses: Tuple[LensReading, ...]
-    parampara_validated: bool  # seed % 37 == 0
-    holographic_factors: Tuple[int, ...]  # Values appearing in multiple lenses
 
 
 # =============================================================================
@@ -106,7 +81,7 @@ LENSES: Final[Tuple[Tuple[str, int], ...]] = (
 # THE ADAPTER
 # =============================================================================
 
-class DeterministicHash:
+class DeterministicHash(MahaHashProtocol):
     """
     Deterministic Intent-to-Integer Hash Function.
 
@@ -143,7 +118,8 @@ class DeterministicHash:
             total += char_val * self.triangular(pos)
         return total
 
-    def hash(self, text: str, mod_space: int = None) -> int:
+    def hash(self, text: str, mod_space: Optional[int] = None) -> int:
+
         """
         Hash string to integer in [0, mod_space).
 
@@ -158,7 +134,7 @@ class DeterministicHash:
             mod_space = self.default_mod
         return self.encode(text) % mod_space
 
-    def hash_to_result(self, text: str, mod_space: int = None) -> HashResult:
+    def hash_to_result(self, text: str, mod_space: Optional[int] = None) -> HashResult:
         """Hash with full result object."""
         if mod_space is None:
             mod_space = self.default_mod

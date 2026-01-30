@@ -30,52 +30,7 @@ __mahajana__ = "dynamic"  # Resolved at runtime from SSOT
 __position__ = 0
 __genesis__ = "0x00000000"  # GenesisByte (Position 0)
 
-from typing import Any
+from vibe_core.mahamantra import BootMode
 
-from vibe_core.mahamantra.substrate.registry import GuardianRegistry
+__all__ = ["BootMode"]
 
-# =============================================================================
-# DYNAMIC DISPATCH - The Lotus Level
-# =============================================================================
-
-
-def __getattr__(name: str) -> Any:
-    """
-    Dynamic attribute lookup from registry.
-
-    Position 0 (GENESIS HEAD, SYS_WAKE) determines the owner.
-    The SSOT (MAHAMANTRA_POSITIONS) determines who sits there.
-
-    Currently: Position 0 = Vyasa
-
-    Args:
-        name: Attribute name to load
-
-    Returns:
-        The requested type/class from the position's types module
-
-    Raises:
-        AttributeError: If attribute not found
-    """
-    # Load from position 0's types module
-    attr = GuardianRegistry.load_type(position=0, type_name=name)
-
-    if attr is not None:
-        return attr
-
-    # Fallback: Try loading entire types module and get any attribute
-    types_module = GuardianRegistry.load_module(index=0, component="types")
-    if types_module is not None:
-        try:
-            return getattr(types_module, name)
-        except AttributeError:
-            pass
-
-    # Not found
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
-# =============================================================================
-# NOTE: No __all__ - this is a dynamic proxy module using __getattr__
-# Classes like BootMode are loaded at runtime from position 0's types module
-# =============================================================================

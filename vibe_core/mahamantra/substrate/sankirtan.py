@@ -60,15 +60,14 @@ from vibe_core.mahamantra.protocols._sankirtan import (
 )
 from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
 
-# Import SamskaraProtocol - Balarama-wrapped legacy types
-from vibe_core.mahamantra.substrate._legacy import (
+# Import SSOT Pipeline types (Aliased to avoid collision with local types)
+from vibe_core.mahamantra.substrate.samskara import (
     Phase,
+    PhaseResult as SamskaraPhaseResult,
     PhaseStatus,
+    PipelineContext as SamskaraPipelineContext,
     PipelineExecutor,
     SamskaraProtocol,
-)
-from vibe_core.mahamantra.substrate._legacy import (
-    PipelineContext as SamskaraPipelineContext,
 )
 from vibe_core.mahamantra.substrate.mahajana import Quarter
 from vibe_core.mahamantra.substrate.position import (
@@ -319,9 +318,11 @@ def _get_all_guardian_names() -> List[str]:
     """
     global _GUARDIAN_NAMES_CACHE
     if _GUARDIAN_NAMES_CACHE is None:
-        from vibe_core.mahamantra.substrate.registry import GuardianRegistry
-
-        _GUARDIAN_NAMES_CACHE = GuardianRegistry.get_all_guardians()
+        _GUARDIAN_NAMES_CACHE = [
+            POSITION_BY_INDEX[i].guardian.value
+            for i in range(WORDS)
+            if POSITION_BY_INDEX[i] is not None
+        ]
     return _GUARDIAN_NAMES_CACHE
 
 

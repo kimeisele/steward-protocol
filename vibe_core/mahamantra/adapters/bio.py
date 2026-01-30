@@ -53,9 +53,11 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x3cbf61c0"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
-from typing import Final, List, Optional, Tuple
-
+from vibe_core.mahamantra.protocols.bio import (
+    MahaBioProtocol,
+    KmerResult,
+    IndexStats,
+)
 from vibe_core.mahamantra.adapters.routing import HolographicRouter
 from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS, HALVES, HARE_COUNT
 
@@ -87,29 +89,6 @@ _BASE_TO_INT: Final[dict] = {
 }
 
 _INT_TO_BASE: Final[str] = "ACGT"
-
-
-# =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-@dataclass(frozen=True)
-class KmerResult:
-    """Result of k-mer query."""
-    kmer: str
-    key: int
-    count: int
-    positions: Tuple[int, ...]
-
-
-@dataclass(frozen=True)
-class IndexStats:
-    """Statistics for k-mer index."""
-    k: int
-    key_space: int
-    unique_kmers: int
-    total_indexed: int
-    sequence_length: int
 
 
 # =============================================================================
@@ -160,7 +139,7 @@ def decode_kmer(key: int, k: int) -> str:
 # LOTUS BIO INDEX
 # =============================================================================
 
-class LotusBio:
+class LotusBio(MahaBioProtocol):
     """
     O(1) DNA k-mer Index using Lotus Tree.
 

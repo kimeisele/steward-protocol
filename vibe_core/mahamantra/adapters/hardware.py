@@ -56,10 +56,13 @@ __mahajana__ = "vyasa"
 __position__ = 3
 __genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
-from enum import Enum
-from typing import Final, Iterator, List, Optional
-
+from vibe_core.mahamantra.protocols.hardware import (
+    MahaHardwareProtocol,
+    HardwareSpec,
+    PipelineStageInfo,
+    VerificationResult,
+    PipelineStage,
+)
 from vibe_core.mahamantra.protocols._seed import (
     WORDS,           # 16 - Mahamantra words
     QUARTERS,        # 4 - Quarters
@@ -87,146 +90,6 @@ ROOT_BASE_ADDRESS: Final[int] = 0xBA5E_0000
 
 
 # =============================================================================
-# PIPELINE STAGE ENUM
-# =============================================================================
-
-
-class PipelineStage(Enum):
-    """
-    The 8 pipeline stages of LotusRouterCore.
-
-    Each stage processes one nibble (4 bits) of a 32-bit address.
-    Each stage corresponds to one verse of Siksastakam.
-    """
-
-    L0_NIBBLE = 0  # Bits 31-28
-    L1_NIBBLE = 1  # Bits 27-24
-    L2_NIBBLE = 2  # Bits 23-20
-    L3_NIBBLE = 3  # Bits 19-16
-    L4_NIBBLE = 4  # Bits 15-12
-    L5_NIBBLE = 5  # Bits 11-8
-    L6_NIBBLE = 6  # Bits 7-4
-    L7_NIBBLE = 7  # Bits 3-0
-
-
-# =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-
-@dataclass(frozen=True)
-class PipelineStageInfo:
-    """Information about a pipeline stage with Siksastakam mapping."""
-
-    stage: int
-    name: str
-    bit_range: str
-    sanskrit: str
-    english: str
-    hardware_effect: str
-
-    @property
-    def high_bit(self) -> int:
-        """High bit of this stage's nibble."""
-        return 31 - (self.stage * 4)
-
-    @property
-    def low_bit(self) -> int:
-        """Low bit of this stage's nibble."""
-        return 28 - (self.stage * 4)
-
-
-@dataclass(frozen=True)
-class HardwareSpec:
-    """
-    Complete hardware specification for Lotus Router.
-
-    All parameters are derived from Mahamantra constants.
-    """
-
-    data_width: int  # 32 = AKSARA
-    next_hop_width: int  # 16 = WORDS
-    branching_factor: int  # 16 = WORDS
-    nibble_size: int  # 4 = QUARTERS
-    pipeline_stages: int  # 8 = OCTET
-    root_base_address: int  # 0xBA5E0000
-
-    @property
-    def total_latency_cycles(self) -> int:
-        """Total latency in clock cycles."""
-        return self.pipeline_stages
-
-    @property
-    def is_verified(self) -> bool:
-        """Check if all parameters match Mahamantra constants."""
-        return (
-            self.data_width == AKSARA
-            and self.next_hop_width == WORDS
-            and self.branching_factor == WORDS
-            and self.nibble_size == QUARTERS
-            and self.pipeline_stages == OCTET
-        )
-
-    @property
-    def address_space(self) -> int:
-        """Total address space (2^data_width)."""
-        return 2 ** self.data_width
-
-    @property
-    def max_next_hops(self) -> int:
-        """Maximum number of next-hop destinations."""
-        return 2 ** self.next_hop_width
-
-    def to_dict(self) -> dict:
-        """Convert to dictionary."""
-        return {
-            "data_width": self.data_width,
-            "next_hop_width": self.next_hop_width,
-            "branching_factor": self.branching_factor,
-            "nibble_size": self.nibble_size,
-            "pipeline_stages": self.pipeline_stages,
-            "root_base_address": hex(self.root_base_address),
-            "total_latency_cycles": self.total_latency_cycles,
-            "is_verified": self.is_verified,
-        }
-
-
-@dataclass(frozen=True)
-class VerificationResult:
-    """Result of hardware verification."""
-
-    is_valid: bool
-    checks: List[tuple]  # List of (check_name, expected, actual, passed)
-
-    @property
-    def passed_count(self) -> int:
-        """Number of passed checks."""
-        return sum(1 for _, _, _, passed in self.checks if passed)
-
-    @property
-    def total_count(self) -> int:
-        """Total number of checks."""
-        return len(self.checks)
-
-    @property
-    def summary(self) -> str:
-        """Human-readable verification summary."""
-        lines = [
-            "HARDWARE VERIFICATION",
-            "=" * 50,
-            f"Result: {'PASSED' if self.is_valid else 'FAILED'}",
-            f"Checks: {self.passed_count}/{self.total_count}",
-            "",
-        ]
-
-        for name, expected, actual, passed in self.checks:
-            status = "✓" if passed else "✗"
-            lines.append(f"  {status} {name}: expected {expected}, got {actual}")
-
-        return "\n".join(lines)
-
-
-# =============================================================================
 # SIKSASTAKAM MAPPING
 # =============================================================================
 
@@ -247,7 +110,7 @@ _SIKSASTAKAM_VERSES = [
 # =============================================================================
 
 
-class MahaHardware:
+class MahaHardware(MahaHardwareProtocol):
     """
     Silicon Altar - Hardware Specification Engine.
 
