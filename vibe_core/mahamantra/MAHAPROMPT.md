@@ -13,7 +13,7 @@ from vibe_core.mahamantra import mahamantra
 Wir verbieten keine falschen Imports. Wir machen sie **unmöglich**.
 
 1. **Tod durch Import**: Wer am `seed.py` vorbei importiert, stirbt (`ImportError`).
-2. **Physikalische Realität**: Es gibt keine "andere" Liste. Wer `MAHAMANTRA_SEQUENCE` nicht aus dem Seed ableitet, existiert zur Runtime nicht.
+2. **Physikalische Realität**: Es gibt keine "andere" Liste. Wer `MAHAMANTRA` nicht aus `substrate/seed.py` importiert, existiert zur Runtime nicht.
 3. **Keine Polizei**: Die Architektur ist die Exekutive. Wenn es kompiliert/läuft, ist es legal.
 
 **Falscher Weg = Toter Code.**
@@ -48,16 +48,14 @@ steward "Mache X. Was ist Y? Wann müssen wir wieder Z?"
 
 ```python
 from vibe_core.mahamantra import mahamantra
-r = mahamantra("dein input")
+result = mahamantra.execute("dein input")
 
-# r["position"]  → 0-15 (aus attractor % 16)
-# r["quarter"]   → genesis/dharma/karma/moksha
-# r["guardian"]  → wer zuständig
-# r["verse"]     → Gita-Kontext
+# result.position  → 0-15 (aus attractor % 16)
+# result.quarter   → genesis/dharma/karma/moksha
 ```
 
-**SSOT**: `protocols/_seed.py` (Konstanten, Ableitungen) + `substrate/seed.py` (AVATARAS, MAHAJANAS).
-> 4 Avataras + 12 Mahajanas = 16 Positionen. *Nicht* "Guardians" (kein Shastra).
+**SSOT**: `substrate/seed.py` (MAHAMANTRA Tuple + alle Ableitungen).
+> 4 Avataras + 12 Mahajanas = 16 Positionen. Deriviert aus dem Tuple, nicht hardcoded.
 
 ---
 
@@ -65,12 +63,12 @@ r = mahamantra("dein input")
 
 ```
 mahamantra/
-    ├── __init__.py          # Chaitanya (Position 0)
-    ├── genesis/             # Positionen 0-3
-    ├── dharma/              # Positionen 4-7
-    ├── karma/               # Positionen 8-11
-    ├── moksha/              # Positionen 12-15
-    └── substrate/           # SSOT (Nityananda trägt)
+    ├── __init__.py          # Entry Point (Lazy Loading)
+    ├── substrate/seed.py    # SSOT: MAHAMANTRA Tuple + Ableitungen
+    ├── genesis/             # Positionen 0-3 (Vyasa, Brahma, Narada, Shambhu)
+    ├── dharma/              # Positionen 4-7 (Prithu, Kumaras, Kapila, Manu)
+    ├── karma/               # Positionen 8-11 (Parashurama, Prahlada, Janaka, Bhishma)
+    └── moksha/              # Positionen 12-15 (Nrisimha, Bali, Shuka, Yamaraja)
 ```
 
 **Neuer Mahajana? Folder anlegen. FERTIG.**
@@ -94,7 +92,7 @@ __tattva__ = {
 ## BALARAMA PATTERN
 
 ```python
-from vibe_core.protocols.substrate.balarama import BalaramaWrappedCLI
+from vibe_core.mahamantra.substrate.proxy import BalaramaProxy
 # Wrapped existierende CLIs ohne Code-Änderung
 # Gibt ihnen: Lotus-Connection, Heartbeat, Parampara-Verification
 ```
@@ -104,7 +102,7 @@ from vibe_core.protocols.substrate.balarama import BalaramaWrappedCLI
 ## VERBOTEN
 
 - ❌ Import von `protocols/substrate` statt `mahamantra/substrate`
-- ❌ Hardcoded MAHAMANTRA_SEQUENCE
+- ❌ Hardcoded Zahlen (16, 137, 37, 18, 108) - alles aus seed.py
 - ❌ Any types
 - ❌ Manual Labor (wenn CLI existiert)
 

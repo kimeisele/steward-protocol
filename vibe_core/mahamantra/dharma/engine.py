@@ -8,18 +8,21 @@ Integrates:
 - Layers (Attractors)
 - Matrix (Genesis)
 - Hologram (Fractal)
+- Shabda (Vibration)
 
 Usage:
     from vibe_core.mahamantra.dharma.engine import DharmaEngine
     engine = DharmaEngine()
     form = engine.get_form("KRISHNA")
     layer = engine.get_layer(108)
+    alignment = engine.word_alignment("krishna")
 """
 
 from vibe_core.mahamantra.dharma.components.linguist import Linguist
 from vibe_core.mahamantra.dharma.components.layers import LayerEngine
 from vibe_core.mahamantra.dharma.components.matrix import MahaMatrix
 from vibe_core.mahamantra.dharma.components.hologram import HologramEngine
+from vibe_core.mahamantra.dharma.components.shabda import ShabdaEngine, VibrationSignature
 from typing import List, Any
 from vibe_core.mahamantra.protocols.dharma_protocol import DharmaProtocol, SwarupaData, FractalNodeData
 
@@ -31,11 +34,11 @@ class DharmaEngine:
     """
     
     def __init__(self):
-        # In a real DI system, these would be injected as Protocols
         self._linguist = Linguist()
         self._layers = LayerEngine()
         self._matrix = MahaMatrix()
         self._hologram = HologramEngine()
+        self._shabda = ShabdaEngine()
 
     # --- LINGUISTICS (V9) ---
     def get_form(self, name: str) -> SwarupaData:
@@ -65,5 +68,23 @@ class DharmaEngine:
         """Ignite the Holographic Tree."""
         return self._hologram.ignite(depth)
 
+    # --- SHABDA (Vibration) ---
+    def get_vibration(self, phoneme: str) -> VibrationSignature | None:
+        """Get VibrationSignature for a Sanskrit phoneme."""
+        return self._shabda.get_signature(phoneme)
+        
+    def freq_to_id(self, hz: float) -> int:
+        """Convert Hz to Mahamantra Vibration ID."""
+        return self._shabda.freq_to_id(hz)
+        
+    def id_to_freq(self, vib_id: int) -> float:
+        """Convert Vibration ID back to Hz."""
+        return self._shabda.id_to_freq(vib_id)
+        
+    def word_alignment(self, word: str) -> float:
+        """Calculate Mahamantra alignment of a word (0.0 - 1.0)."""
+        return self._shabda.word_alignment(word)
+
 # Singleton Instance
 dharma: DharmaProtocol = DharmaEngine()
+
