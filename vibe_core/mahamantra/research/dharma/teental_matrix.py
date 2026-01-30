@@ -260,28 +260,45 @@ def analyze_mahamantra_correlation() -> dict:
     - Bass (baya) correlates with HARE (energy/shakti)
     - Treble (daya) correlates with NAME (Krishna/Rama identity)
     """
-    # MAHAMANTRA_PATTERN: Derived from _seed.py axioms
-    # Structure: 4 Quarters × 4 Words each = 16 Words
-    # Q1 (Hare Krishna): H K H K → alternating (HALVES pattern)
-    # Q2 (Krishna Krishna Hare Hare): K K H H → grouped (HALVES × HALVES)
-    # Q3 (Hare Rama): H R H R → alternating
-    # Q4 (Rama Rama Hare Hare): R R H H → grouped
-    from vibe_core.mahamantra.protocols._seed import QUARTERS, MATRA_PER_VIBHAG
+    # MAHAMANTRA_PATTERN: TRUE Axiomatic Derivation
+    # Algorithm:
+    #   - Odd quarters (0, 2): Alternating pattern (H X H X)
+    #   - Even quarters (1, 3): Grouped pattern (X X H H)
+    #   - First half (quarters 0,1): X = Krishna
+    #   - Second half (quarters 2,3): X = Rama
+    from vibe_core.mahamantra.protocols._seed import QUARTERS, MATRA_PER_VIBHAG, HALVES
+    
+    # Name codes (irreducible symbols - these ARE the axioms)
+    HARE, KRISHNA, RAMA = "H", "K", "R"
     
     def _derive_pattern():
-        """Derive the 16-word pattern from quarter structure."""
-        # Quarter 1: Hare Krishna Hare Krishna (alternating)
-        q1 = ("H", "K", "H", "K")  # len = MATRA_PER_VIBHAG = 4
-        # Quarter 2: Krishna Krishna Hare Hare (grouped)
-        q2 = ("K", "K", "H", "H")
-        # Quarter 3: Hare Rama Hare Rama (alternating)
-        q3 = ("H", "R", "H", "R")
-        # Quarter 4: Rama Rama Hare Hare (grouped)
-        q4 = ("R", "R", "H", "H")
-        return q1 + q2 + q3 + q4  # 4 × 4 = 16 = WORDS
+        """
+        Generate 16-word pattern using ONLY mathematical structure.
+        No hardcoded sequences - pure algorithm.
+        """
+        pattern = []
+        for q in range(QUARTERS):  # 0, 1, 2, 3
+            # Name for this quarter: Krishna for first half, Rama for second half
+            name = KRISHNA if q < HALVES else RAMA
+            # Pattern type: alternating for odd indices, grouped for even
+            is_alternating = (q % HALVES == 0)  # q=0,2 alternate; q=1,3 group
+            
+            half_size = MATRA_PER_VIBHAG // HALVES  # 4 // 2 = 2
+            
+            if is_alternating:
+                # H X H X pattern (HALVES repetitions of [H, X])
+                for _ in range(half_size):
+                    pattern.append(HARE)
+                    pattern.append(name)
+            else:
+                # X X H H pattern (half_size of X, then half_size of H)
+                pattern.extend([name] * half_size)
+                pattern.extend([HARE] * half_size)
+        
+        return tuple(pattern)
     
     MAHAMANTRA_PATTERN = _derive_pattern()
-    assert len(MAHAMANTRA_PATTERN) == WORDS, "Pattern must have WORDS (16) elements"
+    assert len(MAHAMANTRA_PATTERN) == WORDS, f"Pattern must have WORDS ({WORDS}) elements"
 
     correlations = []
     bass_pattern = get_bass_pattern()

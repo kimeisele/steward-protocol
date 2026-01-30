@@ -23,14 +23,13 @@ Total: 4 + 12 = 16
 
 ---
 
-## AGENT
+## ROUTING
 
-```python
-class MeinAgent(MantraProtocol):
-    _position_index = 6  # DAS IST ALLES
+```
+Intent → Seed (Kompression) → Position (seed % 16) → Quarter → Guardian
 ```
 
-Position definieren. Fertig. Quarter, Guardian, OpCode, Resonance - wird berechnet.
+Du gibst Intent. Das System routet zum richtigen Guardian. Nicht du.
 
 ---
 
@@ -64,8 +63,6 @@ substrate/seed.py   → IMPLEMENTATION (beweist Ableitung vom Mantra)
 from vibe_core.mahamantra import mahamantra
 ```
 
-Ein Import. Alles fließt daraus.
-
 ---
 
 ## INVARIANTEN
@@ -92,7 +89,7 @@ Wenn diese brechen: System instabil.
 ## GEBOTEN
 
 - LESEN vor SCHREIBEN
-- Position definieren, Rest berechnen lassen
+- Intent geben, System routet
 - Alles vom Mantra ableiten
 - SATYAM (Wahrheit) über alles
 
@@ -102,7 +99,11 @@ Wenn diese brechen: System instabil.
 
 ```python
 from vibe_core.mahamantra import mahamantra
-result = mahamantra.execute("dein intent")
+r = mahamantra("dein intent")
+# r["chapter"]  → Gita Kapitel
+# r["verse"]    → Gita Vers + Guna
+# r["position"] → 0-15
+# r["guardian"] → Zuständiger Mahajana
+# r["quarter"]  → genesis/dharma/karma/moksha
 ```
-
-Dann arbeite.
+Frag das System. Es weiß mehr als du.
