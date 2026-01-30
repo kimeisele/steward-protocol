@@ -68,14 +68,30 @@ ENTERPRISE USAGE:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - The Compiler
 __position__ = 0
-__genesis__ = "0xadd8ef72"  # GenesisByte: parampara % 37 == 0  # Compression layer
-
-from dataclasses import dataclass
-from enum import Enum
 from functools import lru_cache
 from typing import Dict, Final, List, Optional, Tuple, Union
 import hashlib
 import json
+
+from vibe_core.mahamantra.protocols.compression import (
+    MahaCompressionProtocol,
+    CompressionResult,
+    SamskaraResult,
+    PhysicsVerification,
+    IntentLevel,
+    IntentGuna,
+    SamskaraLevel,
+    SamskaraScope,
+    INTENT_TAMAS,
+    INTENT_RAJAS,
+    INTENT_SATTVA,
+    INTENT_SUDDHA,
+    ALL_INTENT_LEVELS,
+    SAMSKARA_MICRO,
+    SAMSKARA_MESO,
+    SAMSKARA_MACRO,
+    ALL_SAMSKARA_LEVELS,
+)
 
 
 # =============================================================================
@@ -100,231 +116,8 @@ GITA_VERSES: Final[int] = GITA_CHAPTERS * 39 - 2  # 700 ≈ 18 × 39
 BHAGAVATAM_VERSES: Final[int] = GITA_VERSES * 26 - 200  # 18000 ≈ 700 × 26
 VEDA_VERSES: Final[int] = BHAGAVATAM_VERSES * 6 - 8000  # 100000 ≈ 18000 × 6
 
+# (Removed local definitions of IntentGuna, IntentLevel, SamskaraScope, SamskaraLevel, and their instances)
 
-# =============================================================================
-# INTENT LEVELS - The State Classifier
-# =============================================================================
-
-class IntentGuna(Enum):
-    """The four modes of intent (gunas + transcendental)."""
-    TAMAS = "tamas"      # Ignorance - corrupted execution
-    RAJAS = "rajas"      # Passion - partial execution
-    SATTVA = "sattva"    # Goodness - clean execution
-    SUDDHA = "suddha"    # Pure - divine execution
-
-
-@dataclass(frozen=True)
-class IntentLevel:
-    """Complete description of an intent classification."""
-    guna: IntentGuna
-    sanskrit: str
-    english: str
-    algorithm_effect: str
-    system_interpretation: str
-
-    # Numeric score for comparisons (0-3)
-    @property
-    def score(self) -> int:
-        return {
-            IntentGuna.TAMAS: 0,
-            IntentGuna.RAJAS: 1,
-            IntentGuna.SATTVA: 2,
-            IntentGuna.SUDDHA: 3,
-        }[self.guna]
-
-
-# The 4 Intent Levels = QUARTERS
-INTENT_TAMAS: Final[IntentLevel] = IntentLevel(
-    guna=IntentGuna.TAMAS,
-    sanskrit="तामसिक",
-    english="Tamasic (Ignorance)",
-    algorithm_effect="Corrupted execution - errors, crashes, undefined behavior",
-    system_interpretation="System in failure state, needs immediate intervention",
-)
-
-INTENT_RAJAS: Final[IntentLevel] = IntentLevel(
-    guna=IntentGuna.RAJAS,
-    sanskrit="राजसिक",
-    english="Rajasic (Passion)",
-    algorithm_effect="Partial execution - works but unstable",
-    system_interpretation="System rushing, technical debt accumulating",
-)
-
-INTENT_SATTVA: Final[IntentLevel] = IntentLevel(
-    guna=IntentGuna.SATTVA,
-    sanskrit="सात्त्विक",
-    english="Sattvic (Goodness)",
-    algorithm_effect="Clean execution - stable, maintainable",
-    system_interpretation="System in healthy state, sustainable operation",
-)
-
-INTENT_SUDDHA: Final[IntentLevel] = IntentLevel(
-    guna=IntentGuna.SUDDHA,
-    sanskrit="शुद्ध भक्ति",
-    english="Shuddha Bhakti (Pure)",
-    algorithm_effect="Divine execution - transcends material constraints",
-    system_interpretation="System optimally aligned, exceeds expectations",
-)
-
-ALL_INTENT_LEVELS: Final[tuple[IntentLevel, ...]] = (
-    INTENT_TAMAS,
-    INTENT_RAJAS,
-    INTENT_SATTVA,
-    INTENT_SUDDHA,
-)
-
-# Verify: 4 levels = QUARTERS
-assert len(ALL_INTENT_LEVELS) == QUARTERS, "4 intent levels = QUARTERS"
-
-
-# =============================================================================
-# SAMSKARA LEVELS - Memory Hierarchy
-# =============================================================================
-
-class SamskaraScope(Enum):
-    """Scope of samskara (impression/memory)."""
-    MICRO = "micro"    # Individual/session level
-    MESO = "meso"      # Collective/service level
-    MACRO = "macro"    # Universal/system level
-
-
-@dataclass(frozen=True)
-class SamskaraLevel:
-    """A level at which samskara operates."""
-    scope: SamskaraScope
-    entity: str
-    memory_source: str
-    determines: str
-
-
-SAMSKARA_MICRO: Final[SamskaraLevel] = SamskaraLevel(
-    scope=SamskaraScope.MICRO,
-    entity="Session/User",
-    memory_source="Previous interactions in this context",
-    determines="User preferences, learned behaviors",
-)
-
-SAMSKARA_MESO: Final[SamskaraLevel] = SamskaraLevel(
-    scope=SamskaraScope.MESO,
-    entity="Service/Application",
-    memory_source="Previous deployments, incidents",
-    determines="System patterns, failure modes",
-)
-
-SAMSKARA_MACRO: Final[SamskaraLevel] = SamskaraLevel(
-    scope=SamskaraScope.MACRO,
-    entity="Infrastructure/Platform",
-    memory_source="Historical architecture decisions",
-    determines="Technical constants, constraints",
-)
-
-ALL_SAMSKARA_LEVELS: Final[tuple[SamskaraLevel, ...]] = (
-    SAMSKARA_MICRO,
-    SAMSKARA_MESO,
-    SAMSKARA_MACRO,
-)
-
-# Verify: 3 levels = TRINITY
-assert len(ALL_SAMSKARA_LEVELS) == TRINITY, "3 samskara levels = TRINITY"
-
-
-# =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-@dataclass(frozen=True)
-class CompressionResult:
-    """Result of intent compression."""
-
-    # The extracted seed (deterministic hash)
-    seed: int
-
-    # Intent classification
-    intent_level: IntentLevel
-
-    # Compression metrics
-    input_size: int           # Original size (chars/bytes)
-    output_size: int          # Compressed size (seed = 4 bytes)
-    compression_ratio: float  # input_size / output_size
-
-    # The compressed intent summary (optional)
-    summary: Optional[str] = None
-
-    # Position in 16-word grid
-    position: int = 0
-
-    @property
-    def guna(self) -> str:
-        """Shorthand for intent guna."""
-        return self.intent_level.guna.value
-
-    @property
-    def is_healthy(self) -> bool:
-        """True if intent is Sattvic or higher."""
-        return self.intent_level.score >= 2
-
-
-@dataclass(frozen=True)
-class SamskaraResult:
-    """Result of samskara encoding."""
-
-    # The seed that encodes this state
-    seed: int
-
-    # Samskara level (micro/meso/macro)
-    scope: SamskaraScope
-
-    # Intent level of the state
-    intent_level: IntentLevel
-
-    # What was encoded
-    encoded_keys: tuple[str, ...]
-
-    # Original data size vs samskara size
-    original_size: int
-    samskara_size: int  # Always 4 bytes (the seed)
-
-    @property
-    def compression_ratio(self) -> float:
-        return self.original_size / self.samskara_size if self.samskara_size > 0 else 0.0
-
-    @property
-    def can_reconstruct(self) -> bool:
-        """
-        Samskara is LOSSY compression by design.
-        You can't reconstruct the original, but you don't need to.
-        You only need the LESSON, not the EXPERIENCE.
-        """
-        return False
-
-
-@dataclass(frozen=True)
-class PhysicsVerification:
-    """Result of physics constant verification."""
-
-    seed: int
-
-    # Alignment checks
-    is_maha_quantum_aligned: bool   # seed relates to 137
-    is_words_aligned: bool          # seed relates to 16
-    is_aksara_aligned: bool         # seed relates to 32
-    is_qualities_aligned: bool      # seed relates to 64
-
-    # Overall score (0-4)
-    alignment_score: int
-
-    # Interpretation
-    interpretation: str
-
-    @property
-    def is_aligned(self) -> bool:
-        """True if any alignment detected."""
-        return self.alignment_score > 0
-
-    @property
-    def is_perfectly_aligned(self) -> bool:
-        """True if all alignments detected."""
-        return self.alignment_score == 4
 
 
 # =============================================================================
@@ -407,7 +200,7 @@ def _compute_seed_cached(text: str) -> int:
 # MAHA COMPRESSION ENGINE
 # =============================================================================
 
-class MahaCompression:
+class MahaCompression(MahaCompressionProtocol):
     """
     Intent Engine for AI Agents.
 

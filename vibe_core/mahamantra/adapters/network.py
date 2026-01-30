@@ -53,9 +53,11 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0xa248b7a8"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
-from typing import Final, List, Optional, Tuple
-
+from vibe_core.mahamantra.protocols.network import (
+    MahaNetworkProtocol,
+    RouteResult,
+    RouterStats,
+)
 from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS, AKSARA_COUNT
 
 
@@ -69,30 +71,6 @@ IPV4_BITS: Final[int] = AKSARA_COUNT  # 32 bits = 32 syllables in Mahamantra!
 IPV4_LEVELS: Final[int] = IPV4_BITS // BITS_PER_LEVEL  # 8 levels = HARE_COUNT
 
 _MASK: Final[int] = (1 << QUARTERS) - 1  # 4-bit mask = 0xF
-
-
-# =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-@dataclass(frozen=True)
-class RouteResult:
-    """Result of a route lookup."""
-    ip: str
-    ip_int: int
-    next_hop: Optional[str]
-    matched_prefix: Optional[str]
-    matched_prefix_len: int
-    ops: int  # Number of operations (always 8 for IPv4)
-
-
-@dataclass(frozen=True)
-class RouterStats:
-    """Statistics for the router."""
-    routes: int
-    levels: int
-    bits_per_level: int
-    max_capacity: str  # e.g., "2^32 addresses"
 
 
 # =============================================================================
@@ -115,7 +93,7 @@ class _LotusNode:
 # LOTUS IPv4 ROUTER
 # =============================================================================
 
-class LotusIPRouter:
+class LotusIPRouter(MahaNetworkProtocol):
     """
     O(1) IPv4 Routing Table with Longest Prefix Match.
 

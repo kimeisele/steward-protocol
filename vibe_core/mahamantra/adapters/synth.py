@@ -69,9 +69,14 @@ __mahajana__ = "narada"
 __position__ = 3
 __genesis__ = "0x7382dc4f"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
-from typing import Any, Dict, Final, List, Optional, Tuple
-
+from vibe_core.mahamantra.protocols.synth import (
+    MahaSynthProtocol,
+    SynthParams,
+    StepResult,
+    CycleResult,
+    ResonanceResult,
+    SpectrumResult,
+)
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     WORDS,
@@ -124,70 +129,6 @@ FULL_CYCLE: Final[int] = (WORDS * SEVEN) // math.gcd(WORDS, SEVEN)  # 112
 
 
 # =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-@dataclass(frozen=True)
-class SynthParams:
-    """
-    Modular Synthesizer Parameters - ALL derived from Mahamantra.
-
-    These are the "knobs" you can turn on the synth.
-    """
-    mod_space: int = MAHA_QUANTUM  # 137 default
-    feedback: int = KSETRAJNA      # 1 default
-    phase_offset: int = 0
-    lfo_enabled: bool = True
-    lfo_rate: int = QUARTERS       # 4
-    adsr_attack: int = ADSR_ATTACK
-    adsr_decay: int = ADSR_DECAY
-    adsr_sustain: int = ADSR_SUSTAIN
-    adsr_release: int = ADSR_RELEASE
-    nibble_mode: bool = False
-
-
-@dataclass(frozen=True)
-class StepResult:
-    """Result of executing one step."""
-    position: int       # 1-16
-    name: str          # H, K, or R
-    quarter: int       # 1-4
-    input_value: int
-    output_value: int
-    operation: str     # Description of operation
-    observer_beat: int  # Which of the 7 beats observes this step
-
-
-@dataclass(frozen=True)
-class CycleResult:
-    """Result of a complete 16-step cycle."""
-    seed: int
-    final_value: int
-    steps: Tuple[StepResult, ...]
-    mod_space: int
-    preset: str
-
-
-@dataclass(frozen=True)
-class ResonanceResult:
-    """Result of resonance analysis (finding attractor)."""
-    seed: int
-    attractor: int
-    cycles_to_converge: int
-    cycle_length: int  # 1 = fixed point, >1 = periodic orbit
-    trajectory: Tuple[int, ...]
-
-
-@dataclass(frozen=True)
-class SpectrumResult:
-    """Harmonic spectrum analysis."""
-    mod_space: int
-    attractors: Tuple[int, ...]
-    attractor_names: Dict[int, str]  # Meaningful names for known attractors
-    convergence_map: Dict[int, int]  # seed -> attractor
-
-
-# =============================================================================
 # PRESETS
 # =============================================================================
 
@@ -229,7 +170,7 @@ def triangular(n: int) -> int:
 # MAHA SYNTH
 # =============================================================================
 
-class MahaSynth:
+class MahaSynth(MahaSynthProtocol):
     """
     16-Step Modular Sequencer.
 

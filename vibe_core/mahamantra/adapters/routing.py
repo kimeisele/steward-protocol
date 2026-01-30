@@ -46,8 +46,13 @@ __position__ = 3
 __genesis__ = "0x880e98bf"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from typing import Any, Final, Generic, Iterator, List, Optional, Tuple, TypeVar
+from typing import Any, Final, Generic, Iterator, List, Optional, Tuple, TypeVar, Dict
 
+from vibe_core.mahamantra.protocols.routing import (
+    MahaRoutingProtocol,
+    RouteEntry,
+    RangeResult,
+)
 from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     WORDS,
@@ -62,26 +67,6 @@ V = TypeVar('V')
 
 BITS_PER_NIBBLE: Final[int] = QUARTERS  # 4 bits
 SLOTS_PER_LEVEL: Final[int] = WORDS      # 16 slots
-
-
-# =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-@dataclass(frozen=True)
-class RouteEntry(Generic[V]):
-    """Single routing entry."""
-    key: int
-    value: V
-    depth: int  # Levels traversed
-
-
-@dataclass(frozen=True)
-class RangeResult(Generic[V]):
-    """Result of range query."""
-    entries: Tuple[RouteEntry[V], ...]
-    count: int
-    levels_visited: int
 
 
 # =============================================================================
@@ -179,7 +164,7 @@ class _LotusEngine16:
 # THE ADAPTER (Enterprise Interface)
 # =============================================================================
 
-class HolographicRouter(Generic[V]):
+class HolographicRouter(MahaRoutingProtocol[V]):
     """
     O(1) Holographic Key-Value Router.
 
@@ -326,7 +311,7 @@ class HolographicRouter(Generic[V]):
         """Iterate over all keys."""
         yield from self._engine.keys()
 
-    def stats(self) -> dict:
+    def stats(self) -> Dict[str, object]:
         """Get router statistics."""
         return {
             "levels": self.levels,
