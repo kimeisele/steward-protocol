@@ -223,13 +223,9 @@ class MahamantraCLIBridge:
         from vibe_core.mahamantra.cli.auto import cli_auto
 
         # =================================================================
-        # POSITION ROUTING - Siksastakam (O(1) cached) or fallback
+        # POSITION ROUTING - Direct routing (registry DELETED)
         # =================================================================
-        try:
-            from vibe_core.mahamantra.substrate.siksastakam_registry import route_to_position
-            position = route_to_position(command)
-        except Exception:
-            position = self.get_position(command)
+        position = self.get_position(command)
 
         # =================================================================
         # EXECUTION - cli_auto (has method matching)
