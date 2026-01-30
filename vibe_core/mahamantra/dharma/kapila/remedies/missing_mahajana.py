@@ -54,7 +54,7 @@ from typing import List, Optional, Sequence, Tuple
 
 import libcst as cst
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
 
 

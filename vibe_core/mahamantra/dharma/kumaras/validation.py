@@ -45,7 +45,7 @@ from typing import Callable, Dict, Final, List, Optional, Pattern, Protocol, Uni
 
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 
-from vibe_core.protocols.mahajanas.kumaras import (
+from vibe_core.mahamantra.dharma.kumaras.types import (
     PurifiableData,
     PurityLevel,
     PurificationResult,

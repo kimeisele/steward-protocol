@@ -19,7 +19,8 @@ __genesis__ = "0xa62f3594"  # GenesisByte: parampara % 37 == 0
 from typing import Optional, Type
 
 import libcst as cst
-from libcst.metadata import MetadataWrapper, PositionProvider
+from libcst.metadata import PositionProvider, MetadataWrapper
+from vibe_core.mahamantra.substrate.shuddhi import ShuddhiResult, ShuddhiStatus
 
 
 class CSTLocator(cst.CSTVisitor):
