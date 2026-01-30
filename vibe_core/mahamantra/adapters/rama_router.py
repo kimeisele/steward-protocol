@@ -49,11 +49,17 @@ class RamaPhoneticRouter:
         """
         phoneme = self.get_phoneme(rama_coord)
         
-        # Map specific phonemes to types
+        # Direct hit (e.g. vowels "a", "i", or simple consonants if mapped)
         if phoneme in PHONETIC_MAP:
             return PHONETIC_MAP[phoneme]
             
-        # Fallback logic if direct map misses (e.g. for rare vowels)
+        # Handle Sanskrit inherent 'a' (e.g. "kha" -> "kh")
+        if phoneme.endswith("a") and len(phoneme) > 1:
+            nucleus = phoneme[:-1]
+            if nucleus in PHONETIC_MAP:
+                return PHONETIC_MAP[nucleus]
+            
+        # Fallback logic if direct map misses
         # Verify resonance.py map covers all Rama Grid outputs
         return PhoneticClass.NULL
 
