@@ -254,14 +254,21 @@ def execute(command: str, args: Optional[List[str]] = None) -> Dict[str, Any]:
     """
     Execute command via Siksastakam Registry.
 
-    Flow:
+    DEPRECATED: This method uses naive string matching ("toy logic").
+    Use `mahamantra()` which employs Real Resonance (MahaCompression) + Polymorphism.
+
+    Flow (Legacy):
         1. route_to_position(command) → position (O(1) cached)
         2. get_null(position) → handler (O(1) cached)
         3. Call method → result (atomic)
-
-    NO discovery loops. NO runtime imports (after first call).
-    Full Siksastakam compliance.
     """
+    import warnings
+    warnings.warn(
+        "siksastakam_registry.execute() is DEPRECATED. Use vibe_core.mahamantra() for Real Resonance.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+
     args = args or []
 
     # 1. ROUTE (O(1) cached via LRU)

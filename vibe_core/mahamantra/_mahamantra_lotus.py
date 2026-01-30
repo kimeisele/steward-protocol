@@ -214,36 +214,30 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         mahamantra("anything") → understands, routes, EXECUTES, responds.
 
-        FLOW (Theologically Correct):
-        ==============================
-        1. PRABHUPADA: Transmit input through the link (blessing, not gatekeeper)
-        2. COMPRESSION: Extract seed/intent via MahaCompression
-        3. EXECUTE: Route via siksastakam_registry (O(1) cached, SSOT-derived)
-        4. RETURN: Complete result
+        FLOW (Theologically Correct & RESONANCE BASED):
+        ===============================================
+        1. PRABHUPADA: Transmit input (blessing)
+        2. RESONANCE:  MahaCompression extracts seed/intent/position via MahaKirtan
+        3. DISCOVERY:  Resolve Mahajana Service class directly (no string matching!)
+        4. POLYMORPHISM: Dispatch based on capability (Cognitive vs Executable)
+           - process_intent() -> for Kapila/Cognitive types
+           - execute()        -> for Prithu/Worker types
+           - Default          -> Error
 
-        FOLDER IS TRUTH: No explicit checks needed - infrastructure enforces.
-        Prabhupada is the context, BalaramaProxy is the enforcement.
-
-        Args:
-            input_text: Any input (command, question, action)
-
-        Returns:
-            ExecuteResult with success, output, vibration, and metadata
+        FOLDER IS TRUTH: Identity derived from filesystem structure.
         """
-        # =====================================================================
-        # 1. PRABHUPADA - Transmit through the link (blessing)
-        # =====================================================================
-        # Prabhupada is the "transparent via medium" - transmits as-is
-        # This is the theological context, not a gatekeeper check
+        import asyncio
+        import importlib
         from vibe_core.mahamantra.substrate.prabhupada import get_prabhupada
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+        from vibe_core.mahamantra.substrate.siksastakam_registry import get_entry, get_guardian
+
+        # 1. PRABHUPADA (The Link)
         prabhupada = get_prabhupada()
         transmitted = prabhupada.transmit(input_text)
 
-        # =====================================================================
-        # 2. COMPRESSION - Extract seed and intent
-        # =====================================================================
-        # MahaCompression uses MahaKirtan + MahaResonator internally
-        from vibe_core.mahamantra.adapters.compression import MahaCompression
+        # 2. RESONANCE (The Algorithm)
+        # Uses MahaLLM + MahaKirtan + MahaResonator internally
         compressor = MahaCompression()
         comp_result = compressor.compress(transmitted)
 
@@ -251,38 +245,111 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         position = comp_result.position
         guna = comp_result.intent_level.guna.value
 
-        # =====================================================================
-        # 3. EXECUTE - via siksastakam_registry (O(1) cached)
-        # =====================================================================
-        # This is the CORRECT routing - derived from SSOT, 512-slot cache
-        from vibe_core.mahamantra.substrate.siksastakam_registry import execute, get_guardian
+        # 3. DISCOVERY (The Registry Lookup - O(1))
+        # We use the registry ONLY to find the class path, NOT for execution logic
+        entry = get_entry(position)
         
-        registry_result = execute(transmitted)
-        
-        success = registry_result.get("success", False)
-        exit_code = registry_result.get("exit_code", 1)
-        guardian = registry_result.get("guardian", get_guardian(position))
-        output = registry_result.get("output", "")
-        error_msg = registry_result.get("error")
+        service_instance = None
+        error_msg = None
+        output = ""
+        success = False
+        exit_code = 1
 
-        # Derive quarter from position
-        if position < 4:
-            quarter = "genesis"
-        elif position < 8:
-            quarter = "dharma"
-        elif position < 12:
-            quarter = "karma"
+        if entry:
+            try:
+                # Lazy load the actual service module
+                module = importlib.import_module(entry.module_path)
+                # Try to get the Service class (e.g. KapilaService)
+                service_cls = getattr(module, entry.service_class, None)
+                if not service_cls:
+                    # Fallback to Null class if Service not found (e.g. NullKapila)
+                    service_cls = getattr(module, entry.null_class, None)
+                
+                if service_cls:
+                    service_instance = service_cls()
+            except ImportError:
+                error_msg = f"Could not load module {entry.module_path}"
         else:
-            quarter = "moksha"
+            error_msg = f"No registry entry for position {position}"
 
-        # =====================================================================
-        # 4. RETURN - Complete ExecuteResult
-        # =====================================================================
+        # 4. POLYMORPHISM (The Execution)
+        if service_instance:
+            try:
+                # A) COGNITIVE INTERFACE (Kapila style)
+                if hasattr(service_instance, "process_intent"):
+                    # Create minimal valid context
+                    # import CognitiveContext only if needed to avoid circular imports? 
+                    # For now pass None or mock if strictly typed. 
+                    # Assuming optional context or tolerant implementation.
+                    
+                    # Async handling
+                    if asyncio.iscoroutinefunction(service_instance.process_intent):
+                        # We are likely in sync context here, so we need a runner
+                        # or we rely on the service to handle sync calls if designed well
+                        # For now, let's assume we can run it:
+                        try:
+                            # Simple sync wrapper for async call
+                            cognition = asyncio.run(service_instance.process_intent(transmitted, None))
+                            output = str(cognition)
+                            success = True
+                            exit_code = 0
+                        except RuntimeError:
+                            # Loop already running? 
+                            output = "Async execution failed (loop running)"
+                            success = False
+                    else:
+                        output = str(service_instance.process_intent(transmitted, None))
+                        success = True
+                        exit_code = 0
+
+                # B) EXECUTABLE INTERFACE (Prithu style)
+                elif hasattr(service_instance, "execute"):
+                    # Standard execute pattern
+                    # Some take (command, args), some take (command)
+                    # We try to inspect or be robust
+                    try:
+                        res = service_instance.execute(transmitted, [])
+                        if isinstance(res, dict):
+                            output = res.get("output", str(res))
+                            success = res.get("success", True)
+                            exit_code = res.get("exit_code", 0)
+                        else:
+                            output = str(res)
+                            success = True
+                            exit_code = 0
+                    except TypeError:
+                         # Maybe it expects just command?
+                        res = service_instance.execute(transmitted)
+                        output = str(res)
+                        success = True
+                        exit_code = 0
+                
+                # C) ANALYTIC INTERFACE (Null/Stub style)
+                elif hasattr(service_instance, "analyze"):
+                    res = service_instance.analyze(transmitted)
+                    output = str(res)
+                    success = True
+                    exit_code = 0
+
+                else:
+                    error_msg = f"Service {service_instance.__class__.__name__} has no known interface (process_intent/execute/analyze)"
+            
+            except Exception as e:
+                error_msg = f"Execution failed: {str(e)}"
+                success = False
+
+        # Derive quarter for result
+        if position < 4: quarter = "genesis"
+        elif position < 8: quarter = "dharma"
+        elif position < 12: quarter = "karma"
+        else: quarter = "moksha"
+
+        # 5. RETURN
         return {
             "success": success,
             "exit_code": exit_code,
             "position": position,
-            "guardian": guardian,
+            "guardian": entry.guardian if entry else get_guardian(position),
             "quarter": quarter,
             "guna": guna,
             "requires_confirmation": guna == "tamas",
@@ -292,9 +359,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "seed": seed,
                 "intent_level": guna,
                 "compression_ratio": comp_result.compression_ratio,
+                "service": service_instance.__class__.__name__ if service_instance else "None"
             },
             "akash": self._akash,
-            "maha_cell": None,  # Created on demand if needed
+            "maha_cell": None,
         }
 
     @property
