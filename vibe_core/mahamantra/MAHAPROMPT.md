@@ -44,17 +44,19 @@ steward "Mache X. Was ist Y? Wann müssen wir wieder Z?"
 
 ---
 
-## SSOT HIERARCHY
+## ROUTING
 
+```python
+from vibe_core.mahamantra import mahamantra
+r = mahamantra("dein input")
+
+# r["position"]  → 0-15 (aus attractor % 16)
+# r["quarter"]   → genesis/dharma/karma/moksha
+# r["guardian"]  → wer zuständig
+# r["verse"]     → Gita-Kontext
 ```
-substrate/seed.py           # MAHAMANTRA tuple = QUELLE
-    ↓
-substrate/opcode.py         # 16 OpCodes + MAHAMANTRA_SEQUENCE (deriviert)
-    ↓
-kernel/singularity.py       # mahamantra Singleton
-    ↓
-services/nrisimha.py        # Chant (liest von opcode.py)
-```
+
+Alles weitere: `substrate/seed.py` lesen.
 
 ---
 
