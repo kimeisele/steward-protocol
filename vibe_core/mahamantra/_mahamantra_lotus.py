@@ -208,9 +208,63 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "output": f"Exit Code: {bridge_result.exit_code}"
         }
 
+    def __call__(self, input_text: str) -> Dict[str, object]:
+        """
+        THE ONE ENTRY POINT.
+
+        mahamantra("anything") → complete computed result
+        NO external LLM. Pure vibration → Gita verse matching.
+
+        Args:
+            input_text: Any input
+
+        Returns:
+            Dict with:
+                - vibration (seed, attractor, etc.)
+                - verse (matching Gita verse)
+                - chapter, position, guardian
+        """
+        # 1. Compute vibration
+        vibration = self._compute_vibration(input_text)
+        attractor = vibration.get("attractor", 0)
+
+        # 2. Get matching Gita verse (NO external LLM)
+        from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
+        from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+
+        verse_result = match_attractor(attractor)
+        chapter = get_gita_chapter(attractor)
+
+        # 3. Get guardian from position
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        position = vibration.get("attractor", 0) % 16
+        guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
+
+        # 4. Build response
+        verse_info = None
+        if verse_result.best_match:
+            v = verse_result.best_match
+            verse_info = {
+                "id": v.verse_id,
+                "chapter": v.chapter,
+                "verse": v.verse,
+                "guna": v.guna,
+                "dominant_name": v.dominant_name,
+            }
+
+        return {
+            "input": input_text,
+            "vibration": vibration,
+            "chapter": chapter,
+            "position": position,
+            "guardian": guardian,
+            "verse": verse_info,
+            "matches": len(verse_result.matches),
+        }
+
     @property
     def steward(self):
-        """Lazy access to the Steward resonance router."""
+        """Lazy access to the Steward resonance router (LEGACY - use __call__ instead)."""
         from vibe_core.mahamantra.cli.steward import get_steward
         return get_steward()
 
