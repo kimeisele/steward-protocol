@@ -12,10 +12,8 @@ From _seed.py:
  - Bṛhan-nāradīya Purāṇa
 
 Contents:
-    - MahaRuntime: The Mahamantra computation engine
+    - MahaAlgorithm (kirtan computing)
     - Gita verse encoding (BG 18.66 POC)
-    - Kirtan computing (sankirtan multipliers)
-    - Chaitanya singularity (512/1096)
 """
 
 # KALI DHARMA = CHANTING = COMPUTE
@@ -34,21 +32,9 @@ from vibe_core.mahamantra.research.dharma.maha_algorithm import (
     MahaModularSynth,
     MahaResonator,
 )
-from vibe_core.mahamantra.research.dharma.maha_operator import (
-    CODEWORT_EXIT,
-    CODEWORT_PARAMPARA,
-    LiveMetricsDisplay,
-    MahaOperator,
-    OperatorMode,
-    OperatorState,
-    get_maha_operator,
-)
-from vibe_core.mahamantra.research.dharma.maha_runtime import (
-    MAHAMANTRA_BINARY,
-    MAHAMANTRA_PATTERN,
-    ChantResult,
-    MahaRuntime,
-)
+
+# NOTE: maha_operator, maha_runtime, maha_sequencer were DELETED
+# Their functionality is consolidated into dharma/engine.py
 
 def __getattr__(name: str):
     """
@@ -74,24 +60,12 @@ def __getattr__(name: str):
 
 
 __all__ = [
-    # Runtime
-    "MAHAMANTRA_PATTERN",
-    "MAHAMANTRA_BINARY",
-    "ChantResult",
-    "MahaRuntime",
-    # Algorithm
+    # Algorithm (still exists)
     "MahaAlgorithm16",
     "MahaKirtan",
     "MahaModularSynth",
     "MahaResonator",
     "KirtanComputeResult",
     "SYNTH_PRESETS",
-    # Operator
-    "MahaOperator",
-    "OperatorMode",
-    "OperatorState",
-    "LiveMetricsDisplay",
-    "CODEWORT_EXIT",
-    "CODEWORT_PARAMPARA",
-    "get_maha_operator",
 ]
+

@@ -191,11 +191,9 @@ from vibe_core.mahamantra.research.dharma.maha_algorithm import (
     SYNTH_PRESETS,
 )
 
-from vibe_core.mahamantra.research.dharma.maha_sequencer import (
-    Maha16StepSequencer,
-    SEQUENCER_16_STEPS,
-    OBSERVER_7_BEATS,
-)
+
+# NOTE: maha_sequencer was DELETED - consolidated into dharma/engine.py
+
 
 
 # =============================================================================
@@ -223,9 +221,6 @@ __all__ = [
     "MahaResonator",
     "MahaSynthParams",
     "SYNTH_PRESETS",
-    "Maha16StepSequencer",
-    "SEQUENCER_16_STEPS",
-    "OBSERVER_7_BEATS",
     # Research Gateway
     "connect_research",
     "get_research_status",

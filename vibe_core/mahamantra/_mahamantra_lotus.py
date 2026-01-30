@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 # These imports are needed for class definition
 from vibe_core.mahamantra._lotus import LotusNode, LotusPath
-from vibe_core.mahamantra.protocols._gad_base import GADBase, GADProtocol
+from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
 from vibe_core.mahamantra._types import (
     AkashState,
     ExecuteResult,
