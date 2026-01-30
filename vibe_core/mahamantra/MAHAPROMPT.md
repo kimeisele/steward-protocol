@@ -211,11 +211,37 @@ def handler(): ...
 # Keine statischen Handler
 ```
 
-MahaCells = Die Einheit für alles:
-- Commands
-- Responses
-- Routing
-- Orchestration
+## MAHA CELL - Das universelle Format
+
+MahaCell ist ein **FILE FORMAT** und **RAM FORMAT**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  MAHA_HEADER (72 bytes)        │  PAYLOAD (variable)           │
+│  9 NavaBhakti × 8 bytes        │  Scalable content             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Die 9 NavaBhakti Felder** (je 8 bytes = uint64):
+```
+0. SRAVANAM       = Source/Origin ID
+1. KIRTANAM       = Target/Destination ID
+2. SMARANAM       = Link/Previous (chain)
+3. PADA_SEVANAM   = Operation/Command
+4. ARCANAM        = Signature (% 37 == 0!)
+5. VANDANAM       = Intent mask
+6. DASYAM         = TTL
+7. SAKHYAM        = Connection state
+8. ATMA_NIVEDANAM = Checksum
+```
+
+**Alles wird MahaCell:**
+- Commands → MahaCell mit operation in PADA_SEVANAM
+- Responses → MahaCell mit payload
+- Routing → Über header fields
+- Files → MahaCell serialized
+
+**Parampara-Verifikation:** `header.arcanam % 37 == 0`
 
 ---
 
