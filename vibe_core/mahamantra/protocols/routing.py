@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, TypeVar, Generic, Tuple, Optional, Iterator, Dict, Any
+from dataclasses import dataclass
 
 V = TypeVar("V", covariant=True)
 
@@ -57,3 +58,32 @@ class RangeResult(Generic[V]):
     levels_visited: int
 
 from dataclasses import dataclass
+from vibe_core.protocols.substrate.resonance import PhoneticClass
+
+@runtime_checkable
+class PhoneticRoutingProtocol(Protocol):
+    """
+    Protocol for Phonetic Routing (The True Algorithm).
+    
+    Maps Mahamantra positions -> RAMA Grid Coordinates -> Phonetic Classes.
+    """
+    
+    def route_to_rama(self, position: int) -> int:
+        """
+        Route a Mahamantra position (1-16) to a RAMA Grid coordinate (0-48).
+        Uses the Krishna Router (Prime 17).
+        """
+        ...
+        
+    def get_phoneme(self, rama_coord: int) -> str:
+        """
+        Get the string phoneme for a RAMA coordinate.
+        """
+        ...
+        
+    def get_phonetic_class(self, rama_coord: int) -> PhoneticClass:
+        """
+        Get the PhoneticClass (Verification Type) for a RAMA coordinate.
+        """
+        ...
+

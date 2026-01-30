@@ -27,27 +27,27 @@ CONSTANTS = {
     "RAMA": 49        # The Grid Size (Modulus)
 }
 
-# THE TARGETS (The "Observed Reality")
-# Position -> RAMA Grid Index of first letter
-# Verified against standard Sanskrit Varnamala:
-# 0-15 Vowels, 16-40 Consonants (ka-ma), 41-48 Antastha (ya-ha)
+# IMPL-PHONETIC-ROUTER: Use the Standard Adapter
+from vibe_core.mahamantra.adapters.rama_router import get_phonetic_router
+
+# Get the router service
+router = get_phonetic_router()
+
+# Build targets dynamically: (Position, RamaPrimary, Name)
+# We recreate the list using the Router's API
+# Note: We need the names. For this solver, we can fetch them from the Router
+# but the Router is currently pure numeric/phonetic.
+# So we import coordinates just for the names, but use Router for calculation.
+from vibe_core.mahamantra.substrate.rama_grid import MAHAJANA_COORDINATES, AVATARA_COORDINATES
+
+_ALL_COORDS = sorted(
+    MAHAJANA_COORDINATES + AVATARA_COORDINATES,
+    key=lambda c: c.global_position
+)
+
 TARGETS = [
-    (1, 44, "Vyasa"),       # va (44)
-    (2, 38, "Brahma"),      # ba (38)
-    (3, 35, "Narada"),      # na (35)
-    (4, 45, "Shambhu"),     # śa (45)
-    (5, 36, "Prithu"),      # pa (36)
-    (6, 16, "Kumaras"),     # ka (16)
-    (7, 16, "Kapila"),      # ka (16)
-    (8, 40, "Manu"),        # ma (40)
-    (9, 36, "Parashurama"), # pa (36)
-    (10, 36, "Prahlada"),   # pa (36)
-    (11, 23, "Janaka"),     # ja (23)
-    (12, 39, "Bhishma"),    # bha (39)
-    (13, 35, "Nrisimha"),   # na (35) - Nri starts with Na
-    (14, 38, "Bali"),       # ba (38)
-    (15, 45, "Shuka"),      # śa (45)
-    (16, 41, "Yamaraja"),   # ya (41)
+    (c.global_position, router.route_to_rama(c.global_position), c.name.capitalize())
+    for c in _ALL_COORDS
 ]
 
 def solve():
