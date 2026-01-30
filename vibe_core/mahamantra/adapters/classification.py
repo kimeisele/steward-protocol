@@ -62,9 +62,13 @@ __mahajana__ = "vyasa"
 __position__ = 3
 __genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
 from typing import Dict, Final, List, Literal, Optional, Union
 
+from vibe_core.mahamantra.protocols.classification import (
+    MahaClassificationProtocol,
+    ClassificationResult,
+    ComparisonResult,
+)
 from vibe_core.mahamantra.research.classification import (
     MAHAMANTRA_ADDRESS_SPACE,
     MAHAMANTRA_QUARTERS,
@@ -95,212 +99,6 @@ QUARTERS: Final[int] = MAHAMANTRA_QUARTERS  # 4
 ADDRESS_SPACE: Final[int] = MAHAMANTRA_ADDRESS_SPACE  # 65536
 PARAMPARA: Final[int] = PARAMPARA_PRIME  # 37
 
-
-# =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-
-@dataclass(frozen=True)
-class ClassificationResult:
-    """
-    Enterprise-friendly classification result.
-
-    Wraps the research Classification with additional convenience properties.
-    """
-
-    _inner: Classification
-
-    @property
-    def name(self) -> str:
-        """Technology name."""
-        return self._inner.name
-
-    @property
-    def verdict(self) -> str:
-        """Human-readable engineering verdict."""
-        return self._inner.get_engineering_verdict()
-
-    @property
-    def is_anukulya(self) -> bool:
-        """Is technology favorable (truth-aligned)?"""
-        return self._inner.is_anukulya
-
-    @property
-    def is_pratikulya(self) -> bool:
-        """Is technology unfavorable (fights truth)?"""
-        return self._inner.is_pratikulya
-
-    @property
-    def mercy_advantage(self) -> float:
-        """G value from Mercy Equation (higher = better)."""
-        return self._inner.mercy_advantage
-
-    @property
-    def chanting_frequency(self) -> float:
-        """f value - degree of Mahamantra structure usage."""
-        return self._inner.chanting_frequency
-
-    @property
-    def karmic_debt(self) -> float:
-        """K value - accumulated technical debt."""
-        return self._inner.karmic_debt
-
-    @property
-    def uses_mahamantra_structure(self) -> bool:
-        """Does this use Mahamantra-aligned structures?"""
-        return self._inner.uses_mahamantra_structure
-
-    @property
-    def is_o1_by_structure(self) -> bool:
-        """Is O(1) achieved through structure (not hashing)?"""
-        return self._inner.is_o1_by_structure
-
-    @property
-    def is_bounded(self) -> bool:
-        """Is memory usage bounded?"""
-        return self._inner.is_bounded
-
-    @property
-    def is_deterministic(self) -> bool:
-        """Is output always predictable?"""
-        return self._inner.is_deterministic
-
-    @property
-    def can_be_converted(self) -> bool:
-        """Can this be converted to use Mahamantra structures?"""
-        return self._inner.can_be_converted
-
-    @property
-    def is_golden_age_viable(self) -> bool:
-        """Will this survive into the Golden Age?"""
-        return is_golden_age_viable(self._inner)
-
-    # Metrics
-    @property
-    def key_space_size(self) -> int:
-        """Number of unique keys supported."""
-        return self._inner.key_space_size
-
-    @property
-    def max_memory_bytes(self) -> int:
-        """Maximum memory usage (-1 = unbounded)."""
-        return self._inner.max_memory_bytes
-
-    @property
-    def ops_per_second(self) -> float:
-        """Measured throughput."""
-        return self._inner.ops_per_second
-
-    @property
-    def speedup_vs_baseline(self) -> float:
-        """Speedup compared to standard dict/linear search."""
-        return self._inner.speedup_vs_baseline
-
-    # Classification values
-    @property
-    def alignment(self) -> str:
-        """Structural alignment level."""
-        return self._inner.alignment.name.lower()
-
-    @property
-    def complexity(self) -> str:
-        """Complexity source."""
-        return self._inner.complexity.value
-
-    @property
-    def memory(self) -> str:
-        """Memory model."""
-        return self._inner.memory.value
-
-    @property
-    def determinism(self) -> str:
-        """Determinism level."""
-        return self._inner.determinism.value
-
-    def to_dict(self) -> Dict[str, object]:
-        """Convert to dictionary for serialization."""
-        return {
-            "name": self.name,
-            "verdict": self.verdict,
-            "is_anukulya": self.is_anukulya,
-            "mercy_advantage": self.mercy_advantage,
-            "chanting_frequency": self.chanting_frequency,
-            "karmic_debt": self.karmic_debt,
-            "alignment": self.alignment,
-            "complexity": self.complexity,
-            "memory": self.memory,
-            "determinism": self.determinism,
-            "key_space_size": self.key_space_size,
-            "max_memory_bytes": self.max_memory_bytes,
-            "ops_per_second": self.ops_per_second,
-            "speedup_vs_baseline": self.speedup_vs_baseline,
-            "is_golden_age_viable": self.is_golden_age_viable,
-        }
-
-
-@dataclass(frozen=True)
-class ComparisonResult:
-    """Result of comparing multiple technologies."""
-
-    technologies: List[ClassificationResult]
-
-    @property
-    def best(self) -> ClassificationResult:
-        """Technology with highest mercy advantage."""
-        return max(self.technologies, key=lambda t: t.mercy_advantage)
-
-    @property
-    def worst(self) -> ClassificationResult:
-        """Technology with lowest mercy advantage."""
-        return min(self.technologies, key=lambda t: t.mercy_advantage)
-
-    @property
-    def anukulya_count(self) -> int:
-        """Number of favorable technologies."""
-        return sum(1 for t in self.technologies if t.is_anukulya)
-
-    @property
-    def pratikulya_count(self) -> int:
-        """Number of unfavorable technologies."""
-        return sum(1 for t in self.technologies if t.is_pratikulya)
-
-    @property
-    def golden_age_viable_count(self) -> int:
-        """Number of technologies viable for Golden Age."""
-        return sum(1 for t in self.technologies if t.is_golden_age_viable)
-
-    @property
-    def summary(self) -> str:
-        """Human-readable comparison summary."""
-        lines = [
-            "=" * 60,
-            "TECHNOLOGY COMPARISON",
-            "=" * 60,
-            "",
-            f"Total: {len(self.technologies)}",
-            f"ANUKULYA (favorable): {self.anukulya_count}",
-            f"PRATIKULYA (unfavorable): {self.pratikulya_count}",
-            f"Golden Age viable: {self.golden_age_viable_count}",
-            "",
-            "-" * 60,
-            "RANKING (by Mercy Advantage G):",
-            "-" * 60,
-        ]
-
-        sorted_tech = sorted(self.technologies, key=lambda t: -t.mercy_advantage)
-        for i, tech in enumerate(sorted_tech, 1):
-            status = "ANUKULYA" if tech.is_anukulya else "PRATIKULYA"
-            lines.append(f"{i}. {tech.name}: G={tech.mercy_advantage:.1f} [{status}]")
-
-        lines.append("")
-        lines.append(f"BEST: {self.best.name} (G={self.best.mercy_advantage:.1f})")
-        lines.append(f"WORST: {self.worst.name} (G={self.worst.mercy_advantage:.2f})")
-        lines.append("=" * 60)
-
-        return "\n".join(lines)
-
-
 # =============================================================================
 # TYPE ALIASES FOR CONVENIENCE
 # =============================================================================
@@ -316,7 +114,7 @@ DeterminismLiteral = Literal["always", "usually", "random", "chaotic"]
 # =============================================================================
 
 
-class MahaClassifier:
+class MahaClassifier(MahaClassificationProtocol):
     """
     Technology Classification Engine.
 

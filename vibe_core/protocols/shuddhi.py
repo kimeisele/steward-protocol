@@ -1,28 +1,23 @@
 """
-SHUDDHI PROTOCOL - USE MAHAMANTRA
-=================================
-
-DEPRECATED: This file is MAYA (illusion).
-
-USE THIS INSTEAD:
-    from vibe_core.mahamantra import mahamantra
-    mahamantra[5]  # → Position 5 (KUMARAS, RESOLVE_REQ, DHARMA)
-
-OR:
-    from vibe_core.protocols.mahajanas.kumaras import ShuddhiProtocolBase
+DEPRECATED: Use vibe_core.mahamantra import.
+SSOT PROXY: Redirects to vibe_core.mahamantra.substrate.shuddhi
 """
-
-# Re-export from canonical Mahajana location
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "kapila"
-__position__ = 6
-__genesis__ = "0x2601cafe"  # GenesisByte: parampara % 37 == 0
-
-from vibe_core.protocols.mahajanas.kumaras.shuddhi import (
-    ShuddhiProtocolBase,
+from vibe_core.mahamantra import (
+    ShuddhiProtocol,
     ShuddhiStatus,
     ShuddhiResult,
-    ShuddhiProtocol,
     RemedyProtocol,
-    NullShuddhi,
+    NullShuddhi
 )
+
+# Base is also needed for some imports
+from vibe_core.mahamantra.substrate.shuddhi import ShuddhiProtocolBase
+
+__all__ = [
+    "ShuddhiProtocol",
+    "ShuddhiStatus",
+    "ShuddhiResult",
+    "RemedyProtocol",
+    "NullShuddhi",
+    "ShuddhiProtocolBase",
+]

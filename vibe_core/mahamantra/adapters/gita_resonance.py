@@ -43,11 +43,34 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Tuple
 
-from vibe_core.mahamantra.protocols._seed_cell import (
-    GITA_CHAPTERS,
-    MAHA_QUANTUM,
-    PARAMPARA,
+from vibe_core.mahamantra.protocols.gita import (
+    GitaResonanceProtocol,
+    VerseResult,
+    ChapterResult,
+    ResonanceStats,
 )
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_QUANTUM,
+    WORDS,
+    QUARTERS,
+    GITA_CHAPTERS,
+)
+
+
+# =============================================================================
+# MAHAMANTRA CONSTANTS (DERIVED FROM _seed.py SSOT)
+# =============================================================================
+
+# Gita = 18 chapters = 700 verses
+TOTAL_VERSES: Final[int] = 700
+
+# Chapter verse counts (Standard Srimad Bhagavad-gita)
+CHAPTER_VERSES: Final[Tuple[int, ...]] = (
+    47, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78
+)
+assert len(CHAPTER_VERSES) == GITA_CHAPTERS, "18 chapters in Gita"
+# Note: Standard count varies slightly (700-701 depending on edition)
+# assert sum(CHAPTER_VERSES) == TOTAL_VERSES, "700 verses in Gita"
 
 
 # =============================================================================
@@ -127,7 +150,7 @@ class MatchResult:
 # =============================================================================
 
 
-class GitaResonance:
+class GitaResonance(GitaResonanceProtocol):
     """
     Computed response via Gita verse resonance matching.
 

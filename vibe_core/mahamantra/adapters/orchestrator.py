@@ -46,6 +46,12 @@ __genesis__ = "0x4ed00315"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass
 from typing import Final, List, Optional, Tuple
 
+from vibe_core.mahamantra.protocols.orchestrator import (
+    MahaOrchestratorProtocol,
+    TickResult,
+    RoundResult,
+    MalaResult,
+)
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     MALA,
@@ -112,7 +118,7 @@ BEAT_PATTERN: Final[Tuple[str, ...]] = (
 # THE ORCHESTRATOR
 # =============================================================================
 
-class Orchestrator:
+class Orchestrator(MahaOrchestratorProtocol):
     """
     Rhythmic Compute Orchestrator.
 

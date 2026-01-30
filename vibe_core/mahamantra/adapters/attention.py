@@ -62,9 +62,13 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x11aaa682"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
 from typing import Any, Callable, Dict, Final, List, Optional, Tuple
 
+from vibe_core.mahamantra.protocols.attention import (
+    MahaAttentionProtocol,
+    AttentionResult,
+    AttentionStats,
+)
 from vibe_core.mahamantra.adapters.hash import DeterministicHash
 from vibe_core.mahamantra.adapters.routing import HolographicRouter
 from vibe_core.mahamantra.protocols._seed import (
@@ -72,31 +76,6 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     WORDS,
 )
-
-
-# =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-@dataclass(frozen=True)
-class AttentionResult:
-    """Result of attention query."""
-    query: str
-    address: int
-    handler: Any
-    found: bool
-    ops_saved: int  # Estimated ops vs linear scan
-
-
-@dataclass(frozen=True)
-class AttentionStats:
-    """Statistics for attention mechanism."""
-    mechanism: str
-    address_space: int
-    registered_intents: int
-    queries_resolved: int
-    cache_hits: int
-    estimated_ops_saved: int
 
 
 # =============================================================================
@@ -115,7 +94,7 @@ LINEAR_SCAN_OPS_PER_INTENT: Final[int] = 10  # Compare, branch, etc.
 # MAHA ATTENTION
 # =============================================================================
 
-class MahaAttention:
+class MahaAttention(MahaAttentionProtocol[Any]):
     """
     O(1) Attention Mechanism for Agentic Routing.
 

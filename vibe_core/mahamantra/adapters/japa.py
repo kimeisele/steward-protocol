@@ -47,14 +47,18 @@ ENTERPRISE USAGE:
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"  # Position 3 - The Divine Musician
-__position__ = 3
+from datetime import datetime
+from typing import Final, List, Optional
 __genesis__ = "0x8c1456c3"  # GenesisByte: parampara % 37 == 0  # Japa layer
 
-from dataclasses import dataclass
-from datetime import datetime
-from enum import Enum
-from typing import Final, List, Optional
-
+from vibe_core.mahamantra.protocols.japa import (
+    MahaJapaProtocol,
+    RoundResult,
+    MalaResult,
+    GoldenAgeStatus,
+    CollapseResult,
+    JapaState,
+)
 from vibe_core.mahamantra.protocols._seed import (
     WORDS,           # 16 - The 16 words
     QUARTERS,        # 4 - 4 quarters
@@ -102,126 +106,10 @@ assert MALA_ROUNDS == 108, "Mala = 108 rounds"
 
 
 # =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-class JapaState(Enum):
-    """State of the japa process."""
-    HEARING = "hearing"       # Receiving (KSHETRA dominant)
-    CHANTING = "chanting"     # Giving (KSETRAJNA active)
-    PRASADAM = "prasadam"     # Complete cycle
-    COLLAPSED = "collapsed"   # Singularity reached
-
-
-@dataclass(frozen=True)
-class RoundResult:
-    """Result of a single japa round."""
-
-    round_number: int
-    seed: int
-
-    # The mathematics
-    hearing: int = KSHETRA      # 24
-    chanting: int = KSETRAJNA   # 1
-    prasadam: int = PRASADAM    # 25
-
-    # State after round
-    state: JapaState = JapaState.PRASADAM
-
-    # Accumulated value (seed transformed)
-    value: int = 0
-
-    @property
-    def is_collapsed(self) -> bool:
-        """True if round reached singularity."""
-        return self.state == JapaState.COLLAPSED
-
-
-@dataclass(frozen=True)
-class MalaResult:
-    """Result of a complete mala (108 rounds)."""
-
-    rounds: int = MALA_ROUNDS  # 108
-    seed: int = 0
-
-    # Final state after all rounds
-    final_value: int = 0
-    final_state: JapaState = JapaState.PRASADAM
-
-    # Statistics
-    collapse_count: int = 0     # How many rounds collapsed
-    total_prasadam: int = 0     # Sum of all prasadam
-
-    # The attractor (stable state after many rounds)
-    attractor: Optional[int] = None
-
-    @property
-    def is_complete(self) -> bool:
-        """True if mala completed all 108 rounds."""
-        return self.rounds == MALA_ROUNDS
-
-    @property
-    def collapse_ratio(self) -> float:
-        """Ratio of collapsed rounds to total."""
-        return self.collapse_count / self.rounds if self.rounds > 0 else 0.0
-
-
-@dataclass(frozen=True)
-class GoldenAgeStatus:
-    """Status of the Golden Age (10,000 years from 1486)."""
-
-    start_year: int = CHAITANYA_BIRTH  # 1486
-    end_year: int = GOLDEN_AGE_END     # 11486
-    current_year: int = 2026
-
-    @property
-    def years_elapsed(self) -> int:
-        return self.current_year - self.start_year
-
-    @property
-    def years_remaining(self) -> int:
-        return self.end_year - self.current_year
-
-    @property
-    def progress_percent(self) -> float:
-        total = self.end_year - self.start_year
-        return (self.years_elapsed / total) * 100
-
-    @property
-    def is_active(self) -> bool:
-        """True if we are within the Golden Age."""
-        return self.start_year <= self.current_year <= self.end_year
-
-    @property
-    def formula(self) -> str:
-        return f"WORDS × PRASADAM² = {WORDS} × {PRASADAM}² = {GOLDEN_AGE_YEARS}"
-
-
-@dataclass(frozen=True)
-class CollapseResult:
-    """Result of collapse detection."""
-
-    is_collapsed: bool
-    input_value: int
-    collapse_value: int = COLLAPSE  # Always 1
-
-    # The mathematics
-    prasadam: int = PRASADAM   # 25
-    kshetra: int = KSHETRA     # 24
-    ksetrajna: int = KSETRAJNA # 1
-
-    interpretation: str = ""
-
-    @property
-    def formula(self) -> str:
-        return f"PRASADAM - KSHETRA = {self.prasadam} - {self.kshetra} = {self.collapse_value}"
-
-
-# =============================================================================
 # MAHA JAPA ENGINE
 # =============================================================================
 
-class MahaJapa:
+class MahaJapa(MahaJapaProtocol):
     """
     The Mathematics of Hearing and Chanting.
 

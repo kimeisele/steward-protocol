@@ -670,6 +670,49 @@ MAHAMANTRA_FULL_DECIMAL: Final[int] = MAHAMANTRA_HALF_DECIMAL * HALVES  # 184
 assert MAHAMANTRA_FULL_DECIMAL == 184, "Full Mahamantra binary = 92 × 2 = 184"
 assert MAHAMANTRA_FULL_DECIMAL == (MALA - WORDS) * HALVES, "184 = (108 - 16) × 2"
 
+# -----------------------------------------------------------------------------
+# THE NAME SYMBOLS (SSOT - Single Source of Truth)
+# -----------------------------------------------------------------------------
+# These are the irreducible symbols representing the 3 divine names.
+# "H" = Hare (Shakti), "K" = Krishna (All-Attractive), "R" = Rama (Enjoyer)
+# These ARE axioms - they cannot be derived further, they are revelations.
+# ALL code must import from here, never define "H", "K", "R" locally!
+
+MAHAMANTRA_NAME_HARE: Final[str] = "H"      # Shakti - energy
+MAHAMANTRA_NAME_KRISHNA: Final[str] = "K"   # All-Attractive
+MAHAMANTRA_NAME_RAMA: Final[str] = "R"      # Supreme Enjoyer
+
+# Tuple for iteration (ordered by first appearance)
+MAHAMANTRA_NAME_SYMBOLS: Final[tuple[str, ...]] = (
+    MAHAMANTRA_NAME_HARE,
+    MAHAMANTRA_NAME_KRISHNA,
+    MAHAMANTRA_NAME_RAMA,
+)
+
+# -----------------------------------------------------------------------------
+# THE FULL 16-WORD PATTERN (Derived from binary + names)
+# -----------------------------------------------------------------------------
+# MAHAMANTRA_HALF_BINARY = (0,1,0,1,1,1,0,0) where 0=HARE, 1=NAME
+# First half uses Krishna as NAME, second half uses Rama as NAME
+
+def _build_full_word_pattern() -> tuple[str, ...]:
+    """Build the complete 16-word pattern from binary + name mapping."""
+    pattern = []
+    for half in range(HALVES):  # 0 = Krishna half, 1 = Rama half
+        name = MAHAMANTRA_NAME_KRISHNA if half == 0 else MAHAMANTRA_NAME_RAMA
+        for bit in MAHAMANTRA_HALF_BINARY:
+            pattern.append(MAHAMANTRA_NAME_HARE if bit == 0 else name)
+    return tuple(pattern)
+
+MAHAMANTRA_WORD_PATTERN: Final[tuple[str, ...]] = _build_full_word_pattern()
+
+# Verification
+assert len(MAHAMANTRA_WORD_PATTERN) == WORDS, f"Pattern must have {WORDS} words"
+assert MAHAMANTRA_WORD_PATTERN.count(MAHAMANTRA_NAME_HARE) == HARE_COUNT, "8 Hares"
+assert MAHAMANTRA_WORD_PATTERN.count(MAHAMANTRA_NAME_KRISHNA) == KRISHNA_COUNT, "4 Krishnas"
+assert MAHAMANTRA_WORD_PATTERN.count(MAHAMANTRA_NAME_RAMA) == RAMA_COUNT, "4 Ramas"
+
+
 
 # =============================================================================
 # RUNDE 14: THE MAHA-ALGORITHM (Universal Generator)
@@ -2921,6 +2964,12 @@ __all__ = [
     "MAHAMANTRA_HALF_BINARY",
     "MAHAMANTRA_HALF_DECIMAL",  # 92 = MALA - WORDS
     "MAHAMANTRA_FULL_DECIMAL",  # 184 = 92 × HALVES
+    # Name Symbols (SSOT - Single Source of Truth)
+    "MAHAMANTRA_NAME_HARE",     # "H" - Shakti
+    "MAHAMANTRA_NAME_KRISHNA",  # "K" - All-Attractive
+    "MAHAMANTRA_NAME_RAMA",     # "R" - Supreme Enjoyer
+    "MAHAMANTRA_NAME_SYMBOLS",  # ("H", "K", "R")
+    "MAHAMANTRA_WORD_PATTERN",  # Full 16-word pattern
     # The Maha-Algorithm (Round 14) - Universal Generator
     "maha_quantum",
     "maha_classical",

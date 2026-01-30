@@ -65,8 +65,6 @@ __mahajana__ = "narada"  # Position 3 - The Messenger
 __position__ = 3
 __genesis__ = "0x838708c8"  # GenesisByte: parampara % 37 == 0  # LLM layer
 
-from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any, Callable, Dict, Final, List, Optional, Union
 import hashlib
 
@@ -84,6 +82,15 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 
+from vibe_core.mahamantra.protocols.llm import (
+    MahaLLMProtocol,
+    RouteResult,
+    RegistrationResult,
+    RouterStats,
+    IntentCategory,
+)
+
+
 # =============================================================================
 # MAHAMANTRA CONSTANTS (DERIVED from _seed.py)
 # =============================================================================
@@ -93,29 +100,8 @@ ROUTING_OPS: Final[int] = QUARTERS            # Always 4 ops to route
 
 
 # =============================================================================
-# THE 16 INTENT CATEGORIES
+# CATEGORY KEYWORDS
 # =============================================================================
-
-class IntentCategory(Enum):
-    """The 16 primary intent categories mapped to WORDS."""
-
-    OBSERVE = 0      # Hare - Attention/Observation
-    CREATE = 1       # Krishna - Creation
-    CONNECT = 2      # Hare - Connection
-    ANALYZE = 3      # Krishna - Analysis
-    EXECUTE = 4      # Krishna - Action
-    TRANSFORM = 5    # Krishna - Transformation
-    INVOKE = 6       # Hare - Invocation
-    SUSTAIN = 7      # Hare - Sustenance
-    EXPAND = 8       # Hare - Expansion
-    INTEGRATE = 9    # Rama - Integration
-    VALIDATE = 10    # Hare - Validation
-    PROTECT = 11     # Rama - Protection
-    GUIDE = 12       # Rama - Guidance
-    SURRENDER = 13   # Rama - Surrender
-    COMPLETE = 14    # Hare - Completion
-    TRANSCEND = 15   # Hare - Transcendence
-
 
 # Category keywords for text classification
 CATEGORY_KEYWORDS: Dict[IntentCategory, List[str]] = {
@@ -160,73 +146,10 @@ class HolographicNode:
 
 
 # =============================================================================
-# RESULT TYPES
-# =============================================================================
-
-@dataclass(frozen=True)
-class RouteResult:
-    """Result of routing an intent."""
-
-    # The intent that was routed
-    intent_id: int
-
-    # The resolved agent/handler
-    agent: Optional[str] = None
-    handler: Optional[Callable] = None
-
-    # Routing metadata
-    category: Optional[IntentCategory] = None
-    category_name: str = ""
-
-    # Performance (always 4 for holographic)
-    ops: int = ROUTING_OPS
-
-    # Was a handler found?
-    found: bool = False
-
-    # The address breakdown (4 nibbles)
-    address: tuple = ()
-
-    @property
-    def is_routed(self) -> bool:
-        return self.found and self.agent is not None
-
-
-@dataclass(frozen=True)
-class RegistrationResult:
-    """Result of registering an agent."""
-
-    agent_name: str
-    intent_id: int
-    category: IntentCategory
-    success: bool = True
-    message: str = ""
-
-    @property
-    def address(self) -> str:
-        return f"0x{self.intent_id:04X}"
-
-
-@dataclass
-class RouterStats:
-    """Statistics about the router."""
-
-    total_agents: int = 0
-    agents_by_category: Dict[str, int] = field(default_factory=dict)
-    total_routes: int = 0
-    routes_found: int = 0
-    routes_missed: int = 0
-
-    @property
-    def hit_rate(self) -> float:
-        return self.routes_found / self.total_routes if self.total_routes > 0 else 0.0
-
-
-# =============================================================================
 # MAHA LLM - HOLOGRAPHIC INTENT ROUTER
 # =============================================================================
 
-class MahaLLM:
+class MahaLLM(MahaLLMProtocol):
     """
     Holographic Intent Router for AI Agents.
 
