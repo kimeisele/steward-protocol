@@ -281,8 +281,11 @@ def analyze_mahamantra_correlation() -> dict:
         stroke = TEENTAL_STROKES[i]
 
         # HARE = energy (bass?), NAME = identity (treble?)
-        is_hare = name == "H"
-        is_name = name in ("K", "R")
+        from vibe_core.mahamantra.protocols._seed import (
+            MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_RAMA
+        )
+        is_hare = name == MAHAMANTRA_NAME_HARE
+        is_name = name in (MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_RAMA)
 
         correlations.append(
             {
