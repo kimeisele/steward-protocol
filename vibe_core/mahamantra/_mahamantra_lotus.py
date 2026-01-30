@@ -208,91 +208,41 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "output": f"Exit Code: {bridge_result.exit_code}"
         }
 
-    def __call__(self, input_text: str) -> Dict[str, object]:
+    def __call__(self, input_text: str) -> ExecuteResult:
         """
-        THE KIRTAN RESONANCE CHAMBER.
+        THE ONE ENTRY POINT - SSOT.
 
-        mahamantra("anything") → routes through ALL systems:
+        mahamantra("anything") → understands, routes, EXECUTES, responds.
 
-        FLOW (Entry-Existence-Exit via MahaCell):
-        ==========================================
-        1. SRAVANAM (Entry):     MahaCompression → seed
-        2. KIRTANAM (Chanting):  MahaKirtan → vibration state (7-beat cycles)
-        3. SMARANAM (Memory):    MahaResonator → attractor (stable harmonic)
-        4. PADA_SEVANAM (Serve): MahaLLM → intent routing (16 categories, O(4))
-        5. ARCANAM (Worship):    GitaResonance → verse matching (700 verses)
-        6. VANDANAM (Prayer):    Shadow Reactor → Yajna cycle (BHOGA→PRASADAM)
-        7. DASYAM (Service):     MahaCell → 72-byte header + payload
-        8. SAKHYAM (Friendship): Aggregated result from all paths
-        9. ATMA_NIVEDANAM:       Complete surrender of computation
+        FLOW:
+        =====
+        1. VIBRATION: Input → Seed → Attractor (what frequency?)
+        2. INTENT:    MahaLLM routing (what action?)
+        3. EXECUTE:   CLI Bridge → Mahajana handler (DO IT!)
+        4. RESONATE:  Gita verse + guardian context (what wisdom?)
 
-        NO external LLM API calls. PURE COMPUTED RESONANCE.
-        Krishna routes through digital space - multi-path, not single chatbot.
+        This is NOT a chatbot. This is NOT analysis-only.
+        Krishna routes AND acts.
 
         Args:
-            input_text: Any input (text, command, question)
+            input_text: Any input (command, question, action)
 
         Returns:
-            Dict with complete resonance from ALL systems
+            ExecuteResult with success, output, vibration, and resonance data
         """
-        from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
-        from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
         from vibe_core.mahamantra.protocols._seed_core import WORDS
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
 
         # =====================================================================
-        # 1. SRAVANAM (Entry) - Compute vibration via MahaCompression + MahaKirtan
+        # 1. VIBRATION - Compute resonance state
         # =====================================================================
         vibration = self._compute_vibration(input_text)
         seed = vibration.get("seed", 0)
         attractor = vibration.get("attractor", 0)
-
-        # =====================================================================
-        # 2. KIRTANAM - MahaLLM Intent Routing (O(4) holographic)
-        # =====================================================================
-        intent_route = None
-        intent_category = None
-        try:
-            from vibe_core.mahamantra.adapters.llm import MahaLLM
-            llm = MahaLLM()
-            route_result = llm.route_text(input_text)
-            intent_route = {
-                "intent_id": route_result.intent_id,
-                "category": route_result.category_name,
-                "agent": route_result.agent,
-                "address": route_result.address,
-                "found": route_result.found,
-                "ops": route_result.ops,  # Always 4 (holographic guarantee)
-            }
-            intent_category = route_result.category_name
-        except Exception:
-            # Fallback if MahaLLM not available
-            intent_route = {"category": "UNKNOWN", "ops": 4}
-
-        # =====================================================================
-        # 3. SMARANAM - GitaResonance Verse Matching (700 verses indexed)
-        # =====================================================================
-        verse_result = match_attractor(attractor)
-        chapter = get_gita_chapter(attractor)
-
-        verse_info = None
-        if verse_result.best_match:
-            v = verse_result.best_match
-            verse_info = {
-                "id": v.verse_id,
-                "chapter": v.chapter,
-                "verse": v.verse,
-                "guna": v.guna,
-                "dominant_name": v.dominant_name,
-            }
-
-        # =====================================================================
-        # 4. PADA_SEVANAM - Position & Guardian (from Mahamantra substrate)
-        # =====================================================================
-        position = attractor % WORDS  # 0-15 position in Mahamantra
+        position = attractor % WORDS
         guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
 
-        # Determine quarter from position
+        # Quarter from position
         if position < 4:
             quarter = "genesis"
         elif position < 8:
@@ -302,119 +252,74 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         else:
             quarter = "moksha"
 
+        # Guna from quarter
+        guna_map = {"genesis": "tamas", "dharma": "sattva", "karma": "rajas", "moksha": "sattva"}
+        guna = guna_map.get(quarter, "sattva")
+
         # =====================================================================
-        # 5. ARCANAM - Shadow Reactor Yajna State (Bhoga-Prasadam cycle)
+        # 2. INTENT - Route via MahaLLM (O(4) holographic)
         # =====================================================================
-        yajna_state = None
+        intent_category = "UNKNOWN"
         try:
-            from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
-            factory = get_shadow_reactor_factory()
-            reactor = factory.spawn(auto_discover=False, initial_position=position)
-
-            # Get tick state for current position
-            tick_state = self.tick()
-
-            yajna_state = {
-                "phase": "BHOGA" if position < 8 else "PRASADAM",
-                "position": position,
-                "quarter": quarter,
-                "guardian": guardian,
-                "reactor_id": reactor.reactor_id,
-                "lagna": reactor.lagna,
-                "parampara_coherence": reactor.parampara_coherence,
-            }
+            from vibe_core.mahamantra.adapters.llm import MahaLLM
+            llm = MahaLLM()
+            route_result = llm.route_text(input_text)
+            intent_category = route_result.category_name if route_result.category else "UNKNOWN"
         except Exception:
-            # Fallback if Shadow Reactor not available
-            yajna_state = {
-                "phase": "BHOGA" if position < 8 else "PRASADAM",
-                "position": position,
-                "quarter": quarter,
-                "guardian": guardian,
-            }
+            pass
 
         # =====================================================================
-        # 6. VANDANAM - MahaCell Creation (72-byte header + payload)
+        # 3. EXECUTE - via CLI Bridge (THE ACTION!)
         # =====================================================================
-        maha_cell = None
+        from vibe_core.mahamantra.cli.bridge import cli_bridge
+
+        bridge_result = cli_bridge.route(input_text, [])
+
+        success = bridge_result.success
+        exit_code = bridge_result.exit_code
+        handler = bridge_result.handler or f"{guardian}@{position}"
+        error_msg = bridge_result.error
+
+        # Build output message
+        if success:
+            output = f"[{intent_category}] {guardian.upper()}@{position} → OK"
+        else:
+            output = f"[{intent_category}] {guardian.upper()}@{position} → FAILED: {error_msg or 'unknown'}"
+
+        # =====================================================================
+        # 4. RESONATE - Gita wisdom (optional enhancement)
+        # =====================================================================
+        verse_info = None
         try:
-            payload = input_text.encode("utf-8")
-            cell = MahaCell.create(
-                payload=payload,
-                source=seed,
-                target=attractor,
-                operation=position,
-                intent=vibration.get("parampara_channel", 0),
-                ttl=300,  # Daily cycles
-            )
-            maha_cell = {
-                "header_size": 72,  # NADI_RESONANCE
-                "payload_size": len(payload),
-                "total_size": cell.size,
-                "valid": cell.is_valid(),
-                "parampara_verified": cell.header.verify_parampara(),
-            }
+            from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
+            from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+
+            verse_result = match_attractor(attractor)
+            chapter = get_gita_chapter(attractor)
+
+            if verse_result.best_match:
+                v = verse_result.best_match
+                verse_info = f"BG.{v.chapter}.{v.verse} ({v.guna})"
+                output = f"{output} | {verse_info}"
         except Exception:
-            maha_cell = {"header_size": 72, "valid": False}
+            pass
 
         # =====================================================================
-        # 7. DASYAM - Maha Algorithm Transform (16-step)
-        # =====================================================================
-        algo_transform = None
-        try:
-            from vibe_core.mahamantra.research.dharma import MahaAlgorithm16
-            algo = MahaAlgorithm16()
-            transformed = algo.transform(seed)
-            classification = algo.classify(transformed)
-            algo_transform = {
-                "input_seed": seed,
-                "transformed": transformed,
-                "classification": classification,
-                "bits_512": algo.total_bits_512,
-                "bits_1096": algo.total_bits_1096,
-            }
-        except Exception:
-            algo_transform = {"input_seed": seed, "transformed": attractor}
-
-        # =====================================================================
-        # 8. SAKHYAM - Aggregated Result (all paths converge)
+        # 5. RETURN - Complete ExecuteResult
         # =====================================================================
         return {
-            # Input
-            "input": input_text,
-
-            # Core Vibration (MahaCompression + MahaKirtan)
-            "vibration": vibration,
-
-            # Intent Routing (MahaLLM - O(4) holographic)
-            "intent": intent_route,
-
-            # Gita Resonance (700 verses)
-            "chapter": chapter,
-            "verse": verse_info,
-            "matches": len(verse_result.matches),
-
-            # Mahamantra Position
+            "success": success,
+            "exit_code": exit_code,
             "position": position,
             "guardian": guardian,
             "quarter": quarter,
-
-            # Yajna State (Shadow Reactor)
-            "yajna": yajna_state,
-
-            # MahaCell (72-byte universal format)
-            "cell": maha_cell,
-
-            # Algorithm Transform (16-step)
-            "transform": algo_transform,
-
-            # ATMA_NIVEDANAM - Summary
-            "summary": {
-                "seed": seed,
-                "attractor": attractor,
-                "guna": verse_info.get("guna") if verse_info else "unknown",
-                "parampara_channel": vibration.get("parampara_channel", -1),
-                "oracle_validated": vibration.get("oracle_validated", False),
-            },
+            "guna": guna,
+            "requires_confirmation": guna == "tamas",
+            "output": output,
+            "error": error_msg,
+            "vibration": vibration,
+            "akash": self._akash,
+            "maha_cell": None,  # Created on demand if needed
         }
 
     @property
