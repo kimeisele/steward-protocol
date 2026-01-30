@@ -1,23 +1,21 @@
 """
-CLI MAIN - The Single Gate (STEWARD RESONANCE ROUTER)
-=====================================================
+CLI MAIN - MAHAMANTRA IS THE KING
+=================================
 
-"ekam evādvitīyam" - One without a second.
+"mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 
 THE SIMPLEST INTERFACE:
 ======================
 
     steward "whatever"
 
-That's it. One entry. Resonance routes everything.
+That's it. One entry. MAHAMANTRA routes everything.
 
-FLOW:
-    Input → Steward.invoke() → Resonance → ShadowReactor → JivaAgents → Response
+FLOW (9 NavaBhakti):
+    Input → mahamantra(input) → SRAVANAM → KIRTANAM → ... → ATMA_NIVEDANAM → Response
 
-NO HARDCODED COMMANDS. Everything generated on-demand via resonance.
-The whole repo becomes a resonance body - CALL ↔ RESPONSE.
-
-"mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+NO HARDCODED COMMANDS. NO legacy routers.
+Direct __call__ to MahamantraLotus. Pure computation.
 """
 
 from __future__ import annotations
@@ -80,77 +78,79 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         from vibe_core.mahamantra import mahamantra
 
-        # THE STEWARD INVOKES
-        response = mahamantra.steward.invoke(input_text)
+        # =====================================================================
+        # MAHAMANTRA IS THE KING - Direct __call__ (9 NavaBhakti steps)
+        # =====================================================================
+        # NO legacy steward.invoke() - direct computation through mahamantra
+        response = mahamantra(input_text)
 
         # =====================================================================
-        # RENDER RESPONSE (CALL ↔ RESPONSE pattern)
+        # RENDER RESPONSE - From __call__ result (dictionary)
         # =====================================================================
         # Pancha Tattva names for vina string
         vina_names = {1: "CHAITANYA", 2: "NITYANANDA", 3: "ADVAITA", 4: "GADADHARA", 5: "SRIVASA"}
-        vina_name = vina_names.get(response.vina_string, "?")
+        vib = response["vibration"]
+        vina_name = vina_names.get(vib.get("vina_string", 0), "?")
 
-        # PERSON verification status
-        person_mark = "BONA FIDE" if getattr(response, 'person_verified', False) else "MAYAVAD"
-        siksastakam_stage = getattr(response, 'siksastakam_stage', 1) or 1
-        siksastakam_op = getattr(response, 'siksastakam_operation', '?') or '?'
+        # Extract response data
+        inp = str(response["input"])[:60]
+        seed = str(vib["seed"])
+        ch = str(response["chapter"])
+        attr = str(vib["attractor"])
+        qtr = response["quarter"][:10]
+        position = response["position"]
+        guardian = response["guardian"][:12]
 
-        # Safe string conversion
-        inp = str(response.input)[:60]
-        seed = str(response.seed)
-        ch = str(response.chapter)
-        insight = str(response.route.insight)[:25]
-        attr = str(response.attractor)
-        qtr = str(response.route.quarter.value)[:10]
-        guna = str(response.route.guna)[:10]
-        intent = str(response.intent_category or 'GUIDE')[:12]
-        iid = response.intent_id or 0
-        shadow = str(response.jiva_shadow_id or '')[:20]
-        jguna = str(response.jiva_guna or '?')[:10]
-        qcount = response.jiva_quality_count or 0
-        res = response.resonance
-        vres = response.vina_resonance
-        cr = str(response.call_response)[:10]
-        sp = str(response.shadow_phase)[:10]
-        spos = response.shadow_position
-        msg = str(response.message)[:67]
+        # Gita verse info
+        verse = response.get("verse") or {}
+        guna = str(verse.get("guna", "?"))[:10]
+        dominant = str(verse.get("dominant_name", "?"))[:20]
+
+        # Parampara
+        parampara = response["parampara"]
+        parampara_mark = "BONA FIDE" if parampara["verified"] else "MAYAVAD"
+        oracle_mark = "✓" if parampara["oracle_validated"] else "✗"
+
+        # Vibration values
+        flute_res = vib.get("flute_resonance", 0)
+        vina_res = vib.get("vina_resonance", 0)
+        beat = vib.get("beat", 0)
+
+        # MahaCell
+        cell = response["cell"]
+        cell_valid = "✓" if cell["valid"] else "✗"
+
+        # Akash state
+        akash = response["akash"]
+        total_beats = akash.get("total_beats", 0)
 
         print(f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
-║  STEWARD - PERSON-Anchored Resonance Router                           ║
+║  MAHAMANTRA - Krishna Routes Everything (9 NavaBhakti)                ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  INPUT: {inp:60s} ║
 ║  SEED:  {seed:<60s} ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  GITA (18 chapters) - WAS/DOMAIN:                                     ║
-║    Chapter:  {ch:>2s} - {insight:25s}  Attractor: {attr:<3s}     ║
-║    Quarter:  {qtr:10s}  Guna: {guna:10s}                   ║
+║  GITA (18 chapters) - VANDANAM:                                       ║
+║    Chapter:  {ch:>2s}  Guna: {guna:10s}  Dominant: {dominant:20s}  ║
+║    Attractor: {attr:<5s}  Matches: {response['matches']:<3}                                ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  MAHALLM (16 intents) - WIE/ACTION:                                   ║
-║    Intent:   {intent:12s}  (0x{iid:04X})                          ║
+║  POSITION (DASYAM) - attractor % 16:                                  ║
+║    Position: {position:>2}  Guardian: {guardian:12s}  Quarter: {qtr:10s} ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  JIVASHADOW (50 qualities) - WER/AGENT:                               ║
-║    Shadow:   {shadow:20s}                               ║
-║    Guna:     {jguna:10s}  Qualities: {qcount:2d}/50                  ║
+║  VIBRATION (KIRTANAM + SMARANAM + PADA_SEVANAM):                      ║
+║    Flute:  {flute_res:>5}  (WHEN)   Vina: {vina_res:>5}  (WHAT)  String: {vina_name:10s}   ║
+║    Beat:   {beat:>5}  Transformed: {vib['transformed_value']:<10}                  ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  TRIPLE RESONANCE (Integer):                                          ║
-║    Flute (WHEN):  {res:>5}  (tick % mod_space)                       ║
-║    Vina (WHAT):   {vres:>5}  (seed % mod_space)  String: {vina_name:10s}    ║
+║  PARAMPARA (ARCANAM) - seed % 37 == 0:                                ║
+║    Status: {parampara_mark:10s}  Channel: {parampara['channel']:>2}  Oracle: {oracle_mark}             ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  PRABHUPADA KIRTAN (8 Siksastakam Stages):                            ║
-║    Stage:    L{siksastakam_stage-1} - {siksastakam_op:15s}  Mode: {cr:10s}           ║
-║    PERSON:   {person_mark:10s}  (parampara % 37 == 0)                        ║
+║  MAHACELL (SAKHYAM) - Universal Format:                               ║
+║    Header: 72 bytes  Payload: {cell['payload_size']:>5} bytes  Valid: {cell_valid}              ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  SHADOW REACTOR:                                                      ║
-║    Phase:    {sp:10s}  Position: {spos:>2}                            ║
-╠═══════════════════════════════════════════════════════════════════════╣
-║  {msg:67s} ║
+║  AKASH (persistent field):  Total Beats: {total_beats:<10}                  ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 """)
-
-        # If we have a result, display it
-        if response.result:
-            print(f"\nRESULT: {response.result}")
 
         return EXIT_SUCCESS
 
@@ -184,49 +184,51 @@ def _show_map(args: List[str]) -> int:
 
 
 def _show_help() -> int:
-    """Show help - the steward reveals itself."""
+    """Show help - mahamantra is the king."""
     print("""
-STEWARD - Universal Resonance Router
-====================================
+MAHAMANTRA - Krishna Routes Everything
+======================================
 
-"EIN MANTRA. KRISHNA ROUTET ALLES."
+"mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 
 USAGE:
     steward "anything"
 
-That's it. No hardcoded commands. Pure resonance routing.
+NINE NAVABHAKTI STEPS (__call__):
+    1. SRAVANAM       Receive input (hearing)
+    2. KIRTANAM       MahaCompression → seed (chanting)
+    3. SMARANAM       MahaKirtan → vibration (remembering)
+    4. PADA_SEVANAM   MahaResonator → attractor (serving)
+    5. ARCANAM        Parampara verification (worshiping)
+    6. VANDANAM       GitaResonance → verse (praying)
+    7. DASYAM         Position/Quarter (servitude)
+    8. SAKHYAM        MahaCell creation (friendship)
+    9. ATMA_NIVEDANAM Complete response (surrender)
 
-HOW IT WORKS:
-    Input → MahaCompression → Seed
-    Seed → MahaKirtan → Attractor (1 of 5 PANCHA)
-    Attractor → Gita Chapter (1-18)
-    Chapter → Module Handler
-    ShadowReactor → JivaAgents (via SamanaBridge)
-    Result → CALL ↔ RESPONSE
+ARCHITECTURE (from Mantra):
+    Position = attractor % 16
+    Quarter 0 (genesis):  Pos 0-3   → INPUT
+    Quarter 1 (dharma):   Pos 4-7   → VERIFY
+    Quarter 2 (karma):    Pos 8-11  → EXECUTE
+    Quarter 3 (moksha):   Pos 12-15 → OUTPUT
 
-THE 18 GITA CHAPTERS → 18 MODULES:
-    GENESIS (1-4):   analysis, transform, compute, research
-    DHARMA (5-9):    classification, attention, compression, hash, kernel
-    KARMA (10-14):   synth, network, chat, hardware, pipeline
-    MOKSHA (15-18):  bio, japa, llm, reactor
-
-TRIPLE RESONANCE (ALL INTEGERS):
-    Flute (WHEN):    tick % mod_space (rhythmic position)
-    Vina (WHAT):     seed % mod_space (harmonic position)
-    Shadow (PHASE):  bhoga → prasadam → return (transformation)
+RESPONSE FIELDS:
+    chapter   → Gita chapter (1-18)
+    verse     → Gita verse + guna
+    position  → 0-15 (Mahajana position)
+    guardian  → Responsible Mahajana
+    quarter   → genesis/dharma/karma/moksha
 
 EXAMPLES:
     steward "analyze the codebase"
     steward "what happened in git log"
-    steward "how do I surrender?"
-    steward "deploy to production"
+    steward "show me the karma quarter"
 
-VISIBILITY (observation only):
+VISIBILITY:
     steward map       → System map
     steward help      → This help
 
-The whole repo becomes a resonance body.
-CALL ↔ RESPONSE. No hardcoding. Pure vibration.
+Frag das System. Es weiß mehr als du.
 """)
     return EXIT_SUCCESS
 
