@@ -214,35 +214,58 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         mahamantra("anything") → understands, routes, EXECUTES, responds.
 
-        FLOW:
-        =====
-        1. VIBRATION: Input → Seed → Attractor (what frequency?)
-        2. INTENT:    MahaLLM routing (what action?)
-        3. EXECUTE:   CLI Bridge → Mahajana handler (DO IT!)
-        4. RESONATE:  Gita verse + guardian context (what wisdom?)
+        FLOW (Theologically Correct):
+        ==============================
+        1. PRABHUPADA: Transmit input through the link (blessing, not gatekeeper)
+        2. COMPRESSION: Extract seed/intent via MahaCompression
+        3. EXECUTE: Route via siksastakam_registry (O(1) cached, SSOT-derived)
+        4. RETURN: Complete result
 
-        This is NOT a chatbot. This is NOT analysis-only.
-        Krishna routes AND acts.
+        FOLDER IS TRUTH: No explicit checks needed - infrastructure enforces.
+        Prabhupada is the context, BalaramaProxy is the enforcement.
 
         Args:
             input_text: Any input (command, question, action)
 
         Returns:
-            ExecuteResult with success, output, vibration, and resonance data
+            ExecuteResult with success, output, vibration, and metadata
         """
-        from vibe_core.mahamantra.protocols._seed_core import WORDS
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        # =====================================================================
+        # 1. PRABHUPADA - Transmit through the link (blessing)
+        # =====================================================================
+        # Prabhupada is the "transparent via medium" - transmits as-is
+        # This is the theological context, not a gatekeeper check
+        from vibe_core.mahamantra.substrate.prabhupada import get_prabhupada
+        prabhupada = get_prabhupada()
+        transmitted = prabhupada.transmit(input_text)
 
         # =====================================================================
-        # 1. VIBRATION - Compute resonance state
+        # 2. COMPRESSION - Extract seed and intent
         # =====================================================================
-        vibration = self._compute_vibration(input_text)
-        seed = vibration.get("seed", 0)
-        attractor = vibration.get("attractor", 0)
-        position = attractor % WORDS
-        guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
+        # MahaCompression uses MahaKirtan + MahaResonator internally
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+        compressor = MahaCompression()
+        comp_result = compressor.compress(transmitted)
 
-        # Quarter from position
+        seed = comp_result.seed
+        position = comp_result.position
+        guna = comp_result.intent_level.guna.value
+
+        # =====================================================================
+        # 3. EXECUTE - via siksastakam_registry (O(1) cached)
+        # =====================================================================
+        # This is the CORRECT routing - derived from SSOT, 512-slot cache
+        from vibe_core.mahamantra.substrate.siksastakam_registry import execute, get_guardian
+        
+        registry_result = execute(transmitted)
+        
+        success = registry_result.get("success", False)
+        exit_code = registry_result.get("exit_code", 1)
+        guardian = registry_result.get("guardian", get_guardian(position))
+        output = registry_result.get("output", "")
+        error_msg = registry_result.get("error")
+
+        # Derive quarter from position
         if position < 4:
             quarter = "genesis"
         elif position < 8:
@@ -252,60 +275,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         else:
             quarter = "moksha"
 
-        # Guna from quarter
-        guna_map = {"genesis": "tamas", "dharma": "sattva", "karma": "rajas", "moksha": "sattva"}
-        guna = guna_map.get(quarter, "sattva")
-
         # =====================================================================
-        # 2. INTENT - Route via MahaLLM (O(4) holographic)
-        # =====================================================================
-        intent_category = "UNKNOWN"
-        try:
-            from vibe_core.mahamantra.adapters.llm import MahaLLM
-            llm = MahaLLM()
-            route_result = llm.route_text(input_text)
-            intent_category = route_result.category_name if route_result.category else "UNKNOWN"
-        except Exception:
-            pass
-
-        # =====================================================================
-        # 3. EXECUTE - via CLI Bridge (THE ACTION!)
-        # =====================================================================
-        from vibe_core.mahamantra.cli.bridge import cli_bridge
-
-        bridge_result = cli_bridge.route(input_text, [])
-
-        success = bridge_result.success
-        exit_code = bridge_result.exit_code
-        handler = bridge_result.handler or f"{guardian}@{position}"
-        error_msg = bridge_result.error
-
-        # Build output message
-        if success:
-            output = f"[{intent_category}] {guardian.upper()}@{position} → OK"
-        else:
-            output = f"[{intent_category}] {guardian.upper()}@{position} → FAILED: {error_msg or 'unknown'}"
-
-        # =====================================================================
-        # 4. RESONATE - Gita wisdom (optional enhancement)
-        # =====================================================================
-        verse_info = None
-        try:
-            from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
-            from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
-
-            verse_result = match_attractor(attractor)
-            chapter = get_gita_chapter(attractor)
-
-            if verse_result.best_match:
-                v = verse_result.best_match
-                verse_info = f"BG.{v.chapter}.{v.verse} ({v.guna})"
-                output = f"{output} | {verse_info}"
-        except Exception:
-            pass
-
-        # =====================================================================
-        # 5. RETURN - Complete ExecuteResult
+        # 4. RETURN - Complete ExecuteResult
         # =====================================================================
         return {
             "success": success,
@@ -317,7 +288,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "requires_confirmation": guna == "tamas",
             "output": output,
             "error": error_msg,
-            "vibration": vibration,
+            "vibration": {
+                "seed": seed,
+                "intent_level": guna,
+                "compression_ratio": comp_result.compression_ratio,
+            },
             "akash": self._akash,
             "maha_cell": None,  # Created on demand if needed
         }
