@@ -181,6 +181,23 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.substrate import samskara
         return getattr(samskara, name)
 
+    # === Grace & Tulasi (Research -> Production) ===
+    if name == "GraceProtocol":
+        from vibe_core.mahamantra.protocols.offering import GraceProtocol
+        return GraceProtocol
+
+    if name == "TulasiGate":
+        from vibe_core.mahamantra.adapters.tulasi_gate import TulasiGate
+        return TulasiGate
+
+    if name == "MahaModularSynth":
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+        return MahaModularSynth
+
+    if name == "OfferingPipeline":
+        from vibe_core.mahamantra.research.tulasi_lila import OfferingPipeline
+        return OfferingPipeline
+
     raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute '{name}'")
 
 
@@ -217,5 +234,7 @@ __all__ = [
     "NullShuddhi", "ShuddhiProtocolBase",
     "PhoenixConfig", "get_config", "reset_config", "set_config",
     "SamskaraProtocol", "Phase", "PhaseStatus", "PhaseResult", "PipelineContext", "PipelineExecutor",
+    # Tulasi
+    "TulasiGate", "GraceProtocol", "MahaModularSynth", "OfferingPipeline",
 ]
 
