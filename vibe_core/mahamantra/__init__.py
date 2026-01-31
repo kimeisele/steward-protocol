@@ -203,6 +203,10 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.research.tulasi_lila import OfferingPipeline
         return OfferingPipeline
 
+    if name == "MahaCluster":
+        from vibe_core.mahamantra.cluster import MahaCluster
+        return MahaCluster
+
     raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute '{name}'")
 
 
@@ -241,5 +245,7 @@ __all__ = [
     "SamskaraProtocol", "Phase", "PhaseStatus", "PhaseResult", "PipelineContext", "PipelineExecutor",
     # Tulasi
     "TulasiGate", "GraceProtocol", "MahaModularSynth", "OfferingPipeline",
+    # Architecture (Unified)
+    "MahaCluster",
 ]
 
