@@ -50,12 +50,12 @@ from vibe_core.mahamantra.orchestrator import (
     VAMSI_SHIFT,
     MURALI_SHIFT,
 )
-from vibe_core.mahamantra.cell import (
+from vibe_core.mahamantra.substrate.cell import (
     MahaCellUnified,
     CellLifecycleState,
     GENESIS_PRANA,
 )
-from vibe_core.mahamantra.cluster import MahaCluster
+from vibe_core.mahamantra.substrate.cluster import MahaCluster
 from vibe_core.mahamantra.substrate.registry import SiksastakamRegistry
 from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator

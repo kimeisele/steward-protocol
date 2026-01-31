@@ -19,8 +19,8 @@ __genesis__ = "0xc8e2b91a"
 from typing import List, Final
 
 from vibe_core.mahamantra.protocols._seed import WORDS
-from vibe_core.mahamantra.cell import MahaCellUnified
-from vibe_core.mahamantra.chamber import SankirtanChamber
+from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
 from vibe_core.mahamantra.adapters.compression import MahaCompression
 
 class MahaCellCLI:
