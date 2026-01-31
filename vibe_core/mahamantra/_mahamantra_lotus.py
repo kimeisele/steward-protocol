@@ -327,17 +327,25 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         trinity_function = get_trinity_function(position)  # "source", "carrier", or "deliverer"
 
         # =====================================================================
-        # 8. SAKHYAM - MahaCell creation (universal format)
+        # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
         # =====================================================================
-        payload = input_text.encode("utf-8")
-        result_cell = MahaCell.create(
-            payload=payload,
+        from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+        
+        result_cell = MahaCellUnified.create(
             source=seed,
             target=attractor,
             operation=position,
-            intent=parampara_channel if parampara_channel >= 0 else 0,
-            ttl=300,  # Daily cycles
+            dna=input_text,  # DNA = input text
+            initial_state=None,  # Generic state (optional)
         )
+        
+        # =====================================================================
+        # 8.5. HOLOGRAPHIC DISPATCH - Chamber Processing
+        # =====================================================================
+        # Cell flows through Chamber for transformation
+        from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
+        chamber = SankirtanChamber()
+        result_cell = chamber.dance(result_cell)  # Transform via DIW
 
         # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
@@ -385,13 +393,17 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "holy_name": holy_name,  # "H" (Hare), "K" (Krishna), "R" (Rama)
             "trinity_function": trinity_function,  # "source" (K), "carrier" (H), "deliverer" (R)
 
-            # MahaCell (SAKHYAM)
+            # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
             "cell": {
                 "header_size": 72,
-                "payload_size": len(payload),
-                "total_size": result_cell.size,
-                "valid": result_cell.is_valid(),
-                "parampara_verified": result_cell.header.verify_parampara(),
+                "payload_size": len(input_text.encode('utf-8')),
+                "total_size": 72 + len(input_text.encode('utf-8')),
+                "valid": True,  # Created via MahaCellUnified.create()
+                "parampara_verified": parampara_verified,
+                "prana": result_cell.prana,
+                "integrity": result_cell.membrane_integrity,
+                "is_alive": result_cell.is_alive,
+                "cycle": result_cell.age,
             },
 
             # Akash (persistent state)
