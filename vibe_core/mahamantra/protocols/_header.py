@@ -106,7 +106,7 @@ assert struct.calcsize(HEADER_STRUCT_FORMAT) == HEADER_SIZE_BYTES, "Struct size 
 # =============================================================================
 
 
-class HeaderField(IntEnum):
+class NavaBhaktiField(IntEnum):
     """
     The 9 NavaBhakti fields of the Maha Header.
 
@@ -126,7 +126,7 @@ class HeaderField(IntEnum):
 
 
 # Verification: Must have exactly NAVA fields
-assert len(HeaderField) == NAVA, f"Must have exactly {NAVA} fields"
+assert len(NavaBhaktiField) == NAVA, f"Must have exactly {NAVA} fields"
 
 
 # =============================================================================
@@ -160,7 +160,7 @@ class MahaHeader:
 
     def __post_init__(self) -> None:
         """Validate all fields fit in uint64."""
-        for field in HeaderField:
+        for field in NavaBhaktiField:
             value = getattr(self, field.name.lower())
             if not (0 <= value < 2**64):
                 raise ValueError(f"{field.name} must be uint64 (0 to 2^64-1), got {value}")
@@ -237,8 +237,8 @@ class MahaHeader:
             self.atma_nivedanam,
         )
 
-    def __getitem__(self, field: HeaderField) -> int:
-        """Get field by HeaderField enum."""
+    def __getitem__(self, field: NavaBhaktiField) -> int:
+        """Get field by NavaBhaktiField enum."""
         return getattr(self, field.name.lower())
 
     # =========================================================================
@@ -446,7 +446,7 @@ __all__ = [
     "HEADER_DAILY_CYCLES",
     "HEADER_STRUCT_FORMAT",
     # Enums
-    "HeaderField",
+    "NavaBhaktiField",
     # Classes
     "MahaHeader",
     "MahaCell",

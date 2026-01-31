@@ -445,7 +445,7 @@ class MahaLLM(MahaLLMProtocol):
         English → Vibration → Sanskrit (intermediate) → Position
         ALL DERIVED FROM _seed.py CONSTANTS!
         """
-        from vibe_core.mahamantra.research.shabda_translation import (
+        from vibe_core.mahamantra.substrate.phonetics import (
             text_to_vibration,
             SANSKRIT_PHONEME_MAP,
         )

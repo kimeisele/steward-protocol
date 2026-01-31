@@ -161,8 +161,8 @@ from vibe_core.mahamantra.research.ip_routing import LotusIPv4Router
 # DNA k-mer (production-ready)
 from vibe_core.mahamantra.research.dna_kmer import Lotus8merIndex, LotusKmerRadix
 
-# Classification
-from vibe_core.mahamantra.research.classification import (
+# Classification (Relocated to Substrate)
+from vibe_core.mahamantra.substrate.classifier import (
     classify_algorithm,
     Classification,
     StructuralAlignment,
@@ -186,10 +186,10 @@ from vibe_core.mahamantra.research_gateway import (
 # These are the most important from dharma/
 from vibe_core.mahamantra.research.dharma.maha_algorithm import (
     MahaModularSynth,
-    MahaResonator,
     MahaSynthParams,
     SYNTH_PRESETS,
 )
+from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
 
 
 # NOTE: maha_sequencer was DELETED - consolidated into dharma/engine.py
