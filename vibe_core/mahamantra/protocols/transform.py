@@ -1,4 +1,4 @@
-from typing import Protocol, runtime_checkable, List, Tuple, Dict, Optional, Any
+from typing import Protocol, runtime_checkable, List, Tuple, Dict, Optional
 from dataclasses import dataclass
 
 @runtime_checkable
