@@ -14,13 +14,8 @@ Every cell carries its 72-byte header and biological state.
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 """
 
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "prahlada"
-__position__ = 5
-__genesis__ = "0xb5c3a829"  # GenesisByte: parampara % 37 == 0
-
 from dataclasses import dataclass, field
-from typing import Final, ClassVar, Optional, Dict, Generic, TypeVar, Tuple
+from typing import Final, ClassVar, Optional, Dict, Generic, TypeVar, Tuple, Any
 import uuid
 
 from vibe_core.mahamantra.protocols._seed import (
@@ -43,6 +38,7 @@ from vibe_core.mahamantra.protocols._header import (
     NavaBhaktiField,
     HEADER_SIZE_BYTES,
 )
+from vibe_core.mahamantra.protocols.cell import MahaCellProtocol
 
 
 # =============================================================================
@@ -96,7 +92,7 @@ class CellLifecycleState:
 # =============================================================================
 
 @dataclass
-class MahaCellUnified(Generic[S]):
+class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
     """
     The Complete Computational Unit.
     
@@ -113,9 +109,6 @@ class MahaCellUnified(Generic[S]):
         MAX_AGE_CYCLES = JIVA_CYCLE = 432
         MITOSIS_THRESHOLD = MAHA_QUANTUM × 2 = 274
     """
-    
-    __mahajana__: ClassVar[str] = "prahlada"
-    __position__: ClassVar[int] = 5
     
     # Identity (immutable)
     header: MahaHeader
@@ -139,6 +132,11 @@ class MahaCellUnified(Generic[S]):
         """Unique cell ID."""
         return self._cell_id
     
+    @property
+    def state(self) -> Optional[S]:
+        """Current internal state (Observation)."""
+        return self.payload
+
     @property
     def prana(self) -> int:
         """Current energy level."""
@@ -211,7 +209,7 @@ class MahaCellUnified(Generic[S]):
         
         return self.lifecycle.prana
     
-    def signal(self, message: M) -> Optional[M]:
+    def signal(self, message: object) -> Optional[object]:
         """
         Process incoming signal via Membrane.
         
@@ -271,7 +269,7 @@ class MahaCellUnified(Generic[S]):
             state=self.header.sakhyam,
         )
         
-        child = MahaCellUnified[S](
+        child = MahaCellUnified[S, M](
             header=child_header,
             lifecycle=CellLifecycleState(
                 prana=half_prana,
@@ -314,7 +312,7 @@ class MahaCellUnified(Generic[S]):
     # INTERACTION METHODS (Branchless Sunya)
     # =========================================================================
     
-    def interact(self, visitor: "MahaCellUnified[S]") -> "MahaCellUnified[S]":
+    def interact(self, visitor: "MahaCellUnified[S, M]") -> "MahaCellUnified[S, M]":
         """
         Interact with a visitor cell.
         
@@ -471,7 +469,7 @@ class MahaCellUnified(Generic[S]):
         *,
         dna: str = "",
         initial_state: Optional[S] = None,
-    ) -> "MahaCellUnified[S]":
+    ) -> "MahaCellUnified[S, M]":
         """
         Create a new cell with auto-generated header.
         
@@ -506,7 +504,7 @@ class MahaCellUnified(Generic[S]):
         return cell
     
     @classmethod
-    def null(cls) -> "MahaCellUnified[None]":
+    def null(cls) -> "MahaCellUnified[None, None]":
         """
         Create a null/sentinel cell.
         

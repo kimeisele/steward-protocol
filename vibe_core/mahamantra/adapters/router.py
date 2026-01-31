@@ -21,11 +21,6 @@ SSOT ALIGNMENT:
     - Derived from _seed.py
 """
 
-# === MAHAJANA DECLARATION ===
-__mahajana__ = "narada"
-__position__ = 2
-__genesis__ = "0x91b2c3d4"
-
 from pathlib import Path
 from typing import Final, Optional
 
