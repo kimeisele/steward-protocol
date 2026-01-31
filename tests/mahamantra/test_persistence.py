@@ -77,7 +77,7 @@ class TestOrchestratorPersistence:
         assert orch.tick == 2
         
         data = orch.to_bytes()
-        assert len(data) == 16
+        assert len(data) == 24
         
         new_orch = VenuOrchestrator()
         new_orch.from_bytes(data)
