@@ -59,9 +59,9 @@ Each task file follows this format:
 | # | Task File | Status | Focus Area | Est. Time |
 |---|-----------|--------|------------|-----------|
 | 1 | `01_ROOT_FILES.md` | DONE | Root-level files (orchestrator, chamber, cell) | 1-2h |
-| 2 | `02_SUBSTRATE.md` | DONE | substrate/ folder (~20 files) | 2-3h |
-| 3 | `03_PROTOCOLS.md` | DONE | protocols/ folder (interfaces) | 2-3h |
-| 4 | `04_ADAPTERS.md` | DONE | adapters/ folder | 1-2h |
+| 2 | `02_SUBSTRATE.md` | PARTIAL | substrate/ core (seed, registry, nadi) | 2-3h |
+| 3 | `03_PROTOCOLS.md` | PARTIAL | protocols/ core (_seed, _sankirtan) | 2-3h |
+| 4 | `04_ADAPTERS.md` | PARTIAL | adapters/ core (compression, classification) | 1-2h |
 | 5 | `05_CLI.md` | DONE | cli/ folder | 2h |
 | 6 | `06_QUARTERS.md` | TODO | genesis/, dharma/, karma/, moksha/ | 3-4h |
 | 7 | `07_KERNEL.md` | TODO | kernel/ folder | 1-2h |
