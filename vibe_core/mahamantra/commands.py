@@ -42,6 +42,7 @@ def cli_chant(
     rounds: int = 1,
     verbose: bool = False,
     audio: bool = False,
+    dest: str = "", # phase 5
 ) -> ChantResult:
     """
     CLI Entry Point for Chant command.
@@ -53,12 +54,16 @@ def cli_chant(
 
     AUDIO SONIFICATION (Phase 4):
     - If audio=True, streams raw 16-bit PCM to stdout (Binary Output).
-    - Ignores verbose mode if audio is enabled (stdout is busy).
+    - Ignores verbose mode if audio is enabled.
+    
+    NETWORKED SANKIRTAN (Phase 5):
+    - If dest="host:port", streams cells to remote Vimana.
 
     Args:
         rounds: Number of complete cycles (default: 1)
         verbose: If True, print each tick
         audio: If True, stream PCM audio to stdout
+        dest: "host:port" address to stream to
 
     Returns:
         ChantResult with cycle results.
@@ -71,6 +76,8 @@ def cli_chant(
     from vibe_core.mahamantra.cell import MahaCellUnified
     from vibe_core.mahamantra.orchestrator import THE_FLUTE_CYCLE
     from vibe_core.mahamantra.sound.audio_engine import PranaSoundEngine
+    import asyncio
+    from vibe_core.mahamantra.net.vimana import VimanaClient
 
     # EPOCH LOCK CHECK (Boot validation - 1972 signature)
     if not SravanamCheck.validate_epoch_lock():
@@ -95,151 +102,104 @@ def cli_chant(
     # Initialize Audio Engine if requested
     sound_engine = PranaSoundEngine() if audio else None
     
-    # Create the Seed Cell (The Mantra itself)
-    seed_cell = MahaCellUnified.create(
-        source=0, target=1, operation=0, initial_state="Hare Krishna"
-    )
-
-    # Disable verbose output if streaming audio (binary clash)
-    if audio:
-        verbose = False
-        import sys
-        # Ensure stdout is in binary mode if possible, or warn user?
-        # In Python 3, sys.stdout.buffer.write() writes bytes.
-
-    if verbose:
-        print("=" * 60)
-        print("MAHAMANTRA CHANT - Sankirtan Chamber Active")
-        print("=" * 60)
-        print(f"Rounds: {rounds} | Ticks: {total_ticks}")
-        print("-" * 60)
-
-    for tick_num in range(total_ticks):
-        # Get tick state from Singularity clock
-        # (Note: For audio, we might want to ignore clock wait to stream fast?)
-        # For now, we respect the clock tick unless we are streaming?
-        # Actually, mahamantra.tick() is just a data generator, not a sleep().
-        tick_state = mahamantra.tick()
-
-        # Step 1: Dance (Transform Cell & Update Registry)
-        chamber.dance(seed_cell)
-        
-        # Step 1b: Audio Synthesis (Phase 4)
-        if sound_engine:
-            # We need the current DIW. 
-            # Note: dance() calls orchestrator.step() internally.
-            # But the orchestrator state is now advanced.
-            # We can get the *current* state from chamber or orchestrator?
-            # Orchestrator doesn't expose "last DIW" easily unless we inspect.
-            # Wait, VenuOrchestrator.step() returns the DIW.
-            # But chamber.dance() consumes it.
-            # We need to peek or get it from chamber metrics?
-            # Chamber accumulates DIW... that doesn't help for exact note.
-            # 
-            # FIX: We need access to the DIW used in this step.
-            # VenuOrchestrator.step() is the only source.
-            # We can't tap it easily without modifying Chamber or Orchestrator.
-            # 
-            # Alternative: Re-calculate it? 
-            # Or assume Chamber properties expose something?
-            # 
-            # Let's check VenuOrchestrator. It has `_prev_state`? Not helpful for full DIW.
-            # 
-            # Pragmatic Fix: 
-            # We will grab `chamber.tick` and calculate what the DIW *was*?
-            # No, Mode (feedback) affects DIW too.
-            # 
-            # HACK for Phase 4: 
-            # The AudioEngine will generate its OWN step if we just pass tick?
-            # No, that drifts from the logic.
-            # 
-            # Proper Fix: 
-            # The chamber should expose `last_diw`.
-            # But for now, let's look at `orchestrator.step()`.
-            # 
-            # Wait! `mahamantra.tick()` is likely unused by chamber logic itself.
-            # 
-            # Let's assume we can synthesis from the Chamber state.
-            # Actually, `sound_engine.stream(chamber)` was designed for this.
-            # But here we are in a loop controlling the steps.
-            # 
-            # Let's manually synthesize using orchestrator state?
-            # No, orchestrator state is post-step.
-            #
-            # STOP. The user wants "Do one thing well".
-            # If `audio=True`, the CLI should probably just call `sound_engine.stream(chamber)` 
-            # and yield bytes until rounds are done.
-            # But we need metrics too? 
-            # Let's keep the loop but synthesize explicitly.
-            # The issue is accessing the DIW.
-            #
-            # Let's peek at `orchestrator.py` again?
-            # Takes too long to verify.
-            # 
-            # Quickest path:
-            # Chamber dance *just happened*.
-            # The tick incremented.
-            # The DIW was generated.
-            # The Orchestrator allows `harmonize`. We can reconstruct the DIW if we know the values.
-            # `route(seed)` depends on input... which comes from Tick? No.
-            # 
-            # WAIT! The current logic uses `THE_FLUTE_CYCLE` for `guardian_name`.
-            # That's only the Venu (melody) part.
-            #
-            # Let's use `chamber._orchestrator.last_diw` if it existed.
-            # Since I cannot modify Chamber right now without context switch,
-            # I will use `chamber.tick - 1` to lookup Venu state,
-            # AND use `chamber._orchestrator.mode` for cluster bits.
-            # It's an approximation but sufficient for Sonification "Control Rate".
+    # Initialize Network Client
+    vimana_client = None
+    if dest:
+        try:
+            host, port = dest.split(":")
+            vimana_client = VimanaClient(host, int(port))
+        except ValueError:
+            print(f"Invalid destination format: {dest}. Use host:port")
+            return ChantResult(success=False, bhakti=NavaBhakti.KIRTANAM.value, rounds=0, ticks=0, final_position=0, final_guardian="", cycle_count=0, switch_count=0, parampara_connected=False)
+    
+    # Async Runner for Client
+    async def run_client_loop():
+        if vimana_client:
+            await vimana_client.connect()
             
-            # Reconstruct DIW approx: 
-            # Tick has advanced. So we look at tick-1.
-            t = (chamber.tick - 1) % WORDS # Is wait, tick is mod COSMIC_FRAME?
-            t = (chamber.tick - 1) 
-            prev_ven = THE_FLUTE_CYCLE[t % WORDS]
-            # We don't have full DIW (Vamsi, Murali are derived).
-            # But AudioEngine mainly uses Venu & Vamsi.
-            #
-            # OK, clean approach:
-            # Just generate "some" sound based on where we are.
-            # This is "Art" (Phase 4), not financial auditing.
-            # We will synth based on Chamber Tick.
-            
-            # Map tick to "Fake DIW" for audio
-            # We need to call sound_engine.synthesize(diw)
-            # We'll construct a synthetic DIW from current chamber state.
-            synth_diw = chamber._orchestrator.harmonize(
-                venu=t, # Use tick as seed approx
-                vamsi=t * 7,
-                murali=t % 16,
-                cluster_route=chamber._orchestrator.mode
-            )
-            pcm = sound_engine.synthesize(synth_diw)
-            sys.stdout.buffer.write(pcm)
-        
-        # Step 2: Metrics (Legacy)
-        current_diw = THE_FLUTE_CYCLE[chamber.tick % WORDS]
-        name_idx = (current_diw >> 16) & 0x3
-        guardian_name = ["HARE", "KRISHNA", "RAMA", "?"][name_idx]
-        
-        state = {
-            "position": chamber.tick % WORDS,
-            "guardian": guardian_name,
-            "phase": "kirtan",
-            "opcode": "TRANSFORM",
-            "resonance": chamber.resonance_count,
-            "transformations": chamber.total_transformations,
-            "active_cells": len(chamber.active_cells),
-        }
+        # Create the Seed Cell (The Mantra itself)
+        seed_cell = MahaCellUnified.create(
+            source=0, target=1, operation=0, initial_state="Hare Krishna"
+        )
+
+        nonlocal verbose
+        # Disable verbose output if streaming audio (binary clash)
+        if audio:
+            verbose = False
+            import sys
+            # Ensure stdout is in binary mode if possible, or warn user?
+            # In Python 3, sys.stdout.buffer.write() writes bytes.
 
         if verbose:
-            print(
-                f"[{tick_num:02d}] ~ {guardian_name:12s} | "
-                f"KIRTAN   | pos={state['position']:2d} | "
-                f"res={state['resonance']} | cells={state['active_cells']}"
-            )
+            print("=" * 60)
+            print("MAHAMANTRA CHANT - Sankirtan Chamber Active")
+            if dest:
+                print(f"Streaming to Vimana: {dest}")
+            print("=" * 60)
+            print(f"Rounds: {rounds} | Ticks: {total_ticks}")
+            print("-" * 60)
 
-        results.append(state)
+        for tick_num in range(total_ticks):
+            # Get tick state from Singularity clock
+            tick_state = mahamantra.tick()
+
+            # Step 1: Dance (Transform Cell & Update Registry)
+            transformed_cell = chamber.dance(seed_cell)
+            
+            # Step 1b: Audio Synthesis (Phase 4)
+            if sound_engine:
+                # Reconstruct DIW approx: 
+                # Tick has advanced. So we look at tick-1.
+                t = (chamber.tick - 1) 
+                # Map tick to "Fake DIW" for audio
+                # We'll construct a synthetic DIW from current chamber state.
+                synth_diw = chamber._orchestrator.harmonize(
+                    venu=t, # Use tick as seed approx
+                    vamsi=t * 7,
+                    murali=t % 16,
+                    cluster_route=chamber._orchestrator.mode
+                )
+                pcm = sound_engine.synthesize(synth_diw)
+                sys.stdout.buffer.write(pcm)
+                
+            # Step 1c: Network Transmission (Phase 5)
+            if vimana_client:
+                await vimana_client.send(transformed_cell)
+            
+            # Step 2: Metrics (Legacy)
+            current_diw = THE_FLUTE_CYCLE[chamber.tick % WORDS]
+            name_idx = (current_diw >> 16) & 0x3
+            guardian_name = ["HARE", "KRISHNA", "RAMA", "?"][name_idx]
+            
+            state = {
+                "position": chamber.tick % WORDS,
+                "guardian": guardian_name,
+                "phase": "kirtan",
+                "opcode": "TRANSFORM",
+                "resonance": chamber.resonance_count,
+                "transformations": chamber.total_transformations,
+                "active_cells": len(chamber.active_cells),
+            }
+
+            if verbose:
+                print(
+                    f"[{tick_num:02d}] ~ {guardian_name:12s} | "
+                    f"KIRTAN   | pos={state['position']:2d} | "
+                    f"res={state['resonance']} | cells={state['active_cells']}"
+                )
+
+            results.append(state)
+            
+        if vimana_client:
+            await vimana_client.close()
+
+    # Create loop and run
+    # If standard run, we just run_until_complete?
+    # Or create a new loop if none exists.
+    try:
+        asyncio.run(run_client_loop())
+    except KeyboardInterrupt:
+        pass
 
     if verbose:
         print("-" * 60)
@@ -264,6 +224,39 @@ def cli_chant(
         switch_count=chamber.total_transformations,
         parampara_connected=len(chamber.active_cells) > 0,
     )
+
+
+class VimanaServeResult(TypedDict):
+    """Result for Vimana Server."""
+    success: bool
+    host: str
+    port: int
+
+def cli_vimana_serve(
+    port: int = 10800,
+    host: str = "0.0.0.0",
+) -> VimanaServeResult:
+    """
+    Start Vimana Server.
+    
+    Args:
+        port: Port to listen on (default 10800)
+        host: Host to bind (default 0.0.0.0)
+    """
+    import asyncio
+    from vibe_core.mahamantra.net.vimana import VimanaServer
+    from vibe_core.mahamantra.chamber import SankirtanChamber
+    
+    print(f"VIMANA SERVE - Listening on {host}:{port}")
+    chamber = SankirtanChamber.create()
+    server = VimanaServer(host, port, chamber)
+    
+    try:
+        asyncio.run(server.serve_forever())
+    except KeyboardInterrupt:
+        print("\nVimana Server Stopped.")
+        
+    return VimanaServeResult(success=True, host=host, port=port)
 
 
 # =============================================================================
