@@ -97,9 +97,10 @@ From folder listing:
 - `kama/shuka/` - what is kama? (not a standard quarter)
 
 Investigate:
-- [ ] Why is janaka in dharma/ if position is 10?
-- [ ] What is dharma/components/?
-- [ ] What is kama/ folder?
+- [x] Why is janaka in dharma/ if position is 10? (Anomaly: legacy artifact)
+- [x] What is dharma/components/? (Internal implementation of DharmaEngine)
+- [x] What is kama/ folder? (Experimental shuka-related dev)
+- [x] **Research Leakage**: `research/dharma/` contained `maha_algorithm.py` which was THE core. Promoted to `substrate/mantra/`. ✓
 
 ---
 

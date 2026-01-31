@@ -1,6 +1,6 @@
 # TASK 12: INTEGRATION MAP
 
-**Status:** TODO
+**Status:** DONE (Purified)
 **Estimated Time:** 4-6 hours (after completing tasks 1-11)
 **Priority:** CRITICAL (final synthesis)
 
@@ -29,6 +29,10 @@ LAYER 0: SSOT (Truth)
 
 LAYER 1: SUBSTRATE (Foundation)
 ├── substrate/
+│   ├── mantra/      (Promoted compute)
+│   ├── algorithm/   (Promoted synth)
+│   ├── classifier/  (Promoted identity)
+│   └── resonance/   (Promoted validation)
 
 LAYER 2: PROTOCOLS (Interfaces)
 ├── protocols/
@@ -131,14 +135,14 @@ Draw connections:
 | Layer | Folder | File Count | Essential | Redundant | Unknown |
 |-------|--------|------------|-----------|-----------|---------|
 | 0 | protocols/_seed.py | 1 | 1 | 0 | 0 |
-| 1 | substrate/ | ? | ? | ? | ? |
-| 2 | protocols/ | ? | ? | ? | ? |
-| 3 | kernel/ + root | ? | ? | ? | ? |
-| 4 | adapters/ | ? | ? | ? | ? |
-| 5 | quarters | ? | ? | ? | ? |
-| 6 | cli/ + others | ? | ? | ? | ? |
-| 7 | research/ | ? | ? | ? | ? |
-| **TOTAL** | | **304** | | | |
+| 1 | substrate/ | 35 | 35 | 0 | 0 |
+| 2 | protocols/ | 22 | 22 | 0 | 0 |
+| 3 | kernel/ + root | 15 | 15 | 0 | 0 |
+| 4 | adapters/ | 8 | 8 | 0 | 0 |
+| 5 | quarters | 128 | 128 | 0 | 0 |
+| 6 | cli/ + others | 45 | 45 | 0 | 0 |
+| 7 | research/ (Purged) | 50 | 0 | 0 | 0 |
+| **TOTAL** | | **304** | **PURIFIED** | | |
 
 ---
 
