@@ -11,11 +11,6 @@ Pattern:
     CLI Args -> Compression -> MahaCell -> Chamber -> Result -> Console
 """
 
-# === MAHAJANA DECLARATION ===
-__mahajana__ = "arjuna"
-__position__ = 2
-__genesis__ = "0xc8e2b91a"
-
 from typing import List, Final
 
 from vibe_core.mahamantra.protocols._seed import WORDS
