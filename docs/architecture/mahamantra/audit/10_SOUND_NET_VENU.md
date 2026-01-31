@@ -87,24 +87,24 @@ How does venu/ relate to root orchestrator.py?
 
 ### sound/
 ```
-Files:
-Purpose:
-VERDICT:
+Files: audio_engine.py
+Purpose: Sonification of mahamantra state (Phase 4).
+VERDICT: [x] Essential
 ```
 
 ### net/
 ```
-Files:
-Purpose:
-VERDICT:
+Files: vimana.py
+Purpose: Network transport for distributed chanting (Phase 5).
+VERDICT: [x] Essential
 ```
 
 ### venu/
 ```
-Files:
-Purpose:
-Relation to orchestrator.py:
-VERDICT:
+Files: clock.py, tick.py, voice.py
+Purpose: Modular engines for root VenuOrchestrator.
+Relation to orchestrator.py: Provides the underlying Tick and Voice logic.
+VERDICT: [x] Essential
 ```
 
 ---

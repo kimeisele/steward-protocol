@@ -73,9 +73,13 @@ ls -la /Users/ss/projects/steward-protocol/vibe_core/mahamantra/protocols/sankal
 - [x] NO research imports? ✓
 - [x] Uses substrate components for implementation? ✓
 
-### OTHER _*.py FILES
+### OTHER _*.py FILES (discover during audit)
+- [ ] _core.py - Core protocol definitions?
 - [x] _pancha.py - PanchaTattvaProtocol?
+- [ ] _lila.py - LilaBoundary, LilaPhase?
 - [x] _gad.py - GAD compliance?
+- [ ] _blueprint.py - StandardBlueprint?
+- [ ] routing.py - PhoneticRoutingProtocol?
 - [x] _seed.py - SSOT verified? ✓
 
 ---

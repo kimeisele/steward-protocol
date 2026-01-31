@@ -93,7 +93,7 @@ For each file, answer:
 ### __init__.py
 ```
 VERDICT: [x] Essential [ ] Redundant [ ] Unknown
-NOTES: Critical facade. Implements the "Siksastakam Architecture" (Pure Lazy Loading). Purified of research dependencies. ✓
+NOTES: Critical facade. Implements the "Siksastakam Architecture" (Pure Lazy Loading). Import time optimization (<20ms). Purified of research dependencies. ✓
 ```
 
 ### __main__.py
@@ -111,7 +111,7 @@ NOTES: Core infrastructure for the "Lotus" pattern (Directory-as-Object auto-dis
 ### _mahamantra_lotus.py
 ```
 VERDICT: [x] Essential [ ] Redundant [ ] Unknown
-NOTES: The Root Object. Implements `__call__` (The Mantra), `vibrate`, `tick`. Purified: Now uses `substrate.mantra` instead of experimental research logic. ✓
+NOTES: The Root Object. Implements `__call__` (The Mantra), `vibrate`, `tick`. Separated from `_lotus.py` to keep `__init__.py` clean. Purified: Now uses `substrate.mantra` instead of experimental research logic. ✓
 ```
 
 ### _types.py

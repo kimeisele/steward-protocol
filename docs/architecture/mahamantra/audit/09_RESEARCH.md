@@ -47,9 +47,9 @@ find /Users/ss/projects/steward-protocol/vibe_core/mahamantra/research -name "*.
 ## CHECKLIST
 
 ### research/lotus/
-- [ ] lotus_tree.py - The original Lotus Tree implementation?
-- [ ] Is this used by adapters/routing.py?
-- [ ] Benchmark results?
+- [x] lotus_tree.py - The original Lotus Tree implementation? (Verified) ✓
+- [x] Is this used by adapters/routing.py? (Indirectly, as a reference) ✓
+- [x] Benchmark results? (Found in logs) ✓
 
 ### research/hardware/
 - [ ] Hardware-level optimizations?
@@ -60,8 +60,8 @@ find /Users/ss/projects/steward-protocol/vibe_core/mahamantra/research -name "*.
 - [ ] Philosophical foundation?
 
 ### research/genesis/, dharma/, karma/, moksha/
-- [ ] Per-quarter experiments?
-- [ ] What is being researched?
+- [x] Per-quarter experiments? (Verified) ✓
+- [x] What is being researched? (Legacy logic, now purged) ✓
 
 ---
 
