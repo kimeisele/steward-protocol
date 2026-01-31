@@ -303,6 +303,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             get_name_at_position, get_trinity_function,
         )
 
+        # Position from attractor (holographic - embedded in computation)
         position = attractor % WORDS  # 0-15
 
         if position < 4:
