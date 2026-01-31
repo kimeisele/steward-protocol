@@ -7,8 +7,9 @@ Verifies TCP Transport Layer for Cell Transmission.
 
 import pytest
 import asyncio
-from vibe_core.mahamantra.cell import MahaCellUnified
-from vibe_core.mahamantra.chamber import SankirtanChamber
+from vibe_core.mahamantra.net.vimana import VimanaServer, VimanaClient
+from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
 from vibe_core.mahamantra.net.vimana import VimanaServer, VimanaClient
 
 PORT = 10888 # Test port

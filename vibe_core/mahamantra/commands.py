@@ -72,8 +72,8 @@ def cli_chant(
     from vibe_core.mahamantra import mahamantra
     from vibe_core.mahamantra.substrate.seed import WORDS
     from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
-    from vibe_core.mahamantra.chamber import SankirtanChamber
-    from vibe_core.mahamantra.cell import MahaCellUnified
+    from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
+    from vibe_core.mahamantra.substrate.cell import MahaCellUnified
     from vibe_core.mahamantra.orchestrator import THE_FLUTE_CYCLE
     from vibe_core.mahamantra.sound.audio_engine import PranaSoundEngine
     import asyncio
@@ -245,7 +245,7 @@ def cli_vimana_serve(
     """
     import asyncio
     from vibe_core.mahamantra.net.vimana import VimanaServer
-    from vibe_core.mahamantra.chamber import SankirtanChamber
+    from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
     
     print(f"VIMANA SERVE - Listening on {host}:{port}")
     chamber = SankirtanChamber.create()

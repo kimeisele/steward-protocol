@@ -14,8 +14,8 @@ import struct
 import logging
 from typing import Optional, Callable, Awaitable
 
-from vibe_core.mahamantra.cell import MahaCellUnified
-from vibe_core.mahamantra.chamber import SankirtanChamber
+from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
 
 logger = logging.getLogger("vimana")
 

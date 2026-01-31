@@ -12,20 +12,20 @@ WATERTIGHT TESTS:
 
 import pytest
 
-from vibe_core.mahamantra.cell import (
-    MahaCellUnified,
-    CellLifecycleState,
-    GENESIS_PRANA,
-    METABOLIC_COST,
-    MITOSIS_THRESHOLD,
-    MAX_AGE_CYCLES,
-)
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     TRINITY,
     PARAMPARA,
     JIVA_CYCLE,
     JIVA_QUALITIES,
+)
+from vibe_core.mahamantra.substrate.cell import (
+    MahaCellUnified,
+    CellLifecycleState,
+    GENESIS_PRANA,
+    METABOLIC_COST,
+    MAX_AGE_CYCLES,
+    MITOSIS_THRESHOLD,
 )
 from vibe_core.mahamantra.protocols._header import (
     MahaHeader,
