@@ -1,0 +1,586 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.3, pytest-8.4.1, pluggy-1.6.0
+rootdir: /Users/ss/projects/steward-protocol
+configfile: pyproject.toml
+plugins: anyio-4.9.0, asyncio-1.1.0, timeout-2.4.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+timeout: 120.0s
+timeout method: signal
+timeout func_only: False
+collected 37 items
+
+tests/mahamantra/adapters/test_pipeline.py ............FFFF...FFFFFFFFFF.....FFF
+
+=================================== FAILURES ===================================
+__________________ TestDharmaPhase.test_dharma_returns_result __________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestDharmaPhase object at 0x10ed23c50>
+
+    def test_dharma_returns_result(self):
+        """Dharma phase should return DharmaResult."""
+        pipeline = MahamantraPipeline()
+>       result = pipeline.dharma(42)
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f59f410>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+_____________ TestDharmaPhase.test_dharma_output_in_quantum_space ______________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestDharmaPhase object at 0x10ed23d90>
+
+    def test_dharma_output_in_quantum_space(self):
+        """Dharma output should be in [0, MAHA_QUANTUM)."""
+        pipeline = MahamantraPipeline()
+>       result = pipeline.dharma(42)
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f5b2470>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+_________________ TestDharmaPhase.test_dharma_finds_attractor __________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestDharmaPhase object at 0x10ed4fa80>
+
+    def test_dharma_finds_attractor(self):
+        """Dharma should find an attractor."""
+        pipeline = MahamantraPipeline()
+>       result = pipeline.dharma(42)
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f5b3020>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+________________ TestDharmaPhase.test_dharma_quarter_is_dharma _________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestDharmaPhase object at 0x10ed4fbb0>
+
+    def test_dharma_quarter_is_dharma(self):
+        """Dharma result should have DHARMA quarter."""
+        pipeline = MahamantraPipeline()
+>       result = pipeline.dharma(42)
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f5da250>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+__________________ TestMokshaPhase.test_moksha_returns_result __________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestMokshaPhase object at 0x10eea8190>
+
+    def test_moksha_returns_result(self):
+        """Moksha phase should return MokshaResult."""
+        pipeline = MahamantraPipeline()
+        pipeline.reset()  # Clean state
+>       result = pipeline.moksha(42)
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:273: in moksha
+    tick_result = self._get_orchestrator.tick(value)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f670f30>
+
+    @property
+    def _get_orchestrator(self):
+        if self._orchestrator is None:
+>           from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/orchestrator.py", line 139
+E               seed=seed,
+E           IndentationError: unexpected indent
+
+vibe_core/mahamantra/adapters/pipeline.py:165: IndentationError
+_____________________ TestMokshaPhase.test_moksha_has_beat _____________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestMokshaPhase object at 0x10eea82d0>
+
+    def test_moksha_has_beat(self):
+        """Moksha should report beat."""
+        pipeline = MahamantraPipeline()
+        pipeline.reset()
+>       result = pipeline.moksha(42)
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:195: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:273: in moksha
+    tick_result = self._get_orchestrator.tick(value)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f6720b0>
+
+    @property
+    def _get_orchestrator(self):
+        if self._orchestrator is None:
+>           from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/orchestrator.py", line 139
+E               seed=seed,
+E           IndentationError: unexpected indent
+
+vibe_core/mahamantra/adapters/pipeline.py:165: IndentationError
+__________________ TestMokshaPhase.test_moksha_has_resonance ___________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestMokshaPhase object at 0x10ed4fe10>
+
+    def test_moksha_has_resonance(self):
+        """Moksha should report resonance."""
+        pipeline = MahamantraPipeline()
+        pipeline.reset()
+>       result = pipeline.moksha(42)
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:273: in moksha
+    tick_result = self._get_orchestrator.tick(value)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f627450>
+
+    @property
+    def _get_orchestrator(self):
+        if self._orchestrator is None:
+>           from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/orchestrator.py", line 139
+E               seed=seed,
+E           IndentationError: unexpected indent
+
+vibe_core/mahamantra/adapters/pipeline.py:165: IndentationError
+________________ TestMokshaPhase.test_moksha_quarter_is_moksha _________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestMokshaPhase object at 0x10eeac050>
+
+    def test_moksha_quarter_is_moksha(self):
+        """Moksha result should have MOKSHA quarter."""
+        pipeline = MahamantraPipeline()
+        pipeline.reset()
+>       result = pipeline.moksha(42)
+                 ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:273: in moksha
+    tick_result = self._get_orchestrator.tick(value)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f714d10>
+
+    @property
+    def _get_orchestrator(self):
+        if self._orchestrator is None:
+>           from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/orchestrator.py", line 139
+E               seed=seed,
+E           IndentationError: unexpected indent
+
+vibe_core/mahamantra/adapters/pipeline.py:165: IndentationError
+_________________ TestFullPipeline.test_execute_returns_result _________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestFullPipeline object at 0x10eea8410>
+
+    def test_execute_returns_result(self):
+        """Execute should return PipelineResult."""
+        pipeline = MahamantraPipeline()
+        pipeline.reset()
+>       result = pipeline.execute("test input")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:220: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:315: in execute
+    dharma_result = self.dharma(genesis_result.hash_value)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10ef2bad0>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+_________________ TestFullPipeline.test_execute_has_all_phases _________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestFullPipeline object at 0x10eea8550>
+
+    def test_execute_has_all_phases(self):
+        """Execute result should have all phase results."""
+        pipeline = MahamantraPipeline()
+        pipeline.reset()
+>       result = pipeline.execute("test")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:227: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:315: in execute
+    dharma_result = self.dharma(genesis_result.hash_value)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f5c7c20>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+__________________ TestFullPipeline.test_execute_phases_chain __________________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestFullPipeline object at 0x10eeac180>
+
+    def test_execute_phases_chain(self):
+        """Phases should chain correctly."""
+        pipeline = MahamantraPipeline()
+        pipeline.reset()
+>       result = pipeline.execute("chain test")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:237: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:315: in execute
+    dharma_result = self.dharma(genesis_result.hash_value)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f694050>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+____________ TestFullPipeline.test_execute_final_value_is_attractor ____________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestFullPipeline object at 0x10eeac2b0>
+
+    def test_execute_final_value_is_attractor(self):
+        """Final value should be the attractor."""
+        pipeline = MahamantraPipeline()
+        pipeline.reset()
+>       result = pipeline.execute("attractor test")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:315: in execute
+    dharma_result = self.dharma(genesis_result.hash_value)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f681130>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+_______ TestFullPipeline.test_execute_different_inputs_different_results _______
+
+self = <tests.mahamantra.adapters.test_pipeline.TestFullPipeline object at 0x10ee9f770>
+
+    def test_execute_different_inputs_different_results(self):
+        """Different inputs should give different results."""
+        pipeline = MahamantraPipeline()
+>       r1 = pipeline.execute("input_one")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:255: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:315: in execute
+    dharma_result = self.dharma(genesis_result.hash_value)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+vibe_core/mahamantra/adapters/pipeline.py:214: in dharma
+    compute_result = self._get_transform.compute(value)
+                     ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f6814f0>
+
+    @property
+    def _get_transform(self):
+        if self._transform is None:
+>           from vibe_core.mahamantra.adapters.transform import MahaTransform
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/transform.py", line 162
+E               )
+E               ^
+E           SyntaxError: unmatched ')'
+
+vibe_core/mahamantra/adapters/pipeline.py:151: SyntaxError
+_______________ TestPipelineReset.test_reset_clears_orchestrator _______________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestPipelineReset object at 0x10eea8690>
+
+    def test_reset_clears_orchestrator(self):
+        """Reset should clear orchestrator state."""
+        pipeline = MahamantraPipeline()
+>       pipeline.moksha(42)  # Advance state
+        ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:266: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+vibe_core/mahamantra/adapters/pipeline.py:273: in moksha
+    tick_result = self._get_orchestrator.tick(value)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <vibe_core.mahamantra.adapters.pipeline.MahamantraPipeline object at 0x10f64ab10>
+
+    @property
+    def _get_orchestrator(self):
+        if self._orchestrator is None:
+>           from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+E             File "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/orchestrator.py", line 139
+E               seed=seed,
+E           IndentationError: unexpected indent
+
+vibe_core/mahamantra/adapters/pipeline.py:165: IndentationError
+___________ TestMahamantraSingletonPipeline.test_pipeline_accessible ___________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestMahamantraSingletonPipeline object at 0x10eea8e10>
+
+    def test_pipeline_accessible(self):
+        """mahamantra.pipeline should be accessible."""
+        from vibe_core.mahamantra import mahamantra
+>       assert hasattr(mahamantra, 'pipeline')
+E       AssertionError: assert False
+E        +  where False = hasattr(mahamantra, 'pipeline')
+
+tests/mahamantra/adapters/test_pipeline.py:318: AssertionError
+_________ TestMahamantraSingletonPipeline.test_pipeline_execute_works __________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestMahamantraSingletonPipeline object at 0x10eea8f50>
+
+    def test_pipeline_execute_works(self):
+        """mahamantra.pipeline.execute() should work."""
+        from vibe_core.mahamantra import mahamantra
+>       mahamantra.pipeline.reset()
+        ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:324: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = mahamantra, name = 'pipeline'
+
+    def __getattr__(self, name: str) -> "LotusNode":
+        """
+        Auto-discover child from folder structure.
+    
+        mahamantra.genesis → discovers genesis/
+        mahamantra.genesis.brahma → discovers genesis/brahma/
+        """
+        # Skip private
+        if name.startswith("_"):
+            raise AttributeError(name)
+    
+        # Check cache
+        if name in self._cache:
+            return self._cache[name]
+    
+        # Discover from folder structure
+        child = self._discover(name)
+        if child is not None:
+            self._cache[name] = child
+            return child
+    
+        # Try to get from loaded module
+        module = self._get_module()
+        if module is not None and hasattr(module, name):
+            return getattr(module, name)
+    
+        # REGISTRY FALLBACK: Delegate to DeclarationRegistry (Senior Architect pattern)
+        # Registry is the single source of truth for cross-codebase routing
+        if self._path.depth == 2:  # mahajana-level (e.g., genesis.brahma)
+            found = self._registry_resolve(name)
+            if found is not None:
+                return found
+    
+>       raise AttributeError(f"'{name}' not found in lotus at '{self._path.folder_path or 'root'}'")
+E       AttributeError: 'pipeline' not found in lotus at 'root'
+
+vibe_core/mahamantra/_lotus.py:127: AttributeError
+__________ TestMahamantraSingletonPipeline.test_pipeline_phases_work ___________
+
+self = <tests.mahamantra.adapters.test_pipeline.TestMahamantraSingletonPipeline object at 0x10eeac510>
+
+    def test_pipeline_phases_work(self):
+        """Individual phases should work through singleton."""
+        from vibe_core.mahamantra import mahamantra
+    
+>       genesis = mahamantra.pipeline.genesis("test")
+                  ^^^^^^^^^^^^^^^^^^^
+
+tests/mahamantra/adapters/test_pipeline.py:332: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = mahamantra, name = 'pipeline'
+
+    def __getattr__(self, name: str) -> "LotusNode":
+        """
+        Auto-discover child from folder structure.
+    
+        mahamantra.genesis → discovers genesis/
+        mahamantra.genesis.brahma → discovers genesis/brahma/
+        """
+        # Skip private
+        if name.startswith("_"):
+            raise AttributeError(name)
+    
+        # Check cache
+        if name in self._cache:
+            return self._cache[name]
+    
+        # Discover from folder structure
+        child = self._discover(name)
+        if child is not None:
+            self._cache[name] = child
+            return child
+    
+        # Try to get from loaded module
+        module = self._get_module()
+        if module is not None and hasattr(module, name):
+            return getattr(module, name)
+    
+        # REGISTRY FALLBACK: Delegate to DeclarationRegistry (Senior Architect pattern)
+        # Registry is the single source of truth for cross-codebase routing
+        if self._path.depth == 2:  # mahajana-level (e.g., genesis.brahma)
+            found = self._registry_resolve(name)
+            if found is not None:
+                return found
+    
+>       raise AttributeError(f"'{name}' not found in lotus at '{self._path.folder_path or 'root'}'")
+E       AttributeError: 'pipeline' not found in lotus at 'root'
+
+vibe_core/mahamantra/_lotus.py:127: AttributeError
+=============================== warnings summary ===============================
+tests/mahamantra/adapters/test_pipeline.py::TestPipelineStructure::test_four_phases_exist
+  /Users/ss/projects/steward-protocol/vibe_core/protocols/universal/__init__.py:25: DeprecationWarning: vibe_core.protocols.universal.mantra is DEPRECATED for OpCodes. Use vibe_core.mahamantra.substrate.opcode instead.
+    from .mantra import MantraProtocol
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================== TÜV BADGE SUMMARY ===============================
+Total Badges Issued: 20
+  GOLD:   0
+  SILVER: 20
+  BRONZE: 0
+  Average Score: 0.70
+=========================== short test summary info ============================
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestDharmaPhase::test_dharma_returns_result
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestDharmaPhase::test_dharma_output_in_quantum_space
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestDharmaPhase::test_dharma_finds_attractor
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestDharmaPhase::test_dharma_quarter_is_dharma
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestMokshaPhase::test_moksha_returns_result
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestMokshaPhase::test_moksha_has_beat
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestMokshaPhase::test_moksha_has_resonance
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestMokshaPhase::test_moksha_quarter_is_moksha
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestFullPipeline::test_execute_returns_result
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestFullPipeline::test_execute_has_all_phases
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestFullPipeline::test_execute_phases_chain
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestFullPipeline::test_execute_final_value_is_attractor
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestFullPipeline::test_execute_different_inputs_different_results
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestPipelineReset::test_reset_clears_orchestrator
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestMahamantraSingletonPipeline::test_pipeline_accessible
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestMahamantraSingletonPipeline::test_pipeline_execute_works
+FAILED tests/mahamantra/adapters/test_pipeline.py::TestMahamantraSingletonPipeline::test_pipeline_phases_work
+=================== 17 failed, 20 passed, 1 warning in 1.63s ===================

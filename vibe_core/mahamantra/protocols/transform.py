@@ -1,5 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Tuple, Dict, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @runtime_checkable
 class MahaTransformProtocol(Protocol):
@@ -30,6 +30,7 @@ class TransformResult:
     value: int
     mod_space: int
     iterations: int
+    metrics: Dict[str, object] = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class AttractorResult:

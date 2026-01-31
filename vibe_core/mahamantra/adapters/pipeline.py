@@ -190,6 +190,8 @@ class MahamantraPipeline(MahaPipelineProtocol):
             input_value=value,
             hash_value=analysis.primary_hash,
             lens_scores=lens_values,
+            quarter=Quarter.GENESIS,
+            metrics={"lenses": len(lens_values), "bits": analysis.primary_hash.bit_length()},
         )
 
     # =========================================================================
@@ -216,6 +218,8 @@ class MahamantraPipeline(MahaPipelineProtocol):
             output_value=compute_result.value,
             attractor=attractor_result.stable_value,
             steps=attractor_result.cycles_to_converge,
+            quarter=Quarter.DHARMA,
+            metrics={"algorithm": "maha_16", "converged": True},
         )
 
     # =========================================================================
@@ -245,6 +249,8 @@ class MahamantraPipeline(MahaPipelineProtocol):
             key=key,
             value=existing if existing is not None else payload,
             routed=existing is not None or payload is not None,
+            quarter=Quarter.KARMA,
+            metrics={"key_space": self._get_router.key_space, "is_new": existing is None},
         )
 
     # =========================================================================
@@ -270,6 +276,8 @@ class MahamantraPipeline(MahaPipelineProtocol):
             beat=tick_result.beat,
             round_num=tick_result.round_num,
             resonance=tick_result.resonance,
+            quarter=Quarter.MOKSHA,
+            metrics={"tick_delta": tick_result.beat_delta},
         )
 
     # =========================================================================

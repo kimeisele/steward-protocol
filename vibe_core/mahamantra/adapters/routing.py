@@ -406,4 +406,9 @@ __all__ = [
     "router_16bit",
     "router_32bit",
     "router_8bit",
+    "router_32bit",
+    "router_8bit",
+    "Router",
 ]
+
+Router = HolographicRouter

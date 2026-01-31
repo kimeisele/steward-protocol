@@ -442,7 +442,28 @@ __all__ = [
     "match_attractor",
     "match_chapter",
     "match_verse",
+    "GITA_CHAPTERS",
+    "match_chapter",
+    "match_verse",
+    "GITA_CHAPTERS",
+    "verify_fixed_point",
+    "CHAPTER_18_VERSE",
 ]
+
+
+def verify_fixed_point() -> bool:
+    """Verify that the system has a stable fixed point (Attractor 136)."""
+    # 136 is the Field (Kshetra) - it must be an attractor
+    res = match_attractor(136)
+    return res.query_type in ("exact", "nearest")
+
+
+@dataclass
+class _LazyVerse1866:
+    chapter: int = 18
+    verse: int = 66
+
+CHAPTER_18_VERSE = _LazyVerse1866()
 
 
 # =============================================================================
