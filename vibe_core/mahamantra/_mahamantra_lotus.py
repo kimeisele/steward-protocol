@@ -280,8 +280,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             }
 
         # =====================================================================
-        # 7. DASYAM - Position/Quarter determination
+        # 7. DASYAM - Position/Quarter/Role determination
         # =====================================================================
+        # STRUCTURE: 4 Avataras (HEADs) + 12 Mahajanas (WORKERs) = 16 positions
+        # HEADs are at positions 0, 4, 8, 12 (first of each Quarter)
+        from vibe_core.mahamantra.protocols._seed import is_head, get_quarter_head
+
         position = attractor % WORDS  # 0-15
 
         if position < 4:
@@ -294,6 +298,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             quarter = "moksha"
 
         guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
+
+        # HEAD/WORKER role determination (from SSOT)
+        role = "avatara" if is_head(position) else "mahajana"
+        quarter_head_pos = get_quarter_head(position)
+        quarter_head_name = ALL_GUARDIANS[quarter_head_pos] if quarter_head_pos < len(ALL_GUARDIANS) else "unknown"
 
         # =====================================================================
         # 8. SAKHYAM - MahaCell creation (universal format)
@@ -343,10 +352,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "verse": verse_info,
             "matches": len(verse_result.matches),
 
-            # Position (DASYAM)
+            # Position (DASYAM) - 4 Avataras (HEADs) + 12 Mahajanas (WORKERs)
             "position": position,
             "guardian": guardian,
             "quarter": quarter,
+            "role": role,  # "avatara" (HEAD) or "mahajana" (WORKER)
+            "quarter_head": quarter_head_name,  # The Avatara managing this Quarter
 
             # MahaCell (SAKHYAM)
             "cell": {
