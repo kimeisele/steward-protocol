@@ -24,22 +24,12 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x9d8b6a7c"  # GenesisByte: parampara % 37 == 0
 
-from vibe_core.mahamantra.research.dharma.maha_algorithm import (
-    SYNTH_PRESETS,
-    KirtanComputeResult,
-    MahaAlgorithm16,
-    MahaKirtan,
-    MahaModularSynth,
-    MahaResonator,
-)
-
-# NOTE: maha_operator, maha_runtime, maha_sequencer were DELETED
-# Their functionality is consolidated into dharma/engine.py
+# NOTE: maha_algorithm, prabhupada_kirtan, prabhupada_engineering were MIGRATED to substrate.mantra
+# and removed from here to ensure zero research dependencies in core.
 
 def __getattr__(name: str):
     """
-    Fractal routing: folder IS wiring.
-    "EIN IMPORT. KRISHNA ROUTET ALLES."
+    Fractal routing fallback (experimental).
     """
     from pathlib import Path
     import importlib
@@ -60,12 +50,6 @@ def __getattr__(name: str):
 
 
 __all__ = [
-    # Algorithm (still exists)
-    "MahaAlgorithm16",
-    "MahaKirtan",
-    "MahaModularSynth",
-    "MahaResonator",
-    "KirtanComputeResult",
-    "SYNTH_PRESETS",
+    # Remaining research modules
 ]
 
