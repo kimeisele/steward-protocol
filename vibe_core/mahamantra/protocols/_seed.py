@@ -106,6 +106,51 @@ ROUNDS: Final[int] = WORDS  # 16
 # AVATAR_COUNT = QUARTERS (4 Avataras head the 4 quarters)
 AVATAR_COUNT: Final[int] = QUARTERS  # 4
 
+# HEAD_POSITIONS - The positions of the 4 Avataras (HEADs of each Quarter)
+# DERIVED: Position 0, 4, 8, 12 = first position of each quarter
+# Formula: q * (WORDS // QUARTERS) for q in 0..3
+HEAD_POSITIONS: Final[tuple[int, ...]] = tuple(
+    q * (WORDS // QUARTERS) for q in range(QUARTERS)
+)  # (0, 4, 8, 12)
+
+# VERIFICATION: HEAD_POSITIONS
+assert len(HEAD_POSITIONS) == AVATAR_COUNT, "Must have exactly 4 HEAD positions"
+assert HEAD_POSITIONS == (0, 4, 8, 12), "HEAD_POSITIONS must be (0, 4, 8, 12)"
+
+
+def is_head(position: int) -> bool:
+    """
+    Check if a position is a HEAD (Avatara) position.
+
+    HEADs are at positions 0, 4, 8, 12 - the first position of each Quarter.
+    This is DERIVED from the Mahamantra structure, not hardcoded.
+
+    Args:
+        position: Position index (0-15)
+
+    Returns:
+        True if position is a HEAD (Avatara), False if WORKER (Mahajana)
+    """
+    return (position % WORDS) in HEAD_POSITIONS
+
+
+def get_quarter_head(position: int) -> int:
+    """
+    Get the HEAD position for the Quarter containing this position.
+
+    Every position belongs to a Quarter, and every Quarter has a HEAD.
+    This returns the HEAD position that manages the given position.
+
+    Args:
+        position: Position index (0-15)
+
+    Returns:
+        HEAD position (0, 4, 8, or 12)
+    """
+    quarter = (position % WORDS) // (WORDS // QUARTERS)
+    return HEAD_POSITIONS[quarter]
+
+
 # VERIFICATION: Primary derivations
 assert LILA == 48, "LILA must be 48"
 assert KSHETRA == 24, "KSHETRA must be 24"
@@ -2899,6 +2944,9 @@ __all__ = [
     "AKSARA_COUNT",
     "ROUNDS",
     "AVATAR_COUNT",
+    "HEAD_POSITIONS",
+    "is_head",
+    "get_quarter_head",
     # Pancha Tattva Structure (The 5 Unique Pairs)
     "CONSECUTIVE_PAIRS",  # 8 = WORDS/HALVES = HARE_COUNT (Shakti binds!)
     "PAIR_REDUNDANCY",  # 3 = TRINITY (HK, HR, HH repeat - Hare connects!)
