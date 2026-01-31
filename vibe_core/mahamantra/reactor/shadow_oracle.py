@@ -79,9 +79,11 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
     ShadowState,
 )
 
-# Mahamantra pattern from research module (SSOT for pattern)
-from vibe_core.mahamantra.research.dharma.maha_algorithm import (
-    PATTERN,
+# Mahamantra pattern from protocols (SSOT for pattern)
+from vibe_core.mahamantra.protocols._seed import MAHAMANTRA_WORD_PATTERN as PATTERN
+
+# PRABHUPADA constants from substrate resonance
+from vibe_core.mahamantra.substrate.resonance import (
     PRABHUPADA_BUILD,
     PRABHUPADA_KEY_YEARS,
     PRABHUPADA_RUNTIME_END,
