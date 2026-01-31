@@ -20,7 +20,7 @@ __position__ = 5
 __genesis__ = "0xb5c3a829"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
-from typing import Final, ClassVar, Optional, Dict, Generic, TypeVar
+from typing import Final, ClassVar, Optional, Dict, Generic, TypeVar, Tuple
 import uuid
 
 from vibe_core.mahamantra.protocols._seed import (
@@ -311,6 +311,36 @@ class MahaCellUnified(Generic[S]):
         return True
     
     # =========================================================================
+    # INTERACTION METHODS (Branchless Sunya)
+    # =========================================================================
+    
+    def interact(self, visitor: "MahaCellUnified[S]") -> "MahaCellUnified[S]":
+        """
+        Interact with a visitor cell.
+        
+        Polymorphic behavior:
+        - If I am NULL (Silence): I disappear, Visitor takes the spot (Presence).
+        - If I am ACTIVE (Sound): We Resonate/Merge.
+        
+        Args:
+            visitor: The incoming cell
+            
+        Returns:
+            The resulting cell (Visitor or Merged)
+        """
+        # If I am inactive (Null/Silence), checking Prana or Flag
+        if not self.lifecycle.is_active:
+            # I am Silence. Visitor becomes the Sound.
+            return visitor
+            
+        # I am Active. We Resonate.
+        # Merge visitor into self
+        self.lifecycle.prana += visitor.lifecycle.prana
+        self.lifecycle.integrity = (self.lifecycle.integrity + visitor.lifecycle.integrity) / 2
+        # Note: We return SELF (the Resident), now empowered.
+        return self
+    
+    # =========================================================================
     # SERIALIZATION
     # =========================================================================
     
@@ -351,6 +381,70 @@ class MahaCellUnified(Generic[S]):
         result.extend(dna_bytes)
         
         return bytes(result)
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> Tuple["MahaCellUnified", int]:
+        """
+        Deserialize cell from bytes.
+        
+        Args:
+            data: Byte stream
+            
+        Returns:
+            Tuple[Cell, bytes_consumed]
+        """
+        import struct
+        
+        # Base size check
+        # Header (72) + Prana (8) + Integrity (8) + Cycle (8) + Flags (8) = 104
+        MIN_SIZE = HEADER_SIZE_BYTES + 32
+        
+        if len(data) < MIN_SIZE:
+            raise ValueError(f"Data too short for MahaCellUnified (min {MIN_SIZE})")
+            
+        # 1. Header
+        header = MahaHeader.from_bytes(data[:HEADER_SIZE_BYTES])
+        offset = HEADER_SIZE_BYTES
+        
+        # 2. Lifecycle
+        prana = struct.unpack("<Q", data[offset:offset+8])[0]
+        offset += 8
+        
+        integrity_fixed = struct.unpack("<Q", data[offset:offset+8])[0]
+        integrity = integrity_fixed / (1 << 32)
+        offset += 8
+        
+        cycle = struct.unpack("<Q", data[offset:offset+8])[0]
+        offset += 8
+        
+        flags = struct.unpack("<Q", data[offset:offset+8])[0]
+        offset += 8
+        
+        is_active = bool(flags & 1)
+        dna_len = flags >> 1
+        
+        # 3. DNA
+        if len(data) < offset + dna_len:
+            raise ValueError("Data too short for DNA content")
+            
+        dna_bytes = data[offset:offset+dna_len]
+        dna = dna_bytes.decode("utf-8")
+        offset += dna_len
+        
+        # Reconstruct
+        cell = cls(
+            header=header,
+            lifecycle=CellLifecycleState(
+                prana=prana,
+                integrity=integrity,
+                cycle=cycle,
+                is_active=is_active,
+                dna=dna
+            ),
+            payload=None, # Payload not serialized by default in unified model
+        )
+        
+        return cell, offset
     
     def get_organelles(self) -> Dict[str, object]:
         """List internal components."""

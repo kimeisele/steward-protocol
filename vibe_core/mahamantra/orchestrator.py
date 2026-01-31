@@ -18,6 +18,7 @@ __position__ = 2
 __genesis__ = "0xa2b9f456"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, ClassVar, Tuple
+import struct
 
 from vibe_core.mahamantra.protocols._seed import (
     # Axioms
@@ -303,6 +304,20 @@ class VenuOrchestrator:
         """Reset orchestrator to initial state."""
         self._tick = 0
         self._prev_state = 0
+
+    # =========================================================================
+    # PERSISTENCE
+    # =========================================================================
+    
+    def to_bytes(self) -> bytes:
+        """Serialize state (tick, prev_state)."""
+        return struct.pack("<QQ", self._tick, self._prev_state)
+        
+    def from_bytes(self, data: bytes) -> None:
+        """Restore state."""
+        if len(data) < 16:
+            raise ValueError("Data too short")
+        self._tick, self._prev_state = struct.unpack("<QQ", data[:16])
 
 
 # =============================================================================

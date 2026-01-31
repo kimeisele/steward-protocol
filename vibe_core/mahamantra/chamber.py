@@ -22,6 +22,7 @@ __genesis__ = "0xd7a9e543"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from typing import Final, ClassVar, Optional, TypeVar, Generic, Callable
+import struct
 from enum import IntEnum
 
 from vibe_core.mahamantra.protocols._seed import (
@@ -179,26 +180,27 @@ class SankirtanChamber(Generic[C]):
         # 2. Transform the cell
         self._apply_diw(cell, diw)
         
-        # 3. INTERACT WITH REGISTRY
+        # 3. INTERACT WITH REGISTRY (Musical Memory)
         # Extract Vamsi (9 bits) - The Memory Address
         vamsi = (diw >> VAMSI_SHIFT) & ((1 << VAMSI_HOLES) - 1)
         
-        # Check residents
+        # Branchless Sunya Pattern:
+        # Get resident (Active or Null)
         resident = self._registry.get(vamsi)
         
-        result_cell = cell
-        
-        if resident and resident is not cell:
-            # RESONANCE interaction!
-            # Merge visitor (cell) into resident
-            merged = self._merge_pair(resident, cell)
-            self._registry.set(vamsi, merged)
-            result_cell = merged
+        # Check collision BEFORE interaction (for metrics only)
+        # (This branch is for stats, not logic flow)
+        if resident.is_alive and resident is not cell:
             self._resonance_count += 1
-        else:
-            # PRESENCE (Update/Occupy)
-            self._registry.set(vamsi, cell)
-            result_cell = cell
+            
+        # Polymorphic Interaction
+        # If resident is Null -> returns cell (Presence)
+        # If resident is Active -> returns resident (Resonance/Merge)
+        result_cell = resident.interact(cell)
+        
+        # Update Registry
+        # Always set, whether it's new presence or updated resonance
+        self._registry.set(vamsi, result_cell)
         
         # Track statistics
         self._accumulated_diw ^= (diw & DIW_MASK)
@@ -386,12 +388,84 @@ class SankirtanChamber(Generic[C]):
         return self._orchestrator.is_sunya(diw)
     
     def reset(self) -> None:
-        """Reset chamber to initial state."""
+        """Reset all state (Registry, Orchestrator, Metrics)."""
         self._orchestrator.reset()
         self._registry.clear()
+        self._accumulated_diw = 0
         self._resonance_count = 0
         self._total_transformations = 0
-        self._accumulated_diw = 0
+
+    # =========================================================================
+    # PERSISTENCE (ChamberState)
+    # =========================================================================
+    
+    def snapshot(self) -> bytes:
+        """
+        Create a full snapshot of the Chamber state.
+        
+        Includes: Metrics, Orchestrator State, Registry State.
+        Format:
+            [4s: Magic "OM!!"]
+            [Q: accumulated_diw]
+            [Q: resonance_count]
+            [Q: total_transformations]
+            [16s: Orchestrator State]
+            [N: Registry State]
+        """
+        result = bytearray()
+        
+        # Header (Magic + Metrics)
+        # 4 + 8 + 8 + 8 = 28 bytes
+        result.extend(b"OM!!")
+        result.extend(struct.pack(
+            "<QQQ",
+            self._accumulated_diw,
+            self._resonance_count,
+            self._total_transformations
+        ))
+        
+        # Orchestrator (16 bytes)
+        result.extend(self._orchestrator.to_bytes())
+        
+        # Registry (Variable)
+        result.extend(self._registry.to_bytes())
+        
+        return bytes(result)
+    
+    def restore(self, snapshot: bytes) -> None:
+        """
+        Restore Chamber from snapshot.
+        
+        Args:
+            snapshot: Valid snapshot bytes
+            
+        Raises:
+            ValueError: If magic or format is invalid
+        """
+        if len(snapshot) < 44: # 28 (Header) + 16 (Orchestrator)
+            raise ValueError("Snapshot too short")
+            
+        # 1. Header
+        magic = snapshot[:4]
+        if magic != b"OM!!":
+            raise ValueError(f"Invalid magic: {magic!r}")
+            
+        offset = 4
+        (
+            self._accumulated_diw,
+            self._resonance_count,
+            self._total_transformations
+        ) = struct.unpack("<QQQ", snapshot[offset:offset+24])
+        offset += 24
+        
+        # 2. Orchestrator
+        orch_data = snapshot[offset:offset+16]
+        self._orchestrator.from_bytes(orch_data)
+        offset += 16
+        
+        # 3. Registry
+        registry_data = snapshot[offset:]
+        self._registry.from_bytes(registry_data)
     
     # =========================================================================
     # FACTORY METHODS
