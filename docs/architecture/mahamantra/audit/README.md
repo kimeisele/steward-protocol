@@ -58,7 +58,7 @@ Each task file follows this format:
 
 | # | Task File | Status | Focus Area | Est. Time |
 |---|-----------|--------|------------|-----------|
-| 1 | `01_ROOT_FILES.md` | TODO | Root-level files (orchestrator, chamber, cell) | 1-2h |
+| 1 | `01_ROOT_FILES.md` | DONE | Root-level files (orchestrator, chamber, cell) | 1-2h |
 | 2 | `02_SUBSTRATE.md` | TODO | substrate/ folder (~20 files) | 2-3h |
 | 3 | `03_PROTOCOLS.md` | TODO | protocols/ folder (interfaces) | 2-3h |
 | 4 | `04_ADAPTERS.md` | TODO | adapters/ folder | 1-2h |
