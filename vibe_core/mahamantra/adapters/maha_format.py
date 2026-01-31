@@ -23,6 +23,11 @@ SSOT ALIGNMENT:
     - Respects 72-byte metric
 """
 
+# === MAHAJANA DECLARATION ===
+__mahajana__ = "shuka"
+__position__ = 14
+__genesis__ = "0x7f8e9d0a"
+
 import struct
 import zlib
 from dataclasses import dataclass

@@ -15,6 +15,11 @@ Structure:
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "gauranga"
+__position__ = 0  # Chaitanya = 0 (The Source of Sankirtan)
+__genesis__ = "0xd7a9e543"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Final, ClassVar, Optional, TypeVar, Generic, Callable
 import struct
@@ -115,6 +120,9 @@ class SankirtanChamber(Generic[C]):
         RESONANCE_THRESHOLD = PARAMPARA = 37
         DEFAULT_CHORUS_SIZE = WORDS = 16
     """
+    
+    __mahajana__: ClassVar[str] = "gauranga"
+    __position__: ClassVar[int] = 0
     
     # The Orchestrator (owned, not inherited)
     _orchestrator: VenuOrchestrator = field(default_factory=VenuOrchestrator)
