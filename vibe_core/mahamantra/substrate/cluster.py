@@ -34,7 +34,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 from vibe_core.mahamantra.protocols._header import MahaHeader
 from vibe_core.mahamantra.substrate.harmonics import ResonanceHarmonics
-from vibe_core.mahamantra.cell import MahaCellUnified
+from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 
 C = TypeVar("C")
 

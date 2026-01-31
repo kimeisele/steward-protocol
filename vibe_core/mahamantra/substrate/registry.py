@@ -21,11 +21,18 @@ If a Cell is already there -> RESONANCE (Merge).
 If the slot is empty -> PRESENCE (Storage).
 """
 
-from typing import List, Optional, Final, Tuple
+from typing import Final, ClassVar, Optional, TypeVar, Generic, List
 import struct
 
-from vibe_core.mahamantra.protocols._seed_cell import SIKSASTAKAM_CACHE
-from vibe_core.mahamantra.cell import MahaCellUnified
+from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+from vibe_core.mahamantra.protocols._seed import (
+    MALA,
+    WORDS,
+    HALVES,
+    NAVA,
+)
+
+SIKSASTAKAM_CACHE: Final[int] = HALVES ** NAVA  # 512
 
 
 class SiksastakamRegistry:

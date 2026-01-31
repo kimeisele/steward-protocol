@@ -29,7 +29,7 @@ __genesis__ = "0x91b2c3d4"
 from pathlib import Path
 from typing import Final, Optional
 
-from vibe_core.mahamantra.cell import MahaCellUnified
+from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from vibe_core.mahamantra.adapters.compression import MahaCompression
 from vibe_core.mahamantra.adapters.routing import HolographicRouter
 from vibe_core.mahamantra.protocols._seed import (

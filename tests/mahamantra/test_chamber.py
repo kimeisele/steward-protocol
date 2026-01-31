@@ -12,18 +12,18 @@ WATERTIGHT TESTS:
 
 import pytest
 
-from vibe_core.mahamantra.chamber import (
+from vibe_core.mahamantra.substrate.chamber import (
     SankirtanChamber,
     KirtanMode,
     CHAMBER_CAPACITY,
     RESONANCE_THRESHOLD,
     DEFAULT_CHORUS_SIZE,
 )
-from vibe_core.mahamantra.cell import (
+from vibe_core.mahamantra.substrate.cell import (
     MahaCellUnified,
     GENESIS_PRANA,
 )
-from vibe_core.mahamantra.cluster import MahaCluster
+from vibe_core.mahamantra.substrate.cluster import MahaCluster
 from vibe_core.mahamantra.orchestrator import VenuOrchestrator
 from vibe_core.mahamantra.protocols._seed import (
     MALA,

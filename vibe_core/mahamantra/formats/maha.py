@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Final, List
 
-from vibe_core.mahamantra.cell import MahaCellUnified
+from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from vibe_core.mahamantra.protocols._header import MahaHeader, HEADER_SIZE_BYTES
 
 # =============================================================================
