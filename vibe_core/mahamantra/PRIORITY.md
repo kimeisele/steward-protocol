@@ -33,6 +33,8 @@
   - Map `Murali` (0-15) to Rhythm/Gate.
   - Implemented in `audio_engine.py` + CLI `--audio`.
 
-## Phase 5: The Offering (Expansion)
-- [ ] **Networked Sankirtan**: Cells flowing between machines.
+## Phase 5: The Offering (Expansion) (DONE)
+- [x] **Networked Sankirtan**: Cells flowing between machines (Vimana TCP).
+- [x] **Impl**: `vimana.py` + `mahamantra vimana` / `chant --dest`.
+
 
