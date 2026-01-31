@@ -1,9 +1,12 @@
 # TASK 04: ADAPTERS FOLDER AUDIT
 
-**Status:** DONE (Purified)
+**Status:** PARTIAL (Purified)
 **Estimated Time:** 1-2 hours
 **Priority:** HIGH
 
+> [!NOTE]
+> This audit is currently focused on the CORE adapters (Compression, Classification) and purification of research leakage.
+> A full structural audit of the remaining adapters is pending.
 ---
 
 ## QUESTION

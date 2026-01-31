@@ -1,8 +1,12 @@
 # TASK 05: CLI FOLDER AUDIT
 
-**Status:** DONE (Unified)
+**Status:** PARTIAL (Purified)
 **Estimated Time:** 2 hours
-**Priority:** HIGH (This is what users interact with)
+**Priority:** HIGH (User interaction layer)
+
+> [!NOTE]
+> This audit is currently focused on the CORE CLI entries (steward, kirtan_cli, auto) and purification of research leakage.
+> A full structural audit of all 13 auxiliary files is pending.
 
 ---
 

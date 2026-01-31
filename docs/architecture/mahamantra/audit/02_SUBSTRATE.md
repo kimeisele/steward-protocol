@@ -1,9 +1,12 @@
 # TASK 02: SUBSTRATE FOLDER AUDIT
 
-**Status:** DONE (Expanded)
+**Status:** PARTIAL (Purified)
 **Estimated Time:** 2-3 hours
 **Priority:** CRITICAL (This is the foundation layer)
 
+> [!NOTE]
+> This audit is currently focused on the CORE substrate components and purification of research leakage.
+> A full structural audit of all 54 auxiliary files is pending.
 ---
 
 ## QUESTION

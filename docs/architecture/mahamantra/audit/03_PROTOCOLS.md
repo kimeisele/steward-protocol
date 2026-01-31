@@ -1,9 +1,12 @@
 # TASK 03: PROTOCOLS FOLDER AUDIT
 
-**Status:** DONE (Purified)
+**Status:** PARTIAL (Purified)
 **Estimated Time:** 2-3 hours
 **Priority:** CRITICAL (This defines the interfaces)
 
+> [!NOTE]
+> This audit is currently focused on the CORE protocols and purification of research leakage.
+> A full structural audit of all 54 auxiliary files is pending.
 ---
 
 ## QUESTION
