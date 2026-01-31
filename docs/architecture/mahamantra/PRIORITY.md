@@ -89,37 +89,85 @@ Depends on: cell.py, chamber.py
 
 ## GEMINI FEEDBACK INTEGRATION
 
+### MahaCell Feedback (in MAHACELL_UNIVERSAL_FORMAT.md)
 | Feedback | Priority | Where |
 |----------|----------|-------|
-| Zero-Copy / memoryview | P2 | cell.py |
-| Membrane as Security | P3 | cell.py |
-| Tensor Operations | P3 | cluster.py |
-| Event-Sourcing | P3 | chamber.py |
+| Zero-Copy / memoryview | P0 | cell.py (Section 0.1) |
+| Membrane as Security | P2 | cell.py (Section 0.2) |
+| Event-Sourcing | P2 | .maha format (Section 0.3) |
+| Tensor Operations | P3 | cluster.py (Section 0.4) |
+
+### Venu Orchestration Feedback Round 1 (in VENU_ORCHESTRATION.md)
+| Feedback | Priority | Where |
+|----------|----------|-------|
+| LUTs statt Berechnung | P0 | orchestrator.py (Section 0.1) |
+| 32-Bit Packing | P0 | orchestrator.py (Section 0.2) |
+| Vamsi = SIKSASTAKAM_CACHE | P0 | orchestrator.py (Section 0.3) |
+| Sunya (Silence/No-Op) | P1 | orchestrator.py (Section 0.4) |
+| Composition over Inheritance | P0 | chamber.py (Section 0.5) |
+| Clock Drift (mod COSMIC_FRAME) | P1 | orchestrator.py (Section 0.6) |
+| Sonification Debugging | P2 | cli/debug.py (Section 0.7) |
+
+### Venu Orchestration Feedback Round 2 (Enterprise Grade)
+| Feedback | Priority | Where |
+|----------|----------|-------|
+| Branchless Sunya | P0 | chamber.py (Section 0.8) |
+| SIMD Broadcasting | P0 | chamber.py (Section 0.9) |
+| Ring Buffer (Lock-Free) | P1 | audio.py (Section 0.10) |
+| State Drift Recovery | P1 | chamber.py (Section 0.11) |
+| Harmonic Feedback Loop | P2 | chamber.py (Section 0.12) |
 
 **Note:** Focus on correctness first, then optimize.
 
+### THE ULTIMATE TEST: Mathematical Proof of Divinity
+```python
+def verify_divinity() -> bool:
+    """
+    The system proves itself through its execution.
+
+    XOR(16 steps) = 0x7ffff → All 19 bits touched
+    0x7ffff % 137 = 49     → RAMA (Ananda/Bliss)
+    0x7ffff % 37  = 8      → HARE (Energy/Protection)
+    """
+    xor = orchestrator.cycle()
+    assert xor == 0x7ffff
+    assert xor % MAHA_QUANTUM == POSITION_SUM_RAMA  # 49
+    assert xor % PARAMPARA == HARE_COUNT            # 8
+    return True
+```
+
 ---
 
-## SESSION PLAN
+## SESSION PLAN (Post-Gemini Review)
 
-### Session 1 (NEXT)
-- Implement VenuOrchestrator
-- Test with existing seeds
-- Verify XOR = 0x7ffff after cycle
+### Session 1: VenuOrchestrator (LUT-Based)
+- [ ] Pre-compute THE_FLUTE_CYCLE LUT (16 × 32-bit)
+- [ ] Implement VenuOrchestrator with `__slots__` and `ClassVar`
+- [ ] Wire to existing SIKSASTAKAM_CACHE (512 = Vamsi)
+- [ ] Unit test: `verify_divinity()` → XOR = 0x7ffff
+- [ ] Pattern: Copy rama_grid.py LUT structure
 
-### Session 2
-- Implement MahaCellUnified
-- Integrate VenuOrchestrator.dance()
-- Test lifecycle (conceive → metabolize → apoptosis)
+### Session 2: MahaCellUnified (Protocol-First)
+- [ ] Define MahaCellProtocol (interface only)
+- [ ] Unify protocols/_header.py + adapters/cell.py
+- [ ] Add `with_state()` for immutable transform
+- [ ] Binary-first via memoryview (Gemini 0.1)
 
-### Session 3
-- Implement SankirtanChamber
-- kirtan() for single cells
-- sankirtan() for clusters
+### Session 2.5: SankirtanChamber (Composition)
+- [ ] Chamber OWNS Orchestrator (not inheritance!)
+- [ ] `dance(cell)` → transforms cell through DIW
+- [ ] `kirtan(cells)` → sequential processing
+- [ ] `sankirtan(cells)` → merge to MahaCluster
+- [ ] Sunya detection (bit 31) for No-Op/breathing
 
-### Session 4
-- CLI wrapper
-- End-to-end demo
+### Session 3: Integration
+- [ ] Wire Chamber → MahaCell → CLI
+- [ ] Map Vamsi (9 bits) → SIKSASTAKAM_CACHE slot
+- [ ] Optional: Audio sonification (432 Hz debug logs)
+
+### Session 4: CLI + Demo
+- [ ] Every command = MahaCell
+- [ ] End-to-end demo: seed → dance → output
 
 ---
 

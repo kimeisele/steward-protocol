@@ -5,6 +5,155 @@
 **Author:** Opus 4.5
 **Date:** 2026-01-31
 **Confidence:** 85% (nach gründlicher Exploration)
+**Review:** Gemini Senior Feedback integriert
+
+---
+
+## 0. CRITICAL: GEMINI SENIOR FEEDBACK
+
+### 0.1 Zero-Copy / Memory Mapping (MUST HAVE)
+
+**Problem:** Python dataclasses zerstören AVX-512 Alignment sofort (Heap-Pointer).
+
+**Lösung:** MahaCell ist ein **View auf einen zusammenhängenden Byte-Block**, nicht eine Klasse mit Attributen.
+
+```python
+# FALSCH (was ich vorher geschrieben habe):
+@dataclass
+class MahaCell:
+    header: MahaHeader  # Pointer auf Heap!
+    payload: bytes      # Noch ein Pointer!
+
+# RICHTIG (Zero-Copy):
+class MahaCellView:
+    """View auf einen mmap'd oder bytearray Buffer."""
+
+    __slots__ = ('_buffer', '_offset')
+
+    def __init__(self, buffer: memoryview, offset: int = 0) -> None:
+        self._buffer = buffer
+        self._offset = offset
+
+    @property
+    def header(self) -> memoryview:
+        """Direct view into header bytes - NO COPY."""
+        return self._buffer[self._offset:self._offset + 72]
+
+    @property
+    def sravanam(self) -> int:
+        """O(1) read via struct - NO PARSE."""
+        return struct.unpack_from('<Q', self._buffer, self._offset)[0]
+
+    def to_bytes(self) -> bytes:
+        """O(1) - just return the buffer slice."""
+        return bytes(self._buffer[self._offset:])
+```
+
+**Benefit:** Wenn Cell über Netzwerk kommt → `mmap` direkt in RAM → Zero Parse.
+
+### 0.2 Membrane = Cryptographic Security (ENTERPRISE)
+
+**Problem:** Membrane als float (0.0-1.0) ist nur Metapher.
+
+**Lösung:** Membrane ist eine **kryptographische Barriere**.
+
+```python
+class SecureMembrane:
+    """Zero Trust Cell Architecture."""
+
+    def __init__(self, cell_view: MahaCellView) -> None:
+        self._cell = cell_view
+        self._decrypted_payload: Optional[bytes] = None
+
+    def validate(self, signature: bytes) -> bool:
+        """
+        Validate ARCANAM signature.
+        Only if valid AND prana sufficient → decrypt payload.
+        """
+        arcanam = self._cell.arcanam
+
+        # Parampara check
+        if arcanam % PARAMPARA != 0:
+            return False
+
+        # Signature verification (Ed25519 or similar)
+        expected_sig = self._compute_signature()
+        return hmac.compare_digest(signature, expected_sig)
+
+    def open(self, key: bytes) -> bytes:
+        """
+        Open membrane (decrypt payload).
+        Requires: validate() passed + sufficient prana.
+        """
+        if self._decrypted_payload is None:
+            encrypted = self._cell.payload
+            self._decrypted_payload = self._decrypt(encrypted, key)
+        return self._decrypted_payload
+```
+
+**Benefit:** Verhindert "Cancer" (schadhafter Code) im System.
+
+### 0.3 Event-Sourcing statt State (AUDIT TRAIL)
+
+**Problem:** `.maha` als Snapshot ist gefährlich in verteilten Systemen.
+
+**Lösung:** `.maha` ist ein **Append-Only Journal**.
+
+```
+┌────────────────────────────────────────────────┐
+│ MAHA FILE FORMAT v2 (Event-Sourced)            │
+├────────────────────────────────────────────────┤
+│ Magic:        "MAHA" (4 bytes)                 │
+│ Version:      0x0002 (2 bytes)                 │
+│ Flags:        uint16 (2 bytes)                 │
+│ ────────────────────────────────────────────── │
+│ Genesis Header: 72 bytes (initial state)       │
+│ ────────────────────────────────────────────── │
+│ Event Count:  uint32                           │
+│ Events:       [timestamp(8) + delta(var)]...   │
+│ ────────────────────────────────────────────── │
+│ Current State: Computed from Genesis + Events  │
+└────────────────────────────────────────────────┘
+```
+
+**Benefit:** Time-Travel Debugging, Enterprise Audit Trails.
+
+### 0.4 Tensor Operations für Cluster (SCALE)
+
+**Problem:** `for cell in cells` ist O(n) und langsam.
+
+**Lösung:** Payloads in Tensor → Matrix-Multiplikation.
+
+```python
+import numpy as np
+
+class MahaClusterTensor:
+    """GPU-accelerated cluster operations."""
+
+    def __init__(self, cells: list[MahaCellView]) -> None:
+        # Stack all headers into matrix (n × 72)
+        self._headers = np.array([
+            np.frombuffer(c.header, dtype=np.uint8)
+            for c in cells
+        ])
+
+        # Stack signatures for vectorized resonance
+        self._arcanam = np.array([c.arcanam for c in cells])
+
+    def resonance_matrix(self) -> np.ndarray:
+        """
+        Compute pairwise resonance - O(n²) but SIMD.
+
+        Returns: n×n matrix where [i,j] = resonance(cell_i, cell_j)
+        """
+        # XOR all pairs (broadcasting)
+        xor_matrix = self._arcanam[:, None] ^ self._arcanam[None, :]
+
+        # Resonance = 1 - (hamming_weight / 64)
+        return 1.0 - (np.bitwise_count(xor_matrix) / 64.0)
+```
+
+**Benefit:** 10,000 Cells → GPU berechnet Resonanz in Millisekunden.
 
 ---
 
