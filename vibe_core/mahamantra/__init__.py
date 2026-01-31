@@ -212,9 +212,9 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.substrate.cell import MahaCellUnified
         return MahaCellUnified
 
-    if name == "UniversalMahaRouter":
-        from vibe_core.mahamantra.adapters.router import UniversalMahaRouter
-        return UniversalMahaRouter
+    if name == "MahaFile":
+        from vibe_core.mahamantra.adapters.maha_format import MahaFile
+        return MahaFile
 
     if name == "SankirtanChamber":
         from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
@@ -259,6 +259,6 @@ __all__ = [
     # Tulasi
     "TulasiGate", "GraceProtocol", "MahaModularSynth", "OfferingPipeline",
     # Architecture (Unified)
-    "MahaCluster", "MahaCellUnified", "UniversalMahaRouter", "SankirtanChamber",
+    "MahaCluster", "MahaCellUnified", "MahaFile", "SankirtanChamber",
 ]
 
