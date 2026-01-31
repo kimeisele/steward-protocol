@@ -245,7 +245,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 4. PADA_SEVANAM - MahaResonator → attractor (stable harmonic)
         # =====================================================================
-        from vibe_core.mahamantra.research.dharma import MahaResonator
+        from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
         resonator = MahaResonator(mod_space=MAHA_QUANTUM)
         attractor = resonator.oscillate_once(kirtan_result.transformed_value)
 

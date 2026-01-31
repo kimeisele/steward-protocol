@@ -65,7 +65,7 @@ class MahamantraGateway(GatewayProtocol):
             position=result["position"],
             guardian=result["guardian"],
             quarter=result["quarter"],
-            guna=result["guna"],
+            guna=result.get("verse", {}).get("guna", result.get("guna", "sattva")) if result.get("verse") else result.get("guna", "sattva"),
             entry_type=entry_type,
             routed_via="mahamantra",
         )
