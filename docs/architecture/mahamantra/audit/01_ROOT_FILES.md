@@ -1,6 +1,6 @@
 # TASK 01: ROOT FILES AUDIT
 
-**Status:** TODO
+**Status:** DONE
 **Estimated Time:** 1-2 hours
 **Priority:** CRITICAL (These are the core files)
 
@@ -17,17 +17,17 @@ Are there redundancies between them?
 
 ```
 vibe_core/mahamantra/
-├── __init__.py         # Main exports
-├── __main__.py         # Entry point
-├── _lotus.py           # ?
-├── _mahamantra_lotus.py # ?
-├── _types.py           # Type definitions
-├── cell.py             # MahaCellUnified
-├── chamber.py          # SankirtanChamber
-├── chat.py             # Chat integration
-├── commands.py         # CLI commands
-├── orchestrator.py     # VenuOrchestrator
-├── research_gateway.py # ?
+├── __init__.py         # Main exports (Lazy Loading Facade)
+├── __main__.py         # CLI Entry Point
+├── _lotus.py           # Base LotusNode/LotusPath infrastructure
+├── _mahamantra_lotus.py # Root node implementation (MahamantraLotus)
+├── _types.py           # TypedDict definitions (Watertight)
+├── cell.py             # MahaCellUnified (Header + Lifecycle)
+├── chamber.py          # SankirtanChamber (Resonance Space)
+├── chat.py             # MahajanaChat (Guardian Chat Infrastructure)
+├── commands.py         # CLI Command Logic (Stateless Handlers)
+├── orchestrator.py     # VenuOrchestrator (Musical Logic)
+├── research_gateway.py # Bridge to Nrisimha Heartbeat
 ```
 
 ---
@@ -37,52 +37,52 @@ vibe_core/mahamantra/
 For each file, answer:
 
 ### __init__.py
-- [ ] What does it export?
-- [ ] Does it re-export from subfolders?
-- [ ] Is there a `mahamantra` singleton here?
+- [x] What does it export? `MahamantraLotus`, `mahamantra` singleton, constants, types.
+- [x] Does it re-export from subfolders? Yes, extensively via `__getattr__` for lazy loading.
+- [x] Is there a `mahamantra` singleton here? Yes, `mahamantra` (via `get_mahamantra()`).
 
 ### __main__.py
-- [ ] What happens when you run `python -m vibe_core.mahamantra`?
-- [ ] Does it duplicate cli/entry.py?
+- [x] What happens when you run `python -m vibe_core.mahamantra`? Runs `main()`, parses args, calls `commands.py`.
+- [x] Does it duplicate cli/entry.py? No, it's a dedicated entry point for the `mahamantra` module context.
 
 ### _lotus.py vs _mahamantra_lotus.py
-- [ ] What is the difference between these two?
-- [ ] Are they redundant?
-- [ ] Which one is used?
+- [x] What is the difference between these two? `_lotus.py` is the generic fractal tree infrastructure. `_mahamantra_lotus.py` is the specific Root implementation.
+- [x] Are they redundant? No, clean separation of concerns (Base vs Implementation).
+- [x] Which one is used? `_mahamantra_lotus.py` uses `_lotus.py`.
 
 ### _types.py
-- [ ] What types are defined here?
-- [ ] Are they used elsewhere?
-- [ ] Do they overlap with protocols/?
+- [x] What types are defined here? `TickState`, `RouteResult`, `VibrationState`, `AkashState`, `ExecuteResult`, `LilaState`, `GitaRoute`.
+- [x] Are they used elsewhere? Yes, throughout the module.
+- [x] Do they overlap with protocols/? No, `protocols/` has Interfaces, this has Data Structures (`TypedDict`).
 
 ### cell.py
-- [ ] MahaCellUnified structure?
-- [ ] Header + Lifecycle pattern?
-- [ ] How does it relate to chamber.py?
+- [x] MahaCellUnified structure? Composition of `MahaHeader`, `CellLifecycleState`, and generic `Payload`.
+- [x] Header + Lifecycle pattern? Yes.
+- [x] How does it relate to chamber.py? Chamber transforms Cell instances via `dance()`.
 
 ### chamber.py
-- [ ] SankirtanChamber structure?
-- [ ] Does it own the Orchestrator?
-- [ ] dance(), kirtan(), sankirtan() methods?
+- [x] SankirtanChamber structure? Owns `VenuOrchestrator` and `SiksastakamRegistry`.
+- [x] Does it own the Orchestrator? Yes.
+- [x] dance(), kirtan(), sankirtan() methods? Yes, all implemented.
 
 ### chat.py
-- [ ] What is this for?
-- [ ] Does it duplicate cli/chat functionality?
-- [ ] Gateway integration?
+- [x] What is this for? Infrastructure for Guardian-specific chat (`MahajanaChat`), routing to `runtime.providers`.
+- [x] Does it duplicate cli/chat functionality? It serves as the backend logic for Guardian chat, likely used by CLI or Services.
+- [x] Gateway integration? Yes, integrates with `vibe_core.runtime.providers`.
 
 ### commands.py
-- [ ] What commands are defined?
-- [ ] How do they relate to cli/?
-- [ ] Are there duplicate command definitions?
+- [x] What commands are defined? `cli_chant`, `cli_listen`, `cli_resolve`, `cli_serve`, `cli_veda`.
+- [x] How do they relate to cli/? These are the implementation handlers.
+- [x] Are there duplicate command definitions? No, these are the stateless logic blocks.
 
 ### orchestrator.py
-- [ ] VenuOrchestrator with 19-bit DIW?
-- [ ] THE_FLUTE_CYCLE LUT?
-- [ ] route(), harmonize(), verify_divinity()?
+- [x] VenuOrchestrator with 19-bit DIW? Yes.
+- [x] THE_FLUTE_CYCLE LUT? Yes, pre-computed.
+- [x] route(), harmonize(), verify_divinity()? Yes.
 
 ### research_gateway.py
-- [ ] What is this?
-- [ ] Is it production or experimental?
+- [x] What is this? Bridge connecting research tracking to `NrisimhaWatchdog` (Heartbeat).
+- [x] Is it production or experimental? Production infrastructure to manage the lifecycle of research modules ("Rollout").
 
 ---
 
@@ -92,68 +92,68 @@ For each file, answer:
 
 ### __init__.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: Critical facade. Implements the "Siksastakam Architecture" (Pure Lazy Loading). Import time optimization (<20ms).
 ```
 
 ### __main__.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: Standard entry point. Thin wrapper around `commands.py`.
 ```
 
 ### _lotus.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: Core infrastructure for the "Lotus" pattern (Directory-as-Object auto-discovery).
 ```
 
 ### _mahamantra_lotus.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: The Root Object. Implements `__call__` (The Mantra), `vibrate`, `tick`. Separated from `_lotus.py` to keep `__init__.py` clean.
 ```
 
 ### _types.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: "Watertight" TypedDicts. Ensures type safety without `Any`.
 ```
 
 ### cell.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: Defines `MahaCellUnified`. The fundamental unit. Clean composition pattern.
 ```
 
 ### chamber.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: The Engine. `SankirtanChamber`. Orchestrates the interaction between Time (`Orchestrator`) and Space (`Registry`).
 ```
 
 ### chat.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: Provides `MahajanaChat` and `FloodedMahajanaChat`. Necessary for Guardian persona implementation.
 ```
 
 ### commands.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: The Logic Library for CLI commands. Stateless and separated from argument parsing.
 ```
 
 ### orchestrator.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: `VenuOrchestrator`. Implements the math/music logic. LUT-based for O(1) performance.
 ```
 
 ### research_gateway.py
 ```
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
-NOTES:
+VERDICT: [x] Essential [ ] Redundant [ ] Unknown
+NOTES: Essential bridge for the "Research -> Production" pipeline. Connects to Kernel Heartbeat.
 ```
 
 ---
@@ -163,11 +163,14 @@ NOTES:
 Draw connections between files:
 
 ```
-orchestrator.py
+orchestrator.py (Time/Logic)
      ↓
-chamber.py (owns orchestrator?)
-     ↓
-cell.py (transformed by chamber?)
+chamber.py (Owns Orchestrator & Registry)
+     ↓ transforms
+cell.py (Unit of Computation)
+
+_mahamantra_lotus.py (Root) --lazy-loads--> chamber.py
+commands.py (Handlers) --uses--> chamber.py, cell.py
 ```
 
 ---
@@ -176,9 +179,9 @@ cell.py (transformed by chamber?)
 
 | File A | File B | Overlap? | Action |
 |--------|--------|----------|--------|
-| _lotus.py | _mahamantra_lotus.py | ? | |
-| chat.py | cli/? | ? | |
-| commands.py | cli/? | ? | |
+| _lotus.py | _mahamantra_lotus.py | No | Distinct roles (Base vs Root Implementor) |
+| chat.py | cli/? | Distinct | chat.py is Domain Logic, cli/ is interface |
+| commands.py | cli/? | Distinct | commands.py is Logic, cli/ is routing |
 
 ---
 
@@ -187,14 +190,19 @@ cell.py (transformed by chamber?)
 (Write after completing audit)
 
 **Essential Files:**
--
+- All 11 files in the root are essential.
+- The structure follows a clear pattern:
+    - **Core Data**: `cell.py`, `_types.py`
+    - **Core Logic**: `orchestrator.py`, `chamber.py`
+    - **Infrastructure**: `_lotus.py`, `_mahamantra_lotus.py`, `__init__.py`
+    - **Interface**: `commands.py`, `__main__.py`, `chat.py`, `research_gateway.py`
 
 **Redundant Files:**
--
+- None found.
 
 **Unknown/Needs More Investigation:**
--
+- None.
 
 ---
 
-*Last updated: ____*
+*Last updated: 2026-01-31*
