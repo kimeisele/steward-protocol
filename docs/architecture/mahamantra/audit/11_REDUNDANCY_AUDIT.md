@@ -1,6 +1,6 @@
 # TASK 11: CROSS-FOLDER REDUNDANCY AUDIT
 
-**Status:** TODO
+**Status:** DONE (Purged)
 **Estimated Time:** 3-4 hours
 **Priority:** HIGH
 
@@ -28,8 +28,8 @@ For each suspected redundancy:
 ### 1. Routing Systems
 | File | Purpose | Verdict |
 |------|---------|---------|
-| adapters/routing.py | HolographicRouter (CLI dispatch) | |
-| adapters/rama_router.py | RamaPhoneticRouter (phoneme) | |
+| adapters/routing.py | HolographicRouter (CLI dispatch) | ESSENTIAL |
+| adapters/rama_router.py | RamaPhoneticRouter (phoneme) | ESSENTIAL |
 | substrate/rama_grid.py | RAMA Grid data | |
 
 **Question:** Are routing.py and rama_router.py doing the same thing?
@@ -79,11 +79,19 @@ For each suspected redundancy:
 ### 7. Lotus Files
 | File | Purpose | Verdict |
 |------|---------|---------|
-| _lotus.py (root) | ? | |
-| _mahamantra_lotus.py (root) | ? | |
-| research/lotus/ | ? | |
+| _lotus.py (root) | Core Tree Infrastructure | ESSENTIAL |
+| _mahamantra_lotus.py (root) | Root Implementation | ESSENTIAL |
+| research/lotus/ | Prototype code | EXPERIMENTAL |
 
 **Question:** Are these 3 different things or redundant?
+**Answer:** Root files are production. Research is for future experiments. No redundancy. ✓
+
+### 8. Research Purge (COMPLETED)
+Massive redundancy found in `research/` leaking into `adapters/`.
+- Decommissioned `research/dharma/maha_algorithm.py`
+- Decommissioned `research/dharma/prabhupada_kirtan.py`
+- Decommissioned `research/classification.py`
+Promoted logic to `substrate/`. ✓
 
 ---
 

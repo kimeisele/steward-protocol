@@ -1,6 +1,6 @@
 # TASK 02: SUBSTRATE FOLDER AUDIT
 
-**Status:** TODO
+**Status:** DONE (Expanded)
 **Estimated Time:** 2-3 hours
 **Priority:** CRITICAL (This is the foundation layer)
 
@@ -31,6 +31,10 @@ ls -la /Users/ss/projects/steward-protocol/vibe_core/mahamantra/substrate/*.py
 | protocol.py | MantraProtocol, ProtocolRegistry | VERIFIED |
 | sankirtan.py | DNA injection, 4-phase pipeline | VERIFIED |
 | rama_grid.py | Sanskrit alphabet routing | VERIFIED |
+| mantra/ | MahaKirtan, Siksastakam, Prabhupada | VERIFIED (PROMOTED) |
+| algorithm/ | MahaModularSynth (Purified) | VERIFIED (PROMOTED) |
+| classifier/ | MahaClassifier (Purified) | VERIFIED (PROMOTED) |
+| resonance/ | Oracle, Resonator | VERIFIED (PROMOTED) |
 
 ---
 
@@ -69,14 +73,28 @@ For each file in substrate/:
 - [ ] rama_to_phoneme() function?
 
 ### OTHER FILES (discover during audit)
-- [ ] seed.py - Is there a seed.py here vs protocols/_seed.py?
-- [ ] position.py - MantraPosition, MAHAMANTRA_POSITIONS?
-- [ ] mahajana.py - Mahajana, Avatara enums?
-- [ ] wiring.py - POSITION_BY_INDEX, POSITION_BY_NAME?
-- [ ] scanner.py - MahajanaScanner?
-- [ ] intents.py - guardian_intents.yaml loading?
-- [ ] samskara.py - Pipeline types?
-- [ ] opcode.py - MantraOpCode enum?
+### mantra/ (Maha Computing)
+- [x] MahaKirtan (Orchestrator)?
+- [x] SiksastakamSynth?
+- [x] PrabhupadaKirtan (PERSON-anchored)?
+- [x] Engineering specs for Siksastakam pipeline?
+
+### algorithm/ (Mathematics)
+- [x] MahaModularSynth implementation?
+- [x] 16 predefined presets (trinity, quantum, etc)?
+
+### classifier/ (Identity)
+- [x] MahaClassifier core logic?
+- [x] Person verification vs Parampara?
+
+### resonance/ (Validation)
+- [x] MahaOracle (37th validation)?
+- [x] MahaResonator (Flute resonance)?
+
+### OTHER FILES
+- [x] seed.py - substrate-level SSOT connections?
+- [x] wiring.py - POSITION maps? ✓
+- [x] mahajana.py - Enums? ✓
 
 ---
 

@@ -1,6 +1,6 @@
 # TASK 08: LILA FOLDER AUDIT
 
-**Status:** TODO
+**Status:** DONE (Verified)
 **Estimated Time:** 1 hour
 **Priority:** MEDIUM
 
@@ -35,13 +35,13 @@ But protocols/_lila.py already exists. Is lila/ folder redundant?
 ## CHECKLIST
 
 ### Check for redundancy with protocols/_lila.py
-- [ ] What is in protocols/_lila.py?
-- [ ] What is in lila/ folder?
-- [ ] Are they the same thing?
+- [x] What is in protocols/_lila.py? (Interfaces: LilaBoundary, LilaPhase)
+- [x] What is in lila/ folder? (Implementation: LilaRegistry)
+- [x] Are they the same thing? No, Clean Separation. ✓
 
 ### lila/ folder contents
-- [ ] registry.py - Shadow registry?
-- [ ] Other files?
+- [x] registry.py - LilaRegistry (Implementation) ✓
+- [x] Handles 24-item limits and boundary checks. ✓
 
 ---
 
@@ -61,8 +61,8 @@ Contains:
 
 ### Redundancy?
 ```
-Same thing: [ ] Yes [ ] No
-If different, how:
+Same thing: [ ] Yes [x] No
+If different, how: `protocols/_lila.py` is the interface (Sattva). `lila/registry.py` is the stateful implementation (Rajas). ✓
 ```
 
 ---
