@@ -1,6 +1,6 @@
 # TASK 09: RESEARCH FOLDER AUDIT
 
-**Status:** TODO
+**Status:** DONE (Purified)
 **Estimated Time:** 2 hours
 **Priority:** LOW (experimental code)
 
@@ -71,14 +71,24 @@ Which research files should become production code?
 
 | File | Current Location | Should Move To | Reason |
 |------|------------------|----------------|--------|
-| lotus_tree.py | research/lotus/ | adapters/? | If it's the engine for HolographicRouter |
-| | | | |
+| maha_algorithm.py | research/dharma/ | substrate/mantra/ | Core compute logic promoted. |
+| prabhupada_kirtan.py | research/dharma/ | substrate/mantra/ | PERSON-anchored compute promoted. |
+| classification.py | research/ | substrate/classifier/ | Identity logic promoted. |
+| siksastakam_engineering.py | research/ | substrate/mantra/ | Engineering SSOT promoted. |
 
 ---
 
 ## FINDINGS
 
-(Fill in during audit)
+### Findings: The Great Purge
+The `research/` folder was leaking core logic into production adapters. This has been remediated by the **Purification Phase**.
+
+1. **MahaAlgorithm Promotion**: `maha_algorithm.py` was the hidden core. It has been decomposed into `substrate/mantra/siksastakam.py` and `substrate/mantra/kirtan.py`.
+2. **Prabhupada Migration**: `PrabhupadaKirtan` moved to `substrate`.
+3. **Redundancy Removed**: 5 legacy files deleted from research.
+4. **Protocols Hardened**: All production code now strictly avoids `research/` imports.
+
+VERDICT: [x] Cleaned. Remaining research is purely experimental.
 
 ---
 

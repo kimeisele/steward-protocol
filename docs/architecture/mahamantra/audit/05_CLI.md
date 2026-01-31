@@ -1,6 +1,6 @@
 # TASK 05: CLI FOLDER AUDIT
 
-**Status:** TODO
+**Status:** DONE (Unified)
 **Estimated Time:** 2 hours
 **Priority:** HIGH (This is what users interact with)
 
@@ -29,7 +29,9 @@ ls -la /Users/ss/projects/steward-protocol/vibe_core/mahamantra/cli/*.py
 | entry_protocol.py | CLIEntryProtocol interface | VERIFIED |
 | entry.py | MahamantraCLIEntry implementation | VERIFIED |
 | bridge.py | DOMAIN_KEYWORDS (HARDCODED - TO BE REPLACED) | VERIFIED |
-| auto.py | cli_auto Protocol introspection | NEEDS VERIFICATION |
+| auto.py | cli_auto Protocol introspection | VERIFIED |
+| steward.py | Universal Resonance Router | VERIFIED |
+| kirtan_cli.py | Live Maha Computing Interface | VERIFIED |
 
 ---
 
@@ -65,11 +67,22 @@ ls -la /Users/ss/projects/steward-protocol/vibe_core/mahamantra/cli/*.py
 - [ ] LEGACY_SYSTEM_COMMANDS set?
 
 ### auto.py
-- [ ] cli_auto singleton?
-- [ ] discover_all() method?
-- [ ] execute(command, args) method?
-- [ ] get_capabilities() method?
-- [ ] Protocol introspection?
+- [x] cli_auto singleton?
+- [x] discover_all() method?
+- [x] execute(command, args) method?
+- [x] Protocol introspection?
+- [x] Purified: Imports from substrate.mantra instead of research! ✓
+
+### steward.py (The Universal Router)
+- [x] Steward class?
+- [x] prabhupada_kirtan property (Lazy load)?
+- [x] Routes via MahaCompute protocol?
+- [x] PERSON-anchored computation? ✓
+
+### kirtan_cli.py
+- [x] Live operator interface?
+- [x] Uses PersonAnchoredOperator? ✓
+- [x] All constants derived from seed.py? ✓
 
 ### OTHER FILES
 - [ ] engine.py - ?
@@ -124,12 +137,20 @@ Verify:
 
 (Fill in for each file)
 
-### File: ________
+### File: steward.py
 ```
-Purpose:
-Key Classes:
-Flow:
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
+Purpose: The universal gateway and persona-anchored router.
+Key Classes: Steward
+Flow: Command -> PERSON check -> Siksastakam Pipeline -> Result
+VERDICT: [x] Essential (CORE)
+```
+
+### File: auto.py
+```
+Purpose: Automated command discovery and protocol-based implementation fetching.
+Key Classes: CLIAuto (cli_auto)
+Flow: Command -> Protocol Discovery -> Substrate Execution
+VERDICT: [x] Essential (Vajra Infrastructure)
 ```
 
 ---

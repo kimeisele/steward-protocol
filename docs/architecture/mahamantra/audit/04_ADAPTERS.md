@@ -1,6 +1,6 @@
 # TASK 04: ADAPTERS FOLDER AUDIT
 
-**Status:** TODO
+**Status:** DONE (Purified)
 **Estimated Time:** 1-2 hours
 **Priority:** HIGH
 
@@ -26,8 +26,9 @@ ls -la /Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/*.py
 | File | Purpose | Status |
 |------|---------|--------|
 | routing.py | HolographicRouter O(1) radix-16 | VERIFIED |
-| compression.py | MahaCompression intent extraction | VERIFIED |
-| rama_router.py | RamaPhoneticRouter (position → phoneme) | NEEDS VERIFICATION |
+| compression.py | MahaCompression (Purified) | VERIFIED |
+| rama_router.py | RamaPhoneticRouter (position → phoneme) | VERIFIED |
+| classification.py | MahaClassifier (Migrated to substrate) | VERIFIED |
 
 ---
 
@@ -51,10 +52,16 @@ ls -la /Users/ss/projects/steward-protocol/vibe_core/mahamantra/adapters/*.py
 - [ ] get_phoneme(rama_coord) method?
 - [ ] Uses rama_grid.py from substrate?
 
+### classification.py (MahaClassifier)
+- [x] MahaClassifier class?
+- [x] extract_identity() method?
+- [x] Now uses substrate/classifier/core.py (Purified) ✓
+- [x] Verifies PERSON against Parampara? ✓
+
 ### OTHER FILES (discover during audit)
 - [ ] attention.py - ?
 - [ ] bio.py - ?
-- [ ] classification.py - ?
+- [x] classification.py - VERIFIED (Purified)
 - [ ] pipeline.py - ?
 
 ---
@@ -78,12 +85,20 @@ These are DIFFERENT. Not redundant.
 
 (Fill in for each file)
 
-### File: ________
+### File: compression.py
 ```
-Purpose:
-Key Classes:
-Used By:
-VERDICT: [ ] Essential [ ] Redundant [ ] Unknown
+Purpose: Intent extraction and seed derivation for routing.
+Key Classes: MahaCompression (implements CompressionProtocol)
+Status: PURIFIED (Moves logic to substrate/algorithm/maha)
+VERDICT: [x] Essential
+```
+
+### File: classification.py
+```
+Purpose: Persona and identity classification for chaitanya-routing.
+Key Classes: MahaClassifier (implements ClassificationProtocol)
+Status: PURIFIED (Moves logic to substrate/classifier/core)
+VERDICT: [x] Essential
 ```
 
 ---
