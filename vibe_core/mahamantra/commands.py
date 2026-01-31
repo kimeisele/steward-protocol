@@ -65,6 +65,9 @@ def cli_chant(
     from vibe_core.mahamantra import mahamantra
     from vibe_core.mahamantra.substrate.seed import WORDS
     from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
+    from vibe_core.mahamantra.chamber import SankirtanChamber
+    from vibe_core.mahamantra.cell import MahaCellUnified
+    from vibe_core.mahamantra.orchestrator import THE_FLUTE_CYCLE
 
     # EPOCH LOCK CHECK (Boot validation - 1972 signature)
     if not SravanamCheck.validate_epoch_lock():
@@ -83,48 +86,69 @@ def cli_chant(
     results: List[Dict[str, object]] = []
     total_ticks = rounds * WORDS  # 1 round = 16 positions
 
-    # Spawn a Shadow Reactor (SANKIRTAN pattern - no singleton)
-    reactor = mahamantra.shadow.spawn(auto_discover=True)
+    # Spawn SANKIRTAN CHAMBER (The New Engine)
+    chamber = SankirtanChamber.create()
+    
+    # Create the Seed Cell (The Mantra itself)
+    # A single cell chanting through the cycles
+    seed_cell = MahaCellUnified.create(
+        source=0,  # Genesis
+        target=1,  # Evolution
+        operation=0, # Chant
+        initial_state="Hare Krishna"
+    )
 
     if verbose:
         print("=" * 60)
-        print("MAHAMANTRA CHANT - Computation on Demand")
+        print("MAHAMANTRA CHANT - Sankirtan Chamber Active")
         print("=" * 60)
         print(f"Rounds: {rounds} | Ticks: {total_ticks}")
         print("-" * 60)
 
     for tick_num in range(total_ticks):
-        # Get tick state from Singularity clock
+        # Get tick state from Singularity clock (still valid for timing)
         tick_state = mahamantra.tick()
 
-        # Process through Shadow Reactor (Yajna cycle)
-        shadow_state = reactor.tick(tick_state)
+        # Step 1: Dance (Transform Cell & Update Registry)
+        chamber.dance(seed_cell)
+        
+        # Step 2: Metrics
+        # Map Orchestrator state to legacy Shadow state for compatibility
+        # Name encoding: (diw >> 16) & 0x3 -> 0=H, 1=K, 2=R
+        current_diw = THE_FLUTE_CYCLE[chamber.tick % WORDS]
+        name_idx = (current_diw >> 16) & 0x3
+        guardian_name = ["HARE", "KRISHNA", "RAMA", "?"][name_idx]
+        
+        state = {
+            "position": chamber.tick % WORDS,
+            "guardian": guardian_name,
+            "phase": "kirtan", # Active chanting
+            "opcode": "TRANSFORM",
+            "resonance": chamber.resonance_count,
+            "transformations": chamber.total_transformations,
+            "active_cells": len(chamber.active_cells),
+        }
 
         if verbose:
-            phase = shadow_state["phase"]
-            phase_symbol = {"bhoga": "+", "prasadam": "~", "return": "<"}
-            symbol = phase_symbol.get(phase, " ")
             print(
-                f"[{tick_num:02d}] {symbol} {shadow_state['guardian']:12s} | "
-                f"{phase:8s} | pos={shadow_state['position']:2d} | "
-                f"opcode={shadow_state['opcode']}"
+                f"[{tick_num:02d}] ~ {guardian_name:12s} | "
+                f"KIRTAN   | pos={state['position']:2d} | "
+                f"res={state['resonance']} | cells={state['active_cells']}"
             )
 
-        results.append(dict(shadow_state))
+        results.append(state)
 
     if verbose:
         print("-" * 60)
         print(f"Completed {rounds} round(s)")
-        print(f"  Cycles: {reactor._cycle_count} | Switches: {reactor._switch_count}")
-        connected = "YES" if reactor.is_parampara_connected else "NO"
-        print(f"  Parampara: {connected}")
+        print(f"  Resonance: {chamber.resonance_count} | Transformations: {chamber.total_transformations}")
+        print(f"  Active Cells (Registry): {len(chamber.active_cells)}")
         print("=" * 60)
     else:
-        # Always show minimal summary (no silent failures)
+        # Always show minimal summary
         final_pos = results[-1]["position"] if results else 0
         final_guard = results[-1]["guardian"] if results else "unknown"
-        connected = "YES" if reactor.is_parampara_connected else "NO"
-        print(f"CHANT: {rounds}r × {total_ticks}t → [{final_guard}@{final_pos}] Parampara={connected}")
+        print(f"CHANT: {rounds}r × {total_ticks}t → [{final_guard}@{final_pos}] Res={chamber.resonance_count} Cells={len(chamber.active_cells)}")
 
     return ChantResult(
         success=True,
@@ -133,9 +157,9 @@ def cli_chant(
         ticks=total_ticks,
         final_position=results[-1]["position"] if results else 0,
         final_guardian=results[-1]["guardian"] if results else "unknown",
-        cycle_count=reactor._cycle_count,
-        switch_count=reactor._switch_count,
-        parampara_connected=reactor.is_parampara_connected,
+        cycle_count=chamber.resonance_count, # Mapped from resonance
+        switch_count=chamber.total_transformations, # Mapped from transformations
+        parampara_connected=len(chamber.active_cells) > 0, # Presence implies connection
     )
 
 
