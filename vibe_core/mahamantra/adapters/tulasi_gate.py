@@ -6,7 +6,7 @@ TULASI GATE - The Sanctification Adapter
 "Simply by seeing, she destroys all sins."
 
 This adapter implements the "Tulasi in Process".
-It does NOT invent numbers. It Validates and Sanctifies.
+It handles the BHOGA -> PRASADAM transformation logic.
 """
 
 from typing import Final, Optional
@@ -14,6 +14,9 @@ from vibe_core.mahamantra.protocols.offering import GraceProtocol
 from vibe_core.mahamantra.protocols._seed import (
     KSETRAJNA,
     MAHA_QUANTUM,
+    POSITION_SUM_TOTAL,
+    KSHETRA,
+    PRASADAM,
 )
 
 class TulasiGate(GraceProtocol):
@@ -22,7 +25,7 @@ class TulasiGate(GraceProtocol):
     
     Role:
     1. VALIDATE: Ensures the offering is suitable (Sattvic).
-    2. SANCTIFY: Adds the Observer (+1) to the Seed.
+    2. SANCTIFY: Transforms Bhoga (Material) to Prasadam (Spiritual).
     3. PROTECT: Does not allow 'dirty' inputs into the core.
     """
     
@@ -30,16 +33,32 @@ class TulasiGate(GraceProtocol):
         """
         Purify the seed through connection.
         
-        If Tulasi is present:
-            The seed (Bhoga) receives the Observer (Ksetrajna).
-            seed -> seed + KSETRAJNA
-            
-        This transforms Bhoga into Prasadam (Qualitative change).
+        TRANSFORMATION LOGIC (Ontological):
+        - Bhoga (Material) = Field (No Observer)
+        - Prasadam (Spiritual) = Field + Observer (Ksetrajna)
+        
+        Transitions:
+        - 136 (POSITION_SUM_TOTAL) -> 137 (MAHA_QUANTUM)
+        - 24 (KSHETRA) -> 25 (PRASADAM)
+        
+        If Tulasi is present, she facilitates this addition of the Observer.
         """
         if not has_tulasi:
             return seed
             
-        # The offering is sanctified (Observer added)
+        # If seed is exactly the Classical Field (136), sanctify to Quantum (137)
+        if seed == POSITION_SUM_TOTAL:
+            return MAHA_QUANTUM
+            
+        # If seed is exactly the Material Field (24), sanctify to Prasadam (25)
+        if seed == KSHETRA:
+            return PRASADAM
+            
+        # General case: Add KSETRAJNA (The Observer)
+        # But ONLY if it's not already sanctified (to avoid 137+1=138 nonsense)
+        # We assume if mod 17 == 1, it might already have the observer.
+        # But simplest "safe" logic for arbitrary seeds is to add the Observer
+        # to ensure the computation includes the "collapse function".
         return seed + KSETRAJNA
 
     def expand_field(self, current_mod: int, has_tulasi: bool) -> int:
