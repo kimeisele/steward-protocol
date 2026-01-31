@@ -45,6 +45,7 @@ from datetime import datetime
 from typing import List, Optional
 from vibe_core.gateway import chat as gateway_chat
 from vibe_core.mahamantra.cli.auto import cli_auto
+from vibe_core.mahamantra.cli.cell_wrapper import MahaCellCLI
 from vibe_core.mahamantra.cli.entry_protocol import CLIEntryProtocol
 from vibe_core.mahamantra.cli.protocol import (
     CLICapability,
@@ -79,6 +80,8 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
         self._discovered = cli_auto.discover_all()
         self._state = CLIState()
         self._health = CLIHealth()
+        # Universal Cell Wrapper (Sankirtan Chamber integration)
+        self._cell_wrapper = MahaCellCLI()
 
     def run(self, args: List[str]) -> int:
         """
@@ -124,6 +127,17 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
         # Route via mahamantra
         self._state.busy = True
         self._state.last_command = command
+
+        # === MAHACELL INTEGRATION ===
+        # Every interaction must flow through the Sankirtan Chamber
+        try:
+            cell = self._cell_wrapper.wrap(command, remaining)
+            # Transform cell through Kirtan (metadata update)
+            # This doesn't replace execution yet, but ensures spiritual audit trail
+            _ = self._cell_wrapper.execute(cell)
+        except Exception as e:
+            # Don't block execution if wrapper fails (Mercy)
+            print(f"WARN: Sankirtan Chamber bypassed: {e}")
 
         result = cli_auto.execute(command, remaining)
 
