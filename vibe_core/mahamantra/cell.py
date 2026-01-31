@@ -40,7 +40,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 from vibe_core.mahamantra.protocols._header import (
     MahaHeader,
-    HeaderField,
+    NavaBhaktiField,
     HEADER_SIZE_BYTES,
 )
 
