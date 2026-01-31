@@ -6,12 +6,11 @@ SANKIRTAN CHAMBER - The Resonance Space
 "One should always chant the holy name of the Lord"
 — Chaitanya Charitamrita, Adi 17.31
 
-The Chamber OWNS the Orchestrator. Cells FLOW through.
-This is COMPOSITION, not INHERITANCE.
+The Chamber OWNS the Orchestrator and the Registry.
+Cells FLOW through the Registry, triggered by the Orchestrator.
 
-Pattern:
-- State (Cell) is separated from Logic (Orchestrator)
-- Cells remain dumb (data), Chamber is intelligent (music)
+Structure:
+    Orchestrator (Time/Logic) -> DIW -> Registry (Space/Memory) -> Cell (Life)
 
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 """
@@ -46,12 +45,16 @@ from vibe_core.mahamantra.orchestrator import (
     THE_FLUTE_CYCLE,
     DIW_MASK,
     SUNYA_MASK,
+    VENU_SHIFT,
+    VAMSI_SHIFT,
+    MURALI_SHIFT,
 )
 from vibe_core.mahamantra.cell import (
     MahaCellUnified,
     CellLifecycleState,
     GENESIS_PRANA,
 )
+from vibe_core.mahamantra.substrate.registry import SiksastakamRegistry
 
 
 # =============================================================================
@@ -106,7 +109,7 @@ class SankirtanChamber(Generic[C]):
     This is COMPOSITION, not INHERITANCE.
     
     Pattern:
-        cell_in → orchestrator.step() → transform → cell_out
+        cell_in → orchestrator.step() → transform → registry(vamsi) → cell_out
     
     SSOT Derivation:
         CHAMBER_CAPACITY = MALA = 108
@@ -119,6 +122,9 @@ class SankirtanChamber(Generic[C]):
     
     # The Orchestrator (owned, not inherited)
     _orchestrator: VenuOrchestrator = field(default_factory=VenuOrchestrator)
+    
+    # The Registry (Musical Memory - 512 slots)
+    _registry: SiksastakamRegistry = field(default_factory=SiksastakamRegistry)
     
     # Chamber state
     _resonance_count: int = 0
@@ -140,36 +146,68 @@ class SankirtanChamber(Generic[C]):
         """Total cells transformed."""
         return self._total_transformations
     
+    @property
+    def active_cells(self) -> list[MahaCellUnified[C]]:
+        """Return all cells currently residing in the registry."""
+        return self._registry.active_cells()
+    
     # =========================================================================
     # CORE TRANSFORMATION METHODS
     # =========================================================================
     
     def dance(self, cell: MahaCellUnified[C]) -> MahaCellUnified[C]:
         """
-        Single cell flows through, gets transformed.
+        Single cell flows through, gets transformed, and interacts with Memory.
         
-        This is the atomic operation: cell + DIW → transformed cell.
+        Logic:
+        1. Get DIW from Orchestrator.
+        2. Transform Cell (apply DIW).
+        3. Extract Vamsi (Address) from DIW.
+        4. Interact with Registry at Vamsi address:
+           - Empty? -> Occupy (Presence).
+           - Occupied? -> Merge (Resonance).
         
         Args:
             cell: The cell to transform
             
         Returns:
-            The same cell (mutated) after transformation
+            The resulting cell (original or merged)
         """
-        # Get the current Divine Instruction Word
+        # 1. Get the current Divine Instruction Word
         diw = self._orchestrator.step()
         
-        # Transform the cell
+        # 2. Transform the cell
         self._apply_diw(cell, diw)
         
-        # Track resonance
+        # 3. INTERACT WITH REGISTRY
+        # Extract Vamsi (9 bits) - The Memory Address
+        vamsi = (diw >> VAMSI_SHIFT) & ((1 << VAMSI_HOLES) - 1)
+        
+        # Check residents
+        resident = self._registry.get(vamsi)
+        
+        result_cell = cell
+        
+        if resident and resident is not cell:
+            # RESONANCE interaction!
+            # Merge visitor (cell) into resident
+            merged = self._merge_pair(resident, cell)
+            self._registry.set(vamsi, merged)
+            result_cell = merged
+            self._resonance_count += 1
+        else:
+            # PRESENCE (Update/Occupy)
+            self._registry.set(vamsi, cell)
+            result_cell = cell
+        
+        # Track statistics
         self._accumulated_diw ^= (diw & DIW_MASK)
         self._total_transformations += 1
         
         if self._accumulated_diw % PARAMPARA == 0:
             self._resonance_count += 1
         
-        return cell
+        return result_cell
     
     def kirtan(
         self,
@@ -188,9 +226,10 @@ class SankirtanChamber(Generic[C]):
         Returns:
             The transformed cell
         """
+        current = cell
         for _ in range(cycles * WORDS):
-            self.dance(cell)
-        return cell
+            current = self.dance(current)
+        return current
     
     def sankirtan(
         self,
@@ -200,28 +239,28 @@ class SankirtanChamber(Generic[C]):
         """
         Transform multiple cells together (group chanting).
         
-        When merge=True, cells with resonance scores > RESONANCE_THRESHOLD
-        are merged using XOR of their headers.
-        
         Args:
             cells: List of cells to transform
-            merge: Whether to merge resonant cells
+            merge: Whether to perform additional group merge pass
             
         Returns:
-            List of transformed cells (may be shorter if merged)
+            List of transformed cells
         """
         if not cells:
-            return cells
+            return []
         
-        # Transform all cells
+        results: list[MahaCellUnified[C]] = []
+        
+        # Transform all cells (they naturally interact via Registry)
         for cell in cells:
-            self.dance(cell)
+            res = self.dance(cell)
+            results.append(res)
         
-        if not merge:
-            return cells
+        # If explicit merge requested, do additional sweep
+        if merge:
+            return self._merge_resonant(results)
         
-        # Merge resonant cells
-        return self._merge_resonant(cells)
+        return results
     
     # =========================================================================
     # TRANSFORMATION LOGIC
@@ -237,9 +276,9 @@ class SankirtanChamber(Generic[C]):
         - cycle: advancement based on high 4 bits (MURALI)
         """
         # Extract flute components
-        venu_bits = diw & ((1 << VENU_HOLES) - 1)
-        vamsi_bits = (diw >> VENU_HOLES) & ((1 << VAMSI_HOLES) - 1)
-        murali_bits = (diw >> (VENU_HOLES + VAMSI_HOLES)) & ((1 << MURALI_HOLES) - 1)
+        venu_bits = (diw >> VENU_SHIFT) & ((1 << VENU_HOLES) - 1)
+        vamsi_bits = (diw >> VAMSI_SHIFT) & ((1 << VAMSI_HOLES) - 1)
+        murali_bits = (diw >> MURALI_SHIFT) & ((1 << MURALI_HOLES) - 1)
         
         # Apply to lifecycle
         # VENU (6 bits): Modulate prana (energy)
@@ -255,12 +294,39 @@ class SankirtanChamber(Generic[C]):
         # MURALI (4 bits): Advance cycle counter
         cell.lifecycle.cycle += murali_bits % 4
     
+    def _merge_pair(
+        self,
+        resident: MahaCellUnified[C],
+        visitor: MahaCellUnified[C],
+    ) -> MahaCellUnified[C]:
+        """
+        Merge two cells colliding in the Registry.
+        
+        Strategy:
+        - Prana accumulates
+        - Integrity averages
+        - Identify (Header) XORs (creating new signature)
+        """
+        # Combine Prana (additive energy)
+        resident.lifecycle.prana += visitor.lifecycle.prana
+        
+        # Average Integrity
+        resident.lifecycle.integrity = (
+            resident.lifecycle.integrity + visitor.lifecycle.integrity
+        ) / 2
+        
+        # Mix Identities (Resonance)
+        # We don't change the immutable header ID, but we could update 'atma_nivedanam' checksum?
+        # For now, we mainly accumulate Life Force.
+        
+        return resident
+        
     def _merge_resonant(
         self,
         cells: list[MahaCellUnified[C]],
     ) -> list[MahaCellUnified[C]]:
         """
-        Merge cells with high resonance.
+        Merge cells in a list with high resonance (Legacy/Batch mode).
         
         Cells are considered resonant if their header checksums
         have matching modulo PARAMPARA values.
@@ -286,11 +352,8 @@ class SankirtanChamber(Generic[C]):
                 # Check resonance: XOR of checksums mod PARAMPARA
                 xor_check = cell_a.header.atma_nivedanam ^ cell_b.header.atma_nivedanam
                 if xor_check % PARAMPARA == 0:
-                    # Merge: combine prana, average integrity
-                    cell_a.lifecycle.prana += cell_b.lifecycle.prana
-                    cell_a.lifecycle.integrity = (
-                        cell_a.lifecycle.integrity + cell_b.lifecycle.integrity
-                    ) / 2
+                    # Merge using pair logic
+                    merger = self._merge_pair(cell_a, cell_b)
                     
                     merged_indices.add(j)
                     partner_found = True
@@ -325,6 +388,7 @@ class SankirtanChamber(Generic[C]):
     def reset(self) -> None:
         """Reset chamber to initial state."""
         self._orchestrator.reset()
+        self._registry.clear()
         self._resonance_count = 0
         self._total_transformations = 0
         self._accumulated_diw = 0
@@ -335,9 +399,10 @@ class SankirtanChamber(Generic[C]):
     
     @classmethod
     def create(cls) -> "SankirtanChamber[C]":
-        """Create a new chamber with fresh orchestrator."""
+        """Create a new chamber with fresh orchestrator and registry."""
         return cls(
             _orchestrator=VenuOrchestrator(),
+            _registry=SiksastakamRegistry(),
             _resonance_count=0,
             _total_transformations=0,
             _accumulated_diw=0,
