@@ -1527,29 +1527,23 @@ class UnifiedCLI:
         Exit: Type "37" (PARAMPARA) or Ctrl+C
         """
         try:
-            from vibe_core.mahamantra.research.dharma.maha_operator import MahaOperator
+            from vibe_core.mahamantra.substrate.mantra import PersonAnchoredOperator
             from vibe_core.services.chat_indriya import get_chat_indriya
 
             # Initialize ChatIndriya for Shravanam/Kirtanam
-            # This is THE sense organ - hearing (SROTRA) + speaking (VAK)
             indriya = None
             try:
                 indriya = get_chat_indriya("operator_default")
             except Exception as e:
                 logger.warning(f"ChatIndriya not available: {e}")
 
-            # Create operator with ChatIndriya integration
-            operator = MahaOperator(
-                session_id="vibe_default",
-                use_indriya=indriya is not None,
-            )
+            # Create operator
+            operator = PersonAnchoredOperator()
 
-            # Run the live loop
-            # This is THE infinite loop until "37" (PARAMPARA) exit
-            final_state = operator.run(seed=0, show_metrics=True)
+            # Run siksastakam round
+            results = operator.run_siksastakam(seed=0)
 
-            # Report final state
-            print(f"\nSession complete: {final_state.total_beats} beats, {final_state.total_rounds} rounds")
+            print(f"\nSession complete: {len(results)} beats.")
             return 0
 
         except ImportError as e:

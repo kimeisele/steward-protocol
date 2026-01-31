@@ -243,7 +243,7 @@ class Steward:
     def prabhupada_kirtan(self):
         """Lazy load PrabhupadaKirtan."""
         if self._prabhupada_kirtan is None:
-            from vibe_core.mahamantra.research.dharma.prabhupada_kirtan import PrabhupadaKirtan
+            from vibe_core.mahamantra.substrate.mantra import PrabhupadaKirtan
             self._prabhupada_kirtan = PrabhupadaKirtan()
         return self._prabhupada_kirtan
 
