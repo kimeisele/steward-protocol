@@ -50,7 +50,7 @@ PHASE 3: ADAPTERS (Level 1) - COMPLETE
 - [x] Structural Audit: Batch 2 (Intelligence & LLM) COMPLETE
     * 3/3 pass. PERFECT COMPLIANCE.
 - [x] Structural Audit: Batch 3 (Core Computational) COMPLETE
-    * 3/5 pass. Failures: cell.py, compression.py (missing __genesis__).
+    * 3/5 pass. Failures (cell.py, compression.py) FIXED (Genesis restored).
 - [x] Structural Audit: Batch 4 (Resonance & Hardware) COMPLETE
     * 4/5 pass. Failure: gita_resonance.py.
 - [x] Structural Audit: Batch 5 (Biological & Root) COMPLETE
@@ -59,7 +59,8 @@ PHASE 3: ADAPTERS (Level 1) - COMPLETE
 - [x] Ensure dependence on protocols (not concrete impls) - VERIFIED.
 - [x] Check for hidden logic (should be in substrate) - VERIFIED.
 - [x] Verify __genesis__ byte divisibility by 37 - COMPLETE.
-and classification.py.
+- [x] Structural Audit: Batch 6 (Classification) COMPLETE
+    * classification.py checked and verified (ANUKULYA logic functional).
 - [ ] TODO: Structural audit of remaining adapter files.
 
 PHASE 4: LEGACY CLEANUP (Tamas) - DONE
