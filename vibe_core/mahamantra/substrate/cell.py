@@ -14,6 +14,11 @@ Every cell carries its 72-byte header and biological state.
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 """
 
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "prahlada"
+__position__ = 5
+__genesis__ = "0xb5c3a829"  # GenesisByte: parampara % 37 == 0
+
 from dataclasses import dataclass, field
 from typing import Final, ClassVar, Optional, Dict, Generic, TypeVar, Tuple, Any
 import uuid
@@ -109,6 +114,9 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         MAX_AGE_CYCLES = JIVA_CYCLE = 432
         MITOSIS_THRESHOLD = MAHA_QUANTUM × 2 = 274
     """
+    
+    __mahajana__: ClassVar[str] = "prahlada"
+    __position__: ClassVar[int] = 5
     
     # Identity (immutable)
     header: MahaHeader
