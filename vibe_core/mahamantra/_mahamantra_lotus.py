@@ -66,7 +66,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def _get_kirtan(cls):
         """Lazy-load MahaKirtan orchestrator."""
         if cls._kirtan is None:
-            from vibe_core.mahamantra.research.dharma import MahaKirtan
+            from vibe_core.mahamantra.substrate.mantra import MahaKirtan
             from vibe_core.mahamantra.adapters.compression import MahaCompression
             from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
@@ -90,7 +90,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         result = kirtan.compute(cell if cell else seed)
 
-        from vibe_core.mahamantra.research.dharma import MahaResonator
+        from vibe_core.mahamantra.substrate.resonance import MahaResonator
         from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
         resonator = MahaResonator(mod_space=MAHA_QUANTUM)
