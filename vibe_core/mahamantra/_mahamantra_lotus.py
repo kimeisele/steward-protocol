@@ -282,9 +282,24 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 7. DASYAM - Position/Quarter/Role determination
         # =====================================================================
-        # STRUCTURE: 4 Avataras (HEADs) + 12 Mahajanas (WORKERs) = 16 positions
-        # HEADs are at positions 0, 4, 8, 12 (first of each Quarter)
-        from vibe_core.mahamantra.protocols._seed import is_head, get_quarter_head
+        # TWO CLASSIFICATION SYSTEMS (both derived from Mahamantra):
+        #
+        # A) OPERATIONAL (Quarters): How computation flows
+        #    - genesis (0-3):  INPUT   - vyasa, brahma, narada, shambhu
+        #    - dharma  (4-7):  VERIFY  - prithu, kumaras, kapila, manu
+        #    - karma   (8-11): EXECUTE - parashurama, prahlada, janaka, bhishma
+        #    - moksha (12-15): OUTPUT  - nrisimha, bali, shuka, yamaraja
+        #    HEAD = first position of each Quarter (0,4,8,12)
+        #
+        # B) ONTOLOGICAL (Trinity): What each position represents
+        #    - HARE (8 positions): Energy/Shakti - carriers/transmitters
+        #    - KRISHNA (4 positions): Source - all Vishnu-tattva
+        #    - RAMA (4 positions): Bliss - receivers/deliverers
+        #
+        from vibe_core.mahamantra.protocols._seed import (
+            is_head, get_quarter_head,
+            get_name_at_position, get_trinity_function,
+        )
 
         position = attractor % WORDS  # 0-15
 
@@ -299,10 +314,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
 
-        # HEAD/WORKER role determination (from SSOT)
+        # OPERATIONAL: HEAD/WORKER role (Quarter leadership)
         role = "avatara" if is_head(position) else "mahajana"
         quarter_head_pos = get_quarter_head(position)
         quarter_head_name = ALL_GUARDIANS[quarter_head_pos] if quarter_head_pos < len(ALL_GUARDIANS) else "unknown"
+
+        # FUNCTIONAL: Trinity classification (Name governance)
+        holy_name = get_name_at_position(position)  # "H", "K", or "R"
+        trinity_function = get_trinity_function(position)  # "source", "carrier", or "deliverer"
 
         # =====================================================================
         # 8. SAKHYAM - MahaCell creation (universal format)
@@ -352,12 +371,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "verse": verse_info,
             "matches": len(verse_result.matches),
 
-            # Position (DASYAM) - 4 Avataras (HEADs) + 12 Mahajanas (WORKERs)
+            # Position (DASYAM) - Dual Classification
             "position": position,
             "guardian": guardian,
+            # Operational (Quarters): How computation flows
             "quarter": quarter,
             "role": role,  # "avatara" (HEAD) or "mahajana" (WORKER)
             "quarter_head": quarter_head_name,  # The Avatara managing this Quarter
+            # Functional (Trinity): What this position DOES
+            "holy_name": holy_name,  # "H" (Hare), "K" (Krishna), "R" (Rama)
+            "trinity_function": trinity_function,  # "source" (K), "carrier" (H), "deliverer" (R)
 
             # MahaCell (SAKHYAM)
             "cell": {
