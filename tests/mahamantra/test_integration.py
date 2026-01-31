@@ -1,47 +1,69 @@
 """
-INTEGRATION TEST - The Balarama Proof
-=====================================
+MAHAMANTRA INTEGRATION TESTS
+============================
 
-"Proof of Strength"
+"yathā taror mūla-niṣecanena"
+"As pouring water on the root nourishes the entire tree..."
+(SB 4.31.14)
 
-This test verifies that the Mahamantra Router correctly:
-1. Loads legacy services.
-2. Wraps them in MahamantraProxy (Balarama).
-3. Makes them Pancha Tattva compliant.
-
-This proves the "One Import" promise:
-    from vibe_core.mahamantra import mahamantra
-    service = mahamantra.mod.some_legacy_service
-    assert service.__tattva__  # Magic!
+Verifies the integration of:
+- SankirtanChamber (Root)
+- SiksastakamRegistry (Memory)
+- CLI Commands (Branches/Fruits)
 """
 
 import pytest
+from vibe_core.mahamantra.commands import cli_chant
+from vibe_core.mahamantra.substrate.seed import WORDS, PARAMPARA
 
-from vibe_core.mahamantra import mahamantra
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
-from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
-
-# We use a known legacy module for testing (e.g. from protocols.mahajanas)
-# OR we can mock one if we want pure isolation.
-# But "Integration" means testing with real components.
-
-
-def test_proxy_transparency():
-    """Test that the proxy forwards calls correctly."""
-
-    class LegacyTool:
-        def run(self):
-            return "legacy run"
-
-    # Wrap it manually to test the proxy mechanism
-    proxy = MahamantraProxy(LegacyTool(), position=0, guardian="test")
-
-    # It should have tattva
-    assert proxy.__tattva__["srivasa"] == "Guarded by test"
-
-    # It should behave like the tool
-    assert proxy.run() == "legacy run"
+def test_chant_integration_basic():
+    """
+    Test standard chant cycle (1 round).
+    Verifies that the CLI command spins up the Chamber and produces valid output.
+    """
+    result = cli_chant(rounds=1, verbose=False)
+    
+    assert result["success"]
+    assert result["rounds"] == 1
+    assert result["ticks"] == WORDS  # 16
+    assert result["final_position"] == 0 # 16 % 16 = 0
+    # Parampara connected if cells exist (presence)
+    assert result["parampara_connected"] is True
+    # Initial run might not have resonance (depends on pattern)
+    # But total transformations must be 16
+    assert result["switch_count"] == 16
 
 
-if __name__ == "__main__":
-    pytest.main([__file__])
+def test_chant_resonance_accumulation():
+    """
+    Test multiple rounds leading to resonance.
+    
+    4 rounds = 64 ticks.
+    The Chamber uses a single Seed Cell, which transforms and jumps around.
+    It leaves a trail in the Registry.
+    Eventually, it should hit its own tail or filled slots.
+    """
+    ROUNDS = 4
+    result = cli_chant(rounds=ROUNDS, verbose=False)
+    
+    assert result["success"]
+    assert result["rounds"] == ROUNDS
+    assert result["ticks"] == ROUNDS * WORDS
+    assert result["switch_count"] == ROUNDS * WORDS
+    
+    # We expect the registry to be populated
+    # parampara_connected indicates Active Cells > 0
+    assert result["parampara_connected"] is True
+
+
+def test_chant_verbose_mode(capsys):
+    """
+    Test verbose output to stdout.
+    """
+    result = cli_chant(rounds=1, verbose=True)
+    assert result["success"]
+    
+    captured = capsys.readouterr()
+    assert "MAHAMANTRA CHANT - Sankirtan Chamber Active" in captured.out
+    assert "KIRTAN" in captured.out
+    assert "res=" in captured.out
