@@ -223,10 +223,19 @@ class VenuOrchestrator:
         return True
     
     def route(self, seed: int) -> Tuple[int, int, int]:
-        """Route seed through the orchestra."""
+        """
+        Route seed through the orchestra.
+
+        All formulas use SSOT constants (SEVEN, TEN) to ensure
+        full coverage of all 16 positions.
+
+        FIX: murali was (seed * seed) % 16 which only produces 4 values
+        (quadratic residues mod 16 = {0,1,4,9}). Now uses linear
+        combination to reach all 16 positions.
+        """
         venu = (seed * SEVEN) % (1 << self.VENU_BITS)
         vamsi = (seed + TEN) % (1 << self.VAMSI_BITS)
-        murali = (seed * seed) % (1 << self.MURALI_BITS)
+        murali = (seed * SEVEN + TEN) % (1 << self.MURALI_BITS)
         return (venu, vamsi, murali)
     
     def harmonize(
