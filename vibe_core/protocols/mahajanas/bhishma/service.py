@@ -11,7 +11,7 @@ Wraps the Ledger implementation.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "bhishma"
 __position__ = 11
-__genesis__ = "0xea56f10e"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x2ed4af5cfeb3b037cb7bf596f6bfd244f9820ba86efd85da163eb8495b0856b4"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
 import logging
@@ -40,6 +40,12 @@ class BhishmaService(BhishmaProtocol):
 
     def __init__(self, ledger: LedgerProtocol):
         self._ledger = ledger
+        
+        # VARNASHRAMA INTEGRATION:
+        # Spawn the JivaShadow qualified for this position (11).
+        from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+        self._shadow = spawn_shadow_for_position(11, context=b"bhishma_service_v1")
+        
         logger.info(f"🛡️ BHISHMA: Initialized with {type(ledger).__name__}")
 
     @property
