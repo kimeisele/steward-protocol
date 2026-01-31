@@ -17,6 +17,7 @@ from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_TOTAL,
     KSHETRA,
     PRASADAM,
+    HARE_COUNT,
 )
 
 class TulasiGate(GraceProtocol):
@@ -26,7 +27,7 @@ class TulasiGate(GraceProtocol):
     Role:
     1. VALIDATE: Ensures the offering is suitable (Sattvic).
     2. SANCTIFY: Transforms Bhoga (Material) to Prasadam (Spiritual).
-    3. PROTECT: Does not allow 'dirty' inputs into the core.
+    3. EXPAND: Opens the Transcendental Field (1096) via Grace.
     """
     
     def purify_offering(self, seed: int, has_tulasi: bool) -> int:
@@ -56,19 +57,23 @@ class TulasiGate(GraceProtocol):
             
         # General case: Add KSETRAJNA (The Observer)
         # But ONLY if it's not already sanctified (to avoid 137+1=138 nonsense)
-        # We assume if mod 17 == 1, it might already have the observer.
-        # But simplest "safe" logic for arbitrary seeds is to add the Observer
-        # to ensure the computation includes the "collapse function".
         return seed + KSETRAJNA
 
     def expand_field(self, current_mod: int, has_tulasi: bool) -> int:
         """
-        Field remains constant (Physics).
+        Expand the Field to the Transcendental Plane.
         
-        We do NOT arbitrarily expand the universe logic.
-        The change is QUALITATIVE (inner), not QUANTITATIVE (outer).
+        If Tulasi is present (Grace):
+            Field = Field * HARE_COUNT (8)
+            Example: 137 * 8 = 1096
+            
+        This breaks the "Stubborn Loop" of the finite field (137)
+        by accessing the infinite expansion of the Name (8 Shaktis).
         """
-        return current_mod
+        if not has_tulasi:
+            return current_mod
+            
+        return current_mod * HARE_COUNT
 
     def modulate_feedback(self, feedback: int, has_tulasi: bool) -> int:
         """

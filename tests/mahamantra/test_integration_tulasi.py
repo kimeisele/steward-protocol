@@ -28,31 +28,32 @@ def test_production_integration():
     
     res_standard = synth.transform(seed=POSITION_SUM_TOTAL, has_tulasi=False)
     
-    # 3. Test Loop WITH Tulasi (Prasadam / Quantum Reality)
-    # Seed 136 becomes 137 (MAHA_QUANTUM) via TulasiGate.purify_offering.
-    # The loop runs with the Sanctified Seed (Field + Observer).
+    # 3. Test Loop WITH Tulasi (Transcendental Expansion)
+    # Seed 136 becomes 137 via purify_offering.
+    # Mod Space becomes 137 * 8 = 1096 via expand_field.
+    # The loop runs in the Expanded Field.
     
     res_tulasi = synth.transform(seed=POSITION_SUM_TOTAL, has_tulasi=True)
     
     print(f"\n[INTEGRATION] Standard Result (seed=136): {res_standard}")
-    print(f"[INTEGRATION] Tulasi Result (seed=136->137): {res_tulasi}")
+    print(f"[INTEGRATION] Tulasi Result (seed=136->137, mod=1096): {res_tulasi}")
     
     # Assert they are DIFFERENT (Grace changes the outcome)
     assert res_standard != res_tulasi, "Tulasi had no effect!"
     
     # Assert Calculation Logic match
-    # The output must remain within the quantum bounds (0-136)
+    # With field expansion, output can exceed 137 but must be within 1096
     
     val_tulasi = synth.transform(seed=108, has_tulasi=True)
     val_standard = synth.transform(seed=108, has_tulasi=False)
 
     print(f"[PROOF] Standard: {val_standard}, Tulasi: {val_tulasi}")
 
-    assert val_tulasi != val_standard, "Tulasi must have an effect (Sanctification)"
-    assert val_tulasi < MAHA_QUANTUM, "Tulasi should NOT break physical laws (must stay within 137)"
+    assert val_tulasi != val_standard, "Tulasi must have an effect"
+    assert val_tulasi < MAHA_QUANTUM * HARE_COUNT, "Tulasi should stay within Transcendental Field (1096)"
     
-    # We found a qualitative difference without breaking parameters
-    print("[CONCLUSION] Tulasi Gate is operational. Seed is sanctified (Bhoga -> Prasadam).")
+    # We found a qualitative difference (Expansion)
+    print("[CONCLUSION] Tulasi Gate is operational. Field is expanded.")
 
 if __name__ == "__main__":
     test_production_integration()
