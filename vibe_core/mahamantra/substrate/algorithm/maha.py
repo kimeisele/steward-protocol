@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Final, Iterator, Dict, Tuple, List, Optional, Union
 
+from vibe_core.mahamantra.protocols.offering import GraceProtocol
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
     HALVES,
@@ -249,11 +250,12 @@ class MahaModularSynth:
     Solves convergence issues by using larger mod_space and feedback.
     """
     STEPS: Final[Tuple[AlgorithmStep, ...]] = MAHA_16_STEPS
-
-    def __init__(self, default_preset: str = "quantum") -> None:
+    
+    def __init__(self, default_preset: str = "quantum", grace_gate: Optional[GraceProtocol] = None) -> None:
         self.default_params = SYNTH_PRESETS.get(default_preset, SYNTH_PRESETS["quantum"])
+        self.grace_gate = grace_gate
 
-    def transform(self, seed: int, params: Optional[MahaSynthParams] = None, preset: Optional[str] = None) -> int:
+    def transform(self, seed: int, params: Optional[MahaSynthParams] = None, preset: Optional[str] = None, has_tulasi: bool = False) -> int:
         if params:
             p = params
         elif preset:
@@ -261,7 +263,17 @@ class MahaModularSynth:
         else:
             p = self.default_params
 
-        value = seed % p.mod_space
+        # Apply Grace if available
+        effective_mod_space = p.mod_space
+        effective_feedback = p.feedback
+        effective_seed = seed
+        
+        if self.grace_gate:
+            effective_mod_space = self.grace_gate.expand_field(p.mod_space, has_tulasi)
+            effective_feedback = self.grace_gate.modulate_feedback(p.feedback, has_tulasi)
+            effective_seed = self.grace_gate.purify_offering(seed, has_tulasi)
+
+        value = effective_seed % effective_mod_space
         feedback_acc = 0
 
         for step in self.STEPS:
@@ -281,13 +293,13 @@ class MahaModularSynth:
 
             # Apply Logic
             if step.name == MAHAMANTRA_NAME_HARE:
-                value = (value * SEVEN * adsr + lfo) % p.mod_space
+                value = (value * SEVEN * adsr + lfo) % effective_mod_space
             elif step.name == MAHAMANTRA_NAME_KRISHNA:
-                value = (value + TEN + effective_pos + feedback_acc) % p.mod_space
+                value = (value + TEN + effective_pos + feedback_acc) % effective_mod_space
             else: # Rama
-                value = (value * value + feedback_acc) % p.mod_space
+                value = (value * value + feedback_acc) % effective_mod_space
 
-            feedback_acc = (feedback_acc + value * p.feedback) % p.mod_space
+            feedback_acc = (feedback_acc + value * effective_feedback) % effective_mod_space
 
         if p.nibble_mode:
             value = value % WORDS

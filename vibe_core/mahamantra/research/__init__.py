@@ -184,7 +184,7 @@ from vibe_core.mahamantra.research_gateway import (
 # =============================================================================
 
 # These are the most important from dharma/
-from vibe_core.mahamantra.research.dharma.maha_algorithm import (
+from vibe_core.mahamantra.substrate.algorithm.maha import (
     MahaModularSynth,
     MahaSynthParams,
     SYNTH_PRESETS,
