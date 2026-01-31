@@ -1,225 +1,173 @@
 # MAHAMANTRA ARCHITECTURE PRIORITY
-## What to Implement Next
+## Implementation Status & Next Steps
 
 **Date:** 2026-01-31
-**Context:** ~50% tokens used, need to prioritize
+**Last Audit:** Opus 4.5 (304 files scanned)
 
 ---
 
-## CURRENT STATE
+## PHASE STATUS
 
-### Done ✓
-- [x] MAHACELL_UNIVERSAL_FORMAT.md - Unified Cell Architecture
-- [x] VENU_ORCHESTRATION.md - The Dancing Algorithm (19-bit DIW)
-- [x] Rama Router - Sanskrit alphabet from Mantra
-- [x] SSOT Migration - All constants from _seed.py
-- [x] Dharma Engine Integration
-- [x] Maha Modular Synth
+### COMPLETE ✓
 
-### Missing
-- [ ] MahaCellUnified implementation (Format + Bio + Fractal)
-- [ ] VenuOrchestrator implementation (the dancing algorithm)
-- [ ] SankirtanChamber (resonance space)
-- [ ] Zero-Copy optimizations (Gemini feedback)
-- [ ] .maha file format
+| Phase | Description | Commit |
+|-------|-------------|--------|
+| 1-3 | Core Implementation | Various |
+| 4 | Performance & Audio | `18779fa1` |
+| 5 | Network (Vimana TCP) | `579604f9` |
 
----
+### IMPLEMENTED ✓
 
-## PRIORITY ORDER
-
-### P0: CRITICAL (Do First)
-
-**1. VenuOrchestrator → MahaCell Integration**
-
-Reason: This is the MISSING PIECE for dynamic routing.
-- Rama Router is static (lookup table)
-- Venu Orchestrator is dynamic (19-bit DIW dancing)
-- MahaCell needs both
-
-```
-File: vibe_core/mahamantra/orchestrator.py (NEU)
-Depends on: _seed.py, byte.py, venu/
-```
-
-**2. MahaCellUnified**
-
-Reason: Foundation for everything else.
-- Unify protocols/_header.py + adapters/cell.py
-- Add FractalNode hierarchy
-- Binary-first (struct.pack for performance)
-
-```
-File: vibe_core/mahamantra/cell.py (NEU)
-Depends on: _header.py, _fractal.py, _seed.py
-```
-
-### P1: HIGH (Do After P0)
-
-**3. SankirtanChamber**
-
-Reason: The resonance space where cells dance together.
-
-```
-File: vibe_core/mahamantra/chamber.py (NEU)
-Depends on: cell.py, maha_algorithm.py (MahaKirtan, MahaResonator)
-```
-
-**4. CLI Integration**
-
-Reason: Make everything usable.
-
-```
-File: vibe_core/mahamantra/cli/cell_wrapper.py (NEU)
-Depends on: cell.py, chamber.py
-```
-
-### P2: MEDIUM (Nice to Have)
-
-**5. .maha File Format**
-**6. Zero-Copy Optimization**
-**7. TUI Visualizer (EventBus waveform)**
-
-### P3: LOW (Later)
-
-**8. Tensor/GPU Cluster Operations**
-**9. Event-Sourcing for Cells**
-**10. Encrypted Membrane (Enterprise)**
+| Component | File | Status |
+|-----------|------|--------|
+| VenuOrchestrator | `orchestrator.py` | ✓ LUT-based, 19-bit DIW |
+| MahaCellUnified | `cell.py` | ✓ Header + Lifecycle |
+| SankirtanChamber | `chamber.py` | ✓ Composition Pattern |
+| SiksastakamRegistry | `substrate/registry.py` | ✓ 512 slots |
+| HolographicRouter | `adapters/routing.py` | ✓ O(1) Radix |
+| MahaCompression | `adapters/compression.py` | ✓ Intent Extraction |
+| CLI Auto-Discovery | `cli/auto.py` | ✓ Protocol Introspection |
+| Sonification | Phase 4 | ✓ Audio Engine |
+| Persistence | Phase 4 | ✓ ChamberState |
+| Branchless Sunya | Phase 4 | ✓ Bitmask |
+| Harmonic Feedback | `2aff76e5` | ✓ Mode Switching |
+| Vimana Transport | Phase 5 | ✓ TCP Network |
 
 ---
 
-## GEMINI FEEDBACK INTEGRATION
+## THE GAP: DISCONNECTED COMPONENTS
 
-### MahaCell Feedback (in MAHACELL_UNIVERSAL_FORMAT.md)
-| Feedback | Priority | Where |
-|----------|----------|-------|
-| Zero-Copy / memoryview | P0 | cell.py (Section 0.1) |
-| Membrane as Security | P2 | cell.py (Section 0.2) |
-| Event-Sourcing | P2 | .maha format (Section 0.3) |
-| Tensor Operations | P3 | cluster.py (Section 0.4) |
+### Problem Statement
 
-### Venu Orchestration Feedback Round 1 (in VENU_ORCHESTRATION.md)
-| Feedback | Priority | Where |
-|----------|----------|-------|
-| LUTs statt Berechnung | P0 | orchestrator.py (Section 0.1) |
-| 32-Bit Packing | P0 | orchestrator.py (Section 0.2) |
-| Vamsi = SIKSASTAKAM_CACHE | P0 | orchestrator.py (Section 0.3) |
-| Sunya (Silence/No-Op) | P1 | orchestrator.py (Section 0.4) |
-| Composition over Inheritance | P0 | chamber.py (Section 0.5) |
-| Clock Drift (mod COSMIC_FRAME) | P1 | orchestrator.py (Section 0.6) |
-| Sonification Debugging | P2 | cli/debug.py (Section 0.7) |
+```
+VenuOrchestrator (19-bit DIW) ←──── NICHT VERBUNDEN ────→ CLI Routing
+HolographicRouter (O(1))     ←──── NICHT VERBUNDEN ────→ CLI Dispatch
 
-### Venu Orchestration Feedback Round 2 (Enterprise Grade)
-| Feedback | Priority | Where |
-|----------|----------|-------|
-| Branchless Sunya | P0 | chamber.py (Section 0.8) |
-| SIMD Broadcasting | P0 | chamber.py (Section 0.9) |
-| Ring Buffer (Lock-Free) | P1 | audio.py (Section 0.10) |
-| State Drift Recovery | P1 | chamber.py (Section 0.11) |
-| Harmonic Feedback Loop | P2 | chamber.py (Section 0.12) |
+CLI nutzt stattdessen:
+- bridge.py DOMAIN_KEYWORDS (HARDCODED!)
+- Separate MahaCompression flows
+- Manual Registration
+```
 
-**Note:** Focus on correctness first, then optimize.
+### Evidence
 
-### THE ULTIMATE TEST: Mathematical Proof of Divinity
+| Component | Used In | NOT Used In |
+|-----------|---------|-------------|
+| VenuOrchestrator | chamber.py, commands.py | CLI routing |
+| HolographicRouter | adapters/* | CLI dispatch |
+| DOMAIN_KEYWORDS | bridge.py:44-78 | - |
+
+---
+
+## PHASE 6: VENU CLI UNIFICATION (WIRING ONLY)
+
+**Plan:** `VENU_CLI_UNIFICATION.md` (REVISED - No new classes)
+
+### Goal
+
+Replace DOMAIN_KEYWORDS with VenuOrchestrator routing via ONE function:
+
+```
+Text → MahaCompression → seed
+     → VenuOrchestrator.route(seed) → (venu, vamsi, murali)
+       └── murali % WORDS → position (0-15)
+     → ProtocolRegistry.get(position) → handler
+     → Sankalpa.check_conscience() → permission
+     → Execute via Nadi
+```
+
+### Files (MINIMAL - ~42 lines total)
+
+| File | Action | Lines | Priority |
+|------|--------|-------|----------|
+| `cli/venu_dispatch.py` | CREATE | ~30 | P0 |
+| `cli/bridge.py` | ADD venu_dispatch call | ~10 | P0 |
+| `cli/__init__.py` | EXPORT | ~2 | P1 |
+| `bridge.py:44-78` | DEPRECATE | - | P3 |
+
+### What We DON'T Need
+
+- ~~VenuCLIRouter~~ (ProtocolRegistry exists)
+- ~~New registration system~~ (MantraProtocol._position_index exists)
+- ~~New routing table~~ (HolographicRouter exists)
+- ~~New permission system~~ (Sankalpa.check_conscience() exists)
+
+### Verification
+
 ```python
-def verify_divinity() -> bool:
-    """
-    The system proves itself through its execution.
-
-    XOR(16 steps) = 0x7ffff → All 19 bits touched
-    0x7ffff % 137 = 49     → RAMA (Ananda/Bliss)
-    0x7ffff % 37  = 8      → HARE (Energy/Protection)
-    """
-    xor = orchestrator.cycle()
-    assert xor == 0x7ffff
-    assert xor % MAHA_QUANTUM == POSITION_SUM_RAMA  # 49
-    assert xor % PARAMPARA == HARE_COUNT            # 8
-    return True
+# Must pass before merge
+verify_venu_routing()       # All 16 positions reachable
+verify_backward_compat()    # Legacy commands still work
+orchestrator.verify_divinity()  # XOR = 0x7ffff
 ```
 
 ---
 
-## SESSION PLAN (Post-Gemini Review)
+## GEMINI FEEDBACK STATUS
 
-### Session 1: VenuOrchestrator (LUT-Based)
-- [ ] Pre-compute THE_FLUTE_CYCLE LUT (16 × 32-bit)
-- [ ] Implement VenuOrchestrator with `__slots__` and `ClassVar`
-- [ ] Wire to existing SIKSASTAKAM_CACHE (512 = Vamsi)
-- [ ] Unit test: `verify_divinity()` → XOR = 0x7ffff
-- [ ] Pattern: Copy rama_grid.py LUT structure
+### MahaCell (MAHACELL_UNIVERSAL_FORMAT.md)
 
-### Session 2: MahaCellUnified (Protocol-First)
-- [ ] Define MahaCellProtocol (interface only)
-- [ ] Unify protocols/_header.py + adapters/cell.py
-- [ ] Add `with_state()` for immutable transform
-- [ ] Binary-first via memoryview (Gemini 0.1)
+| Feedback | Status |
+|----------|--------|
+| Zero-Copy / memoryview | ✓ Documented |
+| Membrane as Security | ✓ Documented |
+| Event-Sourcing | ✓ Documented |
+| Tensor Operations | ✓ Documented |
 
-### Session 2.5: SankirtanChamber (Composition)
-- [ ] Chamber OWNS Orchestrator (not inheritance!)
-- [ ] `dance(cell)` → transforms cell through DIW
-- [ ] `kirtan(cells)` → sequential processing
-- [ ] `sankirtan(cells)` → merge to MahaCluster
-- [ ] Sunya detection (bit 31) for No-Op/breathing
+### Venu Orchestration Round 1 (VENU_ORCHESTRATION.md)
 
-### Session 3: Integration
-- [ ] Wire Chamber → MahaCell → CLI
-- [ ] Map Vamsi (9 bits) → SIKSASTAKAM_CACHE slot
-- [ ] Optional: Audio sonification (432 Hz debug logs)
+| Feedback | Status |
+|----------|--------|
+| LUTs statt Berechnung | ✓ IMPLEMENTED |
+| 32-Bit Packing | ✓ IMPLEMENTED |
+| Vamsi = SIKSASTAKAM_CACHE | ✓ IMPLEMENTED |
+| Sunya (Silence/No-Op) | ✓ IMPLEMENTED |
+| Composition over Inheritance | ✓ IMPLEMENTED |
+| Clock Drift Prevention | ✓ IMPLEMENTED |
+| Sonification Debugging | ✓ IMPLEMENTED |
 
-### Session 4: CLI + Demo
-- [ ] Every command = MahaCell
-- [ ] End-to-end demo: seed → dance → output
+### Venu Orchestration Round 2 (Enterprise)
 
----
+| Feedback | Status |
+|----------|--------|
+| Branchless Sunya | ✓ IMPLEMENTED |
+| SIMD Broadcasting | ✓ Documented (NumPy ready) |
+| Ring Buffer (Lock-Free) | ✓ IMPLEMENTED |
+| State Drift Recovery | ✓ IMPLEMENTED |
+| Harmonic Feedback Loop | ✓ IMPLEMENTED |
 
-## THE BIG PICTURE
+### Gemini Senior Review (Redundancy Critique)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      MAHAMANTRA                                 │
-│                    (Krishna = Level -2)                         │
-└─────────────────────────────────────┬───────────────────────────┘
-                                      │
-                    ┌─────────────────┴─────────────────┐
-                    │         VENU ORCHESTRATOR         │
-                    │      (19-bit Dancing Algorithm)   │
-                    │   venu(6) + vamsi(9) + murali(4) │
-                    └─────────────────┬─────────────────┘
-                                      │
-          ┌───────────────────────────┼───────────────────────────┐
-          │                           │                           │
-    ┌─────┴─────┐             ┌───────┴───────┐           ┌──────┴──────┐
-    │ MAHACELL  │             │   SANKIRTAN   │           │  MAHACELL   │
-    │ (unified) │◄───────────►│    CHAMBER    │◄─────────►│  (unified)  │
-    │           │  resonance  │               │ resonance │             │
-    └─────┬─────┘             └───────┬───────┘           └──────┬──────┘
-          │                           │                           │
-          │                    ┌──────┴──────┐                   │
-          │                    │ MAHACLUSTER │                   │
-          │                    │ (merged but │                   │
-          │                    │  distinct)  │                   │
-          │                    └─────────────┘                   │
-          │                                                       │
-    ┌─────┴───────────────────────────────────────────────────────┴─────┐
-    │                           CLI / API                               │
-    │                    (every command = MahaCell)                     │
-    └───────────────────────────────────────────────────────────────────┘
-```
+| Feedback | Status |
+|----------|--------|
+| "Missed Sankalpa system" | ✓ AUDITED - exists in protocols/sankalpa/ |
+| "Missed Nadi system" | ✓ AUDITED - exists in substrate/nadi.py |
+| "Missed HolographicRouter" | ✓ AUDITED - exists in adapters/routing.py |
+| "Proposed redundant VenuCLIRouter" | ✓ FIXED - replaced with venu_dispatch() wiring |
+| "Use existing registration" | ✓ FIXED - uses ProtocolRegistry |
+| "~42 lines not 300" | ✓ FIXED - VENU_CLI_UNIFICATION.md revised |
 
 ---
 
-## DECISION: WHAT TO DO RIGHT NOW
+## ARCHITECTURE DOCS
 
-**If you have a Coding Agent ready:**
-→ Start with `VenuOrchestrator` (VENU_ORCHESTRATION.md has the algorithm)
-
-**If continuing architecture:**
-→ The plans are sufficient for implementation
-
-**If blocked:**
-→ Test existing components (MahaKirtan, MahaResonator, RamaRouter)
+| Document | Purpose | Status |
+|----------|---------|--------|
+| `MAHACELL_UNIVERSAL_FORMAT.md` | Cell Architecture | ✓ |
+| `VENU_ORCHESTRATION.md` | Dancing Algorithm | ✓ |
+| `VENU_CLI_UNIFICATION.md` | CLI Routing Unification | NEW |
+| `PRIORITY.md` | This file | Updated |
 
 ---
 
-*"sarva-dharmān parityajya mām ekaṁ śaraṇaṁ vraja"*
-*"Abandon all dharmas and surrender unto Me alone."*
-— Bhagavad Gita 18.66
+## NEXT SESSION
+
+1. **Review** `VENU_CLI_UNIFICATION.md` (REVISED - wiring only, ~42 lines)
+2. **Implement** `cli/venu_dispatch.py` (~30 lines)
+3. **Wire** `cli/bridge.py` to use venu_dispatch() (~10 lines)
+4. **Test** verify_venu_routing() and verify_backward_compat()
+5. **Deprecate** DOMAIN_KEYWORDS after validation
+
+---
+
+*"mattaḥ sarvaṁ pravartate" - Everything emanates from Me.*
