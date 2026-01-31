@@ -68,6 +68,7 @@ ENTERPRISE USAGE:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - The Compiler
 __position__ = 0
+__genesis__ = "0xc0400014"  # GenesisByte: parampara % 37 == 0
 from functools import lru_cache
 from typing import Dict, Final, List, Optional, Tuple, Union
 import hashlib
