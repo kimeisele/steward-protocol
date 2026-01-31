@@ -48,6 +48,11 @@ def __getattr__(name: str):
         from vibe_core.mahamantra._mahamantra_lotus import get_mahamantra
         return get_mahamantra()
 
+    # === Alias: lotus ===
+    if name == "lotus":
+        from vibe_core.mahamantra._mahamantra_lotus import get_mahamantra
+        return get_mahamantra()
+
     # === Constants (from fast _seed_cell) ===
     if name in ("WORDS", "TRINITY", "QUARTERS", "PANCHA", "HALVES",
                 "HARE_COUNT", "KRISHNA_COUNT", "RAMA_COUNT",

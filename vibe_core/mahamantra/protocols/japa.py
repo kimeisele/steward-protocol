@@ -83,15 +83,26 @@ class GoldenAgeStatus:
     current_year: int
     
     @property
-    def years_elapsed(self) -> int: ...
+    def years_elapsed(self) -> int: 
+        return self.current_year - self.start_year
+        
     @property
-    def years_remaining(self) -> int: ...
+    def years_remaining(self) -> int: 
+        return max(0, self.end_year - self.current_year)
+        
     @property
-    def progress_percent(self) -> float: ...
+    def progress_percent(self) -> float: 
+        total = self.end_year - self.start_year
+        if total == 0: return 0.0
+        return (self.years_elapsed / total) * 100.0
+        
     @property
-    def is_active(self) -> bool: ...
+    def is_active(self) -> bool: 
+        return self.start_year <= self.current_year <= self.end_year
+        
     @property
-    def formula(self) -> str: ...
+    def formula(self) -> str: 
+        return f"{self.years_elapsed} / {self.end_year - self.start_year} years"
 
 @dataclass(frozen=True)
 class CollapseResult:
@@ -105,4 +116,5 @@ class CollapseResult:
     interpretation: str
     
     @property
-    def formula(self) -> str: ...
+    def formula(self) -> str:
+        return f"{self.prasadam} - {self.kshetra} = {self.ksetrajna}"

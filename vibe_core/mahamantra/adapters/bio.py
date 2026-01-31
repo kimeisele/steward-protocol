@@ -53,6 +53,8 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x3cbf61c0"  # GenesisByte: parampara % 37 == 0
 
+from typing import Final, List, Tuple
+
 from vibe_core.mahamantra.protocols.bio import (
     MahaBioProtocol,
     KmerResult,

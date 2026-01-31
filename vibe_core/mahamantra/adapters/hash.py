@@ -204,4 +204,7 @@ __all__ = [
     "MultiLensReading",
     "deterministic_hash",
     "multi_lens_hash",
+    "MahaHash",
 ]
+
+MahaHash = DeterministicHash

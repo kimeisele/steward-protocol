@@ -43,7 +43,7 @@ __mahajana__ = "narada"
 __position__ = 3
 __genesis__ = "0x4ed00315"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass
+# from dataclasses import dataclass (Not needed if we don't define classes)
 from typing import Final, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols.orchestrator import (
@@ -60,38 +60,8 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 
-# =============================================================================
-# RESULT TYPES (Standard CS naming)
-# =============================================================================
-
-@dataclass(frozen=True)
-class TickResult:
-    """Result of a single orchestrator tick (one beat)."""
-    seed: int
-    value: int
-    beat: int           # 1-7
-    round_num: int      # Which round we're in
-    call_response: str  # "CALL" or "RESPONSE"
-    resonance: float    # 0.0-1.0 (builds over time)
-
-
-@dataclass(frozen=True)
-class RoundResult:
-    """Result of a complete round (7 beats)."""
-    seed: int
-    final_value: int
-    ticks: Tuple[TickResult, ...]
-    resonance: float
-
-
-@dataclass(frozen=True)
-class MalaResult:
-    """Result of a complete mala (108 rounds)."""
-    seed: int
-    final_value: int
-    total_ticks: int  # 108 × 7 = 756
-    final_resonance: float
-    attractor: int    # Final stable value
+# Result types imported from protocols.orchestrator
+# DO NOT REDEFINE THEM HERE
 
 
 # =============================================================================
@@ -173,6 +143,8 @@ class Orchestrator(MahaOrchestratorProtocol):
             round_num=self._current_round,
             call_response=BEAT_PATTERN[self._current_beat - 1],
             resonance=self._resonance,
+            beat_delta=0,  # Default for now
+            metrics={"accumulated": self._accumulated},
         )
 
     def round(self, seed: int) -> RoundResult:

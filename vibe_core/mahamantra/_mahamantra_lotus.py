@@ -56,7 +56,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     _kirtan = None
     _compressor = None
     _gita_index = None
+    _gita_index = None
     _gita_by_attractor = None
+    _pipeline = None
 
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
@@ -430,11 +432,68 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Access Moksha quarter."""
         return self._get_quarter("moksha")
 
+    @property
+    def pipeline(self):
+        """Access MahamantraPipeline adapter (Lazy Singleton)."""
+        if self._pipeline is None:
+            from vibe_core.mahamantra.adapters.pipeline import MahamantraPipeline
+            self._pipeline = MahamantraPipeline()
+        return self._pipeline
+
     def _get_quarter(self, name: str):
         """Lazy-load quarter module."""
         import importlib
         module = importlib.import_module(f"vibe_core.mahamantra.{name}")
+        module = importlib.import_module(f"vibe_core.mahamantra.{name}")
         return module
+
+    # === Adapters (Lazy) ===
+
+    @property
+    def transform(self):
+        """Access MahaTransform adapter."""
+        if not hasattr(self, "_transform_adapter"):
+            from vibe_core.mahamantra.adapters.transform import MahaTransform
+            self._transform_adapter = MahaTransform()
+        return self._transform_adapter
+
+    @property
+    def hash(self):
+        """Access MahaHash adapter."""
+        if not hasattr(self, "_hash_adapter"):
+            from vibe_core.mahamantra.adapters.hash import MahaHash
+            self._hash_adapter = MahaHash()
+        return self._hash_adapter
+
+    @property
+    def orchestrator(self):
+        """Access Orchestrator adapter."""
+        if not hasattr(self, "_orchestrator_adapter"):
+            from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+            self._orchestrator_adapter = Orchestrator()
+        return self._orchestrator_adapter
+
+    @property
+    def gita(self):
+        """Access Gita Resonance adapter."""
+        import vibe_core.mahamantra.adapters.gita_resonance as gita
+        return gita
+
+    def router(self, *args, **kwargs):
+        """Create a generic Router."""
+        from vibe_core.mahamantra.adapters.routing import Router
+        return Router(*args, **kwargs)
+
+    def scan(self) -> Dict[str, object]:
+        """
+        Scan system state (Governance/Audit).
+        Delegate to GAD discovery + internal state.
+        """
+        return {
+            "status": "active",
+            "audit": self.get_state(),
+            "gad": self.discover(),
+        }
 
     # === GAD Protocol ===
 

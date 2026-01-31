@@ -53,6 +53,8 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0xa248b7a8"  # GenesisByte: parampara % 37 == 0
 
+from typing import Final, List, Optional, Tuple
+
 from vibe_core.mahamantra.protocols.network import (
     MahaNetworkProtocol,
     RouteResult,

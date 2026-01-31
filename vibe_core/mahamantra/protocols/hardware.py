@@ -1,6 +1,9 @@
 from typing import Protocol, runtime_checkable, Iterator, List, Tuple
 from dataclasses import dataclass
 from enum import Enum
+from vibe_core.mahamantra.protocols._seed import (
+    AKSARA_COUNT, WORDS, QUARTERS, HARE_COUNT
+)
 
 @runtime_checkable
 class MahaHardwareProtocol(Protocol):
@@ -62,6 +65,22 @@ class PipelineStageInfo:
     sanskrit: str
     english: str
     hardware_effect: str
+    
+    @property
+    def high_bit(self) -> int:
+        """Get high bit from range string (e.g. '31-28' -> 31)."""
+        separator = "-" if "-" in self.bit_range else ":"
+        if separator in self.bit_range:
+            return int(self.bit_range.split(separator)[0])
+        return 0
+        
+    @property
+    def low_bit(self) -> int:
+        """Get low bit from range string (e.g. '31-28' -> 28)."""
+        separator = "-" if "-" in self.bit_range else ":"
+        if separator in self.bit_range:
+            return int(self.bit_range.split(separator)[1])
+        return 0
 
 @dataclass(frozen=True)
 class HardwareSpec:
@@ -75,13 +94,34 @@ class HardwareSpec:
     
     @property
     def is_verified(self) -> bool:
-        # Implementation stub or abstract
-        return False
+        """Check if spec matches Mahamantra constants."""
+        return (
+            self.data_width == AKSARA_COUNT and 
+            self.next_hop_width == WORDS and 
+            self.branching_factor == WORDS and 
+            self.nibble_size == QUARTERS and 
+            self.pipeline_stages == HARE_COUNT and 
+            (self.root_base_address & 0xFFFF0000) == 0xBA5E0000
+        )
+
+    @property
+    def total_latency_cycles(self) -> int:
+        return self.pipeline_stages
+
+    @property
+    def address_space(self) -> int:
+        return 2 ** self.data_width
+
+    @property
+    def max_next_hops(self) -> int:
+        return 2 ** self.next_hop_width
         
     def to_dict(self) -> dict:
         return {
             "data_width": self.data_width,
-            "root_base_address": self.root_base_address
+            "pipeline_stages": self.pipeline_stages,
+            "is_verified": self.is_verified,
+            "root_base_address": f"0x{self.root_base_address:08x}"
         }
 
 @dataclass(frozen=True)
@@ -93,3 +133,13 @@ class VerificationResult:
     @property
     def summary(self) -> str:
         return f"Hardware Verification: {'PASSED' if self.is_valid else 'FAILED'}"
+        
+    @property
+    def passed_count(self) -> int:
+        """Count of passed checks."""
+        return sum(1 for _, _, _, passed in self.checks if passed)
+        
+    @property
+    def total_count(self) -> int:
+        """Total number of checks."""
+        return len(self.checks)
