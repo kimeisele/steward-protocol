@@ -49,14 +49,14 @@ But protocols/_lila.py already exists. Is lila/ folder redundant?
 
 ### protocols/_lila.py
 ```
-Purpose:
-Contains:
+Purpose: Defines the boundaries and phases of divine play.
+Contains: LilaBoundary, LilaPhase
 ```
 
 ### lila/ folder
 ```
-Purpose:
-Contains:
+Purpose: Stateful implementation of lila boundaries.
+Contains: LilaRegistry (registry.py)
 ```
 
 ### Redundancy?

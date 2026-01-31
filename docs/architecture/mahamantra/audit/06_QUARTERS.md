@@ -116,31 +116,31 @@ Each guardian folder should have:
 
 ### genesis/
 ```
-Guardians found:
-Files per guardian:
-VERDICT:
+Guardians found: vyasa, brahma, narada, shambhu
+Files per guardian: Standard __init__.py, service.py
+VERDICT: [x] Essential
 ```
 
 ### dharma/
 ```
-Guardians found:
-Files per guardian:
-Anomalies:
-VERDICT:
+Guardians found: prithu, kumaras, kapila, manu
+Files per guardian: Standard __init__.py, service.py
+Anomalies: janaka exists in dharma/ but belongs to karma/
+VERDICT: [x] Essential (with anomalies)
 ```
 
 ### karma/
 ```
-Guardians found:
-Files per guardian:
-VERDICT:
+Guardians found: parashurama, prahlada, janaka, bhishma
+Files per guardian: Standard __init__.py, service.py
+VERDICT: [x] Essential
 ```
 
 ### moksha/
 ```
-Guardians found:
-Files per guardian:
-VERDICT:
+Guardians found: nrisimha, bali, shuka, yamaraja
+Files per guardian: Standard __init__.py, service.py
+VERDICT: [x] Essential
 ```
 
 ---

@@ -67,27 +67,26 @@ ls -la /Users/ss/projects/steward-protocol/vibe_core/mahamantra/cli/*.py
 - [ ] LEGACY_SYSTEM_COMMANDS set?
 
 ### auto.py
-- [x] cli_auto singleton?
-- [x] discover_all() method?
-- [x] execute(command, args) method?
-- [x] Protocol introspection?
+- [x] cli_auto singleton? Yes.
+- [x] discover_all() method? Yes.
+- [x] execute(command, args) method? Yes.
+- [x] Protocol introspection? Yes.
 - [x] Purified: Imports from substrate.mantra instead of research! ✓
 
 ### steward.py (The Universal Router)
-- [x] Steward class?
-- [x] prabhupada_kirtan property (Lazy load)?
-- [x] Routes via MahaCompute protocol?
+- [x] Steward class? Yes.
+- [x] prabhupada_kirtan property (Lazy load)? Yes.
+- [x] Routes via MahaCompute protocol? Yes.
 - [x] PERSON-anchored computation? ✓
 
 ### kirtan_cli.py
-- [x] Live operator interface?
+- [x] Live operator interface? Yes.
 - [x] Uses PersonAnchoredOperator? ✓
 - [x] All constants derived from seed.py? ✓
 
 ### OTHER FILES
 - [ ] engine.py - ?
-- [ ] steward.py - ?
-- [ ] venu_router.py - Does this exist?
+- [ ] venu_router.py - ?
 - [ ] loader.py - ?
 
 ---

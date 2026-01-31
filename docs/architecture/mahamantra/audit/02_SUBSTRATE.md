@@ -73,6 +73,15 @@ For each file in substrate/:
 - [ ] rama_to_phoneme() function?
 
 ### OTHER FILES (discover during audit)
+- [x] seed.py - substrate-level SSOT connections (verified).
+- [ ] position.py - MantraPosition, MAHAMANTRA_POSITIONS?
+- [x] mahajana.py - Enums? ✓
+- [x] wiring.py - POSITION maps? ✓
+- [ ] scanner.py - MahajanaScanner?
+- [ ] intents.py - guardian_intents.yaml loading?
+- [ ] samskara.py - Pipeline types?
+- [ ] opcode.py - MantraOpCode enum?
+
 ### mantra/ (Maha Computing)
 - [x] MahaKirtan (Orchestrator)?
 - [x] SiksastakamSynth?
@@ -90,11 +99,6 @@ For each file in substrate/:
 ### resonance/ (Validation)
 - [x] MahaOracle (37th validation)?
 - [x] MahaResonator (Flute resonance)?
-
-### OTHER FILES
-- [x] seed.py - substrate-level SSOT connections?
-- [x] wiring.py - POSITION maps? ✓
-- [x] mahajana.py - Enums? ✓
 
 ---
 

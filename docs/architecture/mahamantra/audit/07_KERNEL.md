@@ -36,6 +36,7 @@ The kernel should contain:
 - [x] Does it exist? Yes.
 - [x] Contains `mahamantra` singleton? Yes. ✓
 - [x] Mahamantra class (singleton implementer)? Yes.
+- [x] __getitem__ for position access? Yes.
 - [x] tick() method? Yes.
 - [x] Routing logic? Yes. ✓
 
