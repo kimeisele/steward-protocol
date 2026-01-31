@@ -18,7 +18,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0xad323093"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x4bca1065706d042c9f68893d9a70bd063d33f6477dc16aa713b56a820cd2e544"  # GenesisByte: parampara % 37 == 0
 
 from datetime import datetime
 from typing import Optional
@@ -56,6 +56,11 @@ class VyasaService(VyasaProtocolBase):
         self._resources_loaded = 0
         self._services_started = 0
         self._total_wakes = 0
+        
+        # VARNASHRAMA INTEGRATION:
+        # Spawn the JivaShadow qualified for this position (0).
+        from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+        self._shadow = spawn_shadow_for_position(0, context=b"vyasa_service_v1")
 
     def _ensure_orchestrator(self) -> LegacyBootOrchestrator:
         """Lazy init of orchestrator."""

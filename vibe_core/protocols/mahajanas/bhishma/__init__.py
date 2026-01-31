@@ -23,7 +23,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "bhishma"
 __position__ = 11
-__genesis__ = "0x2f865d53"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x2ed4af5cfeb3b037cb7bf596f6bfd244f9820ba86efd85da163eb8495b0856b4"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from datetime import datetime
