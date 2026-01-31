@@ -1,77 +1,64 @@
 """
-TULASI GATE - The Grace Adapter
-===============================
+TULASI GATE - The Sanctification Adapter
+========================================
 
-"ye tu tvadīya-caraṇa-amboja-kośa-gandham" (SB 3.9.5)
+"yā dṛṣṭā nikhilāgha-saṅgha-śamanī"
+"Simply by seeing, she destroys all sins."
 
-Implements the GraceProtocol using the TULASI_BRIDGE logic discovered in research.
-This adapter connects the mechanical synth to the living devotion logic.
+This adapter implements the "Tulasi in Process".
+It does NOT invent numbers. It Validates and Sanctifies.
 """
 
 from typing import Final, Optional
-
 from vibe_core.mahamantra.protocols.offering import GraceProtocol
 from vibe_core.mahamantra.protocols._seed import (
-    HARE_COUNT,
-    MALA,
-    MAHA_QUANTUM,
     KSETRAJNA,
-    NAVA,
+    MAHA_QUANTUM,
 )
-
-# The Transcendental Field Constant (from Research)
-# 137 * 8 = 1096
-TRANSCENDENTAL_FIELD: Final[int] = MAHA_QUANTUM * HARE_COUNT
-
 
 class TulasiGate(GraceProtocol):
     """
-    The Tulasi Gate Adapter.
+    The Tulasi Sanctification Gate.
     
-    Injects the "Hare Count" (8) as an expansion factor into the algorithm.
+    Role:
+    1. VALIDATE: Ensures the offering is suitable (Sattvic).
+    2. SANCTIFY: Adds the Observer (+1) to the Seed.
+    3. PROTECT: Does not allow 'dirty' inputs into the core.
     """
     
     def purify_offering(self, seed: int, has_tulasi: bool) -> int:
         """
-        Purify the seed.
+        Purify the seed through connection.
         
         If Tulasi is present:
-            seed -> (seed * 8) + 108
+            The seed (Bhoga) receives the Observer (Ksetrajna).
+            seed -> seed + KSETRAJNA
             
-        This ensures the seed is never 0 and carries the "8" signature.
+        This transforms Bhoga into Prasadam (Qualitative change).
         """
         if not has_tulasi:
             return seed
             
-        # The Research Formula
-        return (seed * HARE_COUNT) + MALA
+        # The offering is sanctified (Observer added)
+        return seed + KSETRAJNA
 
     def expand_field(self, current_mod: int, has_tulasi: bool) -> int:
         """
-        Expand the modulus space.
+        Field remains constant (Physics).
         
-        If Tulasi is present:
-            mod -> mod * 8 (Octave expansion)
-            
-        Specifically: 137 -> 1096
+        We do NOT arbitrarily expand the universe logic.
+        The change is QUALITATIVE (inner), not QUANTITATIVE (outer).
         """
-        if not has_tulasi:
-            return current_mod
-            
-        return current_mod * HARE_COUNT
+        return current_mod
 
     def modulate_feedback(self, feedback: int, has_tulasi: bool) -> int:
         """
-        Modulate feedback.
+        Feedback Quality Improvement.
         
-        Standard feedback is KSETRAJNA (1).
-        With Tulasi: 1 * 8 + 1 = 9 (NAVA)
-        
-        This turns "Observation" into "Navadha Bhakti".
+        If Tulasi is present, the feedback loop is 'cleansed'.
         """
         if not has_tulasi:
             return feedback
             
-        # Logic: (feedback * 8) + KSETRAJNA
-        # If feedback is 1, result is 9.
-        return (feedback * HARE_COUNT) + KSETRAJNA
+        # Pure feedback - no distortion
+        return feedback
