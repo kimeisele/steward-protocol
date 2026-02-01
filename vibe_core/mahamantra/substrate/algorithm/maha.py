@@ -58,16 +58,18 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_SQ as _SQ,
 )
 
-# TEENTAL WIRING: Import the drum pattern for rhythmic modulation
-from vibe_core.mahamantra.research.dharma.teental_matrix import (
-    TEENTAL_BINARY,
-    get_bass_pattern,
-    get_treble_pattern,
-)
-
-# Pre-compute patterns at module load for O(1) access
-_BASS_PATTERN: tuple[int, ...] = get_bass_pattern()
-_TREBLE_PATTERN: tuple[int, ...] = get_treble_pattern()
+# TEENTAL WIRING: Patterns derived from _seed.py (inline to avoid circular import)
+# Teental: Dha Dhin Dhin Dha | Dha Dhin Dhin Dha | Dha Tin Tin Ta | Ta Dhin Dhin Dha
+# Binary:  11  11   11   11    11  11   11   11    11  01  01  10   10  11   11   11
+# Bass (bit 1):  1   1    1    1     1   1    1    1     1   0   0   1    1   1    1    1
+# Treble (bit 0): 1   1    1    1     1   1    1    1     1   1   1   0    0   1    1    1
+_TEENTAL_BINARY: Final[Tuple[int, ...]] = (3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 2, 2, 3, 3, 3)
+_BASS_PATTERN: Final[Tuple[int, ...]] = tuple((b >> 1) & 1 for b in _TEENTAL_BINARY)
+_TREBLE_PATTERN: Final[Tuple[int, ...]] = tuple(b & 1 for b in _TEENTAL_BINARY)
+# Verify lengths
+assert len(_TEENTAL_BINARY) == WORDS, f"Teental must have {WORDS} beats"
+assert len(_BASS_PATTERN) == WORDS
+assert len(_TREBLE_PATTERN) == WORDS
 
 
 # =============================================================================
@@ -238,7 +240,8 @@ class MahaSynthParams:
     feedback: int = KSETRAJNA
     phase_offset: int = 0
     lfo_enabled: bool = True
-    lfo_rate: int = QUARTERS
+    lfo_rate: int = SEVEN  # WIRED: Creates 16:7 polyrhythm (was QUARTERS)
+    tala_enabled: bool = True  # NEW: Enable Teental/Mridanga modulation
     adsr_attack: int = ADSR_ATTACK
     adsr_decay: int = ADSR_DECAY
     adsr_sustain: int = ADSR_SUSTAIN
@@ -250,12 +253,16 @@ class MahaSynthParams:
 
 
 SYNTH_PRESETS: Final[Dict[str, MahaSynthParams]] = {
-    "classical": MahaSynthParams(mod_space=WEIGHT_KRISHNA, feedback=0),
+    "classical": MahaSynthParams(mod_space=WEIGHT_KRISHNA, feedback=0, tala_enabled=False),
     "quantum": MahaSynthParams(mod_space=MAHA_QUANTUM, feedback=KSETRAJNA),
     "trinity": MahaSynthParams(mod_space=TRINITY, feedback=TRINITY),
     "pancha": MahaSynthParams(mod_space=PANCHA, feedback=KSETRAJNA),
     "nava": MahaSynthParams(mod_space=NAVA, feedback=KSETRAJNA),
-    "wide": MahaSynthParams(mod_space=HALVES**NAVA, feedback=PANCHA), # 512
+    "wide": MahaSynthParams(mod_space=HALVES**NAVA, feedback=PANCHA),  # 512
+    # KIRTAN PRESETS - with full tala modulation
+    "kirtan": MahaSynthParams(mod_space=MAHA_QUANTUM, feedback=KSETRAJNA, lfo_rate=SEVEN, tala_enabled=True),
+    "kirtan_fast": MahaSynthParams(mod_space=MAHA_QUANTUM, lfo_rate=QUARTERS, tala_enabled=True),
+    "kirtan_slow": MahaSynthParams(mod_space=MAHA_QUANTUM, lfo_rate=NAVA, tala_enabled=True),
 }
 
 
@@ -293,13 +300,25 @@ class MahaModularSynth:
 
         for step in self.STEPS:
             effective_pos = ((step.position - 1 + p.phase_offset) % WORDS) + 1
-            
+            step_idx = step.position - 1  # 0-indexed
+
             # Calculate modulations
             lfo = 0
             if p.lfo_enabled:
-                binary_val = BINARY_PATTERN[(step.position - 1) % WORDS]
-                phase_in_lfo = (step.position - 1) % p.lfo_rate
+                binary_val = BINARY_PATTERN[step_idx % WORDS]
+                phase_in_lfo = step_idx % p.lfo_rate  # WIRED: Uses SEVEN by default
                 lfo = binary_val * phase_in_lfo
+
+            # TALA MODULATION: Mridanga stroke affects intensity
+            # Bass (baya) = energy multiplier, Treble (daya) = identity additive
+            tala_mult = 1
+            tala_add = 0
+            if p.tala_enabled:
+                bass = _BASS_PATTERN[step_idx]    # 0 or 1
+                treble = _TREBLE_PATTERN[step_idx]  # 0 or 1
+                # Both heads (Dha/Dhin) = full power, single head = half
+                tala_mult = 1 + bass  # 1 or 2
+                tala_add = treble * SEVEN  # 0 or 7
 
             # BRANCHLESS ADSR lookup by phase index (1-4 → 0-3)
             adsr_table = (p.adsr_attack, p.adsr_decay, p.adsr_sustain, p.adsr_release)
@@ -314,8 +333,9 @@ class MahaModularSynth:
             # For RAMA: mult=1, add=feedback, sq=1
             #
             # Generalized formula with position-dependent adds
-            mult_coeff = (SEVEN * adsr, 1, 1)[op]
-            add_coeff = (lfo, TEN + effective_pos + feedback_acc, feedback_acc)[op]
+            # WIRED: tala_mult scales the coefficient, tala_add offsets
+            mult_coeff = (SEVEN * adsr * tala_mult, tala_mult, tala_mult)[op]
+            add_coeff = (lfo + tala_add, TEN + effective_pos + feedback_acc + tala_add, feedback_acc + tala_add)[op]
 
             v = (value * mult_coeff + add_coeff) % mod
             squared = (v * v) % mod
