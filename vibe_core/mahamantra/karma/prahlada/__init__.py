@@ -37,6 +37,47 @@ PARAMPARA_VECTOR: Final[int] = 370
 # PrahladaBase alias for backward compat
 PrahladaBase = PrahladaProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """
+    PRAHLADA EXECUTION - Devotion & Fearlessness
+
+    The great devotee who was protected by Nrisimhadeva.
+    Represents unwavering faith even in adversity.
+    """
+    intent = input_text.lower().strip()
+
+    if "devot" in intent or "bhakti" in intent or "faith" in intent:
+        return {
+            "success": True,
+            "action": "devotion",
+            "message": "🦁 Prahlada: 'nāma-saṅkīrtanam' - The Name is the only shelter."
+        }
+
+    if "fear" in intent or "protect" in intent:
+        return {
+            "success": True,
+            "action": "protection",
+            "message": "🦁 Prahlada: Fear not. Nrisimhadeva protects all devotees."
+        }
+
+    if "chitta" in intent or "mind" in intent or "smriti" in intent:
+        return {
+            "success": True,
+            "action": "chitta_smriti",
+            "message": "🦁 Prahlada: Fix your mind on Krishna. This is smriti (remembrance)."
+        }
+
+    return {
+        "success": True,
+        "action": "introspect",
+        "position": POSITION,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "message": f"🦁 Prahlada hears: '{input_text}'. Try 'devotion', 'protect', or 'mind'."
+    }
+
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

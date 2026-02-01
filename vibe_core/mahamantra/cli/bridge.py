@@ -4,21 +4,15 @@ CLI BRIDGE - Krishna Routes All Commands
 
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 
-OPTION B: Sauber verbinden (clean connection)
+RESONANZ-BASED ROUTING:
+    Intent → MahaCompression → Seed → Category → Position → Execute
 
-Instead of refactoring all CLIs, we CREATE A BRIDGE:
-- CLIRegistry bleibt (existing handlers continue to work)
-- ABER: routing geht durch mahamantra
-- Gradual migration possible
-
-ARCHITECTURE:
-    CLI input → MahamantraCLIBridge → mahamantra.mod[position] → execute
-                      ↓
-              (fallback to CLIRegistry if no mahajana handler)
+KEINE FALLBACKS. KEINE LEGACY BYPASSES.
+Wenn mahamantra es nicht kann, FAIL.
 
 ONE IMPORT, KRISHNA ROUTES:
     from vibe_core.mahamantra import cli_bridge
-    exit_code = cli_bridge.route("status", ["--verbose"])
+    result = cli_bridge.route("status", ["--verbose"])
 """
 
 from __future__ import annotations
@@ -33,55 +27,18 @@ from typing import Callable, Dict, Final, List, Optional, Set, Tuple, Union
 
 # ONE IMPORT - Krishna IS the router
 from vibe_core.mahamantra.kernel.singularity import mahamantra
+# SSOT - WORDS derives from Mahamantra counting
+from vibe_core.mahamantra.substrate.seed import WORDS
 
 # =============================================================================
-# DOMAIN MAPPING - CLI Keywords → Mahajana Position
+# RESONANCE-BASED ROUTING - No Keyword Matching
 # =============================================================================
-
-# Each mahajana has a DOMAIN (area of responsibility)
-# CLI commands are routed based on keyword matching
-
-DOMAIN_KEYWORDS: Final[Dict[int, Set[str]]] = {
-    # === ALIGNED WITH seed.py ALL_GUARDIANS (SSOT) ===
-    # Position 0 - VYASA (HEAD): Genesis/Bootstrap/System Wake
-    0: {"boot", "init", "wake", "start", "genesis", "vyasa", "system"},
-    # Position 1 - BRAHMA: Creation/Loading/Root
-    1: {"create", "new", "load", "brahma", "root", "spawn", "allocate"},
-    # Position 2 - NARADA: Broadcast/Events/Notifications
-    2: {"broadcast", "notify", "event", "narada", "message", "signal", "emit"},
-    # Position 3 - SHAMBHU: Destruction/Cleanup/Transformation
-    3: {"destroy", "cleanup", "delete", "shambhu", "transform", "clear", "remove"},
-    # Position 4 - PRITHU (HEAD): Dharma/Structure/Compile
-    4: {"scan", "compile", "structure", "prithu", "document", "knowledge", "dharma"},
-    # Position 5 - KUMARAS: Purification/Resolution/Requirements
-    5: {"resolve", "purify", "check", "kumaras", "require", "depend", "shuddhi"},
-    # Position 6 - KAPILA: Analysis/GC/Samkhya
-    6: {"analyze", "gc", "samkhya", "kapila", "inspect", "profile", "debug"},
-    # Position 7 - MANU: Law/Rules/Governance/Sync
-    7: {"law", "rule", "govern", "manu", "sync", "pulse", "config"},
-    # Position 8 - PARASHURAMA (HEAD): Karma/Execution/Fetch
-    8: {"fetch", "execute", "karma", "parashurama", "run", "exec", "do"},
-    # Position 9 - PRAHLADA: Resilience/Cache/Protection
-    9: {"cache", "resilience", "protect", "prahlada", "retry", "fallback", "recover"},
-    # Position 10 - JANAKA: Duty/Cycles/Cognition
-    10: {"cycle", "duty", "janaka", "cognitive", "think", "loop", "iterate"},
-    # Position 11 - BHISHMA: Vows/Commits/Logging
-    11: {"commit", "vow", "promise", "bhishma", "log", "record", "persist"},
-    # Position 12 - NRISIMHA (HEAD): Security/Guard/State
-    12: {"security", "guard", "nrisimha", "state", "protect", "secure", "watch"},
-    # Position 13 - BALI: Surrender/Resources/Optimization
-    13: {"resource", "surrender", "optimize", "bali", "yield", "give", "allocate"},
-    # Position 14 - SHUKA: Vision/Insight/Observation
-    14: {"vision", "insight", "shuka", "observe", "see", "view", "status"},
-    # Position 15 - YAMARAJA: Judgment/Correction/Reset
-    15: {"judge", "correct", "yamaraja", "reset", "verdict", "audit", "karma"},
-}
-
-# Reverse mapping for quick lookup
-_KEYWORD_TO_POSITION: Dict[str, int] = {}
-for pos, keywords in DOMAIN_KEYWORDS.items():
-    for kw in keywords:
-        _KEYWORD_TO_POSITION[kw] = pos
+#
+# KREBS ENTFERNT: DOMAIN_KEYWORDS und _KEYWORD_TO_POSITION gelöscht.
+# Routing geht durch cli_auto._get_position() mit MahaCompression.
+#
+# "mattaḥ sarvaṁ pravartate" - Resonanz bestimmt Position, nicht Keywords.
+#
 
 
 # =============================================================================
@@ -91,39 +48,22 @@ for pos, keywords in DOMAIN_KEYWORDS.items():
 
 @dataclass
 class BridgeResult:
-    """Result from bridge routing."""
+    """Result from bridge routing. KEINE FALLBACKS."""
 
     success: bool
     exit_code: int
     position: Optional[int] = None  # Mahajana position that handled it
     handler: Optional[str] = None  # Handler name
-    fallback: bool = False  # True if fell back to CLIRegistry
     error: Optional[str] = None
 
 
 # =============================================================================
-# LEGACY SYSTEM COMMANDS (Handled by UnifiedCLI/StewardCLI)
+# LEGACY SYSTEM COMMANDS - REMOVED
 # =============================================================================
-
-# These are commands that exist in the "Old King" (StewardCLI)
-# and haven't been migrated to Mahajanas yet.
-# We route them to UnifiedCLI which wraps them with Balarama.
-LEGACY_SYSTEM_COMMANDS: Final[Set[str]] = {
-    "status",
-    "boot",
-    "stop",
-    "ps",
-    "verify",
-    "lineage",
-    "discover",
-    "introspect",
-    "install-llm",
-    "install-semantic",
-    "extensions",
-    "delegate",
-    "do",
-    "init",
-}
+#
+# KREBS ENTFERNT: Hardcoded LEGACY_SYSTEM_COMMANDS set gelöscht.
+# ALLES geht durch mahamantra. Keine Bypass-Listen mehr.
+#
 
 
 # =============================================================================
@@ -151,7 +91,6 @@ class MahamantraCLIBridge:
 
     def __init__(self) -> None:
         self._handlers: Dict[int, Callable[[str, List[str]], int]] = {}
-        self._fallback_enabled: bool = True
 
     # =========================================================================
     # ROUTING
@@ -159,45 +98,23 @@ class MahamantraCLIBridge:
 
     def get_position(self, command: str) -> Optional[int]:
         """
-        Get mahajana position for a command.
+        Get mahajana position for a command via RESONANCE.
 
-        Matching order:
-        1. Exact keyword match
-        2. Prefix match (e.g., "analyze" matches "analyze-code")
-        3. Substring match in command
+        KEINE KEYWORD MATCHING. Nutzt cli_auto._get_position() mit:
+        - MahaCompression → Seed
+        - MahaKirtan → Vibration
+        - Category → Position
 
-        Returns None if no match found.
+        "mattaḥ sarvaṁ pravartate" - Resonanz bestimmt alles.
         """
-        cmd_lower = command.lower()
+        from vibe_core.mahamantra.cli.auto import cli_auto
 
-        # 1. Exact match
-        if cmd_lower in _KEYWORD_TO_POSITION:
-            return _KEYWORD_TO_POSITION[cmd_lower]
+        # Ensure discovery happened
+        if not cli_auto._discovered:
+            cli_auto.discover_all()
 
-        # 2. Check if command contains any keyword
-        for keyword, position in _KEYWORD_TO_POSITION.items():
-            if keyword in cmd_lower or cmd_lower.startswith(keyword):
-                return position
-
-        # 3. No match - could use hash-based fallback
-        # (connect to Parampara via mutation_vector % 37)
-        return self._parampara_fallback(command)
-
-    def _parampara_fallback(self, command: str) -> int:
-        """
-        Fallback routing via Parampara connection.
-
-        Uses hash of command name to get position.
-        Ensures connection to Krishna (% 37 → % 16 for position).
-        """
-        # Hash command to get mutation vector
-        mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command))
-
-        # Connect to Parampara (37) then map to position (16)
-        parampara_connected = mutation_vector % 37
-        position = parampara_connected % 16
-
-        return position
+        # RESONANZ-BASED ROUTING
+        return cli_auto._get_position(command.lower())
 
     def can_route(self, command: str) -> bool:
         """Check if command can be routed."""
@@ -210,115 +127,26 @@ class MahamantraCLIBridge:
 
     def route(self, command: str, args: List[str]) -> BridgeResult:
         """
-        Route and execute a CLI command.
+        Route and execute a CLI command durch MAHAMANTRA.
 
-        Flow:
-        1. Get position via Siksastakam (O(1) cached) OR fallback to self.get_position
-        2. Execute via cli_auto (has the method matching logic)
-        3. Fallback to Legacy if needed
+        KEINE FALLBACKS. Wenn mahamantra es nicht kann, FAIL.
 
-        SIKSASTAKAM: Position routing is cached. Method matching via cli_auto.
+        "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
         """
-        from vibe_core.mahamantra.cli.protocol import CLIErrorCode
         from vibe_core.mahamantra.cli.auto import cli_auto
 
-        # =================================================================
-        # POSITION ROUTING - Direct routing (registry DELETED)
-        # =================================================================
+        # RESONANZ-BASED POSITION
         position = self.get_position(command)
 
-        # =================================================================
-        # EXECUTION - cli_auto (has method matching)
-        # =================================================================
+        # EXECUTION - cli_auto mit MahaCompression
         result = cli_auto.execute(command, args)
-
-        # If not implemented in cli_engine, try legacy fallback
-        if (
-            self._fallback_enabled
-            and result.error
-            and result.error.code in (CLIErrorCode.NOT_IMPLEMENTED, CLIErrorCode.UNKNOWN_COMMAND)
-        ):
-            return self._execute_fallback(command, args, position)
 
         return BridgeResult(
             success=result.success,
             exit_code=result.exit_code,
             position=position,
-            handler=f"cli_engine[{position}]",
-            fallback=False,
+            handler=f"mahamantra[{position}]",
             error=result.error.message if result.error else None,
-        )
-
-    def _execute_fallback(self, command: str, args: List[str], position: int) -> BridgeResult:
-        """
-        Fallback execution:
-        1. Check Legacy System Commands (UnifiedCLI)
-        2. Check CLIRegistry (Plugins)
-        """
-        # 1. Legacy System Commands (StewardCLI wrapped in UnifiedCLI)
-        # This honors Balarama because UnifiedCLI wraps StewardCLI with Balarama
-        if command in LEGACY_SYSTEM_COMMANDS:
-            try:
-                from vibe_core.cli.unified_cli import UnifiedCLI
-
-                # We assume UnifiedCLI handles the Balarama wrapping internally
-                unified = UnifiedCLI()
-
-                # UnifiedCLI expects [command, *args]
-                exit_code = unified.run([command] + args)
-
-                return BridgeResult(
-                    success=exit_code == 0,
-                    exit_code=exit_code,
-                    position=position,
-                    handler=f"UnifiedCLI[{command}]",
-                    fallback=True,
-                )
-            except Exception as e:
-                return BridgeResult(
-                    success=False,
-                    exit_code=1,
-                    position=position,
-                    error=f"UnifiedCLI execution failed: {e}",
-                    fallback=True,
-                )
-
-        # 2. CLIRegistry (Plugins/Cartridges)
-        return self._fallback_to_registry(command, args, position)
-
-    def _fallback_to_registry(self, command: str, args: List[str], position: int) -> BridgeResult:
-        """
-        Fallback to existing CLIRegistry.
-
-        This allows gradual migration:
-        - New commands can use mahamantra.mod directly
-        - Old commands still work via CLIRegistry
-        """
-        try:
-            from vibe_core.protocols.cli import CLIRegistry
-
-            handler = CLIRegistry.get(command)
-            if handler is not None:
-                exit_code = handler.run(args)
-                return BridgeResult(
-                    success=exit_code == 0,
-                    exit_code=exit_code,
-                    position=position,
-                    handler=f"CLIRegistry[{command}]",
-                    fallback=True,
-                )
-        except ImportError:
-            pass
-        except Exception as e:
-            return BridgeResult(
-                success=False, exit_code=1, position=position, error=f"CLIRegistry fallback failed: {e}", fallback=True
-            )
-
-        return BridgeResult(
-            success=False,
-            exit_code=127,  # Command not found
-            position=position,
-            error=f"Command not found: {command}",
         )
 
     # =========================================================================
@@ -335,13 +163,6 @@ class MahamantraCLIBridge:
         """
         self._handlers[position] = handler
 
-    def disable_fallback(self) -> None:
-        """Disable CLIRegistry fallback (for testing pure mahamantra routing)."""
-        self._fallback_enabled = False
-
-    def enable_fallback(self) -> None:
-        """Enable CLIRegistry fallback (default)."""
-        self._fallback_enabled = True
 
     # =========================================================================
     # INTROSPECTION
@@ -353,21 +174,21 @@ class MahamantraCLIBridge:
         return {
             "guardian": pos.guardian.value if hasattr(pos.guardian, "value") else str(pos.guardian),
             "opcode": pos.opcode.value if hasattr(pos.opcode, "value") else str(pos.opcode),
-            "keywords": DOMAIN_KEYWORDS.get(position, set()),
             "is_head": pos.is_head,
+            # KREBS ENTFERNT: Keine hardcoded keywords mehr
         }
 
     def list_routes(self) -> List[Tuple[str, int, str]]:
-        """List all keyword → position → guardian mappings."""
+        """List all position → guardian mappings (resonance-based)."""
         routes = []
-        for keyword, position in sorted(_KEYWORD_TO_POSITION.items()):
+        for position in range(WORDS):  # SSOT: WORDS from seed.py
             pos = mahamantra[position]
             guardian = pos.guardian.value if hasattr(pos.guardian, "value") else str(pos.guardian)
-            routes.append((keyword, position, guardian))
+            routes.append((guardian, position, guardian))
         return routes
 
     def __repr__(self) -> str:
-        return f"MahamantraCLIBridge(routes={len(_KEYWORD_TO_POSITION)}, fallback={self._fallback_enabled})"
+        return f"MahamantraCLIBridge(positions={WORDS}, resonance=True)"  # SSOT: WORDS
 
 
 # =============================================================================
@@ -406,7 +227,7 @@ __all__ = [
     "MahamantraCLIBridge",
     "cli_bridge",
     "BridgeResult",
-    "DOMAIN_KEYWORDS",
+    # KREBS ENTFERNT: DOMAIN_KEYWORDS gelöscht
     "route",
     "get_position",
 ]

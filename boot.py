@@ -101,13 +101,27 @@ def main():
 
     # Only import heavy modules when actually needed
     import logging
-
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    from vibe_core.cli.unified_cli import UnifiedCLI
+    # ==========================================================================
+    # MAHAMANTRA ONLY - The ONE Entry Point
+    # ==========================================================================
+    # KREBS ENTFERNT: Keine SYSTEM_COMMANDS bypass Liste mehr.
+    # ALLES geht durch mahamantra. Krishna routet alles.
+    #
+    # "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+    # ==========================================================================
 
-    cli = UnifiedCLI()
-    return cli.run(sys.argv[1:])
+    from vibe_core.mahamantra import mahamantra
+
+    args = sys.argv[1:]
+    intent = " ".join(args) if args else "status"
+    result = mahamantra(intent)
+
+    # Output the result
+    print(f"🕉️  Position {result['position']}: {result['guardian'].upper()} ({result['quarter']})")
+    print(f"   {result.get('output', result.get('execution', 'OK'))}")
+    return 0 if result.get("success", True) else 1
 
 
 if __name__ == "__main__":

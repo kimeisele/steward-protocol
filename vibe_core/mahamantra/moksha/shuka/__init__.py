@@ -37,6 +37,47 @@ PARAMPARA_VECTOR: Final[int] = 555
 # ShukaBase alias for backward compat
 ShukaBase = ShukaProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """
+    SHUKA EXECUTION - Narration & Wisdom Emission
+
+    Sukadeva Goswami spoke the Srimad Bhagavatam to Parikshit.
+    The supreme narrator. LOG_EMIT = wisdom broadcast.
+    """
+    intent = input_text.lower().strip()
+
+    if "speak" in intent or "narrat" in intent or "tell" in intent:
+        return {
+            "success": True,
+            "action": "narration",
+            "message": "🦜 Shuka: 'śṛṇvatāṁ sva-kathāḥ kṛṣṇaḥ' - Krishna enters through hearing."
+        }
+
+    if "bhagavat" in intent or "wisdom" in intent:
+        return {
+            "success": True,
+            "action": "bhagavatam",
+            "message": "🦜 Shuka: The Bhagavatam is the ripened fruit of the Vedic tree."
+        }
+
+    if "log" in intent or "emit" in intent:
+        return {
+            "success": True,
+            "action": "log_emit",
+            "message": f"🦜 Shuka records: '{input_text}'"
+        }
+
+    return {
+        "success": True,
+        "action": "introspect",
+        "position": POSITION,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "message": f"🦜 Shuka hears: '{input_text}'. Try 'speak', 'bhagavatam', or 'log'."
+    }
+
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

@@ -60,6 +60,7 @@ from vibe_core.mahamantra.protocols._seed import (
     SEVEN,
     TEN,
     TRINITY,
+    WORDS,  # SSOT: 16 words in Mahamantra
     # Flute holes (DERIVED from axioms - NOT hardcoded!)
     VENU_HOLES,
     VAMSI_HOLES,
@@ -181,11 +182,11 @@ class YearFrequency:
     @property
     def shabda_index(self) -> int:
         """
-        Index into the 16-word Mahamantra.
+        Index into the WORDS-word Mahamantra.
 
-        16 words cycle through the years.
+        WORDS words cycle through the years (SSOT).
         """
-        return (self.year - BUILD_YEAR) % 16
+        return (self.year - BUILD_YEAR) % WORDS  # SSOT
 
 
 # =============================================================================

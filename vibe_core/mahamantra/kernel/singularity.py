@@ -107,9 +107,25 @@ from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
 from vibe_core.mahamantra.protocols._kala import KalaTime
 
 # =============================================================================
+# CELL ROUTER INTEGRATION (O(1) Cell Registry - IPv6-like Routing)
+# =============================================================================
+from vibe_core.mahamantra.substrate.cell_router import CellRouter, get_router
+
+# =============================================================================
+# IP ROUTER INTEGRATION (O(1) Longest Prefix Match)
+# =============================================================================
+from vibe_core.mahamantra.adapters.network import LotusIPRouter, create_ip_router
+
+# =============================================================================
+# COMPRESSION INTEGRATION (Intent Extraction - Kolmogorov Complexity)
+# =============================================================================
+from vibe_core.mahamantra.adapters.compression import MahaCompression
+
+# =============================================================================
 # MAHA CELL INTEGRATION (72-byte Header + Payload - Universal Data Format)
 # =============================================================================
 from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 
 # Governance Bridge (lazy import to avoid circular deps)
 _governance_bridge = None
@@ -664,6 +680,124 @@ class Mahamantra:
         "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
         """
         return _module_router
+
+    @property
+    def cells(self) -> CellRouter:
+        """
+        Access the CellRouter (O(1) Cell Registry).
+
+        MAHAMANTRA = IPv6 ROUTER:
+            16 words = 128 bits = IPv6 address space
+            Every cell gets auto-generated address from content.
+            O(1) lookup via LotusTree structure.
+
+        USAGE:
+            from vibe_core.mahamantra import mahamantra
+
+            # Lookup cell by address
+            cell = mahamantra.cells[address]
+
+            # Check if address is registered
+            if address in mahamantra.cells:
+                ...
+
+            # Range query
+            result = mahamantra.cells.range_query(0, 1000)
+
+            # Stats
+            stats = mahamantra.cells.stats()
+
+        "sarvasya cāhaṁ hṛdi sanniviṣṭo" - I am seated in everyone's heart.
+        """
+        return get_router()
+
+    def cell_from_content(self, content: str, *, register: bool = True) -> MahaCellUnified:
+        """
+        Create a MahaCell from ANY content. Address computed automatically.
+
+        MAHACELL = ANYTHING:
+            - Pass any string content
+            - Address is computed via MahaCompression (Kolmogorov-inspired)
+            - Cell is auto-registered in CellRouter for O(1) lookup
+            - Returns fully-formed MahaCellUnified
+
+        USAGE:
+            from vibe_core.mahamantra import mahamantra
+
+            # Create cell from content
+            cell = mahamantra.cell_from_content("my content")
+
+            # Cell is now discoverable
+            found = mahamantra.cells[cell.header.sravanam]
+
+        Args:
+            content: Any string content
+            register: Auto-register in CellRouter (default True)
+
+        Returns:
+            MahaCellUnified with computed address
+        """
+        return MahaCellUnified.from_content(content, register=register)
+
+    def network(self) -> LotusIPRouter:
+        """
+        Create an O(1) IPv4 Router (Longest Prefix Match).
+
+        LOTUS TREE FOR IP ROUTING:
+            IPv4 = 32 bits = 8 levels × 4 bits = 8 levels × 16 slots
+            This is EXACTLY the Lotus Tree structure!
+
+            - O(8) = O(1) constant time LPM
+            - 8 memory accesses for ANY lookup
+            - BGP tables with 1M+ routes: SAME speed!
+
+        USAGE:
+            from vibe_core.mahamantra import mahamantra
+
+            # Create IPv4 router
+            router = mahamantra.network()
+
+            # Insert routes
+            router.insert_cidr("192.168.0.0/16", "gateway_a")
+            router.insert_cidr("192.168.1.0/24", "gateway_b")
+
+            # O(1) Longest Prefix Match
+            next_hop = router.lookup("192.168.1.100")  # "gateway_b"
+
+        Returns:
+            New LotusIPRouter instance
+        """
+        return create_ip_router()
+
+    def compression(self) -> MahaCompression:
+        """
+        Create a MahaCompression engine (Intent Extraction).
+
+        NOT DATA COMPRESSION - INTENT EXTRACTION:
+            - Silicon Valley compresses BITS (Shannon entropy)
+            - Maha compresses MEANING (Kolmogorov complexity)
+
+        K(x) = shortest program that GENERATES x
+
+        USAGE:
+            from vibe_core.mahamantra import mahamantra
+
+            compressor = mahamantra.compression()
+
+            # Compress text to intent
+            result = compressor.compress("...100k log lines...")
+            print(result.intent_level)        # "RAJAS"
+            print(result.seed)                # 42 (deterministic address)
+            print(result.position)            # 0-15 (mahamantra position)
+
+            # This seed becomes the cell address!
+            cell = mahamantra.cell_from_content("same text")
+            assert cell.header.sravanam == result.seed
+
+        Returns:
+            New MahaCompression instance
+        """
+        return MahaCompression()
 
     @property
     def shadow(self) -> "ShadowReactorFactory":

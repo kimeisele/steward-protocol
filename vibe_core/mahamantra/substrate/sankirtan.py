@@ -396,7 +396,7 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
 
     # STEP 3: HASH FALLBACK - Deterministic assignment
     # This ensures deterministic assignment for unknown paths
-    path_hash = hash(path_str) % 16
+    path_hash = hash(path_str) % WORDS  # SSOT
     mapping = MAHAMANTRA_POSITIONS[path_hash]
     return (mapping.guardian.value, mapping.index)
 
@@ -933,22 +933,8 @@ def perform_sankirtan(
     if base_path is None:
         base_path = Path(__file__).parent.parent.parent
 
-    # === SSOT: Use MahajanaScanner for discovery ===
-    if use_scanner:
-        from vibe_core.mahamantra.substrate.scanner import get_scanner
-
-        scanner = get_scanner()
-        scan_result = scanner.scan(str(base_path))
-
-        # Get orphan files (files without __mahajana__)
-        orphan_files = scanner.get_orphans()
-        file_paths = [Path(f.get("path", "")) for f in orphan_files if f.get("path")]
-
-        logger.info(f"Scanner found {len(file_paths)} orphan files to chant over")
-
-        return chant_over_files(file_paths, dry_run=dry_run)
-
-    # === LEGACY: Own rglob scanning (deprecated) ===
+    # Scanner removed - folder IS wiring. Use direct file discovery.
+    # (use_scanner flag ignored - scanner was backwards thinking)
     result = SankirtanResult(was_dry_run=dry_run)
     phase_counts: Dict[str, int] = {q.value: 0 for q in Quarter}
 

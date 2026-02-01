@@ -58,6 +58,8 @@ from vibe_core.mahamantra.cli.protocol import (
     CLIState,
 )
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+# SSOT - WORDS derives from Mahamantra counting
+from vibe_core.mahamantra.substrate.seed import WORDS
 
 
 # =============================================================================
@@ -234,7 +236,7 @@ class CLIEngine(PanchaTattvaProtocol):
     def _parampara_fallback(self, command: str) -> int:
         """Fallback routing via Parampara hash."""
         mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(command))
-        return (mutation_vector % 37) % 16
+        return (mutation_vector % 37) % WORDS  # SSOT: WORDS from seed.py
 
     def can_handle(self, position: int, command: str) -> bool:
         """Check if position can handle command."""
