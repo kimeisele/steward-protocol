@@ -34,6 +34,8 @@ from vibe_core.mahamantra.substrate.guna import (
     get_guna_by_position,
 )
 from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+# SSOT - WORDS derives from Mahamantra counting
+from vibe_core.mahamantra.substrate.seed import WORDS
 
 # =============================================================================
 # TYPES
@@ -86,13 +88,10 @@ def get_all_cli_commands() -> Dict[str, int]:
     """
     commands: Dict[str, int] = {}
 
-    # Import Bridge Mappings for Correct Position Attribution
+    # RESONANCE-BASED POSITION (KREBS ENTFERNT: keine hardcoded keywords mehr)
     try:
-        from vibe_core.mahamantra.cli.bridge import _KEYWORD_TO_POSITION
-    except ImportError:
-        _KEYWORD_TO_POSITION = {}
+        from vibe_core.mahamantra.cli.bridge import cli_bridge
 
-    try:
         # Get UnifiedCLI commands (cmd_* methods)
         from vibe_core.cli.unified_cli import UnifiedCLI
 
@@ -101,15 +100,10 @@ def get_all_cli_commands() -> Dict[str, int]:
         for attr in dir(cli):
             if attr.startswith("cmd_"):
                 cmd_name = attr[4:]  # Remove "cmd_" prefix
-
-                # 1. Try Bridge Mapping (Correct Domain)
-                if cmd_name in _KEYWORD_TO_POSITION:
-                    position = _KEYWORD_TO_POSITION[cmd_name]
-                else:
-                    # 2. Fallback to Parampara Hash
-                    mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(cmd_name.lower()))
-                    position = mutation_vector % 16
-
+                # RESONANZ-BASED: cli_bridge.get_position nutzt MahaCompression
+                position = cli_bridge.get_position(cmd_name)
+                if position is None:
+                    position = 0  # Default to vyasa if resonance fails
                 commands[cmd_name] = position
     except ImportError:
         pass
@@ -122,7 +116,7 @@ def get_all_cli_commands() -> Dict[str, int]:
 
         for name in bridge._cli_stubs.keys() if hasattr(bridge, "_cli_stubs") else []:
             mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(name.lower()))
-            position = mutation_vector % 16
+            position = mutation_vector % WORDS  # SSOT: WORDS from seed.py
             commands[name] = position
     except (ImportError, AttributeError):
         pass
@@ -139,21 +133,20 @@ def get_cli_commands_for_position(position: int) -> List[str]:
 
 
 def get_declared_files_for_position(position: int) -> int:
-    """Get count of files declared at a position."""
-    try:
-        from vibe_core.mahamantra.substrate.scanner import scan_all
+    """Get count of files declared at a position.
 
-        result = scan_all()
-        return result.get("by_position", {}).get(position, 0)
-    except ImportError:
-        return 0
+    NOTE: Scanner removed. Files are wired via folder structure (folder = wiring).
+    This now returns 0 as file counting is no longer via declarations.
+    """
+    # Scanner removed - folder IS wiring. No declaration counting needed.
+    return 0
 
 
 def build_map() -> MapResult:
     """
     Build the complete system map.
 
-    Returns structured data about all 16 positions.
+    Returns structured data about all WORDS positions (SSOT).
     """
     positions: List[PositionInfo] = []
     total_cli = 0
@@ -184,10 +177,10 @@ def build_map() -> MapResult:
             )
         )
 
-    coverage = (positions_with_content / 16) * 100 if positions else 0
+    coverage = (positions_with_content / WORDS) * 100 if positions else 0  # SSOT
 
     return MapResult(
-        total_positions=16,
+        total_positions=WORDS,  # SSOT: WORDS from seed.py
         positions=positions,
         total_cli_commands=total_cli,
         total_declared_files=total_declared,

@@ -66,19 +66,29 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     @classmethod
     def _get_kirtan(cls):
-        """Lazy-load MahaKirtan orchestrator."""
+        """
+        Lazy-load PERSON-Anchored Kirtan (PrabhupadaKirtan).
+
+        "selbst die mahajans fragen dann prabhupad nach seinen gita interpretation"
+        Every computation flows through THE PERSON - Prabhupada.
+
+        PrabhupadaKirtan wraps MahaKirtan with:
+        - 8 Siksastakam stages (L0-L7) pipeline
+        - PERSON-anchored parampara verification (% 37 == 0)
+        - Bidirectional CALL ↔ RESPONSE transmission
+        """
         if cls._kirtan is None:
-            from vibe_core.mahamantra.substrate.mantra import MahaKirtan
+            from vibe_core.mahamantra.substrate.mantra.prabhupada_kirtan import PrabhupadaKirtan
             from vibe_core.mahamantra.adapters.compression import MahaCompression
             from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
-            cls._kirtan = MahaKirtan(mod_space=MAHA_QUANTUM)
+            cls._kirtan = PrabhupadaKirtan(mod_space=MAHA_QUANTUM)
             cls._compressor = MahaCompression()
 
         return cls._compressor, cls._kirtan
 
     def _compute_vibration(self, input_data):
-        """Compute vibration state from input."""
+        """Compute vibration state from input (PERSON-anchored)."""
         compressor, kirtan = self._get_kirtan()
 
         cell = None
@@ -90,7 +100,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             comp_result = compressor.compress(command)
             seed = comp_result.seed
 
-        result = kirtan.compute(cell if cell else seed)
+        # PERSON-ANCHORED: flows through Prabhupada
+        result = kirtan.compute_with_person(seed)
 
         from vibe_core.mahamantra.substrate.resonance import MahaResonator
         from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
@@ -108,6 +119,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "attractor": attractor,
             "parampara_channel": result.parampara_channel,
             "oracle_validated": result.oracle_validated,
+            # PERSON-ANCHORED additions
+            "person_verified": result.person_verified,
+            "is_bona_fide": result.is_bona_fide,
+            "siksastakam_stage": result.siksastakam_stage.verse,
         }
 
     def vibrate(self, input_data: Union[str, MahaCell]) -> VibrationState:
@@ -121,14 +136,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def tick(self) -> Dict[str, Union[str, int]]:
         """
         Get current tick state (Lazy).
-        
+
         Required by Steward for Shadow Reactor timing.
         """
         import time
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
-        
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
+
         t = int(time.time())
-        pos = t % 16
+        pos = t % WORDS  # SSOT: WORDS from seed.py
         guardian = ALL_GUARDIANS[pos]
         
         return {
@@ -240,9 +255,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             seed = comp_result.seed
 
         # =====================================================================
-        # 3. SMARANAM - MahaKirtan → vibration state
+        # 3. SMARANAM - PrabhupadaKirtan → PERSON-anchored vibration state
         # =====================================================================
-        kirtan_result = kirtan.compute(cell if cell else seed)
+        # PERSON-ANCHORED: Every computation flows through Prabhupada
+        # PrabhupadaKirtanResult has all KirtanComputeResult fields + parampara
+        kirtan_result = kirtan.compute_with_person(seed)
 
         # =====================================================================
         # 4. PADA_SEVANAM - MahaModularSynth → attractor (full 16-position coverage)
@@ -271,8 +288,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         chapter = get_gita_chapter(attractor)
 
         verse_info = None
-        if verse_result.best_match:
-            v = verse_result.best_match
+        if verse_result.matches:
+            # USE SEED TO SELECT VERSE (not just first = hardcoded!)
+            # seed modulo matches length gives computed verse selection
+            verse_index = seed % len(verse_result.matches)
+            v = verse_result.matches[verse_index]
             verse_info = {
                 "id": v.verse_id,
                 "chapter": v.chapter,
@@ -329,32 +349,33 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
         # =====================================================================
+        # MahaCell = ANYTHING. For __call__, we use create() with resonated position.
+        # Auto-register in global router for O(1) lookup.
         from vibe_core.mahamantra.substrate.cell import MahaCellUnified
-        
+        from vibe_core.mahamantra.substrate.cell_router import register_cell
+
         result_cell = MahaCellUnified.create(
-            source=seed,
-            target=attractor,
-            operation=position,
-            dna=input_text,  # DNA = input text
-            initial_state=None,  # Generic state (optional)
+            source=seed,              # Address from compression
+            target=attractor,         # Resonated attractor
+            operation=position,       # Position from attractor % WORDS (resonated)
+            dna=input_text,
         )
+
+        # Register in global router
+        register_cell(result_cell)
         
         # =====================================================================
-        # 8.5. HOLOGRAPHIC DISPATCH - Chamber Processing
+        # 8.5. KIRTAN - Call and Response Loop
         # =====================================================================
-        # Cell flows through Chamber for transformation
+        # Cell flows through Chamber via KIRTAN (not single dance)
+        # KIRTAN = cycles × WORDS transformations
+        # "kirtanīyaḥ sadā hariḥ" - One should always chant
         from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
         chamber = SankirtanChamber()
-        result_cell = chamber.dance(result_cell)  # Transform via DIW
 
-        # =====================================================================
-        # 8.75. VENU DISPATCH - Krishna arranges, Halbgötter execute
-        # =====================================================================
-        # Clean separation: Venu dispatcher handles ALL execution routing
-        from vibe_core.mahamantra.venu.dispatcher import get_dispatcher
-        
-        dispatcher = get_dispatcher()
-        dispatch_result = dispatcher.dispatch(quarter, guardian, input_text, result_cell)
+        # KIRTAN LOOP: 1 cycle = WORDS (16) transformations
+        # Each transformation applies DIW (Divine Instruction Word)
+        result_cell = chamber.kirtan(result_cell, cycles=1)
 
         # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
@@ -379,11 +400,18 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "attractor": attractor,
             },
 
-            # Parampara (ARCANAM)
+            # Parampara (ARCANAM) - PERSON-ANCHORED through Prabhupada
             "parampara": {
                 "verified": parampara_verified,
                 "channel": parampara_channel,
                 "oracle_validated": oracle_validated,
+                # PERSON-ANCHORED additions (from PrabhupadaKirtan)
+                "person_verified": kirtan_result.person_verified,
+                "is_bona_fide": kirtan_result.is_bona_fide,
+                "transmission_mode": kirtan_result.transmission_mode,
+                "siksastakam_stage": kirtan_result.siksastakam_stage.verse,
+                "siksastakam_sanskrit": kirtan_result.siksastakam_stage.sanskrit,
+                "siksastakam_operation": kirtan_result.siksastakam_stage.operation,
             },
 
             # Gita (VANDANAM)
@@ -417,9 +445,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
             # Akash (persistent state)
             "akash": self._akash,
-            
-            # Execution (VENU DISPATCH) - Clean, no spaghetti
-            **dispatch_result,
+
+            # Execution: The Cell transformation IS the execution
+            # Chamber.kirtan() already transformed the cell via DIW (3 flutes)
+            # No external dispatch - holographic principle
+            "execution": {
+                "success": result_cell.is_alive,
+                "prana": result_cell.prana,
+                "integrity": result_cell.membrane_integrity,
+                "cycles": result_cell.age,
+            },
         }
 
     @property
@@ -509,6 +544,89 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         from vibe_core.mahamantra.adapters.routing import Router
         return Router(*args, **kwargs)
 
+    # === IPv6-LIKE ROUTING (O(1) Cell Registry) ===
+
+    @property
+    def cells(self):
+        """
+        Access the CellRouter (O(1) Cell Registry).
+
+        MAHAMANTRA = IPv6 ROUTER:
+            16 words = 128 bits = IPv6 address space
+            Every cell gets auto-generated address from content.
+            O(1) lookup via LotusTree structure.
+
+        USAGE:
+            cell = mahamantra.cell_from_content("any content")
+            found = mahamantra.cells[cell.header.sravanam]
+
+        "sarvasya cāhaṁ hṛdi sanniviṣṭo" - I am seated in everyone's heart.
+        """
+        from vibe_core.mahamantra.substrate.cell_router import get_router
+        return get_router()
+
+    def cell_from_content(self, content: str, *, register: bool = True):
+        """
+        Create a MahaCell from ANY content. Address computed automatically.
+
+        MAHACELL = ANYTHING:
+            - Pass any string content
+            - Address is computed via MahaCompression (Kolmogorov-inspired)
+            - Cell is auto-registered in CellRouter for O(1) lookup
+            - Returns fully-formed MahaCellUnified
+
+        USAGE:
+            cell = mahamantra.cell_from_content("my content")
+            found = mahamantra.cells[cell.header.sravanam]  # Same cell
+
+        Args:
+            content: Any string content
+            register: Auto-register in CellRouter (default True)
+
+        Returns:
+            MahaCellUnified with computed address
+        """
+        from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+        return MahaCellUnified.from_content(content, register=register)
+
+    def network(self):
+        """
+        Create an O(1) IPv4 Router (Longest Prefix Match).
+
+        LOTUS TREE FOR IP ROUTING:
+            IPv4 = 32 bits = 8 levels × 4 bits
+            O(8) = O(1) constant time LPM
+
+        USAGE:
+            router = mahamantra.network()
+            router.insert_cidr("192.168.0.0/16", "gateway_a")
+            next_hop = router.lookup("192.168.1.100")
+
+        Returns:
+            New LotusIPRouter instance
+        """
+        from vibe_core.mahamantra.adapters.network import create_ip_router
+        return create_ip_router()
+
+    def compression(self):
+        """
+        Create a MahaCompression engine (Intent Extraction).
+
+        NOT DATA COMPRESSION - INTENT EXTRACTION:
+            K(x) = shortest program that GENERATES x
+
+        USAGE:
+            compressor = mahamantra.compression()
+            result = compressor.compress("text")
+            print(result.seed)  # Address
+            print(result.position)  # 0-15
+
+        Returns:
+            New MahaCompression instance
+        """
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+        return MahaCompression()
+
     def scan(self) -> Dict[str, object]:
         """
         Scan system state (Governance/Audit).
@@ -519,6 +637,25 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "audit": self.get_state(),
             "gad": self.discover(),
         }
+
+    def __getitem__(self, index: int):
+        """
+        Index into MAHAMANTRA_POSITIONS.
+
+        Enables: mahamantra[2] → MantraPosition at index 2
+        """
+        from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+        return MAHAMANTRA_POSITIONS[index]
+
+    def __len__(self) -> int:
+        """Return number of positions (16 = WORDS)."""
+        from vibe_core.mahamantra.protocols._seed import WORDS
+        return WORDS
+
+    def __iter__(self) -> Iterator:
+        """Iterate over all positions."""
+        from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+        return iter(MAHAMANTRA_POSITIONS)
 
     # === GAD Protocol ===
 

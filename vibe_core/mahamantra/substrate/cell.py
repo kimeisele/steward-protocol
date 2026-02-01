@@ -277,7 +277,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             state=self.header.sakhyam,
         )
         
-        child = MahaCellUnified[S, M](
+        child = MahaCellUnified[S](
             header=child_header,
             lifecycle=CellLifecycleState(
                 prana=half_prana,
@@ -480,14 +480,14 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
     ) -> "MahaCellUnified[S, M]":
         """
         Create a new cell with auto-generated header.
-        
+
         Args:
             source: Source ID
             target: Target ID
             operation: Operation code
             dna: Genetic instructions
             initial_state: Initial payload
-            
+
         Returns:
             New MahaCellUnified instance
         """
@@ -496,7 +496,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             target=target,
             operation=operation,
         )
-        
+
         cell = cls(
             header=header,
             lifecycle=CellLifecycleState(
@@ -508,7 +508,55 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             ),
             payload=initial_state,
         )
-        
+
+        return cell
+
+    @classmethod
+    def from_content(
+        cls,
+        content: str,
+        *,
+        target: int = 0,
+        initial_state: Optional[S] = None,
+        register: bool = True,
+    ) -> "MahaCellUnified[S]":
+        """
+        MahaCell = ANYTHING. Address computed from content.
+
+        The content IS the cell. The address IS computed.
+        No manual IDs - mahamantra computes everything.
+        Auto-registers in global CellRouter for O(1) lookup.
+
+        Args:
+            content: Any string (file, request, data, etc.)
+            target: Optional target address (default 0)
+            initial_state: Optional payload state
+            register: Auto-register in global router (default True)
+
+        Returns:
+            MahaCellUnified with:
+            - header.sravanam = address (from MahaCompression seed)
+            - header.pada_sevanam = position (0-15 in mahamantra)
+            - lifecycle.dna = content
+        """
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+
+        compression = MahaCompression()
+        result = compression.compress(content)
+
+        cell = cls.create(
+            source=result.seed,        # ADDRESS aus content
+            target=target,
+            operation=result.position, # POSITION im mahamantra (0-15)
+            dna=content,
+            initial_state=initial_state,
+        )
+
+        # Auto-register in global router for O(1) lookup
+        if register:
+            from vibe_core.mahamantra.substrate.cell_router import register_cell
+            register_cell(cell)
+
         return cell
     
     @classmethod

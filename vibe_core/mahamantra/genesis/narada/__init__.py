@@ -37,6 +37,38 @@ PARAMPARA_VECTOR: Final[int] = 111
 # NaradaBase alias for backward compat
 NaradaBase = NaradaProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """
+    NARADA EXECUTION - Observation & Communication
+
+    Stateless execution via NullNarada.
+    """
+    narada = NullNarada()
+    intent = input_text.lower().strip()
+
+    if "broadcast" in intent or "pulse" in intent:
+        result = narada.broadcast_cli(input_text)
+        return {"success": True, "action": "broadcast", "result": result}
+
+    if "observe" in intent:
+        narada.observe("user", "request", input_text)
+        return {"success": True, "action": "observe", "recorded": True}
+
+    if "state" in intent or "status" in intent:
+        state = narada.get_state()
+        return {"success": True, "action": "get_state", "state": state}
+
+    # Default: return state
+    return {
+        "success": True,
+        "action": "introspect",
+        "position": POSITION,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "message": f"🎵 Narada hears: '{input_text}'. Try 'broadcast', 'observe', or 'state'."
+    }
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

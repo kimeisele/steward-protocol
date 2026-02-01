@@ -134,22 +134,32 @@ class TestMahamantraCLIEntry:
         assert hasattr(result, "output")
 
     def test_cli_auto_routes_to_correct_position(self):
-        """cli_auto MUST route commands to correct mahajana position."""
+        """cli_auto MUST route commands via RESONANCE (not keyword mapping)."""
         from vibe_core.mahamantra.cli.auto import cli_auto
+        from vibe_core.mahamantra.substrate.seed import WORDS
 
         cli_auto.discover_all()
 
-        # analyze -> Kapila (position 6)
-        pos = cli_auto._get_position("analyze")
-        assert pos == 6, f"analyze should route to position 6 (Kapila), got {pos}"
+        # RESONANCE ROUTING: Position is COMPUTED from MahaCompression pipeline
+        # NOT from hardcoded keyword → position mappings (that's KREBS!)
 
-        # judge -> Yamaraja (position 15)
-        pos = cli_auto._get_position("judge")
-        assert pos == 15, f"judge should route to position 15 (Yamaraja), got {pos}"
+        # Test 1: Position is always computed (never None)
+        pos_analyze = cli_auto._get_position("analyze")
+        assert pos_analyze is not None, "analyze must route to a position"
+        assert 0 <= pos_analyze < WORDS, f"Position must be 0-{WORDS-1}"
 
-        # bootstrap -> Prithu (position 4) - Prithu is DHARMA HEAD, infra foundation
-        pos = cli_auto._get_position("bootstrap")
-        assert pos == 4, f"bootstrap should route to position 4 (Prithu), got {pos}"
+        pos_judge = cli_auto._get_position("judge")
+        assert pos_judge is not None, "judge must route to a position"
+        assert 0 <= pos_judge < WORDS, f"Position must be 0-{WORDS-1}"
+
+        # Test 2: Routing is DETERMINISTIC (same input → same position)
+        pos_analyze2 = cli_auto._get_position("analyze")
+        assert pos_analyze == pos_analyze2, "Resonance routing must be deterministic"
+
+        # Test 3: Case insensitivity
+        pos_upper = cli_auto._get_position("ANALYZE")
+        pos_lower = cli_auto._get_position("analyze")
+        assert pos_upper == pos_lower, "Routing must be case insensitive"
 
     def test_cli_auto_capabilities_returns_list(self):
         """cli_auto.get_capabilities() MUST return List[CLICapability]."""
