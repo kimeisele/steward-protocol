@@ -37,6 +37,43 @@ PARAMPARA_VECTOR: Final[int] = 148
 # ShambhuBase alias for backward compat
 ShambhuBase = ShambhuProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """
+    SHAMBHU EXECUTION - Transformation & Garbage Collection
+
+    Shambhu = Shiva = Destruction for transformation.
+    """
+    intent = input_text.lower().strip()
+
+    if "gc" in intent or "collect" in intent or "clean" in intent:
+        # Import GC module
+        from vibe_core.protocols.mahajanas.shambhu.gc import (
+            ShambhuGCProtocol,
+            GCPhase,
+        )
+        return {
+            "success": True,
+            "action": "gc_ready",
+            "message": "🔱 Shambhu GC available. Transformation awaits."
+        }
+
+    if "transform" in intent:
+        return {
+            "success": True,
+            "action": "transform_ready",
+            "message": "🔱 Shambhu ready to transform. Destruction precedes creation."
+        }
+
+    return {
+        "success": True,
+        "action": "introspect",
+        "position": POSITION,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "message": f"🔱 Shambhu receives: '{input_text}'. Try 'gc', 'collect', or 'transform'."
+    }
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

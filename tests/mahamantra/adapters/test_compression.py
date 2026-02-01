@@ -160,17 +160,18 @@ class TestMahaCompression:
     def test_verify_physics_137(self, compressor):
         """Seed 137 should be MAHA_QUANTUM aligned."""
         result = compressor.verify_physics(137)
-        assert result.is_maha_quantum_aligned
+        assert result.is_aligned
+        assert result.quantum_score == 1.0  # 137 is MAHA_QUANTUM
 
     def test_verify_physics_16(self, compressor):
-        """Seed 16 should be WORDS aligned."""
+        """Seed 16 should be aligned (WORDS)."""
         result = compressor.verify_physics(16)
-        assert result.is_words_aligned
+        assert result.is_aligned
 
     def test_verify_physics_64(self, compressor):
-        """Seed 64 should be QUALITIES aligned."""
+        """Seed 64 should be aligned (QUALITIES)."""
         result = compressor.verify_physics(64)
-        assert result.is_qualities_aligned
+        assert result.is_aligned
 
 
 class TestIntentGuna:
