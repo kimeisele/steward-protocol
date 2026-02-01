@@ -518,17 +518,20 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         *,
         target: int = 0,
         initial_state: Optional[S] = None,
+        register: bool = True,
     ) -> "MahaCellUnified[S]":
         """
         MahaCell = ANYTHING. Address computed from content.
 
         The content IS the cell. The address IS computed.
         No manual IDs - mahamantra computes everything.
+        Auto-registers in global CellRouter for O(1) lookup.
 
         Args:
             content: Any string (file, request, data, etc.)
             target: Optional target address (default 0)
             initial_state: Optional payload state
+            register: Auto-register in global router (default True)
 
         Returns:
             MahaCellUnified with:
@@ -541,13 +544,20 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         compression = MahaCompression()
         result = compression.compress(content)
 
-        return cls.create(
+        cell = cls.create(
             source=result.seed,        # ADDRESS aus content
             target=target,
             operation=result.position, # POSITION im mahamantra (0-15)
             dna=content,
             initial_state=initial_state,
         )
+
+        # Auto-register in global router for O(1) lookup
+        if register:
+            from vibe_core.mahamantra.substrate.cell_router import register_cell
+            register_cell(cell)
+
+        return cell
     
     @classmethod
     def null(cls) -> "MahaCellUnified[None, None]":
