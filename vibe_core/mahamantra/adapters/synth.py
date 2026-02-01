@@ -94,12 +94,15 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAMANTRA_NAME_KRISHNA,
     MAHAMANTRA_WORD_PATTERN,
     MAHAMANTRA_NAME_HARE,
-    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    # Core coefficients for synth-specific step() logic (with ADSR/LFO modulation)
     MAHA_OP_MAP as _OP_MAP,
     MAHA_MULT as _MULT,
     MAHA_ADD as _ADD,
     MAHA_SQ as _SQ,
 )
+
+# THE ALGORITHM - for resonance/attractor discovery
+from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
 
 # =============================================================================
@@ -368,16 +371,11 @@ class MahaSynth(MahaSynthProtocol):
     # =========================================================================
 
     def _oscillate_once(self, value: int) -> int:
-        """One oscillation = simplified 16-step pass (no ADSR/LFO for speed). BRANCHLESS."""
-        mod = self._params.mod_space
-        for name in PATTERN:
-            op = _OP_MAP[name]
-            # Phase 1: Multiply and Add (no branch)
-            v = (value * _MULT[op] + _ADD[op]) % mod
-            # Phase 2: Conditional square via arithmetic selection
-            squared = (v * v) % mod
-            value = _SQ[op] * squared + (1 - _SQ[op]) * v
-        return value
+        """One oscillation = simplified 16-step pass (no ADSR/LFO for speed).
+
+        DELEGATES to algorithm/ - no duplication!
+        """
+        return maha_oscillate(value, self._params.mod_space)
 
     def resonate(self, seed: int, max_cycles: int = 100) -> ResonanceResult:
         """

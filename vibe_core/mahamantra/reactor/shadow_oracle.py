@@ -68,12 +68,10 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     TRINITY,
     WORDS,
-    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
-    MAHA_OP_MAP as _OP_MAP,
-    MAHA_MULT as _MULT,
-    MAHA_ADD as _ADD,
-    MAHA_SQ as _SQ,
 )
+
+# THE ALGORITHM - imported from SSOT, not reimplemented!
+from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
 # Parampara channels from _seed.py (via shadow_protocol)
 from vibe_core.mahamantra.reactor.shadow_protocol import (
@@ -84,8 +82,7 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
     ShadowState,
 )
 
-# Mahamantra pattern from protocols (SSOT for pattern)
-from vibe_core.mahamantra.protocols._seed import MAHAMANTRA_WORD_PATTERN as PATTERN
+# NOTE: Pattern no longer needed - using maha_oscillate from algorithm/
 
 # PRABHUPADA constants from substrate resonance
 from vibe_core.mahamantra.substrate.resonance import (
@@ -140,23 +137,11 @@ class ShadowOracle:
 
     def _oscillate_parampara(self, value: int) -> int:
         """
-        Single oscillation through 16-step Mahamantra at mod PARAMPARA (37). BRANCHLESS.
+        Single oscillation through 16-step Mahamantra at mod PARAMPARA (37).
 
-        INLINE for performance - no external resonator needed.
-
-        TRANSFORMATION RULES (from _seed.py RUNDE 15):
-            HARE    → value × SEVEN
-            KRISHNA → value + TEN
-            RAMA    → value × value
+        DELEGATES to algorithm/ - no duplication!
         """
-        for name in PATTERN:
-            op = _OP_MAP[name]
-            # Phase 1: Multiply and Add (no branch)
-            v = (value * _MULT[op] + _ADD[op]) % PARAMPARA
-            # Phase 2: Conditional square via arithmetic selection
-            squared = (v * v) % PARAMPARA
-            value = _SQ[op] * squared + (1 - _SQ[op]) * v
-        return value
+        return maha_oscillate(value, PARAMPARA)
 
     def _find_attractor_parampara(self, seed: int, max_cycles: int = 50) -> tuple[int, int]:
         """

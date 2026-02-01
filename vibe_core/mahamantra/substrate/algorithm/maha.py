@@ -319,3 +319,78 @@ class MahaModularSynth:
 
     def transform_multi(self, seeds: List[int], params: Optional[MahaSynthParams] = None, preset: Optional[str] = None) -> List[int]:
         return [self.transform(s, params, preset) for s in seeds]
+
+
+# =============================================================================
+# PRIMITIVE ALGORITHM FUNCTIONS - THE SINGLE SOURCE OF TRUTH
+# =============================================================================
+# All other files MUST import these instead of reimplementing.
+# This is the PLUGIN point - when the algorithm evolves, only this changes.
+# =============================================================================
+
+
+def maha_step(value: int, name: str, mod: int) -> int:
+    """
+    Apply ONE step of the Maha Algorithm. BRANCHLESS.
+
+    THE SINGLE SOURCE OF TRUTH for the transformation.
+    All implementations MUST use this function.
+
+    Args:
+        value: Current value
+        name: "H", "K", or "R"
+        mod: Modular space (e.g., 137, 37)
+
+    Returns:
+        Transformed value
+    """
+    op = _OP_MAP[name]
+    # Phase 1: Multiply and Add (no branch)
+    v = (value * _MULT[op] + _ADD[op]) % mod
+    # Phase 2: Conditional square via arithmetic selection
+    squared = (v * v) % mod
+    return _SQ[op] * squared + (1 - _SQ[op]) * v
+
+
+def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
+    """
+    Apply FULL 16-step oscillation. BRANCHLESS.
+
+    One complete pass through the Mahamantra pattern.
+
+    Args:
+        value: Starting value
+        mod: Modular space (default: 137)
+
+    Returns:
+        Value after 16 transformations
+    """
+    for name in PATTERN:
+        value = maha_step(value, name, mod)
+    return value
+
+
+def find_attractor(seed: int, mod: int = MAHA_QUANTUM, max_cycles: int = 100) -> Tuple[int, int, int]:
+    """
+    Find attractor by iterating until stable state.
+
+    Args:
+        seed: Starting value
+        mod: Modular space (default: 137)
+        max_cycles: Maximum iterations (default: 100)
+
+    Returns:
+        Tuple of (attractor, cycles_to_converge, cycle_length)
+    """
+    seen: Dict[int, int] = {}
+    value = seed % mod
+
+    for cycle in range(max_cycles):
+        if value in seen:
+            cycle_start = seen[value]
+            cycle_length = cycle - cycle_start
+            return value, cycle_start, cycle_length
+        seen[value] = cycle
+        value = maha_oscillate(value, mod)
+
+    return value, max_cycles, 0

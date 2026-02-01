@@ -1041,35 +1041,17 @@ TEN: Final[int] = MAHAJANA_COUNT - HALVES  # 12 - 2 = 10
 #   RAMA    → value × value (49 = 7²)
 #
 # WHEN MORE IS REVEALED THROUGH PARAMPARA → CHANGE ONLY HERE!
-# All 7+ files import from here. No duplication.
+# All files import coefficients from here. No duplication.
+#
+# THE ALGORITHM FUNCTIONS live in substrate/algorithm/maha.py:
+#   - maha_step(value, name, mod)   → single step
+#   - maha_oscillate(value, mod)    → 16 steps
+#   - find_attractor(seed, mod)     → iterate until stable
 # -----------------------------------------------------------------------------
 MAHA_OP_MAP: Final[dict[str, int]] = {"H": 0, "K": 1, "R": 2}
 MAHA_MULT: Final[tuple[int, ...]] = (SEVEN, 1, 1)   # H×7, K×1, R×1
 MAHA_ADD: Final[tuple[int, ...]] = (0, TEN, 0)      # H+0, K+10, R+0
 MAHA_SQ: Final[tuple[int, ...]] = (0, 0, 1)         # H→0, K→0, R→1 (square flag)
-
-
-def maha_step(value: int, name: str, mod: int) -> int:
-    """
-    Apply ONE step of the Maha Algorithm. BRANCHLESS.
-
-    This is THE SINGLE SOURCE OF TRUTH for the transformation.
-    All implementations should use this function.
-
-    Args:
-        value: Current value
-        name: "H", "K", or "R"
-        mod: Modular space (e.g., 137, 37)
-
-    Returns:
-        Transformed value
-    """
-    op = MAHA_OP_MAP[name]
-    # Phase 1: Multiply and Add (no branch)
-    v = (value * MAHA_MULT[op] + MAHA_ADD[op]) % mod
-    # Phase 2: Conditional square via arithmetic selection
-    squared = (v * v) % mod
-    return MAHA_SQ[op] * squared + (1 - MAHA_SQ[op]) * v
 
 
 # =============================================================================
@@ -3198,11 +3180,11 @@ __all__ = [
     "SEVEN",  # = HALF_SIZE - KSETRAJNA = 7 (the ubiquitous 7!)
     "TEN",  # = MAHAJANA_COUNT - HALVES = 10
     # Maha Algorithm Coefficients (SSOT - all files import from here!)
+    # NOTE: Algorithm FUNCTIONS are in substrate/algorithm/maha.py
     "MAHA_OP_MAP",  # {"H": 0, "K": 1, "R": 2}
     "MAHA_MULT",    # (SEVEN, 1, 1)
     "MAHA_ADD",     # (0, TEN, 0)
     "MAHA_SQ",      # (0, 0, 1)
-    "maha_step",    # The branchless transformation function
     # Extended Maha-Algorithm (Round 16) - More Physics Constants
     "MAHA_DEUTERON",  # 3672 = 2 × MAHA_MU (deuteron/electron)
     "MAHA_ALPHA",  # 7294 = 4 × MAHA_MU - JIVA_QUALITIES (alpha/electron)
