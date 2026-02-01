@@ -400,6 +400,19 @@ _LAZY_IMPORTS = {
     "cli_sankirtan": "sankirtan",
     "FOLDER_MAHAJANA_MAP": "sankirtan",
     "heal_wiring": "sankirtan",
+    # === CELL (Fundamental computational unit) ===
+    "MahaCellUnified": "cell",
+    "CellLifecycleState": "cell",
+    "GENESIS_PRANA": "cell",
+    "METABOLIC_COST": "cell",
+    "MITOSIS_THRESHOLD": "cell",
+    "MAX_AGE_CYCLES": "cell",
+    # === CELL ROUTER (O(1) cell registry) ===
+    "CellRouter": "cell_router",
+    "get_router": "cell_router",
+    "register_cell": "cell_router",
+    "KEY_BITS": "cell_router",
+    "KEY_MASK": "cell_router",
     # === LOTUS RADIX (CLI backbone, prefix routing) ===
     "LotusRadixN": "lotus_radix",
     "SLOTS_PER_LEVEL": "lotus_radix",
