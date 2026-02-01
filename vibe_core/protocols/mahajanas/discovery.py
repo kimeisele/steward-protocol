@@ -314,12 +314,9 @@ class DiscoveryEngine:
         if scanner is not None:
             self._scanner = scanner
         else:
-            # Create scanner with config
-            from vibe_core.mahamantra.substrate.scanner import MahajanaScanner
-
-            scan_config = config or get_default_config()
-            scan_config["base_path"] = str(self._base_path)
-            self._scanner = MahajanaScanner(scan_config)
+            # MahajanaScanner removed - use base ScannerProtocol stub
+            # Folder IS wiring - no declaration scanning needed
+            self._scanner = None  # Will use fallback path discovery
 
     # =========================================================================
     # SCAN - Uses ScannerProtocol (SUBSTRATE)

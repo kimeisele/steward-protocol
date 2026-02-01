@@ -195,26 +195,9 @@ INTENT_KEYWORDS: Final[Dict[str, VedaIntent]] = _load_intent_keywords()
 # Mahajana names for RESOLVE intent - use SSOT (NO HARDCODING)
 def _get_all_mahajana_names() -> set:
     """Get all mahajana names and aliases from SSOT."""
-    names = set()
-
-    # PRIMARY: Use scanner aliases (includes learned aliases)
-    try:
-        from vibe_core.mahamantra.substrate.scanner import MAHAJANA_ALIASES
-
-        for alias in MAHAJANA_ALIASES:
-            names.add(alias.name)
-            names.update(alias.aliases)
-        return names
-    except ImportError:
-        pass
-
-    # FALLBACK: Use seed.py ALL_GUARDIANS (THE SSOT)
-    try:
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
-
-        return set(ALL_GUARDIANS)
-    except ImportError:
-        pass
+    # Use SSOT directly (scanner removed - folder IS wiring)
+    from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+    return set(ALL_GUARDIANS)
 
     # ULTIMATE FALLBACK: Empty set (mahamantra.resonate() will handle it)
     return names

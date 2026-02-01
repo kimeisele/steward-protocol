@@ -277,7 +277,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             state=self.header.sakhyam,
         )
         
-        child = MahaCellUnified[S, M](
+        child = MahaCellUnified[S](
             header=child_header,
             lifecycle=CellLifecycleState(
                 prana=half_prana,

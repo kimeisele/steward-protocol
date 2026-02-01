@@ -205,7 +205,7 @@ class MantraByte:
 
         # Base calculation (Karma - strict matching)
         for i in range(self._length):
-            if self.get_trit(i) == std.get_trit(i % 16):
+            if self.get_trit(i) == std.get_trit(i % MAHAMANTRA_DIMENSION):  # SSOT
                 matches += 1
 
         ratio = matches / self._length if self._length else 0
@@ -337,14 +337,14 @@ class MantraByte:
         from .mantra.routing import get_fractal_path
 
         if 0 <= pada_index < self._length:
-            return get_fractal_path(pada_index % 16, aksara_index)
+            return get_fractal_path(pada_index % MAHAMANTRA_DIMENSION, aksara_index)  # SSOT
         raise IndexError(f"Invalid pada index: {pada_index}")
 
     def get_quarter(self, index: int) -> int:
         """Get which quarter (0-3) a position belongs to."""
         from .mantra.routing import get_quarter
 
-        return get_quarter(index % 16)
+        return get_quarter(index % MAHAMANTRA_DIMENSION)  # SSOT
 
     def get_padas_in_quarter(self, quarter: int) -> Tuple["Pada", ...]:
         """Get all padas in a quarter from this MantraByte."""

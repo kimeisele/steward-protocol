@@ -148,15 +148,15 @@ def cli_chant(
             
             # Step 1b: Audio Synthesis (Phase 4)
             if sound_engine:
-                # Reconstruct DIW approx: 
+                # Reconstruct DIW approx:
                 # Tick has advanced. So we look at tick-1.
-                t = (chamber.tick - 1) 
+                t = (chamber.tick - 1)
                 # Map tick to "Fake DIW" for audio
                 # We'll construct a synthetic DIW from current chamber state.
                 synth_diw = chamber._orchestrator.harmonize(
                     venu=t, # Use tick as seed approx
                     vamsi=t * 7,
-                    murali=t % 16,
+                    murali=t % WORDS,  # SSOT: WORDS from seed.py
                     cluster_route=chamber._orchestrator.mode
                 )
                 pcm = sound_engine.synthesize(synth_diw)
@@ -382,23 +382,36 @@ def cli_resolve(
     Returns:
         ResolveResult with mahajana details.
     """
-    # SSOT imports from seed.py
-    from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, get_quarter_name
-
-    # Core logic from scanner.py (Separation of Concerns)
-    from vibe_core.mahamantra.substrate.scanner import resolve_mahajana
+    # SSOT imports from seed.py and wiring.py
+    from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS, get_quarter_name
+    from vibe_core.mahamantra.substrate.wiring import get_position_from_name
 
     try:
-        alias = resolve_mahajana(name)
-        quarter = get_quarter_name(alias.position)
+        # Use SSOT (wiring.py) instead of scanner
+        pos = get_position_from_name(name)
+        if pos is None:
+            # Try by index
+            try:
+                idx = int(name)
+                if 0 <= idx < WORDS:
+                    pos_name = ALL_GUARDIANS[idx]
+                    pos = get_position_from_name(pos_name)
+            except ValueError:
+                pass
+
+        if pos is None:
+            raise ValueError(f"Unknown mahajana: {name}")
+
+        guardian_name = pos.guardian.value
+        quarter = get_quarter_name(pos.index)
 
         result = ResolveResult(
             success=True,
             bhakti=NavaBhakti.VANDANAM.value,
-            name=alias.name,
-            position=alias.position,
-            aliases=alias.aliases,
-            description=alias.description,
+            name=guardian_name,
+            position=pos.index,
+            aliases=(),  # SSOT doesn't track aliases
+            description=f"Position {pos.index} in {quarter}",
             quarter=quarter,
         )
 
@@ -406,16 +419,16 @@ def cli_resolve(
             print("=" * 60)
             print(f"MAHAMANTRA RESOLVE - Vandanam (query={name})")
             print("=" * 60)
-            print(f"  Name:        {alias.name}")
-            print(f"  Position:    {alias.position}")
+            print(f"  Name:        {guardian_name}")
+            print(f"  Position:    {pos.index}")
             print(f"  Quarter:     {quarter.upper()}")
-            print(f"  Description: {alias.description}")
-            print(f"  Aliases:     {', '.join(alias.aliases)}")
+            print(f"  Word:        {pos.word.value}")
+            print(f"  Role:        {'HEAD' if pos.is_head else 'WORKER'}")
             print("-" * 60)
-            # Parampara context (circular: pos 0 wraps to pos 15)
-            prev_pos = (alias.position - 1) % 16
-            next_pos = (alias.position + 1) % 16
-            print(f"  Parampara:   ...{ALL_GUARDIANS[prev_pos]} -> [{alias.name}] -> {ALL_GUARDIANS[next_pos]}...")
+            # Parampara context (circular: pos 0 wraps to pos WORDS-1)
+            prev_pos = (pos.index - 1) % WORDS  # SSOT
+            next_pos = (pos.index + 1) % WORDS  # SSOT
+            print(f"  Parampara:   ...{ALL_GUARDIANS[prev_pos]} -> [{guardian_name}] -> {ALL_GUARDIANS[next_pos]}...")
             print("=" * 60)
 
         return result

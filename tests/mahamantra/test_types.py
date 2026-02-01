@@ -84,13 +84,14 @@ class TestExecuteResult:
 
     def test_execute_result_keys(self):
         """ExecuteResult has correct keys including vibration state."""
-        hints = get_type_hints(ExecuteResult)
+        # Use __annotations__ directly to avoid TYPE_CHECKING import issues
+        # MahaCell is forward-referenced and only imported under TYPE_CHECKING
         expected_keys = {
             "success", "exit_code", "position", "guardian",
             "quarter", "guna", "requires_confirmation", "output", "error",
-            "vibration", "akash",  # Vibration flows through!
+            "vibration", "akash", "maha_cell",  # Vibration flows through!
         }
-        assert set(hints.keys()) == expected_keys
+        assert set(ExecuteResult.__annotations__.keys()) == expected_keys
 
     def test_execute_result_can_be_created(self):
         """ExecuteResult can be instantiated with vibration."""

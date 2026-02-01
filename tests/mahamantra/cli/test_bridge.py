@@ -1,80 +1,25 @@
 """
-TESTS: cli/bridge.py - CLI Bridge
-==================================
+TESTS: cli/bridge.py - CLI Bridge (Resonance-Based)
+====================================================
 
 REAL TESTS for:
-1. DOMAIN_KEYWORDS mapping
-2. BridgeResult dataclass
-3. MahamantraCLIBridge class
-4. cli_bridge singleton
-5. route and get_position functions
+1. BridgeResult dataclass
+2. MahamantraCLIBridge class (resonance-based routing)
+3. cli_bridge singleton
+4. route and get_position functions
+
+KREBS ENTFERNT: No keyword matching tests - resonance only.
 """
 
 import pytest
 from vibe_core.mahamantra.cli.bridge import (
-    DOMAIN_KEYWORDS,
     BridgeResult,
     MahamantraCLIBridge,
     cli_bridge,
     route,
     get_position,
 )
-
-
-# =============================================================================
-# DOMAIN_KEYWORDS Tests
-# =============================================================================
-
-
-class TestDomainKeywords:
-    """Test DOMAIN_KEYWORDS mapping."""
-
-    def test_domain_keywords_has_16_positions(self):
-        """DOMAIN_KEYWORDS has entries for all 16 positions."""
-        assert len(DOMAIN_KEYWORDS) == 16
-
-    def test_domain_keywords_position_0_vyasa(self):
-        """Position 0 (Vyasa) has boot/genesis keywords."""
-        keywords = DOMAIN_KEYWORDS[0]
-        assert "boot" in keywords
-        assert "wake" in keywords
-        assert "genesis" in keywords
-        assert "vyasa" in keywords
-
-    def test_domain_keywords_position_1_brahma(self):
-        """Position 1 (Brahma) has creation keywords."""
-        keywords = DOMAIN_KEYWORDS[1]
-        assert "create" in keywords
-        assert "new" in keywords
-        assert "brahma" in keywords
-
-    def test_domain_keywords_position_2_narada(self):
-        """Position 2 (Narada) has broadcast keywords."""
-        keywords = DOMAIN_KEYWORDS[2]
-        assert "broadcast" in keywords
-        assert "notify" in keywords
-        assert "narada" in keywords
-
-    def test_domain_keywords_position_6_kapila(self):
-        """Position 6 (Kapila) has analysis keywords."""
-        keywords = DOMAIN_KEYWORDS[6]
-        assert "analyze" in keywords
-        assert "gc" in keywords
-        assert "kapila" in keywords
-
-    def test_domain_keywords_position_8_parashurama(self):
-        """Position 8 (Parashurama) has execution keywords."""
-        keywords = DOMAIN_KEYWORDS[8]
-        assert "fetch" in keywords
-        assert "execute" in keywords
-        assert "parashurama" in keywords
-
-    def test_domain_keywords_position_15_yamaraja(self):
-        """Position 15 (Yamaraja) has judgment keywords."""
-        keywords = DOMAIN_KEYWORDS[15]
-        assert "judge" in keywords
-        assert "correct" in keywords
-        assert "yamaraja" in keywords
+from vibe_core.mahamantra.substrate.seed import WORDS
 
 
 # =============================================================================
@@ -101,14 +46,9 @@ class TestBridgeResult:
         result = BridgeResult(
             success=True,
             exit_code=0,
-            handler="cli_engine[6]",
+            handler="mahamantra[6]",
         )
-        assert result.handler == "cli_engine[6]"
-
-    def test_bridge_result_fallback_flag(self):
-        """BridgeResult tracks fallback usage."""
-        result = BridgeResult(success=True, exit_code=0, fallback=True)
-        assert result.fallback is True
+        assert result.handler == "mahamantra[6]"
 
     def test_bridge_result_with_error(self):
         """BridgeResult tracks error message."""
@@ -122,74 +62,46 @@ class TestBridgeResult:
 
 
 # =============================================================================
-# MahamantraCLIBridge Tests
+# MahamantraCLIBridge Tests (Resonance-Based)
 # =============================================================================
 
 
 class TestMahamantraCLIBridge:
-    """Test MahamantraCLIBridge class."""
+    """Test MahamantraCLIBridge class with resonance-based routing."""
 
     def test_cli_bridge_creation(self):
         """MahamantraCLIBridge can be created."""
         bridge = MahamantraCLIBridge()
         assert bridge is not None
 
-    def test_cli_bridge_get_position_exact_match(self):
-        """get_position finds exact keyword match."""
+    def test_cli_bridge_get_position_returns_valid(self):
+        """get_position returns valid position (0 to WORDS-1)."""
         bridge = MahamantraCLIBridge()
-        assert bridge.get_position("boot") == 0
-        assert bridge.get_position("create") == 1
-        assert bridge.get_position("broadcast") == 2
-        assert bridge.get_position("analyze") == 6
-        assert bridge.get_position("judge") == 15
+        # Resonance-based - any command gets a position
+        pos = bridge.get_position("status")
+        assert pos is not None
+        assert 0 <= pos < WORDS
 
     def test_cli_bridge_get_position_case_insensitive(self):
         """get_position is case insensitive."""
         bridge = MahamantraCLIBridge()
-        assert bridge.get_position("BOOT") == 0
-        assert bridge.get_position("Analyze") == 6
+        pos1 = bridge.get_position("status")
+        pos2 = bridge.get_position("STATUS")
+        assert pos1 == pos2
 
-    def test_cli_bridge_get_position_substring_match(self):
-        """get_position finds substring match."""
+    def test_cli_bridge_get_position_deterministic(self):
+        """Resonance routing is deterministic."""
         bridge = MahamantraCLIBridge()
-        pos = bridge.get_position("analyze-deep")
-        # Should match "analyze" keyword → position 6
-        assert pos is not None
-
-    def test_cli_bridge_get_position_parampara_fallback(self):
-        """get_position uses parampara fallback for unknown commands."""
-        bridge = MahamantraCLIBridge()
-        pos = bridge.get_position("unknown_xyz_123")
-        # Should return a valid position via hash
-        assert 0 <= pos <= 15
-
-    def test_cli_bridge_parampara_fallback_deterministic(self):
-        """Parampara fallback is deterministic."""
-        bridge = MahamantraCLIBridge()
-        pos1 = bridge._parampara_fallback("test_command")
-        pos2 = bridge._parampara_fallback("test_command")
+        pos1 = bridge.get_position("test_command")
+        pos2 = bridge.get_position("test_command")
         assert pos1 == pos2
 
     def test_cli_bridge_can_route(self):
-        """can_route returns True for routable commands."""
+        """can_route returns True for all commands (resonance always routes)."""
         bridge = MahamantraCLIBridge()
-        # All commands can be routed (via keywords or fallback)
+        # Resonance-based routing always works
         assert bridge.can_route("boot") is True
-        assert bridge.can_route("unknown") is True  # Fallback works
-
-    def test_cli_bridge_disable_fallback(self):
-        """disable_fallback disables CLIRegistry fallback."""
-        bridge = MahamantraCLIBridge()
-        assert bridge._fallback_enabled is True
-        bridge.disable_fallback()
-        assert bridge._fallback_enabled is False
-
-    def test_cli_bridge_enable_fallback(self):
-        """enable_fallback re-enables CLIRegistry fallback."""
-        bridge = MahamantraCLIBridge()
-        bridge.disable_fallback()
-        bridge.enable_fallback()
-        assert bridge._fallback_enabled is True
+        assert bridge.can_route("unknown_xyz_123") is True
 
     def test_cli_bridge_register_handler(self):
         """register_handler registers custom handler."""
@@ -207,26 +119,27 @@ class TestMahamantraCLIBridge:
         info = bridge.get_domain_info(6)
         assert "guardian" in info
         assert "opcode" in info
-        assert "keywords" in info
         assert "is_head" in info
 
     def test_cli_bridge_list_routes(self):
-        """list_routes returns all routes."""
+        """list_routes returns WORDS routes (all positions)."""
         bridge = MahamantraCLIBridge()
         routes = bridge.list_routes()
-        assert len(routes) > 0
-        # Each route is (keyword, position, guardian)
+        assert len(routes) == WORDS  # SSOT: WORDS positions
+        # Each route is (guardian, position, guardian)
         assert all(len(r) == 3 for r in routes)
 
     def test_cli_bridge_repr(self):
-        """MahamantraCLIBridge has __repr__."""
+        """MahamantraCLIBridge has __repr__ with WORDS."""
         bridge = MahamantraCLIBridge()
-        assert "MahamantraCLIBridge" in repr(bridge)
+        repr_str = repr(bridge)
+        assert "MahamantraCLIBridge" in repr_str
+        assert f"positions={WORDS}" in repr_str
 
     def test_cli_bridge_route_returns_result(self):
         """route returns BridgeResult."""
         bridge = MahamantraCLIBridge()
-        result = bridge.route("boot", [])
+        result = bridge.route("status", [])
         assert isinstance(result, BridgeResult)
         assert result.position is not None
 
@@ -254,7 +167,7 @@ class TestConvenienceFunctions:
 
     def test_route_function(self):
         """route function works."""
-        result = route("boot", [])
+        result = route("status", [])
         assert isinstance(result, BridgeResult)
 
     def test_route_function_default_args(self):
@@ -263,9 +176,10 @@ class TestConvenienceFunctions:
         assert isinstance(result, BridgeResult)
 
     def test_get_position_function(self):
-        """get_position function works."""
+        """get_position function returns valid position."""
         pos = get_position("analyze")
-        assert pos == 6
+        assert pos is not None
+        assert 0 <= pos < WORDS
 
 
 # =============================================================================
@@ -280,11 +194,11 @@ class TestModuleExports:
         """All expected items are in __all__."""
         from vibe_core.mahamantra.cli import bridge
 
+        # KREBS ENTFERNT: DOMAIN_KEYWORDS removed from exports
         expected = [
             "MahamantraCLIBridge",
             "cli_bridge",
             "BridgeResult",
-            "DOMAIN_KEYWORDS",
             "route",
             "get_position",
         ]
