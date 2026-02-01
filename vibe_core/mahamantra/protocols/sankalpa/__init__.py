@@ -38,16 +38,8 @@ from .types import (
     # Protocol
     SankalpaOrchestratorProtocol,
 )
-from .will import (
-    SankalpaOrchestrator,
-    SankalpaPlanner,
-    SankalpaRegistry,
-    get_sankalpa,
-    handle_sankalpa_query,
-    get_sankalpa_status_for_chat,
-    # Conscience function
-    check_conscience,
-)
+# IMPL MOVED TO SUBSTRATE (vibe_core.mahamantra.substrate.sankalpa)
+# from .will import ... (REMOVED FOR PURITY)
 
 def __getattr__(name: str):
     """
@@ -90,14 +82,7 @@ __all__ = [
     "ConscienceVerdict",
     "ASHRAMA_PERMISSIONS",
     "INTENT_PERMISSION_MAP",
-    "check_conscience",
-    # Protocol
     "SankalpaOrchestratorProtocol",
-    # Logic
-    "SankalpaOrchestrator",
-    "SankalpaPlanner",
-    "SankalpaRegistry",
-    "get_sankalpa",
-    "handle_sankalpa_query",
-    "get_sankalpa_status_for_chat",
+    # Implementation Logic moved to substrate.sankalpa
+    # "check_conscience", "SankalpaOrchestrator", etc. REMOVED.
 ]

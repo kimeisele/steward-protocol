@@ -41,12 +41,13 @@ __genesis__ = "0x7e40b596"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Final, List, Optional, Tuple
 
-from vibe_core.mahamantra.substrate.seed import (
+from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     PARAMPARA,
     WORDS,
     HALF_SIZE,
     JIVA_QUALITIES,
+    SEVEN,
 )
 from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
 
@@ -56,7 +57,8 @@ from .prabhupada_engineering import (
     VERSE_CONSTANTS,
     ENGINEERING_SUMMARY,
 )
-from .maha_algorithm import (
+# Use substrate kirtan
+from .kirtan import (
     MahaKirtan,
     KirtanComputeResult,
 )
@@ -283,7 +285,7 @@ class PrabhupadaKirtan:
             return True
 
         # Import self to verify genesis
-        import vibe_core.mahamantra.research.dharma.prabhupada_kirtan as self_module
+        from . import prabhupada_kirtan as self_module
 
         # Verify through THE PERSON
         self._self_verified = self._prabhupada.verify_link(self_module)
@@ -307,7 +309,7 @@ class PrabhupadaKirtan:
         stage = self._get_current_stage()
 
         # Get this module's genesis signature
-        import vibe_core.mahamantra.research.dharma.prabhupada_kirtan as self_module
+        from . import prabhupada_kirtan as self_module
         genesis_hex = getattr(self_module, "__genesis__", "0x0")
 
         try:

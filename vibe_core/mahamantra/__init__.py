@@ -48,6 +48,11 @@ def __getattr__(name: str):
         from vibe_core.mahamantra._mahamantra_lotus import get_mahamantra
         return get_mahamantra()
 
+    # === Alias: lotus ===
+    if name == "lotus":
+        from vibe_core.mahamantra._mahamantra_lotus import get_mahamantra
+        return get_mahamantra()
+
     # === Constants (from fast _seed_cell) ===
     if name in ("WORDS", "TRINITY", "QUARTERS", "PANCHA", "HALVES",
                 "HARE_COUNT", "KRISHNA_COUNT", "RAMA_COUNT",
@@ -181,6 +186,40 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.substrate import samskara
         return getattr(samskara, name)
 
+    # === Grace & Tulasi (Research -> Production) ===
+    if name == "GraceProtocol":
+        from vibe_core.mahamantra.protocols.offering import GraceProtocol
+        return GraceProtocol
+
+    if name == "TulasiGate":
+        from vibe_core.mahamantra.adapters.tulasi_gate import TulasiGate
+        return TulasiGate
+
+    if name == "MahaModularSynth":
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+        return MahaModularSynth
+
+    if name == "OfferingPipeline":
+        from vibe_core.mahamantra.research.tulasi_lila import OfferingPipeline
+        return OfferingPipeline
+
+    # === Architecture (Unified) ===
+    if name == "MahaCluster":
+        from vibe_core.mahamantra.substrate.cluster import MahaCluster
+        return MahaCluster
+
+    if name == "MahaCellUnified":
+        from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+        return MahaCellUnified
+
+    if name == "MahaFile":
+        from vibe_core.mahamantra.adapters.maha_format import MahaFile
+        return MahaFile
+
+    if name == "SankirtanChamber":
+        from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
+        return SankirtanChamber
+
     raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute '{name}'")
 
 
@@ -217,5 +256,9 @@ __all__ = [
     "NullShuddhi", "ShuddhiProtocolBase",
     "PhoenixConfig", "get_config", "reset_config", "set_config",
     "SamskaraProtocol", "Phase", "PhaseStatus", "PhaseResult", "PipelineContext", "PipelineExecutor",
+    # Tulasi
+    "TulasiGate", "GraceProtocol", "MahaModularSynth", "OfferingPipeline",
+    # Architecture (Unified)
+    "MahaCluster", "MahaCellUnified", "MahaFile", "SankirtanChamber",
 ]
 

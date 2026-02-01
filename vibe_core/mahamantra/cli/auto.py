@@ -113,7 +113,7 @@ def _get_kirtan_orchestrator() -> tuple["MahaCompression", "MahaKirtan"]:
     global _COMPRESSOR, _KIRTAN
     if _COMPRESSOR is None:
         from vibe_core.mahamantra.adapters.compression import MahaCompression
-        from vibe_core.mahamantra.research.dharma import MahaKirtan
+        from vibe_core.mahamantra.substrate.mantra import MahaKirtan
         _COMPRESSOR = MahaCompression()
         _KIRTAN = MahaKirtan(mod_space=MAHA_QUANTUM)
     return _COMPRESSOR, _KIRTAN

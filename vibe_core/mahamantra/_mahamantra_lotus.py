@@ -56,7 +56,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     _kirtan = None
     _compressor = None
     _gita_index = None
+    _gita_index = None
     _gita_by_attractor = None
+    _pipeline = None
 
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
@@ -66,7 +68,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def _get_kirtan(cls):
         """Lazy-load MahaKirtan orchestrator."""
         if cls._kirtan is None:
-            from vibe_core.mahamantra.research.dharma import MahaKirtan
+            from vibe_core.mahamantra.substrate.mantra import MahaKirtan
             from vibe_core.mahamantra.adapters.compression import MahaCompression
             from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
@@ -90,7 +92,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         result = kirtan.compute(cell if cell else seed)
 
-        from vibe_core.mahamantra.research.dharma import MahaResonator
+        from vibe_core.mahamantra.substrate.resonance import MahaResonator
         from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
         resonator = MahaResonator(mod_space=MAHA_QUANTUM)
@@ -243,11 +245,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         kirtan_result = kirtan.compute(cell if cell else seed)
 
         # =====================================================================
-        # 4. PADA_SEVANAM - MahaResonator → attractor (stable harmonic)
+        # 4. PADA_SEVANAM - MahaModularSynth → attractor (full 16-position coverage)
         # =====================================================================
-        from vibe_core.mahamantra.research.dharma import MahaResonator
-        resonator = MahaResonator(mod_space=MAHA_QUANTUM)
-        attractor = resonator.oscillate_once(kirtan_result.transformed_value)
+        # FIX: MahaResonator.oscillate_once() only produces 5 attractors due to
+        # quadratic convergence in RAMA operation. MahaModularSynth with "quantum"
+        # preset uses feedback to break convergence and reach all 16 positions.
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+        synth = MahaModularSynth(default_preset="quantum")
+        attractor = synth.transform(kirtan_result.transformed_value)
 
         # =====================================================================
         # 5. ARCANAM - Parampara verification (% 37 == 0)
@@ -277,8 +282,28 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             }
 
         # =====================================================================
-        # 7. DASYAM - Position/Quarter determination
+        # 7. DASYAM - Position/Quarter/Role determination
         # =====================================================================
+        # TWO CLASSIFICATION SYSTEMS (both derived from Mahamantra):
+        #
+        # A) OPERATIONAL (Quarters): How computation flows
+        #    - genesis (0-3):  INPUT   - vyasa, brahma, narada, shambhu
+        #    - dharma  (4-7):  VERIFY  - prithu, kumaras, kapila, manu
+        #    - karma   (8-11): EXECUTE - parashurama, prahlada, janaka, bhishma
+        #    - moksha (12-15): OUTPUT  - nrisimha, bali, shuka, yamaraja
+        #    HEAD = first position of each Quarter (0,4,8,12)
+        #
+        # B) ONTOLOGICAL (Trinity): What each position represents
+        #    - HARE (8 positions): Energy/Shakti - carriers/transmitters
+        #    - KRISHNA (4 positions): Source - all Vishnu-tattva
+        #    - RAMA (4 positions): Bliss - receivers/deliverers
+        #
+        from vibe_core.mahamantra.protocols._seed import (
+            is_head, get_quarter_head,
+            get_name_at_position, get_trinity_function,
+        )
+
+        # Position from attractor (holographic - embedded in computation)
         position = attractor % WORDS  # 0-15
 
         if position < 4:
@@ -291,6 +316,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             quarter = "moksha"
 
         guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
+
+        # OPERATIONAL: HEAD/WORKER role (Quarter leadership)
+        role = "avatara" if is_head(position) else "mahajana"
+        quarter_head_pos = get_quarter_head(position)
+        quarter_head_name = ALL_GUARDIANS[quarter_head_pos] if quarter_head_pos < len(ALL_GUARDIANS) else "unknown"
+
+        # FUNCTIONAL: Trinity classification (Name governance)
+        holy_name = get_name_at_position(position)  # "H", "K", or "R"
+        trinity_function = get_trinity_function(position)  # "source", "carrier", or "deliverer"
 
         # =====================================================================
         # 8. SAKHYAM - MahaCell creation (universal format)
@@ -340,10 +374,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "verse": verse_info,
             "matches": len(verse_result.matches),
 
-            # Position (DASYAM)
+            # Position (DASYAM) - Dual Classification
             "position": position,
             "guardian": guardian,
+            # Operational (Quarters): How computation flows
             "quarter": quarter,
+            "role": role,  # "avatara" (HEAD) or "mahajana" (WORKER)
+            "quarter_head": quarter_head_name,  # The Avatara managing this Quarter
+            # Functional (Trinity): What this position DOES
+            "holy_name": holy_name,  # "H" (Hare), "K" (Krishna), "R" (Rama)
+            "trinity_function": trinity_function,  # "source" (K), "carrier" (H), "deliverer" (R)
 
             # MahaCell (SAKHYAM)
             "cell": {
@@ -393,11 +433,68 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Access Moksha quarter."""
         return self._get_quarter("moksha")
 
+    @property
+    def pipeline(self):
+        """Access MahamantraPipeline adapter (Lazy Singleton)."""
+        if self._pipeline is None:
+            from vibe_core.mahamantra.adapters.pipeline import MahamantraPipeline
+            self._pipeline = MahamantraPipeline()
+        return self._pipeline
+
     def _get_quarter(self, name: str):
         """Lazy-load quarter module."""
         import importlib
         module = importlib.import_module(f"vibe_core.mahamantra.{name}")
+        module = importlib.import_module(f"vibe_core.mahamantra.{name}")
         return module
+
+    # === Adapters (Lazy) ===
+
+    @property
+    def transform(self):
+        """Access MahaTransform adapter."""
+        if not hasattr(self, "_transform_adapter"):
+            from vibe_core.mahamantra.adapters.transform import MahaTransform
+            self._transform_adapter = MahaTransform()
+        return self._transform_adapter
+
+    @property
+    def hash(self):
+        """Access MahaHash adapter."""
+        if not hasattr(self, "_hash_adapter"):
+            from vibe_core.mahamantra.adapters.hash import MahaHash
+            self._hash_adapter = MahaHash()
+        return self._hash_adapter
+
+    @property
+    def orchestrator(self):
+        """Access Orchestrator adapter."""
+        if not hasattr(self, "_orchestrator_adapter"):
+            from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+            self._orchestrator_adapter = Orchestrator()
+        return self._orchestrator_adapter
+
+    @property
+    def gita(self):
+        """Access Gita Resonance adapter."""
+        import vibe_core.mahamantra.adapters.gita_resonance as gita
+        return gita
+
+    def router(self, *args, **kwargs):
+        """Create a generic Router."""
+        from vibe_core.mahamantra.adapters.routing import Router
+        return Router(*args, **kwargs)
+
+    def scan(self) -> Dict[str, object]:
+        """
+        Scan system state (Governance/Audit).
+        Delegate to GAD discovery + internal state.
+        """
+        return {
+            "status": "active",
+            "audit": self.get_state(),
+            "gad": self.discover(),
+        }
 
     # === GAD Protocol ===
 

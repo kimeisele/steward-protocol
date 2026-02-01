@@ -22,19 +22,6 @@ SEVEN = 7 = the perfection constant from _seed.py.
 
 These 7 effects translate DIRECTLY to computing efficiency principles
 for Kali Yuga (maximum entropy reduction).
-
-CRITICAL DISTINCTION:
-=====================
-
-The moonlight (candrikā) is for the CONDITIONED SOUL in darkness.
-The white lotus (kairava) blooms at NIGHT - not under burning sunlight.
-
-ENGINEERING PARALLEL:
-- Sunlight = Vaikuntha aiśvarya = brute force (O(n), high power)
-- Moonlight = Vrindavan mādhurya = gentle efficiency (O(1), low power)
-
-The material CPU cooling is a REFLECTION of the spiritual cooling.
-The spiritual is the ORIGINAL, the material is the SHADOW (BG 15.1).
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -44,7 +31,7 @@ __genesis__ = "0xbf879742"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Final
+from typing import Final, List, Dict
 
 from vibe_core.mahamantra.protocols._seed import (
     # Efficiency constants
@@ -472,7 +459,7 @@ CRITICAL: We do NOT derive spiritual from material.
 
 
 # The 7 effects and their material reflections
-REFLECTION_PRINCIPLES: Final[list[ReflectionPrinciple]] = [
+REFLECTION_PRINCIPLES: Final[List[ReflectionPrinciple]] = [
     ReflectionPrinciple(
         spiritual_truth="Holy Name cleanses the heart mirror",
         spiritual_source="ceto-darpaṇa-mārjanaṁ",
@@ -599,36 +586,3 @@ IMPLEMENTATION:
 "paraṁ vijayate śrī-kṛṣṇa-saṅkīrtanam"
 Let there be all victory for the chanting of the holy name of Lord Kṛṣṇa!
 """
-
-
-# =============================================================================
-# EXPORTS
-# =============================================================================
-
-__all__ = [
-    # Structure constants
-    "SIKSASTAKAM_VERSES",
-    "VERSE_ONE_EFFECTS",
-    "REMAINING_VERSES",
-    # Effect enumeration
-    "SankirtanaEffect",
-    # Engineering effects
-    "EngineeringEffect",
-    "ENGINEERING_EFFECTS",
-    # Illumination types
-    "IlluminationType",
-    "SUNLIGHT",
-    "MOONLIGHT",
-    # Lotus types
-    "LotusType",
-    "KAIRAVA_LOTUS",
-    "PADMA_LOTUS",
-    # Kali Yuga optimization
-    "KaliYugaOptimization",
-    "KALI_YUGA_OPTIMIZATION",
-    # Reflection principle
-    "ReflectionPrinciple",
-    "REFLECTION_PRINCIPLES",
-    # Key insight
-    "KEY_INSIGHT",
-]

@@ -1,5 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @runtime_checkable
 class MahaOrchestratorProtocol(Protocol):
@@ -43,6 +43,8 @@ class TickResult:
     round_num: int
     call_response: str
     resonance: float
+    beat_delta: int = 0
+    metrics: dict = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class RoundResult:
@@ -51,6 +53,7 @@ class RoundResult:
     final_value: int
     ticks: Tuple[TickResult, ...]
     resonance: float
+    metrics: dict = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class MalaResult:
@@ -60,3 +63,4 @@ class MalaResult:
     total_ticks: int
     final_resonance: float
     attractor: int
+    metrics: dict = field(default_factory=dict)

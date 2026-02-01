@@ -18,7 +18,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0x25d36ba1"  # GenesisByte
+__genesis__ = "0x348ce48e2986757649ef37ccd73ad6b0cad14a59f72a1733f9300f8d6673d28f"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # FRACTAL DISCOVERY - Folder IS Wiring

@@ -158,6 +158,8 @@ class MahaTransform(MahaTransformProtocol):
             seed=seed,
             value=value,
             mod_space=self.mod_space,
+            iterations=WORDS,
+            metrics={"feedback_acc": self._feedback_acc},
         )
 
     def find_attractor(self, seed: int, max_iterations: int = MAHA_QUANTUM) -> AttractorResult:

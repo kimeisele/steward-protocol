@@ -85,7 +85,7 @@ def _compute_spectrum() -> dict:
         return _computed_spectrum
 
     # Import here to avoid circular dependency
-    from vibe_core.mahamantra.research.dharma.maha_algorithm import MahaResonator
+    from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
 
     resonator = MahaResonator(mod_space=MAHA_QUANTUM)
     _computed_spectrum = resonator.harmonic_spectrum()

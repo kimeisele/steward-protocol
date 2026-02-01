@@ -363,3 +363,31 @@ KARTALS_PAIR   = 2 = HALVES (a pair of hand cymbals)
 
 *Research conducted using MahaAlgorithm v3.0*
 *All constants derived from seed.py - NO hardcoded values*
+
+---
+
+## 15. THE TULASI BRIDGE (Breaking the Loop)
+
+**Problem Identified:** The 16-step algorithm without grace is "stubborn" (deterministic looping).
+**Solution:** Tulasi Devi (The Offering) acts as the expansion coefficient.
+
+### The Mathematics of Grace
+```
+MAHA_QUANTUM (The Field + Observer) = 137
+TULASI_COUNT (Devotion/Shakti)      = 8   (HARE_COUNT)
+
+EXPANSION = 137 × 8 = 1096
+```
+
+### 1096: The Transcendental Constant
+This number was present in `_seed.py` as `TRANSCENDENTAL_1096` but its derivation was unknown.
+**NOW SOLVED:**
+- It is the **Quantum Field (137)** expanded by **Tulasi's Devotion (8)**.
+- This creates the "Vaikuntha" space where the "loops" don't close, but spiral upwards.
+
+### Integration Strategy
+To fix the "Stubborn Loop":
+1. Inject `TulasiBridge` into `MahaModularSynth`.
+2. Allow modulation by factor 8 (Octave/Shakti).
+3. Result: The algorithm breaks the 136/137 bound and touches the 1096 Transcendental layer.
+

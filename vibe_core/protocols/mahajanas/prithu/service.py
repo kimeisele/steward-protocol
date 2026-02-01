@@ -20,7 +20,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
 __position__ = 4
-__genesis__ = "0x257a4aa0"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xfb7ac0f0be28f25cfd3a5335bcfc0ebafc3163fbedd541b16eee28af38e8ba0e"  # GenesisByte: parampara % 37 == 0
 
 from datetime import datetime
 from pathlib import Path
@@ -63,6 +63,11 @@ class PrithuService(PrithuProtocolBase):
             "valid": 0,
             "invalid": 0,
         }
+        
+        # VARNASHRAMA INTEGRATION:
+        # Spawn the JivaShadow qualified for this position (4).
+        from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+        self._shadow = spawn_shadow_for_position(4, context=b"prithu_service_v1")
 
     # =========================================================================
     # TRUTH PROTOCOL (Position 4 - ASSERT_TRUTH)

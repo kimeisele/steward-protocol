@@ -108,17 +108,17 @@ class KirtanCLI:
     def _ensure_kirtan(self):
         """Lazy-load MahaKirtan."""
         if self._kirtan is None:
-            from vibe_core.mahamantra.research.dharma.maha_algorithm import MahaKirtan
+            from vibe_core.mahamantra.substrate.mantra import MahaKirtan
 
             self._kirtan = MahaKirtan()
         return self._kirtan
 
     def _ensure_operator(self, **kwargs):
-        """Lazy-load MahaOperator."""
+        """Lazy-load PersonAnchoredOperator."""
         if self._operator is None:
-            from vibe_core.mahamantra.research.dharma.maha_operator import MahaOperator
+            from vibe_core.mahamantra.substrate.mantra import PersonAnchoredOperator
 
-            self._operator = MahaOperator(**kwargs)
+            self._operator = PersonAnchoredOperator(**kwargs)
         return self._operator
 
     def _ensure_research(self):
@@ -220,16 +220,17 @@ class KirtanCLI:
                 i += 1
 
         # Create and run operator
-        from vibe_core.mahamantra.research.dharma.maha_operator import MahaOperator
+        from vibe_core.mahamantra.substrate.mantra import PersonAnchoredOperator
 
-        operator = MahaOperator(
+        operator = PersonAnchoredOperator(
             mod_space=mod_space,
-            preset=preset,
         )
 
         try:
-            final_state = operator.run(seed=seed, show_metrics=not no_metrics)
-            print(f"\nSession complete: {final_state.total_beats} beats, {final_state.total_rounds} rounds")
+            # PersonAnchoredOperator uses siksastakam stages (8 beats)
+            print(f"Entering Live Mode (Seed: {seed}, Mod: {mod_space})")
+            results = operator.run_siksastakam(seed=seed)
+            print(f"\nRound complete: {len(results)} beats")
             return 0
         except Exception as e:
             logger.error(f"Operator error: {e}")
@@ -338,7 +339,8 @@ class KirtanCLI:
 
         Usage: vibe kirtan synth [--preset NAME] [--mod N]
         """
-        from vibe_core.mahamantra.research.dharma.maha_algorithm import SYNTH_PRESETS, MahaModularSynth
+        from vibe_core.mahamantra.substrate.mantra import MahaModularSynth
+        from vibe_core.mahamantra.substrate.algorithm.maha import SYNTH_PRESETS
 
         preset = "quantum"
         mod_space = MAHA_QUANTUM
@@ -391,7 +393,7 @@ class KirtanCLI:
         """
         from dataclasses import fields
 
-        from vibe_core.mahamantra.research.dharma.maha_algorithm import SYNTH_PRESETS
+        from vibe_core.mahamantra.substrate.algorithm.maha import SYNTH_PRESETS
 
         print("Available Synth Presets:")
         print("=" * 40)

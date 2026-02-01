@@ -69,7 +69,7 @@ from vibe_core.mahamantra.protocols.classification import (
     ClassificationResult,
     ComparisonResult,
 )
-from vibe_core.mahamantra.research.classification import (
+from vibe_core.mahamantra.substrate.classifier import (
     MAHAMANTRA_ADDRESS_SPACE,
     MAHAMANTRA_QUARTERS,
     MAHAMANTRA_WORDS,
@@ -193,7 +193,9 @@ class MahaClassifier(MahaClassificationProtocol):
             entries_per_level=entries_per_level,
         )
 
-        return ClassificationResult(_inner=inner)
+
+
+        return self._to_result(inner)
 
     def quick_verdict(
         self,
@@ -228,7 +230,7 @@ class MahaClassifier(MahaClassificationProtocol):
         65536-entry array, O(1) by structure, 512KB fixed.
         50x faster range queries than dict.
         """
-        return ClassificationResult(_inner=classify_lotus_array_int())
+        return self._to_result(classify_lotus_array_int())
 
     def ipv4_router(self) -> ClassificationResult:
         """
@@ -237,7 +239,7 @@ class MahaClassifier(MahaClassificationProtocol):
         8-level radix (16 entries each = 32-bit IPv4).
         1557x faster than linear search.
         """
-        return ClassificationResult(_inner=classify_lotus_ipv4_router())
+        return self._to_result(classify_lotus_ipv4_router())
 
     def kmer_index(self) -> ClassificationResult:
         """
@@ -246,7 +248,7 @@ class MahaClassifier(MahaClassificationProtocol):
         4^8 = 65536 = perfect Mahamantra fit.
         6.5x faster than Counter.
         """
-        return ClassificationResult(_inner=classify_lotus_8mer_index())
+        return self._to_result(classify_lotus_8mer_index())
 
     def radix_n(self, levels: int = 8) -> ClassificationResult:
         """
@@ -255,7 +257,7 @@ class MahaClassifier(MahaClassificationProtocol):
         Scales to any key size while maintaining 16-alignment.
         levels=4: 16-bit, levels=8: 32-bit, levels=32: 128-bit
         """
-        return ClassificationResult(_inner=classify_lotus_radix_n(levels))
+        return self._to_result(classify_lotus_radix_n(levels))
 
     def python_dict(self) -> ClassificationResult:
         """
@@ -263,7 +265,7 @@ class MahaClassifier(MahaClassificationProtocol):
 
         O(1) by HASH (not structure!). Unbounded. Non-deterministic.
         """
-        return ClassificationResult(_inner=classify_python_dict())
+        return self._to_result(classify_python_dict())
 
     def neural_network(self) -> ClassificationResult:
         """
@@ -271,7 +273,7 @@ class MahaClassifier(MahaClassificationProtocol):
 
         O(N^2) quadratic. Unbounded. Random.
         """
-        return ClassificationResult(_inner=classify_neural_network_attention())
+        return self._to_result(classify_neural_network_attention())
 
     def blockchain(self) -> ClassificationResult:
         """
@@ -279,7 +281,7 @@ class MahaClassifier(MahaClassificationProtocol):
 
         O(N) linear, grows forever, never shrinks.
         """
-        return ClassificationResult(_inner=classify_blockchain())
+        return self._to_result(classify_blockchain())
 
     # === COMPARISON ===
 
@@ -308,6 +310,33 @@ class MahaClassifier(MahaClassificationProtocol):
         ])
 
     # === HELPERS ===
+
+    def _to_result(self, inner: Classification) -> ClassificationResult:
+        """Convert substrate Classification to protocol ClassificationResult."""
+        return ClassificationResult(
+            name=inner.name,
+            verdict=inner.get_engineering_verdict(),
+            is_anukulya=inner.is_anukulya,
+            mercy_advantage=inner.mercy_advantage,
+            chanting_frequency=inner.chanting_frequency,
+            karmic_debt=inner.karmic_debt,
+            alignment=inner.alignment.name.lower(),
+            complexity=inner.complexity.name.lower(),
+            memory=inner.memory.name.lower(),
+            determinism=inner.determinism.name.lower(),
+            to_dict=lambda: {
+                "name": inner.name,
+                "verdict": inner.get_engineering_verdict(),
+                "is_anukulya": inner.is_anukulya,
+                "mercy_advantage": inner.mercy_advantage,
+                "chanting_frequency": inner.chanting_frequency,
+                "karmic_debt": inner.karmic_debt,
+                "alignment": inner.alignment.name.lower(),
+                "complexity": inner.complexity.name.lower(),
+                "memory": inner.memory.name.lower(),
+                "determinism": inner.determinism.name.lower(),
+            }
+        )
 
     def _to_alignment(self, value: Union[str, StructuralAlignment]) -> StructuralAlignment:
         """Convert string to StructuralAlignment enum."""

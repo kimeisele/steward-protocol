@@ -1,5 +1,5 @@
-from typing import Protocol, runtime_checkable, Any, Dict, List, Tuple, Optional
-from dataclasses import dataclass
+from typing import Protocol, runtime_checkable, Dict, List, Tuple, Optional
+from dataclasses import dataclass, field
 from enum import Enum
 
 # Forward reference for simplicity if needed, but we can define Enums here or assume they are imported.
@@ -14,7 +14,7 @@ from enum import Enum
 # or define local Protocol-compatible Enums if possible.
 # Better: Import the Enums. They are in `vibe_core.mahamantra.substrate.mahajana`.
 
-from vibe_core.mahamantra.substrate.mahajana import Quarter, Sampradaya
+from vibe_core.mahamantra.protocols.types import Quarter, Sampradaya
 
 @runtime_checkable
 class MahaPipelineProtocol(Protocol):
@@ -73,6 +73,7 @@ class GenesisResult:
     hash_value: int
     lens_scores: Tuple[int, ...]
     quarter: Quarter
+    metrics: Dict[str, object] = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class DharmaResult:
@@ -82,6 +83,7 @@ class DharmaResult:
     attractor: int
     steps: int
     quarter: Quarter
+    metrics: Dict[str, object] = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class KarmaResult:
@@ -90,6 +92,7 @@ class KarmaResult:
     value: object
     routed: bool
     quarter: Quarter
+    metrics: Dict[str, object] = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class MokshaResult:
@@ -99,6 +102,7 @@ class MokshaResult:
     round_num: int
     resonance: float
     quarter: Quarter
+    metrics: Dict[str, object] = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class PipelineResult:

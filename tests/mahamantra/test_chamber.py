@@ -12,17 +12,18 @@ WATERTIGHT TESTS:
 
 import pytest
 
-from vibe_core.mahamantra.chamber import (
+from vibe_core.mahamantra.substrate.chamber import (
     SankirtanChamber,
     KirtanMode,
     CHAMBER_CAPACITY,
     RESONANCE_THRESHOLD,
     DEFAULT_CHORUS_SIZE,
 )
-from vibe_core.mahamantra.cell import (
+from vibe_core.mahamantra.substrate.cell import (
     MahaCellUnified,
     GENESIS_PRANA,
 )
+from vibe_core.mahamantra.substrate.cluster import MahaCluster
 from vibe_core.mahamantra.orchestrator import VenuOrchestrator
 from vibe_core.mahamantra.protocols._seed import (
     MALA,
@@ -151,18 +152,22 @@ class TestSankirtan:
             for i in range(5)
         ]
         
-        result = chamber.sankirtan(cells, merge=False)
+        result = chamber.sankirtan(cells)
         
-        assert len(result) == 5
+        assert isinstance(result, MahaCluster)
+        assert result.size == 5
+        assert len(result.cells) == 5
         assert chamber.total_transformations == 5
     
     def test_sankirtan_empty_list(self) -> None:
         """Sankirtan handles empty list."""
         chamber = SankirtanChamber.create()
         
-        result = chamber.sankirtan([], merge=False)
+        result = chamber.sankirtan([])
         
-        assert result == []
+        assert isinstance(result, MahaCluster)
+        assert result.size == 0
+        assert result.cells == []
 
 
 class TestResonance:
