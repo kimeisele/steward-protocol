@@ -91,14 +91,23 @@ class VenuDispatcher:
                     from vibe_core.mahamantra.substrate.ledger import InMemoryLedger
                     service_inst = ServiceClass(InMemoryLedger())
                 
-                # Now call the service - it implements protocol methods
-                # For now just return success showing it instantiated
-                return {
-                    'success': True,
-                    'output': f'{guardian_service_name} instantiated successfully',
-                    'execution': {'service': guardian_service_name, 'ready': True},
-                    'exit_code': 0
-                }
+                # Now call execute() if available (from ExecutableMixin)
+                if hasattr(service_inst, 'execute') and callable(service_inst.execute):
+                    result = service_inst.execute(input_text)
+                    return {
+                        'success': True,
+                        'output': str(result),
+                        'execution': result,
+                        'exit_code': 0
+                    }
+                else:
+                    # Service instantiated but no execute() - just return ready state
+                    return {
+                        'success': True,
+                        'output': f'{guardian_service_name} instantiated successfully',
+                        'execution': {'service': guardian_service_name, 'ready': True},
+                        'exit_code': 0
+                    }
             
             # Option 3: process_intent (cognitive interface)
             elif hasattr(service, 'process_intent'):
