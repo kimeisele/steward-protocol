@@ -6,12 +6,12 @@ Instead of static logs, agents now "emit" events that are broadcast to all liste
 
 DEPRECATED: Phase 4 Migration to Mahamantra (NARADA)
 =====================================================
-EventBus is being migrated to mahamantra.mod.narada.
+EventBus is being migrated to mahamantra.<quarter>.narada  # FIXME: specify correct quarter.
 
 MIGRATION PATH:
-- Events → mahamantra.mod.narada (broadcast/events)
+- Events → mahamantra.<quarter>.narada  # FIXME: specify correct quarter (broadcast/events)
 - Signals → mahajanas/narada/events.py
-- Access: `from vibe_core.mahamantra import mahamantra; mahamantra.mod.narada`
+- Access: `from vibe_core.mahamantra import mahamantra; mahamantra.<quarter>.narada  # FIXME: specify correct quarter`
 
 CURRENT STATUS: Deprecated but functional
 - New event systems should use narada patterns

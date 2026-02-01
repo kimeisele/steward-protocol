@@ -10,8 +10,8 @@ This ServiceRegistry is being migrated to mahamantra-based routing.
 MIGRATION PATH:
 - Services should be registered as mahajana capabilities
 - Access via: `from vibe_core.mahamantra import mahamantra`
-- Example: `mahamantra.mod.kapila` for analysis services
-- Example: `mahamantra.mod.yamaraja` for security services
+- Example: `mahamantra.<quarter>.kapila  # FIXME: specify correct quarter` for analysis services
+- Example: `mahamantra.<quarter>.yamaraja  # FIXME: specify correct quarter` for security services
 
 CURRENT STATUS: Deprecated but functional
 - New services should use mahajana patterns
@@ -808,7 +808,7 @@ def get_mahajana_for_service(service_name: str) -> Optional[str]:
 
         # Then access via mahamantra:
         from vibe_core.mahamantra import mahamantra
-        narada = mahamantra.mod.narada
+        narada = mahamantra.<quarter>.narada  # FIXME: specify correct quarter
 
     Returns:
         Mahajana name or None if not mapped

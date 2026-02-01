@@ -10,7 +10,7 @@ Semantic syscalls are being migrated to protocol-based mahajana services.
 
 MIGRATION PATH:
 - Operators → mahamantra protocol decorators (@ProtocolRegistry.register)
-- Syscall execution → mahamantra.mod.parashurama (karma/execution)
+- Syscall execution → mahamantra.<quarter>.parashurama  # FIXME: specify correct quarter (karma/execution)
 - Intent routing → mahamantra cli_bridge
 - Blueprints → mahamantra circuit routing
 
