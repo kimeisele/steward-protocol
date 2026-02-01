@@ -85,13 +85,8 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_RAMA as WEIGHT_RAMA,
 )
-from vibe_core.mahamantra.protocols._seed import (
-    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
-    MAHA_OP_MAP as _OP_MAP,
-    MAHA_MULT as _MULT,
-    MAHA_ADD as _ADD,
-    MAHA_SQ as _SQ,
-)
+# THE ALGORITHM - imported from SSOT, not reimplemented!
+from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
 # =============================================================================
 # CORE CONSTANTS (Derived from Seed)
@@ -584,29 +579,13 @@ class LilaChronology:
         """
         Apply MahaAlgorithm 16-step transform to year's delta.
 
-        PATTERN: H K H K | K K H H | H R H R | R R H H
-
-        TRANSFORMATION RULES (derived from _seed.py):
-        - HARE:    value × 7 (SEVEN)
-        - KRISHNA: value + 10 (TEN)
-        - RAMA:    value × value (SQUARING)
+        DELEGATES to algorithm/ - no duplication!
 
         DISCOVERED:
         - Δ63 (1959 Sannyasa) → 136 = T(16) = THE FIELD!
         """
-        pattern = "HKHKKKHHHRHRRRHH"
-        value = self.get_delta(year) % mod_space
-
-        # BRANCHLESS transformation via lookup tables
-        for name in pattern:
-            op = _OP_MAP[name]
-            # Phase 1: Multiply and Add (no branch)
-            v = (value * _MULT[op] + _ADD[op]) % mod_space
-            # Phase 2: Conditional square via arithmetic selection
-            squared = (v * v) % mod_space
-            value = _SQ[op] * squared + (1 - _SQ[op]) * v
-
-        return value
+        delta = self.get_delta(year)
+        return maha_oscillate(delta, mod_space)
 
     def get_chladni_analysis(self, year: int) -> Dict[str, object]:
         """
