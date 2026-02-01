@@ -16,7 +16,7 @@ __position__ = 0
 __genesis__ = "0x672435f8"
 
 from dataclasses import dataclass
-from typing import Final, List, Union, Optional
+from typing import Dict, Final, List, Optional, Union
 
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
@@ -166,3 +166,14 @@ class MahaKirtan:
             results.extend(round_results)
             current_seed = round_results[-1].transformed_value
         return results
+
+    def get_state(self) -> Dict[str, object]:
+        """Return observable state for GAD monitoring."""
+        return {
+            "current_tick": self._state.current_tick,
+            "current_round": self._state.current_round,
+            "total_computations": self._state.total_computations,
+            "resonance_level": self._state.resonance_level,
+            "last_oracle_result": self._state.last_oracle_result,
+            "accumulated_value": self._state.accumulated_value,
+        }

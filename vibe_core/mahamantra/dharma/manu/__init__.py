@@ -37,6 +37,39 @@ PARAMPARA_VECTOR: Final[int] = 296
 # ManuBase alias for backward compat
 ManuBase = ManuProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """
+    MANU EXECUTION - Dharma Law & Governance
+
+    Manu-samhita: The lawgiver of human society.
+    """
+    intent = input_text.lower().strip()
+
+    if "dharma" in intent or "law" in intent or "rule" in intent:
+        return {
+            "success": True,
+            "action": "dharma_check",
+            "message": "⚖️ Manu: Dharma is eternal. Act according to your nature (svadharma)."
+        }
+
+    if "varna" in intent or "ashram" in intent:
+        return {
+            "success": True,
+            "action": "varnashrama",
+            "message": "⚖️ Manu: Varnashrama is social organization by guna and karma, not birth."
+        }
+
+    return {
+        "success": True,
+        "action": "introspect",
+        "position": POSITION,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "message": f"⚖️ Manu hears: '{input_text}'. Try 'dharma', 'law', or 'varnashrama'."
+    }
+
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.
