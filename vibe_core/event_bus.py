@@ -7,7 +7,9 @@ from vibe_core.mahamantra import (
     EventType,
     Event,
     EventBusProtocol,
-    get_event_bus
+    get_event_bus,
+    SubscriberMetrics,
+    SudarshanaGuard,
 )
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "Event",
     "EventBusProtocol",
     "get_event_bus",
+    "SubscriberMetrics",
+    "SudarshanaGuard",
 ]
