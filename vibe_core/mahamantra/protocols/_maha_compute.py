@@ -47,6 +47,11 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     TRINITY,
     WORDS,
+    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    MAHA_OP_MAP as OP_CODE,
+    MAHA_MULT as _MULT,
+    MAHA_ADD as _ADD,
+    MAHA_SQ as _SQ,
 )
 
 # =============================================================================
@@ -311,22 +316,49 @@ def get_operation(position: int) -> str:
     return PATTERN[position % WORDS]
 
 
+# =============================================================================
+# BRANCHLESS COMPUTATION - NO IF/ELSE!
+# =============================================================================
+# All derived from Mahamantra axioms:
+#   HARE    = multiply by SEVEN (7)  - Shakti distributes energy
+#   KRISHNA = add TEN (10)           - Krishna attracts/adds
+#   RAMA    = square                 - Rama intensifies (7² = 49)
+#
+# Operation encoded as integer: H=0, K=1, R=2
+# Coefficients are LOOKUP TABLES, not branches.
+
+# =============================================================================
+# SSOT: Coefficients imported from _seed.py (NO DUPLICATION!)
+# =============================================================================
+# OP_CODE = MAHA_OP_MAP: {"H": 0, "K": 1, "R": 2}
+# _MULT = MAHA_MULT: (SEVEN, 1, 1)   - H×7, K×1, R×1
+# _ADD = MAHA_ADD: (0, TEN, 0)       - H+0, K+10, R+0
+# _SQ = MAHA_SQ: (0, 0, 1)           - H→0, K→0, R→1 (square flag)
+
+
 def apply_operation(value: int, operation: str) -> int:
     """
-    Apply Mahamantra operation to value.
+    Apply Mahamantra operation to value - BRANCHLESS.
 
     H (HARE)    → value × SEVEN (mod 137) - Shakti multiplies
     K (KRISHNA) → value + TEN (mod 137) - Krishna attracts/adds
     R (RAMA)    → value × value (mod 137) - Rama intensifies/squares
+
+    NO IF/ELSE. Pure arithmetic via lookup tables.
     """
-    if operation == "H":
-        return (value * SEVEN) % MAHA_QUANTUM
-    elif operation == "K":
-        return (value + TEN) % MAHA_QUANTUM
-    elif operation == "R":
-        return (value * value) % MAHA_QUANTUM
-    else:
-        raise ValueError(f"Unknown operation: {operation}")
+    op = OP_CODE[operation]
+
+    # Phase 1: Multiply and Add (no branch)
+    v = (value * _MULT[op] + _ADD[op]) % MAHA_QUANTUM
+
+    # Phase 2: Conditional Square WITHOUT IF
+    # Compute both paths, select via arithmetic
+    # When _SQ[op]=0: result = 0*squared + 1*v = v
+    # When _SQ[op]=1: result = 1*squared + 0*v = squared
+    squared = (v * v) % MAHA_QUANTUM
+    result = _SQ[op] * squared + (1 - _SQ[op]) * v
+
+    return result
 
 
 def is_attractor(value: int) -> Tuple[bool, AttractorType]:
@@ -414,6 +446,8 @@ __all__ = [
     "ALL_ATTRACTORS",
     "GITA_INSIGHTS",
     "PATTERN",
+    # Branchless computation
+    "OP_CODE",
     # Functions
     "get_operation",
     "apply_operation",
