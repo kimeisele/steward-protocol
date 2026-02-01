@@ -350,8 +350,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
         # =====================================================================
         # MahaCell = ANYTHING. For __call__, we use create() with resonated position.
-        # Use from_content() for simple content → cell without resonance.
+        # Auto-register in global router for O(1) lookup.
         from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+        from vibe_core.mahamantra.substrate.cell_router import register_cell
 
         result_cell = MahaCellUnified.create(
             source=seed,              # Address from compression
@@ -359,6 +360,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             operation=position,       # Position from attractor % WORDS (resonated)
             dna=input_text,
         )
+
+        # Register in global router
+        register_cell(result_cell)
         
         # =====================================================================
         # 8.5. KIRTAN - Call and Response Loop
