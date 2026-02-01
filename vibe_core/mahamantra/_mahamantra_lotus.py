@@ -349,14 +349,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
         # =====================================================================
+        # MahaCell = ANYTHING. For __call__, we use create() with resonated position.
+        # Use from_content() for simple content → cell without resonance.
         from vibe_core.mahamantra.substrate.cell import MahaCellUnified
-        
+
         result_cell = MahaCellUnified.create(
-            source=seed,
-            target=attractor,
-            operation=position,
-            dna=input_text,  # DNA = input text
-            initial_state=None,  # Generic state (optional)
+            source=seed,              # Address from compression
+            target=attractor,         # Resonated attractor
+            operation=position,       # Position from attractor % WORDS (resonated)
+            dna=input_text,
         )
         
         # =====================================================================
