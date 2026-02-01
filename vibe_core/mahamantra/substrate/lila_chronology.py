@@ -85,6 +85,13 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_RAMA as WEIGHT_RAMA,
 )
+from vibe_core.mahamantra.protocols._seed import (
+    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    MAHA_OP_MAP as _OP_MAP,
+    MAHA_MULT as _MULT,
+    MAHA_ADD as _ADD,
+    MAHA_SQ as _SQ,
+)
 
 # =============================================================================
 # CORE CONSTANTS (Derived from Seed)
@@ -590,13 +597,14 @@ class LilaChronology:
         pattern = "HKHKKKHHHRHRRRHH"
         value = self.get_delta(year) % mod_space
 
+        # BRANCHLESS transformation via lookup tables
         for name in pattern:
-            if name == "H":
-                value = (value * SEVEN) % mod_space
-            elif name == "K":
-                value = (value + TEN) % mod_space
-            else:  # R
-                value = (value * value) % mod_space
+            op = _OP_MAP[name]
+            # Phase 1: Multiply and Add (no branch)
+            v = (value * _MULT[op] + _ADD[op]) % mod_space
+            # Phase 2: Conditional square via arithmetic selection
+            squared = (v * v) % mod_space
+            value = _SQ[op] * squared + (1 - _SQ[op]) * v
 
         return value
 

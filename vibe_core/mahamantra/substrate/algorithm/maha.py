@@ -51,6 +51,11 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
     MAHAMANTRA_NAME_RAMA,
+    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    MAHA_OP_MAP as _OP_MAP,
+    MAHA_MULT as _MULT,
+    MAHA_ADD as _ADD,
+    MAHA_SQ as _SQ,
 )
 
 
@@ -199,16 +204,15 @@ class MahaAlgorithm16:
 
     def transform(self, seed: int) -> int:
         """
-        Standard transformation (converges to fixed point).
+        Standard transformation (converges to fixed point). BRANCHLESS.
         """
         value = seed % MAHA_QUANTUM
+        mod = MAHA_QUANTUM
         for step in self.execute():
-            if step.name == MAHAMANTRA_NAME_HARE:
-                value = (value * SEVEN) % MAHA_QUANTUM
-            elif step.name == MAHAMANTRA_NAME_KRISHNA:
-                value = (value + TEN) % MAHA_QUANTUM
-            else:  # Rama
-                value = (value * value) % MAHA_QUANTUM
+            op = _OP_MAP[step.name]
+            v = (value * _MULT[op] + _ADD[op]) % mod
+            squared = (v * v) % mod
+            value = _SQ[op] * squared + (1 - _SQ[op]) * v
         return value
 
 
@@ -286,18 +290,25 @@ class MahaModularSynth:
                 phase_in_lfo = (step.position - 1) % p.lfo_rate
                 lfo = binary_val * phase_in_lfo
 
-            adsr = p.adsr_attack
-            if step.phase == Phase.KRISHNA: adsr = p.adsr_decay
-            elif step.phase == Phase.PRAKRITI: adsr = p.adsr_sustain
-            elif step.phase == Phase.KARMA: adsr = p.adsr_release
+            # BRANCHLESS ADSR lookup by phase index (1-4 → 0-3)
+            adsr_table = (p.adsr_attack, p.adsr_decay, p.adsr_sustain, p.adsr_release)
+            adsr = adsr_table[step.phase.value - 1]
 
-            # Apply Logic
-            if step.name == MAHAMANTRA_NAME_HARE:
-                value = (value * SEVEN * adsr + lfo) % effective_mod_space
-            elif step.name == MAHAMANTRA_NAME_KRISHNA:
-                value = (value + TEN + effective_pos + feedback_acc) % effective_mod_space
-            else: # Rama
-                value = (value * value + feedback_acc) % effective_mod_space
+            # BRANCHLESS Apply Logic
+            op = _OP_MAP[step.name]
+            mod = effective_mod_space
+
+            # For HARE: mult=SEVEN*adsr, add=lfo, sq=0
+            # For KRISHNA: mult=1, add=TEN+pos+feedback, sq=0
+            # For RAMA: mult=1, add=feedback, sq=1
+            #
+            # Generalized formula with position-dependent adds
+            mult_coeff = (SEVEN * adsr, 1, 1)[op]
+            add_coeff = (lfo, TEN + effective_pos + feedback_acc, feedback_acc)[op]
+
+            v = (value * mult_coeff + add_coeff) % mod
+            squared = (v * v) % mod
+            value = _SQ[op] * squared + (1 - _SQ[op]) * v
 
             feedback_acc = (feedback_acc + value * effective_feedback) % effective_mod_space
 

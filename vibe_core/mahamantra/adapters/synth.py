@@ -94,6 +94,11 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAMANTRA_NAME_KRISHNA,
     MAHAMANTRA_WORD_PATTERN,
     MAHAMANTRA_NAME_HARE,
+    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    MAHA_OP_MAP as _OP_MAP,
+    MAHA_MULT as _MULT,
+    MAHA_ADD as _ADD,
+    MAHA_SQ as _SQ,
 )
 
 
@@ -125,6 +130,17 @@ ADSR_RELEASE: Final[int] = MAHAJANA_COUNT  # 12 - final fall
 # Full cycle length (polyrhythm)
 import math
 FULL_CYCLE: Final[int] = (WORDS * SEVEN) // math.gcd(WORDS, SEVEN)  # 112
+
+
+# =============================================================================
+# SYNTH-SPECIFIC COEFFICIENT TABLES (Core coefficients imported from _seed.py)
+# =============================================================================
+# For step() with ADSR: HARE uses ADSR multiplier, KRISHNA/RAMA don't
+_ADSR_MULT: Final[Tuple[int, ...]] = (1, 0, 0)  # HARE uses ADSR, others don't
+# For step() with position: KRISHNA adds position, others don't
+_POS_ADD: Final[Tuple[int, ...]] = (0, 1, 0)    # KRISHNA adds pos, others don't
+# For step() with LFO: HARE uses LFO, others don't
+_LFO_ADD: Final[Tuple[int, ...]] = (1, 0, 0)    # HARE adds LFO, others don't
 
 
 # =============================================================================
@@ -275,18 +291,32 @@ class MahaSynth(MahaSynthProtocol):
         lfo = self._get_lfo_value(pos)
         mod = self._params.mod_space
 
-        if name == MAHAMANTRA_NAME_HARE:
-            # HARE: multiply by SEVEN, modulated by ADSR
-            output = (value * SEVEN * adsr + lfo) % mod
-            operation = f"{value} × {SEVEN} × {adsr} + {lfo} = {output} (mod {mod})"
-        elif name == MAHAMANTRA_NAME_KRISHNA:
-            # KRISHNA: add TEN plus position
-            output = (value + TEN + pos) % mod
-            operation = f"{value} + {TEN} + {pos} = {output} (mod {mod})"
-        else:  # R
-            # RAMA: square
-            output = (value * value) % mod
-            operation = f"{value}² = {output} (mod {mod})"
+        # BRANCHLESS computation via lookup tables
+        op = _OP_MAP[name]
+
+        # Compute all three possible outputs (only correct one will be selected)
+        # HARE: value * SEVEN * adsr + lfo
+        # KRISHNA: value + TEN + pos
+        # RAMA: value * value
+
+        # Base computation: mult × value + add
+        adsr_factor = 1 + _ADSR_MULT[op] * (adsr - 1)  # 1 for K/R, adsr for H
+        mult_coeff = _MULT[op] * adsr_factor
+        add_coeff = _ADD[op] + _POS_ADD[op] * pos + _LFO_ADD[op] * lfo
+
+        v = (value * mult_coeff + add_coeff) % mod
+
+        # Conditional square via arithmetic selection
+        squared = (v * v) % mod
+        output = _SQ[op] * squared + (1 - _SQ[op]) * v
+
+        # Operation string (for logging/debugging)
+        op_templates = (
+            f"{value} × {SEVEN} × {adsr} + {lfo} = {output} (mod {mod})",  # HARE
+            f"{value} + {TEN} + {pos} = {output} (mod {mod})",             # KRISHNA
+            f"{value}² = {output} (mod {mod})",                            # RAMA
+        )
+        operation = op_templates[op]
 
         self._total_steps += 1
 
@@ -338,15 +368,15 @@ class MahaSynth(MahaSynthProtocol):
     # =========================================================================
 
     def _oscillate_once(self, value: int) -> int:
-        """One oscillation = simplified 16-step pass (no ADSR/LFO for speed)."""
+        """One oscillation = simplified 16-step pass (no ADSR/LFO for speed). BRANCHLESS."""
         mod = self._params.mod_space
         for name in PATTERN:
-            if name == MAHAMANTRA_NAME_HARE:
-                value = (value * SEVEN) % mod
-            elif name == MAHAMANTRA_NAME_KRISHNA:
-                value = (value + TEN) % mod
-            else:  # R
-                value = (value * value) % mod
+            op = _OP_MAP[name]
+            # Phase 1: Multiply and Add (no branch)
+            v = (value * _MULT[op] + _ADD[op]) % mod
+            # Phase 2: Conditional square via arithmetic selection
+            squared = (v * v) % mod
+            value = _SQ[op] * squared + (1 - _SQ[op]) * v
         return value
 
     def resonate(self, seed: int, max_cycles: int = 100) -> ResonanceResult:

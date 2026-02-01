@@ -39,6 +39,21 @@ from vibe_core.mahamantra.substrate.algorithm.maha import triangular
 from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
 
 
+# =============================================================================
+# BRANCHLESS ENCODING COEFFICIENTS - NO IF/ELSE!
+# =============================================================================
+# H=0, K=1, R=2 → lookup replaces IF/ELSE in encode_intent
+#
+# HARE: char_val * t_pos * SEVEN (multiplicative)
+# KRISHNA: char_val + t_pos + TEN (additive)
+# RAMA: char_val * t_pos (multiplicative)
+#
+# Using selection trick: contribution = is_mult * mult_result + (1-is_mult) * add_result
+_ENCODE_OP_MAP: Final[Dict[str, int]] = {"H": 0, "K": 1, "R": 2}
+_ENCODE_IS_MULT: Final[Tuple[int, ...]] = (1, 0, 1)  # HARE=mult, KRISHNA=add, RAMA=mult
+_ENCODE_MULT_FACTOR: Final[Tuple[int, ...]] = (SEVEN, 1, 1)  # HARE×7, K×1(unused), RAMA×1
+
+
 @dataclass(frozen=True)
 class OracleLens:
     """A single lens (mod-space) for viewing an intent."""
@@ -92,7 +107,7 @@ class MahaOracle:
             self._resonators[mod_space] = MahaResonator(mod_space)
             
     def encode_intent(self, intent: str) -> int:
-        """Encode intent string to integer using Mahamantra weights."""
+        """Encode intent string to integer using Mahamantra weights. BRANCHLESS."""
         if not intent:
             return 0
         value = 0
@@ -101,15 +116,21 @@ class MahaOracle:
             pos = (i % WORDS) + 1
             t_pos = triangular(pos)
             pattern_char = PATTERN[i % WORDS]
-            
-            if pattern_char == MAHAMANTRA_NAME_HARE:
-                contribution = (char_val * t_pos * SEVEN) % MAHA_QUANTUM
-            elif pattern_char == MAHAMANTRA_NAME_KRISHNA:
-                contribution = (char_val + t_pos + TEN) % MAHA_QUANTUM
-            else:
-                contribution = (char_val * t_pos) % MAHA_QUANTUM
+
+            # BRANCHLESS encoding via lookup tables
+            op = _ENCODE_OP_MAP[pattern_char]
+            is_mult = _ENCODE_IS_MULT[op]
+            mult_factor = _ENCODE_MULT_FACTOR[op]
+
+            # HARE/RAMA: multiplicative (char_val * t_pos * factor)
+            mult_result = (char_val * t_pos * mult_factor) % MAHA_QUANTUM
+            # KRISHNA: additive (char_val + t_pos + TEN)
+            add_result = (char_val + t_pos + TEN) % MAHA_QUANTUM
+
+            # Select via arithmetic: is_mult * mult + (1-is_mult) * add
+            contribution = is_mult * mult_result + (1 - is_mult) * add_result
             value = (value + contribution) % MAHA_QUANTUM
-            
+
         return self._resonators[MAHA_QUANTUM].oscillate_once(value)
 
     def _analyze_lens(self, seed: int, name: str, mod_space: int, meaning: str) -> OracleLens:

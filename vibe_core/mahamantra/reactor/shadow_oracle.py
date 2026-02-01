@@ -68,6 +68,11 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     TRINITY,
     WORDS,
+    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    MAHA_OP_MAP as _OP_MAP,
+    MAHA_MULT as _MULT,
+    MAHA_ADD as _ADD,
+    MAHA_SQ as _SQ,
 )
 
 # Parampara channels from _seed.py (via shadow_protocol)
@@ -135,7 +140,7 @@ class ShadowOracle:
 
     def _oscillate_parampara(self, value: int) -> int:
         """
-        Single oscillation through 16-step Mahamantra at mod PARAMPARA (37).
+        Single oscillation through 16-step Mahamantra at mod PARAMPARA (37). BRANCHLESS.
 
         INLINE for performance - no external resonator needed.
 
@@ -145,12 +150,12 @@ class ShadowOracle:
             RAMA    → value × value
         """
         for name in PATTERN:
-            if name == "H":
-                value = (value * SEVEN) % PARAMPARA
-            elif name == "K":
-                value = (value + TEN) % PARAMPARA
-            else:  # R
-                value = (value * value) % PARAMPARA
+            op = _OP_MAP[name]
+            # Phase 1: Multiply and Add (no branch)
+            v = (value * _MULT[op] + _ADD[op]) % PARAMPARA
+            # Phase 2: Conditional square via arithmetic selection
+            squared = (v * v) % PARAMPARA
+            value = _SQ[op] * squared + (1 - _SQ[op]) * v
         return value
 
     def _find_attractor_parampara(self, seed: int, max_cycles: int = 50) -> tuple[int, int]:

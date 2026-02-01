@@ -67,6 +67,11 @@ from vibe_core.mahamantra.protocols._seed import (
     NAVA,
     MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
+    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    MAHA_OP_MAP as _OP_MAP,
+    MAHA_MULT as _MULT,
+    MAHA_ADD as _ADD,
+    MAHA_SQ as _SQ,
 )
 
 
@@ -82,6 +87,13 @@ PATTERN: Final[str] = "HKHKKKHHHRHRRRHHH"[:WORDS]  # 16 characters
 
 # Default mod space (Maha Quantum = 137)
 DEFAULT_MOD: Final[int] = MAHA_QUANTUM
+
+
+# =============================================================================
+# TRANSFORM-SPECIFIC COEFFICIENT (Core coefficients imported from _seed.py)
+# =============================================================================
+# For position-based add: KRISHNA adds position, others don't
+_POS_ADD: Final[Tuple[int, ...]] = (0, 1, 0)    # H+0, K+pos, R+0
 
 
 # =============================================================================
@@ -141,15 +153,17 @@ class MahaTransform(MahaTransformProtocol):
         for i, op in enumerate(PATTERN):
             position = i + 1  # 1-indexed
 
-            if op == MAHAMANTRA_NAME_HARE:
-                # HARE: Multiply by SEVEN
-                value = (value * SEVEN + self._feedback_acc) % self.mod_space
-            elif op == MAHAMANTRA_NAME_KRISHNA:
-                # KRISHNA: Add TEN + position
-                value = (value + TEN + position + self._feedback_acc) % self.mod_space
-            else:
-                # RAMA: Square
-                value = (value * value + self._feedback_acc) % self.mod_space
+            # BRANCHLESS computation via lookup tables
+            op_idx = _OP_MAP[op]
+
+            # Non-squared path: value * MULT + ADD + POS_ADD * position + feedback
+            non_sq = (value * _MULT[op_idx] + _ADD[op_idx] + _POS_ADD[op_idx] * position + self._feedback_acc) % self.mod_space
+
+            # Squared path: value * value + feedback
+            sq = (value * value + self._feedback_acc) % self.mod_space
+
+            # Select via arithmetic: SQ * squared + (1-SQ) * non_squared
+            value = _SQ[op_idx] * sq + (1 - _SQ[op_idx]) * non_sq
 
             # Accumulate feedback
             self._feedback_acc = (self._feedback_acc + value * self.feedback) % self.mod_space

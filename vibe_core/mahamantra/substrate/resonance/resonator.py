@@ -30,6 +30,11 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAMANTRA_WORD_PATTERN as PATTERN,
     MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
+    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    MAHA_OP_MAP as _OP_MAP,
+    MAHA_MULT as _MULT,
+    MAHA_ADD as _ADD,
+    MAHA_SQ as _SQ,
 )
 
 
@@ -52,14 +57,15 @@ class MahaResonator:
         self.mod_space = mod_space
 
     def oscillate_once(self, value: int) -> int:
-        """One oscillation = one pass through the 16-step algorithm."""
+        """One oscillation = one pass through the 16-step algorithm. BRANCHLESS."""
+        mod = self.mod_space
         for name in PATTERN:
-            if name == MAHAMANTRA_NAME_HARE:
-                value = (value * SEVEN) % self.mod_space
-            elif name == MAHAMANTRA_NAME_KRISHNA:
-                value = (value + TEN) % self.mod_space
-            else:  # Rama
-                value = (value * value) % self.mod_space
+            op = _OP_MAP[name]
+            # Phase 1: Multiply and Add
+            v = (value * _MULT[op] + _ADD[op]) % mod
+            # Phase 2: Conditional square via arithmetic selection
+            squared = (v * v) % mod
+            value = _SQ[op] * squared + (1 - _SQ[op]) * v
         return value
 
     def find_attractor(self, seed: int, max_cycles: int = 100) -> ResonanceResult:
