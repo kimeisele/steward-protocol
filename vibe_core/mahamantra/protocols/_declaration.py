@@ -424,33 +424,11 @@ class DeclarationRegistry:
         Lazy-load scanner results ONCE.
 
         Called by resolve_export() on first access.
-        Populates _mahajana_modules from scanner.
+        Scanner removed - folder IS wiring. Modules discovered via fractal_getattr.
         """
-        if self._scanner_loaded:
-            return
-
-        try:
-            from vibe_core.mahamantra.substrate.scanner import get_scanner
-
-            scanner = get_scanner()
-            result = scanner.scan()
-
-            for f in result.get("files", []):
-                for decl in f.get("declarations", []):
-                    if decl.get("type") == "mahajana":
-                        mahajana = decl.get("value", "")
-                        module_path = f.get("module_path", "")
-                        if mahajana and module_path:
-                            if not module_path.startswith("vibe_core."):
-                                module_path = f"vibe_core.{module_path}"
-                            if mahajana not in self._mahajana_modules:
-                                self._mahajana_modules[mahajana] = []
-                            if module_path not in self._mahajana_modules[mahajana]:
-                                self._mahajana_modules[mahajana].append(module_path)
-
-            self._scanner_loaded = True
-        except Exception:  # noqa: BLE001 - ARJUNA-PATTERN
-            self._scanner_loaded = True
+        # Scanner removed - folder structure IS the wiring.
+        # Mahajana modules are accessed via fractal routing, not declaration scanning.
+        self._scanner_loaded = True
 
     def resolve_export(self, mahajana: str, name: str) -> Optional[object]:
         """

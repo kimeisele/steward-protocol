@@ -27,6 +27,8 @@ from typing import Callable, Dict, Final, List, Optional, Set, Tuple, Union
 
 # ONE IMPORT - Krishna IS the router
 from vibe_core.mahamantra.kernel.singularity import mahamantra
+# SSOT - WORDS derives from Mahamantra counting
+from vibe_core.mahamantra.substrate.seed import WORDS
 
 # =============================================================================
 # RESONANCE-BASED ROUTING - No Keyword Matching
@@ -179,14 +181,14 @@ class MahamantraCLIBridge:
     def list_routes(self) -> List[Tuple[str, int, str]]:
         """List all position → guardian mappings (resonance-based)."""
         routes = []
-        for position in range(16):
+        for position in range(WORDS):  # SSOT: WORDS from seed.py
             pos = mahamantra[position]
             guardian = pos.guardian.value if hasattr(pos.guardian, "value") else str(pos.guardian)
             routes.append((guardian, position, guardian))
         return routes
 
     def __repr__(self) -> str:
-        return "MahamantraCLIBridge(positions=16, resonance=True)"
+        return f"MahamantraCLIBridge(positions={WORDS}, resonance=True)"  # SSOT: WORDS
 
 
 # =============================================================================

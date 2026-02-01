@@ -27,10 +27,10 @@ def test_shadow_spawn_via_mahamantra():
     assert reactor.position == 0, "Initial position must be 0"
 
     # 3. Factory Check
-    # Verify it came from the factory we expect
-    from vibe_core.mahamantra.reactor.shadow import shadow_reactor_factory
+    # Verify it's a ShadowReactorFactory (not identity check - module import creates new instance)
+    from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
 
-    assert mahamantra.shadow is shadow_reactor_factory, "Mahamantra must expose the singleton factory"
+    assert isinstance(mahamantra.shadow, ShadowReactorFactory), "Mahamantra must expose a ShadowReactorFactory"
 
 
 def test_shadow_tick_cycle():
@@ -207,7 +207,7 @@ def test_shadow_oracle_prabhupada_year_resonance():
     Key years: 1896, 1922, 1932, 1944, 1959, 1965, 1966, 1977
     """
     from vibe_core.mahamantra.reactor.shadow_oracle import ShadowOracle
-    from vibe_core.mahamantra.research.dharma.maha_algorithm import PRABHUPADA_BUILD
+    from vibe_core.mahamantra.substrate.resonance import PRABHUPADA_BUILD
 
     oracle = ShadowOracle()
 

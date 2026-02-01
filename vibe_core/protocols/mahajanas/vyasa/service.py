@@ -210,30 +210,18 @@ class VyasaService(VyasaProtocolBase):
         Vyasa (Position 0) initiates the scan (SYS_WAKE),
         but the Scanner (Substrate) performs it.
         """
-        try:
-            from vibe_core.mahamantra.substrate.scanner import scan_all, print_scan_report
-            from io import StringIO
-            import sys
+        # Scanner removed - folder IS wiring.
+        # Vyasa no longer scans for declarations; routing is via fractal_getattr.
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
+        from vibe_core.mahamantra.substrate.wiring import POSITION_BY_NAME
 
-            # If path is ".", use default base (None)
-            scan_path = None if path == "." else path
-
-            result = scan_all(base_path=scan_path)
-
-            # Format a nice report
-            files_total = result.get("files_total", 0)
-            declarations = result.get("declarations_found", 0)
-
-            report = (
-                f"📂 **SCAN RESULT** (Vyasa -> Scanner):\n"
-                f"Files Scanned: {files_total}\n"
-                f"Declarations: {declarations}\n\n"
-                f"Scanning completed successfully."
-            )
-            return report
-
-        except Exception as e:
-            return f"🔴 Scan Failed: {e}"
+        report = (
+            f"📂 **SYSTEM MAP** (Vyasa - Folder IS Wiring):\n"
+            f"Positions: {WORDS}\n"
+            f"Guardians: {', '.join(ALL_GUARDIANS)}\n\n"
+            f"Note: Declaration scanning removed. Routing via fractal structure."
+        )
+        return report
 
     @property
     def boot_mode(self) -> BootMode:
