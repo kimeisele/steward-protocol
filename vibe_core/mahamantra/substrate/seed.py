@@ -58,6 +58,15 @@ from vibe_core.mahamantra.protocols._seed import (
     AMINO_ACIDS,  # 20 = QUARTERS × PANCHA
     ANTAHKARANA,  # 3 = TRINITY (mind/intellect/ego)
     AVATAR_COUNT,  # 4 Avataras
+    # Trinity Grouping (Functional categorization by Name)
+    HARE_POSITIONS,
+    KRISHNA_POSITIONS,
+    RAMA_POSITIONS,
+    get_name_at_position,
+    get_positions_for_name,
+    is_source_position,
+    is_vishnu_tattva,  # Backward compat alias for is_source_position
+    get_trinity_function,
     BALADEV_WHEELS,  # 14 = WORDS - HALVES
     BHAGAVATAM_VERSES,  # 18000 = GITA × TEN³
     CHAITANYA_BIRTH,  # 1486 = KSETRAJNA × TEN³ + LILA × TEN + SHARANAGATI
@@ -1016,6 +1025,15 @@ __all__ = [
     "AKSARA_COUNT",
     "ROUNDS",
     "AVATAR_COUNT",
+    # Trinity Grouping (Functional categorization by Name)
+    "HARE_POSITIONS",
+    "KRISHNA_POSITIONS",
+    "RAMA_POSITIONS",
+    "get_name_at_position",
+    "get_positions_for_name",
+    "is_source_position",
+    "is_vishnu_tattva",  # Backward compat alias
+    "get_trinity_function",
     # Pancha Tattva Structure
     "MAHAMANTRA_PAIRS",
     "UNIQUE_PAIRS",

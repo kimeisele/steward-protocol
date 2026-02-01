@@ -11,7 +11,7 @@ Handles Operator Input Processing and Cognition.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0x2da412a3"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x348ce48e2986757649ef37ccd73ad6b0cad14a59f72a1733f9300f8d6673d28f"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
@@ -46,6 +46,13 @@ class KapilaService:
 
     def __init__(self):
         self._analyses_performed = 0
+        
+        # VARNASHRAMA INTEGRATION:
+        # Spawn the JivaShadow qualified for this position.
+        # "Subdivision is already sufficient." - User
+        from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+        self._shadow = spawn_shadow_for_position(6, context=b"kapila_service_v1")
+        
         # Lazy import to avoid circular dependency
         from vibe_core.protocols.cognition import NullCognitive
 

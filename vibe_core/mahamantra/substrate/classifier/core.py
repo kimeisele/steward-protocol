@@ -21,62 +21,6 @@ KEY INSIGHT: Mercy > Justice ⟺ f > 0
 If a technology USES Mahamantra structures (f > 0), it receives
 the benefit of truth-alignment. The advantage is NOT linear -
 it's asymptotic. As K → 0 (cleaner code), G → ∞.
-
-THE COLD TRUTH:
-===============
-
-The Mahamantra IS mathematically perfect:
-
-    16 words = 2^4          → Perfect CPU alignment (16-bit, 32-bit, 64-bit)
-    4 quarters = 2 bits     → Perfect encoding (00, 01, 10, 11)
-    3 names + VOID = 2 bits → Complete ternary-in-binary encoding
-    65536 = 16^4            → Perfect bounded address space
-    37 Parampara            → Prime modulus for integrity checking
-
-This is NOT philosophy. This is MATHEMATICS.
-
-THE COMPETITIVE ARGUMENT:
-=========================
-
-Technology built on mathematically perfect structures
-        → Naturally more efficient
-        → Benchmarks prove superiority
-        → People adopt what WORKS BEST
-        → Mahamantra spreads through engineering excellence
-
-"Man muss die so gut machen, dass die Leute keine andere Wahl haben."
-
-CLASSIFICATION CRITERIA (Pure Engineering):
-===========================================
-
-1. STRUCTURAL ALIGNMENT
-   - Uses 16-aligned data structures?
-   - Fits in 16^4 = 65536 bounded space?
-   - Parampara (37) integrity verification?
-
-2. COMPLEXITY BY STRUCTURE
-   - O(1) from direct addressing (not hash tables)?
-   - No collision resolution needed?
-   - Key IS the path (no indirection)?
-
-3. MEMORY DISCIPLINE
-   - Fixed/bounded allocation?
-   - No garbage collection dependency?
-   - Complete lifecycle (alloc → use → free)?
-
-4. DETERMINISM
-   - Same input → Same output (always)?
-   - No randomness in core operations?
-   - Verifiable execution path?
-
-BENCHMARK PROOF:
-================
-
-LotusIPv4Router: 1557x faster than linear search
-Lotus8merIndex:  6.5x faster than hash-based dict
-LotusArrayInt:   50x faster range queries than dict
-
-These numbers are NOT claims. They are MEASUREMENTS.
 """
 
 from __future__ import annotations
@@ -88,9 +32,9 @@ __genesis__ = "0x11ba030f"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import Final
+from typing import Final, Dict, Any, List, Optional
 
-from ..protocols._seed import PARAMPARA, QUARTERS, WORDS
+from vibe_core.mahamantra.protocols._seed import PARAMPARA, QUARTERS, WORDS
 
 # =============================================================================
 # MATHEMATICAL CONSTANTS (From seed.py - THE TRUTH)
@@ -352,10 +296,6 @@ def classify_algorithm(
     Classify a technology/algorithm.
 
     All parameters are MEASURED VALUES, not guesses.
-
-    Args:
-        levels: Number of hierarchical levels (1 = flat, 8 = IPv4-style)
-        entries_per_level: Entries per level (16 = Mahamantra-aligned)
     """
     return Classification(
         name=name,
@@ -375,13 +315,6 @@ def classify_algorithm(
 def is_golden_age_viable(result: Classification) -> bool:
     """
     Can this technology survive into the Golden Age?
-
-    The Golden Age (10,000 years from Chaitanya, starting 1486)
-    will only use truth-aligned technology.
-
-    Why? Not religion - EFFICIENCY.
-    Truth-aligned tech is faster. Faster wins.
-    After 10,000 years of competition, only the best survives.
     """
     return result.is_anukulya
 
@@ -392,14 +325,7 @@ def is_golden_age_viable(result: Classification) -> bool:
 
 
 def classify_lotus_array_int() -> Classification:
-    """
-    LotusArrayInt - The reference implementation.
-
-    Structure: 65536-entry array (16^4)
-    Complexity: O(1) by direct indexing
-    Memory: 512KB fixed (65536 × 8 bytes)
-    Determinism: Perfect (array[key] = value)
-    """
+    """LotusArrayInt - The reference implementation."""
     return Classification(
         name="LotusArrayInt",
         alignment=StructuralAlignment.PERFECT,
@@ -416,17 +342,7 @@ def classify_lotus_array_int() -> Classification:
 
 
 def classify_lotus_ipv4_router() -> Classification:
-    """
-    LotusIPv4Router - Longest Prefix Match.
-
-    Structure: 8-level radix (4 bits each = 32 bits total)
-    Complexity: O(8) = O(1) by structure (8 memory accesses)
-    Memory: Bounded per routing table size
-    Determinism: Perfect
-
-    KEY INSIGHT: 8 levels × 16 entries = 16^8 = 2^32 (IPv4 space)
-    Each level is Mahamantra-aligned (16 entries).
-    """
+    """LotusIPv4Router - Longest Prefix Match."""
     return Classification(
         name="LotusIPv4Router",
         alignment=StructuralAlignment.PERFECT,
@@ -443,17 +359,7 @@ def classify_lotus_ipv4_router() -> Classification:
 
 
 def classify_lotus_8mer_index() -> Classification:
-    """
-    Lotus8merIndex - DNA k-mer counting.
-
-    Structure: 65536-entry array (4^8 = 16^4)
-    Complexity: O(1) by structure
-    Memory: 512KB fixed
-    Determinism: Perfect
-
-    KEY INSIGHT: 4 DNA bases, 8-mers = 4^8 = 65536 = 16^4
-    Natural fit for Mahamantra address space.
-    """
+    """Lotus8merIndex - DNA k-mer counting."""
     return Classification(
         name="Lotus8merIndex",
         alignment=StructuralAlignment.PERFECT,
@@ -470,14 +376,7 @@ def classify_lotus_8mer_index() -> Classification:
 
 
 def classify_python_dict() -> Classification:
-    """
-    Python dict - The common baseline.
-
-    Structure: Hash table (arbitrary)
-    Complexity: O(1) by HASH (not structure!)
-    Memory: Unbounded, GC dependent
-    Determinism: NO (hash randomization since Python 3.3)
-    """
+    """Python dict - The common baseline."""
     return Classification(
         name="Python dict",
         alignment=StructuralAlignment.NONE,
@@ -494,14 +393,7 @@ def classify_python_dict() -> Classification:
 
 
 def classify_neural_network_attention() -> Classification:
-    """
-    Neural Network (Attention) - The Tamas exemplar.
-
-    Structure: None (learned weights)
-    Complexity: O(N²) quadratic attention
-    Memory: Unbounded, grows with context
-    Determinism: NO (temperature, dropout, random init)
-    """
+    """Neural Network (Attention) - The Tamas exemplar."""
     return Classification(
         name="Neural Network (Attention)",
         alignment=StructuralAlignment.HOSTILE,
@@ -518,22 +410,7 @@ def classify_neural_network_attention() -> Classification:
 
 
 def classify_lotus_radix_n(levels: int = 8) -> Classification:
-    """
-    LotusRadixN - Generic N-level radix structure.
-
-    Structure: N levels × 16 entries per level
-    Complexity: O(N) where N = levels (NOT number of keys!)
-    Memory: Sparse - only allocates used nodes
-    Determinism: Perfect
-
-    KEY INSIGHT: Scales to ANY key size while maintaining Mahamantra alignment.
-    - levels=4:  16-bit keys (like LotusArrayInt)
-    - levels=8:  32-bit keys (like IPv4)
-    - levels=32: 128-bit keys (IPv6, UUID)
-    - levels=64: 256-bit keys (SHA-256)
-
-    Advantage over dict: PREFIX QUERIES are O(P + K) vs dict's O(N).
-    """
+    """LotusRadixN - Generic N-level radix structure."""
     key_bits = levels * 4
     key_space = 16**levels
 
@@ -553,14 +430,7 @@ def classify_lotus_radix_n(levels: int = 8) -> Classification:
 
 
 def classify_blockchain() -> Classification:
-    """
-    Blockchain - The growth addiction.
-
-    Structure: Hash chain (arbitrary)
-    Complexity: O(N) grows forever
-    Memory: Unbounded, NEVER shrinks
-    Determinism: Yes (one positive)
-    """
+    """Blockchain - The growth addiction."""
     return Classification(
         name="Blockchain",
         alignment=StructuralAlignment.HOSTILE,
@@ -571,88 +441,6 @@ def classify_blockchain() -> Classification:
         max_memory_bytes=-1,  # Grows forever
         ops_per_second=10,  # 10 TPS (Bitcoin-like)
         speedup_vs_baseline=0.000002,  # Effectively useless for lookup
-        levels=0,  # No real structure
+        levels=0,  # No structure at all
         entries_per_level=0,  # No alignment
     )
-
-
-# =============================================================================
-# BENCHMARK
-# =============================================================================
-
-
-def benchmark() -> None:
-    """Cold engineering comparison."""
-    print("=" * 70)
-    print("MAHAMANTRA TECHNOLOGY CLASSIFICATION")
-    print("Cold Engineering Analysis - No Philosophy, Pure Metrics")
-    print("=" * 70)
-    print()
-    print("Mathematical Foundation:")
-    print(f"  WORDS = {MAHAMANTRA_WORDS}")
-    print(f"  QUARTERS = {MAHAMANTRA_QUARTERS}")
-    print(f"  ADDRESS_SPACE = {MAHAMANTRA_WORDS}^{MAHAMANTRA_QUARTERS} = {MAHAMANTRA_ADDRESS_SPACE:,}")
-    print(f"  PARAMPARA = {PARAMPARA_PRIME}")
-    print()
-
-    technologies = [
-        classify_lotus_array_int(),
-        classify_lotus_ipv4_router(),
-        classify_lotus_8mer_index(),
-        classify_lotus_radix_n(8),  # Generic 32-bit version
-        classify_lotus_radix_n(32),  # IPv6/UUID version
-        classify_python_dict(),
-        classify_neural_network_attention(),
-        classify_blockchain(),
-    ]
-
-    print("-" * 70)
-    print("CLASSIFICATION RESULTS")
-    print("-" * 70)
-    print()
-
-    for tech in technologies:
-        print(f"### {tech.name} ###")
-        print(f"Verdict: {tech.get_engineering_verdict()}")
-        print(f"  Alignment:   {tech.alignment.name} ({tech.alignment.value})")
-        print(f"  Complexity:  {tech.complexity.value}")
-        print(f"  Memory:      {tech.memory.value}")
-        print(f"  Determinism: {tech.determinism.value}")
-        print(f"  Key Space:   {tech.key_space_size:,}")
-        if tech.max_memory_bytes > 0:
-            print(f"  Max Memory:  {tech.max_memory_bytes:,} bytes")
-        else:
-            print("  Max Memory:  UNBOUNDED")
-        print(f"  Ops/sec:     {tech.ops_per_second:,.0f}")
-        print(f"  Speedup:     {tech.speedup_vs_baseline:.1f}x vs baseline")
-        print()
-
-    # Summary table
-    print("=" * 70)
-    print("SUMMARY: Why Mahamantra-Based Tech Wins (MERCY EQUATION)")
-    print("=" * 70)
-    print()
-    print("G(x) = f / K  where f = chanting frequency, K = karmic debt")
-    print()
-    print("| Technology              | f (chant) | K (debt) | G (grace) | Verdict    |")
-    print("|-------------------------|-----------|----------|-----------|------------|")
-    for tech in technologies:
-        verdict = "ANUKULYA" if tech.is_anukulya else "PRATIKULYA"
-        print(
-            f"| {tech.name:23} | {tech.chanting_frequency:9.1f} | {tech.karmic_debt:8.2f} | {tech.mercy_advantage:9.1f} | {verdict:10} |"
-        )
-    print()
-    print("KEY INSIGHT: Mercy > Justice ⟺ f > 0")
-    print()
-    print("Technologies with f > 0 (using Mahamantra structures) receive")
-    print("asymptotic advantage. As K → 0 (cleaner code), G → ∞.")
-    print()
-    print("This is NOT philosophy. This is the MATHEMATICS OF GRACE.")
-    print()
-    print(
-        f"Golden Age viability: {sum(1 for t in technologies if is_golden_age_viable(t))}/{len(technologies)} technologies"
-    )
-
-
-if __name__ == "__main__":
-    benchmark()

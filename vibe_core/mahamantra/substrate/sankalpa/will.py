@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
-from .types import (
+from vibe_core.mahamantra.protocols.sankalpa.types import (
     ASHRAMA_PERMISSIONS,
     INTENT_PERMISSION_MAP,
     # Conscience types (extracted from DharmaSense)

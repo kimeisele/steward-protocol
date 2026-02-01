@@ -55,11 +55,13 @@ from vibe_core.mahamantra.substrate.seed import (
     WORDS,
 )
 
-from .maha_algorithm import (
-    CHAITANYA_512_B,
-    SYNTH_PRESETS,
+from vibe_core.mahamantra.substrate.mantra import (
     KirtanComputeResult,
     MahaKirtan,
+)
+from vibe_core.mahamantra.substrate.mantra.siksastakam import CHAITANYA_512_B
+from vibe_core.mahamantra.substrate.algorithm.maha import (
+    SYNTH_PRESETS,
     MahaSynthParams,
 )
 

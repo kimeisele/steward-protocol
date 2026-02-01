@@ -68,6 +68,7 @@ ENTERPRISE USAGE:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - The Compiler
 __position__ = 0
+__genesis__ = "0xc0400014"  # GenesisByte: parampara % 37 == 0
 from functools import lru_cache
 from typing import Dict, Final, List, Optional, Tuple, Union
 import hashlib
@@ -146,7 +147,7 @@ def _get_maha_kirtan() -> "MahaKirtan":  # noqa: F821
     """Singleton MahaKirtan - O(1) after first call."""
     global _MAHA_KIRTAN
     if _MAHA_KIRTAN is None:
-        from vibe_core.mahamantra.research.dharma import MahaKirtan
+        from vibe_core.mahamantra.substrate.mantra import MahaKirtan
         _MAHA_KIRTAN = MahaKirtan(mod_space=MAHA_QUANTUM)
     return _MAHA_KIRTAN
 
@@ -155,7 +156,7 @@ def _get_maha_resonator() -> "MahaResonator":  # noqa: F821
     """Singleton MahaResonator - O(1) after first call."""
     global _MAHA_RESONATOR
     if _MAHA_RESONATOR is None:
-        from vibe_core.mahamantra.research.dharma import MahaResonator
+        from vibe_core.mahamantra.substrate.resonance import MahaResonator
         _MAHA_RESONATOR = MahaResonator(mod_space=MAHA_QUANTUM)
     return _MAHA_RESONATOR
 
@@ -399,11 +400,10 @@ class MahaCompression(MahaCompressionProtocol):
 
         return SamskaraResult(
             seed=seed,
-            scope=scope,
+            data_hash=hash(state_json),
+            item_count=len(state),
             intent_level=intent_level,
-            encoded_keys=tuple(state.keys()),
-            original_size=original_size,
-            samskara_size=4,  # 32-bit seed
+            compression_ratio=original_size / 4 if original_size > 0 else 0.0,
         )
 
     def decode_samskara_intent(self, seed: int) -> IntentLevel:
@@ -474,12 +474,11 @@ class MahaCompression(MahaCompressionProtocol):
 
         return PhysicsVerification(
             seed=seed,
-            is_maha_quantum_aligned=is_maha,
-            is_words_aligned=is_words,
-            is_aksara_aligned=is_aksara,
-            is_qualities_aligned=is_qualities,
-            alignment_score=score,
-            interpretation=interpretation,
+            is_aligned=score > 0,
+            quantum_score=1.0 if is_maha else 0.0,
+            parampara_score=0.5, # Placeholder
+            field_score=0.5, # Placeholder
+            classification=interpretation,
         )
 
     # =========================================================================
@@ -617,7 +616,7 @@ if __name__ == "__main__":
     """
     result = compressor.compress(error_log)
     print(f"Error log compression:")
-    print(f"  Intent: {result.guna}")
+    print(f"  Intent: {result.intent_level.guna.value}")
     print(f"  Seed: {result.seed}")
     print(f"  Ratio: {result.compression_ratio:.1f}×")
     print(f"  Summary: {result.summary}")
@@ -631,8 +630,8 @@ if __name__ == "__main__":
     """
     result = compressor.compress(healthy_log)
     print(f"Healthy log compression:")
-    print(f"  Intent: {result.guna}")
-    print(f"  Healthy: {result.is_healthy}")
+    print(f"  Intent: {result.intent_level.guna.value}")
+    print(f"  Healthy: {result.intent_level.guna == IntentGuna.SATTVA}")
     print(f"  Ratio: {result.compression_ratio:.1f}×")
     print()
 
@@ -647,13 +646,12 @@ if __name__ == "__main__":
     print(f"  Seed: {samskara.seed}")
     print(f"  Intent: {samskara.intent_level.guna.value}")
     print(f"  Compression: {samskara.compression_ratio:.1f}×")
-    print(f"  Can reconstruct: {samskara.can_reconstruct}")
     print()
 
     # Test 4: Physics verification
     for seed in [137, 16, 32, 64, 42]:
         v = compressor.verify_physics(seed)
-        print(f"Seed {seed}: score={v.alignment_score}, aligned={v.is_aligned}")
+        print(f"Seed {seed}: aligned={v.is_aligned}, class={v.classification}")
     print()
 
     # Test 5: Reference ratios

@@ -106,6 +106,51 @@ ROUNDS: Final[int] = WORDS  # 16
 # AVATAR_COUNT = QUARTERS (4 Avataras head the 4 quarters)
 AVATAR_COUNT: Final[int] = QUARTERS  # 4
 
+# HEAD_POSITIONS - The positions of the 4 Avataras (HEADs of each Quarter)
+# DERIVED: Position 0, 4, 8, 12 = first position of each quarter
+# Formula: q * (WORDS // QUARTERS) for q in 0..3
+HEAD_POSITIONS: Final[tuple[int, ...]] = tuple(
+    q * (WORDS // QUARTERS) for q in range(QUARTERS)
+)  # (0, 4, 8, 12)
+
+# VERIFICATION: HEAD_POSITIONS
+assert len(HEAD_POSITIONS) == AVATAR_COUNT, "Must have exactly 4 HEAD positions"
+assert HEAD_POSITIONS == (0, 4, 8, 12), "HEAD_POSITIONS must be (0, 4, 8, 12)"
+
+
+def is_head(position: int) -> bool:
+    """
+    Check if a position is a HEAD (Avatara) position.
+
+    HEADs are at positions 0, 4, 8, 12 - the first position of each Quarter.
+    This is DERIVED from the Mahamantra structure, not hardcoded.
+
+    Args:
+        position: Position index (0-15)
+
+    Returns:
+        True if position is a HEAD (Avatara), False if WORKER (Mahajana)
+    """
+    return (position % WORDS) in HEAD_POSITIONS
+
+
+def get_quarter_head(position: int) -> int:
+    """
+    Get the HEAD position for the Quarter containing this position.
+
+    Every position belongs to a Quarter, and every Quarter has a HEAD.
+    This returns the HEAD position that manages the given position.
+
+    Args:
+        position: Position index (0-15)
+
+    Returns:
+        HEAD position (0, 4, 8, or 12)
+    """
+    quarter = (position % WORDS) // (WORDS // QUARTERS)
+    return HEAD_POSITIONS[quarter]
+
+
 # VERIFICATION: Primary derivations
 assert LILA == 48, "LILA must be 48"
 assert KSHETRA == 24, "KSHETRA must be 24"
@@ -712,6 +757,120 @@ assert MAHAMANTRA_WORD_PATTERN.count(MAHAMANTRA_NAME_HARE) == HARE_COUNT, "8 Har
 assert MAHAMANTRA_WORD_PATTERN.count(MAHAMANTRA_NAME_KRISHNA) == KRISHNA_COUNT, "4 Krishnas"
 assert MAHAMANTRA_WORD_PATTERN.count(MAHAMANTRA_NAME_RAMA) == RAMA_COUNT, "4 Ramas"
 
+
+# =============================================================================
+# TRINITY GROUPING - Positions grouped by Name (DERIVED from MAHAMANTRA)
+# =============================================================================
+# The MAHAMANTRA pattern assigns each position to HARE, KRISHNA, or RAMA.
+# This is the ONTOLOGICAL grouping - which Name governs each position.
+#
+# Position Sums reveal the mathematical signature:
+#   HARE (positions 0,2,6,7,8,10,14,15): Σ = 70 = 7 × 10 (composite - energy distributes)
+#   KRISHNA (positions 1,3,4,5): Σ = 17 (PRIME - indivisible source)
+#   RAMA (positions 9,11,12,13): Σ = 49 = 7² (square - bliss amplifies)
+#
+# This is DIFFERENT from the QUARTERS model (operational: INPUT/VERIFY/EXECUTE/OUTPUT).
+# TRINITY is about WHO the position represents (Source/Energy/Bliss).
+# -----------------------------------------------------------------------------
+
+
+def _compute_positions_by_name() -> tuple[tuple[int, ...], tuple[int, ...], tuple[int, ...]]:
+    """Compute which positions belong to each Name."""
+    hare_pos = tuple(i for i, name in enumerate(MAHAMANTRA_WORD_PATTERN) if name == MAHAMANTRA_NAME_HARE)
+    krishna_pos = tuple(i for i, name in enumerate(MAHAMANTRA_WORD_PATTERN) if name == MAHAMANTRA_NAME_KRISHNA)
+    rama_pos = tuple(i for i, name in enumerate(MAHAMANTRA_WORD_PATTERN) if name == MAHAMANTRA_NAME_RAMA)
+    return hare_pos, krishna_pos, rama_pos
+
+
+HARE_POSITIONS, KRISHNA_POSITIONS, RAMA_POSITIONS = _compute_positions_by_name()
+
+# VERIFICATION: Position assignments
+assert HARE_POSITIONS == (0, 2, 6, 7, 8, 10, 14, 15), "HARE positions must be (0,2,6,7,8,10,14,15)"
+assert KRISHNA_POSITIONS == (1, 3, 4, 5), "KRISHNA positions must be (1,3,4,5)"
+assert RAMA_POSITIONS == (9, 11, 12, 13), "RAMA positions must be (9,11,12,13)"
+assert len(HARE_POSITIONS) == HARE_COUNT, "8 HARE positions"
+assert len(KRISHNA_POSITIONS) == KRISHNA_COUNT, "4 KRISHNA positions"
+assert len(RAMA_POSITIONS) == RAMA_COUNT, "4 RAMA positions"
+
+
+def get_name_at_position(position: int) -> str:
+    """
+    Get the Holy Name at a position (H, K, or R).
+
+    Derived from MAHAMANTRA_WORD_PATTERN - the actual Mahamantra.
+
+    Args:
+        position: Position index (0-15)
+
+    Returns:
+        "H" for HARE, "K" for KRISHNA, "R" for RAMA
+    """
+    return MAHAMANTRA_WORD_PATTERN[position % WORDS]
+
+
+def get_positions_for_name(name: str) -> tuple[int, ...]:
+    """
+    Get all positions for a given Name.
+
+    Args:
+        name: "H" (HARE), "K" (KRISHNA), or "R" (RAMA)
+
+    Returns:
+        Tuple of position indices
+    """
+    if name == MAHAMANTRA_NAME_HARE:
+        return HARE_POSITIONS
+    elif name == MAHAMANTRA_NAME_KRISHNA:
+        return KRISHNA_POSITIONS
+    elif name == MAHAMANTRA_NAME_RAMA:
+        return RAMA_POSITIONS
+    else:
+        raise ValueError(f"Unknown name: {name}. Must be 'H', 'K', or 'R'.")
+
+
+def is_source_position(position: int) -> bool:
+    """
+    Check if a position is a SOURCE (KRISHNA-governed) position.
+
+    KRISHNA positions (1,3,4,5) have the ATTRACT/SOURCE function:
+    - brahma (1): Creator (rajas) - sources creation
+    - shambhu (3): Transformer (tamas) - sources dissolution
+    - prithu (4): Ideal King - sources governance
+    - kumaras (5): Eternal Youths - source knowledge
+
+    NOTE: This is about FUNCTION in the system, not ontological category.
+    Other positions (HARE/RAMA) may also contain Avatars:
+    - Kapila (6), Parashurama (8), Nrisimha (12) are all Avatars
+    - But their FUNCTION is CARRIER (HARE) or DELIVERER (RAMA)
+
+    The TRINITY grouping is functional:
+    - KRISHNA = SOURCE (attracts, originates)
+    - HARE = CARRIER (energy, transmission)
+    - RAMA = DELIVERER (bliss, output)
+    """
+    return (position % WORDS) in KRISHNA_POSITIONS
+
+
+# Backward compatibility alias
+is_vishnu_tattva = is_source_position
+
+
+def get_trinity_function(position: int) -> str:
+    """
+    Get the TRINITY function for a position.
+
+    Returns:
+        "source" for KRISHNA positions (1,3,4,5) - attracts, originates
+        "carrier" for HARE positions (0,2,6,7,8,10,14,15) - energy, transmission
+        "deliverer" for RAMA positions (9,11,12,13) - bliss, output
+    """
+    pos = position % WORDS
+    if pos in KRISHNA_POSITIONS:
+        return "source"
+    elif pos in HARE_POSITIONS:
+        return "carrier"
+    else:
+        return "deliverer"
 
 
 # =============================================================================
@@ -2899,6 +3058,18 @@ __all__ = [
     "AKSARA_COUNT",
     "ROUNDS",
     "AVATAR_COUNT",
+    "HEAD_POSITIONS",
+    "is_head",
+    "get_quarter_head",
+    # Trinity Grouping (Ontological - which Name governs each position)
+    "HARE_POSITIONS",
+    "KRISHNA_POSITIONS",
+    "RAMA_POSITIONS",
+    "get_name_at_position",
+    "get_positions_for_name",
+    "is_source_position",
+    "is_vishnu_tattva",  # Backward compat alias for is_source_position
+    "get_trinity_function",
     # Pancha Tattva Structure (The 5 Unique Pairs)
     "CONSECUTIVE_PAIRS",  # 8 = WORDS/HALVES = HARE_COUNT (Shakti binds!)
     "PAIR_REDUNDANCY",  # 3 = TRINITY (HK, HR, HH repeat - Hare connects!)

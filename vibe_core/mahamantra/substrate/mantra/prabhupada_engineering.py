@@ -387,14 +387,6 @@ class PipelineStage(IntEnum):
 
 
 # The constants encoded in each verse - ALL DERIVED FROM _seed.py!
-# Verse 1: SEVEN (7) = HALF_SIZE - 1 = cache clear cycles
-# Verse 2: TEN (10) = MAHAJANA_COUNT - HALVES = input acceptance
-# Verse 3: TRINITY (3) = the 3 Names = humility
-# Verse 4: QUARTERS (4) = the 4 desires rejected
-# Verse 5: PANCHA (5) = the 5 Tattvas = service
-# Verse 6: SHARANAGATI (6) = 6 limbs of surrender = flow
-# Verse 7: SEVEN (7) = cycles of time perception
-# Verse 8: HALF_SIZE (8) = complete half = unconditional return
 VERSE_CONSTANTS: Final[Tuple[int, ...]] = (
     SEVEN,       # Verse 1: 7 = HALF_SIZE - 1
     TEN,         # Verse 2: 10 = MAHAJANA_COUNT - HALVES

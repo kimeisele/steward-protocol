@@ -40,20 +40,14 @@ USAGE:
     values = router.prefix_query(0x12, prefix_bits=8)
 """
 
-# === MAHAJANA DECLARATION ===
-__mahajana__ = "narada"
-__position__ = 3
-__genesis__ = "0x880e98bf"  # GenesisByte: parampara % 37 == 0
-
-from dataclasses import dataclass
 from typing import Any, Final, Generic, Iterator, List, Optional, Tuple, TypeVar, Dict
 
-from vibe_core.mahamantra.protocols.routing import (
+from ..protocols.routing import (
     MahaRoutingProtocol,
     RouteEntry,
     RangeResult,
 )
-from vibe_core.mahamantra.protocols._seed import (
+from ..protocols._seed import (
     QUARTERS,
     WORDS,
 )
@@ -406,4 +400,7 @@ __all__ = [
     "router_16bit",
     "router_32bit",
     "router_8bit",
+    "Router",
 ]
+
+Router = HolographicRouter

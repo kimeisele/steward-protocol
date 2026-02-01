@@ -18,6 +18,7 @@ __position__ = 2
 __genesis__ = "0xa2b9f456"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, ClassVar, Tuple
+import struct
 
 from vibe_core.mahamantra.protocols._seed import (
     # Axioms
@@ -149,90 +150,73 @@ class VenuOrchestrator:
     VAMSI_BITS: ClassVar[int] = VAMSI_HOLES    # 9 - Mid register (512 = SIKSASTAKAM_CACHE)
     MURALI_BITS: ClassVar[int] = MURALI_HOLES  # 4 - High register (16 = WORDS)
     
-    __slots__ = ('_tick', '_prev_state')
+    __slots__ = ('_tick', '_prev_state', '_mode')
     
     def __init__(self) -> None:
         self._tick: int = 0
         self._prev_state: int = 0
+        self._mode: int = 0  # 0=Solo, 1=CallResponse, 2=Chorus
     
     @property
     def tick(self) -> int:
         """Current tick position."""
         return self._tick
+        
+    @property
+    def mode(self) -> int:
+        """Current Kirtan Mode."""
+        return self._mode
     
     def step(self) -> int:
         """
         One step through the Mahamantra.
-        Returns delta (XOR with previous state) = the melody.
+        Returns delta (XOR with previous state) | Mode Flags.
         
-        O(1) - just a LUT lookup, no ALU operations.
+        O(1) - just a LUT lookup + XOR + OR.
         """
-        # O(1) lookup - no computation!
+        # O(1) lookup
         new_state = THE_FLUTE_CYCLE[self._tick % WORDS]
         
-        # Calculate delta (the melody!)
+        # Calculate delta (the melody)
         delta = self._prev_state ^ new_state
         
         # Update state
         self._prev_state = new_state
-        self._tick = (self._tick + 1) % COSMIC_FRAME  # Prevent overflow
+        self._tick = (self._tick + 1) % COSMIC_FRAME
         
-        return delta
+        # Inject Mode into Cluster Bits (Harmonic Feedback)
+        # Cluster bits are 23-26 (CLUSTER_SHIFT = 23)
+        # 0=Solo -> 0
+        # 1=CallResp -> 1<<23
+        # 2=Chorus -> 2<<23
+        return delta | (self._mode << CLUSTER_SHIFT)
     
     def cycle(self) -> int:
         """
         Complete 16-step cycle.
         Returns XOR of all position bits from all 16 LUT entries.
-        
-        This is the "Mathematical Proof of Divinity" test.
-        XOR(all 16 position bits) = 0xFFFF (each bit set exactly once).
-        
-        Note: This reads directly from the LUT for verification purposes,
-        while step() is for runtime execution with delta tracking.
         """
         accumulated = 0
         for i in range(WORDS):
-            # Direct LUT read - get the state at position i
             state = THE_FLUTE_CYCLE[i]
-            # Accumulate position bits (lower 16 bits)
             accumulated ^= (state & 0xFFFF)
         
-        # Advance tick (for consistency if called during runtime)
         self._tick = (self._tick + WORDS) % COSMIC_FRAME
-        
         return accumulated
     
     def verify_divinity(self) -> bool:
         """
         The "Beweis Gottes" Test.
-        
-        Runs full cycle and asserts:
-        - XOR of positions = 0xFFFF (all 16 position bits touched)
-        - Total XOR % MAHA_QUANTUM = POSITION_SUM_RAMA (49)
-        - Total XOR % PARAMPARA = HARE_COUNT (8)
-        
-        Returns True if all assertions pass.
-        Raises AssertionError if any fail.
         """
-        # Reset state for clean test
         self._tick = 0
         self._prev_state = 0
-        
-        # Run one complete cycle
         xor_positions = self.cycle()
-        
-        # The expected value: all 16 bits set = 0xFFFF = 65535
         expected_xor = (1 << WORDS) - 1
         
         assert xor_positions == expected_xor, \
             f"Position XOR must be {hex(expected_xor)}, got {hex(xor_positions)}"
-        
-        # Verify modular properties against SSOT constants
-        # 65535 % 137 = 49 = POSITION_SUM_RAMA
         assert xor_positions % MAHA_QUANTUM == POSITION_SUM_RAMA, \
             f"Must resonate to Rama ({POSITION_SUM_RAMA})"
-        
-        # 65535 % 37 = 8 = HARE_COUNT
         assert xor_positions % PARAMPARA == HARE_COUNT, \
             f"Must be protected by Hare ({HARE_COUNT})"
         
@@ -241,18 +225,17 @@ class VenuOrchestrator:
     def route(self, seed: int) -> Tuple[int, int, int]:
         """
         Route seed through the orchestra.
-        
-        Args:
-            seed: Input value to route
-            
-        Returns:
-            (venu_state, vamsi_state, murali_state)
+
+        All formulas use SSOT constants (SEVEN, TEN) to ensure
+        full coverage of all 16 positions.
+
+        FIX: murali was (seed * seed) % 16 which only produces 4 values
+        (quadratic residues mod 16 = {0,1,4,9}). Now uses linear
+        combination to reach all 16 positions.
         """
-        # Modulate seed through each flute
         venu = (seed * SEVEN) % (1 << self.VENU_BITS)
         vamsi = (seed + TEN) % (1 << self.VAMSI_BITS)
-        murali = (seed * seed) % (1 << self.MURALI_BITS)
-        
+        murali = (seed * SEVEN + TEN) % (1 << self.MURALI_BITS)
         return (venu, vamsi, murali)
     
     def harmonize(
@@ -264,26 +247,13 @@ class VenuOrchestrator:
         cluster_route: int = 0,
         sunya: bool = False,
     ) -> int:
-        """
-        Combine three flute states into 32-bit Instruction Word.
-        
-        Bits 0-5:   VENU (6 bits)
-        Bits 6-14:  VAMSI (9 bits)
-        Bits 15-18: MURALI (4 bits)
-        Bits 19-22: Velocity (4 bits)
-        Bits 23-26: Cluster routing (4 bits)
-        Bits 27-30: Reserved (4 bits)
-        Bit 31:     SUNYA flag (silence/no-op)
-        """
-        # Mask each component to its bit width
+        """Combine three flute states into 32-bit Instruction Word."""
         venu_masked = venu & ((1 << self.VENU_BITS) - 1)
         vamsi_masked = vamsi & ((1 << self.VAMSI_BITS) - 1)
         murali_masked = murali & ((1 << self.MURALI_BITS) - 1)
         
-        # 19-bit DIW core
         diw = (murali_masked << MURALI_SHIFT) | (vamsi_masked << VAMSI_SHIFT) | venu_masked
         
-        # 13-bit metadata
         meta = (velocity & 0xF) << VELOCITY_SHIFT
         meta |= (cluster_route & 0xF) << CLUSTER_SHIFT
         if sunya:
@@ -303,6 +273,32 @@ class VenuOrchestrator:
         """Reset orchestrator to initial state."""
         self._tick = 0
         self._prev_state = 0
+        self._mode = 0
+
+    def set_mode(self, mode: int) -> None:
+        """Set the Kirtan Mode (Harmonic Feedback)."""
+        self._mode = mode
+
+    # =========================================================================
+    # PERSISTENCE
+    # =========================================================================
+    
+    def to_bytes(self) -> bytes:
+        """Serialize state (tick, prev_state, mode)."""
+        return struct.pack("<QQQ", self._tick, self._prev_state, self._mode)
+        
+    def from_bytes(self, data: bytes) -> None:
+        """Restore state."""
+        MIN_SIZE = 24 # 3 * 8
+        if len(data) < MIN_SIZE:
+            # Backwards compatibility check for old 16-byte snapshots
+            if len(data) >= 16:
+                self._tick, self._prev_state = struct.unpack("<QQ", data[:16])
+                self._mode = 0 # Default to Solo
+                return
+            raise ValueError("Data too short")
+            
+        self._tick, self._prev_state, self._mode = struct.unpack("<QQQ", data[:24])
 
 
 # =============================================================================

@@ -774,7 +774,7 @@ class Mahamantra:
         """
         global _governance_bridge
         if _governance_bridge is None:
-            from vibe_core.mahamantra.protocols import ProtocolBridge
+            from vibe_core.protocols.governance import ProtocolBridge
 
             _governance_bridge = ProtocolBridge
         return _governance_bridge

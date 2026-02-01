@@ -10,7 +10,7 @@ These Protocols define the Contracts for the Dharma Engine components.
 No concrete classes in signatures. Only Protocols.
 """
 
-from typing import Protocol, List, Tuple, Dict, Any
+from typing import Protocol, List, Tuple, Dict
 from dataclasses import dataclass
 
 # --- SHARED DATA STRUCTURES ---
