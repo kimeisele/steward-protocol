@@ -121,14 +121,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def tick(self) -> Dict[str, Union[str, int]]:
         """
         Get current tick state (Lazy).
-        
+
         Required by Steward for Shadow Reactor timing.
         """
         import time
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
-        
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
+
         t = int(time.time())
-        pos = t % 16
+        pos = t % WORDS  # SSOT: WORDS from seed.py
         guardian = ALL_GUARDIANS[pos]
         
         return {
@@ -271,8 +271,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         chapter = get_gita_chapter(attractor)
 
         verse_info = None
-        if verse_result.best_match:
-            v = verse_result.best_match
+        if verse_result.matches:
+            # USE SEED TO SELECT VERSE (not just first = hardcoded!)
+            # seed modulo matches length gives computed verse selection
+            verse_index = seed % len(verse_result.matches)
+            v = verse_result.matches[verse_index]
             verse_info = {
                 "id": v.verse_id,
                 "chapter": v.chapter,
@@ -340,21 +343,17 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         )
         
         # =====================================================================
-        # 8.5. HOLOGRAPHIC DISPATCH - Chamber Processing
+        # 8.5. KIRTAN - Call and Response Loop
         # =====================================================================
-        # Cell flows through Chamber for transformation
+        # Cell flows through Chamber via KIRTAN (not single dance)
+        # KIRTAN = cycles × WORDS transformations
+        # "kirtanīyaḥ sadā hariḥ" - One should always chant
         from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
         chamber = SankirtanChamber()
-        result_cell = chamber.dance(result_cell)  # Transform via DIW
 
-        # =====================================================================
-        # 8.75. VENU DISPATCH - Krishna arranges, Halbgötter execute
-        # =====================================================================
-        # Clean separation: Venu dispatcher handles ALL execution routing
-        from vibe_core.mahamantra.venu.dispatcher import get_dispatcher
-        
-        dispatcher = get_dispatcher()
-        dispatch_result = dispatcher.dispatch(quarter, guardian, input_text, result_cell)
+        # KIRTAN LOOP: 1 cycle = WORDS (16) transformations
+        # Each transformation applies DIW (Divine Instruction Word)
+        result_cell = chamber.kirtan(result_cell, cycles=1)
 
         # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
@@ -417,9 +416,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
             # Akash (persistent state)
             "akash": self._akash,
-            
-            # Execution (VENU DISPATCH) - Clean, no spaghetti
-            **dispatch_result,
+
+            # Execution: The Cell transformation IS the execution
+            # Chamber.kirtan() already transformed the cell via DIW (3 flutes)
+            # No external dispatch - holographic principle
+            "execution": {
+                "success": result_cell.is_alive,
+                "prana": result_cell.prana,
+                "integrity": result_cell.membrane_integrity,
+                "cycles": result_cell.age,
+            },
         }
 
     @property
