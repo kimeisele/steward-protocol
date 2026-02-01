@@ -29,11 +29,12 @@ from vibe_core.mahamantra.karma.bhishma.protocol import (
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.protocols.mahajanas.prithu.types.ledger import SQLiteLedger as VibeLedger  # Protocol-first
 from vibe_core.protocols.mahajanas.router import Mahajana
+from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("BHISHMA_SERVICE")
 
 
-class BhishmaService(BhishmaProtocol, PanchaTattvaProtocol):
+class BhishmaService(BhishmaProtocol, PanchaTattvaProtocol, ExecutableMixin):
     """
     BhishmaService - The Grandsire.
     Manages the immutable ledger and audit trail.

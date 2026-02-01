@@ -26,11 +26,12 @@ from vibe_core.protocols.mahajanas.bali import (
     SurrenderType,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
+from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("BALI_SERVICE")
 
 
-class BaliService(BaliProtocol):
+class BaliService(BaliProtocol, ExecutableMixin):
     """
     BaliService - The Renouncer.
     Manages resources, graceful shutdown, and economic substrate.
