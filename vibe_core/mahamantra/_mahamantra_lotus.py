@@ -66,19 +66,29 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     @classmethod
     def _get_kirtan(cls):
-        """Lazy-load MahaKirtan orchestrator."""
+        """
+        Lazy-load PERSON-Anchored Kirtan (PrabhupadaKirtan).
+
+        "selbst die mahajans fragen dann prabhupad nach seinen gita interpretation"
+        Every computation flows through THE PERSON - Prabhupada.
+
+        PrabhupadaKirtan wraps MahaKirtan with:
+        - 8 Siksastakam stages (L0-L7) pipeline
+        - PERSON-anchored parampara verification (% 37 == 0)
+        - Bidirectional CALL ↔ RESPONSE transmission
+        """
         if cls._kirtan is None:
-            from vibe_core.mahamantra.substrate.mantra import MahaKirtan
+            from vibe_core.mahamantra.substrate.mantra.prabhupada_kirtan import PrabhupadaKirtan
             from vibe_core.mahamantra.adapters.compression import MahaCompression
             from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
 
-            cls._kirtan = MahaKirtan(mod_space=MAHA_QUANTUM)
+            cls._kirtan = PrabhupadaKirtan(mod_space=MAHA_QUANTUM)
             cls._compressor = MahaCompression()
 
         return cls._compressor, cls._kirtan
 
     def _compute_vibration(self, input_data):
-        """Compute vibration state from input."""
+        """Compute vibration state from input (PERSON-anchored)."""
         compressor, kirtan = self._get_kirtan()
 
         cell = None
@@ -90,7 +100,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             comp_result = compressor.compress(command)
             seed = comp_result.seed
 
-        result = kirtan.compute(cell if cell else seed)
+        # PERSON-ANCHORED: flows through Prabhupada
+        result = kirtan.compute_with_person(seed)
 
         from vibe_core.mahamantra.substrate.resonance import MahaResonator
         from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
@@ -108,6 +119,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "attractor": attractor,
             "parampara_channel": result.parampara_channel,
             "oracle_validated": result.oracle_validated,
+            # PERSON-ANCHORED additions
+            "person_verified": result.person_verified,
+            "is_bona_fide": result.is_bona_fide,
+            "siksastakam_stage": result.siksastakam_stage.verse,
         }
 
     def vibrate(self, input_data: Union[str, MahaCell]) -> VibrationState:
@@ -240,9 +255,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             seed = comp_result.seed
 
         # =====================================================================
-        # 3. SMARANAM - MahaKirtan → vibration state
+        # 3. SMARANAM - PrabhupadaKirtan → PERSON-anchored vibration state
         # =====================================================================
-        kirtan_result = kirtan.compute(cell if cell else seed)
+        # PERSON-ANCHORED: Every computation flows through Prabhupada
+        # PrabhupadaKirtanResult has all KirtanComputeResult fields + parampara
+        kirtan_result = kirtan.compute_with_person(seed)
 
         # =====================================================================
         # 4. PADA_SEVANAM - MahaModularSynth → attractor (full 16-position coverage)
@@ -378,11 +395,18 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "attractor": attractor,
             },
 
-            # Parampara (ARCANAM)
+            # Parampara (ARCANAM) - PERSON-ANCHORED through Prabhupada
             "parampara": {
                 "verified": parampara_verified,
                 "channel": parampara_channel,
                 "oracle_validated": oracle_validated,
+                # PERSON-ANCHORED additions (from PrabhupadaKirtan)
+                "person_verified": kirtan_result.person_verified,
+                "is_bona_fide": kirtan_result.is_bona_fide,
+                "transmission_mode": kirtan_result.transmission_mode,
+                "siksastakam_stage": kirtan_result.siksastakam_stage.verse,
+                "siksastakam_sanskrit": kirtan_result.siksastakam_stage.sanskrit,
+                "siksastakam_operation": kirtan_result.siksastakam_stage.operation,
             },
 
             # Gita (VANDANAM)
