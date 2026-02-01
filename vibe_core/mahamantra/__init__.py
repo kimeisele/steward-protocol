@@ -167,7 +167,8 @@ def __getattr__(name: str):
         return getattr(ledger, name)
 
     # === EventBus (Narada) ===
-    if name in ("EventBus", "Event", "EventType", "EventColor", "EventBusProtocol", "get_event_bus"):
+    if name in ("EventBus", "Event", "EventType", "EventColor", "EventBusProtocol", "get_event_bus",
+                "SubscriberMetrics", "SudarshanaGuard"):
         from vibe_core.mahamantra.substrate import event_bus
         return getattr(event_bus, name)
 
