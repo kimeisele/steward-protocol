@@ -21,7 +21,7 @@ from vibe_core.reactor.matrix import (
     Varga, Sthana, analyze_phonemes, PHONEME_MATRIX
 )
 from vibe_core.mahamantra.substrate.phonetics.shabda import (
-    SANSKRIT_PHONEME_MAP, VibrationSignature, NADI_RESONANCE
+    SANSKRIT_PHONEME_MAP, VibrationSignature, NADI_RESONANCE, VoicingType
 )
 
 # =============================================================================
@@ -55,16 +55,18 @@ class VarnaPhysics:
         # Default to LILA (48) if unknown
         sig = SANSKRIT_PHONEME_MAP.get(char.lower())
         energy = sig.base_frequency if sig else 48
+        voicing = sig.voicing if sig else VoicingType.VOICED # Default to voiced
         
-        # 3. Svara Detection (Axiomatic)
-        # Definition: Energy >= NADI (72) AND NOT Aspirated-Voiced-Consonant ('h')
-        # BUT 'h' has energy 72.
-        # However, vowels in PHONEME_MATRIX are mostly mapped to GHOSHAVAT (2).
-        # We need a robust 'Is Vowel' check.
-        # Using a small intrinsic set is safer than inferring from ambiguous physics overlap.
-        # "Svaras shine by themselves"
-        SVARAS = {'a', 'ā', 'i', 'ī', 'u', 'ū', 'e', 'ai', 'o', 'au', 'ṛ', 'ṝ', 'ḷ'}
-        is_svara = char.lower() in SVARAS
+        # 3. Svara Detection (PURE PHYSICS)
+        # Axiom: "Svaras shine by themselves" (High Energy Nucleus)
+        # Condition: Energy >= NADI (72) AND NOT Voiced-Aspirated ('h')
+        # 'h' (72Hz) is the only consonant with Nadi resonance, but it is Aspirated.
+        # Vowels are Voiced (2) but NOT Aspirated (3).
+        
+        is_high_energy = energy >= 72
+        is_not_aspirated = voicing != VoicingType.VOICED_ASPIRATED
+        
+        is_svara = is_high_energy and is_not_aspirated
         
         return cls(char, varga, sthana, energy, is_svara)
 

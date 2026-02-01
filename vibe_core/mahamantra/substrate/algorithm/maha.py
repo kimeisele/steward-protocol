@@ -425,3 +425,35 @@ def find_attractor(seed: int, mod: int = MAHA_QUANTUM, max_cycles: int = 100) ->
         value = maha_oscillate(value, mod)
 
     return value, max_cycles, 0
+
+
+# =============================================================================
+# LAYAKARI: FRAME SIZES (Vedic Rhythm Layering)
+# =============================================================================
+# From Vedic music theory (Tala system):
+#   Thah   = 1× speed = 16 ticks = WORDS
+#   Dugun  = 2× speed = 32 ticks = AKSARA_COUNT
+#   Tigun  = 3× speed = 48 ticks = LILA
+#   Chougun = 4× speed = 64 ticks = QUALITIES (max frame)
+#
+# All layers reset at tick 0 (Sam = "together")
+#
+# NOTE: This is COMPLEMENTARY to MantraTick (venu/tick.py):
+#   - MantraTick: STATEFUL clock that tracks time
+#   - These constants: Frame sizes for the ALGORITHM at different speeds
+# =============================================================================
+
+# Frame sizes at each Layakari speed (all derived from axioms!)
+FRAME_THAH: Final[int] = WORDS                 # 16 ticks (1×)
+FRAME_DUGUN: Final[int] = WORDS * HALVES       # 32 ticks (2×) = AKSARA_COUNT
+FRAME_TIGUN: Final[int] = WORDS * TRINITY      # 48 ticks (3×) = LILA
+FRAME_CHOUGUN: Final[int] = WORDS * QUARTERS   # 64 ticks (4×) = QUALITIES
+
+# Max frame = QUALITIES = 64 (Chougun = 4× speed)
+MAX_FRAME: Final[int] = FRAME_CHOUGUN
+
+# Layakari speed multipliers (derived from axioms)
+LAYAKARI_THAH: Final[int] = KSETRAJNA      # 1× (TRINITY - HALVES = 1)
+LAYAKARI_DUGUN: Final[int] = HALVES        # 2× (Axiom)
+LAYAKARI_TIGUN: Final[int] = TRINITY       # 3× (Axiom)
+LAYAKARI_CHOUGUN: Final[int] = QUARTERS    # 4× (= KRISHNA_COUNT)
