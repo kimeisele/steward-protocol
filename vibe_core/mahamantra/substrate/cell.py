@@ -480,14 +480,14 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
     ) -> "MahaCellUnified[S, M]":
         """
         Create a new cell with auto-generated header.
-        
+
         Args:
             source: Source ID
             target: Target ID
             operation: Operation code
             dna: Genetic instructions
             initial_state: Initial payload
-            
+
         Returns:
             New MahaCellUnified instance
         """
@@ -496,7 +496,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             target=target,
             operation=operation,
         )
-        
+
         cell = cls(
             header=header,
             lifecycle=CellLifecycleState(
@@ -508,8 +508,46 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             ),
             payload=initial_state,
         )
-        
+
         return cell
+
+    @classmethod
+    def from_content(
+        cls,
+        content: str,
+        *,
+        target: int = 0,
+        initial_state: Optional[S] = None,
+    ) -> "MahaCellUnified[S]":
+        """
+        MahaCell = ANYTHING. Address computed from content.
+
+        The content IS the cell. The address IS computed.
+        No manual IDs - mahamantra computes everything.
+
+        Args:
+            content: Any string (file, request, data, etc.)
+            target: Optional target address (default 0)
+            initial_state: Optional payload state
+
+        Returns:
+            MahaCellUnified with:
+            - header.sravanam = address (from MahaCompression seed)
+            - header.pada_sevanam = position (0-15 in mahamantra)
+            - lifecycle.dna = content
+        """
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+
+        compression = MahaCompression()
+        result = compression.compress(content)
+
+        return cls.create(
+            source=result.seed,        # ADDRESS aus content
+            target=target,
+            operation=result.position, # POSITION im mahamantra (0-15)
+            dna=content,
+            initial_state=initial_state,
+        )
     
     @classmethod
     def null(cls) -> "MahaCellUnified[None, None]":
