@@ -32,7 +32,7 @@ from vibe_core.mahamantra.protocols._seed import (
     # Jiva
     JIVA_CYCLE,
     JIVA_QUALITIES,
-    # Prana
+    # Prana Timing (DERIVED: SECONDS_PER_DAY = COSMIC_FRAME × QUARTERS)
     SECONDS_PER_DAY,
     PRANA_DURATION_S,
     PRANA_DURATION_MS,
@@ -176,28 +176,31 @@ class TestJiva:
 
 
 # =============================================================================
-# Prana Tests
+# Prana Tests - FULLY DERIVED FROM MAHAMANTRA
 # =============================================================================
+# SECONDS_PER_DAY = COSMIC_FRAME × QUARTERS = 21600 × 4 = 86400
+# The Vedic day is divided into 21600 pranas, and the seconds follow.
 
 
 class TestPrana:
-    """Test Prana/timing constants."""
+    """Test Prana/timing constants - ALL DERIVED FROM MAHAMANTRA."""
 
     def test_seconds_per_day(self):
-        """SECONDS_PER_DAY is 86400."""
+        """SECONDS_PER_DAY = COSMIC_FRAME × QUARTERS = 86400."""
         assert SECONDS_PER_DAY == 86400
+        assert SECONDS_PER_DAY == COSMIC_FRAME * QUARTERS
 
     def test_prana_duration_s(self):
-        """PRANA_DURATION_S is 4."""
+        """PRANA_DURATION_S = QUARTERS = 4."""
         assert PRANA_DURATION_S == 4
-        assert PRANA_DURATION_S == SECONDS_PER_DAY // COSMIC_FRAME
+        assert PRANA_DURATION_S == QUARTERS
 
     def test_prana_duration_ms(self):
-        """PRANA_DURATION_MS is 4000."""
+        """PRANA_DURATION_MS = 4000."""
         assert PRANA_DURATION_MS == 4000
 
     def test_tick_interval_ms(self):
-        """TICK_INTERVAL_MS is 250."""
+        """TICK_INTERVAL_MS = PRANA_DURATION_MS // WORDS = 250."""
         assert TICK_INTERVAL_MS == 250
         assert TICK_INTERVAL_MS == PRANA_DURATION_MS // WORDS
 

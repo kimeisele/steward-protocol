@@ -58,6 +58,17 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_SQ as _SQ,
 )
 
+# TEENTAL WIRING: Import the drum pattern for rhythmic modulation
+from vibe_core.mahamantra.research.dharma.teental_matrix import (
+    TEENTAL_BINARY,
+    get_bass_pattern,
+    get_treble_pattern,
+)
+
+# Pre-compute patterns at module load for O(1) access
+_BASS_PATTERN: tuple[int, ...] = get_bass_pattern()
+_TREBLE_PATTERN: tuple[int, ...] = get_treble_pattern()
+
 
 # =============================================================================
 # PHASE DEFINITIONS
