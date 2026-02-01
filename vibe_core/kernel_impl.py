@@ -13,12 +13,12 @@ DEPRECATED: Phase 4 Migration to Mahamantra
 Kernel operations are being decomposed into mahajana services:
 
 MIGRATION PATH:
-- Process management → mahamantra.mod.janaka (cycles/execution)
-- Task scheduling → mahamantra.mod.janaka (scheduler)
-- Ledger → mahamantra.mod.bhishma (ledger/lineage)
-- Agent manifests → mahamantra.mod.brahma (bootstrap/registry)
-- Health checks → mahamantra.mod.shuka (introspection)
-- Security ops → mahamantra.mod.yamaraja (security)
+- Process management → mahamantra.<quarter>.janaka  # FIXME: specify correct quarter (cycles/execution)
+- Task scheduling → mahamantra.<quarter>.janaka  # FIXME: specify correct quarter (scheduler)
+- Ledger → mahamantra.<quarter>.bhishma  # FIXME: specify correct quarter (ledger/lineage)
+- Agent manifests → mahamantra.<quarter>.brahma  # FIXME: specify correct quarter (bootstrap/registry)
+- Health checks → mahamantra.<quarter>.shuka  # FIXME: specify correct quarter (introspection)
+- Security ops → mahamantra.<quarter>.yamaraja  # FIXME: specify correct quarter (security)
 
 CURRENT STATUS: Deprecated but functional
 - Kernel continues to work via existing implementation

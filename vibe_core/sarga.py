@@ -6,7 +6,7 @@ ONE IMPORT, BRAHMA OWNS:
 
 Or via mahamantra:
     from vibe_core.mahamantra import mahamantra
-    sarga = mahamantra.mod.brahma.types.sarga
+    sarga = mahamantra.<quarter>.brahma  # FIXME: specify correct quarter.types.sarga
 
 This file is a BRIDGE for backward compatibility.
 Will be removed in future version.
