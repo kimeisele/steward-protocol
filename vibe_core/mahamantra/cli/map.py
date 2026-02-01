@@ -86,13 +86,10 @@ def get_all_cli_commands() -> Dict[str, int]:
     """
     commands: Dict[str, int] = {}
 
-    # Import Bridge Mappings for Correct Position Attribution
+    # RESONANCE-BASED POSITION (KREBS ENTFERNT: keine hardcoded keywords mehr)
     try:
-        from vibe_core.mahamantra.cli.bridge import _KEYWORD_TO_POSITION
-    except ImportError:
-        _KEYWORD_TO_POSITION = {}
+        from vibe_core.mahamantra.cli.bridge import cli_bridge
 
-    try:
         # Get UnifiedCLI commands (cmd_* methods)
         from vibe_core.cli.unified_cli import UnifiedCLI
 
@@ -101,15 +98,10 @@ def get_all_cli_commands() -> Dict[str, int]:
         for attr in dir(cli):
             if attr.startswith("cmd_"):
                 cmd_name = attr[4:]  # Remove "cmd_" prefix
-
-                # 1. Try Bridge Mapping (Correct Domain)
-                if cmd_name in _KEYWORD_TO_POSITION:
-                    position = _KEYWORD_TO_POSITION[cmd_name]
-                else:
-                    # 2. Fallback to Parampara Hash
-                    mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(cmd_name.lower()))
-                    position = mutation_vector % 16
-
+                # RESONANZ-BASED: cli_bridge.get_position nutzt MahaCompression
+                position = cli_bridge.get_position(cmd_name)
+                if position is None:
+                    position = 0  # Default to vyasa if resonance fails
                 commands[cmd_name] = position
     except ImportError:
         pass
