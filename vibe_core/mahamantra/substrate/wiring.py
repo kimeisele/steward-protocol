@@ -60,11 +60,22 @@ from vibe_core.mahamantra.substrate.seed import (
 )
 
 # === EXPOSE PRITHU IMPLEMENTATION (The Avatar) ===
-from vibe_core.mahamantra.dharma.prithu import PrithuService
+# LAZY INIT to avoid circular import (wiring → prithu → lila → reactor → wiring)
+_prithu_instance: Optional["PrithuService"] = None
 
-# THE AVATAR MANIFESTS (Singleton)
-# This allows mahamantra.mod.prithu to have .execute()
-prithu = PrithuService()
+
+def get_prithu() -> "PrithuService":
+    """
+    Get or create PrithuService singleton (LAZY INIT).
+    
+    MUST be lazy to break circular import cycle!
+    DO NOT make this eager again!
+    """
+    global _prithu_instance
+    if _prithu_instance is None:
+        from vibe_core.mahamantra.dharma.prithu import PrithuService
+        _prithu_instance = PrithuService()
+    return _prithu_instance
 
 
 # =============================================================================

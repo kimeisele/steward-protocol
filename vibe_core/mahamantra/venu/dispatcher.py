@@ -56,15 +56,15 @@ class VenuDispatcher:
         Returns:
             Dict with success, output, execution result
         """
-        # Get or create service instance
-        service = self._get_service(quarter, guardian)
-        
-        if not service:
+        # Get guardian handler - EXPLICIT error handling
+        try:
+            service = self._get_service(quarter, guardian)
+        except ImportError as e:
             return {
                 'success': False,
-                'output': f'Guardian {guardian} has no service implementation',
+                'output': f'Guardian {guardian} not implemented: {e}',
                 'execution': None,
-                'exit_code': 1
+                'exit_code': 127  # Command not found
             }
         
         # Polymorphic execution
@@ -112,10 +112,10 @@ class VenuDispatcher:
     
     def _get_service(self, quarter: str, guardian: str) -> Optional[Any]:
         """
-        Get guardian service (cached).
+        Get guardian handler - EXPLICIT, NO SILENT FAILURES.
         
-        Guardian folders re-export from protocols/mahajanas.
-        We import {Guardian}Service class.
+        Returns: Guardian module OR raises ImportError
+        Caller MUST handle missing guardians explicitly!
         """
         cache_key = f"{quarter}.{guardian}"
         
@@ -123,27 +123,13 @@ class VenuDispatcher:
         if cache_key in self._service_cache:
             return self._service_cache[cache_key]
         
-        try:
-            # Import guardian module (re-exports from protocols/mahajanas)
-            module_path = f"vibe_core.mahamantra.{quarter}.{guardian}"
-            guardian_module = importlib.import_module(module_path)
-            
-            # Look for {Guardian}Service class
-            service_class_name = f"{guardian.capitalize()}Service"
-            ServiceClass = getattr(guardian_module, service_class_name, None)
-            
-            if ServiceClass:
-                # Instantiate and cache
-                service = ServiceClass()
-                self._service_cache[cache_key] = service
-                return service
-            
-            # No service found
-            return None
+        # Import guardian module - let ImportError propagate!
+        module_path = f"vibe_core.mahamantra.{quarter}.{guardian}"
+        guardian_module = importlib.import_module(module_path)
         
-        except ImportError:
-            # Guardian module doesn't exist
-            return None
+        # Cache and return
+        self._service_cache[cache_key] = guardian_module
+        return guardian_module
     
     @staticmethod
     def _run_async(coro):
