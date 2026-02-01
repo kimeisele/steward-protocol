@@ -520,6 +520,25 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "gad": self.discover(),
         }
 
+    def __getitem__(self, index: int):
+        """
+        Index into MAHAMANTRA_POSITIONS.
+
+        Enables: mahamantra[2] → MantraPosition at index 2
+        """
+        from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+        return MAHAMANTRA_POSITIONS[index]
+
+    def __len__(self) -> int:
+        """Return number of positions (16 = WORDS)."""
+        from vibe_core.mahamantra.protocols._seed import WORDS
+        return WORDS
+
+    def __iter__(self) -> Iterator:
+        """Iterate over all positions."""
+        from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+        return iter(MAHAMANTRA_POSITIONS)
+
     # === GAD Protocol ===
 
     def guardian(self) -> str:

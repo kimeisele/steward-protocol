@@ -101,13 +101,43 @@ def main():
 
     # Only import heavy modules when actually needed
     import logging
-
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    from vibe_core.cli.unified_cli import UnifiedCLI
+    # ==========================================================================
+    # MAHAMANTRA FIRST - The ONE Entry Point
+    # ==========================================================================
+    # If user provides ANY text that's not a known system command,
+    # route it through mahamantra. Krishna handles everything.
+    #
+    # Known system commands go to UnifiedCLI for backward compatibility.
+    # Everything else: mahamantra("intent")
+    # ==========================================================================
 
+    SYSTEM_COMMANDS = {
+        "boot", "stop", "status", "ps", "discover", "introspect",
+        "lineage", "verify", "init", "delegate", "state", "diff",
+        "plugins", "update", "install", "install-llm", "install-semantic",
+        "extensions", "capabilities"
+    }
+
+    args = sys.argv[1:]
+
+    # If no args or first arg is NOT a system command → MAHAMANTRA
+    if not args or (args and args[0] not in SYSTEM_COMMANDS):
+        from vibe_core.mahamantra import mahamantra
+
+        intent = " ".join(args) if args else "status"
+        result = mahamantra(intent)
+
+        # Output the result
+        print(f"🕉️  Position {result['position']}: {result['guardian'].upper()} ({result['quarter']})")
+        print(f"   {result.get('output', result.get('execution', 'OK'))}")
+        return 0 if result.get("success", True) else 1
+
+    # System commands → UnifiedCLI (backward compat)
+    from vibe_core.cli.unified_cli import UnifiedCLI
     cli = UnifiedCLI()
-    return cli.run(sys.argv[1:])
+    return cli.run(args)
 
 
 if __name__ == "__main__":
