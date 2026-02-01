@@ -29,11 +29,12 @@ from vibe_core.protocols.mahajanas.brahma import (
 )
 from vibe_core.protocols.mahajanas.prithu.types.ledger import SQLiteLedger as VibeLedger  # Protocol-first
 from vibe_core.protocols.mahajanas.router import Mahajana
+from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("BRAHMA_SERVICE")
 
 
-class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol):
+class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol, ExecutableMixin):
     """
     BrahmaService - The Creator.
     Manages system genesis, manifest registry, capability registry, and initial memory allocation.

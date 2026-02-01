@@ -107,9 +107,9 @@ class StewardCLI:
     for new implementations.
 
     Migration path:
-    - System commands → mahamantra.mod.prithu (Genesis/Boot)
-    - Status commands → mahamantra.mod.shuka (Vision/Observation)
-    - Verify commands → mahamantra.mod.vyasa (Dharma/Assertions)
+    - System commands → mahamantra.<quarter>.prithu  # FIXME: specify correct quarter (Genesis/Boot)
+    - Status commands → mahamantra.<quarter>.shuka  # FIXME: specify correct quarter (Vision/Observation)
+    - Verify commands → mahamantra.<quarter>.vyasa  # FIXME: specify correct quarter (Dharma/Assertions)
     """
 
     def __init__(self):

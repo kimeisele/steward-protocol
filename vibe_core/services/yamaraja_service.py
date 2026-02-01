@@ -67,6 +67,7 @@ from vibe_core.protocols.mahajanas.yamaraja.security import (
     SecurityStateSnapshot,
     SecurityViolation,
 )
+from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("YAMARAJA_SERVICE")
 
@@ -102,7 +103,7 @@ class ViolationTracker:
 # =============================================================================
 
 
-class YamarajaService(SecurityProtocol, YamarajaProtocol):
+class YamarajaService(SecurityProtocol, YamarajaProtocol, ExecutableMixin):
     """
     The Unified Security Guardian - Full SecurityProtocol Implementation.
 

@@ -29,11 +29,12 @@ from vibe_core.protocols.mahajanas.janaka import (
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.scheduling.in_memory import InMemoryScheduler
 from vibe_core.scheduling.task import Task as SchedulerTask
+from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("JANAKA_SERVICE")
 
 
-class JanakaService(JanakaProtocol, PanchaTattvaProtocol):
+class JanakaService(JanakaProtocol, PanchaTattvaProtocol, ExecutableMixin):
     """
     JanakaService - The Executor.
     Manages task scheduling and execution.
