@@ -28,11 +28,12 @@ from vibe_core.protocols.mahajanas.kapila import (
     OptimizationResult,
 )
 from vibe_core.protocols.mahajanas.router import Mahajana
+from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("KAPILA_SERVICE")
 
 
-class KapilaService(KapilaProtocol, PanchaTattvaProtocol):
+class KapilaService(KapilaProtocol, PanchaTattvaProtocol, ExecutableMixin):
     """
     KapilaService - The Analyzer.
     Manages cognition, intent resolution, and system metrics.
