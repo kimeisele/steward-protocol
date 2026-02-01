@@ -51,6 +51,11 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
     MAHAMANTRA_NAME_RAMA,
+    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
+    MAHA_OP_MAP as _OP_MAP,
+    MAHA_MULT as _MULT,
+    MAHA_ADD as _ADD,
+    MAHA_SQ as _SQ,
 )
 
 
@@ -199,16 +204,15 @@ class MahaAlgorithm16:
 
     def transform(self, seed: int) -> int:
         """
-        Standard transformation (converges to fixed point).
+        Standard transformation (converges to fixed point). BRANCHLESS.
         """
         value = seed % MAHA_QUANTUM
+        mod = MAHA_QUANTUM
         for step in self.execute():
-            if step.name == MAHAMANTRA_NAME_HARE:
-                value = (value * SEVEN) % MAHA_QUANTUM
-            elif step.name == MAHAMANTRA_NAME_KRISHNA:
-                value = (value + TEN) % MAHA_QUANTUM
-            else:  # Rama
-                value = (value * value) % MAHA_QUANTUM
+            op = _OP_MAP[step.name]
+            v = (value * _MULT[op] + _ADD[op]) % mod
+            squared = (v * v) % mod
+            value = _SQ[op] * squared + (1 - _SQ[op]) * v
         return value
 
 
@@ -286,18 +290,25 @@ class MahaModularSynth:
                 phase_in_lfo = (step.position - 1) % p.lfo_rate
                 lfo = binary_val * phase_in_lfo
 
-            adsr = p.adsr_attack
-            if step.phase == Phase.KRISHNA: adsr = p.adsr_decay
-            elif step.phase == Phase.PRAKRITI: adsr = p.adsr_sustain
-            elif step.phase == Phase.KARMA: adsr = p.adsr_release
+            # BRANCHLESS ADSR lookup by phase index (1-4 → 0-3)
+            adsr_table = (p.adsr_attack, p.adsr_decay, p.adsr_sustain, p.adsr_release)
+            adsr = adsr_table[step.phase.value - 1]
 
-            # Apply Logic
-            if step.name == MAHAMANTRA_NAME_HARE:
-                value = (value * SEVEN * adsr + lfo) % effective_mod_space
-            elif step.name == MAHAMANTRA_NAME_KRISHNA:
-                value = (value + TEN + effective_pos + feedback_acc) % effective_mod_space
-            else: # Rama
-                value = (value * value + feedback_acc) % effective_mod_space
+            # BRANCHLESS Apply Logic
+            op = _OP_MAP[step.name]
+            mod = effective_mod_space
+
+            # For HARE: mult=SEVEN*adsr, add=lfo, sq=0
+            # For KRISHNA: mult=1, add=TEN+pos+feedback, sq=0
+            # For RAMA: mult=1, add=feedback, sq=1
+            #
+            # Generalized formula with position-dependent adds
+            mult_coeff = (SEVEN * adsr, 1, 1)[op]
+            add_coeff = (lfo, TEN + effective_pos + feedback_acc, feedback_acc)[op]
+
+            v = (value * mult_coeff + add_coeff) % mod
+            squared = (v * v) % mod
+            value = _SQ[op] * squared + (1 - _SQ[op]) * v
 
             feedback_acc = (feedback_acc + value * effective_feedback) % effective_mod_space
 
@@ -308,3 +319,78 @@ class MahaModularSynth:
 
     def transform_multi(self, seeds: List[int], params: Optional[MahaSynthParams] = None, preset: Optional[str] = None) -> List[int]:
         return [self.transform(s, params, preset) for s in seeds]
+
+
+# =============================================================================
+# PRIMITIVE ALGORITHM FUNCTIONS - THE SINGLE SOURCE OF TRUTH
+# =============================================================================
+# All other files MUST import these instead of reimplementing.
+# This is the PLUGIN point - when the algorithm evolves, only this changes.
+# =============================================================================
+
+
+def maha_step(value: int, name: str, mod: int) -> int:
+    """
+    Apply ONE step of the Maha Algorithm. BRANCHLESS.
+
+    THE SINGLE SOURCE OF TRUTH for the transformation.
+    All implementations MUST use this function.
+
+    Args:
+        value: Current value
+        name: "H", "K", or "R"
+        mod: Modular space (e.g., 137, 37)
+
+    Returns:
+        Transformed value
+    """
+    op = _OP_MAP[name]
+    # Phase 1: Multiply and Add (no branch)
+    v = (value * _MULT[op] + _ADD[op]) % mod
+    # Phase 2: Conditional square via arithmetic selection
+    squared = (v * v) % mod
+    return _SQ[op] * squared + (1 - _SQ[op]) * v
+
+
+def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
+    """
+    Apply FULL 16-step oscillation. BRANCHLESS.
+
+    One complete pass through the Mahamantra pattern.
+
+    Args:
+        value: Starting value
+        mod: Modular space (default: 137)
+
+    Returns:
+        Value after 16 transformations
+    """
+    for name in PATTERN:
+        value = maha_step(value, name, mod)
+    return value
+
+
+def find_attractor(seed: int, mod: int = MAHA_QUANTUM, max_cycles: int = 100) -> Tuple[int, int, int]:
+    """
+    Find attractor by iterating until stable state.
+
+    Args:
+        seed: Starting value
+        mod: Modular space (default: 137)
+        max_cycles: Maximum iterations (default: 100)
+
+    Returns:
+        Tuple of (attractor, cycles_to_converge, cycle_length)
+    """
+    seen: Dict[int, int] = {}
+    value = seed % mod
+
+    for cycle in range(max_cycles):
+        if value in seen:
+            cycle_start = seen[value]
+            cycle_length = cycle - cycle_start
+            return value, cycle_start, cycle_length
+        seen[value] = cycle
+        value = maha_oscillate(value, mod)
+
+    return value, max_cycles, 0

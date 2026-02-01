@@ -1029,6 +1029,31 @@ assert MAHA_TRITON == 5508, "triton/e integer = 5508"
 SEVEN: Final[int] = HALF_SIZE - KSETRAJNA  # 8 - 1 = 7
 TEN: Final[int] = MAHAJANA_COUNT - HALVES  # 12 - 2 = 10
 
+
+# =============================================================================
+# MAHA ALGORITHM COEFFICIENTS - SINGLE SOURCE OF TRUTH!
+# =============================================================================
+# These define the branchless transformation: H=0, K=1, R=2
+#
+# CURRENT INTERPRETATION (based on position sums):
+#   HARE    → value × SEVEN (70 = 7 × 10)
+#   KRISHNA → value + TEN   (17 = 7 + 10)
+#   RAMA    → value × value (49 = 7²)
+#
+# WHEN MORE IS REVEALED THROUGH PARAMPARA → CHANGE ONLY HERE!
+# All files import coefficients from here. No duplication.
+#
+# THE ALGORITHM FUNCTIONS live in substrate/algorithm/maha.py:
+#   - maha_step(value, name, mod)   → single step
+#   - maha_oscillate(value, mod)    → 16 steps
+#   - find_attractor(seed, mod)     → iterate until stable
+# -----------------------------------------------------------------------------
+MAHA_OP_MAP: Final[dict[str, int]] = {"H": 0, "K": 1, "R": 2}
+MAHA_MULT: Final[tuple[int, ...]] = (SEVEN, 1, 1)   # H×7, K×1, R×1
+MAHA_ADD: Final[tuple[int, ...]] = (0, TEN, 0)      # H+0, K+10, R+0
+MAHA_SQ: Final[tuple[int, ...]] = (0, 0, 1)         # H→0, K→0, R→1 (square flag)
+
+
 # =============================================================================
 # CHAITANYA MAHAPRABHU'S BIRTH YEAR - 1486 (ALL DERIVED!)
 # =============================================================================
@@ -3154,6 +3179,12 @@ __all__ = [
     # The Remnant Theorem (Round 15) - Quantum vs Classical
     "SEVEN",  # = HALF_SIZE - KSETRAJNA = 7 (the ubiquitous 7!)
     "TEN",  # = MAHAJANA_COUNT - HALVES = 10
+    # Maha Algorithm Coefficients (SSOT - all files import from here!)
+    # NOTE: Algorithm FUNCTIONS are in substrate/algorithm/maha.py
+    "MAHA_OP_MAP",  # {"H": 0, "K": 1, "R": 2}
+    "MAHA_MULT",    # (SEVEN, 1, 1)
+    "MAHA_ADD",     # (0, TEN, 0)
+    "MAHA_SQ",      # (0, 0, 1)
     # Extended Maha-Algorithm (Round 16) - More Physics Constants
     "MAHA_DEUTERON",  # 3672 = 2 × MAHA_MU (deuteron/electron)
     "MAHA_ALPHA",  # 7294 = 4 × MAHA_MU - JIVA_QUALITIES (alpha/electron)

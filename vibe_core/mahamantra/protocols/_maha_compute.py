@@ -311,22 +311,30 @@ def get_operation(position: int) -> str:
     return PATTERN[position % WORDS]
 
 
+# =============================================================================
+# BRANCHLESS COMPUTATION - DELEGATED TO algorithm/maha.py
+# =============================================================================
+# THE ALGORITHM lives in substrate/algorithm/maha.py
+# This module provides backward-compatible wrappers.
+
+
 def apply_operation(value: int, operation: str) -> int:
     """
-    Apply Mahamantra operation to value.
+    Apply Mahamantra operation to value - BRANCHLESS.
 
-    H (HARE)    → value × SEVEN (mod 137) - Shakti multiplies
-    K (KRISHNA) → value + TEN (mod 137) - Krishna attracts/adds
-    R (RAMA)    → value × value (mod 137) - Rama intensifies/squares
+    DELEGATES to algorithm/maha.py - no duplication!
+
+    H (HARE)    → value × SEVEN (mod 137)
+    K (KRISHNA) → value + TEN (mod 137)
+    R (RAMA)    → value × value (mod 137)
     """
-    if operation == "H":
-        return (value * SEVEN) % MAHA_QUANTUM
-    elif operation == "K":
-        return (value + TEN) % MAHA_QUANTUM
-    elif operation == "R":
-        return (value * value) % MAHA_QUANTUM
-    else:
-        raise ValueError(f"Unknown operation: {operation}")
+    # Late import to avoid circular dependency
+    from vibe_core.mahamantra.substrate.algorithm import maha_step
+    return maha_step(value, operation, MAHA_QUANTUM)
+
+
+# OP_CODE for backward compatibility (some code might use it)
+OP_CODE: Final[dict[str, int]] = {"H": 0, "K": 1, "R": 2}
 
 
 def is_attractor(value: int) -> Tuple[bool, AttractorType]:
@@ -414,6 +422,8 @@ __all__ = [
     "ALL_ATTRACTORS",
     "GITA_INSIGHTS",
     "PATTERN",
+    # Branchless computation
+    "OP_CODE",
     # Functions
     "get_operation",
     "apply_operation",
