@@ -1,4 +1,4 @@
-import pytest
+# import pytest (Removed to allow standalone execution)
 from vibe_core.mahamantra.namarupa.akshara import SyllableEngine, Akshara
 from vibe_core.mahamantra.namarupa.atom import AtomicResonanceHash, IdentityRegistry
 from vibe_core.reactor.matrix import Varga, Sthana

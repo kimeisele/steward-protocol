@@ -53,6 +53,15 @@
       "violation_count": 0,
       "signer_id": "naga_federation",
       "signature": "31d8c1830ddb875a7f029a8bcd1bda9487e5c8fd1c69f3ab7a5a6c5216ffadf83037c0b4e0efedf70714f54c06f61282faf0633f0098997eb7ddad5a48919294"
+    },
+    "test": {
+      "component_id": "test",
+      "reason": "TAKSHAKA_BITE: SQL_INJECTION (ref: event_1)",
+      "started_at": "2026-02-01T17:41:32.963055",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "naga_federation",
+      "signature": "e3ad070aa78788848f33b3e3aebc4f10ec2ad014ca3507443edb2ece6033266b58f28f8238dd83dc747205177e4e4ea6784d7d84577659d364f2bded12b747c5"
     }
   },
   "violations": {
@@ -68,11 +77,12 @@
     "comp_123": 1,
     "comp_001": 8,
     "bad_comp": 4,
-    "criminal_agent_007": 1
+    "criminal_agent_007": 1,
+    "test": 1
   },
   "escalated": [
+    "comp_001",
     "bad_comp",
-    "test_component",
-    "comp_001"
+    "test_component"
   ]
 }
