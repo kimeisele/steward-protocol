@@ -348,6 +348,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         result_cell = chamber.dance(result_cell)  # Transform via DIW
 
         # =====================================================================
+        # 8.75. VENU DISPATCH - Krishna arranges, Halbgötter execute
+        # =====================================================================
+        # Clean separation: Venu dispatcher handles ALL execution routing
+        from vibe_core.mahamantra.venu.dispatcher import get_dispatcher
+        
+        dispatcher = get_dispatcher()
+        dispatch_result = dispatcher.dispatch(quarter, guardian, input_text, result_cell)
+
+        # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
         # =====================================================================
         # Update Akash state (persistent field)
@@ -408,6 +417,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
             # Akash (persistent state)
             "akash": self._akash,
+            
+            # Execution (VENU DISPATCH) - Clean, no spaghetti
+            **dispatch_result,
         }
 
     @property
