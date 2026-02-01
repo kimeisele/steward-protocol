@@ -8,6 +8,8 @@ Unlike a one-shot transform, the resonator applies the algorithm
 repeatedly until stable states (attractors) are found.
 
 The mod_space determines the "resonant frequency".
+
+NOTE: Uses maha_oscillate() from algorithm/ - NO DUPLICATION.
 """
 
 from __future__ import annotations
@@ -18,19 +20,17 @@ __position__ = 0
 __genesis__ = "0x672435f8"
 
 from dataclasses import dataclass
-from typing import Final, Dict, List, Tuple, Optional
+from typing import Final, Dict, List, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
-    SEVEN,
-    TEN,
     PARAMPARA,
     POSITION_SUM_KRISHNA,
     MALA_COMPLETE,
-    MAHAMANTRA_WORD_PATTERN as PATTERN,
-    MAHAMANTRA_NAME_HARE,
-    MAHAMANTRA_NAME_KRISHNA,
 )
+
+# THE ALGORITHM - imported from SSOT, not reimplemented!
+from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
 
 @dataclass(frozen=True)
@@ -53,14 +53,8 @@ class MahaResonator:
 
     def oscillate_once(self, value: int) -> int:
         """One oscillation = one pass through the 16-step algorithm."""
-        for name in PATTERN:
-            if name == MAHAMANTRA_NAME_HARE:
-                value = (value * SEVEN) % self.mod_space
-            elif name == MAHAMANTRA_NAME_KRISHNA:
-                value = (value + TEN) % self.mod_space
-            else:  # Rama
-                value = (value * value) % self.mod_space
-        return value
+        # DELEGATE to algorithm/ - no duplication!
+        return maha_oscillate(value, self.mod_space)
 
     def find_attractor(self, seed: int, max_cycles: int = 100) -> ResonanceResult:
         """Find the attractor (stable state) for a given seed."""
@@ -94,14 +88,14 @@ class MahaResonator:
     def harmonic_spectrum(self) -> Dict[str, List[int]]:
         """Compute complete harmonic spectrum for this mod_space."""
         fixed_points = []
-        attractor_basins = {}
+        attractor_basins: Dict[int, List[int]] = {}
 
         for seed in range(self.mod_space):
             result = self.find_attractor(seed)
             if result.cycle_length == 1:
                 if result.attractor not in fixed_points:
                     fixed_points.append(result.attractor)
-            
+
             if result.attractor not in attractor_basins:
                 attractor_basins[result.attractor] = []
             attractor_basins[result.attractor].append(seed)

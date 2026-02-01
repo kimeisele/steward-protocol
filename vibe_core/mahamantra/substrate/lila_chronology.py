@@ -85,6 +85,8 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_RAMA as WEIGHT_RAMA,
 )
+# THE ALGORITHM - imported from SSOT, not reimplemented!
+from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
 # =============================================================================
 # CORE CONSTANTS (Derived from Seed)
@@ -577,28 +579,13 @@ class LilaChronology:
         """
         Apply MahaAlgorithm 16-step transform to year's delta.
 
-        PATTERN: H K H K | K K H H | H R H R | R R H H
-
-        TRANSFORMATION RULES (derived from _seed.py):
-        - HARE:    value × 7 (SEVEN)
-        - KRISHNA: value + 10 (TEN)
-        - RAMA:    value × value (SQUARING)
+        DELEGATES to algorithm/ - no duplication!
 
         DISCOVERED:
         - Δ63 (1959 Sannyasa) → 136 = T(16) = THE FIELD!
         """
-        pattern = "HKHKKKHHHRHRRRHH"
-        value = self.get_delta(year) % mod_space
-
-        for name in pattern:
-            if name == "H":
-                value = (value * SEVEN) % mod_space
-            elif name == "K":
-                value = (value + TEN) % mod_space
-            else:  # R
-                value = (value * value) % mod_space
-
-        return value
+        delta = self.get_delta(year)
+        return maha_oscillate(delta, mod_space)
 
     def get_chladni_analysis(self, year: int) -> Dict[str, object]:
         """

@@ -70,6 +70,9 @@ from vibe_core.mahamantra.protocols._seed import (
     WORDS,
 )
 
+# THE ALGORITHM - imported from SSOT, not reimplemented!
+from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
+
 # Parampara channels from _seed.py (via shadow_protocol)
 from vibe_core.mahamantra.reactor.shadow_protocol import (
     PARAMPARA_CHANNEL_NAMES,
@@ -79,8 +82,7 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
     ShadowState,
 )
 
-# Mahamantra pattern from protocols (SSOT for pattern)
-from vibe_core.mahamantra.protocols._seed import MAHAMANTRA_WORD_PATTERN as PATTERN
+# NOTE: Pattern no longer needed - using maha_oscillate from algorithm/
 
 # PRABHUPADA constants from substrate resonance
 from vibe_core.mahamantra.substrate.resonance import (
@@ -137,21 +139,9 @@ class ShadowOracle:
         """
         Single oscillation through 16-step Mahamantra at mod PARAMPARA (37).
 
-        INLINE for performance - no external resonator needed.
-
-        TRANSFORMATION RULES (from _seed.py RUNDE 15):
-            HARE    → value × SEVEN
-            KRISHNA → value + TEN
-            RAMA    → value × value
+        DELEGATES to algorithm/ - no duplication!
         """
-        for name in PATTERN:
-            if name == "H":
-                value = (value * SEVEN) % PARAMPARA
-            elif name == "K":
-                value = (value + TEN) % PARAMPARA
-            else:  # R
-                value = (value * value) % PARAMPARA
-        return value
+        return maha_oscillate(value, PARAMPARA)
 
     def _find_attractor_parampara(self, seed: int, max_cycles: int = 50) -> tuple[int, int]:
         """
