@@ -29,6 +29,12 @@ _fractal_getattr_fn = None
 
 def __getattr__(name: str):
     """Lazy fractal discovery to avoid circular imports."""
+    # Explicit service loading (ExecutableMixin pattern)
+    if name == "KapilaService":
+        from vibe_core.services.kapila_service import KapilaService
+        return KapilaService
+    
+    # Fallback to fractal discovery
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
         from vibe_core.mahamantra.substrate.wiring import fractal_getattr

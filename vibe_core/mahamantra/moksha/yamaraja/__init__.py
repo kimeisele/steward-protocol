@@ -264,6 +264,11 @@ def __getattr__(name: str):
     Fractal routing: folder IS wiring.
     "EIN IMPORT. KRISHNA ROUTET ALLES."
     """
+    # Explicit service loading (ExecutableMixin pattern)
+    if name == "YamarajaService":
+        from vibe_core.services.yamaraja_service import YamarajaService
+        return YamarajaService
+    
     from pathlib import Path
     import importlib
 
