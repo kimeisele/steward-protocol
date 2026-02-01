@@ -52,6 +52,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         "attractor_counts": {},
     }
 
+    # ==========================================================================
+    # LISTENER SYSTEM (Narada - The Broadcaster)
+    # ==========================================================================
+    # This enables the 6.34 Override (GAD-000 Amendment B):
+    # - NrisimhaWatchdog registers to receive tick events
+    # - MahaProxy registers to receive tick events
+    # - Any service can listen to the heartbeat
+    _listeners: List = []
+
     # Lazy-loaded instances
     _kirtan = None
     _compressor = None
@@ -145,15 +154,61 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         t = int(time.time())
         pos = t % WORDS  # SSOT: WORDS from seed.py
         guardian = ALL_GUARDIANS[pos]
-        
-        return {
-            "quarter": "karma" if pos > 8 else "dharma", 
+
+        state = {
+            "quarter": "karma" if pos > 8 else "dharma",
             "guardian": guardian,
             "word": "hare" if pos % 2 == 0 else "krishna",
             "opcode": "EXECUTE",
             "position": pos,
             "tick": t
         }
+
+        # Broadcast to all listeners (6.34 Override - Japa Loop)
+        self._broadcast(state)
+
+        return state
+
+    # ==========================================================================
+    # LISTENER MANAGEMENT (6.34 Override / Japa Loop)
+    # ==========================================================================
+    # GAD-000 Amendment B: "Every Agent must implement a Japa-Loop (Heartbeat)"
+    # This is the mechanism that enables NrisimhaWatchdog to detect Maya/drift.
+
+    def register_listener(self, callback) -> None:
+        """
+        Register a listener for tick events.
+
+        PARAMPARA CONNECTION:
+        When you register, you become part of the heartbeat.
+        Every tick(), you will receive the state.
+
+        Args:
+            callback: Function that accepts tick state dict
+        """
+        if callback not in self._listeners:
+            self._listeners.append(callback)
+            logger.debug(f"🔗 Listener registered (total: {len(self._listeners)})")
+
+    def unregister_listener(self, callback) -> None:
+        """Remove a listener from tick events."""
+        if callback in self._listeners:
+            self._listeners.remove(callback)
+
+    def _broadcast(self, state: Dict) -> None:
+        """
+        Broadcast tick state to all listeners.
+
+        NARADA PRINCIPLE: The broadcast continues even if one ear is deaf.
+        One failing listener does not stop the others.
+        """
+        for listener in self._listeners:
+            try:
+                listener(state)
+            except Exception:
+                # Arjuna Pattern: Continue even if one listener fails
+                # The system is greater than its parts
+                pass
 
     _bootstrapped: bool = False
 
