@@ -104,40 +104,24 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     # ==========================================================================
-    # MAHAMANTRA FIRST - The ONE Entry Point
+    # MAHAMANTRA ONLY - The ONE Entry Point
     # ==========================================================================
-    # If user provides ANY text that's not a known system command,
-    # route it through mahamantra. Krishna handles everything.
+    # KREBS ENTFERNT: Keine SYSTEM_COMMANDS bypass Liste mehr.
+    # ALLES geht durch mahamantra. Krishna routet alles.
     #
-    # Known system commands go to UnifiedCLI for backward compatibility.
-    # Everything else: mahamantra("intent")
+    # "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
     # ==========================================================================
 
-    SYSTEM_COMMANDS = {
-        "boot", "stop", "status", "ps", "discover", "introspect",
-        "lineage", "verify", "init", "delegate", "state", "diff",
-        "plugins", "update", "install", "install-llm", "install-semantic",
-        "extensions", "capabilities"
-    }
+    from vibe_core.mahamantra import mahamantra
 
     args = sys.argv[1:]
+    intent = " ".join(args) if args else "status"
+    result = mahamantra(intent)
 
-    # If no args or first arg is NOT a system command → MAHAMANTRA
-    if not args or (args and args[0] not in SYSTEM_COMMANDS):
-        from vibe_core.mahamantra import mahamantra
-
-        intent = " ".join(args) if args else "status"
-        result = mahamantra(intent)
-
-        # Output the result
-        print(f"🕉️  Position {result['position']}: {result['guardian'].upper()} ({result['quarter']})")
-        print(f"   {result.get('output', result.get('execution', 'OK'))}")
-        return 0 if result.get("success", True) else 1
-
-    # System commands → UnifiedCLI (backward compat)
-    from vibe_core.cli.unified_cli import UnifiedCLI
-    cli = UnifiedCLI()
-    return cli.run(args)
+    # Output the result
+    print(f"🕉️  Position {result['position']}: {result['guardian'].upper()} ({result['quarter']})")
+    print(f"   {result.get('output', result.get('execution', 'OK'))}")
+    return 0 if result.get("success", True) else 1
 
 
 if __name__ == "__main__":
