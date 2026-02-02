@@ -99,29 +99,6 @@ INTENT_SPACE: Final[int] = WORDS ** QUARTERS  # 16^4 = 65536 = total intent spac
 ROUTING_OPS: Final[int] = QUARTERS            # Always 4 ops to route
 
 
-# =============================================================================
-# CATEGORY KEYWORDS
-# =============================================================================
-
-# Category keywords for text classification
-CATEGORY_KEYWORDS: Dict[IntentCategory, List[str]] = {
-    IntentCategory.OBSERVE: ["watch", "monitor", "observe", "check", "look", "see", "view"],
-    IntentCategory.CREATE: ["create", "make", "build", "write", "generate", "new", "add"],
-    IntentCategory.CONNECT: ["connect", "link", "join", "integrate", "merge", "combine"],
-    IntentCategory.ANALYZE: ["analyze", "examine", "study", "investigate", "understand", "why"],
-    IntentCategory.EXECUTE: ["run", "execute", "do", "perform", "start", "launch", "deploy", "fix"],
-    IntentCategory.TRANSFORM: ["change", "transform", "convert", "modify", "update", "refactor"],
-    IntentCategory.INVOKE: ["call", "invoke", "trigger", "request", "ask", "summon"],
-    IntentCategory.SUSTAIN: ["maintain", "keep", "sustain", "preserve", "hold", "continue"],
-    IntentCategory.EXPAND: ["expand", "grow", "scale", "extend", "increase", "more"],
-    IntentCategory.INTEGRATE: ["integrate", "unify", "consolidate", "sync", "harmonize"],
-    IntentCategory.VALIDATE: ["validate", "verify", "test", "check", "confirm", "ensure"],
-    IntentCategory.PROTECT: ["protect", "secure", "guard", "defend", "safe", "backup"],
-    IntentCategory.GUIDE: ["guide", "help", "assist", "advise", "teach", "show", "explain"],
-    IntentCategory.SURRENDER: ["accept", "surrender", "submit", "yield", "trust", "delegate"],
-    IntentCategory.COMPLETE: ["complete", "finish", "done", "end", "close", "final"],
-    IntentCategory.TRANSCEND: ["transcend", "beyond", "elevate", "enlighten", "liberate", "free"],
-}
 
 
 # =============================================================================
@@ -631,7 +608,6 @@ __all__ = [
     "ROUTING_OPS",
     "THEORETICAL_SPEEDUP",
     "INTENT_LEVELS",
-    "CATEGORY_KEYWORDS",
 ]
 
 
