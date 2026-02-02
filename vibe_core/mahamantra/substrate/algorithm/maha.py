@@ -584,10 +584,14 @@ FIXED_POINT: Final[int] = POSITION_SUM_TOTAL  # 136
 CYCLE_VALUES: Final[Tuple[int, ...]] = (87, 22, 18, 49)
 
 # Verify cycle values form a closed loop
-assert maha_oscillate(87, MAHA_QUANTUM) == 22, "87 → 22"
-assert maha_oscillate(22, MAHA_QUANTUM) == 18, "22 → 18"
-assert maha_oscillate(18, MAHA_QUANTUM) == 49, "18 → 49"
-assert maha_oscillate(49, MAHA_QUANTUM) == 87, "49 → 87"
+# (suppress deprecation warning during verification - maha_oscillate is legacy but still valid for this check)
+import warnings as _warnings
+with _warnings.catch_warnings():
+    _warnings.simplefilter("ignore", DeprecationWarning)
+    assert maha_oscillate(87, MAHA_QUANTUM) == 22, "87 → 22"
+    assert maha_oscillate(22, MAHA_QUANTUM) == 18, "22 → 18"
+    assert maha_oscillate(18, MAHA_QUANTUM) == 49, "18 → 49"
+    assert maha_oscillate(49, MAHA_QUANTUM) == 87, "49 → 87"
 
 # The 32 CYCLE_SEEDS: Seeds that lead to the Samsara cycle
 # Computed: all seeds where trajectory == SAMSARA
@@ -646,9 +650,12 @@ def _build_cycle_position_table() -> Tuple[int, ...]:
     return tuple(table)
 
 # PRECOMPUTED TABLES - Generated once at import time
-TRAJECTORY_TABLE: Final[Tuple[int, ...]] = _build_trajectory_table()
-ATTRACTOR_TABLE: Final[Tuple[int, ...]] = _build_attractor_table()
-CYCLE_POSITION_TABLE: Final[Tuple[int, ...]] = _build_cycle_position_table()
+# (suppress deprecation warning - tables use legacy maha_oscillate internally)
+with _warnings.catch_warnings():
+    _warnings.simplefilter("ignore", DeprecationWarning)
+    TRAJECTORY_TABLE: Final[Tuple[int, ...]] = _build_trajectory_table()
+    ATTRACTOR_TABLE: Final[Tuple[int, ...]] = _build_attractor_table()
+    CYCLE_POSITION_TABLE: Final[Tuple[int, ...]] = _build_cycle_position_table()
 
 
 def classify_trajectory(seed: int, mod: int = MAHA_QUANTUM) -> Trajectory:
