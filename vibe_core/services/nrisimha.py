@@ -102,8 +102,11 @@ class NrisimhaWatchdog(MantraProtocol, PanchaTattvaProtocol):
         ARJUNA-PATTERN: Wenn ein Proxy crashed, weitermachen.
         """
         try:
-            # Extract OpCode from tick_state (it's a TickState dataclass)
-            opcode = getattr(tick_state, "opcode", None)
+            # Extract OpCode from tick_state (dict from mahamantra.tick() or TickState dataclass)
+            if isinstance(tick_state, dict):
+                opcode = tick_state.get("opcode")
+            else:
+                opcode = getattr(tick_state, "opcode", None)
             if opcode is None:
                 return
 

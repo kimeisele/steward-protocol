@@ -37,7 +37,7 @@ def execute(input_text: str, context: dict = None) -> dict:
     NO service instantiation needed - pure function!
     """
     from vibe_core.mahamantra.substrate.ledger import InMemoryLedger
-    from vibe_core.services.brahma_service import BrahmaService
+    from vibe_core.protocols.mahajanas.brahma import BrahmaService
     
     # Create ephemeral service with in-memory ledger
     ledger = InMemoryLedger()
@@ -70,7 +70,7 @@ def __getattr__(name: str) -> object:
     NO MANUAL WIRING - auto-discovery needs these exports.
     """
     if name == "BrahmaService":
-        from vibe_core.services.brahma_service import BrahmaService
+        from vibe_core.protocols.mahajanas.brahma import BrahmaService
 
         return BrahmaService
 

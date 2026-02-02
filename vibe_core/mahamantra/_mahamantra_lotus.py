@@ -52,10 +52,17 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         "attractor_counts": {},
     }
 
+    # ==========================================================================
+    # LISTENER SYSTEM (Narada - The Broadcaster)
+    # ==========================================================================
+    # This enables the 6.34 Override (GAD-000 Amendment B):
+    # - NrisimhaWatchdog registers to receive tick events
+    # - MahaProxy registers to receive tick events
+    # - Any service can listen to the heartbeat
+    _listeners: List = []
+
     # Lazy-loaded instances
-    _kirtan = None
     _compressor = None
-    _gita_index = None
     _gita_index = None
     _gita_by_attractor = None
     _pipeline = None
@@ -65,64 +72,34 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         GADBase.__init__(self)
 
     @classmethod
-    def _get_kirtan(cls):
-        """
-        Lazy-load PERSON-Anchored Kirtan (PrabhupadaKirtan).
-
-        "selbst die mahajans fragen dann prabhupad nach seinen gita interpretation"
-        Every computation flows through THE PERSON - Prabhupada.
-
-        PrabhupadaKirtan wraps MahaKirtan with:
-        - 8 Siksastakam stages (L0-L7) pipeline
-        - PERSON-anchored parampara verification (% 37 == 0)
-        - Bidirectional CALL ↔ RESPONSE transmission
-        """
-        if cls._kirtan is None:
-            from vibe_core.mahamantra.substrate.mantra.prabhupada_kirtan import PrabhupadaKirtan
+    def _get_compressor(cls):
+        """Lazy-load MahaCompression."""
+        if cls._compressor is None:
             from vibe_core.mahamantra.adapters.compression import MahaCompression
-            from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
-
-            cls._kirtan = PrabhupadaKirtan(mod_space=MAHA_QUANTUM)
             cls._compressor = MahaCompression()
-
-        return cls._compressor, cls._kirtan
+        return cls._compressor
 
     def _compute_vibration(self, input_data):
-        """Compute vibration state from input (PERSON-anchored)."""
-        compressor, kirtan = self._get_kirtan()
+        """Compute vibration state from input."""
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, PARAMPARA
 
-        cell = None
+        compressor = self._get_compressor()
+
         if isinstance(input_data, MahaCell):
-            cell = input_data
-            seed = cell.header.sravanam
+            seed = input_data.header.sravanam
         else:
-            command = input_data
-            comp_result = compressor.compress(command)
+            comp_result = compressor.compress(str(input_data))
             seed = comp_result.seed
 
-        # PERSON-ANCHORED: flows through Prabhupada
-        result = kirtan.compute_with_person(seed)
-
-        from vibe_core.mahamantra.substrate.resonance import MahaResonator
-        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM
-
-        resonator = MahaResonator(mod_space=MAHA_QUANTUM)
-        attractor = resonator.oscillate_once(result.transformed_value)
+        synth = MahaModularSynth(default_preset="quantum")
+        attractor = synth.transform(seed)
 
         return {
             "seed": seed,
-            "transformed_value": result.transformed_value,
-            "beat": result.beat_number,
-            "resonance": result.flute_resonance,
-            "vina_resonance": result.vina_resonance,
-            "vina_string": result.vina_string,
             "attractor": attractor,
-            "parampara_channel": result.parampara_channel,
-            "oracle_validated": result.oracle_validated,
-            # PERSON-ANCHORED additions
-            "person_verified": result.person_verified,
-            "is_bona_fide": result.is_bona_fide,
-            "siksastakam_stage": result.siksastakam_stage.verse,
+            "resonance": seed % MAHA_QUANTUM,
+            "parampara_verified": seed % PARAMPARA == 0,
         }
 
     def vibrate(self, input_data: Union[str, MahaCell]) -> VibrationState:
@@ -138,22 +115,71 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Get current tick state (Lazy).
 
         Required by Steward for Shadow Reactor timing.
+        Uses MAHAMANTRA_SEQUENCE for correct opcode per position.
         """
         import time
         from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
+        from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
 
         t = int(time.time())
         pos = t % WORDS  # SSOT: WORDS from seed.py
         guardian = ALL_GUARDIANS[pos]
-        
-        return {
-            "quarter": "karma" if pos > 8 else "dharma", 
+        word, opcode = MAHAMANTRA_SEQUENCE[pos]
+
+        state = {
+            "quarter": "karma" if pos > 8 else "dharma",
             "guardian": guardian,
-            "word": "hare" if pos % 2 == 0 else "krishna",
-            "opcode": "EXECUTE",
+            "word": word,
+            "opcode": opcode.name,  # MantraOpCode.name for Nrisimha
             "position": pos,
             "tick": t
         }
+
+        # Broadcast to all listeners (6.34 Override - Japa Loop)
+        self._broadcast(state)
+
+        return state
+
+    # ==========================================================================
+    # LISTENER MANAGEMENT (6.34 Override / Japa Loop)
+    # ==========================================================================
+    # GAD-000 Amendment B: "Every Agent must implement a Japa-Loop (Heartbeat)"
+    # This is the mechanism that enables NrisimhaWatchdog to detect Maya/drift.
+
+    def register_listener(self, callback) -> None:
+        """
+        Register a listener for tick events.
+
+        PARAMPARA CONNECTION:
+        When you register, you become part of the heartbeat.
+        Every tick(), you will receive the state.
+
+        Args:
+            callback: Function that accepts tick state dict
+        """
+        if callback not in self._listeners:
+            self._listeners.append(callback)
+            logger.debug(f"🔗 Listener registered (total: {len(self._listeners)})")
+
+    def unregister_listener(self, callback) -> None:
+        """Remove a listener from tick events."""
+        if callback in self._listeners:
+            self._listeners.remove(callback)
+
+    def _broadcast(self, state: Dict) -> None:
+        """
+        Broadcast tick state to all listeners.
+
+        NARADA PRINCIPLE: The broadcast continues even if one ear is deaf.
+        One failing listener does not stop the others.
+        """
+        for listener in self._listeners:
+            try:
+                listener(state)
+            except Exception:
+                # Arjuna Pattern: Continue even if one listener fails
+                # The system is greater than its parts
+                pass
 
     _bootstrapped: bool = False
 
@@ -189,9 +215,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             except Exception as e:
                 if not silent:
                     _log.debug(f"Kapila cognition wiring failed: {e}")
-
-        # LAZY mode (default) - services load on first use
-        # The _get_kirtan() method already handles lazy loading
 
         self._bootstrapped = True
         if not silent:
@@ -248,35 +271,23 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 2. KIRTANAM - MahaCompression → seed
         # =====================================================================
-        compressor, kirtan = self._get_kirtan()
+        compressor = self._get_compressor()
 
         if seed is None:
             comp_result = compressor.compress(input_text)
             seed = comp_result.seed
 
         # =====================================================================
-        # 3. SMARANAM - PrabhupadaKirtan → PERSON-anchored vibration state
+        # 3. PADA_SEVANAM - MahaModularSynth → attractor
         # =====================================================================
-        # PERSON-ANCHORED: Every computation flows through Prabhupada
-        # PrabhupadaKirtanResult has all KirtanComputeResult fields + parampara
-        kirtan_result = kirtan.compute_with_person(seed)
-
-        # =====================================================================
-        # 4. PADA_SEVANAM - MahaModularSynth → attractor (full 16-position coverage)
-        # =====================================================================
-        # FIX: MahaResonator.oscillate_once() only produces 5 attractors due to
-        # quadratic convergence in RAMA operation. MahaModularSynth with "quantum"
-        # preset uses feedback to break convergence and reach all 16 positions.
         from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
         synth = MahaModularSynth(default_preset="quantum")
-        attractor = synth.transform(kirtan_result.transformed_value)
+        attractor = synth.transform(seed)
 
         # =====================================================================
-        # 5. ARCANAM - Parampara verification (% 37 == 0)
+        # 4. ARCANAM - Parampara verification (% 37 == 0)
         # =====================================================================
         parampara_verified = (seed % PARAMPARA == 0)
-        parampara_channel = kirtan_result.parampara_channel
-        oracle_validated = kirtan_result.oracle_validated
 
         # =====================================================================
         # 6. VANDANAM - GitaResonance → verse match
@@ -325,6 +336,18 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         # Position from attractor (holographic - embedded in computation)
         position = attractor % WORDS  # 0-15
+
+        # =====================================================================
+        # FIX 4: VENU ORCHESTRATOR INTEGRATION
+        # =====================================================================
+        # THE_FLUTE_CYCLE is the 19-bit DIW LUT - O(1) lookup for each position.
+        # Format: (name_encoding << 16) | (1 << position)
+        # This unifies the Venu orchestrator with the main computation pipeline.
+        from vibe_core.mahamantra.orchestrator import THE_FLUTE_CYCLE
+
+        diw = THE_FLUTE_CYCLE[position]
+        diw_name_encoding = (diw >> 16) & 0x3  # H=0, K=1, R=2
+        diw_position_bit = diw & 0xFFFF        # 1 << position
 
         if position < 4:
             quarter = "genesis"
@@ -389,29 +412,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             # Input
             "input": input_text,
 
-            # Vibration (KIRTANAM + SMARANAM + PADA_SEVANAM)
+            # Vibration
             "vibration": {
                 "seed": seed,
-                "transformed_value": kirtan_result.transformed_value,
-                "beat": kirtan_result.beat_number,
-                "flute_resonance": kirtan_result.flute_resonance,
-                "vina_resonance": kirtan_result.vina_resonance,
-                "vina_string": kirtan_result.vina_string,
                 "attractor": attractor,
             },
 
-            # Parampara (ARCANAM) - PERSON-ANCHORED through Prabhupada
+            # Parampara
             "parampara": {
                 "verified": parampara_verified,
-                "channel": parampara_channel,
-                "oracle_validated": oracle_validated,
-                # PERSON-ANCHORED additions (from PrabhupadaKirtan)
-                "person_verified": kirtan_result.person_verified,
-                "is_bona_fide": kirtan_result.is_bona_fide,
-                "transmission_mode": kirtan_result.transmission_mode,
-                "siksastakam_stage": kirtan_result.siksastakam_stage.verse,
-                "siksastakam_sanskrit": kirtan_result.siksastakam_stage.sanskrit,
-                "siksastakam_operation": kirtan_result.siksastakam_stage.operation,
             },
 
             # Gita (VANDANAM)
@@ -429,6 +438,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             # Functional (Trinity): What this position DOES
             "holy_name": holy_name,  # "H" (Hare), "K" (Krishna), "R" (Rama)
             "trinity_function": trinity_function,  # "source" (K), "carrier" (H), "deliverer" (R)
+
+            # Venu Orchestrator (FIX 4) - 19-bit Divine Instruction Word
+            "diw": {
+                "raw": diw,                    # Full 19-bit DIW
+                "name_encoding": diw_name_encoding,  # H=0, K=1, R=2
+                "position_bit": diw_position_bit,    # 1 << position
+            },
 
             # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
             "cell": {
@@ -681,7 +697,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Get current state."""
         return {
             "akash": self._akash,
-            "kirtan_loaded": self._kirtan is not None,
             "compressor_loaded": self._compressor is not None,
         }
 

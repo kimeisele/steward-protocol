@@ -1363,11 +1363,18 @@ def get_step_sequencer(kirtan_mode: str = "alternating") -> LilaStepSequencer:
     return _sequencer_instance
 
 
-def get_kirtan_runtime() -> KirtanRuntime:
-    """Get the KirtanRuntime singleton."""
+def get_kirtan_runtime(fresh: bool = False) -> KirtanRuntime:
+    """Get the KirtanRuntime singleton.
+
+    Args:
+        fresh: If True, reset the runtime before returning.
+               Use this for deterministic/reproducible computations.
+    """
     global _kirtan_instance
     if _kirtan_instance is None:
         _kirtan_instance = KirtanRuntime()
+    elif fresh:
+        _kirtan_instance.reset()
     return _kirtan_instance
 
 

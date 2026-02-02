@@ -34,15 +34,28 @@ if TYPE_CHECKING:
     )
 
 from vibe_core.protocols.mahajanas.router import Mahajana
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("KAPILA_SERVICE")
 
 
-class KapilaService:
+class KapilaService(PanchaTattvaProtocol, ExecutableMixin):
     """
     KapilaService - The Analyzer.
     Manages cognition, intent resolution, and system metrics.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of Kapila Service."""
+        return {
+            "chaitanya": "Analysis & Cognition Service",
+            "nityananda": "Cognitive Protocol Hook",
+            "advaita": "Inference & Optimization Logic",
+            "gadadhara": "Operator Input Flow",
+            "srivasa": "Metrics & Health Governance",
+        }
 
     def __init__(self):
         self._analyses_performed = 0
