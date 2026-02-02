@@ -147,19 +147,22 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Get current tick state (Lazy).
 
         Required by Steward for Shadow Reactor timing.
+        Uses MAHAMANTRA_SEQUENCE for correct opcode per position.
         """
         import time
         from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
+        from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
 
         t = int(time.time())
         pos = t % WORDS  # SSOT: WORDS from seed.py
         guardian = ALL_GUARDIANS[pos]
+        word, opcode = MAHAMANTRA_SEQUENCE[pos]
 
         state = {
             "quarter": "karma" if pos > 8 else "dharma",
             "guardian": guardian,
-            "word": "hare" if pos % 2 == 0 else "krishna",
-            "opcode": "EXECUTE",
+            "word": word,
+            "opcode": opcode.name,  # MantraOpCode.name for Nrisimha
             "position": pos,
             "tick": t
         }
