@@ -1,30 +1,32 @@
 """
-MAHA KERNEL - The Clean Kernel Using Existing Infrastructure
-============================================================
+MAHA KERNEL - The Protocol-Based Resonance Kernel
+=================================================
 
 "ahaṁ sarvasya prabhavo mattaḥ sarvaṁ pravartate"
 "I am the source of all. Everything emanates from Me." (BG 10.8)
 
-This kernel USES the existing Mahamantra infrastructure from singularity.py.
-NO reinvention. NO duplication. JUST wiring.
+PROTOCOL-BASED ARCHITECTURE:
+    1. Implements PanchaTattvaProtocol (5 Questions)
+    2. Uses MahamantraLotus for RESONANCE routing (NOT if/else!)
+    3. __call__ enables: kernel("text") → READS. COMPUTES. RESPONDS.
 
-WHAT IT USES:
-    - Mahamantra.mod → ModuleRouter (services via BalaramaProxy)
-    - Mahamantra.cells → CellRouter (O(1) cell lookup)
-    - Mahamantra.shadow → ShadowReactor (parallel processing)
-    - Mahamantra.tick() → Heartbeat
-    - Mahamantra.governance → Protocol ownership
-
-WHAT IT ADDS:
-    - Ledger integration (the only thing missing in singularity.py)
-    - Service wiring with ledger injection
+RESONANCE ROUTING (9 NavaBhakti):
+    1. SRAVANAM:       Input empfangen
+    2. KIRTANAM:       MahaCompression → seed
+    3. SMARANAM:       MahaKirtan → vibration
+    4. PADA_SEVANAM:   MahaResonator → attractor
+    5. ARCANAM:        Parampara verification
+    6. VANDANAM:       GitaResonance → verse match
+    7. DASYAM:         Position/Quarter determination
+    8. SAKHYAM:        MahaCell creation
+    9. ATMA_NIVEDANAM: Complete response
 
 USAGE:
     from vibe_core.mahamantra.kernel.maha_kernel import MahaKernel
 
     kernel = MahaKernel()
-    kernel.brahma  # → via mahamantra.mod.brahma (BalaramaProxy wrapped)
-    kernel.tick()  # → via mahamantra.tick()
+    kernel("analyze this")  # → Resonance-based routing
+    kernel.brahma           # → via mahamantra.mod (BalaramaProxy)
 """
 
 from __future__ import annotations
@@ -34,23 +36,27 @@ __position__ = 0
 __genesis__ = "0x00000000"
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 if TYPE_CHECKING:
-    from vibe_core.mahamantra.kernel.singularity import Mahamantra, TickState
+    from vibe_core.mahamantra.kernel.singularity import TickState
+    from vibe_core.mahamantra.protocols._header import MahaCell
 
 logger = logging.getLogger("MAHA_KERNEL")
 
 
-class MahaKernel:
+class MahaKernel(PanchaTattvaProtocol):
     """
-    The Clean Kernel.
+    The Protocol-Based Resonance Kernel.
 
-    USES Mahamantra from singularity.py for EVERYTHING.
-    ADDS only ledger integration.
+    IMPLEMENTS: PanchaTattvaProtocol (the 5 Questions)
+    USES: MahamantraLotus for resonance routing
+    ADDS: Ledger integration
     """
 
-    __slots__ = ("_mahamantra", "_ledger")
+    __slots__ = ("_lotus", "_singularity", "_ledger")
 
     def __init__(self, ledger_path: str = ":memory:") -> None:
         """
@@ -59,12 +65,17 @@ class MahaKernel:
         Args:
             ledger_path: Path to SQLite ledger, or ":memory:" for in-memory
         """
-        # 1. THE MAHAMANTRA (from singularity.py - the REAL one)
+        # 1. MAHAMANTRA LOTUS (for __call__ resonance routing)
+        from vibe_core.mahamantra._mahamantra_lotus import get_mahamantra
+
+        self._lotus = get_mahamantra()
+
+        # 2. MAHAMANTRA SINGULARITY (for infrastructure: mod, registry, etc.)
         from vibe_core.mahamantra.kernel.singularity import Mahamantra
 
-        self._mahamantra = Mahamantra()
+        self._singularity = Mahamantra()
 
-        # 2. LEDGER (the only thing we add)
+        # 3. LEDGER (the only thing we add)
         from vibe_core.mahamantra import InMemoryLedger, SQLiteLedger
 
         if ledger_path == ":memory:":
@@ -72,17 +83,53 @@ class MahaKernel:
         else:
             self._ledger = SQLiteLedger(ledger_path)
 
-        # 3. INJECT LEDGER to services that need it
+        # 4. INJECT LEDGER to services that need it
         self._inject_ledger()
 
-        logger.info("🕉️ MahaKernel initialized (using singularity.py infrastructure)")
+        logger.info("🕉️ MahaKernel initialized (Protocol-based, Resonance routing)")
+
+    # =========================================================================
+    # PANCHA TATTVA PROTOCOL (5 Questions Every Entity Must Answer)
+    # =========================================================================
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold truth of MahaKernel."""
+        return {
+            "chaitanya": "MahaKernel - The Protocol-Based Resonance Kernel",
+            "nityananda": "MahamantraLotus (9 NavaBhakti Flow)",
+            "advaita": "kernel('text') → Resonance Routing",
+            "gadadhara": "Input → Seed → Attractor → Position → Response",
+            "srivasa": "PanchaTattvaProtocol Governance",
+        }
+
+    # =========================================================================
+    # RESONANCE ROUTING (__call__)
+    # =========================================================================
+
+    def __call__(self, input_data: Union[str, "MahaCell"]) -> Dict[str, object]:
+        """
+        RESONANCE-BASED ROUTING.
+
+        kernel("anything") → READS. UNDERSTANDS. COMPUTES. RESPONDS.
+
+        Delegates to MahamantraLotus.__call__ which implements
+        the 9 NavaBhakti flow for pure resonance computation.
+
+        Args:
+            input_data: String or MahaCell to process
+
+        Returns:
+            ExecuteResult with position, guardian, quarter, guna, output
+        """
+        return self._lotus(input_data)
 
     def _inject_ledger(self) -> None:
-        """Inject ledger to services via mahamantra.mod."""
+        """Inject ledger to services via singularity.mod."""
         # Services that need ledger: brahma, bhishma, yamaraja
         for guardian in ["brahma", "bhishma", "yamaraja"]:
             try:
-                service = getattr(self._mahamantra.mod, guardian)
+                service = getattr(self._singularity.mod, guardian)
                 # Check if it has inject_ledger or accepts ledger
                 if hasattr(service, "inject_ledger"):
                     service.inject_ledger(self._ledger)
@@ -101,109 +148,107 @@ class MahaKernel:
         return self._ledger
 
     @property
-    def mahamantra(self) -> "Mahamantra":
-        """The underlying Mahamantra singleton."""
-        return self._mahamantra
+    def lotus(self):
+        """The MahamantraLotus (resonance routing)."""
+        return self._lotus
 
-    # --- Position Access ---
+    @property
+    def singularity(self):
+        """The Mahamantra singularity (infrastructure)."""
+        return self._singularity
+
+    # --- Position Access (via singularity) ---
 
     def __getitem__(self, index: int):
-        """kernel[5] → mahamantra[5]"""
-        return self._mahamantra[index]
+        """kernel[5] → singularity[5]"""
+        return self._singularity[index]
 
     def __len__(self) -> int:
-        return len(self._mahamantra)
+        return len(self._singularity)
 
     def __iter__(self):
-        return iter(self._mahamantra)
+        return iter(self._singularity)
 
-    # --- Guardian Access (via mod with BalaramaProxy) ---
+    # --- Guardian Access (Delegate to Lotus) ---
 
     def __getattr__(self, name: str) -> Any:
         """
-        kernel.brahma → mahamantra.mod.brahma (BalaramaProxy wrapped)
+        kernel.brahma → Delegates to MahamantraLotus
 
-        This routes ALL guardian access through ModuleRouter.
+        MahamantraLotus handles routing via:
+        - LotusNode (folder-based auto-discovery)
+        - DeclarationRegistry (cross-codebase routing)
+
+        NO if/else chains here. Pure delegation.
         """
         if name.startswith("_"):
             raise AttributeError(name)
 
-        # Try mahamantra.mod first (services)
-        try:
-            return getattr(self._mahamantra.mod, name)
-        except AttributeError:
-            pass
+        # DELEGATE to MahamantraLotus - it knows how to route
+        return getattr(self._lotus, name)
 
-        # Try mahamantra directly (positions, etc.)
-        try:
-            return getattr(self._mahamantra, name)
-        except AttributeError:
-            pass
-
-        raise AttributeError(f"MahaKernel has no attribute '{name}'")
-
-    # --- Core Operations ---
+    # --- Core Operations (via singularity) ---
 
     def tick(self) -> "TickState":
         """Advance one position in the 16-word mantra."""
-        return self._mahamantra.tick()
+        return self._singularity.tick()
 
     def chant(self, separator: str = " ") -> str:
         """Chant the complete Mahamantra (16 words)."""
-        return self._mahamantra.chant(separator)
+        return self._singularity.chant(separator)
 
     def verify(self, value: int) -> bool:
         """Verify connection to Parampara."""
-        return self._mahamantra.verify(value)
+        return self._singularity.verify(value)
 
-    # --- Infrastructure Access ---
+    # --- Infrastructure Access (via singularity) ---
 
     @property
     def mod(self):
         """ModuleRouter (services via BalaramaProxy)."""
-        return self._mahamantra.mod
+        return self._singularity.mod
 
     @property
     def cells(self):
         """CellRouter (O(1) cell lookup)."""
-        return self._mahamantra.cells
+        return self._lotus.cells  # Lotus has cells
 
     @property
     def shadow(self):
         """ShadowReactorFactory."""
-        return self._mahamantra.shadow
+        return self._lotus.shadow  # Lotus has shadow
 
     @property
     def governance(self):
         """Protocol governance bridge."""
-        return self._mahamantra.governance
+        return self._singularity.governance
 
     @property
     def kala(self):
         """TimeKeeper."""
-        return self._mahamantra.kala
+        return self._singularity.kala
 
     @property
     def registry(self):
         """ProtocolRegistry."""
-        return self._mahamantra.registry
+        return self._singularity.registry
 
-    # --- Convenience ---
+    # --- Convenience (via singularity) ---
 
     def compression(self):
         """Create MahaCompression engine."""
-        return self._mahamantra.compression()
+        return self._singularity.compression()
 
     def network(self):
         """Create LotusIPRouter."""
-        return self._mahamantra.network()
+        return self._singularity.network()
 
     def cell_from_content(self, content: str, *, register: bool = True):
         """Create MahaCell from content."""
-        return self._mahamantra.cell_from_content(content, register=register)
+        return self._singularity.cell_from_content(content, register=register)
 
     def __repr__(self) -> str:
-        return f"MahaKernel(tick={self._mahamantra._tick_counter})"
+        return "MahaKernel(resonance=active)"
 
 
 # =============================================================================
