@@ -337,6 +337,18 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # Position from attractor (holographic - embedded in computation)
         position = attractor % WORDS  # 0-15
 
+        # =====================================================================
+        # FIX 4: VENU ORCHESTRATOR INTEGRATION
+        # =====================================================================
+        # THE_FLUTE_CYCLE is the 19-bit DIW LUT - O(1) lookup for each position.
+        # Format: (name_encoding << 16) | (1 << position)
+        # This unifies the Venu orchestrator with the main computation pipeline.
+        from vibe_core.mahamantra.orchestrator import THE_FLUTE_CYCLE
+
+        diw = THE_FLUTE_CYCLE[position]
+        diw_name_encoding = (diw >> 16) & 0x3  # H=0, K=1, R=2
+        diw_position_bit = diw & 0xFFFF        # 1 << position
+
         if position < 4:
             quarter = "genesis"
         elif position < 8:
@@ -426,6 +438,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             # Functional (Trinity): What this position DOES
             "holy_name": holy_name,  # "H" (Hare), "K" (Krishna), "R" (Rama)
             "trinity_function": trinity_function,  # "source" (K), "carrier" (H), "deliverer" (R)
+
+            # Venu Orchestrator (FIX 4) - 19-bit Divine Instruction Word
+            "diw": {
+                "raw": diw,                    # Full 19-bit DIW
+                "name_encoding": diw_name_encoding,  # H=0, K=1, R=2
+                "position_bit": diw_position_bit,    # 1 << position
+            },
 
             # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
             "cell": {
