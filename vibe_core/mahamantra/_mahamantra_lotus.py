@@ -320,14 +320,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         kirtan_result = kirtan.compute_with_person(seed)
 
         # =====================================================================
-        # 4. PADA_SEVANAM - MahaModularSynth → attractor (full 16-position coverage)
+        # 4. PADA_SEVANAM - MahaModularSynth → attractor
         # =====================================================================
-        # FIX: MahaResonator.oscillate_once() only produces 5 attractors due to
-        # quadratic convergence in RAMA operation. MahaModularSynth with "quantum"
-        # preset uses feedback to break convergence and reach all 16 positions.
         from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
         synth = MahaModularSynth(default_preset="quantum")
-        attractor = synth.transform(kirtan_result.transformed_value)
+        attractor = synth.transform(seed)
 
         # =====================================================================
         # 5. ARCANAM - Parampara verification (% 37 == 0)
