@@ -71,10 +71,13 @@ from vibe_core.mahamantra.protocols._seed import (
 
 if TYPE_CHECKING:
     from vibe_core.state.cognitive_weaver import CognitiveWeaver
+    from vibe_core.state.commit_authority import CommitAuthority
     from vibe_core.state.guna_classifier import GunaClassifier, StateGuna
     from vibe_core.state.prakriti import Prakriti
     from vibe_core.state.state_service import StateService
     from vibe_core.state.sync_holon import StateSyncHolon
+    from vibe_core.state.synapse_store import SynapseStore
+    from vibe_core.state.unified_akshara import UnifiedAkshara
     from vibe_core.state.weaver import StateSyncWeaver
 
 logger = logging.getLogger(__name__)
@@ -231,6 +234,9 @@ class MahaState:
         self._weaver: Optional["StateSyncWeaver"] = None
         self._cognitive_weaver: Optional["CognitiveWeaver"] = None
         self._guna_classifier: Optional["GunaClassifier"] = None
+        self._commit_authority: Optional["CommitAuthority"] = None
+        self._synapse_store: Optional["SynapseStore"] = None
+        self._akshara: Optional["UnifiedAkshara"] = None
         self._config_ref: Optional[object] = None
         self._garuda_ref: Optional[GarudaBridge] = None
 
@@ -333,6 +339,42 @@ class MahaState:
             except ImportError as e:
                 logger.warning(f"MahaState: GunaClassifier not available: {e}")
         return self._guna_classifier
+
+    @property
+    def commit_authority(self) -> Optional["CommitAuthority"]:
+        """Single Point of Commit Execution (OPUS-210)."""
+        if self._commit_authority is None:
+            try:
+                from vibe_core.state.commit_authority import CommitAuthority
+                self._commit_authority = CommitAuthority(self._workspace)
+                logger.debug("MahaState: CommitAuthority wrapped")
+            except ImportError as e:
+                logger.warning(f"MahaState: CommitAuthority not available: {e}")
+        return self._commit_authority
+
+    @property
+    def synapse_store(self) -> Optional["SynapseStore"]:
+        """Unified Synapse Persistence (OPUS-171)."""
+        if self._synapse_store is None:
+            try:
+                from vibe_core.state.synapse_store import SynapseStore
+                self._synapse_store = SynapseStore.get_instance(self._workspace)
+                logger.debug("MahaState: SynapseStore wrapped")
+            except ImportError as e:
+                logger.warning(f"MahaState: SynapseStore not available: {e}")
+        return self._synapse_store
+
+    @property
+    def akshara(self) -> Optional["UnifiedAkshara"]:
+        """Unified Routing Substrate (OPUS-154)."""
+        if self._akshara is None:
+            try:
+                from vibe_core.state.unified_akshara import UnifiedAkshara
+                self._akshara = UnifiedAkshara(workspace=self._workspace)
+                logger.debug("MahaState: UnifiedAkshara wrapped")
+            except ImportError as e:
+                logger.warning(f"MahaState: UnifiedAkshara not available: {e}")
+        return self._akshara
 
     # =========================================================================
     # CONVENIENCE ACCESSORS (Prakriti Layers)
@@ -638,6 +680,9 @@ class MahaState:
                 "weaver": self._weaver is not None,
                 "cognitive_weaver": self._cognitive_weaver is not None,
                 "guna_classifier": self._guna_classifier is not None,
+                "commit_authority": self._commit_authority is not None,
+                "synapse_store": self._synapse_store is not None,
+                "akshara": self._akshara is not None,
             },
             # Thresholds
             "thresholds": {
