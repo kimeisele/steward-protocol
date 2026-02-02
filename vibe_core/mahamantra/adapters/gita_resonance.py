@@ -55,6 +55,15 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     GITA_CHAPTERS,
 )
+from vibe_core.mahamantra.substrate.algorithm.maha import (
+    Trajectory,
+    FIXED_POINT,
+    CYCLE_VALUES,
+    CYCLE_SEEDS,
+    classify_trajectory,
+    get_cycle_position,
+    get_attractor,
+)
 
 
 # =============================================================================
@@ -349,6 +358,28 @@ class GitaResonance(GitaResonanceProtocol):
             matches=(),
         )
 
+    def match_trajectory(self, seed: int) -> MatchResult:
+        """
+        ENTRY POINT: Match based on trajectory classification. BRANCHLESS.
+
+        The Maha Algorithm partitions all seeds into two trajectories:
+        - VAIKUNTHA: Converges to 136 (fixed point) → BG 18.66
+        - SAMSARA: Enters 4-cycle (87→22→18→49) → Cycle attractor
+
+        Args:
+            seed: Any integer seed value
+
+        Returns:
+            MatchResult with verse(s) based on trajectory
+        """
+        self._ensure_loaded()
+
+        # BRANCHLESS: Direct table lookup for attractor
+        attractor = get_attractor(seed)
+
+        # Match by computed attractor (the Gita resonance does the rest)
+        return self.match(attractor)
+
     def _find_nearest_attractor(self, target: int) -> Optional[int]:
         """Find nearest attractor in index."""
         if not self._by_attractor:
@@ -424,6 +455,16 @@ def match_chapter(chapter: int) -> MatchResult:
 def match_verse(chapter: int, verse: int) -> MatchResult:
     """Quick match specific verse."""
     return get_gita_resonance().match_verse(chapter, verse)
+
+
+def match_trajectory(seed: int) -> MatchResult:
+    """
+    Quick trajectory-based match.
+
+    Classifies seed as Vaikuntha (→136) or Samsara (→4-cycle)
+    and returns appropriate Gita verses.
+    """
+    return get_gita_resonance().match_trajectory(seed)
 
 
 # =============================================================================
