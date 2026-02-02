@@ -27,16 +27,29 @@ from vibe_core.protocols.mahajanas.bhishma import (
 )
 from vibe_core.protocols.mahajanas.bhishma.ledger import LedgerProtocol
 from vibe_core.protocols.mahajanas.router import Mahajana
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("BHISHMA_SERVICE")
 
 
-class BhishmaService(BhishmaProtocol):
+class BhishmaService(BhishmaProtocol, PanchaTattvaProtocol, ExecutableMixin):
     """
     BhishmaService - The Grandsire.
     Manages the immutable ledger and audit trail.
     Wraps the underlying LedgerProtocol implementation.
     """
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold Truth of Bhishma Service."""
+        return {
+            "chaitanya": "Ledger & Commitment Service",
+            "nityananda": "VibeLedger Implementation",
+            "advaita": "Event Recording Logic",
+            "gadadhara": "Commit & Verification Flow",
+            "srivasa": "Immutable History Governance",
+        }
 
     def __init__(self, ledger: LedgerProtocol):
         self._ledger = ledger
