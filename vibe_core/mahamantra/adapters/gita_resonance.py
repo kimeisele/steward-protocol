@@ -472,18 +472,12 @@ def match_trajectory(seed: int) -> MatchResult:
 # =============================================================================
 
 __all__ = [
-    # Types
     "VerseMatch",
     "ChapterSignature",
     "MatchResult",
-    # Class
     "GitaResonance",
-    # Functions
     "get_gita_resonance",
     "match_attractor",
-    "match_chapter",
-    "match_verse",
-    "GITA_CHAPTERS",
     "match_chapter",
     "match_verse",
     "GITA_CHAPTERS",
