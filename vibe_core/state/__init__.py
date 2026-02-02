@@ -1,35 +1,89 @@
 """
 vibe_core/state - Unified State Management (PRAKRITI)
+=====================================================
+
+MAHASTATE IS KING. All access routes through MahaState.
+
+"alte struktur in neue struktur"
+Old imports still work, but singleton getters route through MahaState.
+MahaState is the sovereign - the SINGLE POINT OF TRUTH.
 
 OPUS-009: The Repository IS the Mind
 OPUS-106: FORTRESS x2 - State + Knowledge Unification
-
-This module provides the unified state engine for the Steward Protocol,
-treating every Agent as a Commit, every Decision as a Branch, and
-every Learning as a Merge.
 
 Three Layers:
 - STHULA (Physical): Git + Ledger + Files
 - PRANA (Runtime): Kernel state + Ephemeral
 - PURUSHA (Identity): Agent personas
 
-OPUS-106 Additions:
-- CognitiveWeaver: State ↔ Knowledge Bridge
-- UntotbarMergeEngine: Conflict healing
-- GunaClassifier: State Tri-Guna diagnosis
+ROUTING:
+- get_prakriti()         → MahaState.prakriti
+- get_state_service()    → MahaState.state_service
+- get_sync_holon()       → MahaState.sync_holon
+- get_weaver()           → MahaState.weaver
+- get_cognitive_weaver() → MahaState.cognitive_weaver
+- get_guna_classifier()  → MahaState.guna_classifier
 """
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING, Optional
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "bhishma"
 __position__ = 11
 __genesis__ = "0x1f10b83d"  # GenesisByte: parampara % 37 == 0
 
+# =============================================================================
+# MAHASTATE - THE KING (Import first, route through it)
+# =============================================================================
+
+from vibe_core.mahamantra.substrate.maha_state import (
+    MahaState,
+    StateEntry,
+    get_maha_state,
+    pierce,
+)
+
+# =============================================================================
+# SOVEREIGN SINGLETON GETTERS (Route through MahaState)
+# =============================================================================
+
+
+def get_prakriti(workspace: Optional[Path] = None) -> Optional["Prakriti"]:
+    """Get Prakriti through MahaState (the sovereign)."""
+    return get_maha_state(workspace).prakriti
+
+
+def get_sync_holon(workspace: Optional[Path] = None) -> Optional["StateSyncHolon"]:
+    """Get StateSyncHolon through MahaState (the sovereign)."""
+    return get_maha_state(workspace).sync_holon
+
+
+def get_guna_classifier(workspace: Optional[Path] = None) -> Optional["GunaClassifier"]:
+    """Get GunaClassifier through MahaState (the sovereign)."""
+    return get_maha_state(workspace).guna_classifier
+
+
+# =============================================================================
+# RAW CLASSES (For direct instantiation if needed - legacy compat)
+# =============================================================================
+
 from .cognitive_weaver import (
     CognitiveContext,
     CognitiveWeaver,
     WisdomConsultation,
-    get_cognitive_weaver,
 )
+# OVERRIDE: Route through MahaState
+from .cognitive_weaver import get_cognitive_weaver as _raw_get_cognitive_weaver
+
+
+def get_cognitive_weaver(workspace: Optional[Path] = None) -> Optional[CognitiveWeaver]:
+    """Get CognitiveWeaver through MahaState (the sovereign)."""
+    return get_maha_state(workspace).cognitive_weaver
+
+
 from .ephemeral_state import EphemeralState, SessionContext, ThoughtEntry
 from .file_state import FileState
 from .git_state import GitState
@@ -92,9 +146,16 @@ from .state_service import (
     StatePolicy,
     StateService,
     WriteResult,
-    get_state_service,
-    reset_state_service,
 )
+# OVERRIDE: Route through MahaState
+from .state_service import get_state_service as _raw_get_state_service
+from .state_service import reset_state_service
+
+
+def get_state_service(workspace: Optional[Path] = None) -> Optional[StateService]:
+    """Get StateService through MahaState (the sovereign)."""
+    return get_maha_state(workspace).state_service
+
 
 # OPUS-171: SynapseStore - Unified Synapse Persistence
 from .synapse_store import (
@@ -130,14 +191,40 @@ from .weaver import (
     WeaverMode,
     WeaverStateMap,
     WeavingAdvice,
-    get_state_sync_weaver,
-    reset_state_sync_weaver,
 )
+# OVERRIDE: Route through MahaState
+from .weaver import get_state_sync_weaver as _raw_get_state_sync_weaver
+from .weaver import reset_state_sync_weaver
+
+
+def get_state_sync_weaver(
+    prakriti: Optional["Prakriti"] = None,
+    holon: Optional["StateSyncHolon"] = None,
+    workspace: Optional[Path] = None,
+) -> Optional[StateSyncWeaver]:
+    """Get StateSyncWeaver through MahaState (the sovereign)."""
+    return get_maha_state(workspace).weaver
+
+
 from .weaver import (
     CommitResult as WeaverCommitResult,
 )
 
 __all__ = [
+    # ==========================================================================
+    # MAHASTATE - THE KING (All access routes through here)
+    # ==========================================================================
+    "MahaState",
+    "StateEntry",
+    "get_maha_state",
+    "pierce",
+    # Sovereign getters (route through MahaState)
+    "get_prakriti",
+    "get_sync_holon",
+    "get_guna_classifier",
+    # ==========================================================================
+    # LEGACY CLASSES (For direct instantiation - backwards compat)
+    # ==========================================================================
     # Main engine
     "Prakriti",
     "CommitResult",
@@ -189,7 +276,7 @@ __all__ = [
     "CognitiveWeaver",
     "CognitiveContext",
     "WisdomConsultation",
-    "get_cognitive_weaver",
+    "get_cognitive_weaver",  # Routes through MahaState
     # OPUS-096: RuntimeStateDefinition (Single Source of Truth)
     "RuntimeStateDefinition",
     "get_runtime_state_definition",
@@ -203,13 +290,13 @@ __all__ = [
     "WeavingAdvice",
     "CommitPlan",
     "WeaverCommitResult",
-    "get_state_sync_weaver",
+    "get_state_sync_weaver",  # Routes through MahaState
     "reset_state_sync_weaver",
     # P0: StateService (Single Point of Truth)
     "StateService",
     "StatePolicy",
     "WriteResult",
-    "get_state_service",
+    "get_state_service",  # Routes through MahaState
     "reset_state_service",
     # Phase 2: Samskara (Memory Consolidation)
     "Samskara",
