@@ -382,6 +382,9 @@ def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
     """
     Apply FULL 16-step oscillation. BRANCHLESS.
 
+    DEPRECATED: Use MahaModularSynth.transform() or maha_transform() instead.
+    This function only reaches 12/16 positions due to R-operation convergence.
+
     One complete pass through the Mahamantra pattern.
 
     Args:
@@ -391,9 +394,33 @@ def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
     Returns:
         Value after 16 transformations
     """
+    import warnings
+    warnings.warn(
+        "maha_oscillate only reaches 12/16 positions. Use MahaModularSynth.transform() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     for name in PATTERN:
         value = maha_step(value, name, mod)
     return value
+
+
+def maha_transform(seed: int, preset: str = "quantum") -> int:
+    """
+    CANONICAL transformation - reaches all 16 positions.
+
+    Uses MahaModularSynth which breaks convergence via feedback.
+    This is the recommended function for position computation.
+
+    Args:
+        seed: Input value to transform
+        preset: Synth preset (default: "quantum")
+
+    Returns:
+        Transformed value (0 to MAHA_QUANTUM-1)
+    """
+    synth = MahaModularSynth(default_preset=preset)
+    return synth.transform(seed)
 
 
 def find_attractor(seed: int, mod: int = MAHA_QUANTUM, max_cycles: int = 100) -> Tuple[int, int, int]:
@@ -411,15 +438,19 @@ def find_attractor(seed: int, mod: int = MAHA_QUANTUM, max_cycles: int = 100) ->
     seen: Dict[int, int] = {}
     value = seed % mod
 
-    for cycle in range(max_cycles):
-        if value in seen:
-            cycle_start = seen[value]
-            cycle_length = cycle - cycle_start
-            return value, cycle_start, cycle_length
-        seen[value] = cycle
-        value = maha_oscillate(value, mod)
+    # Suppress deprecation warning for internal use
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        for cycle in range(max_cycles):
+            if value in seen:
+                cycle_start = seen[value]
+                cycle_length = cycle - cycle_start
+                return value, cycle_start, cycle_length
+            seen[value] = cycle
+            value = maha_oscillate(value, mod)
 
-    return value, max_cycles, 0
+        return value, max_cycles, 0
 
 
 # =============================================================================
@@ -487,8 +518,11 @@ class DynamicMahaEngine:
             # Already found attractor, skip computation
             return self._attractor, True  # type: ignore
 
-        # Advance one oscillation
-        self._value = maha_oscillate(self._value, self._mod)
+        # Advance one oscillation (suppress deprecation for internal use)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            self._value = maha_oscillate(self._value, self._mod)
         self._cycle += 1
 
         # Check if we've seen this value before
