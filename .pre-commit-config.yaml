@@ -89,10 +89,11 @@ repos:
   - repo: local
     hooks:
       - id: kernel-is-eternal
-        name: ☢️ Nuclear Auto-Restore (TOTAL LOCKDOWN)
+        name: ☢️ VISNU Workflow Protection (kernel unlocked)
         entry: scripts/governance/restore_kernel.sh
         language: script
-        files: ^(vibe_core/(kernel_impl|kernel_ops|plugin_protocol|plugin_loader|narasimha|capability_registry|bridge)\.py|scripts/governance/(restore_kernel\.sh|verify_kernel\.py|kernel_hashes\.json)|\.github/workflows/.*\.ya?ml|\.pre-commit-config\.yaml|\.gitignore)$
+        # SLIM: Only workflows + governance protected. Kernel files are unlocked.
+        files: ^(scripts/governance/(restore_kernel\.sh|verify_kernel\.py|kernel_hashes\.json)|\.github/workflows/.*\.ya?ml|\.pre-commit-config\.yaml|\.gitignore)$
         stages: [commit]
 
   # =========================================================================

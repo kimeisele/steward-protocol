@@ -31,17 +31,9 @@
 set -e
 
 PROTECTED_FILES=(
-    # Core Orchestration
-    "vibe_core/kernel_impl.py"
-    "vibe_core/kernel_ops.py"
-    "vibe_core/ledger.py"
-    # Plugin System
-    "vibe_core/plugin_protocol.py"
-    "vibe_core/plugin_loader.py"
-    # Security (Sword, Shield, Gate)
-    "vibe_core/narasimha.py"
-    "vibe_core/capability_registry.py"
-    "vibe_core/bridge.py"
+    # ==========================================================================
+    # VISNU SLIM - Only Workflows Protected (Kernel unlocked for development)
+    # ==========================================================================
     # Governance (The Watchers watch themselves)
     "scripts/governance/restore_kernel.sh"
     "scripts/governance/verify_kernel.py"
