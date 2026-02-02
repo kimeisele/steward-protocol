@@ -12,20 +12,23 @@ PRIMITIVE FUNCTIONS (use these!):
 CLASSES:
     MahaAlgorithm16    - Pure 16-step executor
     MahaModularSynth   - Runtime-adjustable transformer
+    DynamicMahaEngine  - Incremental attractor finder
 """
+
 from .maha import (
-    # PRIMITIVE FUNCTIONS - THE API
-    maha_step,
-    maha_oscillate,
-    find_attractor,
+    SYNTH_PRESETS,
+    AlgorithmStep,
+    DynamicMahaEngine,
     # CLASSES
     MahaAlgorithm16,
     MahaModularSynth,
     MahaSynthParams,
-    AlgorithmStep,
     Operation,
     Phase,
-    SYNTH_PRESETS,
+    find_attractor,
+    maha_oscillate,
+    # PRIMITIVE FUNCTIONS - THE API
+    maha_step,
 )
 
 __all__ = [
@@ -41,4 +44,5 @@ __all__ = [
     "Operation",
     "Phase",
     "SYNTH_PRESETS",
+    "DynamicMahaEngine",
 ]
