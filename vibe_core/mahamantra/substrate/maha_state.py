@@ -700,6 +700,9 @@ class MahaState:
             "weaver": self.weaver is not None,
             "cognitive_weaver": self.cognitive_weaver is not None,
             "guna_classifier": self.guna_classifier is not None,
+            "commit_authority": self.commit_authority is not None,
+            "synapse_store": self.synapse_store is not None,
+            "akshara": self.akshara is not None,
         }
 
 
