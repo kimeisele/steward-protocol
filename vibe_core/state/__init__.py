@@ -66,28 +66,6 @@ def get_guna_classifier(workspace: Optional[Path] = None) -> Optional["GunaClass
     return get_maha_state(workspace).guna_classifier
 
 
-def get_commit_authority(workspace: Optional[Path] = None) -> Optional["CommitAuthority"]:
-    """Get CommitAuthority through MahaState (the sovereign)."""
-    return get_maha_state(workspace).commit_authority
-
-
-def get_synapse_store(
-    workspace: Optional[Path] = None,
-    seed_weights: Optional[dict] = None,
-) -> Optional["SynapseStore"]:
-    """Get SynapseStore through MahaState (the sovereign)."""
-    return get_maha_state(workspace).synapse_store
-
-
-def get_akshara(
-    workspace: Optional[Path] = None,
-    enable_reactor: bool = True,
-    session_salt: str = "",
-) -> Optional["UnifiedAkshara"]:
-    """Get UnifiedAkshara through MahaState (the sovereign)."""
-    return get_maha_state(workspace).akshara
-
-
 # =============================================================================
 # RAW CLASSES (For direct instantiation if needed - legacy compat)
 # =============================================================================
@@ -190,23 +168,11 @@ from .synapse_store import (
     SynapseStore,
     detect_schema,
     ensure_v3_schema,
+    get_synapse_store,
     migrate_v1_to_v3,
     migrate_v2_to_v3,
     reset_synapse_store,
 )
-# OVERRIDE: Route through MahaState
-from .synapse_store import get_synapse_store as _raw_get_synapse_store
-
-# OPUS-210: CommitAuthority - Single Point of Commit Execution
-from .commit_authority import CommitAuthority
-# OVERRIDE: Route through MahaState
-from .commit_authority import get_commit_authority as _raw_get_commit_authority
-from .commit_authority import reset_commit_authority
-
-# OPUS-154: UnifiedAkshara - Unified Routing Substrate
-from .unified_akshara import UnifiedAkshara, PranaRecommendation
-# OVERRIDE: Route through MahaState
-from .unified_akshara import get_akshara as _raw_get_akshara
 from .sync_holon import (
     GovernanceViolation,
     PluginStateContract,
@@ -256,9 +222,6 @@ __all__ = [
     "get_prakriti",
     "get_sync_holon",
     "get_guna_classifier",
-    "get_commit_authority",
-    "get_synapse_store",
-    "get_akshara",
     # ==========================================================================
     # LEGACY CLASSES (For direct instantiation - backwards compat)
     # ==========================================================================
@@ -361,11 +324,6 @@ __all__ = [
     "ensure_v3_schema",
     "migrate_v1_to_v3",
     "migrate_v2_to_v3",
+    "get_synapse_store",
     "reset_synapse_store",
-    # OPUS-210: CommitAuthority (Single Point of Commit Execution)
-    "CommitAuthority",
-    "reset_commit_authority",
-    # OPUS-154: UnifiedAkshara (Unified Routing Substrate)
-    "UnifiedAkshara",
-    "PranaRecommendation",
 ]
