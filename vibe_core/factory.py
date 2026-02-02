@@ -21,17 +21,17 @@ __genesis__ = "0xd4a989ae"  # GenesisByte: parampara % 37 == 0
 from typing import Optional
 
 # =============================================================================
-# Protocols (Public Interface) - These are the ONLY exports that matter
-# =============================================================================
-from vibe_core.protocols.kernel_protocol import KernelProtocol
-from vibe_core.protocols.ledger import VibeLedger
-
-# =============================================================================
 # Concrete Implementations (Hidden Details)
 # HIER UND NUR HIER sind diese Imports legal!
 # =============================================================================
 # Concrete Implementations are Lazy Loaded to prevent circular imports
-from vibe_core.ledger import SQLiteLedger, InMemoryLedger
+from vibe_core.ledger import InMemoryLedger, SQLiteLedger
+
+# =============================================================================
+# Protocols (Public Interface) - These are the ONLY exports that matter
+# =============================================================================
+from vibe_core.protocols.kernel_protocol import KernelProtocol
+from vibe_core.protocols.ledger import VibeLedger
 
 
 class VibeFactory:
@@ -81,6 +81,22 @@ class VibeFactory:
             load_plugins=load_plugins,
             test_mode=test_mode,
         )
+
+        # =================================================================
+        # LOTUS PROJECTION - Auto-Wire at Boot Time
+        # =================================================================
+        # "FOLDER = EXISTENCE = WIRED = GRAVITY"
+        # Every mahajana in the folder structure gets discovered,
+        # instantiated, and wired to the kernel automatically.
+        try:
+            from vibe_core.mahamantra.lotus_projection import project_lotus
+
+            kernel._positions = project_lotus(kernel)
+        except Exception as e:
+            # Graceful degradation - kernel still works without projection
+            import logging
+
+            logging.getLogger("FACTORY").debug(f"Lotus projection skipped: {e}")
 
         # Register via ServiceRegistry (NAGA-observed!)
         ServiceRegistry.register(KernelProtocol, kernel)
