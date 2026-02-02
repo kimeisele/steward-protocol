@@ -550,6 +550,10 @@ class EventBus(EventBusProtocol):
         Returns:
             Subscription ID
         """
+        # Generate and store subscriber ID
+        subscriber_id = f"sub_{len(self._callback_ids)}"
+        self._callback_ids[callback] = subscriber_id
+
         if event_types:
             # Subscribe to multiple event types
             for event_type in event_types:
@@ -557,13 +561,13 @@ class EventBus(EventBusProtocol):
                 if event_type_str not in self._subscribers:
                     self._subscribers[event_type_str] = set()
                 self._subscribers[event_type_str].add(callback)
-            logger.debug(f"📡 Subscriber registered for {len(event_types)} event types")
+            logger.debug(f"📡 Subscriber {subscriber_id} registered for {len(event_types)} event types")
         else:
             # Subscribe to all events (global)
             self._global_subscribers.add(callback)
-            logger.debug("📡 Global subscriber registered")
+            logger.debug(f"📡 Global subscriber {subscriber_id} registered")
 
-        return str(uuid4())
+        return subscriber_id
 
     def unsubscribe(self, subscriber_id: str) -> bool:
         """
@@ -575,14 +579,36 @@ class EventBus(EventBusProtocol):
         Returns:
             True if was subscribed, False otherwise
 
-        Note: Current implementation doesn't track subscriber IDs,
-        so this always returns False. Legacy callback-based unsubscribe
-        is still supported internally but not exposed in protocol.
+        Note: Uses _callback_ids reverse lookup to find and remove callback.
         """
-        # TODO: Implement proper subscriber ID tracking
-        # For now, return False as we don't track subscriber IDs
-        logger.warning("⚠️  Unsubscribe by ID not yet implemented")
-        return False
+        # Find callback by ID
+        callback_to_remove = None
+        for callback, cid in self._callback_ids.items():
+            if cid == subscriber_id:
+                callback_to_remove = callback
+                break
+
+        if callback_to_remove is None:
+            logger.debug(f"Subscriber {subscriber_id} not found")
+            return False
+
+        # Remove from all subscription sets
+        removed = False
+        for event_type, callbacks in self._subscribers.items():
+            if callback_to_remove in callbacks:
+                callbacks.discard(callback_to_remove)
+                removed = True
+
+        if callback_to_remove in self._global_subscribers:
+            self._global_subscribers.discard(callback_to_remove)
+            removed = True
+
+        # Clean up callback_ids
+        if removed:
+            del self._callback_ids[callback_to_remove]
+            logger.debug(f"Unsubscribed {subscriber_id}")
+
+        return removed
 
     def emit_sync(
         self,
@@ -635,9 +661,36 @@ class EventBus(EventBusProtocol):
         Returns:
             List of subscriber info dicts
         """
-        # TODO: Implement proper SubscriberInfo tracking
-        # For now, return basic info
-        return []
+        result: List[SubscriberInfo] = []
+
+        # Build reverse lookup: callback_id -> event_types
+        id_to_types: Dict[str, List[str]] = {}
+        for callback, callback_id in self._callback_ids.items():
+            id_to_types[callback_id] = []
+            # Check which event types this callback is subscribed to
+            for event_type, callbacks in self._subscribers.items():
+                if callback in callbacks:
+                    id_to_types[callback_id].append(event_type)
+            # Check if global subscriber
+            if callback in self._global_subscribers:
+                id_to_types[callback_id].append("*")
+
+        # Build SubscriberInfo from metrics
+        for callback_id, event_types in id_to_types.items():
+            metrics = self._subscriber_metrics._metrics.get(callback_id, {})
+            sent = metrics.get("events_sent", 0)
+            completed = metrics.get("events_completed", 0)
+            ack_rate = completed / sent if sent > 0 else 1.0
+
+            result.append({
+                "callback_id": callback_id,
+                "event_types": event_types,
+                "events_received": sent,
+                "events_completed": completed,
+                "ack_rate": ack_rate,
+            })
+
+        return result
 
     def get_zombie_subscribers(self) -> List[ZombieInfo]:
         """
@@ -688,7 +741,7 @@ class EventBus(EventBusProtocol):
         return {
             "protocol_name": "event_bus",
             "owner": "narada",
-            "is_chanting": False,  # TODO: Integrate with OwnedProtocol
+            "is_chanting": len(self._global_subscribers) > 0 or any(self._subscribers.values()),
             "total_events": self._event_count,
             "total_subscribers": len(self._global_subscribers) + sum(len(subs) for subs in self._subscribers.values()),
             "zombie_subscribers": len(zombie_subs),
