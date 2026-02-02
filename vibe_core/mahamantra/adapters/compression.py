@@ -69,7 +69,6 @@ ENTERPRISE USAGE:
 __mahajana__ = "vyasa"  # Position 0 - The Compiler
 __position__ = 0
 __genesis__ = "0xc0400014"  # GenesisByte: parampara % 37 == 0
-from functools import lru_cache
 from typing import Dict, Final, List, Optional, Tuple, Union
 import hashlib
 import json
@@ -121,74 +120,23 @@ VEDA_VERSES: Final[int] = BHAGAVATAM_VERSES * 6 - 8000  # 100000 ≈ 18000 × 6
 
 
 
-# =============================================================================
-# SIKSASTAKAM CACHE - Effect #1: ceto-darpaṇa-mārjanaṁ (Cache Invalidation)
-# 512 = OCTET (8 verses) × QUALITIES (64) = Siksastakam Cache Structure
-# =============================================================================
-
-_SIKSASTAKAM_CACHE_SIZE: Final[int] = 512  # 8 × 64 = OCTET × QUALITIES
-
-# Lazy singletons - initialized once, reused forever
-_MAHA_LLM: Optional["MahaLLM"] = None  # noqa: F821
-_MAHA_KIRTAN: Optional["MahaKirtan"] = None  # noqa: F821
-_MAHA_RESONATOR: Optional["MahaResonator"] = None  # noqa: F821
-
-
-def _get_maha_llm() -> "MahaLLM":  # noqa: F821
-    """Singleton MahaLLM - O(1) after first call."""
-    global _MAHA_LLM
-    if _MAHA_LLM is None:
-        from vibe_core.mahamantra.adapters.llm import MahaLLM
-        _MAHA_LLM = MahaLLM()
-    return _MAHA_LLM
-
-
-def _get_maha_kirtan() -> "MahaKirtan":  # noqa: F821
-    """Singleton MahaKirtan - O(1) after first call."""
-    global _MAHA_KIRTAN
-    if _MAHA_KIRTAN is None:
-        from vibe_core.mahamantra.substrate.mantra import MahaKirtan
-        _MAHA_KIRTAN = MahaKirtan(mod_space=MAHA_QUANTUM)
-    return _MAHA_KIRTAN
-
-
-def _get_maha_resonator() -> "MahaResonator":  # noqa: F821
-    """Singleton MahaResonator - O(1) after first call."""
-    global _MAHA_RESONATOR
-    if _MAHA_RESONATOR is None:
-        from vibe_core.mahamantra.substrate.resonance import MahaResonator
-        _MAHA_RESONATOR = MahaResonator(mod_space=MAHA_QUANTUM)
-    return _MAHA_RESONATOR
-
-
 def _compute_seed_cached(text: str) -> int:
     """
-    Deterministic seed computation.
-
-    No cache needed - pure functions give same result every time.
+    Deterministic seed computation - PURE, no keyword matching.
     """
     from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 
-    llm = _get_maha_llm()
+    # PURE: Hash-based, no MahaLLM keyword matching
+    text_bytes = hashlib.sha256(text.encode("utf-8")).digest()
+    text_hash = int.from_bytes(text_bytes[:4], "big")
+    category = text_hash % WORDS  # 0-15, pure computation
 
-    # 1. SEMANTIC CLASSIFICATION via MahaLLM
-    route = llm.route_text(text)
-    category = route.category.value if route.category else 0
-
-    # 2. Create base seed from category + text entropy
-    text_hash = int.from_bytes(
-        hashlib.sha256(text.encode("utf-8")).digest()[:2], "big"
-    )
     base_seed = (category * MAHA_QUANTUM) + (text_hash % MAHA_QUANTUM)
 
-    # 3. TRANSFORM via MahaModularSynth (deterministic, no tick state)
     synth = MahaModularSynth(default_preset="quantum")
     transformed = synth.transform(base_seed)
-
-    # 4. ATTRACTOR via modulo (deterministic)
     attractor = transformed % MAHA_QUANTUM
 
-    # 5. Final seed combines all three layers
     final_seed = (category << 24) | (transformed << 12) | attractor
 
     return final_seed & 0xFFFFFFFF
