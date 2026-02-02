@@ -44,9 +44,9 @@ def __getattr__(name: str) -> object:
     Unification of Kernel and Mahamantra.
     """
     if name == "NrisimhaService":
-        from vibe_core.services.nrisimha import NrisimhaWatchdog
+        from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
 
-        return NrisimhaWatchdog  # Return the new class as the old name
+        return NrisimhaService
 
     # ==========================================================================
     # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
