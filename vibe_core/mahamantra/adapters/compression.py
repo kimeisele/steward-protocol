@@ -126,8 +126,8 @@ def _compute_seed_cached(text: str) -> int:
     """
     from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 
-    # PURE: Hash-based, no MahaLLM keyword matching
-    text_bytes = hashlib.sha256(text.encode("utf-8")).digest()
+    # PURE: Hash-based, case-insensitive, no MahaLLM keyword matching
+    text_bytes = hashlib.sha256(text.lower().encode("utf-8")).digest()
     text_hash = int.from_bytes(text_bytes[:4], "big")
     category = text_hash % WORDS  # 0-15, pure computation
 

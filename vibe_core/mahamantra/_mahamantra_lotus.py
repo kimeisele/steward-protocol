@@ -98,6 +98,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return {
             "seed": seed,
             "attractor": attractor,
+            "resonance": seed % MAHA_QUANTUM,
             "parampara_verified": seed % PARAMPARA == 0,
         }
 
@@ -677,7 +678,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Get current state."""
         return {
             "akash": self._akash,
-            "kirtan_loaded": self._kirtan is not None,
             "compressor_loaded": self._compressor is not None,
         }
 
