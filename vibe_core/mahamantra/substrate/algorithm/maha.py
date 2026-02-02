@@ -445,9 +445,10 @@ def maha_step(value: int, name: str, mod: int) -> int:
 
 def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
     """
-    Apply FULL 16-step oscillation. BRANCHLESS.
+    DEPRECATED: Use MahaModularSynth.transform() instead.
 
-    One complete pass through the Mahamantra pattern.
+    This function only reaches 12/16 positions due to R-operation convergence.
+    MahaModularSynth breaks this convergence via feedback and reaches all 16.
 
     Args:
         value: Starting value
@@ -456,9 +457,33 @@ def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
     Returns:
         Value after 16 transformations
     """
+    import warnings
+    warnings.warn(
+        "maha_oscillate only reaches 12/16 positions. Use MahaModularSynth.transform() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     for name in PATTERN:
         value = maha_step(value, name, mod)
     return value
+
+
+def maha_transform(seed: int, preset: str = "quantum") -> int:
+    """
+    CANONICAL transformation - reaches all 16 positions.
+
+    Uses MahaModularSynth which breaks convergence via feedback.
+    This is the RECOMMENDED function for all new code.
+
+    Args:
+        seed: Input seed value
+        preset: Synth preset ("quantum", "classic", "experimental")
+
+    Returns:
+        Transformed value (attractor)
+    """
+    synth = MahaModularSynth(default_preset=preset)
+    return synth.transform(seed)
 
 
 def find_attractor(seed: int, mod: int = MAHA_QUANTUM, max_cycles: int = 100) -> Tuple[int, int, int]:
