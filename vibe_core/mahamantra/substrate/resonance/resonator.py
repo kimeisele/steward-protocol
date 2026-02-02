@@ -54,7 +54,12 @@ class MahaResonator:
     def oscillate_once(self, value: int) -> int:
         """One oscillation = one pass through the 16-step algorithm."""
         # DELEGATE to algorithm/ - no duplication!
-        return maha_oscillate(value, self.mod_space)
+        # Note: Uses legacy maha_oscillate (12/16 coverage) for backward compatibility.
+        # For 16/16 coverage, use MahaModularSynth.transform() directly.
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            return maha_oscillate(value, self.mod_space)
 
     def find_attractor(self, seed: int, max_cycles: int = 100) -> ResonanceResult:
         """Find the attractor (stable state) for a given seed."""
