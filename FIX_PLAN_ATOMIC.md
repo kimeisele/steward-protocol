@@ -1,12 +1,13 @@
 # ATOMIC FIX PLAN - Bombenfest
 
-## STATUS: TEILWEISE GEFIXT ✓
+## STATUS: 3/4 FIXES ERLEDIGT ✓
 
 **Verifiziert:**
 - Deterministisch: ✓ (gleicher Input = gleiche Position)
 - 16/16 Coverage: ✓ (alle Positionen erreichbar)
 - maha_oscillate: DEPRECATED mit Warning
 - maha_transform(): NEU - kanonische Funktion
+- get_kirtan_runtime(fresh=True): ✓ Reset für reproduzierbare Berechnungen
 
 ---
 
@@ -150,5 +151,5 @@ assert len(positions) == 16
 
 1. ✅ FIX 1 (deterministic) - ERLEDIGT - mahamantra() ist deterministisch
 2. ✅ FIX 2 (deprecate oscillate) - ERLEDIGT - Warning + maha_transform()
-3. [ ] FIX 3 (runtime reset) - NICE - cleanup
+3. ✅ FIX 3 (runtime reset) - ERLEDIGT - get_kirtan_runtime(fresh=True)
 4. [ ] FIX 4 (venu integration) - SPÄTER - architektonische Vereinheitlichung
