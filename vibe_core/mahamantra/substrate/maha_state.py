@@ -1,31 +1,25 @@
 """
-MAHASTATE - Sovereign State Adapter (BALARAMA PATTERN)
-======================================================
+MAHASTATE - Sovereign State Layer
+=================================
 
-"baladevera svarupa -- sankarshana
-ananta, pradyumna, aniruddha, -- tanra gana"
-"Balarama's forms are Sankarshana, Ananta, Pradyumna, Aniruddha" (CC Adi 5.10)
+"om purnam adah purnam idam" - That is complete, this is complete.
 
-BALARAMA PATTERN: Wrap legacy, don't migrate.
-MahaState wraps ALL existing state systems and makes them accessible
-through ONE unified sovereign interface.
+MahaState sits ABOVE PhoenixConfig and can PIERCE (override) config values.
+MINIMAL implementation - no redundant validation (Kumaras handles that).
 
-WRAPPED SYSTEMS (vibe_core/state/):
-- Prakriti: 3-Layer State Engine (STHULA/PRANA/PURUSHA)
-- StateService: Single Point for Writes
-- StateSyncHolon: Plugin State Discovery + Git Sync
-- StateSyncWeaver: Meta-Orchestration
-- CognitiveWeaver: State <-> Knowledge Bridge
-- GunaClassifier: Guna Diagnosis (SATTVA/RAJAS/TAMAS)
+HIERARCHY:
+    MahaState (sovereign) → pierces → PhoenixConfig (legacy)
+    Nagas ← Garuda controls
 
-SOVEREIGN LAYER:
-- pierce(): Override config values
-- persist(): Own state persistence
-- garuda_flight(): Naga control
+WHAT IT DOES:
+- pierce(): Override config values with sovereign state
+- persist(): Save/load state to disk
+- garuda_flight(): Suppress Nagas during sensitive operations
 
-PHILOSOPHY:
-"alte struktur in neue struktur" - Old systems run THROUGH MahaState.
-The legacy becomes manageable. The sovereign layer ADDS, never REPLACES.
+WHAT IT DOES NOT DO:
+- Validation (Kumaras handles that at Position 5)
+- Position checking (SSOT is constant - checking it is meaningless)
+- Redundant observation (the Mahamantra algorithm IS the computation)
 
 WATERTIGHT: No Any types.
 """
@@ -44,11 +38,11 @@ import shutil
 import threading
 import time
 from collections import OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Callable,
     Dict,
     Final,
@@ -61,24 +55,7 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra.protocols._seed import (
-    HIDDEN_RESERVE,
-    KISHORA_NUMERATOR,
-    MALA,
-    NADI_RESONANCE,
-    PARAMPARA,
-)
-
-if TYPE_CHECKING:
-    from vibe_core.state.cognitive_weaver import CognitiveWeaver
-    from vibe_core.state.commit_authority import CommitAuthority
-    from vibe_core.state.guna_classifier import GunaClassifier, StateGuna
-    from vibe_core.state.prakriti import Prakriti
-    from vibe_core.state.state_service import StateService
-    from vibe_core.state.sync_holon import StateSyncHolon
-    from vibe_core.state.synapse_store import SynapseStore
-    from vibe_core.state.unified_akshara import UnifiedAkshara
-    from vibe_core.state.weaver import StateSyncWeaver
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 logger = logging.getLogger(__name__)
 
@@ -87,23 +64,7 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 
 StateValue = Union[str, int, float, bool, None]
-SourceType = Literal["sovereign", "config", "computed", "boot", "naga", "prakriti"]
-
-# =============================================================================
-# SOVEREIGN CONSTANTS (From Seed - Thresholds for pierce decisions)
-# =============================================================================
-
-# Max concurrent state entries before warning
-MAX_STATE_ENTRIES: Final[int] = NADI_RESONANCE  # 72
-
-# Reserve capacity for kernel operations
-KERNEL_RESERVE: Final[int] = HIDDEN_RESERVE  # 16
-
-# Full cycle threshold (commit after this many changes)
-MALA_THRESHOLD: Final[int] = MALA  # 108
-
-# Age threshold for Krishna's eternal youth (max staleness in minutes)
-KISHORA_MAX_STALE: Final[int] = KISHORA_NUMERATOR  # 79
+SourceType = Literal["sovereign", "config", "computed", "boot", "naga"]
 
 # =============================================================================
 # STATE LOCATIONS
@@ -112,6 +73,16 @@ KISHORA_MAX_STALE: Final[int] = KISHORA_NUMERATOR  # 79
 STATE_DIR: Final[Path] = Path(".vibe/state/mahamantra")
 STATE_FILE: Final[str] = "maha_state.json"
 MAX_BACKUPS: Final[int] = 5
+
+# =============================================================================
+# THRESHOLD CONSTANTS (SSOT-derived)
+# =============================================================================
+# These control state management limits, derived from mahamantra constants
+
+MAX_STATE_ENTRIES: Final[int] = 72   # NADI_RESONANCE - max sovereign overrides
+KERNEL_RESERVE: Final[int] = 16      # HIDDEN_RESERVE - reserved for kernel state
+MALA_THRESHOLD: Final[int] = 108     # MALA - cleanup cycle threshold
+KISHORA_MAX_STALE: Final[int] = 79   # KISHORA_NUMERATOR - max stale entry age
 
 
 # =============================================================================
@@ -187,65 +158,38 @@ class _NullFlightContext:
 
 
 # =============================================================================
-# MAHASTATE - Sovereign State Adapter (BALARAMA PATTERN)
+# MAHASTATE - Minimal Sovereign State
 # =============================================================================
 
 
 class MahaState:
     """
-    Sovereign state adapter wrapping ALL existing state systems.
+    Sovereign state layer above PhoenixConfig.
 
-    BALARAMA PATTERN: Wrap legacy, don't migrate.
-
-    WRAPPED SYSTEMS:
-    - prakriti: 3-Layer State Engine
-    - state_service: Single Point for Writes
-    - sync_holon: Plugin State Discovery
-    - weaver: Meta-Orchestration
-    - cognitive_weaver: State <-> Knowledge Bridge
-    - guna_classifier: Guna Diagnosis
-
-    SOVEREIGN LAYER:
-    - pierce(): Override config values
-    - persist(): Own state persistence
-    - garuda_flight(): Naga control
+    MINIMAL: Only pierce, persist, garuda. No redundant validation.
     """
 
     _instance: Optional["MahaState"] = None
     _initialized: bool = False
     _lock: threading.Lock = threading.Lock()
 
-    def __init__(self, workspace: Optional[Path] = None) -> None:
-        self._workspace = workspace or Path.cwd()
-
-        # === SOVEREIGN STATE (pierce/persist) ===
+    def __init__(self) -> None:
         self._entries: Dict[str, StateEntry] = {}
         self._observers: List[Callable[[str, StateEntry], None]] = []
+        self._config_ref: Optional[object] = None
+        self._garuda_ref: Optional[GarudaBridge] = None
         self._state_dir: Path = STATE_DIR
         self._dirty: bool = False
         self._boot_count: int = 0
         self._started_at: float = time.time()
         self._pierce_history: OrderedDict[str, float] = OrderedDict()
 
-        # === WRAPPED SYSTEMS (lazy loaded) ===
-        self._prakriti: Optional["Prakriti"] = None
-        self._state_service: Optional["StateService"] = None
-        self._sync_holon: Optional["StateSyncHolon"] = None
-        self._weaver: Optional["StateSyncWeaver"] = None
-        self._cognitive_weaver: Optional["CognitiveWeaver"] = None
-        self._guna_classifier: Optional["GunaClassifier"] = None
-        self._commit_authority: Optional["CommitAuthority"] = None
-        self._synapse_store: Optional["SynapseStore"] = None
-        self._akshara: Optional["UnifiedAkshara"] = None
-        self._config_ref: Optional[object] = None
-        self._garuda_ref: Optional[GarudaBridge] = None
-
     @classmethod
-    def get_instance(cls, workspace: Optional[Path] = None) -> "MahaState":
+    def get_instance(cls) -> "MahaState":
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
-                    cls._instance = cls(workspace)
+                    cls._instance = cls()
                     cls._instance._load_state()
                     cls._instance._boot_count += 1
                     cls._initialized = True
@@ -260,158 +204,7 @@ class MahaState:
             cls._initialized = False
 
     # =========================================================================
-    # WRAPPED SYSTEMS (BALARAMA - Lazy Loading)
-    # =========================================================================
-
-    @property
-    def prakriti(self) -> Optional["Prakriti"]:
-        """The Unified State Engine (3 layers: STHULA/PRANA/PURUSHA)."""
-        if self._prakriti is None:
-            try:
-                from vibe_core.state.prakriti import Prakriti
-                self._prakriti = Prakriti(self._workspace)
-                logger.debug("MahaState: Prakriti wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: Prakriti not available: {e}")
-        return self._prakriti
-
-    @property
-    def state_service(self) -> Optional["StateService"]:
-        """Single Point for all State Writes."""
-        if self._state_service is None:
-            try:
-                from vibe_core.state.state_service import get_state_service
-                self._state_service = get_state_service(self._workspace)
-                logger.debug("MahaState: StateService wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: StateService not available: {e}")
-        return self._state_service
-
-    @property
-    def sync_holon(self) -> Optional["StateSyncHolon"]:
-        """Plugin State Discovery + Git Sync."""
-        if self._sync_holon is None:
-            try:
-                from vibe_core.state.sync_holon import StateSyncHolon
-                if self.prakriti:
-                    self._sync_holon = StateSyncHolon(self.prakriti)
-                    logger.debug("MahaState: StateSyncHolon wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: StateSyncHolon not available: {e}")
-        return self._sync_holon
-
-    @property
-    def weaver(self) -> Optional["StateSyncWeaver"]:
-        """Meta-Orchestration (DISCOVER -> CLASSIFY -> DECIDE -> EXECUTE)."""
-        if self._weaver is None:
-            try:
-                from vibe_core.state.weaver import get_state_sync_weaver
-                self._weaver = get_state_sync_weaver(self.prakriti, self.sync_holon)
-                logger.debug("MahaState: StateSyncWeaver wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: StateSyncWeaver not available: {e}")
-        return self._weaver
-
-    @property
-    def cognitive_weaver(self) -> Optional["CognitiveWeaver"]:
-        """State <-> Knowledge Bridge."""
-        if self._cognitive_weaver is None:
-            try:
-                from vibe_core.state.cognitive_weaver import get_cognitive_weaver
-                self._cognitive_weaver = get_cognitive_weaver()
-                logger.debug("MahaState: CognitiveWeaver wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: CognitiveWeaver not available: {e}")
-        return self._cognitive_weaver
-
-    @property
-    def guna_classifier(self) -> Optional["GunaClassifier"]:
-        """Guna Diagnosis (SATTVA/RAJAS/TAMAS)."""
-        if self._guna_classifier is None:
-            try:
-                from vibe_core.state.guna_classifier import GunaClassifier
-                git_state = self.prakriti.git if self.prakriti else None
-                self._guna_classifier = GunaClassifier(
-                    workspace=self._workspace,
-                    git_state=git_state,
-                )
-                logger.debug("MahaState: GunaClassifier wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: GunaClassifier not available: {e}")
-        return self._guna_classifier
-
-    @property
-    def commit_authority(self) -> Optional["CommitAuthority"]:
-        """Single Point of Commit Execution (OPUS-210)."""
-        if self._commit_authority is None:
-            try:
-                from vibe_core.state.commit_authority import CommitAuthority
-                self._commit_authority = CommitAuthority(self._workspace)
-                logger.debug("MahaState: CommitAuthority wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: CommitAuthority not available: {e}")
-        return self._commit_authority
-
-    @property
-    def synapse_store(self) -> Optional["SynapseStore"]:
-        """Unified Synapse Persistence (OPUS-171)."""
-        if self._synapse_store is None:
-            try:
-                from vibe_core.state.synapse_store import SynapseStore
-                self._synapse_store = SynapseStore.get_instance(self._workspace)
-                logger.debug("MahaState: SynapseStore wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: SynapseStore not available: {e}")
-        return self._synapse_store
-
-    @property
-    def akshara(self) -> Optional["UnifiedAkshara"]:
-        """Unified Routing Substrate (OPUS-154)."""
-        if self._akshara is None:
-            try:
-                from vibe_core.state.unified_akshara import UnifiedAkshara
-                self._akshara = UnifiedAkshara(workspace=self._workspace)
-                logger.debug("MahaState: UnifiedAkshara wrapped")
-            except ImportError as e:
-                logger.warning(f"MahaState: UnifiedAkshara not available: {e}")
-        return self._akshara
-
-    # =========================================================================
-    # CONVENIENCE ACCESSORS (Prakriti Layers)
-    # =========================================================================
-
-    @property
-    def git(self) -> Optional[object]:
-        """GitState from Prakriti (Layer 1: STHULA)."""
-        return self.prakriti.git if self.prakriti else None
-
-    @property
-    def files(self) -> Optional[object]:
-        """FileState from Prakriti (Layer 1: STHULA)."""
-        return self.prakriti.files if self.prakriti else None
-
-    @property
-    def ledger(self) -> Optional[object]:
-        """LedgerState from Prakriti (Layer 1: STHULA)."""
-        return self.prakriti.ledger if self.prakriti else None
-
-    @property
-    def kernel(self) -> Optional[object]:
-        """KernelState from Prakriti (Layer 2: PRANA)."""
-        return self.prakriti.kernel if self.prakriti else None
-
-    @property
-    def ephemeral(self) -> Optional[object]:
-        """EphemeralState from Prakriti (Layer 2: PRANA)."""
-        return self.prakriti.ephemeral if self.prakriti else None
-
-    @property
-    def personas(self) -> Optional[object]:
-        """PersonaManager from Prakriti (Layer 3: PURUSHA)."""
-        return self.prakriti.personas if self.prakriti else None
-
-    # =========================================================================
-    # SOVEREIGN STATE OPERATIONS (pierce/set/get)
+    # STATE OPERATIONS
     # =========================================================================
 
     def set(
@@ -440,7 +233,7 @@ class MahaState:
                 logger.warning(f"State observer failed for {key}: {e}")
 
     def get(self, key: str, default: StateValue = None) -> StateValue:
-        """Priority: sovereign (pierced) -> config -> default."""
+        """Priority: sovereign (pierced) → config → default."""
         if key in self._entries:
             entry = self._entries[key]
             if entry.pierced or entry.source == "sovereign":
@@ -475,7 +268,7 @@ class MahaState:
         return False
 
     # =========================================================================
-    # PIERCE (Sovereign Override)
+    # PIERCE (Override Config)
     # =========================================================================
 
     def pierce(self, key: str, value: StateValue) -> None:
@@ -532,41 +325,7 @@ class MahaState:
         return garuda.is_flying if garuda else False
 
     # =========================================================================
-    # WEAVER OPERATIONS (Delegated)
-    # =========================================================================
-
-    def weave(self) -> Optional[object]:
-        """Weave state + knowledge into unified context (via CognitiveWeaver)."""
-        if self.cognitive_weaver:
-            return self.cognitive_weaver.weave()
-        return None
-
-    def pulse(self) -> Optional[object]:
-        """Run one weave cycle (via StateSyncWeaver)."""
-        if self.weaver:
-            return self.weaver.pulse()
-        return None
-
-    def diagnose(self) -> Optional[Dict[str, object]]:
-        """Full system diagnosis (via CognitiveWeaver)."""
-        if self.cognitive_weaver:
-            return self.cognitive_weaver.diagnose()
-        return None
-
-    def diagnose_guna(self, path: Path) -> Optional["StateGuna"]:
-        """Diagnose Guna of a path (via GunaClassifier)."""
-        if self.guna_classifier:
-            return self.guna_classifier.classify(path).guna
-        return None
-
-    def heal_toward_sattva(self, path: Path) -> Optional["StateGuna"]:
-        """Heal path toward Sattva (via StateSyncHolon)."""
-        if self.sync_holon:
-            return self.sync_holon.heal_toward_sattva(path)
-        return None
-
-    # =========================================================================
-    # PERSISTENCE (Sovereign State)
+    # PERSISTENCE
     # =========================================================================
 
     def save(self) -> bool:
@@ -581,17 +340,11 @@ class MahaState:
                 self._rotate_backups(state_file)
 
             data = {
-                "version": 3,
+                "version": 2,
                 "timestamp": datetime.now().isoformat(),
                 "parampara": PARAMPARA,
                 "entries": {k: v.to_dict() for k, v in self._entries.items()},
                 "boot_count": self._boot_count,
-                "thresholds": {
-                    "max_entries": MAX_STATE_ENTRIES,
-                    "kernel_reserve": KERNEL_RESERVE,
-                    "mala_threshold": MALA_THRESHOLD,
-                    "kishora_max_stale": KISHORA_MAX_STALE,
-                },
             }
 
             temp_file = state_file.with_suffix(".tmp")
@@ -659,50 +412,17 @@ class MahaState:
         return self._garuda_ref
 
     # =========================================================================
-    # STATUS (Unified)
+    # STATUS
     # =========================================================================
 
-    def get_status(self) -> Dict[str, Union[str, int, float, bool, Dict[str, bool]]]:
-        """Get comprehensive status including all wrapped systems."""
+    def get_status(self) -> Dict[str, Union[str, int, float, bool]]:
         return {
-            # Sovereign state
             "boot_count": self._boot_count,
             "uptime_seconds": time.time() - self._started_at,
             "entries_count": len(self._entries),
             "pierced_count": len(self.pierced_keys()),
             "dirty": self._dirty,
             "garuda_flying": self.is_garuda_flying,
-            # Wrapped systems availability
-            "systems": {
-                "prakriti": self._prakriti is not None,
-                "state_service": self._state_service is not None,
-                "sync_holon": self._sync_holon is not None,
-                "weaver": self._weaver is not None,
-                "cognitive_weaver": self._cognitive_weaver is not None,
-                "guna_classifier": self._guna_classifier is not None,
-                "commit_authority": self._commit_authority is not None,
-                "synapse_store": self._synapse_store is not None,
-                "akshara": self._akshara is not None,
-            },
-            # Thresholds
-            "thresholds": {
-                "max_entries": MAX_STATE_ENTRIES,
-                "mala_threshold": MALA_THRESHOLD,
-            },
-        }
-
-    def get_wrapped_systems(self) -> Dict[str, bool]:
-        """Check which systems are available for wrapping."""
-        return {
-            "prakriti": self.prakriti is not None,
-            "state_service": self.state_service is not None,
-            "sync_holon": self.sync_holon is not None,
-            "weaver": self.weaver is not None,
-            "cognitive_weaver": self.cognitive_weaver is not None,
-            "guna_classifier": self.guna_classifier is not None,
-            "commit_authority": self.commit_authority is not None,
-            "synapse_store": self.synapse_store is not None,
-            "akshara": self.akshara is not None,
         }
 
 
@@ -711,8 +431,8 @@ class MahaState:
 # =============================================================================
 
 
-def get_maha_state(workspace: Optional[Path] = None) -> MahaState:
-    return MahaState.get_instance(workspace)
+def get_maha_state() -> MahaState:
+    return MahaState.get_instance()
 
 
 def pierce(key: str, value: StateValue) -> None:
@@ -724,22 +444,12 @@ def pierce(key: str, value: StateValue) -> None:
 # =============================================================================
 
 __all__ = [
-    # Types
     "StateValue",
     "SourceType",
     "StateEntry",
     "GarudaBridge",
     "GarudaFlightContext",
-    # Constants (Thresholds)
-    "MAX_STATE_ENTRIES",
-    "KERNEL_RESERVE",
-    "MALA_THRESHOLD",
-    "KISHORA_MAX_STALE",
-    "STATE_DIR",
-    "STATE_FILE",
-    # Main class
     "MahaState",
-    # Convenience
     "get_maha_state",
     "pierce",
 ]
