@@ -1,15 +1,16 @@
 """
-TEST MAHASTATE - Minimal Sovereign State Layer
-==============================================
+TEST MAHASTATE - Sovereign State Adapter (BALARAMA PATTERN)
+============================================================
 
-Tests for the MINIMAL MahaState implementation:
-- pierce/set/get operations
+Tests for MahaState as BALARAMA adapter that wraps ALL existing state systems:
+- Sovereign operations (pierce/set/get)
+- Wrapped systems (Prakriti, StateService, StateSyncHolon, etc.)
 - State persistence
 - Garuda integration
 - Observer callbacks
+- Threshold constants
 
 NO validation tests (Kumaras handles that).
-NO VishnuObserver tests (removed - was redundant).
 """
 
 import json
@@ -26,6 +27,11 @@ from vibe_core.mahamantra.substrate.maha_state import (
     pierce,
     STATE_DIR,
     STATE_FILE,
+    # Threshold constants
+    MAX_STATE_ENTRIES,
+    KERNEL_RESERVE,
+    MALA_THRESHOLD,
+    KISHORA_MAX_STALE,
 )
 
 
@@ -365,12 +371,19 @@ class TestGarudaIntegration:
         # Before flight
         assert state.is_garuda_flying is False
 
-        # During flight
-        with state.garuda_flight():
-            assert state.is_garuda_flying is True
+        # During flight (with mock Garuda)
+        mock_garuda = MagicMock()
+        mock_garuda.is_flying = False
+        mock_context = MagicMock()
+        mock_context.__enter__ = MagicMock(return_value=None)
+        mock_context.__exit__ = MagicMock(return_value=None)
+        mock_garuda.fly.return_value = mock_context
+        state._garuda_ref = mock_garuda
 
-        # After flight
-        assert state.is_garuda_flying is False
+        with state.garuda_flight():
+            pass
+
+        mock_garuda.fly.assert_called_once()
 
     def test_garuda_not_available(self, clean_state):
         """Should return no-op context when Garuda not available."""
@@ -409,6 +422,7 @@ class TestPersistence:
         assert "version" in data
         assert "entries" in data
         assert "json.test" in data["entries"]
+        assert "thresholds" in data
 
     def test_load_restores_state(self, temp_state_dir):
         # Create and save state
@@ -445,6 +459,27 @@ class TestPersistence:
 
 
 # =============================================================================
+# TEST: Threshold Constants
+# =============================================================================
+
+
+class TestThresholdConstants:
+    """Tests for threshold constants from seed.py."""
+
+    def test_max_state_entries(self):
+        assert MAX_STATE_ENTRIES == 72  # NADI_RESONANCE
+
+    def test_kernel_reserve(self):
+        assert KERNEL_RESERVE == 16  # HIDDEN_RESERVE
+
+    def test_mala_threshold(self):
+        assert MALA_THRESHOLD == 108  # MALA
+
+    def test_kishora_max_stale(self):
+        assert KISHORA_MAX_STALE == 79  # KISHORA_NUMERATOR
+
+
+# =============================================================================
 # TEST: Status
 # =============================================================================
 
@@ -466,6 +501,49 @@ class TestStatus:
         assert "pierced_count" in status
         assert status["pierced_count"] >= 1
         assert "garuda_flying" in status
+        assert "systems" in status
+        assert "thresholds" in status
+
+    def test_wrapped_systems_status(self, clean_state):
+        state = get_maha_state()
+        systems = state.get_wrapped_systems()
+
+        # Initially all should be accessible (will lazy load on access)
+        assert "prakriti" in systems
+        assert "state_service" in systems
+        assert "sync_holon" in systems
+        assert "weaver" in systems
+        assert "cognitive_weaver" in systems
+        assert "guna_classifier" in systems
+
+
+# =============================================================================
+# TEST: BALARAMA Wrapped Systems
+# =============================================================================
+
+
+class TestBalaaramaWrappedSystems:
+    """Tests for BALARAMA adapter pattern - wrapped systems."""
+
+    def test_prakriti_property_accessible(self, clean_state):
+        state = get_maha_state()
+        # Just check it doesn't crash on access
+        # May return None if vibe_core.state not available
+        _ = state.prakriti
+
+    def test_state_service_property_accessible(self, clean_state):
+        state = get_maha_state()
+        _ = state.state_service
+
+    def test_prakriti_layer_accessors(self, clean_state):
+        state = get_maha_state()
+        # These may return None if prakriti not loaded
+        _ = state.git
+        _ = state.files
+        _ = state.ledger
+        _ = state.kernel
+        _ = state.ephemeral
+        _ = state.personas
 
 
 # =============================================================================
