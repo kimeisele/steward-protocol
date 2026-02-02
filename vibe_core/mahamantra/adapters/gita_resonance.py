@@ -43,27 +43,28 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Tuple
 
-from vibe_core.mahamantra.protocols.gita import (
-    GitaResonanceProtocol,
-    VerseResult,
-    ChapterResult,
-    ResonanceStats,
-)
 from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    WORDS,
-    QUARTERS,
     GITA_CHAPTERS,
+    MAHA_QUANTUM,
+    QUARTERS,
+    WORDS,
 )
-from vibe_core.mahamantra.substrate.algorithm.maha import (
-    Trajectory,
-    FIXED_POINT,
-    CYCLE_VALUES,
-    CYCLE_SEEDS,
-    classify_trajectory,
-    get_cycle_position,
-    get_attractor,
+from vibe_core.mahamantra.protocols.gita import (
+    ChapterResult,
+    GitaResonanceProtocol,
+    ResonanceStats,
+    VerseResult,
 )
+
+# Use MahaResonator for attractor finding (the correct SSOT)
+from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
+
+
+def _get_attractor(seed: int) -> int:
+    """Get attractor for seed using MahaResonator (SSOT)."""
+    resonator = MahaResonator()
+    result = resonator.find_attractor(seed)
+    return result.attractor
 
 
 # =============================================================================
@@ -74,9 +75,7 @@ from vibe_core.mahamantra.substrate.algorithm.maha import (
 TOTAL_VERSES: Final[int] = 700
 
 # Chapter verse counts (Standard Srimad Bhagavad-gita)
-CHAPTER_VERSES: Final[Tuple[int, ...]] = (
-    47, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78
-)
+CHAPTER_VERSES: Final[Tuple[int, ...]] = (47, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78)
 assert len(CHAPTER_VERSES) == GITA_CHAPTERS, "18 chapters in Gita"
 # Note: Standard count varies slightly (700-701 depending on edition)
 # assert sum(CHAPTER_VERSES) == TOTAL_VERSES, "700 verses in Gita"
@@ -102,17 +101,18 @@ class VerseMatch:
 
     This is the EXIT POINT - all data flows out through this.
     """
-    verse_id: str           # "BG.1.1"
-    chapter: int            # 1-18
-    verse: int              # verse number
-    attractor: int          # computed attractor value
-    guna: str               # sattva/rajas/tamas/suddha
-    dominant_name: str      # HARE/KRISHNA/RAMA
+
+    verse_id: str  # "BG.1.1"
+    chapter: int  # 1-18
+    verse: int  # verse number
+    attractor: int  # computed attractor value
+    guna: str  # sattva/rajas/tamas/suddha
+    dominant_name: str  # HARE/KRISHNA/RAMA
     resonance_hare: float
     resonance_krishna: float
     resonance_rama: float
     phonetic_hash: str
-    position: int           # 0-699
+    position: int  # 0-699
 
     # Future fields (Level 3+)
     text: Optional[str] = None
@@ -123,6 +123,7 @@ class VerseMatch:
 @dataclass(frozen=True, slots=True)
 class ChapterSignature:
     """Chapter-level resonance signature."""
+
     chapter: int
     verse_count: int
     avg_resonance_hare: float
@@ -138,6 +139,7 @@ class MatchResult:
 
     EXIT POINT for all queries.
     """
+
     query_attractor: int
     query_type: str  # "exact", "chapter", "nearest"
     matches: Tuple[VerseMatch, ...]
@@ -374,8 +376,8 @@ class GitaResonance(GitaResonanceProtocol):
         """
         self._ensure_loaded()
 
-        # BRANCHLESS: Direct table lookup for attractor
-        attractor = get_attractor(seed)
+        # Use MahaResonator to find attractor (SSOT for attractor computation)
+        attractor = _get_attractor(seed)
 
         # Match by computed attractor (the Gita resonance does the rest)
         return self.match(attractor)
@@ -391,6 +393,7 @@ class GitaResonance(GitaResonanceProtocol):
 
         # Binary search for nearest
         import bisect
+
         pos = bisect.bisect_left(available, target)
 
         if pos == 0:
@@ -497,6 +500,7 @@ def verify_fixed_point() -> bool:
 class _LazyVerse1866:
     chapter: int = 18
     verse: int = 66
+
 
 CHAPTER_18_VERSE = _LazyVerse1866()
 
