@@ -407,11 +407,6 @@ _LAZY_IMPORTS = {
     "METABOLIC_COST": "cell",
     "MITOSIS_THRESHOLD": "cell",
     "MAX_AGE_CYCLES": "cell",
-    # === MAHA STATE (Sovereign state - MINIMAL) ===
-    "MahaState": "maha_state",
-    "StateEntry": "maha_state",
-    "get_maha_state": "maha_state",
-    "pierce": "maha_state",
     # === CELL ROUTER (O(1) cell registry) ===
     "CellRouter": "cell_router",
     "get_router": "cell_router",

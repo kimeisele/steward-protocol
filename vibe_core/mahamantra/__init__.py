@@ -221,23 +221,6 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
         return SankirtanChamber
 
-    # === MahaState (Sovereign state layer) ===
-    if name == "MahaState":
-        from vibe_core.mahamantra.substrate.maha_state import MahaState
-        return MahaState
-
-    if name == "get_maha_state":
-        from vibe_core.mahamantra.substrate.maha_state import get_maha_state
-        return get_maha_state
-
-    if name == "pierce":
-        from vibe_core.mahamantra.substrate.maha_state import pierce
-        return pierce
-
-    if name == "StateEntry":
-        from vibe_core.mahamantra.substrate.maha_state import StateEntry
-        return StateEntry
-
     raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute '{name}'")
 
 
@@ -278,7 +261,5 @@ __all__ = [
     "TulasiGate", "GraceProtocol", "MahaModularSynth", "OfferingPipeline",
     # Architecture (Unified)
     "MahaCluster", "MahaCellUnified", "MahaFile", "SankirtanChamber",
-    # MahaState (Sovereign state - MINIMAL)
-    "MahaState", "StateEntry", "get_maha_state", "pierce",
 ]
 
