@@ -265,12 +265,8 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_TOTAL as _PROTO_POSITION_SUM_TOTAL,
 )
-from vibe_core.mahamantra.protocols._seed import (
-    PRANA_DURATION_MS as _PROTO_PRANA_DURATION_MS,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    PRANA_DURATION_S as _PROTO_PRANA_DURATION_S,
-)
+# NOTE: PRANA_DURATION_MS, PRANA_DURATION_S removed from protocols (external physics)
+# These timing constants are defined locally in substrate as physical implementation
 from vibe_core.mahamantra.protocols._seed import (
     QUALITIES as _PROTO_QUALITIES,
 )
@@ -280,15 +276,11 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     RAMA_COUNT as _PROTO_RAMA_COUNT,
 )
-from vibe_core.mahamantra.protocols._seed import (
-    SECONDS_PER_DAY as _PROTO_SECONDS_PER_DAY,
-)
+# NOTE: SECONDS_PER_DAY removed from protocols (external physics - Earth rotation)
 from vibe_core.mahamantra.protocols._seed import (
     SHARANAGATI as _PROTO_SHARANAGATI,
 )
-from vibe_core.mahamantra.protocols._seed import (
-    TICK_INTERVAL_MS as _PROTO_TICK_INTERVAL_MS,
-)
+# NOTE: TICK_INTERVAL_MS removed from protocols (depends on SECONDS_PER_DAY)
 from vibe_core.mahamantra.protocols._seed import (
     TRINITY as _PROTO_TRINITY,
 )
@@ -777,19 +769,17 @@ assert NAVA == _PROTO_NAVA, "SSOT violation: NAVA != protocols/_seed.py"
 assert GITA_CHAPTERS == _PROTO_GITA_CHAPTERS, "SSOT violation: GITA_CHAPTERS != protocols/_seed.py"
 assert JIVA_CYCLE == _PROTO_JIVA_CYCLE, "SSOT violation: JIVA_CYCLE != protocols/_seed.py"
 assert JIVA_QUALITIES == _PROTO_JIVA_QUALITIES, "SSOT violation: JIVA_QUALITIES != protocols/_seed.py"
-assert PRANA_DURATION_S == _PROTO_PRANA_DURATION_S, "SSOT violation: PRANA_DURATION_S != protocols/_seed.py"
-assert PRANA_DURATION_MS == _PROTO_PRANA_DURATION_MS, "SSOT violation: PRANA_DURATION_MS != protocols/_seed.py"
-assert TICK_INTERVAL_MS == _PROTO_TICK_INTERVAL_MS, "SSOT violation: TICK_INTERVAL_MS != protocols/_seed.py"
+# NOTE: PRANA_DURATION_S/MS, TICK_INTERVAL_MS assertions removed (external physics)
 assert HALVES == _PROTO_HALVES, "SSOT violation: HALVES != protocols/_seed.py"
 assert HALF_SIZE == _PROTO_HALF_SIZE, "SSOT violation: HALF_SIZE != protocols/_seed.py"
 assert HARE_COUNT == _PROTO_HARE_COUNT, "SSOT violation: HARE_COUNT != protocols/_seed.py"
 assert KRISHNA_COUNT == _PROTO_KRISHNA_COUNT, "SSOT violation: KRISHNA_COUNT != protocols/_seed.py"
 assert KSETRAJNA == _PROTO_KSETRAJNA, "SSOT violation: KSETRAJNA != protocols/_seed.py"
 assert RAMA_COUNT == _PROTO_RAMA_COUNT, "SSOT violation: RAMA_COUNT != protocols/_seed.py"
-assert SECONDS_PER_DAY == _PROTO_SECONDS_PER_DAY, "SSOT violation: SECONDS_PER_DAY != protocols/_seed.py"
+# NOTE: SECONDS_PER_DAY assertion removed (external physics - Earth rotation)
 
 # AKSARA_COUNT: 32 syllables (2 per word)
-AKSARA_COUNT: Final[int] = WORDS * 2  # 32
+AKSARA_COUNT: Final[int] = WORDS * HALVES  # 32 = 16 × 2
 assert AKSARA_COUNT == _PROTO_AKSARA_COUNT, "SSOT violation: AKSARA_COUNT != protocols/_seed.py"
 
 

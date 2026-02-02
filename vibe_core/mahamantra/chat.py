@@ -547,7 +547,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._sesha = SeshaService()
         except Exception:
-            pass
+            logger.warning("SeshaService init failed", exc_info=True)
 
         # 2. Takshaka (security - needs Sesha)
         try:
@@ -555,7 +555,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._takshaka = TakshakaService(sesha=self._sesha)
         except Exception:
-            pass
+            logger.warning("TakshakaService init failed", exc_info=True)
 
         # 3. Vasuki (network - needs Sesha and Takshaka)
         try:
@@ -563,7 +563,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._vasuki = VasukiService(sesha=self._sesha, takshaka=self._takshaka)
         except Exception:
-            pass
+            logger.warning("VasukiService init failed", exc_info=True)
 
         # 4. Kaliya (resilience - optional deps)
         try:
@@ -571,7 +571,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._kaliya = KaliyaService()
         except Exception:
-            pass
+            logger.warning("KaliyaService init failed", exc_info=True)
 
         # 5. Karkotaka (secrets)
         try:
@@ -579,7 +579,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._karkotaka = KarkotakaService()
         except Exception:
-            pass
+            logger.warning("KarkotakaService init failed", exc_info=True)
 
         # 6. Kulika (wiring)
         try:
@@ -587,7 +587,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._kulika = KulikaService()
         except Exception:
-            pass
+            logger.warning("KulikaService init failed", exc_info=True)
 
         # 7. Padma (purity/cache)
         try:
@@ -595,7 +595,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._padma = PadmaService()
         except Exception:
-            pass
+            logger.warning("PadmaService init failed", exc_info=True)
 
         # 8. Shankha (signals/pubsub)
         try:
@@ -603,7 +603,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._shankha = ShankhaService()
         except Exception:
-            pass
+            logger.warning("ShankhaService init failed", exc_info=True)
 
         # === GOVERNANCE LAYER (3) ===
 
@@ -613,7 +613,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._narada = NaradaService()
         except Exception:
-            pass
+            logger.warning("NaradaService init failed", exc_info=True)
 
         # 10. Chitragupta (audit/metrics)
         try:
@@ -621,7 +621,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._chitragupta = ChitraguptaService()
         except Exception:
-            pass
+            logger.warning("ChitraguptaService init failed", exc_info=True)
 
         # 11. Prahlad (protection/veto)
         try:
@@ -629,7 +629,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._prahlad = PrahladService()
         except Exception:
-            pass
+            logger.warning("PrahladService init failed", exc_info=True)
 
         # === SUBSTRATE (1) ===
 
@@ -639,7 +639,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
             self._ananta = AnantaService()
         except Exception:
-            pass
+            logger.warning("AnantaService init failed", exc_info=True)
 
         self._naga_initialized = True
 
@@ -742,7 +742,7 @@ class FloodedMahajanaChat(MahajanaChat):
                         llm_used=False,
                     )
             except Exception:
-                pass
+                logger.debug("Prahlad veto check failed", exc_info=True)
 
         # 2. TAKSHAKA: Security scan
         if self._takshaka:
@@ -757,14 +757,14 @@ class FloodedMahajanaChat(MahajanaChat):
                         llm_used=False,
                     )
             except Exception:
-                pass
+                logger.debug("Takshaka security scan failed", exc_info=True)
 
         # 3. PADMA: Purity validation
         if self._padma and hasattr(self._padma, "validate"):
             try:
                 self._padma.validate(message)
             except Exception:
-                pass
+                logger.debug("Padma validation failed", exc_info=True)
 
         # 4. KARKOTAKA: Credential check (for sensitive operations)
         # (No action needed for basic chat)
@@ -777,7 +777,7 @@ class FloodedMahajanaChat(MahajanaChat):
             try:
                 max_retries = self._kaliya.get_retry_count("chat")
             except Exception:
-                pass
+                logger.debug("Kaliya retry count failed", exc_info=True)
 
         # 6. VASUKI: Serialize request (for network ops)
         # (Chat is local, no serialization needed)
@@ -828,7 +828,7 @@ class FloodedMahajanaChat(MahajanaChat):
                     result="OK" if result.success else "FAILED",
                 )
             except Exception:
-                pass
+                logger.debug("Chitragupta audit failed", exc_info=True)
 
         # 9. NARADA: Broadcast event
         if self._narada:
@@ -843,7 +843,7 @@ class FloodedMahajanaChat(MahajanaChat):
                     },
                 )
             except Exception:
-                pass
+                logger.debug("Narada broadcast failed", exc_info=True)
 
         # 10. SESHA: Persist
         if self._sesha and hasattr(self._sesha, "record_event"):
@@ -857,7 +857,7 @@ class FloodedMahajanaChat(MahajanaChat):
                     },
                 )
             except Exception:
-                pass
+                logger.debug("Sesha persist failed", exc_info=True)
 
         # 11. SHANKHA: Signal completion
         if self._shankha and hasattr(self._shankha, "signal"):
@@ -870,7 +870,7 @@ class FloodedMahajanaChat(MahajanaChat):
                     },
                 )
             except Exception:
-                pass
+                logger.debug("Shankha signal failed", exc_info=True)
 
         # 12. ANANTA: Heartbeat to substrate
         if self._ananta and hasattr(self._ananta, "resonate"):
@@ -879,7 +879,7 @@ class FloodedMahajanaChat(MahajanaChat):
 
                 self._ananta.resonate(MantraOpCode.EMIT)
             except Exception:
-                pass
+                logger.debug("Ananta resonate failed", exc_info=True)
 
         # GAD-000: Chant heartbeat
         self.chant()

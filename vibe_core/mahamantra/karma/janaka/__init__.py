@@ -156,7 +156,7 @@ def __getattr__(name: str) -> object:
     Unification of Kernel and Mahamantra.
     """
     if name == "JanakaService":
-        from vibe_core.services.janaka_service import JanakaService
+        from vibe_core.protocols.mahajanas.janaka.service import JanakaService
 
         return JanakaService
 

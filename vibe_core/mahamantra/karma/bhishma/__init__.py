@@ -35,7 +35,7 @@ def __getattr__(name: str) -> object:
     NO MANUAL WIRING - auto-discovery needs these exports.
     """
     if name == "BhishmaService":
-        from vibe_core.services.bhishma_service import BhishmaService
+        from vibe_core.protocols.mahajanas.bhishma.service import BhishmaService
 
         return BhishmaService
 

@@ -44,23 +44,35 @@
       "violation_count": 2,
       "signer_id": "",
       "signature": null
+    },
+    "criminal_agent_007": {
+      "component_id": "criminal_agent_007",
+      "reason": "TAKSHAKA_BITE: TEST_VIOLATION (ref: EVT-000001)",
+      "started_at": "2026-01-19T17:15:35.917869",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "naga_federation",
+      "signature": "31d8c1830ddb875a7f029a8bcd1bda9487e5c8fd1c69f3ab7a5a6c5216ffadf83037c0b4e0efedf70714f54c06f61282faf0633f0098997eb7ddad5a48919294"
     }
   },
   "violations": {
     "test_component": 0,
     "comp_001": 8,
-    "bad_comp": 2
+    "bad_comp": 2,
+    "EventBus": 2,
+    "RealVibeKernel": 2
   },
   "cycles": {
     "bad_agent_001": 1,
     "test_component": 3,
     "comp_123": 1,
     "comp_001": 8,
-    "bad_comp": 4
+    "bad_comp": 4,
+    "criminal_agent_007": 1
   },
   "escalated": [
-    "test_component",
     "bad_comp",
+    "test_component",
     "comp_001"
   ]
 }
