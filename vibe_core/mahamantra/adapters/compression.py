@@ -161,18 +161,15 @@ def _get_maha_resonator() -> "MahaResonator":  # noqa: F821
     return _MAHA_RESONATOR
 
 
-@lru_cache(maxsize=_SIKSASTAKAM_CACHE_SIZE)
 def _compute_seed_cached(text: str) -> int:
     """
-    Cached seed computation - Siksastakam Effect #1.
+    Deterministic seed computation.
 
-    512-slot LRU cache = 8 × 64 = OCTET × QUALITIES.
-    Same text → Same seed → O(1) lookup after first compute.
+    No cache needed - pure functions give same result every time.
     """
-    # Use singletons instead of creating new instances
+    from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+
     llm = _get_maha_llm()
-    kirtan = _get_maha_kirtan()
-    resonator = _get_maha_resonator()
 
     # 1. SEMANTIC CLASSIFICATION via MahaLLM
     route = llm.route_text(text)
@@ -184,12 +181,12 @@ def _compute_seed_cached(text: str) -> int:
     )
     base_seed = (category * MAHA_QUANTUM) + (text_hash % MAHA_QUANTUM)
 
-    # 3. TRANSFORM via MahaKirtan (16-step × 7-beat)
-    kirtan_result = kirtan.compute(base_seed)
-    transformed = kirtan_result.transformed_value
+    # 3. TRANSFORM via MahaModularSynth (deterministic, no tick state)
+    synth = MahaModularSynth(default_preset="quantum")
+    transformed = synth.transform(base_seed)
 
-    # 4. ATTRACTOR via MahaResonator
-    attractor = resonator.oscillate_once(transformed)
+    # 4. ATTRACTOR via modulo (deterministic)
+    attractor = transformed % MAHA_QUANTUM
 
     # 5. Final seed combines all three layers
     final_seed = (category << 24) | (transformed << 12) | attractor
