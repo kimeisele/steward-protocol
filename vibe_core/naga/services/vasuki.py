@@ -302,11 +302,11 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
         import base64
 
         wire_data = {
-            "payload": base64.b64encode(envelope.payload).decode(),
-            "signature": base64.b64encode(envelope.signature).decode() if envelope.signature else "",
-            "sender_key": envelope.sender_key,
-            "timestamp": envelope.timestamp,
-            "content_type": envelope.content_type,
+            "payload": base64.b64encode(envelope["payload"]).decode(),
+            "signature": base64.b64encode(envelope["signature"]).decode() if envelope["signature"] else "",
+            "sender_key": envelope["sender_key"],
+            "timestamp": envelope["timestamp"],
+            "content_type": envelope["content_type"],
         }
 
         try:
@@ -321,7 +321,7 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
                 ) as resp:
                     if resp.status == 200:
                         self._events_processed += 1
-                        logger.debug(f"VASUKI: Sent to {target} ({len(envelope.payload)} bytes)")
+                        logger.debug(f"VASUKI: Sent to {target} ({len(envelope['payload'])} bytes)")
                         return SendResult(
                             status=SendStatus.SENT,
                             envelope_hash=envelope_hash,
@@ -387,14 +387,14 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
 
         self._receive_queue.append(envelope)
         self._last_heartbeat = datetime.now()
-        logger.debug(f"VASUKI: Queued incoming envelope ({len(envelope.payload)} bytes)")
+        logger.debug(f"VASUKI: Queued incoming envelope ({len(envelope['payload'])} bytes)")
         return True
 
     def _hash_envelope(self, envelope: SignedEnvelope) -> str:
         """Compute hash of envelope for tracking."""
         import hashlib
 
-        content = envelope.payload + envelope.signature
+        content = envelope["payload"] + envelope["signature"]
         return hashlib.sha256(content).hexdigest()[:16]
 
     # =========================================================================

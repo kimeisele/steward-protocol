@@ -567,18 +567,23 @@ class KulikaRegistry:
 
     def get_instance(self, name: str) -> Optional[Any]:
         """Get a NAGA instance by name (ADVAITA: delegates to ServiceRegistry)."""
-        # First check if we have a manifest with protocol_class
-        manifest = self._services.get(name.lower())
+        name_lower = name.lower()
+
+        # Try protocol_class first (if defined in manifest)
+        manifest = self._services.get(name_lower)
         if manifest and manifest.protocol_class:
-            try:
-                return ServiceRegistry.get(manifest.protocol_class)
-            except Exception:
-                pass
-        # Fallback: try by name directly
-        try:
-            return ServiceRegistry.get(name)
-        except Exception:
-            return None
+            result = ServiceRegistry.get(manifest.protocol_class)
+            if result is not None:
+                return result
+
+        # Try the stored class (from register() call)
+        cls = self._classes.get(name_lower)
+        if cls:
+            result = ServiceRegistry.get(cls)
+            if result is not None:
+                return result
+
+        return None
 
     def set_instance(self, name: str, instance: Any) -> None:
         """Set a NAGA instance (ADVAITA: writes to ServiceRegistry)."""
@@ -649,7 +654,7 @@ class KulikaRegistry:
         """Clear all registrations (for testing)."""
         self._services.clear()
         self._classes.clear()
-        self._instances.clear()
+        # ADVAITA: _instances removed - ServiceRegistry is single source of truth
         self._by_lord = {lord: [] for lord in NagaLord}
         self._by_domain = {domain: [] for domain in NagaDomain}
         self._by_drift_source.clear()

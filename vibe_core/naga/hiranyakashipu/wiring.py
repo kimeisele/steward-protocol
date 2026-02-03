@@ -400,7 +400,7 @@ def wire_hiranyakashipu_to_protocols(
         if dispatcher:
             dispatcher.register_handler(
                 source=DriftSource.STRUCTURAL,
-                handler=handler,
+                handler=handler.handle,  # CorrectionHandler expects Callable
                 handler_id="hiranyakashipu_handler",
                 priority=10,  # Higher priority for security
             )
