@@ -49,9 +49,10 @@ class TestChurnOperations:
 
         envelope = vasuki.churn_out(event)
 
-        assert isinstance(envelope, SignedEnvelope)
-        assert envelope.content_type == "msgpack"
-        assert len(envelope.payload) > 0
+        # SignedEnvelope is TypedDict (dict at runtime)
+        assert isinstance(envelope, dict)
+        assert envelope["content_type"] == "msgpack"
+        assert len(envelope["payload"]) > 0
 
     def test_churn_in_restores_event(self, vasuki):
         original = {"type": "test", "nested": {"a": 1, "b": [1, 2, 3]}}
@@ -128,8 +129,9 @@ class TestNetworkSend:
 
         result = asyncio.run(vasuki.send("no_url_peer", envelope))
 
-        assert result.status == SendStatus.FAILED
-        assert "No URL configured" in result.message
+        # SendResult is TypedDict
+        assert result["status"] == SendStatus.FAILED
+        assert "No URL configured" in result["message"]
 
     def test_send_builds_correct_wire_format(self, vasuki):
         """Test that send() builds correct wire format (without actual network call)."""
@@ -137,12 +139,12 @@ class TestNetworkSend:
 
         envelope = vasuki.churn_out({"test": "data"})
 
-        # Verify envelope structure
-        assert isinstance(envelope.payload, bytes)
-        assert envelope.content_type == "msgpack"
+        # SignedEnvelope is TypedDict (dict at runtime)
+        assert isinstance(envelope["payload"], bytes)
+        assert envelope["content_type"] == "msgpack"
 
         # The wire_data structure should be base64 encoded
-        wire_payload_b64 = base64.b64encode(envelope.payload).decode()
+        wire_payload_b64 = base64.b64encode(envelope["payload"]).decode()
         assert len(wire_payload_b64) > 0
 
 
@@ -214,8 +216,9 @@ class TestReceiveQueue:
             received.append(env)
 
         assert len(received) == 2
-        assert received[0].payload == b"msg1"
-        assert received[1].payload == b"msg2"
+        # SignedEnvelope is TypedDict
+        assert received[0]["payload"] == b"msg1"
+        assert received[1]["payload"] == b"msg2"
         assert len(vasuki._receive_queue) == 0
 
 
