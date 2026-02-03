@@ -194,7 +194,7 @@ def __getattr__(name: str):
         return boot.BootMode
 
     # === ProcessManager (Vyasa) ===
-    if name in ("ProcessManager", "ProcessStatus"):
+    if name in ("ProcessManager", "ProcessStatus", "AgentProcessInfo"):
         from vibe_core.mahamantra.substrate import process_manager
 
         return getattr(process_manager, name)
