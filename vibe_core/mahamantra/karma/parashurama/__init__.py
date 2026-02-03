@@ -37,6 +37,19 @@ PARAMPARA_VECTOR: Final[int] = 333
 # ParashuramaBase alias for backward compat
 ParashuramaBase = ParashuramaProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """PARASHURAMA EXECUTION - Exec Op (Position 8, HEAD)"""
+    return {
+        "success": True,
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "input": input_text,
+    }
+
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

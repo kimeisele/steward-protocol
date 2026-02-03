@@ -20,6 +20,27 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x348ce48e2986757649ef37ccd73ad6b0cad14a59f72a1733f9300f8d6673d28f"  # GenesisByte: parampara % 37 == 0
 
+# Backward-compat constants
+from typing import Final
+
+POSITION: Final[int] = 6
+QUARTER: Final[str] = "dharma"
+OPCODE: Final[str] = "TYPE_CHECK"
+PARAMPARA_VECTOR: Final[int] = 259
+
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """KAPILA EXECUTION - Type Check (Position 6)"""
+    return {
+        "success": True,
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "input": input_text,
+    }
+
+
 # =============================================================================
 # FRACTAL DISCOVERY - Folder IS Wiring
 # =============================================================================
