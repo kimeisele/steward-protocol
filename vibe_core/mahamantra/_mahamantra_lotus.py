@@ -81,19 +81,21 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def _compute_vibration(self, input_data):
         """Compute vibration state from input."""
-        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+        from vibe_core.mahamantra.kernel.maha_kernel import get_kernel
         from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, PARAMPARA
 
         compressor = self._get_compressor()
+        kernel = get_kernel()
 
+        # Kernel handles str or MahaCell and returns 16-bit address
+        attractor = kernel(input_data)
+        
+        # Seed is needed for return dict, extract it manually
         if isinstance(input_data, MahaCell):
             seed = input_data.header.sravanam
         else:
             comp_result = compressor.compress(str(input_data))
             seed = comp_result.seed
-
-        synth = MahaModularSynth(default_preset="quantum")
-        attractor = synth.transform(seed)
 
         return {
             "seed": seed,
@@ -278,11 +280,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             seed = comp_result.seed
 
         # =====================================================================
-        # 3. PADA_SEVANAM - MahaModularSynth → attractor
+        # 3. PADA_SEVANAM - MahaKernel → attractor (Resonance)
         # =====================================================================
-        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
-        synth = MahaModularSynth(default_preset="quantum")
-        attractor = synth.transform(seed)
+        from vibe_core.mahamantra.kernel.maha_kernel import get_kernel
+        kernel = get_kernel()
+        attractor = kernel(input_text)
 
         # =====================================================================
         # 4. ARCANAM - Parampara verification (% 37 == 0)
