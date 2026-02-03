@@ -53,25 +53,24 @@ from datetime import datetime
 from enum import IntEnum
 from typing import Callable, Dict, Final, List, Optional, Protocol, TypedDict, Union, runtime_checkable
 
+from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
+
 # =============================================================================
 # IMPORT FROM ACINTYA - THE SOURCE
 # =============================================================================
 # Krishna = Mahamantra (Level -2) - NON-DIFFERENT
 # The Mahamantra is not "powered by" Krishna - it IS Krishna in 1D form
-
 from vibe_core.protocols.substrate.mantra.acintya import (
     PARAMPARA,
-    SYSTEM_MANIFESTATION,
-    ProtocolLevel,
-    AcintyaAware,
-    ParamparaProtocol,
-    ParamparaConnection,
-    verify_parampara,
-    TRINITY,
     PHASES,
+    SYSTEM_MANIFESTATION,
+    TRINITY,
+    AcintyaAware,
+    ParamparaConnection,
+    ParamparaProtocol,
+    ProtocolLevel,
+    verify_parampara,
 )
-
-from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 
 # =============================================================================
 # PROTOCOL OWNERSHIP (Governed by CLI)
@@ -116,13 +115,9 @@ class CLILotusQuarter(IntEnum):
     MOKSHA = 3  # Hare Rama (liberation, gc, reset, clean)
 
 
-# Quarter mapping based on command purpose
-QUARTER_KEYWORDS: Final[Dict[CLILotusQuarter, List[str]]] = {
-    CLILotusQuarter.GENESIS: ["genesis", "create", "init", "bootstrap", "config", "setup"],
-    CLILotusQuarter.DHARMA: ["audit", "validate", "check", "standards", "naga", "knowledge"],
-    CLILotusQuarter.KARMA: ["run", "exec", "tool", "ci", "plugins", "prompts", "circuit"],
-    CLILotusQuarter.MOKSHA: ["remedies", "gc", "reset", "clean", "cartridges", "sections"],
-}
+# DEPRECATED: QUARTER_KEYWORDS removed - was KEYWORD MATCHING (Krebs!)
+# Position is now derived via Maha Algorithm in derive_lotus_position()
+# "Das Routing ist unabhängig von dem Inhalt und der Bedeutung!"
 
 
 @dataclass(frozen=True)
@@ -157,27 +152,33 @@ class CLILotusPosition:
 
 def derive_lotus_position(command: str) -> CLILotusPosition:
     """
-    Derive Lotus position from command name.
+    Derive Lotus position from command name via MAHA ALGORITHM.
 
-    NO MANUAL WIRING - position is derived from:
-    1. Command keywords → quarter
-    2. Name hash → worker within quarter
+    "Das Routing ist unabhängig von dem Inhalt und der Bedeutung!"
 
-    This ensures every CLI command automatically has a position
-    in the Mahamantra structure.
+    The position is derived by passing the command through the same
+    Maha Algorithm that transforms user input. This creates holographic
+    alignment: command name and user input both flow through the same
+    transformation, meeting at the same position = resonance.
+
+    NO keyword matching. NO semantic analysis.
+    The Maha Algorithm IS the router.
     """
+    from vibe_core.mahamantra.substrate.algorithm import maha_transform
+
+    # Seed from command name (same hash as used elsewhere)
     command_lower = command.lower()
+    seed = sum(ord(c) * (i + 1) for i, c in enumerate(command_lower))
 
-    # Determine quarter from keywords
-    quarter = CLILotusQuarter.KARMA  # Default to action quarter
-    for q, keywords in QUARTER_KEYWORDS.items():
-        if any(kw in command_lower for kw in keywords):
-            quarter = q
-            break
+    # Transform through Maha Algorithm → produces value in [0, MAHA_QUANTUM)
+    transformed = maha_transform(seed)
 
-    # Determine worker from name hash (deterministic)
-    name_hash = sum(ord(c) * (i + 1) for i, c in enumerate(command_lower))
-    worker = name_hash % 4  # 0-3 within quarter
+    # Map to 16 positions (WORDS = 16)
+    position = transformed % MAHAMANTRA_POSITIONS
+
+    # Derive quarter and worker from position
+    quarter = CLILotusQuarter(position // 4)
+    worker = position % 4
 
     return CLILotusPosition(quarter=quarter, worker=worker)
 
