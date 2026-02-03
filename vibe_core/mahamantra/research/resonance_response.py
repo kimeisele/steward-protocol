@@ -47,9 +47,11 @@ from vibe_core.mahamantra.adapters.gita_resonance import GitaResonance, MatchRes
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     PARAMPARA,
-    POSITION_SUM_RAMA,
     WORDS,
 )
+
+# Resonance: Seed -> Attractor (PRODUCTION: MahaModularSynth, not MahaResonator)
+from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 
 # Kirtan: Seed -> Compute (7-beat)
 from vibe_core.mahamantra.substrate.mantra.kirtan import KirtanComputeResult, MahaKirtan
@@ -70,9 +72,6 @@ from vibe_core.mahamantra.substrate.rama_grid import (
 
 # Oracle: Seed -> OracleReading
 from vibe_core.mahamantra.substrate.resonance.oracle import MahaOracle, OracleReading
-
-# Resonance: Seed -> Attractor
-from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
 
 # Verify parampara
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
@@ -212,7 +211,8 @@ class ResonanceResponder:
 
         # Initialize components
         self._compression = MahaCompression()
-        self._resonator = MahaResonator(mod_space=mod_space)
+        # PRODUCTION: Use MahaModularSynth.transform() not MahaResonator.find_attractor()
+        self._synth = MahaModularSynth(default_preset="quantum")
         self._gita = GitaResonance()
         self._oracle = MahaOracle() if use_oracle else None
         self._kirtan = MahaKirtan(mod_space=mod_space, use_oracle=use_oracle) if use_kirtan else None
@@ -250,14 +250,14 @@ class ResonanceResponder:
         dominant_name: Optional[str] = None,
     ) -> SyllableSequence:
         """
-        Derive syllables from the ATTRACTOR via proper Mahamantra routing.
+        Derive syllables from the ATTRACTOR via krishna_route().
 
-        FOLLOWS PRODUCTION PATTERN from _mahamantra_lotus.py:
-        1. position = attractor % WORDS (0-15)
-        2. Route through krishna_route() → rama_to_phoneme()
+        MATHEMATICALLY DERIVED FROM MANTRA:
+            krishna_route(position) = position × 17 mod 49
+            where: 17 = SEVEN + TEN = POSITION_SUM_KRISHNA
+                   49 = SEVEN² = POSITION_SUM_RAMA (VARNAMALA)
 
-        For a SEQUENCE, we step through WORDS positions starting from
-        the attractor-derived position.
+        This is the ONLY routing formula in the codebase - no speculation.
 
         Args:
             attractor: The resonance attractor (136=VAIKUNTHA or cycle value)
@@ -286,8 +286,8 @@ class ResonanceResponder:
             pos_0indexed = (base_position + i) % WORDS
             pos_1indexed = pos_0indexed + 1
 
-            # Route through Krishna to get RAMA coordinate
-            # krishna_route: position × 17 mod 49
+            # KRISHNA ROUTING: The mathematically derived formula
+            # krishna_route(pos) = pos × 17 mod 49
             rama_idx = krishna_route(pos_0indexed)
 
             # Get phoneme from RAMA grid
@@ -319,9 +319,8 @@ class ResonanceResponder:
         position = compression.position
         guna = compression.intent_level.guna.value
 
-        # 2. Find attractor
-        resonance = self._resonator.find_attractor(seed)
-        attractor = resonance.attractor
+        # 2. Find attractor via PRODUCTION method (MahaModularSynth.transform)
+        attractor = self._synth.transform(seed)
         trajectory_class = "vaikuntha" if attractor == 136 else "samsara"
 
         # 3. Match to Gita verse - USE SEED TO SELECT (like production!)
@@ -370,8 +369,8 @@ class ResonanceResponder:
             guna=guna,
             attractor=attractor,
             trajectory_class=trajectory_class,
-            cycles_to_converge=resonance.cycles_to_converge,
-            trajectory=resonance.trajectory,
+            cycles_to_converge=WORDS,  # MahaModularSynth runs 16 steps
+            trajectory=(seed, attractor),  # Simplified: input → output
             verse_id=verse_id,
             verse_guna=verse_guna,
             dominant_name=dominant_name,
@@ -385,9 +384,8 @@ class ResonanceResponder:
         """
         Generate response from a numeric seed (skip compression).
         """
-        # Use seed directly
-        resonance = self._resonator.find_attractor(seed)
-        attractor = resonance.attractor
+        # Use seed directly via PRODUCTION method (MahaModularSynth.transform)
+        attractor = self._synth.transform(seed)
         trajectory_class = "vaikuntha" if attractor == 136 else "samsara"
 
         # Gita match - USE SEED TO SELECT (like production!)
@@ -433,8 +431,8 @@ class ResonanceResponder:
             guna="computed",
             attractor=attractor,
             trajectory_class=trajectory_class,
-            cycles_to_converge=resonance.cycles_to_converge,
-            trajectory=resonance.trajectory,
+            cycles_to_converge=WORDS,  # MahaModularSynth runs 16 steps
+            trajectory=(seed, attractor),  # Simplified: input → output
             verse_id=verse_id,
             verse_guna=verse_guna,
             dominant_name=dominant_name,
