@@ -58,10 +58,11 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 # Use ACTUAL Lotus data structures!
+# NOTE: LotusArrayInt is unique research (array.array for C-speed)
+# For radix tree, use HolographicRouter from adapters/routing.py
 from vibe_core.mahamantra.research.lotus_tree import (
     KEY_SPACE,
     LotusArrayInt,
-    LotusRadixInt,
 )
 
 logger = logging.getLogger("RESEARCH_LAB")
@@ -313,9 +314,9 @@ class ResearchLab:
     def _init_research_modules(self) -> None:
         """Initialize rollout tracking for research modules."""
         research_modules = [
-            ("lotus_tree", 1.9, ["ip_routing.py uses LotusRadixInt"]),
+            ("lotus_tree", 1.9, ["adapters/routing.py HolographicRouter"]),
             ("lotus_radix_n", 1.5, []),
-            ("ip_routing", 1557.0, []),  # THE BIG ONE
+            ("ip_routing", 1557.0, ["adapters/network.py LotusIPRouter"]),
             ("routing_holographic", 1557.0, []),
             ("kishora_architecture", 1.0, ["kernel_impl.py threshold"]),
             ("acintya_mathematics", 1.0, ["_seed.py derivations"]),
@@ -561,7 +562,7 @@ class ResearchLab:
             "explanation": "16-ary routing = O(8) for IPv4 vs O(32) for binary radix",
             "kishora_insight": "1.25% = KSETRAJNA reserve (1/80)",
             "production_ready": True,
-            "integration_path": "Replace dict-based routing with LotusRadixInt",
+            "integration_path": "Replace dict-based routing with HolographicRouter",
         }
 
 
