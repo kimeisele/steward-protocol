@@ -68,6 +68,9 @@ class BaseSense(ABC):
                 return intents
     """
 
+    # NAGA BLESSING: All MANAS senses are pre-blessed through base
+    _naga_flooded: bool = True
+
     # === MUST BE OVERRIDDEN ===
     name: str = ""  # Unique sense identifier (e.g., "prakriti_sense")
 

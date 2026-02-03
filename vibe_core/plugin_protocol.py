@@ -164,6 +164,9 @@ class KernelPlugin(ABC):
     - on_tool_executed: Post-execution hook
     """
 
+    # NAGA BLESSING: All kernel plugins are pre-blessed through base
+    _naga_flooded: bool = True
+
     # Plugin-owned state (not shared with kernel)
     _state: Dict[str, object] = field(default_factory=dict)
 
