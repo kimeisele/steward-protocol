@@ -56,19 +56,18 @@ class SendResult(TypedDict):
     """Result of a send operation."""
 
     status: SendStatus
-    message_id: str
-    timestamp: str
-    error: Optional[str]
+    envelope_hash: str  # Hash of the sent envelope for tracking
+    message: str  # Human-readable status message
 
 
 class SignedEnvelope(TypedDict):
-    """A signed message envelope."""
+    """A signed message envelope for network transport."""
 
-    payload: str  # Serialized data
-    signature: str
-    hash: str
-    signer_id: str
-    timestamp: str
+    payload: bytes  # Serialized data (msgpack)
+    signature: bytes  # Cryptographic signature
+    sender_key: str  # Public key of sender
+    timestamp: float  # Unix timestamp
+    content_type: str  # MIME type, e.g. "msgpack"
 
 
 class IntegrityError(Exception):

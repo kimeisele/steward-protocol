@@ -204,7 +204,11 @@ class TestRegistration:
         success = kulika.register_service(InstanceService, instance=instance)
 
         assert success is True
-        assert kulika.get_service_instance("instanceservice") is instance
+        # BALARAMA: Services are wrapped in NagaProxy for universal observation
+        proxy = kulika.get_service_instance("instanceservice")
+        assert proxy is not None
+        # Unwrap to verify original instance
+        assert proxy.unwrap is instance
 
     def test_register_invalid_service(self, kulika):
         """Test registering an invalid service fails."""
