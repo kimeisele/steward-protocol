@@ -2,6 +2,14 @@
 UnifiedCLI - Single entry point for all CLI operations.
 Combines Fractal CLI (Plugin-based) with Legacy StewardCLI (System commands).
 
+DEPRECATED: Use vibe_core.mahamantra.__main__ instead.
+
+The TRUE entry point is now:
+    vibe_core/mahamantra/__main__.py
+
+This file is kept for backwards compatibility and to trigger @register_cli
+decorators via imports. Do not add new functionality here.
+
 WIRED TO PRAKRITI: Unified State Engine (OPUS-009)
 """
 
