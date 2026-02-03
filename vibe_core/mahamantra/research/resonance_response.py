@@ -244,19 +244,23 @@ class ResonanceResponder:
             positions=positions,
         )
 
-    def _derive_from_trajectory(
+    def _derive_from_attractor(
         self,
-        trajectory: Tuple[int, ...],
+        attractor: int,
         dominant_name: Optional[str] = None,
     ) -> SyllableSequence:
         """
-        Derive syllables from the ACTUAL TRAJECTORY to the attractor.
+        Derive syllables from the ATTRACTOR via proper Mahamantra routing.
 
-        The trajectory is the path the seed takes through mod-space
-        before reaching its attractor. This path IS the resonance pattern.
+        FOLLOWS PRODUCTION PATTERN from _mahamantra_lotus.py:
+        1. position = attractor % WORDS (0-15)
+        2. Route through krishna_route() → rama_to_phoneme()
+
+        For a SEQUENCE, we step through WORDS positions starting from
+        the attractor-derived position.
 
         Args:
-            trajectory: The values from ResonanceResult.trajectory
+            attractor: The resonance attractor (136=VAIKUNTHA or cycle value)
             dominant_name: HARE/KRISHNA/RAMA from GitaResonance
 
         The dominant_name determines the NUMBER of syllables (from axioms):
@@ -270,30 +274,26 @@ class ResonanceResponder:
         _SYLLABLE_COUNT = {"HARE": 8, "KRISHNA": 4, "RAMA": 4}
         num_syllables = _SYLLABLE_COUNT.get(dominant_name or "", 4)
 
+        # Base position from attractor (like production: attractor % WORDS)
+        base_position = attractor % WORDS
+
         rama_indices = []
         syllables = []
         positions = []
 
-        # Use trajectory values directly - these ARE the resonance path
-        # If trajectory is too short, we cycle through it
-        traj_len = len(trajectory)
-
         for i in range(num_syllables):
-            # Get value from trajectory (cycle if needed)
-            traj_idx = i % traj_len if traj_len > 0 else 0
-            traj_value = trajectory[traj_idx] if traj_len > 0 else 0
-
-            # Map trajectory value to Mahamantra position (1-16)
-            pos = (traj_value % WORDS) + 1
+            # Step through Mahamantra positions starting from base
+            pos_0indexed = (base_position + i) % WORDS
+            pos_1indexed = pos_0indexed + 1
 
             # Route through Krishna to get RAMA coordinate
-            # This is the CORRECT way - krishna_route maps position to RAMA space
-            rama_idx = krishna_route(pos - 1)  # 0-indexed position
+            # krishna_route: position × 17 mod 49
+            rama_idx = krishna_route(pos_0indexed)
 
             # Get phoneme from RAMA grid
             phoneme = rama_to_phoneme(rama_idx)
 
-            positions.append(pos)
+            positions.append(pos_1indexed)
             rama_indices.append(rama_idx)
             syllables.append(phoneme)
 
@@ -324,15 +324,20 @@ class ResonanceResponder:
         attractor = resonance.attractor
         trajectory_class = "vaikuntha" if attractor == 136 else "samsara"
 
-        # 3. Match to Gita verse
+        # 3. Match to Gita verse - USE SEED TO SELECT (like production!)
+        # FIX: Don't use best_match (= first), use seed % len(matches)
+        # See _mahamantra_lotus.py line 305 for the production fix
         gita_result = self._gita.match(attractor)
         verse_id = None
         verse_guna = None
         dominant_name = None
-        if gita_result.best_match:
-            verse_id = gita_result.best_match.verse_id
-            verse_guna = gita_result.best_match.guna
-            dominant_name = gita_result.best_match.dominant_name
+        if gita_result.matches:
+            # COMPUTED verse selection - NOT first match!
+            verse_index = seed % len(gita_result.matches)
+            selected_verse = gita_result.matches[verse_index]
+            verse_id = selected_verse.verse_id
+            verse_guna = selected_verse.guna
+            dominant_name = selected_verse.dominant_name
 
         # 4. Oracle reading (optional)
         oracle_reading = None
@@ -344,10 +349,10 @@ class ResonanceResponder:
         if self._kirtan:
             kirtan_result = self._kirtan.compute(seed)
 
-        # 6. Derive syllables from TRAJECTORY (not from arbitrary XOR!)
-        # The trajectory IS the resonance path - use it directly
-        syllables = self._derive_from_trajectory(
-            trajectory=resonance.trajectory,
+        # 6. Derive syllables from ATTRACTOR via proper Mahamantra routing
+        # FOLLOWS PRODUCTION: position = attractor % WORDS, then krishna_route()
+        syllables = self._derive_from_attractor(
+            attractor=attractor,
             dominant_name=dominant_name,
         )
 
@@ -385,15 +390,18 @@ class ResonanceResponder:
         attractor = resonance.attractor
         trajectory_class = "vaikuntha" if attractor == 136 else "samsara"
 
-        # Gita match
+        # Gita match - USE SEED TO SELECT (like production!)
         gita_result = self._gita.match(attractor)
         verse_id = None
         verse_guna = None
         dominant_name = None
-        if gita_result.best_match:
-            verse_id = gita_result.best_match.verse_id
-            verse_guna = gita_result.best_match.guna
-            dominant_name = gita_result.best_match.dominant_name
+        if gita_result.matches:
+            # COMPUTED verse selection - NOT first match!
+            verse_index = seed % len(gita_result.matches)
+            selected_verse = gita_result.matches[verse_index]
+            verse_id = selected_verse.verse_id
+            verse_guna = selected_verse.guna
+            dominant_name = selected_verse.dominant_name
 
         # Oracle
         oracle_reading = None
@@ -405,9 +413,9 @@ class ResonanceResponder:
         if self._kirtan:
             kirtan_result = self._kirtan.compute(seed)
 
-        # Syllables - from TRAJECTORY
-        syllables = self._derive_from_trajectory(
-            trajectory=resonance.trajectory,
+        # Syllables - from ATTRACTOR via proper Mahamantra routing
+        syllables = self._derive_from_attractor(
+            attractor=attractor,
             dominant_name=dominant_name,
         )
 
