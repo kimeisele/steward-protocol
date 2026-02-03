@@ -26,7 +26,9 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Final, List, Optional, Set, Tuple, Union
 
 # ONE IMPORT - Krishna IS the router
-from vibe_core.mahamantra.kernel.singularity import mahamantra
+# FIX: MahamantraLotus hat __call__ UND __getitem__ (Singularity nur __getitem__)
+from vibe_core.mahamantra import mahamantra
+
 # SSOT - WORDS derives from Mahamantra counting
 from vibe_core.mahamantra.substrate.seed import WORDS
 
@@ -162,7 +164,6 @@ class MahamantraCLIBridge:
         - Now "analyze" routes to kapila_cli instead of CLIRegistry
         """
         self._handlers[position] = handler
-
 
     # =========================================================================
     # INTROSPECTION
