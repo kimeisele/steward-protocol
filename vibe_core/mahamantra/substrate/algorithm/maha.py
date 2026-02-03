@@ -401,9 +401,8 @@ def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
         DeprecationWarning,
         stacklevel=2,
     )
-    for name in PATTERN:
-        value = maha_step(value, name, mod)
-    return value
+    # Use optimized implementation (O(1) for mod=137, O(9) otherwise)
+    return maha_oscillate_optimized(value, mod)
 
 
 def maha_transform(seed: int, preset: str = "quantum") -> int:
