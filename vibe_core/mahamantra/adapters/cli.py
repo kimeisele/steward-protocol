@@ -4,17 +4,19 @@ MAHA CLI ADAPTER - Bridge between Resonance and Action
 
 "yogaḥ karmasu kauśalam" - Yoga is skill in action.
 
-PURE RESONANCE MATCHING:
-    1. mahamantra(input) → position (0-15)
-    2. CLIMeta.lotus_position == position → MATCH
+HOLOGRAPHIC ROUTING (Cell-based):
+    1. mahamantra(input) → MahaCell (72-byte header + payload)
+    2. Cell carries FULL resonance (position, prana, integrity...)
+    3. Action EMERGES from cell state, not just position lookup
 
-NO keyword matching. NO hardcoded imports.
-The Mahamantra KNOWS. The CLI declares its position. They meet.
+SANKIRTAN CHAMBER PRINCIPLE:
+    - Input flows through 9 NavaBhakti steps
+    - Cell is created with all dimensions
+    - Mahajanas are Guardians, not fixed CLIs
+    - The action is GENERATED, not looked up
 
-HOLOGRAPHIC PRINCIPLE:
-    - Every @register_cli decorated CLI auto-gets lotus_position
-    - CLIRegistry.all() discovers ALL CLIs dynamically
-    - Position match = resonance alignment
+"Das Routing ist unabhängig von dem Inhalt und der Bedeutung!"
+But the CELL knows the difference through its dimensions.
 """
 
 from __future__ import annotations
@@ -28,9 +30,42 @@ import importlib
 import pkgutil
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from vibe_core.protocols.cli import CLIHandler, CLIMeta, CLIRegistry
+
+
+@dataclass
+class CellFingerprint:
+    """
+    The holographic fingerprint from a MahaCell.
+
+    Multiple dimensions for disambiguation:
+    - position: 0-15 (Mahamantra word)
+    - payload_size: Length of input
+    - prana: Energy level
+    - cycle: Computation cycle
+    """
+
+    position: int
+    payload_size: int
+    prana: int
+    cycle: int
+    seed: int
+
+    def matches(self, other: "CellFingerprint", tolerance: int = 0) -> bool:
+        """Check if two fingerprints match within tolerance."""
+        if self.position != other.position:
+            return False
+        if abs(self.payload_size - other.payload_size) > tolerance:
+            return False
+        return True
+
+    def distance(self, other: "CellFingerprint") -> int:
+        """Compute distance between fingerprints."""
+        if self.position != other.position:
+            return 1000000  # Different position = far apart
+        return abs(self.payload_size - other.payload_size) + abs(self.prana - other.prana)
 
 
 @dataclass
@@ -42,48 +77,67 @@ class AdapterResult:
     cli_command: Optional[str] = None
     cli_result: Optional[int] = None
     matched_position: Optional[int] = None
+    fingerprint: Optional[CellFingerprint] = None
+    candidates: List[str] = field(default_factory=list)
 
 
 class MahaCLIAdapter:
     """
     Bridge between Mahamantra Resonance and Domain CLIs.
 
-    PURE RESONANCE MATCHING:
-        resonance["position"] == cli.meta.lotus_position
+    HOLOGRAPHIC ROUTING:
+        1. Input → mahamantra() → Cell with fingerprint
+        2. CLI names → mahamantra() → Cell fingerprints (cached)
+        3. Match by fingerprint similarity, not just position
 
-    NO keyword matching. NO string comparison.
-    The system is holographic - position IS meaning.
+    This allows "audit" and "create" to be distinguished even at same position.
     """
 
     def __init__(self) -> None:
         self._discovered = False
+        self._cli_fingerprints: Dict[str, CellFingerprint] = {}
 
     def _discover_all_clis(self) -> None:
         """
-        Dynamically discover ALL CLIs in vibe_core/cli/.
-
-        NO hardcoded imports. Walk the package and import everything.
-        Each @register_cli decorator auto-registers with CLIRegistry.
+        Dynamically discover ALL CLIs and compute their fingerprints.
         """
         if self._discovered:
             return
+
+        from vibe_core.mahamantra import mahamantra
 
         try:
             import vibe_core.cli as cli_package
 
             package_path = Path(cli_package.__file__).parent
 
-            # Import all *_cli.py modules
             for module_info in pkgutil.iter_modules([str(package_path)]):
                 if module_info.name.endswith("_cli"):
                     try:
                         importlib.import_module(f"vibe_core.cli.{module_info.name}")
                     except ImportError:
-                        pass  # Skip broken modules
+                        pass
         except ImportError:
             pass
 
+        # Compute fingerprint for each registered CLI
+        for cli in CLIRegistry.all():
+            cmd = cli.meta.command
+            resonance = mahamantra(cmd)
+            self._cli_fingerprints[cmd] = self._extract_fingerprint(resonance)
+
         self._discovered = True
+
+    def _extract_fingerprint(self, resonance: Dict) -> CellFingerprint:
+        """Extract CellFingerprint from mahamantra() result."""
+        cell = resonance.get("cell", {})
+        return CellFingerprint(
+            position=resonance.get("position", 0),
+            payload_size=cell.get("payload_size", 0),
+            prana=cell.get("prana", 0),
+            cycle=cell.get("cycle", 0),
+            seed=resonance.get("vibration", {}).get("seed", 0),
+        )
 
     def execute(
         self,
@@ -92,66 +146,84 @@ class MahaCLIAdapter:
         mode: str = "observe",
     ) -> AdapterResult:
         """
-        Execute input through resonance matching.
-
-        Args:
-            input_text: Any input
-            mode: "observe" (match only) or "execute" (run CLI)
-
-        Returns:
-            AdapterResult with resonance and execution data
+        Execute input through holographic cell matching.
         """
-        # 1. Get resonance from Mahamantra
         from vibe_core.mahamantra import mahamantra
 
+        # 1. Get resonance and fingerprint from input
         resonance = mahamantra(input_text)
+        input_fp = self._extract_fingerprint(resonance)
 
-        # 2. Discover all CLIs (dynamic, no hardcoding)
+        # 2. Discover all CLIs and their fingerprints
         self._discover_all_clis()
 
-        # 3. Find CLI by POSITION MATCH (pure resonance)
-        position = resonance.get("position")
-        cli = self._find_by_position(position)
+        # 3. Find best matching CLI by fingerprint
+        cli, candidates = self._find_by_fingerprint(input_fp, input_text)
 
         result = AdapterResult(
             resonance=resonance,
-            matched_position=position,
+            matched_position=input_fp.position,
+            fingerprint=input_fp,
+            candidates=candidates,
         )
 
         if cli:
             result.cli_command = cli.meta.command
 
-            # 4. Execute if requested
             if mode == "execute":
-                # Parse subcommand from input if present
                 args = self._extract_args(input_text, cli)
                 result.cli_result = cli.run(args)
                 result.executed = True
 
         return result
 
-    def _find_by_position(self, position: int) -> Optional[CLIHandler]:
+    def _find_by_fingerprint(
+        self,
+        input_fp: CellFingerprint,
+        input_text: str,
+    ) -> Tuple[Optional[CLIHandler], List[str]]:
         """
-        Find CLI by lotus_position.
+        Find CLI by fingerprint matching.
 
-        PURE RESONANCE: No keyword matching.
-        Position from mahamantra() == lotus_position from CLIMeta.
+        Strategy:
+        1. Find all CLIs at same position
+        2. Sort by fingerprint distance
+        3. If exact payload_size match, use that
+        4. Otherwise, use name matching as tiebreaker
         """
+        candidates = []
+
         for cli in CLIRegistry.all():
-            if cli.meta.lotus_position == position:
-                return cli
-        return None
+            cmd = cli.meta.command
+            cli_fp = self._cli_fingerprints.get(cmd)
+
+            if cli_fp and cli_fp.position == input_fp.position:
+                distance = cli_fp.distance(input_fp)
+                candidates.append((distance, cmd, cli))
+
+        if not candidates:
+            return None, []
+
+        # Sort by distance
+        candidates.sort(key=lambda x: x[0])
+        candidate_names = [c[1] for c in candidates]
+
+        # If multiple at same distance, use name matching
+        if len(candidates) > 1 and candidates[0][0] == candidates[1][0]:
+            # Check if input contains any CLI name
+            input_lower = input_text.lower()
+            for _, cmd, cli in candidates:
+                if cmd.lower() in input_lower:
+                    return cli, candidate_names
+
+        # Return closest match
+        return candidates[0][2], candidate_names
 
     def _extract_args(self, input_text: str, cli: CLIHandler) -> List[str]:
-        """
-        Extract CLI arguments from input.
-
-        Check if any subcommand appears in input.
-        """
+        """Extract CLI arguments from input."""
         words = input_text.lower().split()
         args = []
 
-        # Find subcommand
         for subcmd in cli.meta.subcommands:
             if subcmd.lower() in words:
                 args.append(subcmd)
@@ -164,10 +236,14 @@ class MahaCLIAdapter:
         self._discover_all_clis()
         return CLIRegistry.discover()
 
-    def by_position(self, position: int) -> Optional[CLIHandler]:
-        """Get CLI for a specific position."""
+    def by_position(self, position: int) -> List[CLIHandler]:
+        """Get all CLIs at a specific position."""
         self._discover_all_clis()
-        return self._find_by_position(position)
+        return [
+            cli
+            for cli in CLIRegistry.all()
+            if self._cli_fingerprints.get(cli.meta.command, CellFingerprint(0, 0, 0, 0, 0)).position == position
+        ]
 
 
 # Singleton
