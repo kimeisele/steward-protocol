@@ -273,10 +273,8 @@ def __getattr__(name: str):
 
         return MahaModularSynth
 
-    if name == "OfferingPipeline":
-        from vibe_core.mahamantra.research.tulasi_lila import OfferingPipeline
-
-        return OfferingPipeline
+    # NOTE: OfferingPipeline removed from top-level API (production > research)
+    # Use: from vibe_core.mahamantra.research.tulasi_lila import OfferingPipeline
 
     # === Architecture (Unified) ===
     if name == "MahaCluster":

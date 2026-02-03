@@ -69,13 +69,16 @@ assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 # CATEGORY MODULES (Lazy loaded for fast import)
 # =============================================================================
 
+
 def __getattr__(name: str):
     """Lazy-load category modules on first access."""
 
     # LOTUS - Data Structures
     if name == "lotus":
-        from vibe_core.mahamantra.research import lotus_tree, lotus_radix_n, lotus_acintya, lotus_full_spectrum
         import types
+
+        from vibe_core.mahamantra.research import lotus_acintya, lotus_full_spectrum, lotus_radix_n, lotus_tree
+
         module = types.SimpleNamespace(
             LotusRadix=lotus_tree.LotusRadix,
             LotusArray=lotus_tree.LotusArray,
@@ -91,8 +94,10 @@ def __getattr__(name: str):
 
     # PREDICTIONS - Physics/Chemistry/Biology/Medicine
     if name == "predictions":
-        from vibe_core.mahamantra.research import physics, chemistry, biology, medicine
         import types
+
+        from vibe_core.mahamantra.research import biology, chemistry, medicine, physics
+
         module = types.SimpleNamespace(
             PHYSICS_PREDICTIONS=physics.PHYSICS_PREDICTIONS,
             CHEMISTRY_PREDICTIONS=chemistry.CHEMISTRY_PREDICTIONS,
@@ -103,8 +108,10 @@ def __getattr__(name: str):
 
     # COMPUTE - Core algorithms
     if name == "compute":
-        from vibe_core.mahamantra.research import maha_generator, maha_compression, computation, unified_compute
         import types
+
+        from vibe_core.mahamantra.research import computation, maha_compression, maha_generator, unified_compute
+
         module = types.SimpleNamespace(
             MahaGenerator=maha_generator.MahaGenerator,
             UnifiedComputeUnit=unified_compute.UnifiedComputeUnit,
@@ -114,14 +121,15 @@ def __getattr__(name: str):
     # DHARMA - Access to dharma submodule
     if name == "dharma":
         from vibe_core.mahamantra.research import dharma as _dharma
+
         return _dharma
 
     # ==========================================================================
     # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
     # Any .py file or subpackage in research/ is auto-discoverable
     # ==========================================================================
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     research_root = Path(__file__).parent
 
@@ -143,10 +151,18 @@ def __getattr__(name: str):
 # =============================================================================
 
 # Lotus Data Structures
+# DNA k-mer (research - benchmarked, not yet promoted)
+from vibe_core.mahamantra.research.dna_kmer import Lotus8merIndex, LotusKmerRadix
+
+# IP Routing (DEPRECATED - use adapters/network.py LotusIPRouter)
+from vibe_core.mahamantra.research.ip_routing import LotusIPv4Router
+
+# Lotus Tree (LotusRadix DEPRECATED - use adapters/routing.py HolographicRouter)
+# LotusArrayInt is unique research (array.array for C-speed integers)
 from vibe_core.mahamantra.research.lotus_tree import (
-    LotusRadix,
     LotusArray,
     LotusArrayInt,
+    LotusRadix,
 )
 
 # Generator
@@ -155,45 +171,35 @@ from vibe_core.mahamantra.research.maha_generator import MahaGenerator
 # Predictions (most requested)
 from vibe_core.mahamantra.research.physics import PHYSICS_PREDICTIONS
 
-# IP Routing (production-ready)
-from vibe_core.mahamantra.research.ip_routing import LotusIPv4Router
-
-# DNA k-mer (production-ready)
-from vibe_core.mahamantra.research.dna_kmer import Lotus8merIndex, LotusKmerRadix
-
-# Classification (Relocated to Substrate)
-from vibe_core.mahamantra.substrate.classifier import (
-    classify_algorithm,
-    Classification,
-    StructuralAlignment,
-)
-
 # Research Gateway
 from vibe_core.mahamantra.research_gateway import (
+    RESEARCH_MODULES,
+    auto_connect,
     connect_research,
     get_research_status,
-    is_production_ready,
-    auto_connect,
     get_rollout_tracker,
-    RESEARCH_MODULES,
+    is_production_ready,
 )
-
 
 # =============================================================================
 # DHARMA SUB-MODULE EXPORTS (Core Algorithm)
 # =============================================================================
-
 # These are the most important from dharma/
 from vibe_core.mahamantra.substrate.algorithm.maha import (
+    SYNTH_PRESETS,
     MahaModularSynth,
     MahaSynthParams,
-    SYNTH_PRESETS,
+)
+
+# Classification (Relocated to Substrate)
+from vibe_core.mahamantra.substrate.classifier import (
+    Classification,
+    StructuralAlignment,
+    classify_algorithm,
 )
 from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
 
-
 # NOTE: maha_sequencer was DELETED - consolidated into dharma/engine.py
-
 
 
 # =============================================================================
