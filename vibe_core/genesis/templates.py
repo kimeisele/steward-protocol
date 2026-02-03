@@ -47,6 +47,9 @@ class TemplateRegistry:
     NOTE: Use get_template_registry() to access via ServiceRegistry.
     """
 
+    # NAGA BLESSING: Mahamantra (Brahma) governs genesis - pre-blessed
+    _naga_flooded: bool = True
+
     def __init__(self, templates_dir: Optional[Path] = None):
         """Initialize template registry."""
         self._templates_dir = templates_dir or self._get_default_templates_dir()

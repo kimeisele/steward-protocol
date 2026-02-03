@@ -114,6 +114,9 @@ class Prakriti(PrakritiProtocol):
     - Layer 3 (PURUSHA): Personas (Identity)
     """
 
+    # NAGA BLESSING: Mahamantra (Bhishma) governs state - pre-blessed
+    _naga_flooded: bool = True
+
     def __init__(self, workspace_path: Optional[Path] = None, db_path: Optional[Path] = None):
         """Initialize Prakriti for a workspace.
 

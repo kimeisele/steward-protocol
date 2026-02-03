@@ -429,6 +429,9 @@ class EventBus(EventBusProtocol):
     - VRITRASURA DETECTION: Zombie subscriber tracking
     """
 
+    # NAGA BLESSING: Mahamantra is KING - services here are pre-blessed
+    _naga_flooded: bool = True
+
     @property
     def owner(self) -> Mahajana:
         """Always returns Mahajana.NARADA (Position 2)."""
