@@ -91,6 +91,12 @@ def __getattr__(name: str):
 
         return getattr(_types, name)
 
+    # === MahaState (Balarama) ===
+    if name in ("MahaState", "StateEntry", "get_maha_state", "pierce"):
+        from vibe_core.mahamantra.substrate import maha_state
+
+        return getattr(maha_state, name)
+
     # === Lotus ===
     if name in ("LotusNode", "LotusPath"):
         from vibe_core.mahamantra import _lotus
@@ -188,7 +194,7 @@ def __getattr__(name: str):
         return boot.BootMode
 
     # === ProcessManager (Vyasa) ===
-    if name in ("ProcessManager", "ProcessStatus"):
+    if name in ("ProcessManager", "ProcessStatus", "AgentProcessInfo"):
         from vibe_core.mahamantra.substrate import process_manager
 
         return getattr(process_manager, name)
