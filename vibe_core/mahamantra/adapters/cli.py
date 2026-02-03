@@ -4,16 +4,33 @@ MAHA CLI ADAPTER - Bridge between Resonance and Action
 
 "yogaḥ karmasu kauśalam" - Yoga is skill in action.
 
+BOUNDARY DEFINITION (Ksetra/Ksetrajna - BG 13):
+===============================================
+
+    THIS MODULE (our boundary):
+        vibe_core/mahamantra/adapters/cli.py  ← YOU ARE HERE
+        vibe_core/mahamantra/__main__.py      ← Entry Point
+
+    HOLY (do not modify):
+        vibe_core/mahamantra/_mahamantra_lotus.py  ← The Heart
+        vibe_core/mahamantra/substrate/*           ← The Algorithm
+        vibe_core/mahamantra/protocols/*           ← The Laws
+        vibe_core/mahamantra/reactor/*             ← The Reactors
+
+    EXTERNAL (use but don't own):
+        vibe_core/cli/*_cli.py                ← Domain CLIs
+        vibe_core/protocols/cli.py            ← CLIRegistry
+
 HOLOGRAPHIC ROUTING (Cell-based):
     1. mahamantra(input) → MahaCell (72-byte header + payload)
     2. Cell carries FULL resonance (position, prana, integrity...)
-    3. Action EMERGES from cell state, not just position lookup
+    3. Match by CellFingerprint (multi-dimensional)
+    4. Action EMERGES from cell state, not just position lookup
 
-SANKIRTAN CHAMBER PRINCIPLE:
-    - Input flows through 9 NavaBhakti steps
-    - Cell is created with all dimensions
-    - Mahajanas are Guardians, not fixed CLIs
-    - The action is GENERATED, not looked up
+THE CELL KNOWS THE DIFFERENCE:
+    "audit" and "create" both resonate at position 14 (Shuka)
+    But their cells differ: payload_size 5 vs 6
+    Holographic routing uses ALL dimensions for disambiguation.
 
 "Das Routing ist unabhängig von dem Inhalt und der Bedeutung!"
 But the CELL knows the difference through its dimensions.
