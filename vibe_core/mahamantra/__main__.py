@@ -41,6 +41,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         Cell → SankirtanChamber → Transform
         Response
 
+    With --run: Also executes matched CLI command.
+
     NO hardcoded commands. Pure resonance routing.
     """
     if argv is None:
@@ -49,6 +51,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     # No input = help
     if not argv:
         return _show_help()
+
+    # Check for --run flag (execute mode)
+    execute_mode = "--run" in argv or "-x" in argv
+    argv = [a for a in argv if a not in ("--run", "-x")]
 
     # Join all args into one input string
     # Resonance doesn't care about structure - it FEELS the meaning
@@ -66,15 +72,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     # =========================================================================
 
     try:
-        from vibe_core.mahamantra import mahamantra
+        from vibe_core.mahamantra.adapters.maha_cli import get_adapter
 
-        # THE ONE CALL - Everything emanates from here
-        response = mahamantra(input_text)
+        adapter = get_adapter()
+        mode = "execute" if execute_mode else "observe"
+        result = adapter.execute(input_text, mode=mode)
 
         # Render the response
-        _render_response(response)
+        _render_response(result.resonance, result)
 
-        return EXIT_SUCCESS
+        return result.cli_result if result.executed else EXIT_SUCCESS
 
     except ImportError as e:
         print(f"ERROR: Mahamantra not available ({e})")
@@ -88,9 +95,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         return EXIT_ERROR
 
 
-def _render_response(response: dict) -> None:
+def _render_response(response: dict, adapter_result=None) -> None:
     """
-    Render mahamantra() response.
+    Render mahamantra() response + adapter matching info.
 
     The response contains EVERYTHING - we just display it.
     """
@@ -121,6 +128,12 @@ def _render_response(response: dict) -> None:
     holy_name = response.get("holy_name", "?")
     trinity_fn = response.get("trinity_function", "?")
 
+    # Adapter info
+    cli_cmd = adapter_result.cli_command if adapter_result else None
+    cli_score = adapter_result.match_score if adapter_result else 0
+    cli_executed = adapter_result.executed if adapter_result else False
+    exec_mark = "✓ EXECUTED" if cli_executed else "observe"
+
     print(f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  MAHAMANTRA - Krishna Routes Everything                               ║
@@ -134,6 +147,9 @@ def _render_response(response: dict) -> None:
 ║  ROUTING (computed from seed):                                        ║
 ║    Position: {position:>2}  Guardian: {guardian:12s}  Quarter: {quarter:10s}  ║
 ║    Name: {holy_name}  Function: {trinity_fn:12s}                              ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║  CLI ADAPTER:                                                         ║
+║    Matched: {str(cli_cmd or "none"):<12s}  Score: {cli_score:<5.1f}  Mode: {exec_mark:12s}  ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  PARAMPARA: {parampara_status:10s}  CELL: {cell_valid}                                   ║
 ╚═══════════════════════════════════════════════════════════════════════╝
