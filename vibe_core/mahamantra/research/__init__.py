@@ -154,8 +154,11 @@ def __getattr__(name: str):
 # DNA k-mer (research - benchmarked, not yet promoted)
 from vibe_core.mahamantra.research.dna_kmer import Lotus8merIndex, LotusKmerRadix
 
-# IP Routing (research - benchmarked, not yet promoted)
+# IP Routing (DEPRECATED - use adapters/network.py LotusIPRouter)
 from vibe_core.mahamantra.research.ip_routing import LotusIPv4Router
+
+# Lotus Tree (LotusRadix DEPRECATED - use adapters/routing.py HolographicRouter)
+# LotusArrayInt is unique research (array.array for C-speed integers)
 from vibe_core.mahamantra.research.lotus_tree import (
     LotusArray,
     LotusArrayInt,
