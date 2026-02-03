@@ -395,10 +395,11 @@ def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
         Value after 16 transformations
     """
     import warnings
+
     warnings.warn(
         "maha_oscillate only reaches 12/16 positions. Use MahaModularSynth.transform() instead.",
         DeprecationWarning,
-        stacklevel=2
+        stacklevel=2,
     )
     for name in PATTERN:
         value = maha_step(value, name, mod)
@@ -440,6 +441,7 @@ def find_attractor(seed: int, mod: int = MAHA_QUANTUM, max_cycles: int = 100) ->
 
     # Suppress deprecation warning for internal use
     import warnings
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         for cycle in range(max_cycles):
@@ -451,6 +453,229 @@ def find_attractor(seed: int, mod: int = MAHA_QUANTUM, max_cycles: int = 100) ->
             value = maha_oscillate(value, mod)
 
         return value, max_cycles, 0
+
+
+# =============================================================================
+# THE 8:2:2 OPTIMIZATION - Algebraic Closed Form
+# =============================================================================
+# DISCOVERY: The 16-step oscillation has algebraic structure:
+#
+#   HALF 1 (Q1+Q2): 8 linear ops → v * 72 + 105 (mod 137)
+#   HALF 2 (Q3+Q4): 4 squares + 3 mults (nonlinear)
+#
+# Quarter breakdown:
+#   Q1: H K H K → (v*49 + 80) % mod     [linear]
+#   Q2: K K H H → (v*49 + 980) % mod    [linear]
+#   Q3: H R H R → ((v*7)²*7)² % mod     [nonlinear]
+#   Q4: R R H H → v⁴*49 % mod           [nonlinear]
+#
+# Combined Half 1: v → (v * 72 + 105) % 137
+#   where 72 = 49*49 % 137 = 2401 % 137
+#   and  105 = (80*49 + 980) % 137 = 4900 % 137
+#
+# The "8:2:2" refers to:
+#   - 8 linear operations (HARE/KRISHNA) in first half
+#   - 2 quadratics in Q3
+#   - 2 quadratics in Q4
+#
+# SPEEDUP: 16 ops → 9 ops (44% reduction)
+# Or: O(1) via precomputed lookup table
+# =============================================================================
+
+# Precomputed lookup table for mod=137 (MAHA_QUANTUM)
+# maha_oscillate(i, 137) for i in range(137)
+_MAHA_OSCILLATE_LUT: Final[Tuple[int, ...]] = (
+    99,
+    14,
+    87,
+    78,
+    64,
+    15,
+    14,
+    121,
+    14,
+    103,
+    4,
+    121,
+    81,
+    77,
+    136,
+    103,
+    87,
+    81,
+    49,
+    87,
+    49,
+    14,
+    18,
+    77,
+    63,
+    22,
+    78,
+    63,
+    87,
+    81,
+    18,
+    15,
+    15,
+    22,
+    103,
+    15,
+    64,
+    65,
+    49,
+    49,
+    65,
+    64,
+    15,
+    103,
+    22,
+    15,
+    15,
+    18,
+    81,
+    87,
+    63,
+    78,
+    22,
+    63,
+    77,
+    18,
+    14,
+    49,
+    87,
+    49,
+    81,
+    87,
+    103,
+    136,
+    77,
+    81,
+    121,
+    4,
+    103,
+    14,
+    121,
+    14,
+    15,
+    64,
+    78,
+    87,
+    14,
+    99,
+    136,
+    18,
+    4,
+    99,
+    64,
+    64,
+    136,
+    63,
+    103,
+    22,
+    77,
+    77,
+    78,
+    136,
+    65,
+    99,
+    65,
+    78,
+    4,
+    121,
+    81,
+    63,
+    65,
+    18,
+    49,
+    4,
+    99,
+    22,
+    121,
+    0,
+    121,
+    22,
+    99,
+    4,
+    49,
+    18,
+    65,
+    63,
+    81,
+    121,
+    4,
+    78,
+    65,
+    99,
+    65,
+    136,
+    78,
+    77,
+    77,
+    22,
+    103,
+    63,
+    136,
+    64,
+    64,
+    99,
+    4,
+    18,
+    136,
+)
+
+# The two attractors and the 4-cycle
+_ATTRACTOR_FIXED: Final[int] = 136  # T(16) = Position Sum Total
+_ATTRACTOR_CYCLE: Final[Tuple[int, ...]] = (18, 49, 87, 22)  # GITA → RAMA² → HARE+KRISHNA → SHRUTIS
+
+# Algebraic constants for Half 1
+_HALF1_MULT: Final[int] = 72  # 49*49 % 137 = 2401 % 137
+_HALF1_ADD: Final[int] = 105  # (80*49 + 980) % 137 = 4900 % 137
+
+
+def maha_oscillate_optimized(value: int, mod: int = MAHA_QUANTUM) -> int:
+    """
+    OPTIMIZED 16-step oscillation using the 8:2:2 algebraic form.
+
+    For mod=137 (MAHA_QUANTUM): O(1) via lookup table
+    For other mod values: O(9) via algebraic closed form (vs O(16) naive)
+
+    The 8:2:2 Optimization:
+        - Half 1 (Q1+Q2): 8 linear ops → 2 ops (mult + add)
+        - Half 2 (Q3+Q4): 4 squares + 3 mults = 7 ops
+        - Total: 9 ops (44% reduction from 16)
+
+    Args:
+        value: Starting value
+        mod: Modular space (default: MAHA_QUANTUM = 137)
+
+    Returns:
+        Value after 16 transformations
+    """
+    v = value % mod
+
+    # O(1) path for standard mod=137
+    if mod == MAHA_QUANTUM:
+        return _MAHA_OSCILLATE_LUT[v]
+
+    # Algebraic form for arbitrary mod
+    # Half 1: Linear combination (Q1+Q2 combined)
+    # General form: v → v * (49² % mod) + ((80*49 + 980) % mod)
+    mult_h1 = (POSITION_SUM_RAMA * POSITION_SUM_RAMA) % mod  # 49*49
+    add_h1 = (80 * POSITION_SUM_RAMA + 980) % mod  # 80*49 + 980
+    u = (v * mult_h1 + add_h1) % mod
+
+    # Half 2: Q3 + Q4 (nonlinear, must compute step by step)
+    # Q3: H R H R → ((u*7)²*7)²
+    x = (u * SEVEN) % mod
+    y = (x * x) % mod
+    z = (y * SEVEN) % mod
+    w = (z * z) % mod
+
+    # Q4: R R H H → w⁴*49
+    a = (w * w) % mod
+    b = (a * a) % mod
+    return (b * POSITION_SUM_RAMA) % mod
 
 
 # =============================================================================
@@ -520,6 +745,7 @@ class DynamicMahaEngine:
 
         # Advance one oscillation (suppress deprecation for internal use)
         import warnings
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             self._value = maha_oscillate(self._value, self._mod)
