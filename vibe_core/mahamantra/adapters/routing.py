@@ -40,19 +40,19 @@ USAGE:
     values = router.prefix_query(0x12, prefix_bits=8)
 """
 
-from typing import Any, Final, Generic, Iterator, List, Optional, Tuple, TypeVar, Dict
+from typing import Any, Dict, Final, Generic, Iterator, List, Optional, Tuple, TypeVar
 
-from ..protocols.routing import (
-    MahaRoutingProtocol,
-    RouteEntry,
-    RangeResult,
-)
 from ..protocols._seed import (
     QUARTERS,
     WORDS,
 )
+from ..protocols.routing import (
+    MahaRoutingProtocol,
+    RangeResult,
+    RouteEntry,
+)
 
-V = TypeVar('V')
+V = TypeVar("V")
 
 
 # =============================================================================
@@ -60,12 +60,16 @@ V = TypeVar('V')
 # =============================================================================
 
 BITS_PER_NIBBLE: Final[int] = QUARTERS  # 4 bits
-SLOTS_PER_LEVEL: Final[int] = WORDS      # 16 slots
+SLOTS_PER_LEVEL: Final[int] = WORDS  # 16 slots
+
+# Sentinel for empty slots (allows storing None as valid value)
+_EMPTY: Final[object] = object()
 
 
 # =============================================================================
 # THE LOTUS ENGINE (16-bit optimized)
 # =============================================================================
+
 
 class _LotusEngine16:
     """
@@ -73,18 +77,20 @@ class _LotusEngine16:
 
     This is the FAST PATH for 16-bit keys (65,536 key space).
     Directly derived from research/lotus_tree.py LotusRadixInt.
+
+    OPTIMIZED: Values stored directly in tree (no dict lookup).
+    Uses _EMPTY sentinel to distinguish empty from None values.
     """
 
-    __slots__ = ("_L0", "_size", "_values")
+    __slots__ = ("_L0", "_size")
 
     def __init__(self) -> None:
         # Level 0: 16 slots, each points to Level 1 or None
         self._L0: List[Optional[List]] = [None] * SLOTS_PER_LEVEL
         self._size: int = 0
-        self._values: dict = {}  # key -> value mapping for generic types
 
     def get(self, key: int) -> Optional[Any]:
-        """O(1) lookup with unrolled traversal."""
+        """O(1) lookup with unrolled traversal. Value stored directly in tree."""
         # Level 0
         i0 = (key >> 12) & 0xF
         L1 = self._L0[i0]
@@ -103,60 +109,103 @@ class _LotusEngine16:
         if L3 is None:
             return None
 
-        # Level 3 (leaf) - check existence
+        # Level 3 (leaf) - value stored directly, _EMPTY means not found
         i3 = key & 0xF
-        if L3[i3] is None:
-            return None
-
-        return self._values.get(key)
+        val = L3[i3]
+        return None if val is _EMPTY else val
 
     def set(self, key: int, value: Any) -> None:
-        """O(1) insert with unrolled traversal."""
-        # Level 0
+        """O(1) insert with unrolled traversal. Value stored directly in tree."""
+        # Level 0 (uses None for empty slots - these are child pointers)
         i0 = (key >> 12) & 0xF
         if self._L0[i0] is None:
             self._L0[i0] = [None] * SLOTS_PER_LEVEL
 
-        # Level 1
+        # Level 1 (uses None for empty slots - these are child pointers)
         L1 = self._L0[i0]
         i1 = (key >> 8) & 0xF
         if L1[i1] is None:
             L1[i1] = [None] * SLOTS_PER_LEVEL
 
-        # Level 2
+        # Level 2 (uses None for empty slots - these are child pointers)
         L2 = L1[i1]
         i2 = (key >> 4) & 0xF
         if L2[i2] is None:
-            L2[i2] = [None] * SLOTS_PER_LEVEL
+            # Level 3 uses _EMPTY for empty VALUE slots (leaf level)
+            L2[i2] = [_EMPTY] * SLOTS_PER_LEVEL
 
-        # Level 3 (leaf)
+        # Level 3 (leaf) - store value directly, uses _EMPTY for empty
         L3 = L2[i2]
         i3 = key & 0xF
 
-        if L3[i3] is None:
+        if L3[i3] is _EMPTY:
             self._size += 1
 
-        L3[i3] = True  # Mark as present
-        self._values[key] = value
+        L3[i3] = value  # Value stored directly (no dict!)
 
     def __contains__(self, key: int) -> bool:
-        return self.get(key) is not None
+        """Check if key exists. Uses _EMPTY sentinel so None values work."""
+        # Level 0
+        i0 = (key >> 12) & 0xF
+        L1 = self._L0[i0]
+        if L1 is None:
+            return False
+
+        # Level 1
+        i1 = (key >> 8) & 0xF
+        L2 = L1[i1]
+        if L2 is None:
+            return False
+
+        # Level 2
+        i2 = (key >> 4) & 0xF
+        L3 = L2[i2]
+        if L3 is None:
+            return False
+
+        # Level 3 (leaf) - _EMPTY means not present
+        i3 = key & 0xF
+        return L3[i3] is not _EMPTY
 
     def __len__(self) -> int:
         return self._size
 
     def keys(self) -> Iterator[int]:
-        """Iterate over all keys."""
-        return iter(self._values.keys())
+        """Iterate over all keys by traversing tree."""
+        for i0, L1 in enumerate(self._L0):
+            if L1 is None:
+                continue
+            for i1, L2 in enumerate(L1):
+                if L2 is None:
+                    continue
+                for i2, L3 in enumerate(L2):
+                    if L3 is None:
+                        continue
+                    for i3, val in enumerate(L3):
+                        if val is not _EMPTY:
+                            yield (i0 << 12) | (i1 << 8) | (i2 << 4) | i3
 
     def items(self) -> Iterator[Tuple[int, Any]]:
-        """Iterate over all (key, value) pairs."""
-        return iter(self._values.items())
+        """Iterate over all (key, value) pairs by traversing tree."""
+        for i0, L1 in enumerate(self._L0):
+            if L1 is None:
+                continue
+            for i1, L2 in enumerate(L1):
+                if L2 is None:
+                    continue
+                for i2, L3 in enumerate(L2):
+                    if L3 is None:
+                        continue
+                    for i3, val in enumerate(L3):
+                        if val is not _EMPTY:
+                            key = (i0 << 12) | (i1 << 8) | (i2 << 4) | i3
+                            yield (key, val)
 
 
 # =============================================================================
 # THE ADAPTER (Enterprise Interface)
 # =============================================================================
+
 
 class HolographicRouter(MahaRoutingProtocol[V]):
     """
@@ -179,7 +228,7 @@ class HolographicRouter(MahaRoutingProtocol[V]):
         self.levels = levels
         self.default = default
         self.key_bits = levels * BITS_PER_NIBBLE
-        self.key_space = SLOTS_PER_LEVEL ** levels
+        self.key_space = SLOTS_PER_LEVEL**levels
         self._key_mask = (1 << self.key_bits) - 1
 
         # Pre-compute shifts for each level
@@ -221,11 +270,11 @@ class HolographicRouter(MahaRoutingProtocol[V]):
         return result if result is not None else self.default
 
     def __getitem__(self, key: int) -> V:
-        """Dict-like access."""
-        result = self.get(key)
-        if result is None and self.default is None:
+        """Dict-like access. Supports None as valid stored value."""
+        key = key & self._key_mask
+        if key not in self._engine:
             raise KeyError(key)
-        return result
+        return self._engine.get(key)
 
     def __setitem__(self, key: int, value: V) -> None:
         """Dict-like assignment."""
@@ -321,6 +370,7 @@ class HolographicRouter(MahaRoutingProtocol[V]):
 # GENERIC ENGINE (For non-16-bit keys)
 # =============================================================================
 
+
 class _GenericLotusEngine:
     """Generic Lotus engine for arbitrary key sizes."""
 
@@ -377,6 +427,7 @@ class _GenericLotusEngine:
 # =============================================================================
 # CONVENIENCE FACTORIES
 # =============================================================================
+
 
 def router_16bit(default: Optional[V] = None) -> HolographicRouter[V]:
     """Create 16-bit router (65,536 key space). USES FAST ENGINE."""
