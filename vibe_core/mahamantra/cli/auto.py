@@ -79,29 +79,31 @@ MethodResultList = List[Union[MethodResultLeaf, Dict[str, "MethodResultLeaf"]]]
 MethodResultDict = Dict[str, Union[MethodResultLeaf, List[MethodResultLeaf]]]
 MethodResult = Union[None, MethodResultDict, MethodResultList, Tuple[MethodResultLeaf, ...], str, int, float, bool]
 
+# FIX: MahamantraLotus hat __call__ UND __getitem__ (Singularity nur __getitem__)
+from vibe_core.mahamantra import mahamantra
 from vibe_core.mahamantra.cli.protocol import (
+    # Chaitanya Lila Boundaries
+    NAVADVIPA_LIMIT,
+    PURI_LIMIT,
     CLICapability,
     CLIContext,
     CLIErrorCode,
     CLIOutput,
     CLIParameter,
     CLIResult,
-    # Chaitanya Lila Boundaries
-    NAVADVIPA_LIMIT,
-    PURI_LIMIT,
 )
-from vibe_core.mahamantra.kernel.singularity import mahamantra
-from vibe_core.mahamantra.substrate.seed import WORDS, PARAMPARA, MAHA_QUANTUM
+from vibe_core.mahamantra.substrate.seed import MAHA_QUANTUM, PARAMPARA, WORDS
 
 # =============================================================================
 # VIBRATION ROUTING - MahaKirtan Orchestration (THE KING)
 # =============================================================================
 # Lazy-loaded to avoid circular imports at module load time
-_COMPRESSOR: "MahaCompression | None" = None
-_KIRTAN: "MahaKirtan | None" = None
+# Type hints use strings because these are lazy-loaded
+_COMPRESSOR = None  # type: MahaCompression | None
+_KIRTAN = None  # type: MahaKirtan | None
 
 
-def _get_kirtan_orchestrator() -> tuple["MahaCompression", "MahaKirtan"]:
+def _get_kirtan_orchestrator():  # returns tuple[MahaCompression, MahaKirtan]
     """
     Get the KING orchestration infrastructure (lazy singleton).
 
@@ -114,6 +116,7 @@ def _get_kirtan_orchestrator() -> tuple["MahaCompression", "MahaKirtan"]:
     if _COMPRESSOR is None:
         from vibe_core.mahamantra.adapters.compression import MahaCompression
         from vibe_core.mahamantra.substrate.mantra import MahaKirtan
+
         _COMPRESSOR = MahaCompression()
         _KIRTAN = MahaKirtan(mod_space=MAHA_QUANTUM)
     return _COMPRESSOR, _KIRTAN
@@ -344,12 +347,12 @@ class CLIAutoDiscovery:
 
             param_type = "string"  # default
             annotation = param.annotation
-            if annotation != inspect.Parameter.empty:
-                if annotation == int:
+            if annotation is not inspect.Parameter.empty:
+                if annotation is int:
                     param_type = "integer"
-                elif annotation == float:
+                elif annotation is float:
                     param_type = "float"
-                elif annotation == bool:
+                elif annotation is bool:
                     param_type = "boolean"
 
             required = param.default == inspect.Parameter.empty
