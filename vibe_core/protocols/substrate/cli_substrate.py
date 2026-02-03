@@ -152,29 +152,22 @@ class CLILotusPosition:
 
 def derive_lotus_position(command: str) -> CLILotusPosition:
     """
-    Derive Lotus position from command name via MAHA ALGORITHM.
+    Derive Lotus position from command name via MAHAMANTRA.
 
     "Das Routing ist unabhängig von dem Inhalt und der Bedeutung!"
 
-    The position is derived by passing the command through the same
-    Maha Algorithm that transforms user input. This creates holographic
-    alignment: command name and user input both flow through the same
-    transformation, meeting at the same position = resonance.
+    The position is derived by passing the command through the SAME
+    mahamantra() function that transforms user input. This creates
+    holographic alignment - same algorithm, same result.
 
-    NO keyword matching. NO semantic analysis.
-    The Maha Algorithm IS the router.
+    NO keyword matching. NO separate algorithm.
+    ONE ALGORITHM TO RULE THEM ALL.
     """
-    from vibe_core.mahamantra.substrate.algorithm import maha_transform
+    from vibe_core.mahamantra import mahamantra
 
-    # Seed from command name (same hash as used elsewhere)
-    command_lower = command.lower()
-    seed = sum(ord(c) * (i + 1) for i, c in enumerate(command_lower))
-
-    # Transform through Maha Algorithm → produces value in [0, MAHA_QUANTUM)
-    transformed = maha_transform(seed)
-
-    # Map to 16 positions (WORDS = 16)
-    position = transformed % MAHAMANTRA_POSITIONS
+    # Get resonance through THE mahamantra
+    resonance = mahamantra(command)
+    position = resonance["position"]
 
     # Derive quarter and worker from position
     quarter = CLILotusQuarter(position // 4)
