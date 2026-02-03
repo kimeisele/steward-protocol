@@ -6,14 +6,17 @@ MAHAJANA: PRAHLADA (The Resilient)
 OPCODE: EXTEND_CAP (Position 9)
 PHASE: SERVE
 
-ARCHITECTURE (Clean):
-    User Input → mahamantra.resonate() → Guardian → CLI Command
+ARCHITECTURE (Live Computed Routing):
+    User Input → mahamantra() → Position/Guardian → CLI Command
 
-    NO INTENT_PATTERNS HERE.
-    NO KEYWORD MATCHING HERE.
-    ALL INTELLIGENCE IN THE CORE (intents.py + resonance).
+    mahamantra() routing is 100% LIVE COMPUTED:
+    Input → Seed (MahaCompression) → Attractor (MahaModularSynth) → Position = attractor % 16
 
-PRAHLADA is just a relay. The Core decides.
+    NO HARDCODED KEYWORDS.
+    NO PATTERN MATCHING.
+    PURE MATHEMATICAL ROUTING FROM THE SEED.
+
+PRAHLADA is just a relay. The Core decides via computation.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -60,25 +63,25 @@ GUARDIAN_COMMANDS = {
 @naga_command(
     opcode=MantraOpCode.EXTEND_CAP,
     name="chat",
-    help_text="PRAHLADA - Chat with the system, routes via mahamantra.resonate()",
+    help_text="PRAHLADA - Chat with the system, routes via mahamantra() live computed",
 )
 class ChatCommand(NagaCommandBase):
     """
     Chat command - dumb I/O interface.
 
-    ALL INTELLIGENCE IS IN THE CORE:
-    - intents.py defines keywords per position
-    - MantraProtocol.get_resonance() scores input
-    - mahamantra.resonate() finds best match
+    ALL INTELLIGENCE IS IN THE CORE (mahamantra):
+    - MahaCompression computes seed from input
+    - MahaModularSynth computes attractor from seed
+    - Position = attractor % 16 (deterministic)
 
     This command just:
-    1. Calls mahamantra.resonate(input)
+    1. Calls mahamantra(input) for live computed routing
     2. Maps guardian → CLI command
     3. Executes and returns result
     """
 
     def execute(self, args: List[str]) -> NagaCommandResult:
-        """Execute chat via mahamantra.resonate() - no local intelligence."""
+        """Execute chat via mahamantra() - live computed routing."""
         from vibe_core.cli.naga_commands import discover_commands
 
         discover_commands()
@@ -91,32 +94,31 @@ class ChatCommand(NagaCommandBase):
 
         message = " ".join(args)
 
-        # === THE CORE DECIDES ===
+        # === THE CORE DECIDES (LIVE COMPUTED ROUTING) ===
+        # mahamantra() uses: Input → Seed → Attractor → Position = attractor % 16
+        # NO keywords, NO hardcoded patterns - 100% mathematically computed
         from vibe_core.mahamantra import mahamantra
 
-        score, guardian_node = mahamantra.resonate(message)
+        result = mahamantra(message)
 
-        # Get guardian name (extract from path like "mahamantra.dharma.prithu")
-        guardian = None
-        if guardian_node:
-            node_str = str(guardian_node)
-            # Extract last part of path
-            guardian = node_str.split(".")[-1] if "." in node_str else node_str
+        # Extract routing info from live computed result
+        guardian = result.get("guardian")
+        position = result.get("position", -1)
+        quarter = result.get("quarter", "unknown")
+
+        # Live computed routing = deterministic = always confident
+        # Score represents routing confidence (1.0 = fully computed)
+        score = 1.0 if guardian else 0.0
 
         # === ROUTING DECISION ===
-        # Threshold from ResonanceHarmonics: LILA/MALA = 4/9 ≈ 0.444
-        from vibe_core.mahamantra.substrate.harmonics import ResonanceHarmonics
-
-        threshold = ResonanceHarmonics.THRESHOLD_REFINE
-
-        if score >= threshold and guardian:
-            # Route to guardian's command
+        if guardian:
+            # Route to guardian's command (live computed)
             command_name = GUARDIAN_COMMANDS.get(guardian.lower())
 
             if command_name and command_name != "chat":
                 return self._route_to_command(command_name, guardian, message, score)
 
-        # Fallback: PRAHLADA responds directly (no routing)
+        # Fallback: PRAHLADA responds directly (prahlada maps to None in GUARDIAN_COMMANDS)
         return self._chat_response(message, score, guardian)
 
     def _route_to_command(self, command_name: str, guardian: str, message: str, score: float) -> NagaCommandResult:
