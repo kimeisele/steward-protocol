@@ -288,6 +288,16 @@ class StateService(StateServiceProtocol):
                 # 5. 🍎 APPLE MAGIC: Check if we should auto-commit
                 self._maybe_auto_commit()
 
+                # 6. BALARAMA SEAL (Body/Soul Separation)
+                # Soul follows Body. We seal the intent asynchronously.
+                try:
+                    from vibe_core.mahamantra.substrate.maha_state import get_maha_state
+                    maha = get_maha_state(self.workspace)
+                    maha.seal(filename, data)
+                except Exception as e:
+                     # Sealing is secondary. Body survives even if Soul is delayed.
+                    logger.debug(f"⚠️ StateService: Seal failed for {filename} (Drift): {e}")
+
                 return WriteResult(
                     success=True,
                     path=target_path,

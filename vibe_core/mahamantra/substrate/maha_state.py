@@ -401,7 +401,7 @@ class MahaState:
         """Priority: sovereign (pierced) -> config -> default."""
         if key in self._entries:
             entry = self._entries[key]
-            if entry.pierced or entry.source == "sovereign":
+            if entry.pierced or entry.source in ("sovereign", "seal"):
                 return entry.value
 
         config = self._get_config()
@@ -657,6 +657,71 @@ class MahaState:
             "guna_classifier": self.guna_classifier is not None,
         }
 
+
+    # =========================================================================
+    # BALARAMA SEALING (Body/Soul Separation - Async)
+    # =========================================================================
+
+    def seal(self, key: str, content: object) -> None:
+        """
+        Seal content: Compress to Seed + Set Sticky bit.
+        
+        ASYNC SERIALIZATION: This does NOT write to disk immediately.
+        It marks the state dirty. The System Loop will flush it.
+        
+        Args:
+            key: Path key (e.g. "viveka_decisions.json")
+            content: Data to seal
+        """
+        try:
+            # Lazy import to avoid circular dependency
+            from vibe_core.mahamantra.adapters.compression import MahaCompression
+            
+            # Compress content to Seed (Soul)
+            result = MahaCompression().encode_samskara(content)
+            
+            # Store Seed as the Value
+            # source="seal" indicates this is a File Seal, not a Config Override
+            self.set(key, result.seed, source="seal")
+            
+            # Note: set() marks _dirty=True. We do NOT call save() here.
+            # This prevents IO bloat.
+            logger.debug(f"MahaState SEALED: {key} -> {result.seed}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to seal {key}: {e}")
+
+    def validate(self, key: str, content: object) -> str:
+        """
+        Validate content against sealed Seed.
+        
+        Returns:
+            "MATCH" - Perfect alignment
+            "DRIFT" - New content, old seed (Atomicity gap) - OK
+            "TAMAS" - Corruption detected (if stricter checks enabled)
+            "UNKNOWN" - No seal found
+        """
+        config_seed = self.get(key)
+        if config_seed is None:
+            return "UNKNOWN" # Not sealed yet
+            
+        try:
+            from vibe_core.mahamantra.adapters.compression import MahaCompression
+            current_seed = MahaCompression().encode_samskara(content).seed
+            
+            if current_seed == config_seed:
+                return "MATCH"
+            
+            # If seeds mismatch, strictly it's DRIFT (unsealed changes)
+            # We don't scream "TAMAS" yet unless we track timestamps.
+            return "DRIFT"
+            
+        except Exception:
+            return "UNKNOWN"
+
+    def persist(self) -> None:
+        """Alias for save() (Sovereign Interface)."""
+        self.save()
 
 # =============================================================================
 # CONVENIENCE FUNCTIONS

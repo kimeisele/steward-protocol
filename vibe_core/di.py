@@ -203,6 +203,26 @@ class ServiceRegistry:
             logger.debug(f"[DI] Registered: {name}")
 
     @classmethod
+    def unregister(cls, interface: Type[T]) -> None:
+        """
+        Unregister a service.
+
+        Used primarily for testing to clear singletons without resetting the entire registry.
+
+        Args:
+            interface: The interface/protocol type to unregister
+        """
+        with cls._lock:
+            name = interface.__name__
+            if name in cls._services:
+                del cls._services[name]
+                logger.debug(f"[DI] Unregistered: {name}")
+
+            if name in cls._factories:
+                del cls._factories[name]
+                logger.debug(f"[DI] Unregistered factory: {name}")
+
+    @classmethod
     def register_factory(cls, interface: Type[T], factory: Callable[[], T]) -> None:
         """
         Register a factory for lazy instantiation.
