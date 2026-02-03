@@ -72,7 +72,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     # =========================================================================
 
     try:
-        from vibe_core.mahamantra.adapters.maha_cli import get_adapter
+        from vibe_core.mahamantra.adapters.cli import get_adapter
 
         adapter = get_adapter()
         mode = "execute" if execute_mode else "observe"
@@ -130,9 +130,15 @@ def _render_response(response: dict, adapter_result=None) -> None:
 
     # Adapter info
     cli_cmd = adapter_result.cli_command if adapter_result else None
-    cli_score = adapter_result.match_score if adapter_result else 0
+    cli_pos = adapter_result.matched_position if adapter_result else "?"
     cli_executed = adapter_result.executed if adapter_result else False
     exec_mark = "✓ EXECUTED" if cli_executed else "observe"
+    candidates = adapter_result.candidates[:3] if adapter_result else []
+    candidates_str = ", ".join(candidates) if candidates else "-"
+
+    # Fingerprint info
+    fp = adapter_result.fingerprint if adapter_result else None
+    fp_str = f"pos={fp.position} payload={fp.payload_size}" if fp else "-"
 
     print(f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
@@ -148,8 +154,10 @@ def _render_response(response: dict, adapter_result=None) -> None:
 ║    Position: {position:>2}  Guardian: {guardian:12s}  Quarter: {quarter:10s}  ║
 ║    Name: {holy_name}  Function: {trinity_fn:12s}                              ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  CLI ADAPTER:                                                         ║
-║    Matched: {str(cli_cmd or "none"):<12s}  Score: {cli_score:<5.1f}  Mode: {exec_mark:12s}  ║
+║  CLI ADAPTER (holographic cell matching):                             ║
+║    Matched: {str(cli_cmd or "none"):<12s}  Mode: {exec_mark:14s}            ║
+║    Fingerprint: {fp_str:<52s} ║
+║    Candidates: {candidates_str:<54s} ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  PARAMPARA: {parampara_status:10s}  CELL: {cell_valid}                                   ║
 ╚═══════════════════════════════════════════════════════════════════════╝
