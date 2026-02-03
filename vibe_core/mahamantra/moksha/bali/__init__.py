@@ -37,6 +37,19 @@ PARAMPARA_VECTOR: Final[int] = 518
 # BaliBase alias for backward compat
 BaliBase = BaliProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """BALI EXECUTION - IO Flush (Position 13)"""
+    return {
+        "success": True,
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "input": input_text,
+    }
+
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

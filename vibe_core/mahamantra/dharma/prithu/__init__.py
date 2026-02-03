@@ -37,6 +37,19 @@ PARAMPARA_VECTOR: Final[int] = 185
 # PrithuBase alias for backward compat
 PrithuBase = PrithuProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """PRITHU EXECUTION - Assert Truth (Position 4, HEAD)"""
+    return {
+        "success": True,
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "input": input_text,
+    }
+
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

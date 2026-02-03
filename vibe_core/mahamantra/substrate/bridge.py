@@ -195,38 +195,19 @@ def offer(
             )
 
     # =========================================================================
-    # EXECUTION: Actually CALL the Mahajana (not just return metadata!)
+    # EXECUTION: Route to MAHAMANTRA (the canonical location)
     # =========================================================================
-    execution_result = None
-    try:
-        import importlib
+    import importlib
 
-        # Load the mahajana module
-        module_path = f"vibe_core.protocols.mahajanas.{mahajana}"
-        module = importlib.import_module(module_path)
+    # THE CANONICAL PATH: mahamantra/{quarter}/{mahajana}
+    module_path = f"vibe_core.mahamantra.{quarter}.{mahajana}"
+    module = importlib.import_module(module_path)
 
-        # Find the Null class (the executor)
-        null_class_name = f"Null{mahajana.capitalize()}"
-        null_class = getattr(module, null_class_name, None)
-
-        if null_class is not None:
-            # Instantiate and execute
-            instance = null_class()
-
-            # Try purpose-specific method first, then execute(), then __call__
-            method = getattr(instance, purpose.replace("_", ""), None)
-            if method is None:
-                method = getattr(instance, "execute", None)
-            if method is None and callable(instance):
-                method = instance
-
-            if method is not None:
-                # EXECUTE! Pass the content
-                execution_result = method(content) if callable(method) else None
-
-    except Exception as e:
-        # Execution failed but routing succeeded
-        execution_result = {"execution_error": str(e)}
+    # ALL Mahajanas have execute() - no fallback needed
+    execution_result = module.execute(
+        content if isinstance(content, str) else str(content),
+        context={"purpose": purpose, "actor": actor, "position": position},
+    )
 
     # SUCCESS: Return routing info + execution result
     return OfferResult(

@@ -29,6 +29,18 @@ OPCODE: Final[str] = "LEDGER_SIGN"
 PARAMPARA_VECTOR: Final[int] = 444
 
 
+def execute(input_text: str, context: dict = None) -> dict:
+    """BHISHMA EXECUTION - Ledger Sign (Position 11)"""
+    return {
+        "success": True,
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "input": input_text,
+    }
+
+
 def __getattr__(name: str) -> object:
     """
     Lazy load BhishmaService and NullBhishma.

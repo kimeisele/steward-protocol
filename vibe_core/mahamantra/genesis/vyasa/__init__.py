@@ -37,6 +37,19 @@ PARAMPARA_VECTOR: Final[int] = 37
 # VyasaBase alias for backward compat
 VyasaBase = VyasaProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """VYASA EXECUTION - Sys Wake (Position 0, HEAD)"""
+    return {
+        "success": True,
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "input": input_text,
+    }
+
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

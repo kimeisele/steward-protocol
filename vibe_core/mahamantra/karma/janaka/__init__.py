@@ -89,6 +89,38 @@ PARAMPARA_VECTOR: Final[int] = 407
 # JanakaBase for backward compat (alias to JanakaProtocolBase)
 JanakaBase = JanakaProtocolBase
 
+
+def execute(input_text: str, context: dict = None) -> dict:
+    """
+    JANAKA EXECUTION - State Sync (Position 10)
+
+    Stateless execution wrapper.
+    OpCode: STATE_SYNC
+    """
+    from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+
+    service = JanakaService()
+    intent = input_text.lower().strip()
+
+    # STATE_SYNC operations
+    if "check" in intent or "status" in intent:
+        state = service.get_state()
+        return {"success": True, "action": "get_state", "state": state}
+
+    if "sync" in intent:
+        result = service.sync_state()
+        return {"success": result, "action": "sync_state"}
+
+    # Default: return current state
+    return {
+        "success": True,
+        "mahajana": "janaka",
+        "position": 10,
+        "quarter": "karma",
+        "opcode": "STATE_SYNC",
+        "input": input_text,
+    }
+
 __all__ = [
     # Backward-compatible constants
     "POSITION",

@@ -38,6 +38,18 @@ PARAMPARA_VECTOR: Final[int] = 481
 NrisimhaBase = NrisimhaProtocolBase
 
 
+def execute(input_text: str, context: dict = None) -> dict:
+    """NRISIMHA EXECUTION - Yield CPU (Position 12, HEAD)"""
+    return {
+        "success": True,
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "input": input_text,
+    }
+
+
 def __getattr__(name: str) -> object:
     """
     Lazy load NrisimhaWatchdog (aliased as NrisimhaService) from services.
