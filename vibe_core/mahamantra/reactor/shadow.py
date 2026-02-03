@@ -1280,6 +1280,9 @@ class ShadowReactorFactory:
         reactor = shadow_reactor_factory.spawn()
     """
 
+    # NAGA BLESSING: Mahamantra is KING - services here are pre-blessed
+    _naga_flooded: bool = True
+
     def spawn(
         self,
         auto_discover: bool = True,

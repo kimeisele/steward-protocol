@@ -539,6 +539,10 @@ class GADBase(ABC):
     - Automatic dharma tests
     """
 
+    # NAGA BLESSING: All GAD-000 compliant components are pre-blessed
+    # Mahamantra is KING - GAD services route through mahamantra
+    _naga_flooded: bool = True
+
     def __init__(self) -> None:
         self._heartbeat = MantraHeartbeat()
 
