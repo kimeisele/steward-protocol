@@ -24,9 +24,9 @@ __genesis__ = "0xedb5ebb8"  # GenesisByte: parampara % 37 == 0
 from typing import List, Optional
 
 from vibe_core.protocols.naga.cli_command import (
+    NAGA_COMMAND_REGISTRY,
     NagaCommandBase,
     NagaCommandResult,
-    NAGA_COMMAND_REGISTRY,
     naga_command,
 )
 from vibe_core.protocols.substrate import MantraOpCode
@@ -60,7 +60,7 @@ GUARDIAN_COMMANDS = {
 @naga_command(
     opcode=MantraOpCode.EXTEND_CAP,
     name="chat",
-    help_text="Chat with the system - routes via mahamantra.resonate()",
+    help_text="PRAHLADA - Chat with the system, routes via mahamantra.resonate()",
 )
 class ChatCommand(NagaCommandBase):
     """
