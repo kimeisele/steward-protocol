@@ -141,6 +141,7 @@ class ResonanceResponse:
     syllables: SyllableSequence
 
     # Full data (optional, for deep analysis)
+    trajectory: Tuple[int, ...] = field(default_factory=tuple)  # The actual path to attractor
     oracle_reading: Optional[OracleReading] = None
     kirtan_result: Optional[KirtanComputeResult] = None
     vibrations: Tuple[VibrationSignature, ...] = field(default_factory=tuple)
@@ -159,13 +160,15 @@ class ResonanceResponse:
 
     def summary(self) -> str:
         """Human-readable summary."""
-        traj = "VAIKUNTHA" if self.is_vaikuntha else "SAMSARA"
+        traj_type = "VAIKUNTHA" if self.is_vaikuntha else "SAMSARA"
+        traj_preview = str(self.trajectory[:5]) + "..." if len(self.trajectory) > 5 else str(self.trajectory)
         lines = [
             f"Intent: {self.intent[:50]}{'...' if len(self.intent) > 50 else ''}",
             f"Seed: {self.seed} | Guna: {self.guna.upper()}",
-            f"Attractor: {self.attractor} ({traj})",
+            f"Attractor: {self.attractor} ({traj_type}) | Cycles: {self.cycles_to_converge}",
+            f"Trajectory: {traj_preview}",
             f"Verse: {self.verse_id or 'N/A'} | Dominant: {self.dominant_name or 'N/A'}",
-            f"Syllables: {self.syllables.as_string}",
+            f"Syllables: {self.syllables.as_string} (Positions: {self.syllables.positions})",
         ]
         return "\n".join(lines)
 
@@ -241,42 +244,56 @@ class ResonanceResponder:
             positions=positions,
         )
 
-    def _derive_from_attractor(self, attractor: int, seed: int = 0) -> SyllableSequence:
+    def _derive_from_trajectory(
+        self,
+        trajectory: Tuple[int, ...],
+        dominant_name: Optional[str] = None,
+    ) -> SyllableSequence:
         """
-        Derive syllables from attractor AND seed.
+        Derive syllables from the ACTUAL TRAJECTORY to the attractor.
 
-        The attractor determines the base resonance pattern,
-        the seed provides variation within that pattern.
+        The trajectory is the path the seed takes through mod-space
+        before reaching its attractor. This path IS the resonance pattern.
 
-        For attractor 136 (VAIKUNTHA):
-        - Use seed to select which of the 16 positions to emphasize
-        - This creates unique syllable sequences for each input
+        Args:
+            trajectory: The values from ResonanceResult.trajectory
+            dominant_name: HARE/KRISHNA/RAMA from GitaResonance
 
-        For other attractors (SAMSARA cycles):
-        - The cycle itself provides variation
+        The dominant_name determines the NUMBER of syllables (from axioms):
+            HARE: 8 syllables (HARE_COUNT = 8)
+            KRISHNA: 4 syllables (KRISHNA_COUNT = 4)
+            RAMA: 4 syllables (RAMA_COUNT = 4)
+            None: 4 syllables (default)
         """
+        # BRANCHLESS: Lookup table derived from axioms
+        # HARE_COUNT=8, KRISHNA_COUNT=4, RAMA_COUNT=4
+        _SYLLABLE_COUNT = {"HARE": 8, "KRISHNA": 4, "RAMA": 4}
+        num_syllables = _SYLLABLE_COUNT.get(dominant_name or "", 4)
+
         rama_indices = []
         syllables = []
         positions = []
 
-        # Combine attractor and seed for variation
-        combined = attractor ^ seed  # XOR gives good distribution
+        # Use trajectory values directly - these ARE the resonance path
+        # If trajectory is too short, we cycle through it
+        traj_len = len(trajectory)
 
-        for i in range(4):
-            # Each syllable position uses different bits of combined value
-            nibble = (combined >> (i * 8)) & 0xFF
+        for i in range(num_syllables):
+            # Get value from trajectory (cycle if needed)
+            traj_idx = i % traj_len if traj_len > 0 else 0
+            traj_value = trajectory[traj_idx] if traj_len > 0 else 0
 
-            # Position in Mahamantra (1-16)
-            pos = (nibble % WORDS) + 1
-            positions.append(pos)
+            # Map trajectory value to Mahamantra position (1-16)
+            pos = (traj_value % WORDS) + 1
 
             # Route through Krishna to get RAMA coordinate
-            rama_idx = krishna_route(pos - 1)  # 0-indexed
+            # This is the CORRECT way - krishna_route maps position to RAMA space
+            rama_idx = krishna_route(pos - 1)  # 0-indexed position
 
-            # Add attractor influence
-            rama_idx = (rama_idx + (attractor >> i)) % POSITION_SUM_RAMA
-
+            # Get phoneme from RAMA grid
             phoneme = rama_to_phoneme(rama_idx)
+
+            positions.append(pos)
             rama_indices.append(rama_idx)
             syllables.append(phoneme)
 
@@ -327,8 +344,12 @@ class ResonanceResponder:
         if self._kirtan:
             kirtan_result = self._kirtan.compute(seed)
 
-        # 6. Derive syllables from attractor AND seed
-        syllables = self._derive_from_attractor(attractor, seed)
+        # 6. Derive syllables from TRAJECTORY (not from arbitrary XOR!)
+        # The trajectory IS the resonance path - use it directly
+        syllables = self._derive_from_trajectory(
+            trajectory=resonance.trajectory,
+            dominant_name=dominant_name,
+        )
 
         # 7. Get vibration signatures for syllables
         vibrations = tuple(
@@ -345,6 +366,7 @@ class ResonanceResponder:
             attractor=attractor,
             trajectory_class=trajectory_class,
             cycles_to_converge=resonance.cycles_to_converge,
+            trajectory=resonance.trajectory,
             verse_id=verse_id,
             verse_guna=verse_guna,
             dominant_name=dominant_name,
@@ -383,8 +405,11 @@ class ResonanceResponder:
         if self._kirtan:
             kirtan_result = self._kirtan.compute(seed)
 
-        # Syllables
-        syllables = self._derive_from_attractor(attractor, seed)
+        # Syllables - from TRAJECTORY
+        syllables = self._derive_from_trajectory(
+            trajectory=resonance.trajectory,
+            dominant_name=dominant_name,
+        )
 
         # Vibrations
         vibrations = tuple(
@@ -401,6 +426,7 @@ class ResonanceResponder:
             attractor=attractor,
             trajectory_class=trajectory_class,
             cycles_to_converge=resonance.cycles_to_converge,
+            trajectory=resonance.trajectory,
             verse_id=verse_id,
             verse_guna=verse_guna,
             dominant_name=dominant_name,
