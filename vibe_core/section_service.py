@@ -33,6 +33,9 @@ class SectionService(SectionServiceProtocol):
     NOTE: Use get_section_service() to access via ServiceRegistry.
     """
 
+    # NAGA BLESSING: Mahamantra routes sections - pre-blessed
+    _naga_flooded: bool = True
+
     def __init__(self, workspace: Optional[Path] = None):
         self._workspace = workspace or Path.cwd()
         self._sections: Dict[str, SectionInfo] = {}

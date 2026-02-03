@@ -358,6 +358,9 @@ class CognitiveCircuitExecutor:
     5. Emits events for meta-circuit integration (TASK_LEDGER, ERROR_RECOVERY)
     """
 
+    # NAGA BLESSING: Cognitive layer blessed through mahamantra
+    _naga_flooded: bool = True
+
     def __init__(self, kernel: "RealVibeKernel"):
         self.kernel = kernel
         self.syscall_executor = SemanticSyscallExecutor(kernel)

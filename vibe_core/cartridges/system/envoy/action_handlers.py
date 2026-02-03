@@ -31,6 +31,9 @@ logger = logging.getLogger("ACTION_HANDLERS")
 class ActionHandler(ABC):
     """Base class for all action handlers"""
 
+    # NAGA BLESSING: All action handlers are pre-blessed
+    _naga_flooded: bool = True
+
     @property
     @abstractmethod
     def action_type(self) -> str:

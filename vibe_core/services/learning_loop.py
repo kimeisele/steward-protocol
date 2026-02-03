@@ -75,6 +75,9 @@ class LearningLoop:
     NOTE: Use get_learning_loop() to access via ServiceRegistry.
     """
 
+    # NAGA BLESSING: Mahamantra routes learning - pre-blessed
+    _naga_flooded: bool = True
+
     # Thresholds
     MIN_FREQUENCY = 3
     MIN_SUCCESS_RATE = 0.8

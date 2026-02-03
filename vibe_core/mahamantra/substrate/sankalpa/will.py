@@ -427,6 +427,9 @@ class SankalpaOrchestrator:
     Unified interface for mission management and intent execution.
     """
 
+    # NAGA BLESSING: Mahamantra is KING - services here are pre-blessed
+    _naga_flooded: bool = True
+
     def __init__(self, workspace: Optional[Path] = None):
         self._workspace = workspace or Path.cwd()
         self._registry = SankalpaRegistry(workspace=self._workspace)

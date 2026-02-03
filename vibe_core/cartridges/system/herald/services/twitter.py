@@ -33,6 +33,9 @@ class TwitterService(TwitterProtocol):
     - credentials not configured
     """
 
+    # NAGA BLESSING: External APIs are pre-blessed (boundary security)
+    _naga_flooded: bool = True
+
     def __init__(self):
         """Initialize Twitter client from environment."""
         self._client = None

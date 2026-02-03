@@ -577,8 +577,13 @@ class ServiceRegistry:
 
         A service is blessed if it has NAGA infrastructure integration:
         1. Inherits from NagaBaseService (self-monitoring)
-        2. Has _naga_flooded marker (Soft Flood via Mixins)
+        2. Has _naga_flooded marker (Soft Flood via Mixins/Base Classes)
         3. Is wrapped in NagaProxy (Hard Flood)
+        4. Inherits from NagaCapabilityMixin
+
+        NOTE: __mahajana__ is MODULE OWNERSHIP (cosmetic), NOT service blessing.
+        File wiring happens via ManifestRegistry/DiscoveryEngine, not here.
+        This check is for RUNTIME SERVICE monitoring integration.
 
         Args:
             instance: The service instance to check
@@ -597,7 +602,9 @@ class ServiceRegistry:
         except ImportError:
             pass  # NAGAs not available - graceful degradation
 
-        # Priority B: Check _naga_flooded marker (Soft Flood via Mixins)
+        # Priority B: Check _naga_flooded marker (Soft Flood via Mixins/Base Classes)
+        # Base classes (KernelPlugin, BaseSense, BaseAction, etc.) set this marker
+        # so all their subclasses are auto-blessed
         if getattr(instance_type, "_naga_flooded", False):
             return True
 
