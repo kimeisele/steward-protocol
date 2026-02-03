@@ -23,6 +23,16 @@ from vibe_core.mahamantra.moksha.yamaraja import SamskaraService
 from vibe_core.mahamantra import Mahajana
 
 
+def _get_samskara_service() -> SamskaraService:
+    """Get SamskaraService via consistent pattern (mahamantra = force)."""
+    from vibe_core.di import ServiceRegistry
+    service = ServiceRegistry.get(SamskaraService)
+    if service is None:
+        service = SamskaraService()
+        ServiceRegistry.register(SamskaraService, service)
+    return service
+
+
 def main() -> int:
     """CLI entry point."""
     args = sys.argv[1:]
@@ -50,7 +60,7 @@ def _cmd_discover(args: list[str]) -> int:
     """Discover wild protocols."""
     paths = args if args else ["vibe_core"]
 
-    service = SamskaraService()
+    service = _get_samskara_service()
     wilds = service.discover_wild(paths)
 
     print(f"Found {len(wilds)} wild protocols:\n")
@@ -71,7 +81,7 @@ def _cmd_judge(args: list[str]) -> int:
         return 1
 
     path = args[0]
-    service = SamskaraService()
+    service = _get_samskara_service()
 
     verdict = service.judge(path)
 
@@ -95,7 +105,7 @@ def _cmd_migrate(args: list[str]) -> int:
         return 1
 
     path = args[0]
-    service = SamskaraService()
+    service = _get_samskara_service()
 
     # First judge
     verdict = service.judge(path)
@@ -123,7 +133,7 @@ def _cmd_migrate(args: list[str]) -> int:
 
 def _cmd_status() -> int:
     """Show status."""
-    service = SamskaraService()
+    service = _get_samskara_service()
     state = service.get_state()
 
     print("SAMSKARA STATUS")
