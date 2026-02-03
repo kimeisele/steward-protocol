@@ -12,13 +12,13 @@ DEPRECATED: Phase 4 Migration to Mahamantra
 ============================================
 Kernel operations are being decomposed into mahajana services:
 
-MIGRATION PATH:
-- Process management → mahamantra.<quarter>.janaka  # FIXME: specify correct quarter (cycles/execution)
-- Task scheduling → mahamantra.<quarter>.janaka  # FIXME: specify correct quarter (scheduler)
-- Ledger → mahamantra.<quarter>.bhishma  # FIXME: specify correct quarter (ledger/lineage)
-- Agent manifests → mahamantra.<quarter>.brahma  # FIXME: specify correct quarter (bootstrap/registry)
-- Health checks → mahamantra.<quarter>.shuka  # FIXME: specify correct quarter (introspection)
-- Security ops → mahamantra.<quarter>.yamaraja  # FIXME: specify correct quarter (security)
+MIGRATION PATH (Quarters resolved):
+- Process management → mahamantra.karma.janaka    (Position 10, KARMA quarter)
+- Task scheduling → mahamantra.karma.janaka       (Position 10, KARMA quarter)
+- Ledger → mahamantra.karma.bhishma               (Position 11, KARMA quarter)
+- Agent manifests → mahamantra.genesis.brahma     (Position 1, GENESIS quarter)
+- Health checks → mahamantra.moksha.shuka         (Position 14, MOKSHA quarter)
+- Security ops → mahamantra.moksha.yamaraja       (Position 15, MOKSHA quarter)
 
 CURRENT STATUS: Deprecated but functional
 - Kernel continues to work via existing implementation
@@ -50,6 +50,11 @@ if TYPE_CHECKING:
     from vibe_core.phoenix import PhoenixConfig
     from vibe_core.protocols.economy import BankProtocol, VaultProtocol
 
+# Phase 2: ONE IMPORT - KRISHNA ROUTES ALLES
+from vibe_core.mahamantra import mahamantra
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
+
 from .errors import kernel_fault
 from .event_bus import Event, EventType, get_event_bus
 from .io_service import KernelIOService
@@ -62,10 +67,20 @@ from .kernel import (
 )
 from .kernel_ops import (
     check_system_health as _check_system_health_impl,
+)
+from .kernel_ops import (
     execute_playbook as _execute_playbook_impl,
+)
+from .kernel_ops import (
     grant_repo_access as _grant_repo_access_impl,
+)
+from .kernel_ops import (
     narasimha_destroy_agent as _narasimha_destroy_agent_impl,
+)
+from .kernel_ops import (
     pulse as _pulse_impl,
+)
+from .kernel_ops import (
     sync_resource_quotas as _sync_resource_quotas_impl,
 )
 from .ledger import InMemoryLedger, SQLiteLedger
@@ -75,25 +90,19 @@ from .narasimha import ThreatIndicator, get_narasimha
 from .plugin_loader import PluginLoader
 from .protocols.agent import AgentManifest, VibeAgent
 from .protocols.auditor import AuditorProtocol, NullAuditor
-from .services.nrisimha import NrisimhaWatchdog
-from .protocols.universal.types import SovereignContext
-from .protocols.substrate import MantraOpCode
 
-# Phase 2: ONE IMPORT - KRISHNA ROUTES ALLES
-from vibe_core.mahamantra import mahamantra
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
-# Services accessed via: mahamantra.mod[position].Service
-# Position 1 = Brahma, 6 = Kapila, 10 = Janaka, 11 = Bhishma, 13 = Bali
-
+# Services accessed via: mahamantra.<quarter>.<mahajana> (folder-based routing)
+# Or wrapped with MahamantraProxy for governance identity
 from .protocols.cognition import (
     CognitiveContext,
     CognitiveResult,
     NullCognitive,
     OperatorCognitiveProtocol,
     SignedOperatorInput,
+)
+from .protocols.cognition import (
     IntentType as CognitiveIntentType,
 )
-
 from .protocols.kernel_types import (
     AgentData,
     AgentHealth,
@@ -101,15 +110,17 @@ from .protocols.kernel_types import (
     PluginProtocol,
     TaskResult,
 )
-
+from .protocols.substrate import MantraOpCode
+from .protocols.universal.types import SovereignContext
 from .runtime.unified_execution import create_unified_runtime
 from .scheduling import InMemoryScheduler, Task
+from .security import VajraGuarded
 from .services.manifestation_service import ManifestationService
-from .state.schema import ExecutionRequest
+from .services.nrisimha import NrisimhaWatchdog
 from .state.prakriti import Prakriti
+from .state.schema import ExecutionRequest
 from .utils.async_logging import setup_async_logging
 from .utils.lazy_import import lazy_class
-from .security import VajraGuarded
 
 logger = logging.getLogger("VIBE_KERNEL")
 
@@ -176,20 +187,20 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         l_path = ledger_path or "data/vibe_ledger.db"
         self.__ledger = SQLiteLedger(l_path) if l_path != ":memory:" else InMemoryLedger()
 
-        # Import services directly (mahamantra.mod API deprecated)
+        # Import services (will be wrapped with MahamantraProxy for governance)
+        from vibe_core.services.bali_service import BaliService
         from vibe_core.services.bhishma_service import BhishmaService
         from vibe_core.services.brahma_service import BrahmaService
         from vibe_core.services.janaka_service import JanakaService
-        from vibe_core.services.bali_service import BaliService
         from vibe_core.services.kapila_service import KapilaService
 
-        self.bhishma = BhishmaService(self.__ledger)
-
-        # 2. REGISTRY (Brahma - Position 1) & Other Mahajanas
-        self.brahma = BrahmaService(self.__ledger)
-        self.janaka = JanakaService()
-        self.bali = BaliService()
-        self.kapila = KapilaService()
+        # 2. MAHAJANA SERVICES (wrapped with MahamantraProxy for governance identity)
+        # BALARAMA PATTERN: Services are governed through proxy, not code changes
+        self.bhishma = MahamantraProxy(BhishmaService(self.__ledger), position=11, guardian="bhishma")
+        self.brahma = MahamantraProxy(BrahmaService(self.__ledger), position=1, guardian="brahma")
+        self.janaka = MahamantraProxy(JanakaService(), position=10, guardian="janaka")
+        self.bali = MahamantraProxy(BaliService(), position=13, guardian="bali")
+        self.kapila = MahamantraProxy(KapilaService(), position=6, guardian="kapila")
 
         # 3. MANTRA (Vishnu Clock)
         self._sovereign_context = SovereignContext(
