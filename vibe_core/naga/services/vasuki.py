@@ -233,8 +233,10 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
 
             import msgpack
 
-            if envelope.content_type != "msgpack":
-                raise ValueError(f"Unsupported content type: {envelope.content_type}")
+            # SignedEnvelope is a TypedDict - use dict access, not attribute access
+            content_type = envelope.get("content_type", "msgpack")
+            if content_type != "msgpack":
+                raise ValueError(f"Unsupported content type: {content_type}")
 
             # 1. VERIFY BEFORE PROCESS (Takshaka)
             if self._takshaka:
@@ -243,11 +245,11 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
                 # However, Takshaka.verify_envelope expects raw bytes.
                 raw_envelope = msgpack.packb(
                     {
-                        "payload": envelope.payload,
-                        "signature": envelope.signature,
-                        "sender_key": envelope.sender_key,
-                        "timestamp": envelope.timestamp,
-                        "content_type": envelope.content_type,
+                        "payload": envelope["payload"],
+                        "signature": envelope.get("signature", ""),
+                        "sender_key": envelope.get("sender_key", ""),
+                        "timestamp": envelope.get("timestamp", ""),
+                        "content_type": content_type,
                     }
                 )
 
@@ -263,7 +265,7 @@ class VasukiService(NagaBaseService, VasukiProtocol, TransformProtocol):
                     raise RuntimeError(f"Security validation failed: {result.reason}")
 
             # 2. PROCESS ONLY AFTER VERIFICATION
-            event = msgpack.unpackb(envelope.payload, raw=False)
+            event = msgpack.unpackb(envelope["payload"], raw=False)
 
             self._events_processed += 1
             self._last_heartbeat = datetime.now()
