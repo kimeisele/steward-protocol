@@ -32,6 +32,9 @@ class RedditService(RedditProtocol):
     - credentials not configured
     """
 
+    # NAGA BLESSING: External APIs are pre-blessed (boundary security)
+    _naga_flooded: bool = True
+
     def __init__(self):
         """Initialize Reddit client from environment."""
         self._client = None
