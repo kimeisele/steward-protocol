@@ -188,7 +188,7 @@ def cached_kernel():
 
     cache_key = "default"
     if cache_key not in _kernel_cache:
-        kernel = RealVibeKernel(ledger_path=":memory:")
+        kernel = RealVibeKernel(ledger_path=":memory:", test_mode=True)
         _kernel_cache[cache_key] = kernel
 
     return _kernel_cache[cache_key]
@@ -199,7 +199,7 @@ def fresh_kernel():
     """Fresh kernel instance for tests that modify kernel state."""
     from vibe_core.kernel_impl import RealVibeKernel
 
-    return RealVibeKernel(ledger_path=":memory:")
+    return RealVibeKernel(ledger_path=":memory:", test_mode=True)
 
 
 def pytest_sessionfinish(session, exitstatus):
