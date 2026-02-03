@@ -26,7 +26,7 @@ __mahajana__ = "dynamic"  # Resolved at runtime from SSOT
 __position__ = 0
 __genesis__ = "0x00000000"  # GenesisByte (Position 0)
 
-from vibe_core.mahamantra import ProcessManager
+from vibe_core.mahamantra import ProcessManager, AgentProcessInfo, ProcessStatus
 
-__all__ = ["ProcessManager"]
+__all__ = ["ProcessManager", "AgentProcessInfo", "ProcessStatus"]
 
