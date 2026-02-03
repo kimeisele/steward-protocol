@@ -577,10 +577,13 @@ class ServiceRegistry:
 
         A service is blessed if it has NAGA infrastructure integration:
         1. Inherits from NagaBaseService (self-monitoring)
-        2. Has __mahajana__ declaration (MAHAMANTRA = KING, file exists = wired)
-        3. Has _naga_flooded marker (Soft Flood via Mixins)
-        4. Is wrapped in NagaProxy (Hard Flood)
-        5. Inherits from NagaCapabilityMixin
+        2. Has _naga_flooded marker (Soft Flood via Mixins/Base Classes)
+        3. Is wrapped in NagaProxy (Hard Flood)
+        4. Inherits from NagaCapabilityMixin
+
+        NOTE: __mahajana__ is MODULE OWNERSHIP (cosmetic), NOT service blessing.
+        File wiring happens via ManifestRegistry/DiscoveryEngine, not here.
+        This check is for RUNTIME SERVICE monitoring integration.
 
         Args:
             instance: The service instance to check
@@ -599,23 +602,13 @@ class ServiceRegistry:
         except ImportError:
             pass  # NAGAs not available - graceful degradation
 
-        # Priority B: MAHAMANTRA = KING - __mahajana__ declaration = auto-blessed
-        # "datei existiert = wired" - if module has mahajana, it's blessed
-        try:
-            import sys
-            module_name = instance_type.__module__
-            if module_name in sys.modules:
-                module = sys.modules[module_name]
-                if hasattr(module, "__mahajana__"):
-                    return True
-        except Exception:
-            pass  # Graceful degradation
-
-        # Priority C: Check _naga_flooded marker (Soft Flood via Mixins)
+        # Priority B: Check _naga_flooded marker (Soft Flood via Mixins/Base Classes)
+        # Base classes (KernelPlugin, BaseSense, BaseAction, etc.) set this marker
+        # so all their subclasses are auto-blessed
         if getattr(instance_type, "_naga_flooded", False):
             return True
 
-        # Priority D: Check NagaProxy wrapping (Hard Flood)
+        # Priority C: Check NagaProxy wrapping (Hard Flood)
         try:
             from vibe_core.naga.proxy import NagaProxy
 
@@ -624,7 +617,7 @@ class ServiceRegistry:
         except ImportError:
             pass
 
-        # Priority E: Check NagaCapabilityMixin inheritance
+        # Priority D: Check NagaCapabilityMixin inheritance
         try:
             from vibe_core.naga.mixins import NagaCapabilityMixin
 
