@@ -2,6 +2,12 @@
 CLI ENTRY - The Thin Gate
 =========================
 
+DEPRECATED: Use vibe_core.mahamantra.__main__ instead.
+This file is kept for backwards compatibility only.
+
+The TRUE entry point is now:
+    vibe_core/mahamantra/__main__.py
+
 "ekam evādvitīyam" - One without a second.
 
 This is the ONLY entry point. Everything routes through mahamantra.
@@ -43,6 +49,7 @@ import json
 import sys
 from datetime import datetime
 from typing import List, Optional
+
 from vibe_core.gateway import chat as gateway_chat
 from vibe_core.mahamantra.cli.auto import cli_auto
 from vibe_core.mahamantra.cli.cell_wrapper import MahaCellCLI

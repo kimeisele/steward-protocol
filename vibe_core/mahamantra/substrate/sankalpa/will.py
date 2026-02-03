@@ -515,7 +515,7 @@ class SankalpaOrchestrator:
 # SERVICEREGISTRY FACTORY
 # =============================================================================
 
-from .types import SankalpaOrchestratorProtocol
+from vibe_core.mahamantra.protocols.sankalpa.types import SankalpaOrchestratorProtocol
 
 
 def get_sankalpa(workspace: Optional[Path] = None) -> SankalpaOrchestrator:
