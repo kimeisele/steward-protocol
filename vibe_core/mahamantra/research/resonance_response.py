@@ -56,6 +56,14 @@ from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 # Kirtan: Seed -> Compute (7-beat)
 from vibe_core.mahamantra.substrate.mantra.kirtan import KirtanComputeResult, MahaKirtan
 
+# Phonetic Bridge: Phoneme -> Varga/Sthana Analysis (EXISTING PRODUCTION)
+from vibe_core.mahamantra.substrate.phonetic_bridge import (
+    PhoneticTensor,
+    SthanaIndex,
+    UniversalPhoneticBridge,
+    VargaIndex,
+)
+
 # Shabda: Vibration signatures
 from vibe_core.mahamantra.substrate.phonetics.shabda import (
     SANSKRIT_PHONEME_MAP,
@@ -90,6 +98,9 @@ class SyllableSequence:
     rama_indices: Tuple[int, ...]  # RAMA[0-48] indices
     positions: Tuple[int, ...]  # Mahamantra positions (1-16)
 
+    # PHONETIC ANALYSIS (via UniversalPhoneticBridge - EXISTING PRODUCTION)
+    phonetic_tensor: Optional[PhoneticTensor] = None
+
     @property
     def as_string(self) -> str:
         """Join syllables with hyphens."""
@@ -100,6 +111,26 @@ class SyllableSequence:
         """Placeholder for Devanagari output."""
         # Future: Convert to Devanagari script
         return self.as_string
+
+    @property
+    def varga(self) -> Optional[VargaIndex]:
+        """Dominant articulation point (WHERE)."""
+        return self.phonetic_tensor.dominant_varga if self.phonetic_tensor else None
+
+    @property
+    def sthana(self) -> Optional[SthanaIndex]:
+        """Dominant energy level (HOW)."""
+        return self.phonetic_tensor.dominant_sthana if self.phonetic_tensor else None
+
+    @property
+    def quarter(self) -> Optional[int]:
+        """Mahamantra quarter (0-3) from phonetic analysis."""
+        return self.phonetic_tensor.quarter if self.phonetic_tensor else None
+
+    @property
+    def shakti(self) -> Optional[float]:
+        """Energy level (0-1) from phonetic analysis."""
+        return self.phonetic_tensor.shakti if self.phonetic_tensor else None
 
 
 @dataclass(frozen=True)
@@ -161,6 +192,13 @@ class ResonanceResponse:
         """Human-readable summary."""
         traj_type = "VAIKUNTHA" if self.is_vaikuntha else "SAMSARA"
         traj_preview = str(self.trajectory[:5]) + "..." if len(self.trajectory) > 5 else str(self.trajectory)
+
+        # Phonetic analysis (WIRED from UniversalPhoneticBridge)
+        varga_str = self.syllables.varga.name if self.syllables.varga else "N/A"
+        sthana_str = self.syllables.sthana.name if self.syllables.sthana else "N/A"
+        quarter_str = str(self.syllables.quarter) if self.syllables.quarter is not None else "N/A"
+        shakti_str = f"{self.syllables.shakti:.2f}" if self.syllables.shakti is not None else "N/A"
+
         lines = [
             f"Intent: {self.intent[:50]}{'...' if len(self.intent) > 50 else ''}",
             f"Seed: {self.seed} | Guna: {self.guna.upper()}",
@@ -168,6 +206,7 @@ class ResonanceResponse:
             f"Trajectory: {traj_preview}",
             f"Verse: {self.verse_id or 'N/A'} | Dominant: {self.dominant_name or 'N/A'}",
             f"Syllables: {self.syllables.as_string} (Positions: {self.syllables.positions})",
+            f"Phonetics: Varga={varga_str} | Sthana={sthana_str} | Quarter={quarter_str} | Shakti={shakti_str}",
         ]
         return "\n".join(lines)
 
@@ -216,6 +255,8 @@ class ResonanceResponder:
         self._gita = GitaResonance()
         self._oracle = MahaOracle() if use_oracle else None
         self._kirtan = MahaKirtan(mod_space=mod_space, use_oracle=use_oracle) if use_kirtan else None
+        # PHONETIC BRIDGE: Phoneme -> Varga/Sthana Analysis (EXISTING PRODUCTION)
+        self._phonetic_bridge = UniversalPhoneticBridge()
 
     def _derive_syllables(self, seed: int, positions: Optional[Tuple[int, ...]] = None) -> SyllableSequence:
         """
@@ -297,10 +338,15 @@ class ResonanceResponder:
             rama_indices.append(rama_idx)
             syllables.append(phoneme)
 
+        # PHONETIC ANALYSIS via UniversalPhoneticBridge (EXISTING PRODUCTION)
+        syllable_string = " ".join(syllables)
+        phonetic_tensor = self._phonetic_bridge.analyze(syllable_string)
+
         return SyllableSequence(
             syllables=tuple(syllables),
             rama_indices=tuple(rama_indices),
             positions=tuple(positions),
+            phonetic_tensor=phonetic_tensor,
         )
 
     def respond(self, intent: str) -> ResonanceResponse:
