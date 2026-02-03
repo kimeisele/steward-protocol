@@ -73,6 +73,9 @@ class BaseAction(ABC):
                 )
     """
 
+    # NAGA BLESSING: All MANAS actions are pre-blessed through base
+    _naga_flooded: bool = True
+
     # === MUST BE OVERRIDDEN ===
     name: str = ""  # Unique action identifier (e.g., "shell_cortex")
     handled_intent_types: Set[str] = set()  # Intent types this action handles

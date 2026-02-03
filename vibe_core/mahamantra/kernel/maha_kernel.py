@@ -56,6 +56,9 @@ class MahaKernel(PanchaTattvaProtocol):
     ADDS: Ledger integration
     """
 
+    # NAGA BLESSING: MahaKernel IS mahamantra - absolute sovereignty
+    _naga_flooded: bool = True
+
     __slots__ = ("_lotus", "_singularity", "_ledger")
 
     def __init__(self, ledger_path: str = ":memory:") -> None:
