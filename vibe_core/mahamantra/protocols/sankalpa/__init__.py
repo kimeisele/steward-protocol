@@ -46,6 +46,11 @@ def __getattr__(name: str):
     Fractal routing: folder IS wiring.
     "EIN IMPORT. KRISHNA ROUTET ALLES."
     """
+    # Route to substrate implementation
+    if name in ("handle_sankalpa_query", "SankalpaOrchestrator", "get_sankalpa"):
+        from vibe_core.mahamantra.substrate.sankalpa import will
+        return getattr(will, name)
+
     from pathlib import Path
     import importlib
 
