@@ -115,8 +115,9 @@ class TestNagaFederationIntegration:
 
         # Churn out (serialize)
         envelope = naga.vasuki.churn_out(original)
-        assert envelope.payload is not None
-        assert envelope.content_type == "msgpack"
+        # SignedEnvelope is a TypedDict, use dict access not attribute access
+        assert envelope["payload"] is not None
+        assert envelope["content_type"] == "msgpack"
 
         # Churn in (deserialize)
         restored = naga.vasuki.churn_in(envelope)
