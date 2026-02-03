@@ -435,9 +435,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "phoneme": shabda_result.phoneme,
                 "rama_index": shabda_result.rama_index,
                 "signature": {
-                    "varga": shabda_result.vibration.varga.value if shabda_result.vibration else None,
-                    "sthana": shabda_result.vibration.sthana.value if shabda_result.vibration else None,
-                    "frequency": shabda_result.vibration.frequency if shabda_result.vibration else 0,
+                    "varga": shabda_result.vibration.articulation.value if shabda_result.vibration else None,
+                    "voicing": shabda_result.vibration.voicing.value if shabda_result.vibration else None,
+                    "frequency": shabda_result.vibration.base_frequency if shabda_result.vibration else 0,
                 },
             },
             # Parampara

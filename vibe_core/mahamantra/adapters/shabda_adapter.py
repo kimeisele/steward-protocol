@@ -35,7 +35,7 @@ class ShabdaResult:
 
     phoneme: str
     rama_index: int
-    vibration: VibrationSignature
+    vibration: Optional[VibrationSignature]
     tensor: Optional[PhoneticTensor] = None
 
 
@@ -66,8 +66,9 @@ class ShabdaAdapter:
         # RAMA → Phoneme
         phoneme = rama_to_phoneme(rama_idx)
 
-        # Phoneme → Vibration
-        vibration = text_to_vibration(phoneme)
+        # Phoneme → Vibration (returns list, take primary/first)
+        vibration_list = text_to_vibration(phoneme)
+        vibration = vibration_list[0] if vibration_list else None
 
         # Phoneme → Phonetic Analysis (optional)
         try:
