@@ -52,7 +52,7 @@ from vibe_core.protocols.naga import (
     VasukiProtocol,
 )
 from vibe_core.phoenix.sections.naga.section_main import NagaConfig
-from vibe_core.protocols.correction import CorrectionOrchestratorProtocol
+from vibe_core.protocols.correction import CorrectionOrchestratorProtocol, DriftSource
 from vibe_core.protocols.identity import IdentityProtocol, KeyStoreProtocol
 from vibe_core.steward.crypto import generate_keys
 from vibe_core.steward.keystore import FileKeyStore
@@ -142,7 +142,10 @@ class NagaBootloader:
             sesha = SeshaService()
             registry.register(sesha, force=True)
             if correction_orchestrator:
-                correction_orchestrator.dispatcher.register_handler("sesha", sesha)
+                # Use as_handler() to get the CorrectionHandler callable
+                correction_orchestrator.dispatcher.register_handler(
+                    DriftSource.STATE, sesha.as_handler(), handler_id="sesha"
+                )
             # Inject kernel's ledger for 10,000-year persistence (NO SPLIT BRAIN)
             if ledger:
                 sesha.inject_ledger(ledger)
@@ -156,7 +159,9 @@ class NagaBootloader:
                 takshaka = TakshakaService(sesha=sesha, trust_mode=config.takshaka.trust_mode)
                 registry.register(takshaka, force=True)
                 if correction_orchestrator:
-                    correction_orchestrator.dispatcher.register_handler("takshaka", takshaka)
+                    correction_orchestrator.dispatcher.register_handler(
+                        DriftSource.COGNITIVE, takshaka.as_handler(), handler_id="takshaka"
+                    )
             else:
                 logger.warning("Takshaka disabled: Sesha is required.")
 
@@ -168,7 +173,9 @@ class NagaBootloader:
                 vasuki = VasukiService(sesha=sesha, takshaka=takshaka)
                 registry.register(vasuki, force=True)
                 if correction_orchestrator:
-                    correction_orchestrator.dispatcher.register_handler("vasuki", vasuki)
+                    correction_orchestrator.dispatcher.register_handler(
+                        DriftSource.CONFIG, vasuki.as_handler(), handler_id="vasuki"
+                    )
             else:
                 logger.warning("Vasuki disabled: Sesha and Takshaka are required.")
 
@@ -203,7 +210,9 @@ class NagaBootloader:
             kaliya = KaliyaService(cortex=cortex, identity=identity)
             registry.register(kaliya, force=True)
             if correction_orchestrator:
-                correction_orchestrator.dispatcher.register_handler("kaliya", kaliya)
+                correction_orchestrator.dispatcher.register_handler(
+                    DriftSource.RELIABILITY, kaliya.as_handler(), handler_id="kaliya"
+                )
 
         # Chitragupta (Profiler)
         chitragupta = None
@@ -211,7 +220,9 @@ class NagaBootloader:
             chitragupta = ChitraguptaService(cortex=cortex, identity=identity)
             registry.register(chitragupta, force=True)
             if correction_orchestrator:
-                correction_orchestrator.dispatcher.register_handler("chitragupta", chitragupta)
+                correction_orchestrator.dispatcher.register_handler(
+                    DriftSource.PERFORMANCE, chitragupta.as_handler(), handler_id="chitragupta"
+                )
 
         # Narada (Observer - The Cosmic Journalist)
         # NOTE: Narada is GOVERNANCE, not Infrastructure - no CorrectionHandler
@@ -227,7 +238,9 @@ class NagaBootloader:
             prahlad = PrahladService(cortex=cortex, identity=identity)
             registry.register(prahlad, force=True)
             if correction_orchestrator:
-                correction_orchestrator.dispatcher.register_handler("prahlad", prahlad)
+                correction_orchestrator.dispatcher.register_handler(
+                    DriftSource.STRUCTURAL, prahlad.as_handler(), handler_id="prahlad"
+                )
 
         # 4. Stability & Observability
         # ----------------------------

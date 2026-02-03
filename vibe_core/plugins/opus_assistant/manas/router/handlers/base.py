@@ -66,6 +66,9 @@ class BaseHandler(ABC):
                 return {"success": True, "handler": self.name}
     """
 
+    # NAGA BLESSING: All handlers are pre-blessed through base class
+    _naga_flooded: bool = True
+
     # === REQUIRED CLASS ATTRIBUTES ===
     name: ClassVar[str] = ""  # Handler name (e.g., "sutra", "shell")
     intent_types: ClassVar[List[str]] = []  # Intent types this handler processes

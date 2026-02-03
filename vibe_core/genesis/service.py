@@ -36,6 +36,9 @@ class GenesisService:
     NOTE: Use get_genesis_service() to access via ServiceRegistry.
     """
 
+    # NAGA BLESSING: Mahamantra (Brahma) governs genesis - pre-blessed
+    _naga_flooded: bool = True
+
     # Path patterns for module type detection
     PATH_PATTERNS: List[Tuple[str, ModuleType]] = [
         # More specific patterns first

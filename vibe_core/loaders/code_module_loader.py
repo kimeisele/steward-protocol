@@ -104,6 +104,9 @@ class CodeModuleLoader(ABC):
         - _post_process_instance(): Add extra metadata
     """
 
+    # NAGA BLESSING: All code module loaders are pre-blessed
+    _naga_flooded: bool = True
+
     # === MUST BE DEFINED BY SUBCLASS ===
     item_type: str = ""
     scan_paths: List[Path] = []

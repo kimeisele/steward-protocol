@@ -94,6 +94,9 @@ class CartridgeBase:
     - Discoverable (registrable in CartridgeRegistry)
     """
 
+    # NAGA BLESSING: All cartridges are pre-blessed through base class
+    _naga_flooded: bool = True
+
     # Metadata (override in subclasses)
     name: str = "base"
     version: str = "0.0.1"

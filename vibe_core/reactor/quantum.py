@@ -71,6 +71,9 @@ class QuantumReactor:
     This is a computational paradigm, not a security layer.
     """
 
+    # NAGA BLESSING: Mahamantra substrate - pre-blessed
+    _naga_flooded: bool = True
+
     def __init__(self, initial_inertia: float = 0.5):
         """
         Initialize the reactor.

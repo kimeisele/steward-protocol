@@ -163,6 +163,9 @@ class ShadowRegistry:
         registry.cleanup()
     """
 
+    # NAGA BLESSING: Mahamantra is KING - services here are pre-blessed
+    _naga_flooded: bool = True
+
     def __init__(self, max_shadows: int = MAX_SHADOWS):
         self._max_shadows = max_shadows
         self._entries: Dict[str, RegistryEntry] = {}
