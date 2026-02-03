@@ -1,6 +1,6 @@
 """
-LOTUS TREE - O(1) Holographic Data Structure (OPTIMIZED)
-=========================================================
+LOTUS TREE - O(1) Holographic Data Structure (RESEARCH)
+========================================================
 
 KEY INSIGHT: The address IS the path. No search, no hash, no collisions.
 
@@ -8,26 +8,17 @@ STRUCTURE:
   16-bit key = 4 × 4 bits = 4 levels × 16 slots
   KEY_SPACE = 16^4 = 65536 = WORDS^QUARTERS
 
-PERFORMANCE (verified benchmarks):
-  INSERT: 1.9x faster than dict (no hashing needed)
-  READ:   ~equal to dict
-  RANGE QUERY: 19.6x faster for small ranges!
-    - Lotus: O(k) where k = range size
-    - Dict:  O(N) must filter ALL items
+PRODUCTION VS RESEARCH:
+  - HolographicRouter (adapters/routing.py) = PRODUCTION radix tree
+  - LotusArrayInt (this file) = RESEARCH array.array for C-speed integers
 
-  This is the killer feature. Dict CANNOT do efficient range queries.
+This file contains ONLY experimental code not yet in production.
+For production radix tree, use: from vibe_core.mahamantra.adapters.routing import HolographicRouter
 
-WHY RANGE QUERIES MATTER:
-  - Database queries: SELECT WHERE key BETWEEN x AND y
-  - Time series: Get data for last hour
-  - IP routing: Find all routes in subnet
-  - DNA: Find all k-mers with prefix
-
-OPTIMIZATIONS:
-  1. array.array instead of list (C-level speed)
-  2. No boundary checks in hot path
-  3. Loop unrolling (4 levels hardcoded)
-  4. Inline bit extraction
+UNIQUE RESEARCH CODE:
+  LotusArrayInt - Uses array.array('q') for 64-bit integers at C-level speed.
+                  Faster than dict for sequential access and range queries.
+                  Pre-allocates 65536 slots (512KB) for O(1) access.
 """
 
 from __future__ import annotations
@@ -66,12 +57,15 @@ _SHIFT_3: Final[int] = 0  # bits 0-3 (always 0)
 
 
 # =============================================================================
-# LOTUS ARRAY - Flat O(1) for integers (FAST)
+# LOTUS ARRAY - Flat O(1) for integers (EXPERIMENTAL - uses array.array)
 # =============================================================================
 
 
 class LotusArrayInt:
     """O(1) integer key-value store using array.array.
+
+    EXPERIMENTAL: Uses array.array('q') for C-level speed.
+    Pre-allocates all 65536 slots (512KB memory).
 
     FASTER than dict for:
       - Sequential access
@@ -133,84 +127,46 @@ class LotusArrayInt:
 
 
 # =============================================================================
-# LOTUS RADIX - Sparse O(1) with inline unrolling (FAST)
+# LOTUS RADIX - DEPRECATED, USE PRODUCTION
 # =============================================================================
+# LotusRadixInt has been promoted to production.
+# Use HolographicRouter from adapters/routing.py instead.
+
+from vibe_core.mahamantra.adapters.routing import HolographicRouter
 
 
+# Backward compatibility alias - wraps production HolographicRouter
 class LotusRadixInt:
-    """Sparse O(1) integer store with unrolled 4-level traversal.
+    """DEPRECATED: Use HolographicRouter from adapters/routing.py.
 
-    Uses nested lists with explicit level handling.
-    Much faster than generic version.
+    This is a backward-compatibility wrapper around the production
+    HolographicRouter. New code should import directly from production.
     """
 
-    __slots__ = ("_L0", "_size")
-
     def __init__(self) -> None:
-        # Level 0: 16 slots, each points to Level 1 or None
-        self._L0: list[list | None] = [None] * WORDS
-        self._size: int = 0
+        import warnings
+
+        warnings.warn(
+            "LotusRadixInt is deprecated. Use HolographicRouter from vibe_core.mahamantra.adapters.routing instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._router: HolographicRouter[int] = HolographicRouter()
 
     def get(self, key: int) -> int:
-        """O(1) lookup with unrolled traversal. Returns -1 if not found."""
-        # Level 0
-        i0 = (key >> 12) & 0xF
-        L1 = self._L0[i0]
-        if L1 is None:
-            return -1
-
-        # Level 1
-        i1 = (key >> 8) & 0xF
-        L2 = L1[i1]
-        if L2 is None:
-            return -1
-
-        # Level 2
-        i2 = (key >> 4) & 0xF
-        L3 = L2[i2]
-        if L3 is None:
-            return -1
-
-        # Level 3 (leaf)
-        i3 = key & 0xF
-        v = L3[i3]
-        return v if v is not None else -1
+        """O(1) lookup. Returns -1 if not found."""
+        val = self._router.get(key)
+        return -1 if val is None else val
 
     def set(self, key: int, value: int) -> None:
-        """O(1) insert with unrolled traversal."""
-        # Level 0
-        i0 = (key >> 12) & 0xF
-        L1 = self._L0[i0]
-        if L1 is None:
-            L1 = [None] * WORDS
-            self._L0[i0] = L1
-
-        # Level 1
-        i1 = (key >> 8) & 0xF
-        L2 = L1[i1]
-        if L2 is None:
-            L2 = [None] * WORDS
-            L1[i1] = L2
-
-        # Level 2
-        i2 = (key >> 4) & 0xF
-        L3 = L2[i2]
-        if L3 is None:
-            L3 = [None] * WORDS
-            L2[i2] = L3
-
-        # Level 3 (leaf)
-        i3 = key & 0xF
-        old = L3[i3]
-        L3[i3] = value
-        if old is None:
-            self._size += 1
+        """O(1) insert."""
+        self._router[key] = value
 
     def __len__(self) -> int:
-        return self._size
+        return len(self._router)
 
     def __contains__(self, key: int) -> bool:
-        return self.get(key) != -1
+        return key in self._router
 
 
 # =============================================================================
@@ -283,11 +239,13 @@ def benchmark(n: int = 60000) -> None:
     print("KEY INSIGHT:")
     print("  Dict cannot do range queries efficiently.")
     print("  Lotus range query is O(k), Dict is O(N).")
+    print()
+    print("NOTE: For radix tree functionality, use HolographicRouter from production.")
 
 
-# Keep old classes for compatibility
+# Backward compatibility aliases
 LotusArray = LotusArrayInt
-LotusRadix = LotusRadixInt
+LotusRadix = LotusRadixInt  # Deprecated wrapper
 
 if __name__ == "__main__":
     benchmark()
