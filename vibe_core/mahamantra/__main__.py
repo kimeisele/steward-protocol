@@ -1,75 +1,211 @@
 """
-MAHAMANTRA CLI ENTRY POINT
-==========================
+MAHAMANTRA - THE KING
+=====================
 
-"The Conchshell Blows."
+"mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 
-Enables `python -m vibe_core.mahamantra <command>` execution.
+python -m vibe_core.mahamantra "anything"
+
+THAT'S IT. One entry. Krishna routes everything.
+
+FLOW (9 NavaBhakti):
+    Input → mahamantra(input) → SRAVANAM → ... → ATMA_NIVEDANAM → Response
+
+NO HARDCODED COMMANDS. Pure resonance routing.
+The system FEELS the input and routes via computation, not if-else.
 """
 
+from __future__ import annotations
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "brahma"
+__position__ = 1
+__genesis__ = "0x8dfc6e38"  # GenesisByte: parampara % 37 == 0
+
 import sys
-import argparse
-from vibe_core.mahamantra.commands import cli_chant, cli_listen, cli_resolve, cli_serve, cli_veda, cli_vimana_serve
+from typing import Final, List, Optional
+
+# Exit codes
+EXIT_SUCCESS: Final[int] = 0
+EXIT_ERROR: Final[int] = 1
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Mahamantra CLI")
-    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+def main(argv: Optional[List[str]] = None) -> int:
+    """
+    THE ONE ENTRY POINT - Mahamantra is King.
 
-    # CHANT
-    chant_parser = subparsers.add_parser("chant", help="Perform Kirtan (Chanting)")
-    chant_parser.add_argument("--rounds", type=int, default=1, help="Number of rounds (16 ticks)")
-    chant_parser.add_argument("--verbose", action="store_true", help="Verbose output")
-    chant_parser.add_argument("--audio", action="store_true", help="Stream raw PCM audio to stdout")
-    chant_parser.add_argument("--dest", type=str, default="", help="Stream to Vimana (host:port)")
+    EVERYTHING flows through mahamantra():
+        Input → MahaCompression → Seed
+        Seed → MahaKirtan → Attractor → Gita Chapter
+        Chapter → Position → Guardian
+        Cell → SankirtanChamber → Transform
+        Response
 
-    # LISTEN
-    listen_parser = subparsers.add_parser("listen", help="Sravanam (Hearing)")
-    listen_parser.add_argument("--source", type=str, default="all", help="Event source")
-    listen_parser.add_argument("--tail", type=int, default=10, help="Number of entries")
-    listen_parser.add_argument("--json", action="store_true", help="JSON output")
+    With --run: Also executes matched CLI command.
 
-    # RESOLVE
-    resolve_parser = subparsers.add_parser("resolve", help="Vandanam (Praying/Lookup)")
-    resolve_parser.add_argument("name", type=str, help="Mahajana name or position")
-    resolve_parser.add_argument("--json", action="store_true", help="JSON output")
+    NO hardcoded commands. Pure resonance routing.
+    """
+    if argv is None:
+        argv = sys.argv[1:]
 
-    # SERVE (Janaka)
-    serve_parser = subparsers.add_parser("serve", help="Pada Sevanam (Task Service)")
-    serve_parser.add_argument("task", type=str, help="Task description")
-    serve_parser.add_argument("--execute", action="store_true", help="Execute immediately")
-    serve_parser.add_argument("--priority", type=str, default="normal", help="Task priority")
-    serve_parser.add_argument("--json", action="store_true", help="JSON output")
+    # No input = help
+    if not argv:
+        return _show_help()
 
-    # VIMANA (Network Server)
-    vimana_parser = subparsers.add_parser("vimana", help="Vimana Server (Networked Sankirtan)")
-    vimana_parser.add_argument("--port", type=int, default=10800, help="Port to listen on")
-    vimana_parser.add_argument("--host", type=str, default="0.0.0.0", help="Host interface")
+    # Check for --run flag (execute mode)
+    execute_mode = "--run" in argv or "-x" in argv
+    argv = [a for a in argv if a not in ("--run", "-x")]
 
-    # VEDA
-    veda_parser = subparsers.add_parser("veda", help="Atma Nivedanam (Self-Surrender / Explorer)")
-    veda_parser.add_argument("message", type=str, nargs="?", help="Message to explorer")
-    veda_parser.add_argument("--mode", type=str, default="enhanced", help="Explorer mode")
-    veda_parser.add_argument("--interactive", action="store_true", help="REPL mode")
-    veda_parser.add_argument("--json", action="store_true", help="JSON output")
+    # Join all args into one input string
+    # Resonance doesn't care about structure - it FEELS the meaning
+    input_text = " ".join(argv)
 
-    args = parser.parse_args()
+    # Special: help (the only escape hatch)
+    if input_text in ("-h", "--help", "help"):
+        return _show_help()
 
-    if args.command == "chant":
-        cli_chant(rounds=args.rounds, verbose=args.verbose, audio=args.audio, dest=args.dest)
-    elif args.command == "listen":
-        cli_listen(source=args.source, tail=args.tail, json=args.json)
-    elif args.command == "resolve":
-        cli_resolve(name=args.name, json=args.json)
-    elif args.command == "serve":
-        cli_serve(task=args.task, execute=args.execute, priority=args.priority, json=args.json)
-    elif args.command == "vimana":
-        cli_vimana_serve(port=args.port, host=args.host)
-    elif args.command == "veda":
-        cli_veda(message=args.message, mode=args.mode, interactive=args.interactive, json=args.json)
-    else:
-        parser.print_help()
+    # =========================================================================
+    # MAHAMANTRA IS THE KING - Direct __call__ (9 NavaBhakti steps)
+    # =========================================================================
+    # NO argparse. NO subcommands. NO if-else chains.
+    # The Mahamantra COMPUTES the route from the input itself.
+    # =========================================================================
+
+    try:
+        from vibe_core.mahamantra.adapters.cli import get_adapter
+
+        adapter = get_adapter()
+        mode = "execute" if execute_mode else "observe"
+        result = adapter.execute(input_text, mode=mode)
+
+        # Render the response
+        _render_response(result.resonance, result)
+
+        return result.cli_result if result.executed else EXIT_SUCCESS
+
+    except ImportError as e:
+        print(f"ERROR: Mahamantra not available ({e})")
+        return EXIT_ERROR
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return EXIT_ERROR
+
+
+def _render_response(response: dict, adapter_result=None) -> None:
+    """
+    Render mahamantra() response + adapter matching info.
+
+    The response contains EVERYTHING - we just display it.
+    """
+    vib = response.get("vibration", {})
+
+    # Core data
+    inp = str(response.get("input", ""))[:60]
+    seed = str(vib.get("seed", "?"))
+    attractor = str(vib.get("attractor", "?"))
+    chapter = str(response.get("chapter", "?"))
+    position = response.get("position", "?")
+    guardian = str(response.get("guardian", "?"))[:12]
+    quarter = str(response.get("quarter", "?"))[:10]
+
+    # Gita verse
+    verse = response.get("verse") or {}
+    guna = str(verse.get("guna", "?"))[:10]
+
+    # Parampara
+    parampara = response.get("parampara", {})
+    parampara_status = "BONA FIDE" if parampara.get("verified") else "?"
+
+    # Cell
+    cell = response.get("cell", {})
+    cell_valid = "✓" if cell.get("valid") else "?"
+
+    # Trinity function
+    holy_name = response.get("holy_name", "?")
+    trinity_fn = response.get("trinity_function", "?")
+
+    # Adapter info
+    cli_cmd = adapter_result.cli_command if adapter_result else None
+    cli_pos = adapter_result.matched_position if adapter_result else "?"
+    cli_executed = adapter_result.executed if adapter_result else False
+    exec_mark = "✓ EXECUTED" if cli_executed else "observe"
+    candidates = adapter_result.candidates[:3] if adapter_result else []
+    candidates_str = ", ".join(candidates) if candidates else "-"
+
+    # Fingerprint info
+    fp = adapter_result.fingerprint if adapter_result else None
+    fp_str = f"pos={fp.position} payload={fp.payload_size}" if fp else "-"
+
+    print(f"""
+╔═══════════════════════════════════════════════════════════════════════╗
+║  MAHAMANTRA - Krishna Routes Everything                               ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║  INPUT:    {inp:58s} ║
+║  SEED:     {seed:<58s} ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║  VIBRATION:                                                           ║
+║    Attractor: {attractor:<10s}  Chapter: {chapter:>2s}  Guna: {guna:10s}          ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║  ROUTING (computed from seed):                                        ║
+║    Position: {position:>2}  Guardian: {guardian:12s}  Quarter: {quarter:10s}  ║
+║    Name: {holy_name}  Function: {trinity_fn:12s}                              ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║  CLI ADAPTER (holographic cell matching):                             ║
+║    Matched: {str(cli_cmd or "none"):<12s}  Mode: {exec_mark:14s}            ║
+║    Fingerprint: {fp_str:<52s} ║
+║    Candidates: {candidates_str:<54s} ║
+╠═══════════════════════════════════════════════════════════════════════╣
+║  PARAMPARA: {parampara_status:10s}  CELL: {cell_valid}                                   ║
+╚═══════════════════════════════════════════════════════════════════════╝
+""")
+
+
+def _show_help() -> int:
+    """Show help - Mahamantra is King."""
+    print("""
+MAHAMANTRA - Krishna Routes Everything
+======================================
+
+"mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
+
+USAGE:
+    python -m vibe_core.mahamantra "anything"
+
+THAT'S IT. No subcommands. No flags. Just speak.
+
+EXAMPLES:
+    python -m vibe_core.mahamantra "analyze the codebase"
+    python -m vibe_core.mahamantra "what is position 6"
+    python -m vibe_core.mahamantra "show me karma quarter"
+    python -m vibe_core.mahamantra "chant 3 rounds"
+
+HOW IT WORKS (9 NavaBhakti):
+    1. SRAVANAM       Receive your input
+    2. KIRTANAM       Compress to seed (MahaCompression)
+    3. SMARANAM       Vibrate (MahaKirtan)
+    4. PADA_SEVANAM   Find attractor (MahaResonator)
+    5. ARCANAM        Verify Parampara (% 37)
+    6. VANDANAM       Match Gita chapter
+    7. DASYAM         Determine position/guardian
+    8. SAKHYAM        Create MahaCell
+    9. ATMA_NIVEDANAM Return complete response
+
+ARCHITECTURE:
+    Position = attractor % 16
+    Quarter 0 (genesis):  Pos 0-3   - INPUT
+    Quarter 1 (dharma):   Pos 4-7   - VERIFY
+    Quarter 2 (karma):    Pos 8-11  - EXECUTE
+    Quarter 3 (moksha):   Pos 12-15 - OUTPUT
+
+The system doesn't parse commands. It FEELS meaning.
+Krishna routes everything.
+""")
+    return EXIT_SUCCESS
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

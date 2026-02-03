@@ -97,9 +97,15 @@ def execute(input_text: str, context: dict = None) -> dict:
     Stateless execution wrapper.
     OpCode: STATE_SYNC
     """
+    from vibe_core.di import ServiceRegistry
+    from vibe_core.protocols.mahajanas.janaka import JanakaProtocol
     from vibe_core.protocols.mahajanas.janaka.service import JanakaService
 
-    service = JanakaService()
+    # Use ServiceRegistry for singleton (mahamantra = force, consistent routing)
+    service = ServiceRegistry.get(JanakaProtocol)
+    if service is None:
+        service = JanakaService()
+        ServiceRegistry.register(JanakaProtocol, service)
     intent = input_text.lower().strip()
 
     # STATE_SYNC operations
