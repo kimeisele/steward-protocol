@@ -284,7 +284,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         from vibe_core.mahamantra.kernel.maha_kernel import get_kernel
         kernel = get_kernel()
-        attractor = kernel(input_text)
+        # Hybrid Kernel: High Byte = Attractor (Legacy), Low Byte = Variance (Storage)
+        raw_address = kernel(input_text)
+        attractor = raw_address >> 8
 
         # =====================================================================
         # 4. ARCANAM - Parampara verification (% 37 == 0)
@@ -381,7 +383,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         result_cell = MahaCellUnified.create(
             source=seed,              # Address from compression
-            target=attractor,         # Resonated attractor
+            target=raw_address,       # FULL Hybrid Address (High=Route, Low=Var)
             operation=position,       # Position from attractor % WORDS (resonated)
             dna=input_text,
         )
