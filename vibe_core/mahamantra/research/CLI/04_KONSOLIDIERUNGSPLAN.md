@@ -105,54 +105,41 @@ Alle 21 CLIs behalten - sie sind die Domain-Experten:
 - run_cli → Execute/Tool (KARMA Quarter)
 - etc.
 
-Die lotus_position wird automatisch berechnet, aber wir sollten verifizieren
-dass die QUARTER_KEYWORDS in cli_substrate.py alle Commands richtig routet.
+Die lotus_position wird jetzt automatisch via MAHA ALGORITHM berechnet.
+Kein Keyword Matching mehr - pure Resonanz durch den Algorithmus.
 
 ---
 
-## QUARTER Mapping (cli_substrate.py:120-125)
+## Position Derivation via MAHA ALGORITHM
 
+**ALTE ARCHITEKTUR (Krebs):**
 ```python
-QUARTER_KEYWORDS = {
-    GENESIS: ["genesis", "create", "init", "bootstrap", "config", "setup"],
-    DHARMA:  ["audit", "validate", "check", "standards", "naga", "knowledge"],
-    KARMA:   ["run", "exec", "tool", "ci", "plugins", "prompts", "circuit"],
-    MOKSHA:  ["remedies", "gc", "reset", "clean", "cartridges", "sections"],
-}
+# Keyword matching - semantische Bedeutung
+QUARTER_KEYWORDS = {"audit" → DHARMA, "genesis" → GENESIS, ...}
 ```
 
-### CLI → Quarter Mapping Verification
+**NEUE ARCHITEKTUR (Holographisch):**
+```python
+def derive_lotus_position(command: str):
+    seed = hash(command)
+    transformed = maha_transform(seed)  # Maha Algorithm!
+    position = transformed % 16
+    return position
+```
 
-| CLI | Erkannter Quarter | Korrekt? |
-|-----|-------------------|----------|
-| audit_cli | DHARMA (audit) | ✓ |
-| genesis_cli | GENESIS (genesis) | ✓ |
-| naga_cli | DHARMA (naga) | ✓ |
-| config_cli | GENESIS (config) | ✓ |
-| create_cli | GENESIS (create) | ✓ |
-| run_cli | KARMA (run) | ✓ |
-| tool_cli | KARMA (tool) | ✓ |
-| ci_cli | KARMA (ci) | ✓ |
-| plugins_cli | KARMA (plugins) | ✓ |
-| prompts_cli | KARMA (prompts) | ✓ |
-| circuit_cli | KARMA (circuit) | ✓ |
-| remedies_cli | MOKSHA (remedies) | ✓ |
-| sections_cli | MOKSHA (sections) | ✓ |
-| knowledge_cli | DHARMA (knowledge) | ✓ |
-| standards_cli | DHARMA (standards) | ✓ |
-| governance_cli | KARMA (default) | ? evtl. DHARMA |
-| kirtan_cli | KARMA (default) | ? spiritual |
-| lotus_cli | KARMA (default) | ? evtl. GENESIS |
-| prakriti_cli | KARMA (default) | ? evtl. MOKSHA |
-| samskara_cli | KARMA (default) | ? evtl. DHARMA |
-| cartridge_bridge | MOKSHA (cartridges) | ✓ |
+**Das Routing ist unabhängig von dem Inhalt und der Bedeutung!**
+
+Beide Pfade gehen durch denselben Algorithmus:
+- User Input → mahamantra() → position
+- CLI Name → maha_transform() → lotus_position
+- MATCH = Resonanz
 
 ---
 
 ## Empfehlung
 
-1. **Sofort**: Deprecation Warnings in entry.py und unified_cli.py
-2. **Diese Woche**: QUARTER_KEYWORDS erweitern für besseres Routing
+1. **ERLEDIGT**: Deprecation Warnings in entry.py und unified_cli.py
+2. **ERLEDIGT**: QUARTER_KEYWORDS entfernt - nutzt jetzt Maha Algorithm
 3. **Später**: protocol.py nach vibe_core/protocols/cli_types.py verschieben
 
 ---
