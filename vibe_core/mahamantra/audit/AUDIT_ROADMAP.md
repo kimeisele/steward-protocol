@@ -25,6 +25,27 @@ COMMITS HEUTE (pr-720):
 VERIFIZIERUNG:
 python3 -c "from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol; from vibe_core.mahamantra.substrate.chamber import SankirtanChamber; print(isinstance(SankirtanChamber.create(), PanchaTattvaProtocol))"
 # Muss TRUE sein
+
+SONNET vs OPUS ENTSCHEIDUNG (HIL = Human In Loop):
+┌─────────────────────────────────────────────────────────────────┐
+│ SONNET KANN:                                                    │
+│ - Kleine Fixes (Parameter rename, Import fixes)                 │
+│ - Mechanische Änderungen (gleiche __tattva__ zu 10 Klassen)     │
+│ - Tests schreiben für existierende Funktionen                   │
+│ - Audit-Scripts ausführen und Ergebnisse dokumentieren          │
+│ - ALLES was ein klares Pattern hat                              │
+├─────────────────────────────────────────────────────────────────┤
+│ OPUS MUSS (→ HIL Übergabe):                                     │
+│ - Architektur-Entscheidungen (welches Protocol für welche Klasse)│
+│ - Paradigma-Shifts (STATIC → RESONANCE-BASED)                   │
+│ - Wenn SONNET sagt "ich verstehe das Konzept nicht"             │
+│ - Wenn isinstance() Tests FAILED nach SONNET-Änderungen         │
+│ - Neue Protocols designen                                       │
+│ - ALLES was INTENT/VISION braucht                               │
+├─────────────────────────────────────────────────────────────────┤
+│ SIGNAL FÜR HIL ÜBERGABE:                                        │
+│ "OPUS NEEDED: [Grund]" in Commit-Message oder Chat              │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
