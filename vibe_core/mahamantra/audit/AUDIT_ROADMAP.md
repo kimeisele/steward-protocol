@@ -43,15 +43,26 @@ SSOT VIOLATIONS:
      - yajna.py, _guna.py now import from SSOT
      - matrix.py renamed to PhoneticGuna (different semantics)
 
-  🔴 HolyName (IntEnum) - 2 DEFINITIONS:
-     - substrate/seed.py (SHOULD BE SSOT)
-     - substrate/byte.py (DUPLICATE)
+  ✅ HolyName (IntEnum) - FIXED (Commit 0e0da3c9)
+     - SSOT: substrate/seed.py (4 values: HARE, KRISHNA, RAMA, VOID)
+     - byte.py now imports from seed.py
+     - Verification: SeedHolyName is ByteHolyName = True
 
-  🔴 MantraByte - 2 DEFINITIONS:
-     - substrate/byte.py (SHOULD BE SSOT)
-     - substrate/yajna.py (DUPLICATE)
+  ✅ TickState (TypedDict) - FIXED (Commit 0e0da3c9)
+     - SSOT: _types.py (all fields with total=False)
+     - singularity.py, proxy.py, venu.py now import from _types.py
+     - Verification: All imports point to same class
 
-  🔴 TickState, PhaseResult, PipelineContext (2 files each)
+  ✅ MantraByte - FIXED (Commit 18942e57)
+     - SSOT: substrate/byte.py (full implementation)
+     - Added yajna.py methods: standard(), get_name(), resonance_check(), validate_parampara()
+     - yajna.py now imports from byte.py
+     - Verification: ByteMantraByte is YajnaMantraByte = True
+
+  ⚪ PhaseResult, PipelineContext - NOT A VIOLATION (different semantics)
+     - sankirtan.py: File processing pipeline (Quarter-based)
+     - samskara.py: Generic transformation pipeline (Phase-based with Generic[C])
+     - Different namespaces, different use cases - OK to have both
 
 PROTOCOL RESURRECTION (NEW!):
   ✅ MahaAlgorithm16 → implements MahaComputeProtocol (Commit 182693be)
@@ -67,12 +78,13 @@ PROTOCOL RESURRECTION (NEW!):
     - Protocol-First Design = Code exists at runtime
 ```
 
-### CRITICAL: SSOT VIOLATIONS MÜSSEN GEFIXT WERDEN!
+### SSOT PRINCIPLE: ONE CLASS IN RAM = ONE DEFINITION ON DISK
 
-Die Duplicates verletzen das SSOT-Prinzip. Alle sollten von EINER Quelle importieren:
-- `Guna` → import from `substrate/guna.py`
-- `HolyName` → import from `substrate/seed.py`
-- `MantraByte` → import from `substrate/byte.py`
+All major SSOT violations have been fixed:
+- `Guna` → import from `substrate/guna.py` ✅
+- `HolyName` → import from `substrate/seed.py` ✅
+- `TickState` → import from `_types.py` ✅
+- `MantraByte` → import from `substrate/byte.py` ✅
 
 ---
 
