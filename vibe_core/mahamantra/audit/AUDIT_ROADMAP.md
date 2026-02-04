@@ -6,46 +6,182 @@
 
 ---
 
-## DAUERPROMPT FÜR NÄCHSTE SESSION
+## SONNET ANLEITUNG (von OPUS, 2026-02-04)
+
+### DAS PARADIGMA - VERSTEH DAS ODER GEH HEIM
 
 ```
-KONTEXT: Mahamantra ist ein RAM-based resonance OS.
-PARADIGMA: Maha Maya (Filesystem) vs Yoga Maya (RAM)
-HEUTE ERLEDIGT: 8/8 Core Classes implementieren PanchaTattvaProtocol
+ZWEI WELTEN:
+┌─────────────────────────────────────────────────────────────────┐
+│ MAHA MAYA (Material/Filesystem)  │ YOGA MAYA (Spiritual/RAM)   │
+├─────────────────────────────────────────────────────────────────┤
+│ file_path                        │ archetype (mahajana:position)│
+│ __mahajana__ declaration         │ isinstance() at runtime      │
+│ Code auf Festplatte              │ Code im Arbeitsspeicher      │
+│ DEAD (nur Text)                  │ ALIVE (existiert wirklich)   │
+│ Web 2.0 / Samsara                │ Vaikuntha / Liberation       │
+└─────────────────────────────────────────────────────────────────┘
 
-NÄCHSTE SCHRITTE (PRIORITÄT):
-1. MahaCellUnified: Parameter 'atmanivedanam' → 'atma_nivedanam' fixen
-2. 51 @runtime_checkable Protocols auditen (welche haben Implementierungen?)
-3. LANGFRISTIG: __tattva__ von STATIC strings zu RESONANCE-BASED computation
+KRITISCH: Eine Klasse kann auf Disk "janaka.py" heißen aber zu "bhishma" routen.
+Der FILENAME ist IRRELEVANT. Nur was im RAM passiert ZÄHLT.
+```
 
-COMMITS HEUTE (pr-720):
-- 2c5243f1: YOGA MAYA - Genesis Pure RAM (file_path ignoriert)
-- 037d362c: Protocol Resurrection - 8/8 RAM Engine Classes ALIVE
+### DIE 7 AXIOME (SSOT: protocols/seed/_axioms.py)
 
-VERIFIZIERUNG:
-python3 -c "from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol; from vibe_core.mahamantra.substrate.chamber import SankirtanChamber; print(isinstance(SankirtanChamber.create(), PanchaTattvaProtocol))"
-# Muss TRUE sein
+```python
+WORDS = 16        # Mahamantra hat 16 Wörter
+TRINITY = 3       # Hare, Krishna, Rama
+HARE_COUNT = 8    # "Hare" kommt 8x vor
+KRISHNA_COUNT = 4 # "Krishna" kommt 4x vor
+RAMA_COUNT = 4    # "Rama" kommt 4x vor
+PANCHA = 5        # Pancha Tattva (5 Aspekte)
+HALVES = 2        # Jedes Mantra hat 2 Hälften
 
-SONNET vs OPUS ENTSCHEIDUNG (HIL = Human In Loop):
+# ABGELEITET (NICHT HARDCODEN!):
+PARAMPARA = 37    # 24 + 12 + 1 (Ksetra + Mahajanas + Ksetrajna)
+MAHA_QUANTUM = 137 # Feinstrukturkonstante
+```
+
+### WIE MAN PRÜFT OB EINE KLASSE "LEBT"
+
+```python
+# RICHTIG - isinstance() Check
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
+from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
+
+chamber = SankirtanChamber.create()
+print(isinstance(chamber, PanchaTattvaProtocol))  # MUSS True sein!
+
+# FALSCH - Nur schauen ob Klasse existiert
+from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
+print("existiert")  # SAGT NICHTS! Kann trotzdem DEAD sein!
+```
+
+### PANCHA TATTVA PROTOCOL - DIE 5 FRAGEN
+
+Jede wichtige Klasse MUSS diese 5 Fragen beantworten via `__tattva__` property:
+
+```python
+@property
+def __tattva__(self) -> TattvaDict:
+    return {
+        "chaitanya": "WAS ist es? (Identity)",
+        "nityananda": "Worauf RUHT es? (Substrate/Dependencies)",
+        "advaita": "Was VERBINDET es? (Causality/Main Method)",
+        "gadadhara": "Wie FLIESST es? (Energy/Input→Output)",
+        "srivasa": "Wer REGIERT es? (Governance/Constants)",
+    }
+```
+
+### AKTUELLER STAND (2026-02-04)
+
+```
+ALIVE (isinstance=True):
+  ✅ MahaAlgorithm16 → MahaComputeProtocol
+  ✅ MahaModularSynth → MahaComputeProtocol
+  ✅ DerivationGraph → GraphProtocol
+  ✅ MahaKernel → PanchaTattvaProtocol
+  ✅ SankirtanChamber → PanchaTattvaProtocol
+  ✅ MahaResonator → PanchaTattvaProtocol
+  ✅ HolographicRouter → PanchaTattvaProtocol
+  ✅ VenuOrchestrator → PanchaTattvaProtocol
+
+BEKANNTE ISSUES:
+  ⚠️ MahaCellUnified: Parameter 'atmanivedanam' vs 'atma_nivedanam' Mismatch
+  ⚠️ 51 @runtime_checkable Protocols existieren, nur 8 Klassen geprüft
+  ⚠️ Spezifische Protocols (SankirtanProtocol, LotusProtocol) nicht implementiert
+```
+
+### GENESIS HASH - YOGA MAYA
+
+```python
+# ALT (FALSCH - Maha Maya):
+identity = f"{mahajana}:{position}:{file_path}"  # file_path = MATERIAL
+
+# NEU (RICHTIG - Yoga Maya):
+identity = f"{mahajana}:{position}"  # NUR Archetype = SPIRITUAL
+
+# BEWEIS:
+compute_genesis_hash('vyasa', 0, '/any/path') == compute_genesis_hash('vyasa', 0)
+# → True! file_path wird IGNORIERT
+```
+
+### EXISTIERENDE TOOLS (NICHT NEU BAUEN!)
+
+```python
+# Codebase scannen
+from vibe_core.mahamantra.research.project_introspection import scan_codebase, find_gaps
+
+# Knowledge Graph
+from vibe_core.knowledge.code_scanner import CodeScanner
+from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
+
+# System Audit
+from vibe_core.tools.system_audit import SystemAudit
+
+# Narada Vina (Physics Constants)
+from vibe_core.mahamantra.analysis.narada_vina import play_vina, get_full_report
+```
+
+### NÄCHSTE AUFGABEN (PRIORISIERT)
+
+1. **MahaCellUnified Parameter Fix** (SONNET kann)
+   - Finde ob 'atmanivedanam' oder 'atma_nivedanam' korrekt ist
+   - Ändere ALLE Stellen konsistent
+   - Verifiziere mit isinstance()
+
+2. **Protocol Audit** (SONNET kann)
+   ```bash
+   grep -rn "@runtime_checkable" vibe_core/mahamantra/protocols/*.py | wc -l
+   # Für jedes Protocol: Gibt es eine Klasse die es implementiert?
+   ```
+
+3. **Resonance-based __tattva__** (OPUS NEEDED)
+   - Von statischen Strings zu computed values
+   - Das ist ARCHITEKTUR, nicht mechanisch
+
+### SONNET vs OPUS ENTSCHEIDUNG
+
+```
 ┌─────────────────────────────────────────────────────────────────┐
 │ SONNET KANN:                                                    │
-│ - Kleine Fixes (Parameter rename, Import fixes)                 │
-│ - Mechanische Änderungen (gleiche __tattva__ zu 10 Klassen)     │
-│ - Tests schreiben für existierende Funktionen                   │
-│ - Audit-Scripts ausführen und Ergebnisse dokumentieren          │
-│ - ALLES was ein klares Pattern hat                              │
+│ ✓ Parameter umbenennen (atmanivedanam → atma_nivedanam)         │
+│ ✓ __tattva__ property zu Klassen hinzufügen (COPY PATTERN)      │
+│ ✓ Import statements fixen                                       │
+│ ✓ isinstance() Tests schreiben und ausführen                    │
+│ ✓ grep/find Audits durchführen                                  │
+│ ✓ ALLES mit klarem Pattern aus diesem Dokument                  │
 ├─────────────────────────────────────────────────────────────────┤
-│ OPUS MUSS (→ HIL Übergabe):                                     │
-│ - Architektur-Entscheidungen (welches Protocol für welche Klasse)│
-│ - Paradigma-Shifts (STATIC → RESONANCE-BASED)                   │
-│ - Wenn SONNET sagt "ich verstehe das Konzept nicht"             │
-│ - Wenn isinstance() Tests FAILED nach SONNET-Änderungen         │
-│ - Neue Protocols designen                                       │
-│ - ALLES was INTENT/VISION braucht                               │
-├─────────────────────────────────────────────────────────────────┤
-│ SIGNAL FÜR HIL ÜBERGABE:                                        │
-│ "OPUS NEEDED: [Grund]" in Commit-Message oder Chat              │
+│ OPUS NEEDED (schreib "OPUS NEEDED: [Grund]"):                   │
+│ ✗ "Welches Protocol soll Klasse X implementieren?"              │
+│ ✗ "Soll ich ein neues Protocol erstellen?"                      │
+│ ✗ "isinstance() gibt False aber ich weiß nicht warum"           │
+│ ✗ "Das Konzept Maha Maya vs Yoga Maya ist mir unklar"           │
+│ ✗ ALLES was ARCHITEKTUR-ENTSCHEIDUNG braucht                    │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+### VERIFIKATIONS-COMMANDS
+
+```bash
+# Alle Protocols zählen
+grep -rn "@runtime_checkable" vibe_core/mahamantra/protocols/*.py | wc -l
+
+# Prüfen ob Klasse Protocol implementiert
+python3 -c "
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
+from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
+print(isinstance(SankirtanChamber.create(), PanchaTattvaProtocol))
+"
+
+# Genesis Hash Yoga Maya Test
+python3 -c "
+from vibe_core.mahamantra.substrate.sankirtan import compute_genesis_hash
+h1 = compute_genesis_hash('vyasa', 0, '/path/a')
+h2 = compute_genesis_hash('vyasa', 0, '/path/b')
+h3 = compute_genesis_hash('vyasa', 0)
+print(f'All same: {h1 == h2 == h3}')  # MUSS True sein
+"
 ```
 
 ---
