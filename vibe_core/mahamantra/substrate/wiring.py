@@ -513,6 +513,112 @@ def enable_hybrid_discovery(
 
 
 # =============================================================================
+# UNIVERSAL ROUTER - The "One Ring" of Import Resolution
+# =============================================================================
+
+
+def create_universal_getattr(
+    caller_file: str,
+    core_modules: List[str],
+) -> callable:
+    """
+    Create a UNIVERSAL __getattr__ that acts as a Semantic Router for code.
+
+    MANTRA LOGIC:
+        1. FRACTAL: Check subfolders/modules (Existence = Wiring).
+        2. UNIVERSAL: Check registered core modules (Seed/Substrate).
+        3. FALLBACK: Raise AttributeError.
+
+    DYNAMIC DISCOVERY:
+        Instead of a hardcoded "LEGACY_EXPORTS" map, this function
+        dynamically scans the `core_modules` to resolve symbols.
+
+    Args:
+        caller_file: Pass __file__ from the calling module.
+        core_modules: List of module paths to scan (e.g., ["seed.types", "substrate.lotus"]).
+
+    Returns:
+        A __getattr__ function.
+    """
+    import importlib
+    import sys
+
+    # 1. Fractal Discovery (Folder = Wiring)
+    _fractal = fractal_getattr(caller_file)
+
+    # 2. Universal Symbol Map (Lazy Loaded)
+    # Map[symbol_name, source_module_path]
+    _symbol_map: Optional[Dict[str, str]] = None
+
+    def _ensure_symbol_map():
+        nonlocal _symbol_map
+        if _symbol_map is not None:
+            return
+
+        _symbol_map = {}
+        for mod_path in core_modules:
+            try:
+                # Import module
+                module = importlib.import_module(mod_path)
+                
+                # Scan __all__ if present (Preferred/Watertight)
+                if hasattr(module, "__all__"):
+                    for name in module.__all__:
+                        _symbol_map[name] = mod_path
+                else:
+                    # Fallback: Scan dir() (Entropy)
+                    for name in dir(module):
+                        if not name.startswith("_"):
+                            _symbol_map[name] = mod_path
+            except ImportError:
+                # Should we log? Maybe via print for now as logger might not be ready
+                pass
+
+    def _universal_getattr(name: str):
+        """
+        Universal discovery: Fractal -> Universal -> Error.
+        """
+        # 1. Try Fractal (Local Folders)
+        try:
+            return _fractal(name)
+        except AttributeError:
+            pass
+
+        # 2. Try Universal (Core Modules)
+        _ensure_symbol_map()
+        if name in _symbol_map:
+            mod_path = _symbol_map[name]
+            try:
+                module = importlib.import_module(mod_path)
+                return getattr(module, name)
+            except (ImportError, AttributeError) as e:
+                # Symbol in map but not in module? Drift detected!
+                raise AttributeError(
+                    f"Universal symbol '{name}' mapped to {mod_path} but failed load: {e}"
+                ) from e
+
+        # 3. Not Found
+        raise AttributeError(f"module has no attribute '{name}'")
+
+    return _universal_getattr
+
+
+def enable_universal_discovery(
+    caller_globals: dict,
+    caller_file: str,
+    core_modules: List[str],
+) -> None:
+    """
+    Enable UNIVERSAL discovery for a module.
+
+    Usage:
+        CORE_MODULES = ["vibe_core.mahamantra.seed.types", ...]
+        enable_universal_discovery(globals(), __file__, CORE_MODULES)
+    """
+    caller_globals["__getattr__"] = create_universal_getattr(caller_file, core_modules)
+
+
+# =============================================================================
 # SANKIRTAN VALIDATOR - Military Grade Watertight
 # =============================================================================
 # "yato dharmas tato jayah" - Where there is dharma, there is victory
