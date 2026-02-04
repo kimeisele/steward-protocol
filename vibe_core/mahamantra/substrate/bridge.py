@@ -209,36 +209,55 @@ def offer(
             )
 
     # =========================================================================
-    # EXECUTION: Route via ShadowReactor (THE HEARING GAP RESOLVED)
+    # EXECUTION: RESOANCE ROUTING (The Flow)
     # =========================================================================
-    # Phase 1: Ephemeral Reactor (Spawnbar)
-    # 1. Wrap content into MahaCell
-    cell = wrap_cell(content, purpose)
+    # Phase 4 (Narada): We publish the intent and wait for the echo.
+    # No more hardcoded teleportation (target_position).
     
-    # PERSISTENT REACTOR FLOW (Arjuna Pattern)
     from vibe_core.mahamantra.reactor.loop import get_loop
     
     # 1. Get the Loop and Mailbox
     loop, mailbox = get_loop()
     
-    # Prepare routing metadata for the result
-    # Prepare routing metadata for the result
-    final_routing = {
-        "position": position,
-        "mahajana": mahajana,
-        "quarter": quarter,
-    }
+    # 2. Wait for Readiness (Narada must be awake)
+    if not loop.wait_until_ready(timeout=5.0):
+        return OfferResult(
+            success=False,
+            position=position,
+            mahajana=mahajana,
+            quarter=quarter,
+            purpose=purpose,
+            error="Reactor Init Timeout",
+            execution_result=None,
+            intent_id=None,
+        )
     
-    # 2. Submit Work (Async)
-    # We pass the target position from the Router so the Reactor can "teleport" there.
+    # 3. Prepare Ticket (The Promise)
+    ticket = mailbox.create_ticket()
+    
+    # 4. Broadcast Intent (The Shout)
+    # Map purpose to EventType (e.g. remember -> REMEMBER)
+    event_type = purpose.upper()
+    
+    # Prepare details
+    if isinstance(content, dict):
+        details = content
+    else:
+        details = {"data": content}
+        
+    loop.publish(
+        event_type=event_type,
+        agent_id=actor or "bridge",
+        message=f"Offer: {purpose}",
+        details=details,
+        task_id=ticket 
+    )
+    
+    # 4. Wait for Echo (Sync)
     try:
-        tracking_id = loop.submit(cell, purpose, target_position=position)
+        result_data = mailbox.collect(ticket, timeout=10.0) # 10s timeout
         
-        # 3. Wait for Result (Sync)
-        # The Mailbox bridges the gap between the living loop and the waiting caller.
-        result_data = mailbox.collect(tracking_id, timeout=10.0) # 10s timeout
-        
-        # 4. Unpack Result
+        # 5. Unpack Result
         if not result_data["success"]:
             return OfferResult(
                 success=False,
@@ -248,7 +267,7 @@ def offer(
                 purpose=purpose,
                 error=result_data["error"] or "Unknown Reactor Error",
                 execution_result=None,
-                intent_id=None, # Clean up OfferResult signature
+                intent_id=None,
             )
             
         execution_result = result_data["execution_result"]

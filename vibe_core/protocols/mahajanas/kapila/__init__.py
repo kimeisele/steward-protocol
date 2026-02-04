@@ -495,7 +495,8 @@ def on_event(event: Any) -> None:
             event_type="COMPLETED",
             agent_id="kapila",
             message=f"Processed {intent}",
-            details={"result": execution_result, "original_task_id": event.task_id}
+            details={"result": execution_result, "original_task_id": event.task_id},
+            task_id=event.task_id # PROPAGATE TASK ID so Mailbox can resolve it
         )
 
 # =============================================================================
