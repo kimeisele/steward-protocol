@@ -38,7 +38,6 @@ __genesis__ = "0xb651262c"  # GenesisByte: parampara % 37 == 0
 
 import time
 from dataclasses import dataclass, field
-from enum import IntEnum
 from typing import (
     Final,
     Generator,
@@ -95,14 +94,8 @@ class ParamparaBreakError(ValueError):
 # GUNA - Quality of Service (from BG 14)
 # =============================================================================
 
-
-class Guna(IntEnum):
-    """The three modes of material nature + transcendental."""
-
-    SATTVA = 0  # Safe (read) - ●
-    RAJAS = 1  # Active (write) - ◐
-    TAMAS = 2  # Destroy (needs confirmation) - ○
-
+# SSOT: Import from guna.py (The canonical definition per BG 14)
+from vibe_core.mahamantra.substrate.guna import Guna
 
 # HolyName imported from byte.py (SSOT) - includes VOID for binary encoding
 
