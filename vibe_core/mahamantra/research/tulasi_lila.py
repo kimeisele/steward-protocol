@@ -12,7 +12,7 @@ It moves beyond the mathematical "Grace Factor" (8) to the actual LILA.
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "shuka"
 __position__ = 14
-__genesis__ = "0xABC12345"
+__genesis__ = "0xed874970"
 
 from dataclasses import dataclass
 from enum import Enum, auto

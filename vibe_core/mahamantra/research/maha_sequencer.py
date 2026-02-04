@@ -37,7 +37,7 @@ PARAMPARA = "one after another" = SEQUENCE!
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"  # Compiler - generates the texts
 __position__ = 1
-__genesis__ = "0x9a8b7c6d"
+__genesis__ = "0x027b452a"
 
 from dataclasses import dataclass
 from typing import Final, Tuple, List, Optional

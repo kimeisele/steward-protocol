@@ -1,14 +1,17 @@
 """
-SHUDDHI ENGINE - Stub (Implementation Missing)
-=============================================
+SHUDDHI ENGINE - Re-export from Canonical Location
+===================================================
 
-This file is a stub. The actual implementation was never completed.
-Tests expecting this module should be skipped or updated.
+The REAL ShuddhiEngine lives in Mahamantra (dharma/kumaras/engine.py).
+This file exists for backwards compatibility with legacy imports.
+
+CANONICAL: vibe_core.mahamantra.dharma.kumaras.engine.ShuddhiEngine
+LEGACY:    vibe_core.shuddhi.engine.ShuddhiEngine (this file)
+
+Protocol Liberation: All roads lead to Mahamantra.
 """
 
+# Re-export from canonical location (Protocol-First)
+from vibe_core.mahamantra.dharma.kumaras.engine import ShuddhiEngine
 
-class ShuddhiEngine:
-    """Stub ShuddhiEngine - raises NotImplementedError."""
-
-    def __init__(self):
-        raise NotImplementedError("ShuddhiEngine is not implemented")
+__all__ = ["ShuddhiEngine"]

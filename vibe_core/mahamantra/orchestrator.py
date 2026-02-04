@@ -15,7 +15,7 @@ ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 2
-__genesis__ = "0xa2b9f456"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xdd4f22d7"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, ClassVar, Tuple
 import struct
@@ -143,13 +143,13 @@ CLUSTER_SHIFT: Final[int] = FLUTE_HOLES_SUM + 4  # 23
 class VenuOrchestrator:
     """
     The Dancing Mahamantra - LUT-based O(1) Performance.
-    
+
     Uses pre-computed look-up table derived from MAHAMANTRA_WORD_PATTERN.
     Pattern: rama_grid.py (SVARAS, SPARSHA_GRID as LUTs).
-    
+
     "The Orchestrator plays Krishna's flute - 19 bits at a time."
     """
-    
+
     __mahajana__: ClassVar[str] = "narada"
     __position__: ClassVar[int] = 2
 
@@ -157,19 +157,35 @@ class VenuOrchestrator:
     VENU_BITS: ClassVar[int] = VENU_HOLES      # 6 - Low register (64 states)
     VAMSI_BITS: ClassVar[int] = VAMSI_HOLES    # 9 - Mid register (512 = SIKSASTAKAM_CACHE)
     MURALI_BITS: ClassVar[int] = MURALI_HOLES  # 4 - High register (16 = WORDS)
-    
+
     __slots__ = ('_tick', '_prev_state', '_mode')
-    
+
     def __init__(self) -> None:
         self._tick: int = 0
         self._prev_state: int = 0
         self._mode: int = 0  # 0=Solo, 1=CallResponse, 2=Chorus
-    
+
+    # =========================================================================
+    # PANCHA TATTVA PROTOCOL (5 Questions Every Entity Must Answer)
+    # =========================================================================
+
+    @property
+    def __tattva__(self) -> "TattvaDict":
+        """The 5-fold truth of VenuOrchestrator."""
+        from vibe_core.mahamantra.protocols._pancha import TattvaDict
+        return {
+            "chaitanya": "VenuOrchestrator - The Dancing Mahamantra (19-bit DIW)",
+            "nityananda": "THE_FLUTE_CYCLE LUT (pre-computed from MAHAMANTRA_WORD_PATTERN)",
+            "advaita": "step() - O(1) LUT lookup + XOR + Mode injection",
+            "gadadhara": f"VENU({VENU_HOLES}b) + VAMSI({VAMSI_HOLES}b) + MURALI({MURALI_HOLES}b) = 19b",
+            "srivasa": f"WORDS ({WORDS}), COSMIC_FRAME ({COSMIC_FRAME})",
+        }
+
     @property
     def tick(self) -> int:
         """Current tick position."""
         return self._tick
-        
+
     @property
     def mode(self) -> int:
         """Current Kirtan Mode."""

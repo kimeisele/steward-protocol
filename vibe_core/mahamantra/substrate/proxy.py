@@ -48,15 +48,8 @@ from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaD
 # =============================================================================
 
 
-class TickState(TypedDict, total=False):
-    """State passed on each Mahamantra tick. WATERTIGHT: No Any."""
-
-    tick: int
-    position: int
-    quarter: str
-    guardian: str
-    word: str
-    opcode: int
+# TickState imported from _types.py (SSOT)
+from vibe_core.mahamantra._types import TickState
 
 
 if TYPE_CHECKING:

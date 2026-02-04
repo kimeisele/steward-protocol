@@ -9,6 +9,8 @@ This adapter implements the "Tulasi in Process".
 It handles the BHOGA -> PRASADAM transformation logic.
 """
 
+__all__ = ["TulasiGate"]
+
 from typing import Final, Optional
 from vibe_core.mahamantra.protocols.offering import GraceProtocol
 from vibe_core.mahamantra.protocols._seed import (

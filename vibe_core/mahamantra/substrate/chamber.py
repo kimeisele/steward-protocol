@@ -18,7 +18,7 @@ ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "gauranga"
 __position__ = 0  # Chaitanya = 0 (The Source of Sankirtan)
-__genesis__ = "0xd7a9e543"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xe79456f2"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from typing import Final, ClassVar, Optional, TypeVar, Generic, Callable
@@ -41,6 +41,7 @@ from vibe_core.mahamantra.protocols._seed import (
     SEVEN,
     TEN,
 )
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.orchestrator import (
     VenuOrchestrator,
     THE_FLUTE_CYCLE,
@@ -137,7 +138,22 @@ class SankirtanChamber(Generic[C]):
     _resonance_count: int = 0
     _total_transformations: int = 0
     _accumulated_diw: int = 0
-    
+
+    # =========================================================================
+    # PANCHA TATTVA PROTOCOL (5 Questions Every Entity Must Answer)
+    # =========================================================================
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold truth of SankirtanChamber."""
+        return {
+            "chaitanya": "SankirtanChamber - The Resonance Space (RAM Engine)",
+            "nityananda": "VenuOrchestrator (Time) + SiksastakamRegistry (Space)",
+            "advaita": "dance() / sankirtan() - DIW-driven cell transformation",
+            "gadadhara": "Cell → DIW → Transform → Registry → Cell",
+            "srivasa": "MALA (108 capacity), PARAMPARA (37 threshold)",
+        }
+
     @property
     def tick(self) -> int:
         """Current orchestrator tick."""

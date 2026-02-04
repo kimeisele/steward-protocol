@@ -3,6 +3,8 @@ __mahajana__ = "kapila"  # Position 6 (Sankhya/Biology)
 __position__ = 6
 __genesis__ = "0xce110007"  # GenesisByte: parampara % 37 == 0
 
+__all__ = ["MahaCell"]
+
 from typing import Any, Dict, Generic, Optional, TypeVar, cast
 from dataclasses import dataclass, field
 import uuid

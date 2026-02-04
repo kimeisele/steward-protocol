@@ -21,7 +21,7 @@ SSOT ALIGNMENT:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "gauranga"
 __position__ = 0
-__genesis__ = "0x9f3b2a1c"
+__genesis__ = "0xe79456f2"
 
 from dataclasses import dataclass, field
 from typing import List, Final, TypeVar, Generic
