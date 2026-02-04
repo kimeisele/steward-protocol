@@ -35,12 +35,13 @@ OUROBOROS:
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, MALA, PANCHA, QUARTERS, TEN)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0xf77b128c"  # GenesisByte: parampara % 37 == 0
 
 import asyncio
@@ -120,7 +121,7 @@ class DaemonMetrics:
 
     # Entropy tracking
     health_history: List[float] = field(default_factory=list)
-    max_history: int = 108  # One mala round
+    max_history: int = MALA  # One mala round
 
     def record_health(self, score: float) -> None:
         """Record health score, maintaining history limit."""
@@ -138,10 +139,10 @@ class DaemonMetrics:
     @property
     def health_trend(self) -> str:
         """Is health improving, stable, or declining?"""
-        if len(self.health_history) < 2:
+        if len(self.health_history) < HALVES:
             return "unknown"
-        recent = self.health_history[-10:]
-        older = self.health_history[-20:-10] if len(self.health_history) >= 20 else self.health_history[:10]
+        recent = self.health_history[-TEN:]
+        older = self.health_history[-20:-TEN] if len(self.health_history) >= 20 else self.health_history[:TEN]
 
         recent_avg = sum(recent) / len(recent) if recent else 0
         older_avg = sum(older) / len(older) if older else recent_avg
@@ -253,7 +254,7 @@ class MahamantraDaemon:
         cycle = 0
 
         while not self._stop_requested:
-            cycle += 1
+            cycle += KSETRAJNA
 
             # Check max cycles
             if self._max_cycles and cycle > self._max_cycles:
@@ -311,7 +312,7 @@ class MahamantraDaemon:
 
             # Chant the quarter
             chant_result = mahamantra.chant_quarter(quarter)
-            self._metrics.total_chants += 1
+            self._metrics.total_chants += KSETRAJNA
             self._metrics.last_chant_time = datetime.now()
 
             # === DHARMA QUARTER: Trigger Shuddhi Self-Healing ===
@@ -334,7 +335,7 @@ class MahamantraDaemon:
             logger.debug(f"  {quarter.upper()}: {chant_result}")
 
             # Rest between quarters (4 words per quarter)
-            await asyncio.sleep(4 * frequency.word_interval)
+            await asyncio.sleep(QUARTERS * frequency.word_interval)
 
         # Brief pause between cycles
         await asyncio.sleep(self._min_interval)
@@ -372,7 +373,7 @@ class MahamantraDaemon:
             dry_run = health >= HEALTH_SADHANA
 
             results = engine.heal_all_violations(dry_run=dry_run)
-            healed = sum(1 for r in results if r.status.value == "purified")
+            healed = sum(KSETRAJNA for r in results if r.status.value == "purified")
 
             if healed > 0:
                 mode = "DRY-RUN" if dry_run else "LIVE"
@@ -393,7 +394,7 @@ class MahamantraDaemon:
         Only runs every 10 cycles to avoid overhead.
         """
         # Only run every 10 cycles
-        if cycle % 10 != 0:
+        if cycle % TEN != 0:
             return
 
         try:
@@ -413,7 +414,7 @@ class MahamantraDaemon:
 
             # Judge and migrate (only those with ALLOW/MERCY)
             migrated = 0
-            for wild in wilds[:5]:  # Max 5 per cycle
+            for wild in wilds[:PANCHA]:  # Max 5 per cycle
                 path = wild.get("path", "")
                 verdict = service.judge(path)
 
@@ -424,7 +425,7 @@ class MahamantraDaemon:
 
                         name = Path(path).stem
                         if service.migrate(path, mahajana, name):
-                            migrated += 1
+                            migrated += KSETRAJNA
                             logger.info(f"⚖️ SAMSKARA: Migrated {path} → {mahajana.value}")
 
             if migrated > 0:

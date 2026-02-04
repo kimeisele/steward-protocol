@@ -39,6 +39,7 @@ THE 9 NAVABHAKTI FIELDS:
 
 ALL INTEGER. NO FLOATS. PRABHUPADA WEIST DEN WEG.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, PANCHA, QUALITIES, QUARTERS, SEVEN, SHARANAGATI, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -92,8 +93,8 @@ HEADER_STRUCT_FORMAT: Final[str] = "<" + "Q" * NAVA  # "<QQQQQQQQQ"
 
 assert HEADER_SIZE_BYTES == NADI_RESONANCE, f"Header must be {NADI_RESONANCE} bytes"
 assert HEADER_SIZE_BYTES == 72, "Header must be exactly 72 bytes"
-assert FIELD_SIZE_BYTES == 8, "Each field must be 8 bytes (uint64)"
-assert NAVA == 9, "Must have exactly 9 NavaBhakti fields"
+assert FIELD_SIZE_BYTES == HARE_COUNT, "Each field must be 8 bytes (uint64)"
+assert NAVA == NAVA, "Must have exactly 9 NavaBhakti fields"
 assert PAYLOAD_REFERENCE_SIZE == 1024, "Reference payload is 1024 bytes"
 assert HEADER_DAILY_CYCLES == 300, "300 header cycles per day"
 
@@ -115,14 +116,14 @@ class NavaBhaktiField(IntEnum):
     """
 
     SRAVANAM = 0  # Hearing - Source/Origin ID
-    KIRTANAM = 1  # Chanting - Target/Destination ID
-    SMARANAM = 2  # Remembering - Link/Previous (chain)
-    PADA_SEVANAM = 3  # Serving - Operation/Command
-    ARCANAM = 4  # Worshiping - Validation/Signature
-    VANDANAM = 5  # Praying - Intent/Request mask
-    DASYAM = 6  # Servitude - Delegation/TTL
-    SAKHYAM = 7  # Friendship - Connection/State
-    ATMA_NIVEDANAM = 8  # Surrender - Commit/Checksum
+    KIRTANAM = KSETRAJNA  # Chanting - Target/Destination ID
+    SMARANAM = HALVES  # Remembering - Link/Previous (chain)
+    PADA_SEVANAM = TRINITY  # Serving - Operation/Command
+    ARCANAM = QUARTERS  # Worshiping - Validation/Signature
+    VANDANAM = PANCHA  # Praying - Intent/Request mask
+    DASYAM = SHARANAGATI  # Servitude - Delegation/TTL
+    SAKHYAM = SEVEN  # Friendship - Connection/State
+    ATMA_NIVEDANAM = HARE_COUNT  # Surrender - Commit/Checksum
 
 
 # Verification: Must have exactly NAVA fields
@@ -162,7 +163,7 @@ class MahaHeader:
         """Validate all fields fit in uint64."""
         for field in NavaBhaktiField:
             value = getattr(self, field.name.lower())
-            if not (0 <= value < 2**64):
+            if not (0 <= value < HALVES**QUALITIES):
                 raise ValueError(f"{field.name} must be uint64 (0 to 2^64-1), got {value}")
 
     # =========================================================================
@@ -209,14 +210,14 @@ class MahaHeader:
         fields = struct.unpack(HEADER_STRUCT_FORMAT, data)
         return cls(
             sravanam=fields[0],
-            kirtanam=fields[1],
-            smaranam=fields[2],
-            pada_sevanam=fields[3],
-            arcanam=fields[4],
-            vandanam=fields[5],
-            dasyam=fields[6],
-            sakhyam=fields[7],
-            atma_nivedanam=fields[8],
+            kirtanam=fields[KSETRAJNA],
+            smaranam=fields[HALVES],
+            pada_sevanam=fields[TRINITY],
+            arcanam=fields[QUARTERS],
+            vandanam=fields[PANCHA],
+            dasyam=fields[SHARANAGATI],
+            sakhyam=fields[SEVEN],
+            atma_nivedanam=fields[HARE_COUNT],
         )
 
     # =========================================================================
@@ -268,7 +269,7 @@ class MahaHeader:
             uint64 checksum value
         """
         xor_sum = 0
-        for i in range(NAVA - 1):  # First 8 fields (excluding checksum)
+        for i in range(NAVA - KSETRAJNA):  # First 8 fields (excluding checksum)
             xor_sum ^= self.as_tuple()[i]
 
         # Adjust to be parampara-valid (% 37 == 0)

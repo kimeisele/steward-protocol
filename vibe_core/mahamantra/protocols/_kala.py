@@ -16,6 +16,7 @@ HIERARCHY:
     4. MALA (Round)     : 1728 Ticks (108 Mantras)
 
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -39,12 +40,12 @@ class KalaTime:
     @property
     def mantra_completion(self) -> float:
         """Percentage of current mantra completed (0.0 - 1.0)."""
-        return (self.tick_in_mantra + 1) / 16.0
+        return (self.tick_in_mantra + KSETRAJNA) / 16.0
 
     @property
     def mala_completion(self) -> float:
         """Percentage of current mala completed (0.0 - 1.0)."""
-        return (self.mantra_in_mala * 16 + self.tick_in_mantra + 1) / 1728.0
+        return (self.mantra_in_mala * WORDS + self.tick_in_mantra + KSETRAJNA) / 1728.0
 
     def __str__(self) -> str:
         return f"Kala(Mala={self.mala_count}, Mantra={self.mantra_in_mala}, Tick={self.tick_in_mantra})"

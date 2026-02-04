@@ -51,12 +51,13 @@ MAHAMANTRA MAPPING:
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "parashurama"
-__position__ = 8
+__position__ = HARE_COUNT
 __genesis__ = "0x60b19acb"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
@@ -382,7 +383,7 @@ class EntropyProtocolDef(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="EntropyProtocol",
         mahajana="parashurama",  # Smells corruption
-        position=8,
+        position=HARE_COUNT,
         level=Level.SUBSTRATE,
         quarter=Quarter.KARMA,  # Position 8 is in KARMA quarter
     )
@@ -438,7 +439,7 @@ assert HEALTH_SAMADHI == 1.0 - PAIN_SAMADHI, "Health/Pain thresholds must be inv
 assert HEALTH_SADHANA == 1.0 - PAIN_SADHANA, "Health/Pain thresholds must be inverse"
 
 # Verify entropy levels
-assert len(EntropyLevel) == 3, "Must have exactly 3 entropy levels"
+assert len(EntropyLevel) == TRINITY, "Must have exactly 3 entropy levels"
 assert EntropyLevel.SAMADHI.frequency_hz < EntropyLevel.SADHANA.frequency_hz, "Samadhi must be slower"
 assert EntropyLevel.SADHANA.frequency_hz < EntropyLevel.GAJENDRA.frequency_hz, "Gajendra must be fastest"
 

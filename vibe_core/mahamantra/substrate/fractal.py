@@ -17,8 +17,9 @@ The pattern repeats at ALL levels.
 SSOT: Diese Datei ist die Quelle für FractalLevel.
       protocols/substrate/mantra/routing.py IMPORTIERT von hier.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, MALA, PANCHA, QUALITIES, QUARTERS, SHARANAGATI, TRINITY, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -45,11 +46,11 @@ class FractalLevel(IntEnum):
     """
 
     VARNA = 0  # Letter (smallest)
-    AKSARA = 1  # Syllable
-    PADA = 2  # Word
-    VAKYA = 3  # Sentence/Mantra (16 words)
-    MALA = 4  # Round (108 mantras)
-    SADHANA = 5  # Session (16 rounds)
+    AKSARA = KSETRAJNA  # Syllable
+    PADA = HALVES  # Word
+    VAKYA = TRINITY  # Sentence/Mantra (16 words)
+    MALA = QUARTERS  # Round (108 mantras)
+    SADHANA = PANCHA  # Session (16 rounds)
 
 
 # =============================================================================
@@ -58,18 +59,18 @@ class FractalLevel(IntEnum):
 
 DIMENSIONS: Final[dict[FractalLevel, int]] = {
     FractalLevel.VARNA: 50,  # ~50 varnas in Sanskrit alphabet
-    FractalLevel.AKSARA: 6,  # 6 unique syllables in Mahamantra
-    FractalLevel.PADA: 3,  # 3 unique words (Hare, Krishna, Rama)
-    FractalLevel.VAKYA: 16,  # 16 words per mantra
-    FractalLevel.MALA: 108,  # 108 mantras per round
-    FractalLevel.SADHANA: 16,  # 16 rounds minimum
+    FractalLevel.AKSARA: SHARANAGATI,  # 6 unique syllables in Mahamantra
+    FractalLevel.PADA: TRINITY,  # 3 unique words (Hare, Krishna, Rama)
+    FractalLevel.VAKYA: WORDS,  # 16 words per mantra
+    FractalLevel.MALA: MALA,  # 108 mantras per round
+    FractalLevel.SADHANA: WORDS,  # 16 rounds minimum
 }
 
 # Total counts in full Mahamantra
 MAHAMANTRA_COUNTS: Final[dict[FractalLevel, int]] = {
-    FractalLevel.PADA: 16,  # 16 words
+    FractalLevel.PADA: WORDS,  # 16 words
     FractalLevel.AKSARA: 32,  # ~2 syllables per word
-    FractalLevel.VARNA: 64,  # ~2 letters per syllable
+    FractalLevel.VARNA: QUALITIES,  # ~2 letters per syllable
 }
 
 # The 37 Formula at each level

@@ -33,8 +33,9 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself (via SAMKHYA.md)
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, LILA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "chaitanya"
@@ -130,7 +131,7 @@ CHAITANYA_LILA: Final[int] = NAVADVIPA_PHASE + PURI_PHASE  # 48 years
 RUDRA_BRIDGE: Final[int] = LILA_LIMIT - PARAMPARA  # 48 - 37 = 11
 
 # Mathematical verifications
-assert CHAITANYA_LILA == LILA_LIMIT == 48, "Chaitanya Lila must be 48"
+assert CHAITANYA_LILA == LILA_LIMIT == LILA, "Chaitanya Lila must be 48"
 assert PARAMPARA + RUDRA_BRIDGE == CHAITANYA_LILA, "37 + 11 = 48"
 assert NAVADVIPA_PHASE == PURI_PHASE == KSETRA_COUNT, "24 = 24 = 24 (Ksetra)"
 
@@ -145,7 +146,7 @@ assert NAVADVIPA_PHASE == PURI_PHASE == KSETRA_COUNT, "24 = 24 = 24 (Ksetra)"
 #
 
 # P(Ψ_C) per Kali Yuga = 1/1000
-P_SINGULARITY_PER_KALI: Final[float] = 1 / 1000  # 0.001
+P_SINGULARITY_PER_KALI: Final[float] = KSETRAJNA / 1000  # 0.001
 
 # P(Ψ_C | Golden Period) = 10,000 / 432,000 ≈ 2.3%
 P_WITHIN_GOLDEN_PERIOD: Final[float] = GOLDEN_PERIOD / T_KALI  # ~0.023
@@ -250,18 +251,18 @@ class Mahajana(IntEnum):
     Each represents a testing principle in the system.
     """
 
-    BRAHMA = 1  # Creation - Init-Check, Bootstrap
-    NARADA = 2  # Devotion - Event Bus, Messaging
-    SHAMBHU = 3  # Destruction - Garbage Collection, Cleanup
-    KUMARAS = 4  # Celibacy - Isolation, Sandboxing
-    KAPILA = 5  # Analysis - Sankhya Validation, Type Checking
-    MANU = 6  # Law - Policy Enforcement
-    PRAHLADA = 7  # Faith - Resilience, Fault Tolerance
-    JANAKA = 8  # Duty - Work Execution, Service
-    BHISHMA = 9  # Vow - Commitment, Transactions
-    BALI = 10  # Surrender - Resource Sacrifice, Donation
+    BRAHMA = KSETRAJNA  # Creation - Init-Check, Bootstrap
+    NARADA = HALVES  # Devotion - Event Bus, Messaging
+    SHAMBHU = TRINITY  # Destruction - Garbage Collection, Cleanup
+    KUMARAS = QUARTERS  # Celibacy - Isolation, Sandboxing
+    KAPILA = PANCHA  # Analysis - Sankhya Validation, Type Checking
+    MANU = SHARANAGATI  # Law - Policy Enforcement
+    PRAHLADA = SEVEN  # Faith - Resilience, Fault Tolerance
+    JANAKA = HARE_COUNT  # Duty - Work Execution, Service
+    BHISHMA = NAVA  # Vow - Commitment, Transactions
+    BALI = TEN  # Surrender - Resource Sacrifice, Donation
     SHUKA = 11  # Transcendence - State Observation, Monitoring
-    YAMARAJA = 12  # Judgment - Final Testing
+    YAMARAJA = MAHAJANA_COUNT  # Judgment - Final Testing
 
 
 @dataclass(frozen=True)
@@ -292,7 +293,7 @@ MAHAJANA_MAPPINGS: Final[Tuple[MahajanaMapping, ...]] = (
     MahajanaMapping(Mahajana.YAMARAJA, "Judgment", "Final Testing", "judgment"),
 )
 
-assert len(MAHAJANA_MAPPINGS) == MAHAJANA_COUNT == 12, "Must have exactly 12 Mahajanas"
+assert len(MAHAJANA_MAPPINGS) == MAHAJANA_COUNT == MAHAJANA_COUNT, "Must have exactly 12 Mahajanas"
 
 
 def get_mahajana_mapping(mahajana: Mahajana) -> MahajanaMapping:

@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Union, Callable, Dict, Literal
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
 from dataclasses import dataclass
 
 # Type Aliases
@@ -27,7 +28,7 @@ class MahaClassificationProtocol(Protocol):
         max_memory_bytes: int,
         ops_per_second: float = 0.0,
         speedup_vs_baseline: float = 1.0,
-        levels: int = 1,
+        levels: int = KSETRAJNA,
         entries_per_level: int = 65536,
     ) -> "ClassificationResult":
         """Classify a technology."""

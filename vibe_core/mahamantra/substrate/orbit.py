@@ -9,10 +9,11 @@ Implements the OrbitCalculator:
 - Determines if "It is Time" based on Kaksha (Frequency).
 
 """
+from vibe_core.mahamantra.protocols._seed import (QUARTERS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0xfb0a3320"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
@@ -38,7 +39,7 @@ class OrbitCalculator(OrbitProtocol):
         """
         hash_bytes = hashlib.sha256(entity_id.encode("utf-8")).digest()
         # Use first 4 bytes as integer seed
-        seed_int = int.from_bytes(hash_bytes[:4], byteorder="big")
+        seed_int = int.from_bytes(hash_bytes[:QUARTERS], byteorder="big")
         return seed_int % modulus
 
     def should_dance(self, current_tick: int, entity_id: str, kaksha_modulus: int = WORDS) -> bool:

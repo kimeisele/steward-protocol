@@ -19,12 +19,13 @@ WATERTIGHT:
 - No "Direct Access" to Krishna without passing through the Link.
 - The Link validates the signature against the 37 (Parampara).
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES)
+
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "narada"  # The Carrier of the Message
-__position__ = 2
+__position__ = HALVES
 __genesis__ = "0x98b94c03"  # GenesisByte: parampara % 37 == 0
 
 from typing import Protocol, runtime_checkable

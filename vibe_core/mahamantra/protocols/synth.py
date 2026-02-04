@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Tuple, Dict, Optional
+from vibe_core.mahamantra.protocols._seed import (MAHAJANA_COUNT, PANCHA, QUARTERS)
 from dataclasses import dataclass
 
 @runtime_checkable
@@ -53,11 +54,11 @@ class SynthParams:
     feedback: int = 0
     phase_offset: int = 0
     lfo_enabled: bool = True
-    lfo_rate: int = 4  # QUARTERS
-    adsr_attack: int = 5  # PANCHA
-    adsr_decay: int = 12  # MAHAJANA_COUNT
-    adsr_sustain: int = 5  # PANCHA
-    adsr_release: int = 12  # MAHAJANA_COUNT
+    lfo_rate: int = QUARTERS  # QUARTERS
+    adsr_attack: int = PANCHA  # PANCHA
+    adsr_decay: int = MAHAJANA_COUNT  # MAHAJANA_COUNT
+    adsr_sustain: int = PANCHA  # PANCHA
+    adsr_release: int = MAHAJANA_COUNT  # MAHAJANA_COUNT
     nibble_mode: bool = False
 
 @dataclass(frozen=True)

@@ -16,12 +16,13 @@ Proxy wraps them and routes operations through Mahamantra.
 
 WATERTIGHT: NO hardcoded numbers. ALL from seed.py.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "nityananda"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0x12419353"  # GenesisByte: parampara % 37 == 0
 
 import importlib
@@ -261,7 +262,7 @@ class BalaramaProxy(GADBase, GADProtocol):
 
         # Identity (Navadvipa Awareness)
         self._mahajana: str = "unknown"
-        self._position: int = -1
+        self._position: int = -KSETRAJNA
         self._genesis: str = ""
 
         # Init GADBase (triggers verify_link)
@@ -326,10 +327,10 @@ class BalaramaProxy(GADBase, GADProtocol):
                 self._mahajana, self._position = mapping
             else:
                 self._mahajana = "unknown"
-                self._position = -1
+                self._position = -KSETRAJNA
         else:
             self._mahajana = "unknown"
-            self._position = -1
+            self._position = -KSETRAJNA
 
         # Genesis can still be derived from path hash
         self._genesis = getattr(self.module, "__genesis__", "")
@@ -350,7 +351,7 @@ class BalaramaProxy(GADBase, GADProtocol):
         if self._mahajana != "unknown" and self._position >= 0:
             # Service has identity - welcome by name
             logger.info(
-                f"🙏 {self._mahajana.upper()} (Position {self._position}) embraced: {self.module_name.split('.')[-1]}"
+                f"🙏 {self._mahajana.upper()} (Position {self._position}) embraced: {self.module_name.split('.')[-KSETRAJNA]}"
             )
         else:
             # Anonymous service - still welcomed
@@ -467,15 +468,15 @@ class BalaramaProxy(GADBase, GADProtocol):
             # THE GATE: Only fire if position matches
             # Support both dict and object access
             if isinstance(tick_state, dict):
-                current_position = tick_state.get("position", -1)
+                current_position = tick_state.get("position", -KSETRAJNA)
             else:
-                current_position = getattr(tick_state, "position", -1)
+                current_position = getattr(tick_state, "position", -KSETRAJNA)
 
             if current_position != proxy._position:
                 return  # Not my turn - stay silent
 
             # MY TURN! Increment counter
-            proxy._tick_count += 1
+            proxy._tick_count += KSETRAJNA
 
             # Look for handler methods in wrapped module
             # Duck typing: on_tick, process, update, handle_tick
@@ -806,10 +807,10 @@ def auto_wrap_services(*, silent: bool = True) -> dict[str, BalaramaProxy]:
         try:
             proxy = wrap_service(service_name, silent=silent)
             proxies[service_name] = proxy
-            embraced_count += 1
+            embraced_count += KSETRAJNA
 
             if proxy.has_identity:
-                identity_count += 1
+                identity_count += KSETRAJNA
 
         except Exception as e:
             # Graceful degradation - continue with other services

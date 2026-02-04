@@ -30,6 +30,7 @@ Each year yields unique derivations, research domains, resonances.
 the incarnation of Godhead who constantly sings the names of Krishna."
 — Srimad Bhagavatam 11.5.32
 """
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, LILA, MAHA_QUANTUM, MALA, PANCHA, PARAMPARA, POSITION_SUM_HARE, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUARTERS, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - History/Chronology
@@ -94,7 +95,7 @@ from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
 BUILD_YEAR: Final[int] = 1896  # Srila Prabhupada's appearance
 RUNTIME_END: Final[int] = 1977  # Return to spiritual world
-RUNTIME_YEARS: Final[int] = RUNTIME_END - BUILD_YEAR + 1  # 82 years (inclusive)
+RUNTIME_YEARS: Final[int] = RUNTIME_END - BUILD_YEAR + KSETRAJNA  # 82 years (inclusive)
 
 # Janmashtami connection: 1896 was day after Janmashtami (Nandotsava)
 NANDOTSAVA_ENCODED: Final[bool] = True
@@ -123,16 +124,16 @@ PRIME_CHAIN: Final[Tuple[int, ...]] = (
 
 def triangular(n: int) -> int:
     """Compute triangular number T(n) = n(n+1)/2."""
-    return n * (n + 1) // 2
+    return n * (n + KSETRAJNA) // HALVES
 
 
 def is_triangular(num: int) -> Optional[int]:
     """Check if num is triangular. Returns n if T(n)=num, else None."""
     # T(n) = num → n² + n - 2*num = 0 → n = (-1 + sqrt(1 + 8*num)) / 2
-    discriminant = 1 + 8 * num
+    discriminant = KSETRAJNA + HARE_COUNT * num
     sqrt_disc = int(discriminant**0.5)
     if sqrt_disc * sqrt_disc == discriminant:
-        n = (-1 + sqrt_disc) // 2
+        n = (-KSETRAJNA + sqrt_disc) // HALVES
         if triangular(n) == num:
             return n
     return None
@@ -239,7 +240,7 @@ class LilaChronology:
 
     def _initialize_years(self):
         """Initialize all 82 years with base frequencies."""
-        for year in range(BUILD_YEAR, RUNTIME_END + 1):
+        for year in range(BUILD_YEAR, RUNTIME_END + KSETRAJNA):
             phase = get_phase(year)
             self._years[year] = YearFrequency(year=year, phase=phase)
 
@@ -417,7 +418,7 @@ class LilaChronology:
             raise ValueError(f"Year {year} not in chronology")
 
         phase_index = list(LilaPhase).index(yf.phase)
-        signature = (year << 8) | (yf.parampara_resonance << 4) | phase_index
+        signature = (year << HARE_COUNT) | (yf.parampara_resonance << QUARTERS) | phase_index
 
         return f"0x{signature:08x}"
 
@@ -461,7 +462,7 @@ class LilaChronology:
     def get_year_mantra_sequence(self, start: int, end: int) -> List[Tuple[int, str]]:
         """Get sequence of years with their mantra words."""
         result = []
-        for year in range(max(start, BUILD_YEAR), min(end, RUNTIME_END) + 1):
+        for year in range(max(start, BUILD_YEAR), min(end, RUNTIME_END) + KSETRAJNA):
             result.append((year, self.year_to_mantra_word(year)))
         return result
 
@@ -493,7 +494,7 @@ class LilaChronology:
 
     def get_vco_aligned_years(self, modulo: int) -> List[int]:
         """Get all years where delta % modulo == 0."""
-        return [year for year in range(BUILD_YEAR, RUNTIME_END + 1) if (year - BUILD_YEAR) % modulo == 0]
+        return [year for year in range(BUILD_YEAR, RUNTIME_END + KSETRAJNA) if (year - BUILD_YEAR) % modulo == 0]
 
     def get_triangular_year(self, year: int) -> Optional[int]:
         """
@@ -511,7 +512,7 @@ class LilaChronology:
     def get_all_triangular_years(self) -> List[Tuple[int, int]]:
         """Get all years with triangular deltas. Returns [(year, n), ...]."""
         result = []
-        for year in range(BUILD_YEAR, RUNTIME_END + 1):
+        for year in range(BUILD_YEAR, RUNTIME_END + KSETRAJNA):
             n = self.get_triangular_year(year)
             if n is not None:
                 result.append((year, n))
@@ -550,7 +551,7 @@ class LilaChronology:
         products = [
             (SEVEN, NAVA, "SEVEN × NAVA"),
             (HARE_COUNT, NAVA, "HARE_COUNT × NAVA"),
-            (4, SEVEN, "QUARTERS × SEVEN"),
+            (QUARTERS, SEVEN, "QUARTERS × SEVEN"),
         ]
         for a, b, name in products:
             if delta == a * b:
@@ -572,7 +573,7 @@ class LilaChronology:
             "year": year,
             "delta": delta,
             "formulas": formulas,
-            "factors": [i for i in range(1, delta + 1) if delta % i == 0] if delta > 0 else [0],
+            "factors": [i for i in range(KSETRAJNA, delta + KSETRAJNA) if delta % i == 0] if delta > 0 else [0],
         }
 
     def maha_transform(self, year: int, mod_space: int = MODULO_QUANTUM) -> int:
@@ -611,8 +612,8 @@ class LilaChronology:
             "alignment_count": len(aligned_vcos),
             "triangular_n": self.get_triangular_year(year),
             "formulas": self.get_year_formula(year)["formulas"],
-            "maha_transform_137": self.maha_transform(year, 137),
-            "maha_transform_37": self.maha_transform(year, 37),
+            "maha_transform_137": self.maha_transform(year, MAHA_QUANTUM),
+            "maha_transform_37": self.maha_transform(year, PARAMPARA),
         }
 
 
@@ -695,7 +696,7 @@ assert _FORMULA_N_ZERO == 1900, "BUILD + QUARTERS = 1900 (n=0 in formula!)"
 
 # Generate DOUBLE_DIGIT_YEARS from formula: year = BUILD + QUARTERS + STEP_INTERVAL × n
 DOUBLE_DIGIT_YEARS: Final[Tuple[int, ...]] = tuple(
-    BUILD_YEAR + STEP_OFFSET + STEP_INTERVAL * n for n in range(1, SEVEN + 1)
+    BUILD_YEAR + STEP_OFFSET + STEP_INTERVAL * n for n in range(KSETRAJNA, SEVEN + KSETRAJNA)
 )
 # Verify: (1911, 1922, 1933, 1944, 1955, 1966, 1977)
 assert DOUBLE_DIGIT_YEARS == (1911, 1922, 1933, 1944, 1955, 1966, 1977), "Generated years must match!"
@@ -759,17 +760,17 @@ class LilaStepSequencer:
         formulas = {
             15: "STEP_OFFSET + 11 × 1 = 15 (First meeting year offset)",
             26: "STEP_OFFSET + 11 × 2 = 26 (2 × 13)",
-            37: "PARAMPARA! (Δ = 37, perfect alignment)",
-            48: "LILA (Δ = 48 = LILA constant)",
+            PARAMPARA: "PARAMPARA! (Δ = 37, perfect alignment)",
+            LILA: "LILA (Δ = 48 = LILA constant)",
             59: "STEP_OFFSET + 11 × 5 = 59 (prime)",
-            70: "WEIGHT_HARE! (Δ = 70 = position sum HARE)",
+            POSITION_SUM_HARE: "WEIGHT_HARE! (Δ = 70 = position sum HARE)",
             81: "NAVA² (Δ = 81 = 9 × 9)",
         }
 
         chronology = get_lila_chronology()
 
         for i, year in enumerate(DOUBLE_DIGIT_YEARS):
-            beat_num = i + 1
+            beat_num = i + KSETRAJNA
             delta = year - BUILD_YEAR
             phase = get_phase(year)
             formula = formulas.get(delta, f"Δ = {delta}")
@@ -777,9 +778,9 @@ class LilaStepSequencer:
 
             # Determine call/response
             if self.kirtan_mode == "alternating":
-                call_response = "CALL" if beat_num % 2 == 1 else "RESPONSE"
+                call_response = "CALL" if beat_num % HALVES == KSETRAJNA else "RESPONSE"
             else:  # split
-                call_response = "CALL" if beat_num <= 4 else "RESPONSE"
+                call_response = "CALL" if beat_num <= QUARTERS else "RESPONSE"
 
             self._beats.append(
                 StepBeat(
@@ -795,9 +796,9 @@ class LilaStepSequencer:
 
     def get_beat(self, beat_number: int) -> StepBeat:
         """Get a specific beat (1-7)."""
-        if beat_number < 1 or beat_number > SEVEN:
+        if beat_number < KSETRAJNA or beat_number > SEVEN:
             raise ValueError(f"Beat number must be 1-{SEVEN}")
-        return self._beats[beat_number - 1]
+        return self._beats[beat_number - KSETRAJNA]
 
     def get_sequence(self) -> List[StepBeat]:
         """Get the full 7-beat sequence."""
@@ -896,7 +897,7 @@ class KirtanRuntime:
 
         # Check if we completed a round (every 7 ticks)
         if self._tick > 0 and self._tick % SEVEN == 0:
-            self._round += 1
+            self._round += KSETRAJNA
             # Resonance grows with each round (asymptotic to 1.0)
             self._resonance = 1.0 - (1.0 / (1.0 + self._round * 0.1))
 
@@ -905,11 +906,11 @@ class KirtanRuntime:
             current_beat=beat,
             mode=beat.call_response,
             round_number=self._round,
-            total_ticks=self._tick + 1,
+            total_ticks=self._tick + KSETRAJNA,
             resonance=self._resonance,
         )
 
-        self._tick += 1
+        self._tick += KSETRAJNA
         return state
 
     def run_mala(self) -> List[KirtanState]:
@@ -920,7 +921,7 @@ class KirtanRuntime:
             List of all states from the session
         """
         states = []
-        total_ticks = 108 * SEVEN  # 756
+        total_ticks = MALA * SEVEN  # 756
         for _ in range(total_ticks):
             states.append(self.tick())
         return states
@@ -1019,7 +1020,7 @@ class FluteSync:
         Returns dict mapping flute name to sync status.
         """
         return {
-            "MURALI": cls.is_murali_sync(tick + 1),  # 1-indexed beats
+            "MURALI": cls.is_murali_sync(tick + KSETRAJNA),  # 1-indexed beats
             "VENU": cls.is_venu_sync(tick),
             "VAMSI": cls.is_vamsi_sync(tick),
         }
@@ -1057,7 +1058,7 @@ class FluteSync:
             return 1.0 - (distance / half_period)
 
         # MURALI uses (tick + 1) for 1-indexed beats
-        murali_res = flute_resonance(tick + 1, MURALI_HOLES)
+        murali_res = flute_resonance(tick + KSETRAJNA, MURALI_HOLES)
         venu_res = flute_resonance(tick, VENU_HOLES)
         vamsi_res = flute_resonance(tick, VAMSI_HOLES)
 
@@ -1082,8 +1083,8 @@ class FluteSync:
         No VAMSI sync within 7 beats
         """
         return {
-            "MURALI": [DOUBLE_DIGIT_YEARS[MURALI_HOLES - 1]],  # 1944
-            "VENU": [DOUBLE_DIGIT_YEARS[VENU_HOLES - 1]],  # 1966
+            "MURALI": [DOUBLE_DIGIT_YEARS[MURALI_HOLES - KSETRAJNA]],  # 1944
+            "VENU": [DOUBLE_DIGIT_YEARS[VENU_HOLES - KSETRAJNA]],  # 1966
             "VAMSI": [],  # 9 > 7, no sync in single sequence
         }
 
@@ -1123,17 +1124,17 @@ class VinaSync:
         String = (seed % VINA_STRINGS) + 1
         Returns 1-5 (Pancha Tattva string number)
         """
-        return (seed % VINA_STRINGS) + 1
+        return (seed % VINA_STRINGS) + KSETRAJNA
 
     @classmethod
     def get_string_name(cls, string_num: int) -> str:
         """Get the Pancha Tattva name for a string number."""
         names = {
-            1: "CHAITANYA",    # The Source - Identity
-            2: "NITYANANDA",   # The Foundation - Storage
-            3: "ADVAITA",      # The Bridge - Logic
-            4: "GADADHARA",    # The Connection - API
-            5: "SRIVASA",      # The Enforcer - Validation
+            KSETRAJNA: "CHAITANYA",    # The Source - Identity
+            HALVES: "NITYANANDA",   # The Foundation - Storage
+            TRINITY: "ADVAITA",      # The Bridge - Logic
+            QUARTERS: "GADADHARA",    # The Connection - API
+            PANCHA: "SRIVASA",      # The Enforcer - Validation
         }
         return names.get(string_num, "UNKNOWN")
 
@@ -1193,7 +1194,7 @@ class VinaSync:
         harmonic = seed % VINA_FUNDAMENTAL
         # Distance to closest attractor (normalized to 0-1)
         # The 5 Pancha attractors from Akash field
-        attractors = [136 % VINA_FUNDAMENTAL, 22, 18, 87, 49]  # 0, 22, 18, 87, 49
+        attractors = [POSITION_SUM_TOTAL % VINA_FUNDAMENTAL, 22, GITA_CHAPTERS, 87, POSITION_SUM_RAMA]  # 0, 22, 18, 87, 49
         min_dist = min(abs(harmonic - a) for a in attractors)
         # Normalize: 0 distance = 0.30, max distance (~68) = 0.0
         harmonic_res = 0.30 * (1.0 - min_dist / (VINA_FUNDAMENTAL / 2.0))
@@ -1280,7 +1281,7 @@ class LilaSynthParams:
     """
 
     mod_space: int = MODULO_QUANTUM  # 137 default (fine structure constant)
-    feedback: int = 1
+    feedback: int = KSETRAJNA
     step_interval: int = STEP_INTERVAL  # 11
     kirtan_mode: str = "alternating"
     flute_mode: str = "ALL"
@@ -1315,11 +1316,11 @@ LILA_SYNTH_PRESETS: Final[Dict[str, LilaSynthParams]] = {
     # QUANTUM: Default - fine structure constant resonance
     "quantum": LilaSynthParams(mod_space=MODULO_QUANTUM),
     # PARAMPARA: Disciplic succession mode
-    "parampara": LilaSynthParams(mod_space=MODULO_PARAMPARA, feedback=2),
+    "parampara": LilaSynthParams(mod_space=MODULO_PARAMPARA, feedback=HALVES),
     # CLASSICAL: Material manifestation (mod 17)
     "classical": LilaSynthParams(mod_space=MODULO_KRISHNA, feedback=0),
     # MALA: Complete japa round (mod 109)
-    "mala": LilaSynthParams(mod_space=MODULO_MALA, feedback=3),
+    "mala": LilaSynthParams(mod_space=MODULO_MALA, feedback=TRINITY),
     # KIRTAN_CALL: Leader mode (split, MURALI sync)
     "kirtan_call": LilaSynthParams(kirtan_mode="split", flute_mode="MURALI"),
     # KIRTAN_RESPONSE: Group mode (split, VAMSI sync)
@@ -1418,7 +1419,7 @@ def analyze_year(year: int) -> Dict[str, object]:
 
     # Add flute sync (for beat years)
     if step:
-        tick = step - 1
+        tick = step - KSETRAJNA
         chladni["flute_sync"] = FluteSync.get_flute_resonance(tick)
         chladni["flute_resonance"] = FluteSync.get_combined_resonance(tick)
     else:

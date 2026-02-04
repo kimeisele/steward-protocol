@@ -11,10 +11,11 @@ NISHKAMA KARMA - Action without attachment.
 ADVAITA: All execution goes through ChatProtocol.
 Internal voice (Sankalpa) and external voice (User) enter the same gate.
 """
+from vibe_core.mahamantra.protocols._seed import (NAVA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
-__position__ = 9
+__position__ = NAVA
 __genesis__ = "0xebbc13e9"
 
 from .types import (

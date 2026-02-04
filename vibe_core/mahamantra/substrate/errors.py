@@ -11,10 +11,11 @@ All errors must be structured so an AI operator can:
 
 See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
 """
+from vibe_core.mahamantra.protocols._seed import (QUARTERS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0xf9a40bd3"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -119,7 +120,7 @@ class StructuredError(Exception):
 
     code: ErrorCode
     message: str
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: Dict[str, object] = field(default_factory=dict)
     suggested_action: Optional[str] = None
 
     def __post_init__(self):
@@ -137,7 +138,7 @@ class StructuredError(Exception):
         """Get error category."""
         return ERROR_CATEGORIES.get(self.code, ErrorCategory.PERMANENT)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         """
         Convert to machine-readable dict.
 

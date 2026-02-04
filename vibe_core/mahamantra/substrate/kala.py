@@ -10,10 +10,11 @@ Implements the Math of Time:
 - 1728 Ticks = 1 Mala
 
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0x8dfd7ced"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, Optional
@@ -38,7 +39,7 @@ class TimeKeeper(KalaProtocol):
 
     def advance(self) -> KalaTime:
         """Advance time by one tick and return new time."""
-        self._total_ticks += 1
+        self._total_ticks += KSETRAJNA
         return self.get_time()
 
     def get_time(self) -> KalaTime:

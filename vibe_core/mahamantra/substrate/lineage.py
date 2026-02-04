@@ -14,10 +14,11 @@ The lineage is eternal.
 
 This is the SOUL of the system.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, QUALITIES, QUARTERS, SHARANAGATI, TEN, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0x448bce13"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
@@ -155,7 +156,7 @@ class LineageChain:
         Looks for pyproject.toml or .git as markers.
         """
         current = Path(__file__).resolve().parent
-        for _ in range(10):  # Max 10 levels up
+        for _ in range(TEN):  # Max 10 levels up
             if (current / "pyproject.toml").exists() or (current / ".git").exists():
                 return current
             current = current.parent
@@ -221,7 +222,7 @@ class LineageChain:
                 },
                 "timestamp_utc": datetime.utcnow().isoformat(),
             },
-            previous_hash="0" * 64,  # No previous block
+            previous_hash="0" * QUALITIES,  # No previous block
             hash="",  # Will be calculated
         )
 
@@ -234,9 +235,9 @@ class LineageChain:
         logger.info("🌌" + "=" * 60)
         logger.info("🌌 GENESIS BLOCK CREATED")
         logger.info(f"🌌 Hash: {genesis.hash[:32]}...")
-        logger.info(f"🌌 Philosophy (GAD-000 v{gad_000_version}): {gad_000_hash[:16]}...")
+        logger.info(f"🌌 Philosophy (GAD-000 v{gad_000_version}): {gad_000_hash[:WORDS]}...")
         logger.info(f"🌌 Sovereign Model: {genesis.data['anchors']['sovereign_model']}")
-        logger.info(f"🌌 Law (CONSTITUTION): {constitution_hash[:16]}...")
+        logger.info(f"🌌 Law (CONSTITUTION): {constitution_hash[:WORDS]}...")
         logger.info("🌌 The Parampara has begun. The lineage is eternal.")
         logger.info("🌌" + "=" * 60)
 
@@ -267,7 +268,7 @@ class LineageChain:
 
         # Create new block
         block = LineageBlock(
-            index=previous_block.index + 1,
+            index=previous_block.index + KSETRAJNA,
             timestamp=datetime.utcnow().isoformat(),
             event_type=event_type,
             agent_id=agent_id,
@@ -282,7 +283,7 @@ class LineageChain:
         # Store in DB
         self._store_block(block)
 
-        logger.info(f"⛓️  Block {block.index}: {event_type} ({agent_id or 'SYSTEM'}) → {block.hash[:16]}...")
+        logger.info(f"⛓️  Block {block.index}: {event_type} ({agent_id or 'SYSTEM'}) → {block.hash[:WORDS]}...")
 
         return block
 
@@ -313,13 +314,13 @@ class LineageChain:
             path = Path(file_path)
             if not path.exists():
                 logger.warning(f"⚠️  File not found for hashing: {file_path}")
-                return "0" * 64
+                return "0" * QUALITIES
 
             content = path.read_text()
             return hashlib.sha256(content.encode()).hexdigest()
         except Exception as e:
             logger.error(f"❌ Failed to hash file {file_path}: {e}")
-            return "0" * 64
+            return "0" * QUALITIES
 
     def _store_block(self, block: LineageBlock) -> None:
         """Store block in database"""
@@ -365,16 +366,16 @@ class LineageChain:
             calculated_hash = self._calculate_hash(block)
             if block.hash != calculated_hash:
                 logger.critical(f"💥 CHAIN BROKEN AT INDEX {i}: Hash mismatch!")
-                logger.critical(f"   Expected: {calculated_hash[:16]}...")
-                logger.critical(f"   Found: {block.hash[:16]}...")
+                logger.critical(f"   Expected: {calculated_hash[:WORDS]}...")
+                logger.critical(f"   Found: {block.hash[:WORDS]}...")
                 return False
 
             # Verify chain linkage (except Genesis)
             if i > 0:
-                if block.previous_hash != blocks[i - 1].hash:
+                if block.previous_hash != blocks[i - KSETRAJNA].hash:
                     logger.critical(f"💥 CHAIN BROKEN AT INDEX {i}: Link broken!")
-                    logger.critical(f"   Previous block hash: {blocks[i - 1].hash[:16]}...")
-                    logger.critical(f"   This block's prev_hash: {block.previous_hash[:16]}...")
+                    logger.critical(f"   Previous block hash: {blocks[i - KSETRAJNA].hash[:WORDS]}...")
+                    logger.critical(f"   This block's prev_hash: {block.previous_hash[:WORDS]}...")
                     return False
 
         logger.info(f"✅ Parampara chain verified ({len(blocks)} blocks)")
@@ -409,7 +410,7 @@ class LineageChain:
         cur = self.conn.cursor()
         cur.execute("SELECT idx FROM blocks ORDER BY idx DESC LIMIT 1")
         row = cur.fetchone()
-        return row[0] if row else -1
+        return row[0] if row else -KSETRAJNA
 
     def _get_checkpoint_path(self) -> Path:
         """Get path to checkpoint file (.vibe/lineage_checkpoint.json)."""
@@ -440,8 +441,8 @@ class LineageChain:
                 "chain_db_path": str(self.db_path),
             }
 
-            checkpoint_path.write_text(json.dumps(checkpoint, indent=2))
-            logger.debug(f"⚡ Checkpoint saved: {tip_hash[:16]}... (idx={tip_index})")
+            checkpoint_path.write_text(json.dumps(checkpoint, indent=HALVES))
+            logger.debug(f"⚡ Checkpoint saved: {tip_hash[:WORDS]}... (idx={tip_index})")
             return True
         except Exception as e:
             logger.warning(f"⚠️  Failed to save checkpoint: {e}")
@@ -520,7 +521,7 @@ class LineageChain:
                 "blocks_verified": 0,
                 "duration_ms": (time.time() - start_time) * 1000,
                 "tip_hash": "",
-                "tip_index": -1,
+                "tip_index": -KSETRAJNA,
             }
 
         # Try checkpoint
@@ -541,7 +542,7 @@ class LineageChain:
 
         if checkpoint and checkpoint["verified_index"] < current_tip_index:
             # Checkpoint exists but chain grew - verify delta
-            delta_start = checkpoint["verified_index"] + 1
+            delta_start = checkpoint["verified_index"] + KSETRAJNA
             valid = self._verify_delta(delta_start)
             duration_ms = (time.time() - start_time) * 1000
             blocks_verified = current_tip_index - checkpoint["verified_index"]
@@ -569,7 +570,7 @@ class LineageChain:
         return {
             "valid": valid,
             "method": "full",
-            "blocks_verified": current_tip_index + 1,
+            "blocks_verified": current_tip_index + KSETRAJNA,
             "duration_ms": duration_ms,
             "tip_hash": current_tip_hash,
             "tip_index": current_tip_index,
@@ -589,7 +590,7 @@ class LineageChain:
             return True
 
         # Get previous block for linkage check
-        cur.execute("SELECT * FROM blocks WHERE idx = ?", (start_index - 1,))
+        cur.execute("SELECT * FROM blocks WHERE idx = ?", (start_index - KSETRAJNA,))
         prev_row = cur.fetchone()
         prev_block = self._row_to_block(prev_row) if prev_row else None
 
@@ -606,7 +607,7 @@ class LineageChain:
                     logger.critical(f"💥 DELTA: Link broken at index {block.index}!")
                     return False
             elif i > 0:
-                if block.previous_hash != new_blocks[i - 1].hash:
+                if block.previous_hash != new_blocks[i - KSETRAJNA].hash:
                     logger.critical(f"💥 DELTA: Link broken at index {block.index}!")
                     return False
 
@@ -654,23 +655,23 @@ class LineageChain:
         chain_data = {
             "chain_length": len(blocks),
             "genesis_hash": blocks[0].hash if blocks else None,
-            "latest_hash": blocks[-1].hash if blocks else None,
+            "latest_hash": blocks[-KSETRAJNA].hash if blocks else None,
             "blocks": [asdict(block) for block in blocks],
         }
 
-        Path(output_path).write_text(json.dumps(chain_data, indent=2))
+        Path(output_path).write_text(json.dumps(chain_data, indent=HALVES))
         logger.info(f"📄 Chain exported to {output_path}")
 
     def _row_to_block(self, row) -> LineageBlock:
         """Convert database row to LineageBlock"""
         return LineageBlock(
             index=row[0],
-            timestamp=row[1],
-            event_type=row[2],
-            agent_id=row[3],
-            data=json.loads(row[4]),
-            previous_hash=row[5],
-            hash=row[6],
+            timestamp=row[KSETRAJNA],
+            event_type=row[HALVES],
+            agent_id=row[TRINITY],
+            data=json.loads(row[QUARTERS]),
+            previous_hash=row[PANCHA],
+            hash=row[SHARANAGATI],
         )
 
     def close(self) -> None:

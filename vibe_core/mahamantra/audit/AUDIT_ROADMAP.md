@@ -394,24 +394,24 @@ All major SSOT violations have been fixed:
 
 ---
 
-## LÖSUNG: JAPA LOOP INTEGRATION (YOGA MAYA)
+## 3. NÄCHSTE SCHRITTE
 
-Wir haben den "Pulse" des Systems gefunden: `MahamantraLotus.register_listener()`.
-Statt statisch Files zu scannen, haben wir den Audit-Loop in den Herzschlag integriert.
+### Phase 1: KARTIERUNG ✅ COMPLETE
+1. [x] Alle existierenden Audit-Komponenten inventarisiert
+2. [x] Protocol Resurrection Audit erstellt (protocol_resurrection.py)
+3. [x] Core Classes jetzt ALIVE at runtime
 
-**NEUE ARCHITEKTUR:**
-1.  `DriftAuditor.start_listening()`: Hängt sich in den Takt (Tick).
-2.  `activate_audit_loop()`: Aktiviert diesen Hook.
-3.  Jeder 108. Tick (1 Mala) löst einen vollen Scan aus.
+### Phase 2: INTEGRATION
+1. [ ] Unified Audit Kernel designen (nutzt ALLE existierenden Komponenten)
+2. [ ] Holographic structure (Audit audits itself)
+3. [ ] Resonance-based semantic layer
 
-**STATUS:**
-- `drift.py`: Updated mit Listener-Logik ✅
-- `activate.py`: Script zur Aktivierung erstellt ✅
-- `protocol_resurrection.py`: Wiederhergestellt (als Referenz) ✅
-
-**NÄCHSTE SCHRITTE:**
-1.  Füge `activate_audit_loop()` in den Boot-Prozess ein (z.B. via Extension oder Service).
-2.  Implementiere die fehlenden 53 Protokolle ("Resurrection") durch echte Klassen im Kernel.
+### Phase 3: RUNTIME (YOGA MAYA)
+1. [x] Live system observation (Japa Loop Integration)
+   - `DriftAuditor.start_listening()` hooks into `MahamantraLotus.tick`
+   - `activate.py` activates the loop
+   - 108 Ticks (Mala) trigger full audit
+2. [ ] LILA (48) completion (Full Protocol Resurrection)
 
 ---
 

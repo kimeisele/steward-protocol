@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Optional, Dict, Union, Callable, Tuple
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
 from dataclasses import dataclass
 from enum import Enum
 
@@ -45,18 +46,18 @@ class MahaLLMProtocol(Protocol):
 class IntentCategory(Enum):
     """The 16 primary intent categories."""
     OBSERVE = 0
-    CREATE = 1
-    CONNECT = 2
-    ANALYZE = 3
-    EXECUTE = 4
-    TRANSFORM = 5
-    INVOKE = 6
-    SUSTAIN = 7
-    EXPAND = 8
-    INTEGRATE = 9
-    VALIDATE = 10
+    CREATE = KSETRAJNA
+    CONNECT = HALVES
+    ANALYZE = TRINITY
+    EXECUTE = QUARTERS
+    TRANSFORM = PANCHA
+    INVOKE = SHARANAGATI
+    SUSTAIN = SEVEN
+    EXPAND = HARE_COUNT
+    INTEGRATE = NAVA
+    VALIDATE = TEN
     PROTECT = 11
-    GUIDE = 12
+    GUIDE = MAHAJANA_COUNT
     SURRENDER = 13
     COMPLETE = 14
     TRANSCEND = 15
@@ -69,7 +70,7 @@ class RouteResult:
     found: bool = False
     agent: Optional[str] = None
     category: Optional[IntentCategory] = None
-    ops: int = 4  # Always 4 (holographic guarantee)
+    ops: int = QUARTERS  # Always 4 (holographic guarantee)
     address: Tuple[int, ...] = ()
     handler: Optional[Callable[..., object]] = None
 

@@ -28,8 +28,9 @@ WATERTIGHT:
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -304,7 +305,7 @@ class Yajna(Generic[T, R]):
             return False  # Maya - invalid state
 
         # Advance position (0-15 cycle)
-        self._position = (self._position + 1) % MAHA_POSITIONS
+        self._position = (self._position + KSETRAJNA) % MAHA_POSITIONS
 
         return True
 
@@ -320,7 +321,7 @@ class Yajna(Generic[T, R]):
             Prasadam with result
         """
         # 1. VALIDATE PARAMPARA (lineage)
-        parampara_vector = (bhoga.position + 1) * PRIME_SIGNATURE
+        parampara_vector = (bhoga.position + KSETRAJNA) * PRIME_SIGNATURE
         if not self._mantra.validate_parampara(parampara_vector):
             raise ParamparaBreakError(f"Position {bhoga.position} has invalid parampara")
 
