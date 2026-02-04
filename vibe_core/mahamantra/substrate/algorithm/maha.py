@@ -51,6 +51,15 @@ from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
     WORDS,
 )
+from vibe_core.mahamantra.protocols._maha_compute import (
+    AttractorType,
+    MahaComputeProtocol,
+    MahaComputeResult,
+    MahaComputeState,
+    get_gita_chapter,
+    get_gita_insight,
+    get_operation,
+)
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_ADD as _ADD,
 )
@@ -209,9 +218,15 @@ class MahaAlgorithm16:
     """
     The Pure 16-step Maha Algorithm executor.
     Standardized execution model.
+
+    IMPLEMENTS: MahaComputeProtocol - NOW ALIVE AT RUNTIME!
     """
 
     STEPS: Final[Tuple[AlgorithmStep, ...]] = MAHA_16_STEPS
+
+    def __init__(self) -> None:
+        """Initialize with protocol state tracking."""
+        self._state = MahaComputeState()
 
     def execute(self) -> Iterator[AlgorithmStep]:
         for step in self.STEPS:
@@ -229,6 +244,70 @@ class MahaAlgorithm16:
             squared = (v * v) % mod
             value = _SQ[op] * squared + (1 - _SQ[op]) * v
         return value
+
+    # =========================================================================
+    # PROTOCOL IMPLEMENTATION - MahaComputeProtocol
+    # =========================================================================
+
+    def on_tick(self, tick: int, position: int, mala: int, mantra: int) -> MahaComputeResult:
+        """Process one tick from the Mahamantra clock. PROTOCOL METHOD."""
+        seed = position
+        transformed = self.transform(seed)
+        attractor, iterations, attr_type = self.find_attractor(seed)
+
+        gita_chapter = get_gita_chapter(attractor)
+        gita_insight = get_gita_insight(gita_chapter)
+
+        result = MahaComputeResult(
+            seed=seed,
+            tick_position=position,
+            transformed=transformed,
+            iterations=iterations,
+            attractor=attractor,
+            attractor_type=attr_type,
+            gita_chapter=gita_chapter,
+            gita_insight=gita_insight,
+            mala_count=mala,
+            mantra_in_mala=mantra,
+        )
+
+        self._state.total_ticks += 1
+        self._state.last_result = result
+        if attr_type == AttractorType.FIXED_POINT:
+            self._state.fixed_point_count += 1
+        elif attr_type == AttractorType.CYCLE:
+            self._state.cycle_count += 1
+
+        if attractor not in self._state.attractor_histogram:
+            self._state.attractor_histogram[attractor] = 0
+        self._state.attractor_histogram[attractor] += 1
+
+        return result
+
+    def find_attractor(self, seed: int) -> Tuple[int, int, AttractorType]:
+        """Iterate transformation until attractor is reached. PROTOCOL METHOD."""
+        seen: Dict[int, int] = {}
+        value = seed % MAHA_QUANTUM
+        max_cycles = 100
+
+        for cycle in range(max_cycles):
+            if value in seen:
+                cycle_start = seen[value]
+                cycle_length = cycle - cycle_start
+                if cycle_length == 1:
+                    attr_type = AttractorType.FIXED_POINT
+                else:
+                    attr_type = AttractorType.CYCLE
+                return value, cycle_start, attr_type
+
+            seen[value] = cycle
+            value = self.transform(value)
+
+        return value, max_cycles, AttractorType.TRANSIENT
+
+    def get_state(self) -> MahaComputeState:
+        """Return current computation state. PROTOCOL METHOD."""
+        return self._state
 
 
 # =============================================================================
@@ -269,6 +348,8 @@ class MahaModularSynth:
     """
     Runtime-adjustable transformation engine.
     Solves convergence issues by using larger mod_space and feedback.
+
+    IMPLEMENTS: MahaComputeProtocol - NOW ALIVE AT RUNTIME!
     """
 
     STEPS: Final[Tuple[AlgorithmStep, ...]] = MAHA_16_STEPS
@@ -276,6 +357,8 @@ class MahaModularSynth:
     def __init__(self, default_preset: str = "quantum", grace_gate: Optional[GraceProtocol] = None) -> None:
         self.default_params = SYNTH_PRESETS.get(default_preset, SYNTH_PRESETS["quantum"])
         self.grace_gate = grace_gate
+        # Protocol state tracking
+        self._state = MahaComputeState()
 
     def transform(
         self,
@@ -345,6 +428,87 @@ class MahaModularSynth:
         self, seeds: List[int], params: Optional[MahaSynthParams] = None, preset: Optional[str] = None
     ) -> List[int]:
         return [self.transform(s, params, preset) for s in seeds]
+
+    # =========================================================================
+    # PROTOCOL IMPLEMENTATION - MahaComputeProtocol
+    # =========================================================================
+
+    def on_tick(self, tick: int, position: int, mala: int, mantra: int) -> MahaComputeResult:
+        """
+        Process one tick from the Mahamantra clock.
+        PROTOCOL METHOD - makes this class ALIVE at runtime!
+        """
+        # Use position as seed (position-based computation)
+        seed = position
+
+        # Transform through full 16-step algorithm
+        transformed = self.transform(seed)
+
+        # Find attractor
+        attractor, iterations, attr_type = self.find_attractor(seed)
+
+        # Get Gita correlation
+        gita_chapter = get_gita_chapter(attractor)
+        gita_insight = get_gita_insight(gita_chapter)
+
+        # Build result
+        result = MahaComputeResult(
+            seed=seed,
+            tick_position=position,
+            transformed=transformed,
+            iterations=iterations,
+            attractor=attractor,
+            attractor_type=attr_type,
+            gita_chapter=gita_chapter,
+            gita_insight=gita_insight,
+            mala_count=mala,
+            mantra_in_mala=mantra,
+        )
+
+        # Update state
+        self._state.total_ticks += 1
+        self._state.last_result = result
+        if attr_type == AttractorType.FIXED_POINT:
+            self._state.fixed_point_count += 1
+        elif attr_type == AttractorType.CYCLE:
+            self._state.cycle_count += 1
+
+        # Update histogram
+        if attractor not in self._state.attractor_histogram:
+            self._state.attractor_histogram[attractor] = 0
+        self._state.attractor_histogram[attractor] += 1
+
+        return result
+
+    def find_attractor(self, seed: int) -> Tuple[int, int, AttractorType]:
+        """
+        Iterate transformation until attractor is reached.
+        PROTOCOL METHOD - returns (attractor, iterations, type).
+        """
+        seen: Dict[int, int] = {}
+        value = seed % MAHA_QUANTUM
+        max_cycles = 100
+
+        for cycle in range(max_cycles):
+            if value in seen:
+                cycle_start = seen[value]
+                cycle_length = cycle - cycle_start
+                # Determine type
+                if cycle_length == 1:
+                    attr_type = AttractorType.FIXED_POINT
+                else:
+                    attr_type = AttractorType.CYCLE
+                return value, cycle_start, attr_type
+
+            seen[value] = cycle
+            value = self.transform(value)
+
+        # Didn't converge
+        return value, max_cycles, AttractorType.TRANSIENT
+
+    def get_state(self) -> MahaComputeState:
+        """Return current computation state. PROTOCOL METHOD."""
+        return self._state
 
 
 # =============================================================================
