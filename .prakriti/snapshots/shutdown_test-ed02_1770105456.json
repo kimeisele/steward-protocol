@@ -1,0 +1,105 @@
+{
+  "timestamp": 1770105456.133662,
+  "git": {
+    "is_repo": true,
+    "branch": "fix/alte-welt-stabilization",
+    "sha": "2b10b23",
+    "dirty": true,
+    "workspace": "/Users/ss/projects/steward-protocol"
+  },
+  "files": {
+    "workspace": "/Users/ss/projects/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 26.550148010253906,
+    "agent_count": 30,
+    "queue_pending": 1,
+    "plugins_loaded": 24
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/Users/ss/projects/steward-protocol/config/personas",
+    "loaded": [
+      "envoy",
+      "discoverer",
+      "manas",
+      "ping",
+      "civic",
+      "archivist",
+      "supreme_court",
+      "naga",
+      "oracle",
+      "science",
+      "forum",
+      "watchman",
+      "scribe",
+      "herald",
+      "chronicle",
+      "cleaner",
+      "auditor",
+      "engineer",
+      "librarian",
+      "analyst",
+      "marketer",
+      "mechanic",
+      "agora",
+      "ambassador",
+      "pulse",
+      "artisan",
+      "lens",
+      "market",
+      "dhruva",
+      "temple"
+    ],
+    "modified": [
+      "market",
+      "auditor",
+      "mechanic",
+      "librarian",
+      "pulse",
+      "lens",
+      "supreme_court",
+      "ambassador",
+      "forum",
+      "manas",
+      "watchman",
+      "artisan",
+      "engineer",
+      "scribe",
+      "archivist",
+      "cleaner",
+      "oracle",
+      "marketer",
+      "dhruva",
+      "ping",
+      "analyst",
+      "herald",
+      "science",
+      "agora",
+      "discoverer",
+      "temple",
+      "naga",
+      "civic",
+      "envoy",
+      "chronicle"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "test-ed02",
+    "boot_time": 1770105454.432944,
+    "commit_count": 0
+  }
+}

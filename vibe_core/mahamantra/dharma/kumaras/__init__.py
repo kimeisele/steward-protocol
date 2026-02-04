@@ -58,8 +58,8 @@ def execute(input_text: str, context: dict = None) -> dict:
                 "position": POSITION,
                 "quarter": QUARTER
             }
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return {
         "success": True,

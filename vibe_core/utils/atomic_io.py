@@ -63,8 +63,8 @@ def atomic_write_text(path: Union[str, Path], content: str, encoding: str = "utf
         # Cleanup bei Fehler
         try:
             os.close(fd)
-        except OSError:
-            pass
+        except OSError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise

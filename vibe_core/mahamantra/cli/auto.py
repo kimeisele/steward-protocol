@@ -253,8 +253,8 @@ class CLIAutoDiscovery:
             try:
                 proto_base_mod = importlib.import_module(f"vibe_core.protocols.mahajanas.{guardian_name}")
                 protocol_class = self._find_protocol(proto_base_mod, guardian_name)
-            except ImportError:
-                pass
+            except ImportError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         if protocol_class is None:
             return 0
@@ -374,8 +374,8 @@ class CLIAutoDiscovery:
             return_type = hints.get("return")
             if return_type and hasattr(return_type, "__annotations__"):
                 return_fields = list(return_type.__annotations__.keys())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Get docstring
         doc = method.__doc__ or f"{method_name} - auto-discovered"

@@ -276,8 +276,8 @@ class Library:
         if self._knowledge_path.exists():
             try:
                 return json.loads(self._knowledge_path.read_text())
-            except (json.JSONDecodeError, IOError):
-                pass
+            except (json.JSONDecodeError, IOError) as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return {}
 
     def _save_knowledge(self, knowledge: Dict[str, Any]) -> None:

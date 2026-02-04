@@ -105,8 +105,8 @@ def _discover_adapters() -> Dict[str, tuple]:
             if hasattr(mahamantra, factory_name) and callable(getattr(mahamantra, factory_name)):
                 for kw in keywords:
                     adapters[kw] = (factory_name, method, desc)
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return adapters
 
@@ -182,8 +182,8 @@ def _load_intent_keywords() -> Dict[str, VedaIntent]:
                 for keyword in intent_data.get("keywords", []):
                     keywords[keyword.lower()] = intent_enum
 
-    except Exception:
-        pass  # Fail gracefully
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return keywords
 
@@ -430,8 +430,8 @@ class VedaExplorer:
                     confidence=score,
                     llm_used=False,  # Mahamantra resonance, not LLM!
                 )
-        except Exception:
-            pass  # Fall through to LLM
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # 2. FALLBACK: LLM classification (last resort)
         if not self._llm_available or not self._llm:
@@ -909,8 +909,8 @@ Beispiele:
                     data={},
                     llm_used=True,
                 )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return VedaResult(
             success=False,

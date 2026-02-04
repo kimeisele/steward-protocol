@@ -691,8 +691,8 @@ class LocalNadi(GADBase):
             if message.operation == op:
                 try:
                     handler(message)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         # Queue in inbox
         self._inbox.append(message)

@@ -173,8 +173,8 @@ class DependencyAnalysisTool(Tool):
                     if file_imports:
                         imports[rel_path] = file_imports
 
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         # Calculate metrics
         total_imports = sum(len(deps) for deps in imports.values())
@@ -213,8 +213,8 @@ class DependencyAnalysisTool(Tool):
                                     "source": "requirements.txt",
                                 }
                             )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Check pyproject.toml
         pyproject_file = self.root_dir / "pyproject.toml"
@@ -244,8 +244,8 @@ class DependencyAnalysisTool(Tool):
                                             "source": "pyproject.toml",
                                         }
                                     )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Categorize
         std_libs = {"os", "sys", "re", "json", "pathlib", "typing", "logging", "datetime", "collections", "abc"}
@@ -288,8 +288,8 @@ class DependencyAnalysisTool(Tool):
 
                     outgoing[rel_path] = imports_found
 
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         # Sort by incoming (most depended upon)
         hubs = sorted(incoming.items(), key=lambda x: -x[1])[:20]

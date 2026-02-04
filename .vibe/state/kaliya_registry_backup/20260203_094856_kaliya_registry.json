@@ -1,0 +1,111 @@
+{
+  "registry": {
+    "bad_agent_001": {
+      "component_id": "bad_agent_001",
+      "reason": "Excessive violations",
+      "started_at": "2026-01-07T08:48:04.750247",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "",
+      "signature": null
+    },
+    "test_component": {
+      "component_id": "test_component",
+      "reason": "testing",
+      "started_at": "2026-01-07T08:48:04.796446",
+      "duration_seconds": 0.1,
+      "violation_count": 0,
+      "signer_id": "",
+      "signature": null
+    },
+    "comp_123": {
+      "component_id": "comp_123",
+      "reason": "bad behavior",
+      "started_at": "2026-01-07T08:48:04.973716",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "",
+      "signature": null
+    },
+    "comp_001": {
+      "component_id": "comp_001",
+      "reason": "Auto-quarantine: 8 violations",
+      "started_at": "2026-01-07T08:48:06.061463",
+      "duration_seconds": 300.0,
+      "violation_count": 8,
+      "signer_id": "",
+      "signature": null
+    },
+    "bad_comp": {
+      "component_id": "bad_comp",
+      "reason": "Auto-quarantine: 2 violations",
+      "started_at": "2026-01-07T08:48:05.698868",
+      "duration_seconds": 300.0,
+      "violation_count": 2,
+      "signer_id": "",
+      "signature": null
+    },
+    "criminal_agent_007": {
+      "component_id": "criminal_agent_007",
+      "reason": "TAKSHAKA_BITE: TEST_VIOLATION (ref: EVT-000001)",
+      "started_at": "2026-01-19T17:15:35.917869",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "naga_federation",
+      "signature": "31d8c1830ddb875a7f029a8bcd1bda9487e5c8fd1c69f3ab7a5a6c5216ffadf83037c0b4e0efedf70714f54c06f61282faf0633f0098997eb7ddad5a48919294"
+    },
+    "test": {
+      "component_id": "test",
+      "reason": "TAKSHAKA_BITE: SQL_INJECTION (ref: event_3)",
+      "started_at": "2026-02-03T09:48:49.382540",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "naga_federation",
+      "signature": "fad47d2f7fce383002b318f5c0bcd7f076d74c96bffc20c16762770f0ac5d0fea6456911cb4bfd6b4a0d34d57c4a8e5a5c581a6b18ec84291d278afb379a8e41"
+    },
+    "unknown": {
+      "component_id": "unknown",
+      "reason": "TAKSHAKA_BITE: COGNITIVE_THREAT (ref: event_123)",
+      "started_at": "2026-02-03T09:48:56.288748",
+      "duration_seconds": 300.0,
+      "violation_count": 0,
+      "signer_id": "naga_federation",
+      "signature": "d8c35bc96de08050557afeb4457445078df367d042abf2630c4a90885a49f2815817a0a0a49b3d630b6312555464c603463bdb3138c0e2313d972e38427b8047"
+    },
+    "RealVibeKernel": {
+      "component_id": "RealVibeKernel",
+      "reason": "Auto-quarantine: 4 violations",
+      "started_at": "2026-02-03T09:31:01.015555",
+      "duration_seconds": 300.0,
+      "violation_count": 4,
+      "signer_id": "naga_federation",
+      "signature": "7951541a5df00dbac520bab63d67b50d8b19c949165f227202e46b38d7905ad80f998d89cb06784d8eb016c41852fbbf266a2476bbfc245a1b8222777cb040a8"
+    }
+  },
+  "violations": {
+    "test_component": 0,
+    "comp_001": 8,
+    "bad_comp": 2,
+    "EventBus": 2,
+    "RealVibeKernel": 4,
+    "StateSyncWeaver": 1
+  },
+  "cycles": {
+    "bad_agent_001": 1,
+    "test_component": 3,
+    "comp_123": 1,
+    "comp_001": 8,
+    "bad_comp": 4,
+    "criminal_agent_007": 1,
+    "test": 11,
+    "unknown": 8,
+    "RealVibeKernel": 2
+  },
+  "escalated": [
+    "test_component",
+    "unknown",
+    "test",
+    "comp_001",
+    "bad_comp"
+  ]
+}

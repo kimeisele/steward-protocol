@@ -106,8 +106,8 @@ class AgentLoader(UnifiedLoader):
                         system_cfg = getattr(paths_cfg, "system", None)
                         if system_cfg:
                             lib_path_str = getattr(system_cfg, "library_path", None)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             # 2. Try Dict Access (if not found yet)
             if not lib_path_str and isinstance(config, dict):
@@ -116,8 +116,8 @@ class AgentLoader(UnifiedLoader):
                     # Fallback: check top level for simpler configs or passed args
                     if not lib_path_str:
                         lib_path_str = config.get("library_path")
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             if lib_path_str:
                 lib_path = Path(lib_path_str)

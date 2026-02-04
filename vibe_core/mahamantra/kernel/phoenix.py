@@ -85,10 +85,8 @@ def save_state(tick: int, lila_tick: int) -> None:
         temp_file.write_text(json.dumps(state, indent=2))
         temp_file.replace(STATE_FILE)
 
-    except Exception:
-        # GRACEFUL DEGRADATION: Log would go here, but we continue
-        # State loss is acceptable (resets to 0), death is not
-        pass
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
 
 def load_state() -> Optional[PhoenixState]:
@@ -137,8 +135,8 @@ def clear_state() -> None:
     try:
         if STATE_FILE.exists():
             STATE_FILE.unlink()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
 
 # =============================================================================

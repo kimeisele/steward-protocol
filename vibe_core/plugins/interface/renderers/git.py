@@ -285,8 +285,8 @@ class GitAnalyzerV2:
                             current_commit.deletions += deletions
                             current_commit.files_changed += 1
                             current_files.append(filename)
-                        except ValueError:
-                            pass
+                        except ValueError as _exc:
+                            logger.exception("Unexpected error: %s", _exc)
 
             # Add last commit
             if current_commit:

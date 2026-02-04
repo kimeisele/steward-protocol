@@ -360,8 +360,8 @@ class ImportAuditor:
                         if node.module.startswith("vibe_core"):
                             imported = node.module.replace(".", "/") + ".py"
                             self.imported_by[imported].add(rel_path)
-        except SyntaxError:
-            pass
+        except SyntaxError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         except Exception as e:
             logger.debug(f"Could not parse {py_file}: {e}")
 

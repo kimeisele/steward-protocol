@@ -125,14 +125,11 @@ class NrisimhaWatchdog(MantraProtocol, PanchaTattvaProtocol):
                 try:
                     if hasattr(proxy, "on_mantra_pulse"):
                         proxy.on_mantra_pulse(opcode)
-                except Exception:
-                    # Arjuna-Pattern: Ein Proxy crashed → weitermachen
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
-        except Exception:
-            # Arjuna-Pattern: Nrisimha crashed → Mahamantra läuft weiter
-            # Das System ist größer als seine Teile.
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
     def register_proxy(self, proxy: object) -> None:
         """
@@ -413,5 +410,5 @@ class NrisimhaWatchdog(MantraProtocol, PanchaTattvaProtocol):
             ananta = ServiceRegistry.get(IAnantaBridge)
             if ananta and hasattr(ananta, "auto_flood_orphans"):
                 ananta.auto_flood_orphans()
-        except Exception:  # Arjuna-Pattern: Ashvamedha failure → continue
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)

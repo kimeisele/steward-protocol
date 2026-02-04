@@ -552,8 +552,8 @@ class EnvoyPlugin(KernelPlugin):
             # Handle object form if necessary
             try:
                 intent = intent.to_dict()
-            except AttributeError:
-                pass
+            except AttributeError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         mission_id = intent.get("id", "unknown")
         action = intent.get("action", "unknown")
@@ -638,8 +638,8 @@ class EnvoyPlugin(KernelPlugin):
                 # But based on user request, we should try.
                 # Actually, let's fail if kernel registry missing for safety in V1
                 pass
-            except ImportError:
-                pass
+            except ImportError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
             if not registry:
                 logger.error("❌ CRITICAL: ToolRegistry not found. Cannot execute.")
@@ -728,8 +728,8 @@ class EnvoyPlugin(KernelPlugin):
             else:
                 logger.debug(f"🔴 ENVOY synapse weakened: {action}")
 
-        except ImportError:
-            pass  # VivekaAction not available
+        except ImportError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         except Exception as e:
             logger.debug(f"Synapse reinforcement skipped: {e}")
 

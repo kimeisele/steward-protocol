@@ -335,8 +335,8 @@ class LifecycleService:
             self._gateway_task.cancel()
             try:
                 await self._gateway_task
-            except asyncio.CancelledError:
-                pass
+            except asyncio.CancelledError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Cleanup processes
         if self._kernel.process_manager:

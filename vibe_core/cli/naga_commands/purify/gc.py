@@ -185,8 +185,8 @@ class GcCommand(NagaCommandBase):
                 try:
                     shutil.rmtree(pycache)
                     cleaned += 1
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         return cleaned
 
@@ -200,8 +200,8 @@ class GcCommand(NagaCommandBase):
                 try:
                     pyc.unlink()
                     cleaned += 1
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         return cleaned
 
@@ -222,8 +222,8 @@ class GcCommand(NagaCommandBase):
             try:
                 shutil.rmtree(pytest_cache)
                 cleaned += 1
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Clean mypy cache
         mypy_cache = cwd / ".mypy_cache"
@@ -231,8 +231,8 @@ class GcCommand(NagaCommandBase):
             try:
                 shutil.rmtree(mypy_cache)
                 cleaned += 1
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return cleaned
 

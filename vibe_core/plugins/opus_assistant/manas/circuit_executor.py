@@ -332,14 +332,14 @@ class CognitiveCircuitExecutor(CognitiveProcess):
         # Try to parse as integer
         try:
             return int(value_str)
-        except ValueError:
-            pass
+        except ValueError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Try to parse as float
         try:
             return float(value_str)
-        except ValueError:
-            pass
+        except ValueError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Check for quoted string
         if (value_str.startswith("'") and value_str.endswith("'")) or (

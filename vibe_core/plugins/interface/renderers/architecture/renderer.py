@@ -193,8 +193,8 @@ class ArchitectureRenderer(BaseRenderer):
             full_path = self._root / path
             if full_path.exists():
                 return len(full_path.read_text().splitlines())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return 0
 
 

@@ -64,6 +64,7 @@ from vibe_core.mahamantra.protocols._core import (
     ProtocolIdentity,
     ProtocolCapability,
 )
+from vibe_core.mahamantra.protocols._seed import WORDS
 
 
 # =============================================================================
@@ -361,7 +362,7 @@ class GrowthRule:
     """
 
     pattern: GrowthPattern
-    max_depth: int = 16  # Reasonable limit
+    max_depth: int = WORDS  # 16 - Reasonable limit (SSOT: WORDS from _seed.py)
     can_grow: Callable[[FractalAddress], bool] = field(default_factory=lambda: lambda addr: True)
 
     def should_grow(self, address: FractalAddress) -> bool:

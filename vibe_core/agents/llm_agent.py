@@ -296,8 +296,8 @@ class SimpleLLMAgent(VibeAgent):
             data = json.loads(response.strip())
             if isinstance(data, dict) and "tool" in data and "parameters" in data:
                 return data
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Fallback: Try to find JSON object with balanced braces
         brace_depth = 0
@@ -317,8 +317,8 @@ class SimpleLLMAgent(VibeAgent):
                         data = json.loads(json_str)
                         if isinstance(data, dict) and "tool" in data and "parameters" in data:
                             return data
-                    except json.JSONDecodeError:
-                        pass
+                    except json.JSONDecodeError as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
                     json_start = -1
 
         return None

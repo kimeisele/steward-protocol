@@ -105,8 +105,8 @@ def get_all_cli_commands() -> Dict[str, int]:
                 if position is None:
                     position = 0  # Default to vyasa if resonance fails
                 commands[cmd_name] = position
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     try:
         # Get cartridge commands
@@ -118,8 +118,8 @@ def get_all_cli_commands() -> Dict[str, int]:
             mutation_vector = sum(ord(c) * (i + 1) for i, c in enumerate(name.lower()))
             position = mutation_vector % WORDS  # SSOT: WORDS from seed.py
             commands[name] = position
-    except (ImportError, AttributeError):
-        pass
+    except (ImportError, AttributeError) as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return commands
 

@@ -99,15 +99,23 @@ assert len(THE_FLUTE_CYCLE) == WORDS, f"LUT must have {WORDS} entries"
 _position_xor = 0
 for diw in THE_FLUTE_CYCLE:
     _position_xor ^= (diw & 0xFFFF)  # Only position bits
-assert _position_xor == (1 << WORDS) - 1, "All 16 position bits must be touched exactly once"
+
+# P0-FIX: Replace assert with runtime check (asserts removed in python -O)
+if _position_xor != (1 << WORDS) - 1:
+    raise ValueError("All 16 position bits must be touched exactly once")
 
 # Count name occurrences
 _hare_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 0)
 _krishna_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 1)
 _rama_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 2)
-assert _hare_count == HARE_COUNT, f"HARE count must be {HARE_COUNT}"
-assert _krishna_count == 4, "KRISHNA count must be 4"
-assert _rama_count == 4, "RAMA count must be 4"
+
+# P0-FIX: Replace asserts with runtime checks
+if _hare_count != HARE_COUNT:
+    raise ValueError(f"HARE count must be {HARE_COUNT}, got {_hare_count}")
+if _krishna_count != 4:
+    raise ValueError(f"KRISHNA count must be 4, got {_krishna_count}")
+if _rama_count != 4:
+    raise ValueError(f"RAMA count must be 4, got {_rama_count}")
 
 
 # =============================================================================
@@ -212,14 +220,15 @@ class VenuOrchestrator:
         self._prev_state = 0
         xor_positions = self.cycle()
         expected_xor = (1 << WORDS) - 1
-        
-        assert xor_positions == expected_xor, \
-            f"Position XOR must be {hex(expected_xor)}, got {hex(xor_positions)}"
-        assert xor_positions % MAHA_QUANTUM == POSITION_SUM_RAMA, \
-            f"Must resonate to Rama ({POSITION_SUM_RAMA})"
-        assert xor_positions % PARAMPARA == HARE_COUNT, \
-            f"Must be protected by Hare ({HARE_COUNT})"
-        
+
+        # P0-FIX: Replace assert with runtime check (asserts removed in python -O)
+        if xor_positions != expected_xor:
+            raise ValueError(f"Position XOR must be {hex(expected_xor)}, got {hex(xor_positions)}")
+        if xor_positions % MAHA_QUANTUM != POSITION_SUM_RAMA:
+            raise ValueError(f"Must resonate to Rama ({POSITION_SUM_RAMA})")
+        if xor_positions % PARAMPARA != HARE_COUNT:
+            raise ValueError(f"Must be protected by Hare ({HARE_COUNT})")
+
         return True
     
     def route(self, seed: int) -> Tuple[int, int, int]:

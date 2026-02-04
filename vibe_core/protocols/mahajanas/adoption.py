@@ -461,8 +461,8 @@ class AdoptionPipeline:
                     position=route.position,
                     reason=f"OpCode {opcode.value} → {mahajana.value} (position {route.position})",
                 )
-            except ValueError:
-                pass
+            except ValueError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # 6. No clear OpCode - assign by quarter (fallback)
         quarter_mahajanas = self._get_quarter_mahajanas(analysis["quarter_index"])

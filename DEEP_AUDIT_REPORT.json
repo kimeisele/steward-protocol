@@ -1,0 +1,1528 @@
+{
+  "magic_numbers": [
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 27,
+      "number": 2,
+      "code": "2. Registers with NrisimhaWatchdog.register_proxy()",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 28,
+      "number": 3,
+      "code": "3. Tracks research module rollout: RESEARCH \u2192 PROVEN \u2192 INTEGRATING \u2192 PRODUCTION",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 29,
+      "number": 4,
+      "code": "4. Counts heartbeat pulses per module",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 36,
+      "number": 2,
+      "code": "__position__ = 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 37,
+      "number": 37,
+      "code": "__genesis__ = \"0x6e44c339\"  # GenesisByte: parampara % 37 == 0",
+      "should_be": [
+        "PARAMPARA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 75,
+      "number": 5,
+      "code": "{\"name\": \"lotus_radix_n\", \"efficiency\": 1.5},  # Generalized N-level structure",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 76,
+      "number": 37,
+      "code": "{\"name\": \"lotus_acintya\", \"efficiency\": 1.37},  # ACINTYA verification",
+      "should_be": [
+        "PARAMPARA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 78,
+      "number": 4,
+      "code": "{\"name\": \"lotus_tree\", \"efficiency\": 1.4},  # Tree structure",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 79,
+      "number": 37,
+      "code": "{\"name\": \"research_lab\", \"efficiency\": 1.37},  # Lab with Lotus structures",
+      "should_be": [
+        "PARAMPARA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 80,
+      "number": 2,
+      "code": "{\"name\": \"gap_analysis\", \"efficiency\": 1.2},  # Gap detection",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 81,
+      "number": 3,
+      "code": "{\"name\": \"project_introspection\", \"efficiency\": 1.3},  # Drishti - codebase scan",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 82,
+      "number": 37,
+      "code": "{\"name\": \"gut_synthesis\", \"efficiency\": 1.37},  # GUT proof",
+      "should_be": [
+        "PARAMPARA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 83,
+      "number": 2,
+      "code": "{\"name\": \"research_chat\", \"efficiency\": 1.2},  # Internal chat",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/research_gateway.py",
+      "line": 84,
+      "number": 4,
+      "code": "{\"name\": \"classification\", \"efficiency\": 1.4},  # Classification system",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_lotus.py",
+      "line": 22,
+      "number": 2,
+      "code": "__position__ = 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_lotus.py",
+      "line": 23,
+      "number": 37,
+      "code": "__genesis__ = \"0x3e2fa1fe\"  # GenesisByte: parampara % 37 == 0",
+      "should_be": [
+        "PARAMPARA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_lotus.py",
+      "line": 122,
+      "number": 2,
+      "code": "if self._path.depth == 2:  # mahajana-level (e.g., genesis.brahma)",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_lotus.py",
+      "line": 213,
+      "number": 2,
+      "code": "NAVADVIPA_LIMIT = LILA_LIMIT // 2  # 24",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_lotus.py",
+      "line": 288,
+      "number": 2,
+      "code": "if self._path.depth == 2:",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_lotus.py",
+      "line": 306,
+      "number": 2,
+      "code": "if self._path.depth < 2:",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_lotus.py",
+      "line": 341,
+      "number": 2,
+      "code": "if self._path.depth == 2:",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 19,
+      "number": 2,
+      "code": "__position__ = 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 20,
+      "number": 37,
+      "code": "__genesis__ = \"0x7c5f43fc\"  # GenesisByte: parampara % 37 == 0",
+      "should_be": [
+        "PARAMPARA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 68,
+      "number": 16,
+      "code": "transformed: int  # Output after 16-step transform",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 72,
+      "number": 5,
+      "code": "vina_string: int  # Which string (1-5): CHAITANYA/NITYANANDA/ADVAITA/GADADHARA/S",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 74,
+      "number": 2,
+      "code": "parampara_channel: int  # Validation channel (0-2 or -1)",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 118,
+      "number": 16,
+      "code": "This is the COMPLETE lifecycle, not just the 16-word mantra.",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 124,
+      "number": 2,
+      "code": "cycle: int  # 1, 2, or 3",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 124,
+      "number": 3,
+      "code": "cycle: int  # 1, 2, or 3",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_types.py",
+      "line": 152,
+      "number": 8,
+      "code": "verse_ids: list  # Matching verse IDs (e.g., [\"BG.18.66\", \"BG.12.8\"])",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 132,
+      "number": 8,
+      "code": "\"quarter\": \"karma\" if pos > 8 else \"dharma\",",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 242,
+      "number": 16,
+      "code": "Pure computation from the 16 words.",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 247,
+      "number": 2,
+      "code": "2. KIRTANAM:       MahaCompression \u2192 seed (chanting)",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 248,
+      "number": 3,
+      "code": "3. SMARANAM:       MahaKirtan \u2192 vibration state (remembering)",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 249,
+      "number": 4,
+      "code": "4. PADA_SEVANAM:   MahaResonator \u2192 attractor (serving)",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 250,
+      "number": 5,
+      "code": "5. ARCANAM:        Parampara verification (worshiping)",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 253,
+      "number": 8,
+      "code": "8. SAKHYAM:        MahaCell creation (friendship)",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 266,
+      "number": 8,
+      "code": "input_text = cell.payload.decode(\"utf-8\", errors=\"replace\")",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 289,
+      "number": 8,
+      "code": "attractor = raw_address >> 8",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 353,
+      "number": 16,
+      "code": "diw_name_encoding = (diw >> 16) & 0x3  # H=0, K=1, R=2",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 353,
+      "number": 2,
+      "code": "diw_name_encoding = (diw >> 16) & 0x3  # H=0, K=1, R=2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 356,
+      "number": 4,
+      "code": "if position < 4:",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 358,
+      "number": 8,
+      "code": "elif position < 8:",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 449,
+      "number": 2,
+      "code": "\"name_encoding\": diw_name_encoding,  # H=0, K=1, R=2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 456,
+      "number": 8,
+      "code": "\"payload_size\": len(input_text.encode('utf-8')),",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 457,
+      "number": 8,
+      "code": "\"total_size\": 72 + len(input_text.encode('utf-8')),",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 575,
+      "number": 16,
+      "code": "16 words = 128 bits = IPv6 address space",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 617,
+      "number": 8,
+      "code": "IPv4 = 32 bits = 8 levels \u00d7 4 bits",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 617,
+      "number": 4,
+      "code": "IPv4 = 32 bits = 8 levels \u00d7 4 bits",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 618,
+      "number": 8,
+      "code": "O(8) = O(1) constant time LPM",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 622,
+      "number": 16,
+      "code": "router.insert_cidr(\"192.168.0.0/16\", \"gateway_a\")",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 665,
+      "number": 2,
+      "code": "Enables: mahamantra[2] \u2192 MantraPosition at index 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/_mahamantra_lotus.py",
+      "line": 665,
+      "number": 2,
+      "code": "Enables: mahamantra[2] \u2192 MantraPosition at index 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/__init__.py",
+      "line": 2,
+      "number": 2,
+      "code": "MAHAMANTRA - The Sovereign Singularity (Level -2)",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/__init__.py",
+      "line": 6,
+      "number": 8,
+      "code": "\"I am the source of all. Everything emanates from Me.\" (BG 10.8)",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/__init__.py",
+      "line": 13,
+      "number": 2,
+      "code": "Effect #2: bhava-mah\u0101-d\u0101v\u0101gni (Zero Entropy) - No eager imports",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 17,
+      "number": 2,
+      "code": "2. module.__position__ \u2192 gets holographic address (0-15)",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 18,
+      "number": 3,
+      "code": "3. _instantiate_guardian() \u2192 creates live instance",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 19,
+      "number": 4,
+      "code": "4. auto_wire(kernel, instance) \u2192 injects kernel reference",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 20,
+      "number": 5,
+      "code": "5. PositionRegistry \u2192 stores by position for gravity routing",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 29,
+      "number": 5,
+      "code": "self._positions[5]  # \u2192 KumarasService instance (position 5)",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 29,
+      "number": 5,
+      "code": "self._positions[5]  # \u2192 KumarasService instance (position 5)",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 37,
+      "number": 2,
+      "code": "__position__ = 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 140,
+      "number": 2,
+      "code": "2. vibe_core.protocols.mahajanas.{guardian}.service",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 141,
+      "number": 3,
+      "code": "3. vibe_core.services.{guardian}",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 233,
+      "number": 2,
+      "code": "if path.depth < 2:",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 237,
+      "number": 2,
+      "code": "if len(path.segments) < 2:",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 292,
+      "number": 2,
+      "code": "Core guardians: brahma(1), narada(2), kapila(5), janaka(10)",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 292,
+      "number": 5,
+      "code": "Core guardians: brahma(1), narada(2), kapila(5), janaka(10)",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 301,
+      "number": 2,
+      "code": "(2, \"narada\", \"genesis\"),",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/lotus_projection.py",
+      "line": 302,
+      "number": 5,
+      "code": "(5, \"kapila\", \"cycles\"),",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 9,
+      "number": 2,
+      "code": "2. Provides MahajanaChat base class for guardians to extend",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 10,
+      "number": 3,
+      "code": "3. Routes through proper LLM infrastructure",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 28,
+      "number": 2,
+      "code": "__position__ = 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 29,
+      "number": 37,
+      "code": "__genesis__ = \"0x31e06f79\"  # GenesisByte: parampara % 37 == 0",
+      "should_be": [
+        "PARAMPARA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 261,
+      "number": 16,
+      "code": "- Position: {self.position} (of 16)",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 287,
+      "number": 2,
+      "code": "2. Guardian-specific system prompt built dynamically",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 288,
+      "number": 3,
+      "code": "3. provider.invoke() for real LLM response",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 461,
+      "number": 8,
+      "code": "INFRASTRUCTURE LAYER (8):",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 471,
+      "number": 3,
+      "code": "GOVERNANCE LAYER (3):",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 698,
+      "number": 3,
+      "code": "return active >= 3",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 713,
+      "number": 2,
+      "code": "2. TAKSHAKA: Security scan (toxicity)",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 714,
+      "number": 3,
+      "code": "3. PADMA: Purity validation",
+      "should_be": [
+        "TRINITY"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 715,
+      "number": 4,
+      "code": "4. KARKOTAKA: Credential check",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 718,
+      "number": 5,
+      "code": "5. KALIYA: Retry wrapper (resilience)",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "line": 723,
+      "number": 8,
+      "code": "8. CHITRAGUPTA: Audit the interaction",
+      "should_be": [
+        "HARE_COUNT",
+        "HALF_SIZE"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 7,
+      "number": 5,
+      "code": "\u2014 Brahma-samhita 5.30",
+      "should_be": [
+        "PANCHA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 10,
+      "number": 4,
+      "code": "VENU (6 bits) + VAMSI (9 bits) + MURALI (4 bits) = 19 bits",
+      "should_be": [
+        "KRISHNA_COUNT",
+        "RAMA_COUNT",
+        "QUARTERS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 17,
+      "number": 2,
+      "code": "__position__ = 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 18,
+      "number": 37,
+      "code": "__genesis__ = \"0xa2b9f456\"  # GenesisByte: parampara % 37 == 0",
+      "should_be": [
+        "PARAMPARA"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 57,
+      "number": 2,
+      "code": "MAHAMANTRA_NAME_RAMA: 2,      # \"R\" \u2192 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 57,
+      "number": 2,
+      "code": "MAHAMANTRA_NAME_RAMA: 2,      # \"R\" \u2192 2",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 74,
+      "number": 16,
+      "code": "- Bits 16-17: Name encoding (H=0, K=1, R=2)",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 74,
+      "number": 2,
+      "code": "- Bits 16-17: Name encoding (H=0, K=1, R=2)",
+      "should_be": [
+        "HALVES"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 80,
+      "number": 16,
+      "code": "diw = (encoding << 16) | (1 << pos)",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 105,
+      "number": 16,
+      "code": "raise ValueError(\"All 16 position bits must be touched exactly once\")",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 108,
+      "number": 16,
+      "code": "_hare_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 0)",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 109,
+      "number": 16,
+      "code": "_krishna_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 1)",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 110,
+      "number": 16,
+      "code": "_rama_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 2)",
+      "should_be": [
+        "WORDS"
+      ]
+    },
+    {
+      "file": "vibe_core/mahamantra/orchestrator.py",
+      "line": 110,
+      "number": 2,
+      "code": "_rama_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 2)",
+      "should_be": [
+        "HALVES"
+      ]
+    }
+  ],
+  "duplicates": {
+    "PURPOSE": [
+      "vibe_core/mahamantra/research_gateway.py",
+      "vibe_core/mahamantra/research/clean_room_extraction.py",
+      "vibe_core/mahamantra/protocols/_declaration.py"
+    ],
+    "USAGE": [
+      "vibe_core/mahamantra/research_gateway.py",
+      "vibe_core/mahamantra/__init__.py",
+      "vibe_core/mahamantra/lotus_projection.py",
+      "vibe_core/mahamantra/chat.py",
+      "vibe_core/mahamantra/__main__.py",
+      "vibe_core/mahamantra/research/lotus/__init__.py",
+      "vibe_core/mahamantra/research/gita/__init__.py",
+      "vibe_core/mahamantra/research/git/__init__.py",
+      "vibe_core/mahamantra/substrate/cell_router.py",
+      "vibe_core/mahamantra/substrate/samskara.py",
+      "vibe_core/mahamantra/cli/engine.py",
+      "vibe_core/mahamantra/cli/auto.py",
+      "vibe_core/mahamantra/adapters/synth.py",
+      "vibe_core/mahamantra/adapters/attention.py",
+      "vibe_core/mahamantra/adapters/classification.py",
+      "vibe_core/mahamantra/adapters/bio.py",
+      "vibe_core/mahamantra/adapters/__init__.py",
+      "vibe_core/mahamantra/adapters/hash.py",
+      "vibe_core/mahamantra/adapters/routing.py",
+      "vibe_core/mahamantra/adapters/pipeline.py",
+      "vibe_core/mahamantra/adapters/orchestrator.py",
+      "vibe_core/mahamantra/adapters/transform.py",
+      "vibe_core/mahamantra/adapters/network.py",
+      "vibe_core/mahamantra/adapters/hardware.py",
+      "vibe_core/mahamantra/adapters/compute.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/__init__.py",
+      "vibe_core/mahamantra/protocols/_rollout.py",
+      "vibe_core/mahamantra/kernel/singularity.py",
+      "vibe_core/mahamantra/lila/jiva_shadow.py",
+      "vibe_core/mahamantra/lila/adhikara.py"
+    ],
+    "SSOT": [
+      "vibe_core/mahamantra/research_gateway.py",
+      "vibe_core/mahamantra/research/research_lab.py",
+      "vibe_core/mahamantra/research/research_chat.py",
+      "vibe_core/mahamantra/research/project_introspection.py",
+      "vibe_core/mahamantra/research/gut_synthesis.py",
+      "vibe_core/mahamantra/research/gap_analysis.py",
+      "vibe_core/mahamantra/substrate/fractal.py",
+      "vibe_core/mahamantra/protocols/types.py",
+      "vibe_core/mahamantra/protocols/_rollout.py"
+    ],
+    "FOLDER": [
+      "vibe_core/mahamantra/_lotus.py",
+      "vibe_core/mahamantra/lotus_projection.py",
+      "vibe_core/mahamantra/substrate/wiring.py",
+      "vibe_core/mahamantra/dharma/kapila/remedies/__init__.py"
+    ],
+    "WATERTIGHT": [
+      "vibe_core/mahamantra/_types.py",
+      "vibe_core/mahamantra/substrate/intents.py",
+      "vibe_core/mahamantra/substrate/opcode.py",
+      "vibe_core/mahamantra/substrate/proxy.py",
+      "vibe_core/mahamantra/substrate/parampara.py",
+      "vibe_core/mahamantra/substrate/maha_state.py",
+      "vibe_core/mahamantra/substrate/protocol.py",
+      "vibe_core/mahamantra/substrate/clock.py",
+      "vibe_core/mahamantra/substrate/bridge.py",
+      "vibe_core/mahamantra/substrate/guna.py",
+      "vibe_core/mahamantra/substrate/position.py",
+      "vibe_core/mahamantra/substrate/pancha_tattva.py",
+      "vibe_core/mahamantra/substrate/yajna.py",
+      "vibe_core/mahamantra/substrate/samskara.py",
+      "vibe_core/mahamantra/substrate/wiring.py",
+      "vibe_core/mahamantra/moksha/yamaraja/samskara_service.py",
+      "vibe_core/mahamantra/cli/protocol.py",
+      "vibe_core/mahamantra/cli/map.py",
+      "vibe_core/mahamantra/dharma/kumaras/validation.py",
+      "vibe_core/mahamantra/dharma/kapila/remedies/any_type_usage.py",
+      "vibe_core/mahamantra/dharma/kapila/remedies/fractal_routing.py",
+      "vibe_core/mahamantra/protocols/_singularity.py",
+      "vibe_core/mahamantra/protocols/_lotus.py",
+      "vibe_core/mahamantra/protocols/_ouroboros.py",
+      "vibe_core/mahamantra/protocols/_prabhupada.py",
+      "vibe_core/mahamantra/protocols/_holographic.py",
+      "vibe_core/mahamantra/protocols/_graph.py",
+      "vibe_core/mahamantra/protocols/_fractal.py",
+      "vibe_core/mahamantra/protocols/_declaration.py",
+      "vibe_core/mahamantra/protocols/_gad.py",
+      "vibe_core/mahamantra/protocols/_core.py",
+      "vibe_core/mahamantra/protocols/_sense.py",
+      "vibe_core/mahamantra/protocols/_bridge.py",
+      "vibe_core/mahamantra/protocols/_steward.py",
+      "vibe_core/mahamantra/protocols/_lila.py",
+      "vibe_core/mahamantra/protocols/_entropy.py",
+      "vibe_core/mahamantra/kernel/intent.py",
+      "vibe_core/mahamantra/kernel/fractal.py",
+      "vibe_core/mahamantra/kernel/phoenix.py",
+      "vibe_core/mahamantra/kernel/daemon.py",
+      "vibe_core/mahamantra/reactor/shadow_oracle.py",
+      "vibe_core/mahamantra/reactor/shadow.py",
+      "vibe_core/mahamantra/reactor/shadow_protocol.py"
+    ],
+    "EXAMPLES": [
+      "vibe_core/mahamantra/__main__.py",
+      "vibe_core/mahamantra/research/research_chat.py"
+    ],
+    "ARCHITECTURE": [
+      "vibe_core/mahamantra/__main__.py",
+      "vibe_core/mahamantra/research/research_lab.py",
+      "vibe_core/mahamantra/research/__init__.py",
+      "vibe_core/mahamantra/research/research_chat.py",
+      "vibe_core/mahamantra/research/project_introspection.py",
+      "vibe_core/mahamantra/research/gut_synthesis.py",
+      "vibe_core/mahamantra/research/gap_analysis.py",
+      "vibe_core/mahamantra/venu/__init__.py",
+      "vibe_core/mahamantra/substrate/mantra/engineering.py",
+      "vibe_core/mahamantra/cli/veda_explorer.py",
+      "vibe_core/mahamantra/cli/event_bridge.py",
+      "vibe_core/mahamantra/cli/entry.py",
+      "vibe_core/mahamantra/adapters/synth.py",
+      "vibe_core/mahamantra/protocols/_indriya.py",
+      "vibe_core/mahamantra/kernel/maha_kernel.py",
+      "vibe_core/mahamantra/reactor/shadow_oracle.py",
+      "vibe_core/mahamantra/reactor/shadow.py",
+      "vibe_core/mahamantra/reactor/shadow_protocol.py"
+    ],
+    "KEY_INSIGHT": [
+      "vibe_core/mahamantra/research/lotus_full_spectrum.py",
+      "vibe_core/mahamantra/research/climate_impact.py",
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/routing_holographic.py",
+      "vibe_core/mahamantra/research/consciousness_mathematics.py",
+      "vibe_core/mahamantra/research/hardware_lotus.py",
+      "vibe_core/mahamantra/research/ki_training_paradigm.py",
+      "vibe_core/mahamantra/research/goloka_tattva.py",
+      "vibe_core/mahamantra/research/mantra_computation_bridge.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py",
+      "vibe_core/mahamantra/research/spiritual_tdd.py",
+      "vibe_core/mahamantra/research/vedic_western_synthesis.py",
+      "vibe_core/mahamantra/research/lotus_acintya.py",
+      "vibe_core/mahamantra/research/ananta_shesha_python.py",
+      "vibe_core/mahamantra/research/karma_mathematics.py",
+      "vibe_core/mahamantra/research/yantra_computation.py",
+      "vibe_core/mahamantra/research/maha_compression.py",
+      "vibe_core/mahamantra/research/llm_holographic.py",
+      "vibe_core/mahamantra/research/nityananda_substrate.py",
+      "vibe_core/mahamantra/research/siksastakam_complete.py",
+      "vibe_core/mahamantra/research/adi_guru_factor.py",
+      "vibe_core/mahamantra/research/acintya_mathematics.py",
+      "vibe_core/mahamantra/substrate/mantra/engineering.py"
+    ],
+    "FRACTAL_LEVELS": [
+      "vibe_core/mahamantra/research/bhoga_prasadam.py",
+      "vibe_core/mahamantra/research/consciousness_mathematics.py",
+      "vibe_core/mahamantra/research/project_introspection.py"
+    ],
+    "HYPOTHESE": [
+      "vibe_core/mahamantra/research/attractor_analysis.py",
+      "vibe_core/mahamantra/research/mahajana_derivation.py"
+    ],
+    "EQUIVALENTS": [
+      "vibe_core/mahamantra/research/climate_impact.py",
+      "vibe_core/mahamantra/research/climate_impact.py"
+    ],
+    "WORDS": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/adapters/classification.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_axioms.py"
+    ],
+    "HARE_COUNT": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_axioms.py"
+    ],
+    "KRISHNA_COUNT": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_axioms.py"
+    ],
+    "RAMA_COUNT": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_axioms.py"
+    ],
+    "HALVES": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_axioms.py"
+    ],
+    "TRINITY": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_axioms.py"
+    ],
+    "QUARTERS": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/adapters/classification.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_primary.py"
+    ],
+    "POSITION_SUM_TOTAL": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_extended.py"
+    ],
+    "KSETRAJNA": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_primary.py"
+    ],
+    "KSHETRA": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_primary.py"
+    ],
+    "PRASADAM": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/research/consciousness_mathematics.py",
+      "vibe_core/mahamantra/research/ki_training_paradigm.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py",
+      "vibe_core/mahamantra/protocols/seed/_extended.py"
+    ],
+    "MAHA_QUANTUM": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/research/lotus_acintya.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_extended.py"
+    ],
+    "POSITION_SUM_KRISHNA": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/seed/_extended.py"
+    ],
+    "MALA": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_secondary.py"
+    ],
+    "QUALITIES": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_secondary.py"
+    ],
+    "GITA_CHAPTERS": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_secondary.py"
+    ],
+    "SEVEN": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/mantra/engineering.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_secondary.py"
+    ],
+    "LILA": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_primary.py"
+    ],
+    "MAHAJANA_COUNT": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/research/project_introspection.py",
+      "vibe_core/mahamantra/protocols/_seed_cell.py",
+      "vibe_core/mahamantra/protocols/seed/_secondary.py"
+    ],
+    "MAHA_MU": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/protocols/seed/_extended.py"
+    ],
+    "TSIRELSON_EXPONENT": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/research/quantum_entanglement.py"
+    ],
+    "TSIRELSON_ACTUAL": [
+      "vibe_core/mahamantra/research/PROOF_HARDCORE.py",
+      "vibe_core/mahamantra/research/quantum_entanglement.py"
+    ],
+    "VENU_FREQ": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/substrate/seed.py",
+      "vibe_core/mahamantra/protocols/seed/_secondary.py"
+    ],
+    "OCTET": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/hardware_lotus.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py",
+      "vibe_core/mahamantra/research/vedic_western_synthesis.py",
+      "vibe_core/mahamantra/research/ananta_shesha_python.py",
+      "vibe_core/mahamantra/research/computation.py",
+      "vibe_core/mahamantra/research/gita_verse_text.py",
+      "vibe_core/mahamantra/research/adi_guru_factor.py",
+      "vibe_core/mahamantra/substrate/mantra/engineering.py",
+      "vibe_core/mahamantra/adapters/hardware.py"
+    ],
+    "ADI_GURU_FACTOR": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/goloka_tattva.py",
+      "vibe_core/mahamantra/research/kishora_architecture.py",
+      "vibe_core/mahamantra/research/vedic_western_synthesis.py",
+      "vibe_core/mahamantra/research/adi_guru_factor.py"
+    ],
+    "LILA_MADHURYA": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py"
+    ],
+    "PREMA_MADHURYA": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py"
+    ],
+    "VENU_MADHURYA": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py"
+    ],
+    "RUPA_MADHURYA": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py"
+    ],
+    "ALL_MADHURYA": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py"
+    ],
+    "MADHURYA_SUM": [
+      "vibe_core/mahamantra/research/chaitanya_singularity.py",
+      "vibe_core/mahamantra/research/madhurya_analysis.py"
+    ],
+    "CONSTANTS": [
+      "vibe_core/mahamantra/research/syllable_analysis.py",
+      "vibe_core/mahamantra/research/dharma/sequence_solver.py",
+      "vibe_core/mahamantra/research/dharma/vishvarupa_solver.py"
+    ],
+    "CACHE_LINE_BYTES": [
+      "vibe_core/mahamantra/research/moores_law.py",
+      "vibe_core/mahamantra/research/mantra_computation_bridge.py",
+      "vibe_core/mahamantra/research/nityananda_substrate.py",
+      "vibe_core/mahamantra/research/hardware/__init__.py",
+      "vibe_core/mahamantra/adapters/compute.py"
+    ],
+    "MAHABYTE": [
+      "vibe_core/mahamantra/research/moores_law.py",
+      "vibe_core/mahamantra/research/computation.py"
+    ],
+    "MEMORY_PAGE": [
+      "vibe_core/mahamantra/research/moores_law.py",
+      "vibe_core/mahamantra/research/computation.py"
+    ],
+    "EFFICIENCY_NOW": [
+      "vibe_core/mahamantra/research/routing_holographic.py",
+      "vibe_core/mahamantra/research/hardware.py"
+    ],
+    "EFFICIENCY_MIDPOINT": [
+      "vibe_core/mahamantra/research/routing_holographic.py",
+      "vibe_core/mahamantra/research/hardware.py"
+    ],
+    "KORREKTUR": [
+      "vibe_core/mahamantra/research/routing_holographic.py",
+      "vibe_core/mahamantra/research/hardware.py",
+      "vibe_core/mahamantra/research/llm_holographic.py"
+    ],
+    "ROOT_BASE_ADDRESS": [
+      "vibe_core/mahamantra/research/hardware_lotus.py",
+      "vibe_core/mahamantra/adapters/hardware.py"
+    ]
+  },
+  "import_chaos": {
+    "vibe_core/mahamantra/substrate/seed.py": 35
+  },
+  "complex_files": [
+    {
+      "file": "vibe_core/mahamantra/substrate/lila_chronology.py",
+      "lines": 1526,
+      "functions": 66,
+      "classes": 11,
+      "complexity_score": 2736
+    },
+    {
+      "file": "vibe_core/mahamantra/kernel/singularity.py",
+      "lines": 1219,
+      "functions": 86,
+      "classes": 4,
+      "complexity_score": 2279
+    },
+    {
+      "file": "vibe_core/mahamantra/reactor/shadow.py",
+      "lines": 1424,
+      "functions": 62,
+      "classes": 3,
+      "complexity_score": 2194
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/sankirtan.py",
+      "lines": 1473,
+      "functions": 31,
+      "classes": 6,
+      "complexity_score": 2083
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/nadi.py",
+      "lines": 892,
+      "functions": 67,
+      "classes": 9,
+      "complexity_score": 2012
+    },
+    {
+      "file": "vibe_core/mahamantra/protocols/_ouroboros.py",
+      "lines": 646,
+      "functions": 36,
+      "classes": 19,
+      "complexity_score": 1956
+    },
+    {
+      "file": "vibe_core/mahamantra/research/gita_verse_text.py",
+      "lines": 1791,
+      "functions": 3,
+      "classes": 2,
+      "complexity_score": 1921
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/event_bus.py",
+      "lines": 856,
+      "functions": 28,
+      "classes": 14,
+      "complexity_score": 1836
+    },
+    {
+      "file": "vibe_core/mahamantra/cli/veda_explorer.py",
+      "lines": 1262,
+      "functions": 31,
+      "classes": 5,
+      "complexity_score": 1822
+    },
+    {
+      "file": "vibe_core/mahamantra/cli/protocol.py",
+      "lines": 803,
+      "functions": 34,
+      "classes": 13,
+      "complexity_score": 1793
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/seed.py",
+      "lines": 1315,
+      "functions": 15,
+      "classes": 5,
+      "complexity_score": 1715
+    },
+    {
+      "file": "vibe_core/mahamantra/protocols/_bridge.py",
+      "lines": 672,
+      "functions": 49,
+      "classes": 10,
+      "complexity_score": 1662
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/proxy.py",
+      "lines": 924,
+      "functions": 48,
+      "classes": 4,
+      "complexity_score": 1604
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/acintya.py",
+      "lines": 676,
+      "functions": 46,
+      "classes": 9,
+      "complexity_score": 1586
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/maha_state.py",
+      "lines": 763,
+      "functions": 56,
+      "classes": 5,
+      "complexity_score": 1573
+    },
+    {
+      "file": "vibe_core/mahamantra/protocols/_gad.py",
+      "lines": 750,
+      "functions": 41,
+      "classes": 8,
+      "complexity_score": 1560
+    },
+    {
+      "file": "vibe_core/mahamantra/protocols/_graph.py",
+      "lines": 616,
+      "functions": 38,
+      "classes": 10,
+      "complexity_score": 1496
+    },
+    {
+      "file": "vibe_core/mahamantra/research/acintya_mathematics.py",
+      "lines": 924,
+      "functions": 12,
+      "classes": 9,
+      "complexity_score": 1494
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/harmonics.py",
+      "lines": 1058,
+      "functions": 27,
+      "classes": 3,
+      "complexity_score": 1478
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/protocol.py",
+      "lines": 650,
+      "functions": 41,
+      "classes": 8,
+      "complexity_score": 1460
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/samana_bridge.py",
+      "lines": 905,
+      "functions": 32,
+      "classes": 4,
+      "complexity_score": 1425
+    },
+    {
+      "file": "vibe_core/mahamantra/protocols/_lotus.py",
+      "lines": 576,
+      "functions": 39,
+      "classes": 9,
+      "complexity_score": 1416
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/algorithm/maha.py",
+      "lines": 816,
+      "functions": 22,
+      "classes": 7,
+      "complexity_score": 1386
+    },
+    {
+      "file": "vibe_core/mahamantra/research/karma_mathematics.py",
+      "lines": 746,
+      "functions": 27,
+      "classes": 7,
+      "complexity_score": 1366
+    },
+    {
+      "file": "vibe_core/mahamantra/chat.py",
+      "lines": 943,
+      "functions": 20,
+      "classes": 4,
+      "complexity_score": 1343
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/ledger.py",
+      "lines": 815,
+      "functions": 35,
+      "classes": 3,
+      "complexity_score": 1315
+    },
+    {
+      "file": "vibe_core/mahamantra/protocols/_core.py",
+      "lines": 581,
+      "functions": 33,
+      "classes": 8,
+      "complexity_score": 1311
+    },
+    {
+      "file": "vibe_core/mahamantra/research/maha_sequencer.py",
+      "lines": 763,
+      "functions": 16,
+      "classes": 7,
+      "complexity_score": 1273
+    },
+    {
+      "file": "vibe_core/mahamantra/substrate/samskara.py",
+      "lines": 612,
+      "functions": 24,
+      "classes": 8,
+      "complexity_score": 1252
+    },
+    {
+      "file": "vibe_core/mahamantra/research/spiritual_tdd.py",
+      "lines": 711,
+      "functions": 9,
+      "classes": 9,
+      "complexity_score": 1251
+    }
+  ]
+}

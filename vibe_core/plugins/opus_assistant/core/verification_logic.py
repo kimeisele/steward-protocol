@@ -107,8 +107,8 @@ class VerificationEngine:
             if config_path.exists():
                 data = yaml.safe_load(config_path.read_text())
                 return data.get("verification", {})
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return {}
 
     def run_verification(self, quick: bool = False, changed_files: Optional[List[str]] = None) -> Dict[str, Any]:

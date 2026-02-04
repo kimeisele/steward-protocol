@@ -765,13 +765,13 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
             if oldest.loader_type in self._load_by_loader:
                 try:
                     self._load_by_loader[oldest.loader_type].remove(oldest)
-                except ValueError:
-                    pass
+                except ValueError as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
             if oldest.item_id and oldest.item_id in self._load_by_item:
                 try:
                     self._load_by_item[oldest.item_id].remove(oldest)
-                except ValueError:
-                    pass
+                except ValueError as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         # Persist to ledger
         if self._ledger:
@@ -879,8 +879,8 @@ class AnantaService(NagaBaseService, AnantaProtocol, TransformProtocol, IAnantaB
             self._wrapped = False
             logger.info("ANANTA: Loaders unwrapped")
 
-        except ImportError:
-            pass
+        except ImportError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
     def get_load_events(
         self,

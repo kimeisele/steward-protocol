@@ -616,8 +616,8 @@ class BaseAgent:
                     "error": result.error,
                     "timestamp": result.timestamp,
                 }
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Fallback if TaskExecutor not available
         return {

@@ -308,8 +308,8 @@ class BasicCorrectionOrchestrator:
                 from vibe_core.services.healing_resolver import get_healing_resolver
 
                 self._resolver = get_healing_resolver()
-            except ImportError:
-                pass
+            except ImportError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return self._resolver
 
     @property
@@ -660,8 +660,8 @@ def get_correction_orchestrator() -> CorrectionOrchestratorProtocol:
         orchestrator = ServiceRegistry.get(CorrectionOrchestratorProtocol)
         if orchestrator is not None:
             return orchestrator
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     # Fallback to new instance
     return BasicCorrectionOrchestrator()

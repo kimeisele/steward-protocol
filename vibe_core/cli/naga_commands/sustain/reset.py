@@ -185,8 +185,8 @@ class ResetCommand(NagaCommandBase):
 
             gc.collect()
             result["GC"] = "complete"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return result
 

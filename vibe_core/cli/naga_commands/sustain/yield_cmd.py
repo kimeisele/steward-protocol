@@ -135,8 +135,8 @@ class YieldCommand(NagaCommandBase):
         try:
             affinity = os.sched_getaffinity(0)
             info["affinity"] = f"{len(affinity)} cores"
-        except (AttributeError, OSError):
-            pass
+        except (AttributeError, OSError) as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return info
 
@@ -155,8 +155,8 @@ class YieldCommand(NagaCommandBase):
             usage = resource.getrusage(resource.RUSAGE_SELF)
             info["User Time"] = f"{usage.ru_utime:.2f}s"
             info["System Time"] = f"{usage.ru_stime:.2f}s"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return info
 

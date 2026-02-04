@@ -410,8 +410,8 @@ class MahaState:
                 result = config.read(key)
                 if result is not None and hasattr(result, "value"):
                     return result.value
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return default
 
@@ -603,8 +603,8 @@ class MahaState:
             try:
                 from vibe_core.mahamantra.substrate.config import get_config
                 self._config_ref = get_config()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return self._config_ref
 
     def _get_garuda(self) -> Optional[GarudaBridge]:
@@ -612,8 +612,8 @@ class MahaState:
             try:
                 from vibe_core.naga.garuda import garuda
                 self._garuda_ref = garuda  # type: ignore[assignment]
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return self._garuda_ref
 
     # =========================================================================

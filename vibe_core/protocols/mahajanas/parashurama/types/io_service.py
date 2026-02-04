@@ -431,8 +431,8 @@ class KernelIOService:
             try:
                 kernel_status = self._kernel.status.value
                 agent_count = len(self._kernel.agent_registry)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Load header config from InterfaceConfig (Phoenix Section)
         quick_start_command = "python -m vibe_core.cli boot"  # default
