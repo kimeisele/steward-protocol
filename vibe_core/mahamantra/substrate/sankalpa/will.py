@@ -10,10 +10,11 @@ ADVAITA PRINCIPLE:
 All execution goes through ChatProtocol. No bypass. No special paths.
 Internal voice (Sankalpa) and external voice (User) enter the same gate.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, NAVA, TEN, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
-__position__ = 9
+__position__ = NAVA
 __genesis__ = "0xebbc13e9"  # GenesisByte: parampara % 37 == 0
 
 import json
@@ -66,7 +67,7 @@ DEFAULT_MISSIONS: List[dict] = [
                 "intent_type": "hygiene_check",
                 "intent_template": {"actions": ["lint", "format", "test_quick"]},
                 "requires_ci_green": False,
-                "max_executions_per_day": 1,
+                "max_executions_per_day": KSETRAJNA,
             },
         ],
     },
@@ -127,7 +128,7 @@ class SankalpaRegistry:
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
         temp = state_file.with_suffix(".tmp")
-        temp.write_text(json.dumps(data, indent=2, default=str))
+        temp.write_text(json.dumps(data, indent=HALVES, default=str))
         temp.replace(state_file)
 
     def _parse_mission(self, data: dict) -> SankalpaMission:
@@ -163,7 +164,7 @@ class SankalpaRegistry:
             intent_template=data.get("intent_template", {}),
             requires_ci_green=data.get("requires_ci_green", True),
             requires_no_pending_intents=data.get("requires_no_pending_intents", True),
-            max_executions_per_day=data.get("max_executions_per_day", 3),
+            max_executions_per_day=data.get("max_executions_per_day", TRINITY),
             enabled=data.get("enabled", True),
         )
 
@@ -263,7 +264,7 @@ class SankalpaPlanner:
                     intents.append(intent)
 
                     # Update tracking
-                    strategy.execution_count_today += 1
+                    strategy.execution_count_today += KSETRAJNA
                     strategy.last_executed = datetime.now(timezone.utc)
                     self._registry.update_strategy(mission.id, strategy)
 
@@ -323,7 +324,7 @@ class SankalpaPlanner:
                 if strategy.last_executed.date() >= now.date():
                     return False
             elif strategy.frequency == StrategyFrequency.WEEKLY:
-                if strategy.last_executed.isocalendar()[1] >= now.isocalendar()[1]:
+                if strategy.last_executed.isocalendar()[KSETRAJNA] >= now.isocalendar()[KSETRAJNA]:
                     return False
 
         return True
@@ -387,7 +388,7 @@ def check_conscience(
         reason = f"Ashrama {ashrama.value} has all required permissions"
         is_permitted = True
 
-    elif bhakti >= 50 and len(missing_perms) == 1:
+    elif bhakti >= 50 and len(missing_perms) == KSETRAJNA:
         # High Bhakti can compensate for one missing permission - Rajasic
         guna = GunaState.RAJASIC
         reason = f"High Bhakti ({bhakti}) grants provisional access for {missing_perms}"
@@ -613,5 +614,5 @@ def get_sankalpa_status_for_chat(workspace: Optional[Path] = None) -> str:
 └─ Status: {"ACTIVE" if status.active_missions > 0 else "IDLE"}
 
 **Active Missions:**
-{chr(10).join(f"  • {name}" for name in active_names) if active_names else "  (none)"}
+{chr(TEN).join(f"  • {name}" for name in active_names) if active_names else "  (none)"}
 """

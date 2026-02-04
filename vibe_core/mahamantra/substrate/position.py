@@ -17,8 +17,9 @@ SINGLE SOURCE OF TRUTH:
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -89,7 +90,7 @@ class MantraPosition:
     @property
     def parampara_vector(self) -> int:
         """Parampara vector: (index + 1) * 37."""
-        return (self.index + 1) * PARAMPARA
+        return (self.index + KSETRAJNA) * PARAMPARA
 
     @property
     def is_connected(self) -> bool:
@@ -191,7 +192,7 @@ _verify_ssot_alignment()
 def get_position(index: int) -> MantraPosition:
     """Get position by index (0-15)."""
     if not 0 <= index < WORDS:
-        raise ValueError(f"Position index must be 0-{WORDS - 1}, got {index}")
+        raise ValueError(f"Position index must be 0-{WORDS - KSETRAJNA}, got {index}")
     return MAHAMANTRA_POSITIONS[index]
 
 
@@ -211,9 +212,9 @@ def get_position_by_opcode(opcode: MantraOpCode) -> MantraPosition:
 # Quarter to index mapping
 QUARTER_INDEX: dict = {
     Quarter.GENESIS: 0,
-    Quarter.DHARMA: 1,
-    Quarter.KARMA: 2,
-    Quarter.MOKSHA: 3,
+    Quarter.DHARMA: KSETRAJNA,
+    Quarter.KARMA: HALVES,
+    Quarter.MOKSHA: TRINITY,
 }
 
 
@@ -234,7 +235,7 @@ def get_worker_positions_for_quarter(quarter: Quarter) -> Tuple[MantraPosition, 
     """Get the WORKER positions for a quarter (3 per quarter)."""
     idx = QUARTER_INDEX[quarter]
     start = idx * WORDS_PER_QUARTER
-    return MAHAMANTRA_POSITIONS[start + 1 : start + WORDS_PER_QUARTER]
+    return MAHAMANTRA_POSITIONS[start + KSETRAJNA : start + WORDS_PER_QUARTER]
 
 
 # Alias for backward compatibility

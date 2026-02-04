@@ -11,10 +11,11 @@ This is NISHKAMA KARMA (Action without attachment).
 
 NO `Any` TYPES. Everything is explicit. Satyam (Truth) over Tamas (Chaos).
 """
+from vibe_core.mahamantra.protocols._seed import (NAVA, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
-__position__ = 9
+__position__ = NAVA
 __genesis__ = "0xebbc13e9"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -202,7 +203,7 @@ class SankalpaStrategy:
     intent_template: dict  # Template for intent params (structured)
     requires_ci_green: bool = True
     requires_no_pending_intents: bool = True
-    max_executions_per_day: int = 3
+    max_executions_per_day: int = TRINITY
     last_executed: Optional[datetime] = None
     execution_count_today: int = 0
     enabled: bool = True

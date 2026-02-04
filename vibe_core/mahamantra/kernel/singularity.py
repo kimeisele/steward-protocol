@@ -37,12 +37,13 @@ FRACTAL ARCHITECTURE:
     Everything rests upon Me, as pearls are strung on a thread."
     — Bhagavad Gita 7.7
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0x8dfc6e38"  # GenesisByte: parampara % 37 == 0
 
 import importlib
@@ -232,22 +233,22 @@ class ProtocolRouter:
     @property
     def prithu(self) -> Type["MantraProtocol"]:
         """Position 4 - PRITHU (HEAD)."""
-        return self[4]
+        return self[QUARTERS]
 
     @property
     def brahma(self) -> Type["MantraProtocol"]:
         """Position 1 - BRAHMA."""
-        return self[1]
+        return self[KSETRAJNA]
 
     @property
     def narada(self) -> Type["MantraProtocol"]:
         """Position 2 - NARADA."""
-        return self[2]
+        return self[HALVES]
 
     @property
     def shambhu(self) -> Type["MantraProtocol"]:
         """Position 3 - SHAMBHU."""
-        return self[3]
+        return self[TRINITY]
 
     @property
     def vyasa(self) -> Type["MantraProtocol"]:
@@ -257,32 +258,32 @@ class ProtocolRouter:
     @property
     def kumaras(self) -> Type["MantraProtocol"]:
         """Position 5 - KUMARAS."""
-        return self[5]
+        return self[PANCHA]
 
     @property
     def kapila(self) -> Type["MantraProtocol"]:
         """Position 6 - KAPILA."""
-        return self[6]
+        return self[SHARANAGATI]
 
     @property
     def manu(self) -> Type["MantraProtocol"]:
         """Position 7 - MANU."""
-        return self[7]
+        return self[SEVEN]
 
     @property
     def parashurama(self) -> Type["MantraProtocol"]:
         """Position 8 - PARASHURAMA (HEAD)."""
-        return self[8]
+        return self[HARE_COUNT]
 
     @property
     def prahlada(self) -> Type["MantraProtocol"]:
         """Position 9 - PRAHLADA."""
-        return self[9]
+        return self[NAVA]
 
     @property
     def janaka(self) -> Type["MantraProtocol"]:
         """Position 10 - JANAKA."""
-        return self[10]
+        return self[TEN]
 
     @property
     def bhishma(self) -> Type["MantraProtocol"]:
@@ -292,7 +293,7 @@ class ProtocolRouter:
     @property
     def nrisimha(self) -> Type["MantraProtocol"]:
         """Position 12 - NRISIMHA (HEAD)."""
-        return self[12]
+        return self[MAHAJANA_COUNT]
 
     @property
     def bali(self) -> Type["MantraProtocol"]:
@@ -1002,11 +1003,11 @@ class Mahamantra:
         # But for now, trust the static map for the "Word Property"
 
         # Quarter based on index 0-15
-        if current < 4:
+        if current < QUARTERS:
             quarter = Quarter.GENESIS
-        elif current < 8:
+        elif current < HARE_COUNT:
             quarter = Quarter.DHARMA
-        elif current < 12:
+        elif current < MAHAJANA_COUNT:
             quarter = Quarter.KARMA
         else:
             quarter = Quarter.MOKSHA
@@ -1039,11 +1040,11 @@ class Mahamantra:
     def get_quarter(self) -> Quarter:
         """Get current quarter based on tick."""
         current = Mahamantra._tick_counter
-        if current < 4:
+        if current < QUARTERS:
             return Quarter.GENESIS
-        elif current < 8:
+        elif current < HARE_COUNT:
             return Quarter.DHARMA
-        elif current < 12:
+        elif current < MAHAJANA_COUNT:
             return Quarter.KARMA
         else:
             return Quarter.MOKSHA
@@ -1071,7 +1072,7 @@ class Mahamantra:
         tick_state = self.tick()
 
         # Encode quarter as intent (GENESIS=0, DHARMA=1, KARMA=2, MOKSHA=3)
-        quarter_intent = {"genesis": 0, "dharma": 1, "karma": 2, "moksha": 3}.get(
+        quarter_intent = {"genesis": 0, "dharma": KSETRAJNA, "karma": HALVES, "moksha": TRINITY}.get(
             tick_state["quarter"], 0
         )
 

@@ -22,8 +22,9 @@ If a technology USES Mahamantra structures (f > 0), it receives
 the benefit of truth-alignment. The advantage is NOT linear -
 it's asymptotic. As K → 0 (cleaner code), G → ∞.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, QUALITIES, QUARTERS, TEN, TRINITY, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -49,7 +50,7 @@ PARAMPARA_PRIME: Final[int] = PARAMPARA  # 37
 # Golden Age calculation: WORDS × PRASADAM² = 16 × 625 = 10,000 years
 # PRASADAM = 25 (Bhaktivinoda Thakur's sacred number)
 PRASADAM_UNIT: Final[int] = 25
-GOLDEN_AGE_YEARS: Final[int] = WORDS * (PRASADAM_UNIT**2)  # 10,000
+GOLDEN_AGE_YEARS: Final[int] = WORDS * (PRASADAM_UNIT**HALVES)  # 10,000
 
 
 # =============================================================================
@@ -60,9 +61,9 @@ GOLDEN_AGE_YEARS: Final[int] = WORDS * (PRASADAM_UNIT**2)  # 10,000
 class StructuralAlignment(IntEnum):
     """How well does the structure align with Mahamantra mathematics?"""
 
-    PERFECT = 3  # Uses 16^4 bounded space, 16-aligned, Parampara verified
-    PARTIAL = 2  # Uses some Mahamantra-aligned structures
-    NONE = 1  # Arbitrary structures
+    PERFECT = TRINITY  # Uses 16^4 bounded space, 16-aligned, Parampara verified
+    PARTIAL = HALVES  # Uses some Mahamantra-aligned structures
+    NONE = KSETRAJNA  # Arbitrary structures
     HOSTILE = 0  # Actively fights mathematical truth (unbounded, random)
 
 
@@ -138,7 +139,7 @@ class Classification:
         hierarchical_aligned = (
             self.alignment >= StructuralAlignment.PARTIAL
             and self.entries_per_level == WORDS  # 16 entries per level
-            and self.levels > 1
+            and self.levels > KSETRAJNA
         )
         return single_level_aligned or hierarchical_aligned
 
@@ -289,7 +290,7 @@ def classify_algorithm(
     max_memory_bytes: int,
     ops_per_second: float = 0.0,
     speedup_vs_baseline: float = 1.0,
-    levels: int = 1,
+    levels: int = KSETRAJNA,
     entries_per_level: int = MAHAMANTRA_ADDRESS_SPACE,
 ) -> Classification:
     """
@@ -333,10 +334,10 @@ def classify_lotus_array_int() -> Classification:
         memory=MemoryModel.BOUNDED_STATIC,
         determinism=Determinism.ALWAYS,
         key_space_size=MAHAMANTRA_ADDRESS_SPACE,  # 65536
-        max_memory_bytes=65536 * 8,  # 512KB
+        max_memory_bytes=65536 * HARE_COUNT,  # 512KB
         ops_per_second=100_000_000,  # 100M ops/sec (measured)
         speedup_vs_baseline=50.0,  # 50x faster range queries than dict
-        levels=1,  # Single flat array
+        levels=KSETRAJNA,  # Single flat array
         entries_per_level=MAHAMANTRA_ADDRESS_SPACE,  # 65536
     )
 
@@ -349,11 +350,11 @@ def classify_lotus_ipv4_router() -> Classification:
         complexity=ComplexitySource.STRUCTURE,
         memory=MemoryModel.BOUNDED_DYNAMIC,
         determinism=Determinism.ALWAYS,
-        key_space_size=2**32,  # IPv4 space
+        key_space_size=HALVES**32,  # IPv4 space
         max_memory_bytes=100_000_000,  # ~100MB for 1M routes
         ops_per_second=50_000_000,  # 50M lookups/sec
         speedup_vs_baseline=1557.0,  # 1557x faster than linear
-        levels=8,  # 8 hierarchical levels
+        levels=HARE_COUNT,  # 8 hierarchical levels
         entries_per_level=WORDS,  # 16 entries per level (Mahamantra!)
     )
 
@@ -367,10 +368,10 @@ def classify_lotus_8mer_index() -> Classification:
         memory=MemoryModel.BOUNDED_STATIC,
         determinism=Determinism.ALWAYS,
         key_space_size=MAHAMANTRA_ADDRESS_SPACE,  # 4^8 = 65536
-        max_memory_bytes=65536 * 8,  # 512KB
+        max_memory_bytes=65536 * HARE_COUNT,  # 512KB
         ops_per_second=15_000_000,  # 15M k-mers/sec
         speedup_vs_baseline=6.5,  # 6.5x faster than Counter
-        levels=1,  # Single flat array
+        levels=KSETRAJNA,  # Single flat array
         entries_per_level=MAHAMANTRA_ADDRESS_SPACE,  # 65536
     )
 
@@ -383,11 +384,11 @@ def classify_python_dict() -> Classification:
         complexity=ComplexitySource.HASH,
         memory=MemoryModel.UNBOUNDED_GC,
         determinism=Determinism.USUALLY,  # Hash randomization!
-        key_space_size=2**64,  # Effectively unlimited
-        max_memory_bytes=-1,  # Unbounded
+        key_space_size=HALVES**QUALITIES,  # Effectively unlimited
+        max_memory_bytes=-KSETRAJNA,  # Unbounded
         ops_per_second=5_000_000,  # 5M ops/sec (average)
         speedup_vs_baseline=1.0,  # Baseline
-        levels=1,  # Flat hash table
+        levels=KSETRAJNA,  # Flat hash table
         entries_per_level=0,  # No alignment (arbitrary)
     )
 
@@ -400,8 +401,8 @@ def classify_neural_network_attention() -> Classification:
         complexity=ComplexitySource.QUADRATIC,
         memory=MemoryModel.UNBOUNDED_GC,
         determinism=Determinism.RANDOM,
-        key_space_size=2**64,  # Effectively unlimited
-        max_memory_bytes=-1,  # Grows with context length
+        key_space_size=HALVES**QUALITIES,  # Effectively unlimited
+        max_memory_bytes=-KSETRAJNA,  # Grows with context length
         ops_per_second=100_000,  # 100K tokens/sec (optimistic)
         speedup_vs_baseline=0.02,  # 50x SLOWER than dict for lookup
         levels=0,  # No structure at all
@@ -409,10 +410,10 @@ def classify_neural_network_attention() -> Classification:
     )
 
 
-def classify_lotus_radix_n(levels: int = 8) -> Classification:
+def classify_lotus_radix_n(levels: int = HARE_COUNT) -> Classification:
     """LotusRadixN - Generic N-level radix structure."""
-    key_bits = levels * 4
-    key_space = 16**levels
+    key_bits = levels * QUARTERS
+    key_space = WORDS**levels
 
     return Classification(
         name=f"LotusRadixN[{levels}]",
@@ -437,9 +438,9 @@ def classify_blockchain() -> Classification:
         complexity=ComplexitySource.LINEAR,
         memory=MemoryModel.UNBOUNDED_NEVER,
         determinism=Determinism.ALWAYS,
-        key_space_size=2**256,  # SHA-256 space
-        max_memory_bytes=-1,  # Grows forever
-        ops_per_second=10,  # 10 TPS (Bitcoin-like)
+        key_space_size=HALVES**256,  # SHA-256 space
+        max_memory_bytes=-KSETRAJNA,  # Grows forever
+        ops_per_second=TEN,  # 10 TPS (Bitcoin-like)
         speedup_vs_baseline=0.000002,  # Effectively useless for lookup
         levels=0,  # No structure at all
         entries_per_level=0,  # No alignment

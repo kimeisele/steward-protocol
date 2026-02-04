@@ -14,6 +14,7 @@ Structure:
 
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, KSHETRA, QUALITIES, QUARTERS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "gauranga"
@@ -97,8 +98,8 @@ class KirtanMode(IntEnum):
     - CHORUS (Murali) = Group harmony
     """
     SOLO = 0          # Single cell transformation
-    CALL_RESPONSE = 1  # Two cells interacting
-    CHORUS = 2         # Multiple cells merging
+    CALL_RESPONSE = KSETRAJNA  # Two cells interacting
+    CHORUS = HALVES         # Multiple cells merging
 
 
 # =============================================================================
@@ -204,7 +205,7 @@ class SankirtanChamber(Generic[C]):
         
         # 3. INTERACT WITH REGISTRY (Musical Memory)
         # Extract Vamsi (9 bits) - The Memory Address
-        vamsi = (diw >> VAMSI_SHIFT) & ((1 << VAMSI_HOLES) - 1)
+        vamsi = (diw >> VAMSI_SHIFT) & ((KSETRAJNA << VAMSI_HOLES) - KSETRAJNA)
         
         # Branchless Sunya Pattern:
         # Get resident (Active or Null)
@@ -213,7 +214,7 @@ class SankirtanChamber(Generic[C]):
         # Check collision BEFORE interaction (for metrics only)
         # (This branch is for stats, not logic flow)
         if resident.is_alive and resident is not cell:
-            self._resonance_count += 1
+            self._resonance_count += KSETRAJNA
             
         # Polymorphic Interaction
         # If resident is Null -> returns cell (Presence)
@@ -226,10 +227,10 @@ class SankirtanChamber(Generic[C]):
         
         # Track statistics
         self._accumulated_diw ^= (diw & DIW_MASK)
-        self._total_transformations += 1
+        self._total_transformations += KSETRAJNA
         
         if self._accumulated_diw % PARAMPARA == 0:
-            self._resonance_count += 1
+            self._resonance_count += KSETRAJNA
             
         # 4. HARMONIC FEEDBACK (Gemini Round 2)
         # Verify Resonance -> Adapt Mode
@@ -246,7 +247,7 @@ class SankirtanChamber(Generic[C]):
     def kirtan(
         self,
         cell: MahaCellUnified[C],
-        cycles: int = 1,
+        cycles: int = KSETRAJNA,
     ) -> MahaCellUnified[C]:
         """
         Transform cell through multiple mantra cycles.
@@ -321,13 +322,13 @@ class SankirtanChamber(Generic[C]):
         - cycle: advancement based on high 4 bits (MURALI)
         """
         # Extract flute components
-        venu_bits = (diw >> VENU_SHIFT) & ((1 << VENU_HOLES) - 1)
-        vamsi_bits = (diw >> VAMSI_SHIFT) & ((1 << VAMSI_HOLES) - 1)
-        murali_bits = (diw >> MURALI_SHIFT) & ((1 << MURALI_HOLES) - 1)
+        venu_bits = (diw >> VENU_SHIFT) & ((KSETRAJNA << VENU_HOLES) - KSETRAJNA)
+        vamsi_bits = (diw >> VAMSI_SHIFT) & ((KSETRAJNA << VAMSI_HOLES) - KSETRAJNA)
+        murali_bits = (diw >> MURALI_SHIFT) & ((KSETRAJNA << MURALI_HOLES) - KSETRAJNA)
         
         # Apply to lifecycle
         # VENU (6 bits): Modulate prana (energy)
-        prana_delta = (venu_bits * SEVEN) % 64 - 32  # Range: -32 to +31
+        prana_delta = (venu_bits * SEVEN) % QUALITIES - 32  # Range: -32 to +31
         cell.lifecycle.prana = max(0, cell.lifecycle.prana + prana_delta)
         
         # VAMSI (9 bits): Modulate integrity (stability factor)
@@ -337,7 +338,7 @@ class SankirtanChamber(Generic[C]):
         ))
         
         # MURALI (4 bits): Advance cycle counter
-        cell.lifecycle.cycle += murali_bits % 4
+        cell.lifecycle.cycle += murali_bits % QUARTERS
     
     def _merge_pair(
         self,
@@ -358,7 +359,7 @@ class SankirtanChamber(Generic[C]):
         # Average Integrity
         resident.lifecycle.integrity = (
             resident.lifecycle.integrity + visitor.lifecycle.integrity
-        ) / 2
+        ) / HALVES
         
         # Mix Identities (Resonance)
         # We don't change the immutable header ID, but we could update 'atma_nivedanam' checksum?
@@ -376,7 +377,7 @@ class SankirtanChamber(Generic[C]):
         Cells are considered resonant if their header checksums
         have matching modulo PARAMPARA values.
         """
-        if len(cells) < 2:
+        if len(cells) < HALVES:
             return cells
         
         result: list[MahaCellUnified[C]] = []
@@ -388,7 +389,7 @@ class SankirtanChamber(Generic[C]):
             
             # Find resonant partner
             partner_found = False
-            for j in range(i + 1, len(cells)):
+            for j in range(i + KSETRAJNA, len(cells)):
                 if j in merged_indices:
                     continue
                 
@@ -423,7 +424,7 @@ class SankirtanChamber(Generic[C]):
         xor_result = test_orch.cycle()
         
         # Must equal all 16 bits set
-        expected = (1 << WORDS) - 1
+        expected = (KSETRAJNA << WORDS) - KSETRAJNA
         return xor_result == expected
     
     def is_silent(self, diw: int) -> bool:
@@ -490,17 +491,17 @@ class SankirtanChamber(Generic[C]):
             pass 
             
         # 1. Header
-        magic = snapshot[:4]
+        magic = snapshot[:QUARTERS]
         if magic != b"OM!!":
             raise ValueError(f"Invalid magic: {magic!r}")
             
-        offset = 4
+        offset = QUARTERS
         (
             self._accumulated_diw,
             self._resonance_count,
             self._total_transformations
-        ) = struct.unpack("<QQQ", snapshot[offset:offset+24])
-        offset += 24
+        ) = struct.unpack("<QQQ", snapshot[offset:offset+KSHETRA])
+        offset += KSHETRA
         
         # 2. Orchestrator
         # We need to detect size.
@@ -516,7 +517,7 @@ class SankirtanChamber(Generic[C]):
         # Old snapshots (16 bytes) will fail or need heuristics.
         # Given this is a fresh feature, assuming 24 bytes is acceptable.
         
-        orch_size = 24
+        orch_size = KSHETRA
         orch_data = snapshot[offset:offset+orch_size]
         self._orchestrator.from_bytes(orch_data)
         offset += orch_size
@@ -540,7 +541,7 @@ class SankirtanChamber(Generic[C]):
         xor_result = test_orch.cycle()
         
         # Must equal all 16 bits set
-        expected = (1 << WORDS) - 1
+        expected = (KSETRAJNA << WORDS) - KSETRAJNA
         return xor_result == expected
     
     def is_silent(self, diw: int) -> bool:
@@ -607,17 +608,17 @@ class SankirtanChamber(Generic[C]):
             pass 
             
         # 1. Header
-        magic = snapshot[:4]
+        magic = snapshot[:QUARTERS]
         if magic != b"OM!!":
             raise ValueError(f"Invalid magic: {magic!r}")
             
-        offset = 4
+        offset = QUARTERS
         (
             self._accumulated_diw,
             self._resonance_count,
             self._total_transformations
-        ) = struct.unpack("<QQQ", snapshot[offset:offset+24])
-        offset += 24
+        ) = struct.unpack("<QQQ", snapshot[offset:offset+KSHETRA])
+        offset += KSHETRA
         
         # 2. Orchestrator
         # We need to detect size.
@@ -633,7 +634,7 @@ class SankirtanChamber(Generic[C]):
         # Old snapshots (16 bytes) will fail or need heuristics.
         # Given this is a fresh feature, assuming 24 bytes is acceptable.
         
-        orch_size = 24
+        orch_size = KSHETRA
         orch_data = snapshot[offset:offset+orch_size]
         self._orchestrator.from_bytes(orch_data)
         offset += orch_size

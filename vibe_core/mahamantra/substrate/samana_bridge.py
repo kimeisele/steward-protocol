@@ -45,10 +45,11 @@ DERIVED FROM SEED.PY:
 - All timing from PRANA_DURATION_MS / TICK_INTERVAL_MS
 - Buffer sizes from NADI_RESONANCE (72)
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, SHARANAGATI)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "parashurama"  # Position 8 - THE SWITCH
-__position__ = 8
+__position__ = HARE_COUNT
 __genesis__ = "0xd2f4c898"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -129,19 +130,19 @@ MAX_KERNELS_PER_REACTOR: Final[int] = SHARANAGATI  # 6
 
 # Dispatch batch size = WORDS / 2 = 8 (half mantra)
 # Bhoga phase has 8 positions, so max 8 tasks per batch
-DISPATCH_BATCH_SIZE: Final[int] = WORDS // 2  # 8
+DISPATCH_BATCH_SIZE: Final[int] = WORDS // HALVES  # 8
 
 # Result fold timeout = PRANA_DURATION_MS × 2 = 8 seconds
 # Allow 2 breath cycles for results to return
-FOLD_TIMEOUT_MS: Final[int] = PRANA_DURATION_MS * 2  # 8000ms
+FOLD_TIMEOUT_MS: Final[int] = PRANA_DURATION_MS * HALVES  # 8000ms
 
 # Heartbeat check interval = TICK_INTERVAL_MS × NADI_RESONANCE / 9
 # = 250 × 72 / 9 = 250 × 8 = 2000ms = 2 seconds
-SAMANA_HEARTBEAT_MS: Final[int] = (TICK_INTERVAL_MS * NADI_RESONANCE) // 9  # 2000ms
+SAMANA_HEARTBEAT_MS: Final[int] = (TICK_INTERVAL_MS * NADI_RESONANCE) // NAVA  # 2000ms
 
 # Verification
-assert MAX_KERNELS_PER_REACTOR == 6, "Max kernels = SHARANAGATI"
-assert DISPATCH_BATCH_SIZE == 8, "Batch size = WORDS/2 (Bhoga phase)"
+assert MAX_KERNELS_PER_REACTOR == SHARANAGATI, "Max kernels = SHARANAGATI"
+assert DISPATCH_BATCH_SIZE == HARE_COUNT, "Batch size = WORDS/2 (Bhoga phase)"
 assert FOLD_TIMEOUT_MS == 8000, "Fold timeout = 8 seconds"
 assert SAMANA_HEARTBEAT_MS == 2000, "Heartbeat = 2 seconds"
 
@@ -197,10 +198,10 @@ class SamanaDispatch:
     phase: str  # bhoga/prasadam/return
     priority: NadiPriority = NadiPriority.RAJAS
     timeout_ms: int = FOLD_TIMEOUT_MS
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: Dict[str, object] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_nadi_payload(self) -> Dict[str, Any]:
+    def to_nadi_payload(self) -> Dict[str, object]:
         """Convert to Nadi message payload."""
         return {
             "type": SamanaMessageType.DISPATCH,
@@ -215,7 +216,7 @@ class SamanaDispatch:
         }
 
     @classmethod
-    def from_nadi_payload(cls, payload: Dict[str, Any]) -> "SamanaDispatch":
+    def from_nadi_payload(cls, payload: Dict[str, object]) -> "SamanaDispatch":
         """Create from Nadi message payload."""
         return cls(
             dispatch_id=payload["dispatch_id"],
@@ -248,7 +249,7 @@ class SamanaDispatch:
             ATMA_NIVEDANAM (checksum) → auto-computed
         """
         # Encode phase as intent (bhoga=0, prasadam=1, return=2)
-        phase_map = {"bhoga": 0, "prasadam": 1, "return": 2}
+        phase_map = {"bhoga": 0, "prasadam": KSETRAJNA, "return": HALVES}
         intent = phase_map.get(self.phase, 0)
 
         # Convert timeout_ms to cycles (each cycle = 1 day / 300)
@@ -260,7 +261,7 @@ class SamanaDispatch:
             operation=self.position,
             link=link,
             intent=intent,
-            ttl=max(1, ttl_cycles),
+            ttl=max(KSETRAJNA, ttl_cycles),
             state=self.priority.value,
         )
 
@@ -290,13 +291,13 @@ class SamanaFold:
     dispatch_id: str  # Links back to dispatch
     kernel_id: str
     status: str  # completed/failed/timeout
-    output: Any = None
+    output: object = None
     error: Optional[str] = None
     duration_ms: float = 0.0
     reinforcement_signal: float = 0.0  # +1 = good, -1 = bad
     timestamp: datetime = field(default_factory=datetime.now)
 
-    def to_nadi_payload(self) -> Dict[str, Any]:
+    def to_nadi_payload(self) -> Dict[str, object]:
         """Convert to Nadi message payload."""
         return {
             "type": SamanaMessageType.FOLD,
@@ -312,7 +313,7 @@ class SamanaFold:
         }
 
     @classmethod
-    def from_nadi_payload(cls, payload: Dict[str, Any]) -> "SamanaFold":
+    def from_nadi_payload(cls, payload: Dict[str, object]) -> "SamanaFold":
         """Create from Nadi message payload."""
         return cls(
             fold_id=payload["fold_id"],
@@ -346,7 +347,7 @@ class SamanaFold:
             ATMA_NIVEDANAM (checksum) → auto-computed
         """
         # Encode status (completed=0, failed=1, timeout=2)
-        status_map = {"completed": 0, "failed": 1, "timeout": 2}
+        status_map = {"completed": 0, "failed": KSETRAJNA, "timeout": HALVES}
         operation = status_map.get(self.status, 0)
 
         # Encode reinforcement signal as uint64 (scale: -1..+1 → 0..1000)
@@ -420,7 +421,7 @@ class SamanaBridge(GADBase):
         # =====================================================================
         # Shadows are reused, not spawned-and-discarded.
         # Registry is lazy-loaded to avoid circular imports.
-        self._registry: Optional[Any] = None  # ShadowRegistry
+        self._registry: Optional[object] = None  # ShadowRegistry
         self._dispatch_shadows: Dict[str, str] = {}  # dispatch_id → shadow_id
 
         # Callbacks
@@ -477,7 +478,7 @@ class SamanaBridge(GADBase):
             ],
         }
 
-    def _get_registry(self) -> Any:
+    def _get_registry(self) -> object:
         """Lazy-load the ShadowRegistry singleton."""
         if self._registry is None:
             from vibe_core.mahamantra.lila.registry import get_registry
@@ -526,7 +527,7 @@ class SamanaBridge(GADBase):
         """GAD Tapas: Resource efficiency."""
         # Check we're not wasting resources on stale dispatches
         stale_count = len(self.detect_drift())
-        return stale_count < self._max_kernels // 2
+        return stale_count < self._max_kernels // HALVES
 
     def test_saucam(self) -> bool:
         """GAD Saucam: Connection purity."""
@@ -544,7 +545,7 @@ class SamanaBridge(GADBase):
         position: int,
         phase: str,
         priority: NadiPriority = NadiPriority.RAJAS,
-        payload: Optional[Dict[str, Any]] = None,
+        payload: Optional[Dict[str, object]] = None,
         shadow_seed: Optional[bytes] = None,
     ) -> Optional[str]:
         """
@@ -590,7 +591,7 @@ class SamanaBridge(GADBase):
         # =====================================================================
         # BUILD DISPATCH WITH SHADOW CONTEXT
         # =====================================================================
-        dispatch_id = f"dispatch_{uuid4().hex[:8]}"
+        dispatch_id = f"dispatch_{uuid4().hex[:HARE_COUNT]}"
 
         # Enrich payload with shadow context
         enriched_payload = payload or {}
@@ -612,7 +613,7 @@ class SamanaBridge(GADBase):
         # Track dispatch → shadow mapping
         self._pending_dispatches[dispatch_id] = dispatch
         self._dispatch_shadows[dispatch_id] = shadow.shadow_id
-        self._dispatches_sent += 1
+        self._dispatches_sent += KSETRAJNA
 
         # Mark shadow as BUSY in Registry
         self._mark_shadow_busy(shadow.shadow_id, dispatch_id)
@@ -636,7 +637,7 @@ class SamanaBridge(GADBase):
         self,
         position: int,
         shadow_seed: Optional[bytes] = None,
-    ) -> Any:  # Returns JivaShadow (always succeeds)
+    ) -> object:  # Returns JivaShadow (always succeeds)
         """
         Get a qualified JivaShadow - REUSE first, MANIFEST if needed.
 
@@ -662,7 +663,7 @@ class SamanaBridge(GADBase):
         # Option 1: REUSE - Find idle qualified shadow in Ashrama
         entry = registry.find_idle(position)
         if entry is not None:
-            self._shadows_reused += 1
+            self._shadows_reused += KSETRAJNA
             return entry.shadow
 
         # Option 2: MANIFEST - Create new shadow FOR this position (Varnashrama)
@@ -676,7 +677,7 @@ class SamanaBridge(GADBase):
 
         # Register in Ashrama with known qualification
         registry.register(shadow, qualified_positions={position})
-        self._shadows_manifested += 1
+        self._shadows_manifested += KSETRAJNA
 
         return shadow  # Guaranteed qualified
 
@@ -692,7 +693,7 @@ class SamanaBridge(GADBase):
 
     def dispatch_batch(
         self,
-        tasks: List[Tuple[str, str, Dict[str, Any]]],
+        tasks: List[Tuple[str, str, Dict[str, object]]],
         position: int,
         phase: str,
     ) -> List[str]:
@@ -755,7 +756,7 @@ class SamanaBridge(GADBase):
 
         # Store fold
         self._completed_folds[dispatch_id] = fold
-        self._folds_received += 1
+        self._folds_received += KSETRAJNA
 
         # Mark shadow as IDLE (ready for reuse in Ashrama)
         shadow_id = self._dispatch_shadows.get(dispatch_id)
@@ -822,13 +823,13 @@ class SamanaBridge(GADBase):
         stale = []
         for dispatch_id, dispatch in self._pending_dispatches.items():
             age_ms = (now - dispatch.timestamp).total_seconds() * 1000
-            if age_ms > FOLD_TIMEOUT_MS * 2:  # 2x timeout = definitely stale
+            if age_ms > FOLD_TIMEOUT_MS * HALVES:  # 2x timeout = definitely stale
                 stale.append(dispatch_id)
 
         for dispatch_id in stale:
             # Create timeout fold
             fold = SamanaFold(
-                fold_id=f"timeout_{uuid4().hex[:8]}",
+                fold_id=f"timeout_{uuid4().hex[:HARE_COUNT]}",
                 dispatch_id=dispatch_id,
                 kernel_id="timeout",
                 status="timeout",
@@ -846,7 +847,7 @@ class SamanaBridge(GADBase):
     # STATS
     # =========================================================================
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Dict[str, object]:
         """Get bridge statistics."""
         return {
             "reactor_id": self._reactor_id,

@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, TypeVar, List, Generic, Optional
+from vibe_core.mahamantra.protocols._seed import (WORDS)
 from dataclasses import dataclass
 
 T_Handler = TypeVar("T_Handler", covariant=True)
@@ -32,7 +33,7 @@ class MahaAttentionProtocol(Protocol, Generic[T_Handler]):
         """Resolve multiple queries."""
         ...
         
-    def attend_fuzzy(self, query: str, radius: int = 16) -> List["AttentionResult[T_Handler]"]:
+    def attend_fuzzy(self, query: str, radius: int = WORDS) -> List["AttentionResult[T_Handler]"]:
         """Fuzzy match within radius."""
         ...
 

@@ -31,12 +31,13 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "janaka"
-__position__ = 10
+__position__ = TEN
 __genesis__ = "0x3413af82"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
@@ -136,7 +137,7 @@ class LotusPetal:
     @property
     def parampara_vector(self) -> int:
         """The Parampara connection vector."""
-        return (self.position + 1) * PARAMPARA
+        return (self.position + KSETRAJNA) * PARAMPARA
 
     @property
     def is_connected(self) -> bool:
@@ -164,21 +165,21 @@ class LotusPetal:
 MAHAJANA_POSITIONS: Dict[str, int] = {
     # GENESIS Quarter (0-3)
     "vyasa": 0,  # HEAD - Avatara (Genesis HEAD)
-    "brahma": 1,  # Worker
-    "narada": 2,  # Worker
-    "shambhu": 3,  # Worker (Shiva)
+    "brahma": KSETRAJNA,  # Worker
+    "narada": HALVES,  # Worker
+    "shambhu": TRINITY,  # Worker (Shiva)
     # DHARMA Quarter (4-7)
-    "prithu": 4,  # HEAD - Avatara (Dharma HEAD)
-    "kumaras": 5,  # Worker
-    "kapila": 6,  # Worker
-    "manu": 7,  # Worker
+    "prithu": QUARTERS,  # HEAD - Avatara (Dharma HEAD)
+    "kumaras": PANCHA,  # Worker
+    "kapila": SHARANAGATI,  # Worker
+    "manu": SEVEN,  # Worker
     # KARMA Quarter (8-11)
-    "parashurama": 8,  # HEAD - Avatara
-    "prahlada": 9,  # Worker
-    "janaka": 10,  # Worker
+    "parashurama": HARE_COUNT,  # HEAD - Avatara
+    "prahlada": NAVA,  # Worker
+    "janaka": TEN,  # Worker
     "bhishma": 11,  # Worker
     # MOKSHA Quarter (12-15)
-    "nrisimha": 12,  # HEAD - Avatara
+    "nrisimha": MAHAJANA_COUNT,  # HEAD - Avatara
     "bali": 13,  # Worker
     "shuka": 14,  # Worker
     "yamaraja": 15,  # Worker
@@ -190,7 +191,7 @@ POSITION_MAHAJANAS: Dict[int, str] = {v: k for k, v in MAHAJANA_POSITIONS.items(
 
 def get_mahajana_position(mahajana: str) -> int:
     """Get the position for a mahajana name."""
-    return MAHAJANA_POSITIONS.get(mahajana.lower(), -1)
+    return MAHAJANA_POSITIONS.get(mahajana.lower(), -KSETRAJNA)
 
 
 def get_position_mahajana(position: int) -> str:
@@ -222,16 +223,16 @@ class LotusState:
 
         Returns the new position.
         """
-        self.position = (self.position + 1) % LOTUS_PETALS
+        self.position = (self.position + KSETRAJNA) % LOTUS_PETALS
 
         # Check for mantra completion
         if self.position == 0:
-            self.mantra_count += 1
+            self.mantra_count += KSETRAJNA
 
             # Check for mala completion
             if self.mantra_count >= MALA_BEADS:
                 self.mantra_count = 0
-                self.mala_count += 1
+                self.mala_count += KSETRAJNA
 
         return self.position
 
@@ -384,7 +385,7 @@ class LotusBase(ABC):
 
     @property
     def parampara_vector(self) -> int:
-        return (self.LOTUS_POSITION + 1) * PARAMPARA
+        return (self.LOTUS_POSITION + KSETRAJNA) * PARAMPARA
 
     @property
     def is_connected(self) -> bool:

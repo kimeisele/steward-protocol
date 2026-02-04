@@ -10,10 +10,11 @@ degrees (Maya) and integer-based Lipta (Sat/Truth).
 Base: 1 Degree = 60 Lipta
 COSMIC_FRAME = 21600 Lipta (360 Degrees)
 """
+from vibe_core.mahamantra.protocols._seed import (QUARTERS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0x5fcffced"  # GenesisByte: parampara % 37 == 0
 
 from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME

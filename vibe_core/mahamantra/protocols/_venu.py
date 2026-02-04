@@ -27,6 +27,7 @@ Position 12-15 (MOKSHA):  R-R-H-H = Front-loaded (Cleanup)
 
 This is not coincidence. This is RHYTHM.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, TEN)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -71,7 +72,7 @@ VENU_TICKS_PER_MALA: Final[int] = MALA * WORDS  # 1728
 VENU_TICK_S: Final[float] = TICK_INTERVAL_MS / 1000.0  # 0.25 seconds
 
 # Maximum acceptable jitter before logging a warning (10ms)
-VENU_MAX_JITTER_MS: Final[int] = 10
+VENU_MAX_JITTER_MS: Final[int] = TEN
 
 # =============================================================================
 # HARMONIC INTERVALS (Derived from Resonances)
@@ -94,7 +95,7 @@ VENU_FIELD_SECONDS: Final[float] = VENU_FIELD_TICKS * VENU_TICK_S  # 36.0
 # WATERTIGHT INTEGRITY CHECKS:
 assert VENU_NADI_TICKS == NADI_RESONANCE, "Nadi ticks must equal NADI_RESONANCE (72)"
 assert VENU_FIELD_TICKS == FIELD_RESONANCE, "Field ticks must equal FIELD_RESONANCE (144)"
-assert VENU_FIELD_TICKS == VENU_NADI_TICKS * 2, "Field must be 2x Nadi"
+assert VENU_FIELD_TICKS == VENU_NADI_TICKS * HALVES, "Field must be 2x Nadi"
 assert VENU_TICKS_PER_MALA % VENU_NADI_TICKS == 0, "Mala must be divisible by Nadi"
 assert VENU_TICKS_PER_MALA % VENU_FIELD_TICKS == 0, "Mala must be divisible by Field"
 

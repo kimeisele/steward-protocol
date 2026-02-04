@@ -26,6 +26,7 @@ USAGE:
 PROTOCOL:
     Implements MahaRoutingProtocol from protocols/routing.py
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -51,7 +52,7 @@ if TYPE_CHECKING:
 
 # Key space: 16-bit for efficient LotusTree (65,536 slots)
 KEY_BITS: Final[int] = WORDS  # 16
-KEY_MASK: Final[int] = (1 << KEY_BITS) - 1  # 0xFFFF
+KEY_MASK: Final[int] = (KSETRAJNA << KEY_BITS) - KSETRAJNA  # 0xFFFF
 
 # Full address space: 32-bit from MahaCompression
 FULL_KEY_BITS: Final[int] = 32
@@ -95,7 +96,7 @@ class CellRouter:
             value: The MahaCellUnified to register
         """
         self._cells[key] = value
-        self._total_inserts += 1
+        self._total_inserts += KSETRAJNA
 
     def get(self, key: int) -> Optional["MahaCellUnified"]:
         """
@@ -107,10 +108,10 @@ class CellRouter:
         Returns:
             MahaCellUnified if found, None otherwise
         """
-        self._total_lookups += 1
+        self._total_lookups += KSETRAJNA
         result = self._cells.get(key)
         if result is not None:
-            self._total_hits += 1
+            self._total_hits += KSETRAJNA
         return result
 
     def range_query(self, start: int, end: int) -> RangeResult:
@@ -136,7 +137,7 @@ class CellRouter:
         return RangeResult(
             entries=tuple(entries),
             count=len(entries),
-            levels_visited=1,
+            levels_visited=KSETRAJNA,
         )
 
     def prefix_query(self, prefix: int, prefix_bits: int) -> RangeResult:
@@ -150,7 +151,7 @@ class CellRouter:
         Returns:
             RangeResult with matching entries
         """
-        mask = ((1 << prefix_bits) - 1) << (FULL_KEY_BITS - prefix_bits)
+        mask = ((KSETRAJNA << prefix_bits) - KSETRAJNA) << (FULL_KEY_BITS - prefix_bits)
         target = prefix << (FULL_KEY_BITS - prefix_bits)
 
         entries = []
@@ -165,7 +166,7 @@ class CellRouter:
         return RangeResult(
             entries=tuple(entries),
             count=len(entries),
-            levels_visited=1,
+            levels_visited=KSETRAJNA,
         )
 
     def stats(self) -> Dict[str, object]:
@@ -177,7 +178,7 @@ class CellRouter:
             "total_hits": self._total_hits,
             "hit_rate": self._total_hits / self._total_lookups if self._total_lookups > 0 else 0.0,
             "key_bits": KEY_BITS,
-            "max_capacity": 1 << KEY_BITS,
+            "max_capacity": KSETRAJNA << KEY_BITS,
         }
 
     def keys(self) -> Iterator[int]:

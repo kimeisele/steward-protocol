@@ -9,6 +9,8 @@ IMPLEMENTATION DETAILS:
 - Encoding: 00=HARE, 01=KRISHNA, 10=RAMA, 11=VOID.
 - Performance: O(1) Bitwise operations, O(1) Memory.
 """
+from vibe_core.mahamantra.protocols._seed import (TRINITY)
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -53,25 +55,25 @@ class MantraBit(IntFlag):
     """
 
     # Quarter 1: Genesis (Hare Krishna Hare Krishna)
-    HARE_1 = 1 << 0
-    KRISHNA_1 = 1 << 1
-    HARE_2 = 1 << 2
-    KRISHNA_2 = 1 << 3
+    HARE_1 = KSETRAJNA << 0
+    KRISHNA_1 = KSETRAJNA << KSETRAJNA
+    HARE_2 = KSETRAJNA << HALVES
+    KRISHNA_2 = KSETRAJNA << TRINITY
     # Quarter 2: Dharma (Krishna Krishna Hare Hare)
-    KRISHNA_3 = 1 << 4
-    KRISHNA_4 = 1 << 5
-    HARE_3 = 1 << 6
-    HARE_4 = 1 << 7
+    KRISHNA_3 = KSETRAJNA << QUARTERS
+    KRISHNA_4 = KSETRAJNA << PANCHA
+    HARE_3 = KSETRAJNA << SHARANAGATI
+    HARE_4 = KSETRAJNA << SEVEN
     # Quarter 3: Karma (Hare Rama Hare Rama)
-    HARE_5 = 1 << 8
-    RAMA_1 = 1 << 9
-    HARE_6 = 1 << 10
-    RAMA_2 = 1 << 11
+    HARE_5 = KSETRAJNA << HARE_COUNT
+    RAMA_1 = KSETRAJNA << NAVA
+    HARE_6 = KSETRAJNA << TEN
+    RAMA_2 = KSETRAJNA << 11
     # Quarter 4: Moksha (Rama Rama Hare Hare)
-    RAMA_3 = 1 << 12
-    RAMA_4 = 1 << 13
-    HARE_7 = 1 << 14
-    HARE_8 = 1 << 15
+    RAMA_3 = KSETRAJNA << MAHAJANA_COUNT
+    RAMA_4 = KSETRAJNA << 13
+    HARE_7 = KSETRAJNA << 14
+    HARE_8 = KSETRAJNA << 15
 
     @classmethod
     def full_resonance(cls) -> "MantraBit":
@@ -112,7 +114,7 @@ class MantraByte:
                 raise ValueError("Cannot pack VOID into Mantra.")
             # Shift 2 bits per trit.
             # Note: We pack index 0 at LSB (standard little-endian feel for sequences)
-            packed |= name.value << (i * 2)
+            packed |= name.value << (i * HALVES)
         return cls(packed, len(trits))
 
     @classmethod
@@ -148,7 +150,7 @@ class MantraByte:
         if index >= self._length or index < 0:
             return HolyName.VOID
         # Mask: 11 (binary 3) shifted to position
-        val = (self._packed >> (index * 2)) & 0b11
+        val = (self._packed >> (index * HALVES)) & TRINITY
         return HolyName(val)
 
     @property
@@ -191,7 +193,7 @@ class MantraByte:
         # Base calculation (Karma - strict matching)
         for i in range(self._length):
             if self.get_trit(i) == std.get_trit(i % MAHAMANTRA_DIMENSION):  # SSOT
-                matches += 1
+                matches += KSETRAJNA
 
         ratio = matches / self._length if self._length else 0
         base_coherence = 1.0 - math.exp(-5.0 * ratio)
@@ -316,7 +318,7 @@ class MantraByte:
         std_packed = std._packed
 
         # Mask for the length (2 bits per position)
-        mask = (1 << (self._length * 2)) - 1
+        mask = (KSETRAJNA << (self._length * HALVES)) - KSETRAJNA
 
         # XOR: bits that differ become 1
         diff = (self._packed ^ std_packed) & mask
@@ -329,7 +331,7 @@ class MantraByte:
             errors = bin(diff).count("1")
 
         # Coherence = 1 - (errors / total_bits)
-        total_bits = self._length * 2
+        total_bits = self._length * HALVES
         coherence = 1.0 - (errors / total_bits)
 
         return coherence
@@ -404,7 +406,7 @@ class MantraByte:
         """Get all padas in a quarter from this MantraByte."""
         from .mantra.routing import QUARTERS
 
-        if 0 <= quarter < 4:
+        if 0 <= quarter < QUARTERS:
             indices = QUARTERS[quarter]
             padas = self.to_padas()
             return tuple(padas[i] for i in indices if i < len(padas))
@@ -478,10 +480,10 @@ class GenesisByte:
             raise ConnectionError("Sahajiya Fault: Invalid Parampara Hash.")
 
         # 5. Chaitanya Lila Check (48 = 16 × 3)
-        if self.lila_limit != self.dimension * 3:
+        if self.lila_limit != self.dimension * TRINITY:
             raise ValueError(
                 f"Chaitanya Lila Violation: lila_limit must be dimension × 3. "
-                f"Expected {self.dimension * 3}, got {self.lila_limit}"
+                f"Expected {self.dimension * TRINITY}, got {self.lila_limit}"
             )
 
         return True
@@ -495,7 +497,7 @@ class GenesisByte:
 
     def _verify_lineage(self) -> bool:
         try:
-            return (int(self.parampara_hash, 16) % PARAMPARA) == 0
+            return (int(self.parampara_hash, WORDS) % PARAMPARA) == 0
         except ValueError:
             return False
 
@@ -508,21 +510,21 @@ class GenesisByte:
             "puri" (lila_limit/2 to lila_limit - 1)
         """
         if not 0 <= tick < self.lila_limit:
-            raise ValueError(f"Tick must be 0-{self.lila_limit - 1}, got {tick}")
-        midpoint = self.lila_limit // 2  # 24 for standard 48
+            raise ValueError(f"Tick must be 0-{self.lila_limit - KSETRAJNA}, got {tick}")
+        midpoint = self.lila_limit // HALVES  # 24 for standard 48
         return "navadvipa" if tick < midpoint else "puri"
 
     def get_mantra_position(self, tick: int) -> int:
         """Get Mahamantra position (0-15) for a tick."""
         if not 0 <= tick < self.lila_limit:
-            raise ValueError(f"Tick must be 0-{self.lila_limit - 1}, got {tick}")
+            raise ValueError(f"Tick must be 0-{self.lila_limit - KSETRAJNA}, got {tick}")
         return tick % self.dimension
 
     def get_mantra_cycle(self, tick: int) -> int:
         """Get Mahamantra cycle (1-3) for a tick."""
         if not 0 <= tick < self.lila_limit:
-            raise ValueError(f"Tick must be 0-{self.lila_limit - 1}, got {tick}")
-        return (tick // self.dimension) + 1
+            raise ValueError(f"Tick must be 0-{self.lila_limit - KSETRAJNA}, got {tick}")
+        return (tick // self.dimension) + KSETRAJNA
 
 
 # Global Default

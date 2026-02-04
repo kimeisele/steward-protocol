@@ -16,12 +16,13 @@ All operations route to the correct Position/Mahajana.
 
 WATERTIGHT: NO hardcoded numbers. ALL from seed.py (SSOT).
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, TEN)
+
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "janaka"
-__position__ = 10
+__position__ = TEN
 __genesis__ = "0x17f29aed"  # GenesisByte: parampara % 37 == 0
 
 from typing import Dict, Optional, Final, Union
@@ -154,7 +155,7 @@ def offer(
     if purpose not in PURPOSE_MAP:
         return OfferResult(
             success=False,
-            position=-1,
+            position=-KSETRAJNA,
             mahajana="unknown",
             quarter="unknown",
             purpose=purpose,
@@ -172,7 +173,7 @@ def offer(
             mahajana="unknown",
             quarter="unknown",
             purpose=purpose,
-            error=f"Position {position} out of bounds (0 to {WORDS - 1})",
+            error=f"Position {position} out of bounds (0 to {WORDS - KSETRAJNA})",
         )
 
     # Get mahajana name for this position (from seed mapping)

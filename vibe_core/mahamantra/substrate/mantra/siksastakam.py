@@ -20,6 +20,7 @@ THE 7 EFFECTS MAP TO 7 BEATS:
   Beat 6 (1966): FULL_NECTAR_EACH_STEP   → Atomic transactions
   Beat 7 (1977): BATHE_ENTIRE_SELF       → Total transformation
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -59,13 +60,13 @@ GUNA_COLORS: Final[dict[str, str]] = {
 
 # Beat-to-Effect mapping (7 beats → 7 effects)
 BEAT_EFFECT_MAP: Final[dict[int, str]] = {
-    1: "CLEANSE_HEART_MIRROR",  # 1911 - Cache invalidation
-    2: "EXTINGUISH_FOREST_FIRE",  # 1922 - Zero entropy routing
-    3: "SPREAD_MOONLIGHT",  # 1933 - Graceful degradation
-    4: "LIFE_OF_KNOWLEDGE",  # 1944 - Live data structures
-    5: "EXPAND_BLISS_OCEAN",  # 1955 - Infinite scalability
-    6: "FULL_NECTAR_EACH_STEP",  # 1966 - Atomic transactions
-    7: "BATHE_ENTIRE_SELF",  # 1977 - Total transformation
+    KSETRAJNA: "CLEANSE_HEART_MIRROR",  # 1911 - Cache invalidation
+    HALVES: "EXTINGUISH_FOREST_FIRE",  # 1922 - Zero entropy routing
+    TRINITY: "SPREAD_MOONLIGHT",  # 1933 - Graceful degradation
+    QUARTERS: "LIFE_OF_KNOWLEDGE",  # 1944 - Live data structures
+    PANCHA: "EXPAND_BLISS_OCEAN",  # 1955 - Infinite scalability
+    SHARANAGATI: "FULL_NECTAR_EACH_STEP",  # 1966 - Atomic transactions
+    SEVEN: "BATHE_ENTIRE_SELF",  # 1977 - Total transformation
 }
 
 # Effect-to-Color mapping (7 effects → colors)
@@ -131,7 +132,7 @@ class SiksastakamSynth:
 
     def get_effect_for_beat(self, beat_number: int) -> str:
         """Get Siksastakam effect name for a beat number (1-7)."""
-        if beat_number < 1 or beat_number > SEVEN:
+        if beat_number < KSETRAJNA or beat_number > SEVEN:
             return "BATHE_ENTIRE_SELF"  # Default to complete effect
         return BEAT_EFFECT_MAP[beat_number]
 
@@ -202,7 +203,7 @@ class SiksastakamSynth:
         
         # Bit generation logic:
         # Mix seed with beat identifier
-        mixed_seed = (seed * beat_number + 7) % (2**32)
+        mixed_seed = (seed * beat_number + SEVEN) % (HALVES**32)
         bit_pattern = mixed_seed
 
         return SiksastakamOutput(
@@ -214,7 +215,7 @@ class SiksastakamSynth:
             guna=guna,
             illumination=illumination,
             intensity=resonance,
-            bits_output=32 if self.use_512 else 8,
+            bits_output=32 if self.use_512 else HARE_COUNT,
             bit_pattern=bit_pattern,
         )
 
@@ -223,7 +224,7 @@ class SiksastakamSynth:
         # Note: KirtanComputeResult must be imported only for type checking to avoid circular dep
         # But we assume the object has beat_number, seed, resonance
         return self.synthesize(
-            beat_number=getattr(kirtan_result, "beat_number", 1),
+            beat_number=getattr(kirtan_result, "beat_number", KSETRAJNA),
             seed=getattr(kirtan_result, "input_seed", 0),
             resonance=getattr(kirtan_result, "resonance", 0.5),
         )

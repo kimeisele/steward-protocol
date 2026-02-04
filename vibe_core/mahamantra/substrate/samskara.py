@@ -41,8 +41,9 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself (Position 0 - VYASA)
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, PARAMPARA, QUARTERS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -70,9 +71,9 @@ from typing import (
 # CONSTANTS - The Sacred Numbers
 # =============================================================================
 
-PARAMPARA: Final[int] = 37
-PHASES: Final[int] = 4
-POSITIONS_PER_PHASE: Final[int] = 4
+PARAMPARA: Final[int] = PARAMPARA
+PHASES: Final[int] = QUARTERS
+POSITIONS_PER_PHASE: Final[int] = QUARTERS
 
 
 # =============================================================================
@@ -110,7 +111,7 @@ class Phase(str, Enum):
     @property
     def parampara_vector(self) -> int:
         """Get the parampara vector for this phase."""
-        return (self.quarter_index + 1) * PARAMPARA
+        return (self.quarter_index + KSETRAJNA) * PARAMPARA
 
 
 # =============================================================================
@@ -198,7 +199,7 @@ class PipelineContext(Generic[C]):
     def current_phase(self) -> Optional[Phase]:
         """Get the current (last executed) phase."""
         if self.phases:
-            return self.phases[-1].phase
+            return self.phases[-KSETRAJNA].phase
         return None
 
     @property

@@ -23,8 +23,9 @@ KEIN STATE. KEINE COUNTER. NUR PURE FUNCTIONS.
 
 WATERTIGHT: Keine externen Abhängigkeiten. Nur substrate/.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, PARAMPARA)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -125,12 +126,12 @@ def get_position_by_guardian(guardian_name: str) -> MantraPosition:
 
 def next_position(position: int) -> int:
     """Calculate next position (wraps at 16). PURE."""
-    return (position + 1) % MAHAMANTRA_WORDS
+    return (position + KSETRAJNA) % MAHAMANTRA_WORDS
 
 
 def previous_position(position: int) -> int:
     """Calculate previous position (wraps at 0). PURE."""
-    return (position - 1) % MAHAMANTRA_WORDS
+    return (position - KSETRAJNA) % MAHAMANTRA_WORDS
 
 
 # =============================================================================
@@ -178,12 +179,12 @@ def get_lila_info(lila_position: int) -> LilaInfo:
 
 def next_lila_position(lila_position: int) -> int:
     """Calculate next lila position (wraps at 48). PURE."""
-    return (lila_position + 1) % CHAITANYA_LILA
+    return (lila_position + KSETRAJNA) % CHAITANYA_LILA
 
 
 def previous_lila_position(lila_position: int) -> int:
     """Calculate previous lila position (wraps at 0). PURE."""
-    return (lila_position - 1) % CHAITANYA_LILA
+    return (lila_position - KSETRAJNA) % CHAITANYA_LILA
 
 
 def lila_to_mantra(lila_position: int) -> Tuple[int, int, str]:
@@ -231,7 +232,7 @@ def get_chant(separator: str = " ") -> str:
 
 def verify_parampara(value: int) -> bool:
     """Verify Parampara connection (% 37 == 0). PURE."""
-    return value % 37 == 0
+    return value % PARAMPARA == 0
 
 
 # =============================================================================

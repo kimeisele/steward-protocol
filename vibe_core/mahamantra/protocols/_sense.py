@@ -65,12 +65,13 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself (through Kapila's Sankhya)
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, PANCHA, QUARTERS, SEVEN, SHARANAGATI)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
-__position__ = 6
+__position__ = SHARANAGATI
 __genesis__ = "0x633fe12b"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
@@ -125,10 +126,10 @@ BG_SENSE_VERSE: Final[str] = "15.9"  # The 5 senses listed
 BG_KSETRA_VERSE: Final[str] = "13.6"  # 24 elements of the field
 
 # The Sacred Numbers
-JNANENDRIYA_COUNT: Final[int] = 5  # 5 knowledge senses
-KARMENDRIYA_COUNT: Final[int] = 5  # 5 action senses
-TANMATRA_COUNT: Final[int] = 5  # 5 subtle elements
-MAHABHUTA_COUNT: Final[int] = 5  # 5 gross elements
+JNANENDRIYA_COUNT: Final[int] = PANCHA  # 5 knowledge senses
+KARMENDRIYA_COUNT: Final[int] = PANCHA  # 5 action senses
+TANMATRA_COUNT: Final[int] = PANCHA  # 5 subtle elements
+MAHABHUTA_COUNT: Final[int] = PANCHA  # 5 gross elements
 TATTVA_COUNT: Final[int] = KSETRA_COUNT  # 24 = Prakriti elements
 
 
@@ -253,11 +254,11 @@ class Jnanendriya(str, Enum):
     def mahamantra_position(self) -> int:
         """Get the Mahamantra position that owns this sense."""
         return {
-            Jnanendriya.SROTRA: 4,  # Vyasa - hears the Veda
-            Jnanendriya.TVAK: 5,  # Kumaras - feels purity
-            Jnanendriya.CAKSU: 6,  # Kapila - sees analysis
-            Jnanendriya.JIHVA: 7,  # Manu - tastes dharma
-            Jnanendriya.GHRANA: 8,  # Parashurama - smells corruption
+            Jnanendriya.SROTRA: QUARTERS,  # Vyasa - hears the Veda
+            Jnanendriya.TVAK: PANCHA,  # Kumaras - feels purity
+            Jnanendriya.CAKSU: SHARANAGATI,  # Kapila - sees analysis
+            Jnanendriya.JIHVA: SEVEN,  # Manu - tastes dharma
+            Jnanendriya.GHRANA: HARE_COUNT,  # Parashurama - smells corruption
         }[self]
 
     @property
@@ -481,7 +482,7 @@ class SenseProtocolDef(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="SenseProtocol",
         mahajana="kapila",  # Kapila taught Sankhya
-        position=6,
+        position=SHARANAGATI,
         level=Level.SUBSTRATE,
         quarter=Quarter.DHARMA,
     )
@@ -509,7 +510,7 @@ _valid, _violations = SenseProtocolDef.validate()
 assert _valid, f"SenseProtocol failed validation: {_violations}"
 
 # Verify the sacred numbers
-assert JNANENDRIYA_COUNT == 5, "Must have exactly 5 knowledge senses"
+assert JNANENDRIYA_COUNT == PANCHA, "Must have exactly 5 knowledge senses"
 assert TATTVA_COUNT == KSETRA_COUNT, "Tattvas must equal Ksetra count (24)"
 assert len(Jnanendriya) == JNANENDRIYA_COUNT, "Enum must have 5 senses"
 assert len(Tanmatra) == TANMATRA_COUNT, "Enum must have 5 tanmatras"

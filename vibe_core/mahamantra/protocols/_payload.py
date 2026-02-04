@@ -51,6 +51,7 @@ DUAL MODE: VIBRATIONAL + DATA:
     SAME STRUCTURE. DIFFERENT INTERPRETATION.
     Krishna is all-present. Entry point is everywhere.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, PANCHA, QUALITIES, QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -140,17 +141,17 @@ class PayloadQuarter(IntEnum):
     """The 4 payload categories (quarters)."""
 
     GENESIS = 0  # Chapters 1-4:  Raw input
-    DHARMA = 1   # Chapters 5-9:  Validated
-    KARMA = 2    # Chapters 10-14: Execution
-    MOKSHA = 3   # Chapters 15-18: Output
+    DHARMA = KSETRAJNA   # Chapters 5-9:  Validated
+    KARMA = HALVES    # Chapters 10-14: Execution
+    MOKSHA = TRINITY   # Chapters 15-18: Output
 
 
 def get_payload_quarter(payload_type: PayloadType) -> PayloadQuarter:
     """Get quarter for a payload type."""
     chapter = payload_type.value
-    if chapter <= 4:
+    if chapter <= QUARTERS:
         return PayloadQuarter.GENESIS
-    elif chapter <= 9:
+    elif chapter <= NAVA:
         return PayloadQuarter.DHARMA
     elif chapter <= 14:
         return PayloadQuarter.KARMA
@@ -171,13 +172,13 @@ class SiksastakamOp(IntEnum):
     """
 
     RECEIVE = 0    # L0: ceto-darpana   - Parse/receive input
-    LINK = 1       # L1: namnam akari   - Chain/connect
-    VALIDATE = 2   # L2: trinad api     - Check integrity
-    INTENT = 3     # L3: na dhanam      - Extract purpose
-    LIFETIME = 4   # L4: ayi nanda      - Set TTL/scope
-    STATE = 5      # L5: nayanam galad  - Track changes
-    OPERATE = 6    # L6: yugayitam      - Transform
-    COMPLETE = 7   # L7: aslishya va    - Finalize/return
+    LINK = KSETRAJNA       # L1: namnam akari   - Chain/connect
+    VALIDATE = HALVES   # L2: trinad api     - Check integrity
+    INTENT = TRINITY     # L3: na dhanam      - Extract purpose
+    LIFETIME = QUARTERS   # L4: ayi nanda      - Set TTL/scope
+    STATE = PANCHA      # L5: nayanam galad  - Track changes
+    OPERATE = SHARANAGATI    # L6: yugayitam      - Transform
+    COMPLETE = SEVEN   # L7: aslishya va    - Finalize/return
 
 
 # Verification
@@ -213,22 +214,22 @@ BITS_STAGE: Final[int] = HALF_SIZE     # 8 = byte aligned, fits 0-7
 
 # Verification: Must fit in 64 bits with 8 reserved
 _TOTAL_BITS = BITS_VALUE + BITS_POSITION + BITS_CHAPTER + BITS_STAGE + HALF_SIZE
-assert _TOTAL_BITS == 64, f"Total bits must be 64, got {_TOTAL_BITS}"
+assert _TOTAL_BITS == QUALITIES, f"Total bits must be 64, got {_TOTAL_BITS}"
 
 SHIFT_POSITION: Final[int] = BITS_VALUE
 SHIFT_CHAPTER: Final[int] = SHIFT_POSITION + BITS_POSITION
 SHIFT_STAGE: Final[int] = SHIFT_CHAPTER + BITS_CHAPTER
 
-MASK_VALUE: Final[int] = (1 << BITS_VALUE) - 1
-MASK_POSITION: Final[int] = (1 << BITS_POSITION) - 1
-MASK_CHAPTER: Final[int] = (1 << BITS_CHAPTER) - 1
-MASK_STAGE: Final[int] = (1 << BITS_STAGE) - 1
+MASK_VALUE: Final[int] = (KSETRAJNA << BITS_VALUE) - KSETRAJNA
+MASK_POSITION: Final[int] = (KSETRAJNA << BITS_POSITION) - KSETRAJNA
+MASK_CHAPTER: Final[int] = (KSETRAJNA << BITS_CHAPTER) - KSETRAJNA
+MASK_STAGE: Final[int] = (KSETRAJNA << BITS_STAGE) - KSETRAJNA
 
 
 def encode_maha_field(
     value: int,
     position: int = 0,
-    chapter: int = 1,
+    chapter: int = KSETRAJNA,
     stage: int = 0,
 ) -> int:
     """
@@ -244,9 +245,9 @@ def encode_maha_field(
         64-bit encoded field
     """
     assert 0 <= value <= MASK_VALUE, f"Value must fit in {BITS_VALUE} bits"
-    assert 0 <= position < WORDS, f"Position must be 0-{WORDS-1}"
-    assert 1 <= chapter <= GITA_CHAPTERS, f"Chapter must be 1-{GITA_CHAPTERS}"
-    assert 0 <= stage < HALF_SIZE, f"Stage must be 0-{HALF_SIZE-1}"
+    assert 0 <= position < WORDS, f"Position must be 0-{WORDS-KSETRAJNA}"
+    assert KSETRAJNA <= chapter <= GITA_CHAPTERS, f"Chapter must be 1-{GITA_CHAPTERS}"
+    assert 0 <= stage < HALF_SIZE, f"Stage must be 0-{HALF_SIZE-KSETRAJNA}"
 
     return (
         (value & MASK_VALUE) |
@@ -326,7 +327,7 @@ class MahaPayload:
     data: bytes
     position: int = 0      # Mahamantra position (0-15)
     stage: int = 0         # Siksastakam stage (0-7)
-    metadata: Dict[str, Any] = None
+    metadata: Dict[str, object] = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -357,18 +358,18 @@ class MahaPayload:
             chapter=self.chapter,
             stage=self.stage,
         )
-        return type_field.to_bytes(8, "little") + self.data
+        return type_field.to_bytes(HARE_COUNT, "little") + self.data
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "MahaPayload":
         """Deserialize from bytes."""
-        if len(data) < 8:
+        if len(data) < HARE_COUNT:
             raise ValueError("Payload must be at least 8 bytes")
 
-        type_field = int.from_bytes(data[:8], "little")
+        type_field = int.from_bytes(data[:HARE_COUNT], "little")
         length, position, chapter, stage = decode_maha_field(type_field)
 
-        payload_data = data[8:8+length]
+        payload_data = data[HARE_COUNT:HARE_COUNT+length]
 
         return cls(
             payload_type=PayloadType(chapter),
@@ -407,7 +408,7 @@ class MahaPayload:
 # =============================================================================
 
 # Verify genesis byte
-_genesis_val = int(__genesis__, 16)
+_genesis_val = int(__genesis__, WORDS)
 assert _genesis_val % PARAMPARA == 0, f"Genesis {__genesis__} must be % 37 == 0"
 
 
