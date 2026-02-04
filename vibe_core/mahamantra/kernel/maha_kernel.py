@@ -13,8 +13,9 @@ MISSION:
 ARCHITECTURE:
     Input -> MahaCompression (Seed) -> MahaSynth (Attractor) -> Hybrid Address -> Result
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HARE_COUNT)
+
 
 __mahajana__ = "vishnu"
 __position__ = 0
@@ -143,7 +144,7 @@ class MahaKernel(PanchaTattvaProtocol):
         # 4. FUSION (16-Bit Address)
         # High Byte (8 bits) = Attractor (0-136)
         # Low Byte (8 bits) = Variance (0-255)
-        final_address = (attractor << 8) | variance
+        final_address = (attractor << HARE_COUNT) | variance
         
         return final_address
 
@@ -179,7 +180,7 @@ class MahaKernel(PanchaTattvaProtocol):
     
     # Proxy remaining calls to Singularity for backward compatibility
     # (But strict logic happens in __call__)
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         return getattr(self._singularity, name)
 
 # =============================================================================

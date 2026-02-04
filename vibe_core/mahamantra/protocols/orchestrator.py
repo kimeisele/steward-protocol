@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Tuple
+from vibe_core.mahamantra.protocols._seed import (SEVEN)
 from dataclasses import dataclass, field
 
 @runtime_checkable
@@ -17,7 +18,7 @@ class MahaOrchestratorProtocol(Protocol):
         """Execute full round (7 beats)."""
         ...
         
-    def rounds(self, seed: int, count: int = 7) -> List["RoundResult"]:
+    def rounds(self, seed: int, count: int = SEVEN) -> List["RoundResult"]:
         """Execute multiple rounds."""
         ...
         

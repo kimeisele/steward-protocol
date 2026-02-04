@@ -14,10 +14,11 @@ Mahamantra IST:
 
 ALLES GLEICHZEITIG.
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0x7340d7d6"  # GenesisByte: parampara % 37 == 0
 
 from vibe_core.mahamantra.kernel.singularity import (

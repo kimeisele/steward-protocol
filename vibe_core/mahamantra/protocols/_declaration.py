@@ -44,12 +44,13 @@ WATERTIGHT: No Any types. Everything explicit.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS, TEN, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "janaka"
-__position__ = 10
+__position__ = TEN
 __genesis__ = "0x09fbb498"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -155,13 +156,13 @@ class MahajanaCard:
         object.__setattr__(self, "quarter", Quarter.from_position(self.position))
 
         # Compute parampara vector
-        object.__setattr__(self, "parampara_vector", (self.position + 1) * PARAMPARA)
+        object.__setattr__(self, "parampara_vector", (self.position + KSETRAJNA) * PARAMPARA)
 
         # Compute full name
         object.__setattr__(self, "full_name", f"{self.mahajana}.{self.name}")
 
         # Validate position
-        if not 0 <= self.position < 16:
+        if not 0 <= self.position < WORDS:
             raise ValueError(f"Position must be 0-15, got {self.position}")
 
         # Validate parampara connection
@@ -220,11 +221,11 @@ class MahajanaCard:
 
     def is_head(self) -> bool:
         """Check if this is a HEAD position (Avatara)."""
-        return self.position % 4 == 0
+        return self.position % QUARTERS == 0
 
     def is_worker(self) -> bool:
         """Check if this is a WORKER position (Mahajana)."""
-        return self.position % 4 != 0
+        return self.position % QUARTERS != 0
 
     def can_provide(self, capability: str) -> bool:
         """Check if this card provides a capability."""
@@ -492,7 +493,7 @@ class DeclarationProtocol(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="DeclarationProtocol",
         mahajana="brahma",  # Brahma is the creator/declarer
-        position=1,
+        position=KSETRAJNA,
         level=Level.ACINTYA,
         quarter=Quarter.GENESIS,
     )

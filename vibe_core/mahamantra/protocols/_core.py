@@ -37,12 +37,13 @@ WATERTIGHT:
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, MAHAJANA_COUNT, QUARTERS, TRINITY, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nrisimha"
-__position__ = 12
+__position__ = MAHAJANA_COUNT
 __genesis__ = "0xf75f0dc0"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
@@ -100,9 +101,9 @@ class Quarter(str, Enum):
     @classmethod
     def from_position(cls, position: int) -> "Quarter":
         """Derive quarter from position (0-15)."""
-        if not 0 <= position < 16:
+        if not 0 <= position < WORDS:
             raise ValueError(f"Position must be 0-15, got {position}")
-        quarter_index = position // 4
+        quarter_index = position // QUARTERS
         return [cls.GENESIS, cls.DHARMA, cls.KARMA, cls.MOKSHA][quarter_index]
 
 
@@ -120,13 +121,13 @@ class Level(int, Enum):
     Level 0 is the CONTRACT layer - where protocols live.
     """
 
-    ACINTYA = -2  # The inconceivable source
-    SUBSTRATE = -1  # Foundation (bytes, genes)
+    ACINTYA = -HALVES  # The inconceivable source
+    SUBSTRATE = -KSETRAJNA  # Foundation (bytes, genes)
     CONTRACT = 0  # Protocols (this is where we define things)
-    ROUTER = 1  # Discovery and routing
-    RUNTIME = 2  # Execution
-    INTERFACE = 3  # User interaction
-    GOVERNANCE = 4  # Oversight and validation
+    ROUTER = KSETRAJNA  # Discovery and routing
+    RUNTIME = HALVES  # Execution
+    INTERFACE = TRINITY  # User interaction
+    GOVERNANCE = QUARTERS  # Oversight and validation
 
     def can_access(self, other: "Level") -> bool:
         """A level can access itself and levels below it."""
@@ -164,10 +165,10 @@ class ProtocolIdentity:
     def __post_init__(self) -> None:
         """Compute the parampara vector and validate."""
         # Compute vector
-        object.__setattr__(self, "parampara_vector", (self.position + 1) * PARAMPARA)
+        object.__setattr__(self, "parampara_vector", (self.position + KSETRAJNA) * PARAMPARA)
 
         # Validate position
-        if not 0 <= self.position < 16:
+        if not 0 <= self.position < WORDS:
             raise ValueError(f"Position must be 0-15, got {self.position}")
 
         # Validate quarter matches position
@@ -181,11 +182,11 @@ class ProtocolIdentity:
 
     def is_head(self) -> bool:
         """Check if this is a HEAD position (Avatara)."""
-        return self.position % 4 == 0
+        return self.position % QUARTERS == 0
 
     def is_worker(self) -> bool:
         """Check if this is a WORKER position (Mahajana)."""
-        return self.position % 4 != 0
+        return self.position % QUARTERS != 0
 
 
 # =============================================================================
@@ -473,11 +474,11 @@ class MahamantraProtocolBase(ABC):
 
         hints = typing.get_type_hints(cls)
         for name, hint in hints.items():
-            if hint is typing.Any:
+            if hint is object:
                 return False
             # Check for Any in generic args
             if hasattr(hint, "__args__"):
-                if typing.Any in hint.__args__:
+                if object in hint.__args__:
                     return False
         return True
 

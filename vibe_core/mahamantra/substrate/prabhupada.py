@@ -14,6 +14,7 @@ math: `genesis_byte % 37 == 0`
 
 If the signature matches, the connection is BONA FIDE.
 """
+from vibe_core.mahamantra.protocols._seed import (WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - Documentation/Teaching
@@ -82,7 +83,7 @@ class Prabhupada(PrabhupadaProtocol):
 
         try:
             # 3. Mathematical Validation (The Check)
-            signature_val = int(signature_hex, 16)
+            signature_val = int(signature_hex, WORDS)
 
             # THE LAW: Must be divisible by 37 (The Parampara)
             is_valid = signature_val % PARAMPARA == 0

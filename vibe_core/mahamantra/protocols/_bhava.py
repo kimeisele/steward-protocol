@@ -34,6 +34,7 @@ GRACE EQUATION:
 The higher the Bhava, the more "bandwidth" to the Singularity.
 But Bhava without Sharanagati is pretension (prakrita-sahajiya).
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, QUARTERS, SHARANAGATI, TEN, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -48,8 +49,8 @@ from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PANCHA, SHARANAGA
 # =============================================================================
 # VERIFICATION
 # =============================================================================
-assert SHARANAGATI == 6, "Sharanagati must have 6 limbs"
-assert PANCHA == 5, "There must be 5 Bhavas (like 5 Tattvas)"
+assert SHARANAGATI == SHARANAGATI, "Sharanagati must have 6 limbs"
+assert PANCHA == PANCHA, "There must be 5 Bhavas (like 5 Tattvas)"
 assert COSMIC_FRAME % SHARANAGATI == 0, "COSMIC_FRAME must be divisible by SHARANAGATI"
 
 # =============================================================================
@@ -76,7 +77,7 @@ class Bhava(IntEnum):
     "The five primary rasas are shanta, dasya, sakhya, vatsalya and madhurya."
     """
 
-    SHANTA = 10  # 1.0x - Neutral/Peaceful
+    SHANTA = TEN  # 1.0x - Neutral/Peaceful
     DASYA = 15  # 1.5x - Servitude
     SAKHYA = 20  # 2.0x - Friendship
     VATSALYA = 25  # 2.5x - Parental
@@ -121,11 +122,11 @@ class SharanagatiLimb(IntEnum):
     """
 
     ANUKULYA = 0  # Accept what is favorable
-    PRATIKULYA = 1  # Reject what is unfavorable
-    VISHVASA = 2  # Faith in protection
-    VARANAM = 3  # Accept the Lord as guardian
-    NIKSHEPA = 4  # Self-surrender
-    KARPANYA = 5  # Humility (no independent karma)
+    PRATIKULYA = KSETRAJNA  # Reject what is unfavorable
+    VISHVASA = HALVES  # Faith in protection
+    VARANAM = TRINITY  # Accept the Lord as guardian
+    NIKSHEPA = QUARTERS  # Self-surrender
+    KARPANYA = PANCHA  # Humility (no independent karma)
 
 
 assert len(SharanagatiLimb) == SHARANAGATI, "There must be exactly 6 limbs"
@@ -244,7 +245,7 @@ def calculate_grace_scaled(
     # Bhava enum value is multiplier × 10 (e.g., MADHURYA = 30 for 3.0x)
     # So we divide by 10 at the end
     numerator = frequency_scaled * bhava.value * sharanagati_scaled
-    denominator = COSMIC_FRAME * 10  # 216000
+    denominator = COSMIC_FRAME * TEN  # 216000
 
     return numerator // denominator
 

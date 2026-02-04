@@ -26,8 +26,9 @@ PANCHA TATTVA:
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (WORDS)
+
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "yamaraja"
@@ -47,7 +48,7 @@ from vibe_core.mahamantra.protocols._core import (
 )
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
 
-assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
+assert int(__genesis__, WORDS) % PARAMPARA == 0, "BROKEN LINEAGE"
 
 
 # =============================================================================

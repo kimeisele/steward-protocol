@@ -62,8 +62,9 @@ PRODUCTION USE:
     - Vibrational seed → handler mapping
     - Future: IPv6/UUID indexing
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, KSETRAJNA, QUALITIES, QUARTERS, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -79,7 +80,7 @@ from ..protocols._seed import WORDS
 # =============================================================================
 
 SLOTS_PER_LEVEL: Final[int] = WORDS  # 16 (Mahamantra!)
-BITS_PER_LEVEL: Final[int] = 4  # log2(16) = 4
+BITS_PER_LEVEL: Final[int] = QUARTERS  # log2(16) = 4
 NIBBLE_MASK: Final[int] = 0xF  # 4 bits = 0b1111
 
 V = TypeVar("V")
@@ -118,20 +119,20 @@ class LotusRadixN(Generic[V]):
     __slots__ = ("_levels", "_root", "_size", "_default", "_max_key")
 
     def __init__(self, levels: int, default: V | None = None) -> None:
-        if levels < 1:
+        if levels < KSETRAJNA:
             raise ValueError("levels must be at least 1")
-        if levels > 64:
+        if levels > QUALITIES:
             raise ValueError("levels > 64 not supported (256-bit max)")
 
         self._levels: int = levels
         self._default: V | None = default
-        self._root: list[Any] = [None] * SLOTS_PER_LEVEL
+        self._root: list[object] = [None] * SLOTS_PER_LEVEL
         self._size: int = 0
 
         # Maximum key value for this structure
         # For levels=4: max_key = 16^4 - 1 = 65535
         # For levels=8: max_key = 16^8 - 1 = 4294967295
-        self._max_key: int = (1 << (levels * BITS_PER_LEVEL)) - 1
+        self._max_key: int = (KSETRAJNA << (levels * BITS_PER_LEVEL)) - KSETRAJNA
 
     @property
     def levels(self) -> int:
@@ -151,11 +152,11 @@ class LotusRadixN(Generic[V]):
     @property
     def key_space(self) -> int:
         """Total possible keys (16^levels)."""
-        return self._max_key + 1
+        return self._max_key + KSETRAJNA
 
     def _get_nibble(self, key: int, level: int) -> int:
         """Extract 4-bit nibble for given level (0 = top level)."""
-        shift = (self._levels - 1 - level) * BITS_PER_LEVEL
+        shift = (self._levels - KSETRAJNA - level) * BITS_PER_LEVEL
         return (key >> shift) & NIBBLE_MASK
 
     def get(self, key: int) -> V | None:
@@ -168,7 +169,7 @@ class LotusRadixN(Generic[V]):
             return self._default
 
         node = self._root
-        for level in range(self._levels - 1):
+        for level in range(self._levels - KSETRAJNA):
             nibble = self._get_nibble(key, level)
             next_node = node[nibble]
             if next_node is None:
@@ -176,7 +177,7 @@ class LotusRadixN(Generic[V]):
             node = next_node
 
         # Leaf level
-        nibble = self._get_nibble(key, self._levels - 1)
+        nibble = self._get_nibble(key, self._levels - KSETRAJNA)
         value = node[nibble]
         return value if value is not None else self._default
 
@@ -190,7 +191,7 @@ class LotusRadixN(Generic[V]):
             raise ValueError(f"Key {key} out of range [0, {self._max_key}]")
 
         node = self._root
-        for level in range(self._levels - 1):
+        for level in range(self._levels - KSETRAJNA):
             nibble = self._get_nibble(key, level)
             next_node = node[nibble]
             if next_node is None:
@@ -199,12 +200,12 @@ class LotusRadixN(Generic[V]):
             node = next_node
 
         # Leaf level
-        nibble = self._get_nibble(key, self._levels - 1)
+        nibble = self._get_nibble(key, self._levels - KSETRAJNA)
         old_value = node[nibble]
         node[nibble] = value
 
         if old_value is None and value is not None:
-            self._size += 1
+            self._size += KSETRAJNA
 
     def delete(self, key: int) -> bool:
         """
@@ -216,9 +217,9 @@ class LotusRadixN(Generic[V]):
             return False
 
         node = self._root
-        path: list[tuple[list[Any], int]] = []
+        path: list[tuple[list[object], int]] = []
 
-        for level in range(self._levels - 1):
+        for level in range(self._levels - KSETRAJNA):
             nibble = self._get_nibble(key, level)
             next_node = node[nibble]
             if next_node is None:
@@ -227,12 +228,12 @@ class LotusRadixN(Generic[V]):
             node = next_node
 
         # Leaf level
-        nibble = self._get_nibble(key, self._levels - 1)
+        nibble = self._get_nibble(key, self._levels - KSETRAJNA)
         if node[nibble] is None:
             return False
 
         node[nibble] = None
-        self._size -= 1
+        self._size -= KSETRAJNA
         return True
 
     def __getitem__(self, key: int) -> V | None:
@@ -303,9 +304,9 @@ class LotusRadixN(Generic[V]):
         # Now recursively yield all keys under this node
         yield from self._iter_subtree(node, key_prefix, prefix_levels)
 
-    def _iter_subtree(self, node: list[Any], key_prefix: int, current_level: int) -> Iterator[tuple[int, V]]:
+    def _iter_subtree(self, node: list[object], key_prefix: int, current_level: int) -> Iterator[tuple[int, V]]:
         """Recursively iterate all keys in subtree."""
-        if current_level == self._levels - 1:
+        if current_level == self._levels - KSETRAJNA:
             # Leaf level
             for nibble in range(SLOTS_PER_LEVEL):
                 value = node[nibble]
@@ -318,11 +319,11 @@ class LotusRadixN(Generic[V]):
                 child = node[nibble]
                 if child is not None:
                     new_prefix = (key_prefix << BITS_PER_LEVEL) | nibble
-                    yield from self._iter_subtree(child, new_prefix, current_level + 1)
+                    yield from self._iter_subtree(child, new_prefix, current_level + KSETRAJNA)
 
     def count_prefix(self, prefix: int, prefix_bits: int) -> int:
         """Count keys matching prefix. O(P + K) vs Dict's O(N)."""
-        return sum(1 for _ in self.prefix_iter(prefix, prefix_bits))
+        return sum(KSETRAJNA for _ in self.prefix_iter(prefix, prefix_bits))
 
 
 # =============================================================================
@@ -332,17 +333,17 @@ class LotusRadixN(Generic[V]):
 
 def lotus_16bit(default: V | None = None) -> LotusRadixN[V]:
     """Create 16-bit key structure (65,536 keys, like LotusArrayInt)."""
-    return LotusRadixN[V](levels=4, default=default)
+    return LotusRadixN[V](levels=QUARTERS, default=default)
 
 
 def lotus_32bit(default: V | None = None) -> LotusRadixN[V]:
     """Create 32-bit key structure (4 billion keys, IPv4)."""
-    return LotusRadixN[V](levels=8, default=default)
+    return LotusRadixN[V](levels=HARE_COUNT, default=default)
 
 
 def lotus_64bit(default: V | None = None) -> LotusRadixN[V]:
     """Create 64-bit key structure (uint64 keys)."""
-    return LotusRadixN[V](levels=16, default=default)
+    return LotusRadixN[V](levels=WORDS, default=default)
 
 
 def lotus_128bit(default: V | None = None) -> LotusRadixN[V]:
@@ -352,4 +353,4 @@ def lotus_128bit(default: V | None = None) -> LotusRadixN[V]:
 
 def lotus_256bit(default: V | None = None) -> LotusRadixN[V]:
     """Create 256-bit key structure (SHA-256 hashes)."""
-    return LotusRadixN[V](levels=64, default=default)
+    return LotusRadixN[V](levels=QUALITIES, default=default)

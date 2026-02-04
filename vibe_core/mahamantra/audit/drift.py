@@ -30,6 +30,7 @@ __genesis__ = "0x8000000f"
 
 import re
 import hashlib
+import logging
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -44,6 +45,8 @@ from vibe_core.mahamantra.protocols._audit import (
 )
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
+
+logger = logging.getLogger("DRIFT_AUDITOR")
 
 
 # =============================================================================
@@ -260,6 +263,46 @@ class DriftAuditor:
             fixed.append(v.path)
 
         return fixed
+
+    # === JAPA LOOP LISTENER (ALIVE AUDIT) ===
+
+    def start_listening(self) -> None:
+        """
+        Hook into the Mahamantra Heartbeat (Japa Loop).
+        
+        This makes the Audit ALIVE. Instead of just scanning files,
+        we verify system integrity on every cosmic breath.
+        """
+        # Lazy import to avoid circular dependency
+        from vibe_core.mahamantra import mahamantra
+        
+        # Register self as listener
+        # mahamantra is the singleton instance of MahamantraLotus
+        mahamantra.register_listener(self._on_tick)
+        logger.info("👂 DriftAuditor started listening to Mahamantra Heartbeat")
+
+    def _on_tick(self, state: Dict[str, object]) -> None:
+        """
+        Callback for Mahamantra Heartbeat.
+        
+        Args:
+            state: Tick state dict from MahamantraLotus.tick()
+        """
+        tick = state.get("tick", 0)
+        
+        # LIVENESS CHECK (Every tick)
+        # Just being called proves the heart is beating.
+        
+        # MALA CHECK (Every 108 ticks)
+        # Run a full audit scan periodically to detect drift.
+        # 108 is the sacred number of beads in a Mala.
+        if isinstance(tick, int) and tick % 108 == 0:
+            logger.info(f"📿 MALA COMPLETE (Tick {tick}). Running periodic drift audit...")
+            report = self.audit()
+            if not report.is_pristine:
+                logger.warning(f"⚠️ DRIFT DETECTED during Japa Loop: {report.protocols_dead} dead protocols")
+            else:
+                logger.info("✅ SYSTEM PRISTINE")
 
     # === PRIVATE ===
 

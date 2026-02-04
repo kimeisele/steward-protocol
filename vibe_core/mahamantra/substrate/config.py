@@ -19,10 +19,11 @@ ZERO MANUAL REGISTRATION:
     Add config/section_id.yaml → auto-populated!
     Access via config.section_id → works!
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0x2d18a205"  # GenesisByte: parampara % 37 == 0
 
 import logging
@@ -62,7 +63,7 @@ class SectionMeta:
     """Metadata about a loaded section (SSOT definition)."""
 
     section_id: str
-    section_class: Any  # Type
+    section_class: object  # Type
     source_file: Optional[Path]
     priority: int
     loaded_from_yaml: bool
@@ -85,19 +86,19 @@ class PhoenixConfig:
     """
 
     # ALL sections stored here - auto-discovered
-    _sections: Dict[str, Any] = field(default_factory=dict)
+    _sections: Dict[str, object] = field(default_factory=dict)
     _section_metadata: Dict[str, SectionMeta] = field(default_factory=dict, repr=False)
 
     # Dynamic collections (not sections) - use forward references or Any to avoid import cycles
-    circuits: Dict[str, Any] = field(default_factory=dict)  # Dict[str, CircuitConfig]
-    routing: List[Any] = field(default_factory=list)      # List[RoutingRule]
+    circuits: Dict[str, object] = field(default_factory=dict)  # Dict[str, CircuitConfig]
+    routing: List[object] = field(default_factory=list)      # List[RoutingRule]
 
     # Source paths (for save/reload)
     _circuits_dir: Optional[Path] = field(default=None, repr=False)
     _routing_path: Optional[Path] = field(default=None, repr=False)
     _config_dir: Optional[Path] = field(default=None, repr=False)
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         """
         Dynamic access to ALL auto-discovered sections.
         This is the ONLY way sections are accessed - no manual fields!
@@ -124,7 +125,7 @@ class PhoenixConfig:
         except (AttributeError, KeyError) as e:
             raise KeyNotFoundError(f"Config key '{key}' not found: {e}")
 
-    def write(self, key: str, value: Any, context: Optional["SovereignContext"] = None) -> None:
+    def write(self, key: str, value: object, context: Optional["SovereignContext"] = None) -> None:
         """
         Write value by dotted key path.
         Enforces Anti-Mayavad: Must be signed by Sovereign.
@@ -136,11 +137,11 @@ class PhoenixConfig:
         try:
             # 1. Resolve Parent
             parts = key.split(".")
-            if len(parts) < 2:
+            if len(parts) < HALVES:
                 raise KeyError(f"Invalid config key '{key}'. Must be 'section.field'")
 
             section_id = parts[0]
-            field_path = parts[1:]
+            field_path = parts[KSETRAJNA:]
 
             # Get Section
             if section_id not in self._sections:
@@ -149,7 +150,7 @@ class PhoenixConfig:
             obj = self._sections[section_id]
 
             # Traverse to leaf parent
-            for part in field_path[:-1]:
+            for part in field_path[:-KSETRAJNA]:
                 if hasattr(obj, part):
                     obj = getattr(obj, part)
                 elif isinstance(obj, dict) and part in obj:
@@ -158,7 +159,7 @@ class PhoenixConfig:
                     raise KeyError(f"Path segment '{part}' not found in '{key}'")
 
             # 2. Set Value (Leaf)
-            leaf = field_path[-1]
+            leaf = field_path[-KSETRAJNA]
             old_value = None
 
             if hasattr(obj, leaf):
@@ -188,7 +189,7 @@ class PhoenixConfig:
         except (KeyError, AttributeError):
             return False
 
-    def _resolve_path(self, key: str) -> Any:
+    def _resolve_path(self, key: str) -> object:
         """Helper: Resolve dotted path to value. Safe traversal."""
         parts = key.split(".")
         if not parts:
@@ -199,7 +200,7 @@ class PhoenixConfig:
             raise KeyError(f"Section '{section_id}' not found")
 
         current = self._sections[section_id]
-        for part in parts[1:]:
+        for part in parts[KSETRAJNA:]:
             if hasattr(current, part):
                 current = getattr(current, part)
             elif isinstance(current, dict) and part in current:
@@ -436,7 +437,7 @@ class PhoenixConfig:
     def list_sections(self) -> List[str]:
         return list(self._sections.keys())
 
-    def get_section(self, section_id: str) -> Optional[Any]:
+    def get_section(self, section_id: str) -> Optional[object]:
         return self._sections.get(section_id)
 
     def get_section_metadata(self, section_id: str) -> Optional[SectionMeta]:
@@ -523,21 +524,21 @@ class PhoenixConfig:
 
     def get(self, key: str, default=None):
         if key.startswith("providers."):
-            attr = key.split(".", 1)[1]
+            attr = key.split(".", KSETRAJNA)[KSETRAJNA]
             return getattr(self.kernel.providers, attr, default) if self.kernel else default
         elif key.startswith("features."):
-            attr = key.split(".", 1)[1]
+            attr = key.split(".", KSETRAJNA)[KSETRAJNA]
             return getattr(self.kernel.features, attr, default) if self.kernel else default
         return default
 
     def set(self, key: str, value) -> bool:
         try:
             if key.startswith("providers.") and self.kernel:
-                attr = key.split(".", 1)[1]
+                attr = key.split(".", KSETRAJNA)[KSETRAJNA]
                 setattr(self.kernel.providers, attr, value)
                 return True
             elif key.startswith("features.") and self.kernel:
-                attr = key.split(".", 1)[1]
+                attr = key.split(".", KSETRAJNA)[KSETRAJNA]
                 setattr(self.kernel.features, attr, value)
                 return True
             return False
@@ -567,6 +568,6 @@ def reset_config() -> None:
     _config = None
 
 
-def set_config(key: str, value: Any) -> bool:
+def set_config(key: str, value: object) -> bool:
     """Set a config value by key (convenience wrapper)."""
     return get_config().set(key, value)

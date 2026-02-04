@@ -34,12 +34,13 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "shambhu"
-__position__ = 3
+__position__ = TRINITY
 __genesis__ = "0xd301e9ab"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
@@ -86,10 +87,10 @@ OUROBOROS_CYCLE: Final[int] = MALA  # 108 = One mala = one complete cycle
 BODY_COUNT: Final[int] = TRINITY  # 3
 
 # Layer positions
-LAYER_PRAKRITI: Final[int] = -2  # State Substrate
-LAYER_SHESHA: Final[int] = -1  # This bridge
+LAYER_PRAKRITI: Final[int] = -HALVES  # State Substrate
+LAYER_SHESHA: Final[int] = -KSETRAJNA  # This bridge
 LAYER_OUROBOROS: Final[int] = 0  # System level
-LAYER_SERVICE: Final[int] = 1  # Application level
+LAYER_SERVICE: Final[int] = KSETRAJNA  # Application level
 
 
 # =============================================================================

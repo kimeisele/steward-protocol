@@ -12,10 +12,11 @@ The 8 verses encode the complete AVX-512 pipeline specification.
 SOURCE: Caitanya Caritāmṛta, Antya Līlā Chapter 20
         Commentary from "Science of Self Realization" and lectures
 """
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
-__position__ = 6
+__position__ = SHARANAGATI
 __genesis__ = "0x3ccab85f"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
@@ -126,7 +127,7 @@ class FlexibleInput:
     sanskrit: str = "nāmnām akāri bahudhā"
     translation: str = "many names with all potencies"
 
-    pipeline_stage: int = 1  # L1
+    pipeline_stage: int = KSETRAJNA  # L1
     operation: str = "ACCEPT"
     validation: str = "PERMISSIVE"  # Accept all valid inputs
 
@@ -162,7 +163,7 @@ class NoSpeculation:
     sanskrit: str = "tṛṇād api sunīcena"
     translation: str = "humbler than grass"
 
-    pipeline_stage: int = 2  # L2
+    pipeline_stage: int = HALVES  # L2
     operation: str = "HUMBLE"
     speculation: str = "DISABLED"
     security: str = "SPECTRE_IMMUNE"
@@ -201,7 +202,7 @@ class NoSideEffects:
     sanskrit: str = "na dhanaṁ na janam"
     translation: str = "not wealth, not followers"
 
-    pipeline_stage: int = 3  # L3
+    pipeline_stage: int = TRINITY  # L3
     operation: str = "DESIRELESS"
     side_effects: str = "NONE"
     purity: str = "FUNCTIONAL"
@@ -238,7 +239,7 @@ class ServiceOriented:
     sanskrit: str = "ayi nanda-tanuja kiṅkaraṁ"
     translation: str = "O son of Nanda, I am Your servant"
 
-    pipeline_stage: int = 4  # L4
+    pipeline_stage: int = QUARTERS  # L4
     operation: str = "SERVE"
     scheduling: str = "FAIR"
     architecture: str = "SERVICE_ORIENTED"
@@ -276,7 +277,7 @@ class UnobstructedFlow:
     sanskrit: str = "nayanam galad-aśru-dhārayā"
     translation: str = "eyes decorated with flowing tears"
 
-    pipeline_stage: int = 5  # L5
+    pipeline_stage: int = PANCHA  # L5
     operation: str = "FLOW"
     stalls: str = "NONE"
     architecture: str = "STREAMING"
@@ -317,7 +318,7 @@ class DeterministicTiming:
     sanskrit: str = "yugāyitaṁ nimeṣeṇa"
     translation: str = "a moment seems like an age"
 
-    pipeline_stage: int = 6  # L6
+    pipeline_stage: int = SHARANAGATI  # L6
     operation: str = "TIMING"
     latency: str = "DETERMINISTIC"
     guarantee: str = "REAL_TIME"
@@ -361,7 +362,7 @@ class UnconditionalReturn:
     sanskrit: str = "āśliṣya vā pāda-ratāṁ"
     translation: str = "embrace me or trample me"
 
-    pipeline_stage: int = 7  # L7
+    pipeline_stage: int = SEVEN  # L7
     operation: str = "UNCONDITIONAL"
     returns: str = "ALWAYS"
     completeness: str = "TOTAL_FUNCTION"
@@ -377,13 +378,13 @@ class UnconditionalReturn:
 class PipelineStage(IntEnum):
     """8 stages derived from 8 verses."""
     L0_CACHE_CLEAR = 0      # Verse 1: ceto-darpaṇa-mārjanam
-    L1_ACCEPT_INPUT = 1     # Verse 2: nāmnām akāri
-    L2_NO_SPECULATION = 2   # Verse 3: tṛṇād api
-    L3_NO_SIDE_EFFECTS = 3  # Verse 4: na dhanaṁ
-    L4_SERVE_NEXT = 4       # Verse 5: ayi nanda-tanuja
-    L5_FLOW_DATA = 5        # Verse 6: nayanam galad
-    L6_TIMING_DETERMINISTIC = 6  # Verse 7: yugāyitaṁ
-    L7_RETURN_UNCONDITIONAL = 7  # Verse 8: āśliṣya vā
+    L1_ACCEPT_INPUT = KSETRAJNA     # Verse 2: nāmnām akāri
+    L2_NO_SPECULATION = HALVES   # Verse 3: tṛṇād api
+    L3_NO_SIDE_EFFECTS = TRINITY  # Verse 4: na dhanaṁ
+    L4_SERVE_NEXT = QUARTERS       # Verse 5: ayi nanda-tanuja
+    L5_FLOW_DATA = PANCHA        # Verse 6: nayanam galad
+    L6_TIMING_DETERMINISTIC = SHARANAGATI  # Verse 7: yugāyitaṁ
+    L7_RETURN_UNCONDITIONAL = SEVEN  # Verse 8: āśliṣya vā
 
 
 # The constants encoded in each verse - ALL DERIVED FROM _seed.py!
@@ -403,9 +404,9 @@ TOTAL_SUM: Final[int] = sum(VERSE_CONSTANTS)
 assert TOTAL_SUM == JIVA_QUALITIES, f"Sum of Siksastakam constants = {JIVA_QUALITIES} = JIVA_QUALITIES"
 
 # Verses 1+2 = 7+10 = 17, +1 (observer) = 18 = GITA_CHAPTERS
-VERSE_1_2_SUM: Final[int] = VERSE_CONSTANTS[0] + VERSE_CONSTANTS[1]
-assert VERSE_1_2_SUM == 17, "7+10 = 17 = POSITION_SUM_KRISHNA"
-assert VERSE_1_2_SUM + 1 == 18, "17+1 = 18 = GITA_CHAPTERS"
+VERSE_1_2_SUM: Final[int] = VERSE_CONSTANTS[0] + VERSE_CONSTANTS[KSETRAJNA]
+assert VERSE_1_2_SUM == POSITION_SUM_KRISHNA, "7+10 = 17 = POSITION_SUM_KRISHNA"
+assert VERSE_1_2_SUM + KSETRAJNA == GITA_CHAPTERS, "17+1 = 18 = GITA_CHAPTERS"
 
 
 # =============================================================================
@@ -475,27 +476,27 @@ it IMPROVES with use. Cache locality increases. Patterns emerge.
 # ENGINEERING SUMMARY
 # =============================================================================
 
-ENGINEERING_SUMMARY: Final[Dict[str, Any]] = {
+ENGINEERING_SUMMARY: Final[Dict[str, object]] = {
     "specification": "Śrī Śikṣāṣṭakam",
     "author": "Śrī Kṛṣṇa Caitanya Mahāprabhu (1486-1535)",
     "commentary": "A.C. Bhaktivedānta Swāmī Prabhupāda",
     "hardware_target": "AVX-512 (8 stages × 64 bits = 512 bits)",
 
     "stages": {
-        0: {"verse": 1, "op": "CACHE_CLEAR", "sanskrit": "ceto-darpaṇa", "const": 7},
-        1: {"verse": 2, "op": "ACCEPT_INPUT", "sanskrit": "nāmnām akāri", "const": 10},
-        2: {"verse": 3, "op": "NO_SPECULATION", "sanskrit": "tṛṇād api", "const": 3},
-        3: {"verse": 4, "op": "NO_SIDE_EFFECTS", "sanskrit": "na dhanaṁ", "const": 4},
-        4: {"verse": 5, "op": "SERVE_NEXT", "sanskrit": "ayi nanda", "const": 5},
-        5: {"verse": 6, "op": "FLOW_DATA", "sanskrit": "nayanam galad", "const": 6},
-        6: {"verse": 7, "op": "TIMING_DET", "sanskrit": "yugāyitaṁ", "const": 7},
-        7: {"verse": 8, "op": "RETURN_UNCONDITIONAL", "sanskrit": "āśliṣya vā", "const": 8},
+        0: {"verse": KSETRAJNA, "op": "CACHE_CLEAR", "sanskrit": "ceto-darpaṇa", "const": SEVEN},
+        KSETRAJNA: {"verse": HALVES, "op": "ACCEPT_INPUT", "sanskrit": "nāmnām akāri", "const": TEN},
+        HALVES: {"verse": TRINITY, "op": "NO_SPECULATION", "sanskrit": "tṛṇād api", "const": TRINITY},
+        TRINITY: {"verse": QUARTERS, "op": "NO_SIDE_EFFECTS", "sanskrit": "na dhanaṁ", "const": QUARTERS},
+        QUARTERS: {"verse": PANCHA, "op": "SERVE_NEXT", "sanskrit": "ayi nanda", "const": PANCHA},
+        PANCHA: {"verse": SHARANAGATI, "op": "FLOW_DATA", "sanskrit": "nayanam galad", "const": SHARANAGATI},
+        SHARANAGATI: {"verse": SEVEN, "op": "TIMING_DET", "sanskrit": "yugāyitaṁ", "const": SEVEN},
+        SEVEN: {"verse": HARE_COUNT, "op": "RETURN_UNCONDITIONAL", "sanskrit": "āśliṣya vā", "const": HARE_COUNT},
     },
 
     "mathematical_properties": {
         "constant_sum": 50,  # = JIVA_QUALITIES
-        "verse_1_2_sum": 17,  # = POSITION_SUM_KRISHNA
-        "gita_encoding": 18,  # 17 + 1 = GITA_CHAPTERS
+        "verse_1_2_sum": POSITION_SUM_KRISHNA,  # = POSITION_SUM_KRISHNA
+        "gita_encoding": GITA_CHAPTERS,  # 17 + 1 = GITA_CHAPTERS
         "mod_space": MAHA_QUANTUM,  # 137
     },
 

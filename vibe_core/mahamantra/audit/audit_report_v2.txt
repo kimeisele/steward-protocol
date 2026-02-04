@@ -1,0 +1,1560 @@
+Auditing /Users/ss/projects/steward-protocol/vibe_core/mahamantra...
+
+❌ research_gateway.py
+  - FATAL: Hardcoded Sacred Number 16 on line 45
+  - FATAL: Usage of 'Any' type on line 73
+  - FATAL: Usage of 'Any' type on line 93
+  - FATAL: Usage of 'Any' type on line 125
+  - FATAL: Usage of 'Any' type on line 147
+
+❌ _mahamantra_lotus.py
+  - FATAL: Hardcoded Sacred Number 8 on line 132
+  - FATAL: Hardcoded Sacred Number 8 on line 287
+  - FATAL: Hardcoded Sacred Number 16 on line 351
+  - FATAL: Hardcoded Sacred Number 3 on line 351
+  - FATAL: Hardcoded Sacred Number 4 on line 354
+  - FATAL: Hardcoded Sacred Number 8 on line 356
+
+❌ lotus_projection.py
+  - FATAL: Usage of 'Any' type on line 73
+  - FATAL: Usage of 'Any' type on line 76
+  - FATAL: Usage of 'Any' type on line 91
+  - FATAL: Usage of 'Any' type on line 91
+  - FATAL: Usage of 'Any' type on line 95
+  - FATAL: Usage of 'Any' type on line 102
+  - FATAL: Usage of 'Any' type on line 108
+  - FATAL: Usage of 'Any' type on line 131
+  - FATAL: Usage of 'Any' type on line 171
+  - FATAL: Usage of 'Any' type on line 316
+
+❌ chat.py
+  - FATAL: Hardcoded Sacred Number 3 on line 698
+
+❌ orchestrator.py
+  - FATAL: Hardcoded Sacred Number 16 on line 80
+  - FATAL: Hardcoded Sacred Number 16 on line 108
+  - FATAL: Hardcoded Sacred Number 16 on line 109
+  - FATAL: Hardcoded Sacred Number 16 on line 110
+  - FATAL: Hardcoded Sacred Number 4 on line 115
+  - FATAL: Hardcoded Sacred Number 4 on line 117
+  - FATAL: Hardcoded Sacred Number 4 on line 136
+  - FATAL: Hardcoded Sacred Number 16 on line 320
+  - FATAL: Hardcoded Sacred Number 16 on line 321
+
+❌ commands.py
+  - FATAL: Hardcoded Sacred Number 16 on line 171
+  - FATAL: Hardcoded Sacred Number 3 on line 171
+  - FATAL: Hardcoded Sacred Number 4 on line 323
+  - FATAL: Hardcoded Sacred Number 4 on line 679
+
+❌ __main__.py
+  - FATAL: Hardcoded Sacred Number 3 on line 136
+
+❌ _audit_ist_zustand.py
+  - FATAL: Hardcoded Sacred Number 4 on line 164
+
+❌ research/research_lab.py
+  - FATAL: Hardcoded Sacred Number 16 on line 84
+  - FATAL: Hardcoded Sacred Number 4 on line 240
+  - FATAL: Hardcoded Sacred Number 16 on line 240
+  - FATAL: Usage of 'Any' type on line 281
+  - FATAL: Usage of 'Any' type on line 338
+  - FATAL: Usage of 'Any' type on line 412
+  - FATAL: Usage of 'Any' type on line 482
+  - FATAL: Usage of 'Any' type on line 506
+  - FATAL: Usage of 'Any' type on line 519
+  - FATAL: Usage of 'Any' type on line 552
+
+❌ research/lotus_full_spectrum.py
+  - FATAL: Hardcoded Sacred Number 8 on line 98
+  - FATAL: Hardcoded Sacred Number 16 on line 107
+  - FATAL: Hardcoded Sacred Number 8 on line 203
+  - FATAL: Hardcoded Sacred Number 4 on line 207
+  - FATAL: Hardcoded Sacred Number 4 on line 207
+  - FATAL: Hardcoded Sacred Number 16 on line 260
+
+❌ research/bhoga_prasadam.py
+  - FATAL: Hardcoded Sacred Number 3 on line 428
+  - FATAL: Hardcoded Sacred Number 3 on line 429
+  - FATAL: Hardcoded Sacred Number 3 on line 446
+
+❌ research/attractor_analysis.py
+  - FATAL: Hardcoded Sacred Number 3 on line 202
+  - FATAL: Hardcoded Sacred Number 8 on line 203
+  - FATAL: Hardcoded Sacred Number 3 on line 260
+  - FATAL: Hardcoded Sacred Number 3 on line 335
+  - FATAL: Hardcoded Sacred Number 4 on line 399
+  - FATAL: Hardcoded Sacred Number 4 on line 400
+  - FATAL: Hardcoded Sacred Number 4 on line 400
+  - FATAL: Hardcoded Sacred Number 8 on line 405
+  - FATAL: Hardcoded Sacred Number 8 on line 406
+
+❌ research/climate_impact.py
+  - FATAL: Hardcoded Sacred Number 8 on line 143
+  - FATAL: Hardcoded Sacred Number 8 on line 144
+  - FATAL: Hardcoded Sacred Number 16 on line 151
+  - FATAL: Hardcoded Sacred Number 16 on line 152
+  - FATAL: Hardcoded Sacred Number 4 on line 277
+  - FATAL: Hardcoded Sacred Number 4 on line 278
+
+❌ research/PROOF_HARDCORE.py
+  - FATAL: Hardcoded Sacred Number 16 on line 44
+  - FATAL: Hardcoded Sacred Number 8 on line 45
+  - FATAL: Hardcoded Sacred Number 4 on line 46
+  - FATAL: Hardcoded Sacred Number 4 on line 47
+  - FATAL: Hardcoded Sacred Number 3 on line 55
+  - FATAL: Hardcoded Sacred Number 4 on line 56
+  - FATAL: Hardcoded Sacred Number 8 on line 336
+  - FATAL: Hardcoded Sacred Number 3 on line 377
+  - FATAL: Hardcoded Sacred Number 16 on line 534
+  - FATAL: Hardcoded Sacred Number 137 on line 535
+
+❌ research/quantum_entanglement.py
+  - FATAL: Hardcoded Sacred Number 8 on line 189
+  - FATAL: Hardcoded Sacred Number 4 on line 247
+
+❌ research/chaitanya_singularity.py
+  - FATAL: Hardcoded Sacred Number 4 on line 158
+  - FATAL: Hardcoded Sacred Number 3 on line 165
+  - FATAL: Hardcoded Sacred Number 3 on line 219
+  - FATAL: Hardcoded Sacred Number 4 on line 414
+  - FATAL: Hardcoded Sacred Number 4 on line 558
+  - FATAL: Hardcoded Sacred Number 108 on line 562
+
+❌ research/syllable_analysis.py
+  - FATAL: Hardcoded Sacred Number 3 on line 27
+  - FATAL: Hardcoded Sacred Number 4 on line 27
+  - FATAL: Hardcoded Sacred Number 8 on line 28
+  - FATAL: Hardcoded Sacred Number 16 on line 32
+  - FATAL: Hardcoded Sacred Number 37 on line 44
+  - FATAL: Hardcoded Sacred Number 3 on line 57
+  - FATAL: Hardcoded Sacred Number 4 on line 58
+  - FATAL: Hardcoded Sacred Number 8 on line 61
+  - FATAL: Hardcoded Sacred Number 16 on line 64
+  - FATAL: Hardcoded Sacred Number 37 on line 68
+  - FATAL: Hardcoded Sacred Number 16 on line 128
+  - FATAL: Hardcoded Sacred Number 3 on line 145
+  - FATAL: Hardcoded Sacred Number 4 on line 145
+  - FATAL: Hardcoded Sacred Number 8 on line 146
+
+❌ research/moores_law.py
+  - FATAL: Hardcoded Sacred Number 16 on line 201
+  - FATAL: Hardcoded Sacred Number 16 on line 212
+  - FATAL: Hardcoded Sacred Number 4 on line 223
+
+❌ research/routing_holographic.py
+  - FATAL: Hardcoded Sacred Number 3 on line 77
+  - FATAL: Hardcoded Sacred Number 4 on line 78
+  - FATAL: Hardcoded Sacred Number 8 on line 79
+  - FATAL: Hardcoded Sacred Number 16 on line 80
+  - FATAL: Hardcoded Sacred Number 3 on line 77
+  - FATAL: Hardcoded Sacred Number 4 on line 78
+  - FATAL: Hardcoded Sacred Number 8 on line 79
+  - FATAL: Hardcoded Sacred Number 16 on line 80
+  - FATAL: Hardcoded Sacred Number 8 on line 85
+  - FATAL: Hardcoded Sacred Number 8 on line 142
+  - FATAL: Hardcoded Sacred Number 4 on line 257
+  - FATAL: Hardcoded Sacred Number 8 on line 423
+  - FATAL: Hardcoded Sacred Number 8 on line 427
+  - FATAL: Hardcoded Sacred Number 4 on line 471
+  - FATAL: Hardcoded Sacred Number 8 on line 471
+
+❌ research/verify_holistic_addressing.py
+  - FATAL: Hardcoded Sacred Number 4 on line 49
+  - FATAL: Hardcoded Sacred Number 4 on line 51
+  - FATAL: Hardcoded Sacred Number 16 on line 75
+
+❌ research/consciousness_mathematics.py
+  - FATAL: Hardcoded Sacred Number 3 on line 428
+  - FATAL: Hardcoded Sacred Number 4 on line 429
+
+❌ research/hardware_lotus.py
+  - FATAL: Hardcoded Sacred Number 16 on line 78
+  - FATAL: Hardcoded Sacred Number 16 on line 79
+  - FATAL: Hardcoded Sacred Number 4 on line 80
+  - FATAL: Hardcoded Sacred Number 8 on line 81
+  - FATAL: Hardcoded Sacred Number 8 on line 108
+  - FATAL: Hardcoded Sacred Number 3 on line 125
+  - FATAL: Hardcoded Sacred Number 4 on line 126
+  - FATAL: Hardcoded Sacred Number 3 on line 166
+  - FATAL: Hardcoded Sacred Number 4 on line 174
+  - FATAL: Hardcoded Sacred Number 8 on line 206
+
+❌ research/japa.py
+  - FATAL: Hardcoded Sacred Number 3 on line 251
+
+❌ research/verify_algorithm_purity.py
+  - FATAL: Hardcoded Sacred Number 16 on line 83
+
+❌ research/tulasi_lila.py
+  - FATAL: Hardcoded Sacred Number 108 on line 66
+
+❌ research/ki_training_paradigm.py
+  - FATAL: Hardcoded Sacred Number 3 on line 164
+  - FATAL: Hardcoded Sacred Number 16 on line 337
+  - FATAL: Hardcoded Sacred Number 3 on line 652
+  - FATAL: Hardcoded Sacred Number 3 on line 652
+
+❌ research/goloka_tattva.py
+  - FATAL: Hardcoded Sacred Number 4 on line 94
+  - FATAL: Hardcoded Sacred Number 3 on line 171
+  - FATAL: Hardcoded Sacred Number 4 on line 421
+
+❌ research/kishora_architecture.py
+  - FATAL: Hardcoded Sacred Number 137 on line 186
+
+❌ research/dna_kmer.py
+  - FATAL: Hardcoded Sacred Number 3 on line 133
+  - FATAL: Hardcoded Sacred Number 3 on line 165
+  - FATAL: Hardcoded Sacred Number 3 on line 188
+  - FATAL: Hardcoded Sacred Number 3 on line 192
+  - FATAL: Hardcoded Sacred Number 8 on line 250
+  - FATAL: Hardcoded Sacred Number 3 on line 273
+  - FATAL: Hardcoded Sacred Number 3 on line 273
+  - FATAL: Hardcoded Sacred Number 8 on line 273
+  - FATAL: Hardcoded Sacred Number 4 on line 274
+  - FATAL: Hardcoded Sacred Number 4 on line 274
+  - FATAL: Hardcoded Sacred Number 4 on line 275
+  - FATAL: Hardcoded Sacred Number 8 on line 300
+  - FATAL: Hardcoded Sacred Number 8 on line 305
+  - FATAL: Hardcoded Sacred Number 3 on line 319
+  - FATAL: Hardcoded Sacred Number 3 on line 319
+  - FATAL: Hardcoded Sacred Number 8 on line 319
+  - FATAL: Hardcoded Sacred Number 4 on line 320
+  - FATAL: Hardcoded Sacred Number 4 on line 320
+  - FATAL: Hardcoded Sacred Number 4 on line 321
+  - FATAL: Hardcoded Sacred Number 8 on line 346
+  - FATAL: Hardcoded Sacred Number 8 on line 351
+  - FATAL: Hardcoded Sacred Number 8 on line 361
+  - FATAL: Hardcoded Sacred Number 8 on line 379
+  - FATAL: Hardcoded Sacred Number 8 on line 382
+  - FATAL: Hardcoded Sacred Number 8 on line 425
+  - FATAL: Hardcoded Sacred Number 8 on line 479
+
+❌ research/ip_routing.py
+  - FATAL: Hardcoded Sacred Number 8 on line 128
+  - FATAL: Hardcoded Sacred Number 16 on line 128
+  - FATAL: Hardcoded Sacred Number 16 on line 140
+  - FATAL: Hardcoded Sacred Number 8 on line 140
+  - FATAL: Hardcoded Sacred Number 16 on line 167
+  - FATAL: Hardcoded Sacred Number 8 on line 167
+
+❌ research/maha_sequencer.py
+  - FATAL: Hardcoded Sacred Number 8 on line 155
+  - FATAL: Hardcoded Sacred Number 4 on line 219
+  - FATAL: Hardcoded Sacred Number 3 on line 287
+  - FATAL: Hardcoded Sacred Number 4 on line 288
+  - FATAL: Hardcoded Sacred Number 8 on line 292
+  - FATAL: Hardcoded Sacred Number 16 on line 300
+  - FATAL: Hardcoded Sacred Number 3 on line 361
+  - FATAL: Hardcoded Sacred Number 4 on line 362
+  - FATAL: Hardcoded Sacred Number 16 on line 469
+  - FATAL: Hardcoded Sacred Number 4 on line 482
+  - FATAL: Hardcoded Sacred Number 16 on line 483
+  - FATAL: Hardcoded Sacred Number 4 on line 533
+  - FATAL: Hardcoded Sacred Number 8 on line 536
+  - FATAL: Hardcoded Sacred Number 16 on line 539
+  - FATAL: Hardcoded Sacred Number 37 on line 543
+  - FATAL: Hardcoded Sacred Number 3 on line 586
+  - FATAL: Hardcoded Sacred Number 4 on line 587
+  - FATAL: Hardcoded Sacred Number 16 on line 631
+  - FATAL: Hardcoded Sacred Number 37 on line 635
+  - FATAL: Hardcoded Sacred Number 3 on line 643
+  - FATAL: Hardcoded Sacred Number 4 on line 644
+  - FATAL: Hardcoded Sacred Number 8 on line 649
+  - FATAL: Hardcoded Sacred Number 3 on line 651
+  - FATAL: Hardcoded Sacred Number 3 on line 652
+  - FATAL: Hardcoded Sacred Number 3 on line 653
+  - FATAL: Hardcoded Sacred Number 3 on line 654
+  - FATAL: Hardcoded Sacred Number 4 on line 656
+  - FATAL: Hardcoded Sacred Number 4 on line 657
+  - FATAL: Hardcoded Sacred Number 4 on line 658
+  - FATAL: Hardcoded Sacred Number 16 on line 659
+  - FATAL: Hardcoded Sacred Number 4 on line 659
+  - FATAL: Hardcoded Sacred Number 3 on line 674
+  - FATAL: Hardcoded Sacred Number 16 on line 720
+  - FATAL: Hardcoded Sacred Number 16 on line 720
+  - FATAL: Hardcoded Sacred Number 16 on line 725
+  - FATAL: Hardcoded Sacred Number 37 on line 725
+  - FATAL: Hardcoded Sacred Number 16 on line 728
+
+❌ research/__init__.py
+  - FATAL: Hardcoded Sacred Number 16 on line 65
+
+❌ research/lotus_radix_n.py
+  - FATAL: Hardcoded Sacred Number 4 on line 83
+  - FATAL: Usage of 'Any' type on line 129
+  - FATAL: Usage of 'Any' type on line 220
+  - FATAL: Usage of 'Any' type on line 307
+  - FATAL: Hardcoded Sacred Number 4 on line 336
+  - FATAL: Hardcoded Sacred Number 8 on line 341
+  - FATAL: Hardcoded Sacred Number 16 on line 346
+  - FATAL: Hardcoded Sacred Number 4 on line 377
+  - FATAL: Hardcoded Sacred Number 8 on line 378
+  - FATAL: Hardcoded Sacred Number 16 on line 379
+  - FATAL: Hardcoded Sacred Number 16 on line 384
+  - FATAL: Hardcoded Sacred Number 4 on line 388
+  - FATAL: Hardcoded Sacred Number 8 on line 434
+  - FATAL: Hardcoded Sacred Number 16 on line 442
+  - FATAL: Hardcoded Sacred Number 8 on line 449
+  - FATAL: Hardcoded Sacred Number 16 on line 462
+  - FATAL: Hardcoded Sacred Number 16 on line 467
+  - FATAL: Hardcoded Sacred Number 16 on line 467
+
+❌ research/mantra_computation_bridge.py
+  - FATAL: Hardcoded Sacred Number 16 on line 134
+  - FATAL: Hardcoded Sacred Number 3 on line 493
+  - FATAL: Hardcoded Sacred Number 8 on line 498
+  - FATAL: Hardcoded Sacred Number 4 on line 501
+  - FATAL: Hardcoded Sacred Number 16 on line 506
+
+❌ research/madhurya_analysis.py
+  - FATAL: Hardcoded Sacred Number 8 on line 59
+  - FATAL: Hardcoded Sacred Number 4 on line 91
+  - FATAL: Hardcoded Sacred Number 4 on line 109
+  - FATAL: Hardcoded Sacred Number 4 on line 118
+  - FATAL: Hardcoded Sacred Number 3 on line 132
+  - FATAL: Hardcoded Sacred Number 3 on line 220
+  - FATAL: Hardcoded Sacred Number 4 on line 228
+  - FATAL: Hardcoded Sacred Number 3 on line 319
+  - FATAL: Hardcoded Sacred Number 3 on line 332
+  - FATAL: Hardcoded Sacred Number 8 on line 441
+  - FATAL: Hardcoded Sacred Number 3 on line 447
+  - FATAL: Hardcoded Sacred Number 4 on line 450
+  - FATAL: Hardcoded Sacred Number 3 on line 453
+  - FATAL: Hardcoded Sacred Number 3 on line 456
+
+❌ research/gita_verse_content.py
+  - FATAL: Hardcoded Sacred Number 8 on line 384
+
+❌ research/spiritual_tdd.py
+  - FATAL: Hardcoded Sacred Number 3 on line 110
+  - FATAL: Hardcoded Sacred Number 4 on line 111
+  - FATAL: Hardcoded Sacred Number 3 on line 195
+  - FATAL: Hardcoded Sacred Number 4 on line 196
+  - FATAL: Hardcoded Sacred Number 16 on line 440
+
+❌ research/position_holograph.py
+  - FATAL: Hardcoded Sacred Number 3 on line 147
+  - FATAL: Hardcoded Sacred Number 3 on line 247
+  - FATAL: Hardcoded Sacred Number 3 on line 251
+  - FATAL: Hardcoded Sacred Number 4 on line 262
+  - FATAL: Hardcoded Sacred Number 4 on line 263
+  - FATAL: Hardcoded Sacred Number 8 on line 263
+  - FATAL: Hardcoded Sacred Number 8 on line 264
+  - FATAL: Hardcoded Sacred Number 16 on line 265
+
+❌ research/physics.py
+  - FATAL: Hardcoded Sacred Number 3 on line 88
+  - FATAL: Hardcoded Sacred Number 3 on line 463
+
+❌ research/vedic_western_synthesis.py
+  - FATAL: Hardcoded Sacred Number 8 on line 71
+  - FATAL: Hardcoded Sacred Number 4 on line 480
+  - FATAL: Hardcoded Sacred Number 4 on line 483
+
+❌ research/unified_compute.py
+  - FATAL: Hardcoded Sacred Number 3 on line 132
+  - FATAL: Hardcoded Sacred Number 4 on line 219
+  - FATAL: Hardcoded Sacred Number 3 on line 243
+  - FATAL: Hardcoded Sacred Number 8 on line 259
+  - FATAL: Hardcoded Sacred Number 16 on line 264
+  - FATAL: Hardcoded Sacred Number 3 on line 298
+  - FATAL: Hardcoded Sacred Number 16 on line 350
+  - FATAL: Hardcoded Sacred Number 16 on line 385
+  - FATAL: Hardcoded Sacred Number 3 on line 385
+  - FATAL: Hardcoded Sacred Number 16 on line 386
+  - FATAL: Hardcoded Sacred Number 4 on line 386
+  - FATAL: Hardcoded Sacred Number 16 on line 387
+
+❌ research/shabda_translation.py
+  - FATAL: Hardcoded Sacred Number 4 on line 186
+  - FATAL: Hardcoded Sacred Number 8 on line 186
+  - FATAL: Hardcoded Sacred Number 16 on line 186
+  - FATAL: Hardcoded Sacred Number 108 on line 218
+  - FATAL: Hardcoded Sacred Number 108 on line 220
+  - FATAL: Hardcoded Sacred Number 108 on line 268
+  - FATAL: Hardcoded Sacred Number 3 on line 408
+  - FATAL: Hardcoded Sacred Number 3 on line 409
+
+❌ research/gita_verse_derivation.py
+  - FATAL: Hardcoded Sacred Number 3 on line 183
+  - FATAL: Hardcoded Sacred Number 4 on line 184
+  - FATAL: Hardcoded Sacred Number 8 on line 188
+  - FATAL: Hardcoded Sacred Number 16 on line 196
+  - FATAL: Hardcoded Sacred Number 3 on line 204
+  - FATAL: Hardcoded Sacred Number 4 on line 205
+  - FATAL: Hardcoded Sacred Number 8 on line 209
+  - FATAL: Hardcoded Sacred Number 16 on line 217
+  - FATAL: Hardcoded Sacred Number 3 on line 386
+
+❌ research/mahajana_derivation.py
+  - FATAL: Hardcoded Sacred Number 3 on line 93
+  - FATAL: Hardcoded Sacred Number 4 on line 96
+  - FATAL: Hardcoded Sacred Number 3 on line 101
+  - FATAL: Hardcoded Sacred Number 8 on line 102
+  - FATAL: Hardcoded Sacred Number 3 on line 102
+  - FATAL: Hardcoded Sacred Number 3 on line 103
+  - FATAL: Hardcoded Sacred Number 4 on line 106
+  - FATAL: Hardcoded Sacred Number 4 on line 107
+  - FATAL: Hardcoded Sacred Number 4 on line 108
+  - FATAL: Hardcoded Sacred Number 3 on line 115
+  - FATAL: Hardcoded Sacred Number 3 on line 115
+  - FATAL: Hardcoded Sacred Number 4 on line 116
+  - FATAL: Hardcoded Sacred Number 4 on line 116
+  - FATAL: Hardcoded Sacred Number 3 on line 177
+  - FATAL: Hardcoded Sacred Number 3 on line 250
+  - FATAL: Hardcoded Sacred Number 4 on line 251
+  - FATAL: Hardcoded Sacred Number 3 on line 296
+  - FATAL: Hardcoded Sacred Number 3 on line 469
+  - FATAL: Hardcoded Sacred Number 3 on line 526
+  - FATAL: Hardcoded Sacred Number 3 on line 552
+  - FATAL: Hardcoded Sacred Number 4 on line 552
+  - FATAL: Hardcoded Sacred Number 8 on line 553
+  - FATAL: Hardcoded Sacred Number 3 on line 614
+  - FATAL: Hardcoded Sacred Number 3 on line 751
+  - FATAL: Hardcoded Sacred Number 4 on line 752
+  - FATAL: Hardcoded Sacred Number 3 on line 770
+  - FATAL: Hardcoded Sacred Number 16 on line 795
+  - FATAL: Hardcoded Sacred Number 37 on line 795
+  - FATAL: Hardcoded Sacred Number 137 on line 795
+  - FATAL: Hardcoded Sacred Number 3 on line 796
+  - FATAL: Hardcoded Sacred Number 4 on line 796
+  - FATAL: Hardcoded Sacred Number 16 on line 796
+  - FATAL: Hardcoded Sacred Number 3 on line 801
+  - FATAL: Hardcoded Sacred Number 3 on line 818
+  - FATAL: Hardcoded Sacred Number 3 on line 843
+
+❌ research/what_is_13.py
+  - FATAL: Hardcoded Sacred Number 4 on line 179
+  - FATAL: Hardcoded Sacred Number 37 on line 179
+
+❌ research/medicine.py
+  - FATAL: Hardcoded Sacred Number 37 on line 170
+
+❌ research/ananta_shesha_python.py
+  - FATAL: Hardcoded Sacred Number 3 on line 165
+  - FATAL: Hardcoded Sacred Number 4 on line 172
+  - FATAL: Hardcoded Sacred Number 3 on line 189
+
+❌ research/hardware.py
+  - FATAL: Hardcoded Sacred Number 4 on line 98
+  - FATAL: Hardcoded Sacred Number 16 on line 103
+  - FATAL: Hardcoded Sacred Number 16 on line 144
+  - FATAL: Hardcoded Sacred Number 4 on line 150
+  - FATAL: Hardcoded Sacred Number 137 on line 162
+  - FATAL: Hardcoded Sacred Number 3 on line 215
+  - FATAL: Hardcoded Sacred Number 3 on line 216
+  - FATAL: Hardcoded Sacred Number 4 on line 221
+  - FATAL: Hardcoded Sacred Number 4 on line 222
+  - FATAL: Hardcoded Sacred Number 8 on line 227
+  - FATAL: Hardcoded Sacred Number 8 on line 228
+  - FATAL: Hardcoded Sacred Number 16 on line 361
+  - FATAL: Hardcoded Sacred Number 4 on line 362
+  - FATAL: Hardcoded Sacred Number 8 on line 363
+  - FATAL: Hardcoded Sacred Number 4 on line 366
+  - FATAL: Hardcoded Sacred Number 8 on line 367
+  - FATAL: Hardcoded Sacred Number 3 on line 408
+
+❌ research/chemistry.py
+  - FATAL: Hardcoded Sacred Number 8 on line 145
+  - FATAL: Hardcoded Sacred Number 4 on line 178
+
+❌ research/karma_mathematics.py
+  - FATAL: Hardcoded Sacred Number 3 on line 90
+  - FATAL: Hardcoded Sacred Number 4 on line 91
+  - FATAL: Hardcoded Sacred Number 3 on line 260
+  - FATAL: Hardcoded Sacred Number 4 on line 261
+  - FATAL: Hardcoded Sacred Number 3 on line 491
+  - FATAL: Hardcoded Sacred Number 4 on line 492
+  - FATAL: Hardcoded Sacred Number 3 on line 737
+  - FATAL: Hardcoded Sacred Number 3 on line 741
+  - FATAL: Hardcoded Sacred Number 3 on line 741
+
+❌ research/tulasi_bridge.py
+  - FATAL: Hardcoded Sacred Number 4 on line 60
+
+❌ research/golden_age_peak.py
+  - FATAL: Hardcoded Sacred Number 3 on line 190
+  - FATAL: Hardcoded Sacred Number 3 on line 195
+  - FATAL: Hardcoded Sacred Number 3 on line 196
+
+❌ research/yantra_computation.py
+  - FATAL: Hardcoded Sacred Number 37 on line 95
+
+❌ research/research_chat.py
+  - FATAL: Hardcoded Sacred Number 16 on line 84
+  - FATAL: Usage of 'Any' type on line 99
+
+❌ research/guru_parampara.py
+  - FATAL: Hardcoded Sacred Number 3 on line 174
+  - FATAL: Hardcoded Sacred Number 4 on line 175
+  - FATAL: Hardcoded Sacred Number 137 on line 377
+  - FATAL: Hardcoded Sacred Number 137 on line 377
+
+❌ research/maha_generator.py
+  - FATAL: Hardcoded Sacred Number 3 on line 215
+  - FATAL: Hardcoded Sacred Number 3 on line 241
+  - FATAL: Hardcoded Sacred Number 3 on line 328
+  - FATAL: Hardcoded Sacred Number 16 on line 345
+  - FATAL: Hardcoded Sacred Number 108 on line 351
+  - FATAL: Hardcoded Sacred Number 37 on line 368
+  - FATAL: Hardcoded Sacred Number 137 on line 370
+
+❌ research/project_introspection.py
+  - FATAL: Hardcoded Sacred Number 16 on line 73
+  - FATAL: Hardcoded Sacred Number 16 on line 94
+  - FATAL: Hardcoded Sacred Number 3 on line 126
+  - FATAL: Hardcoded Sacred Number 4 on line 262
+  - FATAL: Hardcoded Sacred Number 3 on line 471
+
+❌ research/maha_compression.py
+  - FATAL: Hardcoded Sacred Number 4 on line 195
+  - FATAL: Hardcoded Sacred Number 3 on line 384
+  - FATAL: Hardcoded Sacred Number 4 on line 391
+  - FATAL: Hardcoded Sacred Number 4 on line 405
+  - FATAL: Hardcoded Sacred Number 4 on line 580
+  - FATAL: Hardcoded Sacred Number 4 on line 589
+  - FATAL: Hardcoded Sacred Number 4 on line 595
+
+❌ research/llm_holographic.py
+  - FATAL: Hardcoded Sacred Number 3 on line 102
+  - FATAL: Hardcoded Sacred Number 4 on line 103
+  - FATAL: Hardcoded Sacred Number 3 on line 102
+  - FATAL: Hardcoded Sacred Number 4 on line 103
+  - FATAL: Hardcoded Sacred Number 4 on line 179
+  - FATAL: Hardcoded Sacred Number 8 on line 191
+  - FATAL: Hardcoded Sacred Number 4 on line 197
+  - FATAL: Hardcoded Sacred Number 8 on line 234
+  - FATAL: Hardcoded Sacred Number 4 on line 241
+  - FATAL: Hardcoded Sacred Number 4 on line 276
+  - FATAL: Hardcoded Sacred Number 3 on line 286
+  - FATAL: Hardcoded Sacred Number 3 on line 291
+  - FATAL: Hardcoded Sacred Number 3 on line 296
+  - FATAL: Hardcoded Sacred Number 4 on line 299
+  - FATAL: Hardcoded Sacred Number 4 on line 301
+  - FATAL: Hardcoded Sacred Number 3 on line 315
+  - FATAL: Hardcoded Sacred Number 4 on line 316
+  - FATAL: Hardcoded Sacred Number 8 on line 320
+  - FATAL: Hardcoded Sacred Number 4 on line 345
+  - FATAL: Hardcoded Sacred Number 4 on line 512
+  - FATAL: Hardcoded Sacred Number 16 on line 539
+  - FATAL: Hardcoded Sacred Number 137 on line 544
+  - FATAL: Hardcoded Sacred Number 8 on line 666
+  - FATAL: Hardcoded Sacred Number 3 on line 678
+
+❌ research/clean_room_extraction.py
+  - FATAL: Hardcoded Sacred Number 8 on line 162
+  - FATAL: Hardcoded Sacred Number 16 on line 162
+  - FATAL: Hardcoded Sacred Number 16 on line 206
+  - FATAL: Hardcoded Sacred Number 3 on line 337
+
+❌ research/nityananda_substrate.py
+  - FATAL: Hardcoded Sacred Number 4 on line 161
+  - FATAL: Hardcoded Sacred Number 4 on line 167
+  - FATAL: Hardcoded Sacred Number 4 on line 189
+  - FATAL: Hardcoded Sacred Number 16 on line 196
+  - FATAL: Hardcoded Sacred Number 16 on line 197
+  - FATAL: Hardcoded Sacred Number 16 on line 217
+  - FATAL: Hardcoded Sacred Number 16 on line 221
+  - FATAL: Hardcoded Sacred Number 16 on line 223
+
+❌ research/computation.py
+  - FATAL: Hardcoded Sacred Number 16 on line 102
+  - FATAL: Hardcoded Sacred Number 8 on line 113
+
+❌ research/biology.py
+  - FATAL: Hardcoded Sacred Number 4 on line 148
+
+❌ research/resonance_response.py
+  - FATAL: Hardcoded Sacred Number 16 on line 85
+  - FATAL: Hardcoded Sacred Number 4 on line 271
+  - FATAL: Hardcoded Sacred Number 4 on line 271
+  - FATAL: Hardcoded Sacred Number 8 on line 315
+  - FATAL: Hardcoded Sacred Number 4 on line 315
+  - FATAL: Hardcoded Sacred Number 4 on line 315
+  - FATAL: Hardcoded Sacred Number 4 on line 316
+
+❌ research/gut_synthesis.py
+  - FATAL: Hardcoded Sacred Number 4 on line 46
+  - FATAL: Hardcoded Sacred Number 16 on line 119
+  - FATAL: Hardcoded Sacred Number 16 on line 178
+  - FATAL: Hardcoded Sacred Number 3 on line 179
+  - FATAL: Hardcoded Sacred Number 8 on line 180
+  - FATAL: Hardcoded Sacred Number 4 on line 181
+  - FATAL: Hardcoded Sacred Number 4 on line 182
+  - FATAL: Hardcoded Sacred Number 4 on line 193
+  - FATAL: Hardcoded Sacred Number 3 on line 196
+  - FATAL: Hardcoded Sacred Number 37 on line 197
+  - FATAL: Hardcoded Sacred Number 4 on line 197
+  - FATAL: Hardcoded Sacred Number 3 on line 199
+  - FATAL: Hardcoded Sacred Number 4 on line 200
+  - FATAL: Hardcoded Sacred Number 137 on line 201
+  - FATAL: Hardcoded Sacred Number 108 on line 204
+  - FATAL: Hardcoded Sacred Number 8 on line 207
+  - FATAL: Hardcoded Sacred Number 3 on line 230
+  - FATAL: Hardcoded Sacred Number 137 on line 354
+  - FATAL: Usage of 'Any' type on line 401
+  - FATAL: Hardcoded Sacred Number 8 on line 471
+
+❌ research/siksastakam_complete.py
+  - FATAL: Hardcoded Sacred Number 16 on line 118
+  - FATAL: Hardcoded Sacred Number 3 on line 191
+  - FATAL: Hardcoded Sacred Number 4 on line 236
+  - FATAL: Hardcoded Sacred Number 3 on line 252
+  - FATAL: Hardcoded Sacred Number 16 on line 253
+  - FATAL: Hardcoded Sacred Number 4 on line 294
+  - FATAL: Hardcoded Sacred Number 16 on line 295
+  - FATAL: Hardcoded Sacred Number 16 on line 340
+  - FATAL: Hardcoded Sacred Number 8 on line 415
+
+❌ research/maha_lossless.py
+  - FATAL: Hardcoded Sacred Number 37 on line 238
+
+❌ research/kishora_engineering.py
+  - FATAL: Hardcoded Sacred Number 8 on line 200
+
+❌ research/gita_verse_text.py
+  - FATAL: Hardcoded Sacred Number 8 on line 109
+  - FATAL: Hardcoded Sacred Number 16 on line 335
+  - FATAL: Hardcoded Sacred Number 3 on line 358
+  - FATAL: Hardcoded Sacred Number 4 on line 358
+  - FATAL: Hardcoded Sacred Number 3 on line 454
+  - FATAL: Hardcoded Sacred Number 8 on line 454
+  - FATAL: Hardcoded Sacred Number 4 on line 464
+  - FATAL: Hardcoded Sacred Number 8 on line 523
+  - FATAL: Hardcoded Sacred Number 3 on line 1004
+  - FATAL: Hardcoded Sacred Number 4 on line 1094
+  - FATAL: Hardcoded Sacred Number 108 on line 1159
+  - FATAL: Hardcoded Sacred Number 137 on line 1174
+
+❌ research/adi_guru_factor.py
+  - FATAL: Hardcoded Sacred Number 4 on line 249
+  - FATAL: Hardcoded Sacred Number 4 on line 490
+  - FATAL: Hardcoded Sacred Number 3 on line 493
+
+❌ research/acintya_mathematics.py
+  - FATAL: Hardcoded Sacred Number 3 on line 461
+  - FATAL: Hardcoded Sacred Number 3 on line 528
+  - FATAL: Hardcoded Sacred Number 4 on line 529
+  - FATAL: Hardcoded Sacred Number 3 on line 618
+  - FATAL: Hardcoded Sacred Number 4 on line 619
+  - FATAL: Hardcoded Sacred Number 3 on line 685
+  - FATAL: Hardcoded Sacred Number 4 on line 686
+  - FATAL: Hardcoded Sacred Number 8 on line 690
+
+❌ research/six_attractors_deep.py
+  - FATAL: Hardcoded Sacred Number 4 on line 33
+  - FATAL: Hardcoded Sacred Number 37 on line 33
+  - FATAL: Hardcoded Sacred Number 3 on line 39
+  - FATAL: Hardcoded Sacred Number 4 on line 40
+  - FATAL: Hardcoded Sacred Number 8 on line 44
+  - FATAL: Hardcoded Sacred Number 16 on line 48
+  - FATAL: Hardcoded Sacred Number 37 on line 55
+  - FATAL: Hardcoded Sacred Number 108 on line 59
+  - FATAL: Hardcoded Sacred Number 137 on line 60
+  - FATAL: Hardcoded Sacred Number 3 on line 178
+
+❌ research/gap_analysis.py
+  - FATAL: Hardcoded Sacred Number 16 on line 102
+  - FATAL: Hardcoded Sacred Number 4 on line 162
+
+❌ research/lotus/__init__.py
+  - FATAL: Hardcoded Sacred Number 16 on line 92
+  - FATAL: Hardcoded Sacred Number 4 on line 108
+  - FATAL: Hardcoded Sacred Number 4 on line 111
+  - FATAL: Hardcoded Sacred Number 16 on line 113
+
+❌ research/CLI/05_GAD_COMPLIANCE_TEST.py
+  - FATAL: Hardcoded Sacred Number 3 on line 223
+  - FATAL: Hardcoded Sacred Number 3 on line 297
+  - FATAL: Hardcoded Sacred Number 4 on line 799
+
+❌ research/gita/__init__.py
+  - FATAL: Hardcoded Sacred Number 3 on line 133
+  - FATAL: Hardcoded Sacred Number 4 on line 134
+  - FATAL: Hardcoded Sacred Number 8 on line 138
+  - FATAL: Hardcoded Sacred Number 16 on line 146
+
+❌ research/dharma/sequence_solver.py
+  - FATAL: Hardcoded Sacred Number 3 on line 47
+
+❌ research/dharma/axiom_gate.py
+  - FATAL: Hardcoded Sacred Number 4 on line 77
+  - FATAL: Hardcoded Sacred Number 3 on line 88
+  - FATAL: Hardcoded Sacred Number 3 on line 183
+  - FATAL: Hardcoded Sacred Number 16 on line 201
+  - FATAL: Hardcoded Sacred Number 37 on line 208
+  - FATAL: Hardcoded Sacred Number 3 on line 239
+  - FATAL: Hardcoded Sacred Number 4 on line 246
+  - FATAL: Hardcoded Sacred Number 3 on line 260
+
+❌ research/dharma/teental_matrix.py
+  - FATAL: Hardcoded Sacred Number 3 on line 75
+  - FATAL: Hardcoded Sacred Number 3 on line 76
+  - FATAL: Hardcoded Sacred Number 3 on line 91
+  - FATAL: Hardcoded Sacred Number 3 on line 391
+
+❌ research/dharma/vishvarupa_solver.py
+  - FATAL: Hardcoded Sacred Number 16 on line 18
+  - FATAL: Hardcoded Sacred Number 37 on line 25
+
+❌ research/dharma/gad_kirtan.py
+  - FATAL: Hardcoded Sacred Number 3 on line 78
+  - FATAL: Hardcoded Sacred Number 4 on line 79
+  - FATAL: Hardcoded Sacred Number 4 on line 77
+  - FATAL: Hardcoded Sacred Number 4 on line 78
+  - FATAL: Hardcoded Sacred Number 8 on line 79
+  - FATAL: Hardcoded Sacred Number 8 on line 80
+  - FATAL: Hardcoded Sacred Number 16 on line 82
+  - FATAL: Hardcoded Sacred Number 3 on line 89
+  - FATAL: Hardcoded Sacred Number 4 on line 90
+
+❌ research/git/findings.py
+  - FATAL: Hardcoded Sacred Number 16 on line 85
+  - FATAL: Hardcoded Sacred Number 137 on line 95
+
+❌ research/git/__init__.py
+  - FATAL: Hardcoded Sacred Number 16 on line 20
+
+❌ research/git/lab.py
+  - FATAL: Hardcoded Sacred Number 16 on line 32
+  - FATAL: Hardcoded Sacred Number 4 on line 35
+  - FATAL: Hardcoded Sacred Number 3 on line 141
+  - FATAL: Hardcoded Sacred Number 4 on line 142
+  - FATAL: Hardcoded Sacred Number 8 on line 170
+
+❌ net/vimana.py
+  - FATAL: Hardcoded Sacred Number 4 on line 33
+  - FATAL: Hardcoded Sacred Number 4 on line 47
+  - FATAL: Hardcoded Sacred Number 4 on line 48
+
+❌ analysis/derivation_graph.py
+  - FATAL: Hardcoded Sacred Number 3 on line 647
+
+❌ analysis/universal_generator.py
+  - FATAL: Hardcoded Sacred Number 4 on line 283
+
+❌ analysis/narada_vina/endpoints.py
+  - FATAL: Usage of 'Any' type on line 55
+  - FATAL: Usage of 'Any' type on line 76
+  - FATAL: Usage of 'Any' type on line 87
+  - FATAL: Hardcoded Sacred Number 4 on line 104
+  - FATAL: Usage of 'Any' type on line 100
+  - FATAL: Usage of 'Any' type on line 112
+  - FATAL: Usage of 'Any' type on line 127
+  - FATAL: Usage of 'Any' type on line 140
+  - FATAL: Usage of 'Any' type on line 163
+  - FATAL: Usage of 'Any' type on line 178
+  - FATAL: Usage of 'Any' type on line 193
+  - FATAL: Usage of 'Any' type on line 207
+  - FATAL: Usage of 'Any' type on line 221
+  - FATAL: Usage of 'Any' type on line 235
+  - FATAL: Usage of 'Any' type on line 246
+  - FATAL: Usage of 'Any' type on line 269
+  - FATAL: Hardcoded Sacred Number 4 on line 352
+  - FATAL: Hardcoded Sacred Number 4 on line 352
+
+❌ analysis/narada_vina/validation.py
+  - FATAL: Hardcoded Sacred Number 4 on line 54
+  - FATAL: Hardcoded Sacred Number 8 on line 58
+
+❌ venu/clock.py
+  - FATAL: Hardcoded Sacred Number 4 on line 17
+
+❌ venu/__init__.py
+  - FATAL: Hardcoded Sacred Number 4 on line 24
+
+❌ venu/voice.py
+  - FATAL: Hardcoded Sacred Number 4 on line 16
+
+❌ venu/tick.py
+  - FATAL: Hardcoded Sacred Number 4 on line 16
+
+❌ substrate/config.py
+  - FATAL: Usage of 'Any' type on line 89
+  - FATAL: Usage of 'Any' type on line 93
+  - FATAL: Usage of 'Any' type on line 94
+  - FATAL: Usage of 'Any' type on line 440
+
+❌ substrate/lotus_radix.py
+  - FATAL: Usage of 'Any' type on line 129
+  - FATAL: Usage of 'Any' type on line 220
+  - FATAL: Usage of 'Any' type on line 307
+
+❌ substrate/parampara.py
+  - FATAL: Hardcoded Sacred Number 4 on line 277
+  - FATAL: Hardcoded Sacred Number 8 on line 278
+  - FATAL: Hardcoded Sacred Number 16 on line 280
+  - FATAL: Hardcoded Sacred Number 4 on line 287
+  - FATAL: Hardcoded Sacred Number 8 on line 288
+  - FATAL: Hardcoded Sacred Number 16 on line 289
+  - FATAL: Hardcoded Sacred Number 4 on line 296
+  - FATAL: Hardcoded Sacred Number 8 on line 298
+  - FATAL: Hardcoded Sacred Number 16 on line 299
+
+❌ substrate/samana_bridge.py
+  - FATAL: Usage of 'Any' type on line 201
+  - FATAL: Usage of 'Any' type on line 204
+  - FATAL: Usage of 'Any' type on line 219
+  - FATAL: Usage of 'Any' type on line 300
+  - FATAL: Usage of 'Any' type on line 316
+  - FATAL: Usage of 'Any' type on line 424
+  - FATAL: Usage of 'Any' type on line 548
+  - FATAL: Usage of 'Any' type on line 696
+  - FATAL: Usage of 'Any' type on line 850
+
+❌ substrate/nadi.py
+  - FATAL: Usage of 'Any' type on line 206
+  - FATAL: Usage of 'Any' type on line 334
+  - FATAL: Usage of 'Any' type on line 352
+  - FATAL: Usage of 'Any' type on line 361
+  - FATAL: Usage of 'Any' type on line 433
+  - FATAL: Usage of 'Any' type on line 446
+  - FATAL: Usage of 'Any' type on line 451
+  - FATAL: Usage of 'Any' type on line 659
+  - FATAL: Usage of 'Any' type on line 734
+  - FATAL: Usage of 'Any' type on line 767
+
+❌ substrate/seed.py
+  - FATAL: Hardcoded Sacred Number 4 on line 18
+  - FATAL: Hardcoded Sacred Number 3 on line 328
+  - FATAL: Hardcoded Sacred Number 3 on line 469
+  - FATAL: Hardcoded Sacred Number 37 on line 564
+  - FATAL: Hardcoded Sacred Number 4 on line 739
+  - FATAL: Hardcoded Sacred Number 16 on line 748
+  - FATAL: Hardcoded Sacred Number 3 on line 749
+  - FATAL: Hardcoded Sacred Number 4 on line 752
+  - FATAL: Hardcoded Sacred Number 37 on line 755
+  - FATAL: Hardcoded Sacred Number 108 on line 759
+  - FATAL: Hardcoded Sacred Number 3 on line 826
+  - FATAL: Hardcoded Sacred Number 3 on line 827
+  - FATAL: Hardcoded Sacred Number 37 on line 971
+  - FATAL: Hardcoded Sacred Number 16 on line 987
+
+❌ substrate/lipta.py
+  - FATAL: Hardcoded Sacred Number 4 on line 16
+
+❌ substrate/phonetic_bridge.py
+  - FATAL: Hardcoded Sacred Number 3 on line 94
+  - FATAL: Hardcoded Sacred Number 4 on line 95
+  - FATAL: Hardcoded Sacred Number 3 on line 289
+  - FATAL: Hardcoded Sacred Number 4 on line 290
+  - FATAL: Hardcoded Sacred Number 8 on line 411
+  - FATAL: Hardcoded Sacred Number 3 on line 434
+  - FATAL: Hardcoded Sacred Number 3 on line 494
+
+❌ substrate/position.py
+  - FATAL: Hardcoded Sacred Number 3 on line 216
+
+❌ substrate/kala.py
+  - FATAL: Hardcoded Sacred Number 4 on line 16
+
+❌ substrate/process_manager.py
+  - FATAL: Usage of 'Any' type on line 76
+  - FATAL: Usage of 'Any' type on line 81
+  - FATAL: Usage of 'Any' type on line 102
+  - FATAL: Usage of 'Any' type on line 103
+  - FATAL: Usage of 'Any' type on line 264
+  - FATAL: Usage of 'Any' type on line 298
+  - FATAL: Usage of 'Any' type on line 355
+
+❌ substrate/lila_chronology.py
+  - FATAL: Hardcoded Sacred Number 8 on line 132
+  - FATAL: Hardcoded Sacred Number 8 on line 420
+  - FATAL: Hardcoded Sacred Number 4 on line 420
+  - FATAL: Hardcoded Sacred Number 4 on line 553
+  - FATAL: Hardcoded Sacred Number 137 on line 614
+  - FATAL: Hardcoded Sacred Number 37 on line 615
+  - FATAL: Hardcoded Sacred Number 37 on line 762
+  - FATAL: Hardcoded Sacred Number 4 on line 782
+  - FATAL: Hardcoded Sacred Number 108 on line 923
+  - FATAL: Hardcoded Sacred Number 3 on line 1134
+  - FATAL: Hardcoded Sacred Number 4 on line 1135
+  - FATAL: Hardcoded Sacred Number 3 on line 1322
+
+❌ substrate/errors.py
+  - FATAL: Hardcoded Sacred Number 4 on line 17
+  - FATAL: Usage of 'Any' type on line 122
+  - FATAL: Usage of 'Any' type on line 140
+
+❌ substrate/chamber.py
+  - FATAL: Hardcoded Sacred Number 4 on line 340
+  - FATAL: Hardcoded Sacred Number 4 on line 493
+  - FATAL: Hardcoded Sacred Number 4 on line 497
+  - FATAL: Hardcoded Sacred Number 4 on line 610
+  - FATAL: Hardcoded Sacred Number 4 on line 614
+
+❌ substrate/harmonics.py
+  - FATAL: Hardcoded Sacred Number 3 on line 920
+  - FATAL: Hardcoded Sacred Number 4 on line 921
+  - FATAL: Hardcoded Sacred Number 4 on line 922
+  - FATAL: Hardcoded Sacred Number 3 on line 922
+  - FATAL: Hardcoded Sacred Number 3 on line 923
+  - FATAL: Hardcoded Sacred Number 4 on line 936
+  - FATAL: Hardcoded Sacred Number 3 on line 936
+  - FATAL: Hardcoded Sacred Number 3 on line 938
+  - FATAL: Hardcoded Sacred Number 16 on line 939
+  - FATAL: Hardcoded Sacred Number 8 on line 969
+  - FATAL: Hardcoded Sacred Number 4 on line 970
+  - FATAL: Hardcoded Sacred Number 3 on line 971
+  - FATAL: Hardcoded Sacred Number 16 on line 972
+
+❌ substrate/lineage.py
+  - FATAL: Hardcoded Sacred Number 4 on line 20
+  - FATAL: Hardcoded Sacred Number 16 on line 237
+  - FATAL: Hardcoded Sacred Number 16 on line 239
+  - FATAL: Hardcoded Sacred Number 16 on line 285
+  - FATAL: Hardcoded Sacred Number 16 on line 368
+  - FATAL: Hardcoded Sacred Number 16 on line 369
+  - FATAL: Hardcoded Sacred Number 16 on line 376
+  - FATAL: Hardcoded Sacred Number 16 on line 377
+  - FATAL: Hardcoded Sacred Number 16 on line 444
+  - FATAL: Hardcoded Sacred Number 3 on line 670
+  - FATAL: Hardcoded Sacred Number 4 on line 671
+
+❌ substrate/pancha_tattva.py
+  - FATAL: Hardcoded Sacred Number 3 on line 116
+  - FATAL: Hardcoded Sacred Number 4 on line 117
+  - FATAL: Hardcoded Sacred Number 3 on line 186
+  - FATAL: Hardcoded Sacred Number 4 on line 195
+  - FATAL: Hardcoded Sacred Number 4 on line 220
+  - FATAL: Hardcoded Sacred Number 3 on line 293
+  - FATAL: Hardcoded Sacred Number 4 on line 294
+  - FATAL: Hardcoded Sacred Number 3 on line 364
+  - FATAL: Hardcoded Sacred Number 37 on line 388
+  - FATAL: Hardcoded Sacred Number 37 on line 393
+  - FATAL: Hardcoded Sacred Number 37 on line 500
+
+❌ substrate/samskara.py
+  - FATAL: Hardcoded Sacred Number 37 on line 73
+  - FATAL: Hardcoded Sacred Number 4 on line 74
+  - FATAL: Hardcoded Sacred Number 4 on line 75
+
+❌ substrate/byte.py
+  - FATAL: Hardcoded Sacred Number 3 on line 59
+  - FATAL: Hardcoded Sacred Number 4 on line 61
+  - FATAL: Hardcoded Sacred Number 8 on line 66
+  - FATAL: Hardcoded Sacred Number 3 on line 151
+  - FATAL: Hardcoded Sacred Number 4 on line 407
+  - FATAL: Hardcoded Sacred Number 3 on line 481
+  - FATAL: Hardcoded Sacred Number 3 on line 484
+  - FATAL: Hardcoded Sacred Number 16 on line 498
+
+❌ substrate/wiring.py
+  - FATAL: Hardcoded Sacred Number 3 on line 369
+
+❌ substrate/mantra/siksastakam.py
+  - FATAL: Hardcoded Sacred Number 3 on line 64
+  - FATAL: Hardcoded Sacred Number 4 on line 65
+  - FATAL: Hardcoded Sacred Number 8 on line 217
+
+❌ substrate/mantra/kirtan.py
+  - FATAL: Hardcoded Sacred Number 108 on line 71
+  - FATAL: Hardcoded Sacred Number 3 on line 125
+
+❌ substrate/mantra/prabhupada_engineering.py
+  - FATAL: Hardcoded Sacred Number 3 on line 204
+  - FATAL: Hardcoded Sacred Number 4 on line 241
+  - FATAL: Hardcoded Sacred Number 3 on line 382
+  - FATAL: Hardcoded Sacred Number 4 on line 383
+  - FATAL: Usage of 'Any' type on line 478
+  - FATAL: Hardcoded Sacred Number 3 on line 488
+  - FATAL: Hardcoded Sacred Number 4 on line 489
+  - FATAL: Hardcoded Sacred Number 3 on line 487
+  - FATAL: Hardcoded Sacred Number 3 on line 487
+  - FATAL: Hardcoded Sacred Number 4 on line 488
+  - FATAL: Hardcoded Sacred Number 4 on line 488
+  - FATAL: Hardcoded Sacred Number 8 on line 492
+  - FATAL: Hardcoded Sacred Number 8 on line 492
+
+❌ substrate/mantra/prabhupada_kirtan.py
+  - FATAL: Hardcoded Sacred Number 16 on line 316
+
+❌ substrate/mantra/engineering.py
+  - FATAL: Hardcoded Sacred Number 8 on line 57
+  - FATAL: Hardcoded Sacred Number 8 on line 73
+
+❌ substrate/algorithm/maha.py
+  - FATAL: Hardcoded Sacred Number 3 on line 88
+  - FATAL: Hardcoded Sacred Number 4 on line 89
+  - FATAL: Hardcoded Sacred Number 4 on line 661
+  - FATAL: Hardcoded Sacred Number 4 on line 718
+  - FATAL: Hardcoded Sacred Number 4 on line 731
+  - FATAL: Hardcoded Sacred Number 4 on line 747
+  - FATAL: Hardcoded Sacred Number 4 on line 754
+  - FATAL: Hardcoded Sacred Number 4 on line 762
+  - FATAL: Hardcoded Sacred Number 4 on line 769
+  - FATAL: Hardcoded Sacred Number 4 on line 785
+
+❌ substrate/classifier/core.py
+  - FATAL: Hardcoded Sacred Number 3 on line 63
+  - FATAL: Hardcoded Sacred Number 8 on line 336
+  - FATAL: Hardcoded Sacred Number 8 on line 356
+  - FATAL: Hardcoded Sacred Number 8 on line 370
+  - FATAL: Hardcoded Sacred Number 8 on line 412
+  - FATAL: Hardcoded Sacred Number 4 on line 414
+  - FATAL: Hardcoded Sacred Number 16 on line 415
+
+❌ substrate/phonetics/shabda.py
+  - FATAL: Hardcoded Sacred Number 3 on line 58
+  - FATAL: Hardcoded Sacred Number 4 on line 59
+  - FATAL: Hardcoded Sacred Number 3 on line 66
+  - FATAL: Hardcoded Sacred Number 4 on line 90
+  - FATAL: Hardcoded Sacred Number 8 on line 90
+  - FATAL: Hardcoded Sacred Number 16 on line 90
+  - FATAL: Hardcoded Sacred Number 108 on line 107
+  - FATAL: Hardcoded Sacred Number 108 on line 109
+  - FATAL: Hardcoded Sacred Number 108 on line 136
+  - FATAL: Hardcoded Sacred Number 3 on line 154
+
+❌ substrate/sankalpa/will.py
+  - FATAL: Hardcoded Sacred Number 3 on line 166
+
+❌ cli/cell_wrapper.py
+  - FATAL: Hardcoded Sacred Number 4 on line 60
+
+❌ cli/protocol.py
+  - FATAL: Hardcoded Sacred Number 3 on line 114
+  - FATAL: Hardcoded Sacred Number 4 on line 115
+
+❌ cli/veda_explorer.py
+  - FATAL: Hardcoded Sacred Number 3 on line 1073
+  - FATAL: Hardcoded Sacred Number 4 on line 1074
+
+❌ cli/map.py
+  - FATAL: Hardcoded Sacred Number 4 on line 102
+  - FATAL: Hardcoded Sacred Number 3 on line 265
+  - FATAL: Hardcoded Sacred Number 4 on line 266
+  - FATAL: Hardcoded Sacred Number 8 on line 270
+
+❌ cli/engine.py
+  - FATAL: Hardcoded Sacred Number 37 on line 239
+
+❌ cli/steward.py
+  - FATAL: Hardcoded Sacred Number 4 on line 99
+  - FATAL: Usage of 'Any' type on line 197
+  - FATAL: Hardcoded Sacred Number 3 on line 421
+  - FATAL: Hardcoded Sacred Number 4 on line 421
+  - FATAL: Usage of 'Any' type on line 403
+
+❌ adapters/synth.py
+  - FATAL: Hardcoded Sacred Number 3 on line 71
+  - FATAL: Hardcoded Sacred Number 3 on line 262
+  - FATAL: Usage of 'Any' type on line 472
+
+❌ adapters/attention.py
+  - FATAL: Usage of 'Any' type on line 97
+  - FATAL: Usage of 'Any' type on line 145
+  - FATAL: Usage of 'Any' type on line 193
+  - FATAL: Usage of 'Any' type on line 208
+
+❌ adapters/japa.py
+  - FATAL: Hardcoded Sacred Number 108 on line 105
+
+❌ adapters/classification.py
+  - FATAL: Hardcoded Sacred Number 3 on line 62
+  - FATAL: Hardcoded Sacred Number 8 on line 253
+  - FATAL: Hardcoded Sacred Number 8 on line 306
+
+❌ adapters/compression.py
+  - FATAL: Hardcoded Sacred Number 4 on line 131
+  - FATAL: Hardcoded Sacred Number 4 on line 245
+  - FATAL: Hardcoded Sacred Number 4 on line 246
+  - FATAL: Hardcoded Sacred Number 4 on line 351
+  - FATAL: Hardcoded Sacred Number 4 on line 409
+  - FATAL: Hardcoded Sacred Number 3 on line 411
+  - FATAL: Hardcoded Sacred Number 4 on line 510
+  - FATAL: Hardcoded Sacred Number 4 on line 511
+  - FATAL: Hardcoded Sacred Number 137 on line 597
+  - FATAL: Hardcoded Sacred Number 16 on line 597
+
+❌ adapters/bio.py
+  - FATAL: Hardcoded Sacred Number 3 on line 75
+  - FATAL: Hardcoded Sacred Number 3 on line 135
+  - FATAL: Hardcoded Sacred Number 16 on line 162
+  - FATAL: Hardcoded Sacred Number 3 on line 167
+  - FATAL: Hardcoded Sacred Number 4 on line 167
+  - FATAL: Hardcoded Sacred Number 4 on line 187
+
+❌ adapters/__init__.py
+  - FATAL: Hardcoded Sacred Number 3 on line 20
+
+❌ adapters/llm.py
+  - FATAL: Hardcoded Sacred Number 3 on line 65
+  - FATAL: Usage of 'Any' type on line 122
+  - FATAL: Usage of 'Any' type on line 169
+  - FATAL: Hardcoded Sacred Number 4 on line 196
+  - FATAL: Hardcoded Sacred Number 16 on line 196
+  - FATAL: Hardcoded Sacred Number 8 on line 221
+  - FATAL: Hardcoded Sacred Number 4 on line 227
+  - FATAL: Hardcoded Sacred Number 8 on line 308
+  - FATAL: Hardcoded Sacred Number 4 on line 309
+  - FATAL: Hardcoded Sacred Number 3 on line 449
+  - FATAL: Hardcoded Sacred Number 16 on line 449
+  - FATAL: Usage of 'Any' type on line 456
+  - FATAL: Usage of 'Any' type on line 551
+  - FATAL: Usage of 'Any' type on line 567
+  - FATAL: Hardcoded Sacred Number 3 on line 586
+  - FATAL: Hardcoded Sacred Number 4 on line 587
+  - FATAL: Hardcoded Sacred Number 3 on line 586
+  - FATAL: Hardcoded Sacred Number 4 on line 587
+  - FATAL: Hardcoded Sacred Number 16 on line 640
+
+❌ adapters/maha_format.py
+  - FATAL: Hardcoded Sacred Number 4 on line 135
+  - FATAL: Hardcoded Sacred Number 4 on line 140
+  - FATAL: Hardcoded Sacred Number 4 on line 157
+  - FATAL: Hardcoded Sacred Number 4 on line 158
+
+❌ adapters/hash.py
+  - FATAL: Hardcoded Sacred Number 3 on line 43
+
+❌ adapters/routing.py
+  - FATAL: Hardcoded Sacred Number 8 on line 102
+  - FATAL: Hardcoded Sacred Number 4 on line 108
+  - FATAL: Usage of 'Any' type on line 93
+  - FATAL: Usage of 'Any' type on line 118
+  - FATAL: Hardcoded Sacred Number 8 on line 127
+  - FATAL: Hardcoded Sacred Number 4 on line 133
+  - FATAL: Hardcoded Sacred Number 8 on line 156
+  - FATAL: Hardcoded Sacred Number 4 on line 162
+  - FATAL: Hardcoded Sacred Number 8 on line 187
+  - FATAL: Hardcoded Sacred Number 4 on line 187
+  - FATAL: Hardcoded Sacred Number 8 on line 202
+  - FATAL: Hardcoded Sacred Number 4 on line 202
+  - FATAL: Usage of 'Any' type on line 189
+  - FATAL: Hardcoded Sacred Number 4 on line 398
+  - FATAL: Usage of 'Any' type on line 403
+  - FATAL: Usage of 'Any' type on line 416
+  - FATAL: Usage of 'Any' type on line 439
+  - FATAL: Hardcoded Sacred Number 4 on line 450
+  - FATAL: Hardcoded Sacred Number 8 on line 455
+
+❌ adapters/pipeline.py
+  - FATAL: Hardcoded Sacred Number 3 on line 85
+  - FATAL: Hardcoded Sacred Number 4 on line 85
+  - FATAL: Hardcoded Sacred Number 8 on line 93
+  - FATAL: Hardcoded Sacred Number 16 on line 109
+  - FATAL: Usage of 'Any' type on line 173
+  - FATAL: Usage of 'Any' type on line 229
+  - FATAL: Usage of 'Any' type on line 287
+
+❌ adapters/orchestrator.py
+  - FATAL: Hardcoded Sacred Number 3 on line 43
+  - FATAL: Hardcoded Sacred Number 4 on line 241
+  - FATAL: Hardcoded Sacred Number 3 on line 244
+
+❌ adapters/transform.py
+  - FATAL: Hardcoded Sacred Number 3 on line 48
+
+❌ adapters/network.py
+  - FATAL: Hardcoded Sacred Number 4 on line 129
+  - FATAL: Hardcoded Sacred Number 3 on line 131
+  - FATAL: Hardcoded Sacred Number 16 on line 132
+  - FATAL: Hardcoded Sacred Number 8 on line 132
+  - FATAL: Hardcoded Sacred Number 16 on line 137
+  - FATAL: Hardcoded Sacred Number 8 on line 137
+  - FATAL: Hardcoded Sacred Number 3 on line 162
+  - FATAL: Hardcoded Sacred Number 4 on line 175
+  - FATAL: Hardcoded Sacred Number 4 on line 179
+  - FATAL: Hardcoded Sacred Number 16 on line 263
+  - FATAL: Hardcoded Sacred Number 8 on line 281
+  - FATAL: Hardcoded Sacred Number 4 on line 290
+  - FATAL: Hardcoded Sacred Number 16 on line 325
+  - FATAL: Hardcoded Sacred Number 8 on line 325
+  - FATAL: Hardcoded Sacred Number 4 on line 325
+
+❌ adapters/hardware.py
+  - FATAL: Hardcoded Sacred Number 3 on line 56
+
+❌ adapters/compute.py
+  - FATAL: Hardcoded Sacred Number 3 on line 58
+  - FATAL: Hardcoded Sacred Number 3 on line 159
+  - FATAL: Hardcoded Sacred Number 8 on line 265
+  - FATAL: Hardcoded Sacred Number 4 on line 320
+  - FATAL: Hardcoded Sacred Number 4 on line 494
+  - FATAL: Hardcoded Sacred Number 16 on line 511
+  - FATAL: Hardcoded Sacred Number 16 on line 519
+  - FATAL: Hardcoded Sacred Number 8 on line 519
+  - FATAL: Hardcoded Sacred Number 3 on line 520
+  - FATAL: Hardcoded Sacred Number 3 on line 521
+  - FATAL: Hardcoded Sacred Number 8 on line 527
+  - FATAL: Hardcoded Sacred Number 16 on line 530
+  - FATAL: Hardcoded Sacred Number 16 on line 541
+  - FATAL: Hardcoded Sacred Number 3 on line 553
+
+❌ karma/__init__.py
+  - FATAL: Hardcoded Sacred Number 8 on line 43
+  - FATAL: Hardcoded Sacred Number 8 on line 51
+  - FATAL: Hardcoded Sacred Number 8 on line 71
+
+❌ karma/parashurama/__init__.py
+  - FATAL: Hardcoded Sacred Number 8 on line 20
+  - FATAL: Hardcoded Sacred Number 8 on line 32
+
+❌ dharma/__init__.py
+  - FATAL: Hardcoded Sacred Number 4 on line 24
+
+❌ dharma/components/shabda.py
+  - FATAL: Hardcoded Sacred Number 3 on line 32
+  - FATAL: Hardcoded Sacred Number 4 on line 33
+  - FATAL: Hardcoded Sacred Number 3 on line 40
+  - FATAL: Hardcoded Sacred Number 4 on line 76
+  - FATAL: Hardcoded Sacred Number 8 on line 76
+  - FATAL: Hardcoded Sacred Number 16 on line 76
+  - FATAL: Hardcoded Sacred Number 108 on line 117
+  - FATAL: Hardcoded Sacred Number 108 on line 118
+
+❌ dharma/components/linguist.py
+  - FATAL: Hardcoded Sacred Number 3 on line 31
+  - FATAL: Hardcoded Sacred Number 4 on line 31
+  - FATAL: Hardcoded Sacred Number 16 on line 36
+  - FATAL: Hardcoded Sacred Number 16 on line 53
+  - FATAL: Hardcoded Sacred Number 16 on line 113
+
+❌ dharma/prithu/__init__.py
+  - FATAL: Hardcoded Sacred Number 4 on line 20
+  - FATAL: Hardcoded Sacred Number 4 on line 32
+
+❌ dharma/kapila/remedies/hardcoded_constants.py
+  - FATAL: Hardcoded Sacred Number 16 on line 66
+  - FATAL: Hardcoded Sacred Number 4 on line 67
+  - FATAL: Hardcoded Sacred Number 37 on line 71
+  - FATAL: Hardcoded Sacred Number 137 on line 72
+  - FATAL: Hardcoded Sacred Number 108 on line 77
+
+❌ dharma/kapila/remedies/missing_mahajana.py
+  - FATAL: Hardcoded Sacred Number 3 on line 203
+  - FATAL: Hardcoded Sacred Number 4 on line 204
+  - FATAL: Hardcoded Sacred Number 8 on line 208
+  - FATAL: Hardcoded Sacred Number 3 on line 236
+  - FATAL: Hardcoded Sacred Number 4 on line 237
+  - FATAL: Hardcoded Sacred Number 8 on line 238
+  - FATAL: Hardcoded Sacred Number 8 on line 272
+  - FATAL: Hardcoded Sacred Number 16 on line 275
+
+❌ dharma/kapila/remedies/broken_genesis.py
+  - FATAL: Hardcoded Sacred Number 16 on line 119
+  - FATAL: Hardcoded Sacred Number 8 on line 212
+  - FATAL: Hardcoded Sacred Number 16 on line 215
+
+❌ demos/log_sentinel.py
+  - FATAL: Hardcoded Sacred Number 4 on line 338
+  - FATAL: Hardcoded Sacred Number 4 on line 340
+
+❌ demos/bio_indexer.py
+  - FATAL: Hardcoded Sacred Number 3 on line 43
+  - FATAL: Hardcoded Sacred Number 3 on line 101
+
+❌ protocols/_singularity.py
+  - FATAL: Hardcoded Sacred Number 3 on line 255
+  - FATAL: Hardcoded Sacred Number 4 on line 256
+  - FATAL: Hardcoded Sacred Number 8 on line 260
+
+❌ protocols/_lotus.py
+  - FATAL: Hardcoded Sacred Number 3 on line 169
+  - FATAL: Hardcoded Sacred Number 4 on line 171
+  - FATAL: Hardcoded Sacred Number 8 on line 176
+
+❌ protocols/synth.py
+  - FATAL: Hardcoded Sacred Number 4 on line 56
+
+❌ protocols/attention.py
+  - FATAL: Hardcoded Sacred Number 16 on line 35
+
+❌ protocols/_bhava.py
+  - FATAL: Hardcoded Sacred Number 3 on line 126
+  - FATAL: Hardcoded Sacred Number 4 on line 127
+
+❌ protocols/_ouroboros.py
+  - FATAL: Hardcoded Sacred Number 3 on line 42
+
+❌ protocols/_seed_cell.py
+  - FATAL: Hardcoded Sacred Number 16 on line 47
+  - FATAL: Hardcoded Sacred Number 3 on line 48
+  - FATAL: Hardcoded Sacred Number 8 on line 49
+  - FATAL: Hardcoded Sacred Number 4 on line 50
+  - FATAL: Hardcoded Sacred Number 4 on line 51
+  - FATAL: Hardcoded Sacred Number 4 on line 56
+  - FATAL: Hardcoded Sacred Number 8 on line 58
+  - FATAL: Hardcoded Sacred Number 16 on line 64
+  - FATAL: Hardcoded Sacred Number 4 on line 65
+  - FATAL: Hardcoded Sacred Number 108 on line 72
+  - FATAL: Hardcoded Sacred Number 137 on line 73
+  - FATAL: Hardcoded Sacred Number 37 on line 84
+  - FATAL: Hardcoded Sacred Number 8 on line 87
+  - FATAL: Hardcoded Sacred Number 16 on line 107
+  - FATAL: Hardcoded Sacred Number 108 on line 114
+
+❌ protocols/_kala.py
+  - FATAL: Hardcoded Sacred Number 16 on line 47
+
+❌ protocols/_audit.py
+  - FATAL: Hardcoded Sacred Number 16 on line 50
+
+❌ protocols/_gita_lens.py
+  - FATAL: Hardcoded Sacred Number 3 on line 172
+  - FATAL: Hardcoded Sacred Number 4 on line 173
+  - FATAL: Hardcoded Sacred Number 3 on line 240
+  - FATAL: Hardcoded Sacred Number 4 on line 241
+  - FATAL: Hardcoded Sacred Number 3 on line 293
+  - FATAL: Hardcoded Sacred Number 3 on line 338
+  - FATAL: Hardcoded Sacred Number 4 on line 339
+  - FATAL: Hardcoded Sacred Number 8 on line 343
+  - FATAL: Hardcoded Sacred Number 3 on line 420
+  - FATAL: Hardcoded Sacred Number 4 on line 421
+  - FATAL: Hardcoded Sacred Number 8 on line 425
+  - FATAL: Hardcoded Sacred Number 16 on line 479
+
+❌ protocols/compression.py
+  - FATAL: Hardcoded Sacred Number 3 on line 70
+
+❌ protocols/_maha_compute.py
+  - FATAL: Hardcoded Sacred Number 3 on line 195
+  - FATAL: Hardcoded Sacred Number 4 on line 196
+  - FATAL: Hardcoded Sacred Number 8 on line 200
+  - FATAL: Hardcoded Sacred Number 16 on line 208
+
+❌ protocols/_fractal.py
+  - FATAL: Hardcoded Sacred Number 16 on line 102
+  - FATAL: Hardcoded Sacred Number 16 on line 129
+  - FATAL: Hardcoded Sacred Number 3 on line 393
+
+❌ protocols/_declaration.py
+  - FATAL: Hardcoded Sacred Number 16 on line 164
+  - FATAL: Hardcoded Sacred Number 4 on line 223
+  - FATAL: Hardcoded Sacred Number 4 on line 227
+
+❌ protocols/llm.py
+  - FATAL: Hardcoded Sacred Number 3 on line 50
+  - FATAL: Hardcoded Sacred Number 4 on line 51
+  - FATAL: Hardcoded Sacred Number 8 on line 55
+  - FATAL: Hardcoded Sacred Number 4 on line 72
+
+❌ protocols/_indriya.py
+  - FATAL: Usage of 'Any' type on line 349
+  - FATAL: Hardcoded Sacred Number 8 on line 372
+
+❌ protocols/_gad.py
+  - FATAL: Hardcoded Sacred Number 3 on line 134
+  - FATAL: Hardcoded Sacred Number 4 on line 137
+  - FATAL: Hardcoded Sacred Number 3 on line 154
+  - FATAL: Hardcoded Sacred Number 3 on line 168
+  - FATAL: Hardcoded Sacred Number 4 on line 453
+  - FATAL: Hardcoded Sacred Number 3 on line 453
+  - FATAL: Hardcoded Sacred Number 4 on line 456
+
+❌ protocols/_core.py
+  - FATAL: Hardcoded Sacred Number 16 on line 103
+  - FATAL: Hardcoded Sacred Number 4 on line 105
+  - FATAL: Hardcoded Sacred Number 3 on line 128
+  - FATAL: Hardcoded Sacred Number 4 on line 129
+  - FATAL: Hardcoded Sacred Number 16 on line 170
+  - FATAL: Hardcoded Sacred Number 4 on line 184
+  - FATAL: Hardcoded Sacred Number 4 on line 188
+  - FATAL: Usage of 'Any' type on line 476
+  - FATAL: Usage of 'Any' type on line 480
+
+❌ protocols/_sense.py
+  - FATAL: Hardcoded Sacred Number 4 on line 256
+  - FATAL: Hardcoded Sacred Number 8 on line 260
+
+❌ protocols/_payload.py
+  - FATAL: Hardcoded Sacred Number 3 on line 145
+  - FATAL: Hardcoded Sacred Number 4 on line 151
+  - FATAL: Hardcoded Sacred Number 3 on line 176
+  - FATAL: Hardcoded Sacred Number 4 on line 177
+  - FATAL: Usage of 'Any' type on line 329
+  - FATAL: Hardcoded Sacred Number 8 on line 360
+  - FATAL: Hardcoded Sacred Number 8 on line 365
+  - FATAL: Hardcoded Sacred Number 8 on line 368
+  - FATAL: Hardcoded Sacred Number 8 on line 371
+  - FATAL: Hardcoded Sacred Number 8 on line 371
+  - FATAL: Hardcoded Sacred Number 16 on line 410
+
+❌ protocols/_bridge.py
+  - FATAL: Hardcoded Sacred Number 3 on line 40
+
+❌ protocols/_steward.py
+  - FATAL: Hardcoded Sacred Number 4 on line 45
+
+❌ protocols/transform.py
+  - FATAL: Hardcoded Sacred Number 137 on line 14
+
+❌ protocols/_adhikara.py
+  - FATAL: Hardcoded Sacred Number 37 on line 62
+  - FATAL: Hardcoded Sacred Number 3 on line 84
+  - FATAL: Hardcoded Sacred Number 4 on line 85
+  - FATAL: Hardcoded Sacred Number 8 on line 89
+  - FATAL: Hardcoded Sacred Number 3 on line 109
+  - FATAL: Hardcoded Sacred Number 3 on line 117
+  - FATAL: Hardcoded Sacred Number 16 on line 151
+  - FATAL: Hardcoded Sacred Number 16 on line 151
+  - FATAL: Hardcoded Sacred Number 16 on line 231
+  - FATAL: Hardcoded Sacred Number 16 on line 231
+
+❌ protocols/hardware.py
+  - FATAL: Hardcoded Sacred Number 3 on line 53
+  - FATAL: Hardcoded Sacred Number 4 on line 54
+
+❌ protocols/_rollout.py
+  - FATAL: Hardcoded Sacred Number 16 on line 39
+  - FATAL: Usage of 'Any' type on line 106
+  - FATAL: Usage of 'Any' type on line 156
+
+❌ protocols/_lila.py
+  - FATAL: Hardcoded Sacred Number 4 on line 40
+
+❌ protocols/_header.py
+  - FATAL: Hardcoded Sacred Number 8 on line 95
+  - FATAL: Hardcoded Sacred Number 3 on line 120
+  - FATAL: Hardcoded Sacred Number 4 on line 121
+  - FATAL: Hardcoded Sacred Number 8 on line 125
+  - FATAL: Hardcoded Sacred Number 3 on line 214
+  - FATAL: Hardcoded Sacred Number 4 on line 215
+  - FATAL: Hardcoded Sacred Number 8 on line 219
+
+❌ protocols/_dhyana.py
+  - FATAL: Hardcoded Sacred Number 3 on line 107
+  - FATAL: Hardcoded Sacred Number 4 on line 108
+  - FATAL: Usage of 'Any' type on line 214
+  - FATAL: Hardcoded Sacred Number 3 on line 373
+  - FATAL: Hardcoded Sacred Number 3 on line 378
+  - FATAL: Usage of 'Any' type on line 365
+  - FATAL: Usage of 'Any' type on line 420
+  - FATAL: Usage of 'Any' type on line 479
+
+❌ protocols/compute.py
+  - FATAL: Hardcoded Sacred Number 8 on line 15
+  - FATAL: Hardcoded Sacred Number 4 on line 26
+
+❌ protocols/_entropy.py
+  - FATAL: Hardcoded Sacred Number 8 on line 59
+  - FATAL: Hardcoded Sacred Number 8 on line 385
+  - FATAL: Hardcoded Sacred Number 3 on line 441
+
+❌ protocols/seed/_secondary.py
+  - FATAL: Hardcoded Sacred Number 108 on line 88
+  - FATAL: Hardcoded Sacred Number 37 on line 92
+
+❌ protocols/seed/_axioms.py
+  - FATAL: Hardcoded Sacred Number 16 on line 16
+  - FATAL: Hardcoded Sacred Number 3 on line 19
+  - FATAL: Hardcoded Sacred Number 8 on line 22
+  - FATAL: Hardcoded Sacred Number 4 on line 23
+  - FATAL: Hardcoded Sacred Number 4 on line 24
+
+❌ protocols/seed/_extended.py
+  - FATAL: Hardcoded Sacred Number 8 on line 136
+  - FATAL: Hardcoded Sacred Number 3 on line 137
+  - FATAL: Hardcoded Sacred Number 4 on line 137
+  - FATAL: Hardcoded Sacred Number 137 on line 185
+  - FATAL: Hardcoded Sacred Number 3 on line 203
+  - FATAL: Hardcoded Sacred Number 4 on line 204
+
+❌ protocols/seed/_cosmic.py
+  - FATAL: Hardcoded Sacred Number 4 on line 53
+
+❌ protocols/seed/_primary.py
+  - FATAL: Hardcoded Sacred Number 4 on line 84
+  - FATAL: Hardcoded Sacred Number 8 on line 84
+
+❌ protocols/sankalpa/types.py
+  - FATAL: Hardcoded Sacred Number 3 on line 205
+
+❌ genesis/__init__.py
+  - FATAL: Hardcoded Sacred Number 4 on line 24
+  - FATAL: Hardcoded Sacred Number 3 on line 43
+  - FATAL: Hardcoded Sacred Number 3 on line 59
+  - FATAL: Hardcoded Sacred Number 3 on line 74
+
+❌ genesis/vyasa/__init__.py
+  - FATAL: Hardcoded Sacred Number 37 on line 35
+
+❌ genesis/shambhu/__init__.py
+  - FATAL: Hardcoded Sacred Number 3 on line 20
+  - FATAL: Hardcoded Sacred Number 3 on line 32
+
+❌ kernel/intent.py
+  - FATAL: Hardcoded Sacred Number 37 on line 208
+
+❌ kernel/singularity.py
+  - FATAL: Hardcoded Sacred Number 4 on line 235
+  - FATAL: Hardcoded Sacred Number 3 on line 250
+  - FATAL: Hardcoded Sacred Number 8 on line 275
+  - FATAL: Hardcoded Sacred Number 4 on line 1005
+  - FATAL: Hardcoded Sacred Number 8 on line 1007
+  - FATAL: Hardcoded Sacred Number 4 on line 1042
+  - FATAL: Hardcoded Sacred Number 8 on line 1044
+  - FATAL: Hardcoded Sacred Number 3 on line 1074
+
+❌ kernel/maha_kernel.py
+  - FATAL: Hardcoded Sacred Number 8 on line 146
+  - FATAL: Usage of 'Any' type on line 182
+
+❌ kernel/fractal.py
+  - FATAL: Hardcoded Sacred Number 3 on line 252
+  - FATAL: Hardcoded Sacred Number 3 on line 252
+  - FATAL: Hardcoded Sacred Number 3 on line 262
+  - FATAL: Hardcoded Sacred Number 3 on line 262
+  - FATAL: Hardcoded Sacred Number 37 on line 303
+  - FATAL: Hardcoded Sacred Number 37 on line 323
+
+❌ kernel/daemon.py
+  - FATAL: Hardcoded Sacred Number 108 on line 123
+  - FATAL: Hardcoded Sacred Number 4 on line 337
+
+❌ lila/registry.py
+  - FATAL: Usage of 'Any' type on line 95
+  - FATAL: Usage of 'Any' type on line 183
+  - FATAL: Usage of 'Any' type on line 319
+  - FATAL: Usage of 'Any' type on line 337
+
+❌ lila/jiva_shadow.py
+  - FATAL: Hardcoded Sacred Number 3 on line 103
+  - FATAL: Hardcoded Sacred Number 4 on line 104
+  - FATAL: Hardcoded Sacred Number 8 on line 108
+  - FATAL: Hardcoded Sacred Number 16 on line 116
+  - FATAL: Hardcoded Sacred Number 37 on line 141
+  - FATAL: Hardcoded Sacred Number 4 on line 337
+  - FATAL: Hardcoded Sacred Number 4 on line 338
+  - FATAL: Hardcoded Sacred Number 8 on line 380
+
+❌ lila/adhikara.py
+  - FATAL: Hardcoded Sacred Number 8 on line 168
+
+❌ lila/adoption.py
+  - FATAL: Hardcoded Sacred Number 4 on line 22
+  - FATAL: Hardcoded Sacred Number 3 on line 110
+
+❌ lila/migration.py
+  - FATAL: Hardcoded Sacred Number 4 on line 19
+
+❌ namarupa/atom.py
+  - FATAL: Hardcoded Sacred Number 8 on line 48
+  - FATAL: Hardcoded Sacred Number 4 on line 66
+  - FATAL: Hardcoded Sacred Number 8 on line 73
+  - FATAL: Hardcoded Sacred Number 8 on line 83
+  - FATAL: Hardcoded Sacred Number 4 on line 125
+  - FATAL: Hardcoded Sacred Number 4 on line 125
+
+❌ reactor/shadow.py
+  - FATAL: Hardcoded Sacred Number 8 on line 50
+  - FATAL: Hardcoded Sacred Number 8 on line 205
+  - FATAL: Hardcoded Sacred Number 16 on line 231
+  - FATAL: Hardcoded Sacred Number 16 on line 389
+  - FATAL: Hardcoded Sacred Number 16 on line 412
+  - FATAL: Hardcoded Sacred Number 16 on line 452
+  - FATAL: Hardcoded Sacred Number 37 on line 473
+  - FATAL: Hardcoded Sacred Number 137 on line 473
+  - FATAL: Hardcoded Sacred Number 8 on line 723
+  - FATAL: Hardcoded Sacred Number 16 on line 1049
+
+❌ reactor/shadow_protocol.py
+  - FATAL: Hardcoded Sacred Number 8 on line 38
+  - FATAL: Hardcoded Sacred Number 8 on line 75
+
+========================================
+Checked: 352 files
+Violations: 1137

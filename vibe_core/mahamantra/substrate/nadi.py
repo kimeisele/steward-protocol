@@ -31,10 +31,11 @@ The 9 NADI OPERATIONS map to NavaBhakti:
 8. SAKHYAM (Friendship)   → CONNECT
 9. ATMA_NIVEDANAM (Surrender) → COMMIT
 """
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, KSETRAJNA, PANCHA, QUARTERS, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0x646fe98f"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -66,11 +67,11 @@ from vibe_core.mahamantra.substrate.seed import (
 NADI_CAPACITY: Final[int] = NADI_RESONANCE  # 72
 
 # Message buffer = NADI_RESONANCE × 2 (144 pending messages)
-NADI_BUFFER_SIZE: Final[int] = NADI_RESONANCE * 2  # 144
+NADI_BUFFER_SIZE: Final[int] = NADI_RESONANCE * HALVES  # 144
 
 # Heartbeat interval = TICK_INTERVAL_MS × NADI_RESONANCE / 18
 # = 250 × 72 / 18 = 250 × 4 = 1000ms = 1 second
-NADI_HEARTBEAT_MS: Final[int] = (TICK_INTERVAL_MS * NADI_RESONANCE) // 18  # 1000ms
+NADI_HEARTBEAT_MS: Final[int] = (TICK_INTERVAL_MS * NADI_RESONANCE) // GITA_CHAPTERS  # 1000ms
 
 # Connection timeout = PRANA_DURATION_MS × SHARANAGATI
 # = 4000 × 6 = 24000ms = 24 seconds (one Kshetra of time)
@@ -108,10 +109,10 @@ class NadiType(IntEnum):
     """
 
     PRANA = 0  # User ↔ System (Chat/UI)
-    APANA = 1  # Agent ↔ Agent (Synapse compatibility)
-    VYANA = 2  # Service ↔ Service (IPC)
-    UDANA = 3  # Agent ↔ Mahajana (Routing)
-    SAMANA = 4  # Kernel ↔ Shadow (TaskKernel)
+    APANA = KSETRAJNA  # Agent ↔ Agent (Synapse compatibility)
+    VYANA = HALVES  # Service ↔ Service (IPC)
+    UDANA = TRINITY  # Agent ↔ Mahajana (Routing)
+    SAMANA = QUARTERS  # Kernel ↔ Shadow (TaskKernel)
 
 
 NADI_TYPE_NAMES: Final[Tuple[str, ...]] = (
@@ -122,7 +123,7 @@ NADI_TYPE_NAMES: Final[Tuple[str, ...]] = (
     "samana",  # Kernel dispatch
 )
 
-assert len(NadiType) == 5, "Pancha Nadi types"
+assert len(NadiType) == PANCHA, "Pancha Nadi types"
 
 
 # =============================================================================
@@ -180,9 +181,9 @@ class NadiPriority(IntEnum):
     """
 
     TAMAS = 0  # Background
-    RAJAS = 1  # Normal
-    SATTVA = 2  # Important
-    SUDDHA = 3  # Critical
+    RAJAS = KSETRAJNA  # Normal
+    SATTVA = HALVES  # Important
+    SUDDHA = TRINITY  # Critical
 
 
 # =============================================================================
@@ -202,7 +203,7 @@ class NadiMessage:
     target: str  # Receiver ID ("*" = broadcast)
     nadi_type: NadiType  # Type of connection
     operation: NadiOp  # What operation
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: Dict[str, object] = field(default_factory=dict)
     priority: NadiPriority = NadiPriority.RAJAS
     correlation_id: Optional[str] = None  # For request/response
     timestamp: datetime = field(default_factory=datetime.now)
@@ -330,7 +331,7 @@ class NadiProtocol(Protocol):
         """Send a message. Returns True if queued."""
         ...
 
-    def broadcast(self, operation: NadiOp, payload: Dict[str, Any]) -> int:
+    def broadcast(self, operation: NadiOp, payload: Dict[str, object]) -> int:
         """Broadcast to all connections. Returns count sent."""
         ...
 
@@ -348,7 +349,7 @@ class NadiProtocol(Protocol):
         self,
         target: str,
         operation: NadiOp,
-        payload: Dict[str, Any],
+        payload: Dict[str, object],
         timeout_ms: int = NADI_TIMEOUT_MS,
     ) -> Optional[NadiMessage]:
         """Send request and wait for response."""
@@ -357,7 +358,7 @@ class NadiProtocol(Protocol):
     def respond(
         self,
         original: NadiMessage,
-        payload: Dict[str, Any],
+        payload: Dict[str, object],
     ) -> bool:
         """Respond to a request."""
         ...
@@ -429,7 +430,7 @@ class NullNadi:
     def send(self, message: NadiMessage) -> bool:
         return False
 
-    def broadcast(self, operation: NadiOp, payload: Dict[str, Any]) -> int:
+    def broadcast(self, operation: NadiOp, payload: Dict[str, object]) -> int:
         return 0
 
     def receive(self, timeout_ms: Optional[int] = None) -> Optional[NadiMessage]:
@@ -442,12 +443,12 @@ class NullNadi:
         self,
         target: str,
         operation: NadiOp,
-        payload: Dict[str, Any],
+        payload: Dict[str, object],
         timeout_ms: int = NADI_TIMEOUT_MS,
     ) -> Optional[NadiMessage]:
         return None
 
-    def respond(self, original: NadiMessage, payload: Dict[str, Any]) -> bool:
+    def respond(self, original: NadiMessage, payload: Dict[str, object]) -> bool:
         return False
 
     def subscribe(
@@ -568,7 +569,7 @@ class LocalNadi(GADBase):
             issues.append(f"Connections ({len(self._connections)}) exceed NADI_CAPACITY ({NADI_CAPACITY})")
 
         # Check for stale connections
-        stale_count = sum(1 for c in self._connections.values() if c.is_stale)
+        stale_count = sum(KSETRAJNA for c in self._connections.values() if c.is_stale)
         if stale_count > 0:
             issues.append(f"{stale_count} stale connections detected")
 
@@ -581,8 +582,8 @@ class LocalNadi(GADBase):
     def test_tapas(self) -> bool:
         """GAD Tapas: Test resource efficiency."""
         # Check we're not wasting resources on stale connections
-        stale = sum(1 for c in self._connections.values() if c.is_stale)
-        return stale <= len(self._connections) // 2
+        stale = sum(KSETRAJNA for c in self._connections.values() if c.is_stale)
+        return stale <= len(self._connections) // HALVES
 
     def test_saucam(self) -> bool:
         """GAD Saucam: Test connection purity."""
@@ -649,13 +650,13 @@ class LocalNadi(GADBase):
                 return False
 
             target_nadi._deliver(message)
-            self._stats["sent"] += 1
-            self._connections[message.target].messages_sent += 1
+            self._stats["sent"] += KSETRAJNA
+            self._connections[message.target].messages_sent += KSETRAJNA
             self._connections[message.target].last_activity = datetime.now()
 
         return True
 
-    def broadcast(self, operation: NadiOp, payload: Dict[str, Any]) -> int:
+    def broadcast(self, operation: NadiOp, payload: Dict[str, object]) -> int:
         message = NadiMessage(
             source=self._endpoint_id,
             target="*",
@@ -670,7 +671,7 @@ class LocalNadi(GADBase):
                 target_nadi = self._hub.get(target_id)
                 if target_nadi:
                     target_nadi._deliver(message)
-                    count += 1
+                    count += KSETRAJNA
 
         self._stats["sent"] += count
         return count
@@ -696,11 +697,11 @@ class LocalNadi(GADBase):
 
         # Queue in inbox
         self._inbox.append(message)
-        self._stats["received"] += 1
+        self._stats["received"] += KSETRAJNA
 
         # Update connection stats
         if message.source in self._connections:
-            self._connections[message.source].messages_received += 1
+            self._connections[message.source].messages_received += KSETRAJNA
             self._connections[message.source].last_activity = datetime.now()
 
     # =========================================================================
@@ -730,7 +731,7 @@ class LocalNadi(GADBase):
         self,
         target: str,
         operation: NadiOp,
-        payload: Dict[str, Any],
+        payload: Dict[str, object],
         timeout_ms: int = NADI_TIMEOUT_MS,
     ) -> Optional[NadiMessage]:
         correlation_id = str(self._uuid())
@@ -763,7 +764,7 @@ class LocalNadi(GADBase):
         del self._pending_requests[correlation_id]
         return None
 
-    def respond(self, original: NadiMessage, payload: Dict[str, Any]) -> bool:
+    def respond(self, original: NadiMessage, payload: Dict[str, object]) -> bool:
         if not original.correlation_id:
             return False
 

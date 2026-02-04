@@ -37,12 +37,13 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0x3d990745"  # GenesisByte: parampara % 37 == 0
 
 import logging
@@ -175,7 +176,7 @@ class StewardState:
         """Record a heartbeat."""
         self.last_heartbeat = datetime.now().isoformat()
         # Verify parampara connection
-        self.parampara_vector = (self.active_protocols + 1) * PARAMPARA
+        self.parampara_vector = (self.active_protocols + KSETRAJNA) * PARAMPARA
         self.parampara_connected = self.parampara_vector % PARAMPARA == 0
 
     def awaken(self) -> None:
@@ -404,7 +405,7 @@ class StewardSystem:
 
         # Calculate health score
         total_issues = len(protocol_issues) + len(disconnected)
-        total_items = max(1, len(self._protocols))
+        total_items = max(KSETRAJNA, len(self._protocols))
         health_score = max(0.0, 1.0 - (total_issues / total_items))
 
         return StewardAudit(

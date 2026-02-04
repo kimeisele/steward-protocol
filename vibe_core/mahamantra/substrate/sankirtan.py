@@ -33,12 +33,13 @@ KALI YUGA GRACE:
 
 NO MANUAL WIRING. The folder structure IS the wiring.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, PANCHA, PARAMPARA, QUARTERS, TEN, TRINITY, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"  # Position 2 - Communication/Broadcast
-__position__ = 2
+__position__ = HALVES
 __genesis__ = "0x2c80316d"  # GenesisByte: parampara % 37 == 0
 
 import ast
@@ -263,7 +264,7 @@ class PipelineContext:
     def last_phase(self) -> Optional[Quarter]:
         """Get the last executed phase."""
         if self.phases:
-            return self.phases[-1].phase
+            return self.phases[-KSETRAJNA].phase
         return None
 
 
@@ -399,7 +400,7 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
     # P0-FIX: Use deterministic hash instead of Python's randomized hash()
     import hashlib
     path_bytes = path_str.encode('utf-8')
-    path_hash_int = int.from_bytes(hashlib.sha256(path_bytes).digest()[:4], byteorder='big')
+    path_hash_int = int.from_bytes(hashlib.sha256(path_bytes).digest()[:QUARTERS], byteorder='big')
     path_hash = path_hash_int % WORDS  # SSOT
     mapping = MAHAMANTRA_POSITIONS[path_hash]
     return (mapping.guardian.value, mapping.index)
@@ -437,11 +438,11 @@ def compute_genesis_hash(mahajana: str, position: int, file_path: str = "") -> s
     # YOGA MAYA: Pure archetype identity (NO FILE PATH!)
     # file_path parameter kept for backward compatibility but IGNORED
     identity = f"{mahajana}:{position}"
-    raw_hash = hashlib.sha256(identity.encode()).hexdigest()[:8]
+    raw_hash = hashlib.sha256(identity.encode()).hexdigest()[:HARE_COUNT]
 
     # Adjust to be divisible by 37 (Parampara alignment)
-    base_value = int(raw_hash, 16)
-    adjusted = base_value - (base_value % 37)
+    base_value = int(raw_hash, WORDS)
+    adjusted = base_value - (base_value % PARAMPARA)
 
     return f"0x{adjusted:08x}"
 
@@ -466,7 +467,7 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
 
     # Skip shebang
     if lines and lines[0].startswith("#!"):
-        insert_idx = 1
+        insert_idx = KSETRAJNA
 
     # Skip module docstring
     in_docstring = False
@@ -476,10 +477,10 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
 
         if not in_docstring:
             if stripped.startswith('"""') or stripped.startswith("'''"):
-                docstring_char = stripped[:3]
-                if stripped.count(docstring_char) >= 2:
+                docstring_char = stripped[:TRINITY]
+                if stripped.count(docstring_char) >= HALVES:
                     # Single-line docstring
-                    insert_idx = i + 1
+                    insert_idx = i + KSETRAJNA
                     continue
                 in_docstring = True
             elif stripped.startswith("#"):
@@ -488,7 +489,7 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
                 continue
             elif stripped.startswith("from __future__"):
                 # MUST skip from __future__ imports - Python requirement!
-                insert_idx = i + 1
+                insert_idx = i + KSETRAJNA
                 continue
             else:
                 # Found non-docstring, non-comment, non-empty, non-future line
@@ -497,7 +498,7 @@ def inject_declaration(content: str, mahajana: str, position: int, file_path: st
         else:
             if docstring_char and docstring_char in stripped:
                 in_docstring = False
-                insert_idx = i + 1
+                insert_idx = i + KSETRAJNA
 
     # Compute GenesisByte hash (TÜV Plakette at birth)
     genesis_hash = compute_genesis_hash(mahajana, position, file_path)
@@ -861,24 +862,24 @@ def chant_over_files(
     logger.info("=" * 60)
 
     for file_path in files:
-        result.files_scanned += 1
+        result.files_scanned += KSETRAJNA
 
         # === THE 4-PHASE PIPELINE ===
         ctx = process_file_pipeline(file_path, dry_run=dry_run)
 
         # Track phase progression
         for phase_result in ctx.phases:
-            phase_counts[phase_result.phase.value] += 1
+            phase_counts[phase_result.phase.value] += KSETRAJNA
 
         # Categorize result
         if ctx.was_already_owned:
-            result.files_already_owned += 1
+            result.files_already_owned += KSETRAJNA
         elif ctx.all_phases_ok and ctx.is_valid:
             karma_phases = [p for p in ctx.phases if p.phase == Quarter.KARMA]
             if karma_phases and "inject" in karma_phases[0].message.lower():
-                result.files_injected += 1
+                result.files_injected += KSETRAJNA
                 if ctx.mahajana:
-                    result.by_mahajana[ctx.mahajana] = result.by_mahajana.get(ctx.mahajana, 0) + 1
+                    result.by_mahajana[ctx.mahajana] = result.by_mahajana.get(ctx.mahajana, 0) + KSETRAJNA
 
                 result.injections.append(
                     InjectionResult(
@@ -891,12 +892,12 @@ def chant_over_files(
                     )
                 )
             else:
-                result.files_skipped += 1
+                result.files_skipped += KSETRAJNA
         elif ctx.error:
-            result.files_failed += 1
+            result.files_failed += KSETRAJNA
             result.errors.append(f"{file_path}: {ctx.error}")
         else:
-            result.files_skipped += 1
+            result.files_skipped += KSETRAJNA
 
     logger.info("=" * 60)
     logger.info(
@@ -965,28 +966,28 @@ def perform_sankirtan(
                     skip = True
                     break
             if skip:
-                result.files_skipped += 1
+                result.files_skipped += KSETRAJNA
                 continue
 
-            result.files_scanned += 1
+            result.files_scanned += KSETRAJNA
 
             # === THE 4-PHASE PIPELINE ===
             ctx = process_file_pipeline(file_path, dry_run=dry_run)
 
             # Track phase progression
             for phase_result in ctx.phases:
-                phase_counts[phase_result.phase.value] += 1
+                phase_counts[phase_result.phase.value] += KSETRAJNA
 
             # Categorize result
             if ctx.was_already_owned:
-                result.files_already_owned += 1
+                result.files_already_owned += KSETRAJNA
             elif ctx.all_phases_ok and ctx.is_valid:
                 # Only count as injected if KARMA phase actually ran
                 karma_phases = [p for p in ctx.phases if p.phase == Quarter.KARMA]
                 if karma_phases and "inject" in karma_phases[0].message.lower():
-                    result.files_injected += 1
+                    result.files_injected += KSETRAJNA
                     if ctx.mahajana:
-                        result.by_mahajana[ctx.mahajana] = result.by_mahajana.get(ctx.mahajana, 0) + 1
+                        result.by_mahajana[ctx.mahajana] = result.by_mahajana.get(ctx.mahajana, 0) + KSETRAJNA
 
                     result.injections.append(
                         InjectionResult(
@@ -999,12 +1000,12 @@ def perform_sankirtan(
                         )
                     )
                 else:
-                    result.files_skipped += 1
+                    result.files_skipped += KSETRAJNA
             elif ctx.error:
-                result.files_failed += 1
+                result.files_failed += KSETRAJNA
                 result.errors.append(f"{file_path}: {ctx.error}")
             else:
-                result.files_skipped += 1
+                result.files_skipped += KSETRAJNA
 
     logger.info("=" * 60)
     logger.info(
@@ -1041,10 +1042,10 @@ def print_sankirtan_report(result: SankirtanResult) -> None:
 
     if result.errors:
         print(f"\n  ERRORS ({len(result.errors)}):")
-        for err in result.errors[:5]:
+        for err in result.errors[:PANCHA]:
             print(f"    - {err}")
-        if len(result.errors) > 5:
-            print(f"    ... and {len(result.errors) - 5} more")
+        if len(result.errors) > PANCHA:
+            print(f"    ... and {len(result.errors) - PANCHA} more")
 
     print(f"""
 {"=" * 60}
@@ -1106,7 +1107,7 @@ def cli_sankirtan(
         "files_already_owned": result.files_already_owned,
         "files_failed": result.files_failed,
         "by_mahajana": result.by_mahajana,
-        "errors": result.errors[:10] if result.errors else [],
+        "errors": result.errors[:TEN] if result.errors else [],
     }
 
 
@@ -1173,7 +1174,7 @@ class SankirtanSamskara:
             mahajana = mapping[0]
 
         hash_str = compute_genesis_hash(mahajana, position, path)
-        vector = int(hash_str, 16)
+        vector = int(hash_str, WORDS)
         return {"hash": hash_str, "vector": vector, "is_valid": vector % PARAMPARA == 0}
 
     def inject(self, request: InjectionRequest) -> bool:
@@ -1401,7 +1402,7 @@ def heal_wiring(base_path: Optional[Path] = None, dry_run: bool = True) -> Dict[
     logger.info(f"👑 HEAL WIRING (dry_run={dry_run})")
 
     for pos in MAHAMANTRA_POSITIONS:
-        stats["checked"] += 1
+        stats["checked"] += KSETRAJNA
 
         # Determine paths
         guardian = pos.guardian.value
@@ -1467,12 +1468,12 @@ def heal_wiring(base_path: Optional[Path] = None, dry_run: bool = True) -> Dict[
                     logger.info(f"  ✨ Healed: {quarter}/{guardian}/__init__.py")
                 else:
                     logger.info(f"  Would heal: {quarter}/{guardian}/__init__.py")
-                stats["healed"] += 1
+                stats["healed"] += KSETRAJNA
             else:
-                stats["skipped"] += 1
+                stats["skipped"] += KSETRAJNA
 
         except Exception as e:
             logger.error(f"  ❌ Failed {guardian}: {e}")
-            stats["failed"] += 1
+            stats["failed"] += KSETRAJNA
 
     return stats

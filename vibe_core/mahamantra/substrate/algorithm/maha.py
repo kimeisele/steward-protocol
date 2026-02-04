@@ -14,8 +14,9 @@ COMPONENTS:
 1. MahaAlgorithm16: The pure 16-step sequencer.
 2. MahaModularSynth: The runtime-adjustable transformer engine.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, KSETRAJNA, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUALITIES, QUARTERS, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -83,10 +84,10 @@ from vibe_core.mahamantra.protocols.offering import GraceProtocol
 class Phase(Enum):
     """The 4 algorithmic phases = QUARTERS."""
 
-    KSETRAJNA = 1  # Q1: Generate intent
-    KRISHNA = 2  # Q2: Sanction
-    PRAKRITI = 3  # Q3: Execute
-    KARMA = 4  # Q4: Record
+    KSETRAJNA = KSETRAJNA  # Q1: Generate intent
+    KRISHNA = HALVES  # Q2: Sanction
+    PRAKRITI = TRINITY  # Q3: Execute
+    KARMA = QUARTERS  # Q4: Record
 
 
 PHASE_SANSKRIT: Final[Dict[Phase, str]] = {
@@ -157,7 +158,7 @@ class AlgorithmStep:
 
 def triangular(n: int) -> int:
     """Compute triangular number T(n) = n(n+1)/2."""
-    return n * (n + 1) // 2
+    return n * (n + KSETRAJNA) // HALVES
 
 
 def _build_steps() -> Tuple[AlgorithmStep, ...]:
@@ -166,9 +167,9 @@ def _build_steps() -> Tuple[AlgorithmStep, ...]:
     for pos in range(WORDS):
         phase_idx = pos // QUARTERS
         phase = list(Phase)[phase_idx]
-        phase_pos = (pos % QUARTERS) + 1
+        phase_pos = (pos % QUARTERS) + KSETRAJNA
         step = AlgorithmStep(
-            position=pos + 1,
+            position=pos + KSETRAJNA,
             phase=phase,
             name=PATTERN[pos],
             phase_position=phase_pos,
@@ -185,7 +186,7 @@ MAHA_16_STEPS: Final[Tuple[AlgorithmStep, ...]] = _build_steps()
 # =============================================================================
 
 # Binary pattern: HARE=0, NAME=1
-BINARY_PATTERN: Final[Tuple[int, ...]] = tuple(0 if name == MAHAMANTRA_NAME_HARE else 1 for name in PATTERN)
+BINARY_PATTERN: Final[Tuple[int, ...]] = tuple(0 if name == MAHAMANTRA_NAME_HARE else KSETRAJNA for name in PATTERN)
 
 ADSR_ATTACK: Final[int] = PANCHA
 ADSR_DECAY: Final[int] = MAHAJANA_COUNT
@@ -242,7 +243,7 @@ class MahaAlgorithm16:
             op = _OP_MAP[step.name]
             v = (value * _MULT[op] + _ADD[op]) % mod
             squared = (v * v) % mod
-            value = _SQ[op] * squared + (1 - _SQ[op]) * v
+            value = _SQ[op] * squared + (KSETRAJNA - _SQ[op]) * v
         return value
 
     # =========================================================================
@@ -271,16 +272,16 @@ class MahaAlgorithm16:
             mantra_in_mala=mantra,
         )
 
-        self._state.total_ticks += 1
+        self._state.total_ticks += KSETRAJNA
         self._state.last_result = result
         if attr_type == AttractorType.FIXED_POINT:
-            self._state.fixed_point_count += 1
+            self._state.fixed_point_count += KSETRAJNA
         elif attr_type == AttractorType.CYCLE:
-            self._state.cycle_count += 1
+            self._state.cycle_count += KSETRAJNA
 
         if attractor not in self._state.attractor_histogram:
             self._state.attractor_histogram[attractor] = 0
-        self._state.attractor_histogram[attractor] += 1
+        self._state.attractor_histogram[attractor] += KSETRAJNA
 
         return result
 
@@ -294,7 +295,7 @@ class MahaAlgorithm16:
             if value in seen:
                 cycle_start = seen[value]
                 cycle_length = cycle - cycle_start
-                if cycle_length == 1:
+                if cycle_length == KSETRAJNA:
                     attr_type = AttractorType.FIXED_POINT
                 else:
                     attr_type = AttractorType.CYCLE
@@ -388,18 +389,18 @@ class MahaModularSynth:
         feedback_acc = 0
 
         for step in self.STEPS:
-            effective_pos = ((step.position - 1 + p.phase_offset) % WORDS) + 1
+            effective_pos = ((step.position - KSETRAJNA + p.phase_offset) % WORDS) + KSETRAJNA
 
             # Calculate modulations
             lfo = 0
             if p.lfo_enabled:
-                binary_val = BINARY_PATTERN[(step.position - 1) % WORDS]
-                phase_in_lfo = (step.position - 1) % p.lfo_rate
+                binary_val = BINARY_PATTERN[(step.position - KSETRAJNA) % WORDS]
+                phase_in_lfo = (step.position - KSETRAJNA) % p.lfo_rate
                 lfo = binary_val * phase_in_lfo
 
             # BRANCHLESS ADSR lookup by phase index (1-4 → 0-3)
             adsr_table = (p.adsr_attack, p.adsr_decay, p.adsr_sustain, p.adsr_release)
-            adsr = adsr_table[step.phase.value - 1]
+            adsr = adsr_table[step.phase.value - KSETRAJNA]
 
             # BRANCHLESS Apply Logic
             op = _OP_MAP[step.name]
@@ -410,12 +411,12 @@ class MahaModularSynth:
             # For RAMA: mult=1, add=feedback, sq=1
             #
             # Generalized formula with position-dependent adds
-            mult_coeff = (SEVEN * adsr, 1, 1)[op]
+            mult_coeff = (SEVEN * adsr, KSETRAJNA, KSETRAJNA)[op]
             add_coeff = (lfo, TEN + effective_pos + feedback_acc, feedback_acc)[op]
 
             v = (value * mult_coeff + add_coeff) % mod
             squared = (v * v) % mod
-            value = _SQ[op] * squared + (1 - _SQ[op]) * v
+            value = _SQ[op] * squared + (KSETRAJNA - _SQ[op]) * v
 
             feedback_acc = (feedback_acc + value * effective_feedback) % effective_mod_space
 
@@ -466,17 +467,17 @@ class MahaModularSynth:
         )
 
         # Update state
-        self._state.total_ticks += 1
+        self._state.total_ticks += KSETRAJNA
         self._state.last_result = result
         if attr_type == AttractorType.FIXED_POINT:
-            self._state.fixed_point_count += 1
+            self._state.fixed_point_count += KSETRAJNA
         elif attr_type == AttractorType.CYCLE:
-            self._state.cycle_count += 1
+            self._state.cycle_count += KSETRAJNA
 
         # Update histogram
         if attractor not in self._state.attractor_histogram:
             self._state.attractor_histogram[attractor] = 0
-        self._state.attractor_histogram[attractor] += 1
+        self._state.attractor_histogram[attractor] += KSETRAJNA
 
         return result
 
@@ -494,7 +495,7 @@ class MahaModularSynth:
                 cycle_start = seen[value]
                 cycle_length = cycle - cycle_start
                 # Determine type
-                if cycle_length == 1:
+                if cycle_length == KSETRAJNA:
                     attr_type = AttractorType.FIXED_POINT
                 else:
                     attr_type = AttractorType.CYCLE
@@ -539,7 +540,7 @@ def maha_step(value: int, name: str, mod: int) -> int:
     v = (value * _MULT[op] + _ADD[op]) % mod
     # Phase 2: Conditional square via arithmetic selection
     squared = (v * v) % mod
-    return _SQ[op] * squared + (1 - _SQ[op]) * v
+    return _SQ[op] * squared + (KSETRAJNA - _SQ[op]) * v
 
 
 def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
@@ -563,7 +564,7 @@ def maha_oscillate(value: int, mod: int = MAHA_QUANTUM) -> int:
     warnings.warn(
         "maha_oscillate only reaches 12/16 positions. Use MahaModularSynth.transform() instead.",
         DeprecationWarning,
-        stacklevel=2,
+        stacklevel=HALVES,
     )
     # Use optimized implementation (O(1) for mod=137, O(9) otherwise)
     return maha_oscillate_optimized(value, mod)
@@ -652,25 +653,25 @@ _MAHA_OSCILLATE_LUT: Final[Tuple[int, ...]] = (
     14,
     87,
     78,
-    64,
+    QUALITIES,
     15,
     14,
     121,
     14,
     103,
-    4,
+    QUARTERS,
     121,
     81,
     77,
-    136,
+    POSITION_SUM_TOTAL,
     103,
     87,
     81,
-    49,
+    POSITION_SUM_RAMA,
     87,
-    49,
+    POSITION_SUM_RAMA,
     14,
-    18,
+    GITA_CHAPTERS,
     77,
     63,
     22,
@@ -678,24 +679,24 @@ _MAHA_OSCILLATE_LUT: Final[Tuple[int, ...]] = (
     63,
     87,
     81,
-    18,
+    GITA_CHAPTERS,
     15,
     15,
     22,
     103,
     15,
-    64,
+    QUALITIES,
     65,
-    49,
-    49,
+    POSITION_SUM_RAMA,
+    POSITION_SUM_RAMA,
     65,
-    64,
+    QUALITIES,
     15,
     103,
     22,
     15,
     15,
-    18,
+    GITA_CHAPTERS,
     81,
     87,
     63,
@@ -703,55 +704,55 @@ _MAHA_OSCILLATE_LUT: Final[Tuple[int, ...]] = (
     22,
     63,
     77,
-    18,
+    GITA_CHAPTERS,
     14,
-    49,
+    POSITION_SUM_RAMA,
     87,
-    49,
+    POSITION_SUM_RAMA,
     81,
     87,
     103,
-    136,
+    POSITION_SUM_TOTAL,
     77,
     81,
     121,
-    4,
+    QUARTERS,
     103,
     14,
     121,
     14,
     15,
-    64,
+    QUALITIES,
     78,
     87,
     14,
     99,
-    136,
-    18,
-    4,
+    POSITION_SUM_TOTAL,
+    GITA_CHAPTERS,
+    QUARTERS,
     99,
-    64,
-    64,
-    136,
+    QUALITIES,
+    QUALITIES,
+    POSITION_SUM_TOTAL,
     63,
     103,
     22,
     77,
     77,
     78,
-    136,
+    POSITION_SUM_TOTAL,
     65,
     99,
     65,
     78,
-    4,
+    QUARTERS,
     121,
     81,
     63,
     65,
-    18,
-    49,
-    4,
+    GITA_CHAPTERS,
+    POSITION_SUM_RAMA,
+    QUARTERS,
     99,
     22,
     121,
@@ -759,37 +760,37 @@ _MAHA_OSCILLATE_LUT: Final[Tuple[int, ...]] = (
     121,
     22,
     99,
-    4,
-    49,
-    18,
+    QUARTERS,
+    POSITION_SUM_RAMA,
+    GITA_CHAPTERS,
     65,
     63,
     81,
     121,
-    4,
+    QUARTERS,
     78,
     65,
     99,
     65,
-    136,
+    POSITION_SUM_TOTAL,
     78,
     77,
     77,
     22,
     103,
     63,
-    136,
-    64,
-    64,
+    POSITION_SUM_TOTAL,
+    QUALITIES,
+    QUALITIES,
     99,
-    4,
-    18,
-    136,
+    QUARTERS,
+    GITA_CHAPTERS,
+    POSITION_SUM_TOTAL,
 )
 
 # The two attractors and the 4-cycle
-_ATTRACTOR_FIXED: Final[int] = 136  # T(16) = Position Sum Total
-_ATTRACTOR_CYCLE: Final[Tuple[int, ...]] = (18, 49, 87, 22)  # GITA → RAMA² → HARE+KRISHNA → SHRUTIS
+_ATTRACTOR_FIXED: Final[int] = POSITION_SUM_TOTAL  # T(16) = Position Sum Total
+_ATTRACTOR_CYCLE: Final[Tuple[int, ...]] = (GITA_CHAPTERS, POSITION_SUM_RAMA, 87, 22)  # GITA → RAMA² → HARE+KRISHNA → SHRUTIS
 
 # Algebraic constants for Half 1
 _HALF1_MULT: Final[int] = 72  # 49*49 % 137 = 2401 % 137
@@ -912,7 +913,7 @@ class DynamicMahaEngine:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             self._value = maha_oscillate(self._value, self._mod)
-        self._cycle += 1
+        self._cycle += KSETRAJNA
 
         # Check if we've seen this value before
         if self._value in self._seen:

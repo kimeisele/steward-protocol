@@ -7,8 +7,9 @@ MAHA ORACLE - The Intent-to-Resonance Interface
 Receives a question (intent) and returns a reading by viewing it 
 through multiple sacred lenses (mod-spaces).
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
+
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
@@ -49,9 +50,9 @@ from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
 # RAMA: char_val * t_pos (multiplicative)
 #
 # Using selection trick: contribution = is_mult * mult_result + (1-is_mult) * add_result
-_ENCODE_OP_MAP: Final[Dict[str, int]] = {"H": 0, "K": 1, "R": 2}
-_ENCODE_IS_MULT: Final[Tuple[int, ...]] = (1, 0, 1)  # HARE=mult, KRISHNA=add, RAMA=mult
-_ENCODE_MULT_FACTOR: Final[Tuple[int, ...]] = (SEVEN, 1, 1)  # HARE×7, K×1(unused), RAMA×1
+_ENCODE_OP_MAP: Final[Dict[str, int]] = {"H": 0, "K": KSETRAJNA, "R": HALVES}
+_ENCODE_IS_MULT: Final[Tuple[int, ...]] = (KSETRAJNA, 0, KSETRAJNA)  # HARE=mult, KRISHNA=add, RAMA=mult
+_ENCODE_MULT_FACTOR: Final[Tuple[int, ...]] = (SEVEN, KSETRAJNA, KSETRAJNA)  # HARE×7, K×1(unused), RAMA×1
 
 
 @dataclass(frozen=True)
@@ -113,7 +114,7 @@ class MahaOracle:
         value = 0
         for i, char in enumerate(intent):
             char_val = ord(char)
-            pos = (i % WORDS) + 1
+            pos = (i % WORDS) + KSETRAJNA
             t_pos = triangular(pos)
             pattern_char = PATTERN[i % WORDS]
 
@@ -128,7 +129,7 @@ class MahaOracle:
             add_result = (char_val + t_pos + TEN) % MAHA_QUANTUM
 
             # Select via arithmetic: is_mult * mult + (1-is_mult) * add
-            contribution = is_mult * mult_result + (1 - is_mult) * add_result
+            contribution = is_mult * mult_result + (KSETRAJNA - is_mult) * add_result
             value = (value + contribution) % MAHA_QUANTUM
 
         return self._resonators[MAHA_QUANTUM].oscillate_once(value)
@@ -141,7 +142,7 @@ class MahaOracle:
             mod_space=mod_space,
             meaning=meaning,
             resonance=seed % mod_space,
-            is_fixed_point=(result.cycle_length == 1 and result.cycles_to_converge == 0),
+            is_fixed_point=(result.cycle_length == KSETRAJNA and result.cycles_to_converge == 0),
             attractor=result.attractor,
             cycles=result.cycles_to_converge,
         )
@@ -168,7 +169,7 @@ class MahaOracle:
             
         parampara_lens = lenses_by_name.get("PARAMPARA")
         parampara_validated = False
-        parampara_channel = -1
+        parampara_channel = -KSETRAJNA
         if parampara_lens and parampara_lens.attractor in PARAMPARA_CHANNELS:
             parampara_validated = True
             parampara_channel = PARAMPARA_CHANNELS.index(parampara_lens.attractor)
@@ -180,8 +181,8 @@ class MahaOracle:
         # Find holographic
         counts: Dict[int, int] = {}
         for l in lenses:
-            counts[l.attractor] = counts.get(l.attractor, 0) + 1
-        holographic = tuple(sorted([v for v, c in counts.items() if c > 1]))
+            counts[l.attractor] = counts.get(l.attractor, 0) + KSETRAJNA
+        holographic = tuple(sorted([v for v, c in counts.items() if c > KSETRAJNA]))
         
         reading = {
             "parampara_validated": parampara_validated,

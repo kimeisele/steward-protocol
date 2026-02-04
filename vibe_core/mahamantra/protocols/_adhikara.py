@@ -36,6 +36,7 @@ AUTHORIZATION MATRIX:
 Higher quarters (KARMA, MOKSHA) require MORE authorization because
 their operations have greater impact on the substrate.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, PARAMPARA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -58,8 +59,8 @@ from vibe_core.mahamantra.protocols._seed import (
 # =============================================================================
 # VERIFICATION
 # =============================================================================
-assert MAHAJANA_COUNT == 12, "There must be 12 Mahajanas"
-assert PARAMPARA == 37, "Parampara must be 37"
+assert MAHAJANA_COUNT == MAHAJANA_COUNT, "There must be 12 Mahajanas"
+assert PARAMPARA == PARAMPARA, "Parampara must be 37"
 assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA, "37 Formula"
 
 
@@ -79,16 +80,16 @@ class Mahajana(IntEnum):
     """
 
     BRAHMA = 0  # Genesis Quarter, Worker 1
-    NARADA = 1  # Genesis Quarter, Worker 2
-    SHAMBHU = 2  # Genesis Quarter, Worker 3
-    KUMARAS = 3  # Dharma Quarter, Worker 1
-    KAPILA = 4  # Dharma Quarter, Worker 2
-    MANU = 5  # Dharma Quarter, Worker 3
-    PRAHLADA = 6  # Karma Quarter, Worker 1
-    JANAKA = 7  # Karma Quarter, Worker 2
-    BHISHMA = 8  # Karma Quarter, Worker 3
-    BALI = 9  # Moksha Quarter, Worker 1
-    SHUKA = 10  # Moksha Quarter, Worker 2
+    NARADA = KSETRAJNA  # Genesis Quarter, Worker 2
+    SHAMBHU = HALVES  # Genesis Quarter, Worker 3
+    KUMARAS = TRINITY  # Dharma Quarter, Worker 1
+    KAPILA = QUARTERS  # Dharma Quarter, Worker 2
+    MANU = PANCHA  # Dharma Quarter, Worker 3
+    PRAHLADA = SHARANAGATI  # Karma Quarter, Worker 1
+    JANAKA = SEVEN  # Karma Quarter, Worker 2
+    BHISHMA = HARE_COUNT  # Karma Quarter, Worker 3
+    BALI = NAVA  # Moksha Quarter, Worker 1
+    SHUKA = TEN  # Moksha Quarter, Worker 2
     YAMARAJA = 11  # Moksha Quarter, Worker 3
 
 
@@ -104,17 +105,17 @@ class Quarter(IntEnum):
     """The 4 Quarters with increasing authorization requirements."""
 
     GENESIS = 0  # Boot/Load - 1 signature required
-    DHARMA = 1  # Verify/Check - 2 signatures required
-    KARMA = 2  # Execute/Commit - 2 signatures required
-    MOKSHA = 3  # Yield/Exit - 3 signatures required
+    DHARMA = KSETRAJNA  # Verify/Check - 2 signatures required
+    KARMA = HALVES  # Execute/Commit - 2 signatures required
+    MOKSHA = TRINITY  # Yield/Exit - 3 signatures required
 
 
 # Signatures required per quarter (increasing risk = increasing auth)
 SIGNATURES_REQUIRED: Final[dict[Quarter, int]] = {
-    Quarter.GENESIS: 1,
-    Quarter.DHARMA: 2,
-    Quarter.KARMA: 2,
-    Quarter.MOKSHA: 3,
+    Quarter.GENESIS: KSETRAJNA,
+    Quarter.DHARMA: HALVES,
+    Quarter.KARMA: HALVES,
+    Quarter.MOKSHA: TRINITY,
 }
 
 
@@ -148,7 +149,7 @@ class MahajanaSignature:
     def verify_parampara(self) -> bool:
         """Verify that the signature satisfies Parampara constraint."""
         try:
-            hash_int = int(self.signature_hash[:16], 16)  # First 64 bits
+            hash_int = int(self.signature_hash[:WORDS], WORDS)  # First 64 bits
             return hash_int % PARAMPARA == 0
         except (ValueError, TypeError):
             return False
@@ -228,7 +229,7 @@ def create_signature(
     for nonce in range(max_attempts):
         data = f"{mahajana.value}:{payload.hex()}:{nonce}".encode()
         sig_hash = sha256(data).hexdigest()
-        hash_int = int(sig_hash[:16], 16)
+        hash_int = int(sig_hash[:WORDS], WORDS)
 
         if hash_int % PARAMPARA == 0:
             return MahajanaSignature(

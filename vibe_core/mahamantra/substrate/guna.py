@@ -59,8 +59,9 @@ The Name itself (chant/tick) is above this classification.
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -94,8 +95,8 @@ class Guna(IntEnum):
     """
 
     SATTVA = 0  # Goodness - Pure, illuminating, safe
-    RAJAS = 1  # Passion - Active, modifying, transactional
-    TAMAS = 2  # Ignorance - Destructive, irreversible
+    RAJAS = KSETRAJNA  # Passion - Active, modifying, transactional
+    TAMAS = HALVES  # Ignorance - Destructive, irreversible
 
 
 # =============================================================================

@@ -20,6 +20,7 @@ it activates that specific slot in memory.
 If a Cell is already there -> RESONANCE (Merge).
 If the slot is empty -> PRESENCE (Storage).
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS, SHARANAGATI)
 
 from typing import Final, ClassVar, Optional, TypeVar, Generic, List
 import struct
@@ -76,7 +77,7 @@ class SiksastakamRegistry:
             IndexError: If index is outside valid Vamsi range.
         """
         if not 0 <= index < SIKSASTAKAM_CACHE:
-            raise IndexError(f"Vamsi index {index} out of bounds (0-{SIKSASTAKAM_CACHE-1})")
+            raise IndexError(f"Vamsi index {index} out of bounds (0-{SIKSASTAKAM_CACHE-KSETRAJNA})")
         return self._memory[index]
         
     def set(self, index: int, cell: MahaCellUnified) -> None:
@@ -88,7 +89,7 @@ class SiksastakamRegistry:
             cell: The MahaCellUnified to place (Active or Null)
         """
         if not 0 <= index < SIKSASTAKAM_CACHE:
-            raise IndexError(f"Vamsi index {index} out of bounds (0-{SIKSASTAKAM_CACHE-1})")
+            raise IndexError(f"Vamsi index {index} out of bounds (0-{SIKSASTAKAM_CACHE-KSETRAJNA})")
         self._memory[index] = cell
 
     def clear(self) -> None:
@@ -109,7 +110,7 @@ class SiksastakamRegistry:
 
     def __repr__(self) -> str:
         """String representation of registry state."""
-        count = sum(1 for c in self._memory if c.is_alive)
+        count = sum(KSETRAJNA for c in self._memory if c.is_alive)
         return f"<SiksastakamRegistry: {count}/{SIKSASTAKAM_CACHE} slots active>"
 
     # =========================================================================
@@ -157,20 +158,20 @@ class SiksastakamRegistry:
         self.clear()
         
         offset = 0
-        if len(data) < 4:
+        if len(data) < QUARTERS:
             raise ValueError("Data too short check count")
             
         # 1. Count
-        count = struct.unpack("<I", data[offset:offset+4])[0]
-        offset += 4
+        count = struct.unpack("<I", data[offset:offset+QUARTERS])[0]
+        offset += QUARTERS
         
         # 2. Entries
         for _ in range(count):
-            if len(data) < offset + 6:
+            if len(data) < offset + SHARANAGATI:
                 raise ValueError("Data truncated reading entry header")
             
-            index, length = struct.unpack("<HI", data[offset:offset+6])
-            offset += 6
+            index, length = struct.unpack("<HI", data[offset:offset+SHARANAGATI])
+            offset += SHARANAGATI
             
             if len(data) < offset + length:
                 raise ValueError("Data truncated reading cell body")

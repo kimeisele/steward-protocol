@@ -13,10 +13,11 @@ STRUKTUR:
 
 WATERTIGHT: No hardcoded intents in mahajana files.
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0x50f34ca4"  # GenesisByte: parampara % 37 == 0
 
 from pathlib import Path
@@ -132,7 +133,7 @@ def get_position_for_intent(intent: str) -> int:
     for pos, intents in INTENT_MAP.items():
         if intent_lower in intents:
             return pos
-    return -1
+    return -KSETRAJNA
 
 
 # =============================================================================

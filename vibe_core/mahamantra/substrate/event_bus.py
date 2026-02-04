@@ -18,10 +18,11 @@ Event Types:
 
 This is the "Flute" that plays the Rasa Lila (Dance of Agents).
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TEN)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
-__position__ = 2
+__position__ = HALVES
 __genesis__ = "0xec02c0c4"  # GenesisByte: parampara % 37 == 0
 
 import asyncio
@@ -144,7 +145,7 @@ class SubscriberMetrics:
     def __init__(self):
         # {callback_id: MetricsEntry}
         self._metrics: Dict[str, MetricsEntry] = {}
-        self._zombie_threshold_events = 10  # Events sent without completion
+        self._zombie_threshold_events = TEN  # Events sent without completion
         self._zombie_threshold_rate = 0.5  # ACK rate below this = zombie
         self._stall_threshold_seconds = 30  # No completion in this time = stalled
 
@@ -157,12 +158,12 @@ class SubscriberMetrics:
                 "last_complete_time": time_module.time(),
                 "total_duration": 0.0,
             }
-        self._metrics[callback_id]["events_sent"] += 1
+        self._metrics[callback_id]["events_sent"] += KSETRAJNA
 
     def record_complete(self, callback_id: str, duration: float):
         """Record that a subscriber completed processing an event."""
         if callback_id in self._metrics:
-            self._metrics[callback_id]["events_completed"] += 1
+            self._metrics[callback_id]["events_completed"] += KSETRAJNA
             self._metrics[callback_id]["last_complete_time"] = time_module.time()
             self._metrics[callback_id]["total_duration"] += duration
 
@@ -343,7 +344,7 @@ class SudarshanaGuard:
 
         # VIP bypass
         if agent_id in self.VIP_AGENTS:
-            self._allowed_count += 1
+            self._allowed_count += KSETRAJNA
             return True
 
         import time
@@ -364,13 +365,13 @@ class SudarshanaGuard:
         if tokens < 1.0:
             # Update timestamp but don't deduct
             self._buckets[agent_id] = [tokens, now]
-            self._blocked_count += 1
+            self._blocked_count += KSETRAJNA
             logger.warning(f"🛑 SUDARSHANA: Rate limit exceeded for '{agent_id}' (blocked={self._blocked_count})")
             raise PermissionError(f"SUDARSHANA: Rate limit exceeded for '{agent_id}'. Back off and try again.")
 
         # Deduct token and update
         self._buckets[agent_id] = [tokens - 1.0, now]
-        self._allowed_count += 1
+        self._allowed_count += KSETRAJNA
         return True
 
     def get_stats(self) -> RateLimitStats:
@@ -483,7 +484,7 @@ class EventBus(EventBusProtocol):
             self._guard.check_traffic(event.agent_id)
         except PermissionError:
             # Shadow ban - drop event silently
-            self._dropped_count += 1
+            self._dropped_count += KSETRAJNA
             return False  # Event is NOT emitted (rate limited)
 
         # Store in history
@@ -491,11 +492,11 @@ class EventBus(EventBusProtocol):
         if len(self._event_history) > self._max_history:
             self._event_history.pop(0)  # FIFO removal
 
-        self._event_count += 1
+        self._event_count += KSETRAJNA
 
         # Increment per-type count
         etype = event.event_type
-        self._type_counts[etype] = self._type_counts.get(etype, 0) + 1
+        self._type_counts[etype] = self._type_counts.get(etype, 0) + KSETRAJNA
 
         # Emit to type-specific subscribers
         type_subs = self._subscribers.get(event.event_type, set())
@@ -652,8 +653,8 @@ class EventBus(EventBusProtocol):
             self._event_history.append(event)
             if len(self._event_history) > self._max_history:
                 self._event_history.pop(0)
-            self._event_count += 1
-            self._type_counts[event.event_type] = self._type_counts.get(event.event_type, 0) + 1
+            self._event_count += KSETRAJNA
+            self._type_counts[event.event_type] = self._type_counts.get(event.event_type, 0) + KSETRAJNA
 
         return event_id
 
@@ -748,7 +749,7 @@ class EventBus(EventBusProtocol):
             "total_events": self._event_count,
             "total_subscribers": len(self._global_subscribers) + sum(len(subs) for subs in self._subscribers.values()),
             "zombie_subscribers": len(zombie_subs),
-            "last_event_time": self._event_history[-1].timestamp if self._event_history else "",
+            "last_event_time": self._event_history[-KSETRAJNA].timestamp if self._event_history else "",
             "health": "healthy" if len(zombie_subs) == 0 else "degraded",
         }
 

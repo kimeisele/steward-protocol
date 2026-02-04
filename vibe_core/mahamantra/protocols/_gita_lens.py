@@ -40,6 +40,7 @@ THIS FILE PROVIDES:
 
 "iti guhyatamaṁ śāstram" - This is the most confidential knowledge.
 """
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -111,7 +112,7 @@ GITA_JNANA: Final[int] = QUARTERS  # 4 - Knowledge
 GITA_KARMA_SANNYASA: Final[int] = PANCHA  # 5 - Renunciation
 GITA_DHYANA: Final[int] = SHARANAGATI  # 6 - Meditation
 GITA_JNANA_VIJNANA: Final[int] = SEVEN  # 7 - Realization
-GITA_AKSARA_BRAHMA: Final[int] = NAVA - 1  # 8 - Imperishable
+GITA_AKSARA_BRAHMA: Final[int] = NAVA - KSETRAJNA  # 8 - Imperishable
 GITA_RAJA_VIDYA: Final[int] = NAVA  # 9 - King of knowledge
 
 # KARMA Chapters (10-14): Execution/Action
@@ -128,7 +129,7 @@ GITA_SRADDHATRAYA: Final[int] = WORDS + KSETRAJNA  # 17 - Three faiths
 GITA_MOKSHA: Final[int] = GITA_CHAPTERS  # 18 - Liberation
 
 # Verification
-assert GITA_MOKSHA == 18, "Chapter 18 must be liberation"
+assert GITA_MOKSHA == GITA_CHAPTERS, "Chapter 18 must be liberation"
 assert GITA_KSHETRA == 13, "Chapter 13 is the Kshetra chapter"
 
 
@@ -167,10 +168,10 @@ class GitaNadiMapping(IntEnum):
 
 NADI_TO_GITA: Final[Dict[int, int]] = {
     0: GitaNadiMapping.PRANA,   # User ↔ System → Ch.2
-    1: GitaNadiMapping.APANA,   # Agent ↔ Agent → Ch.3
-    2: GitaNadiMapping.VYANA,   # Service ↔ Service → Ch.7
-    3: GitaNadiMapping.UDANA,   # Agent ↔ Mahajana → Ch.15
-    4: GitaNadiMapping.SAMANA,  # Kernel ↔ Shadow → Ch.6
+    KSETRAJNA: GitaNadiMapping.APANA,   # Agent ↔ Agent → Ch.3
+    HALVES: GitaNadiMapping.VYANA,   # Service ↔ Service → Ch.7
+    TRINITY: GitaNadiMapping.UDANA,   # Agent ↔ Mahajana → Ch.15
+    QUARTERS: GitaNadiMapping.SAMANA,  # Kernel ↔ Shadow → Ch.6
 }
 
 
@@ -235,10 +236,10 @@ class GitaVrttiMapping(IntEnum):
 
 VRTTI_TO_GITA: Final[Dict[int, int]] = {
     0: GitaVrttiMapping.PRAMANA,    # Right knowledge → Ch.4
-    1: GitaVrttiMapping.VIPARYAYA,  # Misconception → Ch.16
-    2: GitaVrttiMapping.VIKALPA,    # Imagination → Ch.11
-    3: GitaVrttiMapping.NIDRA,      # Sleep → Ch.14
-    4: GitaVrttiMapping.SMRTI,      # Memory → Ch.15
+    KSETRAJNA: GitaVrttiMapping.VIPARYAYA,  # Misconception → Ch.16
+    HALVES: GitaVrttiMapping.VIKALPA,    # Imagination → Ch.11
+    TRINITY: GitaVrttiMapping.NIDRA,      # Sleep → Ch.14
+    QUARTERS: GitaVrttiMapping.SMRTI,      # Memory → Ch.15
 }
 
 
@@ -288,9 +289,9 @@ class GitaQuarterMapping(IntEnum):
 
 QUARTER_TO_GITA: Final[Dict[int, int]] = {
     0: GitaQuarterMapping.GENESIS,  # Genesis → Ch.1
-    1: GitaQuarterMapping.DHARMA,   # Dharma → Ch.6
-    2: GitaQuarterMapping.KARMA,    # Karma → Ch.10
-    3: GitaQuarterMapping.MOKSHA,   # Moksha → Ch.18
+    KSETRAJNA: GitaQuarterMapping.DHARMA,   # Dharma → Ch.6
+    HALVES: GitaQuarterMapping.KARMA,    # Karma → Ch.10
+    TRINITY: GitaQuarterMapping.MOKSHA,   # Moksha → Ch.18
 }
 
 
@@ -333,14 +334,14 @@ class GitaNavaBhaktiMapping(IntEnum):
 
 NAVABHAKTI_TO_GITA: Final[Dict[int, int]] = {
     0: GitaNavaBhaktiMapping.SRAVANAM,       # Hearing → Ch.2
-    1: GitaNavaBhaktiMapping.KIRTANAM,       # Chanting → Ch.9
-    2: GitaNavaBhaktiMapping.SMARANAM,       # Remembering → Ch.15
-    3: GitaNavaBhaktiMapping.PADA_SEVANAM,   # Serving → Ch.3
-    4: GitaNavaBhaktiMapping.ARCANAM,        # Worship → Ch.9
-    5: GitaNavaBhaktiMapping.VANDANAM,       # Prayer → Ch.11
-    6: GitaNavaBhaktiMapping.DASYAM,         # Servitude → Ch.12
-    7: GitaNavaBhaktiMapping.SAKHYAM,        # Friendship → Ch.4
-    8: GitaNavaBhaktiMapping.ATMA_NIVEDANAM, # Surrender → Ch.18
+    KSETRAJNA: GitaNavaBhaktiMapping.KIRTANAM,       # Chanting → Ch.9
+    HALVES: GitaNavaBhaktiMapping.SMARANAM,       # Remembering → Ch.15
+    TRINITY: GitaNavaBhaktiMapping.PADA_SEVANAM,   # Serving → Ch.3
+    QUARTERS: GitaNavaBhaktiMapping.ARCANAM,        # Worship → Ch.9
+    PANCHA: GitaNavaBhaktiMapping.VANDANAM,       # Prayer → Ch.11
+    SHARANAGATI: GitaNavaBhaktiMapping.DASYAM,         # Servitude → Ch.12
+    SEVEN: GitaNavaBhaktiMapping.SAKHYAM,        # Friendship → Ch.4
+    HARE_COUNT: GitaNavaBhaktiMapping.ATMA_NIVEDANAM, # Surrender → Ch.18
 }
 
 
@@ -415,14 +416,14 @@ class GitaSiksastakamMapping(IntEnum):
 
 
 SIKSASTAKAM_TO_GITA: Final[Dict[int, int]] = {
-    1: GitaSiksastakamMapping.VERSE_1,  # Cleansing → Ch.6
-    2: GitaSiksastakamMapping.VERSE_2,  # Names → Ch.10
-    3: GitaSiksastakamMapping.VERSE_3,  # Humility → Ch.12
-    4: GitaSiksastakamMapping.VERSE_4,  # Renunciation → Ch.5
-    5: GitaSiksastakamMapping.VERSE_5,  # Devotion → Ch.9
-    6: GitaSiksastakamMapping.VERSE_6,  # Ecstasy → Ch.11
-    7: GitaSiksastakamMapping.VERSE_7,  # Time → Ch.8
-    8: GitaSiksastakamMapping.VERSE_8,  # Surrender → Ch.18
+    KSETRAJNA: GitaSiksastakamMapping.VERSE_1,  # Cleansing → Ch.6
+    HALVES: GitaSiksastakamMapping.VERSE_2,  # Names → Ch.10
+    TRINITY: GitaSiksastakamMapping.VERSE_3,  # Humility → Ch.12
+    QUARTERS: GitaSiksastakamMapping.VERSE_4,  # Renunciation → Ch.5
+    PANCHA: GitaSiksastakamMapping.VERSE_5,  # Devotion → Ch.9
+    SHARANAGATI: GitaSiksastakamMapping.VERSE_6,  # Ecstasy → Ch.11
+    SEVEN: GitaSiksastakamMapping.VERSE_7,  # Time → Ch.8
+    HARE_COUNT: GitaSiksastakamMapping.VERSE_8,  # Surrender → Ch.18
 }
 
 
@@ -476,7 +477,7 @@ def get_gita_for_sense(sense_type: str) -> int:
 # =============================================================================
 
 # Verify genesis byte
-_genesis_val = int(__genesis__, 16)
+_genesis_val = int(__genesis__, WORDS)
 assert _genesis_val % PARAMPARA == 0, f"Genesis {__genesis__} must be % 37 == 0"
 
 # Verify fixed point (from research/gita/)

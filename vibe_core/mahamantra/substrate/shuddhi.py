@@ -18,10 +18,11 @@ ANTI-MAYAVAD:
     - All types explicit and WATERTIGHT
     - The protocol IS the purification, not a wrapper
 """
+from vibe_core.mahamantra.protocols._seed import (PANCHA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kumaras"
-__position__ = 5
+__position__ = PANCHA
 __genesis__ = "0x49395271"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
@@ -55,7 +56,7 @@ class ShuddhiProtocolBase(WorkerProtocol):
         parampara_vector() → 222 (% 37 == 0)
     """
 
-    _position_index: ClassVar[int] = 5  # THE ONLY CONFIGURATION
+    _position_index: ClassVar[int] = PANCHA  # THE ONLY CONFIGURATION
 
 
 # =============================================================================

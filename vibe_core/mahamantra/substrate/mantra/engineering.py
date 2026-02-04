@@ -23,6 +23,7 @@ SEVEN = 7 = the perfection constant from _seed.py.
 These 7 effects translate DIRECTLY to computing efficiency principles
 for Kali Yuga (maximum entropy reduction).
 """
+from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, SEVEN)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -54,7 +55,7 @@ from vibe_core.mahamantra.protocols._seed import (
 # OCTET = 8 = HALF_SIZE = HARE_COUNT (derived, not hardcoded!)
 # The 8 verses of Siksastakam = 8 "Hare" in Mahamantra = 8 words per half
 OCTET: Final[int] = HALF_SIZE
-assert OCTET == 8, "OCTET = HALF_SIZE = 8"
+assert OCTET == HARE_COUNT, "OCTET = HALF_SIZE = 8"
 assert OCTET == HARE_COUNT, "8 verses = 8 Hares (Shakti encodes!)"
 
 # =============================================================================
@@ -70,8 +71,8 @@ SIKSASTAKAM_VERSES: Final[int] = OCTET  # 8 verses
 VERSE_ONE_EFFECTS: Final[int] = SEVEN  # 7 effects in verse 1
 
 # VERIFICATION: The structure matches the substrate
-assert SIKSASTAKAM_VERSES == 8, "8 verses = OCTET"
-assert VERSE_ONE_EFFECTS == 7, "7 effects = SEVEN (perfection)"
+assert SIKSASTAKAM_VERSES == HARE_COUNT, "8 verses = OCTET"
+assert VERSE_ONE_EFFECTS == SEVEN, "7 effects = SEVEN (perfection)"
 
 # The remaining verses (2-8) = SEVEN more verses after the first
 REMAINING_VERSES: Final[int] = SIKSASTAKAM_VERSES - KSETRAJNA  # 8 - 1 = 7

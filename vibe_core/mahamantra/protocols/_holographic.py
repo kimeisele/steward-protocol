@@ -32,8 +32,9 @@ WATERTIGHT: No Any types. Everything explicit.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "bhishma"
@@ -227,7 +228,7 @@ class Reflector(Generic[T]):
 
         if relation == "siblings":
             # Same mahajana prefix
-            prefix = part_name.rsplit(".", 1)[0] + "."
+            prefix = part_name.rsplit(".", KSETRAJNA)[0] + "."
             related = [n for n in parts.keys() if n.startswith(prefix) and n != part_name]
 
         elif relation == "provides":
@@ -376,7 +377,7 @@ class HolographicProtocol(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="HolographicProtocol",
         mahajana="narada",  # Narada travels everywhere - non-locality
-        position=2,
+        position=HALVES,
         level=Level.ACINTYA,
         quarter=Quarter.GENESIS,
     )

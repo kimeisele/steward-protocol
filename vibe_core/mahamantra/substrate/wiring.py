@@ -23,8 +23,9 @@ DERIVES FROM SSOT:
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, TEN, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -277,8 +278,8 @@ def calculate_fractal_depth(total_nodes: int) -> int:
     if total_nodes <= QUARTER_COUNT:
         return 0
     if total_nodes <= TOTAL_POSITIONS:
-        return 1
-    return int(math.log(total_nodes, FRACTAL_BASE)) + 1
+        return KSETRAJNA
+    return int(math.log(total_nodes, FRACTAL_BASE)) + KSETRAJNA
 
 
 def calculate_total_nodes(depth: int) -> int:
@@ -365,8 +366,8 @@ def fractal_getattr(caller_file: str):
             return None
 
         module_parts = list(parts[vibe_idx:])
-        if module_parts and module_parts[-1].endswith(".py"):
-            module_parts[-1] = module_parts[-1][:-3]
+        if module_parts and module_parts[-KSETRAJNA].endswith(".py"):
+            module_parts[-KSETRAJNA] = module_parts[-KSETRAJNA][:-TRINITY]
 
         return ".".join(module_parts)
 
@@ -707,8 +708,8 @@ def validate_fractal_discovery(base_path: Optional[str] = None) -> SankirtanVali
     # ==========================================================================
     # COMPILE RESULTS
     # ==========================================================================
-    total_valid = sum(1 for r in results if r.is_valid)
-    total_invalid = sum(1 for r in results if not r.is_valid)
+    total_valid = sum(KSETRAJNA for r in results if r.is_valid)
+    total_invalid = sum(KSETRAJNA for r in results if not r.is_valid)
 
     return SankirtanValidation(
         total_checked=len(results),
@@ -743,7 +744,7 @@ def assert_watertight(fail_fast: bool = True) -> SankirtanValidation:
     validation = validate_fractal_discovery()
 
     if not validation.is_watertight and fail_fast:
-        error_summary = "\n".join(f"  - {e}" for e in validation.errors[:10])
+        error_summary = "\n".join(f"  - {e}" for e in validation.errors[:TEN])
         raise RuntimeError(
             f"MAHAMANTRA NOT WATERTIGHT!\n"
             f"Invalid modules: {validation.total_invalid}\n"
@@ -774,10 +775,10 @@ def print_validation_report(validation: SankirtanValidation) -> None:
 
     if validation.errors:
         print(f"  ERRORS ({len(validation.errors)}):")
-        for err in validation.errors[:10]:
+        for err in validation.errors[:TEN]:
             print(f"    ❌ {err}")
-        if len(validation.errors) > 10:
-            print(f"    ... and {len(validation.errors) - 10} more")
+        if len(validation.errors) > TEN:
+            print(f"    ... and {len(validation.errors) - TEN} more")
 
     print(f"""
 {'=' * 60}
