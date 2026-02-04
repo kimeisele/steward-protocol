@@ -35,16 +35,16 @@ from vibe_core.mahamantra.substrate.wiring import create_hybrid_getattr
 
 LEGACY_EXPORTS = {
     # === CORE ===
-    "MahamantraLotus": ("vibe_core.mahamantra._mahamantra_lotus", "MahamantraLotus"),
-    "mahamantra": ("vibe_core.mahamantra._mahamantra_lotus", "get_mahamantra"),
-    "lotus": ("vibe_core.mahamantra._mahamantra_lotus", "get_mahamantra"),
-    "AkashState": ("vibe_core.mahamantra._types", "AkashState"),
-    "ExecuteResult": ("vibe_core.mahamantra._types", "ExecuteResult"),
-    "GitaRoute": ("vibe_core.mahamantra._types", "GitaRoute"),
-    "RouteResult": ("vibe_core.mahamantra._types", "RouteResult"),
-    "VibrationState": ("vibe_core.mahamantra._types", "VibrationState"),
-    "LotusNode": ("vibe_core.mahamantra._lotus", "LotusNode"),
-    "LotusPath": ("vibe_core.mahamantra._lotus", "LotusPath"),
+    "MahamantraLotus": ("vibe_core.mahamantra.substrate.lotus_core", "MahamantraLotus"),
+    "mahamantra": ("vibe_core.mahamantra.substrate.lotus_core", "get_mahamantra"),
+    "lotus": ("vibe_core.mahamantra.substrate.lotus_core", "get_mahamantra"),
+    "AkashState": ("vibe_core.mahamantra.seed.types", "AkashState"),
+    "ExecuteResult": ("vibe_core.mahamantra.seed.types", "ExecuteResult"),
+    "GitaRoute": ("vibe_core.mahamantra.seed.types", "GitaRoute"),
+    "RouteResult": ("vibe_core.mahamantra.seed.types", "RouteResult"),
+    "VibrationState": ("vibe_core.mahamantra.seed.types", "VibrationState"),
+    "LotusNode": ("vibe_core.mahamantra.substrate.lotus_types", "LotusNode"),
+    "LotusPath": ("vibe_core.mahamantra.substrate.lotus_types", "LotusPath"),
     "PositionRegistry": ("vibe_core.mahamantra.lotus_projection", "PositionRegistry"),
     "cli_auto": ("vibe_core.mahamantra.cli.auto", "cli_auto"),
 
