@@ -169,4 +169,3 @@ def audit() -> Tuple[bool, str]:
 
 
 __all__ = ["check_protocol_compliance", "verify_protocol_methods", "get_king_status", "audit"]
-
