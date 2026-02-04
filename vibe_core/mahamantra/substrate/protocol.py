@@ -471,6 +471,12 @@ class ProtocolRegistry:
         idx = protocol_class._position_index
         if idx in cls._registry:
             existing = cls._registry[idx]
+            # Idempotent registration (Robust to module aliasing)
+            if existing == protocol_class:
+                return protocol_class
+            if existing.__name__ == protocol_class.__name__ and existing.__module__ == protocol_class.__module__:
+                 return protocol_class
+                 
             raise ValueError(
                 f"Position {idx} already registered to {existing.__name__}, cannot register {protocol_class.__name__}"
             )

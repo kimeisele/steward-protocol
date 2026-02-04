@@ -438,6 +438,65 @@ from vibe_core.protocols.mahajanas.kapila.types import (
     ErrorRecoveryAttempt,
 )
 
+def on_event(event: Any) -> None:
+    """
+    Resonance Handler for Kapila.
+    "I listen only to that which concerns the Truth."
+    """
+    from vibe_core.mahamantra.reactor.loop import get_loop
+    
+    # 1. Inspect Event (Vibration)
+    intent = event.event_type  # e.g. "REMEMBER", "RECALL"
+    payload = event.details or {}
+    
+    # 2. Map to State (Legacy Adaptor)
+    state = {
+        "opcode": None,
+        "payload": {
+            "op": intent,
+            **payload
+        }
+    }
+    
+    # 3. Execute Logic (The Brain)
+    # We instantiate the protocol transiently or reuse checking if instance exists?
+    # For now, transient is safer/simpler for "Functional Core".
+    # Or strict adherence: "The Protocol is the Object".
+    # ProtocolRegistry has it.
+    
+    # Use module-level dispatch to existing on_bhoga logic? 
+    # But on_bhoga is inside Protocol class.
+    protocol = KapilaProtocolBase() 
+    result_state = protocol.on_bhoga(state)
+    
+    # 4. Determine Result (The Fruit)
+    # on_bhoga updates state/logs. 
+    # For memory, we need the returned string/secret. 
+    # Kapila.on_bhoga currently returns 'state'. 
+    # The result is implicitly in... where?
+    # _handle_recall returns/logs.
+    # We need to capture the RETURN value.
+    # KapilaProtocolBase.on_bhoga returns Dict.
+    
+    # Let's inspect `_handle_recall` implementation in `KapilaProtocolBase`.
+    # It seems to just return state.
+    # If the secret was recalled, where is it?
+    # In verify_memory.py we see: Result 2: om_namo...
+    # The Bridge returns execution_result.
+    # We need `execution_result` in the state!
+    
+    execution_result = result_state.get("execution_result")
+    
+    # 5. Echo Completion (Resonance Return)
+    if event.task_id:
+        loop_instance, _ = get_loop()
+        # Publish COMPLETED
+        loop_instance.publish(
+            event_type="COMPLETED",
+            agent_id="kapila",
+            message=f"Processed {intent}",
+            details={"result": execution_result, "original_task_id": event.task_id}
+        )
 
 # =============================================================================
 # CLI - Krishna Discovers Everything (ZERO REGISTRATION)
