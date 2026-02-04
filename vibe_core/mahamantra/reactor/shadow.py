@@ -323,44 +323,50 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         For: __mahajana__ declaration and reactor methods
         """
         guardian_name = mapping.guardian.value
-        folder_path = self._BASE_PATH / mapping.quarter.value / guardian_name
+        
+        # SEARCH PATHS:
+        # 1. vibe_core.mahamantra.{quarter}.{guardian} (Canonical)
+        # 2. vibe_core.protocols.mahajanas.{guardian} (Legacy/Moved)
+        
+        candidates = [
+            (self._BASE_PATH / mapping.quarter.value / guardian_name, 
+             f"vibe_core.mahamantra.{mapping.quarter.value}.{guardian_name}"),
+            (self._BASE_PATH.parent / "protocols" / "mahajanas" / guardian_name,
+             f"vibe_core.protocols.mahajanas.{guardian_name}")
+        ]
 
-        if not folder_path.exists():
-            return
+        for folder_path, module_name in candidates:
+            if not folder_path.exists():
+                continue
 
-        init_file = folder_path / "__init__.py"
-        if not init_file.exists():
-            return
+            init_file = folder_path / "__init__.py"
+            if not init_file.exists():
+                continue
 
-        # Try to import the module
-        try:
-            module_name = f"vibe_core.mahamantra.{mapping.quarter.value}.{guardian_name}"
-            module = importlib.import_module(module_name)
+            # Try to import the module
+            try:
+                module = importlib.import_module(module_name)
 
-            # MAHAMANTRA DEFINES IDENTITY - FOLDER IS TRUTH
-            # If module is at vibe_core.mahamantra.{quarter}.{guardian}, it IS a Mahajana.
-            # No need to check labels - the path defines identity.
-            # "Manual Labor ist Maya" - MAHAPROMPT.md
+                # Check for reactor methods (any of the 4 phases)
+                has_reactor = (
+                    hasattr(module, "on_bhoga")
+                    or hasattr(module, "on_switch")
+                    or hasattr(module, "on_prasadam")
+                    or hasattr(module, "on_return")
+                )
 
-            # Check for reactor methods (any of the 4 phases)
-            has_reactor = (
-                hasattr(module, "on_bhoga")
-                or hasattr(module, "on_switch")
-                or hasattr(module, "on_prasadam")
-                or hasattr(module, "on_return")
-            )
+                if has_reactor:
+                    if mapping.index not in self._listeners:
+                        self._listeners[mapping.index] = []
+                    # Store module as reactor
+                    self._listeners[mapping.index].append(module)
+                    # Found it, stop searching for this position
+                    return
 
-            if has_reactor:
-                if mapping.index not in self._listeners:
-                    self._listeners[mapping.index] = []
-                # Store module as reactor
-                self._listeners[mapping.index].append(module)
+            except ImportError as e:
+                # APARADHA AUDIT: Log discovery failures
+                print(f"APARADHA [DISCOVERY]: Failed to import reactor at {folder_path}: {e}")
 
-        except ImportError as e:
-            # APARADHA AUDIT: Log discovery failures
-            # We can't use state['dissonance_report'] here as we are in __init__ phase usually.
-            # But we should not fail silently.
-            print(f"APARADHA [DISCOVERY]: Failed to import reactor at {folder_path}: {e}")
 
     # =========================================================================
     # TICK - The Heartbeat with Bhoga-Prasadam-Return
@@ -999,6 +1005,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             self._listeners[position] = []
         if listener not in self._listeners[position]:
             self._listeners[position].append(listener)
+
 
     def unregister_listener(
         self,

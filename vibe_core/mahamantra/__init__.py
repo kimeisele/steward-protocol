@@ -50,6 +50,10 @@ CORE_MODULES = [
     "vibe_core.mahamantra.substrate.errors",        # Error Codes
     "vibe_core.mahamantra.substrate.position",      # Position Logic
     "vibe_core.mahamantra.substrate.cell",          # MahaCellUnified
+    "vibe_core.mahamantra.substrate.config",        # PhoenixConfig
+    "vibe_core.mahamantra.substrate.boot",          # BootMode
+    "vibe_core.mahamantra.substrate.event_bus",     # EventBus
+    "vibe_core.mahamantra.substrate.ledger",        # SQLiteLedger
     
     # === PROTOCOLS (The Standard) ===
     "vibe_core.mahamantra.protocols._gad",          # GADBase
@@ -65,7 +69,7 @@ enable_universal_discovery(globals(), __file__, CORE_MODULES)
 # =============================================================================
 
 __all__ = [
-    "MahamantraLotus", "mahamantra", "AkashState", "ExecuteResult",
+    "MahamantraLotus", "mahamantra", "AkashState", "ExecuteResult", "PhoenixConfig",
     "genesis", "dharma", "karma", "moksha",
     "substrate", "protocols", "adapters", "kernel",
 ]
