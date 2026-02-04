@@ -62,14 +62,14 @@ def __getattr__(name: str) -> object:
 
         module = importlib.import_module("vibe_core.mahamantra.karma.bhishma.protocol")
         return getattr(module, name)
-    except (ImportError, AttributeError) as _exc:
-        logger.exception("Unexpected error: %s", _exc)
+    except (ImportError, AttributeError):
+        pass  # Fall through to fractal routing
 
     # ==========================================================================
     # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
     # ==========================================================================
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     pkg_root = Path(__file__).parent
 
