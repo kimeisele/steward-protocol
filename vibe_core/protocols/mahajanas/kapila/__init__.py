@@ -20,6 +20,9 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 from __future__ import annotations
 
+import logging
+from typing import Any, Dict, List, Optional
+
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
@@ -41,6 +44,9 @@ from typing import (
 )
 
 from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
+from vibe_core.protocols.memory import get_memory_safe, MemoryProtocol
+
+logger = logging.getLogger("Kapila")
 
 
 # =============================================================================
@@ -151,8 +157,108 @@ class AnalyzeCliResult(TypedDict):
 
 
 # =============================================================================
-# KAPILA PROTOCOL
+# KAPILA PROTOCOL (Analysis + Memory Integration)
 # =============================================================================
+
+@ProtocolRegistry.register
+class KapilaProtocolBase(WorkerProtocol):
+    """
+    Kapila - The Analytical Engineer (and now Memory Keeper).
+    """
+    _position_index: ClassVar[int] = 6 
+
+    def on_bhoga(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        KAPILA.on_bhoga: Analyze Reality & Manage Memory.
+        
+        Args:
+            state: Context from the Reactor (opcode, payload, etc.)
+            
+        Returns:
+            Updated state.
+        """
+        opcode = state.get("opcode")
+        payload = state.get("payload", {})
+        
+        # 0. Deserialize Payload (Safe Unpacking)
+        try:
+             # If payload is bytes, it might be a MahaPayload wrapper
+             if isinstance(payload, bytes):
+                 # Try to unpack MahaPayload wrapper first
+                 try:
+                     from vibe_core.mahamantra.protocols._payload import MahaPayload
+                     unpacked = MahaPayload.from_bytes(payload)
+                     payload = unpacked.data
+                 except Exception:
+                     # Not a MahaPayload, treat as raw bytes
+                     pass
+
+                 # Now try JSON decode on the data
+                 import json
+                 payload = json.loads(payload.decode("utf-8"))
+        except Exception as e:
+            state["dissonance_report"] = f"Kapila: Failed to decode payload: {e}"
+            return state
+        
+        # 1. Access Memory (The Akshara)
+        memory = get_memory_safe()
+        
+        # 2. Determine Intent (from Payload 'op' or OpCode)
+        # Verify: bridge guarantees payload is dict for these intents
+        intent = payload.get("op") if isinstance(payload, dict) else None
+        
+        if intent == "REMEMBER":
+            return self._handle_remember(memory, payload, state)
+        elif intent == "RECALL":
+            return self._handle_recall(memory, payload, state)
+        elif opcode == MantraOpCode.TYPE_CHECK: # Legacy/Default
+            return self._handle_analysis(payload, state)
+            
+        return state
+
+    def _handle_remember(self, memory: MemoryProtocol, payload: Any, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Store info in memory."""
+        # Payload: {"key": "foo", "value": "bar", "session_id": "..."}
+        if not isinstance(payload, dict):
+            # Try to infer if payload is just a string or list? 
+            # For now assume dict.
+            state["dissonance_report"] = "Invalid payload for REMEMBER. Expected dict."
+            return state
+            
+        key = payload.get("key")
+        value = payload.get("value")
+        session_id = payload.get("session_id", "global")
+        
+        if key and value:
+            memory.remember(key, value, session_id=str(session_id))
+            state["execution_result"] = f"Remembered: {key}"
+            logger.info(f"Kapila: Remembered '{key}' (Session: {session_id})")
+        else:
+            state["dissonance_report"] = "Missing key/value for REMEMBER"
+            
+        return state
+
+    def _handle_recall(self, memory: MemoryProtocol, payload: Any, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Retrieve info from memory."""
+        # Payload: {"key": "foo", "session_id": "..."}
+        key = payload.get("key") if isinstance(payload, dict) else str(payload)
+        session_id = payload.get("session_id", "global") if isinstance(payload, dict) else "global"
+        
+        result = memory.recall(key, session_id=str(session_id))
+        
+        if result is not None:
+            state["execution_result"] = result
+            logger.info(f"Kapila: Recalled '{key}' -> {result}")
+        else:
+            state["execution_result"] = "<FORGOTTEN>"
+            state["dissonance_report"] = f"Memory not found: {key}"
+            
+        return state
+
+    def _handle_analysis(self, payload: Any, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Existing default analysis behavior (Stub for now)."""
+        state["execution_result"] = f"Analyzed: {payload}"
+        return state
 
 
 @runtime_checkable
@@ -332,6 +438,65 @@ from vibe_core.protocols.mahajanas.kapila.types import (
     ErrorRecoveryAttempt,
 )
 
+def on_event(event: Any) -> None:
+    """
+    Resonance Handler for Kapila.
+    "I listen only to that which concerns the Truth."
+    """
+    from vibe_core.mahamantra.reactor.loop import get_loop
+    
+    # 1. Inspect Event (Vibration)
+    intent = event.event_type  # e.g. "REMEMBER", "RECALL"
+    payload = event.details or {}
+    
+    # 2. Map to State (Legacy Adaptor)
+    state = {
+        "opcode": None,
+        "payload": {
+            "op": intent,
+            **payload
+        }
+    }
+    
+    # 3. Execute Logic (The Brain)
+    # We instantiate the protocol transiently or reuse checking if instance exists?
+    # For now, transient is safer/simpler for "Functional Core".
+    # Or strict adherence: "The Protocol is the Object".
+    # ProtocolRegistry has it.
+    
+    # Use module-level dispatch to existing on_bhoga logic? 
+    # But on_bhoga is inside Protocol class.
+    protocol = KapilaProtocolBase() 
+    result_state = protocol.on_bhoga(state)
+    
+    # 4. Determine Result (The Fruit)
+    # on_bhoga updates state/logs. 
+    # For memory, we need the returned string/secret. 
+    # Kapila.on_bhoga currently returns 'state'. 
+    # The result is implicitly in... where?
+    # _handle_recall returns/logs.
+    # We need to capture the RETURN value.
+    # KapilaProtocolBase.on_bhoga returns Dict.
+    
+    # Let's inspect `_handle_recall` implementation in `KapilaProtocolBase`.
+    # It seems to just return state.
+    # If the secret was recalled, where is it?
+    # In verify_memory.py we see: Result 2: om_namo...
+    # The Bridge returns execution_result.
+    # We need `execution_result` in the state!
+    
+    execution_result = result_state.get("execution_result")
+    
+    # 5. Echo Completion (Resonance Return)
+    if event.task_id:
+        loop_instance, _ = get_loop()
+        # Publish COMPLETED
+        loop_instance.publish(
+            event_type="COMPLETED",
+            agent_id="kapila",
+            message=f"Processed {intent}",
+            details={"result": execution_result, "original_task_id": event.task_id}
+        )
 
 # =============================================================================
 # CLI - Krishna Discovers Everything (ZERO REGISTRATION)
@@ -434,3 +599,30 @@ __all__ = [
 # =============================================================================
 
 from vibe_core.protocols.mahajanas.kapila.service import KapilaService
+
+
+# =============================================================================
+# MODULE-LEVEL DISPATCH (For ShadowReactor)
+# =============================================================================
+
+_kapila_instance = KapilaProtocolBase()
+
+def on_bhoga(state: Dict[str, Any]) -> None:
+    """
+    Module-level dispatch for ShadowReactor.
+    
+    The ShadowReactor discovers modules and calls on_bhoga(state).
+    We delegate to the protocol instance.
+    """
+    # Delegate logic to the class method
+    # Note: on_bhoga determines what to do and updates state inplace.
+    # The return value from class method logic (new state) is ignored by ShadowReactor?
+    # No, ShadowReactor calls on_bhoga(state), and state is mutable.
+    # Wait, my class method returns state.
+    # I should update the state dict passed in.
+    
+    updated_state = _kapila_instance.on_bhoga(state)
+    # Since on_bhoga modifies state in-place mostly, but returns it too.
+    # We ensure the original dict is updated if new keys were added not in-place?
+    # Dicts are mutable. on_bhoga(state) receives ref.
+    pass

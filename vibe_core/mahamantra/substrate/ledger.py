@@ -15,10 +15,11 @@ Implements:
 - InMemoryLedger: Fast, volatile ledger (for testing)
 - SQLiteLedger: Persistent, hash-chained + signed ledger (for production)
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUALITIES, QUARTERS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0xf9a27e38"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
@@ -101,7 +102,7 @@ class InMemoryLedger(VibeLedger):
         error: str = None,
     ) -> str:
         """Record a generic event (governance action)"""
-        self._event_counter += 1
+        self._event_counter += KSETRAJNA
         event_id = f"EVT-{self._event_counter:06d}"
         event = {
             "event_id": event_id,
@@ -214,9 +215,9 @@ class InMemoryLedger(VibeLedger):
         Returns "0"*64 if no events exist (same as SQLiteLedger).
         """
         if not self.events:
-            return "0" * 64
+            return "0" * QUALITIES
         # Hash the last event for consistency with SQLiteLedger
-        last_event = self.events[-1]
+        last_event = self.events[-KSETRAJNA]
         content = json.dumps(last_event, sort_keys=True, default=str)
         return hashlib.sha256(content.encode()).hexdigest()
 
@@ -404,7 +405,7 @@ class SQLiteLedger(VibeLedger):
             cursor = self.connection.cursor()
             # Check if column exists
             cursor.execute("PRAGMA table_info(ledger_events)")
-            columns = [row[1] for row in cursor.fetchall()]
+            columns = [row[KSETRAJNA] for row in cursor.fetchall()]
             if "agent_signature" not in columns:
                 cursor.execute("ALTER TABLE ledger_events ADD COLUMN agent_signature TEXT")
                 self.connection.commit()
@@ -475,7 +476,7 @@ class SQLiteLedger(VibeLedger):
 
             cursor = self.connection.cursor()
             row = cursor.execute("SELECT MAX(id) FROM ledger_events").fetchone()
-            next_id = (row[0] or 0) + 1
+            next_id = (row[0] or 0) + KSETRAJNA
             event_id = f"EVT-{next_id:06d}"
 
             cursor.execute(
@@ -547,7 +548,7 @@ class SQLiteLedger(VibeLedger):
         """Get hash of last event, or genesis hash if first event"""
         cursor = self.connection.cursor()
         row = cursor.execute("SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1").fetchone()
-        return row[0] if row else "0" * 64
+        return row[0] if row else "0" * QUALITIES
 
     def _compute_hash(self, event_data: str, previous_hash: str) -> str:
         """Compute SHA256 hash of event + previous_hash"""
@@ -635,7 +636,7 @@ class SQLiteLedger(VibeLedger):
 
     def get_all_events(self) -> List[Dict[str, object]]:
         """Return all ledger events in order with parsed details"""
-        return self.get_events(limit=-1, include_archives=False)
+        return self.get_events(limit=-KSETRAJNA, include_archives=False)
 
     def get_events(
         self,
@@ -751,7 +752,7 @@ class SQLiteLedger(VibeLedger):
         events = list(reversed(events))
 
         corruptions = []
-        previous_hash = "0" * 64
+        previous_hash = "0" * QUALITIES
 
         for idx, event in enumerate(events):
             stored_previous = event.get("previous_hash")

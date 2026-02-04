@@ -34,8 +34,9 @@ ARCHITECTURAL MAPPING (Capability-First):
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, PARAMPARA, QUARTERS, SEVEN, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -111,10 +112,10 @@ class TattvaIndex(IntEnum):
     """Index der Pancha Tattva (0-4)."""
 
     CHAITANYA = 0  # Der Erste - Krishna selbst
-    NITYANANDA = 1  # Die Expansion
-    ADVAITA = 2  # Die Inkarnation
-    GADADHARA = 3  # Die innere Energie
-    SRIVASA = 4  # Die Rand-Energie
+    NITYANANDA = KSETRAJNA  # Die Expansion
+    ADVAITA = HALVES  # Die Inkarnation
+    GADADHARA = TRINITY  # Die innere Energie
+    SRIVASA = QUARTERS  # Die Rand-Energie
 
 
 # =============================================================================
@@ -165,7 +166,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
     ),
     TattvaAspect(
         tattva=PanchaTattva.NITYANANDA,
-        index=1,
+        index=KSETRAJNA,
         sanskrit_name="Prabhu Nityananda",
         essence="Ananta Shesha - Das unendliche Bett",
         capability="STORAGE - Das Fundament trägt alles",
@@ -174,7 +175,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
     ),
     TattvaAspect(
         tattva=PanchaTattva.ADVAITA,
-        index=2,
+        index=HALVES,
         sanskrit_name="Sri Advaita Acarya",
         essence="Maha-Vishnu - Der der Krishna herbeiruft",
         capability="LOGIC - Die Brücke zwischen Welten",
@@ -183,7 +184,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
     ),
     TattvaAspect(
         tattva=PanchaTattva.GADADHARA,
-        index=3,
+        index=TRINITY,
         sanskrit_name="Gadadhara Pandita",
         essence="Radharani - Die Freude-Energie",
         capability="SYNC - Die Verbindung ist Shakti",
@@ -192,7 +193,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
     ),
     TattvaAspect(
         tattva=PanchaTattva.SRIVASA,
-        index=4,
+        index=QUARTERS,
         sanskrit_name="Srivasa Thakura",
         essence="Narada Muni - Der wandernde Devotee",
         capability="ENFORCE - Organisiert die Sangha",
@@ -217,7 +218,7 @@ def get_tattva_aspect(tattva: PanchaTattva) -> TattvaAspect:
 
 def get_tattva_by_index(index: int) -> TattvaAspect:
     """Get aspect by index (0-4)."""
-    if not 0 <= index <= 4:
+    if not 0 <= index <= QUARTERS:
         raise ValueError(f"Tattva index must be 0-4, got {index}")
     return PANCHA_TATTVA_ASPECTS[index]
 
@@ -288,10 +289,10 @@ class TattvaGate(IntEnum):
     """Die 5 Gates als Entry Points (Pancha Tattva Order)."""
 
     PARSE = 0  # Chaitanya - Parse/Entry
-    VALIDATE = 1  # Nityananda - Validate/Foundation
-    EXECUTE = 2  # Advaita - Execute/Bridge
-    RESULT = 3  # Gadadhara - Result/Connection
-    SYNC = 4  # Srivasa - Sync/Parallel
+    VALIDATE = KSETRAJNA  # Nityananda - Validate/Foundation
+    EXECUTE = HALVES  # Advaita - Execute/Bridge
+    RESULT = TRINITY  # Gadadhara - Result/Connection
+    SYNC = QUARTERS  # Srivasa - Sync/Parallel
 
 
 GATE_TO_TATTVA: Final[dict[TattvaGate, PanchaTattva]] = {
@@ -361,9 +362,9 @@ def get_tattva_for_position(position: int) -> PanchaTattva:
 
     if position == 0:
         return PanchaTattva.CHAITANYA
-    elif position <= 3:
+    elif position <= TRINITY:
         return PanchaTattva.NITYANANDA
-    elif position <= 7:
+    elif position <= SEVEN:
         return PanchaTattva.ADVAITA
     elif position <= 11:
         return PanchaTattva.GADADHARA
@@ -382,15 +383,15 @@ def get_tattva_for_position(position: int) -> PanchaTattva:
 # Pancha Tattva = Der EINSTIEG in diese 37
 #
 
-PANCHA_TATTVA_COUNT: Final[int] = 5
+PANCHA_TATTVA_COUNT: Final[int] = PANCHA
 
 # Parampara vector for Pancha Tattva: 5 × 37 = 185
-PANCHA_TATTVA_VECTOR: Final[int] = PANCHA_TATTVA_COUNT * 37
+PANCHA_TATTVA_VECTOR: Final[int] = PANCHA_TATTVA_COUNT * PARAMPARA
 
 
 def verify_pancha_tattva_parampara(value: int) -> bool:
     """Verify Pancha Tattva connection to Parampara."""
-    return value % 37 == 0
+    return value % PARAMPARA == 0
 
 
 # =============================================================================
@@ -467,7 +468,7 @@ def get_mantra_cycle(tick: int) -> int:
     """
     if not 0 <= tick < CHAITANYA_LILA:
         raise ValueError(f"Tick must be 0-47, got {tick}")
-    return (tick // MAHAMANTRA_WORDS) + 1
+    return (tick // MAHAMANTRA_WORDS) + KSETRAJNA
 
 
 def get_mantra_position(tick: int) -> int:
@@ -497,7 +498,7 @@ def verify_chaitanya_lila(value: int) -> bool:
     return (
         MAHAMANTRA_WORDS * LILA_CYCLES == CHAITANYA_LILA
         and NAVADVIPA_PHASE + PURI_PHASE == CHAITANYA_LILA
-        and 37 + RUDRA_BRIDGE == CHAITANYA_LILA
+        and PARAMPARA + RUDRA_BRIDGE == CHAITANYA_LILA
         and value <= CHAITANYA_LILA
     )
 

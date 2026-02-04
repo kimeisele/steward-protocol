@@ -16,10 +16,11 @@ USAGE:
 
 SSOT: Constants from _seed.py
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, SHARANAGATI, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "manu"
-__position__ = 6
+__position__ = SHARANAGATI
 __genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 
 import logging
@@ -36,7 +37,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 # Verify genesis
-assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
+assert int(__genesis__, WORDS) % PARAMPARA == 0, "BROKEN LINEAGE"
 
 logger = logging.getLogger("ROLLOUT")
 
@@ -103,19 +104,19 @@ class RolloutTracker:
     # HEARTBEAT LISTENER (called by Nrisimha)
     # =========================================================================
 
-    def on_mantra_pulse(self, opcode: Any) -> None:
+    def on_mantra_pulse(self, opcode: object) -> None:
         """
         Called by Nrisimha on each tick of the 16-step cycle.
 
         This is the PARAMPARA connection - we hear the heartbeat.
         """
-        self._total_pulses += 1
+        self._total_pulses += KSETRAJNA
         self._last_pulse = datetime.utcnow()
 
         # Increment step count for all tracked modules
         for module in self._modules.values():
             if module.stage != Stage.PRODUCTION:
-                module.step_count += 1
+                module.step_count += KSETRAJNA
 
                 # Auto-advance if ready
                 if module.is_ready:
@@ -140,9 +141,9 @@ class RolloutTracker:
         stages = list(Stage)
         idx = stages.index(module.stage)
 
-        if idx < len(stages) - 1:
+        if idx < len(stages) - KSETRAJNA:
             old = module.stage
-            module.stage = stages[idx + 1]
+            module.stage = stages[idx + KSETRAJNA]
             module.step_count = 0  # Reset for new stage
             logger.info(f"📈 {module.name}: {old.value} → {module.stage.value}")
             return True
@@ -153,7 +154,7 @@ class RolloutTracker:
     # =========================================================================
 
     @property
-    def status(self) -> Dict[str, Any]:
+    def status(self) -> Dict[str, object]:
         """Get overall status."""
         by_stage = {s.value: [] for s in Stage}
         for m in self._modules.values():

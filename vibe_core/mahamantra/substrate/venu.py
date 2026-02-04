@@ -22,12 +22,13 @@ Diese Datei beantwortet NICHT:
 
 KEIN STATE. KEINE COUNTER. NUR PURE FUNCTIONS.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0xdb705f2f"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, Tuple, TypedDict
@@ -235,7 +236,7 @@ def position_to_quarter(position: int) -> Quarter:
         Quarter enum
     """
     if not 0 <= position < VENU_POSITIONS:
-        raise ValueError(f"Position must be 0-{VENU_POSITIONS - 1}, got {position}")
+        raise ValueError(f"Position must be 0-{VENU_POSITIONS - KSETRAJNA}, got {position}")
     return Quarter(position // VENU_POSITIONS_PER_PHASE)
 
 
@@ -250,7 +251,7 @@ def position_to_word(position: int) -> HolyName:
         HolyName at that position
     """
     if not 0 <= position < VENU_POSITIONS:
-        raise ValueError(f"Position must be 0-{VENU_POSITIONS - 1}, got {position}")
+        raise ValueError(f"Position must be 0-{VENU_POSITIONS - KSETRAJNA}, got {position}")
     return MAHAMANTRA[position]
 
 
@@ -264,7 +265,7 @@ def next_position(position: int) -> int:
     Returns:
         Next position (0-15)
     """
-    return (position + 1) % VENU_POSITIONS
+    return (position + KSETRAJNA) % VENU_POSITIONS
 
 
 def previous_position(position: int) -> int:
@@ -277,7 +278,7 @@ def previous_position(position: int) -> int:
     Returns:
         Previous position (0-15)
     """
-    return (position - 1) % VENU_POSITIONS
+    return (position - KSETRAJNA) % VENU_POSITIONS
 
 
 # =============================================================================

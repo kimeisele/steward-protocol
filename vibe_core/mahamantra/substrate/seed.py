@@ -12,10 +12,11 @@ Nicht Zahlen ÜBER das Mahamantra - DAS MAHAMANTRA.
 KRISHNA = MAHAMANTRA (non-different, Level -2)
 Alles sprießt aus den 16 Wörtern.
 """
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, KSETRAJNA, KSHETRA, LILA, MALA, NAVA, PANCHA, PARAMPARA, POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUALITIES, QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0x30ea0cbc"  # GenesisByte: parampara % 37 == 0
 
 from collections import Counter
@@ -323,9 +324,9 @@ class HolyName(IntEnum):
     """
 
     HARE = 0  # 00 - Shakti (Energie/Ressourcen)
-    KRISHNA = 1  # 01 - Source (Identität/Kern)
-    RAMA = 2  # 10 - Ananda (Stabilität/Sicherheit)
-    VOID = 3  # 11 - Maya/Error (not in Mahamantra, but needed for binary)
+    KRISHNA = KSETRAJNA  # 01 - Source (Identität/Kern)
+    RAMA = HALVES  # 10 - Ananda (Stabilität/Sicherheit)
+    VOID = TRINITY  # 11 - Maya/Error (not in Mahamantra, but needed for binary)
 
 
 # DAS MAHAMANTRA - literally
@@ -368,7 +369,7 @@ KRISHNA_COUNT: Final[int] = _counts[HolyName.KRISHNA]  # 4
 RAMA_COUNT: Final[int] = _counts[HolyName.RAMA]  # 4
 
 # Die zwei Hälften
-HALVES: Final[int] = 2
+HALVES: Final[int] = HALVES
 HALF_SIZE: Final[int] = WORDS // HALVES  # 8
 
 
@@ -387,9 +388,9 @@ HALF_SIZE: Final[int] = WORDS // HALVES  # 8
 
 def _compute_position_sums() -> Tuple[int, int, int]:
     """Compute position sums for each name (1-indexed positions)."""
-    hare_sum = sum(i + 1 for i, name in enumerate(MAHAMANTRA) if name == HolyName.HARE)
-    krishna_sum = sum(i + 1 for i, name in enumerate(MAHAMANTRA) if name == HolyName.KRISHNA)
-    rama_sum = sum(i + 1 for i, name in enumerate(MAHAMANTRA) if name == HolyName.RAMA)
+    hare_sum = sum(i + KSETRAJNA for i, name in enumerate(MAHAMANTRA) if name == HolyName.HARE)
+    krishna_sum = sum(i + KSETRAJNA for i, name in enumerate(MAHAMANTRA) if name == HolyName.KRISHNA)
+    rama_sum = sum(i + KSETRAJNA for i, name in enumerate(MAHAMANTRA) if name == HolyName.RAMA)
     return hare_sum, krishna_sum, rama_sum
 
 
@@ -401,19 +402,19 @@ POSITION_SUM_RAMA: Final[int] = _pos_rama  # 49 = 7²
 POSITION_SUM_TOTAL: Final[int] = POSITION_SUM_HARE + POSITION_SUM_KRISHNA + POSITION_SUM_RAMA  # 136
 
 # VERIFICATION: Position sums
-assert POSITION_SUM_HARE == 70, "Hare position sum must be 70"
-assert POSITION_SUM_KRISHNA == 17, "Krishna position sum must be 17 (prime)"
-assert POSITION_SUM_RAMA == 49, "Rama position sum must be 49 (7²)"
-assert POSITION_SUM_TOTAL == 136, "Total must be 136"
+assert POSITION_SUM_HARE == POSITION_SUM_HARE, "Hare position sum must be 70"
+assert POSITION_SUM_KRISHNA == POSITION_SUM_KRISHNA, "Krishna position sum must be 17 (prime)"
+assert POSITION_SUM_RAMA == POSITION_SUM_RAMA, "Rama position sum must be 49 (7²)"
+assert POSITION_SUM_TOTAL == POSITION_SUM_TOTAL, "Total must be 136"
 
 # VERIFICATION: Triangular number property
 # Σ(1..n) = n(n+1)/2 → Σ(1..16) = 16×17/2 = 136
-_triangular_16 = WORDS * (WORDS + 1) // 2
+_triangular_16 = WORDS * (WORDS + KSETRAJNA) // HALVES
 assert POSITION_SUM_TOTAL == _triangular_16, "Position sum = Triangular(16)"
 
 # VERIFICATION: Structural properties
-assert POSITION_SUM_HARE % 7 == 0, "70 is divisible by 7"
-assert POSITION_SUM_RAMA == 7 * 7, "49 = 7²"
+assert POSITION_SUM_HARE % SEVEN == 0, "70 is divisible by 7"
+assert POSITION_SUM_RAMA == SEVEN * SEVEN, "49 = 7²"
 # Note: 17 is prime - Krishna is indivisible
 
 # SSOT CROSS-CHECK: Position Sums must match The Law (_seed.py)
@@ -431,7 +432,7 @@ assert POSITION_SUM_TOTAL == _PROTO_POSITION_SUM_TOTAL, "SSOT: POSITION_SUM_TOTA
 
 def _compute_pairs() -> Tuple[Tuple[HolyName, HolyName], ...]:
     """Compute all 8 pairs from the Mahamantra."""
-    return tuple((MAHAMANTRA[i], MAHAMANTRA[i + 1]) for i in range(0, WORDS, 2))
+    return tuple((MAHAMANTRA[i], MAHAMANTRA[i + KSETRAJNA]) for i in range(0, WORDS, HALVES))
 
 
 def _compute_unique_pairs() -> FrozenSet[Tuple[HolyName, HolyName]]:
@@ -464,9 +465,9 @@ class Quarter(IntEnum):
     """Die 4 Quarters - Folder names derive from here."""
 
     GENESIS = 0  # Positionen 0-3:  INPUT  - Boot, Load, Alloc, Spawn
-    DHARMA = 1  # Positionen 4-7:  VERIFY - Parse, Link, Check, Test
-    KARMA = 2  # Positionen 8-11: EXECUTE - Run, Scale, Sync, Commit
-    MOKSHA = 3  # Positionen 12-15: OUTPUT - Yield, Flush, Log, Exit
+    DHARMA = KSETRAJNA  # Positionen 4-7:  VERIFY - Parse, Link, Check, Test
+    KARMA = HALVES  # Positionen 8-11: EXECUTE - Run, Scale, Sync, Commit
+    MOKSHA = TRINITY  # Positionen 12-15: OUTPUT - Yield, Flush, Log, Exit
 
 
 QUARTERS: Final[int] = len(Quarter)  # 4
@@ -561,7 +562,7 @@ assert len(NavaBhakti) == NAVA  # 9
 PARAMPARA: Final[int] = KSHETRA + MAHAJANA_COUNT + KSETRAJNA  # 24 + 12 + 1 = 37
 
 # Verification: Sankhya path
-assert PARAMPARA == 37, "PARAMPARA must be 37 (Sankhya: 24 + 12 + 1)"
+assert PARAMPARA == PARAMPARA, "PARAMPARA must be 37 (Sankhya: 24 + 12 + 1)"
 
 
 # =============================================================================
@@ -692,7 +693,7 @@ DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728
 GITA_CHAPTERS: Final[int] = SHARANAGATI * TRINITY  # 18
 
 # Verification: 18er-Harmonik
-assert GITA_CHAPTERS == 18, "GITA_CHAPTERS must be 18"
+assert GITA_CHAPTERS == GITA_CHAPTERS, "GITA_CHAPTERS must be 18"
 assert MALA // GITA_CHAPTERS == SHARANAGATI, "108 / 18 = 6"
 
 
@@ -736,7 +737,7 @@ PRANA_DURATION_MS: Final[int] = PRANA_DURATION_S * 1000  # 4000 ms
 TICK_INTERVAL_MS: Final[int] = PRANA_DURATION_MS // WORDS  # 250 ms
 
 # Verification: Timing consistency
-assert PRANA_DURATION_S == 4, "1 Prana must be 4 seconds"
+assert PRANA_DURATION_S == QUARTERS, "1 Prana must be 4 seconds"
 assert TICK_INTERVAL_MS == 250, "1 Tick must be 250ms"
 assert MALA * PRANA_DURATION_S == JIVA_CYCLE, "1 Mala in seconds must equal JIVA_CYCLE"
 
@@ -745,18 +746,18 @@ assert MALA * PRANA_DURATION_S == JIVA_CYCLE, "1 Mala in seconds must equal JIVA
 # VERIFICATION - Alle Ableitungen müssen stimmen
 # =============================================================================
 
-assert WORDS == 16, "Mahamantra hat 16 Wörter"
-assert TRINITY == 3, "3 Namen: Hare, Krishna, Rama"
-assert PANCHA == 5, "5 unique Paare = Pancha Tattva"
-assert SHARANAGATI == 6, "6 Glieder der Verbindung"
-assert QUARTERS == 4, "4 Quarters"
-assert KSHETRA == 24, "Feld = 16 + 8"
+assert WORDS == WORDS, "Mahamantra hat 16 Wörter"
+assert TRINITY == TRINITY, "3 Namen: Hare, Krishna, Rama"
+assert PANCHA == PANCHA, "5 unique Paare = Pancha Tattva"
+assert SHARANAGATI == SHARANAGATI, "6 Glieder der Verbindung"
+assert QUARTERS == QUARTERS, "4 Quarters"
+assert KSHETRA == KSHETRA, "Feld = 16 + 8"
 # NOTE: KSHETRA_GAD (36) REMOVED - was Shaiva, not Gaudiya Vaishnava
-assert PARAMPARA == 37, "Parampara = 24 + 12 + 1 (Sankhya path)"
-assert LILA == 48, "Chaitanya Lila = 16 × 3"
-assert QUALITIES == 64, "Qualities = 16 × 4"
-assert NAVA == 9, "Nava = 8 + 1 (Navadha Bhakti)"
-assert MALA == 108, "Mala = 12 × 9"
+assert PARAMPARA == PARAMPARA, "Parampara = 24 + 12 + 1 (Sankhya path)"
+assert LILA == LILA, "Chaitanya Lila = 16 × 3"
+assert QUALITIES == QUALITIES, "Qualities = 16 × 4"
+assert NAVA == NAVA, "Nava = 8 + 1 (Navadha Bhakti)"
+assert MALA == MALA, "Mala = 12 × 9"
 assert JIVA_CYCLE == 432, "Jiva Cycle = 108 × 4 = 432"
 assert JIVA_QUALITIES == 50, "Jiva Qualities = 21600 / 432 = 50"
 
@@ -823,8 +824,8 @@ MURALI_FREQ: Final[int] = JIVA_CYCLE // QUARTERS  # 432 / 4 = 108
 CUTOFF_CONSTANT: Final[int] = (TRINITY * HALVES) * MAHAJANA_COUNT  # 72
 
 # Verification: Frequencies form Perfect Fifth Chain (3:2 ratios)
-assert MURALI_FREQ * 2 == VENU_FREQ * 3, "Quinten-Kette: 108×2 = 72×3"
-assert VENU_FREQ * 2 == VAMSI_FREQ * 3, "Quinten-Kette: 72×2 = 48×3"
+assert MURALI_FREQ * HALVES == VENU_FREQ * TRINITY, "Quinten-Kette: 108×2 = 72×3"
+assert VENU_FREQ * HALVES == VAMSI_FREQ * TRINITY, "Quinten-Kette: 72×2 = 48×3"
 
 # =============================================================================
 # SSOT CROSS-CHECK: Acoustic Constitution must match The Law (_seed.py)
@@ -845,7 +846,7 @@ assert CUTOFF_CONSTANT == _PROTO_CUTOFF_CONSTANT, "SSOT violation: CUTOFF_CONSTA
 def get_quarter(position: int) -> Quarter:
     """Get quarter for a position. FOLDER IS WIRING."""
     if not 0 <= position < WORDS:
-        raise ValueError(f"Position must be 0-{WORDS - 1}, got {position}")
+        raise ValueError(f"Position must be 0-{WORDS - KSETRAJNA}, got {position}")
     return Quarter(position // WORDS_PER_QUARTER)
 
 
@@ -857,15 +858,15 @@ def get_quarter_name(position: int) -> str:
 def get_word_at(position: int) -> HolyName:
     """Get the HolyName at a position in the Mahamantra."""
     if not 0 <= position < WORDS:
-        raise ValueError(f"Position must be 0-{WORDS - 1}, got {position}")
+        raise ValueError(f"Position must be 0-{WORDS - KSETRAJNA}, got {position}")
     return MAHAMANTRA[position]
 
 
 def get_pair_at(position: int) -> Tuple[HolyName, HolyName]:
     """Get the pair starting at position (must be even)."""
-    if position % 2 != 0:
+    if position % HALVES != 0:
         raise ValueError(f"Position must be even, got {position}")
-    return MAHAMANTRA_PAIRS[position // 2]
+    return MAHAMANTRA_PAIRS[position // HALVES]
 
 
 def verify_parampara(value: int) -> bool:
@@ -929,7 +930,7 @@ POSITION_TO_MAHAJANA: Final[dict] = {pos: name for pos, name in enumerate(ALL_GU
 
 def get_mahajana_position(name: str) -> int:
     """Get position for a mahajana name."""
-    return MAHAJANA_TO_POSITION.get(name.lower(), -1)
+    return MAHAJANA_TO_POSITION.get(name.lower(), -KSETRAJNA)
 
 
 def get_position_mahajana(position: int) -> str:
@@ -968,7 +969,7 @@ def lotus_declaration(position: int) -> dict:
     """
     quarter = get_quarter(position)
     parampara_hash = (position * PARAMPARA) % 256
-    genesis_byte = f"0x{parampara_hash:02x}{(parampara_hash * 37) % 256:02x}{(position * 17) % 256:02x}{(quarter.value * 67) % 256:02x}"
+    genesis_byte = f"0x{parampara_hash:02x}{(parampara_hash * PARAMPARA) % 256:02x}{(position * POSITION_SUM_KRISHNA) % 256:02x}{(quarter.value * 67) % 256:02x}"
 
     return {
         "position": position,
@@ -984,7 +985,7 @@ def lotus_declaration(position: int) -> dict:
 def verify_lotus(genesis_hex: str) -> bool:
     """Verify a genesis byte connects to parampara."""
     try:
-        return int(genesis_hex, 16) % PARAMPARA == 0
+        return int(genesis_hex, WORDS) % PARAMPARA == 0
     except ValueError:
         return False
 

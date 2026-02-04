@@ -32,10 +32,11 @@ L7: āśliṣya vā              → RETURN_UNCONDITIONAL (verse 8)
 
 ALL CONSTANTS DERIVED FROM SEED.PY.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, NAVA, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"  # Position 9 - Devotion under adversity
-__position__ = 9
+__position__ = NAVA
 __genesis__ = "0x7e40b596"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -80,7 +81,7 @@ class SiksastakamStage:
     @property
     def pipeline_stage(self) -> int:
         """L0-L7 stage number."""
-        return self.verse - 1
+        return self.verse - KSETRAJNA
 
 
 def _build_siksastakam_stages() -> Tuple["SiksastakamStage", ...]:
@@ -298,7 +299,7 @@ class PrabhupadaKirtan:
 
     def _advance_stage(self) -> None:
         """Advance to next Siksastakam stage (wraps at 8)."""
-        self._current_stage_index = (self._current_stage_index + 1) % HALF_SIZE
+        self._current_stage_index = (self._current_stage_index + KSETRAJNA) % HALF_SIZE
 
     def _perform_parampara_check(self, beat_number: int) -> ParamparaCheckResult:
         """
@@ -313,7 +314,7 @@ class PrabhupadaKirtan:
         genesis_hex = getattr(self_module, "__genesis__", "0x0")
 
         try:
-            signature_val = int(genesis_hex, 16)
+            signature_val = int(genesis_hex, WORDS)
         except ValueError:
             signature_val = 0
 
@@ -367,7 +368,7 @@ class PrabhupadaKirtan:
 
         This is TRUE kirtan - call and response through THE PERSON.
         """
-        return "CALL" if beat_number % 2 == 1 else "RESPONSE"
+        return "CALL" if beat_number % HALVES == KSETRAJNA else "RESPONSE"
 
     def compute_with_person(self, seed: int) -> PrabhupadaKirtanResult:
         """
@@ -606,7 +607,7 @@ class PersonAnchoredOperator:
             return {"beats": 0, "all_verified": True, "person": "Prabhupada"}
 
         total = len(self._check_history)
-        verified = sum(1 for c in self._check_history if c.link_verified)
+        verified = sum(KSETRAJNA for c in self._check_history if c.link_verified)
 
         return {
             "person": "A.C. Bhaktivedanta Swami Prabhupada",

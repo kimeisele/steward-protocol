@@ -32,12 +32,13 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "shambhu"
-__position__ = 3
+__position__ = TRINITY
 __genesis__ = "0x0abb5f5d"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
@@ -584,7 +585,7 @@ class BridgeProtocolDef(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="BridgeProtocol",
         mahajana="narada",  # Narada travels between worlds
-        position=2,
+        position=HALVES,
         level=Level.CONTRACT,
         quarter=Quarter.GENESIS,
     )

@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, Iterator, List, Tuple
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY)
 from dataclasses import dataclass
 from enum import Enum
 from vibe_core.mahamantra.protocols._seed import (
@@ -48,13 +49,13 @@ class MahaHardwareProtocol(Protocol):
 class PipelineStage(Enum):
     """The 8 pipeline stages of LotusRouterCore."""
     L0_NIBBLE = 0
-    L1_NIBBLE = 1
-    L2_NIBBLE = 2
-    L3_NIBBLE = 3
-    L4_NIBBLE = 4
-    L5_NIBBLE = 5
-    L6_NIBBLE = 6
-    L7_NIBBLE = 7
+    L1_NIBBLE = KSETRAJNA
+    L2_NIBBLE = HALVES
+    L3_NIBBLE = TRINITY
+    L4_NIBBLE = QUARTERS
+    L5_NIBBLE = PANCHA
+    L6_NIBBLE = SHARANAGATI
+    L7_NIBBLE = SEVEN
 
 @dataclass(frozen=True)
 class PipelineStageInfo:
@@ -79,7 +80,7 @@ class PipelineStageInfo:
         """Get low bit from range string (e.g. '31-28' -> 28)."""
         separator = "-" if "-" in self.bit_range else ":"
         if separator in self.bit_range:
-            return int(self.bit_range.split(separator)[1])
+            return int(self.bit_range.split(separator)[KSETRAJNA])
         return 0
 
 @dataclass(frozen=True)
@@ -110,11 +111,11 @@ class HardwareSpec:
 
     @property
     def address_space(self) -> int:
-        return 2 ** self.data_width
+        return HALVES ** self.data_width
 
     @property
     def max_next_hops(self) -> int:
-        return 2 ** self.next_hop_width
+        return HALVES ** self.next_hop_width
         
     def to_dict(self) -> dict:
         return {
@@ -137,7 +138,7 @@ class VerificationResult:
     @property
     def passed_count(self) -> int:
         """Count of passed checks."""
-        return sum(1 for _, _, _, passed in self.checks if passed)
+        return sum(KSETRAJNA for _, _, _, passed in self.checks if passed)
         
     @property
     def total_count(self) -> int:

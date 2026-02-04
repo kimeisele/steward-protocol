@@ -10,10 +10,11 @@ Alle Imports INNERHALB mahamantra/ sollten hierüber gehen.
 
 NICHT NEU SCHREIBEN - nur wrappen.
 """
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nityananda"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0x3658b02f"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================

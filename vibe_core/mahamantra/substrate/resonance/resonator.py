@@ -11,8 +11,9 @@ The mod_space determines the "resonant frequency".
 
 NOTE: Uses maha_oscillate() from algorithm/ - NO DUPLICATION.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
@@ -113,7 +114,7 @@ class MahaResonator:
 
         for seed in range(self.mod_space):
             result = self.find_attractor(seed)
-            if result.cycle_length == 1:
+            if result.cycle_length == KSETRAJNA:
                 if result.attractor not in fixed_points:
                     fixed_points.append(result.attractor)
 

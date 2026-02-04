@@ -21,8 +21,9 @@ KEIN DUPLIKAT MEHR. NUR DIESE DATEI.
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -102,7 +103,7 @@ class MantraProtocol(ABC):
     # THE ONLY CONFIGURATION - Subclasses set this
     # =========================================================================
 
-    _position_index: ClassVar[int] = -1  # Must be overridden (0-15)
+    _position_index: ClassVar[int] = -KSETRAJNA  # Must be overridden (0-15)
     _intents: ClassVar[List[str]] = []  # List of keywords/intents this protocol handles
 
     # =========================================================================
@@ -156,7 +157,7 @@ class MantraProtocol(ABC):
             intent_lower = intent.lower()
             # Exact word match only (no substring matching)
             if intent_lower in phrase_words:
-                exact_matches += 1
+                exact_matches += KSETRAJNA
 
         if exact_matches == 0:
             return 0.0
@@ -176,7 +177,7 @@ class MantraProtocol(ABC):
         nadi_base = NADI_RESONANCE / MALA  # 0.667 base for first match
         lila_increment = (LILA / MALA) / len(intents)  # Diminishing returns per additional match
 
-        base_resonance = nadi_base + (exact_matches - 1) * lila_increment if exact_matches > 0 else 0.0
+        base_resonance = nadi_base + (exact_matches - KSETRAJNA) * lila_increment if exact_matches > 0 else 0.0
 
         # Position-specific modulation (overtone)
         # Each position has a unique frequency in the JIVA_CYCLE
@@ -470,6 +471,12 @@ class ProtocolRegistry:
         idx = protocol_class._position_index
         if idx in cls._registry:
             existing = cls._registry[idx]
+            # Idempotent registration (Robust to module aliasing)
+            if existing == protocol_class:
+                return protocol_class
+            if existing.__name__ == protocol_class.__name__ and existing.__module__ == protocol_class.__module__:
+                 return protocol_class
+                 
             raise ValueError(
                 f"Position {idx} already registered to {existing.__name__}, cannot register {protocol_class.__name__}"
             )
@@ -621,7 +628,7 @@ class ProtocolRegistry:
         for listener in cls._tick_listeners:
             try:
                 listener(tick_state)
-                notified += 1
+                notified += KSETRAJNA
             except Exception:
                 # Don't let one failing listener break the tick
                 pass

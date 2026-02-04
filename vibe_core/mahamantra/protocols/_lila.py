@@ -32,12 +32,13 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, KSHETRA, LILA, QUARTERS, SHARANAGATI)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
-__position__ = 4
+__position__ = QUARTERS
 __genesis__ = "0x63fe653d"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -84,8 +85,8 @@ from vibe_core.mahamantra.substrate.seed import (
 LILA_BOUNDARY: Final[int] = NAVADVIPA_PHASE  # 24
 
 # Verification assertion
-assert LILA_BOUNDARY == 24, "Lila boundary must equal 24"
-assert LILA_LIMIT == 48, "Lila limit must be 48"
+assert LILA_BOUNDARY == KSHETRA, "Lila boundary must equal 24"
+assert LILA_LIMIT == LILA, "Lila limit must be 48"
 assert LILA_LIMIT % PARAMPARA != 0, "48 % 37 != 0 - Lila is transcendental to Parampara"
 
 
@@ -406,7 +407,7 @@ class LilaBoundedOutput:
             value: Output value
             strict: If True, THROW on boundary. If False, track overflow.
         """
-        self.total_attempted += 1
+        self.total_attempted += KSETRAJNA
         self.boundary.add((key, value), strict=strict)
         return self
 
@@ -468,7 +469,7 @@ class LilaProtocol(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="LilaProtocol",
         mahajana="kapila",  # Kapila - the analyst
-        position=6,
+        position=SHARANAGATI,
         level=Level.ACINTYA,
         quarter=Quarter.DHARMA,
     )

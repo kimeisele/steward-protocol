@@ -64,6 +64,32 @@ def execute(input_text: str, context: dict = None) -> dict:
         return {"success": True, "action": "get_state", "state": state}
 
 
+def on_bhoga(state: dict) -> None:
+    """
+    Reactor Hook: Called when ShadowReactor executes index 1 (Brahma).
+    
+    CONNECTS THE EARS (ShadowReactor) TO THE BRAIN (Service).
+    """
+    # 1. Access Payload (The Intent)
+    payload_bytes = state.get("payload")
+    if not payload_bytes:
+        state["execution_result"] = {"error": "No payload provided to on_bhoga"}
+        return
+
+    try:
+        # 2. Decode Intent
+        intent_text = payload_bytes.decode("utf-8")
+        
+        # 3. Execute Service (Reuse existing logic)
+        result = execute(intent_text)
+        
+        # 4. Return Result (Phase 1 Bridge)
+        state["execution_result"] = result
+        
+    except Exception as e:
+        state["execution_result"] = {"error": f"Brahma execution failed: {str(e)}"}
+
+
 def __getattr__(name: str) -> object:
     """
     Lazy load BrahmaService and NullBrahma.

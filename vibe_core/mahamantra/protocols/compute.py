@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, Literal, Iterator, Optional
+from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, QUARTERS)
 from dataclasses import dataclass
 
 @runtime_checkable
@@ -12,7 +13,7 @@ class MahaComputeProtocol(Protocol):
     def analyze(
         self, 
         entries: int, 
-        bytes_per_entry: int = 8, 
+        bytes_per_entry: int = HARE_COUNT, 
         access_pattern: Literal["uniform", "prefix", "sequential"] = "uniform"
     ) -> "DataAnalysis":
         """Analyze data structure for memory hierarchy fit."""
@@ -23,7 +24,7 @@ class MahaComputeProtocol(Protocol):
         name: str, 
         simd_lanes: int, 
         cache_kb: int, 
-        memory_levels: int = 4
+        memory_levels: int = QUARTERS
     ) -> "ComputeUnit":
         """Create and evaluate a compute unit definition."""
         ...

@@ -13,10 +13,11 @@ Every cell carries its 72-byte header and biological state.
 
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, PANCHA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
-__position__ = 5
+__position__ = PANCHA
 __genesis__ = "0x001740aa"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -65,7 +66,7 @@ GENESIS_PRANA: Final[int] = MAHA_QUANTUM * 100
 METABOLIC_COST: Final[int] = TRINITY
 
 # Minimum prana required for mitosis: 2 × MAHA_QUANTUM = 274
-MITOSIS_THRESHOLD: Final[int] = MAHA_QUANTUM * 2
+MITOSIS_THRESHOLD: Final[int] = MAHA_QUANTUM * HALVES
 
 # Membrane integrity threshold for signal processing: 20%
 MEMBRANE_MIN_INTEGRITY: Final[float] = 0.2
@@ -116,7 +117,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
     """
     
     __mahajana__: ClassVar[str] = "prahlada"
-    __position__: ClassVar[int] = 5
+    __position__: ClassVar[int] = PANCHA
     
     # Identity (immutable)
     header: MahaHeader
@@ -210,7 +211,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             return 0
         
         # Age check
-        self.lifecycle.cycle += 1
+        self.lifecycle.cycle += KSETRAJNA
         if self.lifecycle.cycle >= MAX_AGE_CYCLES:
             self.apoptosis()
             return 0
@@ -263,7 +264,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             )
         
         # Split prana
-        half_prana = self.lifecycle.prana // 2
+        half_prana = self.lifecycle.prana // HALVES
         self.lifecycle.prana = half_prana
         
         # Create child with new header (same source/target, new link)
@@ -342,7 +343,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         # I am Active. We Resonate.
         # Merge visitor into self
         self.lifecycle.prana += visitor.lifecycle.prana
-        self.lifecycle.integrity = (self.lifecycle.integrity + visitor.lifecycle.integrity) / 2
+        self.lifecycle.integrity = (self.lifecycle.integrity + visitor.lifecycle.integrity) / HALVES
         # Note: We return SELF (the Resident), now empowered.
         return self
     
@@ -374,13 +375,13 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         
         # Lifecycle state
         result.extend(struct.pack("<Q", self.lifecycle.prana))
-        integrity_fixed = int(self.lifecycle.integrity * (1 << 32))
+        integrity_fixed = int(self.lifecycle.integrity * (KSETRAJNA << 32))
         result.extend(struct.pack("<Q", integrity_fixed))
         result.extend(struct.pack("<Q", self.lifecycle.cycle))
         
         # Active flag + DNA length
         dna_bytes = self.lifecycle.dna.encode("utf-8")
-        flags = (1 if self.lifecycle.is_active else 0) | (len(dna_bytes) << 1)
+        flags = (KSETRAJNA if self.lifecycle.is_active else 0) | (len(dna_bytes) << KSETRAJNA)
         result.extend(struct.pack("<Q", flags))
         
         # DNA
@@ -413,21 +414,21 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         offset = HEADER_SIZE_BYTES
         
         # 2. Lifecycle
-        prana = struct.unpack("<Q", data[offset:offset+8])[0]
-        offset += 8
+        prana = struct.unpack("<Q", data[offset:offset+HARE_COUNT])[0]
+        offset += HARE_COUNT
         
-        integrity_fixed = struct.unpack("<Q", data[offset:offset+8])[0]
-        integrity = integrity_fixed / (1 << 32)
-        offset += 8
+        integrity_fixed = struct.unpack("<Q", data[offset:offset+HARE_COUNT])[0]
+        integrity = integrity_fixed / (KSETRAJNA << 32)
+        offset += HARE_COUNT
         
-        cycle = struct.unpack("<Q", data[offset:offset+8])[0]
-        offset += 8
+        cycle = struct.unpack("<Q", data[offset:offset+HARE_COUNT])[0]
+        offset += HARE_COUNT
         
-        flags = struct.unpack("<Q", data[offset:offset+8])[0]
-        offset += 8
+        flags = struct.unpack("<Q", data[offset:offset+HARE_COUNT])[0]
+        offset += HARE_COUNT
         
-        is_active = bool(flags & 1)
-        dna_len = flags >> 1
+        is_active = bool(flags & KSETRAJNA)
+        dna_len = flags >> KSETRAJNA
         
         # 3. DNA
         if len(data) < offset + dna_len:

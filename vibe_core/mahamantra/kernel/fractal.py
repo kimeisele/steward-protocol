@@ -22,12 +22,13 @@ The pattern IS Krishna (acintya).
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, MAHAJANA_COUNT, PARAMPARA, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0x50d9193c"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -136,7 +137,7 @@ class FractalNode(Generic[T]):
         """
         ksetra_count = len(self.ksetra)
         mahajana_count = len(self.mahajanas)
-        ksetrajna_count = 1  # Always 1
+        ksetrajna_count = KSETRAJNA  # Always 1
 
         # At base level: 24 + 12 + 1 = 37
         # At higher levels: multiples of 37
@@ -148,7 +149,7 @@ class FractalNode(Generic[T]):
         max_depth = 0
         for item in self.ksetra:
             if isinstance(item, FractalNode):
-                child_depth = item.depth + 1
+                child_depth = item.depth + KSETRAJNA
                 max_depth = max(max_depth, child_depth)
         return max_depth
 
@@ -183,14 +184,14 @@ class FractalNode(Generic[T]):
 
         item = self.ksetra[path[0]]
         if isinstance(item, FractalNode):
-            return item.zoom_in(path[1:])
-        elif len(path) == 1:
+            return item.zoom_in(path[KSETRAJNA:])
+        elif len(path) == KSETRAJNA:
             # We're at a leaf - create a virtual node
             return FractalNode(
                 ksetrajna=str(item),
                 ksetra=[],
                 mahajanas=self.mahajanas,
-                level=FractalLevel(min(self.level.value + 1, FractalLevel.SADHANA.value)),
+                level=FractalLevel(min(self.level.value + KSETRAJNA, FractalLevel.SADHANA.value)),
                 parampara_vector=self.parampara_vector,
             )
         return None
@@ -249,9 +250,9 @@ class FractalTree(Generic[T]):
                 FractalNode(
                     ksetrajna=word,
                     ksetra=[],  # Aksaras would go here
-                    mahajanas=all_mahajanas[i * 3 : (i + 1) * 3],  # 3 per quarter
+                    mahajanas=all_mahajanas[i * TRINITY : (i + KSETRAJNA) * TRINITY],  # 3 per quarter
                     level=FractalLevel.PADA,
-                    parampara_vector=FRACTAL_BASE * (i + 1),
+                    parampara_vector=FRACTAL_BASE * (i + KSETRAJNA),
                 )
                 for word in words
             ]
@@ -259,9 +260,9 @@ class FractalTree(Generic[T]):
             quarter = FractalNode(
                 ksetrajna=name,
                 ksetra=padas,  # type: ignore
-                mahajanas=all_mahajanas[i * 3 : (i + 1) * 3],
+                mahajanas=all_mahajanas[i * TRINITY : (i + KSETRAJNA) * TRINITY],
                 level=FractalLevel.VAKYA,
-                parampara_vector=FRACTAL_BASE * (i + 1),
+                parampara_vector=FRACTAL_BASE * (i + KSETRAJNA),
             )
             quarters.append(quarter)
 
@@ -271,7 +272,7 @@ class FractalTree(Generic[T]):
             ksetra=quarters,  # type: ignore
             mahajanas=all_mahajanas,
             level=FractalLevel.VAKYA,
-            parampara_vector=FRACTAL_BASE * 12,  # 444 = fully connected
+            parampara_vector=FRACTAL_BASE * MAHAJANA_COUNT,  # 444 = fully connected
         )
 
         return cls(root=root)
@@ -300,7 +301,7 @@ class FractalTree(Generic[T]):
 # =============================================================================
 
 
-def scale_up(node: FractalNode[T], factor: int = 37) -> FractalNode[T]:
+def scale_up(node: FractalNode[T], factor: int = PARAMPARA) -> FractalNode[T]:
     """
     Scale up a fractal node by a factor.
 
@@ -315,12 +316,12 @@ def scale_up(node: FractalNode[T], factor: int = 37) -> FractalNode[T]:
         ksetrajna=node.ksetrajna,
         ksetra=scaled_ksetra,
         mahajanas=node.mahajanas,
-        level=FractalLevel(max(node.level.value - 1, FractalLevel.VARNA.value)),
+        level=FractalLevel(max(node.level.value - KSETRAJNA, FractalLevel.VARNA.value)),
         parampara_vector=node.parampara_vector * factor,
     )
 
 
-def scale_down(node: FractalNode[T], factor: int = 37) -> FractalNode[T]:
+def scale_down(node: FractalNode[T], factor: int = PARAMPARA) -> FractalNode[T]:
     """
     Scale down a fractal node by a factor.
 
@@ -333,7 +334,7 @@ def scale_down(node: FractalNode[T], factor: int = 37) -> FractalNode[T]:
         ksetrajna=node.ksetrajna,
         ksetra=reduced_ksetra,
         mahajanas=node.mahajanas,
-        level=FractalLevel(min(node.level.value + 1, FractalLevel.SADHANA.value)),
+        level=FractalLevel(min(node.level.value + KSETRAJNA, FractalLevel.SADHANA.value)),
         parampara_vector=node.parampara_vector // factor if factor > 0 else 0,
     )
 

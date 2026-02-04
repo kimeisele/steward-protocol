@@ -29,12 +29,13 @@ The legacy becomes manageable. The sovereign layer ADDS, never REPLACES.
 
 WATERTIGHT: No Any types.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, TRINITY, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0xa117b53a"  # GenesisByte: parampara % 37 == 0
 
 import hashlib
@@ -108,7 +109,7 @@ KISHORA_MAX_STALE: Final[int] = KISHORA_NUMERATOR  # 79
 
 STATE_DIR: Final[Path] = Path(".vibe/state/mahamantra")
 STATE_FILE: Final[str] = "maha_state.json"
-MAX_BACKUPS: Final[int] = 5
+MAX_BACKUPS: Final[int] = PANCHA
 
 
 # =============================================================================
@@ -130,7 +131,7 @@ class StateEntry:
     def __post_init__(self) -> None:
         if not self.hash:
             content = f"{self.key}:{self.value}:{self.source}:{self.timestamp}"
-            computed = hashlib.sha256(content.encode()).hexdigest()[:16]
+            computed = hashlib.sha256(content.encode()).hexdigest()[:WORDS]
             object.__setattr__(self, "hash", computed)
 
     def to_dict(self) -> Dict[str, StateValue]:
@@ -156,7 +157,7 @@ class StateEntry:
 
     def verify_integrity(self) -> bool:
         content = f"{self.key}:{self.value}:{self.source}:{self.timestamp}"
-        expected = hashlib.sha256(content.encode()).hexdigest()[:16]
+        expected = hashlib.sha256(content.encode()).hexdigest()[:WORDS]
         return self.hash == expected
 
 
@@ -241,7 +242,7 @@ class MahaState:
                 if cls._instance is None:
                     cls._instance = cls(workspace)
                     cls._instance._load_state()
-                    cls._instance._boot_count += 1
+                    cls._instance._boot_count += KSETRAJNA
                     cls._initialized = True
         return cls._instance
 
@@ -539,7 +540,7 @@ class MahaState:
                 self._rotate_backups(state_file)
 
             data = {
-                "version": 3,
+                "version": TRINITY,
                 "timestamp": datetime.now().isoformat(),
                 "parampara": PARAMPARA,
                 "entries": {k: v.to_dict() for k, v in self._entries.items()},
@@ -553,7 +554,7 @@ class MahaState:
             }
 
             temp_file = state_file.with_suffix(".tmp")
-            temp_file.write_text(json.dumps(data, indent=2))
+            temp_file.write_text(json.dumps(data, indent=HALVES))
             temp_file.replace(state_file)
 
             self._dirty = False

@@ -23,8 +23,9 @@ DERIVES FROM SSOT:
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, TEN, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -277,8 +278,8 @@ def calculate_fractal_depth(total_nodes: int) -> int:
     if total_nodes <= QUARTER_COUNT:
         return 0
     if total_nodes <= TOTAL_POSITIONS:
-        return 1
-    return int(math.log(total_nodes, FRACTAL_BASE)) + 1
+        return KSETRAJNA
+    return int(math.log(total_nodes, FRACTAL_BASE)) + KSETRAJNA
 
 
 def calculate_total_nodes(depth: int) -> int:
@@ -365,8 +366,8 @@ def fractal_getattr(caller_file: str):
             return None
 
         module_parts = list(parts[vibe_idx:])
-        if module_parts and module_parts[-1].endswith(".py"):
-            module_parts[-1] = module_parts[-1][:-3]
+        if module_parts and module_parts[-KSETRAJNA].endswith(".py"):
+            module_parts[-KSETRAJNA] = module_parts[-KSETRAJNA][:-TRINITY]
 
         return ".".join(module_parts)
 
@@ -509,6 +510,109 @@ def enable_hybrid_discovery(
         enable_hybrid_discovery(globals(), __file__, LEGACY_EXPORTS)
     """
     caller_globals["__getattr__"] = create_hybrid_getattr(caller_file, legacy_lookup)
+
+
+# =============================================================================
+# UNIVERSAL ROUTER - The "One Ring" of Import Resolution
+# =============================================================================
+
+
+def create_universal_getattr(
+    caller_file: str,
+    core_modules: List[str],
+) -> callable:
+    """
+    Create a UNIVERSAL __getattr__ that acts as a Semantic Router for code.
+
+    MANTRA LOGIC:
+        1. FRACTAL: Check subfolders/modules (Existence = Wiring).
+        2. UNIVERSAL: Check registered core modules (Seed/Substrate).
+        3. FALLBACK: Raise AttributeError.
+
+    DYNAMIC DISCOVERY:
+        Instead of a hardcoded "LEGACY_EXPORTS" map, this function
+        dynamically scans the `core_modules` to resolve symbols.
+
+    Args:
+        caller_file: Pass __file__ from the calling module.
+        core_modules: List of module paths to scan (e.g., ["seed.types", "substrate.lotus"]).
+
+    Returns:
+        A __getattr__ function.
+    """
+    import importlib
+    import sys
+
+    # 1. Fractal Discovery (Folder = Wiring)
+    _fractal = fractal_getattr(caller_file)
+
+    # 2. Universal Symbol Map (Lazy Loaded)
+    # Map[symbol_name, source_module_path]
+    _symbol_map: Optional[Dict[str, str]] = None
+
+    def _ensure_symbol_map():
+        nonlocal _symbol_map
+        if _symbol_map is not None:
+            return
+
+        _symbol_map = {}
+        for mod_path in core_modules:
+            # FAIL FAST: If a Core Module fails to load, the system must crash.
+            # No try/except here. We want to know IMMEDIATELY if seed.types is broken.
+            module = importlib.import_module(mod_path)
+            
+            # Scan __all__ if present (Preferred/Watertight)
+            if hasattr(module, "__all__"):
+                for name in module.__all__:
+                    _symbol_map[name] = mod_path
+            else:
+                # Fallback: Scan dir() (Entropy)
+                for name in dir(module):
+                    if not name.startswith("_"):
+                        _symbol_map[name] = mod_path
+
+    def _universal_getattr(name: str):
+        """
+        Universal discovery: Fractal -> Universal -> Error.
+        """
+        # 1. Try Fractal (Local Folders)
+        try:
+            return _fractal(name)
+        except AttributeError:
+            pass
+
+        # 2. Try Universal (Core Modules)
+        _ensure_symbol_map()
+        if name in _symbol_map:
+            mod_path = _symbol_map[name]
+            try:
+                module = importlib.import_module(mod_path)
+                return getattr(module, name)
+            except (ImportError, AttributeError) as e:
+                # Symbol in map but not in module? Drift detected!
+                raise AttributeError(
+                    f"Universal symbol '{name}' mapped to {mod_path} but failed load: {e}"
+                ) from e
+
+        # 3. Not Found
+        raise AttributeError(f"module has no attribute '{name}'")
+
+    return _universal_getattr
+
+
+def enable_universal_discovery(
+    caller_globals: dict,
+    caller_file: str,
+    core_modules: List[str],
+) -> None:
+    """
+    Enable UNIVERSAL discovery for a module.
+
+    Usage:
+        CORE_MODULES = ["vibe_core.mahamantra.seed.types", ...]
+        enable_universal_discovery(globals(), __file__, CORE_MODULES)
+    """
+    caller_globals["__getattr__"] = create_universal_getattr(caller_file, core_modules)
 
 
 # =============================================================================
@@ -707,8 +811,8 @@ def validate_fractal_discovery(base_path: Optional[str] = None) -> SankirtanVali
     # ==========================================================================
     # COMPILE RESULTS
     # ==========================================================================
-    total_valid = sum(1 for r in results if r.is_valid)
-    total_invalid = sum(1 for r in results if not r.is_valid)
+    total_valid = sum(KSETRAJNA for r in results if r.is_valid)
+    total_invalid = sum(KSETRAJNA for r in results if not r.is_valid)
 
     return SankirtanValidation(
         total_checked=len(results),
@@ -743,7 +847,7 @@ def assert_watertight(fail_fast: bool = True) -> SankirtanValidation:
     validation = validate_fractal_discovery()
 
     if not validation.is_watertight and fail_fast:
-        error_summary = "\n".join(f"  - {e}" for e in validation.errors[:10])
+        error_summary = "\n".join(f"  - {e}" for e in validation.errors[:TEN])
         raise RuntimeError(
             f"MAHAMANTRA NOT WATERTIGHT!\n"
             f"Invalid modules: {validation.total_invalid}\n"
@@ -774,10 +878,10 @@ def print_validation_report(validation: SankirtanValidation) -> None:
 
     if validation.errors:
         print(f"  ERRORS ({len(validation.errors)}):")
-        for err in validation.errors[:10]:
+        for err in validation.errors[:TEN]:
             print(f"    ❌ {err}")
-        if len(validation.errors) > 10:
-            print(f"    ... and {len(validation.errors) - 10} more")
+        if len(validation.errors) > TEN:
+            print(f"    ... and {len(validation.errors) - TEN} more")
 
     print(f"""
 {'=' * 60}
@@ -819,6 +923,9 @@ __all__ = [
     # HYBRID DISCOVERY (Protocol-First + Backwards Compat)
     "create_hybrid_getattr",
     "enable_hybrid_discovery",
+    # UNIVERSAL DISCOVERY (Semantic Router for Code)
+    "create_universal_getattr",
+    "enable_universal_discovery",
     # SANKIRTAN VALIDATOR
     "ValidationResult",
     "SankirtanValidation",

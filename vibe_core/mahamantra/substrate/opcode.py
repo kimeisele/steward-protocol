@@ -14,8 +14,8 @@ REVERTED TO TRUTH (Post-Legacy Clean Slate).
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -48,24 +48,24 @@ class MantraOpCode(IntEnum):
 
     # === GENESIS Quarter (Hare Krishna Hare Krishna) ===
     SYS_WAKE = 0  # VYASA: System awakening, boot (Genesis HEAD)
-    LOAD_ROOT = 1  # Brahma: Load root configuration, DI
-    ALLOC_MEM = 2  # Narada: Allocate memory, communication
-    INIT_THREAD = 3  # Shambhu: Initialize thread, destruction ready
+    LOAD_ROOT = KSETRAJNA  # Brahma: Load root configuration, DI
+    ALLOC_MEM = HALVES  # Narada: Allocate memory, communication
+    INIT_THREAD = TRINITY  # Shambhu: Initialize thread, destruction ready
 
     # === DHARMA Quarter (Krishna Krishna Hare Hare) ===
-    COMPILE_AST = 4  # PRITHU: Compile AST, encode knowledge (Dharma HEAD)
-    BIND_SYMBOL = 5  # Kumaras: Bind symbol, memory, cognition
-    TYPE_CHECK = 6  # Kapila: Type check, analysis
-    DHARMA_TEST = 7  # Manu: Dharma test, law check
+    COMPILE_AST = QUARTERS  # PRITHU: Compile AST, encode knowledge (Dharma HEAD)
+    BIND_SYMBOL = PANCHA  # Kumaras: Bind symbol, memory, cognition
+    TYPE_CHECK = SHARANAGATI  # Kapila: Type check, analysis
+    DHARMA_TEST = SEVEN  # Manu: Dharma test, law check
 
     # === KARMA Quarter (Hare Rama Hare Rama) ===
-    EXEC_OP = 8  # Parashurama: Execute operation
-    EXTEND_CAP = 9  # Prahlada: Extend capability, plugins
-    STATE_SYNC = 10  # Janaka: Sync state, kernel
+    EXEC_OP = HARE_COUNT  # Parashurama: Execute operation
+    EXTEND_CAP = NAVA  # Prahlada: Extend capability, plugins
+    STATE_SYNC = TEN  # Janaka: Sync state, kernel
     LEDGER_SIGN = 11  # Bhishma: Sign ledger, commitment
 
     # === MOKSHA Quarter (Rama Rama Hare Hare) ===
-    YIELD_CPU = 12  # Nrisimha: Yield CPU, protection
+    YIELD_CPU = MAHAJANA_COUNT  # Nrisimha: Yield CPU, protection
     IO_FLUSH = 13  # Bali: Flush I/O, resources
     LOG_EMIT = 14  # Shuka: Emit log, output
     AUDIT_SEAL = 15  # Yamaraja: Seal audit, judgment
@@ -183,11 +183,11 @@ def get_mahajana_opcode(mahajana: str) -> MantraOpCode:
 def get_opcode_quarter(opcode: MantraOpCode) -> Quarter:
     """Get the quarter for an opcode."""
     position = opcode.value
-    if position < 4:
+    if position < QUARTERS:
         return Quarter.GENESIS
-    if position < 8:
+    if position < HARE_COUNT:
         return Quarter.DHARMA
-    if position < 12:
+    if position < MAHAJANA_COUNT:
         return Quarter.KARMA
     return Quarter.MOKSHA
 
@@ -201,7 +201,7 @@ def get_quarter_opcodes(quarter: Quarter) -> FrozenSet[MantraOpCode]:
 # PARAMPARA VECTORS - For each opcode (PARAMPARA imported from acintya.py SSOT)
 # =============================================================================
 
-OPCODE_PARAMPARA: Final[Dict[MantraOpCode, int]] = {opcode: (opcode.value + 1) * PARAMPARA for opcode in MantraOpCode}
+OPCODE_PARAMPARA: Final[Dict[MantraOpCode, int]] = {opcode: (opcode.value + KSETRAJNA) * PARAMPARA for opcode in MantraOpCode}
 
 
 def get_opcode_parampara(opcode: MantraOpCode) -> int:

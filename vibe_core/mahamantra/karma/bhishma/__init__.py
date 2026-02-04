@@ -20,7 +20,12 @@ __mahajana__ = "bhishma"
 __position__ = 11
 __genesis__ = "0x030295b1"  # GenesisByte
 
+__genesis__ = "0x030295b1"  # GenesisByte
+    
+import logging
 from typing import Final
+
+logger = logging.getLogger(__name__)
 
 # Constants
 POSITION: Final[int] = 11

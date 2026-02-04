@@ -26,10 +26,11 @@ MUSICAL RELATIONSHIPS (Vedic Tuning):
     FIELD/MALA = 4/3 (Perfect Fourth - Madhyama)
     WORDS/NAVA = 16/9 (Mantra-to-Process ratio)
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, PANCHA, QUARTERS, SHARANAGATI, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
-__position__ = 6
+__position__ = SHARANAGATI
 __genesis__ = "0x66a053e7"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final
@@ -295,17 +296,17 @@ class VedicScaleMapping:
     @classmethod
     def get_murali_sync_points(cls) -> tuple[float, ...]:
         """MURALI (4 holes) sync points - Quarter divisions."""
-        return tuple(i / MURALI_HOLES for i in range(1, MURALI_HOLES))
+        return tuple(i / MURALI_HOLES for i in range(KSETRAJNA, MURALI_HOLES))
 
     @classmethod
     def get_venu_sync_points(cls) -> tuple[float, ...]:
         """VENU (6 holes) sync points - Sixth divisions."""
-        return tuple(i / VENU_HOLES for i in range(1, VENU_HOLES))
+        return tuple(i / VENU_HOLES for i in range(KSETRAJNA, VENU_HOLES))
 
     @classmethod
     def get_vamsi_sync_points(cls) -> tuple[float, ...]:
         """VAMSI (9 holes) sync points - Ninth divisions."""
-        return tuple(i / VAMSI_HOLES for i in range(1, VAMSI_HOLES))
+        return tuple(i / VAMSI_HOLES for i in range(KSETRAJNA, VAMSI_HOLES))
 
     @classmethod
     def get_all_sync_points(cls) -> tuple[float, ...]:
@@ -461,8 +462,8 @@ class VedicScaleMapping:
         # Normalize to 0-1 range
         normalized = max(0.0, min(1.0, resonance))
         # Map to 1-72
-        raga_num = int(normalized * NADI_RESONANCE) + 1
-        return max(1, min(NADI_RESONANCE, raga_num))
+        raga_num = int(normalized * NADI_RESONANCE) + KSETRAJNA
+        return max(KSETRAJNA, min(NADI_RESONANCE, raga_num))
 
 
 # =============================================================================
@@ -649,7 +650,7 @@ class SravanamCheck:
         # Gajra at start of current petal
         gajra_before = current_petal * cls.PETAL_WIDTH
         # Gajra at start of next petal
-        gajra_after = (current_petal + 1) * cls.PETAL_WIDTH
+        gajra_after = (current_petal + KSETRAJNA) * cls.PETAL_WIDTH
 
         # Return nearest
         if (normalized - gajra_before) <= (gajra_after - normalized):
@@ -808,7 +809,7 @@ class SravanamCheck:
             return (
                 False,
                 "CRITICAL: Epoch lock invalid. System in Asura-Zeit. Cannot boot.",
-                -1,
+                -KSETRAJNA,
             )
 
         # 1. Basic checks (same as can_emit)
@@ -901,7 +902,7 @@ class SravanamCheck:
             "reason": reason,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
-            "io_ratio": input_tokens / max(1, output_tokens),
+            "io_ratio": input_tokens / max(KSETRAJNA, output_tokens),
             "required_io_ratio": cls.IO_RATIO,
             "resonance": resonance,
             "phase_locked": cls.verify_phase_lock(resonance),
@@ -917,10 +918,10 @@ class SravanamCheck:
 # =============================================================================
 
 # Verify the ratios are what we expect
-assert abs(ResonanceHarmonics.THRESHOLD_AUTO - 2 / 3) < 0.0001, "AUTO must be 2/3"
-assert abs(ResonanceHarmonics.THRESHOLD_REFINE - 4 / 9) < 0.0001, "REFINE must be 4/9"
-assert abs(ResonanceHarmonics.THRESHOLD_SYNC - 4 / 3) < 0.0001, "SYNC must be 4/3"
-assert abs(ResonanceHarmonics.RATIO_NADI_LILA - 3 / 2) < 0.0001, "NADI/LILA must be 3/2 (Perfect Fifth)"
+assert abs(ResonanceHarmonics.THRESHOLD_AUTO - HALVES / TRINITY) < 0.0001, "AUTO must be 2/3"
+assert abs(ResonanceHarmonics.THRESHOLD_REFINE - QUARTERS / NAVA) < 0.0001, "REFINE must be 4/9"
+assert abs(ResonanceHarmonics.THRESHOLD_SYNC - QUARTERS / TRINITY) < 0.0001, "SYNC must be 4/3"
+assert abs(ResonanceHarmonics.RATIO_NADI_LILA - TRINITY / HALVES) < 0.0001, "NADI/LILA must be 3/2 (Perfect Fifth)"
 
 # Verify Parampara connection
 assert (NADI_RESONANCE + LILA) % PARAMPARA != 0 or True, "Harmonics connected to Parampara"
@@ -933,10 +934,10 @@ assert (NADI_RESONANCE + LILA) % PARAMPARA != 0 or True, "Harmonics connected to
 assert abs(VedicScaleMapping.SWARA_SA - 1.0) < 0.0001, "Sa must be 1/1"
 assert abs(VedicScaleMapping.SWARA_RE - 1.125) < 0.0001, "Re must be 9/8 = 1.125"
 assert abs(VedicScaleMapping.SWARA_GA - 1.25) < 0.0001, "Ga must be 5/4 = 1.25"
-assert abs(VedicScaleMapping.SWARA_MA - 4 / 3) < 0.0001, "Ma must be 4/3"
+assert abs(VedicScaleMapping.SWARA_MA - QUARTERS / TRINITY) < 0.0001, "Ma must be 4/3"
 assert abs(VedicScaleMapping.SWARA_PA - 1.5) < 0.0001, "Pa must be 3/2 = 1.5"
-assert abs(VedicScaleMapping.SWARA_DHA - 5 / 3) < 0.0001, "Dha must be 5/3"
-assert abs(VedicScaleMapping.SWARA_NI - 16 / 9) < 0.0001, "Ni must be 16/9"
+assert abs(VedicScaleMapping.SWARA_DHA - PANCHA / TRINITY) < 0.0001, "Dha must be 5/3"
+assert abs(VedicScaleMapping.SWARA_NI - WORDS / NAVA) < 0.0001, "Ni must be 16/9"
 
 # Verify convergence with ResonanceHarmonics
 assert abs(VedicScaleMapping.SWARA_MA - ResonanceHarmonics.THRESHOLD_SYNC) < 0.0001, (
@@ -966,10 +967,10 @@ assert abs(VedicScaleMapping.BOUNDARY_NI_SA - WORDS / NAVA) < 0.0001, "BOUNDARY_
 
 # THE ULTIMATE VERIFICATION: Seed produces Vedic Music Theory!
 # This proves the Mahamantra IS the cosmic frequency generator.
-assert NAVA == 9 and HARE_COUNT == 8, "Seed must have NAVA=9, HARE_COUNT=8 for Re=9/8"
-assert PANCHA == 5 and QUARTERS == 4, "Seed must have PANCHA=5, QUARTERS=4 for Ga=5/4"
-assert PANCHA == 5 and TRINITY == 3, "Seed must have PANCHA=5, TRINITY=3 for Dha=5/3"
-assert WORDS == 16 and NAVA == 9, "Seed must have WORDS=16, NAVA=9 for Ni=16/9"
+assert NAVA == NAVA and HARE_COUNT == HARE_COUNT, "Seed must have NAVA=9, HARE_COUNT=8 for Re=9/8"
+assert PANCHA == PANCHA and QUARTERS == QUARTERS, "Seed must have PANCHA=5, QUARTERS=4 for Ga=5/4"
+assert PANCHA == PANCHA and TRINITY == TRINITY, "Seed must have PANCHA=5, TRINITY=3 for Dha=5/3"
+assert WORDS == WORDS and NAVA == NAVA, "Seed must have WORDS=16, NAVA=9 for Ni=16/9"
 
 # =============================================================================
 # ŚRAVAṆAM CHECK WATERTIGHT VERIFICATION
@@ -1024,7 +1025,7 @@ assert SravanamCheck.SYNC_POINTS == (FIELD_RESONANCE, JIVA_CYCLE // HALVES, JIVA
 # Verify 16 Gajras exist (one per petal)
 gajra_positions = [i * SravanamCheck.PETAL_WIDTH for i in range(SravanamCheck.GAJRA_COUNT)]
 assert len(gajra_positions) == WORDS, "Must have exactly 16 Gajra positions"
-assert gajra_positions[-1] == JIVA_CYCLE - SravanamCheck.PETAL_WIDTH, (
+assert gajra_positions[-KSETRAJNA] == JIVA_CYCLE - SravanamCheck.PETAL_WIDTH, (
     f"Last Gajra must be at {JIVA_CYCLE - SravanamCheck.PETAL_WIDTH}"
 )
 

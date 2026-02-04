@@ -28,8 +28,9 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, SHARANAGATI)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "yamaraja"
@@ -167,7 +168,7 @@ class GraphNode:
     def parampara_vector(self) -> int:
         """Parampara connection vector."""
         if self.lotus_position is not None:
-            return (self.lotus_position + 1) * PARAMPARA
+            return (self.lotus_position + KSETRAJNA) * PARAMPARA
         # For non-lotus nodes, use ID hash
         return sum(ord(c) for c in self.id) * PARAMPARA
 
@@ -380,7 +381,7 @@ class GraphBuilder:
             GraphNode(
                 id="KRISHNA",
                 node_type=NodeType.SOURCE,
-                level=-2,
+                level=-HALVES,
             )
         )
         return self
@@ -416,7 +417,7 @@ class GraphBuilder:
         self,
         name: str,
         sampradaya: Optional[Sampradaya] = None,
-        level: int = -1,
+        level: int = -KSETRAJNA,
     ) -> "GraphBuilder":
         """Add an Avatara node."""
         return self.add_node(name, NodeType.AVATARA, sampradaya, level)
@@ -561,7 +562,7 @@ class GraphProtocolDef(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="GraphProtocol",
         mahajana="kapila",  # Kapila analyzes structure (Sankhya)
-        position=6,
+        position=SHARANAGATI,
         level=Level.CONTRACT,
         quarter=Quarter.DHARMA,
     )

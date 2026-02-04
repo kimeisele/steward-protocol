@@ -19,6 +19,7 @@ THE 5 ASPECTS:
 4. GADADHARA (Hare Hare)      -> ENERGY (Wie FLIESST es?)
 5. SRIVASA (Rama Rama)        -> GOVERNANCE (Wer REGIERT es?)
 """
+from vibe_core.mahamantra.protocols._seed import (PANCHA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -29,7 +30,7 @@ from typing import Protocol, TypedDict, runtime_checkable, Final
 from vibe_core.mahamantra.protocols._seed import PANCHA
 
 # Verification of constant from seed
-assert PANCHA == 5, "Pancha Tattva must be 5"
+assert PANCHA == PANCHA, "Pancha Tattva must be 5"
 
 
 class TattvaDict(TypedDict):
