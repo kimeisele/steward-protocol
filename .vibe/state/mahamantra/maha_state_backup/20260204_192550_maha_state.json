@@ -1,0 +1,22 @@
+{
+  "version": 3,
+  "timestamp": "2026-02-03T14:42:06.351084",
+  "parampara": 37,
+  "entries": {
+    "balarama_test.json": {
+      "key": "balarama_test.json",
+      "value": 114716,
+      "source": "seal",
+      "timestamp": "2026-02-03T14:42:06.349370",
+      "pierced": false,
+      "hash": "bdf9d977f4e41056"
+    }
+  },
+  "boot_count": 174,
+  "thresholds": {
+    "max_entries": 72,
+    "kernel_reserve": 16,
+    "mala_threshold": 108,
+    "kishora_max_stale": 79
+  }
+}
