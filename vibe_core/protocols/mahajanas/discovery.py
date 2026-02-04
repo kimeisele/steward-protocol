@@ -218,8 +218,8 @@ def is_in_mahajana_folder(path: Path) -> Optional[str]:
             potential_owner = parts[idx + 1]
             if potential_owner in OWNERSHIP_MARKERS:
                 return potential_owner
-    except ValueError:
-        pass
+    except ValueError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
     return None
 
 

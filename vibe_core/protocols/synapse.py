@@ -470,8 +470,8 @@ def get_synapse_safe(agent_id: str = "anonymous") -> SynapseProtocol:
         synapse = ServiceRegistry.get(SynapseProtocol)
         if synapse is not None:
             return synapse
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return NullSynapse(agent_id)
 

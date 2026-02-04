@@ -80,8 +80,8 @@ def _format_output(cmd: str, output: str) -> str:
             icon = "✓" if success else "✗"
             return f"{icon} {msg}\n  Destination: {to_path}" if to_path else f"{icon} {msg}"
 
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return output
 

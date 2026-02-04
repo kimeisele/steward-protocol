@@ -220,7 +220,12 @@ class ArchitectureSense(BaseSense):
         for anomaly in perception.anomalies:
             if anomaly.anomaly_type == "circular_import":
                 intent = Intent(
-                    id=f"arch_fix_circle_{hash(str(anomaly.details['cycle']))}",
+                    # P0-FIX: Use deterministic hash instead of Python's randomized hash()
+                    import hashlib
+                    cycle_str = str(anomaly.details['cycle'])
+                    cycle_bytes = cycle_str.encode('utf-8')
+                    cycle_hash = int.from_bytes(hashlib.sha256(cycle_bytes).digest()[:4], byteorder='big')
+                    id=f"arch_fix_circle_{cycle_hash}",
                     intent_type="code_refactor",
                     title=f"🔴 Fix Circular Import: {anomaly.details['cycle'][0]}",
                     description=anomaly.message,

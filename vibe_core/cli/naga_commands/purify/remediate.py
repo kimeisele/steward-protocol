@@ -57,8 +57,8 @@ class RemediateCommand(NagaCommandBase):
                     if not dry_run:
                         py_file.write_text(new_content, encoding="utf-8")
                     fixed_count += 1
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         status = "Would fix" if dry_run else "Fixed"
         return self.success(f"[KAPILA] {status} {fixed_count} files.")

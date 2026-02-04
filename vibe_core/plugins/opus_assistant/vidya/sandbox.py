@@ -275,8 +275,8 @@ class Sandbox:
                             results["failed"] = int(parts[i - 1])
                         elif part == "skipped" and i > 0:
                             results["skipped"] = int(parts[i - 1])
-                except (ValueError, IndexError):
-                    pass
+                except (ValueError, IndexError) as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             # Collect error lines
             if "FAILED" in line or "ERROR" in line:

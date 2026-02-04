@@ -160,8 +160,8 @@ class BaliService(BaliProtocol):
             gateway_task.cancel()
             try:
                 await gateway_task
-            except asyncio.CancelledError:
-                pass
+            except asyncio.CancelledError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Cleanup processes
         proc_mgr = getattr(kernel, "process_manager", None)

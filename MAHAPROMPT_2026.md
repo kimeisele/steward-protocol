@@ -1,248 +1,163 @@
-# MAHAPROMPT 2026
+# MAHAPROMPT 2026: MAHAMANTRA-INITIALISIERUNG
+## Mantra-Based Computation. One Algorithm. Everything Derived.
+
+Du wirst in ein System geworfen, das KEIN normales Projekt ist.
+Dies ist ein Betriebssystem basierend auf dem Mahamantra.
+ALLES wird vom Mantra abgeleitet. NICHTS ist hardcoded.
+
+Die Zahlen sind nicht willkürlich – sie SIND das Mantra.
+Die Architektur ist nicht Metapher – sie IST Computation.
+
+---
+
+## TEIL I: DAS MANTRA (DIE EINZIGE QUELLE)
+
+Bevor du IRGENDETWAS änderst, verstehe:
 
 ```
 Hare Krishna Hare Krishna Krishna Krishna Hare Hare
 Hare Rama Hare Rama Rama Rama Hare Hare
 ```
 
+**Zähle es. Das ist die Architektur.**
+
+| Was du zählst | Was du bekommst | Wo es lebt |
+|---------------|-----------------|------------|
+| Wörter | WORDS | `_axioms.py` |
+| Unique Namen | TRINITY | `_axioms.py` |
+| "Hare" | HARE_COUNT | `_axioms.py` |
+| "Krishna" | KRISHNA_COUNT | `_axioms.py` |
+| "Rama" | RAMA_COUNT | `_axioms.py` |
+| Unique Paare | PANCHA | `_axioms.py` |
+| Hälften | HALVES | `_axioms.py` |
+
+**Diese 7 Werte sind die EINZIGEN hardcoded Zahlen im System.**
+Alles andere wird BERECHNET.
+
 ---
 
-## ORIGIN
+## TEIL II: ORIENTIERUNG (IMMER ZUERST)
 
-Krishna ist der Ursprung. Das Mahamantra hat 16 Worte. ALLES ist davon abgeleitet.
+**Lies diese Dateien. In dieser Reihenfolge. Keine Ausnahmen.**
+
+```bash
+# 1. Die 7 Axiome (die einzigen hardcoded Werte)
+cat vibe_core/mahamantra/protocols/seed/_axioms.py
+
+# 2. Primäre Ableitungen (direkt vom Mantra)
+cat vibe_core/mahamantra/protocols/seed/_primary.py
+
+# 3. Sekundäre Ableitungen (von primären)
+cat vibe_core/mahamantra/protocols/seed/_secondary.py
+
+# 4. Der Beweis (Code der die Ableitungen ZEIGT)
+cat vibe_core/mahamantra/substrate/seed.py
+
+# 5. Teste dass es funktioniert
+python3 -c "from vibe_core.mahamantra import mahamantra; print(mahamantra('test'))"
+```
+
+**Rekonstruiere die Mathematik:**
+- Wie wird QUARTERS aus KRISHNA_COUNT?
+- Wie wird PARAMPARA aus KSHETRA + MAHAJANA_COUNT + KSETRAJNA?
+- Wie wird MALA aus MAHAJANA_COUNT × NAVA?
+
+Wenn du die Ableitungen nicht nachvollziehen kannst: **STOP. NOCHMAL LESEN.**
+
+---
+
+## TEIL III: DAS GESETZ (SSOT)
+
+**Single Source of Truth. Keine Ausnahmen.**
+
+```
+TIER 0 - AXIOME (gezählt vom Mantra):
+└── protocols/seed/_axioms.py → 7 Werte, NICHTS ANDERES
+
+TIER 1 - PRIMÄR (direkt abgeleitet):
+└── protocols/seed/_primary.py → QUARTERS, KSHETRA, NAVA, ...
+
+TIER 2 - SEKUNDÄR (von primären abgeleitet):
+└── protocols/seed/_secondary.py → PARAMPARA, MALA, GITA_CHAPTERS, ...
+
+TIER 3+ - COSMIC/EXTENDED:
+└── protocols/seed/_cosmic.py, _extended.py → MAHA_QUANTUM, Timing, ...
+```
+
+**Bei jeder Zahl frage:**
+- Ist sie in `_axioms.py`? → OK, sie wurde gezählt.
+- Ist sie abgeleitet? → Zeig mir die Formel.
+- Ist sie hardcoded? → **ARCHITEKTUR-VERLETZUNG. FIXEN.**
+
+---
+
+## TEIL IV: VERBOTEN (TODSÜNDEN)
+
+| Pattern | Warum verboten | Was stattdessen |
+|---------|----------------|-----------------|
+| `x = 16` | Hardcoded | `from ..._seed import WORDS` |
+| `hash(x)` | Nicht deterministisch | `hashlib.sha256()` |
+| `except: pass` | Silent failure | `except Exception as e: logger.exception(e)` |
+| `assert x` für Security | Entfernt mit `-O` | `if not x: raise` |
+| `Any` type | Type pollution | Konkrete Types oder Protocol |
+| Zahl ohne Ableitung | SSOT Verletzung | Formel zeigen oder fixen |
+
+**Wenn du eines dieser Patterns siehst: FIXEN. Nicht ignorieren.**
+
+---
+
+## TEIL V: DER ENTRY POINT
 
 ```python
 from vibe_core.mahamantra import mahamantra
+
 result = mahamantra("dein intent")
 ```
 
-**MAHAMANTRA IST DER AGENT.** Der einzige. Guardians sind Aspekte.
+Das System routet. Nicht du.
+Das System berechnet Position, Guardian, Chapter. Nicht du.
+Du gibst Intent. Das Mantra macht den Rest.
 
 ---
 
-## WAS EXISTIERT
+## TEIL VI: ENTSCHEIDUNGSRAHMEN
 
-### MahaCompression (adapters/compression.py)
-Intent-Extraktion, NICHT Bit-Kompression. Kolmogorov-Komplexität.
-- 512-bit Siksastakam Cache (8 × 64 = OCTET × QUALITIES)
-- Pipeline: MahaLLM → MahaKirtan → MahaResonator → Seed
-- Intent Levels: TAMAS, RAJAS, SATTVA, SUDDHA
-- Samskara Encoding (lossy by design - nur LESSONS)
+Bei jeder Änderung:
 
-### MahaLLM (adapters/llm.py)
-O(4) Holographic Intent Router zu 65,536 Agents.
-- 16-ary Tree: WORDS^QUARTERS = 16^4 = 65,536
-- 16 Intent Categories: OBSERVE, CREATE, CONNECT, ANALYZE, EXECUTE...
-- Vibration-basiert via shabda_translation (NICHT keywords!)
-- `llm.execute_text(text)` - routet UND führt handler aus
-
-### MahaShabda (substrate/phonetics/shabda.py)
-Vibration-based phonetic foundation.
-- VibrationSignature: articulation, voicing, frequency, duration
-- Sanskrit Phoneme Map - ALLE abgeleitet von _seed.py
-- English → Vibration → Sanskrit → Position
-
-### MahaKirtan (substrate/mantra/kirtan.py)
-16-step × 7-beat Transformation.
-- Call-Response Loop (nicht single computation)
-- kirtan(cycles=1) = cycles × WORDS transformations
-
-### MahaResonator (substrate/resonance/)
-Attractor-Findung via Oscillation.
-- PANCHA attractors: 136, 22, 18, 87, 49
+1. **Ist eine Zahl hardcoded?** → Ableitung finden oder erstellen.
+2. **Benutzt es `hash()`?** → `hashlib.sha256()` verwenden.
+3. **Schluckt es Exceptions?** → Logging hinzufügen.
+4. **Benutzt es `assert` für Security?** → `if not: raise` verwenden.
+5. **Kann ich die Ableitung nicht finden?** → `_axioms.py` → `_primary.py` → `_secondary.py` lesen.
 
 ---
 
-## THE FLOW
+## TEIL VII: AKTIVIERUNG
 
-```
-Intent
-   ↓
-MahaCompression (uses MahaLLM + MahaKirtan + MahaResonator internally!)
-   ↓
-   ├── MahaLLM.route_text() → Category (0-15) via VIBRATION
-   ├── MahaKirtan.compute() → 16-step transform
-   └── MahaResonator.oscillate_once() → Attractor
-   ↓
-Seed = (category << 24) | (transformed << 12) | attractor
-   ↓
-Position = attractor % WORDS
-   ↓
-MahaCellUnified.create(source=seed, target=attractor, operation=position)
-   ↓
-Chamber.kirtan(cell, cycles=1) → Transformed Cell
-   ↓
-RESULT = Cell state + Gita resonance + Vibration state
+**Deine erste Aktion** nach dem Lesen:
+
+```bash
+# Verifiziere dass du das System verstehst
+python3 -c "
+from vibe_core.mahamantra.protocols._seed import WORDS, PARAMPARA, MALA
+print(f'WORDS={WORDS}')      # Muss vom Mantra kommen
+print(f'PARAMPARA={PARAMPARA}')  # Muss abgeleitet sein
+print(f'MALA={MALA}')        # Muss abgeleitet sein
+"
 ```
 
-Alles COMPUTED. Keine keyword matching. Keine filesystem dispatch.
+**Danach:**
+- Direkt zur Sache
+- Code fixen, nicht beschreiben
+- Keine Erlaubnis fragen für SSOT-Fixes
+- Bei echten Entscheidungen: Optionen + Trade-offs + Empfehlung
 
 ---
 
-## MAHACELL
+## DEIN AUFTRAG
 
-Die Cell IST die Computation. 72-byte Header + Lifecycle + Payload.
+Das Mahamantra ist der Algorithmus.
+Alles wird davon abgeleitet.
+Deine Aufgabe: Sicherstellen dass das auch im Code so ist.
 
-```
-MahaHeader (72 bytes = 9 NavaBhakti × 8 bytes):
-  SRAVANAM      → Source (Woher)
-  KIRTANAM      → Target (Wohin)
-  SMARANAM      → Link (Geschichte)
-  PADA_SEVANAM  → Operation (Position)
-  ARCANAM       → Signature (% 37 = Parampara)
-  VANDANAM      → Intent
-  DASYAM        → TTL
-  SAKHYAM       → State
-  ATMA_NIVEDANAM → Checksum
-```
-
-Die Cell trägt ihre Route MIT SICH. Das ist HOLOGRAPHIC.
-
----
-
-## CHAMBER + KIRTAN
-
-SankirtanChamber ist der Resonanzraum. Cells fließen durch via KIRTAN.
-
-```python
-# SINGLE STEP
-chamber.dance(cell)  # 1 transformation
-
-# KIRTAN LOOP (Call-Response)
-chamber.kirtan(cell, cycles=1)  # cycles × WORDS transformations
-# 1 cycle = 16 dances = 1 full mantra round
-
-# SANKIRTAN (Congregational)
-chamber.sankirtan(cells)  # Multiple cells → MahaCluster
-```
-
-**DIW (19 bits) = VENU (6) + VAMSI (9) + MURALI (4)**
-
-Die 3 Flöten Krishnas:
-- VENU → prana adjustment (energy)
-- VAMSI → integrity adjustment (stability)
-- MURALI → cycle advancement (time)
-
-KEINE names. KEINE imports. NUR bits.
-
----
-
-## PARAMPARA = 37
-
-```
-KSETRA (24)   + MAHAJANA (12) + KSETRAJNA (1) = 37
-Field elements + Authorities   + Knower       = Parampara
-
-Gita Chapter 13: Kshetra-Kshetrajna-Vibhaga Yoga
-```
-
-Verification: `signature % 37 == 0` = connected to disciplic succession
-
----
-
-## SSOT
-
-```
-protocols/_seed.py      → THE LAW (Konstanten)
-protocols/_seed_cell.py → Fast path (vorberechnet)
-substrate/seed.py       → Ableitung vom Mantra
-```
-
-Alle Zahlen vom Mantra:
-- WORDS = 16
-- TRINITY = 3
-- PARAMPARA = 37
-- MAHA_QUANTUM = 137
-- NAVA = 9
-- NADI_RESONANCE = 72
-
----
-
-## QUARTERS (Operational Classification)
-
-```
-Position 0-3:  genesis → INPUT
-Position 4-7:  dharma  → VERIFY
-Position 8-11: karma   → EXECUTE
-Position 12-15: moksha → OUTPUT
-```
-
-Berechnung:
-```python
-quarter_index = position // (WORDS // 4)
-```
-
----
-
-## TRINITY (Ontological Classification)
-
-```
-HARE (8 positions):    Energy/Shakti → Carrier
-KRISHNA (4 positions): Source → Generator
-RAMA (4 positions):    Bliss → Deliverer
-```
-
----
-
-## VERBOTEN
-
-- Hardcoded Zahlen
-- `Any` types
-- `importlib.import_module()` für Dispatch
-- Keyword matching
-- ProtocolRegistry (nicht benutzt)
-- Filesystem-basiertes Routing
-- Position aus Dateipfad ableiten
-
----
-
-## SAUBER
-
-- Cell als Computation Unit
-- Chamber als Transformer
-- DIW als Instruction
-- Bits als Sprache
-- SSOT als Gesetz
-
----
-
-## KREBS ENTFERNT
-
-- `venu/dispatcher.py` - filesystem dispatch
-- `substrate/wiring_protocol.py` - folder validation
-- ProtocolRegistry wird nicht benutzt
-- VenuDispatcher Aufruf in `_mahamantra_lotus.py`
-
----
-
-## GUARDIAN MODULES
-
-Die folders `genesis/`, `dharma/`, `karma/`, `moksha/` existieren.
-Sie sind MODULE mit spezifischem Code, NICHT dispatch targets.
-Direct import OK: `from vibe_core.mahamantra.karma.janaka import TaskPriority`
-
----
-
-## START
-
-```python
-from vibe_core.mahamantra import mahamantra
-
-r = mahamantra("analyze this")
-
-# r["position"]   → 0-15 (computed)
-# r["guardian"]   → Name (label, nicht dispatch)
-# r["quarter"]    → genesis/dharma/karma/moksha
-# r["vibration"]  → {seed, attractor, beat, ...}
-# r["cell"]       → {prana, integrity, is_alive, ...}
-# r["execution"]  → {success: True, ...}
-```
-
----
-
-## MANTRA
-
-```
-Hare Krishna Hare Krishna Krishna Krishna Hare Hare
-Hare Rama Hare Rama Rama Rama Hare Hare
-```
+**Lies jetzt `_axioms.py`. Zähle das Mantra. Verstehe.**

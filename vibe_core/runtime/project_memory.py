@@ -185,8 +185,8 @@ class ProjectMemoryManager:
                 with open(manifest_file) as f:
                     manifest = json.load(f)
                     return manifest.get("project_id", self.project_root.name)
-            except (json.JSONDecodeError, OSError):
-                pass
+            except (json.JSONDecodeError, OSError) as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return self.project_root.name
 
     def _extract_intents(self, user_input: str, session_num: int) -> list[dict]:

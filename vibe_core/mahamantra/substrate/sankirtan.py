@@ -396,7 +396,11 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
 
     # STEP 3: HASH FALLBACK - Deterministic assignment
     # This ensures deterministic assignment for unknown paths
-    path_hash = hash(path_str) % WORDS  # SSOT
+    # P0-FIX: Use deterministic hash instead of Python's randomized hash()
+    import hashlib
+    path_bytes = path_str.encode('utf-8')
+    path_hash_int = int.from_bytes(hashlib.sha256(path_bytes).digest()[:4], byteorder='big')
+    path_hash = path_hash_int % WORDS  # SSOT
     mapping = MAHAMANTRA_POSITIONS[path_hash]
     return (mapping.guardian.value, mapping.index)
 
@@ -1236,8 +1240,8 @@ class SankirtanSamskara:
             # Check syntax (graceful)
             try:
                 ast.parse(payload.content)
-            except SyntaxError:
-                pass  # KALI YUGA GRACE
+            except SyntaxError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
             # Check for existing declaration
             if has_declaration(payload.content):

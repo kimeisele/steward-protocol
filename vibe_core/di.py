@@ -619,8 +619,8 @@ class ServiceRegistry:
 
             if isinstance(instance, NagaBaseService):
                 return True
-        except ImportError:
-            pass  # NAGAs not available - graceful degradation
+        except ImportError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Priority B: Check _naga_flooded marker (Soft Flood via Mixins/Base Classes)
         # Base classes (KernelPlugin, BaseSense, BaseAction, etc.) set this marker
@@ -634,8 +634,8 @@ class ServiceRegistry:
 
             if isinstance(instance, NagaProxy):
                 return True
-        except ImportError:
-            pass
+        except ImportError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Priority D: Check NagaCapabilityMixin inheritance
         try:
@@ -643,8 +643,8 @@ class ServiceRegistry:
 
             if isinstance(instance, NagaCapabilityMixin):
                 return True
-        except ImportError:
-            pass
+        except ImportError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return False
 
@@ -890,7 +890,7 @@ def migrate_service_to_mahamantra(interface: Type[T]) -> Optional[Any]:
         module = getattr(mahamantra.mod, mahajana, None)
         if module and hasattr(module, service_name):
             return getattr(module, service_name)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return None

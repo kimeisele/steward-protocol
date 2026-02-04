@@ -185,8 +185,8 @@ class ResourcesCommand(NagaCommandBase):
 
             all_objects = gc.get_objects()
             details["Live Objects"] = f"~{len(all_objects):,}"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return details
 

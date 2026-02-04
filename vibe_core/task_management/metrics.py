@@ -66,8 +66,8 @@ class MetricsCollector:
                     completed = datetime.fromisoformat(task["completed_at"])
                     completion_time = (completed - created).total_seconds()
                     completion_times.append(completion_time)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         # Update metrics
         self.metrics.total_tasks = len(tasks)

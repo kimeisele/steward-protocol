@@ -143,8 +143,8 @@ class IdentityCommand(NagaCommandBase):
                         name = line.split("=")[1].strip().strip("\"'")
                     if line.startswith("version"):
                         version = line.split("=")[1].strip().strip("\"'")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return {
             "name": name,

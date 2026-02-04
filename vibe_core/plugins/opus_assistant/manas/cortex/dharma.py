@@ -260,8 +260,8 @@ class ArchitectureSpec:
                 # Extract plugin references
                 plugins = re.findall(r"plugins/(\w+)", content)
                 self._documented_modules.update(plugins)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         logger.debug(f"Found {len(self._documented_modules)} documented modules")
 

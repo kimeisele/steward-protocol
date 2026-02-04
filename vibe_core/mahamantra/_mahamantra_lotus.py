@@ -178,10 +178,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         for listener in self._listeners:
             try:
                 listener(state)
-            except Exception:
-                # Arjuna Pattern: Continue even if one listener fails
-                # The system is greater than its parts
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
     _bootstrapped: bool = False
 

@@ -20,6 +20,7 @@ __mahajana__ = "vishnu"
 __position__ = 0
 __genesis__ = "0x00000000"
 
+import hashlib
 import logging
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
@@ -114,6 +115,7 @@ class MahaKernel(PanchaTattvaProtocol):
             The calculated Address (0-65535) in Lotus Memory.
         """
         # 1. SRAVANAM (Input & Seed Extraction)
+        # PROTOCOL: Only str or MahaCell allowed - no fallback!
         seed: int
         if isinstance(input_data, str):
             # Compress text to 32-bit seed (Intent extraction)
@@ -123,8 +125,12 @@ class MahaKernel(PanchaTattvaProtocol):
             # Extract seed from MahaCell header
             seed = input_data.header.sravanam
         else:
-            # Fallback for raw bytes or other types
-            seed = hash(str(input_data)) & 0xFFFFFFFF
+            # PROTOCOL VIOLATION: Invalid input type
+            # P0-FIX: No fallback - fail explicitly instead of using hash()
+            raise TypeError(
+                f"MahaKernel requires str or MahaCell input, got {type(input_data).__name__}. "
+                f"This is a protocol violation - convert your input to str first."
+            )
 
         # 2. TRANSFORM (The Sacred Path)
         # Use the standard synth to get the correct attractor (0-136)

@@ -297,8 +297,8 @@ def _extract_assignment(
             try:
                 int_val = int(value, 16)
                 verified = int_val % 37 == 0
-            except ValueError:
-                pass
+            except ValueError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
             return Declaration(
                 type=DeclarationType.GENESIS.value,
                 name="genesis",
@@ -333,8 +333,8 @@ def path_to_module(path: Path, base_path: Path) -> str:
         try:
             idx = parts.index("vibe_core")
             parts = parts[idx:]
-        except ValueError:
-            pass
+        except ValueError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return ".".join(parts)
     except ValueError:

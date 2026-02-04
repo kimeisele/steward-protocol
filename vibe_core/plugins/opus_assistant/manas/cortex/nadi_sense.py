@@ -219,8 +219,8 @@ class NadiSense(BaseSense):
                 from vibe_core.event_bus import get_event_bus
 
                 self._event_bus = get_event_bus()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return self._event_bus
 

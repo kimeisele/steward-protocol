@@ -498,9 +498,8 @@ class VibeAgent(ABC):
             else:
                 # No running loop, try to run in new task
                 asyncio.run(self.emit_event(event_type, message, task_id, details))
-        except RuntimeError:
-            # No event loop available, silently skip
-            pass
+        except RuntimeError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         except Exception as e:
             logger = logging.getLogger("VibeAgent")
             logger.debug(f"⚠️  Sync event emission failed: {e}")
@@ -526,8 +525,8 @@ class VibeAgent(ABC):
             module = sys.modules.get(self.__class__.__module__)
             if module and hasattr(module, "__file__") and module.__file__:
                 return Path(module.__file__).parent
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return None
 

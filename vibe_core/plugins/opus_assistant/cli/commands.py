@@ -339,8 +339,8 @@ def explore_codebase(query: str, workspace: Path, limit: int = 10, json_mode: bo
         )
         name_matches = [p for p in proc.stdout.strip().split("\n") if p and ".git" not in p][:limit]
         results["files"].extend(name_matches)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     # 2. Content-based search (grep)
     try:
@@ -354,8 +354,8 @@ def explore_codebase(query: str, workspace: Path, limit: int = 10, json_mode: bo
         for match in content_matches:
             if match not in results["files"] and len(results["files"]) < limit:
                 results["files"].append(match)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     results["total_matches"] = len(results["files"])
 
@@ -403,8 +403,8 @@ def deep_explore(query: str, workspace: Path, limit: int = 5) -> Dict[str, Any]:
                         "content": content[:5000],  # First 5KB
                     }
                 )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
     # Generate synthesis prompt
     if results["files"]:

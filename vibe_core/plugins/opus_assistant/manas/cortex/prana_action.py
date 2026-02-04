@@ -167,8 +167,8 @@ class PranaAction(BaseAction):
                         last_errors = error_log.read_text().split("\n")[-10:]
                         investigation["last_errors"] = last_errors
                         investigation["findings"].append(f"Found {len(last_errors)} recent error log entries")
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
                 # Check steward.json for agent identity
                 steward_json = cartridge / "steward.json"
@@ -178,8 +178,8 @@ class PranaAction(BaseAction):
                             identity = json.load(f)
                         investigation["agent_identity"] = identity
                         investigation["findings"].append("Agent identity (DNA) intact")
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
             else:
                 investigation["findings"].append("Cartridge directory missing - agent fully removed")
                 investigation["possible_causes"].append("DELETION - cartridge removed from filesystem")

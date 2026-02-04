@@ -191,8 +191,8 @@ class DriftDetector:
                 diff_result = prakriti.diff(since_commit)
                 if hasattr(diff_result, "files"):
                     return set(diff_result.files)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Fallback: Direct git via subprocess
         try:
@@ -209,8 +209,8 @@ class DriftDetector:
                 for line in result.stdout.strip().split("\n"):
                     if line:
                         changed.add(line)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return changed
 

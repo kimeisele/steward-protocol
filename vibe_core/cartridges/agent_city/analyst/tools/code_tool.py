@@ -201,12 +201,11 @@ class CodeAnalysisTool(Tool):
                             }
                         )
 
-                except SyntaxError:
-                    # Skip files with syntax errors
-                    pass
+                except SyntaxError as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Sort by complexity
         file_complexities.sort(key=lambda x: -x["complexity"])
@@ -260,8 +259,8 @@ class CodeAnalysisTool(Tool):
                                     }
                                 )
 
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         total_debt = sum(debt_counts.values())
 
@@ -340,11 +339,11 @@ class CodeAnalysisTool(Tool):
                                     {"file": rel_path, "class": node.name, "methods": methods}
                                 )
 
-                except SyntaxError:
-                    pass
+                except SyntaxError as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Limit results
         for key in patterns_found:

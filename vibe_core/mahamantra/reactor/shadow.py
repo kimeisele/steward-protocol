@@ -717,7 +717,10 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
         # Use reactor ID hash as default source
         if source_id == 0:
-            source_id = hash(self._reactor_id) & 0xFFFFFFFFFFFFFFFF
+            # P0-FIX: Use deterministic hash instead of Python's randomized hash()
+            import hashlib
+            reactor_bytes = str(self._reactor_id).encode('utf-8')
+            source_id = int.from_bytes(hashlib.sha256(reactor_bytes).digest()[:8], byteorder='big')
 
         # Get current state
         state = self.get_state()

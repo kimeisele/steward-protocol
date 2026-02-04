@@ -676,8 +676,8 @@ class PathsConfig:
         for key in ["workspace_root", "diplomatic_bag", "intelligence", "archive", "migration", "starter_packs"]:
             try:
                 result[f"project.{key}"] = self.project.resolve(key)
-            except KeyError:
-                pass
+            except KeyError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Data paths
         for key in [
@@ -704,15 +704,15 @@ class PathsConfig:
         ]:
             try:
                 result[f"data.{key}"] = self.data.resolve(key)
-            except KeyError:
-                pass
+            except KeyError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Cartridge paths
         for key in ["system", "agent_city", "plugins", "phoenix_sections"]:
             try:
                 result[f"cartridges.{key}"] = self.cartridges.resolve(key)
-            except KeyError:
-                pass
+            except KeyError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Knowledge paths
         for key in [
@@ -731,21 +731,21 @@ class PathsConfig:
         ]:
             try:
                 result[f"knowledge.{key}"] = self.knowledge.resolve(key)
-            except KeyError:
-                pass
+            except KeyError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # System paths
         for key in ["runtime_root", "agents", "models", "cache", "logs", "lineage_db"]:
             try:
                 result[f"system.{key}"] = self.system.resolve(key)
-            except KeyError:
-                pass
+            except KeyError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Doc paths
         for key in ["operations", "settings", "envoy", "readme", "index", "agents", "help", "tasks", "opus", "citymap"]:
             try:
                 result[f"docs.{key}"] = self.docs.resolve(key)
-            except KeyError:
-                pass
+            except KeyError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return result

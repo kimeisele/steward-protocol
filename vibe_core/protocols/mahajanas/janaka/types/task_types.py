@@ -103,8 +103,8 @@ class TaskStatus(str, Enum):
         # Try direct match
         try:
             return cls(normalized)
-        except ValueError:
-            pass
+        except ValueError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Try by name
         try:

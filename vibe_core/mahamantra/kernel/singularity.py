@@ -385,8 +385,8 @@ class ModuleRouter:
 
                 self._modules[name] = module
                 return module
-            except ImportError:
-                pass  # Fallback to legacy
+            except ImportError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # 2. FALLBACK: PROTOCOLS/MAHAJANAS (legacy)
         module_path = f"vibe_core.protocols.mahajanas.{name}"
@@ -494,9 +494,8 @@ class Mahamantra:
         for listener in self._listeners:
             try:
                 listener(state)
-            except Exception:
-                # Narada Principle: Broadcast continues even if one ear is deaf
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
     def __iter__(self) -> Iterator[MantraPosition]:
         """Iterate through all 16 positions."""
@@ -1145,8 +1144,8 @@ class Mahamantra:
             # Try Mahajana first
             try:
                 return get_position_by_guardian(Mahajana(guardian.lower()))
-            except ValueError:
-                pass
+            except ValueError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
             # Try Avatara
             try:
                 return get_position_by_guardian(Avatara(guardian.lower()))

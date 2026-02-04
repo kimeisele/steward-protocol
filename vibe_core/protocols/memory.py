@@ -471,7 +471,7 @@ def get_memory_safe() -> MemoryProtocol:
         memory = ServiceRegistry.get(MemoryProtocol)
         if memory is not None:
             return memory
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return NullMemory()

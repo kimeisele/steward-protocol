@@ -498,9 +498,8 @@ class BalaramaProxy(GADBase, GADProtocol):
                         except TypeError:
                             handler()
                         break  # Only call first found handler
-                    except Exception:
-                        # Silent failure (Arjuna pattern)
-                        pass
+                    except Exception as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
                 # If we found a callable, we are done
                 if callable(handler):
@@ -673,8 +672,8 @@ class BalaramaProxy(GADBase, GADProtocol):
             try:
                 handler(state)
                 return
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Fallback to generic tick handler logic (reuse gated logic but force execution)
         # Or just do nothing?
@@ -686,8 +685,8 @@ class BalaramaProxy(GADBase, GADProtocol):
         if callable(handler):
             try:
                 handler(state)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         elif self.has_identity:
             # Proxy Dharma Fallback
             name = self.mahajana.lower()
@@ -700,8 +699,8 @@ class BalaramaProxy(GADBase, GADProtocol):
         if callable(handler):
             try:
                 handler(state)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
     def on_prasadam(self, state: TickState) -> None:
         """React to PRASADAM phase (Distribution)."""
@@ -709,8 +708,8 @@ class BalaramaProxy(GADBase, GADProtocol):
         if callable(handler):
             try:
                 handler(state)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
     def on_return(self, state: TickState) -> None:
         """React to RETURN phase (Cycle Complete)."""
@@ -718,8 +717,8 @@ class BalaramaProxy(GADBase, GADProtocol):
         if callable(handler):
             try:
                 handler(state)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
     # =========================================================================
     # UNIVERSAL SANKIRTAN (CHAT BRIDGE)

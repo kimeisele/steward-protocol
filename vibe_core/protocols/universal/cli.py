@@ -938,11 +938,11 @@ def verify_gad000() -> GAD000Seal:
                     mahajanas_seen.add(mahajana)
                     worker_opcodes += 1
                 opcodes_routed += 1
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     # Check heartbeat
     heartbeat_available = False
@@ -951,8 +951,8 @@ def verify_gad000() -> GAD000Seal:
 
         hb = MantraHeartbeat()
         heartbeat_available = hb.krishna_present  # Always True
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     # Krishna is ALWAYS present (acintya - Level -2)
     krishna_present = True

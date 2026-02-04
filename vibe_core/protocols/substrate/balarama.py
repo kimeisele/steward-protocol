@@ -431,8 +431,8 @@ class BalaramaRegistry:
                                 discovered[command] = obj
                                 cls._discovered[command] = obj
                                 logger.debug(f"Discovered CLI: {command} in {py_file}")
-                        except Exception:
-                            pass
+                        except Exception as _exc:
+                            logger.exception("Unexpected error: %s", _exc)
 
             except Exception as e:
                 logger.debug(f"Could not import {py_file}: {e}")

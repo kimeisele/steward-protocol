@@ -590,8 +590,8 @@ class Mirror:
         if self._inspection_history_path.exists():
             try:
                 history = json.loads(self._inspection_history_path.read_text())
-            except (json.JSONDecodeError, IOError):
-                pass
+            except (json.JSONDecodeError, IOError) as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Keep last 20 inspections
         history.append(inspection.to_dict())

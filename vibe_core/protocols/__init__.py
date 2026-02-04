@@ -242,8 +242,8 @@ def __getattr__(name: str):
         if hasattr(mahamantra.protocols, name):
             return getattr(mahamantra.protocols, name)
 
-    except (ImportError, AttributeError):
-        pass
+    except (ImportError, AttributeError) as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

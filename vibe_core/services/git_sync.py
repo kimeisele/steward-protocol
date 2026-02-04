@@ -111,8 +111,8 @@ class GitSyncService(SyncProtocol):
                     pending_items = int(behind_res.stdout.strip())
 
                 is_synced = (pending_items == 0) and (self._last_error is None)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return SyncStatus(
             is_synced=is_synced,

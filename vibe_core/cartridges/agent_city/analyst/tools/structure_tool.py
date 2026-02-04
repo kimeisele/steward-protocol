@@ -173,8 +173,8 @@ class StructureAnalysisTool(Tool):
                     for f in py_files:
                         try:
                             total_lines += len(f.read_text().split("\n"))
-                        except Exception:
-                            pass
+                        except Exception as _exc:
+                            logger.exception("Unexpected error: %s", _exc)
 
                     # Submodules
                     submodules = [

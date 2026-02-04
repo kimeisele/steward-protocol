@@ -525,7 +525,7 @@ def get_feedback_safe() -> FeedbackProtocol:
         feedback = ServiceRegistry.get(FeedbackProtocol)
         if feedback is not None:
             return feedback
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return NullFeedback()

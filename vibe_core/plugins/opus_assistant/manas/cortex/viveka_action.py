@@ -99,8 +99,8 @@ def _get_curiosity_tracker():
             from vibe_core.plugins.opus_assistant.manas.dojo.agency import CuriosityTracker
 
             _curiosity_tracker = CuriosityTracker(Path("."))
-        except ImportError:
-            pass
+        except ImportError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
     return _curiosity_tracker
 
 
@@ -1669,8 +1669,8 @@ class VivekaAction(BaseAction):
             try:
                 with open(karma_path) as f:
                     return json.load(f)
-            except (json.JSONDecodeError, IOError):
-                pass
+            except (json.JSONDecodeError, IOError) as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return {"pending": [], "history": [], "version": "1.0"}
 
     def _save_karma_log(self, karma_log: Dict[str, Any]) -> None:

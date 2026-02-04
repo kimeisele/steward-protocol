@@ -402,8 +402,8 @@ class DharmaSense(BaseSense):
                         "bhakti": status.get("bhakti", 0),
                         "is_registered": True,
                     }
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Try state manager
         state_mgr = self._ensure_state_manager()
@@ -417,8 +417,8 @@ class DharmaSense(BaseSense):
                         "bhakti": agent_data.get("bhakti", 0),
                         "is_registered": True,
                     }
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Default state for unregistered agents
         return {
@@ -486,8 +486,8 @@ class DharmaSense(BaseSense):
                 # Don't lose Bhakti for being blocked - that would be punishing learning
                 # Just record the event
                 logger.info(f"[DHARMA_SENSE] Intent blocked: {intent_type} - {reason}")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
     def get_boot_summary(self) -> Dict[str, Any]:
         """

@@ -306,8 +306,8 @@ def register_cli(cls: Type[CLIHandler]) -> Type[CLIHandler]:
                 if callable(method) and not hasattr(method, "__wrapped__"):
                     wrapped = cli_governed()(method)
                     setattr(cls, name, wrapped)
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     # === ANANTA PHASE 2: Inject intelligence methods ===
     _inject_ananta_intelligence(cls)
@@ -381,8 +381,8 @@ def _inject_ananta_heartbeat(cls: Type) -> None:
 
             command = self.meta.command
             emit_cli_heartbeat(command, exit_code=exit_code, duration_ms=duration_ms)
-        except Exception:
-            pass  # Don't fail CLI on heartbeat error
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
     _heartbeat_run._ananta_heartbeat_wrapped = True
     cls.run = _heartbeat_run
