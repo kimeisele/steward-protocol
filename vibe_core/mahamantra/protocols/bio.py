@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, Tuple, List
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
 from dataclasses import dataclass
 
 @runtime_checkable
@@ -9,7 +10,7 @@ class MahaBioProtocol(Protocol):
     Matches 4-base DNA structure to 4-Quarter Mahamantra.
     """
     
-    def index_kmer(self, kmer: str, position: int = -1) -> bool:
+    def index_kmer(self, kmer: str, position: int = -KSETRAJNA) -> bool:
         """Index a single k-mer."""
         ...
         

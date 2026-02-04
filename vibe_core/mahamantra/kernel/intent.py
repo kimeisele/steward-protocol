@@ -13,12 +13,13 @@ NO MANUAL WIRING. Declare INTENT. Krishna resolves.
 
 WATERTIGHT: No Any types. All typed with Union/TypedDict/Final.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, MAHAJANA_COUNT, PARAMPARA)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
-__position__ = 1
+__position__ = KSETRAJNA
 __genesis__ = "0x445329d5"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -205,7 +206,7 @@ class IntentResult(Generic[ResultT]):
         >0 = Some ego remains (needs more surrender)
         """
         if self.intent.parampara_vector == 0:
-            return 37  # No vector = maximum ego
+            return PARAMPARA  # No vector = maximum ego
         return self.intent.parampara_vector % PARAMPARA
 
 
@@ -378,7 +379,7 @@ def surrender(target: str, params: Optional[Dict[str, Union[str, int, bool, None
         type=IntentType.SURRENDER,
         target=target,
         params=params or {},
-        parampara_vector=PARAMPARA * 12,  # 444 - always connected
+        parampara_vector=PARAMPARA * MAHAJANA_COUNT,  # 444 - always connected
     )
     return resolve(intent)
 

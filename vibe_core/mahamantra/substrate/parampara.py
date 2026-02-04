@@ -33,13 +33,15 @@ is ACINTYA - like iron becoming fire, indistinguishable.
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, QUALITIES, QUARTERS, WORDS)
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, KSHETRA, MAHAJANA_COUNT, NAVA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
 __position__ = 0
-__genesis__ = "0x48c2d992"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x48c2d983"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum
@@ -113,7 +115,7 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     # Handled separately as AVATARA
     Mahajana.BRAHMA: ParamparaNode(
         mahajana=Mahajana.BRAHMA,
-        position=1,
+        position=KSETRAJNA,
         quarter=Quarter.GENESIS,
         sampradaya=Sampradaya.BRAHMA,
         is_head=False,
@@ -123,7 +125,7 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     ),
     Mahajana.NARADA: ParamparaNode(
         mahajana=Mahajana.NARADA,
-        position=2,
+        position=HALVES,
         quarter=Quarter.GENESIS,
         sampradaya=Sampradaya.BRAHMA,
         is_head=False,
@@ -132,7 +134,7 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     ),
     Mahajana.SHAMBHU: ParamparaNode(
         mahajana=Mahajana.SHAMBHU,
-        position=3,
+        position=TRINITY,
         quarter=Quarter.GENESIS,
         sampradaya=Sampradaya.RUDRA,  # Shiva has his own sampradaya!
         is_head=False,
@@ -146,7 +148,7 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     # Note: Prithu is Shaktyavesha Avatara - not in Mahajana enum
     Mahajana.KUMARAS: ParamparaNode(
         mahajana=Mahajana.KUMARAS,
-        position=5,
+        position=PANCHA,
         quarter=Quarter.DHARMA,
         sampradaya=Sampradaya.KUMARA,
         is_head=False,
@@ -154,7 +156,7 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     ),
     Mahajana.KAPILA: ParamparaNode(
         mahajana=Mahajana.KAPILA,
-        position=6,
+        position=SHARANAGATI,
         quarter=Quarter.DHARMA,
         sampradaya=Sampradaya.BRAHMA,  # Kapila is avatara in Brahma line
         is_head=False,
@@ -162,7 +164,7 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     ),
     Mahajana.MANU: ParamparaNode(
         mahajana=Mahajana.MANU,
-        position=7,
+        position=SEVEN,
         quarter=Quarter.DHARMA,
         sampradaya=Sampradaya.BRAHMA,  # Manu is son of Brahma
         is_head=False,
@@ -175,7 +177,7 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     # Position 8: HEAD - Parashurama (Enforcement Avatar)
     Mahajana.PRAHLADA: ParamparaNode(
         mahajana=Mahajana.PRAHLADA,
-        position=9,
+        position=NAVA,
         quarter=Quarter.KARMA,
         sampradaya=Sampradaya.BRAHMA,  # Prahlada in Brahma line via Narada
         is_head=False,
@@ -183,7 +185,7 @@ PARAMPARA_GRAPH: Final[Dict[Mahajana, ParamparaNode]] = {
     ),
     Mahajana.JANAKA: ParamparaNode(
         mahajana=Mahajana.JANAKA,
-        position=10,
+        position=TEN,
         quarter=Quarter.KARMA,
         sampradaya=Sampradaya.BRAHMA,
         is_head=False,
@@ -270,35 +272,35 @@ class PrakritiElement:
 # This creates the RHYTHM that enlivens dead matter
 PRAKRITI_24: Final[List[PrakritiElement]] = [
     # ROOT (1)
-    PrakritiElement(1, "prakriti", PrakritiCategory.ROOT, 0, 0b00000001, (0, 0), (0, 0)),
+    PrakritiElement(KSETRAJNA, "prakriti", PrakritiCategory.ROOT, 0, KSETRAJNA, (0, 0), (0, 0)),
     # SUBTLE (2-4) - The three aspects of false ego
-    PrakritiElement(2, "mahat", PrakritiCategory.SUBTLE, 1, 0b00000010, (0, 1), (0, 1)),
-    PrakritiElement(3, "ahankara", PrakritiCategory.SUBTLE, 2, 0b00000100, (0, 2), (0, 2)),
-    PrakritiElement(4, "manas", PrakritiCategory.SUBTLE, 3, 0b00001000, (0, 3), (0, 3)),
+    PrakritiElement(HALVES, "mahat", PrakritiCategory.SUBTLE, KSETRAJNA, HALVES, (0, KSETRAJNA), (0, KSETRAJNA)),
+    PrakritiElement(TRINITY, "ahankara", PrakritiCategory.SUBTLE, HALVES, QUARTERS, (0, HALVES), (0, HALVES)),
+    PrakritiElement(QUARTERS, "manas", PrakritiCategory.SUBTLE, TRINITY, HARE_COUNT, (0, TRINITY), (0, TRINITY)),
     # TANMATRA (5-9) - Subtle sense objects
-    PrakritiElement(5, "shabda", PrakritiCategory.TANMATRA, 4, 0b00010000, (0, 4), (0, 4)),
-    PrakritiElement(6, "sparsha", PrakritiCategory.TANMATRA, 5, 0b00100000, (0, 5), (0, 5)),
-    PrakritiElement(7, "rupa", PrakritiCategory.TANMATRA, 6, 0b01000000, (0, 6), (1, 0)),
-    PrakritiElement(8, "rasa", PrakritiCategory.TANMATRA, 7, 0b10000000, (0, 7), (1, 1)),
-    PrakritiElement(9, "gandha", PrakritiCategory.TANMATRA, 8, 0b00000001, (1, 0), (1, 2)),
+    PrakritiElement(PANCHA, "shabda", PrakritiCategory.TANMATRA, QUARTERS, WORDS, (0, QUARTERS), (0, QUARTERS)),
+    PrakritiElement(SHARANAGATI, "sparsha", PrakritiCategory.TANMATRA, PANCHA, 0b00100000, (0, PANCHA), (0, PANCHA)),
+    PrakritiElement(SEVEN, "rupa", PrakritiCategory.TANMATRA, SHARANAGATI, QUALITIES, (0, SHARANAGATI), (KSETRAJNA, 0)),
+    PrakritiElement(HARE_COUNT, "rasa", PrakritiCategory.TANMATRA, SEVEN, 0b10000000, (0, SEVEN), (KSETRAJNA, KSETRAJNA)),
+    PrakritiElement(NAVA, "gandha", PrakritiCategory.TANMATRA, HARE_COUNT, KSETRAJNA, (KSETRAJNA, 0), (KSETRAJNA, HALVES)),
     # JNANENDRIYA (10-14) - Knowledge senses
-    PrakritiElement(10, "shrotra", PrakritiCategory.JNANENDRIYA, 9, 0b00000010, (1, 1), (1, 3)),
-    PrakritiElement(11, "tvak", PrakritiCategory.JNANENDRIYA, 10, 0b00000100, (1, 2), (1, 4)),
-    PrakritiElement(12, "chakshus", PrakritiCategory.JNANENDRIYA, 11, 0b00001000, (1, 3), (1, 5)),
-    PrakritiElement(13, "rasana", PrakritiCategory.JNANENDRIYA, 12, 0b00010000, (1, 4), (2, 0)),
-    PrakritiElement(14, "ghrana", PrakritiCategory.JNANENDRIYA, 13, 0b00100000, (1, 5), (2, 1)),
+    PrakritiElement(TEN, "shrotra", PrakritiCategory.JNANENDRIYA, NAVA, HALVES, (KSETRAJNA, KSETRAJNA), (KSETRAJNA, TRINITY)),
+    PrakritiElement(11, "tvak", PrakritiCategory.JNANENDRIYA, TEN, QUARTERS, (KSETRAJNA, HALVES), (KSETRAJNA, QUARTERS)),
+    PrakritiElement(MAHAJANA_COUNT, "chakshus", PrakritiCategory.JNANENDRIYA, 11, HARE_COUNT, (KSETRAJNA, TRINITY), (KSETRAJNA, PANCHA)),
+    PrakritiElement(13, "rasana", PrakritiCategory.JNANENDRIYA, MAHAJANA_COUNT, WORDS, (KSETRAJNA, QUARTERS), (HALVES, 0)),
+    PrakritiElement(14, "ghrana", PrakritiCategory.JNANENDRIYA, 13, 0b00100000, (KSETRAJNA, PANCHA), (HALVES, KSETRAJNA)),
     # KARMENDRIYA (15-19) - Action organs
-    PrakritiElement(15, "vak", PrakritiCategory.KARMENDRIYA, 14, 0b01000000, (1, 6), (2, 2)),
-    PrakritiElement(16, "pani", PrakritiCategory.KARMENDRIYA, 15, 0b10000000, (1, 7), (2, 3)),
-    PrakritiElement(17, "pada", PrakritiCategory.KARMENDRIYA, 0, 0b00000001, (2, 0), (2, 4)),
-    PrakritiElement(18, "payu", PrakritiCategory.KARMENDRIYA, 1, 0b00000010, (2, 1), (2, 5)),
-    PrakritiElement(19, "upastha", PrakritiCategory.KARMENDRIYA, 2, 0b00000100, (2, 2), (3, 0)),
+    PrakritiElement(15, "vak", PrakritiCategory.KARMENDRIYA, 14, QUALITIES, (KSETRAJNA, SHARANAGATI), (HALVES, HALVES)),
+    PrakritiElement(WORDS, "pani", PrakritiCategory.KARMENDRIYA, 15, 0b10000000, (KSETRAJNA, SEVEN), (HALVES, TRINITY)),
+    PrakritiElement(POSITION_SUM_KRISHNA, "pada", PrakritiCategory.KARMENDRIYA, 0, KSETRAJNA, (HALVES, 0), (HALVES, QUARTERS)),
+    PrakritiElement(GITA_CHAPTERS, "payu", PrakritiCategory.KARMENDRIYA, KSETRAJNA, HALVES, (HALVES, KSETRAJNA), (HALVES, PANCHA)),
+    PrakritiElement(19, "upastha", PrakritiCategory.KARMENDRIYA, HALVES, QUARTERS, (HALVES, HALVES), (TRINITY, 0)),
     # MAHABHUTA (20-24) - Gross elements
-    PrakritiElement(20, "akasha", PrakritiCategory.MAHABHUTA, 3, 0b00001000, (2, 3), (3, 1)),
-    PrakritiElement(21, "vayu", PrakritiCategory.MAHABHUTA, 4, 0b00010000, (2, 4), (3, 2)),
-    PrakritiElement(22, "tejas", PrakritiCategory.MAHABHUTA, 5, 0b00100000, (2, 5), (3, 3)),
-    PrakritiElement(23, "apas", PrakritiCategory.MAHABHUTA, 6, 0b01000000, (2, 6), (3, 4)),
-    PrakritiElement(24, "prithvi", PrakritiCategory.MAHABHUTA, 7, 0b10000000, (2, 7), (3, 5)),
+    PrakritiElement(20, "akasha", PrakritiCategory.MAHABHUTA, TRINITY, HARE_COUNT, (HALVES, TRINITY), (TRINITY, KSETRAJNA)),
+    PrakritiElement(21, "vayu", PrakritiCategory.MAHABHUTA, QUARTERS, WORDS, (HALVES, QUARTERS), (TRINITY, HALVES)),
+    PrakritiElement(22, "tejas", PrakritiCategory.MAHABHUTA, PANCHA, 0b00100000, (HALVES, PANCHA), (TRINITY, TRINITY)),
+    PrakritiElement(23, "apas", PrakritiCategory.MAHABHUTA, SHARANAGATI, QUALITIES, (HALVES, SHARANAGATI), (TRINITY, QUARTERS)),
+    PrakritiElement(KSHETRA, "prithvi", PrakritiCategory.MAHABHUTA, SEVEN, 0b10000000, (HALVES, SEVEN), (TRINITY, PANCHA)),
 ]
 
 
@@ -383,8 +385,8 @@ def get_37_formula() -> Dict[str, int]:
     return {
         "prakriti": len(PRAKRITI_24),  # 24
         "mahajanas": len(PARAMPARA_GRAPH),  # 12
-        "ksetrajna": 1,  # Krishna (always 1)
-        "total": len(PRAKRITI_24) + len(PARAMPARA_GRAPH) + 1,  # 37
+        "ksetrajna": KSETRAJNA,  # Krishna (always 1)
+        "total": len(PRAKRITI_24) + len(PARAMPARA_GRAPH) + KSETRAJNA,  # 37
     }
 
 

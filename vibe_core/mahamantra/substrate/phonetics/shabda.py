@@ -10,15 +10,16 @@ mapping phonetic articulation to Mahamantra resonance space.
 
 DERIVED FROM _seed.py and protocols.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, LILA, MALA, QUARTERS, SHARANAGATI, TRINITY, WORDS)
+
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Final, List, Dict, Optional
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "kapila"
-__position__ = 6
+__position__ = SHARANAGATI
 __genesis__ = "0xea72176b"
 
 from vibe_core.mahamantra.protocols._seed import (
@@ -53,17 +54,17 @@ from vibe_core.mahamantra.protocols._seed import (
 class ArticulationPoint(IntEnum):
     """Where in the mouth the sound originates (5 points = PANCHA)."""
     KANTHA = 0  # Guttural (throat)
-    TALU = 1    # Palatal (palate)
-    MURDHA = 2   # Retroflex (roof)
-    DANTA = 3    # Dental (teeth)
-    OSHTHA = 4   # Labial (lips)
+    TALU = KSETRAJNA    # Palatal (palate)
+    MURDHA = HALVES   # Retroflex (roof)
+    DANTA = TRINITY    # Dental (teeth)
+    OSHTHA = QUARTERS   # Labial (lips)
 
 class VoicingType(IntEnum):
     """Voicing characteristics (4 types = QUARTERS)."""
     UNVOICED = 0
-    UNVOICED_ASPIRATED = 1
-    VOICED = 2
-    VOICED_ASPIRATED = 3
+    UNVOICED_ASPIRATED = KSETRAJNA
+    VOICED = HALVES
+    VOICED_ASPIRATED = TRINITY
 
 @dataclass(frozen=True)
 class VibrationSignature:
@@ -87,7 +88,7 @@ class VibrationSignature:
         if self.base_frequency == NADI_RESONANCE: alignment += 0.25
         elif self.base_frequency == FIELD_RESONANCE: alignment += 0.25
         elif self.base_frequency % NADI_RESONANCE == 0: alignment += 0.15
-        if self.duration_ratio in (1, 2, 4, 8, 16, 32): alignment += 0.25
+        if self.duration_ratio in (KSETRAJNA, HALVES, QUARTERS, HARE_COUNT, WORDS, 32): alignment += 0.25
         if self.articulation.value < PANCHA and self.voicing.value < QUARTERS: alignment += 0.25
         if self.signature_id <= KIRTAN_RESONANCE: alignment += 0.25
         return min(1.0, alignment)
@@ -98,45 +99,45 @@ class VibrationSignature:
 
 SANSKRIT_PHONEME_MAP: Final[Dict[str, VibrationSignature]] = {
     # VOWELS
-    "a": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 72, 1),
-    "ā": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 72, 2),
-    "i": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 72, 1),
-    "ī": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 72, 2),
-    "u": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 72, 1),
-    "ū": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 72, 2),
-    "e": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 108, 2),
-    "ai": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 144, 2),
-    "o": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 108, 2),
-    "au": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 144, 2),
+    "a": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 72, KSETRAJNA),
+    "ā": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 72, HALVES),
+    "i": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 72, KSETRAJNA),
+    "ī": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 72, HALVES),
+    "u": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 72, KSETRAJNA),
+    "ū": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 72, HALVES),
+    "e": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, MALA, HALVES),
+    "ai": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 144, HALVES),
+    "o": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, MALA, HALVES),
+    "au": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 144, HALVES),
     # CONSONANTS (English mappings & Sanskrit equivalents)
-    "k": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 48, 1),
-    "g": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, 48, 1),
-    "c": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 48, 1),
-    "q": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 48, 1),
-    "j": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 48, 1),
-    "r": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 48, 1),
-    "l": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 48, 1),
-    "t": VibrationSignature(ArticulationPoint.DANTA, VoicingType.UNVOICED, 48, 1),
-    "d": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 48, 1),
-    "n": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 48, 1),
-    "s": VibrationSignature(ArticulationPoint.DANTA, VoicingType.UNVOICED, 36, 1),
-    "z": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 36, 1),
-    "p": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.UNVOICED, 48, 1),
-    "b": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
-    "m": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
-    "f": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.UNVOICED, 48, 1),
-    "v": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
-    "w": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
-    "y": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 54, 1),
-    "h": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED_ASPIRATED, 72, 1),
-    "x": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 36, 1),
+    "k": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, LILA, KSETRAJNA),
+    "g": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "c": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, LILA, KSETRAJNA),
+    "q": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, LILA, KSETRAJNA),
+    "j": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, LILA, KSETRAJNA),
+    "r": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "l": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "t": VibrationSignature(ArticulationPoint.DANTA, VoicingType.UNVOICED, LILA, KSETRAJNA),
+    "d": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "n": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "s": VibrationSignature(ArticulationPoint.DANTA, VoicingType.UNVOICED, 36, KSETRAJNA),
+    "z": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 36, KSETRAJNA),
+    "p": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.UNVOICED, LILA, KSETRAJNA),
+    "b": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "m": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "f": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.UNVOICED, LILA, KSETRAJNA),
+    "v": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "w": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, LILA, KSETRAJNA),
+    "y": VibrationSignature(ArticulationPoint.TALU, VoicingType.VOICED, 54, KSETRAJNA),
+    "h": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED_ASPIRATED, 72, KSETRAJNA),
+    "x": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 36, KSETRAJNA),
     # MAHAMANTRA SYLLABLES
-    "ha": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED_ASPIRATED, 72, 1),
-    "re": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 72, 1),
-    "kṛ": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, 108, 1),
-    "ṣṇa": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 72, 2),
-    "rā": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 72, 2),
-    "ma": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),
+    "ha": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.VOICED_ASPIRATED, 72, KSETRAJNA),
+    "re": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 72, KSETRAJNA),
+    "kṛ": VibrationSignature(ArticulationPoint.KANTHA, VoicingType.UNVOICED, MALA, KSETRAJNA),
+    "ṣṇa": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 72, HALVES),
+    "rā": VibrationSignature(ArticulationPoint.MURDHA, VoicingType.VOICED, 72, HALVES),
+    "ma": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, LILA, KSETRAJNA),
 }
 
 # =============================================================================
@@ -151,7 +152,7 @@ def text_to_vibration(text: str, source_lang: str = "en") -> List[VibrationSigna
     while i < len(text_lower):
         # Check for multi-character phonemes first
         found = False
-        for length in [3, 2]:
+        for length in [TRINITY, HALVES]:
             if i + length <= len(text_lower):
                 chunk = text_lower[i:i+length]
                 if chunk in SANSKRIT_PHONEME_MAP:
@@ -163,7 +164,7 @@ def text_to_vibration(text: str, source_lang: str = "en") -> List[VibrationSigna
             char = text_lower[i]
             if char in SANSKRIT_PHONEME_MAP:
                 signatures.append(SANSKRIT_PHONEME_MAP[char])
-            i += 1
+            i += KSETRAJNA
     return signatures
 
 def vibration_to_sanskrit(signatures: List[VibrationSignature]) -> str:

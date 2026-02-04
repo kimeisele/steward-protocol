@@ -49,10 +49,11 @@ DERIVED FROM SEED.PY:
 - DASHA_INDRIYA = PANCHA × HALVES = 10 (5 knowledge + 5 action)
 - PANCHA_VRTTI = PANCHA = 5 (the 5 mental modifications)
 """
+from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, MAHAJANA_COUNT, NAVA, PANCHA, SHARANAGATI, TEN)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
-__position__ = 6
+__position__ = SHARANAGATI
 __genesis__ = "0x1c3dc0e4"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
@@ -111,9 +112,9 @@ KARMENDRIYA_COUNT: Final[int] = PANCHA  # 5
 VRTTI_COUNT: Final[int] = PANCHA  # 5
 
 # Verification
-assert DASHA_INDRIYA == 10, "DASHA_INDRIYA must be 10"
+assert DASHA_INDRIYA == TEN, "DASHA_INDRIYA must be 10"
 assert KARMENDRIYA_COUNT == JNANENDRIYA_COUNT, "Karmendriya count must equal Jnanendriya count"
-assert VRTTI_COUNT == 5, "VRTTI_COUNT must be 5 (Yoga Sutras)"
+assert VRTTI_COUNT == PANCHA, "VRTTI_COUNT must be 5 (Yoga Sutras)"
 
 
 # =============================================================================
@@ -165,10 +166,10 @@ class Karmendriya(str, Enum):
     def mahamantra_position(self) -> int:
         """Get the Mahamantra position that owns this action sense."""
         return {
-            Karmendriya.VAK: 9,  # Prahlada - speaks truth
-            Karmendriya.PANI: 10,  # Janaka - hands of karma yoga
+            Karmendriya.VAK: NAVA,  # Prahlada - speaks truth
+            Karmendriya.PANI: TEN,  # Janaka - hands of karma yoga
             Karmendriya.PADA: 11,  # Bhishma - walks the path
-            Karmendriya.PAYU: 12,  # Nrisimha - destroys impurity
+            Karmendriya.PAYU: MAHAJANA_COUNT,  # Nrisimha - destroys impurity
             Karmendriya.UPASTHA: 13,  # Bali - generates surrender
         }[self]
 
@@ -346,7 +347,7 @@ class TanmatraMessage:
     source_indriya: Optional[IndriyaType] = None  # Which sense sent this
     target_indriya: Optional[IndriyaType] = None  # Which sense receives this
     timestamp: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, object] = field(default_factory=dict)
 
     @property
     def is_valid(self) -> bool:
@@ -369,7 +370,7 @@ class TanmatraMessage:
         from uuid import uuid4
 
         return cls(
-            message_id=message_id or f"tm_{uuid4().hex[:8]}",
+            message_id=message_id or f"tm_{uuid4().hex[:HARE_COUNT]}",
             tanmatra=Tanmatra.SABDA,  # Text = sound
             intent=intent,
             content=text,

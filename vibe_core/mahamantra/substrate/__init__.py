@@ -19,8 +19,8 @@ LEVEL -1 (SUBSTRATE):
 LAZY IMPORTS: All imports deferred until accessed.
 This prevents 1000ms+ cascades when importing a single module.
 """
-
 from __future__ import annotations
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

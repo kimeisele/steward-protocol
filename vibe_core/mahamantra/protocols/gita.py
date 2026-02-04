@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, Tuple, Optional
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS)
 from dataclasses import dataclass
 
 @runtime_checkable
@@ -58,7 +59,7 @@ ChapterResult = MatchResult
 class ResonanceStats:
     """Statistics about the resonance index."""
     total_verses: int = 700
-    total_chapters: int = 18
+    total_chapters: int = GITA_CHAPTERS
     unique_attractors: int = 0
     avg_resonance_hare: float = 0.0
     avg_resonance_krishna: float = 0.0

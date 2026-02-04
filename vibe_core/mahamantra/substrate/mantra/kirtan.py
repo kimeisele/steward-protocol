@@ -7,8 +7,9 @@ MAHA KIRTAN - The Compute Orchestrator
 Bridges the 7-beat Lila Step Sequencer with MahaAlgorithm transforms
 for rhythmic computations.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, MALA, SEVEN, TRINITY)
+
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
@@ -68,7 +69,7 @@ class MahaKirtan:
     """The Maha Kirtan Compute Orchestrator."""
 
     BEATS_PER_ROUND: Final[int] = SEVEN
-    ROUNDS_PER_MALA: Final[int] = 108
+    ROUNDS_PER_MALA: Final[int] = MALA
     DEFAULT_MOD_SPACE: Final[int] = MAHA_QUANTUM
 
     def __init__(self, mod_space: int = MAHA_QUANTUM, kirtan_mode: str = "alternating", use_oracle: bool = True) -> None:
@@ -88,12 +89,12 @@ class MahaKirtan:
 
     def _get_vina_resonance(self, seed: int, tick: int) -> Tuple[int, int]:
         vina_resonance = seed % self.mod_space
-        vina_string = (seed % VINA_STRINGS) + 1
+        vina_string = (seed % VINA_STRINGS) + KSETRAJNA
         return vina_resonance, vina_string
 
     def _oracle_prefilter(self, seed: int) -> Tuple[bool, int]:
         if not self.use_oracle or self._oracle is None:
-             return True, -1
+             return True, -KSETRAJNA
         reading = self._oracle.consult_seed(seed)
         return reading.parampara_validated, reading.parampara_channel
 
@@ -122,14 +123,14 @@ class MahaKirtan:
             resonance_boost = (transformed * flute_resonance) // self.mod_space
             transformed = (transformed + resonance_boost) % self.mod_space
 
-        threshold = self.mod_space // 3
+        threshold = self.mod_space // TRINITY
         if vina_resonance > threshold:
-            vina_boost = (transformed * vina_resonance) // (self.mod_space * 2)
+            vina_boost = (transformed * vina_resonance) // (self.mod_space * HALVES)
             transformed = (transformed + vina_boost) % self.mod_space
 
         self._state.current_tick = tick
         self._state.current_round = state.round_number
-        self._state.total_computations += 1
+        self._state.total_computations += KSETRAJNA
         self._state.resonance_level = (self._state.resonance_level + flute_resonance + vina_resonance) % self.mod_space
         self._state.accumulated_value = (self._state.accumulated_value + transformed) % self.mod_space
 
@@ -158,13 +159,13 @@ class MahaKirtan:
             seed = result.transformed_value
         return results
 
-    def compute_rounds(self, seed: int, num_rounds: int = 7) -> List[KirtanComputeResult]:
+    def compute_rounds(self, seed: int, num_rounds: int = SEVEN) -> List[KirtanComputeResult]:
         results = []
         current_seed = seed
         for _ in range(num_rounds):
             round_results = self.compute_round(current_seed)
             results.extend(round_results)
-            current_seed = round_results[-1].transformed_value
+            current_seed = round_results[-KSETRAJNA].transformed_value
         return results
 
     def get_state(self) -> Dict[str, object]:

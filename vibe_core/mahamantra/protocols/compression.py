@@ -4,6 +4,7 @@ Compression Protocol Types - SSOT for MahaCompression
 
 All types used by MahaCompression adapter must be defined here.
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TRINITY)
 
 from typing import Protocol, runtime_checkable, Final, Literal, Optional
 from dataclasses import dataclass
@@ -51,7 +52,7 @@ INTENT_RAJAS: Final[IntentLevel] = IntentLevel(
     guna=IntentGuna.RAJAS,
     confidence=1.0,
     category="ACTION",
-    score=1,
+    score=KSETRAJNA,
     system_interpretation="Passion/action mode - execute with caution"
 )
 
@@ -59,7 +60,7 @@ INTENT_SATTVA: Final[IntentLevel] = IntentLevel(
     guna=IntentGuna.SATTVA,
     confidence=1.0,
     category="CREATION",
-    score=2,
+    score=HALVES,
     system_interpretation="Goodness/creation mode - clean execution"
 )
 
@@ -67,7 +68,7 @@ INTENT_SUDDHA: Final[IntentLevel] = IntentLevel(
     guna=IntentGuna.SUDDHA,
     confidence=1.0,
     category="TRANSCENDENTAL",
-    score=3,
+    score=TRINITY,
     system_interpretation="Pure/transcendental mode - divine execution"
 )
 

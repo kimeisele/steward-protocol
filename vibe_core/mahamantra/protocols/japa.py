@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Optional
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
 from dataclasses import dataclass
 from enum import Enum
 
@@ -10,7 +11,7 @@ class MahaJapaProtocol(Protocol):
     Simulates the 108-round mala cycle and collapse detection.
     """
     
-    def round(self, seed: int, round_number: int = 1) -> "RoundResult":
+    def round(self, seed: int, round_number: int = KSETRAJNA) -> "RoundResult":
         """Execute a single japa round."""
         ...
         

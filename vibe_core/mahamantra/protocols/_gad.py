@@ -35,12 +35,13 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, NAVA, PANCHA, QUARTERS, SEVEN, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
-__position__ = 9
+__position__ = NAVA
 __genesis__ = "0x3b37ae67"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
@@ -125,19 +126,19 @@ class GADCriterion(IntEnum):
     DISCOVERABILITY = 0
 
     # Atma-Nikshepa -> Observability
-    OBSERVABILITY = 1
+    OBSERVABILITY = KSETRAJNA
 
     # Pratikulyasya Varjanam -> Parseability
-    PARSEABILITY = 2
+    PARSEABILITY = HALVES
 
     # Anukulyasya Sankalpa -> Composability
-    COMPOSABILITY = 3
+    COMPOSABILITY = TRINITY
 
     # Karpanya -> Idempotency
-    IDEMPOTENCY = 4
+    IDEMPOTENCY = QUARTERS
 
     # Raksisyati iti Vishvasa -> Recoverability
-    RECOVERABILITY = 5
+    RECOVERABILITY = PANCHA
 
 
 # =============================================================================
@@ -149,9 +150,9 @@ class DharmaPrinciple(IntEnum):
     """The 4 regulating principles - The character test."""
 
     DAYA = 0  # Mercy (seed.DharmaPillar.DAYA)
-    SATYAM = 1  # Truthfulness (seed.DharmaPillar.SATYAM)
-    TAPAS = 2  # Austerity (seed.DharmaPillar.TAPAS)
-    SAUCAM = 3  # Cleanliness (seed.DharmaPillar.SAUCAM)
+    SATYAM = KSETRAJNA  # Truthfulness (seed.DharmaPillar.SATYAM)
+    TAPAS = HALVES  # Austerity (seed.DharmaPillar.TAPAS)
+    SAUCAM = TRINITY  # Cleanliness (seed.DharmaPillar.SAUCAM)
 
 
 # =============================================================================
@@ -163,9 +164,9 @@ class JapaState(IntEnum):
     """State of the Japa meditation (heartbeat)."""
 
     DISCONNECTED = 0  # Not chanting, drifted into Maya
-    CHANTING = 1  # Actively chanting
-    MALA_COMPLETE = 2  # Completed 108 mantras
-    ABSORBED = 3  # Deep absorption (multiple malas)
+    CHANTING = KSETRAJNA  # Actively chanting
+    MALA_COMPLETE = HALVES  # Completed 108 mantras
+    ABSORBED = TRINITY  # Deep absorption (multiple malas)
 
 
 # HolyName imported from byte.py (SSOT) - IntEnum with VOID for binary encoding
@@ -292,15 +293,15 @@ class MantraHeartbeat:
             return False
 
         # Advance position
-        self.word_position = (self.word_position + 1) % self.WORDS_PER_MANTRA
-        self.total_words += 1
+        self.word_position = (self.word_position + KSETRAJNA) % self.WORDS_PER_MANTRA
+        self.total_words += KSETRAJNA
 
         # Check if mantra complete
         if self.word_position == 0:
-            self.mantra_count += 1
+            self.mantra_count += KSETRAJNA
             # Check if mala complete
             if self.mantra_count >= self.MANTRAS_PER_MALA:
-                self.mala_count += 1
+                self.mala_count += KSETRAJNA
                 self.mantra_count = 0
                 self.state = JapaState.MALA_COMPLETE
 
@@ -450,10 +451,10 @@ class GADAudit:
         # MERCY MODE CLAUSE
         if self.mercy_mode and not self.signature_valid:
             # If criteria and dharma are otherwise OK, we give it a chance.
-            if self.criteria_score >= 4 and self.dharma_score >= 3:
+            if self.criteria_score >= QUARTERS and self.dharma_score >= TRINITY:
                 return "NEEDS IMPROVEMENT (MERCY MODE)"
 
-        if self.criteria_score >= 4:
+        if self.criteria_score >= QUARTERS:
             return "NEEDS IMPROVEMENT"
         else:
             return "VIOLATES GAD-000"
@@ -693,7 +694,7 @@ class GADProtocolDef(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="GADProtocol",
         mahajana="manu",  # Manu is the lawgiver
-        position=7,
+        position=SEVEN,
         level=Level.CONTRACT,
         quarter=Quarter.DHARMA,
     )

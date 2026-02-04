@@ -31,10 +31,11 @@ CATEGORY (English) ↔ VARGA:
     dental        = DANTYA = 3
     labial        = OSHTHYA = 4
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, QUARTERS, SHARANAGATI, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
-__position__ = 6
+__position__ = SHARANAGATI
 __genesis__ = "0xea72176b"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
@@ -89,10 +90,10 @@ class VargaIndex(IntEnum):
     """
 
     KANTHYA = 0  # Throat   → PANCHA_VARGA[0]
-    TALAVYA = 1  # Palate   → PANCHA_VARGA[1]
-    MURDHANYA = 2  # Retroflex → PANCHA_VARGA[2]
-    DANTYA = 3  # Teeth    → PANCHA_VARGA[3]
-    OSHTHYA = 4  # Lips     → PANCHA_VARGA[4]
+    TALAVYA = KSETRAJNA  # Palate   → PANCHA_VARGA[1]
+    MURDHANYA = HALVES  # Retroflex → PANCHA_VARGA[2]
+    DANTYA = TRINITY  # Teeth    → PANCHA_VARGA[3]
+    OSHTHYA = QUARTERS  # Lips     → PANCHA_VARGA[4]
 
 
 # Verify against PANCHA from seed.py
@@ -284,10 +285,10 @@ class SthanaIndex(IntEnum):
     """
 
     SPARSHA = 0  # Unvoiced stop → minimal energy (0.2)
-    MAHAPRANA = 1  # Aspirated → expansion energy (0.6)
-    GHOSHAVAT = 2  # Voiced → active energy (0.8)
-    GHOSHMAHA = 3  # Voiced aspirated → maximum energy (1.0)
-    ANUNASIKA = 4  # Nasal → continuous energy (0.5)
+    MAHAPRANA = KSETRAJNA  # Aspirated → expansion energy (0.6)
+    GHOSHAVAT = HALVES  # Voiced → active energy (0.8)
+    GHOSHMAHA = TRINITY  # Voiced aspirated → maximum energy (1.0)
+    ANUNASIKA = QUARTERS  # Nasal → continuous energy (0.5)
 
 
 # Verify against PANCHA from seed.py
@@ -404,13 +405,13 @@ def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
         # 3-6: i/ī/u/ū (closed) → SPARSHA (minimal)
         # 7-8: ṛ/ṝ (retroflex) → GHOSHAVAT (active)
         # 9-12: e/ai/o/au (mid/diphthongs) → GHOSHAVAT/GHOSHMAHA
-        if idx < 2:  # a, ā
+        if idx < HALVES:  # a, ā
             sthana = SthanaIndex.MAHAPRANA
-        elif idx < 6:  # i, ī, u, ū
+        elif idx < SHARANAGATI:  # i, ī, u, ū
             sthana = SthanaIndex.SPARSHA
-        elif idx < 8:  # ṛ, ṝ
+        elif idx < HARE_COUNT:  # ṛ, ṝ
             sthana = SthanaIndex.GHOSHAVAT
-        elif idx in (9, 11):  # ai, au (diphthongs)
+        elif idx in (NAVA, 11):  # ai, au (diphthongs)
             sthana = SthanaIndex.GHOSHMAHA
         else:  # e, o
             sthana = SthanaIndex.GHOSHAVAT
@@ -431,7 +432,7 @@ def _build_phoneme_sthana_from_protocols() -> Dict[str, SthanaIndex]:
     # 4. From USHMAN (varna.py) - Sibilants + H
     # śa/ṣa/sa = fricatives (GHOSHAVAT), ha = aspirate (MAHAPRANA)
     for idx, varna in enumerate(USHMAN):
-        sthana = SthanaIndex.MAHAPRANA if idx == 3 else SthanaIndex.GHOSHAVAT
+        sthana = SthanaIndex.MAHAPRANA if idx == TRINITY else SthanaIndex.GHOSHAVAT
         if varna.roman:
             mapping[varna.roman.lower()] = sthana
         if varna.iast:
@@ -488,10 +489,10 @@ PHONEME_TO_STHANA: Final[Dict[str, SthanaIndex]] = _build_phoneme_sthana_from_pr
 
 VARGA_TO_QUARTER: Final[Dict[VargaIndex, int]] = {
     VargaIndex.KANTHYA: 0,  # Throat → GENESIS (system/kernel)
-    VargaIndex.TALAVYA: 1,  # Palate → DHARMA (cognition)
-    VargaIndex.MURDHANYA: 1,  # Retroflex → DHARMA (LOTUS MERGE: 5→4)
-    VargaIndex.DANTYA: 2,  # Teeth → KARMA (interface/action)
-    VargaIndex.OSHTHYA: 3,  # Lips → MOKSHA (output/liberation)
+    VargaIndex.TALAVYA: KSETRAJNA,  # Palate → DHARMA (cognition)
+    VargaIndex.MURDHANYA: KSETRAJNA,  # Retroflex → DHARMA (LOTUS MERGE: 5→4)
+    VargaIndex.DANTYA: HALVES,  # Teeth → KARMA (interface/action)
+    VargaIndex.OSHTHYA: TRINITY,  # Lips → MOKSHA (output/liberation)
 }
 
 # Verify the Lotus algorithm
@@ -575,35 +576,35 @@ class UniversalPhoneticBridge:
             char = text_lower[i]
 
             # Try digraphs first (ch, th, etc.)
-            if i + 2 <= len(text_lower):
-                digraph = text_lower[i : i + 2]
+            if i + HALVES <= len(text_lower):
+                digraph = text_lower[i : i + HALVES]
                 if digraph in self._phoneme_to_varga:
                     varga = self._phoneme_to_varga[digraph]
                     sthana = PHONEME_TO_STHANA.get(digraph, SthanaIndex.GHOSHAVAT)
-                    varga_counts[varga.value] += 1
-                    sthana_counts[sthana.value] += 1
+                    varga_counts[varga.value] += KSETRAJNA
+                    sthana_counts[sthana.value] += KSETRAJNA
                     total_energy += STHANA_ENERGY.get(sthana, 0.5)
-                    recognized += 1
-                    total_phonemes += 1
-                    i += 2
+                    recognized += KSETRAJNA
+                    total_phonemes += KSETRAJNA
+                    i += HALVES
                     continue
 
             # Single character
             if char.isalpha():
-                total_phonemes += 1
+                total_phonemes += KSETRAJNA
                 if char in self._phoneme_to_varga:
                     varga = self._phoneme_to_varga[char]
                     sthana = PHONEME_TO_STHANA.get(char, SthanaIndex.GHOSHAVAT)
-                    varga_counts[varga.value] += 1
-                    sthana_counts[sthana.value] += 1
+                    varga_counts[varga.value] += KSETRAJNA
+                    sthana_counts[sthana.value] += KSETRAJNA
                     total_energy += STHANA_ENERGY.get(sthana, 0.5)
-                    recognized += 1
+                    recognized += KSETRAJNA
 
-            i += 1
+            i += KSETRAJNA
 
         # Normalize vectors
-        total_varga = sum(varga_counts) or 1
-        total_sthana = sum(sthana_counts) or 1
+        total_varga = sum(varga_counts) or KSETRAJNA
+        total_sthana = sum(sthana_counts) or KSETRAJNA
         varga_vector = tuple(v / total_varga for v in varga_counts)
         sthana_vector = tuple(s / total_sthana for s in sthana_counts)
 
@@ -617,7 +618,7 @@ class UniversalPhoneticBridge:
         quarter = VARGA_TO_QUARTER[dominant_varga]
 
         # Calculate shakti (normalized energy)
-        shakti = min(1.0, total_energy / max(recognized, 1))
+        shakti = min(1.0, total_energy / max(recognized, KSETRAJNA))
 
         return PhoneticTensor(
             varga_vector=varga_vector,

@@ -32,12 +32,13 @@ WATERTIGHT: No Any types. Everything explicit.
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TRINITY, WORDS)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
-__position__ = 2
+__position__ = HALVES
 __genesis__ = "0x7e861cd0"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
@@ -99,7 +100,7 @@ class FractalAddress:
 
         # Validate each component is 0-15
         for i, component in enumerate(self.path):
-            if not 0 <= component < 16:
+            if not 0 <= component < WORDS:
                 raise ValueError(f"Address component {i} must be 0-15, got {component}")
 
     @property
@@ -120,13 +121,13 @@ class FractalAddress:
     @property
     def parent_address(self) -> Optional["FractalAddress"]:
         """Get the parent address (one level up)."""
-        if self.depth <= 1:
+        if self.depth <= KSETRAJNA:
             return None
-        return FractalAddress(path=self.path[:-1])
+        return FractalAddress(path=self.path[:-KSETRAJNA])
 
     def child_address(self, sub_position: int) -> "FractalAddress":
         """Create a child address at the given sub-position."""
-        if not 0 <= sub_position < 16:
+        if not 0 <= sub_position < WORDS:
             raise ValueError(f"Sub-position must be 0-15, got {sub_position}")
         return FractalAddress(path=self.path + (sub_position,))
 
@@ -300,13 +301,13 @@ class FractalTree(Generic[T]):
         root = self.roots.get(address.position)
         if root is None:
             return None
-        if address.depth == 1:
+        if address.depth == KSETRAJNA:
             return root
-        return root.get_descendant(address.path[1:])
+        return root.get_descendant(address.path[KSETRAJNA:])
 
     def add_node(self, address: FractalAddress, payload: T) -> FractalNode[T]:
         """Add a node at the given address."""
-        if address.depth == 1:
+        if address.depth == KSETRAJNA:
             return self.add_root(address.position, payload)
 
         # Find or create parent
@@ -318,7 +319,7 @@ class FractalTree(Generic[T]):
         if parent is None:
             raise ValueError(f"Parent node does not exist at {parent_addr.to_string()}")
 
-        sub_position = address.path[-1]
+        sub_position = address.path[-KSETRAJNA]
         return parent.add_child(sub_position, payload)
 
     def all_nodes(self) -> Iterator[FractalNode[T]]:
@@ -390,7 +391,7 @@ class FractalProtocol(MahamantraProtocolBase):
     __protocol_identity__ = ProtocolIdentity(
         name="FractalProtocol",
         mahajana="kapila",  # Kapila analyzes structure
-        position=3,
+        position=TRINITY,
         level=Level.ACINTYA,
         quarter=Quarter.GENESIS,
     )

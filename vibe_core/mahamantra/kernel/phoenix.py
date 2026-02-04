@@ -13,12 +13,13 @@ On restart: Read state → Continue where stopped.
 
 WATERTIGHT: All constants from SSOT (seed.py). NO MAGIC NUMBERS.
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, MAHAJANA_COUNT)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nrisimha"
-__position__ = 12
+__position__ = MAHAJANA_COUNT
 __genesis__ = "0x03a8f0d6"  # GenesisByte: parampara % 37 == 0
 
 import json
@@ -82,7 +83,7 @@ def save_state(tick: int, lila_tick: int) -> None:
 
         # Atomic write: write to temp, then rename
         temp_file = STATE_FILE.with_suffix(".tmp")
-        temp_file.write_text(json.dumps(state, indent=2))
+        temp_file.write_text(json.dumps(state, indent=HALVES))
         temp_file.replace(STATE_FILE)
 
     except Exception as _exc:

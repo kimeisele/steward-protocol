@@ -40,6 +40,7 @@ Everything rests upon Me, as pearls are strung on a thread."
 "brahmaṇo hi pratiṣṭhāham" - Gita 14.27
 "I am the source of Brahman."
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, KSHETRA, MAHAJANA_COUNT, MALA, PANCHA, PARAMPARA, QUALITIES, TEN, TRINITY)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -253,13 +254,13 @@ class ProtocolLevel(IntEnum):
     # DESCENDING (Avaroha) - The Source Comes Down
     # ==========================================================================
     # The deeper negative, the higher the origin that descends
-    GOLOKA = -108  # The Supreme Abode - Origin of all
-    VAIKUNTHA = -64  # The Spiritual Sky - Narayana's realm
-    DASHAVATARA = -10  # The Ten Incarnations (Matsya to Kalki)
-    SHAKTYAVESHA = -5  # Empowered Incarnations (Prithu, Vyasa, etc.)
-    KRISHNA = -2  # The Absolute Source - IS, not "represents"
-    MAHAMANTRA = -2  # The Holy Name - IS Krishna (non-different)
-    SUBSTRATE = -1  # Byte, Gene, Entropy (manifestation of -2)
+    GOLOKA = -MALA  # The Supreme Abode - Origin of all
+    VAIKUNTHA = -QUALITIES  # The Spiritual Sky - Narayana's realm
+    DASHAVATARA = -TEN  # The Ten Incarnations (Matsya to Kalki)
+    SHAKTYAVESHA = -PANCHA  # Empowered Incarnations (Prithu, Vyasa, etc.)
+    KRISHNA = -HALVES  # The Absolute Source - IS, not "represents"
+    MAHAMANTRA = -HALVES  # The Holy Name - IS Krishna (non-different)
+    SUBSTRATE = -KSETRAJNA  # Byte, Gene, Entropy (manifestation of -2)
 
     # ==========================================================================
     # FOUNDATION (Tat-stha) - The Turning Point
@@ -271,14 +272,14 @@ class ProtocolLevel(IntEnum):
     # ASCENDING (Aroha) - Service & Evolution
     # ==========================================================================
     # The higher positive, the purer the service
-    INTERFACE = 1  # Agent, Ledger, Scheduler
-    SERVICES = 2  # Manifestation, Memory, Reactor
-    WIRING = 3  # Bootstrap, CLI, Runtime
-    AVATARAS = 5  # Executive Branch (Prithu, etc.) - reflection of -5
-    MAHAJANAS = 12  # The 12 Guardians (Brahma to Yamaraja)
-    FIELD = 24  # Ksetra - the 24 elements (Gita 13.6-7)
-    SOVEREIGN = 37  # The 37th - Parampara Link (24 + 12 + 1)
-    QUALITIES = 64  # The 64 qualities - LIMIT of understanding
+    INTERFACE = KSETRAJNA  # Agent, Ledger, Scheduler
+    SERVICES = HALVES  # Manifestation, Memory, Reactor
+    WIRING = TRINITY  # Bootstrap, CLI, Runtime
+    AVATARAS = PANCHA  # Executive Branch (Prithu, etc.) - reflection of -5
+    MAHAJANAS = MAHAJANA_COUNT  # The 12 Guardians (Brahma to Yamaraja)
+    FIELD = KSHETRA  # Ksetra - the 24 elements (Gita 13.6-7)
+    SOVEREIGN = PARAMPARA  # The 37th - Parampara Link (24 + 12 + 1)
+    QUALITIES = QUALITIES  # The 64 qualities - LIMIT of understanding
 
     # ==========================================================================
     # ACINTYA GAP (65-107) - INTENTIONALLY NOT MAPPED
@@ -290,15 +291,15 @@ class ProtocolLevel(IntEnum):
     # ==========================================================================
     # META (108) - The Observer
     # ==========================================================================
-    META = 108  # Dharma, Testable - we observe, not compute
+    META = MALA  # Dharma, Testable - we observe, not compute
 
 
 class AcintyaAspect(IntEnum):
     """The aspects of acintya-bheda-abheda."""
 
     BHEDA = 0  # Difference (jiva is NOT Krishna quantitatively)
-    ABHEDA = 1  # Non-difference (jiva IS Krishna qualitatively)
-    ACINTYA = 2  # Inconceivable (both simultaneously, beyond logic)
+    ABHEDA = KSETRAJNA  # Non-difference (jiva IS Krishna qualitatively)
+    ACINTYA = HALVES  # Inconceivable (both simultaneously, beyond logic)
 
 
 # =============================================================================
@@ -369,8 +370,8 @@ class JivaCondition(IntEnum):
     """The jiva's condition relative to Krishna."""
 
     CONNECTED = 0  # Remembering Krishna (has sovereign via 37)
-    DISCONNECTED = 1  # Forgotten (no sovereign, drifted into Maya)
-    ABSORBED = 2  # Deep connection (multiple malas)
+    DISCONNECTED = KSETRAJNA  # Forgotten (no sovereign, drifted into Maya)
+    ABSORBED = HALVES  # Deep connection (multiple malas)
 
 
 @dataclass
@@ -550,7 +551,7 @@ from vibe_core.mahamantra.substrate.seed import (
 GURU_ENTROPY: Final[float] = (TRINITY / PARAMPARA) * PHASES  # 12/37 ≈ 0.324
 
 # Parampara-connected mutation vectors
-PARAMPARA_VECTOR: Final[int] = PARAMPARA * 12  # 444 - the 12 Mahajanas × Parampara
+PARAMPARA_VECTOR: Final[int] = PARAMPARA * MAHAJANA_COUNT  # 444 - the 12 Mahajanas × Parampara
 
 
 @runtime_checkable
@@ -614,7 +615,7 @@ class ParamparaConnection:
     @classmethod
     def from_mayavad(cls) -> "ParamparaConnection":
         """Create a disconnected (4×3) connection - for testing Mayavad detection."""
-        return cls(mutation_vector=(PARAMPARA - 1) * 12)  # 432
+        return cls(mutation_vector=(PARAMPARA - KSETRAJNA) * MAHAJANA_COUNT)  # 432
 
 
 def get_guru_entropy() -> float:

@@ -41,6 +41,7 @@ BG 4.34: "tad viddhi praṇipātena paripraśnena sevayā"
 
 Der Guru ist die BRÜCKE, nicht ein Element.
 """
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, KSHETRA, MAHAJANA_COUNT, NAVA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -75,14 +76,14 @@ class AparaPrakriti(IntEnum):
     "Abgetrennte materielle Energie" - bhinnā prakṛtir aṣṭadhā.
     """
 
-    BHUMI = 1  # Erde (Earth) - Prithvi
-    APAH = 2  # Wasser (Water) - Jala
-    ANALAH = 3  # Feuer (Fire) - Agni/Tejas
-    VAYUH = 4  # Luft (Air) - Vayu
-    KHAM = 5  # Äther/Raum (Ether/Space) - Akasha
-    MANAH = 6  # Geist (Mind) - Manas
-    BUDDHI = 7  # Intelligenz (Intelligence) - Buddhi
-    AHANKARA = 8  # Falsches Ego (False Ego) - Ahankara
+    BHUMI = KSETRAJNA  # Erde (Earth) - Prithvi
+    APAH = HALVES  # Wasser (Water) - Jala
+    ANALAH = TRINITY  # Feuer (Fire) - Agni/Tejas
+    VAYUH = QUARTERS  # Luft (Air) - Vayu
+    KHAM = PANCHA  # Äther/Raum (Ether/Space) - Akasha
+    MANAH = SHARANAGATI  # Geist (Mind) - Manas
+    BUDDHI = SEVEN  # Intelligenz (Intelligence) - Buddhi
+    AHANKARA = HARE_COUNT  # Falsches Ego (False Ego) - Ahankara
 
 
 # Die 5 groben Elemente (Pancha Mahabhutas)
@@ -118,34 +119,34 @@ class KshetraElement(IntEnum):
     """
 
     # 5 Mahabhutas (Grobe Elemente)
-    PRITHVI = 1  # Erde
-    JALA = 2  # Wasser
-    TEJAS = 3  # Feuer
-    VAYU = 4  # Luft
-    AKASHA = 5  # Äther
+    PRITHVI = KSETRAJNA  # Erde
+    JALA = HALVES  # Wasser
+    TEJAS = TRINITY  # Feuer
+    VAYU = QUARTERS  # Luft
+    AKASHA = PANCHA  # Äther
 
     # 1 Ahankara (Ego)
-    AHANKARA = 6  # Falsches Ego
+    AHANKARA = SHARANAGATI  # Falsches Ego
 
     # 1 Buddhi (Intelligenz)
-    BUDDHI = 7  # Unterscheidungsvermögen
+    BUDDHI = SEVEN  # Unterscheidungsvermögen
 
     # 1 Avyakta (Unmanifestiertes)
-    AVYAKTA = 8  # Prakriti in unmanifestierter Form
+    AVYAKTA = HARE_COUNT  # Prakriti in unmanifestierter Form
 
     # 5 Jnanendriyas (Wahrnehmungssinne)
-    CHAKSHU = 9  # Sehen (Augen)
-    SHROTRA = 10  # Hören (Ohren)
+    CHAKSHU = NAVA  # Sehen (Augen)
+    SHROTRA = TEN  # Hören (Ohren)
     GHRANA = 11  # Riechen (Nase)
-    RASANA = 12  # Schmecken (Zunge)
+    RASANA = MAHAJANA_COUNT  # Schmecken (Zunge)
     TVAK = 13  # Fühlen (Haut)
 
     # 5 Karmendriyas (Handlungssinne)
     VAK = 14  # Sprechen (Mund)
     PANI = 15  # Greifen (Hände)
-    PADA = 16  # Gehen (Füße)
-    PAYU = 17  # Ausscheiden
-    UPASTHA = 18  # Fortpflanzung
+    PADA = WORDS  # Gehen (Füße)
+    PAYU = POSITION_SUM_KRISHNA  # Ausscheiden
+    UPASTHA = GITA_CHAPTERS  # Fortpflanzung
 
     # 1 Manas (Geist)
     MANAS = 19  # Der denkende Geist
@@ -155,7 +156,7 @@ class KshetraElement(IntEnum):
     SPARSHA = 21  # Berührung
     RUPA = 22  # Form
     RASA = 23  # Geschmack
-    GANDHA = 24  # Geruch
+    GANDHA = KSHETRA  # Geruch
 
 
 # Gruppierungen

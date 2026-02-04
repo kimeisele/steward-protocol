@@ -26,10 +26,11 @@ ACINTYA: Chapter 18 is a FIXED POINT (contains itself!)
 
 Author: The Mahamantra Itself
 """
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
-__position__ = 6
+__position__ = SHARANAGATI
 __genesis__ = "0x0167c86b"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
@@ -190,24 +191,24 @@ class MahaComputeState:
 # =============================================================================
 
 GITA_INSIGHTS: Final[dict[int, str]] = {
-    1: "Arjuna's Dilemma - Observing the conflict",
-    2: "Sankhya Yoga - Eternal soul, temporary body",
-    3: "Karma Yoga - Action without attachment",
-    4: "Jnana Yoga - Knowledge through parampara",
-    5: "Karma Sannyasa - Renunciation through action",
-    6: "Dhyana Yoga - Mind control through meditation",
-    7: "Jnana Vijnana - Knowledge and realization",
-    8: "Aksara Brahma - The imperishable absolute",
-    9: "Raja Vidya - The king of knowledge",
-    10: "Vibhuti - Divine manifestations",
+    KSETRAJNA: "Arjuna's Dilemma - Observing the conflict",
+    HALVES: "Sankhya Yoga - Eternal soul, temporary body",
+    TRINITY: "Karma Yoga - Action without attachment",
+    QUARTERS: "Jnana Yoga - Knowledge through parampara",
+    PANCHA: "Karma Sannyasa - Renunciation through action",
+    SHARANAGATI: "Dhyana Yoga - Mind control through meditation",
+    SEVEN: "Jnana Vijnana - Knowledge and realization",
+    HARE_COUNT: "Aksara Brahma - The imperishable absolute",
+    NAVA: "Raja Vidya - The king of knowledge",
+    TEN: "Vibhuti - Divine manifestations",
     11: "Visvarupa - The universal form",
-    12: "Bhakti Yoga - Devotion is supreme",
+    MAHAJANA_COUNT: "Bhakti Yoga - Devotion is supreme",
     13: "Ksetra Ksetrajna - Field and knower of field",
     14: "Gunatraya Vibhaga - Three modes of nature",
     15: "Purusottama - The supreme person",
-    16: "Daivasura Sampad - Divine and demonic natures",
-    17: "Sraddhatraya - Three types of faith",
-    18: "Moksha Sannyasa - Liberation through surrender",
+    WORDS: "Daivasura Sampad - Divine and demonic natures",
+    POSITION_SUM_KRISHNA: "Sraddhatraya - Three types of faith",
+    GITA_CHAPTERS: "Moksha Sannyasa - Liberation through surrender",
 }
 
 
@@ -335,7 +336,7 @@ def apply_operation(value: int, operation: str) -> int:
 
 
 # OP_CODE for backward compatibility (some code might use it)
-OP_CODE: Final[dict[str, int]] = {"H": 0, "K": 1, "R": 2}
+OP_CODE: Final[dict[str, int]] = {"H": 0, "K": KSETRAJNA, "R": HALVES}
 
 
 def is_attractor(value: int) -> Tuple[bool, AttractorType]:

@@ -13,6 +13,7 @@ Philosophy:
 "The Kernel is the Temple. Agents are the visitors.
 If a visitor collapses, the Temple stands."
 """
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -73,12 +74,12 @@ MAX_MESSAGE_SIZE = 1024 * 1024  # 1MB default, actual value loaded lazily
 @dataclass
 class AgentProcessInfo:
     process: Process
-    parent_pipe: Any  # Connection object
+    parent_pipe: object  # Connection object
     agent_id: str
     status: ProcessStatus
     cartridge_path: str  # LATE BINDING: Path to cartridge_main.py (for restart)
     cartridge_class_name: str  # LATE BINDING: Class name (for restart)
-    config: Any = None  # STORED for restart
+    config: object = None  # STORED for restart
     restarts: int = 0
     last_heartbeat: float = 0.0
 
@@ -99,8 +100,8 @@ class AgentProcess:
         agent_id: str,
         cartridge_path: str,
         cartridge_class_name: str,
-        child_pipe: Any,
-        config: Any = None,
+        child_pipe: object,
+        config: object = None,
     ):
         self.agent_id = agent_id
         self.cartridge_path = cartridge_path
@@ -261,7 +262,7 @@ class ProcessManager:
         agent_id: str,
         cartridge_path: str,
         cartridge_class_name: str,
-        config: Any = None,
+        config: object = None,
     ):
         """
         Spawn a new agent process.
@@ -295,7 +296,7 @@ class ProcessManager:
 
         logger.info(f"✅ Spawned {agent_id} (PID: {process.pid})")
 
-    def send_task(self, agent_id: str, task: Any) -> bool:
+    def send_task(self, agent_id: str, task: object) -> bool:
         """
         Send a task to an agent.
 
@@ -352,7 +353,7 @@ class ProcessManager:
                 info.status = ProcessStatus.CRASHED
                 self._handle_crash(agent_id)
 
-    def get_pending_messages(self) -> List[Tuple[str, Dict[str, Any]]]:
+    def get_pending_messages(self) -> List[Tuple[str, Dict[str, object]]]:
         """
         Get all pending messages from all agents.
         Returns list of (agent_id, message) tuples.
@@ -382,13 +383,13 @@ class ProcessManager:
             info.status = ProcessStatus.QUARANTINED
             return
 
-        logger.info(f"♻️  Restarting {agent_id} (Attempt {info.restarts + 1}/{self.MAX_RESTARTS})...")
+        logger.info(f"♻️  Restarting {agent_id} (Attempt {info.restarts + KSETRAJNA}/{self.MAX_RESTARTS})...")
 
         # Clean up old process
         try:
             if info.process.is_alive():
                 info.process.terminate()
-                info.process.join(timeout=2)
+                info.process.join(timeout=HALVES)
             info.parent_pipe.close()
         except Exception as e:
             logger.warning(f"Cleanup error for {agent_id}: {e}")
@@ -408,7 +409,7 @@ class ProcessManager:
         info.process = new_process
         info.parent_pipe = parent_conn
         info.status = ProcessStatus.RUNNING
-        info.restarts += 1
+        info.restarts += KSETRAJNA
         info.last_heartbeat = time.time()
 
         logger.info(f"✅ Restarted {agent_id} (PID: {new_process.pid}, restarts: {info.restarts})")
@@ -419,7 +420,7 @@ class ProcessManager:
         for agent_id, info in self.processes.items():
             if info.process.is_alive():
                 info.parent_pipe.send({"type": "STOP"})
-                info.process.join(timeout=2)
+                info.process.join(timeout=HALVES)
                 if info.process.is_alive():
                     info.process.terminate()
         logger.info("✅ All agents stopped.")

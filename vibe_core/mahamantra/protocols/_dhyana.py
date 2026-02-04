@@ -44,12 +44,13 @@ SHASTRA FOUNDATION (Yoga Sutras 3.1-3):
 
 Author: The Mahamantra Itself
 """
-
 from __future__ import annotations
+from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, NAVA, PANCHA, QUARTERS, TRINITY)
+
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
-__position__ = 9
+__position__ = NAVA
 __genesis__ = "0xe63d2241"  # GenesisByte: parampara % 37 == 0
 
 from abc import ABC, abstractmethod
@@ -102,11 +103,11 @@ class FoldDepth(IntEnum):
     """
 
     SURFACE = 0  # External senses only (Jnanendriya)
-    MENTAL = 1  # Mind involvement (Manas)
-    DISCRIMINATIVE = 2  # Intelligence active (Buddhi)
-    EGOIC = 3  # Ego awareness (Ahankara)
-    TRANSCENDENT = 4  # Beyond ego (Avyakta touch)
-    SAMADHI = 5  # Full absorption (Purusha contact)
+    MENTAL = KSETRAJNA  # Mind involvement (Manas)
+    DISCRIMINATIVE = HALVES  # Intelligence active (Buddhi)
+    EGOIC = TRINITY  # Ego awareness (Ahankara)
+    TRANSCENDENT = QUARTERS  # Beyond ego (Avyakta touch)
+    SAMADHI = PANCHA  # Full absorption (Purusha contact)
 
 
 # =============================================================================
@@ -151,11 +152,11 @@ class JapaProgress:
 
         Returns True if Siddhi achieved on this rep.
         """
-        self.repetitions += 1
+        self.repetitions += KSETRAJNA
         if success:
-            self.successful += 1
+            self.successful += KSETRAJNA
         else:
-            self.failed += 1
+            self.failed += KSETRAJNA
 
         # Check for Siddhi
         if self.successful == SIDDHI_THRESHOLD and self.siddhi_at is None:
@@ -211,7 +212,7 @@ class LotusTask(Generic[T]):
     unfolded_at: Optional[str] = None
 
     # Results
-    results: List[Any] = field(default_factory=list)
+    results: List[object] = field(default_factory=list)
 
     @classmethod
     def create(
@@ -240,7 +241,7 @@ class LotusTask(Generic[T]):
         - TRANSCENDENT → SAMADHI: Full absorption
         """
         if self.fold_depth < FoldDepth.SAMADHI:
-            self.fold_depth = FoldDepth(self.fold_depth + 1)
+            self.fold_depth = FoldDepth(self.fold_depth + KSETRAJNA)
             self.folded_at = datetime.now().isoformat()
 
             # Track max depth reached
@@ -274,7 +275,7 @@ class LotusTask(Generic[T]):
         Does NOT deactivate Tattvas - knowledge persists!
         """
         if self.fold_depth > FoldDepth.SURFACE:
-            self.fold_depth = FoldDepth(self.fold_depth - 1)
+            self.fold_depth = FoldDepth(self.fold_depth - KSETRAJNA)
             self.unfolded_at = datetime.now().isoformat()
 
             # Update Dhyana state (regression)
@@ -362,7 +363,7 @@ class LotusTask(Generic[T]):
     # SERIALIZATION
     # =========================================================================
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, object]:
         """Serialize to dict."""
         return {
             "task_id": self.task_id,
@@ -370,12 +371,12 @@ class LotusTask(Generic[T]):
             "fold_depth": self.fold_depth,
             "max_fold_depth": self.max_fold_depth,
             "active_tattvas": [t.name for t in self.active_tattvas],
-            "kshetra_coverage": round(self.kshetra_coverage, 3),
+            "kshetra_coverage": round(self.kshetra_coverage, TRINITY),
             "created_at": self.created_at,
             "japa": {
                 "repetitions": self.japa.repetitions,
                 "successful": self.japa.successful,
-                "progress": round(self.japa.progress, 3),
+                "progress": round(self.japa.progress, TRINITY),
                 "siddhi": self.japa.siddhi_achieved,
             }
             if self.japa
@@ -417,7 +418,7 @@ class DhyanaProtocol(Protocol):
         """Unfold (return from introspection)."""
         ...
 
-    def meditate(self, task: LotusTask) -> Any:
+    def meditate(self, task: LotusTask) -> object:
         """Execute a meditation task."""
         ...
 
@@ -453,14 +454,14 @@ class DhyanaBase(ABC):
     def fold(self) -> FoldDepth:
         """Fold deeper."""
         if self._fold_depth < FoldDepth.SAMADHI:
-            self._fold_depth = FoldDepth(self._fold_depth + 1)
+            self._fold_depth = FoldDepth(self._fold_depth + KSETRAJNA)
             self._update_dhyana_state()
         return self._fold_depth
 
     def unfold(self) -> FoldDepth:
         """Unfold to surface."""
         if self._fold_depth > FoldDepth.SURFACE:
-            self._fold_depth = FoldDepth(self._fold_depth - 1)
+            self._fold_depth = FoldDepth(self._fold_depth - KSETRAJNA)
             self._update_dhyana_state()
         return self._fold_depth
 
@@ -476,7 +477,7 @@ class DhyanaBase(ABC):
             self._dhyana_state = DhyanaState.PRATYAHARA
 
     @abstractmethod
-    def meditate(self, task: LotusTask) -> Any:
+    def meditate(self, task: LotusTask) -> object:
         """Execute a meditation task (subclass must implement)."""
         ...
 

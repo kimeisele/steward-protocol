@@ -1,4 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Tuple, Dict, Optional
+from vibe_core.mahamantra.protocols._seed import (MAHA_QUANTUM)
 from dataclasses import dataclass, field
 
 @runtime_checkable
@@ -11,7 +12,7 @@ class MahaTransformProtocol(Protocol):
         """Apply 16-step transformation."""
         ...
         
-    def find_attractor(self, seed: int, max_iterations: int = 137) -> "AttractorResult":
+    def find_attractor(self, seed: int, max_iterations: int = MAHA_QUANTUM) -> "AttractorResult":
         """Iterate until stable state reached."""
         ...
         

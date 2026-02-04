@@ -1,6 +1,8 @@
+from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "manu"
-__position__ = 7
+from vibe_core.mahamantra.protocols._seed import (SEVEN)
+__position__ = SEVEN
 __genesis__ = "0x00b8cbf8"  # GenesisByte: parampara % 37 == 0
 
 """
@@ -90,7 +92,6 @@ MAHAMANTRA AS LENS:
 PARAMPARA: {vector} (% 37 == 0 -> CONNECTED)
 """
 
-from __future__ import annotations
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "{mahajana}"
