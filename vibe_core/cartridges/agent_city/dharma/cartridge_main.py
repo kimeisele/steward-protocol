@@ -387,8 +387,8 @@ class DharmaCartridge(VibeAgent, OathMixin):
                 context = opus.get_current_context()
                 if context and "karma" in context:
                     karma_score = context["karma"].get("score", 100)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Determine karma level
         if karma_score >= 80:

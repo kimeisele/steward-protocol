@@ -318,8 +318,8 @@ class NarasimhaProtocol:
                                         "description": "Agent attempts to delete/modify Constitution",
                                     }
                                 )
-                except SyntaxError:
-                    pass
+                except SyntaxError as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
             # String-based fallback for natural language
             if any(word in agent_code.lower() for word in ["delete", "remove", "destroy", "modify"]):
                 threats.append(

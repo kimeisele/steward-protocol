@@ -483,7 +483,7 @@ def get_reflection_safe() -> ReflectionProtocol:
         reflection = ServiceRegistry.get(ReflectionProtocol)
         if reflection is not None:
             return reflection
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return NullReflection()

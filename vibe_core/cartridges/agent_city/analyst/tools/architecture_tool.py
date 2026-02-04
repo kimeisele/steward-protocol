@@ -326,8 +326,8 @@ class ArchitectureAnalysisTool(Tool):
                 kernel = orchestrator.get_kernel()
                 if kernel and hasattr(kernel, "ledger"):
                     db_path = kernel.ledger.db_path
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
             # Fallback to default ledger path
             if not db_path:

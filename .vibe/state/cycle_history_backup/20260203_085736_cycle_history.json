@@ -1,0 +1,64 @@
+{
+  "completed": [
+    {
+      "cycle_id": "cb747869",
+      "parent_cycle_id": null,
+      "trace_id": "<MagicMock name='mock.start()' id='139358363390480'>",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "error": "'RealVibeKernel' object has no attribute 'spawn_deferred_agents'",
+        "agents_registered": 30
+      },
+      "timestamp": "2026-01-25T17:49:56.296518"
+    },
+    {
+      "cycle_id": "611f6d59",
+      "parent_cycle_id": null,
+      "trace_id": "1398acd2",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "error": "Cannot operate on a closed database."
+      },
+      "timestamp": "2026-01-25T17:49:56.296530"
+    },
+    {
+      "cycle_id": "f9dc7dc2",
+      "parent_cycle_id": null,
+      "trace_id": "c02351f9",
+      "cycle_name": "boot_sequence",
+      "phase": "recover",
+      "observations_count": 1,
+      "orientations_count": 1,
+      "decisions_count": 0,
+      "actions_count": 0,
+      "errors": {
+        "boot_config_valid": true,
+        "kernel_space_allocated": true,
+        "communication_established": true,
+        "capabilities_discovered": 0,
+        "error": "Cannot operate on a closed database."
+      },
+      "timestamp": "2026-01-25T17:49:56.296536"
+    }
+  ],
+  "errors": [],
+  "last_updated": "2026-01-25T17:49:56.296548"
+}

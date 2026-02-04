@@ -165,8 +165,8 @@ class FloodCommand(NagaCommandBase):
                     "last_pulse": status.get("last_pulse", "N/A"),
                     "sync_status": status.get("sync_status", "SYNCED"),
                 }
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Return default/unavailable status
         return {

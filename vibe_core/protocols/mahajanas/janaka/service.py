@@ -242,8 +242,8 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol, ExecutableMixin):
                 current_reactor = QuantumReactor(initial_inertia=0.5)
                 logger.info("☢️ JANAKA: QuantumReactor loaded as execution primitive")
                 setattr(kernel, "_reactor", current_reactor)
-            except ImportError:
-                pass
+            except ImportError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return current_reactor
 
     def get_akasha_hash(self, kernel: object) -> str:

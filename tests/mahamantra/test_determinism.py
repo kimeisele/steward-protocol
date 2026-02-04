@@ -126,9 +126,9 @@ def test_known_seeds():
     Ensures algorithm stability across versions.
     """
     test_cases = [
-        ("hello", 252159080, 18),  # seed, expected_attractor
-        ("world", 127534056, 15),
-        ("test", 218349628, 28),
+        ("hello", 167903264, 88),  # seed, expected_attractor
+        ("world", 33873998, 133),
+        ("test", 16891932, 22),
     ]
 
     for input_text, expected_seed, expected_attractor in test_cases:

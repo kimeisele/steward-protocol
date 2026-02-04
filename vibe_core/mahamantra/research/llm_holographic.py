@@ -338,8 +338,12 @@ def intent_category_from_text(text: str) -> int:
     Returns: 0-15 (WORDS range)
     """
     # Simple hash to 16 categories
-    text_hash = hash(text.lower().strip())
-    return text_hash % WORDS
+    # P0-FIX: Use deterministic hash instead of Python's randomized hash()
+    import hashlib
+    text_normalized = text.lower().strip()
+    text_bytes = text_normalized.encode('utf-8')
+    text_hash_int = int.from_bytes(hashlib.sha256(text_bytes).digest()[:4], byteorder='big')
+    return text_hash_int % WORDS
 
 
 def get_intent_handler_path(category: int, subcategory: int = 0) -> int:

@@ -137,14 +137,19 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
 
         # === MAHACELL INTEGRATION ===
         # Every interaction must flow through the Sankirtan Chamber
+        # P0-FIX: Changed from fail-open to fail-close for security
+        # Audit trail is MANDATORY - no ghost operations allowed
         try:
             cell = self._cell_wrapper.wrap(command, remaining)
             # Transform cell through Kirtan (metadata update)
             # This doesn't replace execution yet, but ensures spiritual audit trail
             _ = self._cell_wrapper.execute(cell)
         except Exception as e:
-            # Don't block execution if wrapper fails (Mercy)
-            print(f"WARN: Sankirtan Chamber bypassed: {e}")
+            # P0-SECURITY: Fail-close instead of fail-open
+            # If audit fails, execution MUST be blocked
+            print(f"ERROR: Sankirtan Chamber audit failed: {e}")
+            print(f"SECURITY: Execution blocked - audit trail is mandatory")
+            return 1  # Exit with error code
 
         result = cli_auto.execute(command, remaining)
 

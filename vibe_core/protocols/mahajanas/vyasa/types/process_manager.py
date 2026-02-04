@@ -222,8 +222,8 @@ class AgentProcess:
                         "traceback": traceback.format_exc(),
                     }
                 )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
             raise  # Die and let OS clean up
 
 

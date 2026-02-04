@@ -472,8 +472,8 @@ def get_event_bus_safe() -> EventBusProtocol:
         bus = ServiceRegistry.get(EventBusProtocol)
         if bus is not None:
             return bus
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     # Arjuna Pattern: NullEventBus fallback
     return NullEventBus()

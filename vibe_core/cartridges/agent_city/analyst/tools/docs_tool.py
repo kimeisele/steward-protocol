@@ -178,8 +178,8 @@ class DocsAnalysisTool(Tool):
                                 else:
                                     undocumented.append({"type": "function", "name": node.name, "file": rel_path})
 
-                except (SyntaxError, Exception):
-                    pass
+                except (SyntaxError, Exception) as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         # Calculate coverage
         class_coverage = round(documented_classes / total_classes * 100, 1) if total_classes > 0 else 0
@@ -263,8 +263,8 @@ class DocsAnalysisTool(Tool):
                                                 }
                                             )
 
-                except (SyntaxError, Exception):
-                    pass
+                except (SyntaxError, Exception) as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         return {
             "quality_issues": quality_issues[:15],
@@ -302,8 +302,8 @@ class DocsAnalysisTool(Tool):
                     }
                 )
 
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Sort by size
         doc_files.sort(key=lambda x: -x["lines"])

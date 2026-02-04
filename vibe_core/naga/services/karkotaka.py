@@ -436,8 +436,8 @@ class KarkotakaService(NagaBaseService, KarkotakaProtocol):
                     if fingerprint in pem_file.stem:
                         pem_file.unlink()
                         logger.info(f"KARKOTAKA: Removed trusted key {pem_file.name}")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
             logger.info(f"KARKOTAKA: Revoked key {fingerprint}")
             return True

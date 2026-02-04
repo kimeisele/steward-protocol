@@ -62,8 +62,8 @@ def __getattr__(name: str) -> object:
 
         module = importlib.import_module("vibe_core.mahamantra.karma.bhishma.protocol")
         return getattr(module, name)
-    except (ImportError, AttributeError):
-        pass
+    except (ImportError, AttributeError) as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     # ==========================================================================
     # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."

@@ -213,8 +213,8 @@ class SamskaraService(YamarajaBase):
                     if isinstance(node, ast.Name) and node.id == "Any":
                         # Check context - is it in annotation?
                         return False
-            except SyntaxError:
-                pass
+            except SyntaxError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return True
 
     def get_wild_protocols(self) -> List[WildProtocol]:
@@ -384,8 +384,8 @@ class SamskaraService(YamarajaBase):
                                     return Mahajana[name]
                                 except KeyError:
                                     return None
-        except (SyntaxError, OSError):
-            pass
+        except (SyntaxError, OSError) as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return None
 
@@ -424,8 +424,8 @@ class SamskaraService(YamarajaBase):
                 idx = next(i for i, s in enumerate(stages) if s.value == current)
                 if idx < len(stages) - 1:
                     self._wild_protocols[protocol_path]["samskara_stage"] = stages[idx + 1].value
-            except StopIteration:
-                pass
+            except StopIteration as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return True
 
@@ -504,8 +504,8 @@ class SamskaraService(YamarajaBase):
                     self._wild_protocols[protocol_path]["status"] = MigrationStatus.WILD.value
                 self._completed.discard(protocol_path)
                 return True
-            except OSError:
-                pass
+            except OSError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return False
 
@@ -552,8 +552,8 @@ class SamskaraService(YamarajaBase):
                 path = verdict.get("protocol_path", "")
                 if path:
                     self._verdicts[path] = verdict
-        except (json.JSONDecodeError, OSError):
-            pass
+        except (json.JSONDecodeError, OSError) as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
     def get_state(self) -> SamskaraState:
         """Get current state. WATERTIGHT."""

@@ -198,8 +198,8 @@ def cli_chant(
     # Or create a new loop if none exists.
     try:
         asyncio.run(run_client_loop())
-    except KeyboardInterrupt:
-        pass
+    except KeyboardInterrupt as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     if verbose:
         print("-" * 60)
@@ -396,8 +396,8 @@ def cli_resolve(
                 if 0 <= idx < WORDS:
                     pos_name = ALL_GUARDIANS[idx]
                     pos = get_position_from_name(pos_name)
-            except ValueError:
-                pass
+            except ValueError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         if pos is None:
             raise ValueError(f"Unknown mahajana: {name}")

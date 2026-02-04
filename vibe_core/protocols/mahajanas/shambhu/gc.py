@@ -363,8 +363,8 @@ class GarbageCollector:
         if obj.destructor:
             try:
                 obj.destructor()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         self._stats.managed_objects -= 1
         self._stats.managed_bytes -= obj.size_bytes
         self._objects.pop(obj.object_id, None)

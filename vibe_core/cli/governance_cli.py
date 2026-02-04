@@ -522,8 +522,8 @@ Status: {report["governed_count"]}/{report["total_protocols"]} governed | {len(i
                 parts = rel.parts
                 top_dir = parts[0] if len(parts) > 1 else "ROOT"
                 by_dir[top_dir].append(str(rel))
-            except ValueError:
-                pass
+            except ValueError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         if as_json:
             result = {
@@ -721,8 +721,8 @@ OWNER: Final[Mahajana] = Mahajana.{mahajana.name}
                     "by": "governance-cli",
                 },
             )
-        except Exception:
-            pass  # Ledger not available, skip
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
     def cmd_fix_all(self, args: List[str]) -> int:
         """

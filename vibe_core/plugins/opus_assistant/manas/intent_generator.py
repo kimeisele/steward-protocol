@@ -421,8 +421,8 @@ class IntentGenerator:
                     try:
                         count = int(line.split(":")[-1])
                         total_todos += count
-                    except ValueError:
-                        pass
+                    except ValueError as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
             if total_todos > 20:
                 return Intent(

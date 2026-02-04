@@ -697,8 +697,8 @@ class ProtocolBridge:
                 if not potential_guardian.endswith(".py"):
                     try:
                         return Mahajana(potential_guardian)
-                    except ValueError:
-                        pass
+                    except ValueError as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
         # === 2. FOLDER_IS_WIRING - Structural folders ===
         if parts:
@@ -725,10 +725,10 @@ class ProtocolBridge:
                     mahajana_name = match.group(1)
                     try:
                         return Mahajana(mahajana_name)
-                    except ValueError:
-                        pass
-        except Exception:
-            pass
+                    except ValueError as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # === 5. ROOT FALLBACK - Everything belongs to Manu ===
         return FOLDER_OWNERS.get("", Mahajana.MANU)

@@ -467,8 +467,8 @@ class OpusContextService:
             fragment = self.prakriti.ephemeral.get(self.PROMPT_KEY)
             if fragment:
                 return fragment
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Synthesize fresh if not available
         context = self.synthesize()
@@ -490,8 +490,8 @@ class OpusContextService:
                 try:
                     dirty_files = git.dirty_files() if hasattr(git, "dirty_files") else []
                     uncommitted = dirty_files[:10]  # Limit to 10
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             return {
                 "branch": status.get("branch", "unknown"),

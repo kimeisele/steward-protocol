@@ -254,8 +254,8 @@ class GitAnalysisTool(Tool):
                 try:
                     hour = int(line.strip())
                     hour_counts[hour] += 1
-                except ValueError:
-                    pass
+                except ValueError as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         # Categorize hours
         morning = sum(hour_counts.get(h, 0) for h in range(6, 12))

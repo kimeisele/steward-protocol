@@ -132,10 +132,10 @@ class MahaCLIAdapter:
                 if module_info.name.endswith("_cli"):
                     try:
                         importlib.import_module(f"vibe_core.cli.{module_info.name}")
-                    except ImportError:
-                        pass
-        except ImportError:
-            pass
+                    except ImportError as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
+        except ImportError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Compute fingerprint for each registered CLI
         for cli in CLIRegistry.all():
