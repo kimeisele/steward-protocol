@@ -62,24 +62,18 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra.protocols._seed import (
-    KSETRAJNA as KSETRAJNA_COUNT,  # 1  - The knower (Krishna)
-)
-
 # =============================================================================
-# THE 37 FORMULA - From seed.py (THE SSOT)
+# THE SEED - All constants from 7 axioms
 # =============================================================================
-# seed.py = Chaitanya = Position 0 = THE ONE ORIGIN
-# _core.py = Contracts that SERVE the origin, not duplicate it
+# Import from _seed (the REAL source)
 from vibe_core.mahamantra.protocols._seed import (
     KSHETRA as KSETRA_COUNT,  # 24 - Prakriti elements (field)
-)
-from vibe_core.mahamantra.protocols._seed import (
+    KSETRAJNA as KSETRAJNA_COUNT,  # 1  - The knower (Krishna)
     MAHAJANA_COUNT,  # 12 - The guardians
     PARAMPARA,  # 37 - The sacred sum
 )
 
-# Verification (seed.py already asserts this, but we verify import worked)
+# Verification (the 37 formula is eternal)
 assert KSETRA_COUNT + MAHAJANA_COUNT + KSETRAJNA_COUNT == PARAMPARA, "The 37 formula is eternal and unchanging"
 
 

@@ -21,6 +21,14 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Optional, Set, Tuple
 
+from vibe_core.mahamantra.protocols._graph import (
+    EdgeType,
+    GraphEdge,
+    GraphNode,
+    GraphProtocol,
+    NodeType,
+)
+
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
     COSMIC_FRAME,
@@ -137,7 +145,6 @@ class DerivationEdge:
     formula: str  # The derivation formula
 
 
-@dataclass
 class DerivationGraph:
     """
     Complete knowledge graph of Mahamantra constants.
@@ -146,15 +153,21 @@ class DerivationGraph:
     Edges: Derivation relationships
 
     This graph proves the complete derivation chain from 7 axioms.
+
+    IMPLEMENTS: GraphProtocol - NOW ALIVE AT RUNTIME!
     """
 
-    nodes: Dict[str, ConstantNode] = field(default_factory=dict)
-    edges: List[DerivationEdge] = field(default_factory=list)
-
-    def __post_init__(self):
+    def __init__(self):
         """Build the complete graph on initialization."""
+        self.nodes: Dict[str, ConstantNode] = {}
+        self.edges: List[DerivationEdge] = []
+        # Protocol-compatible storage
+        self._graph_nodes: Dict[str, GraphNode] = {}
+        self._graph_edges: List[GraphEdge] = []
+
         self._build_nodes()
         self._build_edges()
+        self._build_protocol_graph()
 
     def _build_nodes(self):
         """Build all constant nodes."""
@@ -647,6 +660,89 @@ class DerivationGraph:
         lines.append("")
         lines.append("═" * 60)
         return "\n".join(lines)
+
+    # =========================================================================
+    # PROTOCOL IMPLEMENTATION - GraphProtocol
+    # =========================================================================
+
+    def _build_protocol_graph(self) -> None:
+        """Convert DerivationGraph nodes/edges to GraphProtocol format."""
+        # Convert ConstantNode → GraphNode
+        for name, const_node in self.nodes.items():
+            # Map category to NodeType
+            if const_node.category == NodeCategory.AXIOM:
+                node_type = NodeType.SOURCE  # Axioms are SOURCE
+            elif const_node.category in (NodeCategory.PRIMARY, NodeCategory.SECONDARY):
+                node_type = NodeType.PROTOCOL  # Derived constants are PROTOCOL level
+            else:
+                node_type = NodeType.PRAKRITI  # Everything else is PRAKRITI
+
+            graph_node = GraphNode(
+                id=name,
+                node_type=node_type,
+                level=0 if const_node.category != NodeCategory.AXIOM else -2,
+            )
+            self._graph_nodes[name] = graph_node
+
+        # Convert DerivationEdge → GraphEdge
+        for deriv_edge in self.edges:
+            graph_edge = GraphEdge(
+                source=deriv_edge.source,
+                target=deriv_edge.target,
+                edge_type=deriv_edge.edge_type,
+                note=deriv_edge.formula,  # Formula as note
+            )
+            self._graph_edges.append(graph_edge)
+
+    def add_node(self, node: GraphNode) -> None:
+        """Add a node to the graph. PROTOCOL METHOD."""
+        self._graph_nodes[node.id] = node
+
+    def add_edge(self, edge: GraphEdge) -> None:
+        """Add an edge to the graph. PROTOCOL METHOD."""
+        self._graph_edges.append(edge)
+
+    def get_node(self, node_id: str) -> Optional[GraphNode]:
+        """Get a node by ID. PROTOCOL METHOD."""
+        return self._graph_nodes.get(node_id)
+
+    def get_lineage(self, node_id: str) -> List[str]:
+        """Trace lineage back to SOURCE (axioms). PROTOCOL METHOD."""
+        lineage = [node_id]
+        current = node_id
+
+        # Trace back through edges
+        for _ in range(100):  # Max depth
+            parent_edge = None
+            for edge in self._graph_edges:
+                if edge.target == current:
+                    parent_edge = edge
+                    break
+
+            if parent_edge is None:
+                break  # Reached axiom
+
+            lineage.append(parent_edge.source)
+            current = parent_edge.source
+
+        return lineage
+
+    def get_children(self, node_id: str, edge_type: Optional[EdgeType] = None) -> List[str]:
+        """Get children/disciples of a node. PROTOCOL METHOD."""
+        children = []
+        for edge in self._graph_edges:
+            if edge.source == node_id:
+                if edge_type is None or edge.edge_type == edge_type:
+                    children.append(edge.target)
+        return children
+
+    def get_parent(self, node_id: str, edge_type: Optional[EdgeType] = None) -> Optional[str]:
+        """Get parent/guru of a node. PROTOCOL METHOD."""
+        for edge in self._graph_edges:
+            if edge.target == node_id:
+                if edge_type is None or edge.edge_type == edge_type:
+                    return edge.source
+        return None
 
 
 # ═══════════════════════════════════════════════════════════════════════════
