@@ -34,7 +34,7 @@ NO EXTERNAL LLM. PURE COMPUTED RESONANCE.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0x8a2b4c6d"
+__genesis__ = "0x5ad7f6c5"
 
 import json
 import os

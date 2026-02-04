@@ -42,7 +42,7 @@ This is not curve-fitting. This is COORDINATES.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Compiler position
 __position__ = 0
-__genesis__ = "0x7a8b9c0d"
+__genesis__ = "0x5ad7f6c5"
 
 from dataclasses import dataclass
 from typing import Final, Tuple, Optional

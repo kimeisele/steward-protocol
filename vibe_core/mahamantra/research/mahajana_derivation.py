@@ -32,7 +32,7 @@ dass sie existieren MUSS aber noch implementiert werden muss.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"  # Analysis position
 __position__ = 6
-__genesis__ = "0x4a9b8c7d"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x25d36ba1"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Final, Tuple

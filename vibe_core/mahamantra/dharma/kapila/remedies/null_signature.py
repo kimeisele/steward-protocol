@@ -25,7 +25,7 @@ DERIVED FROM MAHAMANTRA:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0x3a71c1f8"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x25d36ba1"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Optional, Sequence, Union
 

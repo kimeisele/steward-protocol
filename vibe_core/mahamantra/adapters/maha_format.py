@@ -26,7 +26,7 @@ SSOT ALIGNMENT:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "shuka"
 __position__ = 14
-__genesis__ = "0x7f8e9d0a"
+__genesis__ = "0xed874970"
 
 __all__ = ["MahaFile"]
 
