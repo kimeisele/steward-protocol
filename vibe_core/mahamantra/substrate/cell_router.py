@@ -30,7 +30,7 @@ PROTOCOL:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 0
-__genesis__ = "0x8b7d4c21"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x5ad7f6c5"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from typing import Dict, Final, Iterator, Optional, Tuple, TYPE_CHECKING

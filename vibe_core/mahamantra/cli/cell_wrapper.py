@@ -14,7 +14,7 @@ Pattern:
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "arjuna"
 __position__ = 2
-__genesis__ = "0xc8e2b91a"
+__genesis__ = "0xb9734b29"
 
 import hashlib
 from typing import List, Final

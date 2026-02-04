@@ -18,7 +18,7 @@ ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "gauranga"
 __position__ = 0  # Chaitanya = 0 (The Source of Sankirtan)
-__genesis__ = "0xd7a9e543"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xe79456f2"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from typing import Final, ClassVar, Optional, TypeVar, Generic, Callable

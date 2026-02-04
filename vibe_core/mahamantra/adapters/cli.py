@@ -41,7 +41,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = 6
-__genesis__ = "0x4e8a7c21"
+__genesis__ = "0x25d36ba1"
 
 __all__ = ["MahaCLIAdapter", "CellFingerprint", "AdapterResult"]
 

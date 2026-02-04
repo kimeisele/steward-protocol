@@ -17,7 +17,7 @@ ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
 __position__ = 5
-__genesis__ = "0xb5c3a829"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x001740aa"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from typing import Final, ClassVar, Optional, Dict, Generic, TypeVar, Tuple, Any

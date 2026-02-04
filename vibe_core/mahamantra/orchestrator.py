@@ -15,7 +15,7 @@ ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
 __position__ = 2
-__genesis__ = "0xa2b9f456"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xdd4f22d7"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final, ClassVar, Tuple
 import struct
