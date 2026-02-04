@@ -81,6 +81,11 @@ PURPOSE_MAP: Final[Dict[str, int]] = {
     "creation": get_mahajana_position("brahma"),    # Position 1 - BRAHMA (alias)
     "wake": get_mahajana_position("brahma"),        # Position 1 - BRAHMA (alias)
     # ==========================================================================
+    # JUDGMENT OPERATIONS (Moksha)
+    "judge": get_mahajana_position("yamaraja"),     # Position 15 - YAMARAJA
+    "judgment": get_mahajana_position("yamaraja"),  # Position 15 - YAMARAJA (alias)
+    "audit": get_mahajana_position("yamaraja"),     # Position 15 - YAMARAJA (alias)
+    # ==========================================================================
     # STATE OPERATIONS
     "state_update": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
     "state_read": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
@@ -98,6 +103,9 @@ PURPOSE_MAP: Final[Dict[str, int]] = {
     # VERIFICATION OPERATIONS
     "verify": get_mahajana_position("kapila"),  # Position 6 - TYPE_CHECK
     "type_check": get_mahajana_position("kapila"),  # Position 6 - TYPE_CHECK
+    # MEMORY OPERATIONS (Kapila's Promotion - Phase 3)
+    "remember": get_mahajana_position("kapila"),  # Position 6 - REMEMBER
+    "recall": get_mahajana_position("kapila"),  # Position 6 - RECALL
 }
 
 
@@ -207,49 +215,78 @@ def offer(
     # 1. Wrap content into MahaCell
     cell = wrap_cell(content, purpose)
     
-    # 2. Spawn Reactor (The Engine)
-    # Local import to avoid circular dependency
-    from vibe_core.mahamantra.reactor.shadow import ShadowReactor
-    # Force Lagna=0 to ensures 1:1 mapping between Intent and Position (No Orbital Drift for Bridge)
-    reactor = ShadowReactor(auto_discover=True, forced_lagna=0)
+    # PERSISTENT REACTOR FLOW (Arjuna Pattern)
+    from vibe_core.mahamantra.reactor.loop import get_loop
     
-    # GRANT SANKIRTAN MERCY (Authorize Bridge Execution)
-    # The Bridge is the Gateway, so it provides the initial Shakti.
-    reactor._sankirtan_shakti = 108.0
+    # 1. Get the Loop and Mailbox
+    loop, mailbox = get_loop()
     
-    # 3. Inject Cell (The Soul)
-    reactor.set_maha_cell(cell)
-    
-    # 4. Tick Reactor (The Pulse)
-    # Determine tick state manually for Phase 1 control
-    tick_state = {
-        "tick": position,  # Simple mapping for now
+    # Prepare routing metadata for the result
+    # Prepare routing metadata for the result
+    final_routing = {
         "position": position,
+        "mahajana": mahajana,
         "quarter": quarter,
-        "guardian": mahajana,
-        "word": declaration["word"],
-        "opcode": None,
     }
     
-    # Run the tick - triggers on_bhoga() in the listener
-    final_state = reactor.tick(tick_state)
-    
-    # 5. Extract Result (Phase 1 Bridge)
-    execution_result = final_state.get("execution_result")
-    
-    # SUCCESS: Return routing info + execution result
-    return OfferResult(
-        success=True,
-        position=position,
-        mahajana=mahajana,
-        quarter=quarter,
-        purpose=purpose,
-        actor=actor,
-        genesis=declaration["genesis"],
-        word=declaration["word"],
-        error=final_state.get("dissonance_report"),
-        execution_result=execution_result,
-    )
+    # 2. Submit Work (Async)
+    # We pass the target position from the Router so the Reactor can "teleport" there.
+    try:
+        tracking_id = loop.submit(cell, purpose, target_position=position)
+        
+        # 3. Wait for Result (Sync)
+        # The Mailbox bridges the gap between the living loop and the waiting caller.
+        result_data = mailbox.collect(tracking_id, timeout=10.0) # 10s timeout
+        
+        # 4. Unpack Result
+        if not result_data["success"]:
+            return OfferResult(
+                success=False,
+                position=position,
+                mahajana=mahajana,
+                quarter=quarter,
+                purpose=purpose,
+                error=result_data["error"] or "Unknown Reactor Error",
+                execution_result=None,
+                intent_id=None, # Clean up OfferResult signature
+            )
+            
+        execution_result = result_data["execution_result"]
+        error = result_data["error"]
+        
+        return OfferResult(
+            success=True,
+            position=position,
+            mahajana=mahajana,
+            quarter=quarter,
+            purpose=purpose,
+            error=error,
+            execution_result=execution_result,
+            intent_id=None,
+        )
+
+    except TimeoutError:
+        return OfferResult(
+            success=False,
+            position=position,
+            mahajana=mahajana,
+            quarter=quarter,
+            purpose=purpose,
+            error="Reactor Timeout (MahaMailbox expired)",
+            execution_result=None,
+            intent_id=None,
+        )
+    except Exception as e:
+        return OfferResult(
+            success=False,
+            position=position,
+            mahajana=mahajana,
+            quarter=quarter,
+            purpose=purpose,
+            error=f"Bridge/Loop Error: {str(e)}",
+            execution_result=None,
+            intent_id=None,
+        )
 
 
 # =============================================================================
@@ -290,7 +327,7 @@ def wrap_cell(
     # Map quarter → PayloadType (GENESIS/DHARMA/KARMA/MOKSHA)
     quarter_to_type = {
         "genesis": PayloadType.ARJUNA_VISHADA,  # Ch.1 - Raw input
-        "dharma": PayloadType.JNANA_VIJNANA,    # Ch.7 - Typed/validated
+        "dharma": PayloadType.JNANA_VIJNANA,    # Ch.7 - Typed/validated (Kapila Memory)
         "karma": PayloadType.VIBHUTI,           # Ch.10 - Execution
         "moksha": PayloadType.MOKSA_SANNYASA,   # Ch.18 - Output
     }
