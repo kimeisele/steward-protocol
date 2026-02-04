@@ -313,11 +313,19 @@ KRISHNA_IS: Final[bool] = True  # Always present
 
 
 class HolyName(IntEnum):
-    """Die drei Namen - Basis der Realität."""
+    """
+    Die drei Namen + Maya - Basis der Realität.
 
-    HARE = 0  # Shakti (Energie/Ressourcen)
-    KRISHNA = 1  # Source (Identität/Kern)
-    RAMA = 2  # Ananda (Stabilität/Sicherheit)
+    SSOT: This is THE definition. byte.py imports from here.
+
+    The 3 pure names (HARE, KRISHNA, RAMA) are the Mahamantra.
+    VOID (Maya) is needed for binary encoding (2 bits = 4 values).
+    """
+
+    HARE = 0  # 00 - Shakti (Energie/Ressourcen)
+    KRISHNA = 1  # 01 - Source (Identität/Kern)
+    RAMA = 2  # 10 - Ananda (Stabilität/Sicherheit)
+    VOID = 3  # 11 - Maya/Error (not in Mahamantra, but needed for binary)
 
 
 # DAS MAHAMANTRA - literally

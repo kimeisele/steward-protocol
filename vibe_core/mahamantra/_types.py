@@ -31,15 +31,37 @@ if TYPE_CHECKING:
 # =============================================================================
 
 
-class TickState(TypedDict):
-    """Return type for tick() - WATERTIGHT."""
+class TickState(TypedDict, total=False):
+    """
+    Return type for tick() - WATERTIGHT.
 
+    SSOT: This is THE definition. All other files import from here.
+
+    Uses total=False because different contexts need different fields.
+    Core fields (tick, position, quarter, word) are always present.
+    Extended fields (mala, mantra, lila, cycle, etc.) are context-dependent.
+    """
+
+    # Core fields (always present)
     tick: int
     position: int
     quarter: str
-    guardian: str
     word: str
-    opcode: Optional[int]
+
+    # Guardian/routing fields
+    guardian: str
+    opcode: int
+
+    # KALA (Time) - extended fields
+    mala: int
+    mantra: int
+    lila: int
+
+    # Venu-specific fields
+    cycle: int  # Which cycle (tick // 16)
+    prana: int  # Which Prana within Mala (tick // 16 % 108)
+    is_downbeat: bool  # position == 0 (start of cycle)
+    is_mala_complete: bool  # tick % 1728 == 0 and tick > 0
 
 
 class RouteResult(TypedDict):
