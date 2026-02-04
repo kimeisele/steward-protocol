@@ -11,6 +11,8 @@ __mahajana__ = "prahlada" # Memory/Router
 __position__ = 9
 __genesis__ = "0xc4ae098d"
 
+__all__ = ["RamaPhoneticRouter"]
+
 from typing import Optional
 
 from vibe_core.protocols.substrate.resonance import PhoneticClass, PHONETIC_MAP
