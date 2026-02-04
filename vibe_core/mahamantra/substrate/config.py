@@ -571,3 +571,16 @@ def reset_config() -> None:
 def set_config(key: str, value: object) -> bool:
     """Set a config value by key (convenience wrapper)."""
     return get_config().set(key, value)
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    "PhoenixConfig",
+    "SectionMeta",
+    "get_config",
+    "reset_config",
+    "set_config",
+]
