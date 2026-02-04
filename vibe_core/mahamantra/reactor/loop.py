@@ -117,6 +117,8 @@ class ReactorLoop(threading.Thread):
         self._stop_event = threading.Event()
         self._idle_ticks = 0
         self._bus: Optional[Any] = None # Narada (Initialized in run)
+        self._dojo: Optional[Any] = None # Dojo (Initialized in run)
+        self._ready_event = threading.Event()
         
     def attach_mailbox(self, mailbox: MahaMailbox):
         """Connect the loop to a mailbox."""
@@ -134,8 +136,14 @@ class ReactorLoop(threading.Thread):
         request = LoopRequest(ticket, maha_cell, purpose, target_position)
         self._queue.put(request)
         return ticket
+        
+    def wait_until_ready(self, timeout: float = 5.0) -> bool:
+        """Wait for the reactor loop to fully initialize."""
+        if self._running:
+            return True
+        return self._ready_event.wait(timeout)
 
-    def publish(self, event_type: str, agent_id: str, message: str, details: Optional[Dict] = None) -> str:
+    def publish(self, event_type: str, agent_id: str, message: str, details: Optional[Dict] = None, task_id: Optional[str] = None) -> str:
         """
         Broadcasting Intent (Resonance Routing).
         Delegates to Narada (EventBus).
@@ -143,7 +151,7 @@ class ReactorLoop(threading.Thread):
         if self._bus:
             # Import expected EventType if needed, or use string
             # For now passing string is fine as EventBus handles it
-            return self._bus.emit_sync(event_type, agent_id, message, details)
+            return self._bus.emit_sync(event_type, agent_id, message, details, task_id)
         else:
             logger.warning("ReactorLoop: Attempted to publish but Narada sleeps.")
             return ""
@@ -158,9 +166,11 @@ class ReactorLoop(threading.Thread):
         # 1. Initialize Reactor (First Birth)
         self._init_memory()  # NEW: Awaken Memory (Phase 3)
         self._init_bus()     # NEW: Wake Narada (Phase 4)
+        self._init_dojo()    # NEW: Open Dojo (Phase 5)
         self._init_reactor()
         
         self._running = True
+        self._ready_event.set() # Signal readiness
         
         while not self._stop_event.is_set():
             try:
@@ -243,6 +253,64 @@ class ReactorLoop(threading.Thread):
             logger.info("ReactorLoop: Narada (EventBus) awakened.")
         except Exception as e:
             logger.error(f"ReactorLoop: Failed to init EventBus: {e}")
+            
+        # RESONANCE SUBSCRIPTIONS (The Choir)
+        # We manually wire Mahajanas to Narada here.
+        # In a perfect world, they auto-subscribe on import.
+        if self._bus:
+            try:
+                # 1. Self-Subscription (Closing the Loop)
+                self._bus.subscribe(self.on_completion, ["COMPLETED"])
+                
+                # 2. Mahajanas (Kapila)
+                import vibe_core.protocols.mahajanas.kapila as kapila_mod
+                if hasattr(kapila_mod, "on_event"):
+                    # Subscribe to Memory Vibrations
+                    self._bus.subscribe(kapila_mod.on_event, ["REMEMBER", "RECALL"])
+                    logger.info("ReactorLoop: Kapila subscribed to REMEMBER/RECALL.")
+            except Exception as e:
+                logger.error(f"ReactorLoop: Failed to subscribe components: {e}")
+
+    def on_completion(self, event):
+        """
+        Handle COMPLETED events (Resonance Return).
+        Resolve Mailbox tickets if applicable.
+        """
+        if not self._mailbox or not event.task_id:
+            return
+            
+        # Extract result
+        # The Kapila protocol puts result in details["result"]
+        # Or generally in details
+        result_data = event.details
+        
+        # We need to structure it as the Bridge expects:
+        # { "success": bool, "execution_result": ..., "error": ... }
+        # If the event implies success (it's COMPLETED), we assume success unless ERROR event (which we don't catch yet).
+        # Improving Protocol: catch ERROR events too?
+        
+        # For now, construct a success result
+        final_result = {
+            "success": True,
+            "execution_result": result_data.get("result"),
+            "error": None
+        }
+        
+        self._mailbox.deposit(event.task_id, final_result)
+
+    def _init_dojo(self):
+        """Initialize the Dojo (Legacy Training Ground)."""
+        try:
+            # Import lazily to avoid heavy startup if not needed
+            from vibe_core.plugins.opus_assistant.manas.dojo.runner import DojoRunner
+            from pathlib import Path
+            # Use default workspace or specific dojo path?
+            # Assuming current working dir or derived from env
+            workspace = Path(".") 
+            self._dojo = DojoRunner(workspace)
+            logger.info("ReactorLoop: DojoRunner initialized for Meditation.")
+        except Exception as e:
+            logger.error(f"ReactorLoop: Failed to init Dojo: {e}")
 
     def _meditate(self):
         """
@@ -280,6 +348,11 @@ class ReactorLoop(threading.Thread):
                     # Periodic Log (every 108 chants = ~10s)
                     if self._idle_ticks % 1080 == 0:
                          logger.debug(f"ReactorLoop: Meditating... (Cycle: {self._reactor.cycle_count}, Pos: {self._reactor.position})")
+                
+                    # DOJO TICK (Legacy Mounting)
+                    # "Practice even when no one is watching."
+                    if self._dojo and self._idle_ticks % 5 == 0: # Every 5 ticks (~500ms)
+                        self._dojo.meditate_tick()
                          
                 except Exception as e:
                     logger.warning(f"ReactorLoop: Meditation stumbled: {e}")
