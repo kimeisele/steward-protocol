@@ -198,14 +198,17 @@ class BrokenGenesisRemedy(CSTRemedy):
         Inline genesis computation (fallback if sankirtan import fails).
 
         Replicates compute_genesis_hash() logic.
+
+        YOGA MAYA: Uses only mahajana + position (NO file_path!)
+        This makes Genesis HOLOGRAPHIC - same archetype → same hash ALWAYS.
         """
         import hashlib
 
         if self._mahajana is None or self._position is None:
             return None
 
-        # Create deterministic hash from file identity
-        identity = f"{self._mahajana}:{self._position}:{self._file_path}"
+        # YOGA MAYA: Pure archetype identity (NO FILE PATH!)
+        identity = f"{self._mahajana}:{self._position}"
         raw_hash = hashlib.sha256(identity.encode()).hexdigest()[:8]
 
         # Adjust to be divisible by 37

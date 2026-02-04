@@ -9,7 +9,9 @@ This is the bridge between the Core (Protocol) and the Substrate (Rama Grid).
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada" # Memory/Router
 __position__ = 9
-__genesis__ = "0xc4ae098d"
+__genesis__ = "0xf6cf0c05"
+
+__all__ = ["RamaPhoneticRouter"]
 
 from typing import Optional
 

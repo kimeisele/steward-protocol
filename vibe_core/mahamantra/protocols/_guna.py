@@ -10,7 +10,8 @@ O Arjuna, become transcendental to these three modes."
 This protocol defines the QUALITIES (Gunas) of every entity.
 Derived from the 3 Holy Names, but applied to Matter (Prakriti).
 
-LOCATION: vibe_core.mahamantra.protocols._guna (THE LAW)
+SSOT: vibe_core.mahamantra.substrate.guna
+This file re-exports for protocol-layer access.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -18,22 +19,10 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x8a89fdb5"  # GenesisByte: parampara % 37 == 0
 
-from enum import IntEnum, unique
-from typing import Final, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
-
-@unique
-class Guna(IntEnum):
-    """
-    The 3 Modes of Material Nature.
-    """
-
-    SATTVA = 1  # Goodness, Knowledge, Maintenance, Purity
-    RAJAS = 2  # Passion, Creation, Action, Motion
-    TAMAS = 3  # Ignorance, Destruction, Inertia, Storage
-
-    # Transcendental (Not material)
-    VISHUDDHA_SATTVA = 4  # Pure Goodness (The Holy Name)
+# SSOT: Re-export from substrate
+from vibe_core.mahamantra.substrate.guna import Guna, VISHUDDHA_SATTVA
 
 
 @runtime_checkable
@@ -55,4 +44,5 @@ class GunaAware(Protocol):
 __all__ = [
     "Guna",
     "GunaAware",
+    "VISHUDDHA_SATTVA",
 ]

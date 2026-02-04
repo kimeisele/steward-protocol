@@ -110,21 +110,22 @@ def get_fixed_points() -> Tuple[int, ...]:
     return tuple(spectrum["fixed_points"])
 
 
-# For backward compatibility - these are computed on first import
-# After first access, _computed_spectrum is cached
-ATTRACTOR_CYCLE: Tuple[int, ...] = ()  # Placeholder, computed below
-ALL_ATTRACTORS: Tuple[int, ...] = ()  # Placeholder, computed below
+# For backward compatibility - DON'T compute at module load (circular import!)
+# These will be empty tuples until explicitly computed
+ATTRACTOR_CYCLE: Tuple[int, ...] = ()
+ALL_ATTRACTORS: Tuple[int, ...] = ()
 
 
-def _init_attractors() -> None:
-    """Initialize attractors via computation. Called at module load."""
+def _init_attractors_lazy() -> None:
+    """
+    Initialize attractors via computation.
+    Call this AFTER all modules are loaded to avoid circular imports.
+    """
     global ATTRACTOR_CYCLE, ALL_ATTRACTORS
-    ATTRACTOR_CYCLE = get_cycle_attractors()
-    ALL_ATTRACTORS = get_all_attractors()
-
-
-# Compute on module load (lazy via _compute_spectrum cache)
-_init_attractors()
+    if not ATTRACTOR_CYCLE:  # Only compute once
+        ATTRACTOR_CYCLE = get_cycle_attractors()
+    if not ALL_ATTRACTORS:
+        ALL_ATTRACTORS = get_all_attractors()
 
 
 class AttractorType(Enum):

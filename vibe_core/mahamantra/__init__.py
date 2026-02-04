@@ -309,6 +309,15 @@ def __getattr__(name: str):
 
         return PositionRegistry
 
+    # === FRACTAL DISCOVERY (Folder = Existence = Wired) ===
+    # If not a legacy symbol, try folder-based discovery
+    from vibe_core.mahamantra.substrate.wiring import fractal_getattr
+    _fractal = fractal_getattr(__file__)
+    try:
+        return _fractal(name)
+    except AttributeError:
+        pass
+
     raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute '{name}'")
 
 

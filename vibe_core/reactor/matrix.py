@@ -65,14 +65,22 @@ class Sthana(IntEnum):
     ANUNASIKA = 4  # Nasal - Resonant, continuous
 
 
-class Guna(IntEnum):
+class PhoneticGuna(IntEnum):
     """
-    The 3 Modes of Nature - Quality of action.
+    Phonetic Quality Modes - NOT the same as BG 14 Gunas!
+
+    This is PHONETIC physics - energy levels in sound production.
+    For BG 14 Gunas (SATTVA=0, RAJAS=1, TAMAS=2), use:
+        from vibe_core.mahamantra.substrate.guna import Guna
     """
 
-    TAMAS = -1  # Inertia, storage, read
-    SATTVA = 0  # Balance, observe, maintain
-    RAJAS = 1  # Activity, execute, transform
+    TAMAS = -1  # Inertia, storage, read (phonetic: minimal energy)
+    SATTVA = 0  # Balance, observe, maintain (phonetic: neutral)
+    RAJAS = 1  # Activity, execute, transform (phonetic: active energy)
+
+
+# Backwards compatibility alias (DEPRECATED - use PhoneticGuna)
+Guna = PhoneticGuna
 
 
 # =============================================================================

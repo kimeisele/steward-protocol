@@ -134,23 +134,8 @@ assert VARNAMALA_TOTAL == POSITION_SUM_KRISHNA + AKSARA_COUNT, "49 = 17 + 32"
 # =============================================================================
 
 
-class ArticulationPoint(IntEnum):
-    """Where in the mouth the sound originates (5 points = PANCHA)."""
-
-    KANTHA = 0  # Guttural (throat)
-    TALU = 1  # Palatal (palate)
-    MURDHA = 2  # Retroflex (roof)
-    DANTA = 3  # Dental (teeth)
-    OSHTHA = 4  # Labial (lips)
-
-
-class VoicingType(IntEnum):
-    """Voicing characteristics (4 types = QUARTERS)."""
-
-    UNVOICED = 0  # ka, ca, ṭa, ta, pa
-    UNVOICED_ASPIRATED = 1  # kha, cha, ṭha, tha, pha
-    VOICED = 2  # ga, ja, ḍa, da, ba
-    VOICED_ASPIRATED = 3  # gha, jha, ḍha, dha, bha
+# ArticulationPoint and VoicingType imported from phonetics/shabda.py (SSOT)
+from vibe_core.mahamantra.substrate.phonetics.shabda import ArticulationPoint, VoicingType
 
 
 @dataclass(frozen=True)

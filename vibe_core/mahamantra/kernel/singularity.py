@@ -54,19 +54,8 @@ from typing import Callable, Iterator, List, Optional, Union, Type, Dict, TYPE_C
 # =============================================================================
 
 
-class TickState(TypedDict):
-    """Return type for tick() - WATERTIGHT."""
-
-    tick: int
-    position: int
-    quarter: str
-    guardian: str
-    word: str
-    opcode: Optional[int]
-    # KALA (Time)
-    mala: int
-    mantra: int
-    lila: int
+# TickState imported from _types.py (SSOT)
+from vibe_core.mahamantra._types import TickState
 
 
 # VEDA-4 PROTOCOL - Elegant Python Dunder Mapping

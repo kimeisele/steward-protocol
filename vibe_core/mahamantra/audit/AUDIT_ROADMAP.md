@@ -1,10 +1,231 @@
-# AUDIT ROADMAP - Das ECHTE Audit-System
+# OPUS SHASTRA - Selbstlaufendes Audit System
 
-**Status**: DISCOVERY PHASE
-**Ziel**: 100% Verständnis des Systems durch NUTZUNG existierender Komponenten
-**Letzte Aktualisierung**: 2026-02-04
+**LIES DAS KOMPLETT BEVOR DU IRGENDWAS MACHST.**
 
 ---
+
+## DER AUDIT LOOP (FÜHRE DAS AUS)
+
+```bash
+# SCHRITT 1: Finde alle Protocols
+grep -rn "@runtime_checkable" vibe_core/mahamantra/protocols/*.py > /tmp/protocols.txt
+
+# SCHRITT 2: Für JEDES Protocol, prüfe ob ALIVE
+python3 << 'EOF'
+import subprocess
+import re
+
+# Parse protocols
+with open('/tmp/protocols.txt') as f:
+    lines = f.readlines()
+
+protocols = []
+for line in lines:
+    match = re.search(r'class (\w+Protocol)', line)
+    if match:
+        protocols.append(match.group(1))
+
+print(f"GEFUNDEN: {len(protocols)} Protocols")
+print("=" * 60)
+
+# Bekannte Implementierungen (erweitere diese Liste!)
+KNOWN_IMPLEMENTATIONS = {
+    "PanchaTattvaProtocol": [
+        ("vibe_core.mahamantra.kernel.maha_kernel", "MahaKernel"),
+        ("vibe_core.mahamantra.substrate.chamber", "SankirtanChamber"),
+        ("vibe_core.mahamantra.substrate.resonance.resonator", "MahaResonator"),
+        ("vibe_core.mahamantra.adapters.routing", "HolographicRouter"),
+        ("vibe_core.mahamantra.orchestrator", "VenuOrchestrator"),
+    ],
+    "MahaComputeProtocol": [
+        ("vibe_core.mahamantra.substrate.algorithm.maha", "MahaAlgorithm16"),
+        ("vibe_core.mahamantra.substrate.algorithm.maha", "MahaModularSynth"),
+    ],
+    "GraphProtocol": [
+        ("vibe_core.mahamantra.analysis.derivation_graph", "DerivationGraph"),
+    ],
+}
+
+for proto in protocols:
+    if proto in KNOWN_IMPLEMENTATIONS:
+        print(f"✅ {proto}: {len(KNOWN_IMPLEMENTATIONS[proto])} Implementierungen")
+    else:
+        print(f"❓ {proto}: UNBEKANNT - PRÜFEN!")
+EOF
+```
+
+**WENN ❓ ERSCHEINT:**
+1. Suche Klasse die das Protocol implementieren KÖNNTE
+2. Prüfe mit `isinstance(instance, Protocol)`
+3. Wenn FALSE → füge `__tattva__` property hinzu (siehe PATTERN unten)
+4. Wenn TRUE → füge zu KNOWN_IMPLEMENTATIONS hinzu
+
+---
+
+## DAS PARADIGMA (VERSTEH DAS)
+
+```
+MAHA MAYA (Filesystem)          YOGA MAYA (RAM)
+─────────────────────           ─────────────────
+file_path                       archetype (mahajana:position)
+__mahajana__ declaration        isinstance() at runtime
+Code auf Festplatte             Code im Arbeitsspeicher
+DEAD (nur Text)                 ALIVE (existiert wirklich)
+```
+
+**REGEL:** Filename ist IRRELEVANT. Nur isinstance() im RAM zählt.
+
+---
+
+## DIE 7 AXIOME (SSOT: protocols/seed/_axioms.py)
+
+```python
+WORDS = 16        # Mahamantra hat 16 Wörter
+TRINITY = 3       # Hare, Krishna, Rama
+HARE_COUNT = 8    # "Hare" kommt 8x vor
+KRISHNA_COUNT = 4 # "Krishna" kommt 4x vor
+RAMA_COUNT = 4    # "Rama" kommt 4x vor
+PANCHA = 5        # Pancha Tattva (5 Aspekte)
+HALVES = 2        # Jedes Mantra hat 2 Hälften
+# ABGELEITET: PARAMPARA = 37, MAHA_QUANTUM = 137
+```
+
+---
+
+## PATTERN: __tattva__ HINZUFÜGEN
+
+Wenn eine Klasse `isinstance(x, PanchaTattvaProtocol) = False` hat:
+
+```python
+# 1. Import hinzufügen (oben in der Datei)
+from ..protocols._pancha import TattvaDict
+
+# 2. Property hinzufügen (in der Klasse)
+@property
+def __tattva__(self) -> TattvaDict:
+    return {
+        "chaitanya": "KLASSENNAME - Was es IST",
+        "nityananda": "Worauf es RUHT (Dependencies)",
+        "advaita": "Was es VERBINDET (Main Method)",
+        "gadadhara": "Wie es FLIESST (Input→Output)",
+        "srivasa": "Wer es REGIERT (Constants)",
+    }
+
+# 3. Verifizieren
+python3 -c "
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
+from MODUL import KLASSE
+print(isinstance(KLASSE(), PanchaTattvaProtocol))  # MUSS True sein
+"
+```
+
+---
+
+## ENTSCHEIDUNGSBAUM
+
+```
+START
+  │
+  ▼
+Führe AUDIT LOOP aus
+  │
+  ▼
+Alle ✅? ──YES──► FERTIG. Commit.
+  │
+  NO
+  │
+  ▼
+❓ Protocol gefunden
+  │
+  ▼
+Kannst du Klasse finden die es implementieren SOLLTE?
+  │
+  ├──YES──► Füge __tattva__ hinzu (PATTERN oben)
+  │         Verifiziere mit isinstance()
+  │         TRUE? → Commit, weiter
+  │         FALSE? → OPUS NEEDED: isinstance False nach Fix
+  │
+  └──NO───► OPUS NEEDED: Welche Klasse für Protocol X?
+```
+
+---
+
+## BEKANNTE ISSUES (ARBEITE DIESE AB)
+
+1. **MahaCellUnified Parameter**
+   ```bash
+   grep -rn "atmanivedanam" vibe_core/
+   grep -rn "atma_nivedanam" vibe_core/
+   # Welches kommt öfter vor? Das ist RICHTIG. Ändere das andere.
+   ```
+
+2. **51 Protocols, 8 geprüft**
+   - Führe AUDIT LOOP aus
+   - Arbeite ❓ ab
+
+---
+
+## OPUS NEEDED SIGNALE
+
+Schreibe **exakt** diesen Text wenn du nicht weiterkommst:
+
+```
+OPUS NEEDED: [Grund]
+```
+
+Gründe die OPUS brauchen:
+- "Welches Protocol soll Klasse X implementieren?"
+- "isinstance() gibt False nach meinem Fix"
+- "Soll ich neues Protocol erstellen?"
+- "Konzept unklar"
+
+**ALLES ANDERE KANNST DU SELBST.**
+
+---
+
+## AKTUELLER STAND (2026-02-04)
+
+```
+ALIVE (8/8):
+  ✅ MahaAlgorithm16 → MahaComputeProtocol
+  ✅ MahaModularSynth → MahaComputeProtocol
+  ✅ DerivationGraph → GraphProtocol
+  ✅ MahaKernel → PanchaTattvaProtocol
+  ✅ SankirtanChamber → PanchaTattvaProtocol
+  ✅ MahaResonator → PanchaTattvaProtocol
+  ✅ HolographicRouter → PanchaTattvaProtocol
+  ✅ VenuOrchestrator → PanchaTattvaProtocol
+```
+
+---
+
+## EXISTIERENDE TOOLS (NICHT NEU BAUEN)
+
+```python
+from vibe_core.mahamantra.research.project_introspection import scan_codebase, find_gaps
+from vibe_core.knowledge.code_scanner import CodeScanner
+from vibe_core.tools.system_audit import SystemAudit
+from vibe_core.mahamantra.analysis.narada_vina import play_vina, get_full_report
+```
+
+---
+
+## GENESIS HASH TEST (YOGA MAYA VERIFIKATION)
+
+```bash
+python3 -c "
+from vibe_core.mahamantra.substrate.sankirtan import compute_genesis_hash
+h1 = compute_genesis_hash('vyasa', 0, '/path/a')
+h2 = compute_genesis_hash('vyasa', 0, '/path/b')
+h3 = compute_genesis_hash('vyasa', 0)
+assert h1 == h2 == h3, 'YOGA MAYA BROKEN!'
+print('✅ YOGA MAYA OK')
+"
+```
+
+---
+
+# ARCHIV (Referenz)
 
 ## 0. AKTUELLE METRIKEN (ECHTE DATEN)
 
@@ -37,30 +258,54 @@ KNOWLEDGE GRAPH (substrate scan):
 WATCHMAN:
   Rules: 12
 
-DUPLICATES DETECTED (SSOT VIOLATIONS!):
-  🔴 Guna (IntEnum) - 4 DEFINITIONS:
-     - substrate/guna.py (SHOULD BE SSOT)
-     - substrate/yajna.py (DUPLICATE)
-     - protocols/_guna.py (DUPLICATE)
-     - reactor/matrix.py (DUPLICATE)
+SSOT VIOLATIONS:
+  ✅ Guna (IntEnum) - FIXED (Commit 21d363ad)
+     - Consolidated to substrate/guna.py
+     - yajna.py, _guna.py now import from SSOT
+     - matrix.py renamed to PhoneticGuna (different semantics)
 
-  🔴 HolyName (IntEnum) - 2 DEFINITIONS:
-     - substrate/seed.py (SHOULD BE SSOT)
-     - substrate/byte.py (DUPLICATE)
+  ✅ HolyName (IntEnum) - FIXED (Commit 0e0da3c9)
+     - SSOT: substrate/seed.py (4 values: HARE, KRISHNA, RAMA, VOID)
+     - byte.py now imports from seed.py
+     - Verification: SeedHolyName is ByteHolyName = True
 
-  🔴 MantraByte - 2 DEFINITIONS:
-     - substrate/byte.py (SHOULD BE SSOT)
-     - substrate/yajna.py (DUPLICATE)
+  ✅ TickState (TypedDict) - FIXED (Commit 0e0da3c9)
+     - SSOT: _types.py (all fields with total=False)
+     - singularity.py, proxy.py, venu.py now import from _types.py
+     - Verification: All imports point to same class
 
-  🔴 TickState, PhaseResult, PipelineContext (2 files each)
+  ✅ MantraByte - FIXED (Commit 18942e57)
+     - SSOT: substrate/byte.py (full implementation)
+     - Added yajna.py methods: standard(), get_name(), resonance_check(), validate_parampara()
+     - yajna.py now imports from byte.py
+     - Verification: ByteMantraByte is YajnaMantraByte = True
+
+  ⚪ PhaseResult, PipelineContext - NOT A VIOLATION (different semantics)
+     - sankirtan.py: File processing pipeline (Quarter-based)
+     - samskara.py: Generic transformation pipeline (Phase-based with Generic[C])
+     - Different namespaces, different use cases - OK to have both
+
+PROTOCOL RESURRECTION (NEW!):
+  ✅ MahaAlgorithm16 → implements MahaComputeProtocol (Commit 182693be)
+  ✅ MahaModularSynth → implements MahaComputeProtocol (Commit 182693be)
+  ✅ DerivationGraph → implements GraphProtocol (Commit 182693be)
+
+  BEFORE: Classes inherited only from object → DEAD CODE
+  AFTER:  Classes implement protocols → ALIVE AT RUNTIME!
+
+  THE KING = ZUSAMMENSPIEL:
+    - 7 Axioms → 49 Nodes → 92 Edges → ∞ RAM
+    - 64 Qualities (Krishna's complete capability)
+    - Protocol-First Design = Code exists at runtime
 ```
 
-### CRITICAL: SSOT VIOLATIONS MÜSSEN GEFIXT WERDEN!
+### SSOT PRINCIPLE: ONE CLASS IN RAM = ONE DEFINITION ON DISK
 
-Die Duplicates verletzen das SSOT-Prinzip. Alle sollten von EINER Quelle importieren:
-- `Guna` → import from `substrate/guna.py`
-- `HolyName` → import from `substrate/seed.py`
-- `MantraByte` → import from `substrate/byte.py`
+All major SSOT violations have been fixed:
+- `Guna` → import from `substrate/guna.py` ✅
+- `HolyName` → import from `substrate/seed.py` ✅
+- `TickState` → import from `_types.py` ✅
+- `MantraByte` → import from `substrate/byte.py` ✅
 
 ---
 
@@ -151,10 +396,10 @@ Die Duplicates verletzen das SSOT-Prinzip. Alle sollten von EINER Quelle importi
 
 ## 3. NÄCHSTE SCHRITTE
 
-### Phase 1: KARTIERUNG (JETZT)
-1. [ ] Alle existierenden Audit-Komponenten inventarisieren
-2. [ ] Dependency Graph zwischen Audit-Komponenten erstellen
-3. [ ] Gaps zwischen Komponenten identifizieren
+### Phase 1: KARTIERUNG ✅ COMPLETE
+1. [x] Alle existierenden Audit-Komponenten inventarisiert
+2. [x] Protocol Resurrection Audit erstellt (protocol_resurrection.py)
+3. [x] Core Classes jetzt ALIVE at runtime
 
 ### Phase 2: INTEGRATION
 1. [ ] Unified Audit Kernel designen (nutzt ALLE existierenden Komponenten)

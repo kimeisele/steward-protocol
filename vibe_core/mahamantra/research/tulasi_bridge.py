@@ -31,7 +31,7 @@ MATHEMATICAL SIGNATURE:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "shuka"  # The Parrot of Radha (Shukadeva)
 __position__ = 14
-__genesis__ = "0x99AABBCC"  # Placeholder (Research)
+__genesis__ = "0xed874970"  # Placeholder (Research)
 
 from dataclasses import dataclass
 from typing import Final, Optional

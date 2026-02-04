@@ -38,27 +38,12 @@ from vibe_core.mahamantra.substrate.seed import (
     TRINITY as LILA_CYCLES,  # 3
     LILA as LILA_LIMIT,  # 48
     PARAMPARA,  # 37
+    # HolyName - THE SSOT (seed.py is THE source, includes VOID)
+    HolyName,
 )
 
 # Strict Typing
 FractalInt = NewType("FractalInt", int)
-
-
-class HolyName(IntEnum):
-    """
-    The Ternary Basis of Reality + Maya.
-
-    seed.py defines the pure TRUTH (3 holy names).
-    byte.py extends with VOID for binary encoding necessity.
-
-    "māyā tatam idaṁ sarvaṁ" - Maya pervades this world.
-    VOID is not truth, but computation requires error states.
-    """
-
-    HARE = 0  # 00 - Radha, the energy
-    KRISHNA = 1  # 01 - The all-attractive
-    RAMA = 2  # 10 - Reservoir of pleasure
-    VOID = 3  # 11 - Maya/Error (not in seed.py - that's TRUTH only)
 
 
 class MantraBit(IntFlag):
@@ -292,6 +277,75 @@ class MantraByte:
     def to_triple(self) -> Tuple[str, str, str]:
         """Returns (devanagari, iast, roman)."""
         return (self.to_devanagari(), self.to_iast(), self.to_roman())
+
+    # =========================================================================
+    # YAJNA COMPATIBILITY (merged from yajna.py for SSOT)
+    # =========================================================================
+
+    @classmethod
+    def standard(cls) -> "MantraByte":
+        """Alias for standard_16() - yajna.py compatibility."""
+        return cls.standard_16()
+
+    @property
+    def packed(self) -> int:
+        """Raw packed integer."""
+        return self._packed
+
+    def get_name(self, index: int) -> HolyName:
+        """Alias for get_trit() - yajna.py compatibility."""
+        return self.get_trit(index)
+
+    def resonance_check(self) -> float:
+        """
+        O(1) Bitwise Coherence Check.
+
+        Uses XOR to compare bit patterns directly.
+        No loops. One CPU instruction.
+
+        Returns coherence score (0.0-1.0).
+
+        NOTE: This is the fast O(1) version from yajna.py.
+        For the full Mercy Equation coherence, use the .coherence property.
+        """
+        if self._length == 0:
+            return 0.0
+
+        # Standard pattern for comparison
+        std = self.standard_16()
+        std_packed = std._packed
+
+        # Mask for the length (2 bits per position)
+        mask = (1 << (self._length * 2)) - 1
+
+        # XOR: bits that differ become 1
+        diff = (self._packed ^ std_packed) & mask
+
+        # Count differing bits (Python 3.10+ has bit_count())
+        try:
+            errors = diff.bit_count()
+        except AttributeError:
+            # Fallback for older Python
+            errors = bin(diff).count("1")
+
+        # Coherence = 1 - (errors / total_bits)
+        total_bits = self._length * 2
+        coherence = 1.0 - (errors / total_bits)
+
+        return coherence
+
+    def validate_parampara(self, signature: int) -> bool:
+        """
+        The 37 Check - Parampara Validation.
+
+        Only signatures divisible by 37 are valid.
+        This is Shcherbak's Arithmetic.
+        """
+        return (signature % PARAMPARA) == 0
+
+    def __repr__(self) -> str:
+        """String representation with coherence."""
+        return f"<MantraByte 0x{self._packed:X} len={self._length} coh={self.resonance_check():.2f}>"
 
     # =========================================================================
     # FRACTAL DECOMPOSITION (via mantra/)

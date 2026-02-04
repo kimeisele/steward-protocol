@@ -209,9 +209,10 @@ def project_lotus(kernel: "RealVibeKernel") -> PositionRegistry:
     registry = PositionRegistry()
     root = LotusNode()
 
-    # The actual mahamantra folders that contain mahajana subfolders
-    # These are discovered from filesystem, not hardcoded conceptual names
-    quarters = ["genesis", "karma", "dharma", "moksha", "lila"]
+    # SSOT: Derive quarters from POSITION_BY_FOLDER (wiring.py)
+    # FOLDER = EXISTENCE = WIRED
+    from vibe_core.mahamantra.substrate.wiring import POSITION_BY_FOLDER
+    quarters = sorted(set(folder.split("/")[0] for folder in POSITION_BY_FOLDER.keys()))
 
     projected_count = 0
     wired_count = 0

@@ -58,18 +58,8 @@ from vibe_core.mahamantra.substrate.seed import (
 # =============================================================================
 
 
-class TickState(TypedDict):
-    """State derived from a tick count. PURE, no side effects."""
-
-    tick: int  # The raw tick count
-    position: int  # 0-15 (tick % 16)
-    cycle: int  # Which cycle (tick // 16)
-    prana: int  # Which Prana within Mala (tick // 16 % 108)
-    mala: int  # Which Mala (tick // 1728)
-    quarter: str  # "genesis", "dharma", "karma", "moksha"
-    word: str  # "HARE", "KRISHNA", "RAMA"
-    is_downbeat: bool  # position == 0 (start of cycle)
-    is_mala_complete: bool  # tick % 1728 == 0 and tick > 0
+# TickState imported from _types.py (SSOT)
+from vibe_core.mahamantra._types import TickState
 
 
 # =============================================================================

@@ -422,6 +422,95 @@ def enable_fractal_discovery(caller_globals: dict, caller_file: str) -> None:
     caller_globals["__getattr__"] = fractal_getattr(caller_file)
 
 
+def create_hybrid_getattr(
+    caller_file: str,
+    legacy_lookup: dict[str, tuple[str, str]],
+) -> callable:
+    """
+    Create a HYBRID __getattr__ that combines fractal discovery with legacy exports.
+
+    PROTOCOL-FIRST:
+        1. Try fractal discovery (folders/modules)
+        2. Fallback to legacy constants (backwards compat)
+        3. Raise AttributeError if not found
+
+    Args:
+        caller_file: Pass __file__ from the calling module
+        legacy_lookup: Dict mapping name -> (module_path, attr_name)
+                       e.g. {"WORDS": ("vibe_core.mahamantra.protocols._seed_cell", "WORDS")}
+
+    Returns:
+        A __getattr__ function for hybrid discovery
+
+    Usage:
+        # In vibe_core/mahamantra/__init__.py:
+        from vibe_core.mahamantra.substrate.wiring import create_hybrid_getattr
+
+        LEGACY_EXPORTS = {
+            "WORDS": ("vibe_core.mahamantra.protocols._seed_cell", "WORDS"),
+            "MahamantraLotus": ("vibe_core.mahamantra._mahamantra_lotus", "MahamantraLotus"),
+            # ... etc
+        }
+
+        __getattr__ = create_hybrid_getattr(__file__, LEGACY_EXPORTS)
+    """
+    import importlib
+
+    _fractal = fractal_getattr(caller_file)
+
+    def _hybrid_getattr(name: str):
+        """
+        Hybrid discovery: fractal first, then legacy.
+
+        FOLDER = EXISTENCE = WIRED (for new code)
+        LEGACY = BACKWARDS COMPAT (for existing code)
+        """
+        # 1. Try fractal discovery (folders/modules)
+        try:
+            return _fractal(name)
+        except AttributeError:
+            pass
+
+        # 2. Try legacy lookup (backwards compat)
+        if name in legacy_lookup:
+            module_path, attr_name = legacy_lookup[name]
+            try:
+                module = importlib.import_module(module_path)
+                return getattr(module, attr_name)
+            except (ImportError, AttributeError) as e:
+                raise AttributeError(
+                    f"Legacy export '{name}' failed to load from {module_path}: {e}"
+                ) from e
+
+        # 3. Not found
+        raise AttributeError(f"module has no attribute '{name}'")
+
+    return _hybrid_getattr
+
+
+def enable_hybrid_discovery(
+    caller_globals: dict,
+    caller_file: str,
+    legacy_lookup: dict[str, tuple[str, str]],
+) -> None:
+    """
+    Enable HYBRID discovery for a module.
+
+    PROTOCOL-FIRST with backwards compat.
+
+    Usage:
+        from vibe_core.mahamantra.substrate.wiring import enable_hybrid_discovery
+
+        LEGACY_EXPORTS = {
+            "WORDS": ("vibe_core.mahamantra.protocols._seed_cell", "WORDS"),
+            # ...
+        }
+
+        enable_hybrid_discovery(globals(), __file__, LEGACY_EXPORTS)
+    """
+    caller_globals["__getattr__"] = create_hybrid_getattr(caller_file, legacy_lookup)
+
+
 # =============================================================================
 # SANKIRTAN VALIDATOR - Military Grade Watertight
 # =============================================================================
@@ -727,6 +816,9 @@ __all__ = [
     # FRACTAL DISCOVERY
     "fractal_getattr",
     "enable_fractal_discovery",
+    # HYBRID DISCOVERY (Protocol-First + Backwards Compat)
+    "create_hybrid_getattr",
+    "enable_hybrid_discovery",
     # SANKIRTAN VALIDATOR
     "ValidationResult",
     "SankirtanValidation",
