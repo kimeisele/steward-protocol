@@ -179,8 +179,49 @@ class DriftAuditor:
 
     def protocols(self) -> Tuple[int, int, Tuple[ProtocolViolation, ...]]:
         """Check protocols. Returns (alive, dead, violations)."""
-        # TODO: Implement protocol checking
-        return 8, 0, ()
+        violations: List[ProtocolViolation] = []
+        alive = 0
+        dead = 0
+
+        # Registry: (module, class, protocol_module, protocol)
+        checks = [
+            ("vibe_core.mahamantra.substrate.algorithm.maha", "MahaAlgorithm16",
+             "vibe_core.mahamantra.protocols._maha_compute", "MahaComputeProtocol"),
+            ("vibe_core.mahamantra.substrate.algorithm.maha", "MahaModularSynth",
+             "vibe_core.mahamantra.protocols._maha_compute", "MahaComputeProtocol"),
+            ("vibe_core.mahamantra.analysis.derivation_graph", "DerivationGraph",
+             "vibe_core.mahamantra.protocols._graph", "GraphProtocol"),
+            ("vibe_core.mahamantra.kernel.maha_kernel", "MahaKernel",
+             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
+            ("vibe_core.mahamantra.substrate.chamber", "SankirtanChamber",
+             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
+            ("vibe_core.mahamantra.substrate.resonance.resonator", "MahaResonator",
+             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
+            ("vibe_core.mahamantra.adapters.routing", "HolographicRouter",
+             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
+            ("vibe_core.mahamantra.orchestrator", "VenuOrchestrator",
+             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
+        ]
+
+        import importlib
+        for mod_name, cls_name, proto_mod, proto_name in checks:
+            try:
+                mod = importlib.import_module(mod_name)
+                cls = getattr(mod, cls_name)
+                proto_m = importlib.import_module(proto_mod)
+                proto = getattr(proto_m, proto_name)
+
+                instance = cls.create() if hasattr(cls, 'create') else cls()
+                if isinstance(instance, proto):
+                    alive += 1
+                else:
+                    dead += 1
+                    violations.append(ProtocolViolation(cls_name, mod_name, proto_name, "isinstance=False"))
+            except Exception as e:
+                dead += 1
+                violations.append(ProtocolViolation(cls_name, mod_name, proto_name, str(e)[:100]))
+
+        return alive, dead, tuple(violations)
 
     def audit(self) -> AuditReport:
         """Run full audit. Returns complete report."""
