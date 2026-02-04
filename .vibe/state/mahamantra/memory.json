@@ -1,0 +1,53 @@
+{
+  "store": {
+    "global::mahamantra_secret": {
+      "key": "mahamantra_secret",
+      "value": "om_namo_bhagavate_vasudevaya",
+      "created_at": "2026-02-05 00:20:23.544788",
+      "expires_at": null,
+      "session_id": "global",
+      "tags": []
+    },
+    "global::resonance_test_a574": {
+      "key": "resonance_test_a574",
+      "value": "hare_krishna",
+      "created_at": "2026-02-05 00:13:21.136819",
+      "expires_at": null,
+      "session_id": "global",
+      "tags": []
+    },
+    "global::resonance_test_9fbe": {
+      "key": "resonance_test_9fbe",
+      "value": "hare_krishna",
+      "created_at": "2026-02-05 00:14:16.752801",
+      "expires_at": null,
+      "session_id": "global",
+      "tags": []
+    },
+    "global::resonance_test_ac6f": {
+      "key": "resonance_test_ac6f",
+      "value": "hare_krishna",
+      "created_at": "2026-02-05 00:14:54.657273",
+      "expires_at": null,
+      "session_id": "global",
+      "tags": []
+    },
+    "global::resonance_test_0895": {
+      "key": "resonance_test_0895",
+      "value": "hare_krishna",
+      "created_at": "2026-02-05 00:34:58.875195",
+      "expires_at": null,
+      "session_id": "global",
+      "tags": []
+    },
+    "global::resonance_test_94fe": {
+      "key": "resonance_test_94fe",
+      "value": "hare_krishna",
+      "created_at": "2026-02-05 00:39:50.807504",
+      "expires_at": null,
+      "session_id": "global",
+      "tags": []
+    }
+  },
+  "updated_at": "2026-02-05T00:39:50.807895"
+}

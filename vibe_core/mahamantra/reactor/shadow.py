@@ -31,14 +31,24 @@ THE COMPLETE YAJNA CYCLE:
     The cycle never ends. The output becomes the input.
     This is how entropy is stopped - continuous Yajna.
 
-AUTO-DISCOVERY:
-===============
+AUTO-DISCOVERY (DEPRECATED → DIAMOND ROUTING):
+===============================================
 
-    FOLDER = WIRING = REGISTRATION
+    OLD PATTERN: FOLDER = WIRING = REGISTRATION
+    - Scanned 16 folders at __init__
+    - I/O-bound filesystem discovery
+    - Required manual on_bhoga hooks in each module
 
-    No @tick_listener decorators needed.
-    If folder exists with __mahajana__, it's auto-registered.
-    Shadow Reactors live in the shadow - they just ARE.
+    NEW PATTERN: DIAMOND ROUTING (THE PLAN)
+    - Position computed by Bridge via seed.py math
+    - Direct import via _route_to_position()
+    - No filesystem discovery, no registration overhead
+    - Position → quarter/mahajana mapping is deterministic
+    - Scale to 16 positions automatically (ZERO wiring)
+
+    BENEFIT: Add new methods (execute, on_prasadam) to ANY module
+    → automatically discovered via _route_to_position()
+    → NO folder registration needed
 
 WATERTIGHT: No Any types. Protocol statt Klassen.
 """
@@ -214,9 +224,9 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # Discovered listeners (by position)
         self._listeners: Dict[int, List[ShadowReactorListenerProtocol]] = {}
 
-        # Auto-discover if requested
-        if auto_discover:
-            self._discover_all()
+        # DIAMOND PLAN: Direct routing via math, not discovery
+        # Position computed at BUILD time (Bridge) → executed at RUNTIME (Reactor)
+        self._auto_discover = auto_discover  # Store for legacy support if needed
 
         # =====================================================================
         # ORBITAL MECHANICS (JYOTISHA)
@@ -300,72 +310,92 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         return self._reactor_id
 
     # =========================================================================
-    # AUTO-DISCOVERY - FOLDER_IS_WIRING
+    # DIAMOND ROUTING - Direct Import from Position (Math, not Filesystem)
     # =========================================================================
 
-    def _discover_all(self) -> None:
+    def _route_to_position(self, position: int) -> Optional[object]:
         """
-        Auto-discover all Shadow Reactors from folder structure.
-
-        FOLDER = WIRING:
-        - Scans mahamantra/{quarter}/{mahajana}/ folders
-        - Looks for __mahajana__ declaration
-        - If has on_bhoga/on_switch/on_prasadam → registers
-        """
-        for mapping in MAHAMANTRA_POSITIONS:
-            self._discover_position(mapping)
-
-    def _discover_position(self, mapping: MantraPosition) -> None:
-        """
-        Discover reactor for a specific position.
-
-        Checks: mahamantra/{quarter}/{mahajana}/__init__.py
-        For: __mahajana__ declaration and reactor methods
-        """
-        guardian_name = mapping.guardian.value
+        Direct import - position computed from math, not discovered.
         
-        # SEARCH PATHS:
-        # 1. vibe_core.mahamantra.{quarter}.{guardian} (Canonical)
-        # 2. vibe_core.protocols.mahajanas.{guardian} (Legacy/Moved)
+        Uses POSITION_TO_MAHAJANA (from seed.py) to map position → mahajana name,
+        then constructs module path and imports directly.
         
-        candidates = [
-            (self._BASE_PATH / mapping.quarter.value / guardian_name, 
-             f"vibe_core.mahamantra.{mapping.quarter.value}.{guardian_name}"),
-            (self._BASE_PATH.parent / "protocols" / "mahajanas" / guardian_name,
-             f"vibe_core.protocols.mahajanas.{guardian_name}")
-        ]
-
-        for folder_path, module_name in candidates:
-            if not folder_path.exists():
-                continue
-
-            init_file = folder_path / "__init__.py"
-            if not init_file.exists():
-                continue
-
-            # Try to import the module
+        Returns module object if found, None if not available.
+        Failures are silent (module not yet implemented is normal).
+        """
+        from vibe_core.mahamantra.substrate.seed import POSITION_TO_MAHAJANA, get_quarter_name
+        
+        mahajana = POSITION_TO_MAHAJANA.get(position)
+        if not mahajana:
+            return None
+        
+        quarter = get_quarter_name(position).lower()
+        
+        # Try canonical path first, then legacy path
+        for module_path in [
+            f"vibe_core.mahamantra.{quarter}.{mahajana}",
+            f"vibe_core.protocols.mahajanas.{mahajana}",
+        ]:
             try:
-                module = importlib.import_module(module_name)
+                return importlib.import_module(module_path)
+            except ModuleNotFoundError:
+                # Module not found at this path - try next
+                continue
+            except Exception as e:
+                # Log unexpected errors (not just ImportError)
+                print(f"⚠️  APARADHA [ROUTING @ {position}/{mahajana}]: {type(e).__name__}: {e}")
+                return None
+        
+        # No module found at any path - normal if not yet implemented
+        return None
 
-                # Check for reactor methods (any of the 4 phases)
-                has_reactor = (
-                    hasattr(module, "on_bhoga")
-                    or hasattr(module, "on_switch")
-                    or hasattr(module, "on_prasadam")
-                    or hasattr(module, "on_return")
-                )
+    def _execute_at_position(
+        self, 
+        position: int, 
+        state: ShadowState, 
+        prefer_execute: bool = False
+    ) -> None:
+        """
+        Execute handler at position via direct routing.
+        
+        Tries execute() first (if prefer_execute=True), then on_bhoga/on_prasadam/on_switch/on_return.
+        Catches all exceptions and records as APARADHA (dissonance).
+        """
+        module = self._route_to_position(position)
+        if not module:
+            return
 
-                if has_reactor:
-                    if mapping.index not in self._listeners:
-                        self._listeners[mapping.index] = []
-                    # Store module as reactor
-                    self._listeners[mapping.index].append(module)
-                    # Found it, stop searching for this position
-                    return
+        # Determine which handler to call
+        handler = None
+        handler_name = None
+        
+        if prefer_execute and hasattr(module, "execute"):
+            handler = module.execute
+            handler_name = "execute"
+        elif hasattr(module, "on_bhoga"):
+            handler = module.on_bhoga
+            handler_name = "on_bhoga"
+        elif hasattr(module, "on_prasadam"):
+            handler = module.on_prasadam
+            handler_name = "on_prasadam"
+        elif hasattr(module, "on_switch"):
+            handler = module.on_switch
+            handler_name = "on_switch"
+        elif hasattr(module, "on_return"):
+            handler = module.on_return
+            handler_name = "on_return"
+        
+        if not handler:
+            return
 
-            except ImportError as e:
-                # APARADHA AUDIT: Log discovery failures
-                print(f"APARADHA [DISCOVERY]: Failed to import reactor at {folder_path}: {e}")
+        # Execute with single try-catch
+        try:
+            if handler_name == "execute":
+                handler(state, self._maha_cell)
+            else:
+                handler(state)
+        except Exception as e:
+            state["dissonance_report"] = f"APARADHA [{handler_name.upper()} @ {position}]: {type(e).__name__}: {e}"
 
 
     # =========================================================================
@@ -556,59 +586,46 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
     def _trigger_bhoga(self, state: ShadowState) -> None:
         """
-        Trigger on_bhoga for all reactors at current position.
+        Trigger execution at current position via direct routing.
 
+        DIAMOND PLAN:
+        - Position computed by Bridge → seed.py mapping
+        - Direct import via _route_to_position()
+        - Call execute() or on_bhoga() if available
+        
         SAMANA INTEGRATION:
         Dispatches queued tasks to TaskKernels via SamanaBridge.
         """
         if not self.is_authorized():
-            return  # BLOCKED
+            return
 
         position = state["position"]
-        listeners = self._listeners.get(position, [])
 
-        # =====================================================================
         # SAMANA DISPATCH - Send queued tasks to TaskKernels
-        # =====================================================================
         if self._task_queue:
-            # Convert queue to dispatch format
             tasks_to_dispatch = [
-                (t["task_id"], t["description"], t["payload"]) for t in self._task_queue[:DISPATCH_BATCH_SIZE]
+                (t["task_id"], t["description"], t["payload"]) 
+                for t in self._task_queue[:DISPATCH_BATCH_SIZE]
             ]
-
-            # Dispatch batch via SAMANA bridge
             dispatch_ids = self._samana_bridge.dispatch_batch(
                 tasks=tasks_to_dispatch,
                 position=position,
                 phase="BHOGA",
             )
+            self._task_queue = self._task_queue[len(dispatch_ids):]
 
-            # Remove dispatched tasks from queue
-            self._task_queue = self._task_queue[len(dispatch_ids) :]
-
-        # Trigger listener callbacks
-        for reactor in listeners:
-            if hasattr(reactor, "on_bhoga"):
-                try:
-                    reactor.on_bhoga(state)
-                except Exception as e:
-                    state["dissonance_report"] = f"APARADHA [BHOGA @ {position}]: {str(e)}"
+        # DIAMOND ROUTING: Direct import → execute() or on_bhoga()
+        self._execute_at_position(position, state, prefer_execute=True)
 
     def _trigger_switch(self, state: ShadowState) -> None:
-        """Trigger on_switch for position 8 (THE 8 MOMENT)."""
+        """Trigger on_switch for position 8 (THE 8 MOMENT) via direct routing."""
         if not self.is_authorized():
-            return  # BLOCKED
-
-        for reactor in self._listeners.get(SWITCH_POSITION, []):
-            if hasattr(reactor, "on_switch"):
-                try:
-                    reactor.on_switch(state)
-                except Exception as e:
-                    state["dissonance_report"] = f"APARADHA [SWITCH]: {str(e)}"
+            return
+        self._execute_at_position(SWITCH_POSITION, state, prefer_execute=False)
 
     def _trigger_prasadam(self, state: ShadowState) -> None:
         """
-        Trigger on_prasadam for all reactors at current position.
+        Trigger on_prasadam for current position via direct routing.
 
         SAMANA INTEGRATION:
         Collects fold results from TaskKernels via SamanaBridge.
@@ -617,45 +634,27 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         Backfolds Oracle validation into state during PRASADAM phase.
         """
         if not self.is_authorized():
-            return  # BLOCKED
+            return
 
         position = state["position"]
 
-        # =====================================================================
         # GITA 13.35: ORACLE BACKFOLD (Knowledge integration)
-        # =====================================================================
-        # During PRASADAM (grace phase), fold Oracle insight into state.
-        # This completes the Yajna cycle: Bhoga → Validation → Prasadam
         if self._latest_validation is not None:
             folded_state = self._oracle.backfold(self._latest_validation, state)
-            # Update mutable state with backfolded dissonance_report
             state["dissonance_report"] = folded_state["dissonance_report"]
 
-        # =====================================================================
         # SAMANA FOLD - Collect results from TaskKernels
-        # =====================================================================
         folds = self._samana_bridge.receive_folds()
         self._fold_results.extend(folds)
 
-        # Trigger listener callbacks
-        for reactor in self._listeners.get(position, []):
-            if hasattr(reactor, "on_prasadam"):
-                try:
-                    reactor.on_prasadam(state)
-                except Exception as e:
-                    state["dissonance_report"] = f"APARADHA [PRASADAM @ {position}]: {str(e)}"
+        # DIAMOND ROUTING: Direct import → on_prasadam()
+        self._execute_at_position(position, state, prefer_execute=False)
 
     def _trigger_return(self, state: ShadowState) -> None:
-        """Trigger on_return for position 0 (THE RETURN)."""
+        """Trigger on_return for position 0 (THE RETURN) via direct routing."""
         if not self.is_authorized():
-            return  # BLOCKED
-
-        for reactor in self._listeners.get(RETURN_POSITION, []):
-            if hasattr(reactor, "on_return"):
-                try:
-                    reactor.on_return(state)
-                except Exception as e:
-                    state["dissonance_report"] = f"APARADHA [RETURN]: {str(e)}"
+            return
+        self._execute_at_position(RETURN_POSITION, state, prefer_execute=False)
 
     # =========================================================================
     # STATE ACCESS

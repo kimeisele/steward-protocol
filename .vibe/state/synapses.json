@@ -3,7 +3,7 @@
   "version": "2026-01-03",
   "weights": {
     "trigger:test_failure": {
-      "action:notify_operator": 1.0,
+      "action:notify_operator": 0.9414801494009999,
       "action:analyze_error": 0.8,
       "action:auto_retry": 0.3
     },
@@ -23,10 +23,234 @@
       "action:maintenance": 0.9000000000000004
     }
   },
-  "triggers": [],
+  "triggers": [
+    {
+      "trigger": "trigger:reflex_trigger",
+      "connections": [
+        {
+          "target": "action:reflex_trigger",
+          "weight": 0.6000000000000001,
+          "learned_at": "2026-02-05T00:16:47.719768"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_corrupted_state",
+      "connections": [
+        {
+          "target": "action:detect_corrupted_state",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:19:40.179438"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_breaking_change",
+      "connections": [
+        {
+          "target": "action:detect_breaking_change",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:48.747109"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:update_documentation",
+      "connections": [
+        {
+          "target": "action:update_documentation",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:48.880058"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:delete_files",
+      "connections": [
+        {
+          "target": "action:delete_files",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:49.006734"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:shell_execute",
+      "connections": [
+        {
+          "target": "action:shell_execute",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:49.127735"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_code_smell",
+      "connections": [
+        {
+          "target": "action:detect_code_smell",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:49.246974"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_renderer_pattern",
+      "connections": [
+        {
+          "target": "action:evaluate_renderer_pattern",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:49.378642"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:update_config",
+      "connections": [
+        {
+          "target": "action:update_config",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:39:49.606645"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_unregistered_state",
+      "connections": [
+        {
+          "target": "action:detect_unregistered_state",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:39:49.740563"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:modify_governance",
+      "connections": [
+        {
+          "target": "action:modify_governance",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:49.864014"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:read_secrets",
+      "connections": [
+        {
+          "target": "action:read_secrets",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:50.308234"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_architectural_decision",
+      "connections": [
+        {
+          "target": "action:evaluate_architectural_decision",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:50.434611"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:contradictory_action",
+      "connections": [
+        {
+          "target": "action:contradictory_action",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:50.560337"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:mutation_test_result",
+      "connections": [
+        {
+          "target": "action:mutation_test_result",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:50.686604"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:system_override",
+      "connections": [
+        {
+          "target": "action:system_override",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:50.812756"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_tool_output",
+      "connections": [
+        {
+          "target": "action:evaluate_tool_output",
+          "weight": 0.6000000000000001,
+          "learned_at": "2026-02-05T00:39:50.947221"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:export_env",
+      "connections": [
+        {
+          "target": "action:export_env",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:39:51.130401"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:refactor_code",
+      "connections": [
+        {
+          "target": "action:refactor_code",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:39:51.263745"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_config_location",
+      "connections": [
+        {
+          "target": "action:evaluate_config_location",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:51.406139"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:create_function",
+      "connections": [
+        {
+          "target": "action:create_function",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:51.546555"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_new_module",
+      "connections": [
+        {
+          "target": "action:evaluate_new_module",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:39:51.674858"
+        }
+      ]
+    }
+  ],
   "meta": {
     "created": "2026-01-03T22:16:51.585643Z",
     "last_updated": "2026-01-12T04:07:37.512875Z",
-    "updates_count": 8
+    "updates_count": 8,
+    "last_synapse_update": "2026-02-05T00:39:51.805471",
+    "last_vairagya_prune": "2026-02-05T00:39:49.006823",
+    "last_vairagya_count": 1
   }
 }
