@@ -116,6 +116,7 @@ class ReactorLoop(threading.Thread):
         self._running = False
         self._stop_event = threading.Event()
         self._idle_ticks = 0
+        self._bus: Optional[Any] = None # Narada (Initialized in run)
         
     def attach_mailbox(self, mailbox: MahaMailbox):
         """Connect the loop to a mailbox."""
@@ -134,6 +135,19 @@ class ReactorLoop(threading.Thread):
         self._queue.put(request)
         return ticket
 
+    def publish(self, event_type: str, agent_id: str, message: str, details: Optional[Dict] = None) -> str:
+        """
+        Broadcasting Intent (Resonance Routing).
+        Delegates to Narada (EventBus).
+        """
+        if self._bus:
+            # Import expected EventType if needed, or use string
+            # For now passing string is fine as EventBus handles it
+            return self._bus.emit_sync(event_type, agent_id, message, details)
+        else:
+            logger.warning("ReactorLoop: Attempted to publish but Narada sleeps.")
+            return ""
+
     def run(self):
         """The Main Loop."""
         # Yield to allow main thread to complete imports (avoid import deadlock)
@@ -143,6 +157,7 @@ class ReactorLoop(threading.Thread):
         
         # 1. Initialize Reactor (First Birth)
         self._init_memory()  # NEW: Awaken Memory (Phase 3)
+        self._init_bus()     # NEW: Wake Narada (Phase 4)
         self._init_reactor()
         
         self._running = True
@@ -219,6 +234,15 @@ class ReactorLoop(threading.Thread):
             logger.error(f"ReactorLoop: Failed to init reactor: {e}")
             # If we can't spawn, we are in trouble. Sleep and retry?
             time.sleep(1.0)
+            
+    def _init_bus(self):
+        """Initialize the EventBus (Narada)."""
+        try:
+            from vibe_core.mahamantra.substrate.event_bus import EventBus
+            self._bus = EventBus()
+            logger.info("ReactorLoop: Narada (EventBus) awakened.")
+        except Exception as e:
+            logger.error(f"ReactorLoop: Failed to init EventBus: {e}")
 
     def _meditate(self):
         """

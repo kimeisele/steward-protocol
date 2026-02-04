@@ -713,3 +713,18 @@ def get_mahamantra() -> MahamantraLotus:
     if _mahamantra_instance is None:
         _mahamantra_instance = MahamantraLotus()
     return _mahamantra_instance
+
+
+# Alias for easier access (Universal Router needs this name)
+mahamantra = get_mahamantra()
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    "MahamantraLotus",
+    "get_mahamantra",
+    "mahamantra",
+]

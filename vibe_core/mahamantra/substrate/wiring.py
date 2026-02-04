@@ -923,6 +923,9 @@ __all__ = [
     # HYBRID DISCOVERY (Protocol-First + Backwards Compat)
     "create_hybrid_getattr",
     "enable_hybrid_discovery",
+    # UNIVERSAL DISCOVERY (Semantic Router for Code)
+    "create_universal_getattr",
+    "enable_universal_discovery",
     # SANKIRTAN VALIDATOR
     "ValidationResult",
     "SankirtanValidation",
