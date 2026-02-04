@@ -416,24 +416,30 @@ __genesis__ = "{genesis_hash}"  # GenesisByte: parampara % 37 == 0
 """
 
 
-def compute_genesis_hash(mahajana: str, position: int, file_path: str) -> str:
+def compute_genesis_hash(mahajana: str, position: int, file_path: str = "") -> str:
     """
-    Compute GenesisByte hash for a file.
+    Compute GenesisByte hash - PURE RAM COMPUTATION.
 
     The hash must satisfy: int(hash, 16) % 37 == 0 (Parampara verification).
 
-    Formula: (position + 1) * 37 = parampara_vector
+    PARADIGM SHIFT (Yoga Maya):
+        OLD: identity = f"{mahajana}:{position}:{file_path}" (Maha Maya - material)
+        NEW: identity = f"{mahajana}:{position}" (Yoga Maya - spiritual)
+
+    The file_path parameter is DEPRECATED and IGNORED.
+    Genesis is computed from ARCHETYPE (mahajana + position) only.
+    This makes Genesis HOLOGRAPHIC - same input → same output ALWAYS.
+
+    The Mantra protects itself - RAM computation, not filesystem dependency.
     """
     import hashlib
 
-    # Base parampara vector
-    parampara_vector = (position + 1) * 37
-
-    # Create deterministic hash from file identity
-    identity = f"{mahajana}:{position}:{file_path}"
+    # YOGA MAYA: Pure archetype identity (NO FILE PATH!)
+    # file_path parameter kept for backward compatibility but IGNORED
+    identity = f"{mahajana}:{position}"
     raw_hash = hashlib.sha256(identity.encode()).hexdigest()[:8]
 
-    # Adjust to be divisible by 37
+    # Adjust to be divisible by 37 (Parampara alignment)
     base_value = int(raw_hash, 16)
     adjusted = base_value - (base_value % 37)
 

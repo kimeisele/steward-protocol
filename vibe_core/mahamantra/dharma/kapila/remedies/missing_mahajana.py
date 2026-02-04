@@ -256,14 +256,19 @@ class MissingMahajanaRemedy(CSTRemedy):
         self._inferred_position = 9
 
     def _compute_genesis(self) -> str:
-        """Compute valid genesis byte for this file."""
+        """
+        Compute valid genesis byte for this file.
+
+        YOGA MAYA: Uses only mahajana + position (NO file_path!)
+        This makes Genesis HOLOGRAPHIC - same archetype → same hash ALWAYS.
+        """
         import hashlib
 
         mahajana = self._inferred_mahajana or "prahlada"
         position = self._inferred_position or 9
 
-        # Deterministic hash from identity
-        identity = f"{mahajana}:{position}:{self._file_path}"
+        # YOGA MAYA: Pure archetype identity (NO FILE PATH!)
+        identity = f"{mahajana}:{position}"
         raw_hash = hashlib.sha256(identity.encode()).hexdigest()[:8]
 
         # Adjust to be divisible by 37
