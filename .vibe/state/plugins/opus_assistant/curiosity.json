@@ -1,29 +1,71 @@
 {
-  "current_level": 0.5,
+  "current_level": 1.0,
   "threshold": 0.7,
   "last_training": null,
   "training_cooldown_hours": 4,
-  "is_curious_enough": false,
+  "is_curious_enough": true,
   "in_cooldown": false,
-  "should_train": false,
+  "should_train": true,
   "sources": [
     {
-      "type": "gap",
-      "description": "Found 3 violations - building trust via observation",
-      "weight": 0.2,
-      "timestamp": "2026-01-04T09:54:14.276202"
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:16:47.137179"
     },
     {
-      "type": "gap",
-      "description": "Found 3 violations - building trust via observation",
-      "weight": 0.2,
-      "timestamp": "2026-01-04T09:54:14.277310"
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on check_lint: Check linting errors",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:18:41.202769"
     },
     {
-      "type": "gap",
-      "description": "RESONANCE healed 3 violations (trust earned!)",
-      "weight": 0.1,
-      "timestamp": "2026-01-04T09:54:14.279993"
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:19:40.305010"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:19:42.717633"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: BLOCKED : Empty intent",
+      "weight": 0.12,
+      "timestamp": "2026-02-05T00:19:44.165190"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on check_lint: Check linting errors",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:19:45.600548"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:19:46.529637"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:34:56.436207"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:34:59.536056"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-05T00:39:51.255514"
     }
   ]
 }

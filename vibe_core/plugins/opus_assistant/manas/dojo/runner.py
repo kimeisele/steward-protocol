@@ -187,6 +187,56 @@ class DojoRunner:
         self._viveka = None
         self._session: Optional[TrainingSession] = None
         self._loaded_curricula: Dict[str, LoadedCurriculum] = {}
+        
+        # INTERNAL STATE for Meditation (Incremental)
+        self._meditation_queue: List[Scenario] = []
+        self._meditation_initialized = False
+
+    def init_meditation(self):
+        """Prepare for incremental training (Meditation)."""
+        if self._meditation_initialized:
+            return
+            
+        logger.info("🥋 DOJO: Initializing Meditation Mode...")
+        self._init_viveka()
+        # Load a mixed bag of scenarios for continuous practice
+        self._config.curriculum = "mixed" 
+        self._config.scenarios_per_epoch = 100 # Load a good buffer
+        self._meditation_queue = self._get_curriculum_scenarios()
+        self._meditation_initialized = True
+        logger.info(f"🥋 DOJO: Meditation Ready ({len(self._meditation_queue)} scenarios loaded).")
+
+    def meditate_tick(self) -> Optional[TrainingResult]:
+        """
+        Run a single training step (Non-blocking).
+        Returns result if a scenario was trained, None otherwise.
+        """
+        if not self._meditation_initialized:
+            self.init_meditation()
+            
+        if not self._meditation_queue:
+            # Reload if empty
+            logger.info("🥋 DOJO: Meditation cycle complete. Reloading scenarios.")
+            self._meditation_queue = self._get_curriculum_scenarios()
+            
+        if not self._meditation_queue:
+            return None
+            
+        # Pop one scenario
+        scenario = self._meditation_queue.pop(0)
+        
+        # Train
+        try:
+            result = self._train_scenario(scenario)
+            
+            # Simple logging for heartbeat
+            status = "✅" if result.decision_correct else "❌"
+            logger.debug(f"🥋 DOJO T.I.C.K: {status} {scenario.name[:30]} | {result.actual_decision}")
+            
+            return result
+        except Exception as e:
+            logger.error(f"🥋 DOJO CLASH: {e}")
+            return None
 
     def _init_viveka(self) -> None:
         """Initialize VivekaAction for training."""
