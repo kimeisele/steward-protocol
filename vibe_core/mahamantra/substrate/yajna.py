@@ -49,7 +49,7 @@ from typing import (
 )
 
 from vibe_core.mahamantra.substrate.acintya import PARAMPARA
-from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION, HolyName
+from vibe_core.mahamantra.substrate.byte import MAHAMANTRA_DIMENSION, HolyName, MantraByte
 from vibe_core.mahamantra.protocols._seed import MALA, TRINITY
 
 # =============================================================================
@@ -193,88 +193,11 @@ class Prasadam(Generic[R]):
 
 
 # =============================================================================
-# MANTRA BYTE - O(1) Packed Representation
+# MANTRA BYTE - IMPORTED FROM byte.py (SSOT)
 # =============================================================================
-
-
-class MantraByte:
-    """
-    True Optimized Fractal Container.
-
-    Uses __slots__ for memory efficiency (no __dict__).
-    Bitwise operations for O(1) coherence check.
-    Generator for lazy iteration (no list allocation).
-    """
-
-    __slots__ = ("_packed", "_len")
-
-    def __init__(self, packed_val: int = STD_MANTRA_PATTERN, length: int = MAHA_POSITIONS):
-        self._packed = packed_val
-        self._len = length
-
-    @classmethod
-    def standard(cls) -> "MantraByte":
-        """The standard 16-word Mahamantra."""
-        return cls(STD_MANTRA_PATTERN, MAHA_POSITIONS)
-
-    @property
-    def packed(self) -> int:
-        """Raw packed integer."""
-        return self._packed
-
-    def get_name(self, index: int) -> HolyName:
-        """Get name at position (O(1) bitwise)."""
-        if not 0 <= index < self._len:
-            return HolyName.VOID
-        return HolyName((self._packed >> (index * 2)) & 0b11)
-
-    def resonance_check(self) -> float:
-        """
-        O(1) Bitwise Coherence Check.
-
-        Uses XOR to compare bit patterns directly.
-        No loops. One CPU instruction.
-
-        Returns coherence score (0.0-1.0).
-        """
-        if self._len == 0:
-            return 0.0
-
-        # Mask for the length (2 bits per position)
-        mask = (1 << (self._len * 2)) - 1
-
-        # XOR: bits that differ become 1
-        diff = (self._packed ^ STD_MANTRA_PATTERN) & mask
-
-        # Count differing bits (Python 3.10+ has bit_count())
-        try:
-            errors = diff.bit_count()
-        except AttributeError:
-            # Fallback for older Python
-            errors = bin(diff).count("1")
-
-        # Coherence = 1 - (errors / total_bits)
-        total_bits = self._len * 2
-        coherence = 1.0 - (errors / total_bits)
-
-        return coherence
-
-    def validate_parampara(self, signature: int) -> bool:
-        """
-        The 37 Check - Parampara Validation.
-
-        Only signatures divisible by 37 are valid.
-        This is Shcherbak's Arithmetic.
-        """
-        return (signature % PRIME_SIGNATURE) == 0
-
-    def __iter__(self) -> Generator[HolyName, None, None]:
-        """Lazy unfolding. No list allocation. O(1) memory."""
-        for i in range(self._len):
-            yield HolyName((self._packed >> (i * 2)) & 0b11)
-
-    def __repr__(self) -> str:
-        return f"<MantraByte 0x{self._packed:X} (Coh: {self.resonance_check():.2f})>"
+# MantraByte is now imported from byte.py at the top of this file.
+# All methods (standard, get_name, resonance_check, validate_parampara, etc.)
+# are available through the imported class.
 
 
 # =============================================================================
