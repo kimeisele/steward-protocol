@@ -557,22 +557,19 @@ def create_universal_getattr(
 
         _symbol_map = {}
         for mod_path in core_modules:
-            try:
-                # Import module
-                module = importlib.import_module(mod_path)
-                
-                # Scan __all__ if present (Preferred/Watertight)
-                if hasattr(module, "__all__"):
-                    for name in module.__all__:
+            # FAIL FAST: If a Core Module fails to load, the system must crash.
+            # No try/except here. We want to know IMMEDIATELY if seed.types is broken.
+            module = importlib.import_module(mod_path)
+            
+            # Scan __all__ if present (Preferred/Watertight)
+            if hasattr(module, "__all__"):
+                for name in module.__all__:
+                    _symbol_map[name] = mod_path
+            else:
+                # Fallback: Scan dir() (Entropy)
+                for name in dir(module):
+                    if not name.startswith("_"):
                         _symbol_map[name] = mod_path
-                else:
-                    # Fallback: Scan dir() (Entropy)
-                    for name in dir(module):
-                        if not name.startswith("_"):
-                            _symbol_map[name] = mod_path
-            except ImportError:
-                # Should we log? Maybe via print for now as logger might not be ready
-                pass
 
     def _universal_getattr(name: str):
         """
