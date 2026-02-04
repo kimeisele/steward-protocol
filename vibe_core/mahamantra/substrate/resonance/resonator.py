@@ -28,6 +28,7 @@ from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_KRISHNA,
     MALA_COMPLETE,
 )
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
 
 # THE ALGORITHM - imported from SSOT, not reimplemented!
 from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
@@ -50,6 +51,21 @@ class MahaResonator:
     """
     def __init__(self, mod_space: int = MAHA_QUANTUM) -> None:
         self.mod_space = mod_space
+
+    # =========================================================================
+    # PANCHA TATTVA PROTOCOL (5 Questions Every Entity Must Answer)
+    # =========================================================================
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold truth of MahaResonator."""
+        return {
+            "chaitanya": "MahaResonator - Iterative Harmonic Analysis Engine",
+            "nityananda": "maha_oscillate() from algorithm/ (SSOT)",
+            "advaita": "find_attractor() - Seed → Attractor computation",
+            "gadadhara": "Seed → Oscillate → Cycle Detection → Attractor",
+            "srivasa": f"MAHA_QUANTUM ({MAHA_QUANTUM}), mod_space={self.mod_space}",
+        }
 
     def oscillate_once(self, value: int) -> int:
         """One oscillation = one pass through the 16-step algorithm."""
