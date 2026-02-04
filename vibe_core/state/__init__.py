@@ -152,7 +152,11 @@ from .state_service import get_state_service as _raw_get_state_service
 from .state_service import reset_state_service
 
 
-def get_state_service(workspace: Optional[Path] = None) -> Optional[StateService]:
+def get_state_service(
+    workspace: Optional[Path] = None,
+    agent_id: Optional[str] = None,
+    plugin_id: Optional[str] = None,
+) -> Optional[StateService]:
     """Get StateService through MahaState (the sovereign)."""
     return get_maha_state(workspace).state_service
 
