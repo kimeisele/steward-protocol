@@ -133,7 +133,10 @@ class ShadowState(TypedDict):
     cycle_count: int  # How many full cycles completed
     switch_count: int  # How many Bhoga→Prasadam switches
     return_count: int  # How many 15→0 RETURNs (cycle completions)
+    return_count: int  # How many 15→0 RETURNs (cycle completions)
     dissonance_report: Optional[str]  # Audit log for silent failures (Aparadha)
+    payload: Optional[bytes]  # The intent/content from the MahaCell (WATERTIGHT)
+    execution_result: Optional[Dict]  # Result from the listener (Phase 1 Bridge)
 
 
 @dataclass

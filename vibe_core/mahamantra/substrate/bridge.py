@@ -76,6 +76,11 @@ PURPOSE_MAP: Final[Dict[str, int]] = {
     "chanting": get_mahajana_position("narada"),    # Position 2 - KIRTANAM
     "kirtanam": get_mahajana_position("narada"),    # Position 2 - KIRTANAM (alias)
     # ==========================================================================
+    # GENESIS OPERATIONS (Creation)
+    "genesis": get_mahajana_position("brahma"),     # Position 1 - BRAHMA
+    "creation": get_mahajana_position("brahma"),    # Position 1 - BRAHMA (alias)
+    "wake": get_mahajana_position("brahma"),        # Position 1 - BRAHMA (alias)
+    # ==========================================================================
     # STATE OPERATIONS
     "state_update": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
     "state_read": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
@@ -196,20 +201,42 @@ def offer(
             )
 
     # =========================================================================
-    # EXECUTION: Route to MAHAMANTRA (the canonical location)
+    # EXECUTION: Route via ShadowReactor (THE HEARING GAP RESOLVED)
     # =========================================================================
-    import importlib
-
-    # THE CANONICAL PATH: mahamantra/{quarter}/{mahajana}
-    module_path = f"vibe_core.mahamantra.{quarter}.{mahajana}"
-    module = importlib.import_module(module_path)
-
-    # ALL Mahajanas have execute() - no fallback needed
-    execution_result = module.execute(
-        content if isinstance(content, str) else str(content),
-        context={"purpose": purpose, "actor": actor, "position": position},
-    )
-
+    # Phase 1: Ephemeral Reactor (Spawnbar)
+    # 1. Wrap content into MahaCell
+    cell = wrap_cell(content, purpose)
+    
+    # 2. Spawn Reactor (The Engine)
+    # Local import to avoid circular dependency
+    from vibe_core.mahamantra.reactor.shadow import ShadowReactor
+    # Force Lagna=0 to ensures 1:1 mapping between Intent and Position (No Orbital Drift for Bridge)
+    reactor = ShadowReactor(auto_discover=True, forced_lagna=0)
+    
+    # GRANT SANKIRTAN MERCY (Authorize Bridge Execution)
+    # The Bridge is the Gateway, so it provides the initial Shakti.
+    reactor._sankirtan_shakti = 108.0
+    
+    # 3. Inject Cell (The Soul)
+    reactor.set_maha_cell(cell)
+    
+    # 4. Tick Reactor (The Pulse)
+    # Determine tick state manually for Phase 1 control
+    tick_state = {
+        "tick": position,  # Simple mapping for now
+        "position": position,
+        "quarter": quarter,
+        "guardian": mahajana,
+        "word": declaration["word"],
+        "opcode": None,
+    }
+    
+    # Run the tick - triggers on_bhoga() in the listener
+    final_state = reactor.tick(tick_state)
+    
+    # 5. Extract Result (Phase 1 Bridge)
+    execution_result = final_state.get("execution_result")
+    
     # SUCCESS: Return routing info + execution result
     return OfferResult(
         success=True,
@@ -220,7 +247,7 @@ def offer(
         actor=actor,
         genesis=declaration["genesis"],
         word=declaration["word"],
-        error=None,
+        error=final_state.get("dissonance_report"),
         execution_result=execution_result,
     )
 

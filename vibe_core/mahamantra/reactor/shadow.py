@@ -513,6 +513,8 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             switch_count=self._switch_count,
             return_count=self._return_count,
             dissonance_report=None,  # Init as clean
+            payload=self._maha_cell.payload if self._maha_cell else None,  # WATERTIGHT PAYLOAD ACCESS
+            execution_result=None,  # Phase 1 Bridge return channel
         )
 
         # =====================================================================
