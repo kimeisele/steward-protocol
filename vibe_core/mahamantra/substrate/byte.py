@@ -38,27 +38,12 @@ from vibe_core.mahamantra.substrate.seed import (
     TRINITY as LILA_CYCLES,  # 3
     LILA as LILA_LIMIT,  # 48
     PARAMPARA,  # 37
+    # HolyName - THE SSOT (seed.py is THE source, includes VOID)
+    HolyName,
 )
 
 # Strict Typing
 FractalInt = NewType("FractalInt", int)
-
-
-class HolyName(IntEnum):
-    """
-    The Ternary Basis of Reality + Maya.
-
-    seed.py defines the pure TRUTH (3 holy names).
-    byte.py extends with VOID for binary encoding necessity.
-
-    "māyā tatam idaṁ sarvaṁ" - Maya pervades this world.
-    VOID is not truth, but computation requires error states.
-    """
-
-    HARE = 0  # 00 - Radha, the energy
-    KRISHNA = 1  # 01 - The all-attractive
-    RAMA = 2  # 10 - Reservoir of pleasure
-    VOID = 3  # 11 - Maya/Error (not in seed.py - that's TRUTH only)
 
 
 class MantraBit(IntFlag):
