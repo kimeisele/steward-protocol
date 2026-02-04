@@ -172,8 +172,8 @@ class KirtanCLI:
         try:
             seed = int(subcmd)
             return self._cmd_beat([str(seed)])
-        except ValueError:
-            pass
+        except ValueError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Unknown command
         print(f"Unknown command: {subcmd}")
@@ -215,8 +215,8 @@ class KirtanCLI:
                 # Try as seed
                 try:
                     seed = int(arg)
-                except ValueError:
-                    pass
+                except ValueError as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
                 i += 1
 
         # Create and run operator

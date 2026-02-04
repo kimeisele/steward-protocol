@@ -163,8 +163,8 @@ class CuriosityTracker:
                         )
                     )
                 return state
-            except (json.JSONDecodeError, IOError):
-                pass
+            except (json.JSONDecodeError, IOError) as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return CuriosityState()
 
     def _save_state(self) -> None:

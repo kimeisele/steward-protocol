@@ -328,8 +328,8 @@ class InvariantChecker:
             if "." in raw:
                 return float(raw)
             return int(raw)
-        except ValueError:
-            pass
+        except ValueError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Return as string
         return raw

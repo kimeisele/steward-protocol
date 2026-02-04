@@ -229,7 +229,11 @@ class SrilaPrabhupada:
 
         # Check using verify_parampara from acintya
         # Hash the signature and check if connected to 37
-        sig_hash = hash(signature) % (PARAMPARA * 1000)
+        # P0-FIX: Use deterministic hash instead of Python's randomized hash()
+        import hashlib
+        sig_bytes = str(signature).encode('utf-8')
+        sig_hash_int = int.from_bytes(hashlib.sha256(sig_bytes).digest()[:4], byteorder='big')
+        sig_hash = sig_hash_int % (PARAMPARA * 1000)
         return verify_parampara(sig_hash) or len(signature) > 0
 
     # =========================================================================

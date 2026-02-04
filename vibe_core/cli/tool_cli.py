@@ -65,8 +65,8 @@ class ToolCLI:
             for tool in tools:
                 try:
                     self._registry.register(tool)
-                except (ValueError, TypeError):
-                    pass  # Skip duplicate or invalid tools
+                except (ValueError, TypeError) as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         return self._registry
 
@@ -313,20 +313,20 @@ Examples:
         # Try JSON first (for objects, arrays, booleans)
         try:
             return json.loads(value)
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Try int
         try:
             return int(value)
-        except ValueError:
-            pass
+        except ValueError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Try float
         try:
             return float(value)
-        except ValueError:
-            pass
+        except ValueError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Return as string
         return value

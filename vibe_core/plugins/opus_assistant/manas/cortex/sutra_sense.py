@@ -619,8 +619,8 @@ class SutraSense(BaseSense):
                                     suggested_action="Add to relevant OPUS doc harness or create new doc",
                                 )
                             )
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
     def _verify_harness_wiring(self) -> None:
         """Verify that wiring patterns are actually present in code."""
@@ -641,8 +641,8 @@ class SutraSense(BaseSense):
                         if re.search(pattern, content):
                             found = True
                             break
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
                 if found:
                     wiring_found.append(pattern)
@@ -902,8 +902,8 @@ class SutraSense(BaseSense):
                         for g in match.groups():
                             if g:
                                 documented_patterns.add(g.lower())
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         # Scan code directories for hidden elements
         for code_dir in CODE_DIRECTORIES:
@@ -1289,8 +1289,8 @@ class SutraSense(BaseSense):
                         if f"class {class_name}" in file_content:
                             found = True
                             break
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
                 if found:
                     break
             if not found and class_name not in ("Path", "Dict", "List", "Any", "Optional"):

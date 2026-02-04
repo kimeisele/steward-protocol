@@ -76,8 +76,8 @@ class WatertightValidator:
                     type_leaks.append(f"{name}:return_missing")
                 elif _is_any(hints["return"]):
                     type_leaks.append(f"{name}:return_is_Any")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         if type_leaks:
             leaks.append(f"❌ [SHRI] Type leaks: {', '.join(type_leaks)}")
         else:

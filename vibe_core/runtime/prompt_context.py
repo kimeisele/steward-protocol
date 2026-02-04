@@ -269,8 +269,8 @@ class PromptContext:
 
                     extension = "    " if is_last else "│   "
                     _walk(entry, depth + 1, prefix + extension)
-            except PermissionError:
-                pass
+            except PermissionError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         _walk(root, 0)
         return "\n".join(lines)

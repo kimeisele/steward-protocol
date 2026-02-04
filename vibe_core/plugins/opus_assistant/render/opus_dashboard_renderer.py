@@ -107,8 +107,8 @@ class OpusDashboardRenderer:
         try:
             if config_path.exists():
                 return yaml.safe_load(config_path.read_text())
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return {}
 
     def _load_manas_config(self) -> Dict[str, Any]:
@@ -330,8 +330,8 @@ class OpusDashboardRenderer:
                     "status": self._kernel.status.value,
                     "agent_count": len(getattr(self._kernel, "_agents", {})),
                 }
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
         return {"status": "STOPPED", "agent_count": 0}
 
     def _gather_git_state(self) -> Dict[str, Any]:
@@ -347,8 +347,8 @@ class OpusDashboardRenderer:
             if status.get("dirty", False):
                 try:
                     uncommitted = prakriti.git.dirty_files() if hasattr(prakriti.git, "dirty_files") else []
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             return {
                 "branch": status.get("branch", "unknown"),
@@ -397,8 +397,8 @@ class OpusDashboardRenderer:
                         "id": session.session_id,
                         "boot_commit": getattr(session, "boot_commit", "unknown"),
                     }
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return session_data if session_data else None
 
@@ -448,8 +448,8 @@ class OpusDashboardRenderer:
             if hasattr(prakriti, "personas"):
                 status = prakriti.personas.status() if hasattr(prakriti.personas, "status") else {}
                 purusha["persona"] = status.get("active_persona")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return {"purusha": purusha}
 
@@ -462,8 +462,8 @@ class OpusDashboardRenderer:
             prakriti = ServiceRegistry.get(PrakritiProtocol)
             if prakriti and prakriti.git.status().get("dirty"):
                 focus.append("Commit pending changes")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Drift?
         try:
@@ -473,8 +473,8 @@ class OpusDashboardRenderer:
             quick = detector.quick_check()
             if not quick.get("healthy", True):
                 focus.append("Documentation drift detected")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return focus
 
@@ -530,8 +530,8 @@ class OpusDashboardRenderer:
                                 "message": message.strip(),
                             }
                         )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return observations
 
@@ -753,8 +753,8 @@ class OpusDashboardRenderer:
                                 "states": 0,
                             }
                         )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return circuits
 
@@ -829,8 +829,8 @@ class OpusDashboardRenderer:
                                 "path": f"docs/architecture/OPUS/{f.name}",
                             }
                         )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return plans
 
@@ -1018,8 +1018,8 @@ class OpusDashboardRenderer:
                             "priority": intent.priority if hasattr(intent, "priority") else "medium",
                         }
                     )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
             return {
                 "current_goal": current_goal,
@@ -1137,8 +1137,8 @@ class OpusDashboardRenderer:
                     manas_status["intent_buffer"]["executed"] = data.get("executed", [])[-10:]
                     manas_status["intent_buffer"]["rejected"] = data.get("rejected", [])[-5:]
                     manas_status["intent_buffer"]["last_updated"] = data.get("last_updated")
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             # =================================================================
             # OPUS-133: NEURAL LEARNING STATUS
@@ -1161,8 +1161,8 @@ class OpusDashboardRenderer:
                     "broken_files": [],
                     "sanskrit_missing": [],
                 }
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
             return manas_status
 
@@ -1268,8 +1268,8 @@ class OpusDashboardRenderer:
                     data = json.loads(reinforce_path.read_text())
                     neural["ops"]["last_reinforcement"] = data
                     neural["last_reinforcement"] = data  # Legacy compat
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             # Read recent Viveka decisions
             decisions_path = get_opus_state_path(self._root, "viveka_decisions.json")
@@ -1312,8 +1312,8 @@ class OpusDashboardRenderer:
                 neural["prabhupada_patch"]["vairagya_decay"] = VAIRAGYA_DECAY
                 neural["prabhupada_patch"]["prasadam_threshold"] = PRASADAM_THRESHOLD
                 neural["prabhupada_patch"]["nishkama_duties"] = list(DHARMIC_DUTIES)[:5]
-            except ImportError:
-                pass
+            except ImportError as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
             return neural
 
@@ -1341,10 +1341,10 @@ class OpusDashboardRenderer:
                                         "text": line.strip(),
                                     }
                                 )
-                    except Exception:
-                        pass
-            except Exception:
-                pass
+                    except Exception as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
             return results[:50]
 
         return {
@@ -1378,8 +1378,8 @@ class OpusDashboardRenderer:
                         using_fixtures += 1
                     elif "RealVibeKernel" in content:
                         using_raw += 1
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             total_scanned = using_fixtures + using_raw
 
@@ -1435,8 +1435,8 @@ class OpusDashboardRenderer:
                                 doc = content[start:end].strip()
                                 # First line only
                                 description = doc.split("\n")[0][:60]
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
                 # Count Python files
                 py_files = list(item.glob("**/*.py"))
@@ -1508,8 +1508,8 @@ class OpusDashboardRenderer:
                         }
                     )
 
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return hot_paths
 
@@ -1567,8 +1567,8 @@ class OpusDashboardRenderer:
                             if source_module not in edges:
                                 edges[source_module] = {}
                             edges[source_module][target] = edges[source_module].get(target, 0) + 1
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # Build nodes with sizes (from module index)
         nodes = []
@@ -1676,8 +1676,8 @@ class OpusDashboardRenderer:
         try:
             if config_path.exists():
                 return yaml.safe_load(config_path.read_text()) or {}
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return {}
 
     def get_ai_section(self, section: str) -> Optional[str]:
@@ -1771,8 +1771,8 @@ class OpusDashboardRenderer:
                 if match:
                     preserved[section_name] = match.group(1).strip()
 
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return preserved
 

@@ -295,8 +295,8 @@ class LotusNode:
                     score = protocol_cls.get_resonance(cmd_lower)
                     if score > 0:
                         return score, self
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         # 2. Delegate to children (Tree Level)
         max_score = 0.0

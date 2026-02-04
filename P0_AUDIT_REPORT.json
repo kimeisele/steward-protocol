@@ -1,0 +1,271 @@
+{
+  "timestamp": "2026-02-03 18:34:35",
+  "total_problems": 7,
+  "total_findings": 489,
+  "stats": {
+    "files_scanned": 0,
+    "lines_scanned": 0,
+    "p0_critical": 1,
+    "p0_security": 1,
+    "p0_architecture": 5
+  },
+  "problems": [
+    {
+      "id": "P0-1",
+      "title": "Non-Deterministic hash() Usage",
+      "severity": "\ud83d\udd25 P0-CRITICAL",
+      "verified": true,
+      "findings_count": 197,
+      "findings": [
+        {
+          "file": "vibe_core/kernel_impl.py",
+          "line": 391,
+          "code": "child_hash = child.get_ledger_hash()",
+          "reason": "Uses Python hash() which is non-deterministic across runs"
+        },
+        {
+          "file": "vibe_core/kernel_impl.py",
+          "line": 531,
+          "code": "def get_ledger_hash(self) -> str:",
+          "reason": "Uses Python hash() which is non-deterministic across runs"
+        },
+        {
+          "file": "vibe_core/kernel_impl.py",
+          "line": 534,
+          "code": "return self.ledger.get_hash()",
+          "reason": "Uses Python hash() which is non-deterministic across runs"
+        },
+        {
+          "file": "vibe_core/kernel_impl.py",
+          "line": 536,
+          "code": "return self.ledger.compute_hash()",
+          "reason": "Uses Python hash() which is non-deterministic across runs"
+        },
+        {
+          "file": "vibe_core/vajra/enforcement.py",
+          "line": 430,
+          "code": "\"chain_hash\": self.reactor._chain_hash(),",
+          "reason": "Uses Python hash() which is non-deterministic across runs"
+        }
+      ]
+    },
+    {
+      "id": "P0-2",
+      "title": "Audit Trail Bypasses (Fail-Open)",
+      "severity": "\ud83d\udd25 P0-SECURITY",
+      "verified": true,
+      "findings_count": 42,
+      "findings": [
+        {
+          "file": "vibe_core/vajra/auto_wire.py",
+          "line": 127,
+          "code": "except Exception:",
+          "reason": "Silent exception handling - errors are hidden"
+        },
+        {
+          "file": "vibe_core/naga/flood.py",
+          "line": 539,
+          "code": "except Exception:",
+          "reason": "Silent exception handling - errors are hidden"
+        },
+        {
+          "file": "vibe_core/naga/commit_watcher.py",
+          "line": 521,
+          "code": "except Exception:",
+          "reason": "Silent exception handling - errors are hidden"
+        },
+        {
+          "file": "vibe_core/naga/commit_watcher.py",
+          "line": 543,
+          "code": "except Exception:",
+          "reason": "Silent exception handling - errors are hidden"
+        },
+        {
+          "file": "vibe_core/cli/unified_cli.py",
+          "line": 1512,
+          "code": "except Exception:",
+          "reason": "Silent exception handling - errors are hidden"
+        }
+      ]
+    },
+    {
+      "id": "P0-3",
+      "title": "Assert-Based Security (Removed in -O mode)",
+      "severity": "\ud83d\udd25 P0-INTEGRITY",
+      "verified": false,
+      "findings_count": 0,
+      "findings": []
+    },
+    {
+      "id": "P0-4",
+      "title": "Circular Import Dependencies",
+      "severity": "\ud83d\udd25 P0-ARCHITECTURE",
+      "verified": true,
+      "findings_count": 199,
+      "findings": [
+        {
+          "file": "vibe_core/plugin_service.py",
+          "line": 40,
+          "code": "- Lazy loading (classes imported on demand)",
+          "reason": "Lazy import pattern detected - indicates circular dependency"
+        },
+        {
+          "file": "vibe_core/kernel_impl.py",
+          "line": 123,
+          "code": "from .utils.lazy_import import lazy_class",
+          "reason": "Lazy import pattern detected - indicates circular dependency"
+        },
+        {
+          "file": "vibe_core/__init__.py",
+          "line": 10,
+          "code": "LAZY IMPORTS: All imports are deferred until actually accessed.",
+          "reason": "Lazy import pattern detected - indicates circular dependency"
+        },
+        {
+          "file": "vibe_core/__init__.py",
+          "line": 62,
+          "code": "# LAZY IMPORT MECHANISM (Python 3.7+)",
+          "reason": "Lazy import pattern detected - indicates circular dependency"
+        },
+        {
+          "file": "vibe_core/__init__.py",
+          "line": 65,
+          "code": "_LAZY_IMPORTS = {",
+          "reason": "Lazy import pattern detected - indicates circular dependency"
+        }
+      ]
+    },
+    {
+      "id": "P0-5",
+      "title": "Duplicate State Management Systems",
+      "severity": "\ud83d\udd25 P0-ARCHITECTURE",
+      "verified": true,
+      "findings_count": 6,
+      "findings": [
+        {
+          "file": "multiple files",
+          "line": 0,
+          "code": "StateService used in 27 files",
+          "reason": "Parallel state system - no single source of truth"
+        },
+        {
+          "file": "multiple files",
+          "line": 0,
+          "code": "Prakriti used in 103 files",
+          "reason": "Parallel state system - no single source of truth"
+        },
+        {
+          "file": "multiple files",
+          "line": 0,
+          "code": "SynapseStore used in 7 files",
+          "reason": "Parallel state system - no single source of truth"
+        },
+        {
+          "file": "multiple files",
+          "line": 0,
+          "code": "EphemeralStorage used in 6 files",
+          "reason": "Parallel state system - no single source of truth"
+        },
+        {
+          "file": "multiple files",
+          "line": 0,
+          "code": "Ouroboros used in 41 files",
+          "reason": "Parallel state system - no single source of truth"
+        }
+      ]
+    },
+    {
+      "id": "P0-6",
+      "title": "Research Code in Production Paths",
+      "severity": "\u26a0\ufe0f  P0-STABILITY",
+      "verified": true,
+      "findings_count": 8,
+      "findings": [
+        {
+          "file": "vibe_core/cli/kirtan_cli.py",
+          "line": 127,
+          "code": "from vibe_core.mahamantra.research.research_chat import get_research_chat",
+          "reason": "Production code imports from research/ - unstable dependency"
+        },
+        {
+          "file": "vibe_core/cli/kirtan_cli.py",
+          "line": 321,
+          "code": "from vibe_core.mahamantra.research.research_chat import main as research_main",
+          "reason": "Production code imports from research/ - unstable dependency"
+        },
+        {
+          "file": "vibe_core/mahamantra/protocols/_gita_lens.py",
+          "line": 78,
+          "code": "from vibe_core.mahamantra.research.gita import (",
+          "reason": "Production code imports from research/ - unstable dependency"
+        },
+        {
+          "file": "vibe_core/mahamantra/kernel/maha_kernel.py",
+          "line": 28,
+          "code": "from vibe_core.mahamantra.research.lotus_tree import LotusArrayInt",
+          "reason": "Production code imports from research/ - unstable dependency"
+        },
+        {
+          "file": "vibe_core/plugins/opus_assistant/vidya/__init__.py",
+          "line": 31,
+          "code": "from vibe_core.plugins.opus_assistant.vidya.research_interface import ResearchInterface",
+          "reason": "Production code imports from research/ - unstable dependency"
+        }
+      ]
+    },
+    {
+      "id": "P0-7",
+      "title": "Service Instantiation Bypasses",
+      "severity": "\u26a0\ufe0f  P0-ARCHITECTURE",
+      "verified": true,
+      "findings_count": 36,
+      "findings": [
+        {
+          "file": "vibe_core/kernel_impl.py",
+          "line": 201,
+          "code": "self.janaka = MahamantraProxy(JanakaService(), position=10, guardian=\"janaka\")",
+          "reason": "Direct service instantiation - bypasses mahamantra routing"
+        },
+        {
+          "file": "vibe_core/kernel_impl.py",
+          "line": 202,
+          "code": "self.bali = MahamantraProxy(BaliService(), position=13, guardian=\"bali\")",
+          "reason": "Direct service instantiation - bypasses mahamantra routing"
+        },
+        {
+          "file": "vibe_core/kernel_impl.py",
+          "line": 203,
+          "code": "self.kapila = MahamantraProxy(KapilaService(), position=6, guardian=\"kapila\")",
+          "reason": "Direct service instantiation - bypasses mahamantra routing"
+        },
+        {
+          "file": "vibe_core/ouroboros/sync.py",
+          "line": 35,
+          "code": "sync = CISyncService()",
+          "reason": "Direct service instantiation - bypasses mahamantra routing"
+        },
+        {
+          "file": "vibe_core/mahamantra/chat.py",
+          "line": 548,
+          "code": "self._sesha = SeshaService()",
+          "reason": "Direct service instantiation - bypasses mahamantra routing"
+        }
+      ]
+    },
+    {
+      "id": "P0-8",
+      "title": "Incomplete Balarama Pattern Enforcement",
+      "severity": "\u26a0\ufe0f  P0-ARCHITECTURE",
+      "verified": true,
+      "findings_count": 1,
+      "findings": [
+        {
+          "file": "multiple files",
+          "line": 0,
+          "code": "MahamantraProxy: 10 uses, Direct instantiation: 43 uses",
+          "reason": "Balarama pattern not enforced globally - inconsistent service governance"
+        }
+      ]
+    }
+  ]
+}

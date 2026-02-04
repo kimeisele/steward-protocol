@@ -1323,8 +1323,8 @@ class ChatService(ChatProtocol, LotusBase):
             prompt_ctx = get_prompt_context()
             runtime = prompt_ctx.resolve(["git_status", "current_branch", "kernel_status"])
             context.update(runtime)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Add CLI capabilities - SELF-AWARENESS
         # Chat needs to know what commands it can execute
@@ -1453,8 +1453,8 @@ Be concise, technical, and helpful.
             if not model:
                 model = config.steward.cognitive_policy.model_preferences.fallback
             return model
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Should not reach here if config is proper
         raise ValueError("❌ No model configured in config/steward.yaml")
@@ -1519,8 +1519,8 @@ def get_chat_service() -> ChatService:
         existing = ServiceRegistry.get(ChatProtocol)
         if existing is not None:
             return existing
-    except Exception:
-        pass  # Not registered yet, we'll create and register
+    except Exception as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     # Create and register - this triggers NagaProxy wrapping if enabled!
     instance = ChatService()

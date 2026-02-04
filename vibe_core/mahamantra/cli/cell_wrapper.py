@@ -16,6 +16,7 @@ __mahajana__ = "arjuna"
 __position__ = 2
 __genesis__ = "0xc8e2b91a"
 
+import hashlib
 from typing import List, Final
 
 from vibe_core.mahamantra.protocols._seed import WORDS
@@ -54,7 +55,10 @@ class MahaCellCLI:
         # Operation: Hash of command mapped to 16 words (Functional Slot)
         # Intent: The compressed seed
         # DNA: The original command string
-        op_code = hash(command) % WORDS
+        # P0-FIX: Use deterministic hash instead of Python's randomized hash()
+        command_bytes = command.encode('utf-8')
+        command_hash = int.from_bytes(hashlib.sha256(command_bytes).digest()[:4], byteorder='big')
+        op_code = command_hash % WORDS
         
         cell = MahaCellUnified.create(
             source=result.position,

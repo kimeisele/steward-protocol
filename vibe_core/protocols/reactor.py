@@ -403,8 +403,8 @@ class BasicReactor:
                 if handler(drift):
                     corrected = True
                     break
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         if corrected:
             drift.corrected = True
@@ -492,7 +492,7 @@ def get_reactor_safe() -> ReactorProtocol:
         reactor = ServiceRegistry.get(ReactorProtocol)
         if reactor is not None:
             return reactor
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return NullReactor()

@@ -1063,8 +1063,8 @@ class NagaCortex:
                 for k, v in snapshot["dispatched"].items():
                     try:
                         self._dispatched[k] = datetime.fromisoformat(v)
-                    except (ValueError, TypeError):
-                        pass
+                    except (ValueError, TypeError) as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
             logger.info(f"[CORTEX] PHOENIX: Restored state (decisions_made={self._stats.decisions_made})")
 

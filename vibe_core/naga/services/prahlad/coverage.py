@@ -109,8 +109,8 @@ class CoverageIntelligenceMixin:
             for testable in naga_testables:
                 try:
                     naga_tests += len(testable.get_test_cases())
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
             return {
                 "testables_covered": len(naga_testables),

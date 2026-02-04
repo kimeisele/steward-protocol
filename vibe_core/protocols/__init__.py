@@ -21,6 +21,10 @@ __mahajana__ = "brahma"
 __position__ = 1
 __genesis__ = "0x388bbf83"  # GenesisByte: parampara % 37 == 0
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # OPUS-311 Sprint 2: Event Bus Protocol (NARADA - Position 2)
 from vibe_core.protocols.mahajanas.narada.events import (
     Event,
@@ -242,8 +246,8 @@ def __getattr__(name: str):
         if hasattr(mahamantra.protocols, name):
             return getattr(mahamantra.protocols, name)
 
-    except (ImportError, AttributeError):
-        pass
+    except (ImportError, AttributeError) as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

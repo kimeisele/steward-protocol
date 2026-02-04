@@ -186,8 +186,8 @@ class IdentityScanner:
                         parts = line.split("=")
                         if len(parts) == 2:
                             return parts[1].strip().strip('"').strip("'")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return "0.3.0"  # Default
 
     def _scan_system_agents(self) -> List[AgentIdentity]:
@@ -325,8 +325,8 @@ class IdentityScanner:
                 # Count test functions
                 count += content.count("def test_")
                 count += content.count("async def test_")
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return count
 
@@ -356,8 +356,8 @@ class IdentityScanner:
                             opus_num = f"OPUS-{match.group(1).zfill(3)}"
                             if opus_num not in iterations:
                                 iterations.append(opus_num)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         return sorted(iterations, reverse=True)[:10]  # Last 10
 
@@ -651,8 +651,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
                     "source_url": urls.get("Source", "https://github.com/kimeisele/steward-protocol"),
                     "issues_url": urls.get("Tracker", "https://github.com/kimeisele/steward-protocol/issues"),
                 }
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return {"name": "steward-protocol", "source_url": "https://github.com/kimeisele/steward-protocol"}
 
     def _get_core_agents(self, identity: SystemIdentity) -> Dict[str, List[AgentIdentity]]:
@@ -734,8 +734,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 {chr(10).join(items)}
 
 See [OPUS.md](OPUS.md) for current goals and roadmap."""
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return ""
 
     def update_readme(self) -> Path:
@@ -959,6 +959,6 @@ class ReadmeDataProvider:
             if result.returncode == 0 and result.stdout.strip():
                 commits = result.stdout.strip().split("\n")
                 return [c.split(" ", 1)[1] if " " in c else c for c in commits[:5]]
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return []

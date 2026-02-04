@@ -155,8 +155,8 @@ class ReadmeRenderer(BaseRenderer):
                 test_files = list(tests_dir.rglob("test_*.py"))
                 # Rough estimate: ~10 tests per file average
                 return len(test_files) * 10
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
         return 685  # Fallback to known count
 
     def _build_agents_by_category(self) -> Dict[str, List[Dict[str, Any]]]:

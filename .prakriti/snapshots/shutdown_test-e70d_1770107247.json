@@ -1,0 +1,47 @@
+{
+  "timestamp": 1770107247.810099,
+  "git": {
+    "is_repo": true,
+    "branch": "fix/alte-welt-stabilization",
+    "sha": "2b10b23",
+    "dirty": true,
+    "workspace": "/Users/ss/projects/steward-protocol"
+  },
+  "files": {
+    "workspace": "/Users/ss/projects/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 6.616023063659668,
+    "agent_count": 1,
+    "queue_pending": 0,
+    "plugins_loaded": 24
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/Users/ss/projects/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "test-e70d",
+    "boot_time": 1770107247.077184,
+    "commit_count": 0
+  }
+}

@@ -155,8 +155,8 @@ class OptimizeCommand(NagaCommandBase):
         for f in python_files[:100]:  # Limit for speed
             try:
                 total_lines += len(f.read_text().split("\n"))
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         return {
             "python_files": str(len(python_files)),
@@ -179,8 +179,8 @@ class OptimizeCommand(NagaCommandBase):
                 lines = len(f.read_text().split("\n"))
                 if lines > 500:
                     large_files.append(f.name)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         if large_files:
             analysis["Large Files (>500 lines)"] = str(len(large_files))
@@ -212,8 +212,8 @@ class OptimizeCommand(NagaCommandBase):
                 content = f.read_text()
                 if "from " in content and " import *" in content:
                     star_import_count += 1
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.exception("Unexpected error: %s", _exc)
 
         if star_import_count > 0:
             findings.append(f"Star imports found: {star_import_count} files")
@@ -241,8 +241,8 @@ class OptimizeCommand(NagaCommandBase):
                     content = f.read_text()
                     if len(content) < 100:  # Very short private module
                         dead.append(f"{f.parent.name}/{f.name} (small private module)")
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.exception("Unexpected error: %s", _exc)
 
         if not dead:
             dead.append("No obvious dead code detected")

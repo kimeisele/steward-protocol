@@ -200,8 +200,8 @@ class LineageChain:
                     gad_000_version = "2.0"
                 elif "v1.6" in content:
                     gad_000_version = "1.6"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         genesis = LineageBlock(
             index=0,

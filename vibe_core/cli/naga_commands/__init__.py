@@ -89,23 +89,23 @@ def discover_commands() -> List[INagaCommand]:
     # Import subpackages to trigger @naga_command decorators
     try:
         from vibe_core.cli.naga_commands import wake
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     try:
         from vibe_core.cli.naga_commands import purify
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     try:
         from vibe_core.cli.naga_commands import serve
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     try:
         from vibe_core.cli.naga_commands import sustain
-    except ImportError:
-        pass
+    except ImportError as _exc:
+        logger.exception("Unexpected error: %s", _exc)
 
     return NAGA_COMMAND_REGISTRY.list_all()
 

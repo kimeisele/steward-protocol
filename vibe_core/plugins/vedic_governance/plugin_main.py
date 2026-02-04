@@ -276,8 +276,8 @@ class VedicGovernancePlugin(KernelPlugin):
                 if varna_str:
                     try:
                         self._varna_registry[agent_id] = Varna(varna_str)
-                    except ValueError:
-                        pass  # Unknown varna value
+                    except ValueError as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
             elif event_type == "ASHRAMA_TRANSITION" and agent_id:
                 # Only keep latest transition per agent
@@ -291,8 +291,8 @@ class VedicGovernancePlugin(KernelPlugin):
                         if details.get("timestamp"):
                             transition.entry_time = datetime.fromisoformat(details["timestamp"])
                         self._ashrama_registry[agent_id] = transition
-                    except (ValueError, KeyError):
-                        pass  # Invalid transition data
+                    except (ValueError, KeyError) as _exc:
+                        logger.exception("Unexpected error: %s", _exc)
 
     def _sync_from_state_manager(self) -> None:
         """
@@ -890,8 +890,8 @@ class VedicGovernancePlugin(KernelPlugin):
 
                             parsed = dt.fromisoformat(ts.replace("Z", "+00:00"))
                             timestamps.append(parsed)
-                        except (ValueError, AttributeError):
-                            pass
+                        except (ValueError, AttributeError) as _exc:
+                            logger.exception("Unexpected error: %s", _exc)
 
                 if len(timestamps) >= 10:
                     timestamps.sort()

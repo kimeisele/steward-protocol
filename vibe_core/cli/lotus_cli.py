@@ -169,8 +169,8 @@ class LotusCLI:
             guna_name = guna.name
             guna_symbols = {"SATTVA": "●", "RAJAS": "◐", "TAMAS": "○"}
             guna_sym = guna_symbols.get(guna_name, "?")
-        except ImportError:
-            pass
+        except ImportError as _exc:
+            logger.exception("Unexpected error: %s", _exc)
 
         # Quarter names
         quarter_names = ["GENESIS", "DHARMA", "KARMA", "MOKSHA"]
