@@ -20,8 +20,6 @@ __mahajana__ = "bhishma"
 __position__ = 11
 __genesis__ = "0x030295b1"  # GenesisByte
 
-__genesis__ = "0x030295b1"  # GenesisByte
-    
 import logging
 from typing import Final
 
@@ -73,8 +71,8 @@ def __getattr__(name: str) -> object:
     # ==========================================================================
     # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
     # ==========================================================================
-    from pathlib import Path
     import importlib
+    from pathlib import Path
 
     pkg_root = Path(__file__).parent
 
