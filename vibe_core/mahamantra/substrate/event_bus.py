@@ -620,6 +620,7 @@ class EventBus(EventBusProtocol):
         agent_id: str,
         message: str,
         data: Optional[EventDetails] = None,
+        task_id: Optional[str] = None,
     ) -> str:
         """
         Emit an event synchronously.
@@ -629,6 +630,7 @@ class EventBus(EventBusProtocol):
             agent_id: ID of agent emitting event
             message: Event message
             data: Optional event data
+            task_id: Optional trace ID
 
         Returns:
             Event ID
@@ -641,6 +643,7 @@ class EventBus(EventBusProtocol):
             message=message,
             timestamp=datetime.now().isoformat() + "Z",
             details=data or {},
+            task_id=task_id,
         )
 
         # Emit asynchronously if there's a running event loop
@@ -655,6 +658,34 @@ class EventBus(EventBusProtocol):
                 self._event_history.pop(0)
             self._event_count += KSETRAJNA
             self._type_counts[event.event_type] = self._type_counts.get(event.event_type, 0) + KSETRAJNA
+            
+            # DISPATCH TO SUBSCRIBERS (Sync Fallback)
+            # "Sankirtan must continue even without Async"
+            
+            def _sync_dispatch(cb, ev):
+                """Inline helper for sync dispatch with metrics."""
+                if asyncio.iscoroutinefunction(cb):
+                    logger.warning(f"⚠️ EventBus (Sync): Skipping async callback {cb} in sync mode")
+                    return
+                # Manual Metric Tracking
+                callback_id = self._callback_ids.get(cb, f"sub_{id(cb)}")
+                self._subscriber_metrics.record_send(callback_id)
+                start = time_module.time()
+                try:
+                    cb(ev)
+                    duration = time_module.time() - start
+                    self._subscriber_metrics.record_complete(callback_id, duration)
+                except Exception as ex:
+                    logger.error(f"EventBus Sync Dispatch Error: {ex}")
+
+            # 1. Type-specific
+            type_subs = self._subscribers.get(event.event_type, set())
+            for sub in type_subs:
+                _sync_dispatch(sub, event)
+                
+            # 2. Global
+            for sub in self._global_subscribers:
+                _sync_dispatch(sub, event)
 
         return event_id
 

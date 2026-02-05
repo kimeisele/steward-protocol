@@ -254,6 +254,7 @@ from vibe_core.protocols.mahajanas.yamaraja.samskara import (
 
 
 # =============================================================================
+# =============================================================================
 # SAMSKARA SERVICE - Migration Engine
 # =============================================================================
 
@@ -270,6 +271,41 @@ def execute(input_text: str, context: dict = None) -> dict:
         "opcode": OPCODE,
         "input": input_text,
     }
+
+
+def on_bhoga(state: dict) -> None:
+    """
+    Reactor Hook: Called when ShadowReactor executes index 15 (Yamaraja).
+    
+    THE JUDGE HEARS.
+    """
+    # 1. Access Payload
+    payload_bytes = state.get("payload")
+    if not payload_bytes:
+        state["execution_result"] = {"error": "Yamaraja hears nothing (No Payload)"}
+        return
+
+    try:
+        # 2. Decode Intent
+        intent_text = payload_bytes.decode("utf-8")
+        
+        # 3. Execute Judgment
+        # For MVP, we wrap the execute() call
+        result = execute(intent_text)
+        
+        # 4. Return Verdict
+        state["execution_result"] = {
+            "verdict": "HEARD",
+            "judge": "YAMARAJA",
+            "details": result
+        }
+        
+    except Exception as e:
+        state["execution_result"] = {"error": f"Yamaraja execution failed: {str(e)}"}
+
+
+# YAMARAJA LISTENS IN PRASADAM PHASE (Pos 15 >= 8)
+on_prasadam = on_bhoga
 
 
 def __getattr__(name: str):

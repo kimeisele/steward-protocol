@@ -27,6 +27,7 @@ from typing import Any, Dict, List, Optional
 __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x26629549"  # GenesisByte: parampara % 37 == 0
+__listening_for__ = ["REMEMBER", "RECALL"]  # AUTO-WIRING: Listen for these events
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -495,7 +496,8 @@ def on_event(event: Any) -> None:
             event_type="COMPLETED",
             agent_id="kapila",
             message=f"Processed {intent}",
-            details={"result": execution_result, "original_task_id": event.task_id}
+            details={"result": execution_result, "original_task_id": event.task_id},
+            task_id=event.task_id # PROPAGATE TASK ID so Mailbox can resolve it
         )
 
 # =============================================================================
