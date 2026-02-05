@@ -165,9 +165,11 @@ class MantraByte:
         return self._length
 
     @property
-    def coherence(self) -> float:
+    def coherence(self) -> int:
         """
         Calculates Fractal Coherence against the Standard Pattern.
+        
+        Returns: int in range [0, COSMIC_FRAME] where 21600 = 100%
 
         CHAITANYA SINGULARITY INTEGRATION:
         ==================================
@@ -185,7 +187,7 @@ class MantraByte:
         "Mercy > Justice ⟺ f > 0" (SAMKHYA.md §8.2)
         """
         if self._coherence_override is not None:
-            return self._coherence_override
+            return int(self._coherence_override * 21600)  # Scale to COSMIC_FRAME
 
         std = self.standard_16()
         matches = 0
@@ -237,13 +239,14 @@ class MantraByte:
             # No chanting (f = 0) - strict karma applies
             coherence = base_coherence
 
-        return coherence
+        # Scale to COSMIC_FRAME (21600 = 100%)
+        return int(coherence * 21600)
 
     @property
-    def stability(self) -> float:
-        """Rate of integrity maintenance over time."""
+    def stability(self) -> int:
+        """Rate of integrity maintenance over time. Returns 0-21600."""
         if self._stability_override is not None:
-            return self._stability_override
+            return int(self._stability_override * 21600)
         return self.coherence  # Default stability equals coherence
 
     def __len__(self) -> int:
@@ -298,20 +301,20 @@ class MantraByte:
         """Alias for get_trit() - yajna.py compatibility."""
         return self.get_trit(index)
 
-    def resonance_check(self) -> float:
+    def resonance_check(self) -> int:
         """
         O(1) Bitwise Coherence Check.
 
         Uses XOR to compare bit patterns directly.
         No loops. One CPU instruction.
 
-        Returns coherence score (0.0-1.0).
+        Returns coherence score (0-21600, COSMIC_FRAME scaling).
 
         NOTE: This is the fast O(1) version from yajna.py.
         For the full Mercy Equation coherence, use the .coherence property.
         """
         if self._length == 0:
-            return 0.0
+            return 0
 
         # Standard pattern for comparison
         std = self.standard_16()
@@ -330,9 +333,9 @@ class MantraByte:
             # Fallback for older Python
             errors = bin(diff).count("1")
 
-        # Coherence = 1 - (errors / total_bits)
+        # Coherence = (1 - errors/total_bits) * COSMIC_FRAME
         total_bits = self._length * HALVES
-        coherence = 1.0 - (errors / total_bits)
+        coherence = 21600 - (errors * 21600 // total_bits)
 
         return coherence
 

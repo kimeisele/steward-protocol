@@ -87,7 +87,7 @@ class CellLifecycleState:
     Separate from the header (identity) to allow independent mutation.
     """
     prana: int = GENESIS_PRANA
-    integrity: float = 1.0  # 0.0 to 1.0
+    integrity: int = 21600  # 0 to COSMIC_FRAME (21600 = 100%)
     cycle: int = 0
     is_active: bool = False
     dna: str = ""
@@ -152,8 +152,8 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         return self.lifecycle.prana
     
     @property
-    def membrane_integrity(self) -> float:
-        """Health of the boundary (0.0 - 1.0)."""
+    def membrane_integrity(self) -> int:
+        """Health of the boundary (0 to COSMIC_FRAME, 21600 = 100%)."""
         return self.lifecycle.integrity
     
     @property

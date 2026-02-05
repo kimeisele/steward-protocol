@@ -111,18 +111,20 @@ class MantraProtocol(ABC):
     # =========================================================================
 
     @classmethod
-    def get_resonance(cls, phrase: str) -> float:
+    def get_resonance(cls, phrase: str) -> int:
         """
         Calculate resonance score for a given phrase.
+        
+        Returns: int in range [0, 21600] (COSMIC_FRAME scaling)
 
         HARMONIC COMPUTATION (not discrete 1.0/0.5/0.0):
             - Keywords are ENTRY POINTS (trigger potential resonance)
             - Score is CONTINUOUS based on Seed math
             - Uses Three Flutes (NADI/LILA/MALA) for scaling
 
-        THRESHOLDS (from ResonanceHarmonics):
-            - THRESHOLD_AUTO = 72/108 = 2/3 ≈ 0.667 (high confidence)
-            - THRESHOLD_REFINE = 48/108 = 4/9 ≈ 0.444 (medium confidence)
+        THRESHOLDS (from ResonanceHarmonics, scaled to COSMIC_FRAME):
+            - THRESHOLD_AUTO = 72/108 * 21600 ≈ 14400 (high confidence)
+            - THRESHOLD_REFINE = 48/108 * 21600 ≈ 9600 (medium confidence)
 
         SSOT: Reads from knowledge/guardian_intents.yaml via intents.py
         """
@@ -139,7 +141,7 @@ class MantraProtocol(ABC):
         intents = get_intents(cls._position_index) or tuple(cls._intents)
 
         if not intents:
-            return 0.0
+            return 0
 
         phrase_lower = phrase.lower()
         phrase_words = set(phrase_lower.split())
@@ -160,7 +162,7 @@ class MantraProtocol(ABC):
                 exact_matches += KSETRAJNA
 
         if exact_matches == 0:
-            return 0.0
+            return 0
 
         # =====================================================================
         # THREE FLUTES COMPUTATION
@@ -187,10 +189,11 @@ class MantraProtocol(ABC):
         # Normalize position influence (subtle modulation, not dominant)
         position_factor = 1.0 + (position_frequency / JIVA_CYCLE) * 0.1  # 1.0 to 1.1
 
-        # Final resonance (capped at 1.0)
+        # Final resonance (capped at 1.0, then scaled to COSMIC_FRAME)
         resonance = min(1.0, base_resonance * position_factor)
 
-        return resonance
+        # Scale to COSMIC_FRAME (21600 = 100%)
+        return int(resonance * 21600)
 
     # =========================================================================
     # DERIVED PROPERTIES - All from truth table

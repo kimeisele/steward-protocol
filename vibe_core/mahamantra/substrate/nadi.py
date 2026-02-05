@@ -273,17 +273,19 @@ class NadiStats:
 
     # Derived metrics
     @property
-    def resonance_ratio(self) -> float:
-        """How close to NADI_RESONANCE (72) are we?"""
+    def resonance_ratio(self) -> int:
+        """How close to NADI_RESONANCE (72) are we? Returns 0-21600."""
         if self.connections == 0:
-            return 0.0
-        return min(1.0, self.connections / NADI_RESONANCE)
+            return 0
+        ratio = min(1.0, self.connections / NADI_RESONANCE)
+        return int(ratio * 21600)
 
     @property
-    def mala_progress(self) -> float:
-        """Progress through current mala cycle (108 messages)."""
+    def mala_progress(self) -> int:
+        """Progress through current mala cycle (108 messages). Returns 0-21600."""
         total = self.messages_sent + self.messages_received
-        return (total % NADI_MALA_CYCLE) / NADI_MALA_CYCLE
+        progress = (total % NADI_MALA_CYCLE) / NADI_MALA_CYCLE
+        return int(progress * 21600)
 
 
 # =============================================================================
