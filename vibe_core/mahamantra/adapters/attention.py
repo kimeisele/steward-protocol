@@ -142,13 +142,13 @@ class MahaAttention(MahaAttentionProtocol[Any]):
     # CORE API
     # =========================================================================
 
-    def memorize(self, intent: str, handler: Any) -> int:
+    def memorize(self, intent: str, handler: object) -> int:
         """
         Register an intent → handler mapping (One-Shot Learning).
 
         Args:
             intent: The intent string (e.g., "deploy production")
-            handler: Any callable or value to return on match
+            handler: Callable or value to return on match
 
         Returns:
             The address where handler is stored

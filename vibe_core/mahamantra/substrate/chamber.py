@@ -43,7 +43,7 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
 )
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
-from vibe_core.mahamantra.orchestrator import (
+from vibe_core.mahamantra.substrate.venu_orchestrator import (
     VenuOrchestrator,
     THE_FLUTE_CYCLE,
     DIW_MASK,
@@ -660,6 +660,40 @@ class SankirtanChamber(Generic[C]):
 
 
 # =============================================================================
+# SINGLETON CHAMBER (Persistent Resonance)
+# =============================================================================
+
+_chamber_instance: Optional["SankirtanChamber"] = None
+
+
+def get_chamber() -> "SankirtanChamber":
+    """
+    Get the singleton SankirtanChamber instance.
+    
+    PERSISTENT RESONANCE: The chamber maintains state across calls.
+    This enables:
+    - Accumulated DIW tracking
+    - Resonance count persistence
+    - Registry state preservation
+    - Orchestrator tick continuity
+    
+    "kirtanīyaḥ sadā hariḥ" - One should ALWAYS chant (continuous, not fresh each time)
+    """
+    global _chamber_instance
+    if _chamber_instance is None:
+        _chamber_instance = SankirtanChamber.create()
+    return _chamber_instance
+
+
+def reset_chamber() -> None:
+    """Reset the singleton chamber (for testing or fresh start)."""
+    global _chamber_instance
+    if _chamber_instance is not None:
+        _chamber_instance.reset()
+    _chamber_instance = None
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -671,4 +705,7 @@ __all__ = [
     # Types
     "KirtanMode",
     "SankirtanChamber",
+    # Singleton
+    "get_chamber",
+    "reset_chamber",
 ]

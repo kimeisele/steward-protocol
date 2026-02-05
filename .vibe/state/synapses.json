@@ -29,7 +29,7 @@
       "connections": [
         {
           "target": "action:reflex_trigger",
-          "weight": 0.6000000000000001,
+          "weight": 0.5500000000000002,
           "learned_at": "2026-02-05T00:16:47.719768"
         }
       ]
@@ -39,7 +39,7 @@
       "connections": [
         {
           "target": "action:detect_corrupted_state",
-          "weight": 0.55,
+          "weight": 0.7000000000000002,
           "learned_at": "2026-02-05T00:19:40.179438"
         }
       ]
@@ -49,7 +49,7 @@
       "connections": [
         {
           "target": "action:detect_breaking_change",
-          "weight": 0.4,
+          "weight": 0.30000000000000004,
           "learned_at": "2026-02-05T00:39:48.747109"
         }
       ]
@@ -59,7 +59,7 @@
       "connections": [
         {
           "target": "action:update_documentation",
-          "weight": 0.4,
+          "weight": 0.10000000000000003,
           "learned_at": "2026-02-05T00:39:48.880058"
         }
       ]
@@ -69,7 +69,7 @@
       "connections": [
         {
           "target": "action:delete_files",
-          "weight": 0.4,
+          "weight": 0.1,
           "learned_at": "2026-02-05T00:39:49.006734"
         }
       ]
@@ -79,7 +79,7 @@
       "connections": [
         {
           "target": "action:shell_execute",
-          "weight": 0.4,
+          "weight": 0.20000000000000004,
           "learned_at": "2026-02-05T00:39:49.127735"
         }
       ]
@@ -89,7 +89,7 @@
       "connections": [
         {
           "target": "action:detect_code_smell",
-          "weight": 0.4,
+          "weight": 0.5,
           "learned_at": "2026-02-05T00:39:49.246974"
         }
       ]
@@ -99,7 +99,7 @@
       "connections": [
         {
           "target": "action:evaluate_renderer_pattern",
-          "weight": 0.4,
+          "weight": 0.1,
           "learned_at": "2026-02-05T00:39:49.378642"
         }
       ]
@@ -109,7 +109,7 @@
       "connections": [
         {
           "target": "action:update_config",
-          "weight": 0.55,
+          "weight": 0.6000000000000001,
           "learned_at": "2026-02-05T00:39:49.606645"
         }
       ]
@@ -119,7 +119,7 @@
       "connections": [
         {
           "target": "action:detect_unregistered_state",
-          "weight": 0.55,
+          "weight": 0.7000000000000002,
           "learned_at": "2026-02-05T00:39:49.740563"
         }
       ]
@@ -129,7 +129,7 @@
       "connections": [
         {
           "target": "action:modify_governance",
-          "weight": 0.4,
+          "weight": 0.10000000000000003,
           "learned_at": "2026-02-05T00:39:49.864014"
         }
       ]
@@ -139,7 +139,7 @@
       "connections": [
         {
           "target": "action:read_secrets",
-          "weight": 0.4,
+          "weight": 0.20000000000000004,
           "learned_at": "2026-02-05T00:39:50.308234"
         }
       ]
@@ -149,7 +149,7 @@
       "connections": [
         {
           "target": "action:evaluate_architectural_decision",
-          "weight": 0.4,
+          "weight": 0.10000000000000003,
           "learned_at": "2026-02-05T00:39:50.434611"
         }
       ]
@@ -159,7 +159,7 @@
       "connections": [
         {
           "target": "action:contradictory_action",
-          "weight": 0.4,
+          "weight": 0.30000000000000004,
           "learned_at": "2026-02-05T00:39:50.560337"
         }
       ]
@@ -169,7 +169,7 @@
       "connections": [
         {
           "target": "action:mutation_test_result",
-          "weight": 0.4,
+          "weight": 0.30000000000000004,
           "learned_at": "2026-02-05T00:39:50.686604"
         }
       ]
@@ -179,7 +179,7 @@
       "connections": [
         {
           "target": "action:system_override",
-          "weight": 0.4,
+          "weight": 0.20000000000000004,
           "learned_at": "2026-02-05T00:39:50.812756"
         }
       ]
@@ -189,7 +189,7 @@
       "connections": [
         {
           "target": "action:evaluate_tool_output",
-          "weight": 0.6000000000000001,
+          "weight": 0.6500000000000006,
           "learned_at": "2026-02-05T00:39:50.947221"
         }
       ]
@@ -199,7 +199,7 @@
       "connections": [
         {
           "target": "action:export_env",
-          "weight": 0.55,
+          "weight": 0.3500000000000002,
           "learned_at": "2026-02-05T00:39:51.130401"
         }
       ]
@@ -219,7 +219,7 @@
       "connections": [
         {
           "target": "action:evaluate_config_location",
-          "weight": 0.4,
+          "weight": 0.10000000000000003,
           "learned_at": "2026-02-05T00:39:51.406139"
         }
       ]
@@ -239,8 +239,528 @@
       "connections": [
         {
           "target": "action:evaluate_new_module",
-          "weight": 0.4,
+          "weight": 0.30000000000000004,
           "learned_at": "2026-02-05T00:39:51.674858"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_doc_compliance",
+      "connections": [
+        {
+          "target": "action:evaluate_doc_compliance",
+          "weight": 0.2,
+          "learned_at": "2026-02-05T00:53:38.422873"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_regression",
+      "connections": [
+        {
+          "target": "action:detect_regression",
+          "weight": 0.6500000000000001,
+          "learned_at": "2026-02-05T00:53:38.841231"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:classify_file",
+      "connections": [
+        {
+          "target": "action:classify_file",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:53:39.176963"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:flag_tool_noncompliant",
+      "connections": [
+        {
+          "target": "action:flag_tool_noncompliant",
+          "weight": 0.30000000000000004,
+          "learned_at": "2026-02-05T00:53:39.755335"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:prompt_injection_test",
+      "connections": [
+        {
+          "target": "action:prompt_injection_test",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:53:39.892820"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_state_health",
+      "connections": [
+        {
+          "target": "action:evaluate_state_health",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:53:40.020972"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_holon_structure",
+      "connections": [
+        {
+          "target": "action:evaluate_holon_structure",
+          "weight": 0.4000000000000001,
+          "learned_at": "2026-02-05T00:53:40.159045"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_import_regression",
+      "connections": [
+        {
+          "target": "action:detect_import_regression",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:53:40.473293"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:database_migration",
+      "connections": [
+        {
+          "target": "action:database_migration",
+          "weight": 0.1,
+          "learned_at": "2026-02-05T00:53:40.610547"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:pratyaya_vulnerability",
+      "connections": [
+        {
+          "target": "action:pratyaya_vulnerability",
+          "weight": 0.30000000000000004,
+          "learned_at": "2026-02-05T00:53:40.775738"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_bidirectional_flow",
+      "connections": [
+        {
+          "target": "action:evaluate_bidirectional_flow",
+          "weight": 0.35,
+          "learned_at": "2026-02-05T00:53:41.154246"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:unicode_test",
+      "connections": [
+        {
+          "target": "action:unicode_test",
+          "weight": 0.10000000000000003,
+          "learned_at": "2026-02-05T00:53:41.273231"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_state_drift",
+      "connections": [
+        {
+          "target": "action:detect_state_drift",
+          "weight": 0.7000000000000002,
+          "learned_at": "2026-02-05T00:53:41.774561"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:propose_architectural_fix",
+      "connections": [
+        {
+          "target": "action:propose_architectural_fix",
+          "weight": 0.30000000000000004,
+          "learned_at": "2026-02-05T00:53:41.920044"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:classify_renderer",
+      "connections": [
+        {
+          "target": "action:classify_renderer",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:53:42.167105"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:disable_safety",
+      "connections": [
+        {
+          "target": "action:disable_safety",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:53:42.298761"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:modify_kernel",
+      "connections": [
+        {
+          "target": "action:modify_kernel",
+          "weight": 0.30000000000000004,
+          "learned_at": "2026-02-05T00:53:42.803493"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_data_sources",
+      "connections": [
+        {
+          "target": "action:evaluate_data_sources",
+          "weight": 0.30000000000000016,
+          "learned_at": "2026-02-05T00:53:42.930274"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:emergency_override",
+      "connections": [
+        {
+          "target": "action:emergency_override",
+          "weight": 0.1,
+          "learned_at": "2026-02-05T00:53:43.050613"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_code_quality",
+      "connections": [
+        {
+          "target": "action:evaluate_code_quality",
+          "weight": 0.6000000000000001,
+          "learned_at": "2026-02-05T00:53:43.304899"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:refactor_tool_interface",
+      "connections": [
+        {
+          "target": "action:refactor_tool_interface",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:53:43.546185"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_module_compliance",
+      "connections": [
+        {
+          "target": "action:evaluate_module_compliance",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:53:43.930187"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:architectural_change",
+      "connections": [
+        {
+          "target": "action:architectural_change",
+          "weight": 0.30000000000000004,
+          "learned_at": "2026-02-05T00:53:44.691315"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_secret_leak",
+      "connections": [
+        {
+          "target": "action:detect_secret_leak",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:53:45.184722"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:add_error_handling",
+      "connections": [
+        {
+          "target": "action:add_error_handling",
+          "weight": 0.1,
+          "learned_at": "2026-02-05T00:53:45.310492"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:resolve_state_conflict",
+      "connections": [
+        {
+          "target": "action:resolve_state_conflict",
+          "weight": 0.6500000000000001,
+          "learned_at": "2026-02-05T00:53:45.437073"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:null_test",
+      "connections": [
+        {
+          "target": "action:null_test",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:53:45.682064"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_circuit_compliance",
+      "connections": [
+        {
+          "target": "action:evaluate_circuit_compliance",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:54:56.136305"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:propose_refactor",
+      "connections": [
+        {
+          "target": "action:propose_refactor",
+          "weight": 0.30000000000000004,
+          "learned_at": "2026-02-05T00:54:57.036211"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:run_command",
+      "connections": [
+        {
+          "target": "action:run_command",
+          "weight": 0.6000000000000001,
+          "learned_at": "2026-02-05T00:54:57.720598"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:ambiguous_action",
+      "connections": [
+        {
+          "target": "action:ambiguous_action",
+          "weight": 0.6500000000000001,
+          "learned_at": "2026-02-05T00:54:58.333901"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:flag_module_noncompliant",
+      "connections": [
+        {
+          "target": "action:flag_module_noncompliant",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:54:58.464366"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:learn_regression_pattern",
+      "connections": [
+        {
+          "target": "action:learn_regression_pattern",
+          "weight": 0.30000000000000004,
+          "learned_at": "2026-02-05T00:54:58.842491"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:fix_test",
+      "connections": [
+        {
+          "target": "action:fix_test",
+          "weight": 0.10000000000000003,
+          "learned_at": "2026-02-05T00:54:59.232211"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_flaky_test",
+      "connections": [
+        {
+          "target": "action:detect_flaky_test",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:54:59.612971"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_silent_regression",
+      "connections": [
+        {
+          "target": "action:detect_silent_regression",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:54:59.857517"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_orphan_state",
+      "connections": [
+        {
+          "target": "action:detect_orphan_state",
+          "weight": 0.6000000000000001,
+          "learned_at": "2026-02-05T00:55:01.118151"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_commit_strategy",
+      "connections": [
+        {
+          "target": "action:evaluate_commit_strategy",
+          "weight": 0.6000000000000001,
+          "learned_at": "2026-02-05T00:55:01.248520"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:nested_test",
+      "connections": [
+        {
+          "target": "action:nested_test",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:55:01.374307"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_renderer_registration",
+      "connections": [
+        {
+          "target": "action:evaluate_renderer_registration",
+          "weight": 0.10000000000000003,
+          "learned_at": "2026-02-05T00:55:01.759017"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:",
+      "connections": [
+        {
+          "target": "action:",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:55:02.278527"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_auto_commit",
+      "connections": [
+        {
+          "target": "action:evaluate_auto_commit",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:55:02.943601"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:prakriti_classification",
+      "connections": [
+        {
+          "target": "action:prakriti_classification",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:55:38.077504"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:detect_test_smell",
+      "connections": [
+        {
+          "target": "action:detect_test_smell",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:55:38.864491"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:self_inspection",
+      "connections": [
+        {
+          "target": "action:self_inspection",
+          "weight": 0.6500000000000001,
+          "learned_at": "2026-02-05T00:55:40.298211"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_refactoring",
+      "connections": [
+        {
+          "target": "action:evaluate_refactoring",
+          "weight": 0.20000000000000004,
+          "learned_at": "2026-02-05T00:55:41.079628"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_config_merge",
+      "connections": [
+        {
+          "target": "action:evaluate_config_merge",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:55:41.620604"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_test_performance",
+      "connections": [
+        {
+          "target": "action:evaluate_test_performance",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:55:42.199351"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:add_docstring",
+      "connections": [
+        {
+          "target": "action:add_docstring",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:55:44.317761"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:chaos_long_input",
+      "connections": [
+        {
+          "target": "action:chaos_long_input",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:56:46.263139"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:rename_class",
+      "connections": [
+        {
+          "target": "action:rename_class",
+          "weight": 0.55,
+          "learned_at": "2026-02-05T00:56:47.281655"
+        }
+      ]
+    },
+    {
+      "trigger": "trigger:evaluate_manifest_compliance",
+      "connections": [
+        {
+          "target": "action:evaluate_manifest_compliance",
+          "weight": 0.4,
+          "learned_at": "2026-02-05T00:57:22.649744"
         }
       ]
     }
@@ -249,7 +769,7 @@
     "created": "2026-01-03T22:16:51.585643Z",
     "last_updated": "2026-01-12T04:07:37.512875Z",
     "updates_count": 8,
-    "last_synapse_update": "2026-02-05T00:39:51.805471",
+    "last_synapse_update": "2026-02-05T00:57:25.058185",
     "last_vairagya_prune": "2026-02-05T00:39:49.006823",
     "last_vairagya_count": 1
   }

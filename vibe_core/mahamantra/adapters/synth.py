@@ -80,20 +80,26 @@ from vibe_core.mahamantra.protocols.synth import (
     SpectrumResult,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    WORDS,
-    SEVEN,
-    TEN,
-    QUARTERS,
+    GITA_CHAPTERS,
     HALVES,
     KSETRAJNA,
-    PANCHA,
-    NAVA,
-    TRINITY,
+    KSHETRA,
+    MAHA_QUANTUM,
     MAHAJANA_COUNT,
+    MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
     MAHAMANTRA_WORD_PATTERN,
-    MAHAMANTRA_NAME_HARE,
+    NAVA,
+    PANCHA,
+    POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
+    POSITION_SUM_TOTAL,
+    QUARTERS,
+    SEVEN,
+    TEN,
+    TRINITY,
+    WORDS,
     # Core coefficients for synth-specific step() logic (with ADSR/LFO modulation)
     MAHA_OP_MAP as _OP_MAP,
     MAHA_MULT as _MULT,
@@ -165,13 +171,17 @@ SYNTH_PRESETS: Final[Dict[str, SynthParams]] = {
     "wide": SynthParams(mod_space=512, feedback=PANCHA),
 }
 
-# Known attractors for MAHA_QUANTUM (137)
+# Known attractors for MAHA_QUANTUM (137) - ALL DERIVED FROM SSOT
+# Derived constants (no hardcoding)
+_SHRUTIS_VAL: Final[int] = KSHETRA - HALVES  # 24 - 2 = 22
+_HARE_KRISHNA_VAL: Final[int] = POSITION_SUM_HARE + POSITION_SUM_KRISHNA  # 70 + 17 = 87
+
 QUANTUM_ATTRACTORS: Final[Dict[int, str]] = {
-    136: "FIELD (T(16) = Position Sum Total)",
-    49: "RAMA (7² = Position Sum Rama)",
-    22: "SHRUTIS (Indian microtones)",
-    18: "GITA_CHAPTERS",
-    87: "CHAITANYA (Nadi + Gaura)",
+    POSITION_SUM_TOTAL: "FIELD (T(16) = Position Sum Total)",  # 136
+    POSITION_SUM_RAMA: "RAMA (7² = Position Sum Rama)",  # 49
+    _SHRUTIS_VAL: "SHRUTIS (Indian microtones)",  # 22
+    GITA_CHAPTERS: "GITA_CHAPTERS",  # 18
+    _HARE_KRISHNA_VAL: "CHAITANYA (Hare + Krishna combined)",  # 87
 }
 
 

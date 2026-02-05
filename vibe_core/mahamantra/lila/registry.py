@@ -38,7 +38,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from threading import Lock
-from typing import Any, Dict, Final, List, Optional, Set
+from typing import TYPE_CHECKING, Dict, Final, List, Optional, Set
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.lila.jiva_shadow import JivaShadow
 
 # SSOT: Constants from seed
 from vibe_core.mahamantra.protocols._seed import (
@@ -92,7 +95,7 @@ class RegistryEntry:
     Tracks the shadow's lifecycle and service history.
     """
 
-    shadow: Any  # JivaShadow (Any to avoid circular import)
+    shadow: "JivaShadow"  # Forward reference to avoid circular import
     status: ShadowStatus = ShadowStatus.IDLE
 
     # Service tracking
@@ -180,7 +183,7 @@ class ShadowRegistry:
     # CORE OPERATIONS
     # =========================================================================
 
-    def register(self, shadow: Any, qualified_positions: Optional[Set[int]] = None) -> bool:
+    def register(self, shadow: "JivaShadow", qualified_positions: Optional[Set[int]] = None) -> bool:
         """
         Register a shadow in the ashrama.
 

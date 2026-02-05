@@ -55,8 +55,8 @@ from typing import Callable, Iterator, List, Optional, Union, Type, Dict, TYPE_C
 # =============================================================================
 
 
-# TickState imported from _types.py (SSOT)
-from vibe_core.mahamantra._types import TickState
+# TickState imported from seed/types.py (SSOT)
+from vibe_core.mahamantra.seed.types import TickState
 
 
 # VEDA-4 PROTOCOL - Elegant Python Dunder Mapping

@@ -19,6 +19,11 @@ from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Union
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
+    from vibe_core.mahamantra.reactor.shadow_protocol import (
+        ShadowReactorProtocol,
+        ShadowState,
+        TickStateInput,
+    )
 
 # These imports are needed for class definition
 from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
@@ -287,9 +292,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         attractor = raw_address >> 8
 
         # =====================================================================
-        # 4. ARCANAM - Parampara verification (% 37 == 0)
+        # 4. ARCANAM - Parampara verification via ShadowOracle (Gita 13.35)
         # =====================================================================
-        parampara_verified = (seed % PARAMPARA == 0)
+        # FIX: Use ShadowOracle for proper Parampara validation (not just % 37)
+        from vibe_core.mahamantra.reactor.shadow_oracle import get_shadow_oracle
+        oracle = get_shadow_oracle()
+        oracle_validation = oracle.validate(seed)
+        parampara_verified = oracle_validation["parampara_validated"]
+        parampara_channel = oracle_validation["parampara_channel"]
+        parampara_coherence = oracle_validation["coherence"]
 
         # =====================================================================
         # 6. VANDANAM - GitaResonance → verse match
@@ -345,7 +356,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # THE_FLUTE_CYCLE is the 19-bit DIW LUT - O(1) lookup for each position.
         # Format: (name_encoding << 16) | (1 << position)
         # This unifies the Venu orchestrator with the main computation pipeline.
-        from vibe_core.mahamantra.orchestrator import THE_FLUTE_CYCLE
+        from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
 
         diw = THE_FLUTE_CYCLE[position]
         diw_name_encoding = (diw >> 16) & 0x3  # H=0, K=1, R=2
@@ -395,12 +406,67 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # Cell flows through Chamber via KIRTAN (not single dance)
         # KIRTAN = cycles × WORDS transformations
         # "kirtanīyaḥ sadā hariḥ" - One should always chant
-        from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
-        chamber = SankirtanChamber()
+        # FIX: Use singleton chamber for persistent resonance
+        from vibe_core.mahamantra.substrate.chamber import get_chamber
+        chamber = get_chamber()
 
         # KIRTAN LOOP: 1 cycle = WORDS (16) transformations
         # Each transformation applies DIW (Divine Instruction Word)
         result_cell = chamber.kirtan(result_cell, cycles=1)
+
+        # =====================================================================
+        # 8.6. YAJNA CYCLE - ShadowReactor Integration (Bhoga→Prasadam→Return)
+        # =====================================================================
+        # THE MISSING WIRING: ShadowReactor walks the cell through the Yajna cycle.
+        # This activates on_bhoga/on_prasadam/on_switch/on_return hooks in guardians.
+        # Protocol-based: depends on ShadowReactorProtocol, not concrete class.
+        from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
+        from vibe_core.mahamantra.reactor.shadow_protocol import TickStateInput
+        from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
+
+        # Get reactor via factory (DI pattern, not direct instantiation)
+        reactor = get_shadow_reactor_factory().spawn(
+            auto_discover=False,  # Diamond routing, not filesystem discovery
+            initial_position=position,
+        )
+
+        # SANKIRTAN AUTHORIZATION: Accumulate grace through chanting
+        # "kīrtanīyaḥ sadā hariḥ" - Always chant the Holy Name
+        # 1 valid chant = SHARANAGATI_UNIT (3600) = authorized (MERCY path)
+        # Uses COSMIC_FRAME scaling consistent with _bhava.py
+        reactor.chant()
+
+        # Inject MahaCell into reactor for payload flow
+        reactor.set_maha_cell(MahaCell(
+            header=MahaHeader.create(
+                source=seed,
+                target=raw_address,
+                operation=position,
+                link=0,
+                intent=0,
+                ttl=300,
+                state=0,
+            ),
+            payload=input_text.encode('utf-8'),
+        ))
+
+        # Build TickStateInput (WATERTIGHT TypedDict)
+        word, opcode = MAHAMANTRA_SEQUENCE[position]
+        tick_input: TickStateInput = {
+            "tick": self._akash["total_beats"],
+            "position": position,
+            "quarter": quarter,
+            "guardian": guardian,
+            "word": word,
+            "opcode": opcode.value if hasattr(opcode, 'value') else opcode,
+        }
+
+        # YAJNA TICK: Walks through Bhoga→Switch→Prasadam→Return
+        # This triggers on_bhoga/on_prasadam hooks in guardian modules
+        shadow_state = reactor.tick(tick_input)
+
+        # Extract guardian execution result from shadow state
+        guardian_result = shadow_state.get("execution_result")
 
         # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
@@ -420,9 +486,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "attractor": attractor,
             },
 
-            # Parampara
+            # Parampara (via ShadowOracle - Gita 13.35)
             "parampara": {
                 "verified": parampara_verified,
+                "channel": parampara_channel,
+                "coherence": parampara_coherence,
             },
 
             # Gita (VANDANAM)
@@ -464,14 +532,24 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             # Akash (persistent state)
             "akash": self._akash,
 
-            # Execution: The Cell transformation IS the execution
-            # Chamber.kirtan() already transformed the cell via DIW (3 flutes)
-            # No external dispatch - holographic principle
+            # Execution: Cell transformation + Yajna cycle + Guardian invocation
+            # Chamber.kirtan() transforms via DIW, ShadowReactor.tick() triggers hooks
             "execution": {
                 "success": result_cell.is_alive,
                 "prana": result_cell.prana,
                 "integrity": result_cell.membrane_integrity,
                 "cycles": result_cell.age,
+                "guardian_acted": guardian_result is not None,
+                "guardian_result": guardian_result,
+            },
+
+            # Yajna Cycle (ShadowReactor integration)
+            "yajna": {
+                "phase": shadow_state.get("phase"),
+                "cycle_count": shadow_state.get("cycle_count", 0),
+                "switch_count": shadow_state.get("switch_count", 0),
+                "return_count": shadow_state.get("return_count", 0),
+                "dissonance": shadow_state.get("dissonance_report"),
             },
         }
 

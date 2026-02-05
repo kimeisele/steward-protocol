@@ -339,7 +339,7 @@
       "decision": "BLOCK",
       "decision_modifier": "ग",
       "count": 1,
-      "avg_dharmic_score": 0.20000000000000004,
+      "avg_dharmic_score": 0.30000000000000004,
       "trend": "stable"
     },
     {
@@ -764,7 +764,7 @@
       "decision": "BLOCK",
       "meaning": "COGNITION actions should BLOCK",
       "total_count": 33,
-      "avg_score": 0.209,
+      "avg_score": 0.212,
       "intent_types": [
         "COGNITION"
       ],
@@ -823,7 +823,7 @@
       "ञख",
       "ञक"
     ],
-    "generated_at": "2026-02-05T00:57:25.060849"
+    "generated_at": "2026-02-05T00:57:24.936801"
   },
   "version": "1.0"
 }
