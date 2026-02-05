@@ -141,52 +141,63 @@ class ResonanceHarmonics:
     # HELPER METHODS
     # =========================================================================
 
+    # COSMIC_FRAME scaling constant (21600 = 100%)
+    COSMIC_FRAME: Final[int] = 21600
+
     @classmethod
-    def normalize_to_mala(cls, count: int) -> float:
+    def normalize_to_mala(cls, count: int) -> int:
         """
-        Normalize a count to MALA-based ratio.
+        Normalize a count to MALA-based ratio, scaled to COSMIC_FRAME.
 
         Args:
             count: Any count from the Seed (e.g., 72, 48, 144)
 
         Returns:
-            The ratio as fraction of MALA (108)
+            The ratio scaled to COSMIC_FRAME (21600 = 100%)
         """
-        return count / MALA
+        return int((count / MALA) * cls.COSMIC_FRAME)
 
     @classmethod
-    def should_auto_execute(cls, resonance: float) -> bool:
-        """Check if resonance is high enough for auto-execution."""
-        return resonance >= cls.THRESHOLD_AUTO
+    def should_auto_execute(cls, resonance: int) -> bool:
+        """Check if resonance (0-21600) is high enough for auto-execution."""
+        threshold = int(cls.THRESHOLD_AUTO * cls.COSMIC_FRAME)
+        return resonance >= threshold
 
     @classmethod
-    def needs_refinement(cls, resonance: float) -> bool:
-        """Check if resonance is in the refinement (Lila) zone."""
-        return cls.THRESHOLD_REFINE <= resonance < cls.THRESHOLD_AUTO
+    def needs_refinement(cls, resonance: int) -> bool:
+        """Check if resonance (0-21600) is in the refinement (Lila) zone."""
+        refine = int(cls.THRESHOLD_REFINE * cls.COSMIC_FRAME)
+        auto = int(cls.THRESHOLD_AUTO * cls.COSMIC_FRAME)
+        return refine <= resonance < auto
 
     @classmethod
-    def is_silent(cls, resonance: float) -> bool:
-        """Check if resonance is below refinement threshold."""
-        return resonance < cls.THRESHOLD_REFINE
+    def is_silent(cls, resonance: int) -> bool:
+        """Check if resonance (0-21600) is below refinement threshold."""
+        threshold = int(cls.THRESHOLD_REFINE * cls.COSMIC_FRAME)
+        return resonance < threshold
 
     @classmethod
-    def is_multi_agent_sync(cls, resonance: float) -> bool:
-        """Check if resonance indicates multi-agent synchronization."""
-        return resonance >= cls.THRESHOLD_SYNC
+    def is_multi_agent_sync(cls, resonance: int) -> bool:
+        """Check if resonance (0-28800) indicates multi-agent synchronization."""
+        threshold = int(cls.THRESHOLD_SYNC * cls.COSMIC_FRAME)
+        return resonance >= threshold
 
     @classmethod
-    def get_zone(cls, resonance: float) -> str:
+    def get_zone(cls, resonance: int) -> str:
         """
-        Get the resonance zone name.
+        Get the resonance zone name for integer resonance (0-21600+).
 
         Returns:
             "AUTO" | "REFINE" | "SILENCE" | "SYNC"
         """
-        if resonance >= cls.THRESHOLD_SYNC:
+        sync = int(cls.THRESHOLD_SYNC * cls.COSMIC_FRAME)
+        auto = int(cls.THRESHOLD_AUTO * cls.COSMIC_FRAME)
+        refine = int(cls.THRESHOLD_REFINE * cls.COSMIC_FRAME)
+        if resonance >= sync:
             return "SYNC"
-        elif resonance >= cls.THRESHOLD_AUTO:
+        elif resonance >= auto:
             return "AUTO"
-        elif resonance >= cls.THRESHOLD_REFINE:
+        elif resonance >= refine:
             return "REFINE"
         else:
             return "SILENCE"

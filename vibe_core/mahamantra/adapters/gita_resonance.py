@@ -48,6 +48,7 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     QUARTERS,
     WORDS,
+    CHAPTER_VERSES,  # SSOT from _topology.py (Prabhupada's 700 verses)
 )
 from vibe_core.mahamantra.protocols.gita import (
     ChapterResult,
@@ -71,14 +72,13 @@ def _get_attractor(seed: int) -> int:
 # MAHAMANTRA CONSTANTS (DERIVED FROM _seed.py SSOT)
 # =============================================================================
 
-# Gita = 18 chapters = 700 verses
+# Gita = 18 chapters = 700 verses (Prabhupada's Bhagavad Gita As It Is)
 TOTAL_VERSES: Final[int] = 700
 
-# Chapter verse counts (Standard Srimad Bhagavad-gita)
-CHAPTER_VERSES: Final[Tuple[int, ...]] = (47, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78)
+# CHAPTER_VERSES imported from _seed.py (SSOT from _topology.py)
+# Prabhupada's edition: (46, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78)
 assert len(CHAPTER_VERSES) == GITA_CHAPTERS, "18 chapters in Gita"
-# Note: Standard count varies slightly (700-701 depending on edition)
-# assert sum(CHAPTER_VERSES) == TOTAL_VERSES, "700 verses in Gita"
+assert sum(CHAPTER_VERSES) == TOTAL_VERSES, "Prabhupada's Gita = 700 verses"
 
 
 # =============================================================================
