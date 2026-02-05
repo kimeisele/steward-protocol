@@ -24,62 +24,62 @@ __genesis__ = "0xe12cdf3a"  # GenesisByte: parampara % 37 == 0
 # === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
 # Mahamantra provides STRUCTURE. protocols/mahajanas has IMPLEMENTATION.
 # Samskara will migrate over time.
-from vibe_core.protocols.mahajanas.janaka import (
-    # Protocol Base
-    JanakaProtocolBase,
-    # State Types (WATERTIGHT)
-    TaskValue,
-    TaskStatus,
-    TaskPriority,
-    Task,
-    ExecutionResult,
-    ExecutionState,
-    CheckResult,
-    # Handler Protocol
-    TaskHandler,
-    # Protocol
-    JanakaProtocol,
-    # Implementations
-    NullJanaka,
-    # Instructions
-    SankalpaInstruction,
-    # Cycle Protocol (WATERTIGHT)
-    CyclePhase,
-    CycleStatus,
-    CycleElement,
-    PhaseResult,
-    CycleContextState,
-    RetentionConfig,
-    CycleRegistryStats,
-    CycleState,
-    CognitiveCycleProtocol,
-    CycleRegistryProtocol,
-    CycleOwnedProtocol,
-    NullCognitiveCycle,
-    NullCycleRegistry,
-    # Scheduler (Task Scheduling)
-    SchedulingAlgorithm,
-    ScheduledTask,
-    TaskExecutor,
-    SchedulerProtocol,
-    Scheduler,
-    NullScheduler,
-    # === MIGRATED TYPES ===
-    SessionStartConfig,
-    HeartbeatConfig,
-    KernelConfig,
-    OpusConfig,
-    LimitsConfig,
-    PranaConfig,
-    load_config,
-    is_kernel_running,
-    ensure_kernel_running,
-    get_last_heartbeat,
-    record_heartbeat,
-)
-
 # Backward-compat constants - derived from mahamantra position 10
 from typing import Final
+
+from vibe_core.protocols.mahajanas.janaka import (
+    CheckResult,
+    CognitiveCycleProtocol,
+    CycleContextState,
+    CycleElement,
+    CycleOwnedProtocol,
+    # Cycle Protocol (WATERTIGHT)
+    CyclePhase,
+    CycleRegistryProtocol,
+    CycleRegistryStats,
+    CycleState,
+    CycleStatus,
+    ExecutionResult,
+    ExecutionState,
+    HeartbeatConfig,
+    # Protocol
+    JanakaProtocol,
+    # Protocol Base
+    JanakaProtocolBase,
+    KernelConfig,
+    LimitsConfig,
+    NullCognitiveCycle,
+    NullCycleRegistry,
+    # Implementations
+    NullJanaka,
+    NullScheduler,
+    OpusConfig,
+    PhaseResult,
+    PranaConfig,
+    RetentionConfig,
+    # Instructions
+    SankalpaInstruction,
+    ScheduledTask,
+    Scheduler,
+    SchedulerProtocol,
+    # Scheduler (Task Scheduling)
+    SchedulingAlgorithm,
+    # === MIGRATED TYPES ===
+    SessionStartConfig,
+    Task,
+    TaskExecutor,
+    # Handler Protocol
+    TaskHandler,
+    TaskPriority,
+    TaskStatus,
+    # State Types (WATERTIGHT)
+    TaskValue,
+    ensure_kernel_running,
+    get_last_heartbeat,
+    is_kernel_running,
+    load_config,
+    record_heartbeat,
+)
 
 POSITION: Final[int] = 10
 QUARTER: Final[str] = "karma"
@@ -126,6 +126,7 @@ def execute(input_text: str, context: dict = None) -> dict:
         "opcode": "STATE_SYNC",
         "input": input_text,
     }
+
 
 __all__ = [
     # Backward-compatible constants
@@ -188,33 +189,19 @@ __all__ = [
 ]
 
 
+_fractal_getattr_fn = None
+
+
 def __getattr__(name: str) -> object:
-    """
-    Lazy load JanakaService from the services layer.
-    Unification of Kernel and Mahamantra.
-    """
+    """Explicit exports + fractal discovery fallback."""
     if name == "JanakaService":
         from vibe_core.protocols.mahajanas.janaka.service import JanakaService
 
         return JanakaService
 
-    # Legacy fallbacks might be needed for types, handled by static imports above
-    # ==========================================================================
-    # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
-    # ==========================================================================
-    from pathlib import Path
-    import importlib
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-    pkg_root = Path(__file__).parent
-
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)

@@ -135,7 +135,6 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
     ShadowState,
     TickStateInput,
     YajnaPhase,
-    __genesis__,
     get_phase,
 )
 from vibe_core.mahamantra.substrate.position import (
