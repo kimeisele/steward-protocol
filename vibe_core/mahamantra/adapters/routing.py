@@ -40,7 +40,9 @@ USAGE:
     values = router.prefix_query(0x12, prefix_bits=8)
 """
 
-from typing import Any, Dict, Final, Generic, Iterator, List, Optional, Tuple, TypeVar
+from typing import Dict, Final, Generic, Iterator, List, Optional, Tuple, TypeVar
+
+# V = TypeVar for generic value type (replaces Any)
 
 from ..protocols._seed import (
     QUARTERS,
@@ -115,7 +117,7 @@ class _LotusEngine16:
         val = L3[i3]
         return None if val is _EMPTY else val
 
-    def set(self, key: int, value: Any) -> None:
+    def set(self, key: int, value: object) -> None:
         """O(1) insert with unrolled traversal. Value stored directly in tree."""
         # Level 0 (uses None for empty slots - these are child pointers)
         i0 = (key >> 12) & 0xF
@@ -413,7 +415,7 @@ class _GenericLotusEngine:
             return None
         return self._values.get(key)
 
-    def set(self, key: int, value: Any) -> None:
+    def set(self, key: int, value: object) -> None:
         node = self._root
         for level in range(self.levels - 1):
             nibble = self._get_nibble(key, level)

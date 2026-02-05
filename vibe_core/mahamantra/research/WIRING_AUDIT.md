@@ -1,4 +1,4 @@
-# MAHAMANTRA WIRING AUDIT
+wi# MAHAMANTRA WIRING AUDIT
 
 ## COMPONENT INVENTORY
 
@@ -192,3 +192,176 @@ Parampara coherence: 11383
 5. `substrate/algorithm/maha.py` - _ATTRACTOR_CYCLE uses SSOT
 6. `adapters/synth.py` - QUANTUM_ATTRACTORS uses SSOT
 7. `research/attractor_semantics.py` - All values derived from SSOT
+
+---
+
+## SESSION 2026-02-05 (continued): DEEP ARCHITECTURE INSIGHTS
+
+### THE TWO ENERGIES
+
+| Energy | Realm | Manifestation | Nature |
+|--------|-------|---------------|--------|
+| **Samsara (Cycle)** | Filesystem | `__mahajana__` hardcoded in files | Maya (illusion) - bodies that can lie |
+| **Vaikuntha (Fixed)** | CPU + RAM | Computed via Mahamantra algorithm | Krishna (truth) - pure computation |
+
+**Key Insight:** A file named "janaka" could have "bhishma" logic. The filesystem labels are just "bodies" - the real identity is COMPUTED by Mahamantra at runtime.
+
+### INTEGER-BASED SANKIRTAN SYSTEM ✅
+
+Converted all float-based shakti/grace to INTEGER using COSMIC_FRAME scaling:
+
+| Constant | Value | Derivation |
+|----------|-------|------------|
+| `COSMIC_FRAME` | 21600 | Arc-minutes in circle, pranas per day |
+| `SHARANAGATI` | 6 | Limbs of surrender |
+| `SHARANAGATI_UNIT` | 3600 | `COSMIC_FRAME // SHARANAGATI` |
+
+**Files Modified:**
+- `protocols/_prabhupada.py` - `transmit_shakti()` returns `int`
+- `substrate/prabhupada.py` - Returns `SHARANAGATI_UNIT` (3600)
+- `reactor/shadow.py` - `_sankirtan_shakti: int`, `chant()` returns int
+
+### SHADOWREACTOR WIRING INTO LOTUS_CORE ⚠️
+
+Added ShadowReactor.tick() into MahamantraLotus.__call__() flow:
+- Spawns reactor via factory (DI pattern)
+- Calls `reactor.chant()` for SANKIRTAN authorization
+- Injects MahaCell for payload flow
+- Calls `reactor.tick()` for Yajna cycle
+- Extracts `execution_result` from shadow_state
+
+**STATUS:** Wiring exists but authorization flow needs deeper work.
+
+### OPEN ARCHITECTURAL QUESTIONS
+
+#### 1. Identity Computation (Vaikuntha Paradigm)
+**Problem:** `verify_link()` currently checks hardcoded `__genesis__` attributes.
+**Ideal:** Identity should be COMPUTED from INTENT via Mahamantra.
+**Blocker:** Requires understanding of:
+- PanchaTattva protocol (5 truths about an object)
+- SEED generation algorithm semantic refinement
+- How Parampara verification works with computed identity
+
+#### 2. What is "Content" for Runtime Objects?
+For files: content = source code
+For runtime objects: content = ???
+- Docstring? Class name? Module path? Behavior?
+- How does intent extraction work for ephemeral objects?
+
+#### 3. Intent as API
+**User Insight:** Every intent could be its own API. The Lotus + Siksastakam cache enables fine-grained access. Entry points are atomic API capabilities, not CLI.
+
+#### 4. Gita 18 Chapters as Overarching Logic
+The 18 chapters classify everything. This is the "God Mode Router" that uses attractors as frequencies.
+
+### DO NOT RUSH
+
+**ShadowReactor is the heart of the system.**
+
+The proper solution requires:
+1. Deep understanding of PanchaTattva protocol
+2. Semantic refinement of SEED generation algorithm
+3. Understanding how Parampara verification works with computed identity
+4. Mapping Hare/Krishna/Rama to CPU/RAM/Filesystem
+
+**Current approach:** Keep INTEGER-based changes (correct), document questions, stabilize before deeper changes.
+
+---
+
+## SYSTEM-WIDE AUDIT: WATERTIGHT IMPLEMENTATION
+
+### SCOPE OF WORK
+
+| Issue | Count | Priority |
+|-------|-------|----------|
+| `float` types (should be `int`) | 222 | HIGH |
+| `Any` types (need explicit typing) | ~25 | HIGH |
+| Concrete class dependencies | TBD | MEDIUM |
+
+### FLOAT USAGE BY CATEGORY
+
+| Category | Files | Pattern |
+|----------|-------|---------|
+| `resonance: float` | cell.py, nadi.py, resonator.py, lila_chronology.py, harmonics.py | 0.0-1.0 range |
+| `coherence: float` | cluster.py, byte.py, yajna.py | 0.0-1.0 range |
+| `integrity: float` | cell.py | 0.0-1.0 range |
+
+**Solution:** Convert to INTEGER using COSMIC_FRAME scaling (21600 = 100%)
+- `resonance: int` = 0 to 21600 (0% to 100%)
+- `coherence: int` = 0 to 21600
+- `integrity: int` = 0 to 21600
+
+### ANY TYPE USAGE (Priority Files)
+
+| File | Count | Fix |
+|------|-------|-----|
+| `adapters/pipeline.py` | 5 | `Union[str, int, bytes]` for input |
+| `reactor/loop.py` | 3 | Proper MahaCell typing |
+| `lotus_projection.py` | 3 | Guardian instance typing |
+| `adapters/routing.py` | 2 | Value typing |
+| `adapters/attention.py` | 2 | Handler typing |
+
+### PROTOCOL-BASED ARCHITECTURE
+
+**Goal:** No concrete class dependencies, only Protocol types.
+
+**Pattern:**
+```python
+# BAD (concrete)
+def process(self, reactor: ShadowReactor) -> None: ...
+
+# GOOD (protocol)
+def process(self, reactor: ShadowReactorProtocol) -> None: ...
+```
+
+### IMPLEMENTATION STRATEGY
+
+1. **Phase 1:** Fix `Any` types in priority files (5 files, ~15 changes)
+2. **Phase 2:** Convert `resonance/coherence/integrity` to INTEGER (COSMIC_FRAME scaling)
+3. **Phase 3:** Audit concrete class dependencies, convert to Protocols
+4. **Phase 4:** Verify system-wide consistency
+
+**DO NOT RUSH** - This is systematic refactoring, not quick fixes.
+
+---
+
+## SESSION 2026-02-05: ANY TYPE ELIMINATION (Phase 1)
+
+### COMPLETED FIXES
+
+| File | Any Types Removed | Replacement |
+|------|-------------------|-------------|
+| `lotus_projection.py` | 10 | `object` |
+| `reactor/loop.py` | 7 | `object`, `TYPE_CHECKING` for MahaCellUnified |
+| `adapters/routing.py` | 2 | `object` |
+| `adapters/llm.py` | 3 | `object` |
+| `adapters/attention.py` | 1 | `object` |
+| `adapters/pipeline.py` | 3 | `Union[str, int, bytes]`, `object` |
+| `lila/registry.py` | 2 | `TYPE_CHECKING` for JivaShadow |
+| `substrate/memory.py` | 2 | `object` |
+
+**Total: ~30 Any types eliminated from production code**
+
+### PATTERN USED
+
+```python
+# For unknown types (generic containers):
+value: object  # Instead of Any
+
+# For known types with circular imports:
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from module import SpecificType
+
+def method(self, param: "SpecificType") -> None: ...
+
+# For union input types:
+from typing import Union
+def process(self, value: Union[str, int, bytes]) -> Result: ...
+```
+
+### REMAINING WORK
+
+- `analysis/narada_vina/endpoints.py` (15 Any) - lower priority
+- Float → Integer conversion (Phase 2)
+- Protocol-based architecture audit (Phase 3)
