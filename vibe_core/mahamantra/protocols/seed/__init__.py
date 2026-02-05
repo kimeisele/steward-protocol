@@ -105,9 +105,45 @@ from ._algorithm import (
     MAHA_SQ,
 )
 
+# TIER 4: Gita Topology (Canonical Structure)
+from ._topology import (
+    # Verse Data
+    CHAPTER_VERSES,
+    CHAPTER_VERSES_PRABHUPADA,
+    # Quarter Sums
+    GENESIS_SUM,
+    DHARMA_SUM,
+    KARMA_SUM,
+    MOKSHA_SUM,
+    FRUIT_SUM,
+    FIELD_SUM,
+    # Derived Constants
+    KRISHNA_UNITS,
+    EPOCH_FACTOR_1,
+    EPOCH_FACTOR_2,
+    EPOCH_FACTOR_3,
+    KARMA_SANNYASA_CHAPTER,
+    # Modular Signatures
+    EPOCH_MOD_18,
+    EPOCH_MOD_27,
+    EPOCH_DIGIT_SUM,
+    # Checkpoints
+    KRISHNA_CHECKPOINTS,
+    # Functions
+    get_cumulative_sum,
+    is_krishna_checkpoint,
+    validate_field_integrity,
+    check_fruit_symmetry,
+    get_quarter,
+    is_in_field,
+    is_fruit,
+    # Matches
+    KNOWN_MATCHES,
+)
+
 # Extended Constants
 from ._extended import (
-    # Position Sums
+    # Position Sums (SSOT)
     POSITION_SUM_HARE,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
