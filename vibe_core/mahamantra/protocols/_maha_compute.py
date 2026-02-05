@@ -43,6 +43,7 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
     PARAMPARA,
+    POSITION_SUM_RAMA,
     POSITION_SUM_TOTAL,
     SEVEN,
     TEN,
@@ -61,14 +62,15 @@ from vibe_core.mahamantra.protocols._seed import (
 # -----------------------------------------------------------------------------
 
 # KNOWN DERIVATIONS (from _seed.py):
-# - GITA_CHAPTERS (18) is ALWAYS a fixed point (verified mathematically)
-# - POSITION_SUM_TOTAL (136) = T(16) = The Field
+# - POSITION_SUM_TOTAL (136) = T(16) = The Field = TRUE FIXED POINT
+# - GITA_CHAPTERS (18) is part of the 4-CYCLE, NOT a fixed point!
+#   The 4-cycle: 18 → 49 → 87 → 22 → 18
 
-# Fixed point - this is DERIVED from _seed.py, not hardcoded
-ATTRACTOR_FIXED: Final[int] = GITA_CHAPTERS  # 18
+# FIX: The TRUE fixed point is 136 (T(16) = Vaikuntha), not 18
+ATTRACTOR_FIXED: Final[int] = POSITION_SUM_TOTAL  # 136 = T(16) = TRUE FIXED POINT
 
-# Field attractor - DERIVED from _seed.py
-ATTRACTOR_FIELD: Final[int] = POSITION_SUM_TOTAL  # 136 = T(16)
+# The 4-cycle attractor (for reference)
+ATTRACTOR_GITA: Final[int] = GITA_CHAPTERS  # 18 = Part of 4-cycle
 
 # Cache for computed attractors (lazy generation)
 _computed_spectrum: Optional[dict] = None
@@ -111,22 +113,39 @@ def get_fixed_points() -> Tuple[int, ...]:
     return tuple(spectrum["fixed_points"])
 
 
-# For backward compatibility - DON'T compute at module load (circular import!)
-# These will be empty tuples until explicitly computed
-ATTRACTOR_CYCLE: Tuple[int, ...] = ()
-ALL_ATTRACTORS: Tuple[int, ...] = ()
+# COMPUTED ATTRACTORS (lazy-loaded to avoid circular imports)
+# These are computed on first access, not hardcoded
+_attractor_cycle_cache: Optional[Tuple[int, ...]] = None
+_all_attractors_cache: Optional[Tuple[int, ...]] = None
 
 
-def _init_attractors_lazy() -> None:
+def get_attractor_cycle() -> Tuple[int, ...]:
     """
-    Initialize attractors via computation.
-    Call this AFTER all modules are loaded to avoid circular imports.
+    Get the 4-cycle attractors - COMPUTED, not hardcoded.
+    
+    In mod 137: 18 → 49 → 87 → 22 → 18
+    This is discovered by the algorithm, not declared.
     """
-    global ATTRACTOR_CYCLE, ALL_ATTRACTORS
-    if not ATTRACTOR_CYCLE:  # Only compute once
-        ATTRACTOR_CYCLE = get_cycle_attractors()
-    if not ALL_ATTRACTORS:
-        ALL_ATTRACTORS = get_all_attractors()
+    global _attractor_cycle_cache
+    if _attractor_cycle_cache is None:
+        _attractor_cycle_cache = get_cycle_attractors()
+    return _attractor_cycle_cache
+
+
+def get_all_attractors_cached() -> Tuple[int, ...]:
+    """
+    Get all attractors - COMPUTED, not hardcoded.
+    """
+    global _all_attractors_cache
+    if _all_attractors_cache is None:
+        _all_attractors_cache = get_all_attractors()
+    return _all_attractors_cache
+
+
+# For backward compatibility - these are FUNCTIONS now, not constants
+# Use get_attractor_cycle() and get_all_attractors_cached() for computed values
+ATTRACTOR_CYCLE: Tuple[int, ...] = ()  # Empty - use get_attractor_cycle()
+ALL_ATTRACTORS: Tuple[int, ...] = ()  # Empty - use get_all_attractors_cached()
 
 
 class AttractorType(Enum):
@@ -201,11 +220,11 @@ GITA_INSIGHTS: Final[dict[int, str]] = {
     HARE_COUNT: "Aksara Brahma - The imperishable absolute",
     NAVA: "Raja Vidya - The king of knowledge",
     TEN: "Vibhuti - Divine manifestations",
-    11: "Visvarupa - The universal form",
+    TEN + KSETRAJNA: "Visvarupa - The universal form",  # 11 = TEN + 1
     MAHAJANA_COUNT: "Bhakti Yoga - Devotion is supreme",
-    13: "Ksetra Ksetrajna - Field and knower of field",
-    14: "Gunatraya Vibhaga - Three modes of nature",
-    15: "Purusottama - The supreme person",
+    MAHAJANA_COUNT + KSETRAJNA: "Ksetra Ksetrajna - Field and knower of field",  # 13 = 12 + 1
+    MAHAJANA_COUNT + HALVES: "Gunatraya Vibhaga - Three modes of nature",  # 14 = 12 + 2
+    MAHAJANA_COUNT + TRINITY: "Purusottama - The supreme person",  # 15 = 12 + 3
     WORDS: "Daivasura Sampad - Divine and demonic natures",
     POSITION_SUM_KRISHNA: "Sraddhatraya - Three types of faith",
     GITA_CHAPTERS: "Moksha Sannyasa - Liberation through surrender",
@@ -343,7 +362,8 @@ def is_attractor(value: int) -> Tuple[bool, AttractorType]:
     """Check if value is an attractor."""
     if value == ATTRACTOR_FIXED:
         return True, AttractorType.FIXED_POINT
-    if value in ATTRACTOR_CYCLE:
+    # Use computed cycle, not empty constant
+    if value in get_attractor_cycle():
         return True, AttractorType.CYCLE
     return False, AttractorType.TRANSIENT
 
@@ -420,8 +440,11 @@ __all__ = [
     "AttractorType",
     # Constants
     "ATTRACTOR_FIXED",
+    "ATTRACTOR_GITA",
     "ATTRACTOR_CYCLE",
     "ALL_ATTRACTORS",
+    "get_attractor_cycle",
+    "get_all_attractors_cached",
     "GITA_INSIGHTS",
     "PATTERN",
     # Branchless computation

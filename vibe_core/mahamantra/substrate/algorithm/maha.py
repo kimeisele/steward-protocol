@@ -32,6 +32,7 @@ from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     HARE_COUNT,
     KSETRAJNA,
+    KSHETRA,
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
     MAHAMANTRA_NAME_HARE,
@@ -788,9 +789,11 @@ _MAHA_OSCILLATE_LUT: Final[Tuple[int, ...]] = (
     POSITION_SUM_TOTAL,
 )
 
-# The two attractors and the 4-cycle
-_ATTRACTOR_FIXED: Final[int] = POSITION_SUM_TOTAL  # T(16) = Position Sum Total
-_ATTRACTOR_CYCLE: Final[Tuple[int, ...]] = (GITA_CHAPTERS, POSITION_SUM_RAMA, 87, 22)  # GITA → RAMA² → HARE+KRISHNA → SHRUTIS
+# The two attractors and the 4-cycle (ALL DERIVED FROM SSOT - no hardcoded values)
+_ATTRACTOR_FIXED: Final[int] = POSITION_SUM_TOTAL  # T(16) = 136
+_HARE_KRISHNA_COMBINED: Final[int] = POSITION_SUM_HARE + POSITION_SUM_KRISHNA  # 70 + 17 = 87
+_SHRUTIS: Final[int] = KSHETRA - HALVES  # 24 - 2 = 22
+_ATTRACTOR_CYCLE: Final[Tuple[int, ...]] = (GITA_CHAPTERS, POSITION_SUM_RAMA, _HARE_KRISHNA_COMBINED, _SHRUTIS)  # 18 → 49 → 87 → 22
 
 # Algebraic constants for Half 1
 _HALF1_MULT: Final[int] = 72  # 49*49 % 137 = 2401 % 137

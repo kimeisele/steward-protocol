@@ -287,9 +287,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         attractor = raw_address >> 8
 
         # =====================================================================
-        # 4. ARCANAM - Parampara verification (% 37 == 0)
+        # 4. ARCANAM - Parampara verification via ShadowOracle (Gita 13.35)
         # =====================================================================
-        parampara_verified = (seed % PARAMPARA == 0)
+        # FIX: Use ShadowOracle for proper Parampara validation (not just % 37)
+        from vibe_core.mahamantra.reactor.shadow_oracle import get_shadow_oracle
+        oracle = get_shadow_oracle()
+        oracle_validation = oracle.validate(seed)
+        parampara_verified = oracle_validation["parampara_validated"]
+        parampara_channel = oracle_validation["parampara_channel"]
+        parampara_coherence = oracle_validation["coherence"]
 
         # =====================================================================
         # 6. VANDANAM - GitaResonance → verse match
@@ -395,8 +401,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # Cell flows through Chamber via KIRTAN (not single dance)
         # KIRTAN = cycles × WORDS transformations
         # "kirtanīyaḥ sadā hariḥ" - One should always chant
-        from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
-        chamber = SankirtanChamber()
+        # FIX: Use singleton chamber for persistent resonance
+        from vibe_core.mahamantra.substrate.chamber import get_chamber
+        chamber = get_chamber()
 
         # KIRTAN LOOP: 1 cycle = WORDS (16) transformations
         # Each transformation applies DIW (Divine Instruction Word)
@@ -441,9 +448,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "attractor": attractor,
             },
 
-            # Parampara
+            # Parampara (via ShadowOracle - Gita 13.35)
             "parampara": {
                 "verified": parampara_verified,
+                "channel": parampara_channel,
+                "coherence": parampara_coherence,
             },
 
             # Gita (VANDANAM)
