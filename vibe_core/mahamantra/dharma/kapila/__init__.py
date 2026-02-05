@@ -28,6 +28,16 @@ QUARTER: Final[str] = "dharma"
 OPCODE: Final[str] = "TYPE_CHECK"
 PARAMPARA_VECTOR: Final[int] = 259
 
+# =============================================================================
+# EXPORTS FOR RESONANCE (Auto-Wiring)
+# =============================================================================
+try:
+    from vibe_core.protocols.mahajanas.kapila import on_event, __listening_for__
+except ImportError:
+    # Fallback if protocol not available yet
+    on_event = None
+    __listening_for__ = []
+
 
 def execute(input_text: str, context: dict = None) -> dict:
     """KAPILA EXECUTION - Type Check (Position 6)"""

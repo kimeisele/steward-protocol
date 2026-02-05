@@ -169,6 +169,10 @@ class ReactorLoop(threading.Thread):
         self._init_dojo()    # NEW: Open Dojo (Phase 5)
         self._init_reactor()
         
+        # 2. Wire the Cosmos (Auto-Discovery)
+        # Must happen AFTER reactor exists
+        self._wire_bus()
+        
         self._running = True
         self._ready_event.set() # Signal readiness
         
@@ -198,6 +202,38 @@ class ReactorLoop(threading.Thread):
 
         logger.info("ReactorLoop: STOPPING")
 
+    def _wire_bus(self):
+        """
+        Auto-wire Mahajanas to the EventBus.
+        "Yatha Pinde Tatha Brahmande"
+        """
+        if not self._bus or not self._reactor:
+            return
+
+        try:
+            # 1. Self-Subscription (Closing the Loop)
+            self._bus.subscribe(self.on_completion, ["COMPLETED"])
+            
+            # 2. Iterate the Mandala (16 Positions)
+            for pos in range(16):
+                try:
+                    module = self._reactor._route_to_position(pos)
+                    
+                    if not module:
+                        continue
+                        
+                    if hasattr(module, "on_event") and hasattr(module, "__listening_for__"):
+                        events = getattr(module, "__listening_for__")
+                        if events and isinstance(events, list):
+                            self._bus.subscribe(module.on_event, events)
+                            logger.info(f"ReactorLoop: Auto-wired Pos {pos} ({module.__name__}) to {events}")
+                            
+                except Exception as e:
+                    logger.warning(f"ReactorLoop: Failed to wire Pos {pos}: {e}")
+
+        except Exception as e:
+            logger.error(f"ReactorLoop: Failed to wire bus: {e}")
+
     def _init_memory(self):
         """Register the Persistent Memory (The Soul's Context)."""
         try:
@@ -225,21 +261,6 @@ class ReactorLoop(threading.Thread):
             # "api cet su-durācāro..." (Gita 9.30)
             self._reactor._sankirtan_shakti = 108.0 
             
-            # FORCE KAPILA REGISTRATION (Living Memory Guarantee)
-            # Bypass discovery fragility for the Memory Keeper.
-            try:
-                import importlib
-                kapila_mod = importlib.import_module("vibe_core.protocols.mahajanas.kapila")
-                # Position 6 = Kapila
-                if 6 not in self._reactor._listeners:
-                    self._reactor._listeners[6] = []
-                # Avoid duplicates
-                if kapila_mod not in self._reactor._listeners[6]:
-                    self._reactor._listeners[6].append(kapila_mod)
-                    logger.info("ReactorLoop: Kapila (Memory) force-registered.")
-            except Exception as e:
-                logger.error(f"ReactorLoop: Failed to force-register Kapila: {e}")
-            
         except Exception as e:
             logger.error(f"ReactorLoop: Failed to init reactor: {e}")
             # If we can't spawn, we are in trouble. Sleep and retry?
@@ -253,23 +274,6 @@ class ReactorLoop(threading.Thread):
             logger.info("ReactorLoop: Narada (EventBus) awakened.")
         except Exception as e:
             logger.error(f"ReactorLoop: Failed to init EventBus: {e}")
-            
-        # RESONANCE SUBSCRIPTIONS (The Choir)
-        # We manually wire Mahajanas to Narada here.
-        # In a perfect world, they auto-subscribe on import.
-        if self._bus:
-            try:
-                # 1. Self-Subscription (Closing the Loop)
-                self._bus.subscribe(self.on_completion, ["COMPLETED"])
-                
-                # 2. Mahajanas (Kapila)
-                import vibe_core.protocols.mahajanas.kapila as kapila_mod
-                if hasattr(kapila_mod, "on_event"):
-                    # Subscribe to Memory Vibrations
-                    self._bus.subscribe(kapila_mod.on_event, ["REMEMBER", "RECALL"])
-                    logger.info("ReactorLoop: Kapila subscribed to REMEMBER/RECALL.")
-            except Exception as e:
-                logger.error(f"ReactorLoop: Failed to subscribe components: {e}")
 
     def on_completion(self, event):
         """
