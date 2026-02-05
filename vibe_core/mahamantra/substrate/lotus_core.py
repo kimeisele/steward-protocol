@@ -345,7 +345,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # THE_FLUTE_CYCLE is the 19-bit DIW LUT - O(1) lookup for each position.
         # Format: (name_encoding << 16) | (1 << position)
         # This unifies the Venu orchestrator with the main computation pipeline.
-        from vibe_core.mahamantra.orchestrator import THE_FLUTE_CYCLE
+        from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
 
         diw = THE_FLUTE_CYCLE[position]
         diw_name_encoding = (diw >> 16) & 0x3  # H=0, K=1, R=2
@@ -401,6 +401,27 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # KIRTAN LOOP: 1 cycle = WORDS (16) transformations
         # Each transformation applies DIW (Divine Instruction Word)
         result_cell = chamber.kirtan(result_cell, cycles=1)
+
+        # =====================================================================
+        # 8.6. GUARDIAN INVOCATION - The Guardian at position ACTS
+        # =====================================================================
+        # RUNTIME: After cell transformation, invoke the Guardian's execute()
+        # Uses computed routing (POSITION_TO_MAHAJANA from seed.py)
+        # NO MANUAL WIRING - position determines module path automatically
+        guardian_result = None
+        try:
+            from vibe_core.mahamantra.substrate.seed import POSITION_TO_MAHAJANA, get_quarter_name
+            import importlib
+            
+            mahajana_name = POSITION_TO_MAHAJANA.get(position)
+            if mahajana_name:
+                quarter_name = get_quarter_name(position).lower()
+                module_path = f"vibe_core.mahamantra.{quarter_name}.{mahajana_name}"
+                module = importlib.import_module(module_path)
+                if hasattr(module, "execute"):
+                    guardian_result = module.execute(input_text, {"cell": result_cell, "position": position})
+        except (ImportError, AttributeError):
+            pass  # Module not yet implemented - normal during migration
 
         # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
@@ -464,14 +485,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             # Akash (persistent state)
             "akash": self._akash,
 
-            # Execution: The Cell transformation IS the execution
-            # Chamber.kirtan() already transformed the cell via DIW (3 flutes)
-            # No external dispatch - holographic principle
+            # Execution: Cell transformation + Guardian invocation
+            # Chamber.kirtan() transforms via DIW, then Guardian.execute() acts
             "execution": {
                 "success": result_cell.is_alive,
                 "prana": result_cell.prana,
                 "integrity": result_cell.membrane_integrity,
                 "cycles": result_cell.age,
+                "guardian_acted": guardian_result is not None,
+                "guardian_result": guardian_result,
             },
         }
 
