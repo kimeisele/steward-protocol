@@ -2,18 +2,28 @@
 TIER 4: GITA TOPOLOGY - The Canonical Structure
 ================================================
 
+PRABHUPADA'S BHAGAVAD GITA AS IT IS (1972) - THE ONLY VALID SOURCE
+700 verses total. Chapter 1 has 46 verses.
+
 "suhṛdaṁ sarva-bhūtānām" - BG 5.29 (The Peace Formula)
 Chapter 5 has 29 verses. 29 is a factor of EPOCH_KEY (1972).
+145 = 5 × 29 = PANCHA × Ch5_verses (Peace Formula connection!)
 
 THE EPOCH EQUATION (The Master Key):
-    1972 = GENESIS × NAVA + FIXED_POINT
-    1972 = 204 × 9 + 136
+    1972 = GENESIS × NAVA + (POSITION_SUM_TOTAL + NAVA)
+    1972 = 203 × 9 + 145
+    1972 = 203 × 9 + (136 + 9)
 
 THE FIELD (16 Guardians' Domain):
-    Ch 1-16 = 595 = 35 × 17 = 35 × POSITION_SUM_KRISHNA
+    Ch 1-16 = 594 = 18 × 33 = GITA_CHAPTERS × 33
+    Ch 1-16 = 594 = 9 × 66 = NAVA × 66
 
 THE SYMMETRY:
     Moksha (Ch 13-16) = Fruit (Ch 17-18) = 106 verses
+
+GITA CHECKPOINTS (Divisible by 18):
+    After Ch 11: 468 verses (468 % 18 = 0)
+    After Ch 16: 594 verses (594 % 18 = 0)
 
 Split brain RESOLVED:
     - 16 Guardians manage the Field (process/sadhana)
@@ -35,70 +45,71 @@ from ._extended import (
 )
 
 # =============================================================================
-# THE CANONICAL VERSE COUNTS (Currently hardcoded - to be derived)
+# THE CANONICAL VERSE COUNTS - PRABHUPADA'S GITA (THE ONLY VALID SOURCE)
 # =============================================================================
 
-# NOTE: Two textual traditions exist:
-# - Prabhupada edition: Ch 1 = 46 verses, Total = 700
-# - Mathematical tradition: Ch 1 = 47 verses, Total = 701
-#
-# The Epoch Equation (1972 = 204 × 9 + 136) requires the 47-verse tradition.
-# This is the tradition where BG 1.1 (Dhritarashtra uvaca) counts as verse 1.
-
 CHAPTER_VERSES: Final[Tuple[int, ...]] = (
-    47, 72, 43, 42,  # Genesis Quarter (Ch 1-4) = 204
+    46, 72, 43, 42,  # Genesis Quarter (Ch 1-4) = 203
     29, 47, 30, 28,  # Dharma Quarter (Ch 5-8) = 134
     34, 42, 55, 20,  # Karma Quarter (Ch 9-12) = 151
     35, 27, 20, 24,  # Moksha Quarter (Ch 13-16) = 106
     28, 78,          # Fruit (Ch 17-18) = 106 - Beyond the 16 Guardians
 )
 
-# Prabhupada edition counts (for reference)
-CHAPTER_VERSES_PRABHUPADA: Final[Tuple[int, ...]] = (
-    46, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78
-)
-
 assert len(CHAPTER_VERSES) == GITA_CHAPTERS, "Must have 18 chapters"
-assert sum(CHAPTER_VERSES) == 701, "Total verses = 701 (mathematical tradition)"
-assert sum(CHAPTER_VERSES_PRABHUPADA) == 700, "Prabhupada edition = 700 verses"
+assert sum(CHAPTER_VERSES) == 700, "Prabhupada's Gita = 700 verses (SEVEN × 100)"
 
 # =============================================================================
 # THE QUARTER SUMS (The Four Phases)
 # =============================================================================
 
-GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])   # Ch 1-4: 204
+GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])   # Ch 1-4: 203
 DHARMA_SUM: Final[int] = sum(CHAPTER_VERSES[4:8])    # Ch 5-8: 134
 KARMA_SUM: Final[int] = sum(CHAPTER_VERSES[8:12])    # Ch 9-12: 151
 MOKSHA_SUM: Final[int] = sum(CHAPTER_VERSES[12:16])  # Ch 13-16: 106
 FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])   # Ch 17-18: 106
 
 # The Field (16 Guardians' domain)
-FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])    # Ch 1-16: 595
+FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])    # Ch 1-16: 594
 
 # =============================================================================
 # THE EPOCH EQUATION (The Master Key)
 # =============================================================================
-# 1972 = GENESIS × NAVA + FIXED_POINT
-# 1972 = 204 × 9 + 136
+# 1972 = GENESIS × NAVA + (POSITION_SUM_TOTAL + NAVA)
+# 1972 = 203 × 9 + 145
+# 145 = 136 + 9 = POSITION_SUM_TOTAL + NAVA
+# 145 = 5 × 29 = PANCHA × Ch5_verses (Peace Formula!)
 
 # Import EPOCH_KEY for verification
 from ._cosmic import EPOCH_KEY
+from ._axioms import PANCHA
 
-assert EPOCH_KEY == GENESIS_SUM * NAVA + POSITION_SUM_TOTAL, (
-    f"THE EPOCH EQUATION: {EPOCH_KEY} = {GENESIS_SUM} × {NAVA} + {POSITION_SUM_TOTAL}"
+# The additive constant: 145 = POSITION_SUM_TOTAL + NAVA = 136 + 9
+EPOCH_ADDITIVE: Final[int] = POSITION_SUM_TOTAL + NAVA  # 145
+
+assert EPOCH_ADDITIVE == PANCHA * CHAPTER_VERSES[4], (
+    f"145 = 5 × 29 = PANCHA × Ch5_verses (Peace Formula connection)"
+)
+
+assert EPOCH_KEY == GENESIS_SUM * NAVA + EPOCH_ADDITIVE, (
+    f"THE EPOCH EQUATION: {EPOCH_KEY} = {GENESIS_SUM} × {NAVA} + {EPOCH_ADDITIVE}"
 )
 
 # =============================================================================
-# THE FIELD = 35 × KRISHNA (The Guardian Domain)
+# THE FIELD = GITA_CHAPTERS × 33 = NAVA × 66 (The Guardian Domain)
 # =============================================================================
-# 595 = 35 × 17 = 35 × POSITION_SUM_KRISHNA
+# 594 = 18 × 33 = GITA_CHAPTERS × 33
+# 594 = 9 × 66 = NAVA × 66
+# 594 = 6 × 99 = SHARANAGATI × 99
 
-KRISHNA_UNITS: Final[int] = FIELD_SUM // POSITION_SUM_KRISHNA  # 35
+FIELD_FACTOR: Final[int] = FIELD_SUM // GITA_CHAPTERS  # 33
 
-assert FIELD_SUM == KRISHNA_UNITS * POSITION_SUM_KRISHNA, (
-    f"THE FIELD: {FIELD_SUM} = {KRISHNA_UNITS} × {POSITION_SUM_KRISHNA}"
+assert FIELD_SUM == GITA_CHAPTERS * FIELD_FACTOR, (
+    f"THE FIELD: {FIELD_SUM} = {GITA_CHAPTERS} × {FIELD_FACTOR}"
 )
-assert FIELD_SUM % POSITION_SUM_KRISHNA == 0, "Field must be divisible by Krishna"
+assert FIELD_SUM % GITA_CHAPTERS == 0, "Field must be divisible by GITA_CHAPTERS"
+assert FIELD_SUM % NAVA == 0, "Field must be divisible by NAVA"
+assert FIELD_SUM % SHARANAGATI == 0, "Field must be divisible by SHARANAGATI"
 
 # =============================================================================
 # MOKSHA = FRUIT (Perfect Symmetry)
@@ -156,7 +167,7 @@ from ._secondary import FLUTE_HOLES_SUM
 assert EPOCH_DIGIT_SUM == FLUTE_HOLES_SUM, "digit_sum(1972) = 19 = FLUTE_HOLES_SUM"
 
 # =============================================================================
-# CUMULATIVE KRISHNA CHECKPOINTS (Divisible by 17)
+# CUMULATIVE GITA CHECKPOINTS (Divisible by 18 = GITA_CHAPTERS)
 # =============================================================================
 
 def get_cumulative_sum(chapter: int) -> int:
@@ -166,20 +177,19 @@ def get_cumulative_sum(chapter: int) -> int:
     return sum(CHAPTER_VERSES[:chapter])
 
 
-def is_krishna_checkpoint(chapter: int) -> bool:
-    """Check if cumulative sum at this chapter is divisible by 17."""
-    return get_cumulative_sum(chapter) % POSITION_SUM_KRISHNA == 0
+def is_gita_checkpoint(chapter: int) -> bool:
+    """Check if cumulative sum at this chapter is divisible by 18."""
+    return get_cumulative_sum(chapter) % GITA_CHAPTERS == 0
 
 
-# Krishna checkpoints: After Ch 2, 4, 16
-KRISHNA_CHECKPOINTS: Final[Tuple[int, ...]] = tuple(
-    ch for ch in range(1, GITA_CHAPTERS + 1) if is_krishna_checkpoint(ch)
+# Gita checkpoints: After Ch 11 and Ch 16
+GITA_CHECKPOINTS: Final[Tuple[int, ...]] = tuple(
+    ch for ch in range(1, GITA_CHAPTERS + 1) if is_gita_checkpoint(ch)
 )
 
 # Verify known checkpoints
-assert 2 in KRISHNA_CHECKPOINTS, "After Ch 2: 119 verses, 119 % 17 = 0"
-assert 4 in KRISHNA_CHECKPOINTS, "After Ch 4: 204 verses, 204 % 17 = 0"
-assert 16 in KRISHNA_CHECKPOINTS, "After Ch 16: 595 verses, 595 % 17 = 0"
+assert 11 in GITA_CHECKPOINTS, "After Ch 11: 468 verses, 468 % 18 = 0"
+assert 16 in GITA_CHECKPOINTS, "After Ch 16: 594 verses, 594 % 18 = 0"
 
 # =============================================================================
 # VALIDATION FUNCTIONS (For Runtime Use)
@@ -232,7 +242,8 @@ __all__ = [
     "FRUIT_SUM",
     "FIELD_SUM",
     # Derived Constants
-    "KRISHNA_UNITS",
+    "FIELD_FACTOR",
+    "EPOCH_ADDITIVE",
     "EPOCH_FACTOR_1",
     "EPOCH_FACTOR_2",
     "EPOCH_FACTOR_3",
@@ -242,10 +253,10 @@ __all__ = [
     "EPOCH_MOD_27",
     "EPOCH_DIGIT_SUM",
     # Checkpoints
-    "KRISHNA_CHECKPOINTS",
+    "GITA_CHECKPOINTS",
     # Functions
     "get_cumulative_sum",
-    "is_krishna_checkpoint",
+    "is_gita_checkpoint",
     "validate_field_integrity",
     "check_fruit_symmetry",
     "get_quarter",

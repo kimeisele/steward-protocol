@@ -109,7 +109,6 @@ from ._algorithm import (
 from ._topology import (
     # Verse Data
     CHAPTER_VERSES,
-    CHAPTER_VERSES_PRABHUPADA,
     # Quarter Sums
     GENESIS_SUM,
     DHARMA_SUM,
@@ -118,7 +117,8 @@ from ._topology import (
     FRUIT_SUM,
     FIELD_SUM,
     # Derived Constants
-    KRISHNA_UNITS,
+    FIELD_FACTOR,
+    EPOCH_ADDITIVE,
     EPOCH_FACTOR_1,
     EPOCH_FACTOR_2,
     EPOCH_FACTOR_3,
@@ -128,10 +128,10 @@ from ._topology import (
     EPOCH_MOD_27,
     EPOCH_DIGIT_SUM,
     # Checkpoints
-    KRISHNA_CHECKPOINTS,
+    GITA_CHECKPOINTS,
     # Functions
     get_cumulative_sum,
-    is_krishna_checkpoint,
+    is_gita_checkpoint,
     validate_field_integrity,
     check_fruit_symmetry,
     get_quarter,
