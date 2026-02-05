@@ -50,7 +50,7 @@ from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaD
 
 
 # TickState imported from _types.py (SSOT)
-from vibe_core.mahamantra._types import TickState
+from vibe_core.mahamantra.seed.types import TickState
 
 
 if TYPE_CHECKING:

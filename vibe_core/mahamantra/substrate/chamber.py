@@ -43,7 +43,7 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
 )
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
-from vibe_core.mahamantra.orchestrator import (
+from vibe_core.mahamantra.substrate.venu_orchestrator import (
     VenuOrchestrator,
     THE_FLUTE_CYCLE,
     DIW_MASK,
