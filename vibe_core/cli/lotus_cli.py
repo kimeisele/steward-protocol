@@ -32,30 +32,12 @@ __genesis__ = "0xac560f43"  # GenesisByte: parampara % 37 == 0
 from typing import List
 
 from vibe_core.protocols.cli import CLIMeta, register_cli
-from vibe_core.protocols.cognition import CognitiveResult, IntentType
-from vibe_core.protocols.universal.semantic_router import (
-    SemanticRouter,
-    SemanticRouteResult,
-    get_semantic_router,
+from vibe_core.mahamantra.adapters.cli import (
+    get_adapter as get_mahamantra_cli_adapter,
+    AdapterResult,
 )
 
 
-def _infer_intent_type(query: str) -> IntentType:
-    """
-    Infer IntentType from natural language.
-
-    Simple keyword matching - the SemanticRouter handles the rest.
-    """
-    q = query.lower()
-
-    if any(w in q for w in ("create", "make", "spawn", "new", "add")):
-        return IntentType.EXECUTE
-    elif any(w in q for w in ("find", "search", "get", "fetch", "show", "list")):
-        return IntentType.QUERY
-    elif any(w in q for w in ("route", "send", "dispatch", "forward")):
-        return IntentType.ROUTE
-    else:
-        return IntentType.CHAT
 
 
 @register_cli
@@ -80,7 +62,7 @@ class LotusCLI:
     """
 
     def __init__(self) -> None:
-        self._router = get_semantic_router()
+        self._adapter = get_mahamantra_cli_adapter()
 
     @property
     def meta(self) -> CLIMeta:
@@ -118,107 +100,55 @@ class LotusCLI:
         return self._route(query, explain=explain)
 
     def _route(self, query: str, explain: bool = False) -> int:
-        """Route query through semantic stack."""
-        # Infer intent
-        intent_type = _infer_intent_type(query)
-
-        # Create minimal CognitiveResult
-        cognitive = CognitiveResult(
-            intent_type=intent_type,
-            confidence=1.0,
-        )
-
-        # Route through semantic router
-        result = self._router.route(cognitive)
-        result.original_message = query
+        """Route query through Mahamantra holographic routing."""
+        # The adapter handles execution mode internally. We pass 'observe' to just see
+        # the routing without running the command, unless --execute is passed (future feature).
+        result = self._adapter.execute(query, mode="observe")
 
         if explain:
             self._print_explain(result)
         else:
             self._print_result(result)
 
-        return 0 if result.success else 1
+        return result.cli_result if result.executed and result.cli_result is not None else 0
 
-    def _print_result(self, result: SemanticRouteResult) -> None:
-        """Print routing result."""
-        print(f"[{result.mahajana.value.upper()}] Routed: {result.original_message}")
-        print(f"  OpCode: {result.opcode.name}")
-        print(f"  Quarter: {result.quarter} | Position: {result.position}")
-        if result.is_head:
-            print(f"  HEAD (Avatara-owned)")
+    def _print_result(self, result: AdapterResult) -> None:
+        """Print routing result from Mahamantra Adapter."""
+        resonance = result.resonance
+        guardian = resonance.get("guardian", "UNKNOWN").upper()
+        position = resonance.get("position", "?")
+        command = result.cli_command or "NO MATCH"
+        candidates = ", ".join(result.candidates)
 
-    def _print_explain(self, result: SemanticRouteResult) -> None:
+        print(f"[{guardian}] Routed to: {command}")
+        print(f"  Position: {position}")
+        print(f"  Candidates: {candidates}")
+        if result.executed:
+            print(f"  Execution Result: {result.cli_result}")
+
+    def _print_explain(self, result: AdapterResult) -> None:
         """
-        Print detailed routing explanation.
-
-        THE INVISIBLE BACKEND - Now visible!
-        Shows full mahamantra routing with Guna QoS.
+        Print detailed routing explanation from the Mahamantra.
+        This is the true "Invisible Backend".
         """
-        msg = result.original_message or ""
-
-        # Calculate parampara hash
-        parampara_hash = sum(ord(c) * (i + 1) for i, c in enumerate(msg.lower()))
-
-        # Get Guna
-        guna_name = "UNKNOWN"
-        guna_sym = "?"
-        try:
-            from vibe_core.mahamantra.substrate.guna import get_guna_by_position
-
-            guna = get_guna_by_position(result.position)
-            guna_name = guna.name
-            guna_symbols = {"SATTVA": "●", "RAJAS": "◐", "TAMAS": "○"}
-            guna_sym = guna_symbols.get(guna_name, "?")
-        except ImportError as _exc:
-            logger.exception("Unexpected error: %s", _exc)
-
-        # Quarter names
-        quarter_names = ["GENESIS", "DHARMA", "KARMA", "MOKSHA"]
-        quarter_name = quarter_names[result.quarter] if 0 <= result.quarter < 4 else "UNKNOWN"
-
-        print("─" * 60)
-        print("SEMANTIC ROUTE (The Invisible Backend)")
-        print("─" * 60)
-        print(f'  Input:     "{msg}"')
-        print(f"  Hash:      {parampara_hash} (mod 16 = {parampara_hash % 16})")
-        print()
-        print("PROCESSING PATH:")
-        for i, step in enumerate(result.processing_path):
-            indent = "  " * (i + 1)
-            print(f"{indent}↓ {step}")
-        print()
-        print("RESULT:")
-        print(f"  Intent:    {result.intent_type.value}")
-        print(f"  OpCode:    {result.opcode.name}")
-        print(f"  Mahajana:  {result.mahajana.value.upper()}")
-        print(f"  Quarter:   {quarter_name} ({result.quarter}/4)")
-        print(f"  Position:  {result.position}/16")
-        print(f"  Guna:      {guna_name} {guna_sym}")
-        print(f"  Confidence: {result.bridge_confidence:.2f}")
-        print(f"  Source:    {result.bridge_source}")
-        if result.is_head:
-            print(f"  HEAD:      Yes (Avatara-owned position)")
-        if guna_name == "TAMAS":
-            print()
-            print("  ⚠️  TAMAS operation - requires confirmation")
-        print("─" * 60)
+        from vibe_core.mahamantra.mahamantra.__main__ import _render_response
+        # The __main__ module's renderer provides the canonical explanation.
+        _render_response(result.resonance, result)
 
     def _show_routing_table(self) -> int:
-        """Show full routing table."""
-        table = self._router.get_routing_table()
+        """Show full routing table from the Mahamantra Adapter."""
+        self._adapter._discover_all_clis()  # Ensure fingerprints are computed
+        table = self._adapter._cli_fingerprints
 
-        print("SEMANTIC ROUTING TABLE")
+        print("MAHAMANTRA HOLOGRAPHIC ROUTING TABLE")
         print("=" * 60)
+        print(f"{"COMMAND":<20} {"POSITION":<10} {"PAYLOAD_SIZE":<15} {"SEED"}")
+        print("-" * 60)
 
-        print("\nINTENT ROUTES:")
-        for route in table.get("intent_routes", []):
-            head = " [HEAD]" if route.get("is_head") else ""
-            print(f"  {route['intent']:12} → {route['opcode']:16} → {route['mahajana'].upper()}{head}")
+        sorted_table = sorted(table.items(), key=lambda item: item[1].position)
 
-        print("\nSYSCALL ROUTES:")
-        for route in table.get("syscall_routes", [])[:10]:
-            head = " [HEAD]" if route.get("is_head") else ""
-            print(f"  {route['syscall']:20} → {route['opcode']:16} → {route['mahajana'].upper()}{head}")
+        for command, fp in sorted_table:
+            print(f"{command:<20} {fp.position:<10} {fp.payload_size:<15} {fp.seed}")
 
         return 0
 

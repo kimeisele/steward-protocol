@@ -36,6 +36,7 @@ from typing import Dict, List, Tuple
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
+from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity
 from vibe_core.mahamantra.protocols._audit import (
     AuditProtocol,
     AuditReport,
@@ -64,7 +65,7 @@ SSOT_FILES: Tuple[str, ...] = ("_axioms.py", "_seed.py")
 # DRIFT AUDITOR - Implements AuditProtocol
 # =============================================================================
 
-class DriftAuditor:
+class Auditor:  # Renamed from DriftAuditor
     """
     The Drift Auditor - Implements AuditProtocol.
 
@@ -226,22 +227,48 @@ class DriftAuditor:
 
         return alive, dead, tuple(violations)
 
-    def audit(self) -> AuditReport:
-        """Run full audit. Returns complete report."""
-        lin_v, lin_b, lin_viol = self.lineage()
-        ssot_c, ssot_viol = self.ssot()
-        proto_a, proto_d, proto_viol = self.protocols()
+    def run_audit(self) -> List[AuditFinding]:
+        """Run full audit and return findings for the registry."""
+        findings: List[AuditFinding] = []
 
-        return AuditReport(
-            lineage_valid=lin_v,
-            lineage_broken=lin_b,
-            lineage_violations=lin_viol,
-            ssot_clean=ssot_c,
-            ssot_violations=ssot_viol,
-            protocols_alive=proto_a,
-            protocols_dead=proto_d,
-            protocol_violations=proto_viol,
-        )
+        # 1. Lineage Check
+        _, _, lin_violations = self.lineage()
+        for v in lin_violations:
+            findings.append(AuditFinding(
+                source="DriftAuditor.lineage",
+                position=__position__,
+                mahajana=__mahajana__,
+                description=f"Broken lineage. Genesis {v.current_genesis} has remainder {v.remainder}",
+                file_path=v.path,
+                severity=FindingSeverity.CRITICAL,
+            ))
+
+        # 2. SSOT Check
+        _, ssot_violations = self.ssot()
+        for v in ssot_violations:
+            findings.append(AuditFinding(
+                source="DriftAuditor.ssot",
+                position=__position__,
+                mahajana=__mahajana__,
+                description=f"Hardcoded sacred constant: {v.constant_name}={v.value}",
+                file_path=v.path,
+                line_number=v.line_number,
+                severity=FindingSeverity.WARNING,
+            ))
+
+        # 3. Protocol Check
+        _, _, proto_violations = self.protocols()
+        for v in proto_violations:
+            findings.append(AuditFinding(
+                source="DriftAuditor.protocols",
+                position=__position__,
+                mahajana=__mahajana__,
+                description=f"Protocol violation for {v.class_name}: {v.details}",
+                file_path=v.module_name.replace('.', '/') + '.py',
+                severity=FindingSeverity.CRITICAL,
+            ))
+
+        return findings
 
     # === HEALING (NOT IDEMPOTENT - Marked) ===
     # NOT IDEMPOTENT - Modifies files
@@ -315,37 +342,8 @@ class DriftAuditor:
         return f"0x{base - (base % PARAMPARA):08x}"
 
 
-# =============================================================================
-# MODULE-LEVEL API (Backwards Compatible)
-# =============================================================================
-
-_default_auditor: DriftAuditor | None = None
-
-def _get_auditor() -> DriftAuditor:
-    global _default_auditor
-    if _default_auditor is None:
-        _default_auditor = DriftAuditor()
-    return _default_auditor
-
-def lineage(root: Path | None = None) -> Tuple[int, int, Tuple[LineageViolation, ...]]:
-    """Check lineage. Returns (valid, broken, violations)."""
-    return DriftAuditor(root).lineage()
-
-def ssot(root: Path | None = None) -> Tuple[int, Tuple[SSOTViolation, ...]]:
-    """Check SSOT. Returns (clean, violations)."""
-    return DriftAuditor(root).ssot()
-
-def audit(root: Path | None = None) -> AuditReport:
-    """Run full audit."""
-    return DriftAuditor(root).audit()
-
-def heal_lineage(root: Path | None = None, dry_run: bool = False) -> List[str]:
-    """Fix broken lineages."""
-    return DriftAuditor(root).heal_lineage(dry_run)
-
-
 __all__ = [
-    "DriftAuditor",
-    "lineage", "ssot", "audit", "heal_lineage",
-    "AuditReport", "LineageViolation", "SSOTViolation", "ProtocolViolation",
+    "Auditor",
+    "heal_lineage",  # Keep heal as a standalone utility
+    "AuditReport", "LineageViolation", "SSOTViolation", "ProtocolViolation", # Keep types for now
 ]

@@ -23,7 +23,10 @@ import threading
 import queue
 import time
 import uuid
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from dataclasses import dataclass, field
 
 from vibe_core.mahamantra.reactor.shadow import ShadowReactor, ShadowState
@@ -39,7 +42,7 @@ MAILBOX_TIMEOUT_S = 10.0  # Max time to wait for a result
 class LoopRequest:
     """A request to the Reactor Loop."""
     tracking_id: str
-    maha_cell: Any  # MahaCellUnified (flexible type for now)
+    maha_cell: "MahaCellUnified"  # Typed reference
     purpose: str
     target_position: int = -1  # For routed requests (Teleportation)
 
@@ -52,7 +55,7 @@ class MahaMailbox:
     Sync callers wait on a specific tracking_id.
     """
     def __init__(self):
-        self._results: Dict[str, Any] = {}
+        self._results: Dict[str, object] = {}
         self._events: Dict[str, threading.Event] = {}
         self._lock = threading.Lock()
 
@@ -63,7 +66,7 @@ class MahaMailbox:
             self._events[tracking_id] = threading.Event()
         return tracking_id
 
-    def deposit(self, tracking_id: str, result: Any) -> None:
+    def deposit(self, tracking_id: str, result: object) -> None:
         """Deposit a result and wake up the waiter."""
         with self._lock:
             if tracking_id in self._events:
@@ -72,7 +75,7 @@ class MahaMailbox:
             else:
                 logger.warning(f"Mailbox: Deposited result for unknown/expired ID {tracking_id}")
 
-    def collect(self, tracking_id: str, timeout: float = MAILBOX_TIMEOUT_S) -> Any:
+    def collect(self, tracking_id: str, timeout: float = MAILBOX_TIMEOUT_S) -> object:
         """
         Wait for and retrieve a result.
         
@@ -116,15 +119,15 @@ class ReactorLoop(threading.Thread):
         self._running = False
         self._stop_event = threading.Event()
         self._idle_ticks = 0
-        self._bus: Optional[Any] = None # Narada (Initialized in run)
-        self._dojo: Optional[Any] = None # Dojo (Initialized in run)
+        self._bus: Optional[object] = None  # Narada (Initialized in run)
+        self._dojo: Optional[object] = None  # Dojo (Initialized in run)
         self._ready_event = threading.Event()
         
     def attach_mailbox(self, mailbox: MahaMailbox):
         """Connect the loop to a mailbox."""
         self._mailbox = mailbox
 
-    def submit(self, maha_cell: Any, purpose: str, target_position: int = -1) -> str:
+    def submit(self, maha_cell: "MahaCellUnified", purpose: str, target_position: int = -1) -> str:
         """
         Submit work to the loop. 
         Returns tracking_id to wait on.

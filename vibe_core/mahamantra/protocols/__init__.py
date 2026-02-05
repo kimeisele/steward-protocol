@@ -171,6 +171,16 @@ def __getattr__(name: str):
         from vibe_core.mahamantra.protocols import _lotus
         return getattr(_lotus, name)
 
+    # Shabda Derivation
+    if name in (
+        "ShabdaSeedProtocol", "ShabdaTreeProtocol", "ShabdaForestProtocol",
+        "ShabdaDerivationProtocol", "VibrationProtocol",
+        "ROOT_WORDS", "POS_HARE", "POS_KRISHNA", "POS_RAMA",
+        "verify_rama_hare_identity", "verify_total_mahajana_identity",
+    ):
+        from vibe_core.mahamantra.protocols import _shabda_derivation
+        return getattr(_shabda_derivation, name)
+
     # Veda Protocol (from vibe_core/protocols/veda.py - NOT mahamantra!)
     if name in ("VedaProtocol", "VedaMixin", "is_vedic", "veda_audit"):
         from vibe_core.protocols import veda

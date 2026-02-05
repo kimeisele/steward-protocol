@@ -11,7 +11,7 @@ Persists to `.vibe/state/mahamantra/memory.json`.
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 from datetime import datetime
 from dataclasses import asdict
 
@@ -76,7 +76,7 @@ class PersistentMemory:
     def remember(
         self,
         key: str,
-        value: Any,
+        value: object,
         session_id: Optional[str] = None,
         ttl_seconds: Optional[int] = None,
         tags: Optional[List[str]] = None,
@@ -106,7 +106,7 @@ class PersistentMemory:
         self,
         key: str,
         session_id: Optional[str] = None,
-    ) -> Optional[Any]:
+    ) -> Optional[object]:
         """Retrieve a value."""
         store_key = self._get_key(key, session_id)
         entry = self._store.get(store_key)

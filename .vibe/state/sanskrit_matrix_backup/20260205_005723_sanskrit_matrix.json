@@ -60,7 +60,7 @@
       "decision": "WARN_EXECUTE",
       "decision_modifier": "ख",
       "count": 1,
-      "avg_dharmic_score": 0.5,
+      "avg_dharmic_score": 0.45,
       "trend": "stable"
     },
     {
@@ -156,10 +156,10 @@
     {
       "akshara": "ञ",
       "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
+      "decision": "WARN_EXECUTE",
+      "decision_modifier": "ख",
       "count": 1,
-      "avg_dharmic_score": 0.3500000000000002,
+      "avg_dharmic_score": 0.4500000000000002,
       "trend": "stable"
     },
     {
@@ -276,7 +276,7 @@
       "decision": "BLOCK",
       "decision_modifier": "ग",
       "count": 1,
-      "avg_dharmic_score": 0.1,
+      "avg_dharmic_score": 0.10000000000000003,
       "trend": "stable"
     },
     {
@@ -312,7 +312,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.7000000000000002,
+      "avg_dharmic_score": 0.6500000000000001,
       "trend": "stable"
     },
     {
@@ -339,7 +339,7 @@
       "decision": "BLOCK",
       "decision_modifier": "ग",
       "count": 1,
-      "avg_dharmic_score": 0.20000000000000004,
+      "avg_dharmic_score": 0.30000000000000004,
       "trend": "stable"
     },
     {
@@ -393,7 +393,7 @@
       "decision": "BLOCK",
       "decision_modifier": "ग",
       "count": 1,
-      "avg_dharmic_score": 0.20000000000000004,
+      "avg_dharmic_score": 0.30000000000000004,
       "trend": "stable"
     },
     {
@@ -420,7 +420,7 @@
       "decision": "BLOCK",
       "decision_modifier": "ग",
       "count": 1,
-      "avg_dharmic_score": 0.1,
+      "avg_dharmic_score": 0.10000000000000003,
       "trend": "stable"
     },
     {
@@ -501,7 +501,7 @@
       "decision": "BLOCK",
       "decision_modifier": "ग",
       "count": 1,
-      "avg_dharmic_score": 0.10000000000000003,
+      "avg_dharmic_score": 0.20000000000000004,
       "trend": "stable"
     },
     {
@@ -763,8 +763,8 @@
       "layer": "COGNITION",
       "decision": "BLOCK",
       "meaning": "COGNITION actions should BLOCK",
-      "total_count": 33,
-      "avg_score": 0.209,
+      "total_count": 32,
+      "avg_score": 0.211,
       "intent_types": [
         "COGNITION"
       ],
@@ -777,8 +777,8 @@
       "layer": "COGNITION",
       "decision": "WARN_EXECUTE",
       "meaning": "COGNITION actions should WARN_EXECUTE",
-      "total_count": 19,
-      "avg_score": 0.468,
+      "total_count": 20,
+      "avg_score": 0.465,
       "intent_types": [
         "COGNITION"
       ],
@@ -792,7 +792,7 @@
       "decision": "EXECUTE",
       "meaning": "COGNITION actions should EXECUTE",
       "total_count": 19,
-      "avg_score": 0.723,
+      "avg_score": 0.721,
       "intent_types": [
         "COGNITION"
       ],
@@ -814,16 +814,16 @@
       "REPAIR": 5
     },
     "decision_distribution": {
-      "WARN_EXECUTE": 22,
+      "WARN_EXECUTE": 23,
       "EXECUTE": 22,
-      "BLOCK": 40
+      "BLOCK": 39
     },
     "top_mantras": [
       "ञग",
       "ञख",
       "ञक"
     ],
-    "generated_at": "2026-02-05T00:57:25.060849"
+    "generated_at": "2026-02-05T00:57:23.784733"
   },
   "version": "1.0"
 }
