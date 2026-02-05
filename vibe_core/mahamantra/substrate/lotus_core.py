@@ -434,9 +434,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
 
         # Get reactor via factory (DI pattern, not direct instantiation)
+        # FORCED LAGNA=0: The position is ALREADY computed from attractor % WORDS.
+        # Adding a random phase shift corrupts deterministic routing.
+        # "Der Output darf niemals variieren" - Same input → same output. Always.
         reactor = get_shadow_reactor_factory().spawn(
             auto_discover=False,  # Diamond routing, not filesystem discovery
             initial_position=position,
+            forced_lagna=0,  # No phase shift - position from attractor IS the truth
         )
 
         # SANKIRTAN AUTHORIZATION: Accumulate grace through chanting
