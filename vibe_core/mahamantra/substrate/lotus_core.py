@@ -307,9 +307,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
         from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+        from vibe_core.mahamantra.protocols._seed import is_fruit, is_in_field
 
         verse_result = match_attractor(attractor)
         chapter = get_gita_chapter(attractor)
+        
+        # TOPOLOGY: Field (Ch 1-16) = process, Fruit (Ch 17-18) = complete
+        gita_phase = "fruit" if is_fruit(chapter) else "field"
+        is_complete = is_fruit(chapter)  # Stopping condition
 
         verse_info = None
         if verse_result.matches:
@@ -493,10 +498,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "coherence": parampara_coherence,
             },
 
-            # Gita (VANDANAM)
+            # Gita (VANDANAM) + TOPOLOGY
             "chapter": chapter,
             "verse": verse_info,
             "matches": len(verse_result.matches),
+            "gita_phase": gita_phase,  # "field" (Ch 1-16) or "fruit" (Ch 17-18)
+            "is_complete": is_complete,  # True if in Fruit (stopping condition)
 
             # Position (DASYAM) - Dual Classification
             "position": position,
