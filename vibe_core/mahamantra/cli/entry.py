@@ -148,7 +148,7 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
             # P0-SECURITY: Fail-close instead of fail-open
             # If audit fails, execution MUST be blocked
             print(f"ERROR: Sankirtan Chamber audit failed: {e}")
-            print(f"SECURITY: Execution blocked - audit trail is mandatory")
+            print("SECURITY: Execution blocked - audit trail is mandatory")
             return 1  # Exit with error code
 
         result = cli_auto.execute(command, remaining)
@@ -243,7 +243,7 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
         for pos in range(WORDS):
             position = mahamantra[pos]
             guardian = position.guardian.value.upper()
-            opcode = position.opcode.value
+            opcode = position.opcode.name
             is_head = "HEAD" if position.is_head else "    "
             quarter = position.quarter.name
 

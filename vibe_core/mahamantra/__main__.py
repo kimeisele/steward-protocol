@@ -23,7 +23,7 @@ __position__ = 1
 __genesis__ = "0x8dfc6e38"  # GenesisByte: parampara % 37 == 0
 
 import sys
-from typing import Final, List, Optional
+from typing import Dict, Final, List, Optional
 
 # Exit codes
 EXIT_SUCCESS: Final[int] = 0
@@ -34,16 +34,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     """
     THE ONE ENTRY POINT - Mahamantra is King.
 
-    EVERYTHING flows through mahamantra():
-        Input → MahaCompression → Seed
-        Seed → MahaKirtan → Attractor → Gita Chapter
-        Chapter → Position → Guardian
-        Cell → SankirtanChamber → Transform
-        Response
+    mahamantra("anything") → Full 9-step NavaBhakti Pipeline → Result
 
-    With --run: Also executes matched CLI command.
-
-    NO hardcoded commands. Pure resonance routing.
+    NO argparse. NO subcommands. NO if-else chains.
+    The Mahamantra COMPUTES the route from the input itself.
     """
     if argv is None:
         argv = sys.argv[1:]
@@ -51,10 +45,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     # No input = help
     if not argv:
         return _show_help()
-
-    # Check for --run flag (execute mode)
-    execute_mode = "--run" in argv or "-x" in argv
-    argv = [a for a in argv if a not in ("--run", "-x")]
 
     # Join all args into one input string
     # Resonance doesn't care about structure - it FEELS the meaning
@@ -67,25 +57,19 @@ def main(argv: Optional[List[str]] = None) -> int:
     # =========================================================================
     # MAHAMANTRA IS THE KING - Direct __call__ (9 NavaBhakti steps)
     # =========================================================================
-    # NO argparse. NO subcommands. NO if-else chains.
-    # The Mahamantra COMPUTES the route from the input itself.
+    # NO adapter. NO fingerprint matching. NO old CLI registry.
+    # mahamantra.execute() IS the router. Pure computation.
     # =========================================================================
 
     try:
-        from vibe_core.mahamantra.adapters.cli import get_adapter
+        from vibe_core.mahamantra import mahamantra
 
-        adapter = get_adapter()
-        mode = "execute" if execute_mode else "observe"
-        result = adapter.execute(input_text, mode=mode)
+        result = mahamantra.execute(input_text)
 
         # Render the response
-        _render_response(result.resonance, result)
+        _render_response(result)
 
-        return result.cli_result if result.executed else EXIT_SUCCESS
-
-    except ImportError as e:
-        print(f"ERROR: Mahamantra not available ({e})")
-        return EXIT_ERROR
+        return result.get("exit_code", EXIT_SUCCESS)
 
     except Exception as e:
         print(f"ERROR: {e}")
@@ -95,9 +79,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         return EXIT_ERROR
 
 
-def _render_response(response: dict, adapter_result=None) -> None:
+def _render_response(response: Dict[str, object]) -> None:
     """
-    Render mahamantra() response + adapter matching info.
+    Render mahamantra.execute() response.
 
     The response contains EVERYTHING - we just display it.
     """
@@ -115,6 +99,7 @@ def _render_response(response: dict, adapter_result=None) -> None:
     # Gita verse
     verse = response.get("verse") or {}
     guna = str(verse.get("guna", "?"))[:10]
+    verse_id = str(verse.get("id", "-"))
 
     # Parampara
     parampara = response.get("parampara", {})
@@ -122,23 +107,23 @@ def _render_response(response: dict, adapter_result=None) -> None:
 
     # Cell
     cell = response.get("cell", {})
-    cell_valid = "✓" if cell.get("valid") else "?"
+    cell_valid = "ALIVE" if cell.get("is_alive") else "?"
+    cell_prana = str(cell.get("prana", "?"))
 
     # Trinity function
     holy_name = response.get("holy_name", "?")
     trinity_fn = response.get("trinity_function", "?")
 
-    # Adapter info
-    cli_cmd = adapter_result.cli_command if adapter_result else None
-    cli_pos = adapter_result.matched_position if adapter_result else "?"
-    cli_executed = adapter_result.executed if adapter_result else False
-    exec_mark = "✓ EXECUTED" if cli_executed else "observe"
-    candidates = adapter_result.candidates[:3] if adapter_result else []
-    candidates_str = ", ".join(candidates) if candidates else "-"
+    # Execution
+    execution = response.get("execution", {})
+    exec_success = execution.get("success", False)
+    guardian_acted = execution.get("guardian_acted", False)
+    exec_mark = "EXECUTED" if exec_success else "PENDING"
+    guardian_mark = "YES" if guardian_acted else "no"
 
-    # Fingerprint info
-    fp = adapter_result.fingerprint if adapter_result else None
-    fp_str = f"pos={fp.position} payload={fp.payload_size}" if fp else "-"
+    # Yajna cycle
+    yajna = response.get("yajna", {})
+    yajna_phase = str(yajna.get("phase", "?"))
 
     print(f"""
 ╔═══════════════════════════════════════════════════════════════════════╗
@@ -149,17 +134,17 @@ def _render_response(response: dict, adapter_result=None) -> None:
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  VIBRATION:                                                           ║
 ║    Attractor: {attractor:<10s}  Chapter: {chapter:>2s}  Guna: {guna:10s}          ║
+║    Verse: {verse_id:<58s} ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  ROUTING (computed from seed):                                        ║
 ║    Position: {position:>2}  Guardian: {guardian:12s}  Quarter: {quarter:10s}  ║
 ║    Name: {holy_name}  Function: {trinity_fn:12s}                              ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  CLI ADAPTER (holographic cell matching):                             ║
-║    Matched: {str(cli_cmd or "none"):<12s}  Mode: {exec_mark:14s}            ║
-║    Fingerprint: {fp_str:<52s} ║
-║    Candidates: {candidates_str:<54s} ║
+║  EXECUTION:                                                           ║
+║    Status: {exec_mark:<12s}  Guardian acted: {guardian_mark:<10s}          ║
+║    Cell: {cell_valid:<8s}  Prana: {cell_prana:<10s}  Yajna: {yajna_phase:10s}  ║
 ╠═══════════════════════════════════════════════════════════════════════╣
-║  PARAMPARA: {parampara_status:10s}  CELL: {cell_valid}                                   ║
+║  PARAMPARA: {parampara_status:10s}                                             ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 """)
 
@@ -173,15 +158,16 @@ MAHAMANTRA - Krishna Routes Everything
 "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
 
 USAGE:
+    steward "anything"
     python -m vibe_core.mahamantra "anything"
 
 THAT'S IT. No subcommands. No flags. Just speak.
 
 EXAMPLES:
-    python -m vibe_core.mahamantra "analyze the codebase"
-    python -m vibe_core.mahamantra "what is position 6"
-    python -m vibe_core.mahamantra "show me karma quarter"
-    python -m vibe_core.mahamantra "chant 3 rounds"
+    steward "analyze the codebase"
+    steward "what is position 6"
+    steward "show me karma quarter"
+    steward "chant 3 rounds"
 
 HOW IT WORKS (9 NavaBhakti):
     1. SRAVANAM       Receive your input
@@ -189,10 +175,10 @@ HOW IT WORKS (9 NavaBhakti):
     3. SMARANAM       Vibrate (MahaKirtan)
     4. PADA_SEVANAM   Find attractor (MahaResonator)
     5. ARCANAM        Verify Parampara (% 37)
-    6. VANDANAM       Match Gita chapter
+    6. VANDANAM       Match Gita chapter (THE BINDING ELEMENT)
     7. DASYAM         Determine position/guardian
-    8. SAKHYAM        Create MahaCell
-    9. ATMA_NIVEDANAM Return complete response
+    8. SAKHYAM        Create MahaCell + Chamber.kirtan()
+    9. ATMA_NIVEDANAM ShadowReactor.tick() → Guardian execution
 
 ARCHITECTURE:
     Position = attractor % 16
