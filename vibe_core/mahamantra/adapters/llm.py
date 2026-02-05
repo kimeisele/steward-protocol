@@ -453,7 +453,7 @@ class MahaLLM(MahaLLMProtocol):
     # INTEGRATION WITH MAHACOMPRESSION
     # =========================================================================
 
-    def route_compressed(self, compression_result: Any) -> RouteResult:
+    def route_compressed(self, compression_result: object) -> RouteResult:
         """
         Route a MahaCompression result to agent.
 
@@ -548,7 +548,7 @@ class MahaLLM(MahaLLMProtocol):
     # EXECUTE (Call handler if registered)
     # =========================================================================
 
-    def execute(self, intent_id: int, *args, **kwargs) -> Any:
+    def execute(self, intent_id: int, *args, **kwargs) -> object:
         """
         Route and execute the handler for an intent.
 
@@ -564,7 +564,7 @@ class MahaLLM(MahaLLMProtocol):
             return result.handler(*args, **kwargs)
         return None
 
-    def execute_text(self, text: str, *args, **kwargs) -> Any:
+    def execute_text(self, text: str, *args, **kwargs) -> object:
         """Route text and execute the handler."""
         result = self.route_text(text)
         if result.handler is not None:

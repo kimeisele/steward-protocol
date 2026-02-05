@@ -14,7 +14,7 @@ math: `genesis_byte % 37 == 0`
 
 If the signature matches, the connection is BONA FIDE.
 """
-from vibe_core.mahamantra.protocols._seed import (WORDS)
+from vibe_core.mahamantra.protocols._seed import WORDS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - Documentation/Teaching
@@ -26,10 +26,9 @@ from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
 from vibe_core.mahamantra.protocols._seed import (
     PARAMPARA,
     MAHAJANA_COUNT,
-    HARE_COUNT,
     WORDS,
-    END_CORRECTION,
 )
+from vibe_core.mahamantra.protocols._bhava import SHARANAGATI_UNIT
 
 
 class Prabhupada(PrabhupadaProtocol):
@@ -62,6 +61,17 @@ class Prabhupada(PrabhupadaProtocol):
         1. Check for `__genesis__` attribute (The signature).
         2. Validate: `int(__genesis__, 16) % PARAMPARA == 0`
         3. Check identity existence.
+
+        TODO (VAIKUNTHA PARADIGM):
+        ==========================
+        This currently checks hardcoded __genesis__ attributes (Samsara/Maya).
+        The proper solution is to COMPUTE identity from INTENT via Mahamantra.
+        But this requires deeper understanding of:
+        - PanchaTattva protocol (5 truths about an object)
+        - SEED generation algorithm semantic refinement
+        - How Parampara verification works with computed identity
+        
+        DO NOT RUSH - ShadowReactor is the heart of the system.
 
         Args:
             component: The object to verify.
@@ -99,30 +109,32 @@ class Prabhupada(PrabhupadaProtocol):
         """
         return seed
 
-    def transmit_shakti(self, component: object) -> float:
+    def transmit_shakti(self, component: object) -> int:
         """
         Measure and transmit Shakti through the transparent via medium.
 
-        DERIVATION (from _seed.py):
-        - BASE_SHAKTI = HARE_COUNT / WORDS = 8/16 = 0.5
-        - This is the natural Shakti ratio in the Mahamantra itself
-        - END_CORRECTION = HARE_COUNT = "the energy escaping the tube"
+        WATERTIGHT INTEGER VERSION (COSMIC_FRAME scaling):
+        - BASE_SHAKTI = SHARANAGATI_UNIT = 3600 (one limb of surrender)
+        - Authorization threshold = SHARANAGATI_UNIT = 3600 (1 valid chant)
+        - Uses same scaling as calculate_grace_scaled() in _bhava.py
+        
+        DERIVATION:
+        - COSMIC_FRAME = 21600 (arc-minutes in circle)
+        - SHARANAGATI = 6 (limbs of surrender)
+        - SHARANAGATI_UNIT = 21600 / 6 = 3600
+        - Each valid chant = 1 limb fulfilled = 3600 units
 
         Returns:
-            0.0 if channel blocked (no valid link)
-            BASE_SHAKTI if channel open (valid Parampara connection)
+            0 if channel blocked (no valid link)
+            SHARANAGATI_UNIT if channel open (valid Parampara connection)
         """
         # 1. Check if channel is open (Parampara connection)
         if not self.verify_link(component):
-            return 0.0  # Blocked channel = no Shakti transmission
+            return 0  # Blocked channel = no Shakti transmission
 
-        # 2. Calculate BASE_SHAKTI from Seed (NOT hardcoded!)
-        # HARE_COUNT / WORDS = 8/16 = the natural Shakti proportion
-        base_shakti = HARE_COUNT / WORDS
-
-        # 3. Return base Shakti (channel is open, energy flows)
-        # Future: modulate by Guna state, VarnaTensor resonance, etc.
-        return base_shakti
+        # 2. Return BASE_SHAKTI as SHARANAGATI_UNIT (3600)
+        # Same scaling as _bhava.py grace calculations
+        return SHARANAGATI_UNIT
 
 
 # =============================================================================

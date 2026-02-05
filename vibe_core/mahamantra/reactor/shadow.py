@@ -102,7 +102,14 @@ from vibe_core.mahamantra.protocols._gad import (
 # =============================================================================
 # SSOT IMPORTS - The Law (_seed.py) governs the Reality (shadow.py)
 # =============================================================================
-from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, PARAMPARA, WORDS
+from vibe_core.mahamantra.protocols._seed import (
+    COSMIC_FRAME,
+    KSETRAJNA,
+    PARAMPARA,
+    QUARTERS,
+    WORDS,
+)
+from vibe_core.mahamantra.protocols._bhava import SHARANAGATI_UNIT
 
 # =============================================================================
 # PRABHUPADA KIRTAN INTEGRATION - THE PERSON (SANKIRTAN = UNLIMITED MERCY)
@@ -187,6 +194,11 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
 
     GAD-000: ✓D ✓O ✓P ✓C ✓I ✓R
     """
+
+    # NOTE: NO hardcoded __mahajana__/__genesis__ here!
+    # Identity is COMPUTED at runtime via Mahamantra routing.
+    # Filesystem = Maya (illusion). Mahamantra = Krishna (truth).
+    # The reactor's identity comes from its INTENT, not static labels.
 
     # Base path for discovery (shared across instances)
     _BASE_PATH: ClassVar[Path] = Path(__file__).parent.parent
@@ -289,7 +301,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # SANKIRTAN PRINCIPLE: Everyone benefits, more chanting = more grace!
         # Unlike Adhikara (signatures required), Prabhupada provides MERCY.
         self._prabhupada: Prabhupada = get_prabhupada()
-        self._sankirtan_shakti: float = 0.0  # Accumulated grace through chanting
+        self._sankirtan_shakti: int = 0  # Accumulated grace through chanting (INTEGER)
 
     # =========================================================================
     # PROTOCOL PROPERTIES
@@ -360,12 +372,13 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         
         Tries execute() first (if prefer_execute=True), then on_bhoga/on_prasadam/on_switch/on_return.
         Catches all exceptions and records as APARADHA (dissonance).
+        Results stored in state["execution_result"] for upstream consumption.
         """
         module = self._route_to_position(position)
         if not module:
             return
 
-        # Determine which handler to call
+        # Determine which handler to call (priority order)
         handler = None
         handler_name = None
         
@@ -388,11 +401,16 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         if not handler:
             return
 
-        # Execute with single try-catch
+        # Execute with single try-catch, capture result
         try:
             if handler_name == "execute":
-                handler(state, self._maha_cell)
+                # execute(input_text, context) -> dict
+                payload = self._maha_cell.payload if self._maha_cell else b""
+                input_text = payload.decode("utf-8", errors="replace") if payload else ""
+                result = handler(input_text, {"cell": self._maha_cell, "position": position, "state": state})
+                state["execution_result"] = result
             else:
+                # on_bhoga/on_prasadam/on_switch/on_return(state) -> None (mutates state)
                 handler(state)
         except Exception as e:
             state["dissonance_report"] = f"APARADHA [{handler_name.upper()} @ {position}]: {type(e).__name__}: {e}"
@@ -432,35 +450,33 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             or (position == RETURN_POSITION and cycle > 0)  # The Return
         )
 
-    def _compute_parampara_coherence(self, position: int, cycle: int) -> float:
+    def _compute_parampara_coherence(self, position: int, cycle: int) -> int:
         """
         Compute coherence relative to Parampara.
 
-        Uses the GOLDEN RATIO pattern within Parampara:
-        - 37 = sum of first 5 Fibonacci numbers squared (1+1+4+9+16+9-3=37... nope)
-        - Actually: 37 is prime, so use distance from nearest Parampara multiple
+        WATERTIGHT INTEGER VERSION:
+        - Returns 0 to PARAMPARA (37) indicating distance from alignment
+        - 0 = perfectly aligned (at Parampara multiple)
+        - PARAMPARA // 2 = maximally distant (midpoint)
+        - Lower distance = higher coherence
 
-        Returns 0.0 to 1.0 indicating how "connected" this state is.
-        Sinusoidal pattern creates rhythm of connection.
+        Uses simple modular arithmetic - no floats, no trig.
         """
-        import math
+        total_ticks = (cycle * WORDS) + position + KSETRAJNA  # +1 to avoid zero
 
-        total_ticks = (cycle * 16) + position + 1  # +1 to avoid zero
-
-        # Distance from nearest Parampara multiple
+        # Distance from nearest Parampara multiple (0 to PARAMPARA//2)
         remainder = total_ticks % PARAMPARA
         distance = min(remainder, PARAMPARA - remainder)
 
-        # Sinusoidal coherence - creates a rhythmic pattern
-        # High at 0, 37, 74... Low at 18, 55... (midpoints)
-        phase = (total_ticks / PARAMPARA) * 2 * math.pi
-        base_coherence = (math.cos(phase) + 1) / 2  # 0 to 1
+        # Coherence = PARAMPARA - distance (higher = more coherent)
+        # Range: PARAMPARA//2 + 1 to PARAMPARA (19 to 37)
+        coherence = PARAMPARA - distance
 
-        # Boost at switch position (8) - the transformation
+        # Boost at switch position (8) - add PARAMPARA // QUARTERS (9)
         if position == SWITCH_POSITION:
-            base_coherence = min(1.0, base_coherence + 0.37)
+            coherence = min(PARAMPARA, coherence + (PARAMPARA // QUARTERS))
 
-        return base_coherence
+        return coherence
 
     def tick(self, tick_state: TickStateInput) -> ShadowState:
         """
@@ -915,13 +931,24 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         return self._prabhupada
 
     @property
-    def sankirtan_shakti(self) -> float:
-        """Accumulated Shakti through SANKIRTAN (chanting grace)."""
+    def sankirtan_shakti(self) -> int:
+        """Accumulated Shakti through SANKIRTAN (chanting grace). INTEGER."""
         return self._sankirtan_shakti
 
-    def chant(self, component: object = None) -> float:
+    def chant(self, component: object = None) -> int:
         """
         Perform SANKIRTAN - accumulate grace through chanting.
+
+        WATERTIGHT INTEGER VERSION (COSMIC_FRAME scaling):
+        - Valid chant = SHARANAGATI_UNIT (3600) shakti units
+        - Mercy chant (blocked) = KSETRAJNA (1) shakti unit
+        - Authorization threshold = SHARANAGATI_UNIT (3600) = 1 valid chant
+
+        DERIVATION:
+        - COSMIC_FRAME = 21600 (arc-minutes in circle)
+        - SHARANAGATI = 6 (limbs of surrender)
+        - SHARANAGATI_UNIT = 21600 / 6 = 3600
+        - Same scaling as calculate_grace_scaled() in _bhava.py
 
         SANKIRTAN PRINCIPLE:
         - Everyone benefits from chanting
@@ -929,20 +956,20 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         - Even without formal Adhikara, MERCY flows
 
         Returns:
-            Shakti transmitted this chant (0.5 if valid link, accumulated anyway)
+            Shakti transmitted this chant (SHARANAGATI_UNIT if valid, KSETRAJNA if mercy)
         """
         # Use self if no component provided
         target = component or self
 
-        # Get Shakti from THE PERSON
+        # Get Shakti from THE PERSON (returns SHARANAGATI_UNIT or 0)
         shakti = self._prabhupada.transmit_shakti(target)
 
         # SANKIRTAN: Even if blocked, some grace accumulates (mercy!)
         # "api cet su-durācāro" - even if one commits most abominable action
-        mercy_factor = 0.1  # Minimum mercy for ANY chanting
-        effective_shakti = max(shakti, mercy_factor)
+        # MERCY_UNIT = KSETRAJNA (1) - minimum mercy for ANY chanting
+        effective_shakti = max(shakti, KSETRAJNA)
 
-        # Accumulate grace
+        # Accumulate grace (INTEGER)
         self._sankirtan_shakti += effective_shakti
 
         return effective_shakti
@@ -951,11 +978,13 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         """
         Check SANKIRTAN-based authorization (MERCY path).
 
-        Unlike Adhikara (strict signatures), SANKIRTAN provides mercy:
-        - Accumulated shakti >= 1.0 = authorized through chanting
+        WATERTIGHT INTEGER VERSION (COSMIC_FRAME scaling):
+        - Threshold = SHARANAGATI_UNIT (3600) = 1 valid chant minimum
+        - Each valid chant = SHARANAGATI_UNIT (3600) shakti
+        - Each mercy chant = KSETRAJNA (1) shakti
         - This is the INCLUSIVE path - everyone can participate!
         """
-        return self._sankirtan_shakti >= 1.0
+        return self._sankirtan_shakti >= SHARANAGATI_UNIT
 
     # =========================================================================
     # ADHIKARA STATE (Authorization Chain - Mahajana Signatures)

@@ -54,7 +54,7 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0xc1739dcf"  # GenesisByte: parampara % 37 == 0
 
-from typing import Any, Final, Optional
+from typing import Final, Optional, Union
 
 from vibe_core.mahamantra.substrate.mahajana import Quarter, Sampradaya
 from vibe_core.mahamantra.protocols._seed import (
@@ -170,7 +170,7 @@ class MahamantraPipeline(MahaPipelineProtocol):
     # PHASE 1: GENESIS - Determine Intent
     # =========================================================================
 
-    def genesis(self, value: Any) -> GenesisResult:
+    def genesis(self, value: Union[str, int, bytes]) -> GenesisResult:
         """
         Phase 1: GENESIS - Determine the intent/nature of input.
 
@@ -178,7 +178,7 @@ class MahamantraPipeline(MahaPipelineProtocol):
         Maps input to quantum space through 7-lens hash.
 
         Args:
-            value: Any input (string, int, bytes)
+            value: Input (string, int, bytes)
 
         Returns:
             GenesisResult with hash_value in [0, MAHA_QUANTUM)
@@ -226,7 +226,7 @@ class MahamantraPipeline(MahaPipelineProtocol):
     # PHASE 3: KARMA - Route/Execute
     # =========================================================================
 
-    def karma(self, value: int, payload: Any = None) -> KarmaResult:
+    def karma(self, value: int, payload: object = None) -> KarmaResult:
         """
         Phase 3: KARMA - Route to destination.
 
@@ -284,14 +284,14 @@ class MahamantraPipeline(MahaPipelineProtocol):
     # FULL PIPELINE
     # =========================================================================
 
-    def execute(self, value: Any) -> PipelineResult:
+    def execute(self, value: Union[str, int, bytes]) -> PipelineResult:
         """
         Execute the complete 4-phase pipeline.
 
         INPUT → GENESIS → DHARMA → KARMA → MOKSHA → OUTPUT
 
         Args:
-            value: Any input value
+            value: Input value (string, int, bytes)
 
         Returns:
             PipelineResult with all phase results

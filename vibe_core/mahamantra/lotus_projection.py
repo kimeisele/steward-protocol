@@ -40,7 +40,7 @@ __genesis__ = "0x3e2fa1fe"
 import importlib
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Iterator, Optional, Tuple
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -70,10 +70,10 @@ class PositionRegistry:
         - Kernel (needs wired instances)
     """
 
-    _instances: Dict[int, Any] = field(default_factory=dict)
+    _instances: Dict[int, object] = field(default_factory=dict)
     _guardians: Dict[str, int] = field(default_factory=dict)  # name → position
 
-    def __getitem__(self, position: int) -> Any:
+    def __getitem__(self, position: int) -> object:
         """Get instance by position (gravity lookup)."""
         if position not in self._instances:
             raise KeyError(f"Position {position} not projected")
@@ -88,24 +88,24 @@ class PositionRegistry:
     def __iter__(self) -> Iterator[int]:
         return iter(sorted(self._instances.keys()))
 
-    def get(self, position: int, default: Any = None) -> Any:
+    def get(self, position: int, default: object = None) -> object:
         """Safe get by position."""
         return self._instances.get(position, default)
 
-    def by_guardian(self, name: str) -> Optional[Any]:
+    def by_guardian(self, name: str) -> Optional[object]:
         """Get instance by guardian name."""
         position = self._guardians.get(name.lower())
         if position is None:
             return None
         return self._instances.get(position)
 
-    def register(self, position: int, guardian: str, instance: Any) -> None:
+    def register(self, position: int, guardian: str, instance: object) -> None:
         """Register an instance at position."""
         self._instances[position] = instance
         self._guardians[guardian.lower()] = position
         logger.debug(f"🪷 Projected {guardian} at position {position}")
 
-    def all_active(self) -> list[Tuple[int, str, Any]]:
+    def all_active(self) -> list[Tuple[int, str, object]]:
         """Return all active projections as (position, guardian, instance)."""
         result = []
         for guardian, position in self._guardians.items():
@@ -128,7 +128,7 @@ class PositionRegistry:
 # =============================================================================
 
 
-def _instantiate_guardian(guardian: str, quarter: str) -> Optional[Any]:
+def _instantiate_guardian(guardian: str, quarter: str) -> Optional[object]:
     """
     Instantiate a guardian service.
 
@@ -168,7 +168,7 @@ def _instantiate_guardian(guardian: str, quarter: str) -> Optional[Any]:
     return None
 
 
-def _get_module_metadata(module: Any) -> Tuple[Optional[int], Optional[str]]:
+def _get_module_metadata(module: object) -> Tuple[Optional[int], Optional[str]]:
     """
     Extract __position__ and __mahajana__ from a module.
 
