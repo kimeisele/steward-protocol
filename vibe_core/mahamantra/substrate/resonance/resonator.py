@@ -52,6 +52,10 @@ class MahaResonator:
     """
     def __init__(self, mod_space: int = MAHA_QUANTUM) -> None:
         self.mod_space = mod_space
+        # FIX: Cache synth instance for performance (same algorithm as MahaKernel)
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth, MahaSynthParams
+        self._synth = MahaModularSynth(default_preset="quantum")
+        self._params = MahaSynthParams(mod_space=mod_space)
 
     # =========================================================================
     # PANCHA TATTVA PROTOCOL (5 Questions Every Entity Must Answer)
@@ -70,13 +74,8 @@ class MahaResonator:
 
     def oscillate_once(self, value: int) -> int:
         """One oscillation = one pass through the 16-step algorithm."""
-        # DELEGATE to algorithm/ - no duplication!
-        # Note: Uses legacy maha_oscillate (12/16 coverage) for backward compatibility.
-        # For 16/16 coverage, use MahaModularSynth.transform() directly.
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            return maha_oscillate(value, self.mod_space)
+        # FIX: Use cached MahaModularSynth for 16/16 coverage (same as MahaKernel)
+        return self._synth.transform(value, params=self._params)
 
     def find_attractor(self, seed: int, max_cycles: int = 100) -> ResonanceResult:
         """Find the attractor (stable state) for a given seed."""
