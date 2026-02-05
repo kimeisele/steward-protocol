@@ -48,7 +48,7 @@ class MahaCluster(Generic[C]):
     
     cells: List[MahaCellUnified[C]]
     resonance_attractor: int        # Common attractor (18, 22, 49, 87, 136)
-    coherence: float                # 0.0 - 1.333+ (MALA-normalized)
+    coherence: int                  # 0 - 28800 (COSMIC_FRAME + 33% MALA bonus)
     
     # Meta-header generated post-init
     cluster_header: MahaHeader = field(init=False)
