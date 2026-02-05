@@ -118,8 +118,16 @@ def _render_response(response: Dict[str, object]) -> None:
     execution = response.get("execution", {})
     exec_success = execution.get("success", False)
     guardian_acted = execution.get("guardian_acted", False)
+    guardian_result = execution.get("guardian_result") or {}
     exec_mark = "EXECUTED" if exec_success else "PENDING"
     guardian_mark = "YES" if guardian_acted else "no"
+
+    # Rückfrage: guardian signals it needs confirmation before proceeding
+    needs_confirmation = guardian_result.get("requires_confirmation", False)
+
+    # Guardian response: what did the guardian actually say?
+    guardian_action = str(guardian_result.get("action", ""))[:20]
+    guardian_message = str(guardian_result.get("message", ""))[:56]
 
     # Yajna cycle
     yajna = response.get("yajna", {})
@@ -142,8 +150,20 @@ def _render_response(response: Dict[str, object]) -> None:
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  EXECUTION:                                                           ║
 ║    Status: {exec_mark:<12s}  Guardian acted: {guardian_mark:<10s}          ║
-║    Cell: {cell_valid:<8s}  Prana: {cell_prana:<10s}  Yajna: {yajna_phase:10s}  ║
-╠═══════════════════════════════════════════════════════════════════════╣
+║    Cell: {cell_valid:<8s}  Prana: {cell_prana:<10s}  Yajna: {yajna_phase:10s}  ║""")
+
+    # Show guardian response if it acted
+    if guardian_acted and guardian_action:
+        print(f"║    Action: {guardian_action:<56s} ║")
+    if guardian_acted and guardian_message:
+        print(f"║    Response: {guardian_message:<54s} ║")
+
+    # Rückfrage: guardian needs confirmation before executing
+    if needs_confirmation:
+        print("║                                                                       ║")
+        print("║  ** RÜCKFRAGE: Guardian wartet auf Bestätigung **                      ║")
+
+    print(f"""╠═══════════════════════════════════════════════════════════════════════╣
 ║  PARAMPARA: {parampara_status:10s}                                             ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 """)

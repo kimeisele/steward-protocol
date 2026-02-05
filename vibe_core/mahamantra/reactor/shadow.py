@@ -360,11 +360,16 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # No module found at any path - normal if not yet implemented
         return None
 
-    def _execute_at_position(self, position: int, state: ShadowState, prefer_execute: bool = False) -> None:
+    def _execute_at_position(self, position: int, state: ShadowState, phase: str = "bhoga") -> None:
         """
-        Execute handler at position via direct routing.
+        Execute handler at position via phase-aware direct routing.
 
-        Tries execute() first (if prefer_execute=True), then on_bhoga/on_prasadam/on_switch/on_return.
+        PHASE-AWARE INTROSPECTION (not hardcoded):
+            1. Try phase-specific hook first: on_{phase}() - optional override
+            2. Fall back to execute() - universal interface
+            This means: add on_prasadam() to ANY guardian → it automatically
+            gets called during PRASADAM. No wiring needed.
+
         Catches all exceptions and records as APARADHA (dissonance).
         Results stored in state["execution_result"] for upstream consumption.
         """
@@ -372,25 +377,19 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         if not module:
             return
 
-        # Determine which handler to call (priority order)
+        # Phase-aware handler discovery:
+        # 1. Phase hook takes priority (e.g., on_bhoga overrides execute during BHOGA)
+        # 2. execute() is the universal fallback
         handler = None
         handler_name = None
 
-        if prefer_execute and hasattr(module, "execute"):
+        phase_hook = f"on_{phase}"
+        if hasattr(module, phase_hook):
+            handler = getattr(module, phase_hook)
+            handler_name = phase_hook
+        elif hasattr(module, "execute"):
             handler = module.execute
             handler_name = "execute"
-        elif hasattr(module, "on_bhoga"):
-            handler = module.on_bhoga
-            handler_name = "on_bhoga"
-        elif hasattr(module, "on_prasadam"):
-            handler = module.on_prasadam
-            handler_name = "on_prasadam"
-        elif hasattr(module, "on_switch"):
-            handler = module.on_switch
-            handler_name = "on_switch"
-        elif hasattr(module, "on_return"):
-            handler = module.on_return
-            handler_name = "on_return"
 
         if not handler:
             return
@@ -404,7 +403,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
                 result = handler(input_text, {"cell": self._maha_cell, "position": position, "state": state})
                 state["execution_result"] = result
             else:
-                # on_bhoga/on_prasadam/on_switch/on_return(state) -> None (mutates state)
+                # on_{phase}(state) -> None (mutates state)
                 handler(state)
         except Exception as e:
             state["dissonance_report"] = f"APARADHA [{handler_name.upper()} @ {position}]: {type(e).__name__}: {e}"
@@ -622,14 +621,14 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
             )
             self._task_queue = self._task_queue[len(dispatch_ids) :]
 
-        # DIAMOND ROUTING: Direct import → execute() or on_bhoga()
-        self._execute_at_position(position, state, prefer_execute=True)
+        # DIAMOND ROUTING: Direct import → on_bhoga() or execute()
+        self._execute_at_position(position, state, phase="bhoga")
 
     def _trigger_switch(self, state: ShadowState) -> None:
         """Trigger on_switch for position 8 (THE 8 MOMENT) via direct routing."""
         if not self.is_authorized():
             return
-        self._execute_at_position(SWITCH_POSITION, state, prefer_execute=False)
+        self._execute_at_position(SWITCH_POSITION, state, phase="switch")
 
     def _trigger_prasadam(self, state: ShadowState) -> None:
         """
@@ -655,16 +654,16 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         folds = self._samana_bridge.receive_folds()
         self._fold_results.extend(folds)
 
-        # DIAMOND ROUTING: Direct import → execute() or on_prasadam()
-        # prefer_execute=True: Every guardian has execute(). Phase-specific hooks
-        # (on_prasadam) are optional overrides, not the primary interface.
-        self._execute_at_position(position, state, prefer_execute=True)
+        # DIAMOND ROUTING: Direct import → on_prasadam() or execute()
+        # Phase-specific hooks override execute(). Add on_prasadam() to
+        # any guardian → it gets called automatically. No wiring.
+        self._execute_at_position(position, state, phase="prasadam")
 
     def _trigger_return(self, state: ShadowState) -> None:
         """Trigger on_return for position 0 (THE RETURN) via direct routing."""
         if not self.is_authorized():
             return
-        self._execute_at_position(RETURN_POSITION, state, prefer_execute=False)
+        self._execute_at_position(RETURN_POSITION, state, phase="return")
 
     # =========================================================================
     # STATE ACCESS
