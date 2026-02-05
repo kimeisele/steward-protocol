@@ -32,32 +32,32 @@ PARAMPARA_VECTOR: Final[int] = 74
 def execute(input_text: str, context: dict = None) -> dict:
     """
     BRAHMA EXECUTION - Creation & Genesis
-    
+
     Stateless execution wrapper for BrahmaService.
     NO service instantiation needed - pure function!
     """
     from vibe_core.mahamantra.substrate.ledger import InMemoryLedger
     from vibe_core.protocols.mahajanas.brahma import BrahmaService
-    
+
     # Create ephemeral service with in-memory ledger
     ledger = InMemoryLedger()
     service = BrahmaService(ledger)
-    
+
     # Parse intent and call appropriate method
     intent = input_text.lower().strip()
-    
+
     if "wake" in intent:
         result = service.wake(sovereign_id="mahamantra")
         return {"success": result, "action": "wake", "phase": service.get_phase().value}
-    
+
     elif "load" in intent:
         result = service.load_root(root_path="/")
         return {"success": result, "action": "load_root", "phase": service.get_phase().value}
-    
+
     elif "alloc" in intent:
         result = service.alloc_mem(size_bytes=1024)
         return {"success": result.success, "action": "alloc_mem", "allocated": result.allocated_bytes}
-    
+
     else:
         # Default: show state
         state = service.get_state()
@@ -67,7 +67,7 @@ def execute(input_text: str, context: dict = None) -> dict:
 def on_bhoga(state: dict) -> None:
     """
     Reactor Hook: Called when ShadowReactor executes index 1 (Brahma).
-    
+
     CONNECTS THE EARS (ShadowReactor) TO THE BRAIN (Service).
     """
     # 1. Access Payload (The Intent)
@@ -79,22 +79,22 @@ def on_bhoga(state: dict) -> None:
     try:
         # 2. Decode Intent
         intent_text = payload_bytes.decode("utf-8")
-        
+
         # 3. Execute Service (Reuse existing logic)
         result = execute(intent_text)
-        
+
         # 4. Return Result (Phase 1 Bridge)
         state["execution_result"] = result
-        
+
     except Exception as e:
         state["execution_result"] = {"error": f"Brahma execution failed: {str(e)}"}
 
 
+_fractal_getattr_fn = None
+
+
 def __getattr__(name: str) -> object:
-    """
-    Lazy load BrahmaService and NullBrahma.
-    NO MANUAL WIRING - auto-discovery needs these exports.
-    """
+    """Explicit exports + fractal discovery fallback."""
     if name == "BrahmaService":
         from vibe_core.protocols.mahajanas.brahma import BrahmaService
 
@@ -105,25 +105,12 @@ def __getattr__(name: str) -> object:
 
         return NullBrahma
 
-    # ==========================================================================
-    # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
-    # ==========================================================================
-    from pathlib import Path
-    import importlib
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-    pkg_root = Path(__file__).parent
-
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)
 
 
 __all__ = ["BrahmaService", "POSITION", "QUARTER", "OPCODE", "PARAMPARA_VECTOR"]

@@ -21,13 +21,13 @@ __position__ = 7
 __genesis__ = "0xe3baeca8"  # GenesisByte
 
 # === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
+# Backward-compat constants
+from typing import Final
+
 from vibe_core.protocols.mahajanas.manu import *
 
 # Re-export __all__ from protocols
 from vibe_core.protocols.mahajanas.manu import __all__
-
-# Backward-compat constants
-from typing import Final
 
 POSITION: Final[int] = 7
 QUARTER: Final[str] = "dharma"
@@ -50,14 +50,14 @@ def execute(input_text: str, context: dict = None) -> dict:
         return {
             "success": True,
             "action": "dharma_check",
-            "message": "⚖️ Manu: Dharma is eternal. Act according to your nature (svadharma)."
+            "message": "⚖️ Manu: Dharma is eternal. Act according to your nature (svadharma).",
         }
 
     if "varna" in intent or "ashram" in intent:
         return {
             "success": True,
             "action": "varnashrama",
-            "message": "⚖️ Manu: Varnashrama is social organization by guna and karma, not birth."
+            "message": "⚖️ Manu: Varnashrama is social organization by guna and karma, not birth.",
         }
 
     return {
@@ -66,28 +66,18 @@ def execute(input_text: str, context: dict = None) -> dict:
         "position": POSITION,
         "quarter": QUARTER,
         "opcode": OPCODE,
-        "message": f"⚖️ Manu hears: '{input_text}'. Try 'dharma', 'law', or 'varnashrama'."
+        "message": f"⚖️ Manu hears: '{input_text}'. Try 'dharma', 'law', or 'varnashrama'.",
     }
 
 
+_fractal_getattr_fn = None
+
+
 def __getattr__(name: str):
-    """
-    Fractal routing: folder IS wiring.
-    "EIN IMPORT. KRISHNA ROUTET ALLES."
-    """
-    from pathlib import Path
-    import importlib
+    """Fractal discovery: folder IS wiring."""
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-    pkg_root = Path(__file__).parent
-
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)
