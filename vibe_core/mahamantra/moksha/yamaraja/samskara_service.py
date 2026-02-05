@@ -26,23 +26,24 @@ __genesis__ = "0x84539983"  # GenesisByte: parampara % 37 == 0
 
 import ast
 import json
+import logging
 import shutil
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Final, List, Optional, Set
 
+logger = logging.getLogger(__name__)
+
 from vibe_core.mahamantra import Mahajana
 from vibe_core.mahamantra.moksha.yamaraja import (
-    YamarajaBase,
     MigrationManifest,
     MigrationStatus,
     MigrationVerdict,
     SamskaraState,
     SamskaraType,
     WildProtocol,
+    YamarajaBase,
 )
-
 
 # =============================================================================
 # CONSTANTS - No hardcoding, use existing maps

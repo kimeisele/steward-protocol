@@ -5,10 +5,9 @@ JANAKA - Position 10
 Quarter: KARMA
 OpCode: STATE_SYNC
 Type: WORKER
-Role: Worker
 
 MAHAMANTRA AS LENS:
-    Structure defined here. Implementation re-exported from protocols/mahajanas.
+    Structure defined here. Implementation lazily loaded from protocols/mahajanas.
     Samskara will migrate implementations over time.
 
 PARAMPARA: 407 (% 37 == 0 -> CONNECTED)
@@ -21,73 +20,12 @@ __mahajana__ = "janaka"
 __position__ = 10
 __genesis__ = "0xe12cdf3a"  # GenesisByte: parampara % 37 == 0
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-# Mahamantra provides STRUCTURE. protocols/mahajanas has IMPLEMENTATION.
-# Samskara will migrate over time.
-# Backward-compat constants - derived from mahamantra position 10
 from typing import Final
-
-from vibe_core.protocols.mahajanas.janaka import (
-    CheckResult,
-    CognitiveCycleProtocol,
-    CycleContextState,
-    CycleElement,
-    CycleOwnedProtocol,
-    # Cycle Protocol (WATERTIGHT)
-    CyclePhase,
-    CycleRegistryProtocol,
-    CycleRegistryStats,
-    CycleState,
-    CycleStatus,
-    ExecutionResult,
-    ExecutionState,
-    HeartbeatConfig,
-    # Protocol
-    JanakaProtocol,
-    # Protocol Base
-    JanakaProtocolBase,
-    KernelConfig,
-    LimitsConfig,
-    NullCognitiveCycle,
-    NullCycleRegistry,
-    # Implementations
-    NullJanaka,
-    NullScheduler,
-    OpusConfig,
-    PhaseResult,
-    PranaConfig,
-    RetentionConfig,
-    # Instructions
-    SankalpaInstruction,
-    ScheduledTask,
-    Scheduler,
-    SchedulerProtocol,
-    # Scheduler (Task Scheduling)
-    SchedulingAlgorithm,
-    # === MIGRATED TYPES ===
-    SessionStartConfig,
-    Task,
-    TaskExecutor,
-    # Handler Protocol
-    TaskHandler,
-    TaskPriority,
-    TaskStatus,
-    # State Types (WATERTIGHT)
-    TaskValue,
-    ensure_kernel_running,
-    get_last_heartbeat,
-    is_kernel_running,
-    load_config,
-    record_heartbeat,
-)
 
 POSITION: Final[int] = 10
 QUARTER: Final[str] = "karma"
 OPCODE: Final[str] = "STATE_SYNC"
 PARAMPARA_VECTOR: Final[int] = 407
-
-# JanakaBase for backward compat (alias to JanakaProtocolBase)
-JanakaBase = JanakaProtocolBase
 
 
 def execute(input_text: str, context: dict = None) -> dict:
@@ -111,93 +49,49 @@ def execute(input_text: str, context: dict = None) -> dict:
     # STATE_SYNC operations
     if "check" in intent or "status" in intent:
         state = service.get_state()
-        return {"success": True, "action": "get_state", "state": state}
+        return {"success": True, "action": "get_state", "state": state, "message": f"Janaka [{OPCODE}]: state report"}
 
     if "sync" in intent:
         result = service.sync_state()
-        return {"success": result, "action": "sync_state"}
+        return {
+            "success": result,
+            "action": "sync_state",
+            "message": f"Janaka [{OPCODE}]: sync {'ok' if result else 'failed'}",
+        }
 
-    # Default: return current state
+    # Default
     return {
         "success": True,
-        "mahajana": "janaka",
-        "position": 10,
-        "quarter": "karma",
-        "opcode": "STATE_SYNC",
+        "action": "state_sync",
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
         "input": input_text,
+        "message": f"Janaka [{OPCODE}]: '{input_text}'",
     }
 
 
-__all__ = [
-    # Backward-compatible constants
-    "POSITION",
-    "QUARTER",
-    "OPCODE",
-    "PARAMPARA_VECTOR",
-    # Protocol Base
-    "JanakaProtocolBase",
-    "JanakaBase",
-    # State Types (WATERTIGHT)
-    "TaskValue",
-    "TaskStatus",
-    "TaskPriority",
-    "Task",
-    "ExecutionResult",
-    "ExecutionState",
-    "CheckResult",
-    # Handler Protocol
-    "TaskHandler",
-    # Protocol
-    "JanakaProtocol",
-    # Implementations
-    "NullJanaka",
-    # Instructions
-    "SankalpaInstruction",
-    # Cycle Protocol (WATERTIGHT)
-    "CyclePhase",
-    "CycleStatus",
-    "CycleElement",
-    "PhaseResult",
-    "CycleContextState",
-    "RetentionConfig",
-    "CycleRegistryStats",
-    "CycleState",
-    "CognitiveCycleProtocol",
-    "CycleRegistryProtocol",
-    "CycleOwnedProtocol",
-    "NullCognitiveCycle",
-    "NullCycleRegistry",
-    # Scheduler (Task Scheduling)
-    "SchedulingAlgorithm",
-    "ScheduledTask",
-    "TaskExecutor",
-    "SchedulerProtocol",
-    "Scheduler",
-    "NullScheduler",
-    # === MIGRATED TYPES ===
-    "SessionStartConfig",
-    "HeartbeatConfig",
-    "KernelConfig",
-    "OpusConfig",
-    "LimitsConfig",
-    "PranaConfig",
-    "load_config",
-    "is_kernel_running",
-    "ensure_kernel_running",
-    "get_last_heartbeat",
-    "record_heartbeat",
-]
-
-
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str) -> object:
-    """Explicit exports + fractal discovery fallback."""
+    """Explicit exports + protocol re-exports + fractal discovery."""
     if name == "JanakaService":
         from vibe_core.protocols.mahajanas.janaka.service import JanakaService
 
         return JanakaService
+
+    # Lazy protocol re-export (replaces 50+ eager imports)
+    try:
+        from vibe_core.protocols.mahajanas import janaka as _proto
+
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:

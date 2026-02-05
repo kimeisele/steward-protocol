@@ -60,6 +60,7 @@ def execute(input_text: str, context: dict = None) -> dict:
                 "purity": "pristine",
                 "position": POSITION,
                 "quarter": QUARTER,
+                "message": f"Kumaras [{OPCODE}]: purity=pristine",
             }
     except Exception as _exc:
         logger.exception("Unexpected error: %s", _exc)

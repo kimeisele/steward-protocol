@@ -20,41 +20,43 @@ __mahajana__ = "parashurama"
 __position__ = 8
 __genesis__ = "0xeb1e287f"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-# Backward-compat constants
 from typing import Final
-
-from vibe_core.protocols.mahajanas.parashurama import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.parashurama import __all__
 
 POSITION: Final[int] = 8
 QUARTER: Final[str] = "karma"
 OPCODE: Final[str] = "EXEC_OP"
 PARAMPARA_VECTOR: Final[int] = 333
 
-# ParashuramaBase alias for backward compat
-ParashuramaBase = ParashuramaProtocolBase
-
 
 def execute(input_text: str, context: dict = None) -> dict:
     """PARASHURAMA EXECUTION - Exec Op (Position 8, HEAD)"""
     return {
         "success": True,
+        "action": "exec_op",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
+        "message": f"Parashurama [{OPCODE}]: '{input_text}'",
     }
 
 
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str):
-    """Fractal discovery: folder IS wiring."""
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import parashurama as _proto
+
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
+
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
         from vibe_core.mahamantra.substrate.wiring import fractal_getattr

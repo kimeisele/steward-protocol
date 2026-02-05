@@ -48,46 +48,37 @@ def execute(input_text: str, context: dict = None) -> dict:
 
     if "wake" in intent:
         result = service.wake(sovereign_id="mahamantra")
-        return {"success": result, "action": "wake", "phase": service.get_phase().value}
+        phase = service.get_phase().value
+        return {
+            "success": result,
+            "action": "wake",
+            "phase": phase,
+            "message": f"Brahma [{OPCODE}]: wake (phase={phase})",
+        }
 
     elif "load" in intent:
         result = service.load_root(root_path="/")
-        return {"success": result, "action": "load_root", "phase": service.get_phase().value}
+        phase = service.get_phase().value
+        return {
+            "success": result,
+            "action": "load_root",
+            "phase": phase,
+            "message": f"Brahma [{OPCODE}]: load_root (phase={phase})",
+        }
 
     elif "alloc" in intent:
         result = service.alloc_mem(size_bytes=1024)
-        return {"success": result.success, "action": "alloc_mem", "allocated": result.allocated_bytes}
+        return {
+            "success": result.success,
+            "action": "alloc_mem",
+            "allocated": result.allocated_bytes,
+            "message": f"Brahma [{OPCODE}]: alloc_mem ({result.allocated_bytes}b)",
+        }
 
     else:
         # Default: show state
         state = service.get_state()
-        return {"success": True, "action": "get_state", "state": state}
-
-
-def on_bhoga(state: dict) -> None:
-    """
-    Reactor Hook: Called when ShadowReactor executes index 1 (Brahma).
-
-    CONNECTS THE EARS (ShadowReactor) TO THE BRAIN (Service).
-    """
-    # 1. Access Payload (The Intent)
-    payload_bytes = state.get("payload")
-    if not payload_bytes:
-        state["execution_result"] = {"error": "No payload provided to on_bhoga"}
-        return
-
-    try:
-        # 2. Decode Intent
-        intent_text = payload_bytes.decode("utf-8")
-
-        # 3. Execute Service (Reuse existing logic)
-        result = execute(intent_text)
-
-        # 4. Return Result (Phase 1 Bridge)
-        state["execution_result"] = result
-
-    except Exception as e:
-        state["execution_result"] = {"error": f"Brahma execution failed: {str(e)}"}
+        return {"success": True, "action": "get_state", "state": state, "message": f"Brahma [{OPCODE}]: '{input_text}'"}
 
 
 _fractal_getattr_fn = None
