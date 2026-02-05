@@ -36,11 +36,13 @@ def execute(input_text: str, context: dict = None) -> dict:
     """BHISHMA EXECUTION - Ledger Sign (Position 11)"""
     return {
         "success": True,
+        "action": "ledger_sign",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
+        "message": f"Bhishma [{OPCODE}]: '{input_text}'",
     }
 
 

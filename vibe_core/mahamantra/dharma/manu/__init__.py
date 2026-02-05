@@ -20,22 +20,12 @@ __mahajana__ = "manu"
 __position__ = 7
 __genesis__ = "0xe3baeca8"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-# Backward-compat constants
 from typing import Final
-
-from vibe_core.protocols.mahajanas.manu import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.manu import __all__
 
 POSITION: Final[int] = 7
 QUARTER: Final[str] = "dharma"
 OPCODE: Final[str] = "DHARMA_TEST"
 PARAMPARA_VECTOR: Final[int] = 296
-
-# ManuBase alias for backward compat
-ManuBase = ManuProtocolBase
 
 
 def execute(input_text: str, context: dict = None) -> dict:
@@ -50,14 +40,14 @@ def execute(input_text: str, context: dict = None) -> dict:
         return {
             "success": True,
             "action": "dharma_check",
-            "message": "⚖️ Manu: Dharma is eternal. Act according to your nature (svadharma).",
+            "message": "Manu: Dharma is eternal. Act according to your nature (svadharma).",
         }
 
     if "varna" in intent or "ashram" in intent:
         return {
             "success": True,
             "action": "varnashrama",
-            "message": "⚖️ Manu: Varnashrama is social organization by guna and karma, not birth.",
+            "message": "Manu: Varnashrama is social organization by guna and karma, not birth.",
         }
 
     return {
@@ -66,15 +56,25 @@ def execute(input_text: str, context: dict = None) -> dict:
         "position": POSITION,
         "quarter": QUARTER,
         "opcode": OPCODE,
-        "message": f"⚖️ Manu hears: '{input_text}'. Try 'dharma', 'law', or 'varnashrama'.",
+        "message": f"Manu hears: '{input_text}'. Try 'dharma', 'law', or 'varnashrama'.",
     }
 
 
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str):
-    """Fractal discovery: folder IS wiring."""
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import manu as _proto
+
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
+
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
         from vibe_core.mahamantra.substrate.wiring import fractal_getattr

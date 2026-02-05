@@ -20,41 +20,43 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x5ad7f6c5"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-# Backward-compat constants
 from typing import Final
-
-from vibe_core.protocols.mahajanas.vyasa import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.vyasa import __all__
 
 POSITION: Final[int] = 0
 QUARTER: Final[str] = "genesis"
 OPCODE: Final[str] = "SYS_WAKE"
 PARAMPARA_VECTOR: Final[int] = 37
 
-# VyasaBase alias for backward compat
-VyasaBase = VyasaProtocolBase
-
 
 def execute(input_text: str, context: dict = None) -> dict:
     """VYASA EXECUTION - Sys Wake (Position 0, HEAD)"""
     return {
         "success": True,
+        "action": "sys_wake",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
+        "message": f"Vyasa [{OPCODE}]: '{input_text}'",
     }
 
 
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str):
-    """Fractal discovery: folder IS wiring."""
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import vyasa as _proto
+
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
+
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
         from vibe_core.mahamantra.substrate.wiring import fractal_getattr

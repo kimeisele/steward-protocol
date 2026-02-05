@@ -20,45 +20,47 @@ __mahajana__ = "nrisimha"
 __position__ = 12
 __genesis__ = "0x7ac86006"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-# Backward-compat constants
 from typing import Final
-
-from vibe_core.protocols.mahajanas.nrisimha import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.nrisimha import __all__
 
 POSITION: Final[int] = 12
 QUARTER: Final[str] = "moksha"
 OPCODE: Final[str] = "YIELD_CPU"
 PARAMPARA_VECTOR: Final[int] = 481
 
-# NrisimhaBase alias for backward compat
-NrisimhaBase = NrisimhaProtocolBase
-
 
 def execute(input_text: str, context: dict = None) -> dict:
     """NRISIMHA EXECUTION - Yield CPU (Position 12, HEAD)"""
     return {
         "success": True,
+        "action": "yield_cpu",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
+        "message": f"Nrisimha [{OPCODE}]: '{input_text}'",
     }
 
 
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str) -> object:
-    """Explicit exports + fractal discovery fallback."""
+    """Explicit exports + protocol re-exports + fractal discovery."""
     if name == "NrisimhaService":
         from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
 
         return NrisimhaService
+
+    try:
+        from vibe_core.protocols.mahajanas import nrisimha as _proto
+
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:

@@ -20,22 +20,12 @@ __mahajana__ = "prahlada"
 __position__ = 9
 __genesis__ = "0xf6cf0c05"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-# Backward-compat constants
 from typing import Final
-
-from vibe_core.protocols.mahajanas.prahlada import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.prahlada import __all__
 
 POSITION: Final[int] = 9
 QUARTER: Final[str] = "karma"
 OPCODE: Final[str] = "EXTEND_CAP"
 PARAMPARA_VECTOR: Final[int] = 370
-
-# PrahladaBase alias for backward compat
-PrahladaBase = PrahladaProtocolBase
 
 
 def execute(input_text: str, context: dict = None) -> dict:
@@ -51,21 +41,21 @@ def execute(input_text: str, context: dict = None) -> dict:
         return {
             "success": True,
             "action": "devotion",
-            "message": "🦁 Prahlada: 'nāma-saṅkīrtanam' - The Name is the only shelter.",
+            "message": "Prahlada: 'nama-sankirtanam' - The Name is the only shelter.",
         }
 
     if "fear" in intent or "protect" in intent:
         return {
             "success": True,
             "action": "protection",
-            "message": "🦁 Prahlada: Fear not. Nrisimhadeva protects all devotees.",
+            "message": "Prahlada: Fear not. Nrisimhadeva protects all devotees.",
         }
 
     if "chitta" in intent or "mind" in intent or "smriti" in intent:
         return {
             "success": True,
             "action": "chitta_smriti",
-            "message": "🦁 Prahlada: Fix your mind on Krishna. This is smriti (remembrance).",
+            "message": "Prahlada: Fix your mind on Krishna. This is smriti (remembrance).",
         }
 
     return {
@@ -74,15 +64,25 @@ def execute(input_text: str, context: dict = None) -> dict:
         "position": POSITION,
         "quarter": QUARTER,
         "opcode": OPCODE,
-        "message": f"🦁 Prahlada hears: '{input_text}'. Try 'devotion', 'protect', or 'mind'.",
+        "message": f"Prahlada hears: '{input_text}'. Try 'devotion', 'protect', or 'mind'.",
     }
 
 
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str):
-    """Fractal discovery: folder IS wiring."""
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import prahlada as _proto
+
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
+
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
         from vibe_core.mahamantra.substrate.wiring import fractal_getattr
