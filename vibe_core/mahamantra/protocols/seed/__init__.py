@@ -410,6 +410,22 @@ __all__ = [
     "EPOCH_KEY",
     "CHAITANYA_BIRTH",
     "KISHORA_NUMERATOR",
+    # Gita Topology (Prabhupada's 700 verses - SSOT)
+    "CHAPTER_VERSES",
+    "GENESIS_SUM",
+    "DHARMA_SUM",
+    "KARMA_SUM",
+    "MOKSHA_SUM",
+    "FRUIT_SUM",
+    "FIELD_SUM",
+    "FIELD_FACTOR",
+    "EPOCH_ADDITIVE",
+    "GITA_CHECKPOINTS",
+    "get_cumulative_sum",
+    "is_gita_checkpoint",
+    "get_quarter",
+    "is_in_field",
+    "is_fruit",
     # Golden Age (Round 11b)
     "GOLDEN_AGE_DURATION",
     # Position Sums (Round 13)
