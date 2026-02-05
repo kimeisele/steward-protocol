@@ -244,8 +244,8 @@ class YajnaProtocol(Protocol[T, R]):
         ...
 
     @property
-    def coherence(self) -> float:
-        """Current spiritual frequency (0.0-1.0)."""
+    def coherence(self) -> int:
+        """Current spiritual frequency (0-21600, COSMIC_FRAME scaling)."""
         ...
 
 
@@ -276,8 +276,8 @@ class Yajna(Generic[T, R]):
         self._confirmed_tamas = False  # TAMAS confirmation flag
 
     @property
-    def coherence(self) -> float:
-        """Current spiritual frequency."""
+    def coherence(self) -> int:
+        """Current spiritual frequency (0-21600, COSMIC_FRAME scaling)."""
         return self._mantra.resonance_check()
 
     @property

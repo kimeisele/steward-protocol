@@ -105,9 +105,45 @@ from ._algorithm import (
     MAHA_SQ,
 )
 
+# TIER 4: Gita Topology (Canonical Structure)
+from ._topology import (
+    # Verse Data
+    CHAPTER_VERSES,
+    # Quarter Sums
+    GENESIS_SUM,
+    DHARMA_SUM,
+    KARMA_SUM,
+    MOKSHA_SUM,
+    FRUIT_SUM,
+    FIELD_SUM,
+    # Derived Constants
+    FIELD_FACTOR,
+    EPOCH_ADDITIVE,
+    EPOCH_FACTOR_1,
+    EPOCH_FACTOR_2,
+    EPOCH_FACTOR_3,
+    KARMA_SANNYASA_CHAPTER,
+    # Modular Signatures
+    EPOCH_MOD_18,
+    EPOCH_MOD_27,
+    EPOCH_DIGIT_SUM,
+    # Checkpoints
+    GITA_CHECKPOINTS,
+    # Functions
+    get_cumulative_sum,
+    is_gita_checkpoint,
+    validate_field_integrity,
+    check_fruit_symmetry,
+    get_quarter,
+    is_in_field,
+    is_fruit,
+    # Matches
+    KNOWN_MATCHES,
+)
+
 # Extended Constants
 from ._extended import (
-    # Position Sums
+    # Position Sums (SSOT)
     POSITION_SUM_HARE,
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
@@ -374,6 +410,22 @@ __all__ = [
     "EPOCH_KEY",
     "CHAITANYA_BIRTH",
     "KISHORA_NUMERATOR",
+    # Gita Topology (Prabhupada's 700 verses - SSOT)
+    "CHAPTER_VERSES",
+    "GENESIS_SUM",
+    "DHARMA_SUM",
+    "KARMA_SUM",
+    "MOKSHA_SUM",
+    "FRUIT_SUM",
+    "FIELD_SUM",
+    "FIELD_FACTOR",
+    "EPOCH_ADDITIVE",
+    "GITA_CHECKPOINTS",
+    "get_cumulative_sum",
+    "is_gita_checkpoint",
+    "get_quarter",
+    "is_in_field",
+    "is_fruit",
     # Golden Age (Round 11b)
     "GOLDEN_AGE_DURATION",
     # Position Sums (Round 13)

@@ -128,11 +128,13 @@ class MahaResonator:
             "mod_space": self.mod_space,
         }
 
-    def resonance_strength(self, seed: int) -> float:
+    def resonance_strength(self, seed: int) -> int:
+        """Returns resonance strength scaled to COSMIC_FRAME (0-21600)."""
         result = self.find_attractor(seed)
         if result.cycles_to_converge == 0:
-            return 1.0
-        return 1.0 / (1.0 + result.cycles_to_converge)
+            return 21600  # 100%
+        ratio = 1.0 / (1.0 + result.cycles_to_converge)
+        return int(ratio * 21600)
 
 
 # Preset Resonators
