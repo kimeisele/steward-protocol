@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-02-05T00:39:51.812486",
+  "intent_type": "evaluate_tool_output",
+  "intent_title": "[GAD-VIOLATION] Tool prints instead of returning",
+  "success": true,
+  "old_weight": 0.55,
+  "new_weight": 0.6000000000000001,
+  "delta": 0.05
+}
