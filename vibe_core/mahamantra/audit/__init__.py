@@ -17,22 +17,18 @@ from vibe_core.mahamantra.protocols._seed import PARAMPARA
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
-# Re-exports only - NO BUSINESS LOGIC
-from vibe_core.mahamantra.audit.drift import DriftAuditor
-from vibe_core.mahamantra.protocols._audit import (
-    AuditProtocol,
-    AuditReport,
-    LineageViolation,
-    SSOTViolation,
-    ProtocolViolation,
-)
+# Re-exports for the new audit system
+from .audit_registry import AuditFinding, AuditRegistry, FindingSeverity, FindingStatus, get_registry
+from .audit_dispatcher import AuditDispatcher, AuditorProtocol, get_dispatcher
 
 __all__ = [
-    "DriftAuditor",
-    "AuditProtocol",
-    "AuditReport",
-    "LineageViolation",
-    "SSOTViolation",
-    "ProtocolViolation",
+    "AuditDispatcher",
+    "get_dispatcher",
+    "AuditorProtocol",
+    "AuditRegistry",
+    "get_registry",
+    "AuditFinding",
+    "FindingStatus",
+    "FindingSeverity",
 ]
 

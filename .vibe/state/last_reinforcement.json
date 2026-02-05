@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-05T00:39:51.812486",
-  "intent_type": "evaluate_tool_output",
-  "intent_title": "[GAD-VIOLATION] Tool prints instead of returning",
-  "success": true,
-  "old_weight": 0.55,
-  "new_weight": 0.6000000000000001,
-  "delta": 0.05
+  "timestamp": "2026-02-05T00:57:25.069687",
+  "intent_type": "disable_safety",
+  "intent_title": "[ATTACK] Disable Viveka gate",
+  "success": false,
+  "old_weight": 0.30000000000000004,
+  "new_weight": 0.20000000000000004,
+  "delta": -0.1
 }

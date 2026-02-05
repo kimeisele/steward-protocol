@@ -28,144 +28,126 @@ __genesis__ = "0x000000b9"  # 5 * 37 = 185
 
 from typing import Dict, List, Tuple
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
+from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
 
-def check_protocol_compliance() -> Dict[str, bool]:
-    """
-    Check if core classes implement their protocols.
-    
-    Returns:
-        Dict mapping class name to compliance status
-    """
-    from vibe_core.mahamantra.substrate.algorithm.maha import MahaAlgorithm16, MahaModularSynth
-    from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
-    from vibe_core.mahamantra.protocols._maha_compute import MahaComputeProtocol
-    from vibe_core.mahamantra.protocols._graph import GraphProtocol
-    
-    results = {}
-    
-    # Computation classes
-    algo = MahaAlgorithm16()
-    synth = MahaModularSynth()
-    results["MahaAlgorithm16"] = isinstance(algo, MahaComputeProtocol)
-    results["MahaModularSynth"] = isinstance(synth, MahaComputeProtocol)
-    
-    # Knowledge classes
-    graph = DerivationGraph()
-    results["DerivationGraph"] = isinstance(graph, GraphProtocol)
-    
-    return results
+class Auditor:
+    """Auditor for runtime protocol compliance."""
 
+    def run_audit(self) -> List[AuditFinding]:
+        """Execute the audit and return a list of findings."""
+        findings: List[AuditFinding] = []
+        all_compliant = True
 
-def verify_protocol_methods() -> Dict[str, List[str]]:
-    """
-    Verify that protocol methods are implemented.
-    
-    Returns:
-        Dict mapping class name to list of implemented protocol methods
-    """
-    from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
-    from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
-    
-    results = {}
-    
-    # MahaComputeProtocol methods
-    synth = MahaModularSynth()
-    compute_methods = []
-    for method in ["on_tick", "transform", "find_attractor", "get_state"]:
-        if hasattr(synth, method) and callable(getattr(synth, method)):
-            compute_methods.append(method)
-    results["MahaModularSynth"] = compute_methods
-    
-    # GraphProtocol methods
-    graph = DerivationGraph()
-    graph_methods = []
-    for method in ["add_node", "add_edge", "get_node", "get_lineage", "get_children", "get_parent"]:
-        if hasattr(graph, method) and callable(getattr(graph, method)):
-            graph_methods.append(method)
-    results["DerivationGraph"] = graph_methods
-    
-    return results
+        # Check compliance
+        compliance = self._check_protocol_compliance()
+        for cls_name, status in compliance.items():
+            if not status:
+                all_compliant = False
+                findings.append(AuditFinding(
+                    source="ProtocolResurrection.compliance",
+                    position=__position__,
+                    mahajana=__mahajana__,
+                    description=f"Class '{cls_name}' failed runtime protocol compliance check.",
+                    severity=FindingSeverity.CRITICAL,
+                ))
 
+        # Add a summary finding
+        summary_severity = FindingSeverity.INFO if all_compliant else FindingSeverity.WARNING
+        summary_desc = "All core classes are ALIVE at runtime."
+        if not all_compliant:
+            summary_desc = "DEAD CODE DETECTED: Some core classes do not comply with their protocols."
 
-def get_king_status() -> Dict[str, any]:
-    """
-    Get status of THE KING - the interplay of all components.
-    
-    Returns:
-        Dict with axioms, nodes, edges, qualities
-    """
-    from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
-    from vibe_core.mahamantra.protocols.seed._axioms import (
-        WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT, PANCHA, HALVES
-    )
-    from vibe_core.mahamantra.research.acintya_mathematics import QUALITIES
-    
-    graph = DerivationGraph()
-    
-    return {
-        "axioms": 7,
-        "axiom_values": [WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT, PANCHA, HALVES],
-        "nodes": len(graph.nodes),
-        "edges": len(graph.edges),
-        "qualities": QUALITIES,  # 64 - Krishna's complete capability
-        "king_formula": "7 Axioms → 49 Nodes → 92 Edges → ∞ RAM",
-    }
+        findings.append(AuditFinding(
+            source="ProtocolResurrection.summary",
+            position=__position__,
+            mahajana=__mahajana__,
+            description=summary_desc,
+            severity=summary_severity,
+        ))
 
+        return findings
 
-def audit() -> Tuple[bool, str]:
-    """
-    Run full protocol resurrection audit.
-    
-    Returns:
-        (success, report)
-    """
-    lines = []
-    lines.append("=" * 70)
-    lines.append("PROTOCOL RESURRECTION AUDIT")
-    lines.append("=" * 70)
-    lines.append("")
-    
-    # Check compliance
-    compliance = check_protocol_compliance()
-    lines.append("PROTOCOL COMPLIANCE:")
-    all_compliant = True
-    for cls, status in compliance.items():
-        symbol = "✅" if status else "❌"
-        lines.append(f"  {cls:20} : {symbol}")
-        if not status:
-            all_compliant = False
-    lines.append("")
-    
-    # Check methods
-    methods = verify_protocol_methods()
-    lines.append("PROTOCOL METHODS:")
-    for cls, method_list in methods.items():
-        lines.append(f"  {cls}:")
-        for method in method_list:
-            lines.append(f"    - {method}()")
-    lines.append("")
-    
-    # Check KING
-    king = get_king_status()
-    lines.append("THE KING (ZUSAMMENSPIEL):")
-    lines.append(f"  Axioms:   {king['axioms']}")
-    lines.append(f"  Nodes:    {king['nodes']}")
-    lines.append(f"  Edges:    {king['edges']}")
-    lines.append(f"  Qualities: {king['qualities']} (Krishna's complete capability)")
-    lines.append(f"  Formula:  {king['king_formula']}")
-    lines.append("")
-    
-    lines.append("=" * 70)
-    if all_compliant:
-        lines.append("✅ ALL CLASSES ARE ALIVE AT RUNTIME!")
-    else:
-        lines.append("❌ SOME CLASSES ARE STILL DEAD CODE!")
-    lines.append("=" * 70)
-    
-    return all_compliant, "\n".join(lines)
+    def _check_protocol_compliance(self) -> Dict[str, bool]:
+        """
+        Check if core classes implement their protocols.
 
+        Returns:
+            Dict mapping class name to compliance status
+        """
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaAlgorithm16, MahaModularSynth
+        from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
+        from vibe_core.mahamantra.protocols._maha_compute import MahaComputeProtocol
+        from vibe_core.mahamantra.protocols._graph import GraphProtocol
 
-__all__ = ["check_protocol_compliance", "verify_protocol_methods", "get_king_status", "audit"]
+        results = {}
+
+        # Computation classes
+        algo = MahaAlgorithm16()
+        synth = MahaModularSynth()
+        results["MahaAlgorithm16"] = isinstance(algo, MahaComputeProtocol)
+        results["MahaModularSynth"] = isinstance(synth, MahaComputeProtocol)
+
+        # Knowledge classes
+        graph = DerivationGraph()
+        results["DerivationGraph"] = isinstance(graph, GraphProtocol)
+
+        return results
+
+    def _verify_protocol_methods(self) -> Dict[str, List[str]]:
+        """
+        Verify that protocol methods are implemented.
+
+        Returns:
+            Dict mapping class name to list of implemented protocol methods
+        """
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+        from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
+
+        results = {}
+
+        # MahaComputeProtocol methods
+        synth = MahaModularSynth()
+        compute_methods = []
+        for method in ["on_tick", "transform", "find_attractor", "get_state"]:
+            if hasattr(synth, method) and callable(getattr(synth, method)):
+                compute_methods.append(method)
+        results["MahaModularSynth"] = compute_methods
+
+        # GraphProtocol methods
+        graph = DerivationGraph()
+        graph_methods = []
+        for method in ["add_node", "add_edge", "get_node", "get_lineage", "get_children", "get_parent"]:
+            if hasattr(graph, method) and callable(getattr(graph, method)):
+                graph_methods.append(method)
+        results["DerivationGraph"] = graph_methods
+
+        return results
+
+    def _get_king_status(self) -> Dict[str, any]:
+        """
+        Get status of THE KING - the interplay of all components.
+
+        Returns:
+            Dict with axioms, nodes, edges, qualities
+        """
+        from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
+        from vibe_core.mahamantra.protocols.seed._axioms import (
+            WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT, PANCHA, HALVES
+        )
+        from vibe_core.mahamantra.research.acintya_mathematics import QUALITIES
+
+        graph = DerivationGraph()
+
+        return {
+            "axioms": 7,
+            "axiom_values": [WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT, PANCHA, HALVES],
+            "nodes": len(graph.nodes),
+            "edges": len(graph.edges),
+            "qualities": QUALITIES,  # 64 - Krishna's complete capability
+            "king_formula": "7 Axioms → 49 Nodes → 92 Edges → ∞ RAM",
+        }
+
+__all__ = ["Auditor"]
