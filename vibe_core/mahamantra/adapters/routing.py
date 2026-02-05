@@ -40,15 +40,15 @@ USAGE:
     values = router.prefix_query(0x12, prefix_bits=8)
 """
 
-from typing import Dict, Final, Generic, Iterator, List, Optional, Tuple, TypeVar
+from typing import Any, Dict, Final, Generic, Iterator, List, Optional, Tuple, TypeVar
+
+from ..protocols._pancha import TattvaDict
 
 # V = TypeVar for generic value type (replaces Any)
-
 from ..protocols._seed import (
     QUARTERS,
     WORDS,
 )
-from ..protocols._pancha import TattvaDict
 from ..protocols.routing import (
     MahaRoutingProtocol,
     RangeResult,
@@ -256,7 +256,7 @@ class HolographicRouter(MahaRoutingProtocol[V]):
         """The 5-fold truth of HolographicRouter."""
         return {
             "chaitanya": f"HolographicRouter - O(1) Lotus Engine ({self.key_bits}-bit)",
-            "nityananda": f"_LotusEngine16 (unrolled) or _GenericLotusEngine",
+            "nityananda": "_LotusEngine16 (unrolled) or _GenericLotusEngine",
             "advaita": "Key IS Path - Holographic addressing",
             "gadadhara": f"insert/get O(1), range O(k), {self.key_space} slots",
             "srivasa": f"WORDS ({WORDS} slots/level), QUARTERS ({QUARTERS} bits/nibble)",
