@@ -1,25 +1,23 @@
 """
-PANCHA WALK - Articulation-Based Semantic Engine
-=================================================
+PANCHA WALK - Element Walk through Sanskrit Phonemes
+=====================================================
 
 "pañca-mahā-bhūta" - The Five Great Elements
 
-Every phoneme lives in a 3D phonetic space:
-    Dim 1: Sthāna  (WHERE) = PANCHA   = 5 articulation points
-    Dim 2: Prayatna (HOW)  = PANCHA   = 5 effort qualities
-    Dim 3: Varga    (WHAT) = TRINITY  = 3 sound classes
+FOUR DIMENSIONS — all derived from axioms (= QUARTERS = catur-vyūha):
 
-    PANCHA × PANCHA × TRINITY = 75 slots
-    Occupied: 49 = VARNAMALA (complete Sanskrit alphabet)
-    Empty: 26 = Krishna-Inverse (17⁻¹ mod 49)
+    Dim 1 (Sthāna):    COORD_ELEMENT   — PANCHA (5) articulation → element
+    Dim 2 (Varga):     COORD_VARGA     — TRINITY (3) sound classes
+    Dim 3 (Prayatna):  COORD_SUB       — intra-section quality:
+        Sparsha:  column = (c - WORDS) % PANCHA   → catur-vyūha + nasal (5)
+        Svara:    duration type = c // PANCHA      → QUARTERS (4): short/long/compound/special
+        Shesha:   class = (c - 41) // QUARTERS     → HALVES (2): antastha/ūṣman
+    Dim 4 (Harmonic):  COORD_HARMONIC  — H-orbit (×SEVEN mod 49):
+        Where each phoneme GOES under absorption = dissolution path
 
-The 3 Vargas partition the 49 phonemes architecturally:
-    Varga 0: WORDS (16)      = Svara (vowels)
-    Varga 1: PRASADAM (25)   = Sparsha (stop consonants, 5×5 grid)
-    Varga 2: HARE_COUNT (8)  = Remaining (semivowels + sibilants + ha)
-
-A word = a walk through this 3D space.
-The walk IS the meaning. 100% unique for all 4127 Gita words. Zero collisions.
+UNIQUENESS (tested on 4127 Gita words):
+    3D (element+varga+sub):     99.97% (4126 unique, 3 phoneme collisions)
+    4D (+harmonic):             100.00% (4127 unique, 49/49 phoneme bijection)
 """
 
 from __future__ import annotations
@@ -28,10 +26,12 @@ from enum import IntEnum
 from typing import Final, Sequence
 
 from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
     HARE_COUNT,
     PANCHA,
     PRASADAM,
-    TRINITY,
+    QUARTERS,
+    SEVEN,
     WORDS,
 )
 from vibe_core.mahamantra.substrate.rama_grid import (
@@ -63,9 +63,8 @@ ELEMENT_NAMES: Final[tuple[str, ...]] = ("akasha", "vayu", "agni", "jala", "prit
 ELEMENT_SYMBOLS: Final[str] = "SVFWE"
 
 # =============================================================================
-# COORDINATE → ELEMENT MAP (the complete 49-entry mapping)
+# COORDINATE → ELEMENT MAP (derived from SPARSHA_GRID + phonetic science)
 # =============================================================================
-# Built entirely from architectural structure, no hardcoding.
 
 # Vowel articulation points (Sanskrit phonetic tradition):
 #   a/ā  → kantha  → AKASHA      (coords 0, 5)
@@ -101,7 +100,6 @@ assert len(_VOWEL_ELEMENTS) == WORDS
 
 # Sparsha elements: row index = element index (from SPARSHA_GRID)
 _SPARSHA_ELEMENT_NAMES: Final[tuple[str, ...]] = tuple(row.element for row in SPARSHA_GRID)
-# Verify SPARSHA_GRID elements match our Element enum order
 assert _SPARSHA_ELEMENT_NAMES == ELEMENT_NAMES
 
 # Remaining consonants (41-48): ya/ra/la/va/śa/ṣa/sa/ha
@@ -120,146 +118,178 @@ _REMAINING_ELEMENTS: Final[tuple[Element, ...]] = (
 def _build_element_map() -> tuple[Element, ...]:
     """Build the complete RAMA coordinate → Element mapping."""
     result: list[Element] = []
-
-    # Vowels (0-15)
     result.extend(_VOWEL_ELEMENTS)
-
-    # Sparsha consonants (16-40): row determines element
     for row_idx in range(PANCHA):
         for _col_idx in range(PANCHA):
             result.append(Element(row_idx))
-
-    # Remaining consonants (41-48)
     result.extend(_REMAINING_ELEMENTS)
-
     assert len(result) == VARNAMALA_TOTAL
     return tuple(result)
 
 
 COORD_ELEMENT: Final[tuple[Element, ...]] = _build_element_map()
-assert len(COORD_ELEMENT) == VARNAMALA_TOTAL  # 49 entries, one per phoneme
+assert len(COORD_ELEMENT) == VARNAMALA_TOTAL
 
 
 # =============================================================================
-# THE 3D PHONEME SPACE: (element, quality, varga)
+# VARGA PARTITION (derived: WORDS + PRASADAM + HARE_COUNT = VARNAMALA)
 # =============================================================================
-# PANCHA × PANCHA × TRINITY = 75 slots. 49 used = VARNAMALA.
-# This decomposition is a BIJECTION: each coord has a unique triple.
-
-
-def _build_quality_map() -> tuple[int, ...]:
-    """Build RAMA coordinate → quality (prayatna) mapping."""
-    result: list[int] = []
-
-    # Vowels (0-15): quality = duration/compound class
-    _VOWEL_QUALITY = (
-        0,
-        0,
-        0,
-        0,
-        0,  # hrasva (short): a, i, u, ṛ, ḷ
-        1,
-        1,
-        1,
-        1,
-        1,  # dīrgha (long): ā, ī, ū, ṝ, ḹ
-        2,
-        3,  # sandhyakṣara: e(simple), ai(complex)
-        2,
-        3,  # sandhyakṣara: o(simple), au(complex)
-        3,
-        4,  # anusvāra(ṁ), visarga(ḥ)
-    )
-    result.extend(_VOWEL_QUALITY)
-
-    # Sparsha (16-40): quality = column in 5×5 grid
-    for _row in range(PANCHA):
-        for col in range(PANCHA):
-            result.append(col)
-
-    # Remaining (41-48): antastha=0, ūṣman=1, mahāprāṇa=2
-    _REMAINING_QUALITY = (0, 0, 0, 0, 1, 1, 1, 2)
-    result.extend(_REMAINING_QUALITY)
-
-    assert len(result) == VARNAMALA_TOTAL
-    return tuple(result)
 
 
 def _build_varga_map() -> tuple[int, ...]:
-    """Build RAMA coordinate → varga (sound class) mapping."""
+    """Partition coords into 3 sound classes (svara/sparsha/shesha)."""
     result: list[int] = []
-    result.extend([0] * WORDS)  # Svara (vowels)
-    result.extend([1] * PRASADAM)  # Sparsha (stops)
-    result.extend([2] * HARE_COUNT)  # Remaining
+    result.extend([0] * WORDS)  # 16 svara (vowels)
+    result.extend([1] * PRASADAM)  # 25 sparsha (stops)
+    result.extend([2] * HARE_COUNT)  # 8 remaining
     assert len(result) == VARNAMALA_TOTAL
     return tuple(result)
 
 
-COORD_QUALITY: Final[tuple[int, ...]] = _build_quality_map()
 COORD_VARGA: Final[tuple[int, ...]] = _build_varga_map()
-
-# Varga names (the 3 sound classes)
-VARGA_NAMES: Final[tuple[str, ...]] = ("svara", "sparsha", "shesha")
-
-# Verify bijection: all 49 triples must be unique
-_seen_triples: set[tuple[int, int, int]] = set()
-for _c in range(VARNAMALA_TOTAL):
-    _triple = (int(COORD_ELEMENT[_c]), COORD_QUALITY[_c], COORD_VARGA[_c])
-    assert _triple not in _seen_triples, f"Duplicate triple at coord {_c}"
-    _seen_triples.add(_triple)
-assert len(_seen_triples) == VARNAMALA_TOTAL
-del _seen_triples, _triple, _c
-
-# Verify partition sizes
-assert sum(1 for v in COORD_VARGA if v == 0) == WORDS  # 16 svara
-assert sum(1 for v in COORD_VARGA if v == 1) == PRASADAM  # 25 sparsha
-assert sum(1 for v in COORD_VARGA if v == 2) == HARE_COUNT  # 8 remaining
-
-# Quality symbols (for compact notation)
-QUALITY_SYMBOLS: Final[str] = "01234"
-
-# Varga symbols
-VARGA_SYMBOLS: Final[str] = "scr"  # svara, consonant-stop, remaining
 
 
 # =============================================================================
-# PANCHA WALK - The Semantic Engine
+# PRAYATNA / SUB-INDEX (derived intra-section quality)
+# =============================================================================
+# Each varga has its own quality dimension, ALL derived from coordinate structure:
+#
+#   Sparsha (25): column = (c - WORDS) % PANCHA
+#     Col 0: unvoiced       (ka, ca, ṭa, ta, pa)      = Vāsudeva
+#     Col 1: unvoiced-asp   (kha, cha, ṭha, tha, pha)  = Saṅkarṣaṇa
+#     Col 2: voiced         (ga, ja, ḍa, da, ba)       = Pradyumna
+#     Col 3: voiced-asp     (gha, jha, ḍha, dha, bha)  = Aniruddha
+#     Col 4: nasal          (ṅa, ña, ṇa, na, ma)       = +1 = PANCHA
+#
+#   Svara (16): duration type = c // PANCHA (for simple), then compound/special
+#     0: short   (a, i, u, ṛ, ḷ)     — coords 0-4
+#     1: long    (ā, ī, ū, ṝ, ḹ)     — coords 5-9
+#     2: compound (e, ai, o, au)       — coords 10-13 = QUARTERS
+#     3: special  (ṁ, ḥ)              — coords 14-15 = HALVES
+#
+#   Shesha (8): class = (c - WORDS - PRASADAM) // QUARTERS
+#     0: antastha   (ya, ra, la, va)   — semivowels = QUARTERS
+#     1: ūṣman      (śa, ṣa, sa, ha)  — sibilants  = QUARTERS
+
+
+def _build_sub_map() -> tuple[int, ...]:
+    """Build the intra-section quality index for each coordinate."""
+    result: list[int] = []
+
+    # Svara: duration type
+    for c in range(WORDS):
+        if c < PANCHA * HALVES:  # 0-9: simple vowels
+            result.append(c // PANCHA)  # 0=short, 1=long
+        elif c < PANCHA * HALVES + QUARTERS:  # 10-13: compounds
+            result.append(HALVES)  # 2
+        else:  # 14-15: specials
+            result.append(HALVES + 1)  # 3
+    assert len(result) == WORDS
+
+    # Sparsha: column index
+    for c in range(WORDS, WORDS + PRASADAM):
+        result.append((c - WORDS) % PANCHA)
+    assert len(result) == WORDS + PRASADAM
+
+    # Shesha: antastha (0) vs ūṣman (1)
+    for c in range(WORDS + PRASADAM, WORDS + PRASADAM + HARE_COUNT):
+        result.append((c - WORDS - PRASADAM) // QUARTERS)
+    assert len(result) == VARNAMALA_TOTAL
+
+    return tuple(result)
+
+
+COORD_SUB: Final[tuple[int, ...]] = _build_sub_map()
+
+# Verify sub-index ranges per varga
+assert max(COORD_SUB[:WORDS]) == HALVES + 1  # QUARTERS sub-types for vowels
+assert max(COORD_SUB[WORDS : WORDS + PRASADAM]) == PANCHA - 1  # PANCHA columns for sparsha
+assert max(COORD_SUB[WORDS + PRASADAM :]) == 1  # HALVES for shesha
+
+
+# =============================================================================
+# HARMONIC / H-ORBIT (derived from SEVEN axiom)
+# =============================================================================
+# The H-operation (×SEVEN mod VARNAMALA) maps each phoneme to its
+# dissolution path — where it goes under absorption (pralaya).
+#
+# This is the 4th dimension: not WHERE a phoneme is, but WHERE IT GOES.
+# 3D (element, varga, sub) = kṣetra (the field, 46/49 unique phonemes)
+# 4D + harmonic           = kṣetra + kṣetrajña (49/49 = BIJECTION)
+#
+# 3 phoneme-level collision pairs in 3D, ALL resolved by H-orbit:
+#   ṁ(14)/ḥ(15):  H→0 / H→7   (direct absorption vs via ū)
+#   e(10)/ai(11): H→21 / H→28  (ca-varga vs ṭa-varga)
+#   o(12)/au(13): H→35 / H→42  (na vs ra)
+
+
+COORD_HARMONIC: Final[tuple[int, ...]] = tuple((c * SEVEN) % VARNAMALA_TOTAL for c in range(VARNAMALA_TOTAL))
+
+# Verify: 3D + harmonic is a BIJECTION on the 49 phonemes
+_4d_keys = {(COORD_ELEMENT[c], COORD_VARGA[c], COORD_SUB[c], COORD_HARMONIC[c]) for c in range(VARNAMALA_TOTAL)}
+assert len(_4d_keys) == VARNAMALA_TOTAL, "4D must be bijective on VARNAMALA"
+
+
+# =============================================================================
+# SHRUTI / NAKSHATRA PARTITION (R-operation: quadratic residues mod 49)
+# =============================================================================
+# R(v) = v² mod VARNAMALA. The set of residues = SHRUTIS (22 microtones).
+# The complement = NAKSHATRAS (27 lunar mansions).
+# Together: 22 + 27 = 49 = VARNAMALA.
+
+_R_RESIDUES: frozenset[int] = frozenset((c * c) % VARNAMALA_TOTAL for c in range(VARNAMALA_TOTAL))
+
+IS_SHRUTI: Final[tuple[bool, ...]] = tuple(c in _R_RESIDUES for c in range(VARNAMALA_TOTAL))
+
+_shruti_count = sum(IS_SHRUTI)
+_nakshatra_count = VARNAMALA_TOTAL - _shruti_count
+assert _shruti_count == 22, f"SHRUTIS must be 22, got {_shruti_count}"
+assert _nakshatra_count == 27, f"NAKSHATRAS must be 27, got {_nakshatra_count}"
+
+
+# =============================================================================
+# DERIVED SIGNATURE (all 3 spatial dimensions + harmonic)
+# =============================================================================
+
+
+def derived_signature(coords: Sequence[int]) -> str:
+    """
+    3D phoneme signature: element + varga + sub-index per phoneme.
+
+    4126/4127 Gita words unique (99.97%).
+    3 phoneme-level collisions (ṁ/ḥ, e/ai, o/au).
+    Use full_signature() for 100% with harmonic dimension.
+    """
+    return "".join(f"{COORD_ELEMENT[c]}{COORD_VARGA[c]}{COORD_SUB[c]}" for c in coords)
+
+
+def full_signature(coords: Sequence[int]) -> str:
+    """
+    4D phoneme signature: element + varga + sub + harmonic.
+
+    Includes H-orbit (×SEVEN mod 49) as 4th dimension.
+    4127/4127 Gita words unique (100.00%). 49/49 phoneme bijection.
+    """
+    return "".join(f"{COORD_ELEMENT[c]}{COORD_VARGA[c]}{COORD_SUB[c]}{COORD_HARMONIC[c]:02d}" for c in coords)
+
+
+# =============================================================================
+# ELEMENT WALK
 # =============================================================================
 
 
 def element_walk(coords: Sequence[int]) -> tuple[Element, ...]:
-    """
-    Convert RAMA coordinate sequence to element walk.
-
-    Each phoneme's articulation point gives its element.
-    The sequence of elements IS the semantic signature.
-
-    >>> from vibe_core.mahamantra.substrate.varnamala_codec import encode
-    >>> element_walk(encode("dharma"))
-    (Element.JALA, Element.AGNI, Element.PRITHVI)
-    """
+    """Convert RAMA coordinate sequence to element walk."""
     return tuple(COORD_ELEMENT[c] for c in coords)
 
 
 def walk_signature(coords: Sequence[int]) -> str:
-    """
-    Compact string representation of the element walk.
-
-    A=Akasha, V=Vayu, G=Agni, J=Jala, P=Prithvi
-
-    >>> from vibe_core.mahamantra.substrate.varnamala_codec import encode
-    >>> walk_signature(encode("dharma"))
-    'JGP'
-    """
+    """Compact string: S=Space, V=Vayu, F=Fire, W=Water, E=Earth."""
     return "".join(ELEMENT_SYMBOLS[COORD_ELEMENT[c]] for c in coords)
 
 
 def element_histogram(coords: Sequence[int]) -> tuple[int, ...]:
-    """
-    Count occurrences of each element in a coordinate sequence.
-
-    Returns (akasha, vayu, agni, jala, prithvi) counts.
-    """
+    """Count per element: (akasha, vayu, agni, jala, prithvi)."""
     counts = [0] * PANCHA
     for c in coords:
         counts[COORD_ELEMENT[c]] += 1
@@ -267,29 +297,13 @@ def element_histogram(coords: Sequence[int]) -> tuple[int, ...]:
 
 
 def dominant_element(coords: Sequence[int]) -> Element:
-    """
-    The most frequent element in a word's articulation walk.
-
-    This is the word's primary elemental quality.
-    """
+    """Most frequent element in a word's walk."""
     counts = element_histogram(coords)
     return Element(counts.index(max(counts)))
 
 
-# =============================================================================
-# SEMANTIC DIRECTION (ascending/descending through elements)
-# =============================================================================
-
-
 def walk_direction(coords: Sequence[int]) -> int:
-    """
-    Net direction of element walk: positive = ascending, negative = descending.
-
-    PRITHVI(4)→AKASHA(0) = ascending (material → spiritual)
-    AKASHA(0)→PRITHVI(4) = descending (spiritual → material)
-
-    Returns sum of transitions (next.value - current.value).
-    """
+    """Net direction: positive = ascending (earth→space), negative = descending."""
     walk = element_walk(coords)
     if len(walk) < 2:
         return 0
@@ -297,82 +311,19 @@ def walk_direction(coords: Sequence[int]) -> int:
 
 
 def element_transitions(coords: Sequence[int]) -> tuple[tuple[Element, Element], ...]:
-    """
-    All element-to-element transitions in a walk.
-
-    Each transition is a (from_element, to_element) pair.
-    """
+    """All element-to-element transitions in a walk."""
     walk = element_walk(coords)
     return tuple((walk[i], walk[i + 1]) for i in range(len(walk) - 1))
 
 
-# =============================================================================
-# ELEMENT DISTANCE (for comparing words)
-# =============================================================================
-
-
 def walk_distance(coords_a: Sequence[int], coords_b: Sequence[int]) -> float:
-    """
-    Element-histogram distance between two words.
-
-    Normalized to [0, 1]. 0 = identical element distribution, 1 = maximally different.
-    """
+    """Element-histogram distance, normalized to [0, 1]."""
     ha = element_histogram(coords_a)
     hb = element_histogram(coords_b)
     total_a = sum(ha) or 1
     total_b = sum(hb) or 1
-    # Normalized histogram comparison (L1 distance / 2)
     dist = sum(abs(ha[i] / total_a - hb[i] / total_b) for i in range(PANCHA))
     return dist / 2.0
-
-
-# =============================================================================
-# SEMANTIC FINGERPRINT (3D walk = 100% unique)
-# =============================================================================
-
-
-def coord_triple(coord: int) -> tuple[int, int, int]:
-    """
-    Decompose a RAMA coordinate into its 3D phonetic triple.
-
-    Returns (element, quality, varga) — the complete phonetic identity.
-    """
-    return (int(COORD_ELEMENT[coord]), COORD_QUALITY[coord], COORD_VARGA[coord])
-
-
-def semantic_fingerprint(coords: Sequence[int]) -> tuple[tuple[int, int, int], ...]:
-    """
-    Full semantic fingerprint: 3D walk through phonetic space.
-
-    Each phoneme → (element, quality, varga) triple.
-    The sequence of triples IS the word's identity.
-
-    100% unique for all 4127 Gita words. Zero collisions.
-    No HKR cycles needed — the 3D space is a complete bijection.
-
-    >>> from vibe_core.mahamantra.substrate.varnamala_codec import encode
-    >>> semantic_fingerprint(encode("dharma"))
-    ((3, 3, 1), (2, 0, 2), (4, 4, 1))
-    """
-    return tuple(coord_triple(c) for c in coords)
-
-
-def fingerprint_signature(coords: Sequence[int]) -> str:
-    """
-    Compact string form of the 3D semantic fingerprint.
-
-    Format: element_symbol + quality_digit + varga_symbol per phoneme.
-    Example: dharma → "W3c-F0r-E4c"
-
-    100% unique. Human-readable. Architecturally complete.
-    """
-    parts = []
-    for c in coords:
-        el = ELEMENT_SYMBOLS[COORD_ELEMENT[c]]
-        q = QUALITY_SYMBOLS[COORD_QUALITY[c]]
-        v = VARGA_SYMBOLS[COORD_VARGA[c]]
-        parts.append(f"{el}{q}{v}")
-    return "-".join(parts)
 
 
 # =============================================================================
@@ -384,9 +335,12 @@ __all__ = [
     "ELEMENT_NAMES",
     "ELEMENT_SYMBOLS",
     "COORD_ELEMENT",
-    "COORD_QUALITY",
     "COORD_VARGA",
-    "VARGA_NAMES",
+    "COORD_SUB",
+    "COORD_HARMONIC",
+    "IS_SHRUTI",
+    "derived_signature",
+    "full_signature",
     "element_walk",
     "walk_signature",
     "element_histogram",
@@ -394,7 +348,4 @@ __all__ = [
     "walk_direction",
     "element_transitions",
     "walk_distance",
-    "coord_triple",
-    "semantic_fingerprint",
-    "fingerprint_signature",
 ]

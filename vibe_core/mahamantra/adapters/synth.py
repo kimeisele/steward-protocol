@@ -64,21 +64,13 @@ USAGE:
     spectrum = synth.spectrum()
 """
 
-from typing import Final, Tuple, Dict, Optional, List, Any
+from typing import Any, Dict, Final, List, Optional, Tuple
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "narada"
 __position__ = 3
 __genesis__ = "0x7382dc4f"  # GenesisByte: parampara % 37 == 0
 
-from vibe_core.mahamantra.protocols.synth import (
-    MahaSynthProtocol,
-    SynthParams,
-    StepResult,
-    CycleResult,
-    ResonanceResult,
-    SpectrumResult,
-)
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
     HALVES,
@@ -88,6 +80,7 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHAJANA_COUNT,
     MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
+    MAHAMANTRA_NAME_RAMA,
     MAHAMANTRA_WORD_PATTERN,
     NAVA,
     PANCHA,
@@ -100,16 +93,31 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     TRINITY,
     WORDS,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_ADD as _ADD,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_MULT as _MULT,
+)
+from vibe_core.mahamantra.protocols._seed import (
     # Core coefficients for synth-specific step() logic (with ADSR/LFO modulation)
     MAHA_OP_MAP as _OP_MAP,
-    MAHA_MULT as _MULT,
-    MAHA_ADD as _ADD,
+)
+from vibe_core.mahamantra.protocols._seed import (
     MAHA_SQ as _SQ,
+)
+from vibe_core.mahamantra.protocols.synth import (
+    CycleResult,
+    MahaSynthProtocol,
+    ResonanceResult,
+    SpectrumResult,
+    StepResult,
+    SynthParams,
 )
 
 # THE ALGORITHM - for resonance/attractor discovery
 from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
-
 
 # =============================================================================
 # CONSTANTS (DERIVED from _seed.py)
@@ -121,23 +129,22 @@ PATTERN: Final[Tuple[str, ...]] = MAHAMANTRA_WORD_PATTERN
 
 # Binary pattern from Mahamantra (0=HARE, 1=NAME)
 # Derived: 0 if Name is HARE, else 1
-BINARY_PATTERN: Final[Tuple[int, ...]] = tuple(
-    0 if name == MAHAMANTRA_NAME_HARE else 1 for name in PATTERN
-)
+BINARY_PATTERN: Final[Tuple[int, ...]] = tuple(0 if name == MAHAMANTRA_NAME_HARE else 1 for name in PATTERN)
 
 # Position sums reveal operations (DERIVED!)
-WEIGHT_HARE: Final[int] = SEVEN * TEN      # 7 × 10 = 70
-WEIGHT_KRISHNA: Final[int] = SEVEN + TEN   # 7 + 10 = 17
-WEIGHT_RAMA: Final[int] = SEVEN * SEVEN    # 7 × 7 = 49
+WEIGHT_HARE: Final[int] = SEVEN * TEN  # 7 × 10 = 70
+WEIGHT_KRISHNA: Final[int] = SEVEN + TEN  # 7 + 10 = 17
+WEIGHT_RAMA: Final[int] = SEVEN * SEVEN  # 7 × 7 = 49
 
 # ADSR envelope (from binary pattern 01011100)
-ADSR_ATTACK: Final[int] = PANCHA           # 5 - rising
-ADSR_DECAY: Final[int] = MAHAJANA_COUNT    # 12 - falling
-ADSR_SUSTAIN: Final[int] = PANCHA          # 5 - steady
+ADSR_ATTACK: Final[int] = PANCHA  # 5 - rising
+ADSR_DECAY: Final[int] = MAHAJANA_COUNT  # 12 - falling
+ADSR_SUSTAIN: Final[int] = PANCHA  # 5 - steady
 ADSR_RELEASE: Final[int] = MAHAJANA_COUNT  # 12 - final fall
 
 # Full cycle length (polyrhythm)
 import math
+
 FULL_CYCLE: Final[int] = (WORDS * SEVEN) // math.gcd(WORDS, SEVEN)  # 112
 
 
@@ -147,9 +154,9 @@ FULL_CYCLE: Final[int] = (WORDS * SEVEN) // math.gcd(WORDS, SEVEN)  # 112
 # For step() with ADSR: HARE uses ADSR multiplier, KRISHNA/RAMA don't
 _ADSR_MULT: Final[Tuple[int, ...]] = (1, 0, 0)  # HARE uses ADSR, others don't
 # For step() with position: KRISHNA adds position, others don't
-_POS_ADD: Final[Tuple[int, ...]] = (0, 1, 0)    # KRISHNA adds pos, others don't
+_POS_ADD: Final[Tuple[int, ...]] = (0, 1, 0)  # KRISHNA adds pos, others don't
 # For step() with LFO: HARE uses LFO, others don't
-_LFO_ADD: Final[Tuple[int, ...]] = (1, 0, 0)    # HARE adds LFO, others don't
+_LFO_ADD: Final[Tuple[int, ...]] = (1, 0, 0)  # HARE adds LFO, others don't
 
 
 # =============================================================================
@@ -189,6 +196,7 @@ QUANTUM_ATTRACTORS: Final[Dict[int, str]] = {
 # TRIANGULAR FUNCTION
 # =============================================================================
 
+
 def triangular(n: int) -> int:
     """T(n) = n(n+1)/2 - Sum of integers 1 to n."""
     return n * (n + 1) // 2
@@ -197,6 +205,7 @@ def triangular(n: int) -> int:
 # =============================================================================
 # MAHA SYNTH
 # =============================================================================
+
 
 class MahaSynth(MahaSynthProtocol):
     """
@@ -266,9 +275,9 @@ class MahaSynth(MahaSynthProtocol):
     def _get_adsr_multiplier(self, quarter: int) -> int:
         """Get ADSR envelope multiplier for current quarter."""
         if quarter == 1:
-            return self._params.adsr_attack   # 5 - rising
+            return self._params.adsr_attack  # 5 - rising
         elif quarter == 2:
-            return self._params.adsr_decay    # 12 - falling
+            return self._params.adsr_decay  # 12 - falling
         elif quarter == 3:
             return self._params.adsr_sustain  # 5 - steady
         else:
@@ -326,8 +335,8 @@ class MahaSynth(MahaSynthProtocol):
         # Operation string (for logging/debugging)
         op_templates = (
             f"{value} × {SEVEN} × {adsr} + {lfo} = {output} (mod {mod})",  # HARE
-            f"{value} + {TEN} + {pos} = {output} (mod {mod})",             # KRISHNA
-            f"{value}² = {output} (mod {mod})",                            # RAMA
+            f"{value} + {TEN} + {pos} = {output} (mod {mod})",  # KRISHNA
+            f"{value}² = {output} (mod {mod})",  # RAMA
         )
         operation = op_templates[op]
 
@@ -464,6 +473,98 @@ class MahaSynth(MahaSynthProtocol):
         )
 
     # =========================================================================
+    # PHONEME-MODULATED STEP (4D Coordinate Integration)
+    # =========================================================================
+
+    def phoneme_step(self, value: int, coord: int) -> StepResult:
+        """
+        Execute a step modulated by a phoneme's 4D coordinates.
+
+        The 4D catur-vyūha decomposition drives modulation:
+            VARGA (TRINITY=3)   → operation type (svara=H, sparsha=K, shesha=R)
+            ELEMENT (PANCHA=5)  → ADSR envelope phase
+            SUB                 → position offset within pattern
+            HARMONIC            → feedback seed (dissolution target)
+
+        This is the bridge between Sanskrit phonetics and the synth engine:
+        each phoneme IS a modulation instruction.
+        """
+        from vibe_core.mahamantra.substrate.pancha_walk import (
+            COORD_ELEMENT,
+            COORD_HARMONIC,
+            COORD_SUB,
+            COORD_VARGA,
+        )
+
+        varga = COORD_VARGA[coord]
+        element = COORD_ELEMENT[coord]
+        sub = COORD_SUB[coord]
+        harmonic = COORD_HARMONIC[coord]
+
+        # VARGA → operation: svara(0)=H(carrier), sparsha(1)=K(transform), shesha(2)=R(release)
+        op_names = (MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_RAMA)
+        name = op_names[varga]
+        op = _OP_MAP[name]
+
+        # ELEMENT → quarter (PANCHA wraps to QUARTERS for ADSR)
+        quarter = (element % QUARTERS) + 1
+        adsr = self._get_adsr_multiplier(quarter)
+
+        # SUB → position (1-indexed, within WORDS range)
+        pos = (sub % WORDS) + 1
+
+        # HARMONIC → feedback contribution
+        lfo = harmonic % (self._params.mod_space or 1) if self._params.lfo_enabled else 0
+        mod = self._params.mod_space
+
+        # Same branchless computation as step()
+        adsr_factor = 1 + _ADSR_MULT[op] * (adsr - 1)
+        mult_coeff = _MULT[op] * adsr_factor
+        add_coeff = _ADD[op] + _POS_ADD[op] * pos + _LFO_ADD[op] * lfo
+
+        v = (value * mult_coeff + add_coeff) % mod
+        squared = (v * v) % mod
+        output = _SQ[op] * squared + (1 - _SQ[op]) * v
+
+        self._total_steps += 1
+
+        return StepResult(
+            position=pos,
+            name=name,
+            quarter=quarter,
+            input_value=value,
+            output_value=output,
+            operation=f"phoneme({coord}): {name} q{quarter} → {output} (mod {mod})",
+            observer_beat=self._get_observer_beat(pos),
+        )
+
+    def spell_cycle(self, coords: tuple[int, ...], seed: int) -> CycleResult:
+        """
+        Run a word's RAMA coordinates through the synth as phoneme-modulated steps.
+
+        Each phoneme = one step. The word's 4D structure drives the entire cycle.
+        """
+        value = seed % self._params.mod_space
+        steps = []
+        feedback_acc = 0
+
+        for coord in coords:
+            result = self.phoneme_step(value + feedback_acc, coord)
+            steps.append(result)
+            value = result.output_value
+            feedback_acc = (feedback_acc + value * self._params.feedback) % self._params.mod_space
+
+        self._total_cycles += 1
+
+        return CycleResult(
+            seed=seed,
+            final_value=value,
+            steps=tuple(steps),
+            mod_space=self._params.mod_space,
+            preset=self._preset_name,
+        )
+
+    # =========================================================================
     # BATCH OPERATIONS
     # =========================================================================
 
@@ -496,6 +597,7 @@ class MahaSynth(MahaSynthProtocol):
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
+
 
 def create_synth(preset: str = "quantum", params: Optional[SynthParams] = None) -> MahaSynth:
     """Create a new MahaSynth instance."""

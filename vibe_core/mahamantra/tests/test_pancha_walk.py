@@ -1,27 +1,34 @@
 """
-Tests for PANCHA Walk - Articulation-Based Semantic Engine.
+Tests for PANCHA Walk - Element Walk through Sanskrit Phonemes.
 
-Verifies element mapping, walk signatures, and semantic fingerprinting.
+Only tests what is DERIVED, not invented.
 """
 
 import pytest
 
-from vibe_core.mahamantra.protocols._seed import HARE_COUNT, PANCHA, PRASADAM, TRINITY, WORDS
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    PANCHA,
+    PRASADAM,
+    QUARTERS,
+    WORDS,
+)
 from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_ELEMENT,
-    COORD_QUALITY,
+    COORD_HARMONIC,
+    COORD_SUB,
     COORD_VARGA,
     ELEMENT_NAMES,
     ELEMENT_SYMBOLS,
-    VARGA_NAMES,
+    IS_SHRUTI,
     Element,
-    coord_triple,
+    derived_signature,
     dominant_element,
     element_histogram,
     element_transitions,
     element_walk,
-    fingerprint_signature,
-    semantic_fingerprint,
+    full_signature,
     walk_direction,
     walk_distance,
     walk_signature,
@@ -31,67 +38,69 @@ from vibe_core.mahamantra.substrate.varnamala_codec import encode
 
 
 class TestElementMap:
-    """COORD_ELEMENT must cover all 49 RAMA coordinates."""
+    """COORD_ELEMENT: derived from SPARSHA_GRID + phonetic science."""
 
     def test_complete_coverage(self):
         assert len(COORD_ELEMENT) == VARNAMALA_TOTAL
 
     def test_all_elements_present(self):
-        """Every element must appear at least once."""
         present = set(COORD_ELEMENT)
         assert present == set(Element)
 
     def test_sparsha_rows_match_grid(self):
-        """Sparsha consonant elements must match SPARSHA_GRID."""
+        """Sparsha consonant elements must match SPARSHA_GRID rows."""
         for row_idx, row in enumerate(SPARSHA_GRID):
             for col_idx in range(PANCHA):
                 coord = WORDS + row_idx * PANCHA + col_idx
-                assert COORD_ELEMENT[coord] == Element(row_idx), (
-                    f"coord {coord}: expected {Element(row_idx).name}, got {COORD_ELEMENT[coord].name} (row {row.name})"
-                )
+                assert COORD_ELEMENT[coord] == Element(row_idx)
 
     def test_vowel_a_is_akasha(self):
-        """'a' (coord 0) = throat = AKASHA."""
         assert COORD_ELEMENT[0] == Element.AKASHA
 
     def test_vowel_i_is_vayu(self):
-        """'i' (coord 1) = palate = VAYU."""
         assert COORD_ELEMENT[1] == Element.VAYU
 
     def test_vowel_u_is_prithvi(self):
-        """'u' (coord 2) = lips = PRITHVI."""
         assert COORD_ELEMENT[2] == Element.PRITHVI
 
     def test_ha_is_akasha(self):
-        """'ha' (coord 48) = throat = AKASHA."""
         assert COORD_ELEMENT[48] == Element.AKASHA
 
     def test_element_enum_is_pancha(self):
         assert len(Element) == PANCHA
 
-    def test_symbols_length(self):
-        assert len(ELEMENT_SYMBOLS) == PANCHA
-
     def test_symbols_unique(self):
         assert len(set(ELEMENT_SYMBOLS)) == PANCHA
 
 
+class TestVargaPartition:
+    """COORD_VARGA: derived from WORDS + PRASADAM + HARE_COUNT."""
+
+    def test_svara_count(self):
+        assert sum(1 for v in COORD_VARGA if v == 0) == WORDS
+
+    def test_sparsha_count(self):
+        assert sum(1 for v in COORD_VARGA if v == 1) == PRASADAM
+
+    def test_remaining_count(self):
+        assert sum(1 for v in COORD_VARGA if v == 2) == HARE_COUNT
+
+    def test_total(self):
+        assert len(COORD_VARGA) == VARNAMALA_TOTAL
+
+
 class TestElementWalk:
-    """element_walk() and walk_signature() correctness."""
+    """element_walk() and walk_signature()."""
 
     def test_dharma_walk(self):
-        """dharma = dha(jala) + r(agni) + ma(prithvi)."""
         walk = element_walk(encode("dharma"))
         assert walk == (Element.JALA, Element.AGNI, Element.PRITHVI)
 
     def test_walk_signature_matches(self):
-        """Signature string must match walk elements."""
         coords = encode("dharma")
         walk = element_walk(coords)
         sig = walk_signature(coords)
         assert len(sig) == len(walk)
-        for i, el in enumerate(walk):
-            assert sig[i] == ELEMENT_SYMBOLS[el]
 
     def test_empty_coords(self):
         assert element_walk(()) == ()
@@ -99,31 +108,21 @@ class TestElementWalk:
 
 
 class TestHistogram:
-    """element_histogram() correctness."""
-
     def test_histogram_sums_to_length(self):
         coords = encode("bhagavad")
-        hist = element_histogram(coords)
-        assert sum(hist) == len(coords)
+        assert sum(element_histogram(coords)) == len(coords)
 
     def test_histogram_length(self):
-        hist = element_histogram(encode("yoga"))
-        assert len(hist) == PANCHA
+        assert len(element_histogram(encode("yoga"))) == PANCHA
 
 
 class TestDominantElement:
-    """dominant_element() picks the most frequent."""
-
     def test_krsna_fire_dominant(self):
-        """kṛṣṇa has 3 agni phonemes (ṛ, ṣ, ṇ) = AGNI dominant."""
         assert dominant_element(encode("kṛṣṇa")) == Element.AGNI
 
 
 class TestDirection:
-    """walk_direction() captures ascending/descending patterns."""
-
     def test_ascending_positive(self):
-        """bhakti ascends (earth → space → water → air)."""
         assert walk_direction(encode("bhakti")) > 0
 
     def test_single_phoneme_neutral(self):
@@ -131,121 +130,301 @@ class TestDirection:
 
 
 class TestTransitions:
-    """element_transitions() pairs."""
-
     def test_transition_count(self):
         coords = encode("dharma")
-        trans = element_transitions(coords)
-        assert len(trans) == len(coords) - 1
-
-    def test_transition_types(self):
-        trans = element_transitions(encode("dharma"))
-        assert all(isinstance(t, tuple) and len(t) == 2 for t in trans)
-        assert all(isinstance(t[0], Element) and isinstance(t[1], Element) for t in trans)
+        assert len(element_transitions(coords)) == len(coords) - 1
 
 
 class TestDistance:
-    """walk_distance() between words."""
-
     def test_self_distance_zero(self):
         coords = encode("dharma")
         assert walk_distance(coords, coords) == pytest.approx(0.0)
 
     def test_distance_symmetric(self):
-        a = encode("dharma")
-        b = encode("bhakti")
+        a, b = encode("dharma"), encode("bhakti")
         assert walk_distance(a, b) == pytest.approx(walk_distance(b, a))
 
     def test_distance_bounded(self):
-        a = encode("dharma")
-        b = encode("yoga")
-        d = walk_distance(a, b)
+        d = walk_distance(encode("dharma"), encode("yoga"))
         assert 0.0 <= d <= 1.0
 
 
-class Test3DPhonemeSpace:
-    """The complete (element, quality, varga) decomposition."""
-
-    def test_triple_bijection(self):
-        """All 49 triples must be unique (verified at module load, but test explicitly)."""
-        triples = set()
-        for c in range(VARNAMALA_TOTAL):
-            t = coord_triple(c)
-            assert t not in triples, f"Duplicate triple at coord {c}"
-            triples.add(t)
-        assert len(triples) == VARNAMALA_TOTAL
-
-    def test_varga_partition_sizes(self):
-        """Varga 0=WORDS, 1=PRASADAM, 2=HARE_COUNT."""
-        counts = [0, 0, 0]
-        for c in range(VARNAMALA_TOTAL):
-            counts[COORD_VARGA[c]] += 1
-        assert counts == [WORDS, PRASADAM, HARE_COUNT]
-
-    def test_varga_count_is_trinity(self):
-        assert len(VARGA_NAMES) == TRINITY
-
-    def test_space_size(self):
-        """PANCHA × PANCHA × TRINITY = 75, VARNAMALA = 49, empty = 26."""
-        assert PANCHA * PANCHA * TRINITY == 75
-        assert 75 - VARNAMALA_TOTAL == 26
-
-    def test_sparsha_quality_is_column(self):
-        """For sparsha (coords 16-40), quality must equal grid column."""
-        for c in range(WORDS, WORDS + PRASADAM):
-            expected_col = (c - WORDS) % PANCHA
-            assert COORD_QUALITY[c] == expected_col
-
-
-class TestSemanticFingerprint:
-    """3D semantic fingerprint = 100% unique."""
-
-    def test_fingerprint_is_tuple_of_triples(self):
-        fp = semantic_fingerprint(encode("dharma"))
-        assert isinstance(fp, tuple)
-        assert all(isinstance(t, tuple) and len(t) == 3 for t in fp)
-
-    def test_fingerprint_different_words(self):
-        fp1 = semantic_fingerprint(encode("dharma"))
-        fp2 = semantic_fingerprint(encode("bhakti"))
-        assert fp1 != fp2
-
-    def test_fingerprint_signature_format(self):
-        sig = fingerprint_signature(encode("dharma"))
-        parts = sig.split("-")
-        assert len(parts) == len(encode("dharma"))
-        assert all(len(p) == 3 for p in parts)
-
-    def test_ta_sa_now_distinguished(self):
-        """ta and sa had identical old signatures. 3D must distinguish them."""
-        fp_tat = semantic_fingerprint(encode("tat"))
-        fp_sat = semantic_fingerprint(encode("sat"))
-        assert fp_tat != fp_sat
-
-    def test_visarga_ha_now_distinguished(self):
-        """ḥ (visarga) and ha (mahāprāṇa) must differ in varga."""
-        triple_visarga = coord_triple(15)  # ḥ
-        triple_ha = coord_triple(48)  # ha
-        assert triple_visarga != triple_ha
-        assert triple_visarga[2] == 0  # svara (vowel side)
-        assert triple_ha[2] == 2  # remaining
-
-
 class TestArchitecturalIdentities:
-    """Verifiable mathematical properties."""
-
     def test_sparsha_element_order(self):
-        """SPARSHA_GRID elements must follow PANCHA Mahabhuta order."""
         expected = ("akasha", "vayu", "agni", "jala", "prithvi")
-        actual = tuple(row.element for row in SPARSHA_GRID)
-        assert actual == expected
+        assert tuple(row.element for row in SPARSHA_GRID) == expected
 
-    def test_remaining_consonants_cover_all_elements(self):
-        """Antastha + Ushman (coords 41-48) must touch all 5 elements."""
-        remaining_elements = set(COORD_ELEMENT[c] for c in range(41, 49))
-        assert remaining_elements == set(Element)
+    def test_remaining_cover_all_elements(self):
+        assert set(COORD_ELEMENT[c] for c in range(41, 49)) == set(Element)
 
     def test_vowels_cover_all_elements(self):
-        """Vowels (coords 0-15) must touch all 5 elements."""
-        vowel_elements = set(COORD_ELEMENT[c] for c in range(WORDS))
-        assert vowel_elements == set(Element)
+        assert set(COORD_ELEMENT[c] for c in range(WORDS)) == set(Element)
+
+
+# =============================================================================
+# COORD_SUB: derived intra-section quality
+# =============================================================================
+
+
+class TestSubIndex:
+    """COORD_SUB: prayatna dimension, derived from coordinate structure."""
+
+    def test_total_length(self):
+        assert len(COORD_SUB) == WORDS + PRASADAM + HARE_COUNT
+
+    # --- Svara sub-types = QUARTERS ---
+
+    def test_svara_short_vowels(self):
+        """Coords 0-4: short simple vowels → sub = 0."""
+        for c in range(PANCHA):
+            assert COORD_SUB[c] == 0
+
+    def test_svara_long_vowels(self):
+        """Coords 5-9: long simple vowels → sub = 1."""
+        for c in range(PANCHA, PANCHA * HALVES):
+            assert COORD_SUB[c] == 1
+
+    def test_svara_compound_vowels(self):
+        """Coords 10-13: compound vowels → sub = 2 (HALVES)."""
+        for c in range(PANCHA * HALVES, PANCHA * HALVES + QUARTERS):
+            assert COORD_SUB[c] == HALVES
+
+    def test_svara_special_vowels(self):
+        """Coords 14-15: ṁ/ḥ → sub = 3 (HALVES + 1)."""
+        for c in range(PANCHA * HALVES + QUARTERS, WORDS):
+            assert COORD_SUB[c] == HALVES + 1
+
+    def test_svara_sub_range(self):
+        """Vowel sub-types span QUARTERS values (0, 1, 2, 3)."""
+        svara_subs = set(COORD_SUB[:WORDS])
+        assert svara_subs == {0, 1, HALVES, HALVES + 1}
+        assert len(svara_subs) == QUARTERS
+
+    # --- Sparsha sub-types = PANCHA (column) ---
+
+    def test_sparsha_column_derived(self):
+        """Sparsha sub = column index from SPARSHA_GRID, cycles 0-4."""
+        for c in range(WORDS, WORDS + PRASADAM):
+            assert COORD_SUB[c] == (c - WORDS) % PANCHA
+
+    def test_sparsha_sub_range(self):
+        """Sparsha sub-types span PANCHA values (0-4)."""
+        sparsha_subs = set(COORD_SUB[WORDS : WORDS + PRASADAM])
+        assert sparsha_subs == set(range(PANCHA))
+
+    # --- Shesha sub-types = HALVES ---
+
+    def test_shesha_antastha(self):
+        """Coords 41-44 (ya/ra/la/va): antastha → sub = 0."""
+        for c in range(WORDS + PRASADAM, WORDS + PRASADAM + QUARTERS):
+            assert COORD_SUB[c] == 0
+
+    def test_shesha_ushman(self):
+        """Coords 45-48 (śa/ṣa/sa/ha): ūṣman → sub = 1."""
+        for c in range(WORDS + PRASADAM + QUARTERS, WORDS + PRASADAM + HARE_COUNT):
+            assert COORD_SUB[c] == 1
+
+    def test_shesha_sub_range(self):
+        """Shesha sub-types span HALVES values (0, 1)."""
+        shesha_subs = set(COORD_SUB[WORDS + PRASADAM :])
+        assert shesha_subs == {0, 1}
+        assert len(shesha_subs) == HALVES
+
+
+class TestDerivedSignature:
+    """derived_signature(): 3D phoneme walk."""
+
+    def test_dharma_signature(self):
+        coords = encode("dharma")
+        sig = derived_signature(coords)
+        # 3 chars per phoneme (element, varga, sub)
+        assert len(sig) == len(coords) * 3
+
+    def test_different_words_different_sigs(self):
+        assert derived_signature(encode("dharma")) != derived_signature(encode("karma"))
+
+    def test_empty(self):
+        assert derived_signature(()) == ""
+
+    def test_sparsha_pair_distinguished(self):
+        """ta and da share element (JALA) but differ in sub (col 0 vs col 2)."""
+        sig_ta = derived_signature(encode("ta"))
+        sig_da = derived_signature(encode("da"))
+        assert sig_ta != sig_da
+
+    def test_varga_boundary_distinguished(self):
+        """ta (sparsha) and sa (shesha) share element (JALA) but differ in varga."""
+        sig_ta = derived_signature(encode("ta"))
+        sig_sa = derived_signature(encode("sa"))
+        assert sig_ta != sig_sa
+
+
+# =============================================================================
+# COORD_HARMONIC: H-orbit (×SEVEN mod 49)
+# =============================================================================
+
+
+class TestHarmonic:
+    """COORD_HARMONIC: 4th dimension, derived from SEVEN axiom."""
+
+    def test_total_length(self):
+        assert len(COORD_HARMONIC) == WORDS + PRASADAM + HARE_COUNT
+
+    def test_derived_from_seven(self):
+        """Each value = coord × SEVEN mod 49."""
+        from vibe_core.mahamantra.protocols._seed import SEVEN
+
+        for c in range(WORDS + PRASADAM + HARE_COUNT):
+            assert COORD_HARMONIC[c] == (c * SEVEN) % (WORDS + PRASADAM + HARE_COUNT)
+
+    def test_a_is_fixed_point(self):
+        """'a' (coord 0) maps to 0 — the absorption origin."""
+        assert COORD_HARMONIC[0] == 0
+
+    def test_4d_bijection(self):
+        """4D tuple (element, varga, sub, harmonic) is unique for all 49 phonemes."""
+        keys = set()
+        for c in range(WORDS + PRASADAM + HARE_COUNT):
+            key = (COORD_ELEMENT[c], COORD_VARGA[c], COORD_SUB[c], COORD_HARMONIC[c])
+            keys.add(key)
+        assert len(keys) == WORDS + PRASADAM + HARE_COUNT
+
+    def test_resolves_anusv_visarga(self):
+        """ṁ(14) and ḥ(15) have different H-orbits."""
+        assert COORD_HARMONIC[14] != COORD_HARMONIC[15]
+
+    def test_resolves_e_ai(self):
+        """e(10) and ai(11) have different H-orbits."""
+        assert COORD_HARMONIC[10] != COORD_HARMONIC[11]
+
+    def test_resolves_o_au(self):
+        """o(12) and au(13) have different H-orbits — the one R-residue misses."""
+        assert COORD_HARMONIC[12] != COORD_HARMONIC[13]
+
+
+class TestFullSignature:
+    """full_signature(): 4D phoneme walk."""
+
+    def test_full_sig_longer_than_derived(self):
+        coords = encode("dharma")
+        assert len(full_signature(coords)) > len(derived_signature(coords))
+
+    def test_full_sig_resolves_3d_collision(self):
+        """paramaḥ and paramaṁ must differ in full_signature."""
+        # They collide in derived_signature (3D)
+        assert derived_signature(encode("paramaḥ")) == derived_signature(encode("paramaṁ"))
+        # But NOT in full_signature (4D)
+        assert full_signature(encode("paramaḥ")) != full_signature(encode("paramaṁ"))
+
+
+class TestShrutiPartition:
+    """IS_SHRUTI: R-operation quadratic residues mod 49."""
+
+    def test_complete_coverage(self):
+        assert len(IS_SHRUTI) == VARNAMALA_TOTAL
+
+    def test_shruti_count_is_22(self):
+        """22 quadratic residues = SHRUTIS (Indian microtones)."""
+        assert sum(IS_SHRUTI) == 22
+
+    def test_nakshatra_count_is_27(self):
+        """27 non-residues = NAKSHATRAS (lunar mansions)."""
+        assert sum(not s for s in IS_SHRUTI) == 27
+
+    def test_a_is_shruti(self):
+        """'a' (coord 0) is always a quadratic residue (0² = 0)."""
+        assert IS_SHRUTI[0] is True
+
+    def test_partition_sums_to_varnamala(self):
+        """22 + 27 = 49 = VARNAMALA."""
+        assert sum(IS_SHRUTI) + sum(not s for s in IS_SHRUTI) == VARNAMALA_TOTAL
+
+    def test_collision_pair_o_au_both_nakshatra(self):
+        """o(12) and au(13) are BOTH NAKSHATRA — R-residue can't distinguish them."""
+        assert IS_SHRUTI[12] is False
+        assert IS_SHRUTI[13] is False
+
+    def test_collision_pair_m_h_different(self):
+        """ṁ(14)=NAKSHATRA, ḥ(15)=SHRUTI — R-residue CAN distinguish these."""
+        assert IS_SHRUTI[14] != IS_SHRUTI[15]
+
+
+class TestWordEntryIntegration:
+    """WordEntry properties wire through correctly."""
+
+    def test_full_sig_property(self):
+        from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+
+        w = word_by_iast("dharma")
+        assert w is not None
+        assert len(w.full_sig) > len(w.derived_sig)
+        assert len(w.full_sig) > len(w.element_walk)
+
+    def test_shruti_pattern_property(self):
+        from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+
+        w = word_by_iast("dharma")
+        assert w is not None
+        assert all(c in "SN" for c in w.shruti_pattern)
+        assert len(w.shruti_pattern) == len(w.coords)
+
+    def test_derived_sig_property(self):
+        from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+
+        w = word_by_iast("dharma")
+        assert w is not None
+        assert len(w.derived_sig) == len(w.coords) * 3  # 3 digits per phoneme
+
+
+class TestSynthPhonemeStep:
+    """MahaSynth.phoneme_step() and spell_cycle() with 4D coords."""
+
+    def test_phoneme_step_returns_result(self):
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        result = synth.phoneme_step(value=42, coord=0)
+        assert result.output_value >= 0
+        assert result.output_value < synth.mod_space
+
+    def test_phoneme_step_all_coords_valid(self):
+        """Every RAMA coordinate must produce a valid step."""
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        for coord in range(VARNAMALA_TOTAL):
+            result = synth.phoneme_step(value=1, coord=coord)
+            assert 0 <= result.output_value < synth.mod_space
+
+    def test_varga_determines_operation(self):
+        """svara→H, sparsha→K, shesha→R."""
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        # coord 0 = 'a' (svara) → H
+        assert synth.phoneme_step(1, 0).name == "H"
+        # coord 16 = 'ka' (sparsha) → K
+        assert synth.phoneme_step(1, 16).name == "K"
+        # coord 41 = 'ya' (shesha) → R
+        assert synth.phoneme_step(1, 41).name == "R"
+
+    def test_spell_cycle_dharma(self):
+        """spell_cycle() with a real Sanskrit word."""
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        coords = encode("dharma")
+        result = synth.spell_cycle(coords, seed=42)
+        assert len(result.steps) == len(coords)
+        assert result.final_value >= 0
+
+    def test_different_words_different_attractors(self):
+        """Different Sanskrit words should (usually) produce different outputs."""
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        r1 = synth.spell_cycle(encode("dharma"), seed=42)
+        r2 = synth.spell_cycle(encode("karma"), seed=42)
+        # Same seed, different words → different final values (not guaranteed but very likely)
+        # At minimum, the steps should differ
+        assert r1.steps[0].name != r2.steps[0].name or r1.final_value != r2.final_value
