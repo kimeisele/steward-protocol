@@ -76,12 +76,13 @@ def cli_chant(
 
     from vibe_core.mahamantra import mahamantra
     from vibe_core.mahamantra.net.vimana import VimanaClient
-    from vibe_core.mahamantra.orchestrator import THE_FLUTE_CYCLE
+    from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
     from vibe_core.mahamantra.sound.audio_engine import PranaSoundEngine
     from vibe_core.mahamantra.substrate.cell import MahaCellUnified
     from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
     from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
     from vibe_core.mahamantra.substrate.seed import WORDS
+    from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
 
     # EPOCH LOCK CHECK (Boot validation - 1972 signature)
     if not SravanamCheck.validate_epoch_lock():
@@ -180,8 +181,12 @@ def cli_chant(
 
             # Step 2: Metrics (Legacy)
             current_diw = THE_FLUTE_CYCLE[chamber.tick % WORDS]
-            name_idx = (current_diw >> 16) & 0x3
-            guardian_name = ["HARE", "KRISHNA", "RAMA", "?"][name_idx]
+            diw_parts = diw_unpack(current_diw)
+            # VAMSI encodes name region: H=0-169, K=170-339, R=340-511
+            vamsi_stride = 512 // 3  # 170
+            name_idx = min(diw_parts.vamsi // vamsi_stride, 2)
+            guardian_name = ["HARE", "KRISHNA", "RAMA"][name_idx]
+
 
             state = {
                 "position": chamber.tick % WORDS,

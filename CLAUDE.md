@@ -53,6 +53,33 @@ MALA           = MAHAJANA_COUNT × NAVA                = 108
 
 Wenn eine Zahl im Code auftaucht ohne Ableitung: Architektur-Verletzung.
 
+## Die Flöte (DIW - Divine Instruction Word)
+
+19 bits = `FLUTE_HOLES_SUM` = `VENU(6) + VAMSI(9) + MURALI(4)` = `GITA_CHAPTERS(18) + KSETRAJNA(1)`.
+
+SSOT: `protocols/diw.py`. Produzent: `substrate/venu_orchestrator.py`. Konsument: `substrate/chamber.py`.
+
+Bit-Layout (LSB → MSB):
+
+```
+Bits  0-5  (6): VENU   = Sharanagati (Quality/Mood)     → Intensität
+Bits  6-14 (9): VAMSI  = Nava Bhakti (Process/Action)   → H/K/R Name-Region
+Bits 15-18 (4): MURALI = Quarters (Phase)                → Genesis/Dharma/Karma/Moksha
+```
+
+`THE_FLUTE_CYCLE[16]` = vorberechnete LUT aus dem Mahamantra-Pattern. Jede Position
+ist ein natives 19-bit DIW. `VenuOrchestrator.step()` liefert das nächste Wort.
+
+`chamber._apply_diw()` interpretiert semantisch:
+- MURALI bestimmt WAS (Phase: Empfang/Prüfung/Verarbeitung/Vollendung)
+- VAMSI bestimmt WIE (Name: H=prana-dominant, K=integrity-dominant, R=cycle-dominant)
+- VENU bestimmt WIE STARK (0-63 normalisiert auf Intensität)
+
+`verify_divinity()` beweist: alle 4 Quarters, alle 3 Name-Regionen, 16 unique VENU-Werte.
+
+**WARNUNG:** Vor Feb 2026 war das DIW-Format kaputt (`[Name:2][Position:16]` statt `[4:9:6]`).
+Alle Konsumenten MÜSSEN `diw.unpack()` benutzen. Keine manuellen Bit-Shifts.
+
 ## Die Gita
 
 Die Bhagavad Gita ist nicht Metapher - sie ist das Routing-Netz.
@@ -117,10 +144,16 @@ Jeder Guardian: `__mahajana__`, `__position__`, `__genesis__`, identischer thin 
 
 ## Codebase-Realität (Bekannte Probleme)
 
+Offen:
 - `seed.py`: ~20 F811 Redefinitionen (absichtliche Re-Derivation, aber unordentlich)
 - Zwei CLI-Systeme: `vibe_core/cli/` (alt) und `vibe_core/mahamantra/cli/` (neu)
-- `ExecuteResult.requires_confirmation` existiert, kein Guardian nutzt es (Rückfrage-Infrastruktur)
+- `ExecuteResult.requires_confirmation` existiert, kein Guardian nutzt es
 - `protocols/` hat massive Dateien (yamaraja protocol = 653 Zeilen)
+
+Fallen (aufpassen!):
+- `CellLifecycleState.integrity` ist `float` (0.0-1.0), NICHT `int`. War mal falsch deklariert.
+- DIW-Konsumenten MÜSSEN `diw.unpack()` nutzen. Keine manuellen Bit-Shifts.
+- `substrate/` ist flach — fraktale Restrukturierung steht noch aus.
 
 Bereits aufgeräumt (nicht nochmal anfassen):
 - Guardians: ALLE 16 identisches thin Pattern (keine if-else, keine Klassen)
@@ -129,6 +162,23 @@ Bereits aufgeräumt (nicht nochmal anfassen):
 - hologram.py/layers.py: AI-Slop entfernt (doppelte Import-Blöcke)
 - gita.py: Duplikat-Import + Ghost MAHA_WORDS entfernt, 11/13/14/15 → abgeleitet
 - Star Imports eliminiert → lazy Protocol Re-Exports
+- DIW-Format repariert: `[Name:2][Position:16]` → native `[MURALI:4][VAMSI:9][VENU:6]`
+- `_apply_diw()` semantisch: Phase×Name×Intensität statt generische Modulation
+- `verify_divinity()` + `verify_resonance()` auf 6-9-4 Struktur aktualisiert
+
+## Repo-Zustand
+
+~60+ ungemergte Remote-Branches (`claude/*`, `copilot/*`, `gemini/*`). Fast alle sind AI-Müll.
+Nur diese Branches haben echten Wert:
+
+| Branch | Status | Inhalt |
+|--------|--------|--------|
+| `main` | Stabil | Letzter Senior: Guardian-Cleanup + F821-Fixes + Pancha-Tattva-Wiring |
+| `feature/diw-refinement` | Ungemergt | DIW-Format repariert, semantische `_apply_diw()`, integrity-Fix |
+| `feature/gita-architecture-refinement` | In diw-refinement | Vorgänger-Branch, DIW-Protokoll erstellt |
+
+Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
+zeigt den vollen Friedhof.
 
 ## Arbeitsweise
 
