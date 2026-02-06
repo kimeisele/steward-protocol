@@ -29,7 +29,7 @@ from typing import List, Sequence, Union
 
 import libcst as cst
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 
 # The fractal routing __getattr__ function as CST nodes

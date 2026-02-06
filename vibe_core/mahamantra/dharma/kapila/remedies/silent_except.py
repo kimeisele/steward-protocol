@@ -21,7 +21,7 @@ from typing import List, Sequence, Union
 import libcst as cst
 import libcst.matchers as m
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 
 class SilentExceptRemedy(CSTRemedy):

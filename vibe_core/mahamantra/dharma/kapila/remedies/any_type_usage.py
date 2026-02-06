@@ -25,7 +25,7 @@ from typing import List, Set, Union
 import libcst as cst
 import libcst.matchers as m
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 
 class AnyTypeRemedy(CSTRemedy):
