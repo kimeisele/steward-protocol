@@ -20,7 +20,13 @@ THE 7 EFFECTS MAP TO 7 BEATS:
   Beat 6 (1966): FULL_NECTAR_EACH_STEP   → Atomic transactions
   Beat 7 (1977): BATHE_ENTIRE_SELF       → Total transformation
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY)
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.substrate.mantra.maha_kirtan import KirtanComputeResult
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -219,7 +225,7 @@ class SiksastakamSynth:
             bit_pattern=bit_pattern,
         )
 
-    def synthesize_from_result(self, kirtan_result: "KirtanComputeResult") -> SiksastakamOutput:  # type: ignore
+    def synthesize_from_result(self, kirtan_result: KirtanComputeResult) -> SiksastakamOutput:
         """Synthesize from a MahaKirtan result."""
         # Note: KirtanComputeResult must be imported only for type checking to avoid circular dep
         # But we assume the object has beat_number, seed, resonance

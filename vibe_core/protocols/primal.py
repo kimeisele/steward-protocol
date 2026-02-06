@@ -199,3 +199,6 @@ class AlignmentScore:
 
 # The canonical MAHAMANTRA_SEQUENCE lives in substrate/__init__.py (Layer -1)
 from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE
+
+import logging
+logger = logging.getLogger(__name__)

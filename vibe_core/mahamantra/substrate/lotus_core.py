@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 # These imports are needed for class definition
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
-from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader, HEADER_SIZE_BYTES, HEADER_DAILY_CYCLES
 from vibe_core.mahamantra.seed.types import (
     AkashState,
     ExecuteResult,
@@ -131,7 +131,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         import time
 
         from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS, get_quarter_name
 
         t = int(time.time())
         pos = t % WORDS  # SSOT: WORDS from seed.py
@@ -139,7 +139,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         word, opcode = MAHAMANTRA_SEQUENCE[pos]
 
         state = {
-            "quarter": "karma" if pos > 8 else "dharma",
+            "quarter": get_quarter_name(pos),
             "guardian": guardian,
             "word": word,
             "opcode": opcode.name,  # MantraOpCode.name for Nrisimha
@@ -400,14 +400,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         diw_name_encoding = diw_components.vamsi  # Process/Action (name-derived)
         diw_position_bit = diw_components.venu  # Quality (position-derived)
 
-        if position < 4:
-            quarter = "genesis"
-        elif position < 8:
-            quarter = "dharma"
-        elif position < 12:
-            quarter = "karma"
-        else:
-            quarter = "moksha"
+        from vibe_core.mahamantra.substrate.seed import get_quarter_name
+        quarter = get_quarter_name(position)
 
         guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
 
@@ -503,7 +497,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                     operation=position,
                     link=0,
                     intent=0,
-                    ttl=300,
+                    ttl=HEADER_DAILY_CYCLES,
                     state=0,
                 ),
                 payload=input_text.encode("utf-8"),
@@ -527,14 +521,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             tick_word, tick_opcode = MAHAMANTRA_SEQUENCE[tick_pos]
             tick_guardian = ALL_GUARDIANS[tick_pos] if tick_pos < len(ALL_GUARDIANS) else "unknown"
 
-            if tick_pos < 4:
-                tick_quarter = "genesis"
-            elif tick_pos < 8:
-                tick_quarter = "dharma"
-            elif tick_pos < 12:
-                tick_quarter = "karma"
-            else:
-                tick_quarter = "moksha"
+            tick_quarter = get_quarter_name(tick_pos)
 
             tick_input: TickStateInput = {
                 "tick": base_tick + i,
@@ -608,9 +595,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             },
             # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
             "cell": {
-                "header_size": 72,
+                "header_size": HEADER_SIZE_BYTES,
                 "payload_size": len(input_text.encode("utf-8")),
-                "total_size": 72 + len(input_text.encode("utf-8")),
+                "total_size": HEADER_SIZE_BYTES + len(input_text.encode("utf-8")),
                 "valid": True,  # Created via MahaCellUnified.create()
                 "parampara_verified": parampara_verified,
                 "prana": result_cell.prana,

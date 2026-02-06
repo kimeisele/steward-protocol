@@ -22,6 +22,9 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, Union
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def atomic_write_text(path: Union[str, Path], content: str, encoding: str = "utf-8") -> None:
     """
