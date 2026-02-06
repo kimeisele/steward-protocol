@@ -87,7 +87,7 @@ from vibe_core.mahamantra.protocols._seed import (
 # THE CANONICAL DATA (Currently hardcoded - to be derived)
 # =============================================================================
 
-CHAPTER_VERSES: Final[Tuple[int, ...]] = (47, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78)
+CHAPTER_VERSES: Final[Tuple[int, ...]] = (46, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78)
 assert len(CHAPTER_VERSES) == GITA_CHAPTERS
 assert sum(CHAPTER_VERSES) == 700  # SEVEN x 100
 
@@ -95,37 +95,31 @@ assert sum(CHAPTER_VERSES) == 700  # SEVEN x 100
 # THE CANONICAL TOPOLOGY (SOLVED!)
 # =============================================================================
 
-# Quarter sums
-GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])  # Ch 1-4: 204
+# Quarter sums (corrected: Ch 1 = 46, not 47)
+GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])  # Ch 1-4: 203
 DHARMA_SUM: Final[int] = sum(CHAPTER_VERSES[4:8])  # Ch 5-8: 134
 KARMA_SUM: Final[int] = sum(CHAPTER_VERSES[8:12])  # Ch 9-12: 151
 MOKSHA_SUM: Final[int] = sum(CHAPTER_VERSES[12:16])  # Ch 13-16: 106
 FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])  # Ch 17-18: 106
 
 # The Field (16 Guardians' domain)
-FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])  # Ch 1-16: 595
+FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])  # Ch 1-16: 594
 
 # =============================================================================
-# THE EPOCH EQUATION (The Master Key)
+# NOTE: The old "EPOCH EQUATION" (1972 = 204 × 9 + 136) was based on wrong
+# Ch 1 = 47. With correct Ch 1 = 46: GENESIS = 203, FIELD = 594.
+# The real epoch derivation is in protocols/seed/_cosmic.py (SSOT).
 # =============================================================================
-# 1972 = GENESIS × NAVA + FIXED_POINT
-# 1972 = 204 × 9 + 136
 
-assert EPOCH_KEY == GENESIS_SUM * NAVA + POSITION_SUM_TOTAL, (
-    f"THE EPOCH EQUATION: 1972 = {GENESIS_SUM} × {NAVA} + {POSITION_SUM_TOTAL}"
+# =============================================================================
+# THE FIELD (Corrected: 594, not 595)
+# =============================================================================
+# 594 = SHARANAGATI × 99 = 6 × 99 = 2 × 3³ × 11
+# Old claim (595 = 35 × 17) was based on wrong Ch 1 data.
+FIELD_SHARANAGATI_UNITS: Final[int] = FIELD_SUM // SHARANAGATI  # 99
+assert FIELD_SUM == FIELD_SHARANAGATI_UNITS * SHARANAGATI, (
+    f"THE FIELD: {FIELD_SUM} = {FIELD_SHARANAGATI_UNITS} × {SHARANAGATI}"
 )
-
-# =============================================================================
-# THE FIELD = 35 × KRISHNA (The Guardian Domain)
-# =============================================================================
-# 595 = 35 × 17 = 35 × POSITION_SUM_KRISHNA
-
-KRISHNA_UNITS: Final[int] = FIELD_SUM // POSITION_SUM_KRISHNA  # 35
-
-assert FIELD_SUM == KRISHNA_UNITS * POSITION_SUM_KRISHNA, (
-    f"THE FIELD: {FIELD_SUM} = {KRISHNA_UNITS} × {POSITION_SUM_KRISHNA}"
-)
-assert FIELD_SUM % POSITION_SUM_KRISHNA == 0, "Field must be divisible by Krishna"
 
 # =============================================================================
 # MOKSHA = FRUIT (Perfect Symmetry)

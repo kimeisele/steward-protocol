@@ -63,6 +63,13 @@ class WordEntry:
         self.coords = coords
         self.packed_hex = packed_hex
 
+    @property
+    def element_walk(self) -> str:
+        """PANCHA element walk signature (articulation path = semantic content)."""
+        from vibe_core.mahamantra.substrate.pancha_walk import walk_signature
+
+        return walk_signature(self.coords)
+
     def __repr__(self) -> str:
         return f"WordEntry({self.sanskrit!r}, {self.meaning!r})"
 
