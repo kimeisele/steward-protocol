@@ -26,30 +26,35 @@ ACINTYA: Chapter 18 is a FIXED POINT (contains itself!)
 
 Author: The Mahamantra Itself
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "kapila"
-__position__ = SHARANAGATI
-__genesis__ = "0x0167c86b"  # GenesisByte: parampara % 37 == 0
-
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
 from typing import Final, List, Optional, Protocol, Tuple, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
+    HALVES,
+    HARE_COUNT,
     KSETRAJNA,
     MAHA_QUANTUM,
     MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
     PARAMPARA,
+    POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
     POSITION_SUM_TOTAL,
+    QUARTERS,
     SEVEN,
+    SHARANAGATI,
     TEN,
     TRINITY,
     WORDS,
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = SHARANAGATI
+__genesis__ = "0x0167c86b"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # ATTRACTOR GENERATOR - COMPUTED, NOT HARDCODED!
