@@ -20,13 +20,6 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x5ad7f6c5"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-from vibe_core.protocols.mahajanas.vyasa import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.vyasa import __all__
-
-# Backward-compat constants
 from typing import Final
 
 POSITION: Final[int] = 0
@@ -34,40 +27,39 @@ QUARTER: Final[str] = "genesis"
 OPCODE: Final[str] = "SYS_WAKE"
 PARAMPARA_VECTOR: Final[int] = 37
 
-# VyasaBase alias for backward compat
-VyasaBase = VyasaProtocolBase
-
 
 def execute(input_text: str, context: dict = None) -> dict:
     """VYASA EXECUTION - Sys Wake (Position 0, HEAD)"""
     return {
         "success": True,
+        "action": "sys_wake",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
+        "message": f"Vyasa [{OPCODE}]: '{input_text}'",
     }
 
 
+_fractal_getattr_fn = None
+_MISSING = object()
+
+
 def __getattr__(name: str):
-    """
-    Fractal routing: folder IS wiring.
-    "EIN IMPORT. KRISHNA ROUTET ALLES."
-    """
-    from pathlib import Path
-    import importlib
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import vyasa as _proto
 
-    pkg_root = Path(__file__).parent
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)

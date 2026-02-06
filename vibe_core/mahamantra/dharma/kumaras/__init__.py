@@ -20,7 +20,10 @@ __mahajana__ = "kumaras"
 __position__ = 5
 __genesis__ = "0xfe9a70b8"  # GenesisByte
 
+import logging
 from typing import Final
+
+logger = logging.getLogger(__name__)
 
 POSITION: Final[int] = 5
 QUARTER: Final[str] = "dharma"
@@ -47,7 +50,7 @@ def execute(input_text: str, context: dict = None) -> dict:
                 "success": True,
                 "action": "shuddhi",
                 "purity": "pristine",
-                "message": "🧘 Kumaras: Shuddhi check passed. Eternal purity maintained."
+                "message": "🧘 Kumaras: Shuddhi check passed. Eternal purity maintained.",
             }
 
         if "state" in intent or "status" in intent:
@@ -56,7 +59,8 @@ def execute(input_text: str, context: dict = None) -> dict:
                 "action": "get_state",
                 "purity": "pristine",
                 "position": POSITION,
-                "quarter": QUARTER
+                "quarter": QUARTER,
+                "message": f"Kumaras [{OPCODE}]: purity=pristine",
             }
     except Exception as _exc:
         logger.exception("Unexpected error: %s", _exc)
@@ -67,8 +71,9 @@ def execute(input_text: str, context: dict = None) -> dict:
         "position": POSITION,
         "quarter": QUARTER,
         "opcode": OPCODE,
-        "message": f"🧒 Kumaras hear: '{input_text}'. Try 'shuddhi', 'purify', or 'check'."
+        "message": f"🧒 Kumaras hear: '{input_text}'. Try 'shuddhi', 'purify', or 'check'.",
     }
+
 
 # =============================================================================
 # FRACTAL DISCOVERY - Folder IS Wiring
@@ -79,21 +84,30 @@ _fractal_getattr_fn = None
 
 def __getattr__(name: str):
     """Lazy fractal discovery to avoid circular imports."""
-    
+
     # Map Protocol types to protocol.py
     if name in (
-        "KumarasProtocol", "KumarasProtocolBase", "NullKumaras", 
-        "ShuddhiProtocol", "ShuddhiResult", "ShuddhiStatus",
-        "PurityLevel", "PurificationResult", "ResetResult", "PurityState"
+        "KumarasProtocol",
+        "KumarasProtocolBase",
+        "NullKumaras",
+        "ShuddhiProtocol",
+        "ShuddhiResult",
+        "ShuddhiStatus",
+        "PurityLevel",
+        "PurificationResult",
+        "ResetResult",
+        "PurityState",
     ):
         from . import protocol
+
         return getattr(protocol, name)
 
     # Map Validation types to validation.py
     if name.startswith("Validation") or name.endswith("check"):
         from . import validation
+
         return getattr(validation, name)
-        
+
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
         from vibe_core.mahamantra.substrate.wiring import fractal_getattr

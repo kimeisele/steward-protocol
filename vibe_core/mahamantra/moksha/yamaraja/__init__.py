@@ -239,126 +239,50 @@ class NullYamaraja(YamarajaBase):
             )
 
 
-# =============================================================================
-# SAMSKARA TYPES (re-export from protocols/mahajanas/yamaraja/samskara)
-# =============================================================================
-
-from vibe_core.protocols.mahajanas.yamaraja.samskara import (
-    SamskaraType,
-    SamskaraState,
-    MigrationVerdict,
-    MigrationStatus,
-    WildProtocol,
-    MigrationManifest,
-)
-
-
-# =============================================================================
-# =============================================================================
-# SAMSKARA SERVICE - Migration Engine
-# =============================================================================
-
-from vibe_core.mahamantra.moksha.yamaraja.samskara_service import SamskaraService
-
-
 def execute(input_text: str, context: dict = None) -> dict:
     """YAMARAJA EXECUTION - Audit Seal (Position 15)"""
     return {
         "success": True,
+        "action": "audit_seal",
+        "verdict": "HEARD",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
+        "message": f"Yamaraja [{OPCODE}]: '{input_text}'",
     }
 
 
-def on_bhoga(state: dict) -> None:
-    """
-    Reactor Hook: Called when ShadowReactor executes index 15 (Yamaraja).
-    
-    THE JUDGE HEARS.
-    """
-    # 1. Access Payload
-    payload_bytes = state.get("payload")
-    if not payload_bytes:
-        state["execution_result"] = {"error": "Yamaraja hears nothing (No Payload)"}
-        return
-
-    try:
-        # 2. Decode Intent
-        intent_text = payload_bytes.decode("utf-8")
-        
-        # 3. Execute Judgment
-        # For MVP, we wrap the execute() call
-        result = execute(intent_text)
-        
-        # 4. Return Verdict
-        state["execution_result"] = {
-            "verdict": "HEARD",
-            "judge": "YAMARAJA",
-            "details": result
-        }
-        
-    except Exception as e:
-        state["execution_result"] = {"error": f"Yamaraja execution failed: {str(e)}"}
-
-
-# YAMARAJA LISTENS IN PRASADAM PHASE (Pos 15 >= 8)
-on_prasadam = on_bhoga
+_fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str):
-    """
-    Fractal routing: folder IS wiring.
-    "EIN IMPORT. KRISHNA ROUTET ALLES."
-    """
-    # Explicit service loading (ExecutableMixin pattern)
+    """Explicit exports + protocol re-exports + fractal discovery."""
     if name == "YamarajaService":
         from vibe_core.services.yamaraja_service import YamarajaService
+
         return YamarajaService
-    
-    from pathlib import Path
-    import importlib
 
-    pkg_root = Path(__file__).parent
+    if name == "SamskaraService":
+        from vibe_core.mahamantra.moksha.yamaraja.samskara_service import SamskaraService
 
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
+        return SamskaraService
 
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
+    # Lazy protocol re-export (samskara types, etc.)
+    try:
+        from vibe_core.protocols.mahajanas import yamaraja as _proto
 
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-
-__all__ = [
-    # Backward-compatible constants
-    "POSITION",
-    "QUARTER",
-    "OPCODE",
-    "PARAMPARA_VECTOR",
-    # Return types (for cli_auto)
-    "SamskaraStatusResult",
-    "SamskaraDiscoverResult",
-    "SamskaraJudgeResult",
-    "SamskaraMigrateResult",
-    # Protocol classes
-    "YamarajaProtocol",
-    "YamarajaBase",
-    "NullYamaraja",
-    # Samskara Types
-    "SamskaraType",
-    "SamskaraState",
-    "MigrationVerdict",
-    "MigrationStatus",
-    "WildProtocol",
-    "MigrationManifest",
-    # Samskara (Migration)
-    "SamskaraService",
-]
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)

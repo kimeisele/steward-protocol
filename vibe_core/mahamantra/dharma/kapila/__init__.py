@@ -32,7 +32,7 @@ PARAMPARA_VECTOR: Final[int] = 259
 # EXPORTS FOR RESONANCE (Auto-Wiring)
 # =============================================================================
 try:
-    from vibe_core.protocols.mahajanas.kapila import on_event, __listening_for__
+    from vibe_core.protocols.mahajanas.kapila import __listening_for__, on_event
 except ImportError:
     # Fallback if protocol not available yet
     on_event = None
@@ -43,11 +43,13 @@ def execute(input_text: str, context: dict = None) -> dict:
     """KAPILA EXECUTION - Type Check (Position 6)"""
     return {
         "success": True,
+        "action": "type_check",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
+        "message": f"Kapila [{OPCODE}]: '{input_text}'",
     }
 
 
@@ -63,8 +65,9 @@ def __getattr__(name: str):
     # Explicit service loading (ExecutableMixin pattern)
     if name == "KapilaService":
         from vibe_core.protocols.mahajanas.kapila.service import KapilaService
+
         return KapilaService
-    
+
     # Fallback to fractal discovery
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
