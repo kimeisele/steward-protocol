@@ -24,6 +24,9 @@ from typing import Dict, List
 
 from vibe_core.protocols import register_cli, CLIMeta
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def _format_output(cmd: str, output: str) -> str:
     """Format cli_auto output nicely."""

@@ -201,8 +201,11 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
     def shutdown(self, reason: str) -> bool:
         """Graceful collapse of the wave function."""
+        # Stop VenuService heartbeat
+        if hasattr(self, "_venu_service") and self._venu_service:
+            asyncio.ensure_future(self._venu_service.stop())
+
         if self.kernel:
-            # TODO: Add shutdown protocol
             return True
         return False
 
@@ -532,6 +535,173 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                     logger.info("      → Shuddhi Kala Bridge active (Kala loop engaged)")
                 except Exception as e:
                     logger.warning(f"⚠️ Could not start Shuddhi Kala Bridge: {e}")
+
+                # GOVARDHAN: Start VenuService (Krishna's Flute - Central Orchestrator)
+                try:
+                    from vibe_core.di import ServiceRegistry
+                    from vibe_core.mahamantra.protocols._venu import VenuServiceProtocol
+                    from vibe_core.services.venu_service import VenuService
+
+                    self._venu_service = VenuService()
+
+                    # Wire Jagannath ratha_yatra to the beat (auto_flood_orphans on rhythm)
+                    try:
+                        from vibe_core.protocols.lila.jagannath import IJagannath
+
+                        jagannath = ServiceRegistry.get(IJagannath)
+                        if jagannath:
+                            # Run ratha_yatra every 144 ticks (VENU_FIELD_TICKS = 36 seconds)
+                            from vibe_core.mahamantra.protocols._venu import VENU_FIELD_TICKS
+
+                            _ratha_counter = {"ticks": 0}
+
+                            def _ratha_on_beat(position: int) -> None:
+                                _ratha_counter["ticks"] += 1
+                                if _ratha_counter["ticks"] % VENU_FIELD_TICKS == 0:
+                                    try:
+                                        jagannath.start_ratha_yatra()
+                                    except Exception as e:
+                                        logger.debug(f"Ratha yatra tick error: {e}")
+
+                            self._venu_service.on_beat(_ratha_on_beat)
+                            logger.info("      → Jagannath wired to VenuService (ratha_yatra every 36s)")
+                    except Exception as e:
+                        logger.debug(f"Jagannath wiring skipped: {e}")
+
+                    ServiceRegistry.register(VenuServiceProtocol, self._venu_service)
+
+                    # YASODA'S ROPE: Wire BeatSubscribers via protocol discovery
+                    # No hardcoded list. Any service registered under
+                    # BeatSubscriberProtocol gets heartbeat time automatically.
+                    try:
+                        from vibe_core.mahamantra.protocols._venu import BeatSubscriberProtocol
+
+                        # Create and register healing subscribers
+                        try:
+                            from vibe_core.services.healing_subscribers import (
+                                OuroborosSubscriber,
+                                ShuddhiSubscriber,
+                            )
+
+                            workspace = getattr(self.kernel, "_workspace", None)
+                            subscribers = [
+                                OuroborosSubscriber(workspace=workspace),
+                                ShuddhiSubscriber(dry_run=True),
+                            ]
+
+                            # Register each subscriber so get_all(BeatSubscriberProtocol) finds them
+                            for sub in subscribers:
+                                ServiceRegistry.register(
+                                    type(sub), sub,
+                                    protocols=[BeatSubscriberProtocol],
+                                )
+                                logger.info(f"      → Registered beat subscriber: {sub.beat_name}")
+                        except Exception as e:
+                            logger.debug(f"Healing subscribers not available: {e}")
+
+                        # Discover ALL registered BeatSubscribers and wire to VenuService
+                        all_subscribers = ServiceRegistry.get_all(BeatSubscriberProtocol) or []
+                        if all_subscribers:
+                            _beat_counter = {"ticks": 0}
+
+                            def _dispatch_subscribers(position: int) -> None:
+                                _beat_counter["ticks"] += 1
+                                tick = _beat_counter["ticks"]
+                                for sub in all_subscribers:
+                                    try:
+                                        if tick % sub.beat_interval == 0:
+                                            sub.on_beat_tick(tick, position)
+                                    except Exception as e:
+                                        logger.debug(f"Beat subscriber {sub.beat_name} error: {e}")
+
+                            self._venu_service.on_beat(_dispatch_subscribers)
+                            logger.info(
+                                f"      → {len(all_subscribers)} beat subscribers wired to VenuService"
+                            )
+                    except Exception as e:
+                        logger.debug(f"BeatSubscriber wiring skipped: {e}")
+
+                    # Start the heartbeat (non-blocking async task)
+                    asyncio.ensure_future(self._venu_service.start())
+                    logger.info("      → VenuService started (Krishna's flute plays)")
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not start VenuService: {e}")
+
+                # GOVARDHAN: Balarama embraces lotus-discovered services (organic wrapping)
+                try:
+                    from vibe_core.mahamantra.substrate.proxy import wrap_service
+
+                    self._balarama_proxies = {}
+                    # Use lotus-discovered positions from kernel (set by project_lotus in factory.py)
+                    kernel_positions = getattr(self.kernel, "_positions", None)
+                    if kernel_positions is not None:
+                        for pos, guardian, instance in kernel_positions.all_active():
+                            mod_name = getattr(instance, "__module__", None)
+                            if mod_name is None:
+                                # Module object (not a service instance) — get its __name__
+                                mod_name = getattr(instance, "__name__", None)
+                            if mod_name:
+                                try:
+                                    proxy = wrap_service(mod_name, silent=True)
+                                    self._balarama_proxies[mod_name] = proxy
+                                except Exception:
+                                    pass  # Not all modules are wrappable
+
+                    if self._balarama_proxies:
+                        logger.info(
+                            f"      → Balarama embraced {len(self._balarama_proxies)} services (lotus-driven)"
+                        )
+                    else:
+                        logger.debug("No lotus-discovered services to embrace")
+                except Exception as e:
+                    logger.warning(f"⚠️ Balarama wrapping skipped: {e}")
+
+                # GOVARDHAN: Register Mahamantra governance hook (King installs itself)
+                try:
+                    from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
+                    from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
+                    # Dangerous opcodes that modify state require extra scrutiny
+                    _WRITE_OPCODES = frozenset({
+                        MantraOpCode.LEDGER_SIGN,   # File writes
+                        MantraOpCode.IO_FLUSH,      # I/O operations
+                        MantraOpCode.STATE_SYNC,    # State mutations
+                    })
+
+                    def _sudarshana_governance_check(
+                        opcode: MantraOpCode,
+                        instance: object,
+                        args: tuple,
+                        kwargs: dict,
+                    ) -> bool:
+                        """
+                        SudarshanaChakra — the real security spin.
+                        Registered by Mahamantra at boot. Runs before every
+                        @mantra_governed call.
+                        """
+                        # Always allow non-write opcodes
+                        if opcode not in _WRITE_OPCODES:
+                            return True
+
+                        # For write opcodes, check if any arg looks like a
+                        # forbidden path (.git, __pycache__, etc.)
+                        for arg in args:
+                            arg_str = str(arg)
+                            if "/.git/" in arg_str or "/.git" == arg_str[-5:]:
+                                logger.warning(
+                                    f"🌀 SUDARSHANA BLOCKED: {opcode.name} targeting .git "
+                                    f"via {type(instance).__name__}"
+                                )
+                                return False
+                            if "__pycache__" in arg_str:
+                                return True  # Allow cache writes
+
+                        return True
+
+                    register_governance_hook(_sudarshana_governance_check)
+                    logger.info("      → Sudarshana governance hook active (Mahamantra is King)")
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not register governance hook: {e}")
 
                 results["kernel_booted"] = True
                 results["agents_registered"] = total_agents

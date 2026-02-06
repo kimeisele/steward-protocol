@@ -192,6 +192,14 @@ Bereits aufgeräumt (nicht nochmal anfassen):
 - `verify_divinity()` + `verify_resonance()` auf 6-9-4 Struktur aktualisiert
 - Sanskrit 4D Dekomposition: `pancha_walk.py` (4 COORD maps, 49/49 Bijektion, 101 Tests)
 - `vedabase.db` entfernt: Extraktion abgeschlossen, Production nutzt `rama_lexicon.json`
+- `lotus_projection.py`: Import-Fix (`_lotus` → `substrate.lotus_types`), 16/16 Positionen
+- `lotus_core.py`: 3× if-else Quarter-Routing → branchless `seed.get_quarter_name()`
+- `lotus_core.py`: Magic 72→`HEADER_SIZE_BYTES`, 300→`HEADER_DAILY_CYCLES`
+- `chat_service.py`: `position < 8` → `position < HALF_SIZE`
+- `lotus_projection.py`: `project_minimal()` hardcoded Positionen → SSOT `HEAD_POSITIONS`
+- `proxy.py`: `AUTO_WRAP_SERVICES` (2 hardcoded) → lotus-driven Discovery (16/16)
+- `boot_orchestrator.py`: Balarama wrapping via `kernel._positions` statt manueller Liste
+- `substrate/__init__.py`: Monolith-Split → `types.py`, `hardware.py`, `mantra_protocol.py`
 
 ## Repo-Zustand
 
@@ -201,7 +209,7 @@ Nur diese Branches haben echten Wert:
 | Branch | Status | Inhalt |
 |--------|--------|--------|
 | `main` | Stabil | Letzter Senior: Guardian-Cleanup + F821-Fixes + Pancha-Tattva-Wiring |
-| `feature/diw-refinement` | Ungemergt | DIW-Format repariert, semantische `_apply_diw()`, integrity-Fix |
+| `feature/diw-refinement` | Aktiv | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
 | `feature/gita-architecture-refinement` | In diw-refinement | Vorgänger-Branch, DIW-Protokoll erstellt |
 | `claude/extract-sanskrit-vedabase-*` | Aktiv | Sanskrit-Extraktion + 4D Dekomposition + Synth-Integration |
 

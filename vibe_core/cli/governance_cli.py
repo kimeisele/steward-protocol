@@ -42,6 +42,9 @@ from vibe_core.protocols.naga.intel_bridge import (
     NullIntelBridge,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @register_cli
 class GovernanceCLI:

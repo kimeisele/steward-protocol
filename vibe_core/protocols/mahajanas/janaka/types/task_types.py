@@ -31,6 +31,9 @@ __genesis__ = "0x7d71c667"  # GenesisByte: parampara % 37 == 0
 
 from enum import Enum
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class TaskStatus(str, Enum):
     """

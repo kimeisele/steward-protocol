@@ -313,6 +313,47 @@ class VenuServiceProtocol(Protocol):
 
 
 # =============================================================================
+# BEAT SUBSCRIBER PROTOCOL (Yasoda's Rope - Protocol-Driven Wiring)
+# =============================================================================
+# Any service that wants heartbeat time implements this protocol.
+# VenuService discovers all subscribers at boot via ServiceRegistry.
+# NO MANUAL WIRING. The rope always has a 2-finger gap — you can't
+# bind Krishna with hardcoded lists. Let the protocol discover.
+
+
+@runtime_checkable
+class BeatSubscriberProtocol(Protocol):
+    """
+    Protocol for services that want to participate in the heartbeat.
+
+    Implement this to receive periodic callbacks from VenuService.
+    Register with ServiceRegistry under BeatSubscriberProtocol (as a list).
+
+    The VenuService will call on_beat_tick() every beat_interval ticks.
+    """
+
+    @property
+    def beat_name(self) -> str:
+        """Human-readable name for logging."""
+        ...
+
+    @property
+    def beat_interval(self) -> int:
+        """How often to fire, in ticks. Use VENU_NADI_TICKS (72) or VENU_FIELD_TICKS (144)."""
+        ...
+
+    def on_beat_tick(self, tick_count: int, position: int) -> None:
+        """
+        Called by VenuService when this subscriber's interval fires.
+
+        Args:
+            tick_count: Total ticks since VenuService started
+            position: Current position in the 16-beat cycle (0-15)
+        """
+        ...
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -338,4 +379,6 @@ __all__ = [
     "MantraClockProtocol",
     # Protocols (Phase 3 - Service)
     "VenuServiceProtocol",
+    # Protocols (Phase 4 - Beat Subscription)
+    "BeatSubscriberProtocol",
 ]

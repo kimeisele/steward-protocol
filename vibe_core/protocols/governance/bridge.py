@@ -44,6 +44,7 @@ __mahajana__ = "manu"
 __position__ = 7
 __genesis__ = "0x48420a30"  # GenesisByte: parampara % 37 == 0
 
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -60,6 +61,8 @@ from typing import (
 
 from vibe_core.protocols.mahajanas.router import Mahajana
 from vibe_core.protocols.mahajanas.yamaraja.security import SecurityLevel
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================

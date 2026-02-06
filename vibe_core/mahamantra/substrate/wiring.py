@@ -34,6 +34,7 @@ __genesis__ = "0xa117b53a"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import (
+    TYPE_CHECKING,
     Dict,
     Final,
     List,
@@ -41,6 +42,9 @@ from typing import (
     Protocol,
     runtime_checkable,
 )
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.dharma.prithu import PrithuService
 
 # === DERIVE FROM SSOT ===
 from vibe_core.mahamantra.substrate.position import (

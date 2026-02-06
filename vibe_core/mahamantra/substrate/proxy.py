@@ -780,45 +780,41 @@ def wrap_service(module_name: str, *, silent: bool = False) -> BalaramaProxy:
 # AUTO-WRAP REGISTRY
 # =============================================================================
 
-# Services that should be auto-wrapped on import
-# Add service names here to auto-govern them
-#
-# NITYANANDA STRATEGY: Jagai & Madhai are embraced, not killed.
-# These services are powerful but "wild" - they write directly to disk.
-# The proxy wraps them, replacing Path with _GovernedPath.
-# All writes now flow through bridge.offer() → Dharmic governance.
-#
-AUTO_WRAP_SERVICES = [
-    "vibe_core.services.manifestation_service",  # Jagai: Markdown manifestation
-    "vibe_core.protocols.prakriti_binding",  # Madhai: File blessing/signature
-]
+# LOTUS-DRIVEN WRAPPING (replaces hardcoded AUTO_WRAP_SERVICES list)
+# boot_orchestrator iterates kernel._positions (from project_lotus) and calls
+# wrap_service() for each discovered module. Zero manual lists.
 
 
 def auto_wrap_services(*, silent: bool = True) -> dict[str, BalaramaProxy]:
+    """
+    Wrap all lotus-discovered services with BalaramaProxy.
+
+    Uses PositionRegistry (from project_lotus) to discover modules organically.
+    No hardcoded service list — folder structure IS the configuration.
+    """
     import logging
+
+    from vibe_core.mahamantra.lotus_projection import get_positions
 
     logger = logging.getLogger("BALARAMA")
 
     proxies = {}
-    embraced_count = 0
-    identity_count = 0
+    positions = get_positions()
 
-    for service_name in AUTO_WRAP_SERVICES:
+    for pos, guardian, instance in positions.all_active():
+        mod_name = getattr(instance, "__module__", None)
+        if mod_name is None:
+            mod_name = getattr(instance, "__name__", None)
+        if not mod_name:
+            continue
         try:
-            proxy = wrap_service(service_name, silent=silent)
-            proxies[service_name] = proxy
-            embraced_count += KSETRAJNA
-
-            if proxy.has_identity:
-                identity_count += KSETRAJNA
-
+            proxy = wrap_service(mod_name, silent=silent)
+            proxies[mod_name] = proxy
         except Exception as e:
-            # Graceful degradation - continue with other services
-            logger.warning(f"⚠️ Failed to embrace {service_name}: {e}")
+            logger.debug(f"Skip wrapping {mod_name}: {e}")
 
-    # Summary log (always shown)
-    if embraced_count > 0:
-        logger.info(f"🎵 Sankirtan: {embraced_count} services embraced, {identity_count} with Mahajana identity")
+    if proxies:
+        logger.info(f"🎵 Sankirtan: {len(proxies)} services embraced (lotus-driven)")
 
     return proxies
 
