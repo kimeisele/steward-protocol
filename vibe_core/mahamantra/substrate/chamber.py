@@ -420,15 +420,10 @@ class SankirtanChamber(Generic[C]):
         """
         Verify the chamber maintains resonance.
         
-        Returns True if accumulated DIW creates proper resonance pattern.
+        Returns True if the orchestrator passes structural verification.
         """
-        # Run one full cycle
         test_orch = VenuOrchestrator()
-        xor_result = test_orch.cycle()
-        
-        # Must equal all 16 bits set
-        expected = (KSETRAJNA << WORDS) - KSETRAJNA
-        return xor_result == expected
+        return test_orch.verify_divinity()
     
     def is_silent(self, diw: int) -> bool:
         """Check if instruction is silence (SUNYA)."""
