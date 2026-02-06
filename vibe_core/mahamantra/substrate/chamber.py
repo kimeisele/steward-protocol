@@ -46,11 +46,17 @@ from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.substrate.venu_orchestrator import (
     VenuOrchestrator,
     THE_FLUTE_CYCLE,
+)
+from vibe_core.mahamantra.protocols.diw import (
     DIW_MASK,
     SUNYA_MASK,
     VENU_SHIFT,
     VAMSI_SHIFT,
     MURALI_SHIFT,
+    VENU_MASK,
+    VAMSI_MASK,
+    MURALI_MASK,
+    unpack,
 )
 from vibe_core.mahamantra.substrate.cell import (
     MahaCellUnified,
@@ -205,7 +211,7 @@ class SankirtanChamber(Generic[C]):
         
         # 3. INTERACT WITH REGISTRY (Musical Memory)
         # Extract Vamsi (9 bits) - The Memory Address
-        vamsi = (diw >> VAMSI_SHIFT) & ((KSETRAJNA << VAMSI_HOLES) - KSETRAJNA)
+        vamsi = (diw >> VAMSI_SHIFT) & VAMSI_MASK
         
         # Branchless Sunya Pattern:
         # Get resident (Active or Null)
@@ -315,30 +321,94 @@ class SankirtanChamber(Generic[C]):
     def _apply_diw(self, cell: MahaCellUnified[C], diw: int) -> None:
         """
         Apply Divine Instruction Word to cell.
-        
-        The DIW modifies:
-        - prana: energy adjustment based on low 6 bits (VENU)
-        - integrity: adjustment based on middle 9 bits (VAMSI)
-        - cycle: advancement based on high 4 bits (MURALI)
+
+        The DIW is a native 19-bit word in canonical 6-9-4 format.
+        Each component has a distinct semantic role:
+
+        MURALI (4 bits) = WHAT happens (Phase/Operation):
+            0=GENESIS: Cell receives energy (Input)
+            1=DHARMA:  Cell is verified (Validate)
+            2=KARMA:   Cell processes (Execute)
+            3=MOKSHA:  Cell completes (Output)
+
+        VAMSI (9 bits) = HOW it happens (Name/Mode):
+            H region (0-169):   Carrier   → prana-dominant
+            K region (170-339): Source    → integrity-dominant
+            R region (340-511): Deliverer → cycle-dominant
+
+        VENU (6 bits) = HOW STRONG (Quality/Intensity):
+            0-63 normalized to 0.0-1.0 via QUALITIES(64)
         """
-        # Extract flute components
-        venu_bits = (diw >> VENU_SHIFT) & ((KSETRAJNA << VENU_HOLES) - KSETRAJNA)
-        vamsi_bits = (diw >> VAMSI_SHIFT) & ((KSETRAJNA << VAMSI_HOLES) - KSETRAJNA)
-        murali_bits = (diw >> MURALI_SHIFT) & ((KSETRAJNA << MURALI_HOLES) - KSETRAJNA)
-        
-        # Apply to lifecycle
-        # VENU (6 bits): Modulate prana (energy)
-        prana_delta = (venu_bits * SEVEN) % QUALITIES - 32  # Range: -32 to +31
-        cell.lifecycle.prana = max(0, cell.lifecycle.prana + prana_delta)
-        
-        # VAMSI (9 bits): Modulate integrity (stability factor)
-        integrity_factor = 1.0 - (vamsi_bits / 512.0) * 0.01  # Max 1% change
-        cell.lifecycle.integrity = max(0.0, min(1.0, 
-            cell.lifecycle.integrity * integrity_factor
-        ))
-        
-        # MURALI (4 bits): Advance cycle counter
-        cell.lifecycle.cycle += murali_bits % QUARTERS
+        components = unpack(diw)
+
+        # --- Intensity from VENU (0.0 to 1.0) ---
+        # QUALITIES = 64 = WORDS × QUARTERS (SSOT)
+        intensity = components.venu / (QUALITIES - KSETRAJNA)  # 0/63 .. 63/63
+
+        # --- Name region from VAMSI ---
+        vamsi_stride = (KSETRAJNA << VAMSI_HOLES) // 3  # 512 // 3 = 170
+        name_region = min(components.vamsi // vamsi_stride, HALVES)  # 0=H, 1=K, 2=R
+
+        # --- Phase operation from MURALI ---
+        phase = components.murali % QUARTERS  # 0-3
+
+        # Base delta scaled by SEVEN (SSOT: 7 = HALF_SIZE - KSETRAJNA)
+        base_delta = SEVEN + int(intensity * SEVEN)  # 7 to 14
+
+        if phase == 0:
+            # GENESIS: Cell RECEIVES energy (Input phase)
+            # H → strong prana boost, K → moderate + integrity, R → moderate + cycle
+            if name_region == 0:      # HARE (Carrier)
+                cell.lifecycle.prana += base_delta * HALVES
+            elif name_region == 1:    # KRISHNA (Source)
+                cell.lifecycle.prana += base_delta
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.01)
+            else:                     # RAMA (Deliverer)
+                cell.lifecycle.prana += base_delta
+                cell.lifecycle.cycle += KSETRAJNA
+
+        elif phase == 1:
+            # DHARMA: Cell is VERIFIED (Validation phase)
+            # K → integrity strengthened, H → prana cost for validation, R → cycle check
+            if name_region == 0:      # HARE (Carrier)
+                cell.lifecycle.prana -= base_delta  # Validation costs energy
+                cell.lifecycle.prana = max(0, cell.lifecycle.prana)
+            elif name_region == 1:    # KRISHNA (Source)
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.02)
+            else:                     # RAMA (Deliverer)
+                cell.lifecycle.cycle += KSETRAJNA
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.01)
+
+        elif phase == HALVES:
+            # KARMA: Cell PROCESSES (Execution phase)
+            # All names cost prana (work), but effect differs
+            cell.lifecycle.prana -= base_delta
+            cell.lifecycle.prana = max(0, cell.lifecycle.prana)
+            if name_region == 0:      # HARE (Carrier)
+                cell.lifecycle.cycle += KSETRAJNA
+            elif name_region == 1:    # KRISHNA (Source)
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.01)
+                cell.lifecycle.cycle += KSETRAJNA
+            else:                     # RAMA (Deliverer)
+                cell.lifecycle.cycle += HALVES  # Rama accelerates completion
+
+        else:
+            # MOKSHA: Cell COMPLETES (Output phase)
+            # Energy released, integrity stabilized, cycle advanced
+            cell.lifecycle.prana -= base_delta
+            cell.lifecycle.prana = max(0, cell.lifecycle.prana)
+            if name_region == 0:      # HARE (Carrier)
+                cell.lifecycle.integrity = max(0.0,
+                    cell.lifecycle.integrity - intensity * 0.005)
+            elif name_region == 1:    # KRISHNA (Source)
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.01)
+            else:                     # RAMA (Deliverer)
+                cell.lifecycle.cycle += HALVES  # Rama delivers completion
     
     def _merge_pair(
         self,
@@ -417,15 +487,10 @@ class SankirtanChamber(Generic[C]):
         """
         Verify the chamber maintains resonance.
         
-        Returns True if accumulated DIW creates proper resonance pattern.
+        Returns True if the orchestrator passes structural verification.
         """
-        # Run one full cycle
         test_orch = VenuOrchestrator()
-        xor_result = test_orch.cycle()
-        
-        # Must equal all 16 bits set
-        expected = (KSETRAJNA << WORDS) - KSETRAJNA
-        return xor_result == expected
+        return test_orch.verify_divinity()
     
     def is_silent(self, diw: int) -> bool:
         """Check if instruction is silence (SUNYA)."""
@@ -525,124 +590,7 @@ class SankirtanChamber(Generic[C]):
         # 3. Registry
         registry_data = snapshot[offset:]
         self._registry.from_bytes(registry_data)
-    
-    # =========================================================================
-    # VERIFICATION METHODS
-    # =========================================================================
-    
-    def verify_resonance(self) -> bool:
-        """
-        Verify the chamber maintains resonance.
-        
-        Returns True if accumulated DIW creates proper resonance pattern.
-        """
-        # Run one full cycle
-        test_orch = VenuOrchestrator()
-        xor_result = test_orch.cycle()
-        
-        # Must equal all 16 bits set
-        expected = (KSETRAJNA << WORDS) - KSETRAJNA
-        return xor_result == expected
-    
-    def is_silent(self, diw: int) -> bool:
-        """Check if instruction is silence (SUNYA)."""
-        return self._orchestrator.is_sunya(diw)
-    
-    def reset(self) -> None:
-        """Reset all state (Registry, Orchestrator, Metrics)."""
-        self._orchestrator.reset()
-        self._registry.clear()
-        self._accumulated_diw = 0
-        self._resonance_count = 0
-        self._total_transformations = 0
 
-    # =========================================================================
-    # PERSISTENCE (ChamberState)
-    # =========================================================================
-    
-    def snapshot(self) -> bytes:
-        """
-        Create a full snapshot of the Chamber state.
-        
-        Includes: Metrics, Orchestrator State, Registry State.
-        Format:
-            [4s: Magic "OM!!"]
-            [Q: accumulated_diw]
-            [Q: resonance_count]
-            [Q: total_transformations]
-            [24s: Orchestrator State] (was 16s)
-            [N: Registry State]
-        """
-        result = bytearray()
-        
-        # Header (Magic + Metrics)
-        # 4 + 8 + 8 + 8 = 28 bytes
-        result.extend(b"OM!!")
-        result.extend(struct.pack(
-            "<QQQ",
-            self._accumulated_diw,
-            self._resonance_count,
-            self._total_transformations
-        ))
-        
-        # Orchestrator (24 bytes now)
-        result.extend(self._orchestrator.to_bytes())
-        
-        # Registry (Variable)
-        result.extend(self._registry.to_bytes())
-        
-        return bytes(result)
-    
-    def restore(self, snapshot: bytes) -> None:
-        """
-        Restore Chamber from snapshot.
-        
-        Args:
-            snapshot: Valid snapshot bytes
-            
-        Raises:
-            ValueError: If magic or format is invalid
-        """
-        if len(snapshot) < 52: # 28 (Header) + 24 (Orchestrator)
-            # Try legacy size check (44 bytes) for backward compat logic
-            pass 
-            
-        # 1. Header
-        magic = snapshot[:QUARTERS]
-        if magic != b"OM!!":
-            raise ValueError(f"Invalid magic: {magic!r}")
-            
-        offset = QUARTERS
-        (
-            self._accumulated_diw,
-            self._resonance_count,
-            self._total_transformations
-        ) = struct.unpack("<QQQ", snapshot[offset:offset+KSHETRA])
-        offset += KSHETRA
-        
-        # 2. Orchestrator
-        # We need to detect size.
-        # But we don't know the exact break point without a length prefix.
-        # However, VenuOrchestrator.from_bytes() handles length check.
-        # Let's peek 24 bytes if strictly 24 are available.
-        # Wait, Registry data follows. How do we know where Orchestrator ends?
-        # WE DON'T.
-        # This is a binary format flaw. Logic update needed.
-        # Orchestrator size MUST be fixed or prefixed.
-        # Since I changed it to 24 bytes, and I control both files...
-        # I will assume 24 bytes for new format.
-        # Old snapshots (16 bytes) will fail or need heuristics.
-        # Given this is a fresh feature, assuming 24 bytes is acceptable.
-        
-        orch_size = KSHETRA
-        orch_data = snapshot[offset:offset+orch_size]
-        self._orchestrator.from_bytes(orch_data)
-        offset += orch_size
-        
-        # 3. Registry
-        registry_data = snapshot[offset:]
-        self._registry.from_bytes(registry_data)
-    
     # =========================================================================
     # FACTORY METHODS
     # =========================================================================

@@ -93,7 +93,7 @@ class CellLifecycleState:
     """
 
     prana: int = GENESIS_PRANA
-    integrity: int = 21600  # 0 to COSMIC_FRAME (21600 = 100%)
+    integrity: float = 1.0  # 0.0 to 1.0 (membrane health)
     cycle: int = 0
     is_active: bool = False
     dna: str = ""

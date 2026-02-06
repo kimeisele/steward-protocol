@@ -73,13 +73,23 @@ Position 15→0: THE RETURN
 
 ## KRISHNA'S FLUTES ROLE
 
-| Flute | Bits | Range | Function |
-|-------|------|-------|----------|
-| **VENU** | 6 | 64 states | Prana/Energy modulation |
-| **VAMSI** | 9 | 512 states | Memory Address (Registry) |
-| **MURALI** | 4 | 16 states | Cycle advancement |
+| Flute | Bits | Range | Semantic (Gita) | Engineering |
+|-------|------|-------|-----------------|-------------|
+| **VENU** | 6 | 64 states | Sharanagati (Quality/Mood) | Prana/Energy modulation |
+| **VAMSI** | 9 | 512 states | Nava Bhakti (Process/Action) | Memory Address (Registry) |
+| **MURALI** | 4 | 16 states | Quarters (Phase) | Cycle advancement |
 
-**Total: 19 bits = Divine Instruction Word (DIW)**
+**Total: 19 bits = Divine Instruction Word (DIW) = GITA_CHAPTERS(18) + KSETRAJNA(1)**
+
+**SSOT:** `protocols/diw.py` — canonical bit layout, masks, pack/unpack.
+
+### DIW FORMAT FIX (2026-02-06)
+**BUG:** `_compute_flute_cycle()` produced `[Name:2][Position:16]` but `_apply_diw()` expected `[MURALI:4][VAMSI:9][VENU:6]`. Chamber was interpreting XOR deltas as structured data = semantic noise.
+
+**FIX:** LUT now produces native 6-9-4 DIW words:
+- VENU = `(pos × SEVEN) % 64` — position-derived, all 16 values unique
+- VAMSI = `(encoding × 170 + pos) % 512` — name-derived, H/K/R in distinct regions
+- MURALI = `pos // 4` — quarter-derived (0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3)
 
 The flutes are the **SCHEDULER**, not audio:
 - Position 0-3 (GENESIS): H-K-H-K = Alternating (IO Pattern)
