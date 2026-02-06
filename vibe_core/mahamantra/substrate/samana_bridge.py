@@ -45,7 +45,7 @@ DERIVED FROM SEED.PY:
 - All timing from PRANA_DURATION_MS / TICK_INTERVAL_MS
 - Buffer sizes from NADI_RESONANCE (72)
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, SHARANAGATI)
+from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "parashurama"  # Position 8 - THE SWITCH

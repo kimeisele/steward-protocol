@@ -9,8 +9,10 @@ IMPLEMENTATION DETAILS:
 - Encoding: 00=HARE, 01=KRISHNA, 10=RAMA, 11=VOID.
 - Performance: O(1) Bitwise operations, O(1) Memory.
 """
-from vibe_core.mahamantra.protocols._seed import (TRINITY)
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA,
+    QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

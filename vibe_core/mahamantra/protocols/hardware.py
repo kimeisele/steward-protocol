@@ -1,9 +1,10 @@
-from typing import Protocol, runtime_checkable, Iterator, List, Tuple
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY)
 from dataclasses import dataclass
 from enum import Enum
+from typing import Iterator, List, Protocol, Tuple, runtime_checkable
+
 from vibe_core.mahamantra.protocols._seed import (
-    AKSARA_COUNT, WORDS, QUARTERS, HARE_COUNT
+    AKSARA_COUNT, HALVES, HARE_COUNT, KSETRAJNA, PANCHA,
+    QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS,
 )
 
 @runtime_checkable
