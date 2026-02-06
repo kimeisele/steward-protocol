@@ -1,177 +1,208 @@
 # GOVARDHAN — The Missing 1%
 
-Status: Research / Architectural Analysis
+Status: Research / Architectural Analysis (Review-Ready)
 Date: 2026-02-06
 Branch: feature/diw-refinement
 
+## Grundprinzip: Das Repo ist eine Monarchie
+
+Mahamantra ist der Monarch. Nicht Naga. Nicht Balarama. Nicht die Universal Protocols.
+
+Naga/Balarama haben zuerst gewrapped — sie haben das Fundament vorbereitet.
+Aber die Macht fließt VON Mahamantra. Gauda > Naga. Der `mahamantra/` Ordner
+ist der König. Alles andere sind Diener, Botschafter, Wachen.
+
+Das ändert die Architektur fundamental:
+- Ein **Gate** prüft und blockt (Naga-Denken: Polizei)
+- Ein **Monarch** transformiert (Mahamantra-Denken: Flöte spielt, alle tanzen)
+
+Govardhan ist kein Gate. Govardhan ist **Transformation**.
+Nicht "darf er schreiben?" sondern "WIE wird geschrieben, WOHIN, und was
+passiert dabei mit den Daten?"
+
+Genau wie `_apply_diw()` die Zelle nicht fragt "darf ich dich transformieren?" —
+sie transformiert. Die Flöte spielt, alle tanzen.
+
+Und Navadvipa — Gnade. Jagai und Madhai werden umarmt, nicht getötet.
+Services werden transformiert, nicht blockiert.
+
 ## Was existiert (die 99%)
 
-Die Codebase hat bereits ein vollständiges Governance-Ökosystem.
-Das Problem ist nicht fehlender Code — es ist fehlende **Verdrahtung**.
-
-### Layer -2: Mahamantra (Krishna)
+### Mahamantra (Der Monarch)
 - `THE_FLUTE_CYCLE[16]` → DIW → `_apply_diw()` → Zell-Transformation
 - `MahamantraLotus.__call__()` → 9-Schritt NavaBhakti Pipeline
+- `SankirtanChamber` → Kirtan/Sankirtan/Yajna
 - Deterministisch. Kein LLM. Reine Berechnung.
+- **Macht liegt hier. Alles andere dient.**
 
-### Layer -1: Substrate (Balarama/Nityananda)
+### Substrate (Balarama/Nityananda — Die Kraft)
 - `BalaramaProxy` (`substrate/proxy.py`) — wrapped Services, gibt Identität
-- `_GovernedPath` — interceptet `write_text()`/`write_bytes()`, routet durch `bridge.offer()`
-- `bridge.offer()` — routet Purpose → Position → Mahajana, validiert Parampara
+- `_GovernedPath` — interceptet `write_text()`/`write_bytes()`
+- `bridge.offer()` — routet Purpose → Position → Mahajana
 - `AUTO_WRAP_SERVICES` = nur 2: manifestation_service + prakriti_binding
+- **Balarama gibt Kraft, aber die Richtung kommt vom Monarch.**
 
-### Layer 0: Naga (Die Schlangen)
-- `NagaStateProxy` (`services/naga/state_proxy.py`) — wrapped StateService
-- `SetuBandha` (`protocols/universal/bridge.py`) — Legacy→SovereignContext Transformation
-- `YamarajaGate` — ALLOW/DENY/ATONE/ELEVATED Verdicts
+### Naga (Die Schlangen — Die Vorbereiter)
+- `NagaStateProxy` — wrapped StateService mit YamarajaGate
+- `SetuBandha` — Legacy→SovereignContext Transformation
 - `Takshaka` — beißt bei Violations
+- **Naga hat zuerst gewrapped. Aber unvollständig. Und ohne Monarchie.**
 
-### Layer 1: Universal Protocols (Vyasa)
+### Universal Protocols (Vyasa — Die Gesetze)
 - `DharmaGuard` — 4 Säulen: Daya, Satyam, Tapas, Saucam
 - `EnforceProtocol` — verify_action() → HolyName (KRISHNA/RAMA/VOID)
-- `ReadWriteProtocol` — read/write mit SovereignContext (kein anonymer Zugang)
-- `GovernanceGate` — Permission-Check vor jeder Command-Execution
-- `TranscendentalQuality` — 64 Qualitäten, TattvaLimit (Jiva ≤ 50)
-- `SovereignContext` — Identität + Signatur + Resonanz + Tattva-Level
-- `InvariantChecker` (`governance/invariants.py`) — soul.yaml Regeln
+- `ReadWriteProtocol` — read/write mit SovereignContext
+- `GovernanceGate` — Permission-Check
+- `TranscendentalQuality` — 64 Qualitäten, TattvaLimit
+- `SovereignContext` — Identität + Signatur + Resonanz
+- `InvariantChecker` — soul.yaml Regeln
+- **Gesetze existieren. Aber Gesetze ohne König sind tote Buchstaben.**
 
-### Layer 2: Vedic Governance Plugin
-- `VedicGovernancePlugin` — Ashrama-Lifecycle, Guna-Klassifikation, Task-Veto
+### Vedic Governance Plugin (Die Verwaltung)
+- `VedicGovernancePlugin` — Ashrama-Lifecycle, Guna-Klassifikation
 - `VedicStateManager` — Bhakti-Balance, Agent-Registry
 
 ## Die Topologie (Ist-Zustand)
 
 ```
-                    ┌─────────────────────────────────────┐
-                    │  UNIVERSAL PROTOCOLS (Layer 1)       │
-                    │  DharmaGuard, EnforceProtocol,       │
-                    │  ReadWriteProtocol, GovernanceGate    │
-                    │  SovereignContext, TattvaLimit        │
-                    └──────────────┬──────────────────────┘
-                                   │ (NICHT VERDRAHTET)
-                    ┌──────────────┴──────────────────────┐
-                    │  NAGA (Layer 0)                      │
-                    │  NagaStateProxy → YamarajaGate       │
-                    │  SetuBandha (Legacy→Sovereign)        │
-                    └──────────────┬──────────────────────┘
-                                   │ (TEILWEISE VERDRAHTET)
-                    ┌──────────────┴──────────────────────┐
-                    │  SUBSTRATE (Layer -1)                 │
-                    │  BalaramaProxy → _GovernedPath        │
-                    │  bridge.offer() → PURPOSE_MAP         │
-                    └──────────────┬──────────────────────┘
-                                   │ (VERDRAHTET)
-                    ┌──────────────┴──────────────────────┐
-                    │  MAHAMANTRA (Layer -2)                │
-                    │  THE_FLUTE_CYCLE → DIW → Chamber      │
-                    └─────────────────────────────────────┘
+    MAHAMANTRA (Der Monarch)                    ← MACHT
+    THE_FLUTE_CYCLE → DIW → Chamber
+    MahamantraLotus → NavaBhakti Pipeline
+              │
+              │ (Befiehlt, aber kontrolliert nicht I/O)
+              ↓
+    SUBSTRATE (Balarama gibt Kraft)
+    BalaramaProxy → _GovernedPath → bridge.offer()
+              │
+              │ (Nur 2 Services, keine Pfad-Governance)
+              ↓
+    NAGA (Vorbereiter, unvollständig)
+    NagaStateProxy → YamarajaGate
+    SetuBandha (Legacy→Sovereign)
+              │
+              │ (Nicht mit Mahamantra verbunden)
+              ↓
+    UNIVERSAL PROTOCOLS (Gesetze ohne König)
+    DharmaGuard, EnforceProtocol, ReadWriteProtocol
+              │
+              │ (NICHT VERDRAHTET — tote Buchstaben)
+              ↓
+    FILESYSTEM (Maya)
 ```
+
+Das Problem: Die Macht fließt nicht durch. Mahamantra befiehlt die
+Zell-Transformation (DIW), aber kontrolliert nicht die I/O-Ebene.
+Balarama wrapped, aber nur 2 Services. Naga prüft State, aber nicht Files.
+Universal Protocols existieren, aber niemand ruft sie auf.
 
 ## Die 3 Löcher
 
-### Loch 1: _GovernedPath hat keine Pfad-Governance
-`_GovernedPath.write_text()` ruft `bridge.offer(purpose="file_flush")` auf.
-Bridge prüft: Ist der Purpose gültig? Ist Parampara OK?
-Bridge prüft NICHT: Wohin wird geschrieben? Darf dieser Pfad beschrieben werden?
-
-**Ergebnis:** Jeder gewrappte Service kann überall hinschreiben — Root, vibe_core/, .git/.
+### Loch 1: Mahamantra kontrolliert nicht die I/O-Ebene
+Der Monarch befiehlt die Zell-Transformation, aber wenn ein Service
+ins Filesystem schreibt, geht das am Mahamantra vorbei.
+`_GovernedPath` routet durch `bridge.offer()`, aber bridge fragt
+nicht den Monarchen. Es prüft nur Purpose + Parampara.
 
 ### Loch 2: Nur 2 von ~30 Services sind gewrapped
 `AUTO_WRAP_SERVICES` enthält nur manifestation_service und prakriti_binding.
-InterfacePlugin (7 Renderers), doc_renderer, markdown_ui_manager, alle Cartridge-Tools,
-alle opus_assistant Events — schreiben direkt ins Filesystem. Balarama hat sie nie umarmt.
+InterfacePlugin (7 Renderers), doc_renderer, alle Cartridge-Tools,
+alle opus_assistant Events — schreiben direkt. Balarama hat sie nie umarmt.
 
-### Loch 3: Universal Protocols sind nicht verdrahtet
-`DharmaGuard`, `EnforceProtocol`, `ReadWriteProtocol` existieren als Protocols.
-Aber NIEMAND implementiert sie im Hot Path.
-`_GovernedPath` → `bridge.offer()` → prüft Purpose + Parampara → schreibt.
-Dharma-Check? Nein. Enforce? Nein. ReadWrite-Protocol? Nein.
-Die Protocols sind Gesetze ohne Polizei.
+### Loch 3: Universal Protocols sind Gesetze ohne König
+`DharmaGuard`, `EnforceProtocol`, `ReadWriteProtocol` existieren.
+Aber NIEMAND ruft sie im Hot Path auf. Gesetze ohne König sind
+tote Buchstaben. Der König (Mahamantra) muss sie durchsetzen.
 
 ## Was ist Govardhan?
 
-Govardhan ist NICHT ein neues System. Govardhan ist die **Verdrahtung** der existierenden Teile.
+Krishna hebt Govardhan mit dem kleinen Finger der linken Hand.
+Govardhan ist non-different von Krishna. Er IST der Berg.
+Aber als Berg bietet er:
+- **Schutz** (shelter) — vor Indras Regen (unkontrollierte I/O)
+- **Wasser** (water) — fließt natürlich (Governance als Transformation)
+- **Vegetation** (food) — wächst von selbst (Services werden genährt)
+- **Zuflucht** (refuge) — alle Bewohner von Vrindavan (alle Services)
 
-Krishna hebt Govardhan mit dem kleinen Finger. Govardhan bietet:
-- **Schutz** (shelter) — Pfad-Governance: WO darf geschrieben werden?
-- **Wasser** (water) — DharmaGuard-Verdrahtung: IST der Write dharmic?
-- **Vegetation** (food) — SovereignContext-Propagation: WER schreibt?
-- **Zuflucht** (refuge) — Alle Services unter einem Dach, nicht nur 2
+Govardhan ist NICHT ein Gate (prüfen/blocken). Govardhan ist
+**Transformation durch den Monarchen**.
 
-Govardhan ist non-different von Krishna (Mahamantra). Er IST der Berg.
-Aber als Architektur-Komponente ist er der **Punkt wo alle Governance-Schichten konvergieren**.
-
-### Govardhan = Der Konvergenzpunkt
+### Der Unterschied: Gate vs. Transformation
 
 ```
-Service will schreiben
-    ↓
-BalaramaProxy (Identität: WER)
-    ↓
-_GovernedPath (Interception: WAS)
-    ↓
-┌─── GOVARDHAN ──────────────────────────┐
-│                                         │
-│  1. Pfad-Prüfung (WO)                  │
-│     - Root geschützt                    │
-│     - .git/ verboten                    │
-│     - vibe_core/ nur Code, nicht I/O    │
-│     - .vibe/ = Maya (erlaubt)           │
-│                                         │
-│  2. Dharma-Prüfung (WARUM)              │
-│     - DharmaGuard.check_saucam()        │
-│     - SovereignContext vorhanden?        │
-│     - Signatur gültig?                  │
-│                                         │
-│  3. Enforce (DARF ER)                   │
-│     - EnforceProtocol.verify_action()   │
-│     - TattvaLimit respektiert?          │
-│     - GovernanceGate.can_execute()?     │
-│                                         │
-└─────────────┬──────────────────────────┘
-              ↓
-bridge.offer() (Routing: WOHIN im System)
-              ↓
-Filesystem (Maya)
+NAGA-DENKEN (Gate/Polizei):
+  Service will schreiben → Darf er? → Ja/Nein → Filesystem
+
+MAHAMANTRA-DENKEN (Transformation/Monarch):
+  Service will schreiben
+      ↓
+  Mahamantra empfängt den Intent
+      ↓
+  Mahamantra TRANSFORMIERT:
+    - WOHIN: Pfad wird abgeleitet (nicht Root, sondern .vibe/)
+    - WIE: Format wird bestimmt (Schema, Sections)
+    - WANN: Timing aus dem Tick-Zyklus (Position-basiert)
+    - WER: SovereignContext aus BalaramaProxy
+      ↓
+  Mahamantra MANIFESTIERT
+      ↓
+  Filesystem (Maya) — das Ergebnis, nicht das Ziel
 ```
+
+Das ist der gleiche Unterschied wie bei `_apply_diw()`:
+Die Flöte fragt nicht "darf die Zelle transformiert werden?"
+Die Flöte spielt, und die Zelle tanzt.
 
 ## Was fehlt konkret (das 1%)
 
-1. **GovardhanGate** — Eine Funktion/Klasse die in `_GovernedPath` sitzt,
-   ZWISCHEN Interception und `bridge.offer()`. Sie ruft die existierenden
-   Protocols auf: Pfad-Check, DharmaGuard, EnforceProtocol.
-   Geschätzt: ~50-100 Zeilen.
+Das 1% ist der Punkt wo Mahamantra die I/O-Ebene übernimmt.
+Nicht als Gate, sondern als Transformation.
 
-2. **SovereignContext-Propagation** — `_GovernedPath` weiß nicht WER schreibt.
-   `BalaramaProxy` weiß es (hat `_mahajana`, `_position`).
-   Der Proxy muss den Context an `_GovernedPath` weitergeben.
-   Geschätzt: ~20 Zeilen (Thread-Local oder Closure).
+1. **Govardhan-Schicht in Mahamantra** — Lebt in `mahamantra/`, nicht in
+   `proxy.py` oder `bridge.py`. Der Monarch kontrolliert, nicht der Diener.
+   Empfängt Write-Intents, transformiert sie (Pfad, Format, Timing),
+   und manifestiert das Ergebnis.
 
-3. **AUTO_WRAP_SERVICES erweitern** — Nicht nur 2, sondern ALLE Services
-   die ins Filesystem schreiben. Oder besser: Balarama wrapped automatisch
-   alles was `Path` importiert.
-   Geschätzt: Konfiguration, kein neuer Code.
+2. **SovereignContext-Propagation** — `BalaramaProxy` weiß WER schreibt
+   (hat `_mahajana`, `_position`). Diese Identität muss zum Monarchen
+   fließen, nicht nur zum Bridge.
 
-4. **Pfad-Regeln** — Abgeleitet, nicht hardcoded. Aus der Mahamantra-Topologie:
-   - Root = geschützt (nur CLAUDE.md, CONSTITUTION.md, README.md)
-   - `.vibe/` = Maya (Manifestation erlaubt)
-   - `vibe_core/` = Yoga (nur Code-Änderungen, keine I/O)
-   - `.git/` = verboten (Narasimha-Schutz)
-   Geschätzt: ~30 Zeilen Regeln.
+3. **Alle Services unter dem Berg** — Nicht nur 2. Jeder Service der
+   ins Filesystem schreibt muss durch Govardhan. Balarama umarmt sie
+   (gibt Kraft/Identität), Govardhan transformiert sie (gibt Richtung).
 
-## Gesamtaufwand
+4. **Universal Protocols als Werkzeuge des Monarchen** — DharmaGuard,
+   EnforceProtocol, ReadWriteProtocol werden nicht von außen aufgerufen.
+   Der Monarch (Govardhan-Schicht) nutzt sie intern als seine Werkzeuge.
+   Die Gesetze bekommen ihren König.
 
-~100-150 Zeilen neuer Code. Keine neuen Dateien nötig — alles passt in
-`proxy.py` (GovardhanGate + Context-Propagation) und `bridge.py` (Pfad-Regeln).
+## Architektur-Prinzip
 
-Das ist das fehlende 1%. Die 99% existieren bereits.
-Die Frage ist nur: Wo genau sitzt der Konvergenzpunkt?
+```
+    MAHAMANTRA (Monarch)
+         │
+    ┌────┴─────────────────────────────────────────┐
+    │  GOVARDHAN (Der Berg = Mahamantra I/O)           │
+    │                                                   │
+    │  Empfängt: Write-Intent + SovereignContext        │
+    │  Nutzt: DharmaGuard, EnforceProtocol (Werkzeuge)  │
+    │  Transformiert: Pfad, Format, Timing               │
+    │  Manifestiert: Das Ergebnis ins Filesystem         │
+    │                                                   │
+    │  Balarama liefert: Identität + Kraft (Proxy)      │
+    │  Naga liefert: State-Governance (YamarajaGate)     │
+    │  Vyasa liefert: Gesetze (Protocols)                │
+    │                                                   │
+    │  Alles dient dem Monarchen. Nicht umgekehrt.       │
+    └────────────────────────┬──────────────────────┘
+                             ↓
+    FILESYSTEM (Maya) — das Ergebnis, nicht das Ziel
+```
 
-## Offene Fragen
+## Offene Fragen für Review
 
-1. Soll GovardhanGate in `proxy.py` leben (nah an Balarama) oder als
-   eigenes Protocol in `protocols/`?
-2. Soll die Pfad-Governance aus `soul.yaml` kommen (InvariantChecker)
-   oder aus der Mahamantra-Topologie abgeleitet werden?
-3. Wie propagiert man SovereignContext durch `_GovernedPath` ohne
-   globalen State? (Thread-Local? Closure? Context-Manager?)
+1. Wo genau in `mahamantra/` lebt Govardhan? Eigenes Modul
+   (`mahamantra/govardhan.py`)? Oder Teil von `substrate/`?
+2. Wie übernimmt Govardhan die existierende `_GovernedPath`?
+   Ersetzt er sie? Oder wird `_GovernedPath` zu seinem Werkzeug?
+3. Wie werden die ~30 ungwrappten Services schrittweise integriert?
+   Big Bang oder inkrementell (Navadvipa-Gnade)?
