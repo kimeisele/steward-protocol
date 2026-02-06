@@ -93,6 +93,31 @@ Jedes Kapitel der Gita mappt auf abgeleitete Konstanten: Kapitel 1 = KSETRAJNA,
 Kapitel 4 = QUARTERS, Kapitel 9 = NAVA, Kapitel 12 = MAHAJANA_COUNT,
 Kapitel 18 = GITA_CHAPTERS (der Fixed Point). Siehe `get_chapter_significance()`.
 
+## Sanskrit = RAMA-Koordinaten (4D Phonem-Dekomposition)
+
+Gita word-for-word: 4127 unique Wörter, 54423 Phoneme = 39KB gepackt = 83% von 65K Lotus.
+Jedes Wort = Sequenz von RAMA-Koordinaten (0-48). Jede Koordinate = 6 bits = VENU-Feld.
+
+`substrate/varnamala_codec.py`: IAST ↔ RAMA encode/decode.
+`substrate/sanskrit_lookup.py`: `verse_words()`, `word_by_iast()`, `hkr_signature()`.
+`data/rama_lexicon.json`: 4127 Wörter, 700 Verse, RAMA-kodiert (Production-Daten).
+
+Jedes Phonem hat eine 4D-Adresse = QUARTERS = catur-vyūha:
+
+```
+Dim 1 (Sthāna):   COORD_ELEMENT   — PANCHA (5) Artikulation → Element
+Dim 2 (Varga):    COORD_VARGA     — TRINITY (3) Lautklassen (svara/sparsha/shesha)
+Dim 3 (Prayatna): COORD_SUB       — Intra-Sektion Qualität (abgeleitet aus Grid-Struktur)
+Dim 4 (Harmonic): COORD_HARMONIC  — H-Orbit (×SEVEN mod 49 = Auflösungspfad)
+```
+
+Uniqueness: 80.7% → 94.7% → 99.97% → **100%** (49/49 Bijektion, 4127/4127 Wörter).
+IS_SHRUTI: R²-Residuen mod 49 = 22 SHRUTIS + 27 NAKSHATRAS = VARNAMALA.
+
+`substrate/pancha_walk.py`: 4 COORD maps, `derived_signature()`, `full_signature()`.
+`adapters/synth.py`: `phoneme_step()` nutzt VARGA→H/K/R, ELEMENT→ADSR, SUB→Position.
+101 Tests (68 walk + 16 codec + 17 lookup).
+
 ## Die 9 Schritte (NavaBhakti Pipeline)
 
 `MahamantraLotus.__call__()` in `substrate/lotus_core.py`. NAVA = 9 Schritte:
@@ -165,6 +190,8 @@ Bereits aufgeräumt (nicht nochmal anfassen):
 - DIW-Format repariert: `[Name:2][Position:16]` → native `[MURALI:4][VAMSI:9][VENU:6]`
 - `_apply_diw()` semantisch: Phase×Name×Intensität statt generische Modulation
 - `verify_divinity()` + `verify_resonance()` auf 6-9-4 Struktur aktualisiert
+- Sanskrit 4D Dekomposition: `pancha_walk.py` (4 COORD maps, 49/49 Bijektion, 101 Tests)
+- `vedabase.db` entfernt: Extraktion abgeschlossen, Production nutzt `rama_lexicon.json`
 
 ## Repo-Zustand
 
@@ -176,6 +203,7 @@ Nur diese Branches haben echten Wert:
 | `main` | Stabil | Letzter Senior: Guardian-Cleanup + F821-Fixes + Pancha-Tattva-Wiring |
 | `feature/diw-refinement` | Ungemergt | DIW-Format repariert, semantische `_apply_diw()`, integrity-Fix |
 | `feature/gita-architecture-refinement` | In diw-refinement | Vorgänger-Branch, DIW-Protokoll erstellt |
+| `claude/extract-sanskrit-vedabase-*` | Aktiv | Sanskrit-Extraktion + 4D Dekomposition + Synth-Integration |
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
