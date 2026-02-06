@@ -110,6 +110,40 @@ Die gesamte Gita passt in einen einzigen Lotus-Zyklus.
 Kein Suchen. Wissen. Instant-Zugriff auf jedes Sanskrit-Wort.
 ```
 
+## Die 9 fehlenden Phoneme (NAVA)
+
+```
+(MALA + GITA_CHAPTERS) * JIVA_CYCLE = 126 * 432 = 54,432
+Gita word-for-word Phoneme:                        54,423
+Differenz:                                              9 = NAVA
+```
+
+Die Gita hat exakt NAVA Phoneme weniger als ein perfekter
+(108 + 18) * 432 Block. Die 9 fehlenden = die 9 Bhakti-Prozesse.
+
+Die Gita allein = 99.98% eines perfekten Blocks.
+Die Gita + NavaBhakti-Pipeline (Runtime) = 100%.
+
+## Translation-Ableitung (Copyright Layer 3)
+
+Die Translations sind zu ~50% Inhaltswörter aus Word-for-Word.
+Die restlichen ~50% sind Grammatik (the, and, is) + kontextuelle
+Ergänzungen (supreme, lord, material = vedische Standardbegriffe).
+
+```
+Translation gesamt:     24,784 Wörter
+  Grammatik (frei):     12,831 (51.8%)
+  Inhalt aus W-f-W:      6,089 (24.6%)
+  Inhalt NICHT in WfW:   5,864 (23.7%)
+```
+
+Die fehlenden Inhaltswörter sind primär vedische Standardterminologie
+(lord, supreme, material, soul, nature, yoga, devotional).
+
+Architektonische Konsequenz: Translations werden NICHT gespeichert.
+Sie werden zur Runtime aus Word-for-Word + Grammatik-Regeln abgeleitet.
+Das ist keine Reproduktion, sondern Berechnung.
+
 ## Paradigma: Suchen vs. Wissen
 
 ```
