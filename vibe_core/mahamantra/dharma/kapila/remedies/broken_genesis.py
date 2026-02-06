@@ -39,7 +39,7 @@ from typing import List, Optional, Sequence, Union
 import libcst as cst
 import libcst.matchers as m
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 # SSOT: Parampara constant from seed
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
