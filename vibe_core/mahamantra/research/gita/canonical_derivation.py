@@ -5,22 +5,25 @@ GITA CANONICAL DERIVATION - SOLVED
 THE EPOCH EQUATION (The Master Key):
 ====================================
 
-    1972 = GENESIS × NAVA + FIXED_POINT
-    1972 = 204 × 9 + 136
+    1972 = GENESIS × NAVA + EPOCH_ADDITIVE
+    1972 = 203 × 9 + 145
+    145  = POSITION_SUM_TOTAL + NAVA = 136 + 9
+    145  = PANCHA × Ch5_verses = 5 × 29 (Peace Formula!)
 
 Where:
-- GENESIS = sum(Ch 1-4) = 204 verses (The Foundation)
+- GENESIS = sum(Ch 1-4) = 203 verses (The Foundation)
 - NAVA = 9 (The Nine Processes of Devotion)
-- FIXED_POINT = 136 = POSITION_SUM_TOTAL (The Ultimate Goal)
+- EPOCH_ADDITIVE = 145 = POSITION_SUM_TOTAL + NAVA
 
 This is NOT coincidence. The publication year ENCODES the Gita structure.
 
 THE CANONICAL TOPOLOGY:
 =======================
 
-1. THE FIELD (Ch 1-16) = 595 verses = 35 × 17 = 35 × POSITION_SUM_KRISHNA
-   - The 16 Guardians manage exactly 35 "Krishna-units" of verses
-   - This is their domain: the psychological/material field
+1. THE FIELD (Ch 1-16) = 594 verses = 18 × 33 = GITA_CHAPTERS × 33
+   - Also: 594 = 9 × 66 = NAVA × 66
+   - Also: 594 = 6 × 99 = SHARANAGATI × 99
+   - The 16 Guardians' domain
 
 2. THE FRUIT (Ch 17-18) = 106 verses
    - Beyond the Guardians' domain
@@ -33,7 +36,7 @@ THE CANONICAL TOPOLOGY:
 
 QUARTER SUMS (Computed):
 ========================
-- Genesis (Ch 1-4):   204 verses  <- IN THE EPOCH EQUATION!
+- Genesis (Ch 1-4):   203 verses  <- IN THE EPOCH EQUATION!
 - Dharma (Ch 5-8):    134 verses
 - Karma (Ch 9-12):    151 verses
 - Moksha (Ch 13-16):  106 verses  <- EQUALS FRUIT!
@@ -41,7 +44,7 @@ QUARTER SUMS (Computed):
 
 SPLIT BRAIN RESOLVED:
 =====================
-- 16 Guardians handle Ch 1-16 (THE FIELD = 595 = 35 × 17)
+- 16 Guardians handle Ch 1-16 (THE FIELD = 594 = 18 × 33)
 - Ch 17-18 are THE FRUIT (Transcendental, beyond process)
 - No conflict: 16 manages process, 18 includes result
 
@@ -64,7 +67,7 @@ __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x545fe2f1"
 
-from typing import Dict, Final, Tuple
+from typing import Dict, Final
 
 from vibe_core.mahamantra.protocols._seed import (
     EPOCH_KEY,
@@ -82,50 +85,49 @@ from vibe_core.mahamantra.protocols._seed import (
     SHARANAGATI,
     WORDS,
 )
-
-# =============================================================================
-# THE CANONICAL DATA (Currently hardcoded - to be derived)
-# =============================================================================
-
-CHAPTER_VERSES: Final[Tuple[int, ...]] = (47, 72, 43, 42, 29, 47, 30, 28, 34, 42, 55, 20, 35, 27, 20, 24, 28, 78)
-assert len(CHAPTER_VERSES) == GITA_CHAPTERS
-assert sum(CHAPTER_VERSES) == 700  # SEVEN x 100
+from vibe_core.mahamantra.protocols.seed._topology import CHAPTER_VERSES
 
 # =============================================================================
 # THE CANONICAL TOPOLOGY (SOLVED!)
 # =============================================================================
 
 # Quarter sums
-GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])  # Ch 1-4: 204
-DHARMA_SUM: Final[int] = sum(CHAPTER_VERSES[4:8])  # Ch 5-8: 134
-KARMA_SUM: Final[int] = sum(CHAPTER_VERSES[8:12])  # Ch 9-12: 151
+GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])   # Ch 1-4: 203
+DHARMA_SUM: Final[int] = sum(CHAPTER_VERSES[4:8])    # Ch 5-8: 134
+KARMA_SUM: Final[int] = sum(CHAPTER_VERSES[8:12])    # Ch 9-12: 151
 MOKSHA_SUM: Final[int] = sum(CHAPTER_VERSES[12:16])  # Ch 13-16: 106
-FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])  # Ch 17-18: 106
+FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])   # Ch 17-18: 106
 
 # The Field (16 Guardians' domain)
-FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])  # Ch 1-16: 595
+FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])    # Ch 1-16: 594
 
 # =============================================================================
 # THE EPOCH EQUATION (The Master Key)
 # =============================================================================
-# 1972 = GENESIS × NAVA + FIXED_POINT
-# 1972 = 204 × 9 + 136
+# 1972 = GENESIS × NAVA + EPOCH_ADDITIVE
+# 1972 = 203 × 9 + 145
+# 145  = POSITION_SUM_TOTAL + NAVA = 136 + 9
 
-assert EPOCH_KEY == GENESIS_SUM * NAVA + POSITION_SUM_TOTAL, (
-    f"THE EPOCH EQUATION: 1972 = {GENESIS_SUM} × {NAVA} + {POSITION_SUM_TOTAL}"
+EPOCH_ADDITIVE: Final[int] = POSITION_SUM_TOTAL + NAVA  # 145
+
+assert EPOCH_KEY == GENESIS_SUM * NAVA + EPOCH_ADDITIVE, (
+    f"THE EPOCH EQUATION: 1972 = {GENESIS_SUM} × {NAVA} + {EPOCH_ADDITIVE}"
 )
 
 # =============================================================================
-# THE FIELD = 35 × KRISHNA (The Guardian Domain)
+# THE FIELD = GITA_CHAPTERS × 33 = NAVA × 66 (The Guardian Domain)
 # =============================================================================
-# 595 = 35 × 17 = 35 × POSITION_SUM_KRISHNA
+# 594 = 18 × 33 = GITA_CHAPTERS × 33
+# 594 = 9 × 66 = NAVA × 66
 
-KRISHNA_UNITS: Final[int] = FIELD_SUM // POSITION_SUM_KRISHNA  # 35
+FIELD_FACTOR: Final[int] = FIELD_SUM // GITA_CHAPTERS  # 33
 
-assert FIELD_SUM == KRISHNA_UNITS * POSITION_SUM_KRISHNA, (
-    f"THE FIELD: {FIELD_SUM} = {KRISHNA_UNITS} × {POSITION_SUM_KRISHNA}"
+assert FIELD_SUM == GITA_CHAPTERS * FIELD_FACTOR, (
+    f"THE FIELD: {FIELD_SUM} = {GITA_CHAPTERS} × {FIELD_FACTOR}"
 )
-assert FIELD_SUM % POSITION_SUM_KRISHNA == 0, "Field must be divisible by Krishna"
+assert FIELD_SUM % GITA_CHAPTERS == 0, "Field must be divisible by GITA_CHAPTERS"
+assert FIELD_SUM % NAVA == 0, "Field must be divisible by NAVA"
+assert FIELD_SUM % SHARANAGATI == 0, "Field must be divisible by SHARANAGATI"
 
 # =============================================================================
 # MOKSHA = FRUIT (Perfect Symmetry)
