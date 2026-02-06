@@ -575,6 +575,29 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                 except Exception as e:
                     logger.warning(f"⚠️ Could not start VenuService: {e}")
 
+                # GOVARDHAN: Balarama embraces services (Proxy wrapping)
+                try:
+                    from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
+
+                    self._balarama_proxies = auto_wrap_services(silent=True)
+                    if self._balarama_proxies:
+                        logger.info(
+                            f"      → Balarama embraced {len(self._balarama_proxies)} services"
+                        )
+
+                        # Mount proxied services onto orbital reactors
+                        try:
+                            from vibe_core.mahamantra.lila.adoption import adopt_services
+
+                            reactors = adopt_services(self._balarama_proxies)
+                            logger.info(f"      → {len(reactors)} services mounted on orbital reactors")
+                        except Exception as e:
+                            logger.debug(f"Orbital adoption skipped: {e}")
+                    else:
+                        logger.debug("No services to embrace (AUTO_WRAP_SERVICES empty or all failed)")
+                except Exception as e:
+                    logger.warning(f"⚠️ Balarama wrapping skipped: {e}")
+
                 # GOVARDHAN: Register Mahamantra governance hook (King installs itself)
                 try:
                     from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
