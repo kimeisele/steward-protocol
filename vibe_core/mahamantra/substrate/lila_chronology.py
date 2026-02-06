@@ -30,62 +30,49 @@ Each year yields unique derivations, research domains, resonances.
 the incarnation of Godhead who constantly sings the names of Krishna."
 — Srimad Bhagavatam 11.5.32
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, LILA, MAHA_QUANTUM, MALA, PANCHA, PARAMPARA, POSITION_SUM_HARE, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUARTERS, TRINITY)
+from dataclasses import dataclass, field
+from enum import Enum, auto
+from typing import Dict, Final, List, Optional, Tuple
+
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS,
+    HALVES,
+    HARE_COUNT,
+    KARTALS_PAIR,
+    KSETRAJNA,
+    LILA,
+    MAHA_QUANTUM,
+    MAHAJANA_COUNT,
+    MALA,
+    MRIDANGA_HEADS,
+    MURALI_HOLES,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
+    POSITION_SUM_HARE,
+    POSITION_SUM_RAMA,
+    POSITION_SUM_TOTAL,
+    QUARTERS,
+    SEVEN,
+    TEN,
+    TRINITY,
+    VAMSI_HOLES,
+    VENU_HOLES,
+    VINA_FUNDAMENTAL,
+    VINA_STRINGS,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - History/Chronology
 __position__ = 0
 __genesis__ = "0x4eb13b87"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Dict, Final, List, Optional, Tuple
-
-# =============================================================================
-# SEED IMPORTS (Single Source of Truth)
-# =============================================================================
-from vibe_core.mahamantra.protocols._seed import (
-    # Axioms
-    HALVES,
-    HARE_COUNT,
-    KARTALS_PAIR,
-    # Derived constants
-    KSETRAJNA,
-    MAHAJANA_COUNT,
-    # Binary encoding (rhythm foundation!)
-    MRIDANGA_HEADS,
-    NAVA,
-    # Structural
-    PARAMPARA,
-    QUARTERS,
-    SEVEN,
-    TEN,
-    TRINITY,
-    WORDS,  # SSOT: 16 words in Mahamantra
-    # Flute holes (DERIVED from axioms - NOT hardcoded!)
-    VENU_HOLES,
-    VAMSI_HOLES,
-    MURALI_HOLES,
-    # Vina constants (DERIVED from axioms!)
-    VINA_FUNDAMENTAL,
-    VINA_STRINGS,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM as MODULO_QUANTUM,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    MALA_COMPLETE as MODULO_MALA,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    # Position sums (weights)
-    POSITION_SUM_HARE as WEIGHT_HARE,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    POSITION_SUM_KRISHNA as WEIGHT_KRISHNA,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    POSITION_SUM_RAMA as WEIGHT_RAMA,
-)
+from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM as MODULO_QUANTUM
+from vibe_core.mahamantra.protocols._seed import MALA_COMPLETE as MODULO_MALA
+from vibe_core.mahamantra.protocols._seed import POSITION_SUM_HARE as WEIGHT_HARE
+from vibe_core.mahamantra.protocols._seed import POSITION_SUM_KRISHNA as WEIGHT_KRISHNA
+from vibe_core.mahamantra.protocols._seed import POSITION_SUM_RAMA as WEIGHT_RAMA
 # THE ALGORITHM - imported from SSOT, not reimplemented!
 from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
