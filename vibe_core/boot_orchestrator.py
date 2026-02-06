@@ -575,26 +575,32 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                 except Exception as e:
                     logger.warning(f"⚠️ Could not start VenuService: {e}")
 
-                # GOVARDHAN: Balarama embraces services (Proxy wrapping)
+                # GOVARDHAN: Balarama embraces lotus-discovered services (organic wrapping)
                 try:
-                    from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
+                    from vibe_core.mahamantra.substrate.proxy import wrap_service
 
-                    self._balarama_proxies = auto_wrap_services(silent=True)
+                    self._balarama_proxies = {}
+                    # Use lotus-discovered positions from kernel (set by project_lotus in factory.py)
+                    kernel_positions = getattr(self.kernel, "_positions", None)
+                    if kernel_positions is not None:
+                        for pos, guardian, instance in kernel_positions.all_active():
+                            mod_name = getattr(instance, "__module__", None)
+                            if mod_name is None:
+                                # Module object (not a service instance) — get its __name__
+                                mod_name = getattr(instance, "__name__", None)
+                            if mod_name:
+                                try:
+                                    proxy = wrap_service(mod_name, silent=True)
+                                    self._balarama_proxies[mod_name] = proxy
+                                except Exception:
+                                    pass  # Not all modules are wrappable
+
                     if self._balarama_proxies:
                         logger.info(
-                            f"      → Balarama embraced {len(self._balarama_proxies)} services"
+                            f"      → Balarama embraced {len(self._balarama_proxies)} services (lotus-driven)"
                         )
-
-                        # Mount proxied services onto orbital reactors
-                        try:
-                            from vibe_core.mahamantra.lila.adoption import adopt_services
-
-                            reactors = adopt_services(self._balarama_proxies)
-                            logger.info(f"      → {len(reactors)} services mounted on orbital reactors")
-                        except Exception as e:
-                            logger.debug(f"Orbital adoption skipped: {e}")
                     else:
-                        logger.debug("No services to embrace (AUTO_WRAP_SERVICES empty or all failed)")
+                        logger.debug("No lotus-discovered services to embrace")
                 except Exception as e:
                     logger.warning(f"⚠️ Balarama wrapping skipped: {e}")
 
