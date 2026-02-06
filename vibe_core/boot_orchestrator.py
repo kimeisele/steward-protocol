@@ -538,6 +538,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
                 # GOVARDHAN: Start VenuService (Krishna's Flute - Central Orchestrator)
                 try:
+                    from vibe_core.di import ServiceRegistry
                     from vibe_core.mahamantra.protocols._venu import VenuServiceProtocol
                     from vibe_core.services.venu_service import VenuService
 
