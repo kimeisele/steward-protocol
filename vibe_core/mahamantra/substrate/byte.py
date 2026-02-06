@@ -9,9 +9,20 @@ IMPLEMENTATION DETAILS:
 - Encoding: 00=HARE, 01=KRISHNA, 10=RAMA, 11=VOID.
 - Performance: O(1) Bitwise operations, O(1) Memory.
 """
+
 from vibe_core.mahamantra.protocols._seed import (
-    HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA,
-    QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS,
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
 )
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -19,15 +30,15 @@ __mahajana__ = "prithu"
 __position__ = 0
 __genesis__ = "0x0752f8c3"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass, field
-from enum import IntEnum, IntFlag
-from typing import TYPE_CHECKING, NewType, List, Final, Union, Optional, Tuple
-from datetime import datetime
 import math
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import IntEnum, IntFlag
+from typing import TYPE_CHECKING, Final, List, NewType, Optional, Tuple, Union
 
 if TYPE_CHECKING:
-    from vibe_core.mahamantra.substrate.mantra.pada import Pada
     from vibe_core.mahamantra.substrate.mantra.aksara import Aksara
+    from vibe_core.mahamantra.substrate.mantra.pada import Pada
     from vibe_core.mahamantra.substrate.mantra.routing import FractalLevel, FractalRoute
 
 # =============================================================================
@@ -37,13 +48,19 @@ if TYPE_CHECKING:
 # "bījaṁ māṁ sarva-bhūtānāṁ" - I am the seed of all existences.
 
 from vibe_core.mahamantra.substrate.seed import (
-    # Mathematical constants - THE SSOT (seed.py is THE source)
-    WORDS as MAHAMANTRA_DIMENSION,  # 16
-    TRINITY as LILA_CYCLES,  # 3
     LILA as LILA_LIMIT,  # 48
+)
+from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,  # 37
     # HolyName - THE SSOT (seed.py is THE source, includes VOID)
     HolyName,
+)
+from vibe_core.mahamantra.substrate.seed import (
+    TRINITY as LILA_CYCLES,  # 3
+)
+from vibe_core.mahamantra.substrate.seed import (
+    # Mathematical constants - THE SSOT (seed.py is THE source)
+    WORDS as MAHAMANTRA_DIMENSION,  # 16
 )
 
 # Strict Typing
@@ -170,7 +187,7 @@ class MantraByte:
     def coherence(self) -> int:
         """
         Calculates Fractal Coherence against the Standard Pattern.
-        
+
         Returns: int in range [0, COSMIC_FRAME] where 21600 = 100%
 
         CHAITANYA SINGULARITY INTEGRATION:

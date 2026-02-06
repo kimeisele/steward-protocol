@@ -31,7 +31,6 @@ import libcst as cst
 
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
-
 # The fractal routing __getattr__ function as CST nodes
 FRACTAL_GETATTR_CODE = '''
 def __getattr__(name: str):
@@ -104,9 +103,7 @@ class FractalRoutingRemedy(CSTRemedy):
                     self._has_all = True
         return False
 
-    def leave_Module(
-        self, original_node: cst.Module, updated_node: cst.Module
-    ) -> cst.Module:
+    def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:
         """
         Transform module by adding __getattr__ if missing.
 
@@ -191,9 +188,7 @@ class FractalRoutingDetector(CSTRemedy):
             self._has_getattr = True
         return False
 
-    def leave_Module(
-        self, original_node: cst.Module, updated_node: cst.Module
-    ) -> cst.Module:
+    def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:
         """Mark violation if __getattr__ is missing."""
         if not self._has_getattr:
             self.violation_found = True

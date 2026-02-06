@@ -33,13 +33,27 @@ is ACINTYA - like iron becoming fire, indistinguishable.
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (
-    GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, KSHETRA, MAHAJANA_COUNT,
-    NAVA, PANCHA, POSITION_SUM_KRISHNA, QUALITIES, QUARTERS, SEVEN,
-    SHARANAGATI, TEN, TRINITY, WORDS,
-)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS,
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    KSHETRA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    POSITION_SUM_KRISHNA,
+    QUALITIES,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -284,26 +298,56 @@ PRAKRITI_24: Final[List[PrakritiElement]] = [
     PrakritiElement(PANCHA, "shabda", PrakritiCategory.TANMATRA, QUARTERS, WORDS, (0, QUARTERS), (0, QUARTERS)),
     PrakritiElement(SHARANAGATI, "sparsha", PrakritiCategory.TANMATRA, PANCHA, 0b00100000, (0, PANCHA), (0, PANCHA)),
     PrakritiElement(SEVEN, "rupa", PrakritiCategory.TANMATRA, SHARANAGATI, QUALITIES, (0, SHARANAGATI), (KSETRAJNA, 0)),
-    PrakritiElement(HARE_COUNT, "rasa", PrakritiCategory.TANMATRA, SEVEN, 0b10000000, (0, SEVEN), (KSETRAJNA, KSETRAJNA)),
-    PrakritiElement(NAVA, "gandha", PrakritiCategory.TANMATRA, HARE_COUNT, KSETRAJNA, (KSETRAJNA, 0), (KSETRAJNA, HALVES)),
+    PrakritiElement(
+        HARE_COUNT, "rasa", PrakritiCategory.TANMATRA, SEVEN, 0b10000000, (0, SEVEN), (KSETRAJNA, KSETRAJNA)
+    ),
+    PrakritiElement(
+        NAVA, "gandha", PrakritiCategory.TANMATRA, HARE_COUNT, KSETRAJNA, (KSETRAJNA, 0), (KSETRAJNA, HALVES)
+    ),
     # JNANENDRIYA (10-14) - Knowledge senses
-    PrakritiElement(TEN, "shrotra", PrakritiCategory.JNANENDRIYA, NAVA, HALVES, (KSETRAJNA, KSETRAJNA), (KSETRAJNA, TRINITY)),
-    PrakritiElement(11, "tvak", PrakritiCategory.JNANENDRIYA, TEN, QUARTERS, (KSETRAJNA, HALVES), (KSETRAJNA, QUARTERS)),
-    PrakritiElement(MAHAJANA_COUNT, "chakshus", PrakritiCategory.JNANENDRIYA, 11, HARE_COUNT, (KSETRAJNA, TRINITY), (KSETRAJNA, PANCHA)),
-    PrakritiElement(13, "rasana", PrakritiCategory.JNANENDRIYA, MAHAJANA_COUNT, WORDS, (KSETRAJNA, QUARTERS), (HALVES, 0)),
-    PrakritiElement(14, "ghrana", PrakritiCategory.JNANENDRIYA, 13, 0b00100000, (KSETRAJNA, PANCHA), (HALVES, KSETRAJNA)),
+    PrakritiElement(
+        TEN, "shrotra", PrakritiCategory.JNANENDRIYA, NAVA, HALVES, (KSETRAJNA, KSETRAJNA), (KSETRAJNA, TRINITY)
+    ),
+    PrakritiElement(
+        11, "tvak", PrakritiCategory.JNANENDRIYA, TEN, QUARTERS, (KSETRAJNA, HALVES), (KSETRAJNA, QUARTERS)
+    ),
+    PrakritiElement(
+        MAHAJANA_COUNT,
+        "chakshus",
+        PrakritiCategory.JNANENDRIYA,
+        11,
+        HARE_COUNT,
+        (KSETRAJNA, TRINITY),
+        (KSETRAJNA, PANCHA),
+    ),
+    PrakritiElement(
+        13, "rasana", PrakritiCategory.JNANENDRIYA, MAHAJANA_COUNT, WORDS, (KSETRAJNA, QUARTERS), (HALVES, 0)
+    ),
+    PrakritiElement(
+        14, "ghrana", PrakritiCategory.JNANENDRIYA, 13, 0b00100000, (KSETRAJNA, PANCHA), (HALVES, KSETRAJNA)
+    ),
     # KARMENDRIYA (15-19) - Action organs
     PrakritiElement(15, "vak", PrakritiCategory.KARMENDRIYA, 14, QUALITIES, (KSETRAJNA, SHARANAGATI), (HALVES, HALVES)),
     PrakritiElement(WORDS, "pani", PrakritiCategory.KARMENDRIYA, 15, 0b10000000, (KSETRAJNA, SEVEN), (HALVES, TRINITY)),
-    PrakritiElement(POSITION_SUM_KRISHNA, "pada", PrakritiCategory.KARMENDRIYA, 0, KSETRAJNA, (HALVES, 0), (HALVES, QUARTERS)),
-    PrakritiElement(GITA_CHAPTERS, "payu", PrakritiCategory.KARMENDRIYA, KSETRAJNA, HALVES, (HALVES, KSETRAJNA), (HALVES, PANCHA)),
+    PrakritiElement(
+        POSITION_SUM_KRISHNA, "pada", PrakritiCategory.KARMENDRIYA, 0, KSETRAJNA, (HALVES, 0), (HALVES, QUARTERS)
+    ),
+    PrakritiElement(
+        GITA_CHAPTERS, "payu", PrakritiCategory.KARMENDRIYA, KSETRAJNA, HALVES, (HALVES, KSETRAJNA), (HALVES, PANCHA)
+    ),
     PrakritiElement(19, "upastha", PrakritiCategory.KARMENDRIYA, HALVES, QUARTERS, (HALVES, HALVES), (TRINITY, 0)),
     # MAHABHUTA (20-24) - Gross elements
-    PrakritiElement(20, "akasha", PrakritiCategory.MAHABHUTA, TRINITY, HARE_COUNT, (HALVES, TRINITY), (TRINITY, KSETRAJNA)),
+    PrakritiElement(
+        20, "akasha", PrakritiCategory.MAHABHUTA, TRINITY, HARE_COUNT, (HALVES, TRINITY), (TRINITY, KSETRAJNA)
+    ),
     PrakritiElement(21, "vayu", PrakritiCategory.MAHABHUTA, QUARTERS, WORDS, (HALVES, QUARTERS), (TRINITY, HALVES)),
     PrakritiElement(22, "tejas", PrakritiCategory.MAHABHUTA, PANCHA, 0b00100000, (HALVES, PANCHA), (TRINITY, TRINITY)),
-    PrakritiElement(23, "apas", PrakritiCategory.MAHABHUTA, SHARANAGATI, QUALITIES, (HALVES, SHARANAGATI), (TRINITY, QUARTERS)),
-    PrakritiElement(KSHETRA, "prithvi", PrakritiCategory.MAHABHUTA, SEVEN, 0b10000000, (HALVES, SEVEN), (TRINITY, PANCHA)),
+    PrakritiElement(
+        23, "apas", PrakritiCategory.MAHABHUTA, SHARANAGATI, QUALITIES, (HALVES, SHARANAGATI), (TRINITY, QUARTERS)
+    ),
+    PrakritiElement(
+        KSHETRA, "prithvi", PrakritiCategory.MAHABHUTA, SEVEN, 0b10000000, (HALVES, SEVEN), (TRINITY, PANCHA)
+    ),
 ]
 
 

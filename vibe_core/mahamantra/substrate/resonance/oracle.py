@@ -4,10 +4,12 @@ MAHA ORACLE - The Intent-to-Resonance Interface
 
 "Those who see with eyes of knowledge..." - BG 13.35
 
-Receives a question (intent) and returns a reading by viewing it 
+Receives a question (intent) and returns a reading by viewing it
 through multiple sacred lenses (mod-spaces).
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Dict, Final, List, Optional, Tuple
 
@@ -17,7 +19,6 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
-    MAHAMANTRA_WORD_PATTERN as PATTERN,
     MALA_COMPLETE,
     PARAMPARA,
     PARAMPARA_CHANNEL_NAMES,
@@ -28,6 +29,9 @@ from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
     WORDS,
 )
+from vibe_core.mahamantra.protocols._seed import (
+    MAHAMANTRA_WORD_PATTERN as PATTERN,
+)
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
@@ -36,7 +40,6 @@ __genesis__ = "0x672435f8"
 
 from vibe_core.mahamantra.substrate.algorithm.maha import triangular
 from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
-
 
 # =============================================================================
 # BRANCHLESS ENCODING COEFFICIENTS - NO IF/ELSE!
@@ -56,6 +59,7 @@ _ENCODE_MULT_FACTOR: Final[Tuple[int, ...]] = (SEVEN, KSETRAJNA, KSETRAJNA)  # H
 @dataclass(frozen=True)
 class OracleLens:
     """A single lens (mod-space) for viewing an intent."""
+
     name: str
     mod_space: int
     meaning: str
@@ -68,6 +72,7 @@ class OracleLens:
 @dataclass(frozen=True)
 class OracleReading:
     """Complete oracle reading."""
+
     intent: str
     seed: int
     lenses: Tuple[OracleLens, ...]
@@ -99,12 +104,12 @@ ORACLE_LENSES: Final[Tuple[Tuple[str, int, str], ...]] = (
 
 class MahaOracle:
     """The Maha Oracle - Intent-to-Resonance Interface."""
-    
+
     def __init__(self) -> None:
         self._resonators: Dict[int, MahaResonator] = {}
         for _name, mod_space, _meaning in ORACLE_LENSES:
             self._resonators[mod_space] = MahaResonator(mod_space)
-            
+
     def encode_intent(self, intent: str) -> int:
         """Encode intent string to integer using Mahamantra weights. BRANCHLESS."""
         if not intent:
@@ -148,13 +153,13 @@ class MahaOracle:
     def _interpret(self, reading_data: dict) -> str:
         lines = []
         if reading_data.get("parampara_validated"):
-             lines.append("✓ PARAMPARA VALIDATED")
+            lines.append("✓ PARAMPARA VALIDATED")
         else:
-             lines.append("⚠ PARAMPARA WARNING")
-        
+            lines.append("⚠ PARAMPARA WARNING")
+
         if reading_data.get("holographic_factors"):
-             lines.append(f"HOLOGRAPHIC: {reading_data['holographic_factors']}")
-             
+            lines.append(f"HOLOGRAPHIC: {reading_data['holographic_factors']}")
+
         return "\n".join(lines)
 
     def consult_seed(self, seed: int) -> OracleReading:
@@ -164,7 +169,7 @@ class MahaOracle:
             lens = self._analyze_lens(seed, name, mod_space, meaning)
             lenses.append(lens)
             lenses_by_name[name] = lens
-            
+
         parampara_lens = lenses_by_name.get("PARAMPARA")
         parampara_validated = False
         parampara_channel = -KSETRAJNA
@@ -175,18 +180,15 @@ class MahaOracle:
         # Simplified logic for now
         gita_resonance = lenses_by_name["TETRAD"].attractor if "TETRAD" in lenses_by_name else 0
         primary = lenses_by_name["QUANTUM"].attractor if "QUANTUM" in lenses_by_name else 0
-        
+
         # Find holographic
         counts: Dict[int, int] = {}
         for l in lenses:
             counts[l.attractor] = counts.get(l.attractor, 0) + KSETRAJNA
         holographic = tuple(sorted([v for v, c in counts.items() if c > KSETRAJNA]))
-        
-        reading = {
-            "parampara_validated": parampara_validated,
-            "holographic_factors": holographic
-        }
-        
+
+        reading = {"parampara_validated": parampara_validated, "holographic_factors": holographic}
+
         return OracleReading(
             intent=f"seed:{seed}",
             seed=seed,
@@ -197,7 +199,7 @@ class MahaOracle:
             interpretation=self._interpret(reading),
             parampara_validated=parampara_validated,
             parampara_channel=parampara_channel,
-            prabhupada_year_resonance=None # Simplified
+            prabhupada_year_resonance=None,  # Simplified
         )
 
     def consult(self, intent: str) -> OracleReading:
@@ -214,5 +216,5 @@ class MahaOracle:
             interpretation=reading.interpretation,
             parampara_validated=reading.parampara_validated,
             parampara_channel=reading.parampara_channel,
-            prabhupada_year_resonance=reading.prabhupada_year_resonance
+            prabhupada_year_resonance=reading.prabhupada_year_resonance,
         )

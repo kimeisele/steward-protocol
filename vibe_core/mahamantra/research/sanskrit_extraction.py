@@ -124,6 +124,35 @@ def extract_lexicon(db_path: Path = DB_PATH) -> dict:
     return {"vocabulary": vocabulary, "verses": verses, "stats": stats}
 
 
+def _clean_meaning(meaning: str) -> str:
+    """Clean parsing artifacts from a word-for-word meaning.
+
+    Vedabase synonyms have several recurring extraction problems:
+    - Em-dash leakage: "also,madhusūdana—O killer of Madhu" → "also"
+    - Missing spaces: "theVedas" → "the Vedas"
+    - Trailing periods: "also." → "also"
+    """
+    import re
+
+    # 1. Em-dash leakage: truncate at comma+word—meaning pattern
+    if "—" in meaning:
+        meaning = meaning.split("—")[0]
+    # Also catch comma followed by Sanskrit word (lowercase diacritics)
+    if "," in meaning:
+        parts = meaning.split(",")
+        meaning = parts[0]
+
+    # 2. Missing spaces before capital letters mid-word: "theVedas" → "the Vedas"
+    meaning = re.sub(r"([a-z])([A-Z])", r"\1 \2", meaning)
+    # Missing spaces: "ofsomajuice" → harder, but "of" prefix is common
+    meaning = re.sub(r"\bof([a-z])", r"of \1", meaning)
+
+    # 3. Trailing periods (inconsistent in source)
+    meaning = meaning.rstrip(".")
+
+    return meaning.strip()
+
+
 def extract_rama_lexicon(db_path: Path = DB_PATH) -> dict:
     """
     Extract Sanskrit word-for-word as RAMA coordinate sequences.
@@ -131,6 +160,12 @@ def extract_rama_lexicon(db_path: Path = DB_PATH) -> dict:
     This is the architecture-native encoding. No SHA256 hashes.
     Each word = sequence of RAMA Grid coordinates (0-48).
     Each coordinate = 6 bits = VENU field.
+
+    DEDUPLICATION: Vedabase groups consecutive verses (e.g. "Texts 16-18")
+    with a single combined word-for-word section. The DB stores the same
+    synonyms string for every verse in the group. We detect this and assign
+    the words only to the FIRST verse in each group, marking the others
+    with a "grouped_with" reference.
     """
     from vibe_core.mahamantra.substrate.varnamala_codec import (
         BITS_PER_COORD,
@@ -142,22 +177,53 @@ def extract_rama_lexicon(db_path: Path = DB_PATH) -> dict:
     conn = sqlite3.connect(str(db_path))
     c = conn.cursor()
 
-    # Build RAMA-encoded vocabulary
-    vocabulary: dict[str, dict] = {}  # packed_hex → {word, coords, meanings}
+    # First pass: detect duplicate synonym groups
+    c.execute("SELECT chapter, verse, synonyms FROM verses ORDER BY chapter, CAST(verse AS INTEGER)")
+    rows = c.fetchall()
+
+    # Group consecutive verses with identical synonyms
+    seen_synonyms: dict[str, str] = {}  # synonyms_hash → first verse ref
+    verse_group_map: dict[str, str] = {}  # ref → grouped_with ref (if secondary)
+
+    for chapter, verse_num, synonyms_text in rows:
+        ref = f"BG.{chapter}.{verse_num}"
+        if not synonyms_text or not synonyms_text.strip():
+            continue
+        syn_hash = hashlib.md5(synonyms_text.encode()).hexdigest()
+        if syn_hash in seen_synonyms:
+            verse_group_map[ref] = seen_synonyms[syn_hash]
+        else:
+            seen_synonyms[syn_hash] = ref
+
+    # Second pass: build vocabulary and verse data
+    vocabulary: dict[str, dict] = {}
     verses: list[dict] = []
     total_phonemes = 0
     total_words = 0
+    grouped_count = 0
 
     c.execute("SELECT chapter, verse, sanskrit, synonyms FROM verses ORDER BY chapter, CAST(verse AS INTEGER)")
 
     for chapter, verse_num, sanskrit_text, synonyms_text in c.fetchall():
+        ref = f"BG.{chapter}.{verse_num}"
         word_entries = []
 
-        if synonyms_text:
+        if ref in verse_group_map:
+            # Secondary verse in a group — words belong to the first verse
+            grouped_count += 1
+            verse_data = {
+                "ref": ref,
+                "chapter": chapter,
+                "verse": verse_num,
+                "words": [],
+                "grouped_with": verse_group_map[ref],
+            }
+        elif synonyms_text and synonyms_text.strip():
             entries = encode_verse_words(synonyms_text)
             for entry in entries:
                 packed_hex = f"{entry['packed']:x}"
                 coords = list(entry["rama_coords"])
+                meaning = _clean_meaning(entry["meaning"])
 
                 if packed_hex not in vocabulary:
                     vocabulary[packed_hex] = {
@@ -167,8 +233,8 @@ def extract_rama_lexicon(db_path: Path = DB_PATH) -> dict:
                         "meanings": [],
                     }
 
-                if entry["meaning"] not in vocabulary[packed_hex]["meanings"]:
-                    vocabulary[packed_hex]["meanings"].append(entry["meaning"])
+                if meaning and meaning not in vocabulary[packed_hex]["meanings"]:
+                    vocabulary[packed_hex]["meanings"].append(meaning)
 
                 word_entries.append(
                     {
@@ -179,12 +245,20 @@ def extract_rama_lexicon(db_path: Path = DB_PATH) -> dict:
                 total_phonemes += entry["length"]
                 total_words += 1
 
-        verse_data = {
-            "ref": f"BG.{chapter}.{verse_num}",
-            "chapter": chapter,
-            "verse": verse_num,
-            "words": word_entries,
-        }
+            verse_data = {
+                "ref": ref,
+                "chapter": chapter,
+                "verse": verse_num,
+                "words": word_entries,
+            }
+        else:
+            # Empty verse
+            verse_data = {
+                "ref": ref,
+                "chapter": chapter,
+                "verse": verse_num,
+                "words": [],
+            }
 
         if sanskrit_text:
             sanskrit_coords = encode(sanskrit_text)
@@ -205,6 +279,8 @@ def extract_rama_lexicon(db_path: Path = DB_PATH) -> dict:
         "total_bytes": total_bits // 8,
         "avg_phonemes_per_word": round(total_phonemes / max(total_words, 1), 1),
         "avg_phonemes_per_verse": round(total_phonemes / max(len(verses), 1), 1),
+        "grouped_verses": grouped_count,
+        "empty_verses": sum(1 for v in verses if not v["words"] and "grouped_with" not in v),
         "fits_in_65k": total_phonemes <= 65536,
         "utilization_65k_pct": round(total_phonemes / 65536 * 100, 1),
     }

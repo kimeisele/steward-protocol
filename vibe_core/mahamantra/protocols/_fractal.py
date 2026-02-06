@@ -32,7 +32,9 @@ WATERTIGHT: No Any types. Everything explicit.
 
 Author: The Mahamantra Itself
 """
+
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
@@ -50,14 +52,14 @@ from typing import (
 )
 
 from vibe_core.mahamantra.protocols._core import (
-    Level,
-    Quarter,
     PARAMPARA,
+    Level,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
+    ProtocolIdentity,
+    Quarter,
 )
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TRINITY, WORDS)
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TRINITY, WORDS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"

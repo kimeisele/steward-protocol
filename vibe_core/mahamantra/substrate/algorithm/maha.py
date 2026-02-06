@@ -14,7 +14,9 @@ COMPONENTS:
 1. MahaAlgorithm16: The pure 16-step sequencer.
 2. MahaModularSynth: The runtime-adjustable transformer engine.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Final, Iterator, List, Optional, Tuple, Union
@@ -784,7 +786,12 @@ _MAHA_OSCILLATE_LUT: Final[Tuple[int, ...]] = (
 _ATTRACTOR_FIXED: Final[int] = POSITION_SUM_TOTAL  # T(16) = 136
 _HARE_KRISHNA_COMBINED: Final[int] = POSITION_SUM_HARE + POSITION_SUM_KRISHNA  # 70 + 17 = 87
 _SHRUTIS: Final[int] = KSHETRA - HALVES  # 24 - 2 = 22
-_ATTRACTOR_CYCLE: Final[Tuple[int, ...]] = (GITA_CHAPTERS, POSITION_SUM_RAMA, _HARE_KRISHNA_COMBINED, _SHRUTIS)  # 18 → 49 → 87 → 22
+_ATTRACTOR_CYCLE: Final[Tuple[int, ...]] = (
+    GITA_CHAPTERS,
+    POSITION_SUM_RAMA,
+    _HARE_KRISHNA_COMBINED,
+    _SHRUTIS,
+)  # 18 → 49 → 87 → 22
 
 # Algebraic constants for Half 1
 _HALF1_MULT: Final[int] = 72  # 49*49 % 137 = 2401 % 137

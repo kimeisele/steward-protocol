@@ -37,9 +37,10 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import QUARTERS
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import QUARTERS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -62,37 +63,40 @@ from typing import (
     runtime_checkable,
 )
 
+from vibe_core.mahamantra.protocols._bridge import (
+    BridgeRegistry,
+)
 from vibe_core.mahamantra.protocols._core import (
     Level,
-    Quarter,
     MahamantraProtocol,
     MahamantraProtocolBase,
-    ProtocolIdentity,
     ProtocolCapability,
-)
-
-from vibe_core.mahamantra.substrate.seed import (
-    PARAMPARA,
-    KSHETRA as KSETRA,  # 24 - The field (prakriti elements)
-    KSETRAJNA,  # 1 - The knower (Krishna)
-    MAHAJANAS,  # 12 - The authorities
-    WORDS as POSITIONS,  # 16 - Total positions
+    ProtocolIdentity,
+    Quarter,
 )
 from vibe_core.mahamantra.protocols._declaration import (
-    MahajanaCard,
     DeclarationRegistry,
+    MahajanaCard,
+)
+from vibe_core.mahamantra.protocols._graph import (
+    ProtocolGraph,
+    VedicGraph,
 )
 from vibe_core.mahamantra.protocols._lotus import (
     LOTUS_PETALS,
-    LotusTree,
     LotusHologram,
+    LotusTree,
 )
-from vibe_core.mahamantra.protocols._graph import (
-    VedicGraph,
-    ProtocolGraph,
+from vibe_core.mahamantra.substrate.seed import (
+    KSETRAJNA,  # 1 - The knower (Krishna)
+    MAHAJANAS,  # 12 - The authorities
+    PARAMPARA,
 )
-from vibe_core.mahamantra.protocols._bridge import (
-    BridgeRegistry,
+from vibe_core.mahamantra.substrate.seed import (
+    KSHETRA as KSETRA,  # 24 - The field (prakriti elements)
+)
+from vibe_core.mahamantra.substrate.seed import (
+    WORDS as POSITIONS,  # 16 - Total positions
 )
 
 _logger = logging.getLogger("STEWARD")

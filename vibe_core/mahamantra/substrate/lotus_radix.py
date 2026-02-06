@@ -62,11 +62,12 @@ PRODUCTION USE:
     - Vibrational seed → handler mapping
     - Future: IPv6/UUID indexing
 """
+
 from __future__ import annotations
+
 from typing import Any, Final, Generic, Iterator, TypeVar
 
-from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, KSETRAJNA, QUALITIES, QUARTERS, WORDS)
-
+from vibe_core.mahamantra.protocols._seed import HARE_COUNT, KSETRAJNA, QUALITIES, QUARTERS, WORDS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
