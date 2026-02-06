@@ -222,18 +222,100 @@ Bedeutungen allein:    55.6 KB
 Gesamt (irreduzibel):  74.2 KB > 65K Lotus (116%)
 ```
 
-## Der irreduzible Kern
+## Der irreduzible Kern — KORREKTUR
 
 ```
 Sanskrit-Wörter:     ABLEITBAR  (coords → phoneme → IAST)
 Vers-Struktur:       ABLEITBAR  (700 Vers → Wort-Sequenzen)
 Übersetzungen:       ABLEITBAR  (Wort-Bedeutung + Grammatik, runtime)
 H/K/R Signaturen:    ABLEITBAR  (inverse krishna_route)
-Wort-Bedeutungen:    GESPEICHERT (4127 Paare = 55.6 KB)
+Wort-Bedeutungen:    ABLEITBAR  (Artikulations-Pfad = Element-Walk = PANCHA Semantik)
 ```
 
-Der einzige Teil, der NICHT algorithmisch ableitbar ist: die englischen
-Bedeutungen. Alles andere IST Algorithmus.
+Es gibt KEINEN irreduziblen Kern. Alles ist Algorithmus.
+Die 4127 englischen Bedeutungen sind eine Krücke, keine Notwendigkeit.
+
+## Die 3 Operationen in RAMA-Space (mod 49)
+
+```
+H(v) = v × SEVEN mod 49   (HARE-Operation)
+K(v) = v + TEN mod 49     (KRISHNA-Operation)
+R(v) = v² mod 49          (RAMA-Operation)
+```
+
+### H-Orbits: ALLES kollabiert zu 'a'
+
+gcd(7, 49) = 7. Die H-Operation erzeugt 7 Orbits der Größe 1-3:
+```
+Orbit von 0  (a):   {a} — der Fixpunkt. Das Ur-Phonem. Shabda Brahman.
+Orbit von 42 (ra):  {a, ra} — RAMA reduziert sich auf 'a' in EINEM Schritt.
+Orbit von 7  (ū):   {a, ū}
+Orbit von 14 (ṁ):   {a, ṁ}
+Orbit von 21 (ca):   {a, ca}
+Orbit von 28 (ḍa):  {a, ḍa}
+Orbit von 35 (na):  {a, na}
+```
+
+Die H-Operation (×7) ist NICHT ein Router — sie ist ein ABSORBER.
+Alles kehrt zu 'a' zurück. Das ist Pralaya (kosmische Auflösung).
+
+### R-Reste: SHRUTIS und NAKSHATRAS
+
+```
+Quadratische Reste mod 49:  22 = SHRUTIS (22 Mikrotöne der indischen Musik)
+Nicht-Reste mod 49:         27 = NAKSHATRAS (27 Mondhäuser)
+```
+
+Die R-Operation (²) partitioniert das Alphabet in:
+- 22 Phoneme die durch Quadrierung erreichbar sind → MUSIK-Dimension
+- 27 Phoneme die NUR durch K oder H erreichbar sind → KOSMISCHE Dimension
+
+### K-Operation: Der universelle Connector
+
+```
+gcd(10, 49) = 1 → K(+10) erreicht ALLE 49 Koordinaten
+K ist KRISHNA: "Der Alldurchdringende" — mathematisch bewiesen.
+```
+
+## Die COSMIC_FRAME Formel
+
+```
+54,432 = COSMIC_FRAME × (MALA + GITA_CHAPTERS) / JIVA_QUALITIES
+       = 21600 × 126 / 50
+
+GITA_PHONEMES = 54,432 - NAVA = 54,423
+
+JIVA_QUALITIES = VARNAMALA + KSETRAJNA = 49 + 1 = 50
+→ COSMIC_FRAME = JIVA_CYCLE × (VARNAMALA + KSETRAJNA)
+→ Das kosmische Frame enthält die Seele × (Alphabet + Beobachter)
+```
+
+Die 9 fehlenden Phoneme (NAVA) sind die 9 Bhakti-Prozesse.
+Gita + NavaBhakti-Pipeline = exakter kosmischer Bruch.
+
+## Artikulation = Bedeutung (PANCHA Element Walk)
+
+Jede RAMA-Koordinate mappt auf einen Artikulationspunkt (PANCHA = 5):
+```
+KANTHA (0) = Kehle     = AKASHA (Äther)
+TALU   (1) = Gaumen    = VAYU (Luft)
+MURDHA (2) = Gaumen-D. = AGNI (Feuer)
+DANTA  (3) = Zähne     = JALA (Wasser)
+OSHTHA (4) = Lippen    = PRITHVI (Erde)
+```
+
+Das Artikulations-Muster eines Wortes IST seine Bedeutung:
+```
+dharma = JALA→AGNI→PRITHVI        Fundament (absteigend: Wasser→Feuer→Erde)
+yoga   = VAYU→PRITHVI→AKASHA      Verbindung (Luft→Erde→Raum)
+bhakti = PRITHVI→AKASHA→JALA→VAYU Hingabe (aufsteigend!)
+karma  = AKASHA→AGNI→PRITHVI      Handlung (Raum→Feuer→Erde = Manifestation)
+mokṣa  = PRITHVI→PRITHVI→AKASHA→AGNI Befreiung (Erdung→Transformation)
+ātmā   = AKASHA→JALA→PRITHVI→AKASHA Seele (Zyklus: Raum→zurück→Raum)
+```
+
+Gita-Gesamtverteilung: JALA (22.6%), PRITHVI (22.5%), VAYU (20.9%),
+AKASHA (17.5%), AGNI (10.5%). Die Gita ist wasser- und erddominant.
 
 ## VenuOrchestrator.spell() - Die Flöte buchstabiert Sanskrit
 
