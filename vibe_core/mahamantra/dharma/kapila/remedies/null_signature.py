@@ -32,7 +32,7 @@ from typing import List, Optional, Sequence, Union
 import libcst as cst
 from libcst import matchers as m
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 
 # Type hint → default value mapping (DERIVED, not hardcoded)

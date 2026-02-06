@@ -10,18 +10,13 @@ Responsibility:
 """
 
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Final, Optional
-from vibe_core.mahamantra.protocols._seed import (
-    WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT
-)
+from typing import Dict, Final, List, Optional, Tuple
 
-from typing import List, Tuple, Dict, Final, Optional
-from vibe_core.mahamantra.protocols.dharma_protocol import AksharaData, SwarupaData, LinguistProtocol
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT,
-    LILA, SHARANAGATI, TEN, HALVES, KSHETRA, KSETRAJNA,
-    LILA, SHARANAGATI, TEN, HALVES, KSHETRA, KSETRAJNA
+    HALVES, HARE_COUNT, KRISHNA_COUNT, KSHETRA, KSETRAJNA,
+    LILA, RAMA_COUNT, SHARANAGATI, TEN, TRINITY, WORDS,
 )
+from vibe_core.mahamantra.protocols.dharma_protocol import AksharaData, SwarupaData, LinguistProtocol
 
 # --- THE GRAMMAR ---
 class SandhiEngine:
