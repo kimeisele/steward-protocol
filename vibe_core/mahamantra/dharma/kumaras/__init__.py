@@ -42,38 +42,20 @@ def execute(input_text: str, context: dict = None) -> dict:
     }
 
 
-# =============================================================================
-# FRACTAL DISCOVERY - Folder IS Wiring
-# =============================================================================
-
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str):
-    """Lazy fractal discovery to avoid circular imports."""
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import kumaras as _proto
 
-    # Map Protocol types to protocol.py
-    if name in (
-        "KumarasProtocol",
-        "KumarasProtocolBase",
-        "NullKumaras",
-        "ShuddhiProtocol",
-        "ShuddhiResult",
-        "ShuddhiStatus",
-        "PurityLevel",
-        "PurificationResult",
-        "ResetResult",
-        "PurityState",
-    ):
-        from . import protocol
-
-        return getattr(protocol, name)
-
-    # Map Validation types to validation.py
-    if name.startswith("Validation") or name.endswith("check"):
-        from . import validation
-
-        return getattr(validation, name)
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
