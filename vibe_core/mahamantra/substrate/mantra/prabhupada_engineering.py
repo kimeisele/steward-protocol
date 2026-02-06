@@ -12,29 +12,32 @@ The 8 verses encode the complete AVX-512 pipeline specification.
 SOURCE: Caitanya Caritāmṛta, Antya Līlā Chapter 20
         Commentary from "Science of Self Realization" and lectures
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
+from dataclasses import dataclass
+from enum import IntEnum
+from typing import Any, Dict, Final, List, Tuple
+
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS,
+    HALF_SIZE,
+    HALVES,
+    HARE_COUNT,
+    JIVA_QUALITIES,
+    KSETRAJNA,
+    MAHA_QUANTUM,
+    PANCHA,
+    POSITION_SUM_KRISHNA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = SHARANAGATI
 __genesis__ = "0x3ccab85f"  # GenesisByte: parampara % 37 == 0
-
-from dataclasses import dataclass
-from enum import IntEnum
-from typing import Final, Dict, List, Tuple, Any
-
-from vibe_core.mahamantra.protocols._seed import (
-    HALF_SIZE,
-    WORDS,
-    MAHA_QUANTUM,
-    SEVEN,
-    TEN,
-    TRINITY,
-    QUARTERS,
-    PANCHA,
-    SHARANAGATI,
-    JIVA_QUALITIES,
-)
 
 
 # =============================================================================
