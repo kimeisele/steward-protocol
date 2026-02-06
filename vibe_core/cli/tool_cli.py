@@ -28,6 +28,9 @@ from vibe_core.tool_discovery import ToolDiscovery
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 from vibe_core.tools.tool_registry import ToolRegistry
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @register_cli
 class ToolCLI:

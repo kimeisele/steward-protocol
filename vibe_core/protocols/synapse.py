@@ -51,6 +51,9 @@ from vibe_core.mahamantra.substrate.nadi import (
     NullNadi as _NullNadi,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def _deprecation_warning(old_name: str, new_name: str) -> None:
     """Issue deprecation warning."""

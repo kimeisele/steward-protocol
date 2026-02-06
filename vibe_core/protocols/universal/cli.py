@@ -53,6 +53,9 @@ from .steward import VedicSteward
 from vibe_core.protocols.cli_execution import CLICapabilityToken
 from vibe_core.protocols.command import CommandContext
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # =============================================================================
 # STRICT TYPES (Anti-Mayavad)

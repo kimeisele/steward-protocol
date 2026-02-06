@@ -644,6 +644,9 @@ from vibe_core.protocols.substrate.mantra.diksha import (
     create_uninitiated,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class ManifestResult(TypedDict):
     """Result of manifesting a protocol into the byte substrate. WATERTIGHT."""

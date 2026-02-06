@@ -29,6 +29,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class MemoryEntry:
