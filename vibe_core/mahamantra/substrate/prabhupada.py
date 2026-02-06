@@ -14,20 +14,19 @@ math: `genesis_byte % 37 == 0`
 
 If the signature matches, the connection is BONA FIDE.
 """
-from vibe_core.mahamantra.protocols._seed import WORDS
+from typing import ClassVar, Optional
+
+from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
+from vibe_core.mahamantra.protocols._seed import (
+    MAHAJANA_COUNT,
+    PARAMPARA,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - Documentation/Teaching
 __position__ = 0
 __genesis__ = "0x5668524e"  # GenesisByte: parampara % 37 == 0
-
-from typing import ClassVar, Optional
-from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
-from vibe_core.mahamantra.protocols._seed import (
-    PARAMPARA,
-    MAHAJANA_COUNT,
-    WORDS,
-)
 from vibe_core.mahamantra.protocols._bhava import SHARANAGATI_UNIT
 
 
