@@ -357,7 +357,7 @@ class MahamantraDaemon:
             return
 
         try:
-            from vibe_core.shuddhi.engine import ShuddhiEngine
+            from vibe_core.mahamantra.dharma.kumaras.engine import ShuddhiEngine
 
             # Lazy singleton - avoid import loop
             if not hasattr(self, "_shuddhi_engine"):
