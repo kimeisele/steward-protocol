@@ -345,23 +345,59 @@ BG 18.66 = 62 Flöten-Atemzüge. Die gesamte Gita = 54,423.
 Zentrale Einsicht: Alle gescheiterten Ansätze versuchten `Name → Position`.
 Die richtige Kausalität: `Position → krishna_route → Koordinate → Phonem`.
 
-## PANCHA Walk Semantische Eindeutigkeit
+## 4D Phonem-Dekomposition (catur-vyūha)
 
-Kombination von Element-Walk + H/K/R-Signatur über 3 Zyklen:
+4 Dimensionen = QUARTERS = catur-vyūha. Alle aus Axiomen abgeleitet:
 
 ```
-Walk allein:                 3329 unique (80.7%)
-Walk + HKR (1 Zyklus):      3952 unique (95.8%)
-Walk + HKR (3 Zyklen):      4092 unique (99.2%)
-
-Verbleibende Kollisionen: 33 Signaturen, 68 Wörter
-Alle Kollisionen = Phonetische Kognaten (ta↔sa Dental-Alternation)
-                   oder Flexionsformen (vadati/vadasi = identische Wurzel)
+Dim 1 (Sthāna):   COORD_ELEMENT   — PANCHA (5) Artikulation → Element
+Dim 2 (Varga):    COORD_VARGA     — TRINITY (3) Lautklassen (svara/sparsha/shesha)
+Dim 3 (Prayatna): COORD_SUB       — Intra-Sektion Qualität:
+   Sparsha: Spalte = (c - WORDS) % PANCHA → catur-vyūha + Nasal (5)
+   Svara:   Dauer  = c // PANCHA          → QUARTERS (4): kurz/lang/compound/special
+   Shesha:  Klasse = (c - 41) // QUARTERS → HALVES (2): antastha/ūṣman
+Dim 4 (Harmonic): COORD_HARMONIC  — H-Orbit (×SEVEN mod 49):
+   Wohin jedes Phonem unter Absorption GEHT = Auflösungspfad
 ```
 
-Die 33 Kollisionen sind KORREKT: ta und sa teilen sich den Artikulationspunkt (danta/JALA).
-Satem/Centum-Alternation ist ein bekanntes phonetisches Gesetz.
-Das System identifiziert verwandte Wörter automatisch.
+### Progressive Eindeutigkeit (4127 Gita-Wörter)
+
+```
+1D (Element allein):              3329 unique (80.7%)
+2D (Element + Varga):             3909 unique (94.7%)
+3D (Element + Varga + Sub):       4126 unique (99.97%)
+4D (+ Harmonic):                  4127 unique (100.00%)
+```
+
+### 3 Phonem-Kollisionen in 3D (alle durch H-Orbit aufgelöst)
+
+```
+Koordinate  Phonem  3D-Tupel      H-Orbit   R-Residue
+14 (ṁ)     anusvara (0, 0, 3)     0         Nein (NAKSHATRA)
+15 (ḥ)     visarga  (0, 0, 3)     7         Ja (SHRUTI)
+10 (e)     e        (1, 0, 2)     21        Ja (SHRUTI)
+11 (ai)    ai       (1, 0, 2)     28        Ja (SHRUTI)
+12 (o)     o        (4, 0, 2)     35        Nein (NAKSHATRA)
+13 (au)    au       (4, 0, 2)     42        Nein (NAKSHATRA)
+```
+
+R-Residue löst nur 2/3 Paare (o/au sind beide NAKSHATRA).
+H-Orbit (×SEVEN mod 49) löst ALLE 3 → 49/49 Bijektion.
+
+### SPARSHA-Spalten = Catur-vyūha
+
+```
+Spalte 0: unvoiced     (ka, ca, ṭa, ta, pa)  = Vāsudeva
+Spalte 1: aspirated    (kha, cha, ṭha, tha, pha) = Saṅkarṣaṇa
+Spalte 2: voiced       (ga, ja, ḍa, da, ba)  = Pradyumna
+Spalte 3: voiced-asp   (gha, jha, ḍha, dha, bha) = Aniruddha
+Spalte 4: nasal        (ṅa, ña, ṇa, na, ma)  = +1 = PANCHA
+```
+
+### Wort-Level Kollision
+
+1 einzige Wort-Kollision in 3D: paramaḥ / paramaṁ (visarga/anusvara).
+In 4D (full_signature): 0 Kollisionen. Perfekte Bijektion.
 
 ## Production-Integration
 
@@ -369,12 +405,12 @@ Das System identifiziert verwandte Wörter automatisch.
 substrate/varnamala_codec.py    — IAST ↔ RAMA Codec
 substrate/sanskrit_lookup.py    — verse_words(), word_by_iast(), hkr_signature()
 substrate/venu_orchestrator.py  — spell(coords) → native DIWs
-substrate/pancha_walk.py        — Element-Walk (80.7% unique, only derived data)
+substrate/pancha_walk.py        — 4D Dekomposition (4127/4127 unique, 49/49 bijektiv)
 substrate/lotus_core.py         — VANDANAM (Schritt 6) liefert Sanskrit
 data/rama_lexicon.json          — 4127 Wörter, 700 Verse, RAMA-kodiert
 tests/test_varnamala_codec.py   — Codec-Tests (16 tests)
 tests/test_sanskrit_lookup.py   — Lookup + Spell-Tests (17 tests)
-tests/test_pancha_walk.py       — Element-Walk-Tests (29 tests)
+tests/test_pancha_walk.py       — 4D Walk-Tests (53 tests)
 ```
 
 ## Dateien (Research)
