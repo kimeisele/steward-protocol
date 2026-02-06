@@ -27,6 +27,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
 
+import logging
+logger = logging.getLogger(__name__)
+
 # OPUS-025: Avoid string literal "/tmp/vibe_os" (grep pattern match)
 # Use Path() construction for the default runtime root
 _DEFAULT_RUNTIME_ROOT = str(Path("/tmp") / "vibe_os")
