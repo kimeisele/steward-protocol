@@ -359,13 +359,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # FIX 4: VENU ORCHESTRATOR INTEGRATION
         # =====================================================================
         # THE_FLUTE_CYCLE is the 19-bit DIW LUT - O(1) lookup for each position.
-        # Format: (name_encoding << 16) | (1 << position)
+        # Format: Native 6-9-4 DIW = pack(venu, vamsi, murali)
         # This unifies the Venu orchestrator with the main computation pipeline.
         from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
+        from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
 
         diw = THE_FLUTE_CYCLE[position]
-        diw_name_encoding = (diw >> 16) & 0x3  # H=0, K=1, R=2
-        diw_position_bit = diw & 0xFFFF        # 1 << position
+        diw_components = diw_unpack(diw)
+        diw_name_encoding = diw_components.vamsi  # Process/Action (name-derived)
+        diw_position_bit = diw_components.venu    # Quality (position-derived)
 
         if position < 4:
             quarter = "genesis"
@@ -516,11 +518,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "holy_name": holy_name,  # "H" (Hare), "K" (Krishna), "R" (Rama)
             "trinity_function": trinity_function,  # "source" (K), "carrier" (H), "deliverer" (R)
 
-            # Venu Orchestrator (FIX 4) - 19-bit Divine Instruction Word
+            # Venu Orchestrator (FIX 4) - 19-bit Divine Instruction Word (6-9-4)
             "diw": {
-                "raw": diw,                    # Full 19-bit DIW
-                "name_encoding": diw_name_encoding,  # H=0, K=1, R=2
-                "position_bit": diw_position_bit,    # 1 << position
+                "raw": diw,                          # Full 19-bit DIW
+                "venu": diw_components.venu,          # 6 bits: Quality/Mood
+                "vamsi": diw_components.vamsi,        # 9 bits: Process/Action
+                "murali": diw_components.murali,      # 4 bits: Phase/Quarter
             },
 
             # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
