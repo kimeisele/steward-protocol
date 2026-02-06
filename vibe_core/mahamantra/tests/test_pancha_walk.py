@@ -6,16 +6,21 @@ Verifies element mapping, walk signatures, and semantic fingerprinting.
 
 import pytest
 
-from vibe_core.mahamantra.protocols._seed import PANCHA, PRASADAM, WORDS
+from vibe_core.mahamantra.protocols._seed import HARE_COUNT, PANCHA, PRASADAM, TRINITY, WORDS
 from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_ELEMENT,
+    COORD_QUALITY,
+    COORD_VARGA,
     ELEMENT_NAMES,
     ELEMENT_SYMBOLS,
+    VARGA_NAMES,
     Element,
+    coord_triple,
     dominant_element,
     element_histogram,
     element_transitions,
     element_walk,
+    fingerprint_signature,
     semantic_fingerprint,
     walk_direction,
     walk_distance,
@@ -158,28 +163,72 @@ class TestDistance:
         assert 0.0 <= d <= 1.0
 
 
-class TestSemanticFingerprint:
-    """Combined walk + HKR fingerprint."""
+class Test3DPhonemeSpace:
+    """The complete (element, quality, varga) decomposition."""
 
-    def test_fingerprint_format(self):
-        fp = semantic_fingerprint(encode("dharma"), hkr_cycles=1)
-        parts = fp.split("|")
-        assert len(parts) == 2
-        # Walk part: only SVFWE characters
-        assert all(c in ELEMENT_SYMBOLS for c in parts[0])
-        # HKR part: only H/K/R characters
-        assert all(c in "HKR" for c in parts[1])
+    def test_triple_bijection(self):
+        """All 49 triples must be unique (verified at module load, but test explicitly)."""
+        triples = set()
+        for c in range(VARNAMALA_TOTAL):
+            t = coord_triple(c)
+            assert t not in triples, f"Duplicate triple at coord {c}"
+            triples.add(t)
+        assert len(triples) == VARNAMALA_TOTAL
+
+    def test_varga_partition_sizes(self):
+        """Varga 0=WORDS, 1=PRASADAM, 2=HARE_COUNT."""
+        counts = [0, 0, 0]
+        for c in range(VARNAMALA_TOTAL):
+            counts[COORD_VARGA[c]] += 1
+        assert counts == [WORDS, PRASADAM, HARE_COUNT]
+
+    def test_varga_count_is_trinity(self):
+        assert len(VARGA_NAMES) == TRINITY
+
+    def test_space_size(self):
+        """PANCHA × PANCHA × TRINITY = 75, VARNAMALA = 49, empty = 26."""
+        assert PANCHA * PANCHA * TRINITY == 75
+        assert 75 - VARNAMALA_TOTAL == 26
+
+    def test_sparsha_quality_is_column(self):
+        """For sparsha (coords 16-40), quality must equal grid column."""
+        for c in range(WORDS, WORDS + PRASADAM):
+            expected_col = (c - WORDS) % PANCHA
+            assert COORD_QUALITY[c] == expected_col
+
+
+class TestSemanticFingerprint:
+    """3D semantic fingerprint = 100% unique."""
+
+    def test_fingerprint_is_tuple_of_triples(self):
+        fp = semantic_fingerprint(encode("dharma"))
+        assert isinstance(fp, tuple)
+        assert all(isinstance(t, tuple) and len(t) == 3 for t in fp)
 
     def test_fingerprint_different_words(self):
         fp1 = semantic_fingerprint(encode("dharma"))
         fp2 = semantic_fingerprint(encode("bhakti"))
         assert fp1 != fp2
 
-    def test_multi_cycle_more_unique(self):
-        """More HKR cycles should produce longer fingerprints."""
-        fp1 = semantic_fingerprint(encode("dharma"), hkr_cycles=1)
-        fp3 = semantic_fingerprint(encode("dharma"), hkr_cycles=3)
-        assert len(fp3) > len(fp1)
+    def test_fingerprint_signature_format(self):
+        sig = fingerprint_signature(encode("dharma"))
+        parts = sig.split("-")
+        assert len(parts) == len(encode("dharma"))
+        assert all(len(p) == 3 for p in parts)
+
+    def test_ta_sa_now_distinguished(self):
+        """ta and sa had identical old signatures. 3D must distinguish them."""
+        fp_tat = semantic_fingerprint(encode("tat"))
+        fp_sat = semantic_fingerprint(encode("sat"))
+        assert fp_tat != fp_sat
+
+    def test_visarga_ha_now_distinguished(self):
+        """ḥ (visarga) and ha (mahāprāṇa) must differ in varga."""
+        triple_visarga = coord_triple(15)  # ḥ
+        triple_ha = coord_triple(48)  # ha
+        assert triple_visarga != triple_ha
+        assert triple_visarga[2] == 0  # svara (vowel side)
+        assert triple_ha[2] == 2  # remaining
 
 
 class TestArchitecturalIdentities:
