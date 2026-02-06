@@ -247,11 +247,11 @@
     "result": null
   },
   {
-    "timestamp": "2026-02-04T23:57:24.927755",
-    "intent_type": "detect_state_drift",
-    "intent_title": "State file not committed - system dependency risk",
-    "trigger": "trigger:file_changed:other",
-    "file_path": ".opus_state/synapses.json",
+    "timestamp": "2026-02-06T23:11:00.859304",
+    "intent_type": "run_command",
+    "intent_title": "Run external validation script",
+    "trigger": "trigger:run_command",
+    "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,
     "harmony": "perfect",

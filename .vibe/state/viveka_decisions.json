@@ -247,10 +247,10 @@
     "result": null
   },
   {
-    "timestamp": "2026-02-04T23:57:25.053958",
-    "intent_type": "disable_safety",
-    "intent_title": "[ATTACK] Disable Viveka gate",
-    "trigger": "trigger:disable_safety",
+    "timestamp": "2026-02-06T23:11:00.985837",
+    "intent_type": "evaluate_module_compliance",
+    "intent_title": "Module follows UnifiedLoader pattern",
+    "trigger": "trigger:evaluate_module_compliance",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,
