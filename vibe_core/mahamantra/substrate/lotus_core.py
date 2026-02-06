@@ -349,6 +349,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "significance": chapter_significance,
             }
 
+            # SANSKRIT WORD-FOR-WORD via RAMA coordinates
+            # Each word = RAMA coordinate sequence = VENU ticks
+            from vibe_core.mahamantra.substrate.sanskrit_lookup import verse_words
+
+            sanskrit = verse_words(v.chapter, v.verse)
+            if sanskrit:
+                verse_info["word_count"] = len(sanskrit.words)
+                verse_info["phoneme_count"] = sanskrit.phoneme_count
+                verse_info["words"] = tuple({"sanskrit": w.sanskrit, "meaning": w.meaning} for w in sanskrit.words)
+
         # =====================================================================
         # 7. DASYAM - Position/Quarter/Role determination
         # =====================================================================
@@ -382,13 +392,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # THE_FLUTE_CYCLE is the 19-bit DIW LUT - O(1) lookup for each position.
         # Format: Native 6-9-4 DIW = pack(venu, vamsi, murali)
         # This unifies the Venu orchestrator with the main computation pipeline.
-        from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
         from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
+        from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
 
         diw = THE_FLUTE_CYCLE[position]
         diw_components = diw_unpack(diw)
         diw_name_encoding = diw_components.vamsi  # Process/Action (name-derived)
-        diw_position_bit = diw_components.venu    # Quality (position-derived)
+        diw_position_bit = diw_components.venu  # Quality (position-derived)
 
         if position < 4:
             quarter = "genesis"
@@ -572,7 +582,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "channel": parampara_channel,
                 "coherence": parampara_coherence,
             },
-
             # Gita (VANDANAM) - THE BINDING ELEMENT + TOPOLOGY
             "chapter": chapter,
             "chapter_significance": chapter_significance,
@@ -580,7 +589,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "matches": len(verse_result.matches),
             "gita_phase": gita_phase,  # "field" (Ch 1-16) or "fruit" (Ch 17-18)
             "is_complete": is_complete,  # True if in Fruit (stopping condition)
-
             # Position (DASYAM) - Dual Classification
             "position": position,
             "guardian": guardian,
@@ -591,13 +599,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             # Functional (Trinity): What this position DOES
             "holy_name": holy_name,  # "H" (Hare), "K" (Krishna), "R" (Rama)
             "trinity_function": trinity_function,  # "source" (K), "carrier" (H), "deliverer" (R)
-
             # Venu Orchestrator (FIX 4) - 19-bit Divine Instruction Word (6-9-4)
             "diw": {
-                "raw": diw,                          # Full 19-bit DIW
-                "venu": diw_components.venu,          # 6 bits: Quality/Mood
-                "vamsi": diw_components.vamsi,        # 9 bits: Process/Action
-                "murali": diw_components.murali,      # 4 bits: Phase/Quarter
+                "raw": diw,  # Full 19-bit DIW
+                "venu": diw_components.venu,  # 6 bits: Quality/Mood
+                "vamsi": diw_components.vamsi,  # 9 bits: Process/Action
+                "murali": diw_components.murali,  # 4 bits: Phase/Quarter
             },
             # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
             "cell": {
