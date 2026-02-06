@@ -252,17 +252,38 @@ class VenuOrchestrator:
     def verify_divinity(self) -> bool:
         """
         The "Beweis Gottes" Test.
-        Verifies the full-cycle XOR produces a valid resonance.
+        Verifies the LUT has correct structural properties:
+        - All 4 quarters (MURALI) are represented
+        - All 3 names (VAMSI regions) are represented
+        - All VENU values are unique (no collisions)
+        - Full cycle XOR is non-zero and fits in 19 bits
         """
         self._tick = 0
         self._prev_state = 0
-        cycle_xor = self.cycle()
 
-        # The cycle XOR must be non-zero (the flute is alive)
+        # Structural verification of the LUT
+        murali_set: set[int] = set()
+        venu_set: set[int] = set()
+        vamsi_regions: set[int] = set()
+        vamsi_stride = (1 << VAMSI_HOLES) // 3  # 170
+
+        for entry in THE_FLUTE_CYCLE:
+            parts = unpack(entry)
+            murali_set.add(parts.murali)
+            venu_set.add(parts.venu)
+            vamsi_regions.add(min(parts.vamsi // vamsi_stride, 2))
+
+        if len(murali_set) != QUARTERS:
+            raise ValueError(f"Must have {QUARTERS} quarters, got {len(murali_set)}")
+        if len(vamsi_regions) < 3:
+            raise ValueError(f"Must have 3 name regions, got {len(vamsi_regions)}")
+        if len(venu_set) != WORDS:
+            raise ValueError(f"Must have {WORDS} unique VENU values, got {len(venu_set)}")
+
+        # Cycle XOR check
+        cycle_xor = self.cycle()
         if cycle_xor == 0:
             raise ValueError("Cycle XOR is zero - the flute is silent")
-
-        # The cycle XOR must fit in 19 bits
         if cycle_xor > DIW_MASK:
             raise ValueError(f"Cycle XOR exceeds 19-bit DIW: {hex(cycle_xor)}")
 
