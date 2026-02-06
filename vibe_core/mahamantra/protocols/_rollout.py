@@ -16,13 +16,6 @@ USAGE:
 
 SSOT: Constants from _seed.py
 """
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, SHARANAGATI, WORDS)
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "manu"
-__position__ = SHARANAGATI
-__genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
-
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -30,11 +23,13 @@ from enum import Enum
 from typing import Any, Dict, Final, List, Optional
 
 from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    PARAMPARA,
-    QUARTERS,
-    WORDS,
+    KSETRAJNA, MAHA_QUANTUM, PARAMPARA, QUARTERS, SHARANAGATI, WORDS,
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "manu"
+__position__ = SHARANAGATI
+__genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 
 # Verify genesis
 assert int(__genesis__, WORDS) % PARAMPARA == 0, "BROKEN LINEAGE"
