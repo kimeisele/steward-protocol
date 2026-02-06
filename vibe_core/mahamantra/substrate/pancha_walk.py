@@ -4,20 +4,20 @@ PANCHA WALK - Element Walk through Sanskrit Phonemes
 
 "pañca-mahā-bhūta" - The Five Great Elements
 
-THREE DIMENSIONS — all derived from axioms:
+FOUR DIMENSIONS — all derived from axioms (= QUARTERS = catur-vyūha):
 
-    Dim 1 (Sthāna):  COORD_ELEMENT  — PANCHA (5) articulation → element
-    Dim 2 (Varga):   COORD_VARGA    — TRINITY (3) sound classes
-    Dim 3 (Prayatna): COORD_SUB     — intra-section quality, derived per varga:
+    Dim 1 (Sthāna):    COORD_ELEMENT   — PANCHA (5) articulation → element
+    Dim 2 (Varga):     COORD_VARGA     — TRINITY (3) sound classes
+    Dim 3 (Prayatna):  COORD_SUB       — intra-section quality:
         Sparsha:  column = (c - WORDS) % PANCHA   → catur-vyūha + nasal (5)
         Svara:    duration type = c // PANCHA      → QUARTERS (4): short/long/compound/special
         Shesha:   class = (c - 41) // QUARTERS     → HALVES (2): antastha/ūṣman
+    Dim 4 (Harmonic):  COORD_HARMONIC  — H-orbit (×SEVEN mod 49):
+        Where each phoneme GOES under absorption = dissolution path
 
 UNIQUENESS (tested on 4127 Gita words):
-    Element alone:              80.7%  (3329 unique)
-    Element + Varga:            94.7%  (3909 unique)
-    Element + Varga + Sub:      99.97% (4126 unique)
-    1 collision: paramaḥ / paramaṁ (visarga/anusvara — both Akasha modifiers)
+    3D (element+varga+sub):     99.97% (4126 unique, 3 phoneme collisions)
+    4D (+harmonic):             100.00% (4127 unique, 49/49 phoneme bijection)
 """
 
 from __future__ import annotations
@@ -31,6 +31,7 @@ from vibe_core.mahamantra.protocols._seed import (
     PANCHA,
     PRASADAM,
     QUARTERS,
+    SEVEN,
     WORDS,
 )
 from vibe_core.mahamantra.substrate.rama_grid import (
@@ -207,7 +208,30 @@ assert max(COORD_SUB[WORDS + PRASADAM :]) == 1  # HALVES for shesha
 
 
 # =============================================================================
-# DERIVED SIGNATURE (all 3 dimensions)
+# HARMONIC / H-ORBIT (derived from SEVEN axiom)
+# =============================================================================
+# The H-operation (×SEVEN mod VARNAMALA) maps each phoneme to its
+# dissolution path — where it goes under absorption (pralaya).
+#
+# This is the 4th dimension: not WHERE a phoneme is, but WHERE IT GOES.
+# 3D (element, varga, sub) = kṣetra (the field, 46/49 unique phonemes)
+# 4D + harmonic           = kṣetra + kṣetrajña (49/49 = BIJECTION)
+#
+# 3 phoneme-level collision pairs in 3D, ALL resolved by H-orbit:
+#   ṁ(14)/ḥ(15):  H→0 / H→7   (direct absorption vs via ū)
+#   e(10)/ai(11): H→21 / H→28  (ca-varga vs ṭa-varga)
+#   o(12)/au(13): H→35 / H→42  (na vs ra)
+
+
+COORD_HARMONIC: Final[tuple[int, ...]] = tuple((c * SEVEN) % VARNAMALA_TOTAL for c in range(VARNAMALA_TOTAL))
+
+# Verify: 3D + harmonic is a BIJECTION on the 49 phonemes
+_4d_keys = {(COORD_ELEMENT[c], COORD_VARGA[c], COORD_SUB[c], COORD_HARMONIC[c]) for c in range(VARNAMALA_TOTAL)}
+assert len(_4d_keys) == VARNAMALA_TOTAL, "4D must be bijective on VARNAMALA"
+
+
+# =============================================================================
+# DERIVED SIGNATURE (all 3 spatial dimensions + harmonic)
 # =============================================================================
 
 
@@ -216,9 +240,20 @@ def derived_signature(coords: Sequence[int]) -> str:
     3D phoneme signature: element + varga + sub-index per phoneme.
 
     4126/4127 Gita words unique (99.97%).
-    1 collision: paramaḥ/paramaṁ (visarga/anusvara, both Akasha modifiers).
+    3 phoneme-level collisions (ṁ/ḥ, e/ai, o/au).
+    Use full_signature() for 100% with harmonic dimension.
     """
     return "".join(f"{COORD_ELEMENT[c]}{COORD_VARGA[c]}{COORD_SUB[c]}" for c in coords)
+
+
+def full_signature(coords: Sequence[int]) -> str:
+    """
+    4D phoneme signature: element + varga + sub + harmonic.
+
+    Includes H-orbit (×SEVEN mod 49) as 4th dimension.
+    4127/4127 Gita words unique (100.00%). 49/49 phoneme bijection.
+    """
+    return "".join(f"{COORD_ELEMENT[c]}{COORD_VARGA[c]}{COORD_SUB[c]}{COORD_HARMONIC[c]:02d}" for c in coords)
 
 
 # =============================================================================
@@ -285,7 +320,9 @@ __all__ = [
     "COORD_ELEMENT",
     "COORD_VARGA",
     "COORD_SUB",
+    "COORD_HARMONIC",
     "derived_signature",
+    "full_signature",
     "element_walk",
     "walk_signature",
     "element_histogram",
