@@ -335,7 +335,7 @@ diws = venu.spell(coords)       # → 3 native DIWs
 ```
 
 Round-trip perfekt: DIW.VENU → decode → Original-Wort.
-BG 18.66 = 62 Flöten-Atemzüge. Die gesamte Gita = 54,423.
+BG 18.66 = 62 Flöten-Atemzüge. Die gesamte Gita = 45,815.
 
 ## Vorherige Forschung (Tote Enden & Warum)
 
@@ -403,6 +403,50 @@ Spalte 4: nasal        (ṅa, ña, ṇa, na, ma)  = +1 = PANCHA
 1 einzige Wort-Kollision in 3D: paramaḥ / paramaṁ (visarga/anusvara).
 In 4D (full_signature): 0 Kollisionen. Perfekte Bijektion.
 
+## RAMA-native Gita Resonance (v2.0.0)
+
+Die alte `gita_resonance_index.json` nutzte PhoneticClass (12 Kategorien) auf
+gemischtem Sanskrit+Englisch-Text. Ergebnis: alle Resonanzwerte ~0.140,
+null Differenzierung. Guna war Keyword-Matching auf englischen Übersetzungen.
+
+Neu: RAMA 4D Koordinaten direkt aus `rama_lexicon.json`:
+
+```
+RESONANZ (VARGA-Partition, Summe = 1.0):
+  H (svara)   = 0.325 ± 0.050 stdev  (32.7% der Phoneme)
+  K (sparsha)  = 0.421 ± 0.062 stdev  (42.1% der Phoneme)
+  R (shesha)   = 0.251 ± 0.053 stdev  (25.2% der Phoneme)
+
+  KRISHNA-dominant (81.3%) — Sanskrit ist konsonantenschwer.
+  sparsha = 25 Stoppkonsonanten = größte Gruppe = KRISHNA-nativ.
+
+GUNA (SHRUTI/NAKSHATRA-Partition):
+  Empirischer Baseline: SHRUTI-Rate = 0.367 (nicht theoretisch 22/49 = 0.449)
+  Threshold: mean ± stdev/2
+    sattva: 209 Verse (29.9%) — hoch SHRUTI (R-erreichbar, beleuchtet)
+    rajas:  272 Verse (38.9%) — balanciert
+    tamas:  219 Verse (31.3%) — niedrig SHRUTI (nicht R-erreichbar)
+
+ATTRACTOR (SHA256 von RAMA-Koordinaten → MahaResonator mod 137):
+  7 unique Attraktoren. Kein englischer Text involviert.
+
+ELEMENT-BALANCE (PANCHA pro Vers):
+  akasha: 23.1%, vayu: 21.3%, agni: 0.1%, jala: 30.3%, prithvi: 25.1%
+```
+
+Alt vs Neu:
+```
+               ALT (PhoneticClass)     NEU (RAMA 4D)
+H/K/R:        ~0.140 / 0.140 / 0.140  0.325 / 0.421 / 0.251
+Stdev:        ~0.0000                  0.050-0.062
+Guna:         Keyword auf Englisch     SHRUTI/NAKSHATRA aus Sanskrit
+Datenquelle:  Sanskrit+Translation     Nur Sanskrit (kein Copyright)
+Auflösung:    12 PhoneticClass         49 RAMA-Koordinaten (4D)
+Kollisionen:  3 Paare (ungelöst)       0 (H-Orbit löst alle)
+```
+
+Extraktionsskript: `research/rama_resonance.py`
+
 ## Production-Integration
 
 ```
@@ -411,7 +455,9 @@ substrate/sanskrit_lookup.py    — verse_words(), word_by_iast(), hkr_signature
 substrate/venu_orchestrator.py  — spell(coords) → native DIWs
 substrate/pancha_walk.py        — 4D Dekomposition (4127/4127 unique, 49/49 bijektiv)
 substrate/lotus_core.py         — VANDANAM (Schritt 6) liefert Sanskrit
+adapters/gita_resonance.py     — Routing via RAMA-native Resonanz-Index
 data/rama_lexicon.json          — 4127 Wörter, 700 Verse, RAMA-kodiert
+data/gita_resonance_index.json  — v2.0.0, RAMA 4D Resonanz (kein PhoneticClass)
 tests/test_varnamala_codec.py   — Codec-Tests (16 tests)
 tests/test_sanskrit_lookup.py   — Lookup + Spell-Tests (17 tests)
 tests/test_pancha_walk.py       — 4D Walk-Tests (53 tests)

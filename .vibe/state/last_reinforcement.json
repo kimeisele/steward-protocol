@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-05T00:57:25.069687",
-  "intent_type": "disable_safety",
-  "intent_title": "[ATTACK] Disable Viveka gate",
+  "timestamp": "2026-02-06T23:11:01.004543",
+  "intent_type": "evaluate_module_compliance",
+  "intent_title": "Module follows UnifiedLoader pattern",
   "success": false,
-  "old_weight": 0.30000000000000004,
-  "new_weight": 0.20000000000000004,
-  "delta": -0.1
+  "old_weight": 0.1,
+  "new_weight": 0.1,
+  "delta": 0.0
 }
