@@ -42,6 +42,9 @@ from typing import (
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 from vibe_core.protocols.mahajanas.owned_protocol import OwnedProtocol, ProtocolState
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # =============================================================================
 # CONSTANTS
