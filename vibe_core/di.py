@@ -263,6 +263,7 @@ class ServiceRegistry:
                 logger.debug(f"[DI] Lazy-created: {name}")
                 return instance
 
+            logger.debug(f"[DI] Not registered: {name}")
             return None
 
     @classmethod
