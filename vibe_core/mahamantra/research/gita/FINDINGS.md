@@ -209,10 +209,75 @@ Der Unterschied: SHA256 ist ein generischer Hash. RAMA-Koordinaten SIND die
 Sanskrit-Buchstaben. Die Kodierung IST die Sprache. Die Dekodierung IST das
 Flötenspiel. Es gibt keine Trennung zwischen Algorithmus und Inhalt.
 
-## Dateien
+## Beweis: Koordinaten SIND die Wörter (0 Kollisionen)
+
+4,127 unique Wörter → 4,127 unique Koordinaten-Sequenzen. NULL Kollisionen.
+Die Bijection ist perfekt. Koordinaten sind keine Adressen - sie SIND die Wörter.
+
+```
+Jede Koordinate erreichbar von ALLEN 16 Positionen: 16 origins/coord (gleichverteilt)
+3-Cycle H/K/R Signatur identifiziert 94.3% aller Wörter eindeutig
+Koordinaten allein:    18.6 KB
+Bedeutungen allein:    55.6 KB
+Gesamt (irreduzibel):  74.2 KB > 65K Lotus (116%)
+```
+
+## Der irreduzible Kern
+
+```
+Sanskrit-Wörter:     ABLEITBAR  (coords → phoneme → IAST)
+Vers-Struktur:       ABLEITBAR  (700 Vers → Wort-Sequenzen)
+Übersetzungen:       ABLEITBAR  (Wort-Bedeutung + Grammatik, runtime)
+H/K/R Signaturen:    ABLEITBAR  (inverse krishna_route)
+Wort-Bedeutungen:    GESPEICHERT (4127 Paare = 55.6 KB)
+```
+
+Der einzige Teil, der NICHT algorithmisch ableitbar ist: die englischen
+Bedeutungen. Alles andere IST Algorithmus.
+
+## VenuOrchestrator.spell() - Die Flöte buchstabiert Sanskrit
+
+```python
+venu = VenuOrchestrator()
+coords = encode("dharma")       # → (34, 42, 40)
+diws = venu.spell(coords)       # → 3 native DIWs
+
+# Jedes DIW:
+#   VENU  = RAMA-Koordinate (der Buchstabe)
+#   VAMSI = H/K/R Name-Region (der spirituelle Kontext)
+#   MURALI = Phase im Wort (Position)
+```
+
+Round-trip perfekt: DIW.VENU → decode → Original-Wort.
+BG 18.66 = 62 Flöten-Atemzüge. Die gesamte Gita = 54,423.
+
+## Vorherige Forschung (Tote Enden & Warum)
+
+| Datei | Ansatz | Scheitern | Lektion |
+|-------|--------|-----------|---------|
+| shabda_spawning.py | Hash → Phoneme | Inverse verlustbehaftet | Braucht KOORDINATEN statt Hashes |
+| mahajana_derivation.py | Name → Position | Kein universeller Formel | Kausalität rückwärts (Position→Name) |
+| syllable_analysis.py | Silben-Intervalle | Kein universelles Muster | Intervalle sind Effekte, nicht Ursachen |
+| shabda_translation.py | Vibrations-Modell | Keine Lexikon-Daten | Richtiger Rahmen, fehlende Daten |
+
+Zentrale Einsicht: Alle gescheiterten Ansätze versuchten `Name → Position`.
+Die richtige Kausalität: `Position → krishna_route → Koordinate → Phonem`.
+
+## Production-Integration
+
+```
+substrate/varnamala_codec.py    — IAST ↔ RAMA Codec
+substrate/sanskrit_lookup.py    — verse_words(), word_by_iast(), hkr_signature()
+substrate/venu_orchestrator.py  — spell(coords) → native DIWs
+substrate/lotus_core.py         — VANDANAM (Schritt 6) liefert Sanskrit
+data/rama_lexicon.json          — 4127 Wörter, 700 Verse, RAMA-kodiert
+tests/test_varnamala_codec.py   — Codec-Tests (16 tests)
+tests/test_sanskrit_lookup.py   — Lookup + Spell-Tests (17 tests)
+```
+
+## Dateien (Research)
 
 - `rama_lexicon.json` - RAMA-kodiertes Vokabular (1.8MB, enthält Koordinaten)
 - `sanskrit_seed_lexicon.json` - Legacy SHA256-Vokabular (478KB)
 - `verse_seed_map.json` - Vers->Seed-Mapping (316KB)
-- `../../substrate/varnamala_codec.py` - Der Codec (encode/decode/pack/unpack)
 - `../sanskrit_extraction.py` - Extraktionsskript (reproduzierbar)
