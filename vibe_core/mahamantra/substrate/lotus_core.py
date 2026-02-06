@@ -55,6 +55,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         "total_beats": 0,
         "total_rounds": 0,
         "attractor_counts": {},
+        "last_seed": None,
+        "last_position": None,
+        "last_attractor": None,
     }
 
     # ==========================================================================
@@ -286,6 +289,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             comp_result = compressor.compress(input_text)
             seed = comp_result.seed
 
+        # RETURN-LOOP: If previous yajna left a seed, XOR it in.
+        # "The output becomes the input" - continuity across calls.
+        # XOR preserves determinism: same sequence → same result.
+        last_seed = self._akash.get("last_seed")
+        if last_seed is not None:
+            seed = seed ^ last_seed
+
         # =====================================================================
         # 3. PADA_SEVANAM - MahaKernel → attractor (Resonance)
         # =====================================================================
@@ -313,9 +323,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
         from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+        from vibe_core.mahamantra.substrate.gita import get_chapter_significance
 
         verse_result = match_attractor(attractor)
         chapter = get_gita_chapter(attractor)
+        chapter_significance = get_chapter_significance(chapter)
 
         verse_info = None
         if verse_result.matches:
@@ -329,6 +341,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "verse": v.verse,
                 "guna": v.guna,
                 "dominant_name": v.dominant_name,
+                "significance": chapter_significance,
             }
 
         # =====================================================================
@@ -419,9 +432,19 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         chamber = get_chamber()
 
-        # KIRTAN LOOP: 1 cycle = WORDS (16) transformations
+        # KIRTAN LOOP: cycles × WORDS (16) transformations
         # Each transformation applies DIW (Divine Instruction Word)
-        result_cell = chamber.kirtan(result_cell, cycles=1)
+        # Cycles scale with accumulated resonance (akash memory):
+        #   First call = 1 cycle (KSETRAJNA), then grows with total_rounds
+        #   Max = QUARTERS (4) cycles = 64 transformations
+        from vibe_core.mahamantra.protocols._seed import KSETRAJNA
+        from vibe_core.mahamantra.protocols._seed import QUARTERS as MAX_CYCLES
+
+        kirtan_cycles = min(
+            KSETRAJNA + self._akash["total_rounds"] // WORDS,
+            MAX_CYCLES,
+        )
+        result_cell = chamber.kirtan(result_cell, cycles=kirtan_cycles)
 
         # =====================================================================
         # 8.6. YAJNA CYCLE - ShadowReactor Integration (Bhoga→Prasadam→Return)
@@ -470,31 +493,63 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             )
         )
 
-        # Build TickStateInput (WATERTIGHT TypedDict)
-        word, opcode = MAHAMANTRA_SEQUENCE[position]
-        tick_input: TickStateInput = {
-            "tick": self._akash["total_beats"],
-            "position": position,
-            "quarter": quarter,
-            "guardian": guardian,
-            "word": word,
-            "opcode": opcode.value if hasattr(opcode, "value") else opcode,
-        }
+        # =================================================================
+        # FULL YAJNA CYCLE: WORDS ticks (Bhoga→Switch→Prasadam→Return)
+        # =================================================================
+        # "The cycle never ends. The output becomes the input."
+        # Starting from computed position, walk through all 16 positions.
+        # Each tick triggers the guardian at that position.
+        # The reactor tracks phase transitions (switch at 8, return at 15→0).
 
-        # YAJNA TICK: Walks through Bhoga→Switch→Prasadam→Return
-        # This triggers on_bhoga/on_prasadam hooks in guardian modules
-        shadow_state = reactor.tick(tick_input)
+        shadow_state = None
+        guardian_result = None
+        base_tick = self._akash["total_beats"]
 
-        # Extract guardian execution result from shadow state
-        guardian_result = shadow_state.get("execution_result")
+        for i in range(WORDS):
+            tick_pos = (position + i) % WORDS
+            tick_word, tick_opcode = MAHAMANTRA_SEQUENCE[tick_pos]
+            tick_guardian = ALL_GUARDIANS[tick_pos] if tick_pos < len(ALL_GUARDIANS) else "unknown"
+
+            if tick_pos < 4:
+                tick_quarter = "genesis"
+            elif tick_pos < 8:
+                tick_quarter = "dharma"
+            elif tick_pos < 12:
+                tick_quarter = "karma"
+            else:
+                tick_quarter = "moksha"
+
+            tick_input: TickStateInput = {
+                "tick": base_tick + i,
+                "position": tick_pos,
+                "quarter": tick_quarter,
+                "guardian": tick_guardian,
+                "word": tick_word,
+                "opcode": tick_opcode.value if hasattr(tick_opcode, "value") else tick_opcode,
+            }
+
+            shadow_state = reactor.tick(tick_input)
+
+            # Capture execution result from any guardian that acts
+            tick_result = shadow_state.get("execution_result")
+            if tick_result is not None:
+                guardian_result = tick_result
 
         # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
         # =====================================================================
         # Update Akash state (persistent field)
-        self._akash["total_beats"] += 1
+        # Full yajna = WORDS ticks per call
+        self._akash["total_beats"] += WORDS
+        self._akash["total_rounds"] += 1
         self._akash["accumulated_value"] = (self._akash["accumulated_value"] + attractor) % MAHA_QUANTUM
         self._akash["attractor_counts"][attractor] = self._akash["attractor_counts"].get(attractor, 0) + 1
+
+        # RETURN-LOOP: Store last cell's seed for next call's context
+        # "The output becomes the input" - Yajna principle
+        self._akash["last_seed"] = seed
+        self._akash["last_position"] = position
+        self._akash["last_attractor"] = attractor
 
         return {
             # Input
@@ -510,8 +565,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "channel": parampara_channel,
                 "coherence": parampara_coherence,
             },
-            # Gita (VANDANAM)
+            # Gita (VANDANAM) - THE BINDING ELEMENT
             "chapter": chapter,
+            "chapter_significance": chapter_significance,
             "verse": verse_info,
             "matches": len(verse_result.matches),
             # Position (DASYAM) - Dual Classification
@@ -550,6 +606,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "success": result_cell.is_alive,
                 "prana": result_cell.prana,
                 "integrity": result_cell.membrane_integrity,
+                "kirtan_cycles": kirtan_cycles,
+                "transformations": kirtan_cycles * WORDS,
+                "yajna_ticks": WORDS,
                 "cycles": result_cell.age,
                 "guardian_acted": guardian_result is not None,
                 "guardian_result": guardian_result,

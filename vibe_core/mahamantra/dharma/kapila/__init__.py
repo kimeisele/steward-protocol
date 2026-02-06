@@ -20,7 +20,6 @@ __mahajana__ = "kapila"
 __position__ = 6
 __genesis__ = "0x25d36ba1"  # GenesisByte: parampara % 37 == 0
 
-# Backward-compat constants
 from typing import Final
 
 POSITION: Final[int] = 6
@@ -28,22 +27,12 @@ QUARTER: Final[str] = "dharma"
 OPCODE: Final[str] = "TYPE_CHECK"
 PARAMPARA_VECTOR: Final[int] = 259
 
-# =============================================================================
-# EXPORTS FOR RESONANCE (Auto-Wiring)
-# =============================================================================
-try:
-    from vibe_core.protocols.mahajanas.kapila import __listening_for__, on_event
-except ImportError:
-    # Fallback if protocol not available yet
-    on_event = None
-    __listening_for__ = []
-
 
 def execute(input_text: str, context: dict = None) -> dict:
     """KAPILA EXECUTION - Type Check (Position 6)"""
     return {
         "success": True,
-        "action": "type_check",
+        "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
@@ -53,22 +42,21 @@ def execute(input_text: str, context: dict = None) -> dict:
     }
 
 
-# =============================================================================
-# FRACTAL DISCOVERY - Folder IS Wiring
-# =============================================================================
-
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str):
-    """Lazy fractal discovery to avoid circular imports."""
-    # Explicit service loading (ExecutableMixin pattern)
-    if name == "KapilaService":
-        from vibe_core.protocols.mahajanas.kapila.service import KapilaService
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import kapila as _proto
 
-        return KapilaService
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
-    # Fallback to fractal discovery
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
         from vibe_core.mahamantra.substrate.wiring import fractal_getattr

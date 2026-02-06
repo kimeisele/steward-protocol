@@ -26,6 +26,7 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0xc0994a6b"  # GenesisByte: parampara % 37 == 0
 
+import logging
 from typing import Dict, Final, List, Optional, TypedDict
 
 from vibe_core.mahamantra.substrate.guna import (
@@ -34,8 +35,11 @@ from vibe_core.mahamantra.substrate.guna import (
     get_guna_by_position,
 )
 from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+
 # SSOT - WORDS derives from Mahamantra counting
 from vibe_core.mahamantra.substrate.seed import WORDS
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # TYPES
@@ -90,10 +94,9 @@ def get_all_cli_commands() -> Dict[str, int]:
 
     # RESONANCE-BASED POSITION (KREBS ENTFERNT: keine hardcoded keywords mehr)
     try:
-        from vibe_core.mahamantra.cli.bridge import cli_bridge
-
         # Get UnifiedCLI commands (cmd_* methods)
         from vibe_core.cli.unified_cli import UnifiedCLI
+        from vibe_core.mahamantra.cli.bridge import cli_bridge
 
         cli = UnifiedCLI()
 

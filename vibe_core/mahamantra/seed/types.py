@@ -109,8 +109,12 @@ class AkashState(TypedDict):
     resonance_level: int  # Accumulated resonance % mod_space (integer!)
     accumulated_value: int  # Sum of all transforms
     total_beats: int  # How many times vibrated
-    total_rounds: int  # Complete 7-beat rounds
+    total_rounds: int  # Complete WORDS-beat rounds
     attractor_counts: dict  # Distribution: {136: n, 22: n, ...} PANCHA
+    # RETURN-LOOP: Previous yajna's output feeds next input
+    last_seed: Optional[int]  # Seed from previous call (XOR continuity)
+    last_position: Optional[int]  # Position from previous call
+    last_attractor: Optional[int]  # Attractor from previous call
 
 
 class ExecuteResult(TypedDict):

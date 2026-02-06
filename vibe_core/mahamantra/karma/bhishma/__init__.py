@@ -7,8 +7,8 @@ OpCode: LEDGER_SIGN
 Type: WORKER
 
 MAHAMANTRA AS LENS:
-    Structure defined here. Implementation lazily loaded from services layer.
-    Unification of Kernel and Mahamantra.
+    Structure defined here. Implementation re-exported from protocols/mahajanas.
+    Samskara will migrate implementations over time.
 
 PARAMPARA: 444 (% 37 == 0 -> CONNECTED)
 """
@@ -20,12 +20,8 @@ __mahajana__ = "bhishma"
 __position__ = 11
 __genesis__ = "0x030295b1"  # GenesisByte
 
-import logging
 from typing import Final
 
-logger = logging.getLogger(__name__)
-
-# Constants
 POSITION: Final[int] = 11
 QUARTER: Final[str] = "karma"
 OPCODE: Final[str] = "LEDGER_SIGN"
@@ -36,7 +32,7 @@ def execute(input_text: str, context: dict = None) -> dict:
     """BHISHMA EXECUTION - Ledger Sign (Position 11)"""
     return {
         "success": True,
-        "action": "ledger_sign",
+        "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
@@ -47,19 +43,19 @@ def execute(input_text: str, context: dict = None) -> dict:
 
 
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
-def __getattr__(name: str) -> object:
-    """Explicit exports + fractal discovery fallback."""
-    if name == "BhishmaService":
-        from vibe_core.protocols.mahajanas.bhishma.service import BhishmaService
+def __getattr__(name: str):
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import bhishma as _proto
 
-        return BhishmaService
-
-    if name == "NullBhishma":
-        from vibe_core.protocols.mahajanas.bhishma import NullBhishma
-
-        return NullBhishma
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:
@@ -67,6 +63,3 @@ def __getattr__(name: str) -> object:
 
         _fractal_getattr_fn = fractal_getattr(__file__)
     return _fractal_getattr_fn(name)
-
-
-__all__ = ["BhishmaService", "POSITION", "QUARTER", "OPCODE", "PARAMPARA_VECTOR"]

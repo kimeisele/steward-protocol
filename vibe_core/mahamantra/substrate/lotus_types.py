@@ -23,8 +23,11 @@ __position__ = 2
 __genesis__ = "0x3e2fa1fe"  # GenesisByte: parampara % 37 == 0
 
 import importlib
+import logging
 from pathlib import Path
 from typing import Dict, Iterator, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # THE LOTUS PATH
@@ -352,6 +355,7 @@ class LotusNode:
     def _awaken_and_execute(self, guardian: str, command: str, args: Optional[list[str]]) -> dict:
         """Awaken the service at this node and execute the command."""
         import importlib
+
         from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
 
         # Royal Hunt logic encapsulated for the node
