@@ -53,9 +53,7 @@ from vibe_core.mahamantra.substrate.byte import (
     MAHAMANTRA_DIMENSION,
     LILA_CYCLES as _LILA_CYCLES,
     LILA_LIMIT,
-    PARAMPARA,
 )
-from vibe_core.mahamantra.protocols._seed import HALVES
 
 
 # =============================================================================

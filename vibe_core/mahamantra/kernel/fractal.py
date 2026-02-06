@@ -23,7 +23,7 @@ The pattern IS Krishna (acintya).
 WATERTIGHT: No Any types. All typed explicitly.
 """
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, MAHAJANA_COUNT, PARAMPARA, TRINITY)
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, TRINITY)
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===

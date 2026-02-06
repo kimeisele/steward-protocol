@@ -8,33 +8,31 @@ Receives a question (intent) and returns a reading by viewing it
 through multiple sacred lenses (mod-spaces).
 """
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
+from dataclasses import dataclass
+from typing import Dict, Final, List, Optional, Tuple
 
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    KSETRAJNA,
+    MAHA_QUANTUM,
+    MAHAMANTRA_NAME_HARE,
+    MAHAMANTRA_NAME_KRISHNA,
+    MAHAMANTRA_WORD_PATTERN as PATTERN,
+    MALA_COMPLETE,
+    PARAMPARA,
+    PARAMPARA_CHANNEL_NAMES,
+    PARAMPARA_CHANNELS,
+    POSITION_SUM_KRISHNA,
+    SEVEN,
+    TEN,
+    TRINITY,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x672435f8"
-
-from dataclasses import dataclass
-from typing import Final, Tuple, Dict, Optional, List
-
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    PARAMPARA,
-    HALVES,
-    SEVEN,
-    TEN,
-    POSITION_SUM_KRISHNA,
-    MALA_COMPLETE,
-    PARAMPARA_CHANNELS,
-    PARAMPARA_CHANNEL_NAMES,
-    TRINITY,
-    WORDS,
-    MAHAMANTRA_WORD_PATTERN as PATTERN,
-    MAHAMANTRA_NAME_HARE,
-    MAHAMANTRA_NAME_KRISHNA,
-)
 
 from vibe_core.mahamantra.substrate.algorithm.maha import triangular
 from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator

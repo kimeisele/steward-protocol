@@ -51,38 +51,34 @@ DUAL MODE: VIBRATIONAL + DATA:
     SAME STRUCTURE. DIFFERENT INTERPRETATION.
     Krishna is all-present. Entry point is everywhere.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, PANCHA, QUALITIES, QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS)
+from dataclasses import dataclass
+from enum import IntEnum
+from typing import Any, Dict, Final, Optional, Protocol, Tuple, Type, TypeVar, Union
+
+from vibe_core.mahamantra.protocols._seed import (
+    GAURA_TITHI,
+    GITA_CHAPTERS,
+    HALF_SIZE,
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
+    QUALITIES,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x62a24c79"  # GenesisByte: parampara % 37 == 0
-
-from dataclasses import dataclass
-from enum import IntEnum
-from typing import Any, Dict, Final, Optional, Protocol, Tuple, Type, TypeVar, Union
-
-# =============================================================================
-# IMPORT FROM SEED (SSOT - THE LAW)
-# =============================================================================
-from vibe_core.mahamantra.protocols._seed import (
-    GITA_CHAPTERS,  # 18 - Data types
-    HALF_SIZE,  # 8 - Siksastakam stages
-    NAVA,  # 9 - Operations
-    PANCHA,  # 5 - Tattva categories
-    PARAMPARA,  # 37 - Verification
-    QUARTERS,  # 4 - Quarter types
-    WORDS,  # 16 - Positions
-    # Chapter number derivations (NO HARDCODING!)
-    KSETRAJNA,      # 1
-    HALVES,         # 2
-    TRINITY,        # 3
-    SHARANAGATI,    # 6
-    SEVEN,          # 7
-    TEN,            # 10
-    MAHAJANA_COUNT, # 12
-    GAURA_TITHI,    # 15
-)
 
 # =============================================================================
 # PAYLOAD TYPE (18 Gita Chapters = 18 Data Types)
