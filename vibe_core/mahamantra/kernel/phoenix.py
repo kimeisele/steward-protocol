@@ -13,9 +13,10 @@ On restart: Read state → Continue where stopped.
 
 WATERTIGHT: All constants from SSOT (seed.py). NO MAGIC NUMBERS.
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, MAHAJANA_COUNT)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import HALVES, MAHAJANA_COUNT
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nrisimha"
@@ -23,16 +24,18 @@ __position__ = MAHAJANA_COUNT
 __genesis__ = "0x03a8f0d6"  # GenesisByte: parampara % 37 == 0
 
 import json
+import logging
 from pathlib import Path
 from typing import Final, Optional, TypedDict
 
 # IMPORT FROM SSOT - NO HARDCODED NUMBERS!
 from vibe_core.mahamantra.protocols._seed import (
+    LILA,  # 48
     PARAMPARA,  # 37
     WORDS,  # 16
-    LILA,  # 48
 )
 
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # STATE SCHEMA
