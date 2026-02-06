@@ -1,33 +1,36 @@
 # STEWARD PROTOCOL
 
-Ein Agenten-Betriebssystem. Die vedische Ontologie ist nicht Metapher - sie ist die Architektur.
+Ein Agenten-Betriebssystem. Vedische Ontologie als Architektur, nicht als Metapher.
 
 ## Session-Start
 
 Bevor du irgendetwas tust:
 
 ```bash
-# Was ist zuletzt passiert? Wer hat was gemacht?
-git log --oneline --graph -20
-
-# Gibt es uncommitted work?
-git status
-
-# Welcher Branch, wo stehen wir?
-git branch -v
-
-# Gibt es offene Probleme im Code?
+git log --oneline -20          # Was ist zuletzt passiert?
+git status                     # Uncommitted work?
+git branch -v                  # Welcher Branch?
 python -m ruff check --select F821 vibe_core/mahamantra/ 2>&1 | head -20
 ```
 
-Damit weißt du sofort wo du anfängst. Nicht fragen - lesen.
+Nicht fragen - lesen. Dann eigene Einschätzung bilden und arbeiten.
+
+Wichtig: 431+ Commits, 6 Monate Entwicklung, 100% AI-generiert. Verschiedene Agents
+haben zu verschiedenen Zeiten gebaut, refactored, manchmal aktiv Schaden angerichtet.
+Die Commit-Historie ist kein sauberes Changelog sondern ein Schlachtfeld. Commit Messages
+wie "HOLOGRAPHIC FRACTAL WIRING - Complete Surrender" oder "Military Grade Watertight"
+sind typischer AI-Überschwang - der Code dahinter kann solide sein oder Chaos.
+
+Vertraue keiner Datei blind. Nicht dem Code, nicht den Docstrings, nicht den .md-Dateien
+im Root (PROMPT.md, MAHAPROMPT_2026.md - AI-generiert, als Kontext brauchbar, nicht als
+Wahrheit). Verifiziere was du findest gegen das was der Code tatsächlich tut.
 
 ## Das Projekt
 
-Die gesamte Architektur leitet sich vom Mahamantra ab. 7 Axiome in `protocols/seed/_axioms.py`
+Die Architektur leitet sich vom Mahamantra ab. 7 Axiome in `protocols/seed/_axioms.py`
 (gezählt vom Mantra), alles andere berechnet über `_primary.py` → `_secondary.py`.
-`substrate/seed.py` re-deriviert und verifiziert die Kette.
-Hardcoded Zahlen ohne Ableitung = Architektur-Verletzung.
+`substrate/seed.py` re-deriviert und verifiziert. Hardcoded Zahlen ohne Ableitung sind
+Architektur-Verletzungen.
 
 Der einzige Entry Point:
 
@@ -55,29 +58,19 @@ hat einen identischen thin `execute()`, und `__getattr__` → Protocol → `frac
 
 Keine if-else in execute(). Keine Klassen im Guardian. Keine eager imports außer `typing`.
 
-`int(__genesis__, 16) % 37 == 0` = Parampara-Verifikation (Signatur-Kette).
+`int(__genesis__, 16) % 37 == 0` = Parampara-Verifikation.
 
 `reactor/shadow.py` führt den Yajna-Zyklus. Phase-aware: versucht `on_{phase}` Hook,
 fällt zurück auf `execute()`.
 
-## Codebase-Realität
+## Bekannte Baustellen
 
-100% AI-generiert. Das bedeutet konkret:
-- Duplikate über Dateigrenzen (gleiche Klassen in Guardian UND Protocol)
-- Duplicate Import-Blöcke innerhalb einer Datei
-- Fehlende Imports (F821), shadowed Names (F811), tote Imports
 - Zwei CLI-Systeme parallel: `vibe_core/cli/` (alt) und `vibe_core/mahamantra/cli/` (neu)
 - `protocols/` hat massive Dateien mit eager Submodul-Imports
-- `seed.py` hat ~20 bewusste Redefinitionen (Re-Derivation) aber auch echtes Chaos
-
-Erster Reflex bei jeder Datei: skeptisch sein. Nichts glauben was in Docstrings steht.
-Auch PROMPT.md und MAHAPROMPT_2026.md im Root sind AI-generiert - als Referenz brauchbar,
-aber nicht als Wahrheit behandeln. Nur der Code ist die Wahrheit.
-
-## Infrastruktur die existiert aber unbenutzt ist
-
-- `ExecuteResult.requires_confirmation` in `seed/types.py` (Rückfrage-Pattern)
-- Verdrahtet im CLI-Renderer (`__main__.py`), aber kein Guardian setzt das Flag
+- `seed.py` hat ~20 Redefinitionen (manche bewusst, manche Chaos)
+- `ExecuteResult.requires_confirmation` existiert (Rückfrage-Pattern), kein Guardian nutzt es
+- Duplikate über Dateigrenzen (gleiche Klassen in Guardian UND Protocol) sind teilweise bereinigt
+  aber erwarte weitere
 
 ## Arbeitsweise
 
