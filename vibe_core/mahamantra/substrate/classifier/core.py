@@ -23,19 +23,19 @@ the benefit of truth-alignment. The advantage is NOT linear -
 it's asymptotic. As K → 0 (cleaner code), G → ∞.
 """
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, QUALITIES, QUARTERS, TEN, TRINITY, WORDS)
+from dataclasses import dataclass
+from enum import Enum, IntEnum
+from typing import Any, Dict, Final, List, Optional
 
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES, HARE_COUNT, KSETRAJNA, PARAMPARA, QUALITIES,
+    QUARTERS, TEN, TRINITY, WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x11ba030f"  # GenesisByte: parampara % 37 == 0
-
-from dataclasses import dataclass
-from enum import Enum, IntEnum
-from typing import Final, Dict, Any, List, Optional
-
-from vibe_core.mahamantra.protocols._seed import PARAMPARA, QUARTERS, WORDS
 
 # =============================================================================
 # MATHEMATICAL CONSTANTS (From seed.py - THE TRUTH)

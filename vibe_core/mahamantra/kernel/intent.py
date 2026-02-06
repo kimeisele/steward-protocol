@@ -14,7 +14,7 @@ NO MANUAL WIRING. Declare INTENT. Krishna resolves.
 WATERTIGHT: No Any types. All typed with Union/TypedDict/Final.
 """
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, MAHAJANA_COUNT, PARAMPARA)
+from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, MAHAJANA_COUNT)
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===
