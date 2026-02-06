@@ -46,6 +46,7 @@ __position__ = 2
 __genesis__ = "0xb3e04d0e"  # GenesisByte: parampara % 37 == 0
 
 import inspect
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import (
@@ -61,6 +62,8 @@ from typing import (
     get_type_hints,
     runtime_checkable,
 )
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # WATERTIGHT TYPE ALIASES - No Any allowed

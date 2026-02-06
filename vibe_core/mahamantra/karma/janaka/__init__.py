@@ -29,40 +29,10 @@ PARAMPARA_VECTOR: Final[int] = 407
 
 
 def execute(input_text: str, context: dict = None) -> dict:
-    """
-    JANAKA EXECUTION - State Sync (Position 10)
-
-    Stateless execution wrapper.
-    OpCode: STATE_SYNC
-    """
-    from vibe_core.di import ServiceRegistry
-    from vibe_core.protocols.mahajanas.janaka import JanakaProtocol
-    from vibe_core.protocols.mahajanas.janaka.service import JanakaService
-
-    # Use ServiceRegistry for singleton (mahamantra = force, consistent routing)
-    service = ServiceRegistry.get(JanakaProtocol)
-    if service is None:
-        service = JanakaService()
-        ServiceRegistry.register(JanakaProtocol, service)
-    intent = input_text.lower().strip()
-
-    # STATE_SYNC operations
-    if "check" in intent or "status" in intent:
-        state = service.get_state()
-        return {"success": True, "action": "get_state", "state": state, "message": f"Janaka [{OPCODE}]: state report"}
-
-    if "sync" in intent:
-        result = service.sync_state()
-        return {
-            "success": result,
-            "action": "sync_state",
-            "message": f"Janaka [{OPCODE}]: sync {'ok' if result else 'failed'}",
-        }
-
-    # Default
+    """JANAKA EXECUTION - State Sync (Position 10)"""
     return {
         "success": True,
-        "action": "state_sync",
+        "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,

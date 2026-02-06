@@ -20,10 +20,7 @@ __mahajana__ = "kumaras"
 __position__ = 5
 __genesis__ = "0xfe9a70b8"  # GenesisByte
 
-import logging
 from typing import Final
-
-logger = logging.getLogger(__name__)
 
 POSITION: Final[int] = 5
 QUARTER: Final[str] = "dharma"
@@ -32,81 +29,33 @@ PARAMPARA_VECTOR: Final[int] = 222
 
 
 def execute(input_text: str, context: dict = None) -> dict:
-    """
-    KUMARAS EXECUTION - Purity & Validation (Shuddhi)
-
-    The Four Kumaras maintain eternal purity.
-    """
-    from . import protocol
-
-    intent = input_text.lower().strip()
-
-    # Try NullKumaras for basic operations
-    try:
-        kumaras = protocol.NullKumaras()
-
-        if "shuddhi" in intent or "purify" in intent or "check" in intent:
-            return {
-                "success": True,
-                "action": "shuddhi",
-                "purity": "pristine",
-                "message": "🧘 Kumaras: Shuddhi check passed. Eternal purity maintained.",
-            }
-
-        if "state" in intent or "status" in intent:
-            return {
-                "success": True,
-                "action": "get_state",
-                "purity": "pristine",
-                "position": POSITION,
-                "quarter": QUARTER,
-                "message": f"Kumaras [{OPCODE}]: purity=pristine",
-            }
-    except Exception as _exc:
-        logger.exception("Unexpected error: %s", _exc)
-
+    """KUMARAS EXECUTION - Bind Symbol (Position 5)"""
     return {
         "success": True,
-        "action": "introspect",
-        "position": POSITION,
+        "action": OPCODE.lower(),
+        "mahajana": __mahajana__,
+        "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
-        "message": f"🧒 Kumaras hear: '{input_text}'. Try 'shuddhi', 'purify', or 'check'.",
+        "input": input_text,
+        "message": f"Kumaras [{OPCODE}]: '{input_text}'",
     }
 
 
-# =============================================================================
-# FRACTAL DISCOVERY - Folder IS Wiring
-# =============================================================================
-
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
 def __getattr__(name: str):
-    """Lazy fractal discovery to avoid circular imports."""
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import kumaras as _proto
 
-    # Map Protocol types to protocol.py
-    if name in (
-        "KumarasProtocol",
-        "KumarasProtocolBase",
-        "NullKumaras",
-        "ShuddhiProtocol",
-        "ShuddhiResult",
-        "ShuddhiStatus",
-        "PurityLevel",
-        "PurificationResult",
-        "ResetResult",
-        "PurityState",
-    ):
-        from . import protocol
-
-        return getattr(protocol, name)
-
-    # Map Validation types to validation.py
-    if name.startswith("Validation") or name.endswith("check"):
-        from . import validation
-
-        return getattr(validation, name)
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:

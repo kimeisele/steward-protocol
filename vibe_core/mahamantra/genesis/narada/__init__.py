@@ -29,46 +29,16 @@ PARAMPARA_VECTOR: Final[int] = 111
 
 
 def execute(input_text: str, context: dict = None) -> dict:
-    """
-    NARADA EXECUTION - Observation & Communication
-
-    Stateless execution via NullNarada.
-    """
-    from vibe_core.protocols.mahajanas.narada import NullNarada
-
-    narada = NullNarada()
-    intent = input_text.lower().strip()
-
-    if "broadcast" in intent or "pulse" in intent:
-        result = narada.broadcast_cli(input_text)
-        return {
-            "success": True,
-            "action": "broadcast",
-            "result": result,
-            "message": f"Narada [{OPCODE}]: broadcast sent",
-        }
-
-    if "observe" in intent:
-        narada.observe("user", "request", input_text)
-        return {
-            "success": True,
-            "action": "observe",
-            "recorded": True,
-            "message": f"Narada [{OPCODE}]: observation recorded",
-        }
-
-    if "state" in intent or "status" in intent:
-        state = narada.get_state()
-        return {"success": True, "action": "get_state", "state": state, "message": f"Narada [{OPCODE}]: state report"}
-
-    # Default: return state
+    """NARADA EXECUTION - Alloc Mem (Position 2)"""
     return {
         "success": True,
-        "action": "introspect",
-        "position": POSITION,
+        "action": OPCODE.lower(),
+        "mahajana": __mahajana__,
+        "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
-        "message": f"Narada hears: '{input_text}'. Try 'broadcast', 'observe', or 'state'.",
+        "input": input_text,
+        "message": f"Narada [{OPCODE}]: '{input_text}'",
     }
 
 

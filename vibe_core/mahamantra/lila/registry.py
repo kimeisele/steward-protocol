@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from threading import Lock
-from typing import TYPE_CHECKING, Dict, Final, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, Final, List, Optional, Set
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.lila.jiva_shadow import JivaShadow

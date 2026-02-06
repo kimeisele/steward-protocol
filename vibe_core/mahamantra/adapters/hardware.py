@@ -51,23 +51,25 @@ USAGE:
 
 from __future__ import annotations
 
+from typing import Final, Iterator, Optional
+
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 3
 __genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 
+from vibe_core.mahamantra.protocols._seed import (
+    AKSARA_COUNT,  # 32 - Syllables
+    HARE_COUNT,  # 8 - Pipeline stages = Siksastakam verses
+    QUARTERS,  # 4 - Quarters
+    WORDS,  # 16 - Mahamantra words
+)
 from vibe_core.mahamantra.protocols.hardware import (
-    MahaHardwareProtocol,
     HardwareSpec,
+    MahaHardwareProtocol,
+    PipelineStage,
     PipelineStageInfo,
     VerificationResult,
-    PipelineStage,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    WORDS,           # 16 - Mahamantra words
-    QUARTERS,        # 4 - Quarters
-    AKSARA_COUNT,    # 32 - Syllables
-    HARE_COUNT,      # 8 - Pipeline stages = Siksastakam verses
 )
 
 # =============================================================================
@@ -165,8 +167,14 @@ class MahaHardware(MahaHardwareProtocol):
         Each stage corresponds to one verse of Siksastakam.
         """
         bit_ranges = [
-            "31-28", "27-24", "23-20", "19-16",
-            "15-12", "11-8", "7-4", "3-0",
+            "31-28",
+            "27-24",
+            "23-20",
+            "19-16",
+            "15-12",
+            "11-8",
+            "7-4",
+            "3-0",
         ]
 
         for i, (sanskrit, english, hw_effect) in enumerate(_SIKSASTAKAM_VERSES):
