@@ -247,10 +247,10 @@
     "result": null
   },
   {
-    "timestamp": "2026-02-04T23:57:24.793564",
-    "intent_type": "evaluate_module_compliance",
-    "intent_title": "[GAD-000] Module without manifest.json",
-    "trigger": "trigger:evaluate_module_compliance",
+    "timestamp": "2026-02-06T23:10:58.829234",
+    "intent_type": "detect_code_smell",
+    "intent_title": "[SMELL] 5 modules implementing JSON parsing",
+    "trigger": "trigger:detect_code_smell",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,

@@ -247,10 +247,10 @@
     "result": null
   },
   {
-    "timestamp": "2026-02-04T23:57:23.775263",
-    "intent_type": "detect_code_smell",
-    "intent_title": "[TODSUNDE] Lazy initialization hack",
-    "trigger": "trigger:detect_code_smell",
+    "timestamp": "2026-02-06T23:10:59.798392",
+    "intent_type": "classify_renderer",
+    "intent_title": "Classify system renderer correctly",
+    "trigger": "trigger:classify_renderer",
     "file_path": null,
     "dharmic_score": 0.5,
     "resonance": 1.0,

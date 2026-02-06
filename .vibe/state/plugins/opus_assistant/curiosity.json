@@ -9,63 +9,63 @@
   "sources": [
     {
       "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:54:59.732293"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:55:00.110581"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:55:01.623525"
-    },
-    {
-      "type": "uncertainty",
       "description": "Low confidence decision: BLOCKED : Empty intent",
       "weight": 0.12,
-      "timestamp": "2026-02-05T00:55:02.273485"
+      "timestamp": "2026-02-06T23:10:39.788268"
     },
     {
       "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
+      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:55:40.415275"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on check_lint: Check linting errors",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:55:42.332051"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:55:43.285682"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:55:43.525169"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:56:47.781714"
+      "timestamp": "2026-02-06T23:10:42.120884"
     },
     {
       "type": "uncertainty",
       "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-05T00:57:24.179634"
+      "timestamp": "2026-02-06T23:10:43.711071"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-06T23:10:47.359266"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-06T23:10:51.516739"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: BLOCKED : Empty intent",
+      "weight": 0.12,
+      "timestamp": "2026-02-06T23:10:52.847670"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-06T23:10:52.973083"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on check_lint: Check linting errors",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-06T23:10:54.923894"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-06T23:10:55.648238"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-06T23:10:56.632663"
     }
   ]
 }
