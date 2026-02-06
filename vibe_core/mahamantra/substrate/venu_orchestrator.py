@@ -17,7 +17,10 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0xdd4f22d7"  # GenesisByte: parampara % 37 == 0
 
-from typing import Final, ClassVar, Tuple
+from typing import Final, ClassVar, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.protocols._pancha import TattvaDict
 import struct
 
 from vibe_core.mahamantra.protocols._seed import (
