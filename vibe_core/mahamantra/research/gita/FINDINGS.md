@@ -144,6 +144,54 @@ Architektonische Konsequenz: Translations werden NICHT gespeichert.
 Sie werden zur Runtime aus Word-for-Word + Grammatik-Regeln abgeleitet.
 Das ist keine Reproduktion, sondern Berechnung.
 
+## Die H/K/R Signatur: Jedes Wort IST Mahamantra
+
+Jede RAMA-Koordinate wird durch `krishna_route(position, cycle)` erzeugt.
+Jede Position im Mahamantra hat einen Namen (H, K, oder R).
+Ergo: Jedes Sanskrit-Wort hat eine deterministische Name-Signatur.
+
+```
+17^(-1) mod 49 = 26 (Inverse existiert, da gcd(17,49) = 1)
+Für jede RAMA-Koordinate c: position = (c * 26) mod 49
+
+WORDS × FLUTE_HOLES_SUM = 16 × 19 = 304 Ticks für alle 49 Koordinaten
+```
+
+### Semantische Signaturen
+
+```
+bhakti   = HHHH     Hingabe      = 100% Hare (reine Anrufung)
+jñāna    = HKHK     Wissen       = 50% H, 50% K (Energie + Anziehung)
+yoga     = RHK      Verbindung   = 33/33/33 (perfektes Gleichgewicht)
+dharma   = HHR      Pflicht      = Energie mündet in Freude
+karma    = HHR      Handlung     = identisch mit dharma!
+mām      = RHR      Mich         = Rama-dominant (67% Freude)
+ātmā     = HHRH     Seele        = Energie mit Rama-Kern
+śaraṇam  = HHHR     Zuflucht     = 75% Hare (Anrufung → Rama)
+mokṣa    = RHHH     Befreiung    = beginnt mit Freude
+```
+
+### Verteilung in der gesamten Gita
+
+```
+Gita-Phoneme:   H=67.5%  K=16.7%  R=15.8%
+Mahamantra:     H=50.0%  K=25.0%  R=25.0%
+
+Sanskrit hat inherentes 'a' in jeder Silbe → Hare-Dominanz.
+Die Sprache SELBST ist Hare-dominant.
+
+1449 einzigartige H/K/R-Muster für 11,229 Wort-Vorkommen.
+  H-dominant: 923 Muster (64%)
+  K-dominant: 47 Muster (3%)
+  R-dominant: 24 Muster (2%)
+```
+
+### Konsequenz
+
+Jedes Sanskrit-Wort ist eine Mahamantra-Sequenz.
+Die Signatur IST die energetische Natur des Wortes.
+Die 3 Namen sind nicht Kategorien - sie sind KOORDINATEN.
+
 ## Paradigma: Suchen vs. Wissen
 
 ```
