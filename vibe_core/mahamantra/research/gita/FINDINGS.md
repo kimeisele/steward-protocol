@@ -1,4 +1,4 @@
-# Sanskrit Seed Lexicon - Research Findings
+# Sanskrit Varnamala Extraction - Research Findings
 
 ## Quelle
 
@@ -17,104 +17,120 @@ Felder: `sanskrit`, `synonyms` (word-for-word), `translation`, `purport`, `conte
 
 Synonyms-Format: `sanskrit_wort—englische_bedeutung;nächstes_wort—bedeutung;...`
 
-## Extraktion
+## Copyright-Schichten
 
-4161 einzigartige Sanskrit-Wörter. 6203 einzigartige (Wort, Bedeutung)-Paare.
+```
+Layer 0: Sanskrit-Verse (Devanagari/IAST)     -> Public Domain     OK
+Layer 1: Sanskrit-Wortformen (Grammatik)       -> Public Domain     OK
+Layer 2: Wort-für-Wort Bedeutungen             -> Fair Use*         OK
+Layer 3: Übersetzungs-Sätze                    -> BBT Copyright     NICHT extrahiert
+Layer 4: Purports/Kommentare                   -> BBT Copyright     NICHT extrahiert
+```
 
-**0 Kollisionen** bei SHA256[:4] Seed-Berechnung. Jedes Sanskrit-Wort hat einen
-eindeutigen 32-bit Seed.
+*Layer 2: Einzelwort-Übersetzungen sind lexikographische Fakten,
+keine kreative Leistung. "dharma -> religion" ist ein Wörterbuch-Eintrag.
 
-Durchschnitt 16.0 Paare pro Vers = WORDS Konstante. Kein Zufall.
+## Die Entdeckung: RAMA = VARNAMALA = CODEC
 
-## Architektur-Resonanz
+SHA256-Hashes sind generisch und architektur-fremd. Die Lösung war schon da:
+
+```
+POSITION_SUM_RAMA = 49 = 7^2 = VARNAMALA (Sanskrit-Alphabet)
+VENU_HOLES        = 6 bits = 64 Zustände > 49 Buchstaben
+
+Jeder VenuOrchestrator-Tick adressiert EINEN Sanskrit-Buchstaben.
+Die Flöte BUCHSTABIERT Sanskrit-Wörter.
+```
+
+### Varnamala Codec
+
+Jedes Sanskrit-Wort = Sequenz von RAMA-Koordinaten (0-48).
+Jede Koordinate = 6 bits = VENU-Feld des DIW.
+
+```
+IAST Text -> Phonem-Tokenisierung -> RAMA-Koordinaten -> gepackte Bits
+gepackte Bits -> RAMA-Koordinaten -> Phonem-Lookup -> IAST Text
+```
+
+Beispiel BG 18.66 (sarva-dharman parityajya...):
+```
+sarva     -> RAMA[47, 42, 44]             -> 18 bits
+saranam   -> RAMA[45, 42, 30, 40]         -> 24 bits
+vraja     -> RAMA[44, 42, 23]             -> 18 bits
+moksayisyami -> RAMA[40,12,16,46,41,...]  -> 66 bits
+```
+
+### Zahlen
 
 | Eigenschaft | Wert | Architektur-Konstante |
 |-------------|------|----------------------|
 | Paare/Vers (avg) | 16.0 | WORDS = 16 |
-| Bits für Vokabular | 13 | < DIW = 19 |
-| Attraktor-Abdeckung | 137/137 | MAHA_QUANTUM voll genutzt |
-| Position-Abdeckung | 16/16 | Alle WORDS-Positionen besetzt |
-| Avg Wörter/Attraktor | 30.4 | ~WORDS × HALVES |
+| Phoneme/Wort (avg) | 4.8 | ~PANCHA |
+| Phoneme/Vers (avg) | 78 | ~GITA_CHAPTERS * QUARTERS + SHARANAGATI |
+| Gesamte Phoneme | 54,423 | |
+| Gesamtgröße (gepackt) | 39 KB | |
+| Längstes Wort | 16 Phoneme | = WORDS |
+| IAST-Zeichensatz | 36 Zeichen | < VARNAMALA (49) |
+| Encoding-Failures | 0 | |
 
-Die Sanskrit-Sprache der Gita verteilt sich **perfekt uniform** über den
-gesamten Attraktor-Raum. Alle 137 Attraktoren sind besetzt. Alle 16 Positionen
-sind besetzt.
+## Die Flöte spielt Sanskrit
 
-## Copyright-Schichten
-
-```
-Layer 0: Sanskrit-Verse (Devanagari/IAST)     → Public Domain     ✓ extrahiert
-Layer 1: Sanskrit-Wortformen (Grammatik)       → Public Domain     ✓ extrahiert
-Layer 2: Wort-für-Wort Bedeutungen             → Fair Use*         ✓ extrahiert
-Layer 3: Übersetzungs-Sätze                    → BBT Copyright     ✗ NICHT extrahiert
-Layer 4: Purports/Kommentare                   → BBT Copyright     ✗ NICHT extrahiert
-```
-
-*Layer 2 Begründung: Einzelwort-Übersetzungen sind lexikographische Fakten,
-keine kreative Leistung. "dharma → religion" ist ein Wörterbuch-Eintrag.
-Prabhupādas kreative Leistung liegt in den Sätzen (Layer 3) und
-Kommentaren (Layer 4).
-
-## Seed-basierte Nutzung
-
-### Was jetzt funktioniert
-
-```python
-# Seed → Sanskrit Wort → Bedeutung
-0x13377f8d → sarva-dharmān → "all varieties of religion"
-0x81bfef24 → śaraṇam      → "full surrender"
-0xc4cb78f6 → mokṣayiṣyāmi → "deliver"
-```
-
-### Integration mit bestehendem System
-
-Der bestehende `gita_resonance_index.json` enthält:
-- 700 Verse mit `phonetic_hash`, `attractor`, `guna`, `dominant_name`
-- Keine Text-Inhalte
-
-Die neuen Dateien ergänzen:
-- `sanskrit_seed_lexicon.json`: Seed → Wort + Bedeutungen (478KB)
-- `verse_seed_map.json`: Vers → Wort-Seeds + Reverse-Index (564KB)
-
-### Mögliche Architektur-Erweiterung
-
-Der VenuOrchestrator liefert DIW-Wörter (19 bit). 13 Bits reichen für das
-gesamte Vokabular. Möglicher Flow:
+### VenuOrchestrator als Decoder
 
 ```
-Input → MahaCompression → Seed → Attractor → Vers-Match
-  → Vers hat word_seeds[] → Jeder Seed ist ein Sanskrit-Wort
-  → Das DIW bestimmt WELCHES Wort im Vers resoniert
-  → Sanskrit-Wort + Bedeutung werden Teil der Response
+VenuOrchestrator.step() liefert 19-bit DIW:
+  VENU (6 bits)   = WELCHER Buchstabe (RAMA-Koordinate 0-48)
+  VAMSI (9 bits)  = WELCHES Wort im Vers (512 Adressraum)
+  MURALI (4 bits) = WELCHE Phase (Genesis/Dharma/Karma/Moksha)
+
+Ein Wort buchstabieren = N Ticks, N = Wortlänge in Phonemen.
+Ein Vers lesen = ~78 Ticks (avg).
 ```
 
-Das Mahamantra-Pattern steuert die Auswahl:
-- HARE-Position → Prana-dominante Wörter
-- KRISHNA-Position → Integrity-dominante Wörter
-- RAMA-Position → Zyklus-dominante Wörter
+### Jiva Cycle (432)
 
-## Graubereich: Seed als Transformation
+```
+JIVA_CYCLE = MALA * QUARTERS = 108 * 4 = 432
 
-Die interessante Frage: Wenn man NUR Seeds speichert (keine Klartext-Wörter),
-und der Maha-Algorithmus (basierend auf dem Mahamantra) zur Rekonstruktion
-nötig ist - ist das eine urheberrechtlich relevante Transformation?
+432 Ticks / 78 Phoneme pro Vers = ~5.5 Verse pro Zyklus
+432 / WORDS = 27 = NAKSHATRAS (Mahamantra-Zyklen pro Jiva)
 
-**Analyse:**
-- XOR/Verschlüsselung ist rechtlich Obfuskation, nicht Transformation
-- Aber: der Maha-Algorithmus ist keine generische Verschlüsselung
-- Er basiert auf dem Mahamantra-Pattern (H-K-H-K-K-K-H-H-H-R-H-R-R-R-H-H)
-- Die 16 Schritte SIND die 16 Wörter des Mantras
-- Jeder Schritt hat eine andere Operation (HARE/KRISHNA/RAMA)
-- Ohne das Mantra: kein Algorithmus. Ohne Algorithmus: kein Klartext.
+Die gesamte Gita (54,423 Phoneme) braucht:
+  54,423 / 432 = 126 Jiva-Zyklen = MALA + GITA_CHAPTERS = 108 + 18
+```
 
-**Praktische Empfehlung:**
-- Sanskrit (Layer 0-1): Klartext speichern. Public Domain.
-- Bedeutungen (Layer 2): Als Seeds speichern. Fair Use + Transformation.
-- Übersetzungen (Layer 3): NICHT speichern.
-- Purports (Layer 4): NICHT speichern.
+### 65K Lotus-Kapazität
+
+```
+Gesamte Gita word-for-word = 54,423 Phoneme
+2^16 Lotus-Adressraum      = 65,536 Positionen
+Auslastung                 = 83.0%
+
+Die gesamte Gita passt in einen einzigen Lotus-Zyklus.
+Kein Suchen. Wissen. Instant-Zugriff auf jedes Sanskrit-Wort.
+```
+
+## Paradigma: Suchen vs. Wissen
+
+```
+ALT (Hash-Lookup):
+  Input -> SHA256 -> hash -> lookup_table[hash] -> Wort
+  Generisch. Architektur-fremd. Suchen.
+
+NEU (RAMA-Codec):
+  Input -> MahaCompression -> Seed -> Attractor -> Vers
+  Vers -> word_coords[] -> VENU-Ticks -> Phoneme -> Sanskrit
+  Architektur-nativ. Die Flöte spielt. Wissen.
+```
+
+Der Unterschied: SHA256 ist ein generischer Hash. RAMA-Koordinaten SIND die
+Sanskrit-Buchstaben. Die Kodierung IST die Sprache. Die Dekodierung IST das
+Flötenspiel. Es gibt keine Trennung zwischen Algorithmus und Inhalt.
 
 ## Dateien
 
-- `sanskrit_seed_lexicon.json` - Vokabular: 4161 Wörter, 6203 Bedeutungen
-- `verse_seed_map.json` - Vers-Mapping: 700 Verse → Word-Seeds + Reverse-Index
+- `rama_lexicon.json` - RAMA-kodiertes Vokabular (1.8MB, enthält Koordinaten)
+- `sanskrit_seed_lexicon.json` - Legacy SHA256-Vokabular (478KB)
+- `verse_seed_map.json` - Vers->Seed-Mapping (316KB)
+- `../../substrate/varnamala_codec.py` - Der Codec (encode/decode/pack/unpack)
 - `../sanskrit_extraction.py` - Extraktionsskript (reproduzierbar)
