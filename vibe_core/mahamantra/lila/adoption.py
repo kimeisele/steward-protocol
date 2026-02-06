@@ -29,8 +29,6 @@ from vibe_core.mahamantra.substrate.proxy import BalaramaProxy
 
 # Import OrbitalShadowReactor via convenience factory or direct
 from vibe_core.mahamantra.reactor.shadow import OrbitalShadowReactor, ShadowReactor
-
-from vibe_core.mahamantra.reactor.shadow import OrbitalShadowReactor, ShadowReactor
 from vibe_core.mahamantra.substrate.mahajana import Mahajana, Avatara
 
 logger = logging.getLogger("MAHAMANTRA.ADOPTION")
