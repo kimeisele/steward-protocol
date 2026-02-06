@@ -39,7 +39,17 @@ THE 9 NAVABHAKTI FIELDS:
 
 ALL INTEGER. NO FLOATS. PRABHUPADA WEIST DEN WEG.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, PANCHA, QUALITIES, QUARTERS, SEVEN, SHARANAGATI, TRINITY)
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    PANCHA,
+    QUALITIES,
+    QUARTERS,
+    SEVEN,
+    TRINITY,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"

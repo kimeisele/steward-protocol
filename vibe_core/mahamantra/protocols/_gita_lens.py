@@ -40,23 +40,16 @@ THIS FILE PROVIDES:
 
 "iti guhyatamaṁ śāstram" - This is the most confidential knowledge.
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS)
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
-__position__ = 0
-__genesis__ = "0xb8a58850"  # GenesisByte: parampara % 37 == 0
 
 from enum import IntEnum
 from typing import Dict, Final, Tuple
 
-# =============================================================================
-# IMPORT FROM SEED (SSOT) - THE FOUNDATION
-# =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
+    GAURA_TITHI,
     GITA_CHAPTERS,
     GITA_VERSES,
     HALVES,
+    HARE_COUNT,
     KSETRAJNA,
     MAHAJANA_COUNT,
     NAVA,
@@ -68,34 +61,36 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     TRINITY,
     WORDS,
-    # Chapter derivations
-    GAURA_TITHI,  # 15
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xb8a58850"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # IMPORT FROM MAHA GITA CENTER (research/gita/)
 # =============================================================================
 # The Gita infrastructure is the TRUE CENTER. We import, not duplicate.
-from vibe_core.mahamantra.research.gita import (
-    # Constants
-    FIXED_POINT_CHAPTER,  # 18
-    FIXED_POINT_VERSE,    # 66
-    SHARANAGATI_SUM,      # 84 = 18 + 66
-    # Data
-    CHAPTER_18_VERSE,     # The ultimate verse
-    GitaVerse,
-    # Functions
-    verify_fixed_point,
-    get_chapter_significance,
-)
-
 # =============================================================================
 # IMPORT FROM MAHA COMPUTE (Attractor → Chapter routing)
 # =============================================================================
 from vibe_core.mahamantra.protocols._maha_compute import (
-    get_gita_chapter,     # Attractor → Chapter
-    get_gita_insight,     # Chapter → Insight
-    GITA_INSIGHTS,        # All 18 insights
+    GITA_INSIGHTS,  # All 18 insights
+    get_gita_chapter,  # Attractor → Chapter
+    get_gita_insight,  # Chapter → Insight
+)
+from vibe_core.mahamantra.research.gita import (
+    # Data
+    CHAPTER_18_VERSE,  # The ultimate verse
+    # Constants
+    FIXED_POINT_CHAPTER,  # 18
+    FIXED_POINT_VERSE,  # 66
+    SHARANAGATI_SUM,  # 84 = 18 + 66
+    GitaVerse,
+    get_chapter_significance,
+    # Functions
+    verify_fixed_point,
 )
 
 # =============================================================================
@@ -142,6 +137,7 @@ assert GITA_KSHETRA == 13, "Chapter 13 is the Kshetra chapter"
 # "I am the fire of digestion in the bodies of all living entities"
 # → The pranas are discussed in context of life force and digestion.
 
+
 class GitaNadiMapping(IntEnum):
     """Nadi Type → Gita Chapter mapping."""
 
@@ -167,10 +163,10 @@ class GitaNadiMapping(IntEnum):
 
 
 NADI_TO_GITA: Final[Dict[int, int]] = {
-    0: GitaNadiMapping.PRANA,   # User ↔ System → Ch.2
-    KSETRAJNA: GitaNadiMapping.APANA,   # Agent ↔ Agent → Ch.3
-    HALVES: GitaNadiMapping.VYANA,   # Service ↔ Service → Ch.7
-    TRINITY: GitaNadiMapping.UDANA,   # Agent ↔ Mahajana → Ch.15
+    0: GitaNadiMapping.PRANA,  # User ↔ System → Ch.2
+    KSETRAJNA: GitaNadiMapping.APANA,  # Agent ↔ Agent → Ch.3
+    HALVES: GitaNadiMapping.VYANA,  # Service ↔ Service → Ch.7
+    TRINITY: GitaNadiMapping.UDANA,  # Agent ↔ Mahajana → Ch.15
     QUARTERS: GitaNadiMapping.SAMANA,  # Kernel ↔ Shadow → Ch.6
 }
 
@@ -184,28 +180,29 @@ NADI_TO_GITA: Final[Dict[int, int]] = {
 #
 # ALL SENSES MAP TO CHAPTER 13 (KSHETRA) - the field where they operate!
 
+
 class GitaIndriyaMapping(IntEnum):
     """Indriya (Sense) → Gita Chapter mapping."""
 
     # JNANENDRIYA (5 Knowledge Senses) → Ch.13 KSHETRA
     # The Kshetra chapter defines the field of perception
     SHROTRA = GITA_KSHETRA  # 13 - Hearing
-    TVAK = GITA_KSHETRA     # 13 - Touch
+    TVAK = GITA_KSHETRA  # 13 - Touch
     CHAKSHU = GITA_KSHETRA  # 13 - Sight
-    RASANA = GITA_KSHETRA   # 13 - Taste
-    GHRANA = GITA_KSHETRA   # 13 - Smell
+    RASANA = GITA_KSHETRA  # 13 - Taste
+    GHRANA = GITA_KSHETRA  # 13 - Smell
 
     # KARMENDRIYA (5 Action Senses) → Ch.3 KARMA (action chapter!)
     # Action organs belong to the Karma chapter
-    VAK = GITA_KARMA        # 3 - Speech
-    PANI = GITA_KARMA       # 3 - Hands
-    PADA = GITA_KARMA       # 3 - Feet
-    PAYU = GITA_KARMA       # 3 - Excretion
-    UPASTHA = GITA_KARMA    # 3 - Reproduction
+    VAK = GITA_KARMA  # 3 - Speech
+    PANI = GITA_KARMA  # 3 - Hands
+    PADA = GITA_KARMA  # 3 - Feet
+    PAYU = GITA_KARMA  # 3 - Excretion
+    UPASTHA = GITA_KARMA  # 3 - Reproduction
 
 
 JNANENDRIYA_TO_GITA: Final[int] = GITA_KSHETRA  # All 5 → Ch.13
-KARMENDRIYA_TO_GITA: Final[int] = GITA_KARMA    # All 5 → Ch.3
+KARMENDRIYA_TO_GITA: Final[int] = GITA_KARMA  # All 5 → Ch.3
 
 
 # =============================================================================
@@ -213,6 +210,7 @@ KARMENDRIYA_TO_GITA: Final[int] = GITA_KARMA    # All 5 → Ch.3
 # =============================================================================
 # The 5 Vrttis from Yoga Sutras 1.5-11 map to Gita chapters.
 # These are mental modifications that affect cognition.
+
 
 class GitaVrttiMapping(IntEnum):
     """Vrtti (Mental Modification) → Gita Chapter mapping."""
@@ -235,11 +233,11 @@ class GitaVrttiMapping(IntEnum):
 
 
 VRTTI_TO_GITA: Final[Dict[int, int]] = {
-    0: GitaVrttiMapping.PRAMANA,    # Right knowledge → Ch.4
+    0: GitaVrttiMapping.PRAMANA,  # Right knowledge → Ch.4
     KSETRAJNA: GitaVrttiMapping.VIPARYAYA,  # Misconception → Ch.16
-    HALVES: GitaVrttiMapping.VIKALPA,    # Imagination → Ch.11
-    TRINITY: GitaVrttiMapping.NIDRA,      # Sleep → Ch.14
-    QUARTERS: GitaVrttiMapping.SMRTI,      # Memory → Ch.15
+    HALVES: GitaVrttiMapping.VIKALPA,  # Imagination → Ch.11
+    TRINITY: GitaVrttiMapping.NIDRA,  # Sleep → Ch.14
+    QUARTERS: GitaVrttiMapping.SMRTI,  # Memory → Ch.15
 }
 
 
@@ -248,6 +246,7 @@ VRTTI_TO_GITA: Final[Dict[int, int]] = {
 # =============================================================================
 # The three Gunas are the subject of Chapter 14.
 # But each Guna also has affinity with other chapters.
+
 
 class GitaGunaMapping(IntEnum):
     """Guna → Gita Chapter mapping."""
@@ -271,6 +270,7 @@ GUNA_TO_GITA: Final[int] = GITA_GUNATRAYA  # All 3 → Ch.14
 # =============================================================================
 # The 4 quarters of Mahamantra map to Gita chapter groups.
 
+
 class GitaQuarterMapping(IntEnum):
     """Quarter → Gita Chapter (representative)."""
 
@@ -289,9 +289,9 @@ class GitaQuarterMapping(IntEnum):
 
 QUARTER_TO_GITA: Final[Dict[int, int]] = {
     0: GitaQuarterMapping.GENESIS,  # Genesis → Ch.1
-    KSETRAJNA: GitaQuarterMapping.DHARMA,   # Dharma → Ch.6
-    HALVES: GitaQuarterMapping.KARMA,    # Karma → Ch.10
-    TRINITY: GitaQuarterMapping.MOKSHA,   # Moksha → Ch.18
+    KSETRAJNA: GitaQuarterMapping.DHARMA,  # Dharma → Ch.6
+    HALVES: GitaQuarterMapping.KARMA,  # Karma → Ch.10
+    TRINITY: GitaQuarterMapping.MOKSHA,  # Moksha → Ch.18
 }
 
 
@@ -299,6 +299,7 @@ QUARTER_TO_GITA: Final[Dict[int, int]] = {
 # NAVABHAKTI → GITA CHAPTER
 # =============================================================================
 # The 9 processes of devotional service (SB 7.5.23) map to Gita chapters.
+
 
 class GitaNavaBhaktiMapping(IntEnum):
     """NavaBhakti → Gita Chapter mapping."""
@@ -333,15 +334,15 @@ class GitaNavaBhaktiMapping(IntEnum):
 
 
 NAVABHAKTI_TO_GITA: Final[Dict[int, int]] = {
-    0: GitaNavaBhaktiMapping.SRAVANAM,       # Hearing → Ch.2
-    KSETRAJNA: GitaNavaBhaktiMapping.KIRTANAM,       # Chanting → Ch.9
-    HALVES: GitaNavaBhaktiMapping.SMARANAM,       # Remembering → Ch.15
-    TRINITY: GitaNavaBhaktiMapping.PADA_SEVANAM,   # Serving → Ch.3
-    QUARTERS: GitaNavaBhaktiMapping.ARCANAM,        # Worship → Ch.9
-    PANCHA: GitaNavaBhaktiMapping.VANDANAM,       # Prayer → Ch.11
-    SHARANAGATI: GitaNavaBhaktiMapping.DASYAM,         # Servitude → Ch.12
-    SEVEN: GitaNavaBhaktiMapping.SAKHYAM,        # Friendship → Ch.4
-    HARE_COUNT: GitaNavaBhaktiMapping.ATMA_NIVEDANAM, # Surrender → Ch.18
+    0: GitaNavaBhaktiMapping.SRAVANAM,  # Hearing → Ch.2
+    KSETRAJNA: GitaNavaBhaktiMapping.KIRTANAM,  # Chanting → Ch.9
+    HALVES: GitaNavaBhaktiMapping.SMARANAM,  # Remembering → Ch.15
+    TRINITY: GitaNavaBhaktiMapping.PADA_SEVANAM,  # Serving → Ch.3
+    QUARTERS: GitaNavaBhaktiMapping.ARCANAM,  # Worship → Ch.9
+    PANCHA: GitaNavaBhaktiMapping.VANDANAM,  # Prayer → Ch.11
+    SHARANAGATI: GitaNavaBhaktiMapping.DASYAM,  # Servitude → Ch.12
+    SEVEN: GitaNavaBhaktiMapping.SAKHYAM,  # Friendship → Ch.4
+    HARE_COUNT: GitaNavaBhaktiMapping.ATMA_NIVEDANAM,  # Surrender → Ch.18
 }
 
 
@@ -350,16 +351,17 @@ NAVABHAKTI_TO_GITA: Final[Dict[int, int]] = {
 # =============================================================================
 # The 5 Tattvas (elements) are enumerated in Gita 7.4 and 13.5.
 
+
 class GitaTattvaMapping(IntEnum):
     """Pancha Tattva → Gita Chapter mapping."""
 
     # All 5 elements defined in Ch.7 (apara prakrti)
     # "bhūmir āpo 'nalo vāyuḥ khaṁ mano buddhir eva ca"
     PRITHVI = GITA_JNANA_VIJNANA  # 7 - Earth
-    APAS = GITA_JNANA_VIJNANA     # 7 - Water
-    TEJAS = GITA_JNANA_VIJNANA    # 7 - Fire
-    VAYU = GITA_JNANA_VIJNANA     # 7 - Air
-    AKASHA = GITA_JNANA_VIJNANA   # 7 - Ether
+    APAS = GITA_JNANA_VIJNANA  # 7 - Water
+    TEJAS = GITA_JNANA_VIJNANA  # 7 - Fire
+    VAYU = GITA_JNANA_VIJNANA  # 7 - Air
+    AKASHA = GITA_JNANA_VIJNANA  # 7 - Ether
 
 
 TATTVA_TO_GITA: Final[int] = GITA_JNANA_VIJNANA  # All 5 → Ch.7
@@ -378,6 +380,7 @@ TANMATRA_TO_GITA: Final[int] = GITA_KSHETRA  # All 5 → Ch.13
 # SIKSASTAKAM (8 VERSES) → GITA CHAPTER
 # =============================================================================
 # Lord Caitanya's 8 verses map to Gita chapters by theme.
+
 
 class GitaSiksastakamMapping(IntEnum):
     """Siksastakam Verse → Gita Chapter mapping."""
@@ -494,19 +497,19 @@ __all__ = [
     # =========================================================================
     # RE-EXPORTS FROM research/gita/ (THE CENTER)
     # =========================================================================
-    "FIXED_POINT_CHAPTER",      # 18
-    "FIXED_POINT_VERSE",        # 66
-    "SHARANAGATI_SUM",          # 84
-    "CHAPTER_18_VERSE",         # The ultimate verse
+    "FIXED_POINT_CHAPTER",  # 18
+    "FIXED_POINT_VERSE",  # 66
+    "SHARANAGATI_SUM",  # 84
+    "CHAPTER_18_VERSE",  # The ultimate verse
     "GitaVerse",
     "verify_fixed_point",
     "get_chapter_significance",
     # =========================================================================
     # RE-EXPORTS FROM _maha_compute.py (ROUTING)
     # =========================================================================
-    "get_gita_chapter",         # Attractor → Chapter
-    "get_gita_insight",         # Chapter → Insight
-    "GITA_INSIGHTS",            # All 18 insights
+    "get_gita_chapter",  # Attractor → Chapter
+    "get_gita_insight",  # Chapter → Insight
+    "GITA_INSIGHTS",  # All 18 insights
     # =========================================================================
     # CHAPTER CONSTANTS (DERIVED FROM _seed.py)
     # =========================================================================

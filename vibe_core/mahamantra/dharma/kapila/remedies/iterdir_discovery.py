@@ -26,7 +26,7 @@ from typing import List, Optional, Set, Union
 
 import libcst as cst
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy, ShuddhiScopeError
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy, ShuddhiScopeError
 
 
 class IterdirDiscoveryRemedy(CSTRemedy):

@@ -22,9 +22,10 @@ The pattern IS Krishna (acintya).
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, MAHAJANA_COUNT, PARAMPARA, TRINITY)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
@@ -46,18 +47,17 @@ from typing import (
     Union,
 )
 
+from vibe_core.mahamantra.protocols._seed import (
+    KSETRAJNA,  # 1 - Knower/Soul
+    KSHETRA,  # 24 - Field elements
+    MAHAJANA_COUNT,  # 12 - Guardians
+)
 from vibe_core.mahamantra.substrate.acintya import (
     PARAMPARA,
     SYSTEM_MANIFESTATION,
     ParamparaConnection,
 )
 from vibe_core.mahamantra.substrate.fractal import FractalLevel
-from vibe_core.mahamantra.protocols._seed import (
-    KSHETRA,        # 24 - Field elements
-    MAHAJANA_COUNT, # 12 - Guardians
-    KSETRAJNA,      # 1 - Knower/Soul
-)
-
 
 # =============================================================================
 # FRACTAL CONSTANTS (DERIVED FROM _seed.py SSOT)

@@ -19,7 +19,8 @@ ZERO MANUAL REGISTRATION:
     Add config/section_id.yaml → auto-populated!
     Access via config.section_id → works!
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
@@ -32,16 +33,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-import logging
-import os
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
-
 import yaml
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.universal import ReadResult, SovereignContext
+    # Implementation types (Lazy loaded)
+    from vibe_core.phoenix.section_loader import SectionLoader
+
     # Config sections type hints
     from vibe_core.phoenix.sections.city.section_main import CityConfig
     from vibe_core.phoenix.sections.kernel.section_main import KernelConfig
@@ -50,10 +47,9 @@ if TYPE_CHECKING:
     from vibe_core.phoenix.sections.quality.section_main import QualityConfig
     from vibe_core.phoenix.sections.steward.section_main import StewardConfig
     from vibe_core.phoenix.sections.templates.section_main import TemplatesConfig
-    # Implementation types (Lazy loaded)
-    from vibe_core.phoenix.section_loader import SectionLoader
     from vibe_core.phoenix.utils.circuits import CircuitConfig
     from vibe_core.phoenix.utils.routing import RoutingRule
+    from vibe_core.protocols.universal import ReadResult, SovereignContext
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +87,7 @@ class PhoenixConfig:
 
     # Dynamic collections (not sections) - use forward references or Any to avoid import cycles
     circuits: Dict[str, object] = field(default_factory=dict)  # Dict[str, CircuitConfig]
-    routing: List[object] = field(default_factory=list)      # List[RoutingRule]
+    routing: List[object] = field(default_factory=list)  # List[RoutingRule]
 
     # Source paths (for save/reload)
     _circuits_dir: Optional[Path] = field(default=None, repr=False)
@@ -117,6 +113,7 @@ class PhoenixConfig:
         Returns ENVELOPE (Value + Provenance).
         """
         from datetime import datetime
+
         from vibe_core.protocols.universal import KeyNotFoundError, ReadResult
 
         try:
@@ -132,6 +129,7 @@ class PhoenixConfig:
         """
         if not context:
             from vibe_core.protocols.universal import AccessDeniedError
+
             raise AccessDeniedError("MAYAVAD: Config mutation requires Sovereign Signature.")
 
         try:
@@ -179,6 +177,7 @@ class PhoenixConfig:
 
         except Exception as e:
             from vibe_core.protocols.universal import ProtocolError
+
             raise ProtocolError(f"Failed to write config '{key}': {e}")
 
     def exists(self, key: str, context: Optional["SovereignContext"] = None) -> bool:
@@ -260,7 +259,7 @@ class PhoenixConfig:
                 logger.info(f"Using PHOENIX_CONFIG_DIR: {config_dir}")
             else:
                 config_dir = Path("config")
-        
+
         # Lazy imports to avoid circular dependency with mahamantra
         from vibe_core.phoenix.config_cache import get_cached_or_parse
         from vibe_core.phoenix.section_loader import SectionLoader
@@ -270,7 +269,7 @@ class PhoenixConfig:
         def _parse():
             SectionLoader.clear_cache()
             sections, section_meta = SectionLoader.discover(config_dir=config_dir)
-            
+
             # Convert Phoenix SectionMeta to SSOT SectionMeta if needed?
             # Actually, duck typing might save us here, or we accept Any in Field default.
             # But SectionLoader returns its own Meta.
@@ -278,7 +277,7 @@ class PhoenixConfig:
             # Python dataclasses are not structurally compatible if classes differ.
             # BUT we just stored it in _section_metadata: Dict[str, Any] would be safer.
             # Let's keep it loose for now.
-            
+
             for section_id, meta in section_meta.items():
                 if meta.loaded_from_yaml:
                     logger.info(f"Loaded section '{section_id}' from {meta.source_file}")
@@ -294,8 +293,8 @@ class PhoenixConfig:
             config = cls(
                 _sections=sections,
                 _section_metadata=section_meta,  # type: ignore (Cross-type assignment)
-                circuits=circuits,               # type: ignore
-                routing=routing,                 # type: ignore
+                circuits=circuits,  # type: ignore
+                routing=routing,  # type: ignore
             )
             config._circuits_dir = circuits_dir
             config._routing_path = routing_path
@@ -374,7 +373,7 @@ class PhoenixConfig:
         """Persist configuration back to files."""
         # Lazy import
         from vibe_core.phoenix.utils.routing import save_routing_rules
-        
+
         success = True
         for section_id, meta in self._section_metadata.items():
             if meta.source_file and meta.source_file.exists():
@@ -398,7 +397,7 @@ class PhoenixConfig:
     def reload_routing(self) -> None:
         """Hot-reload MATRIX.md routing rules."""
         from vibe_core.phoenix.utils.routing import load_routing_rules
-        
+
         if self._routing_path:
             self.routing = load_routing_rules(self._routing_path)
             logger.info(f"Reloaded {len(self.routing)} routing rules")
@@ -406,7 +405,7 @@ class PhoenixConfig:
     def reload_circuits(self) -> None:
         """Reload circuit configurations."""
         from vibe_core.phoenix.utils.circuits import discover_circuits
-        
+
         if self._circuits_dir:
             self.circuits = discover_circuits(self._circuits_dir)
             logger.info(f"Reloaded {len(self.circuits)} circuits")
@@ -414,7 +413,7 @@ class PhoenixConfig:
     def reload_section(self, section_id: str) -> bool:
         """Reload a single section from its YAML file."""
         from vibe_core.phoenix.section_loader import SectionLoader
-        
+
         meta = self._section_metadata.get(section_id)
         if not meta or not meta.source_file:
             logger.warning(f"Cannot reload {section_id}: no source file")
@@ -505,7 +504,7 @@ class PhoenixConfig:
     def from_dict(cls, data: Dict) -> "PhoenixConfig":
         from vibe_core.phoenix.utils.circuits import CircuitConfig
         from vibe_core.phoenix.utils.routing import RoutingRule
-        
+
         config = cls.from_files()
         if "circuits" in data:
             config.circuits = {}

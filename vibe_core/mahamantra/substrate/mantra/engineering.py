@@ -23,24 +23,16 @@ SEVEN = 7 = the perfection constant from _seed.py.
 These 7 effects translate DIRECTLY to computing efficiency principles
 for Kali Yuga (maximum entropy reduction).
 """
-from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, SEVEN)
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
-__position__ = 0
-__genesis__ = "0xbf879742"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Final, List, Dict
+from typing import Dict, Final, List
 
 from vibe_core.mahamantra.protocols._seed import (
-    # Efficiency constants
     GOLDEN_AGE_DURATION,
-    # Core constants
-    HALF_SIZE,  # 8 = words per half (will be used as OCTET)
+    HALF_SIZE,
     HALVES,
-    HARE_COUNT,  # 8 = count of "Hare" in Mahamantra
+    HARE_COUNT,
     KSETRAJNA,
     LILA,
     NAVA,
@@ -51,6 +43,11 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     WORDS,
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xbf879742"  # GenesisByte: parampara % 37 == 0
 
 # OCTET = 8 = HALF_SIZE = HARE_COUNT (derived, not hardcoded!)
 # The 8 verses of Siksastakam = 8 "Hare" in Mahamantra = 8 words per half

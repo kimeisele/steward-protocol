@@ -10,61 +10,71 @@ mapping phonetic articulation to Mahamantra resonance space.
 
 DERIVED FROM _seed.py and protocols.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, LILA, MALA, QUARTERS, SHARANAGATI, TRINITY, WORDS)
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Final, List, Dict, Optional
+from typing import Dict, Final, List, Optional
+
+from vibe_core.mahamantra.protocols._seed import (
+    ABHINNA_MATERIAL,
+    ABHINNA_SPIRITUAL,
+    AKSARA_COUNT,
+    FIELD_RESONANCE,
+    FLUTE_VENU_VAMSI,
+    HALVES,
+    HARE_COUNT,
+    JIVA_CYCLE,
+    KIRTAN_RESONANCE,
+    KSETRAJNA,
+    LILA,
+    MALA,
+    MURALI_FREQ,
+    NADI_RESONANCE,
+    NAME_COMPLETE,
+    OCTAVE_RATIO,
+    PANCHA,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
+    PRASADAM,
+    QUARTERS,
+    SHARANAGATI,
+    TRINITY,
+    VAMSI_FREQ,
+    VENU_FREQ,
+    VINA_FUNDAMENTAL,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "kapila"
 __position__ = SHARANAGATI
 __genesis__ = "0xea72176b"
 
-from vibe_core.mahamantra.protocols._seed import (
-    AKSARA_COUNT,
-    NADI_RESONANCE,
-    QUARTERS,
-    PANCHA,
-    KIRTAN_RESONANCE,
-    FIELD_RESONANCE,
-    WORDS,
-    POSITION_SUM_KRISHNA,
-    POSITION_SUM_RAMA,
-    PRASADAM,
-    JIVA_CYCLE,
-    MALA,
-    VENU_FREQ,
-    VAMSI_FREQ,
-    MURALI_FREQ,
-    VINA_FUNDAMENTAL,
-    FLUTE_VENU_VAMSI,
-    ABHINNA_MATERIAL,
-    ABHINNA_SPIRITUAL,
-    KSETRAJNA,
-    NAME_COMPLETE,
-    OCTAVE_RATIO,
-)
-
 # =============================================================================
 # VIBRATION SIGNATURE MODEL
 # =============================================================================
 
+
 class ArticulationPoint(IntEnum):
     """Where in the mouth the sound originates (5 points = PANCHA)."""
+
     KANTHA = 0  # Guttural (throat)
-    TALU = KSETRAJNA    # Palatal (palate)
-    MURDHA = HALVES   # Retroflex (roof)
-    DANTA = TRINITY    # Dental (teeth)
-    OSHTHA = QUARTERS   # Labial (lips)
+    TALU = KSETRAJNA  # Palatal (palate)
+    MURDHA = HALVES  # Retroflex (roof)
+    DANTA = TRINITY  # Dental (teeth)
+    OSHTHA = QUARTERS  # Labial (lips)
+
 
 class VoicingType(IntEnum):
     """Voicing characteristics (4 types = QUARTERS)."""
+
     UNVOICED = 0
     UNVOICED_ASPIRATED = KSETRAJNA
     VOICED = HALVES
     VOICED_ASPIRATED = TRINITY
+
 
 @dataclass(frozen=True)
 class VibrationSignature:
@@ -72,6 +82,7 @@ class VibrationSignature:
     The mathematical signature of a sound.
     ID = (articulation × 4 + voicing) × NADI + frequency × AKSARA + duration
     """
+
     articulation: ArticulationPoint
     voicing: VoicingType
     base_frequency: int  # In relation to NADI_RESONANCE (72)
@@ -85,13 +96,20 @@ class VibrationSignature:
     @property
     def mahamantra_alignment(self) -> float:
         alignment = 0.0
-        if self.base_frequency == NADI_RESONANCE: alignment += 0.25
-        elif self.base_frequency == FIELD_RESONANCE: alignment += 0.25
-        elif self.base_frequency % NADI_RESONANCE == 0: alignment += 0.15
-        if self.duration_ratio in (KSETRAJNA, HALVES, QUARTERS, HARE_COUNT, WORDS, 32): alignment += 0.25
-        if self.articulation.value < PANCHA and self.voicing.value < QUARTERS: alignment += 0.25
-        if self.signature_id <= KIRTAN_RESONANCE: alignment += 0.25
+        if self.base_frequency == NADI_RESONANCE:
+            alignment += 0.25
+        elif self.base_frequency == FIELD_RESONANCE:
+            alignment += 0.25
+        elif self.base_frequency % NADI_RESONANCE == 0:
+            alignment += 0.15
+        if self.duration_ratio in (KSETRAJNA, HALVES, QUARTERS, HARE_COUNT, WORDS, 32):
+            alignment += 0.25
+        if self.articulation.value < PANCHA and self.voicing.value < QUARTERS:
+            alignment += 0.25
+        if self.signature_id <= KIRTAN_RESONANCE:
+            alignment += 0.25
         return min(1.0, alignment)
+
 
 # =============================================================================
 # SANSKRIT PHONEME MAP (The Canonical Reference)
@@ -144,6 +162,7 @@ SANSKRIT_PHONEME_MAP: Final[Dict[str, VibrationSignature]] = {
 # TRANSLATION & ANALYSIS
 # =============================================================================
 
+
 def text_to_vibration(text: str, source_lang: str = "en") -> List[VibrationSignature]:
     """Convert text to vibration signatures sequence."""
     signatures = []
@@ -154,7 +173,7 @@ def text_to_vibration(text: str, source_lang: str = "en") -> List[VibrationSigna
         found = False
         for length in [TRINITY, HALVES]:
             if i + length <= len(text_lower):
-                chunk = text_lower[i:i+length]
+                chunk = text_lower[i : i + length]
                 if chunk in SANSKRIT_PHONEME_MAP:
                     signatures.append(SANSKRIT_PHONEME_MAP[chunk])
                     i += length
@@ -166,6 +185,7 @@ def text_to_vibration(text: str, source_lang: str = "en") -> List[VibrationSigna
                 signatures.append(SANSKRIT_PHONEME_MAP[char])
             i += KSETRAJNA
     return signatures
+
 
 def vibration_to_sanskrit(signatures: List[VibrationSignature]) -> str:
     """Convert vibration signatures to nearest Sanskrit phonemes."""
@@ -182,10 +202,12 @@ def vibration_to_sanskrit(signatures: List[VibrationSignature]) -> str:
         result.append(best_match)
     return "".join(result)
 
+
 def translate_via_vibration(text: str, source_lang: str, target_lang: str) -> str:
     """Translate text by preserving its vibration essence."""
     vibrations = text_to_vibration(text, source_lang)
     return vibration_to_sanskrit(vibrations)
+
 
 # =============================================================================
 # EXPORTS

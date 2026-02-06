@@ -30,62 +30,51 @@ Each year yields unique derivations, research domains, resonances.
 the incarnation of Godhead who constantly sings the names of Krishna."
 — Srimad Bhagavatam 11.5.32
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, LILA, MAHA_QUANTUM, MALA, PANCHA, PARAMPARA, POSITION_SUM_HARE, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUARTERS, TRINITY)
+
+from dataclasses import dataclass, field
+from enum import Enum, auto
+from typing import Dict, Final, List, Optional, Tuple
+
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS,
+    HALVES,
+    HARE_COUNT,
+    KARTALS_PAIR,
+    KSETRAJNA,
+    LILA,
+    MAHA_QUANTUM,
+    MAHAJANA_COUNT,
+    MALA,
+    MRIDANGA_HEADS,
+    MURALI_HOLES,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
+    POSITION_SUM_HARE,
+    POSITION_SUM_RAMA,
+    POSITION_SUM_TOTAL,
+    QUARTERS,
+    SEVEN,
+    TEN,
+    TRINITY,
+    VAMSI_HOLES,
+    VENU_HOLES,
+    VINA_FUNDAMENTAL,
+    VINA_STRINGS,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - History/Chronology
 __position__ = 0
 __genesis__ = "0x4eb13b87"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass, field
-from enum import Enum, auto
-from typing import Dict, Final, List, Optional, Tuple
+from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM as MODULO_QUANTUM
+from vibe_core.mahamantra.protocols._seed import MALA_COMPLETE as MODULO_MALA
+from vibe_core.mahamantra.protocols._seed import POSITION_SUM_HARE as WEIGHT_HARE
+from vibe_core.mahamantra.protocols._seed import POSITION_SUM_KRISHNA as WEIGHT_KRISHNA
+from vibe_core.mahamantra.protocols._seed import POSITION_SUM_RAMA as WEIGHT_RAMA
 
-# =============================================================================
-# SEED IMPORTS (Single Source of Truth)
-# =============================================================================
-from vibe_core.mahamantra.protocols._seed import (
-    # Axioms
-    HALVES,
-    HARE_COUNT,
-    KARTALS_PAIR,
-    # Derived constants
-    KSETRAJNA,
-    MAHAJANA_COUNT,
-    # Binary encoding (rhythm foundation!)
-    MRIDANGA_HEADS,
-    NAVA,
-    # Structural
-    PARAMPARA,
-    QUARTERS,
-    SEVEN,
-    TEN,
-    TRINITY,
-    WORDS,  # SSOT: 16 words in Mahamantra
-    # Flute holes (DERIVED from axioms - NOT hardcoded!)
-    VENU_HOLES,
-    VAMSI_HOLES,
-    MURALI_HOLES,
-    # Vina constants (DERIVED from axioms!)
-    VINA_FUNDAMENTAL,
-    VINA_STRINGS,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM as MODULO_QUANTUM,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    MALA_COMPLETE as MODULO_MALA,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    # Position sums (weights)
-    POSITION_SUM_HARE as WEIGHT_HARE,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    POSITION_SUM_KRISHNA as WEIGHT_KRISHNA,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    POSITION_SUM_RAMA as WEIGHT_RAMA,
-)
 # THE ALGORITHM - imported from SSOT, not reimplemented!
 from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 
@@ -1047,6 +1036,7 @@ class FluteSync:
             VENU (6): Sharanagati rhythm (0.35)
             VAMSI (9): Nava expansion (0.25)
         """
+
         # Continuous resonance per flute (wave approaching sync points)
         def flute_resonance(tick_value: int, period: int) -> float:
             """Compute continuous resonance: 1.0 at sync, 0.0 at midpoint."""
@@ -1066,9 +1056,9 @@ class FluteSync:
         # Weights derived from relative periods: 4, 6, 9
         # Smaller period = faster oscillation = more influence
         combined = (
-            0.40 * murali_res +   # MURALI (4) - foundation rhythm
-            0.35 * venu_res +     # VENU (6) - sharanagati flow
-            0.25 * vamsi_res      # VAMSI (9) - nava expansion
+            0.40 * murali_res  # MURALI (4) - foundation rhythm
+            + 0.35 * venu_res  # VENU (6) - sharanagati flow
+            + 0.25 * vamsi_res  # VAMSI (9) - nava expansion
         )
 
         return combined
@@ -1092,6 +1082,7 @@ class FluteSync:
 # =============================================================================
 # NARADA'S VINA - The Five Strings (RUNDE 20 from _seed.py)
 # =============================================================================
+
 
 class VinaSync:
     """
@@ -1130,11 +1121,11 @@ class VinaSync:
     def get_string_name(cls, string_num: int) -> str:
         """Get the Pancha Tattva name for a string number."""
         names = {
-            KSETRAJNA: "CHAITANYA",    # The Source - Identity
-            HALVES: "NITYANANDA",   # The Foundation - Storage
-            TRINITY: "ADVAITA",      # The Bridge - Logic
-            QUARTERS: "GADADHARA",    # The Connection - API
-            PANCHA: "SRIVASA",      # The Enforcer - Validation
+            KSETRAJNA: "CHAITANYA",  # The Source - Identity
+            HALVES: "NITYANANDA",  # The Foundation - Storage
+            TRINITY: "ADVAITA",  # The Bridge - Logic
+            QUARTERS: "GADADHARA",  # The Connection - API
+            PANCHA: "SRIVASA",  # The Enforcer - Validation
         }
         return names.get(string_num, "UNKNOWN")
 
@@ -1194,7 +1185,13 @@ class VinaSync:
         harmonic = seed % VINA_FUNDAMENTAL
         # Distance to closest attractor (normalized to 0-1)
         # The 5 Pancha attractors from Akash field
-        attractors = [POSITION_SUM_TOTAL % VINA_FUNDAMENTAL, 22, GITA_CHAPTERS, 87, POSITION_SUM_RAMA]  # 0, 22, 18, 87, 49
+        attractors = [
+            POSITION_SUM_TOTAL % VINA_FUNDAMENTAL,
+            22,
+            GITA_CHAPTERS,
+            87,
+            POSITION_SUM_RAMA,
+        ]  # 0, 22, 18, 87, 49
         min_dist = min(abs(harmonic - a) for a in attractors)
         # Normalize: 0 distance = 0.30, max distance (~68) = 0.0
         harmonic_res = 0.30 * (1.0 - min_dist / (VINA_FUNDAMENTAL / 2.0))
@@ -1216,6 +1213,7 @@ class VinaSync:
 # =============================================================================
 # KIRTAN SYNC - Combined Flute + Vina Resonance
 # =============================================================================
+
 
 class KirtanSync:
     """

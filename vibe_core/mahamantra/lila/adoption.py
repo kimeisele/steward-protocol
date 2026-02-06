@@ -25,13 +25,10 @@ __genesis__ = "0xf3110a25"  # GenesisByte: parampara % 37 == 0
 import logging
 from typing import Dict, List
 
-from vibe_core.mahamantra.substrate.proxy import BalaramaProxy
-
 # Import OrbitalShadowReactor via convenience factory or direct
 from vibe_core.mahamantra.reactor.shadow import OrbitalShadowReactor, ShadowReactor
-
-from vibe_core.mahamantra.reactor.shadow import OrbitalShadowReactor, ShadowReactor
-from vibe_core.mahamantra.substrate.mahajana import Mahajana, Avatara
+from vibe_core.mahamantra.substrate.mahajana import Avatara, Mahajana
+from vibe_core.mahamantra.substrate.proxy import BalaramaProxy
 
 logger = logging.getLogger("MAHAMANTRA.ADOPTION")
 
