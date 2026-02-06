@@ -49,12 +49,6 @@ DERIVED FROM SEED.PY:
 - DASHA_INDRIYA = PANCHA × HALVES = 10 (5 knowledge + 5 action)
 - PANCHA_VRTTI = PANCHA = 5 (the 5 mental modifications)
 """
-from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, MAHAJANA_COUNT, NAVA, PANCHA, SHARANAGATI, TEN)
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "kapila"
-__position__ = SHARANAGATI
-__genesis__ = "0x1c3dc0e4"  # GenesisByte: parampara % 37 == 0
 
 from abc import abstractmethod
 from dataclasses import dataclass, field
@@ -73,14 +67,20 @@ from typing import (
     runtime_checkable,
 )
 
-# =============================================================================
-# IMPORT FROM SEED (SSOT)
-# =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
+    HARE_COUNT,
+    MAHAJANA_COUNT,
     NAVA,
     PANCHA,
+    SHARANAGATI,
+    TEN,
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = SHARANAGATI
+__genesis__ = "0x1c3dc0e4"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # IMPORT FROM _SENSE.PY (No Redundancy)

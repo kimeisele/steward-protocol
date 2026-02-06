@@ -14,20 +14,20 @@ math: `genesis_byte % 37 == 0`
 
 If the signature matches, the connection is BONA FIDE.
 """
-from vibe_core.mahamantra.protocols._seed import WORDS
+
+from typing import ClassVar, Optional
+
+from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
+from vibe_core.mahamantra.protocols._seed import (
+    MAHAJANA_COUNT,
+    PARAMPARA,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Position 0 - Documentation/Teaching
 __position__ = 0
 __genesis__ = "0x5668524e"  # GenesisByte: parampara % 37 == 0
-
-from typing import ClassVar, Optional
-from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
-from vibe_core.mahamantra.protocols._seed import (
-    PARAMPARA,
-    MAHAJANA_COUNT,
-    WORDS,
-)
 from vibe_core.mahamantra.protocols._bhava import SHARANAGATI_UNIT
 
 
@@ -70,7 +70,7 @@ class Prabhupada(PrabhupadaProtocol):
         - PanchaTattva protocol (5 truths about an object)
         - SEED generation algorithm semantic refinement
         - How Parampara verification works with computed identity
-        
+
         DO NOT RUSH - ShadowReactor is the heart of the system.
 
         Args:
@@ -117,7 +117,7 @@ class Prabhupada(PrabhupadaProtocol):
         - BASE_SHAKTI = SHARANAGATI_UNIT = 3600 (one limb of surrender)
         - Authorization threshold = SHARANAGATI_UNIT = 3600 (1 valid chant)
         - Uses same scaling as calculate_grace_scaled() in _bhava.py
-        
+
         DERIVATION:
         - COSMIC_FRAME = 21600 (arc-minutes in circle)
         - SHARANAGATI = 6 (limbs of surrender)

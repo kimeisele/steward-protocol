@@ -33,9 +33,23 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself (via SAMKHYA.md)
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, LILA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    LILA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "chaitanya"
@@ -99,29 +113,29 @@ assert YEARS_INTO_GAURABDA < GOLDEN_PERIOD, f"Golden Period check: {YEARS_INTO_G
 # =============================================================================
 
 from vibe_core.mahamantra.substrate.seed import (
-    KSETRAJNA as KSETRAJNA_COUNT,  # 1  - The knower
+    KSETRAJNA as KSETRAJNA_COUNT,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    KSHETRA as KSETRA_COUNT,  # 24 - Prakriti elements
+    KSHETRA as KSETRA_COUNT,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    LILA as LILA_LIMIT,  # 48 - 16 × 3
+    LILA as LILA_LIMIT,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    MAHAJANA_COUNT,  # 12 - The guardians
-    PARAMPARA,  # 37 - The sacred sum
+    MAHAJANA_COUNT,
+    PARAMPARA,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    NAVADVIPA as NAVADVIPA_PHASE,  # 24 - First 24 years (internal)
+    NAVADVIPA as NAVADVIPA_PHASE,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    PURI as PURI_PHASE,  # 24 - Last 24 years (external)
+    PURI as PURI_PHASE,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    TRINITY as LILA_CYCLES,  # 3  - Trinity (Hare, Krishna, Rama)
+    TRINITY as LILA_CYCLES,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    WORDS as MAHAMANTRA_DIMENSION,  # 16 - The 16 words
+    WORDS as MAHAMANTRA_DIMENSION,
 )
 
 # Chaitanya Mahaprabhu's life

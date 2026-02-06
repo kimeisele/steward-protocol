@@ -18,7 +18,7 @@ from typing import List, Set, Union
 
 import libcst as cst
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 
 class GetInstanceAntipatternRemedy(CSTRemedy):

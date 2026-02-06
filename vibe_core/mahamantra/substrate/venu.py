@@ -22,9 +22,10 @@ Diese Datei beantwortet NICHT:
 
 KEIN STATE. KEINE COUNTER. NUR PURE FUNCTIONS.
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, QUARTERS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -34,34 +35,31 @@ __genesis__ = "0xdb705f2f"  # GenesisByte: parampara % 37 == 0
 from typing import Final, Tuple, TypedDict
 
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,
-    QUARTERS,
     MALA,
-    TICK_INTERVAL_MS,
     PRANA_DURATION_MS,
     PRANA_DURATION_S,
+    QUARTERS,
+    TICK_INTERVAL_MS,
+    WORDS,
 )
 from vibe_core.mahamantra.protocols._venu import (
-    VENU_POSITIONS,
     VENU_PHASES,
+    VENU_POSITIONS,
     VENU_POSITIONS_PER_PHASE,
     VENU_TICKS_PER_MALA,
-)
-from vibe_core.mahamantra.substrate.seed import (
-    Quarter,
-    HolyName,
-    MAHAMANTRA,
-    QUARTER_NAMES,
 )
 
 # =============================================================================
 # TYPES
 # =============================================================================
-
-
-# TickState imported from _types.py (SSOT)
-from vibe_core.mahamantra._types import TickState
-
+# TickState imported from seed/types.py (SSOT)
+from vibe_core.mahamantra.seed.types import TickState
+from vibe_core.mahamantra.substrate.seed import (
+    MAHAMANTRA,
+    QUARTER_NAMES,
+    HolyName,
+    Quarter,
+)
 
 # =============================================================================
 # PURE FUNCTIONS - Tick Calculations

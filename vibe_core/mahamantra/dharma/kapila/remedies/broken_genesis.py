@@ -39,7 +39,7 @@ from typing import List, Optional, Sequence, Union
 import libcst as cst
 import libcst.matchers as m
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 # SSOT: Parampara constant from seed
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
@@ -117,13 +117,11 @@ class BrokenGenesisRemedy(CSTRemedy):
                 # DIAGNOSIS: Check validity
                 try:
                     value = int(raw, 16)
-                    self._is_genesis_valid = (value % PARAMPARA == 0)
+                    self._is_genesis_valid = value % PARAMPARA == 0
                 except ValueError:
                     self._is_genesis_valid = False
 
-    def leave_Assign(
-        self, original_node: cst.Assign, updated_node: cst.Assign
-    ) -> cst.Assign:
+    def leave_Assign(self, original_node: cst.Assign, updated_node: cst.Assign) -> cst.Assign:
         """
         LILA PHASE 3 & 4: HEALING & TRANSFORMATION.
 
@@ -162,7 +160,7 @@ class BrokenGenesisRemedy(CSTRemedy):
         original_value = updated_node.value
         if isinstance(original_value, cst.SimpleString):
             quote_char = original_value.value[0]
-            new_value = cst.SimpleString(f'{quote_char}{new_genesis}{quote_char}')
+            new_value = cst.SimpleString(f"{quote_char}{new_genesis}{quote_char}")
         else:
             new_value = cst.SimpleString(f'"{new_genesis}"')
 
@@ -184,6 +182,7 @@ class BrokenGenesisRemedy(CSTRemedy):
 
         try:
             from vibe_core.mahamantra.substrate.sankirtan import compute_genesis_hash
+
             return compute_genesis_hash(
                 self._mahajana,
                 self._position,

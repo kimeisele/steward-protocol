@@ -45,7 +45,8 @@ DERIVED FROM SEED.PY:
 - All timing from PRANA_DURATION_MS / TICK_INTERVAL_MS
 - Buffer sizes from NADI_RESONANCE (72)
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, SHARANAGATI)
+
+from vibe_core.mahamantra.protocols._seed import HALVES, HARE_COUNT, KSETRAJNA, NAVA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "parashurama"  # Position 8 - THE SWITCH
@@ -67,6 +68,15 @@ from uuid import uuid4
 
 # GAD compliance
 from vibe_core.mahamantra.protocols._gad import GADBase
+
+# =============================================================================
+# MAHA HEADER INTEGRATION (The Universal 72-Byte Cell Header)
+# =============================================================================
+from vibe_core.mahamantra.protocols._header import (
+    HEADER_DAILY_CYCLES,
+    MahaCell,
+    MahaHeader,
+)
 
 # =============================================================================
 # IMPORT FROM NADI (SSOT)
@@ -92,15 +102,6 @@ from vibe_core.mahamantra.substrate.seed import (
     SHARANAGATI,
     TICK_INTERVAL_MS,
     WORDS,
-)
-
-# =============================================================================
-# MAHA HEADER INTEGRATION (The Universal 72-Byte Cell Header)
-# =============================================================================
-from vibe_core.mahamantra.protocols._header import (
-    HEADER_DAILY_CYCLES,
-    MahaCell,
-    MahaHeader,
 )
 
 if _TC:
@@ -268,6 +269,7 @@ class SamanaDispatch:
     def to_maha_cell(self, source_id: int, target_id: int, link: int = 0) -> MahaCell:
         """Create MahaCell with JSON payload."""
         import json
+
         header = self.to_maha_header(source_id, target_id, link)
         payload_bytes = json.dumps(self.to_nadi_payload()).encode("utf-8")
         return MahaCell(header=header, payload=payload_bytes)
@@ -369,6 +371,7 @@ class SamanaFold:
     def to_maha_cell(self, source_id: int, target_id: int, dispatch_link: int = 0) -> MahaCell:
         """Create MahaCell with JSON payload."""
         import json
+
         header = self.to_maha_header(source_id, target_id, dispatch_link)
         payload_bytes = json.dumps(self.to_nadi_payload()).encode("utf-8")
         return MahaCell(header=header, payload=payload_bytes)

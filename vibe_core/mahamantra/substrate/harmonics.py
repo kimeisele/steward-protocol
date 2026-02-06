@@ -26,48 +26,40 @@ MUSICAL RELATIONSHIPS (Vedic Tuning):
     FIELD/MALA = 4/3 (Perfect Fourth - Madhyama)
     WORDS/NAVA = 16/9 (Mantra-to-Process ratio)
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, PANCHA, QUARTERS, SHARANAGATI, TRINITY, WORDS)
+
+from typing import Final
+
+from vibe_core.mahamantra.protocols._seed import (
+    EPOCH_KEY,
+    FIELD_RESONANCE,
+    FLUTE_HOLES_SUM,
+    GITA_CHAPTERS,
+    HALVES,
+    HARE_COUNT,
+    HIDDEN_RESERVE,
+    JIVA_CYCLE,
+    KSETRAJNA,
+    LILA,
+    MAHAJANA_COUNT,
+    MALA,
+    MURALI_HOLES,
+    NADI_RESONANCE,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
+    QUALITIES,
+    QUARTERS,
+    SHARANAGATI,
+    TRINITY,
+    VAMSI_HOLES,
+    VENU_HOLES,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
 __position__ = SHARANAGATI
 __genesis__ = "0x66a053e7"  # GenesisByte: parampara % 37 == 0
-
-from typing import Final
-
-# Import from THE LAW (protocols/_seed.py)
-from vibe_core.mahamantra.protocols._seed import (
-    # Counts (Quantities)
-    WORDS,
-    NAVA,
-    LILA,
-    MALA,
-    NADI_RESONANCE,
-    FIELD_RESONANCE,
-    SHARANAGATI,
-    GITA_CHAPTERS,
-    MAHAJANA_COUNT,
-    # Three Flutes (Persons)
-    VENU_HOLES,
-    VAMSI_HOLES,
-    MURALI_HOLES,
-    QUARTERS,
-    # Swara Derivation (ALL from Seed, no hardcoding!)
-    PANCHA,  # 5 - For Ga (5/4) and Dha (5/3)
-    TRINITY,  # 3 - For denominators
-    HALVES,  # 2 - For octave
-    HARE_COUNT,  # 8 - For Re (9/8) and Entropy Law
-    KSETRAJNA,  # 1 - The Knower (unity)
-    # Sravanam/Kirtanam (Input/Output)
-    HIDDEN_RESERVE,  # 16 - Input buffer (must be >= HARE_COUNT)
-    QUALITIES,  # 64 - Full output (result of Sravanam transform)
-    # Dynamics (Phase/Time)
-    JIVA_CYCLE,  # 432 - The harmonic frequency (soul cycle)
-    FLUTE_HOLES_SUM,  # 19 - Epoch signature (6+9+4)
-    EPOCH_KEY,  # 1972 - Temporal anchor
-    # Verification
-    PARAMPARA,
-)
 
 
 # =============================================================================
@@ -1030,7 +1022,7 @@ assert SravanamCheck.GAJRA_COUNT == WORDS, "GAJRA_COUNT must equal WORDS (16)"
 
 # Verify SYNC_POINTS are correct
 assert SravanamCheck.SYNC_POINTS == (FIELD_RESONANCE, JIVA_CYCLE // HALVES, JIVA_CYCLE), (
-    f"SYNC_POINTS must be (144, 216, 432)"
+    "SYNC_POINTS must be (144, 216, 432)"
 )
 
 # Verify 16 Gajras exist (one per petal)

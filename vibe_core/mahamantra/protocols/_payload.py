@@ -51,38 +51,35 @@ DUAL MODE: VIBRATIONAL + DATA:
     SAME STRUCTURE. DIFFERENT INTERPRETATION.
     Krishna is all-present. Entry point is everywhere.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, PANCHA, QUALITIES, QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS)
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
-__position__ = 0
-__genesis__ = "0x62a24c79"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any, Dict, Final, Optional, Protocol, Tuple, Type, TypeVar, Union
 
-# =============================================================================
-# IMPORT FROM SEED (SSOT - THE LAW)
-# =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
-    GITA_CHAPTERS,  # 18 - Data types
-    HALF_SIZE,  # 8 - Siksastakam stages
-    NAVA,  # 9 - Operations
-    PANCHA,  # 5 - Tattva categories
-    PARAMPARA,  # 37 - Verification
-    QUARTERS,  # 4 - Quarter types
-    WORDS,  # 16 - Positions
-    # Chapter number derivations (NO HARDCODING!)
-    KSETRAJNA,      # 1
-    HALVES,         # 2
-    TRINITY,        # 3
-    SHARANAGATI,    # 6
-    SEVEN,          # 7
-    TEN,            # 10
-    MAHAJANA_COUNT, # 12
-    GAURA_TITHI,    # 15
+    GAURA_TITHI,
+    GITA_CHAPTERS,
+    HALF_SIZE,
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
+    QUALITIES,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x62a24c79"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # PAYLOAD TYPE (18 Gita Chapters = 18 Data Types)
@@ -102,30 +99,30 @@ class PayloadType(IntEnum):
     """
 
     # GENESIS Quarter (Input/Init) - Chapters 1-4
-    ARJUNA_VISHADA = KSETRAJNA           # Ch.1 = KSETRAJNA (the knower)
-    SANKHYA = HALVES                     # Ch.2 = HALVES (duality/analysis)
-    KARMA_YOGA = TRINITY                 # Ch.3 = TRINITY (3 names = action)
-    JNANA_YOGA = QUARTERS                # Ch.4 = QUARTERS (4 phases = knowledge)
+    ARJUNA_VISHADA = KSETRAJNA  # Ch.1 = KSETRAJNA (the knower)
+    SANKHYA = HALVES  # Ch.2 = HALVES (duality/analysis)
+    KARMA_YOGA = TRINITY  # Ch.3 = TRINITY (3 names = action)
+    JNANA_YOGA = QUARTERS  # Ch.4 = QUARTERS (4 phases = knowledge)
 
     # DHARMA Quarter (Validation/Structure) - Chapters 5-9
-    KARMA_SANNYASA = PANCHA              # Ch.5 = PANCHA (5 tattvas)
-    DHYANA = SHARANAGATI                 # Ch.6 = SHARANAGATI (6 limbs surrender)
-    JNANA_VIJNANA = SEVEN                # Ch.7 = SEVEN (7 = divine knowledge)
-    AKSARA_BRAHMA = HALF_SIZE            # Ch.8 = HALF_SIZE (8 = imperishable)
-    RAJA_VIDYA = NAVA                    # Ch.9 = NAVA (9 = sovereign)
+    KARMA_SANNYASA = PANCHA  # Ch.5 = PANCHA (5 tattvas)
+    DHYANA = SHARANAGATI  # Ch.6 = SHARANAGATI (6 limbs surrender)
+    JNANA_VIJNANA = SEVEN  # Ch.7 = SEVEN (7 = divine knowledge)
+    AKSARA_BRAHMA = HALF_SIZE  # Ch.8 = HALF_SIZE (8 = imperishable)
+    RAJA_VIDYA = NAVA  # Ch.9 = NAVA (9 = sovereign)
 
     # KARMA Quarter (Execution/Action) - Chapters 10-14
-    VIBHUTI = TEN                        # Ch.10 = TEN (10 = opulence)
-    VISVARUPA = TEN + KSETRAJNA          # Ch.11 = 10+1 = universal form
-    BHAKTI = MAHAJANA_COUNT              # Ch.12 = MAHAJANA_COUNT (12 = devotion)
+    VIBHUTI = TEN  # Ch.10 = TEN (10 = opulence)
+    VISVARUPA = TEN + KSETRAJNA  # Ch.11 = 10+1 = universal form
+    BHAKTI = MAHAJANA_COUNT  # Ch.12 = MAHAJANA_COUNT (12 = devotion)
     KSETRA = MAHAJANA_COUNT + KSETRAJNA  # Ch.13 = 12+1 = field/knower
-    GUNA_TRAYA = MAHAJANA_COUNT + HALVES # Ch.14 = 12+2 = three gunas
+    GUNA_TRAYA = MAHAJANA_COUNT + HALVES  # Ch.14 = 12+2 = three gunas
 
     # MOKSHA Quarter (Output/Result) - Chapters 15-18
-    PURUSOTTAMA = GAURA_TITHI            # Ch.15 = GAURA_TITHI (15 = supreme)
-    DAIVASURA = WORDS                    # Ch.16 = WORDS (16 = divine/demonic)
-    SRADDHA_TRAYA = WORDS + KSETRAJNA    # Ch.17 = 16+1 = three faiths
-    MOKSA_SANNYASA = GITA_CHAPTERS       # Ch.18 = GITA_CHAPTERS (liberation!)
+    PURUSOTTAMA = GAURA_TITHI  # Ch.15 = GAURA_TITHI (15 = supreme)
+    DAIVASURA = WORDS  # Ch.16 = WORDS (16 = divine/demonic)
+    SRADDHA_TRAYA = WORDS + KSETRAJNA  # Ch.17 = 16+1 = three faiths
+    MOKSA_SANNYASA = GITA_CHAPTERS  # Ch.18 = GITA_CHAPTERS (liberation!)
 
 
 # Verification
@@ -141,9 +138,9 @@ class PayloadQuarter(IntEnum):
     """The 4 payload categories (quarters)."""
 
     GENESIS = 0  # Chapters 1-4:  Raw input
-    DHARMA = KSETRAJNA   # Chapters 5-9:  Validated
-    KARMA = HALVES    # Chapters 10-14: Execution
-    MOKSHA = TRINITY   # Chapters 15-18: Output
+    DHARMA = KSETRAJNA  # Chapters 5-9:  Validated
+    KARMA = HALVES  # Chapters 10-14: Execution
+    MOKSHA = TRINITY  # Chapters 15-18: Output
 
 
 def get_payload_quarter(payload_type: PayloadType) -> PayloadQuarter:
@@ -171,14 +168,14 @@ class SiksastakamOp(IntEnum):
     Maps to prabhupada_engineering.py VERSE_CONSTANTS.
     """
 
-    RECEIVE = 0    # L0: ceto-darpana   - Parse/receive input
-    LINK = KSETRAJNA       # L1: namnam akari   - Chain/connect
-    VALIDATE = HALVES   # L2: trinad api     - Check integrity
-    INTENT = TRINITY     # L3: na dhanam      - Extract purpose
-    LIFETIME = QUARTERS   # L4: ayi nanda      - Set TTL/scope
-    STATE = PANCHA      # L5: nayanam galad  - Track changes
-    OPERATE = SHARANAGATI    # L6: yugayitam      - Transform
-    COMPLETE = SEVEN   # L7: aslishya va    - Finalize/return
+    RECEIVE = 0  # L0: ceto-darpana   - Parse/receive input
+    LINK = KSETRAJNA  # L1: namnam akari   - Chain/connect
+    VALIDATE = HALVES  # L2: trinad api     - Check integrity
+    INTENT = TRINITY  # L3: na dhanam      - Extract purpose
+    LIFETIME = QUARTERS  # L4: ayi nanda      - Set TTL/scope
+    STATE = PANCHA  # L5: nayanam galad  - Track changes
+    OPERATE = SHARANAGATI  # L6: yugayitam      - Transform
+    COMPLETE = SEVEN  # L7: aslishya va    - Finalize/return
 
 
 # Verification
@@ -209,8 +206,8 @@ from vibe_core.mahamantra.protocols._seed import AKSARA_COUNT
 
 BITS_VALUE: Final[int] = AKSARA_COUNT  # 32 = WORDS × HALVES (syllables!)
 BITS_POSITION: Final[int] = HALF_SIZE  # 8 = byte aligned, fits 0-15
-BITS_CHAPTER: Final[int] = HALF_SIZE   # 8 = byte aligned, fits 1-18
-BITS_STAGE: Final[int] = HALF_SIZE     # 8 = byte aligned, fits 0-7
+BITS_CHAPTER: Final[int] = HALF_SIZE  # 8 = byte aligned, fits 1-18
+BITS_STAGE: Final[int] = HALF_SIZE  # 8 = byte aligned, fits 0-7
 
 # Verification: Must fit in 64 bits with 8 reserved
 _TOTAL_BITS = BITS_VALUE + BITS_POSITION + BITS_CHAPTER + BITS_STAGE + HALF_SIZE
@@ -245,15 +242,15 @@ def encode_maha_field(
         64-bit encoded field
     """
     assert 0 <= value <= MASK_VALUE, f"Value must fit in {BITS_VALUE} bits"
-    assert 0 <= position < WORDS, f"Position must be 0-{WORDS-KSETRAJNA}"
+    assert 0 <= position < WORDS, f"Position must be 0-{WORDS - KSETRAJNA}"
     assert KSETRAJNA <= chapter <= GITA_CHAPTERS, f"Chapter must be 1-{GITA_CHAPTERS}"
-    assert 0 <= stage < HALF_SIZE, f"Stage must be 0-{HALF_SIZE-KSETRAJNA}"
+    assert 0 <= stage < HALF_SIZE, f"Stage must be 0-{HALF_SIZE - KSETRAJNA}"
 
     return (
-        (value & MASK_VALUE) |
-        ((position & MASK_POSITION) << SHIFT_POSITION) |
-        ((chapter & MASK_CHAPTER) << SHIFT_CHAPTER) |
-        ((stage & MASK_STAGE) << SHIFT_STAGE)
+        (value & MASK_VALUE)
+        | ((position & MASK_POSITION) << SHIFT_POSITION)
+        | ((chapter & MASK_CHAPTER) << SHIFT_CHAPTER)
+        | ((stage & MASK_STAGE) << SHIFT_STAGE)
     )
 
 
@@ -325,8 +322,8 @@ class MahaPayload:
 
     payload_type: PayloadType
     data: bytes
-    position: int = 0      # Mahamantra position (0-15)
-    stage: int = 0         # Siksastakam stage (0-7)
+    position: int = 0  # Mahamantra position (0-15)
+    stage: int = 0  # Siksastakam stage (0-7)
     metadata: Dict[str, object] = None
 
     def __post_init__(self):
@@ -369,7 +366,7 @@ class MahaPayload:
         type_field = int.from_bytes(data[:HARE_COUNT], "little")
         length, position, chapter, stage = decode_maha_field(type_field)
 
-        payload_data = data[HARE_COUNT:HARE_COUNT+length]
+        payload_data = data[HARE_COUNT : HARE_COUNT + length]
 
         return cls(
             payload_type=PayloadType(chapter),

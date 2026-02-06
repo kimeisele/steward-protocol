@@ -20,10 +20,22 @@ THE 7 EFFECTS MAP TO 7 BEATS:
   Beat 6 (1966): FULL_NECTAR_EACH_STEP   → Atomic transactions
   Beat 7 (1977): BATHE_ENTIRE_SELF       → Total transformation
 """
+
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY)
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    MAHA_QUANTUM,
+    PANCHA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TRINITY,
+)
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.substrate.mantra.maha_kirtan import KirtanComputeResult
@@ -35,11 +47,6 @@ __genesis__ = "0xbf879742"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Final, Optional
-
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    SEVEN,
-)
 
 from .engineering import (
     ENGINEERING_EFFECTS,
@@ -181,7 +188,7 @@ class SiksastakamSynth:
         """
         # 1. Get Effect
         effect_name = self.get_effect_for_beat(beat_number)
-        
+
         # 2. Get Engineering Metadata (from engineering.py)
         try:
             enum_effect = getattr(SankirtanaEffect, effect_name)
@@ -206,7 +213,7 @@ class SiksastakamSynth:
         # Use seed + beat to generate deterministic pattern
         # If 512-bit mode, we want 32 bits. If normal, 8 bits (byte).
         # Actually SiksastakamOutput has bits_output (int).
-        
+
         # Bit generation logic:
         # Mix seed with beat identifier
         mixed_seed = (seed * beat_number + SEVEN) % (HALVES**32)

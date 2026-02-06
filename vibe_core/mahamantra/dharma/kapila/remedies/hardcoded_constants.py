@@ -54,8 +54,7 @@ from typing import Final, List, Set, Tuple
 
 import libcst as cst
 
-from vibe_core.shuddhi.remedies.base import CSTRemedy
-
+from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
 # =============================================================================
 # SSOT CONSTANTS - These should NEVER be hardcoded
@@ -63,45 +62,72 @@ from vibe_core.shuddhi.remedies.base import CSTRemedy
 
 # Magic numbers that should come from _seed.py
 SACRED_NUMBERS: Final[Set[int]] = {
-    16,    # WORDS
-    4,     # QUARTERS
-    2,     # HALVES
-    7,     # SEVEN
-    5,     # PANCHA
-    37,    # PARAMPARA
-    137,   # MAHA_QUANTUM
-    18,    # GITA_CHAPTERS
-    32,    # AKSARA_COUNT
-    64,    # QUALITIES
+    16,  # WORDS
+    4,  # QUARTERS
+    2,  # HALVES
+    7,  # SEVEN
+    5,  # PANCHA
+    37,  # PARAMPARA
+    137,  # MAHA_QUANTUM
+    18,  # GITA_CHAPTERS
+    32,  # AKSARA_COUNT
+    64,  # QUALITIES
     1096,  # TRANSCENDENTAL_1096
-    108,   # JAPA_MALA
-    12,    # MAHAJANA_COUNT
-    24,    # KSHETRA (field elements)
+    108,  # JAPA_MALA
+    12,  # MAHAJANA_COUNT
+    24,  # KSHETRA (field elements)
 }
 
 # Contextual magic numbers - only suspicious if NOT in allowed contexts
 CONTEXTUAL_NUMBERS: Final[Set[int]] = {
-    0, 1,  # These are often legitimate (array indices, booleans, etc.)
+    0,
+    1,  # These are often legitimate (array indices, booleans, etc.)
 }
 
 # Mahajana names that should be imported
 MAHAJANA_NAMES: Final[Set[str]] = {
-    "vyasa", "brahma", "narada", "shambhu",
-    "prithu", "kumaras", "kapila", "manu",
-    "parashurama", "prahlada", "janaka", "bhishma",
-    "nrisimha", "bali", "shuka", "yamaraja",
+    "vyasa",
+    "brahma",
+    "narada",
+    "shambhu",
+    "prithu",
+    "kumaras",
+    "kapila",
+    "manu",
+    "parashurama",
+    "prahlada",
+    "janaka",
+    "bhishma",
+    "nrisimha",
+    "bali",
+    "shuka",
+    "yamaraja",
 }
 
 # Known safe patterns (variable names that legitimately use these numbers)
 SAFE_PATTERNS: Final[Set[str]] = {
     # Loop counters and indices
-    "i", "j", "k", "idx", "index",
+    "i",
+    "j",
+    "k",
+    "idx",
+    "index",
     # Flags and modes
-    "mode", "flag", "status", "state",
+    "mode",
+    "flag",
+    "status",
+    "state",
     # Common parameter names
-    "count", "size", "length", "width", "height",
+    "count",
+    "size",
+    "length",
+    "width",
+    "height",
     # Time-related
-    "hours", "minutes", "seconds", "days",
+    "hours",
+    "minutes",
+    "seconds",
+    "days",
 }
 
 
@@ -161,12 +187,23 @@ class HardcodedConstantsRemedy(CSTRemedy):
         """Track which constants were imported from seed."""
         if isinstance(node.names, cst.ImportStar):
             # from _seed import * - all constants are available
-            self._imported_constants.update([
-                "WORDS", "QUARTERS", "HALVES", "SEVEN", "PANCHA",
-                "PARAMPARA", "MAHA_QUANTUM", "GITA_CHAPTERS",
-                "AKSARA_COUNT", "QUALITIES", "TRANSCENDENTAL_1096",
-                "JAPA_MALA", "MAHAJANA_COUNT",
-            ])
+            self._imported_constants.update(
+                [
+                    "WORDS",
+                    "QUARTERS",
+                    "HALVES",
+                    "SEVEN",
+                    "PANCHA",
+                    "PARAMPARA",
+                    "MAHA_QUANTUM",
+                    "GITA_CHAPTERS",
+                    "AKSARA_COUNT",
+                    "QUALITIES",
+                    "TRANSCENDENTAL_1096",
+                    "JAPA_MALA",
+                    "MAHAJANA_COUNT",
+                ]
+            )
         else:
             for alias in node.names:
                 if isinstance(alias, cst.ImportAlias):

@@ -34,9 +34,10 @@ ARCHITECTURAL MAPPING (Capability-First):
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, PARAMPARA, QUARTERS, SEVEN, TRINITY)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, PANCHA, PARAMPARA, QUARTERS, SEVEN, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -45,18 +46,18 @@ __genesis__ = "0x2ca74606"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import Final, Tuple, Protocol, runtime_checkable
+from typing import Final, Protocol, Tuple, runtime_checkable
+
+from vibe_core.mahamantra.substrate.byte import (
+    LILA_CYCLES as _LILA_CYCLES,
+)
 
 # Import from byte.py (SSOT for mathematical constants)
 from vibe_core.mahamantra.substrate.byte import (
-    HolyName,
-    MAHAMANTRA_DIMENSION,
-    LILA_CYCLES as _LILA_CYCLES,
     LILA_LIMIT,
-    PARAMPARA,
+    MAHAMANTRA_DIMENSION,
+    HolyName,
 )
-from vibe_core.mahamantra.protocols._seed import HALVES
-
 
 # =============================================================================
 # PANCHA TATTVA - The Five Absolute Truths

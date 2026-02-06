@@ -33,14 +33,8 @@ KALI YUGA GRACE:
 
 NO MANUAL WIRING. The folder structure IS the wiring.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, PANCHA, PARAMPARA, QUARTERS, TEN, TRINITY, WORDS)
-
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "narada"  # Position 2 - Communication/Broadcast
-__position__ = HALVES
-__genesis__ = "0x2c80316d"  # GenesisByte: parampara % 37 == 0
 
 import ast
 import logging
@@ -51,29 +45,46 @@ from pathlib import Path
 from typing import Dict, Final, Iterator, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
-
-# Import SankirtanProtocol (THE LAW)
 from vibe_core.mahamantra.protocols._sankirtan import (
     GenesisByte,
     InjectionRequest,
     SankirtanProtocol,
     WiringStats,
 )
-from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    PANCHA,
+    PARAMPARA,
+    QUARTERS,
+    TEN,
+    TRINITY,
+    WORDS,
+)
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"  # Position 2 - Communication/Broadcast
+__position__ = HALVES
+__genesis__ = "0x2c80316d"  # GenesisByte: parampara % 37 == 0
 
 # Import SSOT Pipeline types (Aliased to avoid collision with local types)
-from vibe_core.mahamantra.substrate.samskara import (
-    Phase,
-    PhaseResult as SamskaraPhaseResult,
-    PhaseStatus,
-    PipelineContext as SamskaraPipelineContext,
-    PipelineExecutor,
-    SamskaraProtocol,
-)
 from vibe_core.mahamantra.substrate.mahajana import Quarter
 from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
     MantraPosition,
+)
+from vibe_core.mahamantra.substrate.samskara import (
+    Phase,
+    PhaseStatus,
+    PipelineExecutor,
+    SamskaraProtocol,
+)
+from vibe_core.mahamantra.substrate.samskara import (
+    PhaseResult as SamskaraPhaseResult,
+)
+from vibe_core.mahamantra.substrate.samskara import (
+    PipelineContext as SamskaraPipelineContext,
 )
 from vibe_core.mahamantra.substrate.wiring import (
     POSITION_BY_INDEX,
@@ -320,9 +331,7 @@ def _get_all_guardian_names() -> List[str]:
     global _GUARDIAN_NAMES_CACHE
     if _GUARDIAN_NAMES_CACHE is None:
         _GUARDIAN_NAMES_CACHE = [
-            POSITION_BY_INDEX[i].guardian.value
-            for i in range(WORDS)
-            if POSITION_BY_INDEX[i] is not None
+            POSITION_BY_INDEX[i].guardian.value for i in range(WORDS) if POSITION_BY_INDEX[i] is not None
         ]
     return _GUARDIAN_NAMES_CACHE
 
@@ -399,8 +408,9 @@ def get_mahajana_for_path(file_path: Path) -> Optional[Tuple[str, int]]:
     # This ensures deterministic assignment for unknown paths
     # P0-FIX: Use deterministic hash instead of Python's randomized hash()
     import hashlib
-    path_bytes = path_str.encode('utf-8')
-    path_hash_int = int.from_bytes(hashlib.sha256(path_bytes).digest()[:QUARTERS], byteorder='big')
+
+    path_bytes = path_str.encode("utf-8")
+    path_hash_int = int.from_bytes(hashlib.sha256(path_bytes).digest()[:QUARTERS], byteorder="big")
     path_hash = path_hash_int % WORDS  # SSOT
     mapping = MAHAMANTRA_POSITIONS[path_hash]
     return (mapping.guardian.value, mapping.index)

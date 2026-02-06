@@ -31,7 +31,17 @@ CATEGORY (English) ↔ VARGA:
     dental        = DANTYA = 3
     labial        = OSHTHYA = 4
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, QUARTERS, SHARANAGATI, TRINITY)
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    NAVA,
+    PANCHA,
+    QUARTERS,
+    SHARANAGATI,
+    TRINITY,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
@@ -45,9 +55,6 @@ from typing import Dict, Final, List, Optional, Tuple
 # =============================================================================
 # SSOT IMPORTS - Everything derived from protocols!
 # =============================================================================
-# From seed.py (THE LAW)
-from vibe_core.mahamantra.protocols._seed import PANCHA, QUARTERS
-
 # From language.py (Character mappings with IPA)
 from vibe_core.protocols.language import (
     CONSONANT_MAPPINGS,

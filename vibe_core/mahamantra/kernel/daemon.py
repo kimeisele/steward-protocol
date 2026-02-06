@@ -35,9 +35,10 @@ OUROBOROS:
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, MALA, PANCHA, QUARTERS, TEN)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, MALA, PANCHA, QUARTERS, TEN
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
@@ -65,8 +66,8 @@ from typing import (
 from vibe_core.mahamantra.kernel.singularity import mahamantra
 from vibe_core.mahamantra.protocols._core import Quarter
 from vibe_core.mahamantra.protocols._entropy import (
-    HEALTH_SAMADHI,
     HEALTH_SADHANA,
+    HEALTH_SAMADHI,
     EntropyLevel,  # SSOT for frequency
 )
 
@@ -357,7 +358,7 @@ class MahamantraDaemon:
             return
 
         try:
-            from vibe_core.shuddhi.engine import ShuddhiEngine
+            from vibe_core.mahamantra.dharma.kumaras.engine import ShuddhiEngine
 
             # Lazy singleton - avoid import loop
             if not hasattr(self, "_shuddhi_engine"):
