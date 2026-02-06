@@ -288,24 +288,23 @@ def project_lotus(kernel: "RealVibeKernel") -> PositionRegistry:
 
 def project_minimal(kernel: "RealVibeKernel") -> PositionRegistry:
     """
-    Minimal projection - only core guardians.
+    Minimal projection - only HEAD guardians (one per quarter).
 
     For fast boot when full lotus not needed.
-    Core guardians: brahma(1), narada(2), kapila(5), janaka(10)
+    HEAD positions derived from SSOT: HEAD_POSITIONS = (0, 4, 8, 12).
     """
     from vibe_core.vajra.auto_wire import auto_wire
+    from vibe_core.mahamantra.substrate.seed import (
+        ALL_GUARDIANS,
+        get_quarter_name,
+    )
+    from vibe_core.mahamantra.protocols._seed import HEAD_POSITIONS
 
     registry = PositionRegistry()
 
-    # Core guardians with their known locations
-    core = [
-        (1, "brahma", "genesis"),
-        (2, "narada", "genesis"),
-        (5, "kapila", "cycles"),
-        (10, "janaka", "cycles"),
-    ]
-
-    for position, guardian, quarter in core:
+    for position in HEAD_POSITIONS:
+        guardian = ALL_GUARDIANS[position]
+        quarter = get_quarter_name(position)
         instance = _instantiate_guardian(guardian, quarter)
         if instance is not None:
             auto_wire(kernel, instance)
