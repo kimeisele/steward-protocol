@@ -231,6 +231,23 @@ assert len(_4d_keys) == VARNAMALA_TOTAL, "4D must be bijective on VARNAMALA"
 
 
 # =============================================================================
+# SHRUTI / NAKSHATRA PARTITION (R-operation: quadratic residues mod 49)
+# =============================================================================
+# R(v) = v² mod VARNAMALA. The set of residues = SHRUTIS (22 microtones).
+# The complement = NAKSHATRAS (27 lunar mansions).
+# Together: 22 + 27 = 49 = VARNAMALA.
+
+_R_RESIDUES: frozenset[int] = frozenset((c * c) % VARNAMALA_TOTAL for c in range(VARNAMALA_TOTAL))
+
+IS_SHRUTI: Final[tuple[bool, ...]] = tuple(c in _R_RESIDUES for c in range(VARNAMALA_TOTAL))
+
+_shruti_count = sum(IS_SHRUTI)
+_nakshatra_count = VARNAMALA_TOTAL - _shruti_count
+assert _shruti_count == 22, f"SHRUTIS must be 22, got {_shruti_count}"
+assert _nakshatra_count == 27, f"NAKSHATRAS must be 27, got {_nakshatra_count}"
+
+
+# =============================================================================
 # DERIVED SIGNATURE (all 3 spatial dimensions + harmonic)
 # =============================================================================
 
@@ -321,6 +338,7 @@ __all__ = [
     "COORD_VARGA",
     "COORD_SUB",
     "COORD_HARMONIC",
+    "IS_SHRUTI",
     "derived_signature",
     "full_signature",
     "element_walk",
