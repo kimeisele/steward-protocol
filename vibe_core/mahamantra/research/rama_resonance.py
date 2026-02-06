@@ -158,18 +158,24 @@ def _guna_from_shruti(coords: tuple[int, ...], baseline: float, half_std: float)
         return "rajas"
 
 
-def _coord_seed(coords: tuple[int, ...]) -> int:
-    """Deterministic 32-bit seed from RAMA coordinate sequence."""
-    h = hashlib.sha256(str(coords).encode("utf-8")).digest()
+def _coord_seed(coords: tuple[int, ...], verse_id: str = "") -> int:
+    """Deterministic 32-bit seed from RAMA coordinates + verse identity.
+
+    verse_id breaks clone symmetry: grouped verses sharing the same
+    word-for-word (= same coords) get different seeds → different attractors.
+    """
+    key = f"{coords}:{verse_id}" if verse_id else str(coords)
+    h = hashlib.sha256(key.encode("utf-8")).digest()
     return int.from_bytes(h[:4], "big")
 
 
-def _full_sig_hash(coords: tuple[int, ...]) -> str:
-    """SHA256 of concatenated 4D signatures."""
+def _full_sig_hash(coords: tuple[int, ...], verse_id: str = "") -> str:
+    """SHA256 of concatenated 4D signatures + verse identity."""
     from vibe_core.mahamantra.substrate.pancha_walk import full_signature
 
     sig = full_signature(coords)
-    return hashlib.sha256(sig.encode("utf-8")).hexdigest()[:16]
+    key = f"{sig}:{verse_id}" if verse_id else sig
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
 
 
 def _dominant_name(h: float, k: float, r: float) -> str:
