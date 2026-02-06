@@ -20,13 +20,6 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0xdd4f22d7"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-from vibe_core.protocols.mahajanas.narada import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.narada import __all__
-
-# Backward-compat constants
 from typing import Final
 
 POSITION: Final[int] = 2
@@ -34,59 +27,39 @@ QUARTER: Final[str] = "genesis"
 OPCODE: Final[str] = "ALLOC_MEM"
 PARAMPARA_VECTOR: Final[int] = 111
 
-# NaradaBase alias for backward compat
-NaradaBase = NaradaProtocolBase
-
 
 def execute(input_text: str, context: dict = None) -> dict:
-    """
-    NARADA EXECUTION - Observation & Communication
-
-    Stateless execution via NullNarada.
-    """
-    narada = NullNarada()
-    intent = input_text.lower().strip()
-
-    if "broadcast" in intent or "pulse" in intent:
-        result = narada.broadcast_cli(input_text)
-        return {"success": True, "action": "broadcast", "result": result}
-
-    if "observe" in intent:
-        narada.observe("user", "request", input_text)
-        return {"success": True, "action": "observe", "recorded": True}
-
-    if "state" in intent or "status" in intent:
-        state = narada.get_state()
-        return {"success": True, "action": "get_state", "state": state}
-
-    # Default: return state
+    """NARADA EXECUTION - Alloc Mem (Position 2)"""
     return {
         "success": True,
-        "action": "introspect",
-        "position": POSITION,
+        "action": OPCODE.lower(),
+        "mahajana": __mahajana__,
+        "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
-        "message": f"🎵 Narada hears: '{input_text}'. Try 'broadcast', 'observe', or 'state'."
+        "input": input_text,
+        "message": f"Narada [{OPCODE}]: '{input_text}'",
     }
 
+
+_fractal_getattr_fn = None
+_MISSING = object()
+
+
 def __getattr__(name: str):
-    """
-    Fractal routing: folder IS wiring.
-    "EIN IMPORT. KRISHNA ROUTET ALLES."
-    """
-    from pathlib import Path
-    import importlib
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import narada as _proto
 
-    pkg_root = Path(__file__).parent
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)

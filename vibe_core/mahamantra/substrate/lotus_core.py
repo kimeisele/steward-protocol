@@ -26,8 +26,8 @@ if TYPE_CHECKING:
     )
 
 # These imports are needed for class definition
-from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
 from vibe_core.mahamantra.seed.types import (
     AkashState,
     ExecuteResult,
@@ -35,7 +35,7 @@ from vibe_core.mahamantra.seed.types import (
     RouteResult,
     VibrationState,
 )
-from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
 
 logger = logging.getLogger("MAHAMANTRA")
 
@@ -55,6 +55,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         "total_beats": 0,
         "total_rounds": 0,
         "attractor_counts": {},
+        "last_seed": None,
+        "last_position": None,
+        "last_attractor": None,
     }
 
     # ==========================================================================
@@ -81,6 +84,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Lazy-load MahaCompression."""
         if cls._compressor is None:
             from vibe_core.mahamantra.adapters.compression import MahaCompression
+
             cls._compressor = MahaCompression()
         return cls._compressor
 
@@ -94,7 +98,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         # Kernel handles str or MahaCell and returns 16-bit address
         attractor = kernel(input_data)
-        
+
         # Seed is needed for return dict, extract it manually
         if isinstance(input_data, MahaCell):
             seed = input_data.header.sravanam
@@ -125,8 +129,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Uses MAHAMANTRA_SEQUENCE for correct opcode per position.
         """
         import time
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
+
         from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
 
         t = int(time.time())
         pos = t % WORDS  # SSOT: WORDS from seed.py
@@ -139,7 +144,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "word": word,
             "opcode": opcode.name,  # MantraOpCode.name for Nrisimha
             "position": pos,
-            "tick": t
+            "tick": t,
         }
 
         # Broadcast to all listeners (6.34 Override - Japa Loop)
@@ -205,6 +210,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             # EAGER mode (old behavior) - load everything now
             try:
                 from vibe_core.services import maha_compute_service
+
                 if not silent:
                     _log.info("MahaComputeService activated")
             except ImportError as e:
@@ -213,6 +219,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
             try:
                 from vibe_core.mahamantra.adapters.llm import MahaLLM
+
                 kapila = self.dharma.kapila.get_kapila_service()
                 kapila.register_cognitive(MahaLLM())
                 if not silent:
@@ -258,7 +265,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         Everything computed. No external LLM. No hardcoded routing.
         """
-        from vibe_core.mahamantra.protocols._seed import WORDS, PARAMPARA, MAHA_QUANTUM
+        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, PARAMPARA, WORDS
         from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
 
         # =====================================================================
@@ -282,10 +289,18 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             comp_result = compressor.compress(input_text)
             seed = comp_result.seed
 
+        # RETURN-LOOP: If previous yajna left a seed, XOR it in.
+        # "The output becomes the input" - continuity across calls.
+        # XOR preserves determinism: same sequence → same result.
+        last_seed = self._akash.get("last_seed")
+        if last_seed is not None:
+            seed = seed ^ last_seed
+
         # =====================================================================
         # 3. PADA_SEVANAM - MahaKernel → attractor (Resonance)
         # =====================================================================
         from vibe_core.mahamantra.kernel.maha_kernel import get_kernel
+
         kernel = get_kernel()
         # Hybrid Kernel: High Byte = Attractor (Legacy), Low Byte = Variance (Storage)
         raw_address = kernel(input_text)
@@ -296,6 +311,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # FIX: Use ShadowOracle for proper Parampara validation (not just % 37)
         from vibe_core.mahamantra.reactor.shadow_oracle import get_shadow_oracle
+
         oracle = get_shadow_oracle()
         oracle_validation = oracle.validate(seed)
         parampara_verified = oracle_validation["parampara_validated"]
@@ -308,10 +324,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
         from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
         from vibe_core.mahamantra.protocols._seed import is_fruit, is_in_field
+        from vibe_core.mahamantra.substrate.gita import get_chapter_significance
 
         verse_result = match_attractor(attractor)
         chapter = get_gita_chapter(attractor)
-        
+        chapter_significance = get_chapter_significance(chapter)
+
         # TOPOLOGY: Field (Ch 1-16) = process, Fruit (Ch 17-18) = complete
         gita_phase = "fruit" if is_fruit(chapter) else "field"
         is_complete = is_fruit(chapter)  # Stopping condition
@@ -328,6 +346,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "verse": v.verse,
                 "guna": v.guna,
                 "dominant_name": v.dominant_name,
+                "significance": chapter_significance,
             }
 
         # =====================================================================
@@ -348,8 +367,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         #    - RAMA (4 positions): Bliss - receivers/deliverers
         #
         from vibe_core.mahamantra.protocols._seed import (
-            is_head, get_quarter_head,
-            get_name_at_position, get_trinity_function,
+            get_name_at_position,
+            get_quarter_head,
+            get_trinity_function,
+            is_head,
         )
 
         # Position from attractor (holographic - embedded in computation)
@@ -398,15 +419,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         from vibe_core.mahamantra.substrate.cell_router import register_cell
 
         result_cell = MahaCellUnified.create(
-            source=seed,              # Address from compression
-            target=raw_address,       # FULL Hybrid Address (High=Route, Low=Var)
-            operation=position,       # Position from attractor % WORDS (resonated)
+            source=seed,  # Address from compression
+            target=raw_address,  # FULL Hybrid Address (High=Route, Low=Var)
+            operation=position,  # Position from attractor % WORDS (resonated)
             dna=input_text,
         )
 
         # Register in global router
         register_cell(result_cell)
-        
+
         # =====================================================================
         # 8.5. KIRTAN - Call and Response Loop
         # =====================================================================
@@ -415,11 +436,22 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # "kirtanīyaḥ sadā hariḥ" - One should always chant
         # FIX: Use singleton chamber for persistent resonance
         from vibe_core.mahamantra.substrate.chamber import get_chamber
+
         chamber = get_chamber()
 
-        # KIRTAN LOOP: 1 cycle = WORDS (16) transformations
+        # KIRTAN LOOP: cycles × WORDS (16) transformations
         # Each transformation applies DIW (Divine Instruction Word)
-        result_cell = chamber.kirtan(result_cell, cycles=1)
+        # Cycles scale with accumulated resonance (akash memory):
+        #   First call = 1 cycle (KSETRAJNA), then grows with total_rounds
+        #   Max = QUARTERS (4) cycles = 64 transformations
+        from vibe_core.mahamantra.protocols._seed import KSETRAJNA
+        from vibe_core.mahamantra.protocols._seed import QUARTERS as MAX_CYCLES
+
+        kirtan_cycles = min(
+            KSETRAJNA + self._akash["total_rounds"] // WORDS,
+            MAX_CYCLES,
+        )
+        result_cell = chamber.kirtan(result_cell, cycles=kirtan_cycles)
 
         # =====================================================================
         # 8.6. YAJNA CYCLE - ShadowReactor Integration (Bhoga→Prasadam→Return)
@@ -432,67 +464,108 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
 
         # Get reactor via factory (DI pattern, not direct instantiation)
+        # FORCED LAGNA=0: The position is ALREADY computed from attractor % WORDS.
+        # Adding a random phase shift corrupts deterministic routing.
+        # "Der Output darf niemals variieren" - Same input → same output. Always.
         reactor = get_shadow_reactor_factory().spawn(
             auto_discover=False,  # Diamond routing, not filesystem discovery
             initial_position=position,
+            forced_lagna=0,  # No phase shift - position from attractor IS the truth
         )
 
         # SANKIRTAN AUTHORIZATION: Accumulate grace through chanting
         # "kīrtanīyaḥ sadā hariḥ" - Always chant the Holy Name
         # 1 valid chant = SHARANAGATI_UNIT (3600) = authorized (MERCY path)
         # Uses COSMIC_FRAME scaling consistent with _bhava.py
-        reactor.chant()
+        # NOTE: Pass THIS MODULE as chant target (has valid __genesis__ % 37 == 0)
+        # ShadowReactor itself has NO static identity (computed at runtime),
+        # so chant(self) would fail verify_link. The lotus_core module IS the source.
+        import sys
+
+        reactor.chant(sys.modules[__name__])
 
         # Inject MahaCell into reactor for payload flow
-        reactor.set_maha_cell(MahaCell(
-            header=MahaHeader.create(
-                source=seed,
-                target=raw_address,
-                operation=position,
-                link=0,
-                intent=0,
-                ttl=300,
-                state=0,
-            ),
-            payload=input_text.encode('utf-8'),
-        ))
+        reactor.set_maha_cell(
+            MahaCell(
+                header=MahaHeader.create(
+                    source=seed,
+                    target=raw_address,
+                    operation=position,
+                    link=0,
+                    intent=0,
+                    ttl=300,
+                    state=0,
+                ),
+                payload=input_text.encode("utf-8"),
+            )
+        )
 
-        # Build TickStateInput (WATERTIGHT TypedDict)
-        word, opcode = MAHAMANTRA_SEQUENCE[position]
-        tick_input: TickStateInput = {
-            "tick": self._akash["total_beats"],
-            "position": position,
-            "quarter": quarter,
-            "guardian": guardian,
-            "word": word,
-            "opcode": opcode.value if hasattr(opcode, 'value') else opcode,
-        }
+        # =================================================================
+        # FULL YAJNA CYCLE: WORDS ticks (Bhoga→Switch→Prasadam→Return)
+        # =================================================================
+        # "The cycle never ends. The output becomes the input."
+        # Starting from computed position, walk through all 16 positions.
+        # Each tick triggers the guardian at that position.
+        # The reactor tracks phase transitions (switch at 8, return at 15→0).
 
-        # YAJNA TICK: Walks through Bhoga→Switch→Prasadam→Return
-        # This triggers on_bhoga/on_prasadam hooks in guardian modules
-        shadow_state = reactor.tick(tick_input)
+        shadow_state = None
+        guardian_result = None
+        base_tick = self._akash["total_beats"]
 
-        # Extract guardian execution result from shadow state
-        guardian_result = shadow_state.get("execution_result")
+        for i in range(WORDS):
+            tick_pos = (position + i) % WORDS
+            tick_word, tick_opcode = MAHAMANTRA_SEQUENCE[tick_pos]
+            tick_guardian = ALL_GUARDIANS[tick_pos] if tick_pos < len(ALL_GUARDIANS) else "unknown"
+
+            if tick_pos < 4:
+                tick_quarter = "genesis"
+            elif tick_pos < 8:
+                tick_quarter = "dharma"
+            elif tick_pos < 12:
+                tick_quarter = "karma"
+            else:
+                tick_quarter = "moksha"
+
+            tick_input: TickStateInput = {
+                "tick": base_tick + i,
+                "position": tick_pos,
+                "quarter": tick_quarter,
+                "guardian": tick_guardian,
+                "word": tick_word,
+                "opcode": tick_opcode.value if hasattr(tick_opcode, "value") else tick_opcode,
+            }
+
+            shadow_state = reactor.tick(tick_input)
+
+            # Capture execution result from any guardian that acts
+            tick_result = shadow_state.get("execution_result")
+            if tick_result is not None:
+                guardian_result = tick_result
 
         # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
         # =====================================================================
         # Update Akash state (persistent field)
-        self._akash["total_beats"] += 1
+        # Full yajna = WORDS ticks per call
+        self._akash["total_beats"] += WORDS
+        self._akash["total_rounds"] += 1
         self._akash["accumulated_value"] = (self._akash["accumulated_value"] + attractor) % MAHA_QUANTUM
         self._akash["attractor_counts"][attractor] = self._akash["attractor_counts"].get(attractor, 0) + 1
+
+        # RETURN-LOOP: Store last cell's seed for next call's context
+        # "The output becomes the input" - Yajna principle
+        self._akash["last_seed"] = seed
+        self._akash["last_position"] = position
+        self._akash["last_attractor"] = attractor
 
         return {
             # Input
             "input": input_text,
-
             # Vibration
             "vibration": {
                 "seed": seed,
                 "attractor": attractor,
             },
-
             # Parampara (via ShadowOracle - Gita 13.35)
             "parampara": {
                 "verified": parampara_verified,
@@ -500,8 +573,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "coherence": parampara_coherence,
             },
 
-            # Gita (VANDANAM) + TOPOLOGY
+            # Gita (VANDANAM) - THE BINDING ELEMENT + TOPOLOGY
             "chapter": chapter,
+            "chapter_significance": chapter_significance,
             "verse": verse_info,
             "matches": len(verse_result.matches),
             "gita_phase": gita_phase,  # "field" (Ch 1-16) or "fruit" (Ch 17-18)
@@ -525,12 +599,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "vamsi": diw_components.vamsi,        # 9 bits: Process/Action
                 "murali": diw_components.murali,      # 4 bits: Phase/Quarter
             },
-
             # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
             "cell": {
                 "header_size": 72,
-                "payload_size": len(input_text.encode('utf-8')),
-                "total_size": 72 + len(input_text.encode('utf-8')),
+                "payload_size": len(input_text.encode("utf-8")),
+                "total_size": 72 + len(input_text.encode("utf-8")),
                 "valid": True,  # Created via MahaCellUnified.create()
                 "parampara_verified": parampara_verified,
                 "prana": result_cell.prana,
@@ -538,21 +611,21 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "is_alive": result_cell.is_alive,
                 "cycle": result_cell.age,
             },
-
             # Akash (persistent state)
             "akash": self._akash,
-
             # Execution: Cell transformation + Yajna cycle + Guardian invocation
             # Chamber.kirtan() transforms via DIW, ShadowReactor.tick() triggers hooks
             "execution": {
                 "success": result_cell.is_alive,
                 "prana": result_cell.prana,
                 "integrity": result_cell.membrane_integrity,
+                "kirtan_cycles": kirtan_cycles,
+                "transformations": kirtan_cycles * WORDS,
+                "yajna_ticks": WORDS,
                 "cycles": result_cell.age,
                 "guardian_acted": guardian_result is not None,
                 "guardian_result": guardian_result,
             },
-
             # Yajna Cycle (ShadowReactor integration)
             "yajna": {
                 "phase": shadow_state.get("phase"),
@@ -567,14 +640,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def steward(self):
         """Lazy access to the Steward resonance router (LEGACY - use __call__ instead)."""
         from vibe_core.mahamantra.cli.steward import get_steward
+
         return get_steward()
 
     @property
     def shadow(self):
         """Lazy access to Shadow Reactor Factory."""
         from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
-        return get_shadow_reactor_factory()
 
+        return get_shadow_reactor_factory()
 
     # === Quarter Properties (Lazy) ===
 
@@ -603,12 +677,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Access MahamantraPipeline adapter (Lazy Singleton)."""
         if self._pipeline is None:
             from vibe_core.mahamantra.adapters.pipeline import MahamantraPipeline
+
             self._pipeline = MahamantraPipeline()
         return self._pipeline
 
     def _get_quarter(self, name: str):
         """Lazy-load quarter module."""
         import importlib
+
         module = importlib.import_module(f"vibe_core.mahamantra.{name}")
         module = importlib.import_module(f"vibe_core.mahamantra.{name}")
         return module
@@ -620,6 +696,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Access MahaTransform adapter."""
         if not hasattr(self, "_transform_adapter"):
             from vibe_core.mahamantra.adapters.transform import MahaTransform
+
             self._transform_adapter = MahaTransform()
         return self._transform_adapter
 
@@ -628,6 +705,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Access MahaHash adapter."""
         if not hasattr(self, "_hash_adapter"):
             from vibe_core.mahamantra.adapters.hash import MahaHash
+
             self._hash_adapter = MahaHash()
         return self._hash_adapter
 
@@ -636,6 +714,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Access Orchestrator adapter."""
         if not hasattr(self, "_orchestrator_adapter"):
             from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+
             self._orchestrator_adapter = Orchestrator()
         return self._orchestrator_adapter
 
@@ -643,11 +722,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def gita(self):
         """Access Gita Resonance adapter."""
         import vibe_core.mahamantra.adapters.gita_resonance as gita
+
         return gita
 
     def router(self, *args, **kwargs):
         """Create a generic Router."""
         from vibe_core.mahamantra.adapters.routing import Router
+
         return Router(*args, **kwargs)
 
     # === IPv6-LIKE ROUTING (O(1) Cell Registry) ===
@@ -669,6 +750,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         "sarvasya cāhaṁ hṛdi sanniviṣṭo" - I am seated in everyone's heart.
         """
         from vibe_core.mahamantra.substrate.cell_router import get_router
+
         return get_router()
 
     def cell_from_content(self, content: str, *, register: bool = True):
@@ -693,6 +775,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             MahaCellUnified with computed address
         """
         from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+
         return MahaCellUnified.from_content(content, register=register)
 
     def network(self):
@@ -712,6 +795,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             New LotusIPRouter instance
         """
         from vibe_core.mahamantra.adapters.network import create_ip_router
+
         return create_ip_router()
 
     def compression(self):
@@ -731,6 +815,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             New MahaCompression instance
         """
         from vibe_core.mahamantra.adapters.compression import MahaCompression
+
         return MahaCompression()
 
     def scan(self) -> Dict[str, object]:
@@ -751,16 +836,19 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Enables: mahamantra[2] → MantraPosition at index 2
         """
         from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+
         return MAHAMANTRA_POSITIONS[index]
 
     def __len__(self) -> int:
         """Return number of positions (16 = WORDS)."""
         from vibe_core.mahamantra.protocols._seed import WORDS
+
         return WORDS
 
     def __iter__(self) -> Iterator:
         """Iterate over all positions."""
         from vibe_core.mahamantra.substrate.position import MAHAMANTRA_POSITIONS
+
         return iter(MAHAMANTRA_POSITIONS)
 
     # === GAD Protocol ===

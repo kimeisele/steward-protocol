@@ -7,8 +7,8 @@ OpCode: LEDGER_SIGN
 Type: WORKER
 
 MAHAMANTRA AS LENS:
-    Structure defined here. Implementation lazily loaded from services layer.
-    Unification of Kernel and Mahamantra.
+    Structure defined here. Implementation re-exported from protocols/mahajanas.
+    Samskara will migrate implementations over time.
 
 PARAMPARA: 444 (% 37 == 0 -> CONNECTED)
 """
@@ -20,14 +20,8 @@ __mahajana__ = "bhishma"
 __position__ = 11
 __genesis__ = "0x030295b1"  # GenesisByte
 
-__genesis__ = "0x030295b1"  # GenesisByte
-    
-import logging
 from typing import Final
 
-logger = logging.getLogger(__name__)
-
-# Constants
 POSITION: Final[int] = 11
 QUARTER: Final[str] = "karma"
 OPCODE: Final[str] = "LEDGER_SIGN"
@@ -38,57 +32,34 @@ def execute(input_text: str, context: dict = None) -> dict:
     """BHISHMA EXECUTION - Ledger Sign (Position 11)"""
     return {
         "success": True,
+        "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
+        "message": f"Bhishma [{OPCODE}]: '{input_text}'",
     }
 
 
-def __getattr__(name: str) -> object:
-    """
-    Lazy load BhishmaService and NullBhishma.
-    NO MANUAL WIRING - auto-discovery needs these exports.
-    """
-    if name == "BhishmaService":
-        from vibe_core.protocols.mahajanas.bhishma.service import BhishmaService
+_fractal_getattr_fn = None
+_MISSING = object()
 
-        return BhishmaService
 
-    if name == "NullBhishma":
-        from vibe_core.protocols.mahajanas.bhishma import NullBhishma
-
-        return NullBhishma
-
-    # Fallback to protocol definitions if needed (for types)
+def __getattr__(name: str):
+    """Protocol re-exports (lazy) + fractal discovery."""
     try:
-        import importlib
+        from vibe_core.protocols.mahajanas import bhishma as _proto
 
-        module = importlib.import_module("vibe_core.mahamantra.karma.bhishma.protocol")
-        return getattr(module, name)
-    except (ImportError, AttributeError) as _exc:
-        logger.debug("Attribute %s not found in protocol: %s", name, _exc)
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
-    # ==========================================================================
-    # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
-    # ==========================================================================
-    from pathlib import Path
-    import importlib
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-    pkg_root = Path(__file__).parent
-
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
-__all__ = ["BhishmaService", "POSITION", "QUARTER", "OPCODE", "PARAMPARA_VECTOR"]
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)

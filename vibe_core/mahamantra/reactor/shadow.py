@@ -100,6 +100,11 @@ from vibe_core.mahamantra.protocols._gad import (
 )
 
 # =============================================================================
+# MAHA CELL INTEGRATION (72-byte Header + Payload - Universal Data Format)
+# =============================================================================
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+
+# =============================================================================
 # SSOT IMPORTS - The Law (_seed.py) governs the Reality (shadow.py)
 # =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
@@ -109,14 +114,6 @@ from vibe_core.mahamantra.protocols._seed import (
     QUARTERS,
     WORDS,
 )
-from vibe_core.mahamantra.protocols._bhava import SHARANAGATI_UNIT
-
-# =============================================================================
-# PRABHUPADA KIRTAN INTEGRATION - THE PERSON (SANKIRTAN = UNLIMITED MERCY)
-# =============================================================================
-# "tasmād guruṁ prapadyeta" - Therefore one must approach the spiritual master
-# SANKIRTAN PRINCIPLE: Everyone benefits from chanting, unlimited grace!
-from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
 
 # =============================================================================
 # GITA 13.35 INTEGRATION - ShadowOracle (MANDATORY PRE-FILTER)
@@ -138,13 +135,19 @@ from vibe_core.mahamantra.reactor.shadow_protocol import (
     ShadowState,
     TickStateInput,
     YajnaPhase,
-    __genesis__,
     get_phase,
 )
 from vibe_core.mahamantra.substrate.position import (
     MAHAMANTRA_POSITIONS,
     MantraPosition,
 )
+
+# =============================================================================
+# PRABHUPADA KIRTAN INTEGRATION - THE PERSON (SANKIRTAN = UNLIMITED MERCY)
+# =============================================================================
+# "tasmād guruṁ prapadyeta" - Therefore one must approach the spiritual master
+# SANKIRTAN PRINCIPLE: Everyone benefits from chanting, unlimited grace!
+from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
 
 # =============================================================================
 # SAMANA BRIDGE INTEGRATION (TaskKernel ↔ ShadowReactor via Nadi)
@@ -157,11 +160,6 @@ from vibe_core.mahamantra.substrate.samana_bridge import (
     SamanaFold,
     create_samana_bridge,
 )
-
-# =============================================================================
-# MAHA CELL INTEGRATION (72-byte Header + Payload - Universal Data Format)
-# =============================================================================
-from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
 from vibe_core.mahamantra.substrate.wiring import (
     get_position_by_index,
 )
@@ -328,21 +326,21 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
     def _route_to_position(self, position: int) -> Optional[object]:
         """
         Direct import - position computed from math, not discovered.
-        
+
         Uses POSITION_TO_MAHAJANA (from seed.py) to map position → mahajana name,
         then constructs module path and imports directly.
-        
+
         Returns module object if found, None if not available.
         Failures are silent (module not yet implemented is normal).
         """
         from vibe_core.mahamantra.substrate.seed import POSITION_TO_MAHAJANA, get_quarter_name
-        
+
         mahajana = POSITION_TO_MAHAJANA.get(position)
         if not mahajana:
             return None
-        
+
         quarter = get_quarter_name(position).lower()
-        
+
         # Try canonical path first, then legacy path
         for module_path in [
             f"vibe_core.mahamantra.{quarter}.{mahajana}",
@@ -357,20 +355,20 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
                 # Log unexpected errors (not just ImportError)
                 print(f"⚠️  APARADHA [ROUTING @ {position}/{mahajana}]: {type(e).__name__}: {e}")
                 return None
-        
+
         # No module found at any path - normal if not yet implemented
         return None
 
-    def _execute_at_position(
-        self, 
-        position: int, 
-        state: ShadowState, 
-        prefer_execute: bool = False
-    ) -> None:
+    def _execute_at_position(self, position: int, state: ShadowState, phase: str = "bhoga") -> None:
         """
-        Execute handler at position via direct routing.
-        
-        Tries execute() first (if prefer_execute=True), then on_bhoga/on_prasadam/on_switch/on_return.
+        Execute handler at position via phase-aware direct routing.
+
+        PHASE-AWARE INTROSPECTION (not hardcoded):
+            1. Try phase-specific hook first: on_{phase}() - optional override
+            2. Fall back to execute() - universal interface
+            This means: add on_prasadam() to ANY guardian → it automatically
+            gets called during PRASADAM. No wiring needed.
+
         Catches all exceptions and records as APARADHA (dissonance).
         Results stored in state["execution_result"] for upstream consumption.
         """
@@ -378,26 +376,20 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         if not module:
             return
 
-        # Determine which handler to call (priority order)
+        # Phase-aware handler discovery:
+        # 1. Phase hook takes priority (e.g., on_bhoga overrides execute during BHOGA)
+        # 2. execute() is the universal fallback
         handler = None
         handler_name = None
-        
-        if prefer_execute and hasattr(module, "execute"):
+
+        phase_hook = f"on_{phase}"
+        if hasattr(module, phase_hook):
+            handler = getattr(module, phase_hook)
+            handler_name = phase_hook
+        elif hasattr(module, "execute"):
             handler = module.execute
             handler_name = "execute"
-        elif hasattr(module, "on_bhoga"):
-            handler = module.on_bhoga
-            handler_name = "on_bhoga"
-        elif hasattr(module, "on_prasadam"):
-            handler = module.on_prasadam
-            handler_name = "on_prasadam"
-        elif hasattr(module, "on_switch"):
-            handler = module.on_switch
-            handler_name = "on_switch"
-        elif hasattr(module, "on_return"):
-            handler = module.on_return
-            handler_name = "on_return"
-        
+
         if not handler:
             return
 
@@ -410,11 +402,10 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
                 result = handler(input_text, {"cell": self._maha_cell, "position": position, "state": state})
                 state["execution_result"] = result
             else:
-                # on_bhoga/on_prasadam/on_switch/on_return(state) -> None (mutates state)
+                # on_{phase}(state) -> None (mutates state)
                 handler(state)
         except Exception as e:
             state["dissonance_report"] = f"APARADHA [{handler_name.upper()} @ {position}]: {type(e).__name__}: {e}"
-
 
     # =========================================================================
     # TICK - The Heartbeat with Bhoga-Prasadam-Return
@@ -608,7 +599,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         - Position computed by Bridge → seed.py mapping
         - Direct import via _route_to_position()
         - Call execute() or on_bhoga() if available
-        
+
         SAMANA INTEGRATION:
         Dispatches queued tasks to TaskKernels via SamanaBridge.
         """
@@ -620,24 +611,23 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         # SAMANA DISPATCH - Send queued tasks to TaskKernels
         if self._task_queue:
             tasks_to_dispatch = [
-                (t["task_id"], t["description"], t["payload"]) 
-                for t in self._task_queue[:DISPATCH_BATCH_SIZE]
+                (t["task_id"], t["description"], t["payload"]) for t in self._task_queue[:DISPATCH_BATCH_SIZE]
             ]
             dispatch_ids = self._samana_bridge.dispatch_batch(
                 tasks=tasks_to_dispatch,
                 position=position,
                 phase="BHOGA",
             )
-            self._task_queue = self._task_queue[len(dispatch_ids):]
+            self._task_queue = self._task_queue[len(dispatch_ids) :]
 
-        # DIAMOND ROUTING: Direct import → execute() or on_bhoga()
-        self._execute_at_position(position, state, prefer_execute=True)
+        # DIAMOND ROUTING: Direct import → on_bhoga() or execute()
+        self._execute_at_position(position, state, phase="bhoga")
 
     def _trigger_switch(self, state: ShadowState) -> None:
         """Trigger on_switch for position 8 (THE 8 MOMENT) via direct routing."""
         if not self.is_authorized():
             return
-        self._execute_at_position(SWITCH_POSITION, state, prefer_execute=False)
+        self._execute_at_position(SWITCH_POSITION, state, phase="switch")
 
     def _trigger_prasadam(self, state: ShadowState) -> None:
         """
@@ -663,14 +653,16 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         folds = self._samana_bridge.receive_folds()
         self._fold_results.extend(folds)
 
-        # DIAMOND ROUTING: Direct import → on_prasadam()
-        self._execute_at_position(position, state, prefer_execute=False)
+        # DIAMOND ROUTING: Direct import → on_prasadam() or execute()
+        # Phase-specific hooks override execute(). Add on_prasadam() to
+        # any guardian → it gets called automatically. No wiring.
+        self._execute_at_position(position, state, phase="prasadam")
 
     def _trigger_return(self, state: ShadowState) -> None:
         """Trigger on_return for position 0 (THE RETURN) via direct routing."""
         if not self.is_authorized():
             return
-        self._execute_at_position(RETURN_POSITION, state, prefer_execute=False)
+        self._execute_at_position(RETURN_POSITION, state, phase="return")
 
     # =========================================================================
     # STATE ACCESS
@@ -742,8 +734,9 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         if source_id == 0:
             # P0-FIX: Use deterministic hash instead of Python's randomized hash()
             import hashlib
-            reactor_bytes = str(self._reactor_id).encode('utf-8')
-            source_id = int.from_bytes(hashlib.sha256(reactor_bytes).digest()[:8], byteorder='big')
+
+            reactor_bytes = str(self._reactor_id).encode("utf-8")
+            source_id = int.from_bytes(hashlib.sha256(reactor_bytes).digest()[:8], byteorder="big")
 
         # Get current state
         state = self.get_state()
@@ -1034,7 +1027,6 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         if listener not in self._listeners[position]:
             self._listeners[position].append(listener)
 
-
     def unregister_listener(
         self,
         position: int,
@@ -1108,6 +1100,7 @@ class ShadowReactor(GADBase, ShadowReactorProtocol):
         MAHAMANTRA DEFINES IDENTITY - FOLDER IS TRUTH.
         """
         from pathlib import Path
+
         from vibe_core.mahamantra.substrate.sankirtan import get_mahajana_for_path
 
         for position_listeners in self._listeners.values():
