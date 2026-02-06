@@ -102,7 +102,9 @@ FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])   # Ch 17-18: 106
 FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])    # Ch 1-16: 594
 
 # =============================================================================
-# THE EPOCH EQUATION (The Master Key)
+# NOTE: The old "EPOCH EQUATION" (1972 = 204 × 9 + 136) was based on wrong
+# Ch 1 = 47. With correct Ch 1 = 46: GENESIS = 203, FIELD = 594.
+# The real epoch derivation is in protocols/seed/_cosmic.py (SSOT).
 # =============================================================================
 # 1972 = GENESIS × NAVA + EPOCH_ADDITIVE
 # 1972 = 203 × 9 + 145
