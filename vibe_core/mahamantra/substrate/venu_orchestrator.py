@@ -17,49 +17,48 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0xdd4f22d7"  # GenesisByte: parampara % 37 == 0
 
-from typing import Final, ClassVar, Tuple
 import struct
+from typing import ClassVar, Final, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
-    # Axioms
-    WORDS,
-    HARE_COUNT,
-    QUARTERS,
-    # Flute holes
-    VENU_HOLES,
-    VAMSI_HOLES,
-    MURALI_HOLES,
+    COSMIC_FRAME,
     FLUTE_HOLES_SUM,
-    # Mahamantra pattern
-    MAHAMANTRA_WORD_PATTERN,
+    HARE_COUNT,
+    # Verification constants
+    MAHA_QUANTUM,
     MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
     MAHAMANTRA_NAME_RAMA,
-    # Verification constants
-    MAHA_QUANTUM,
+    # Mahamantra pattern
+    MAHAMANTRA_WORD_PATTERN,
+    MURALI_HOLES,
     PARAMPARA,
     POSITION_SUM_RAMA,
-    COSMIC_FRAME,
+    QUARTERS,
     # Derived numbers
     SEVEN,
     TEN,
+    VAMSI_HOLES,
+    # Flute holes
+    VENU_HOLES,
+    # Axioms
+    WORDS,
 )
 from vibe_core.mahamantra.protocols.diw import (
-    pack,
-    unpack,
-    pack_full,
-    VENU_SHIFT,
-    VAMSI_SHIFT,
-    MURALI_SHIFT,
-    VENU_MASK,
-    VAMSI_MASK,
-    MURALI_MASK,
-    DIW_MASK,
-    SUNYA_MASK,
-    VELOCITY_SHIFT,
     CLUSTER_SHIFT,
+    DIW_MASK,
+    MURALI_MASK,
+    MURALI_SHIFT,
+    SUNYA_MASK,
+    VAMSI_MASK,
+    VAMSI_SHIFT,
+    VELOCITY_SHIFT,
+    VENU_MASK,
+    VENU_SHIFT,
+    pack,
+    pack_full,
+    unpack,
 )
-
 
 # =============================================================================
 # NAME ENCODING (DERIVED FROM SSOT)
@@ -68,9 +67,9 @@ from vibe_core.mahamantra.protocols.diw import (
 # H=0, K=1, R=2 (matches HolyName enum order from byte.py)
 
 _NAME_TO_ENCODING: Final[dict[str, int]] = {
-    MAHAMANTRA_NAME_HARE: 0,      # "H" → 0
-    MAHAMANTRA_NAME_KRISHNA: 1,   # "K" → 1
-    MAHAMANTRA_NAME_RAMA: 2,      # "R" → 2
+    MAHAMANTRA_NAME_HARE: 0,  # "H" → 0
+    MAHAMANTRA_NAME_KRISHNA: 1,  # "K" → 1
+    MAHAMANTRA_NAME_RAMA: 2,  # "R" → 2
 }
 
 
@@ -163,6 +162,7 @@ for _enc, _vals in _vamsi_by_name.items():
 # VENU ORCHESTRATOR
 # =============================================================================
 
+
 class VenuOrchestrator:
     """
     The Dancing Mahamantra - LUT-based O(1) Performance.
@@ -177,11 +177,11 @@ class VenuOrchestrator:
     __position__: ClassVar[int] = 2
 
     # Flute configuration (from _seed.py)
-    VENU_BITS: ClassVar[int] = VENU_HOLES      # 6 - Low register (64 states)
-    VAMSI_BITS: ClassVar[int] = VAMSI_HOLES    # 9 - Mid register (512 = SIKSASTAKAM_CACHE)
+    VENU_BITS: ClassVar[int] = VENU_HOLES  # 6 - Low register (64 states)
+    VAMSI_BITS: ClassVar[int] = VAMSI_HOLES  # 9 - Mid register (512 = SIKSASTAKAM_CACHE)
     MURALI_BITS: ClassVar[int] = MURALI_HOLES  # 4 - High register (16 = WORDS)
 
-    __slots__ = ('_tick', '_prev_state', '_mode')
+    __slots__ = ("_tick", "_prev_state", "_mode")
 
     def __init__(self) -> None:
         self._tick: int = 0
@@ -193,9 +193,8 @@ class VenuOrchestrator:
     # =========================================================================
 
     @property
-    def __tattva__(self) -> "TattvaDict":
+    def __tattva__(self) -> dict:
         """The 5-fold truth of VenuOrchestrator."""
-        from vibe_core.mahamantra.protocols._pancha import TattvaDict
         return {
             "chaitanya": "VenuOrchestrator - The Dancing Mahamantra (19-bit DIW)",
             "nityananda": "THE_FLUTE_CYCLE LUT (pre-computed from MAHAMANTRA_WORD_PATTERN)",
@@ -213,7 +212,7 @@ class VenuOrchestrator:
     def mode(self) -> int:
         """Current Kirtan Mode."""
         return self._mode
-    
+
     def step(self) -> int:
         """
         One step through the Mahamantra.
@@ -236,7 +235,7 @@ class VenuOrchestrator:
 
         # Inject Mode into Cluster Bits (Harmonic Feedback)
         return diw | (self._mode << CLUSTER_SHIFT)
-    
+
     def cycle(self) -> int:
         """
         Complete 16-step cycle.
@@ -244,11 +243,11 @@ class VenuOrchestrator:
         """
         accumulated = 0
         for i in range(WORDS):
-            accumulated ^= (THE_FLUTE_CYCLE[i] & DIW_MASK)
+            accumulated ^= THE_FLUTE_CYCLE[i] & DIW_MASK
 
         self._tick = (self._tick + WORDS) % COSMIC_FRAME
         return accumulated
-    
+
     def verify_divinity(self) -> bool:
         """
         The "Beweis Gottes" Test.
@@ -288,7 +287,7 @@ class VenuOrchestrator:
             raise ValueError(f"Cycle XOR exceeds 19-bit DIW: {hex(cycle_xor)}")
 
         return True
-    
+
     def route(self, seed: int) -> Tuple[int, int, int]:
         """
         Route seed through the orchestra.
@@ -304,7 +303,7 @@ class VenuOrchestrator:
         vamsi = (seed + TEN) % (1 << self.VAMSI_BITS)
         murali = (seed * SEVEN + TEN) % (1 << self.MURALI_BITS)
         return (venu, vamsi, murali)
-    
+
     def harmonize(
         self,
         venu: int,
@@ -321,14 +320,65 @@ class VenuOrchestrator:
     def is_sunya(word: int) -> bool:
         """Check if instruction is silence (No-Op)."""
         from vibe_core.mahamantra.protocols.diw import is_sunya as _is_sunya
+
         return _is_sunya(word)
 
     @staticmethod
     def extract_diw(full_word: int) -> int:
         """Extract the 19-bit DIW from a 32-bit instruction word."""
         from vibe_core.mahamantra.protocols.diw import extract_core
+
         return extract_core(full_word)
-    
+
+    def spell(self, coords: Tuple[int, ...], cycle: int = 0) -> Tuple[int, ...]:
+        """
+        Spell a Sanskrit word through the flute.
+
+        Each RAMA coordinate becomes the VENU field of a DIW.
+        VAMSI encodes the H/K/R name-region of the generating position.
+        MURALI encodes the quarter (phase in the word).
+
+        This is the Forward Engineering mode: the flute doesn't play
+        from the static LUT, it plays from a coordinate score.
+
+        Args:
+            coords: RAMA coordinate sequence (from varnamala_codec.encode)
+            cycle: Mahamantra cycle for H/K/R signature context
+
+        Returns:
+            Tuple of DIW values, one per coordinate (phoneme)
+        """
+        result = []
+        quarter_size = max(1, len(coords) // QUARTERS) or 1
+        vamsi_stride = (1 << VAMSI_HOLES) // 3  # 170
+
+        for i, coord in enumerate(coords):
+            # VENU: The RAMA coordinate itself (0-48, fits in 6 bits)
+            venu = coord & VENU_MASK
+
+            # Inverse route: which Mahamantra position generated this coord?
+            # krishna_route(pos, cycle) = (pos * 17 + cycle * 16) % 49
+            # inverse: pos = ((coord - cycle * 16) * 26) % 49
+            pos = ((coord - cycle * WORDS) * 26) % POSITION_SUM_RAMA
+            maha_pos = pos % WORDS
+            name = MAHAMANTRA_WORD_PATTERN[maha_pos]
+            encoding = _NAME_TO_ENCODING[name]
+
+            # VAMSI: Name-region + position in word
+            vamsi = (encoding * vamsi_stride + i) % (1 << VAMSI_HOLES)
+
+            # MURALI: Phase within the word
+            murali = min(i // quarter_size, QUARTERS - 1)
+
+            diw = pack(venu, vamsi, murali)
+            result.append(diw)
+
+            # Advance tick
+            self._prev_state = diw
+            self._tick = (self._tick + 1) % COSMIC_FRAME
+
+        return tuple(result)
+
     def reset(self) -> None:
         """Reset orchestrator to initial state."""
         self._tick = 0
@@ -342,22 +392,22 @@ class VenuOrchestrator:
     # =========================================================================
     # PERSISTENCE
     # =========================================================================
-    
+
     def to_bytes(self) -> bytes:
         """Serialize state (tick, prev_state, mode)."""
         return struct.pack("<QQQ", self._tick, self._prev_state, self._mode)
-        
+
     def from_bytes(self, data: bytes) -> None:
         """Restore state."""
-        MIN_SIZE = 24 # 3 * 8
+        MIN_SIZE = 24  # 3 * 8
         if len(data) < MIN_SIZE:
             # Backwards compatibility check for old 16-byte snapshots
             if len(data) >= 16:
                 self._tick, self._prev_state = struct.unpack("<QQ", data[:16])
-                self._mode = 0 # Default to Solo
+                self._mode = 0  # Default to Solo
                 return
             raise ValueError("Data too short")
-            
+
         self._tick, self._prev_state, self._mode = struct.unpack("<QQQ", data[:24])
 
 

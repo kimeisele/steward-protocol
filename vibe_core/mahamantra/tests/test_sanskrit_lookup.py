@@ -88,6 +88,50 @@ class TestHKRSignature:
         assert len(sigs) > 1  # Must produce multiple distinct signatures
 
 
+class TestVenuSpell:
+    """VenuOrchestrator.spell() must round-trip through VENU field."""
+
+    def test_spell_roundtrip(self):
+        """VENU field carries RAMA coordinates losslessly."""
+        from vibe_core.mahamantra.protocols.diw import unpack
+        from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+
+        venu = VenuOrchestrator()
+        coords = encode("dharma")
+        diws = venu.spell(coords, cycle=0)
+
+        recovered = tuple(unpack(d).venu for d in diws)
+        assert recovered == coords
+
+    def test_spell_vamsi_hkr(self):
+        """VAMSI region must match H/K/R signature."""
+        from vibe_core.mahamantra.protocols.diw import unpack
+        from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+
+        venu = VenuOrchestrator()
+        coords = encode("dharma")
+        sig = hkr_signature(coords, cycle=0)
+        diws = venu.spell(coords, cycle=0)
+
+        for i, d in enumerate(diws):
+            p = unpack(d)
+            region = min(p.vamsi // 170, 2)
+            name = ["H", "K", "R"][region]
+            assert name == sig[i], f"pos {i}: VAMSI region {name} != sig {sig[i]}"
+
+    def test_spell_verse(self):
+        """Spelling a full verse must produce correct tick count."""
+        from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+
+        venu = VenuOrchestrator()
+        vw = verse_words(18, 66)
+        total = 0
+        for w in vw.words:
+            diws = venu.spell(w.coords)
+            total += len(diws)
+        assert total == vw.phoneme_count
+
+
 class TestLexiconStats:
     """Lexicon must satisfy architectural invariants."""
 
