@@ -13,8 +13,8 @@ Each word = sequence of RAMA coordinates (0-48).
 Each coordinate = one tick of the VenuOrchestrator (VENU field, 6 bits).
 
 The entire Bhagavad Gita word-for-word:
-  54,423 phonemes = (MALA + GITA_CHAPTERS) * JIVA_CYCLE - NAVA
-  = 39KB packed = 83% of 65K Lotus address space
+  45,815 phonemes = 935 * VARNAMALA (deduplicated)
+  = 34KB packed = 70% of 65K Lotus address space
 
 NO EXTERNAL DEPENDENCIES. NO LLM. PURE COORDINATE LOOKUP.
 """
