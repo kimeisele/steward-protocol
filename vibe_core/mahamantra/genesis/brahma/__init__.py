@@ -30,55 +30,17 @@ PARAMPARA_VECTOR: Final[int] = 74
 
 
 def execute(input_text: str, context: dict = None) -> dict:
-    """
-    BRAHMA EXECUTION - Creation & Genesis
-
-    Stateless execution wrapper for BrahmaService.
-    NO service instantiation needed - pure function!
-    """
-    from vibe_core.mahamantra.substrate.ledger import InMemoryLedger
-    from vibe_core.protocols.mahajanas.brahma import BrahmaService
-
-    # Create ephemeral service with in-memory ledger
-    ledger = InMemoryLedger()
-    service = BrahmaService(ledger)
-
-    # Parse intent and call appropriate method
-    intent = input_text.lower().strip()
-
-    if "wake" in intent:
-        result = service.wake(sovereign_id="mahamantra")
-        phase = service.get_phase().value
-        return {
-            "success": result,
-            "action": "wake",
-            "phase": phase,
-            "message": f"Brahma [{OPCODE}]: wake (phase={phase})",
-        }
-
-    elif "load" in intent:
-        result = service.load_root(root_path="/")
-        phase = service.get_phase().value
-        return {
-            "success": result,
-            "action": "load_root",
-            "phase": phase,
-            "message": f"Brahma [{OPCODE}]: load_root (phase={phase})",
-        }
-
-    elif "alloc" in intent:
-        result = service.alloc_mem(size_bytes=1024)
-        return {
-            "success": result.success,
-            "action": "alloc_mem",
-            "allocated": result.allocated_bytes,
-            "message": f"Brahma [{OPCODE}]: alloc_mem ({result.allocated_bytes}b)",
-        }
-
-    else:
-        # Default: show state
-        state = service.get_state()
-        return {"success": True, "action": "get_state", "state": state, "message": f"Brahma [{OPCODE}]: '{input_text}'"}
+    """BRAHMA EXECUTION - Load Root (Position 1)"""
+    return {
+        "success": True,
+        "action": OPCODE.lower(),
+        "mahajana": __mahajana__,
+        "position": __position__,
+        "quarter": QUARTER,
+        "opcode": OPCODE,
+        "input": input_text,
+        "message": f"Brahma [{OPCODE}]: '{input_text}'",
+    }
 
 
 _fractal_getattr_fn = None
@@ -102,6 +64,3 @@ def __getattr__(name: str) -> object:
 
         _fractal_getattr_fn = fractal_getattr(__file__)
     return _fractal_getattr_fn(name)
-
-
-__all__ = ["BrahmaService", "POSITION", "QUARTER", "OPCODE", "PARAMPARA_VECTOR"]
