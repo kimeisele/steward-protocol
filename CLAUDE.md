@@ -73,17 +73,34 @@ Kapitel 18 = GITA_CHAPTERS (der Fixed Point). Siehe `get_chapter_significance()`
 ```
 1. SRAVANAM       - Input empfangen
 2. KIRTANAM       - MahaCompression → Seed (deterministic hash)
+                    RETURN-LOOP: XOR mit last_seed aus Akash (Kontinuität)
 3. SMARANAM       - Attractor finden (Seed → Resonanz-Punkt)
 4. PADASEVANAM    - Guna-Klassifikation (sattva/rajas/tamas)
 5. ARCANAM        - Parampara-Verifikation (Oracle, Signatur-Kette)
-6. VANDANAM       - Gita-Resonance (Attractor → Kapitel → Vers)
+6. VANDANAM       - Gita-Resonance (Attractor → Kapitel → Vers + Significance)
 7. DASYAM         - Position/Quarter/Guardian bestimmen
-8. SAKHYAM        - MahaCell erstellen
-9. ATMA_NIVEDANAM - Response zusammenbauen
+8. SAKHYAM        - MahaCell erstellen + Kirtan (1→4 Zyklen) + Yajna (16 Ticks)
+9. ATMA_NIVEDANAM - Response + Akash-Update (last_seed/position/attractor für nächsten Call)
 ```
 
 Entry Point: `steward "anything"` → `cli/main.py` → `__main__.py` → `mahamantra.execute()`
 → `MahamantraLotus.__call__()`. Deterministisch. Kein LLM.
+
+## Pancha Tattva (Die 5 Verbindungen)
+
+Alles was lebt in der Pipeline muss durch 5 Verbindungspunkte fließen.
+`protocols/_pancha.py` definiert `TattvaDict` und `PanchaTattvaProtocol`.
+Jede Komponente implementiert `__tattva__` (5-Fragen-Antwort).
+
+Die 5 Verbindungen im Flow (alle verdrahtet in `lotus_core.py`):
+
+| Tattva | Verbindung | Implementation |
+|--------|-----------|----------------|
+| CHAITANYA | Return-Loop | last_seed XOR → nächster Call (Akash) |
+| NITYANANDA | Multi-Tick Yajna | WORDS(16) Ticks pro Call, voller Zyklus |
+| ADVAITA | CALL_RESPONSE | Kirtan-Zyklen skalieren 1→4 mit Resonanz |
+| GADADHARA | Gita Content | Chapter Significance im Response |
+| SRIVASA | Chamber Persistence | Singleton get_chamber() + wachsende Zyklen |
 
 ## Guardians
 
@@ -98,18 +115,27 @@ Jeder Guardian: `__mahajana__`, `__position__`, `__genesis__`, identischer thin 
 
 `reactor/shadow.py` = Yajna-Zyklus. Phase-aware: `on_{phase}` Hook → fallback `execute()`.
 
-## Codebase-Realität
+## Codebase-Realität (Bekannte Probleme)
 
-- Duplikate über Dateigrenzen (gleiche Klassen in Guardian UND Protocol)
-- Fehlende/tote Imports, shadowed Names
+- `seed.py`: ~20 F811 Redefinitionen (absichtliche Re-Derivation, aber unordentlich)
 - Zwei CLI-Systeme: `vibe_core/cli/` (alt) und `vibe_core/mahamantra/cli/` (neu)
-- `seed.py` re-deriviert Konstanten (teils Verifikation, teils Chaos)
-- `ExecuteResult.requires_confirmation` existiert, kein Guardian nutzt es
+- `ExecuteResult.requires_confirmation` existiert, kein Guardian nutzt es (Rückfrage-Infrastruktur)
+- `protocols/` hat massive Dateien (yamaraja protocol = 653 Zeilen)
+
+Bereits aufgeräumt (nicht nochmal anfassen):
+- Guardians: ALLE 16 identisches thin Pattern (keine if-else, keine Klassen)
+- yamaraja: 288→78 Zeilen (Duplikat-Klassen entfernt)
+- kapila: eager import entfernt, jetzt lazy wie alle anderen
+- hologram.py/layers.py: AI-Slop entfernt (doppelte Import-Blöcke)
+- gita.py: Duplikat-Import + Ghost MAHA_WORDS entfernt, 11/13/14/15 → abgeleitet
+- Star Imports eliminiert → lazy Protocol Re-Exports
 
 ## Arbeitsweise
 
 - Senior Architekt. Entscheidungen treffen, nicht fragen.
 - User spricht Deutsch, nicht technisch, delegiert.
-- Code muss schön sein.
+- Code muss schön sein. Kein if-else Slop.
 - Pre-commit hooks laufen automatisch.
 - Ruff: `python -m ruff check --select F821,F811`
+- 100% AI-generierte Codebase - IMMER versteckte Probleme erwarten.
+- Docstrings und .md-Dateien im Root lügen. Nur Code ist Wahrheit.
