@@ -16,6 +16,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_ELEMENT,
+    COORD_HARMONIC,
     COORD_SUB,
     COORD_VARGA,
     ELEMENT_NAMES,
@@ -26,6 +27,7 @@ from vibe_core.mahamantra.substrate.pancha_walk import (
     element_histogram,
     element_transitions,
     element_walk,
+    full_signature,
     walk_direction,
     walk_distance,
     walk_signature,
@@ -254,3 +256,61 @@ class TestDerivedSignature:
         sig_ta = derived_signature(encode("ta"))
         sig_sa = derived_signature(encode("sa"))
         assert sig_ta != sig_sa
+
+
+# =============================================================================
+# COORD_HARMONIC: H-orbit (×SEVEN mod 49)
+# =============================================================================
+
+
+class TestHarmonic:
+    """COORD_HARMONIC: 4th dimension, derived from SEVEN axiom."""
+
+    def test_total_length(self):
+        assert len(COORD_HARMONIC) == WORDS + PRASADAM + HARE_COUNT
+
+    def test_derived_from_seven(self):
+        """Each value = coord × SEVEN mod 49."""
+        from vibe_core.mahamantra.protocols._seed import SEVEN
+
+        for c in range(WORDS + PRASADAM + HARE_COUNT):
+            assert COORD_HARMONIC[c] == (c * SEVEN) % (WORDS + PRASADAM + HARE_COUNT)
+
+    def test_a_is_fixed_point(self):
+        """'a' (coord 0) maps to 0 — the absorption origin."""
+        assert COORD_HARMONIC[0] == 0
+
+    def test_4d_bijection(self):
+        """4D tuple (element, varga, sub, harmonic) is unique for all 49 phonemes."""
+        keys = set()
+        for c in range(WORDS + PRASADAM + HARE_COUNT):
+            key = (COORD_ELEMENT[c], COORD_VARGA[c], COORD_SUB[c], COORD_HARMONIC[c])
+            keys.add(key)
+        assert len(keys) == WORDS + PRASADAM + HARE_COUNT
+
+    def test_resolves_anusv_visarga(self):
+        """ṁ(14) and ḥ(15) have different H-orbits."""
+        assert COORD_HARMONIC[14] != COORD_HARMONIC[15]
+
+    def test_resolves_e_ai(self):
+        """e(10) and ai(11) have different H-orbits."""
+        assert COORD_HARMONIC[10] != COORD_HARMONIC[11]
+
+    def test_resolves_o_au(self):
+        """o(12) and au(13) have different H-orbits — the one R-residue misses."""
+        assert COORD_HARMONIC[12] != COORD_HARMONIC[13]
+
+
+class TestFullSignature:
+    """full_signature(): 4D phoneme walk."""
+
+    def test_full_sig_longer_than_derived(self):
+        coords = encode("dharma")
+        assert len(full_signature(coords)) > len(derived_signature(coords))
+
+    def test_full_sig_resolves_3d_collision(self):
+        """paramaḥ and paramaṁ must differ in full_signature."""
+        # They collide in derived_signature (3D)
+        assert derived_signature(encode("paramaḥ")) == derived_signature(encode("paramaṁ"))
+        # But NOT in full_signature (4D)
+        assert full_signature(encode("paramaḥ")) != full_signature(encode("paramaṁ"))
