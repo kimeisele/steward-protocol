@@ -20,13 +20,6 @@ __mahajana__ = "shuka"
 __position__ = 14
 __genesis__ = "0xed874970"  # GenesisByte
 
-# === RE-EXPORT FROM PROTOCOLS/MAHAJANAS (rich implementation) ===
-from vibe_core.protocols.mahajanas.shuka import *
-
-# Re-export __all__ from protocols
-from vibe_core.protocols.mahajanas.shuka import __all__
-
-# Backward-compat constants
 from typing import Final
 
 POSITION: Final[int] = 14
@@ -34,68 +27,39 @@ QUARTER: Final[str] = "moksha"
 OPCODE: Final[str] = "LOG_EMIT"
 PARAMPARA_VECTOR: Final[int] = 555
 
-# ShukaBase alias for backward compat
-ShukaBase = ShukaProtocolBase
-
 
 def execute(input_text: str, context: dict = None) -> dict:
-    """
-    SHUKA EXECUTION - Narration & Wisdom Emission
-
-    Sukadeva Goswami spoke the Srimad Bhagavatam to Parikshit.
-    The supreme narrator. LOG_EMIT = wisdom broadcast.
-    """
-    intent = input_text.lower().strip()
-
-    if "speak" in intent or "narrat" in intent or "tell" in intent:
-        return {
-            "success": True,
-            "action": "narration",
-            "message": "🦜 Shuka: 'śṛṇvatāṁ sva-kathāḥ kṛṣṇaḥ' - Krishna enters through hearing."
-        }
-
-    if "bhagavat" in intent or "wisdom" in intent:
-        return {
-            "success": True,
-            "action": "bhagavatam",
-            "message": "🦜 Shuka: The Bhagavatam is the ripened fruit of the Vedic tree."
-        }
-
-    if "log" in intent or "emit" in intent:
-        return {
-            "success": True,
-            "action": "log_emit",
-            "message": f"🦜 Shuka records: '{input_text}'"
-        }
-
+    """SHUKA EXECUTION - Log Emit (Position 14)"""
     return {
         "success": True,
-        "action": "introspect",
-        "position": POSITION,
+        "action": OPCODE.lower(),
+        "mahajana": __mahajana__,
+        "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
-        "message": f"🦜 Shuka hears: '{input_text}'. Try 'speak', 'bhagavatam', or 'log'."
+        "input": input_text,
+        "message": f"Shuka [{OPCODE}]: '{input_text}'",
     }
 
 
+_fractal_getattr_fn = None
+_MISSING = object()
+
+
 def __getattr__(name: str):
-    """
-    Fractal routing: folder IS wiring.
-    "EIN IMPORT. KRISHNA ROUTET ALLES."
-    """
-    from pathlib import Path
-    import importlib
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import shuka as _proto
 
-    pkg_root = Path(__file__).parent
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
-    # Check for subpackage (folder with __init__.py)
-    subpkg_path = pkg_root / name
-    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"{__name__}.{name}")
+    global _fractal_getattr_fn
+    if _fractal_getattr_fn is None:
+        from vibe_core.mahamantra.substrate.wiring import fractal_getattr
 
-    # Check for module (.py file)
-    module_path = pkg_root / f"{name}.py"
-    if module_path.exists():
-        return importlib.import_module(f"{__name__}.{name}")
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+        _fractal_getattr_fn = fractal_getattr(__file__)
+    return _fractal_getattr_fn(name)

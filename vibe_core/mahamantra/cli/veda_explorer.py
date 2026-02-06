@@ -28,6 +28,7 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0x943cfbd5"  # GenesisByte: parampara % 37 == 0
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -36,6 +37,7 @@ from typing import Callable, Dict, Final, List, Optional, Tuple, TypedDict
 # SSOT imports
 from vibe_core.mahamantra.substrate.seed import NavaBhakti
 
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # VEDA EXPLORER TYPES
@@ -67,6 +69,7 @@ class VedaIntent(str, Enum):
 # =============================================================================
 # ADAPTER AUTO-DISCOVERY (Folder IS Wiring)
 # =============================================================================
+
 
 def _discover_adapters() -> Dict[str, tuple]:
     """
@@ -137,8 +140,9 @@ def _load_intent_keywords() -> Dict[str, VedaIntent]:
     NO HARDCODED KEYWORDS. Everything comes from YAML.
     KnowledgeGraph can extend this at runtime.
     """
-    import yaml
     from pathlib import Path
+
+    import yaml
 
     keywords: Dict[str, VedaIntent] = {}
 
@@ -197,10 +201,11 @@ def _get_all_mahajana_names() -> set:
     """Get all mahajana names and aliases from SSOT."""
     # Use SSOT directly (scanner removed - folder IS wiring)
     from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+
     return set(ALL_GUARDIANS)
 
     # ULTIMATE FALLBACK: Empty set (mahamantra.resonate() will handle it)
-    return names
+    return set()
 
 
 MAHAJANA_NAMES: Final[set] = _get_all_mahajana_names()
@@ -273,6 +278,7 @@ class VedaExplorer:
         """Initialize MahamantraPipeline for core processing."""
         try:
             from vibe_core.mahamantra.adapters.pipeline import MahamantraPipeline
+
             self._pipeline = MahamantraPipeline()
         except ImportError:
             self._pipeline = None
@@ -281,6 +287,7 @@ class VedaExplorer:
         """Initialize ChatIndriya for IO with Vrtti tracking."""
         try:
             from vibe_core.services.chat_indriya import get_chat_indriya
+
             self._indriya = get_chat_indriya("veda_explorer")
         except ImportError:
             self._indriya = None
@@ -1089,12 +1096,15 @@ Beispiele:
                 )
 
             # Store routing info
-            karma = self._pipeline.karma(dharma.attractor, payload={
-                "input": text,
-                "intent": parsed.intent.value,
-                "hash": genesis.hash_value,
-                "attractor": dharma.attractor,
-            })
+            karma = self._pipeline.karma(
+                dharma.attractor,
+                payload={
+                    "input": text,
+                    "intent": parsed.intent.value,
+                    "hash": genesis.hash_value,
+                    "attractor": dharma.attractor,
+                },
+            )
 
             # === MOKSHA: Execute and complete ===
             # Execute the intent

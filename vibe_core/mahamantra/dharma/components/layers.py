@@ -11,21 +11,33 @@ Responsibility:
 - Quantum Layer (137)
 """
 
-from typing import List, Dict, Final
+from typing import Dict, Final, List
 
-from typing import List, Dict, Final
 from vibe_core.mahamantra.dharma.components.linguist import DEFINITIONS
 
 MANTRA_SEQUENCE: Final[List[str]] = [
-    "HARE", "KRISHNA", "HARE", "KRISHNA",
-    "KRISHNA", "KRISHNA", "HARE", "HARE",
-    "HARE", "RAMA", "HARE", "RAMA",
-    "RAMA", "RAMA", "HARE", "HARE"
+    "HARE",
+    "KRISHNA",
+    "HARE",
+    "KRISHNA",
+    "KRISHNA",
+    "KRISHNA",
+    "HARE",
+    "HARE",
+    "HARE",
+    "RAMA",
+    "HARE",
+    "RAMA",
+    "RAMA",
+    "RAMA",
+    "HARE",
+    "HARE",
 ]
+
 
 class LayerEngine:
     """Projects the Mantra into specific dimensional layers."""
-    
+
     def _get_seed(self, word: str) -> int:
         """Dynamically calculate seed from derived Akshara indices."""
         indices = DEFINITIONS.get(word, [])
@@ -38,13 +50,13 @@ class LayerEngine:
         """
         layer_data = []
         current_val = 0
-        
+
         for word in MANTRA_SEQUENCE:
             seed = self._get_seed(word)
             # Integration step (Cumulative)
             current_val = (current_val + seed) % attractor
             layer_data.append(current_val)
-            
+
         return layer_data
 
     def signature(self, attractor: int) -> str:
@@ -53,7 +65,9 @@ class LayerEngine:
         chars = "._-:|#"
         pattern = ""
         for v in data:
-            if attractor == 0: idx = 0 
-            else: idx = int((v / attractor) * (len(chars)-1))
+            if attractor == 0:
+                idx = 0
+            else:
+                idx = int((v / attractor) * (len(chars) - 1))
             pattern += chars[idx]
         return pattern

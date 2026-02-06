@@ -31,17 +31,21 @@ The 9 NADI OPERATIONS map to NavaBhakti:
 8. SAKHYAM (Friendship)   → CONNECT
 9. ATMA_NIVEDANAM (Surrender) → COMMIT
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, KSETRAJNA, PANCHA, QUARTERS, TRINITY)
+
+from vibe_core.mahamantra.protocols._seed import GITA_CHAPTERS, HALVES, KSETRAJNA, PANCHA, QUARTERS, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
 __position__ = KSETRAJNA
 __genesis__ = "0x646fe98f"  # GenesisByte: parampara % 37 == 0
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import IntEnum, StrEnum
 from typing import Any, Callable, Dict, Final, List, Optional, Protocol, Tuple, runtime_checkable
+
+logger = logging.getLogger(__name__)
 
 from vibe_core.mahamantra.protocols._gad import GADBase
 

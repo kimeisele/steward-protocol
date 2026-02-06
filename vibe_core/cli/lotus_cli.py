@@ -31,13 +31,13 @@ __genesis__ = "0xac560f43"  # GenesisByte: parampara % 37 == 0
 
 from typing import List
 
-from vibe_core.protocols.cli import CLIMeta, register_cli
 from vibe_core.mahamantra.adapters.cli import (
-    get_adapter as get_mahamantra_cli_adapter,
     AdapterResult,
 )
-
-
+from vibe_core.mahamantra.adapters.cli import (
+    get_adapter as get_mahamantra_cli_adapter,
+)
+from vibe_core.protocols.cli import CLIMeta, register_cli
 
 
 @register_cli
@@ -132,6 +132,7 @@ class LotusCLI:
         This is the true "Invisible Backend".
         """
         from vibe_core.mahamantra.mahamantra.__main__ import _render_response
+
         # The __main__ module's renderer provides the canonical explanation.
         _render_response(result.resonance, result)
 
@@ -142,7 +143,7 @@ class LotusCLI:
 
         print("MAHAMANTRA HOLOGRAPHIC ROUTING TABLE")
         print("=" * 60)
-        print(f"{"COMMAND":<20} {"POSITION":<10} {"PAYLOAD_SIZE":<15} {"SEED"}")
+        print(f"{'COMMAND':<20} {'POSITION':<10} {'PAYLOAD_SIZE':<15} {'SEED'}")
         print("-" * 60)
 
         sorted_table = sorted(table.items(), key=lambda item: item[1].position)

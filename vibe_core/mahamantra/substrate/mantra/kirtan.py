@@ -7,9 +7,10 @@ MAHA KIRTAN - The Compute Orchestrator
 Bridges the 7-beat Lila Step Sequencer with MahaAlgorithm transforms
 for rhythmic computations.
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, MALA, SEVEN, TRINITY)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, MALA, SEVEN, TRINITY
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
@@ -17,27 +18,26 @@ __position__ = 0
 __genesis__ = "0x672435f8"
 
 from dataclasses import dataclass
-from typing import Dict, Final, List, Optional, Union
+from typing import Dict, Final, List, Optional, Tuple, Union
 
+from vibe_core.mahamantra.protocols._header import MahaCell
 from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
-    SEVEN,
     VINA_STRINGS,
 )
-from vibe_core.mahamantra.protocols._header import MahaCell
-
 from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
-from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
-from vibe_core.mahamantra.substrate.resonance.oracle import MahaOracle
-
 from vibe_core.mahamantra.substrate.lila_chronology import (
     get_kirtan_runtime,
     get_step_sequencer,
 )
+from vibe_core.mahamantra.substrate.resonance.oracle import MahaOracle
+from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
+
 
 @dataclass(frozen=True)
 class KirtanComputeResult:
     """Result of a MahaKirtan compute cycle."""
+
     seed: int
     transformed_value: int
     beat_number: int  # 1-7
@@ -57,6 +57,7 @@ class KirtanComputeResult:
 @dataclass
 class MahaKirtanState:
     """State of the MahaKirtan compute orchestrator."""
+
     current_tick: int = 0
     current_round: int = 0
     total_computations: int = 0
@@ -72,7 +73,9 @@ class MahaKirtan:
     ROUNDS_PER_MALA: Final[int] = MALA
     DEFAULT_MOD_SPACE: Final[int] = MAHA_QUANTUM
 
-    def __init__(self, mod_space: int = MAHA_QUANTUM, kirtan_mode: str = "alternating", use_oracle: bool = True) -> None:
+    def __init__(
+        self, mod_space: int = MAHA_QUANTUM, kirtan_mode: str = "alternating", use_oracle: bool = True
+    ) -> None:
         self.mod_space = mod_space
         self.kirtan_mode = kirtan_mode
         self.use_oracle = use_oracle
@@ -94,7 +97,7 @@ class MahaKirtan:
 
     def _oracle_prefilter(self, seed: int) -> Tuple[bool, int]:
         if not self.use_oracle or self._oracle is None:
-             return True, -KSETRAJNA
+            return True, -KSETRAJNA
         reading = self._oracle.consult_seed(seed)
         return reading.parampara_validated, reading.parampara_channel
 
@@ -112,10 +115,10 @@ class MahaKirtan:
 
         oracle_valid, parampara_channel = self._oracle_prefilter(seed)
         self._state.last_oracle_result = oracle_valid
-        
+
         flute_resonance = self._get_flute_resonance(tick)
         vina_resonance, vina_string = self._get_vina_resonance(seed, tick)
-        
+
         beat_modulated_seed = (seed + beat.delta) % self.mod_space
         transformed = self._synth.transform(beat_modulated_seed)
 

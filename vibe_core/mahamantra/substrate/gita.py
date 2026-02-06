@@ -9,11 +9,11 @@ MAHA GITA - The Source Code of Reality
 This module provides the core Gita constants and the fixed-point logic
 required for Mahamantra resonance.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
 
 from dataclasses import dataclass
-from typing import Final, Dict
+from typing import Dict, Final
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "vyasa"
@@ -23,15 +23,21 @@ __genesis__ = "0x545fe2f1"
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
     GITA_VERSES,
-    MAHA_QUANTUM,
-    TRINITY,
-    SHARANAGATI,
-    SEVEN,
-    MAHA_WORDS,
-    MAHAJANA_COUNT,
-    KSETRAJNA,
-    QUALITIES,
     HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    MAHA_QUANTUM,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    POSITION_SUM_KRISHNA,
+    QUALITIES,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
 )
 
 # =============================================================================
@@ -45,14 +51,17 @@ FIXED_POINT_VERSE: Final[int] = QUALITIES + HALVES  # 66
 # 18 + 66 = 84 = 7 × 12
 SHARANAGATI_SUM: Final[int] = FIXED_POINT_CHAPTER + FIXED_POINT_VERSE  # 84
 
+
 @dataclass(frozen=True)
 class GitaVerse:
     """A verse from the Bhagavad Gita."""
+
     chapter: int
     verse: int
     sanskrit: str
     translation: str
     significance: str
+
 
 # The ultimate verse - BG 18.66
 CHAPTER_18_VERSE: Final[GitaVerse] = GitaVerse(
@@ -67,6 +76,7 @@ CHAPTER_18_VERSE: Final[GitaVerse] = GitaVerse(
 # UTILITIES
 # =============================================================================
 
+
 def verify_fixed_point() -> bool:
     """Verify that Chapter 18 is mathematically the fixed point."""
     checks = [
@@ -76,6 +86,7 @@ def verify_fixed_point() -> bool:
         GITA_CHAPTERS < MAHA_QUANTUM,
     ]
     return all(checks)
+
 
 def get_chapter_significance(chapter: int) -> str:
     """Get the significance of a Gita chapter."""
@@ -90,16 +101,17 @@ def get_chapter_significance(chapter: int) -> str:
         HARE_COUNT: "Aksara Brahma - The Imperishable",
         NAVA: "Raja Vidya - The King of Knowledge",
         TEN: "Vibhuti - Divine Manifestations",
-        11: "Visvarupa - The Universal Form",
+        MAHAJANA_COUNT - KSETRAJNA: "Visvarupa - The Universal Form",
         MAHAJANA_COUNT: "Bhakti Yoga - Devotion",
-        13: "Ksetra Ksetrajna - Field and Knower",
-        14: "Gunatraya - Three Modes",
-        15: "Purusottama - The Supreme Person",
+        MAHAJANA_COUNT + KSETRAJNA: "Ksetra Ksetrajna - Field and Knower",
+        HALVES * SEVEN: "Gunatraya - Three Modes",
+        WORDS - KSETRAJNA: "Purusottama - The Supreme Person",
         WORDS: "Daivi Asuri - Divine and Demoniac",
         POSITION_SUM_KRISHNA: "Sraddhatraya - Three Types of Faith",
         GITA_CHAPTERS: "MOKSHA SANNYASA - THE FIXED POINT - Complete Surrender",
     }
     return significances.get(chapter, "Unknown chapter")
+
 
 # =============================================================================
 # EXPORTS
