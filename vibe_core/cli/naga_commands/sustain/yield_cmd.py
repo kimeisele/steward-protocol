@@ -37,6 +37,9 @@ from typing import List, Tuple
 from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandResult, naga_command
 from vibe_core.protocols.substrate import MantraOpCode
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @naga_command(
     opcode=MantraOpCode.YIELD_CPU,

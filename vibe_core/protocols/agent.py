@@ -19,6 +19,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Optional
 
+logger = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
     from pathlib import Path
 

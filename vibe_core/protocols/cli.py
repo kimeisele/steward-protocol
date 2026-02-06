@@ -37,6 +37,9 @@ from typing import Callable, Dict, List, Optional, Protocol, Type, TypedDict, Un
 # Import capability types for NAGA CLI hook integration
 from vibe_core.protocols.cli_execution import CLIPermissionLevel
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # =============================================================================
 # WATERTIGHT TYPES (No Any)

@@ -66,6 +66,9 @@ from vibe_core.protocols.substrate.scanner import (
     get_default_config,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # =============================================================================
 # DISCOVERY STATUS

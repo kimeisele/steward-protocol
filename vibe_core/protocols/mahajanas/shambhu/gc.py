@@ -46,6 +46,9 @@ from vibe_core.protocols.mahajanas.shambhu import (
     DestructionState,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # =============================================================================
 # OWNERSHIP DECLARATION

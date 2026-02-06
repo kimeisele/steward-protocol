@@ -56,6 +56,9 @@ from typing import (
     runtime_checkable,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 # =============================================================================
 # WATERTIGHT TYPES
