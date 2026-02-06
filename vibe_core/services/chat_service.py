@@ -1128,6 +1128,7 @@ class ChatService(ChatProtocol, LotusBase):
             return None
 
         try:
+            from vibe_core.mahamantra.substrate.seed import HALF_SIZE
             position = lotus_result.get("position", 2)
 
             # Only use Shadow for PARASHURAMA (8) or BRAHMA (1) positions
