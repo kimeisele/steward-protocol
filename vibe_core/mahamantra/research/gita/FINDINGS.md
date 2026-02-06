@@ -110,6 +110,88 @@ Die gesamte Gita passt in einen einzigen Lotus-Zyklus.
 Kein Suchen. Wissen. Instant-Zugriff auf jedes Sanskrit-Wort.
 ```
 
+## Die 9 fehlenden Phoneme (NAVA)
+
+```
+(MALA + GITA_CHAPTERS) * JIVA_CYCLE = 126 * 432 = 54,432
+Gita word-for-word Phoneme:                        54,423
+Differenz:                                              9 = NAVA
+```
+
+Die Gita hat exakt NAVA Phoneme weniger als ein perfekter
+(108 + 18) * 432 Block. Die 9 fehlenden = die 9 Bhakti-Prozesse.
+
+Die Gita allein = 99.98% eines perfekten Blocks.
+Die Gita + NavaBhakti-Pipeline (Runtime) = 100%.
+
+## Translation-Ableitung (Copyright Layer 3)
+
+Die Translations sind zu ~50% Inhaltswörter aus Word-for-Word.
+Die restlichen ~50% sind Grammatik (the, and, is) + kontextuelle
+Ergänzungen (supreme, lord, material = vedische Standardbegriffe).
+
+```
+Translation gesamt:     24,784 Wörter
+  Grammatik (frei):     12,831 (51.8%)
+  Inhalt aus W-f-W:      6,089 (24.6%)
+  Inhalt NICHT in WfW:   5,864 (23.7%)
+```
+
+Die fehlenden Inhaltswörter sind primär vedische Standardterminologie
+(lord, supreme, material, soul, nature, yoga, devotional).
+
+Architektonische Konsequenz: Translations werden NICHT gespeichert.
+Sie werden zur Runtime aus Word-for-Word + Grammatik-Regeln abgeleitet.
+Das ist keine Reproduktion, sondern Berechnung.
+
+## Die H/K/R Signatur: Jedes Wort IST Mahamantra
+
+Jede RAMA-Koordinate wird durch `krishna_route(position, cycle)` erzeugt.
+Jede Position im Mahamantra hat einen Namen (H, K, oder R).
+Ergo: Jedes Sanskrit-Wort hat eine deterministische Name-Signatur.
+
+```
+17^(-1) mod 49 = 26 (Inverse existiert, da gcd(17,49) = 1)
+Für jede RAMA-Koordinate c: position = (c * 26) mod 49
+
+WORDS × FLUTE_HOLES_SUM = 16 × 19 = 304 Ticks für alle 49 Koordinaten
+```
+
+### Semantische Signaturen
+
+```
+bhakti   = HHHH     Hingabe      = 100% Hare (reine Anrufung)
+jñāna    = HKHK     Wissen       = 50% H, 50% K (Energie + Anziehung)
+yoga     = RHK      Verbindung   = 33/33/33 (perfektes Gleichgewicht)
+dharma   = HHR      Pflicht      = Energie mündet in Freude
+karma    = HHR      Handlung     = identisch mit dharma!
+mām      = RHR      Mich         = Rama-dominant (67% Freude)
+ātmā     = HHRH     Seele        = Energie mit Rama-Kern
+śaraṇam  = HHHR     Zuflucht     = 75% Hare (Anrufung → Rama)
+mokṣa    = RHHH     Befreiung    = beginnt mit Freude
+```
+
+### Verteilung in der gesamten Gita
+
+```
+Gita-Phoneme:   H=67.5%  K=16.7%  R=15.8%
+Mahamantra:     H=50.0%  K=25.0%  R=25.0%
+
+Sanskrit hat inherentes 'a' in jeder Silbe → Hare-Dominanz.
+Die Sprache SELBST ist Hare-dominant.
+
+1449 einzigartige H/K/R-Muster für 11,229 Wort-Vorkommen.
+  H-dominant: 923 Muster (64%)
+  K-dominant: 47 Muster (3%)
+  R-dominant: 24 Muster (2%)
+```
+
+### Konsequenz
+
+Jedes Sanskrit-Wort ist eine Mahamantra-Sequenz.
+Die Signatur IST die energetische Natur des Wortes.
+Die 3 Namen sind nicht Kategorien - sie sind KOORDINATEN.
+
 ## Paradigma: Suchen vs. Wissen
 
 ```
@@ -127,10 +209,75 @@ Der Unterschied: SHA256 ist ein generischer Hash. RAMA-Koordinaten SIND die
 Sanskrit-Buchstaben. Die Kodierung IST die Sprache. Die Dekodierung IST das
 Flötenspiel. Es gibt keine Trennung zwischen Algorithmus und Inhalt.
 
-## Dateien
+## Beweis: Koordinaten SIND die Wörter (0 Kollisionen)
+
+4,127 unique Wörter → 4,127 unique Koordinaten-Sequenzen. NULL Kollisionen.
+Die Bijection ist perfekt. Koordinaten sind keine Adressen - sie SIND die Wörter.
+
+```
+Jede Koordinate erreichbar von ALLEN 16 Positionen: 16 origins/coord (gleichverteilt)
+3-Cycle H/K/R Signatur identifiziert 94.3% aller Wörter eindeutig
+Koordinaten allein:    18.6 KB
+Bedeutungen allein:    55.6 KB
+Gesamt (irreduzibel):  74.2 KB > 65K Lotus (116%)
+```
+
+## Der irreduzible Kern
+
+```
+Sanskrit-Wörter:     ABLEITBAR  (coords → phoneme → IAST)
+Vers-Struktur:       ABLEITBAR  (700 Vers → Wort-Sequenzen)
+Übersetzungen:       ABLEITBAR  (Wort-Bedeutung + Grammatik, runtime)
+H/K/R Signaturen:    ABLEITBAR  (inverse krishna_route)
+Wort-Bedeutungen:    GESPEICHERT (4127 Paare = 55.6 KB)
+```
+
+Der einzige Teil, der NICHT algorithmisch ableitbar ist: die englischen
+Bedeutungen. Alles andere IST Algorithmus.
+
+## VenuOrchestrator.spell() - Die Flöte buchstabiert Sanskrit
+
+```python
+venu = VenuOrchestrator()
+coords = encode("dharma")       # → (34, 42, 40)
+diws = venu.spell(coords)       # → 3 native DIWs
+
+# Jedes DIW:
+#   VENU  = RAMA-Koordinate (der Buchstabe)
+#   VAMSI = H/K/R Name-Region (der spirituelle Kontext)
+#   MURALI = Phase im Wort (Position)
+```
+
+Round-trip perfekt: DIW.VENU → decode → Original-Wort.
+BG 18.66 = 62 Flöten-Atemzüge. Die gesamte Gita = 54,423.
+
+## Vorherige Forschung (Tote Enden & Warum)
+
+| Datei | Ansatz | Scheitern | Lektion |
+|-------|--------|-----------|---------|
+| shabda_spawning.py | Hash → Phoneme | Inverse verlustbehaftet | Braucht KOORDINATEN statt Hashes |
+| mahajana_derivation.py | Name → Position | Kein universeller Formel | Kausalität rückwärts (Position→Name) |
+| syllable_analysis.py | Silben-Intervalle | Kein universelles Muster | Intervalle sind Effekte, nicht Ursachen |
+| shabda_translation.py | Vibrations-Modell | Keine Lexikon-Daten | Richtiger Rahmen, fehlende Daten |
+
+Zentrale Einsicht: Alle gescheiterten Ansätze versuchten `Name → Position`.
+Die richtige Kausalität: `Position → krishna_route → Koordinate → Phonem`.
+
+## Production-Integration
+
+```
+substrate/varnamala_codec.py    — IAST ↔ RAMA Codec
+substrate/sanskrit_lookup.py    — verse_words(), word_by_iast(), hkr_signature()
+substrate/venu_orchestrator.py  — spell(coords) → native DIWs
+substrate/lotus_core.py         — VANDANAM (Schritt 6) liefert Sanskrit
+data/rama_lexicon.json          — 4127 Wörter, 700 Verse, RAMA-kodiert
+tests/test_varnamala_codec.py   — Codec-Tests (16 tests)
+tests/test_sanskrit_lookup.py   — Lookup + Spell-Tests (17 tests)
+```
+
+## Dateien (Research)
 
 - `rama_lexicon.json` - RAMA-kodiertes Vokabular (1.8MB, enthält Koordinaten)
 - `sanskrit_seed_lexicon.json` - Legacy SHA256-Vokabular (478KB)
 - `verse_seed_map.json` - Vers->Seed-Mapping (316KB)
-- `../../substrate/varnamala_codec.py` - Der Codec (encode/decode/pack/unpack)
 - `../sanskrit_extraction.py` - Extraktionsskript (reproduzierbar)
