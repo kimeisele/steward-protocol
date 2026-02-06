@@ -37,9 +37,22 @@ FRACTAL ARCHITECTURE:
     Everything rests upon Me, as pearls are strung on a thread."
     — Bhagavad Gita 7.7
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
@@ -47,7 +60,10 @@ __position__ = KSETRAJNA
 __genesis__ = "0x8dfc6e38"  # GenesisByte: parampara % 37 == 0
 
 import importlib
-from typing import Callable, Iterator, List, Optional, Union, Type, Dict, TYPE_CHECKING, TypedDict
+import logging
+from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Optional, Type, TypedDict, Union
+
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -56,76 +72,78 @@ from typing import Callable, Iterator, List, Optional, Union, Type, Dict, TYPE_C
 
 
 # TickState imported from seed/types.py (SSOT)
-from vibe_core.mahamantra.seed.types import TickState
-
-
-# VEDA-4 PROTOCOL - Elegant Python Dunder Mapping
-from vibe_core.mahamantra.protocols import (
-    VedaProtocol,
-    VedaMixin,
-    is_vedic,
-    veda_audit,
-)
-
-from vibe_core.mahamantra.substrate import (
-    # Position
-    MAHAMANTRA_POSITIONS,
-    MantraPosition,
-    Guardian,
-    get_position_by_index as get_position,
-    get_position_by_guardian,
-    get_position_by_opcode,
-    get_quarter_positions,
-    get_all_head_positions as get_head_positions,
-    get_all_worker_positions as get_worker_positions,
-    # Mahajana
-    Mahajana,
-    Avatara,
-    Quarter,
-    # OpCode
-    MantraOpCode,
-    # Protocol
-    ProtocolRegistry,
-)
-
-from vibe_core.mahamantra.substrate.seed import (
-    PARAMPARA,
-    WORDS,
-)
-from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
-from vibe_core.mahamantra.protocols._kala import KalaTime
-
-# =============================================================================
-# CELL ROUTER INTEGRATION (O(1) Cell Registry - IPv6-like Routing)
-# =============================================================================
-from vibe_core.mahamantra.substrate.cell_router import CellRouter, get_router
-
-# =============================================================================
-# IP ROUTER INTEGRATION (O(1) Longest Prefix Match)
-# =============================================================================
-from vibe_core.mahamantra.adapters.network import LotusIPRouter, create_ip_router
-
 # =============================================================================
 # COMPRESSION INTEGRATION (Intent Extraction - Kolmogorov Complexity)
 # =============================================================================
 from vibe_core.mahamantra.adapters.compression import MahaCompression
 
 # =============================================================================
+# IP ROUTER INTEGRATION (O(1) Longest Prefix Match)
+# =============================================================================
+from vibe_core.mahamantra.adapters.network import LotusIPRouter, create_ip_router
+
+# VEDA-4 PROTOCOL - Elegant Python Dunder Mapping
+from vibe_core.mahamantra.protocols import (
+    VedaMixin,
+    VedaProtocol,
+    is_vedic,
+    veda_audit,
+)
+
+# =============================================================================
 # MAHA CELL INTEGRATION (72-byte Header + Payload - Universal Data Format)
 # =============================================================================
 from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+from vibe_core.mahamantra.protocols._kala import KalaTime
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
+from vibe_core.mahamantra.seed.types import TickState
+from vibe_core.mahamantra.substrate import (
+    # Position
+    MAHAMANTRA_POSITIONS,
+    Avatara,
+    Guardian,
+    # Mahajana
+    Mahajana,
+    # OpCode
+    MantraOpCode,
+    MantraPosition,
+    # Protocol
+    ProtocolRegistry,
+    Quarter,
+    get_position_by_guardian,
+    get_position_by_opcode,
+    get_quarter_positions,
+)
+from vibe_core.mahamantra.substrate import (
+    get_all_head_positions as get_head_positions,
+)
+from vibe_core.mahamantra.substrate import (
+    get_all_worker_positions as get_worker_positions,
+)
+from vibe_core.mahamantra.substrate import (
+    get_position_by_index as get_position,
+)
 from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+
+# =============================================================================
+# CELL ROUTER INTEGRATION (O(1) Cell Registry - IPv6-like Routing)
+# =============================================================================
+from vibe_core.mahamantra.substrate.cell_router import CellRouter, get_router
+from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
+from vibe_core.mahamantra.substrate.seed import (
+    PARAMPARA,
+    WORDS,
+)
 
 # Governance Bridge (lazy import to avoid circular deps)
 _governance_bridge = None
 
 # Import protocol base for typing
 if TYPE_CHECKING:
-    from vibe_core.mahamantra.substrate import MantraProtocol
-    from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
-    from vibe_core.mahamantra.substrate.kala import TimeKeeper
     from vibe_core.bridge import ProtocolBridge
+    from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
+    from vibe_core.mahamantra.substrate import MantraProtocol
+    from vibe_core.mahamantra.substrate.kala import TimeKeeper
 
 
 # =============================================================================

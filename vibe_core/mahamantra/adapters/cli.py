@@ -46,12 +46,15 @@ __genesis__ = "0x25d36ba1"
 __all__ = ["MahaCLIAdapter", "CellFingerprint", "AdapterResult"]
 
 import importlib
+import logging
 import pkgutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from vibe_core.protocols.cli import CLIHandler, CLIMeta, CLIRegistry
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass

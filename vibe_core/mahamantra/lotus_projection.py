@@ -40,7 +40,7 @@ __genesis__ = "0x3e2fa1fe"
 import importlib
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, Iterator, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -212,6 +212,7 @@ def project_lotus(kernel: "RealVibeKernel") -> PositionRegistry:
     # SSOT: Derive quarters from POSITION_BY_FOLDER (wiring.py)
     # FOLDER = EXISTENCE = WIRED
     from vibe_core.mahamantra.substrate.wiring import POSITION_BY_FOLDER
+
     quarters = sorted(set(folder.split("/")[0] for folder in POSITION_BY_FOLDER.keys()))
 
     projected_count = 0
