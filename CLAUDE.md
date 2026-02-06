@@ -142,29 +142,6 @@ Jeder Guardian: `__mahajana__`, `__position__`, `__genesis__`, identischer thin 
 
 `reactor/shadow.py` = Yajna-Zyklus. Phase-aware: `on_{phase}` Hook → fallback `execute()`.
 
-## Architektur-Karte (Maschinenraum)
-
-```
-protocols/seed/     → SSOT: Axiome → Primär → Sekundär (NICHT ANFASSEN)
-protocols/diw.py    → DIW Bit-Layout, pack/unpack (NICHT ANFASSEN)
-protocols/_pancha.py → TattvaDict, PanchaTattvaProtocol
-protocols/_header.py → MahaHeader (72-byte Identität)
-substrate/seed.py   → Re-Derivation zur Verifikation
-substrate/venu_orchestrator.py → DIW-Produzent (THE_FLUTE_CYCLE LUT)
-substrate/chamber.py → DIW-Konsument (_apply_diw), Zell-Transformation
-substrate/cell.py   → MahaCellUnified (Header + Lifecycle + Payload)
-substrate/lotus_core.py → NavaBhakti Pipeline (9 Schritte)
-substrate/gita.py   → Fixed Point, Kapitel-Mapping
-adapters/gita_resonance.py → Attractor → Vers Matching
-reactor/shadow.py   → Yajna-Zyklus, Phase-aware Hooks
-```
-
-Zwei getrennte Wege vom gleichen Seed:
-- **Weisheit (Gita):** Seed → Attractor → `get_gita_chapter()` → Kapitel/Vers
-- **Rhythmus (Venu):** Seed → Position → `THE_FLUTE_CYCLE[pos]` → DIW → Chamber
-
-Beide treffen sich im Chamber. Vers gibt Inhalt, DIW gibt Modulation.
-
 ## Codebase-Realität (Bekannte Probleme)
 
 Offen:
@@ -177,7 +154,6 @@ Fallen (aufpassen!):
 - `CellLifecycleState.integrity` ist `float` (0.0-1.0), NICHT `int`. War mal falsch deklariert.
 - DIW-Konsumenten MÜSSEN `diw.unpack()` nutzen. Keine manuellen Bit-Shifts.
 - `substrate/` ist flach — fraktale Restrukturierung steht noch aus.
-- Lange inline Python-Skripte (`python3 -c "..."`) crashen das Terminal. Temp-Dateien nutzen.
 
 Bereits aufgeräumt (nicht nochmal anfassen):
 - Guardians: ALLE 16 identisches thin Pattern (keine if-else, keine Klassen)
@@ -189,6 +165,20 @@ Bereits aufgeräumt (nicht nochmal anfassen):
 - DIW-Format repariert: `[Name:2][Position:16]` → native `[MURALI:4][VAMSI:9][VENU:6]`
 - `_apply_diw()` semantisch: Phase×Name×Intensität statt generische Modulation
 - `verify_divinity()` + `verify_resonance()` auf 6-9-4 Struktur aktualisiert
+
+## Repo-Zustand
+
+~60+ ungemergte Remote-Branches (`claude/*`, `copilot/*`, `gemini/*`). Fast alle sind AI-Müll.
+Nur diese Branches haben echten Wert:
+
+| Branch | Status | Inhalt |
+|--------|--------|--------|
+| `main` | Stabil | Letzter Senior: Guardian-Cleanup + F821-Fixes + Pancha-Tattva-Wiring |
+| `feature/diw-refinement` | Ungemergt | DIW-Format repariert, semantische `_apply_diw()`, integrity-Fix |
+| `feature/gita-architecture-refinement` | In diw-refinement | Vorgänger-Branch, DIW-Protokoll erstellt |
+
+Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
+zeigt den vollen Friedhof.
 
 ## Arbeitsweise
 
