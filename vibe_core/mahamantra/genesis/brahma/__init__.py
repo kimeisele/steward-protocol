@@ -22,7 +22,6 @@ __genesis__ = "0x96910869"  # GenesisByte
 
 from typing import Final
 
-# Backward-compat constants
 POSITION: Final[int] = 1
 QUARTER: Final[str] = "genesis"
 OPCODE: Final[str] = "LOAD_ROOT"
@@ -44,19 +43,19 @@ def execute(input_text: str, context: dict = None) -> dict:
 
 
 _fractal_getattr_fn = None
+_MISSING = object()
 
 
-def __getattr__(name: str) -> object:
-    """Explicit exports + fractal discovery fallback."""
-    if name == "BrahmaService":
-        from vibe_core.protocols.mahajanas.brahma import BrahmaService
+def __getattr__(name: str):
+    """Protocol re-exports (lazy) + fractal discovery."""
+    try:
+        from vibe_core.protocols.mahajanas import brahma as _proto
 
-        return BrahmaService
-
-    if name == "NullBrahma":
-        from vibe_core.protocols.mahajanas.brahma import NullBrahma
-
-        return NullBrahma
+        _val = getattr(_proto, name, _MISSING)
+        if _val is not _MISSING:
+            return _val
+    except ImportError:
+        pass
 
     global _fractal_getattr_fn
     if _fractal_getattr_fn is None:

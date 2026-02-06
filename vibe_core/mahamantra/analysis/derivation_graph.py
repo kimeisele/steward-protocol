@@ -22,13 +22,11 @@ from enum import Enum, auto
 from typing import Dict, List, Optional, Set, Tuple
 
 from vibe_core.mahamantra.protocols._graph import (
-    EdgeType,
     GraphEdge,
     GraphNode,
     GraphProtocol,
     NodeType,
 )
-
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
     COSMIC_FRAME,
