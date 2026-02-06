@@ -38,43 +38,38 @@ THE ALGORITHM:
 
 This is not curve-fitting. This is COORDINATES.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
+from dataclasses import dataclass
+from typing import Final, Optional, Tuple
+
+from vibe_core.mahamantra.protocols._seed import (
+    AVATAR_COUNT,
+    HALVES,
+    HARE_COUNT,
+    KRISHNA_COUNT,
+    KSHETRA,
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
+    POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
+    POSITION_SUM_TOTAL,
+    PRASADAM,
+    QUARTERS,
+    RAMA_COUNT,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"  # Compiler position
 __position__ = 0
 __genesis__ = "0x5ad7f6c5"
-
-from dataclasses import dataclass
-from typing import Final, Tuple, Optional
-
-from vibe_core.mahamantra.protocols._seed import (
-    # The 7 Axioms
-    WORDS,          # 16 = Vowels
-    TRINITY,        # 3 = Gunas
-    QUARTERS,       # 4 = Phases
-    HARE_COUNT,     # 8
-    KRISHNA_COUNT,  # 4
-    RAMA_COUNT,     # 4
-    HALVES,         # 2
-    
-    # Position Sums
-    POSITION_SUM_HARE,    # 70
-    POSITION_SUM_KRISHNA, # 17 (Prime - the Router)
-    POSITION_SUM_RAMA,    # 49 = 7² = VARNAMALA
-    POSITION_SUM_TOTAL,   # 136 = T(16)
-    
-    # Derived
-    PANCHA,         # 5 (Elements, Articulation Points)
-    PRASADAM,       # 25 = PANCHA² (Consonant Grid)
-    KSHETRA,        # 24 (Material + 1 Observer = 25)
-    KSETRAJNA,      # 1 (Observer)
-    MAHAJANA_COUNT, # 12
-    AVATAR_COUNT,   # 4
-    SEVEN,          # 7
-    TEN,            # 10
-    PARAMPARA,      # 37
-)
 
 # =============================================================================
 # VERIFICATION: RAMA = ALPHABET

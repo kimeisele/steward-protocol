@@ -15,20 +15,13 @@ COMPONENTS:
 2. MahaModularSynth: The runtime-adjustable transformer engine.
 """
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, KSETRAJNA, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUALITIES, QUARTERS, TRINITY)
-
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
-__position__ = 0
-__genesis__ = "0x672435f8"  # GenesisByte: parampara % 37 == 0
-
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Final, Iterator, List, Optional, Tuple, Union
 
 from vibe_core.mahamantra.protocols._seed import (
     AKSARA_COUNT,
+    GITA_CHAPTERS,
     HALVES,
     HARE_COUNT,
     KSETRAJNA,
@@ -46,6 +39,7 @@ from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
     POSITION_SUM_TOTAL,
+    QUALITIES,
     QUARTERS,
     SEVEN,
     TEN,
@@ -53,6 +47,12 @@ from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
     WORDS,
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0x672435f8"  # GenesisByte: parampara % 37 == 0
+
 from vibe_core.mahamantra.protocols._maha_compute import (
     AttractorType,
     MahaComputeProtocol,
@@ -62,19 +62,10 @@ from vibe_core.mahamantra.protocols._maha_compute import (
     get_gita_insight,
     get_operation,
 )
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_ADD as _ADD,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_MULT as _MULT,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    # SSOT: Maha Algorithm Coefficients (imported, not duplicated!)
-    MAHA_OP_MAP as _OP_MAP,
-)
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_SQ as _SQ,
-)
+from vibe_core.mahamantra.protocols._seed import MAHA_ADD as _ADD
+from vibe_core.mahamantra.protocols._seed import MAHA_MULT as _MULT
+from vibe_core.mahamantra.protocols._seed import MAHA_OP_MAP as _OP_MAP
+from vibe_core.mahamantra.protocols._seed import MAHA_SQ as _SQ
 from vibe_core.mahamantra.protocols.offering import GraceProtocol
 
 # =============================================================================

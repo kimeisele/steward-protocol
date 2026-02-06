@@ -19,15 +19,14 @@ THE 5 ASPECTS:
 4. GADADHARA (Hare Hare)      -> ENERGY (Wie FLIESST es?)
 5. SRIVASA (Rama Rama)        -> GOVERNANCE (Wer REGIERT es?)
 """
-from vibe_core.mahamantra.protocols._seed import (PANCHA)
+from typing import Final, Protocol, TypedDict, runtime_checkable
+
+from vibe_core.mahamantra.protocols._seed import PANCHA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
 __position__ = 0
 __genesis__ = "0x2d991fe3"  # GenesisByte: parampara % 37 == 0
-
-from typing import Protocol, TypedDict, runtime_checkable, Final
-from vibe_core.mahamantra.protocols._seed import PANCHA
 
 # Verification of constant from seed
 assert PANCHA == PANCHA, "Pancha Tattva must be 5"

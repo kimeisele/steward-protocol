@@ -23,7 +23,10 @@ THE 7 EFFECTS MAP TO 7 BEATS:
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY)
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES, HARE_COUNT, KSETRAJNA, MAHA_QUANTUM, PANCHA, QUARTERS,
+    SEVEN, SHARANAGATI, TRINITY,
+)
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.substrate.mantra.maha_kirtan import KirtanComputeResult
@@ -35,11 +38,6 @@ __genesis__ = "0xbf879742"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from typing import Final, Optional
-
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    SEVEN,
-)
 
 from .engineering import (
     ENGINEERING_EFFECTS,

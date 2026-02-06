@@ -34,8 +34,11 @@ is ACINTYA - like iron becoming fire, indistinguishable.
 WATERTIGHT: No Any types. All typed explicitly.
 """
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, QUALITIES, QUARTERS, WORDS)
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, KSHETRA, MAHAJANA_COUNT, NAVA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, KSHETRA, MAHAJANA_COUNT,
+    NAVA, PANCHA, POSITION_SUM_KRISHNA, QUALITIES, QUARTERS, SEVEN,
+    SHARANAGATI, TEN, TRINITY, WORDS,
+)
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===
