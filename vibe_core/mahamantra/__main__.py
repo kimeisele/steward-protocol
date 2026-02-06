@@ -100,6 +100,7 @@ def _render_response(response: Dict[str, object]) -> None:
     verse = response.get("verse") or {}
     guna = str(verse.get("guna", "?"))[:10]
     verse_id = str(verse.get("id", "-"))
+    chapter_significance = str(response.get("chapter_significance", ""))[:50]
 
     # Parampara
     parampara = response.get("parampara", {})
@@ -121,6 +122,8 @@ def _render_response(response: Dict[str, object]) -> None:
     guardian_result = execution.get("guardian_result") or {}
     exec_mark = "EXECUTED" if exec_success else "PENDING"
     guardian_mark = "YES" if guardian_acted else "no"
+    kirtan_cycles = execution.get("kirtan_cycles", 1)
+    yajna_ticks = execution.get("yajna_ticks", 1)
 
     # Rückfrage: guardian signals it needs confirmation before proceeding
     needs_confirmation = guardian_result.get("requires_confirmation", False)
@@ -143,6 +146,7 @@ def _render_response(response: Dict[str, object]) -> None:
 ║  VIBRATION:                                                           ║
 ║    Attractor: {attractor:<10s}  Chapter: {chapter:>2s}  Guna: {guna:10s}          ║
 ║    Verse: {verse_id:<58s} ║
+║    Significance: {chapter_significance:<50s}     ║
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  ROUTING (computed from seed):                                        ║
 ║    Position: {position:>2}  Guardian: {guardian:12s}  Quarter: {quarter:10s}  ║
@@ -150,7 +154,8 @@ def _render_response(response: Dict[str, object]) -> None:
 ╠═══════════════════════════════════════════════════════════════════════╣
 ║  EXECUTION:                                                           ║
 ║    Status: {exec_mark:<12s}  Guardian acted: {guardian_mark:<10s}          ║
-║    Cell: {cell_valid:<8s}  Prana: {cell_prana:<10s}  Yajna: {yajna_phase:10s}  ║""")
+║    Kirtan: {kirtan_cycles} cycles  Yajna: {yajna_ticks} ticks  Phase: {yajna_phase:10s}  ║
+║    Cell: {cell_valid:<8s}  Prana: {cell_prana:<10s}                           ║""")
 
     # Show guardian response if it acted
     if guardian_acted and guardian_action:
