@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 # These imports are needed for class definition
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
-from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
+from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader, HEADER_SIZE_BYTES, HEADER_DAILY_CYCLES
 from vibe_core.mahamantra.seed.types import (
     AkashState,
     ExecuteResult,
@@ -487,7 +487,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                     operation=position,
                     link=0,
                     intent=0,
-                    ttl=300,
+                    ttl=HEADER_DAILY_CYCLES,
                     state=0,
                 ),
                 payload=input_text.encode("utf-8"),
@@ -588,9 +588,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             },
             # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
             "cell": {
-                "header_size": 72,
+                "header_size": HEADER_SIZE_BYTES,
                 "payload_size": len(input_text.encode("utf-8")),
-                "total_size": 72 + len(input_text.encode("utf-8")),
+                "total_size": HEADER_SIZE_BYTES + len(input_text.encode("utf-8")),
                 "valid": True,  # Created via MahaCellUnified.create()
                 "parampara_verified": parampara_verified,
                 "prana": result_cell.prana,
