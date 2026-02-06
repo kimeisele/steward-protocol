@@ -21,6 +21,7 @@ from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_VARGA,
     ELEMENT_NAMES,
     ELEMENT_SYMBOLS,
+    IS_SHRUTI,
     Element,
     derived_signature,
     dominant_element,
@@ -314,3 +315,116 @@ class TestFullSignature:
         assert derived_signature(encode("paramaḥ")) == derived_signature(encode("paramaṁ"))
         # But NOT in full_signature (4D)
         assert full_signature(encode("paramaḥ")) != full_signature(encode("paramaṁ"))
+
+
+class TestShrutiPartition:
+    """IS_SHRUTI: R-operation quadratic residues mod 49."""
+
+    def test_complete_coverage(self):
+        assert len(IS_SHRUTI) == VARNAMALA_TOTAL
+
+    def test_shruti_count_is_22(self):
+        """22 quadratic residues = SHRUTIS (Indian microtones)."""
+        assert sum(IS_SHRUTI) == 22
+
+    def test_nakshatra_count_is_27(self):
+        """27 non-residues = NAKSHATRAS (lunar mansions)."""
+        assert sum(not s for s in IS_SHRUTI) == 27
+
+    def test_a_is_shruti(self):
+        """'a' (coord 0) is always a quadratic residue (0² = 0)."""
+        assert IS_SHRUTI[0] is True
+
+    def test_partition_sums_to_varnamala(self):
+        """22 + 27 = 49 = VARNAMALA."""
+        assert sum(IS_SHRUTI) + sum(not s for s in IS_SHRUTI) == VARNAMALA_TOTAL
+
+    def test_collision_pair_o_au_both_nakshatra(self):
+        """o(12) and au(13) are BOTH NAKSHATRA — R-residue can't distinguish them."""
+        assert IS_SHRUTI[12] is False
+        assert IS_SHRUTI[13] is False
+
+    def test_collision_pair_m_h_different(self):
+        """ṁ(14)=NAKSHATRA, ḥ(15)=SHRUTI — R-residue CAN distinguish these."""
+        assert IS_SHRUTI[14] != IS_SHRUTI[15]
+
+
+class TestWordEntryIntegration:
+    """WordEntry properties wire through correctly."""
+
+    def test_full_sig_property(self):
+        from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+
+        w = word_by_iast("dharma")
+        assert w is not None
+        assert len(w.full_sig) > len(w.derived_sig)
+        assert len(w.full_sig) > len(w.element_walk)
+
+    def test_shruti_pattern_property(self):
+        from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+
+        w = word_by_iast("dharma")
+        assert w is not None
+        assert all(c in "SN" for c in w.shruti_pattern)
+        assert len(w.shruti_pattern) == len(w.coords)
+
+    def test_derived_sig_property(self):
+        from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+
+        w = word_by_iast("dharma")
+        assert w is not None
+        assert len(w.derived_sig) == len(w.coords) * 3  # 3 digits per phoneme
+
+
+class TestSynthPhonemeStep:
+    """MahaSynth.phoneme_step() and spell_cycle() with 4D coords."""
+
+    def test_phoneme_step_returns_result(self):
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        result = synth.phoneme_step(value=42, coord=0)
+        assert result.output_value >= 0
+        assert result.output_value < synth.mod_space
+
+    def test_phoneme_step_all_coords_valid(self):
+        """Every RAMA coordinate must produce a valid step."""
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        for coord in range(VARNAMALA_TOTAL):
+            result = synth.phoneme_step(value=1, coord=coord)
+            assert 0 <= result.output_value < synth.mod_space
+
+    def test_varga_determines_operation(self):
+        """svara→H, sparsha→K, shesha→R."""
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        # coord 0 = 'a' (svara) → H
+        assert synth.phoneme_step(1, 0).name == "H"
+        # coord 16 = 'ka' (sparsha) → K
+        assert synth.phoneme_step(1, 16).name == "K"
+        # coord 41 = 'ya' (shesha) → R
+        assert synth.phoneme_step(1, 41).name == "R"
+
+    def test_spell_cycle_dharma(self):
+        """spell_cycle() with a real Sanskrit word."""
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        coords = encode("dharma")
+        result = synth.spell_cycle(coords, seed=42)
+        assert len(result.steps) == len(coords)
+        assert result.final_value >= 0
+
+    def test_different_words_different_attractors(self):
+        """Different Sanskrit words should (usually) produce different outputs."""
+        from vibe_core.mahamantra.adapters.synth import MahaSynth
+
+        synth = MahaSynth(preset="quantum")
+        r1 = synth.spell_cycle(encode("dharma"), seed=42)
+        r2 = synth.spell_cycle(encode("karma"), seed=42)
+        # Same seed, different words → different final values (not guaranteed but very likely)
+        # At minimum, the steps should differ
+        assert r1.steps[0].name != r2.steps[0].name or r1.final_value != r2.final_value

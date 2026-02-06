@@ -70,6 +70,27 @@ class WordEntry:
 
         return walk_signature(self.coords)
 
+    @property
+    def derived_sig(self) -> str:
+        """3D signature: element + varga + sub (99.97% unique)."""
+        from vibe_core.mahamantra.substrate.pancha_walk import derived_signature
+
+        return derived_signature(self.coords)
+
+    @property
+    def full_sig(self) -> str:
+        """4D signature: element + varga + sub + harmonic (100% unique, bijective)."""
+        from vibe_core.mahamantra.substrate.pancha_walk import full_signature
+
+        return full_signature(self.coords)
+
+    @property
+    def shruti_pattern(self) -> str:
+        """SHRUTI/NAKSHATRA pattern: S=shruti (R-reachable), N=nakshatra."""
+        from vibe_core.mahamantra.substrate.pancha_walk import IS_SHRUTI
+
+        return "".join("S" if IS_SHRUTI[c] else "N" for c in self.coords)
+
     def __repr__(self) -> str:
         return f"WordEntry({self.sanskrit!r}, {self.meaning!r})"
 
