@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
-from vibe_core.mahamantra._lotus import LotusNode, LotusPath
+from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
 
 logger = logging.getLogger("LOTUS_PROJECTION")
 
