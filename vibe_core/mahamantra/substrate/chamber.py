@@ -322,26 +322,93 @@ class SankirtanChamber(Generic[C]):
         """
         Apply Divine Instruction Word to cell.
 
-        The DIW is a native 19-bit word in canonical 6-9-4 format:
-        - VENU   (6 bits): Quality/Mood   → modulates prana (energy)
-        - VAMSI  (9 bits): Process/Action  → modulates integrity (stability)
-        - MURALI (4 bits): Phase/Quarter   → advances cycle counter
+        The DIW is a native 19-bit word in canonical 6-9-4 format.
+        Each component has a distinct semantic role:
+
+        MURALI (4 bits) = WHAT happens (Phase/Operation):
+            0=GENESIS: Cell receives energy (Input)
+            1=DHARMA:  Cell is verified (Validate)
+            2=KARMA:   Cell processes (Execute)
+            3=MOKSHA:  Cell completes (Output)
+
+        VAMSI (9 bits) = HOW it happens (Name/Mode):
+            H region (0-169):   Carrier   → prana-dominant
+            K region (170-339): Source    → integrity-dominant
+            R region (340-511): Deliverer → cycle-dominant
+
+        VENU (6 bits) = HOW STRONG (Quality/Intensity):
+            0-63 normalized to 0.0-1.0 via QUALITIES(64)
         """
-        # Extract flute components using canonical masks (from diw.py)
         components = unpack(diw)
 
-        # VENU (6 bits): Modulate prana (energy)
-        prana_delta = (components.venu * SEVEN) % QUALITIES - 32  # Range: -32 to +31
-        cell.lifecycle.prana = max(0, cell.lifecycle.prana + prana_delta)
+        # --- Intensity from VENU (0.0 to 1.0) ---
+        # QUALITIES = 64 = WORDS × QUARTERS (SSOT)
+        intensity = components.venu / (QUALITIES - KSETRAJNA)  # 0/63 .. 63/63
 
-        # VAMSI (9 bits): Modulate integrity (stability factor)
-        integrity_factor = 1.0 - (components.vamsi / 512.0) * 0.01  # Max 1% change
-        cell.lifecycle.integrity = max(0.0, min(1.0,
-            cell.lifecycle.integrity * integrity_factor
-        ))
+        # --- Name region from VAMSI ---
+        vamsi_stride = (KSETRAJNA << VAMSI_HOLES) // 3  # 512 // 3 = 170
+        name_region = min(components.vamsi // vamsi_stride, HALVES)  # 0=H, 1=K, 2=R
 
-        # MURALI (4 bits): Advance cycle counter
-        cell.lifecycle.cycle += components.murali % QUARTERS
+        # --- Phase operation from MURALI ---
+        phase = components.murali % QUARTERS  # 0-3
+
+        # Base delta scaled by SEVEN (SSOT: 7 = HALF_SIZE - KSETRAJNA)
+        base_delta = SEVEN + int(intensity * SEVEN)  # 7 to 14
+
+        if phase == 0:
+            # GENESIS: Cell RECEIVES energy (Input phase)
+            # H → strong prana boost, K → moderate + integrity, R → moderate + cycle
+            if name_region == 0:      # HARE (Carrier)
+                cell.lifecycle.prana += base_delta * HALVES
+            elif name_region == 1:    # KRISHNA (Source)
+                cell.lifecycle.prana += base_delta
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.01)
+            else:                     # RAMA (Deliverer)
+                cell.lifecycle.prana += base_delta
+                cell.lifecycle.cycle += KSETRAJNA
+
+        elif phase == 1:
+            # DHARMA: Cell is VERIFIED (Validation phase)
+            # K → integrity strengthened, H → prana cost for validation, R → cycle check
+            if name_region == 0:      # HARE (Carrier)
+                cell.lifecycle.prana -= base_delta  # Validation costs energy
+                cell.lifecycle.prana = max(0, cell.lifecycle.prana)
+            elif name_region == 1:    # KRISHNA (Source)
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.02)
+            else:                     # RAMA (Deliverer)
+                cell.lifecycle.cycle += KSETRAJNA
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.01)
+
+        elif phase == HALVES:
+            # KARMA: Cell PROCESSES (Execution phase)
+            # All names cost prana (work), but effect differs
+            cell.lifecycle.prana -= base_delta
+            cell.lifecycle.prana = max(0, cell.lifecycle.prana)
+            if name_region == 0:      # HARE (Carrier)
+                cell.lifecycle.cycle += KSETRAJNA
+            elif name_region == 1:    # KRISHNA (Source)
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.01)
+                cell.lifecycle.cycle += KSETRAJNA
+            else:                     # RAMA (Deliverer)
+                cell.lifecycle.cycle += HALVES  # Rama accelerates completion
+
+        else:
+            # MOKSHA: Cell COMPLETES (Output phase)
+            # Energy released, integrity stabilized, cycle advanced
+            cell.lifecycle.prana -= base_delta
+            cell.lifecycle.prana = max(0, cell.lifecycle.prana)
+            if name_region == 0:      # HARE (Carrier)
+                cell.lifecycle.integrity = max(0.0,
+                    cell.lifecycle.integrity - intensity * 0.005)
+            elif name_region == 1:    # KRISHNA (Source)
+                cell.lifecycle.integrity = min(1.0,
+                    cell.lifecycle.integrity + intensity * 0.01)
+            else:                     # RAMA (Deliverer)
+                cell.lifecycle.cycle += HALVES  # Rama delivers completion
     
     def _merge_pair(
         self,
