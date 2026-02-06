@@ -59,8 +59,8 @@ from vibe_core.mahamantra.substrate.seed import (
 # =============================================================================
 
 
-# TickState imported from _types.py (SSOT)
-from vibe_core.mahamantra._types import TickState
+# TickState imported from seed/types.py (SSOT)
+from vibe_core.mahamantra.seed.types import TickState
 
 
 # =============================================================================
