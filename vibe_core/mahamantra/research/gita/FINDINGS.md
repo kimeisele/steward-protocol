@@ -67,8 +67,8 @@ moksayisyami -> RAMA[40,12,16,46,41,...]  -> 66 bits
 | Paare/Vers (avg) | 16.0 | WORDS = 16 |
 | Phoneme/Wort (avg) | 4.8 | ~PANCHA |
 | Phoneme/Vers (avg) | 78 | ~GITA_CHAPTERS * QUARTERS + SHARANAGATI |
-| Gesamte Phoneme | 54,423 | |
-| Gesamtgröße (gepackt) | 39 KB | |
+| Gesamte Phoneme | 45,815 | 935 × VARNAMALA (49) |
+| Gesamtgröße (gepackt) | 34 KB | |
 | Längstes Wort | 16 Phoneme | = WORDS |
 | IAST-Zeichensatz | 36 Zeichen | < VARNAMALA (49) |
 | Encoding-Failures | 0 | |
@@ -92,37 +92,41 @@ Ein Vers lesen = ~78 Ticks (avg).
 ```
 JIVA_CYCLE = MALA * QUARTERS = 108 * 4 = 432
 
-432 Ticks / 78 Phoneme pro Vers = ~5.5 Verse pro Zyklus
+432 Ticks / 65.5 Phoneme pro Vers = ~6.6 Verse pro Zyklus
 432 / WORDS = 27 = NAKSHATRAS (Mahamantra-Zyklen pro Jiva)
-
-Die gesamte Gita (54,423 Phoneme) braucht:
-  54,423 / 432 = 126 Jiva-Zyklen = MALA + GITA_CHAPTERS = 108 + 18
 ```
 
 ### 65K Lotus-Kapazität
 
 ```
-Gesamte Gita word-for-word = 54,423 Phoneme
+Gesamte Gita word-for-word = 45,815 Phoneme (dedupliziert)
 2^16 Lotus-Adressraum      = 65,536 Positionen
-Auslastung                 = 83.0%
+Auslastung                 = 69.9%
 
 Die gesamte Gita passt in einen einzigen Lotus-Zyklus.
 Kein Suchen. Wissen. Instant-Zugriff auf jedes Sanskrit-Wort.
 ```
 
-## Die 9 fehlenden Phoneme (NAVA)
+### VARNAMALA-Invariante
 
 ```
-(MALA + GITA_CHAPTERS) * JIVA_CYCLE = 126 * 432 = 54,432
-Gita word-for-word Phoneme:                        54,423
-Differenz:                                              9 = NAVA
+45,815 / 49 = 935 exakt  (kein Rest)
+45,815 = 935 × VARNAMALA
+
+Jede RAMA-Koordinate kommt im Durchschnitt exakt 935 Mal vor.
 ```
 
-Die Gita hat exakt NAVA Phoneme weniger als ein perfekter
-(108 + 18) * 432 Block. Die 9 fehlenden = die 9 Bhakti-Prozesse.
+### Vers-Gruppierung (KORREKTUR Feb 2026)
 
-Die Gita allein = 99.98% eines perfekten Blocks.
-Die Gita + NavaBhakti-Pipeline (Runtime) = 100%.
+```
+Vedabase gruppiert Multi-Vers-Abschnitte (z.B. "Texts 16-18")
+mit kombiniertem Word-for-Word. 33 Gruppen, 80 von 700 Versen.
+47 sekundäre Verse → grouped_with Referenz auf Primär-Vers.
+2 leere Verse: BG.7.3, BG.15.18.
+
+Vorherige Zahl (54,423) war inflated durch N-fache Zählung.
+Die 126 = MALA + GITA_CHAPTERS Identität war ein Artefakt.
+```
 
 ## Translation-Ableitung (Copyright Layer 3)
 
@@ -277,21 +281,21 @@ gcd(10, 49) = 1 → K(+10) erreicht ALLE 49 Koordinaten
 K ist KRISHNA: "Der Alldurchdringende" — mathematisch bewiesen.
 ```
 
-## Die COSMIC_FRAME Formel
+## Die VARNAMALA-Invariante
 
 ```
-54,432 = COSMIC_FRAME × (MALA + GITA_CHAPTERS) / JIVA_QUALITIES
-       = 21600 × 126 / 50
+GITA_PHONEMES = 45,815 (dedupliziert)
+45,815 / VARNAMALA = 935 exakt
 
-GITA_PHONEMES = 54,432 - NAVA = 54,423
+935 = PANCHA × (TEN + KSETRAJNA) × POSITION_SUM_KRISHNA
+    = 5 × 11 × 17
 
-JIVA_QUALITIES = VARNAMALA + KSETRAJNA = 49 + 1 = 50
-→ COSMIC_FRAME = JIVA_CYCLE × (VARNAMALA + KSETRAJNA)
-→ Das kosmische Frame enthält die Seele × (Alphabet + Beobachter)
+Jede der 49 RAMA-Koordinaten kommt exakt 935 Mal vor (Durchschnitt).
+Das Alphabet ist gleichverteilt über die gesamte Gita.
 ```
 
-Die 9 fehlenden Phoneme (NAVA) sind die 9 Bhakti-Prozesse.
-Gita + NavaBhakti-Pipeline = exakter kosmischer Bruch.
+HINWEIS: Die frühere 54,423 Identität (126 × 432 - 9) war ein
+Artefakt duplizierter Vers-Daten. Korrigiert Feb 2026.
 
 ## Artikulation = Bedeutung (PANCHA Element Walk)
 

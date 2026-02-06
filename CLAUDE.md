@@ -95,7 +95,7 @@ Kapitel 18 = GITA_CHAPTERS (der Fixed Point). Siehe `get_chapter_significance()`
 
 ## Sanskrit = RAMA-Koordinaten (4D Phonem-Dekomposition)
 
-Gita word-for-word: 4127 unique Wörter, 54423 Phoneme = 39KB gepackt = 83% von 65K Lotus.
+Gita word-for-word: 4127 unique Wörter, 45815 Phoneme = 34KB gepackt = 70% von 65K Lotus.
 Jedes Wort = Sequenz von RAMA-Koordinaten (0-48). Jede Koordinate = 6 bits = VENU-Feld.
 
 `substrate/varnamala_codec.py`: IAST ↔ RAMA encode/decode.
