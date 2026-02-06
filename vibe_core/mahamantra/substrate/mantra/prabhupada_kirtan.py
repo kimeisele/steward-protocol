@@ -32,24 +32,25 @@ L7: āśliṣya vā              → RETURN_UNCONDITIONAL (verse 8)
 
 ALL CONSTANTS DERIVED FROM SEED.PY.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, NAVA, WORDS)
+from dataclasses import dataclass, field
+from typing import Callable, Dict, Final, List, Optional, Tuple
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALF_SIZE,
+    HALVES,
+    JIVA_QUALITIES,
+    KSETRAJNA,
+    MAHA_QUANTUM,
+    NAVA,
+    PARAMPARA,
+    SEVEN,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"  # Position 9 - Devotion under adversity
 __position__ = NAVA
 __genesis__ = "0x7e40b596"  # GenesisByte: parampara % 37 == 0
-
-from dataclasses import dataclass, field
-from typing import Callable, Dict, Final, List, Optional, Tuple
-
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    PARAMPARA,
-    WORDS,
-    HALF_SIZE,
-    JIVA_QUALITIES,
-    SEVEN,
-)
 from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
 
 # SSOT: Import from prabhupada_engineering - NO DUPLICATION!
