@@ -570,6 +570,57 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
                     ServiceRegistry.register(VenuServiceProtocol, self._venu_service)
 
+                    # YASODA'S ROPE: Wire BeatSubscribers via protocol discovery
+                    # No hardcoded list. Any service registered under
+                    # BeatSubscriberProtocol gets heartbeat time automatically.
+                    try:
+                        from vibe_core.mahamantra.protocols._venu import BeatSubscriberProtocol
+
+                        # Create and register healing subscribers
+                        try:
+                            from vibe_core.services.healing_subscribers import (
+                                OuroborosSubscriber,
+                                ShuddhiSubscriber,
+                            )
+
+                            workspace = getattr(self.kernel, "_workspace", None)
+                            subscribers = [
+                                OuroborosSubscriber(workspace=workspace),
+                                ShuddhiSubscriber(dry_run=True),
+                            ]
+
+                            # Register each subscriber so get_all(BeatSubscriberProtocol) finds them
+                            for sub in subscribers:
+                                ServiceRegistry.register(
+                                    type(sub), sub,
+                                    protocols=[BeatSubscriberProtocol],
+                                )
+                                logger.info(f"      → Registered beat subscriber: {sub.beat_name}")
+                        except Exception as e:
+                            logger.debug(f"Healing subscribers not available: {e}")
+
+                        # Discover ALL registered BeatSubscribers and wire to VenuService
+                        all_subscribers = ServiceRegistry.get_all(BeatSubscriberProtocol) or []
+                        if all_subscribers:
+                            _beat_counter = {"ticks": 0}
+
+                            def _dispatch_subscribers(position: int) -> None:
+                                _beat_counter["ticks"] += 1
+                                tick = _beat_counter["ticks"]
+                                for sub in all_subscribers:
+                                    try:
+                                        if tick % sub.beat_interval == 0:
+                                            sub.on_beat_tick(tick, position)
+                                    except Exception as e:
+                                        logger.debug(f"Beat subscriber {sub.beat_name} error: {e}")
+
+                            self._venu_service.on_beat(_dispatch_subscribers)
+                            logger.info(
+                                f"      → {len(all_subscribers)} beat subscribers wired to VenuService"
+                            )
+                    except Exception as e:
+                        logger.debug(f"BeatSubscriber wiring skipped: {e}")
+
                     # Start the heartbeat (non-blocking async task)
                     asyncio.ensure_future(self._venu_service.start())
                     logger.info("      → VenuService started (Krishna's flute plays)")
