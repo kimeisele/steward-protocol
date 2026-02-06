@@ -832,7 +832,7 @@ class ChatService(ChatProtocol, LotusBase):
         VarnaTensor observes phonetics for future Akasha learning.
         """
         from vibe_core.mahamantra.substrate.intents import INTENT_MAP, get_position_for_intent
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, HALF_SIZE
 
         msg_lower = message.lower()
         words = msg_lower.split()
@@ -1152,7 +1152,7 @@ class ChatService(ChatProtocol, LotusBase):
                 task_id=task_id,
                 task_description=task_description,
                 position=position,
-                phase="bhoga" if position < 8 else "prasadam",
+                phase="bhoga" if position < HALF_SIZE else "prasadam",
                 payload={
                     # Action spec for TaskKernel execution
                     "action": action,
@@ -1169,7 +1169,7 @@ class ChatService(ChatProtocol, LotusBase):
             if dispatch_id:
                 logger.info(
                     f"🔥 KARMA: Dispatched {task_id} → {dispatch_id} "
-                    f"(position={position}, phase={'bhoga' if position < 8 else 'prasadam'})"
+                    f"(position={position}, phase={'bhoga' if position < HALF_SIZE else 'prasadam'})"
                 )
 
                 # =============================================================
