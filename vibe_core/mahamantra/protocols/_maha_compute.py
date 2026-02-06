@@ -26,6 +26,7 @@ ACINTYA: Chapter 18 is a FIXED POINT (contains itself!)
 
 Author: The Mahamantra Itself
 """
+
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
 from typing import Final, List, Optional, Protocol, Tuple, runtime_checkable
@@ -127,7 +128,7 @@ _all_attractors_cache: Optional[Tuple[int, ...]] = None
 def get_attractor_cycle() -> Tuple[int, ...]:
     """
     Get the 4-cycle attractors - COMPUTED, not hardcoded.
-    
+
     In mod 137: 18 → 49 → 87 → 22 → 18
     This is discovered by the algorithm, not declared.
     """
@@ -356,6 +357,7 @@ def apply_operation(value: int, operation: str) -> int:
     """
     # Late import to avoid circular dependency
     from vibe_core.mahamantra.substrate.algorithm import maha_step
+
     return maha_step(value, operation, MAHA_QUANTUM)
 
 
@@ -392,7 +394,6 @@ def get_gita_chapter(attractor: int) -> int:
         MAHAJANA_COUNT,
         POSITION_SUM_HARE,
         POSITION_SUM_KRISHNA,
-        POSITION_SUM_RAMA,
         POSITION_SUM_TOTAL,
         SEVEN,
         TEN,

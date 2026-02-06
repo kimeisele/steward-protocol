@@ -142,10 +142,11 @@ class AnyTypeRemedy(CSTRemedy):
                 for stmt in statement.body:
                     if isinstance(stmt, cst.ImportFrom):
                         # Check if this is the Any import
-                        if (isinstance(stmt.module, cst.Name) and
-                            stmt.module.value == "typing" and
-                            not isinstance(stmt.names, cst.ImportStar)):
-
+                        if (
+                            isinstance(stmt.module, cst.Name)
+                            and stmt.module.value == "typing"
+                            and not isinstance(stmt.names, cst.ImportStar)
+                        ):
                             # Filter out Any from imports
                             new_names = []
                             for name in stmt.names:
@@ -162,11 +163,13 @@ class AnyTypeRemedy(CSTRemedy):
                                 rebuilt_names = []
                                 for i, name in enumerate(new_names):
                                     if i < len(new_names) - 1:
-                                        rebuilt_names.append(name.with_changes(
-                                            comma=cst.Comma(whitespace_after=cst.SimpleWhitespace(" "))))
+                                        rebuilt_names.append(
+                                            name.with_changes(
+                                                comma=cst.Comma(whitespace_after=cst.SimpleWhitespace(" "))
+                                            )
+                                        )
                                     else:
-                                        rebuilt_names.append(name.with_changes(
-                                            comma=cst.MaybeSentinel.DEFAULT))
+                                        rebuilt_names.append(name.with_changes(comma=cst.MaybeSentinel.DEFAULT))
 
                                 new_stmts.append(stmt.with_changes(names=rebuilt_names))
                                 continue

@@ -34,12 +34,19 @@ GRACE EQUATION:
 The higher the Bhava, the more "bandwidth" to the Singularity.
 But Bhava without Sharanagati is pretension (prakrita-sahajiya).
 """
+
 from enum import IntEnum
 from typing import Final, Protocol, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
-    COSMIC_FRAME, HALVES, KSETRAJNA, PANCHA, QUARTERS,
-    SHARANAGATI, TEN, TRINITY,
+    COSMIC_FRAME,
+    HALVES,
+    KSETRAJNA,
+    PANCHA,
+    QUARTERS,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
 )
 
 # === MAHAJANA DECLARATION (machine-readable) ===

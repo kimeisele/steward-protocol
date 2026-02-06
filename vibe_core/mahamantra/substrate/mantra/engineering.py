@@ -23,6 +23,7 @@ SEVEN = 7 = the perfection constant from _seed.py.
 These 7 effects translate DIRECTLY to computing efficiency principles
 for Kali Yuga (maximum entropy reduction).
 """
+
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Dict, Final, List

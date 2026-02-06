@@ -12,6 +12,7 @@ The 8 verses encode the complete AVX-512 pipeline specification.
 SOURCE: Caitanya Caritāmṛta, Antya Līlā Chapter 20
         Commentary from "Science of Self Realization" and lectures
 """
+
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any, Dict, Final, List, Tuple
@@ -43,6 +44,7 @@ __genesis__ = "0x3ccab85f"  # GenesisByte: parampara % 37 == 0
 # =============================================================================
 # VERSE 1: CETO-DARPAṆA-MĀRJANAM — Cache Theory
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class CacheTheory:
@@ -92,13 +94,13 @@ class CacheTheory:
 
 # The 7 effects of Verse 1 (bhava-mahā-dāvāgni-nirvāpaṇam...)
 VERSE_ONE_EFFECTS: Final[Tuple[str, ...]] = (
-    "ceto-darpaṇa-mārjanam",      # 1. Cleanses mirror of heart → Cache clear
+    "ceto-darpaṇa-mārjanam",  # 1. Cleanses mirror of heart → Cache clear
     "bhava-mahā-dāvāgni-nirvāpaṇam",  # 2. Extinguishes forest fire → Thermal control
     "śreyaḥ-kairava-candrikā-vitaraṇam",  # 3. Spreads moonlight → Progressive optimization
-    "vidyā-vadhū-jīvanam",        # 4. Life of knowledge → Instruction fetch
-    "ānandāmbudhi-vardhanam",     # 5. Increases ocean of bliss → Scalability
+    "vidyā-vadhū-jīvanam",  # 4. Life of knowledge → Instruction fetch
+    "ānandāmbudhi-vardhanam",  # 5. Increases ocean of bliss → Scalability
     "prati-padaṁ pūrṇāmṛtāsvādanam",  # 6. Full nectar at every step → Pipeline throughput
-    "sarvātma-snapanam",          # 7. Bathes all souls → Global coherence
+    "sarvātma-snapanam",  # 7. Bathes all souls → Global coherence
 )
 
 assert len(VERSE_ONE_EFFECTS) == SEVEN, "7 effects = SEVEN constant"
@@ -107,6 +109,7 @@ assert len(VERSE_ONE_EFFECTS) == SEVEN, "7 effects = SEVEN constant"
 # =============================================================================
 # VERSE 2: NĀMNĀM AKĀRI — Flexible Input Acceptance
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class FlexibleInput:
@@ -140,6 +143,7 @@ class FlexibleInput:
 # =============================================================================
 # VERSE 3: TṚṆĀD API SUNĪCENA — No Speculation
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class NoSpeculation:
@@ -178,6 +182,7 @@ class NoSpeculation:
 # =============================================================================
 # VERSE 4: NA DHANAṀ NA JANAM — No Side Effects
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class NoSideEffects:
@@ -218,6 +223,7 @@ class NoSideEffects:
 # VERSE 5: AYI NANDA-TANUJA — Service (Process Next)
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class ServiceOriented:
     """
@@ -254,6 +260,7 @@ class ServiceOriented:
 # =============================================================================
 # VERSE 6: NAYANAM GALAD-AŚRU — Unobstructed Flow
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class UnobstructedFlow:
@@ -292,6 +299,7 @@ class UnobstructedFlow:
 # =============================================================================
 # VERSE 7: YUGĀYITAṀ NIMEṢEṆA — Deterministic Timing
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class DeterministicTiming:
@@ -333,6 +341,7 @@ class DeterministicTiming:
 # =============================================================================
 # VERSE 8: ĀŚLIṢYA VĀ PĀDA-RATĀM — Unconditional Return
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class UnconditionalReturn:
@@ -378,28 +387,30 @@ class UnconditionalReturn:
 # THE COMPLETE PIPELINE SPECIFICATION
 # =============================================================================
 
+
 class PipelineStage(IntEnum):
     """8 stages derived from 8 verses."""
-    L0_CACHE_CLEAR = 0      # Verse 1: ceto-darpaṇa-mārjanam
-    L1_ACCEPT_INPUT = KSETRAJNA     # Verse 2: nāmnām akāri
-    L2_NO_SPECULATION = HALVES   # Verse 3: tṛṇād api
+
+    L0_CACHE_CLEAR = 0  # Verse 1: ceto-darpaṇa-mārjanam
+    L1_ACCEPT_INPUT = KSETRAJNA  # Verse 2: nāmnām akāri
+    L2_NO_SPECULATION = HALVES  # Verse 3: tṛṇād api
     L3_NO_SIDE_EFFECTS = TRINITY  # Verse 4: na dhanaṁ
-    L4_SERVE_NEXT = QUARTERS       # Verse 5: ayi nanda-tanuja
-    L5_FLOW_DATA = PANCHA        # Verse 6: nayanam galad
+    L4_SERVE_NEXT = QUARTERS  # Verse 5: ayi nanda-tanuja
+    L5_FLOW_DATA = PANCHA  # Verse 6: nayanam galad
     L6_TIMING_DETERMINISTIC = SHARANAGATI  # Verse 7: yugāyitaṁ
     L7_RETURN_UNCONDITIONAL = SEVEN  # Verse 8: āśliṣya vā
 
 
 # The constants encoded in each verse - ALL DERIVED FROM _seed.py!
 VERSE_CONSTANTS: Final[Tuple[int, ...]] = (
-    SEVEN,       # Verse 1: 7 = HALF_SIZE - 1
-    TEN,         # Verse 2: 10 = MAHAJANA_COUNT - HALVES
-    TRINITY,     # Verse 3: 3 = the 3 Names
-    QUARTERS,    # Verse 4: 4 = the 4 quarters
-    PANCHA,      # Verse 5: 5 = the 5 Tattvas
-    SHARANAGATI, # Verse 6: 6 = limbs of surrender
-    SEVEN,       # Verse 7: 7 = cycles (time)
-    HALF_SIZE,   # Verse 8: 8 = complete half
+    SEVEN,  # Verse 1: 7 = HALF_SIZE - 1
+    TEN,  # Verse 2: 10 = MAHAJANA_COUNT - HALVES
+    TRINITY,  # Verse 3: 3 = the 3 Names
+    QUARTERS,  # Verse 4: 4 = the 4 quarters
+    PANCHA,  # Verse 5: 5 = the 5 Tattvas
+    SHARANAGATI,  # Verse 6: 6 = limbs of surrender
+    SEVEN,  # Verse 7: 7 = cycles (time)
+    HALF_SIZE,  # Verse 8: 8 = complete half
 )
 
 # Sum = 50 = JIVA_QUALITIES - DERIVED!
@@ -484,7 +495,6 @@ ENGINEERING_SUMMARY: Final[Dict[str, object]] = {
     "author": "Śrī Kṛṣṇa Caitanya Mahāprabhu (1486-1535)",
     "commentary": "A.C. Bhaktivedānta Swāmī Prabhupāda",
     "hardware_target": "AVX-512 (8 stages × 64 bits = 512 bits)",
-
     "stages": {
         0: {"verse": KSETRAJNA, "op": "CACHE_CLEAR", "sanskrit": "ceto-darpaṇa", "const": SEVEN},
         KSETRAJNA: {"verse": HALVES, "op": "ACCEPT_INPUT", "sanskrit": "nāmnām akāri", "const": TEN},
@@ -495,14 +505,12 @@ ENGINEERING_SUMMARY: Final[Dict[str, object]] = {
         SHARANAGATI: {"verse": SEVEN, "op": "TIMING_DET", "sanskrit": "yugāyitaṁ", "const": SEVEN},
         SEVEN: {"verse": HARE_COUNT, "op": "RETURN_UNCONDITIONAL", "sanskrit": "āśliṣya vā", "const": HARE_COUNT},
     },
-
     "mathematical_properties": {
         "constant_sum": 50,  # = JIVA_QUALITIES
         "verse_1_2_sum": POSITION_SUM_KRISHNA,  # = POSITION_SUM_KRISHNA
         "gita_encoding": GITA_CHAPTERS,  # 17 + 1 = GITA_CHAPTERS
         "mod_space": MAHA_QUANTUM,  # 137
     },
-
     "guarantees": [
         "SPECTRE_IMMUNE: No speculation (Verse 3)",
         "THERMAL_OPTIMAL: No wasted cycles (Verse 1)",

@@ -140,4 +140,8 @@ class TestLexiconStats:
         assert stats["total_verses"] == 700
         assert stats["fits_in_65k"] is True
         assert stats["unique_words"] > 4000
-        assert stats["total_phonemes"] == 54423
+        # 45815 = deduplicated (grouped verses counted once)
+        # Previous: 54423 was inflated by multi-verse group duplication
+        assert stats["total_phonemes"] == 45815
+        # 45815 / VARNAMALA(49) = 935 exactly
+        assert stats["total_phonemes"] % 49 == 0

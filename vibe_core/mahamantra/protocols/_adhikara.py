@@ -36,15 +36,27 @@ AUTHORIZATION MATRIX:
 Higher quarters (KARMA, MOKSHA) require MORE authorization because
 their operations have greater impact on the substrate.
 """
+
 from dataclasses import dataclass, field
 from enum import IntEnum
 from hashlib import sha256
 from typing import Final, FrozenSet, Protocol, Set, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
-    HALVES, HARE_COUNT, KSHETRA, KSETRAJNA, MAHAJANA_COUNT,
-    NAVA, PANCHA, PARAMPARA, QUARTERS, SEVEN, SHARANAGATI,
-    TEN, TRINITY, WORDS,
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    KSHETRA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
 )
 
 # === MAHAJANA DECLARATION (machine-readable) ===

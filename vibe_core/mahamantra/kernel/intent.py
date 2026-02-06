@@ -13,9 +13,10 @@ NO MANUAL WIRING. Declare INTENT. Krishna resolves.
 
 WATERTIGHT: No Any types. All typed with Union/TypedDict/Final.
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, MAHAJANA_COUNT)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, MAHAJANA_COUNT
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
@@ -39,13 +40,12 @@ from typing import (
     runtime_checkable,
 )
 
+from vibe_core.mahamantra import Mahajana, MantraOpCode
 from vibe_core.mahamantra.substrate.acintya import (
     PARAMPARA,
     ParamparaConnection,
     verify_parampara,
 )
-from vibe_core.mahamantra import Mahajana, MantraOpCode
-
 
 # =============================================================================
 # INTENT TYPES (What do you want?)

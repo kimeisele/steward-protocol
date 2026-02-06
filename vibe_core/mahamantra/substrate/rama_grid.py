@@ -17,9 +17,9 @@ KEY IDENTITY FROM _seed.py:
 ===========================
     POSITION_SUM_RAMA = 49 = 7²
     VARNAMALA_TOTAL   = 49 (Complete Sanskrit Alphabet)
-    
+
     RAMA IS THE ALPHABET.
-    
+
 The Mahamantra doesn't "hash" to text - it GENERATES text.
 
 THE STRUCTURE:
@@ -38,6 +38,7 @@ THE ALGORITHM:
 
 This is not curve-fitting. This is COORDINATES.
 """
+
 from dataclasses import dataclass
 from typing import Final, Optional, Tuple
 
@@ -46,8 +47,8 @@ from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     HARE_COUNT,
     KRISHNA_COUNT,
-    KSHETRA,
     KSETRAJNA,
+    KSHETRA,
     MAHAJANA_COUNT,
     NAVA,
     PANCHA,
@@ -95,31 +96,28 @@ assert VOWEL_COUNT + CONSONANT_COUNT == VARNAMALA_TOTAL, "16 vowels + 33 consona
 # The 16 vowels of Sanskrit, mapped to the 16 words of Mahamantra
 SVARAS: Final[Tuple[str, ...]] = (
     # Short vowels (5)
-    "a",   # Position 1  - HARE (first)
-    "i",   # Position 2  - KRISHNA (first)
-    "u",   # Position 3  - HARE (second)
-    "ṛ",   # Position 4  - KRISHNA (second)
-    "ḷ",   # Position 5  - KRISHNA (third) [rare]
-    
+    "a",  # Position 1  - HARE (first)
+    "i",  # Position 2  - KRISHNA (first)
+    "u",  # Position 3  - HARE (second)
+    "ṛ",  # Position 4  - KRISHNA (second)
+    "ḷ",  # Position 5  - KRISHNA (third) [rare]
     # Long vowels (5)
-    "ā",   # Position 6  - KRISHNA (fourth)
-    "ī",   # Position 7  - HARE (third)
-    "ū",   # Position 8  - HARE (fourth)
-    "ṝ",   # Position 9  - HARE (fifth)
-    "ḹ",   # Position 10 - RAMA (first) [rare]
-    
+    "ā",  # Position 6  - KRISHNA (fourth)
+    "ī",  # Position 7  - HARE (third)
+    "ū",  # Position 8  - HARE (fourth)
+    "ṝ",  # Position 9  - HARE (fifth)
+    "ḹ",  # Position 10 - RAMA (first) [rare]
     # Compound vowels (4)
-    "e",   # Position 11 - HARE (sixth)
+    "e",  # Position 11 - HARE (sixth)
     "ai",  # Position 12 - RAMA (second)
-    "o",   # Position 13 - RAMA (third)
+    "o",  # Position 13 - RAMA (third)
     "au",  # Position 14 - RAMA (fourth)
-    
     # Anusvara and Visarga (2)
-    "ṁ",   # Position 15 - HARE (seventh)
-    "ḥ",   # Position 16 - HARE (eighth)
+    "ṁ",  # Position 15 - HARE (seventh)
+    "ḥ",  # Position 16 - HARE (eighth)
 )
 
-assert len(SVARAS) == WORDS, f"16 vowels = 16 words of Mahamantra"
+assert len(SVARAS) == WORDS, "16 vowels = 16 words of Mahamantra"
 
 
 # =============================================================================
@@ -130,32 +128,31 @@ assert len(SVARAS) == WORDS, f"16 vowels = 16 words of Mahamantra"
 # Rows = Articulation Points (PANCHA = 5)
 # Cols = Voicing Types (PANCHA = 5)
 
+
 @dataclass(frozen=True)
 class ArticulationRow:
     """One row of the 5x5 consonant grid."""
-    name: str           # Sanskrit varga name
-    articulation: str   # Where produced
+
+    name: str  # Sanskrit varga name
+    articulation: str  # Where produced
     consonants: Tuple[str, str, str, str, str]
-    element: str        # Associated Pancha Mahabhuta
+    element: str  # Associated Pancha Mahabhuta
+
 
 SPARSHA_GRID: Final[Tuple[ArticulationRow, ...]] = (
     # Row 0: Ka-varga (Guttural/Throat) - Akasha
     ArticulationRow("ka-varga", "kantha", ("ka", "kha", "ga", "gha", "ṅa"), "akasha"),
-    
     # Row 1: Ca-varga (Palatal) - Vayu
     ArticulationRow("ca-varga", "talu", ("ca", "cha", "ja", "jha", "ña"), "vayu"),
-    
     # Row 2: Ṭa-varga (Retroflex) - Agni
     ArticulationRow("ṭa-varga", "murdha", ("ṭa", "ṭha", "ḍa", "ḍha", "ṇa"), "agni"),
-    
     # Row 3: Ta-varga (Dental) - Jala
     ArticulationRow("ta-varga", "danta", ("ta", "tha", "da", "dha", "na"), "jala"),
-    
     # Row 4: Pa-varga (Labial) - Prithvi
     ArticulationRow("pa-varga", "oshtha", ("pa", "pha", "ba", "bha", "ma"), "prithvi"),
 )
 
-assert len(SPARSHA_GRID) == PANCHA, f"5 rows = PANCHA elements"
+assert len(SPARSHA_GRID) == PANCHA, "5 rows = PANCHA elements"
 assert all(len(row.consonants) == PANCHA for row in SPARSHA_GRID), "5 columns each"
 
 # Total sparsha consonants
@@ -167,17 +164,18 @@ assert SPARSHA_COUNT == PRASADAM, "25 stop consonants = PRASADAM"
 # THE ROUTER: KRISHNA (17) - Prime Number Router
 # =============================================================================
 
+
 def krishna_route(position: int, cycle: int = 0) -> int:
     """
     The KRISHNA router - determines which RAMA window is active.
-    
+
     KRISHNA (17) is prime - it never repeats in mod-16 space.
     This makes it the perfect router for the 49-space.
-    
+
     Args:
         position: Current position (0-15)
         cycle: Which cycle we're in (0 = first pass)
-    
+
     Returns:
         The RAMA coordinate (0-48) being addressed
     """
@@ -190,7 +188,7 @@ def krishna_route(position: int, cycle: int = 0) -> int:
 def rama_to_phoneme(rama_coord: int) -> str:
     """
     Convert a RAMA coordinate (0-48) to its phoneme.
-    
+
     The 49-space is divided:
     - 0-15:  Vowels (SVARAS)
     - 16-40: Sparsha consonants (25)
@@ -219,44 +217,47 @@ def rama_to_phoneme(rama_coord: int) -> str:
 # THE MAHAJANA COORDINATE MAPPING
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class MahajanaCoordinate:
     """
     A Mahajana's position in the Mahamantra coordinate system.
-    
+
     Not a hash, but a COORDINATE in the RAMA grid.
     """
+
     name: str
-    global_position: int      # 1-16 (Mahamantra position)
-    quarter: int              # 1-4 (Genesis/Dharma/Karma/Moksha)
-    rama_primary: int         # Primary RAMA coordinate (0-48)
-    rama_secondary: int       # Secondary RAMA coordinate
-    first_syllable: str       # First syllable of name
-    articulation: str         # Where first syllable is produced
+    global_position: int  # 1-16 (Mahamantra position)
+    quarter: int  # 1-4 (Genesis/Dharma/Karma/Moksha)
+    rama_primary: int  # Primary RAMA coordinate (0-48)
+    rama_secondary: int  # Secondary RAMA coordinate
+    first_syllable: str  # First syllable of name
+    articulation: str  # Where first syllable is produced
+
 
 def compute_mahajana_coordinate(name: str, global_position: int, quarter: int) -> MahajanaCoordinate:
     """
     Compute the coordinate for a Mahajana.
-    
+
     The position is NOT derived from the name.
     The position IS the coordinate, and the name is its manifestation.
     """
     # Primary RAMA coordinate via KRISHNA routing
     rama_primary = krishna_route(global_position - KSETRAJNA)  # 0-indexed
-    
+
     # Secondary coordinate (for complex names)
     rama_secondary = (rama_primary + POSITION_SUM_KRISHNA) % POSITION_SUM_RAMA
-    
+
     # Get first syllable as phoneme
     first_char = name[0] if name else "?"
-    
+
     # Map first character to articulation point
     guttural = "kgcqx"
     palatal = "jy"
     retroflex = "rl"
     dental = "tdnsz"
     labial = "pbmfvw"
-    
+
     if first_char in guttural:
         articulation = "kantha"
     elif first_char in palatal:
@@ -269,7 +270,7 @@ def compute_mahajana_coordinate(name: str, global_position: int, quarter: int) -
         articulation = "oshtha"
     else:
         articulation = "mixed"
-    
+
     return MahajanaCoordinate(
         name=name,
         global_position=global_position,
@@ -288,17 +289,14 @@ MAHAJANA_COORDINATES: Final[Tuple[MahajanaCoordinate, ...]] = (
     compute_mahajana_coordinate("brahma", HALVES, KSETRAJNA),
     compute_mahajana_coordinate("narada", TRINITY, KSETRAJNA),
     compute_mahajana_coordinate("shambhu", QUARTERS, KSETRAJNA),
-    
     # DHARMA Quarter (positions 6, 7, 8)
     compute_mahajana_coordinate("kumaras", SHARANAGATI, HALVES),
     compute_mahajana_coordinate("kapila", SEVEN, HALVES),
     compute_mahajana_coordinate("manu", HARE_COUNT, HALVES),
-    
     # KARMA Quarter (positions 10, 11, 12)
     compute_mahajana_coordinate("prahlada", TEN, TRINITY),
     compute_mahajana_coordinate("janaka", 11, TRINITY),
     compute_mahajana_coordinate("bhishma", MAHAJANA_COUNT, TRINITY),
-    
     # MOKSHA Quarter (positions 14, 15, 16)
     compute_mahajana_coordinate("bali", 14, QUARTERS),
     compute_mahajana_coordinate("shuka", 15, QUARTERS),
@@ -318,17 +316,18 @@ AVATARA_COORDINATES: Final[Tuple[MahajanaCoordinate, ...]] = (
 # THE INSIGHT: Position → Phonetic Meaning
 # =============================================================================
 
+
 def explain_position_meaning(position: int) -> str:
     """
     Explain what a position MEANS in phonetic terms.
-    
+
     This is the semantic layer - why Kapila is at position 7,
     not because hash("Kapila") % 16 == 7, but because position 7
     manifests the phonetic energy of 'Ka' (guttural creation).
     """
     rama_coord = krishna_route(position - KSETRAJNA)
     phoneme = rama_to_phoneme(rama_coord)
-    
+
     # Position meaning based on Mahamantra word
     word_meanings = {
         KSETRAJNA: ("HARE", "Address/Attention", "Opening the channel"),
@@ -348,9 +347,9 @@ def explain_position_meaning(position: int) -> str:
         15: ("HARE", "Address", "Third Moksha"),
         WORDS: ("HARE", "Address", "Fourth Moksha (Complete)"),
     }
-    
+
     word, meaning, function = word_meanings.get(position, ("?", "?", "?"))
-    
+
     return f"""
 Position {position}:
   Mahamantra Word: {word} ({meaning})
@@ -364,32 +363,33 @@ Position {position}:
 # VERIFICATION
 # =============================================================================
 
+
 def verify_rama_grid():
     """Verify the RAMA grid structure."""
     print("=" * POSITION_SUM_HARE)
     print("RAMA GRID ROUTER - Verification")
     print("=" * POSITION_SUM_HARE)
     print()
-    
+
     # Key identity
     print("KEY IDENTITY:")
     print(f"  POSITION_SUM_RAMA = {POSITION_SUM_RAMA}")
     print(f"  VARNAMALA_TOTAL   = {VARNAMALA_TOTAL}")
-    print(f"  RAMA = ALPHABET! ✓")
+    print("  RAMA = ALPHABET! ✓")
     print()
-    
+
     # The structure
     print("VOWEL LAYER (SVARAS = WORDS):")
     for i, svara in enumerate(SVARAS):
-        print(f"  Position {i+KSETRAJNA:2}: {svara}")
+        print(f"  Position {i + KSETRAJNA:2}: {svara}")
     print()
-    
+
     # Consonant grid
     print("CONSONANT LAYER (SPARSHA = PRASADAM = 5×5):")
     for row in SPARSHA_GRID:
         print(f"  {row.name:10} ({row.articulation:6}, {row.element:7}): {' '.join(row.consonants)}")
     print()
-    
+
     # KRISHNA routing
     print("KRISHNA ROUTING (Position → RAMA Coordinate):")
     for pos in range(KSETRAJNA, POSITION_SUM_KRISHNA):
@@ -397,31 +397,41 @@ def verify_rama_grid():
         phoneme = rama_to_phoneme(rama)
         print(f"  Position {pos:2} → RAMA[{rama:2}] = '{phoneme}'")
     print()
-    
+
     # Mahajana coordinates
     print("MAHAJANA COORDINATES:")
     for coord in MAHAJANA_COORDINATES:
-        print(f"  {coord.name:12} | pos={coord.global_position:2} | "
-              f"RAMA[{coord.rama_primary:2}] | art={coord.articulation}")
+        print(
+            f"  {coord.name:12} | pos={coord.global_position:2} | "
+            f"RAMA[{coord.rama_primary:2}] | art={coord.articulation}"
+        )
     print()
-    
+
     # Avatara coordinates
     print("AVATARA COORDINATES:")
     for coord in AVATARA_COORDINATES:
-        print(f"  {coord.name:12} | pos={coord.global_position:2} | "
-              f"RAMA[{coord.rama_primary:2}] | art={coord.articulation}")
+        print(
+            f"  {coord.name:12} | pos={coord.global_position:2} | "
+            f"RAMA[{coord.rama_primary:2}] | art={coord.articulation}"
+        )
     print()
-    
+
     # The semantic layer - WHY these phonemes?
     print("=" * POSITION_SUM_HARE)
     print("SEMANTIC ANALYSIS: Position → Phoneme → Meaning")
     print("=" * POSITION_SUM_HARE)
     print()
-    
+
     semantic_analysis = [
         # (position, mahajana, rama_coord, phoneme, meaning)
         (KSETRAJNA, "vyasa", 0, "a", "The first vowel = THE BEGINNING. Vyasa compiles = starts the parampara"),
-        (HALVES, "brahma", POSITION_SUM_KRISHNA, "kha", "ASPIRATED 'k' = Creation with breath. Brahma creates by breathing"),
+        (
+            HALVES,
+            "brahma",
+            POSITION_SUM_KRISHNA,
+            "kha",
+            "ASPIRATED 'k' = Creation with breath. Brahma creates by breathing",
+        ),
         (TRINITY, "narada", 34, "dha", "VOICED ASPIRATED 'd' = Carrying sound/music. Narada travels singing"),
         (QUARTERS, "shambhu", HALVES, "u", "The 'u' sound closes the lips = Destruction gathers inward"),
         (PANCHA, "prithu", 19, "gha", "VOICED ASPIRATED 'g' = Deep organization. Prithu organizes civilization"),
@@ -437,10 +447,10 @@ def verify_rama_grid():
         (15, "shuka", 42, "ra", "The 'ra' = Liberation vibrates. Shuka spoke Bhagavatam for moksha"),
         (WORDS, "yamaraja", TEN, "e", "COMPOUND vowel = Complete judgment. Yamaraja weighs ALL aspects"),
     ]
-    
+
     for pos, name, rama, phoneme, meaning in semantic_analysis:
         print(f"  Position {pos:2} | {name:12} | RAMA[{rama:2}]={phoneme:3} | {meaning}")
-    
+
     print()
     print("=" * POSITION_SUM_HARE)
     print("CONCLUSION: THE NAME IS NOT THE LABEL, IT IS THE CODE")

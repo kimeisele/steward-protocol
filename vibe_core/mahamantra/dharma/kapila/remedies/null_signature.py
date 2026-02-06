@@ -34,7 +34,6 @@ from libcst import matchers as m
 
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 
-
 # Type hint → default value mapping (DERIVED, not hardcoded)
 TYPE_DEFAULTS = {
     "str": '""',
@@ -89,18 +88,14 @@ class NullSignatureRemedy(cst.CSTTransformer):
             self._class_name = name
         return True
 
-    def leave_ClassDef(
-        self, original_node: cst.ClassDef, updated_node: cst.ClassDef
-    ) -> cst.ClassDef:
+    def leave_ClassDef(self, original_node: cst.ClassDef, updated_node: cst.ClassDef) -> cst.ClassDef:
         """Exit Null* class tracking."""
         if original_node.name.value.startswith("Null"):
             self._in_null_class = False
             self._class_name = ""
         return updated_node
 
-    def leave_FunctionDef(
-        self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef
-    ) -> cst.FunctionDef:
+    def leave_FunctionDef(self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef) -> cst.FunctionDef:
         """Add default values to method parameters in Null* classes."""
         if not self._in_null_class:
             return updated_node
@@ -135,9 +130,7 @@ class NullSignatureRemedy(cst.CSTTransformer):
                 modified = True
 
                 # Create new parameter with default
-                new_param = param.with_changes(
-                    default=cst.parse_expression(default_value)
-                )
+                new_param = param.with_changes(default=cst.parse_expression(default_value))
                 new_params.append(new_param)
             else:
                 new_params.append(param)
@@ -186,6 +179,7 @@ class NullSignatureRemedy(cst.CSTTransformer):
     def get_diff(self, old_code: str, new_code: str) -> str:
         """Generates a unified diff for the change."""
         import difflib
+
         return "\n".join(
             difflib.unified_diff(
                 old_code.splitlines(),

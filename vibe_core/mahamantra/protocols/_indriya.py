@@ -49,6 +49,7 @@ DERIVED FROM SEED.PY:
 - DASHA_INDRIYA = PANCHA × HALVES = 10 (5 knowledge + 5 action)
 - PANCHA_VRTTI = PANCHA = 5 (the 5 mental modifications)
 """
+
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -67,7 +68,13 @@ from typing import (
 )
 
 from vibe_core.mahamantra.protocols._seed import (
-    HALVES, HARE_COUNT, MAHAJANA_COUNT, NAVA, PANCHA, SHARANAGATI, TEN,
+    HALVES,
+    HARE_COUNT,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    SHARANAGATI,
+    TEN,
 )
 
 # === MAHAJANA DECLARATION (machine-readable) ===

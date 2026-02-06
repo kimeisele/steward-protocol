@@ -1,0 +1,66 @@
+2026-01-30 13:16:35,218 - INFO - 🔍 Verifying BootMode...
+2026-01-30 13:16:35,228 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.BootMode OK
+2026-01-30 13:16:35,228 - INFO -    ✅ Proxy Import: vibe_core.boot_mode.BootMode OK
+2026-01-30 13:16:35,229 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:35,229 - INFO - 🔍 Verifying ProcessManager...
+2026-01-30 13:16:35,285 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.ProcessManager OK
+2026-01-30 13:16:35,285 - INFO -    ✅ Proxy Import: vibe_core.process_manager.ProcessManager OK
+2026-01-30 13:16:35,285 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:35,286 - INFO - 🔍 Verifying ErrorCode...
+2026-01-30 13:16:35,288 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.ErrorCode OK
+2026-01-30 13:16:35,289 - INFO -    ✅ Proxy Import: vibe_core.errors.ErrorCode OK
+2026-01-30 13:16:35,289 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:35,289 - INFO - 🔍 Verifying LineageChain...
+2026-01-30 13:16:35,318 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.LineageChain OK
+2026-01-30 13:16:35,319 - INFO -    ✅ Proxy Import: vibe_core.lineage.LineageChain OK
+2026-01-30 13:16:35,319 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:35,319 - INFO - 🔍 Verifying SQLiteLedger...
+2026-01-30 13:16:36,167 - INFO - ✅ Prabhupada registered via ServiceRegistry (MAHAMANTRA substrate)
+2026-01-30 13:16:36,375 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.SQLiteLedger OK
+2026-01-30 13:16:36,375 - INFO -    ✅ Proxy Import: vibe_core.ledger.SQLiteLedger OK
+2026-01-30 13:16:36,376 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:36,376 - INFO - 🔍 Verifying EventBus...
+2026-01-30 13:16:36,379 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.EventBus OK
+2026-01-30 13:16:36,380 - INFO -    ✅ Proxy Import: vibe_core.event_bus.EventBus OK
+2026-01-30 13:16:36,380 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:36,380 - INFO - 🔍 Verifying EventBusProtocol...
+2026-01-30 13:16:36,380 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.EventBusProtocol OK
+2026-01-30 13:16:36,380 - INFO -    ✅ Proxy Import: vibe_core.event_bus.EventBusProtocol OK
+2026-01-30 13:16:36,380 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:36,380 - INFO - 🔍 Verifying ShuddhiProtocol...
+2026-01-30 13:16:36,381 - ERROR -    ❌ SSOT Import FAILED: cannot import name 'WorkerProtocol' from 'vibe_core.mahamantra.substrate.mahajana' (/Users/ss/projects/steward-protocol/vibe_core/mahamantra/substrate/mahajana.py)
+2026-01-30 13:16:36,381 - INFO - 🔍 Verifying ShuddhiStatus...
+2026-01-30 13:16:36,382 - ERROR -    ❌ SSOT Import FAILED: cannot import name 'WorkerProtocol' from 'vibe_core.mahamantra.substrate.mahajana' (/Users/ss/projects/steward-protocol/vibe_core/mahamantra/substrate/mahajana.py)
+2026-01-30 13:16:36,382 - INFO - 🔍 Verifying ShuddhiResult...
+2026-01-30 13:16:36,382 - ERROR -    ❌ SSOT Import FAILED: cannot import name 'WorkerProtocol' from 'vibe_core.mahamantra.substrate.mahajana' (/Users/ss/projects/steward-protocol/vibe_core/mahamantra/substrate/mahajana.py)
+2026-01-30 13:16:36,383 - INFO - 🔍 Verifying PhoenixConfig...
+2026-01-30 13:16:36,386 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.PhoenixConfig OK
+2026-01-30 13:16:36,427 - INFO -    ✅ Proxy Import: vibe_core.phoenix.config.PhoenixConfig OK
+2026-01-30 13:16:36,427 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:36,427 - INFO - 🔍 Verifying get_config...
+2026-01-30 13:16:36,427 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.get_config OK
+2026-01-30 13:16:36,427 - INFO -    ✅ Proxy Import: vibe_core.phoenix.config.get_config OK
+2026-01-30 13:16:36,428 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:36,428 - INFO - 🔍 Verifying reset_config...
+2026-01-30 13:16:36,445 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.reset_config OK
+2026-01-30 13:16:36,448 - INFO -    ✅ Proxy Import: vibe_core.phoenix.config.reset_config OK
+2026-01-30 13:16:36,448 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+2026-01-30 13:16:36,448 - INFO - 🔍 Verifying set_config...
+2026-01-30 13:16:36,448 - INFO -    ✅ SSOT Import: vibe_core.mahamantra.set_config OK
+2026-01-30 13:16:36,448 - INFO -    ✅ Proxy Import: vibe_core.phoenix.config.set_config OK
+2026-01-30 13:16:36,448 - INFO -    ✅ IDENTITY MATCH: Proxy points to SSOT
+🚀 STARTING SSOT VERIFICATION
+=============================
+✅ BootMode: VERIFIED
+✅ ProcessManager: VERIFIED
+✅ ErrorCode: VERIFIED
+✅ LineageChain: VERIFIED
+✅ SQLiteLedger: VERIFIED
+✅ EventBus: VERIFIED
+✅ EventBusProtocol: VERIFIED
+✅ PhoenixConfig: VERIFIED
+✅ get_config: VERIFIED
+✅ reset_config: VERIFIED
+✅ set_config: VERIFIED
+=============================
+💥 VERIFICATION FAILED

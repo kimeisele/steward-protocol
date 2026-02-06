@@ -32,6 +32,7 @@ L7: āśliṣya vā              → RETURN_UNCONDITIONAL (verse 8)
 
 ALL CONSTANTS DERIVED FROM SEED.PY.
 """
+
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Final, List, Optional, Tuple
 
@@ -53,22 +54,23 @@ __position__ = NAVA
 __genesis__ = "0x7e40b596"  # GenesisByte: parampara % 37 == 0
 from vibe_core.mahamantra.substrate.prabhupada import Prabhupada, get_prabhupada
 
-# SSOT: Import from prabhupada_engineering - NO DUPLICATION!
-from .prabhupada_engineering import (
-    PipelineStage,
-    VERSE_CONSTANTS,
-    ENGINEERING_SUMMARY,
-)
 # Use substrate kirtan
 from .kirtan import (
-    MahaKirtan,
     KirtanComputeResult,
+    MahaKirtan,
 )
 
+# SSOT: Import from prabhupada_engineering - NO DUPLICATION!
+from .prabhupada_engineering import (
+    ENGINEERING_SUMMARY,
+    VERSE_CONSTANTS,
+    PipelineStage,
+)
 
 # =============================================================================
 # SIKSASTAKAM PIPELINE STAGES - DERIVED FROM SSOT (prabhupada_engineering.py)
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class SiksastakamStage:
@@ -96,12 +98,14 @@ def _build_siksastakam_stages() -> Tuple["SiksastakamStage", ...]:
 
     for stage_num in range(HALF_SIZE):  # 0-7
         data = stages_data[stage_num]
-        stages.append(SiksastakamStage(
-            verse=data["verse"],
-            sanskrit=data["sanskrit"],
-            operation=data["op"],
-            encoded_value=VERSE_CONSTANTS[stage_num],  # From SSOT!
-        ))
+        stages.append(
+            SiksastakamStage(
+                verse=data["verse"],
+                sanskrit=data["sanskrit"],
+                operation=data["op"],
+                encoded_value=VERSE_CONSTANTS[stage_num],  # From SSOT!
+            )
+        )
 
     return tuple(stages)
 
@@ -111,13 +115,15 @@ SIKSASTAKAM_STAGES: Final[Tuple[SiksastakamStage, ...]] = _build_siksastakam_sta
 
 # Verification using SSOT constants
 assert len(SIKSASTAKAM_STAGES) == HALF_SIZE, f"8 verses = HALF_SIZE ({HALF_SIZE})"
-assert sum(s.encoded_value for s in SIKSASTAKAM_STAGES) == JIVA_QUALITIES, \
+assert sum(s.encoded_value for s in SIKSASTAKAM_STAGES) == JIVA_QUALITIES, (
     f"Sum of constants = {JIVA_QUALITIES} = JIVA_QUALITIES"
+)
 
 
 # =============================================================================
 # PRABHUPADA KIRTAN RESULTS
 # =============================================================================
+
 
 @dataclass
 class ParamparaCheckResult:
@@ -208,6 +214,7 @@ class PrabhupadaKirtanResult:
 # =============================================================================
 # PRABHUPADA KIRTAN - THE PERSON-ANCHORED COMPUTE ENGINE
 # =============================================================================
+
 
 class PrabhupadaKirtan:
     """
@@ -312,6 +319,7 @@ class PrabhupadaKirtan:
 
         # Get this module's genesis signature
         from . import prabhupada_kirtan as self_module
+
         genesis_hex = getattr(self_module, "__genesis__", "0x0")
 
         try:
@@ -516,6 +524,7 @@ class PrabhupadaKirtan:
 # =============================================================================
 # LIVE PERSON-ANCHORED OPERATOR
 # =============================================================================
+
 
 class PersonAnchoredOperator:
     """

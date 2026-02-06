@@ -26,6 +26,7 @@ MUSICAL RELATIONSHIPS (Vedic Tuning):
     FIELD/MALA = 4/3 (Perfect Fourth - Madhyama)
     WORDS/NAVA = 16/9 (Mantra-to-Process ratio)
 """
+
 from typing import Final
 
 from vibe_core.mahamantra.protocols._seed import (
@@ -1021,7 +1022,7 @@ assert SravanamCheck.GAJRA_COUNT == WORDS, "GAJRA_COUNT must equal WORDS (16)"
 
 # Verify SYNC_POINTS are correct
 assert SravanamCheck.SYNC_POINTS == (FIELD_RESONANCE, JIVA_CYCLE // HALVES, JIVA_CYCLE), (
-    f"SYNC_POINTS must be (144, 216, 432)"
+    "SYNC_POINTS must be (144, 216, 432)"
 )
 
 # Verify 16 Gajras exist (one per petal)

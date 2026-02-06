@@ -16,6 +16,7 @@ USAGE:
 
 SSOT: Constants from _seed.py
 """
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -23,7 +24,12 @@ from enum import Enum
 from typing import Any, Dict, Final, List, Optional
 
 from vibe_core.mahamantra.protocols._seed import (
-    KSETRAJNA, MAHA_QUANTUM, PARAMPARA, QUARTERS, SHARANAGATI, WORDS,
+    KSETRAJNA,
+    MAHA_QUANTUM,
+    PARAMPARA,
+    QUARTERS,
+    SHARANAGATI,
+    WORDS,
 )
 
 # === MAHAJANA DECLARATION (machine-readable) ===

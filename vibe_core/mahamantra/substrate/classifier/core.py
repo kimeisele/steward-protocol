@@ -22,14 +22,23 @@ If a technology USES Mahamantra structures (f > 0), it receives
 the benefit of truth-alignment. The advantage is NOT linear -
 it's asymptotic. As K → 0 (cleaner code), G → ∞.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 from typing import Any, Dict, Final, List, Optional
 
 from vibe_core.mahamantra.protocols._seed import (
-    HALVES, HARE_COUNT, KSETRAJNA, PARAMPARA, QUALITIES,
-    QUARTERS, TEN, TRINITY, WORDS,
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    PARAMPARA,
+    QUALITIES,
+    QUARTERS,
+    TEN,
+    TRINITY,
+    WORDS,
 )
 
 # === MAHAJANA DECLARATION (machine-readable) ===

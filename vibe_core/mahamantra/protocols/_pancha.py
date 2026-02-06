@@ -19,6 +19,7 @@ THE 5 ASPECTS:
 4. GADADHARA (Hare Hare)      -> ENERGY (Wie FLIESST es?)
 5. SRIVASA (Rama Rama)        -> GOVERNANCE (Wer REGIERT es?)
 """
+
 from typing import Final, Protocol, TypedDict, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import PANCHA

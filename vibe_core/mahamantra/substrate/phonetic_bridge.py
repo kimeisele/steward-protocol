@@ -31,7 +31,17 @@ CATEGORY (English) ↔ VARGA:
     dental        = DANTYA = 3
     labial        = OSHTHYA = 4
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, NAVA, PANCHA, QUARTERS, SHARANAGATI, TRINITY)
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    NAVA,
+    PANCHA,
+    QUARTERS,
+    SHARANAGATI,
+    TRINITY,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"

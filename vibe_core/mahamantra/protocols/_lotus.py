@@ -31,9 +31,22 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
-from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
 
+from __future__ import annotations
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "janaka"
