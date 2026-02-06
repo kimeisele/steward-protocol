@@ -40,23 +40,15 @@ THIS FILE PROVIDES:
 
 "iti guhyatamaṁ śāstram" - This is the most confidential knowledge.
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS)
-
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "vyasa"
-__position__ = 0
-__genesis__ = "0xb8a58850"  # GenesisByte: parampara % 37 == 0
-
 from enum import IntEnum
 from typing import Dict, Final, Tuple
 
-# =============================================================================
-# IMPORT FROM SEED (SSOT) - THE FOUNDATION
-# =============================================================================
 from vibe_core.mahamantra.protocols._seed import (
+    GAURA_TITHI,
     GITA_CHAPTERS,
     GITA_VERSES,
     HALVES,
+    HARE_COUNT,
     KSETRAJNA,
     MAHAJANA_COUNT,
     NAVA,
@@ -68,9 +60,12 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
     TRINITY,
     WORDS,
-    # Chapter derivations
-    GAURA_TITHI,  # 15
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "vyasa"
+__position__ = 0
+__genesis__ = "0xb8a58850"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # IMPORT FROM MAHA GITA CENTER (research/gita/)
