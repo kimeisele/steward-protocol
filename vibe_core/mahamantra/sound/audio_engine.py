@@ -59,15 +59,12 @@ class PranaSoundEngine:
         Returns:
             bytes: Raw 16-bit LE PCM data
         """
-        from vibe_core.mahamantra.orchestrator import (
-            VENU_SHIFT, VAMSI_SHIFT, MURALI_SHIFT,
-            VENU_HOLES, VAMSI_HOLES, MURALI_HOLES
-        )
-        
-        # 1. Decode DIW
-        venu = (diw >> VENU_SHIFT) & ((1 << VENU_HOLES) - 1)
-        vamsi = (diw >> VAMSI_SHIFT) & ((1 << VAMSI_HOLES) - 1)
-        # murali = (diw >> MURALI_SHIFT) & ((1 << MURALI_HOLES) - 1) # Unused yet
+        from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
+
+        # 1. Decode DIW (canonical 6-9-4 format)
+        components = diw_unpack(diw)
+        venu = components.venu
+        vamsi = components.vamsi
         
         # 2. Parameters
         freq = self._get_frequency(venu)

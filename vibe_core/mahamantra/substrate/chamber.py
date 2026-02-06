@@ -46,11 +46,17 @@ from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.substrate.venu_orchestrator import (
     VenuOrchestrator,
     THE_FLUTE_CYCLE,
+)
+from vibe_core.mahamantra.protocols.diw import (
     DIW_MASK,
     SUNYA_MASK,
     VENU_SHIFT,
     VAMSI_SHIFT,
     MURALI_SHIFT,
+    VENU_MASK,
+    VAMSI_MASK,
+    MURALI_MASK,
+    unpack,
 )
 from vibe_core.mahamantra.substrate.cell import (
     MahaCellUnified,
@@ -205,7 +211,7 @@ class SankirtanChamber(Generic[C]):
         
         # 3. INTERACT WITH REGISTRY (Musical Memory)
         # Extract Vamsi (9 bits) - The Memory Address
-        vamsi = (diw >> VAMSI_SHIFT) & ((KSETRAJNA << VAMSI_HOLES) - KSETRAJNA)
+        vamsi = (diw >> VAMSI_SHIFT) & VAMSI_MASK
         
         # Branchless Sunya Pattern:
         # Get resident (Active or Null)
@@ -315,30 +321,27 @@ class SankirtanChamber(Generic[C]):
     def _apply_diw(self, cell: MahaCellUnified[C], diw: int) -> None:
         """
         Apply Divine Instruction Word to cell.
-        
-        The DIW modifies:
-        - prana: energy adjustment based on low 6 bits (VENU)
-        - integrity: adjustment based on middle 9 bits (VAMSI)
-        - cycle: advancement based on high 4 bits (MURALI)
+
+        The DIW is a native 19-bit word in canonical 6-9-4 format:
+        - VENU   (6 bits): Quality/Mood   → modulates prana (energy)
+        - VAMSI  (9 bits): Process/Action  → modulates integrity (stability)
+        - MURALI (4 bits): Phase/Quarter   → advances cycle counter
         """
-        # Extract flute components
-        venu_bits = (diw >> VENU_SHIFT) & ((KSETRAJNA << VENU_HOLES) - KSETRAJNA)
-        vamsi_bits = (diw >> VAMSI_SHIFT) & ((KSETRAJNA << VAMSI_HOLES) - KSETRAJNA)
-        murali_bits = (diw >> MURALI_SHIFT) & ((KSETRAJNA << MURALI_HOLES) - KSETRAJNA)
-        
-        # Apply to lifecycle
+        # Extract flute components using canonical masks (from diw.py)
+        components = unpack(diw)
+
         # VENU (6 bits): Modulate prana (energy)
-        prana_delta = (venu_bits * SEVEN) % QUALITIES - 32  # Range: -32 to +31
+        prana_delta = (components.venu * SEVEN) % QUALITIES - 32  # Range: -32 to +31
         cell.lifecycle.prana = max(0, cell.lifecycle.prana + prana_delta)
-        
+
         # VAMSI (9 bits): Modulate integrity (stability factor)
-        integrity_factor = 1.0 - (vamsi_bits / 512.0) * 0.01  # Max 1% change
-        cell.lifecycle.integrity = max(0.0, min(1.0, 
+        integrity_factor = 1.0 - (components.vamsi / 512.0) * 0.01  # Max 1% change
+        cell.lifecycle.integrity = max(0.0, min(1.0,
             cell.lifecycle.integrity * integrity_factor
         ))
-        
+
         # MURALI (4 bits): Advance cycle counter
-        cell.lifecycle.cycle += murali_bits % QUARTERS
+        cell.lifecycle.cycle += components.murali % QUARTERS
     
     def _merge_pair(
         self,

@@ -24,6 +24,7 @@ from vibe_core.mahamantra.protocols._seed import (
     # Axioms
     WORDS,
     HARE_COUNT,
+    QUARTERS,
     # Flute holes
     VENU_HOLES,
     VAMSI_HOLES,
@@ -43,6 +44,21 @@ from vibe_core.mahamantra.protocols._seed import (
     SEVEN,
     TEN,
 )
+from vibe_core.mahamantra.protocols.diw import (
+    pack,
+    unpack,
+    pack_full,
+    VENU_SHIFT,
+    VAMSI_SHIFT,
+    MURALI_SHIFT,
+    VENU_MASK,
+    VAMSI_MASK,
+    MURALI_MASK,
+    DIW_MASK,
+    SUNYA_MASK,
+    VELOCITY_SHIFT,
+    CLUSTER_SHIFT,
+)
 
 
 # =============================================================================
@@ -61,23 +77,42 @@ _NAME_TO_ENCODING: Final[dict[str, int]] = {
 # =============================================================================
 # THE FLUTE CYCLE LUT (DERIVED FROM MAHAMANTRA_WORD_PATTERN)
 # =============================================================================
-# Format: (name_encoding << 16) | (1 << position)
-# This is O(1) lookup instead of runtime calculation
+# Format: Native 19-bit DIW = pack(venu, vamsi, murali)
+#
+# Each position in the Mahamantra encodes a complete DIW:
+#   VENU   (6 bits): Position-derived quality  = (pos * SEVEN) % 2^6
+#   VAMSI  (9 bits): Name-derived process       = encoding * (2^9 // 3) + pos
+#   MURALI (4 bits): Quarter-derived phase       = pos // (WORDS // QUARTERS)
+#
+# This is O(1) lookup instead of runtime calculation.
 
 
 def _compute_flute_cycle() -> Tuple[int, ...]:
     """
     Compute THE_FLUTE_CYCLE from MAHAMANTRA_WORD_PATTERN (SSOT).
-    
-    Each entry encodes:
-      - Bits 0-15: Position bit (1 << position)
-      - Bits 16-17: Name encoding (H=0, K=1, R=2)
+
+    Each entry is a native 19-bit DIW in canonical 6-9-4 format.
+    The Mahamantra pattern determines the content of each word.
     """
     result: list[int] = []
+    quarter_size = WORDS // QUARTERS  # 4 positions per quarter
+    vamsi_stride = (1 << VAMSI_HOLES) // 3  # 512 // 3 = 170
+
     for pos, name in enumerate(MAHAMANTRA_WORD_PATTERN):
-        encoding = _NAME_TO_ENCODING[name]
-        # Format: (encoding << 16) | (1 << position)
-        diw = (encoding << 16) | (1 << pos)
+        encoding = _NAME_TO_ENCODING[name]  # H=0, K=1, R=2
+
+        # VENU (6 bits): Quality derived from position
+        # Linear spread using SEVEN ensures all 64 states reachable
+        venu = (pos * SEVEN) % (1 << VENU_HOLES)  # 0-63
+
+        # VAMSI (9 bits): Process derived from Name + position
+        # Each name occupies a distinct region of the 512 space
+        vamsi = (encoding * vamsi_stride + pos) % (1 << VAMSI_HOLES)  # 0-511
+
+        # MURALI (4 bits): Phase derived from quarter
+        murali = pos // quarter_size  # 0-3
+
+        diw = pack(venu, vamsi, murali)
         result.append(diw)
     return tuple(result)
 
@@ -89,51 +124,39 @@ THE_FLUTE_CYCLE: Final[Tuple[int, ...]] = _compute_flute_cycle()
 # =============================================================================
 # VERIFICATION: LUT INTEGRITY
 # =============================================================================
-# Verify the LUT has correct properties
 
-assert len(THE_FLUTE_CYCLE) == WORDS, f"LUT must have {WORDS} entries"
+if len(THE_FLUTE_CYCLE) != WORDS:
+    raise ValueError(f"LUT must have {WORDS} entries, got {len(THE_FLUTE_CYCLE)}")
 
-# XOR of all entries should give us 0x7ffff (all 19 bits set)
-# But wait - the encoding format puts name in high bits (16-17)
-# So the XOR includes those bits. Let's verify the position bits only.
-_position_xor = 0
-for diw in THE_FLUTE_CYCLE:
-    _position_xor ^= (diw & 0xFFFF)  # Only position bits
+# Verify all entries fit in 19 bits
+for _i, _entry in enumerate(THE_FLUTE_CYCLE):
+    if _entry > DIW_MASK:
+        raise ValueError(f"Entry {_i} exceeds 19-bit DIW: {hex(_entry)}")
 
-# P0-FIX: Replace assert with runtime check (asserts removed in python -O)
-if _position_xor != (1 << WORDS) - 1:
-    raise ValueError("All 16 position bits must be touched exactly once")
+# Verify MURALI encodes quarters correctly (0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3)
+for _i, _entry in enumerate(THE_FLUTE_CYCLE):
+    _expected_quarter = _i // (WORDS // QUARTERS)
+    _actual = unpack(_entry).murali
+    if _actual != _expected_quarter:
+        raise ValueError(f"Position {_i}: MURALI={_actual}, expected quarter {_expected_quarter}")
 
-# Count name occurrences
-_hare_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 0)
-_krishna_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 1)
-_rama_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 2)
+# Verify VAMSI distinguishes names (H, K, R occupy different regions)
+_vamsi_by_name: dict[int, list[int]] = {0: [], 1: [], 2: []}
+for _i, _entry in enumerate(THE_FLUTE_CYCLE):
+    _encoding = _NAME_TO_ENCODING[MAHAMANTRA_WORD_PATTERN[_i]]
+    _vamsi_by_name[_encoding].append(unpack(_entry).vamsi)
 
-# P0-FIX: Replace asserts with runtime checks
-if _hare_count != HARE_COUNT:
-    raise ValueError(f"HARE count must be {HARE_COUNT}, got {_hare_count}")
-if _krishna_count != 4:
-    raise ValueError(f"KRISHNA count must be 4, got {_krishna_count}")
-if _rama_count != 4:
-    raise ValueError(f"RAMA count must be 4, got {_rama_count}")
+# Each name's VAMSI values must be unique within that name
+for _enc, _vals in _vamsi_by_name.items():
+    if len(_vals) != len(set(_vals)):
+        raise ValueError(f"Name encoding {_enc} has duplicate VAMSI values")
 
 
 # =============================================================================
-# MASKS AND CONSTANTS (ALL DERIVED)
+# MASKS AND CONSTANTS - Re-exported from diw.py (SSOT for bit layout)
 # =============================================================================
-
-# 19-bit DIW mask: (1 << FLUTE_HOLES_SUM) - 1 = 0x7FFFF
-DIW_MASK: Final[int] = (1 << FLUTE_HOLES_SUM) - 1
-
-# 32-bit SUNYA mask for silence/No-Op
-SUNYA_MASK: Final[int] = 1 << 31
-
-# Bit positions for 32-bit instruction word
-VENU_SHIFT: Final[int] = 0
-VAMSI_SHIFT: Final[int] = VENU_HOLES  # 6
-MURALI_SHIFT: Final[int] = VENU_HOLES + VAMSI_HOLES  # 15
-VELOCITY_SHIFT: Final[int] = FLUTE_HOLES_SUM  # 19
-CLUSTER_SHIFT: Final[int] = FLUTE_HOLES_SUM + 4  # 23
+# DIW_MASK, SUNYA_MASK, VENU_SHIFT, VAMSI_SHIFT, MURALI_SHIFT,
+# VELOCITY_SHIFT, CLUSTER_SHIFT are all imported from protocols.diw
 
 
 # =============================================================================
@@ -194,56 +217,54 @@ class VenuOrchestrator:
     def step(self) -> int:
         """
         One step through the Mahamantra.
-        Returns delta (XOR with previous state) | Mode Flags.
-        
-        O(1) - just a LUT lookup + XOR + OR.
+        Returns the native 19-bit DIW for the current tick | Mode Flags.
+
+        O(1) - just a LUT lookup.
+
+        The returned word is a canonical 6-9-4 DIW:
+            VENU   (bits 0-5):  Quality/Mood
+            VAMSI  (bits 6-14): Process/Action
+            MURALI (bits 15-18): Phase/Quarter
+            + Mode in Cluster bits (23-26)
         """
-        # O(1) lookup
-        new_state = THE_FLUTE_CYCLE[self._tick % WORDS]
-        
-        # Calculate delta (the melody)
-        delta = self._prev_state ^ new_state
-        
+        # O(1) lookup - native 19-bit DIW
+        diw = THE_FLUTE_CYCLE[self._tick % WORDS]
+
         # Update state
-        self._prev_state = new_state
+        self._prev_state = diw
         self._tick = (self._tick + 1) % COSMIC_FRAME
-        
+
         # Inject Mode into Cluster Bits (Harmonic Feedback)
-        # Cluster bits are 23-26 (CLUSTER_SHIFT = 23)
-        # 0=Solo -> 0
-        # 1=CallResp -> 1<<23
-        # 2=Chorus -> 2<<23
-        return delta | (self._mode << CLUSTER_SHIFT)
+        return diw | (self._mode << CLUSTER_SHIFT)
     
     def cycle(self) -> int:
         """
         Complete 16-step cycle.
-        Returns XOR of all position bits from all 16 LUT entries.
+        Returns XOR of all 19-bit DIW entries (full cycle resonance).
         """
         accumulated = 0
         for i in range(WORDS):
-            state = THE_FLUTE_CYCLE[i]
-            accumulated ^= (state & 0xFFFF)
-        
+            accumulated ^= (THE_FLUTE_CYCLE[i] & DIW_MASK)
+
         self._tick = (self._tick + WORDS) % COSMIC_FRAME
         return accumulated
     
     def verify_divinity(self) -> bool:
         """
         The "Beweis Gottes" Test.
+        Verifies the full-cycle XOR produces a valid resonance.
         """
         self._tick = 0
         self._prev_state = 0
-        xor_positions = self.cycle()
-        expected_xor = (1 << WORDS) - 1
+        cycle_xor = self.cycle()
 
-        # P0-FIX: Replace assert with runtime check (asserts removed in python -O)
-        if xor_positions != expected_xor:
-            raise ValueError(f"Position XOR must be {hex(expected_xor)}, got {hex(xor_positions)}")
-        if xor_positions % MAHA_QUANTUM != POSITION_SUM_RAMA:
-            raise ValueError(f"Must resonate to Rama ({POSITION_SUM_RAMA})")
-        if xor_positions % PARAMPARA != HARE_COUNT:
-            raise ValueError(f"Must be protected by Hare ({HARE_COUNT})")
+        # The cycle XOR must be non-zero (the flute is alive)
+        if cycle_xor == 0:
+            raise ValueError("Cycle XOR is zero - the flute is silent")
+
+        # The cycle XOR must fit in 19 bits
+        if cycle_xor > DIW_MASK:
+            raise ValueError(f"Cycle XOR exceeds 19-bit DIW: {hex(cycle_xor)}")
 
         return True
     
@@ -273,26 +294,19 @@ class VenuOrchestrator:
         sunya: bool = False,
     ) -> int:
         """Combine three flute states into 32-bit Instruction Word."""
-        venu_masked = venu & ((1 << self.VENU_BITS) - 1)
-        vamsi_masked = vamsi & ((1 << self.VAMSI_BITS) - 1)
-        murali_masked = murali & ((1 << self.MURALI_BITS) - 1)
-        
-        diw = (murali_masked << MURALI_SHIFT) | (vamsi_masked << VAMSI_SHIFT) | venu_masked
-        
-        meta = (velocity & 0xF) << VELOCITY_SHIFT
-        meta |= (cluster_route & 0xF) << CLUSTER_SHIFT
-        if sunya:
-            meta |= SUNYA_MASK
-        
-        return diw | meta
-    
-    def is_sunya(self, diw: int) -> bool:
+        return pack_full(venu, vamsi, murali, velocity, cluster_route, sunya)
+
+    @staticmethod
+    def is_sunya(word: int) -> bool:
         """Check if instruction is silence (No-Op)."""
-        return bool(diw & SUNYA_MASK)
-    
-    def extract_diw(self, full_word: int) -> int:
+        from vibe_core.mahamantra.protocols.diw import is_sunya as _is_sunya
+        return _is_sunya(word)
+
+    @staticmethod
+    def extract_diw(full_word: int) -> int:
         """Extract the 19-bit DIW from a 32-bit instruction word."""
-        return full_word & DIW_MASK
+        from vibe_core.mahamantra.protocols.diw import extract_core
+        return extract_core(full_word)
     
     def reset(self) -> None:
         """Reset orchestrator to initial state."""
