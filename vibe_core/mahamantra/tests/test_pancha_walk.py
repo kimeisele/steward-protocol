@@ -6,13 +6,22 @@ Only tests what is DERIVED, not invented.
 
 import pytest
 
-from vibe_core.mahamantra.protocols._seed import HARE_COUNT, PANCHA, PRASADAM, WORDS
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    PANCHA,
+    PRASADAM,
+    QUARTERS,
+    WORDS,
+)
 from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_ELEMENT,
+    COORD_SUB,
     COORD_VARGA,
     ELEMENT_NAMES,
     ELEMENT_SYMBOLS,
     Element,
+    derived_signature,
     dominant_element,
     element_histogram,
     element_transitions,
@@ -147,3 +156,101 @@ class TestArchitecturalIdentities:
 
     def test_vowels_cover_all_elements(self):
         assert set(COORD_ELEMENT[c] for c in range(WORDS)) == set(Element)
+
+
+# =============================================================================
+# COORD_SUB: derived intra-section quality
+# =============================================================================
+
+
+class TestSubIndex:
+    """COORD_SUB: prayatna dimension, derived from coordinate structure."""
+
+    def test_total_length(self):
+        assert len(COORD_SUB) == WORDS + PRASADAM + HARE_COUNT
+
+    # --- Svara sub-types = QUARTERS ---
+
+    def test_svara_short_vowels(self):
+        """Coords 0-4: short simple vowels → sub = 0."""
+        for c in range(PANCHA):
+            assert COORD_SUB[c] == 0
+
+    def test_svara_long_vowels(self):
+        """Coords 5-9: long simple vowels → sub = 1."""
+        for c in range(PANCHA, PANCHA * HALVES):
+            assert COORD_SUB[c] == 1
+
+    def test_svara_compound_vowels(self):
+        """Coords 10-13: compound vowels → sub = 2 (HALVES)."""
+        for c in range(PANCHA * HALVES, PANCHA * HALVES + QUARTERS):
+            assert COORD_SUB[c] == HALVES
+
+    def test_svara_special_vowels(self):
+        """Coords 14-15: ṁ/ḥ → sub = 3 (HALVES + 1)."""
+        for c in range(PANCHA * HALVES + QUARTERS, WORDS):
+            assert COORD_SUB[c] == HALVES + 1
+
+    def test_svara_sub_range(self):
+        """Vowel sub-types span QUARTERS values (0, 1, 2, 3)."""
+        svara_subs = set(COORD_SUB[:WORDS])
+        assert svara_subs == {0, 1, HALVES, HALVES + 1}
+        assert len(svara_subs) == QUARTERS
+
+    # --- Sparsha sub-types = PANCHA (column) ---
+
+    def test_sparsha_column_derived(self):
+        """Sparsha sub = column index from SPARSHA_GRID, cycles 0-4."""
+        for c in range(WORDS, WORDS + PRASADAM):
+            assert COORD_SUB[c] == (c - WORDS) % PANCHA
+
+    def test_sparsha_sub_range(self):
+        """Sparsha sub-types span PANCHA values (0-4)."""
+        sparsha_subs = set(COORD_SUB[WORDS : WORDS + PRASADAM])
+        assert sparsha_subs == set(range(PANCHA))
+
+    # --- Shesha sub-types = HALVES ---
+
+    def test_shesha_antastha(self):
+        """Coords 41-44 (ya/ra/la/va): antastha → sub = 0."""
+        for c in range(WORDS + PRASADAM, WORDS + PRASADAM + QUARTERS):
+            assert COORD_SUB[c] == 0
+
+    def test_shesha_ushman(self):
+        """Coords 45-48 (śa/ṣa/sa/ha): ūṣman → sub = 1."""
+        for c in range(WORDS + PRASADAM + QUARTERS, WORDS + PRASADAM + HARE_COUNT):
+            assert COORD_SUB[c] == 1
+
+    def test_shesha_sub_range(self):
+        """Shesha sub-types span HALVES values (0, 1)."""
+        shesha_subs = set(COORD_SUB[WORDS + PRASADAM :])
+        assert shesha_subs == {0, 1}
+        assert len(shesha_subs) == HALVES
+
+
+class TestDerivedSignature:
+    """derived_signature(): 3D phoneme walk."""
+
+    def test_dharma_signature(self):
+        coords = encode("dharma")
+        sig = derived_signature(coords)
+        # 3 chars per phoneme (element, varga, sub)
+        assert len(sig) == len(coords) * 3
+
+    def test_different_words_different_sigs(self):
+        assert derived_signature(encode("dharma")) != derived_signature(encode("karma"))
+
+    def test_empty(self):
+        assert derived_signature(()) == ""
+
+    def test_sparsha_pair_distinguished(self):
+        """ta and da share element (JALA) but differ in sub (col 0 vs col 2)."""
+        sig_ta = derived_signature(encode("ta"))
+        sig_da = derived_signature(encode("da"))
+        assert sig_ta != sig_da
+
+    def test_varga_boundary_distinguished(self):
+        """ta (sparsha) and sa (shesha) share element (JALA) but differ in varga."""
+        sig_ta = derived_signature(encode("ta"))
+        sig_sa = derived_signature(encode("sa"))
+        assert sig_ta != sig_sa

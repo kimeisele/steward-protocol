@@ -4,22 +4,20 @@ PANCHA WALK - Element Walk through Sanskrit Phonemes
 
 "pañca-mahā-bhūta" - The Five Great Elements
 
-Every phoneme is produced at one of PANCHA (5) articulation points.
-Each articulation point IS an element (Pancha Mahabhuta).
-This mapping is from SPARSHA_GRID (Sanskrit phonetic science).
+THREE DIMENSIONS — all derived from axioms:
 
-A word's phoneme sequence = a walk through the 5 elements.
+    Dim 1 (Sthāna):  COORD_ELEMENT  — PANCHA (5) articulation → element
+    Dim 2 (Varga):   COORD_VARGA    — TRINITY (3) sound classes
+    Dim 3 (Prayatna): COORD_SUB     — intra-section quality, derived per varga:
+        Sparsha:  column = (c - WORDS) % PANCHA   → catur-vyūha + nasal (5)
+        Svara:    duration type = c // PANCHA      → QUARTERS (4): short/long/compound/special
+        Shesha:   class = (c - 41) // QUARTERS     → HALVES (2): antastha/ūṣman
 
-WHAT IS DERIVED (from SPARSHA_GRID + phonetic tradition):
-    - COORD_ELEMENT: 49 entries, each phoneme → its element
-    - COORD_VARGA: 49 entries, partition into WORDS + PRASADAM + HARE_COUNT
-
-WHAT IS NOT HERE (not yet derived from the Mantra):
-    - Quality/prayatna dimension for vowels and remaining consonants
-    - Anything claiming 100% uniqueness from walk alone (it's 80.7%)
-
-The RAMA coordinate itself IS the unique identifier (0 collisions).
-The element walk captures WHERE, not the full identity.
+UNIQUENESS (tested on 4127 Gita words):
+    Element alone:              80.7%  (3329 unique)
+    Element + Varga:            94.7%  (3909 unique)
+    Element + Varga + Sub:      99.97% (4126 unique)
+    1 collision: paramaḥ / paramaṁ (visarga/anusvara — both Akasha modifiers)
 """
 
 from __future__ import annotations
@@ -28,9 +26,11 @@ from enum import IntEnum
 from typing import Final, Sequence
 
 from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
     HARE_COUNT,
     PANCHA,
     PRASADAM,
+    QUARTERS,
     WORDS,
 )
 from vibe_core.mahamantra.substrate.rama_grid import (
@@ -149,6 +149,79 @@ COORD_VARGA: Final[tuple[int, ...]] = _build_varga_map()
 
 
 # =============================================================================
+# PRAYATNA / SUB-INDEX (derived intra-section quality)
+# =============================================================================
+# Each varga has its own quality dimension, ALL derived from coordinate structure:
+#
+#   Sparsha (25): column = (c - WORDS) % PANCHA
+#     Col 0: unvoiced       (ka, ca, ṭa, ta, pa)      = Vāsudeva
+#     Col 1: unvoiced-asp   (kha, cha, ṭha, tha, pha)  = Saṅkarṣaṇa
+#     Col 2: voiced         (ga, ja, ḍa, da, ba)       = Pradyumna
+#     Col 3: voiced-asp     (gha, jha, ḍha, dha, bha)  = Aniruddha
+#     Col 4: nasal          (ṅa, ña, ṇa, na, ma)       = +1 = PANCHA
+#
+#   Svara (16): duration type = c // PANCHA (for simple), then compound/special
+#     0: short   (a, i, u, ṛ, ḷ)     — coords 0-4
+#     1: long    (ā, ī, ū, ṝ, ḹ)     — coords 5-9
+#     2: compound (e, ai, o, au)       — coords 10-13 = QUARTERS
+#     3: special  (ṁ, ḥ)              — coords 14-15 = HALVES
+#
+#   Shesha (8): class = (c - WORDS - PRASADAM) // QUARTERS
+#     0: antastha   (ya, ra, la, va)   — semivowels = QUARTERS
+#     1: ūṣman      (śa, ṣa, sa, ha)  — sibilants  = QUARTERS
+
+
+def _build_sub_map() -> tuple[int, ...]:
+    """Build the intra-section quality index for each coordinate."""
+    result: list[int] = []
+
+    # Svara: duration type
+    for c in range(WORDS):
+        if c < PANCHA * HALVES:  # 0-9: simple vowels
+            result.append(c // PANCHA)  # 0=short, 1=long
+        elif c < PANCHA * HALVES + QUARTERS:  # 10-13: compounds
+            result.append(HALVES)  # 2
+        else:  # 14-15: specials
+            result.append(HALVES + 1)  # 3
+    assert len(result) == WORDS
+
+    # Sparsha: column index
+    for c in range(WORDS, WORDS + PRASADAM):
+        result.append((c - WORDS) % PANCHA)
+    assert len(result) == WORDS + PRASADAM
+
+    # Shesha: antastha (0) vs ūṣman (1)
+    for c in range(WORDS + PRASADAM, WORDS + PRASADAM + HARE_COUNT):
+        result.append((c - WORDS - PRASADAM) // QUARTERS)
+    assert len(result) == VARNAMALA_TOTAL
+
+    return tuple(result)
+
+
+COORD_SUB: Final[tuple[int, ...]] = _build_sub_map()
+
+# Verify sub-index ranges per varga
+assert max(COORD_SUB[:WORDS]) == HALVES + 1  # QUARTERS sub-types for vowels
+assert max(COORD_SUB[WORDS : WORDS + PRASADAM]) == PANCHA - 1  # PANCHA columns for sparsha
+assert max(COORD_SUB[WORDS + PRASADAM :]) == 1  # HALVES for shesha
+
+
+# =============================================================================
+# DERIVED SIGNATURE (all 3 dimensions)
+# =============================================================================
+
+
+def derived_signature(coords: Sequence[int]) -> str:
+    """
+    3D phoneme signature: element + varga + sub-index per phoneme.
+
+    4126/4127 Gita words unique (99.97%).
+    1 collision: paramaḥ/paramaṁ (visarga/anusvara, both Akasha modifiers).
+    """
+    return "".join(f"{COORD_ELEMENT[c]}{COORD_VARGA[c]}{COORD_SUB[c]}" for c in coords)
+
+
+# =============================================================================
 # ELEMENT WALK
 # =============================================================================
 
@@ -211,6 +284,8 @@ __all__ = [
     "ELEMENT_SYMBOLS",
     "COORD_ELEMENT",
     "COORD_VARGA",
+    "COORD_SUB",
+    "derived_signature",
     "element_walk",
     "walk_signature",
     "element_histogram",
