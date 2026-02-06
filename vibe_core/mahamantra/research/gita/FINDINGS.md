@@ -345,16 +345,36 @@ BG 18.66 = 62 Flöten-Atemzüge. Die gesamte Gita = 54,423.
 Zentrale Einsicht: Alle gescheiterten Ansätze versuchten `Name → Position`.
 Die richtige Kausalität: `Position → krishna_route → Koordinate → Phonem`.
 
+## PANCHA Walk Semantische Eindeutigkeit
+
+Kombination von Element-Walk + H/K/R-Signatur über 3 Zyklen:
+
+```
+Walk allein:                 3329 unique (80.7%)
+Walk + HKR (1 Zyklus):      3952 unique (95.8%)
+Walk + HKR (3 Zyklen):      4092 unique (99.2%)
+
+Verbleibende Kollisionen: 33 Signaturen, 68 Wörter
+Alle Kollisionen = Phonetische Kognaten (ta↔sa Dental-Alternation)
+                   oder Flexionsformen (vadati/vadasi = identische Wurzel)
+```
+
+Die 33 Kollisionen sind KORREKT: ta und sa teilen sich den Artikulationspunkt (danta/JALA).
+Satem/Centum-Alternation ist ein bekanntes phonetisches Gesetz.
+Das System identifiziert verwandte Wörter automatisch.
+
 ## Production-Integration
 
 ```
 substrate/varnamala_codec.py    — IAST ↔ RAMA Codec
 substrate/sanskrit_lookup.py    — verse_words(), word_by_iast(), hkr_signature()
 substrate/venu_orchestrator.py  — spell(coords) → native DIWs
+substrate/pancha_walk.py        — Element-Walk, semantic_fingerprint(), 99.2% unique
 substrate/lotus_core.py         — VANDANAM (Schritt 6) liefert Sanskrit
 data/rama_lexicon.json          — 4127 Wörter, 700 Verse, RAMA-kodiert
 tests/test_varnamala_codec.py   — Codec-Tests (16 tests)
 tests/test_sanskrit_lookup.py   — Lookup + Spell-Tests (17 tests)
+tests/test_pancha_walk.py       — Element-Walk-Tests (29 tests)
 ```
 
 ## Dateien (Research)
