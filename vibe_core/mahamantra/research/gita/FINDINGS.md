@@ -369,7 +369,7 @@ Das System identifiziert verwandte Wörter automatisch.
 substrate/varnamala_codec.py    — IAST ↔ RAMA Codec
 substrate/sanskrit_lookup.py    — verse_words(), word_by_iast(), hkr_signature()
 substrate/venu_orchestrator.py  — spell(coords) → native DIWs
-substrate/pancha_walk.py        — Element-Walk, semantic_fingerprint(), 99.2% unique
+substrate/pancha_walk.py        — Element-Walk (80.7% unique, only derived data)
 substrate/lotus_core.py         — VANDANAM (Schritt 6) liefert Sanskrit
 data/rama_lexicon.json          — 4127 Wörter, 700 Verse, RAMA-kodiert
 tests/test_varnamala_codec.py   — Codec-Tests (16 tests)
