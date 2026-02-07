@@ -17,13 +17,14 @@ from vibe_core.mahamantra.protocols._venu import BeatSubscriberProtocol
 
 
 class TestBeatDiscovery:
-    def test_discovers_all_four_subscribers(self):
+    def test_discovers_all_subscribers(self):
         classes = discover_beat_subscriber_classes()
         names = [cls.__name__ for cls in classes]
         assert "OuroborosSubscriber" in names
         assert "ShuddhiSubscriber" in names
         assert "KalaBridgeSubscriber" in names
         assert "JagannathSubscriber" in names
+        assert "LotusBridgeSubscriber" in names
 
     def test_all_zero_arg_constructors(self):
         classes = discover_beat_subscriber_classes()
@@ -55,26 +56,28 @@ class TestBeatDiscovery:
         ServiceRegistry.reset()
 
         count = discover_and_register_beat_subscribers()
-        assert count == 4
+        assert count == 5
 
         # Verify they are discoverable via protocol
         found = ServiceRegistry.get_all(BeatSubscriberProtocol)
-        assert len(found) >= 4
+        assert len(found) >= 5
 
         names = {sub.beat_name for sub in found}
         assert "ouroboros_ingestion" in names
         assert "shuddhi_healing" in names
         assert "kala_bridge" in names
         assert "jagannath_ratha_yatra" in names
+        assert "lotus_bridge" in names
 
         ServiceRegistry.reset()
 
     def test_beat_intervals_are_harmonic(self):
-        """All intervals must be derived from SSOT (NADI=72 or FIELD=144)."""
+        """All intervals must be derived from SSOT or be 1 (every-tick bridge)."""
         from vibe_core.mahamantra.protocols._venu import VENU_NADI_TICKS, VENU_FIELD_TICKS
 
         classes = discover_beat_subscriber_classes()
-        valid_intervals = {VENU_NADI_TICKS, VENU_FIELD_TICKS}
+        # 1 = every tick (LotusBridge), NADI=72, FIELD=144
+        valid_intervals = {1, VENU_NADI_TICKS, VENU_FIELD_TICKS}
 
         for cls in classes:
             instance = cls()

@@ -41,6 +41,7 @@ _SUBSCRIBER_MODULES: List[Tuple[str, str]] = [
     ("vibe_core.services.healing_subscribers", "ShuddhiSubscriber"),
     ("vibe_core.shuddhi.kala_bridge", "KalaBridgeSubscriber"),
     ("vibe_core.services.jagannath_subscriber", "JagannathSubscriber"),
+    ("vibe_core.services.lotus_bridge", "LotusBridgeSubscriber"),
 ]
 
 
