@@ -7,7 +7,7 @@ Tests mirror the kernel plugin structure exactly.
 
 import pytest
 
-from tests.fractal_test_framework import (
+from tests.fractal.fractal_test_framework import (
     FractalTestCase,
     LightweightKernel,
     TestPlugin,

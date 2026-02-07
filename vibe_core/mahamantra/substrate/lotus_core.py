@@ -887,6 +887,7 @@ def get_mahamantra() -> MahamantraLotus:
 
 # Alias for easier access (Universal Router needs this name)
 mahamantra = get_mahamantra()
+lotus = mahamantra
 
 
 # =============================================================================

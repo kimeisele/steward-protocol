@@ -71,7 +71,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 # THE ALGORITHM - imported from SSOT, not reimplemented!
-from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
+from vibe_core.mahamantra.substrate.algorithm import maha_oscillate_optimized as maha_oscillate
 
 # Parampara channels from _seed.py (via shadow_protocol)
 from vibe_core.mahamantra.reactor.shadow_protocol import (

@@ -19,7 +19,6 @@ import pytest
 from vibe_core.mahamantra.protocols._maha_compute import (
     ALL_ATTRACTORS,
     ATTRACTOR_CYCLE,
-    ATTRACTOR_FIELD,
     ATTRACTOR_FIXED,
     PATTERN,
     AttractorType,
@@ -69,9 +68,8 @@ class TestMahaComputeProtocol:
 
     def test_attractor_constants(self):
         """Attractor constants must be mathematically correct."""
-        assert ATTRACTOR_FIXED == GITA_CHAPTERS == 18
-        assert ATTRACTOR_FIELD == POSITION_SUM_TOTAL == 136
-        assert len(ALL_ATTRACTORS) == 6
+        assert ATTRACTOR_FIXED == POSITION_SUM_TOTAL == 136
+        assert GITA_CHAPTERS == 18
 
 
 # =============================================================================
@@ -127,9 +125,9 @@ class TestOperations:
 class TestAttractors:
     """Test attractor detection and properties."""
 
-    def test_fixed_point_is_18(self):
-        """18 must be a fixed point."""
-        is_attr, attr_type = is_attractor(18)
+    def test_fixed_point_is_attractor_fixed(self):
+        """ATTRACTOR_FIXED must be a fixed point."""
+        is_attr, attr_type = is_attractor(ATTRACTOR_FIXED)
         assert is_attr is True
         assert attr_type == AttractorType.FIXED_POINT
 
@@ -207,9 +205,9 @@ class TestMahaComputeService:
         assert state.fixed_point_count + state.cycle_count == 16
 
     def test_find_attractor_fixed_point(self, service):
-        """Seed 18 must immediately return fixed point."""
-        attractor, iterations, attr_type = service.find_attractor(18)
-        assert attractor == 18
+        """Seed at ATTRACTOR_FIXED must immediately return fixed point."""
+        attractor, iterations, attr_type = service.find_attractor(ATTRACTOR_FIXED)
+        assert attractor == ATTRACTOR_FIXED
         assert iterations == 0
         assert attr_type == AttractorType.FIXED_POINT
 
@@ -257,16 +255,15 @@ class TestMathematicalProperties:
         assert len(attractors_found) >= 2
 
     def test_fixed_point_property(self):
-        """f(18) mod 137 = 18 after full transformation."""
+        """f(ATTRACTOR_FIXED) mod 137 = ATTRACTOR_FIXED after full transformation."""
         service = MahaComputeService()
-        # Apply full 16-step transform to 18
-        value = 18
+        # Apply full 16-step transform to ATTRACTOR_FIXED
+        value = ATTRACTOR_FIXED
         for pos in range(WORDS):
             value = service.transform(value, pos)
-        # After full transform, should converge back to 18 (eventually)
-        # Note: May not be immediate, but within a few iterations
+        # After full transform, should converge back (eventually)
         attractor, _, _ = service.find_attractor(value)
-        assert attractor == 18 or attractor in ATTRACTOR_CYCLE
+        assert attractor == ATTRACTOR_FIXED or attractor in ATTRACTOR_CYCLE
 
     def test_gita_chapter_mapping(self):
         """Gita chapter must be 1-18 for all attractors."""

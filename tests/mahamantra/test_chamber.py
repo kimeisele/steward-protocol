@@ -24,7 +24,7 @@ from vibe_core.mahamantra.substrate.cell import (
     GENESIS_PRANA,
 )
 from vibe_core.mahamantra.substrate.cluster import MahaCluster
-from vibe_core.mahamantra.orchestrator import VenuOrchestrator
+from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
 from vibe_core.mahamantra.protocols._seed import (
     MALA,
     PARAMPARA,
