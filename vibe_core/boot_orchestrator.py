@@ -527,15 +527,6 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                 total_agents = status.get("agents_registered", 0)
                 logger.info(f"      → Total agents registered: {total_agents}")
 
-                # OPUS-212: Start Shuddhi Kala Bridge (The Heartbeat Guardian)
-                try:
-                    from vibe_core.shuddhi.kala_bridge import start_kala_bridge
-
-                    self._kala_bridge = start_kala_bridge(self.project_root)
-                    logger.info("      → Shuddhi Kala Bridge active (Kala loop engaged)")
-                except Exception as e:
-                    logger.warning(f"⚠️ Could not start Shuddhi Kala Bridge: {e}")
-
                 # GOVARDHAN: Start VenuService (Krishna's Flute - Central Orchestrator)
                 try:
                     from vibe_core.di import ServiceRegistry
@@ -582,11 +573,13 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                                 OuroborosSubscriber,
                                 ShuddhiSubscriber,
                             )
+                            from vibe_core.shuddhi.kala_bridge import KalaBridgeSubscriber
 
                             workspace = getattr(self.kernel, "_workspace", None)
                             subscribers = [
                                 OuroborosSubscriber(workspace=workspace),
                                 ShuddhiSubscriber(dry_run=True),
+                                KalaBridgeSubscriber(project_root=self.project_root),
                             ]
 
                             # Register each subscriber so get_all(BeatSubscriberProtocol) finds them
