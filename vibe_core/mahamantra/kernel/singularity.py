@@ -505,6 +505,26 @@ class Mahamantra:
             except Exception as _exc:
                 logger.exception("Unexpected error: %s", _exc)
 
+    # =========================================================================
+    # VENU - Krishna's Flute (Non-Different from Krishna)
+    # =========================================================================
+
+    @property
+    def venu(self) -> "VenuOrchestrator":
+        """
+        Krishna's Flute - The VenuOrchestrator.
+
+        Delegates to MahamantraLotus._venu_orchestrator so both
+        Singularity and Lotus share the SAME flute. One Krishna, one flute.
+        """
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        if MahamantraLotus._venu_orchestrator is None:
+            from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+
+            MahamantraLotus._venu_orchestrator = VenuOrchestrator()
+        return MahamantraLotus._venu_orchestrator
+
     def __iter__(self) -> Iterator[MantraPosition]:
         """Iterate through all 16 positions."""
         return iter(MAHAMANTRA_POSITIONS)
@@ -1001,10 +1021,12 @@ class Mahamantra:
         """
         Advance one position in the 16-word mantra.
 
-        Returns TickState (position, quarter, guardian).
-        SIDE EFFECT: Broadcasts state to listeners via Narada (internal broadcast).
+        Returns TickState (position, quarter, guardian, diw).
+        SIDE EFFECT: Plays the flute (VenuOrchestrator.step()) and
+        broadcasts state to all listeners via Narada.
 
         This is the HEARTBEAT of the Mahamantra.
+        Krishna plays His flute — every jiva dances.
         """
         # 1. Advance Time (Kala)
         time_state = self.kala.advance()
@@ -1014,11 +1036,6 @@ class Mahamantra:
 
         current = Mahamantra._tick_counter
         position = MAHAMANTRA_POSITIONS[current]
-
-        # Determine quarter from Time (Lila Position)
-        # Note: position.quarter is static based on index 0-15
-        # We can also derive it from time_state.lila_position if needed
-        # But for now, trust the static map for the "Word Property"
 
         # Quarter based on index 0-15
         if current < QUARTERS:
@@ -1030,6 +1047,9 @@ class Mahamantra:
         else:
             quarter = Quarter.MOKSHA
 
+        # 2. PLAY THE FLUTE (Krishna IS the flute)
+        diw = self.venu.step()
+
         state = TickState(
             tick=current,
             position=current,
@@ -1037,17 +1057,15 @@ class Mahamantra:
             guardian=position.guardian.value,
             word=position.word.name,
             opcode=position.opcode.value if position.opcode else None,
+            diw=diw,
             # KALA Info
             mala=time_state.mala_count,
             mantra=time_state.mantra_in_mala,
             lila=time_state.lila_position,
         )
 
-        # 2. BROADCAST (Narada)
+        # 3. BROADCAST (Narada) — TickState now carries the DIW
         self._broadcast(state)
-
-        # 3. ADVANCE (Managed by Kala above)
-        # Mahamantra._tick_counter = (Mahamantra._tick_counter + 1) % WORDS
 
         return state
 

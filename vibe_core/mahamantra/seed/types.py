@@ -58,6 +58,7 @@ class TickState(TypedDict, total=False):
     lila: int
 
     # Venu-specific fields
+    diw: int  # 19-bit Divine Instruction Word (Krishna's flute)
     cycle: int  # Which cycle (tick // 16)
     prana: int  # Which Prana within Mala (tick // 16 % 108)
     is_downbeat: bool  # position == 0 (start of cycle)
