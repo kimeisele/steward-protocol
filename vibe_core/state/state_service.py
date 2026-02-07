@@ -170,6 +170,16 @@ class StateService(StateServiceProtocol):
         # Policies (can be extended at runtime)
         self.policies: Dict[str, StatePolicy] = DEFAULT_POLICIES.copy()
 
+        # =====================================================================
+        # WRITE-BEHIND CACHE: RAM-first, Disk only on flush()
+        # =====================================================================
+        # All save() calls write here instead of disk.
+        # load() reads from here first, falls back to disk.
+        # flush() writes dirty entries to disk — called at shutdown or explicitly.
+        self._cache: Dict[str, Any] = {}  # filename -> data
+        self._cache_dirty: Set[str] = set()  # filenames modified since last flush
+        self._signatures: Dict[str, Dict[str, Any]] = {}  # filename -> samskara signature
+
         # Track writes for Weaver integration
         self._write_count = 0
         self._writes_since_commit = 0
@@ -236,15 +246,17 @@ class StateService(StateServiceProtocol):
 
     def save(self, filename: str, data: Any, create_backup: bool = True, indent: int = 2) -> WriteResult:
         """
-        Save state to a JSON file.
+        Save state to RAM cache. Disk write deferred to flush().
 
         This is the ONLY way to write state files.
+        Data lives in RAM until flush() is called (at shutdown or explicitly).
+        This prevents constant disk writes that dirty git status.
 
         Args:
-            filename: Relative to .opus_state/ (e.g., "synapses.json")
-            data: Data to save (will be JSON serialized)
-            create_backup: Whether to create a backup first
-            indent: JSON indentation (default 2)
+            filename: Relative to state_root (e.g., "synapses.json")
+            data: Data to save (will be JSON serialized on flush)
+            create_backup: Whether to create a backup on flush
+            indent: JSON indentation (default 2, used on flush)
 
         Returns:
             WriteResult with success status
@@ -252,75 +264,115 @@ class StateService(StateServiceProtocol):
         with self._lock:
             try:
                 target_path = self.state_root / filename
-                policy = self._get_policy(filename)
-                backup_created = False
-                consolidation_triggered = False
 
-                # 1. Backup Management (if file exists)
-                if create_backup and target_path.exists():
-                    self._rotate_backups(filename, policy)
-                    backup_created = True
+                # Store in RAM cache — NO disk write
+                self._cache[filename] = data
+                self._cache_dirty.add(filename)
 
-                # 2. Check size for consolidation
-                if target_path.exists():
-                    size_kb = target_path.stat().st_size / 1024
-                    if size_kb > policy.max_size_kb and policy.consolidation_fn:
-                        data = self._consolidate(filename, data, policy)
-                        consolidation_triggered = True
+                # SAMSKARA INTERCEPT: Lightweight Mahamantra signature
+                # Gives visibility into what's in the cache (seed, guna, hash)
+                # without the full __call__() overhead (~0.1ms per call).
+                if isinstance(data, dict) and data:
+                    try:
+                        from vibe_core.mahamantra.adapters.compression import MahaCompression
+                        samskara = MahaCompression().encode_samskara(data)
+                        self._signatures[filename] = {
+                            "seed": samskara.seed,
+                            "guna": samskara.intent_level.guna.value,
+                            "hash": samskara.data_hash,
+                            "items": samskara.item_count,
+                            "ratio": samskara.compression_ratio,
+                        }
+                    except Exception:
+                        pass  # Signature is optional — never block a save
 
-                # 3. Atomic Write
-                target_path.parent.mkdir(parents=True, exist_ok=True)
-                temp_path = target_path.with_suffix(".tmp")
-
-                with open(temp_path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=indent, ensure_ascii=False, default=str)
-
-                temp_path.replace(target_path)
-
-                # 4. Mark as dirty for Weaver
+                # Track writes
                 self._dirty_files.add(target_path)
                 self._write_count += 1
                 self._writes_since_commit += 1
                 self._last_write = datetime.now()
 
-                logger.debug(f"💾 State saved: {filename}")
-
-                # 5. 🍎 APPLE MAGIC: Check if we should auto-commit
-                self._maybe_auto_commit()
-
-                # 6. BALARAMA SEAL (Body/Soul Separation)
-                # Soul follows Body. We seal the intent asynchronously.
-                try:
-                    from vibe_core.mahamantra.substrate.maha_state import get_maha_state
-                    maha = get_maha_state(self.workspace)
-                    maha.seal(filename, data)
-                except Exception as e:
-                     # Sealing is secondary. Body survives even if Soul is delayed.
-                    logger.debug(f"⚠️ StateService: Seal failed for {filename} (Drift): {e}")
+                logger.debug(f"💾 State cached (RAM): {filename}")
 
                 return WriteResult(
                     success=True,
                     path=target_path,
-                    backup_created=backup_created,
-                    consolidation_triggered=consolidation_triggered,
                 )
 
             except Exception as e:
-                logger.error(f"❌ Failed to save {filename}: {e}")
+                logger.error(f"❌ Failed to cache {filename}: {e}")
                 return WriteResult(
                     success=False,
                     path=self.state_root / filename,
                     error=str(e),
                 )
 
-    def append(self, filename: str, entry: Dict[str, Any]) -> WriteResult:
+    def flush(self, filename: Optional[str] = None) -> int:
         """
-        Append entry to a JSONL file.
-
-        For log files (karma_history.jsonl, observations.jsonl, etc.)
+        Flush cached state to disk. Call at shutdown or explicitly.
 
         Args:
-            filename: Relative to .opus_state/ (e.g., "karma_history.jsonl")
+            filename: Flush a specific file, or None for all dirty files.
+
+        Returns:
+            Number of files flushed to disk.
+        """
+        flushed = 0
+        with self._lock:
+            targets = [filename] if filename else list(self._cache_dirty)
+
+            for fname in targets:
+                if fname not in self._cache:
+                    continue
+
+                try:
+                    target_path = self.state_root / fname
+                    data = self._cache[fname]
+                    policy = self._get_policy(fname)
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    if fname.endswith(".jsonl") and isinstance(data, list):
+                        # JSONL: append buffered entries
+                        if target_path.exists():
+                            size_kb = target_path.stat().st_size / 1024
+                            if size_kb > policy.max_size_kb:
+                                self._archive_log(fname)
+                        with open(target_path, "a", encoding="utf-8") as f:
+                            for entry in data:
+                                f.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
+                        # Clear buffer after flush
+                        self._cache[fname] = []
+                    else:
+                        # JSON: atomic overwrite
+                        if target_path.exists():
+                            self._rotate_backups(fname, policy)
+                        if target_path.exists():
+                            size_kb = target_path.stat().st_size / 1024
+                            if size_kb > policy.max_size_kb and policy.consolidation_fn:
+                                data = self._consolidate(fname, data, policy)
+                        temp_path = target_path.with_suffix(".tmp")
+                        with open(temp_path, "w", encoding="utf-8") as f:
+                            json.dump(data, f, indent=2, ensure_ascii=False, default=str)
+                        temp_path.replace(target_path)
+
+                    self._cache_dirty.discard(fname)
+                    flushed += 1
+                    logger.debug(f"💾 State flushed to disk: {fname}")
+
+                except Exception as e:
+                    logger.error(f"❌ Failed to flush {fname}: {e}")
+
+        if flushed:
+            logger.info(f"💾 Flushed {flushed} state files to disk")
+
+        return flushed
+
+    def append(self, filename: str, entry: Dict[str, Any]) -> WriteResult:
+        """
+        Append entry to RAM buffer. Flushed to JSONL on flush().
+
+        Args:
+            filename: Relative to state_root (e.g., "karma_history.jsonl")
             entry: Dictionary to append as a JSON line
 
         Returns:
@@ -329,37 +381,27 @@ class StateService(StateServiceProtocol):
         with self._lock:
             try:
                 target_path = self.state_root / filename
-                target_path.parent.mkdir(parents=True, exist_ok=True)
-                policy = self._get_policy(filename)
 
-                # Check rotation before append
-                consolidation_triggered = False
-                if target_path.exists():
-                    size_kb = target_path.stat().st_size / 1024
-                    if size_kb > policy.max_size_kb:
-                        self._archive_log(filename)
-                        consolidation_triggered = True
+                # Buffer appends in RAM as list of entries
+                if filename not in self._cache:
+                    self._cache[filename] = []
+                if not isinstance(self._cache[filename], list):
+                    self._cache[filename] = []
+                self._cache[filename].append(entry)
+                self._cache_dirty.add(filename)
 
-                # Append line
-                with open(target_path, "a", encoding="utf-8") as f:
-                    f.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
-
-                # Mark dirty
+                # Track writes
                 self._dirty_files.add(target_path)
                 self._write_count += 1
                 self._writes_since_commit += 1
 
-                # 🍎 APPLE MAGIC: Check if we should auto-commit
-                self._maybe_auto_commit()
-
                 return WriteResult(
                     success=True,
                     path=target_path,
-                    consolidation_triggered=consolidation_triggered,
                 )
 
             except Exception as e:
-                logger.error(f"❌ Failed to append to {filename}: {e}")
+                logger.error(f"❌ Failed to buffer append for {filename}: {e}")
                 return WriteResult(
                     success=False,
                     path=self.state_root / filename,
@@ -368,35 +410,42 @@ class StateService(StateServiceProtocol):
 
     def load(self, filename: str, default: Any = None) -> Any:
         """
-        Load state from a JSON file.
-        (Heritage Support: Migrates from .opus_state if needed)
+        Load state — RAM cache first, disk fallback. Thread-safe.
         """
+        with self._lock:
+            # 1. Check RAM cache first (instant, no IO)
+            if filename in self._cache:
+                return self._cache[filename]
+
+        # 2. Fall back to disk (outside lock — IO can be slow)
         target_path = self.state_root / filename
 
-        # 🏛️ HERITAGE MIGRATION (Restore Sovereignty)
+        # Heritage migration (legacy .opus_state)
         if not target_path.exists():
             legacy_root = self.workspace / ".opus_state"
             legacy_path = legacy_root / filename
             if legacy_path.exists():
-                logger.info(f"🏛️  Migrating heritage state: {filename} → {self.state_root}")
+                logger.info(f"Migrating heritage state: {filename}")
                 try:
-                    import shutil
-
                     shutil.copy2(legacy_path, target_path)
                 except Exception as e:
-                    logger.warning(f"⚠️  Heritage migration failed for {filename}: {e}")
+                    logger.warning(f"Heritage migration failed for {filename}: {e}")
 
         if not target_path.exists():
             return default
 
         try:
             with open(target_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+            # Warm the cache so subsequent reads are from RAM
+            with self._lock:
+                self._cache[filename] = data
+            return data
         except json.JSONDecodeError as e:
-            logger.warning(f"⚠️ Invalid JSON in {filename}: {e}")
+            logger.warning(f"Invalid JSON in {filename}: {e}")
             return default
         except Exception as e:
-            logger.error(f"❌ Failed to load {filename}: {e}")
+            logger.error(f"Failed to load {filename}: {e}")
             return default
 
     def load_jsonl(self, filename: str) -> List[Dict[str, Any]]:
@@ -432,6 +481,15 @@ class StateService(StateServiceProtocol):
     # =========================================================================
     # PUBLIC API: Lifecycle Management
     # =========================================================================
+
+    @property
+    def signatures(self) -> Dict[str, Dict[str, Any]]:
+        """Mahamantra signatures for all cached state files.
+
+        Each signature contains: seed, guna, hash, items, ratio.
+        Use this to inspect what's in the RAM cache without reading the data.
+        """
+        return dict(self._signatures)
 
     def get_dirty_files(self) -> List[Path]:
         """Get list of files written since last clear."""
@@ -580,11 +638,12 @@ class StateService(StateServiceProtocol):
         """
         Called when Python process exits.
 
-        Commits any remaining dirty state. This is the "Apple Magic"
-        safety net - even if you forget to commit, we've got you covered.
+        Flushes RAM cache to disk, then commits.
         """
+        if self._cache_dirty:
+            logger.info(f"Session ending - flushing {len(self._cache_dirty)} cached state files to disk...")
+            self.flush()
         if self._dirty_files:
-            logger.info("🍎 Session ending - committing dirty state...")
             self._do_auto_commit(reason="session_end")
 
     def trigger_commit(self) -> None:

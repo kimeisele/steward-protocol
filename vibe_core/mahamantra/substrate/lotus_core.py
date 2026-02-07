@@ -224,11 +224,23 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
         """Execute a command through the Mahamantra. SSOT: delegates to __call__."""
-        result = self(command)  # __call__ is the SSOT - returns EVERYTHING
-        # Add execute-specific metadata, keep ALL of __call__ result
-        result["success"] = True
+        try:
+            result = self(command)  # __call__ is the SSOT - returns EVERYTHING
+        except Exception as exc:
+            # TRUTH: Surface errors, don't swallow them
+            logger.error("Mahamantra execute failed: %s", exc)
+            return {
+                "success": False,
+                "command": command,
+                "exit_code": 1,
+                "error": str(exc),
+                "handler": "mahamantra[error]",
+            }
+        # Success is DERIVED from cell state, not hardcoded
+        cell_alive = result.get("cell", {}).get("is_alive", False)
+        result["success"] = cell_alive
         result["command"] = command
-        result["exit_code"] = 0
+        result["exit_code"] = 0 if cell_alive else 1
         result["handler"] = f"mahamantra[{result['position']}]"
         return result
 
@@ -279,22 +291,25 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             comp_result = compressor.compress(input_text)
             seed = comp_result.seed
 
-        # RETURN-LOOP: If previous yajna left a seed, XOR it in.
-        # "The output becomes the input" - continuity across calls.
-        # XOR preserves determinism: same sequence → same result.
-        last_seed = self._akash.get("last_seed")
-        if last_seed is not None:
-            seed = seed ^ last_seed
+        # SEED IS PURE: Same input → same seed. Always.
+        # The Yajna context (Akash state) evolves DOWNSTREAM (kirtan_cycles,
+        # accumulated_value, total_rounds) but never corrupts the seed.
+        # Previous bug: XOR with last_seed made seed^seed=0 for repeated input.
+        # Fix: Removed. Seed is deterministic from input alone.
 
         # =====================================================================
-        # 3. PADA_SEVANAM - MahaKernel → attractor (Resonance)
+        # 3. PADA_SEVANAM - Attractor from Seed (Serial, not Parallel)
         # =====================================================================
-        from vibe_core.mahamantra.kernel.maha_kernel import get_kernel
+        # BUG FIX: Previously kernel(input_text) re-compressed the text
+        # independently, producing a DIFFERENT seed than step 2. Now we
+        # feed the SAME seed through the kernel's synth for consistency.
+        # Pipeline: text → compress → seed → synth → attractor (SERIAL)
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 
-        kernel = get_kernel()
-        # Hybrid Kernel: High Byte = Attractor (Legacy), Low Byte = Variance (Storage)
-        raw_address = kernel(input_text)
-        attractor = raw_address >> 8
+        _attractor_synth = MahaModularSynth(default_preset="quantum")
+        attractor = _attractor_synth.transform(seed)
+        variance = seed & 0xFF
+        raw_address = (attractor << 8) | variance  # 16-bit Hybrid Address
 
         # =====================================================================
         # 4. ARCANAM - Parampara verification via ShadowOracle (Gita 13.35)
@@ -403,6 +418,26 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # FUNCTIONAL: Trinity classification (Name governance)
         holy_name = get_name_at_position(position)  # "H", "K", or "R"
         trinity_function = get_trinity_function(position)  # "source", "carrier", or "deliverer"
+
+        # =====================================================================
+        # 7.5. SHABDA - RAMA Grid Phoneme + 4D Coordinate Signature
+        # =====================================================================
+        # Position → RAMA coordinate → Phoneme + 4D signature (element/varga/sub/harmonic)
+        # EXISTING INFRASTRUCTURE: rama_grid.py + pancha_walk.py (no new code)
+        from vibe_core.mahamantra.substrate.rama_grid import krishna_route, rama_to_phoneme
+        from vibe_core.mahamantra.substrate.pancha_walk import (
+            COORD_ELEMENT, COORD_VARGA, COORD_SUB, COORD_HARMONIC,
+            ELEMENT_NAMES, IS_SHRUTI,
+        )
+
+        rama_coord = krishna_route(position)  # 0-indexed position → RAMA coordinate (0-48)
+        phoneme = rama_to_phoneme(rama_coord)  # RAMA coordinate → Sanskrit phoneme
+        # 4D signature from pancha_walk (100% bijective, covers ALL 49 phonemes)
+        phoneme_element = COORD_ELEMENT[rama_coord]  # Element (0-4)
+        phoneme_varga = COORD_VARGA[rama_coord]  # Varga class (0-2)
+        phoneme_sub = COORD_SUB[rama_coord]  # Sub-index
+        phoneme_harmonic = COORD_HARMONIC[rama_coord]  # H-orbit
+        phoneme_shruti = IS_SHRUTI[rama_coord]  # Shruti (R-reachable) or Nakshatra
 
         # =====================================================================
         # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
@@ -548,10 +583,20 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return {
             # Input
             "input": input_text,
-            # Vibration
+            # Vibration (RAMA Grid + Pancha Walk 4D Signature)
             "vibration": {
                 "seed": seed,
                 "attractor": attractor,
+                "rama_index": rama_coord,
+                "phoneme": phoneme,
+                "signature": {
+                    "element": ELEMENT_NAMES[phoneme_element],
+                    "varga": phoneme_varga,
+                    "sub": phoneme_sub,
+                    "harmonic": phoneme_harmonic,
+                    "shruti": phoneme_shruti,
+                    "frequency": phoneme_harmonic * 3 + phoneme_element * 15,
+                },
             },
             # Parampara (via ShadowOracle - Gita 13.35)
             "parampara": {
