@@ -298,8 +298,9 @@ def maha_respond(
 
     Deterministic. Reproducible. No LLM.
     """
-    from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
+    from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text, detect_language
     from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
+    from vibe_core.mahamantra.substrate.semantic_index import get_index
     from vibe_core.mahamantra.adapters.synth import create_synth
 
     # Step 1: Encode
@@ -323,13 +324,37 @@ def maha_respond(
     synth = create_synth(params=params)
     cycle = synth.spell_cycle(tuple(input_coords), seed)
     attractor = cycle.final_value % VARNAMALA_TOTAL
+    synth_coords = tuple(step.output_value % VARNAMALA_TOTAL for step in cycle.steps)
 
-    # Step 4: Rank words using input signature + attractor
+    # Step 4: Rank words — dual-signal + semantic boost for Latin
     ranked = rank_words(
         input_coords=input_coords,
         input_attractor=attractor,
-        top_n=top_words,
+        synth_coords=synth_coords,
+        top_n=top_words * 10,
     )
+
+    # Step 4b: Semantic boost for Latin inputs
+    lang = detect_language(text)
+    if lang == "latin":
+        idx = get_index()
+        input_tokens = [w.strip().lower() for w in text.split() if len(w.strip()) >= 3]
+        if not input_tokens:
+            input_tokens = [text.strip().lower()]
+
+        semantic_hits: set = set()
+        for token in input_tokens:
+            for word in idx.by_meaning(token):
+                semantic_hits.add(word.packed_hex)
+
+        if semantic_hits:
+            semantic_ranked = [rw for rw in ranked if rw.word.packed_hex in semantic_hits]
+            phonetic_only = [rw for rw in ranked if rw.word.packed_hex not in semantic_hits]
+            ranked = (semantic_ranked + phonetic_only)[:top_words]
+        else:
+            ranked = ranked[:top_words]
+    else:
+        ranked = ranked[:top_words]
 
     # Step 5: Build response
     from vibe_core.mahamantra.substrate.pancha_walk import ELEMENT_NAMES as EN, COORD_ELEMENT as CE
