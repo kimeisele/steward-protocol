@@ -243,15 +243,25 @@ def rank_words(
     input_coords: Sequence[int],
     candidates: Optional[Sequence[LexiconWord]] = None,
     input_attractor: Optional[int] = None,
+    synth_coords: Optional[Sequence[int]] = None,
     top_n: int = 10,
 ) -> List[RankedWord]:
     """
     Rank lexicon words by resonance with input coordinates.
 
+    DUAL-SIGNAL RANKING:
+        input_coords  = raw phonetic encoding (articulatory similarity)
+        synth_coords  = synth-transformed coords (semantic resonance)
+
+    When synth_coords are provided, element and harmonic scores use
+    the AVERAGE of raw and transformed signals. This bridges the gap
+    between phonetic proximity and semantic resonance.
+
     Args:
         input_coords: RAMA coordinates of the input (from encode or synth).
         candidates: Words to rank. If None, ranks ALL lexicon words.
         input_attractor: Attractor value for attractor scoring.
+        synth_coords: Synth-transformed RAMA coordinates (optional, improves accuracy).
         top_n: Number of top results to return.
 
     Returns:
@@ -263,18 +273,37 @@ def rank_words(
     if not input_coords:
         return []
 
+    # If synth_coords provided, blend both signals
+    has_synth = synth_coords is not None and len(synth_coords) > 0
+
     ranked: List[RankedWord] = []
     for word in candidates:
         if not word.coords:
             continue
 
+        e_raw = _element_score(input_coords, word)
+        h_raw = _harmonic_score(input_coords, word)
+        s_raw = _shruti_score(input_coords, word)
+        v_raw = _varga_score(input_coords, word)
+        a_raw = _attractor_score(input_coords, word, input_attractor)
+
+        if has_synth:
+            e_synth = _element_score(synth_coords, word)
+            h_synth = _harmonic_score(synth_coords, word)
+            # Blend: 40% raw (articulatory) + 60% synth (semantic)
+            e_final = 0.4 * e_raw + 0.6 * e_synth
+            h_final = 0.4 * h_raw + 0.6 * h_synth
+        else:
+            e_final = e_raw
+            h_final = h_raw
+
         ranked.append(RankedWord(
             word=word,
-            element=_element_score(input_coords, word),
-            harmonic=_harmonic_score(input_coords, word),
-            shruti=_shruti_score(input_coords, word),
-            varga=_varga_score(input_coords, word),
-            attractor=_attractor_score(input_coords, word, input_attractor),
+            element=e_final,
+            harmonic=h_final,
+            shruti=s_raw,
+            varga=v_raw,
+            attractor=a_raw,
         ))
 
     ranked.sort(key=lambda r: r.total_score, reverse=True)
@@ -297,20 +326,16 @@ def resonate(
 
     Any text (Sanskrit, English, German) → Top N resonant Gita words.
 
-    This is the MahaLLM's "answer" to a query:
-        resonate("fire")       → [tapas (austerity), tejas (splendor), ...]
-        resonate("protection") → [rakṣa (guard), dharma (duty), ...]
-        resonate("devotion")   → [bhakti (devotion), sevā (service), ...]
+    HYBRID RANKING (for Latin inputs):
+        1. Phonetic path: encode → synth → 4D resonance scoring
+        2. Semantic path: search meaning index for input words
+        Words found via BOTH paths score highest (phonetic + semantic alignment).
 
-    Pipeline:
-        1. Detect language → encode to RAMA coords
-        2. Run through synth → get attractor
-        3. Score ALL 4127 Gita words against input signature
-        4. Return top N by resonance score
+    For Sanskrit inputs: pure phonetic path (exact encoding, no meaning search).
 
     Deterministic. Same input → always same output.
     """
-    from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
+    from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text, detect_language
     from vibe_core.mahamantra.adapters.synth import create_synth
 
     # Step 1: Encode input
@@ -318,17 +343,50 @@ def resonate(
     if not input_coords:
         return []
 
-    # Step 2: Find attractor
+    # Step 2: Run through synth → get transformed coords + attractor
     synth = create_synth(preset=preset)
     cycle = synth.spell_cycle(tuple(input_coords), seed)
     attractor = cycle.final_value % VARNAMALA_TOTAL
+    synth_coords = tuple(step.output_value % VARNAMALA_TOTAL for step in cycle.steps)
 
-    # Step 3+4: Rank all words
-    return rank_words(
+    # Step 3: Phonetic ranking (all words)
+    ranked = rank_words(
         input_coords=input_coords,
         input_attractor=attractor,
-        top_n=top_n,
+        synth_coords=synth_coords,
+        top_n=top_n * 10,  # Get more candidates for re-ranking
     )
+
+    # Step 4: Semantic boost for Latin inputs
+    lang = detect_language(text)
+    if lang == "latin":
+        idx = get_index()
+        # Search meaning index for each word in the input
+        input_tokens = [w.strip().lower() for w in text.split() if len(w.strip()) >= 3]
+        if not input_tokens:
+            input_tokens = [text.strip().lower()]
+
+        # Collect words that match semantically
+        semantic_hits: set = set()
+        for token in input_tokens:
+            for word in idx.by_meaning(token):
+                semantic_hits.add(word.packed_hex)
+
+        if semantic_hits:
+            # Build combined list: semantic hits ranked by resonance + phonetic top
+            semantic_ranked = []
+            phonetic_only = []
+            for rw in ranked:
+                if rw.word.packed_hex in semantic_hits:
+                    semantic_ranked.append(rw)
+                else:
+                    phonetic_only.append(rw)
+
+            # Semantic hits first (they have BOTH signals), then phonetic
+            combined = semantic_ranked + phonetic_only
+            return combined[:top_n]
+
+    return ranked[:top_n]
 
 
 def resonate_sanskrit(
