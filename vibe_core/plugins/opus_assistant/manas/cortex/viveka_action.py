@@ -315,20 +315,19 @@ class VivekaDecisionLogger:
         logger.info(f"🔱 VIVEKA: {decision.to_log_line()}")
 
     def _load_entries(self) -> List[Dict[str, Any]]:
-        """Load existing entries.
+        """Load existing entries via StateService (RAM cache first, disk fallback).
 
         Handles both formats:
         - Old format: List of decision dicts
         - New format (after consolidation): Dict with 'samskaras' key
         """
-        if not self._log_file.exists():
-            return []
         try:
-            data = json.loads(self._log_file.read_text())
+            state = get_state_service(self._workspace, plugin_id="opus_assistant")
+            data = state.load("viveka_decisions.json")
+            if data is None:
+                return []
             # Handle consolidated format (dict with samskaras)
             if isinstance(data, dict):
-                # After consolidation, raw entries are stored in raw_sample
-                # But for new logging, we start fresh (samskaras are the memory)
                 return data.get("raw_sample", [])
             # Old format: list of entries
             return data if isinstance(data, list) else []
