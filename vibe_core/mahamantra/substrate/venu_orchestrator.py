@@ -12,8 +12,9 @@ The 19-bit Divine Instruction Word (DIW):
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING.
 """
 
+import logging
 import struct
-from typing import ClassVar, Final, Tuple
+from typing import ClassVar, Final, List, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     COSMIC_FRAME,
@@ -51,6 +52,12 @@ from vibe_core.mahamantra.protocols.diw import (
     pack_full,
     unpack,
 )
+from vibe_core.mahamantra.protocols._venu import (
+    DIWEvent,
+    DIWSubscriberProtocol,
+)
+
+logger = logging.getLogger("VENU_ORCHESTRATOR")
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
@@ -180,12 +187,13 @@ class VenuOrchestrator:
     VAMSI_BITS: ClassVar[int] = VAMSI_HOLES  # 9 - Mid register (512 = SIKSASTAKAM_CACHE)
     MURALI_BITS: ClassVar[int] = MURALI_HOLES  # 4 - High register (16 = WORDS)
 
-    __slots__ = ("_tick", "_prev_state", "_mode")
+    __slots__ = ("_tick", "_prev_state", "_mode", "_subscribers")
 
     def __init__(self) -> None:
         self._tick: int = 0
         self._prev_state: int = 0
         self._mode: int = 0  # 0=Solo, 1=CallResponse, 2=Chorus
+        self._subscribers: List[DIWSubscriberProtocol] = []
 
     # =========================================================================
     # PANCHA TATTVA PROTOCOL (5 Questions Every Entity Must Answer)
@@ -212,6 +220,75 @@ class VenuOrchestrator:
         """Current Kirtan Mode."""
         return self._mode
 
+    # =========================================================================
+    # SUBSCRIBER MANAGEMENT (Krishna's Flute -> Jivas Dance)
+    # =========================================================================
+
+    def subscribe(self, subscriber: DIWSubscriberProtocol) -> None:
+        """Register a DIW subscriber.
+
+        The subscriber's on_diw() will be called on every step()
+        with the full DIWEvent. This is the bit-level orchestration
+        point: nothing moves without the flute.
+
+        Args:
+            subscriber: Any object implementing DIWSubscriberProtocol.
+
+        Raises:
+            TypeError: If subscriber doesn't implement the protocol.
+        """
+        if not isinstance(subscriber, DIWSubscriberProtocol):
+            raise TypeError(
+                f"{type(subscriber).__name__} does not implement DIWSubscriberProtocol"
+            )
+        self._subscribers.append(subscriber)
+
+    def unsubscribe(self, subscriber: DIWSubscriberProtocol) -> None:
+        """Remove a DIW subscriber."""
+        try:
+            self._subscribers.remove(subscriber)
+        except ValueError:
+            pass  # Not subscribed — idempotent
+
+    @property
+    def subscriber_count(self) -> int:
+        """Number of active DIW subscribers."""
+        return len(self._subscribers)
+
+    def _emit(self, diw: int) -> None:
+        """Dispatch DIWEvent to all subscribers.
+
+        This is the core dispatch: the flute plays, every jiva dances.
+        Errors in individual subscribers are logged but never stop the flute.
+        """
+        if not self._subscribers:
+            return
+
+        components = unpack(diw)
+        event = DIWEvent(
+            diw=diw & DIW_MASK,
+            tick=self._tick,
+            position=self._tick % WORDS,
+            phase=components.murali,
+            venu=components.venu,
+            vamsi=components.vamsi,
+            murali=components.murali,
+            mode=self._mode,
+        )
+
+        for sub in self._subscribers:
+            try:
+                sub.on_diw(event)
+            except Exception as exc:
+                logger.error(
+                    "DIW subscriber %s error at tick %d: %s",
+                    sub.subscriber_name, self._tick, exc,
+                )
+
+    # =========================================================================
+    # CORE STEP
+    # =========================================================================
+
     def step(self) -> int:
         """
         One step through the Mahamantra.
@@ -224,9 +301,16 @@ class VenuOrchestrator:
             VAMSI  (bits 6-14): Process/Action
             MURALI (bits 15-18): Phase/Quarter
             + Mode in Cluster bits (23-26)
+
+        After computing the DIW, dispatches a DIWEvent to all subscribers.
+        The flute plays, every jiva dances.
         """
         # O(1) lookup - native 19-bit DIW
         diw = THE_FLUTE_CYCLE[self._tick % WORDS]
+
+        # Dispatch to all subscribers BEFORE advancing tick
+        # (subscribers see the tick that produced this DIW)
+        self._emit(diw)
 
         # Update state
         self._prev_state = diw
@@ -394,6 +478,9 @@ class VenuOrchestrator:
             diw = pack(venu, vamsi, murali)
             result.append(diw)
 
+            # Emit to subscribers (each phoneme is a tick)
+            self._emit(diw)
+
             # Advance tick
             self._prev_state = diw
             self._tick = (self._tick + 1) % COSMIC_FRAME
@@ -401,7 +488,11 @@ class VenuOrchestrator:
         return tuple(result)
 
     def reset(self) -> None:
-        """Reset orchestrator to initial state."""
+        """Reset orchestrator to initial state.
+
+        Clears tick, prev_state, mode. Subscribers are preserved
+        (they are wiring, not state). Use unsubscribe() to remove.
+        """
         self._tick = 0
         self._prev_state = 0
         self._mode = 0
@@ -474,4 +565,7 @@ __all__ = [
     "MURALI_SHIFT",
     # Class
     "VenuOrchestrator",
+    # Re-exported from _venu.py for convenience
+    "DIWEvent",
+    "DIWSubscriberProtocol",
 ]
