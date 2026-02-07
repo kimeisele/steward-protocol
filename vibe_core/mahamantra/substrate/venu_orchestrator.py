@@ -12,36 +12,28 @@ The 19-bit Divine Instruction Word (DIW):
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING.
 """
 
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "narada"
-__position__ = 2
-__genesis__ = "0xdd4f22d7"  # GenesisByte: parampara % 37 == 0
-
 import struct
 from typing import ClassVar, Final, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     COSMIC_FRAME,
     FLUTE_HOLES_SUM,
+    HALVES,
     HARE_COUNT,
-    # Verification constants
+    KSETRAJNA,
     MAHA_QUANTUM,
     MAHAMANTRA_NAME_HARE,
     MAHAMANTRA_NAME_KRISHNA,
     MAHAMANTRA_NAME_RAMA,
-    # Mahamantra pattern
     MAHAMANTRA_WORD_PATTERN,
     MURALI_HOLES,
     PARAMPARA,
     POSITION_SUM_RAMA,
     QUARTERS,
-    # Derived numbers
     SEVEN,
     TEN,
     VAMSI_HOLES,
-    # Flute holes
     VENU_HOLES,
-    # Axioms
     WORDS,
 )
 from vibe_core.mahamantra.protocols.diw import (
@@ -59,6 +51,11 @@ from vibe_core.mahamantra.protocols.diw import (
     pack_full,
     unpack,
 )
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "narada"
+__position__ = HALVES
+__genesis__ = "0xdd4f22d7"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
 # NAME ENCODING (DERIVED FROM SSOT)
@@ -101,12 +98,14 @@ def _compute_flute_cycle() -> Tuple[int, ...]:
         encoding = _NAME_TO_ENCODING[name]  # H=0, K=1, R=2
 
         # VENU (6 bits): Quality derived from position
-        # Linear spread using SEVEN ensures all 64 states reachable
-        venu = (pos * SEVEN) % (1 << VENU_HOLES)  # 0-63
+        # Offset by KSETRAJNA so position 0 is never silent (DIW != 0)
+        # Linear spread using SEVEN ensures all 16 values are distinct
+        venu = ((pos + KSETRAJNA) * SEVEN) % (1 << VENU_HOLES)  # 1-63, never 0
 
         # VAMSI (9 bits): Process derived from Name + position
         # Each name occupies a distinct region of the 512 space
-        vamsi = (encoding * vamsi_stride + pos) % (1 << VAMSI_HOLES)  # 0-511
+        # Offset by KSETRAJNA ensures encoding=0,pos=0 is never zero
+        vamsi = (encoding * vamsi_stride + pos + KSETRAJNA) % (1 << VAMSI_HOLES)  # 1-511
 
         # MURALI (4 bits): Phase derived from quarter
         murali = pos // quarter_size  # 0-3
@@ -245,28 +244,29 @@ class VenuOrchestrator:
         for i in range(WORDS):
             accumulated ^= THE_FLUTE_CYCLE[i] & DIW_MASK
 
+        self._prev_state = accumulated
         self._tick = (self._tick + WORDS) % COSMIC_FRAME
         return accumulated
 
     def verify_divinity(self) -> bool:
         """
-        The "Beweis Gottes" Test.
+        The "Beweis Gottes" Test (non-mutating).
         Verifies the LUT has correct structural properties:
+        - No entry is zero (SUNYA = silence)
         - All 4 quarters (MURALI) are represented
         - All 3 names (VAMSI regions) are represented
         - All VENU values are unique (no collisions)
         - Full cycle XOR is non-zero and fits in 19 bits
         """
-        self._tick = 0
-        self._prev_state = 0
-
-        # Structural verification of the LUT
+        # Structural verification of the LUT (no state mutation)
         murali_set: set[int] = set()
         venu_set: set[int] = set()
         vamsi_regions: set[int] = set()
         vamsi_stride = (1 << VAMSI_HOLES) // 3  # 170
 
-        for entry in THE_FLUTE_CYCLE:
+        for i, entry in enumerate(THE_FLUTE_CYCLE):
+            if entry == 0:
+                raise ValueError(f"Position {i} is SUNYA (zero) - the flute is silent")
             parts = unpack(entry)
             murali_set.add(parts.murali)
             venu_set.add(parts.venu)
@@ -279,8 +279,10 @@ class VenuOrchestrator:
         if len(venu_set) != WORDS:
             raise ValueError(f"Must have {WORDS} unique VENU values, got {len(venu_set)}")
 
-        # Cycle XOR check
-        cycle_xor = self.cycle()
+        # Cycle XOR check (computed without mutating self)
+        cycle_xor = 0
+        for entry in THE_FLUTE_CYCLE:
+            cycle_xor ^= entry & DIW_MASK
         if cycle_xor == 0:
             raise ValueError("Cycle XOR is zero - the flute is silent")
         if cycle_xor > DIW_MASK:
@@ -386,7 +388,9 @@ class VenuOrchestrator:
         self._mode = 0
 
     def set_mode(self, mode: int) -> None:
-        """Set the Kirtan Mode (Harmonic Feedback)."""
+        """Set the Kirtan Mode (0=Solo, 1=CallResponse, 2=Chorus)."""
+        if not (0 <= mode <= HALVES):
+            raise ValueError(f"Mode must be 0-{HALVES}, got {mode}")
         self._mode = mode
 
     # =========================================================================

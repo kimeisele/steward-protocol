@@ -13,7 +13,7 @@ REAL TESTS for:
 
 import pytest
 from typing import get_type_hints
-from vibe_core.mahamantra._types import (
+from vibe_core.mahamantra.seed.types import (
     TickState,
     RouteResult,
     VibrationState,

@@ -7,7 +7,7 @@ and adapt its Kirtan Mode (Solo -> CallResponse -> Chorus).
 """
 
 import pytest
-from vibe_core.mahamantra.orchestrator import VenuOrchestrator, CLUSTER_SHIFT
+from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator, CLUSTER_SHIFT
 from vibe_core.mahamantra.substrate.chamber import SankirtanChamber, KirtanMode, CHAMBER_CAPACITY, PARAMPARA
 from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 

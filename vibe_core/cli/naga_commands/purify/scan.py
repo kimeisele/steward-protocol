@@ -243,26 +243,34 @@ class ScanCommand(NagaCommandBase):
                 issues.append({"file": str(filepath), "line": i, "code": line.strip()})
         return issues
 
+    _SECURITY_PATTERNS = None
+
+    @classmethod
+    def _get_security_patterns(cls):
+        """Precompile security regex patterns (once)."""
+        import re
+        if cls._SECURITY_PATTERNS is None:
+            cls._SECURITY_PATTERNS = [
+                (re.compile(r"eval\s*\("), "EVAL"),
+                (re.compile(r"exec\s*\("), "EXEC"),
+                (re.compile(r"subprocess\.call\s*\(.*shell\s*=\s*True"), "SHELL_INJECTION"),
+                (re.compile(r"yaml\.load\s*\([^)]*(?!Loader)"), "UNSAFE_YAML"),
+                (re.compile(r"pickle\.load"), "PICKLE"),
+                (re.compile(r"__import__\s*\("), "DYNAMIC_IMPORT"),
+            ]
+        return cls._SECURITY_PATTERNS
+
     def _find_security_issues(self, content: str, filepath: any) -> List[Dict]:
         """Find potential security issues."""
-        import re
-
         issues = []
         lines = content.split("\n")
-        patterns = [
-            (r"eval\s*\(", "EVAL"),
-            (r"exec\s*\(", "EXEC"),
-            (r"subprocess\.call\s*\(.*shell\s*=\s*True", "SHELL_INJECTION"),
-            (r"yaml\.load\s*\((?!.*Loader)", "UNSAFE_YAML"),
-            (r"pickle\.load", "PICKLE"),
-            (r"__import__\s*\(", "DYNAMIC_IMPORT"),
-        ]
+        patterns = self._get_security_patterns()
         for i, line in enumerate(lines, 1):
-            if line.strip().startswith("#"):
+            if len(line) > 500 or line.strip().startswith("#"):
                 continue
-            for pattern, issue_type in patterns:
-                if re.search(pattern, line):
-                    issues.append({"file": str(filepath), "line": i, "type": issue_type, "code": line.strip()})
+            for compiled_re, issue_type in patterns:
+                if compiled_re.search(line):
+                    issues.append({"file": str(filepath), "line": i, "type": issue_type, "code": line.strip()[:200]})
         return issues
 
 
