@@ -37,6 +37,10 @@ from vibe_core.mahamantra.substrate.venu_orchestrator import (
     VenuOrchestrator,
     _NAME_TO_ENCODING,
 )
+from vibe_core.mahamantra.protocols._venu import (
+    DIWEvent,
+    DIWSubscriberProtocol,
+)
 
 
 # =============================================================================
@@ -563,3 +567,225 @@ class TestFromBytesHardening:
         orch.from_bytes(legacy)
         assert orch.tick < CF
         assert orch.mode == 0
+
+
+# =============================================================================
+# DIW SUBSCRIBER DISPATCH (Krishna's Flute -> Jivas Dance)
+# =============================================================================
+
+
+class _MockSubscriber:
+    """Test subscriber that records all DIW events."""
+
+    def __init__(self, name: str = "mock"):
+        self._name = name
+        self.events: list[DIWEvent] = []
+
+    @property
+    def subscriber_name(self) -> str:
+        return self._name
+
+    def on_diw(self, event: DIWEvent) -> None:
+        self.events.append(event)
+
+
+class _FailingSubscriber:
+    """Subscriber that raises on every event."""
+
+    @property
+    def subscriber_name(self) -> str:
+        return "failing"
+
+    def on_diw(self, event: DIWEvent) -> None:
+        raise RuntimeError("I broke")
+
+
+class TestDIWSubscriberProtocol:
+    """DIWSubscriberProtocol must be runtime-checkable."""
+
+    def test_mock_implements_protocol(self):
+        sub = _MockSubscriber()
+        assert isinstance(sub, DIWSubscriberProtocol)
+
+    def test_plain_object_does_not_implement(self):
+        assert not isinstance(object(), DIWSubscriberProtocol)
+
+
+class TestSubscriberRegistration:
+    """subscribe() / unsubscribe() management."""
+
+    def test_subscribe_increments_count(self, orch: VenuOrchestrator):
+        assert orch.subscriber_count == 0
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        assert orch.subscriber_count == 1
+
+    def test_unsubscribe_decrements_count(self, orch: VenuOrchestrator):
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        orch.unsubscribe(sub)
+        assert orch.subscriber_count == 0
+
+    def test_unsubscribe_idempotent(self, orch: VenuOrchestrator):
+        """Unsubscribing a non-subscriber should not raise."""
+        sub = _MockSubscriber()
+        orch.unsubscribe(sub)  # no-op
+        assert orch.subscriber_count == 0
+
+    def test_subscribe_rejects_non_protocol(self, orch: VenuOrchestrator):
+        with pytest.raises(TypeError, match="DIWSubscriberProtocol"):
+            orch.subscribe(object())  # type: ignore
+
+    def test_multiple_subscribers(self, orch: VenuOrchestrator):
+        subs = [_MockSubscriber(f"sub_{i}") for i in range(5)]
+        for s in subs:
+            orch.subscribe(s)
+        assert orch.subscriber_count == 5
+
+    def test_reset_preserves_subscribers(self, orch: VenuOrchestrator):
+        """Subscribers are wiring, not state. reset() must preserve them."""
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        orch.reset()
+        assert orch.subscriber_count == 1
+
+
+class TestDIWDispatch:
+    """step() must dispatch DIWEvent to all subscribers."""
+
+    def test_step_dispatches_event(self, orch: VenuOrchestrator):
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        orch.step()
+        assert len(sub.events) == 1
+
+    def test_event_has_all_fields(self, orch: VenuOrchestrator):
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        orch.step()
+        event = sub.events[0]
+        assert "diw" in event
+        assert "tick" in event
+        assert "position" in event
+        assert "phase" in event
+        assert "venu" in event
+        assert "vamsi" in event
+        assert "murali" in event
+        assert "mode" in event
+
+    def test_event_diw_matches_lut(self, orch: VenuOrchestrator):
+        """The DIW in the event must match THE_FLUTE_CYCLE[tick]."""
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        for i in range(WORDS):
+            orch.step()
+        for i, event in enumerate(sub.events):
+            expected = THE_FLUTE_CYCLE[i] & DIW_MASK
+            assert event["diw"] == expected, f"tick {i}: {event['diw']} != {expected}"
+
+    def test_event_components_match_unpack(self, orch: VenuOrchestrator):
+        """venu/vamsi/murali in event must match unpack(diw)."""
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        orch.step()
+        event = sub.events[0]
+        parts = unpack(event["diw"])
+        assert event["venu"] == parts.venu
+        assert event["vamsi"] == parts.vamsi
+        assert event["murali"] == parts.murali
+
+    def test_event_position_is_tick_mod_words(self, orch: VenuOrchestrator):
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        for _ in range(WORDS * 2):
+            orch.step()
+        for event in sub.events:
+            assert event["position"] == event["tick"] % WORDS
+
+    def test_event_phase_matches_quarter(self, orch: VenuOrchestrator):
+        """phase must equal MURALI = position // (WORDS // QUARTERS)."""
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        for _ in range(WORDS):
+            orch.step()
+        for event in sub.events:
+            expected_quarter = event["position"] // (WORDS // QUARTERS)
+            assert event["phase"] == expected_quarter
+
+    def test_event_mode_reflects_set_mode(self, orch: VenuOrchestrator):
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        orch.set_mode(2)  # Chorus
+        orch.step()
+        assert sub.events[0]["mode"] == 2
+
+    def test_multiple_subscribers_all_receive(self, orch: VenuOrchestrator):
+        subs = [_MockSubscriber(f"s{i}") for i in range(3)]
+        for s in subs:
+            orch.subscribe(s)
+        orch.step()
+        for s in subs:
+            assert len(s.events) == 1
+            assert s.events[0]["diw"] == subs[0].events[0]["diw"]
+
+    def test_no_subscribers_no_crash(self, orch: VenuOrchestrator):
+        """step() with zero subscribers must still work."""
+        diw = orch.step()
+        assert diw > 0
+
+    def test_full_cycle_deterministic(self, orch: VenuOrchestrator):
+        """Two orchestrators with same state must produce identical events."""
+        sub1 = _MockSubscriber("a")
+        sub2 = _MockSubscriber("b")
+        orch1 = VenuOrchestrator()
+        orch2 = VenuOrchestrator()
+        orch1.subscribe(sub1)
+        orch2.subscribe(sub2)
+        for _ in range(WORDS):
+            orch1.step()
+            orch2.step()
+        for i in range(WORDS):
+            assert sub1.events[i] == sub2.events[i], f"Divergence at tick {i}"
+
+
+class TestDIWDispatchErrorIsolation:
+    """A failing subscriber must not stop the flute or other subscribers."""
+
+    def test_failing_subscriber_does_not_stop_flute(self, orch: VenuOrchestrator):
+        bad = _FailingSubscriber()
+        orch.subscribe(bad)
+        diw = orch.step()  # must not raise
+        assert diw > 0
+
+    def test_failing_subscriber_does_not_block_others(self, orch: VenuOrchestrator):
+        good = _MockSubscriber("good")
+        bad = _FailingSubscriber()
+        orch.subscribe(bad)
+        orch.subscribe(good)
+        orch.step()
+        assert len(good.events) == 1  # good still received the event
+
+    def test_tick_advances_despite_failure(self, orch: VenuOrchestrator):
+        bad = _FailingSubscriber()
+        orch.subscribe(bad)
+        orch.step()
+        assert orch.tick == 1  # tick advanced
+
+
+class TestSpellDispatch:
+    """spell() must also dispatch DIW events per phoneme."""
+
+    def test_spell_dispatches_per_coord(self, orch: VenuOrchestrator):
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        coords = (10, 20, 30, 40)
+        orch.spell(coords)
+        assert len(sub.events) == len(coords)
+
+    def test_spell_events_have_correct_venu(self, orch: VenuOrchestrator):
+        sub = _MockSubscriber()
+        orch.subscribe(sub)
+        coords = (5, 15, 48)
+        orch.spell(coords)
+        for i, event in enumerate(sub.events):
+            assert event["venu"] == (coords[i] & VENU_MASK)
