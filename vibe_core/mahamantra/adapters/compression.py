@@ -122,16 +122,35 @@ VEDA_VERSES: Final[int] = BHAGAVATAM_VERSES * 6 - 8000  # 100000 ≈ 18000 × 6
 
 def _compute_seed_cached(text: str) -> int:
     """
-    Deterministic seed computation - PURE, no keyword matching.
+    Deterministic seed computation with SHABDA signal integration.
+
+    Pipeline: text → SHA256 hash + vibration_sum → MahaModularSynth → seed
+
+    The vibration_sum from text_to_vibration() encodes the PHONETIC STRUCTURE
+    of the input. This means phonetically similar inputs (e.g. "analyze" vs
+    "analysiere") produce closer seeds than pure SHA256 would give.
+
+    Shabda Brahman: Sound IS the computation, not just the label.
     """
     from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+    from vibe_core.mahamantra.substrate.phonetics.shabda import text_to_vibration
 
-    # PURE: Hash-based, case-insensitive, no MahaLLM keyword matching
+    # Layer 1: SHA256 hash (structural identity — case-insensitive)
     text_bytes = hashlib.sha256(text.lower().encode("utf-8")).digest()
     text_hash = int.from_bytes(text_bytes[:4], "big")
-    category = text_hash % WORDS  # 0-15, pure computation
 
-    base_seed = (category * MAHA_QUANTUM) + (text_hash % MAHA_QUANTUM)
+    # Layer 2: Shabda vibration sum (phonetic identity — articulation-aware)
+    vibrations = text_to_vibration(text)
+    vibration_sum = sum(sig.signature_id for sig in vibrations) if vibrations else 0
+
+    # MERGE: XOR hash with vibration_sum — phonetics modulate the hash
+    # This is NOT symmetric destruction (like seed^seed=0) because
+    # text_hash and vibration_sum are structurally different values.
+    merged = text_hash ^ (vibration_sum & 0xFFFFFFFF)
+
+    category = merged % WORDS  # 0-15, phonetically influenced
+
+    base_seed = (category * MAHA_QUANTUM) + (merged % MAHA_QUANTUM)
 
     synth = MahaModularSynth(default_preset="quantum")
     transformed = synth.transform(base_seed)
