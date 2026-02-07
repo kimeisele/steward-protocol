@@ -12,7 +12,7 @@ Nicht Zahlen ÜBER das Mahamantra - DAS MAHAMANTRA.
 KRISHNA = MAHAMANTRA (non-different, Level -2)
 Alles sprießt aus den 16 Wörtern.
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, KSETRAJNA, KSHETRA, LILA, MALA, NAVA, PANCHA, PARAMPARA, POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUALITIES, QUARTERS, SEVEN, SHARANAGATI, TRINITY, WORDS)
+from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, KSETRAJNA, KSHETRA, LILA, MALA, NAVA, PANCHA, PARAMPARA, POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUALITIES, QUARTERS, SHARANAGATI, TRINITY, WORDS)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -356,20 +356,16 @@ MAHAMANTRA: Final[Tuple[HolyName, ...]] = (
 # DERIVED FROM MAHAMANTRA - Primäre Zahlen
 # =============================================================================
 
-# Die Wörter
-WORDS: Final[int] = len(MAHAMANTRA)  # 16
+# Re-derivation verification: the MAHAMANTRA tuple must match _seed.py axioms
+assert len(MAHAMANTRA) == WORDS, f"MAHAMANTRA length {len(MAHAMANTRA)} != WORDS {WORDS}"
+assert len(set(MAHAMANTRA)) == TRINITY, f"Unique names {len(set(MAHAMANTRA))} != TRINITY {TRINITY}"
 
-# Die drei Namen
-TRINITY: Final[int] = len(set(MAHAMANTRA))  # 3
-
-# Counts pro Name
+# Counts pro Name (defined here, not in _seed.py)
 _counts = Counter(MAHAMANTRA)
 HARE_COUNT: Final[int] = _counts[HolyName.HARE]  # 8
 KRISHNA_COUNT: Final[int] = _counts[HolyName.KRISHNA]  # 4
 RAMA_COUNT: Final[int] = _counts[HolyName.RAMA]  # 4
 
-# Die zwei Hälften
-HALVES: Final[int] = HALVES
 HALF_SIZE: Final[int] = WORDS // HALVES  # 8
 
 
@@ -396,16 +392,11 @@ def _compute_position_sums() -> Tuple[int, int, int]:
 
 _pos_hare, _pos_krishna, _pos_rama = _compute_position_sums()
 
-POSITION_SUM_HARE: Final[int] = _pos_hare  # 70 = 7 × 10
-POSITION_SUM_KRISHNA: Final[int] = _pos_krishna  # 17 (prime)
-POSITION_SUM_RAMA: Final[int] = _pos_rama  # 49 = 7²
-POSITION_SUM_TOTAL: Final[int] = POSITION_SUM_HARE + POSITION_SUM_KRISHNA + POSITION_SUM_RAMA  # 136
-
-# VERIFICATION: Position sums
-assert POSITION_SUM_HARE == POSITION_SUM_HARE, "Hare position sum must be 70"
-assert POSITION_SUM_KRISHNA == POSITION_SUM_KRISHNA, "Krishna position sum must be 17 (prime)"
-assert POSITION_SUM_RAMA == POSITION_SUM_RAMA, "Rama position sum must be 49 (7²)"
-assert POSITION_SUM_TOTAL == POSITION_SUM_TOTAL, "Total must be 136"
+# VERIFICATION: Computed position sums match imported SSOT
+assert _pos_hare == POSITION_SUM_HARE, f"Hare sum {_pos_hare} != {POSITION_SUM_HARE}"
+assert _pos_krishna == POSITION_SUM_KRISHNA, f"Krishna sum {_pos_krishna} != {POSITION_SUM_KRISHNA}"
+assert _pos_rama == POSITION_SUM_RAMA, f"Rama sum {_pos_rama} != {POSITION_SUM_RAMA}"
+assert _pos_hare + _pos_krishna + _pos_rama == POSITION_SUM_TOTAL, "Total must be 136"
 
 # VERIFICATION: Triangular number property
 # Σ(1..n) = n(n+1)/2 → Σ(1..16) = 16×17/2 = 136
@@ -444,7 +435,7 @@ MAHAMANTRA_PAIRS: Final[Tuple[Tuple[HolyName, HolyName], ...]] = _compute_pairs(
 UNIQUE_PAIRS: Final[FrozenSet[Tuple[HolyName, HolyName]]] = _compute_unique_pairs()
 
 # PANCHA = 5 unique pairs = Pancha Tattva!
-PANCHA: Final[int] = len(UNIQUE_PAIRS)  # 5
+assert len(UNIQUE_PAIRS) == PANCHA, f"Unique pairs {len(UNIQUE_PAIRS)} != PANCHA {PANCHA}"
 
 # Die 5 Paare mit Namen
 PANCHA_PAIR_NAMES: Final[Tuple[str, ...]] = (
@@ -470,7 +461,7 @@ class Quarter(IntEnum):
     MOKSHA = TRINITY  # Positionen 12-15: OUTPUT - Yield, Flush, Log, Exit
 
 
-QUARTERS: Final[int] = len(Quarter)  # 4
+assert len(Quarter) == QUARTERS, f"Quarter enum {len(Quarter)} != QUARTERS {QUARTERS}"
 QUARTER_NAMES: Final[Tuple[str, ...]] = ("genesis", "dharma", "karma", "moksha")
 WORDS_PER_QUARTER: Final[int] = WORDS // QUARTERS  # 4
 
@@ -481,7 +472,7 @@ WORDS_PER_QUARTER: Final[int] = WORDS // QUARTERS  # 4
 # KSHETRA = WORDS + HARE_COUNT = 16 + 8 = 24
 # Das ist die Mathematik: Das Mahamantra (16) plus die Shakti (8 Hares)
 
-KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24
+assert WORDS + HARE_COUNT == KSHETRA, f"WORDS+HARE_COUNT={WORDS + HARE_COUNT} != KSHETRA {KSHETRA}"
 
 
 # =============================================================================
@@ -494,7 +485,7 @@ KSHETRA: Final[int] = WORDS + HARE_COUNT  # 24
 # NOTE: That KSHETRA//QUARTERS also equals 6 is Krishna's arrangement (Acintya),
 # NOT a derivation. We import from _seed.py which holds this as PRIMARY.
 
-SHARANAGATI: Final[int] = _PROTO_SHARANAGATI  # 6 (from shastra, SSOT)
+assert _PROTO_SHARANAGATI == SHARANAGATI, f"Proto {_PROTO_SHARANAGATI} != SHARANAGATI {SHARANAGATI}"
 
 
 class SharanagatiLimb(str, Enum):
@@ -538,7 +529,7 @@ KSETRAJNA: Final[int] = TRINITY - HALVES  # 3 - 2 = 1 (DERIVED!)
 # NAVA = HARE_COUNT + KSETRAJNA = 8 + 1 = 9
 # 8 Shakti (Hare/Energie) + 1 Knower (Krishna) = 9 Prozesse der Hingabe
 
-NAVA: Final[int] = HARE_COUNT + KSETRAJNA  # 8 + 1 = 9
+assert HARE_COUNT + KSETRAJNA == NAVA, f"HARE_COUNT+KSETRAJNA={HARE_COUNT + KSETRAJNA} != NAVA {NAVA}"
 
 
 class NavaBhakti(str, Enum):
@@ -559,10 +550,7 @@ assert len(NavaBhakti) == NAVA  # 9
 
 
 # PARAMPARA = Sankhya path ONLY (the legitimate derivation):
-PARAMPARA: Final[int] = KSHETRA + MAHAJANA_COUNT + KSETRAJNA  # 24 + 12 + 1 = 37
-
-# Verification: Sankhya path
-assert PARAMPARA == PARAMPARA, "PARAMPARA must be 37 (Sankhya: 24 + 12 + 1)"
+assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA, f"Sankhya path {KSHETRA + MAHAJANA_COUNT + KSETRAJNA} != PARAMPARA {PARAMPARA}"
 
 
 # =============================================================================
@@ -609,7 +597,7 @@ AVATARS = AVATARAS  # Old name
 # =============================================================================
 # 48 = WORDS × TRINITY = 16 × 3
 
-LILA: Final[int] = WORDS * TRINITY  # 48
+assert WORDS * TRINITY == LILA, f"WORDS*TRINITY={WORDS * TRINITY} != LILA {LILA}"
 NAVADVIPA: Final[int] = LILA // HALVES  # 24 (Build Phase)
 PURI: Final[int] = LILA // HALVES  # 24 (Run Phase)
 
@@ -664,7 +652,7 @@ KALI_YUGA_LEG: Final[str] = DharmaPillar.SATYAM.value  # "truth"
 # - 64-bit: Full system capacity
 # - 16-bit: Reserved/kernel space
 
-QUALITIES: Final[int] = WORDS * QUARTERS  # 64
+assert WORDS * QUARTERS == QUALITIES, f"WORDS*QUARTERS={WORDS * QUARTERS} != QUALITIES {QUALITIES}"
 HIDDEN_RESERVE: Final[int] = QUALITIES - LILA  # 64 - 48 = 16
 
 # Verification: Hidden Reserve = WORDS (the seed itself)
@@ -678,7 +666,7 @@ assert HIDDEN_RESERVE == WORDS, "Hidden reserve must equal WORDS (16)"
 # The 12 Mahajanas (authorities) × 9 Processes (devotional service) = 108 Beads
 # Alternative path: 108 = (KSHETRA + PARAMPARA + LILA - 1) = 24 + 37 + 48 - 1 = 108
 
-MALA: Final[int] = MAHAJANA_COUNT * NAVA  # 12 × 9 = 108
+assert MAHAJANA_COUNT * NAVA == MALA, f"MAHAJANA*NAVA={MAHAJANA_COUNT * NAVA} != MALA {MALA}"
 ROUNDS: Final[int] = WORDS  # 16 Runden pro Tag
 DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728
 
@@ -690,10 +678,9 @@ DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728
 # 18 = SHARANAGATI × TRINITY = 6 × 3 (The 6 limbs acting through 3 Names)
 # All resonances divide by 18: 72/4, 108/6, 144/8, 432/24 = 18
 
-GITA_CHAPTERS: Final[int] = SHARANAGATI * TRINITY  # 18
+assert SHARANAGATI * TRINITY == GITA_CHAPTERS, f"SHARANAGATI*TRINITY={SHARANAGATI * TRINITY} != GITA_CHAPTERS {GITA_CHAPTERS}"
 
 # Verification: 18er-Harmonik
-assert GITA_CHAPTERS == GITA_CHAPTERS, "GITA_CHAPTERS must be 18"
 assert MALA // GITA_CHAPTERS == SHARANAGATI, "108 / 18 = 6"
 
 
