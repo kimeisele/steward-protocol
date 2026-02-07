@@ -553,6 +553,9 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                     # Any service registered under DIWSubscriberProtocol gets
                     # the 19-bit DIW on every tick. No manual wiring.
                     try:
+                        from vibe_core.services.diw_discovery import discover_and_register_diw_subscribers
+
+                        discover_and_register_diw_subscribers()
                         diw_count = self._venu_service.discover_subscribers()
                         if diw_count:
                             logger.info(f"      → {diw_count} DIW subscribers auto-wired to orchestrator")
