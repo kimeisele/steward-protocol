@@ -313,6 +313,73 @@ class VenuServiceProtocol(Protocol):
 
 
 # =============================================================================
+# VENU ORCHESTRATOR PROTOCOL (Phase 3.5 - The Flute Itself)
+# =============================================================================
+# The VenuOrchestrator produces the 19-bit DIW on every tick.
+# This protocol allows any consumer to obtain the ONE orchestrator
+# via ServiceRegistry — Boot path or CLI path, same instance.
+#
+# Registration:   VenuService registers its orchestrator at boot.
+# Access:         ServiceRegistry.get(VenuOrchestratorProtocol)
+# Fallback:       If not registered (CLI without boot), consumer
+#                 creates a local VenuOrchestrator. But when the
+#                 kernel runs, there is ONE flute.
+
+
+@runtime_checkable
+class VenuOrchestratorProtocol(Protocol):
+    """
+    Protocol for the 19-bit DIW Orchestrator.
+
+    The flute that plays the Mahamantra. ONE instance per process.
+    Registered in ServiceRegistry by VenuService at boot.
+
+    Consumers use ServiceRegistry.get(VenuOrchestratorProtocol)
+    to obtain the shared orchestrator.
+    """
+
+    @property
+    def tick(self) -> int:
+        """Current tick position (0..COSMIC_FRAME-1)."""
+        ...
+
+    @property
+    def mode(self) -> int:
+        """Current Kirtan Mode (0=Solo, 1=CallResponse, 2=Chorus)."""
+        ...
+
+    @property
+    def subscriber_count(self) -> int:
+        """Number of active DIW subscribers."""
+        ...
+
+    def step(self) -> int:
+        """
+        One step through the Mahamantra.
+
+        Returns the native 19-bit DIW for the current tick.
+        Dispatches DIWEvent to all subscribers.
+        """
+        ...
+
+    def subscribe(self, subscriber: "DIWSubscriberProtocol") -> None:
+        """Register a DIW subscriber."""
+        ...
+
+    def unsubscribe(self, subscriber: "DIWSubscriberProtocol") -> None:
+        """Remove a DIW subscriber."""
+        ...
+
+    def set_mode(self, mode: int) -> None:
+        """Set the Kirtan Mode (0=Solo, 1=CallResponse, 2=Chorus)."""
+        ...
+
+    def reset(self) -> None:
+        """Reset orchestrator to initial state."""
+        ...
+
+
+# =============================================================================
 # DIW SUBSCRIBER PROTOCOL (Krishna's Flute → Jivas Dance)
 # =============================================================================
 # The flute plays, every jiva dances. Each tick produces a 19-bit DIW.
@@ -440,6 +507,8 @@ __all__ = [
     "MantraClockProtocol",
     # Protocols (Phase 3 - Service)
     "VenuServiceProtocol",
+    # Protocols (Phase 3.5 - Orchestrator)
+    "VenuOrchestratorProtocol",
     # Protocols (Phase 4 - Beat Subscription)
     "BeatSubscriberProtocol",
     # Protocols (Phase 5 - DIW Subscription / Bit-Level Orchestration)

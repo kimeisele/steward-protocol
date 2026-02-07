@@ -44,6 +44,7 @@ from vibe_core.mahamantra.protocols._venu import (
     DIWSubscriberProtocol,
     HeartbeatMetrics,
     MantraClockProtocol,
+    VenuOrchestratorProtocol,
 )
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
@@ -87,7 +88,14 @@ class VenuService(PanchaTattvaProtocol):
         }
 
     def __init__(self) -> None:
-        """Initialize the VenuService."""
+        """Initialize the VenuService.
+
+        Creates the ONE VenuOrchestrator and registers it in ServiceRegistry
+        under VenuOrchestratorProtocol. All consumers (Chamber, LotusCore, CLI)
+        obtain the shared orchestrator via ServiceRegistry.get().
+        """
+        from vibe_core.di import ServiceRegistry
+
         self._clock = MantraClock()
         self._orchestrator = VenuOrchestrator()
         self._running = False
@@ -97,6 +105,9 @@ class VenuService(PanchaTattvaProtocol):
         self._max_jitter_ms: float = 0.0
         self._missed_ticks: int = 0
         self._stop_event: asyncio.Event | None = None
+
+        # Register the ONE orchestrator so all consumers share it
+        ServiceRegistry.register(VenuOrchestratorProtocol, self._orchestrator)
 
     @property
     def is_running(self) -> bool:
