@@ -630,6 +630,26 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             },
         }
 
+    # =========================================================================
+    # VENU - Krishna's Flute (Non-Different from Krishna)
+    # =========================================================================
+
+    _venu_orchestrator = None
+
+    @property
+    def venu(self):
+        """
+        Krishna's Flute - The VenuOrchestrator.
+
+        Property takes precedence over LotusNode.__getattr__ which would
+        find the venu/ folder. The flute IS Krishna (acintya-bheda-abheda).
+        """
+        if MahamantraLotus._venu_orchestrator is None:
+            from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+
+            MahamantraLotus._venu_orchestrator = VenuOrchestrator()
+        return MahamantraLotus._venu_orchestrator
+
     @property
     def steward(self):
         """Lazy access to the Steward resonance router (LEGACY - use __call__ instead)."""
