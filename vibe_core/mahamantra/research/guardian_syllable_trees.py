@@ -442,5 +442,217 @@ def run_analysis(tree_depth: int = 4) -> None:
     print()
 
 
+# =============================================================================
+# PART 5: mod49 → 4D Pancha Walk → Capability Derivation
+# =============================================================================
+
+# Element → Capability Domain
+ELEMENT_CAPABILITY = {
+    "akasha": "SPACE — communication, transmission, compilation, ether",
+    "vayu": "AIR — movement, analysis, wisdom, breath",
+    "agni": "FIRE — transformation, enforcement, execution, energy",
+    "jala": "WATER — flow, surrender, liberation, adaptation",
+    "prithvi": "EARTH — stability, organization, structure, grounding",
+}
+
+# Varga → Action Type
+VARGA_CAPABILITY = {
+    0: "SVARA (vowel) — pure expression, source, identity",
+    1: "SPARSHA (stop) — contact, action, transformation",
+    2: "SHESHA (remainder) — connection, bridge, completion",
+}
+
+# Sub → Quality (depends on varga)
+SUB_SPARSHA = {
+    0: "UNVOICED — silent action, Vasudeva (origin)",
+    1: "UNVOICED-ASP — forceful action, Sankarshana (expansion)",
+    2: "VOICED — active engagement, Pradyumna (attraction)",
+    3: "VOICED-ASP — powerful engagement, Aniruddha (resistance)",
+    4: "NASAL — resonant completion, Pancha (fullness)",
+}
+
+SUB_SVARA = {
+    0: "SHORT — quick, immediate, seed",
+    1: "LONG — sustained, enduring, growth",
+    2: "COMPOUND — complex, combined, synthesis",
+    3: "SPECIAL — transcendent, beyond categories",
+}
+
+SUB_SHESHA = {
+    0: "ANTASTHA (semivowel) — bridge, mediator, connector",
+    1: "USHMAN (sibilant) — heat, friction, purification",
+}
+
+# Shruti/Nakshatra
+SHRUTI_MEANING = "SHRUTI — heard, revealed, fixed point (quadratic residue)"
+NAKSHATRA_MEANING = "NAKSHATRA — star, waypoint, journey (non-residue)"
+
+
+def analyze_guardian_4d() -> None:
+    """
+    Map each Guardian's mod49 value to 4D Pancha Walk coordinates.
+    This derives capabilities from phonetic structure.
+    """
+    from vibe_core.mahamantra.substrate.pancha_walk import (
+        COORD_ELEMENT,
+        COORD_HARMONIC,
+        COORD_SUB,
+        COORD_VARGA,
+        ELEMENT_NAMES,
+        IS_SHRUTI,
+    )
+    from vibe_core.mahamantra.substrate.rama_grid import rama_to_phoneme
+
+    print("=" * 70)
+    print("PART 5: GUARDIAN 4D CAPABILITY DERIVATION")
+    print("         mod49 → RAMA Grid → Pancha Walk → Capability")
+    print("=" * 70)
+    print()
+
+    # Shastrische Funktionen (from mahajana_derivation.py)
+    SHASTRISCH = {
+        "vyasa": "compilation", "brahma": "creation", "narada": "transmission",
+        "shambhu": "destruction", "prithu": "organization", "kumaras": "wisdom",
+        "kapila": "analysis", "manu": "law", "parashurama": "enforcement",
+        "prahlada": "devotion", "janaka": "execution", "bhishma": "commitment",
+        "nrisimha": "protection", "bali": "surrender", "shuka": "liberation",
+        "yamaraja": "judgment",
+    }
+
+    for i, name in enumerate(ALL_GUARDIANS):
+        vib = compute_vibration_sum(name)
+        m49 = vib % 49  # RAMA Grid position
+
+        # 4D coordinates
+        elem = COORD_ELEMENT[m49]
+        varga = COORD_VARGA[m49]
+        sub = COORD_SUB[m49]
+        harmonic = COORD_HARMONIC[m49]
+        shruti = IS_SHRUTI[m49]
+
+        # Phoneme at this position
+        phoneme = rama_to_phoneme(m49)
+
+        # Element name
+        elem_name = ELEMENT_NAMES[elem]
+
+        # Capability derivation
+        elem_cap = ELEMENT_CAPABILITY[elem_name].split(" — ")[1]
+        varga_cap = VARGA_CAPABILITY[varga].split(" — ")[1]
+
+        if varga == 0:
+            sub_cap = SUB_SVARA.get(sub, "?").split(" — ")[1]
+        elif varga == 1:
+            sub_cap = SUB_SPARSHA.get(sub, "?").split(" — ")[1]
+        else:
+            sub_cap = SUB_SHESHA.get(sub, "?").split(" — ")[1]
+
+        shruti_type = "SHRUTI (fixed)" if shruti else "NAKSHATRA (journey)"
+        shastrisch = SHASTRISCH.get(name, "?")
+
+        # Constant match for mod49
+        const_name = KNOWN_CONSTANTS.get(m49, "")
+        const_str = f" = {const_name}" if const_name else ""
+
+        print(f"[{i:2d}] {name.upper():<14} mod49={m49:>2}{const_str}")
+        print(f"     Phoneme: {phoneme}")
+        print(f"     Element: {elem_name} ({elem_cap})")
+        print(f"     Varga:   {VARGA_CAPABILITY[varga]}")
+        print(f"     Sub:     {sub_cap}")
+        print(f"     Harmonic: {harmonic} (dissolution → position {harmonic})")
+        print(f"     {shruti_type}")
+        print(f"     Shastrisch: {shastrisch}")
+        print(f"     ---")
+        print(f"     DERIVED: {elem_cap} + {varga_cap} + {sub_cap}")
+        print()
+
+
+def run_analysis(tree_depth: int = 4) -> None:
+    """Run the complete Guardian Syllable Tree analysis."""
+
+    # --- Part 1: Syllable Vibrations ---
+    print("=" * 70)
+    print("PART 1: GUARDIAN SYLLABLE VIBRATIONS")
+    print("=" * 70)
+    print()
+
+    guardian_vibs = compute_guardian_syllable_vibrations()
+    for name, syl_data in guardian_vibs.items():
+        syls = " - ".join(f"{s['syllable']}({s['rama_idx']}|v{s['vibration']})" for s in syl_data)
+        total_vib = compute_vibration_sum(name)
+        print(f"  {name:<14} {syls}  [total={total_vib}]")
+    print()
+
+    # --- Part 2: Tree Search ---
+    print("=" * 70)
+    print("PART 2: SEARCH ROOT TREES FOR GUARDIAN VIBRATIONS")
+    print("=" * 70)
+    print()
+
+    tree_matches = search_trees_for_guardians(depth=tree_depth)
+
+    found_count = 0
+    not_found = []
+    for name, matches in tree_matches.items():
+        if matches:
+            found_count += 1
+            print(f"  ✓ {name}: {len(matches)} match(es)")
+            for m in matches[:3]:
+                print(f"      {m['syllable']} (v={m['vibration']}) → {m['tree']} tree, depth {m['depth']}")
+                print(f"        lineage: {m['lineage']}")
+        else:
+            not_found.append(name)
+
+    print()
+    print(f"  FOUND (raw): {found_count}/16 Guardians have vibration matches in the trees")
+    if not_found:
+        print(f"  NOT FOUND: {', '.join(not_found)}")
+    print()
+
+    # --- Part 2b: Modular Search ---
+    print("=" * 70)
+    print("PART 2b: MODULAR SEARCH (reduce to same space)")
+    print("=" * 70)
+    print()
+    search_trees_modular(depth=tree_depth)
+    print()
+
+    # --- Part 3: Unknown Intervals ---
+    print("=" * 70)
+    print("PART 3: UNKNOWN INTERVAL DERIVATION")
+    print("=" * 70)
+    print()
+
+    interval_derivations = derive_unknown_intervals()
+    for interval, derivations in sorted(interval_derivations.items()):
+        print(f"  +{interval}:")
+        if derivations:
+            for d in derivations:
+                print(f"    {d}")
+        else:
+            print(f"    (no derivation found)")
+        print()
+
+    # --- Part 4: Name → Position ---
+    analyze_name_positions()
+    print()
+
+    # --- Part 5: 4D Capability Derivation ---
+    analyze_guardian_4d()
+
+    # --- Summary ---
+    print()
+    print("=" * 70)
+    print("SUMMARY")
+    print("=" * 70)
+    print()
+    print(f"  Tree depth: {tree_depth}")
+    print(f"  Guardians with tree matches (raw): {found_count}/16")
+    print(f"  Unknown intervals explained: {sum(1 for d in interval_derivations.values() if d)}/{len(interval_derivations)}")
+    print(f"  All 16 Guardians found in mod-49 (RAMA) space")
+    print(f"  All 16 Guardians have 4D Pancha Walk signatures")
+    print()
+
+
 if __name__ == "__main__":
     run_analysis(tree_depth=4)
