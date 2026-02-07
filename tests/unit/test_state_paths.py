@@ -39,20 +39,25 @@ class TestStatePaths:
             assert "opus_assistant" in str(path)
 
     def test_save_creates_directory(self):
-        """Saving creates parent directories automatically."""
+        """Saving caches in RAM; flush writes to disk creating directories."""
         from vibe_core.plugins.opus_assistant.core.state_paths import (
             get_opus_state_path,
+            get_opus_state_service,
             save_opus_state,
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             workspace = Path(tmpdir).resolve()
 
-            # Save should create directory and file
+            # Save caches in RAM (write-behind)
             success = save_opus_state(workspace, "test.json", {"test": True})
             assert success
 
-            # File and directory should now exist
+            # Flush to disk
+            service = get_opus_state_service(workspace)
+            service.flush()
+
+            # File and directory should now exist on disk
             path = get_opus_state_path(workspace, "test.json")
             assert path.exists()
 
@@ -152,18 +157,23 @@ class TestStatePaths:
             assert has_legacy_state(workspace, "test.json")
 
     def test_append_opus_state(self):
-        """Can append to JSONL file."""
+        """Can append to JSONL file (buffered in RAM, flushed to disk)."""
         from vibe_core.plugins.opus_assistant.core.state_paths import (
             append_opus_state,
             get_opus_state_path,
+            get_opus_state_service,
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             workspace = Path(tmpdir)
 
-            # Append entries
+            # Append entries (buffered in RAM)
             assert append_opus_state(workspace, "test.jsonl", {"entry": 1})
             assert append_opus_state(workspace, "test.jsonl", {"entry": 2})
+
+            # Flush to disk
+            service = get_opus_state_service(workspace)
+            service.flush()
 
             # Read and verify
             path = get_opus_state_path(workspace, "test.jsonl")
