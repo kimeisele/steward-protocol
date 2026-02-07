@@ -535,30 +535,6 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
                     self._venu_service = VenuService()
 
-                    # Wire Jagannath ratha_yatra to the beat (auto_flood_orphans on rhythm)
-                    try:
-                        from vibe_core.protocols.lila.jagannath import IJagannath
-
-                        jagannath = ServiceRegistry.get(IJagannath)
-                        if jagannath:
-                            # Run ratha_yatra every 144 ticks (VENU_FIELD_TICKS = 36 seconds)
-                            from vibe_core.mahamantra.protocols._venu import VENU_FIELD_TICKS
-
-                            _ratha_counter = {"ticks": 0}
-
-                            def _ratha_on_beat(position: int) -> None:
-                                _ratha_counter["ticks"] += 1
-                                if _ratha_counter["ticks"] % VENU_FIELD_TICKS == 0:
-                                    try:
-                                        jagannath.start_ratha_yatra()
-                                    except Exception as e:
-                                        logger.debug(f"Ratha yatra tick error: {e}")
-
-                            self._venu_service.on_beat(_ratha_on_beat)
-                            logger.info("      → Jagannath wired to VenuService (ratha_yatra every 36s)")
-                    except Exception as e:
-                        logger.debug(f"Jagannath wiring skipped: {e}")
-
                     ServiceRegistry.register(VenuServiceProtocol, self._venu_service)
 
                     # YASODA'S ROPE: Wire BeatSubscribers via protocol discovery
@@ -573,6 +549,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                                 OuroborosSubscriber,
                                 ShuddhiSubscriber,
                             )
+                            from vibe_core.services.jagannath_subscriber import JagannathSubscriber
                             from vibe_core.shuddhi.kala_bridge import KalaBridgeSubscriber
 
                             workspace = getattr(self.kernel, "_workspace", None)
@@ -580,6 +557,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                                 OuroborosSubscriber(workspace=workspace),
                                 ShuddhiSubscriber(dry_run=True),
                                 KalaBridgeSubscriber(project_root=self.project_root),
+                                JagannathSubscriber(),
                             ]
 
                             # Register each subscriber so get_all(BeatSubscriberProtocol) finds them
