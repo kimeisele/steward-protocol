@@ -300,7 +300,18 @@ class VenuOrchestrator:
         FIX: murali was (seed * seed) % 16 which only produces 4 values
         (quadratic residues mod 16 = {0,1,4,9}). Now uses linear
         combination to reach all 16 positions.
+
+        Args:
+            seed: Non-negative integer seed value.
+
+        Raises:
+            TypeError: If seed is not an integer.
+            ValueError: If seed is negative.
         """
+        if not isinstance(seed, int):
+            raise TypeError(f"seed must be int, got {type(seed).__name__}")
+        if seed < 0:
+            raise ValueError(f"seed must be non-negative, got {seed}")
         venu = (seed * SEVEN) % (1 << self.VENU_BITS)
         vamsi = (seed + TEN) % (1 << self.VAMSI_BITS)
         murali = (seed * SEVEN + TEN) % (1 << self.MURALI_BITS)
@@ -344,12 +355,20 @@ class VenuOrchestrator:
         from the static LUT, it plays from a coordinate score.
 
         Args:
-            coords: RAMA coordinate sequence (from varnamala_codec.encode)
-            cycle: Mahamantra cycle for H/K/R signature context
+            coords: RAMA coordinate sequence (from varnamala_codec.encode).
+                    Each value should be 0-48 (RAMA space). Values > VENU_MASK
+                    are silently masked to 6 bits.
+            cycle: Mahamantra cycle for H/K/R signature context (non-negative).
 
         Returns:
-            Tuple of DIW values, one per coordinate (phoneme)
+            Tuple of DIW values, one per coordinate (phoneme).
+
+        Raises:
+            TypeError: If coords is not a tuple/sequence of ints.
+            ValueError: If cycle is negative.
         """
+        if cycle < 0:
+            raise ValueError(f"cycle must be non-negative, got {cycle}")
         result = []
         quarter_size = max(1, len(coords) // QUARTERS) or 1
         vamsi_stride = (1 << VAMSI_HOLES) // 3  # 170
@@ -388,7 +407,18 @@ class VenuOrchestrator:
         self._mode = 0
 
     def set_mode(self, mode: int) -> None:
-        """Set the Kirtan Mode (0=Solo, 1=CallResponse, 2=Chorus)."""
+        """Set the Kirtan Mode (0=Solo, 1=CallResponse, 2=Chorus).
+
+        Args:
+            mode: 0 (Solo), 1 (CallResponse), or 2 (Chorus).
+                  Max = HALVES (2) from SSOT.
+
+        Raises:
+            TypeError: If mode is not an integer.
+            ValueError: If mode is outside 0..HALVES.
+        """
+        if not isinstance(mode, int):
+            raise TypeError(f"mode must be int, got {type(mode).__name__}")
         if not (0 <= mode <= HALVES):
             raise ValueError(f"Mode must be 0-{HALVES}, got {mode}")
         self._mode = mode
@@ -402,17 +432,32 @@ class VenuOrchestrator:
         return struct.pack("<QQQ", self._tick, self._prev_state, self._mode)
 
     def from_bytes(self, data: bytes) -> None:
-        """Restore state."""
+        """Restore state from serialized bytes.
+
+        Validates restored values against SSOT bounds:
+        - tick must be < COSMIC_FRAME
+        - mode must be <= HALVES
+        - prev_state must be <= DIW_MASK (19 bits)
+
+        Raises:
+            ValueError: If data is too short or contains out-of-bounds values.
+        """
         MIN_SIZE = 24  # 3 * 8
         if len(data) < MIN_SIZE:
             # Backwards compatibility check for old 16-byte snapshots
             if len(data) >= 16:
                 self._tick, self._prev_state = struct.unpack("<QQ", data[:16])
                 self._mode = 0  # Default to Solo
+                self._tick %= COSMIC_FRAME
+                self._prev_state &= DIW_MASK
                 return
             raise ValueError("Data too short")
 
-        self._tick, self._prev_state, self._mode = struct.unpack("<QQQ", data[:24])
+        tick, prev_state, mode = struct.unpack("<QQQ", data[:24])
+        # Clamp to valid ranges (defensive against corrupt snapshots)
+        self._tick = tick % COSMIC_FRAME
+        self._prev_state = prev_state & DIW_MASK
+        self._mode = min(mode, HALVES)
 
 
 # =============================================================================
