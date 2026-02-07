@@ -1226,7 +1226,9 @@ class OpusDashboardRenderer:
                     mtime = os.path.getmtime(synapses_path)
                     neural["ops"]["synapses_file_mtime"] = datetime.fromtimestamp(mtime).isoformat()
 
-                    data = json.loads(synapses_path.read_text())
+                    from vibe_core.state.state_service import get_state_service
+                    _state = get_state_service(self._root, plugin_id="opus_assistant")
+                    data = _state.load("synapses.json", default={})
                     triggers = data.get("triggers", [])
                     neural["synapses"]["total_triggers"] = len(triggers)
 

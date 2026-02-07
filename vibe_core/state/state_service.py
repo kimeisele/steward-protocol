@@ -410,13 +410,14 @@ class StateService(StateServiceProtocol):
 
     def load(self, filename: str, default: Any = None) -> Any:
         """
-        Load state — RAM cache first, disk fallback.
+        Load state — RAM cache first, disk fallback. Thread-safe.
         """
-        # 1. Check RAM cache first (instant, no IO)
-        if filename in self._cache:
-            return self._cache[filename]
+        with self._lock:
+            # 1. Check RAM cache first (instant, no IO)
+            if filename in self._cache:
+                return self._cache[filename]
 
-        # 2. Fall back to disk
+        # 2. Fall back to disk (outside lock — IO can be slow)
         target_path = self.state_root / filename
 
         # Heritage migration (legacy .opus_state)
@@ -437,7 +438,8 @@ class StateService(StateServiceProtocol):
             with open(target_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             # Warm the cache so subsequent reads are from RAM
-            self._cache[filename] = data
+            with self._lock:
+                self._cache[filename] = data
             return data
         except json.JSONDecodeError as e:
             logger.warning(f"Invalid JSON in {filename}: {e}")
