@@ -537,43 +537,17 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
                     ServiceRegistry.register(VenuServiceProtocol, self._venu_service)
 
-                    # YASODA'S ROPE: Wire BeatSubscribers via protocol discovery
-                    # No hardcoded list. No closure hacks. VenuService owns the dispatch.
+                    # YASODA'S ROPE: Auto-discover BeatSubscribers
+                    # No hardcoded list. No closure hacks. FOLDER=EXISTENCE.
                     try:
-                        from vibe_core.mahamantra.protocols._venu import BeatSubscriberProtocol
+                        from vibe_core.services.beat_discovery import discover_and_register_beat_subscribers
 
-                        # Create and register beat subscribers in ServiceRegistry
-                        try:
-                            from vibe_core.services.healing_subscribers import (
-                                OuroborosSubscriber,
-                                ShuddhiSubscriber,
-                            )
-                            from vibe_core.services.jagannath_subscriber import JagannathSubscriber
-                            from vibe_core.shuddhi.kala_bridge import KalaBridgeSubscriber
-
-                            workspace = getattr(self.kernel, "_workspace", None)
-                            subscribers = [
-                                OuroborosSubscriber(workspace=workspace),
-                                ShuddhiSubscriber(dry_run=True),
-                                KalaBridgeSubscriber(project_root=self.project_root),
-                                JagannathSubscriber(),
-                            ]
-
-                            for sub in subscribers:
-                                ServiceRegistry.register(
-                                    type(sub), sub,
-                                    protocols=[BeatSubscriberProtocol],
-                                )
-                                logger.info(f"      → Registered beat subscriber: {sub.beat_name}")
-                        except Exception as e:
-                            logger.debug(f"Healing subscribers not available: {e}")
-
-                        # VenuService discovers and dispatches internally
+                        discover_and_register_beat_subscribers()
                         beat_count = self._venu_service.discover_beat_subscribers()
                         if beat_count:
-                            logger.info(f"      → {beat_count} beat subscribers wired to VenuService")
+                            logger.info(f"      → {beat_count} beat subscribers auto-wired to VenuService")
                     except Exception as e:
-                        logger.debug(f"BeatSubscriber wiring skipped: {e}")
+                        logger.debug(f"BeatSubscriber discovery skipped: {e}")
 
                     # VENU FLUTE: Auto-discover DIW subscribers (FOLDER=EXISTENCE)
                     # Any service registered under DIWSubscriberProtocol gets

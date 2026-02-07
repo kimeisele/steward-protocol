@@ -43,10 +43,12 @@ class KalaBridgeSubscriber:
 
     Beat interval: NADI (72 ticks = 18s) for log scan.
     Patrol: every 6th NADI (432 ticks = 108s) for watchman.
+
+    Zero-arg constructor: project_root resolved lazily from ServiceRegistry.
     """
 
-    def __init__(self, project_root: Optional[Path] = None) -> None:
-        self._project_root = project_root
+    def __init__(self) -> None:
+        self._project_root: Optional[Path] = None
         self._nadi_count: int = 0
 
     @property
