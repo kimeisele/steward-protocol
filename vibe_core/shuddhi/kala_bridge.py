@@ -1,13 +1,18 @@
 """
-Shuddhi Kala Bridge - The Temporal Guardian.
+Shuddhi Kala Bridge - The Temporal Guardian (BeatSubscriber)
+============================================================
 
-This bridge connects the PulseManager (Time/Kala) with the Shuddhi LogMonitor
-AND the Watchman patrol. It subscribes to the system pulse and runs checks
-at regular intervals.
+Subscribes to VenuService heartbeat via BeatSubscriberProtocol.
+Auto-discovered at boot — no manual wiring.
 
-Two cycles:
-1. Log scan (every N cycles) - detects runtime errors
-2. Watchman patrol (every M cycles) - detects code violations
+Two cycles, both derived from SSOT:
+1. Log scan every NADI (72 ticks = 18s) — detects runtime errors
+2. Watchman patrol every NADI × SHARANAGATI (432 ticks = 108s) — code violations
+
+MIGRATION (Feb 2026):
+    Was: PulseManager subscriber (1s legacy heartbeat)
+    Now: BeatSubscriberProtocol (250ms VenuService heartbeat)
+    Why: One heartbeat, not two. VenuService is the drummer.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -17,88 +22,112 @@ __genesis__ = "0x39f0252d"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from pathlib import Path
+from typing import Optional
 
-from vibe_core.di import ServiceRegistry
-from vibe_core.protocols.task import TaskProtocol
-from vibe_core.pulse import PulsePacket, get_pulse_manager
-from vibe_core.shuddhi.log_monitor import LogMonitor
+from vibe_core.mahamantra.protocols._seed import SHARANAGATI
+from vibe_core.mahamantra.protocols._venu import VENU_NADI_TICKS
 
 logger = logging.getLogger("SHUDDHI.KALA")
 
+# Patrol interval: NADI × SHARANAGATI = 72 × 6 = 432 ticks = 108s
+# This is exactly MALA (108) seconds — harmonically derived.
+_PATROL_EVERY_N_NADIS: int = SHARANAGATI  # 6
 
-class ShuddhiKalaBridge:
-    def __init__(
-        self,
-        project_root: Path,
-        log_interval: int = 10,
-        patrol_interval: int = 100,  # Patrol less frequently (expensive)
-    ):
-        self.project_root = project_root
-        self.log_interval = log_interval
-        self.patrol_interval = patrol_interval
-        self._pulse_manager = get_pulse_manager()
-        self._subscription_id = None
-        self._journal_path = project_root / "data" / "system_journal.jsonl"
 
-    def start(self):
-        """Subscribe to the system pulse."""
-        if self._subscription_id:
-            return
+class KalaBridgeSubscriber:
+    """
+    Temporal guardian for log scanning and watchman patrol.
 
-        self._subscription_id = self._pulse_manager.subscribe(self.on_pulse)
-        logger.info(
-            f"💓 Shuddhi Kala Bridge STARTED (LogScan: {self.log_interval}, Patrol: {self.patrol_interval} cycles)"
-        )
+    Implements BeatSubscriberProtocol. VenuService discovers this
+    at boot via ServiceRegistry.get_all(BeatSubscriberProtocol).
 
-    def stop(self):
-        """Unsubscribe from the pulse."""
-        if self._subscription_id:
-            self._pulse_manager.unsubscribe(self.on_pulse)
-            self._subscription_id = None
-            logger.info("💀 Shuddhi Kala Bridge STOPPED")
+    Beat interval: NADI (72 ticks = 18s) for log scan.
+    Patrol: every 6th NADI (432 ticks = 108s) for watchman.
 
-    def on_pulse(self, packet: PulsePacket):
-        """Callback for each heartbeat."""
-        # Log scan - frequent
-        if packet.cycle_id % self.log_interval == 0:
-            self._run_log_scan()
+    Zero-arg constructor: project_root resolved lazily from ServiceRegistry.
+    """
 
-        # Watchman patrol - less frequent (expensive AST scan)
-        if packet.cycle_id % self.patrol_interval == 0:
+    def __init__(self) -> None:
+        self._project_root: Optional[Path] = None
+        self._nadi_count: int = 0
+
+    @property
+    def beat_name(self) -> str:
+        return "kala_bridge"
+
+    @property
+    def beat_interval(self) -> int:
+        return VENU_NADI_TICKS  # 72 ticks = 18 seconds
+
+    def on_beat_tick(self, tick_count: int, position: int) -> None:
+        """Called by VenuService every NADI interval."""
+        self._nadi_count += 1
+
+        # Log scan — every NADI
+        self._run_log_scan()
+
+        # Watchman patrol — every SHARANAGATI NADIs (108s)
+        if self._nadi_count % _PATROL_EVERY_N_NADIS == 0:
             self._run_watchman_patrol()
 
-    def run_pulse_sync(self, packet: PulsePacket):
-        """Synchronous wrapper for pulse events."""
-        self.on_pulse(packet)
-
-    def _run_log_scan(self):
-        """Execute the log scan and task creation."""
+    def _resolve_project_root(self) -> Optional[Path]:
+        if self._project_root is not None:
+            return self._project_root
         try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols import VibeKernel
+            kernel = ServiceRegistry.get(VibeKernel)
+            if kernel and hasattr(kernel, "project_root"):
+                return kernel.project_root
+        except Exception:
+            pass
+        return None
+
+    def _run_log_scan(self) -> None:
+        """Execute log scan and create tasks for detected errors."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.task import TaskProtocol
+
             task_service = ServiceRegistry.get(TaskProtocol)
             if not task_service:
                 return
 
-            monitor = LogMonitor(self._journal_path, task_service)
+            project_root = self._resolve_project_root()
+            if not project_root:
+                return
+
+            journal_path = project_root / "data" / "system_journal.jsonl"
+            from vibe_core.shuddhi.log_monitor import LogMonitor
+
+            monitor = LogMonitor(journal_path, task_service)
             tasks_created = monitor.scan_and_task()
 
             if tasks_created > 0:
-                logger.info(f"🛡️ KalaBridge: Created {tasks_created} log-based tasks.")
+                logger.info(
+                    "[KALA] Log scan: %d tasks created (nadi %d)",
+                    tasks_created, self._nadi_count,
+                )
         except Exception as e:
-            logger.error(f"KalaBridge log scan failed: {e}")
+            logger.debug("[KALA] Log scan failed: %s", e)
 
-    def _run_watchman_patrol(self):
-        """Trigger Watchman deep inspection via task dispatch."""
+    def _run_watchman_patrol(self) -> None:
+        """Trigger watchman deep inspection via task dispatch."""
         try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.task import TaskProtocol
+
             task_service = ServiceRegistry.get(TaskProtocol)
             if not task_service:
                 return
 
-            # Check if patrol task already pending
-            existing = [t for t in task_service.list_tasks() if t.title == "PATROL: Watchman Deep Inspection"]
+            existing = [
+                t for t in task_service.list_tasks()
+                if t.title == "PATROL: Watchman Deep Inspection"
+            ]
             if existing:
-                return  # Don't duplicate
+                return
 
-            # Create patrol task for Watchman
             task_service.add_task(
                 title="PATROL: Watchman Deep Inspection",
                 description=(
@@ -109,18 +138,9 @@ class ShuddhiKalaBridge:
                 priority=70,
                 assigned_agent="watchman",
             )
-            logger.info("⚔️ KalaBridge: Dispatched Watchman patrol task")
+            logger.info("[KALA] Watchman patrol dispatched (nadi %d)", self._nadi_count)
         except Exception as e:
-            logger.error(f"KalaBridge patrol dispatch failed: {e}")
-
-    # Legacy method name for backwards compatibility
-    def run_checks(self):
-        """Execute both log scan and patrol check."""
-        self._run_log_scan()
+            logger.debug("[KALA] Patrol dispatch failed: %s", e)
 
 
-def start_kala_bridge(project_root: Path) -> ShuddhiKalaBridge:
-    """Factory function to start the bridge."""
-    bridge = ShuddhiKalaBridge(project_root)
-    bridge.start()
-    return bridge
+__all__ = ["KalaBridgeSubscriber"]

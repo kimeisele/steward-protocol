@@ -171,9 +171,12 @@ Jeder Guardian: `__mahajana__`, `__position__`, `__genesis__`, identischer thin 
 
 Offen:
 - `seed.py`: ~20 F811 Redefinitionen (absichtliche Re-Derivation, aber unordentlich)
-- Zwei CLI-Systeme: `vibe_core/cli/` (alt) und `vibe_core/mahamantra/cli/` (neu)
+- Zwei CLI-Systeme: `vibe_core/cli/` (alt, 69 Dateien, nur Redirect) und `vibe_core/mahamantra/cli/` (neu)
 - `ExecuteResult.requires_confirmation` existiert, kein Guardian nutzt es
 - `protocols/` hat massive Dateien (yamaraja protocol = 653 Zeilen)
+- PulseManager (`protocols/mahajanas/manu/types/pulse.py`): ZERO Consumers, deprecated
+- Jagannath `ratha_yatra` hardcoded in `boot_orchestrator.py` statt BeatSubscriber
+- MantraClock: 0/16 position callbacks, 0 voices, 0 mala callbacks — alles leer
 
 Fallen (aufpassen!):
 - `CellLifecycleState.integrity` ist `float` (0.0-1.0), NICHT `int`. War mal falsch deklariert.
@@ -200,6 +203,11 @@ Bereits aufgeräumt (nicht nochmal anfassen):
 - `proxy.py`: `AUTO_WRAP_SERVICES` (2 hardcoded) → lotus-driven Discovery (16/16)
 - `boot_orchestrator.py`: Balarama wrapping via `kernel._positions` statt manueller Liste
 - `substrate/__init__.py`: Monolith-Split → `types.py`, `hardware.py`, `mantra_protocol.py`
+- `VenuOrchestratorProtocol` in `_venu.py`: ONE orchestrator shared via ServiceRegistry
+- `VenuService.__init__()` registriert Orchestrator unter `VenuOrchestratorProtocol`
+- `chamber.py`: `_resolve_orchestrator()` holt shared Orchestrator (Boot) oder local fallback (CLI)
+- `kala_bridge.py`: PulseManager → `BeatSubscriberProtocol` (NADI=72, Patrol=432=MALA Sekunden)
+- `boot_orchestrator.py`: KalaBridge als BeatSubscriber registriert, alte PulseManager-Verdrahtung entfernt
 
 ## Repo-Zustand
 
@@ -209,9 +217,10 @@ Nur diese Branches haben echten Wert:
 | Branch | Status | Inhalt |
 |--------|--------|--------|
 | `main` | Stabil | Letzter Senior: Guardian-Cleanup + F821-Fixes + Pancha-Tattva-Wiring |
-| `feature/diw-refinement` | Aktiv | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
-| `feature/gita-architecture-refinement` | In diw-refinement | Vorgänger-Branch, DIW-Protokoll erstellt |
-| `claude/extract-sanskrit-vedabase-*` | Aktiv | Sanskrit-Extraktion + 4D Dekomposition + Synth-Integration |
+| `feature/venu-production` | Aktiv | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
+| `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
+| `feature/gita-architecture-refinement` | Gemergt | Vorgänger-Branch, DIW-Protokoll erstellt |
+| `claude/extract-sanskrit-vedabase-*` | Gemergt | Sanskrit-Extraktion + 4D Dekomposition + Synth-Integration |
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.

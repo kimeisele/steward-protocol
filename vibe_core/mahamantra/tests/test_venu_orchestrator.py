@@ -789,3 +789,117 @@ class TestSpellDispatch:
         orch.spell(coords)
         for i, event in enumerate(sub.events):
             assert event["venu"] == (coords[i] & VENU_MASK)
+
+
+# =============================================================================
+# SHARED ORCHESTRATOR (One Flute, One Krishna)
+# =============================================================================
+
+
+from vibe_core.mahamantra.protocols._venu import VenuOrchestratorProtocol
+
+
+class TestVenuOrchestratorProtocol:
+    """VenuOrchestrator must satisfy VenuOrchestratorProtocol."""
+
+    def test_implements_protocol(self):
+        orch = VenuOrchestrator()
+        assert isinstance(orch, VenuOrchestratorProtocol)
+
+    def test_protocol_has_step(self):
+        orch = VenuOrchestrator()
+        assert hasattr(orch, "step")
+        diw = orch.step()
+        assert diw > 0
+
+    def test_protocol_has_tick(self):
+        orch = VenuOrchestrator()
+        assert orch.tick == 0
+        orch.step()
+        assert orch.tick == 1
+
+    def test_protocol_has_mode(self):
+        orch = VenuOrchestrator()
+        assert orch.mode == 0
+        orch.set_mode(2)
+        assert orch.mode == 2
+
+    def test_protocol_has_subscriber_count(self):
+        orch = VenuOrchestrator()
+        assert orch.subscriber_count == 0
+
+
+class TestSharedOrchestrator:
+    """Boot path: ONE orchestrator shared via ServiceRegistry."""
+
+    def setup_method(self):
+        from vibe_core.di import ServiceRegistry
+        ServiceRegistry.reset()
+
+    def teardown_method(self):
+        from vibe_core.di import ServiceRegistry
+        ServiceRegistry.reset()
+
+    def test_boot_path_shares_orchestrator(self):
+        """VenuService registers its orchestrator; Chamber resolves the same one."""
+        from vibe_core.services.venu_service import VenuService
+        from vibe_core.mahamantra.substrate.chamber import _resolve_orchestrator
+
+        svc = VenuService()
+        resolved = _resolve_orchestrator()
+        assert resolved is svc.orchestrator
+
+    def test_boot_path_chamber_uses_shared(self):
+        """get_chamber() uses the VenuService orchestrator when booted."""
+        from vibe_core.services.venu_service import VenuService
+        from vibe_core.mahamantra.substrate.chamber import get_chamber, reset_chamber
+
+        reset_chamber()
+        svc = VenuService()
+        chamber = get_chamber()
+        assert chamber._orchestrator is svc.orchestrator
+        reset_chamber()
+
+    def test_cli_path_creates_local_fallback(self):
+        """Without VenuService, _resolve_orchestrator creates a local instance."""
+        from vibe_core.mahamantra.substrate.chamber import _resolve_orchestrator
+
+        orch = _resolve_orchestrator()
+        assert isinstance(orch, VenuOrchestrator)
+
+    def test_shared_orchestrator_ticks_propagate(self):
+        """Ticks on the shared orchestrator are visible to the chamber."""
+        from vibe_core.services.venu_service import VenuService
+        from vibe_core.mahamantra.substrate.chamber import get_chamber, reset_chamber
+
+        reset_chamber()
+        svc = VenuService()
+        chamber = get_chamber()
+
+        # Tick via the service's orchestrator
+        svc.orchestrator.step()
+        svc.orchestrator.step()
+
+        # Chamber sees the same tick
+        assert chamber.tick == 2
+        reset_chamber()
+
+    def test_shared_subscribers_receive_from_both(self):
+        """A subscriber on the shared orchestrator receives DIW from any caller."""
+        from vibe_core.services.venu_service import VenuService
+        from vibe_core.mahamantra.substrate.chamber import get_chamber, reset_chamber
+
+        reset_chamber()
+        svc = VenuService()
+        chamber = get_chamber()
+
+        sub = _MockSubscriber("shared")
+        svc.orchestrator.subscribe(sub)
+
+        # Chamber's dance() calls orchestrator.step() internally
+        # But we can also step directly
+        svc.orchestrator.step()
+        assert len(sub.events) == 1
+
+        reset_chamber()
+        svc.orchestrator.unsubscribe(sub)

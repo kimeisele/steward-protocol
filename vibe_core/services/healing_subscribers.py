@@ -36,10 +36,11 @@ class OuroborosSubscriber:
 
     Runs every NADI interval (72 ticks = 18 seconds).
     Feeds the Knowledge Graph so ShuddhiEngine knows what to heal.
+
+    Zero-arg constructor: workspace resolved lazily from ServiceRegistry.
     """
 
-    def __init__(self, workspace: Optional[Path] = None) -> None:
-        self._workspace = workspace
+    def __init__(self) -> None:
         self._orchestrator = None  # Lazy
 
     @property
@@ -50,11 +51,24 @@ class OuroborosSubscriber:
     def beat_interval(self) -> int:
         return VENU_NADI_TICKS  # 72 ticks = 18 seconds
 
+    def _resolve_workspace(self) -> Optional[Path]:
+        """Lazy workspace resolution from ServiceRegistry."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.kernel_protocol import KernelProtocol
+            kernel = ServiceRegistry.get(KernelProtocol)
+            if kernel and hasattr(kernel, '_workspace'):
+                return kernel._workspace
+        except Exception:
+            pass
+        return None
+
     def _get_orchestrator(self):
         if self._orchestrator is None:
             try:
                 from vibe_core.ouroboros.loop_orchestrator import OuroborosLoopOrchestrator
-                self._orchestrator = OuroborosLoopOrchestrator(workspace=self._workspace)
+                workspace = self._resolve_workspace()
+                self._orchestrator = OuroborosLoopOrchestrator(workspace=workspace)
             except Exception as e:
                 logger.debug(f"[OUROBOROS] Could not create orchestrator: {e}")
         return self._orchestrator
@@ -81,10 +95,12 @@ class ShuddhiSubscriber:
 
     Runs every FIELD interval (144 ticks = 36 seconds).
     Reads unhealed violations from Knowledge Graph, applies remedies.
+
+    Zero-arg constructor: dry_run defaults to True (safe mode).
     """
 
-    def __init__(self, dry_run: bool = True) -> None:
-        self._dry_run = dry_run
+    def __init__(self) -> None:
+        self._dry_run = True  # Safe default — no mutations without explicit opt-in
         self._engine = None  # Lazy
 
     @property

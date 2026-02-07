@@ -527,15 +527,6 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                 total_agents = status.get("agents_registered", 0)
                 logger.info(f"      → Total agents registered: {total_agents}")
 
-                # OPUS-212: Start Shuddhi Kala Bridge (The Heartbeat Guardian)
-                try:
-                    from vibe_core.shuddhi.kala_bridge import start_kala_bridge
-
-                    self._kala_bridge = start_kala_bridge(self.project_root)
-                    logger.info("      → Shuddhi Kala Bridge active (Kala loop engaged)")
-                except Exception as e:
-                    logger.warning(f"⚠️ Could not start Shuddhi Kala Bridge: {e}")
-
                 # GOVARDHAN: Start VenuService (Krishna's Flute - Central Orchestrator)
                 try:
                     from vibe_core.di import ServiceRegistry
@@ -544,82 +535,32 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
                     self._venu_service = VenuService()
 
-                    # Wire Jagannath ratha_yatra to the beat (auto_flood_orphans on rhythm)
-                    try:
-                        from vibe_core.protocols.lila.jagannath import IJagannath
-
-                        jagannath = ServiceRegistry.get(IJagannath)
-                        if jagannath:
-                            # Run ratha_yatra every 144 ticks (VENU_FIELD_TICKS = 36 seconds)
-                            from vibe_core.mahamantra.protocols._venu import VENU_FIELD_TICKS
-
-                            _ratha_counter = {"ticks": 0}
-
-                            def _ratha_on_beat(position: int) -> None:
-                                _ratha_counter["ticks"] += 1
-                                if _ratha_counter["ticks"] % VENU_FIELD_TICKS == 0:
-                                    try:
-                                        jagannath.start_ratha_yatra()
-                                    except Exception as e:
-                                        logger.debug(f"Ratha yatra tick error: {e}")
-
-                            self._venu_service.on_beat(_ratha_on_beat)
-                            logger.info("      → Jagannath wired to VenuService (ratha_yatra every 36s)")
-                    except Exception as e:
-                        logger.debug(f"Jagannath wiring skipped: {e}")
-
                     ServiceRegistry.register(VenuServiceProtocol, self._venu_service)
 
-                    # YASODA'S ROPE: Wire BeatSubscribers via protocol discovery
-                    # No hardcoded list. Any service registered under
-                    # BeatSubscriberProtocol gets heartbeat time automatically.
+                    # YASODA'S ROPE: Auto-discover BeatSubscribers
+                    # No hardcoded list. No closure hacks. FOLDER=EXISTENCE.
                     try:
-                        from vibe_core.mahamantra.protocols._venu import BeatSubscriberProtocol
+                        from vibe_core.services.beat_discovery import discover_and_register_beat_subscribers
 
-                        # Create and register healing subscribers
-                        try:
-                            from vibe_core.services.healing_subscribers import (
-                                OuroborosSubscriber,
-                                ShuddhiSubscriber,
-                            )
-
-                            workspace = getattr(self.kernel, "_workspace", None)
-                            subscribers = [
-                                OuroborosSubscriber(workspace=workspace),
-                                ShuddhiSubscriber(dry_run=True),
-                            ]
-
-                            # Register each subscriber so get_all(BeatSubscriberProtocol) finds them
-                            for sub in subscribers:
-                                ServiceRegistry.register(
-                                    type(sub), sub,
-                                    protocols=[BeatSubscriberProtocol],
-                                )
-                                logger.info(f"      → Registered beat subscriber: {sub.beat_name}")
-                        except Exception as e:
-                            logger.debug(f"Healing subscribers not available: {e}")
-
-                        # Discover ALL registered BeatSubscribers and wire to VenuService
-                        all_subscribers = ServiceRegistry.get_all(BeatSubscriberProtocol) or []
-                        if all_subscribers:
-                            _beat_counter = {"ticks": 0}
-
-                            def _dispatch_subscribers(position: int) -> None:
-                                _beat_counter["ticks"] += 1
-                                tick = _beat_counter["ticks"]
-                                for sub in all_subscribers:
-                                    try:
-                                        if tick % sub.beat_interval == 0:
-                                            sub.on_beat_tick(tick, position)
-                                    except Exception as e:
-                                        logger.debug(f"Beat subscriber {sub.beat_name} error: {e}")
-
-                            self._venu_service.on_beat(_dispatch_subscribers)
-                            logger.info(
-                                f"      → {len(all_subscribers)} beat subscribers wired to VenuService"
-                            )
+                        discover_and_register_beat_subscribers()
+                        beat_count = self._venu_service.discover_beat_subscribers()
+                        if beat_count:
+                            logger.info(f"      → {beat_count} beat subscribers auto-wired to VenuService")
                     except Exception as e:
-                        logger.debug(f"BeatSubscriber wiring skipped: {e}")
+                        logger.debug(f"BeatSubscriber discovery skipped: {e}")
+
+                    # VENU FLUTE: Auto-discover DIW subscribers (FOLDER=EXISTENCE)
+                    # Any service registered under DIWSubscriberProtocol gets
+                    # the 19-bit DIW on every tick. No manual wiring.
+                    try:
+                        from vibe_core.services.diw_discovery import discover_and_register_diw_subscribers
+
+                        discover_and_register_diw_subscribers()
+                        diw_count = self._venu_service.discover_subscribers()
+                        if diw_count:
+                            logger.info(f"      → {diw_count} DIW subscribers auto-wired to orchestrator")
+                    except Exception as e:
+                        logger.debug(f"DIW subscriber discovery skipped: {e}")
 
                     # Start the heartbeat (non-blocking async task)
                     asyncio.ensure_future(self._venu_service.start())

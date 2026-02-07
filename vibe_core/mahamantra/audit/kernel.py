@@ -1,177 +1,118 @@
 """
-UNIFIED AUDIT KERNEL - Orchestrates ALL Audit Components
-=========================================================
+AUDIT KERNEL - Dispatcher-Driven Audit Orchestration
+=====================================================
 
 "sarvasya cāhaṁ hṛdi sanniviṣṭo" (BG 15.15)
 "I am seated in everyone's heart"
 
-This kernel ORCHESTRATES existing tools - it does NOT reinvent them.
-
-COMPONENTS ORCHESTRATED:
-    1. DriftAuditor      - lineage, ssot, protocols
-    2. project_introspection - scan_codebase, find_gaps, measure_scale
-    3. CodeScanner       - graph-based analysis
-    4. narada_vina       - physics constants validation
-    5. SystemAudit       - databases, imports, ledger
+The AuditKernel is a thin facade over the AuditDispatcher.
+It does NOT manually wire auditors — the Dispatcher auto-discovers
+all modules with `class Auditor` + `__position__` in the audit/ folder.
 
 Usage:
     from vibe_core.mahamantra.audit.kernel import AuditKernel
-    
+
     kernel = AuditKernel()
-    report = kernel.full_audit()  # UnifiedAuditReport
+    kernel.run_all()                    # Run all auditors
+    findings = kernel.findings()        # Get all findings
+    report = kernel.summary()           # Get summary dict
 """
 
 __mahajana__ = "yamaraja"
 __position__ = 15
 __genesis__ = "0x8000000f"
 
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Dict, List, Tuple
+import logging
+from typing import Dict, List, Optional
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
+from vibe_core.mahamantra.audit.audit_registry import (
+    AuditFinding,
+    AuditRegistry,
+    FindingSeverity,
+    FindingStatus,
+    get_registry,
+)
+from vibe_core.mahamantra.audit.audit_dispatcher import (
+    AuditDispatcher,
+    get_dispatcher,
+)
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
-
-@dataclass(frozen=True)
-class UnifiedAuditReport:
-    """Complete audit report from all components."""
-    # DriftAuditor
-    lineage_valid: int
-    lineage_broken: int
-    protocols_alive: int
-    protocols_dead: int
-    ssot_violations: int
-    
-    # project_introspection
-    total_files: int
-    total_lines: int
-    coverage_percent: int
-    gaps_count: int
-    gaps_critical: int
-    
-    # narada_vina
-    physics_constants: int
-    physics_derived: int
-    physics_coverage: int
-    
-    # SystemAudit
-    databases: int
-    
-    @property
-    def is_pristine(self) -> bool:
-        return (self.lineage_broken == 0 and 
-                self.protocols_dead == 0 and 
-                self.ssot_violations == 0 and
-                self.gaps_critical == 0)
+logger = logging.getLogger("AUDIT.KERNEL")
 
 
 class AuditKernel:
     """
-    Unified Audit Kernel - Orchestrates all audit components.
-    
-    Does NOT reinvent - only ORCHESTRATES.
+    Audit Kernel — thin facade over AuditDispatcher + AuditRegistry.
+
+    Auto-discovers all auditors in the audit/ folder.
+    No manual wiring. No monolith. Protocol-driven.
     """
-    
-    def __init__(self, root: Path | None = None) -> None:
-        self._root = Path(root or ".")
-    
-    def quick_audit(self) -> UnifiedAuditReport:
-        """Quick audit - drift + physics only (fast)."""
-        drift = self._audit_drift()
-        physics = self._audit_physics()
 
-        return UnifiedAuditReport(
-            lineage_valid=drift["lineage_valid"],
-            lineage_broken=drift["lineage_broken"],
-            protocols_alive=drift["protocols_alive"],
-            protocols_dead=drift["protocols_dead"],
-            ssot_violations=drift["ssot_violations"],
-            total_files=0, total_lines=0, coverage_percent=0,
-            gaps_count=0, gaps_critical=0,
-            physics_constants=physics["total"],
-            physics_derived=physics["derived"],
-            physics_coverage=physics["coverage"],
-            databases=0,
-        )
+    def __init__(
+        self,
+        dispatcher: Optional[AuditDispatcher] = None,
+        registry: Optional[AuditRegistry] = None,
+    ) -> None:
+        self._dispatcher = dispatcher or get_dispatcher()
+        self._registry = registry or get_registry()
 
-    def full_audit(self) -> UnifiedAuditReport:
-        """Full audit - ALL components (slow, scans entire codebase)."""
-        drift = self._audit_drift()
-        introspection = self._audit_introspection()
-        physics = self._audit_physics()
-        system = self._audit_system()
+    def run_all(self) -> int:
+        """Run all discovered auditors. Returns total finding count."""
+        self._registry.clear()
+        self._dispatcher.run_all()
+        count = self._registry.count
+        logger.info("Audit complete: %d findings from %d auditors",
+                     count, len(self._dispatcher.auditors))
+        return count
 
-        return UnifiedAuditReport(
-            lineage_valid=drift["lineage_valid"],
-            lineage_broken=drift["lineage_broken"],
-            protocols_alive=drift["protocols_alive"],
-            protocols_dead=drift["protocols_dead"],
-            ssot_violations=drift["ssot_violations"],
-            total_files=introspection["total_files"],
-            total_lines=introspection["total_lines"],
-            coverage_percent=introspection["coverage_percent"],
-            gaps_count=introspection["gaps_count"],
-            gaps_critical=introspection["gaps_critical"],
-            physics_constants=physics["total"],
-            physics_derived=physics["derived"],
-            physics_coverage=physics["coverage"],
-            databases=system["databases"],
-        )
-    
-    def _audit_drift(self) -> Dict[str, int]:
-        """Use DriftAuditor."""
-        from vibe_core.mahamantra.audit.drift import DriftAuditor
-        auditor = DriftAuditor(self._root / "vibe_core/mahamantra")
-        report = auditor.audit()
+    def run_by_position(self, position: int) -> int:
+        """Run a single auditor by position. Returns finding count."""
+        before = self._registry.count
+        self._dispatcher.run_by_position(position)
+        return self._registry.count - before
+
+    def findings(
+        self,
+        severity: Optional[FindingSeverity] = None,
+        status: Optional[FindingStatus] = None,
+    ) -> List[AuditFinding]:
+        """Get findings, optionally filtered."""
+        return self._registry.list_by(status=status, severity=severity)
+
+    def critical_findings(self) -> List[AuditFinding]:
+        """Get only critical findings."""
+        return self._registry.list_by(severity=FindingSeverity.CRITICAL)
+
+    def summary(self) -> Dict[str, object]:
+        """Get a summary of the last audit run."""
+        all_findings = self._registry.list_all()
+        critical = [f for f in all_findings if f.severity == FindingSeverity.CRITICAL]
+        warnings = [f for f in all_findings if f.severity == FindingSeverity.WARNING]
+        info = [f for f in all_findings if f.severity == FindingSeverity.INFO]
+
+        # Group by source
+        by_source: Dict[str, int] = {}
+        for f in all_findings:
+            by_source[f.source] = by_source.get(f.source, 0) + 1
+
         return {
-            "lineage_valid": report.lineage_valid,
-            "lineage_broken": report.lineage_broken,
-            "protocols_alive": report.protocols_alive,
-            "protocols_dead": report.protocols_dead,
-            "ssot_violations": len(report.ssot_violations),
+            "total": len(all_findings),
+            "critical": len(critical),
+            "warnings": len(warnings),
+            "info": len(info),
+            "is_pristine": len(critical) == 0,
+            "auditors_discovered": len(self._dispatcher.auditors),
+            "by_source": by_source,
         }
-    
-    def _audit_introspection(self) -> Dict[str, int]:
-        """Use project_introspection."""
-        from vibe_core.mahamantra.research.project_introspection import (
-            scan_codebase, find_gaps, measure_scale
-        )
-        scale = measure_scale(self._root)
-        files, _ = scan_codebase(self._root)
-        gaps = find_gaps(files)
-        critical = [g for g in gaps if g.severity == "critical"]
-        return {
-            "total_files": scale["total_files"],
-            "total_lines": scale["total_lines"],
-            "coverage_percent": scale["coverage_percent"],
-            "gaps_count": len(gaps),
-            "gaps_critical": len(critical),
-        }
-    
-    def _audit_physics(self) -> Dict[str, int]:
-        """Use narada_vina."""
-        from vibe_core.mahamantra.analysis.narada_vina import get_coverage
-        cov = get_coverage()
-        # get_coverage returns nested dict with 'coverage' key
-        inner = cov.get("coverage", cov)
-        return {
-            "total": inner.get("total", 0),
-            "derived": inner.get("derived", 0),
-            "coverage": int(inner.get("coverage_percent", 0)),
-        }
-    
-    def _audit_system(self) -> Dict[str, int]:
-        """Use SystemAudit."""
-        try:
-            from vibe_core.tools.system_audit import SystemAudit
-            audit = SystemAudit(self._root)
-            dbs = audit.run_database_audit()
-            return {"databases": len(dbs)}
-        except Exception:
-            return {"databases": 0}
+
+    @property
+    def is_pristine(self) -> bool:
+        """True if no critical findings exist."""
+        return len(self.critical_findings()) == 0
 
 
-__all__ = ["AuditKernel", "UnifiedAuditReport"]
+__all__ = ["AuditKernel"]
 
