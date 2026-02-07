@@ -176,7 +176,7 @@ Offen:
 - `protocols/` hat massive Dateien (yamaraja protocol = 653 Zeilen)
 - PulseManager (`protocols/mahajanas/manu/types/pulse.py`): ZERO Consumers, deprecated
 - Jagannath `ratha_yatra` hardcoded in `boot_orchestrator.py` statt BeatSubscriber
-- MantraClock: 0/16 position callbacks, 0 voices, 0 mala callbacks — alles leer
+- MantraClock: 0/16 position callbacks, 0 voices, 1 mala callback (state flush)
 
 Fallen (aufpassen!):
 - `CellLifecycleState.integrity` ist `float` (0.0-1.0), NICHT `int`. War mal falsch deklariert.
@@ -208,6 +208,8 @@ Bereits aufgeräumt (nicht nochmal anfassen):
 - `chamber.py`: `_resolve_orchestrator()` holt shared Orchestrator (Boot) oder local fallback (CLI)
 - `kala_bridge.py`: PulseManager → `BeatSubscriberProtocol` (NADI=72, Patrol=432=MALA Sekunden)
 - `boot_orchestrator.py`: KalaBridge als BeatSubscriber registriert, alte PulseManager-Verdrahtung entfernt
+- `state_service.py`: Write-behind cache (save→RAM, flush→Disk), Mala-flush (108 ticks), Samskara-Intercept
+- `boot_orchestrator.py`: MantraClock.on_mala() → StateService.flush() (RAM→Disk every ~27s)
 
 ## Repo-Zustand
 
@@ -217,6 +219,7 @@ Nur diese Branches haben echten Wert:
 | Branch | Status | Inhalt |
 |--------|--------|--------|
 | `main` | Stabil | Letzter Senior: Guardian-Cleanup + F821-Fixes + Pancha-Tattva-Wiring |
+| `feature/mahamantra-single-entry-point` | Aktiv | Write-behind cache + Samskara intercept + SeedSpectrum in __call__ |
 | `feature/venu-production` | Aktiv | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
 | `feature/gita-architecture-refinement` | Gemergt | Vorgänger-Branch, DIW-Protokoll erstellt |

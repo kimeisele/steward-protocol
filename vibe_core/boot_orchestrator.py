@@ -562,6 +562,19 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                     except Exception as e:
                         logger.debug(f"DIW subscriber discovery skipped: {e}")
 
+                    # MALA FLUSH: Every 108 ticks (~27s), flush RAM state to disk
+                    try:
+                        from vibe_core.state.state_service import get_state_service
+                        _state_svc = get_state_service(self.project_root)
+                        def _mala_flush(mala_count: int) -> None:
+                            flushed = _state_svc.flush()
+                            if flushed:
+                                logger.debug(f"Mala {mala_count}: flushed {flushed} state files")
+                        self._venu_service.clock.on_mala(_mala_flush)
+                        logger.info("      → Mala flush registered (RAM→Disk every 108 ticks)")
+                    except Exception as e:
+                        logger.debug(f"Mala flush registration skipped: {e}")
+
                     # Start the heartbeat (non-blocking async task)
                     asyncio.ensure_future(self._venu_service.start())
                     logger.info("      → VenuService started (Krishna's flute plays)")
