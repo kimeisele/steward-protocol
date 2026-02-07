@@ -344,6 +344,10 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             # I am Silence. Visitor becomes the Sound.
             return visitor
 
+        # Self-interaction is a no-op (identity, not resonance)
+        if self is visitor:
+            return self
+
         # I am Active. We Resonate.
         # Merge visitor into self (capped at MAX_PRANA to prevent overflow)
         self.lifecycle.prana = min(self.lifecycle.prana + visitor.lifecycle.prana, MAX_PRANA)
