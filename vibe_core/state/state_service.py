@@ -178,6 +178,7 @@ class StateService(StateServiceProtocol):
         # flush() writes dirty entries to disk — called at shutdown or explicitly.
         self._cache: Dict[str, Any] = {}  # filename -> data
         self._cache_dirty: Set[str] = set()  # filenames modified since last flush
+        self._signatures: Dict[str, Dict[str, Any]] = {}  # filename -> samskara signature
 
         # Track writes for Weaver integration
         self._write_count = 0
@@ -267,6 +268,23 @@ class StateService(StateServiceProtocol):
                 # Store in RAM cache — NO disk write
                 self._cache[filename] = data
                 self._cache_dirty.add(filename)
+
+                # SAMSKARA INTERCEPT: Lightweight Mahamantra signature
+                # Gives visibility into what's in the cache (seed, guna, hash)
+                # without the full __call__() overhead (~0.1ms per call).
+                if isinstance(data, dict) and data:
+                    try:
+                        from vibe_core.mahamantra.adapters.compression import MahaCompression
+                        samskara = MahaCompression().encode_samskara(data)
+                        self._signatures[filename] = {
+                            "seed": samskara.seed,
+                            "guna": samskara.intent_level.guna.value,
+                            "hash": samskara.data_hash,
+                            "items": samskara.item_count,
+                            "ratio": samskara.compression_ratio,
+                        }
+                    except Exception:
+                        pass  # Signature is optional — never block a save
 
                 # Track writes
                 self._dirty_files.add(target_path)
@@ -461,6 +479,15 @@ class StateService(StateServiceProtocol):
     # =========================================================================
     # PUBLIC API: Lifecycle Management
     # =========================================================================
+
+    @property
+    def signatures(self) -> Dict[str, Dict[str, Any]]:
+        """Mahamantra signatures for all cached state files.
+
+        Each signature contains: seed, guna, hash, items, ratio.
+        Use this to inspect what's in the RAM cache without reading the data.
+        """
+        return dict(self._signatures)
 
     def get_dirty_files(self) -> List[Path]:
         """Get list of files written since last clear."""
