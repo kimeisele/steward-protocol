@@ -250,9 +250,9 @@ class Auditor:  # Renamed from DriftAuditor
                 source="DriftAuditor.ssot",
                 position=__position__,
                 mahajana=__mahajana__,
-                description=f"Hardcoded sacred constant: {v.constant_name}={v.value}",
+                description=f"Hardcoded sacred constant: {v.constant}={v.value}",
                 file_path=v.path,
-                line_number=v.line_number,
+                line_number=v.line,
                 severity=FindingSeverity.WARNING,
             ))
 
@@ -263,8 +263,8 @@ class Auditor:  # Renamed from DriftAuditor
                 source="DriftAuditor.protocols",
                 position=__position__,
                 mahajana=__mahajana__,
-                description=f"Protocol violation for {v.class_name}: {v.details}",
-                file_path=v.module_name.replace('.', '/') + '.py',
+                description=f"Protocol violation for {v.class_name}: {v.error}",
+                file_path=v.module.replace('.', '/') + '.py',
                 severity=FindingSeverity.CRITICAL,
             ))
 
