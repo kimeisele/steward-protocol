@@ -74,6 +74,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     _gita_index = None
     _gita_by_attractor = None
     _pipeline = None
+    _singularity_instance = None
+    _kernel_instance = None
 
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
@@ -123,32 +125,20 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def tick(self) -> Dict[str, Union[str, int]]:
         """
-        Get current tick state (Lazy).
+        Advance one position in the 16-word mantra.
 
-        Required by Steward for Shadow Reactor timing.
-        Uses MAHAMANTRA_SEQUENCE for correct opcode per position.
+        Delegates to Singularity.tick() which:
+        - Advances Kala (time)
+        - Plays the flute (VenuOrchestrator.step() → DIW)
+        - Broadcasts TickState to all Singularity listeners
+
+        Then broadcasts to MahamantraLotus listeners too.
+        One tick. One DIW. One broadcast. Krishna plays His flute.
         """
-        import time
+        state = self._get_singularity().tick()
 
-        from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS, get_quarter_name
-
-        t = int(time.time())
-        pos = t % WORDS  # SSOT: WORDS from seed.py
-        guardian = ALL_GUARDIANS[pos]
-        word, opcode = MAHAMANTRA_SEQUENCE[pos]
-
-        state = {
-            "quarter": get_quarter_name(pos),
-            "guardian": guardian,
-            "word": word,
-            "opcode": opcode.name,  # MantraOpCode.name for Nrisimha
-            "position": pos,
-            "tick": t,
-        }
-
-        # Broadcast to all listeners (6.34 Override - Japa Loop)
-        self._broadcast(state)
+        # Also broadcast to MahamantraLotus listeners (legacy + BalaramaProxy)
+        self._broadcast(dict(state))
 
         return state
 
@@ -639,7 +629,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     @property
     def venu(self):
         """
-        Krishna's Flute - The VenuOrchestrator.
+        Venu-madhurya (Quality 63) — Krishna's Wonderful Flute.
 
         Property takes precedence over LotusNode.__getattr__ which would
         find the venu/ folder. The flute IS Krishna (acintya-bheda-abheda).
@@ -649,6 +639,136 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
             MahamantraLotus._venu_orchestrator = VenuOrchestrator()
         return MahamantraLotus._venu_orchestrator
+
+    # =========================================================================
+    # SINGULARITY — The Inner Mahamantra (Prema-madhurya: Relations)
+    # =========================================================================
+
+    def _get_singularity(self):
+        """Lazy-load the Singularity (Mahamantra inner engine)."""
+        if MahamantraLotus._singularity_instance is None:
+            from vibe_core.mahamantra.kernel.singularity import Mahamantra
+
+            MahamantraLotus._singularity_instance = Mahamantra()
+        return MahamantraLotus._singularity_instance
+
+    # =========================================================================
+    # PREMA-MADHURYA (Quality 62) — Positions & Relations
+    # Guardian names as properties — delegates to Singularity.
+    # Properties take precedence over LotusNode.__getattr__.
+    # =========================================================================
+
+    @property
+    def brahma(self):
+        """Position 1 - BRAHMA (Creation)."""
+        return self._get_singularity().brahma
+
+    @property
+    def narada(self):
+        """Position 2 - NARADA (Devotion)."""
+        return self._get_singularity().narada
+
+    @property
+    def shambhu(self):
+        """Position 3 - SHAMBHU (Transformation)."""
+        return self._get_singularity().shambhu
+
+    @property
+    def kumaras(self):
+        """Position 5 - KUMARAS (Purification)."""
+        return self._get_singularity().kumaras
+
+    @property
+    def kapila(self):
+        """Position 6 - KAPILA (Analysis)."""
+        return self._get_singularity().kapila
+
+    @property
+    def manu(self):
+        """Position 7 - MANU (Law)."""
+        return self._get_singularity().manu
+
+    @property
+    def prahlada(self):
+        """Position 9 - PRAHLADA (Resilience)."""
+        return self._get_singularity().prahlada
+
+    @property
+    def janaka(self):
+        """Position 10 - JANAKA (Duty)."""
+        return self._get_singularity().janaka
+
+    @property
+    def bhishma(self):
+        """Position 11 - BHISHMA (Vow)."""
+        return self._get_singularity().bhishma
+
+    @property
+    def bali(self):
+        """Position 13 - BALI (Surrender)."""
+        return self._get_singularity().bali
+
+    @property
+    def shuka(self):
+        """Position 14 - SHUKA (Vision)."""
+        return self._get_singularity().shuka
+
+    @property
+    def yamaraja(self):
+        """Position 15 - YAMARAJA (Judgment)."""
+        return self._get_singularity().yamaraja
+
+    @property
+    def prithu(self):
+        """Position 4 - PRITHU (HEAD - Dharma)."""
+        return self._get_singularity().prithu
+
+    @property
+    def vyasa(self):
+        """Position 0 - VYASA (HEAD - Genesis)."""
+        return self._get_singularity().vyasa
+
+    @property
+    def parashurama(self):
+        """Position 8 - PARASHURAMA (HEAD - Karma)."""
+        return self._get_singularity().parashurama
+
+    @property
+    def nrisimha(self):
+        """Position 12 - NRISIMHA (HEAD - Moksha)."""
+        return self._get_singularity().nrisimha
+
+    # =========================================================================
+    # RUPA-MADHURYA (Quality 64 = FIXPOINT) — Algorithm / Form
+    # =========================================================================
+
+    @property
+    def kernel(self):
+        """
+        Rupa-madhurya (Quality 64) — The Beautiful Form.
+
+        Returns the callable MahaKernel (not the kernel/ folder).
+        64 is a fixed point: f(64) = 64. The form needs no transformation.
+        """
+        if MahamantraLotus._kernel_instance is None:
+            from vibe_core.mahamantra.kernel.maha_kernel import get_kernel
+
+            MahamantraLotus._kernel_instance = get_kernel()
+        return MahamantraLotus._kernel_instance
+
+    # =========================================================================
+    # CONVERGENCE — mod/proto routers (Singularity delegation)
+    # =========================================================================
+
+    @property
+    def mod(self):
+        """ModuleRouter — routes to all 16 Mahajana modules."""
+        return self._get_singularity().mod
+
+    @property
+    def proto(self):
+        """ProtocolRouter — routes to all 16 protocol bases."""
+        return self._get_singularity().protocols
 
     @property
     def steward(self):
