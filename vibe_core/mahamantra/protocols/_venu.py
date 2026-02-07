@@ -313,6 +313,66 @@ class VenuServiceProtocol(Protocol):
 
 
 # =============================================================================
+# DIW SUBSCRIBER PROTOCOL (Krishna's Flute → Jivas Dance)
+# =============================================================================
+# The flute plays, every jiva dances. Each tick produces a 19-bit DIW.
+# Any domain — audio, chamber, network, multimedia — implements this
+# protocol to receive the DIW on every tick. Bit-level orchestration.
+#
+# "When Krishna plays His flute, the rivers stop flowing, the cows
+#  stand still with grass in their mouths, and the gopis drop everything
+#  to run toward the sound." — Srimad Bhagavatam 10.21
+
+
+class DIWEvent(TypedDict):
+    """The atomic event emitted by the flute on every tick.
+
+    Every field is derived from SSOT. No optional fields.
+    This is what flows from Krishna's flute to every jiva.
+    """
+
+    diw: int           # 19-bit Divine Instruction Word (canonical 6-9-4)
+    tick: int           # Absolute tick count (0..COSMIC_FRAME-1)
+    position: int       # Position in 16-beat cycle (0..WORDS-1)
+    phase: int          # Quarter/phase (0..QUARTERS-1) = MURALI
+    venu: int           # Quality/Mood (6 bits)
+    vamsi: int          # Process/Action (9 bits)
+    murali: int         # Phase/Quarter (4 bits)
+    mode: int           # Kirtan mode (0=Solo, 1=CallResponse, 2=Chorus)
+
+
+@runtime_checkable
+class DIWSubscriberProtocol(Protocol):
+    """
+    Protocol for any domain that dances to the flute.
+
+    Implement this to receive the DIW on every tick.
+    Audio engines, chambers, network streams, multimedia renderers —
+    all are jivas. The flute is one. The dance is many.
+
+    The VenuOrchestrator dispatches DIWEvent to all subscribers.
+    Registration is via protocol discovery (no hardcoded lists).
+    """
+
+    @property
+    def subscriber_name(self) -> str:
+        """Human-readable name for logging/telemetry."""
+        ...
+
+    def on_diw(self, event: DIWEvent) -> None:
+        """
+        Called on every tick with the current DIW.
+
+        This is the bit-level orchestration point. Every byte
+        waits for this call. Nothing moves without the flute.
+
+        Args:
+            event: The complete DIW event with all decomposed fields.
+        """
+        ...
+
+
+# =============================================================================
 # BEAT SUBSCRIBER PROTOCOL (Yasoda's Rope - Protocol-Driven Wiring)
 # =============================================================================
 # Any service that wants heartbeat time implements this protocol.
@@ -373,6 +433,7 @@ __all__ = [
     "VENU_FIELD_SECONDS",
     # Types
     "HeartbeatMetrics",
+    "DIWEvent",
     # Protocols (Phase 2 - Runtime)
     "MantraTickProtocol",
     "MantraVoiceProtocol",
@@ -381,4 +442,6 @@ __all__ = [
     "VenuServiceProtocol",
     # Protocols (Phase 4 - Beat Subscription)
     "BeatSubscriberProtocol",
+    # Protocols (Phase 5 - DIW Subscription / Bit-Level Orchestration)
+    "DIWSubscriberProtocol",
 ]
