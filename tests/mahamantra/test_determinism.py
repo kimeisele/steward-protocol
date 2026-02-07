@@ -36,13 +36,13 @@ def test_regression_test_determinism():
     """
     result = mahamantra("test determinism")
 
-    # EXACT expected values (captured 2026-02-03)
-    assert result["vibration"]["seed"] == 100786206
-    assert result["vibration"]["attractor"] == 11
-    assert result["position"] == 11
-    assert result["vibration"]["phoneme"] == "ma"
-    assert result["guardian"] == "bhishma"
-    assert result["vibration"]["signature"]["frequency"] == 48
+    # EXACT expected values (captured 2026-02-07, Shabda integration)
+    assert result["vibration"]["seed"] == 67350587
+    assert result["vibration"]["attractor"] == 101
+    assert result["position"] == 5
+    assert result["vibration"]["phoneme"] == "pa"
+    assert result["guardian"] == "kumaras"
+    assert result["vibration"]["signature"]["frequency"] == 81
 
 
 def test_different_inputs_different_outputs():
@@ -99,7 +99,7 @@ def test_full_flow_integrity():
     assert result["chapter"] <= 18
     if result["verse"]:
         assert "id" in result["verse"]
-        assert result["verse"]["guna"] in ["suddha", "rajas", "tamas"]
+        assert result["verse"]["guna"] in ["sattva", "suddha", "rajas", "tamas"]
 
     # 4. Cell transformation worked
     assert result["cell"]["is_alive"] is True
@@ -126,9 +126,9 @@ def test_known_seeds():
     Ensures algorithm stability across versions.
     """
     test_cases = [
-        ("hello", 167903264, 88),  # seed, expected_attractor
-        ("world", 33873998, 133),
-        ("test", 16891932, 22),
+        ("hello", 83894274, 118),  # seed, expected_attractor (Shabda integration)
+        ("world", 67592310, 2),
+        ("test", 67153931, 2),
     ]
 
     for input_text, expected_seed, expected_attractor in test_cases:
