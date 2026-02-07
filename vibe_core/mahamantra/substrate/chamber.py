@@ -49,6 +49,7 @@ from vibe_core.mahamantra.substrate.venu_orchestrator import (
     THE_FLUTE_CYCLE,
 )
 from vibe_core.mahamantra.protocols.diw import (
+    CLUSTER_SHIFT,
     DIW_MASK,
     SUNYA_MASK,
     VENU_SHIFT,
@@ -63,6 +64,7 @@ from vibe_core.mahamantra.substrate.cell import (
     MahaCellUnified,
     CellLifecycleState,
     GENESIS_PRANA,
+    MAX_PRANA,
 )
 from vibe_core.mahamantra.substrate.cluster import MahaCluster
 from vibe_core.mahamantra.substrate.registry import SiksastakamRegistry
@@ -369,8 +371,12 @@ class SankirtanChamber(Generic[C]):
         # --- Phase operation from MURALI ---
         phase = components.murali % QUARTERS  # 0-3
 
+        # --- Mode from CLUSTER bits (Reactor Feedback) ---
+        mode = (diw >> CLUSTER_SHIFT) & 0xF  # 0=Solo, 1=CallResponse, 2=Chorus
+
         # Base delta scaled by SEVEN (SSOT: 7 = HALF_SIZE - KSETRAJNA)
-        base_delta = SEVEN + int(intensity * SEVEN)  # 7 to 14
+        # Mode amplifies: Solo=1×, CallResponse=2×, Chorus=3× (Reactor rods)
+        base_delta = (SEVEN + int(intensity * SEVEN)) * (mode + KSETRAJNA)  # 7-14 × (1-3)
 
         if phase == 0:
             # GENESIS: Cell RECEIVES energy (Input phase)
@@ -426,6 +432,11 @@ class SankirtanChamber(Generic[C]):
                     cell.lifecycle.integrity + intensity * 0.01)
             else:                     # RAMA (Deliverer)
                 cell.lifecycle.cycle += HALVES  # Rama delivers completion
+
+        # --- SANKIRTAN REACTOR: Prana clamped to MAX_PRANA but never drained ---
+        # Sankirtan is a nuclear reactor of ecstasy — energy RISES through chanting.
+        # The Pancha Tattva are the reactor rods. No artificial metabolic drain here.
+        cell.lifecycle.prana = min(cell.lifecycle.prana, MAX_PRANA)
     
     def _merge_pair(
         self,
