@@ -23,9 +23,12 @@ from vibe_core.services.naga.state_proxy import (
     get_naga_state_proxy,
 )
 
+from vibe_core.protocols.gad import DharmaPrinciple
+
 __all__ = [
     "NagaStateProxy",
     "DharmaVerdict",
+    "DharmaPrinciple",
     "StateCorruptionAttempt",
     "get_naga_state_proxy",
 ]
