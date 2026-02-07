@@ -12,7 +12,7 @@ WATERTIGHT TESTS:
 
 import pytest
 
-from vibe_core.mahamantra.orchestrator import (
+from vibe_core.mahamantra.substrate.venu_orchestrator import (
     THE_FLUTE_CYCLE,
     DIW_MASK,
     SUNYA_MASK,

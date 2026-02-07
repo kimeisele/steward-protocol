@@ -10,7 +10,7 @@ import struct
 from vibe_core.mahamantra.protocols._header import MahaHeader
 from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
-from vibe_core.mahamantra.orchestrator import VenuOrchestrator
+from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
 from vibe_core.mahamantra.substrate.registry import SiksastakamRegistry
 
 class TestCellPersistence:

@@ -42,7 +42,7 @@ CORE_MODULES = [
     "vibe_core.mahamantra.protocols._seed_cell",
 
     # === SUBSTRATE (The Engine) ===
-    "vibe_core.mahamantra.substrate.lotus_core",    # MahamantraLotus
+    "vibe_core.mahamantra.substrate.lotus_core",    # MahamantraLotus, mahamantra, lotus
     "vibe_core.mahamantra.substrate.lotus_types",   # LotusNode
     "vibe_core.mahamantra.substrate.mahajana",      # Enums
     "vibe_core.mahamantra.substrate.opcode",        # MantraOpCode
@@ -54,6 +54,9 @@ CORE_MODULES = [
     "vibe_core.mahamantra.substrate.boot",          # BootMode
     "vibe_core.mahamantra.substrate.event_bus",     # EventBus
     "vibe_core.mahamantra.substrate.ledger",        # SQLiteLedger
+    "vibe_core.mahamantra.substrate.lineage",       # LineageChain, LineageBlock, LineageEventType
+    "vibe_core.mahamantra.substrate.shuddhi",       # ShuddhiProtocol, ShuddhiStatus, ShuddhiResult
+    "vibe_core.mahamantra.substrate.process_manager",  # ProcessManager, AgentProcessInfo, ProcessStatus
     
     # === PROTOCOLS (The Standard) ===
     "vibe_core.mahamantra.protocols._gad",          # GADBase
@@ -63,6 +66,22 @@ CORE_MODULES = [
 
 # Enable Universal Discovery (Fractal + Core Modules)
 enable_universal_discovery(globals(), __file__, CORE_MODULES)
+
+# =============================================================================
+# EXPLICIT ALIASES (variables that universal discovery can't resolve)
+# =============================================================================
+# lotus is an alias for the mahamantra singleton (from lotus_core.py)
+# Universal discovery only resolves classes/functions, not module-level variables.
+_original_getattr = globals().get("__getattr__")
+
+def __getattr__(name):
+    if name == "lotus":
+        from vibe_core.mahamantra.substrate.lotus_core import lotus
+        return lotus
+    if _original_getattr is not None:
+        return _original_getattr(name)
+    raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute {name!r}")
+
 
 # =============================================================================
 # EXPORTS (for IDE support - hints only)

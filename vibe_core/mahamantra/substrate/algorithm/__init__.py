@@ -27,6 +27,8 @@ from .maha import (
     Phase,
     find_attractor,
     maha_oscillate,
+    maha_oscillate_optimized,
+    maha_transform,
     # PRIMITIVE FUNCTIONS - THE API
     maha_step,
 )
@@ -35,6 +37,8 @@ __all__ = [
     # PRIMITIVE FUNCTIONS - THE API
     "maha_step",
     "maha_oscillate",
+    "maha_oscillate_optimized",
+    "maha_transform",
     "find_attractor",
     # CLASSES
     "MahaAlgorithm16",
