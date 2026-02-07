@@ -552,8 +552,7 @@ class SankirtanChamber(Generic[C]):
             ValueError: If magic or format is invalid
         """
         if len(snapshot) < 52: # 28 (Header) + 24 (Orchestrator)
-            # Try legacy size check (44 bytes) for backward compat logic
-            pass 
+            raise ValueError(f"Snapshot too short: {len(snapshot)} bytes, need at least 52")
             
         # 1. Header
         magic = snapshot[:QUARTERS]
