@@ -621,6 +621,16 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                     except Exception as e:
                         logger.debug(f"BeatSubscriber wiring skipped: {e}")
 
+                    # VENU FLUTE: Auto-discover DIW subscribers (FOLDER=EXISTENCE)
+                    # Any service registered under DIWSubscriberProtocol gets
+                    # the 19-bit DIW on every tick. No manual wiring.
+                    try:
+                        diw_count = self._venu_service.discover_subscribers()
+                        if diw_count:
+                            logger.info(f"      → {diw_count} DIW subscribers auto-wired to orchestrator")
+                    except Exception as e:
+                        logger.debug(f"DIW subscriber discovery skipped: {e}")
+
                     # Start the heartbeat (non-blocking async task)
                     asyncio.ensure_future(self._venu_service.start())
                     logger.info("      → VenuService started (Krishna's flute plays)")
