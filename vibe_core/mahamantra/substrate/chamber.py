@@ -43,6 +43,7 @@ from vibe_core.mahamantra.protocols._seed import (
     TEN,
 )
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
+from vibe_core.mahamantra.protocols._venu import VenuOrchestratorProtocol
 from vibe_core.mahamantra.substrate.venu_orchestrator import (
     VenuOrchestrator,
     THE_FLUTE_CYCLE,
@@ -112,28 +113,44 @@ class KirtanMode(IntEnum):
 # SANKIRTAN CHAMBER
 # =============================================================================
 
+def _resolve_orchestrator() -> VenuOrchestrator:
+    """Obtain the shared VenuOrchestrator from ServiceRegistry.
+
+    Boot path: VenuService registered it → returns the ONE orchestrator.
+    CLI path:  No VenuService → creates a local fallback instance.
+    """
+    from vibe_core.di import ServiceRegistry
+
+    shared = ServiceRegistry.get(VenuOrchestratorProtocol)
+    if shared is not None:
+        return shared  # type: ignore[return-value]
+    return VenuOrchestrator()
+
+
 @dataclass
 class SankirtanChamber(Generic[C]):
     """
     The Resonance Space - Where Cells Flow Through Music.
-    
-    The Chamber OWNS the Orchestrator and transforms cells that flow through.
-    This is COMPOSITION, not INHERITANCE.
-    
+
+    The Chamber uses the shared VenuOrchestrator from ServiceRegistry.
+    When the kernel is running, this is the SAME orchestrator that
+    VenuService ticks. When running standalone (CLI), a local
+    fallback is created.
+
     Pattern:
         cell_in → orchestrator.step() → transform → registry(vamsi) → cell_out
-    
+
     SSOT Derivation:
         CHAMBER_CAPACITY = MALA = 108
         RESONANCE_THRESHOLD = PARAMPARA = 37
         DEFAULT_CHORUS_SIZE = WORDS = 16
     """
-    
+
     __mahajana__: ClassVar[str] = "gauranga"
     __position__: ClassVar[int] = 0
-    
-    # The Orchestrator (owned, not inherited)
-    _orchestrator: VenuOrchestrator = field(default_factory=VenuOrchestrator)
+
+    # The Orchestrator (shared via ServiceRegistry, or local fallback)
+    _orchestrator: VenuOrchestrator = field(default_factory=_resolve_orchestrator)
     
     # The Registry (Musical Memory - 512 slots)
     _registry: SiksastakamRegistry = field(default_factory=SiksastakamRegistry)
@@ -596,9 +613,9 @@ class SankirtanChamber(Generic[C]):
     
     @classmethod
     def create(cls) -> "SankirtanChamber[C]":
-        """Create a new chamber with fresh orchestrator and registry."""
+        """Create a new chamber using the shared orchestrator and fresh registry."""
         return cls(
-            _orchestrator=VenuOrchestrator(),
+            _orchestrator=_resolve_orchestrator(),
             _registry=SiksastakamRegistry(),
             _resonance_count=0,
             _total_transformations=0,

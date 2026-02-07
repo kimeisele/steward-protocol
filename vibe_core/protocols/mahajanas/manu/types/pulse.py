@@ -80,16 +80,22 @@ class PulsePacket:
 
 class PulseManager:
     """
-    Singleton heartbeat manager for the VibeOS system.
+    DEPRECATED: Use VenuService + BeatSubscriberProtocol instead.
 
-    Non-blocking: Runs on separate asyncio task
-    Fault-tolerant: Continues even if subscribers fail
-    Efficient: Small payloads, minimal overhead
+    PulseManager has ZERO active consumers as of Feb 2026.
+    VenuService (250ms monotonic tick) replaced this 1s legacy heartbeat.
+    All subscribers migrated to BeatSubscriberProtocol.
 
-    NOTE: Use get_pulse_manager() to access via ServiceRegistry.
+    Kept for backward compatibility. Will be removed in next major version.
     """
 
     def __init__(self):
+        import warnings
+        warnings.warn(
+            "PulseManager is deprecated. Use VenuService + BeatSubscriberProtocol.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._cycle_id = 0
         self._frequency = PulseFrequency.ACTIVE
         self._system_state = SystemState.HEALTHY
@@ -245,20 +251,17 @@ class PulseManager:
 # Module-level convenience function
 def get_pulse_manager() -> PulseManager:
     """
-    Get PulseManager through ServiceRegistry (WIRED + NAGA-wrapped).
-
-    ARCHITECTURE:
-        PulseManager → ServiceRegistry.register() → NagaProxy wrapping
-
-    This ensures:
-    - Singleton pattern via ServiceRegistry
-    - NAGA observation (Narada sees heartbeats)
-    - NAGA profiling (Chitragupta tracks pulse timing)
-    - NAGA isolation (Kaliya handles pulse errors)
+    DEPRECATED: Use VenuService + BeatSubscriberProtocol instead.
 
     Returns:
-        PulseManager wrapped with NagaProxy (if NAGA blessing enabled)
+        PulseManager (deprecated, zero consumers)
     """
+    import warnings
+    warnings.warn(
+        "get_pulse_manager() is deprecated. Use VenuService + BeatSubscriberProtocol.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     from vibe_core.di import ServiceRegistry
 
     # Check if already registered

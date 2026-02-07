@@ -38,7 +38,7 @@ __position__ = 5
 __genesis__ = "0x8e660f70"  # GenesisByte: parampara % 37 == 0
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Callable, Dict, Final, List, Optional, Pattern, Protocol, Union, runtime_checkable

@@ -24,12 +24,15 @@ __genesis__ = "0x..."  # TODO: Add genesis byte
 __all__ = ["AuditDispatcher", "get_dispatcher", "AuditorProtocol"]
 
 import importlib
+import logging
 import pkgutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol
 
 from vibe_core.mahamantra.audit.audit_registry import AuditFinding, AuditRegistryProtocol, get_registry
+
+logger = logging.getLogger("AUDIT.DISPATCHER")
 
 
 class AuditorProtocol(Protocol):
@@ -93,9 +96,8 @@ class AuditDispatcher:
                         mahajana=mahajana,
                         instance=instance,
                     )
-            except Exception:
-                # TODO: Add logging for failed auditor loads
-                pass
+            except Exception as e:
+                logger.warning("Failed to load auditor %s: %s", module_info.name, e)
 
         self._discovered = True
 
@@ -107,9 +109,8 @@ class AuditDispatcher:
                 findings = auditor.instance.run_audit()
                 for finding in findings:
                     self._registry.register(finding)
-            except Exception:
-                # TODO: Add logging for failed audit runs
-                pass
+            except Exception as e:
+                logger.error("Auditor at position %d failed: %s", position, e)
 
     def run_by_position(self, position: int) -> None:
         """Run a specific auditor by its position."""

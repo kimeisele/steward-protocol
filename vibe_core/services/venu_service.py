@@ -41,10 +41,14 @@ from vibe_core.mahamantra.protocols._venu import (
     VENU_MAX_JITTER_MS,
     VENU_TICKS_PER_MALA,
     VENU_POSITIONS,
+    BeatSubscriberProtocol,
+    DIWSubscriberProtocol,
     HeartbeatMetrics,
     MantraClockProtocol,
+    VenuOrchestratorProtocol,
 )
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
 from vibe_core.mahamantra.venu.clock import MantraClock
 
 logger = logging.getLogger("VENU_SERVICE")
@@ -63,8 +67,11 @@ class VenuService(PanchaTattvaProtocol):
 
     __slots__ = (
         "_clock",
+        "_orchestrator",
         "_running",
         "_beat_callbacks",
+        "_beat_subscribers",
+        "_beat_tick_count",
         "_start_time",
         "_cumulative_drift_ms",
         "_max_jitter_ms",
@@ -84,15 +91,28 @@ class VenuService(PanchaTattvaProtocol):
         }
 
     def __init__(self) -> None:
-        """Initialize the VenuService."""
+        """Initialize the VenuService.
+
+        Creates the ONE VenuOrchestrator and registers it in ServiceRegistry
+        under VenuOrchestratorProtocol. All consumers (Chamber, LotusCore, CLI)
+        obtain the shared orchestrator via ServiceRegistry.get().
+        """
+        from vibe_core.di import ServiceRegistry
+
         self._clock = MantraClock()
+        self._orchestrator = VenuOrchestrator()
         self._running = False
         self._beat_callbacks: List[Callable[[int], None]] = []
+        self._beat_subscribers: List[BeatSubscriberProtocol] = []
+        self._beat_tick_count: int = 0
         self._start_time: float = 0.0
         self._cumulative_drift_ms: float = 0.0
         self._max_jitter_ms: float = 0.0
         self._missed_ticks: int = 0
         self._stop_event: asyncio.Event | None = None
+
+        # Register the ONE orchestrator so all consumers share it
+        ServiceRegistry.register(VenuOrchestratorProtocol, self._orchestrator)
 
     @property
     def is_running(self) -> bool:
@@ -103,6 +123,37 @@ class VenuService(PanchaTattvaProtocol):
     def clock(self) -> MantraClockProtocol:
         """The underlying MantraClock."""
         return self._clock
+
+    @property
+    def orchestrator(self) -> VenuOrchestrator:
+        """The DIW orchestrator. Use for subscriber management."""
+        return self._orchestrator
+
+    def discover_subscribers(self) -> int:
+        """Auto-discover and subscribe all DIWSubscriberProtocol services.
+
+        Queries ServiceRegistry.get_all(DIWSubscriberProtocol) and subscribes
+        each one to the orchestrator. This is the enforcement layer:
+        if you implement the protocol and are registered, you WILL receive
+        the DIW. No manual wiring needed.
+
+        Returns:
+            Number of subscribers discovered and wired.
+        """
+        from vibe_core.di import ServiceRegistry
+
+        discovered = ServiceRegistry.get_all(DIWSubscriberProtocol)
+        wired = 0
+        for sub in discovered:
+            try:
+                self._orchestrator.subscribe(sub)
+                wired += 1
+                logger.info(f"\U0001f3b5 DIW subscriber discovered: {sub.subscriber_name}")
+            except (TypeError, Exception) as exc:
+                logger.warning(f"DIW subscriber rejected: {exc}")
+        if wired:
+            logger.info(f"\U0001f3b5 {wired} DIW subscribers auto-wired (FOLDER=EXISTENCE)")
+        return wired
 
     @property
     def metrics(self) -> HeartbeatMetrics:
@@ -128,6 +179,41 @@ class VenuService(PanchaTattvaProtocol):
             callback: Function called with position (0-15) on each beat
         """
         self._beat_callbacks.append(callback)
+
+    def add_beat_subscriber(self, subscriber: BeatSubscriberProtocol) -> None:
+        """Register a BeatSubscriberProtocol.
+
+        The subscriber's on_beat_tick() will be called every
+        subscriber.beat_interval ticks. Dispatch is internal —
+        no external closure needed.
+        """
+        self._beat_subscribers.append(subscriber)
+
+    def discover_beat_subscribers(self) -> int:
+        """Auto-discover all BeatSubscriberProtocol services from ServiceRegistry.
+
+        Returns:
+            Number of subscribers discovered and registered.
+        """
+        from vibe_core.di import ServiceRegistry
+
+        discovered = ServiceRegistry.get_all(BeatSubscriberProtocol) or []
+        for sub in discovered:
+            if sub not in self._beat_subscribers:
+                self._beat_subscribers.append(sub)
+                logger.info("Beat subscriber discovered: %s (every %d ticks)", sub.beat_name, sub.beat_interval)
+        return len(self._beat_subscribers)
+
+    def _dispatch_beat_subscribers(self, position: int) -> None:
+        """Dispatch to all BeatSubscribers whose interval has fired."""
+        self._beat_tick_count += 1
+        tick = self._beat_tick_count
+        for sub in self._beat_subscribers:
+            try:
+                if tick % sub.beat_interval == 0:
+                    sub.on_beat_tick(tick, position)
+            except Exception as e:
+                logger.debug("Beat subscriber %s error: %s", sub.beat_name, e)
 
     async def start(self) -> None:
         """
@@ -196,7 +282,14 @@ class VenuService(PanchaTattvaProtocol):
                     except Exception as e:
                         logger.error(f"Beat callback error at position {position}: {e}")
 
-                # 7. Advance the clock (execute tasks in MantraClock, then advance)
+                # 6.5. Dispatch BeatSubscribers (interval-based)
+                self._dispatch_beat_subscribers(position)
+
+                # 7. Play the flute: orchestrator.step() produces DIW and
+                #    dispatches to all subscribers. This is the heartbeat.
+                self._orchestrator.step()
+
+                # 8. Advance the clock (execute tasks in MantraClock, then advance)
                 self._clock.tick_once()
 
         finally:
