@@ -15,35 +15,38 @@ SOLUTION:
 
 SCORING DIMENSIONS (all derived from Mahamantra mathematics):
 
-    1. ELEMENT ALIGNMENT (weight: 0.15)
+    Original 5 dimensions (scaled to 70% to preserve hierarchy):
+
+    1. ELEMENT ALIGNMENT (weight: 0.21)
        Input element histogram vs word element histogram.
        Same dominant element = strong resonance.
 
-    2. HARMONIC CONVERGENCE (weight: 0.10)
+    2. HARMONIC CONVERGENCE (weight: 0.175)
        Do the input and word dissolve to the same harmonic target?
        coord × SEVEN mod 49 = where energy goes.
 
-    3. SHRUTI PATTERN MATCH (weight: 0.10)
+    3. SHRUTI PATTERN MATCH (weight: 0.14)
        Shruti (fixed points) vs Nakshatra (journey points).
        Quadratic residues mod 49.
 
-    4. VARGA ALIGNMENT (weight: 0.10)
+    4. VARGA ALIGNMENT (weight: 0.105)
        Same sound class (svara/sparsha/shesha) = same operational mode.
        svara=carrier(H), sparsha=transform(K), shesha=release(R).
 
-    5. ATTRACTOR PROXIMITY (weight: 0.15)
+    5. ATTRACTOR PROXIMITY (weight: 0.07)
        Words whose coords converge to the same attractor under the synth
        are in the same semantic basin (7 basins, coarse).
 
-    6. HKR PROPORTION (weight: 0.20)
+    New dimensions (30% total):
+
+    6. HKR PROPORTION (weight: 0.15)
        How much each divine operation (H/K/R) contributes to the
        16-step transformation. 48/49 unique signatures (fine-grained).
 
-    7. PHONEME ATTRACTOR CHARGE (weight: 0.20)
+    7. PHONEME ATTRACTOR CHARGE (weight: 0.15)
        Each phoneme converges to one of 5 Mahamantra constants under
        MahaAlgorithm16: {18=Gita, 22=Shruti, 49=Rama, 87=Chaitanya, 136=Field}.
        Cosine similarity of the 5-bin charge histograms.
-       Bridges phonetic structure to semantic domain.
 
 ALL WEIGHTS SUM TO 1.0. ALL SCORES IN [0, 1].
 NO LLM. NO RANDOMNESS. PURE RESONANCE MATHEMATICS.
@@ -81,13 +84,15 @@ from vibe_core.mahamantra.substrate.semantic_index import (
 # =============================================================================
 # PANCHA dimensions, weights proportional to their discriminative power.
 
-W_ELEMENT: Final[float] = 0.15        # Articulatory position (5 elements)
-W_HARMONIC: Final[float] = 0.10       # Dissolution path kinship
-W_SHRUTI: Final[float] = 0.10         # Character: fixed vs journey
-W_VARGA: Final[float] = 0.10          # Operational: carrier/transform/release
-W_ATTRACTOR: Final[float] = 0.15      # Basin: attractor convergence (7 basins, coarse)
-W_HKR: Final[float] = 0.20            # HKR proportion: divine operation mix (48/49 unique, fine)
-W_PHONEME_ATTRACTOR: Final[float] = 0.20  # Phoneme attractor charge: which Mahamantra constant each phoneme converges to
+# Original 5D weights (0.30/0.25/0.20/0.15/0.10) scaled to 70% to preserve hierarchy.
+# New 2D (HKR + Phoneme Attractor) share the remaining 30%.
+W_ELEMENT: Final[float] = 0.21         # Articulatory position (5 elements)
+W_HARMONIC: Final[float] = 0.175      # Dissolution path kinship
+W_SHRUTI: Final[float] = 0.14         # Character: fixed vs journey
+W_VARGA: Final[float] = 0.105         # Operational: carrier/transform/release
+W_ATTRACTOR: Final[float] = 0.07      # Basin: attractor convergence (7 basins, coarse)
+W_HKR: Final[float] = 0.15            # HKR proportion: divine operation mix (48/49 unique, fine)
+W_PHONEME_ATTRACTOR: Final[float] = 0.15  # Phoneme attractor charge: 5 Mahamantra constants
 
 assert abs(W_ELEMENT + W_HARMONIC + W_SHRUTI + W_VARGA + W_ATTRACTOR + W_HKR + W_PHONEME_ATTRACTOR - 1.0) < 1e-9
 
@@ -424,22 +429,8 @@ def resonate(
             )
             fill = [rw for rw in phon_ranked if rw.word.packed_hex not in sem_hexes]
             return (sem_ranked + fill)[:top_n]
-        else:
-            # No string match — use basin pre-filtering for pure math matching.
-            # Find all words sharing at least one basin with the input.
-            from vibe_core.mahamantra.substrate.basin_map import basin_set as _basin_set
-            input_basins = _basin_set(tuple(input_coords))
-            basin_candidates = idx.by_basin_set(input_basins)
-            if basin_candidates:
-                return rank_words(
-                    input_coords=input_coords,
-                    input_attractor=attractor,
-                    synth_coords=synth_coords,
-                    candidates=basin_candidates,
-                    top_n=top_n,
-                )
 
-    # Step 4: Pure phonetic ranking (Sanskrit / non-Latin)
+    # Step 4: Pure phonetic ranking (Sanskrit / fallback for Latin without meaning hits)
     ranked = rank_words(
         input_coords=input_coords,
         input_attractor=attractor,
