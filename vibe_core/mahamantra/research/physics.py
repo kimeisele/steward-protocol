@@ -85,8 +85,8 @@ class ModClassification(Enum):
 
     CLASSICAL = 0  # Stable, no observer
     QUANTUM = 1  # Observer embedded (KSETRAJNA)
-    TRINITY = 3  # Decays into 3 particles
-    PANCHA = 5  # 5-fold structure
+    TRINITY_DECAY = 3  # Decays into 3 particles
+    PANCHA_FOLD = 5  # 5-fold structure
     SHARANAGATI = 6  # Surrender/transformation
     NAVA = 9  # Complex decay modes
     OTHER = -1  # Other mod values
