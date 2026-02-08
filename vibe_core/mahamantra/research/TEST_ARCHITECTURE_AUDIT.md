@@ -134,7 +134,30 @@ Slow: Full suite 255s just to collect.
 - [ ] pytest becomes the ADVERSARIAL layer only (hardening)
 - [ ] Everything else lives in RAM via GAD + Nagas
 
-## 7. Die Vision
+## 7. CRITICAL DISCOVERY: conftest.py (1100 Zeilen)
+
+The bridge is ALREADY BUILT. `tests/conftest.py` has:
+
+| Feature | Lines | Status |
+|---|---|---|
+| Mahamantra 16-Step Lifecycle | 420-727 | ✅ Wired (every test runs 16 steps) |
+| Gene Injection (Entropy/Coherence) | 438-637 | ✅ Wired (fixtures: test_gene, chaos_gene, sattva_gene, guru_gene) |
+| TÜV Badges (Bronze/Silver/Gold) | 730-886 | ✅ Wired (auto-issued on pass) |
+| NagaTestHarness Fixtures | 344-417 | ✅ Available (naga_harness, naga_harness_minimal, naga_harness_orchestrator) |
+| TestableRegistry → pytest Bridge | 888-1000 | ✅ Available (auto-generates tests from registry) |
+| Auto-Markers | 96-119 | ✅ Wired (hardening, integration, fractal, e2e auto-tagged) |
+| Quality Profiles | 60-94 | ✅ Available (--test-profile=fast/full/ci) |
+
+**The problem is NOT missing infrastructure. The problem is ADOPTION.**
+
+- `naga_harness` fixture: used in **1 of 45** naga test files
+- `test_gene` fixture: used in **0** test files (!)
+- `MagicMock`: used in **22** test files (should be 0)
+- `TestableRegistry` bridge: **0** tests use `registry_test_case`
+
+The conftest.py is a cathedral nobody enters.
+
+## 8. Die Vision
 
 ```
 CURRENT:                              FUTURE:
