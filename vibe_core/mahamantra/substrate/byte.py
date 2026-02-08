@@ -367,10 +367,6 @@ class MantraByte:
         """
         return (signature % PARAMPARA) == 0
 
-    def __repr__(self) -> str:
-        """String representation with coherence."""
-        return f"<MantraByte 0x{self._packed:X} len={self._length} coh={self.resonance_check():.2f}>"
-
     # =========================================================================
     # FRACTAL DECOMPOSITION (via mantra/)
     # =========================================================================

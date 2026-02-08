@@ -54,7 +54,6 @@ from vibe_core.mahamantra.substrate.basin_map import (
     PHONEME_ATTRACTOR_COUNT,
     PHONEME_ATTRACTOR_INDEX,
     basin_jaccard,
-    basin_set,
 )
 from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL
 
