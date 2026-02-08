@@ -42,6 +42,14 @@ from vibe_core.mahamantra.substrate.pancha_walk import (
     ELEMENT_NAMES,
     IS_SHRUTI,
 )
+from vibe_core.mahamantra.substrate.basin_map import (
+    BASIN_INDEX,
+    BASIN_LIST,
+    COORD_BASIN,
+    COORD_PHONEME_ATTRACTOR,
+    basin_jaccard,
+    basin_set,
+)
 from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL
 
 # =============================================================================
@@ -62,7 +70,8 @@ class LexiconWord:
     __slots__ = (
         "sanskrit", "meanings", "coords", "packed_hex",
         "first_coord", "element_walk", "varga_walk",
-        "shruti_pattern", "harmonic_walk",
+        "shruti_pattern", "harmonic_walk", "basin_walk",
+        "phoneme_attractor_walk",
     )
 
     def __init__(
@@ -83,11 +92,18 @@ class LexiconWord:
         self.varga_walk = tuple(COORD_VARGA[c] for c in coords)
         self.shruti_pattern = tuple(IS_SHRUTI[c] for c in coords)
         self.harmonic_walk = tuple(COORD_HARMONIC[c] for c in coords)
+        self.basin_walk = tuple(COORD_BASIN[c] for c in coords)
+        self.phoneme_attractor_walk = tuple(COORD_PHONEME_ATTRACTOR[c] for c in coords)
 
     @property
     def first_element(self) -> int:
         """Element of the first phoneme."""
         return self.element_walk[0] if self.element_walk else -1
+
+    @property
+    def basin_set(self) -> FrozenSet[int]:
+        """Unique basins touched by this word."""
+        return frozenset(self.basin_walk)
 
     @property
     def first_meaning(self) -> str:
@@ -125,6 +141,7 @@ class SemanticIndex:
         self._by_first_shruti: Optional[Dict[bool, List[LexiconWord]]] = None
         self._by_harmonic_target: Optional[Dict[int, List[LexiconWord]]] = None
         self._by_meaning_word: Optional[Dict[str, List[LexiconWord]]] = None
+        self._by_basin: Optional[Dict[int, List[LexiconWord]]] = None
 
     # =========================================================================
     # LOADING
@@ -169,6 +186,7 @@ class SemanticIndex:
         by_shruti: Dict[bool, List[LexiconWord]] = defaultdict(list)
         by_harmonic: Dict[int, List[LexiconWord]] = defaultdict(list)
         by_meaning: Dict[str, List[LexiconWord]] = defaultdict(list)
+        by_basin: Dict[int, List[LexiconWord]] = defaultdict(list)
 
         for w in self._words:
             if w.first_coord < 0:
@@ -179,6 +197,10 @@ class SemanticIndex:
             by_varga[w.varga_walk[0]].append(w)
             by_shruti[w.shruti_pattern[0]].append(w)
             by_harmonic[w.harmonic_walk[0]].append(w)
+
+            # Basin index: index by each unique basin touched
+            for b in set(w.basin_walk):
+                by_basin[b].append(w)
 
             # Meaning index: split English meanings into individual words
             for meaning in w.meanings:
@@ -194,6 +216,7 @@ class SemanticIndex:
         self._by_first_shruti = dict(by_shruti)
         self._by_harmonic_target = dict(by_harmonic)
         self._by_meaning_word = dict(by_meaning)
+        self._by_basin = dict(by_basin)
 
     # =========================================================================
     # QUERIES
@@ -242,6 +265,24 @@ class SemanticIndex:
         """All words whose English meaning contains the given word."""
         self._ensure_loaded()
         return self._by_meaning_word.get(english_word.lower(), [])  # type: ignore
+
+    def by_basin(self, basin: int) -> List[LexiconWord]:
+        """All words touching a specific attractor basin."""
+        self._ensure_loaded()
+        return self._by_basin.get(basin, [])  # type: ignore
+
+    def by_basin_set(self, basins: FrozenSet[int]) -> List[LexiconWord]:
+        """All words whose basin set intersects with the given basins."""
+        self._ensure_loaded()
+        result_ids: set = set()
+        result: List[LexiconWord] = []
+        for b in basins:
+            for w in self.by_basin(b):
+                wid = id(w)
+                if wid not in result_ids:
+                    result_ids.add(wid)
+                    result.append(w)
+        return result
 
     def by_4d_query(
         self,
@@ -295,6 +336,7 @@ class SemanticIndex:
             "rama_positions_covered": len(self._by_first_coord),  # type: ignore
             "elements_covered": len(self._by_first_element),  # type: ignore
             "meaning_tokens": len(self._by_meaning_word),  # type: ignore
+            "basins_indexed": len(self._by_basin),  # type: ignore
             "shruti_words": len(self.by_shruti(True)),
             "nakshatra_words": len(self.by_shruti(False)),
         }
