@@ -40,7 +40,7 @@ class iGene:
         # Threshold Logic: Life exists if Coherence > Entropy
         # But we accept "Orange" state (Struggling) if diff is small.
         # Fatal only if Entropy explicitly overwhelms Coherence.
-        return self.entropy_load > self.mantra_shield.coherence
+        return self.entropy_load > self.mantra_shield.coherence / 21600
 
     @classmethod
     def create_random(cls, intensity: float = 0.5) -> "iGene":
