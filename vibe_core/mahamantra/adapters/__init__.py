@@ -88,11 +88,9 @@ _LAZY_IMPORTS = {
     "GoldenAgeStatus": "japa",
     "CollapseResult": "japa",
     "JapaState": "japa",
-    # llm.py
+    # llm.py (RouteResult omitted — conflicts with network.RouteResult; import from llm directly)
     "MahaLLM": "llm",
-    "RouteResult": "llm",
     "RegistrationResult": "llm",
-    "RouterStats": "llm",
     "IntentCategory": "llm",
 }
 
