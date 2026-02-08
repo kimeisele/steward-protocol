@@ -1,0 +1,364 @@
+"""
+ANTARANGA REGISTRY — The Inner Chamber (Contiguous RAM)
+========================================================
+
+"ceto-darpaṇa-mārjanaṁ" — Cleansing the mirror of the heart.
+
+The Antaranga is the INTIMATE space where resonance happens at
+hardware speed. No Python objects. No garbage collector. No pointers.
+Just contiguous bytes reacting to voltage — like silicon.
+
+Architecture:
+    Bahiranga (Outer Chamber) = SankirtanChamber (Python objects, API)
+    Antaranga (Inner Chamber) = THIS (contiguous bytearray, O(1) ops)
+
+    The outer wraps the inner. Srivas Angan: the door is closed,
+    but the kirtan inside is the heart.
+
+Memory Layout (per slot):
+    ┌──────────────────────────────────────────────────────────────┐
+    │  HEADER (24 bytes)              │  LIFECYCLE (8 bytes)       │
+    │  source(4) target(4) op(4)      │  prana(4) integ(2) cyc(2)  │
+    │  arcanam(4) atma(4) flags(4)    │                            │
+    └──────────────────────────────────────────────────────────────┘
+    Total: 32 bytes per slot × 512 slots = 16,384 bytes (16 KB)
+
+    This is the MINIMUM viable cell for collision/resonance:
+    - source/target/op: identity (who, where, what)
+    - arcanam: signature (parampara check)
+    - atma_nivedanam: checksum (integrity)
+    - flags: is_active(1 bit) + reserved(31 bits)
+    - prana: energy (uint32, max ~4.2B)
+    - integrity: membrane health (uint16, 0-65535 = 0.0-1.0)
+    - cycle: age (uint16, max 65535)
+
+Collision Logic (pure byte arithmetic):
+    if resident.prana == 0:  → SILENCE: visitor takes slot
+    else:                    → RESONANCE: prana += visitor.prana, integrity = avg
+
+ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING.
+"""
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    KSETRAJNA,
+    MAHA_QUANTUM,
+    MALA,
+    NAVA,
+    PARAMPARA,
+    VAMSI_HOLES,
+)
+
+import struct
+from typing import Final, NamedTuple, Optional
+
+# === MAHAJANA DECLARATION ===
+__mahajana__ = "gauranga"
+__position__ = 0
+
+# =============================================================================
+# CONSTANTS (DERIVED FROM SSOT)
+# =============================================================================
+
+# Slot count: 2^VAMSI_HOLES = 2^9 = 512
+ANTARANGA_SLOTS: Final[int] = KSETRAJNA << VAMSI_HOLES  # 512
+
+# Bytes per slot: 32 (24 header + 8 lifecycle)
+SLOT_BYTES: Final[int] = 32
+
+# Total chamber size: 512 × 32 = 16,384 bytes
+CHAMBER_BYTES: Final[int] = ANTARANGA_SLOTS * SLOT_BYTES
+
+# Max prana in uint32: GENESIS_PRANA × MALA = 13700 × 108 = 1,479,600
+MAX_PRANA_U32: Final[int] = MAHA_QUANTUM * 100 * MALA
+
+# Genesis prana: MAHA_QUANTUM × 100 = 13,700
+GENESIS_PRANA_U32: Final[int] = MAHA_QUANTUM * 100
+
+# Integrity full: 65535 (uint16 max, represents 1.0)
+INTEGRITY_FULL: Final[int] = (KSETRAJNA << 16) - KSETRAJNA  # 65535
+
+# Flag: is_active
+FLAG_ACTIVE: Final[int] = KSETRAJNA  # bit 0
+
+# Struct format for one slot (little-endian):
+#   Header:    source(I) target(I) op(I) arcanam(I) atma(I) flags(I) = 24 bytes
+#   Lifecycle: prana(I) integrity(H) cycle(H) = 8 bytes
+#   Total: 32 bytes
+_SLOT_FMT: Final[str] = "<IIIIII IHH"
+_SLOT_SIZE: Final[int] = struct.calcsize(_SLOT_FMT)
+
+# Verify slot size matches
+assert _SLOT_SIZE == SLOT_BYTES, f"Slot size mismatch: {_SLOT_SIZE} != {SLOT_BYTES}"
+
+
+# =============================================================================
+# SLOT VIEW (Read-only snapshot, no allocation on hot path)
+# =============================================================================
+
+class SlotView(NamedTuple):
+    """Lightweight read-only view of a slot. No Python object overhead on write path."""
+    source: int
+    target: int
+    operation: int
+    arcanam: int
+    atma_nivedanam: int
+    flags: int
+    prana: int
+    integrity: int  # uint16: 0-65535
+    cycle: int
+
+
+# =============================================================================
+# ANTARANGA REGISTRY
+# =============================================================================
+
+class AntarangaRegistry:
+    """
+    The Inner Chamber — 512 slots × 32 bytes = 16 KB contiguous RAM.
+
+    No Python objects in the hot path. No GC. No pointer indirection.
+    Pure byte arithmetic. Like silicon reacting to voltage.
+
+    Operations:
+        get(slot) → SlotView          O(1) struct.unpack_from
+        set(slot, ...)                O(1) struct.pack_into
+        collide(slot, visitor_*)      O(1) in-place merge or presence
+        apply_diw(slot, diw)          O(1) in-place transformation
+
+    The outer SankirtanChamber wraps this for Python API compatibility.
+    """
+
+    __slots__ = ('_mem',)
+
+    def __init__(self) -> None:
+        """Allocate the chamber: one contiguous block of silence."""
+        self._mem = bytearray(CHAMBER_BYTES)
+
+    # =========================================================================
+    # CORE: O(1) READ / WRITE
+    # =========================================================================
+
+    def get(self, slot: int) -> SlotView:
+        """Read slot as SlotView. O(1)."""
+        offset = slot * SLOT_BYTES
+        return SlotView(*struct.unpack_from(_SLOT_FMT, self._mem, offset))
+
+    def set_slot(
+        self,
+        slot: int,
+        source: int,
+        target: int,
+        operation: int,
+        arcanam: int,
+        atma_nivedanam: int,
+        flags: int,
+        prana: int,
+        integrity: int,
+        cycle: int,
+    ) -> None:
+        """Write full slot. O(1)."""
+        offset = slot * SLOT_BYTES
+        struct.pack_into(
+            _SLOT_FMT, self._mem, offset,
+            source, target, operation, arcanam, atma_nivedanam, flags,
+            prana, integrity, cycle,
+        )
+
+    # =========================================================================
+    # CORE: COLLISION (The Heart of Resonance)
+    # =========================================================================
+
+    def collide(
+        self,
+        slot: int,
+        v_source: int,
+        v_target: int,
+        v_operation: int,
+        v_arcanam: int,
+        v_atma: int,
+        v_prana: int,
+        v_integrity: int,
+        v_cycle: int,
+    ) -> bool:
+        """
+        Visitor collides with resident at slot. In-place. O(1).
+
+        Returns True if RESONANCE (merge), False if PRESENCE (new).
+
+        Logic (mirrors MahaCellUnified.interact()):
+            Resident prana == 0 → SILENCE → visitor takes slot (Presence)
+            Resident prana > 0  → RESONANCE → merge (prana add, integrity avg)
+        """
+        offset = slot * SLOT_BYTES
+
+        # Read resident prana (offset + 24 = lifecycle start)
+        r_prana = struct.unpack_from("<I", self._mem, offset + 24)[0]
+
+        if r_prana == 0:
+            # SILENCE → PRESENCE: visitor takes the slot
+            struct.pack_into(
+                _SLOT_FMT, self._mem, offset,
+                v_source, v_target, v_operation, v_arcanam, v_atma, FLAG_ACTIVE,
+                v_prana, v_integrity, v_cycle,
+            )
+            return False
+
+        # RESONANCE → MERGE: accumulate prana, average integrity
+        new_prana = min(r_prana + v_prana, MAX_PRANA_U32)
+        r_integrity = struct.unpack_from("<H", self._mem, offset + 28)[0]
+        new_integrity = (r_integrity + v_integrity) // HALVES
+
+        # Write back only the mutable lifecycle fields
+        struct.pack_into("<IHH", self._mem, offset + 24,
+                         new_prana, new_integrity,
+                         struct.unpack_from("<H", self._mem, offset + 30)[0])
+        return True
+
+    # =========================================================================
+    # CORE: APPLY DIW (The Reactor)
+    # =========================================================================
+
+    def apply_diw(self, slot: int, diw: int) -> None:
+        """
+        Apply Divine Instruction Word to slot. In-place. O(1).
+
+        Mirrors SankirtanChamber._apply_diw() but operates on raw bytes.
+
+        DIW format: 6-bit VENU | 9-bit VAMSI | 4-bit MURALI
+        """
+        from vibe_core.mahamantra.protocols.diw import (
+            VENU_SHIFT, VENU_MASK, VAMSI_SHIFT, VAMSI_MASK,
+            MURALI_SHIFT, MURALI_MASK, CLUSTER_SHIFT,
+        )
+        from vibe_core.mahamantra.protocols._seed import (
+            SEVEN, QUALITIES,
+        )
+
+        offset = slot * SLOT_BYTES
+
+        # Read current lifecycle
+        prana = struct.unpack_from("<I", self._mem, offset + 24)[0]
+        if prana == 0:
+            return  # Dead slot, nothing to transform
+
+        integrity_u16 = struct.unpack_from("<H", self._mem, offset + 28)[0]
+        cycle = struct.unpack_from("<H", self._mem, offset + 30)[0]
+
+        # Decode DIW
+        venu = (diw >> VENU_SHIFT) & VENU_MASK
+        vamsi = (diw >> VAMSI_SHIFT) & VAMSI_MASK
+        murali = (diw >> MURALI_SHIFT) & MURALI_MASK
+        mode = (diw >> CLUSTER_SHIFT) & 0xF
+
+        # Intensity from VENU (0.0 to 1.0 as fixed-point)
+        intensity_fp = venu  # 0-63, we use integer arithmetic
+        max_intensity = QUALITIES - KSETRAJNA  # 63
+
+        # Name region from VAMSI
+        vamsi_stride = (KSETRAJNA << VAMSI_HOLES) // 3  # 170
+        name_region = min(vamsi // vamsi_stride, HALVES)  # 0=H, 1=K, 2=R
+
+        # Phase from MURALI
+        phase = murali % 4  # 0-3: GENESIS, DHARMA, KARMA, MOKSHA
+
+        # Base delta (integer arithmetic, no floats)
+        # base_delta = (7 + intensity * 7) * (mode + 1)
+        # Using integer: (SEVEN + venu * SEVEN // 63) * (mode + 1)
+        base_delta = (SEVEN + (intensity_fp * SEVEN) // max_intensity) * (mode + KSETRAJNA)
+
+        # Phase-specific transformation (mirrors _apply_diw exactly)
+        if phase == 0:  # GENESIS
+            if name_region == 0:      # HARE
+                prana += base_delta * HALVES
+            elif name_region == 1:    # KRISHNA
+                prana += base_delta
+                integrity_u16 = min(INTEGRITY_FULL,
+                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100))
+            else:                     # RAMA
+                prana += base_delta
+                cycle += KSETRAJNA
+
+        elif phase == 1:  # DHARMA
+            if name_region == 0:      # HARE
+                prana = max(0, prana - base_delta)
+            elif name_region == 1:    # KRISHNA
+                integrity_u16 = min(INTEGRITY_FULL,
+                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 50))
+            else:                     # RAMA
+                cycle += KSETRAJNA
+                integrity_u16 = min(INTEGRITY_FULL,
+                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100))
+
+        elif phase == HALVES:  # KARMA
+            prana = max(0, prana - base_delta)
+            if name_region == 0:      # HARE
+                cycle += KSETRAJNA
+            elif name_region == 1:    # KRISHNA
+                integrity_u16 = min(INTEGRITY_FULL,
+                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100))
+                cycle += KSETRAJNA
+            else:                     # RAMA
+                cycle += HALVES
+
+        else:  # MOKSHA
+            prana = max(0, prana - base_delta)
+            if name_region == 0:      # HARE
+                integrity_u16 = max(0,
+                    integrity_u16 - (intensity_fp * INTEGRITY_FULL) // (max_intensity * 200))
+            elif name_region == 1:    # KRISHNA
+                integrity_u16 = min(INTEGRITY_FULL,
+                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100))
+            else:                     # RAMA
+                cycle += HALVES
+
+        # Clamp prana
+        prana = min(prana, MAX_PRANA_U32)
+
+        # Write back lifecycle
+        struct.pack_into("<IHH", self._mem, offset + 24,
+                         prana, integrity_u16, cycle)
+
+    # =========================================================================
+    # QUERY METHODS
+    # =========================================================================
+
+    def is_alive(self, slot: int) -> bool:
+        """Check if slot has active cell. O(1)."""
+        return struct.unpack_from("<I", self._mem, slot * SLOT_BYTES + 24)[0] > 0
+
+    def prana_at(self, slot: int) -> int:
+        """Read prana at slot. O(1)."""
+        return struct.unpack_from("<I", self._mem, slot * SLOT_BYTES + 24)[0]
+
+    def active_count(self) -> int:
+        """Count active slots. O(N) but N=512 is small."""
+        count = 0
+        for i in range(ANTARANGA_SLOTS):
+            if struct.unpack_from("<I", self._mem, i * SLOT_BYTES + 24)[0] > 0:
+                count += KSETRAJNA
+        return count
+
+    def total_prana(self) -> int:
+        """Sum of all prana in chamber. O(N)."""
+        total = 0
+        for i in range(ANTARANGA_SLOTS):
+            total += struct.unpack_from("<I", self._mem, i * SLOT_BYTES + 24)[0]
+        return total
+
+    def clear(self) -> None:
+        """Wipe the chamber clean. O(1) — memset equivalent."""
+        self._mem[:] = b'\x00' * CHAMBER_BYTES
+
+    @property
+    def raw(self) -> memoryview:
+        """Direct access to the contiguous memory. For advanced use."""
+        return memoryview(self._mem)
+
+    @property
+    def size_bytes(self) -> int:
+        """Total chamber size in bytes."""
+        return CHAMBER_BYTES
+
+    def __repr__(self) -> str:
+        active = self.active_count()
+        return f"<AntarangaRegistry: {active}/{ANTARANGA_SLOTS} slots, {CHAMBER_BYTES} bytes>"
