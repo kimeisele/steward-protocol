@@ -213,6 +213,24 @@ Bereits aufgeräumt (nicht nochmal anfassen):
 - `state_service.py`: Write-behind cache (save→RAM, flush→Disk), Mala-flush (108 ticks), Samskara-Intercept
 - `boot_orchestrator.py`: MantraClock.on_mala() → StateService.flush() (RAM→Disk every ~27s)
 
+## PipelineCache (lotus_core.py)
+
+`_PipelineCache` Singleton — precomputes all seed-independent lookups for `__call__()`.
+Same pattern as `LexiconVectorCache`: build once, use forever.
+
+Was es cached:
+- Constants: WORDS, MAHA_QUANTUM, PARAMPARA, KSETRAJNA, MAX_CYCLES
+- Callables: encode_text, synth_transform, rank_words, match_attractor, get_gita_chapter, etc.
+- Classes: MahaCellUnified, register_cell, TickStateInput
+- Position LUTs (16 each): quarter_names, roles, holy_names, trinity_functions, rama_coords, phonemes, diw_components
+- Phoneme signature tables (49 each): COORD_ELEMENT/VARGA/SUB/HARMONIC, ELEMENT_NAMES, IS_SHRUTI
+
+Was es NICHT cached (Ownership bei MahamantraLotus):
+- Compressor → `MahamantraLotus._get_compressor()` (class-level singleton)
+
+Eliminiert ~30 lazy imports + ~15 Funktionsaufrufe pro `__call__()`.
+0 Regressionen: 662+ Tests grün.
+
 ## Antaranga (Inner Chamber — Contiguous RAM)
 
 `substrate/antaranga.py`: 512 Slots × 32 Bytes = 16 KB kontiguierer Speicher.
