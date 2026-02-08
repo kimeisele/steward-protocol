@@ -184,6 +184,7 @@ Fallen (aufpassen!):
 - `substrate/` ist flach — fraktale Restrukturierung steht noch aus.
 
 Bereits aufgeräumt (nicht nochmal anfassen):
+- F821: 0 Fehler in `mahamantra/` (VenuOrchestrator + SeedResult via TYPE_CHECKING gefixt)
 - Guardians: ALLE 16 identisches thin Pattern (keine if-else, keine Klassen)
 - yamaraja: 288→78 Zeilen (Duplikat-Klassen entfernt)
 - kapila: eager import entfernt, jetzt lazy wie alle anderen
