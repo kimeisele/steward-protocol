@@ -1,0 +1,374 @@
+"""
+SEED TO WORDS — The MahaLLM Core Pipeline
+==========================================
+
+"bījaṁ māṁ sarva-bhūtānāṁ" — I am the seed of all beings (BG 7.10)
+
+THIS IS THE BRIDGE FROM NUMBERS TO LANGUAGE.
+
+Pipeline:
+    1. Seed (any integer) → MahaSynth cycle → 16 output values
+    2. Each output value mod 49 → RAMA coordinate
+    3. RAMA coordinate → phoneme → 4D signature (element/varga/sub/harmonic)
+    4. 4D signature → SemanticIndex query → matching Gita words
+    5. Gita words → English meanings = SEMANTIC OUTPUT
+
+The seed determines WHICH words resonate. Different seeds → different words.
+Same seed → ALWAYS same words. Deterministic. No LLM.
+
+ALSO:
+    - Attractor discovery: find the stable resonance of a seed
+    - Guardian presets: each Guardian IS a synth preset (element + varga + shruti)
+    - Spell mode: feed a word back through the synth, get resonant words
+
+NO EXTERNAL DEPENDENCIES. NO RANDOMNESS. PURE MATHEMATICS.
+"""
+
+from __future__ import annotations
+
+from typing import Dict, Final, List, Optional, Sequence, Tuple
+
+from vibe_core.mahamantra.adapters.synth import (
+    MahaSynth,
+    SynthParams,
+    SYNTH_PRESETS,
+    create_synth,
+)
+from vibe_core.mahamantra.protocols._seed import (
+    MAHA_QUANTUM,
+    SEVEN,
+    WORDS,
+)
+from vibe_core.mahamantra.substrate.pancha_walk import (
+    COORD_ELEMENT,
+    COORD_HARMONIC,
+    COORD_SUB,
+    COORD_VARGA,
+    ELEMENT_NAMES,
+    IS_SHRUTI,
+)
+from vibe_core.mahamantra.substrate.rama_grid import (
+    VARNAMALA_TOTAL,
+    rama_to_phoneme,
+)
+from vibe_core.mahamantra.substrate.semantic_index import (
+    LexiconWord,
+    get_index,
+    words_at_position,
+)
+
+# =============================================================================
+# RESULT TYPES
+# =============================================================================
+
+
+class CoordResult:
+    """A single RAMA coordinate with its 4D properties and matching words."""
+
+    __slots__ = (
+        "step", "synth_value", "rama_coord", "phoneme",
+        "element", "element_name", "varga", "sub", "harmonic",
+        "is_shruti", "words", "meanings",
+    )
+
+    def __init__(self, step: int, synth_value: int, rama_coord: int):
+        self.step = step
+        self.synth_value = synth_value
+        self.rama_coord = rama_coord
+        self.phoneme = rama_to_phoneme(rama_coord)
+
+        # 4D coordinates
+        self.element = int(COORD_ELEMENT[rama_coord])
+        self.element_name = ELEMENT_NAMES[self.element]
+        self.varga = COORD_VARGA[rama_coord]
+        self.sub = COORD_SUB[rama_coord]
+        self.harmonic = COORD_HARMONIC[rama_coord]
+        self.is_shruti = IS_SHRUTI[rama_coord]
+
+        # Matching words from lexicon
+        self.words: Tuple[LexiconWord, ...] = tuple(words_at_position(rama_coord))
+        self.meanings: Tuple[str, ...] = tuple(
+            m for w in self.words for m in w.meanings
+        )
+
+    def top_meanings(self, n: int = 5) -> List[str]:
+        """Top N unique meanings."""
+        seen = set()
+        result = []
+        for m in self.meanings:
+            if m not in seen:
+                seen.add(m)
+                result.append(m)
+                if len(result) >= n:
+                    break
+        return result
+
+    def __repr__(self) -> str:
+        return (f"CoordResult(step={self.step}, coord={self.rama_coord}, "
+                f"phoneme={self.phoneme!r}, elem={self.element_name}, "
+                f"words={len(self.words)})")
+
+
+class SeedResult:
+    """Complete result of running a seed through the pipeline."""
+
+    __slots__ = ("seed", "preset", "coords", "attractor", "element_walk", "shruti_pattern")
+
+    def __init__(
+        self,
+        seed: int,
+        preset: str,
+        coords: Tuple[CoordResult, ...],
+        attractor: Optional[int],
+    ):
+        self.seed = seed
+        self.preset = preset
+        self.coords = coords
+        self.attractor = attractor
+
+        # Derived walks
+        self.element_walk = tuple(c.element_name for c in coords)
+        self.shruti_pattern = "".join("S" if c.is_shruti else "N" for c in coords)
+
+    @property
+    def all_meanings(self) -> List[str]:
+        """All unique meanings across all steps, ordered by step."""
+        seen = set()
+        result = []
+        for c in self.coords:
+            for m in c.meanings:
+                if m not in seen:
+                    seen.add(m)
+                    result.append(m)
+        return result
+
+    @property
+    def all_words(self) -> List[LexiconWord]:
+        """All unique words across all steps."""
+        seen = set()
+        result = []
+        for c in self.coords:
+            for w in c.words:
+                if w.packed_hex not in seen:
+                    seen.add(w.packed_hex)
+                    result.append(w)
+        return result
+
+    @property
+    def phoneme_sequence(self) -> str:
+        """The phoneme sequence generated by this seed."""
+        return "".join(c.phoneme for c in self.coords)
+
+    def summary(self) -> Dict:
+        """Compact summary."""
+        return {
+            "seed": self.seed,
+            "preset": self.preset,
+            "attractor": self.attractor,
+            "phonemes": self.phoneme_sequence,
+            "element_walk": list(self.element_walk),
+            "shruti_pattern": self.shruti_pattern,
+            "total_words": len(self.all_words),
+            "total_meanings": len(self.all_meanings),
+            "top_meanings": self.all_meanings[:10],
+        }
+
+    def __repr__(self) -> str:
+        return (f"SeedResult(seed={self.seed}, preset={self.preset!r}, "
+                f"words={len(self.all_words)}, meanings={len(self.all_meanings)})")
+
+
+# =============================================================================
+# CORE PIPELINE
+# =============================================================================
+
+
+def seed_to_words(
+    seed: int,
+    preset: str = "quantum",
+    params: Optional[SynthParams] = None,
+) -> SeedResult:
+    """
+    THE CORE PIPELINE: Seed → Synth → RAMA Coords → Words → Meanings.
+
+    Args:
+        seed: Any integer. Determines which words resonate.
+        preset: Synth preset ('quantum', 'classical', 'nava', etc.)
+        params: Custom SynthParams (overrides preset).
+
+    Returns:
+        SeedResult with all coordinates, words, and meanings.
+
+    Example:
+        >>> result = seed_to_words(42)
+        >>> result.phoneme_sequence
+        'ūkakakakakakakakakakakakakakaka'
+        >>> result.all_meanings[:3]
+        ['glorious', 'thighs', 'up']
+    """
+    synth = create_synth(preset=preset, params=params)
+
+    # Run one cycle: seed → 16 output values
+    cycle = synth.cycle(seed)
+
+    # Each output → RAMA coordinate → words
+    coord_results = []
+    for i, step in enumerate(cycle.steps):
+        rama_coord = step.output_value % VARNAMALA_TOTAL
+        coord_results.append(CoordResult(
+            step=i,
+            synth_value=step.output_value,
+            rama_coord=rama_coord,
+        ))
+
+    # Find attractor
+    resonance = synth.resonate(seed)
+    attractor = resonance.attractor
+
+    return SeedResult(
+        seed=seed,
+        preset=preset,
+        coords=tuple(coord_results),
+        attractor=attractor,
+    )
+
+
+def attractor_words(
+    seed: int,
+    preset: str = "quantum",
+) -> CoordResult:
+    """
+    Find the STABLE resonance of a seed and return its words.
+
+    The attractor is where the seed WANTS to be.
+    Its words are the seed's DESTINY.
+    """
+    synth = create_synth(preset=preset)
+    resonance = synth.resonate(seed)
+    rama_coord = resonance.attractor % VARNAMALA_TOTAL
+    return CoordResult(step=-1, synth_value=resonance.attractor, rama_coord=rama_coord)
+
+
+# =============================================================================
+# GUARDIAN PRESETS
+# =============================================================================
+
+# Each Guardian IS a synth configuration derived from their 4D coordinates.
+# This was discovered in the research phase (guardian_syllable_trees.py).
+
+_GUARDIAN_CONFIGS: Final[Dict[str, Dict]] = {
+    # name: {mod49, element, varga, shruti, harmonic, shastrisch}
+    "vyasa":       {"m49": 2,  "elem": "prithvi", "varga": 0, "shruti": True,  "harm": 14, "fn": "compilation"},
+    "brahma":      {"m49": 6,  "elem": "vayu",    "varga": 0, "shruti": False, "harm": 42, "fn": "creation"},
+    "narada":      {"m49": 43, "elem": "jala",    "varga": 2, "shruti": True,  "harm": 7,  "fn": "transmission"},
+    "shambhu":     {"m49": 9,  "elem": "jala",    "varga": 0, "shruti": True,  "harm": 14, "fn": "destruction"},
+    "prithu":      {"m49": 36, "elem": "prithvi", "varga": 1, "shruti": True,  "harm": 7,  "fn": "organization"},
+    "kumaras":     {"m49": 43, "elem": "jala",    "varga": 2, "shruti": True,  "harm": 7,  "fn": "wisdom"},
+    "kapila":      {"m49": 6,  "elem": "vayu",    "varga": 0, "shruti": False, "harm": 42, "fn": "analysis"},
+    "manu":        {"m49": 12, "elem": "prithvi", "varga": 0, "shruti": False, "harm": 35, "fn": "law"},
+    "parashurama": {"m49": 42, "elem": "agni",    "varga": 2, "shruti": False, "harm": 0,  "fn": "enforcement"},
+    "prahlada":    {"m49": 16, "elem": "akasha",  "varga": 1, "shruti": True,  "harm": 14, "fn": "devotion"},
+    "janaka":      {"m49": 21, "elem": "vayu",    "varga": 1, "shruti": False, "harm": 0,  "fn": "execution"},
+    "bhishma":     {"m49": 27, "elem": "agni",    "varga": 1, "shruti": False, "harm": 42, "fn": "commitment"},
+    "nrisimha":    {"m49": 7,  "elem": "prithvi", "varga": 0, "shruti": False, "harm": 0,  "fn": "protection"},
+    "bali":        {"m49": 35, "elem": "jala",    "varga": 1, "shruti": False, "harm": 0,  "fn": "surrender"},
+    "shuka":       {"m49": 22, "elem": "vayu",    "varga": 1, "shruti": True,  "harm": 7,  "fn": "liberation"},
+    "yamaraja":    {"m49": 5,  "elem": "akasha",  "varga": 0, "shruti": False, "harm": 35, "fn": "judgment"},
+}
+
+
+def guardian_words(guardian_name: str) -> CoordResult:
+    """
+    Get the resonant words for a Guardian.
+
+    Each Guardian's mod49 position determines their vocabulary.
+    """
+    config = _GUARDIAN_CONFIGS.get(guardian_name.lower())
+    if config is None:
+        raise ValueError(f"Unknown guardian: {guardian_name}")
+
+    return CoordResult(
+        step=-1,
+        synth_value=config["m49"],
+        rama_coord=config["m49"],
+    )
+
+
+def guardian_seed(guardian_name: str, seed: int) -> SeedResult:
+    """
+    Run a seed through a Guardian-tuned synth.
+
+    The Guardian's harmonic target becomes the phase offset,
+    creating a Guardian-specific resonance pattern.
+    """
+    config = _GUARDIAN_CONFIGS.get(guardian_name.lower())
+    if config is None:
+        raise ValueError(f"Unknown guardian: {guardian_name}")
+
+    # Guardian-specific params: use their harmonic as phase offset
+    params = SynthParams(
+        mod_space=MAHA_QUANTUM,
+        feedback=1,
+        phase_offset=config["harm"],
+    )
+
+    return seed_to_words(seed, params=params)
+
+
+# =============================================================================
+# SPELL MODE: Word → Synth → Resonant Words
+# =============================================================================
+
+
+def spell_to_words(
+    sanskrit_text: str,
+    seed: int = 0,
+    preset: str = "quantum",
+) -> SeedResult:
+    """
+    Feed a Sanskrit word through the synth and find resonant words.
+
+    The word's RAMA coordinates become phoneme-modulated steps.
+    The output coordinates point to RESONANT words in the lexicon.
+
+    This is the ECHO: speak a word, hear what the Mahamantra echoes back.
+    """
+    from vibe_core.mahamantra.substrate.varnamala_codec import encode
+
+    coords = encode(sanskrit_text)
+    if not coords:
+        return SeedResult(seed=seed, preset=preset, coords=(), attractor=None)
+
+    synth = create_synth(preset=preset)
+    cycle = synth.spell_cycle(coords, seed)
+
+    coord_results = []
+    for i, step in enumerate(cycle.steps):
+        rama_coord = step.output_value % VARNAMALA_TOTAL
+        coord_results.append(CoordResult(
+            step=i,
+            synth_value=step.output_value,
+            rama_coord=rama_coord,
+        ))
+
+    return SeedResult(
+        seed=seed,
+        preset=preset,
+        coords=tuple(coord_results),
+        attractor=cycle.final_value % VARNAMALA_TOTAL,
+    )
+
+
+# =============================================================================
+# EXPORTS
+# =============================================================================
+
+__all__ = [
+    "CoordResult",
+    "SeedResult",
+    "seed_to_words",
+    "attractor_words",
+    "guardian_words",
+    "guardian_seed",
+    "spell_to_words",
+]
