@@ -144,6 +144,7 @@ if TYPE_CHECKING:
     from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
     from vibe_core.mahamantra.substrate import MantraProtocol
     from vibe_core.mahamantra.substrate.kala import TimeKeeper
+    from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
 
 
 # =============================================================================
