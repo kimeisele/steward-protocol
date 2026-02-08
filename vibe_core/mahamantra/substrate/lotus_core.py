@@ -40,6 +40,161 @@ from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
 logger = logging.getLogger("MAHAMANTRA")
 
 
+# =============================================================================
+# PIPELINE CACHE — Precomputed seed-independent lookups for __call__()
+# =============================================================================
+# Same pattern as LexiconVectorCache: build once, use forever.
+# Eliminates ~30 lazy imports and ~15 function calls per __call__() invocation.
+
+
+class _PipelineCache:
+    """Seed-independent data resolved once at first use."""
+
+    __slots__ = (
+        # Constants (from _seed.py — the 7 axioms and derivations)
+        'WORDS', 'MAHA_QUANTUM', 'PARAMPARA', 'KSETRAJNA', 'MAX_CYCLES',
+        # Stateless callables (function references, no owned state)
+        'encode_text', 'synth_transform',
+        'rank_words', 'match_attractor', 'get_gita_chapter',
+        'get_chapter_significance', 'is_fruit',
+        'verse_words',
+        'diw_unpack',
+        'get_shadow_oracle',
+        'get_chamber',
+        'get_shadow_reactor_factory',
+        # Classes (type references, not instances)
+        'MahaCellUnified', 'register_cell', 'TickStateInput',
+        # Position LUTs (length = WORDS = 16, precomputed tuples)
+        'ALL_GUARDIANS', 'MAHAMANTRA_SEQUENCE', 'THE_FLUTE_CYCLE',
+        'quarter_names', 'is_head_flags',
+        'quarter_head_names', 'holy_names', 'trinity_functions',
+        'rama_coords', 'phonemes', 'roles',
+        # Phoneme signature LUTs (indexed by rama_coord, length = 49)
+        # These are module-level tuples in pancha_walk.py — we hold references.
+        'COORD_ELEMENT', 'COORD_VARGA', 'COORD_SUB', 'COORD_HARMONIC',
+        'ELEMENT_NAMES', 'IS_SHRUTI',
+        # Precomputed DIW components (length = WORDS = 16)
+        'diw_components',
+    )
+
+    def __init__(self) -> None:
+        # --- Constants ---
+        # NOTE: Compressor is NOT cached here — MahamantraLotus owns it
+        # via _get_compressor() (class-level singleton). No duplication.
+        from vibe_core.mahamantra.protocols._seed import (
+            MAHA_QUANTUM, PARAMPARA, WORDS,
+            KSETRAJNA, QUARTERS,
+            get_name_at_position, get_quarter_head, get_trinity_function,
+            is_head,
+        )
+        self.WORDS = WORDS
+        self.MAHA_QUANTUM = MAHA_QUANTUM
+        self.PARAMPARA = PARAMPARA
+        self.KSETRAJNA = KSETRAJNA
+        self.MAX_CYCLES = QUARTERS
+
+        # --- Stateless callables (resolved once, no owned state) ---
+        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
+        self.encode_text = encode_text
+
+        # MahaModularSynth is stateless (pure function: seed → attractor).
+        # No singleton exists elsewhere — safe to own one instance here.
+        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+        self.synth_transform = MahaModularSynth(default_preset="quantum").transform
+
+        from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
+        self.rank_words = rank_words
+
+        from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
+        self.match_attractor = match_attractor
+
+        from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+        self.get_gita_chapter = get_gita_chapter
+
+        from vibe_core.mahamantra.substrate.gita import get_chapter_significance
+        self.get_chapter_significance = get_chapter_significance
+
+        from vibe_core.mahamantra.protocols._seed import is_fruit
+        self.is_fruit = is_fruit
+
+        from vibe_core.mahamantra.substrate.sanskrit_lookup import verse_words
+        self.verse_words = verse_words
+
+        from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
+        self.diw_unpack = diw_unpack
+
+        from vibe_core.mahamantra.reactor.shadow_oracle import get_shadow_oracle
+        self.get_shadow_oracle = get_shadow_oracle
+
+        from vibe_core.mahamantra.substrate.chamber import get_chamber
+        self.get_chamber = get_chamber
+
+        from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
+        self.get_shadow_reactor_factory = get_shadow_reactor_factory
+
+        # --- Classes (type references, not instances) ---
+        from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+        self.MahaCellUnified = MahaCellUnified
+
+        from vibe_core.mahamantra.substrate.cell_router import register_cell
+        self.register_cell = register_cell
+
+        from vibe_core.mahamantra.reactor.shadow_protocol import TickStateInput
+        self.TickStateInput = TickStateInput
+
+        # --- Static LUTs (length = WORDS) ---
+        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, get_quarter_name
+        self.ALL_GUARDIANS = ALL_GUARDIANS
+
+        from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
+        self.THE_FLUTE_CYCLE = THE_FLUTE_CYCLE
+
+        from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
+        self.MAHAMANTRA_SEQUENCE = MAHAMANTRA_SEQUENCE
+
+        # Precompute per-position lookups (16 entries each)
+        self.quarter_names = tuple(get_quarter_name(p) for p in range(WORDS))
+        self.is_head_flags = tuple(is_head(p) for p in range(WORDS))
+        self.quarter_head_names = tuple(
+            ALL_GUARDIANS[get_quarter_head(p)] if get_quarter_head(p) < len(ALL_GUARDIANS) else "unknown"
+            for p in range(WORDS)
+        )
+        self.holy_names = tuple(get_name_at_position(p) for p in range(WORDS))
+        self.trinity_functions = tuple(get_trinity_function(p) for p in range(WORDS))
+        self.roles = tuple("avatara" if is_head(p) else "mahajana" for p in range(WORDS))
+
+        # RAMA grid lookups (16 entries)
+        from vibe_core.mahamantra.substrate.rama_grid import krishna_route, rama_to_phoneme
+        self.rama_coords = tuple(krishna_route(p) for p in range(WORDS))
+        self.phonemes = tuple(rama_to_phoneme(krishna_route(p)) for p in range(WORDS))
+
+        # Precompute DIW components (16 entries)
+        self.diw_components = tuple(diw_unpack(THE_FLUTE_CYCLE[p]) for p in range(WORDS))
+
+        # --- Phoneme signature tables (references to module-level tuples) ---
+        from vibe_core.mahamantra.substrate.pancha_walk import (
+            COORD_ELEMENT, COORD_VARGA, COORD_SUB, COORD_HARMONIC,
+            ELEMENT_NAMES, IS_SHRUTI,
+        )
+        self.COORD_ELEMENT = COORD_ELEMENT
+        self.COORD_VARGA = COORD_VARGA
+        self.COORD_SUB = COORD_SUB
+        self.COORD_HARMONIC = COORD_HARMONIC
+        self.ELEMENT_NAMES = ELEMENT_NAMES
+        self.IS_SHRUTI = IS_SHRUTI
+
+
+_PIPELINE: Optional[_PipelineCache] = None
+
+
+def _get_pipeline() -> _PipelineCache:
+    """Get or create the PipelineCache singleton."""
+    global _PIPELINE
+    if _PIPELINE is None:
+        _PIPELINE = _PipelineCache()
+    return _PIPELINE
+
+
 class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     """
     The Root of the Lotus.
@@ -267,8 +422,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         Everything computed. No external LLM. No hardcoded routing.
         """
-        from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, PARAMPARA, WORDS
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        # All seed-independent references resolved once via PipelineCache.
+        # Compressor owned by MahamantraLotus (class-level singleton).
+        P = _get_pipeline()
+        WORDS = P.WORDS
+        MAHA_QUANTUM = P.MAHA_QUANTUM
 
         # =====================================================================
         # 1. SRAVANAM - Receive input (Entry point)
@@ -285,50 +443,29 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 1.5. NAMA - Phonetic Identity (RAMA coordinate sequence)
         # =====================================================================
-        # Every input gets a phonetic identity in the 49-phoneme RAMA space.
-        # Sanskrit passes through losslessly; other languages project to the
-        # nearest articulatory equivalent. This is the bridge between text
-        # and the resonance engine (spell → DIW → Chamber → Registry).
-        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
-
-        input_coords = tuple(encode_text(input_text))
+        input_coords = tuple(P.encode_text(input_text))
 
         # =====================================================================
         # 2. KIRTANAM - MahaCompression → seed
         # =====================================================================
-        compressor = self._get_compressor()
-
         if seed is None:
-            comp_result = compressor.compress(input_text)
+            comp_result = self._get_compressor().compress(input_text)
             seed = comp_result.seed
 
         # SEED IS PURE: Same input → same seed. Always.
-        # The Yajna context (Akash state) evolves DOWNSTREAM (kirtan_cycles,
-        # accumulated_value, total_rounds) but never corrupts the seed.
-        # Previous bug: XOR with last_seed made seed^seed=0 for repeated input.
-        # Fix: Removed. Seed is deterministic from input alone.
 
         # =====================================================================
         # 3. PADA_SEVANAM - Attractor from Seed (Serial, not Parallel)
         # =====================================================================
-        # BUG FIX: Previously kernel(input_text) re-compressed the text
-        # independently, producing a DIFFERENT seed than step 2. Now we
-        # feed the SAME seed through the kernel's synth for consistency.
         # Pipeline: text → compress → seed → synth → attractor (SERIAL)
-        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
-
-        _attractor_synth = MahaModularSynth(default_preset="quantum")
-        attractor = _attractor_synth.transform(seed)
+        attractor = P.synth_transform(seed)
         variance = seed & 0xFF
         raw_address = (attractor << 8) | variance  # 16-bit Hybrid Address
 
         # =====================================================================
         # 4. ARCANAM - Parampara verification via ShadowOracle (Gita 13.35)
         # =====================================================================
-        # FIX: Use ShadowOracle for proper Parampara validation (not just % 37)
-        from vibe_core.mahamantra.reactor.shadow_oracle import get_shadow_oracle
-
-        oracle = get_shadow_oracle()
+        oracle = P.get_shadow_oracle()
         oracle_validation = oracle.validate(seed)
         parampara_verified = oracle_validation["parampara_validated"]
         parampara_channel = oracle_validation["parampara_channel"]
@@ -337,13 +474,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 5. SMARANAM - Word Resonance (Remembering)
         # =====================================================================
-        # The input's RAMA coordinates resonate with 4127 Gita words.
-        # rank_words() scores across 7 dimensions (element, harmonic, shruti,
-        # varga, attractor, HKR, phoneme_attractor). The top resonant words
-        # are the system's "memory" of what the input vibrates with.
-        from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
-
-        resonant_words = rank_words(
+        resonant_words = P.rank_words(
             input_coords=input_coords,
             input_attractor=attractor,
             top_n=7,
@@ -352,23 +483,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 6. VANDANAM - GitaResonance → verse match
         # =====================================================================
-        from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
-        from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
-        from vibe_core.mahamantra.protocols._seed import is_fruit, is_in_field
-        from vibe_core.mahamantra.substrate.gita import get_chapter_significance
-
-        verse_result = match_attractor(attractor)
-        chapter = get_gita_chapter(attractor)
-        chapter_significance = get_chapter_significance(chapter)
+        verse_result = P.match_attractor(attractor)
+        chapter = P.get_gita_chapter(attractor)
+        chapter_significance = P.get_chapter_significance(chapter)
 
         # TOPOLOGY: Field (Ch 1-16) = process, Fruit (Ch 17-18) = complete
-        gita_phase = "fruit" if is_fruit(chapter) else "field"
-        is_complete = is_fruit(chapter)  # Stopping condition
+        gita_phase = "fruit" if P.is_fruit(chapter) else "field"
+        is_complete = P.is_fruit(chapter)  # Stopping condition
 
         verse_info = None
         if verse_result.matches:
-            # USE SEED TO SELECT VERSE (not just first = hardcoded!)
-            # seed modulo matches length gives computed verse selection
             verse_index = seed % len(verse_result.matches)
             v = verse_result.matches[verse_index]
             verse_info = {
@@ -380,11 +504,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "significance": chapter_significance,
             }
 
-            # SANSKRIT WORD-FOR-WORD via RAMA coordinates
-            # Each word = RAMA coordinate sequence = VENU ticks
-            from vibe_core.mahamantra.substrate.sanskrit_lookup import verse_words
-
-            sanskrit = verse_words(v.chapter, v.verse)
+            sanskrit = P.verse_words(v.chapter, v.verse)
             if sanskrit:
                 verse_info["word_count"] = len(sanskrit.words)
                 verse_info["phoneme_count"] = sanskrit.phoneme_count
@@ -393,167 +513,77 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 7. DASYAM - Position/Quarter/Role determination
         # =====================================================================
-        # TWO CLASSIFICATION SYSTEMS (both derived from Mahamantra):
-        #
-        # A) OPERATIONAL (Quarters): How computation flows
-        #    - genesis (0-3):  INPUT   - vyasa, brahma, narada, shambhu
-        #    - dharma  (4-7):  VERIFY  - prithu, kumaras, kapila, manu
-        #    - karma   (8-11): EXECUTE - parashurama, prahlada, janaka, bhishma
-        #    - moksha (12-15): OUTPUT  - nrisimha, bali, shuka, yamaraja
-        #    HEAD = first position of each Quarter (0,4,8,12)
-        #
-        # B) ONTOLOGICAL (Trinity): What each position represents
-        #    - HARE (8 positions): Energy/Shakti - carriers/transmitters
-        #    - KRISHNA (4 positions): Source - all Vishnu-tattva
-        #    - RAMA (4 positions): Bliss - receivers/deliverers
-        #
-        from vibe_core.mahamantra.protocols._seed import (
-            get_name_at_position,
-            get_quarter_head,
-            get_trinity_function,
-            is_head,
-        )
-
         # Position from attractor (holographic - embedded in computation)
         position = attractor % WORDS  # 0-15
 
-        # =====================================================================
-        # FIX 4: VENU ORCHESTRATOR INTEGRATION
-        # =====================================================================
-        # THE_FLUTE_CYCLE is the 19-bit DIW LUT - O(1) lookup for each position.
-        # Format: Native 6-9-4 DIW = pack(venu, vamsi, murali)
-        # This unifies the Venu orchestrator with the main computation pipeline.
-        from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
-        from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
-
-        diw = THE_FLUTE_CYCLE[position]
-        diw_components = diw_unpack(diw)
-        diw_name_encoding = diw_components.vamsi  # Process/Action (name-derived)
-        diw_position_bit = diw_components.venu  # Quality (position-derived)
-
-        from vibe_core.mahamantra.substrate.seed import get_quarter_name
-        quarter = get_quarter_name(position)
-
-        guardian = ALL_GUARDIANS[position] if position < len(ALL_GUARDIANS) else "unknown"
-
-        # OPERATIONAL: HEAD/WORKER role (Quarter leadership)
-        role = "avatara" if is_head(position) else "mahajana"
-        quarter_head_pos = get_quarter_head(position)
-        quarter_head_name = ALL_GUARDIANS[quarter_head_pos] if quarter_head_pos < len(ALL_GUARDIANS) else "unknown"
-
-        # FUNCTIONAL: Trinity classification (Name governance)
-        holy_name = get_name_at_position(position)  # "H", "K", or "R"
-        trinity_function = get_trinity_function(position)  # "source", "carrier", or "deliverer"
+        # All position-dependent lookups are precomputed LUTs in PipelineCache
+        diw = P.THE_FLUTE_CYCLE[position]
+        diw_comp = P.diw_components[position]
+        quarter = P.quarter_names[position]
+        guardian = P.ALL_GUARDIANS[position] if position < len(P.ALL_GUARDIANS) else "unknown"
+        role = P.roles[position]
+        quarter_head_name = P.quarter_head_names[position]
+        holy_name = P.holy_names[position]
+        trinity_function = P.trinity_functions[position]
 
         # =====================================================================
         # 7.5. SHABDA - RAMA Grid Phoneme + 4D Coordinate Signature
         # =====================================================================
-        # Position → RAMA coordinate → Phoneme + 4D signature (element/varga/sub/harmonic)
-        # EXISTING INFRASTRUCTURE: rama_grid.py + pancha_walk.py (no new code)
-        from vibe_core.mahamantra.substrate.rama_grid import krishna_route, rama_to_phoneme
-        from vibe_core.mahamantra.substrate.pancha_walk import (
-            COORD_ELEMENT, COORD_VARGA, COORD_SUB, COORD_HARMONIC,
-            ELEMENT_NAMES, IS_SHRUTI,
-        )
-
-        rama_coord = krishna_route(position)  # 0-indexed position → RAMA coordinate (0-48)
-        phoneme = rama_to_phoneme(rama_coord)  # RAMA coordinate → Sanskrit phoneme
-        # 4D signature from pancha_walk (100% bijective, covers ALL 49 phonemes)
-        phoneme_element = COORD_ELEMENT[rama_coord]  # Element (0-4)
-        phoneme_varga = COORD_VARGA[rama_coord]  # Varga class (0-2)
-        phoneme_sub = COORD_SUB[rama_coord]  # Sub-index
-        phoneme_harmonic = COORD_HARMONIC[rama_coord]  # H-orbit
-        phoneme_shruti = IS_SHRUTI[rama_coord]  # Shruti (R-reachable) or Nakshatra
+        # Precomputed: position → rama_coord → phoneme (all in PipelineCache)
+        rama_coord = P.rama_coords[position]
+        phoneme = P.phonemes[position]
+        phoneme_element = P.COORD_ELEMENT[rama_coord]
+        phoneme_varga = P.COORD_VARGA[rama_coord]
+        phoneme_sub = P.COORD_SUB[rama_coord]
+        phoneme_harmonic = P.COORD_HARMONIC[rama_coord]
+        phoneme_shruti = P.IS_SHRUTI[rama_coord]
 
         # =====================================================================
         # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
         # =====================================================================
-        # MahaCell = ANYTHING. For __call__, we use create() with resonated position.
-        # Auto-register in global router for O(1) lookup.
-        from vibe_core.mahamantra.substrate.cell import MahaCellUnified
-        from vibe_core.mahamantra.substrate.cell_router import register_cell
-
-        result_cell = MahaCellUnified.create(
-            source=seed,  # Address from compression
-            target=raw_address,  # FULL Hybrid Address (High=Route, Low=Var)
-            operation=position,  # Position from attractor % WORDS (resonated)
+        result_cell = P.MahaCellUnified.create(
+            source=seed,
+            target=raw_address,
+            operation=position,
             dna=input_text,
         )
 
-        # Register in global router
-        register_cell(result_cell)
+        P.register_cell(result_cell)
 
         # =====================================================================
         # 8.5. KIRTAN - Call and Response Loop
         # =====================================================================
-        # Cell flows through Chamber via KIRTAN (not single dance)
-        # KIRTAN = cycles × WORDS transformations
-        # "kirtanīyaḥ sadā hariḥ" - One should always chant
-        # FIX: Use singleton chamber for persistent resonance
-        from vibe_core.mahamantra.substrate.chamber import get_chamber
+        chamber = P.get_chamber()
 
-        chamber = get_chamber()
-
-        # 8.4b. ANTARANGA - Resonant words flow into Inner Chamber (Contiguous RAM)
-        # rank_words() found the resonance. Now make it LIVE in 16 KB RAM.
-        # Cost: ~58µs for 7 words. The words become part of the chamber's memory.
+        # 8.4b. ANTARANGA - Resonant words flow into Inner Chamber
         antaranga_collisions = 0
         if resonant_words:
             antaranga_collisions = chamber.resonate_words(resonant_words, attractor)
 
         # KIRTAN LOOP: cycles × WORDS (16) transformations
-        # Each transformation applies DIW (Divine Instruction Word)
-        # Cycles scale with accumulated resonance (akash memory):
-        #   First call = 1 cycle (KSETRAJNA), then grows with total_rounds
-        #   Max = QUARTERS (4) cycles = 64 transformations
-        from vibe_core.mahamantra.protocols._seed import KSETRAJNA
-        from vibe_core.mahamantra.protocols._seed import QUARTERS as MAX_CYCLES
-
         kirtan_cycles = min(
-            KSETRAJNA + self._akash["total_rounds"] // WORDS,
-            MAX_CYCLES,
+            P.KSETRAJNA + self._akash["total_rounds"] // WORDS,
+            P.MAX_CYCLES,
         )
         result_cell = chamber.kirtan(result_cell, cycles=kirtan_cycles)
 
         # =====================================================================
         # 8.6. SPELL_KIRTAN - Input Melody over Heartbeat
         # =====================================================================
-        # After the heartbeat (kirtan), the input's phonetic identity plays
-        # through the same Chamber. spell_kirtan() uses the shared orchestrator's
-        # spell() to convert RAMA coords into DIWs, then dance(cell, diw=d)
-        # for each. Same reactor, same Registry, same resonance. Different fuel.
         if input_coords:
             result_cell = chamber.spell_kirtan(result_cell, input_coords)
 
         # =====================================================================
         # 8.7. YAJNA CYCLE - ShadowReactor Integration (Bhoga→Prasadam→Return)
         # =====================================================================
-        # THE MISSING WIRING: ShadowReactor walks the cell through the Yajna cycle.
-        # This activates on_bhoga/on_prasadam/on_switch/on_return hooks in guardians.
-        # Protocol-based: depends on ShadowReactorProtocol, not concrete class.
-        from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
-        from vibe_core.mahamantra.reactor.shadow_protocol import TickStateInput
-        from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
-
-        # Get reactor via factory (DI pattern, not direct instantiation)
-        # FORCED LAGNA=0: The position is ALREADY computed from attractor % WORDS.
-        # Adding a random phase shift corrupts deterministic routing.
-        # "Der Output darf niemals variieren" - Same input → same output. Always.
-        reactor = get_shadow_reactor_factory().spawn(
-            auto_discover=False,  # Diamond routing, not filesystem discovery
+        reactor = P.get_shadow_reactor_factory().spawn(
+            auto_discover=False,
             initial_position=position,
-            forced_lagna=0,  # No phase shift - position from attractor IS the truth
+            forced_lagna=0,
         )
 
-        # SANKIRTAN AUTHORIZATION: Accumulate grace through chanting
-        # "kīrtanīyaḥ sadā hariḥ" - Always chant the Holy Name
-        # 1 valid chant = SHARANAGATI_UNIT (3600) = authorized (MERCY path)
-        # Uses COSMIC_FRAME scaling consistent with _bhava.py
-        # NOTE: Pass THIS MODULE as chant target (has valid __genesis__ % 37 == 0)
-        # ShadowReactor itself has NO static identity (computed at runtime),
-        # so chant(self) would fail verify_link. The lotus_core module IS the source.
+        # SANKIRTAN AUTHORIZATION
         import sys
-
         reactor.chant(sys.modules[__name__])
 
         # Inject MahaCell into reactor for payload flow
@@ -575,23 +605,17 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =================================================================
         # FULL YAJNA CYCLE: WORDS ticks (Bhoga→Switch→Prasadam→Return)
         # =================================================================
-        # "The cycle never ends. The output becomes the input."
-        # Starting from computed position, walk through all 16 positions.
-        # Each tick triggers the guardian at that position.
-        # The reactor tracks phase transitions (switch at 8, return at 15→0).
-
         shadow_state = None
         guardian_result = None
         base_tick = self._akash["total_beats"]
 
         for i in range(WORDS):
             tick_pos = (position + i) % WORDS
-            tick_word, tick_opcode = MAHAMANTRA_SEQUENCE[tick_pos]
-            tick_guardian = ALL_GUARDIANS[tick_pos] if tick_pos < len(ALL_GUARDIANS) else "unknown"
+            tick_word, tick_opcode = P.MAHAMANTRA_SEQUENCE[tick_pos]
+            tick_guardian = P.ALL_GUARDIANS[tick_pos] if tick_pos < len(P.ALL_GUARDIANS) else "unknown"
+            tick_quarter = P.quarter_names[tick_pos]
 
-            tick_quarter = get_quarter_name(tick_pos)
-
-            tick_input: TickStateInput = {
+            tick_input: P.TickStateInput = {
                 "tick": base_tick + i,
                 "position": tick_pos,
                 "quarter": tick_quarter,
@@ -602,7 +626,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
             shadow_state = reactor.tick(tick_input)
 
-            # Capture execution result from any guardian that acts
             tick_result = shadow_state.get("execution_result")
             if tick_result is not None:
                 guardian_result = tick_result
@@ -610,30 +633,24 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # =====================================================================
         # 9. ATMA_NIVEDANAM - Complete response (all paths converge)
         # =====================================================================
-        # Update Akash state (persistent field)
-        # Full yajna = WORDS ticks per call
         self._akash["total_beats"] += WORDS
         self._akash["total_rounds"] += 1
         self._akash["accumulated_value"] = (self._akash["accumulated_value"] + attractor) % MAHA_QUANTUM
         self._akash["attractor_counts"][attractor] = self._akash["attractor_counts"].get(attractor, 0) + 1
 
-        # RETURN-LOOP: Store last cell's seed for next call's context
-        # "The output becomes the input" - Yajna principle
         self._akash["last_seed"] = seed
         self._akash["last_position"] = position
         self._akash["last_attractor"] = attractor
 
         return {
-            # Input
             "input": input_text,
-            # Vibration (RAMA Grid + Pancha Walk 4D Signature)
             "vibration": {
                 "seed": seed,
                 "attractor": attractor,
                 "rama_index": rama_coord,
                 "phoneme": phoneme,
                 "signature": {
-                    "element": ELEMENT_NAMES[phoneme_element],
+                    "element": P.ELEMENT_NAMES[phoneme_element],
                     "varga": phoneme_varga,
                     "sub": phoneme_sub,
                     "harmonic": phoneme_harmonic,
@@ -641,54 +658,45 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                     "frequency": phoneme_harmonic * 3 + phoneme_element * 15,
                 },
             },
-            # Parampara (via ShadowOracle - Gita 13.35)
             "parampara": {
                 "verified": parampara_verified,
                 "channel": parampara_channel,
                 "coherence": parampara_coherence,
             },
-            # Gita (VANDANAM) - THE BINDING ELEMENT + TOPOLOGY
             "chapter": chapter,
             "chapter_significance": chapter_significance,
             "verse": verse_info,
             "matches": len(verse_result.matches),
-            "gita_phase": gita_phase,  # "field" (Ch 1-16) or "fruit" (Ch 17-18)
-            "is_complete": is_complete,  # True if in Fruit (stopping condition)
-            # Position (DASYAM) - Dual Classification
+            "gita_phase": gita_phase,
+            "is_complete": is_complete,
             "position": position,
             "guardian": guardian,
-            # Operational (Quarters): How computation flows
             "quarter": quarter,
-            "role": role,  # "avatara" (HEAD) or "mahajana" (WORKER)
-            "quarter_head": quarter_head_name,  # The Avatara managing this Quarter
-            # Functional (Trinity): What this position DOES
-            "holy_name": holy_name,  # "H" (Hare), "K" (Krishna), "R" (Rama)
-            "trinity_function": trinity_function,  # "source" (K), "carrier" (H), "deliverer" (R)
-            # Venu Orchestrator (FIX 4) - 19-bit Divine Instruction Word (6-9-4)
+            "role": role,
+            "quarter_head": quarter_head_name,
+            "holy_name": holy_name,
+            "trinity_function": trinity_function,
             "diw": {
-                "raw": diw,  # Full 19-bit DIW
-                "venu": diw_components.venu,  # 6 bits: Quality/Mood
-                "vamsi": diw_components.vamsi,  # 9 bits: Process/Action
-                "murali": diw_components.murali,  # 4 bits: Phase/Quarter
+                "raw": diw,
+                "venu": diw_comp.venu,
+                "vamsi": diw_comp.vamsi,
+                "murali": diw_comp.murali,
             },
-            # MahaCell (SAKHYAM) - MahaCellUnified with lifecycle
             "cell": {
                 "header_size": HEADER_SIZE_BYTES,
                 "payload_size": len(input_text.encode("utf-8")),
                 "total_size": HEADER_SIZE_BYTES + len(input_text.encode("utf-8")),
-                "valid": True,  # Created via MahaCellUnified.create()
+                "valid": True,
                 "parampara_verified": parampara_verified,
                 "prana": result_cell.prana,
                 "integrity": result_cell.membrane_integrity,
                 "is_alive": result_cell.is_alive,
                 "cycle": result_cell.age,
             },
-            # NAMA (Step 1.5) - Phonetic Identity in RAMA space
             "nama": {
                 "coords": input_coords,
                 "phoneme_count": len(input_coords),
             },
-            # SMARANAM (Step 5) - Word Resonance (7D ranking)
             "smaranam": tuple(
                 {
                     "sanskrit": rw.word.sanskrit,
@@ -697,17 +705,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 }
                 for rw in resonant_words
             ),
-            # ANTARANGA (Inner Chamber - Contiguous RAM)
             "antaranga": {
                 "active_slots": chamber.antaranga.active_count(),
                 "total_prana": chamber.antaranga.total_prana(),
                 "collisions": antaranga_collisions,
                 "size_bytes": chamber.antaranga.size_bytes,
             },
-            # Akash (persistent state)
             "akash": self._akash,
-            # Execution: Cell transformation + Yajna cycle + Guardian invocation
-            # Chamber.kirtan() transforms via DIW, ShadowReactor.tick() triggers hooks
             "execution": {
                 "success": result_cell.is_alive,
                 "prana": result_cell.prana,
@@ -719,7 +723,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "guardian_acted": guardian_result is not None,
                 "guardian_result": guardian_result,
             },
-            # Yajna Cycle (ShadowReactor integration)
             "yajna": {
                 "phase": shadow_state.get("phase"),
                 "cycle_count": shadow_state.get("cycle_count", 0),
