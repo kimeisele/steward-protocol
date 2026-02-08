@@ -123,17 +123,21 @@ IS_SHRUTI: R²-Residuen mod 49 = 22 SHRUTIS + 27 NAKSHATRAS = VARNAMALA.
 `MahamantraLotus.__call__()` in `substrate/lotus_core.py`. NAVA = 9 Schritte:
 
 ```
-1. SRAVANAM       - Input empfangen
-2. KIRTANAM       - MahaCompression → Seed (deterministic hash)
-                    RETURN-LOOP: XOR mit last_seed aus Akash (Kontinuität)
-3. SMARANAM       - Attractor finden (Seed → Resonanz-Punkt)
-4. PADASEVANAM    - Guna-Klassifikation (sattva/rajas/tamas)
-5. ARCANAM        - Parampara-Verifikation (Oracle, Signatur-Kette)
-6. VANDANAM       - Gita-Resonance (Attractor → Kapitel → Vers + Significance)
-7. DASYAM         - Position/Quarter/Guardian bestimmen
-8. SAKHYAM        - MahaCell erstellen + Kirtan (1→4 Zyklen) + Yajna (16 Ticks)
-9. ATMA_NIVEDANAM - Response + Akash-Update (last_seed/position/attractor für nächsten Call)
+1.   SRAVANAM       - Input empfangen (str oder MahaCell)
+1.5  NAMA           - Phonetic Identity (encode_text → RAMA-Koordinaten)
+2.   KIRTANAM       - MahaCompression → Seed (deterministic hash, KEIN XOR)
+3.   PADA_SEVANAM   - Attractor from Seed (MahaModularSynth.transform)
+4.   ARCANAM        - Parampara-Verifikation (ShadowOracle.validate)
+5.   SMARANAM       - Word Resonance (rank_words 7D → top 7 resonant words)
+6.   VANDANAM       - Gita-Resonance (Attractor → Kapitel → Vers + Significance)
+7.   DASYAM         - Position/Quarter/Guardian + Shabda (RAMA Grid 4D Signatur)
+8.   SAKHYAM        - MahaCell + Kirtan (1→4 Zyklen) + spell_kirtan + Yajna (16 Ticks)
+9.   ATMA_NIVEDANAM - Response + Akash-Update (last_seed/position/attractor)
 ```
+
+Seed ist REIN deterministisch: gleicher Input → gleicher Seed. Kein XOR mit last_seed
+(entfernt wegen seed^seed=0 Bug bei wiederholtem Input). Akash-Kontinuität läuft
+über kirtan_cycles (skalieren 1→4 mit total_rounds) und accumulated_value.
 
 Entry Point: `steward "anything"` → `cli/main.py` → `__main__.py` → `mahamantra.execute()`
 → `MahamantraLotus.__call__()`. Deterministisch. Kein LLM.
@@ -148,7 +152,7 @@ Die 5 Verbindungen im Flow (alle verdrahtet in `lotus_core.py`):
 
 | Tattva | Verbindung | Implementation |
 |--------|-----------|----------------|
-| CHAITANYA | Return-Loop | last_seed XOR → nächster Call (Akash) |
+| CHAITANYA | Return-Loop | Akash persistent state (last_seed/attractor/rounds → kirtan_cycles) |
 | NITYANANDA | Multi-Tick Yajna | WORDS(16) Ticks pro Call, voller Zyklus |
 | ADVAITA | CALL_RESPONSE | Kirtan-Zyklen skalieren 1→4 mit Resonanz |
 | GADADHARA | Gita Content | Chapter Significance im Response |
@@ -182,6 +186,12 @@ Fallen (aufpassen!):
 - `CellLifecycleState.integrity` ist `float` (0.0-1.0), NICHT `int`. War mal falsch deklariert.
 - DIW-Konsumenten MÜSSEN `diw.unpack()` nutzen. Keine manuellen Bit-Shifts.
 - `substrate/` ist flach — fraktale Restrukturierung steht noch aus.
+
+Offen (neu entdeckt):
+- `conftest.py` registriert Marker (smoke, unit, e2e, fractal) die `pyproject.toml` nicht kennt → `--strict-markers` Konflikt
+- `test_root_dir` Failure: `"genesis" not in dir(mahamantra)` — Quarter-Attribute fehlen in `__dir__`
+- `iGene.is_fatal` war IMMER False (float 0-1 vs int 0-21600) → Fix auf `fix/igene-fatal-comparison`
+- 4 F811 in `research/` (2× `run_analysis` Duplikate, 2× Enum-Shadowing in physics.py)
 
 Bereits aufgeräumt (nicht nochmal anfassen):
 - F821: 0 Fehler in `mahamantra/` (VenuOrchestrator + SeedResult via TYPE_CHECKING gefixt)
@@ -272,13 +282,14 @@ Nur diese Branches haben echten Wert:
 
 | Branch | Status | Inhalt |
 |--------|--------|--------|
-| `main` | Stabil | Letzter Senior: Guardian-Cleanup + F821-Fixes + Pancha-Tattva-Wiring |
-| `feature/mahamantra-single-entry-point` | Aktiv | Write-behind cache + Samskara intercept + SeedSpectrum in __call__ |
-| `feature/antaranga-ram-chamber` | Aktiv | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
-| `feature/venu-production` | Aktiv | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
+| `main` | Stabil | Antaranga RAM Chamber + LexiconVectorCache + F811/F821 clean |
+| `feature/lotus-pipeline-cache` | PR-ready | PipelineCache Singleton — seed-unabhängige Lookups vorberechnet |
+| `perf/lotus-call-hotpath` | PR-ready | MahaModularSynth Singleton — eliminiert Objekt-Allokation pro __call__ |
+| `fix/igene-fatal-comparison` | PR-ready | iGene.is_fatal: float(0-1) vs int(0-21600) Normalisierung |
+| `feature/mahamantra-single-entry-point` | Gemergt | Write-behind cache + Samskara intercept |
+| `feature/antaranga-ram-chamber` | Gemergt | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
+| `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
-| `feature/gita-architecture-refinement` | Gemergt | Vorgänger-Branch, DIW-Protokoll erstellt |
-| `claude/extract-sanskrit-vedabase-*` | Gemergt | Sanskrit-Extraktion + 4D Dekomposition + Synth-Integration |
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
