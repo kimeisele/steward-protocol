@@ -13,30 +13,37 @@ SOLUTION:
     Multi-dimensional resonance scoring. Each word gets a score based on
     how strongly it resonates with the input's 4D signature.
 
-SCORING DIMENSIONS (all derived from existing Pancha Walk math):
+SCORING DIMENSIONS (all derived from Mahamantra mathematics):
 
-    1. ELEMENT ALIGNMENT (weight: 0.30)
+    1. ELEMENT ALIGNMENT (weight: 0.15)
        Input element histogram vs word element histogram.
        Same dominant element = strong resonance.
-       Uses walk_distance() from pancha_walk.py.
 
-    2. HARMONIC CONVERGENCE (weight: 0.25)
+    2. HARMONIC CONVERGENCE (weight: 0.10)
        Do the input and word dissolve to the same harmonic target?
-       Same dissolution path = deep structural kinship.
        coord × SEVEN mod 49 = where energy goes.
 
-    3. SHRUTI PATTERN MATCH (weight: 0.20)
+    3. SHRUTI PATTERN MATCH (weight: 0.10)
        Shruti (fixed points) vs Nakshatra (journey points).
-       Matching patterns = same vibrational character.
        Quadratic residues mod 49.
 
-    4. VARGA ALIGNMENT (weight: 0.15)
+    4. VARGA ALIGNMENT (weight: 0.10)
        Same sound class (svara/sparsha/shesha) = same operational mode.
        svara=carrier(H), sparsha=transform(K), shesha=release(R).
 
-    5. ATTRACTOR PROXIMITY (weight: 0.10)
+    5. ATTRACTOR PROXIMITY (weight: 0.15)
        Words whose coords converge to the same attractor under the synth
-       are in the same semantic basin.
+       are in the same semantic basin (7 basins, coarse).
+
+    6. HKR PROPORTION (weight: 0.20)
+       How much each divine operation (H/K/R) contributes to the
+       16-step transformation. 48/49 unique signatures (fine-grained).
+
+    7. PHONEME ATTRACTOR CHARGE (weight: 0.20)
+       Each phoneme converges to one of 5 Mahamantra constants under
+       MahaAlgorithm16: {18=Gita, 22=Shruti, 49=Rama, 87=Chaitanya, 136=Field}.
+       Cosine similarity of the 5-bin charge histograms.
+       Bridges phonetic structure to semantic domain.
 
 ALL WEIGHTS SUM TO 1.0. ALL SCORES IN [0, 1].
 NO LLM. NO RANDOMNESS. PURE RESONANCE MATHEMATICS.
@@ -62,6 +69,7 @@ from vibe_core.mahamantra.substrate.pancha_walk import (
     element_histogram,
     walk_distance,
 )
+from vibe_core.mahamantra.substrate.basin_map import basin_cosine, basin_jaccard, hkr_similarity, phoneme_attractor_similarity
 from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL
 from vibe_core.mahamantra.substrate.semantic_index import (
     LexiconWord,
@@ -73,13 +81,15 @@ from vibe_core.mahamantra.substrate.semantic_index import (
 # =============================================================================
 # PANCHA dimensions, weights proportional to their discriminative power.
 
-W_ELEMENT: Final[float] = 0.30   # Strongest: articulatory position
-W_HARMONIC: Final[float] = 0.25  # Deep: dissolution path kinship
-W_SHRUTI: Final[float] = 0.20    # Character: fixed vs journey
-W_VARGA: Final[float] = 0.15     # Operational: carrier/transform/release
-W_ATTRACTOR: Final[float] = 0.10  # Basin: convergence family
+W_ELEMENT: Final[float] = 0.15        # Articulatory position (5 elements)
+W_HARMONIC: Final[float] = 0.10       # Dissolution path kinship
+W_SHRUTI: Final[float] = 0.10         # Character: fixed vs journey
+W_VARGA: Final[float] = 0.10          # Operational: carrier/transform/release
+W_ATTRACTOR: Final[float] = 0.15      # Basin: attractor convergence (7 basins, coarse)
+W_HKR: Final[float] = 0.20            # HKR proportion: divine operation mix (48/49 unique, fine)
+W_PHONEME_ATTRACTOR: Final[float] = 0.20  # Phoneme attractor charge: which Mahamantra constant each phoneme converges to
 
-assert abs(W_ELEMENT + W_HARMONIC + W_SHRUTI + W_VARGA + W_ATTRACTOR - 1.0) < 1e-9
+assert abs(W_ELEMENT + W_HARMONIC + W_SHRUTI + W_VARGA + W_ATTRACTOR + W_HKR + W_PHONEME_ATTRACTOR - 1.0) < 1e-9
 
 
 # =============================================================================
@@ -154,21 +164,16 @@ def _attractor_score(
     word: LexiconWord,
     input_attractor: Optional[int],
 ) -> float:
-    """Attractor proximity: do input and word converge to same basin?"""
-    if input_attractor is None or not word.coords:
+    """Basin resonance: do input and word share attractor basins?
+
+    Uses precomputed COORD_BASIN table (mod-137 attractors).
+    Combines Jaccard (basin overlap) and cosine (proportion match).
+    """
+    if not input_coords or not word.coords:
         return 0.0
-
-    # Word's "attractor" approximation: sum of coords mod 49
-    word_sum = sum(word.coords) % VARNAMALA_TOTAL
-    input_att = input_attractor % VARNAMALA_TOTAL
-
-    if word_sum == input_att:
-        return 1.0
-
-    # Distance in circular RAMA space
-    diff = abs(word_sum - input_att)
-    circular_diff = min(diff, VARNAMALA_TOTAL - diff)
-    return 1.0 - (circular_diff / (VARNAMALA_TOTAL // 2))
+    j = basin_jaccard(input_coords, word.coords)
+    c = basin_cosine(input_coords, word.coords)
+    return 0.4 * j + 0.6 * c
 
 
 # =============================================================================
@@ -182,7 +187,8 @@ class RankedWord:
     __slots__ = (
         "word", "total_score",
         "element_score", "harmonic_score", "shruti_score",
-        "varga_score", "attractor_score",
+        "varga_score", "attractor_score", "hkr_score",
+        "phoneme_attractor_score",
     )
 
     def __init__(
@@ -193,6 +199,8 @@ class RankedWord:
         shruti: float,
         varga: float,
         attractor: float,
+        hkr: float = 0.0,
+        phoneme_attractor: float = 0.0,
     ):
         self.word = word
         self.element_score = element
@@ -200,12 +208,16 @@ class RankedWord:
         self.shruti_score = shruti
         self.varga_score = varga
         self.attractor_score = attractor
+        self.hkr_score = hkr
+        self.phoneme_attractor_score = phoneme_attractor
         self.total_score = (
             W_ELEMENT * element
             + W_HARMONIC * harmonic
             + W_SHRUTI * shruti
             + W_VARGA * varga
             + W_ATTRACTOR * attractor
+            + W_HKR * hkr
+            + W_PHONEME_ATTRACTOR * phoneme_attractor
         )
 
     @property
@@ -228,6 +240,8 @@ class RankedWord:
             "shruti": round(self.shruti_score, 4),
             "varga": round(self.varga_score, 4),
             "attractor": round(self.attractor_score, 4),
+            "hkr": round(self.hkr_score, 4),
+            "phoneme_attractor": round(self.phoneme_attractor_score, 4),
         }
 
     def __repr__(self) -> str:
@@ -291,6 +305,8 @@ def rank_words(
         s_raw = _shruti_score(input_coords, word)
         v_raw = _varga_score(input_coords, word)
         a_raw = _attractor_score(input_coords, word, input_attractor)
+        hkr_raw = hkr_similarity(input_coords, word.coords)
+        pa_raw = phoneme_attractor_similarity(input_coords, word.coords)
 
         if has_synth:
             e_synth = _element_score(synth_coords, word)
@@ -316,6 +332,8 @@ def rank_words(
             shruti=s_raw,
             varga=v_raw,
             attractor=a_raw,
+            hkr=hkr_raw,
+            phoneme_attractor=pa_raw,
         ))
 
     ranked.sort(key=lambda r: r.total_score, reverse=True)
@@ -406,6 +424,20 @@ def resonate(
             )
             fill = [rw for rw in phon_ranked if rw.word.packed_hex not in sem_hexes]
             return (sem_ranked + fill)[:top_n]
+        else:
+            # No string match — use basin pre-filtering for pure math matching.
+            # Find all words sharing at least one basin with the input.
+            from vibe_core.mahamantra.substrate.basin_map import basin_set as _basin_set
+            input_basins = _basin_set(tuple(input_coords))
+            basin_candidates = idx.by_basin_set(input_basins)
+            if basin_candidates:
+                return rank_words(
+                    input_coords=input_coords,
+                    input_attractor=attractor,
+                    synth_coords=synth_coords,
+                    candidates=basin_candidates,
+                    top_n=top_n,
+                )
 
     # Step 4: Pure phonetic ranking (Sanskrit / non-Latin)
     ranked = rank_words(
@@ -459,23 +491,47 @@ def resonate_coords(
 # =============================================================================
 
 
+# Guardian IAST names for full syllable-level resonance
+_GUARDIAN_IAST: Final[Dict[str, str]] = {
+    "vyasa": "vyāsa", "brahma": "brahmā", "narada": "nārada",
+    "shambhu": "śambhu", "prithu": "pṛthu", "kumaras": "kumāra",
+    "kapila": "kapila", "manu": "manu", "parashurama": "paraśurāma",
+    "prahlada": "prahlāda", "janaka": "janaka", "bhishma": "bhīṣma",
+    "nrisimha": "nṛsiṁha", "bali": "bali", "shuka": "śuka",
+    "yamaraja": "yamarāja",
+}
+
+
 def guardian_resonance(guardian_name: str, top_n: int = 10) -> List[RankedWord]:
     """
     Find the words that resonate most strongly with a Guardian.
 
-    Uses the Guardian's mod49 position as the input coordinate.
-    This reveals the Guardian's SEMANTIC VOCABULARY — the words
-    that are most aligned with their function.
+    Uses the Guardian's FULL IAST name encoded to RAMA coords,
+    giving rich basin + element + harmonic information per syllable.
+    Falls back to single m49 coord if IAST encoding fails.
     """
     from vibe_core.mahamantra.substrate.seed_to_words import _GUARDIAN_CONFIGS
+    from vibe_core.mahamantra.substrate.varnamala_codec import encode as encode_iast
 
     config = _GUARDIAN_CONFIGS.get(guardian_name.lower())
     if config is None:
         raise ValueError(f"Unknown guardian: {guardian_name}")
 
+    # Try full IAST encoding first
+    iast = _GUARDIAN_IAST.get(guardian_name.lower())
+    input_coords: Sequence[int] = ()
+    if iast:
+        encoded = encode_iast(iast)
+        if encoded:
+            input_coords = encoded
+
+    # Fallback to single m49 coord
+    if not input_coords:
+        input_coords = (config["m49"],)
+
     m49 = config["m49"]
     return rank_words(
-        input_coords=(m49,),
+        input_coords=input_coords,
         input_attractor=m49,
         top_n=top_n,
     )
