@@ -326,15 +326,7 @@ def maha_respond(
     attractor = cycle.final_value % VARNAMALA_TOTAL
     synth_coords = tuple(step.output_value % VARNAMALA_TOTAL for step in cycle.steps)
 
-    # Step 4: Rank words — dual-signal + semantic boost for Latin
-    ranked = rank_words(
-        input_coords=input_coords,
-        input_attractor=attractor,
-        synth_coords=synth_coords,
-        top_n=top_words * 10,
-    )
-
-    # Step 4b: Semantic boost for Latin inputs
+    # Step 4: Rank words — semantic boost for Latin, phonetic for Sanskrit
     lang = detect_language(text)
     if lang == "latin":
         idx = get_index()
@@ -342,19 +334,51 @@ def maha_respond(
         if not input_tokens:
             input_tokens = [text.strip().lower()]
 
-        semantic_hits: set = set()
+        # Fetch semantic candidates DIRECTLY from meaning index
+        semantic_candidates = []
+        seen_hex: set = set()
         for token in input_tokens:
             for word in idx.by_meaning(token):
-                semantic_hits.add(word.packed_hex)
+                if word.packed_hex not in seen_hex:
+                    seen_hex.add(word.packed_hex)
+                    semantic_candidates.append(word)
 
-        if semantic_hits:
-            semantic_ranked = [rw for rw in ranked if rw.word.packed_hex in semantic_hits]
-            phonetic_only = [rw for rw in ranked if rw.word.packed_hex not in semantic_hits]
-            ranked = (semantic_ranked + phonetic_only)[:top_words]
+        if semantic_candidates:
+            # Rank semantic candidates by resonance with input
+            sem_ranked = rank_words(
+                input_coords=input_coords,
+                input_attractor=attractor,
+                synth_coords=synth_coords,
+                candidates=semantic_candidates,
+                top_n=top_words,
+            )
+            if len(sem_ranked) >= top_words:
+                ranked = sem_ranked[:top_words]
+            else:
+                # Fill remaining with phonetic results
+                sem_hexes = {rw.word.packed_hex for rw in sem_ranked}
+                phon = rank_words(
+                    input_coords=input_coords,
+                    input_attractor=attractor,
+                    synth_coords=synth_coords,
+                    top_n=top_words * 3,
+                )
+                fill = [rw for rw in phon if rw.word.packed_hex not in sem_hexes]
+                ranked = (sem_ranked + fill)[:top_words]
         else:
-            ranked = ranked[:top_words]
+            ranked = rank_words(
+                input_coords=input_coords,
+                input_attractor=attractor,
+                synth_coords=synth_coords,
+                top_n=top_words,
+            )
     else:
-        ranked = ranked[:top_words]
+        ranked = rank_words(
+            input_coords=input_coords,
+            input_attractor=attractor,
+            synth_coords=synth_coords,
+            top_n=top_words,
+        )
 
     # Step 5: Build response
     from vibe_core.mahamantra.substrate.pancha_walk import ELEMENT_NAMES as EN, COORD_ELEMENT as CE
