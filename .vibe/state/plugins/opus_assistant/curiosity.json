@@ -9,12 +9,6 @@
   "sources": [
     {
       "type": "uncertainty",
-      "description": "Low confidence decision: BLOCKED : Empty intent",
-      "weight": 0.12,
-      "timestamp": "2026-02-06T23:10:39.788268"
-    },
-    {
-      "type": "uncertainty",
       "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
       "weight": 0.039999999999999994,
       "timestamp": "2026-02-06T23:10:42.120884"
@@ -66,6 +60,12 @@
       "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
       "weight": 0.039999999999999994,
       "timestamp": "2026-02-06T23:10:56.632663"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-08T20:58:14.570702"
     }
   ]
 }

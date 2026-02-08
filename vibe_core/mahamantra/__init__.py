@@ -82,6 +82,12 @@ def __getattr__(name):
         return _original_getattr(name)
     raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute {name!r}")
 
+def __dir__():
+    """Module-level __dir__ so lazy __getattr__ names appear in dir()."""
+    names = set(globals().keys())
+    names.update(__all__)
+    return sorted(n for n in names if not n.startswith("_"))
+
 
 # =============================================================================
 # EXPORTS (for IDE support - hints only)

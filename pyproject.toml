@@ -132,6 +132,10 @@ markers = [
     "security: Security-focused tests (penetration, crypto)",
     "asyncio: Async tests (handled by pytest-asyncio)",
     "vibe_plugins: Tests requiring specific Vibe plugins to be loaded",
+    "smoke: Quick sanity check tests",
+    "unit: Unit tests",
+    "e2e: End-to-end tests",
+    "fractal: Fractal pattern tests",
 ]
 
 # Warning filters - SATYA STRICT MODE (no hiding failures)
