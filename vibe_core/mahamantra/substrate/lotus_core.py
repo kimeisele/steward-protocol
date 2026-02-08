@@ -71,6 +71,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     # Lazy-loaded instances
     _compressor = None
+    _attractor_synth = None
     _gita_index = None
     _gita_by_attractor = None
     _pipeline = None
@@ -315,10 +316,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # independently, producing a DIFFERENT seed than step 2. Now we
         # feed the SAME seed through the kernel's synth for consistency.
         # Pipeline: text → compress → seed → synth → attractor (SERIAL)
-        from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+        if MahamantraLotus._attractor_synth is None:
+            from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+            MahamantraLotus._attractor_synth = MahaModularSynth(default_preset="quantum")
 
-        _attractor_synth = MahaModularSynth(default_preset="quantum")
-        attractor = _attractor_synth.transform(seed)
+        attractor = MahamantraLotus._attractor_synth.transform(seed)
         variance = seed & 0xFF
         raw_address = (attractor << 8) | variance  # 16-bit Hybrid Address
 
