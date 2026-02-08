@@ -44,6 +44,7 @@ NO LLM. NO RANDOMNESS. PURE RESONANCE MATHEMATICS.
 
 from __future__ import annotations
 
+from collections import Counter as _counter
 from typing import Dict, Final, List, Optional, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
@@ -244,6 +245,7 @@ def rank_words(
     candidates: Optional[Sequence[LexiconWord]] = None,
     input_attractor: Optional[int] = None,
     synth_coords: Optional[Sequence[int]] = None,
+    element_bias: int = -1,
     top_n: int = 10,
 ) -> List[RankedWord]:
     """
@@ -262,6 +264,8 @@ def rank_words(
         candidates: Words to rank. If None, ranks ALL lexicon words.
         input_attractor: Attractor value for attractor scoring.
         synth_coords: Synth-transformed RAMA coordinates (optional, improves accuracy).
+        element_bias: If >= 0, words whose dominant element matches get a bonus.
+                      Used by resonate_as() to apply Guardian-specific coloring.
         top_n: Number of top results to return.
 
     Returns:
@@ -275,6 +279,7 @@ def rank_words(
 
     # If synth_coords provided, blend both signals
     has_synth = synth_coords is not None and len(synth_coords) > 0
+    has_bias = 0 <= element_bias < PANCHA
 
     ranked: List[RankedWord] = []
     for word in candidates:
@@ -296,6 +301,13 @@ def rank_words(
         else:
             e_final = e_raw
             h_final = h_raw
+
+        # Guardian element bias: boost words whose dominant element matches
+        if has_bias and word.element_walk:
+            elem_counts = _counter(word.element_walk)
+            dominant = elem_counts.most_common(1)[0][0]
+            if dominant == element_bias:
+                e_final = min(1.0, e_final + 0.3)
 
         ranked.append(RankedWord(
             word=word,
@@ -349,44 +361,60 @@ def resonate(
     attractor = cycle.final_value % VARNAMALA_TOTAL
     synth_coords = tuple(step.output_value % VARNAMALA_TOTAL for step in cycle.steps)
 
-    # Step 3: Phonetic ranking (all words)
-    ranked = rank_words(
-        input_coords=input_coords,
-        input_attractor=attractor,
-        synth_coords=synth_coords,
-        top_n=top_n * 10,  # Get more candidates for re-ranking
-    )
-
-    # Step 4: Semantic boost for Latin inputs
+    # Step 3: Semantic boost for Latin inputs
+    #
+    # The phonetic path alone cannot bridge English→Sanskrit meaning.
+    # "fire" is phonetically far from "agni/tejas" in RAMA space.
+    # Solution: fetch semantic candidates DIRECTLY from the meaning index,
+    # rank them by resonance, then merge with phonetic results.
     lang = detect_language(text)
     if lang == "latin":
         idx = get_index()
-        # Search meaning index for each word in the input
         input_tokens = [w.strip().lower() for w in text.split() if len(w.strip()) >= 3]
         if not input_tokens:
             input_tokens = [text.strip().lower()]
 
-        # Collect words that match semantically
-        semantic_hits: set = set()
+        # Collect LexiconWords whose English meaning contains input tokens
+        semantic_candidates: List[LexiconWord] = []
+        seen_hex: set = set()
         for token in input_tokens:
             for word in idx.by_meaning(token):
-                semantic_hits.add(word.packed_hex)
+                if word.packed_hex not in seen_hex:
+                    seen_hex.add(word.packed_hex)
+                    semantic_candidates.append(word)
 
-        if semantic_hits:
-            # Build combined list: semantic hits ranked by resonance + phonetic top
-            semantic_ranked = []
-            phonetic_only = []
-            for rw in ranked:
-                if rw.word.packed_hex in semantic_hits:
-                    semantic_ranked.append(rw)
-                else:
-                    phonetic_only.append(rw)
+        if semantic_candidates:
+            # Rank semantic candidates by resonance with input
+            sem_ranked = rank_words(
+                input_coords=input_coords,
+                input_attractor=attractor,
+                synth_coords=synth_coords,
+                candidates=semantic_candidates,
+                top_n=top_n,
+            )
 
-            # Semantic hits first (they have BOTH signals), then phonetic
-            combined = semantic_ranked + phonetic_only
-            return combined[:top_n]
+            if len(sem_ranked) >= top_n:
+                return sem_ranked[:top_n]
 
-    return ranked[:top_n]
+            # Fill remaining slots with phonetic results (no duplicates)
+            sem_hexes = {rw.word.packed_hex for rw in sem_ranked}
+            phon_ranked = rank_words(
+                input_coords=input_coords,
+                input_attractor=attractor,
+                synth_coords=synth_coords,
+                top_n=top_n * 3,
+            )
+            fill = [rw for rw in phon_ranked if rw.word.packed_hex not in sem_hexes]
+            return (sem_ranked + fill)[:top_n]
+
+    # Step 4: Pure phonetic ranking (Sanskrit / non-Latin)
+    ranked = rank_words(
+        input_coords=input_coords,
+        input_attractor=attractor,
+        synth_coords=synth_coords,
+        top_n=top_n,
+    )
+    return ranked
 
 
 def resonate_sanskrit(
