@@ -245,12 +245,23 @@ Collision = in-place Byte-Arithmetik: prana addiert, integrity mittelt, flags |=
 
 **Hot Path Analyse (Feb 2026):**
 ```
-lotus_core.__call__() = ~1400 ms
-rank_words()          = ~1300 ms (90% der Zeit!)
-Alles andere          = <1 ms
+VORHER:
+  lotus_core.__call__() = ~1400 ms
+  rank_words()          = ~1300 ms (90% der Zeit!)
+  Alles andere          = <1 ms
+
+NACHHER (LexiconVectorCache):
+  rank_words()          = ~78 ms (median, 8.5× schneller)
+  rank_words()          = ~34 ms (best case, 18× schneller)
 ```
 
-NÄCHSTER Schritt: Lexikon (4127 Wörter, 132 KB) in kontiguieren RAM → `rank_words()` als Vektor-Op.
+**Vectorisierung (Feb 2026):**
+`LexiconVectorCache` in `semantic_index.py`: 13 Fixed-Size Felder pro Wort, vorberechnet bei Index-Load.
+`_rank_words_vectorized()` in `resonance_ranker.py`: Input-Features EINMAL berechnen, dann
+alle 4127 Wörter via flache Array-Lookups scoren. Bitmask-Jaccard via `int.bit_count()`.
+Unrolled Loops (PANCHA=5, TRINITY=3, BASIN_COUNT=6, PA_COUNT=5).
+Bit-identische Ergebnisse. Kein numpy. Kein neues Dependency.
+`rank_words(candidates=None)` → Fast Path. `rank_words(candidates=[subset])` → Original Slow Path.
 
 ## Repo-Zustand
 
