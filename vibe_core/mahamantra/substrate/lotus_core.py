@@ -494,6 +494,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         chamber = get_chamber()
 
+        # 8.4b. ANTARANGA - Resonant words flow into Inner Chamber (Contiguous RAM)
+        # rank_words() found the resonance. Now make it LIVE in 16 KB RAM.
+        # Cost: ~58µs for 7 words. The words become part of the chamber's memory.
+        antaranga_collisions = 0
+        if resonant_words:
+            antaranga_collisions = chamber.resonate_words(resonant_words, attractor)
+
         # KIRTAN LOOP: cycles × WORDS (16) transformations
         # Each transformation applies DIW (Divine Instruction Word)
         # Cycles scale with accumulated resonance (akash memory):
@@ -690,6 +697,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 }
                 for rw in resonant_words
             ),
+            # ANTARANGA (Inner Chamber - Contiguous RAM)
+            "antaranga": {
+                "active_slots": chamber.antaranga.active_count(),
+                "total_prana": chamber.antaranga.total_prana(),
+                "collisions": antaranga_collisions,
+                "size_bytes": chamber.antaranga.size_bytes,
+            },
             # Akash (persistent state)
             "akash": self._akash,
             # Execution: Cell transformation + Yajna cycle + Guardian invocation

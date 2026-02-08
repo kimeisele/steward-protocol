@@ -68,6 +68,12 @@ from vibe_core.mahamantra.substrate.cell import (
 )
 from vibe_core.mahamantra.substrate.cluster import MahaCluster
 from vibe_core.mahamantra.substrate.registry import SiksastakamRegistry
+from vibe_core.mahamantra.substrate.antaranga import (
+    AntarangaRegistry,
+    GENESIS_PRANA_U32,
+    INTEGRITY_FULL,
+    FLAG_ACTIVE,
+)
 from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
 
@@ -157,6 +163,12 @@ class SankirtanChamber(Generic[C]):
     # The Registry (Musical Memory - 512 slots)
     _registry: SiksastakamRegistry = field(default_factory=SiksastakamRegistry)
     
+    # The Antaranga (Inner Chamber - Contiguous RAM)
+    # 512 × 32 bytes = 16 KB. No Python objects. No GC. Pure byte resonance.
+    # Bahiranga (outer) = Python objects for API/debugging.
+    # Antaranga (inner) = contiguous RAM for the reactor core.
+    _antaranga: AntarangaRegistry = field(default_factory=AntarangaRegistry)
+
     # Resonance Engines (for Clustering)
     _resonator: MahaResonator = field(default_factory=lambda: MahaResonator(mod_space=MAHA_QUANTUM))
     
@@ -258,6 +270,22 @@ class SankirtanChamber(Generic[C]):
         # Always set, whether it's new presence or updated resonance
         self._registry.set(vamsi, result_cell)
         
+        # 3b. ANTARANGA SHADOW (Inner Chamber - Contiguous RAM)
+        # Mirror the collision into 16 KB contiguous memory.
+        # Same logic, hardware speed. The inner chamber resonates.
+        self._antaranga.apply_diw(vamsi, diw)
+        self._antaranga.collide(
+            vamsi,
+            v_source=cell.header.sravanam & 0xFFFFFFFF,
+            v_target=cell.header.kirtanam & 0xFFFFFFFF,
+            v_operation=cell.header.pada_sevanam & 0xFFFFFFFF,
+            v_arcanam=cell.header.arcanam & 0xFFFFFFFF,
+            v_atma=cell.header.atma_nivedanam & 0xFFFFFFFF,
+            v_prana=min(cell.lifecycle.prana, 0xFFFFFFFF),
+            v_integrity=int(cell.lifecycle.integrity * INTEGRITY_FULL),
+            v_cycle=min(cell.lifecycle.cycle, 0xFFFF),
+        )
+
         # Track statistics
         self._accumulated_diw ^= (diw & DIW_MASK)
         self._total_transformations += KSETRAJNA
@@ -376,6 +404,63 @@ class SankirtanChamber(Generic[C]):
             current = self.dance(current, diw=d)
         return current
     
+    # =========================================================================
+    # ANTARANGA METHODS (Inner Chamber - Contiguous RAM)
+    # =========================================================================
+
+    def resonate_words(
+        self,
+        ranked_words: list,
+        attractor: int = 0,
+    ) -> int:
+        """
+        Flow resonant words into the Antaranga (Inner Chamber).
+
+        Each RankedWord becomes a living resonance pattern in contiguous RAM.
+        The word's RAMA coordinates determine its Vamsi slot (deterministic).
+        Its score becomes prana and integrity (energy = meaning).
+
+        This closes the feedback loop: rank_words() finds resonance,
+        resonate_words() makes it LIVE in the chamber's memory.
+
+        Args:
+            ranked_words: List of RankedWord from rank_words()
+            attractor: The input attractor (used as target field)
+
+        Returns:
+            Number of resonance collisions (words that merged with existing)
+        """
+        collisions = 0
+        for i, rw in enumerate(ranked_words):
+            # Deterministic slot from word coordinates
+            coord_sum = sum(rw.word.coords) if hasattr(rw.word, 'coords') else i
+            slot = coord_sum % 512
+
+            # Score → prana/integrity (score 0.0-1.0 → proportional energy)
+            score_prana = int(rw.total_score * GENESIS_PRANA_U32)
+            score_integrity = int(rw.total_score * INTEGRITY_FULL)
+
+            resonated = self._antaranga.collide(
+                slot,
+                v_source=coord_sum & 0xFFFFFFFF,
+                v_target=attractor & 0xFFFFFFFF,
+                v_operation=i,
+                v_arcanam=0,
+                v_atma=0,
+                v_prana=max(KSETRAJNA, score_prana),
+                v_integrity=max(KSETRAJNA, score_integrity),
+                v_cycle=0,
+            )
+            if resonated:
+                collisions += KSETRAJNA
+
+        return collisions
+
+    @property
+    def antaranga(self) -> AntarangaRegistry:
+        """Direct access to the Inner Chamber (read-only intent)."""
+        return self._antaranga
+
     # =========================================================================
     # TRANSFORMATION LOGIC
     # =========================================================================
@@ -568,9 +653,10 @@ class SankirtanChamber(Generic[C]):
         return self._orchestrator.is_sunya(diw)
     
     def reset(self) -> None:
-        """Reset all state (Registry, Orchestrator, Metrics)."""
+        """Reset all state (Registry, Orchestrator, Antaranga, Metrics)."""
         self._orchestrator.reset()
         self._registry.clear()
+        self._antaranga.clear()
         self._accumulated_diw = 0
         self._resonance_count = 0
         self._total_transformations = 0
@@ -609,6 +695,9 @@ class SankirtanChamber(Generic[C]):
         
         # Registry (Variable)
         result.extend(self._registry.to_bytes())
+
+        # Antaranga (Fixed: 16,384 bytes contiguous)
+        result.extend(self._antaranga.raw)
         
         return bytes(result)
     
@@ -657,9 +746,20 @@ class SankirtanChamber(Generic[C]):
         self._orchestrator.from_bytes(orch_data)
         offset += orch_size
         
-        # 3. Registry
-        registry_data = snapshot[offset:]
-        self._registry.from_bytes(registry_data)
+        # 3. Registry + Antaranga
+        # Antaranga is always the LAST 16,384 bytes (fixed size).
+        # Everything between orchestrator and antaranga is Registry.
+        from vibe_core.mahamantra.substrate.antaranga import CHAMBER_BYTES
+        if len(snapshot) >= offset + CHAMBER_BYTES:
+            # New format: Registry + Antaranga
+            registry_data = snapshot[offset:len(snapshot) - CHAMBER_BYTES]
+            self._registry.from_bytes(registry_data)
+            self._antaranga._mem[:] = snapshot[len(snapshot) - CHAMBER_BYTES:]
+        else:
+            # Legacy format: Registry only (no Antaranga)
+            registry_data = snapshot[offset:]
+            self._registry.from_bytes(registry_data)
+            self._antaranga.clear()
 
     # =========================================================================
     # FACTORY METHODS
