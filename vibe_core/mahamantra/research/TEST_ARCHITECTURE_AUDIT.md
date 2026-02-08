@@ -157,7 +157,37 @@ The bridge is ALREADY BUILT. `tests/conftest.py` has:
 
 The conftest.py is a cathedral nobody enters.
 
-## 8. Die Vision
+## 8. VALIDATION RESULTS (Kritische Prüfung)
+
+### ✅ Mahamantra 16-Step Lifecycle — FUNKTIONIERT
+Every test automatically runs 16 steps: Genesis(H-K-H-K) → Dharma(K-K-H-H) → Karma(H-R-H-R) → Moksha(R-R-H-H).
+Verified with `--log-cli-level=DEBUG`. Real Mahamantra sequence, correct opcodes.
+**Verdict: GOLD. Keep.**
+
+### ✅ TÜV Badges — FUNKTIONIERT
+Auto-issued on pass. 19/19 SILVER (Score 0.70 = base 0.5 + speed bonus 0.2).
+No GOLD because Gene bonus never fires (see below).
+**Verdict: SILVER. Works but capped without Gene fix.**
+
+### ❌ Gene Injection (iGene) — KAPUTT
+**BUG: `iGene.is_fatal` compares `entropy_load` (float 0.0-1.0) against `MantraByte.coherence` (int 0-21600).**
+`0.3 > 21454` is ALWAYS False. `is_fatal` can NEVER return True.
+The entire Gene system is dead code — entropy can never overwhelm coherence.
+Root cause: `MantraByte.coherence` returns COSMIC_FRAME scaled int, not float.
+Fix: `iGene.is_fatal` should compare `entropy_load > coherence / 21600`.
+**Verdict: RED. Do not use until fixed. conftest.py Gene fixtures are decorative.**
+
+### ⚠️ TestableRegistry Bridge — UNTESTED (0 users)
+`pytest_generate_tests` hook exists but `registry_test_case` fixture has 0 consumers.
+Cannot validate without at least one test using it.
+**Verdict: UNKNOWN. Needs adoption to validate.**
+
+### ⚠️ NagaTestHarness — WORKS but LEGACY
+Works correctly (verified via test_harness.py). But Naga is outside mahamantra/.
+Long-term: Naga capabilities should be assimilated into Mahamantra via adapters.
+**Verdict: YELLOW. Works but wrong location for future architecture.**
+
+## 9. Die Vision
 
 ```
 CURRENT:                              FUTURE:
