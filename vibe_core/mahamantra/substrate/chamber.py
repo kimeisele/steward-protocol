@@ -204,12 +204,16 @@ class SankirtanChamber(Generic[C]):
     # CORE TRANSFORMATION METHODS
     # =========================================================================
     
-    def dance(self, cell: MahaCellUnified[C]) -> MahaCellUnified[C]:
+    def dance(
+        self,
+        cell: MahaCellUnified[C],
+        diw: Optional[int] = None,
+    ) -> MahaCellUnified[C]:
         """
         Single cell flows through, gets transformed, and interacts with Memory.
         
         Logic:
-        1. Get DIW from Orchestrator.
+        1. Get DIW from Orchestrator (or use provided DIW).
         2. Transform Cell (apply DIW).
         3. Extract Vamsi (Address) from DIW.
         4. Interact with Registry at Vamsi address:
@@ -218,12 +222,16 @@ class SankirtanChamber(Generic[C]):
         
         Args:
             cell: The cell to transform
+            diw: Optional pre-computed DIW (e.g. from spell()).
+                 If None, the orchestrator's step() provides the next
+                 DIW from THE_FLUTE_CYCLE (the heartbeat).
             
         Returns:
             The resulting cell (original or merged)
         """
         # 1. Get the current Divine Instruction Word
-        diw = self._orchestrator.step()
+        if diw is None:
+            diw = self._orchestrator.step()
         
         # 2. Transform the cell
         self._apply_diw(cell, diw)
@@ -332,6 +340,41 @@ class SankirtanChamber(Generic[C]):
             resonance_attractor=attractor_result.attractor,
             coherence=attractor_result.attractor / MALA, # Normalized
         )
+    
+    def spell_kirtan(
+        self,
+        cell: MahaCellUnified[C],
+        coords: tuple[int, ...],
+    ) -> MahaCellUnified[C]:
+        """
+        Transform cell through input-derived DIWs (Melody over Heartbeat).
+        
+        Like kirtan(), but the DIWs come from spell(coords) instead of
+        THE_FLUTE_CYCLE. The input's RAMA coordinates literally play
+        through Krishna's flute, and each phoneme becomes a transformation.
+        
+        dance()  = heartbeat (LUT)
+        kirtan() = heartbeat × cycles
+        spell_kirtan() = melody (input-derived DIWs via shared orchestrator)
+        
+        Same reactor (_apply_diw), same memory (Registry), same resonance.
+        Different fuel.
+        
+        Args:
+            cell: The cell to transform
+            coords: RAMA coordinates (0-48) from phonetic encoding
+            
+        Returns:
+            The transformed cell
+        """
+        if not coords:
+            return cell
+        
+        diws = self._orchestrator.spell(coords)
+        current = cell
+        for d in diws:
+            current = self.dance(current, diw=d)
+        return current
     
     # =========================================================================
     # TRANSFORMATION LOGIC
