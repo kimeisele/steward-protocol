@@ -226,29 +226,25 @@ class LotusNode:
 
         if base.exists():
             for child in base.iterdir():
-                if child.name.startswith("_"):
+                if child.name.startswith(("_", ".")):
                     continue
                 if child.is_dir():
                     items.append(child.name)
                 elif child.suffix == ".py":
                     items.append(child.stem)
 
-                # Lila boundary check
-                if len(items) >= NAVADVIPA_LIMIT:
-                    break
+        # Module exports
+        module = self._get_module()
+        if module is not None:
+            module_items = [name for name in dir(module) if not name.startswith("_")]
+            items.extend(module_items)
 
-        # Module exports (only if we have capacity)
-        if len(items) < NAVADVIPA_LIMIT:
-            module = self._get_module()
-            if module is not None:
-                remaining = NAVADVIPA_LIMIT - len(items)
-                module_items = [name for name in dir(module) if not name.startswith("_")]
-                items.extend(module_items[:remaining])
-
+        # Sort first, THEN truncate (old code truncated unsorted → random items lost)
+        # Root gets full listing (mixed filesystem + module exports need space).
+        # Sub-paths get NAVADVIPA_LIMIT to prevent explosion.
         result = sorted(set(items))
-
-        # Add hint if truncated
-        if len(result) >= NAVADVIPA_LIMIT:
+        if not self._path.is_root and len(result) > NAVADVIPA_LIMIT:
+            result = result[:NAVADVIPA_LIMIT]
             result.append("__has_more__")
 
         return result
