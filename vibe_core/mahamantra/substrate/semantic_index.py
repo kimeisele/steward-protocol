@@ -31,7 +31,9 @@ from pathlib import Path
 from typing import Dict, Final, FrozenSet, List, Optional, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
+    PANCHA,
     SEVEN,
+    TRINITY,
     WORDS,
 )
 from vibe_core.mahamantra.substrate.pancha_walk import (
@@ -43,10 +45,14 @@ from vibe_core.mahamantra.substrate.pancha_walk import (
     IS_SHRUTI,
 )
 from vibe_core.mahamantra.substrate.basin_map import (
+    BASIN_COUNT,
     BASIN_INDEX,
     BASIN_LIST,
     COORD_BASIN,
+    COORD_HKR,
     COORD_PHONEME_ATTRACTOR,
+    PHONEME_ATTRACTOR_COUNT,
+    PHONEME_ATTRACTOR_INDEX,
     basin_jaccard,
     basin_set,
 )
@@ -343,6 +349,152 @@ class SemanticIndex:
 
 
 # =============================================================================
+# VECTOR CACHE — Precomputed Fixed-Size Arrays for rank_words()
+# =============================================================================
+# Every LexiconWord's variable-length walks are reduced to fixed-size
+# numeric fields at build time. rank_words() then scores ALL words via
+# simple arithmetic on flat arrays — no per-word function calls.
+#
+# This eliminates the Python object overhead that makes rank_words()
+# the 90% bottleneck in lotus_core.__call__().
+
+
+class LexiconVectorCache:
+    """
+    Precomputed fixed-size scoring data for every LexiconWord.
+
+    Built once from SemanticIndex.words. Each field is a flat list
+    indexed by word position (0..N-1). All scoring math is reduced
+    to arithmetic on these arrays — no set(), no Counter(), no
+    per-word histogram construction at scoring time.
+
+    Fields per word (all precomputed):
+        element_hist_norm[i][0..4]  — normalized element histogram (5 floats)
+        varga_hist_norm[i][0..2]    — normalized varga histogram (3 floats)
+        harmonic_bitmask[i]         — uint64 bitmask of harmonic set (for Jaccard)
+        shruti_bitmask[i]           — uint16 bitmask of shruti pattern (positional)
+        shruti_ratio[i]             — float: fraction of shruti phonemes
+        coord_count[i]              — int: number of coordinates
+        basin_set_bitmask[i]        — uint8 bitmask of basin set (for Jaccard)
+        basin_hist[i][0..B-1]       — raw basin histogram (B ints)
+        basin_hist_mag[i]           — float: precomputed magnitude for cosine
+        hkr_color[i]                — (h, k, r) tuple of floats
+        pa_hist[i][0..P-1]          — raw phoneme attractor histogram (P ints)
+        pa_hist_mag[i]              — float: precomputed magnitude for cosine
+        dominant_element[i]         — int: most frequent element (for bias)
+    """
+
+    __slots__ = (
+        '_words', '_n',
+        'element_hist_norm', 'varga_hist_norm',
+        'harmonic_bitmask', 'shruti_bitmask', 'shruti_ratio', 'coord_count',
+        'basin_set_bitmask', 'basin_hist', 'basin_hist_mag',
+        'hkr_color', 'pa_hist', 'pa_hist_mag', 'dominant_element',
+    )
+
+    def __init__(self, words: Tuple[LexiconWord, ...]) -> None:
+        self._words = words
+        self._n = len(words)
+        n = self._n
+
+        # Pre-allocate all arrays
+        self.element_hist_norm: List[Tuple[float, ...]] = [() for _ in range(n)]
+        self.varga_hist_norm: List[Tuple[float, ...]] = [() for _ in range(n)]
+        self.harmonic_bitmask: List[int] = [0] * n
+        self.shruti_bitmask: List[int] = [0] * n
+        self.shruti_ratio: List[float] = [0.0] * n
+        self.coord_count: List[int] = [0] * n
+        self.basin_set_bitmask: List[int] = [0] * n
+        self.basin_hist: List[Tuple[int, ...]] = [() for _ in range(n)]
+        self.basin_hist_mag: List[float] = [0.0] * n
+        self.hkr_color: List[Tuple[float, float, float]] = [(0.0, 0.0, 0.0)] * n
+        self.pa_hist: List[Tuple[int, ...]] = [() for _ in range(n)]
+        self.pa_hist_mag: List[float] = [0.0] * n
+        self.dominant_element: List[int] = [0] * n
+
+        # Build all fields
+        for i, w in enumerate(words):
+            coords = w.coords
+            if not coords:
+                continue
+            nc = len(coords)
+            self.coord_count[i] = nc
+
+            # Element histogram (normalized, 5 floats)
+            eh = [0] * PANCHA
+            for c in coords:
+                eh[COORD_ELEMENT[c]] += 1
+            self.dominant_element[i] = eh.index(max(eh))
+            inv_nc = 1.0 / nc
+            self.element_hist_norm[i] = tuple(x * inv_nc for x in eh)
+
+            # Varga histogram (normalized, 3 floats)
+            vh = [0] * TRINITY
+            for c in coords:
+                vh[COORD_VARGA[c]] += 1
+            self.varga_hist_norm[i] = tuple(x * inv_nc for x in vh)
+
+            # Harmonic bitmask (uint64 — values 0..48 fit in 49 bits)
+            hm = 0
+            for c in coords:
+                hm |= (1 << COORD_HARMONIC[c])
+            self.harmonic_bitmask[i] = hm
+
+            # Shruti bitmask + ratio
+            sm = 0
+            shruti_count = 0
+            for j, c in enumerate(coords):
+                if IS_SHRUTI[c]:
+                    sm |= (1 << j)
+                    shruti_count += 1
+            self.shruti_bitmask[i] = sm
+            self.shruti_ratio[i] = shruti_count * inv_nc
+
+            # Basin set bitmask + histogram + magnitude
+            bsm = 0
+            bh = [0] * BASIN_COUNT
+            for c in coords:
+                b = COORD_BASIN[c]
+                bi = BASIN_INDEX[b]
+                bsm |= (1 << bi)
+                bh[bi] += 1
+            self.basin_set_bitmask[i] = bsm
+            self.basin_hist[i] = tuple(bh)
+            self.basin_hist_mag[i] = sum(v * v for v in bh) ** 0.5
+
+            # HKR color (average of per-coord HKR proportions)
+            h_sum = k_sum = r_sum = 0.0
+            for c in coords:
+                hkr = COORD_HKR[c]
+                h_sum += hkr[0]
+                k_sum += hkr[1]
+                r_sum += hkr[2]
+            self.hkr_color[i] = (h_sum * inv_nc, k_sum * inv_nc, r_sum * inv_nc)
+
+            # Phoneme attractor histogram + magnitude
+            pah = [0] * PHONEME_ATTRACTOR_COUNT
+            for c in coords:
+                pah[PHONEME_ATTRACTOR_INDEX[COORD_PHONEME_ATTRACTOR[c]]] += 1
+            self.pa_hist[i] = tuple(pah)
+            self.pa_hist_mag[i] = sum(v * v for v in pah) ** 0.5
+
+    @property
+    def size(self) -> int:
+        return self._n
+
+
+_VECTOR_CACHE: Optional[LexiconVectorCache] = None
+
+
+def get_vector_cache() -> LexiconVectorCache:
+    """Get or create the global LexiconVectorCache singleton."""
+    global _VECTOR_CACHE
+    if _VECTOR_CACHE is None:
+        _VECTOR_CACHE = LexiconVectorCache(get_index().words)
+    return _VECTOR_CACHE
+
+
+# =============================================================================
 # SINGLETON (lazy)
 # =============================================================================
 
@@ -396,8 +548,10 @@ def semantic_query(
 
 __all__ = [
     "LexiconWord",
+    "LexiconVectorCache",
     "SemanticIndex",
     "get_index",
+    "get_vector_cache",
     "words_at_position",
     "words_by_element",
     "words_by_meaning",

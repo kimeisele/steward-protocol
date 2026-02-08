@@ -184,6 +184,7 @@ Fallen (aufpassen!):
 - `substrate/` ist flach — fraktale Restrukturierung steht noch aus.
 
 Bereits aufgeräumt (nicht nochmal anfassen):
+- F821: 0 Fehler in `mahamantra/` (VenuOrchestrator + SeedResult via TYPE_CHECKING gefixt)
 - Guardians: ALLE 16 identisches thin Pattern (keine if-else, keine Klassen)
 - yamaraja: 288→78 Zeilen (Duplikat-Klassen entfernt)
 - kapila: eager import entfernt, jetzt lazy wie alle anderen
@@ -211,6 +212,58 @@ Bereits aufgeräumt (nicht nochmal anfassen):
 - `state_service.py`: Write-behind cache (save→RAM, flush→Disk), Mala-flush (108 ticks), Samskara-Intercept
 - `boot_orchestrator.py`: MantraClock.on_mala() → StateService.flush() (RAM→Disk every ~27s)
 
+## Antaranga (Inner Chamber — Contiguous RAM)
+
+`substrate/antaranga.py`: 512 Slots × 32 Bytes = 16 KB kontiguierer Speicher.
+Kein Python-Objekt. Kein GC. Reine Byte-Resonanz.
+
+SankirtanChamber hat ZWEI Kammern:
+- **Bahiranga** (äußere) = Python-Objekte, API, Debugging (`SiksastakamRegistry`)
+- **Antaranga** (innere) = 16 KB `bytearray`, Hardware-Geschwindigkeit
+
+`dance()` schreibt in BEIDE: Python-Registry für API, Antaranga für den Reaktorkern.
+`resonate_words()` fließt `rank_words()`-Ergebnisse als lebende Muster in die Antaranga.
+`lotus_core.__call__()` Step 8.4b: resonant_words → Antaranga nach rank_words().
+Return-Dict enthält `"antaranga"` Stats (active_slots, total_prana, collisions, size_bytes).
+`snapshot()`/`restore()` inkludiert Antaranga-Bytes (backward-kompatibel mit Legacy).
+
+Slot-Layout (32 Bytes, Little-Endian):
+```
+[0:4]   source     (uint32)
+[4:8]   target     (uint32)
+[8:12]  operation  (uint32)
+[12:16] arcanam    (uint32)
+[16:20] atma       (uint32)
+[20:24] prana      (uint32)
+[24:26] integrity  (uint16)
+[26:28] cycle      (uint16)
+[28:30] flags      (uint16)
+[30:32] diw_acc    (uint16)
+```
+
+Collision = in-place Byte-Arithmetik: prana addiert, integrity mittelt, flags |= ACTIVE.
+`apply_diw()` = XOR auf diw_acc Feld. `active_count()` = linearer Scan über flags.
+
+**Hot Path Analyse (Feb 2026):**
+```
+VORHER:
+  lotus_core.__call__() = ~1400 ms
+  rank_words()          = ~1300 ms (90% der Zeit!)
+  Alles andere          = <1 ms
+
+NACHHER (LexiconVectorCache):
+  rank_words()          = ~78 ms (median, 8.5× schneller)
+  rank_words()          = ~34 ms (best case, 18× schneller)
+```
+
+**Vectorisierung (Feb 2026):**
+`LexiconVectorCache` in `semantic_index.py`: 13 Fixed-Size Felder pro Wort, vorberechnet bei Index-Load.
+`_rank_words_vectorized()` in `resonance_ranker.py`: Input-Features EINMAL berechnen, dann
+alle 4127 Wörter via flache Array-Lookups scoren. Bitmask-Jaccard via `int.bit_count()`.
+Unrolled Loops (PANCHA=5, TRINITY=3, BASIN_COUNT=6, PA_COUNT=5).
+Bit-identische Ergebnisse. Kein numpy. Kein neues Dependency.
+`rank_words(candidates=None)` → Fast Path. `rank_words(candidates=[subset])` → Original Slow Path.
+
 ## Repo-Zustand
 
 ~60+ ungemergte Remote-Branches (`claude/*`, `copilot/*`, `gemini/*`). Fast alle sind AI-Müll.
@@ -220,6 +273,7 @@ Nur diese Branches haben echten Wert:
 |--------|--------|--------|
 | `main` | Stabil | Letzter Senior: Guardian-Cleanup + F821-Fixes + Pancha-Tattva-Wiring |
 | `feature/mahamantra-single-entry-point` | Aktiv | Write-behind cache + Samskara intercept + SeedSpectrum in __call__ |
+| `feature/antaranga-ram-chamber` | Aktiv | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
 | `feature/venu-production` | Aktiv | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
 | `feature/gita-architecture-refinement` | Gemergt | Vorgänger-Branch, DIW-Protokoll erstellt |

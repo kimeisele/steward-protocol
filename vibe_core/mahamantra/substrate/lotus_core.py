@@ -283,6 +283,17 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             seed = None
 
         # =====================================================================
+        # 1.5. NAMA - Phonetic Identity (RAMA coordinate sequence)
+        # =====================================================================
+        # Every input gets a phonetic identity in the 49-phoneme RAMA space.
+        # Sanskrit passes through losslessly; other languages project to the
+        # nearest articulatory equivalent. This is the bridge between text
+        # and the resonance engine (spell → DIW → Chamber → Registry).
+        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
+
+        input_coords = tuple(encode_text(input_text))
+
+        # =====================================================================
         # 2. KIRTANAM - MahaCompression → seed
         # =====================================================================
         compressor = self._get_compressor()
@@ -322,6 +333,21 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         parampara_verified = oracle_validation["parampara_validated"]
         parampara_channel = oracle_validation["parampara_channel"]
         parampara_coherence = oracle_validation["coherence"]
+
+        # =====================================================================
+        # 5. SMARANAM - Word Resonance (Remembering)
+        # =====================================================================
+        # The input's RAMA coordinates resonate with 4127 Gita words.
+        # rank_words() scores across 7 dimensions (element, harmonic, shruti,
+        # varga, attractor, HKR, phoneme_attractor). The top resonant words
+        # are the system's "memory" of what the input vibrates with.
+        from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
+
+        resonant_words = rank_words(
+            input_coords=input_coords,
+            input_attractor=attractor,
+            top_n=7,
+        ) if input_coords else []
 
         # =====================================================================
         # 6. VANDANAM - GitaResonance → verse match
@@ -468,6 +494,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         chamber = get_chamber()
 
+        # 8.4b. ANTARANGA - Resonant words flow into Inner Chamber (Contiguous RAM)
+        # rank_words() found the resonance. Now make it LIVE in 16 KB RAM.
+        # Cost: ~58µs for 7 words. The words become part of the chamber's memory.
+        antaranga_collisions = 0
+        if resonant_words:
+            antaranga_collisions = chamber.resonate_words(resonant_words, attractor)
+
         # KIRTAN LOOP: cycles × WORDS (16) transformations
         # Each transformation applies DIW (Divine Instruction Word)
         # Cycles scale with accumulated resonance (akash memory):
@@ -483,7 +516,17 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         result_cell = chamber.kirtan(result_cell, cycles=kirtan_cycles)
 
         # =====================================================================
-        # 8.6. YAJNA CYCLE - ShadowReactor Integration (Bhoga→Prasadam→Return)
+        # 8.6. SPELL_KIRTAN - Input Melody over Heartbeat
+        # =====================================================================
+        # After the heartbeat (kirtan), the input's phonetic identity plays
+        # through the same Chamber. spell_kirtan() uses the shared orchestrator's
+        # spell() to convert RAMA coords into DIWs, then dance(cell, diw=d)
+        # for each. Same reactor, same Registry, same resonance. Different fuel.
+        if input_coords:
+            result_cell = chamber.spell_kirtan(result_cell, input_coords)
+
+        # =====================================================================
+        # 8.7. YAJNA CYCLE - ShadowReactor Integration (Bhoga→Prasadam→Return)
         # =====================================================================
         # THE MISSING WIRING: ShadowReactor walks the cell through the Yajna cycle.
         # This activates on_bhoga/on_prasadam/on_switch/on_return hooks in guardians.
@@ -639,6 +682,27 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "integrity": result_cell.membrane_integrity,
                 "is_alive": result_cell.is_alive,
                 "cycle": result_cell.age,
+            },
+            # NAMA (Step 1.5) - Phonetic Identity in RAMA space
+            "nama": {
+                "coords": input_coords,
+                "phoneme_count": len(input_coords),
+            },
+            # SMARANAM (Step 5) - Word Resonance (7D ranking)
+            "smaranam": tuple(
+                {
+                    "sanskrit": rw.word.sanskrit,
+                    "meaning": rw.word.first_meaning,
+                    "score": rw.total_score,
+                }
+                for rw in resonant_words
+            ),
+            # ANTARANGA (Inner Chamber - Contiguous RAM)
+            "antaranga": {
+                "active_slots": chamber.antaranga.active_count(),
+                "total_prana": chamber.antaranga.total_prana(),
+                "collisions": antaranga_collisions,
+                "size_bytes": chamber.antaranga.size_bytes,
             },
             # Akash (persistent state)
             "akash": self._akash,
