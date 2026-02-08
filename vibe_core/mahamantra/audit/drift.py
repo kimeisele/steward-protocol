@@ -344,6 +344,5 @@ class Auditor:  # Renamed from DriftAuditor
 
 __all__ = [
     "Auditor",
-    "heal_lineage",  # Keep heal as a standalone utility
-    "AuditReport", "LineageViolation", "SSOTViolation", "ProtocolViolation", # Keep types for now
+    "AuditReport", "LineageViolation", "SSOTViolation", "ProtocolViolation",
 ]

@@ -46,7 +46,7 @@ class JsonlParser(LogParser):
                 offset=offset,
                 metadata=data
             )
-        except: return None
+        except Exception: return None
 
 class TextParser(LogParser):
     import re
@@ -71,7 +71,7 @@ class TextParser(LogParser):
                 offset=offset,
                 raw=line
             )
-        except: return None
+        except Exception: return None
 
 class UnifiedParser:
     """Orchestrates multiple parsers without if-else bloat."""
