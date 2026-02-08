@@ -367,7 +367,7 @@ class MahaLLMKernel(MahaResonanceProtocol):
         """
         self._ensure_loaded()
 
-        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text, detect_language
+        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
         from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
         from vibe_core.mahamantra.substrate.semantic_index import get_index
         from vibe_core.mahamantra.adapters.synth import create_synth, SynthParams
@@ -398,39 +398,29 @@ class MahaLLMKernel(MahaResonanceProtocol):
         # Guardian's element index for bias
         element_idx = COORD_ELEMENT[g.mod49]
 
-        # Semantic boost for Latin inputs + element bias
-        lang = detect_language(text)
-        if lang == "latin":
-            idx = get_index()
-            input_tokens = [w.strip().lower() for w in text.split() if len(w.strip()) >= 3]
-            if not input_tokens:
-                input_tokens = [text.strip().lower()]
+        # Semantic bridge (always — no language gate) + element bias
+        idx = get_index()
+        input_tokens = [w.strip().lower() for w in text.split() if len(w.strip()) >= 3]
+        if not input_tokens:
+            input_tokens = [text.strip().lower()]
 
-            semantic_candidates = []
-            seen_hex: set = set()
-            for token in input_tokens:
-                for word in idx.by_meaning(token):
-                    if word.packed_hex not in seen_hex:
-                        seen_hex.add(word.packed_hex)
-                        semantic_candidates.append(word)
+        semantic_candidates = []
+        seen_hex: set = set()
+        for token in input_tokens:
+            for word in idx.by_meaning(token):
+                if word.packed_hex not in seen_hex:
+                    seen_hex.add(word.packed_hex)
+                    semantic_candidates.append(word)
 
-            if semantic_candidates:
-                ranked = rank_words(
-                    input_coords=input_coords,
-                    input_attractor=attractor,
-                    synth_coords=synth_coords,
-                    candidates=semantic_candidates,
-                    element_bias=element_idx,
-                    top_n=top_n,
-                )
-            else:
-                ranked = rank_words(
-                    input_coords=input_coords,
-                    input_attractor=attractor,
-                    synth_coords=synth_coords,
-                    element_bias=element_idx,
-                    top_n=top_n,
-                )
+        if semantic_candidates:
+            ranked = rank_words(
+                input_coords=input_coords,
+                input_attractor=attractor,
+                synth_coords=synth_coords,
+                candidates=semantic_candidates,
+                element_bias=element_idx,
+                top_n=top_n,
+            )
         else:
             ranked = rank_words(
                 input_coords=input_coords,

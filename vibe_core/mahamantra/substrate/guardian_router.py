@@ -298,12 +298,12 @@ def maha_respond(
 
     Deterministic. Reproducible. No LLM.
     """
-    from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text, detect_language
+    from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
     from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
     from vibe_core.mahamantra.substrate.semantic_index import get_index
     from vibe_core.mahamantra.adapters.synth import create_synth
 
-    # Step 1: Encode
+    # Step 1: Encode (unified — one path for all languages)
     input_coords = encode_text(text)
     if not input_coords:
         dummy = GUARDIANS[0]
@@ -326,52 +326,40 @@ def maha_respond(
     attractor = cycle.final_value % VARNAMALA_TOTAL
     synth_coords = tuple(step.output_value % VARNAMALA_TOTAL for step in cycle.steps)
 
-    # Step 4: Rank words — semantic boost for Latin, phonetic for Sanskrit
-    lang = detect_language(text)
-    if lang == "latin":
-        idx = get_index()
-        input_tokens = [w.strip().lower() for w in text.split() if len(w.strip()) >= 3]
-        if not input_tokens:
-            input_tokens = [text.strip().lower()]
+    # Step 4: Semantic bridge (always — no language gate)
+    idx = get_index()
+    input_tokens = [w.strip().lower() for w in text.split() if len(w.strip()) >= 3]
+    if not input_tokens:
+        input_tokens = [text.strip().lower()]
 
-        # Fetch semantic candidates DIRECTLY from meaning index
-        semantic_candidates = []
-        seen_hex: set = set()
-        for token in input_tokens:
-            for word in idx.by_meaning(token):
-                if word.packed_hex not in seen_hex:
-                    seen_hex.add(word.packed_hex)
-                    semantic_candidates.append(word)
+    semantic_candidates = []
+    seen_hex: set = set()
+    for token in input_tokens:
+        for word in idx.by_meaning(token):
+            if word.packed_hex not in seen_hex:
+                seen_hex.add(word.packed_hex)
+                semantic_candidates.append(word)
 
-        if semantic_candidates:
-            # Rank semantic candidates by resonance with input
-            sem_ranked = rank_words(
-                input_coords=input_coords,
-                input_attractor=attractor,
-                synth_coords=synth_coords,
-                candidates=semantic_candidates,
-                top_n=top_words,
-            )
-            if len(sem_ranked) >= top_words:
-                ranked = sem_ranked[:top_words]
-            else:
-                # Fill remaining with phonetic results
-                sem_hexes = {rw.word.packed_hex for rw in sem_ranked}
-                phon = rank_words(
-                    input_coords=input_coords,
-                    input_attractor=attractor,
-                    synth_coords=synth_coords,
-                    top_n=top_words * 3,
-                )
-                fill = [rw for rw in phon if rw.word.packed_hex not in sem_hexes]
-                ranked = (sem_ranked + fill)[:top_words]
+    if semantic_candidates:
+        sem_ranked = rank_words(
+            input_coords=input_coords,
+            input_attractor=attractor,
+            synth_coords=synth_coords,
+            candidates=semantic_candidates,
+            top_n=top_words,
+        )
+        if len(sem_ranked) >= top_words:
+            ranked = sem_ranked[:top_words]
         else:
-            ranked = rank_words(
+            sem_hexes = {rw.word.packed_hex for rw in sem_ranked}
+            phon = rank_words(
                 input_coords=input_coords,
                 input_attractor=attractor,
                 synth_coords=synth_coords,
-                top_n=top_words,
+                top_n=top_words * 3,
             )
+            fill = [rw for rw in phon if rw.word.packed_hex not in sem_hexes]
+            ranked = (sem_ranked + fill)[:top_words]
     else:
         ranked = rank_words(
             input_coords=input_coords,
