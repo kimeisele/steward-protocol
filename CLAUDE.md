@@ -185,6 +185,7 @@ Fallen (aufpassen!):
 
 Bereits aufgeräumt (nicht nochmal anfassen):
 - F821: 0 Fehler in `mahamantra/` (VenuOrchestrator + SeedResult via TYPE_CHECKING gefixt)
+- F811: 0 Fehler in `mahamantra/` (excl. research/) — byte.py doppeltes `__repr__`, basin_set Shadowing, MAHAJANA_COUNT Doppel-Import
 - Guardians: ALLE 16 identisches thin Pattern (keine if-else, keine Klassen)
 - yamaraja: 288→78 Zeilen (Duplikat-Klassen entfernt)
 - kapila: eager import entfernt, jetzt lazy wie alle anderen

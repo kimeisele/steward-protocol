@@ -122,7 +122,6 @@ from vibe_core.mahamantra.substrate.seed import (
     LILA as LILA_LIMIT,
 )
 from vibe_core.mahamantra.substrate.seed import (
-    MAHAJANA_COUNT,
     PARAMPARA,
 )
 from vibe_core.mahamantra.substrate.seed import (
