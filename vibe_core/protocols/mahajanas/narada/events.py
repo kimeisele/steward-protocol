@@ -22,18 +22,13 @@ __mahajana__ = "narada"
 __position__ = 2
 __genesis__ = "0x2967d08a"  # GenesisByte: parampara % 37 == 0
 
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
 from typing import (
     Awaitable,
-    Callable,
     Dict,
     Final,
     List,
     Optional,
     Protocol,
-    Set,
     TypedDict,
     Union,
     runtime_checkable,
@@ -41,6 +36,7 @@ from typing import (
 
 from vibe_core.protocols.mahajanas.router import Mahajana, MantraOpCode
 from vibe_core.protocols.mahajanas.owned_protocol import OwnedProtocol, ProtocolState
+from vibe_core.mahamantra.substrate.event_types import EventType  # noqa: F401  # SSOT leaf
 
 import logging
 logger = logging.getLogger(__name__)
@@ -57,46 +53,6 @@ LOTUS_QUARTER: Final[str] = "genesis"
 OWNED_OPCODES: Final[List[MantraOpCode]] = [
     MantraOpCode.DHARMA_TEST,  # Event synchronization
 ]
-
-
-# =============================================================================
-# EVENT TYPES (WATERTIGHT - mirrors event_bus.py)
-# =============================================================================
-
-
-class EventType(str, Enum):
-    """Standard event types emitted by agents."""
-
-    # Core lifecycle events
-    THOUGHT = "THOUGHT"
-    ACTION = "ACTION"
-    ERROR = "ERROR"
-    COMPLETED = "COMPLETED"
-
-    # System events
-    VIOLATION = "VIOLATION"
-    MERCY = "MERCY"
-    PRAYER_RECEIVED = "PRAYER_RECEIVED"
-    CRITICAL_INTERRUPT = "CRITICAL_INTERRUPT"
-
-    # Syscall events
-    SYSCALL_EXECUTED = "SYSCALL_EXECUTED"
-
-    # OPUS-211: Pramana
-    INTENT_EXECUTED = "INTENT_EXECUTED"
-
-    # Agent-specific
-    BROADCAST = "BROADCAST"
-    PROPOSAL_CREATED = "PROPOSAL_CREATED"
-    VOTE_CAST = "VOTE_CAST"
-    AUDIT_CHECK = "AUDIT_CHECK"
-
-    # Venu events (NaradaBridge — flute rhythm → agent events)
-    PHASE_TRANSITION = "PHASE_TRANSITION"
-
-    # Circuit triggers
-    KERNEL_TICK = "KERNEL_TICK"
-    HOURLY_PULSE = "HOURLY_PULSE"
 
 
 # =============================================================================

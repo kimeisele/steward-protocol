@@ -31,10 +31,14 @@ import logging
 import time as time_module
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import Callable, Dict, List, Optional, Set, TypedDict, Union
 from uuid import uuid4
 
+from vibe_core.mahamantra.substrate.event_types import (  # noqa: F401
+    EventType,
+    EventColor,
+    EVENT_COLOR_MAP,
+)
 from vibe_core.mahamantra.substrate.mahajana import Mahajana
 from vibe_core.protocols.mahajanas.narada.events import (
     EventBusProtocol,
@@ -216,69 +220,6 @@ class SubscriberMetrics:
     def get_all_metrics(self) -> Dict[str, MetricsEntry]:
         """Get all subscriber metrics. WATERTIGHT - no Any!"""
         return dict(self._metrics)
-
-
-class EventType(str, Enum):
-    """Standard event types emitted by agents"""
-
-    # Core lifecycle events
-    THOUGHT = "THOUGHT"  # Planning/reasoning
-    ACTION = "ACTION"  # Executing task
-    ERROR = "ERROR"  # Failure
-    COMPLETED = "COMPLETED"  # Task completion
-
-    # System events
-    VIOLATION = "VIOLATION"  # Constitution breach
-    MERCY = "MERCY"  # Supreme Court intervention
-    PRAYER_RECEIVED = "PRAYER_RECEIVED"  # Request received
-    CRITICAL_INTERRUPT = "CRITICAL_INTERRUPT"  # Emergency bypass (Gajendra)
-
-    # Syscall events (OPUS-031 Layer 2)
-    SYSCALL_EXECUTED = "SYSCALL_EXECUTED"  # Syscall completed (for experience replay)
-
-    # OPUS-211: Pramana (Feedback Loop)
-    INTENT_EXECUTED = "INTENT_EXECUTED"  # Action completed with verification proof
-
-    # Agent-specific events
-    BROADCAST = "BROADCAST"  # Content published
-    PROPOSAL_CREATED = "PROPOSAL_CREATED"  # New proposal
-    VOTE_CAST = "VOTE_CAST"  # Vote recorded
-    AUDIT_CHECK = "AUDIT_CHECK"  # Invariant verified
-
-    # Venu events (NaradaBridge — flute rhythm → agent events)
-    PHASE_TRANSITION = "PHASE_TRANSITION"  # Quarter change (genesis→dharma→karma→moksha)
-
-    # Circuit trigger events (NOT emitted from kernel - see OPUS-073)
-    KERNEL_TICK = "KERNEL_TICK"  # For circuits, emitted by plugins if needed
-    HOURLY_PULSE = "HOURLY_PULSE"  # For MANAS, emitted by heartbeat.py
-
-
-class EventColor(str, Enum):
-    """ANSI color codes for terminal visualization"""
-
-    BLUE = "34"  # THOUGHT
-    GREEN = "32"  # ACTION
-    RED = "31"  # ERROR / CRITICAL_INTERRUPT
-    PURPLE = "35"  # VIOLATION
-    GOLD = "33"  # MERCY
-    CYAN = "36"  # PRAYER_RECEIVED
-    YELLOW = "33"  # AUDIT_CHECK
-    WHITE = "37"  # COMPLETED
-
-
-EVENT_COLOR_MAP = {
-    EventType.THOUGHT: EventColor.BLUE,
-    EventType.ACTION: EventColor.GREEN,
-    EventType.ERROR: EventColor.RED,
-    EventType.VIOLATION: EventColor.PURPLE,
-    EventType.MERCY: EventColor.GOLD,
-    EventType.PRAYER_RECEIVED: EventColor.CYAN,
-    EventType.CRITICAL_INTERRUPT: EventColor.RED,
-    EventType.BROADCAST: EventColor.GREEN,
-    EventType.COMPLETED: EventColor.WHITE,
-    EventType.AUDIT_CHECK: EventColor.YELLOW,
-    EventType.SYSCALL_EXECUTED: EventColor.CYAN,  # OPUS-031: Experience Replay
-}
 
 
 # =============================================================================

@@ -1,12 +1,13 @@
 """
-RE-EXPORT PROXY — SSOT is vibe_core.mahamantra.substrate.event_bus
-==================================================================
+RE-EXPORT PROXY — Lazy to avoid circular imports
+=================================================
 
-This file re-exports all EventBus symbols from the Single Source of Truth.
-Do NOT add implementations here. All code lives in substrate/event_bus.py.
+Enums come from the zero-dep leaf module (event_types.py) — always safe.
+Heavy classes (Event, EventBus, etc.) are resolved lazily via __getattr__
+because this file is loaded during narada/__init__.py which is triggered
+while substrate/event_bus.py is still initializing.
 
-History: This was an 870-line copy of the real EventBus that drifted out of sync.
-Consolidated to a thin proxy to eliminate the parallel structure.
+Do NOT add implementations here.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -15,48 +16,46 @@ __position__ = 2
 __genesis__ = "0xec02c0c4"  # GenesisByte: parampara % 37 == 0
 
 # =============================================================================
-# SSOT: vibe_core.mahamantra.substrate.event_bus
+# EAGER: Zero-dep leaf module (no cycles possible)
 # =============================================================================
 
-from vibe_core.mahamantra.substrate.event_bus import (  # noqa: F401
-    Event,
-    EventBus,
-    EventBusStatus,
-    EventColor,
-    EventDetails,
+from vibe_core.mahamantra.substrate.event_types import (  # noqa: F401
     EventType,
+    EventColor,
     EVENT_COLOR_MAP,
-    MetricsEntry,
-    RateLimitStats,
-    StalledInfo,
-    SubscriberCounts,
-    SubscriberHealth,
-    SubscriberMetrics,
-    SudarshanaGuard,
-    ZombieInfo,
-    get_event_bus,
 )
 
-from vibe_core.protocols.mahajanas.narada.events import (  # noqa: F401
-    emit_event,
-)
+# =============================================================================
+# LAZY: Heavy classes resolved on first access (breaks import cycle)
+# =============================================================================
+
+_LAZY_IMPORTS = {
+    "Event", "EventBus", "EventBusStatus", "EventDetails",
+    "MetricsEntry", "RateLimitStats", "StalledInfo",
+    "SubscriberCounts", "SubscriberHealth", "SubscriberMetrics",
+    "SudarshanaGuard", "ZombieInfo", "get_event_bus",
+}
+
+_LAZY_EVENTS = {
+    "emit_event",
+}
+
+
+def __getattr__(name):
+    if name in _LAZY_IMPORTS:
+        from vibe_core.mahamantra.substrate import event_bus
+        return getattr(event_bus, name)
+    if name in _LAZY_EVENTS:
+        from vibe_core.protocols.mahajanas.narada import events
+        return getattr(events, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
-    "Event",
-    "EventBus",
-    "EventBusStatus",
-    "EventColor",
-    "EventDetails",
-    "EventType",
-    "EVENT_COLOR_MAP",
-    "MetricsEntry",
-    "RateLimitStats",
-    "StalledInfo",
-    "SubscriberCounts",
-    "SubscriberHealth",
-    "SubscriberMetrics",
-    "SudarshanaGuard",
-    "ZombieInfo",
-    "get_event_bus",
+    "EventType", "EventColor", "EVENT_COLOR_MAP",
+    "Event", "EventBus", "EventBusStatus", "EventDetails",
+    "MetricsEntry", "RateLimitStats", "StalledInfo",
+    "SubscriberCounts", "SubscriberHealth", "SubscriberMetrics",
+    "SudarshanaGuard", "ZombieInfo", "get_event_bus",
     "emit_event",
 ]
