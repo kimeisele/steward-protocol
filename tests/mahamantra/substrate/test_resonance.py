@@ -36,16 +36,17 @@ class TestBasicResonance:
         assert score == 0.0
 
     def test_single_match_returns_nadi_base(self):
-        """Single keyword match returns ~NADI_RESONANCE/MALA (0.667)."""
+        """Single keyword match returns ~NADI_RESONANCE/MALA scaled to COSMIC_FRAME."""
 
         class TestProtocol(MantraProtocol):
             _position_index = 0  # VYASA
 
         score = TestProtocol.get_resonance("boot")
-        expected_base = NADI_RESONANCE / MALA  # 72/108 = 0.667
+        CF = 21600
+        expected_base = int((NADI_RESONANCE / MALA) * CF)  # ~14400
 
         # Allow for position factor (1.0 to 1.1 range)
-        assert 0.65 < score < 0.75, f"Expected ~0.667, got {score}"
+        assert int(0.65 * CF) < score < int(0.75 * CF), f"Expected ~{expected_base}, got {score}"
 
     def test_multiple_matches_higher_than_single(self):
         """Multiple matches score higher than single match."""
@@ -58,15 +59,15 @@ class TestBasicResonance:
 
         assert multi_score > single_score, "Multiple matches should score higher"
 
-    def test_score_capped_at_one(self):
-        """Score never exceeds 1.0."""
+    def test_score_capped_at_cosmic_frame(self):
+        """Score never exceeds COSMIC_FRAME (21600)."""
 
         class TestProtocol(MantraProtocol):
             _position_index = 0  # VYASA
 
         # Try to trigger many matches
         score = TestProtocol.get_resonance("boot wake start system init")
-        assert score <= 1.0, f"Score must not exceed 1.0, got {score}"
+        assert score <= 21600, f"Score must not exceed 21600, got {score}"
 
 
 class TestNoSubstringMatching:
@@ -147,7 +148,8 @@ class TestHarmonicMath:
 
         # They should be close but not identical (position factor)
         # Both are single matches, so base is same, only position differs
-        assert abs(score_0 - score_8) < 0.05, "Single matches should be similar"
+        # In COSMIC_FRAME scale, 0.05 * 21600 = 1080
+        assert abs(score_0 - score_8) < 1080, "Single matches should be similar"
 
 
 class TestLotusIntegration:
@@ -177,7 +179,10 @@ class TestLotusIntegration:
         assert direct_score > 0, f"Direct protocol score should be > 0, got {direct_score}"
 
         # Create FRESH Lotus (avoid cached singleton issues)
-        from vibe_core.mahamantra._lotus import LotusNode
+        try:
+            from vibe_core.mahamantra._lotus import LotusNode
+        except (ImportError, ModuleNotFoundError):
+            from vibe_core.mahamantra.substrate.lotus_types import LotusNode
 
         fresh_lotus = LotusNode()
         score, node = fresh_lotus.resonate("boot the system")
@@ -200,12 +205,15 @@ class TestLotusIntegration:
         """mahamantra.resonate returns None for no match."""
         # NOTE: This test works regardless of ProtocolRegistry state
         # because no keywords match, so score is always 0
-        from vibe_core.mahamantra._lotus import LotusNode
+        try:
+            from vibe_core.mahamantra._lotus import LotusNode
+        except (ImportError, ModuleNotFoundError):
+            from vibe_core.mahamantra.substrate.lotus_types import LotusNode
 
         fresh_lotus = LotusNode()
         score, node = fresh_lotus.resonate("xyznonexistent gibberish")
 
-        assert score == 0.0
+        assert score == 0
         assert node is None
 
     def test_lotus_competing_keywords(self):
@@ -293,21 +301,25 @@ class TestResonanceThresholds:
             _position_index = 0
 
         score = TestProtocol.get_resonance("boot")
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        refine_scaled = int(ResonanceHarmonics.THRESHOLD_REFINE * CF)
 
-        assert score > ResonanceHarmonics.THRESHOLD_REFINE, (
-            f"Single match {score} should exceed THRESHOLD_REFINE {ResonanceHarmonics.THRESHOLD_REFINE}"
+        assert score > refine_scaled, (
+            f"Single match {score} should exceed THRESHOLD_REFINE {refine_scaled}"
         )
 
     def test_single_match_near_auto_threshold(self):
-        """Single match should be near THRESHOLD_AUTO (0.667)."""
+        """Single match should be near THRESHOLD_AUTO scaled to COSMIC_FRAME."""
         from vibe_core.mahamantra.substrate.harmonics import ResonanceHarmonics
 
         class TestProtocol(MantraProtocol):
             _position_index = 0
 
         score = TestProtocol.get_resonance("boot")
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        auto_scaled = int(ResonanceHarmonics.THRESHOLD_AUTO * CF)
 
         # Should be close to but may slightly exceed due to position factor
-        assert abs(score - ResonanceHarmonics.THRESHOLD_AUTO) < 0.1, (
-            f"Single match {score} should be near THRESHOLD_AUTO {ResonanceHarmonics.THRESHOLD_AUTO}"
+        assert abs(score - auto_scaled) < int(0.1 * CF), (
+            f"Single match {score} should be near THRESHOLD_AUTO {auto_scaled}"
         )

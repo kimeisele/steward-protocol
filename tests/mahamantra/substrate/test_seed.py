@@ -143,9 +143,9 @@ class TestHolyNameEnum:
         """RAMA = 2 (Ananda/Stability)."""
         assert HolyName.RAMA.value == 2
 
-    def test_exactly_3_names(self):
-        """Exactly 3 Holy Names."""
-        assert len(HolyName) == 3
+    def test_exactly_4_enum_members(self):
+        """3 Holy Names + VOID (Maya) for binary encoding = 4 members."""
+        assert len(HolyName) == 4
 
 
 class TestMahamantra:
