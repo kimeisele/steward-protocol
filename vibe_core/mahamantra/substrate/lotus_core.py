@@ -159,8 +159,7 @@ class _PipelineCache:
         self.quarter_names = tuple(get_quarter_name(p) for p in range(WORDS))
         self.is_head_flags = tuple(is_head(p) for p in range(WORDS))
         self.quarter_head_names = tuple(
-            ALL_GUARDIANS[get_quarter_head(p)] if get_quarter_head(p) < len(ALL_GUARDIANS) else "unknown"
-            for p in range(WORDS)
+            ALL_GUARDIANS[get_quarter_head(p)] for p in range(WORDS)
         )
         self.holy_names = tuple(get_name_at_position(p) for p in range(WORDS))
         self.trinity_functions = tuple(get_trinity_function(p) for p in range(WORDS))
