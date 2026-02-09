@@ -106,39 +106,53 @@ DEFAULT_CHORUS_SIZE: Final[int] = WORDS
 # =============================================================================
 # DIW RESONANCE TABLE (DERIVED FROM SSOT)
 # =============================================================================
-# Index = phase(QUARTERS) × name(3) → (prana_factor, integrity_coeff, cycle_add)
+# 12 effects = QUARTERS(4) phases × TRINITY-1(3) names.
+# PHASE_DURATION == MAHAJANA_COUNT == 12. Time/Person holographic principle.
 #
-# phase: MURALI % QUARTERS → 0=GENESIS, 1=DHARMA, 2=KARMA, 3=MOKSHA
-# name:  VAMSI // stride   → 0=HARE,    1=KRISHNA, 2=RAMA
+# TWO ACCESS PATHS (Acintya — simultaneously one and different):
+#   4×3 (phase-first): phase * 3 + name   → "what happens to each name?"
+#   3×4 (name-first):  name * 4 + phase   → "what does each name do?"
+# Both index the SAME 12 effects. The data is one. The access is dual.
 #
-# prana_factor:     multiplied by base_delta (+N = gain, -N = cost)
-# integrity_coeff:  multiplied by intensity (float, applied to cell.integrity)
-# cycle_add:        added to cell.cycle (KSETRAJNA=1 or HALVES=2)
-#
-# The table encodes the same semantics as the original 12-branch if/else,
-# but as data — the DIW components select the row, not control flow.
+# Each entry: (prana_factor, integrity_coeff, cycle_add)
+#   prana_factor:     multiplied by base_delta (+N = gain, -N = cost)
+#   integrity_coeff:  multiplied by intensity (float)
+#   cycle_add:        added to cell.cycle
 
-_DIW_RESONANCE_TABLE: tuple = (
-    # GENESIS (phase=0): Cell RECEIVES energy
+# Canonical storage: 12 entries as (phase, name) → effect
+_DIW_DATA: tuple = (
+    #          prana  integrity  cycle
+    # GENESIS (phase=0)
     ( HALVES,  0.0,     0),          # H: strong prana boost
-    ( 1,       0.01,    0),          # K: moderate prana + integrity
-    ( 1,       0.0,     KSETRAJNA),  # R: moderate prana + cycle
-
-    # DHARMA (phase=1): Cell is VERIFIED
-    (-1,       0.0,     0),          # H: prana cost for validation
+    ( 1,       0.01,    0),          # K: moderate + integrity
+    ( 1,       0.0,     KSETRAJNA),  # R: moderate + cycle
+    # DHARMA (phase=1)
+    (-1,       0.0,     0),          # H: validation cost
     ( 0,       0.02,    0),          # K: integrity strengthened
     ( 0,       0.01,    KSETRAJNA),  # R: cycle + integrity
-
-    # KARMA (phase=2): Cell PROCESSES
-    (-1,       0.0,     KSETRAJNA),  # H: work costs prana, advances cycle
+    # KARMA (phase=2)
+    (-1,       0.0,     KSETRAJNA),  # H: work + cycle
     (-1,       0.01,    KSETRAJNA),  # K: work + integrity + cycle
-    (-1,       0.0,     HALVES),     # R: work, Rama accelerates completion
-
-    # MOKSHA (phase=3): Cell COMPLETES
-    (-1,      -0.005,   0),          # H: release, slight integrity decay
-    (-1,       0.01,    0),          # K: release, integrity stabilized
-    (-1,       0.0,     HALVES),     # R: release, Rama delivers completion
+    (-1,       0.0,     HALVES),     # R: Rama accelerates
+    # MOKSHA (phase=3)
+    (-1,      -0.005,   0),          # H: slight integrity decay
+    (-1,       0.01,    0),          # K: integrity stabilized
+    (-1,       0.0,     HALVES),     # R: Rama delivers
 )
+
+# 4×3 index: phase * 3 + name (phase is outer loop)
+_DIW_PHASE_FIRST: tuple = _DIW_DATA  # identity — already stored phase-first
+
+# 3×4 index: name * 4 + phase (name is outer loop)
+# Same 12 entries, transposed access. Built once at import.
+_DIW_NAME_FIRST: tuple = tuple(
+    _DIW_DATA[phase * 3 + name]
+    for name in range(QUARTERS - KSETRAJNA)   # 3 names (H=0, K=1, R=2)
+    for phase in range(QUARTERS)               # 4 phases per name
+)
+
+# Default: phase-first (the DIW naturally decomposes phase then name)
+_DIW_RESONANCE_TABLE = _DIW_PHASE_FIRST
 
 
 class KirtanMode(IntEnum):
