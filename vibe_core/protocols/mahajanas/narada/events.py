@@ -91,6 +91,9 @@ class EventType(str, Enum):
     VOTE_CAST = "VOTE_CAST"
     AUDIT_CHECK = "AUDIT_CHECK"
 
+    # Venu events (NaradaBridge — flute rhythm → agent events)
+    PHASE_TRANSITION = "PHASE_TRANSITION"
+
     # Circuit triggers
     KERNEL_TICK = "KERNEL_TICK"
     HOURLY_PULSE = "HOURLY_PULSE"
