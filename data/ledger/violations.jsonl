@@ -9,3 +9,4 @@
 {"event_type": "VIOLATION", "timestamp": "2026-01-14T09:31:26.764660+00:00", "agent_id": "watchdog", "violation_type": "TEST_VIOLATION", "severity": "HIGH", "message": "Test"}
 {"event_type": "VIOLATION", "timestamp": "2026-01-18T16:25:01.288857+00:00", "agent_id": "watchdog", "violation_type": "TEST_VIOLATION", "severity": "HIGH", "message": "Test"}
 {"event_type": "VIOLATION", "timestamp": "2026-01-25T17:50:02.801415+00:00", "agent_id": "watchdog", "violation_type": "TEST_VIOLATION", "severity": "HIGH", "message": "Test"}
+{"event_type": "VIOLATION", "timestamp": "2026-02-09T16:44:38.979804+00:00", "agent_id": "watchdog", "violation_type": "TEST_VIOLATION", "severity": "HIGH", "message": "Test"}

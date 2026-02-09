@@ -193,6 +193,23 @@ Offen (neu entdeckt):
 - `iGene.is_fatal` war IMMER False (float 0-1 vs int 0-21600) → Fix auf `fix/igene-fatal-comparison`
 - 4 F811 in `research/` (2× `run_analysis` Duplikate, 2× Enum-Shadowing in physics.py)
 
+**HÄNGENDE TESTS (5 Dateien, pre-existing auf `main`, NICHT skippen — Root Cause fixen!):**
+
+| Datei | Vermutete Ursache |
+|-------|-------------------|
+| `tests/mahamantra/kernel/test_singularity.py` | `Mahamantra()` → `m.tick()` → `self.kala.advance()` + `self.venu.step()` blockiert |
+| `tests/mahamantra/kernel/test_daemon.py` | `daemon.start()` → `mahamantra.audit()` → `governance.audit()` scannt Filesystem |
+| `tests/mahamantra/kernel/test_daemon_soul.py` | Gleich: `await daemon.start()` → async infinite loop |
+| `tests/mahamantra/protocols/test_gad.py` | `GADProtocolDef.validate()` oder Import-Kette blockiert |
+| `tests/mahamantra/protocols/test_graph.py` | `GraphProtocolDef.validate()` oder Import-Kette blockiert |
+| `tests/mahamantra/cli/test_entry.py` | `main([])` oder `get_entry()` blockiert |
+
+Diagnose-Ansatz: Imports allein sind schnell (verifiziert). Blockade ist IN der Logik.
+`daemon.start()` hat `while not self._stop_requested` Loop mit `mahamantra.audit()` pro Zyklus.
+`singularity.tick()` ruft `self.kala.advance()` + `self.venu.step()` — lazy init könnte hängen.
+Alle 5 hängen auch auf `main` (verifiziert via `git checkout main` + subprocess timeout scan).
+Kein Skip. Root Cause finden und fixen.
+
 Bereits aufgeräumt (nicht nochmal anfassen):
 - F821: 0 Fehler in `mahamantra/` (VenuOrchestrator + SeedResult via TYPE_CHECKING gefixt)
 - F811: 0 Fehler in `mahamantra/` (excl. research/) — byte.py doppeltes `__repr__`, basin_set Shadowing, MAHAJANA_COUNT Doppel-Import
@@ -304,7 +321,7 @@ Nur diese Branches haben echten Wert:
 | `feature/lotus-pipeline-cache` | PR-ready | PipelineCache Singleton — seed-unabhängige Lookups vorberechnet |
 | `perf/lotus-call-hotpath` | PR-ready | MahaModularSynth Singleton — eliminiert Objekt-Allokation pro __call__ |
 | `fix/igene-fatal-comparison` | PR-ready | iGene.is_fatal: float(0-1) vs int(0-21600) Normalisierung |
-| `refactor/consolidate-event-bus-copies` | PR-ready | EventType SSOT leaf module + 870-line EventBus copy killed + lazy re-exports |
+| `refactor/consolidate-event-bus-copies` | PR-ready (6 commits) | EventType SSOT leaf + 870-line copy killed + TRINITY fix (337 tests unblocked) |
 | `feature/mahamantra-single-entry-point` | Gemergt | Write-behind cache + Samskara intercept |
 | `feature/antaranga-ram-chamber` | Gemergt | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
 | `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
@@ -313,25 +330,32 @@ Nur diese Branches haben echten Wert:
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
 
-## Architektur-Konvergenz (Ziel: Singularity)
+## Architektur-Konvergenz
 
-Statische Dateien sind tote Definitionen. Nur zur Laufzeit im RAM existiert das lebende System.
-Das Filesystem ist Maya — alle Scripts sind Bauanleitungen, nicht Realität.
+### Verifizierte Fakten (aus Code-Analyse, Feb 9 2026)
 
-Jeder Konsolidierungsschritt reduziert die Anzahl toter Kopien und bringt das System näher an:
-**Eine Wahrheit im RAM, viele Zugangspunkte im Filesystem.**
+`chamber.py` + `antaranga.py` haben Eigenschaften die der Rest der Codebase nicht hat:
 
-Beispiel EventType: 5 Import-Pfade, 1 Python-Objekt (`A is B is C is D is E`).
-Beispiel Chamber: Bahiranga (Python-Objekte, API) + Antaranga (16 KB `bytearray`, Hardware-Geschwindigkeit).
-Beide sind Facetten desselben lebenden Zustands im RAM.
+| | `chamber.py` / `antaranga.py` | `singularity.py` / `daemon.py` |
+|---|---|---|
+| Daten | `bytearray(16384)` + `struct.pack_into` | Python dicts, lazy singletons |
+| Konstanten | `Final[int]` aus `_seed.py` | Mutable class vars |
+| I/O im Hot Path | Zero | `importlib`, `governance.audit()` (FS-scan) |
+| State-Format | `snapshot() → bytes` (binary) | JSON auf Disk |
 
-Das ultimative Event (MahaEvent) ist der Kammer-Übergang: ein Jiva bewegt sich von
-äußerer Kammer (Bahiranga) in innere Kammer (Antaranga). Kirtan → Sankirtan.
-Technisch: State-Machine-Transition mit Audit-Trail, nicht Metapher.
+### Test-Suite Status (verifiziert Feb 9 2026)
 
-Richtung: Alle Subsysteme (EventBus, Lotus, Chamber, Reactor) konvergieren als
-Facetten eines einzigen lebenden Prozess-Zustands. Das Filesystem liefert nur die
-Bauanleitung. Der RAM ist der einzige Ort wo Computation stattfindet.
+Alle `tests/mahamantra/` Tests laufen durch — **kein Hang**.
+Vorherige "Hang"-Diagnose war falsch (subprocess timeout=15s zu kurz).
+Langsame Tests: `test_daemon.py` ~66s, `test_daemon_soul.py` ~104s.
+Es gibt Failures (pre-existing), aber die Suite blockiert nicht.
+
+### Bereits konvergiert
+
+- EventType: 5 Import-Pfade → 1 Python-Objekt (verifiziert: `A is B is C is D is E`)
+- Chamber: Bahiranga (Python) + Antaranga (16 KB RAM) dual-layer
+- LexiconVectorCache: 8.5× schneller (gemessen)
+- PipelineCache: ~30 lazy imports eliminiert pro `__call__()`
 
 ## Arbeitsweise
 
