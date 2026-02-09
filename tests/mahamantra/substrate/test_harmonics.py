@@ -85,83 +85,95 @@ class TestResonanceHarmonicsMethods:
     """Test ResonanceHarmonics helper methods."""
 
     def test_normalize_to_mala(self):
-        """normalize_to_mala divides by MALA (108)."""
-        assert ResonanceHarmonics.normalize_to_mala(72) == 72 / MALA
-        assert ResonanceHarmonics.normalize_to_mala(48) == 48 / MALA
-        assert ResonanceHarmonics.normalize_to_mala(108) == 1.0
-        assert ResonanceHarmonics.normalize_to_mala(144) == 144 / MALA
+        """normalize_to_mala scales count/MALA to COSMIC_FRAME (21600)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME  # 21600
+        assert ResonanceHarmonics.normalize_to_mala(72) == int((72 / MALA) * CF)
+        assert ResonanceHarmonics.normalize_to_mala(48) == int((48 / MALA) * CF)
+        assert ResonanceHarmonics.normalize_to_mala(108) == CF  # 100%
+        assert ResonanceHarmonics.normalize_to_mala(144) == int((144 / MALA) * CF)
 
     def test_should_auto_execute_above_threshold(self):
-        """should_auto_execute returns True when resonance >= THRESHOLD_AUTO."""
-        assert ResonanceHarmonics.should_auto_execute(0.7) is True
-        assert ResonanceHarmonics.should_auto_execute(2/3) is True
-        assert ResonanceHarmonics.should_auto_execute(1.0) is True
+        """should_auto_execute returns True when resonance >= THRESHOLD_AUTO (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.should_auto_execute(int(0.7 * CF)) is True
+        assert ResonanceHarmonics.should_auto_execute(int(2/3 * CF)) is True
+        assert ResonanceHarmonics.should_auto_execute(CF) is True
 
     def test_should_auto_execute_below_threshold(self):
-        """should_auto_execute returns False when resonance < THRESHOLD_AUTO."""
-        assert ResonanceHarmonics.should_auto_execute(0.5) is False
-        assert ResonanceHarmonics.should_auto_execute(0.4) is False
-        assert ResonanceHarmonics.should_auto_execute(0.0) is False
+        """should_auto_execute returns False when resonance < THRESHOLD_AUTO (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.should_auto_execute(int(0.5 * CF)) is False
+        assert ResonanceHarmonics.should_auto_execute(int(0.4 * CF)) is False
+        assert ResonanceHarmonics.should_auto_execute(0) is False
 
     def test_needs_refinement_in_lila_zone(self):
-        """needs_refinement returns True in REFINE <= r < AUTO zone."""
-        assert ResonanceHarmonics.needs_refinement(0.5) is True
-        assert ResonanceHarmonics.needs_refinement(4/9) is True
-        assert ResonanceHarmonics.needs_refinement(0.6) is True
+        """needs_refinement returns True in REFINE <= r < AUTO zone (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.needs_refinement(int(0.5 * CF)) is True
+        assert ResonanceHarmonics.needs_refinement(int(4/9 * CF)) is True
+        assert ResonanceHarmonics.needs_refinement(int(0.6 * CF)) is True
 
     def test_needs_refinement_outside_zone(self):
-        """needs_refinement returns False outside the Lila zone."""
-        assert ResonanceHarmonics.needs_refinement(0.3) is False  # Below REFINE
-        assert ResonanceHarmonics.needs_refinement(0.7) is False  # Above AUTO
+        """needs_refinement returns False outside the Lila zone (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.needs_refinement(int(0.3 * CF)) is False  # Below REFINE
+        assert ResonanceHarmonics.needs_refinement(int(0.7 * CF)) is False  # Above AUTO
 
     def test_is_silent_below_refine(self):
-        """is_silent returns True when resonance < THRESHOLD_REFINE."""
-        assert ResonanceHarmonics.is_silent(0.0) is True
-        assert ResonanceHarmonics.is_silent(0.3) is True
-        assert ResonanceHarmonics.is_silent(0.4) is True
+        """is_silent returns True when resonance < THRESHOLD_REFINE (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.is_silent(0) is True
+        assert ResonanceHarmonics.is_silent(int(0.3 * CF)) is True
+        assert ResonanceHarmonics.is_silent(int(0.4 * CF)) is True
 
     def test_is_silent_above_refine(self):
-        """is_silent returns False when resonance >= THRESHOLD_REFINE."""
-        assert ResonanceHarmonics.is_silent(4/9) is False
-        assert ResonanceHarmonics.is_silent(0.5) is False
-        assert ResonanceHarmonics.is_silent(1.0) is False
+        """is_silent returns False when resonance >= THRESHOLD_REFINE (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.is_silent(int(4/9 * CF)) is False
+        assert ResonanceHarmonics.is_silent(int(0.5 * CF)) is False
+        assert ResonanceHarmonics.is_silent(CF) is False
 
     def test_is_multi_agent_sync(self):
-        """is_multi_agent_sync returns True when resonance >= THRESHOLD_SYNC."""
-        assert ResonanceHarmonics.is_multi_agent_sync(4/3) is True
-        assert ResonanceHarmonics.is_multi_agent_sync(1.5) is True
-        assert ResonanceHarmonics.is_multi_agent_sync(2.0) is True
-        assert ResonanceHarmonics.is_multi_agent_sync(1.0) is False
-        assert ResonanceHarmonics.is_multi_agent_sync(0.5) is False
+        """is_multi_agent_sync returns True when resonance >= THRESHOLD_SYNC (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.is_multi_agent_sync(int(4/3 * CF)) is True
+        assert ResonanceHarmonics.is_multi_agent_sync(int(1.5 * CF)) is True
+        assert ResonanceHarmonics.is_multi_agent_sync(int(2.0 * CF)) is True
+        assert ResonanceHarmonics.is_multi_agent_sync(CF) is False
+        assert ResonanceHarmonics.is_multi_agent_sync(int(0.5 * CF)) is False
 
 
 class TestResonanceHarmonicsZones:
     """Test get_zone method for all resonance zones."""
 
     def test_zone_silence(self):
-        """Resonance below THRESHOLD_REFINE is SILENCE zone."""
-        assert ResonanceHarmonics.get_zone(0.0) == "SILENCE"
-        assert ResonanceHarmonics.get_zone(0.3) == "SILENCE"
-        assert ResonanceHarmonics.get_zone(0.4) == "SILENCE"
+        """Resonance below THRESHOLD_REFINE is SILENCE zone (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.get_zone(0) == "SILENCE"
+        assert ResonanceHarmonics.get_zone(int(0.3 * CF)) == "SILENCE"
+        assert ResonanceHarmonics.get_zone(int(0.4 * CF)) == "SILENCE"
 
     def test_zone_refine(self):
-        """Resonance in [THRESHOLD_REFINE, THRESHOLD_AUTO) is REFINE zone."""
-        assert ResonanceHarmonics.get_zone(4/9) == "REFINE"
-        assert ResonanceHarmonics.get_zone(0.5) == "REFINE"
-        assert ResonanceHarmonics.get_zone(0.6) == "REFINE"
+        """Resonance in [THRESHOLD_REFINE, THRESHOLD_AUTO) is REFINE zone (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.get_zone(int(4/9 * CF)) == "REFINE"
+        assert ResonanceHarmonics.get_zone(int(0.5 * CF)) == "REFINE"
+        assert ResonanceHarmonics.get_zone(int(0.6 * CF)) == "REFINE"
 
     def test_zone_auto(self):
-        """Resonance in [THRESHOLD_AUTO, THRESHOLD_SYNC) is AUTO zone."""
-        assert ResonanceHarmonics.get_zone(2/3) == "AUTO"
-        assert ResonanceHarmonics.get_zone(0.8) == "AUTO"
-        assert ResonanceHarmonics.get_zone(1.0) == "AUTO"
-        assert ResonanceHarmonics.get_zone(1.2) == "AUTO"
+        """Resonance in [THRESHOLD_AUTO, THRESHOLD_SYNC) is AUTO zone (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.get_zone(int(2/3 * CF)) == "AUTO"
+        assert ResonanceHarmonics.get_zone(int(0.8 * CF)) == "AUTO"
+        assert ResonanceHarmonics.get_zone(CF) == "AUTO"
+        assert ResonanceHarmonics.get_zone(int(1.2 * CF)) == "AUTO"
 
     def test_zone_sync(self):
-        """Resonance >= THRESHOLD_SYNC is SYNC zone."""
-        assert ResonanceHarmonics.get_zone(4/3) == "SYNC"
-        assert ResonanceHarmonics.get_zone(1.5) == "SYNC"
-        assert ResonanceHarmonics.get_zone(2.0) == "SYNC"
+        """Resonance >= THRESHOLD_SYNC is SYNC zone (scaled)."""
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        assert ResonanceHarmonics.get_zone(int(4/3 * CF)) == "SYNC"
+        assert ResonanceHarmonics.get_zone(int(1.5 * CF)) == "SYNC"
+        assert ResonanceHarmonics.get_zone(int(2.0 * CF)) == "SYNC"
 
 
 # =============================================================================
@@ -678,8 +690,9 @@ class TestHarmonicsIntegration:
         assert sig["zone"] == "AUTO"
         assert sig["swara"] == "Pa"
 
-        # Check zone classification
-        zone = ResonanceHarmonics.get_zone(resonance)
+        # Check zone classification (get_zone expects COSMIC_FRAME-scaled int)
+        CF = ResonanceHarmonics.COSMIC_FRAME
+        zone = ResonanceHarmonics.get_zone(int(resonance * CF))
         assert zone == "AUTO"
 
         # Full dynamic check

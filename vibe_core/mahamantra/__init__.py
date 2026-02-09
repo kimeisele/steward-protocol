@@ -58,6 +58,7 @@ CORE_MODULES = [
     "vibe_core.mahamantra.substrate.lineage",       # LineageChain, LineageBlock, LineageEventType
     "vibe_core.mahamantra.substrate.shuddhi",       # ShuddhiProtocol, ShuddhiStatus, ShuddhiResult
     "vibe_core.mahamantra.substrate.process_manager",  # ProcessManager, AgentProcessInfo, ProcessStatus
+    "vibe_core.mahamantra.substrate.maha_state",      # MahaState, StateEntry, get_maha_state, pierce
     
     # === PROTOCOLS (The Standard) ===
     "vibe_core.mahamantra.protocols._gad",          # GADBase
