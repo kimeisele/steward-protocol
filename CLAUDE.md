@@ -193,6 +193,23 @@ Offen (neu entdeckt):
 - `iGene.is_fatal` war IMMER False (float 0-1 vs int 0-21600) → Fix auf `fix/igene-fatal-comparison`
 - 4 F811 in `research/` (2× `run_analysis` Duplikate, 2× Enum-Shadowing in physics.py)
 
+**HÄNGENDE TESTS (5 Dateien, pre-existing auf `main`, NICHT skippen — Root Cause fixen!):**
+
+| Datei | Vermutete Ursache |
+|-------|-------------------|
+| `tests/mahamantra/kernel/test_singularity.py` | `Mahamantra()` → `m.tick()` → `self.kala.advance()` + `self.venu.step()` blockiert |
+| `tests/mahamantra/kernel/test_daemon.py` | `daemon.start()` → `mahamantra.audit()` → `governance.audit()` scannt Filesystem |
+| `tests/mahamantra/kernel/test_daemon_soul.py` | Gleich: `await daemon.start()` → async infinite loop |
+| `tests/mahamantra/protocols/test_gad.py` | `GADProtocolDef.validate()` oder Import-Kette blockiert |
+| `tests/mahamantra/protocols/test_graph.py` | `GraphProtocolDef.validate()` oder Import-Kette blockiert |
+| `tests/mahamantra/cli/test_entry.py` | `main([])` oder `get_entry()` blockiert |
+
+Diagnose-Ansatz: Imports allein sind schnell (verifiziert). Blockade ist IN der Logik.
+`daemon.start()` hat `while not self._stop_requested` Loop mit `mahamantra.audit()` pro Zyklus.
+`singularity.tick()` ruft `self.kala.advance()` + `self.venu.step()` — lazy init könnte hängen.
+Alle 5 hängen auch auf `main` (verifiziert via `git checkout main` + subprocess timeout scan).
+Kein Skip. Root Cause finden und fixen.
+
 Bereits aufgeräumt (nicht nochmal anfassen):
 - F821: 0 Fehler in `mahamantra/` (VenuOrchestrator + SeedResult via TYPE_CHECKING gefixt)
 - F811: 0 Fehler in `mahamantra/` (excl. research/) — byte.py doppeltes `__repr__`, basin_set Shadowing, MAHAJANA_COUNT Doppel-Import
@@ -304,7 +321,7 @@ Nur diese Branches haben echten Wert:
 | `feature/lotus-pipeline-cache` | PR-ready | PipelineCache Singleton — seed-unabhängige Lookups vorberechnet |
 | `perf/lotus-call-hotpath` | PR-ready | MahaModularSynth Singleton — eliminiert Objekt-Allokation pro __call__ |
 | `fix/igene-fatal-comparison` | PR-ready | iGene.is_fatal: float(0-1) vs int(0-21600) Normalisierung |
-| `refactor/consolidate-event-bus-copies` | PR-ready | EventType SSOT leaf module + 870-line EventBus copy killed + lazy re-exports |
+| `refactor/consolidate-event-bus-copies` | PR-ready (6 commits) | EventType SSOT leaf + 870-line copy killed + TRINITY fix (337 tests unblocked) |
 | `feature/mahamantra-single-entry-point` | Gemergt | Write-behind cache + Samskara intercept |
 | `feature/antaranga-ram-chamber` | Gemergt | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
 | `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
