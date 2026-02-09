@@ -1,0 +1,105 @@
+{
+  "timestamp": 1770655393.6866891,
+  "git": {
+    "is_repo": true,
+    "branch": "refactor/consolidate-event-bus-copies",
+    "sha": "9d81161",
+    "dirty": true,
+    "workspace": "/Users/ss/projects/steward-protocol"
+  },
+  "files": {
+    "workspace": "/Users/ss/projects/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 9.193339824676514,
+    "agent_count": 30,
+    "queue_pending": 1,
+    "plugins_loaded": 24
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/Users/ss/projects/steward-protocol/config/personas",
+    "loaded": [
+      "envoy",
+      "discoverer",
+      "manas",
+      "ping",
+      "civic",
+      "archivist",
+      "supreme_court",
+      "naga",
+      "oracle",
+      "science",
+      "forum",
+      "watchman",
+      "scribe",
+      "herald",
+      "chronicle",
+      "cleaner",
+      "auditor",
+      "engineer",
+      "librarian",
+      "analyst",
+      "marketer",
+      "mechanic",
+      "agora",
+      "ambassador",
+      "pulse",
+      "artisan",
+      "lens",
+      "market",
+      "dhruva",
+      "temple"
+    ],
+    "modified": [
+      "oracle",
+      "cleaner",
+      "supreme_court",
+      "forum",
+      "marketer",
+      "envoy",
+      "ping",
+      "science",
+      "manas",
+      "watchman",
+      "librarian",
+      "analyst",
+      "engineer",
+      "civic",
+      "artisan",
+      "archivist",
+      "lens",
+      "discoverer",
+      "market",
+      "temple",
+      "herald",
+      "ambassador",
+      "chronicle",
+      "scribe",
+      "dhruva",
+      "pulse",
+      "naga",
+      "mechanic",
+      "auditor",
+      "agora"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "test-c80e",
+    "boot_time": 1770655392.440784,
+    "commit_count": 0
+  }
+}

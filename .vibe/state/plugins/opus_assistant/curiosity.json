@@ -9,63 +9,63 @@
   "sources": [
     {
       "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
+      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-06T23:10:42.120884"
+      "timestamp": "2026-02-09T19:34:46.459995"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-09T19:34:59.325848"
     },
     {
       "type": "uncertainty",
       "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-06T23:10:43.711071"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-06T23:10:47.359266"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-06T23:10:51.516739"
+      "timestamp": "2026-02-09T19:35:11.784887"
     },
     {
       "type": "uncertainty",
       "description": "Low confidence decision: BLOCKED : Empty intent",
       "weight": 0.12,
-      "timestamp": "2026-02-06T23:10:52.847670"
+      "timestamp": "2026-02-09T19:35:15.873340"
     },
     {
       "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
+      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-06T23:10:52.973083"
+      "timestamp": "2026-02-09T19:35:20.726638"
     },
     {
       "type": "uncertainty",
       "description": "Low confidence decision: WARN_EXECUTE on check_lint: Check linting errors",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-06T23:10:54.923894"
+      "timestamp": "2026-02-09T19:35:23.788873"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-09T19:35:26.850834"
     },
     {
       "type": "uncertainty",
       "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-06T23:10:55.648238"
+      "timestamp": "2026-02-09T19:35:30.850419"
     },
     {
       "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-06T23:10:56.632663"
+      "description": "Low confidence decision: BLOCKED : Empty intent",
+      "weight": 0.12,
+      "timestamp": "2026-02-09T19:35:31.911764"
     },
     {
       "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
+      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-08T20:58:14.570702"
+      "timestamp": "2026-02-09T19:35:39.907174"
     }
   ]
 }
