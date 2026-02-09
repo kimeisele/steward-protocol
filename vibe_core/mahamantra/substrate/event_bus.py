@@ -621,33 +621,12 @@ class EventBus(EventBusProtocol):
     _narada_bridge = None  # Resolved once, reused forever
     _narada_bridge_failed = False  # True = import failed, stop retrying
 
-    def _stamp_diw_context(self, details: dict) -> dict:
-        """Stamp event details with current DIW context from NaradaBridge.
-
-        Resolves the bridge singleton ONCE. If the import fails, logs a
-        warning and never retries (no silent per-event swallowing).
-        If the bridge is resolved but not yet wired (no VenuService),
-        returns details unchanged — that's a legitimate pre-boot state.
-        """
-        if self._narada_bridge_failed:
-            return details
-
-        if EventBus._narada_bridge is None:
-            try:
-                from vibe_core.services.narada_bridge import get_narada_bridge
-                EventBus._narada_bridge = get_narada_bridge()
-            except Exception as exc:
-                EventBus._narada_bridge_failed = True
-                logger.warning("NaradaBridge import failed (will not retry): %s", exc)
-                return details
-
-        return EventBus._narada_bridge.stamp_event_details(details)
-
     def _get_diw_context(self) -> Optional[Dict]:
         """Get current DIW context from NaradaBridge as a dict.
 
+        Resolves the bridge singleton ONCE. If the import fails, logs a
+        warning and never retries (no silent per-event swallowing).
         Returns None if bridge is not wired or not available.
-        Same resolve-once semantics as _stamp_diw_context.
         """
         if self._narada_bridge_failed:
             return None
