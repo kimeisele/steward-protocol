@@ -163,7 +163,7 @@ NEUTRON_ELECTRON_RATIO: Final[PhysicsPrediction] = PhysicsPrediction(
     derivation="Proton + Trinity (unstable!)",
     error_percent=abs(MAHA_NEUTRON - 1838.68) / 1838.68 * 100,
     mod_17=MAHA_NEUTRON % POSITION_SUM_KRISHNA,
-    classification=ModClassification.TRINITY,
+    classification=ModClassification.TRINITY_DECAY,
 )
 
 TAU_ELECTRON_RATIO: Final[PhysicsPrediction] = PhysicsPrediction(
@@ -189,7 +189,7 @@ MUON_ELECTRON_RATIO: Final[PhysicsPrediction] = PhysicsPrediction(
     derivation="Mahajanas × Krishna + Trinity",
     error_percent=abs(MAHA_MUON - 206.77) / 206.77 * 100,
     mod_17=MAHA_MUON % POSITION_SUM_KRISHNA,
-    classification=ModClassification.TRINITY,
+    classification=ModClassification.TRINITY_DECAY,
 )
 
 DEUTERON_ELECTRON_RATIO: Final[PhysicsPrediction] = PhysicsPrediction(
