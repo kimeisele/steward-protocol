@@ -732,12 +732,48 @@ class EventBus(EventBusProtocol):
         if hasattr(self._guard, "_buckets") and agent_id in self._guard._buckets:
             self._guard._buckets[agent_id] = self._guard._bucket_size
 
-    def get_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[Event]:
-        """Get event history (most recent first)"""
+    def get_history(
+        self,
+        limit: int = 100,
+        event_type: Optional[str] = None,
+        quarter: Optional[str] = None,
+        tick_min: Optional[int] = None,
+        tick_max: Optional[int] = None,
+    ) -> List[Event]:
+        """Get event history with optional DIW-aware filtering.
+
+        Args:
+            limit: Max events to return (0 = all). Most recent first.
+            event_type: Filter by EventType value (e.g. "ACTION").
+            quarter: Filter by DIW quarter name ("genesis", "dharma", "karma", "moksha").
+            tick_min: Only events at or after this tick (inclusive).
+            tick_max: Only events at or before this tick (inclusive).
+
+        Returns:
+            Filtered event list, most recent last, capped at *limit*.
+        """
+        history: List[Event] = self._event_history
+
         if event_type:
-            history = [e for e in self._event_history if e.event_type == event_type]
-        else:
-            history = self._event_history
+            history = [e for e in history if e.event_type == event_type]
+
+        if quarter is not None:
+            history = [
+                e for e in history
+                if e.diw_context is not None and e.diw_context.get("quarter") == quarter
+            ]
+
+        if tick_min is not None:
+            history = [
+                e for e in history
+                if e.diw_context is not None and e.diw_context.get("tick", -1) >= tick_min
+            ]
+
+        if tick_max is not None:
+            history = [
+                e for e in history
+                if e.diw_context is not None and e.diw_context.get("tick", -1) <= tick_max
+            ]
 
         return history[-limit:] if limit else history
 
