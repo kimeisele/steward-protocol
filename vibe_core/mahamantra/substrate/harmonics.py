@@ -368,7 +368,8 @@ class VedicScaleMapping:
         Returns:
             The Rasa name and its meaning
         """
-        zone = ResonanceHarmonics.get_zone(resonance)
+        scaled = int(resonance * ResonanceHarmonics.COSMIC_FRAME)
+        zone = ResonanceHarmonics.get_zone(scaled)
         rasa_map = {
             "SILENCE": ("Shanta", "Peace"),
             "REFINE": ("Karuna", "Compassion"),
@@ -436,7 +437,8 @@ class VedicScaleMapping:
         """
         swara = cls.resonance_to_swara(resonance)
         rasa = cls.resonance_to_rasa(resonance)
-        zone = ResonanceHarmonics.get_zone(resonance)
+        scaled = int(resonance * ResonanceHarmonics.COSMIC_FRAME)
+        zone = ResonanceHarmonics.get_zone(scaled)
         sync_dist, sync_flute = cls.distance_to_nearest_sync(resonance)
 
         return {
@@ -898,7 +900,7 @@ class SravanamCheck:
         """
         can_emit, reason = cls.can_emit(input_tokens, output_tokens, resonance)
         swara = VedicScaleMapping.resonance_to_swara(resonance)
-        zone = ResonanceHarmonics.get_zone(resonance)
+        zone = ResonanceHarmonics.get_zone(int(resonance * ResonanceHarmonics.COSMIC_FRAME))
 
         return {
             "can_emit": can_emit,
