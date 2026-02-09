@@ -103,6 +103,44 @@ DEFAULT_CHORUS_SIZE: Final[int] = WORDS
 # KIRTAN MODE (Transformation Types)
 # =============================================================================
 
+# =============================================================================
+# DIW RESONANCE TABLE (DERIVED FROM SSOT)
+# =============================================================================
+# Index = phase(QUARTERS) × name(3) → (prana_factor, integrity_coeff, cycle_add)
+#
+# phase: MURALI % QUARTERS → 0=GENESIS, 1=DHARMA, 2=KARMA, 3=MOKSHA
+# name:  VAMSI // stride   → 0=HARE,    1=KRISHNA, 2=RAMA
+#
+# prana_factor:     multiplied by base_delta (+N = gain, -N = cost)
+# integrity_coeff:  multiplied by intensity (float, applied to cell.integrity)
+# cycle_add:        added to cell.cycle (KSETRAJNA=1 or HALVES=2)
+#
+# The table encodes the same semantics as the original 12-branch if/else,
+# but as data — the DIW components select the row, not control flow.
+
+_DIW_RESONANCE_TABLE: tuple = (
+    # GENESIS (phase=0): Cell RECEIVES energy
+    ( HALVES,  0.0,     0),          # H: strong prana boost
+    ( 1,       0.01,    0),          # K: moderate prana + integrity
+    ( 1,       0.0,     KSETRAJNA),  # R: moderate prana + cycle
+
+    # DHARMA (phase=1): Cell is VERIFIED
+    (-1,       0.0,     0),          # H: prana cost for validation
+    ( 0,       0.02,    0),          # K: integrity strengthened
+    ( 0,       0.01,    KSETRAJNA),  # R: cycle + integrity
+
+    # KARMA (phase=2): Cell PROCESSES
+    (-1,       0.0,     KSETRAJNA),  # H: work costs prana, advances cycle
+    (-1,       0.01,    KSETRAJNA),  # K: work + integrity + cycle
+    (-1,       0.0,     HALVES),     # R: work, Rama accelerates completion
+
+    # MOKSHA (phase=3): Cell COMPLETES
+    (-1,      -0.005,   0),          # H: release, slight integrity decay
+    (-1,       0.01,    0),          # K: release, integrity stabilized
+    (-1,       0.0,     HALVES),     # R: release, Rama delivers completion
+)
+
+
 class KirtanMode(IntEnum):
     """
     The modes of chanting in the chamber.
@@ -489,7 +527,6 @@ class SankirtanChamber(Generic[C]):
         components = unpack(diw)
 
         # --- Intensity from VENU (0.0 to 1.0) ---
-        # QUALITIES = 64 = WORDS × QUARTERS (SSOT)
         intensity = components.venu / (QUALITIES - KSETRAJNA)  # 0/63 .. 63/63
 
         # --- Name region from VAMSI ---
@@ -503,67 +540,18 @@ class SankirtanChamber(Generic[C]):
         mode = (diw >> CLUSTER_SHIFT) & 0xF  # 0=Solo, 1=CallResponse, 2=Chorus
 
         # Base delta scaled by SEVEN (SSOT: 7 = HALF_SIZE - KSETRAJNA)
-        # Mode amplifies: Solo=1×, CallResponse=2×, Chorus=3× (Reactor rods)
-        base_delta = (SEVEN + int(intensity * SEVEN)) * (mode + KSETRAJNA)  # 7-14 × (1-3)
+        base_delta = (SEVEN + int(intensity * SEVEN)) * (mode + KSETRAJNA)
 
-        if phase == 0:
-            # GENESIS: Cell RECEIVES energy (Input phase)
-            # H → strong prana boost, K → moderate + integrity, R → moderate + cycle
-            if name_region == 0:      # HARE (Carrier)
-                cell.lifecycle.prana += base_delta * HALVES
-            elif name_region == 1:    # KRISHNA (Source)
-                cell.lifecycle.prana += base_delta
-                cell.lifecycle.integrity = min(1.0,
-                    cell.lifecycle.integrity + intensity * 0.01)
-            else:                     # RAMA (Deliverer)
-                cell.lifecycle.prana += base_delta
-                cell.lifecycle.cycle += KSETRAJNA
+        # --- RESONANCE TABLE: phase(4) × name(3) → (prana_factor, integrity_coeff, cycle_add) ---
+        # No if/else. The DIW components ARE the index. The table IS the transformation.
+        pf, ic, ca = _DIW_RESONANCE_TABLE[phase * 3 + name_region]
+        cell.lifecycle.prana += int(pf * base_delta)
+        cell.lifecycle.prana = max(0, cell.lifecycle.prana)
+        cell.lifecycle.integrity = max(0.0, min(1.0,
+            cell.lifecycle.integrity + ic * intensity))
+        cell.lifecycle.cycle += ca
 
-        elif phase == 1:
-            # DHARMA: Cell is VERIFIED (Validation phase)
-            # K → integrity strengthened, H → prana cost for validation, R → cycle check
-            if name_region == 0:      # HARE (Carrier)
-                cell.lifecycle.prana -= base_delta  # Validation costs energy
-                cell.lifecycle.prana = max(0, cell.lifecycle.prana)
-            elif name_region == 1:    # KRISHNA (Source)
-                cell.lifecycle.integrity = min(1.0,
-                    cell.lifecycle.integrity + intensity * 0.02)
-            else:                     # RAMA (Deliverer)
-                cell.lifecycle.cycle += KSETRAJNA
-                cell.lifecycle.integrity = min(1.0,
-                    cell.lifecycle.integrity + intensity * 0.01)
-
-        elif phase == HALVES:
-            # KARMA: Cell PROCESSES (Execution phase)
-            # All names cost prana (work), but effect differs
-            cell.lifecycle.prana -= base_delta
-            cell.lifecycle.prana = max(0, cell.lifecycle.prana)
-            if name_region == 0:      # HARE (Carrier)
-                cell.lifecycle.cycle += KSETRAJNA
-            elif name_region == 1:    # KRISHNA (Source)
-                cell.lifecycle.integrity = min(1.0,
-                    cell.lifecycle.integrity + intensity * 0.01)
-                cell.lifecycle.cycle += KSETRAJNA
-            else:                     # RAMA (Deliverer)
-                cell.lifecycle.cycle += HALVES  # Rama accelerates completion
-
-        else:
-            # MOKSHA: Cell COMPLETES (Output phase)
-            # Energy released, integrity stabilized, cycle advanced
-            cell.lifecycle.prana -= base_delta
-            cell.lifecycle.prana = max(0, cell.lifecycle.prana)
-            if name_region == 0:      # HARE (Carrier)
-                cell.lifecycle.integrity = max(0.0,
-                    cell.lifecycle.integrity - intensity * 0.005)
-            elif name_region == 1:    # KRISHNA (Source)
-                cell.lifecycle.integrity = min(1.0,
-                    cell.lifecycle.integrity + intensity * 0.01)
-            else:                     # RAMA (Deliverer)
-                cell.lifecycle.cycle += HALVES  # Rama delivers completion
-
-        # --- SANKIRTAN REACTOR: Prana clamped to MAX_PRANA but never drained ---
-        # Sankirtan is a nuclear reactor of ecstasy — energy RISES through chanting.
-        # The Pancha Tattva are the reactor rods. No artificial metabolic drain here.
+        # --- SANKIRTAN REACTOR: Prana clamped to MAX_PRANA ---
         cell.lifecycle.prana = min(cell.lifecycle.prana, MAX_PRANA)
     
     def _merge_pair(

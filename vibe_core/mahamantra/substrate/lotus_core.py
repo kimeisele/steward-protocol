@@ -15,6 +15,7 @@ __position__ = 1
 __genesis__ = "0x7340d7d6"
 
 import logging
+import sys
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Union
 
 if TYPE_CHECKING:
@@ -38,6 +39,8 @@ from vibe_core.mahamantra.seed.types import (
 from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
 
 logger = logging.getLogger("MAHAMANTRA")
+
+_THIS_MODULE = sys.modules[__name__]
 
 
 # =============================================================================
@@ -520,7 +523,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         diw = P.THE_FLUTE_CYCLE[position]
         diw_comp = P.diw_components[position]
         quarter = P.quarter_names[position]
-        guardian = P.ALL_GUARDIANS[position] if position < len(P.ALL_GUARDIANS) else "unknown"
+        guardian = P.ALL_GUARDIANS[position]
         role = P.roles[position]
         quarter_head_name = P.quarter_head_names[position]
         holy_name = P.holy_names[position]
@@ -583,8 +586,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         )
 
         # SANKIRTAN AUTHORIZATION
-        import sys
-        reactor.chant(sys.modules[__name__])
+        reactor.chant(_THIS_MODULE)
 
         # Inject MahaCell into reactor for payload flow
         reactor.set_maha_cell(
@@ -612,7 +614,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         for i in range(WORDS):
             tick_pos = (position + i) % WORDS
             tick_word, tick_opcode = P.MAHAMANTRA_SEQUENCE[tick_pos]
-            tick_guardian = P.ALL_GUARDIANS[tick_pos] if tick_pos < len(P.ALL_GUARDIANS) else "unknown"
+            tick_guardian = P.ALL_GUARDIANS[tick_pos]
             tick_quarter = P.quarter_names[tick_pos]
 
             tick_input: P.TickStateInput = {
@@ -621,7 +623,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "quarter": tick_quarter,
                 "guardian": tick_guardian,
                 "word": tick_word,
-                "opcode": tick_opcode.value if hasattr(tick_opcode, "value") else tick_opcode,
+                "opcode": tick_opcode.value,
             }
 
             shadow_state = reactor.tick(tick_input)
