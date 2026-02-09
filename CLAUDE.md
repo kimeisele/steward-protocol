@@ -342,20 +342,13 @@ zeigt den vollen Friedhof.
 | Konstanten | `Final[int]` aus `_seed.py` | Mutable class vars |
 | I/O im Hot Path | Zero | `importlib`, `governance.audit()` (FS-scan) |
 | State-Format | `snapshot() → bytes` (binary) | JSON auf Disk |
-| Testbarkeit | `dance(cell, diw) → cell` (deterministisch) | 5 Test-Dateien hängen (siehe unten) |
 
-### Hängende Tests (verifiziert auf `main`, pre-existing)
+### Test-Suite Status (verifiziert Feb 9 2026)
 
-| Datei | Beobachtung |
-|-------|-------------|
-| `tests/mahamantra/kernel/test_singularity.py` | Hängt bei `tick()` → `kala.advance()` + `venu.step()` |
-| `tests/mahamantra/kernel/test_daemon.py` | `daemon.start()` → `while`-Loop + `mahamantra.audit()` |
-| `tests/mahamantra/kernel/test_daemon_soul.py` | `await daemon.start()` → async infinite loop |
-| `tests/mahamantra/protocols/test_gad.py` | Hängt (Import-Kette oder `validate()`) |
-| `tests/mahamantra/protocols/test_graph.py` | Hängt (Import-Kette oder `validate()`) |
-| `tests/mahamantra/cli/test_entry.py` | Hängt (`main([])` oder `get_entry()`) |
-
-Status: Root Cause noch nicht isoliert. Nicht skippen — fixen.
+Alle `tests/mahamantra/` Tests laufen durch — **kein Hang**.
+Vorherige "Hang"-Diagnose war falsch (subprocess timeout=15s zu kurz).
+Langsame Tests: `test_daemon.py` ~66s, `test_daemon_soul.py` ~104s.
+Es gibt Failures (pre-existing), aber die Suite blockiert nicht.
 
 ### Bereits konvergiert
 
