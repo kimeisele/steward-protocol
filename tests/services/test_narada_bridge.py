@@ -224,3 +224,101 @@ class TestNaradaBridgeSingleton:
         bridge = NaradaBridge()
         bridge.on_diw(_make_diw_event())
         assert "WIRED" in repr(bridge)
+
+
+class TestEventDIWContext:
+    """Phase 2: Event dataclass carries native diw_context field."""
+
+    def test_event_has_diw_context_field(self):
+        from vibe_core.mahamantra.substrate.event_bus import Event
+        event = Event()
+        assert hasattr(event, "diw_context")
+        assert event.diw_context is None
+
+    def test_event_diw_context_serializes(self):
+        from vibe_core.mahamantra.substrate.event_bus import Event
+        import json
+
+        ctx = {"diw": 0x1234, "tick": 42, "position": 5, "phase": 1, "quarter": "dharma", "mode": 0}
+        event = Event(diw_context=ctx)
+        j = json.loads(event.to_json())
+        assert j["diw_context"]["tick"] == 42
+        assert j["diw_context"]["quarter"] == "dharma"
+
+    def test_event_diw_context_none_serializes(self):
+        from vibe_core.mahamantra.substrate.event_bus import Event
+        import json
+
+        event = Event()
+        j = json.loads(event.to_json())
+        assert j["diw_context"] is None
+
+    def test_event_backward_compatible(self):
+        """Existing code that creates Event without diw_context still works."""
+        from vibe_core.mahamantra.substrate.event_bus import Event
+
+        event = Event(
+            event_type="ACTION",
+            agent_id="test",
+            message="hello",
+        )
+        assert event.diw_context is None
+        assert event.agent_id == "test"
+
+    def test_phase_transition_in_event_type_enum(self):
+        from vibe_core.mahamantra.substrate.event_bus import EventType
+
+        assert hasattr(EventType, "PHASE_TRANSITION")
+        assert EventType.PHASE_TRANSITION.value == "PHASE_TRANSITION"
+
+
+class TestEventBusDIWStamping:
+    """EventBus.emit_sync stamps diw_context on Event when bridge is wired."""
+
+    def test_emit_sync_without_bridge_has_none_context(self):
+        """Before bridge is wired, diw_context is None."""
+        from vibe_core.mahamantra.substrate.event_bus import EventBus, EventType
+
+        bus = EventBus()
+        # Reset class-level bridge state for isolation
+        EventBus._narada_bridge = None
+        EventBus._narada_bridge_failed = False
+
+        captured = []
+        bus.subscribe(lambda e: captured.append(e), [EventType.ACTION])
+        bus.emit_sync(EventType.ACTION, "test", "hello")
+
+        assert len(captured) == 1
+        assert captured[0].diw_context is None
+
+        # Clean up
+        EventBus._narada_bridge = None
+        EventBus._narada_bridge_failed = False
+
+    def test_emit_sync_with_wired_bridge_has_context(self):
+        """After bridge receives a DIW tick, events carry diw_context."""
+        from vibe_core.mahamantra.substrate.event_bus import EventBus, EventType
+
+        bus = EventBus()
+
+        # Wire a bridge manually
+        bridge = NaradaBridge()
+        bridge.on_diw(_make_diw_event(diw=0xBEEF, tick=99, position=7, murali=1, mode=0))
+        EventBus._narada_bridge = bridge
+        EventBus._narada_bridge_failed = False
+
+        captured = []
+        bus.subscribe(lambda e: captured.append(e), [EventType.ACTION])
+        bus.emit_sync(EventType.ACTION, "test", "hello")
+
+        assert len(captured) == 1
+        ctx = captured[0].diw_context
+        assert ctx is not None
+        assert ctx["diw"] == 0xBEEF
+        assert ctx["tick"] == 99
+        assert ctx["position"] == 7
+        assert ctx["quarter"] == "dharma"
+
+        # Clean up
+        EventBus._narada_bridge = None
+        EventBus._narada_bridge_failed = False
