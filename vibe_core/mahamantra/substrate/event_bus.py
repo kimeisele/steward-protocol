@@ -245,6 +245,9 @@ class EventType(str, Enum):
     VOTE_CAST = "VOTE_CAST"  # Vote recorded
     AUDIT_CHECK = "AUDIT_CHECK"  # Invariant verified
 
+    # Venu events (NaradaBridge — flute rhythm → agent events)
+    PHASE_TRANSITION = "PHASE_TRANSITION"  # Quarter change (genesis→dharma→karma→moksha)
+
     # Circuit trigger events (NOT emitted from kernel - see OPUS-073)
     KERNEL_TICK = "KERNEL_TICK"  # For circuits, emitted by plugins if needed
     HOURLY_PULSE = "HOURLY_PULSE"  # For MANAS, emitted by heartbeat.py
@@ -614,19 +617,30 @@ class EventBus(EventBusProtocol):
 
         return removed
 
+    _narada_bridge = None  # Resolved once, reused forever
+    _narada_bridge_failed = False  # True = import failed, stop retrying
+
     def _stamp_diw_context(self, details: dict) -> dict:
         """Stamp event details with current DIW context from NaradaBridge.
 
-        If the bridge is not wired (VenuService not started), returns
-        details unchanged. This is a no-op before boot completes.
+        Resolves the bridge singleton ONCE. If the import fails, logs a
+        warning and never retries (no silent per-event swallowing).
+        If the bridge is resolved but not yet wired (no VenuService),
+        returns details unchanged — that's a legitimate pre-boot state.
         """
-        try:
-            from vibe_core.services.narada_bridge import get_narada_bridge
-
-            bridge = get_narada_bridge()
-            return bridge.stamp_event_details(details)
-        except Exception:
+        if self._narada_bridge_failed:
             return details
+
+        if EventBus._narada_bridge is None:
+            try:
+                from vibe_core.services.narada_bridge import get_narada_bridge
+                EventBus._narada_bridge = get_narada_bridge()
+            except Exception as exc:
+                EventBus._narada_bridge_failed = True
+                logger.warning("NaradaBridge import failed (will not retry): %s", exc)
+                return details
+
+        return EventBus._narada_bridge.stamp_event_details(details)
 
     def emit_sync(
         self,

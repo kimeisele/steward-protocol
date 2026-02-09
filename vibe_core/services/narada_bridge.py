@@ -71,7 +71,7 @@ class NaradaBridge:
 
     __slots__ = (
         "_context", "_prev_phase", "_total_ticks",
-        "_phase_transitions", "_event_bus_ref",
+        "_phase_transitions", "_event_bus_ref", "_event_bus_failed",
     )
 
     def __init__(self) -> None:
@@ -80,6 +80,7 @@ class NaradaBridge:
         self._total_ticks: int = 0
         self._phase_transitions: int = 0
         self._event_bus_ref = None  # Lazy — set when first needed
+        self._event_bus_failed = False  # True = import failed, stop retrying
 
     # =========================================================================
     # DIWSubscriberProtocol implementation
@@ -192,8 +193,10 @@ class NaradaBridge:
         from_quarter = _QUARTER_NAMES[from_phase % QUARTERS]
         to_quarter = _QUARTER_NAMES[to_phase % QUARTERS]
 
+        from vibe_core.mahamantra.substrate.event_bus import EventType
+
         bus.emit_sync(
-            event_type="PHASE_TRANSITION",
+            event_type=EventType.PHASE_TRANSITION,
             agent_id="narada_bridge",
             message=f"{from_quarter} → {to_quarter} (tick {tick})",
             data={
@@ -208,12 +211,21 @@ class NaradaBridge:
         )
 
     def _get_event_bus(self):
-        """Lazy-load the EventBus singleton. Avoids circular imports at module level."""
+        """Lazy-load the EventBus singleton. Avoids circular imports at module level.
+
+        Resolves ONCE. If import fails, logs a warning and never retries.
+        No silent per-tick swallowing.
+        """
+        if self._event_bus_failed:
+            return None
+
         if self._event_bus_ref is None:
             try:
                 from vibe_core.mahamantra.substrate.event_bus import get_event_bus
                 self._event_bus_ref = get_event_bus()
-            except Exception:
+            except Exception as exc:
+                self._event_bus_failed = True
+                logger.warning("NaradaBridge: EventBus import failed (will not retry): %s", exc)
                 return None
         return self._event_bus_ref
 
