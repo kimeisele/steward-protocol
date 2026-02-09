@@ -86,28 +86,24 @@ Not a rewrite. Not a merge. A **bridge** — because Narada IS the bridge.
 
 ### Phase Plan
 
-#### Phase 1: Bridge (This PR)
-- Create `NaradaBridge` class implementing `DIWSubscriberProtocol`
+#### Phase 1: Bridge ✅ DONE
+- `NaradaBridge` class implementing `DIWSubscriberProtocol`
 - Bridge holds current DIW state (tick, position, phase, diw)
-- Bridge wraps existing `EventBus` — zero changes to 48 consumer call-sites
-- `get_event_bus()` returns the bridge (which delegates to inner EventBus)
-- Register bridge as DIW subscriber at boot → auto-discovered
-- Every agent event now carries DIW context in `details`
+- Registered as DIW subscriber at boot → auto-discovered by VenuService
+- Resolve-once semantics: import failure logged once, never retried
+- `EventType.PHASE_TRANSITION` added to enum (not a raw string)
 
-#### Phase 2: DIW-Stamped Events (Future)
-- `Event` dataclass gets optional `diw_context: DIWContext` field
-- Agent events carry position/phase/tick natively (not in details dict)
-- EventBus history becomes time-indexed by tick (not wall-clock)
-- Replay: reconstruct exact system state from tick sequence
+#### Phase 2: DIW-Stamped Events ✅ DONE
+- `Event.diw_context: Optional[Dict]` — first-class field on Event dataclass
+- `EventBus._get_diw_context()` stamps every event via `emit_sync()`
+- `get_history(quarter=, tick_min=, tick_max=)` — tick-indexed queries
+- Protocol signatures updated (agent_interface.py, types/event_bus.py)
+- 43 bridge tests + 98 regression tests pass
 
-#### Phase 3: Phase-Aware Scheduling (Future)
-- SudarshanaGuard uses Venu phase for rate-limiting policy
-  - GENESIS (0-3): IO burst allowed (H-K-H-K alternating)
-  - DHARMA (4-7): Front-loaded work burst (K-K-H-H)
-  - KARMA (8-11): Checkpoint phase — reduce throughput
-  - MOKSHA (12-15): Cleanup — only system events
-- EventTypes become phase-aware (some events only valid in certain phases)
-- Agents receive phase hints: "you're in DHARMA, burst now"
+#### Phase 3: Phase-Aware Scheduling (DEFERRED)
+- SudarshanaGuard currently blocks nothing — premature to make phase-aware
+- Will implement when rate-limiting actually triggers in production
+- Design: GENESIS=burst, DHARMA=work, KARMA=checkpoint, MOKSHA=system-only
 
 #### Phase 4: Unified Event Model (Future — Supreme)
 - `DIWEvent` and `Event` merge into a single `MahaEvent`
@@ -124,10 +120,13 @@ Not a rewrite. Not a merge. A **bridge** — because Narada IS the bridge.
    Before VenuService starts, EventBus works normally (no DIW context).
    After VenuService starts, events get DIW stamps automatically.
 5. **Graceful degradation** — If VenuService never starts (CLI, tests), EventBus works as before.
+6. **No silent failures** — resolve-once/log-once pattern. No bare except swallowing.
 
-### Files Changed (Phase 1)
+### Files Changed
 
-- **NEW:** `vibe_core/services/narada_bridge.py` — NaradaBridge class
-- **EDIT:** `vibe_core/services/diw_discovery.py` — add NaradaBridge to subscriber list
-- **EDIT:** `vibe_core/mahamantra/substrate/event_bus.py` — `get_event_bus()` returns bridge-aware bus
-- **TEST:** `tests/services/test_narada_bridge.py` — bridge receives DIW, stamps events
+- **NEW:** `vibe_core/services/narada_bridge.py` — NaradaBridge class + singleton
+- **EDIT:** `vibe_core/services/diw_discovery.py` — registers NaradaBridge singleton
+- **EDIT:** `vibe_core/mahamantra/substrate/event_bus.py` — Event.diw_context, _get_diw_context, tick-indexed get_history
+- **EDIT:** `vibe_core/protocols/mahajanas/narada/types/event_bus.py` — synced get_history signature
+- **EDIT:** `vibe_core/protocols/mahajanas/brahma/types/agent_interface.py` — synced protocol
+- **TEST:** `tests/services/test_narada_bridge.py` — 43 tests (bridge, stamping, history queries)
