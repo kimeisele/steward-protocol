@@ -298,9 +298,9 @@ class TestComputeGenesisHash:
         assert hash1 == hash2
 
     def test_compute_genesis_hash_different_inputs(self):
-        """Different inputs produce different hashes."""
-        hash1 = compute_genesis_hash("vyasa", 4, "file1.py")
-        hash2 = compute_genesis_hash("vyasa", 4, "file2.py")
+        """Different mahajana/position produce different hashes."""
+        hash1 = compute_genesis_hash("vyasa", 0)
+        hash2 = compute_genesis_hash("narada", 2)
         assert hash1 != hash2
 
 

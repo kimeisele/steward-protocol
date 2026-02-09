@@ -318,16 +318,16 @@ class TestMantraByte:
         assert name == HolyName.VOID
 
     def test_mantra_byte_resonance_check(self):
-        """resonance_check returns coherence score."""
+        """resonance_check returns coherence score (COSMIC_FRAME scaled)."""
         mantra = MantraByte.standard()
         coherence = mantra.resonance_check()
-        assert 0.0 <= coherence <= 1.0
+        assert 0 <= coherence <= 21600
 
     def test_mantra_byte_standard_is_coherent(self):
-        """Standard MantraByte is fully coherent."""
+        """Standard MantraByte is fully coherent (COSMIC_FRAME = 21600)."""
         mantra = MantraByte.standard()
         coherence = mantra.resonance_check()
-        assert coherence == 1.0
+        assert coherence == 21600
 
     def test_mantra_byte_validate_parampara_37(self):
         """validate_parampara returns True for 37."""
@@ -371,9 +371,9 @@ class TestYajna:
         assert yajna is not None
 
     def test_yajna_coherence(self):
-        """Yajna has coherence property."""
+        """Yajna has coherence property (COSMIC_FRAME scaled)."""
         yajna = Yajna()
-        assert 0.0 <= yajna.coherence <= 1.0
+        assert 0 <= yajna.coherence <= 21600
 
     def test_yajna_position(self):
         """Yajna has position property."""

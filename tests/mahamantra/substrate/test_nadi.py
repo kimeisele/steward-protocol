@@ -574,7 +574,7 @@ class TestNadiStatsDerivedMetrics:
             nadi_type=NadiType.PRANA,
             connections=NADI_CAPACITY,
         )
-        assert stats.resonance_ratio == 1.0
+        assert stats.resonance_ratio == 21600
 
     def test_mala_progress(self):
         """mala_progress cycles through 0-1 every 108 messages."""
@@ -584,4 +584,4 @@ class TestNadiStatsDerivedMetrics:
             messages_sent=54,
             messages_received=0,
         )
-        assert stats.mala_progress == 0.5  # 54/108
+        assert stats.mala_progress == 10800  # int(0.5 * 21600)
