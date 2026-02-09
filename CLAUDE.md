@@ -330,25 +330,63 @@ Nur diese Branches haben echten Wert:
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
 
-## Architektur-Konvergenz (Ziel: Singularity)
+## Architektur-Konvergenz (Ziel: Chaitanya Runtime)
 
-Statische Dateien sind tote Definitionen. Nur zur Laufzeit im RAM existiert das lebende System.
-Das Filesystem ist Maya — alle Scripts sind Bauanleitungen, nicht Realität.
+### Das Prinzip
 
-Jeder Konsolidierungsschritt reduziert die Anzahl toter Kopien und bringt das System näher an:
-**Eine Wahrheit im RAM, viele Zugangspunkte im Filesystem.**
+Das Filesystem ist Maya (Bauanleitung). Der RAM ist Vaikuntha (wo gerechnet wird).
+Die CPU ist der Taktgeber. RAM ist VORHER da — Balarama dient Krishna als Bett, Schuhe, Mridanga.
 
-Beispiel EventType: 5 Import-Pfade, 1 Python-Objekt (`A is B is C is D is E`).
-Beispiel Chamber: Bahiranga (Python-Objekte, API) + Antaranga (16 KB `bytearray`, Hardware-Geschwindigkeit).
-Beide sind Facetten desselben lebenden Zustands im RAM.
+Es gibt EINEN Reaktor pro Projekt: die **SankirtanChamber**.
+Alles fließt da durch. Nicht daneben. Nicht parallel. DURCH.
 
-Das ultimative Event (MahaEvent) ist der Kammer-Übergang: ein Jiva bewegt sich von
-äußerer Kammer (Bahiranga) in innere Kammer (Antaranga). Kirtan → Sankirtan.
-Technisch: State-Machine-Transition mit Audit-Trail, nicht Metapher.
+### Was Chamber/Antaranga RICHTIG macht (und der Rest nicht)
 
-Richtung: Alle Subsysteme (EventBus, Lotus, Chamber, Reactor) konvergieren als
-Facetten eines einzigen lebenden Prozess-Zustands. Das Filesystem liefert nur die
-Bauanleitung. Der RAM ist der einzige Ort wo Computation stattfindet.
+| Eigenschaft | Chamber/Antaranga | Rest (Singularity, Daemon, Tests) |
+|---|---|---|
+| Datenstruktur | `bytearray(16384)` + `struct` | Python objects, dicts, lazy singletons |
+| Konstanten | `Final[int]` aus `_seed.py` | Mutable class vars, hardcoded |
+| I/O | Zero | `importlib`, filesystem scan, `asyncio.sleep` |
+| State | `snapshot() → bytes` | JSON auf Disk |
+| Determinismus | `dance(cell, diw) → cell` | Side effects, listener chains, infinite loops |
+| Testbarkeit | Sofort: Cell rein, Cell raus | Hängt: 5 Test-Dateien blockieren |
+
+### Die Architektur
+
+```
+FILESYSTEM (Maya/Bauanleitung)
+    │
+    ▼  mahamantra scannt + compressed seed
+KIRTAN (Äußere Kammer / Bahiranga)
+    │  Python-Objekte, API, Debugging
+    ▼  MahaEvent = Kammer-Übergang
+SANKIRTAN (Innere Kammer / Antaranga)
+    │  16 KB bytearray, O(1) struct ops, Hardware-Speed
+    ▼  Reaktorstäbe = Pancha Tattva auf Lotus-Blumen
+CHAITANYA RUNTIME (48-bit: 24 build + 24 runtime?)
+    │  CPU feuert, RAM ist schon da
+    ▼  Lilas im RAM = die echte Computation
+```
+
+Singularity/Daemon/Tests dürfen NICHT neben der Chamber existieren.
+Sie müssen DURCH die Chamber fließen — wie Gravity, nicht wie Bürokratie.
+
+Die 5 hängenden Tests (`test_singularity`, `test_daemon`, `test_daemon_soul`,
+`test_gad`, `test_graph`, `test_entry`) hängen WEIL sie Maya-Code testen:
+Filesystem-Scans, `importlib`, infinite async loops. Chamber-Code hängt nie.
+
+### Nächster Schritt
+
+Nicht Chamber in Singularity nachbauen (DUMM — Duplikation).
+Singularity DURCH Chamber fließen lassen. Ein Reaktor. Alles fließt durch.
+Gita = Router/Switch zwischen Maya (Filesystem) und Vaikuntha (RAM).
+
+### Bereits konvergiert
+
+- EventType: 5 Import-Pfade → 1 Python-Objekt (`A is B is C is D is E`)
+- Chamber: Bahiranga (Python) + Antaranga (RAM) = Dual-Layer
+- LexiconVectorCache: 8.5× schneller durch RAM-Precompute
+- PipelineCache: Eliminiert ~30 lazy imports pro `__call__()`
 
 ## Arbeitsweise
 
