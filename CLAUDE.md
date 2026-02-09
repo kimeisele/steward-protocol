@@ -321,7 +321,7 @@ Nur diese Branches haben echten Wert:
 | `feature/lotus-pipeline-cache` | PR-ready | PipelineCache Singleton — seed-unabhängige Lookups vorberechnet |
 | `perf/lotus-call-hotpath` | PR-ready | MahaModularSynth Singleton — eliminiert Objekt-Allokation pro __call__ |
 | `fix/igene-fatal-comparison` | PR-ready | iGene.is_fatal: float(0-1) vs int(0-21600) Normalisierung |
-| `refactor/consolidate-event-bus-copies` | PR-ready (6 commits) | EventType SSOT leaf + 870-line copy killed + TRINITY fix (337 tests unblocked) |
+| `refactor/consolidate-event-bus-copies` | Gemergt | EventType SSOT leaf + 870-line copy killed + TRINITY fix |
 | `feature/mahamantra-single-entry-point` | Gemergt | Write-behind cache + Samskara intercept |
 | `feature/antaranga-ram-chamber` | Gemergt | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
 | `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
@@ -330,11 +330,22 @@ Nur diese Branches haben echten Wert:
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
 
-## Architektur-Konvergenz
+## Architektur (verifiziert aus Code, Feb 9 2026)
 
-### Verifizierte Fakten (aus Code-Analyse, Feb 9 2026)
+### Der Flow in `lotus_core.__call__()` (auf `main`)
 
-`chamber.py` + `antaranga.py` haben Eigenschaften die der Rest der Codebase nicht hat:
+```
+input → compress(seed) → synth(attractor) → MahaCell.create()
+      → Chamber.resonate_words(ranked_words, attractor)  [Antaranga: 16KB RAM]
+      → Chamber.kirtan(cell, cycles)                     [dance() × WORDS]
+      → Chamber.spell_kirtan(cell, input_coords)         [input-derived DIWs]
+      → ShadowReactor.yajna(16 ticks)                    [Bhoga→Prasadam→Return]
+      → response dict
+```
+
+Dateien: `lotus_core.py:402-733`, `chamber.py:219-306` (dance), `antaranga.py` (16KB bytearray)
+
+### Chamber vs Rest
 
 | | `chamber.py` / `antaranga.py` | `singularity.py` / `daemon.py` |
 |---|---|---|
@@ -343,19 +354,11 @@ zeigt den vollen Friedhof.
 | I/O im Hot Path | Zero | `importlib`, `governance.audit()` (FS-scan) |
 | State-Format | `snapshot() → bytes` (binary) | JSON auf Disk |
 
-### Test-Suite Status (verifiziert Feb 9 2026)
+### Test-Suite (verifiziert Feb 9 2026)
 
-Alle `tests/mahamantra/` Tests laufen durch — **kein Hang**.
-Vorherige "Hang"-Diagnose war falsch (subprocess timeout=15s zu kurz).
+Alle `tests/mahamantra/` Tests laufen durch — kein Hang.
 Langsame Tests: `test_daemon.py` ~66s, `test_daemon_soul.py` ~104s.
-Es gibt Failures (pre-existing), aber die Suite blockiert nicht.
-
-### Bereits konvergiert
-
-- EventType: 5 Import-Pfade → 1 Python-Objekt (verifiziert: `A is B is C is D is E`)
-- Chamber: Bahiranga (Python) + Antaranga (16 KB RAM) dual-layer
-- LexiconVectorCache: 8.5× schneller (gemessen)
-- PipelineCache: ~30 lazy imports eliminiert pro `__call__()`
+Es gibt pre-existing Failures, aber die Suite blockiert nicht.
 
 ## Arbeitsweise
 
