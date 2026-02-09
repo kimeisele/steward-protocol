@@ -66,6 +66,21 @@ def discover_and_register_diw_subscribers() -> int:
         except Exception as e:
             logger.warning("Failed to instantiate %s: %s", cls.__name__, e)
 
+    # NaradaBridge: singleton — connects VenuOrchestrator ↔ EventBus.
+    # Must use get_narada_bridge() to ensure one instance per process.
+    try:
+        from vibe_core.services.narada_bridge import NaradaBridge, get_narada_bridge
+
+        bridge = get_narada_bridge()
+        ServiceRegistry.register(
+            NaradaBridge, bridge,
+            protocols=[DIWSubscriberProtocol],
+        )
+        logger.info("DIW subscriber registered: %s", bridge.subscriber_name)
+        registered += 1
+    except Exception as e:
+        logger.warning("Failed to register NaradaBridge: %s", e)
+
     if registered:
         logger.info("%d DIW subscribers auto-discovered and registered", registered)
 
