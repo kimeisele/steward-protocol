@@ -322,3 +322,109 @@ class TestEventBusDIWStamping:
         # Clean up
         EventBus._narada_bridge = None
         EventBus._narada_bridge_failed = False
+
+
+class TestTickIndexedHistory:
+    """Phase 2b: get_history() supports tick-indexed and quarter-based queries."""
+
+    @pytest.fixture(autouse=True)
+    def _setup_bus(self):
+        """Create a bus with a wired bridge and emit events across multiple ticks."""
+        from vibe_core.mahamantra.substrate.event_bus import EventBus, EventType
+
+        self.EventType = EventType
+        self.bus = EventBus()
+
+        bridge = NaradaBridge()
+        EventBus._narada_bridge = bridge
+        EventBus._narada_bridge_failed = False
+
+        # Emit events at different ticks/quarters:
+        # Bridge reads murali field for phase → quarter mapping:
+        #   murali 0 → genesis, murali 1 → dharma,
+        #   murali 2 → karma, murali 3 → moksha
+        ticks = [
+            (0, 0, 0),    # tick=0, position=0, murali=0 → genesis
+            (2, 2, 0),    # tick=2, position=2, murali=0 → genesis
+            (5, 5, 1),    # tick=5, position=5, murali=1 → dharma
+            (8, 8, 2),    # tick=8, position=8, murali=2 → karma
+            (10, 10, 2),  # tick=10, position=10, murali=2 → karma
+            (13, 13, 3),  # tick=13, position=13, murali=3 → moksha
+        ]
+        for tick, pos, murali in ticks:
+            bridge.on_diw(_make_diw_event(tick=tick, position=pos, murali=murali))
+            self.bus.emit_sync(EventType.ACTION, "agent", f"msg_tick_{tick}")
+
+        # One ERROR event at tick 13 (moksha)
+        self.bus.emit_sync(EventType.ERROR, "agent", "error_in_moksha")
+
+        yield
+
+        EventBus._narada_bridge = None
+        EventBus._narada_bridge_failed = False
+
+    def test_get_history_no_filters(self):
+        """Default: returns all events."""
+        h = self.bus.get_history(limit=0)
+        assert len(h) == 7  # 6 ACTION + 1 ERROR
+
+    def test_get_history_event_type_filter(self):
+        """Existing event_type filter still works."""
+        h = self.bus.get_history(limit=0, event_type="ERROR")
+        assert len(h) == 1
+        assert h[0].event_type == "ERROR"
+
+    def test_get_history_quarter_genesis(self):
+        h = self.bus.get_history(limit=0, quarter="genesis")
+        assert len(h) == 2
+        for e in h:
+            assert e.diw_context["quarter"] == "genesis"
+
+    def test_get_history_quarter_dharma(self):
+        h = self.bus.get_history(limit=0, quarter="dharma")
+        assert len(h) == 1
+        assert h[0].diw_context["tick"] == 5
+
+    def test_get_history_quarter_karma(self):
+        h = self.bus.get_history(limit=0, quarter="karma")
+        assert len(h) == 2
+
+    def test_get_history_quarter_moksha(self):
+        h = self.bus.get_history(limit=0, quarter="moksha")
+        assert len(h) == 2  # 1 ACTION + 1 ERROR, both at tick 13
+
+    def test_get_history_tick_min(self):
+        h = self.bus.get_history(limit=0, tick_min=8)
+        assert len(h) == 4  # tick 8, 10, 13 (ACTION) + tick 13 (ERROR)
+
+    def test_get_history_tick_max(self):
+        h = self.bus.get_history(limit=0, tick_max=2)
+        assert len(h) == 2  # tick 0, 2
+
+    def test_get_history_tick_range(self):
+        h = self.bus.get_history(limit=0, tick_min=5, tick_max=10)
+        assert len(h) == 3  # tick 5 (dharma), 8 (karma), 10 (karma)
+
+    def test_get_history_combined_filters(self):
+        """Quarter + event_type combined."""
+        h = self.bus.get_history(limit=0, quarter="moksha", event_type="ERROR")
+        assert len(h) == 1
+        assert h[0].event_type == "ERROR"
+        assert h[0].diw_context["quarter"] == "moksha"
+
+    def test_get_history_limit_with_filters(self):
+        """Limit applies after filtering."""
+        h = self.bus.get_history(limit=1, quarter="karma")
+        assert len(h) == 1  # Only the most recent karma event
+
+    def test_get_history_empty_quarter(self):
+        """Non-existent quarter returns empty."""
+        h = self.bus.get_history(limit=0, quarter="nonexistent")
+        assert len(h) == 0
+
+    def test_get_history_backward_compatible(self):
+        """Old-style call with only limit and event_type still works."""
+        h = self.bus.get_history(limit=3, event_type="ACTION")
+        assert len(h) == 3
+        for e in h:
+            assert e.event_type == "ACTION"
