@@ -427,17 +427,32 @@ from vibe_core.protocols.mahajanas.narada.broadcast import (
 )
 
 # =============================================================================
-# MIGRATED TYPES - Accessed via mahamantra.mod.narada
+# MIGRATED TYPES - Lazy to break circular import with substrate/event_bus.py
 # =============================================================================
 
-from vibe_core.protocols.mahajanas.narada.types import (
-    # event_bus.py (EventType already defined above)
-    EventColor,
-    Event as EventBusEvent,
-    EventBus,
-    SubscriberMetrics,
-    SudarshanaGuard,
-)
+# Eager: zero-dep leaf (no cycle)
+from vibe_core.mahamantra.substrate.event_types import EventColor  # noqa: F401
+
+# Lazy: heavy classes resolved on first access
+_NARADA_LAZY = {
+    "EventBusEvent": ("vibe_core.mahamantra.substrate.event_bus", "Event"),
+    "EventBus": ("vibe_core.mahamantra.substrate.event_bus", "EventBus"),
+    "SubscriberMetrics": ("vibe_core.mahamantra.substrate.event_bus", "SubscriberMetrics"),
+    "SudarshanaGuard": ("vibe_core.mahamantra.substrate.event_bus", "SudarshanaGuard"),
+}
+
+_original_narada_getattr = globals().get("__getattr__")
+
+
+def __getattr__(name):
+    if name in _NARADA_LAZY:
+        module_path, attr_name = _NARADA_LAZY[name]
+        import importlib
+        mod = importlib.import_module(module_path)
+        return getattr(mod, attr_name)
+    if _original_narada_getattr is not None:
+        return _original_narada_getattr(name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE

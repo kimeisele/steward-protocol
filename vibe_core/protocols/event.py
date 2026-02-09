@@ -43,23 +43,8 @@ from vibe_core.protocols.mahajanas.narada.events import (
     emit_event,
 )
 
-# Import Event from event_bus types if available
-try:
-    from vibe_core.protocols.mahajanas.narada.types.event_bus import Event
-except ImportError:
-    # Define minimal Event for compatibility if not in types
-    from dataclasses import dataclass
-    from datetime import datetime
-    from typing import Any, Dict, Optional
-
-    @dataclass
-    class Event:
-        """Legacy Event class for backward compatibility."""
-
-        event_type: str
-        source: str
-        timestamp: datetime
-        details: Optional[Dict[str, Any]] = None
+# Event re-exported from SSOT (substrate/event_bus.py via types proxy)
+from vibe_core.protocols.mahajanas.narada.types.event_bus import Event
 
 
 __all__ = [
