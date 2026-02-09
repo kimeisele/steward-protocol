@@ -614,6 +614,20 @@ class EventBus(EventBusProtocol):
 
         return removed
 
+    def _stamp_diw_context(self, details: dict) -> dict:
+        """Stamp event details with current DIW context from NaradaBridge.
+
+        If the bridge is not wired (VenuService not started), returns
+        details unchanged. This is a no-op before boot completes.
+        """
+        try:
+            from vibe_core.services.narada_bridge import get_narada_bridge
+
+            bridge = get_narada_bridge()
+            return bridge.stamp_event_details(details)
+        except Exception:
+            return details
+
     def emit_sync(
         self,
         event_type: EventType,
@@ -635,6 +649,11 @@ class EventBus(EventBusProtocol):
         Returns:
             Event ID
         """
+        # NARADA BRIDGE: Stamp event details with DIW context (if bridge is wired).
+        # Before VenuService starts, this is a no-op. After wiring, every event
+        # carries the flute's rhythm (position, phase, tick, diw).
+        stamped_data = self._stamp_diw_context(data or {})
+
         event_id = str(uuid4())
         event = Event(
             event_id=event_id,
@@ -642,7 +661,7 @@ class EventBus(EventBusProtocol):
             agent_id=agent_id,
             message=message,
             timestamp=datetime.now().isoformat() + "Z",
-            details=data or {},
+            details=stamped_data,
             task_id=task_id,
         )
 
