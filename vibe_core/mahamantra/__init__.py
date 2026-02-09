@@ -52,6 +52,7 @@ CORE_MODULES = [
     "vibe_core.mahamantra.substrate.cell",          # MahaCellUnified
     "vibe_core.mahamantra.substrate.config",        # PhoenixConfig
     "vibe_core.mahamantra.substrate.boot",          # BootMode
+    "vibe_core.mahamantra.substrate.event_types",   # EventType, EventColor (zero-dep leaf)
     "vibe_core.mahamantra.substrate.event_bus",     # EventBus
     "vibe_core.mahamantra.substrate.ledger",        # SQLiteLedger
     "vibe_core.mahamantra.substrate.lineage",       # LineageChain, LineageBlock, LineageEventType
