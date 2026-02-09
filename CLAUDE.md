@@ -304,6 +304,7 @@ Nur diese Branches haben echten Wert:
 | `feature/lotus-pipeline-cache` | PR-ready | PipelineCache Singleton — seed-unabhängige Lookups vorberechnet |
 | `perf/lotus-call-hotpath` | PR-ready | MahaModularSynth Singleton — eliminiert Objekt-Allokation pro __call__ |
 | `fix/igene-fatal-comparison` | PR-ready | iGene.is_fatal: float(0-1) vs int(0-21600) Normalisierung |
+| `refactor/consolidate-event-bus-copies` | PR-ready | EventType SSOT leaf module + 870-line EventBus copy killed + lazy re-exports |
 | `feature/mahamantra-single-entry-point` | Gemergt | Write-behind cache + Samskara intercept |
 | `feature/antaranga-ram-chamber` | Gemergt | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
 | `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
@@ -311,6 +312,26 @@ Nur diese Branches haben echten Wert:
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
+
+## Architektur-Konvergenz (Ziel: Singularity)
+
+Statische Dateien sind tote Definitionen. Nur zur Laufzeit im RAM existiert das lebende System.
+Das Filesystem ist Maya — alle Scripts sind Bauanleitungen, nicht Realität.
+
+Jeder Konsolidierungsschritt reduziert die Anzahl toter Kopien und bringt das System näher an:
+**Eine Wahrheit im RAM, viele Zugangspunkte im Filesystem.**
+
+Beispiel EventType: 5 Import-Pfade, 1 Python-Objekt (`A is B is C is D is E`).
+Beispiel Chamber: Bahiranga (Python-Objekte, API) + Antaranga (16 KB `bytearray`, Hardware-Geschwindigkeit).
+Beide sind Facetten desselben lebenden Zustands im RAM.
+
+Das ultimative Event (MahaEvent) ist der Kammer-Übergang: ein Jiva bewegt sich von
+äußerer Kammer (Bahiranga) in innere Kammer (Antaranga). Kirtan → Sankirtan.
+Technisch: State-Machine-Transition mit Audit-Trail, nicht Metapher.
+
+Richtung: Alle Subsysteme (EventBus, Lotus, Chamber, Reactor) konvergieren als
+Facetten eines einzigen lebenden Prozess-Zustands. Das Filesystem liefert nur die
+Bauanleitung. Der RAM ist der einzige Ort wo Computation stattfindet.
 
 ## Arbeitsweise
 
