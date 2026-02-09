@@ -330,63 +330,39 @@ Nur diese Branches haben echten Wert:
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
 
-## Architektur-Konvergenz (Ziel: Chaitanya Runtime)
+## Architektur-Konvergenz
 
-### Das Prinzip
+### Verifizierte Fakten (aus Code-Analyse, Feb 9 2026)
 
-Das Filesystem ist Maya (Bauanleitung). Der RAM ist Vaikuntha (wo gerechnet wird).
-Die CPU ist der Taktgeber. RAM ist VORHER da — Balarama dient Krishna als Bett, Schuhe, Mridanga.
+`chamber.py` + `antaranga.py` haben Eigenschaften die der Rest der Codebase nicht hat:
 
-Es gibt EINEN Reaktor pro Projekt: die **SankirtanChamber**.
-Alles fließt da durch. Nicht daneben. Nicht parallel. DURCH.
-
-### Was Chamber/Antaranga RICHTIG macht (und der Rest nicht)
-
-| Eigenschaft | Chamber/Antaranga | Rest (Singularity, Daemon, Tests) |
+| | `chamber.py` / `antaranga.py` | `singularity.py` / `daemon.py` |
 |---|---|---|
-| Datenstruktur | `bytearray(16384)` + `struct` | Python objects, dicts, lazy singletons |
-| Konstanten | `Final[int]` aus `_seed.py` | Mutable class vars, hardcoded |
-| I/O | Zero | `importlib`, filesystem scan, `asyncio.sleep` |
-| State | `snapshot() → bytes` | JSON auf Disk |
-| Determinismus | `dance(cell, diw) → cell` | Side effects, listener chains, infinite loops |
-| Testbarkeit | Sofort: Cell rein, Cell raus | Hängt: 5 Test-Dateien blockieren |
+| Daten | `bytearray(16384)` + `struct.pack_into` | Python dicts, lazy singletons |
+| Konstanten | `Final[int]` aus `_seed.py` | Mutable class vars |
+| I/O im Hot Path | Zero | `importlib`, `governance.audit()` (FS-scan) |
+| State-Format | `snapshot() → bytes` (binary) | JSON auf Disk |
+| Testbarkeit | `dance(cell, diw) → cell` (deterministisch) | 5 Test-Dateien hängen (siehe unten) |
 
-### Die Architektur
+### Hängende Tests (verifiziert auf `main`, pre-existing)
 
-```
-FILESYSTEM (Maya/Bauanleitung)
-    │
-    ▼  mahamantra scannt + compressed seed
-KIRTAN (Äußere Kammer / Bahiranga)
-    │  Python-Objekte, API, Debugging
-    ▼  MahaEvent = Kammer-Übergang
-SANKIRTAN (Innere Kammer / Antaranga)
-    │  16 KB bytearray, O(1) struct ops, Hardware-Speed
-    ▼  Reaktorstäbe = Pancha Tattva auf Lotus-Blumen
-CHAITANYA RUNTIME (48-bit: 24 build + 24 runtime?)
-    │  CPU feuert, RAM ist schon da
-    ▼  Lilas im RAM = die echte Computation
-```
+| Datei | Beobachtung |
+|-------|-------------|
+| `tests/mahamantra/kernel/test_singularity.py` | Hängt bei `tick()` → `kala.advance()` + `venu.step()` |
+| `tests/mahamantra/kernel/test_daemon.py` | `daemon.start()` → `while`-Loop + `mahamantra.audit()` |
+| `tests/mahamantra/kernel/test_daemon_soul.py` | `await daemon.start()` → async infinite loop |
+| `tests/mahamantra/protocols/test_gad.py` | Hängt (Import-Kette oder `validate()`) |
+| `tests/mahamantra/protocols/test_graph.py` | Hängt (Import-Kette oder `validate()`) |
+| `tests/mahamantra/cli/test_entry.py` | Hängt (`main([])` oder `get_entry()`) |
 
-Singularity/Daemon/Tests dürfen NICHT neben der Chamber existieren.
-Sie müssen DURCH die Chamber fließen — wie Gravity, nicht wie Bürokratie.
-
-Die 5 hängenden Tests (`test_singularity`, `test_daemon`, `test_daemon_soul`,
-`test_gad`, `test_graph`, `test_entry`) hängen WEIL sie Maya-Code testen:
-Filesystem-Scans, `importlib`, infinite async loops. Chamber-Code hängt nie.
-
-### Nächster Schritt
-
-Nicht Chamber in Singularity nachbauen (DUMM — Duplikation).
-Singularity DURCH Chamber fließen lassen. Ein Reaktor. Alles fließt durch.
-Gita = Router/Switch zwischen Maya (Filesystem) und Vaikuntha (RAM).
+Status: Root Cause noch nicht isoliert. Nicht skippen — fixen.
 
 ### Bereits konvergiert
 
-- EventType: 5 Import-Pfade → 1 Python-Objekt (`A is B is C is D is E`)
-- Chamber: Bahiranga (Python) + Antaranga (RAM) = Dual-Layer
-- LexiconVectorCache: 8.5× schneller durch RAM-Precompute
-- PipelineCache: Eliminiert ~30 lazy imports pro `__call__()`
+- EventType: 5 Import-Pfade → 1 Python-Objekt (verifiziert: `A is B is C is D is E`)
+- Chamber: Bahiranga (Python) + Antaranga (16 KB RAM) dual-layer
+- LexiconVectorCache: 8.5× schneller (gemessen)
+- PipelineCache: ~30 lazy imports eliminiert pro `__call__()`
 
 ## Arbeitsweise
 
