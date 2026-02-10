@@ -18,6 +18,7 @@ ARJUNA PATTERN (Self-Healing):
 - If the Reactor crashes, it is reborn.
 - If a tick fails, the result is still delivered (FailureResult).
 """
+import atexit
 import logging
 import threading
 import queue
@@ -203,7 +204,31 @@ class ReactorLoop(threading.Thread):
                 # Re-init reactor if it seems dead
                 pass # Continue loop
 
-        logger.info("ReactorLoop: STOPPING")
+        self._running = False
+        logger.info("ReactorLoop: STOPPED")
+
+    def shutdown(self, timeout: float = 2.0) -> None:
+        """
+        Signal the loop to stop and wait for the thread to finish.
+        Drains pending mailbox tickets so callers don't hang.
+        """
+        if not self._stop_event.is_set():
+            logger.info("ReactorLoop: shutdown() called")
+            self._stop_event.set()
+        if self.is_alive():
+            self.join(timeout=timeout)
+        # Drain any pending tickets so collect() callers get an error
+        # instead of hanging forever
+        if self._mailbox:
+            with self._mailbox._lock:
+                for tid, event in list(self._mailbox._events.items()):
+                    if not event.is_set():
+                        self._mailbox._results[tid] = {
+                            "success": False,
+                            "error": "Reactor shutdown",
+                            "execution_result": None,
+                        }
+                        event.set()
 
     def _wire_bus(self):
         """
@@ -214,10 +239,13 @@ class ReactorLoop(threading.Thread):
             return
 
         try:
-            # 1. Self-Subscription (Closing the Loop)
-            self._bus.subscribe(self.on_completion, ["COMPLETED"])
+            # 1. Global Bridge Handler (Closing the Loop)
+            # Any event with task_id is a Bridge request → deposit result
+            self._bus.subscribe(self._on_bridge_event)
+            logger.info("ReactorLoop: Global bridge handler wired (Narada hears all)")
             
             # 2. Iterate the Mandala (16 Positions)
+            # Auto-wire modules that declare __listening_for__
             for pos in range(16):
                 try:
                     module = self._reactor._route_to_position(pos)
@@ -278,32 +306,22 @@ class ReactorLoop(threading.Thread):
         except Exception as e:
             logger.error(f"ReactorLoop: Failed to init EventBus: {e}")
 
-    def on_completion(self, event):
+    def _on_bridge_event(self, event):
         """
-        Handle COMPLETED events (Resonance Return).
-        Resolve Mailbox tickets if applicable.
+        Global Bridge Handler — closes the offer() → mailbox loop.
+        
+        Any event with a task_id is a Bridge request.
+        The routing (position/mahajana) already happened in offer().
+        We deposit success so the caller unblocks.
         """
         if not self._mailbox or not event.task_id:
             return
-            
-        # Extract result
-        # The Kapila protocol puts result in details["result"]
-        # Or generally in details
-        result_data = event.details
         
-        # We need to structure it as the Bridge expects:
-        # { "success": bool, "execution_result": ..., "error": ... }
-        # If the event implies success (it's COMPLETED), we assume success unless ERROR event (which we don't catch yet).
-        # Improving Protocol: catch ERROR events too?
-        
-        # For now, construct a success result
-        final_result = {
+        self._mailbox.deposit(event.task_id, {
             "success": True,
-            "execution_result": result_data.get("result"),
-            "error": None
-        }
-        
-        self._mailbox.deposit(event.task_id, final_result)
+            "execution_result": event.details,
+            "error": None,
+        })
 
     def _init_dojo(self):
         """Initialize the Dojo (Legacy Training Ground)."""
@@ -451,9 +469,23 @@ def get_loop() -> Tuple[ReactorLoop, MahaMailbox]:
     """Get or create the global reactor loop."""
     global _global_loop, _global_mailbox
     with _init_lock:
-        if not _global_loop:
+        if not _global_loop or not _global_loop.is_alive():
             _global_mailbox = MahaMailbox()
             _global_loop = ReactorLoop()
             _global_loop.attach_mailbox(_global_mailbox)
             _global_loop.start()
     return _global_loop, _global_mailbox
+
+
+def shutdown_loop(timeout: float = 2.0) -> None:
+    """Shutdown the global reactor loop. Safe to call multiple times."""
+    global _global_loop, _global_mailbox
+    with _init_lock:
+        if _global_loop is not None:
+            _global_loop.shutdown(timeout=timeout)
+            _global_loop = None
+            _global_mailbox = None
+
+
+# Ensure cleanup on interpreter exit
+atexit.register(shutdown_loop)
