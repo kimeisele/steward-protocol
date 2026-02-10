@@ -196,6 +196,8 @@ def offer(
     # Get lotus declaration for this position (includes genesis, quarter, etc)
     declaration = lotus_declaration(position)
     quarter = declaration["quarter_name"]
+    genesis = declaration.get("genesis", "")
+    word = declaration.get("word", "")
 
     # Parampara validation (using verify_parampara from seed, not manual % 37)
     if parampara_vector is not None:
@@ -283,6 +285,9 @@ def offer(
             error=error,
             execution_result=execution_result,
             intent_id=None,
+            actor=actor,
+            genesis=genesis,
+            word=word,
         )
 
     except TimeoutError:
