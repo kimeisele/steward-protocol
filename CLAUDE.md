@@ -426,6 +426,31 @@ Seed-Daten: `_QUARTER_NAMES`, `_QUARTER_SET`, `_GUARDIAN_SET`, `_GUARDIANS_BY_QU
 
 **Tests:** 4082 passed, 0 failures, 7 xfail, 25 skipped (identisch zur Baseline).
 
+### Venu Unification ✅ (Feb 10 2026)
+
+**Ziel:** VenuOrchestrator ist DIE einzige Quelle — `step()` wird genau einmal pro Tick aufgerufen.
+
+**Problem:** 3 unabhängige `step()`-Caller auf denselben Orchestrator:
+1. `VenuService.start()` — async heartbeat loop (drift-compensated, 250ms)
+2. `Singularity.tick()` — synchroner Modus (Tests, CLI, Daemon via `chant_quarter()`)
+3. `AudioEngine.stream()` — Audio-Synthese Loop
+
+**Lösung:**
+
+| Datei | Änderung | Effekt |
+|-------|----------|--------|
+| `governance/bridge.py` | `audit()` cached (`_audit_cache`) | rglob nur 1×, nicht pro Daemon-Cycle |
+| `kernel/singularity.py` | Guard: liest `_prev_state` wenn VenuService läuft | Kein doppelter `step()` |
+| `sound/audio_engine.py` | `stream()` liest `_prev_state` statt `step()` | Consumer, nicht Driver |
+
+**Architektur-Analyse:**
+- VenuService + Daemon laufen **nicht** gleichzeitig (Daemon nicht im boot_orchestrator)
+- Aber `Singularity.tick()` kann jederzeit aufgerufen werden → Guard nötig
+- Zwei Broadcast-Systeme: `Singularity._listeners` (TickState) + `VenuOrchestrator._subscribers` (DIWEvent)
+- `LotusBridge` ist ein Pflaster das die beiden verbindet — bleibt vorerst
+
+**Tests:** 4082 passed, 0 failures, 7 xfail, 25 skipped (identisch zur Baseline).
+
 ## Arbeitsweise
 
 - Senior Architekt. Entscheidungen treffen, nicht fragen.

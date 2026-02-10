@@ -110,18 +110,20 @@ class PranaSoundEngine:
             
         Yields:
             chunks of PCM bytes
+
+        GUARD: Reads the current DIW from the orchestrator's last state
+        instead of calling step(). The heartbeat is owned by VenuService
+        or Singularity.tick() — AudioEngine is a consumer, not a driver.
+        Falls back to step() only on cold start (no prev_state yet).
         """
+        orch = chamber._orchestrator
         while True:
-            # 1. Step Chamber (Process Logic)
-            # We treat the chamber as the sequencer.
-            # Ideally we would process a batch of cells, but here we just need the DIW.
-            # wait, chamber.dance() requires a cell.
-            # For pure sonification, we might just step the Orchestrator?
-            # NO! We want to hear the CHAMBER.
+            # Read current DIW — don't drive the orchestrator
+            if orch._prev_state:
+                diw = orch._prev_state
+            else:
+                diw = orch.step()
             
-            # We need to expose the current DIW from the orchestrator directly if we just want to listen.
-            diw = chamber._orchestrator.step()
-            
-            # 2. Synthesize Audio Frame (Audit)
+            # Synthesize Audio Frame
             audio_chunk = self.synthesize(diw, num_frames=1)
             yield audio_chunk
