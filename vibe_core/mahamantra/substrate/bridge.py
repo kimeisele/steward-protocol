@@ -125,6 +125,7 @@ def offer(
     purpose: str,
     actor: Optional[str] = None,
     parampara_vector: Optional[int] = None,
+    timeout: float = 10.0,
 ) -> OfferResult:
     """
     Offer content to the Mahamantra for routing and execution.
@@ -195,6 +196,8 @@ def offer(
     # Get lotus declaration for this position (includes genesis, quarter, etc)
     declaration = lotus_declaration(position)
     quarter = declaration["quarter_name"]
+    genesis = declaration.get("genesis", "")
+    word = declaration.get("word", "")
 
     # Parampara validation (using verify_parampara from seed, not manual % 37)
     if parampara_vector is not None:
@@ -255,7 +258,7 @@ def offer(
     
     # 4. Wait for Echo (Sync)
     try:
-        result_data = mailbox.collect(ticket, timeout=10.0) # 10s timeout
+        result_data = mailbox.collect(ticket, timeout=timeout)
         
         # 5. Unpack Result
         if not result_data["success"]:
@@ -282,6 +285,9 @@ def offer(
             error=error,
             execution_result=execution_result,
             intent_id=None,
+            actor=actor,
+            genesis=genesis,
+            word=word,
         )
 
     except TimeoutError:
