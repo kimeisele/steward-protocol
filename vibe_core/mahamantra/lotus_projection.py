@@ -190,10 +190,9 @@ def project_lotus(kernel: "RealVibeKernel") -> PositionRegistry:
 
     FOLDER = EXISTENCE = WIRED = GRAVITY.
 
-    This is the MISSING PIECE that connects:
-        - LotusNode (folder discovery)
-        - auto_wire (kernel injection)
-        - PositionRegistry (gravity routing)
+    SEED-BASED: Iterates ALL_GUARDIANS directly (O(1) lookup).
+    No LotusNode, no filesystem, no _walk().
+    Module loading via importlib (cached by Python).
 
     Called from kernel.bootstrap() - ONE LINE integration:
         self._positions = project_lotus(self)
@@ -205,76 +204,54 @@ def project_lotus(kernel: "RealVibeKernel") -> PositionRegistry:
         PositionRegistry with all discovered+instantiated+wired guardians
     """
     from vibe_core.vajra.auto_wire import auto_wire
+    from vibe_core.mahamantra.substrate.seed import (
+        ALL_GUARDIANS, QUARTER_NAMES, WORDS_PER_QUARTER,
+    )
 
     registry = PositionRegistry()
-    root = LotusNode()
-
-    # SSOT: Derive quarters from POSITION_BY_FOLDER (wiring.py)
-    # FOLDER = EXISTENCE = WIRED
-    from vibe_core.mahamantra.substrate.wiring import POSITION_BY_FOLDER
-
-    quarters = sorted(set(folder.split("/")[0] for folder in POSITION_BY_FOLDER.keys()))
-
     projected_count = 0
     wired_count = 0
 
-    for quarter_name in quarters:
+    for position, guardian in enumerate(ALL_GUARDIANS):
+        quarter_name = QUARTER_NAMES[position // WORDS_PER_QUARTER]
+
+        # Try to load the module for metadata verification
+        module_path = f"vibe_core.mahamantra.{quarter_name}.{guardian}"
         try:
-            quarter_node = getattr(root, quarter_name, None)
-        except AttributeError:
+            module = importlib.import_module(module_path)
+        except ImportError:
+            logger.debug(f"🪷 No module for {guardian} at {module_path}")
             continue
 
-        if quarter_node is None or not isinstance(quarter_node, LotusNode):
+        declared_position, declared_mahajana = _get_module_metadata(module)
+
+        # Use declared position if available, otherwise use Seed position
+        effective_position = declared_position if declared_position is not None else position
+
+        # Check if already projected (avoid duplicates)
+        if effective_position in registry:
             continue
 
-        # Walk mahajanas in this quarter
-        for item in quarter_node._walk(depth=1):
-            path, node = item
+        # Use declared mahajana name if available, otherwise use Seed name
+        effective_guardian = declared_mahajana or guardian
 
-            # Skip the quarter itself (depth 1)
-            if path.depth < 2:
-                continue
+        # Instantiate the service
+        instance = _instantiate_guardian(effective_guardian, quarter_name)
 
-            # Get the mahajana name from path
-            if len(path.segments) < 2:
-                continue
-            mahajana_name = path.segments[1]
-
-            # Get the module to extract position
-            module = node._get_module()
-            if module is None:
-                continue
-
-            position, declared_mahajana = _get_module_metadata(module)
-
-            # Skip if no position declared
-            if position is None:
-                continue
-
-            # Use declared mahajana name if available, otherwise use folder name
-            guardian = declared_mahajana or mahajana_name
-
-            # Check if already projected (avoid duplicates)
-            if position in registry:
-                continue
-
-            # Instantiate the service
-            instance = _instantiate_guardian(guardian, quarter_name)
-
-            if instance is None:
-                # No service, but we can still register the module itself
-                # This allows position-based access to the module's exports
-                registry.register(position, guardian, module)
-                projected_count += 1
-                continue
-
-            # Wire to kernel
-            if auto_wire(kernel, instance):
-                wired_count += 1
-
-            # Register in position registry
-            registry.register(position, guardian, instance)
+        if instance is None:
+            # No service, but we can still register the module itself
+            # This allows position-based access to the module's exports
+            registry.register(effective_position, effective_guardian, module)
             projected_count += 1
+            continue
+
+        # Wire to kernel
+        if auto_wire(kernel, instance):
+            wired_count += 1
+
+        # Register in position registry
+        registry.register(effective_position, effective_guardian, instance)
+        projected_count += 1
 
     logger.info(f"🪷 LOTUS PROJECTION complete: {projected_count} projected, {wired_count} wired to kernel")
 
