@@ -7,17 +7,17 @@ LOTUS BRIDGE - Connecting MahamantraLotus to VenuService
 — Bhagavad Gita 15.15
 
 PROBLEM:
-    MahamantraLotus.tick() uses time.time() % 16 — wall clock.
-    VenuService uses monotonic time with drift compensation.
-    BalaramaProxy gated listeners depend on Lotus tick().
-    These are TWO INDEPENDENT heartbeats.
+    VenuService calls orchestrator.step() — bit-level heartbeat.
+    Singularity._listeners (Nrisimha, MahaCompute, DriftAuditor, Proxy)
+    need semantic-level TickState broadcasts via tick().
 
 SOLUTION:
-    LotusBridgeSubscriber is a BeatSubscriberProtocol that fires
-    every tick (interval=1) and calls MahamantraLotus._broadcast()
-    with the VenuService-derived position. This unifies the heartbeats.
+    LotusBridgeSubscriber fires every VenuService tick and calls
+    lotus.tick(). The _owned guard on VenuOrchestrator prevents
+    double-stepping — tick() reads _prev_state instead of calling step().
+    Kala advances correctly, full TickState is broadcast to all listeners.
 
-    The Lotus listeners now dance to Krishna's flute, not the wall clock.
+    One flute, one dance. No manual state construction.
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -27,23 +27,19 @@ __genesis__ = "0x4b8e2d5a"
 
 import logging
 
-from vibe_core.mahamantra.protocols._seed import WORDS
-
 logger = logging.getLogger("LOTUS.BRIDGE")
 
 
 class LotusBridgeSubscriber:
     """
-    Bridges VenuService heartbeat → MahamantraLotus listeners.
+    Bridges VenuService heartbeat → Singularity._listeners.
 
-    Fires every tick (250ms). On each tick, constructs the tick state
-    that MahamantraLotus would produce and broadcasts it to all
-    registered Lotus listeners.
+    Fires every tick (250ms). Calls lotus.tick() which:
+    - Advances Kala (time) — correct, VenuService IS the heartbeat
+    - Reads _prev_state via _owned guard (no double step())
+    - Broadcasts full TickState to all Singularity._listeners
 
-    This means BalaramaProxy gated listeners now fire on VenuService
-    timing instead of wall-clock timing. One drummer, one dance.
-
-    Beat interval: 1 tick (every 250ms) — must be in sync with VenuService.
+    Beat interval: 1 tick (every 250ms) — in sync with VenuService.
     """
 
     def __init__(self) -> None:
@@ -56,7 +52,7 @@ class LotusBridgeSubscriber:
 
     @property
     def beat_interval(self) -> int:
-        return 1  # Every tick — Lotus needs position-level granularity
+        return 1  # Every tick — listeners need position-level granularity
 
     def _get_lotus(self):
         """Lazy access to MahamantraLotus singleton."""
@@ -71,47 +67,23 @@ class LotusBridgeSubscriber:
     def on_beat_tick(self, tick_count: int, position: int) -> None:
         """Called by VenuService every tick.
 
-        Constructs the Lotus tick state from VenuService position
-        and broadcasts to all Lotus listeners. This replaces the
-        wall-clock-based tick() with VenuService-driven timing.
+        Delegates to lotus.tick() which advances Kala and broadcasts
+        the full TickState to all Singularity._listeners. The _owned
+        guard ensures step() is not called again — just reads _prev_state.
         """
         lotus = self._get_lotus()
         if lotus is None:
             return
 
-        # Only broadcast if Lotus has listeners
-        listeners = getattr(lotus, '_listeners', [])
-        if not listeners:
-            return
-
-        # Construct tick state matching MahamantraLotus.tick() format
         try:
-            from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
-            from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, get_quarter_name
-
-            pos = position % WORDS
-            guardian = ALL_GUARDIANS[pos]
-            word, opcode = MAHAMANTRA_SEQUENCE[pos]
-
-            state = {
-                "quarter": get_quarter_name(pos),
-                "guardian": guardian,
-                "word": word,
-                "opcode": opcode.name,
-                "position": pos,
-                "tick": tick_count,
-            }
-
-            # Use Lotus's own broadcast mechanism
-            lotus._broadcast(state)
+            lotus.tick()
             self._broadcast_count += 1
-
         except Exception as e:
-            logger.debug("Lotus bridge broadcast failed: %s", e)
+            logger.debug("Lotus bridge tick failed: %s", e)
 
     @property
     def broadcast_count(self) -> int:
-        """Total broadcasts sent to Lotus listeners."""
+        """Total ticks bridged from VenuService to listeners."""
         return self._broadcast_count
 
 
