@@ -406,25 +406,25 @@ Jeder einzelne muss geprüft werden: Ist der Test falsch, oder ist der Code nie 
 **Diagnose-Reihenfolge:** Erst verstehen was der Test WILL, dann prüfen ob der Code das KANN,
 dann entscheiden ob Test oder Code angepasst wird. Niemals Test löschen um grün zu werden.
 
-### LotusNode Filesystem-Audit (Feb 10 2026)
+### LotusNode Seed-Migration ✅ (Feb 10 2026)
 
-`lotus_types.py` hat **7 Methoden die das Filesystem anfassen**. Alle sind durch Seed-Lookups ersetzbar:
+`lotus_types.py` — **5 Methoden von FS auf Seed-first migriert**, `lotus_projection.py` komplett Seed-basiert.
 
-| Methode | Filesystem-Ops | Seed-Alternative (existiert bereits) |
-|---------|---------------|--------------------------------------|
-| `_discover()` | `Path.exists()` ×3, `Path.is_dir()` | `wiring.POSITION_BY_NAME` / `POSITION_BY_FOLDER` — O(1) |
-| `__dir__()` | `Path.iterdir()`, `Path.is_dir()` | `seed.QUARTER_NAMES` + `POSITION_BY_FOLDER` keys |
-| `_dir_full()` | `Path.iterdir()`, `Path.is_dir()` | `POSITION_BY_FOLDER` keys pro Quarter |
-| `_get_module()` | `importlib.import_module()` | Nötig, aber einmal cachen (wie PipelineCache) |
-| `_walk()` | `Path.iterdir()`, `Path.is_dir()` | `POSITION_BY_FOLDER` iteration |
-| `_awaken_and_execute()` | `importlib` ×4 Pfade! | `ShadowReactor._route_to_position()` (2 Pfade, cached) |
-| `resonate()` depth=1 | via `_dir_full()` | ✅ BEREITS GEFIXT (Seed-based für root) |
+| Methode | Vorher | Nachher | Speedup |
+|---------|--------|---------|---------|
+| `_discover()` | `Path.exists()` ×3 (146 µs) | Seed O(1), FS-Fallback nur non-Lotus (3.3 µs) | **44×** |
+| `__dir__()` | `Path.iterdir()` komplett | Seed-first + FS für non-Lotus | — |
+| `_dir_full()` | `Path.iterdir()` komplett | Seed-first + FS für non-Lotus | — |
+| `_walk()` | `Path.iterdir()` rekursiv | Seed: `_QUARTER_NAMES` / `_GUARDIANS_BY_QUARTER` | **∞** (kein FS) |
+| `resonate()` | `_dir_full()` bei depth=1 | Seed für root + quarter | **0.7 ms/call** |
+| `project_lotus()` | `LotusNode._walk()` + FS | `ALL_GUARDIANS` direkt, kein LotusNode | **kein FS** |
+| `_get_module()` | `importlib` | Bleibt (nötig, Python-cached) | — |
+| `_awaken_and_execute()` | `importlib` ×4 | Bleibt (Leaf-Level, selten) | — |
 
-**Consumer:** Nur 3 echte: `lotus_core.py` (erbt LotusNode), `lotus_projection.py` (Discovery), `__init__.py` (Export).
+**Architektur:** Lazy-loaded Seed-Cache (`_ensure_seed()`) bricht Circular Imports.
+Seed-Daten: `_QUARTER_NAMES`, `_QUARTER_SET`, `_GUARDIAN_SET`, `_GUARDIANS_BY_QUARTER`.
 
-**Ziel:** LotusNode projiziert aus Seed, nicht aus Filesystem. Infrastruktur existiert:
-Antaranga (16KB RAM), PipelineCache (vorberechnete LUTs), `wiring.py` (O(1) Lookups).
-Die Frage ist nicht OB, sondern WIE verdrahten — und in welcher Reihenfolge.
+**Tests:** 4082 passed, 0 failures, 7 xfail, 25 skipped (identisch zur Baseline).
 
 ## Arbeitsweise
 
