@@ -304,8 +304,16 @@ class LotusNode:
 
         # We only walk children if we are root or quarter level
         if self._path.depth < 2:
-            for child_name in self._dir_full():
-                # Avoid infinite recursion and non-folder attributes
+            # SEED-BASED ROUTING: At root, only walk the 4 Quarters (from Seed).
+            # NOT the entire filesystem (research/, protocols/, cli/ etc are not Quarters).
+            # At quarter level (depth 1), use _dir_full() for mahajana discovery.
+            if self._path.is_root:
+                from vibe_core.mahamantra.substrate.seed import QUARTER_NAMES
+                children = list(QUARTER_NAMES)
+            else:
+                children = self._dir_full()
+
+            for child_name in children:
                 if child_name.startswith("_") or child_name == "mod" or child_name == "shadow":
                     continue
                 try:

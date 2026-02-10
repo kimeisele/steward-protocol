@@ -317,7 +317,7 @@ Nur diese Branches haben echten Wert:
 
 | Branch | Status | Inhalt |
 |--------|--------|--------|
-| `main` | Stabil | Antaranga RAM Chamber + LexiconVectorCache + F811/F821 clean |
+| `main` | Stabil | Antaranga RAM Chamber + LexiconVectorCache + F811/F821 clean + Reactor Lifecycle + Event-Routing + Lotus Seed-Routing |
 | `feature/lotus-pipeline-cache` | PR-ready | PipelineCache Singleton — seed-unabhängige Lookups vorberechnet |
 | `perf/lotus-call-hotpath` | PR-ready | MahaModularSynth Singleton — eliminiert Objekt-Allokation pro __call__ |
 | `fix/igene-fatal-comparison` | PR-ready | iGene.is_fatal: float(0-1) vs int(0-21600) Normalisierung |
@@ -326,11 +326,42 @@ Nur diese Branches haben echten Wert:
 | `feature/antaranga-ram-chamber` | Gemergt | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
 | `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
+| `fix/reactor-lifecycle` | PR-ready | ReactorLoop shutdown + offer() Event-Routing + Lotus Seed-based resonate() |
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
 
-## Architektur (verifiziert aus Code, Feb 9 2026)
+## Lotus: Seed ist Wahrheit, Filesystem ist Maya
+
+`resonate()` in `lotus_types.py` crawlte das GESAMTE Filesystem (25+ Subdirectories, rekursiv).
+Fix: Root-Level nur die 4 Quarters aus `QUARTER_NAMES` (Seed) durchlaufen.
+86s Timeout → 1.7s. Das ist das Paradigma: **Seed projiziert, Filesystem reflektiert.**
+
+Aber `_dir_full()` und `__dir__()` crawlen immer noch das Filesystem für JEDE Ebene.
+Das ist der nächste Schritt: Lotus sollte aus dem Seed projizieren, nicht das Filesystem fragen.
+Idealerweise: Seed → Cache/RAM → O(1) Lookup. Kein `Path.iterdir()`, kein `importlib`.
+Die Infrastruktur existiert bereits: Antaranga (16KB RAM), Chamber, PipelineCache.
+Die Frage ist nur: wie verdrahten?
+
+## Reactor Lifecycle + Event-Routing (Feb 10 2026)
+
+`ReactorLoop` war ein Zombie-Thread ohne shutdown(). `offer()` hing ewig.
+
+Fix (3 Teile):
+1. `ReactorLoop.shutdown()` + `shutdown_loop()` + `atexit` — Thread-Lifecycle
+2. `offer(timeout=)` — konfigurierbar statt hardcoded 10s
+3. `ReactorLoop._on_bridge_event()` — globaler EventBus-Subscriber, schließt den Loop
+
+```
+offer() → PURPOSE_MAP → position/mahajana (Seed-Routing, kein Reactor)
+       → EventBus.emit_sync(task_id=ticket)
+       → _on_bridge_event() → mailbox.deposit(success)
+       → mailbox.collect(ticket) → OfferResult
+```
+
+18 xfail-Tests → alle grün. 56 Bridge-Tests in 3.5s.
+
+## Architektur (verifiziert aus Code, Feb 10 2026)
 
 ### Der Flow in `lotus_core.__call__()` (auf `main`)
 
@@ -354,11 +385,46 @@ Dateien: `lotus_core.py:402-733`, `chamber.py:219-306` (dance), `antaranga.py` (
 | I/O im Hot Path | Zero | `importlib`, `governance.audit()` (FS-scan) |
 | State-Format | `snapshot() → bytes` (binary) | JSON auf Disk |
 
-### Test-Suite (verifiziert Feb 9 2026)
+### Test-Suite (verifiziert Feb 10 2026)
 
-Alle `tests/mahamantra/` Tests laufen durch — kein Hang.
-Langsame Tests: `test_daemon.py` ~66s, `test_daemon_soul.py` ~104s.
-Es gibt pre-existing Failures, aber die Suite blockiert nicht.
+**4073 passed, 10 pre-existing failures, 25 skipped, ~267s.**
+Kein Hang, kein Timeout, kein xfail.
+
+**VORSICHT bei den 10 Failures — NICHT blind fixen oder löschen!**
+Jeder einzelne muss geprüft werden: Ist der Test falsch, oder ist der Code nie verdrahtet worden?
+"Dead Code" in dieser Codebase heißt oft "nie gewired" — das Potential ist da, die Verbindung fehlt.
+
+**Audit-Ergebnis (Feb 10 2026): Alle 10 sind "Test veraltet", nicht "Code kaputt".**
+
+| Kategorie | Tests | Root Cause (verifiziert) | Fix |
+|-----------|-------|-------------------------|-----|
+| Orchestrator LUT (5) | `test_lut_*`, `test_step_returns_delta`, `test_cycle_returns_correct_xor` | Tests benutzen altes DIW-Format `[Name:2][Position:16]` (`diw >> 16`, `diw & 0xFFFF`). DIW wurde auf `[MURALI:4][VAMSI:9][VENU:6]` refactored. LUT ist korrekt, Tests nie aktualisiert. | Tests auf `diw.unpack()` umschreiben |
+| Lotus Attribute (2) | `test_attractor_fixed_accessible`, `test_attractor_cycle_accessible` | `ATTRACTOR_FIXED` lebt in `protocols/_maha_compute.py`, nicht im Filesystem. `LotusNode.__getattr__` sucht Folder/Module, findet keine Konstanten. | Konstanten über `__init__.py` oder Property exponieren |
+| Shabda (1) | `test_shabda_signature_structure` | Test erwartet `sthana` Key, Code liefert `element`. Pancha-Walk Rename (`sthana` → `element`) nie in Test nachgezogen. | Test: `sthana` → `element` |
+| Types (2) | `test_tick_state_keys`, `test_all_types_exported` | `TickState` wurde erweitert (13 Keys statt 6, `total=False`). `_types.py` wurde nach `seed/types.py` verschoben. Tests nie aktualisiert. | Tests an neue Struktur anpassen |
+
+**Diagnose-Reihenfolge:** Erst verstehen was der Test WILL, dann prüfen ob der Code das KANN,
+dann entscheiden ob Test oder Code angepasst wird. Niemals Test löschen um grün zu werden.
+
+### LotusNode Filesystem-Audit (Feb 10 2026)
+
+`lotus_types.py` hat **7 Methoden die das Filesystem anfassen**. Alle sind durch Seed-Lookups ersetzbar:
+
+| Methode | Filesystem-Ops | Seed-Alternative (existiert bereits) |
+|---------|---------------|--------------------------------------|
+| `_discover()` | `Path.exists()` ×3, `Path.is_dir()` | `wiring.POSITION_BY_NAME` / `POSITION_BY_FOLDER` — O(1) |
+| `__dir__()` | `Path.iterdir()`, `Path.is_dir()` | `seed.QUARTER_NAMES` + `POSITION_BY_FOLDER` keys |
+| `_dir_full()` | `Path.iterdir()`, `Path.is_dir()` | `POSITION_BY_FOLDER` keys pro Quarter |
+| `_get_module()` | `importlib.import_module()` | Nötig, aber einmal cachen (wie PipelineCache) |
+| `_walk()` | `Path.iterdir()`, `Path.is_dir()` | `POSITION_BY_FOLDER` iteration |
+| `_awaken_and_execute()` | `importlib` ×4 Pfade! | `ShadowReactor._route_to_position()` (2 Pfade, cached) |
+| `resonate()` depth=1 | via `_dir_full()` | ✅ BEREITS GEFIXT (Seed-based für root) |
+
+**Consumer:** Nur 3 echte: `lotus_core.py` (erbt LotusNode), `lotus_projection.py` (Discovery), `__init__.py` (Export).
+
+**Ziel:** LotusNode projiziert aus Seed, nicht aus Filesystem. Infrastruktur existiert:
+Antaranga (16KB RAM), PipelineCache (vorberechnete LUTs), `wiring.py` (O(1) Lookups).
+Die Frage ist nicht OB, sondern WIE verdrahten — und in welcher Reihenfolge.
 
 ## Arbeitsweise
 
