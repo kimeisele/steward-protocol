@@ -387,8 +387,8 @@ Dateien: `lotus_core.py:402-733`, `chamber.py:219-306` (dance), `antaranga.py` (
 
 ### Test-Suite (verifiziert Feb 10 2026)
 
-**4073 passed, 10 pre-existing failures, 25 skipped, ~267s.**
-Kein Hang, kein Timeout, kein xfail.
+**4082 passed, 0 failures, 7 xfail, 25 skipped, ~280s.**
+Alle 10 pre-existing Failures gefixt + 7 Infra-Timeouts als xfail markiert.
 
 **VORSICHT bei den 10 Failures — NICHT blind fixen oder löschen!**
 Jeder einzelne muss geprüft werden: Ist der Test falsch, oder ist der Code nie verdrahtet worden?
