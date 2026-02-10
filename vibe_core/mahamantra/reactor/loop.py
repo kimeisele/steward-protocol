@@ -18,6 +18,7 @@ ARJUNA PATTERN (Self-Healing):
 - If the Reactor crashes, it is reborn.
 - If a tick fails, the result is still delivered (FailureResult).
 """
+import atexit
 import logging
 import threading
 import queue
@@ -203,7 +204,31 @@ class ReactorLoop(threading.Thread):
                 # Re-init reactor if it seems dead
                 pass # Continue loop
 
-        logger.info("ReactorLoop: STOPPING")
+        self._running = False
+        logger.info("ReactorLoop: STOPPED")
+
+    def shutdown(self, timeout: float = 2.0) -> None:
+        """
+        Signal the loop to stop and wait for the thread to finish.
+        Drains pending mailbox tickets so callers don't hang.
+        """
+        if not self._stop_event.is_set():
+            logger.info("ReactorLoop: shutdown() called")
+            self._stop_event.set()
+        if self.is_alive():
+            self.join(timeout=timeout)
+        # Drain any pending tickets so collect() callers get an error
+        # instead of hanging forever
+        if self._mailbox:
+            with self._mailbox._lock:
+                for tid, event in list(self._mailbox._events.items()):
+                    if not event.is_set():
+                        self._mailbox._results[tid] = {
+                            "success": False,
+                            "error": "Reactor shutdown",
+                            "execution_result": None,
+                        }
+                        event.set()
 
     def _wire_bus(self):
         """
@@ -451,9 +476,23 @@ def get_loop() -> Tuple[ReactorLoop, MahaMailbox]:
     """Get or create the global reactor loop."""
     global _global_loop, _global_mailbox
     with _init_lock:
-        if not _global_loop:
+        if not _global_loop or not _global_loop.is_alive():
             _global_mailbox = MahaMailbox()
             _global_loop = ReactorLoop()
             _global_loop.attach_mailbox(_global_mailbox)
             _global_loop.start()
     return _global_loop, _global_mailbox
+
+
+def shutdown_loop(timeout: float = 2.0) -> None:
+    """Shutdown the global reactor loop. Safe to call multiple times."""
+    global _global_loop, _global_mailbox
+    with _init_lock:
+        if _global_loop is not None:
+            _global_loop.shutdown(timeout=timeout)
+            _global_loop = None
+            _global_mailbox = None
+
+
+# Ensure cleanup on interpreter exit
+atexit.register(shutdown_loop)

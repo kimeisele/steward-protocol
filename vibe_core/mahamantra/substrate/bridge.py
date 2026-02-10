@@ -125,6 +125,7 @@ def offer(
     purpose: str,
     actor: Optional[str] = None,
     parampara_vector: Optional[int] = None,
+    timeout: float = 10.0,
 ) -> OfferResult:
     """
     Offer content to the Mahamantra for routing and execution.
@@ -255,7 +256,7 @@ def offer(
     
     # 4. Wait for Echo (Sync)
     try:
-        result_data = mailbox.collect(ticket, timeout=10.0) # 10s timeout
+        result_data = mailbox.collect(ticket, timeout=timeout)
         
         # 5. Unpack Result
         if not result_data["success"]:
