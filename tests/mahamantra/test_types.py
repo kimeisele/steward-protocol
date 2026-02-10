@@ -27,10 +27,14 @@ class TestTickState:
     """Test TickState TypedDict."""
 
     def test_tick_state_keys(self):
-        """TickState has correct keys."""
+        """TickState has correct keys (total=False, core + extended)."""
         hints = get_type_hints(TickState)
-        expected_keys = {"tick", "position", "quarter", "guardian", "word", "opcode"}
-        assert set(hints.keys()) == expected_keys
+        # Core fields
+        core_keys = {"tick", "position", "quarter", "word", "guardian", "opcode"}
+        assert core_keys.issubset(hints.keys()), f"Missing core keys: {core_keys - hints.keys()}"
+        # Extended fields (KALA, Venu-specific)
+        extended_keys = {"mala", "mantra", "lila", "diw", "cycle", "prana", "is_downbeat", "is_mala_complete"}
+        assert extended_keys.issubset(hints.keys()), f"Missing extended keys: {extended_keys - hints.keys()}"
 
     def test_tick_state_can_be_created(self):
         """TickState can be instantiated."""
@@ -220,9 +224,9 @@ class TestTypeExports:
     """Test module exports."""
 
     def test_all_types_exported(self):
-        """All types are in __all__."""
-        from vibe_core.mahamantra import _types
-        assert "TickState" in _types.__all__
-        assert "RouteResult" in _types.__all__
-        assert "ExecuteResult" in _types.__all__
-        assert "LilaState" in _types.__all__
+        """All types are in __all__ (moved from _types to seed/types)."""
+        from vibe_core.mahamantra.seed import types as seed_types
+        assert "TickState" in seed_types.__all__
+        assert "RouteResult" in seed_types.__all__
+        assert "ExecuteResult" in seed_types.__all__
+        assert "LilaState" in seed_types.__all__
