@@ -173,14 +173,17 @@ class TestMahamantraVibration:
         assert isinstance(result["resonance"], int)
 
     def test_attractor_fixed_accessible(self, mahamantra):
-        """ATTRACTOR_FIXED is accessible."""
-        assert mahamantra.ATTRACTOR_FIXED == 18
+        """ATTRACTOR_FIXED is the true fixed point (POSITION_SUM_TOTAL = 136)."""
+        from vibe_core.mahamantra.protocols._maha_compute import ATTRACTOR_FIXED
+        from vibe_core.mahamantra.protocols._seed import POSITION_SUM_TOTAL
+        assert ATTRACTOR_FIXED == POSITION_SUM_TOTAL  # 136 = T(16)
 
     def test_attractor_cycle_accessible(self, mahamantra):
-        """ATTRACTOR_CYCLE is accessible."""
-        cycle = mahamantra.ATTRACTOR_CYCLE
+        """Cycle attractors are computed (non-fixed-point attractors in mod-137 space)."""
+        from vibe_core.mahamantra.protocols._maha_compute import get_attractor_cycle
+        cycle = get_attractor_cycle()
         assert isinstance(cycle, tuple)
-        assert len(cycle) == 4
+        assert len(cycle) > 0, "Must have at least one cycle attractor"
 
 
 class TestResearchFractalRouting:

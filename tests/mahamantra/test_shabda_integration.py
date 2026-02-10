@@ -30,7 +30,7 @@ def test_shabda_signature_structure():
 
     sig = result["vibration"]["signature"]
     assert "varga" in sig
-    assert "sthana" in sig
+    assert "element" in sig
     assert "frequency" in sig
 
 

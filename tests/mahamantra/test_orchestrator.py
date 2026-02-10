@@ -18,6 +18,7 @@ from vibe_core.mahamantra.substrate.venu_orchestrator import (
     SUNYA_MASK,
     VenuOrchestrator,
 )
+from vibe_core.mahamantra.protocols.diw import unpack
 from vibe_core.mahamantra.protocols._seed import (
     WORDS,
     HARE_COUNT,
@@ -45,45 +46,45 @@ class TestTheFlueCycleLUT:
         """LUT must have exactly WORDS (16) entries."""
         assert len(THE_FLUTE_CYCLE) == WORDS
     
-    def test_lut_position_bits_all_touched(self) -> None:
-        """XOR of all position bits = 0xFFFF (all 16 bits touched once)."""
-        xor_result = 0
-        for diw in THE_FLUTE_CYCLE:
-            xor_result ^= (diw & 0xFFFF)
-        
-        expected = (1 << WORDS) - 1  # 0xFFFF
-        assert xor_result == expected, f"Expected {hex(expected)}, got {hex(xor_result)}"
+    def test_lut_venu_all_unique(self) -> None:
+        """All WORDS (16) VENU values are unique (every position has distinct quality)."""
+        venu_vals = [unpack(diw).venu for diw in THE_FLUTE_CYCLE]
+        assert len(set(venu_vals)) == WORDS, f"Expected {WORDS} unique VENU, got {len(set(venu_vals))}"
     
     def test_lut_name_counts(self) -> None:
-        """LUT must have correct name counts (8H, 4K, 4R)."""
-        hare_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 0)
-        krishna_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 1)
-        rama_count = sum(1 for diw in THE_FLUTE_CYCLE if (diw >> 16) == 2)
+        """LUT must have correct name counts via VAMSI regions (8H, 4K, 4R)."""
+        vamsi_stride = (1 << VAMSI_HOLES) // 3  # 170
+        hare_count = sum(1 for diw in THE_FLUTE_CYCLE if min(unpack(diw).vamsi // vamsi_stride, 2) == 0)
+        krishna_count = sum(1 for diw in THE_FLUTE_CYCLE if min(unpack(diw).vamsi // vamsi_stride, 2) == 1)
+        rama_count = sum(1 for diw in THE_FLUTE_CYCLE if min(unpack(diw).vamsi // vamsi_stride, 2) == 2)
         
         assert hare_count == HARE_COUNT
         assert krishna_count == KRISHNA_COUNT
         assert rama_count == RAMA_COUNT
     
     def test_lut_matches_mahamantra_pattern(self) -> None:
-        """LUT must reflect MAHAMANTRA_WORD_PATTERN exactly."""
+        """LUT MURALI encodes quarters, VAMSI region encodes name."""
         name_to_encoding = {
             MAHAMANTRA_NAME_HARE: 0,
             MAHAMANTRA_NAME_KRISHNA: 1,
             MAHAMANTRA_NAME_RAMA: 2,
         }
+        vamsi_stride = (1 << VAMSI_HOLES) // 3  # 170
+        quarter_size = WORDS // 4  # 4
         
         for pos, name in enumerate(MAHAMANTRA_WORD_PATTERN):
-            diw = THE_FLUTE_CYCLE[pos]
+            parts = unpack(THE_FLUTE_CYCLE[pos])
             
-            # Check position bit
-            position_bit = 1 << pos
-            assert diw & position_bit, f"Position {pos} bit not set"
+            # MURALI encodes quarter (0-3)
+            expected_quarter = pos // quarter_size
+            assert parts.murali == expected_quarter, \
+                f"Position {pos}: MURALI={parts.murali}, expected quarter {expected_quarter}"
             
-            # Check name encoding
-            encoding = diw >> 16
+            # VAMSI region encodes name (H=0, K=1, R=2)
+            region = min(parts.vamsi // vamsi_stride, 2)
             expected_encoding = name_to_encoding[name]
-            assert encoding == expected_encoding, \
-                f"Position {pos}: expected {name}={expected_encoding}, got {encoding}"
+            assert region == expected_encoding, \
+                f"Position {pos}: expected {name}={expected_encoding}, got region {region}"
 
 
 class TestMaskConstants:
@@ -134,28 +135,35 @@ class TestStep:
         orch.step()
         assert orch.tick == 0
     
-    def test_step_returns_delta(self) -> None:
-        """Step returns XOR delta between states."""
+    def test_step_returns_native_diw(self) -> None:
+        """Step returns the native 19-bit DIW for the current tick."""
         orch = VenuOrchestrator()
         
-        # First step: delta = 0 XOR first_entry
-        delta1 = orch.step()
-        assert delta1 == THE_FLUTE_CYCLE[0]
+        # First step: returns CYCLE[0]
+        diw1 = orch.step()
+        assert diw1 == THE_FLUTE_CYCLE[0]
         
-        # Second step: delta = first_entry XOR second_entry
-        delta2 = orch.step()
-        assert delta2 == THE_FLUTE_CYCLE[0] ^ THE_FLUTE_CYCLE[1]
+        # Second step: returns CYCLE[1] (not XOR delta)
+        diw2 = orch.step()
+        assert diw2 == THE_FLUTE_CYCLE[1]
 
 
 class TestCycle:
     """Test cycle() method - full 16-step cycle."""
     
     def test_cycle_returns_correct_xor(self) -> None:
-        """Full cycle XOR of positions = 0xFFFF."""
+        """Full cycle XOR of all 19-bit DIWs is non-zero and fits in 19 bits."""
         orch = VenuOrchestrator()
         result = orch.cycle()
         
-        expected = (1 << WORDS) - 1  # 0xFFFF
+        # XOR of 16 native DIWs — must be non-zero (flute is not silent)
+        assert result != 0, "Cycle XOR is zero — the flute is silent"
+        assert result <= DIW_MASK, f"Cycle XOR {hex(result)} exceeds 19-bit DIW"
+        
+        # Verify independently
+        expected = 0
+        for diw in THE_FLUTE_CYCLE:
+            expected ^= diw & DIW_MASK
         assert result == expected
     
     def test_cycle_advances_16_ticks(self) -> None:

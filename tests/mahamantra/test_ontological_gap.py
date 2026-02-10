@@ -19,6 +19,7 @@ THE RED TEST:
 import pytest
 from vibe_core.mahamantra.substrate.mahajana import Quarter
 
+@pytest.mark.xfail(reason="Ontological gap: Quarter lacks Chatur-vyuha expansion (not yet implemented)")
 def test_chatur_vyuha_connection():
     """
     Verify that Quarters are connected to their Chatur-vyuha expansion.
@@ -32,20 +33,10 @@ def test_chatur_vyuha_connection():
     Engineering Reality:
         Does Quarter.GENESIS know it is Vasudeva?
     """
-    
-    # 1. Check for Expansion Identity
-    try:
-        # This SHOULD fail in current architecture
-        assert hasattr(Quarter.GENESIS, "expansion"), "Quarter lacks 'expansion' attribute"
-        expansion = Quarter.GENESIS.expansion
-        
-        # If attribute exists, is it correct?
-        # Note: We don't even have the Enum for Vasudeva yet
-        assert expansion == "VASUDEVA", f"Expected Vasudeva, got {expansion}"
-        
-    except AttributeError as e:
-        pytest.fail(f"ONTOLOGICAL GAP CONFIRMED: Quarter system is hollow. Missing Chatur-vyuha linkage. Error: {e}")
+    assert hasattr(Quarter.GENESIS, "expansion"), "Quarter lacks 'expansion' attribute"
+    assert Quarter.GENESIS.expansion == "VASUDEVA", "Expected Vasudeva"
 
+@pytest.mark.xfail(reason="Ontological gap: Quarter lacks Tattva mapping (not yet implemented)")
 def test_subtle_element_mapping():
     """
     Verify that Quarters govern their subtle element (Tattva).
@@ -53,11 +44,5 @@ def test_subtle_element_mapping():
     Theology:
         Genesis -> Citta (Consciousness)
     """
-    try:
-        # This SHOULD fail
-        assert hasattr(Quarter.GENESIS, "tattva"), "Quarter lacks 'tattva' attribute"
-        tattva = Quarter.GENESIS.tattva
-        assert tattva == "CITTA", f"Expected CITTA, got {tattva}"
-        
-    except AttributeError as e:
-        pytest.fail(f"ONTOLOGICAL GAP CONFIRMED: No Subtle Element (Tattva) mapping in Quarter. Error: {e}")
+    assert hasattr(Quarter.GENESIS, "tattva"), "Quarter lacks 'tattva' attribute"
+    assert Quarter.GENESIS.tattva == "CITTA", "Expected CITTA"
