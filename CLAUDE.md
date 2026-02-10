@@ -394,15 +394,37 @@ Kein Hang, kein Timeout, kein xfail.
 Jeder einzelne muss geprüft werden: Ist der Test falsch, oder ist der Code nie verdrahtet worden?
 "Dead Code" in dieser Codebase heißt oft "nie gewired" — das Potential ist da, die Verbindung fehlt.
 
-| Kategorie | Tests | Symptom | Verdacht |
-|-----------|-------|---------|----------|
-| Orchestrator LUT (5) | `test_lut_*`, `test_step_returns_delta`, `test_cycle_returns_correct_xor` | `THE_FLUTE_CYCLE` XOR/Pattern falsch | LUT hat nur 2 Einträge statt 16? Oder Test-Erwartung veraltet? |
-| Lotus Attribute (2) | `test_attractor_fixed_accessible`, `test_attractor_cycle_accessible` | `ATTRACTOR_FIXED` not found in lotus root | Konstanten aus Seed, nicht Folder — LotusNode.__getattr__ findet sie nicht |
-| Shabda (1) | `test_shabda_signature_structure` | `sthana` Key fehlt, `element` vorhanden | Key-Rename? Oder Test veraltet? |
-| Types (2) | `test_tick_state_keys`, `test_all_types_exported` | TickState hat andere Keys als erwartet | TypedDict divergiert von Implementierung |
+**Audit-Ergebnis (Feb 10 2026): Alle 10 sind "Test veraltet", nicht "Code kaputt".**
+
+| Kategorie | Tests | Root Cause (verifiziert) | Fix |
+|-----------|-------|-------------------------|-----|
+| Orchestrator LUT (5) | `test_lut_*`, `test_step_returns_delta`, `test_cycle_returns_correct_xor` | Tests benutzen altes DIW-Format `[Name:2][Position:16]` (`diw >> 16`, `diw & 0xFFFF`). DIW wurde auf `[MURALI:4][VAMSI:9][VENU:6]` refactored. LUT ist korrekt, Tests nie aktualisiert. | Tests auf `diw.unpack()` umschreiben |
+| Lotus Attribute (2) | `test_attractor_fixed_accessible`, `test_attractor_cycle_accessible` | `ATTRACTOR_FIXED` lebt in `protocols/_maha_compute.py`, nicht im Filesystem. `LotusNode.__getattr__` sucht Folder/Module, findet keine Konstanten. | Konstanten über `__init__.py` oder Property exponieren |
+| Shabda (1) | `test_shabda_signature_structure` | Test erwartet `sthana` Key, Code liefert `element`. Pancha-Walk Rename (`sthana` → `element`) nie in Test nachgezogen. | Test: `sthana` → `element` |
+| Types (2) | `test_tick_state_keys`, `test_all_types_exported` | `TickState` wurde erweitert (13 Keys statt 6, `total=False`). `_types.py` wurde nach `seed/types.py` verschoben. Tests nie aktualisiert. | Tests an neue Struktur anpassen |
 
 **Diagnose-Reihenfolge:** Erst verstehen was der Test WILL, dann prüfen ob der Code das KANN,
 dann entscheiden ob Test oder Code angepasst wird. Niemals Test löschen um grün zu werden.
+
+### LotusNode Filesystem-Audit (Feb 10 2026)
+
+`lotus_types.py` hat **7 Methoden die das Filesystem anfassen**. Alle sind durch Seed-Lookups ersetzbar:
+
+| Methode | Filesystem-Ops | Seed-Alternative (existiert bereits) |
+|---------|---------------|--------------------------------------|
+| `_discover()` | `Path.exists()` ×3, `Path.is_dir()` | `wiring.POSITION_BY_NAME` / `POSITION_BY_FOLDER` — O(1) |
+| `__dir__()` | `Path.iterdir()`, `Path.is_dir()` | `seed.QUARTER_NAMES` + `POSITION_BY_FOLDER` keys |
+| `_dir_full()` | `Path.iterdir()`, `Path.is_dir()` | `POSITION_BY_FOLDER` keys pro Quarter |
+| `_get_module()` | `importlib.import_module()` | Nötig, aber einmal cachen (wie PipelineCache) |
+| `_walk()` | `Path.iterdir()`, `Path.is_dir()` | `POSITION_BY_FOLDER` iteration |
+| `_awaken_and_execute()` | `importlib` ×4 Pfade! | `ShadowReactor._route_to_position()` (2 Pfade, cached) |
+| `resonate()` depth=1 | via `_dir_full()` | ✅ BEREITS GEFIXT (Seed-based für root) |
+
+**Consumer:** Nur 3 echte: `lotus_core.py` (erbt LotusNode), `lotus_projection.py` (Discovery), `__init__.py` (Export).
+
+**Ziel:** LotusNode projiziert aus Seed, nicht aus Filesystem. Infrastruktur existiert:
+Antaranga (16KB RAM), PipelineCache (vorberechnete LUTs), `wiring.py` (O(1) Lookups).
+Die Frage ist nicht OB, sondern WIE verdrahten — und in welcher Reihenfolge.
 
 ## Arbeitsweise
 
