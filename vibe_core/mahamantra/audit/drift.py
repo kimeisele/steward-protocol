@@ -36,7 +36,7 @@ from typing import Dict, List, Tuple
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
-from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity
+from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity, get_source_cache
 from vibe_core.mahamantra.protocols._audit import (
     AuditProtocol,
     AuditReport,
@@ -126,12 +126,9 @@ class Auditor:  # Renamed from DriftAuditor
         """Check lineage (genesis % 37). Returns (valid, broken, violations)."""
         violations: List[LineageViolation] = []
         valid = 0
+        cache = get_source_cache(self._root)
 
-        for path in self._root.rglob("*.py"):
-            if "__pycache__" in str(path):
-                continue
-            content = path.read_text()
-
+        for path, content in cache.scan():
             gen = re.search(r'__genesis__\s*[=:]\s*["\']?(0x[0-9a-fA-F]+)', content)
             if not gen:
                 continue
@@ -160,12 +157,13 @@ class Auditor:  # Renamed from DriftAuditor
         """Check SSOT. Returns (clean, violations)."""
         violations: List[SSOTViolation] = []
         clean = 0
+        cache = get_source_cache(self._root)
 
-        for path in self._root.rglob("*.py"):
-            if "__pycache__" in str(path) or any(s in str(path) for s in SSOT_FILES):
+        for path, content in cache.scan():
+            if any(s in str(path) for s in SSOT_FILES):
                 continue
 
-            lines = path.read_text().split('\n')
+            lines = content.split('\n')
             file_clean = True
 
             for i, line in enumerate(lines, 1):

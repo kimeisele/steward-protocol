@@ -187,13 +187,14 @@ class VenuOrchestrator:
     VAMSI_BITS: ClassVar[int] = VAMSI_HOLES  # 9 - Mid register (512 = SIKSASTAKAM_CACHE)
     MURALI_BITS: ClassVar[int] = MURALI_HOLES  # 4 - High register (16 = WORDS)
 
-    __slots__ = ("_tick", "_prev_state", "_mode", "_subscribers")
+    __slots__ = ("_tick", "_prev_state", "_mode", "_subscribers", "_owned")
 
     def __init__(self) -> None:
         self._tick: int = 0
         self._prev_state: int = 0
         self._mode: int = 0  # 0=Solo, 1=CallResponse, 2=Chorus
         self._subscribers: List[DIWSubscriberProtocol] = []
+        self._owned: bool = False  # True when VenuService drives the heartbeat
 
     # =========================================================================
     # PANCHA TATTVA PROTOCOL (5 Questions Every Entity Must Answer)

@@ -230,6 +230,7 @@ class VenuService(PanchaTattvaProtocol):
             return
 
         self._running = True
+        self._orchestrator._owned = True
         self._start_time = time.monotonic()
         self._stop_event = asyncio.Event()
         self._cumulative_drift_ms = 0.0
@@ -308,6 +309,7 @@ class VenuService(PanchaTattvaProtocol):
             return
 
         self._running = False
+        self._orchestrator._owned = False
         if self._stop_event:
             self._stop_event.set()
 
