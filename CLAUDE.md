@@ -317,7 +317,7 @@ Nur diese Branches haben echten Wert:
 
 | Branch | Status | Inhalt |
 |--------|--------|--------|
-| `main` | Stabil | Antaranga RAM Chamber + LexiconVectorCache + F811/F821 clean |
+| `main` | Stabil | Antaranga RAM Chamber + LexiconVectorCache + F811/F821 clean + Reactor Lifecycle + Event-Routing + Lotus Seed-Routing |
 | `feature/lotus-pipeline-cache` | PR-ready | PipelineCache Singleton — seed-unabhängige Lookups vorberechnet |
 | `perf/lotus-call-hotpath` | PR-ready | MahaModularSynth Singleton — eliminiert Objekt-Allokation pro __call__ |
 | `fix/igene-fatal-comparison` | PR-ready | iGene.is_fatal: float(0-1) vs int(0-21600) Normalisierung |
@@ -326,11 +326,42 @@ Nur diese Branches haben echten Wert:
 | `feature/antaranga-ram-chamber` | Gemergt | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
 | `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
+| `fix/reactor-lifecycle` | PR-ready | ReactorLoop shutdown + offer() Event-Routing + Lotus Seed-based resonate() |
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
 
-## Architektur (verifiziert aus Code, Feb 9 2026)
+## Lotus: Seed ist Wahrheit, Filesystem ist Maya
+
+`resonate()` in `lotus_types.py` crawlte das GESAMTE Filesystem (25+ Subdirectories, rekursiv).
+Fix: Root-Level nur die 4 Quarters aus `QUARTER_NAMES` (Seed) durchlaufen.
+86s Timeout → 1.7s. Das ist das Paradigma: **Seed projiziert, Filesystem reflektiert.**
+
+Aber `_dir_full()` und `__dir__()` crawlen immer noch das Filesystem für JEDE Ebene.
+Das ist der nächste Schritt: Lotus sollte aus dem Seed projizieren, nicht das Filesystem fragen.
+Idealerweise: Seed → Cache/RAM → O(1) Lookup. Kein `Path.iterdir()`, kein `importlib`.
+Die Infrastruktur existiert bereits: Antaranga (16KB RAM), Chamber, PipelineCache.
+Die Frage ist nur: wie verdrahten?
+
+## Reactor Lifecycle + Event-Routing (Feb 10 2026)
+
+`ReactorLoop` war ein Zombie-Thread ohne shutdown(). `offer()` hing ewig.
+
+Fix (3 Teile):
+1. `ReactorLoop.shutdown()` + `shutdown_loop()` + `atexit` — Thread-Lifecycle
+2. `offer(timeout=)` — konfigurierbar statt hardcoded 10s
+3. `ReactorLoop._on_bridge_event()` — globaler EventBus-Subscriber, schließt den Loop
+
+```
+offer() → PURPOSE_MAP → position/mahajana (Seed-Routing, kein Reactor)
+       → EventBus.emit_sync(task_id=ticket)
+       → _on_bridge_event() → mailbox.deposit(success)
+       → mailbox.collect(ticket) → OfferResult
+```
+
+18 xfail-Tests → alle grün. 56 Bridge-Tests in 3.5s.
+
+## Architektur (verifiziert aus Code, Feb 10 2026)
 
 ### Der Flow in `lotus_core.__call__()` (auf `main`)
 
@@ -354,11 +385,24 @@ Dateien: `lotus_core.py:402-733`, `chamber.py:219-306` (dance), `antaranga.py` (
 | I/O im Hot Path | Zero | `importlib`, `governance.audit()` (FS-scan) |
 | State-Format | `snapshot() → bytes` (binary) | JSON auf Disk |
 
-### Test-Suite (verifiziert Feb 9 2026)
+### Test-Suite (verifiziert Feb 10 2026)
 
-Alle `tests/mahamantra/` Tests laufen durch — kein Hang.
-Langsame Tests: `test_daemon.py` ~66s, `test_daemon_soul.py` ~104s.
-Es gibt pre-existing Failures, aber die Suite blockiert nicht.
+**4073 passed, 10 pre-existing failures, 25 skipped, ~267s.**
+Kein Hang, kein Timeout, kein xfail.
+
+**VORSICHT bei den 10 Failures — NICHT blind fixen oder löschen!**
+Jeder einzelne muss geprüft werden: Ist der Test falsch, oder ist der Code nie verdrahtet worden?
+"Dead Code" in dieser Codebase heißt oft "nie gewired" — das Potential ist da, die Verbindung fehlt.
+
+| Kategorie | Tests | Symptom | Verdacht |
+|-----------|-------|---------|----------|
+| Orchestrator LUT (5) | `test_lut_*`, `test_step_returns_delta`, `test_cycle_returns_correct_xor` | `THE_FLUTE_CYCLE` XOR/Pattern falsch | LUT hat nur 2 Einträge statt 16? Oder Test-Erwartung veraltet? |
+| Lotus Attribute (2) | `test_attractor_fixed_accessible`, `test_attractor_cycle_accessible` | `ATTRACTOR_FIXED` not found in lotus root | Konstanten aus Seed, nicht Folder — LotusNode.__getattr__ findet sie nicht |
+| Shabda (1) | `test_shabda_signature_structure` | `sthana` Key fehlt, `element` vorhanden | Key-Rename? Oder Test veraltet? |
+| Types (2) | `test_tick_state_keys`, `test_all_types_exported` | TickState hat andere Keys als erwartet | TypedDict divergiert von Implementierung |
+
+**Diagnose-Reihenfolge:** Erst verstehen was der Test WILL, dann prüfen ob der Code das KANN,
+dann entscheiden ob Test oder Code angepasst wird. Niemals Test löschen um grün zu werden.
 
 ## Arbeitsweise
 
