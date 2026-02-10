@@ -25,9 +25,39 @@ __genesis__ = "0x3e2fa1fe"  # GenesisByte: parampara % 37 == 0
 import importlib
 import logging
 from pathlib import Path
-from typing import Dict, Iterator, Optional, Tuple
+from typing import Dict, FrozenSet, Iterator, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
+
+# =============================================================================
+# SEED DATA (O(1) lookups — replaces filesystem iteration)
+# =============================================================================
+# Lazy-loaded to avoid circular imports at module level.
+# Once loaded, these are Final tuples/dicts — zero per-call cost.
+_SEED_LOADED = False
+_QUARTER_NAMES: Tuple[str, ...] = ()
+_QUARTER_SET: FrozenSet[str] = frozenset()
+_GUARDIAN_SET: FrozenSet[str] = frozenset()
+_GUARDIANS_BY_QUARTER: Dict[str, Tuple[str, ...]] = {}
+
+
+def _ensure_seed() -> None:
+    """Load Seed data once (lazy, breaks circular import)."""
+    global _SEED_LOADED, _QUARTER_NAMES, _QUARTER_SET, _GUARDIAN_SET, _GUARDIANS_BY_QUARTER
+    if _SEED_LOADED:
+        return
+    from vibe_core.mahamantra.substrate.seed import (
+        QUARTER_NAMES, ALL_GUARDIANS, WORDS_PER_QUARTER,
+    )
+    _QUARTER_NAMES = QUARTER_NAMES
+    _QUARTER_SET = frozenset(QUARTER_NAMES)
+    _GUARDIAN_SET = frozenset(ALL_GUARDIANS)
+    _GUARDIANS_BY_QUARTER = {}
+    for qi, qname in enumerate(QUARTER_NAMES):
+        start = qi * WORDS_PER_QUARTER
+        end = start + WORDS_PER_QUARTER
+        _GUARDIANS_BY_QUARTER[qname] = ALL_GUARDIANS[start:end]
+    _SEED_LOADED = True
 
 # =============================================================================
 # THE LOTUS PATH
@@ -152,31 +182,41 @@ class LotusNode:
 
     def _discover(self, name: str) -> Optional["LotusNode"]:
         """
-        Discover child from folder structure.
+        Discover child — SEED-FIRST, filesystem fallback.
 
-        FOLDER = EXISTENCE:
-            Folder exists → Node exists
-            No folder → Doesn't exist
+        SEED O(1):
+            Root  → name in QUARTER_NAMES?
+            Quarter → name in GUARDIANS_BY_QUARTER[quarter]?
+        FS FALLBACK:
+            Only for non-Lotus modules (substrate, protocols, adapters, etc.)
         """
+        _ensure_seed()
         child_path = self._path.child(name)
 
-        # Check folder
+        # === SEED PATH (O(1), no filesystem) ===
+        if self._path.is_root and name in _QUARTER_SET:
+            return LotusNode(child_path)
+
+        if self._path.depth == 1:
+            quarter = self._path.segments[0]
+            guardians = _GUARDIANS_BY_QUARTER.get(quarter, ())
+            if name in guardians:
+                return LotusNode(child_path)
+
+        # === FS FALLBACK (non-Lotus modules: substrate, protocols, etc.) ===
         folder = self._BASE_PATH / child_path.folder_path
         if folder.exists() and folder.is_dir():
             return LotusNode(child_path)
 
-        # Check .py file (for substrate modules)
+        # Check .py file at root or current folder
         if self._path.is_root:
             py_file = self._BASE_PATH / f"{name}.py"
-            if py_file.exists():
-                return LotusNode(child_path)
-
-        # Check in current folder
-        if not self._path.is_root:
+        else:
             current_folder = self._BASE_PATH / self._path.folder_path
             py_file = current_folder / f"{name}.py"
-            if py_file.exists():
-                return LotusNode(child_path)
+
+        if py_file.exists():
+            return LotusNode(child_path)
 
         return None
 
@@ -207,18 +247,28 @@ class LotusNode:
         """
         List available children for tab-completion.
 
+        SEED-FIRST: Quarters and Guardians from Seed (O(1)).
+        FS FALLBACK: Non-Lotus modules (substrate, protocols, etc.).
+
         LILA BOUNDARY (Chaitanya's 24+24):
             Returns max 24 items per call (Navadvipa phase).
             Use _dir_full() for complete listing.
-            This prevents exponential output explosion.
         """
         from vibe_core.mahamantra.substrate.byte import LILA_LIMIT
 
         NAVADVIPA_LIMIT = LILA_LIMIT // 2  # 24
 
-        items = []
+        items: Set[str] = set()
+        _ensure_seed()
 
-        # Folders
+        # === SEED items (O(1)) ===
+        if self._path.is_root:
+            items.update(_QUARTER_NAMES)
+        elif self._path.depth == 1:
+            quarter = self._path.segments[0]
+            items.update(_GUARDIANS_BY_QUARTER.get(quarter, ()))
+
+        # === FS items (non-Lotus modules) ===
         if self._path.is_root:
             base = self._BASE_PATH
         else:
@@ -229,20 +279,17 @@ class LotusNode:
                 if child.name.startswith(("_", ".")):
                     continue
                 if child.is_dir():
-                    items.append(child.name)
+                    items.add(child.name)
                 elif child.suffix == ".py":
-                    items.append(child.stem)
+                    items.add(child.stem)
 
         # Module exports
         module = self._get_module()
         if module is not None:
-            module_items = [name for name in dir(module) if not name.startswith("_")]
-            items.extend(module_items)
+            items.update(name for name in dir(module) if not name.startswith("_"))
 
-        # Sort first, THEN truncate (old code truncated unsorted → random items lost)
-        # Root gets full listing (mixed filesystem + module exports need space).
-        # Sub-paths get NAVADVIPA_LIMIT to prevent explosion.
-        result = sorted(set(items))
+        # Sort first, THEN truncate
+        result = sorted(items)
         if not self._path.is_root and len(result) > NAVADVIPA_LIMIT:
             result = result[:NAVADVIPA_LIMIT]
             result.append("__has_more__")
@@ -250,9 +297,22 @@ class LotusNode:
         return result
 
     def _dir_full(self) -> list:
-        """Full directory listing (bypasses Lila boundary for internal use)."""
-        items = []
+        """
+        Full directory listing (bypasses Lila boundary for internal use).
 
+        SEED-FIRST for Lotus hierarchy, FS for non-Lotus modules.
+        """
+        items: Set[str] = set()
+        _ensure_seed()
+
+        # === SEED items (O(1)) ===
+        if self._path.is_root:
+            items.update(_QUARTER_NAMES)
+        elif self._path.depth == 1:
+            quarter = self._path.segments[0]
+            items.update(_GUARDIANS_BY_QUARTER.get(quarter, ()))
+
+        # === FS items (non-Lotus modules) ===
         if self._path.is_root:
             base = self._BASE_PATH
         else:
@@ -263,15 +323,15 @@ class LotusNode:
                 if child.name.startswith("_"):
                     continue
                 if child.is_dir():
-                    items.append(child.name)
+                    items.add(child.name)
                 elif child.suffix == ".py":
-                    items.append(child.stem)
+                    items.add(child.stem)
 
         module = self._get_module()
         if module is not None:
-            items.extend(name for name in dir(module) if not name.startswith("_"))
+            items.update(name for name in dir(module) if not name.startswith("_"))
 
-        return sorted(set(items))
+        return sorted(items)
 
     # === Resonance & Execution (Node-to-Node Lotus) ===
 
@@ -304,14 +364,14 @@ class LotusNode:
 
         # We only walk children if we are root or quarter level
         if self._path.depth < 2:
-            # SEED-BASED ROUTING: At root, only walk the 4 Quarters (from Seed).
-            # NOT the entire filesystem (research/, protocols/, cli/ etc are not Quarters).
-            # At quarter level (depth 1), use _dir_full() for mahajana discovery.
+            # SEED-BASED ROUTING: Use Seed data for both root and quarter level.
+            # Root → 4 Quarters, Quarter → its Guardians. No filesystem.
+            _ensure_seed()
             if self._path.is_root:
-                from vibe_core.mahamantra.substrate.seed import QUARTER_NAMES
-                children = list(QUARTER_NAMES)
+                children = list(_QUARTER_NAMES)
             else:
-                children = self._dir_full()
+                quarter = self._path.segments[0]
+                children = list(_GUARDIANS_BY_QUARTER.get(quarter, ()))
 
             for child_name in children:
                 if child_name.startswith("_") or child_name == "mod" or child_name == "shadow":
@@ -412,26 +472,38 @@ class LotusNode:
     # === Iteration ===
 
     def _walk(self, depth: int = 1) -> Iterator[Tuple[LotusPath, "LotusNode"]]:
-        """Walk the lotus fractally."""
+        """
+        Walk the lotus fractally — SEED-BASED.
+
+        Uses Seed data for Quarters and Guardians (O(1)).
+        Falls back to FS only for non-Lotus depths.
+        """
         yield (self._path, self)
 
         if depth <= 0:
             return
 
+        _ensure_seed()
+
+        # SEED PATH: Root → Quarters, Quarter → Guardians
         if self._path.is_root:
-            base = self._BASE_PATH
+            children = _QUARTER_NAMES
+        elif self._path.depth == 1:
+            quarter = self._path.segments[0]
+            children = _GUARDIANS_BY_QUARTER.get(quarter, ())
         else:
+            # Depth 2+: no Seed data, fall back to FS
             base = self._BASE_PATH / self._path.folder_path
+            if not base.exists():
+                return
+            children = sorted(
+                child.name for child in base.iterdir()
+                if not child.name.startswith("_") and child.is_dir()
+            )
 
-        if not base.exists():
-            return
-
-        for child in sorted(base.iterdir()):
-            if child.name.startswith("_"):
-                continue
-            if child.is_dir():
-                child_node = LotusNode(self._path.child(child.name))
-                yield from child_node._walk(depth - 1)
+        for child_name in children:
+            child_node = LotusNode(self._path.child(child_name))
+            yield from child_node._walk(depth - 1)
 
     # === Properties ===
 
