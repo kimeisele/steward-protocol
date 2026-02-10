@@ -217,15 +217,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         "last_attractor": None,
     }
 
-    # ==========================================================================
-    # LISTENER SYSTEM (Narada - The Broadcaster)
-    # ==========================================================================
-    # This enables the 6.34 Override (GAD-000 Amendment B):
-    # - NrisimhaWatchdog registers to receive tick events
-    # - MahaProxy registers to receive tick events
-    # - Any service can listen to the heartbeat
-    _listeners: List = []
-
     # Lazy-loaded instances
     _compressor = None
     _gita_index = None
@@ -287,56 +278,45 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         Delegates to Singularity.tick() which:
         - Advances Kala (time)
         - Plays the flute (VenuOrchestrator.step() → DIW)
-        - Broadcasts TickState to all Singularity listeners
+        - Broadcasts TickState to all listeners via Singularity._broadcast()
 
-        Then broadcasts to MahamantraLotus listeners too.
         One tick. One DIW. One broadcast. Krishna plays His flute.
         """
-        state = self._get_singularity().tick()
-
-        # Also broadcast to MahamantraLotus listeners (legacy + BalaramaProxy)
-        self._broadcast(dict(state))
-
-        return state
+        return self._get_singularity().tick()
 
     # ==========================================================================
-    # LISTENER MANAGEMENT (6.34 Override / Japa Loop)
+    # LISTENER MANAGEMENT — delegates to Singularity (one list, one broadcast)
     # ==========================================================================
     # GAD-000 Amendment B: "Every Agent must implement a Japa-Loop (Heartbeat)"
-    # This is the mechanism that enables NrisimhaWatchdog to detect Maya/drift.
+    # All listeners live in Singularity._listeners. Lotus delegates.
 
     def register_listener(self, callback) -> None:
         """
         Register a listener for tick events.
 
-        PARAMPARA CONNECTION:
-        When you register, you become part of the heartbeat.
-        Every tick(), you will receive the state.
+        Delegates to Singularity.register_listener() — one listener list
+        for the entire system. No dual-broadcast.
 
         Args:
             callback: Function that accepts tick state dict
         """
-        if callback not in self._listeners:
-            self._listeners.append(callback)
-            logger.debug(f"🔗 Listener registered (total: {len(self._listeners)})")
+        self._get_singularity().register_listener(callback)
+        logger.debug(f"🔗 Listener registered via Singularity")
 
     def unregister_listener(self, callback) -> None:
         """Remove a listener from tick events."""
-        if callback in self._listeners:
-            self._listeners.remove(callback)
+        listeners = self._get_singularity()._listeners
+        if callback in listeners:
+            listeners.remove(callback)
 
     def _broadcast(self, state: Dict) -> None:
         """
         Broadcast tick state to all listeners.
 
-        NARADA PRINCIPLE: The broadcast continues even if one ear is deaf.
-        One failing listener does not stop the others.
+        Delegates to Singularity._broadcast() — one broadcast channel.
+        Used by LotusBridge to inject VenuService-driven ticks.
         """
-        for listener in self._listeners:
-            try:
-                listener(state)
-            except Exception as _exc:
-                logger.exception("Unexpected error: %s", _exc)
+        self._get_singularity()._broadcast(state)
 
     _bootstrapped: bool = False
 
