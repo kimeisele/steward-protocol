@@ -131,6 +131,8 @@ from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from vibe_core.mahamantra.substrate.cell_router import CellRouter, get_router
 from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
 from vibe_core.mahamantra.substrate.seed import (
+    ALL_GUARDIANS,
+    MAHAJANA_TO_POSITION,
     PARAMPARA,
     WORDS,
 )
@@ -154,35 +156,25 @@ if TYPE_CHECKING:
 
 def _get_guardian_name(index: int) -> str:
     """
-    Get guardian name from index - DERIVED from substrate.
-
-    NO hardcoded mappings. The truth table IS the source.
+    Get guardian name from index - O(1) via ALL_GUARDIANS tuple.
     """
     if 0 <= index < WORDS:
-        return MAHAMANTRA_POSITIONS[index].guardian.value
+        return ALL_GUARDIANS[index]
     raise IndexError(f"Invalid position index: {index}")
 
 
 def _get_index_by_guardian_name(name: str) -> Optional[int]:
     """
-    Get index from guardian name - DERIVED from substrate.
-
-    NO hardcoded mappings. The truth table IS the source.
+    Get index from guardian name - O(1) via MAHAJANA_TO_POSITION dict.
     """
-    name_lower = name.lower()
-    for pos in MAHAMANTRA_POSITIONS:
-        if pos.guardian.value == name_lower:
-            return pos.index
-    return None
+    return MAHAJANA_TO_POSITION.get(name.lower())
 
 
 def _is_valid_guardian_name(name: str) -> bool:
     """
-    Check if name is a valid guardian - DERIVED from substrate.
-
-    NO hardcoded sets. The truth table IS the source.
+    Check if name is a valid guardian - O(1) via MAHAJANA_TO_POSITION.
     """
-    return _get_index_by_guardian_name(name) is not None
+    return name.lower() in MAHAJANA_TO_POSITION
 
 
 class ProtocolRouter:
