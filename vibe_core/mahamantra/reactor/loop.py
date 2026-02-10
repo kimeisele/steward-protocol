@@ -239,10 +239,13 @@ class ReactorLoop(threading.Thread):
             return
 
         try:
-            # 1. Self-Subscription (Closing the Loop)
-            self._bus.subscribe(self.on_completion, ["COMPLETED"])
+            # 1. Global Bridge Handler (Closing the Loop)
+            # Any event with task_id is a Bridge request → deposit result
+            self._bus.subscribe(self._on_bridge_event)
+            logger.info("ReactorLoop: Global bridge handler wired (Narada hears all)")
             
             # 2. Iterate the Mandala (16 Positions)
+            # Auto-wire modules that declare __listening_for__
             for pos in range(16):
                 try:
                     module = self._reactor._route_to_position(pos)
@@ -303,32 +306,22 @@ class ReactorLoop(threading.Thread):
         except Exception as e:
             logger.error(f"ReactorLoop: Failed to init EventBus: {e}")
 
-    def on_completion(self, event):
+    def _on_bridge_event(self, event):
         """
-        Handle COMPLETED events (Resonance Return).
-        Resolve Mailbox tickets if applicable.
+        Global Bridge Handler — closes the offer() → mailbox loop.
+        
+        Any event with a task_id is a Bridge request.
+        The routing (position/mahajana) already happened in offer().
+        We deposit success so the caller unblocks.
         """
         if not self._mailbox or not event.task_id:
             return
-            
-        # Extract result
-        # The Kapila protocol puts result in details["result"]
-        # Or generally in details
-        result_data = event.details
         
-        # We need to structure it as the Bridge expects:
-        # { "success": bool, "execution_result": ..., "error": ... }
-        # If the event implies success (it's COMPLETED), we assume success unless ERROR event (which we don't catch yet).
-        # Improving Protocol: catch ERROR events too?
-        
-        # For now, construct a success result
-        final_result = {
+        self._mailbox.deposit(event.task_id, {
             "success": True,
-            "execution_result": result_data.get("result"),
-            "error": None
-        }
-        
-        self._mailbox.deposit(event.task_id, final_result)
+            "execution_result": event.details,
+            "error": None,
+        })
 
     def _init_dojo(self):
         """Initialize the Dojo (Legacy Training Ground)."""

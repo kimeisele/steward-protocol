@@ -52,7 +52,6 @@ class TestWatertightChecklist:
             # Position should exist in seed mapping
             assert position in POSITION_TO_MAHAJANA, f"Position {position} not in seed mapping"
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_parampara_validation_works(self):
         """✅ Parampara validation uses verify_parampara(), not manual % 37."""
         # Valid parampara (multiple of 37)
@@ -67,7 +66,6 @@ class TestWatertightChecklist:
         assert result["success"] is False
         assert "Parampara" in result["error"]
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_position_bounds_use_words_constant(self):
         """✅ Bounds checks use WORDS from seed, not hardcoded 16."""
         # All purposes should route to positions within WORDS
@@ -80,7 +78,6 @@ class TestWatertightChecklist:
 class TestOfferFunction:
     """Test offer() function behavior."""
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_valid_state_update_offer(self):
         """State update routes to Janaka (position 10)."""
         result = offer("some state", purpose="state_update", actor="test_service", timeout=0.5)
@@ -91,7 +88,6 @@ class TestOfferFunction:
         assert result["quarter"] == "karma"  # Position 10 is in karma quarter
         assert result["actor"] == "test_service"
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_valid_ledger_write_offer(self):
         """Ledger write routes to Bhishma (position 11)."""
         result = offer("ledger entry", purpose="ledger_write", timeout=0.5)
@@ -101,7 +97,6 @@ class TestOfferFunction:
         assert result["position"] == get_mahajana_position("bhishma")
         assert result["quarter"] == "karma"  # Position 11 is in karma quarter
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_valid_log_emit_offer(self):
         """Log emit routes to Shuka (position 14)."""
         result = offer("log message", purpose="log_emit", timeout=0.5)
@@ -119,7 +114,6 @@ class TestOfferFunction:
         assert result["position"] == -1
         assert "Unknown purpose" in result["error"]
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_genesis_included_in_result(self):
         """Result includes genesis signature from lotus_declaration."""
         result = offer("test", purpose="state_update", timeout=0.5)
@@ -128,7 +122,6 @@ class TestOfferFunction:
         assert "genesis" in result
         assert result["genesis"].startswith("0x")  # Genesis is hex string
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_word_included_in_result(self):
         """Result includes mantra word from position."""
         result = offer("test", purpose="state_update", timeout=0.5)
@@ -179,7 +172,6 @@ class TestQueryPurpose:
 class TestAllPurposes:
     """Test all defined purposes in PURPOSE_MAP."""
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_all_purposes_route_successfully(self):
         """Every purpose in PURPOSE_MAP routes successfully."""
         for purpose in PURPOSE_MAP:
@@ -203,7 +195,6 @@ class TestAllPurposes:
 class TestParamparaValidation:
     """Test Parampara signature validation."""
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_parampara_multiples_accepted(self):
         """Multiples of PARAMPARA (37) are accepted."""
         for multiple in [1, 2, 3, 5, 10]:
@@ -217,7 +208,6 @@ class TestParamparaValidation:
             result = offer("test", purpose="state_update", parampara_vector=value, timeout=0.5)
             assert result["success"] is False, f"Non-parampara vector {value} accepted"
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_zero_parampara_accepted(self):
         """Zero is a valid parampara (0 % 37 == 0)."""
         result = offer("test", purpose="state_update", parampara_vector=0, timeout=0.5)

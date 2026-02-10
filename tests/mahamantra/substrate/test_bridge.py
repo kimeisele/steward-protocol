@@ -108,7 +108,6 @@ class TestOfferResult:
 class TestOffer:
     """Test offer() function."""
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired — no handler deposits mailbox result", strict=False)
     def test_offer_valid_state_update(self):
         """offer with valid state_update purpose succeeds."""
         result = offer("test content", purpose="state_update", timeout=0.5)
@@ -116,19 +115,16 @@ class TestOffer:
         assert "position" in result
         assert "mahajana" in result
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_offer_valid_ledger_write(self):
         """offer with valid ledger_write purpose succeeds."""
         result = offer("ledger entry", purpose="ledger_write", timeout=0.5)
         assert result["success"] is True
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_offer_valid_log_emit(self):
         """offer with valid log_emit purpose succeeds."""
         result = offer("log message", purpose="log_emit", timeout=0.5)
         assert result["success"] is True
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_offer_valid_file_flush(self):
         """offer with valid file_flush purpose succeeds."""
         result = offer("file content", purpose="file_flush", timeout=0.5)
@@ -158,14 +154,12 @@ class TestOffer:
         result = offer("content", purpose="state_update", timeout=0.5)
         assert "quarter" in result
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_offer_with_actor(self):
         """offer with actor parameter."""
         result = offer("content", purpose="state_update", actor="test_actor", timeout=0.5)
         assert result["success"] is True
         assert result.get("actor") == "test_actor"
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_offer_with_valid_parampara_vector(self):
         """offer with valid parampara_vector succeeds."""
         # 37 is divisible by 37
@@ -179,13 +173,11 @@ class TestOffer:
         assert result["success"] is False
         assert "Parampara validation failed" in result["error"]
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_offer_with_dict_content(self):
         """offer accepts dict content."""
         result = offer({"key": "value"}, purpose="state_update", timeout=0.5)
         assert result["success"] is True
 
-    @pytest.mark.xfail(reason="Reactor event routing not wired", strict=False)
     def test_offer_with_bytes_content(self):
         """offer accepts bytes content."""
         result = offer(b"binary content", purpose="file_flush", timeout=0.5)
