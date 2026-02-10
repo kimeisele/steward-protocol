@@ -666,6 +666,7 @@ class ProtocolBridge:
     """
 
     _protocols_root: Path = Path(__file__).parent.parent  # protocols/
+    _audit_cache: Optional["GovernanceAudit"] = None
 
     @classmethod
     def get_instance(cls) -> "ProtocolBridge":
@@ -850,7 +851,14 @@ class ProtocolBridge:
         - Distribution by owner and level
 
         FRACTAL LAW: mahajanas/<NAME>/*.py files are auto-governed.
+
+        CACHED: File list is static at runtime. rglob runs once,
+        subsequent calls return cached result. Use invalidate_audit_cache()
+        to force rescan (e.g. after hot-reload in dev).
         """
+        if cls._audit_cache is not None:
+            return cls._audit_cache
+
         # Scan actual files
         actual_files: Set[str] = set()
         protocols_root = cls._protocols_root
@@ -889,7 +897,7 @@ class ProtocolBridge:
         total = len(actual_files)
         health = governed_count / total if total > 0 else 0.0
 
-        return GovernanceAudit(
+        result = GovernanceAudit(
             total_protocols=total,
             governed_count=governed_count,
             ungoverned_count=len(ungoverned_files),
@@ -898,6 +906,13 @@ class ProtocolBridge:
             level_distribution=level_dist,
             health_score=round(health, 3),
         )
+        cls._audit_cache = result
+        return result
+
+    @classmethod
+    def invalidate_audit_cache(cls) -> None:
+        """Force rescan on next audit() call (dev/hot-reload only)."""
+        cls._audit_cache = None
 
     @classmethod
     def _check_tests_exist(cls, protocol_path: str) -> bool:

@@ -136,6 +136,7 @@ from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,
     WORDS,
 )
+from vibe_core.mahamantra.protocols.diw import CLUSTER_SHIFT
 
 # Governance Bridge (lazy import to avoid circular deps)
 _governance_bridge = None
@@ -1020,6 +1021,10 @@ class Mahamantra:
 
         This is the HEARTBEAT of the Mahamantra.
         Krishna plays His flute — every jiva dances.
+
+        GUARD: If VenuService is running (async heartbeat owns the
+        orchestrator), we read the last DIW instead of calling step()
+        again. One flute, one player — no double-stepping.
         """
         # 1. Advance Time (Kala)
         time_state = self.kala.advance()
@@ -1041,7 +1046,13 @@ class Mahamantra:
             quarter = Quarter.MOKSHA
 
         # 2. PLAY THE FLUTE (Krishna IS the flute)
-        diw = self.venu.step()
+        # Guard: if VenuService owns the heartbeat, read last DIW
+        venu = self.venu
+        if venu._subscribers and venu._prev_state:
+            # VenuService is driving — read, don't step
+            diw = venu._prev_state | (venu._mode << CLUSTER_SHIFT)
+        else:
+            diw = venu.step()
 
         state = TickState(
             tick=current,
