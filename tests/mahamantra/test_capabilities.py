@@ -184,3 +184,49 @@ class TestGateTattvaConsistency:
     def test_all_5_tattvas_covered(self):
         tattvas = {GATE_TO_TATTVA[g] for g in GATE_CAPABILITY}
         assert tattvas == set(PanchaTattva)
+
+
+# =============================================================================
+# TESTS: TattvaAspect.protocol is real type (not string)
+# =============================================================================
+
+
+class TestTattvaAspectProtocolTypes:
+    """TattvaAspect.protocol must be a real Protocol class, not a string."""
+
+    def test_all_aspects_have_type_protocol(self):
+        from vibe_core.mahamantra.substrate.pancha_tattva import PANCHA_TATTVA_ASPECTS
+        for aspect in PANCHA_TATTVA_ASPECTS:
+            assert isinstance(aspect.protocol, type), (
+                f"{aspect.tattva.value}: protocol is {type(aspect.protocol).__name__}, not type"
+            )
+
+    def test_aspect_protocols_match_gate_capabilities(self):
+        from vibe_core.mahamantra.substrate.pancha_tattva import (
+            PANCHA_TATTVA_ASPECTS, TattvaIndex,
+        )
+        expected = [
+            MantraCapability,
+            StorageCapability,
+            InferCapability,
+            SyncCapability,
+            EnforceCapability,
+        ]
+        for aspect, cap in zip(PANCHA_TATTVA_ASPECTS, expected):
+            assert aspect.protocol is cap, (
+                f"{aspect.tattva.value}: expected {cap.__name__}, got {aspect.protocol}"
+            )
+
+    def test_mock_satisfies_aspect_protocol(self):
+        from vibe_core.mahamantra.substrate.pancha_tattva import PANCHA_TATTVA_ASPECTS
+        mocks = [
+            MockMantraComponent(),
+            MockStorageComponent(),
+            MockInferComponent(),
+            MockSyncComponent(),
+            MockEnforceComponent(),
+        ]
+        for aspect, mock in zip(PANCHA_TATTVA_ASPECTS, mocks):
+            assert isinstance(mock, aspect.protocol), (
+                f"{type(mock).__name__} should satisfy {aspect.protocol.__name__}"
+            )
