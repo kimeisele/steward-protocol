@@ -63,6 +63,8 @@ import importlib
 import logging
 from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Optional, Type, TypedDict, Union
 
+from vibe_core.mahamantra.substrate.tattva_registry import get_registry
+
 logger = logging.getLogger(__name__)
 
 
@@ -386,6 +388,7 @@ class ModuleRouter:
                     module = MahamantraProxy(module, pos_idx, name)
 
                 self._modules[name] = module
+                get_registry().register(name, module)
                 return module
             except ImportError as _exc:
                 logger.exception("Unexpected error: %s", _exc)
@@ -400,6 +403,7 @@ class ModuleRouter:
             module = MahamantraProxy(module, pos_idx, name)
 
         self._modules[name] = module
+        get_registry().register(name, module)
         return module
 
     def __getattr__(self, name: str) -> object:
