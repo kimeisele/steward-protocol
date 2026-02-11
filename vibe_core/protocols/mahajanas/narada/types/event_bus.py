@@ -51,7 +51,7 @@ def __getattr__(name):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = [
+__all__ = [  # noqa: F822 — lazy imports via __getattr__
     "EventType", "EventColor", "EVENT_COLOR_MAP",
     "Event", "EventBus", "EventBusStatus", "EventDetails",
     "MetricsEntry", "RateLimitStats", "StalledInfo",

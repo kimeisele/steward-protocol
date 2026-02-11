@@ -503,7 +503,6 @@ class VibeAgent(ABC):
         except RuntimeError as _exc:
             logger.exception("Unexpected error: %s", _exc)
         except Exception as e:
-            logger = logging.getLogger("VibeAgent")
             logger.debug(f"⚠️  Sync event emission failed: {e}")
 
     # =========================================================================
