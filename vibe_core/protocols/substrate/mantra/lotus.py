@@ -1,4 +1,16 @@
 """
+DEPRECATED — DEAD CODE (0 imports across codebase as of 2026-02-10)
+====================================================================
+
+The canonical Lotus definitions live in:
+    mahamantra/protocols/_lotus.py  (LotusProtocol, LotusBase, etc.)
+    mahamantra/substrate/lotus_types.py  (LotusNode, LotusPath — runtime)
+    mahamantra/substrate/lotus_core.py  (MahamantraLotus — singleton)
+
+This file is a diverged copy that nobody imports. Kept for reference only.
+Delete when confident no external tooling depends on it.
+
+ORIGINAL DOCSTRING:
 LOTUS - The Mahamantra AS Universal Kernel
 ===========================================
 
