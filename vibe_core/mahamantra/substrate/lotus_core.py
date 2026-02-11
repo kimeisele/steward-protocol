@@ -47,6 +47,32 @@ _THIS_MODULE = sys.modules[__name__]
 
 
 # =============================================================================
+# GATE DISPATCH — Maps TattvaGate to capability method on provider
+# =============================================================================
+
+_GATE_DISPATCH = {
+    # gate: (method_name, [ctx keys to extract as positional args])
+    TattvaGate.PARSE: ("parse", ["input_data"]),
+    TattvaGate.VALIDATE: ("validate", ["seed"]),
+    TattvaGate.EXECUTE: ("infer", ["seed", "attractor"]),
+    TattvaGate.RESULT: ("route", ["attractor"]),
+    TattvaGate.SYNC: ("enforce", ["position", "seed", "attractor"]),
+}
+
+
+def _dispatch_provider(gate: TattvaGate, provider: object, ctx: dict) -> None:
+    """Call the capability method on a gate provider with pipeline context."""
+    spec = _GATE_DISPATCH.get(gate)
+    if spec is None:
+        return
+    method_name, arg_keys = spec
+    method = getattr(provider, method_name, None)
+    if method is not None:
+        args = [ctx.get(k) for k in arg_keys]
+        method(*args)
+
+
+# =============================================================================
 # PIPELINE CACHE — Precomputed seed-independent lookups for __call__()
 # =============================================================================
 # Same pattern as LexiconVectorCache: build once, use forever.
@@ -261,13 +287,20 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         self._gate_hooks[gate].append(callback)
 
     def _fire_gate(self, gate: TattvaGate, ctx: Dict[str, object]) -> None:
-        """Set active gate and fire registered hooks."""
+        """Set active gate, fire registered hooks, then dispatch gate providers."""
         self._active_gate = gate
+        # 1. Local hooks (lightweight callbacks)
         for hook in self._gate_hooks.get(gate, ()):
             try:
                 hook(gate, ctx)
             except Exception as exc:
                 logger.warning("Gate hook error at %s: %s", gate.name, exc)
+        # 2. Registry gate providers (capability-checked components)
+        for name, provider in get_registry().get_gate_providers(gate):
+            try:
+                _dispatch_provider(gate, provider, ctx)
+            except Exception as exc:
+                logger.warning("Gate provider %s error at %s: %s", name, gate.name, exc)
 
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
