@@ -327,9 +327,39 @@ Nur diese Branches haben echten Wert:
 | `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
 | `fix/reactor-lifecycle` | PR-ready | ReactorLoop shutdown + offer() Event-Routing + Lotus Seed-based resonate() |
+| `feature/tattva-gate-pipeline` | PR-ready | TattvaGate explicit in `__call__()` + TattvaRegistry + Gate Hooks |
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
+
+## TattvaGate Pipeline ✅ (Feb 11 2026)
+
+**Branch: `feature/tattva-gate-pipeline`** (5 Commits, 35 neue Tests, -1275 Zeilen toter Code)
+
+Die 9 NavaBhakti-Schritte in `lotus_core.__call__()` sind jetzt explizit auf 5 TattvaGates gemappt:
+
+```
+GATE 0 — CHAITANYA (PARSE):    SRAVANAM + NAMA + KIRTANAM
+GATE 1 — NITYANANDA (VALIDATE): PADA_SEVANAM + ARCANAM
+GATE 2 — ADVAITA (EXECUTE):     SMARANAM + VANDANAM
+GATE 3 — GADADHARA (RESULT):    DASYAM + SHABDA
+GATE 4 — SRIVASA (SYNC):        SAKHYAM + KIRTAN + YAJNA + ATMA_NIVEDANAM
+```
+
+Was gebaut wurde:
+- `__tattva__` auf `MahamantraLotus` — Root beschreibt sich selbst (PanchaTattvaProtocol compliant)
+- `active_gate` Property — welches Gate gerade aktiv ist während `__call__`
+- `TattvaRegistry` (`substrate/tattva_registry.py`) — sammelt, indexiert, queryt `__tattva__` Deklarationen
+- `Singularity._load_module()` registriert Module in TattvaRegistry beim Laden
+- `on_gate(gate, callback)` + `_fire_gate(gate, ctx)` — Hooks an Gate-Grenzen mit Pipeline-Kontext
+- `protocols/substrate/mantra/lotus.py` gelöscht (863 Zeilen, 0 Imports = toter Code)
+
+Tests: `tests/mahamantra/test_tattva_gate.py` (17) + `tests/mahamantra/test_tattva_registry.py` (18)
+
+**Was NICHT getan wurde (bewusst):**
+- ChatService NICHT durch `mahamantra("text")` geleitet (großer Refactor, braucht Konzept)
+- 5 Capability Protocols NICHT als echten Code gebaut (noch Strings in Docstrings)
+- TattvaRegistry wird bei Boot NICHT automatisch befüllt (nur Singularity + Lotus registrieren)
 
 ## Lotus: Seed ist Wahrheit, Filesystem ist Maya
 
