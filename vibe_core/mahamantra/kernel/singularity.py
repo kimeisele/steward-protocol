@@ -1048,7 +1048,7 @@ class Mahamantra:
         # 2. PLAY THE FLUTE (Krishna IS the flute)
         # Guard: if VenuService owns the heartbeat, read last DIW
         venu = self.venu
-        if venu._subscribers and venu._prev_state:
+        if venu._owned:
             # VenuService is driving — read, don't step
             diw = venu._prev_state | (venu._mode << CLUSTER_SHIFT)
         else:

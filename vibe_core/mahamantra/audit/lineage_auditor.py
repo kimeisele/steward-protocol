@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
-from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity
+from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity, get_source_cache
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
@@ -43,16 +43,9 @@ class Auditor:
     def run_audit(self) -> List[AuditFinding]:
         """AuditorProtocol: scan all .py files for broken lineage."""
         findings: List[AuditFinding] = []
+        cache = get_source_cache(self._root)
 
-        for path in self._root.rglob("*.py"):
-            if "__pycache__" in str(path):
-                continue
-
-            try:
-                content = path.read_text()
-            except Exception:
-                continue
-
+        for path, content in cache.scan():
             gen_match = re.search(
                 r'__genesis__\s*[=:]\s*["\']?(0x[0-9a-fA-F]+)', content
             )

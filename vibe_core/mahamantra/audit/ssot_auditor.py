@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
-from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity
+from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity, get_source_cache
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
@@ -68,17 +68,13 @@ class Auditor:
     def run_audit(self) -> List[AuditFinding]:
         """AuditorProtocol: scan for hardcoded sacred constants."""
         findings: List[AuditFinding] = []
+        cache = get_source_cache(self._root)
 
-        for path in self._root.rglob("*.py"):
-            if "__pycache__" in str(path):
-                continue
+        for path, content in cache.scan():
             if any(ssot in path.name for ssot in SSOT_FILES):
                 continue
 
-            try:
-                lines = path.read_text().split("\n")
-            except Exception:
-                continue
+            lines = content.split("\n")
 
             for i, line in enumerate(lines, 1):
                 stripped = line.strip()
