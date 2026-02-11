@@ -136,8 +136,8 @@ class TestPanchaTattvaLookup:
         assert aspect.tattva == PanchaTattva.NITYANANDA
 
     def test_get_tattva_by_protocol(self) -> None:
-        """get_tattva_by_protocol finds by protocol name."""
-        aspect = get_tattva_by_protocol("MantraProtocol")
+        """get_tattva_by_protocol finds by protocol name (Type.__name__)."""
+        aspect = get_tattva_by_protocol("MantraCapability")
         assert aspect.tattva == PanchaTattva.CHAITANYA
 
         aspect = get_tattva_by_protocol("Sync")
