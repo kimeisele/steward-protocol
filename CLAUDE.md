@@ -410,7 +410,7 @@ Bit-identische Ergebnisse. Kein numpy. Kein neues Dependency.
 
 ## Repo-Zustand
 
-**Repo ist SAUBER.** 0 ungemergte Branches. Frühjahrsputz am 11. Feb 2026: 61 Müll-Branches gelöscht.
+**Repo ist SAUBER.** 1 offener Feature-Branch. Frühjahrsputz am 11. Feb 2026: 61 Müll-Branches gelöscht.
 
 Alles Wertvolle ist auf `main`:
 
@@ -425,6 +425,7 @@ Alles Wertvolle ist auf `main`:
 | Reactor Lifecycle | ✅ main | ReactorLoop shutdown + offer() Event-Routing |
 | TattvaGate Pipeline | ✅ main | 5 Gates in `__call__()` + TattvaRegistry + Hooks |
 | Pancha Tattva Protocols | ✅ main | 5 Capability Protocols + Gate Provider Dispatch (54 Tests) |
+| Gate Providers | 🔧 feature/gate-providers | 5 reale Wächter an den Gates + fix get_tattva_by_protocol (37 Tests) |
 
 Gelöschte/verworfene Branches (für die Akten):
 - `architectural/state-authority` — builtins.open Monkey-Patch war Symptom-Doktorei
@@ -486,8 +487,33 @@ Tests: `test_capabilities.py` (24) + `test_gate_providers.py` (20) + `test_gate_
 Regression: 4167 bestehende Mahamantra-Tests grün, 0 Failures.
 
 **Was NICHT getan wurde (bewusst):**
-- Keine echten Gate-Provider registriert (Infrastruktur steht, Wächter fehlen noch)
-- StateService nicht als EnforceCapability-Provider verdrahtet
+- ~~Keine echten Gate-Provider registriert~~ → **ERLEDIGT** in `feature/gate-providers`
+- ~~StateService nicht als EnforceCapability-Provider verdrahtet~~ → **ERLEDIGT** (EnforceGateProvider nutzt StateService lazy)
+
+## Gate Providers 🔧 (Feb 12 2026)
+
+**Branch: `feature/gate-providers`** (1 Commit, 37 neue Tests)
+
+Die 5 TattvaGates haben jetzt **echte Wächter** (Observer-Adapter):
+
+```
+GATE 0 — CHAITANYA (PARSE)     → MantraGateProvider   (Input-Validierung + Seed-Tracking)
+GATE 1 — NITYANANDA (VALIDATE) → StorageGateProvider   (Seed-Integrität)
+GATE 2 — ADVAITA (EXECUTE)     → InferGateProvider     (Attractor-Distribution-Tracking)
+GATE 3 — GADADHARA (RESULT)    → SyncGateProvider      (Position-Routing-Tracking)
+GATE 4 — SRIVASA (SYNC)        → EnforceGateProvider   (Governance via StateService)
+```
+
+Was gebaut wurde:
+- `substrate/gate_providers.py` — 5 Provider-Klassen + `wire_gate_providers()` + `get_providers()` Singleton
+- Jeder Provider erfüllt sein Capability Protocol (`isinstance` check ✅)
+- `EnforceGateProvider` nutzt `StateService` lazy via DI (graceful degradation ohne DI)
+- `wire_gate_providers()` — einmal bei Boot aufrufen, registriert alle 5 in TattvaRegistry (idempotent)
+- **Bugfix**: `get_tattva_by_protocol()` in `pancha_tattva.py` — `.lower()` auf Type statt str gefixt
+
+Tests: `test_gate_provider_impl.py` (37) — Compliance, Methoden, Stats, Wiring, Integration mit `_dispatch_provider`
+
+**Architektur-Entscheidung**: Provider sind **Observer** (nicht Controller). Sie beobachten den Pipeline-Kontext, tracken Statistiken, validieren — aber ändern den Flow NICHT. `__call__()` bleibt der einzige Controller.
 
 ## Lotus: Seed ist Wahrheit, Filesystem ist Maya
 
