@@ -223,10 +223,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     # TattvaGate — which gate is currently active during __call__
     _active_gate: Optional[TattvaGate] = None
 
-    # Gate hooks — callbacks fired at gate boundaries
-    # Key: TattvaGate, Value: list of callables(gate, context_dict)
-    _gate_hooks: Dict[TattvaGate, List] = {}
-
     # Lazy-loaded instances
     _compressor = None
     _gita_index = None
@@ -276,6 +272,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
         GADBase.__init__(self)
+        self._gate_hooks: Dict[TattvaGate, List] = {}
         get_registry().register("mahamantra_lotus", self)
 
     @classmethod
