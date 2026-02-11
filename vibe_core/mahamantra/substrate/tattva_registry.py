@@ -30,6 +30,7 @@ import threading
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
+from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 
 logger = logging.getLogger("TATTVA_REGISTRY")
 
@@ -54,6 +55,8 @@ class TattvaRegistry:
     def __init__(self) -> None:
         self._entries: Dict[str, TattvaDict] = {}
         self._objects: Dict[str, object] = {}
+        self._gate_providers: Dict[TattvaGate, List[Tuple[str, object]]] = {}
+        self._violations: List[Tuple[str, str]] = []  # (name, reason)
 
     @classmethod
     def instance(cls) -> "TattvaRegistry":
@@ -157,6 +160,55 @@ class TattvaRegistry:
         return results
 
     # =========================================================================
+    # GATE PROVIDERS — Components claim responsibility for gates
+    # =========================================================================
+
+    def register_gate_provider(self, name: str, obj: object, gate: TattvaGate) -> bool:
+        """
+        Register an object as a provider for a specific TattvaGate.
+
+        The object MUST satisfy the capability protocol for that gate.
+        Non-compliant objects are rejected and logged as violations.
+
+        Args:
+            name: Provider identifier
+            obj: The provider object
+            gate: Which gate this provider serves
+
+        Returns:
+            True if accepted, False if capability check failed
+        """
+        from vibe_core.mahamantra.protocols._capabilities import check_capability, get_capability_for_gate
+
+        if not check_capability(obj, gate):
+            cap = get_capability_for_gate(gate)
+            reason = f"{name} lacks {cap.__name__} for gate {gate.name}"
+            self._violations.append((name, reason))
+            logger.warning("Gate provider REJECTED: %s", reason)
+            return False
+
+        if gate not in self._gate_providers:
+            self._gate_providers[gate] = []
+        self._gate_providers[gate].append((name, obj))
+        logger.debug("Gate provider registered: %s → %s", name, gate.name)
+        return True
+
+    def get_gate_providers(self, gate: TattvaGate) -> List[Tuple[str, object]]:
+        """Get all registered providers for a gate."""
+        return list(self._gate_providers.get(gate, []))
+
+    def gate_provider_count(self, gate: Optional[TattvaGate] = None) -> int:
+        """Count providers. If gate is None, count all."""
+        if gate is not None:
+            return len(self._gate_providers.get(gate, []))
+        return sum(len(v) for v in self._gate_providers.values())
+
+    @property
+    def violations(self) -> List[Tuple[str, str]]:
+        """All capability violations (rejected registrations)."""
+        return list(self._violations)
+
+    # =========================================================================
     # INTROSPECTION — The system describes itself
     # =========================================================================
 
@@ -186,12 +238,14 @@ class TattvaRegistry:
     @property
     def __tattva__(self) -> TattvaDict:
         """The registry describes itself."""
+        providers = self.gate_provider_count()
+        viols = len(self._violations)
         return {
-            "chaitanya": f"TattvaRegistry — Border Control ({self.count} passports checked)",
-            "nityananda": "Dict[str, TattvaDict] + Dict[str, object] (in-memory, thread-safe)",
-            "advaita": "register(name, obj) → query(key, pattern) → List[(name, tattva)]",
-            "gadadhara": f"Registered: {', '.join(self.names[:5])}{'...' if self.count > 5 else ''}",
-            "srivasa": "Singleton via get_registry(), reset() for testing",
+            "chaitanya": f"TattvaRegistry — Border Control ({self.count} passports, {providers} gate providers)",
+            "nityananda": "Dict[str, TattvaDict] + Dict[str, object] + Dict[TattvaGate, providers] (in-memory, thread-safe)",
+            "advaita": "register(name, obj) → register_gate_provider(name, obj, gate) → query(key, pattern)",
+            "gadadhara": f"Registered: {', '.join(self.names[:5])}{'...' if self.count > 5 else ''}, violations: {viols}",
+            "srivasa": "Singleton via get_registry(), reset() for testing. Capability-checked gate providers.",
         }
 
 

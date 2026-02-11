@@ -46,7 +46,7 @@ __genesis__ = "0x2ca74606"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import Final, Protocol, Tuple, runtime_checkable
+from typing import Final, Protocol, Tuple, Type, runtime_checkable
 
 from vibe_core.mahamantra.substrate.byte import (
     LILA_CYCLES as _LILA_CYCLES,
@@ -57,6 +57,15 @@ from vibe_core.mahamantra.substrate.byte import (
     LILA_LIMIT,
     MAHAMANTRA_DIMENSION,
     HolyName,
+)
+
+# Capability Protocols (the 5 Pancha Tattva as runtime contracts)
+from vibe_core.mahamantra.protocols._capabilities import (
+    MantraCapability as _MantraCapability,
+    StorageCapability as _StorageCapability,
+    InferCapability as _InferCapability,
+    SyncCapability as _SyncCapability,
+    EnforceCapability as _EnforceCapability,
 )
 
 # =============================================================================
@@ -145,7 +154,7 @@ class TattvaAspect:
     # Was sie tun (funktional)
     capability: str
     # Welches Protokoll sie manifestieren
-    protocol: str
+    protocol: Type
     # Welches HolyName-Wort primär
     primary_word: HolyName
 
@@ -162,7 +171,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
         sanskrit_name="Sri Krishna Chaitanya Mahaprabhu",
         essence="Krishna selbst in Devotee-Stimmung",
         capability="IDENTITY - Der Einstiegspunkt",
-        protocol="MantraProtocol",
+        protocol=_MantraCapability,
         primary_word=HolyName.KRISHNA,
     ),
     TattvaAspect(
@@ -171,7 +180,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
         sanskrit_name="Prabhu Nityananda",
         essence="Ananta Shesha - Das unendliche Bett",
         capability="STORAGE - Das Fundament trägt alles",
-        protocol="StorageProtocol",
+        protocol=_StorageCapability,
         primary_word=HolyName.HARE,
     ),
     TattvaAspect(
@@ -180,7 +189,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
         sanskrit_name="Sri Advaita Acarya",
         essence="Maha-Vishnu - Der der Krishna herbeiruft",
         capability="LOGIC - Die Brücke zwischen Welten",
-        protocol="InferProtocol",
+        protocol=_InferCapability,
         primary_word=HolyName.KRISHNA,
     ),
     TattvaAspect(
@@ -189,7 +198,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
         sanskrit_name="Gadadhara Pandita",
         essence="Radharani - Die Freude-Energie",
         capability="SYNC - Die Verbindung ist Shakti",
-        protocol="SyncProtocol",
+        protocol=_SyncCapability,
         primary_word=HolyName.HARE,
     ),
     TattvaAspect(
@@ -198,7 +207,7 @@ PANCHA_TATTVA_ASPECTS: Final[Tuple[TattvaAspect, ...]] = (
         sanskrit_name="Srivasa Thakura",
         essence="Narada Muni - Der wandernde Devotee",
         capability="ENFORCE - Organisiert die Sangha",
-        protocol="EnforceProtocol",
+        protocol=_EnforceCapability,
         primary_word=HolyName.RAMA,
     ),
 )
