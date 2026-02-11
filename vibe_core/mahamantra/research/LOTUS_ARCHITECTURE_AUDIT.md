@@ -1,123 +1,203 @@
-# Lotus Architecture Audit
-**Date:** 2026-02-10 | **Branch:** feature/lotus-architecture-audit
+# Lotus & Pancha Tattva Architecture Audit
+**Date:** 2026-02-11 | **Branch:** feature/lotus-architecture-audit
 
-## 1. Benchmark Results (Verified)
+---
+
+## 1. Benchmark (Verified — Not Gemini Speculation)
 
 | Operation | Cold | Warm | Hot Path? |
 |---|---|---|---|
 | `tick()` | — | **0.26ms** | ✅ YES (250ms budget → 249ms headroom) |
 | `rank_words()` vectorized | 328ms | **32ms** | ❌ NO (only on `__call__`) |
 | `resonate('dharma')` | 97ms | — | ❌ NO |
-| `lotus_core('test')` | **2288ms** | **106ms** | ❌ NO (user-triggered, not heartbeat) |
+| `lotus_core('test')` | **2288ms** | **106ms** | ❌ NO (user-triggered) |
 
-**Verdict:** Gemini's "1300ms blocking violation" is **wrong for the hot path**. `tick()` is 0.26ms. `rank_words` is never called from the heartbeat loop. The 2.3s cold start is a one-time import/cache penalty, not a per-tick cost.
+**Verdict:** No real-time violation. `tick()` = 0.26ms. The 2.3s cold start is one-time import/cache.
 
-## 2. Lotus Class Inventory
+---
 
-### A. DUPLICATE DEFINITIONS (Problem)
+## 2. PANCHA TATTVA — Was Existiert (Fakten)
 
-| Class | File 1 | File 2 | Identical? |
+### 2A. Drei Schichten — alle leben
+
+| Datei | Was | Importeure | Status |
 |---|---|---|---|
-| `LotusProtocol` | `mahamantra/protocols/_lotus.py:317` | `protocols/substrate/mantra/lotus.py:350` | ~90% same |
-| `LotusBase` | `mahamantra/protocols/_lotus.py:359` | `protocols/substrate/mantra/lotus.py:456` | ~85% same |
-| `LotusMode` | `mahamantra/protocols/_lotus.py:103` | `protocols/substrate/mantra/lotus.py:146` | Identical |
-| `LotusState` | `mahamantra/protocols/_lotus.py:212` | `protocols/substrate/mantra/lotus.py:232` | Different (dataclass vs TypedDict) |
-| `LotusRoute` | `mahamantra/protocols/_lotus.py:270` | `protocols/substrate/mantra/lotus.py:249` | Different (dataclass vs TypedDict) |
-| `LotusPetal` | `mahamantra/protocols/_lotus.py:118` | `protocols/substrate/mantra/lotus.py:202` | Different (dataclass vs TypedDict) |
+| `protocols/_pancha.py` | `PanchaTattvaProtocol` + `TattvaDict` (5 Fragen) | 0 direkte Imports | ⚠️ **PROTOCOL DEFINIERT, ABER NIEMAND IMPORTIERT ES** |
+| `substrate/pancha_tattva.py` | `PanchaTattva` Enum, `TattvaAspect`, `TattvaGate`, Capability-Mapping | 3 Importeure (clock, narada_vina, endpoints) | ✅ Lebt |
+| `substrate/tattva.py` | `KshetraElement` (24 Elemente), `AparaPrakriti` (8), `GuruTattva`, `Purushottama` | 0 direkte Imports | ⚠️ **Philosophisch komplett, aber unbenutzt** |
 
-**This is the core structural problem.** Two parallel Lotus type systems that diverged.
+### 2B. `__tattva__` Property — 33 Implementierer!
 
-### B. ACTUAL RUNTIME CLASSES (Used)
+Das `__tattva__` Property (aus `_pancha.py:PanchaTattvaProtocol`) wird von **33 Dateien** implementiert:
+- `kernel/singularity.py`, `kernel_impl.py`
+- `substrate/proxy.py` (4×), `chamber.py`, `sankirtan.py`, `venu_orchestrator.py`
+- `services/nrisimha.py`, `venu_service.py`, `maha_compute_service.py`
+- `cli/engine.py`, `cli/entry.py`, `cli/observe.py`
+- `protocols/_blueprint.py`, `_audit.py`, `_karma.py`, `_sankirtan.py`
+- `adapters/routing.py`, `resonance/resonator.py`
+- `cartridges/archivist`, `auditor`, `envoy`
+- `mahajanas/bhishma`, `brahma`, `janaka`, `kapila`
+- `dharma/kapila/remedies/*`
 
-| Class | File | Role | Used By |
-|---|---|---|---|
-| `MahamantraLotus` | `substrate/lotus_core.py` | Root singleton, `__call__`, `tick()`, `vibrate()` | Everything |
-| `LotusNode` | `substrate/lotus_types.py` | Auto-discovery tree (`__getattr__` → folder) | `MahamantraLotus` inherits |
-| `LotusPath` | `substrate/lotus_types.py` | Path segments for tree traversal | `LotusNode` |
-| `LotusBridgeSubscriber` | `services/lotus_bridge.py` | VenuService → Singularity bridge | VenuService beat dispatch |
-| `LotusBase` | `protocols/substrate/mantra/lotus.py` | ABC for Lotus-aware services | `ChatService` |
+**Das ist kein totes Konzept.** 33 Klassen deklarieren ihre 5-Tattva-Identität. Aber:
+- **Niemand liest `__tattva__` zur Laufzeit** (kein Router, kein Dispatcher nutzt es)
+- Es ist eine **Deklaration ohne Consumer** — wie ein Reisepass den niemand kontrolliert
 
-### C. DATA STRUCTURE CLASSES (Adapters)
+### 2C. Capability-Mapping (existiert als Strings, nicht als Code)
 
-| Class | File | Role |
+In `pancha_tattva.py` steht:
+```
+CHAITANYA  → MantraProtocol (Identity/Entry)
+NITYANANDA → StorageProtocol (Substrate/Foundation)
+ADVAITA    → InferProtocol (Logic/Bridge)
+GADADHARA  → SyncProtocol (Connection/Flow)
+SRIVASA    → EnforceProtocol (Governance/Sangha)
+```
+
+**`MantraProtocol`, `StorageProtocol`, `InferProtocol`, `SyncProtocol`, `EnforceProtocol` existieren NICHT als Code.** 0 Treffer. Das sind nur Strings in Docstrings.
+
+### 2D. TattvaGate (existiert, unbenutzt)
+
+`TattvaGate` Enum (PARSE→VALIDATE→EXECUTE→RESULT→SYNC) ist definiert in `pancha_tattva.py` mit vollständigem Mapping zu Pancha Tattva. **Wird von niemandem importiert.**
+
+---
+
+## 3. LOTUS — Duplikate & Toter Code
+
+### 3A. Zwei divergierte LotusProtocol-Definitionen
+
+| Datei | Importeure | Status |
 |---|---|---|
-| `LotusIPRouter` | `adapters/network.py` | O(1) IPv4 routing via 16-ary radix |
-| `LotusBio` | `adapters/bio.py` | O(1) DNA k-mer index |
-| `_LotusEngine16` | `adapters/routing.py` | 16-bit radix engine |
-| `_GenericLotusEngine` | `adapters/routing.py` | N-bit radix engine |
+| `mahamantra/protocols/_lotus.py` | **6 Dateien** (chat_service, _gad, _steward, _graph, chat_refinement, chat_substrate_bridge) | **KANONISCH** |
+| `protocols/substrate/mantra/lotus.py` | **0 Dateien** | **TOT** — deprecated markiert |
 
-These are **correctly named** — they use the Lotus (16-ary radix) as a data structure. No problem here.
+### 3B. Runtime-Klassen (die tatsächlich laufen)
 
-### D. RESEARCH/DEMO (Not production)
+| Klasse | Datei | Rolle |
+|---|---|---|
+| `MahamantraLotus` | `substrate/lotus_core.py` | Root-Singleton, `__call__`, `tick()` |
+| `LotusNode` | `substrate/lotus_types.py` | Auto-Discovery-Baum (`__getattr__` → Folder) |
+| `LotusBridgeSubscriber` | `services/lotus_bridge.py` | VenuService → Singularity Bridge |
+| `LotusBase` | `protocols/_lotus.py` | ABC für Lotus-aware Services (ChatService erbt) |
 
-| File | Purpose |
+### 3C. Adapter-Klassen (korrekt benannt, kein Problem)
+
+`LotusIPRouter`, `LotusBio`, `_LotusEngine16` — nutzen Lotus als 16-ary Radix-Datenstruktur.
+
+### 3D. Tattva Re-Exports (sauber)
+
+`protocols/substrate/tattva.py` ist ein Thin Wrapper → re-exportiert aus `mahamantra/substrate/tattva.py`. Kein Duplikat.
+
+---
+
+## 4. INPUT-PIPELINE — Drei Getrennte Wege
+
+### Weg 1: `mahamantra("text")` — Mantra-Based Computing
+```
+Text → encode_text() → RAMA coords
+     → compress() → seed
+     → synth_transform(seed) → attractor
+     → rank_words(coords, attractor) → resonant words
+     → match_attractor() → Gita verse
+     → chamber.kirtan() → MahaCell
+     → Dict response
+```
+**9 NavaBhakti Schritte.** Vollständig, deterministisch, kein LLM.
+
+### Weg 2: `ChatService.chat(message)` — LLM-Augmented
+```
+Message → _compute_resonance() → VarnaTensor routing
+        → position → mahajana
+        → LLM Provider → response
+        → Nadi message passing (optional)
+```
+**Nutzt `LotusBase`, `KshetraElement`, Resonance-Thresholds.** Hat LLM-Dependency.
+
+### Weg 3: `tick()` — Heartbeat (kein User-Input)
+```
+VenuOrchestrator.step() → 19-bit DIW
+Singularity.tick() → TickState broadcast
+```
+**Rein intern, kein User-Input.**
+
+### Problem: Weg 1 und Weg 2 sind nicht verbunden
+- `ChatService` nutzt `_compute_resonance()` (VarnaTensor), nicht `mahamantra("text")`
+- `mahamantra("text")` nutzt `rank_words()`, nicht ChatService
+- Zwei parallele Resonance-Engines für denselben Zweck
+
+---
+
+## 5. OS-GRAPH — Was Existiert, Was Fehlt
+
+### Existiert ✅
+
+| OS-Konzept | Komponente | Qualität |
+|---|---|---|
+| **Kernel** | `Singularity` | Solid — tick, broadcast, unified |
+| **Clock** | `VenuOrchestrator` + `VenuService` | Solid — `_owned` flag, one heartbeat |
+| **IPC** | `Singularity._listeners` (semantic) + `_subscribers` (DIW) | Consolidated |
+| **Process Scheduler** | `ShadowReactor` (position-gated Yajna cycle) | Works |
+| **Memory** | `Antaranga` (16KB bytearray) + `SankirtanChamber` | Works, split-brain risk |
+| **Device Drivers** | Adapters (network, bio, audio, routing) | Clean |
+| **Identity System** | `__tattva__` auf 33 Klassen | Deklariert, aber kein Consumer |
+| **Capability Taxonomy** | `PanchaTattva` Enum + `TattvaAspect` | Definiert, nicht verdrahtet |
+| **Type System** | `KshetraElement` (24), `AparaPrakriti` (8) | Philosophisch komplett, Code-unbenutzt |
+| **Gate Pipeline** | `TattvaGate` (PARSE→VALIDATE→EXECUTE→RESULT→SYNC) | Definiert, nicht verdrahtet |
+| **Nadi (Message Passing)** | `ChatService._boot_nadi()`, `NadiProtocol` | Existiert, optional |
+
+### Fehlt 🔴
+
+| OS-Konzept | Status |
 |---|---|
-| `research/hardware_lotus.py` | Hardware pipeline simulation |
-| `research/lotus_acintya.py` | Philosophical exploration |
-| `research/lotus_full_spectrum.py` | Full spectrum analysis |
-| `research/lotus_radix_n.py` | N-ary radix experiments |
-| `research/lotus_tree.py` | Tree visualization |
+| **Unified Entry Point** | Zwei getrennte Pipelines (mahamantra vs ChatService) |
+| **Capability Router** | `TattvaGate` existiert aber routet nichts |
+| **`__tattva__` Consumer** | 33 Deklarationen, 0 Leser |
+| **5 Protocol Interfaces** | Nur als Strings in Docstrings, nicht als Code |
+| **Session/Process** | Kein Konzept jenseits Heartbeat-Ticks |
 
-## 3. The Real Problem: Two Type Systems
+---
 
-```
-vibe_core/
-├── mahamantra/protocols/_lotus.py      ← "acintya level" (dataclasses)
-│   ├── LotusProtocol (Protocol)
-│   ├── LotusBase (ABC)
-│   ├── LotusMode, LotusPetal, LotusState, LotusRoute (dataclass)
-│   ├── LotusTree, LotusHologram
-│   └── LotusProtocolDef
-│
-├── protocols/substrate/mantra/lotus.py  ← "substrate level" (TypedDicts)
-│   ├── LotusProtocol (Protocol)         ← DUPLICATE
-│   ├── LotusBase (ABC)                  ← DUPLICATE
-│   ├── LotusMode                        ← DUPLICATE
-│   ├── LotusPetal, LotusNode, LotusState, LotusRoute (TypedDict)
-│   ├── LotusHeartbeat
-│   └── LotusRegistry
-│
-├── mahamantra/substrate/lotus_types.py  ← ACTUAL runtime (LotusNode tree)
-└── mahamantra/substrate/lotus_core.py   ← ACTUAL runtime (MahamantraLotus)
-```
+## 6. DIAGNOSE — Das Echte Problem
 
-**The runtime uses `lotus_types.py` and `lotus_core.py`.** The two protocol files (`_lotus.py` and `mantra/lotus.py`) are **legacy definitions that diverged** and are barely imported.
+### Es ist KEIN Spaghetti-Problem. Es ist ein VERDRAHTUNGS-Problem.
 
-## 4. Who Imports What? (Verified)
+Die Teile existieren:
+- **Pancha Tattva** als Enum, als Capability-Mapping, als Gate-Pipeline
+- **`__tattva__`** als universelle Identitäts-Deklaration auf 33 Klassen
+- **`TattvaGate`** als 5-stufige Processing-Pipeline
+- **`KshetraElement`** als vollständiges Typ-System (24 Elemente)
+- **Nadi** als Message-Passing-Protokoll
+- **Zwei funktionierende Input-Pipelines** (Mantra + Chat)
 
-| File | Importers | Status |
-|---|---|---|
-| `mahamantra/protocols/_lotus.py` | 6 files (chat_service, chat_refinement, chat_substrate_bridge, _gad, _steward, _graph) | **CANONICAL** |
-| `protocols/substrate/mantra/lotus.py` | **0 files** | **DEAD CODE** — marked deprecated |
-| `mahamantra/substrate/lotus_types.py` | 2 files (lotus_core, lotus_projection) | **RUNTIME** |
-| `mahamantra/substrate/lotus_core.py` | Everything (via `mahamantra` singleton) | **RUNTIME** |
+Was fehlt ist die **Verdrahtung**:
+1. Niemand **liest** `__tattva__` — es ist ein Reisepass ohne Grenzkontrolle
+2. `TattvaGate` (PARSE→VALIDATE→EXECUTE→RESULT→SYNC) ist definiert aber **routet nichts**
+3. Die 5 Capability-Protocols sind **Strings**, nicht **Interfaces**
+4. `mahamantra("text")` und `ChatService.chat()` sind **zwei getrennte Welten**
+5. `protocols/substrate/mantra/lotus.py` ist **863 Zeilen toter Code** (0 Imports)
 
-## 5. OS-Graph Mapping (Current State)
+### Was NICHT kaputt ist:
+- Heartbeat/Tick-System (unified, 0.26ms)
+- Broadcast-System (consolidated)
+- Resonance-Ranker (32ms warm, 7D scoring)
+- Adapter-Layer (clean separation)
+- Tattva Re-Exports (sauber)
 
-| OS Concept | Current Component | Status |
-|---|---|---|
-| **Kernel** | `Singularity` (tick, broadcast) | ✅ Solid |
-| **Heartbeat/Clock** | `VenuOrchestrator` + `VenuService` | ✅ Unified |
-| **Process Scheduler** | `ShadowReactor` (position-gated) | ✅ Works |
-| **IPC/Bus** | `Singularity._listeners` + `VenuOrchestrator._subscribers` | ✅ Consolidated |
-| **Filesystem** | `LotusNode` (folder = existence) | ⚠️ Mixed with FS fallback |
-| **Memory** | `Antaranga` (bytearray) | ⚠️ Split-brain risk |
-| **Syscall Interface** | `PanchaTattva` (5 questions) | 🔴 Exists as protocol, not as API |
-| **Device Drivers** | Adapters (network, bio, audio) | ✅ Clean |
-| **Shell** | `lotus_cli.py` | ⚠️ Exists but not unified |
+---
 
-## 6. What's Missing for "Universal OS"
+## 7. NÄCHSTE SCHRITTE (Vorschlag — kein Code ohne Freigabe)
 
-1. **Single Lotus Protocol** — Merge the two diverged definitions into ONE SSOT
-2. **Pancha Tattva as Syscall** — The 5 questions should be the ONLY way to interact with the kernel
-3. **Semantic Namespace** — `LotusNode.__getattr__` is the right idea but mixes FS discovery with seed data
-4. **Input Pipeline** — Text/Audio/Any → RAMA coords → Mantra position → Response (exists but not unified as "the OS interface")
-5. **Session/State** — No concept of "user session" or "running process" beyond heartbeat ticks
+### Phase 1: Aufräumen (risikoarm)
+1. `protocols/substrate/mantra/lotus.py` löschen (863 Zeilen, 0 Imports, bereits deprecated)
+2. Verifizieren dass `LotusBase` Import in `ChatService` von `_lotus.py` kommt (ja, bestätigt)
 
-## 7. Recommended Actions (Priority Order)
+### Phase 2: Verdrahten (das eigentliche Werk)
+3. `__tattva__` Consumer bauen — ein Router der `__tattva__` liest und Capabilities dispatcht
+4. `TattvaGate` als echte Pipeline verdrahten (PARSE→VALIDATE→EXECUTE→RESULT→SYNC)
+5. Die 5 Capability-Protocols als echte `Protocol` Klassen definieren (nicht nur Strings)
 
-1. **DEDUPLICATE:** Determine which `LotusProtocol` is canonical, delete the other
-2. **SSOT TYPES:** One file for all Lotus types (merge `_lotus.py` TypedDicts with dataclasses)
-3. **PANCHA API:** Formalize the 5 Pancha Tattva questions as the universal interface
-4. **NAMESPACE:** Clean `LotusNode` to be pure seed-based (no FS fallback for core paths)
-5. **INPUT UNIFICATION:** Single entry point: any input → RAMA → DIW → response
+### Phase 3: Unifizieren
+6. `mahamantra("text")` und `ChatService.chat()` über `TattvaGate` vereinen
+7. CLI → Capability-Injection umstellen (nicht starre Commands, sondern Tattva-Routing)
+
+**Kein Schritt ohne Test. Kein Schritt ohne Plan.**
