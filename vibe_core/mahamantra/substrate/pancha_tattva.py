@@ -245,7 +245,8 @@ def get_tattva_by_capability(capability: str) -> TattvaAspect:
 def get_tattva_by_protocol(protocol: str) -> TattvaAspect:
     """Get aspect by protocol name."""
     for aspect in PANCHA_TATTVA_ASPECTS:
-        if protocol.lower() in aspect.protocol.lower():
+        proto_name = aspect.protocol.__name__ if isinstance(aspect.protocol, type) else str(aspect.protocol)
+        if protocol.lower() in proto_name.lower():
             return aspect
     raise ValueError(f"Unknown protocol: {protocol}")
 
