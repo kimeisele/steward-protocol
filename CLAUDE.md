@@ -410,28 +410,26 @@ Bit-identische Ergebnisse. Kein numpy. Kein neues Dependency.
 
 ## Repo-Zustand
 
-~60+ ungemergte Remote-Branches (`claude/*`, `copilot/*`, `gemini/*`). Fast alle sind AI-Müll.
-Nur diese Branches haben echten Wert:
+**Repo ist SAUBER.** 0 ungemergte Branches. Frühjahrsputz am 11. Feb 2026: 61 Müll-Branches gelöscht.
 
-| Branch | Status | Inhalt |
-|--------|--------|--------|
-| `main` | Stabil | Antaranga RAM Chamber + LexiconVectorCache + F811/F821 clean + Reactor Lifecycle + Event-Routing + Lotus Seed-Routing |
-| `feature/lotus-pipeline-cache` | PR-ready | PipelineCache Singleton — seed-unabhängige Lookups vorberechnet |
-| `perf/lotus-call-hotpath` | PR-ready | MahaModularSynth Singleton — eliminiert Objekt-Allokation pro __call__ |
-| `fix/igene-fatal-comparison` | PR-ready | iGene.is_fatal: float(0-1) vs int(0-21600) Normalisierung |
-| `refactor/consolidate-event-bus-copies` | Gemergt | EventType SSOT leaf + 870-line copy killed + TRINITY fix |
-| `feature/mahamantra-single-entry-point` | Gemergt | Write-behind cache + Samskara intercept |
-| `feature/antaranga-ram-chamber` | Gemergt | 16KB kontiguierer RAM als Schatten-Layer in SankirtanChamber |
-| `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
-| `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
-| `fix/reactor-lifecycle` | PR-ready | ReactorLoop shutdown + offer() Event-Routing + Lotus Seed-based resonate() |
-| `feature/tattva-gate-pipeline` | Gemergt | TattvaGate explicit in `__call__()` + TattvaRegistry + Gate Hooks (5 Commits, 35 Tests) |
-| `feature/pancha-tattva-protocols` | PR-ready | 5 Capability Protocols + Gate Provider Dispatch + TattvaAspect.protocol=Type (54 Tests) |
-| `architectural/state-authority` | **VERWORFEN** | builtins.open Monkey-Patch war Symptom-Doktorei. Nicht mergen. |
-| `refactor/float-to-integer` | **GEPLANT** | Float→Integer Sanierung: 904 Float-Deklarationen, 2756 Float-Literals. |
+Alles Wertvolle ist auf `main`:
 
-Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
-zeigt den vollen Friedhof.
+| Feature | Status | Inhalt |
+|---------|--------|--------|
+| Antaranga RAM Chamber | ✅ main | 16KB kontiguierer RAM als Schatten-Layer |
+| LexiconVectorCache | ✅ main | Precomputed vector lookups |
+| PipelineCache | ✅ main | Seed-unabhängige Lookups vorberechnet |
+| EventType SSOT | ✅ main | Leaf module, 870-line copy killed |
+| Write-behind StateService | ✅ main | RAM-first + Samskara intercept + Mala flush |
+| DIW 19-bit Layout | ✅ main | VENU(6)+VAMSI(9)+MURALI(4) kanonisch |
+| Reactor Lifecycle | ✅ main | ReactorLoop shutdown + offer() Event-Routing |
+| TattvaGate Pipeline | ✅ main | 5 Gates in `__call__()` + TattvaRegistry + Hooks |
+| Pancha Tattva Protocols | ✅ main | 5 Capability Protocols + Gate Provider Dispatch (54 Tests) |
+
+Gelöschte/verworfene Branches (für die Akten):
+- `architectural/state-authority` — builtins.open Monkey-Patch war Symptom-Doktorei
+- 51× `claude/*` Auto-Sessions — nie relevant
+- `copilot/*`, `gemini/*`, diverse Feature-Branches — aufgeräumt
 
 ## TattvaGate Pipeline ✅ (Feb 11 2026)
 
