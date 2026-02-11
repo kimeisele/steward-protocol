@@ -37,6 +37,7 @@ from vibe_core.mahamantra.seed.types import (
     VibrationState,
 )
 from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 
 logger = logging.getLogger("MAHAMANTRA")
@@ -228,6 +229,23 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     _pipeline = None
     _singularity_instance = None
     _kernel_instance = None
+
+    @property
+    def __tattva__(self) -> TattvaDict:
+        """The 5-fold truth of MahamantraLotus — the Root."""
+        gate = self._active_gate
+        return {
+            "chaitanya": "MahamantraLotus — Root of all computation (16 words, 9 NavaBhakti, 5 TattvaGates)",
+            "nityananda": "PipelineCache (LUT), MahaCompression (seed), VenuOrchestrator (flute), Singularity (kernel)",
+            "advaita": "__call__(input) → PARSE→VALIDATE→EXECUTE→RESULT→SYNC → deterministic response",
+            "gadadhara": f"active_gate={gate.name if gate else 'IDLE'}, rounds={self._akash['total_rounds']}, beats={self._akash['total_beats']}",
+            "srivasa": "Parampara verification, ShadowOracle, Yajna cycle, Antaranga chamber",
+        }
+
+    @property
+    def active_gate(self) -> Optional[TattvaGate]:
+        """Which TattvaGate is currently active. None if idle."""
+        return self._active_gate
 
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
