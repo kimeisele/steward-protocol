@@ -425,10 +425,9 @@ Nur diese Branches haben echten Wert:
 | `feature/venu-production` | Gemergt | Orchestrator-Hardening + Shared Orchestrator + KalaBridge-Migration |
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
 | `fix/reactor-lifecycle` | PR-ready | ReactorLoop shutdown + offer() Event-Routing + Lotus Seed-based resonate() |
-| `feature/tattva-gate-pipeline` | PR-ready | TattvaGate explicit in `__call__()` + TattvaRegistry + Gate Hooks |
-| `feature/tattva-gate-pipeline` | PR-ready | TattvaGate explicit in `__call__()` + TattvaRegistry + Gate Hooks (5 Commits, 35 Tests) |
-| `architectural/state-authority` | **GEPLANT** | State-Autorität: Alle 30+ Disk-Schreiber durch StateService zwingen. Siehe DEEP STATE DIAGNOSE. |
-| `refactor/float-to-integer` | **GEPLANT** | Float→Integer Sanierung: 904 Float-Deklarationen, 2756 Float-Literals. Siehe DEEP STATE DIAGNOSE. |
+| `feature/tattva-gate-pipeline` | Gemergt | TattvaGate explicit in `__call__()` + TattvaRegistry + Gate Hooks (5 Commits, 35 Tests) |
+| `architectural/state-authority` | **VERWORFEN** | builtins.open Monkey-Patch war Symptom-Doktorei. Nicht mergen. |
+| `refactor/float-to-integer` | **GEPLANT** | Float→Integer Sanierung: 904 Float-Deklarationen, 2756 Float-Literals. |
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
@@ -453,7 +452,7 @@ Was gebaut wurde:
 - `TattvaRegistry` (`substrate/tattva_registry.py`) — sammelt, indexiert, queryt `__tattva__` Deklarationen
 - `Singularity._load_module()` registriert Module in TattvaRegistry beim Laden
 - `on_gate(gate, callback)` + `_fire_gate(gate, ctx)` — Hooks an Gate-Grenzen mit Pipeline-Kontext
-- `protocols/substrate/mantra/lotus.py` gelöscht (863 Zeilen, 0 Imports = toter Code)
+- `protocols/substrate/mantra/lotus.py` — Löschung RÜCKGÄNGIG (7 Dateien importieren daraus, war NICHT dead code)
 
 Tests: `tests/mahamantra/test_tattva_gate.py` (17) + `tests/mahamantra/test_tattva_registry.py` (18)
 
