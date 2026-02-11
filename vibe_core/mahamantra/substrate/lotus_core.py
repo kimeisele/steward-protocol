@@ -39,6 +39,7 @@ from vibe_core.mahamantra.seed.types import (
 from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
+from vibe_core.mahamantra.substrate.tattva_registry import get_registry
 
 logger = logging.getLogger("MAHAMANTRA")
 
@@ -222,6 +223,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     # TattvaGate — which gate is currently active during __call__
     _active_gate: Optional[TattvaGate] = None
 
+    # Gate hooks — callbacks fired at gate boundaries
+    # Key: TattvaGate, Value: list of callables(gate, context_dict)
+    _gate_hooks: Dict[TattvaGate, List] = {}
+
     # Lazy-loaded instances
     _compressor = None
     _gita_index = None
@@ -247,9 +252,31 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Which TattvaGate is currently active. None if idle."""
         return self._active_gate
 
+    def on_gate(self, gate: TattvaGate, callback) -> None:
+        """
+        Register a callback to fire when a TattvaGate is entered.
+
+        callback(gate: TattvaGate, ctx: dict) -> None
+            gate: which gate was entered
+            ctx: mutable dict with pipeline state at that point
+        """
+        if gate not in self._gate_hooks:
+            self._gate_hooks[gate] = []
+        self._gate_hooks[gate].append(callback)
+
+    def _fire_gate(self, gate: TattvaGate, ctx: Dict[str, object]) -> None:
+        """Set active gate and fire registered hooks."""
+        self._active_gate = gate
+        for hook in self._gate_hooks.get(gate, ()):
+            try:
+                hook(gate, ctx)
+            except Exception as exc:
+                logger.warning("Gate hook error at %s: %s", gate.name, exc)
+
     def __init__(self) -> None:
         LotusNode.__init__(self, LotusPath())
         GADBase.__init__(self)
+        get_registry().register("mahamantra_lotus", self)
 
     @classmethod
     def _get_compressor(cls):
@@ -448,7 +475,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # GATE 0: CHAITANYA — PARSE / Identity
         # "Who/What is this?" — Receive, identify, compress.
         # =====================================================================
-        self._active_gate = TattvaGate.PARSE
+        self._fire_gate(TattvaGate.PARSE, {"input_data": input_data})
 
         # 1. SRAVANAM - Receive input (Entry point)
         if isinstance(input_data, MahaCell):
@@ -478,7 +505,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # GATE 1: NITYANANDA — VALIDATE / Substrate
         # "What does this rest upon?" — Derive attractor, verify parampara.
         # =====================================================================
-        self._active_gate = TattvaGate.VALIDATE
+        self._fire_gate(TattvaGate.VALIDATE, {"input_text": input_text, "seed": seed, "input_coords": input_coords})
 
         # 3. PADA_SEVANAM - Attractor from Seed (Serial, not Parallel)
         # Pipeline: text → compress → seed → synth → attractor (SERIAL)
@@ -499,7 +526,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # GATE 2: ADVAITA — EXECUTE / Bridge
         # "How does this connect?" — Resonance + verse matching.
         # =====================================================================
-        self._active_gate = TattvaGate.EXECUTE
+        self._fire_gate(TattvaGate.EXECUTE, {"seed": seed, "attractor": attractor, "parampara_verified": parampara_verified})
 
         # 5. SMARANAM - Word Resonance (Remembering)
         resonant_words = P.rank_words(
@@ -542,7 +569,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # GATE 3: GADADHARA — RESULT / Energy
         # "How does energy flow?" — Position, phoneme, routing.
         # =====================================================================
-        self._active_gate = TattvaGate.RESULT
+        self._fire_gate(TattvaGate.RESULT, {"attractor": attractor, "resonant_words": resonant_words, "verse_result": verse_result})
 
         # 7. DASYAM - Position/Quarter/Role determination
         # Position from attractor (holographic - embedded in computation)
@@ -574,7 +601,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # GATE 4: SRIVASA — SYNC / Governance
         # "Who governs this?" — Cell creation, chamber, yajna, response.
         # =====================================================================
-        self._active_gate = TattvaGate.SYNC
+        self._fire_gate(TattvaGate.SYNC, {"position": position, "guardian": guardian, "seed": seed, "attractor": attractor})
 
         # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
         result_cell = P.MahaCellUnified.create(

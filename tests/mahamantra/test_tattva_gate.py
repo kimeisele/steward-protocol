@@ -97,3 +97,89 @@ class TestTattvaGateEnum:
     def test_gate_names(self):
         names = [g.name for g in TattvaGate]
         assert names == ["PARSE", "VALIDATE", "EXECUTE", "RESULT", "SYNC"]
+
+
+class TestGateHooks:
+    """Gate hooks fire at gate boundaries with pipeline context."""
+
+    def test_hook_fires_on_parse(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        lotus = MahamantraLotus()
+        captured = []
+        lotus.on_gate(TattvaGate.PARSE, lambda gate, ctx: captured.append((gate, ctx)))
+        lotus("test")
+        assert len(captured) == 1
+        assert captured[0][0] == TattvaGate.PARSE
+        assert "input_data" in captured[0][1]
+
+    def test_all_five_gates_fire(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        lotus = MahamantraLotus()
+        gates_seen = []
+        for gate in TattvaGate:
+            lotus.on_gate(gate, lambda g, ctx, _g=gate: gates_seen.append(_g))
+        lotus("dharma")
+        assert gates_seen == [
+            TattvaGate.PARSE,
+            TattvaGate.VALIDATE,
+            TattvaGate.EXECUTE,
+            TattvaGate.RESULT,
+            TattvaGate.SYNC,
+        ]
+
+    def test_validate_hook_receives_seed(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        lotus = MahamantraLotus()
+        captured = []
+        lotus.on_gate(TattvaGate.VALIDATE, lambda g, ctx: captured.append(ctx))
+        lotus("karma")
+        assert len(captured) == 1
+        assert "seed" in captured[0]
+        assert isinstance(captured[0]["seed"], int)
+
+    def test_execute_hook_receives_attractor(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        lotus = MahamantraLotus()
+        captured = []
+        lotus.on_gate(TattvaGate.EXECUTE, lambda g, ctx: captured.append(ctx))
+        lotus("jnana")
+        assert "attractor" in captured[0]
+        assert "parampara_verified" in captured[0]
+
+    def test_sync_hook_receives_position(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        lotus = MahamantraLotus()
+        captured = []
+        lotus.on_gate(TattvaGate.SYNC, lambda g, ctx: captured.append(ctx))
+        lotus("bhakti")
+        assert "position" in captured[0]
+        assert "guardian" in captured[0]
+        assert 0 <= captured[0]["position"] <= 15
+
+    def test_hook_error_does_not_crash_pipeline(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        lotus = MahamantraLotus()
+
+        def bad_hook(gate, ctx):
+            raise ValueError("intentional test error")
+
+        lotus.on_gate(TattvaGate.PARSE, bad_hook)
+        result = lotus("resilience")
+        assert result is not None
+        assert "gate_trace" in result
+
+    def test_auto_registers_in_tattva_registry(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.tattva_registry import get_registry
+
+        lotus = MahamantraLotus()
+        reg = get_registry()
+        assert "mahamantra_lotus" in reg
+        tattva = reg.get("mahamantra_lotus")
+        assert "MahamantraLotus" in tattva["chaitanya"]
