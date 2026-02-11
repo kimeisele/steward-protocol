@@ -410,7 +410,7 @@ Bit-identische Ergebnisse. Kein numpy. Kein neues Dependency.
 
 ## Repo-Zustand
 
-**Repo ist SAUBER.** 1 offener Feature-Branch. Frühjahrsputz am 11. Feb 2026: 61 Müll-Branches gelöscht.
+**Repo ist SAUBER.** 0 ungemergte Branches. Frühjahrsputz am 11. Feb 2026: 61 Müll-Branches gelöscht.
 
 Alles Wertvolle ist auf `main`:
 
@@ -425,7 +425,7 @@ Alles Wertvolle ist auf `main`:
 | Reactor Lifecycle | ✅ main | ReactorLoop shutdown + offer() Event-Routing |
 | TattvaGate Pipeline | ✅ main | 5 Gates in `__call__()` + TattvaRegistry + Hooks |
 | Pancha Tattva Protocols | ✅ main | 5 Capability Protocols + Gate Provider Dispatch (54 Tests) |
-| Gate Providers | 🔧 feature/gate-providers | 5 reale Wächter an den Gates + fix get_tattva_by_protocol (37 Tests) |
+| Gate Providers | ✅ main | 5 reale Wächter an den Gates + fix get_tattva_by_protocol (37 Tests) |
 
 Gelöschte/verworfene Branches (für die Akten):
 - `architectural/state-authority` — builtins.open Monkey-Patch war Symptom-Doktorei
@@ -490,7 +490,7 @@ Regression: 4167 bestehende Mahamantra-Tests grün, 0 Failures.
 - ~~Keine echten Gate-Provider registriert~~ → **ERLEDIGT** in `feature/gate-providers`
 - ~~StateService nicht als EnforceCapability-Provider verdrahtet~~ → **ERLEDIGT** (EnforceGateProvider nutzt StateService lazy)
 
-## Gate Providers 🔧 (Feb 12 2026)
+## Gate Providers ✅ (Feb 12 2026)
 
 **Branch: `feature/gate-providers`** (1 Commit, 37 neue Tests)
 
