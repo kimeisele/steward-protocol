@@ -610,6 +610,16 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                 except Exception as e:
                     logger.warning(f"⚠️ Balarama wrapping skipped: {e}")
 
+                # GOVARDHAN: Wire Gate Providers (5 Watchers at the TattvaGates)
+                try:
+                    from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers
+
+                    gate_count = wire_gate_providers()
+                    if gate_count:
+                        logger.info(f"      → {gate_count} gate providers wired (TattvaGates armed)")
+                except Exception as e:
+                    logger.debug(f"Gate provider wiring skipped: {e}")
+
                 # GOVARDHAN: Register Mahamantra governance hook (King installs itself)
                 try:
                     from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
