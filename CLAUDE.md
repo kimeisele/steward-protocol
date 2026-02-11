@@ -171,6 +171,104 @@ Jeder Guardian: `__mahajana__`, `__position__`, `__genesis__`, identischer thin 
 
 `reactor/shadow.py` = Yajna-Zyklus. Phase-aware: `on_{phase}` Hook → fallback `execute()`.
 
+## DEEP STATE DIAGNOSE (Feb 11 2026, verifiziert)
+
+**Problem:** Es gibt KEINE State-Autorität. 30+ Python-Files schreiben direkt auf Disk (`json.dump`,
+`open(..., 'w')`). `StateService` existiert (write-behind cache in RAM), aber fast niemand benutzt es.
+Jeder Cartridge, Plugin, Tool schreibt wo er will. Das Ergebnis:
+
+### Was in Git liegt und nicht sollte (verifiziert)
+
+| Was | Wo | Anzahl | Größe | Warum schlimm |
+|-----|----|--------|-------|---------------|
+| Timestamp-Backups | `.vibe/state/*_backup/` | ~30 Dateien | — | Endlos wachsende Kopien |
+| Model-Blobs | `data/models/` | 37 Dateien | **87 MB** | sentence-transformers Weights IN GIT (gitignored aber committed) |
+| Private Keys | `data/identities/*.key`, `data/security/master.key` | 3 Dateien | 8 KB | **SICHERHEITSLÜCKE** |
+| SQLite DBs | `data/economy.db`, `data/vibe_ledger.db` | 2 Dateien | — | Binary in Git |
+| Log-Dateien | `data/logs/*.log` | 2 Dateien | — | Runtime-Artefakte |
+| JSONL Trails | `data/ledger/`, `data/governance/votes/`, `data/logs/` | 5 Dateien | — | Append-only Logs in Git |
+| Science Cache | `data/science/cache/` | 3 Dateien | — | Generierte Cache-Hashes |
+| Root JSON Müll | `watchman_report.json` (1.7MB!), `DEEP_AUDIT_REPORT.json`, etc. | 5 Dateien | 1.8 MB | Auto-generiert, nie aufgeräumt |
+| **Gesamt non-code in Git** | — | **1053 Dateien** | **~100 MB** | — |
+
+### Wer schreibt unkontrolliert auf Disk (30+ Files, verifiziert via grep)
+
+Direkte `.vibe/` Schreiber (20 Files):
+- `cartridges/registry.py`, `cartridges/base.py`
+- `cartridges/system/archivist/`, `watchman/`
+- `plugin_loader.py`, `task_management/task_manager.py`
+- `plugins/economy/`, `resource_limits/`, `naga_guard/`, `sangha_network/`, `durvasa/`, `samsara/`
+- `plugins/opus_assistant/manas/cortex/` (dharma, sutra_sense, shruta_sense, nadi_sense, viveka_action)
+
+Direkte `json.dump`/`open(w)` Schreiber (30+ Files):
+- `cartridges/system/civic/`, `archivist/`, `supreme_court/`, `science/`, `envoy/`, `forum/`, `watchman/`, `herald/`, `auditor/`, `engineer/`
+- `cartridges/agent_city/librarian/`, `dharma/`, `dhruva/`
+- `naga/ouroboros.py`, `commit_watcher.py`
+- `state/commit_authority.py`, `state/samskara.py`
+
+### Branch 1: `architectural/state-authority` (KEIN Cleanup — Architektur-Overhaul)
+
+**Ziel:** EINE State-Autorität. Alles was auf Disk schreibt MUSS durch `StateService` fließen.
+Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
+
+**Was existiert und verdrahtet werden muss:**
+- `StateService` (`state/state_service.py`) — write-behind cache, Mala-flush, Samskara-Intercept
+- `MahamantraLotus.__call__()` — der Geburtskanal für User-Input (TattvaGate Pipeline)
+- `TattvaGate.SYNC` — Gate 4 (Srivasa/Governance) = der richtige Ort für Disk-I/O
+
+**Schritte (verifiziert, nicht halluziniert):**
+1. Audit: Jeden der 30+ unkontrollierten Schreiber identifizieren (DONE — siehe Liste oben)
+2. `StateService` mit `write()` Method erweitern die ALLE Disk-Writes zentral routet
+3. Jeden unkontrollierten Schreiber auf `StateService.write()` umstellen
+4. `git rm --cached` für bereits committed Artefakte (Backups, Model-Blobs, Keys, DBs, Logs)
+5. `.gitignore` als ZWEITE Verteidigungslinie (nicht als einzige!)
+6. **Private Keys rotieren** — die in Git sind für immer kompromittiert
+7. Tests: Verifikation dass kein File mehr direkt schreibt
+
+**NICHT machen:**
+- Neue State-Infrastruktur bauen — `StateService` existiert bereits
+- Files einfach nur gitignoren ohne den Schreiber umzustellen
+- Cartridges/Plugins löschen — nur die Disk-I/O Pfade umleiten
+
+### Branch 2: `refactor/float-to-integer`
+
+**Ziel:** Alle Floats die Mantra-Ableitungen sein sollten → Integer (COSMIC_FRAME = 21600).
+
+**Die Float-Seuche (verifiziert):**
+- 904 Matches für `: float` in 324 Files
+- 2756 Matches für `0.\d+` Literals in 537 Files
+
+**Kategorien (verifiziert):**
+
+| Kategorie | Beispiel | Aktion |
+|-----------|---------|--------|
+| Schon sauber | `harmonics.py` — leitet von Seed ab (`NADI/MALA`) | NICHT anfassen |
+| Purer Slop | `synaptic_seeder.py` — 91× hardcoded `0.85`/`0.15` | → COSMIC_FRAME Integer |
+| Resonance scores | `resonance_ranker.py` — `element: float` | → Integer (0-COSMIC_FRAME) |
+| Timestamps | `byte.py`, `yajna.py` — `time.time()` | Bleibt float (ist korrekt) |
+| Duration | `samskara.py` — `duration_ms: float` | Bleibt float (ist korrekt) |
+| Weights/Trust | `synaptic_seeder.py`, `manas/` — `0.85`, `0.15` | → Integer (0-COSMIC_FRAME) |
+| Shakti/Energy | `phonetic_bridge.py` — `shakti: float` | → Integer |
+| OpsPerSec | `classifier/core.py` — `ops_per_second: float` | Bleibt float (Messwert) |
+
+**Schritte:**
+1. Datei für Datei, schlimmste Offender zuerst
+2. Jede Float-Stelle prüfen: Ist das eine Mantra-Ableitung? Ja → Integer. Nein → lassen.
+3. `COSMIC_FRAME = 21600` als Basis (= KSHETRA × GITA_CHAPTERS × 50 = 24 × 18 × 50)
+4. Ratio `0.85` → `18360` (= `int(0.85 * COSMIC_FRAME)`), Ratio `2/3` → `NADI_RESONANCE` (= 72, bereits abgeleitet)
+5. Tests müssen grün bleiben, bit-identische Ergebnisse wo möglich
+
+**Reihenfolge der Offender:**
+1. `synaptic_seeder.py` (91 Floats) — purer Slop
+2. `resonance_ranker.py` (51 Floats) — Score-Pipeline
+3. `biorhythm.py` (47 Floats) — MANAS
+4. `viveka_action.py` (45 Floats) — MANAS Cortex
+5. `triggers.py` (41 Floats) — MANAS
+6. `lila_chronology.py` (32 Floats) — Resonance-Params
+7. Rest nach Bedarf
+
+**Root .md Files im Repo-Root (57 Stück) sind ein SEPARATES Problem — nicht in diesen Branches.**
+
 ## Codebase-Realität (Bekannte Probleme)
 
 Offen:
@@ -328,6 +426,9 @@ Nur diese Branches haben echten Wert:
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
 | `fix/reactor-lifecycle` | PR-ready | ReactorLoop shutdown + offer() Event-Routing + Lotus Seed-based resonate() |
 | `feature/tattva-gate-pipeline` | PR-ready | TattvaGate explicit in `__call__()` + TattvaRegistry + Gate Hooks |
+| `feature/tattva-gate-pipeline` | PR-ready | TattvaGate explicit in `__call__()` + TattvaRegistry + Gate Hooks (5 Commits, 35 Tests) |
+| `architectural/state-authority` | **GEPLANT** | State-Autorität: Alle 30+ Disk-Schreiber durch StateService zwingen. Siehe DEEP STATE DIAGNOSE. |
+| `refactor/float-to-integer` | **GEPLANT** | Float→Integer Sanierung: 904 Float-Deklarationen, 2756 Float-Literals. Siehe DEEP STATE DIAGNOSE. |
 
 Alle anderen Branches: Ignorieren bis explizit gefragt. `git branch -a --no-merged origin/main`
 zeigt den vollen Friedhof.
