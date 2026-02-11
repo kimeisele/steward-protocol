@@ -18,6 +18,7 @@ import struct
 from typing import Iterator
 
 from vibe_core.mahamantra.protocols._seed import JIVA_CYCLE  # 432
+from vibe_core.mahamantra.protocols.diw import CLUSTER_SHIFT
 
 # Audio Constants
 SAMPLE_RATE = 44100
@@ -119,8 +120,8 @@ class PranaSoundEngine:
         orch = chamber._orchestrator
         while True:
             # Read current DIW — don't drive the orchestrator
-            if orch._prev_state:
-                diw = orch._prev_state
+            if orch._owned:
+                diw = orch._prev_state | (orch._mode << CLUSTER_SHIFT)
             else:
                 diw = orch.step()
             

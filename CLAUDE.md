@@ -430,24 +430,28 @@ Seed-Daten: `_QUARTER_NAMES`, `_QUARTER_SET`, `_GUARDIAN_SET`, `_GUARDIANS_BY_QU
 
 **Ziel:** VenuOrchestrator ist DIE einzige Quelle — `step()` wird genau einmal pro Tick aufgerufen.
 
-**Problem:** 3 unabhängige `step()`-Caller auf denselben Orchestrator:
-1. `VenuService.start()` — async heartbeat loop (drift-compensated, 250ms)
-2. `Singularity.tick()` — synchroner Modus (Tests, CLI, Daemon via `chant_quarter()`)
-3. `AudioEngine.stream()` — Audio-Synthese Loop
+**Problem:** 3 unabhängige `step()`-Caller + 5× redundante rglob + 2 getrennte Broadcast-Kanäle.
 
-**Lösung:**
+**Lösung (4 Commits):**
 
 | Datei | Änderung | Effekt |
 |-------|----------|--------|
+| `venu_orchestrator.py` | `_owned: bool` Flag | Expliziter Vertrag: VenuService setzt True/False |
+| `venu_service.py` | `start()` → `_owned=True`, `stop()` → `_owned=False` | Ownership klar signalisiert |
+| `kernel/singularity.py` | Guard: `if venu._owned: read _prev_state` | Kein doppelter `step()` |
+| `sound/audio_engine.py` | Guard: `if orch._owned: read _prev_state` | Consumer, nicht Driver |
 | `governance/bridge.py` | `audit()` cached (`_audit_cache`) | rglob nur 1×, nicht pro Daemon-Cycle |
-| `kernel/singularity.py` | Guard: liest `_prev_state` wenn VenuService läuft | Kein doppelter `step()` |
-| `sound/audio_engine.py` | `stream()` liest `_prev_state` statt `step()` | Consumer, nicht Driver |
+| `audit/audit_registry.py` | `SourceCache` Singleton | 5× rglob+read_text → 1× shared scan |
+| `audit/lineage,ssot,hygiene,drift` | Nutzen `SourceCache.scan()` | Kein eigener FS-Scan mehr |
+| `substrate/lotus_core.py` | `register_listener()` + `_broadcast()` delegieren an Singularity | Ein Broadcast-Kanal |
+| `services/lotus_bridge.py` | `on_beat_tick()` ruft `lotus.tick()` statt manuelles state-Dict | Kein fragiler Import-Spaghetti |
 
-**Architektur-Analyse:**
-- VenuService + Daemon laufen **nicht** gleichzeitig (Daemon nicht im boot_orchestrator)
-- Aber `Singularity.tick()` kann jederzeit aufgerufen werden → Guard nötig
-- Zwei Broadcast-Systeme: `Singularity._listeners` (TickState) + `VenuOrchestrator._subscribers` (DIWEvent)
-- `LotusBridge` ist ein Pflaster das die beiden verbindet — bleibt vorerst
+**Architektur nach Unification:**
+- **Ein Flötenspieler:** `_owned` Flag entscheidet wer `step()` aufruft (VenuService ODER Singularity, nie beide)
+- **Ein Broadcast-Kanal:** `Singularity._listeners` — Lotus delegiert, hat keine eigene Liste mehr
+- **Zwei Abstraktionsebenen (korrekt):** `VenuOrchestrator._subscribers` (DIW, 19-bit) + `Singularity._listeners` (TickState, semantisch)
+- **LotusBridge:** Verbindet VenuService → `Singularity._listeners` via `lotus.tick()` (Guard verhindert doppelten step)
+- **Daemon:** Läuft nie gleichzeitig mit VenuService. `chant_quarter()` × 4 = 16 ticks = 1 Runde — korrekt.
 
 **Tests:** 4082 passed, 0 failures, 7 xfail, 25 skipped (identisch zur Baseline).
 

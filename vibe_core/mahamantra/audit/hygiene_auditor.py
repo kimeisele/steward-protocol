@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA
-from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity
+from vibe_core.mahamantra.audit.audit_registry import AuditFinding, FindingSeverity, get_source_cache
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
@@ -89,16 +89,14 @@ class Auditor:
     def run_audit(self) -> List[AuditFinding]:
         """AuditorProtocol: scan for hygiene violations via AST."""
         findings: List[AuditFinding] = []
+        cache = get_source_cache(self._root)
 
-        for path in self._root.rglob("*.py"):
-            if "__pycache__" in str(path):
-                continue
+        for path, source in cache.scan():
             # Don't audit the audit tools themselves
             if "audit" in str(path.parent.name):
                 continue
 
             try:
-                source = path.read_text()
                 tree = ast.parse(source, filename=str(path))
             except SyntaxError:
                 findings.append(AuditFinding(
