@@ -146,34 +146,50 @@ class EnforceCapability(Protocol):
 # =============================================================================
 # GATE CAPABILITY MAP — Links TattvaGate to its Protocol
 # =============================================================================
+# Lazy import to avoid circular dependency with pancha_tattva.py
+# (pancha_tattva defines TattvaGate AND imports Capability protocols)
 
-from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
-
-GATE_CAPABILITY: Dict[TattvaGate, type] = {
-    TattvaGate.PARSE: MantraCapability,
-    TattvaGate.VALIDATE: StorageCapability,
-    TattvaGate.EXECUTE: InferCapability,
-    TattvaGate.RESULT: SyncCapability,
-    TattvaGate.SYNC: EnforceCapability,
-}
+_GATE_CAPABILITY_CACHE = None
 
 
-def get_capability_for_gate(gate: TattvaGate) -> type:
+def _get_gate_capability():
+    """Lazy-build the gate→capability map (avoids circular import)."""
+    global _GATE_CAPABILITY_CACHE
+    if _GATE_CAPABILITY_CACHE is None:
+        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
+        _GATE_CAPABILITY_CACHE = {
+            TattvaGate.PARSE: MantraCapability,
+            TattvaGate.VALIDATE: StorageCapability,
+            TattvaGate.EXECUTE: InferCapability,
+            TattvaGate.RESULT: SyncCapability,
+            TattvaGate.SYNC: EnforceCapability,
+        }
+    return _GATE_CAPABILITY_CACHE
+
+
+def get_capability_for_gate(gate) -> type:
     """Get the capability Protocol class for a TattvaGate."""
-    return GATE_CAPABILITY[gate]
+    return _get_gate_capability()[gate]
 
 
-def check_capability(obj: object, gate: TattvaGate) -> bool:
+def check_capability(obj: object, gate) -> bool:
     """Check if an object satisfies the capability for a gate."""
-    cap = GATE_CAPABILITY[gate]
+    cap = _get_gate_capability()[gate]
     return isinstance(obj, cap)
+
+
+# Module-level lazy attribute for GATE_CAPABILITY
+def __getattr__(name):
+    if name == "GATE_CAPABILITY":
+        return _get_gate_capability()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 # =============================================================================
 # EXPORTS
 # =============================================================================
 
-__all__ = [
+__all__ = [  # noqa: F822 — GATE_CAPABILITY is lazy via __getattr__
     "MantraCapability",
     "StorageCapability",
     "InferCapability",
