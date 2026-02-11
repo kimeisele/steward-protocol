@@ -37,6 +37,7 @@ from vibe_core.mahamantra.seed.types import (
     VibrationState,
 )
 from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
+from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 
 logger = logging.getLogger("MAHAMANTRA")
 
@@ -217,6 +218,9 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         "last_attractor": None,
     }
 
+    # TattvaGate — which gate is currently active during __call__
+    _active_gate: Optional[TattvaGate] = None
+
     # Lazy-loaded instances
     _compressor = None
     _gita_index = None
@@ -390,17 +394,29 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         NO registry. NO services. NO delegation.
         Pure computation from the 16 words.
 
-        FLOW (9 NavaBhakti = 72 bytes):
-        ================================
-        1. SRAVANAM:       Receive input (hearing)
-        2. KIRTANAM:       MahaCompression → seed (chanting)
-        3. SMARANAM:       MahaKirtan → vibration state (remembering)
-        4. PADA_SEVANAM:   MahaResonator → attractor (serving)
-        5. ARCANAM:        Parampara verification (worshiping)
-        6. VANDANAM:       GitaResonance → verse match (praying)
-        7. DASYAM:         Position/Quarter determination (servitude)
-        8. SAKHYAM:        MahaCell creation (friendship)
-        9. ATMA_NIVEDANAM: Complete response (surrender)
+        TATTVA GATE PIPELINE (5 Gates × NavaBhakti Steps):
+        ===================================================
+        GATE 0 — CHAITANYA (PARSE/Identity):
+            1. SRAVANAM       — Receive input (hearing)
+            1.5 NAMA          — Phonetic identity (RAMA coords)
+            2. KIRTANAM       — MahaCompression → seed (chanting)
+
+        GATE 1 — NITYANANDA (VALIDATE/Substrate):
+            3. PADA_SEVANAM   — Attractor from seed (serving)
+            4. ARCANAM        — Parampara verification (worshiping)
+
+        GATE 2 — ADVAITA (EXECUTE/Bridge):
+            5. SMARANAM       — Word resonance (remembering)
+            6. VANDANAM       — GitaResonance → verse match (praying)
+
+        GATE 3 — GADADHARA (RESULT/Energy):
+            7. DASYAM         — Position/Quarter determination (servitude)
+            7.5 SHABDA        — RAMA Grid phoneme signature
+
+        GATE 4 — SRIVASA (SYNC/Governance):
+            8. SAKHYAM        — MahaCell creation (friendship)
+            8.5-8.7 KIRTAN    — Chamber + Yajna cycle
+            9. ATMA_NIVEDANAM — Complete response (surrender)
 
         Everything computed. No external LLM. No hardcoded routing.
         """
@@ -411,8 +427,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         MAHA_QUANTUM = P.MAHA_QUANTUM
 
         # =====================================================================
-        # 1. SRAVANAM - Receive input (Entry point)
+        # GATE 0: CHAITANYA — PARSE / Identity
+        # "Who/What is this?" — Receive, identify, compress.
         # =====================================================================
+        self._active_gate = TattvaGate.PARSE
+
+        # 1. SRAVANAM - Receive input (Entry point)
         if isinstance(input_data, MahaCell):
             cell = input_data
             input_text = cell.payload.decode("utf-8", errors="replace")
@@ -437,8 +457,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # SEED IS PURE: Same input → same seed. Always.
 
         # =====================================================================
-        # 3. PADA_SEVANAM - Attractor from Seed (Serial, not Parallel)
+        # GATE 1: NITYANANDA — VALIDATE / Substrate
+        # "What does this rest upon?" — Derive attractor, verify parampara.
         # =====================================================================
+        self._active_gate = TattvaGate.VALIDATE
+
+        # 3. PADA_SEVANAM - Attractor from Seed (Serial, not Parallel)
         # Pipeline: text → compress → seed → synth → attractor (SERIAL)
         attractor = P.synth_transform(seed)
         variance = seed & 0xFF
@@ -454,8 +478,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         parampara_coherence = oracle_validation["coherence"]
 
         # =====================================================================
-        # 5. SMARANAM - Word Resonance (Remembering)
+        # GATE 2: ADVAITA — EXECUTE / Bridge
+        # "How does this connect?" — Resonance + verse matching.
         # =====================================================================
+        self._active_gate = TattvaGate.EXECUTE
+
+        # 5. SMARANAM - Word Resonance (Remembering)
         resonant_words = P.rank_words(
             input_coords=input_coords,
             input_attractor=attractor,
@@ -493,8 +521,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 verse_info["words"] = tuple({"sanskrit": w.sanskrit, "meaning": w.meaning} for w in sanskrit.words)
 
         # =====================================================================
-        # 7. DASYAM - Position/Quarter/Role determination
+        # GATE 3: GADADHARA — RESULT / Energy
+        # "How does energy flow?" — Position, phoneme, routing.
         # =====================================================================
+        self._active_gate = TattvaGate.RESULT
+
+        # 7. DASYAM - Position/Quarter/Role determination
         # Position from attractor (holographic - embedded in computation)
         position = attractor % WORDS  # 0-15
 
@@ -521,8 +553,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         phoneme_shruti = P.IS_SHRUTI[rama_coord]
 
         # =====================================================================
-        # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
+        # GATE 4: SRIVASA — SYNC / Governance
+        # "Who governs this?" — Cell creation, chamber, yajna, response.
         # =====================================================================
+        self._active_gate = TattvaGate.SYNC
+
+        # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
         result_cell = P.MahaCellUnified.create(
             source=seed,
             target=raw_address,
@@ -623,8 +659,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         self._akash["last_position"] = position
         self._akash["last_attractor"] = attractor
 
+        # Pipeline complete — reset gate
+        self._active_gate = None
+
         return {
             "input": input_text,
+            "tattva_gate": "SRIVASA",  # last gate = SYNC (all 5 gates passed)
             "vibration": {
                 "seed": seed,
                 "attractor": attractor,
@@ -711,6 +751,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "return_count": shadow_state.get("return_count", 0),
                 "dissonance": shadow_state.get("dissonance_report"),
             },
+            "gate_trace": (
+                TattvaGate.PARSE.name,
+                TattvaGate.VALIDATE.name,
+                TattvaGate.EXECUTE.name,
+                TattvaGate.RESULT.name,
+                TattvaGate.SYNC.name,
+            ),
         }
 
     # =========================================================================
