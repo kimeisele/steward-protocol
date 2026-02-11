@@ -426,6 +426,7 @@ Nur diese Branches haben echten Wert:
 | `feature/diw-refinement` | Gemergt | DIW-Fix + Lotus-Projection-Fix + Axiom-Audit + Branchless-Routing |
 | `fix/reactor-lifecycle` | PR-ready | ReactorLoop shutdown + offer() Event-Routing + Lotus Seed-based resonate() |
 | `feature/tattva-gate-pipeline` | Gemergt | TattvaGate explicit in `__call__()` + TattvaRegistry + Gate Hooks (5 Commits, 35 Tests) |
+| `feature/pancha-tattva-protocols` | PR-ready | 5 Capability Protocols + Gate Provider Dispatch + TattvaAspect.protocol=Type (54 Tests) |
 | `architectural/state-authority` | **VERWORFEN** | builtins.open Monkey-Patch war Symptom-Doktorei. Nicht mergen. |
 | `refactor/float-to-integer` | **GEPLANT** | Float→Integer Sanierung: 904 Float-Deklarationen, 2756 Float-Literals. |
 
@@ -458,8 +459,37 @@ Tests: `tests/mahamantra/test_tattva_gate.py` (17) + `tests/mahamantra/test_tatt
 
 **Was NICHT getan wurde (bewusst):**
 - ChatService NICHT durch `mahamantra("text")` geleitet (großer Refactor, braucht Konzept)
-- 5 Capability Protocols NICHT als echten Code gebaut (noch Strings in Docstrings)
 - TattvaRegistry wird bei Boot NICHT automatisch befüllt (nur Singularity + Lotus registrieren)
+
+## Pancha Tattva Capability Protocols ✅ (Feb 11 2026)
+
+**Branch: `feature/pancha-tattva-protocols`** (2 Commits, 54 neue Tests)
+
+Die 5 Pancha Tattva sind jetzt echte `runtime_checkable` Protocol-Klassen:
+
+```
+GATE 0 — CHAITANYA (PARSE)     → MantraCapability.parse(input_data)
+GATE 1 — NITYANANDA (VALIDATE) → StorageCapability.validate(seed)
+GATE 2 — ADVAITA (EXECUTE)     → InferCapability.infer(seed, attractor)
+GATE 3 — GADADHARA (RESULT)    → SyncCapability.route(attractor)
+GATE 4 — SRIVASA (SYNC)        → EnforceCapability.enforce(position, seed, attractor)
+```
+
+Was gebaut wurde:
+- `protocols/_capabilities.py` — 5 Capability Protocols + lazy `GATE_CAPABILITY` Map
+- `TattvaRegistry.register_gate_provider(name, obj, gate)` — Capability-Check bei Registrierung
+- `TattvaRegistry.violations` — Tracking aller abgelehnten Registrierungen
+- `lotus_core._fire_gate()` dispatcht jetzt registrierte Gate-Provider nach lokalen Hooks
+- `lotus_core._GATE_DISPATCH` — Maps Gate→(method_name, arg_keys) für korrektes Argument-Routing
+- `TattvaAspect.protocol` ist jetzt `Type` statt `str` (echte Referenz auf Capability-Klasse)
+- Lazy `__getattr__` in `_capabilities.py` bricht Zirkel mit `pancha_tattva.py`
+
+Tests: `test_capabilities.py` (24) + `test_gate_providers.py` (20) + `test_gate_dispatch.py` (10)
+Regression: 4167 bestehende Mahamantra-Tests grün, 0 Failures.
+
+**Was NICHT getan wurde (bewusst):**
+- Keine echten Gate-Provider registriert (Infrastruktur steht, Wächter fehlen noch)
+- StateService nicht als EnforceCapability-Provider verdrahtet
 
 ## Lotus: Seed ist Wahrheit, Filesystem ist Maya
 
