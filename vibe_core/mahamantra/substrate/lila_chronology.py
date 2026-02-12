@@ -1325,9 +1325,10 @@ class LilaSynthParams:
     weight_krishna: int = WEIGHT_KRISHNA  # 17
     weight_rama: int = WEIGHT_RAMA  # 49
 
-    # Resonance parameters
-    resonance_decay: float = 0.1  # How fast resonance decays
-    resonance_growth: float = 0.15  # How fast resonance grows
+    # Resonance parameters (integer rates in COSMIC_FRAME space)
+    # decay = 1/TEN = CF//TEN = 2160, growth = 3/20 = CF*TRINITY//(HALVES*TEN) = 3240
+    resonance_decay: int = COSMIC_FRAME // TEN  # 2160 (was 0.1)
+    resonance_growth: int = COSMIC_FRAME * TRINITY // (HALVES * TEN)  # 3240 (was 0.15)
 
     def with_mod_space(self, value: int) -> "LilaSynthParams":
         """Return new params with adjusted mod_space."""

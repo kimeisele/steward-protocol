@@ -130,10 +130,12 @@ class MantraProtocol(ABC):
         """
         from vibe_core.mahamantra.substrate.intents import get_intents
         from vibe_core.mahamantra.protocols._seed import (
+            COSMIC_FRAME,
             JIVA_CYCLE,
             LILA,
             MALA,
             NADI_RESONANCE,
+            TEN,
             WORDS,
         )
 
@@ -165,35 +167,34 @@ class MantraProtocol(ABC):
             return 0
 
         # =====================================================================
-        # THREE FLUTES COMPUTATION
+        # THREE FLUTES COMPUTATION (pure integer arithmetic in CF space)
         # =====================================================================
         # Each match contributes to the resonance based on the Flute math:
-        # - First match: NADI level (72/108 = 0.667)
-        # - Additional matches: LILA increments (48/108 / total_intents)
+        # - First match: NADI level (CF * 72 // 108 = 14400)
+        # - Additional matches: LILA increments (CF * 48 // (108 * total_intents))
         #
         # The position modulates the base frequency:
-        # - Position frequency = JIVA_CYCLE / (position + WORDS)
-        # - This creates unique "overtones" per guardian
+        # - Position frequency = JIVA_CYCLE // (position + WORDS)
+        # - Factor = (TEN * JIVA_CYCLE + pos_freq) / (TEN * JIVA_CYCLE) ≈ 1.0 to 1.1
 
-        # Base resonance: First match gives NADI, additional matches add LILA increments
-        nadi_base = NADI_RESONANCE / MALA  # 0.667 base for first match
-        lila_increment = (LILA / MALA) / len(intents)  # Diminishing returns per additional match
+        # Base resonance in CF space: first match = NADI/MALA * CF
+        nadi_base_cf = COSMIC_FRAME * NADI_RESONANCE // MALA  # 14400
+        lila_inc_cf = COSMIC_FRAME * LILA // (MALA * len(intents))  # Diminishing per intent
 
-        base_resonance = nadi_base + (exact_matches - KSETRAJNA) * lila_increment if exact_matches > 0 else 0.0
+        base_cf = nadi_base_cf + (exact_matches - KSETRAJNA) * lila_inc_cf
 
-        # Position-specific modulation (overtone)
-        # Each position has a unique frequency in the JIVA_CYCLE
+        # Position-specific modulation (overtone) — integer multiplication
         position = cls._position_index if cls._position_index >= 0 else 0
-        position_frequency = JIVA_CYCLE / (position + WORDS)  # Ranges from 27 to 14.4
+        pos_freq = JIVA_CYCLE // (position + WORDS)  # Integer division
 
-        # Normalize position influence (subtle modulation, not dominant)
-        position_factor = 1.0 + (position_frequency / JIVA_CYCLE) * 0.1  # 1.0 to 1.1
+        # Factor = (TEN * JIVA_CYCLE + pos_freq) / (TEN * JIVA_CYCLE)
+        # Apply as: base_cf * numerator // denominator
+        factor_num = TEN * JIVA_CYCLE + pos_freq
+        factor_den = TEN * JIVA_CYCLE
 
-        # Final resonance (capped at 1.0, then scaled to COSMIC_FRAME)
-        resonance = min(1.0, base_resonance * position_factor)
+        resonance_cf = base_cf * factor_num // factor_den
 
-        # Scale to COSMIC_FRAME (21600 = 100%)
-        return int(resonance * 21600)
+        return min(COSMIC_FRAME, resonance_cf)
 
     # =========================================================================
     # DERIVED PROPERTIES - All from truth table
