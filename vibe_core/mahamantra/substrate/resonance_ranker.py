@@ -62,6 +62,7 @@ from vibe_core.mahamantra.protocols._seed import (
     SEVEN,
     TRINITY,
 )
+from vibe_core.mahamantra.protocols.seed._cosmic import COSMIC_FRAME
 from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_ELEMENT,
     COORD_HARMONIC,
@@ -96,16 +97,40 @@ from vibe_core.mahamantra.substrate.semantic_index import (
 # SCORING WEIGHTS (derived from Mahamantra structure)
 # =============================================================================
 # PANCHA dimensions, weights proportional to their discriminative power.
-
+#
+# INTEGER WEIGHTS (SSOT) — exact fractions of COSMIC_FRAME (21600).
 # Original 5D weights (0.30/0.25/0.20/0.15/0.10) scaled to 70% to preserve hierarchy.
 # New 2D (HKR + Phoneme Attractor) share the remaining 30%.
-W_ELEMENT: Final[float] = 0.21         # Articulatory position (5 elements)
-W_HARMONIC: Final[float] = 0.175      # Dissolution path kinship
-W_SHRUTI: Final[float] = 0.14         # Character: fixed vs journey
-W_VARGA: Final[float] = 0.105         # Operational: carrier/transform/release
-W_ATTRACTOR: Final[float] = 0.07      # Basin: attractor convergence (7 basins, coarse)
-W_HKR: Final[float] = 0.15            # HKR proportion: divine operation mix (48/49 unique, fine)
-W_PHONEME_ATTRACTOR: Final[float] = 0.15  # Phoneme attractor charge: 5 Mahamantra constants
+#
+# Derivation:
+#   W_ELEMENT    = 21/100 × COSMIC_FRAME = 4536
+#   W_HARMONIC   =  7/40  × COSMIC_FRAME = 3780
+#   W_SHRUTI     =  7/50  × COSMIC_FRAME = 3024
+#   W_VARGA      = 21/200 × COSMIC_FRAME = 2268
+#   W_ATTRACTOR  =  7/100 × COSMIC_FRAME = 1512
+#   W_HKR        =  3/20  × COSMIC_FRAME = 3240
+#   W_PA         =  3/20  × COSMIC_FRAME = 3240
+#                                   SUM = 21600 ✓
+
+W_ELEMENT_CF: Final[int] = 4536       # 21/100 × 21600 — Articulatory position (5 elements)
+W_HARMONIC_CF: Final[int] = 3780      # 7/40 × 21600 — Dissolution path kinship
+W_SHRUTI_CF: Final[int] = 3024        # 7/50 × 21600 — Character: fixed vs journey
+W_VARGA_CF: Final[int] = 2268         # 21/200 × 21600 — Operational: carrier/transform/release
+W_ATTRACTOR_CF: Final[int] = 1512     # 7/100 × 21600 — Basin: attractor convergence (coarse)
+W_HKR_CF: Final[int] = 3240           # 3/20 × 21600 — HKR proportion: divine operation mix (fine)
+W_PHONEME_ATTRACTOR_CF: Final[int] = 3240  # 3/20 × 21600 — Phoneme attractor charge
+
+assert (W_ELEMENT_CF + W_HARMONIC_CF + W_SHRUTI_CF + W_VARGA_CF
+        + W_ATTRACTOR_CF + W_HKR_CF + W_PHONEME_ATTRACTOR_CF) == COSMIC_FRAME
+
+# Float aliases (derived from integer SSOT, for backward-compatible computation)
+W_ELEMENT: Final[float] = W_ELEMENT_CF / COSMIC_FRAME
+W_HARMONIC: Final[float] = W_HARMONIC_CF / COSMIC_FRAME
+W_SHRUTI: Final[float] = W_SHRUTI_CF / COSMIC_FRAME
+W_VARGA: Final[float] = W_VARGA_CF / COSMIC_FRAME
+W_ATTRACTOR: Final[float] = W_ATTRACTOR_CF / COSMIC_FRAME
+W_HKR: Final[float] = W_HKR_CF / COSMIC_FRAME
+W_PHONEME_ATTRACTOR: Final[float] = W_PHONEME_ATTRACTOR_CF / COSMIC_FRAME
 
 assert abs(W_ELEMENT + W_HARMONIC + W_SHRUTI + W_VARGA + W_ATTRACTOR + W_HKR + W_PHONEME_ATTRACTOR - 1.0) < 1e-9
 
