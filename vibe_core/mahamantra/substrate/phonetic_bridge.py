@@ -33,6 +33,7 @@ CATEGORY (English) ↔ VARGA:
 """
 
 from vibe_core.mahamantra.protocols._seed import (
+    COSMIC_FRAME,
     HALVES,
     HARE_COUNT,
     KSETRAJNA,
@@ -301,13 +302,19 @@ class SthanaIndex(IntEnum):
 # Verify against PANCHA from seed.py
 assert len(SthanaIndex) == PANCHA, f"SthanaIndex must have {PANCHA} values"
 
-# Sthana to energy multiplier (DERIVED from acoustic physics)
+# Sthana energy in COSMIC_FRAME space (integer SSOT, Seed-derived)
+# All values = CF * numerator // PANCHA (exact, no rounding)
+STHANA_ENERGY_CF: Final[Dict[SthanaIndex, int]] = {
+    SthanaIndex.SPARSHA: COSMIC_FRAME // PANCHA,             # 4320  (1/5 = 0.2)
+    SthanaIndex.MAHAPRANA: COSMIC_FRAME * TRINITY // PANCHA,  # 12960 (3/5 = 0.6)
+    SthanaIndex.GHOSHAVAT: COSMIC_FRAME * QUARTERS // PANCHA, # 17280 (4/5 = 0.8)
+    SthanaIndex.GHOSHMAHA: COSMIC_FRAME,                      # 21600 (5/5 = 1.0)
+    SthanaIndex.ANUNASIKA: COSMIC_FRAME // HALVES,            # 10800 (1/2 = 0.5)
+}
+
+# Float alias for backward-compatible consumers
 STHANA_ENERGY: Final[Dict[SthanaIndex, float]] = {
-    SthanaIndex.SPARSHA: 0.2,  # Minimal contact = low energy
-    SthanaIndex.MAHAPRANA: 0.6,  # Aspiration = expansion
-    SthanaIndex.GHOSHAVAT: 0.8,  # Voicing = active
-    SthanaIndex.GHOSHMAHA: 1.0,  # Voiced + aspirated = maximum
-    SthanaIndex.ANUNASIKA: 0.5,  # Continuous nasal = medium
+    k: v / COSMIC_FRAME for k, v in STHANA_ENERGY_CF.items()
 }
 
 
