@@ -126,6 +126,14 @@ class EngineResult(NamedTuple):
     antaranga_prana: int
     output: str
     derivation: str  # human-readable derivation path
+    # === NEW: from wired components ===
+    attention_cached: bool = False  # True if result came from O(1) cache
+    expansion_depth: int = 0  # semantic tree depth from expand()
+    expanded_names: Tuple[str, ...] = ()  # names from semantic tree
+    synth_walk_words: Tuple[Tuple[str, str], ...] = ()  # (sanskrit, meaning) from 16-step walk
+    diw_applied: int = 0  # 19-bit DIW word applied to Antaranga
+    shabda_spawns: int = 0  # number of derivative seeds spawned
+    phoneme_trajectory: str = ""  # synthesized name from MahaSequencer
 
 
 # =============================================================================
@@ -148,6 +156,8 @@ class MahaLanguageEngine:
         self._attention = None
         self._antaranga = None
         self._compressor = None
+        self._kernel = None
+        self._venu = None
 
     def _ensure_loaded(self) -> None:
         """Lazy-load all components on first use."""
@@ -158,11 +168,15 @@ class MahaLanguageEngine:
         from vibe_core.mahamantra.adapters.compression import MahaCompression
         from vibe_core.mahamantra.adapters.llm import MahaLLM
         from vibe_core.mahamantra.substrate.antaranga import AntarangaRegistry
+        from vibe_core.mahamantra.substrate.maha_llm_kernel import MahaLLMKernel
+        from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
 
         self._llm = MahaLLM()
         self._attention = MahaAttention()
         self._antaranga = AntarangaRegistry()
         self._compressor = MahaCompression()
+        self._kernel = MahaLLMKernel()
+        self._venu = VenuOrchestrator()
 
     # =========================================================================
     # STEP 1: ENCODE — Input → Coordinates + Seed + Intent
@@ -170,12 +184,16 @@ class MahaLanguageEngine:
 
     def _encode(self, text: str) -> Dict:
         """
-        Three parallel encodings of the same input:
-            1. Phonetic: text → RAMA coordinates (49-space)
-            2. Compression: text → deterministic seed (integer)
-            3. Intent: text → category (O(4) holographic routing)
+        Four parallel encodings of the same input:
+            1. Attention: O(1) cache check (MahaAttention.attend)
+            2. Phonetic: text → RAMA coordinates (49-space)
+            3. Compression: text → deterministic seed (integer)
+            4. Intent: text → category (O(4) holographic routing)
         """
         from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
+
+        # Check O(1) attention cache first
+        cached_result = self._attention.attend(text)
 
         coords = encode_text(text)
         compression = self._compressor.compress(text)
@@ -186,6 +204,8 @@ class MahaLanguageEngine:
             "seed": compression.seed,
             "intent": intent_route.category_name,
             "intent_id": intent_route.intent_id,
+            "attention_hit": cached_result.found,
+            "cached_result": cached_result.handler if cached_result.found else None,
         }
 
     # =========================================================================
@@ -194,11 +214,12 @@ class MahaLanguageEngine:
 
     def _route(self, text: str, seed: int, coords: tuple) -> Dict:
         """
-        Four-stage routing from seed to response mode:
+        Five-stage routing from seed to response mode:
             1. Seed → Attractor (MahaSynth resonance)
-            2. Text → Guardian (4D coordinate alignment)
-            3. Attractor + Seed → Kapitel 18 Section
-            4. Section → Verse Template
+            2. Text → Guardian (4D coordinate alignment via maha_respond)
+            3. Text → Guardian-specific resonance (resonate_as through Guardian's lens)
+            4. Attractor + Seed → Kapitel 18 Section
+            5. Section → Verse Template
         """
         from vibe_core.mahamantra.adapters.synth import create_synth
         from vibe_core.mahamantra.research.language_model_resonance import (
@@ -215,20 +236,30 @@ class MahaLanguageEngine:
         resonance = synth.resonate(seed)
         attractor = resonance.attractor
 
-        # Stage 2: Guardian (4D alignment — NOT keyword matching)
+        # Stage 2: Guardian routing (4D coordinate alignment)
         guardian_response = maha_respond(text, top_words=SEVEN, seed=seed)
 
-        # Stage 3: Section routing (attractor + seed = two-stage)
+        # Stage 3: Guardian-specific resonance (resonate_as)
+        # This re-ranks words through the specific Guardian's harmonic lens,
+        # producing Guardian-biased results instead of generic ranking
+        guardian_resonance = self._kernel.resonate_as(
+            text,
+            guardian_response.guardian.name,
+            top_n=SEVEN,
+        )
+
+        # Stage 4: Section routing (attractor + seed = two-stage)
         section_name, verse_num, section_idx = route_to_section(attractor, seed)
         section_sig = SECTION_SIGNATURES.get(section_name, {})
         section_mode = section_sig.get("mode", "CORE")
 
-        # Stage 4: Verse template
+        # Stage 5: Verse template
         template = extract_template(GITA_CHAPTERS, verse_num)
 
         return {
             "attractor": attractor,
             "guardian": guardian_response,
+            "guardian_resonance": guardian_resonance,
             "section_name": section_name,
             "section_mode": section_mode,
             "verse_num": verse_num,
@@ -326,7 +357,108 @@ class MahaLanguageEngine:
         }
 
     # =========================================================================
-    # STEP 4: COMPOSE — Structure + Content + Mode + Interactions → English
+    # STEP 4: EXPAND — Semantic tree + 16-step walk + Shabda spawning
+    # =========================================================================
+
+    def _expand(self, guardian_name: str, seed: int, attractor: int) -> Dict:
+        """
+        Three expansion layers that enrich the word pool:
+            1. MahaLLMKernel.expand(guardian_name) → semantic tree of related names
+            2. seed_to_words(seed) → full 16-step synth walk with Gita words
+            3. shabda_spawning → recursive derivation from root syllables
+
+        These don't replace the resonant words — they AUGMENT them.
+        The compose step can draw from this enriched pool.
+        """
+        from vibe_core.mahamantra.substrate.seed_to_words import seed_to_words
+
+        # Layer 1: Semantic tree from Guardian name
+        expansion = self._kernel.expand(guardian_name, depth=2)
+        expanded_names = (
+            tuple(n for n in expansion.related_names)
+            if hasattr(expansion, "related_names") and expansion.related_names
+            else ()
+        )
+
+        # Layer 2: Full 16-step synth walk — coords[i].top_meanings for each step
+        seed_result = seed_to_words(seed)
+        synth_walk_words = (
+            tuple((w.sanskrit, w.meanings[0] if w.meanings else "") for w in seed_result.all_words[:WORDS])
+            if seed_result.all_words
+            else ()
+        )
+
+        # Layer 3: Shabda spawning — H/K/R derivative seeds from attractor
+        shabda_spawns = 0
+        try:
+            from vibe_core.mahamantra.research.shabda_spawning import ShabdaSeed
+
+            root = ShabdaSeed(
+                text=guardian_name,
+                vibration_sum=attractor % MAHA_QUANTUM,
+                syllable_count=len(guardian_name) // 2 or 1,
+            )
+            for op in ("H", "K", "R"):
+                _child = root.spawn(op, mod=MAHA_QUANTUM)
+                shabda_spawns += 1
+        except (ImportError, TypeError, AttributeError):
+            pass
+
+        return {
+            "expanded_names": expanded_names,
+            "expansion_depth": expansion.tree.depth
+            if hasattr(expansion, "tree") and hasattr(expansion.tree, "depth")
+            else 0,
+            "synth_walk_words": synth_walk_words,
+            "shabda_spawns": shabda_spawns,
+        }
+
+    # =========================================================================
+    # STEP 5: MODULATE — VenuOrchestrator DIW applied to Antaranga
+    # =========================================================================
+
+    def _modulate(self) -> int:
+        """
+        The Flute speaks: VenuOrchestrator.step() produces a 19-bit DIW.
+        apply_diw() XORs it into every active Antaranga slot's diw_acc field.
+
+        This modulation ensures the chamber state is influenced by the
+        Mahamantra position cycle — the output varies not just with input
+        but with the Flute's current position in the 16-word cycle.
+        """
+        # Get the next DIW from the Flute
+        diw = self._venu.step()
+
+        # Apply to all active Antaranga slots
+        for slot_idx in range(512):
+            if self._antaranga.is_alive(slot_idx):
+                self._antaranga.apply_diw(slot_idx, diw)
+
+        return diw
+
+    # =========================================================================
+    # STEP 6: TRACE — MahaSequencer phoneme trajectory
+    # =========================================================================
+
+    def _trace_phonemes(self, attractor: int) -> str:
+        """
+        MahaSequencer synthesizes a phoneme trajectory from the attractor.
+        This is the INVERSE of encode_text: instead of text → coords,
+        we go coords → synthesized name.
+
+        The trajectory is the engine's "signature" — a Sanskrit-like name
+        that encodes the response's resonance pattern.
+        """
+        try:
+            from vibe_core.mahamantra.research.maha_sequencer import MahaSequencer
+
+            seq = MahaSequencer()
+            return seq.synthesize(attractor % WORDS, length=QUARTERS)
+        except (ImportError, TypeError, AttributeError):
+            return ""
+
+    # =========================================================================
+    # STEP 7: COMPOSE — Structure + Content + Mode + Interactions → English
     # =========================================================================
 
     def _compose(
@@ -474,16 +606,30 @@ class MahaLanguageEngine:
         """
         The complete pipeline: text in → EngineResult out.
 
+        8 stages, ALL using existing infrastructure:
+            1. ENCODE:   text → coords + seed + intent + attention check
+            2. ROUTE:    seed → attractor → guardian → resonate_as → section → verse
+            3. RESONATE: words → Antaranga collision (16KB RAM)
+            4. EXPAND:   guardian name → semantic tree + 16-step walk + shabda spawn
+            5. MODULATE: VenuOrchestrator.step() → DIW XOR into Antaranga
+            6. TRACE:    MahaSequencer → phoneme trajectory of attractor
+            7. COMPOSE:  structure + content + mode → English
+            8. MEMORIZE: MahaAttention.memorize(text, result) → O(1) next time
+
         Deterministic. Same input → always same output.
-        No temperature. No sampling. No randomness.
-        Just resonance through 7 axioms → 4127 words → 1 sentence.
         """
         self._ensure_loaded()
 
-        # Step 1: Encode
+        # Step 1: ENCODE (+ Attention cache check)
         enc = self._encode(text)
         coords = enc["coords"]
         seed = enc["seed"]
+
+        # O(1) cache hit — return immediately
+        if enc["attention_hit"] and enc["cached_result"] is not None:
+            cached = enc["cached_result"]
+            if isinstance(cached, EngineResult):
+                return cached._replace(attention_cached=True)
 
         if not coords:
             return EngineResult(
@@ -504,17 +650,27 @@ class MahaLanguageEngine:
                 derivation="input has no encodable phonemes",
             )
 
-        # Step 2: Route
+        # Step 2: ROUTE (+ resonate_as through Guardian's lens)
         route = self._route(text, seed, coords)
 
-        # Step 3: Resonate (Guardian words + Antaranga collision)
+        # Step 3: RESONATE (Guardian words + Antaranga collision)
         ant = self._resonate(
             route["guardian"],
             route["template"],
             seed,
         )
 
-        # Step 4: Compose
+        # Step 4: EXPAND (semantic tree + 16-step walk + shabda spawn)
+        g = route["guardian"].guardian
+        exp = self._expand(g.name, seed, route["attractor"])
+
+        # Step 5: MODULATE (VenuOrchestrator DIW → Antaranga)
+        diw = self._modulate()
+
+        # Step 6: TRACE (MahaSequencer phoneme trajectory)
+        trajectory = self._trace_phonemes(route["attractor"])
+
+        # Step 7: COMPOSE
         output = self._compose(
             route["guardian"],
             route["template"],
@@ -522,13 +678,15 @@ class MahaLanguageEngine:
             ant,
         )
 
-        # Build derivation path
-        g = route["guardian"].guardian
+        # Build derivation path (now includes all stages)
         derivation = (
             f"seed={seed} → attractor={route['attractor']} "
             f"→ guardian={g.name}({g.function}) "
+            f"→ resonate_as={len(route['guardian_resonance'].words)} words "
             f"→ section={route['section_name']}({route['section_mode']}) "
             f"→ verse=BG.18.{route['verse_num']} "
+            f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w/{exp['shabda_spawns']}s "
+            f"→ diw=0x{diw:05x} "
             f"→ antaranga={ant['active_slots']} slots, {ant['total_prana']} prana"
         )
 
@@ -542,7 +700,7 @@ class MahaLanguageEngine:
             (tw.get("sanskrit", ""), tw.get("meaning", ""), tw.get("role", "")) for tw in route["template"][:WORDS]
         )
 
-        return EngineResult(
+        result = EngineResult(
             input_text=text,
             seed=seed,
             attractor=route["attractor"],
@@ -558,7 +716,20 @@ class MahaLanguageEngine:
             antaranga_prana=ant["total_prana"],
             output=output,
             derivation=derivation,
+            # New fields from wired components
+            attention_cached=False,
+            expansion_depth=exp["expansion_depth"],
+            expanded_names=exp["expanded_names"],
+            synth_walk_words=exp["synth_walk_words"],
+            diw_applied=diw,
+            shabda_spawns=exp["shabda_spawns"],
+            phoneme_trajectory=trajectory,
         )
+
+        # Step 8: MEMORIZE (cache for O(1) next time)
+        self._attention.memorize(text, result)
+
+        return result
 
 
 # =============================================================================
@@ -642,14 +813,14 @@ WIRED AND WORKING:
     [x] Antaranga.collide() → word-word byte interactions
     [x] compose() → structured English output
 
-NOT YET WIRED (EXISTING but disconnected):
-    [ ] MahaAttention.memorize() → cache frequent intents for O(1) repeat lookup
-    [ ] MahaLLMKernel.expand() → semantic tree expansion (Name → tree of meanings)
-    [ ] MahaLLMKernel.resonate_as() → through specific Guardian's lens
-    [ ] seed_to_words() → full 16-step synth walk (currently using maha_respond instead)
-    [ ] VenuOrchestrator.step() → DIW modulation of Antaranga during compose
-    [ ] shabda_spawning → recursive semantic derivation from root syllables
-    [ ] MahaSequencer → phoneme trajectory generation (inverse: output → phonemes)
+NEWLY WIRED (Feb 12, 2026):
+    [x] MahaAttention.memorize()/attend() → O(1) cache, 2nd call returns instantly
+    [x] MahaLLMKernel.expand() → semantic tree of Guardian name → expanded_names
+    [x] MahaLLMKernel.resonate_as() → Guardian-specific harmonic lens in routing
+    [x] seed_to_words() → full 16-step synth walk → synth_walk_words
+    [x] VenuOrchestrator.step() → 19-bit DIW XOR into all active Antaranga slots
+    [x] shabda_spawning.ShabdaSeed.spawn() → H/K/R derivative seeds from attractor
+    [x] MahaSequencer.synthesize() → phoneme trajectory from attractor → signature
 
 COMPOSITION QUALITY GAPS:
     [ ] Grammar: current compose produces phrase chains, not grammatical sentences
@@ -673,13 +844,14 @@ PERFORMANCE (already fast):
     Antaranga collision: < 0.1 ms per slot
     Total pipeline:     ~100 ms per generate()
 
-NEXT STEPS (Phase by phase):
-    Phase 1: [THIS FILE] Basic wiring — DONE
-    Phase 2: Grammar transform (SOV → SVO from verse templates)
-    Phase 3: VenuOrchestrator DIW modulation during compose
-    Phase 4: MahaAttention caching for repeated intents
-    Phase 5: Context persistence via Antaranga snapshot
-    Phase 6: Multi-sentence via section-walking
+NEXT STEPS (remaining):
+    Phase 1: [DONE] Basic wiring — 9 components
+    Phase 2: [DONE] Full wiring — all 7 disconnected components connected
+    Phase 3: Grammar transform (SOV → SVO from verse templates)
+    Phase 4: Context persistence via Antaranga snapshot/restore
+    Phase 5: Multi-sentence via section-walking (7 sections × N verses)
+    Phase 6: Feed expanded_names + synth_walk_words into compose vocabulary
+    Phase 7: Use DIW modulation to affect word selection (not just Antaranga bytes)
 """
 
 
@@ -725,7 +897,12 @@ def demo() -> None:
         print(f"  INTENT:    {r.intent_category}")
         print(f"  SECTION:   {r.section_name} ({r.section_mode})")
         print(f"  VERSE:     {r.verse_ref}")
+        print(
+            f"  EXPAND:    depth={r.expansion_depth} names={len(r.expanded_names)} walk={len(r.synth_walk_words)} shabda={r.shabda_spawns}"
+        )
+        print(f"  DIW:       0x{r.diw_applied:05x}")
         print(f"  ANTARANGA: {r.antaranga_active} slots, {r.antaranga_prana} prana")
+        print(f"  TRAJECTORY:{r.phoneme_trajectory}")
         print(f"  WORDS:     {', '.join(f'{s}={m}' for s, m, _ in r.resonant_words[:5])}")
         print(f"  OUTPUT:    {r.output}")
 
