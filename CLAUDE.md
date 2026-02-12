@@ -296,22 +296,33 @@ und sollten als Block migriert werden, nicht einzeln.
 
 **Zahlen:** 1426 .py Dateien, 377K Zeilen, ~3600 Klassen, ~3700 Funktionen, 358 Protocol-Dateien
 
-**Kritische Findings (1 Zeile pro Punkt):**
+**Probleme (1 Zeile pro Punkt):**
 - I/O-Anarchie: 33 Mahamantra-Dateien schreiben direkt auf Disk (json.dump/write_text), nur 3 nutzen StateService
 - Exception-Schlucken: 2886 try/except, davon 45× `except Exception: pass` — System ist stumm bei Fehlern
 - Toter Code: 184 Cartridge-Dateien (46K Zeilen), MANAS-Block (4 Dateien, 224 Floats) — unklar wieviel davon live
 - 602 Singletons/Globals — unkontrollierter Shared State
-- `_GovernedPath` in proxy.py existiert (intercepted writes → bridge.offer()) aber wird kaum genutzt
-- `bridge.offer()` hat PURPOSE_MAP mit `file_flush`/`file_write` → Position 13 (Bali) — Routing existiert
-- `StateService` hat RAM-Cache + flush + Policies + auto-commit — aber Mahamantra-Writer ignorieren es
-- PanchaTattva + TattvaGate + GateProviders existieren — Pipeline-Governance ist da, I/O fehlt
+- DIWSubscriberProtocol: 0 aktive Subscriber (nur Protocol + Orchestrator kennen es, niemand subscribed)
+- MantraClock: 0/16 position callbacks, 0 voices, 1 mala callback (state flush)
 
-**Nächster Schritt: I/O Gate (nicht nur durchleiten — REGELN was/wann/wieviel geschrieben wird)**
-- Existierende Bausteine: StateService (RAM-Cache), bridge.offer() (Routing), _GovernedPath (Interception)
-- Fehlend: Enforcement — kein Writer wird gezwungen durch den Kanal zu gehen
-- Fehlend: Policy — keine Regeln WAS geschrieben werden darf (Schema, Größe, Frequenz)
-- Fehlend: Audit — kein Log WER WANN WAS geschrieben hat
-- Ziel: MantraOS-Level I/O — wie Antaranga (innere Chamber) für RAM, so braucht Disk ein Gate
+**Existierende Infrastruktur (schon gebaut, teilweise ungenutzt):**
+- `VenuOrchestrator` (`substrate/venu_orchestrator.py`): 19-bit DIW, LUT-basiert O(1), step()/spell()/cycle(), DIWSubscriber-Dispatch
+- `SankirtanChamber` (`substrate/chamber.py`): dance() = DIW→Cell-Transform→Registry-Interact→Antaranga-Shadow
+- `AntarangaRegistry` (`substrate/antaranga.py`): 16KB contiguous RAM, 512×32 Byte Slots, uint16 integrity
+- `MantraClock` (`venu/clock.py`): 16 position callbacks + mala callbacks + voices — aber 0 Nutzer
+- `StateService` (`state/state_service.py`): RAM-Cache + flush + Policies + auto-commit + Weaver-Integration
+- `bridge.offer()` (`substrate/bridge.py`): PURPOSE_MAP mit `file_flush`/`file_write` → Position 13 (Bali)
+- `_GovernedPath` (`substrate/proxy.py`): intercepted write_text() → bridge.offer() — existiert, kaum genutzt
+- `PanchaTattva` + `TattvaGate` + `GateProviders`: Pipeline-Governance für lotus_core.__call__()
+- `TattvaRegistry` (`substrate/tattva_registry.py`): collect/index/query __tattva__ declarations
+- `Singularity.tick()`: Heartbeat = kala.advance() + venu.step() + _broadcast(TickState)
+- `EventBus` (`substrate/event_bus.py`): publish/subscribe, aber separate Welt von DIWSubscriber
+- `Reactor/Loop` (`reactor/loop.py`): async event loop + mailbox, bridge.offer() nutzt es
+
+**I/O Gate — was fehlt:**
+- Enforcement: kein Writer wird gezwungen durch StateService/bridge zu gehen
+- Policy: keine Regeln WAS geschrieben werden darf (Schema, Größe, Frequenz)
+- Audit: kein Log WER WANN WAS geschrieben hat
+- Verbindung: StateService ↔ VenuOrchestrator ↔ DIWSubscriber sind nicht verdrahtet
 
 ## Codebase-Realität (Bekannte Probleme)
 
