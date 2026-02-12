@@ -90,6 +90,7 @@ from typing import Dict, Final, List, NamedTuple, Optional, Tuple
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
     HARE_COUNT,
+    KSETRAJNA,
     MAHA_QUANTUM,
     NAVA,
     PANCHA,
@@ -389,28 +390,25 @@ class MahaLanguageEngine:
         )
 
         # Layer 3: Shabda spawning — H/K/R derivative seeds from attractor
-        shabda_spawns = 0
-        try:
-            from vibe_core.mahamantra.research.shabda_spawning import ShabdaSeed
+        from vibe_core.mahamantra.research.shabda_spawning import ShabdaSeed
 
-            root = ShabdaSeed(
-                text=guardian_name,
-                vibration_sum=attractor % MAHA_QUANTUM,
-                syllable_count=len(guardian_name) // 2 or 1,
-            )
-            for op in ("H", "K", "R"):
-                _child = root.spawn(op, mod=MAHA_QUANTUM)
-                shabda_spawns += 1
-        except (ImportError, TypeError, AttributeError):
-            pass
+        root = ShabdaSeed(
+            text=guardian_name,
+            vibration_sum=attractor % MAHA_QUANTUM,
+            syllable_count=len(guardian_name) // 2 or KSETRAJNA,
+        )
+        shabda_children = tuple(root.spawn(op, mod=MAHA_QUANTUM) for op in ("H", "K", "R"))
 
         return {
             "expanded_names": expanded_names,
-            "expansion_depth": expansion.tree.depth
-            if hasattr(expansion, "tree") and hasattr(expansion.tree, "depth")
-            else 0,
+            "expansion_depth": expansion.tree.depth,
+            "expansion_words": tuple(
+                (rw.sanskrit, rw.meanings[0] if rw.meanings else "") for rw in expansion.resonant_words
+            )
+            if expansion.resonant_words
+            else (),
             "synth_walk_words": synth_walk_words,
-            "shabda_spawns": shabda_spawns,
+            "shabda_children": shabda_children,
         }
 
     # =========================================================================
@@ -448,14 +446,15 @@ class MahaLanguageEngine:
 
         The trajectory is the engine's "signature" — a Sanskrit-like name
         that encodes the response's resonance pattern.
-        """
-        try:
-            from vibe_core.mahamantra.research.maha_sequencer import MahaSequencer
 
-            seq = MahaSequencer()
-            return seq.synthesize(attractor % WORDS, length=QUARTERS)
-        except (ImportError, TypeError, AttributeError):
-            return ""
+        Position = (attractor mod WORDS) + 1 because MahaSequencer expects 1-16.
+        Length = QUARTERS (4) — one phoneme per phase.
+        """
+        from vibe_core.mahamantra.research.maha_sequencer import MahaSequencer
+
+        seq = MahaSequencer()
+        position = (attractor % WORDS) + KSETRAJNA  # 1-16
+        return seq.synthesize(position, length=QUARTERS)
 
     # =========================================================================
     # STEP 7: COMPOSE — Structure + Content + Mode + Interactions → English
@@ -467,24 +466,20 @@ class MahaLanguageEngine:
         template: List[Dict],
         section_mode: str,
         antaranga_data: Dict,
+        expansion_data: Optional[Dict] = None,
     ) -> str:
         """
-        Composition using THREE constraints simultaneously:
+        Composition using FIVE constraints simultaneously:
             1. STRUCTURE: Verse template gives word ORDER and grammatical roles
             2. CONTENT: Guardian-shaped resonant words give MEANING
             3. MODE: Kapitel-18 section determines EMPHASIS (verb/noun/quality/etc.)
             4. INTERACTION: Antaranga prana reveals which words amplify each other
+            5. EXPANSION: semantic tree + synth walk + shabda enrich vocabulary
 
         Strategy: Build sentence by ROLE, not by concatenation.
             Subject → Verb → Object → Qualifier → Closure
-
-        The Guardian's function shapes the TONE:
-            vyasa="compilation" → factual assembly
-            narada="connection" → relational statements
-            kapila="analysis" → analytical decomposition
-            prahlada="devotion" → devotional emphasis
         """
-        # Collect resonant meanings sorted by score
+        # === WORD POOL: merge resonant + expansion words by score ===
         resonant = []
         for rw in guardian_response.words:
             meanings = rw.word.meanings
@@ -498,7 +493,33 @@ class MahaLanguageEngine:
                     }
                 )
 
-        # Collect template words by role
+        # Enrich with expansion words (lower priority — scored at half)
+        if expansion_data:
+            for sanskrit, meaning in expansion_data.get("expansion_words", ()):
+                if meaning:
+                    resonant.append(
+                        {
+                            "sanskrit": sanskrit,
+                            "meaning": meaning,
+                            "score": 0.3,  # Below resonant threshold
+                            "all_meanings": (meaning,),
+                        }
+                    )
+            for sanskrit, meaning in expansion_data.get("synth_walk_words", ()):
+                if meaning:
+                    resonant.append(
+                        {
+                            "sanskrit": sanskrit,
+                            "meaning": meaning,
+                            "score": 0.2,  # Walk words = background texture
+                            "all_meanings": (meaning,),
+                        }
+                    )
+
+        # Sort full pool by score descending — best words first
+        resonant.sort(key=lambda r: r["score"], reverse=True)
+
+        # === TEMPLATE: words by grammatical role ===
         by_role: Dict[str, List[str]] = {
             "VERB": [],
             "NOUN": [],
@@ -513,17 +534,12 @@ class MahaLanguageEngine:
             if meaning and role in by_role:
                 by_role[role].append(meaning)
 
-        # Guardian function determines composition style
-        g_func = guardian_response.guardian.function.lower()
-
-        # Build sentence by structure: Subject + Action + Object + Context
+        # === BUILD: Subject → Verb → Object → Qualifier → Closure ===
         parts: List[str] = []
 
-        # === SUBJECT ===
-        # From template references or first resonant noun
+        # SUBJECT: template REF, or first resonant noun
         if by_role["REF"]:
             subj = by_role["REF"][0]
-            # Normalize subject
             if subj.lower() in ("unto me", "of me", "me"):
                 subj = "The Supreme"
             elif subj.lower() in ("you", "unto you"):
@@ -532,15 +548,13 @@ class MahaLanguageEngine:
         elif resonant:
             parts.append(resonant[0]["meaning"].capitalize())
 
-        # === VERB (mode-shaped) ===
+        # VERB: mode-shaped
         if section_mode == "FILTER" and by_role["VERB"]:
-            # TYAGA: negation emphasis
             parts.append("transcends")
             parts.append(by_role["VERB"][0])
         elif section_mode == "VERB" and by_role["VERB"]:
             parts.append(by_role["VERB"][0])
         elif section_mode == "CORE":
-            # RAHASYA: devotional core — use resonant verb if available
             verb_meanings = [
                 r["meaning"]
                 for r in resonant
@@ -553,9 +567,9 @@ class MahaLanguageEngine:
         elif by_role["VERB"]:
             parts.append(by_role["VERB"][0])
 
-        # === OBJECT (resonant content — the heart of the response) ===
-        used_meanings = set()
-        max_content = PANCHA  # 5 content words max
+        # OBJECT: resonant content (now enriched with expansion pool)
+        used_meanings: set = set()
+        max_content = SEVEN  # 7 content words (was PANCHA=5, now richer pool)
         content_count = 0
 
         for r in resonant:
@@ -568,7 +582,7 @@ class MahaLanguageEngine:
                 parts.append(m)
                 content_count += 1
 
-        # === QUALIFIER (mode-dependent) ===
+        # QUALIFIER: mode-dependent
         if section_mode == "QUALITY" and by_role["QUALITY"]:
             parts.append(by_role["QUALITY"][0])
         elif section_mode == "TARGET" and by_role["NOUN"]:
@@ -578,12 +592,12 @@ class MahaLanguageEngine:
             if by_role["NOUN"]:
                 parts.append(by_role["NOUN"][0])
 
-        # === CLOSURE (mode-dependent) ===
+        # CLOSURE: mode-dependent
         if section_mode == "CLOSURE" and by_role["PARTICLE"]:
             parts.append(by_role["PARTICLE"][0])
 
-        # Clean: remove empties, deduplicate, join
-        seen = set()
+        # Deduplicate, clean, join
+        seen: set = set()
         clean = []
         for p in parts:
             p = p.strip()
@@ -593,7 +607,6 @@ class MahaLanguageEngine:
                 clean.append(p)
 
         if not clean and resonant:
-            # Fallback: just the resonant meanings
             clean = [r["meaning"] for r in resonant[:PANCHA]]
 
         return " — ".join(_chunk_sentence(clean))
@@ -670,12 +683,13 @@ class MahaLanguageEngine:
         # Step 6: TRACE (MahaSequencer phoneme trajectory)
         trajectory = self._trace_phonemes(route["attractor"])
 
-        # Step 7: COMPOSE
+        # Step 7: COMPOSE (with expansion data feeding into word pool)
         output = self._compose(
             route["guardian"],
             route["template"],
             route["section_mode"],
             ant,
+            expansion_data=exp,
         )
 
         # Build derivation path (now includes all stages)
@@ -685,7 +699,7 @@ class MahaLanguageEngine:
             f"→ resonate_as={len(route['guardian_resonance'].words)} words "
             f"→ section={route['section_name']}({route['section_mode']}) "
             f"→ verse=BG.18.{route['verse_num']} "
-            f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w/{exp['shabda_spawns']}s "
+            f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w/{len(exp['shabda_children'])}s "
             f"→ diw=0x{diw:05x} "
             f"→ antaranga={ant['active_slots']} slots, {ant['total_prana']} prana"
         )
@@ -722,7 +736,7 @@ class MahaLanguageEngine:
             expanded_names=exp["expanded_names"],
             synth_walk_words=exp["synth_walk_words"],
             diw_applied=diw,
-            shabda_spawns=exp["shabda_spawns"],
+            shabda_spawns=len(exp["shabda_children"]),
             phoneme_trajectory=trajectory,
         )
 
