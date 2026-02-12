@@ -94,21 +94,33 @@ class VibrationSignature:
         return base + self.base_frequency * AKSARA_COUNT + self.duration_ratio
 
     @property
-    def mahamantra_alignment(self) -> float:
-        alignment = 0.0
+    def mahamantra_alignment_cf(self) -> int:
+        """Alignment score in COSMIC_FRAME space (0 to COSMIC_FRAME).
+
+        Each criterion contributes QUARTERS(4) points, weaker match TRINITY(3).
+        Sum capped at WORDS(16), then scaled: score * COSMIC_FRAME // WORDS.
+        """
+        from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME
+        points = 0
         if self.base_frequency == NADI_RESONANCE:
-            alignment += 0.25
+            points += QUARTERS
         elif self.base_frequency == FIELD_RESONANCE:
-            alignment += 0.25
+            points += QUARTERS
         elif self.base_frequency % NADI_RESONANCE == 0:
-            alignment += 0.15
-        if self.duration_ratio in (KSETRAJNA, HALVES, QUARTERS, HARE_COUNT, WORDS, 32):
-            alignment += 0.25
+            points += TRINITY  # Weaker match: 3 instead of 4
+        if self.duration_ratio in (KSETRAJNA, HALVES, QUARTERS, HARE_COUNT, WORDS, AKSARA_COUNT):
+            points += QUARTERS
         if self.articulation.value < PANCHA and self.voicing.value < QUARTERS:
-            alignment += 0.25
+            points += QUARTERS
         if self.signature_id <= KIRTAN_RESONANCE:
-            alignment += 0.25
-        return min(1.0, alignment)
+            points += QUARTERS
+        return min(WORDS, points) * COSMIC_FRAME // WORDS
+
+    @property
+    def mahamantra_alignment(self) -> float:
+        """Float API boundary — returns 0.0 to 1.0 for external consumers."""
+        from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME
+        return self.mahamantra_alignment_cf / COSMIC_FRAME
 
 
 # =============================================================================
