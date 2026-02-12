@@ -245,6 +245,11 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 | `_entropy.py` | Pain/Health Thresholds | `CF_PAIN_SAMADHI=1080` etc. — Seed-abgeleitet (KSETRAJNA/PANCHA/QUARTERS) |
 | `chat.py` | Hardcoded `0.444` | → `ResonanceHarmonics.THRESHOLD_REFINE` |
 | `lila_chronology.py` | Flute/Vina/Kirtan Weights + Resonance | Alle GERATEN→Seed-abgeleitet, pure Int-Arithmetik in CF-Space |
+| `protocol.py` | Intermediate float math + hardcoded `21600` | Pure Int-Arithmetik, `0.1`→`1/TEN`, `21600`→`COSMIC_FRAME` |
+| `shabda.py` | Alignment weights `0.25/0.15` | Integer-Punkte: QUARTERS(4)/TRINITY(3), Summe=WORDS(16), `_cf()` SSOT |
+| `lila_chronology.py` | `resonance_decay/growth` `0.1/0.15` | `CF//TEN=2160`, `CF*TRINITY//(HALVES*TEN)=3240` |
+| `guardian_router.py` | Routing weights `0.40/0.25/0.20/0.15` | HARE_COUNT(8)/PANCHA(5)/QUARTERS(4)/TRINITY(3), Summe=20 |
+| `phonetic_bridge.py` | `STHANA_ENERGY` `0.2/0.6/0.8/1.0/0.5` | `STHANA_ENERGY_CF` als Int-SSOT, Float-Alias abgeleitet |
 
 **lila_chronology.py Details (war Design-Problem, jetzt gelöst):**
 - Flute: `0.40/0.35/0.25` → `VAMSI_HOLES(9)/VENU_HOLES(6)/MURALI_HOLES(4)`, Summe=`FLUTE_HOLES_SUM(19)`
@@ -259,14 +264,22 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 | Kategorie | Dateien | Grund |
 |-----------|---------|-------|
 | Timestamps | `byte.py`, `yajna.py` | `time.time()` — korrekt als float |
-| Duration | `samskara.py` | `duration_ms` — Messwert |
+| Duration | `samskara.py`, `samana_bridge.py` | `duration_ms` — Messwert |
 | OpsPerSec | `classifier/core.py` | Messwert |
 | Metriken 0-1 | `compute.py`, `_sense.py`, `_gad.py`, `knowledge.py` | Cache-Hit-Rates, Effizienz-Scores — keine Seed-Ableitung |
+| Mercy Equation | `classifier/core.py` | `1.0/0.5/0.1/0.3` — konzeptuelle Scoring-Faktoren, keine Seed-Ableitung |
+| Similarity Math | `basin_map.py`, `resonance_ranker.py` inner loop | Cosine/L1 Geometrie — korrekt als float |
+| Musical Ratios | `harmonics.py` SWARA_* | Physikalische Frequenzverhältnisse — korrekt als float |
+| Infrastructure | `event_bus.py`, `guna.py`, `bridge.py` | Timeouts, Rate-Limits, Latencies — operationelle Parameter |
+| Coherence | `yajna.py` | `coherence: float = 1.0` — Messparameter |
 
 **Offen (niedrigere Priorität):**
 
 | Datei | Problem | Schwierigkeit |
 |-------|---------|---------------|
+| `cell.py` | `integrity: float` 0.0-1.0 (39 Konsumenten, 8 Dateien) | Mittel (großer Blast-Radius) |
+| `phonetic_bridge.py` | `PhoneticTensor` float vectors + `shakti` | Mittel (3 Konsumenten) |
+| `siksastakam.py` | `resonance: float = 0.5` Default | Niedrig |
 | `synaptic_seeder.py` (91 Floats) | Purer Slop — hardcoded `0.85`/`0.15` | Hoch (MANAS-Subsystem, viele Konsumenten) |
 | `biorhythm.py` (47 Floats) | MANAS | Hoch (eigenes Subsystem) |
 | `viveka_action.py` (45 Floats) | MANAS Cortex | Hoch |
