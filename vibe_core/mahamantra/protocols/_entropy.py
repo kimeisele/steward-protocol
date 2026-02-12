@@ -52,7 +52,15 @@ MAHAMANTRA MAPPING:
 WATERTIGHT: No Any types. All typed explicitly.
 """
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, TRINITY)
+from vibe_core.mahamantra.protocols._seed import (
+    FLUTE_HOLES_SUM,
+    HARE_COUNT,
+    KSETRAJNA,
+    PANCHA,
+    QUARTERS,
+    TRINITY,
+)
+from vibe_core.mahamantra.protocols.seed._cosmic import COSMIC_FRAME
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -92,15 +100,29 @@ from vibe_core.mahamantra.protocols._core import (
 # Srimad Bhagavatam - Gajendra Moksha
 SB_GAJENDRA_CHAPTER: Final[str] = "8.2-4"  # The elephant's prayer
 
-# The sacred thresholds (inverted from health to pain)
-# pain = 1.0 - health
-PAIN_SAMADHI: Final[float] = 0.05  # Below this: deep rest (health >= 0.95)
-PAIN_SADHANA: Final[float] = 0.20  # Below this: normal (health >= 0.80)
-# Above PAIN_SADHANA: Gajendra mode (health < 0.80)
+# The sacred thresholds — Integer SSOT (COSMIC_FRAME-scaled)
+#
+# Derivation from Seed:
+#   PAIN_SAMADHI  = KSETRAJNA / (PANCHA × QUARTERS) = 1/20 → CF × 1 // 20 = 1080
+#   PAIN_SADHANA  = KSETRAJNA / PANCHA             = 1/5  → CF × 1 // 5  = 4320
+#   HEALTH_SADHANA = QUARTERS / PANCHA              = 4/5  → CF × 4 // 5  = 17280
+#   HEALTH_SAMADHI = FLUTE_HOLES_SUM / (PANCHA × QUARTERS) = 19/20 → CF × 19 // 20 = 20520
+#
+# pain = 1.0 - health → CF_PAIN = COSMIC_FRAME - CF_HEALTH
 
-# Health thresholds (for compatibility with daemon)
-HEALTH_SAMADHI: Final[float] = 0.95  # Above: Samadhi
-HEALTH_SADHANA: Final[float] = 0.80  # Above: Sadhana, Below: Gajendra
+CF_PAIN_SAMADHI: Final[int] = COSMIC_FRAME * KSETRAJNA // (PANCHA * QUARTERS)  # 1080
+CF_PAIN_SADHANA: Final[int] = COSMIC_FRAME * KSETRAJNA // PANCHA  # 4320
+CF_HEALTH_SADHANA: Final[int] = COSMIC_FRAME * QUARTERS // PANCHA  # 17280
+CF_HEALTH_SAMADHI: Final[int] = COSMIC_FRAME * FLUTE_HOLES_SUM // (PANCHA * QUARTERS)  # 20520
+
+assert CF_PAIN_SAMADHI == COSMIC_FRAME - CF_HEALTH_SAMADHI  # 1080 = 21600 - 20520
+assert CF_PAIN_SADHANA == COSMIC_FRAME - CF_HEALTH_SADHANA  # 4320 = 21600 - 17280
+
+# Float aliases (backward-compatible, for consumers in 0-1 space)
+PAIN_SAMADHI: Final[float] = CF_PAIN_SAMADHI / COSMIC_FRAME  # 0.05
+PAIN_SADHANA: Final[float] = CF_PAIN_SADHANA / COSMIC_FRAME  # 0.20
+HEALTH_SAMADHI: Final[float] = CF_HEALTH_SAMADHI / COSMIC_FRAME  # 0.95
+HEALTH_SADHANA: Final[float] = CF_HEALTH_SADHANA / COSMIC_FRAME  # 0.80
 
 
 # =============================================================================
