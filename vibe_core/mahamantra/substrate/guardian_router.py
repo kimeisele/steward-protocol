@@ -28,7 +28,9 @@ from __future__ import annotations
 from typing import Dict, Final, List, Optional, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
+    HARE_COUNT,
     PANCHA,
+    QUARTERS,
     SEVEN,
     TRINITY,
 )
@@ -113,6 +115,16 @@ for _g in GUARDIANS:
 # ROUTING SCORE
 # =============================================================================
 
+# Seed-derived scoring weights for Guardian routing (integer SSOT)
+# Element=HARE_COUNT(8), Varga=PANCHA(5), Shruti=QUARTERS(4), Harmonic=TRINITY(3)
+# Sum = QUARTERS * PANCHA = 20
+_W_ELEMENT: Final[int] = HARE_COUNT   # 8  (was 0.40)
+_W_VARGA: Final[int] = PANCHA         # 5  (was 0.25)
+_W_SHRUTI: Final[int] = QUARTERS      # 4  (was 0.20)
+_W_HARMONIC: Final[int] = TRINITY     # 3  (was 0.15)
+_W_SUM: Final[int] = QUARTERS * PANCHA  # 20
+
+
 class RouteResult:
     """Result of routing an input to a Guardian."""
 
@@ -132,13 +144,13 @@ class RouteResult:
         self.varga_match = varga_match
         self.shruti_match = shruti_match
         self.harmonic_distance = harmonic_distance
-        # Weighted score (same dimensions as resonance_ranker)
+        # Weighted score — weights are Seed-derived integers, result is float API boundary
         self.score = (
-            0.40 * element_match
-            + 0.25 * varga_match
-            + 0.20 * shruti_match
-            + 0.15 * (1.0 - harmonic_distance)
-        )
+            _W_ELEMENT * element_match
+            + _W_VARGA * varga_match
+            + _W_SHRUTI * shruti_match
+            + _W_HARMONIC * (1.0 - harmonic_distance)
+        ) / _W_SUM
 
     def __repr__(self) -> str:
         return (f"Route({self.guardian.name}, score={self.score:.3f}, "
