@@ -244,6 +244,15 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 | `resonance_ranker.py` | 7D Scoring Weights | `W_*_CF` als Int-SSOT (Summe=21600), Float-Aliases abgeleitet |
 | `_entropy.py` | Pain/Health Thresholds | `CF_PAIN_SAMADHI=1080` etc. — Seed-abgeleitet (KSETRAJNA/PANCHA/QUARTERS) |
 | `chat.py` | Hardcoded `0.444` | → `ResonanceHarmonics.THRESHOLD_REFINE` |
+| `lila_chronology.py` | Flute/Vina/Kirtan Weights + Resonance | Alle GERATEN→Seed-abgeleitet, pure Int-Arithmetik in CF-Space |
+
+**lila_chronology.py Details (war Design-Problem, jetzt gelöst):**
+- Flute: `0.40/0.35/0.25` → `VAMSI_HOLES(9)/VENU_HOLES(6)/MURALI_HOLES(4)`, Summe=`FLUTE_HOLES_SUM(19)`
+- Vina: `0.20/0.30/0.20` → `VINA_STRINGS(5)/SEVEN(7)/VINA_STRINGS(5)`, Summe=`POSITION_SUM_KRISHNA(17)`
+- Kirtan: `0.6/0.4` → `FLUTE_HOLES_SUM(19)/VINA_STRINGS(5)`, Summe=`KSHETRA(24)`
+- Attractors: Hardcoded `22`→`SHRUTIS`, `87`→`POSITION_SUM_HARE+POSITION_SUM_KRISHNA`
+- KirtanRuntime: `0.1` Wachstumsfaktor → `1/TEN` (Integer-Äquivalent)
+- Pattern: `_cf()` Methoden = SSOT (pure int), Float-Wrapper nur an API-Grenze
 
 **Analyse-Ergebnis — was NICHT migriert werden muss:**
 
@@ -259,7 +268,6 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 | Datei | Problem | Schwierigkeit |
 |-------|---------|---------------|
 | `synaptic_seeder.py` (91 Floats) | Purer Slop — hardcoded `0.85`/`0.15` | Hoch (MANAS-Subsystem, viele Konsumenten) |
-| `lila_chronology.py` | Flute-Weights `0.40/0.35/0.25` sind GERATEN, nicht abgeleitet | Design-Problem, nicht einfaches Float→Int |
 | `biorhythm.py` (47 Floats) | MANAS | Hoch (eigenes Subsystem) |
 | `viveka_action.py` (45 Floats) | MANAS Cortex | Hoch |
 | `triggers.py` (41 Floats) | MANAS | Hoch |
