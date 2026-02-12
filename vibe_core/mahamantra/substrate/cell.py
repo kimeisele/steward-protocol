@@ -14,7 +14,7 @@ Every cell carries its 72-byte header and biological state.
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 """
 
-from vibe_core.mahamantra.protocols._seed import HALVES, HARE_COUNT, KSETRAJNA, PANCHA
+from vibe_core.mahamantra.protocols._seed import HALVES, HARE_COUNT, KSETRAJNA, PANCHA, TEN
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
@@ -68,8 +68,11 @@ METABOLIC_COST: Final[int] = TRINITY
 # Minimum prana required for mitosis: 2 × MAHA_QUANTUM = 274
 MITOSIS_THRESHOLD: Final[int] = MAHA_QUANTUM * HALVES
 
-# Membrane integrity threshold for signal processing: 20%
-MEMBRANE_MIN_INTEGRITY: Final[float] = 0.2
+# Membrane integrity threshold for signal processing: CF // PANCHA = 4320 (20%)
+MEMBRANE_MIN_INTEGRITY: Final[int] = COSMIC_FRAME // PANCHA  # 4320
+
+# Signal wear per processing: CF // (TEN * TEN) = 216 (1%)
+_SIGNAL_WEAR: Final[int] = COSMIC_FRAME // (TEN * TEN)  # 216
 
 # Maximum age (cycles) before apoptosis: JIVA_CYCLE = 432
 MAX_AGE_CYCLES: Final[int] = JIVA_CYCLE
@@ -93,7 +96,7 @@ class CellLifecycleState:
     """
 
     prana: int = GENESIS_PRANA
-    integrity: float = 1.0  # 0.0 to 1.0 (membrane health)
+    integrity: int = COSMIC_FRAME  # 0 to COSMIC_FRAME (membrane health)
     cycle: int = 0
     is_active: bool = False
     dna: str = ""
@@ -188,7 +191,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         self.lifecycle.dna = dna
         self.lifecycle.is_active = True
         self.lifecycle.cycle = 0
-        self.lifecycle.integrity = 1.0
+        self.lifecycle.integrity = COSMIC_FRAME
         self.lifecycle.prana = GENESIS_PRANA
         self.payload = genesis_state
 
@@ -245,9 +248,9 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             return None  # Membrane too weak
 
         # Signal processing costs integrity
-        self.lifecycle.integrity -= 0.01  # 1% wear per signal
+        self.lifecycle.integrity -= _SIGNAL_WEAR  # 216 per signal (1%)
         if self.lifecycle.integrity < 0:
-            self.lifecycle.integrity = 0.0
+            self.lifecycle.integrity = 0
 
         return message
 
@@ -300,7 +303,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         """Self-destruct (Death/Mrityu)."""
         self.lifecycle.is_active = False
         self.lifecycle.prana = 0
-        self.lifecycle.integrity = 0.0
+        self.lifecycle.integrity = 0
 
     def homeostasis(self) -> bool:
         """
@@ -351,7 +354,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         # I am Active. We Resonate.
         # Merge visitor into self (capped at MAX_PRANA to prevent overflow)
         self.lifecycle.prana = min(self.lifecycle.prana + visitor.lifecycle.prana, MAX_PRANA)
-        self.lifecycle.integrity = (self.lifecycle.integrity + visitor.lifecycle.integrity) / HALVES
+        self.lifecycle.integrity = (self.lifecycle.integrity + visitor.lifecycle.integrity) // HALVES
         # Note: We return SELF (the Resident), now empowered.
         return self
 
@@ -383,8 +386,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
 
         # Lifecycle state
         result.extend(struct.pack("<Q", self.lifecycle.prana))
-        integrity_fixed = int(self.lifecycle.integrity * (KSETRAJNA << 32))
-        result.extend(struct.pack("<Q", integrity_fixed))
+        result.extend(struct.pack("<Q", self.lifecycle.integrity))
         result.extend(struct.pack("<Q", self.lifecycle.cycle))
 
         # Active flag + DNA length
@@ -425,8 +427,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         prana = struct.unpack("<Q", data[offset : offset + HARE_COUNT])[0]
         offset += HARE_COUNT
 
-        integrity_fixed = struct.unpack("<Q", data[offset : offset + HARE_COUNT])[0]
-        integrity = integrity_fixed / (KSETRAJNA << 32)
+        integrity = struct.unpack("<Q", data[offset : offset + HARE_COUNT])[0]
         offset += HARE_COUNT
 
         cycle = struct.unpack("<Q", data[offset : offset + HARE_COUNT])[0]
@@ -460,7 +461,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
         return {
             "nucleus": "active" if self.lifecycle.is_active else "inactive",
             "mitochondria": f"{self.lifecycle.prana} prana",
-            "membrane": f"{self.lifecycle.integrity:.2%} integrity",
+            "membrane": f"{self.lifecycle.integrity / COSMIC_FRAME:.2%} integrity",
             "dna_length": len(self.lifecycle.dna),
             "cycles": self.lifecycle.cycle,
             "jiva_qualities": JIVA_QUALITIES,  # 50
@@ -504,7 +505,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             header=header,
             lifecycle=CellLifecycleState(
                 prana=GENESIS_PRANA,
-                integrity=1.0,
+                integrity=COSMIC_FRAME,
                 cycle=0,
                 is_active=True,
                 dna=dna,
@@ -575,7 +576,7 @@ class MahaCellUnified(MahaCellProtocol[S, object], Generic[S]):
             header=MahaHeader.null(),
             lifecycle=CellLifecycleState(
                 prana=0,
-                integrity=0.0,
+                integrity=0,
                 cycle=0,
                 is_active=False,
                 dna="",
