@@ -7,6 +7,7 @@ Verifies serialization and deserialization of the entire Mahamantra stack.
 
 import pytest
 import struct
+from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME, HALVES
 from vibe_core.mahamantra.protocols._header import MahaHeader
 from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
@@ -22,7 +23,7 @@ class TestCellPersistence:
         
         # Then modify state
         cell.lifecycle.prana = 12345
-        cell.lifecycle.integrity = 0.5
+        cell.lifecycle.integrity = COSMIC_FRAME // HALVES  # 10800
         
         data = cell.to_bytes()
         assert len(data) >= 104
@@ -31,7 +32,7 @@ class TestCellPersistence:
         
         assert restored.header.sravanam == 1
         assert restored.lifecycle.prana == 12345
-        assert restored.lifecycle.integrity == 0.5
+        assert restored.lifecycle.integrity == COSMIC_FRAME // HALVES
         assert restored.lifecycle.dna == "AGCT"
         assert restored.lifecycle.is_active is True
         assert consumed == len(data)
