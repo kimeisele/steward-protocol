@@ -26,6 +26,7 @@ __genesis__ = "0xedb5ebb8"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Optional
 
+from vibe_core.mahamantra.substrate.harmonics import ResonanceHarmonics
 from vibe_core.protocols.naga.cli_command import (
     NAGA_COMMAND_REGISTRY,
     NagaCommandBase,
@@ -160,7 +161,7 @@ class ChatCommand(NagaCommandBase):
         response = f"[PRAHLADA] Resonance: {score:.3f}"
         if guardian:
             response += f" → {guardian.upper()}"
-        if score < 0.444:  # THRESHOLD_REFINE
+        if score < ResonanceHarmonics.THRESHOLD_REFINE:
             response += " (below threshold)"
         response += f'\n\nInput: "{message}"'
         if note:
@@ -171,7 +172,7 @@ class ChatCommand(NagaCommandBase):
             data=(
                 ("resonance_score", score),
                 ("guardian", guardian or "none"),
-                ("threshold", 0.444),
+                ("threshold", ResonanceHarmonics.THRESHOLD_REFINE),
             ),
         )
 

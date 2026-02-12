@@ -55,6 +55,7 @@ from vibe_core.mahamantra.protocols._seed import (
     VENU_HOLES,
     WORDS,
 )
+from vibe_core.mahamantra.protocols.seed._cosmic import COSMIC_FRAME
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kapila"
@@ -89,23 +90,30 @@ class ResonanceHarmonics:
     """
 
     # =========================================================================
-    # PRIMARY THRESHOLDS (Derived from Seed)
+    # PRIMARY THRESHOLDS — Integer (COSMIC_FRAME-scaled)
+    # =========================================================================
+    # All thresholds are pure integer arithmetic: count * COSMIC_FRAME // MALA.
+    # No float intermediaries. No rounding. Exact.
+
+    # AUTO-EXECUTE: NADI * COSMIC_FRAME // MALA = 72 * 21600 // 108 = 14400
+    # This is the Perfect Fifth (Panchama) - the dominant frequency
+    CF_AUTO: Final[int] = NADI_RESONANCE * COSMIC_FRAME // MALA  # 14400
+
+    # REFINEMENT: LILA * COSMIC_FRAME // MALA = 48 * 21600 // 108 = 9600
+    # This is between Gandhara and Madhyama
+    CF_REFINE: Final[int] = LILA * COSMIC_FRAME // MALA  # 9600
+
+    # SYNCHRONIZATION: FIELD * COSMIC_FRAME // MALA = 144 * 21600 // 108 = 28800
+    # This is the Perfect Fourth (Madhyama) above the tonic
+    # Values > COSMIC_FRAME indicate "super-resonance" (multiple agents aligned)
+    CF_SYNC: Final[int] = FIELD_RESONANCE * COSMIC_FRAME // MALA  # 28800
+
+    # =========================================================================
+    # FLOAT RATIOS (backward-compatible, for consumers in 0-1 space)
     # =========================================================================
 
-    # AUTO-EXECUTE: When resonance reaches Nadi level (pulse)
-    # NADI/MALA = 72/108 = 2/3
-    # This is the Perfect Fifth (Panchama) - the dominant frequency
     THRESHOLD_AUTO: Final[float] = NADI_RESONANCE / MALA  # 0.666...
-
-    # REFINEMENT: When resonance is in Lila zone (play/uncertainty)
-    # LILA/MALA = 48/108 = 4/9
-    # This is between Gandhara and Madhyama
     THRESHOLD_REFINE: Final[float] = LILA / MALA  # 0.444...
-
-    # SYNCHRONIZATION: Multi-agent coherence point
-    # FIELD/MALA = 144/108 = 4/3
-    # This is the Perfect Fourth (Madhyama) above the tonic
-    # Values > 1.0 indicate "super-resonance" (multiple agents aligned)
     THRESHOLD_SYNC: Final[float] = FIELD_RESONANCE / MALA  # 1.333...
 
     # =========================================================================
@@ -134,12 +142,14 @@ class ResonanceHarmonics:
     # =========================================================================
 
     # COSMIC_FRAME scaling constant (21600 = 100%)
-    COSMIC_FRAME: Final[int] = 21600
+    COSMIC_FRAME: Final[int] = COSMIC_FRAME
 
     @classmethod
     def normalize_to_mala(cls, count: int) -> int:
         """
         Normalize a count to MALA-based ratio, scaled to COSMIC_FRAME.
+
+        Pure integer arithmetic: count * COSMIC_FRAME // MALA.
 
         Args:
             count: Any count from the Seed (e.g., 72, 48, 144)
@@ -147,32 +157,27 @@ class ResonanceHarmonics:
         Returns:
             The ratio scaled to COSMIC_FRAME (21600 = 100%)
         """
-        return int((count / MALA) * cls.COSMIC_FRAME)
+        return count * cls.COSMIC_FRAME // MALA
 
     @classmethod
     def should_auto_execute(cls, resonance: int) -> bool:
         """Check if resonance (0-21600) is high enough for auto-execution."""
-        threshold = int(cls.THRESHOLD_AUTO * cls.COSMIC_FRAME)
-        return resonance >= threshold
+        return resonance >= cls.CF_AUTO
 
     @classmethod
     def needs_refinement(cls, resonance: int) -> bool:
         """Check if resonance (0-21600) is in the refinement (Lila) zone."""
-        refine = int(cls.THRESHOLD_REFINE * cls.COSMIC_FRAME)
-        auto = int(cls.THRESHOLD_AUTO * cls.COSMIC_FRAME)
-        return refine <= resonance < auto
+        return cls.CF_REFINE <= resonance < cls.CF_AUTO
 
     @classmethod
     def is_silent(cls, resonance: int) -> bool:
         """Check if resonance (0-21600) is below refinement threshold."""
-        threshold = int(cls.THRESHOLD_REFINE * cls.COSMIC_FRAME)
-        return resonance < threshold
+        return resonance < cls.CF_REFINE
 
     @classmethod
     def is_multi_agent_sync(cls, resonance: int) -> bool:
         """Check if resonance (0-28800) indicates multi-agent synchronization."""
-        threshold = int(cls.THRESHOLD_SYNC * cls.COSMIC_FRAME)
-        return resonance >= threshold
+        return resonance >= cls.CF_SYNC
 
     @classmethod
     def get_zone(cls, resonance: int) -> str:
@@ -182,14 +187,11 @@ class ResonanceHarmonics:
         Returns:
             "AUTO" | "REFINE" | "SILENCE" | "SYNC"
         """
-        sync = int(cls.THRESHOLD_SYNC * cls.COSMIC_FRAME)
-        auto = int(cls.THRESHOLD_AUTO * cls.COSMIC_FRAME)
-        refine = int(cls.THRESHOLD_REFINE * cls.COSMIC_FRAME)
-        if resonance >= sync:
+        if resonance >= cls.CF_SYNC:
             return "SYNC"
-        elif resonance >= auto:
+        elif resonance >= cls.CF_AUTO:
             return "AUTO"
-        elif resonance >= refine:
+        elif resonance >= cls.CF_REFINE:
             return "REFINE"
         else:
             return "SILENCE"
@@ -926,6 +928,11 @@ class SravanamCheck:
 assert abs(ResonanceHarmonics.THRESHOLD_AUTO - HALVES / TRINITY) < 0.0001, "AUTO must be 2/3"
 assert abs(ResonanceHarmonics.THRESHOLD_REFINE - QUARTERS / NAVA) < 0.0001, "REFINE must be 4/9"
 assert abs(ResonanceHarmonics.THRESHOLD_SYNC - QUARTERS / TRINITY) < 0.0001, "SYNC must be 4/3"
+
+# Verify integer thresholds are exact (no rounding)
+assert ResonanceHarmonics.CF_AUTO == 14400, f"CF_AUTO must be 14400, got {ResonanceHarmonics.CF_AUTO}"
+assert ResonanceHarmonics.CF_REFINE == 9600, f"CF_REFINE must be 9600, got {ResonanceHarmonics.CF_REFINE}"
+assert ResonanceHarmonics.CF_SYNC == 28800, f"CF_SYNC must be 28800, got {ResonanceHarmonics.CF_SYNC}"
 assert abs(ResonanceHarmonics.RATIO_NADI_LILA - TRINITY / HALVES) < 0.0001, "NADI/LILA must be 3/2 (Perfect Fifth)"
 
 # Verify Parampara connection
@@ -1045,6 +1052,11 @@ THRESHOLD_REFINE: Final[float] = ResonanceHarmonics.THRESHOLD_REFINE
 THRESHOLD_SYNC: Final[float] = ResonanceHarmonics.THRESHOLD_SYNC
 RATIO_MANTRA_PROCESS: Final[float] = ResonanceHarmonics.RATIO_MANTRA_PROCESS
 
+# Integer thresholds (COSMIC_FRAME-scaled, for int-space consumers)
+CF_AUTO: Final[int] = ResonanceHarmonics.CF_AUTO
+CF_REFINE: Final[int] = ResonanceHarmonics.CF_REFINE
+CF_SYNC: Final[int] = ResonanceHarmonics.CF_SYNC
+
 
 # =============================================================================
 # EXPORTS
@@ -1060,4 +1072,8 @@ __all__ = [
     "THRESHOLD_REFINE",
     "THRESHOLD_SYNC",
     "RATIO_MANTRA_PROCESS",
+    # Integer thresholds (COSMIC_FRAME-scaled)
+    "CF_AUTO",
+    "CF_REFINE",
+    "CF_SYNC",
 ]
