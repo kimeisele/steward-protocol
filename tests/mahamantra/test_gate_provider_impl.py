@@ -235,8 +235,11 @@ class TestEnforceGateProvider:
 
     def test_enforce_without_state_service(self):
         """Without StateService in DI, committed should be False."""
+        from unittest.mock import patch
         p = EnforceGateProvider()
-        result = p.enforce(position=0, seed=0, attractor=0)
+        p._state_service = None  # Reset any cached DI lookup
+        with patch.object(EnforceGateProvider, "_get_state_service", return_value=None):
+            result = p.enforce(position=0, seed=0, attractor=0)
         assert result["committed"] is False
 
     def test_enforce_stats(self):
