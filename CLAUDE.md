@@ -236,7 +236,7 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 
 **Pattern:** Int-Konstanten als SSOT (CF_*), Float-Aliases abgeleitet für backward-compatible Konsumenten.
 
-**Erledigt (4208 Tests grün, 0 Regression):**
+**Erledigt (4208 Tests grün, 0 Regression, Branch `feature/float-int-wave-2`):**
 
 | Datei | Was | Wie |
 |-------|-----|-----|
@@ -250,6 +250,9 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 | `lila_chronology.py` | `resonance_decay/growth` `0.1/0.15` | `CF//TEN=2160`, `CF*TRINITY//(HALVES*TEN)=3240` |
 | `guardian_router.py` | Routing weights `0.40/0.25/0.20/0.15` | HARE_COUNT(8)/PANCHA(5)/QUARTERS(4)/TRINITY(3), Summe=20 |
 | `phonetic_bridge.py` | `STHANA_ENERGY` `0.2/0.6/0.8/1.0/0.5` | `STHANA_ENERGY_CF` als Int-SSOT, Float-Alias abgeleitet |
+| `cell.py` | `integrity: float` 0.0-1.0 | `integrity: int` 0-COSMIC_FRAME. `MEMBRANE_MIN_INTEGRITY=CF//PANCHA(4320)`, `_SIGNAL_WEAR=CF//(TEN*TEN)(216)` |
+| `chamber.py` | DIW-Tabelle float Koeffizienten | `0.01→216`, `0.02→432`, `-0.005→-MALA(-108)`. Merge: `//HALVES` statt `/HALVES` |
+| `lotus_core.py` | API-Boundary für cell integrity | `membrane_integrity / COSMIC_FRAME` — Float nur an API-Grenze |
 
 **lila_chronology.py Details (war Design-Problem, jetzt gelöst):**
 - Flute: `0.40/0.35/0.25` → `VAMSI_HOLES(9)/VENU_HOLES(6)/MURALI_HOLES(4)`, Summe=`FLUTE_HOLES_SUM(19)`
@@ -277,7 +280,6 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 
 | Datei | Problem | Schwierigkeit |
 |-------|---------|---------------|
-| `cell.py` | `integrity: float` 0.0-1.0 (39 Konsumenten, 8 Dateien) | Mittel (großer Blast-Radius) |
 | `phonetic_bridge.py` | `PhoneticTensor` float vectors + `shakti` | Mittel (3 Konsumenten) |
 | `siksastakam.py` | `resonance: float = 0.5` Default | Niedrig |
 | `synaptic_seeder.py` (91 Floats) | Purer Slop — hardcoded `0.85`/`0.15` | Hoch (MANAS-Subsystem, viele Konsumenten) |
