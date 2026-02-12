@@ -107,6 +107,8 @@ class _PipelineCache:
         'ELEMENT_NAMES', 'IS_SHRUTI',
         # Precomputed DIW components (length = WORDS = 16)
         'diw_components',
+        # COSMIC_FRAME for API boundary conversions
+        'COSMIC_FRAME',
     )
 
     def __init__(self) -> None:
@@ -114,11 +116,12 @@ class _PipelineCache:
         # NOTE: Compressor is NOT cached here — MahamantraLotus owns it
         # via _get_compressor() (class-level singleton). No duplication.
         from vibe_core.mahamantra.protocols._seed import (
-            MAHA_QUANTUM, PARAMPARA, WORDS,
+            COSMIC_FRAME, MAHA_QUANTUM, PARAMPARA, WORDS,
             KSETRAJNA, QUARTERS,
             get_name_at_position, get_quarter_head, get_trinity_function,
             is_head,
         )
+        self.COSMIC_FRAME = COSMIC_FRAME
         self.WORDS = WORDS
         self.MAHA_QUANTUM = MAHA_QUANTUM
         self.PARAMPARA = PARAMPARA
@@ -500,6 +503,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         P = _get_pipeline()
         WORDS = P.WORDS
         MAHA_QUANTUM = P.MAHA_QUANTUM
+        COSMIC_FRAME = P.COSMIC_FRAME
 
         # =====================================================================
         # GATE 0: CHAITANYA — PARSE / Identity
@@ -785,7 +789,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "valid": True,
                 "parampara_verified": parampara_verified,
                 "prana": result_cell.prana,
-                "integrity": result_cell.membrane_integrity,
+                "integrity": result_cell.membrane_integrity / COSMIC_FRAME,
                 "is_alive": result_cell.is_alive,
                 "cycle": result_cell.age,
             },
@@ -811,7 +815,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             "execution": {
                 "success": result_cell.is_alive,
                 "prana": result_cell.prana,
-                "integrity": result_cell.membrane_integrity,
+                "integrity": result_cell.membrane_integrity / COSMIC_FRAME,
                 "kirtan_cycles": kirtan_cycles,
                 "transformations": kirtan_cycles * WORDS,
                 "yajna_ticks": WORDS,

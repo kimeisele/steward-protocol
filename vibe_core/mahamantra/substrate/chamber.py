@@ -114,30 +114,37 @@ DEFAULT_CHORUS_SIZE: Final[int] = WORDS
 #   3×4 (name-first):  name * 4 + phase   → "what does each name do?"
 # Both index the SAME 12 effects. The data is one. The access is dual.
 #
-# Each entry: (prana_factor, integrity_coeff, cycle_add)
-#   prana_factor:     multiplied by base_delta (+N = gain, -N = cost)
-#   integrity_coeff:  multiplied by intensity (float)
-#   cycle_add:        added to cell.cycle
+# Each entry: (prana_factor, integrity_coeff_cf, cycle_add)
+#   prana_factor:       multiplied by base_delta (+N = gain, -N = cost)
+#   integrity_coeff_cf: integer in COSMIC_FRAME space, multiplied by intensity_cf
+#   cycle_add:          added to cell.cycle
+#
+# Integrity coefficients (Seed-derived):
+#   CF // 100 = 216 (was 0.01), 2 * CF // 100 = 432 (was 0.02), -MALA = -108 (was -0.005)
 
 # Canonical storage: 12 entries as (phase, name) → effect
+_IC_1: Final[int] = COSMIC_FRAME // 100   # 216 (was 0.01)
+_IC_2: Final[int] = HALVES * COSMIC_FRAME // 100  # 432 (was 0.02)
+_IC_NEG: Final[int] = -MALA               # -108 (was -0.005)
+
 _DIW_DATA: tuple = (
-    #          prana  integrity  cycle
+    #          prana  integrity_cf  cycle
     # GENESIS (phase=0)
-    ( HALVES,  0.0,     0),          # H: strong prana boost
-    ( 1,       0.01,    0),          # K: moderate + integrity
-    ( 1,       0.0,     KSETRAJNA),  # R: moderate + cycle
+    ( HALVES,  0,        0),          # H: strong prana boost
+    ( 1,       _IC_1,    0),          # K: moderate + integrity
+    ( 1,       0,        KSETRAJNA),  # R: moderate + cycle
     # DHARMA (phase=1)
-    (-1,       0.0,     0),          # H: validation cost
-    ( 0,       0.02,    0),          # K: integrity strengthened
-    ( 0,       0.01,    KSETRAJNA),  # R: cycle + integrity
+    (-1,       0,        0),          # H: validation cost
+    ( 0,       _IC_2,    0),          # K: integrity strengthened
+    ( 0,       _IC_1,    KSETRAJNA),  # R: cycle + integrity
     # KARMA (phase=2)
-    (-1,       0.0,     KSETRAJNA),  # H: work + cycle
-    (-1,       0.01,    KSETRAJNA),  # K: work + integrity + cycle
-    (-1,       0.0,     HALVES),     # R: Rama accelerates
+    (-1,       0,        KSETRAJNA),  # H: work + cycle
+    (-1,       _IC_1,    KSETRAJNA),  # K: work + integrity + cycle
+    (-1,       0,        HALVES),     # R: Rama accelerates
     # MOKSHA (phase=3)
-    (-1,      -0.005,   0),          # H: slight integrity decay
-    (-1,       0.01,    0),          # K: integrity stabilized
-    (-1,       0.0,     HALVES),     # R: Rama delivers
+    (-1,       _IC_NEG,  0),          # H: slight integrity decay
+    (-1,       _IC_1,    0),          # K: integrity stabilized
+    (-1,       0,        HALVES),     # R: Rama delivers
 )
 
 # 4×3 index: phase * 3 + name (phase is outer loop)
@@ -334,7 +341,7 @@ class SankirtanChamber(Generic[C]):
             v_arcanam=cell.header.arcanam & 0xFFFFFFFF,
             v_atma=cell.header.atma_nivedanam & 0xFFFFFFFF,
             v_prana=min(cell.lifecycle.prana, 0xFFFFFFFF),
-            v_integrity=int(cell.lifecycle.integrity * INTEGRITY_FULL),
+            v_integrity=cell.lifecycle.integrity * INTEGRITY_FULL // COSMIC_FRAME,
             v_cycle=min(cell.lifecycle.cycle, 0xFFFF),
         )
 
@@ -558,11 +565,12 @@ class SankirtanChamber(Generic[C]):
 
         # --- RESONANCE TABLE: phase(4) × name(3) → (prana_factor, integrity_coeff, cycle_add) ---
         # No if/else. The DIW components ARE the index. The table IS the transformation.
-        pf, ic, ca = _DIW_RESONANCE_TABLE[phase * 3 + name_region]
+        pf, ic_cf, ca = _DIW_RESONANCE_TABLE[phase * 3 + name_region]
         cell.lifecycle.prana += int(pf * base_delta)
         cell.lifecycle.prana = max(0, cell.lifecycle.prana)
-        cell.lifecycle.integrity = max(0.0, min(1.0,
-            cell.lifecycle.integrity + ic * intensity))
+        # integrity_coeff_cf is already in CF space; scale by intensity (0-1 float)
+        cell.lifecycle.integrity = max(0, min(COSMIC_FRAME,
+            cell.lifecycle.integrity + int(ic_cf * intensity)))
         cell.lifecycle.cycle += ca
 
         # --- SANKIRTAN REACTOR: Prana clamped to MAX_PRANA ---
@@ -584,10 +592,10 @@ class SankirtanChamber(Generic[C]):
         # Combine Prana (additive energy)
         resident.lifecycle.prana += visitor.lifecycle.prana
         
-        # Average Integrity
+        # Average Integrity (integer division)
         resident.lifecycle.integrity = (
             resident.lifecycle.integrity + visitor.lifecycle.integrity
-        ) / HALVES
+        ) // HALVES
         
         # Mix Identities (Resonance)
         # We don't change the immutable header ID, but we could update 'atma_nivedanam' checksum?
