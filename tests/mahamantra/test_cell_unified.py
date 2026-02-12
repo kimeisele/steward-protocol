@@ -13,7 +13,9 @@ WATERTIGHT TESTS:
 import pytest
 
 from vibe_core.mahamantra.protocols._seed import (
+    COSMIC_FRAME,
     MAHA_QUANTUM,
+    PANCHA,
     TRINITY,
     PARAMPARA,
     JIVA_CYCLE,
@@ -23,9 +25,11 @@ from vibe_core.mahamantra.substrate.cell import (
     MahaCellUnified,
     CellLifecycleState,
     GENESIS_PRANA,
+    MEMBRANE_MIN_INTEGRITY,
     METABOLIC_COST,
     MAX_AGE_CYCLES,
     MITOSIS_THRESHOLD,
+    _SIGNAL_WEAR,
 )
 from vibe_core.mahamantra.protocols._header import (
     MahaHeader,
@@ -72,7 +76,7 @@ class TestMahaCellUnifiedCreation:
         
         assert cell.is_alive
         assert cell.prana == GENESIS_PRANA
-        assert cell.membrane_integrity == 1.0
+        assert cell.membrane_integrity == COSMIC_FRAME
         assert cell.age == 0
         assert cell.payload == {"key": "value"}
     
@@ -82,7 +86,7 @@ class TestMahaCellUnifiedCreation:
         
         assert not cell.is_alive
         assert cell.prana == 0
-        assert cell.membrane_integrity == 0.0
+        assert cell.membrane_integrity == 0
     
     def test_cell_requires_valid_header(self) -> None:
         """Cell creation fails with invalid header."""
@@ -158,9 +162,9 @@ class TestSignal:
         assert result == "test_message"
     
     def test_signal_rejected_with_low_integrity(self) -> None:
-        """Signal rejected when membrane integrity < 0.2."""
+        """Signal rejected when membrane integrity < MEMBRANE_MIN_INTEGRITY."""
         cell = MahaCellUnified.create(source=1, target=2, operation=3)
-        cell.lifecycle.integrity = 0.1
+        cell.lifecycle.integrity = MEMBRANE_MIN_INTEGRITY - 1
         
         result = cell.signal("test_message")
         
@@ -173,7 +177,7 @@ class TestSignal:
         
         cell.signal("test_message")
         
-        assert cell.membrane_integrity == pytest.approx(initial_integrity - 0.01)
+        assert cell.membrane_integrity == initial_integrity - _SIGNAL_WEAR
 
 
 class TestMitosis:
@@ -220,7 +224,7 @@ class TestApoptosis:
         
         assert not cell.is_alive
         assert cell.prana == 0
-        assert cell.membrane_integrity == 0.0
+        assert cell.membrane_integrity == 0
 
 
 class TestHomeostasis:

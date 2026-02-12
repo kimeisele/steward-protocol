@@ -104,7 +104,7 @@ def test_full_flow_integrity():
     # 4. Cell transformation worked
     assert result["cell"]["is_alive"] is True
     assert result["cell"]["prana"] > 0
-    assert 0 <= result["cell"]["integrity"] <= 1
+    assert 0.0 <= result["cell"]["integrity"] <= 1.0
     assert result["cell"]["cycle"] >= 0
 
     # 5. Shabda extraction worked
