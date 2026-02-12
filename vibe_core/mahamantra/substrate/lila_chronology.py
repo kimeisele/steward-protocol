@@ -36,10 +36,13 @@ from enum import Enum, auto
 from typing import Dict, Final, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
+    COSMIC_FRAME,
+    FLUTE_HOLES_SUM,
     GITA_CHAPTERS,
     HALVES,
     HARE_COUNT,
     KARTALS_PAIR,
+    KSHETRA,
     KSETRAJNA,
     LILA,
     MAHA_QUANTUM,
@@ -51,10 +54,12 @@ from vibe_core.mahamantra.protocols._seed import (
     PANCHA,
     PARAMPARA,
     POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
     POSITION_SUM_RAMA,
     POSITION_SUM_TOTAL,
     QUARTERS,
     SEVEN,
+    SHRUTIS,
     TEN,
     TRINITY,
     VAMSI_HOLES,
@@ -844,7 +849,7 @@ class KirtanState:
     mode: str  # "CALL" or "RESPONSE"
     round_number: int  # Which round of 7
     total_ticks: int
-    resonance: float = 0.0
+    resonance: int = 0  # 0 to COSMIC_FRAME (was float 0.0-1.0)
 
 
 class KirtanRuntime:
@@ -873,7 +878,7 @@ class KirtanRuntime:
         self.sequencer = sequencer or LilaStepSequencer()
         self._tick = 0
         self._round = 0
-        self._resonance = 0.0
+        self._resonance = 0  # Integer: 0 to COSMIC_FRAME
 
     def tick(self) -> KirtanState:
         """
@@ -887,8 +892,10 @@ class KirtanRuntime:
         # Check if we completed a round (every 7 ticks)
         if self._tick > 0 and self._tick % SEVEN == 0:
             self._round += KSETRAJNA
-            # Resonance grows with each round (asymptotic to 1.0)
-            self._resonance = 1.0 - (1.0 / (1.0 + self._round * 0.1))
+            # Resonance grows with each round (asymptotic to COSMIC_FRAME)
+            # Integer equivalent of: 1.0 - 1.0/(1.0 + round * 1/TEN)
+            # = 1 - TEN/(TEN + round) → CF - CF*TEN/(TEN + round)
+            self._resonance = COSMIC_FRAME - (COSMIC_FRAME * TEN) // (TEN + self._round)
 
         state = KirtanState(
             tick=self._tick,
@@ -927,7 +934,7 @@ class KirtanRuntime:
         """Reset the runtime."""
         self._tick = 0
         self._round = 0
-        self._resonance = 0.0
+        self._resonance = 0
 
     @property
     def current_tick(self) -> int:
@@ -940,8 +947,8 @@ class KirtanRuntime:
         return self._round
 
     @property
-    def resonance(self) -> float:
-        """Get current resonance level (0.0 to 1.0)."""
+    def resonance(self) -> int:
+        """Get current resonance level (0 to COSMIC_FRAME)."""
         return self._resonance
 
 
@@ -1015,53 +1022,50 @@ class FluteSync:
         }
 
     @classmethod
-    def get_combined_resonance(cls, tick: int) -> float:
+    def get_combined_resonance_cf(cls, tick: int) -> int:
         """
-        Calculate combined flute resonance (0.0 to 1.0).
+        Calculate combined flute resonance in COSMIC_FRAME space (0 to COSMIC_FRAME).
 
-        FIXED: Computes CONTINUOUS resonance based on proximity to sync points.
-        Each flute contributes based on how close the tick is to its sync.
+        RESONANCE FORMULA (per flute, integer):
+            remainder = tick % period
+            distance = min(remainder, period - remainder)
+            resonance_cf = COSMIC_FRAME * (half_period - distance) // half_period
 
-        OLD (BROKEN): Boolean sync only → mostly 0.0
-        NEW (WATERTIGHT): Wave-like resonance → always meaningful
+        Smooth oscillation: COSMIC_FRAME at sync → 0 at midpoint → COSMIC_FRAME at next sync
 
-        RESONANCE FORMULA (per flute):
-            distance = min(tick % period, period - (tick % period))
-            resonance = 1.0 - (distance / (period / 2.0))
-
-        This creates smooth oscillation: 1.0 at sync → 0.0 at midpoint → 1.0 at next sync
-
-        Combined resonance = weighted average of all three flutes:
-            MURALI (4): Closest quarters, highest weight (0.4)
-            VENU (6): Sharanagati rhythm (0.35)
-            VAMSI (9): Nava expansion (0.25)
+        WEIGHTS (Seed-derived, inverse proportional to period):
+            MURALI (4 holes) → weight VAMSI_HOLES (9) — fastest oscillation, most influence
+            VENU   (6 holes) → weight VENU_HOLES  (6) — middle
+            VAMSI  (9 holes) → weight MURALI_HOLES(4) — slowest oscillation, least influence
+            Sum = FLUTE_HOLES_SUM (19)
         """
 
-        # Continuous resonance per flute (wave approaching sync points)
-        def flute_resonance(tick_value: int, period: int) -> float:
-            """Compute continuous resonance: 1.0 at sync, 0.0 at midpoint."""
+        def _flute_res_cf(tick_value: int, period: int) -> int:
+            """Per-flute resonance: COSMIC_FRAME at sync, 0 at midpoint."""
             if period == 0:
-                return 0.0
+                return 0
             remainder = tick_value % period
             distance = min(remainder, period - remainder)
-            half_period = period / 2.0
-            return 1.0 - (distance / half_period)
+            half_period = period // HALVES
+            if half_period == 0:
+                return COSMIC_FRAME if distance == 0 else 0
+            return COSMIC_FRAME * (half_period - distance) // half_period
 
-        # MURALI uses (tick + 1) for 1-indexed beats
-        murali_res = flute_resonance(tick + KSETRAJNA, MURALI_HOLES)
-        venu_res = flute_resonance(tick, VENU_HOLES)
-        vamsi_res = flute_resonance(tick, VAMSI_HOLES)
+        murali_cf = _flute_res_cf(tick + KSETRAJNA, MURALI_HOLES)
+        venu_cf = _flute_res_cf(tick, VENU_HOLES)
+        vamsi_cf = _flute_res_cf(tick, VAMSI_HOLES)
 
-        # Weighted combination (MURALI strongest - quarters foundation)
-        # Weights derived from relative periods: 4, 6, 9
-        # Smaller period = faster oscillation = more influence
-        combined = (
-            0.40 * murali_res  # MURALI (4) - foundation rhythm
-            + 0.35 * venu_res  # VENU (6) - sharanagati flow
-            + 0.25 * vamsi_res  # VAMSI (9) - nava expansion
-        )
+        # Weighted average: (9*murali + 6*venu + 4*vamsi) // 19
+        return (
+            VAMSI_HOLES * murali_cf
+            + VENU_HOLES * venu_cf
+            + MURALI_HOLES * vamsi_cf
+        ) // FLUTE_HOLES_SUM
 
-        return combined
+    @classmethod
+    def get_combined_resonance(cls, tick: int) -> float:
+        """Float API boundary — returns 0.0 to 1.0 for external consumers."""
+        return cls.get_combined_resonance_cf(tick) / COSMIC_FRAME
 
     @classmethod
     def get_sync_years(cls) -> Dict[str, List[int]]:
@@ -1157,57 +1161,78 @@ class VinaSync:
         """
         return tick > 0 and tick % VINA_FUNDAMENTAL == 0
 
+    # Vina attractors — the 5 Pancha positions in VINA_FUNDAMENTAL (136) space
+    # ALL derived from named Seed constants, no hardcoded integers
+    _VINA_ATTRACTORS: Final[Tuple[int, ...]] = (
+        POSITION_SUM_TOTAL % VINA_FUNDAMENTAL,  # 0 (136 mod 136)
+        SHRUTIS,                                 # 22 (KSHETRA - HALVES)
+        GITA_CHAPTERS,                           # 18 (SHARANAGATI × TRINITY)
+        POSITION_SUM_HARE + POSITION_SUM_KRISHNA,  # 87 (70 + 17 = Hare+Krishna)
+        POSITION_SUM_RAMA,                       # 49 (SEVEN²)
+    )
+
+    # Vina component weights (Seed-derived):
+    #   String     = VINA_STRINGS (5) = PANCHA
+    #   Harmonic   = SEVEN (7)        = dissolution path
+    #   Fundamental= VINA_STRINGS (5) = PANCHA
+    #   Sum = 5 + 7 + 5 = 17 = POSITION_SUM_KRISHNA
+    # String alignment bonus = HALVES (2) out of POSITION_SUM_KRISHNA (17)
+    _W_STRING: Final[int] = VINA_STRINGS       # 5
+    _W_HARMONIC: Final[int] = SEVEN            # 7
+    _W_FUNDAMENTAL: Final[int] = VINA_STRINGS  # 5
+    _W_VINA_SUM: Final[int] = POSITION_SUM_KRISHNA  # 17
+    _W_STRING_BONUS: Final[int] = HALVES       # 2
+
     @classmethod
-    def get_combined_resonance(cls, seed: int, tick: int) -> float:
+    def get_combined_resonance_cf(cls, seed: int, tick: int) -> int:
         """
-        Calculate Vina resonance (0.0 to 1.0).
+        Calculate Vina resonance in COSMIC_FRAME space (0 to COSMIC_FRAME).
 
-        FIXED: Uses CONTINUOUS resonance based on seed's harmonic position.
-
-        VINA RESONANCE COMPONENTS:
-        1. String resonance: Which Pancha Tattva string (always contributes)
-        2. Harmonic position: Seed's position in VINA_FUNDAMENTAL (136) space
-        3. Fundamental proximity: How close tick is to fundamental sync
+        VINA RESONANCE COMPONENTS (all integer, Seed-derived weights):
+        1. String resonance: VINA_STRINGS(5)/17 base + HALVES(2)/17 alignment bonus
+        2. Harmonic position: SEVEN(7)/17 — proximity to 5 Pancha attractors
+        3. Fundamental proximity: VINA_STRINGS(5)/17 — approach to 136 sync
 
         The Vina measures WHAT TYPE (harmonic), complementing Flute's WHEN (rhythmic).
         """
-        # 1. String resonance (Pancha Tattva): 0.2 base
+        # 1. String resonance (Pancha Tattva)
         string_num = cls.get_string_for_seed(seed)
-        string_base = 0.20
-
-        # String harmony bonus: seeds with strong string alignment
-        # (divisible by string_num gives +0.1)
-        if seed > 0 and seed % string_num == 0:
-            string_base += 0.10
+        string_cf = COSMIC_FRAME  # Full resonance for base component
+        # String alignment bonus: divisible by string_num → extra HALVES weight
+        bonus_cf = COSMIC_FRAME if (seed > 0 and seed % string_num == 0) else 0
 
         # 2. Harmonic position in VINA_FUNDAMENTAL (136) space
-        # Resonance peaks at attractor positions (136, 22, 18, 87, 49)
         harmonic = seed % VINA_FUNDAMENTAL
-        # Distance to closest attractor (normalized to 0-1)
-        # The 5 Pancha attractors from Akash field
-        attractors = [
-            POSITION_SUM_TOTAL % VINA_FUNDAMENTAL,
-            22,
-            GITA_CHAPTERS,
-            87,
-            POSITION_SUM_RAMA,
-        ]  # 0, 22, 18, 87, 49
-        min_dist = min(abs(harmonic - a) for a in attractors)
-        # Normalize: 0 distance = 0.30, max distance (~68) = 0.0
-        harmonic_res = 0.30 * (1.0 - min_dist / (VINA_FUNDAMENTAL / 2.0))
-        harmonic_res = max(0.0, harmonic_res)
+        min_dist = min(abs(harmonic - a) for a in cls._VINA_ATTRACTORS)
+        vina_half = VINA_FUNDAMENTAL // HALVES  # 68
+        if vina_half > 0:
+            harmonic_cf = COSMIC_FRAME * max(0, vina_half - min_dist) // vina_half
+        else:
+            harmonic_cf = COSMIC_FRAME if min_dist == 0 else 0
 
         # 3. Fundamental proximity: continuous approach to 136 sync
-        # (instead of boolean 0/1)
         fund_remainder = tick % VINA_FUNDAMENTAL
         fund_distance = min(fund_remainder, VINA_FUNDAMENTAL - fund_remainder)
-        fund_half = VINA_FUNDAMENTAL / 2.0
-        fundamental_res = 0.20 * (1.0 - fund_distance / fund_half)
+        if vina_half > 0:
+            fundamental_cf = COSMIC_FRAME * (vina_half - fund_distance) // vina_half
+        else:
+            fundamental_cf = COSMIC_FRAME if fund_distance == 0 else 0
 
-        # Combined resonance
-        combined = string_base + harmonic_res + fundamental_res
+        # Weighted sum: (5*string + 2*bonus + 7*harmonic + 5*fundamental) // 17
+        # Note: bonus uses _W_STRING_BONUS weight, not _W_STRING
+        combined = (
+            cls._W_STRING * string_cf
+            + cls._W_STRING_BONUS * bonus_cf
+            + cls._W_HARMONIC * harmonic_cf
+            + cls._W_FUNDAMENTAL * fundamental_cf
+        ) // cls._W_VINA_SUM
 
-        return min(1.0, max(0.0, combined))
+        return min(COSMIC_FRAME, max(0, combined))
+
+    @classmethod
+    def get_combined_resonance(cls, seed: int, tick: int) -> float:
+        """Float API boundary — returns 0.0 to 1.0 for external consumers."""
+        return cls.get_combined_resonance_cf(seed, tick) / COSMIC_FRAME
 
 
 # =============================================================================
@@ -1229,32 +1254,43 @@ class KirtanSync:
     WATERTIGHT: Uses FluteSync + VinaSync, both derived from _seed.py.
     """
 
+    # Kirtan weights (Seed-derived):
+    #   Flute = FLUTE_HOLES_SUM (19) — 3 instruments, 19 holes total
+    #   Vina  = VINA_STRINGS    (5)  — 1 instrument, 5 strings
+    #   Sum   = KSHETRA         (24) — the field!
+    # Identity: FLUTE_HOLES_SUM + VINA_STRINGS = 19 + 5 = 24 = KSHETRA
+    _W_FLUTE: Final[int] = FLUTE_HOLES_SUM  # 19
+    _W_VINA: Final[int] = VINA_STRINGS      # 5
+    _W_KIRTAN_SUM: Final[int] = KSHETRA     # 24
+
     @classmethod
     def get_full_resonance(cls, seed: int, tick: int) -> Dict[str, object]:
         """
         Get combined resonance from all instruments.
 
-        Returns complete resonance state.
+        All resonance values in COSMIC_FRAME space (0 to 21600).
         """
         flute_status = FluteSync.get_flute_resonance(tick)
         vina_status = VinaSync.get_vina_resonance(seed)
 
-        flute_resonance = FluteSync.get_combined_resonance(tick)
-        vina_resonance = VinaSync.get_combined_resonance(seed, tick)
+        flute_cf = FluteSync.get_combined_resonance_cf(tick)
+        vina_cf = VinaSync.get_combined_resonance_cf(seed, tick)
 
-        # Combined resonance (weighted average - flute is rhythm, vina is type)
-        combined = 0.6 * flute_resonance + 0.4 * vina_resonance
+        # Combined: (19*flute + 5*vina) // 24
+        combined_cf = (
+            cls._W_FLUTE * flute_cf + cls._W_VINA * vina_cf
+        ) // cls._W_KIRTAN_SUM
 
         return {
             "flute": {
                 "status": flute_status,
-                "resonance": flute_resonance,
+                "resonance_cf": flute_cf,
             },
             "vina": {
                 "status": vina_status,
-                "resonance": vina_resonance,
+                "resonance_cf": vina_cf,
             },
-            "combined_resonance": combined,
+            "combined_resonance_cf": combined_cf,
             "seed": seed,
             "tick": tick,
         }
@@ -1419,10 +1455,10 @@ def analyze_year(year: int) -> Dict[str, object]:
     if step:
         tick = step - KSETRAJNA
         chladni["flute_sync"] = FluteSync.get_flute_resonance(tick)
-        chladni["flute_resonance"] = FluteSync.get_combined_resonance(tick)
+        chladni["flute_resonance_cf"] = FluteSync.get_combined_resonance_cf(tick)
     else:
         chladni["flute_sync"] = None
-        chladni["flute_resonance"] = 0.0
+        chladni["flute_resonance_cf"] = 0
 
     # Add book publications / key events
     chladni["book_publication"] = BOOK_PUBLICATIONS.get(year)
