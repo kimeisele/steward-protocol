@@ -275,13 +275,13 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 | Musical Ratios | `harmonics.py` SWARA_* | Physikalische Frequenzverhältnisse — korrekt als float |
 | Infrastructure | `event_bus.py`, `guna.py`, `bridge.py` | Timeouts, Rate-Limits, Latencies — operationelle Parameter |
 | Coherence | `yajna.py` | `coherence: float = 1.0` — Messparameter |
+| Histogramme | `phonetic_bridge.py` PhoneticTensor | `varga_vector`/`sthana_vector`/`shakti` — normalisierte Verteilungen, Geometrie |
+| Funktions-Defaults | `siksastakam.py` | `resonance: float = 0.5` — Parameter-Default, kein gespeicherter Wert |
 
-**Offen (niedrigere Priorität):**
+**Offen (nur MANAS-Subsystem, eigener Block):**
 
 | Datei | Problem | Schwierigkeit |
 |-------|---------|---------------|
-| `phonetic_bridge.py` | `PhoneticTensor` float vectors + `shakti` | Mittel (3 Konsumenten) |
-| `siksastakam.py` | `resonance: float = 0.5` Default | Niedrig |
 | `synaptic_seeder.py` (91 Floats) | Purer Slop — hardcoded `0.85`/`0.15` | Hoch (MANAS-Subsystem, viele Konsumenten) |
 | `biorhythm.py` (47 Floats) | MANAS | Hoch (eigenes Subsystem) |
 | `viveka_action.py` (45 Floats) | MANAS Cortex | Hoch |
