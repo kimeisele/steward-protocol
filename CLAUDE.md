@@ -230,42 +230,42 @@ Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
 - Files einfach nur gitignoren ohne den Schreiber umzustellen
 - Cartridges/Plugins löschen — nur die Disk-I/O Pfade umleiten
 
-### Branch 2: `refactor/float-to-integer`
+### Float→Integer Migration (auf `main`, kein separater Branch)
 
 **Ziel:** Alle Floats die Mantra-Ableitungen sein sollten → Integer (COSMIC_FRAME = 21600).
 
-**Die Float-Seuche (verifiziert):**
-- 904 Matches für `: float` in 324 Files
-- 2756 Matches für `0.\d+` Literals in 537 Files
+**Pattern:** Int-Konstanten als SSOT (CF_*), Float-Aliases abgeleitet für backward-compatible Konsumenten.
 
-**Kategorien (verifiziert):**
+**Erledigt (4208 Tests grün, 0 Regression):**
 
-| Kategorie | Beispiel | Aktion |
-|-----------|---------|--------|
-| Schon sauber | `harmonics.py` — leitet von Seed ab (`NADI/MALA`) | NICHT anfassen |
-| Purer Slop | `synaptic_seeder.py` — 91× hardcoded `0.85`/`0.15` | → COSMIC_FRAME Integer |
-| Resonance scores | `resonance_ranker.py` — `element: float` | → Integer (0-COSMIC_FRAME) |
-| Timestamps | `byte.py`, `yajna.py` — `time.time()` | Bleibt float (ist korrekt) |
-| Duration | `samskara.py` — `duration_ms: float` | Bleibt float (ist korrekt) |
-| Weights/Trust | `synaptic_seeder.py`, `manas/` — `0.85`, `0.15` | → Integer (0-COSMIC_FRAME) |
-| Shakti/Energy | `phonetic_bridge.py` — `shakti: float` | → Integer |
-| OpsPerSec | `classifier/core.py` — `ops_per_second: float` | Bleibt float (Messwert) |
+| Datei | Was | Wie |
+|-------|-----|-----|
+| `harmonics.py` | Thresholds AUTO/REFINE/SYNC | `CF_AUTO=14400`, `CF_REFINE=9600`, `CF_SYNC=28800` — reine Int-Arithmetik in Helpern |
+| `resonance_ranker.py` | 7D Scoring Weights | `W_*_CF` als Int-SSOT (Summe=21600), Float-Aliases abgeleitet |
+| `_entropy.py` | Pain/Health Thresholds | `CF_PAIN_SAMADHI=1080` etc. — Seed-abgeleitet (KSETRAJNA/PANCHA/QUARTERS) |
+| `chat.py` | Hardcoded `0.444` | → `ResonanceHarmonics.THRESHOLD_REFINE` |
 
-**Schritte:**
-1. Datei für Datei, schlimmste Offender zuerst
-2. Jede Float-Stelle prüfen: Ist das eine Mantra-Ableitung? Ja → Integer. Nein → lassen.
-3. `COSMIC_FRAME = 21600` als Basis (= KSHETRA × GITA_CHAPTERS × 50 = 24 × 18 × 50)
-4. Ratio `0.85` → `18360` (= `int(0.85 * COSMIC_FRAME)`), Ratio `2/3` → `NADI_RESONANCE` (= 72, bereits abgeleitet)
-5. Tests müssen grün bleiben, bit-identische Ergebnisse wo möglich
+**Analyse-Ergebnis — was NICHT migriert werden muss:**
 
-**Reihenfolge der Offender:**
-1. `synaptic_seeder.py` (91 Floats) — purer Slop
-2. `resonance_ranker.py` (51 Floats) — Score-Pipeline
-3. `biorhythm.py` (47 Floats) — MANAS
-4. `viveka_action.py` (45 Floats) — MANAS Cortex
-5. `triggers.py` (41 Floats) — MANAS
-6. `lila_chronology.py` (32 Floats) — Resonance-Params
-7. Rest nach Bedarf
+| Kategorie | Dateien | Grund |
+|-----------|---------|-------|
+| Timestamps | `byte.py`, `yajna.py` | `time.time()` — korrekt als float |
+| Duration | `samskara.py` | `duration_ms` — Messwert |
+| OpsPerSec | `classifier/core.py` | Messwert |
+| Metriken 0-1 | `compute.py`, `_sense.py`, `_gad.py`, `knowledge.py` | Cache-Hit-Rates, Effizienz-Scores — keine Seed-Ableitung |
+
+**Offen (niedrigere Priorität):**
+
+| Datei | Problem | Schwierigkeit |
+|-------|---------|---------------|
+| `synaptic_seeder.py` (91 Floats) | Purer Slop — hardcoded `0.85`/`0.15` | Hoch (MANAS-Subsystem, viele Konsumenten) |
+| `lila_chronology.py` | Flute-Weights `0.40/0.35/0.25` sind GERATEN, nicht abgeleitet | Design-Problem, nicht einfaches Float→Int |
+| `biorhythm.py` (47 Floats) | MANAS | Hoch (eigenes Subsystem) |
+| `viveka_action.py` (45 Floats) | MANAS Cortex | Hoch |
+| `triggers.py` (41 Floats) | MANAS | Hoch |
+
+Die MANAS-Dateien (`synaptic_seeder`, `biorhythm`, `viveka_action`, `triggers`) sind ein eigenes Subsystem
+und sollten als Block migriert werden, nicht einzeln.
 
 **Root .md Files im Repo-Root (57 Stück) sind ein SEPARATES Problem — nicht in diesen Branches.**
 
