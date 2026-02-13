@@ -56,7 +56,7 @@ _GATE_DISPATCH = {
     TattvaGate.VALIDATE: ("validate", ["seed"]),
     TattvaGate.EXECUTE: ("infer", ["seed", "attractor"]),
     TattvaGate.RESULT: ("route", ["attractor"]),
-    TattvaGate.SYNC: ("enforce", ["position", "seed", "attractor"]),
+    TattvaGate.SYNC: ("enforce", ["position", "seed", "attractor", "opcode", "guna"]),
 }
 
 
@@ -109,6 +109,8 @@ class _PipelineCache:
         'diw_components',
         # COSMIC_FRAME for API boundary conversions
         'COSMIC_FRAME',
+        # Guna derivation (OpCode → Guna)
+        'MantraOpCode', 'get_guna', 'Guna',
     )
 
     def __init__(self) -> None:
@@ -184,8 +186,13 @@ class _PipelineCache:
         from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
         self.THE_FLUTE_CYCLE = THE_FLUTE_CYCLE
 
-        from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE
+        from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE, MantraOpCode
         self.MAHAMANTRA_SEQUENCE = MAHAMANTRA_SEQUENCE
+        self.MantraOpCode = MantraOpCode
+
+        from vibe_core.mahamantra.substrate.guna import get_guna, Guna
+        self.get_guna = get_guna
+        self.Guna = Guna
 
         # Precompute per-position lookups (16 entries each)
         self.quarter_names = tuple(get_quarter_name(p) for p in range(WORDS))
@@ -463,7 +470,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         result["handler"] = f"mahamantra[{result['position']}]"
         return result
 
-    def __call__(self, input_data: Union[str, MahaCell]) -> Dict[str, object]:
+    def __call__(self, input_data: Union[str, MahaCell], *, opcode: Optional[int] = None) -> Dict[str, object]:
         """
         MANTRA-BASED COMPUTING.
 
@@ -497,6 +504,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             9. ATMA_NIVEDANAM — Complete response (surrender)
 
         Everything computed. No external LLM. No hardcoded routing.
+
+        Args:
+            input_data: Text string or MahaCell to process
+            opcode: Optional MantraOpCode value (0-15). If not provided,
+                    derived from position (attractor % 16). The OpCode
+                    determines the Guna via guna.get_guna(opcode).
+                    See substrate/guna.py: "The Guna is DERIVED from the OpCode."
         """
         # All seed-independent references resolved once via PipelineCache.
         # Compressor owned by MahamantraLotus (class-level singleton).
@@ -632,10 +646,26 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         phoneme_shruti = P.IS_SHRUTI[rama_coord]
 
         # =====================================================================
+        # GUNA DERIVATION — OpCode determines the Guna (BG 14.5)
+        # "The Guna is DERIVED from the OpCode, not decorated." (guna.py)
+        # =====================================================================
+        if opcode is not None:
+            pipeline_opcode = P.MantraOpCode(opcode)
+        else:
+            # Position IS the OpCode: FOLDER_IS_WIRING (guna.py line 57)
+            pipeline_opcode = P.MantraOpCode(position)
+        pipeline_guna = P.get_guna(pipeline_opcode)
+
+        # =====================================================================
         # GATE 4: SRIVASA — SYNC / Governance
         # "Who governs this?" — Cell creation, chamber, yajna, response.
+        # Now Guna-aware: the gate knows the nature of the operation.
         # =====================================================================
-        self._fire_gate(TattvaGate.SYNC, {"position": position, "guardian": guardian, "seed": seed, "attractor": attractor})
+        self._fire_gate(TattvaGate.SYNC, {
+            "position": position, "guardian": guardian,
+            "seed": seed, "attractor": attractor,
+            "opcode": pipeline_opcode, "guna": pipeline_guna,
+        })
 
         # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
         result_cell = P.MahaCellUnified.create(
@@ -744,6 +774,12 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         return {
             "input": input_text,
             "tattva_gate": "SRIVASA",  # last gate = SYNC (all 5 gates passed)
+            "guna": {
+                "mode": pipeline_guna.name,
+                "opcode": pipeline_opcode.name,
+                "opcode_value": pipeline_opcode.value,
+                "source": "caller" if opcode is not None else "position",
+            },
             "vibration": {
                 "seed": seed,
                 "attractor": attractor,

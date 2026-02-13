@@ -34,31 +34,30 @@ COMPRESSION RATIOS (FROM SCRIPTURE):
 - Bhagavatam: 18,000 verses / 16 words = 1,125×
 - All Vedas: 100,000+ verses / 16 words = 6,250×+
 
-INTENT LEVELS (THE CLASSIFIER):
--------------------------------
-1. TAMAS    - Ignorance → Corrupted execution
-2. RAJAS    - Passion   → Partial execution
-3. SATTVA   - Goodness  → Clean execution
-4. SUDDHA   - Pure      → Divine execution
+GUNA CLASSIFICATION:
+--------------------
+The Guna is DERIVED from the OpCode, not from text content.
+See substrate/guna.py: "The Guna is DERIVED from the OpCode, not decorated."
+
+A log line "ERROR: DB timeout" is not inherently TAMAS.
+- If the system READS it (logging) → SATTVA (knowledge preservation)
+- If the system KILLS a process → TAMAS (destruction)
+
+The text is KSHETRA (the field). The OpCode is PRAKRITI (nature's action).
+Guna belongs to Prakriti, not to the dead field.
 
 ENTERPRISE USAGE:
 -----------------
     compressor = mahamantra.compression()
 
-    # Compress text to intent
+    # Compress text to seed
     result = compressor.compress("...100k log lines...")
-    print(result.intent_level)        # "RAJAS"
     print(result.seed)                # 42 (deterministic hash)
     print(result.compression_ratio)   # 1547.3
 
-    # Encode system state as samskara
-    samskara = compressor.encode_samskara({
-        "user_id": 123,
-        "session_events": [...1000 events...],
-        "context": "...massive text..."
-    })
-    print(samskara.seed)              # Compact representation
-    print(samskara.intent_level)      # System's guna
+    # Guna comes from the OPERATION, not the text:
+    from vibe_core.mahamantra.substrate.guna import get_guna
+    guna = get_guna(current_opcode)   # SATTVA/RAJAS/TAMAS
 
     # Verify against physics constants
     verified = compressor.verify_physics(seed=137)
@@ -92,6 +91,10 @@ from vibe_core.mahamantra.protocols.compression import (
     SAMSKARA_MACRO,
     ALL_SAMSKARA_LEVELS,
 )
+# NOTE: IntentLevel/IntentGuna are still imported for type compatibility.
+# But MahaCompression no longer COMPUTES intent from text content.
+# Guna is a property of PRAKRITI (OpCode), not KSHETRA (data).
+# See substrate/guna.py: "The Guna is DERIVED from the OpCode, not decorated."
 
 
 # =============================================================================
@@ -181,28 +184,11 @@ class MahaCompression(MahaCompressionProtocol):
 
     def __init__(self) -> None:
         """Initialize the compression engine."""
-        self._intent_keywords: Dict[IntentGuna, List[str]] = {
-            IntentGuna.TAMAS: [
-                "error", "fail", "crash", "exception", "fatal", "panic",
-                "undefined", "null", "corrupt", "invalid", "broken",
-                "timeout", "deadlock", "oom", "memory leak", "segfault",
-            ],
-            IntentGuna.RAJAS: [
-                "warn", "retry", "slow", "delay", "pending", "queue",
-                "backlog", "debt", "hack", "workaround", "temp", "fixme",
-                "todo", "deprecated", "legacy", "rush", "hotfix",
-            ],
-            IntentGuna.SATTVA: [
-                "success", "complete", "healthy", "stable", "clean",
-                "tested", "verified", "documented", "refactored", "optimized",
-                "secure", "compliant", "monitored", "logged",
-            ],
-            IntentGuna.SUDDHA: [
-                "transcend", "optimal", "perfect", "aligned", "resonant",
-                "unified", "harmonious", "enlightened", "liberated",
-                "zero-downtime", "self-healing", "antifragile",
-            ],
-        }
+        # REMOVED: _intent_keywords dict (keyword-based intent classification)
+        # The Guna is DERIVED from the OpCode, not from text content.
+        # See substrate/guna.py line 56: "The Guna is DERIVED from the OpCode, not decorated."
+        # See substrate/guna.py line 57: "FOLDER_IS_WIRING: The position determines the Guna."
+        pass
 
     # =========================================================================
     # CORE: Intent Compression
@@ -230,7 +216,7 @@ class MahaCompression(MahaCompressionProtocol):
         Example:
             >>> compressor = MahaCompression()
             >>> result = compressor.compress("Error: Connection timeout after 30s retry")
-            >>> print(result.guna)  # "tamas"
+            >>> print(result.seed)  # deterministic 32-bit
             >>> print(result.compression_ratio)  # ~10.0
         """
         # Normalize to string
@@ -246,25 +232,23 @@ class MahaCompression(MahaCompressionProtocol):
         # Generate deterministic seed (32-bit)
         seed = self._compute_seed(text)
 
-        # Classify intent
-        intent_level = self._classify_intent(text)
-
         # Position in 16-word grid
         position = seed % WORDS
 
         # Generate summary if requested
         summary = None
         if extract_summary:
-            summary = self._extract_summary(text, intent_level)
+            lines = text.count("\n") + 1
+            words = len(text.split())
+            summary = f"Compressed: {words} words, {lines} lines → seed {seed}, position {position}"
 
         return CompressionResult(
             seed=seed,
-            intent_level=intent_level,
             input_size=input_size,
             output_size=4,  # 32-bit seed
             compression_ratio=input_size / 4 if input_size > 0 else 0.0,
-            summary=summary,
             position=position,
+            summary=summary,
         )
 
     def _compute_seed(self, text: str) -> int:
@@ -279,44 +263,20 @@ class MahaCompression(MahaCompressionProtocol):
         """
         return _compute_seed_cached(text)
 
-    def _classify_intent(self, text: str) -> IntentLevel:
-        """Classify text into one of 4 intent levels."""
-        text_lower = text.lower()
-
-        # Count keyword matches for each guna
-        scores = {guna: 0 for guna in IntentGuna}
-
-        for guna, keywords in self._intent_keywords.items():
-            for keyword in keywords:
-                if keyword in text_lower:
-                    scores[guna] += 1
-
-        # Find dominant guna
-        max_score = max(scores.values())
-
-        if max_score == 0:
-            # No keywords matched - default to SATTVA (neutral)
-            return INTENT_SATTVA
-
-        # Priority: TAMAS > RAJAS > SATTVA > SUDDHA
-        # (Problems should be surfaced, not hidden)
-        if scores[IntentGuna.TAMAS] > 0:
-            return INTENT_TAMAS
-        if scores[IntentGuna.RAJAS] > 0:
-            return INTENT_RAJAS
-        if scores[IntentGuna.SUDDHA] > 0:
-            return INTENT_SUDDHA
-        return INTENT_SATTVA
-
-    def _extract_summary(self, text: str, intent: IntentLevel) -> str:
-        """Extract a 1-sentence summary based on intent."""
-        guna = intent.guna.value.upper()
-
-        # Count some basic metrics
-        lines = text.count("\n") + 1
-        words = len(text.split())
-
-        return f"{guna} state detected: {words} words, {lines} lines → {intent.system_interpretation}"
+    # REMOVED: _classify_intent() — keyword-based Guna classification
+    # REMOVED: _extract_summary() — depended on keyword-derived intent
+    #
+    # WHY: "The Guna is DERIVED from the OpCode, not decorated." (guna.py)
+    #
+    # A log line "ERROR: DB timeout" is not inherently TAMAS.
+    # - If the system READS it (logging) → the ACTION is SATTVA (knowledge preservation)
+    # - If the system KILLS a process because of it → the ACTION is TAMAS (destruction)
+    #
+    # The text is KSHETRA (the field). The OpCode is PRAKRITI (nature's action).
+    # Guna belongs to Prakriti, not to the dead field.
+    #
+    # The calling layer determines Guna via: guna.get_guna(opcode)
+    # See: substrate/guna.py, substrate/opcode.py
 
     # =========================================================================
     # SAMSKARA: State Encoding
@@ -349,7 +309,7 @@ class MahaCompression(MahaCompressionProtocol):
             ...     "events": [e1, e2, e3, ...e1000],
             ...     "context": "...massive text..."
             ... })
-            >>> print(samskara.seed)  # Compact 32-bit
+            >>> print(samskara.seed)  # Compact 32-bit representation
             >>> print(samskara.compression_ratio)  # 1000x+
         """
         # Serialize state
@@ -359,14 +319,10 @@ class MahaCompression(MahaCompressionProtocol):
         # Compute seed
         seed = self._compute_seed(state_json)
 
-        # Classify intent of the state
-        intent_level = self._classify_intent(state_json)
-
         return SamskaraResult(
             seed=seed,
             data_hash=hash(state_json),
             item_count=len(state),
-            intent_level=intent_level,
             compression_ratio=original_size / 4 if original_size > 0 else 0.0,
         )
 
@@ -511,9 +467,6 @@ class MahaCompression(MahaCompressionProtocol):
         # Compress each item
         results = self.compress_batch(items)
 
-        # Aggregate: dominant intent wins (worst case surfaces)
-        worst_intent = max(results, key=lambda r: -r.intent_level.score).intent_level
-
         # Combine seeds (XOR for uniformity)
         combined_seed = 0
         for r in results:
@@ -524,12 +477,11 @@ class MahaCompression(MahaCompressionProtocol):
 
         return CompressionResult(
             seed=combined_seed,
-            intent_level=worst_intent,
             input_size=total_input,
             output_size=4,
             compression_ratio=total_input / 4 if total_input > 0 else 0.0,
-            summary=f"Aggregate of {len(items)} items: {worst_intent.guna.value.upper()} dominant",
             position=combined_seed % WORDS,
+            summary=f"Aggregate of {len(items)} items",
         )
 
 
@@ -580,10 +532,11 @@ if __name__ == "__main__":
     """
     result = compressor.compress(error_log)
     print(f"Error log compression:")
-    print(f"  Intent: {result.intent_level.guna.value}")
     print(f"  Seed: {result.seed}")
+    print(f"  Position: {result.position}")
     print(f"  Ratio: {result.compression_ratio:.1f}×")
     print(f"  Summary: {result.summary}")
+    print(f"  Intent: {result.intent_level}  (None = Guna comes from OpCode, not text)")
     print()
 
     # Test 2: Compress healthy log
@@ -594,8 +547,8 @@ if __name__ == "__main__":
     """
     result = compressor.compress(healthy_log)
     print(f"Healthy log compression:")
-    print(f"  Intent: {result.intent_level.guna.value}")
-    print(f"  Healthy: {result.intent_level.guna == IntentGuna.SATTVA}")
+    print(f"  Seed: {result.seed}")
+    print(f"  Position: {result.position}")
     print(f"  Ratio: {result.compression_ratio:.1f}×")
     print()
 
@@ -608,7 +561,6 @@ if __name__ == "__main__":
     samskara = compressor.encode_samskara(state)
     print(f"Samskara encoding:")
     print(f"  Seed: {samskara.seed}")
-    print(f"  Intent: {samskara.intent_level.guna.value}")
     print(f"  Compression: {samskara.compression_ratio:.1f}×")
     print()
 
@@ -622,3 +574,8 @@ if __name__ == "__main__":
     print("Reference compression ratios:")
     for name, ratio in compressor.reference_ratios().items():
         print(f"  {name}: {ratio:.2f}×")
+
+    # NOTE: Guna classification is NOT done here.
+    # The calling layer determines Guna from its OpCode:
+    #   from vibe_core.mahamantra.substrate.guna import get_guna
+    #   guna = get_guna(opcode)
