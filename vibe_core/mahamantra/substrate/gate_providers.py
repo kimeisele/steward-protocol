@@ -25,9 +25,85 @@ __position__ = 0
 __genesis__ = "0x3f7a1b2e"
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Dict, List, Optional, TypedDict
 
 logger = logging.getLogger("MAHAMANTRA.GATES")
+
+
+# =============================================================================
+# WATERTIGHT TYPES — No Any, No dict, No list
+# =============================================================================
+
+class ParseResult(TypedDict):
+    valid: bool
+    input_type: str
+    parse_count: int
+    reason: str
+
+class ValidateResult(TypedDict):
+    valid: bool
+    seed: int
+    validate_count: int
+    reason: str
+
+class InferResult(TypedDict):
+    seed: int
+    attractor: int
+    attractor_frequency: int
+    unique_attractors: int
+
+class RouteResult(TypedDict):
+    attractor: int
+    position: int
+    position_frequency: int
+
+class EnforceResult(TypedDict):
+    position: int
+    seed: int
+    attractor: int
+    committed: bool
+    enforce_count: int
+
+class IOWriteResult(TypedDict):
+    success: bool
+    cached: bool
+    actor: str
+    file: str
+    reason: str
+
+class AuditEntry(TypedDict, total=False):
+    actor: str
+    file: str
+    allowed: bool
+    cached: bool
+    denied_reason: str
+
+class ParseStats(TypedDict):
+    parse_count: int
+    last_input_type: Optional[str]
+
+class ValidateStats(TypedDict):
+    validate_count: int
+    rejection_count: int
+
+class InferStats(TypedDict):
+    infer_count: int
+    unique_attractors: int
+    top_attractors: list
+
+class RouteStats(TypedDict):
+    route_count: int
+    position_distribution: Dict[int, int]
+
+class EnforceStats(TypedDict):
+    enforce_count: int
+    last_position: Optional[int]
+    last_seed: Optional[int]
+    state_service_available: bool
+    writes_total: int
+    writes_cached: int
+    writes_denied: int
+    audit_log_size: int
 
 
 # =============================================================================
@@ -44,7 +120,7 @@ class MantraGateProvider:
         self._parse_count: int = 0
         self._last_input_type: Optional[str] = None
 
-    def parse(self, input_data: Any) -> Dict[str, Any]:
+    def parse(self, input_data: object) -> ParseResult:
         """
         Observe the PARSE gate.
 
@@ -56,24 +132,25 @@ class MantraGateProvider:
 
         if input_data is None:
             logger.warning("PARSE gate: received None input")
-            return {"valid": False, "reason": "null_input"}
+            return ParseResult(valid=False, reason="null_input", input_type="NoneType", parse_count=self._parse_count)
 
         logger.debug(
             "PARSE gate: input #%d type=%s",
             self._parse_count, self._last_input_type,
         )
-        return {
-            "valid": True,
-            "input_type": self._last_input_type,
-            "parse_count": self._parse_count,
-        }
+        return ParseResult(
+            valid=True,
+            input_type=self._last_input_type,
+            parse_count=self._parse_count,
+            reason="",
+        )
 
     @property
-    def stats(self) -> Dict[str, Any]:
-        return {
-            "parse_count": self._parse_count,
-            "last_input_type": self._last_input_type,
-        }
+    def stats(self) -> ParseStats:
+        return ParseStats(
+            parse_count=self._parse_count,
+            last_input_type=self._last_input_type,
+        )
 
 
 # =============================================================================
@@ -90,7 +167,7 @@ class StorageGateProvider:
         self._validate_count: int = 0
         self._rejection_count: int = 0
 
-    def validate(self, seed: int) -> Dict[str, Any]:
+    def validate(self, seed: int) -> ValidateResult:
         """
         Observe the VALIDATE gate.
 
@@ -101,26 +178,27 @@ class StorageGateProvider:
         if not isinstance(seed, int):
             self._rejection_count += 1
             logger.warning("VALIDATE gate: seed is %s, not int", type(seed).__name__)
-            return {"valid": False, "reason": "non_integer_seed"}
+            return ValidateResult(valid=False, reason="non_integer_seed", seed=0, validate_count=self._validate_count)
 
         if seed < 0:
             self._rejection_count += 1
             logger.warning("VALIDATE gate: negative seed %d", seed)
-            return {"valid": False, "reason": "negative_seed"}
+            return ValidateResult(valid=False, reason="negative_seed", seed=seed, validate_count=self._validate_count)
 
         logger.debug("VALIDATE gate: seed=%d (#%d)", seed, self._validate_count)
-        return {
-            "valid": True,
-            "seed": seed,
-            "validate_count": self._validate_count,
-        }
+        return ValidateResult(
+            valid=True,
+            seed=seed,
+            validate_count=self._validate_count,
+            reason="",
+        )
 
     @property
-    def stats(self) -> Dict[str, Any]:
-        return {
-            "validate_count": self._validate_count,
-            "rejection_count": self._rejection_count,
-        }
+    def stats(self) -> ValidateStats:
+        return ValidateStats(
+            validate_count=self._validate_count,
+            rejection_count=self._rejection_count,
+        )
 
 
 # =============================================================================
@@ -137,7 +215,7 @@ class InferGateProvider:
         self._infer_count: int = 0
         self._attractor_seen: Dict[int, int] = {}
 
-    def infer(self, seed: int, attractor: int) -> Dict[str, Any]:
+    def infer(self, seed: int, attractor: int) -> InferResult:
         """
         Observe the EXECUTE gate.
 
@@ -150,22 +228,22 @@ class InferGateProvider:
             "EXECUTE gate: seed=%d attractor=%d (seen %dx)",
             seed, attractor, self._attractor_seen[attractor],
         )
-        return {
-            "seed": seed,
-            "attractor": attractor,
-            "attractor_frequency": self._attractor_seen[attractor],
-            "unique_attractors": len(self._attractor_seen),
-        }
+        return InferResult(
+            seed=seed,
+            attractor=attractor,
+            attractor_frequency=self._attractor_seen[attractor],
+            unique_attractors=len(self._attractor_seen),
+        )
 
     @property
-    def stats(self) -> Dict[str, Any]:
-        return {
-            "infer_count": self._infer_count,
-            "unique_attractors": len(self._attractor_seen),
-            "top_attractors": sorted(
+    def stats(self) -> InferStats:
+        return InferStats(
+            infer_count=self._infer_count,
+            unique_attractors=len(self._attractor_seen),
+            top_attractors=sorted(
                 self._attractor_seen.items(), key=lambda x: x[1], reverse=True
             )[:5],
-        }
+        )
 
 
 # =============================================================================
@@ -182,7 +260,7 @@ class SyncGateProvider:
         self._route_count: int = 0
         self._position_hits: Dict[int, int] = {}
 
-    def route(self, attractor: int) -> Dict[str, Any]:
+    def route(self, attractor: int) -> RouteResult:
         """
         Observe the RESULT gate.
 
@@ -197,51 +275,83 @@ class SyncGateProvider:
             "RESULT gate: attractor=%d → position=%d (hit %dx)",
             attractor, position, self._position_hits[position],
         )
-        return {
-            "attractor": attractor,
-            "position": position,
-            "position_frequency": self._position_hits[position],
-        }
+        return RouteResult(
+            attractor=attractor,
+            position=position,
+            position_frequency=self._position_hits[position],
+        )
 
     @property
-    def stats(self) -> Dict[str, Any]:
-        return {
-            "route_count": self._route_count,
-            "position_distribution": dict(sorted(self._position_hits.items())),
-        }
+    def stats(self) -> RouteStats:
+        return RouteStats(
+            route_count=self._route_count,
+            position_distribution=dict(sorted(self._position_hits.items())),
+        )
 
 
 # =============================================================================
-# GATE 4: SRIVASA — EnforceGateProvider (SYNC / Governance)
+# GATE 4: SRIVASA — EnforceGateProvider (SYNC / I/O Governance)
 # =============================================================================
-# Observer at the governance gate. Enforces state tracking via StateService.
-# This is the CRITICAL gate — where governance meets computation.
+# CONTROLLER at the governance gate. All state I/O flows through here.
+# This is the CRITICAL gate — where governance meets I/O.
+#
+# Two roles:
+#   1. Pipeline observer (called by _fire_gate in lotus_core.__call__)
+#   2. I/O controller (called by any module that wants to write state)
+#
+# Usage for state writers:
+#   from vibe_core.mahamantra.substrate.gate_providers import get_sync_gate
+#   gate = get_sync_gate()
+#   gate.write("maha_state.json", data, actor="maha_state")
 
 class EnforceGateProvider:
-    """Watcher at SYNC gate — enforces governance and tracks state commits."""
+    """Controller at SYNC gate — governs all state I/O through StateService."""
 
-    __slots__ = ("_enforce_count", "_state_service", "_last_position", "_last_seed")
+    __slots__ = (
+        "_enforce_count", "_state_service", "_last_position", "_last_seed",
+        "_writes_total", "_writes_denied", "_writes_cached",
+        "_audit_log",
+    )
 
     def __init__(self) -> None:
         self._enforce_count: int = 0
-        self._state_service = None  # Lazy — resolved on first enforce()
+        self._state_service: Optional["StateServiceProtocol"] = None
         self._last_position: Optional[int] = None
         self._last_seed: Optional[int] = None
+        self._writes_total: int = 0
+        self._writes_denied: int = 0
+        self._writes_cached: int = 0
+        self._audit_log: List[AuditEntry] = []
 
-    def _get_state_service(self):
-        """Lazy-resolve StateService from DI registry."""
-        if self._state_service is None:
-            try:
-                from vibe_core.di import ServiceRegistry
-                from vibe_core.protocols import StateServiceProtocol
-                self._state_service = ServiceRegistry.get(StateServiceProtocol)
-            except Exception:
-                pass  # No StateService available — degrade gracefully
+    def _get_state_service(self) -> Optional["StateServiceProtocol"]:
+        """Lazy-resolve StateService. Falls back to direct import."""
+        if self._state_service is not None:
+            return self._state_service
+        # Try DI registry first
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols import StateServiceProtocol
+            svc = ServiceRegistry.get(StateServiceProtocol)
+            if svc is not None:
+                self._state_service = svc
+                return svc
+        except (ImportError, AttributeError, KeyError):
+            pass
+        # Fallback: direct import
+        try:
+            from vibe_core.state.state_service import get_state_service
+            self._state_service = get_state_service()
+        except (ImportError, RuntimeError):
+            pass
         return self._state_service
 
-    def enforce(self, position: int, seed: int, attractor: int) -> Dict[str, Any]:
+    # =========================================================================
+    # ROLE 1: Pipeline Observer (called by _fire_gate in lotus_core.__call__)
+    # =========================================================================
+
+    def enforce(self, position: int, seed: int, attractor: int) -> EnforceResult:
         """
-        Observe the SYNC gate.
+        Pipeline checkpoint at SYNC gate.
 
         Tracks governance events. If StateService is available,
         marks the gate passage as a state event for audit trail.
@@ -250,7 +360,6 @@ class EnforceGateProvider:
         self._last_position = position
         self._last_seed = seed
 
-        # Try to record gate passage in StateService
         state_svc = self._get_state_service()
         committed = False
         if state_svc is not None:
@@ -259,29 +368,121 @@ class EnforceGateProvider:
                     state_svc.state_root / "gate_audit.json"
                 )
                 committed = True
-            except Exception as exc:
+            except (AttributeError, OSError) as exc:
                 logger.debug("SYNC gate: StateService mark_dirty failed: %s", exc)
 
         logger.debug(
             "SYNC gate: position=%d seed=%d attractor=%d committed=%s (#%d)",
             position, seed, attractor, committed, self._enforce_count,
         )
-        return {
-            "position": position,
-            "seed": seed,
-            "attractor": attractor,
-            "committed": committed,
-            "enforce_count": self._enforce_count,
-        }
+        return EnforceResult(
+            position=position,
+            seed=seed,
+            attractor=attractor,
+            committed=committed,
+            enforce_count=self._enforce_count,
+        )
+
+    # =========================================================================
+    # ROLE 2: I/O Controller (called by any state writer)
+    # =========================================================================
+
+    def write(
+        self,
+        filename: str,
+        data: object,
+        *,
+        actor: str = "unknown",
+        create_backup: bool = True,
+    ) -> IOWriteResult:
+        """
+        Governed state write. ALL state I/O should flow through here.
+
+        Routes to StateService RAM cache (deferred disk write).
+        No StateService = write DENIED. No ungoverned fallback.
+
+        Args:
+            filename: State filename (e.g. "maha_state.json")
+            data: JSON-serializable data to write
+            actor: Who is writing (for audit trail)
+            create_backup: Whether StateService should create backup
+
+        Returns:
+            IOWriteResult with typed success/failure metadata
+        """
+        self._writes_total += 1
+
+        state_svc = self._get_state_service()
+        if state_svc is not None:
+            try:
+                state_svc.save(filename, data, create_backup=create_backup)
+                self._writes_cached += 1
+                self._record_audit(AuditEntry(actor=actor, file=filename, allowed=True, cached=True))
+                logger.debug("SYNC I/O: %s wrote %s (cached in RAM)", actor, filename)
+                return IOWriteResult(success=True, cached=True, actor=actor, file=filename, reason="")
+            except (OSError, ValueError, TypeError) as exc:
+                logger.warning("SYNC I/O: StateService.save failed for %s: %s", filename, exc)
+
+        self._writes_denied += 1
+        self._record_audit(AuditEntry(actor=actor, file=filename, allowed=False, denied_reason="no_state_service"))
+        return IOWriteResult(success=False, cached=False, actor=actor, file=filename, reason="no_state_service")
+
+    def flush(self, filename: Optional[str] = None) -> int:
+        """
+        Flush cached state to disk via StateService.
+
+        Args:
+            filename: Specific file to flush, or None for all.
+
+        Returns:
+            Number of files flushed.
+        """
+        state_svc = self._get_state_service()
+        if state_svc is None:
+            return 0
+        try:
+            return state_svc.flush(filename)
+        except (OSError, ValueError, RuntimeError) as exc:
+            logger.error("SYNC I/O: flush failed: %s", exc)
+            return 0
+
+    def load(self, filename: str, default: object = None) -> object:
+        """
+        Governed state read. Reads from StateService cache first.
+
+        Args:
+            filename: State filename to load
+            default: Default value if not found
+
+        Returns:
+            Loaded data or default
+        """
+        state_svc = self._get_state_service()
+        if state_svc is not None:
+            try:
+                return state_svc.load(filename, default=default)
+            except (OSError, ValueError, KeyError) as exc:
+                logger.debug("SYNC I/O: load failed for %s: %s", filename, exc)
+        return default
+
+    def _record_audit(self, entry: AuditEntry) -> None:
+        """Append to bounded audit log (max 1000 entries)."""
+        self._audit_log.append(entry)
+        if len(self._audit_log) > 1000:
+            self._audit_log = self._audit_log[-500:]
 
     @property
-    def stats(self) -> Dict[str, Any]:
-        return {
-            "enforce_count": self._enforce_count,
-            "last_position": self._last_position,
-            "last_seed": self._last_seed,
-            "state_service_available": self._get_state_service() is not None,
-        }
+    def stats(self) -> EnforceStats:
+        return EnforceStats(
+            enforce_count=self._enforce_count,
+            last_position=self._last_position,
+            last_seed=self._last_seed,
+            state_service_available=self._get_state_service() is not None,
+            writes_total=self._writes_total,
+            writes_cached=self._writes_cached,
+            writes_denied=self._writes_denied,
+            audit_log_size=len(self._audit_log),
+        )
 
 
 # =============================================================================
@@ -304,6 +505,19 @@ def get_providers() -> Dict[str, object]:
             "enforce_gate": EnforceGateProvider(),
         }
     return _PROVIDERS
+
+
+def get_sync_gate() -> EnforceGateProvider:
+    """Get the singleton SYNC gate (I/O Controller).
+
+    This is the ONE entry point for governed state I/O.
+    Any module that wants to write state calls this.
+
+    Usage:
+        gate = get_sync_gate()
+        gate.write("my_state.json", data, actor="my_module")
+    """
+    return get_providers()["enforce_gate"]  # type: ignore[return-value]
 
 
 def wire_gate_providers() -> int:
@@ -359,5 +573,6 @@ __all__ = [
     "SyncGateProvider",
     "EnforceGateProvider",
     "get_providers",
+    "get_sync_gate",
     "wire_gate_providers",
 ]

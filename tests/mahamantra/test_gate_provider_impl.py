@@ -381,3 +381,90 @@ class TestFireGateIntegration:
 
         assert enforce.stats["enforce_count"] == 1
         assert enforce.stats["last_position"] == 5
+
+
+# =============================================================================
+# 10. ENFORCE GATE — I/O CONTROLLER (ROLE 2)
+# =============================================================================
+
+class TestEnforceGateIOController:
+    """Tests for EnforceGateProvider as I/O Controller (write/load/flush)."""
+
+    def test_write_with_state_service(self):
+        """write() should route through StateService when available."""
+        gate = EnforceGateProvider()
+        result = gate.write("test_state.json", {"key": "value"}, actor="test")
+        # StateService is available in test env (get_state_service works)
+        assert result["actor"] == "test"
+        assert result["file"] == "test_state.json"
+        assert gate.stats["writes_total"] == 1
+
+    def test_write_tracks_audit(self):
+        """write() should record audit entries."""
+        gate = EnforceGateProvider()
+        gate.write("a.json", {}, actor="mod_a")
+        gate.write("b.json", {}, actor="mod_b")
+        assert gate.stats["audit_log_size"] == 2
+        assert gate.stats["writes_total"] == 2
+
+    def test_write_without_state_service_denies(self, monkeypatch):
+        """write() should deny if no StateService available."""
+        gate = EnforceGateProvider()
+        # Patch _get_state_service to always return None (no StateService)
+        monkeypatch.setattr(
+            EnforceGateProvider, "_get_state_service", lambda self: None,
+        )
+        result = gate.write("x.json", {}, actor="rogue")
+        assert result["success"] is False
+        assert result["reason"] == "no_state_service"
+        assert gate.stats["writes_denied"] == 1
+
+    def test_load_returns_default_when_missing(self):
+        """load() should return default for missing files."""
+        gate = EnforceGateProvider()
+        result = gate.load("nonexistent_file_12345.json", default={"empty": True})
+        # Either StateService returns default or we get our default
+        assert result is not None
+
+    def test_stats_include_io_fields(self):
+        """stats should include I/O controller fields."""
+        gate = EnforceGateProvider()
+        stats = gate.stats
+        assert "writes_total" in stats
+        assert "writes_cached" in stats
+        assert "writes_denied" in stats
+        assert "audit_log_size" in stats
+
+    def test_audit_log_bounded(self, monkeypatch):
+        """Audit log should not grow unbounded."""
+        gate = EnforceGateProvider()
+        monkeypatch.setattr(
+            EnforceGateProvider, "_get_state_service", lambda self: None,
+        )
+        for i in range(1100):
+            gate.write(f"file_{i}.json", {}, actor="stress")
+        # Should be trimmed to ~500
+        assert gate.stats["audit_log_size"] <= 600
+
+    def test_enforce_and_write_independent(self):
+        """Pipeline enforce() and I/O write() are independent operations."""
+        gate = EnforceGateProvider()
+        gate.enforce(position=3, seed=42, attractor=99)
+        gate.write("state.json", {"x": 1}, actor="test")
+        assert gate.stats["enforce_count"] == 1
+        assert gate.stats["writes_total"] == 1
+
+
+class TestGetSyncGate:
+    """Tests for get_sync_gate() convenience function."""
+
+    def test_returns_enforce_gate(self):
+        from vibe_core.mahamantra.substrate.gate_providers import get_sync_gate
+        gate = get_sync_gate()
+        assert isinstance(gate, EnforceGateProvider)
+
+    def test_singleton(self):
+        from vibe_core.mahamantra.substrate.gate_providers import get_sync_gate
+        g1 = get_sync_gate()
+        g2 = get_sync_gate()
+        assert g1 is g2
