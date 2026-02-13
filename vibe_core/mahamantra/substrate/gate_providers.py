@@ -99,6 +99,8 @@ class EnforceStats(TypedDict):
     enforce_count: int
     last_position: Optional[int]
     last_seed: Optional[int]
+    last_opcode: Optional[str]
+    last_guna: Optional[str]
     state_service_available: bool
     writes_total: int
     writes_cached: int
@@ -309,6 +311,7 @@ class EnforceGateProvider:
 
     __slots__ = (
         "_enforce_count", "_state_service", "_last_position", "_last_seed",
+        "_last_opcode", "_last_guna",
         "_writes_total", "_writes_denied", "_writes_cached",
         "_audit_log",
     )
@@ -318,6 +321,8 @@ class EnforceGateProvider:
         self._state_service: Optional["StateServiceProtocol"] = None
         self._last_position: Optional[int] = None
         self._last_seed: Optional[int] = None
+        self._last_opcode: Optional[object] = None
+        self._last_guna: Optional[object] = None
         self._writes_total: int = 0
         self._writes_denied: int = 0
         self._writes_cached: int = 0
@@ -349,16 +354,22 @@ class EnforceGateProvider:
     # ROLE 1: Pipeline Observer (called by _fire_gate in lotus_core.__call__)
     # =========================================================================
 
-    def enforce(self, position: int, seed: int, attractor: int) -> EnforceResult:
+    def enforce(self, position: int, seed: int, attractor: int,
+                opcode: Optional[object] = None, guna: Optional[object] = None) -> EnforceResult:
         """
         Pipeline checkpoint at SYNC gate.
 
-        Tracks governance events. If StateService is available,
-        marks the gate passage as a state event for audit trail.
+        Tracks governance events. Now Guna-aware: the gate knows
+        the nature of the operation (SATTVA/RAJAS/TAMAS).
+
+        The Guna is DERIVED from the OpCode, not from text content.
+        See substrate/guna.py: "The Guna is DERIVED from the OpCode."
         """
         self._enforce_count += 1
         self._last_position = position
         self._last_seed = seed
+        self._last_opcode = opcode
+        self._last_guna = guna
 
         state_svc = self._get_state_service()
         committed = False
@@ -371,9 +382,11 @@ class EnforceGateProvider:
             except (AttributeError, OSError) as exc:
                 logger.debug("SYNC gate: StateService mark_dirty failed: %s", exc)
 
+        guna_name = getattr(guna, 'name', str(guna)) if guna is not None else 'NONE'
+        opcode_name = getattr(opcode, 'name', str(opcode)) if opcode is not None else 'NONE'
         logger.debug(
-            "SYNC gate: position=%d seed=%d attractor=%d committed=%s (#%d)",
-            position, seed, attractor, committed, self._enforce_count,
+            "SYNC gate: position=%d seed=%d attractor=%d guna=%s opcode=%s committed=%s (#%d)",
+            position, seed, attractor, guna_name, opcode_name, committed, self._enforce_count,
         )
         return EnforceResult(
             position=position,
@@ -477,6 +490,8 @@ class EnforceGateProvider:
             enforce_count=self._enforce_count,
             last_position=self._last_position,
             last_seed=self._last_seed,
+            last_opcode=getattr(self._last_opcode, 'name', None),
+            last_guna=getattr(self._last_guna, 'name', None),
             state_service_available=self._get_state_service() is not None,
             writes_total=self._writes_total,
             writes_cached=self._writes_cached,
