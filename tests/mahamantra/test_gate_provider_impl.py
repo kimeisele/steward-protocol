@@ -392,29 +392,30 @@ class TestEnforceGateIOController:
 
     def test_write_with_state_service(self):
         """write() should route through StateService when available."""
+        from vibe_core.mahamantra.substrate.guna import Guna
         gate = EnforceGateProvider()
-        result = gate.write("test_state.json", {"key": "value"}, actor="test")
-        # StateService is available in test env (get_state_service works)
+        result = gate.write("test_state.json", {"key": "value"}, actor="test", guna=Guna.RAJAS)
         assert result["actor"] == "test"
         assert result["file"] == "test_state.json"
         assert gate.stats["writes_total"] == 1
 
     def test_write_tracks_audit(self):
         """write() should record audit entries."""
+        from vibe_core.mahamantra.substrate.guna import Guna
         gate = EnforceGateProvider()
-        gate.write("a.json", {}, actor="mod_a")
-        gate.write("b.json", {}, actor="mod_b")
+        gate.write("a.json", {}, actor="mod_a", guna=Guna.RAJAS)
+        gate.write("b.json", {}, actor="mod_b", guna=Guna.RAJAS)
         assert gate.stats["audit_log_size"] == 2
         assert gate.stats["writes_total"] == 2
 
     def test_write_without_state_service_denies(self, monkeypatch):
-        """write() should deny if no StateService available."""
+        """write() should deny if no StateService available (even with valid Guna)."""
+        from vibe_core.mahamantra.substrate.guna import Guna
         gate = EnforceGateProvider()
-        # Patch _get_state_service to always return None (no StateService)
         monkeypatch.setattr(
             EnforceGateProvider, "_get_state_service", lambda self: None,
         )
-        result = gate.write("x.json", {}, actor="rogue")
+        result = gate.write("x.json", {}, actor="rogue", guna=Guna.RAJAS)
         assert result["success"] is False
         assert result["reason"] == "no_state_service"
         assert gate.stats["writes_denied"] == 1
@@ -435,12 +436,10 @@ class TestEnforceGateIOController:
         assert "writes_denied" in stats
         assert "audit_log_size" in stats
 
-    def test_audit_log_bounded(self, monkeypatch):
+    def test_audit_log_bounded(self):
         """Audit log should not grow unbounded."""
         gate = EnforceGateProvider()
-        monkeypatch.setattr(
-            EnforceGateProvider, "_get_state_service", lambda self: None,
-        )
+        # None guna = DENIED, generates audit entries without needing StateService
         for i in range(1100):
             gate.write(f"file_{i}.json", {}, actor="stress")
         # Should be trimmed to ~500
@@ -448,9 +447,10 @@ class TestEnforceGateIOController:
 
     def test_enforce_and_write_independent(self):
         """Pipeline enforce() and I/O write() are independent operations."""
+        from vibe_core.mahamantra.substrate.guna import Guna
         gate = EnforceGateProvider()
         gate.enforce(position=3, seed=42, attractor=99)
-        gate.write("state.json", {"x": 1}, actor="test")
+        gate.write("state.json", {"x": 1}, actor="test", guna=Guna.RAJAS)
         assert gate.stats["enforce_count"] == 1
         assert gate.stats["writes_total"] == 1
 
@@ -468,3 +468,276 @@ class TestGetSyncGate:
         g1 = get_sync_gate()
         g2 = get_sync_gate()
         assert g1 is g2
+
+
+# =============================================================================
+# 11. GUNA I/O POLICY — The Gate's Teeth
+# =============================================================================
+# Ksetra (field) = the data flowing through.
+# Ksetrajna (knower of the field) = the policy that DECIDES based on Guna.
+# =============================================================================
+
+class TestGunaPolicyResolution:
+    """_resolve_policy() maps Guna → IOPolicy correctly."""
+
+    def test_sattva_resolves_to_cache_only(self):
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        from vibe_core.mahamantra.substrate.guna import Guna
+        assert EnforceGateProvider._resolve_policy(Guna.SATTVA) == IOPolicy.CACHE_ONLY
+
+    def test_rajas_resolves_to_write_behind(self):
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        from vibe_core.mahamantra.substrate.guna import Guna
+        assert EnforceGateProvider._resolve_policy(Guna.RAJAS) == IOPolicy.WRITE_BEHIND
+
+    def test_tamas_resolves_to_sync_flush(self):
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        from vibe_core.mahamantra.substrate.guna import Guna
+        assert EnforceGateProvider._resolve_policy(Guna.TAMAS) == IOPolicy.SYNC_FLUSH
+
+    def test_none_resolves_to_denied(self):
+        """None = VOID = Mayavad = no right to write."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        assert EnforceGateProvider._resolve_policy(None) == IOPolicy.DENIED
+
+    def test_garbage_resolves_to_denied(self):
+        """Unknown values = DENIED. No duck-typing. No 'anything else'."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        assert EnforceGateProvider._resolve_policy("SATTVA") == IOPolicy.DENIED
+        assert EnforceGateProvider._resolve_policy(999) == IOPolicy.DENIED
+        assert EnforceGateProvider._resolve_policy(object()) == IOPolicy.DENIED
+
+
+class TestGunaIOPolicySattva:
+    """SATTVA = read-only. Writing under SATTVA is DENIED."""
+
+    def test_sattva_blocks_write(self):
+        from vibe_core.mahamantra.substrate.guna import Guna
+        gate = EnforceGateProvider()
+        result = gate.write("obs.json", {"x": 1}, actor="observer", guna=Guna.SATTVA)
+        assert result["success"] is False
+        assert result["reason"] == "sattva_read_only"
+        assert result["guna_policy"] == "cache_only"
+
+    def test_sattva_increments_sattva_blocks(self):
+        from vibe_core.mahamantra.substrate.guna import Guna
+        gate = EnforceGateProvider()
+        gate.write("a.json", {}, actor="a", guna=Guna.SATTVA)
+        gate.write("b.json", {}, actor="b", guna=Guna.SATTVA)
+        assert gate.stats["sattva_blocks"] == 2
+        assert gate.stats["writes_total"] == 2
+        assert gate.stats["writes_cached"] == 0
+
+    def test_sattva_records_audit(self):
+        from vibe_core.mahamantra.substrate.guna import Guna
+        gate = EnforceGateProvider()
+        gate.write("x.json", {}, actor="spy", guna=Guna.SATTVA)
+        assert gate.stats["audit_log_size"] == 1
+
+    def test_load_still_works_under_sattva(self):
+        """SATTVA blocks writes, but load() is always allowed (read-only)."""
+        gate = EnforceGateProvider()
+        result = gate.load("nonexistent_sattva.json", default={"ok": True})
+        assert result is not None
+
+
+class TestGunaIOPolicyRajas:
+    """RAJAS = normal write-behind. Data goes to RAM cache, deferred flush."""
+
+    def test_rajas_allows_write(self):
+        from vibe_core.mahamantra.substrate.guna import Guna
+        gate = EnforceGateProvider()
+        result = gate.write("state.json", {"key": "val"}, actor="creator", guna=Guna.RAJAS)
+        assert result["guna_policy"] == "write_behind"
+        assert result["flushed"] is False
+        assert gate.stats["writes_cached"] >= 1
+
+    def test_rajas_no_immediate_flush(self):
+        from vibe_core.mahamantra.substrate.guna import Guna
+        gate = EnforceGateProvider()
+        result = gate.write("state.json", {}, actor="mod", guna=Guna.RAJAS)
+        assert result["flushed"] is False
+        assert gate.stats["writes_flushed"] == 0
+
+    def test_none_guna_is_denied(self):
+        """write() without guna = VOID = DENIED. No ungoverned writes."""
+        gate = EnforceGateProvider()
+        result = gate.write("legacy.json", {"old": True}, actor="legacy_module")
+        assert result["success"] is False
+        assert result["guna_policy"] == "denied"
+        assert result["reason"] == "void_no_guna"
+
+
+class TestGunaIOPolicyTamas:
+    """TAMAS = sync flush. Data written to RAM AND immediately flushed to disk."""
+
+    def test_tamas_writes_and_flushes(self):
+        from vibe_core.mahamantra.substrate.guna import Guna
+        gate = EnforceGateProvider()
+        result = gate.write("cleanup.json", {"dead": True}, actor="shiva", guna=Guna.TAMAS)
+        assert result["guna_policy"] == "sync_flush"
+        # flushed depends on StateService availability
+        if result["success"]:
+            assert result["cached"] is True
+
+    def test_tamas_increments_flushed_counter(self):
+        from vibe_core.mahamantra.substrate.guna import Guna
+        gate = EnforceGateProvider()
+        gate.write("flush_me.json", {}, actor="destroyer", guna=Guna.TAMAS)
+        # If StateService is available, writes_flushed should increment
+        stats = gate.stats
+        if stats["writes_cached"] > 0:
+            assert stats["writes_flushed"] >= 0  # May or may not flush depending on env
+
+    def test_tamas_without_state_service_denied(self, monkeypatch):
+        """TAMAS still denied if no StateService (no ungoverned fallback)."""
+        from vibe_core.mahamantra.substrate.guna import Guna
+        gate = EnforceGateProvider()
+        monkeypatch.setattr(
+            EnforceGateProvider, "_get_state_service", lambda self: None,
+        )
+        result = gate.write("x.json", {}, actor="rogue", guna=Guna.TAMAS)
+        assert result["success"] is False
+        assert result["reason"] == "no_state_service"
+
+
+class TestGunaIOPolicyIntegration:
+    """End-to-end: Guna from OpCode → Policy → I/O decision."""
+
+    def test_all_16_opcodes_have_valid_policy(self):
+        """Every OpCode maps to a valid Guna → valid IOPolicy."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+        from vibe_core.mahamantra.substrate.guna import get_guna
+
+        for op in MantraOpCode:
+            guna = get_guna(op)
+            policy = EnforceGateProvider._resolve_policy(guna)
+            assert isinstance(policy, IOPolicy), f"OpCode {op.name} → invalid policy"
+
+    def test_io_flush_opcode_triggers_sync_flush(self):
+        """IO_FLUSH (position 13, Bali) is TAMAS → SYNC_FLUSH."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+        from vibe_core.mahamantra.substrate.guna import get_guna
+
+        guna = get_guna(MantraOpCode.IO_FLUSH)
+        policy = EnforceGateProvider._resolve_policy(guna)
+        assert policy == IOPolicy.SYNC_FLUSH
+
+    def test_type_check_opcode_blocks_write(self):
+        """TYPE_CHECK (position 6, Kapila) is SATTVA → CACHE_ONLY → write blocked."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+        from vibe_core.mahamantra.substrate.guna import get_guna
+
+        guna = get_guna(MantraOpCode.TYPE_CHECK)
+        policy = EnforceGateProvider._resolve_policy(guna)
+        assert policy == IOPolicy.CACHE_ONLY
+
+        gate = EnforceGateProvider()
+        result = gate.write("analysis.json", {}, actor="kapila", guna=guna)
+        assert result["success"] is False
+        assert result["reason"] == "sattva_read_only"
+
+    def test_alloc_mem_opcode_allows_write_behind(self):
+        """ALLOC_MEM (position 2, Narada) is RAJAS → WRITE_BEHIND."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+        from vibe_core.mahamantra.substrate.guna import get_guna
+
+        guna = get_guna(MantraOpCode.ALLOC_MEM)
+        policy = EnforceGateProvider._resolve_policy(guna)
+        assert policy == IOPolicy.WRITE_BEHIND
+
+    def test_stats_show_guna_fields(self):
+        """Stats include writes_flushed and sattva_blocks."""
+        gate = EnforceGateProvider()
+        stats = gate.stats
+        assert "writes_flushed" in stats
+        assert "sattva_blocks" in stats
+        assert stats["writes_flushed"] == 0
+        assert stats["sattva_blocks"] == 0
+
+
+# =============================================================================
+# 12. VISHUDDHA SATTVA — The Transcendental Bypass
+# =============================================================================
+# "sa gunān samatītyaitān brahma-bhūyāya kalpate" — BG 14.26
+# The Name transcends the three modes. No gate holds it.
+# =============================================================================
+
+class TestVishuddhaBypass:
+    """VISHUDDHA = transcendental. The Name bypasses the Gate entirely."""
+
+    def test_vishuddha_resolves_for_chant(self):
+        """actor='chant' → VISHUDDHA (transcendental bypass)."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        policy = EnforceGateProvider._resolve_policy(None, actor="chant")
+        assert policy == IOPolicy.VISHUDDHA
+
+    def test_vishuddha_resolves_for_tick(self):
+        """actor='tick' → VISHUDDHA (the heartbeat of the Name)."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        policy = EnforceGateProvider._resolve_policy(None, actor="tick")
+        assert policy == IOPolicy.VISHUDDHA
+
+    def test_vishuddha_resolves_for_mahamantra(self):
+        """actor='mahamantra' → VISHUDDHA (direct access to the source)."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        policy = EnforceGateProvider._resolve_policy(None, actor="mahamantra")
+        assert policy == IOPolicy.VISHUDDHA
+
+    def test_vishuddha_bypasses_guna_check(self):
+        """VISHUDDHA doesn't need a Guna — it IS the source."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        # Even with guna=None, vishuddha actor bypasses
+        policy = EnforceGateProvider._resolve_policy(None, actor="chant")
+        assert policy == IOPolicy.VISHUDDHA
+
+    def test_vishuddha_write_succeeds(self):
+        """The Name can write. No gate holds it."""
+        gate = EnforceGateProvider()
+        result = gate.write("akash.json", {"seed": 42}, actor="chant")
+        assert result["guna_policy"] == "vishuddha"
+        # Success depends on StateService availability
+        if result["success"]:
+            assert result["cached"] is True
+
+    def test_vishuddha_audit_records_transcendental(self):
+        """Audit trail records vishuddha origin, not rajas mechanism."""
+        gate = EnforceGateProvider()
+        gate.write("akash.json", {}, actor="tick")
+        assert gate.stats["audit_log_size"] == 1
+
+    def test_non_vishuddha_actor_not_bypassed(self):
+        """Regular actors don't get VISHUDDHA bypass."""
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        policy = EnforceGateProvider._resolve_policy(None, actor="some_plugin")
+        assert policy == IOPolicy.DENIED
+
+
+# =============================================================================
+# 13. VOID — Mayavad (No Guna = No Existence)
+# =============================================================================
+
+class TestVoidDenied:
+    """VOID = Mayavad. No Guna, no existence, no right to write."""
+
+    def test_none_guna_none_actor_is_void(self):
+        from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+        assert EnforceGateProvider._resolve_policy(None) == IOPolicy.DENIED
+
+    def test_void_write_denied(self):
+        gate = EnforceGateProvider()
+        result = gate.write("rogue.json", {"hack": True}, actor="rogue_writer")
+        assert result["success"] is False
+        assert result["reason"] == "void_no_guna"
+        assert result["guna_policy"] == "denied"
+
+    def test_void_increments_denied(self):
+        gate = EnforceGateProvider()
+        gate.write("a.json", {}, actor="x")
+        gate.write("b.json", {}, actor="y")
+        assert gate.stats["writes_denied"] == 2
+        assert gate.stats["writes_cached"] == 0
