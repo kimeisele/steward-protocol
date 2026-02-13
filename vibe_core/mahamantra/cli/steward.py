@@ -272,22 +272,17 @@ class Steward:
         return self._link_verified
 
     def _compress_large_input(self, input_text: str) -> str:
-        """Apply MahaCompression to large inputs with Guna filtering."""
-        from vibe_core.mahamantra.adapters.compression import MahaCompression, IntentGuna
-        compressor = MahaCompression()
-        lines = input_text.split('\n')
-        sattva_lines = []
-        rajas_lines = []
-        for line in lines:
-            if not line.strip(): continue
-            result = compressor.compress(line)
-            guna = getattr(result, "intent_level", None) and result.intent_level.guna
-            if guna == IntentGuna.SATTVA: sattva_lines.append(line)
-            elif guna == IntentGuna.RAJAS: rajas_lines.append(line)
-        
+        """Apply MahaCompression to large inputs — truncate to MALA lines.
+
+        NOTE: Guna-based filtering was removed. The Guna is a property of
+        the OPERATION (OpCode), not the text content. Compression compresses
+        KSHETRA (data), it does not judge GUNA.
+        See substrate/guna.py: "The Guna is DERIVED from the OpCode, not decorated."
+        """
+        lines = [line for line in input_text.split('\n') if line.strip()]
         max_lines = MALA
-        compressed_lines = sattva_lines[:max_lines // HALVES] + rajas_lines[:max_lines // HALVES]
-        return '\n'.join(compressed_lines) if compressed_lines else (lines[0] if lines else input_text[:256])
+        compressed_lines = lines[:max_lines]
+        return '\n'.join(compressed_lines) if compressed_lines else input_text[:256]
 
     @property
     def mahamantra(self):
