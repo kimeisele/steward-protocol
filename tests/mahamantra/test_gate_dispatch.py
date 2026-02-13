@@ -71,8 +71,9 @@ class RecordingEnforcer:
     def __init__(self):
         self.calls: List[tuple] = []
 
-    def enforce(self, position: int, seed: int, attractor: int) -> Dict[str, Any]:
-        self.calls.append(("enforce", position, seed, attractor))
+    def enforce(self, position: int, seed: int, attractor: int,
+                opcode=None, guna=None) -> Dict[str, Any]:
+        self.calls.append(("enforce", position, seed, attractor, opcode, guna))
         return {"cell": None, "committed": True}
 
 
@@ -126,10 +127,11 @@ class TestDispatchProvider:
 
     def test_dispatch_sync(self):
         enforcer = RecordingEnforcer()
-        ctx = {"position": 7, "guardian": "manu", "seed": 42, "attractor": 137}
+        ctx = {"position": 7, "guardian": "manu", "seed": 42, "attractor": 137,
+               "opcode": "TEST_OP", "guna": "SATTVA"}
         _dispatch_provider(TattvaGate.SYNC, enforcer, ctx)
         assert len(enforcer.calls) == 1
-        assert enforcer.calls[0] == ("enforce", 7, 42, 137)
+        assert enforcer.calls[0] == ("enforce", 7, 42, 137, "TEST_OP", "SATTVA")
 
     def test_dispatch_ignores_missing_method(self):
         """Object without the method is silently skipped."""
@@ -183,7 +185,8 @@ class TestRegistryDispatchIntegration:
             TattvaGate.VALIDATE: {"input_text": "hello", "seed": 42, "input_coords": ()},
             TattvaGate.EXECUTE: {"seed": 42, "attractor": 137, "parampara_verified": True},
             TattvaGate.RESULT: {"attractor": 137, "resonant_words": [], "verse_result": None},
-            TattvaGate.SYNC: {"position": 7, "guardian": "manu", "seed": 42, "attractor": 137},
+            TattvaGate.SYNC: {"position": 7, "guardian": "manu", "seed": 42, "attractor": 137,
+                             "opcode": "TEST_OP", "guna": "SATTVA"},
         }
 
         for gate, ctx in contexts.items():
