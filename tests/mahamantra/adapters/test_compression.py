@@ -1,7 +1,11 @@
 """
 Tests for MahaCompression adapter.
 
-Tests intent classification, seed generation, and compression metrics.
+Tests seed generation, compression metrics, and architectural correctness.
+
+NOTE: MahaCompression does NOT classify intent from text content.
+Guna is a property of PRAKRITI (OpCode), not KSHETRA (data).
+See substrate/guna.py: "The Guna is DERIVED from the OpCode, not decorated."
 """
 
 import pytest
@@ -41,49 +45,65 @@ class TestMahaCompression:
         assert result1.seed != result2.seed
 
     # =========================================================================
-    # INTENT CLASSIFICATION
+    # ARCHITECTURAL CORRECTNESS: Compression does NOT classify intent
     # =========================================================================
 
-    def test_classify_tamas_error(self, compressor):
-        """Error messages should classify as TAMAS."""
+    def test_no_intent_from_error_text(self, compressor):
+        """Compression must NOT classify 'error' text as TAMAS.
+
+        The Guna is DERIVED from the OpCode, not from text content.
+        A log line 'ERROR: DB timeout' is not inherently TAMAS.
+        - If the system READS it (logging) -> SATTVA
+        - If the system KILLS a process -> TAMAS
+        """
         result = compressor.compress("ERROR: Database connection failed")
-        assert result.intent_level.guna == IntentGuna.TAMAS
+        assert result.intent_level is None
 
-    def test_classify_tamas_crash(self, compressor):
-        """Crash messages should classify as TAMAS."""
-        result = compressor.compress("FATAL: Application crashed with segfault")
-        assert result.intent_level.guna == IntentGuna.TAMAS
+    def test_no_intent_from_success_text(self, compressor):
+        """Compression must NOT classify 'success' text as SATTVA."""
+        result = compressor.compress("SUCCESS: All tests passed")
+        assert result.intent_level is None
 
-    def test_classify_rajas_warning(self, compressor):
-        """Warning messages should classify as RAJAS."""
-        result = compressor.compress("WARNING: Slow query detected, retry in progress")
-        assert result.intent_level.guna == IntentGuna.RAJAS
+    def test_no_intent_from_warning_text(self, compressor):
+        """Compression must NOT classify 'warning' text as RAJAS."""
+        result = compressor.compress("WARNING: Slow query detected")
+        assert result.intent_level is None
 
-    def test_classify_rajas_todo(self, compressor):
-        """TODO comments should classify as RAJAS."""
-        result = compressor.compress("TODO: Fix this workaround later")
-        assert result.intent_level.guna == IntentGuna.RAJAS
+    def test_intent_level_is_none_by_default(self, compressor):
+        """All compression results should have intent_level=None.
 
-    def test_classify_sattva_success(self, compressor):
-        """Success messages should classify as SATTVA."""
-        result = compressor.compress("SUCCESS: All tests passed, deployment complete")
-        assert result.intent_level.guna == IntentGuna.SATTVA
+        The calling layer sets Guna from its OpCode context.
+        """
+        texts = [
+            "ERROR: crash",
+            "SUCCESS: done",
+            "TODO: fix later",
+            "Unified harmonious state",
+            "Hello world",
+        ]
+        for text in texts:
+            result = compressor.compress(text)
+            assert result.intent_level is None, (
+                f"Compression must not assign intent to '{text}'. "
+                f"Guna comes from OpCode, not text content."
+            )
 
-    def test_classify_sattva_healthy(self, compressor):
-        """Health messages should classify as SATTVA."""
-        result = compressor.compress("System healthy and stable, all services verified")
-        assert result.intent_level.guna == IntentGuna.SATTVA
+    def test_guna_from_opcode_not_text(self):
+        """Verify that Guna classification exists in guna.py via OpCode."""
+        from vibe_core.mahamantra.substrate.guna import get_guna, Guna
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 
-    def test_classify_suddha_transcend(self, compressor):
-        """Transcendental terms should classify as SUDDHA."""
-        result = compressor.compress("Unified system achieved optimal harmonious state")
-        assert result.intent_level.guna == IntentGuna.SUDDHA
+        # SATTVA operations: observation, no side effects
+        assert get_guna(MantraOpCode.TYPE_CHECK) == Guna.SATTVA
+        assert get_guna(MantraOpCode.LOG_EMIT) == Guna.SATTVA
 
-    def test_tamas_priority_over_sattva(self, compressor):
-        """TAMAS should take priority when both keywords present."""
-        # This has both "error" (TAMAS) and "success" (SATTVA)
-        result = compressor.compress("Error occurred but partial success achieved")
-        assert result.intent_level.guna == IntentGuna.TAMAS
+        # RAJAS operations: creation, modification
+        assert get_guna(MantraOpCode.EXEC_OP) == Guna.RAJAS
+        assert get_guna(MantraOpCode.ALLOC_MEM) == Guna.RAJAS
+
+        # TAMAS operations: destruction, cleanup
+        assert get_guna(MantraOpCode.INIT_THREAD) == Guna.TAMAS
+        assert get_guna(MantraOpCode.IO_FLUSH) == Guna.TAMAS
 
     # =========================================================================
     # COMPRESSION METRICS
@@ -114,20 +134,24 @@ class TestMahaCompression:
         items = ["Error: fail", "Warning: slow", "Success: done"]
         results = compressor.compress_batch(items)
         assert len(results) == 3
-        assert results[0].intent_level.guna == IntentGuna.TAMAS
-        assert results[1].intent_level.guna == IntentGuna.RAJAS
-        assert results[2].intent_level.guna == IntentGuna.SATTVA
+        # All seeds should be different
+        seeds = {r.seed for r in results}
+        assert len(seeds) == 3
+        # No intent classification from text
+        for r in results:
+            assert r.intent_level is None
 
     def test_compress_aggregate(self, compressor):
-        """Aggregate should return worst-case intent."""
+        """Aggregate should combine seeds and sizes."""
         items = [
             "Everything is healthy",
             "Warning: minor issue",
             "Error: critical failure",
         ]
         result = compressor.compress_aggregate(items)
-        # Worst case (TAMAS) should surface
-        assert result.intent_level.guna == IntentGuna.TAMAS
+        assert result.seed is not None
+        assert result.input_size > 0
+        assert result.intent_level is None
 
     # =========================================================================
     # EDGE CASES

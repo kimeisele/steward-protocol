@@ -161,6 +161,21 @@ class TestGateHooks:
         assert "guardian" in captured[0]
         assert 0 <= captured[0]["position"] <= 15
 
+    def test_sync_hook_receives_opcode_and_guna(self):
+        """SYNC gate context includes opcode and guna (TattvaGate→OpCode→Guna wiring)."""
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        lotus = MahamantraLotus()
+        captured = []
+        lotus.on_gate(TattvaGate.SYNC, lambda g, ctx: captured.append(ctx))
+        lotus("dharma")
+        ctx = captured[0]
+        assert "opcode" in ctx, "SYNC gate must receive opcode"
+        assert "guna" in ctx, "SYNC gate must receive guna"
+        assert hasattr(ctx["opcode"], "name"), "opcode must be a MantraOpCode enum"
+        assert hasattr(ctx["guna"], "name"), "guna must be a Guna enum"
+        assert ctx["guna"].name in ("SATTVA", "RAJAS", "TAMAS")
+
     def test_hook_error_does_not_crash_pipeline(self):
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
 
@@ -173,6 +188,45 @@ class TestGateHooks:
         result = lotus("resilience")
         assert result is not None
         assert "gate_trace" in result
+
+    def test_response_contains_guna(self):
+        """__call__ response includes guna dict with mode, opcode, source."""
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        lotus = MahamantraLotus()
+        result = lotus("karma")
+        assert "guna" in result
+        guna = result["guna"]
+        assert guna["mode"] in ("SATTVA", "RAJAS", "TAMAS")
+        assert "opcode" in guna
+        assert "opcode_value" in guna
+        assert guna["source"] == "position"  # no caller opcode → derived from position
+
+    def test_caller_supplied_opcode_overrides_position(self):
+        """Caller can supply opcode explicitly — Guna derived from it, not position."""
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+        from vibe_core.mahamantra.substrate.guna import get_guna
+
+        lotus = MahamantraLotus()
+        # Force TAMAS opcode (IO_FLUSH = 13)
+        result = lotus("hello world", opcode=MantraOpCode.IO_FLUSH.value)
+        guna = result["guna"]
+        assert guna["mode"] == "TAMAS"
+        assert guna["opcode"] == "IO_FLUSH"
+        assert guna["source"] == "caller"
+
+    def test_guna_consistent_with_guna_module(self):
+        """Guna in response matches guna.get_guna(MantraOpCode(position))."""
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+        from vibe_core.mahamantra.substrate.guna import get_guna
+
+        lotus = MahamantraLotus()
+        result = lotus("test consistency")
+        position = result["position"]
+        expected_guna = get_guna(MantraOpCode(position))
+        assert result["guna"]["mode"] == expected_guna.name
 
     def test_auto_registers_in_tattva_registry(self):
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus

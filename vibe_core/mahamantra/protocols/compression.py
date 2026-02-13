@@ -6,7 +6,7 @@ All types used by MahaCompression adapter must be defined here.
 """
 from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TRINITY)
 
-from typing import Protocol, runtime_checkable, Final, Literal, Optional
+from typing import Protocol, runtime_checkable, Final, Literal, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
 
@@ -118,13 +118,21 @@ ALL_SAMSKARA_LEVELS: Final[tuple[SamskaraLevel, ...]] = (
 class CompressionResult:
     """
     Watertight result of a compression operation.
+
+    NOTE: intent_level is Optional. The compression layer compresses
+    KSHETRA (data), it does not judge GUNA. Guna is a property of
+    PRAKRITI (the operation/OpCode), not of the dead field.
+    See substrate/guna.py: "The Guna is DERIVED from the OpCode, not decorated."
+
+    The calling layer may set intent_level from its own OpCode context
+    via guna.get_guna(opcode).
     """
     seed: int
-    intent_level: IntentLevel
     input_size: int
     output_size: int
     compression_ratio: float
     position: int
+    intent_level: Optional[IntentLevel] = None
     summary: Optional[str] = None
     text_hash: Optional[int] = None
     length: Optional[int] = None
@@ -137,12 +145,14 @@ class SamskaraResult:
 
     The samskara is a compact representation that preserves the
     essential "karmic imprint" of the data.
+
+    NOTE: intent_level is Optional — same principle as CompressionResult.
     """
     seed: int
     data_hash: int
     item_count: int
-    intent_level: IntentLevel
     compression_ratio: float
+    intent_level: Optional[IntentLevel] = None
 
 
 @dataclass(frozen=True)

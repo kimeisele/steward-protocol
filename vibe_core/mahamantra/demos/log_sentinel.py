@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from typing import Final
 
 # Import the production adapter
-from vibe_core.mahamantra.adapters import MahaCompression, IntentGuna
+from vibe_core.mahamantra.adapters import MahaCompression
 
 # =============================================================================
 # GENERATE REALISTIC CHAOS (Simulated Server Logs)
