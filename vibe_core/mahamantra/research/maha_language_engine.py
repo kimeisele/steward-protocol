@@ -85,6 +85,8 @@ __position__ = 2
 __genesis__ = "0x2c80316d"
 
 import struct
+import re
+from functools import lru_cache
 from typing import Dict, Final, List, NamedTuple, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
@@ -102,6 +104,42 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
+
+
+_WORD_TOKEN_RE: Final = re.compile(r"[A-Za-z']+")
+
+
+@lru_cache(maxsize=1)
+def _cmu_lookup() -> Optional[Dict[str, List[List[str]]]]:
+    """Load CMU dictionary once (if available)."""
+    try:
+        import cmudict
+
+        return cmudict.dict()
+    except Exception:
+        return None
+
+
+def _fallback_stress(word: str) -> Tuple[int, ...]:
+    """Fallback stress pattern from vowel groups when CMU is unavailable."""
+    syllables = re.findall(r"[aeiouy]+", word.lower())
+    if not syllables:
+        return ()
+    if len(syllables) == KSETRAJNA:
+        return (KSETRAJNA,)
+    return tuple(KSETRAJNA if i == 0 else 0 for i in range(len(syllables)))
+
+
+def _stress_for_word(word: str) -> Tuple[int, ...]:
+    """Extract stress digits from CMU ARPAbet, fallback to vowel groups."""
+    cmu = _cmu_lookup()
+    if cmu:
+        pronunciations = cmu.get(word.lower())
+        if pronunciations:
+            stresses = tuple(int(p[-1]) for p in pronunciations[0] if p and p[-1].isdigit())
+            if stresses:
+                return stresses
+    return _fallback_stress(word)
 
 
 # =============================================================================
@@ -135,6 +173,9 @@ class EngineResult(NamedTuple):
     diw_applied: int = 0  # 19-bit DIW word applied to Antaranga
     shabda_spawns: int = 0  # number of derivative seeds spawned
     phoneme_trajectory: str = ""  # synthesized name from MahaSequencer
+    syllable_count: int = 0  # temporal unit count from input
+    stress_pattern: Tuple[int, ...] = ()  # per-syllable stress sequence
+    sequencer_steps: Tuple[int, ...] = ()  # mapped positions in 32-step mantra grid
 
 
 # =============================================================================
@@ -456,6 +497,37 @@ class MahaLanguageEngine:
         position = (attractor % WORDS) + KSETRAJNA  # 1-16
         return seq.synthesize(position, length=QUARTERS)
 
+    def _scan_syllable_rhythm(self, text: str) -> Dict[str, object]:
+        """
+        Convert input into a syllable-time sequence.
+
+        Each syllable maps to a 32-step grid (16 mantra words × 2 beats).
+        """
+        tokens = _WORD_TOKEN_RE.findall(text)
+        stress: List[int] = []
+        for token in tokens:
+            stress.extend(_stress_for_word(token))
+
+        if not stress:
+            return {
+                "syllable_count": 0,
+                "stress_pattern": (),
+                "steps": (),
+                "signature": "-",
+            }
+
+        step_count = WORDS * 2
+        steps = tuple((i * 2) % step_count for i in range(len(stress)))
+        stress_pattern = tuple(stress)
+        signature = "".join(str(s) for s in stress_pattern)
+
+        return {
+            "syllable_count": len(stress_pattern),
+            "stress_pattern": stress_pattern,
+            "steps": steps,
+            "signature": signature,
+        }
+
     # =========================================================================
     # STEP 7: COMPOSE — Structure + Content + Mode + Interactions → English
     # =========================================================================
@@ -637,6 +709,7 @@ class MahaLanguageEngine:
         enc = self._encode(text)
         coords = enc["coords"]
         seed = enc["seed"]
+        rhythm = self._scan_syllable_rhythm(text)
 
         # O(1) cache hit — return immediately
         if enc["attention_hit"] and enc["cached_result"] is not None:
@@ -661,6 +734,9 @@ class MahaLanguageEngine:
                 antaranga_prana=0,
                 output="[no phonemic content]",
                 derivation="input has no encodable phonemes",
+                syllable_count=rhythm["syllable_count"],
+                stress_pattern=rhythm["stress_pattern"],
+                sequencer_steps=rhythm["steps"],
             )
 
         # Step 2: ROUTE (+ resonate_as through Guardian's lens)
@@ -699,6 +775,7 @@ class MahaLanguageEngine:
             f"→ resonate_as={len(route['guardian_resonance'].words)} words "
             f"→ section={route['section_name']}({route['section_mode']}) "
             f"→ verse=BG.18.{route['verse_num']} "
+            f"→ rhythm={rhythm['signature']}({rhythm['syllable_count']}) "
             f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w/{len(exp['shabda_children'])}s "
             f"→ diw=0x{diw:05x} "
             f"→ antaranga={ant['active_slots']} slots, {ant['total_prana']} prana"
@@ -738,6 +815,9 @@ class MahaLanguageEngine:
             diw_applied=diw,
             shabda_spawns=len(exp["shabda_children"]),
             phoneme_trajectory=trajectory,
+            syllable_count=rhythm["syllable_count"],
+            stress_pattern=rhythm["stress_pattern"],
+            sequencer_steps=rhythm["steps"],
         )
 
         # Step 8: MEMORIZE (cache for O(1) next time)
@@ -914,6 +994,7 @@ def demo() -> None:
         print(
             f"  EXPAND:    depth={r.expansion_depth} names={len(r.expanded_names)} walk={len(r.synth_walk_words)} shabda={r.shabda_spawns}"
         )
+        print(f"  RHYTHM:    stress={''.join(str(s) for s in r.stress_pattern) or '-'} syll={r.syllable_count}")
         print(f"  DIW:       0x{r.diw_applied:05x}")
         print(f"  ANTARANGA: {r.antaranga_active} slots, {r.antaranga_prana} prana")
         print(f"  TRAJECTORY:{r.phoneme_trajectory}")

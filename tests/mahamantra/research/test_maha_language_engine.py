@@ -237,3 +237,30 @@ class TestEdgeCases:
         """Numeric input works."""
         r = engine.generate("108")
         assert r.output
+
+
+# =============================================================================
+# SYLLABLE RHYTHM (temporal layer)
+# =============================================================================
+
+
+class TestSyllableRhythm:
+    """Input carries time structure, not only static tokens."""
+
+    def test_syllable_metadata_present(self, engine):
+        r = engine.generate("devotion")
+        assert r.syllable_count > 0
+        assert len(r.stress_pattern) == r.syllable_count
+        assert len(r.sequencer_steps) == r.syllable_count
+
+    def test_steps_fit_32_step_grid(self, engine):
+        r = engine.generate("surrender everything")
+        for step in r.sequencer_steps:
+            assert 0 <= step < WORDS * 2
+            assert step % 2 == 0
+
+    def test_rhythm_is_deterministic(self, engine):
+        r1 = engine.generate("engine")
+        r2 = engine.generate("engine")
+        assert r1.stress_pattern == r2.stress_pattern
+        assert r1.sequencer_steps == r2.sequencer_steps
