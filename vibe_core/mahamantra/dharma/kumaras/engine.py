@@ -299,6 +299,69 @@ class ShuddhiEngine(ShuddhiProtocol):
 
         return results
 
+    def scan_cell(
+        self,
+        source_code: str,
+        rule_id: str,
+        file_path: Optional[Path] = None,
+    ) -> Optional[ShuddhiResult]:
+        """
+        SRAVANAM: Scan ONE source fragment with ONE rule.
+
+        This is the ATOMIC scan unit — no file I/O, no bulk.
+        The source_code is already in RAM (from a CSTFragment or Cell payload).
+
+        Args:
+            source_code: Python source code string (from fragment/cell).
+            rule_id: Single remedy rule_id to check.
+            file_path: Optional path for context (not read from disk).
+
+        Returns:
+            ShuddhiResult if violation found (PURIFIED), None otherwise.
+        """
+        if rule_id not in self._remedies:
+            return None
+
+        try:
+            module = cst.parse_module(source_code)
+        except Exception:
+            return None
+
+        remedy_class = self._remedies[rule_id]
+        transformer = remedy_class()
+
+        if hasattr(transformer, "set_file_path") and file_path:
+            transformer.set_file_path(str(file_path))
+
+        try:
+            wrapper = cst.MetadataWrapper(module)
+            modified_module = wrapper.visit(transformer)
+        except ShuddhiScopeError:
+            return None
+        except Exception:
+            return None
+
+        if not transformer.applied:
+            return None
+
+        new_code = modified_module.code
+
+        try:
+            compile(new_code, str(file_path or "<cell>"), "exec")
+        except SyntaxError:
+            return None
+
+        result = ShuddhiResult(
+            status=ShuddhiStatus.PURIFIED,
+            file_path=file_path or Path("<cell>"),
+            rule_id=rule_id,
+            message="Surgery successful.",
+            diff=transformer.get_diff(source_code, new_code),
+            purified_code=new_code,
+        )
+        self._emit_vibration(result)
+        return result
+
     def list_remedies(self) -> List[str]:
         """Returns list of registered remedy rule_ids."""
         return list(self._remedies.keys())
