@@ -103,7 +103,14 @@ from vibe_core.mahamantra.protocols._seed import (
     SHARANAGATI,
     WORDS,
 )
-from vibe_core.mahamantra.substrate.seed import MAHAMANTRA, HolyName
+from vibe_core.mahamantra.substrate.seed import (
+    MAHAMANTRA,
+    HolyName,
+    HARE_POSITIONS,
+    KRISHNA_POSITIONS,
+    RAMA_POSITIONS,
+)
+from vibe_core.mahamantra.protocols.seed._extended import get_trinity_function
 from vibe_core.mahamantra.substrate.phonetic_bridge import (
     VargaIndex,
     CATEGORY_TO_VARGA,
@@ -342,6 +349,48 @@ def _alignment_score(sv: SyllableVector, gs: GridStep) -> int:
     if sv.height <= HALVES and gs.holy_name == HolyName.KRISHNA:
         score += KSETRAJNA
     return score
+
+
+# =============================================================================
+# MODE AFFINITY — Graph-distance classification (no hardcoded keywords)
+# =============================================================================
+# Anchor phrases derived from protocol:
+#   HolyName.name + get_trinity_function(first_position_of_that_name)
+# WordNet graph distance determines which mode a word belongs to.
+
+
+@lru_cache(maxsize=1)
+def _mode_anchor_phrases() -> Dict[str, str]:
+    """Build mode anchor phrases from protocol-derived trinity functions.
+
+    Returns: {"DHARMA": "hare carrier", "GENESIS": "krishna source", "KARMA": "rama deliverer"}
+    """
+    return {
+        _HOLYNAME_MODE[HolyName.HARE]: f"{HolyName.HARE.name.lower()} {get_trinity_function(HARE_POSITIONS[0])}",
+        _HOLYNAME_MODE[HolyName.KRISHNA]: f"{HolyName.KRISHNA.name.lower()} {get_trinity_function(KRISHNA_POSITIONS[0])}",
+        _HOLYNAME_MODE[HolyName.RAMA]: f"{HolyName.RAMA.name.lower()} {get_trinity_function(RAMA_POSITIONS[0])}",
+    }
+
+
+def _classify_by_graph(packed_hex: str, anchors: Dict[str, str]) -> Optional[str]:
+    """Classify a Gita word into a mode by WordNet graph distance to anchors.
+
+    Returns the mode with highest semantic_score, or None if all scores are 0.
+    """
+    try:
+        from vibe_core.mahamantra.substrate.wordnet_bridge import semantic_score
+    except Exception:
+        return None
+
+    best_mode: Optional[str] = None
+    best_score = 0.0
+    for mode, anchor in anchors.items():
+        score = semantic_score(anchor, packed_hex)
+        if score > best_score:
+            best_score = score
+            best_mode = mode
+
+    return best_mode
 
 
 class RhythmProfile(NamedTuple):
@@ -871,24 +920,25 @@ class MahaLanguageEngine:
         # Rank full pool by rhythm + semantic
         resonant = self._rank_resonant_by_rhythm(resonant, rhythm, input_text)
 
-        # === MODE AFFINITY: classify words by grid mode ===
-        # DHARMA (Hare) = devotion/service/energy words
-        # GENESIS (Krishna) = source/wisdom/creation words
-        # KARMA (Rama) = action/duty/strength words
-        _DHARMA_HINTS = frozenset(("devotion", "love", "energy", "grace", "mercy", "surrender", "service", "heart", "soul", "faith"))
-        _GENESIS_HINTS = frozenset(("knowledge", "wisdom", "truth", "source", "origin", "supreme", "eternal", "consciousness", "self", "divine"))
-        _KARMA_HINTS = frozenset(("action", "duty", "strength", "fight", "perform", "work", "sacrifice", "dharma", "righteous", "warrior"))
+        # === MODE AFFINITY: classify words by graph distance ===
+        # Anchor phrases derived from protocol:
+        #   get_trinity_function(HARE_pos) = "carrier" -> DHARMA
+        #   get_trinity_function(KRISHNA_pos) = "source" -> GENESIS
+        #   get_trinity_function(RAMA_pos) = "deliverer" -> KARMA
+        # Combined with HolyName.name for richer graph query.
+        # NO HARDCODED KEYWORD LISTS. Pure WordNet graph distance.
+        mode_anchors = _mode_anchor_phrases()
 
         by_mode: Dict[str, List[Dict]] = {"DHARMA": [], "GENESIS": [], "KARMA": []}
         for r in resonant:
-            ml = r["meaning"].lower()
-            # Check affinity by keyword overlap
-            if any(h in ml for h in _DHARMA_HINTS):
-                by_mode["DHARMA"].append(r)
-            elif any(h in ml for h in _GENESIS_HINTS):
-                by_mode["GENESIS"].append(r)
-            elif any(h in ml for h in _KARMA_HINTS):
-                by_mode["KARMA"].append(r)
+            phex = str(r.get("packed_hex", ""))
+            if phex:
+                best_mode = _classify_by_graph(phex, mode_anchors)
+            else:
+                best_mode = None
+
+            if best_mode:
+                by_mode[best_mode].append(r)
             else:
                 # Unclassified: available to all modes
                 for m in by_mode.values():
