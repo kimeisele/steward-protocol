@@ -255,9 +255,15 @@ class TestSyllableRhythm:
 
     def test_steps_fit_32_step_grid(self, engine):
         r = engine.generate("surrender everything")
+        step_count = WORDS * 2
         for step in r.sequencer_steps:
-            assert 0 <= step < WORDS * 2
-            assert step % 2 == 0
+            assert 0 <= step < step_count
+
+        # Step-to-step movement follows stress: unstressed=+1, stressed=+2
+        for i in range(len(r.sequencer_steps) - 1):
+            delta = (r.sequencer_steps[i + 1] - r.sequencer_steps[i]) % step_count
+            expected = 1 + min(r.stress_pattern[i], 1)
+            assert delta == expected
 
     def test_rhythm_is_deterministic(self, engine):
         r1 = engine.generate("engine")
