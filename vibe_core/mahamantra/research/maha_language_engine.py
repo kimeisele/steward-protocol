@@ -555,6 +555,45 @@ class MahaLanguageEngine:
         }
 
     # =========================================================================
+    # STEP 2.5: BUILD CHARACTER WAVE — Prompt chars → Antaranga standing wave
+    # =========================================================================
+
+    def _build_character_wave(self, text: str) -> Dict:
+        """
+        Fire every prompt character into the Antaranga as a collide() event.
+
+        Each character maps to a RAMA coordinate via protocol phonetics
+        (vowels → SVARAS, consonants → SPARSHA grid). The accumulated
+        interference pattern IS the physical representation of the prompt.
+
+        Characters that share articulatory features land on the same slot
+        and RESONATE (prana adds). This creates a unique standing wave
+        for every distinct prompt.
+        """
+        from vibe_core.mahamantra.research.language_runtime.antaranga_bridge import (
+            impact_keystroke,
+            modulate_with_diw,
+        )
+
+        self._antaranga.clear()
+
+        impacts = 0
+        for char in text:
+            result = impact_keystroke(self._antaranga, char)
+            if result is not None:
+                impacts += KSETRAJNA
+
+        # One VenuOrchestrator tick to modulate the accumulated wave
+        diw = self._venu.step()
+        modulate_with_diw(self._antaranga, diw)
+
+        return {
+            "char_impacts": impacts,
+            "char_wave_prana": self._antaranga.total_prana(),
+            "char_wave_active": self._antaranga.active_count(),
+        }
+
+    # =========================================================================
     # STEP 3: RESONATE — Words through Guardian's lens + Antaranga collision
     # =========================================================================
 
@@ -569,8 +608,10 @@ class MahaLanguageEngine:
             1. Guardian-shaped words (from maha_respond — already 4D-aligned)
             2. Antaranga collision (word-word byte interactions in 16KB RAM)
 
-        The Antaranga collision reveals which words AMPLIFY each other
-        (prana adds up) vs which words are merely PRESENT (no interaction).
+        Words collide ON TOP of the existing character wave. Words whose
+        RAMA coordinates overlap with energized character slots will
+        RESONATE (prana adds up), naturally biasing toward phonetically
+        related content.
         """
         from vibe_core.mahamantra.substrate.antaranga import (
             FLAG_ACTIVE,
@@ -581,9 +622,7 @@ class MahaLanguageEngine:
 
         resonant_words = guardian_response.words  # List[RankedWord]
 
-        # Feed resonant words into Antaranga as slots
-        # Each word gets a slot: source=coord, target=attractor, op=element
-        self._antaranga.clear()
+        # DO NOT clear — words collide on top of the character wave
 
         word_slots: List[Tuple[int, int]] = []  # (slot_idx, prana_after)
 
@@ -821,17 +860,37 @@ class MahaLanguageEngine:
         except Exception:
             return 0.0
 
-    def _rank_resonant_by_rhythm(self, resonant: List[Dict[str, object]], rhythm: RhythmProfile, input_text: str = "") -> List[Dict[str, object]]:
-        """Rank resonant pool by base score + rhythm bonus + semantic boost."""
+    def _chamber_boost(self, first_coord: int, seed: int) -> float:
+        """Antaranga chamber boost: prana at the word's slot from the character wave.
+
+        Words whose RAMA coordinates overlap with character-energized slots
+        get a score boost proportional to the slot's accumulated prana.
+        This is the physical resonance between input characters and Gita words.
+        """
+        if self._antaranga is None or first_coord < 0:
+            return 0.0
+        slot = (first_coord * SEVEN + seed) % 512
+        prana = self._antaranga.prana_at(slot)
+        if prana == 0:
+            return 0.0
+        # Normalize: GENESIS_PRANA_U32 = 13700 is a typical single-char impact.
+        # Scale to 0.0-0.15 range so it's meaningful but doesn't overwhelm.
+        from vibe_core.mahamantra.substrate.antaranga import GENESIS_PRANA_U32
+        return min(0.15, (prana / GENESIS_PRANA_U32) * 0.05)
+
+    def _rank_resonant_by_rhythm(self, resonant: List[Dict[str, object]], rhythm: RhythmProfile, input_text: str = "", seed: int = 0) -> List[Dict[str, object]]:
+        """Rank resonant pool by base score + rhythm + semantic + chamber boost."""
         ranked: List[Dict[str, object]] = []
         for i, item in enumerate(resonant):
             scored = dict(item)
             bias = self._rhythm_bias(rhythm, i)
             sem = self._semantic_boost(input_text, str(scored.get("packed_hex", "")))
+            chamber = self._chamber_boost(int(scored.get("first_coord", -1)), seed)
             base_score = float(scored.get("score", 0.0))
             scored["rhythm_bias"] = bias
             scored["semantic_boost"] = sem
-            scored["rhythm_score"] = base_score + bias + sem
+            scored["chamber_boost"] = chamber
+            scored["rhythm_score"] = base_score + bias + sem + chamber
             ranked.append(scored)
 
         ranked.sort(key=lambda it: (float(it.get("rhythm_score", 0.0)), float(it.get("score", 0.0))), reverse=True)
@@ -850,6 +909,7 @@ class MahaLanguageEngine:
         section_mode: str,
         antaranga_data: Dict,
         expansion_data: Optional[Dict] = None,
+        seed: int = 0,
     ) -> str:
         """
         Rhythmic Sequencing Compose (Opus design).
@@ -875,6 +935,7 @@ class MahaLanguageEngine:
                         "score": rw.total_score,
                         "all_meanings": meanings,
                         "packed_hex": getattr(rw.word, "packed_hex", ""),
+                        "first_coord": rw.word.first_coord,
                     }
                 )
 
@@ -902,7 +963,7 @@ class MahaLanguageEngine:
                     )
 
         # Rank full pool by rhythm + semantic
-        resonant = self._rank_resonant_by_rhythm(resonant, rhythm, input_text)
+        resonant = self._rank_resonant_by_rhythm(resonant, rhythm, input_text, seed=seed)
 
         # === MODE AFFINITY: classify words by graph distance ===
         # Anchor phrases derived from protocol:
@@ -1056,12 +1117,16 @@ class MahaLanguageEngine:
         # Step 2: ROUTE (+ resonate_as through Guardian's lens)
         route = self._route(text, seed, coords)
 
-        # Step 3: RESONATE (Guardian words + Antaranga collision)
+        # Step 2.5: BUILD CHARACTER WAVE (prompt chars → Antaranga standing wave)
+        char_wave = self._build_character_wave(text)
+
+        # Step 3: RESONATE (Guardian words collide ON TOP of character wave)
         ant = self._resonate(
             route["guardian"],
             route["template"],
             seed,
         )
+        ant["char_wave"] = char_wave
 
         # Step 4: EXPAND (semantic tree + 16-step walk + shabda spawn)
         g = route["guardian"].guardian
@@ -1073,7 +1138,7 @@ class MahaLanguageEngine:
         # Step 6: TRACE (MahaSequencer phoneme trajectory)
         trajectory = self._trace_phonemes(route["attractor"])
 
-        # Step 7: COMPOSE (with expansion data feeding into word pool)
+        # Step 7: COMPOSE (with expansion data + chamber boost from character wave)
         output = self._compose(
             route["guardian"],
             route["template"],
@@ -1082,6 +1147,7 @@ class MahaLanguageEngine:
             route["section_mode"],
             ant,
             expansion_data=exp,
+            seed=seed,
         )
 
         # Build derivation path (now includes all stages)
@@ -1094,6 +1160,7 @@ class MahaLanguageEngine:
             f"→ rhythm={rhythm.signature}({rhythm.syllable_count}) "
             f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w/{len(exp['shabda_children'])}s "
             f"→ diw=0x{diw:05x} "
+            f"→ char_wave={char_wave['char_impacts']}i/{char_wave['char_wave_active']}a/{char_wave['char_wave_prana']}p "
             f"→ antaranga={ant['active_slots']} slots, {ant['total_prana']} prana"
         )
 

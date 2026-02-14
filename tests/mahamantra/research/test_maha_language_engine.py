@@ -298,3 +298,46 @@ class TestSyllableRhythm:
         ranked = engine._rank_resonant_by_rhythm(pool, rhythm)
         assert ranked[0]["meaning"] == "first"
         assert ranked[0]["rhythm_score"] > ranked[1]["rhythm_score"]
+
+
+class TestCharacterWaveOnDemand:
+    """ON DEMAND: full prompt → char-by-char Antaranga collide → standing wave → compose."""
+
+    def test_character_wave_deterministic(self, engine):
+        """Same prompt must produce identical chamber state and output."""
+        r1 = engine.generate("what is devotion")
+        r2 = engine.generate("what is devotion")
+        assert r1.output == r2.output
+        assert r1.antaranga_prana == r2.antaranga_prana
+        assert r1.antaranga_active == r2.antaranga_active
+
+    def test_different_prompts_different_prana(self, engine):
+        """Different prompts must produce different chamber states."""
+        r1 = engine.generate("what is devotion")
+        r2 = engine.generate("sacrifice and duty")
+        assert r1.antaranga_prana != r2.antaranga_prana
+
+    def test_character_order_matters(self, engine):
+        """Same characters in different order → different chamber state."""
+        r_how = engine.generate("how")
+        r_who = engine.generate("who")
+        # Same chars, different order → different slot collision sequence
+        # Output must differ (different routing from different seeds)
+        assert r_how.output != r_who.output
+
+    def test_char_wave_in_derivation(self, engine):
+        """Derivation string must contain char_wave stats."""
+        r = engine.generate("test")
+        assert "char_wave=" in r.derivation
+
+    def test_antaranga_prana_positive(self, engine):
+        """Any non-empty prompt must produce positive prana."""
+        r = engine.generate("hello")
+        assert r.antaranga_prana > 0
+        assert r.antaranga_active > 0
+
+    def test_longer_prompt_more_impacts(self, engine):
+        """Longer prompts fire more characters → generally more active slots."""
+        r_short = engine.generate("om")
+        r_long = engine.generate("what is the meaning of devotion and sacrifice")
+        assert r_long.antaranga_active >= r_short.antaranga_active
