@@ -14,7 +14,9 @@ class EngineLikeResult(Protocol):
     seed: int
     attractor: int
     output: str
+    derivation: str
     stress_pattern: Tuple[int, ...]
+    sequencer_steps: Tuple[int, ...]
 
 
 class LanguageRuntimeSession:
@@ -49,4 +51,7 @@ class LanguageRuntimeSession:
             seed=result.seed,
             attractor=result.attractor,
             output=result.output,
+            derivation=getattr(result, "derivation", ""),
+            stress_pattern=result.stress_pattern,
+            sequencer_steps=getattr(result, "sequencer_steps", ()),
         )
