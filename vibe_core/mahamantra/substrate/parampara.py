@@ -58,7 +58,7 @@ from vibe_core.mahamantra.protocols._seed import (
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
 __position__ = 0
-__genesis__ = "0x48c2d983"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0x2f04d413"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum

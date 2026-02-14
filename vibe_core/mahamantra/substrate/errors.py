@@ -20,7 +20,7 @@ __genesis__ = "0xf9a40bd3"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 
 class ErrorCategory(Enum):

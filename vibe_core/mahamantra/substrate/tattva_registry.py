@@ -23,7 +23,7 @@ from __future__ import annotations
 
 __mahajana__ = "bhishma"
 __position__ = 11
-__genesis__ = "0x4a2e7f1c"
+__genesis__ = "0x030295b1"
 
 import logging
 import threading

@@ -32,7 +32,7 @@ Healing flows through ALL 5 Tattva Gates, ensuring governance:
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kumaras"
 __position__ = 5
-__genesis__ = "0x5e1a3b70"
+__genesis__ = "0xfe9a70b8"
 
 import logging
 from pathlib import Path

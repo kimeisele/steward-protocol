@@ -40,7 +40,7 @@ from __future__ import annotations
 
 __mahajana__ = "prahlada"
 __position__ = 7
-__genesis__ = "0x4e2a9f1c"
+__genesis__ = "0x90cf95fc"
 
 import json
 import inspect
