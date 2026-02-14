@@ -333,7 +333,7 @@ class Mirror:
             for rule_id, instances in by_rule.items():
                 if len(instances) >= threshold:
                     # This rule keeps appearing - MANAS needs to learn
-                    files = list({inst.properties.get("file_path", "unknown") for inst in instances})
+                    files = list({inst.properties.get("file", "unknown") for inst in instances})
                     recent = max(inst.properties.get("detected_at", "") for inst in instances)
 
                     gaps.append(

@@ -32,10 +32,17 @@ logger = logging.getLogger("HEALING.BEAT")
 
 class OuroborosSubscriber:
     """
-    Ingests violations from CI artifacts, reports, and audit files.
+    Ingests violations from CI artifacts, reports, audit files,
+    AND runtime I/O Sentinel detections.
 
     Runs every NADI interval (72 ticks = 18 seconds).
     Feeds the Knowledge Graph so ShuddhiEngine knows what to heal.
+
+    The Sentinel→Ouroboros→KG→Shuddhi loop:
+        1. Sentinel sees rogue json.dump calls at runtime
+        2. drain_violations() harvests them (clears buffer)
+        3. ViolationIngester pushes them into KG
+        4. ShuddhiSubscriber reads KG and applies CST remedies
 
     Zero-arg constructor: workspace resolved lazily from ServiceRegistry.
     """
@@ -73,7 +80,49 @@ class OuroborosSubscriber:
                 logger.debug(f"[OUROBOROS] Could not create orchestrator: {e}")
         return self._orchestrator
 
+    def _ingest_sentinel_violations(self) -> int:
+        """Drain I/O Sentinel violations and push into KG."""
+        try:
+            from vibe_core.mahamantra.substrate.io_sentinel import drain_violations
+            from vibe_core.ouroboros.ingestion import ViolationRecord, ViolationSource
+
+            drained = drain_violations()
+            if not drained:
+                return 0
+
+            records = []
+            for v in drained:
+                records.append(ViolationRecord(
+                    source=ViolationSource.SENTINEL,
+                    rule_id="unsafe_io_write",
+                    file_path=v["caller_file"],
+                    line=v["caller_line"],
+                    message=f"Rogue {v['call_type']} in {v['caller_func']}() — bypasses StateService",
+                    severity="MEDIUM",
+                    has_remedy=True,
+                    verification_status="verified",
+                    origin="live_scan",
+                ))
+
+            orchestrator = self._get_orchestrator()
+            if orchestrator is None:
+                return 0
+
+            return orchestrator.ingester.ingest(records)
+        except Exception as e:
+            logger.debug("[OUROBOROS] Sentinel ingestion failed: %s", e)
+            return 0
+
     def on_beat_tick(self, tick_count: int, position: int) -> None:
+        # Step 1: Drain runtime Sentinel violations into KG
+        sentinel_count = self._ingest_sentinel_violations()
+        if sentinel_count > 0:
+            logger.info(
+                "[OUROBOROS] Sentinel: %d rogue I/O violations ingested (tick %d)",
+                sentinel_count, tick_count,
+            )
+
+        # Step 2: Ingest from CI artifacts / reports (existing path)
         orchestrator = self._get_orchestrator()
         if orchestrator is None:
             return

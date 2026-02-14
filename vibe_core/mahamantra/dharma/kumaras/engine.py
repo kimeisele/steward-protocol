@@ -326,7 +326,7 @@ class ShuddhiEngine(ShuddhiProtocol):
 
             for v in violations:
                 rule_id = v.properties.get("rule_id", "")
-                file_path_str = v.properties.get("file_path", "")
+                file_path_str = v.properties.get("file", "")
 
                 # Type guard for str
                 if not isinstance(rule_id, str) or not isinstance(file_path_str, str):
