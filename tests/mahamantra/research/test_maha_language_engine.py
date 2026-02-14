@@ -237,3 +237,64 @@ class TestEdgeCases:
         """Numeric input works."""
         r = engine.generate("108")
         assert r.output
+
+
+# =============================================================================
+# SYLLABLE RHYTHM (temporal layer)
+# =============================================================================
+
+
+class TestSyllableRhythm:
+    """Input carries time structure, not only static tokens."""
+
+    def test_syllable_metadata_present(self, engine):
+        r = engine.generate("devotion")
+        assert r.syllable_count > 0
+        assert len(r.stress_pattern) == r.syllable_count
+        assert len(r.sequencer_steps) == r.syllable_count
+
+    def test_steps_fit_32_step_grid(self, engine):
+        r = engine.generate("surrender everything")
+        step_count = WORDS * 2
+        for step in r.sequencer_steps:
+            assert 0 <= step < step_count
+
+        # Best-fit alignment: steps are contiguous (start, start+1, ...)
+        for i in range(len(r.sequencer_steps) - 1):
+            delta = (r.sequencer_steps[i + 1] - r.sequencer_steps[i]) % step_count
+            assert delta == 1, f"Steps must be contiguous, got delta={delta} at i={i}"
+
+    def test_rhythm_is_deterministic(self, engine):
+        r1 = engine.generate("engine")
+        r2 = engine.generate("engine")
+        assert r1.stress_pattern == r2.stress_pattern
+        assert r1.sequencer_steps == r2.sequencer_steps
+
+    def test_rhythm_bias_prefers_stressed_downbeat(self, engine):
+        from vibe_core.mahamantra.research.maha_language_engine import RhythmProfile
+
+        rhythm = RhythmProfile(
+            syllable_count=2,
+            stress_pattern=(1, 0),
+            sequencer_steps=(0, 3),
+            signature="10",
+        )
+        assert engine._rhythm_bias(rhythm, 0) > engine._rhythm_bias(rhythm, 1)
+
+    def test_rhythm_ranking_reorders_equal_scores(self, engine):
+        from vibe_core.mahamantra.research.maha_language_engine import RhythmProfile
+
+        rhythm = RhythmProfile(
+            syllable_count=2,
+            stress_pattern=(1, 0),
+            sequencer_steps=(0, 3),
+            signature="10",
+        )
+        pool = [
+            {"sanskrit": "x", "meaning": "first", "score": 0.5, "all_meanings": ("first",)},
+            {"sanskrit": "y", "meaning": "second", "score": 0.5, "all_meanings": ("second",)},
+        ]
+
+        ranked = engine._rank_resonant_by_rhythm(pool, rhythm)
+        assert ranked[0]["meaning"] == "first"
+        assert ranked[0]["rhythm_score"] > ranked[1]["rhythm_score"]
