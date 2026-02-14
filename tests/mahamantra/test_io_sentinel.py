@@ -19,6 +19,7 @@ import pytest
 from vibe_core.mahamantra.substrate.io_sentinel import (
     arm,
     disarm,
+    drain_violations,
     report,
     reset,
     SentinelReport,
@@ -163,3 +164,115 @@ class TestDisarmedPassthrough:
         r = report()
         assert r["total_calls"] == 0
         assert r["armed"] is False
+
+
+class TestDrainViolations:
+    """drain_violations() returns and clears the buffer."""
+
+    def test_drain_returns_violations(self, tmp_path):
+        reset()
+        target = tmp_path / "drain1.json"
+        with open(target, "w") as f:
+            json.dump({"x": 1}, f)
+        drained = drain_violations()
+        assert len(drained) >= 1
+        v = drained[-1]
+        assert "caller_file" in v
+        assert "caller_line" in v
+        assert "caller_func" in v
+        assert "call_type" in v
+
+    def test_drain_clears_buffer(self, tmp_path):
+        reset()
+        target = tmp_path / "drain2.json"
+        with open(target, "w") as f:
+            json.dump({}, f)
+        first = drain_violations()
+        assert len(first) >= 1
+        second = drain_violations()
+        assert len(second) == 0
+
+    def test_drain_empty_when_no_violations(self):
+        reset()
+        drained = drain_violations()
+        assert drained == []
+
+    def test_drain_does_not_affect_counters(self, tmp_path):
+        reset()
+        target = tmp_path / "drain3.json"
+        with open(target, "w") as f:
+            json.dump({}, f)
+        r_before = report()
+        rogue_before = r_before["rogue_calls"]
+        drain_violations()
+        r_after = report()
+        assert r_after["rogue_calls"] == rogue_before
+
+
+class TestSentinelOuroborosLoop:
+    """The closed loop: Sentinel → drain → ViolationRecord → KG."""
+
+    def test_sentinel_violation_becomes_violation_record(self, tmp_path):
+        """Drained violations can be converted to ViolationRecord."""
+        from vibe_core.ouroboros.ingestion import ViolationRecord, ViolationSource
+
+        reset()
+        target = tmp_path / "loop1.json"
+        with open(target, "w") as f:
+            json.dump({"loop": True}, f)
+
+        drained = drain_violations()
+        assert len(drained) >= 1
+
+        v = drained[-1]
+        record = ViolationRecord(
+            source=ViolationSource.SENTINEL,
+            rule_id="unsafe_io_write",
+            file_path=v["caller_file"],
+            line=v["caller_line"],
+            message=f"Rogue {v['call_type']} in {v['caller_func']}()",
+            severity="MEDIUM",
+            has_remedy=True,
+            verification_status="verified",
+            origin="live_scan",
+        )
+        assert record.source == ViolationSource.SENTINEL
+        assert record.rule_id == "unsafe_io_write"
+        assert record.has_remedy is True
+        assert record.is_verified()
+        assert not record.is_maya()
+
+    def test_violation_source_sentinel_exists(self):
+        from vibe_core.ouroboros.ingestion import ViolationSource
+        assert hasattr(ViolationSource, "SENTINEL")
+        assert ViolationSource.SENTINEL.value == "sentinel"
+
+    def test_ouroboros_subscriber_has_sentinel_ingestion(self):
+        from vibe_core.services.healing_subscribers import OuroborosSubscriber
+        sub = OuroborosSubscriber()
+        assert hasattr(sub, "_ingest_sentinel_violations")
+
+    def test_ouroboros_subscriber_drains_on_tick(self, tmp_path):
+        """OuroborosSubscriber._ingest_sentinel_violations() drains the buffer."""
+        from vibe_core.services.healing_subscribers import OuroborosSubscriber
+
+        reset()
+        target = tmp_path / "tick1.json"
+        with open(target, "w") as f:
+            json.dump({"tick": True}, f)
+
+        assert report()["rogue_calls"] >= 1
+        before = drain_violations()
+        assert len(before) >= 1
+        # Re-arm with fresh violations
+        reset()
+        with open(target, "w") as f:
+            json.dump({"tick2": True}, f)
+
+        sub = OuroborosSubscriber()
+        # _ingest_sentinel_violations will try to push to KG
+        # Without KG it returns 0 but still drains
+        result = sub._ingest_sentinel_violations()
+        # Buffer should be drained regardless of KG availability
+        remaining = drain_violations()
+        assert len(remaining) == 0
