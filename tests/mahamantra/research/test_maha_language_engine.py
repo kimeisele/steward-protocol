@@ -259,11 +259,10 @@ class TestSyllableRhythm:
         for step in r.sequencer_steps:
             assert 0 <= step < step_count
 
-        # Step-to-step movement follows stress: unstressed=+1, stressed=+2
+        # Best-fit alignment: steps are contiguous (start, start+1, ...)
         for i in range(len(r.sequencer_steps) - 1):
             delta = (r.sequencer_steps[i + 1] - r.sequencer_steps[i]) % step_count
-            expected = 1 + min(r.stress_pattern[i], 1)
-            assert delta == expected
+            assert delta == 1, f"Steps must be contiguous, got delta={delta} at i={i}"
 
     def test_rhythm_is_deterministic(self, engine):
         r1 = engine.generate("engine")
