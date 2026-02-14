@@ -23,7 +23,7 @@ __genesis__ = "0x001740aa"  # GenesisByte: parampara % 37 == 0
 
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, Final, Generic, Optional, Tuple, TypeVar
+from typing import ClassVar, Dict, Final, Generic, Optional, Tuple, TypeVar
 
 from vibe_core.mahamantra.protocols._header import (
     HEADER_SIZE_BYTES,
