@@ -414,7 +414,7 @@ class DojoAgency:
             # Store example file paths for context
             if rule_id not in rule_examples:
                 rule_examples[rule_id] = []
-            file_path = v.properties.get("file_path", "")
+            file_path = v.properties.get("file", "")
             if file_path and len(rule_examples[rule_id]) < 3:
                 rule_examples[rule_id].append(file_path)
 
