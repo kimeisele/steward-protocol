@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum
-from typing import Any, Dict, Final, List, Optional
+from typing import Dict, Final, List, Optional
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,

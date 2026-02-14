@@ -63,7 +63,7 @@ from datetime import datetime
 # samana_bridge → lila.__init__ → adoption → reactor.shadow → samana_bridge
 # We use TYPE_CHECKING for type hints only.
 from typing import TYPE_CHECKING as _TC
-from typing import Any, Callable, Dict, Final, List, Optional, Tuple
+from typing import Callable, Dict, Final, List, Optional, Tuple
 from uuid import uuid4
 
 # GAD compliance

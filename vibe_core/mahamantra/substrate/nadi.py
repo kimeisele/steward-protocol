@@ -43,7 +43,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import IntEnum, StrEnum
-from typing import Any, Callable, Dict, Final, List, Optional, Protocol, Tuple, runtime_checkable
+from typing import Callable, Dict, Final, List, Optional, Protocol, Tuple, runtime_checkable
 
 logger = logging.getLogger(__name__)
 

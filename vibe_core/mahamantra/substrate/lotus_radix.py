@@ -65,7 +65,7 @@ PRODUCTION USE:
 
 from __future__ import annotations
 
-from typing import Any, Final, Generic, Iterator, TypeVar
+from typing import Final, Generic, Iterator, TypeVar
 
 from vibe_core.mahamantra.protocols._seed import HARE_COUNT, KSETRAJNA, QUALITIES, QUARTERS, WORDS
 
