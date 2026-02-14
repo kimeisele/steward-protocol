@@ -596,6 +596,130 @@ class EnforceGateProvider:
             guna_policy=policy.value, reason="",
         )
 
+    # =========================================================================
+    # ROLE 3: Source File Writer (called by HealingIntentResolver)
+    # =========================================================================
+    # The Healing Pipeline needs to write Python source, NOT state JSON.
+    # This is DIFFERENT from write() which uses StateService.
+    # write_source() still enforces Guna policy + audit trail.
+    # RAJAS = allowed (healing commit is an act of creation).
+    # SATTVA = blocked (analysis doesn't touch disk).
+    # =========================================================================
+
+    def write_source(
+        self,
+        file_path: "Path",
+        content: str,
+        *,
+        actor: str = "unknown",
+        guna: object = None,
+        backup: bool = True,
+    ) -> IOWriteResult:
+        """
+        Governed source-file write. For healing Maya-Sync.
+
+        Same Guna policy as write(), but writes Python source to disk
+        instead of going through StateService.
+
+        Args:
+            file_path: Absolute path to the Python source file.
+            content: The reconstructed source code to write.
+            actor: Who is writing (for audit trail).
+            guna: The Guna of the operation. RAJAS required for writes.
+            backup: If True, create .bak before overwriting.
+
+        Returns:
+            IOWriteResult with typed success/failure metadata.
+        """
+        from pathlib import Path as _Path
+
+        self._writes_total += 1
+        policy = self._resolve_policy(guna, actor=actor)
+        fname = str(file_path)
+
+        # ── VISHUDDHA: Transcendental bypass → falls through to write ──
+        if policy == IOPolicy.VISHUDDHA:
+            return self._do_write_source(
+                _Path(file_path), content, actor=actor,
+                policy=policy, backup=backup,
+            )
+
+        # ── DENIED or SATTVA: No right to write source. ──
+        if policy in (IOPolicy.DENIED, IOPolicy.CACHE_ONLY):
+            reason = "void_no_guna" if policy == IOPolicy.DENIED else "sattva_read_only"
+            if policy == IOPolicy.CACHE_ONLY:
+                self._sattva_blocks += 1
+            self._writes_denied += 1
+            self._record_audit(AuditEntry(
+                actor=actor, file=fname, allowed=False,
+                guna_policy=policy.value, denied_reason=reason,
+            ))
+            logger.debug(
+                "SYNC SOURCE BLOCKED: %s tried to write %s (%s)",
+                actor, fname, reason,
+            )
+            return IOWriteResult(
+                success=False, cached=False, flushed=False,
+                actor=actor, file=fname,
+                guna_policy=policy.value, reason=reason,
+            )
+
+        # ── RAJAS / TAMAS: Material write path (source file) ──
+        return self._do_write_source(
+            _Path(file_path), content, actor=actor,
+            policy=policy, backup=backup,
+        )
+
+    def _do_write_source(
+        self,
+        file_path: "Path",
+        content: str,
+        *,
+        actor: str,
+        policy: IOPolicy,
+        backup: bool,
+    ) -> IOWriteResult:
+        """Internal source-file write executor."""
+        import shutil
+        fname = str(file_path)
+
+        try:
+            # Backup before overwrite
+            if backup and file_path.exists():
+                bak = file_path.with_suffix(file_path.suffix + ".bak")
+                shutil.copy2(file_path, bak)
+
+            # Write
+            file_path.write_text(content, encoding="utf-8")
+            self._writes_flushed += 1
+
+            self._record_audit(AuditEntry(
+                actor=actor, file=fname, allowed=True,
+                cached=False, flushed=True, guna_policy=policy.value,
+            ))
+            logger.debug(
+                "SYNC SOURCE OK: %s wrote %s (policy=%s)",
+                actor, fname, policy.value,
+            )
+            return IOWriteResult(
+                success=True, cached=False, flushed=True,
+                actor=actor, file=fname,
+                guna_policy=policy.value, reason="",
+            )
+
+        except OSError as exc:
+            self._writes_denied += 1
+            self._record_audit(AuditEntry(
+                actor=actor, file=fname, allowed=False,
+                guna_policy=policy.value, denied_reason=str(exc),
+            ))
+            logger.warning("SYNC SOURCE FAILED: %s → %s: %s", actor, fname, exc)
+            return IOWriteResult(
+                success=False, cached=False, flushed=False,
+                actor=actor, file=fname,
+                guna_policy=policy.value, reason=str(exc),
+            )
+
     def flush(self, filename: Optional[str] = None) -> int:
         """
         Flush cached state to disk via StateService.
