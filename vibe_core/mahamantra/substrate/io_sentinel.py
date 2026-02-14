@@ -228,6 +228,12 @@ def report() -> SentinelReport:
         )
 
 
+def is_armed() -> bool:
+    """Return True if the sentinel is currently armed."""
+    with _lock:
+        return _armed
+
+
 def drain_violations() -> List[SentinelViolation]:
     """Drain all accumulated violations. Thread-safe.
 
