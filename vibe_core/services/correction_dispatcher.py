@@ -561,11 +561,11 @@ def create_structural_detector(
                             id=f"structural_{uuid.uuid4().hex[:8]}",
                             source=DriftSource.STRUCTURAL,
                             severity=DriftSeverity.WARNING,
-                            message=v.get("message", "Structural violation"),
-                            file_path=Path(v["file_path"]) if v.get("file_path") else None,
-                            line_number=v.get("line"),
-                            rule_id=v.get("rule_id"),
-                            auto_healable=v.get("has_remedy", False),
+                            message=v.description or "Structural violation",
+                            file_path=Path(v.properties["file"]) if v.properties.get("file") else None,
+                            line_number=v.properties.get("line"),
+                            rule_id=v.properties.get("rule_id"),
+                            auto_healable=v.properties.get("has_remedy", False),
                             detector_id="knowledge_graph",
                         )
                     )
