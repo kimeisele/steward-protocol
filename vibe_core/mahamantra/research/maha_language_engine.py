@@ -91,6 +91,7 @@ from typing import Dict, Final, List, NamedTuple, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
+    HALVES,
     HARE_COUNT,
     KSETRAJNA,
     MAHA_QUANTUM,
@@ -102,6 +103,11 @@ from vibe_core.mahamantra.protocols._seed import (
     SHARANAGATI,
     WORDS,
 )
+from vibe_core.mahamantra.substrate.seed import MAHAMANTRA, HolyName
+from vibe_core.mahamantra.substrate.phonetic_bridge import (
+    VargaIndex,
+    CATEGORY_TO_VARGA,
+)
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
@@ -109,47 +115,244 @@ assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 _WORD_TOKEN_RE: Final = re.compile(r"[A-Za-z']+")
 _VOWEL_GROUP_RE: Final = re.compile(r"[aeiouy]+")
 
+# =============================================================================
+# 3D SYLLABLE VECTORS — (stress, height, weight)
+# =============================================================================
+# Opus design: each syllable is a 3D vector:
+#   stress = ARPAbet stress marker (0=unstressed, 1=primary, 2=secondary)
+#   height = vowel height from articulatory phonetics (1=low, 5=high)
+#   weight = consonant cluster mass (onset + coda consonants + 1 for vowel)
+
+
+class SyllableVector(NamedTuple):
+    """3D phonetic vector for a single syllable."""
+
+    stress: int   # 0=unstressed, 1=primary, 2=secondary
+    height: int   # vowel height 1-5 (low→high)
+    weight: int   # syllable weight (consonant mass + 1)
+
+
+# ARPAbet vowel → VargaIndex (articulatory placement, protocol-derived)
+# Mapping follows Sanskrit phonetic tradition:
+#   KANTHYA (throat/0) = open vowels (AA, AH, AE)
+#   TALAVYA (palate/1) = front vowels (IY, IH, EY, EH)
+#   MURDHANYA (roof/2) = r-colored (ER)
+#   DANTYA (teeth/3) = mid-back (AO, OW, OY)
+#   OSHTHYA (lips/4) = rounded (UW, UH, AW)
+_ARPABET_TO_VARGA: Final[Dict[str, VargaIndex]] = {
+    "AA": VargaIndex.KANTHYA, "AH": VargaIndex.KANTHYA, "AE": VargaIndex.KANTHYA,
+    "IY": VargaIndex.TALAVYA, "IH": VargaIndex.TALAVYA, "EY": VargaIndex.TALAVYA, "EH": VargaIndex.TALAVYA,
+    "ER": VargaIndex.MURDHANYA,
+    "AO": VargaIndex.DANTYA, "OW": VargaIndex.DANTYA, "OY": VargaIndex.DANTYA,
+    "UW": VargaIndex.OSHTHYA, "UH": VargaIndex.OSHTHYA, "AW": VargaIndex.OSHTHYA,
+    "AY": VargaIndex.KANTHYA,  # diphthong starting open
+}
+
+
+def _varga_height(varga: VargaIndex) -> int:
+    """Map VargaIndex to height 1-5 (PANCHA scale, protocol-derived).
+
+    KANTHYA(0)=1 (throat=low), OSHTHYA(4)=5 (lips=high).
+    This is the articulatory height axis from phonetic_bridge.
+    """
+    return varga.value + KSETRAJNA  # 0→1, 1→2, 2→3, 3→4, 4→5
+
 
 @lru_cache(maxsize=1)
 def _cmu_lookup() -> Optional[Dict[str, List[List[str]]]]:
-    """Load CMU dictionary once (if available)."""
+    """Load CMU dictionary via NLTK (134K entries, 39 ARPAbet phonemes)."""
     try:
-        import cmudict
+        from nltk.corpus import cmudict
 
         return cmudict.dict()
     except Exception:
         return None
 
 
-def _fallback_stress(word: str) -> Tuple[int, ...]:
-    """Fallback stress pattern from vowel groups when CMU is unavailable."""
-    syllables = _VOWEL_GROUP_RE.findall(word.lower())
-    if not syllables:
-        return ()
-    if len(syllables) == KSETRAJNA:
-        return (KSETRAJNA,)
-    return tuple(KSETRAJNA if i == 0 else 0 for i in range(len(syllables)))
+def _syllable_vectors_for_word(word: str) -> Tuple[SyllableVector, ...]:
+    """Extract 3D syllable vectors from CMU ARPAbet pronunciation.
 
-
-def _stress_for_word(word: str) -> Tuple[int, ...]:
-    """Extract stress digits from CMU ARPAbet, fallback to vowel groups."""
+    Each vowel phoneme (carrying a stress digit) starts a new syllable.
+    Height comes from the vowel identity. Weight comes from surrounding
+    consonant count.
+    """
     cmu = _cmu_lookup()
     if cmu:
         pronunciations = cmu.get(word.lower())
         if pronunciations:
-            stresses = tuple(int(p[-1]) for p in pronunciations[0] if p and p[-1].isdigit())
-            if stresses:
-                return stresses
-    return _fallback_stress(word)
+            return _parse_arpabet(pronunciations[0])
+    return _fallback_vectors(word)
+
+
+def _parse_arpabet(phones: List[str]) -> Tuple[SyllableVector, ...]:
+    """Parse ARPAbet phoneme list into 3D syllable vectors."""
+    syllables: List[SyllableVector] = []
+    onset_consonants = 0
+
+    for p in phones:
+        base = p.rstrip("012")
+        stress_char = p[-1] if p[-1].isdigit() else None
+
+        if stress_char is not None:  # vowel nucleus
+            stress = int(stress_char)
+            varga = _ARPABET_TO_VARGA.get(base, VargaIndex.MURDHANYA)
+            height = _varga_height(varga)
+            weight = onset_consonants + KSETRAJNA  # onset + vowel itself
+            syllables.append(SyllableVector(stress=stress, height=height, weight=weight))
+            onset_consonants = 0
+        else:
+            onset_consonants += KSETRAJNA
+
+    # Trailing consonants (coda) add to last syllable weight
+    if syllables and onset_consonants > 0:
+        last = syllables[-1]
+        syllables[-1] = SyllableVector(
+            stress=last.stress,
+            height=last.height,
+            weight=last.weight + onset_consonants,
+        )
+
+    return tuple(syllables)
+
+
+def _fallback_vectors(word: str) -> Tuple[SyllableVector, ...]:
+    """Fallback when CMU is unavailable: vowel groups → approximate vectors."""
+    groups = _VOWEL_GROUP_RE.findall(word.lower())
+    if not groups:
+        return ()
+    if len(groups) == KSETRAJNA:
+        return (SyllableVector(stress=KSETRAJNA, height=3, weight=max(KSETRAJNA, len(word) - len(groups[0]) + KSETRAJNA)),)
+    return tuple(
+        SyllableVector(
+            stress=KSETRAJNA if i == 0 else 0,
+            height=3,
+            weight=HALVES,
+        )
+        for i in range(len(groups))
+    )
+
+
+def _stress_for_word(word: str) -> Tuple[int, ...]:
+    """Extract stress digits (backward compat for incremental.py)."""
+    return tuple(sv.stress for sv in _syllable_vectors_for_word(word))
+
+
+# =============================================================================
+# 32-STEP MANTRA GRID — Derived from seed.MAHAMANTRA (SSOT)
+# =============================================================================
+# 16 words × 2 syllables = 32 steps. Each step carries HolyName identity
+# and a mode derived from the name. NO HARDCODED SEQUENCE.
+
+_GRID_STEPS: Final[int] = WORDS * HALVES  # 32
+
+# Mode mapping: HolyName → compositional mode (protocol-derived from Pancha Tattva)
+# Hare = Shakti (energy/devotion) → DHARMA
+# Krishna = Source (identity/wisdom) → GENESIS
+# Rama = Ananda (stability/action) → KARMA
+_HOLYNAME_MODE: Final[Dict[HolyName, str]] = {
+    HolyName.HARE: "DHARMA",
+    HolyName.KRISHNA: "GENESIS",
+    HolyName.RAMA: "KARMA",
+}
+
+
+class GridStep(NamedTuple):
+    """One position in the 32-step mantra sequencer."""
+
+    position: int       # 0-31
+    holy_name: HolyName # HARE/KRISHNA/RAMA (from seed.MAHAMANTRA)
+    mode: str           # DHARMA/GENESIS/KARMA
+    beat: int           # 0=downbeat (stressed), 1=upbeat (unstressed)
+
+
+@lru_cache(maxsize=1)
+def _build_mantra_grid() -> Tuple[GridStep, ...]:
+    """Build the 32-step mantra sequencer grid from seed.MAHAMANTRA."""
+    assert len(MAHAMANTRA) == WORDS
+    grid: List[GridStep] = []
+    for i, name in enumerate(MAHAMANTRA):
+        mode = _HOLYNAME_MODE[name]
+        grid.append(GridStep(position=i * HALVES, holy_name=name, mode=mode, beat=0))
+        grid.append(GridStep(position=i * HALVES + KSETRAJNA, holy_name=name, mode=mode, beat=1))
+    return tuple(grid)
+
+
+def _align_syllables_to_grid(
+    vectors: Tuple[SyllableVector, ...],
+) -> Tuple[int, ...]:
+    """Find best-fit alignment of syllable vectors onto the 32-step grid.
+
+    Scoring: stressed syllables prefer downbeats (beat=0),
+    heavy syllables prefer heavy grid positions (Krishna/Rama > Hare),
+    high vowels prefer Hare positions (open, light).
+
+    Returns tuple of grid step indices (one per syllable).
+    """
+    if not vectors:
+        return ()
+
+    grid = _build_mantra_grid()
+    n_syl = len(vectors)
+    n_grid = len(grid)
+
+    if n_syl == KSETRAJNA:
+        # Single syllable: find best matching step
+        best_pos = 0
+        best_score = -1
+        for pos in range(n_grid):
+            score = _alignment_score(vectors[0], grid[pos])
+            if score > best_score:
+                best_score = score
+                best_pos = pos
+        return (best_pos,)
+
+    # Multi-syllable: sliding window over grid, find best start position
+    best_start = 0
+    best_total = -1
+
+    for start in range(n_grid):
+        total = 0
+        for j in range(n_syl):
+            step_idx = (start + j) % n_grid
+            total += _alignment_score(vectors[j], grid[step_idx])
+        if total > best_total:
+            best_total = total
+            best_start = start
+
+    return tuple((best_start + j) % n_grid for j in range(n_syl))
+
+
+def _alignment_score(sv: SyllableVector, gs: GridStep) -> int:
+    """Score how well a syllable vector fits a grid step."""
+    score = 0
+    # Stressed syllables prefer downbeats
+    if sv.stress >= KSETRAJNA and gs.beat == 0:
+        score += 3
+    elif sv.stress == 0 and gs.beat == KSETRAJNA:
+        score += 2
+    # Heavy syllables prefer Krishna/Rama (heavier names)
+    if sv.weight >= 3 and gs.holy_name in (HolyName.KRISHNA, HolyName.RAMA):
+        score += 2
+    elif sv.weight <= HALVES and gs.holy_name == HolyName.HARE:
+        score += KSETRAJNA
+    # High vowels resonate with Hare (open, devotional)
+    if sv.height >= QUARTERS and gs.holy_name == HolyName.HARE:
+        score += KSETRAJNA
+    # Low vowels resonate with Krishna (deep, foundational)
+    if sv.height <= HALVES and gs.holy_name == HolyName.KRISHNA:
+        score += KSETRAJNA
+    return score
 
 
 class RhythmProfile(NamedTuple):
-    """Temporal profile for a text input."""
+    """Temporal profile for a text input — 3D syllable vectors on mantra grid."""
 
     syllable_count: int
-    stress_pattern: Tuple[int, ...]
-    sequencer_steps: Tuple[int, ...]
-    signature: str
+    stress_pattern: Tuple[int, ...]           # per-syllable stress (0/1/2)
+    sequencer_steps: Tuple[int, ...]          # grid positions (0-31)
+    signature: str                            # compact stress string
+    vectors: Tuple[SyllableVector, ...] = ()  # full 3D vectors
+    grid_modes: Tuple[str, ...] = ()          # mode at each aligned position
 
 
 # =============================================================================
@@ -509,16 +712,18 @@ class MahaLanguageEngine:
 
     def _scan_syllable_rhythm(self, text: str) -> RhythmProfile:
         """
-        Convert input into a syllable-time sequence.
+        Convert input into 3D syllable vectors aligned to the 32-step mantra grid.
 
-        Each syllable maps to a 32-step grid (16 mantra words × 2 beats).
+        Each syllable = (stress, height, weight) from CMU ARPAbet.
+        Grid alignment finds the best-fit start position where the syllable
+        rhythm matches the mantra's trochaic pattern.
         """
         tokens = _WORD_TOKEN_RE.findall(text)
-        stress: List[int] = []
+        all_vectors: List[SyllableVector] = []
         for token in tokens:
-            stress.extend(_stress_for_word(token))
+            all_vectors.extend(_syllable_vectors_for_word(token))
 
-        if not stress:
+        if not all_vectors:
             return RhythmProfile(
                 syllable_count=0,
                 stress_pattern=(),
@@ -526,35 +731,50 @@ class MahaLanguageEngine:
                 signature="-",
             )
 
-        step_count = WORDS * 2
-        stress_pattern = tuple(stress)
-        steps: List[int] = []
-        cursor = 0
-        for stress_level in stress_pattern:
-            steps.append(cursor % step_count)
-            # stressed syllables consume more rhythmic space than unstressed ones
-            cursor += KSETRAJNA + min(stress_level, 1)
+        vectors = tuple(all_vectors)
+        steps = _align_syllables_to_grid(vectors)
+        grid = _build_mantra_grid()
+        modes = tuple(grid[s].mode for s in steps)
+        stress_pattern = tuple(sv.stress for sv in vectors)
         signature = "".join(str(s) for s in stress_pattern)
 
         return RhythmProfile(
-            syllable_count=len(stress_pattern),
+            syllable_count=len(vectors),
             stress_pattern=stress_pattern,
-            sequencer_steps=tuple(steps),
+            sequencer_steps=steps,
             signature=signature,
+            vectors=vectors,
+            grid_modes=modes,
         )
 
     def _rhythm_bias(self, rhythm: RhythmProfile, index: int) -> float:
-        """Compute rhythmic emphasis bonus for a candidate word index."""
+        """Compute rhythmic emphasis bonus using 3D vectors and grid modes."""
         if rhythm.syllable_count == 0 or not rhythm.sequencer_steps:
             return 0.0
 
-        step = rhythm.sequencer_steps[index % len(rhythm.sequencer_steps)]
-        stress = rhythm.stress_pattern[index % len(rhythm.stress_pattern)] if rhythm.stress_pattern else 0
+        grid = _build_mantra_grid()
+        step_idx = rhythm.sequencer_steps[index % len(rhythm.sequencer_steps)]
+        gs = grid[step_idx]
+        sv = rhythm.vectors[index % len(rhythm.vectors)] if rhythm.vectors else None
 
-        downbeat_bonus = 0.04 if step % QUARTERS == 0 else 0.0
-        stress_bonus = 0.03 * min(stress, 2)
-        half_cycle_bonus = 0.01 if step < WORDS else 0.0
-        return downbeat_bonus + stress_bonus + half_cycle_bonus
+        score = 0.0
+        # Downbeat bonus
+        if gs.beat == 0:
+            score += 0.04
+        # Stress-beat alignment bonus
+        if sv is not None:
+            if sv.stress >= KSETRAJNA and gs.beat == 0:
+                score += 0.03
+            # Heavy syllable on heavy name
+            if sv.weight >= 3 and gs.holy_name in (HolyName.KRISHNA, HolyName.RAMA):
+                score += 0.02
+            # Height-mode resonance
+            if sv.height >= QUARTERS and gs.mode == "DHARMA":
+                score += 0.01
+        # Half-cycle bonus (first half of mantra)
+        if step_idx < WORDS:
+            score += 0.01
+        return score
 
     @staticmethod
     def _semantic_boost(input_text: str, packed_hex: str) -> float:
