@@ -341,3 +341,38 @@ class TestCharacterWaveOnDemand:
         r_short = engine.generate("om")
         r_long = engine.generate("what is the meaning of devotion and sacrifice")
         assert r_long.antaranga_active >= r_short.antaranga_active
+
+
+class TestFractalDerivationTree:
+    """Fractal Lotus: seed sprouts into derivation tree with mode branches."""
+
+    def test_sprout_in_derivation(self, engine):
+        """Derivation string must contain sprout stats."""
+        r = engine.generate("what is devotion")
+        assert "sprout=" in r.derivation
+        assert "nodes" in r.derivation
+
+    def test_tree_has_13_nodes(self, engine):
+        """1 root + 3 branches + 9 leaves = 13 nodes."""
+        r = engine.generate("test input")
+        assert "sprout=13nodes" in r.derivation
+
+    def test_fractal_deterministic(self, engine):
+        """Same prompt → same tree → same output."""
+        r1 = engine.generate("sacrifice and duty")
+        r2 = engine.generate("sacrifice and duty")
+        assert r1.output == r2.output
+        assert r1.antaranga_prana == r2.antaranga_prana
+        assert r1.derivation == r2.derivation
+
+    def test_different_prompts_different_trees(self, engine):
+        """Different prompts produce different prana fields (tree branches differ)."""
+        r1 = engine.generate("what is devotion")
+        r2 = engine.generate("how to find peace")
+        assert r1.antaranga_prana != r2.antaranga_prana
+
+    def test_sprout_enriches_output(self, engine):
+        """Output must be non-empty (tree branches contribute words)."""
+        r = engine.generate("knowledge of the self")
+        assert len(r.output) > 0
+        assert r.antaranga_active > 0
