@@ -4,6 +4,14 @@ OPUS-212: ShuddhiEngine - The Surgical Orchestrator.
 OPUS-307: No more hardcoded remedies!
 Remedies are auto-discovered via RemedyLoader (VEDA-4 pattern).
 
+CELLULAR HEALING (OPUS-400):
+    Code fragments are Cells. Healing is atomic, per-fragment.
+    The CellularHealer performs CST surgery on individual fragments.
+    The Chamber gives healed cells Prana (resonance after surgery).
+    Maya-Sync writes the reconstructed file to disk.
+
+    File → Fragments → Cells → CellularHealer → Maya-Sync
+
 VIBRATIONAL INTEGRATION (Top-Down Architecture):
     Mahamantra is the SINGULARITY - all intelligence flows from there.
     ShuddhiEngine EMITS vibrations to Mahamantra after each operation.
@@ -217,19 +225,17 @@ class ShuddhiEngine(ShuddhiProtocol):
 
     def scan_file(self, file_path: Path, rule_ids: Optional[List[str]] = None) -> List[ShuddhiResult]:
         """
-        Detect violations in a single file. Parses the file ONCE.
+        Scan a single file with multiple remedies. Parses the file ONCE.
 
-        Each remedy is applied INDEPENDENTLY to the original CST.
-        Results are NOT cumulative — this is detection, not healing.
-        For cumulative healing, use heal_and_record() per violation.
+        This is the O(N) path: one parse, M remedy passes on the same CST.
+        Each remedy gets its own transformer instance but shares the parse cost.
 
         Args:
             file_path: Path to the file to scan
             rule_ids: Optional list of rule_ids to check. None = all registered.
 
         Returns:
-            List of ShuddhiResults (PURIFIED = violation found + fix available,
-            FAILED = fix produced invalid syntax).
+            List of ShuddhiResults (only PURIFIED results included).
         """
         results: List[ShuddhiResult] = []
 
@@ -377,8 +383,12 @@ class ShuddhiEngine(ShuddhiProtocol):
         """
         OUROBOROS: Heal all violations from Knowledge Graph that have remedies.
 
-        This is the automatic healing loop - reads violations from KG,
-        applies remedies where available, marks them as healed.
+        CELLULAR PIPELINE (OPUS-400):
+            Uses CellularHealer for fragment-level healing.
+            Each file is decomposed into atomic fragments (functions, classes, etc.).
+            Each fragment is healed independently via CST transformation.
+            Healed fragments are registered as new Cells in the CellRouter.
+            Maya-Sync reconstructs and writes the file.
 
         Args:
             dry_run: If True, don't write files (just return diffs)
@@ -402,33 +412,53 @@ class ShuddhiEngine(ShuddhiProtocol):
             violations = kg.get_violations(healed=False)
             logger.info(f"[SHUDDHI] Found {len(violations)} unhealed violations")
 
+            # Group violations by file for efficient fragment-level healing
+            from collections import defaultdict
+            by_file: Dict[str, List[tuple]] = defaultdict(list)
             for v in violations:
                 rule_id = v.properties.get("rule_id", "")
                 file_path_str = v.properties.get("file", "")
+                if isinstance(rule_id, str) and isinstance(file_path_str, str):
+                    by_file[file_path_str].append((rule_id, v.id))
 
-                # Type guard for str
-                if not isinstance(rule_id, str) or not isinstance(file_path_str, str):
-                    continue
+            # Heal each file using the cellular pipeline
+            from vibe_core.mahamantra.dharma.kumaras.healing_intent import get_cellular_healer
+            healer = get_cellular_healer()
 
-                # Check if we have a remedy
-                if not self.can_heal(rule_id):
-                    continue
-
+            for file_path_str, violation_list in by_file.items():
                 file_path = Path(file_path_str)
                 if not file_path.exists():
                     continue
 
-                # Attempt healing
-                result = self.heal_and_record(
-                    file_path=file_path,
-                    rule_id=rule_id,
-                    violation_id=v.id,
-                    write_file=not dry_run,
-                )
-                results.append(result)
+                for rule_id, violation_id in violation_list:
+                    if not healer.can_heal(rule_id):
+                        continue
 
-                if result.status == ShuddhiStatus.PURIFIED:
-                    logger.info(f"[SHUDDHI] Healed {rule_id} in {file_path}")
+                    # Cellular healing: fragment-level CST transformation
+                    cell_results = healer.heal_file(
+                        file_path=file_path,
+                        rule_id=rule_id,
+                        dry_run=dry_run,
+                    )
+
+                    for cr in cell_results:
+                        shuddhi_result = cr.shuddhi_result
+                        results.append(shuddhi_result)
+
+                        # Emit vibration for each fragment healing
+                        self._emit_vibration(shuddhi_result)
+
+                        # Mark healed in KG
+                        if shuddhi_result.status == ShuddhiStatus.PURIFIED:
+                            try:
+                                if kg and violation_id:
+                                    kg.mark_violation_healed(violation_id, rule_id)
+                                    logger.info(
+                                        f"[SHUDDHI] Cellular heal: {rule_id} in "
+                                        f"{cr.fragment.display_name if cr.fragment else file_path}"
+                                    )
+                            except Exception as e:
+                                logger.warning(f"[SHUDDHI->KG] Failed to record: {e}")
 
         except Exception as e:
             logger.exception(f"[SHUDDHI] Error in heal_all_violations: {e}")
