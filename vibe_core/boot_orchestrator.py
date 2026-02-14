@@ -620,6 +620,19 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                 except Exception as e:
                     logger.debug(f"Gate provider wiring skipped: {e}")
 
+                # GOVARDHAN: Arm I/O Sentinel explicitly (enterprise hardening)
+                # gate_providers also arms on import, but boot should not rely on side effects.
+                try:
+                    from vibe_core.mahamantra.substrate.io_sentinel import arm, is_armed
+
+                    arm()
+                    if is_armed():
+                        logger.info("      → I/O Sentinel armed (rogue json writers monitored)")
+                    else:
+                        logger.warning("⚠️ I/O Sentinel failed to arm")
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not arm I/O Sentinel: {e}")
+
                 # GOVARDHAN: Register Mahamantra governance hook (King installs itself)
                 try:
                     from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
