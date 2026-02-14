@@ -142,17 +142,21 @@ class BrokenGenesisRemedy(CSTRemedy):
         if self._mahajana is None or self._position is None:
             return updated_node
 
-        # Already valid? No healing needed
-        if self._is_genesis_valid:
+        # PROOF OF TRUST: Enforce Strict Archetype Identity (Yoga Maya)
+        # We don't just check % 37 == 0. We check if it matches the AUTHORITATIVE formula.
+        expected_genesis = self._compute_valid_genesis()
+        
+        # If we can't compute it (missing dependencies), we can't heal it.
+        if expected_genesis is None:
             return updated_node
 
-        # HEALING: Compute valid genesis
+        # If it ALREADY matches exactly, no healing needed.
+        # This handles the "0 files found" case - only truly broken/drifting files are touched.
+        if self._current_genesis == expected_genesis:
+            return updated_node
+
+        # HEALING: Reuse already-computed expected genesis
         self.violation_found = True
-        new_genesis = self._compute_valid_genesis()
-
-        if new_genesis is None:
-            return updated_node
-
         self.applied = True
 
         # TRANSFORMATION: Create new SimpleString with valid genesis
@@ -160,9 +164,9 @@ class BrokenGenesisRemedy(CSTRemedy):
         original_value = updated_node.value
         if isinstance(original_value, cst.SimpleString):
             quote_char = original_value.value[0]
-            new_value = cst.SimpleString(f"{quote_char}{new_genesis}{quote_char}")
+            new_value = cst.SimpleString(f"{quote_char}{expected_genesis}{quote_char}")
         else:
-            new_value = cst.SimpleString(f'"{new_genesis}"')
+            new_value = cst.SimpleString(f'"{expected_genesis}"')
 
         return updated_node.with_changes(
             value=new_value,
