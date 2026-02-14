@@ -59,6 +59,8 @@ class ShuddhiEngine(ShuddhiProtocol):
         self._loader = get_remedy_loader()
         self._discover_remedies()
         self._mahamantra = None  # Lazy-loaded
+        self._sravanam_wired = False
+        self._ensure_sravanam_wired()
 
     def _get_mahamantra(self):
         """Lazy-load Mahamantra singleton for vibration emission."""
@@ -517,6 +519,22 @@ class ShuddhiEngine(ShuddhiProtocol):
                 "Healing CANNOT proceed without gate governance. "
                 "No ungoverned path exists by design."
             )
+
+    def _ensure_sravanam_wired(self) -> None:
+        """
+        Wire the SravanamListener. BEST-EFFORT — scanning is optional.
+
+        Unlike healing (which hard-fails), scanning is advisory.
+        If it can't wire, we log and continue.
+        """
+        if self._sravanam_wired:
+            return
+        try:
+            from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
+            wire_sravanam()
+            self._sravanam_wired = True
+        except Exception as exc:
+            logger.debug("[SHUDDHI] Sravanam wiring skipped: %s", exc)
 
     def _heal_through_gates(
         self,
