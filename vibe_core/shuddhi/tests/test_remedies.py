@@ -205,7 +205,7 @@ class TestRemedyProtocolCompliance:
 
     def test_all_remedies_have_requirements(self):
         """All remedies must define requirements."""
-        from vibe_core.shuddhi.remedy_loader import discover_remedies
+        from vibe_core.mahamantra.dharma.kapila.remedy_loader import discover_remedies
 
         remedies = discover_remedies()
 
@@ -220,7 +220,7 @@ class TestRemedyProtocolCompliance:
 
     def test_all_remedies_track_applied_state(self):
         """All remedies must track applied state."""
-        from vibe_core.shuddhi.remedy_loader import discover_remedies
+        from vibe_core.mahamantra.dharma.kapila.remedy_loader import discover_remedies
 
         remedies = discover_remedies()
 
