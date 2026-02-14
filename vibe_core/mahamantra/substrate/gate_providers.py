@@ -26,7 +26,12 @@ __genesis__ = "0x3f7a1b2e"
 
 import logging
 from enum import Enum
-from typing import Dict, List, Optional, TypedDict
+from typing import TYPE_CHECKING, Dict, List, Optional, TypedDict
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from vibe_core.state.state_service import StateServiceProtocol
+
 
 logger = logging.getLogger("MAHAMANTRA.GATES")
 
