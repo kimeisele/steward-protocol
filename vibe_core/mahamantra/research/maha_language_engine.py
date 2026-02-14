@@ -85,10 +85,13 @@ __position__ = 2
 __genesis__ = "0x2c80316d"
 
 import struct
+import re
+from functools import lru_cache
 from typing import Dict, Final, List, NamedTuple, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
+    HALVES,
     HARE_COUNT,
     KSETRAJNA,
     MAHA_QUANTUM,
@@ -100,8 +103,289 @@ from vibe_core.mahamantra.protocols._seed import (
     SHARANAGATI,
     WORDS,
 )
+from vibe_core.mahamantra.substrate.seed import (
+    MAHAMANTRA,
+    HolyName,
+    HARE_POSITIONS,
+    KRISHNA_POSITIONS,
+    RAMA_POSITIONS,
+)
+from vibe_core.mahamantra.protocols.seed._extended import get_trinity_function
+from vibe_core.mahamantra.substrate.phonetic_bridge import (
+    ARPABET_TO_VARGA,
+    VargaIndex,
+)
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
+
+
+_WORD_TOKEN_RE: Final = re.compile(r"[A-Za-z']+")
+_VOWEL_GROUP_RE: Final = re.compile(r"[aeiouy]+")
+
+# =============================================================================
+# 3D SYLLABLE VECTORS — (stress, height, weight)
+# =============================================================================
+# Opus design: each syllable is a 3D vector:
+#   stress = ARPAbet stress marker (0=unstressed, 1=primary, 2=secondary)
+#   height = vowel height from articulatory phonetics (1=low, 5=high)
+#   weight = consonant cluster mass (onset + coda consonants + 1 for vowel)
+
+
+class SyllableVector(NamedTuple):
+    """3D phonetic vector for a single syllable."""
+
+    stress: int   # 0=unstressed, 1=primary, 2=secondary
+    height: int   # vowel height 1-5 (low→high)
+    weight: int   # syllable weight (consonant mass + 1)
+
+
+
+def _varga_height(varga: VargaIndex) -> int:
+    """Map VargaIndex to height 1-5 (PANCHA scale, protocol-derived).
+
+    KANTHYA(0)=1 (throat=low), OSHTHYA(4)=5 (lips=high).
+    This is the articulatory height axis from phonetic_bridge.
+    """
+    return varga.value + KSETRAJNA  # 0→1, 1→2, 2→3, 3→4, 4→5
+
+
+@lru_cache(maxsize=1)
+def _cmu_lookup() -> Optional[Dict[str, List[List[str]]]]:
+    """Load CMU dictionary via NLTK (134K entries, 39 ARPAbet phonemes)."""
+    try:
+        from nltk.corpus import cmudict
+
+        return cmudict.dict()
+    except Exception:
+        return None
+
+
+def _syllable_vectors_for_word(word: str) -> Tuple[SyllableVector, ...]:
+    """Extract 3D syllable vectors from CMU ARPAbet pronunciation.
+
+    Each vowel phoneme (carrying a stress digit) starts a new syllable.
+    Height comes from the vowel identity. Weight comes from surrounding
+    consonant count.
+    """
+    cmu = _cmu_lookup()
+    if cmu:
+        pronunciations = cmu.get(word.lower())
+        if pronunciations:
+            return _parse_arpabet(pronunciations[0])
+    return _fallback_vectors(word)
+
+
+def _parse_arpabet(phones: List[str]) -> Tuple[SyllableVector, ...]:
+    """Parse ARPAbet phoneme list into 3D syllable vectors."""
+    syllables: List[SyllableVector] = []
+    onset_consonants = 0
+
+    for p in phones:
+        base = p.rstrip("012")
+        stress_char = p[-1] if p[-1].isdigit() else None
+
+        if stress_char is not None:  # vowel nucleus
+            stress = int(stress_char)
+            varga = ARPABET_TO_VARGA.get(base, VargaIndex.MURDHANYA)
+            height = _varga_height(varga)
+            weight = onset_consonants + KSETRAJNA  # onset + vowel itself
+            syllables.append(SyllableVector(stress=stress, height=height, weight=weight))
+            onset_consonants = 0
+        else:
+            onset_consonants += KSETRAJNA
+
+    # Trailing consonants (coda) add to last syllable weight
+    if syllables and onset_consonants > 0:
+        last = syllables[-1]
+        syllables[-1] = SyllableVector(
+            stress=last.stress,
+            height=last.height,
+            weight=last.weight + onset_consonants,
+        )
+
+    return tuple(syllables)
+
+
+def _fallback_vectors(word: str) -> Tuple[SyllableVector, ...]:
+    """Fallback when CMU is unavailable: vowel groups → approximate vectors."""
+    groups = _VOWEL_GROUP_RE.findall(word.lower())
+    if not groups:
+        return ()
+    if len(groups) == KSETRAJNA:
+        return (SyllableVector(stress=KSETRAJNA, height=3, weight=max(KSETRAJNA, len(word) - len(groups[0]) + KSETRAJNA)),)
+    return tuple(
+        SyllableVector(
+            stress=KSETRAJNA if i == 0 else 0,
+            height=3,
+            weight=HALVES,
+        )
+        for i in range(len(groups))
+    )
+
+
+def _stress_for_word(word: str) -> Tuple[int, ...]:
+    """Extract stress digits (backward compat for incremental.py)."""
+    return tuple(sv.stress for sv in _syllable_vectors_for_word(word))
+
+
+# =============================================================================
+# 32-STEP MANTRA GRID — Derived from seed.MAHAMANTRA (SSOT)
+# =============================================================================
+# 16 words × 2 syllables = 32 steps. Each step carries HolyName identity
+# and a mode derived from the name. NO HARDCODED SEQUENCE.
+
+_GRID_STEPS: Final[int] = WORDS * HALVES  # 32
+
+# Mode mapping: HolyName → compositional mode (protocol-derived from Pancha Tattva)
+# Hare = Shakti (energy/devotion) → DHARMA
+# Krishna = Source (identity/wisdom) → GENESIS
+# Rama = Ananda (stability/action) → KARMA
+_HOLYNAME_MODE: Final[Dict[HolyName, str]] = {
+    HolyName.HARE: "DHARMA",
+    HolyName.KRISHNA: "GENESIS",
+    HolyName.RAMA: "KARMA",
+}
+
+
+class GridStep(NamedTuple):
+    """One position in the 32-step mantra sequencer."""
+
+    position: int       # 0-31
+    holy_name: HolyName # HARE/KRISHNA/RAMA (from seed.MAHAMANTRA)
+    mode: str           # DHARMA/GENESIS/KARMA
+    beat: int           # 0=downbeat (stressed), 1=upbeat (unstressed)
+
+
+@lru_cache(maxsize=1)
+def _build_mantra_grid() -> Tuple[GridStep, ...]:
+    """Build the 32-step mantra sequencer grid from seed.MAHAMANTRA."""
+    assert len(MAHAMANTRA) == WORDS
+    grid: List[GridStep] = []
+    for i, name in enumerate(MAHAMANTRA):
+        mode = _HOLYNAME_MODE[name]
+        grid.append(GridStep(position=i * HALVES, holy_name=name, mode=mode, beat=0))
+        grid.append(GridStep(position=i * HALVES + KSETRAJNA, holy_name=name, mode=mode, beat=1))
+    return tuple(grid)
+
+
+def _align_syllables_to_grid(
+    vectors: Tuple[SyllableVector, ...],
+) -> Tuple[int, ...]:
+    """Find best-fit alignment of syllable vectors onto the 32-step grid.
+
+    Scoring: stressed syllables prefer downbeats (beat=0),
+    heavy syllables prefer heavy grid positions (Krishna/Rama > Hare),
+    high vowels prefer Hare positions (open, light).
+
+    Returns tuple of grid step indices (one per syllable).
+    """
+    if not vectors:
+        return ()
+
+    grid = _build_mantra_grid()
+    n_syl = len(vectors)
+    n_grid = len(grid)
+
+    if n_syl == KSETRAJNA:
+        # Single syllable: find best matching step
+        best_pos = 0
+        best_score = -1
+        for pos in range(n_grid):
+            score = _alignment_score(vectors[0], grid[pos])
+            if score > best_score:
+                best_score = score
+                best_pos = pos
+        return (best_pos,)
+
+    # Multi-syllable: sliding window over grid, find best start position
+    best_start = 0
+    best_total = -1
+
+    for start in range(n_grid):
+        total = 0
+        for j in range(n_syl):
+            step_idx = (start + j) % n_grid
+            total += _alignment_score(vectors[j], grid[step_idx])
+        if total > best_total:
+            best_total = total
+            best_start = start
+
+    return tuple((best_start + j) % n_grid for j in range(n_syl))
+
+
+def _alignment_score(sv: SyllableVector, gs: GridStep) -> int:
+    """Score how well a syllable vector fits a grid step."""
+    score = 0
+    # Stressed syllables prefer downbeats
+    if sv.stress >= KSETRAJNA and gs.beat == 0:
+        score += 3
+    elif sv.stress == 0 and gs.beat == KSETRAJNA:
+        score += 2
+    # Heavy syllables prefer Krishna/Rama (heavier names)
+    if sv.weight >= 3 and gs.holy_name in (HolyName.KRISHNA, HolyName.RAMA):
+        score += 2
+    elif sv.weight <= HALVES and gs.holy_name == HolyName.HARE:
+        score += KSETRAJNA
+    # High vowels resonate with Hare (open, devotional)
+    if sv.height >= QUARTERS and gs.holy_name == HolyName.HARE:
+        score += KSETRAJNA
+    # Low vowels resonate with Krishna (deep, foundational)
+    if sv.height <= HALVES and gs.holy_name == HolyName.KRISHNA:
+        score += KSETRAJNA
+    return score
+
+
+# =============================================================================
+# MODE AFFINITY — Graph-distance classification (no hardcoded keywords)
+# =============================================================================
+# Anchor phrases derived from protocol:
+#   HolyName.name + get_trinity_function(first_position_of_that_name)
+# WordNet graph distance determines which mode a word belongs to.
+
+
+@lru_cache(maxsize=1)
+def _mode_anchor_phrases() -> Dict[str, str]:
+    """Build mode anchor phrases from protocol-derived trinity functions.
+
+    Returns: {"DHARMA": "hare carrier", "GENESIS": "krishna source", "KARMA": "rama deliverer"}
+    """
+    return {
+        _HOLYNAME_MODE[HolyName.HARE]: f"{HolyName.HARE.name.lower()} {get_trinity_function(HARE_POSITIONS[0])}",
+        _HOLYNAME_MODE[HolyName.KRISHNA]: f"{HolyName.KRISHNA.name.lower()} {get_trinity_function(KRISHNA_POSITIONS[0])}",
+        _HOLYNAME_MODE[HolyName.RAMA]: f"{HolyName.RAMA.name.lower()} {get_trinity_function(RAMA_POSITIONS[0])}",
+    }
+
+
+def _classify_by_graph(packed_hex: str, anchors: Dict[str, str]) -> Optional[str]:
+    """Classify a Gita word into a mode by WordNet graph distance to anchors.
+
+    Returns the mode with highest semantic_score, or None if all scores are 0.
+    """
+    try:
+        from vibe_core.mahamantra.substrate.wordnet_bridge import semantic_score
+    except Exception:
+        return None
+
+    best_mode: Optional[str] = None
+    best_score = 0.0
+    for mode, anchor in anchors.items():
+        score = semantic_score(anchor, packed_hex)
+        if score > best_score:
+            best_score = score
+            best_mode = mode
+
+    return best_mode
+
+
+class RhythmProfile(NamedTuple):
+    """Temporal profile for a text input — 3D syllable vectors on mantra grid."""
+
+    syllable_count: int
+    stress_pattern: Tuple[int, ...]           # per-syllable stress (0/1/2)
+    sequencer_steps: Tuple[int, ...]          # grid positions (0-31)
+    signature: str                            # compact stress string
+    vectors: Tuple[SyllableVector, ...] = ()  # full 3D vectors
+    grid_modes: Tuple[str, ...] = ()          # mode at each aligned position
 
 
 # =============================================================================
@@ -135,6 +419,9 @@ class EngineResult(NamedTuple):
     diw_applied: int = 0  # 19-bit DIW word applied to Antaranga
     shabda_spawns: int = 0  # number of derivative seeds spawned
     phoneme_trajectory: str = ""  # synthesized name from MahaSequencer
+    syllable_count: int = 0  # temporal unit count from input
+    stress_pattern: Tuple[int, ...] = ()  # per-syllable stress sequence
+    sequencer_steps: Tuple[int, ...] = ()  # mapped positions in 32-step mantra grid
 
 
 # =============================================================================
@@ -456,6 +743,100 @@ class MahaLanguageEngine:
         position = (attractor % WORDS) + KSETRAJNA  # 1-16
         return seq.synthesize(position, length=QUARTERS)
 
+    def _scan_syllable_rhythm(self, text: str) -> RhythmProfile:
+        """
+        Convert input into 3D syllable vectors aligned to the 32-step mantra grid.
+
+        Each syllable = (stress, height, weight) from CMU ARPAbet.
+        Grid alignment finds the best-fit start position where the syllable
+        rhythm matches the mantra's trochaic pattern.
+        """
+        tokens = _WORD_TOKEN_RE.findall(text)
+        all_vectors: List[SyllableVector] = []
+        for token in tokens:
+            all_vectors.extend(_syllable_vectors_for_word(token))
+
+        if not all_vectors:
+            return RhythmProfile(
+                syllable_count=0,
+                stress_pattern=(),
+                sequencer_steps=(),
+                signature="-",
+            )
+
+        vectors = tuple(all_vectors)
+        steps = _align_syllables_to_grid(vectors)
+        grid = _build_mantra_grid()
+        modes = tuple(grid[s].mode for s in steps)
+        stress_pattern = tuple(sv.stress for sv in vectors)
+        signature = "".join(str(s) for s in stress_pattern)
+
+        return RhythmProfile(
+            syllable_count=len(vectors),
+            stress_pattern=stress_pattern,
+            sequencer_steps=steps,
+            signature=signature,
+            vectors=vectors,
+            grid_modes=modes,
+        )
+
+    def _rhythm_bias(self, rhythm: RhythmProfile, index: int) -> float:
+        """Compute rhythmic emphasis bonus using 3D vectors and grid modes."""
+        if rhythm.syllable_count == 0 or not rhythm.sequencer_steps:
+            return 0.0
+
+        grid = _build_mantra_grid()
+        step_idx = rhythm.sequencer_steps[index % len(rhythm.sequencer_steps)]
+        gs = grid[step_idx]
+        sv = rhythm.vectors[index % len(rhythm.vectors)] if rhythm.vectors else None
+
+        score = 0.0
+        # Downbeat bonus
+        if gs.beat == 0:
+            score += 0.04
+        # Stress-beat alignment bonus
+        if sv is not None:
+            if sv.stress >= KSETRAJNA and gs.beat == 0:
+                score += 0.03
+            # Heavy syllable on heavy name
+            if sv.weight >= 3 and gs.holy_name in (HolyName.KRISHNA, HolyName.RAMA):
+                score += 0.02
+            # Height-mode resonance
+            if sv.height >= QUARTERS and gs.mode == "DHARMA":
+                score += 0.01
+        # Half-cycle bonus (first half of mantra)
+        if step_idx < WORDS:
+            score += 0.01
+        return score
+
+    @staticmethod
+    def _semantic_boost(input_text: str, packed_hex: str) -> float:
+        """WordNet graph distance bonus for a candidate word."""
+        if not packed_hex:
+            return 0.0
+        try:
+            from vibe_core.mahamantra.substrate.wordnet_bridge import semantic_score
+
+            return semantic_score(input_text, packed_hex) * 0.1
+        except Exception:
+            return 0.0
+
+    def _rank_resonant_by_rhythm(self, resonant: List[Dict[str, object]], rhythm: RhythmProfile, input_text: str = "") -> List[Dict[str, object]]:
+        """Rank resonant pool by base score + rhythm bonus + semantic boost."""
+        ranked: List[Dict[str, object]] = []
+        for i, item in enumerate(resonant):
+            scored = dict(item)
+            bias = self._rhythm_bias(rhythm, i)
+            sem = self._semantic_boost(input_text, str(scored.get("packed_hex", "")))
+            base_score = float(scored.get("score", 0.0))
+            scored["rhythm_bias"] = bias
+            scored["semantic_boost"] = sem
+            scored["rhythm_score"] = base_score + bias + sem
+            ranked.append(scored)
+
+        ranked.sort(key=lambda it: (float(it.get("rhythm_score", 0.0)), float(it.get("score", 0.0))), reverse=True)
+        return ranked
+
     # =========================================================================
     # STEP 7: COMPOSE — Structure + Content + Mode + Interactions → English
     # =========================================================================
@@ -464,20 +845,23 @@ class MahaLanguageEngine:
         self,
         guardian_response,
         template: List[Dict],
+        rhythm: RhythmProfile,
+        input_text: str,
         section_mode: str,
         antaranga_data: Dict,
         expansion_data: Optional[Dict] = None,
     ) -> str:
         """
-        Composition using FIVE constraints simultaneously:
-            1. STRUCTURE: Verse template gives word ORDER and grammatical roles
-            2. CONTENT: Guardian-shaped resonant words give MEANING
-            3. MODE: Kapitel-18 section determines EMPHASIS (verb/noun/quality/etc.)
-            4. INTERACTION: Antaranga prana reveals which words amplify each other
-            5. EXPANSION: semantic tree + synth walk + shabda enrich vocabulary
+        Rhythmic Sequencing Compose (Opus design).
 
-        Strategy: Build sentence by ROLE, not by concatenation.
-            Subject → Verb → Object → Qualifier → Closure
+        PRIMARY: Grid modes (DHARMA/GENESIS/KARMA) drive word selection.
+        SECONDARY: Template roles and section_mode refine within mode.
+
+        Algorithm:
+            1. Build word pool (resonant + expansion), ranked by rhythm + semantic
+            2. Classify each word by affinity to grid modes
+            3. Walk the grid mode sequence, picking best word per mode
+            4. Template roles provide structural hints (subject/verb/object)
         """
         # === WORD POOL: merge resonant + expansion words by score ===
         resonant = []
@@ -490,10 +874,11 @@ class MahaLanguageEngine:
                         "meaning": meanings[0],
                         "score": rw.total_score,
                         "all_meanings": meanings,
+                        "packed_hex": getattr(rw.word, "packed_hex", ""),
                     }
                 )
 
-        # Enrich with expansion words (lower priority — scored at half)
+        # Enrich with expansion words (lower priority)
         if expansion_data:
             for sanskrit, meaning in expansion_data.get("expansion_words", ()):
                 if meaning:
@@ -501,7 +886,7 @@ class MahaLanguageEngine:
                         {
                             "sanskrit": sanskrit,
                             "meaning": meaning,
-                            "score": 0.3,  # Below resonant threshold
+                            "score": 0.3,
                             "all_meanings": (meaning,),
                         }
                     )
@@ -511,90 +896,91 @@ class MahaLanguageEngine:
                         {
                             "sanskrit": sanskrit,
                             "meaning": meaning,
-                            "score": 0.2,  # Walk words = background texture
+                            "score": 0.2,
                             "all_meanings": (meaning,),
                         }
                     )
 
-        # Sort full pool by score descending — best words first
-        resonant.sort(key=lambda r: r["score"], reverse=True)
+        # Rank full pool by rhythm + semantic
+        resonant = self._rank_resonant_by_rhythm(resonant, rhythm, input_text)
 
-        # === TEMPLATE: words by grammatical role ===
-        by_role: Dict[str, List[str]] = {
-            "VERB": [],
-            "NOUN": [],
-            "QUALITY": [],
-            "REF": [],
-            "PARTICLE": [],
-            "PREP": [],
-        }
+        # === MODE AFFINITY: classify words by graph distance ===
+        # Anchor phrases derived from protocol:
+        #   get_trinity_function(HARE_pos) = "carrier" -> DHARMA
+        #   get_trinity_function(KRISHNA_pos) = "source" -> GENESIS
+        #   get_trinity_function(RAMA_pos) = "deliverer" -> KARMA
+        # Combined with HolyName.name for richer graph query.
+        # NO HARDCODED KEYWORD LISTS. Pure WordNet graph distance.
+        mode_anchors = _mode_anchor_phrases()
+
+        by_mode: Dict[str, List[Dict]] = {"DHARMA": [], "GENESIS": [], "KARMA": []}
+        for r in resonant:
+            phex = str(r.get("packed_hex", ""))
+            if phex:
+                best_mode = _classify_by_graph(phex, mode_anchors)
+            else:
+                best_mode = None
+
+            if best_mode:
+                by_mode[best_mode].append(r)
+            else:
+                # Unclassified: available to all modes
+                for m in by_mode.values():
+                    m.append(r)
+
+        # === RHYTHMIC SEQUENCING: walk grid modes, pick words ===
+        parts: List[str] = []
+        used: set = set()
+
+        # Get the dominant mode sequence from rhythm profile
+        if rhythm.grid_modes:
+            # Deduplicate consecutive modes to get the mode phrase structure
+            mode_seq: List[str] = []
+            for gm in rhythm.grid_modes:
+                if not mode_seq or mode_seq[-1] != gm:
+                    mode_seq.append(gm)
+        else:
+            # Fallback: use section_mode as single mode
+            mode_seq = [_HOLYNAME_MODE.get(HolyName.KRISHNA, "GENESIS")]
+
+        # Pick best word per mode phase
+        for mode in mode_seq:
+            pool = by_mode.get(mode, resonant)
+            for r in pool:
+                ml = r["meaning"].lower().strip()
+                if ml and ml not in used and ml not in ("", "the", "a", "an"):
+                    used.add(ml)
+                    parts.append(r["meaning"])
+                    break
+
+        # Fill remaining slots from ranked pool (up to SEVEN total)
+        for r in resonant:
+            if len(parts) >= SEVEN:
+                break
+            ml = r["meaning"].lower().strip()
+            if ml and ml not in used and ml not in ("", "the", "a", "an"):
+                used.add(ml)
+                parts.append(r["meaning"])
+
+        # === TEMPLATE STRUCTURAL HINTS (secondary) ===
+        # Prepend subject from template REF if available
+        by_role: Dict[str, List[str]] = {"REF": [], "VERB": [], "QUALITY": []}
         for tw in template:
             role = tw.get("role", "NOUN")
             meaning = tw.get("meaning", "")
             if meaning and role in by_role:
                 by_role[role].append(meaning)
 
-        # === BUILD: Subject → Verb → Object → Qualifier → Closure ===
-        parts: List[str] = []
-
-        # SUBJECT: template REF, or first resonant noun
-        if by_role["REF"]:
+        if by_role["REF"] and parts:
             subj = by_role["REF"][0]
             if subj.lower() in ("unto me", "of me", "me"):
                 subj = "The Supreme"
             elif subj.lower() in ("you", "unto you"):
                 subj = "One who"
-            parts.append(subj.capitalize())
-        elif resonant:
-            parts.append(resonant[0]["meaning"].capitalize())
-
-        # VERB: mode-shaped
-        if section_mode == "FILTER" and by_role["VERB"]:
-            parts.append("transcends")
-            parts.append(by_role["VERB"][0])
-        elif section_mode == "VERB" and by_role["VERB"]:
-            parts.append(by_role["VERB"][0])
-        elif section_mode == "CORE":
-            verb_meanings = [
-                r["meaning"]
-                for r in resonant
-                if any(v in r["meaning"].lower() for v in ("to ", "should ", "perform", "attain", "know"))
-            ]
-            if verb_meanings:
-                parts.append(verb_meanings[0])
-            elif by_role["VERB"]:
-                parts.append(by_role["VERB"][0])
-        elif by_role["VERB"]:
-            parts.append(by_role["VERB"][0])
-
-        # OBJECT: resonant content (now enriched with expansion pool)
-        used_meanings: set = set()
-        max_content = SEVEN  # 7 content words (was PANCHA=5, now richer pool)
-        content_count = 0
-
-        for r in resonant:
-            if content_count >= max_content:
-                break
-            m = r["meaning"]
-            ml = m.lower().strip()
-            if ml not in used_meanings and ml not in ("", "the", "a", "an"):
-                used_meanings.add(ml)
-                parts.append(m)
-                content_count += 1
-
-        # QUALIFIER: mode-dependent
-        if section_mode == "QUALITY" and by_role["QUALITY"]:
-            parts.append(by_role["QUALITY"][0])
-        elif section_mode == "TARGET" and by_role["NOUN"]:
-            parts.append("towards " + by_role["NOUN"][0])
-        elif section_mode == "CONTEXT" and by_role["PREP"]:
-            parts.append(by_role["PREP"][0])
-            if by_role["NOUN"]:
-                parts.append(by_role["NOUN"][0])
-
-        # CLOSURE: mode-dependent
-        if section_mode == "CLOSURE" and by_role["PARTICLE"]:
-            parts.append(by_role["PARTICLE"][0])
+            sl = subj.lower()
+            if sl not in used:
+                parts.insert(0, subj.capitalize())
+                used.add(sl)
 
         # Deduplicate, clean, join
         seen: set = set()
@@ -637,6 +1023,7 @@ class MahaLanguageEngine:
         enc = self._encode(text)
         coords = enc["coords"]
         seed = enc["seed"]
+        rhythm = self._scan_syllable_rhythm(text)
 
         # O(1) cache hit — return immediately
         if enc["attention_hit"] and enc["cached_result"] is not None:
@@ -661,6 +1048,9 @@ class MahaLanguageEngine:
                 antaranga_prana=0,
                 output="[no phonemic content]",
                 derivation="input has no encodable phonemes",
+                syllable_count=rhythm.syllable_count,
+                stress_pattern=rhythm.stress_pattern,
+                sequencer_steps=rhythm.sequencer_steps,
             )
 
         # Step 2: ROUTE (+ resonate_as through Guardian's lens)
@@ -687,6 +1077,8 @@ class MahaLanguageEngine:
         output = self._compose(
             route["guardian"],
             route["template"],
+            rhythm,
+            text,
             route["section_mode"],
             ant,
             expansion_data=exp,
@@ -699,6 +1091,7 @@ class MahaLanguageEngine:
             f"→ resonate_as={len(route['guardian_resonance'].words)} words "
             f"→ section={route['section_name']}({route['section_mode']}) "
             f"→ verse=BG.18.{route['verse_num']} "
+            f"→ rhythm={rhythm.signature}({rhythm.syllable_count}) "
             f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w/{len(exp['shabda_children'])}s "
             f"→ diw=0x{diw:05x} "
             f"→ antaranga={ant['active_slots']} slots, {ant['total_prana']} prana"
@@ -738,6 +1131,9 @@ class MahaLanguageEngine:
             diw_applied=diw,
             shabda_spawns=len(exp["shabda_children"]),
             phoneme_trajectory=trajectory,
+            syllable_count=rhythm.syllable_count,
+            stress_pattern=rhythm.stress_pattern,
+            sequencer_steps=rhythm.sequencer_steps,
         )
 
         # Step 8: MEMORIZE (cache for O(1) next time)
@@ -914,6 +1310,7 @@ def demo() -> None:
         print(
             f"  EXPAND:    depth={r.expansion_depth} names={len(r.expanded_names)} walk={len(r.synth_walk_words)} shabda={r.shabda_spawns}"
         )
+        print(f"  RHYTHM:    stress={''.join(str(s) for s in r.stress_pattern) or '-'} syll={r.syllable_count}")
         print(f"  DIW:       0x{r.diw_applied:05x}")
         print(f"  ANTARANGA: {r.antaranga_active} slots, {r.antaranga_prana} prana")
         print(f"  TRAJECTORY:{r.phoneme_trajectory}")
