@@ -112,8 +112,8 @@ from vibe_core.mahamantra.substrate.seed import (
 )
 from vibe_core.mahamantra.protocols.seed._extended import get_trinity_function
 from vibe_core.mahamantra.substrate.phonetic_bridge import (
+    ARPABET_TO_VARGA,
     VargaIndex,
-    CATEGORY_TO_VARGA,
 )
 
 assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
@@ -138,22 +138,6 @@ class SyllableVector(NamedTuple):
     height: int   # vowel height 1-5 (low→high)
     weight: int   # syllable weight (consonant mass + 1)
 
-
-# ARPAbet vowel → VargaIndex (articulatory placement, protocol-derived)
-# Mapping follows Sanskrit phonetic tradition:
-#   KANTHYA (throat/0) = open vowels (AA, AH, AE)
-#   TALAVYA (palate/1) = front vowels (IY, IH, EY, EH)
-#   MURDHANYA (roof/2) = r-colored (ER)
-#   DANTYA (teeth/3) = mid-back (AO, OW, OY)
-#   OSHTHYA (lips/4) = rounded (UW, UH, AW)
-_ARPABET_TO_VARGA: Final[Dict[str, VargaIndex]] = {
-    "AA": VargaIndex.KANTHYA, "AH": VargaIndex.KANTHYA, "AE": VargaIndex.KANTHYA,
-    "IY": VargaIndex.TALAVYA, "IH": VargaIndex.TALAVYA, "EY": VargaIndex.TALAVYA, "EH": VargaIndex.TALAVYA,
-    "ER": VargaIndex.MURDHANYA,
-    "AO": VargaIndex.DANTYA, "OW": VargaIndex.DANTYA, "OY": VargaIndex.DANTYA,
-    "UW": VargaIndex.OSHTHYA, "UH": VargaIndex.OSHTHYA, "AW": VargaIndex.OSHTHYA,
-    "AY": VargaIndex.KANTHYA,  # diphthong starting open
-}
 
 
 def _varga_height(varga: VargaIndex) -> int:
@@ -202,7 +186,7 @@ def _parse_arpabet(phones: List[str]) -> Tuple[SyllableVector, ...]:
 
         if stress_char is not None:  # vowel nucleus
             stress = int(stress_char)
-            varga = _ARPABET_TO_VARGA.get(base, VargaIndex.MURDHANYA)
+            varga = ARPABET_TO_VARGA.get(base, VargaIndex.MURDHANYA)
             height = _varga_height(varga)
             weight = onset_consonants + KSETRAJNA  # onset + vowel itself
             syllables.append(SyllableVector(stress=stress, height=height, weight=weight))
