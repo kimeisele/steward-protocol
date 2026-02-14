@@ -383,36 +383,45 @@ class ShuddhiEngine(ShuddhiProtocol):
         """
         OUROBOROS: Heal all violations from Knowledge Graph that have remedies.
 
-        CELLULAR PIPELINE (OPUS-400):
-            Uses CellularHealer for fragment-level healing.
-            Each file is decomposed into atomic fragments (functions, classes, etc.).
-            Each fragment is healed independently via CST transformation.
-            Healed fragments are registered as new Cells in the CellRouter.
-            Maya-Sync reconstructs and writes the file.
+        PANCHA TATTVA GATE MAPPING (OPUS-500):
+            Each violation is wrapped in a MantraIntent(type=HEAL) and
+            routed through the HealingIntentResolver, which fires all 5
+            Tattva Gates:
+                PARSE → VALIDATE → EXECUTE → RESULT → SYNC
+
+            2-Phase Guna Model:
+                Gates 0-3: SATTVA (analysis in RAM, no side effects)
+                Gate 4: RAJAS (authorized commit via Srivasa gate)
+
+            There is NO ungoverned path. If the resolver cannot wire,
+            healing FAILS. No bypass. No legacy fallback.
 
         Args:
             dry_run: If True, don't write files (just return diffs)
 
         Returns:
             List of ShuddhiResults for each attempted healing
+
+        Raises:
+            RuntimeError: If HealingIntentResolver cannot be wired.
         """
         results: List[ShuddhiResult] = []
+
+        # Wire the healing resolver — HARD FAIL if impossible
+        self._ensure_resolver_wired()
 
         try:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.mahajanas.prithu.knowledge import KnowledgeGraphProtocol
 
-            # Use protocol, not implementation
             kg = ServiceRegistry.get(KnowledgeGraphProtocol)
             if not kg:
                 logger.warning("[SHUDDHI] KnowledgeGraphProtocol not available")
                 return results
 
-            # Get unhealed violations
             violations = kg.get_violations(healed=False)
             logger.info(f"[SHUDDHI] Found {len(violations)} unhealed violations")
 
-            # Group violations by file for efficient fragment-level healing
             from collections import defaultdict
             by_file: Dict[str, List[tuple]] = defaultdict(list)
             for v in violations:
@@ -421,46 +430,92 @@ class ShuddhiEngine(ShuddhiProtocol):
                 if isinstance(rule_id, str) and isinstance(file_path_str, str):
                     by_file[file_path_str].append((rule_id, v.id))
 
-            # Heal each file using the cellular pipeline
-            from vibe_core.mahamantra.dharma.kumaras.healing_intent import get_cellular_healer
-            healer = get_cellular_healer()
-
-            for file_path_str, violation_list in by_file.items():
-                file_path = Path(file_path_str)
-                if not file_path.exists():
-                    continue
-
-                for rule_id, violation_id in violation_list:
-                    if not healer.can_heal(rule_id):
-                        continue
-
-                    # Cellular healing: fragment-level CST transformation
-                    cell_results = healer.heal_file(
-                        file_path=file_path,
-                        rule_id=rule_id,
-                        dry_run=dry_run,
-                    )
-
-                    for cr in cell_results:
-                        shuddhi_result = cr.shuddhi_result
-                        results.append(shuddhi_result)
-
-                        # Emit vibration for each fragment healing
-                        self._emit_vibration(shuddhi_result)
-
-                        # Mark healed in KG
-                        if shuddhi_result.status == ShuddhiStatus.PURIFIED:
-                            try:
-                                if kg and violation_id:
-                                    kg.mark_violation_healed(violation_id, rule_id)
-                                    logger.info(
-                                        f"[SHUDDHI] Cellular heal: {rule_id} in "
-                                        f"{cr.fragment.display_name if cr.fragment else file_path}"
-                                    )
-                            except Exception as e:
-                                logger.warning(f"[SHUDDHI->KG] Failed to record: {e}")
+            # ALL healing goes through gates. No other path exists.
+            self._heal_through_gates(by_file, dry_run, results, kg)
 
         except Exception as e:
             logger.exception(f"[SHUDDHI] Error in heal_all_violations: {e}")
 
         return results
+
+    def _ensure_resolver_wired(self) -> None:
+        """
+        Wire the HealingIntentResolver. HARD FAIL if impossible.
+
+        There is no fallback. If this fails, healing cannot proceed.
+        An ungoverned healing path is an architectural violation.
+        """
+        from vibe_core.mahamantra.dharma.kumaras.healing_resolver import (
+            wire_healing_resolver,
+        )
+        if not wire_healing_resolver():
+            raise RuntimeError(
+                "FATAL: HealingIntentResolver could not be wired to MantraKernel. "
+                "Healing CANNOT proceed without gate governance. "
+                "No ungoverned path exists by design."
+            )
+
+    def _heal_through_gates(
+        self,
+        by_file: Dict[str, List[tuple]],
+        dry_run: bool,
+        results: List[ShuddhiResult],
+        kg: object,
+    ) -> None:
+        """
+        Heal via MantraIntent → HealingIntentResolver → 5-gate pipeline.
+
+        This is the ONLY healing path. There is no fallback.
+        """
+        from vibe_core.mahamantra.kernel.intent import (
+            MantraIntent,
+            IntentType,
+            IntentPriority,
+            get_kernel,
+        )
+
+        kernel = get_kernel()
+
+        for file_path_str, violation_list in by_file.items():
+            file_path = Path(file_path_str)
+            if not file_path.exists():
+                continue
+
+            for rule_id, violation_id in violation_list:
+                intent = MantraIntent(
+                    type=IntentType.HEAL,
+                    target=file_path_str,
+                    params={
+                        "file_path": file_path_str,
+                        "rule_id": rule_id,
+                        "dry_run": dry_run,
+                        "violation_id": violation_id,
+                    },
+                    priority=IntentPriority.NORMAL,
+                    requester="shuddhi_engine",
+                )
+
+                intent_result = kernel.resolve(intent)
+
+                if intent_result.is_success and intent_result.value:
+                    for cr in intent_result.value:
+                        shuddhi_result = cr.shuddhi_result
+                        results.append(shuddhi_result)
+                        self._emit_vibration(shuddhi_result)
+
+                        if shuddhi_result.status == ShuddhiStatus.PURIFIED:
+                            try:
+                                if kg and violation_id:
+                                    kg.mark_violation_healed(violation_id, rule_id)
+                                    logger.info(
+                                        f"[SHUDDHI] Gate-healed: {rule_id} in "
+                                        f"{cr.fragment.display_name if cr.fragment else file_path}"
+                                    )
+                            except Exception as e:
+                                logger.warning(f"[SHUDDHI->KG] Failed to record: {e}")
+
+                elif intent_result.error:
+                    logger.warning(
+                        "[SHUDDHI] Intent resolution failed: %s", intent_result.error
+                    )
+
