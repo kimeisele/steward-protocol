@@ -292,6 +292,7 @@ class CellularHealer:
         file_path: Path,
         rule_id: str,
         dry_run: bool = False,
+        governed: bool = False,
     ) -> List[CellularHealingResult]:
         """
         Heal all fragments in a file that match a given rule.
@@ -304,6 +305,9 @@ class CellularHealer:
             file_path: Path to the Python file.
             rule_id: Which violation to heal.
             dry_run: If True, don't write to disk.
+            governed: If True, Maya-Sync goes through Srivasa gate
+                      (EnforceGateProvider.write_source) with RAJAS Guna.
+                      If False, raw Path.write_text (legacy path).
 
         Returns:
             List of CellularHealingResult (one per fragment that was touched).
@@ -325,7 +329,7 @@ class CellularHealer:
 
         # Maya-Sync: write reconstructed file
         if any_healed and not dry_run:
-            self._maya_sync(file_frags)
+            self._maya_sync(file_frags, governed=governed)
             for r in results:
                 if r.status == ShuddhiStatus.PURIFIED:
                     r.maya_synced = True
@@ -339,7 +343,7 @@ class CellularHealer:
     # MAYA-SYNC: Reconstruct file from fragments and write to disk
     # =========================================================================
 
-    def _maya_sync(self, file_frags: FileFragments) -> bool:
+    def _maya_sync(self, file_frags: FileFragments, governed: bool = False) -> bool:
         """
         Reconstruct the full file from its fragments and write to disk.
 
@@ -348,6 +352,8 @@ class CellularHealer:
 
         Args:
             file_frags: FileFragments with healed fragments.
+            governed: If True, write through Srivasa gate (RAJAS-authorized).
+                      If False, raw Path.write_text (legacy path).
 
         Returns:
             True if write succeeded.
@@ -358,12 +364,32 @@ class CellularHealer:
             # Verify the full reconstructed file compiles
             compile(reconstructed, str(file_frags.file_path), "exec")
 
-            # Write to disk
-            file_frags.file_path.write_text(reconstructed, encoding="utf-8")
+            if governed:
+                # ── GOVERNED PATH: Srivasa gate authorizes the write ──
+                from vibe_core.mahamantra.substrate.gate_providers import get_sync_gate
+                from vibe_core.mahamantra.substrate.guna import Guna
+
+                gate = get_sync_gate()
+                result = gate.write_source(
+                    file_path=file_frags.file_path,
+                    content=reconstructed,
+                    actor="shuddhi_healer",
+                    guna=Guna.RAJAS,  # Healing commit = act of creation
+                )
+                if not result["success"]:
+                    logger.error(
+                        f"[MAYA-SYNC] Srivasa gate DENIED write to "
+                        f"{file_frags.file_path}: {result['reason']}"
+                    )
+                    return False
+            else:
+                # ── LEGACY PATH: Raw write (backward compat) ──
+                file_frags.file_path.write_text(reconstructed, encoding="utf-8")
 
             logger.info(
                 f"[MAYA-SYNC] Written {file_frags.file_path.name} "
                 f"({file_frags.count} fragments)"
+                f"{' [GOVERNED]' if governed else ''}"
             )
             return True
 
