@@ -278,6 +278,30 @@ PHONEME_TO_VARGA: Final[Dict[str, VargaIndex]] = _build_phoneme_varga_from_proto
 
 
 # =============================================================================
+# ARPABET → VARGA (CMU English vowels → Sanskrit articulation points)
+# =============================================================================
+# ARPAbet is the phoneme set used by CMU Pronouncing Dictionary (134K English words).
+# This bridges English vowel phonemes to the Sanskrit articulatory system (Sthana).
+# Mapping follows the same Varga principle: WHERE in the vocal tract is the sound produced.
+#
+#   KANTHYA (throat/0) = open vowels: AA (father), AH (but), AE (bat), AY (bite)
+#   TALAVYA (palate/1) = front vowels: IY (beat), IH (bit), EY (bait), EH (bet)
+#   MURDHANYA (roof/2) = r-colored: ER (bird)
+#   DANTYA (teeth/3) = mid-back: AO (bought), OW (boat), OY (boy)
+#   OSHTHYA (lips/4) = rounded: UW (boot), UH (book), AW (bout)
+
+ARPABET_TO_VARGA: Final[Dict[str, VargaIndex]] = {
+    "AA": VargaIndex.KANTHYA, "AH": VargaIndex.KANTHYA, "AE": VargaIndex.KANTHYA,
+    "AY": VargaIndex.KANTHYA,
+    "IY": VargaIndex.TALAVYA, "IH": VargaIndex.TALAVYA, "EY": VargaIndex.TALAVYA,
+    "EH": VargaIndex.TALAVYA,
+    "ER": VargaIndex.MURDHANYA,
+    "AO": VargaIndex.DANTYA, "OW": VargaIndex.DANTYA, "OY": VargaIndex.DANTYA,
+    "UW": VargaIndex.OSHTHYA, "UH": VargaIndex.OSHTHYA, "AW": VargaIndex.OSHTHYA,
+}
+
+
+# =============================================================================
 # STHANA INDEX (Position within Varga = Energy/Intensity Level)
 # =============================================================================
 # The 5 Sthanas (HOW - Energy/Intensity) - Position within Varga
@@ -726,6 +750,7 @@ __all__ = [
     "get_phonetic_bridge",
     # Varga mappings (WHERE - articulation point)
     "PHONEME_TO_VARGA",
+    "ARPABET_TO_VARGA",
     "STHANA_TO_VARGA",
     "CATEGORY_TO_VARGA",
     "VARGA_TO_QUARTER",
