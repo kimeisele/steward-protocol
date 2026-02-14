@@ -226,3 +226,16 @@ def report() -> SentinelReport:
             rogue_callers=dict(_rogue_callers),
             recent_violations=list(_recent_violations),
         )
+
+
+def drain_violations() -> List[SentinelViolation]:
+    """Drain all accumulated violations. Thread-safe.
+
+    Returns the violations and clears the buffer.
+    This is the bridge to Ouroboros ingestion:
+    Sentinel sees → drain_violations() → OuroborosSubscriber → KG.
+    """
+    with _lock:
+        drained = list(_recent_violations)
+        _recent_violations.clear()
+    return drained
