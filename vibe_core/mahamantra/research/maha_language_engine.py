@@ -107,6 +107,7 @@ assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
 
 _WORD_TOKEN_RE: Final = re.compile(r"[A-Za-z']+")
+_VOWEL_GROUP_RE: Final = re.compile(r"[aeiouy]+")
 
 
 @lru_cache(maxsize=1)
@@ -122,7 +123,7 @@ def _cmu_lookup() -> Optional[Dict[str, List[List[str]]]]:
 
 def _fallback_stress(word: str) -> Tuple[int, ...]:
     """Fallback stress pattern from vowel groups when CMU is unavailable."""
-    syllables = re.findall(r"[aeiouy]+", word.lower())
+    syllables = _VOWEL_GROUP_RE.findall(word.lower())
     if not syllables:
         return ()
     if len(syllables) == KSETRAJNA:
@@ -140,6 +141,15 @@ def _stress_for_word(word: str) -> Tuple[int, ...]:
             if stresses:
                 return stresses
     return _fallback_stress(word)
+
+
+class RhythmProfile(NamedTuple):
+    """Temporal profile for a text input."""
+
+    syllable_count: int
+    stress_pattern: Tuple[int, ...]
+    sequencer_steps: Tuple[int, ...]
+    signature: str
 
 
 # =============================================================================
@@ -497,7 +507,7 @@ class MahaLanguageEngine:
         position = (attractor % WORDS) + KSETRAJNA  # 1-16
         return seq.synthesize(position, length=QUARTERS)
 
-    def _scan_syllable_rhythm(self, text: str) -> Dict[str, object]:
+    def _scan_syllable_rhythm(self, text: str) -> RhythmProfile:
         """
         Convert input into a syllable-time sequence.
 
@@ -509,24 +519,29 @@ class MahaLanguageEngine:
             stress.extend(_stress_for_word(token))
 
         if not stress:
-            return {
-                "syllable_count": 0,
-                "stress_pattern": (),
-                "steps": (),
-                "signature": "-",
-            }
+            return RhythmProfile(
+                syllable_count=0,
+                stress_pattern=(),
+                sequencer_steps=(),
+                signature="-",
+            )
 
         step_count = WORDS * 2
-        steps = tuple((i * 2) % step_count for i in range(len(stress)))
         stress_pattern = tuple(stress)
+        steps: List[int] = []
+        cursor = 0
+        for stress_level in stress_pattern:
+            steps.append(cursor % step_count)
+            # stressed syllables consume more rhythmic space than unstressed ones
+            cursor += KSETRAJNA + min(stress_level, 1)
         signature = "".join(str(s) for s in stress_pattern)
 
-        return {
-            "syllable_count": len(stress_pattern),
-            "stress_pattern": stress_pattern,
-            "steps": steps,
-            "signature": signature,
-        }
+        return RhythmProfile(
+            syllable_count=len(stress_pattern),
+            stress_pattern=stress_pattern,
+            sequencer_steps=tuple(steps),
+            signature=signature,
+        )
 
     # =========================================================================
     # STEP 7: COMPOSE — Structure + Content + Mode + Interactions → English
@@ -734,9 +749,9 @@ class MahaLanguageEngine:
                 antaranga_prana=0,
                 output="[no phonemic content]",
                 derivation="input has no encodable phonemes",
-                syllable_count=rhythm["syllable_count"],
-                stress_pattern=rhythm["stress_pattern"],
-                sequencer_steps=rhythm["steps"],
+                syllable_count=rhythm.syllable_count,
+                stress_pattern=rhythm.stress_pattern,
+                sequencer_steps=rhythm.sequencer_steps,
             )
 
         # Step 2: ROUTE (+ resonate_as through Guardian's lens)
@@ -775,7 +790,7 @@ class MahaLanguageEngine:
             f"→ resonate_as={len(route['guardian_resonance'].words)} words "
             f"→ section={route['section_name']}({route['section_mode']}) "
             f"→ verse=BG.18.{route['verse_num']} "
-            f"→ rhythm={rhythm['signature']}({rhythm['syllable_count']}) "
+            f"→ rhythm={rhythm.signature}({rhythm.syllable_count}) "
             f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w/{len(exp['shabda_children'])}s "
             f"→ diw=0x{diw:05x} "
             f"→ antaranga={ant['active_slots']} slots, {ant['total_prana']} prana"
@@ -815,9 +830,9 @@ class MahaLanguageEngine:
             diw_applied=diw,
             shabda_spawns=len(exp["shabda_children"]),
             phoneme_trajectory=trajectory,
-            syllable_count=rhythm["syllable_count"],
-            stress_pattern=rhythm["stress_pattern"],
-            sequencer_steps=rhythm["steps"],
+            syllable_count=rhythm.syllable_count,
+            stress_pattern=rhythm.stress_pattern,
+            sequencer_steps=rhythm.sequencer_steps,
         )
 
         # Step 8: MEMORIZE (cache for O(1) next time)
