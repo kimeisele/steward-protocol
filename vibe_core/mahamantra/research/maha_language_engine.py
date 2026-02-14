@@ -819,17 +819,16 @@ class MahaLanguageEngine:
         expansion_data: Optional[Dict] = None,
     ) -> str:
         """
-        Composition using FIVE constraints simultaneously:
-            1. STRUCTURE: Verse template gives word ORDER and grammatical roles
-            2. CONTENT: Guardian-shaped resonant words give MEANING
-            3. MODE: Kapitel-18 section determines EMPHASIS (verb/noun/quality/etc.)
-            4. INTERACTION: Antaranga prana reveals which words amplify each other
-            5. EXPANSION: semantic tree + synth walk + shabda enrich vocabulary
-            6. RHYTHM: syllable stress + sequencer step bias the candidate priority
-            7. SEMANTIC: WordNet graph distance boosts words closer to input meaning
+        Rhythmic Sequencing Compose (Opus design).
 
-        Strategy: Build sentence by ROLE, not by concatenation.
-            Subject → Verb → Object → Qualifier → Closure
+        PRIMARY: Grid modes (DHARMA/GENESIS/KARMA) drive word selection.
+        SECONDARY: Template roles and section_mode refine within mode.
+
+        Algorithm:
+            1. Build word pool (resonant + expansion), ranked by rhythm + semantic
+            2. Classify each word by affinity to grid modes
+            3. Walk the grid mode sequence, picking best word per mode
+            4. Template roles provide structural hints (subject/verb/object)
         """
         # === WORD POOL: merge resonant + expansion words by score ===
         resonant = []
@@ -846,7 +845,7 @@ class MahaLanguageEngine:
                     }
                 )
 
-        # Enrich with expansion words (lower priority — scored at half)
+        # Enrich with expansion words (lower priority)
         if expansion_data:
             for sanskrit, meaning in expansion_data.get("expansion_words", ()):
                 if meaning:
@@ -854,7 +853,7 @@ class MahaLanguageEngine:
                         {
                             "sanskrit": sanskrit,
                             "meaning": meaning,
-                            "score": 0.3,  # Below resonant threshold
+                            "score": 0.3,
                             "all_meanings": (meaning,),
                         }
                     )
@@ -864,90 +863,90 @@ class MahaLanguageEngine:
                         {
                             "sanskrit": sanskrit,
                             "meaning": meaning,
-                            "score": 0.2,  # Walk words = background texture
+                            "score": 0.2,
                             "all_meanings": (meaning,),
                         }
                     )
 
-        # Sort full pool by score + rhythm bias + semantic graph distance
+        # Rank full pool by rhythm + semantic
         resonant = self._rank_resonant_by_rhythm(resonant, rhythm, input_text)
 
-        # === TEMPLATE: words by grammatical role ===
-        by_role: Dict[str, List[str]] = {
-            "VERB": [],
-            "NOUN": [],
-            "QUALITY": [],
-            "REF": [],
-            "PARTICLE": [],
-            "PREP": [],
-        }
+        # === MODE AFFINITY: classify words by grid mode ===
+        # DHARMA (Hare) = devotion/service/energy words
+        # GENESIS (Krishna) = source/wisdom/creation words
+        # KARMA (Rama) = action/duty/strength words
+        _DHARMA_HINTS = frozenset(("devotion", "love", "energy", "grace", "mercy", "surrender", "service", "heart", "soul", "faith"))
+        _GENESIS_HINTS = frozenset(("knowledge", "wisdom", "truth", "source", "origin", "supreme", "eternal", "consciousness", "self", "divine"))
+        _KARMA_HINTS = frozenset(("action", "duty", "strength", "fight", "perform", "work", "sacrifice", "dharma", "righteous", "warrior"))
+
+        by_mode: Dict[str, List[Dict]] = {"DHARMA": [], "GENESIS": [], "KARMA": []}
+        for r in resonant:
+            ml = r["meaning"].lower()
+            # Check affinity by keyword overlap
+            if any(h in ml for h in _DHARMA_HINTS):
+                by_mode["DHARMA"].append(r)
+            elif any(h in ml for h in _GENESIS_HINTS):
+                by_mode["GENESIS"].append(r)
+            elif any(h in ml for h in _KARMA_HINTS):
+                by_mode["KARMA"].append(r)
+            else:
+                # Unclassified: available to all modes
+                for m in by_mode.values():
+                    m.append(r)
+
+        # === RHYTHMIC SEQUENCING: walk grid modes, pick words ===
+        parts: List[str] = []
+        used: set = set()
+
+        # Get the dominant mode sequence from rhythm profile
+        if rhythm.grid_modes:
+            # Deduplicate consecutive modes to get the mode phrase structure
+            mode_seq: List[str] = []
+            for gm in rhythm.grid_modes:
+                if not mode_seq or mode_seq[-1] != gm:
+                    mode_seq.append(gm)
+        else:
+            # Fallback: use section_mode as single mode
+            mode_seq = [_HOLYNAME_MODE.get(HolyName.KRISHNA, "GENESIS")]
+
+        # Pick best word per mode phase
+        for mode in mode_seq:
+            pool = by_mode.get(mode, resonant)
+            for r in pool:
+                ml = r["meaning"].lower().strip()
+                if ml and ml not in used and ml not in ("", "the", "a", "an"):
+                    used.add(ml)
+                    parts.append(r["meaning"])
+                    break
+
+        # Fill remaining slots from ranked pool (up to SEVEN total)
+        for r in resonant:
+            if len(parts) >= SEVEN:
+                break
+            ml = r["meaning"].lower().strip()
+            if ml and ml not in used and ml not in ("", "the", "a", "an"):
+                used.add(ml)
+                parts.append(r["meaning"])
+
+        # === TEMPLATE STRUCTURAL HINTS (secondary) ===
+        # Prepend subject from template REF if available
+        by_role: Dict[str, List[str]] = {"REF": [], "VERB": [], "QUALITY": []}
         for tw in template:
             role = tw.get("role", "NOUN")
             meaning = tw.get("meaning", "")
             if meaning and role in by_role:
                 by_role[role].append(meaning)
 
-        # === BUILD: Subject → Verb → Object → Qualifier → Closure ===
-        parts: List[str] = []
-
-        # SUBJECT: template REF, or first resonant noun
-        if by_role["REF"]:
+        if by_role["REF"] and parts:
             subj = by_role["REF"][0]
             if subj.lower() in ("unto me", "of me", "me"):
                 subj = "The Supreme"
             elif subj.lower() in ("you", "unto you"):
                 subj = "One who"
-            parts.append(subj.capitalize())
-        elif resonant:
-            parts.append(resonant[0]["meaning"].capitalize())
-
-        # VERB: mode-shaped
-        if section_mode == "FILTER" and by_role["VERB"]:
-            parts.append("transcends")
-            parts.append(by_role["VERB"][0])
-        elif section_mode == "VERB" and by_role["VERB"]:
-            parts.append(by_role["VERB"][0])
-        elif section_mode == "CORE":
-            verb_meanings = [
-                r["meaning"]
-                for r in resonant
-                if any(v in r["meaning"].lower() for v in ("to ", "should ", "perform", "attain", "know"))
-            ]
-            if verb_meanings:
-                parts.append(verb_meanings[0])
-            elif by_role["VERB"]:
-                parts.append(by_role["VERB"][0])
-        elif by_role["VERB"]:
-            parts.append(by_role["VERB"][0])
-
-        # OBJECT: resonant content (now enriched with expansion pool)
-        used_meanings: set = set()
-        max_content = SEVEN  # 7 content words (was PANCHA=5, now richer pool)
-        content_count = 0
-
-        for r in resonant:
-            if content_count >= max_content:
-                break
-            m = r["meaning"]
-            ml = m.lower().strip()
-            if ml not in used_meanings and ml not in ("", "the", "a", "an"):
-                used_meanings.add(ml)
-                parts.append(m)
-                content_count += 1
-
-        # QUALIFIER: mode-dependent
-        if section_mode == "QUALITY" and by_role["QUALITY"]:
-            parts.append(by_role["QUALITY"][0])
-        elif section_mode == "TARGET" and by_role["NOUN"]:
-            parts.append("towards " + by_role["NOUN"][0])
-        elif section_mode == "CONTEXT" and by_role["PREP"]:
-            parts.append(by_role["PREP"][0])
-            if by_role["NOUN"]:
-                parts.append(by_role["NOUN"][0])
-
-        # CLOSURE: mode-dependent
-        if section_mode == "CLOSURE" and by_role["PARTICLE"]:
-            parts.append(by_role["PARTICLE"][0])
+            sl = subj.lower()
+            if sl not in used:
+                parts.insert(0, subj.capitalize())
+                used.add(sl)
 
         # Deduplicate, clean, join
         seen: set = set()
