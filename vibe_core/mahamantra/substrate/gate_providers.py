@@ -677,6 +677,21 @@ _populate_guna_policy_lut()
 
 
 # =============================================================================
+# I/O SENTINEL — Armed at module load, not at boot
+# =============================================================================
+# The sentinel watches json.dump/json.dumps calls system-wide.
+# Armed here because gate_providers is imported by every mahamantra path.
+# No boot dependency. No wiring step. Just: import → armed.
+
+def _arm_io_sentinel() -> None:
+    """Arm the I/O sentinel. Called once at module load."""
+    from vibe_core.mahamantra.substrate.io_sentinel import arm
+    arm()
+
+_arm_io_sentinel()
+
+
+# =============================================================================
 # WIRING — Register all 5 providers at boot
 # =============================================================================
 

@@ -85,6 +85,7 @@ class ViolationSource(Enum):
     # Runtime sources
     RUNTIME_ERROR = "runtime"  # Production errors
     CRASH = "crash"  # System crashes
+    SENTINEL = "sentinel"  # I/O Sentinel runtime detections
 
 
 @dataclass
