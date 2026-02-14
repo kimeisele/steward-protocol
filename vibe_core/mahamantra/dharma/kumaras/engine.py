@@ -215,6 +215,84 @@ class ShuddhiEngine(ShuddhiProtocol):
             self._emit_vibration(result)
             return result
 
+    def scan_file(self, file_path: Path, rule_ids: Optional[List[str]] = None) -> List[ShuddhiResult]:
+        """
+        Detect violations in a single file. Parses the file ONCE.
+
+        Each remedy is applied INDEPENDENTLY to the original CST.
+        Results are NOT cumulative — this is detection, not healing.
+        For cumulative healing, use heal_and_record() per violation.
+
+        Args:
+            file_path: Path to the file to scan
+            rule_ids: Optional list of rule_ids to check. None = all registered.
+
+        Returns:
+            List of ShuddhiResults (PURIFIED = violation found + fix available,
+            FAILED = fix produced invalid syntax).
+        """
+        results: List[ShuddhiResult] = []
+
+        if not file_path.exists():
+            return results
+
+        targets = rule_ids if rule_ids else list(self._remedies.keys())
+
+        try:
+            source_code = file_path.read_text()
+            module = cst.parse_module(source_code)
+        except Exception as e:
+            logger.warning("[SHUDDHI] Failed to parse %s: %s", file_path, e)
+            return results
+
+        for rule_id in targets:
+            if rule_id not in self._remedies:
+                continue
+
+            remedy_class = self._remedies[rule_id]
+            transformer = remedy_class()
+
+            if hasattr(transformer, "set_file_path"):
+                transformer.set_file_path(str(file_path))
+
+            try:
+                wrapper = cst.MetadataWrapper(module)
+                modified_module = wrapper.visit(transformer)
+            except ShuddhiScopeError:
+                continue
+            except Exception as e:
+                logger.warning("[SHUDDHI] Remedy %s failed on %s: %s", rule_id, file_path, e)
+                continue
+
+            if not transformer.applied:
+                continue
+
+            new_code = modified_module.code
+
+            try:
+                compile(new_code, str(file_path), "exec")
+            except SyntaxError as e:
+                results.append(ShuddhiResult(
+                    status=ShuddhiStatus.FAILED,
+                    file_path=file_path,
+                    rule_id=rule_id,
+                    message=f"Transformation produced invalid syntax: {e}",
+                ))
+                continue
+
+            result = ShuddhiResult(
+                status=ShuddhiStatus.PURIFIED,
+                file_path=file_path,
+                rule_id=rule_id,
+                message="Surgery successful.",
+                diff=transformer.get_diff(source_code, new_code),
+                purified_code=new_code,
+            )
+            self._emit_vibration(result)
+            results.append(result)
+
+        return results
+
     def list_remedies(self) -> List[str]:
         """Returns list of registered remedy rule_ids."""
         return list(self._remedies.keys())
@@ -312,7 +390,7 @@ class ShuddhiEngine(ShuddhiProtocol):
 
         try:
             from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.mahajanas.vyasa import KnowledgeGraphProtocol
+            from vibe_core.protocols.mahajanas.prithu.knowledge import KnowledgeGraphProtocol
 
             # Use protocol, not implementation
             kg = ServiceRegistry.get(KnowledgeGraphProtocol)
