@@ -556,15 +556,29 @@ class MahaLanguageEngine:
         half_cycle_bonus = 0.01 if step < WORDS else 0.0
         return downbeat_bonus + stress_bonus + half_cycle_bonus
 
-    def _rank_resonant_by_rhythm(self, resonant: List[Dict[str, object]], rhythm: RhythmProfile) -> List[Dict[str, object]]:
-        """Rank resonant pool by base score + rhythm bonus."""
+    @staticmethod
+    def _semantic_boost(input_text: str, packed_hex: str) -> float:
+        """WordNet graph distance bonus for a candidate word."""
+        if not packed_hex:
+            return 0.0
+        try:
+            from vibe_core.mahamantra.substrate.wordnet_bridge import semantic_score
+
+            return semantic_score(input_text, packed_hex) * 0.1
+        except Exception:
+            return 0.0
+
+    def _rank_resonant_by_rhythm(self, resonant: List[Dict[str, object]], rhythm: RhythmProfile, input_text: str = "") -> List[Dict[str, object]]:
+        """Rank resonant pool by base score + rhythm bonus + semantic boost."""
         ranked: List[Dict[str, object]] = []
         for i, item in enumerate(resonant):
             scored = dict(item)
             bias = self._rhythm_bias(rhythm, i)
+            sem = self._semantic_boost(input_text, str(scored.get("packed_hex", "")))
             base_score = float(scored.get("score", 0.0))
             scored["rhythm_bias"] = bias
-            scored["rhythm_score"] = base_score + bias
+            scored["semantic_boost"] = sem
+            scored["rhythm_score"] = base_score + bias + sem
             ranked.append(scored)
 
         ranked.sort(key=lambda it: (float(it.get("rhythm_score", 0.0)), float(it.get("score", 0.0))), reverse=True)
@@ -579,6 +593,7 @@ class MahaLanguageEngine:
         guardian_response,
         template: List[Dict],
         rhythm: RhythmProfile,
+        input_text: str,
         section_mode: str,
         antaranga_data: Dict,
         expansion_data: Optional[Dict] = None,
@@ -591,6 +606,7 @@ class MahaLanguageEngine:
             4. INTERACTION: Antaranga prana reveals which words amplify each other
             5. EXPANSION: semantic tree + synth walk + shabda enrich vocabulary
             6. RHYTHM: syllable stress + sequencer step bias the candidate priority
+            7. SEMANTIC: WordNet graph distance boosts words closer to input meaning
 
         Strategy: Build sentence by ROLE, not by concatenation.
             Subject → Verb → Object → Qualifier → Closure
@@ -606,6 +622,7 @@ class MahaLanguageEngine:
                         "meaning": meanings[0],
                         "score": rw.total_score,
                         "all_meanings": meanings,
+                        "packed_hex": getattr(rw.word, "packed_hex", ""),
                     }
                 )
 
@@ -632,8 +649,8 @@ class MahaLanguageEngine:
                         }
                     )
 
-        # Sort full pool by score + rhythm bias
-        resonant = self._rank_resonant_by_rhythm(resonant, rhythm)
+        # Sort full pool by score + rhythm bias + semantic graph distance
+        resonant = self._rank_resonant_by_rhythm(resonant, rhythm, input_text)
 
         # === TEMPLATE: words by grammatical role ===
         by_role: Dict[str, List[str]] = {
@@ -808,6 +825,7 @@ class MahaLanguageEngine:
             route["guardian"],
             route["template"],
             rhythm,
+            text,
             route["section_mode"],
             ant,
             expansion_data=exp,

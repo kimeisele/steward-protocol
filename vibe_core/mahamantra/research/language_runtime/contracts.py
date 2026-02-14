@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Tuple
 
 
 class RuntimeTick(NamedTuple):
@@ -34,3 +34,6 @@ class RuntimeEnvelope(NamedTuple):
     seed: int
     attractor: int
     output: str
+    derivation: str = ""
+    stress_pattern: Tuple[int, ...] = ()
+    sequencer_steps: Tuple[int, ...] = ()
