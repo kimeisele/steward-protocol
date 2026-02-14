@@ -543,6 +543,33 @@ class MahaLanguageEngine:
             signature=signature,
         )
 
+    def _rhythm_bias(self, rhythm: RhythmProfile, index: int) -> float:
+        """Compute rhythmic emphasis bonus for a candidate word index."""
+        if rhythm.syllable_count == 0 or not rhythm.sequencer_steps:
+            return 0.0
+
+        step = rhythm.sequencer_steps[index % len(rhythm.sequencer_steps)]
+        stress = rhythm.stress_pattern[index % len(rhythm.stress_pattern)] if rhythm.stress_pattern else 0
+
+        downbeat_bonus = 0.04 if step % QUARTERS == 0 else 0.0
+        stress_bonus = 0.03 * min(stress, 2)
+        half_cycle_bonus = 0.01 if step < WORDS else 0.0
+        return downbeat_bonus + stress_bonus + half_cycle_bonus
+
+    def _rank_resonant_by_rhythm(self, resonant: List[Dict[str, object]], rhythm: RhythmProfile) -> List[Dict[str, object]]:
+        """Rank resonant pool by base score + rhythm bonus."""
+        ranked: List[Dict[str, object]] = []
+        for i, item in enumerate(resonant):
+            scored = dict(item)
+            bias = self._rhythm_bias(rhythm, i)
+            base_score = float(scored.get("score", 0.0))
+            scored["rhythm_bias"] = bias
+            scored["rhythm_score"] = base_score + bias
+            ranked.append(scored)
+
+        ranked.sort(key=lambda it: (float(it.get("rhythm_score", 0.0)), float(it.get("score", 0.0))), reverse=True)
+        return ranked
+
     # =========================================================================
     # STEP 7: COMPOSE — Structure + Content + Mode + Interactions → English
     # =========================================================================
@@ -551,6 +578,7 @@ class MahaLanguageEngine:
         self,
         guardian_response,
         template: List[Dict],
+        rhythm: RhythmProfile,
         section_mode: str,
         antaranga_data: Dict,
         expansion_data: Optional[Dict] = None,
@@ -562,6 +590,7 @@ class MahaLanguageEngine:
             3. MODE: Kapitel-18 section determines EMPHASIS (verb/noun/quality/etc.)
             4. INTERACTION: Antaranga prana reveals which words amplify each other
             5. EXPANSION: semantic tree + synth walk + shabda enrich vocabulary
+            6. RHYTHM: syllable stress + sequencer step bias the candidate priority
 
         Strategy: Build sentence by ROLE, not by concatenation.
             Subject → Verb → Object → Qualifier → Closure
@@ -603,8 +632,8 @@ class MahaLanguageEngine:
                         }
                     )
 
-        # Sort full pool by score descending — best words first
-        resonant.sort(key=lambda r: r["score"], reverse=True)
+        # Sort full pool by score + rhythm bias
+        resonant = self._rank_resonant_by_rhythm(resonant, rhythm)
 
         # === TEMPLATE: words by grammatical role ===
         by_role: Dict[str, List[str]] = {
@@ -778,6 +807,7 @@ class MahaLanguageEngine:
         output = self._compose(
             route["guardian"],
             route["template"],
+            rhythm,
             route["section_mode"],
             ant,
             expansion_data=exp,
