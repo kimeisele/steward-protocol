@@ -23,7 +23,7 @@ DETERMINISM: Same file → same fragments → same Lotus addresses. Always.
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kumaras"
 __position__ = 5
-__genesis__ = "0x2b5c08e4"  # GenesisByte: parampara % 37 == 0
+__genesis__ = "0xfe9a70b8"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from pathlib import Path

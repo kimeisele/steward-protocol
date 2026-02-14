@@ -27,7 +27,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from multiprocessing import Pipe, Process
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 logger = logging.getLogger("PROCESS_MANAGER")
 
