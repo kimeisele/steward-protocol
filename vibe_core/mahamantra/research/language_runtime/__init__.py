@@ -6,6 +6,7 @@ reimplementing timing logic.
 """
 
 from .contracts import InputSignal, RuntimeEnvelope, RuntimeTick
+from .incremental import FrameHistory, IncrementalBuffer, TickInputFrame
 from .session import LanguageRuntimeSession
 from .venu_bridge import VenuTickBridge
 
@@ -15,4 +16,7 @@ __all__ = [
     "RuntimeTick",
     "LanguageRuntimeSession",
     "VenuTickBridge",
+    "IncrementalBuffer",
+    "TickInputFrame",
+    "FrameHistory",
 ]
