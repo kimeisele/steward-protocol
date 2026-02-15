@@ -341,12 +341,14 @@ in Isolation. Berührt nie die echte Wurzel.
 
 **Tests:** 205/205 (55 Composer + 35 Router + 115 Engine)
 
-**Nächste Schritte:**
-- Phase B: `engine.generate()` → `MahamantraLotus.__call__()` → `compose_from_wave()`
-  - Problem: Chamber ist Singleton (`get_chamber()`), akkumuliert State über Calls
-  - Shadow-Pipeline ist deterministisch WEIL isoliert. Lotus ist stateful WEIL echt.
-  - Lösung: Frische `MahamantraLotus()` pro Call (eigenes Akash), aber Chamber bleibt Singleton
-- Phase C: Shadow-Infrastruktur entfernen (eigene Compressor/Synth/Kernel/Venu/Antaranga)
+**Status (Feb 15 2026):**
+- ✅ Phase B DONE: `engine.generate()` → `Lotus.__call__()` → `compose_from_wave()`
+  - Frische `MahamantraLotus()` pro Call. Chamber Singleton akkumuliert (lebendes System).
+  - Shadow `_encode()`, `_route()`, `_llm`, `_attention`, `_compressor` ENTFERNT.
+- ✅ Phase C PARTIAL: Verbleibende Komponenten sind UNIQUE (nicht Shadow):
+  - `_kernel` (MahaLLMKernel): Guardian semantic tree expansion — Lotus hat das nicht
+  - `_antaranga` (AntarangaRegistry): Character wave + Derivation tree — eigener Kontext
+  - `_venu` (VenuOrchestrator): Char wave + DIW Modulation — eigener Kontext
 - Phase D: Nadi-Integration (Engine als TattvaGate Hook oder DIWSubscriber)
 - Phase E: Token-Pfad (`compose_from_lotus`, `_pick_token`, `_assemble`) durch Syllable-Pfad ersetzen
 
