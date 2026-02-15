@@ -547,7 +547,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                         if beat_count:
                             logger.info(f"      → {beat_count} beat subscribers auto-wired to VenuService")
                     except Exception as e:
-                        logger.debug(f"BeatSubscriber discovery skipped: {e}")
+                        logger.warning(f"⚠️ BeatSubscriber discovery FAILED: {e}")
 
                     # VENU FLUTE: Auto-discover DIW subscribers (FOLDER=EXISTENCE)
                     # Any service registered under DIWSubscriberProtocol gets
@@ -560,7 +560,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                         if diw_count:
                             logger.info(f"      → {diw_count} DIW subscribers auto-wired to orchestrator")
                     except Exception as e:
-                        logger.debug(f"DIW subscriber discovery skipped: {e}")
+                        logger.warning(f"⚠️ DIW subscriber discovery FAILED: {e}")
 
                     # MALA FLUSH: Every 108 ticks (~27s), flush RAM state to disk
                     try:
@@ -573,7 +573,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                         self._venu_service.clock.on_mala(_mala_flush)
                         logger.info("      → Mala flush registered (RAM→Disk every 108 ticks)")
                     except Exception as e:
-                        logger.debug(f"Mala flush registration skipped: {e}")
+                        logger.warning(f"⚠️ Mala flush registration FAILED: {e}")
 
                     # Start the heartbeat (non-blocking async task)
                     asyncio.ensure_future(self._venu_service.start())
