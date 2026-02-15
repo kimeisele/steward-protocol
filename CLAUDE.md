@@ -206,91 +206,15 @@ Direkte `json.dump`/`open(w)` Schreiber (30+ Files):
 - `naga/ouroboros.py`, `commit_watcher.py`
 - `state/commit_authority.py`, `state/samskara.py`
 
-### Branch 1: `architectural/state-authority` (KEIN Cleanup — Architektur-Overhaul)
+### State Authority (offen)
 
-**Ziel:** EINE State-Autorität. Alles was auf Disk schreibt MUSS durch `StateService` fließen.
-Nichts wird gelöscht oder gitignored — die URSACHE wird behoben.
+30+ Dateien schreiben direkt auf Disk. `EnforceGateProvider` (Gate 4) existiert als I/O-Controller
+mit Guna-Policy. Nächster Schritt: unkontrollierte Schreiber auf `get_sync_gate().write()` umstellen.
 
-**Was existiert und verdrahtet werden muss:**
-- `StateService` (`state/state_service.py`) — write-behind cache, Mala-flush, Samskara-Intercept
-- `MahamantraLotus.__call__()` — der Geburtskanal für User-Input (TattvaGate Pipeline)
-- `TattvaGate.SYNC` — Gate 4 (Srivasa/Governance) = der richtige Ort für Disk-I/O
+### Float→Integer Migration (✅ auf main)
 
-**Schritte (verifiziert, nicht halluziniert):**
-1. Audit: Jeden der 30+ unkontrollierten Schreiber identifizieren (DONE — siehe Liste oben)
-2. `StateService` mit `write()` Method erweitern die ALLE Disk-Writes zentral routet
-3. Jeden unkontrollierten Schreiber auf `StateService.write()` umstellen
-4. `git rm --cached` für bereits committed Artefakte (Backups, Model-Blobs, Keys, DBs, Logs)
-5. `.gitignore` als ZWEITE Verteidigungslinie (nicht als einzige!)
-6. **Private Keys rotieren** — die in Git sind für immer kompromittiert
-7. Tests: Verifikation dass kein File mehr direkt schreibt
-
-**NICHT machen:**
-- Neue State-Infrastruktur bauen — `StateService` existiert bereits
-- Files einfach nur gitignoren ohne den Schreiber umzustellen
-- Cartridges/Plugins löschen — nur die Disk-I/O Pfade umleiten
-
-### Float→Integer Migration (auf `main`, kein separater Branch)
-
-**Ziel:** Alle Floats die Mantra-Ableitungen sein sollten → Integer (COSMIC_FRAME = 21600).
-
-**Pattern:** Int-Konstanten als SSOT (CF_*), Float-Aliases abgeleitet für backward-compatible Konsumenten.
-
-**Erledigt (4208 Tests grün, 0 Regression, Branch `feature/float-int-wave-2`):**
-
-| Datei | Was | Wie |
-|-------|-----|-----|
-| `harmonics.py` | Thresholds AUTO/REFINE/SYNC | `CF_AUTO=14400`, `CF_REFINE=9600`, `CF_SYNC=28800` — reine Int-Arithmetik in Helpern |
-| `resonance_ranker.py` | 7D Scoring Weights | `W_*_CF` als Int-SSOT (Summe=21600), Float-Aliases abgeleitet |
-| `_entropy.py` | Pain/Health Thresholds | `CF_PAIN_SAMADHI=1080` etc. — Seed-abgeleitet (KSETRAJNA/PANCHA/QUARTERS) |
-| `chat.py` | Hardcoded `0.444` | → `ResonanceHarmonics.THRESHOLD_REFINE` |
-| `lila_chronology.py` | Flute/Vina/Kirtan Weights + Resonance | Alle GERATEN→Seed-abgeleitet, pure Int-Arithmetik in CF-Space |
-| `protocol.py` | Intermediate float math + hardcoded `21600` | Pure Int-Arithmetik, `0.1`→`1/TEN`, `21600`→`COSMIC_FRAME` |
-| `shabda.py` | Alignment weights `0.25/0.15` | Integer-Punkte: QUARTERS(4)/TRINITY(3), Summe=WORDS(16), `_cf()` SSOT |
-| `lila_chronology.py` | `resonance_decay/growth` `0.1/0.15` | `CF//TEN=2160`, `CF*TRINITY//(HALVES*TEN)=3240` |
-| `guardian_router.py` | Routing weights `0.40/0.25/0.20/0.15` | HARE_COUNT(8)/PANCHA(5)/QUARTERS(4)/TRINITY(3), Summe=20 |
-| `phonetic_bridge.py` | `STHANA_ENERGY` `0.2/0.6/0.8/1.0/0.5` | `STHANA_ENERGY_CF` als Int-SSOT, Float-Alias abgeleitet |
-| `cell.py` | `integrity: float` 0.0-1.0 | `integrity: int` 0-COSMIC_FRAME. `MEMBRANE_MIN_INTEGRITY=CF//PANCHA(4320)`, `_SIGNAL_WEAR=CF//(TEN*TEN)(216)` |
-| `chamber.py` | DIW-Tabelle float Koeffizienten | `0.01→216`, `0.02→432`, `-0.005→-MALA(-108)`. Merge: `//HALVES` statt `/HALVES` |
-| `lotus_core.py` | API-Boundary für cell integrity | `membrane_integrity / COSMIC_FRAME` — Float nur an API-Grenze |
-
-**lila_chronology.py Details (war Design-Problem, jetzt gelöst):**
-- Flute: `0.40/0.35/0.25` → `VAMSI_HOLES(9)/VENU_HOLES(6)/MURALI_HOLES(4)`, Summe=`FLUTE_HOLES_SUM(19)`
-- Vina: `0.20/0.30/0.20` → `VINA_STRINGS(5)/SEVEN(7)/VINA_STRINGS(5)`, Summe=`POSITION_SUM_KRISHNA(17)`
-- Kirtan: `0.6/0.4` → `FLUTE_HOLES_SUM(19)/VINA_STRINGS(5)`, Summe=`KSHETRA(24)`
-- Attractors: Hardcoded `22`→`SHRUTIS`, `87`→`POSITION_SUM_HARE+POSITION_SUM_KRISHNA`
-- KirtanRuntime: `0.1` Wachstumsfaktor → `1/TEN` (Integer-Äquivalent)
-- Pattern: `_cf()` Methoden = SSOT (pure int), Float-Wrapper nur an API-Grenze
-
-**Analyse-Ergebnis — was NICHT migriert werden muss:**
-
-| Kategorie | Dateien | Grund |
-|-----------|---------|-------|
-| Timestamps | `byte.py`, `yajna.py` | `time.time()` — korrekt als float |
-| Duration | `samskara.py`, `samana_bridge.py` | `duration_ms` — Messwert |
-| OpsPerSec | `classifier/core.py` | Messwert |
-| Metriken 0-1 | `compute.py`, `_sense.py`, `_gad.py`, `knowledge.py` | Cache-Hit-Rates, Effizienz-Scores — keine Seed-Ableitung |
-| Mercy Equation | `classifier/core.py` | `1.0/0.5/0.1/0.3` — konzeptuelle Scoring-Faktoren, keine Seed-Ableitung |
-| Similarity Math | `basin_map.py`, `resonance_ranker.py` inner loop | Cosine/L1 Geometrie — korrekt als float |
-| Musical Ratios | `harmonics.py` SWARA_* | Physikalische Frequenzverhältnisse — korrekt als float |
-| Infrastructure | `event_bus.py`, `guna.py`, `bridge.py` | Timeouts, Rate-Limits, Latencies — operationelle Parameter |
-| Coherence | `yajna.py` | `coherence: float = 1.0` — Messparameter |
-| Histogramme | `phonetic_bridge.py` PhoneticTensor | `varga_vector`/`sthana_vector`/`shakti` — normalisierte Verteilungen, Geometrie |
-| Funktions-Defaults | `siksastakam.py` | `resonance: float = 0.5` — Parameter-Default, kein gespeicherter Wert |
-
-**Offen (nur MANAS-Subsystem, eigener Block):**
-
-| Datei | Problem | Schwierigkeit |
-|-------|---------|---------------|
-| `synaptic_seeder.py` (91 Floats) | Purer Slop — hardcoded `0.85`/`0.15` | Hoch (MANAS-Subsystem, viele Konsumenten) |
-| `biorhythm.py` (47 Floats) | MANAS | Hoch (eigenes Subsystem) |
-| `viveka_action.py` (45 Floats) | MANAS Cortex | Hoch |
-| `triggers.py` (41 Floats) | MANAS | Hoch |
-
-Die MANAS-Dateien (`synaptic_seeder`, `biorhythm`, `viveka_action`, `triggers`) sind ein eigenes Subsystem
-und sollten als Block migriert werden, nicht einzeln.
-
-**Root .md Files im Repo-Root (57 Stück) sind ein SEPARATES Problem — nicht in diesen Branches.**
+Pattern: `CF_*` Int-Konstanten als SSOT, Float-Aliases nur an API-Grenze. COSMIC_FRAME=21600.
+13 Dateien migriert. Offen: MANAS-Block (4 Dateien, 224 Floats) — eigenes Subsystem, Block-Migration.
 
 ## Maha Language Engine (Feb 15 2026, aktualisiert)
 
@@ -373,34 +297,25 @@ Sie recomputen was `__call__()` schon berechnet, statt die Gate-Ergebnisse zu ko
 
 **Shadow Pipelines GETÖTET (Feb 15 2026):**
 
-| Komponente | Status | Was passiert ist |
-|------------|--------|-----------------|
-| `MahaLLMKernel.resonate()` | ✅ REWIRED | Konsumiert jetzt `__call__()` statt `maha_respond()` |
-| `MahaLLMKernel.resonate_as()` | ✅ REWIRED | Konsumiert `__call__(opcode=guardian_pos)` statt eigene Synth+Rank |
-| `MahaLLMKernel.expand()` | ✅ REWIRED | `__call__()` für Resonanz, Tree-Building (H/K/R) bleibt unique |
-| `guardian_router.maha_respond()` | ⚠️ DEPRECATED | 0 Production-Caller. DeprecationWarning hinzugefügt |
+| Komponente | Status |
+|------------|--------|
+| `MahaLLMKernel.resonate()` | ✅ Konsumiert `__call__()` |
+| `MahaLLMKernel.resonate_as()` | ✅ Konsumiert `__call__(opcode=guardian_pos)` |
+| `MahaLLMKernel.expand()` | ✅ `__call__()` für Resonanz, H/K/R Tree bleibt unique |
+| `guardian_router.maha_respond()` | ⚠️ DEPRECATED (0 Production-Caller) |
 
-**Was NOCH DISCONNECTED ist:**
+**Gate Providers (7 total, alle verdrahtet via `wire_gate_providers()`):**
 
-| Komponente | Ort | Problem |
-|------------|-----|---------|
-| `MahaLLM` | `adapters/llm.py` | Eigener 16-Kategorie Router. Nur in `bootstrap(lazy=False)` via Kapila. `steward.py` hat tote `.llm` Property |
-| `MahaAttention` | `adapters/attention.py` | O(1) Intent→Handler. 0 Production-Caller |
-| `MahaComposition` | `adapters/composition.py` | Korrekt positioniert (post-pipeline). Kein Gate-Teilnehmer nötig |
-| `language_runtime/` | `research/` | Keystroke→Antaranga Bridge, Venu Bridge. Echtzeit-Prototypen |
+| Gate | Observer | Adapter |
+|------|----------|---------|
+| 0 PARSE | `MantraGateProvider` | `MahaAttention.parse()` — O(1) Intent-Resolution |
+| 1 VALIDATE | `StorageGateProvider` | — |
+| 2 EXECUTE | `InferGateProvider` | `MahaLLM.infer()` — Holographic Intent Routing from Seed |
+| 3 RESULT | `SyncGateProvider` | — |
+| 4 SYNC | `EnforceGateProvider` (I/O Governance via StateService) | — |
 
-**Was NOCH passieren MUSS:**
-- `MahaLLM` sollte Gate-Hook oder Gate-Provider auf Gate 2 (EXECUTE) sein
-- `MahaAttention` sollte Gate-Hook auf Gate 0 (PARSE) sein — Intent-Resolution
-- `language_runtime/` Prototypen → nach `substrate/` migrieren wenn reif
-- `steward.py` tote `.llm` Property entfernen
-
-**Infrastruktur existiert bereits:**
-- `_fire_gate()` in `lotus_core.py` — feuert bei jedem Gate
-- `TattvaRegistry` — registriert Gate-Hooks
-- 5 Capability Protocols (`_capabilities.py`) — `MantraCapability`, `StorageCapability`, etc.
-- 5 Gate Providers (`gate_providers.py`) — Observer an jedem Gate
-- `check_capability()` — `isinstance` Prüfung
+**Noch offen:**
+- `language_runtime/` in `research/` → nach `substrate/` migrieren wenn reif
 
 ## Architektur-Audit (Feb 12 2026)
 
@@ -456,22 +371,10 @@ Offen (neu entdeckt):
 - `iGene.is_fatal` war IMMER False (float 0-1 vs int 0-21600) → Fix auf `fix/igene-fatal-comparison`
 - 4 F811 in `research/` (2× `run_analysis` Duplikate, 2× Enum-Shadowing in physics.py)
 
-**HÄNGENDE TESTS (5 Dateien, pre-existing auf `main`, NICHT skippen — Root Cause fixen!):**
-
-| Datei | Vermutete Ursache |
-|-------|-------------------|
-| `tests/mahamantra/kernel/test_singularity.py` | `Mahamantra()` → `m.tick()` → `self.kala.advance()` + `self.venu.step()` blockiert |
-| `tests/mahamantra/kernel/test_daemon.py` | `daemon.start()` → `mahamantra.audit()` → `governance.audit()` scannt Filesystem |
-| `tests/mahamantra/kernel/test_daemon_soul.py` | Gleich: `await daemon.start()` → async infinite loop |
-| `tests/mahamantra/protocols/test_gad.py` | `GADProtocolDef.validate()` oder Import-Kette blockiert |
-| `tests/mahamantra/protocols/test_graph.py` | `GraphProtocolDef.validate()` oder Import-Kette blockiert |
-| `tests/mahamantra/cli/test_entry.py` | `main([])` oder `get_entry()` blockiert |
-
-Diagnose-Ansatz: Imports allein sind schnell (verifiziert). Blockade ist IN der Logik.
-`daemon.start()` hat `while not self._stop_requested` Loop mit `mahamantra.audit()` pro Zyklus.
-`singularity.tick()` ruft `self.kala.advance()` + `self.venu.step()` — lazy init könnte hängen.
-Alle 5 hängen auch auf `main` (verifiziert via `git checkout main` + subprocess timeout scan).
-Kein Skip. Root Cause finden und fixen.
+**HÄNGENDE TESTS (pre-existing auf `main`, Root Cause: blocking loops/FS-scans):**
+- `test_singularity.py`, `test_daemon.py`, `test_daemon_soul.py` — `daemon.start()` infinite loop + FS audit
+- `test_gad.py`, `test_graph.py` — Protocol validate() Import-Kette blockiert
+- `test_entry.py` — CLI `main([])` blockiert
 
 Bereits aufgeräumt (nicht nochmal anfassen):
 - F821: 0 Fehler in `mahamantra/` (VenuOrchestrator + SeedResult via TYPE_CHECKING gefixt)
@@ -573,128 +476,45 @@ Unrolled Loops (PANCHA=5, TRINITY=3, BASIN_COUNT=6, PA_COUNT=5).
 Bit-identische Ergebnisse. Kein numpy. Kein neues Dependency.
 `rank_words(candidates=None)` → Fast Path. `rank_words(candidates=[subset])` → Original Slow Path.
 
-## Repo-Zustand
+## Repo-Zustand (Feb 15 2026)
 
-**Repo ist SAUBER.** 1 Branch: `main`. Zweiter Frühjahrsputz am 15. Feb 2026: 28 weitere Branches gelöscht.
+**1 Branch: `main`.** 436/436 Tests grün.
 
-Alles Wertvolle ist auf `main`:
-
-| Feature | Status | Inhalt |
-|---------|--------|--------|
-| Antaranga RAM Chamber | ✅ main | 16KB kontiguierer RAM als Schatten-Layer |
-| LexiconVectorCache | ✅ main | Precomputed vector lookups |
-| PipelineCache | ✅ main | Seed-unabhängige Lookups vorberechnet |
-| EventType SSOT | ✅ main | Leaf module, 870-line copy killed |
-| Write-behind StateService | ✅ main | RAM-first + Samskara intercept + Mala flush |
-| DIW 19-bit Layout | ✅ main | VENU(6)+VAMSI(9)+MURALI(4) kanonisch |
-| Reactor Lifecycle | ✅ main | ReactorLoop shutdown + offer() Event-Routing |
-| TattvaGate Pipeline | ✅ main | 5 Gates in `__call__()` + TattvaRegistry + Hooks |
-| Pancha Tattva Protocols | ✅ main | 5 Capability Protocols + Gate Provider Dispatch (54 Tests) |
-| Gate Providers | ✅ main | 5 reale Wächter an den Gates + fix get_tattva_by_protocol (37 Tests) |
-| Unified Heartbeat | ✅ main | 1 Singularity, 1 Flute, 1 Tick. 5 Surgeries + 13 Tests |
-| Composition Triad | ✅ main | Protocol/Substrate/Adapter. 5 Scorer. 22 Tests |
-
-**Unified Heartbeat (Feb 15 2026):**
-- Surgery 1: `lotus_core._get_singularity()` → Singleton aus `kernel/singularity.py`
-- Surgery 2: `maha_kernel.py` nutzt Singleton statt `Mahamantra()`
-- Surgery 3: `venu_service.py` → `singularity.tick()`, `lotus_bridge.py` → No-Op
-- Surgery 4: Silent Death → `logger.warning` (boot_orchestrator, venu_service)
-- Surgery 5: `sravanam.py` TickState dict/dataclass Handling
+| Feature | Inhalt |
+|---------|--------|
+| Antaranga RAM Chamber | 16KB kontiguierer RAM, 512×32 Byte Slots |
+| LexiconVectorCache | rank_words() 1300ms→78ms |
+| PipelineCache | Seed-unabhängige Lookups vorberechnet |
+| TattvaGate Pipeline | 5 Gates + 7 Provider (5 Observer + MahaAttention + MahaLLM) |
+| Composition Triad | Protocol/Substrate/Adapter. 5 Scorer |
+| Shadow Pipeline Kills | MahaLLMKernel rewired, maha_respond() deprecated |
+| Unified Heartbeat | 1 Singularity, 1 Flute, 1 Tick |
+| DIW 19-bit Layout | VENU(6)+VAMSI(9)+MURALI(4) kanonisch |
+| Write-behind StateService | RAM-first + Mala flush + EnforceGateProvider I/O Governance |
 
 **research/ ist LOAD-BEARING (nicht löschen!):**
-- `_gita_lens.py` importiert aus `research/gita/`
-- `maha_kernel.py` importiert `LotusArrayInt` aus `research/lotus_tree.py`
-- `adapters/routing.py` nutzt `LotusRadixInt` aus `research/lotus_tree.py`
-- Migration nach `substrate/` steht aus, aber NICHT blind löschen
+- `_gita_lens.py`, `maha_kernel.py`, `adapters/routing.py` importieren aus `research/`
+- Migration nach `substrate/` steht aus
 
-Gelöschte/verworfene Branches (für die Akten):
-- `followup/maha-language-engine` — gemergt in main (Feb 15 2026)
-- `architectural/state-authority` — builtins.open Monkey-Patch war Symptom-Doktorei
-- 51× `claude/*` Auto-Sessions — nie relevant
-- 28× diverse Feature-Branches — Frühjahrsputz Feb 15 2026
+## TattvaGate Pipeline + Providers ✅ (Feb 11-15 2026)
 
-## TattvaGate Pipeline ✅ (Feb 11 2026)
-
-**Branch: `feature/tattva-gate-pipeline`** (5 Commits, 35 neue Tests, -1275 Zeilen toter Code)
-
-Die 9 NavaBhakti-Schritte in `lotus_core.__call__()` sind jetzt explizit auf 5 TattvaGates gemappt:
+9 NavaBhakti-Schritte auf 5 TattvaGates gemappt. Jedes Gate hat Observer + optionale Adapter-Provider.
 
 ```
-GATE 0 — CHAITANYA (PARSE):    SRAVANAM + NAMA + KIRTANAM
-GATE 1 — NITYANANDA (VALIDATE): PADA_SEVANAM + ARCANAM
-GATE 2 — ADVAITA (EXECUTE):     SMARANAM + VANDANAM
-GATE 3 — GADADHARA (RESULT):    DASYAM + SHABDA
-GATE 4 — SRIVASA (SYNC):        SAKHYAM + KIRTAN + YAJNA + ATMA_NIVEDANAM
+GATE 0 — CHAITANYA (PARSE)     → MantraGateProvider + MahaAttention.parse()
+GATE 1 — NITYANANDA (VALIDATE) → StorageGateProvider
+GATE 2 — ADVAITA (EXECUTE)     → InferGateProvider + MahaLLM.infer()
+GATE 3 — GADADHARA (RESULT)    → SyncGateProvider
+GATE 4 — SRIVASA (SYNC)        → EnforceGateProvider (I/O Governance via StateService)
 ```
 
-Was gebaut wurde:
-- `__tattva__` auf `MahamantraLotus` — Root beschreibt sich selbst (PanchaTattvaProtocol compliant)
-- `active_gate` Property — welches Gate gerade aktiv ist während `__call__`
-- `TattvaRegistry` (`substrate/tattva_registry.py`) — sammelt, indexiert, queryt `__tattva__` Deklarationen
-- `Singularity._load_module()` registriert Module in TattvaRegistry beim Laden
-- `on_gate(gate, callback)` + `_fire_gate(gate, ctx)` — Hooks an Gate-Grenzen mit Pipeline-Kontext
-- `protocols/substrate/mantra/lotus.py` — Löschung RÜCKGÄNGIG (7 Dateien importieren daraus, war NICHT dead code)
+**Schlüssel-Dateien:**
+- `protocols/_capabilities.py` — 5 `runtime_checkable` Capability Protocols
+- `substrate/gate_providers.py` — 5 Observer + `wire_gate_providers()` (registriert alle 7 Provider)
+- `substrate/tattva_registry.py` — `register_gate_provider()` mit Capability-Check
+- `lotus_core.py` — `_fire_gate()` dispatcht Hooks + Provider, `_GATE_DISPATCH` mappt Gate→Method
 
-Tests: `tests/mahamantra/test_tattva_gate.py` (17) + `tests/mahamantra/test_tattva_registry.py` (18)
-
-**Was NICHT getan wurde (bewusst):**
-- ChatService NICHT durch `mahamantra("text")` geleitet (großer Refactor, braucht Konzept)
-- TattvaRegistry wird bei Boot NICHT automatisch befüllt (nur Singularity + Lotus registrieren)
-
-## Pancha Tattva Capability Protocols ✅ (Feb 11 2026)
-
-**Branch: `feature/pancha-tattva-protocols`** (2 Commits, 54 neue Tests)
-
-Die 5 Pancha Tattva sind jetzt echte `runtime_checkable` Protocol-Klassen:
-
-```
-GATE 0 — CHAITANYA (PARSE)     → MantraCapability.parse(input_data)
-GATE 1 — NITYANANDA (VALIDATE) → StorageCapability.validate(seed)
-GATE 2 — ADVAITA (EXECUTE)     → InferCapability.infer(seed, attractor)
-GATE 3 — GADADHARA (RESULT)    → SyncCapability.route(attractor)
-GATE 4 — SRIVASA (SYNC)        → EnforceCapability.enforce(position, seed, attractor)
-```
-
-Was gebaut wurde:
-- `protocols/_capabilities.py` — 5 Capability Protocols + lazy `GATE_CAPABILITY` Map
-- `TattvaRegistry.register_gate_provider(name, obj, gate)` — Capability-Check bei Registrierung
-- `TattvaRegistry.violations` — Tracking aller abgelehnten Registrierungen
-- `lotus_core._fire_gate()` dispatcht jetzt registrierte Gate-Provider nach lokalen Hooks
-- `lotus_core._GATE_DISPATCH` — Maps Gate→(method_name, arg_keys) für korrektes Argument-Routing
-- `TattvaAspect.protocol` ist jetzt `Type` statt `str` (echte Referenz auf Capability-Klasse)
-- Lazy `__getattr__` in `_capabilities.py` bricht Zirkel mit `pancha_tattva.py`
-
-Tests: `test_capabilities.py` (24) + `test_gate_providers.py` (20) + `test_gate_dispatch.py` (10)
-Regression: 4167 bestehende Mahamantra-Tests grün, 0 Failures.
-
-**Was NICHT getan wurde (bewusst):**
-- ~~Keine echten Gate-Provider registriert~~ → **ERLEDIGT** in `feature/gate-providers`
-- ~~StateService nicht als EnforceCapability-Provider verdrahtet~~ → **ERLEDIGT** (EnforceGateProvider nutzt StateService lazy)
-
-## Gate Providers ✅ (Feb 12 2026)
-
-**Branch: `feature/gate-providers`** (1 Commit, 37 neue Tests)
-
-Die 5 TattvaGates haben jetzt **echte Wächter** (Observer-Adapter):
-
-```
-GATE 0 — CHAITANYA (PARSE)     → MantraGateProvider   (Input-Validierung + Seed-Tracking)
-GATE 1 — NITYANANDA (VALIDATE) → StorageGateProvider   (Seed-Integrität)
-GATE 2 — ADVAITA (EXECUTE)     → InferGateProvider     (Attractor-Distribution-Tracking)
-GATE 3 — GADADHARA (RESULT)    → SyncGateProvider      (Position-Routing-Tracking)
-GATE 4 — SRIVASA (SYNC)        → EnforceGateProvider   (Governance via StateService)
-```
-
-Was gebaut wurde:
-- `substrate/gate_providers.py` — 5 Provider-Klassen + `wire_gate_providers()` + `get_providers()` Singleton
-- Jeder Provider erfüllt sein Capability Protocol (`isinstance` check ✅)
-- `EnforceGateProvider` nutzt `StateService` lazy via DI (graceful degradation ohne DI)
-- `wire_gate_providers()` — einmal bei Boot aufrufen, registriert alle 5 in TattvaRegistry (idempotent)
-- **Bugfix**: `get_tattva_by_protocol()` in `pancha_tattva.py` — `.lower()` auf Type statt str gefixt
-
-Tests: `test_gate_provider_impl.py` (37) — Compliance, Methoden, Stats, Wiring, Integration mit `_dispatch_provider`
-
-**Architektur-Entscheidung**: Provider sind **Observer** (nicht Controller). Sie beobachten den Pipeline-Kontext, tracken Statistiken, validieren — aber ändern den Flow NICHT. `__call__()` bleibt der einzige Controller.
+**Architektur-Entscheidung**: Provider sind **Observer** (nicht Controller). `__call__()` bleibt der einzige Controller.
 
 ## Lotus: Seed ist Wahrheit, Filesystem ist Maya
 
@@ -750,26 +570,9 @@ Dateien: `lotus_core.py:402-733`, `chamber.py:219-306` (dance), `antaranga.py` (
 | I/O im Hot Path | Zero | `importlib`, `governance.audit()` (FS-scan) |
 | State-Format | `snapshot() → bytes` (binary) | JSON auf Disk |
 
-### Test-Suite (verifiziert Feb 10 2026)
+### Test-Suite
 
-**4082 passed, 0 failures, 7 xfail, 25 skipped, ~280s.**
-Alle 10 pre-existing Failures gefixt + 7 Infra-Timeouts als xfail markiert.
-
-**VORSICHT bei den 10 Failures — NICHT blind fixen oder löschen!**
-Jeder einzelne muss geprüft werden: Ist der Test falsch, oder ist der Code nie verdrahtet worden?
-"Dead Code" in dieser Codebase heißt oft "nie gewired" — das Potential ist da, die Verbindung fehlt.
-
-**Audit-Ergebnis (Feb 10 2026): Alle 10 sind "Test veraltet", nicht "Code kaputt".**
-
-| Kategorie | Tests | Root Cause (verifiziert) | Fix |
-|-----------|-------|-------------------------|-----|
-| Orchestrator LUT (5) | `test_lut_*`, `test_step_returns_delta`, `test_cycle_returns_correct_xor` | Tests benutzen altes DIW-Format `[Name:2][Position:16]` (`diw >> 16`, `diw & 0xFFFF`). DIW wurde auf `[MURALI:4][VAMSI:9][VENU:6]` refactored. LUT ist korrekt, Tests nie aktualisiert. | Tests auf `diw.unpack()` umschreiben |
-| Lotus Attribute (2) | `test_attractor_fixed_accessible`, `test_attractor_cycle_accessible` | `ATTRACTOR_FIXED` lebt in `protocols/_maha_compute.py`, nicht im Filesystem. `LotusNode.__getattr__` sucht Folder/Module, findet keine Konstanten. | Konstanten über `__init__.py` oder Property exponieren |
-| Shabda (1) | `test_shabda_signature_structure` | Test erwartet `sthana` Key, Code liefert `element`. Pancha-Walk Rename (`sthana` → `element`) nie in Test nachgezogen. | Test: `sthana` → `element` |
-| Types (2) | `test_tick_state_keys`, `test_all_types_exported` | `TickState` wurde erweitert (13 Keys statt 6, `total=False`). `_types.py` wurde nach `seed/types.py` verschoben. Tests nie aktualisiert. | Tests an neue Struktur anpassen |
-
-**Diagnose-Reihenfolge:** Erst verstehen was der Test WILL, dann prüfen ob der Code das KANN,
-dann entscheiden ob Test oder Code angepasst wird. Niemals Test löschen um grün zu werden.
+**436 passed** (Feb 15 2026, `vibe_core/mahamantra/tests/`). Alle Shadow-Pipeline-Rewires + Gate-Wiring grün.
 
 ### LotusNode Seed-Migration ✅ (Feb 10 2026)
 
