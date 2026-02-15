@@ -312,7 +312,27 @@ in Isolation. Berührt nie die echte Wurzel.
 - `antaranga`: Chamber State
 - `akash`: Akkumulierter State über Runden
 
-**Composer-Infrastruktur (korrekt, wiederverwendbar):**
+**Zwei Kompositions-Pfade:**
+
+1. `compose_from_lotus(lotus_response, input_text)` — Token-basiert (SVO Rollen, Input-Echo)
+2. `compose_from_wave(lotus_response, input_text)` — **Antaranga-getrieben** (NEU, Feb 15):
+   - Liest die Standing Wave aus dem Chamber-Singleton nach Lotus `__call__()`
+   - Wörter gerankt nach POST-MODULATION Prana (nicht Pre-Computation Score)
+   - English Meanings → Syllable Vectors (CMU ARPAbet, `phonetics.py`)
+   - Syllables aligned auf 32-Step Mantra Grid (`mantra_grid.py`)
+   - Grid-Position = Satzreihenfolge
+
+**Syllable-Infrastruktur (gebaut, wiederverwendbar):**
+- `phonetics.py`: Input → 3D SyllableVector (stress, height, weight) via CMU ARPAbet
+- `mantra_grid.py`: 32-Step Sequencer aus MAHAMANTRA. Alignment Scoring.
+- `mode_affinity.py`: WordNet Graph-Distanz Klassifikation (keine Keywords)
+- `wordnet_bridge.py`: 3-Layer Semantic Scoring (exact/graph/morph), 4259 Wörter
+- `varnamala_codec.py`: IAST ↔ RAMA Koordinaten (49-Space)
+- `research/language_runtime/antaranga_bridge.py`: Keystroke → RAMA coord → Antaranga collide()
+- `research/language_runtime/venu_bridge.py`: DIWSubscriber für VenuOrchestrator Ticks
+- `research/language_runtime/incremental.py`: Live Keystroke Buffer → TickInputFrame
+
+**Token-Infrastruktur (alt, wird durch Syllable-Pfad ersetzt):**
 - `_word_role()`: Koordinaten-Masse → REF/VERB/NOUN/QUALITY/PREP/PARTICLE
 - `_SVO_ORDER`: Subject → Verb → Object → Quality → Modifiers (SOV→SVO Transformation)
 - `_pick_token()`: Scoring (Länge + Input-Echo Bonus), Dedup-aware
@@ -322,12 +342,20 @@ in Isolation. Berührt nie die echte Wurzel.
 **Tests:** 205/205 (55 Composer + 35 Router + 115 Engine)
 
 **Nächste Schritte:**
-- Phase B: `engine.generate()` → `MahamantraLotus.__call__()` → `compose_from_lotus()`
+- Phase B: `engine.generate()` → `MahamantraLotus.__call__()` → `compose_from_wave()`
+  - Problem: Chamber ist Singleton (`get_chamber()`), akkumuliert State über Calls
+  - Shadow-Pipeline ist deterministisch WEIL isoliert. Lotus ist stateful WEIL echt.
+  - Lösung: Frische `MahamantraLotus()` pro Call (eigenes Akash), aber Chamber bleibt Singleton
 - Phase C: Shadow-Infrastruktur entfernen (eigene Compressor/Synth/Kernel/Venu/Antaranga)
 - Phase D: Nadi-Integration (Engine als TattvaGate Hook oder DIWSubscriber)
+- Phase E: Token-Pfad (`compose_from_lotus`, `_pick_token`, `_assemble`) durch Syllable-Pfad ersetzen
 
 **WARNUNG:** `state_bridge.py` und `StateVector` sind FALSCH — MahaState ist ein Wrapper, nicht die Wurzel.
 Werden in Phase C entfernt. Der Lotus Response ersetzt alles.
+
+**WARNUNG:** Sprache = Syllables, NICHT Tokens. Die 49 Varnamala Matrix IST der Kompositionsraum.
+Gita-Wörter sind Computation-INPUT (smaranam → Antaranga), NICHT Output-Fragmente.
+Kein LLM. `chat.py` ist Legacy.
 
 ## Architektur-Audit (Feb 12 2026)
 
