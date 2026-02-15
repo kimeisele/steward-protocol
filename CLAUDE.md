@@ -1,18 +1,15 @@
 # STEWARD PROTOCOL
 
-## Session-Start
+## Regeln
 
-```bash
-git log --oneline -20
-git status
-git branch -v
-python -m ruff check --select F821 vibe_core/mahamantra/ 2>&1 | head -20
-```
-
-Lies die Historie kritisch. Tausende Commits über 6 Monate, 100% AI-generiert von
-verschiedenen Agents. Manche haben solide gebaut, manche haben aktiv Schaden angerichtet.
-Commit Messages sind oft AI-Überschwang. Docstrings lügen. .md-Dateien im Root sind
-AI-generierte Referenzen, keine Wahrheit. Verifiziere alles gegen den Code selbst.
+- 100% AI-generierte Codebase. Docstrings lügen. .md-Dateien lügen. **Nur Code ist Wahrheit.**
+- Verifiziere ALLES gegen den Code selbst, nicht gegen Dokumentation.
+- Kein LLM. Deterministisch. Kein externer API-Call.
+- Sprache = Syllables, NICHT Tokens. Die 49 Varnamala Matrix ist der Kompositionsraum.
+- Protocol statt konkrete Klassen (Dependency Inversion).
+- Wenn eine Zahl im Code auftaucht ohne Ableitung aus dem Mantra: Architektur-Verletzung.
+- `research/` ist load-bearing — `_gita_lens.py`, `maha_kernel.py`, `adapters/routing.py` importieren daraus.
+- DIW-Konsumenten MÜSSEN `diw.unpack()` benutzen. Keine manuellen Bit-Shifts.
 
 ## Das Mantra
 
@@ -21,614 +18,133 @@ Hare Krishna Hare Krishna Krishna Krishna Hare Hare
 Hare Rama   Hare Rama   Rama   Rama   Hare Hare
 ```
 
-Zähle es. Das ist die Architektur.
+7 Axiome (`protocols/seed/_axioms.py`): WORDS=16, TRINITY=3, HARE_COUNT=8, KRISHNA_COUNT=4, RAMA_COUNT=4, PANCHA=5, HALVES=2.
 
-7 Axiome in `protocols/seed/_axioms.py`:
-
-| Axiom | Wert | Gezählt von |
-|-------|------|-------------|
-| WORDS | 16 | Wörter im Mantra |
-| TRINITY | 3 | Unique Namen (Hare, Krishna, Rama) |
-| HARE_COUNT | 8 | "Hare" zählen |
-| KRISHNA_COUNT | 4 | "Krishna" zählen |
-| RAMA_COUNT | 4 | "Rama" zählen |
-| PANCHA | 5 | Unique aufeinanderfolgende Paare |
-| HALVES | 2 | Zwei symmetrische Hälften |
-
-Alles andere wird abgeleitet. `_primary.py` direkt von Axiomen, `_secondary.py` von primären.
-Jede assert-Zeile ist ein Beweis. `substrate/seed.py` re-deriviert zur Verifikation.
-
-Schlüssel-Ableitungen:
+Ableitungen (`_primary.py` → `_secondary.py` → `substrate/seed.py`):
 
 ```
-QUARTERS       = KRISHNA_COUNT                        = 4
-KSHETRA        = WORDS + HARE_COUNT                   = 24
-NAVA           = HARE_COUNT + (TRINITY - HALVES)      = 9
-SHARANAGATI    = KSHETRA // QUARTERS                  = 6
-MAHAJANA_COUNT = KSHETRA // HALVES                    = 12
-PARAMPARA      = KSHETRA + MAHAJANA_COUNT + KSETRAJNA = 37
-GITA_CHAPTERS  = SHARANAGATI × TRINITY                = 18
-MALA           = MAHAJANA_COUNT × NAVA                = 108
+QUARTERS=4  KSHETRA=24  NAVA=9  SHARANAGATI=6  MAHAJANA_COUNT=12  PARAMPARA=37  GITA_CHAPTERS=18  MALA=108
 ```
 
-Wenn eine Zahl im Code auftaucht ohne Ableitung: Architektur-Verletzung.
+## DIW (Divine Instruction Word) — 19 bits
 
-## Die Flöte (DIW - Divine Instruction Word)
-
-19 bits = `FLUTE_HOLES_SUM` = `VENU(6) + VAMSI(9) + MURALI(4)` = `GITA_CHAPTERS(18) + KSETRAJNA(1)`.
-
-SSOT: `protocols/diw.py`. Produzent: `substrate/venu_orchestrator.py`. Konsument: `substrate/chamber.py`.
-
-Bit-Layout (LSB → MSB):
+`protocols/diw.py` → `substrate/venu_orchestrator.py` → `substrate/chamber.py`
 
 ```
-Bits  0-5  (6): VENU   = Sharanagati (Quality/Mood)     → Intensität
-Bits  6-14 (9): VAMSI  = Nava Bhakti (Process/Action)   → H/K/R Name-Region
-Bits 15-18 (4): MURALI = Quarters (Phase)                → Genesis/Dharma/Karma/Moksha
+Bits  0-5  (6): VENU   — Intensität (Sharanagati)
+Bits  6-14 (9): VAMSI  — H/K/R Name-Region (Nava Bhakti)
+Bits 15-18 (4): MURALI — Phase (Genesis/Dharma/Karma/Moksha)
 ```
 
-`THE_FLUTE_CYCLE[16]` = vorberechnete LUT aus dem Mahamantra-Pattern. Jede Position
-ist ein natives 19-bit DIW. `VenuOrchestrator.step()` liefert das nächste Wort.
+`THE_FLUTE_CYCLE[16]` = LUT. `VenuOrchestrator.step()` → nächstes DIW.
+`chamber._apply_diw()`: MURALI=WAS, VAMSI=WIE, VENU=WIE STARK.
 
-`chamber._apply_diw()` interpretiert semantisch:
-- MURALI bestimmt WAS (Phase: Empfang/Prüfung/Verarbeitung/Vollendung)
-- VAMSI bestimmt WIE (Name: H=prana-dominant, K=integrity-dominant, R=cycle-dominant)
-- VENU bestimmt WIE STARK (0-63 normalisiert auf Intensität)
+## Gita
 
-`verify_divinity()` beweist: alle 4 Quarters, alle 3 Name-Regionen, 16 unique VENU-Werte.
+18 Kapitel = `SHARANAGATI × TRINITY`. 700 Verse. Fixed Point: BG 18.66.
+`protocols/seed/_topology.py` → `substrate/gita.py` → `adapters/gita_resonance.py`.
+`data/rama_lexicon.json`: 4127 Wörter, 700 Verse, RAMA-kodiert.
 
-**WARNUNG:** Vor Feb 2026 war das DIW-Format kaputt (`[Name:2][Position:16]` statt `[4:9:6]`).
-Alle Konsumenten MÜSSEN `diw.unpack()` benutzen. Keine manuellen Bit-Shifts.
+## RAMA-Koordinaten (49-Space)
 
-## Die Gita
-
-Die Bhagavad Gita ist nicht Metapher - sie ist das Routing-Netz.
-
-18 Kapitel = `SHARANAGATI × TRINITY`. 700 Verse (Prabhupada's Bhagavad Gita As It Is).
-Die Kapitel-Vers-Topologie liegt in `protocols/seed/_topology.py` als `CHAPTER_VERSES`.
-`substrate/gita.py` definiert den Fixed Point: Kapitel 18, Vers 66 (BG 18.66).
-`adapters/gita_resonance.py` matched Attractors zu Versen via berechneter Resonanz.
-
-Jedes Kapitel der Gita mappt auf abgeleitete Konstanten: Kapitel 1 = KSETRAJNA,
-Kapitel 4 = QUARTERS, Kapitel 9 = NAVA, Kapitel 12 = MAHAJANA_COUNT,
-Kapitel 18 = GITA_CHAPTERS (der Fixed Point). Siehe `get_chapter_significance()`.
-
-## Sanskrit = RAMA-Koordinaten (4D Phonem-Dekomposition)
-
-Gita word-for-word: 4127 unique Wörter, 45815 Phoneme = 34KB gepackt = 70% von 65K Lotus.
-Jedes Wort = Sequenz von RAMA-Koordinaten (0-48). Jede Koordinate = 6 bits = VENU-Feld.
-
-`substrate/varnamala_codec.py`: IAST ↔ RAMA encode/decode.
-`substrate/sanskrit_lookup.py`: `verse_words()`, `word_by_iast()`, `hkr_signature()`.
-`data/rama_lexicon.json`: 4127 Wörter, 700 Verse, RAMA-kodiert (Production-Daten).
-
-Jedes Phonem hat eine 4D-Adresse = QUARTERS = catur-vyūha:
+Jedes Phonem = 4D-Adresse (0-48):
 
 ```
-Dim 1 (Sthāna):   COORD_ELEMENT   — PANCHA (5) Artikulation → Element
-Dim 2 (Varga):    COORD_VARGA     — TRINITY (3) Lautklassen (svara/sparsha/shesha)
-Dim 3 (Prayatna): COORD_SUB       — Intra-Sektion Qualität (abgeleitet aus Grid-Struktur)
-Dim 4 (Harmonic): COORD_HARMONIC  — H-Orbit (×SEVEN mod 49 = Auflösungspfad)
+COORD_ELEMENT   — PANCHA (5) Elemente
+COORD_VARGA     — TRINITY (3) Lautklassen
+COORD_SUB       — Intra-Sektion Qualität
+COORD_HARMONIC  — H-Orbit (×SEVEN mod 49)
 ```
 
-Uniqueness: 80.7% → 94.7% → 99.97% → **100%** (49/49 Bijektion, 4127/4127 Wörter).
-IS_SHRUTI: R²-Residuen mod 49 = 22 SHRUTIS + 27 NAKSHATRAS = VARNAMALA.
+49/49 Bijektion. 4127/4127 Wörter unique. IS_SHRUTI = R²-Residuen mod 49.
+`substrate/varnamala_codec.py`, `substrate/pancha_walk.py`, `adapters/synth.py`.
 
-`substrate/pancha_walk.py`: 4 COORD maps, `derived_signature()`, `full_signature()`.
-`adapters/synth.py`: `phoneme_step()` nutzt VARGA→H/K/R, ELEMENT→ADSR, SUB→Position.
-101 Tests (68 walk + 16 codec + 17 lookup).
+## Pipeline: `MahamantraLotus.__call__()`
 
-## Die 9 Schritte (NavaBhakti Pipeline)
-
-`MahamantraLotus.__call__()` in `substrate/lotus_core.py`. NAVA = 9 Schritte:
+`substrate/lotus_core.py`. Entry: `steward "text"` → `MahamantraLotus.__call__()`.
 
 ```
-1.   SRAVANAM       - Input empfangen (str oder MahaCell)
-1.5  NAMA           - Phonetic Identity (encode_text → RAMA-Koordinaten)
-2.   KIRTANAM       - MahaCompression → Seed (deterministic hash, KEIN XOR)
-3.   PADA_SEVANAM   - Attractor from Seed (MahaModularSynth.transform)
-4.   ARCANAM        - Parampara-Verifikation (ShadowOracle.validate)
-5.   SMARANAM       - Word Resonance (rank_words 7D → top 7 resonant words)
-6.   VANDANAM       - Gita-Resonance (Attractor → Kapitel → Vers + Significance)
-7.   DASYAM         - Position/Quarter/Guardian + Shabda (RAMA Grid 4D Signatur)
-8.   SAKHYAM        - MahaCell + Kirtan (1→4 Zyklen) + spell_kirtan + Yajna (16 Ticks)
-9.   ATMA_NIVEDANAM - Response + Akash-Update (last_seed/position/attractor)
+GATE 0 PARSE:     SRAVANAM (input) → NAMA (encode) → KIRTANAM (compress → seed)
+GATE 1 VALIDATE:  PADA_SEVANAM (synth → attractor) → ARCANAM (parampara check)
+GATE 2 EXECUTE:   SMARANAM (rank_words 7D) → VANDANAM (Gita verse match)
+GATE 3 RESULT:    DASYAM (position/guardian/shabda)
+GATE 4 SYNC:      SAKHYAM (cell+kirtan) → YAJNA (16 ticks) → ATMA_NIVEDANAM (response)
 ```
 
-Seed ist REIN deterministisch: gleicher Input → gleicher Seed. Kein XOR mit last_seed
-(entfernt wegen seed^seed=0 Bug bei wiederholtem Input). Akash-Kontinuität läuft
-über kirtan_cycles (skalieren 1→4 mit total_rounds) und accumulated_value.
+Seed = deterministisch (gleicher Input → gleicher Seed). Kein XOR.
+Output = lebendig (Chamber akkumuliert, Beobachter verändert das Feld).
 
-Entry Point: `steward "anything"` → `cli/main.py` → `__main__.py` → `mahamantra.execute()`
-→ `MahamantraLotus.__call__()`. Deterministisch. Kein LLM.
+## Gate Providers
 
-## Pancha Tattva (Die 5 Verbindungen)
+`substrate/gate_providers.py` → `wire_gate_providers()` bei Boot.
+`_fire_gate()` dispatcht Hooks + Provider. `_GATE_DISPATCH` mappt Gate→Method.
 
-Alles was lebt in der Pipeline muss durch 5 Verbindungspunkte fließen.
-`protocols/_pancha.py` definiert `TattvaDict` und `PanchaTattvaProtocol`.
-Jede Komponente implementiert `__tattva__` (5-Fragen-Antwort).
+| Gate | Capability Protocol | Observer | Adapter |
+|------|-------------------|----------|---------|
+| 0 PARSE | `MantraCapability.parse()` | `MantraGateProvider` | `MahaAttention` |
+| 1 VALIDATE | `StorageCapability.validate()` | `StorageGateProvider` | — |
+| 2 EXECUTE | `InferCapability.infer()` | `InferGateProvider` | `MahaLLM` |
+| 3 RESULT | `SyncCapability.route()` | `SyncGateProvider` | — |
+| 4 SYNC | `EnforceCapability.enforce()` | `EnforceGateProvider` | — |
 
-Die 5 Verbindungen im Flow (alle verdrahtet in `lotus_core.py`):
-
-| Tattva | Verbindung | Implementation |
-|--------|-----------|----------------|
-| CHAITANYA | Return-Loop | Akash persistent state (last_seed/attractor/rounds → kirtan_cycles) |
-| NITYANANDA | Multi-Tick Yajna | WORDS(16) Ticks pro Call, voller Zyklus |
-| ADVAITA | CALL_RESPONSE | Kirtan-Zyklen skalieren 1→4 mit Resonanz |
-| GADADHARA | Gita Content | Chapter Significance im Response |
-| SRIVASA | Chamber Persistence | Singleton get_chamber() + wachsende Zyklen |
+Provider sind **Observer** — sie ändern den Flow nicht. `__call__()` ist der einzige Controller.
+`EnforceGateProvider` kontrolliert I/O via Guna-Policy (SATTVA=read-only, RAJAS=write, TAMAS=flush).
 
 ## Guardians
 
-16 Guardians (Mahajanas), WORDS = 16 Positionen, QUARTERS = 4 Quadranten.
-Module: `mahamantra/{quarter}/{name}/`. Protocols: `protocols/mahajanas/{name}/`.
-Protocol ist die kanonische Quelle. Guardian re-exportiert lazy via `__getattr__`.
+16 Guardians = WORDS Positionen, QUARTERS Quadranten.
+`mahamantra/{quarter}/{name}/` → `protocols/mahajanas/{name}/`.
+`__mahajana__`, `__position__`, `__genesis__` (parampara % 37 == 0).
+`reactor/shadow.py` = Yajna-Zyklus mit Phase-Hooks.
 
-Jeder Guardian: `__mahajana__`, `__position__`, `__genesis__`, identischer thin `execute()`,
-`__getattr__` → Protocol → `fractal_getattr(__file__)` aus `substrate/wiring.py`.
+## Antaranga (Inner Chamber)
 
-`int(__genesis__, 16) % PARAMPARA == 0` - Signatur-Kette. 37 = abgeleitet.
-
-`reactor/shadow.py` = Yajna-Zyklus. Phase-aware: `on_{phase}` Hook → fallback `execute()`.
-
-## DEEP STATE DIAGNOSE (Feb 11 2026, verifiziert)
-
-**Problem:** Es gibt KEINE State-Autorität. 30+ Python-Files schreiben direkt auf Disk (`json.dump`,
-`open(..., 'w')`). `StateService` existiert (write-behind cache in RAM), aber fast niemand benutzt es.
-Jeder Cartridge, Plugin, Tool schreibt wo er will. Das Ergebnis:
-
-### Was in Git liegt und nicht sollte (verifiziert)
-
-| Was | Wo | Anzahl | Größe | Warum schlimm |
-|-----|----|--------|-------|---------------|
-| Timestamp-Backups | `.vibe/state/*_backup/` | ~30 Dateien | — | Endlos wachsende Kopien |
-| Model-Blobs | `data/models/` | 37 Dateien | **87 MB** | sentence-transformers Weights IN GIT (gitignored aber committed) |
-| Private Keys | `data/identities/*.key`, `data/security/master.key` | 3 Dateien | 8 KB | **SICHERHEITSLÜCKE** |
-| SQLite DBs | `data/economy.db`, `data/vibe_ledger.db` | 2 Dateien | — | Binary in Git |
-| Log-Dateien | `data/logs/*.log` | 2 Dateien | — | Runtime-Artefakte |
-| JSONL Trails | `data/ledger/`, `data/governance/votes/`, `data/logs/` | 5 Dateien | — | Append-only Logs in Git |
-| Science Cache | `data/science/cache/` | 3 Dateien | — | Generierte Cache-Hashes |
-| Root JSON Müll | `watchman_report.json` (1.7MB!), `DEEP_AUDIT_REPORT.json`, etc. | 5 Dateien | 1.8 MB | Auto-generiert, nie aufgeräumt |
-| **Gesamt non-code in Git** | — | **1053 Dateien** | **~100 MB** | — |
-
-### Wer schreibt unkontrolliert auf Disk (30+ Files, verifiziert via grep)
-
-Direkte `.vibe/` Schreiber (20 Files):
-- `cartridges/registry.py`, `cartridges/base.py`
-- `cartridges/system/archivist/`, `watchman/`
-- `plugin_loader.py`, `task_management/task_manager.py`
-- `plugins/economy/`, `resource_limits/`, `naga_guard/`, `sangha_network/`, `durvasa/`, `samsara/`
-- `plugins/opus_assistant/manas/cortex/` (dharma, sutra_sense, shruta_sense, nadi_sense, viveka_action)
-
-Direkte `json.dump`/`open(w)` Schreiber (30+ Files):
-- `cartridges/system/civic/`, `archivist/`, `supreme_court/`, `science/`, `envoy/`, `forum/`, `watchman/`, `herald/`, `auditor/`, `engineer/`
-- `cartridges/agent_city/librarian/`, `dharma/`, `dhruva/`
-- `naga/ouroboros.py`, `commit_watcher.py`
-- `state/commit_authority.py`, `state/samskara.py`
-
-### State Authority (offen)
-
-30+ Dateien schreiben direkt auf Disk. `EnforceGateProvider` (Gate 4) existiert als I/O-Controller
-mit Guna-Policy. Nächster Schritt: unkontrollierte Schreiber auf `get_sync_gate().write()` umstellen.
-
-### Float→Integer Migration (✅ auf main)
-
-Pattern: `CF_*` Int-Konstanten als SSOT, Float-Aliases nur an API-Grenze. COSMIC_FRAME=21600.
-13 Dateien migriert. Offen: MANAS-Block (4 Dateien, 224 Floats) — eigenes Subsystem, Block-Migration.
-
-## Maha Language Engine (Feb 15 2026, aktualisiert)
-
-**Branch:** `main` (gemergt, Feature-Branch gelöscht)
-
-**Architektur: Protocol / Substrate / Adapter Triad**
-
-```
-protocols/_composition.py     (THE LAW)    — CompositionProtocol, CompositionScorerProtocol
-substrate/language/composer.py (PURE MATH)  — Scoring-Atome (prosodic_affinity, chamber_boost, etc.)
-adapters/composition.py        (THE BRIDGE) — MahaComposition implementiert CompositionProtocol
-```
-
-**EIN Kompositions-Pfad:**
-
-`MahamantraLotus.__call__()` → `MahaComposition.compose()` → English Output
-
-Alte Pfade (`compose_from_lotus`, `_pick_token`, `_assemble`, `compose`) = GELÖSCHT.
-`compose_from_wave()` in `substrate/` ist nur noch ein 1-Zeilen-Redirect zum Adapter.
-
-**MahaComposition Adapter (`adapters/composition.py`):**
-- Implementiert `CompositionProtocol` (`isinstance` check ✓)
-- 5 pluggable Scorer (PANCHA), jeder `CompositionScorerProtocol`:
-  - `PranaScorer` — Antaranga Standing Wave Prana an RAMA-Koordinaten
-  - `RhythmScorer` — Prosodische Affinität (SyllableVector ↔ Koordinaten)
-  - `SemanticScorer` — WordNet Graph-Distanz zum Input
-  - `ModeScorer` — Guna ↔ WordNet-Mode Alignment (Graph-Distanz, keine Keywords)
-  - `StateScorer` — System-State numerische Affinität
-- Kontext-getriebene Wortanzahl (NICHT hardcoded SEVEN):
-  - GENESIS=5, DHARMA=7, KARMA=5, MOKSHA=4, +2 wenn Prana > 0
-- Singleton via `get_composition()`
-- `last_context` Property für Observability
-
-**Engine (`substrate/language/engine.py`):**
-- THIN SHELL: 149 Zeilen, kein eigener State
-- `generate()` = `MahamantraLotus()` → `get_composition().compose()` → `EngineResult`
-- Importiert direkt von `adapters/composition`, NICHT von substrate Re-Export
-
-**Substrate Scoring-Atome (`substrate/language/composer.py`):**
-- `prosodic_affinity()` — SyllableVector ↔ RAMA-Koordinaten (reine Mathematik)
-- `chamber_boost()` — Antaranga Prana an Wort-Slot (abgeleitete Koeffizienten)
-- `semantic_boost()` — WordNet Graph-Distanz (keine Keywords)
-- `rhythm_bias()` — 3D Vektoren + Grid Alignment
-- `state_affinity()` — Numerische State-Injektion
-- `_build_lotus_pool()` — Smaranam + Verse → Pool Items mit Koordinaten
-
-**Syllable-Infrastruktur (gebaut, verdrahtet):**
-- `phonetics.py`: Input → 3D SyllableVector (stress, height, weight) via CMU ARPAbet
-- `mantra_grid.py`: 32-Step Sequencer aus MAHAMANTRA. Alignment Scoring.
-- `mode_affinity.py`: WordNet Graph-Distanz Klassifikation (keine Keywords)
-- `wordnet_bridge.py`: 3-Layer Semantic Scoring (exact/graph/morph), 4259 Wörter
-
-**Tests:** 436/436 (52 Composer + 22 Adapter + 35 Router + 115 Engine + 13 Heartbeat + Rest)
-
-**Halb-deterministisch BY DESIGN (Kshetrajna-Prinzip):**
-- Seed = deterministisch (gleicher Input → gleicher Seed, immer)
-- Output = LEBENDIG (Chamber akkumuliert — Beobachter verändert das Feld)
-
-**WARNUNG:** `state_bridge.py` und `StateVector` sind FALSCH — MahaState ist ein Wrapper, nicht die Wurzel.
-Werden in Phase C entfernt. Der Lotus Response ersetzt alles.
-
-**WARNUNG:** Sprache = Syllables, NICHT Tokens. Die 49 Varnamala Matrix IST der Kompositionsraum.
-Gita-Wörter sind Computation-INPUT (smaranam → Antaranga), NICHT Output-Fragmente.
-Kein LLM. `chat.py` ist Legacy.
-
-## Wiring-Audit: Shadow Pipelines (Feb 15 2026, code-verifiziert)
-
-**Das Kernproblem:** Mehrere Komponenten sind PARALLEL-PIPELINES zu `lotus_core.__call__()`.
-Sie recomputen was `__call__()` schon berechnet, statt die Gate-Ergebnisse zu konsumieren.
-
-**Was IN den 5 Gates verdrahtet ist (korrekt):**
-- `MahaCompression` → seed (Gate 0)
-- `MahaModularSynth` → attractor (Gate 1)
-- `ShadowOracle` → parampara (Gate 1)
-- `rank_words()` → 7 resonante Wörter (Gate 2)
-- `GitaResonance` → verse match (Gate 2)
-- Position/Guardian/Quarter/DIW LUTs (Gate 3)
-- `Chamber.resonate_words/kirtan/spell_kirtan` (Gate 4)
-- `ShadowReactor.yajna()` 16-tick cycle (Gate 4)
-
-**Shadow Pipelines GETÖTET (Feb 15 2026):**
-
-| Komponente | Status |
-|------------|--------|
-| `MahaLLMKernel.resonate()` | ✅ Konsumiert `__call__()` |
-| `MahaLLMKernel.resonate_as()` | ✅ Konsumiert `__call__(opcode=guardian_pos)` |
-| `MahaLLMKernel.expand()` | ✅ `__call__()` für Resonanz, H/K/R Tree bleibt unique |
-| `guardian_router.maha_respond()` | ⚠️ DEPRECATED (0 Production-Caller) |
-
-**Gate Providers (7 total, alle verdrahtet via `wire_gate_providers()`):**
-
-| Gate | Observer | Adapter |
-|------|----------|---------|
-| 0 PARSE | `MantraGateProvider` | `MahaAttention.parse()` — O(1) Intent-Resolution |
-| 1 VALIDATE | `StorageGateProvider` | — |
-| 2 EXECUTE | `InferGateProvider` | `MahaLLM.infer()` — Holographic Intent Routing from Seed |
-| 3 RESULT | `SyncGateProvider` | — |
-| 4 SYNC | `EnforceGateProvider` (I/O Governance via StateService) | — |
-
-**Noch offen:**
-- `language_runtime/` in `research/` → nach `substrate/` migrieren wenn reif
-
-## Architektur-Audit (Feb 12 2026)
-
-**Zahlen:** 1426 .py Dateien, 377K Zeilen, ~3600 Klassen, ~3700 Funktionen, 358 Protocol-Dateien
-
-**Probleme (1 Zeile pro Punkt):**
-- I/O-Anarchie: 33 Mahamantra-Dateien schreiben direkt auf Disk (json.dump/write_text), nur 3 nutzen StateService
-- Exception-Schlucken: 2886 try/except, davon 45× `except Exception: pass` — System ist stumm bei Fehlern
-- Toter Code: 184 Cartridge-Dateien (46K Zeilen), MANAS-Block (4 Dateien, 224 Floats) — unklar wieviel davon live
-- 602 Singletons/Globals — unkontrollierter Shared State
-- DIWSubscriberProtocol: 0 aktive Subscriber (nur Protocol + Orchestrator kennen es, niemand subscribed)
-- MantraClock: 0/16 position callbacks, 0 voices, 1 mala callback (state flush)
-
-**Existierende Infrastruktur (schon gebaut, teilweise ungenutzt):**
-- `VenuOrchestrator` (`substrate/venu_orchestrator.py`): 19-bit DIW, LUT-basiert O(1), step()/spell()/cycle(), DIWSubscriber-Dispatch
-- `SankirtanChamber` (`substrate/chamber.py`): dance() = DIW→Cell-Transform→Registry-Interact→Antaranga-Shadow
-- `AntarangaRegistry` (`substrate/antaranga.py`): 16KB contiguous RAM, 512×32 Byte Slots, uint16 integrity
-- `MantraClock` (`venu/clock.py`): 16 position callbacks + mala callbacks + voices — aber 0 Nutzer
-- `StateService` (`state/state_service.py`): RAM-Cache + flush + Policies + auto-commit + Weaver-Integration
-- `bridge.offer()` (`substrate/bridge.py`): PURPOSE_MAP mit `file_flush`/`file_write` → Position 13 (Bali)
-- `_GovernedPath` (`substrate/proxy.py`): intercepted write_text() → bridge.offer() — existiert, kaum genutzt
-- `PanchaTattva` + `TattvaGate` + `GateProviders`: Pipeline-Governance für lotus_core.__call__()
-- `TattvaRegistry` (`substrate/tattva_registry.py`): collect/index/query __tattva__ declarations
-- `Singularity.tick()`: Heartbeat = kala.advance() + venu.step() + _broadcast(TickState)
-- `EventBus` (`substrate/event_bus.py`): publish/subscribe, aber separate Welt von DIWSubscriber
-- `Reactor/Loop` (`reactor/loop.py`): async event loop + mailbox, bridge.offer() nutzt es
-
-**I/O Gate — was fehlt:**
-- Enforcement: kein Writer wird gezwungen durch StateService/bridge zu gehen
-- Policy: keine Regeln WAS geschrieben werden darf (Schema, Größe, Frequenz)
-- Audit: kein Log WER WANN WAS geschrieben hat
-- Verbindung: StateService ↔ VenuOrchestrator ↔ DIWSubscriber sind nicht verdrahtet
-
-## Codebase-Realität (Bekannte Probleme)
-
-Offen:
-- `seed.py`: ~20 F811 Redefinitionen (absichtliche Re-Derivation, aber unordentlich)
-- Zwei CLI-Systeme: `vibe_core/cli/` (alt, 69 Dateien, nur Redirect) und `vibe_core/mahamantra/cli/` (neu)
-- `ExecuteResult.requires_confirmation` existiert, kein Guardian nutzt es
-- `protocols/` hat massive Dateien (yamaraja protocol = 653 Zeilen)
-- PulseManager (`protocols/mahajanas/manu/types/pulse.py`): ZERO Consumers, deprecated
-- Jagannath `ratha_yatra` hardcoded in `boot_orchestrator.py` statt BeatSubscriber
-- MantraClock: 0/16 position callbacks, 0 voices, 1 mala callback (state flush)
-
-Fallen (aufpassen!):
-- `CellLifecycleState.integrity` ist jetzt `int` (0-COSMIC_FRAME). Migriert in `feature/float-int-wave-2`.
-- DIW-Konsumenten MÜSSEN `diw.unpack()` nutzen. Keine manuellen Bit-Shifts.
-- `substrate/` ist flach — fraktale Restrukturierung steht noch aus.
-
-Offen (neu entdeckt):
-- `conftest.py` registriert Marker (smoke, unit, e2e, fractal) die `pyproject.toml` nicht kennt → `--strict-markers` Konflikt
-- `test_root_dir` Failure: `"genesis" not in dir(mahamantra)` — Quarter-Attribute fehlen in `__dir__`
-- `iGene.is_fatal` war IMMER False (float 0-1 vs int 0-21600) → Fix auf `fix/igene-fatal-comparison`
-- 4 F811 in `research/` (2× `run_analysis` Duplikate, 2× Enum-Shadowing in physics.py)
-
-**HÄNGENDE TESTS (pre-existing auf `main`, Root Cause: blocking loops/FS-scans):**
-- `test_singularity.py`, `test_daemon.py`, `test_daemon_soul.py` — `daemon.start()` infinite loop + FS audit
-- `test_gad.py`, `test_graph.py` — Protocol validate() Import-Kette blockiert
-- `test_entry.py` — CLI `main([])` blockiert
-
-Bereits aufgeräumt (nicht nochmal anfassen):
-- F821: 0 Fehler in `mahamantra/` (VenuOrchestrator + SeedResult via TYPE_CHECKING gefixt)
-- F811: 0 Fehler in `mahamantra/` (excl. research/) — byte.py doppeltes `__repr__`, basin_set Shadowing, MAHAJANA_COUNT Doppel-Import
-- Guardians: ALLE 16 identisches thin Pattern (keine if-else, keine Klassen)
-- yamaraja: 288→78 Zeilen (Duplikat-Klassen entfernt)
-- kapila: eager import entfernt, jetzt lazy wie alle anderen
-- hologram.py/layers.py: AI-Slop entfernt (doppelte Import-Blöcke)
-- gita.py: Duplikat-Import + Ghost MAHA_WORDS entfernt, 11/13/14/15 → abgeleitet
-- Star Imports eliminiert → lazy Protocol Re-Exports
-- DIW-Format repariert: `[Name:2][Position:16]` → native `[MURALI:4][VAMSI:9][VENU:6]`
-- `_apply_diw()` semantisch: Phase×Name×Intensität statt generische Modulation
-- `verify_divinity()` + `verify_resonance()` auf 6-9-4 Struktur aktualisiert
-- Sanskrit 4D Dekomposition: `pancha_walk.py` (4 COORD maps, 49/49 Bijektion, 101 Tests)
-- `vedabase.db` entfernt: Extraktion abgeschlossen, Production nutzt `rama_lexicon.json`
-- `lotus_projection.py`: Import-Fix (`_lotus` → `substrate.lotus_types`), 16/16 Positionen
-- `lotus_core.py`: 3× if-else Quarter-Routing → branchless `seed.get_quarter_name()`
-- `lotus_core.py`: Magic 72→`HEADER_SIZE_BYTES`, 300→`HEADER_DAILY_CYCLES`
-- `chat_service.py`: `position < 8` → `position < HALF_SIZE`
-- `lotus_projection.py`: `project_minimal()` hardcoded Positionen → SSOT `HEAD_POSITIONS`
-- `proxy.py`: `AUTO_WRAP_SERVICES` (2 hardcoded) → lotus-driven Discovery (16/16)
-- `boot_orchestrator.py`: Balarama wrapping via `kernel._positions` statt manueller Liste
-- `substrate/__init__.py`: Monolith-Split → `types.py`, `hardware.py`, `mantra_protocol.py`
-- `VenuOrchestratorProtocol` in `_venu.py`: ONE orchestrator shared via ServiceRegistry
-- `VenuService.__init__()` registriert Orchestrator unter `VenuOrchestratorProtocol`
-- `chamber.py`: `_resolve_orchestrator()` holt shared Orchestrator (Boot) oder local fallback (CLI)
-- `kala_bridge.py`: PulseManager → `BeatSubscriberProtocol` (NADI=72, Patrol=432=MALA Sekunden)
-- `boot_orchestrator.py`: KalaBridge als BeatSubscriber registriert, alte PulseManager-Verdrahtung entfernt
-- `state_service.py`: Write-behind cache (save→RAM, flush→Disk), Mala-flush (108 ticks), Samskara-Intercept
-- `boot_orchestrator.py`: MantraClock.on_mala() → StateService.flush() (RAM→Disk every ~27s)
-
-## PipelineCache (lotus_core.py)
-
-`_PipelineCache` Singleton — precomputes all seed-independent lookups for `__call__()`.
-Same pattern as `LexiconVectorCache`: build once, use forever.
-
-Was es cached:
-- Constants: WORDS, MAHA_QUANTUM, PARAMPARA, KSETRAJNA, MAX_CYCLES
-- Callables: encode_text, synth_transform, rank_words, match_attractor, get_gita_chapter, etc.
-- Classes: MahaCellUnified, register_cell, TickStateInput
-- Position LUTs (16 each): quarter_names, roles, holy_names, trinity_functions, rama_coords, phonemes, diw_components
-- Phoneme signature tables (49 each): COORD_ELEMENT/VARGA/SUB/HARMONIC, ELEMENT_NAMES, IS_SHRUTI
-
-Was es NICHT cached (Ownership bei MahamantraLotus):
-- Compressor → `MahamantraLotus._get_compressor()` (class-level singleton)
-
-Eliminiert ~30 lazy imports + ~15 Funktionsaufrufe pro `__call__()`.
-0 Regressionen: 662+ Tests grün.
-
-## Antaranga (Inner Chamber — Contiguous RAM)
-
-`substrate/antaranga.py`: 512 Slots × 32 Bytes = 16 KB kontiguierer Speicher.
-Kein Python-Objekt. Kein GC. Reine Byte-Resonanz.
-
-SankirtanChamber hat ZWEI Kammern:
-- **Bahiranga** (äußere) = Python-Objekte, API, Debugging (`SiksastakamRegistry`)
-- **Antaranga** (innere) = 16 KB `bytearray`, Hardware-Geschwindigkeit
-
-`dance()` schreibt in BEIDE: Python-Registry für API, Antaranga für den Reaktorkern.
-`resonate_words()` fließt `rank_words()`-Ergebnisse als lebende Muster in die Antaranga.
-`lotus_core.__call__()` Step 8.4b: resonant_words → Antaranga nach rank_words().
-Return-Dict enthält `"antaranga"` Stats (active_slots, total_prana, collisions, size_bytes).
-`snapshot()`/`restore()` inkludiert Antaranga-Bytes (backward-kompatibel mit Legacy).
+`substrate/antaranga.py`: 512 Slots × 32 Bytes = 16 KB `bytearray`. Kein Python-Objekt. Kein GC.
 
 Slot-Layout (32 Bytes, Little-Endian):
 ```
-[0:4]   source     (uint32)
-[4:8]   target     (uint32)
-[8:12]  operation  (uint32)
-[12:16] arcanam    (uint32)
-[16:20] atma       (uint32)
-[20:24] prana      (uint32)
-[24:26] integrity  (uint16)
-[26:28] cycle      (uint16)
-[28:30] flags      (uint16)
-[30:32] diw_acc    (uint16)
+[0:4]   source     (uint32)    [16:20] atma       (uint32)
+[4:8]   target     (uint32)    [20:24] prana      (uint32)
+[8:12]  operation  (uint32)    [24:26] integrity  (uint16)
+[12:16] arcanam    (uint32)    [26:28] cycle      (uint16)
+                               [28:30] flags      (uint16)
+                               [30:32] diw_acc    (uint16)
 ```
 
-Collision = in-place Byte-Arithmetik: prana addiert, integrity mittelt, flags |= ACTIVE.
-`apply_diw()` = XOR auf diw_acc Feld. `active_count()` = linearer Scan über flags.
+SankirtanChamber hat Bahiranga (Python-API) + Antaranga (16KB bytearray).
+`dance()` schreibt in beide. `resonate_words()` fließt rank_words() in Antaranga.
 
-**Hot Path Analyse (Feb 2026):**
-```
-VORHER:
-  lotus_core.__call__() = ~1400 ms
-  rank_words()          = ~1300 ms (90% der Zeit!)
-  Alles andere          = <1 ms
-
-NACHHER (LexiconVectorCache):
-  rank_words()          = ~78 ms (median, 8.5× schneller)
-  rank_words()          = ~34 ms (best case, 18× schneller)
-```
-
-**Vectorisierung (Feb 2026):**
-`LexiconVectorCache` in `semantic_index.py`: 13 Fixed-Size Felder pro Wort, vorberechnet bei Index-Load.
-`_rank_words_vectorized()` in `resonance_ranker.py`: Input-Features EINMAL berechnen, dann
-alle 4127 Wörter via flache Array-Lookups scoren. Bitmask-Jaccard via `int.bit_count()`.
-Unrolled Loops (PANCHA=5, TRINITY=3, BASIN_COUNT=6, PA_COUNT=5).
-Bit-identische Ergebnisse. Kein numpy. Kein neues Dependency.
-`rank_words(candidates=None)` → Fast Path. `rank_words(candidates=[subset])` → Original Slow Path.
-
-## Repo-Zustand (Feb 15 2026)
-
-**1 Branch: `main`.** 436/436 Tests grün.
-
-| Feature | Inhalt |
-|---------|--------|
-| Antaranga RAM Chamber | 16KB kontiguierer RAM, 512×32 Byte Slots |
-| LexiconVectorCache | rank_words() 1300ms→78ms |
-| PipelineCache | Seed-unabhängige Lookups vorberechnet |
-| TattvaGate Pipeline | 5 Gates + 7 Provider (5 Observer + MahaAttention + MahaLLM) |
-| Composition Triad | Protocol/Substrate/Adapter. 5 Scorer |
-| Shadow Pipeline Kills | MahaLLMKernel rewired, maha_respond() deprecated |
-| Unified Heartbeat | 1 Singularity, 1 Flute, 1 Tick |
-| DIW 19-bit Layout | VENU(6)+VAMSI(9)+MURALI(4) kanonisch |
-| Write-behind StateService | RAM-first + Mala flush + EnforceGateProvider I/O Governance |
-
-**research/ ist LOAD-BEARING (nicht löschen!):**
-- `_gita_lens.py`, `maha_kernel.py`, `adapters/routing.py` importieren aus `research/`
-- Migration nach `substrate/` steht aus
-
-## TattvaGate Pipeline + Providers ✅ (Feb 11-15 2026)
-
-9 NavaBhakti-Schritte auf 5 TattvaGates gemappt. Jedes Gate hat Observer + optionale Adapter-Provider.
+## Composition
 
 ```
-GATE 0 — CHAITANYA (PARSE)     → MantraGateProvider + MahaAttention.parse()
-GATE 1 — NITYANANDA (VALIDATE) → StorageGateProvider
-GATE 2 — ADVAITA (EXECUTE)     → InferGateProvider + MahaLLM.infer()
-GATE 3 — GADADHARA (RESULT)    → SyncGateProvider
-GATE 4 — SRIVASA (SYNC)        → EnforceGateProvider (I/O Governance via StateService)
+protocols/_composition.py      — CompositionProtocol, CompositionScorerProtocol
+substrate/language/composer.py — Scoring-Atome (pure math)
+adapters/composition.py        — MahaComposition (5 Scorer: Prana, Rhythm, Semantic, Mode, State)
 ```
 
-**Schlüssel-Dateien:**
-- `protocols/_capabilities.py` — 5 `runtime_checkable` Capability Protocols
-- `substrate/gate_providers.py` — 5 Observer + `wire_gate_providers()` (registriert alle 7 Provider)
-- `substrate/tattva_registry.py` — `register_gate_provider()` mit Capability-Check
-- `lotus_core.py` — `_fire_gate()` dispatcht Hooks + Provider, `_GATE_DISPATCH` mappt Gate→Method
+EIN Pfad: `__call__()` → `MahaComposition.compose()` → English Output.
+`compose_from_wave()` in substrate = 1-Zeilen-Redirect zum Adapter.
 
-**Architektur-Entscheidung**: Provider sind **Observer** (nicht Controller). `__call__()` bleibt der einzige Controller.
+## Heartbeat
 
-## Lotus: Seed ist Wahrheit, Filesystem ist Maya
+1 Singularity, 1 VenuOrchestrator, 1 `tick()`. `_owned` Flag verhindert doppelten `step()`.
+`Singularity._listeners` = einziger Broadcast-Kanal. LotusBridge verbindet VenuService.
 
-`resonate()` in `lotus_types.py` crawlte das GESAMTE Filesystem (25+ Subdirectories, rekursiv).
-Fix: Root-Level nur die 4 Quarters aus `QUARTER_NAMES` (Seed) durchlaufen.
-86s Timeout → 1.7s. Das ist das Paradigma: **Seed projiziert, Filesystem reflektiert.**
+## Fallen
 
-Aber `_dir_full()` und `__dir__()` crawlen immer noch das Filesystem für JEDE Ebene.
-Das ist der nächste Schritt: Lotus sollte aus dem Seed projizieren, nicht das Filesystem fragen.
-Idealerweise: Seed → Cache/RAM → O(1) Lookup. Kein `Path.iterdir()`, kein `importlib`.
-Die Infrastruktur existiert bereits: Antaranga (16KB RAM), Chamber, PipelineCache.
-Die Frage ist nur: wie verdrahten?
-
-## Reactor Lifecycle + Event-Routing (Feb 10 2026)
-
-`ReactorLoop` war ein Zombie-Thread ohne shutdown(). `offer()` hing ewig.
-
-Fix (3 Teile):
-1. `ReactorLoop.shutdown()` + `shutdown_loop()` + `atexit` — Thread-Lifecycle
-2. `offer(timeout=)` — konfigurierbar statt hardcoded 10s
-3. `ReactorLoop._on_bridge_event()` — globaler EventBus-Subscriber, schließt den Loop
-
-```
-offer() → PURPOSE_MAP → position/mahajana (Seed-Routing, kein Reactor)
-       → EventBus.emit_sync(task_id=ticket)
-       → _on_bridge_event() → mailbox.deposit(success)
-       → mailbox.collect(ticket) → OfferResult
-```
-
-18 xfail-Tests → alle grün. 56 Bridge-Tests in 3.5s.
-
-## Architektur (verifiziert aus Code, Feb 10 2026)
-
-### Der Flow in `lotus_core.__call__()` (auf `main`)
-
-```
-input → compress(seed) → synth(attractor) → MahaCell.create()
-      → Chamber.resonate_words(ranked_words, attractor)  [Antaranga: 16KB RAM]
-      → Chamber.kirtan(cell, cycles)                     [dance() × WORDS]
-      → Chamber.spell_kirtan(cell, input_coords)         [input-derived DIWs]
-      → ShadowReactor.yajna(16 ticks)                    [Bhoga→Prasadam→Return]
-      → response dict
-```
-
-Dateien: `lotus_core.py:402-733`, `chamber.py:219-306` (dance), `antaranga.py` (16KB bytearray)
-
-### Chamber vs Rest
-
-| | `chamber.py` / `antaranga.py` | `singularity.py` / `daemon.py` |
-|---|---|---|
-| Daten | `bytearray(16384)` + `struct.pack_into` | Python dicts, lazy singletons |
-| Konstanten | `Final[int]` aus `_seed.py` | Mutable class vars |
-| I/O im Hot Path | Zero | `importlib`, `governance.audit()` (FS-scan) |
-| State-Format | `snapshot() → bytes` (binary) | JSON auf Disk |
-
-### Test-Suite
-
-**436 passed** (Feb 15 2026, `vibe_core/mahamantra/tests/`). Alle Shadow-Pipeline-Rewires + Gate-Wiring grün.
-
-### LotusNode Seed-Migration ✅ (Feb 10 2026)
-
-`lotus_types.py` — **5 Methoden von FS auf Seed-first migriert**, `lotus_projection.py` komplett Seed-basiert.
-
-| Methode | Vorher | Nachher | Speedup |
-|---------|--------|---------|---------|
-| `_discover()` | `Path.exists()` ×3 (146 µs) | Seed O(1), FS-Fallback nur non-Lotus (3.3 µs) | **44×** |
-| `__dir__()` | `Path.iterdir()` komplett | Seed-first + FS für non-Lotus | — |
-| `_dir_full()` | `Path.iterdir()` komplett | Seed-first + FS für non-Lotus | — |
-| `_walk()` | `Path.iterdir()` rekursiv | Seed: `_QUARTER_NAMES` / `_GUARDIANS_BY_QUARTER` | **∞** (kein FS) |
-| `resonate()` | `_dir_full()` bei depth=1 | Seed für root + quarter | **0.7 ms/call** |
-| `project_lotus()` | `LotusNode._walk()` + FS | `ALL_GUARDIANS` direkt, kein LotusNode | **kein FS** |
-| `_get_module()` | `importlib` | Bleibt (nötig, Python-cached) | — |
-| `_awaken_and_execute()` | `importlib` ×4 | Bleibt (Leaf-Level, selten) | — |
-
-**Architektur:** Lazy-loaded Seed-Cache (`_ensure_seed()`) bricht Circular Imports.
-Seed-Daten: `_QUARTER_NAMES`, `_QUARTER_SET`, `_GUARDIAN_SET`, `_GUARDIANS_BY_QUARTER`.
-
-**Tests:** 4082 passed, 0 failures, 7 xfail, 25 skipped (identisch zur Baseline).
-
-### Venu Unification ✅ (Feb 10 2026)
-
-**Ziel:** VenuOrchestrator ist DIE einzige Quelle — `step()` wird genau einmal pro Tick aufgerufen.
-
-**Problem:** 3 unabhängige `step()`-Caller + 5× redundante rglob + 2 getrennte Broadcast-Kanäle.
-
-**Lösung (4 Commits):**
-
-| Datei | Änderung | Effekt |
-|-------|----------|--------|
-| `venu_orchestrator.py` | `_owned: bool` Flag | Expliziter Vertrag: VenuService setzt True/False |
-| `venu_service.py` | `start()` → `_owned=True`, `stop()` → `_owned=False` | Ownership klar signalisiert |
-| `kernel/singularity.py` | Guard: `if venu._owned: read _prev_state` | Kein doppelter `step()` |
-| `sound/audio_engine.py` | Guard: `if orch._owned: read _prev_state` | Consumer, nicht Driver |
-| `governance/bridge.py` | `audit()` cached (`_audit_cache`) | rglob nur 1×, nicht pro Daemon-Cycle |
-| `audit/audit_registry.py` | `SourceCache` Singleton | 5× rglob+read_text → 1× shared scan |
-| `audit/lineage,ssot,hygiene,drift` | Nutzen `SourceCache.scan()` | Kein eigener FS-Scan mehr |
-| `substrate/lotus_core.py` | `register_listener()` + `_broadcast()` delegieren an Singularity | Ein Broadcast-Kanal |
-| `services/lotus_bridge.py` | `on_beat_tick()` ruft `lotus.tick()` statt manuelles state-Dict | Kein fragiler Import-Spaghetti |
-
-**Architektur nach Unification:**
-- **Ein Flötenspieler:** `_owned` Flag entscheidet wer `step()` aufruft (VenuService ODER Singularity, nie beide)
-- **Ein Broadcast-Kanal:** `Singularity._listeners` — Lotus delegiert, hat keine eigene Liste mehr
-- **Zwei Abstraktionsebenen (korrekt):** `VenuOrchestrator._subscribers` (DIW, 19-bit) + `Singularity._listeners` (TickState, semantisch)
-- **LotusBridge:** Verbindet VenuService → `Singularity._listeners` via `lotus.tick()` (Guard verhindert doppelten step)
-- **Daemon:** Läuft nie gleichzeitig mit VenuService. `chant_quarter()` × 4 = 16 ticks = 1 Runde — korrekt.
-
-**Tests:** 4082 passed, 0 failures, 7 xfail, 25 skipped (identisch zur Baseline).
+- `CellLifecycleState.integrity` ist `int` (0-COSMIC_FRAME=21600), NICHT float.
+- `state_bridge.py` / `StateVector` sind Wrapper-Müll, nicht die Wurzel.
+- `guardian_router.maha_respond()` ist deprecated (0 Caller).
+- `chat.py` ist Legacy.
+- 30+ Dateien schreiben unkontrolliert auf Disk. `StateService` existiert, wird kaum genutzt.
+- Private Keys liegen in Git (`data/identities/*.key`, `data/security/master.key`).
+- `seed.py` hat ~20 F811 Redefinitionen (absichtliche Re-Derivation).
+- Tests mit blocking loops hängen: `test_singularity`, `test_daemon*`, `test_gad`, `test_graph`, `test_entry`.
 
 ## Arbeitsweise
 
 - Senior Architekt. Entscheidungen treffen, nicht fragen.
-- User spricht Deutsch, nicht technisch, delegiert.
+- User spricht Deutsch, delegiert.
 - Code muss schön sein. Kein if-else Slop.
-- Pre-commit hooks laufen automatisch.
 - Ruff: `python -m ruff check --select F821,F811`
-- 100% AI-generierte Codebase - IMMER versteckte Probleme erwarten.
-- Docstrings und .md-Dateien im Root lügen. Nur Code ist Wahrheit.
+- 100% AI-generierte Codebase — IMMER versteckte Probleme erwarten.
