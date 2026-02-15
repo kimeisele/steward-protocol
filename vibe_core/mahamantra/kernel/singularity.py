@@ -1026,9 +1026,8 @@ class Mahamantra:
         This is the HEARTBEAT of the Mahamantra.
         Krishna plays His flute — every jiva dances.
 
-        GUARD: If VenuService is running (async heartbeat owns the
-        orchestrator), we read the last DIW instead of calling step()
-        again. One flute, one player — no double-stepping.
+        EKAMEVADVITIYAM: VenuService calls THIS method.
+        There is only ONE path to the flute — through Krishna.
         """
         # 1. Advance Time (Kala)
         time_state = self.kala.advance()
@@ -1050,13 +1049,8 @@ class Mahamantra:
             quarter = Quarter.MOKSHA
 
         # 2. PLAY THE FLUTE (Krishna IS the flute)
-        # Guard: if VenuService owns the heartbeat, read last DIW
-        venu = self.venu
-        if venu._owned:
-            # VenuService is driving — read, don't step
-            diw = venu._prev_state | (venu._mode << CLUSTER_SHIFT)
-        else:
-            diw = venu.step()
+        # One path, one player. VenuService → tick() → step().
+        diw = self.venu.step()
 
         state = TickState(
             tick=current,

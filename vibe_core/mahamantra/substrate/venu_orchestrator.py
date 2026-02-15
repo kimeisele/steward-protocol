@@ -194,7 +194,7 @@ class VenuOrchestrator:
         self._prev_state: int = 0
         self._mode: int = 0  # 0=Solo, 1=CallResponse, 2=Chorus
         self._subscribers: List[DIWSubscriberProtocol] = []
-        self._owned: bool = False  # True when VenuService drives the heartbeat
+        self._owned: bool = False  # DEPRECATED: Was used by VenuService bypass. Kept for audio_engine compat.
 
     # =========================================================================
     # PANCHA TATTVA PROTOCOL (5 Questions Every Entity Must Answer)

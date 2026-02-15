@@ -900,11 +900,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
     # =========================================================================
 
     def _get_singularity(self):
-        """Lazy-load the Singularity (Mahamantra inner engine)."""
-        if MahamantraLotus._singularity_instance is None:
-            from vibe_core.mahamantra.kernel.singularity import Mahamantra
+        """Lazy-load the Singularity (Mahamantra inner engine).
 
-            MahamantraLotus._singularity_instance = Mahamantra()
+        EKAMEVADVITIYAM: One without a second.
+        Uses the module-level singleton from kernel/singularity.py.
+        Never creates a second instance.
+        """
+        if MahamantraLotus._singularity_instance is None:
+            from vibe_core.mahamantra.kernel.singularity import mahamantra as _singularity
+
+            MahamantraLotus._singularity_instance = _singularity
         return MahamantraLotus._singularity_instance
 
     # =========================================================================

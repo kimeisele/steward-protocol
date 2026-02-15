@@ -96,12 +96,17 @@ class VenuService(PanchaTattvaProtocol):
         Gets Krishna's flute (VenuOrchestrator) from mahamantra.venu.
         The flute belongs to Krishna, not the drummer (Janaka).
         Registers it in ServiceRegistry so all consumers share it.
+
+        EKAMEVADVITIYAM: VenuService drives the heartbeat through
+        Singularity.tick(), not by playing the flute directly.
+        This unifies all three broadcast systems into one.
         """
         from vibe_core.di import ServiceRegistry
         from vibe_core.mahamantra import mahamantra
 
         self._clock = MantraClock()
         self._orchestrator = mahamantra.venu
+        self._singularity = mahamantra._get_singularity()
         self._running = False
         self._beat_callbacks: List[Callable[[int], None]] = []
         self._beat_subscribers: List[BeatSubscriberProtocol] = []
@@ -214,7 +219,7 @@ class VenuService(PanchaTattvaProtocol):
                 if tick % sub.beat_interval == 0:
                     sub.on_beat_tick(tick, position)
             except Exception as e:
-                logger.debug("Beat subscriber %s error: %s", sub.beat_name, e)
+                logger.warning("⚠️ Beat subscriber %s FAILED at tick %d: %s", sub.beat_name, tick, e)
 
     async def start(self) -> None:
         """
@@ -230,7 +235,6 @@ class VenuService(PanchaTattvaProtocol):
             return
 
         self._running = True
-        self._orchestrator._owned = True
         self._start_time = time.monotonic()
         self._stop_event = asyncio.Event()
         self._cumulative_drift_ms = 0.0
@@ -287,9 +291,11 @@ class VenuService(PanchaTattvaProtocol):
                 # 6.5. Dispatch BeatSubscribers (interval-based)
                 self._dispatch_beat_subscribers(position)
 
-                # 7. Play the flute: orchestrator.step() produces DIW and
-                #    dispatches to all subscribers. This is the heartbeat.
-                self._orchestrator.step()
+                # 7. Play the flute THROUGH KRISHNA: Singularity.tick()
+                #    advances Kala, plays flute (venu.step()), and broadcasts
+                #    TickState to ALL listeners (SravanamListener, etc.).
+                #    This is the UNIFIED heartbeat — one tick, all systems hear.
+                self._singularity.tick()
 
                 # 8. Advance the clock (execute tasks in MantraClock, then advance)
                 self._clock.tick_once()
@@ -309,7 +315,6 @@ class VenuService(PanchaTattvaProtocol):
             return
 
         self._running = False
-        self._orchestrator._owned = False
         if self._stop_event:
             self._stop_event.set()
 
