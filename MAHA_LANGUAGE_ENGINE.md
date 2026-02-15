@@ -5,247 +5,242 @@
 
 ---
 
-## 1. The Problem
+## 1. The Problem (REVISED — Feb 15 Root Cause Analysis)
 
 The language engine generates **prosodically correct but semantically empty** output.
 
 ```
-INPUT:  "How is the codebase?"
-OUTPUT: "other faithful activities controlled what speak ought"
+INPUT:  "What is devotion?"
+OUTPUT: "what speak how activities ought controlled faithful"
 ```
 
-The words are real English tokens from the WordNet bridge, selected by prosodic
-affinity (syllable weight ↔ coordinate mass), but they don't **answer** anything.
-The engine doesn't know what the codebase looks like. It has no senses.
+### Root Cause: The Engine is a Shadow Pipeline
 
-**Root cause:** The composer operates in a vacuum. It receives the user's input
-wave (rhythm, phonemes, attractor) but never queries the system's actual state.
-There is no semantic payload — no "truth" to clothe in rhythm.
+`MahaLanguageEngine` creates its **own** compressor, synth, kernel, venu,
+antaranga — all separate instances from the Lotus `__call__`. It duplicates
+the entire Maha Mantra computation in isolation, then tries to compose
+language from this shadow data. It never touches the real root.
 
----
+**The Lotus `__call__` already computes everything the composer needs:**
 
-## 2. The Anatomy (What Exists)
+| Lotus Field | What It Contains | Language Use |
+|-------------|-----------------|--------------|
+| `smaranam` | 7 resonant words (ranked by 7D resonance) | Word pool (primary) |
+| `verse` | Gita verse + word-for-word Sanskrit→English | Philosophical grounding + template |
+| `vibration` | seed, attractor, phoneme, 4D signature | Prosodic alignment |
+| `guna` | RAJAS/SATTVA/TAMAS (from OpCode) | Mode selection |
+| `diw` | Divine Instruction Word (venu/vamsi/murali) | Intensity + process + phase |
+| `position`/`guardian` | Routing context | Guardian-specific vocabulary |
+| `antaranga` | Chamber state (active slots, prana) | Resonance weighting |
+| `akash` | Accumulated state across rounds | Continuity |
+| `chapter_significance` | "Raja Vidya - The King of Knowledge" | Semantic context |
 
-Each organ maps to an existing substrate module. No new modules needed.
+**The fix is NOT adding more vectors to the shadow pipeline.**
+**The fix is connecting the composer to the Lotus root.**
 
-| Organ | Vedic | Module | Role |
-|-------|-------|--------|------|
-| **Ear** | Sravanam | `nadi.py` → `NadiOp.RECEIVE` | Receive input wave |
-| **Senses** | Buddhi/Chitta | `maha_state.py` → `MahaState` | Perceive system state |
-| **Digestion** | Samana | `samana_bridge.py` → `SamanaDispatch` | Dispatch work if needed |
-| **Vocal Cords** | Kirtanam | `language/composer.py` | Compose output |
-| **Voice** | Kirtanam | `nadi.py` → `NadiOp.SEND` | Deliver response |
+### Previous Wrong Approach (StateVector)
 
-### Current Flow (broken)
+The earlier attempt added a `StateVector` extracted from `MahaState.get_status()`.
+This was wrong because:
+1. MahaState is a wrapper, not the root — it wraps legacy systems
+2. A shallow status snapshot (uptime, entry count) has no semantic content
+3. It's manual wiring — adding a new vector means touching 10 files
+4. It ignores the real computation: Gita routing, DIW, Chamber resonance
 
-```
-User Input
-    ↓
-encode() → phonetic coords, seed, intent
-    ↓
-route() → guardian, section, template
-    ↓
-build_character_wave() → antaranga impacts
-    ↓
-resonate() → word slots in antaranga
-    ↓
-expand() → derivation tree, branch words
-    ↓
-compose() → word salad ← NO STATE, NO TRUTH
-    ↓
-EngineResult
-```
-
-### Required Flow
+### Correct Approach: Lotus Response as Input
 
 ```
 User Input
     ↓
-encode() → phonetic coords, seed, intent
+MahamantraLotus.__call__(input)     ← THE ROOT
     ↓
-╔══════════════════════════════════════════╗
-║  SENSE (NEW): MahaState.get_status()    ║
-║  → StateVector (guna, entries, uptime)  ║
-║  → Concept seeds for word selection     ║
-╚══════════════════════════════════════════╝
+Lotus Response Dict                 ← THE MAHA VECTOR
+    ├── smaranam (7 resonant words)
+    ├── verse (Gita words + meanings)
+    ├── vibration (seed, attractor, phoneme signature)
+    ├── guna (mode from OpCode)
+    ├── diw (flute instruction)
+    ├── position/guardian/quarter
+    ├── antaranga (chamber state)
+    └── akash (accumulated state)
     ↓
-route() → guardian, section, template
+compose(lotus_response)             ← LANGUAGE FROM TRUTH
     ↓
-compose(state_vector=...) → semantically grounded output
-    ↓
-EngineResult
+English Output
 ```
+
+No shadow pipeline. No duplicate instances. No manual wiring.
+The composer receives the full Lotus computation and clothes it in language.
 
 ---
 
-## 3. The Gap: Semantic Injection
-
-### What the composer needs
-
-The composer selects words via `prosodic_affinity(syllable_vector, word_coords)`.
-This is the **rhythm** axis. It's correct and stays.
-
-What's missing is the **truth** axis: a numeric signal from `MahaState` that
-biases word selection toward tokens that describe reality.
-
-### StateVector Design
-
-A frozen dataclass extracted from `MahaState.get_status()`:
+## 2. What the Lotus `__call__` Returns (verified Feb 15)
 
 ```python
-@dataclass(frozen=True)
-class StateVector:
-    """Numeric summary of system state for semantic injection."""
-    guna: int           # 0=TAMAS, 1=RAJAS, 2=SATTVA (from GunaClassifier)
-    entry_count: int    # Number of sovereign state entries
-    boot_count: int     # How many times booted
-    uptime_ratio: float # uptime_seconds / KISHORA_MAX_STALE (0-1, clamped)
-    systems_alive: int  # Count of wrapped systems that are available (0-6)
-    dirty: bool         # Unsaved state changes pending
-    prana_level: int    # Total antaranga prana (from engine stage)
+lotus = MahamantraLotus()
+result = lotus("What is devotion?")
 ```
 
-### How it enters the composer
+**Key fields for language composition:**
 
-The StateVector doesn't add keywords. It adds **numeric bias** to existing scoring:
+```
+result["smaranam"]            # 7 resonant words (ranked by 7D resonance ranker)
+  → [{"sanskrit": "paryupāsate", "meaning": "worship perfectly", "score": 0.911}, ...]
 
-1. **Guna → Mode weight:** SATTVA boosts DHARMA words, RAJAS boosts KARMA,
-   TAMAS boosts GENESIS (creation/renewal needed).
-2. **Entry count → Mass preference:** More state entries = prefer heavier words
-   (complex system needs complex description).
-3. **Uptime ratio → Stress alignment:** High uptime = prefer stressed/confident
-   tokens. Low uptime = prefer unstressed/tentative tokens.
-4. **Systems alive → Element preference:** Maps to dominant element selection
-   (more systems = higher element = more akasha/vayu).
+result["verse"]               # Gita verse matched by attractor
+  → {"id": "BG.11.29", "chapter": 11, "verse": 29, "guna": "rajas",
+     "words": [{"sanskrit": "yathā", "meaning": "as"}, {"sanskrit": "pradīptam", "meaning": "blazing"}, ...]}
 
-All numeric. All derived from protocol constants. No keywords.
+result["vibration"]           # Seed, attractor, phoneme, 4D signature
+  → {"seed": 50663505, "attractor": 25, "phoneme": "ī",
+     "signature": {"element": "vayu", "varga": 0, "sub": 1, "harmonic": 42}}
 
----
+result["guna"]                # Mode derived from OpCode (not guessed)
+  → {"mode": "RAJAS", "opcode": "EXTEND_CAP", "opcode_value": 9}
 
-## 4. Implementation Plan
+result["diw"]                 # Divine Instruction Word
+  → {"raw": 87942, "venu": 6, "vamsi": 350, "murali": 2}
 
-### Phase 1: StateVector ✅ DONE (b3ef5a15d)
+result["position"]            # 9
+result["guardian"]            # "prahlada"
+result["quarter"]             # "karma"
+result["holy_name"]           # "R"
+result["trinity_function"]    # "deliverer"
+result["chapter_significance"] # "Raja Vidya - The King of Knowledge"
 
-1. ✅ `StateVector` NamedTuple in `language/types.py`
-2. ✅ `state_bridge.py`: `extract_state_vector()` from `MahaState.get_status()`
-3. ✅ Wired into `engine.py` after `_resonate()`, passed to `compose(state=...)`
-4. ✅ `state_affinity()` in `composer.py`: guna→mode, entries→mass, uptime→confidence
-5. ✅ Integrated into `rank_resonant_by_rhythm()` as 4th scoring axis
-6. ✅ 13 new tests (StateVector, state_affinity, extract_state_vector)
+result["antaranga"]           # Chamber state
+  → {"active_slots": 30, "total_prana": 483117, "collisions": 0}
 
-### Phase 1b: SVO Assembly ✅ DONE (b3ef5a15d)
+result["akash"]               # Accumulated state across rounds
+  → {"total_rounds": 1, "total_beats": 16, "last_attractor": 25, ...}
+```
 
-1. ✅ `_word_role()`: classify pool words by coordinate mass → role
-2. ✅ `_SVO_ORDER`: REF → VERB → NOUN → QUALITY → PREP → PARTICLE
-3. ✅ `_assemble()` rewritten: role-bucket placement, template anchor injection
-4. ✅ `_resolve_coords()`: IAST lookup for expansion/branch words (fixes mass=0)
-
-### Phase 2: Nadi Integration (future)
-
-1. Engine receives input via `NadiOp.RECEIVE` (SRAVANAM)
-2. Engine sends output via `NadiOp.SEND` (KIRTANAM)
-3. State queries via `NadiOp.REQUEST` (VANDANAM)
-4. Full message-passing loop instead of direct function call
-
-### Phase 1c: Output Quality Improvements ✅ DONE (dfee96bf7, 7007ecc6e)
-
-1. ✅ `_pick_token()` rewritten: scoring (len + PANCHA bonus for input match)
-2. ✅ Dedup-aware: accepts `used` set, skips already-picked tokens
-3. ✅ Pool capped: expansion at PANCHA, branch at PANCHA (17 words, not 48)
-4. ✅ Input echo: user's words appear in output via token scoring bonus
-
-### Phase 3: Semantic Grounding (THE REAL BOTTLENECK)
-
-The composer is now structurally correct (SVO order, input echo, focused pool,
-state-biased scoring). But the output is still word salad because:
-
-**The pool words are not semantically relevant to the input.**
-
-"How is the codebase?" → guardian=manu(law) → words about "regulations",
-"cessation", "mysticism". Nothing about codebases.
-
-This is NOT a composer problem. The composer correctly selects, scores, and
-orders whatever words it receives. The problem is upstream:
-
-1. **Guardian routing is phonetic, not semantic.** It routes by attractor
-   (vibration pattern), not by meaning. "How is the codebase?" and "What is
-   dharma?" get similar guardians because they have similar phonetic profiles.
-
-2. **The engine never queries MahaState for content.** StateVector provides
-   numeric bias (guna, uptime, entries) but not semantic content. When the
-   user asks "How is the codebase?", the system should query
-   `MahaState.get_status()` and inject status-relevant words into the pool.
-
-3. **Intent routing exists but doesn't influence word selection.** The engine
-   already computes `intent_category` (from `_llm.route_text()`), but this
-   category doesn't change which words enter the pool.
-
-**The fix is NOT more composer tweaks.** The fix is:
-- Intent-aware pool injection: different intents → different state queries
-- Status query results → semantic tokens injected into pool
-- This requires the engine to be sense-aware (Sravanam → Buddhi → Kirtanam)
-
-This is Phase 2 (Nadi integration) + a new Phase 3 (intent-driven state query).
-The composer is ready to receive these tokens — it just needs better input.
+**This IS the Maha Vector.** No new vector needed. No MahaState snapshot needed.
 
 ---
 
-## 5. Branchless Principles (CLAUDE.md)
+## 3. Implementation Plan (Lotus-Rooted)
 
-Every decision in this architecture MUST follow:
+### Phase A: Lotus-Rooted Composer (NEXT)
+
+The composer must consume the Lotus response dict directly. Two word pools:
+
+1. **Smaranam pool**: `result["smaranam"]` — 7 words already ranked by 7D resonance.
+   These are the primary content words. They have Sanskrit, meaning, score, and
+   full RAMA coordinates (via `word_by_iast` lookup).
+
+2. **Verse pool**: `result["verse"]["words"]` — Gita verse word-for-word.
+   These are the philosophical grounding. They have Sanskrit, meaning, and
+   coordinates. The Gita verse is the "authorized answer" to the input.
+
+**Scoring axes (all numeric, all from Lotus response):**
+- Rhythm: prosodic_affinity(syllable_vector, word_coords) — existing
+- Resonance: smaranam score (already computed by 7D ranker)
+- Guna alignment: word mode vs result["guna"]["mode"]
+- DIW intensity: result["diw"]["venu"] normalizes scoring weight
+- Akash continuity: result["akash"]["total_rounds"] scales confidence
+
+**Assembly:**
+- SVO ordering from coordinate mass → role (existing `_word_role`)
+- Template from verse structure (existing `extract_template`)
+- Input echo from user words (existing `_pick_token` scoring)
+
+### Phase B: Engine Refactor
+
+`MahaLanguageEngine.generate()` should:
+1. Call `MahamantraLotus.__call__(text)` — get the real computation
+2. Extract smaranam + verse + vibration + guna + diw from response
+3. Pass to `compose(lotus_response=...)` — single dict, not 10 params
+4. Return EngineResult
+
+This eliminates the shadow pipeline (own compressor, synth, kernel, venu, antaranga).
+The engine becomes a thin adapter: Lotus → compose → EngineResult.
+
+### Phase C: Remove Shadow Infrastructure
+
+Once Phase B works:
+- Remove `_ensure_loaded()` (own compressor, synth, kernel, venu, antaranga)
+- Remove `_encode()`, `_route()`, `_resonate()`, `_expand()`, `_sprout_derivation_tree()`
+- Remove `state_bridge.py` and `StateVector` (replaced by Lotus response)
+- Remove `state_affinity()` (replaced by Lotus-derived scoring)
+- Keep: `phonetics.py`, `mantra_grid.py`, `mode_affinity.py`, `section_router.py`
+- Keep: `composer.py` (refactored to consume Lotus response)
+
+### Phase D: Nadi Integration (future)
+
+Once the engine consumes Lotus directly, Nadi integration becomes natural:
+- Engine registers as a TattvaGate hook or DIWSubscriber
+- Receives Lotus computation via the existing broadcast channel
+- No separate pipeline needed
+
+---
+
+## 4. Branchless Principles
 
 - **No hardcoded keywords.** Word classification from coordinates, not strings.
 - **No magic numbers.** All thresholds from `_seed.py` protocol constants.
 - **No if/else string matching.** Roles from mass + position, modes from graph distance.
-- **Existing infrastructure first.** WordNet bridge, mode_affinity, pancha_walk, hkr_signature.
-- **Each module = one responsibility.** Don't mix state sensing into composition.
+- **No shadow pipelines.** One computation (Lotus), one truth.
+- **No manual wiring.** New capabilities enter via the Lotus response dict.
+- **Singularity principle.** Everything derives from the Maha Mantra.
 
 ---
 
-## 6. File Map
+## 5. File Map (Target State)
 
 ```
 substrate/
+├── lotus_core.py            # THE ROOT: __call__() → Lotus Response Dict
 ├── language/
-│   ├── __init__.py          # Public API: generate(), MahaLanguageEngine
-│   ├── types.py             # EngineResult, RhythmProfile, SyllableVector, StateVector (NEW)
+│   ├── __init__.py          # Public API: generate()
+│   ├── types.py             # EngineResult, RhythmProfile, SyllableVector
 │   ├── phonetics.py         # 3D syllable vectors from CMU ARPAbet
 │   ├── mantra_grid.py       # 32-step sequencer (16 words × 2 beats)
 │   ├── mode_affinity.py     # WordNet graph-distance mode classification
 │   ├── section_router.py    # Attractor → section + verse template
-│   ├── composer.py          # Prosodic composition (rhythm + semantic + state)
-│   └── engine.py            # Thin orchestrator wiring all stages
-├── maha_state.py            # Sovereign state adapter (Balarama pattern)
-├── nadi.py                  # Universal message passing (Pancha Nadi × Nava Ops)
-├── samana_bridge.py         # TaskKernel ↔ ShadowReactor
-├── wordnet_bridge.py        # Semantic graph + precomputed tokens
-├── pancha_walk.py           # RAMA coordinate element/varga mappings
-└── antaranga.py             # 512-slot collision chamber
+│   ├── composer.py          # Prosodic composition (Lotus response → English)
+│   └── engine.py            # Thin adapter: Lotus → compose → EngineResult
+├── chamber.py               # Sankirtan Chamber (DIW → Cell → Registry)
+├── venu_orchestrator.py     # 19-bit DIW LUT, step()/spell()/cycle()
+├── antaranga.py             # 512-slot collision chamber (16KB RAM)
+├── resonance_ranker.py      # 7D word ranking (vectorized, 4127 words)
+└── sanskrit_lookup.py       # verse_words(), word_by_iast(), hkr_signature()
 ```
 
 ---
 
-## 7. What Was Already Done
+## 6. What Was Already Done (Composer Infrastructure)
 
-### Commit ee9c7987b: Branchless composer + section_router
+### SVO Assembly (b3ef5a15d)
+- `_word_role()`: classify by coordinate mass → REF/VERB/NOUN/QUALITY/PREP/PARTICLE
+- `_SVO_ORDER`: Subject(REF) → Verb → Object(NOUN) → Quality → Modifiers
+- `_assemble()`: role-bucket placement, template anchor injection
+- `_resolve_coords()`: IAST lookup for words without coordinates
 
-- `composer.py`: Removed ALL keyword lists. Token extraction from WN bridge.
-  Prosodic affinity scoring. Assembly via grid mode walk.
-- `section_router.py`: `_infer_role(coords, position, total)` replaces keyword
-  matching. Role from coordinate mass + verse position.
-- 181/181 language tests pass. Zero regressions.
+### Token Selection (dfee96bf7)
+- `_pick_token()`: scoring (len + PANCHA bonus for input match), dedup-aware
+- Input echo: user's words appear in output via token scoring bonus
+
+### Pool Management (7007ecc6e)
+- Pool capped: expansion at PANCHA, branch at PANCHA (focused pool)
+
+**These composer internals are CORRECT and REUSABLE.** The refactor changes
+what feeds INTO the composer (Lotus response instead of shadow pipeline),
+not how the composer processes words internally.
 
 ---
 
-## 8. Open Questions
+## 7. Open Questions
 
-1. **Should StateVector be cached per-tick or per-request?**
-   Per-request is simpler. Per-tick via VenuOrchestrator is more "alive".
+1. **Should `generate()` call Lotus directly or receive a pre-computed response?**
+   Both. `generate(text)` calls Lotus. `generate_from_lotus(response)` accepts
+   a pre-computed response for integration with existing Lotus callers.
 
-2. **How deep should Guna diagnosis go?**
-   `diagnose_guna(workspace)` requires filesystem access. For the language engine,
-   a lightweight `get_status()` summary may suffice initially.
+2. **What about the existing 194 language tests?**
+   Most test composer internals (SVO, token selection, rhythm) — these stay.
+   Engine tests that test the shadow pipeline will need updating.
 
-3. **Should the engine ever trigger SamanaDispatch?**
-   Only if the prompt requires computation (e.g., "run tests"). For now, the
-   language engine is read-only: it senses state but doesn't change it.
+3. **Performance: Lotus `__call__` is ~1400ms (pre-cache) / ~78ms (cached).**
+   The language engine currently takes ~40ms. Adding a Lotus call adds latency.
+   But: the Lotus call IS the computation. The shadow pipeline was doing the
+   same work (compress, synth, rank_words) just with separate instances.
