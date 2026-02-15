@@ -139,8 +139,24 @@ class TestFallbackVectors:
 # syllable_vectors_for_word: CMU lookup with fallback
 # =============================================================================
 
+class TestNoNltkDependency:
+    """phonetics.py must NOT import nltk — zero external dependencies."""
+
+    def test_no_nltk_in_module(self):
+        import vibe_core.mahamantra.substrate.language.phonetics as mod
+        source = open(mod.__file__).read()
+        assert "import nltk" not in source
+        assert "from nltk" not in source
+
+    def test_syllable_vectors_uses_fallback(self):
+        """syllable_vectors_for_word must use _fallback_vectors, not CMU."""
+        result = syllable_vectors_for_word("devotion")
+        fallback = _fallback_vectors("devotion")
+        assert result == fallback
+
+
 class TestSyllableVectorsForWord:
-    """syllable_vectors_for_word: CMU → 3D vectors, fallback if unavailable."""
+    """syllable_vectors_for_word: fallback vowel-group heuristic."""
 
     def test_returns_tuple(self):
         result = syllable_vectors_for_word("love")
