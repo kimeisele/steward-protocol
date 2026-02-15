@@ -1,4 +1,12 @@
 """
+DEPRECATED — Use substrate/language/ instead.
+==============================================
+
+Production location: vibe_core.mahamantra.substrate.language
+    from vibe_core.mahamantra.substrate.language import MahaLanguageEngine, generate
+
+This file is kept for research reference only (demo(), GAP_ANALYSIS).
+
 MAHA LANGUAGE ENGINE — The Anti-Entropy Language Model
 ======================================================
 
