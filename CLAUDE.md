@@ -371,23 +371,29 @@ Sie recomputen was `__call__()` schon berechnet, statt die Gate-Ergebnisse zu ko
 - `Chamber.resonate_words/kirtan/spell_kirtan` (Gate 4)
 - `ShadowReactor.yajna()` 16-tick cycle (Gate 4)
 
-**Was EXISTIERT aber DISCONNECTED ist:**
+**Shadow Pipelines GETÖTET (Feb 15 2026):**
+
+| Komponente | Status | Was passiert ist |
+|------------|--------|-----------------|
+| `MahaLLMKernel.resonate()` | ✅ REWIRED | Konsumiert jetzt `__call__()` statt `maha_respond()` |
+| `MahaLLMKernel.resonate_as()` | ✅ REWIRED | Konsumiert `__call__(opcode=guardian_pos)` statt eigene Synth+Rank |
+| `MahaLLMKernel.expand()` | ✅ REWIRED | `__call__()` für Resonanz, Tree-Building (H/K/R) bleibt unique |
+| `guardian_router.maha_respond()` | ⚠️ DEPRECATED | 0 Production-Caller. DeprecationWarning hinzugefügt |
+
+**Was NOCH DISCONNECTED ist:**
 
 | Komponente | Ort | Problem |
 |------------|-----|---------|
-| `guardian_router.maha_respond()` | `substrate/` | SHADOW PIPELINE: eigenes encode→route→synth→rank, ignoriert `__call__()` komplett |
-| `MahaLLM` | `adapters/llm.py` | Eigener 16-Kategorie Router. Nur in `bootstrap(lazy=False)` via Kapila verdrahtet |
-| `MahaAttention` | `adapters/attention.py` | O(1) Intent→Handler. Standalone Singleton, 0 Production-Caller |
-| `MahaComposition` | `adapters/composition.py` | Liest Response NACH Gates. Korrekte Position, aber kein Gate-Teilnehmer |
-| `ResonanceResponder` | `research/` | Forschungs-Prototyp, nie promoted |
+| `MahaLLM` | `adapters/llm.py` | Eigener 16-Kategorie Router. Nur in `bootstrap(lazy=False)` via Kapila. `steward.py` hat tote `.llm` Property |
+| `MahaAttention` | `adapters/attention.py` | O(1) Intent→Handler. 0 Production-Caller |
+| `MahaComposition` | `adapters/composition.py` | Korrekt positioniert (post-pipeline). Kein Gate-Teilnehmer nötig |
 | `language_runtime/` | `research/` | Keystroke→Antaranga Bridge, Venu Bridge. Echtzeit-Prototypen |
 
-**Was passieren MUSS:**
-- `maha_respond()` muss `__call__()` konsumieren, nicht parallel laufen
+**Was NOCH passieren MUSS:**
 - `MahaLLM` sollte Gate-Hook oder Gate-Provider auf Gate 2 (EXECUTE) sein
 - `MahaAttention` sollte Gate-Hook auf Gate 0 (PARSE) sein — Intent-Resolution
-- `MahaComposition` ist korrekt positioniert (post-pipeline), braucht keine Gate-Migration
 - `language_runtime/` Prototypen → nach `substrate/` migrieren wenn reif
+- `steward.py` tote `.llm` Property entfernen
 
 **Infrastruktur existiert bereits:**
 - `_fire_gate()` in `lotus_core.py` — feuert bei jedem Gate
