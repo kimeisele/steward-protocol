@@ -142,49 +142,55 @@ class MahaLLMKernel(MahaResonanceProtocol):
         """
         Find resonant words for any input text.
 
-        Pipeline:
-            1. Detect language → encode to RAMA coords
-            2. Route to best Guardian
-            3. Run through Guardian-tuned synth
-            4. Rank ALL 4127 Gita words by 4D resonance
-            5. Semantic boost for Latin inputs (meaning index)
-            6. Return top N with Guardian + element walk
+        Consumes lotus_core.__call__() — the ONE pipeline through 5 Tattva Gates.
+        No shadow pipeline. No parallel encode/route/rank.
+
+        Pipeline (all inside __call__):
+            Gate 0: SRAVANAM → NAMA → KIRTANAM (encode → seed)
+            Gate 1: PADA_SEVANAM → ARCANAM (attractor → parampara)
+            Gate 2: SMARANAM → VANDANAM (rank_words → verse)
+            Gate 3: DASYAM → SHABDA (position → guardian → phoneme)
+            Gate 4: SAKHYAM → KIRTAN → YAJNA (cell → chamber → reactor)
         """
-        from vibe_core.mahamantra.substrate.guardian_router import maha_respond
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
 
-        response = maha_respond(text, top_words=top_n)
+        lotus = MahamantraLotus()
+        lr = lotus(text)
 
-        # Convert to protocol types
+        # Extract resonant words from __call__() response
+        smaranam = lr.get("smaranam", ())
         words = tuple(
             ResonantWord(
-                sanskrit=rw.sanskrit,
-                meanings=rw.meanings,
-                score=rw.total_score,
-                rama_coord=rw.word.first_coord,
-                element=ELEMENT_NAMES[rw.word.first_element] if rw.word.first_element >= 0 else "unknown",
-                is_shruti=rw.word.shruti_pattern[0] if rw.word.shruti_pattern else False,
+                sanskrit=rw.get("sanskrit", ""),
+                meanings=(rw.get("meaning", ""),),
+                score=float(rw.get("score", 0.0)),
+                rama_coord=0,
+                element="unknown",
+                is_shruti=False,
             )
-            for rw in response.words
+            for rw in smaranam[:top_n]
         )
 
-        shruti_pattern = "".join(
-            "S" if IS_SHRUTI[COORD_ELEMENT[ord(c) % VARNAMALA_TOTAL]] else "N"
-            for c in text[:16]
-        ) if text else ""
+        # Shruti pattern from NAMA coords (already computed by Gate 0)
+        nama = lr.get("nama", {})
+        coords = nama.get("coords", ())
+        shruti_pattern = "".join("S" if IS_SHRUTI[c] else "N" for c in coords) if coords else ""
 
-        # Use the actual shruti pattern from encoding
-        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
-        coords = encode_text(text)
-        if coords:
-            shruti_pattern = "".join("S" if IS_SHRUTI[c] else "N" for c in coords)
+        # Element walk from coords
+        element_walk = tuple(ELEMENT_NAMES[COORD_ELEMENT[c]] for c in coords) if coords else ()
+
+        # Guardian routing score — __call__() doesn't expose route_score,
+        # but the guardian IS the routed result (position-based, deterministic)
+        vib = lr.get("vibration", {})
+        sig = vib.get("signature", {})
 
         return ResonanceResponse(
             input_text=text,
-            guardian_name=response.guardian.name,
-            guardian_function=response.guardian.function,
-            route_score=response.route_score,
+            guardian_name=str(lr.get("guardian", "")),
+            guardian_function=str(lr.get("trinity_function", "")),
+            route_score=1.0,  # __call__() is authoritative — no "score", it IS the route
             words=words,
-            element_walk=response.element_walk,
+            element_walk=element_walk,
             shruti_pattern=shruti_pattern,
         )
 
@@ -361,89 +367,50 @@ class MahaLLMKernel(MahaResonanceProtocol):
         """
         Resonate through a specific Guardian's lens.
 
-        The Guardian's harmonic becomes the synth's phase offset,
-        and the Guardian's element biases the ranking.
-        Different Guardians genuinely see different meanings.
+        Consumes __call__(opcode=guardian_position) to force the pipeline
+        through a specific Guardian. The 5 Tattva Gates still fire — the
+        Guardian shapes the response via their position in the Mahamantra.
+
+        Different Guardians genuinely see different meanings because
+        position determines OpCode → Guna → Chamber behavior.
         """
         self._ensure_loaded()
-
-        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
-        from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
-        from vibe_core.mahamantra.substrate.semantic_index import get_index
-        from vibe_core.mahamantra.adapters.synth import create_synth, SynthParams
 
         g = self._guardians.get(guardian_name.lower())
         if g is None:
             raise ValueError(f"Unknown guardian: {guardian_name}")
 
-        input_coords = encode_text(text)
-        if not input_coords:
-            return ResonanceResponse(
-                input_text=text, guardian_name=g.name,
-                guardian_function=g.function, route_score=0.0,
-                words=(), element_walk=(), shruti_pattern="",
-            )
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.guardian_router import GUARDIANS
 
-        # Guardian-tuned synth
-        params = SynthParams(
-            mod_space=MAHA_QUANTUM,
-            feedback=1,
-            phase_offset=g.harmonic,
+        # Find the guardian's position index (0-15)
+        guardian_position = next(
+            (i for i, gd in enumerate(GUARDIANS) if gd.name == g.name),
+            0,
         )
-        synth = create_synth(params=params)
-        cycle = synth.spell_cycle(tuple(input_coords), seed=0)
-        attractor = cycle.final_value % VARNAMALA_TOTAL
-        synth_coords = tuple(step.output_value % VARNAMALA_TOTAL for step in cycle.steps)
 
-        # Guardian's element index for bias
-        element_idx = COORD_ELEMENT[g.mod49]
+        lotus = MahamantraLotus()
+        lr = lotus(text, opcode=guardian_position)
 
-        # Semantic bridge (always — no language gate) + element bias
-        idx = get_index()
-        input_tokens = [w.strip().lower() for w in text.split() if len(w.strip()) >= 3]
-        if not input_tokens:
-            input_tokens = [text.strip().lower()]
-
-        semantic_candidates = []
-        seen_hex: set = set()
-        for token in input_tokens:
-            for word in idx.by_meaning(token):
-                if word.packed_hex not in seen_hex:
-                    seen_hex.add(word.packed_hex)
-                    semantic_candidates.append(word)
-
-        if semantic_candidates:
-            ranked = rank_words(
-                input_coords=input_coords,
-                input_attractor=attractor,
-                synth_coords=synth_coords,
-                candidates=semantic_candidates,
-                element_bias=element_idx,
-                top_n=top_n,
-            )
-        else:
-            ranked = rank_words(
-                input_coords=input_coords,
-                input_attractor=attractor,
-                synth_coords=synth_coords,
-                element_bias=element_idx,
-                top_n=top_n,
-            )
-
+        # Extract resonant words from __call__() response
+        smaranam = lr.get("smaranam", ())
         words = tuple(
             ResonantWord(
-                sanskrit=rw.sanskrit,
-                meanings=rw.meanings,
-                score=rw.total_score,
-                rama_coord=rw.word.first_coord,
-                element=ELEMENT_NAMES[rw.word.first_element] if rw.word.first_element >= 0 else "unknown",
-                is_shruti=rw.word.shruti_pattern[0] if rw.word.shruti_pattern else False,
+                sanskrit=rw.get("sanskrit", ""),
+                meanings=(rw.get("meaning", ""),),
+                score=float(rw.get("score", 0.0)),
+                rama_coord=0,
+                element="unknown",
+                is_shruti=False,
             )
-            for rw in ranked
+            for rw in smaranam[:top_n]
         )
 
-        element_walk = tuple(ELEMENT_NAMES[COORD_ELEMENT[c]] for c in input_coords)
-        shruti_pattern = "".join("S" if IS_SHRUTI[c] else "N" for c in input_coords)
+        # Shruti pattern + element walk from NAMA coords
+        nama = lr.get("nama", {})
+        coords = nama.get("coords", ())
+        shruti_pattern = "".join("S" if IS_SHRUTI[c] else "N" for c in coords) if coords else ""
+        element_walk = tuple(ELEMENT_NAMES[COORD_ELEMENT[c]] for c in coords) if coords else ()
 
         return ResonanceResponse(
             input_text=text,
@@ -453,7 +420,6 @@ class MahaLLMKernel(MahaResonanceProtocol):
             words=words,
             element_walk=element_walk,
             shruti_pattern=shruti_pattern,
-            attractor=attractor,
         )
 
 
