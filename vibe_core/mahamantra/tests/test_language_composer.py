@@ -127,7 +127,7 @@ class TestChamberBoost:
                 return 999999999
         result = chamber_boost(MockAntaranga(), 5, 42)
         # Cap = PANCHA / (WORDS * HALVES) = 5/32 ≈ 0.15625
-        from vibe_core.mahamantra.protocols._seed import PANCHA, WORDS, HALVES
+        from vibe_core.mahamantra.protocols._seed import PANCHA, HALVES
         assert result <= PANCHA / (WORDS * HALVES) + 1e-9
 
 
@@ -298,7 +298,7 @@ class TestStateAffinity:
         assert up_score >= down_score
 
     def test_capped(self):
-        from vibe_core.mahamantra.protocols._seed import PANCHA, WORDS, HALVES
+        from vibe_core.mahamantra.protocols._seed import PANCHA, HALVES
         sv = StateVector(guna=2, entry_count=72, uptime_ratio=1.0, prana_level=999999)
         item = {"score": 1.0, "coords": tuple(range(10)), "packed_hex": ""}
         result = state_affinity(sv, item, mode="DHARMA")
