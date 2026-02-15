@@ -271,10 +271,14 @@ class MahaLanguageEngine:
         diw = self._modulate()
         trajectory = self._trace_phonemes(route["attractor"])
 
+        from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
+        state_vec = extract_state_vector(prana_level=ant.get("total_prana", 0))
+
         output = compose(
             route["guardian"], route["template"], rhythm, text,
             route["section_mode"], ant, expansion_data=exp, seed=seed,
             branch_words=sprout["branch_words"], antaranga=self._antaranga,
+            state=state_vec,
         )
 
         derivation = (

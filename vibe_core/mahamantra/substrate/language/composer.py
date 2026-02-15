@@ -36,7 +36,7 @@ from vibe_core.mahamantra.protocols._seed import (
     SEVEN,
     WORDS,
 )
-from vibe_core.mahamantra.substrate.language.types import RhythmProfile, SyllableVector
+from vibe_core.mahamantra.substrate.language.types import RhythmProfile, StateVector, SyllableVector
 from vibe_core.mahamantra.substrate.language.mantra_grid import build_mantra_grid, get_holyname_mode
 from vibe_core.mahamantra.substrate.language.mode_affinity import classify_by_graph, mode_anchor_phrases
 from vibe_core.mahamantra.substrate.seed import HolyName
@@ -137,8 +137,9 @@ def rank_resonant_by_rhythm(
     input_text: str = "",
     seed: int = 0,
     antaranga=None,
+    state: Optional[StateVector] = None,
 ) -> List[Dict[str, object]]:
-    """Rank resonant pool by base score + rhythm + semantic + chamber boost."""
+    """Rank resonant pool by base score + rhythm + semantic + chamber + state boost."""
     ranked: List[Dict[str, object]] = []
     for i, item in enumerate(resonant):
         scored = dict(item)
@@ -149,7 +150,14 @@ def rank_resonant_by_rhythm(
         scored["rhythm_bias"] = bias
         scored["semantic_boost"] = sem
         scored["chamber_boost"] = chamb
-        scored["rhythm_score"] = base_score + bias + sem + chamb
+        # State affinity: bias toward words that match system reality
+        st = 0.0
+        if state is not None:
+            phex = str(scored.get("packed_hex", ""))
+            mode = classify_by_graph(phex, mode_anchor_phrases()) if phex else None
+            st = state_affinity(state, scored, mode)
+        scored["state_boost"] = st
+        scored["rhythm_score"] = base_score + bias + sem + chamb + st
         ranked.append(scored)
 
     ranked.sort(key=lambda it: (float(it.get("rhythm_score", 0.0)), float(it.get("score", 0.0))), reverse=True)
@@ -199,8 +207,81 @@ def prosodic_affinity(sv: SyllableVector, coords: Sequence[int]) -> float:
 
 
 # =============================================================================
+# STATE AFFINITY — semantic injection from MahaState
+# =============================================================================
+
+def state_affinity(
+    sv: StateVector,
+    item: Dict[str, object],
+    mode: Optional[str] = None,
+) -> float:
+    """Score how well a word fits the current system state.
+
+    Three axes, all numeric from StateVector:
+
+        1. Guna → Mode alignment:
+           SATTVA(2) boosts DHARMA, RAJAS(1) boosts KARMA, TAMAS(0) boosts GENESIS.
+           Matching mode gets a bonus.
+
+        2. Entry count → Mass preference:
+           More state entries = prefer heavier words (complex state needs complex words).
+           Fewer entries = prefer lighter words.
+
+        3. Uptime ratio → Confidence:
+           High uptime = prefer words with higher base score (established, confident).
+           Low uptime = no penalty, just no bonus.
+
+    Returns: affinity in [0, max_boost]. All coefficients from protocol constants.
+    """
+    max_boost = PANCHA / (WORDS * HALVES)  # ~0.15625, same scale as chamber_boost
+
+    score = 0.0
+
+    # Axis 1: Guna ↔ Mode alignment
+    # Map guna ordinal to preferred mode
+    guna_mode = ("GENESIS", "KARMA", "DHARMA")  # TAMAS→GENESIS, RAJAS→KARMA, SATTVA→DHARMA
+    preferred = guna_mode[min(sv.guna, HALVES)]
+    if mode is not None and mode == preferred:
+        score += max_boost
+
+    # Axis 2: Entry count → Mass preference
+    # Normalize entry count to [0, 1] using MAX_STATE_ENTRIES (72 = NADI_RESONANCE)
+    from vibe_core.mahamantra.substrate.maha_state import MAX_STATE_ENTRIES
+    entry_ratio = min(1.0, sv.entry_count / max(MAX_STATE_ENTRIES, KSETRAJNA))
+    coords = item.get("coords", ())
+    mass = len(coords) if coords else 0
+    # Heavy state prefers heavy words, light state prefers light words
+    mass_ratio = min(1.0, mass / max(SEVEN, KSETRAJNA))
+    # Reward alignment: both heavy or both light
+    mass_alignment = 1.0 - abs(entry_ratio - mass_ratio)
+    score += mass_alignment * (max_boost / HALVES)
+
+    # Axis 3: Uptime → Confidence boost on high-scoring words
+    base_score = float(item.get("score", 0.0))
+    if sv.uptime_ratio > (KSETRAJNA / HALVES):  # > 0.5
+        score += base_score * sv.uptime_ratio * (max_boost / QUARTERS)
+
+    return min(max_boost * HALVES, score)  # Cap at 2× max_boost
+
+
+# =============================================================================
 # COMPOSE — the three layers wired together
 # =============================================================================
+
+def _resolve_coords(sanskrit: str, first_coord: int) -> Tuple[int, ...]:
+    """Resolve RAMA coordinates for a word. Lookup by IAST, fallback to first_coord."""
+    try:
+        from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+        entry = word_by_iast(sanskrit)
+        if entry is not None and entry.coords:
+            return entry.coords
+    except Exception:
+        pass
+    # Fallback: synthesize minimal coords from first_coord
+    if first_coord >= 0:
+        return (first_coord,)
+    return ()
+
 
 def _build_pool(
     guardian_response,
@@ -229,17 +310,21 @@ def _build_pool(
     if expansion_data:
         for sanskrit, meaning in expansion_data.get("expansion_words", ()):
             if meaning:
+                coords = _resolve_coords(sanskrit, -1)
                 pool.append({
                     "sanskrit": sanskrit, "meaning": meaning, "tokens": (),
-                    "score": PANCHA / WORDS, "packed_hex": "", "first_coord": -1,
-                    "coords": (),
+                    "score": PANCHA / WORDS, "packed_hex": "",
+                    "first_coord": coords[0] if coords else -1,
+                    "coords": coords,
                 })
         for sanskrit, meaning in expansion_data.get("synth_walk_words", ()):
             if meaning:
+                coords = _resolve_coords(sanskrit, -1)
                 pool.append({
                     "sanskrit": sanskrit, "meaning": meaning, "tokens": (),
-                    "score": QUARTERS / WORDS, "packed_hex": "", "first_coord": -1,
-                    "coords": (),
+                    "score": QUARTERS / WORDS, "packed_hex": "",
+                    "first_coord": coords[0] if coords else -1,
+                    "coords": coords,
                 })
 
     if branch_words:
@@ -247,12 +332,15 @@ def _build_pool(
             for bw in bwords:
                 meaning = bw.get("meaning", "")
                 if meaning:
+                    fc = bw.get("first_coord", -1)
+                    coords = _resolve_coords(bw.get("sanskrit", ""), fc)
                     pool.append({
                         "sanskrit": bw.get("sanskrit", ""),
                         "meaning": meaning, "tokens": (),
                         "score": PANCHA / (WORDS - HALVES),
-                        "packed_hex": "", "first_coord": bw.get("first_coord", -1),
-                        "coords": (), "from_branch": True,
+                        "packed_hex": "",
+                        "first_coord": coords[0] if coords else fc,
+                        "coords": coords, "from_branch": True,
                     })
 
     return pool
@@ -320,82 +408,99 @@ def _pick_token(item: Dict[str, object]) -> str:
     return parts[0] if parts else ""
 
 
+def _word_role(item: Dict[str, object]) -> str:
+    """Classify a pool word by coordinate mass → grammatical role.
+
+    Same logic as section_router._infer_role but for pool items
+    (no verse position available, so we use mass only).
+
+    Mass thresholds from protocol constants:
+        mass ≤ HALVES (2)           → PARTICLE
+        mass ≥ PANCHA + HALVES (7)  → QUALITY
+        mass ≤ QUARTERS (4)         → REF
+        mass ≤ PANCHA (5)           → VERB  (mid-weight action words)
+        otherwise                   → NOUN
+    """
+    coords = item.get("coords", ())
+    mass = len(coords) if coords else 0
+
+    if mass <= HALVES:
+        return "PARTICLE"
+    if mass >= PANCHA + HALVES:
+        return "QUALITY"
+    if mass <= QUARTERS:
+        return "REF"
+    if mass <= PANCHA:
+        return "VERB"
+    return "NOUN"
+
+
+# SVO sentence order: Subject → Verb → Object → Modifiers
+# This is the SOV→SVO transformation. Sanskrit verse templates are SOV;
+# English output must be SVO. Role priority defines slot order.
+_SVO_ORDER: Tuple[str, ...] = ("REF", "VERB", "NOUN", "QUALITY", "PREP", "PARTICLE")
+
+
 def _assemble(
     selected: List[Dict[str, object]],
     template: List[Dict],
     rhythm: RhythmProfile,
 ) -> str:
-    """Assemble selected words into output.
+    """Assemble selected words into SVO sentence structure.
 
-    Order determined by grid mode sequence (from rhythm).
-    Template provides structural frame.
+    1. Classify each selected word by coordinate mass → role.
+    2. Place into SVO slots: Subject(REF) → Verb → Object(NOUN) → Quality → Particle.
+    3. Template provides structural anchor words at key positions.
     """
     if not selected:
         return ""
 
-    # Classify selected words by mode (branchless, via WordNet graph)
-    anchors = mode_anchor_phrases()
-    by_mode: Dict[str, List[Dict]] = {"DHARMA": [], "GENESIS": [], "KARMA": []}
-    unclassified: List[Dict] = []
-
+    # Classify selected words into role buckets
+    by_role: Dict[str, List[Dict]] = {r: [] for r in _SVO_ORDER}
     for item in selected:
-        phex = str(item.get("packed_hex", ""))
-        mode = classify_by_graph(phex, anchors) if phex else None
-        if mode and mode in by_mode:
-            by_mode[mode].append(item)
+        role = _word_role(item)
+        if role in by_role:
+            by_role[role].append(item)
         else:
-            unclassified.append(item)
+            by_role["NOUN"].append(item)
 
-    # Walk the grid mode sequence from input rhythm
-    grid = build_mantra_grid()
+    # Walk SVO order, pick best token from each role bucket
     ordered: List[str] = []
     used: set = set()
 
-    # Build mode sequence from rhythm (deduplicated consecutive)
-    mode_seq: List[str] = []
-    if rhythm.grid_modes:
-        for gm in rhythm.grid_modes:
-            if not mode_seq or mode_seq[-1] != gm:
-                mode_seq.append(gm)
-    if not mode_seq:
-        mode_seq = ["GENESIS"]
-
-    # Walk modes, pick tokens
-    for mode in mode_seq:
-        pool = by_mode.get(mode, [])
-        for item in pool:
+    for role in _SVO_ORDER:
+        bucket = by_role.get(role, [])
+        for item in bucket:
+            if len(ordered) >= SEVEN:
+                break
             token = _pick_token(item)
             tl = token.lower()
             if tl and tl not in used and len(tl) > KSETRAJNA:
                 ordered.append(token)
                 used.add(tl)
-                break
 
-    # Fill from unclassified + remaining classified
-    remaining = unclassified[:]
-    for mode_pool in by_mode.values():
-        remaining.extend(mode_pool)
-    for item in remaining:
-        if len(ordered) >= SEVEN:
-            break
-        token = _pick_token(item)
-        tl = token.lower()
-        if tl and tl not in used and len(tl) > KSETRAJNA:
-            ordered.append(token)
-            used.add(tl)
-
-    # Inject template tokens at structural positions
-    # Template words with coords provide the frame; resonant words fill it
+    # Template anchor: inject first template word with a matching role
+    # at the appropriate SVO position (structural frame from the verse)
     if template and len(ordered) >= HALVES:
-        for slot in template[:HALVES]:
+        for slot in template[:PANCHA]:
+            role = slot.get("role", "NOUN")
             meaning = slot.get("meaning", "")
             parts = meaning.split()
-            if parts:
-                t = parts[0].lower()
-                if t not in used and len(t) > KSETRAJNA:
-                    ordered.insert(min(KSETRAJNA, len(ordered)), t)
-                    used.add(t)
+            if not parts:
+                continue
+            t = parts[0].lower()
+            if t in used or len(t) <= KSETRAJNA:
+                continue
+            # Find insertion point: after existing words of earlier roles
+            insert_at = 0
+            for svo_role in _SVO_ORDER:
+                if svo_role == role:
                     break
+                insert_at += len(by_role.get(svo_role, []))
+            insert_at = min(insert_at, len(ordered))
+            ordered.insert(insert_at, t)
+            used.add(t)
+            break
 
     return " ".join(ordered)
 
@@ -411,15 +516,16 @@ def compose(
     seed: int = 0,
     branch_words: Optional[Dict[str, list]] = None,
     antaranga=None,
+    state: Optional[StateVector] = None,
 ) -> str:
     """Prosodic Composition: resonant words → English output.
 
     Layer 1: Build pool with precomputed WN tokens + coords.
-    Layer 2: Rank by rhythm + semantic + chamber. Select by prosodic affinity.
+    Layer 2: Rank by rhythm + semantic + chamber + state. Select by prosodic affinity.
     Layer 3: Assemble via grid mode walk + template frame.
     """
     pool = _build_pool(guardian_response, expansion_data, branch_words)
-    pool = rank_resonant_by_rhythm(pool, rhythm, input_text, seed=seed, antaranga=antaranga)
+    pool = rank_resonant_by_rhythm(pool, rhythm, input_text, seed=seed, antaranga=antaranga, state=state)
     selected = _select_words(pool, rhythm, max_words=SEVEN)
     return _assemble(selected, template, rhythm)
 

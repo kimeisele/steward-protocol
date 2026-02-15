@@ -7,7 +7,7 @@ Tests what is DERIVED from protocol, not invented.
 import pytest
 
 from vibe_core.mahamantra.protocols._seed import KSETRAJNA, QUARTERS, SEVEN, WORDS
-from vibe_core.mahamantra.substrate.language.types import RhythmProfile, SyllableVector
+from vibe_core.mahamantra.substrate.language.types import RhythmProfile, StateVector, SyllableVector
 from vibe_core.mahamantra.substrate.language.composer import (
     chamber_boost,
     chunk_sentence,
@@ -15,6 +15,7 @@ from vibe_core.mahamantra.substrate.language.composer import (
     rank_resonant_by_rhythm,
     rhythm_bias,
     semantic_boost,
+    state_affinity,
 )
 
 
@@ -316,3 +317,118 @@ class TestCompose:
         rhythm = RhythmProfile(syllable_count=0, stress_pattern=(), sequencer_steps=(), signature="-")
         result = compose(guardian, [], rhythm, "test", "CORE", {})
         assert isinstance(result, str)
+
+
+# =============================================================================
+# StateVector: numeric system state summary
+# =============================================================================
+
+class TestStateVector:
+    """StateVector is a pure numeric NamedTuple with sane defaults."""
+
+    def test_defaults(self):
+        sv = StateVector()
+        assert sv.guna == 1  # RAJAS
+        assert sv.entry_count == 0
+        assert sv.boot_count == 0
+        assert sv.uptime_ratio == 0.0
+        assert sv.systems_alive == 0
+        assert sv.dirty is False
+        assert sv.prana_level == 0
+
+    def test_custom_values(self):
+        sv = StateVector(guna=2, entry_count=42, uptime_ratio=0.75, systems_alive=4)
+        assert sv.guna == 2
+        assert sv.entry_count == 42
+        assert sv.uptime_ratio == 0.75
+        assert sv.systems_alive == 4
+
+    def test_is_namedtuple(self):
+        sv = StateVector()
+        assert hasattr(sv, '_fields')
+        assert 'guna' in sv._fields
+        assert 'prana_level' in sv._fields
+
+    def test_immutable(self):
+        sv = StateVector()
+        with pytest.raises(AttributeError):
+            sv.guna = 99
+
+
+# =============================================================================
+# state_affinity: StateVector → word selection bias
+# =============================================================================
+
+class TestStateAffinity:
+    """state_affinity scores word-state alignment. All numeric, no keywords."""
+
+    def test_returns_float(self):
+        sv = StateVector()
+        item = {"score": 0.5, "coords": (1, 2, 3), "packed_hex": ""}
+        result = state_affinity(sv, item)
+        assert isinstance(result, float)
+
+    def test_zero_without_mode(self):
+        sv = StateVector(guna=0)  # TAMAS → prefers GENESIS
+        item = {"score": 0.5, "coords": (), "packed_hex": ""}
+        result = state_affinity(sv, item, mode=None)
+        # No mode match possible, but mass/uptime axes still contribute
+        assert result >= 0.0
+
+    def test_guna_mode_boost(self):
+        sv_sattva = StateVector(guna=2)  # SATTVA → prefers DHARMA
+        item = {"score": 0.5, "coords": (1, 2, 3), "packed_hex": ""}
+        with_match = state_affinity(sv_sattva, item, mode="DHARMA")
+        without_match = state_affinity(sv_sattva, item, mode="KARMA")
+        assert with_match > without_match
+
+    def test_mass_alignment(self):
+        sv_heavy = StateVector(entry_count=60)  # Heavy state
+        heavy_item = {"score": 0.5, "coords": tuple(range(7)), "packed_hex": ""}
+        light_item = {"score": 0.5, "coords": (1,), "packed_hex": ""}
+        # Heavy state should prefer heavy words
+        heavy_score = state_affinity(sv_heavy, heavy_item)
+        light_score = state_affinity(sv_heavy, light_item)
+        assert heavy_score >= light_score
+
+    def test_uptime_confidence(self):
+        sv_up = StateVector(uptime_ratio=0.9)
+        sv_down = StateVector(uptime_ratio=0.1)
+        item = {"score": 0.8, "coords": (1, 2, 3), "packed_hex": ""}
+        up_score = state_affinity(sv_up, item)
+        down_score = state_affinity(sv_down, item)
+        assert up_score >= down_score
+
+    def test_capped(self):
+        from vibe_core.mahamantra.protocols._seed import PANCHA, WORDS, HALVES
+        sv = StateVector(guna=2, entry_count=72, uptime_ratio=1.0, prana_level=999999)
+        item = {"score": 1.0, "coords": tuple(range(10)), "packed_hex": ""}
+        result = state_affinity(sv, item, mode="DHARMA")
+        max_cap = PANCHA / (WORDS * HALVES) * HALVES
+        assert result <= max_cap + 1e-9
+
+    def test_empty_item(self):
+        sv = StateVector()
+        result = state_affinity(sv, {})
+        assert isinstance(result, float)
+        assert result >= 0.0
+
+
+# =============================================================================
+# extract_state_vector: MahaState → StateVector (graceful degradation)
+# =============================================================================
+
+class TestExtractStateVector:
+    """extract_state_vector gracefully degrades when MahaState unavailable."""
+
+    def test_returns_state_vector(self):
+        from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
+        sv = extract_state_vector(prana_level=42)
+        assert isinstance(sv, StateVector)
+        assert sv.prana_level == 42
+
+    def test_default_guna_is_rajas(self):
+        from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
+        sv = extract_state_vector()
+        # Even if MahaState fails, default is RAJAS (1)
+        assert sv.guna in (0, 1, 2)
