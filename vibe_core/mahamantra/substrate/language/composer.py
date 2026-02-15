@@ -575,6 +575,115 @@ def compose(
     return _assemble(selected, template, rhythm, input_text)
 
 
+def _build_lotus_pool(lotus_response: Dict) -> List[Dict[str, object]]:
+    """Build word pool from Lotus __call__ response.
+
+    Two sources (both from the real Maha Mantra computation):
+        1. smaranam — 7 resonant words (7D ranked, primary content)
+        2. verse.words — Gita verse word-for-word (philosophical grounding)
+
+    Each pool item gets coords resolved via word_by_iast for role classification.
+    """
+    pool: List[Dict[str, object]] = []
+
+    # Source 1: Smaranam — resonant words from rank_words (7D scoring)
+    for rw in lotus_response.get("smaranam", ()):
+        sanskrit = rw.get("sanskrit", "")
+        meaning = rw.get("meaning", "")
+        score = float(rw.get("score", 0))
+        if not meaning:
+            continue
+        coords = _resolve_coords(sanskrit, -1)
+        phex = ""
+        try:
+            from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+            entry = word_by_iast(sanskrit)
+            if entry is not None:
+                phex = getattr(entry, "packed_hex", "")
+        except Exception:
+            pass
+        tokens = word_tokens(phex) if phex else ()
+        pool.append({
+            "sanskrit": sanskrit,
+            "meaning": meaning,
+            "tokens": tokens,
+            "score": score,
+            "packed_hex": phex,
+            "first_coord": coords[0] if coords else -1,
+            "coords": coords,
+            "source": "smaranam",
+        })
+
+    # Source 2: Verse words — Gita philosophical grounding
+    verse = lotus_response.get("verse")
+    verse_count = 0
+    if verse and "words" in verse:
+        for vw in verse["words"]:
+            if verse_count >= SEVEN:
+                break
+            sanskrit = vw.get("sanskrit", "")
+            meaning = vw.get("meaning", "")
+            if not meaning or len(meaning) <= KSETRAJNA:
+                continue
+            coords = _resolve_coords(sanskrit, -1)
+            pool.append({
+                "sanskrit": sanskrit,
+                "meaning": meaning,
+                "tokens": (),
+                "score": PANCHA / WORDS,
+                "packed_hex": "",
+                "first_coord": coords[0] if coords else -1,
+                "coords": coords,
+                "source": "verse",
+            })
+            verse_count += KSETRAJNA
+
+    return pool
+
+
+def compose_from_lotus(
+    lotus_response: Dict,
+    input_text: str,
+) -> str:
+    """Compose English output from a Lotus __call__ response.
+
+    This is the Lotus-rooted composition path. The Lotus response IS the
+    Maha Vector — it contains smaranam (resonant words), verse (Gita grounding),
+    vibration, guna, DIW, position, antaranga, akash. Everything computed by
+    the real Maha Mantra pipeline.
+
+    The composer clothes this truth in English using:
+        - SVO ordering from coordinate mass → role
+        - Input echo from user words
+        - Prosodic affinity from syllable vectors
+    """
+    from vibe_core.mahamantra.substrate.language.phonetics import scan_syllable_rhythm
+
+    pool = _build_lotus_pool(lotus_response)
+    rhythm = scan_syllable_rhythm(input_text)
+
+    # Rank by rhythm (prosodic affinity between input syllables and word coords)
+    pool = rank_resonant_by_rhythm(pool, rhythm, input_text, seed=0)
+
+    # Select top SEVEN words by prosodic affinity
+    selected = _select_words(pool, rhythm, max_words=SEVEN)
+
+    # Extract template from verse if available
+    template: List[Dict] = []
+    verse = lotus_response.get("verse")
+    if verse and "words" in verse:
+        total = len(verse["words"])
+        for i, vw in enumerate(verse["words"]):
+            coords = _resolve_coords(vw.get("sanskrit", ""), -1)
+            role = _word_role({"coords": coords})
+            template.append({
+                "position": i, "sanskrit": vw.get("sanskrit", ""),
+                "meaning": vw.get("meaning", ""), "role": role, "coords": coords,
+            })
+
+    return _assemble(selected, template, rhythm, input_text)
+
+
 def chunk_sentence(words: List[str]) -> List[str]:
     """Group flat word list into readable phrase chunks."""
     if len(words) <= HALVES + KSETRAJNA:
