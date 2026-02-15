@@ -124,27 +124,40 @@ All numeric. All derived from protocol constants. No keywords.
 
 ## 4. Implementation Plan
 
-### Phase 1: StateVector (this session)
+### Phase 1: StateVector ✅ DONE (b3ef5a15d)
 
-1. Add `StateVector` dataclass to `language/types.py`
-2. Add `extract_state_vector()` to `maha_state.py` (or a thin bridge)
-3. Wire into `engine.py` between `_encode()` and `_route()`
-4. Add `state_affinity(sv: StateVector, item: Dict)` to `composer.py`
-5. Integrate into `rank_resonant_by_rhythm()` scoring
+1. ✅ `StateVector` NamedTuple in `language/types.py`
+2. ✅ `state_bridge.py`: `extract_state_vector()` from `MahaState.get_status()`
+3. ✅ Wired into `engine.py` after `_resonate()`, passed to `compose(state=...)`
+4. ✅ `state_affinity()` in `composer.py`: guna→mode, entries→mass, uptime→confidence
+5. ✅ Integrated into `rank_resonant_by_rhythm()` as 4th scoring axis
+6. ✅ 13 new tests (StateVector, state_affinity, extract_state_vector)
 
-### Phase 2: Nadi Integration (next session)
+### Phase 1b: SVO Assembly ✅ DONE (b3ef5a15d)
+
+1. ✅ `_word_role()`: classify pool words by coordinate mass → role
+2. ✅ `_SVO_ORDER`: REF → VERB → NOUN → QUALITY → PREP → PARTICLE
+3. ✅ `_assemble()` rewritten: role-bucket placement, template anchor injection
+4. ✅ `_resolve_coords()`: IAST lookup for expansion/branch words (fixes mass=0)
+
+### Phase 2: Nadi Integration (future)
 
 1. Engine receives input via `NadiOp.RECEIVE` (SRAVANAM)
 2. Engine sends output via `NadiOp.SEND` (KIRTANAM)
 3. State queries via `NadiOp.REQUEST` (VANDANAM)
 4. Full message-passing loop instead of direct function call
 
-### Phase 3: Grammar from Template Roles (next session)
+### Phase 3: Output Coherence (next priority)
 
-1. Template roles (NOUN, VERB, REF, PARTICLE, QUALITY, PREP) from
-   coordinate-based `_infer_role()` provide sentence structure
-2. SOV→SVO transformation: Sanskrit template is SOV, English output is SVO
-3. Role-guided assembly: Subject slot → REF words, Verb slot → VERB words, etc.
+The SVO structure is correct but output is still word salad. Root causes:
+1. **Token selection quality**: `_pick_token()` picks longest WN token, but
+   longest ≠ most relevant. Need semantic relevance to input.
+2. **Too many words from unrelated branches**: Expansion/branch words dilute
+   the pool with semantically distant tokens.
+3. **No input echo**: The user's actual words never appear in output.
+   "What is devotion?" should echo "devotion" prominently.
+4. **Missing connective tissue**: No articles, prepositions, or conjunctions
+   to glue content words into readable phrases.
 
 ---
 
