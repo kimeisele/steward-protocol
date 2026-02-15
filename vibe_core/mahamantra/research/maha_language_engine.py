@@ -578,10 +578,12 @@ class MahaLanguageEngine:
         self._antaranga.clear()
 
         impacts = 0
+        rama_coords: List[int] = []
         for char in text:
             result = impact_keystroke(self._antaranga, char)
             if result is not None:
                 impacts += KSETRAJNA
+                rama_coords.append(result.rama_coord)
 
         # One VenuOrchestrator tick to modulate the accumulated wave
         diw = self._venu.step()
@@ -591,6 +593,7 @@ class MahaLanguageEngine:
             "char_impacts": impacts,
             "char_wave_prana": self._antaranga.total_prana(),
             "char_wave_active": self._antaranga.active_count(),
+            "rama_coords": tuple(rama_coords),
         }
 
     # =========================================================================
@@ -1227,11 +1230,17 @@ class MahaLanguageEngine:
         seed = enc["seed"]
         rhythm = self._scan_syllable_rhythm(text)
 
-        # O(1) cache hit — return immediately
-        if enc["attention_hit"] and enc["cached_result"] is not None:
-            cached = enc["cached_result"]
-            if isinstance(cached, EngineResult):
-                return cached._replace(attention_cached=True)
+        # DETERMINISM: Reset VenuOrchestrator to seed-derived tick so the
+        # same seed always produces the same DIW sequence, regardless of
+        # how many generate() calls preceded this one.
+        self._venu.reset()
+        self._venu._tick = seed % WORDS
+
+        # DISABLED: MahaAttention O(1) cache has hash collisions in 16-bit
+        # address space — different prompts can land on the same slot and
+        # return the WRONG cached result. No collision detection in attend().
+        # See: adapters/attention.py DEFAULT_KEY_BITS=16 → 65,536 slots.
+        # TODO: Fix attention.py to store+verify original text on retrieval.
 
         if not coords:
             return EngineResult(
@@ -1351,8 +1360,8 @@ class MahaLanguageEngine:
             sequencer_steps=rhythm.sequencer_steps,
         )
 
-        # Step 8: MEMORIZE (cache for O(1) next time)
-        self._attention.memorize(text, result)
+        # Step 8: MEMORIZE — DISABLED (attention cache has hash collisions)
+        # self._attention.memorize(text, result)
 
         return result
 
