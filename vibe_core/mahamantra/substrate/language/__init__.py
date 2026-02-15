@@ -12,10 +12,11 @@ Each module has a single responsibility:
     mantra_grid.py  — 32-step mantra sequencer grid (16 words × 2 beats)
     mode_affinity.py — WordNet graph-distance mode classification
     section_router.py — Attractor → Kapitel 18 section + verse template
-    composer.py     — Rhythmic sequencing composition (words → English)
-    engine.py       — Thin orchestrator wiring all stages
+    composer.py     — Scoring atoms (prosodic_affinity, chamber_boost, etc.)
+    engine.py       — Thin orchestrator wiring Lotus → adapter → EngineResult
 
-SUBSTRATE LEVEL: This is language as vibration routing, not NLP.
+SUBSTRATE LEVEL: Pure math. Composition lives in adapters/composition.py.
+Protocol lives in protocols/_composition.py.
 """
 
 from vibe_core.mahamantra.substrate.language.types import (
@@ -29,15 +30,12 @@ from vibe_core.mahamantra.substrate.language.engine import (
     generate,
     get_engine,
 )
-from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
-
 __all__ = [
     "EngineResult",
     "MahaLanguageEngine",
     "RhythmProfile",
     "StateVector",
     "SyllableVector",
-    "compose_from_wave",
     "generate",
     "get_engine",
 ]
