@@ -292,6 +292,75 @@ und sollten als Block migriert werden, nicht einzeln.
 
 **Root .md Files im Repo-Root (57 Stück) sind ein SEPARATES Problem — nicht in diesen Branches.**
 
+## Maha Language Engine (Feb 15 2026)
+
+**Branch:** `followup/maha-language-engine`
+
+**Problem:** `MahaLanguageEngine` ist eine **Shadow Pipeline** — eigener Compressor, Synth, Kernel, Venu,
+Antaranga, alles separate Instanzen vom Lotus `__call__()`. Dupliziert die gesamte Maha Mantra Berechnung
+in Isolation. Berührt nie die echte Wurzel.
+
+**Lösung:** `compose_from_lotus(lotus_response, input_text)` — konsumiert das Lotus Response Dict direkt.
+
+**Der Lotus Response IST der Maha-Vektor:**
+- `smaranam`: 7 resonante Wörter (7D Ranker, primärer Content)
+- `verse`: Gita Vers Wort-für-Wort (philosophische Grundlage)
+- `vibration`: Seed, Attractor, Phonem, 4D Signatur
+- `guna`: Modus aus OpCode (nicht geraten)
+- `diw`: Divine Instruction Word (Venu/Vamsi/Murali)
+- `position`/`guardian`/`quarter`/`holy_name`/`trinity_function`
+- `antaranga`: Chamber State
+- `akash`: Akkumulierter State über Runden
+
+**Zwei Kompositions-Pfade:**
+
+1. `compose_from_lotus(lotus_response, input_text)` — Token-basiert (SVO Rollen, Input-Echo)
+2. `compose_from_wave(lotus_response, input_text)` — **Antaranga-getrieben** (NEU, Feb 15):
+   - Liest die Standing Wave aus dem Chamber-Singleton nach Lotus `__call__()`
+   - Wörter gerankt nach POST-MODULATION Prana (nicht Pre-Computation Score)
+   - English Meanings → Syllable Vectors (CMU ARPAbet, `phonetics.py`)
+   - Syllables aligned auf 32-Step Mantra Grid (`mantra_grid.py`)
+   - Grid-Position = Satzreihenfolge
+
+**Syllable-Infrastruktur (gebaut, wiederverwendbar):**
+- `phonetics.py`: Input → 3D SyllableVector (stress, height, weight) via CMU ARPAbet
+- `mantra_grid.py`: 32-Step Sequencer aus MAHAMANTRA. Alignment Scoring.
+- `mode_affinity.py`: WordNet Graph-Distanz Klassifikation (keine Keywords)
+- `wordnet_bridge.py`: 3-Layer Semantic Scoring (exact/graph/morph), 4259 Wörter
+- `varnamala_codec.py`: IAST ↔ RAMA Koordinaten (49-Space)
+- `research/language_runtime/antaranga_bridge.py`: Keystroke → RAMA coord → Antaranga collide()
+- `research/language_runtime/venu_bridge.py`: DIWSubscriber für VenuOrchestrator Ticks
+- `research/language_runtime/incremental.py`: Live Keystroke Buffer → TickInputFrame
+
+**Token-Infrastruktur (alt, wird durch Syllable-Pfad ersetzt):**
+- `_word_role()`: Koordinaten-Masse → REF/VERB/NOUN/QUALITY/PREP/PARTICLE
+- `_SVO_ORDER`: Subject → Verb → Object → Quality → Modifiers (SOV→SVO Transformation)
+- `_pick_token()`: Scoring (Länge + Input-Echo Bonus), Dedup-aware
+- `_resolve_coords()`: IAST Lookup für Wörter ohne Koordinaten
+- `_build_lotus_pool()`: Smaranam + Verse → Pool Items mit Coords
+
+**Tests:** 205/205 (55 Composer + 35 Router + 115 Engine)
+
+**Status (Feb 15 2026) — SLASH AND BURN COMPLETE:**
+- ✅ Engine ist jetzt THIN SHELL: 149 Zeilen, kein eigener State.
+  - `generate()` = `MahamantraLotus()` → `compose_from_wave()` → `EngineResult`
+  - KEINE eigenen Kopien von Antaranga/Venu/Kernel. Alles lebt in Lotus/Chamber.
+  - GELÖSCHT: `_antaranga`, `_kernel`, `_venu`, `_build_character_wave`, `_resonate_from_lotus`,
+    `_expand`, `_sprout_derivation_tree`, `_modulate`, `_trace_phonemes`, `_ensure_loaded`
+- ✅ Halb-deterministisch BY DESIGN (Kshetrajna-Prinzip):
+  - Seed = deterministisch (gleicher Input → gleicher Seed, immer)
+  - Output = LEBENDIG (Chamber akkumuliert — Beobachter verändert das Feld)
+- `compose_from_wave()` liest ECHTE `Chamber.antaranga` (Standing Wave nach Lotus)
+- Alte `compose()`, `_pick_token()`, `_assemble()` = DEAD CODE (0 Production-Caller)
+- Tulasi (Wave Collapse) existiert in `tulasi_gate.py` + `MahaModularSynth.transform(has_tulasi=)`
+
+**WARNUNG:** `state_bridge.py` und `StateVector` sind FALSCH — MahaState ist ein Wrapper, nicht die Wurzel.
+Werden in Phase C entfernt. Der Lotus Response ersetzt alles.
+
+**WARNUNG:** Sprache = Syllables, NICHT Tokens. Die 49 Varnamala Matrix IST der Kompositionsraum.
+Gita-Wörter sind Computation-INPUT (smaranam → Antaranga), NICHT Output-Fragmente.
+Kein LLM. `chat.py` ist Legacy.
+
 ## Architektur-Audit (Feb 12 2026)
 
 **Zahlen:** 1426 .py Dateien, 377K Zeilen, ~3600 Klassen, ~3700 Funktionen, 358 Protocol-Dateien

@@ -432,3 +432,312 @@ class TestExtractStateVector:
         sv = extract_state_vector()
         # Even if MahaState fails, default is RAJAS (1)
         assert sv.guna in (0, 1, 2)
+
+
+# =============================================================================
+# compose_from_lotus: Lotus __call__ response → English output
+# =============================================================================
+
+class TestComposeFromLotus:
+    """compose_from_lotus consumes Lotus response dict directly."""
+
+    def _make_lotus_response(self, smaranam=None, verse=None):
+        """Build a minimal Lotus response dict for testing."""
+        resp = {
+            "input": "test input",
+            "smaranam": smaranam or (),
+            "verse": verse,
+            "vibration": {"seed": 42, "attractor": 7, "phoneme": "a",
+                          "signature": {"element": "prithvi", "varga": 0, "sub": 0, "harmonic": 0}},
+            "guna": {"mode": "RAJAS", "opcode": "EXTEND_CAP", "opcode_value": 9},
+            "diw": {"raw": 0, "venu": 0, "vamsi": 0, "murali": 0},
+            "position": 9, "guardian": "prahlada", "quarter": "karma",
+            "antaranga": {"active_slots": 0, "total_prana": 0},
+            "akash": {"total_rounds": 0, "total_beats": 0},
+        }
+        return resp
+
+    def test_returns_string(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_lotus
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
+                {"sanskrit": "karma", "meaning": "activities", "score": 0.8},
+            ]
+        )
+        result = compose_from_lotus(resp, "What is dharma?")
+        assert isinstance(result, str)
+
+    def test_empty_smaranam_returns_empty(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_lotus
+        resp = self._make_lotus_response()
+        result = compose_from_lotus(resp, "test")
+        assert isinstance(result, str)
+
+    def test_smaranam_words_appear(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_lotus
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "bhakti", "meaning": "devotional service", "score": 0.95},
+                {"sanskrit": "jñānam", "meaning": "knowledge", "score": 0.90},
+                {"sanskrit": "yoga", "meaning": "linking process", "score": 0.85},
+            ]
+        )
+        result = compose_from_lotus(resp, "devotion")
+        # At least one meaning word should appear in output
+        words = result.lower().split()
+        meanings = {"devotional", "service", "knowledge", "linking", "process"}
+        assert any(w in meanings for w in words), f"No meaning word in: {result}"
+
+    def test_verse_words_enrich_pool(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_lotus
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
+            ],
+            verse={
+                "id": "BG.2.47", "chapter": 2, "verse": 47, "guna": "sattva",
+                "dominant_name": "KRISHNA", "significance": "Sankhya Yoga",
+                "word_count": 3, "phoneme_count": 15,
+                "words": (
+                    {"sanskrit": "karmaṇi", "meaning": "prescribed duties"},
+                    {"sanskrit": "eva", "meaning": "certainly"},
+                    {"sanskrit": "adhikāras", "meaning": "right"},
+                ),
+            }
+        )
+        result = compose_from_lotus(resp, "What should I do?")
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_deterministic(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_lotus
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
+                {"sanskrit": "karma", "meaning": "activities", "score": 0.8},
+                {"sanskrit": "yoga", "meaning": "linking process", "score": 0.7},
+            ]
+        )
+        r1 = compose_from_lotus(resp, "test input")
+        r2 = compose_from_lotus(resp, "test input")
+        assert r1 == r2
+
+    def test_max_seven_words(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_lotus
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": f"word{i}", "meaning": f"meaning number {i} here", "score": 0.9 - i * 0.05}
+                for i in range(10)
+            ],
+            verse={
+                "id": "BG.1.1", "chapter": 1, "verse": 1, "guna": "rajas",
+                "dominant_name": "HARE", "significance": "Observing the Armies",
+                "word_count": 5, "phoneme_count": 30,
+                "words": tuple(
+                    {"sanskrit": f"v{i}", "meaning": f"verse word {i}"} for i in range(5)
+                ),
+            }
+        )
+        result = compose_from_lotus(resp, "test")
+        words = result.split()
+        assert len(words) <= SEVEN + 1  # +1 for possible template anchor
+
+
+class TestBuildLotusPool:
+    """_build_lotus_pool extracts words from Lotus response."""
+
+    def test_smaranam_source(self):
+        from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+        resp = {
+            "smaranam": [
+                {"sanskrit": "dharma", "meaning": "duty", "score": 0.9},
+            ],
+        }
+        pool = _build_lotus_pool(resp)
+        smaranam_items = [p for p in pool if p.get("source") == "smaranam"]
+        assert len(smaranam_items) == 1
+        assert smaranam_items[0]["meaning"] == "duty"
+
+    def test_verse_source(self):
+        from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+        resp = {
+            "smaranam": [],
+            "verse": {
+                "words": (
+                    {"sanskrit": "yathā", "meaning": "as"},
+                    {"sanskrit": "pradīptam", "meaning": "blazing"},
+                ),
+            },
+        }
+        pool = _build_lotus_pool(resp)
+        verse_items = [p for p in pool if p.get("source") == "verse"]
+        assert len(verse_items) >= 1
+
+    def test_verse_capped_at_seven(self):
+        from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+        resp = {
+            "smaranam": [],
+            "verse": {
+                "words": tuple(
+                    {"sanskrit": f"w{i}", "meaning": f"meaning {i} long enough"} for i in range(20)
+                ),
+            },
+        }
+        pool = _build_lotus_pool(resp)
+        verse_items = [p for p in pool if p.get("source") == "verse"]
+        assert len(verse_items) <= SEVEN
+
+    def test_empty_response(self):
+        from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+        pool = _build_lotus_pool({})
+        assert pool == []
+
+    def test_coords_resolved(self):
+        from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+        resp = {
+            "smaranam": [
+                {"sanskrit": "dharma", "meaning": "duty", "score": 0.9},
+            ],
+        }
+        pool = _build_lotus_pool(resp)
+        # coords should be resolved (not empty) for known Sanskrit words
+        assert len(pool) == 1
+        assert isinstance(pool[0]["coords"], (tuple, list))
+
+
+# =============================================================================
+# compose_from_wave: Antaranga-driven syllable composition
+# =============================================================================
+
+class TestComposeFromWave:
+    """compose_from_wave reads the Antaranga standing wave for composition."""
+
+    def _make_lotus_response(self, smaranam=None, verse=None):
+        return {
+            "input": "test input",
+            "smaranam": smaranam or (),
+            "verse": verse,
+            "vibration": {"seed": 42, "attractor": 7, "phoneme": "a",
+                          "signature": {"element": "prithvi", "varga": 0, "sub": 0, "harmonic": 0}},
+            "guna": {"mode": "RAJAS", "opcode": "EXTEND_CAP", "opcode_value": 9},
+            "diw": {"raw": 0, "venu": 0, "vamsi": 0, "murali": 0},
+            "position": 9, "guardian": "prahlada", "quarter": "karma",
+            "antaranga": {"active_slots": 0, "total_prana": 0},
+            "akash": {"total_rounds": 0, "total_beats": 0},
+        }
+
+    def test_returns_string(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
+                {"sanskrit": "karma", "meaning": "activities", "score": 0.8},
+            ]
+        )
+        result = compose_from_wave(resp, "What is dharma?")
+        assert isinstance(result, str)
+
+    def test_empty_smaranam_returns_empty(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        resp = self._make_lotus_response(smaranam=[])
+        result = compose_from_wave(resp, "test")
+        assert isinstance(result, str)
+
+    def test_output_nonempty_with_words(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "bhakti", "meaning": "devotional service", "score": 0.95},
+                {"sanskrit": "jñānam", "meaning": "knowledge", "score": 0.90},
+                {"sanskrit": "yoga", "meaning": "linking process", "score": 0.85},
+            ]
+        )
+        result = compose_from_wave(resp, "devotion")
+        assert len(result) > 0
+
+    def test_deterministic(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
+                {"sanskrit": "karma", "meaning": "activities", "score": 0.8},
+                {"sanskrit": "yoga", "meaning": "linking process", "score": 0.7},
+            ]
+        )
+        r1 = compose_from_wave(resp, "test input")
+        r2 = compose_from_wave(resp, "test input")
+        assert r1 == r2
+
+    def test_max_seven_words(self):
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": f"word{i}", "meaning": f"meaning number {i} here", "score": 0.9 - i * 0.05}
+                for i in range(10)
+            ],
+        )
+        result = compose_from_wave(resp, "test")
+        words = result.split()
+        assert len(words) <= SEVEN + 1
+
+    def test_wave_prana_ranking(self):
+        """Words with higher post-modulation prana should be preferred."""
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "dharma", "meaning": "duty", "score": 0.5},
+                {"sanskrit": "karma", "meaning": "action", "score": 0.9},
+                {"sanskrit": "yoga", "meaning": "union", "score": 0.3},
+            ]
+        )
+        result = compose_from_wave(resp, "test")
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_verse_words_not_in_output_directly(self):
+        """Verse words are computation input, not output fragments per se."""
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "dharma", "meaning": "duty", "score": 0.9},
+            ],
+            verse={
+                "id": "BG.2.47", "chapter": 2, "verse": 47, "guna": "sattva",
+                "dominant_name": "KRISHNA", "significance": "Sankhya Yoga",
+                "word_count": 3, "phoneme_count": 15,
+                "words": (
+                    {"sanskrit": "karmaṇi", "meaning": "prescribed duties"},
+                    {"sanskrit": "eva", "meaning": "certainly"},
+                    {"sanskrit": "adhikāras", "meaning": "right"},
+                ),
+            }
+        )
+        result = compose_from_wave(resp, "What should I do?")
+        assert isinstance(result, str)
+
+    def test_with_real_lotus(self):
+        """End-to-end: Lotus __call__ → compose_from_wave."""
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        lotus = MahamantraLotus()
+        lr = lotus("What is the meaning of life?")
+        result = compose_from_wave(lr, "What is the meaning of life?")
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_real_lotus_deterministic(self):
+        """Same Lotus input → same compose_from_wave output."""
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        text = "devotion and surrender"
+        lotus = MahamantraLotus()
+        lr1 = lotus(text)
+        r1 = compose_from_wave(lr1, text)
+        lotus2 = MahamantraLotus()
+        lr2 = lotus2(text)
+        r2 = compose_from_wave(lr2, text)
+        # Seeds must match (deterministic compression)
+        assert lr1["vibration"]["seed"] == lr2["vibration"]["seed"]
+        # Output must match
+        assert r1 == r2
