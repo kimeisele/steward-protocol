@@ -450,6 +450,36 @@ class MahaLLM(MahaLLMProtocol):
             return (best_category.value << 12) | (text_hash & 0xFFF)
 
     # =========================================================================
+    # GATE 2 (EXECUTE) — InferCapability compliance
+    # =========================================================================
+
+    def infer(self, seed: int, attractor: int) -> Dict[str, Any]:
+        """
+        Gate 2 (EXECUTE) observer — classify intent from seed.
+
+        Called by _fire_gate(TattvaGate.EXECUTE, ctx) during __call__().
+        Receives seed + attractor from the pipeline, routes to intent
+        category, and stores the result for later query.
+
+        This is an OBSERVER — it enriches side-state, does not alter flow.
+        """
+        route = self.route_seed(seed)
+        self._last_infer = {
+            "seed": seed,
+            "attractor": attractor,
+            "intent_category": route.category_name,
+            "intent_id": route.intent_id,
+            "agent": route.agent,
+            "found": route.found,
+        }
+        return self._last_infer
+
+    @property
+    def last_infer(self) -> Optional[Dict[str, Any]]:
+        """Last inference result from Gate 2 observation."""
+        return getattr(self, "_last_infer", None)
+
+    # =========================================================================
     # INTEGRATION WITH MAHACOMPRESSION
     # =========================================================================
 

@@ -857,10 +857,15 @@ def get_sync_gate() -> EnforceGateProvider:
 
 def wire_gate_providers() -> int:
     """
-    Register all 5 gate providers in TattvaRegistry.
+    Register all gate providers in TattvaRegistry.
 
     Called once at boot. Returns number of successfully registered providers.
     Safe to call multiple times (idempotent — checks existing registrations).
+
+    Providers:
+        5 core observers (MantraGate, StorageGate, InferGate, SyncGate, EnforceGate)
+        + MahaAttention at Gate 0 (PARSE) — O(1) intent resolution
+        + MahaLLM at Gate 2 (EXECUTE) — holographic intent routing from seed
     """
     from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
     from vibe_core.mahamantra.substrate.tattva_registry import get_registry
@@ -875,6 +880,21 @@ def wire_gate_providers() -> int:
         "sync_gate": TattvaGate.RESULT,
         "enforce_gate": TattvaGate.SYNC,
     }
+
+    # Adapter gate providers — real capability, not just observation
+    try:
+        from vibe_core.mahamantra.adapters.attention import get_attention
+        providers["maha_attention"] = get_attention()
+        gate_map["maha_attention"] = TattvaGate.PARSE
+    except ImportError:
+        logger.debug("MahaAttention not available for Gate 0")
+
+    try:
+        from vibe_core.mahamantra.adapters.llm import MahaLLM
+        providers["maha_llm"] = MahaLLM()
+        gate_map["maha_llm"] = TattvaGate.EXECUTE
+    except ImportError:
+        logger.debug("MahaLLM not available for Gate 2")
 
     registered = 0
     for name, gate in gate_map.items():

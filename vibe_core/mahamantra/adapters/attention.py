@@ -202,6 +202,36 @@ class MahaAttention(MahaAttentionProtocol[Any]):
         return self.attend(query).handler
 
     # =========================================================================
+    # GATE 0 (PARSE) — MantraCapability compliance
+    # =========================================================================
+
+    def parse(self, input_data: Any) -> Dict[str, Any]:
+        """
+        Gate 0 (PARSE) observer — resolve intent at pipeline entry.
+
+        Called by _fire_gate(TattvaGate.PARSE, ctx) during __call__().
+        Receives raw input, attempts O(1) intent resolution, and stores
+        the result for later query.
+
+        This is an OBSERVER — it enriches side-state, does not alter flow.
+        """
+        text = str(input_data) if input_data is not None else ""
+        result = self.attend(text)
+        self._last_parse = {
+            "input_text": text,
+            "address": result.address,
+            "handler_found": result.found,
+            "handler": result.handler,
+            "ops_saved": result.ops_saved,
+        }
+        return self._last_parse
+
+    @property
+    def last_parse(self) -> Optional[Dict[str, Any]]:
+        """Last parse result from Gate 0 observation."""
+        return getattr(self, "_last_parse", None)
+
+    # =========================================================================
     # BATCH API
     # =========================================================================
 
