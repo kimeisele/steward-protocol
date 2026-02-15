@@ -21,6 +21,7 @@ SUBSTRATE LEVEL: This is language as vibration routing, not NLP.
 from vibe_core.mahamantra.substrate.language.types import (
     EngineResult,
     RhythmProfile,
+    StateVector,
     SyllableVector,
 )
 from vibe_core.mahamantra.substrate.language.engine import (
@@ -33,6 +34,7 @@ __all__ = [
     "EngineResult",
     "MahaLanguageEngine",
     "RhythmProfile",
+    "StateVector",
     "SyllableVector",
     "generate",
     "get_engine",
