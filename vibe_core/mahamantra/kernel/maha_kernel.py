@@ -65,8 +65,9 @@ class MahaKernel(PanchaTattvaProtocol):
         self._synth = MahaModularSynth(default_preset="quantum")
         
         # 4. LEGACY INFRASTRUCTURE (Required for Governance/Ledger)
-        from vibe_core.mahamantra.kernel.singularity import Mahamantra
-        self._singularity = Mahamantra()
+        # EKAMEVADVITIYAM: Use the ONE singleton, never create a second.
+        from vibe_core.mahamantra.kernel.singularity import mahamantra as _singularity
+        self._singularity = _singularity
 
         # 5. LEDGER (The Immutable Log)
         from vibe_core.mahamantra import InMemoryLedger, SQLiteLedger

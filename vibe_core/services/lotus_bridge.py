@@ -1,23 +1,20 @@
 """
-LOTUS BRIDGE - Connecting MahamantraLotus to VenuService
-========================================================
+LOTUS BRIDGE - RETIRED (VenuService now calls Singularity.tick() directly)
+==========================================================================
 
 "sarvasya cāhaṁ hṛdi sanniviṣṭo"
 "I am seated in everyone's heart"
 — Bhagavad Gita 15.15
 
-PROBLEM:
-    VenuService calls orchestrator.step() — bit-level heartbeat.
-    Singularity._listeners (Nrisimha, MahaCompute, DriftAuditor, Proxy)
-    need semantic-level TickState broadcasts via tick().
+HISTORY:
+    This subscriber was a workaround for the disconnected heartbeat problem.
+    VenuService used to call orchestrator.step() directly, bypassing
+    Singularity._broadcast(). LotusBridgeSubscriber bridged the gap.
 
-SOLUTION:
-    LotusBridgeSubscriber fires every VenuService tick and calls
-    lotus.tick(). The _owned guard on VenuOrchestrator prevents
-    double-stepping — tick() reads _prev_state instead of calling step().
-    Kala advances correctly, full TickState is broadcast to all listeners.
-
-    One flute, one dance. No manual state construction.
+RETIRED:
+    VenuService now calls Singularity.tick() directly (EKAMEVADVITIYAM).
+    This subscriber is no longer needed. on_beat_tick() is a no-op.
+    Kept for backward compatibility (beat_discovery.py lists it).
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -65,21 +62,13 @@ class LotusBridgeSubscriber:
         return self._lotus
 
     def on_beat_tick(self, tick_count: int, position: int) -> None:
-        """Called by VenuService every tick.
+        """RETIRED: No-op. VenuService now calls Singularity.tick() directly.
 
-        Delegates to lotus.tick() which advances Kala and broadcasts
-        the full TickState to all Singularity._listeners. The _owned
-        guard ensures step() is not called again — just reads _prev_state.
+        Previously this bridged VenuService → Singularity._broadcast().
+        Now VenuService calls Singularity.tick() which does step() + broadcast.
+        Calling lotus.tick() here would DOUBLE-TICK. So: no-op.
         """
-        lotus = self._get_lotus()
-        if lotus is None:
-            return
-
-        try:
-            lotus.tick()
-            self._broadcast_count += 1
-        except Exception as e:
-            logger.debug("Lotus bridge tick failed: %s", e)
+        self._broadcast_count += 1
 
     @property
     def broadcast_count(self) -> int:

@@ -113,17 +113,14 @@ class PranaSoundEngine:
             chunks of PCM bytes
 
         GUARD: Reads the current DIW from the orchestrator's last state
-        instead of calling step(). The heartbeat is owned by VenuService
-        or Singularity.tick() — AudioEngine is a consumer, not a driver.
-        Falls back to step() only on cold start (no prev_state yet).
+        instead of calling step(). Singularity.tick() is the ONLY driver.
+        AudioEngine is a consumer, not a driver.
         """
         orch = chamber._orchestrator
         while True:
-            # Read current DIW — don't drive the orchestrator
-            if orch._owned:
-                diw = orch._prev_state | (orch._mode << CLUSTER_SHIFT)
-            else:
-                diw = orch.step()
+            # Read current DIW — NEVER drive the orchestrator.
+            # Singularity.tick() is the one path to the flute.
+            diw = orch._prev_state | (orch._mode << CLUSTER_SHIFT)
             
             # Synthesize Audio Frame
             audio_chunk = self.synthesize(diw, num_frames=1)
