@@ -119,13 +119,14 @@ class FrameHistory:
 
 def _default_rhythm(text: str):
     """Fallback rhythm computation using engine helpers."""
-    from vibe_core.mahamantra.research.maha_language_engine import RhythmProfile, _WORD_TOKEN_RE, _stress_for_word
+    from vibe_core.mahamantra.substrate.language.types import RhythmProfile
+    from vibe_core.mahamantra.substrate.language.phonetics import syllable_vectors_for_word, _WORD_TOKEN_RE
     from vibe_core.mahamantra.protocols._seed import KSETRAJNA, WORDS
 
     tokens = _WORD_TOKEN_RE.findall(text)
     stress: List[int] = []
     for token in tokens:
-        stress.extend(_stress_for_word(token))
+        stress.extend(sv.stress for sv in syllable_vectors_for_word(token))
 
     if not stress:
         return RhythmProfile(syllable_count=0, stress_pattern=(), sequencer_steps=(), signature="-")
