@@ -147,17 +147,46 @@ All numeric. All derived from protocol constants. No keywords.
 3. State queries via `NadiOp.REQUEST` (VANDANAM)
 4. Full message-passing loop instead of direct function call
 
-### Phase 3: Output Coherence (next priority)
+### Phase 1c: Output Quality Improvements ✅ DONE (dfee96bf7, 7007ecc6e)
 
-The SVO structure is correct but output is still word salad. Root causes:
-1. **Token selection quality**: `_pick_token()` picks longest WN token, but
-   longest ≠ most relevant. Need semantic relevance to input.
-2. **Too many words from unrelated branches**: Expansion/branch words dilute
-   the pool with semantically distant tokens.
-3. **No input echo**: The user's actual words never appear in output.
-   "What is devotion?" should echo "devotion" prominently.
-4. **Missing connective tissue**: No articles, prepositions, or conjunctions
-   to glue content words into readable phrases.
+1. ✅ `_pick_token()` rewritten: scoring (len + PANCHA bonus for input match)
+2. ✅ Dedup-aware: accepts `used` set, skips already-picked tokens
+3. ✅ Pool capped: expansion at PANCHA, branch at PANCHA (17 words, not 48)
+4. ✅ Input echo: user's words appear in output via token scoring bonus
+
+### Phase 3: Semantic Grounding (THE REAL BOTTLENECK)
+
+The composer is now structurally correct (SVO order, input echo, focused pool,
+state-biased scoring). But the output is still word salad because:
+
+**The pool words are not semantically relevant to the input.**
+
+"How is the codebase?" → guardian=manu(law) → words about "regulations",
+"cessation", "mysticism". Nothing about codebases.
+
+This is NOT a composer problem. The composer correctly selects, scores, and
+orders whatever words it receives. The problem is upstream:
+
+1. **Guardian routing is phonetic, not semantic.** It routes by attractor
+   (vibration pattern), not by meaning. "How is the codebase?" and "What is
+   dharma?" get similar guardians because they have similar phonetic profiles.
+
+2. **The engine never queries MahaState for content.** StateVector provides
+   numeric bias (guna, uptime, entries) but not semantic content. When the
+   user asks "How is the codebase?", the system should query
+   `MahaState.get_status()` and inject status-relevant words into the pool.
+
+3. **Intent routing exists but doesn't influence word selection.** The engine
+   already computes `intent_category` (from `_llm.route_text()`), but this
+   category doesn't change which words enter the pool.
+
+**The fix is NOT more composer tweaks.** The fix is:
+- Intent-aware pool injection: different intents → different state queries
+- Status query results → semantic tokens injected into pool
+- This requires the engine to be sense-aware (Sravanam → Buddhi → Kirtanam)
+
+This is Phase 2 (Nadi integration) + a new Phase 3 (intent-driven state query).
+The composer is ready to receive these tokens — it just needs better input.
 
 ---
 
