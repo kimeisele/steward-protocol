@@ -575,6 +575,307 @@ def compose(
     return _assemble(selected, template, rhythm, input_text)
 
 
+def _build_lotus_pool(lotus_response: Dict) -> List[Dict[str, object]]:
+    """Build word pool from Lotus __call__ response.
+
+    Two sources (both from the real Maha Mantra computation):
+        1. smaranam — 7 resonant words (7D ranked, primary content)
+        2. verse.words — Gita verse word-for-word (philosophical grounding)
+
+    Each pool item gets coords resolved via word_by_iast for role classification.
+    """
+    pool: List[Dict[str, object]] = []
+
+    # Source 1: Smaranam — resonant words from rank_words (7D scoring)
+    for rw in lotus_response.get("smaranam", ()):
+        sanskrit = rw.get("sanskrit", "")
+        meaning = rw.get("meaning", "")
+        score = float(rw.get("score", 0))
+        if not meaning:
+            continue
+        coords = _resolve_coords(sanskrit, -1)
+        phex = ""
+        try:
+            from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+            entry = word_by_iast(sanskrit)
+            if entry is not None:
+                phex = getattr(entry, "packed_hex", "")
+        except Exception:
+            pass
+        tokens = word_tokens(phex) if phex else ()
+        pool.append({
+            "sanskrit": sanskrit,
+            "meaning": meaning,
+            "tokens": tokens,
+            "score": score,
+            "packed_hex": phex,
+            "first_coord": coords[0] if coords else -1,
+            "coords": coords,
+            "source": "smaranam",
+        })
+
+    # Source 2: Verse words — Gita philosophical grounding
+    verse = lotus_response.get("verse")
+    verse_count = 0
+    if verse and "words" in verse:
+        for vw in verse["words"]:
+            if verse_count >= SEVEN:
+                break
+            sanskrit = vw.get("sanskrit", "")
+            meaning = vw.get("meaning", "")
+            if not meaning or len(meaning) <= KSETRAJNA:
+                continue
+            coords = _resolve_coords(sanskrit, -1)
+            pool.append({
+                "sanskrit": sanskrit,
+                "meaning": meaning,
+                "tokens": (),
+                "score": PANCHA / WORDS,
+                "packed_hex": "",
+                "first_coord": coords[0] if coords else -1,
+                "coords": coords,
+                "source": "verse",
+            })
+            verse_count += KSETRAJNA
+
+    return pool
+
+
+def compose_from_lotus(
+    lotus_response: Dict,
+    input_text: str,
+) -> str:
+    """Compose English output from a Lotus __call__ response.
+
+    This is the Lotus-rooted composition path. The Lotus response IS the
+    Maha Vector — it contains smaranam (resonant words), verse (Gita grounding),
+    vibration, guna, DIW, position, antaranga, akash. Everything computed by
+    the real Maha Mantra pipeline.
+
+    The composer clothes this truth in English using:
+        - SVO ordering from coordinate mass → role
+        - Input echo from user words
+        - Prosodic affinity from syllable vectors
+    """
+    from vibe_core.mahamantra.substrate.language.phonetics import scan_syllable_rhythm
+
+    pool = _build_lotus_pool(lotus_response)
+    rhythm = scan_syllable_rhythm(input_text)
+
+    # Rank by rhythm (prosodic affinity between input syllables and word coords)
+    pool = rank_resonant_by_rhythm(pool, rhythm, input_text, seed=0)
+
+    # Select top SEVEN words by prosodic affinity
+    selected = _select_words(pool, rhythm, max_words=SEVEN)
+
+    # Extract template from verse if available
+    template: List[Dict] = []
+    verse = lotus_response.get("verse")
+    if verse and "words" in verse:
+        total = len(verse["words"])
+        for i, vw in enumerate(verse["words"]):
+            coords = _resolve_coords(vw.get("sanskrit", ""), -1)
+            role = _word_role({"coords": coords})
+            template.append({
+                "position": i, "sanskrit": vw.get("sanskrit", ""),
+                "meaning": vw.get("meaning", ""), "role": role, "coords": coords,
+            })
+
+    return _assemble(selected, template, rhythm, input_text)
+
+
+def compose_from_wave(
+    lotus_response: Dict,
+    input_text: str,
+) -> str:
+    """Antaranga-driven composition: standing wave → syllable selection → grid output.
+
+    The Lotus __call__() has already run the full pipeline:
+        smaranam → Chamber.resonate_words → kirtan → spell_kirtan → yajna
+
+    The Chamber singleton now holds the STANDING WAVE — 512 slots of
+    (rama_coord, prana) pairs, modulated by the full Maha computation.
+
+    This function READS that wave to determine which words survived with
+    energy, then composes English via syllable alignment on the mantra grid.
+
+    Flow:
+        1. Read Chamber.antaranga — scan alive slots → (rama_coord, prana)
+        2. Map smaranam words to slots by their RAMA coords
+        3. Rank words by POST-MODULATION prana (not pre-computation score)
+        4. Each word's meaning → syllable vectors → align to mantra grid
+        5. Grid position determines sentence order, prana determines emphasis
+    """
+    from vibe_core.mahamantra.substrate.language.phonetics import (
+        scan_syllable_rhythm,
+        syllable_vectors_for_word,
+    )
+    from vibe_core.mahamantra.substrate.language.mantra_grid import (
+        align_syllables_to_grid,
+        build_mantra_grid,
+    )
+
+    # === 1. READ THE STANDING WAVE ===
+    try:
+        from vibe_core.mahamantra.substrate.chamber import get_chamber
+        chamber = get_chamber()
+        antaranga = chamber.antaranga
+    except Exception:
+        antaranga = None
+
+    vib = lotus_response.get("vibration", {})
+    seed = vib.get("seed", 0)
+
+    # === 2. MAP SMARANAM WORDS TO ANTARANGA SLOTS ===
+    pool = _build_lotus_pool(lotus_response)
+    wave_ranked: List[Dict[str, object]] = []
+
+    for item in pool:
+        coords = item.get("coords", ())
+        if not coords or antaranga is None:
+            # No Antaranga or no coords — use pre-computation score
+            item["wave_prana"] = 0
+            item["wave_rank"] = float(item.get("score", 0))
+            wave_ranked.append(item)
+            continue
+
+        # Sum prana across all RAMA coords of this word
+        total_prana = 0
+        for coord in coords:
+            slot = (coord * SEVEN + seed) % 512
+            total_prana += antaranga.prana_at(slot)
+
+        item["wave_prana"] = total_prana
+        # Post-modulation rank: prana normalized + base score as tiebreaker
+        from vibe_core.mahamantra.substrate.antaranga import GENESIS_PRANA_U32
+        prana_norm = min(total_prana / max(GENESIS_PRANA_U32, KSETRAJNA), KSETRAJNA)
+        item["wave_rank"] = prana_norm + float(item.get("score", 0)) / WORDS
+        wave_ranked.append(item)
+
+    # Sort by wave_rank (post-modulation prana dominates)
+    wave_ranked.sort(key=lambda it: float(it.get("wave_rank", 0)), reverse=True)
+
+    # === 3. SELECT TOP SEVEN BY PRANA ===
+    selected: List[Dict[str, object]] = []
+    used_sanskrit: set = set()
+    for item in wave_ranked:
+        if len(selected) >= SEVEN:
+            break
+        sk = item.get("sanskrit", "")
+        if sk in used_sanskrit:
+            continue
+        selected.append(item)
+        used_sanskrit.add(sk)
+
+    if not selected:
+        return ""
+
+    # === 4. SYLLABLE VECTORS FOR EACH SELECTED WORD ===
+    # Each word's English meaning → syllable decomposition
+    word_syllables: List[Tuple[Dict, Tuple[SyllableVector, ...]]] = []
+    for item in selected:
+        # Get English representation
+        tokens = item.get("tokens", ())
+        meaning = str(item.get("meaning", ""))
+        # Prefer longest WN token for syllable analysis, fall back to meaning
+        english = ""
+        if tokens:
+            english = max(tokens, key=len)
+        elif meaning:
+            # Use first content word from meaning (skip articles/prepositions)
+            parts = meaning.split()
+            english = max(parts, key=len) if parts else ""
+
+        if english:
+            svs = syllable_vectors_for_word(english)
+            if svs:
+                word_syllables.append((item, svs))
+
+    if not word_syllables:
+        # Fallback: return meanings joined
+        return " ".join(
+            str(it.get("meaning", "")).split()[0]
+            for it in selected[:SEVEN]
+            if it.get("meaning")
+        )
+
+    # === 5. ALIGN TO MANTRA GRID ===
+    # Collect all syllable vectors in sequence
+    all_vectors: List[SyllableVector] = []
+    vector_to_word: List[int] = []  # index into word_syllables
+    for wi, (item, svs) in enumerate(word_syllables):
+        for sv in svs:
+            all_vectors.append(sv)
+            vector_to_word.append(wi)
+
+    if not all_vectors:
+        return " ".join(
+            str(it.get("meaning", "")).split()[0]
+            for it in selected[:SEVEN]
+            if it.get("meaning")
+        )
+
+    vectors_tuple = tuple(all_vectors)
+    grid_positions = align_syllables_to_grid(vectors_tuple)
+    grid = build_mantra_grid()
+
+    # === 6. COMPOSE: GRID POSITION DETERMINES ORDER ===
+    # Each word gets its earliest grid position as its sentence position
+    word_grid_pos: List[Tuple[int, int]] = []  # (earliest_grid_pos, word_index)
+    word_earliest: Dict[int, int] = {}
+    for si, gp in enumerate(grid_positions):
+        wi = vector_to_word[si]
+        if wi not in word_earliest or gp < word_earliest[wi]:
+            word_earliest[wi] = gp
+
+    for wi in range(len(word_syllables)):
+        gp = word_earliest.get(wi, wi * HALVES)
+        word_grid_pos.append((gp, wi))
+
+    # Sort by grid position — this IS the sentence order
+    word_grid_pos.sort()
+
+    # Build output: use meaning phrases, deduplicate words
+    output_parts: List[str] = []
+    used_words: set = set()
+    total_words = 0
+
+    for _, wi in word_grid_pos:
+        if total_words >= SEVEN:
+            break
+        item = word_syllables[wi][0]
+        meaning = str(item.get("meaning", "")).strip()
+        if not meaning:
+            continue
+
+        # Use tokens if available (single English word), else first meaning word
+        tokens = item.get("tokens", ())
+        if tokens:
+            # Pick longest unused token
+            best_token = ""
+            for t in sorted(tokens, key=len, reverse=True):
+                if t.lower() not in used_words and len(t) > KSETRAJNA:
+                    best_token = t
+                    break
+            if best_token:
+                output_parts.append(best_token)
+                used_words.add(best_token.lower())
+                total_words += KSETRAJNA
+                continue
+
+        # Use meaning — take first unused content word
+        for mw in meaning.split():
+            if total_words >= SEVEN:
+                break
+            mwl = mw.lower()
+            if mwl not in used_words and len(mwl) > KSETRAJNA:
+                output_parts.append(mw)
+                used_words.add(mwl)
+                total_words += KSETRAJNA
+
+    return " ".join(output_parts)
+
+
 def chunk_sentence(words: List[str]) -> List[str]:
     """Group flat word list into readable phrase chunks."""
     if len(words) <= HALVES + KSETRAJNA:
