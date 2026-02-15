@@ -121,12 +121,14 @@ class TestChamberBoost:
         result = chamber_boost(MockAntaranga(), 5, 42)
         assert result > 0.0
 
-    def test_capped_at_015(self):
+    def test_capped_at_derived_max(self):
         class MockAntaranga:
             def prana_at(self, slot):
                 return 999999999
         result = chamber_boost(MockAntaranga(), 5, 42)
-        assert result <= 0.15
+        # Cap = PANCHA / (WORDS * HALVES) = 5/32 ≈ 0.15625
+        from vibe_core.mahamantra.protocols._seed import PANCHA, WORDS, HALVES
+        assert result <= PANCHA / (WORDS * HALVES) + 1e-9
 
 
 # =============================================================================
@@ -193,13 +195,13 @@ class TestChunkSentence:
     def test_single_word(self):
         assert chunk_sentence(["love"]) == ["love"]
 
-    def test_breaks_on_preposition(self):
+    def test_chunks_by_quarters(self):
         words = ["duty", "love", "through", "devotion", "peace"]
         chunks = chunk_sentence(words)
         assert len(chunks) >= 2
-        # "through" should start a new chunk
-        found = any("through" in c.split()[0].lower() for c in chunks[1:])
-        assert found
+        # Chunks break every QUARTERS words, no keyword matching
+        for chunk in chunks:
+            assert len(chunk.split()) <= QUARTERS
 
     def test_breaks_every_quarters_words(self):
         words = [f"word{i}" for i in range(12)]

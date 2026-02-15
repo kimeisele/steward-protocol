@@ -213,34 +213,53 @@ class TestExtractTemplate:
 # =============================================================================
 
 class TestInferRole:
-    """_infer_role classifies English meanings into grammatical roles."""
+    """_infer_role classifies by coordinate mass + verse position."""
 
-    def test_verb_markers(self):
-        assert _infer_role("to abandon", 0, 5) == "VERB"
-        assert _infer_role("should perform", 0, 5) == "VERB"
-        assert _infer_role("abandon", 0, 5) == "VERB"
+    def test_particle_short_mass(self):
+        # mass <= HALVES (2) → PARTICLE
+        assert _infer_role((21,), 0, 10) == "PARTICLE"
+        assert _infer_role((40, 5), 3, 10) == "PARTICLE"
 
-    def test_references(self):
-        assert _infer_role("unto me", 0, 5) == "REF"
-        assert _infer_role("you", 0, 5) == "REF"
-        assert _infer_role("all", 0, 5) == "REF"
+    def test_quality_heavy_mass(self):
+        # mass >= PANCHA + HALVES (7) → QUALITY
+        coords_7 = (47, 42, 44, 34, 42, 40, 5)
+        assert _infer_role(coords_7, 0, 10) == "QUALITY"
+        coords_8 = (47, 42, 44, 34, 42, 40, 5, 10)
+        assert _infer_role(coords_8, 5, 10) == "QUALITY"
 
-    def test_particles(self):
-        assert _infer_role("and", 0, 5) == "PARTICLE"
-        assert _infer_role("indeed", 0, 5) == "PARTICLE"
-        assert _infer_role("not", 0, 5) == "PARTICLE"
+    def test_verb_end_of_verse(self):
+        # last QUARTERS positions, mass > HALVES → VERB
+        coords_4 = (45, 2, 21, 15)  # mass=4
+        assert _infer_role(coords_4, 9, 10) == "VERB"
+        assert _infer_role(coords_4, 8, 10) == "VERB"
 
-    def test_qualities(self):
-        assert _infer_role("supreme lord", 0, 5) == "QUALITY"
-        assert _infer_role("divine grace", 0, 5) == "QUALITY"
+    def test_ref_at_verse_edges(self):
+        # mass <= QUARTERS, position < HALVES or >= total-HALVES → REF
+        coords_3 = (0, 48, 40)  # mass=3
+        assert _infer_role(coords_3, 0, 10) == "REF"
+        assert _infer_role(coords_3, 1, 10) == "REF"
 
-    def test_prepositions(self):
-        assert _infer_role("of the world", 0, 5) == "PREP"
-        assert _infer_role("by devotion", 0, 5) == "PREP"
+    def test_prep_mid_verse_light(self):
+        # mass <= QUARTERS, mid-verse → PREP
+        coords_3 = (40, 5, 40)  # mass=3
+        assert _infer_role(coords_3, 4, 10) == "PREP"
 
-    def test_default_noun(self):
-        assert _infer_role("devotion", 0, 5) == "NOUN"
-        assert _infer_role("dharma", 0, 5) == "NOUN"
+    def test_noun_mid_mass(self):
+        # mass 5-6, not at end → NOUN
+        coords_5 = (47, 42, 44, 34, 42)
+        assert _infer_role(coords_5, 2, 10) == "NOUN"
+        coords_6 = (47, 42, 44, 34, 42, 40)
+        assert _infer_role(coords_6, 3, 10) == "NOUN"
 
-    def test_empty_meaning(self):
-        assert _infer_role("", 0, 5) == "NOUN"
+    def test_empty_coords_is_particle(self):
+        # mass=0 <= HALVES → PARTICLE
+        assert _infer_role((), 0, 5) == "PARTICLE"
+
+    def test_all_roles_valid(self):
+        valid = {"NOUN", "VERB", "REF", "PARTICLE", "QUALITY", "PREP"}
+        # Various masses and positions
+        for mass in range(1, 12):
+            for pos in range(10):
+                coords = tuple(range(mass))
+                role = _infer_role(coords, pos, 10)
+                assert role in valid
