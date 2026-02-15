@@ -34,11 +34,10 @@ __genesis__ = "0xfe9a70b8"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Final, List, Optional, Tuple
+from typing import List, Optional
 
 import libcst as cst
 
-from vibe_core.mahamantra.protocols._seed import PANCHA
 
 
 # =============================================================================

@@ -51,7 +51,7 @@ __genesis__ = "0xea72176b"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Dict, Final, List, Optional, Tuple
+from typing import Dict, Final, Optional, Tuple
 
 # =============================================================================
 # SSOT IMPORTS - Everything derived from protocols!
@@ -60,19 +60,13 @@ from typing import Dict, Final, List, Optional, Tuple
 from vibe_core.protocols.language import (
     CONSONANT_MAPPINGS,
     VOWEL_MAPPINGS,
-    CharacterMapping,
 )
 
 # From varna.py (Sanskrit phonetics SSOT)
 from vibe_core.protocols.substrate.mantra.varna import (
     ANTAHSTHA,
-    DANTYA_VARGA,
-    KANTHYA_VARGA,
-    MURDHANYA_VARGA,
-    OSHTHYA_VARGA,
     PANCHA_VARGA,
     SVARA,
-    TALAVYA_VARGA,
     USHMAN,
     Varna,
 )
@@ -82,7 +76,6 @@ from vibe_core.protocols.translation import (
     ENGLISH_PHONEMES,
     GERMAN_PHONEMES,
     NaturalLanguage,
-    Phoneme,
 )
 
 # =============================================================================

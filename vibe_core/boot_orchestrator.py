@@ -87,7 +87,7 @@ from vibe_core.protocols.operator_protocol import (
 )
 from vibe_core.runtime.boot_sequence import BootSequence
 from vibe_core.runtime.unified_trace import UnifiedTrace
-from vibe_core.sarga import Element, get_sarga
+from vibe_core.sarga import get_sarga
 
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
 

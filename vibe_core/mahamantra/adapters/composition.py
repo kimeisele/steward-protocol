@@ -283,7 +283,6 @@ class MahaComposition:
         """
         from vibe_core.mahamantra.substrate.language.composer import (
             _build_lotus_pool,
-            word_tokens,
         )
         from vibe_core.mahamantra.substrate.language.phonetics import (
             syllable_vectors_for_word,

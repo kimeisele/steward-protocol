@@ -68,7 +68,7 @@ ENTERPRISE USAGE:
 __mahajana__ = "vyasa"  # Position 0 - The Compiler
 __position__ = 0
 __genesis__ = "0xc0400014"  # GenesisByte: parampara % 37 == 0
-from typing import Dict, Final, List, Optional, Tuple, Union
+from typing import Dict, Final, List, Union
 import hashlib
 import json
 
@@ -86,9 +86,6 @@ from vibe_core.mahamantra.protocols.compression import (
     INTENT_SATTVA,
     INTENT_SUDDHA,
     ALL_INTENT_LEVELS,
-    SAMSKARA_MICRO,
-    SAMSKARA_MESO,
-    SAMSKARA_MACRO,
     ALL_SAMSKARA_LEVELS,
 )
 # NOTE: IntentLevel/IntentGuna are still imported for type compatibility.
@@ -106,13 +103,11 @@ from vibe_core.mahamantra.protocols._seed import (
     WORDS,           # 16 - The 16 words
     QUARTERS,        # 4 - Genesis, Dharma, Karma, Moksha
     TRINITY,         # 3 - Observer levels
-    SEVEN,           # 7 - Proofs / beats
     AKSARA_COUNT as AKSARA,  # 32 - Syllables
     QUALITIES,       # 64 - Characters
     MAHA_QUANTUM,    # 137 - Fine structure constant ≈ α⁻¹
     GITA_CHAPTERS,   # 18 - Bhagavad Gita chapters
-    TRANSCENDENTAL_1096,  # 1096 = 8 × 137 - The algorithm space
-)
+    )
 
 # Compression reference ratios (derived from GITA_CHAPTERS × factors)
 GITA_VERSES: Final[int] = GITA_CHAPTERS * 39 - 2  # 700 ≈ 18 × 39

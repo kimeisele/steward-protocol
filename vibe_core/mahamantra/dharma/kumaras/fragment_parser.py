@@ -27,7 +27,7 @@ __genesis__ = "0xfe9a70b8"  # GenesisByte: parampara % 37 == 0
 
 import logging
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import List, Optional
 
 import libcst as cst
 

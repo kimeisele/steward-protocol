@@ -48,13 +48,10 @@ NO EXTERNAL DEPENDENCIES. NO RANDOMNESS. PURE MATHEMATICS.
 
 from __future__ import annotations
 
-from typing import Dict, Final, List, Optional, Sequence, Tuple
+from typing import Dict, Final, Optional
 
 from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    PANCHA,
     SEVEN,
-    WORDS,
 )
 from vibe_core.mahamantra.protocols.resonance import (
     ExpansionResponse,
@@ -66,8 +63,6 @@ from vibe_core.mahamantra.protocols.resonance import (
 )
 from vibe_core.mahamantra.substrate.pancha_walk import (
     COORD_ELEMENT,
-    COORD_HARMONIC,
-    COORD_VARGA,
     ELEMENT_NAMES,
     IS_SHRUTI,
 )

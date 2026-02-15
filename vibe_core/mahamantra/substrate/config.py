@@ -37,7 +37,6 @@ import yaml
 
 if TYPE_CHECKING:
     # Implementation types (Lazy loaded)
-    from vibe_core.phoenix.section_loader import SectionLoader
 
     # Config sections type hints
     from vibe_core.phoenix.sections.city.section_main import CityConfig
