@@ -295,7 +295,7 @@ class MahaComposition:
 
         # === 1. EXTRACT CONTEXT ===
         kwargs = _extract_scorer_kwargs(lotus_response, input_text)
-        seed = kwargs["seed"]
+        seed = kwargs.pop("seed")
         max_words = _context_max_words(lotus_response)
 
         self._last_context = {

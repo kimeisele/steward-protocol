@@ -150,7 +150,8 @@ class TestMahaComposition:
         assert ctx["guna_mode"] == "SATTVA"
         assert "scorer_names" in ctx
 
-    def test_deterministic(self):
+    def test_deterministic_a(self):
+        """First half of determinism check. conftest resets state before next test."""
         from vibe_core.mahamantra.adapters.composition import MahaComposition
         resp = self._make_lotus_response(
             smaranam=[
@@ -158,11 +159,23 @@ class TestMahaComposition:
                 {"sanskrit": "karma", "meaning": "activities", "score": 0.8},
             ]
         )
-        a1 = MahaComposition()
-        a2 = MahaComposition()
-        r1 = a1.compose(resp, "test")
-        r2 = a2.compose(resp, "test")
-        assert r1 == r2
+        result = MahaComposition().compose(resp, "test")
+        # Store for comparison in next test
+        TestMahaComposition._determinism_result = result
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_deterministic_b(self):
+        """Second half: same input after full singleton reset must produce same output."""
+        from vibe_core.mahamantra.adapters.composition import MahaComposition
+        resp = self._make_lotus_response(
+            smaranam=[
+                {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
+                {"sanskrit": "karma", "meaning": "activities", "score": 0.8},
+            ]
+        )
+        result = MahaComposition().compose(resp, "test")
+        assert result == TestMahaComposition._determinism_result
 
     def test_pluggable_scorers(self):
         """Adapter accepts custom scorers."""

@@ -22,15 +22,11 @@ DATA (precomputed, data/wordnet_bridge.json, 446 KB):
     - "c" = full hypernym ancestor chain (precomputed, all ancestors to root)
     - Chain Jaccard = set overlap on integer arrays. No WN runtime needed.
 
-RUNTIME FAST PATH (no WN dependency):
+RUNTIME (zero external dependencies):
     1. Load bridge data → integer chain sets (once, ~1ms)
     2. Input tokens → exact match against stored tokens (Layer 1)
-    3. Input tokens → stored chain integers → Jaccard overlap (Layer 2)
+    3. Input tokens → inverse index (token→chain ints) → Jaccard overlap (Layer 2)
     4. Input stems → morphological overlap (Layer 3)
-
-RUNTIME ENRICHED PATH (with WN installed):
-    - Input tokens → live WN lookup → chain integers → Jaccard with stored chains
-    - Covers input words NOT in any Gita meaning (novel queries)
 
 NO HARDCODED LISTS. NO PATTERN MATCHING. PURE GRAPH MATHEMATICS.
 Built from Open English WordNet (BSD license, 117K synsets).
@@ -63,7 +59,7 @@ _synset_list: Optional[List[str]] = None  # index → synset_id
 _sid_to_int: Optional[Dict[str, int]] = None  # synset_id → index
 _word_entries: Optional[Dict[str, dict]] = None  # packed_hex → entry
 _word_chain_sets: Dict[str, FrozenSet[int]] = {}  # packed_hex → frozenset of ints
-_wn_available: Optional[bool] = None
+_token_to_chains: Optional[Dict[str, FrozenSet[int]]] = None  # inverse index: token → chain ints
 
 
 def _ensure_loaded() -> None:
@@ -102,17 +98,28 @@ def _get_word_chain(packed_hex: str) -> FrozenSet[int]:
     return result
 
 
-def _wn_ok() -> bool:
-    """Check if WordNet is available at runtime (for novel input enrichment)."""
-    global _wn_available
-    if _wn_available is None:
-        try:
-            import wn
+def _build_token_index() -> Dict[str, FrozenSet[int]]:
+    """Build inverse index: English token → chain integers from pre-baked data.
 
-            _wn_available = len(wn.synsets("test", lang="en")) > 0
-        except Exception:
-            _wn_available = False
-    return _wn_available
+    2199 unique tokens, all from Gita word meanings. No external dependency.
+    """
+    _ensure_loaded()
+    idx: Dict[str, Set[int]] = {}
+    for entry in (_word_entries or {}).values():
+        chains = entry.get("c", [])
+        for t in entry.get("t", []):
+            if t not in idx:
+                idx[t] = set()
+            idx[t].update(chains)
+    return {k: frozenset(v) for k, v in idx.items()}
+
+
+def _get_token_index() -> Dict[str, FrozenSet[int]]:
+    """Lazy singleton for the token→chain inverse index."""
+    global _token_to_chains
+    if _token_to_chains is None:
+        _token_to_chains = _build_token_index()
+    return _token_to_chains
 
 
 # =============================================================================
@@ -129,46 +136,21 @@ def _input_tokens(text: str) -> List[str]:
 
 @lru_cache(maxsize=256)
 def _input_chain_ints(text: str) -> FrozenSet[int]:
-    """
-    Build integer chain for user input.
+    """Build integer chain for user input from pre-baked inverse index.
 
-    FAST PATH: Check if input tokens appear in stored synset list.
-    ENRICHED PATH: If WN available, do live lookup for novel tokens.
+    No external dependency. Uses token→chain mapping built from
+    the same wordnet_bridge.json that stores Gita word data.
     """
-    _ensure_loaded()
     tokens = _input_tokens(text)
     if not tokens:
         return frozenset()
 
+    idx = _get_token_index()
     combined: Set[int] = set()
-
-    # Fast path: look up tokens in stored synset→int map
-    # Each token might match synset IDs that contain that token
-    # But synset IDs are like "oewn-07559879-n" — not searchable by token.
-    # We need WN for novel inputs.
-
-    if _wn_ok():
-        import wn
-
-        for token in tokens:
-            for s in wn.synsets(token, lang="en")[:3]:
-                sid = s.id
-                if sid in _sid_to_int:
-                    combined.add(_sid_to_int[sid])
-                # Walk hypernym chain, mapping to ints
-                frontier = [s]
-                depth = 0
-                while frontier and depth < 10:
-                    nf = []
-                    for syn in frontier:
-                        for h in syn.hypernyms():
-                            idx = _sid_to_int.get(h.id)
-                            if idx is not None and idx not in combined:
-                                combined.add(idx)
-                                nf.append(h)
-                    frontier = nf
-                    depth += 1
-
+    for token in tokens:
+        chains = idx.get(token)
+        if chains:
+            combined.update(chains)
     return frozenset(combined)
 
 
@@ -310,7 +292,7 @@ def diagnose(text: str, top_n: int = 10) -> None:
     print(f'Input: "{text}"')
     print(f"Tokens: {tokens}")
     print(f"Chain size: {len(chain)} integer nodes")
-    print(f"WN available: {_wn_ok()}")
+    print(f"Token index size: {len(_get_token_index())}")
     print()
 
     results = []
