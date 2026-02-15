@@ -341,16 +341,18 @@ in Isolation. Berührt nie die echte Wurzel.
 
 **Tests:** 205/205 (55 Composer + 35 Router + 115 Engine)
 
-**Status (Feb 15 2026):**
-- ✅ Phase B DONE: `engine.generate()` → `Lotus.__call__()` → `compose_from_wave()`
-  - Frische `MahamantraLotus()` pro Call. Chamber Singleton akkumuliert (lebendes System).
-  - Shadow `_encode()`, `_route()`, `_llm`, `_attention`, `_compressor` ENTFERNT.
-- ✅ Phase C PARTIAL: Verbleibende Komponenten sind UNIQUE (nicht Shadow):
-  - `_kernel` (MahaLLMKernel): Guardian semantic tree expansion — Lotus hat das nicht
-  - `_antaranga` (AntarangaRegistry): Character wave + Derivation tree — eigener Kontext
-  - `_venu` (VenuOrchestrator): Char wave + DIW Modulation — eigener Kontext
-- Phase D: Nadi-Integration (Engine als TattvaGate Hook oder DIWSubscriber)
-- Phase E: Token-Pfad (`compose_from_lotus`, `_pick_token`, `_assemble`) durch Syllable-Pfad ersetzen
+**Status (Feb 15 2026) — SLASH AND BURN COMPLETE:**
+- ✅ Engine ist jetzt THIN SHELL: 149 Zeilen, kein eigener State.
+  - `generate()` = `MahamantraLotus()` → `compose_from_wave()` → `EngineResult`
+  - KEINE eigenen Kopien von Antaranga/Venu/Kernel. Alles lebt in Lotus/Chamber.
+  - GELÖSCHT: `_antaranga`, `_kernel`, `_venu`, `_build_character_wave`, `_resonate_from_lotus`,
+    `_expand`, `_sprout_derivation_tree`, `_modulate`, `_trace_phonemes`, `_ensure_loaded`
+- ✅ Halb-deterministisch BY DESIGN (Kshetrajna-Prinzip):
+  - Seed = deterministisch (gleicher Input → gleicher Seed, immer)
+  - Output = LEBENDIG (Chamber akkumuliert — Beobachter verändert das Feld)
+- `compose_from_wave()` liest ECHTE `Chamber.antaranga` (Standing Wave nach Lotus)
+- Alte `compose()`, `_pick_token()`, `_assemble()` = DEAD CODE (0 Production-Caller)
+- Tulasi (Wave Collapse) existiert in `tulasi_gate.py` + `MahaModularSynth.transform(has_tulasi=)`
 
 **WARNUNG:** `state_bridge.py` und `StateVector` sind FALSCH — MahaState ist ein Wrapper, nicht die Wurzel.
 Werden in Phase C entfernt. Der Lotus Response ersetzt alles.
