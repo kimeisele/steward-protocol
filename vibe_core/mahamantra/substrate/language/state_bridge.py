@@ -12,12 +12,10 @@ The composer uses the StateVector to bias word selection toward reality.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     KSETRAJNA,
-    PANCHA,
     SHARANAGATI,
 )
 from vibe_core.mahamantra.substrate.language.types import StateVector

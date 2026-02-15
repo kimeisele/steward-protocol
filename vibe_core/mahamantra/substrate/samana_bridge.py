@@ -82,17 +82,11 @@ from vibe_core.mahamantra.protocols._header import (
 # IMPORT FROM NADI (SSOT)
 # =============================================================================
 from vibe_core.mahamantra.substrate.nadi import (
-    NADI_CAPACITY,
-    NADI_TIMEOUT_MS,
     LocalNadi,
-    NadiConnection,
     NadiMessage,
     NadiOp,
     NadiPriority,
-    NadiProtocol,
-    NadiStats,
     NadiType,
-    get_nadi,
 )
 
 # Import from seed for derived constants
@@ -105,20 +99,13 @@ from vibe_core.mahamantra.substrate.seed import (
 )
 
 if _TC:
-    from vibe_core.mahamantra.lila.jiva_shadow import JivaShadow as _JivaShadow
+    pass
 
 # Protocol types (TYPE_CHECKING to avoid circular imports)
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from vibe_core.mahamantra.reactor.shadow_protocol import (
-        ShadowReactorProtocol,
-        ShadowState,
-    )
-    from vibe_core.protocols.task_kernel_protocol import (
-        TaskKernelProtocol,
-        TaskKernelResult,
-    )
+    pass
 
 
 # =============================================================================

@@ -61,16 +61,14 @@ __position__ = 0
 __genesis__ = "0x2f04d413"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import Enum
 from typing import (
     Dict,
     Final,
     FrozenSet,
     List,
     Optional,
-    Set,
     Tuple,
-    TypedDict,
 )
 
 from vibe_core.mahamantra.substrate.mahajana import Mahajana, Quarter, Sampradaya

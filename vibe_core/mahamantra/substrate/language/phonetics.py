@@ -14,13 +14,11 @@ ARPAbet parsing available for callers that supply phoneme lists directly.
 from __future__ import annotations
 
 import re
-from functools import lru_cache
-from typing import Dict, Final, List, Optional, Tuple
+from typing import Final, List, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     KSETRAJNA,
-    QUARTERS,
 )
 from vibe_core.mahamantra.substrate.language.types import (
     RhythmProfile,

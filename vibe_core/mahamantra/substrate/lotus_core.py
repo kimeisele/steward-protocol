@@ -19,12 +19,7 @@ import sys
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Union
 
 if TYPE_CHECKING:
-    from vibe_core.mahamantra.reactor.shadow import ShadowReactorFactory
-    from vibe_core.mahamantra.reactor.shadow_protocol import (
-        ShadowReactorProtocol,
-        ShadowState,
-        TickStateInput,
-    )
+    pass
 
 # These imports are needed for class definition
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
@@ -32,8 +27,6 @@ from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader, HEADER_
 from vibe_core.mahamantra.seed.types import (
     AkashState,
     ExecuteResult,
-    GitaRoute,
-    RouteResult,
     VibrationState,
 )
 from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath

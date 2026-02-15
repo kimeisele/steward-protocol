@@ -38,11 +38,9 @@ from vibe_core.mahamantra.dharma.kapila.remedy_loader import get_remedy_loader
 from vibe_core.mahamantra.dharma.kumaras.fragment import (
     CSTFragment,
     FileFragments,
-    FragmentType,
 )
 from vibe_core.mahamantra.dharma.kumaras.fragment_parser import (
     parse_file_to_fragments,
-    register_fragments_as_cells,
 )
 from vibe_core.mahamantra.substrate.shuddhi import ShuddhiResult, ShuddhiStatus
 

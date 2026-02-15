@@ -28,22 +28,17 @@ from typing import ClassVar, Dict, Final, Generic, Optional, Tuple, TypeVar
 from vibe_core.mahamantra.protocols._header import (
     HEADER_SIZE_BYTES,
     MahaHeader,
-    NavaBhaktiField,
 )
 from vibe_core.mahamantra.protocols._seed import (
     COSMIC_FRAME,
     # Membrane
-    HALF_SIZE,
     JIVA_CYCLE,
     JIVA_QUALITIES,
     # Prana constants
     MAHA_QUANTUM,
     MALA,
     # Cell structure
-    NAVA,
-    PARAMPARA,
     TRINITY,
-    WORDS,
 )
 from vibe_core.mahamantra.protocols.cell import MahaCellProtocol
 

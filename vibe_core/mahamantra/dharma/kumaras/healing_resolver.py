@@ -36,7 +36,7 @@ __genesis__ = "0xfe9a70b8"
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.kernel.intent import MantraIntent, IntentResult
@@ -45,11 +45,9 @@ if TYPE_CHECKING:
 
 
 from vibe_core.mahamantra.dharma.kumaras.healing_intent import (
-    CellularHealer,
-    CellularHealingResult,
     get_cellular_healer,
 )
-from vibe_core.mahamantra.substrate.shuddhi import ShuddhiResult, ShuddhiStatus
+from vibe_core.mahamantra.substrate.shuddhi import ShuddhiStatus
 
 logger = logging.getLogger("SHUDDHI.RESOLVER")
 
@@ -94,7 +92,6 @@ class HealingIntentResolver:
         from vibe_core.mahamantra.kernel.intent import (
             IntentResult,
             IntentStatus,
-            IntentType,
         )
         from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
         from vibe_core.mahamantra.substrate.guna import Guna
