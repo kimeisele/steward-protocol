@@ -297,7 +297,11 @@ class SravanamListener:
         if not self._enabled:
             return
 
-        position = getattr(tick_state, "position", None)
+        # TickState may be dict or dataclass — handle both
+        if isinstance(tick_state, dict):
+            position = tick_state.get("position")
+        else:
+            position = getattr(tick_state, "position", None)
         if position is None:
             return
 
