@@ -29,6 +29,7 @@ from vibe_core.mahamantra.substrate.language.engine import (
     generate,
     get_engine,
 )
+from vibe_core.mahamantra.substrate.language.composer import compose_from_lotus
 
 __all__ = [
     "EngineResult",
@@ -36,6 +37,7 @@ __all__ = [
     "RhythmProfile",
     "StateVector",
     "SyllableVector",
+    "compose_from_lotus",
     "generate",
     "get_engine",
 ]
