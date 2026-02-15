@@ -202,29 +202,32 @@ class MahaLLMKernel(MahaResonanceProtocol):
         """
         Expand a divine name into its semantic tree.
 
-        Each name is encoded to RAMA coordinates, then:
-        1. Each coordinate spawns child nodes via H/K/R operations
-        2. Each child is looked up in the Gita lexicon
-        3. The tree reveals the name's semantic field
+        Resonance via __call__() (5 Tattva Gates).
+        Tree-building via H/K/R operations (unique to expand).
 
-        "Jagannath" → [ja, ga, na, nā, tha] → each phoneme has
-        an element, a varga, a dissolution path → each spawns
-        resonant Gita words → the tree IS the name's meaning.
+        "Jagannath" → __call__() for resonant words + tree for semantic field.
         """
         self._ensure_loaded()
 
-        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
         from vibe_core.mahamantra.substrate.varnamala_codec import encode as encode_iast
-        from vibe_core.mahamantra.substrate.semantic_index import words_at_position
-        from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
-        from vibe_core.mahamantra.adapters.synth import create_synth
 
         # Check if it's a known divine name with IAST form
         iast_form = DIVINE_NAMES.get(name.lower())
+
+        # Run through __call__() for resonance (the ONE pipeline)
+        lotus = MahamantraLotus()
+        lr = lotus(iast_form if iast_form else name)
+
+        # Extract coords from NAMA (Gate 0 already computed them)
+        nama = lr.get("nama", {})
+        coords = nama.get("coords", ())
+
+        # For IAST divine names, use the IAST encoding for tree/mod49
         if iast_form:
-            coords = encode_iast(iast_form)
-        else:
-            coords = encode_text(name)
+            iast_coords = encode_iast(iast_form)
+            if iast_coords:
+                coords = iast_coords
 
         if not coords:
             return ExpansionResponse(
@@ -236,35 +239,24 @@ class MahaLLMKernel(MahaResonanceProtocol):
         mod49 = vibration_sum % VARNAMALA_TOTAL
         element_walk = tuple(ELEMENT_NAMES[COORD_ELEMENT[c]] for c in coords)
 
-        # Build semantic tree
+        # Build semantic tree (unique to expand — H/K/R operations)
         root = self._build_tree(coords[0], depth=0, max_depth=depth)
 
-        # Find resonant words for this name
-        synth = create_synth(preset="quantum")
-        cycle = synth.spell_cycle(tuple(coords), seed=0)
-        attractor = cycle.final_value % VARNAMALA_TOTAL
-        synth_coords = tuple(step.output_value % VARNAMALA_TOTAL for step in cycle.steps)
-
-        ranked = rank_words(
-            input_coords=coords,
-            input_attractor=attractor,
-            synth_coords=synth_coords,
-            top_n=10,
-        )
-
+        # Resonant words from __call__() response (no shadow rank_words)
+        smaranam = lr.get("smaranam", ())
         resonant_words = tuple(
             ResonantWord(
-                sanskrit=rw.sanskrit,
-                meanings=rw.meanings,
-                score=rw.total_score,
-                rama_coord=rw.word.first_coord,
-                element=ELEMENT_NAMES[rw.word.first_element] if rw.word.first_element >= 0 else "unknown",
-                is_shruti=rw.word.shruti_pattern[0] if rw.word.shruti_pattern else False,
+                sanskrit=rw.get("sanskrit", ""),
+                meanings=(rw.get("meaning", ""),),
+                score=float(rw.get("score", 0.0)),
+                rama_coord=0,
+                element="unknown",
+                is_shruti=False,
             )
-            for rw in ranked
+            for rw in smaranam[:10]
         )
 
-        # Find related names (names with same mod49 or same dominant element)
+        # Find related names (names with same mod49)
         related = []
         for dname, iast in DIVINE_NAMES.items():
             if dname.lower() == name.lower():
