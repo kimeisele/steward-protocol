@@ -2,7 +2,7 @@
 MAHA LANGUAGE ENGINE — Lotus-Rooted Orchestrator
 =================================================
 
-Single path: Lotus.__call__() → compose_from_wave() → EngineResult.
+Single path: Lotus.__call__() → MahaComposition.compose() → EngineResult.
 
 Seed is deterministic (same input → same seed, always).
 Output is LIVING (Chamber accumulates — Kshetrajna changes the field).
@@ -38,15 +38,15 @@ class MahaLanguageEngine:
     This engine is a thin shell:
         1. Call Lotus
         2. Route to section (attractor → Gita section)
-        3. Compose via standing wave (compose_from_wave)
+        3. Compose via MahaComposition adapter (protocol-based)
         4. Package into EngineResult
     """
 
     def generate(self, text: str) -> EngineResult:
-        """Lotus → compose_from_wave → EngineResult."""
+        """Lotus → MahaComposition.compose() → EngineResult."""
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
         from vibe_core.mahamantra.substrate.language.phonetics import scan_syllable_rhythm
-        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        from vibe_core.mahamantra.adapters.composition import get_composition
         from vibe_core.mahamantra.substrate.language.section_router import (
             SECTION_SIGNATURES, extract_template, route_to_section,
         )
@@ -84,7 +84,7 @@ class MahaLanguageEngine:
         template = extract_template(GITA_CHAPTERS, verse_num)
 
         # === COMPOSITION: standing wave → syllable grid → English ===
-        output = compose_from_wave(lr, text)
+        output = get_composition().compose(lr, text)
 
         # === PACKAGE RESULT from Lotus response ===
         verse = lr.get("verse")
