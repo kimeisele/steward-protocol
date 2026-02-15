@@ -356,6 +356,46 @@ Werden in Phase C entfernt. Der Lotus Response ersetzt alles.
 Gita-Wörter sind Computation-INPUT (smaranam → Antaranga), NICHT Output-Fragmente.
 Kein LLM. `chat.py` ist Legacy.
 
+## Wiring-Audit: Shadow Pipelines (Feb 15 2026, code-verifiziert)
+
+**Das Kernproblem:** Mehrere Komponenten sind PARALLEL-PIPELINES zu `lotus_core.__call__()`.
+Sie recomputen was `__call__()` schon berechnet, statt die Gate-Ergebnisse zu konsumieren.
+
+**Was IN den 5 Gates verdrahtet ist (korrekt):**
+- `MahaCompression` → seed (Gate 0)
+- `MahaModularSynth` → attractor (Gate 1)
+- `ShadowOracle` → parampara (Gate 1)
+- `rank_words()` → 7 resonante Wörter (Gate 2)
+- `GitaResonance` → verse match (Gate 2)
+- Position/Guardian/Quarter/DIW LUTs (Gate 3)
+- `Chamber.resonate_words/kirtan/spell_kirtan` (Gate 4)
+- `ShadowReactor.yajna()` 16-tick cycle (Gate 4)
+
+**Was EXISTIERT aber DISCONNECTED ist:**
+
+| Komponente | Ort | Problem |
+|------------|-----|---------|
+| `guardian_router.maha_respond()` | `substrate/` | SHADOW PIPELINE: eigenes encode→route→synth→rank, ignoriert `__call__()` komplett |
+| `MahaLLM` | `adapters/llm.py` | Eigener 16-Kategorie Router. Nur in `bootstrap(lazy=False)` via Kapila verdrahtet |
+| `MahaAttention` | `adapters/attention.py` | O(1) Intent→Handler. Standalone Singleton, 0 Production-Caller |
+| `MahaComposition` | `adapters/composition.py` | Liest Response NACH Gates. Korrekte Position, aber kein Gate-Teilnehmer |
+| `ResonanceResponder` | `research/` | Forschungs-Prototyp, nie promoted |
+| `language_runtime/` | `research/` | Keystroke→Antaranga Bridge, Venu Bridge. Echtzeit-Prototypen |
+
+**Was passieren MUSS:**
+- `maha_respond()` muss `__call__()` konsumieren, nicht parallel laufen
+- `MahaLLM` sollte Gate-Hook oder Gate-Provider auf Gate 2 (EXECUTE) sein
+- `MahaAttention` sollte Gate-Hook auf Gate 0 (PARSE) sein — Intent-Resolution
+- `MahaComposition` ist korrekt positioniert (post-pipeline), braucht keine Gate-Migration
+- `language_runtime/` Prototypen → nach `substrate/` migrieren wenn reif
+
+**Infrastruktur existiert bereits:**
+- `_fire_gate()` in `lotus_core.py` — feuert bei jedem Gate
+- `TattvaRegistry` — registriert Gate-Hooks
+- 5 Capability Protocols (`_capabilities.py`) — `MantraCapability`, `StorageCapability`, etc.
+- 5 Gate Providers (`gate_providers.py`) — Observer an jedem Gate
+- `check_capability()` — `isinstance` Prüfung
+
 ## Architektur-Audit (Feb 12 2026)
 
 **Zahlen:** 1426 .py Dateien, 377K Zeilen, ~3600 Klassen, ~3700 Funktionen, 358 Protocol-Dateien
