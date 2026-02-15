@@ -227,7 +227,6 @@ class Steward:
         self._mahamantra = None
         self._prabhupada = None
         self._prabhupada_kirtan = None
-        self._llm = None
         self._orchestrator = None
         self._link_verified = False
 
@@ -246,14 +245,6 @@ class Steward:
             from vibe_core.mahamantra.substrate.mantra import PrabhupadaKirtan
             self._prabhupada_kirtan = PrabhupadaKirtan()
         return self._prabhupada_kirtan
-
-    @property
-    def llm(self):
-        """Lazy load MahaLLM - The Holographic Intent Router (O(4))."""
-        if self._llm is None:
-            from vibe_core.mahamantra.adapters.llm import MahaLLM
-            self._llm = MahaLLM()
-        return self._llm
 
     @property
     def orchestrator(self):
