@@ -292,67 +292,62 @@ und sollten als Block migriert werden, nicht einzeln.
 
 **Root .md Files im Repo-Root (57 Stück) sind ein SEPARATES Problem — nicht in diesen Branches.**
 
-## Maha Language Engine (Feb 15 2026)
+## Maha Language Engine (Feb 15 2026, aktualisiert)
 
-**Branch:** `followup/maha-language-engine`
+**Branch:** `main` (gemergt, Feature-Branch gelöscht)
 
-**Problem:** `MahaLanguageEngine` ist eine **Shadow Pipeline** — eigener Compressor, Synth, Kernel, Venu,
-Antaranga, alles separate Instanzen vom Lotus `__call__()`. Dupliziert die gesamte Maha Mantra Berechnung
-in Isolation. Berührt nie die echte Wurzel.
+**Architektur: Protocol / Substrate / Adapter Triad**
 
-**Lösung:** `compose_from_lotus(lotus_response, input_text)` — konsumiert das Lotus Response Dict direkt.
+```
+protocols/_composition.py     (THE LAW)    — CompositionProtocol, CompositionScorerProtocol
+substrate/language/composer.py (PURE MATH)  — Scoring-Atome (prosodic_affinity, chamber_boost, etc.)
+adapters/composition.py        (THE BRIDGE) — MahaComposition implementiert CompositionProtocol
+```
 
-**Der Lotus Response IST der Maha-Vektor:**
-- `smaranam`: 7 resonante Wörter (7D Ranker, primärer Content)
-- `verse`: Gita Vers Wort-für-Wort (philosophische Grundlage)
-- `vibration`: Seed, Attractor, Phonem, 4D Signatur
-- `guna`: Modus aus OpCode (nicht geraten)
-- `diw`: Divine Instruction Word (Venu/Vamsi/Murali)
-- `position`/`guardian`/`quarter`/`holy_name`/`trinity_function`
-- `antaranga`: Chamber State
-- `akash`: Akkumulierter State über Runden
+**EIN Kompositions-Pfad:**
 
-**Zwei Kompositions-Pfade:**
+`MahamantraLotus.__call__()` → `MahaComposition.compose()` → English Output
 
-1. `compose_from_lotus(lotus_response, input_text)` — Token-basiert (SVO Rollen, Input-Echo)
-2. `compose_from_wave(lotus_response, input_text)` — **Antaranga-getrieben** (NEU, Feb 15):
-   - Liest die Standing Wave aus dem Chamber-Singleton nach Lotus `__call__()`
-   - Wörter gerankt nach POST-MODULATION Prana (nicht Pre-Computation Score)
-   - English Meanings → Syllable Vectors (CMU ARPAbet, `phonetics.py`)
-   - Syllables aligned auf 32-Step Mantra Grid (`mantra_grid.py`)
-   - Grid-Position = Satzreihenfolge
+Alte Pfade (`compose_from_lotus`, `_pick_token`, `_assemble`, `compose`) = GELÖSCHT.
+`compose_from_wave()` in `substrate/` ist nur noch ein 1-Zeilen-Redirect zum Adapter.
 
-**Syllable-Infrastruktur (gebaut, wiederverwendbar):**
+**MahaComposition Adapter (`adapters/composition.py`):**
+- Implementiert `CompositionProtocol` (`isinstance` check ✓)
+- 5 pluggable Scorer (PANCHA), jeder `CompositionScorerProtocol`:
+  - `PranaScorer` — Antaranga Standing Wave Prana an RAMA-Koordinaten
+  - `RhythmScorer` — Prosodische Affinität (SyllableVector ↔ Koordinaten)
+  - `SemanticScorer` — WordNet Graph-Distanz zum Input
+  - `ModeScorer` — Guna ↔ WordNet-Mode Alignment (Graph-Distanz, keine Keywords)
+  - `StateScorer` — System-State numerische Affinität
+- Kontext-getriebene Wortanzahl (NICHT hardcoded SEVEN):
+  - GENESIS=5, DHARMA=7, KARMA=5, MOKSHA=4, +2 wenn Prana > 0
+- Singleton via `get_composition()`
+- `last_context` Property für Observability
+
+**Engine (`substrate/language/engine.py`):**
+- THIN SHELL: 149 Zeilen, kein eigener State
+- `generate()` = `MahamantraLotus()` → `get_composition().compose()` → `EngineResult`
+- Importiert direkt von `adapters/composition`, NICHT von substrate Re-Export
+
+**Substrate Scoring-Atome (`substrate/language/composer.py`):**
+- `prosodic_affinity()` — SyllableVector ↔ RAMA-Koordinaten (reine Mathematik)
+- `chamber_boost()` — Antaranga Prana an Wort-Slot (abgeleitete Koeffizienten)
+- `semantic_boost()` — WordNet Graph-Distanz (keine Keywords)
+- `rhythm_bias()` — 3D Vektoren + Grid Alignment
+- `state_affinity()` — Numerische State-Injektion
+- `_build_lotus_pool()` — Smaranam + Verse → Pool Items mit Koordinaten
+
+**Syllable-Infrastruktur (gebaut, verdrahtet):**
 - `phonetics.py`: Input → 3D SyllableVector (stress, height, weight) via CMU ARPAbet
 - `mantra_grid.py`: 32-Step Sequencer aus MAHAMANTRA. Alignment Scoring.
 - `mode_affinity.py`: WordNet Graph-Distanz Klassifikation (keine Keywords)
 - `wordnet_bridge.py`: 3-Layer Semantic Scoring (exact/graph/morph), 4259 Wörter
-- `varnamala_codec.py`: IAST ↔ RAMA Koordinaten (49-Space)
-- `research/language_runtime/antaranga_bridge.py`: Keystroke → RAMA coord → Antaranga collide()
-- `research/language_runtime/venu_bridge.py`: DIWSubscriber für VenuOrchestrator Ticks
-- `research/language_runtime/incremental.py`: Live Keystroke Buffer → TickInputFrame
 
-**Token-Infrastruktur (alt, wird durch Syllable-Pfad ersetzt):**
-- `_word_role()`: Koordinaten-Masse → REF/VERB/NOUN/QUALITY/PREP/PARTICLE
-- `_SVO_ORDER`: Subject → Verb → Object → Quality → Modifiers (SOV→SVO Transformation)
-- `_pick_token()`: Scoring (Länge + Input-Echo Bonus), Dedup-aware
-- `_resolve_coords()`: IAST Lookup für Wörter ohne Koordinaten
-- `_build_lotus_pool()`: Smaranam + Verse → Pool Items mit Coords
+**Tests:** 436/436 (52 Composer + 22 Adapter + 35 Router + 115 Engine + 13 Heartbeat + Rest)
 
-**Tests:** 205/205 (55 Composer + 35 Router + 115 Engine)
-
-**Status (Feb 15 2026) — SLASH AND BURN COMPLETE:**
-- ✅ Engine ist jetzt THIN SHELL: 149 Zeilen, kein eigener State.
-  - `generate()` = `MahamantraLotus()` → `compose_from_wave()` → `EngineResult`
-  - KEINE eigenen Kopien von Antaranga/Venu/Kernel. Alles lebt in Lotus/Chamber.
-  - GELÖSCHT: `_antaranga`, `_kernel`, `_venu`, `_build_character_wave`, `_resonate_from_lotus`,
-    `_expand`, `_sprout_derivation_tree`, `_modulate`, `_trace_phonemes`, `_ensure_loaded`
-- ✅ Halb-deterministisch BY DESIGN (Kshetrajna-Prinzip):
-  - Seed = deterministisch (gleicher Input → gleicher Seed, immer)
-  - Output = LEBENDIG (Chamber akkumuliert — Beobachter verändert das Feld)
-- `compose_from_wave()` liest ECHTE `Chamber.antaranga` (Standing Wave nach Lotus)
-- Alte `compose()`, `_pick_token()`, `_assemble()` = DEAD CODE (0 Production-Caller)
-- Tulasi (Wave Collapse) existiert in `tulasi_gate.py` + `MahaModularSynth.transform(has_tulasi=)`
+**Halb-deterministisch BY DESIGN (Kshetrajna-Prinzip):**
+- Seed = deterministisch (gleicher Input → gleicher Seed, immer)
+- Output = LEBENDIG (Chamber akkumuliert — Beobachter verändert das Feld)
 
 **WARNUNG:** `state_bridge.py` und `StateVector` sind FALSCH — MahaState ist ein Wrapper, nicht die Wurzel.
 Werden in Phase C entfernt. Der Lotus Response ersetzt alles.
@@ -534,7 +529,7 @@ Bit-identische Ergebnisse. Kein numpy. Kein neues Dependency.
 
 ## Repo-Zustand
 
-**Repo ist SAUBER.** 0 ungemergte Branches. Frühjahrsputz am 11. Feb 2026: 61 Müll-Branches gelöscht.
+**Repo ist SAUBER.** 1 Branch: `main`. Zweiter Frühjahrsputz am 15. Feb 2026: 28 weitere Branches gelöscht.
 
 Alles Wertvolle ist auf `main`:
 
@@ -550,11 +545,27 @@ Alles Wertvolle ist auf `main`:
 | TattvaGate Pipeline | ✅ main | 5 Gates in `__call__()` + TattvaRegistry + Hooks |
 | Pancha Tattva Protocols | ✅ main | 5 Capability Protocols + Gate Provider Dispatch (54 Tests) |
 | Gate Providers | ✅ main | 5 reale Wächter an den Gates + fix get_tattva_by_protocol (37 Tests) |
+| Unified Heartbeat | ✅ main | 1 Singularity, 1 Flute, 1 Tick. 5 Surgeries + 13 Tests |
+| Composition Triad | ✅ main | Protocol/Substrate/Adapter. 5 Scorer. 22 Tests |
+
+**Unified Heartbeat (Feb 15 2026):**
+- Surgery 1: `lotus_core._get_singularity()` → Singleton aus `kernel/singularity.py`
+- Surgery 2: `maha_kernel.py` nutzt Singleton statt `Mahamantra()`
+- Surgery 3: `venu_service.py` → `singularity.tick()`, `lotus_bridge.py` → No-Op
+- Surgery 4: Silent Death → `logger.warning` (boot_orchestrator, venu_service)
+- Surgery 5: `sravanam.py` TickState dict/dataclass Handling
+
+**research/ ist LOAD-BEARING (nicht löschen!):**
+- `_gita_lens.py` importiert aus `research/gita/`
+- `maha_kernel.py` importiert `LotusArrayInt` aus `research/lotus_tree.py`
+- `adapters/routing.py` nutzt `LotusRadixInt` aus `research/lotus_tree.py`
+- Migration nach `substrate/` steht aus, aber NICHT blind löschen
 
 Gelöschte/verworfene Branches (für die Akten):
+- `followup/maha-language-engine` — gemergt in main (Feb 15 2026)
 - `architectural/state-authority` — builtins.open Monkey-Patch war Symptom-Doktorei
 - 51× `claude/*` Auto-Sessions — nie relevant
-- `copilot/*`, `gemini/*`, diverse Feature-Branches — aufgeräumt
+- 28× diverse Feature-Branches — Frühjahrsputz Feb 15 2026
 
 ## TattvaGate Pipeline ✅ (Feb 11 2026)
 
