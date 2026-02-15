@@ -578,10 +578,12 @@ class MahaLanguageEngine:
         self._antaranga.clear()
 
         impacts = 0
+        rama_coords: List[int] = []
         for char in text:
             result = impact_keystroke(self._antaranga, char)
             if result is not None:
                 impacts += KSETRAJNA
+                rama_coords.append(result.rama_coord)
 
         # One VenuOrchestrator tick to modulate the accumulated wave
         diw = self._venu.step()
@@ -591,6 +593,7 @@ class MahaLanguageEngine:
             "char_impacts": impacts,
             "char_wave_prana": self._antaranga.total_prana(),
             "char_wave_active": self._antaranga.active_count(),
+            "rama_coords": tuple(rama_coords),
         }
 
     # =========================================================================
@@ -735,6 +738,130 @@ class MahaLanguageEngine:
             else (),
             "synth_walk_words": synth_walk_words,
             "shabda_children": shabda_children,
+        }
+
+    # =========================================================================
+    # STEP 4.5: SPROUT — Fractal Derivation Tree from Antaranga wave
+    # =========================================================================
+
+    def _sprout_derivation_tree(
+        self,
+        seed: int,
+        attractor: int,
+        guardian_name: str,
+        shabda_children: tuple,
+    ) -> Dict:
+        """
+        Grow a FractalTree from the compressed seed.
+
+        The character wave in the Antaranga has created a standing wave.
+        Now the seed sprouts: each mode (DHARMA/GENESIS/KARMA) gets a
+        branch, and each branch's sub-seed produces its own word pool
+        via seed_to_words(). The Antaranga prana at each branch's slot
+        determines its energy weight.
+
+        Tree structure:
+            Root (seed) → position = attractor % 16
+            ├─ DHARMA branch (H-spawn) → sub-seed → word pool
+            ├─ GENESIS branch (K-spawn) → sub-seed → word pool
+            └─ KARMA branch (R-spawn) → sub-seed → word pool
+
+        Uses production FractalTree from protocols/_fractal.py.
+        """
+        from vibe_core.mahamantra.protocols._fractal import (
+            FractalAddress,
+            FractalNode,
+            FractalTree,
+        )
+        from vibe_core.mahamantra.substrate.seed_to_words import seed_to_words
+        from vibe_core.mahamantra.substrate.algorithm.maha import maha_step
+
+        position = attractor % WORDS
+
+        # Root node: the compressed seed itself
+        tree: FractalTree[Dict] = FractalTree()
+        root_payload = {
+            "mode": "ROOT",
+            "seed": seed,
+            "prana": self._antaranga.prana_at((seed * SEVEN) % 512),
+            "words": (),
+        }
+        root_node = tree.add_root(position, root_payload)
+
+        # Mode branches: H=DHARMA, K=GENESIS, R=KARMA
+        mode_ops = (
+            ("DHARMA", "H", 0),
+            ("GENESIS", "K", KSETRAJNA),
+            ("KARMA", "R", HALVES),
+        )
+
+        branch_words: Dict[str, list] = {"DHARMA": [], "GENESIS": [], "KARMA": []}
+
+        for mode_name, op, sub_pos in mode_ops:
+            # Sub-seed from maha_step (same as ShabdaSeed.spawn)
+            sub_seed = maha_step(seed, op, MAHA_QUANTUM)
+
+            # Word pool from sub-seed
+            sub_result = seed_to_words(sub_seed)
+            sub_words = []
+            if sub_result.all_words:
+                for w in sub_result.all_words[:PANCHA]:
+                    if w.meanings:
+                        sub_words.append({
+                            "sanskrit": w.sanskrit,
+                            "meaning": w.meanings[0],
+                            "first_coord": w.first_coord,
+                        })
+
+            # Prana at this branch's Antaranga slot
+            branch_slot = (sub_seed * SEVEN) % 512
+            branch_prana = self._antaranga.prana_at(branch_slot)
+
+            branch_payload = {
+                "mode": mode_name,
+                "seed": sub_seed,
+                "prana": branch_prana,
+                "words": tuple(sub_words),
+            }
+
+            branch_node = root_node.add_child(sub_pos, branch_payload)
+            branch_words[mode_name] = list(sub_words)
+
+            # === DEPTH 2: Each branch sprouts 3 sub-branches ===
+            for sub_mode, sub_op, leaf_pos in mode_ops:
+                leaf_seed = maha_step(sub_seed, sub_op, MAHA_QUANTUM)
+                leaf_result = seed_to_words(leaf_seed)
+                leaf_words = []
+                if leaf_result.all_words:
+                    for w in leaf_result.all_words[:HALVES]:
+                        if w.meanings:
+                            leaf_words.append({
+                                "sanskrit": w.sanskrit,
+                                "meaning": w.meanings[0],
+                                "first_coord": w.first_coord,
+                            })
+
+                leaf_slot = (leaf_seed * SEVEN) % 512
+                leaf_prana = self._antaranga.prana_at(leaf_slot)
+
+                leaf_payload = {
+                    "mode": f"{mode_name}.{sub_mode}",
+                    "seed": leaf_seed,
+                    "prana": leaf_prana,
+                    "words": tuple(leaf_words),
+                }
+
+                branch_node.add_child(leaf_pos, leaf_payload)
+
+                # Leaf words feed into the PARENT branch's mode pool
+                # (weighted by their Antaranga prana)
+                if leaf_prana > 0:
+                    branch_words[mode_name].extend(leaf_words)
+
+        return {
+            "tree": tree,
+            "tree_nodes": tree.count_nodes(),
+            "branch_words": branch_words,
         }
 
     # =========================================================================
@@ -910,6 +1037,7 @@ class MahaLanguageEngine:
         antaranga_data: Dict,
         expansion_data: Optional[Dict] = None,
         seed: int = 0,
+        branch_words: Optional[Dict[str, list]] = None,
     ) -> str:
         """
         Rhythmic Sequencing Compose (Opus design).
@@ -988,6 +1116,22 @@ class MahaLanguageEngine:
                 # Unclassified: available to all modes
                 for m in by_mode.values():
                     m.append(r)
+
+        # === FRACTAL BRANCH INJECTION: words from derivation tree branches ===
+        if branch_words:
+            for mode_name, bwords in branch_words.items():
+                if mode_name in by_mode:
+                    for bw in bwords:
+                        meaning = bw.get("meaning", "")
+                        if meaning:
+                            by_mode[mode_name].append({
+                                "sanskrit": bw.get("sanskrit", ""),
+                                "meaning": meaning,
+                                "score": 0.4,
+                                "all_meanings": (meaning,),
+                                "first_coord": bw.get("first_coord", -1),
+                                "from_branch": True,
+                            })
 
         # === RHYTHMIC SEQUENCING: walk grid modes, pick words ===
         parts: List[str] = []
@@ -1086,11 +1230,17 @@ class MahaLanguageEngine:
         seed = enc["seed"]
         rhythm = self._scan_syllable_rhythm(text)
 
-        # O(1) cache hit — return immediately
-        if enc["attention_hit"] and enc["cached_result"] is not None:
-            cached = enc["cached_result"]
-            if isinstance(cached, EngineResult):
-                return cached._replace(attention_cached=True)
+        # DETERMINISM: Reset VenuOrchestrator to seed-derived tick so the
+        # same seed always produces the same DIW sequence, regardless of
+        # how many generate() calls preceded this one.
+        self._venu.reset()
+        self._venu._tick = seed % WORDS
+
+        # DISABLED: MahaAttention O(1) cache has hash collisions in 16-bit
+        # address space — different prompts can land on the same slot and
+        # return the WRONG cached result. No collision detection in attend().
+        # See: adapters/attention.py DEFAULT_KEY_BITS=16 → 65,536 slots.
+        # TODO: Fix attention.py to store+verify original text on retrieval.
 
         if not coords:
             return EngineResult(
@@ -1132,13 +1282,18 @@ class MahaLanguageEngine:
         g = route["guardian"].guardian
         exp = self._expand(g.name, seed, route["attractor"])
 
+        # Step 4.5: SPROUT (fractal derivation tree from Antaranga wave)
+        sprout = self._sprout_derivation_tree(
+            seed, route["attractor"], g.name, exp["shabda_children"],
+        )
+
         # Step 5: MODULATE (VenuOrchestrator DIW → Antaranga)
         diw = self._modulate()
 
         # Step 6: TRACE (MahaSequencer phoneme trajectory)
         trajectory = self._trace_phonemes(route["attractor"])
 
-        # Step 7: COMPOSE (with expansion data + chamber boost from character wave)
+        # Step 7: COMPOSE (with expansion data + fractal branch words + chamber boost)
         output = self._compose(
             route["guardian"],
             route["template"],
@@ -1148,6 +1303,7 @@ class MahaLanguageEngine:
             ant,
             expansion_data=exp,
             seed=seed,
+            branch_words=sprout["branch_words"],
         )
 
         # Build derivation path (now includes all stages)
@@ -1161,6 +1317,7 @@ class MahaLanguageEngine:
             f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w/{len(exp['shabda_children'])}s "
             f"→ diw=0x{diw:05x} "
             f"→ char_wave={char_wave['char_impacts']}i/{char_wave['char_wave_active']}a/{char_wave['char_wave_prana']}p "
+            f"→ sprout={sprout['tree_nodes']}nodes "
             f"→ antaranga={ant['active_slots']} slots, {ant['total_prana']} prana"
         )
 
@@ -1203,8 +1360,8 @@ class MahaLanguageEngine:
             sequencer_steps=rhythm.sequencer_steps,
         )
 
-        # Step 8: MEMORIZE (cache for O(1) next time)
-        self._attention.memorize(text, result)
+        # Step 8: MEMORIZE — DISABLED (attention cache has hash collisions)
+        # self._attention.memorize(text, result)
 
         return result
 
