@@ -27,68 +27,38 @@ logger = logging.getLogger("MAHA_LANGUAGE")
 
 
 class MahaLanguageEngine:
-    """The Anti-Entropy Language Model — thin orchestrator."""
+    """The Anti-Entropy Language Model — Lotus-rooted orchestrator.
+
+    Lotus __call__() provides the shared computation (9 NavaBhakti steps).
+    This engine adds UNIQUE language stages not in Lotus:
+        - Character wave (keystroke → Antaranga)
+        - Semantic tree expansion (guardian → name tree)
+        - Fractal derivation tree (seed → mode branches)
+        - DIW modulation (venu → antaranga)
+        - Phoneme trajectory (sequencer synthesis)
+        - Composition (Antaranga wave → syllable grid → English)
+    """
 
     def __init__(self) -> None:
-        self._llm = None
-        self._attention = None
         self._antaranga = None
-        self._compressor = None
         self._kernel = None
         self._venu = None
 
     def _ensure_loaded(self) -> None:
-        if self._llm is not None:
+        if self._antaranga is not None:
             return
-        from vibe_core.mahamantra.adapters.attention import MahaAttention
-        from vibe_core.mahamantra.adapters.compression import MahaCompression
-        from vibe_core.mahamantra.adapters.llm import MahaLLM
         from vibe_core.mahamantra.substrate.antaranga import AntarangaRegistry
         from vibe_core.mahamantra.substrate.maha_llm_kernel import MahaLLMKernel
         from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
-        self._llm = MahaLLM()
-        self._attention = MahaAttention()
         self._antaranga = AntarangaRegistry()
-        self._compressor = MahaCompression()
         self._kernel = MahaLLMKernel()
         self._venu = VenuOrchestrator()
 
-    def _encode(self, text: str) -> Dict:
-        from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
-        cached_result = self._attention.attend(text)
-        coords = encode_text(text)
-        compression = self._compressor.compress(text)
-        intent_route = self._llm.route_text(text)
-        return {
-            "coords": coords, "seed": compression.seed,
-            "intent": intent_route.category_name,
-            "intent_id": intent_route.intent_id,
-            "attention_hit": cached_result.found,
-            "cached_result": cached_result.handler if cached_result.found else None,
-        }
-
-    def _route(self, text: str, seed: int, coords: tuple) -> Dict:
-        from vibe_core.mahamantra.adapters.synth import create_synth
-        from vibe_core.mahamantra.substrate.guardian_router import maha_respond
-        from vibe_core.mahamantra.substrate.language.section_router import (
-            SECTION_SIGNATURES, extract_template, route_to_section,
-        )
-        synth = create_synth(preset="quantum")
-        attractor = synth.resonate(seed).attractor
-        guardian_response = maha_respond(text, top_words=SEVEN, seed=seed)
-        guardian_resonance = self._kernel.resonate_as(
-            text, guardian_response.guardian.name, top_n=SEVEN,
-        )
-        section_name, verse_num, section_idx = route_to_section(attractor, seed)
-        section_sig = SECTION_SIGNATURES.get(section_name, {})
-        section_mode = section_sig.get("mode", "CORE")
-        template = extract_template(GITA_CHAPTERS, verse_num)
-        return {
-            "attractor": attractor, "guardian": guardian_response,
-            "guardian_resonance": guardian_resonance,
-            "section_name": section_name, "section_mode": section_mode,
-            "verse_num": verse_num, "template": template,
-        }
+    def _lotus_compute(self, text: str):
+        """Run Lotus __call__() — the real Maha Mantra computation."""
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        lotus = MahamantraLotus()
+        return lotus(text)
 
     def _build_character_wave(self, text: str) -> Dict:
         from vibe_core.mahamantra.research.language_runtime.antaranga_bridge import (
@@ -111,22 +81,29 @@ class MahaLanguageEngine:
             "rama_coords": tuple(rama_coords),
         }
 
-    def _resonate(self, guardian_response, template: List[Dict], seed: int) -> Dict:
+    def _resonate_from_lotus(self, lr: Dict, template: List[Dict], seed: int) -> Dict:
+        """Resonate Lotus smaranam words into own Antaranga for derivation tree."""
         from vibe_core.mahamantra.substrate.antaranga import (
             GENESIS_PRANA_U32, INTEGRITY_FULL,
         )
         from vibe_core.mahamantra.substrate.pancha_walk import COORD_ELEMENT, COORD_HARMONIC
-        resonant_words = guardian_response.words
+        from vibe_core.mahamantra.substrate.language.composer import _resolve_coords
+
         word_slots = []
-        for i, rw in enumerate(resonant_words):
+        for i, rw in enumerate(lr.get("smaranam", ())):
             if i >= WORDS:
                 break
-            coord = rw.word.first_coord
-            element = int(COORD_ELEMENT[coord]) if coord >= 0 else 0
-            harmonic = int(COORD_HARMONIC[coord]) if coord >= 0 else 0
+            sanskrit = rw.get("sanskrit", "")
+            score = float(rw.get("score", 0))
+            coords = _resolve_coords(sanskrit, -1)
+            coord = coords[0] if coords else -1
+            if coord < 0:
+                continue
+            element = int(COORD_ELEMENT[coord]) if coord < 49 else 0
+            harmonic = int(COORD_HARMONIC[coord]) if coord < 49 else 0
             slot_idx = (coord * SEVEN + seed) % 512
-            prana = int(rw.total_score * GENESIS_PRANA_U32)
-            integrity = int(rw.total_score * INTEGRITY_FULL)
+            prana = int(score * GENESIS_PRANA_U32)
+            integrity = int(score * INTEGRITY_FULL)
             self._antaranga.collide(
                 slot_idx, v_source=coord, v_target=harmonic,
                 v_operation=element, v_arcanam=seed % MAHA_QUANTUM,
@@ -233,23 +210,31 @@ class MahaLanguageEngine:
         return seq.synthesize(position, length=QUARTERS)
 
     def generate(self, text: str) -> EngineResult:
-        """Complete pipeline: text in → EngineResult out. Deterministic."""
+        """Lotus-rooted pipeline: Lotus.__call__() → unique language stages → EngineResult."""
         self._ensure_loaded()
         from vibe_core.mahamantra.substrate.language.phonetics import scan_syllable_rhythm
-        from vibe_core.mahamantra.substrate.language.composer import compose
+        from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+        from vibe_core.mahamantra.substrate.language.section_router import (
+            SECTION_SIGNATURES, extract_template, route_to_section,
+        )
 
-        enc = self._encode(text)
-        coords = enc["coords"]
-        seed = enc["seed"]
+        # === LOTUS: The real Maha Mantra computation ===
+        lr = self._lotus_compute(text)
+
+        vib = lr.get("vibration", {})
+        seed = vib.get("seed", 0)
+        attractor = vib.get("attractor", 0)
         rhythm = scan_syllable_rhythm(text)
 
         self._venu.reset()
         self._venu._tick = seed % WORDS
 
-        if not coords:
+        nama = lr.get("nama", {})
+        if not nama.get("coords"):
+            guna = lr.get("guna", {})
             return EngineResult(
                 input_text=text, seed=seed, attractor=0, guardian_name="",
-                guardian_function="", intent_category=enc["intent"],
+                guardian_function="", intent_category=guna.get("opcode", ""),
                 section_name="", section_mode="", verse_ref="",
                 resonant_words=(), template_words=(),
                 antaranga_active=0, antaranga_prana=0,
@@ -260,62 +245,84 @@ class MahaLanguageEngine:
                 sequencer_steps=rhythm.sequencer_steps,
             )
 
-        route = self._route(text, seed, coords)
+        # === UNIQUE LANGUAGE STAGES (not in Lotus) ===
+
+        # Section routing from attractor
+        section_name, verse_num, section_idx = route_to_section(attractor, seed)
+        section_sig = SECTION_SIGNATURES.get(section_name, {})
+        section_mode = section_sig.get("mode", "CORE")
+        template = extract_template(GITA_CHAPTERS, verse_num)
+
+        # Character wave: keystroke → own Antaranga
         char_wave = self._build_character_wave(text)
-        ant = self._resonate(route["guardian"], route["template"], seed)
-        ant["char_wave"] = char_wave
 
-        g = route["guardian"].guardian
-        exp = self._expand(g.name, seed, route["attractor"])
-        sprout = self._sprout_derivation_tree(seed, route["attractor"], g.name, exp["shabda_children"])
+        # Resonate Lotus smaranam into own Antaranga
+        ant = self._resonate_from_lotus(lr, template, seed)
+
+        # Guardian semantic tree expansion
+        guardian_name = lr.get("guardian", "")
+        exp = self._expand(guardian_name, seed, attractor) if guardian_name else {
+            "expanded_names": (), "expansion_depth": 0,
+            "expansion_words": (), "synth_walk_words": (), "shabda_children": (),
+        }
+
+        # Fractal derivation tree
+        sprout = self._sprout_derivation_tree(seed, attractor, guardian_name, exp.get("shabda_children", ()))
+
+        # DIW modulation on own Antaranga
         diw = self._modulate()
-        trajectory = self._trace_phonemes(route["attractor"])
 
-        from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
-        state_vec = extract_state_vector(prana_level=ant.get("total_prana", 0))
+        # Phoneme trajectory
+        trajectory = self._trace_phonemes(attractor)
 
-        output = compose(
-            route["guardian"], route["template"], rhythm, text,
-            route["section_mode"], ant, expansion_data=exp, seed=seed,
-            branch_words=sprout["branch_words"], antaranga=self._antaranga,
-            state=state_vec,
-        )
+        # === COMPOSITION: Antaranga wave → syllable grid → English ===
+        output = compose_from_wave(lr, text)
 
-        derivation = (
-            f"seed={seed} → attractor={route['attractor']} "
-            f"→ guardian={g.name}({g.function}) "
-            f"→ section={route['section_name']}({route['section_mode']}) "
-            f"→ verse=BG.18.{route['verse_num']} "
-            f"→ rhythm={rhythm.signature}({rhythm.syllable_count}) "
-            f"→ expand={exp['expansion_depth']}d/{len(exp['synth_walk_words'])}w "
-            f"→ diw=0x{diw:05x} "
-            f"→ char_wave={char_wave['char_impacts']}i/{char_wave['char_wave_active']}a "
-            f"→ sprout={sprout['tree_nodes']}nodes "
-            f"→ antaranga={ant['active_slots']}slots,{ant['total_prana']}prana"
-        )
+        # === BUILD RESULT ===
+        verse = lr.get("verse")
+        lotus_ant = lr.get("antaranga", {})
+        guna = lr.get("guna", {})
 
         res_words = tuple(
-            (rw.word.sanskrit, rw.word.meanings[0] if rw.word.meanings else "", rw.total_score)
-            for rw in route["guardian"].words
+            (rw.get("sanskrit", ""), rw.get("meaning", ""), float(rw.get("score", 0)))
+            for rw in lr.get("smaranam", ())
         )
         tmpl_words = tuple(
             (tw.get("sanskrit", ""), tw.get("meaning", ""), tw.get("role", ""))
-            for tw in route["template"][:WORDS]
+            for tw in template[:WORDS]
+        )
+
+        verse_ref = verse["id"] if verse else f"BG.18.{verse_num}"
+
+        derivation = (
+            f"seed={seed} → attractor={attractor} "
+            f"→ guardian={guardian_name}({lr.get('trinity_function', '')}) "
+            f"→ section={section_name}({section_mode}) "
+            f"→ verse={verse_ref} "
+            f"→ rhythm={rhythm.signature}({rhythm.syllable_count}) "
+            f"→ expand={exp['expansion_depth']}d/{len(exp.get('synth_walk_words', ()))}w "
+            f"→ diw=0x{diw:05x} "
+            f"→ char_wave={char_wave['char_impacts']}i/{char_wave['char_wave_active']}a "
+            f"→ sprout={sprout['tree_nodes']}nodes "
+            f"→ antaranga={lotus_ant.get('active_slots', 0)}slots,{lotus_ant.get('total_prana', 0)}prana"
         )
 
         return EngineResult(
-            input_text=text, seed=seed, attractor=route["attractor"],
-            guardian_name=g.name, guardian_function=g.function,
-            intent_category=enc["intent"],
-            section_name=route["section_name"], section_mode=route["section_mode"],
-            verse_ref=f"BG.18.{route['verse_num']}",
+            input_text=text, seed=seed, attractor=attractor,
+            guardian_name=guardian_name,
+            guardian_function=lr.get("trinity_function", ""),
+            intent_category=guna.get("opcode", ""),
+            section_name=section_name, section_mode=section_mode,
+            verse_ref=verse_ref,
             resonant_words=res_words, template_words=tmpl_words,
-            antaranga_active=ant["active_slots"], antaranga_prana=ant["total_prana"],
+            antaranga_active=lotus_ant.get("active_slots", 0),
+            antaranga_prana=lotus_ant.get("total_prana", 0),
             output=output, derivation=derivation,
-            attention_cached=False, expansion_depth=exp["expansion_depth"],
-            expanded_names=exp["expanded_names"],
-            synth_walk_words=exp["synth_walk_words"],
-            diw_applied=diw, shabda_spawns=len(exp["shabda_children"]),
+            expansion_depth=exp["expansion_depth"],
+            expanded_names=exp.get("expanded_names", ()),
+            synth_walk_words=exp.get("synth_walk_words", ()),
+            diw_applied=diw,
+            shabda_spawns=len(exp.get("shabda_children", ())),
             phoneme_trajectory=trajectory,
             syllable_count=rhythm.syllable_count,
             stress_pattern=rhythm.stress_pattern,
