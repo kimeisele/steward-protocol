@@ -190,7 +190,7 @@ def _extract_scorer_kwargs(lotus_response: Dict, input_text: str) -> Dict:
     try:
         from vibe_core.mahamantra.substrate.chamber import get_chamber
         antaranga = get_chamber().antaranga
-    except Exception:
+    except (ImportError, AttributeError):
         pass
 
     # Extract StateVector (graceful degradation)
@@ -199,7 +199,7 @@ def _extract_scorer_kwargs(lotus_response: Dict, input_text: str) -> Dict:
         from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
         ant_info = lotus_response.get("antaranga", {})
         state = extract_state_vector(prana_level=ant_info.get("total_prana", 0))
-    except Exception:
+    except (ImportError, AttributeError):
         pass
 
     return {

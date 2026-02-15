@@ -23,7 +23,7 @@ from __future__ import annotations
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "yamaraja"
 __position__ = 15
-__genesis__ = "0x..." # TODO: Add genesis byte
+__genesis__ = "0x8fd1e5e1"  # GenesisByte: parampara % 37 == 0
 
 __all__ = [
     "AuditFinding", "AuditRegistry", "FindingStatus", "FindingSeverity",
