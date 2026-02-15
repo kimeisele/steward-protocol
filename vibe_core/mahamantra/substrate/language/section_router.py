@@ -12,7 +12,7 @@ Each section has a verified phonetic signature and a response mode.
 
 from __future__ import annotations
 
-from typing import Dict, Final, List, Tuple
+from typing import Dict, Final, List, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
@@ -20,6 +20,8 @@ from vibe_core.mahamantra.protocols._seed import (
     HARE_COUNT,
     KSETRAJNA,
     MAHAJANA_COUNT,
+    PANCHA,
+    QUARTERS,
     QUALITIES,
     SEVEN,
     SHARANAGATI,
@@ -109,15 +111,17 @@ def extract_template(chapter: int, verse: int) -> List[Dict]:
     """Extract a grammatical template from a Gita verse.
 
     Each word becomes a slot with sanskrit, meaning, role, coords.
+    Role inferred from coordinate mass + verse position (no keyword lists).
     """
     vw = verse_words(chapter, verse)
     if vw is None:
         return []
 
     slots = []
+    total = len(vw.words)
     for i, w in enumerate(vw.words):
         meaning = w.meaning if w.meaning else ""
-        role = _infer_role(meaning, i, len(vw.words))
+        role = _infer_role(w.coords, i, total)
         slots.append({
             "position": i,
             "sanskrit": w.sanskrit,
@@ -128,42 +132,41 @@ def extract_template(chapter: int, verse: int) -> List[Dict]:
     return slots
 
 
-def _infer_role(meaning: str, position: int, total: int) -> str:
-    """Infer grammatical role from English meaning."""
-    ml = meaning.lower()
+def _infer_role(coords: Sequence[int], position: int, total: int) -> str:
+    """Infer grammatical role from RAMA coordinate properties.
 
-    verb_markers = (
-        "to ", "should ", "does ", "can ", "must ", "is ", "are ", "was ",
-        "has ", "having ", "being ", "doing ", "said", "know", "give",
-        "take", "abandon", "perform", "attain", "think", "see", "go",
-        "come", "fight", "worship",
-    )
-    for v in verb_markers:
-        if ml.startswith(v) or ml == v.rstrip():
-            return "VERB"
+    Coordinate mass (len(coords)) correlates with grammatical function:
+        mass ≤ HALVES (2)                  → PARTICLE (function words)
+        mass ≤ QUARTERS (4) at edges       → REF (pronouns, deictics)
+        mass ≥ PANCHA + HALVES (7)         → QUALITY (heavy compounds)
+        mass ≤ QUARTERS (4) mid-verse      → PREP (relational)
+        last QUARTERS positions in verse   → VERB (Sanskrit SOV: verb at end)
+        otherwise                          → NOUN
 
-    if ml in (
-        "i", "me", "my", "unto me", "of me", "him", "his", "you", "your",
-        "unto you", "this", "that", "these", "who", "which", "what",
-        "all", "every", "each",
-    ):
-        return "REF"
+    Position in verse provides structural signal:
+        Sanskrit is SOV — verbs cluster at the end of the verse.
+        Subjects/references cluster at the beginning.
+    """
+    mass = len(coords)
 
-    if ml in (
-        "and", "or", "but", "also", "indeed", "certainly", "not", "nor",
-        "neither", "never", "always", "therefore", "thus", "so", "even", "only",
-    ):
+    # Lightest words are particles (connectors, emphasis)
+    if mass <= HALVES:
         return "PARTICLE"
 
-    qual_markers = (
-        "very ", "great ", "supreme ", "divine ", "eternal ", "best ",
-        "highest ", "most ", "pure ", "full ", "true ", "all ", "complete ",
-    )
-    for q in qual_markers:
-        if ml.startswith(q):
-            return "QUALITY"
+    # Heavy compounds are qualities/descriptions
+    if mass >= PANCHA + HALVES:
+        return "QUALITY"
 
-    if ml.startswith(("in ", "of ", "by ", "from ", "to ", "for ", "with ", "without ", "after ", "before ")):
+    # Position signal: last QUARTERS positions tend to be verbs (SOV)
+    if total > 0 and position >= total - QUARTERS and mass > HALVES:
+        return "VERB"
+
+    # Light words at verse edges are references (subject/object)
+    if mass <= QUARTERS and (position < HALVES or position >= total - HALVES):
+        return "REF"
+
+    # Light words mid-verse are relational (prepositions)
+    if mass <= QUARTERS:
         return "PREP"
 
     return "NOUN"
