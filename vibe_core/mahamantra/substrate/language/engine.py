@@ -189,9 +189,9 @@ class MahaLanguageEngine:
         tree: FractalTree[Dict] = FractalTree()
         root_payload = {"mode": "ROOT", "seed": seed, "prana": self._antaranga.prana_at((seed * SEVEN) % 512), "words": ()}
         root_node = tree.add_root(position, root_payload)
-        mode_ops = (("DHARMA", "H", 0), ("GENESIS", "K", KSETRAJNA), ("KARMA", "R", 1))
+        mode_ops = (("DHARMA", "H"), ("GENESIS", "K"), ("KARMA", "R"))
         branch_words: Dict[str, list] = {"DHARMA": [], "GENESIS": [], "KARMA": []}
-        for mode_name, op, sub_pos in mode_ops:
+        for sub_pos, (mode_name, op) in enumerate(mode_ops):
             sub_seed = maha_step(seed, op, MAHA_QUANTUM)
             sub_result = seed_to_words(sub_seed)
             sub_words = []
@@ -204,7 +204,7 @@ class MahaLanguageEngine:
             branch_payload = {"mode": mode_name, "seed": sub_seed, "prana": branch_prana, "words": tuple(sub_words)}
             branch_node = root_node.add_child(sub_pos, branch_payload)
             branch_words[mode_name] = list(sub_words)
-            for sub_mode, sub_op, leaf_pos in mode_ops:
+            for leaf_idx, (sub_mode, sub_op) in enumerate(mode_ops):
                 leaf_seed = maha_step(sub_seed, sub_op, MAHA_QUANTUM)
                 leaf_result = seed_to_words(leaf_seed)
                 leaf_words = []
@@ -214,7 +214,7 @@ class MahaLanguageEngine:
                             leaf_words.append({"sanskrit": w.sanskrit, "meaning": w.meanings[0], "first_coord": w.first_coord})
                 leaf_slot = (leaf_seed * SEVEN) % 512
                 leaf_prana = self._antaranga.prana_at(leaf_slot)
-                branch_node.add_child(leaf_pos, {"mode": f"{mode_name}.{sub_mode}", "seed": leaf_seed, "prana": leaf_prana, "words": tuple(leaf_words)})
+                branch_node.add_child(leaf_idx, {"mode": f"{mode_name}.{sub_mode}", "seed": leaf_seed, "prana": leaf_prana, "words": tuple(leaf_words)})
                 if leaf_prana > 0:
                     branch_words[mode_name].extend(leaf_words)
         return {"tree": tree, "tree_nodes": tree.count_nodes(), "branch_words": branch_words}
@@ -271,10 +271,14 @@ class MahaLanguageEngine:
         diw = self._modulate()
         trajectory = self._trace_phonemes(route["attractor"])
 
+        from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
+        state_vec = extract_state_vector(prana_level=ant.get("total_prana", 0))
+
         output = compose(
             route["guardian"], route["template"], rhythm, text,
             route["section_mode"], ant, expansion_data=exp, seed=seed,
             branch_words=sprout["branch_words"], antaranga=self._antaranga,
+            state=state_vec,
         )
 
         derivation = (

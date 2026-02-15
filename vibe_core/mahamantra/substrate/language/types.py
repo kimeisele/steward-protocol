@@ -34,6 +34,31 @@ class RhythmProfile(NamedTuple):
     grid_modes: Tuple[str, ...] = ()
 
 
+class StateVector(NamedTuple):
+    """Numeric summary of system state for semantic injection into composer.
+
+    Extracted from MahaState.get_status(). All fields are numeric —
+    no strings, no keywords. The composer uses these to bias word selection
+    toward tokens that describe reality.
+
+    guna: 0=TAMAS (inert), 1=RAJAS (active), 2=SATTVA (harmonious)
+    entry_count: sovereign state entries (0..72)
+    boot_count: system boot cycles
+    uptime_ratio: uptime / max_stale, clamped to [0, 1]
+    systems_alive: wrapped subsystems available (0..6)
+    dirty: unsaved state changes pending
+    prana_level: total antaranga prana from engine resonance stage
+    """
+
+    guna: int = 1             # Default RAJAS (active)
+    entry_count: int = 0
+    boot_count: int = 0
+    uptime_ratio: float = 0.0
+    systems_alive: int = 0
+    dirty: bool = False
+    prana_level: int = 0
+
+
 class EngineResult(NamedTuple):
     """Complete result from the Maha Language Engine."""
 
