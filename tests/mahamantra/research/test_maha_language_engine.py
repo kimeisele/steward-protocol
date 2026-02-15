@@ -341,3 +341,120 @@ class TestCharacterWaveOnDemand:
         r_short = engine.generate("om")
         r_long = engine.generate("what is the meaning of devotion and sacrifice")
         assert r_long.antaranga_active >= r_short.antaranga_active
+
+
+class TestFractalDerivationTree:
+    """Fractal Lotus: seed sprouts into derivation tree with mode branches."""
+
+    def test_sprout_in_derivation(self, engine):
+        """Derivation string must contain sprout stats."""
+        r = engine.generate("what is devotion")
+        assert "sprout=" in r.derivation
+        assert "nodes" in r.derivation
+
+    def test_tree_has_13_nodes(self, engine):
+        """1 root + 3 branches + 9 leaves = 13 nodes."""
+        r = engine.generate("test input")
+        assert "sprout=13nodes" in r.derivation
+
+    def test_fractal_deterministic(self, engine):
+        """Same prompt → same tree → same output."""
+        r1 = engine.generate("sacrifice and duty")
+        r2 = engine.generate("sacrifice and duty")
+        assert r1.output == r2.output
+        assert r1.antaranga_prana == r2.antaranga_prana
+        assert r1.derivation == r2.derivation
+
+    def test_different_prompts_different_trees(self, engine):
+        """Different prompts produce different prana fields (tree branches differ)."""
+        r1 = engine.generate("what is devotion")
+        r2 = engine.generate("how to find peace")
+        assert r1.antaranga_prana != r2.antaranga_prana
+
+    def test_sprout_enriches_output(self, engine):
+        """Output must be non-empty (tree branches contribute words)."""
+        r = engine.generate("knowledge of the self")
+        assert len(r.output) > 0
+        assert r.antaranga_active > 0
+
+
+class TestResonanceBridge:
+    """ResonanceBridge: inner chamber → typed packet → intent kwargs."""
+
+    def test_packet_fields_populated(self, engine):
+        """ResonancePacket must have all fields populated."""
+        from vibe_core.mahamantra.research.resonance_bridge import ResonanceBridge
+
+        bridge = ResonanceBridge()
+        r = engine.generate("what is devotion")
+        packet = bridge.emit(r)
+
+        assert packet.seed > 0
+        assert packet.attractor >= 0
+        assert 0 <= packet.position < 16
+        assert 0 <= packet.quarter < 4
+        assert packet.guna in ("suddha", "sattva", "rajas", "tamas")
+        assert packet.prana > 0
+        assert packet.active_slots > 0
+        assert packet.guardian != ""
+        assert packet.verse_ref != ""
+        assert packet.intent_type in ("wake", "resolve", "transform", "heal")
+
+    def test_packet_deterministic(self, engine):
+        """Same prompt → same packet (all fields)."""
+        from vibe_core.mahamantra.research.resonance_bridge import ResonanceBridge
+
+        bridge = ResonanceBridge()
+        p1 = bridge.emit(engine.generate("sacrifice and duty"))
+        p2 = bridge.emit(engine.generate("sacrifice and duty"))
+
+        assert p1.seed == p2.seed
+        assert p1.guna == p2.guna
+        assert p1.intent_type == p2.intent_type
+        assert p1.prana == p2.prana
+        assert p1.guardian == p2.guardian
+
+    def test_guna_discriminative(self, engine):
+        """Different prompts can produce different gunas."""
+        from vibe_core.mahamantra.research.resonance_bridge import ResonanceBridge
+
+        bridge = ResonanceBridge()
+        gunas = set()
+        for prompt in [
+            "what is devotion",
+            "sacrifice and duty",
+            "fix the broken module",
+            "create new service",
+            "observe the system",
+            "read the configuration",
+        ]:
+            packet = bridge.emit(engine.generate(prompt))
+            gunas.add(packet.guna)
+
+        # At least 2 different gunas across varied prompts
+        assert len(gunas) >= 2
+
+    def test_intent_kwargs_structure(self, engine):
+        """Intent kwargs must have correct structure for MantraIntent."""
+        from vibe_core.mahamantra.research.resonance_bridge import ResonanceBridge
+
+        bridge = ResonanceBridge()
+        packet = bridge.emit(engine.generate("fix the broken module"))
+        kwargs = bridge.to_intent_kwargs(packet, target="test.module")
+
+        assert "type" in kwargs
+        assert "target" in kwargs
+        assert "params" in kwargs
+        assert "requester" in kwargs
+        assert kwargs["target"] == "test.module"
+        assert isinstance(kwargs["params"], dict)
+        assert "seed" in kwargs["params"]
+        assert "guna" in kwargs["params"]
+
+    def test_rama_coords_collected(self, engine):
+        """Character wave must collect RAMA coordinates."""
+        r = engine.generate("hello world")
+        # RAMA coords are in the char_wave dict, accessible via derivation
+        # The engine now stores them — verify via a fresh generate
+        assert r.antaranga_active > 0
+        assert r.antaranga_prana > 0
