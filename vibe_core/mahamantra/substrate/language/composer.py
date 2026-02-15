@@ -307,9 +307,11 @@ def _build_pool(
             "coords": getattr(w, "coords", ()),
         })
 
+    # Expansion words: cap at PANCHA to prevent pool dilution
+    exp_count = 0
     if expansion_data:
         for sanskrit, meaning in expansion_data.get("expansion_words", ()):
-            if meaning:
+            if meaning and exp_count < PANCHA:
                 coords = _resolve_coords(sanskrit, -1)
                 pool.append({
                     "sanskrit": sanskrit, "meaning": meaning, "tokens": (),
@@ -317,8 +319,9 @@ def _build_pool(
                     "first_coord": coords[0] if coords else -1,
                     "coords": coords,
                 })
+                exp_count += KSETRAJNA
         for sanskrit, meaning in expansion_data.get("synth_walk_words", ()):
-            if meaning:
+            if meaning and exp_count < PANCHA:
                 coords = _resolve_coords(sanskrit, -1)
                 pool.append({
                     "sanskrit": sanskrit, "meaning": meaning, "tokens": (),
@@ -326,10 +329,15 @@ def _build_pool(
                     "first_coord": coords[0] if coords else -1,
                     "coords": coords,
                 })
+                exp_count += KSETRAJNA
 
+    # Branch words: cap at PANCHA total across all modes
+    branch_count = 0
     if branch_words:
         for mode_name, bwords in branch_words.items():
             for bw in bwords:
+                if branch_count >= PANCHA:
+                    break
                 meaning = bw.get("meaning", "")
                 if meaning:
                     fc = bw.get("first_coord", -1)
@@ -342,6 +350,7 @@ def _build_pool(
                         "first_coord": coords[0] if coords else fc,
                         "coords": coords, "from_branch": True,
                     })
+                    branch_count += KSETRAJNA
 
     return pool
 
