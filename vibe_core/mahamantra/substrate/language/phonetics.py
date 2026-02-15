@@ -1,13 +1,14 @@
 """
-PHONETICS — 3D Syllable Vectors from CMU ARPAbet
-=================================================
+PHONETICS — 3D Syllable Vectors
+================================
 
 Each syllable = (stress, height, weight):
-    stress: ARPAbet stress marker (0/1/2)
+    stress: primary (1), secondary (2), or unstressed (0)
     height: vowel height from articulatory phonetics (1-5)
     weight: consonant cluster mass (onset + coda + 1)
 
-Uses NLTK CMU dictionary (134K entries, 39 phonemes) with fallback.
+Zero external dependencies. Vowel-group heuristic for syllabification.
+ARPAbet parsing available for callers that supply phoneme lists directly.
 """
 
 from __future__ import annotations
@@ -42,29 +43,20 @@ def _varga_height(varga: VargaIndex) -> int:
     return varga.value + KSETRAJNA
 
 
-@lru_cache(maxsize=1)
-def _cmu_lookup() -> Optional[Dict[str, List[List[str]]]]:
-    """Load CMU dictionary via NLTK (134K entries, 39 ARPAbet phonemes)."""
-    try:
-        from nltk.corpus import cmudict
-
-        return cmudict.dict()
-    except Exception:
-        return None
-
-
 def syllable_vectors_for_word(word: str) -> Tuple[SyllableVector, ...]:
-    """Extract 3D syllable vectors from CMU ARPAbet pronunciation."""
-    cmu = _cmu_lookup()
-    if cmu:
-        pronunciations = cmu.get(word.lower())
-        if pronunciations:
-            return _parse_arpabet(pronunciations[0])
+    """Extract 3D syllable vectors from vowel-group heuristic.
+
+    Zero external dependencies. For callers with ARPAbet phoneme lists,
+    use parse_arpabet() directly.
+    """
     return _fallback_vectors(word)
 
 
-def _parse_arpabet(phones: List[str]) -> Tuple[SyllableVector, ...]:
-    """Parse ARPAbet phoneme list into 3D syllable vectors."""
+def parse_arpabet(phones: List[str]) -> Tuple[SyllableVector, ...]:
+    """Parse ARPAbet phoneme list into 3D syllable vectors.
+
+    Public API for callers that already have phoneme data.
+    """
     syllables: List[SyllableVector] = []
     onset_consonants = 0
 

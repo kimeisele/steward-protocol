@@ -881,21 +881,6 @@ def wire_gate_providers() -> int:
         "enforce_gate": TattvaGate.SYNC,
     }
 
-    # Adapter gate providers — real capability, not just observation
-    try:
-        from vibe_core.mahamantra.adapters.attention import get_attention
-        providers["maha_attention"] = get_attention()
-        gate_map["maha_attention"] = TattvaGate.PARSE
-    except ImportError:
-        logger.debug("MahaAttention not available for Gate 0")
-
-    try:
-        from vibe_core.mahamantra.adapters.llm import MahaLLM
-        providers["maha_llm"] = MahaLLM()
-        gate_map["maha_llm"] = TattvaGate.EXECUTE
-    except ImportError:
-        logger.debug("MahaLLM not available for Gate 2")
-
     registered = 0
     for name, gate in gate_map.items():
         # Skip if already registered

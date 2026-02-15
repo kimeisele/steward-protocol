@@ -12,7 +12,7 @@ from vibe_core.mahamantra.substrate.language.phonetics import (
     _VOWEL_GROUP_RE,
     _WORD_TOKEN_RE,
     _fallback_vectors,
-    _parse_arpabet,
+    parse_arpabet,
     _varga_height,
     scan_syllable_rhythm,
     stress_for_word,
@@ -45,61 +45,61 @@ class TestVargaHeight:
 
 
 # =============================================================================
-# _parse_arpabet: ARPAbet phoneme list → SyllableVector tuple
+# parse_arpabet: ARPAbet phoneme list → SyllableVector tuple
 # =============================================================================
 
 class TestParseArpabet:
-    """_parse_arpabet converts CMU phoneme sequences to 3D vectors."""
+    """parse_arpabet converts CMU phoneme sequences to 3D vectors."""
 
     def test_single_vowel(self):
         # "AH0" = unstressed vowel, no onset consonants
-        result = _parse_arpabet(["AH0"])
+        result = parse_arpabet(["AH0"])
         assert len(result) == 1
         assert result[0].stress == 0
         assert result[0].weight == KSETRAJNA  # 0 onset + 1
 
     def test_stressed_vowel(self):
-        result = _parse_arpabet(["AH1"])
+        result = parse_arpabet(["AH1"])
         assert result[0].stress == 1
 
     def test_secondary_stress(self):
-        result = _parse_arpabet(["AH2"])
+        result = parse_arpabet(["AH2"])
         assert result[0].stress == 2
 
     def test_consonant_onset_adds_weight(self):
         # "K AH1" = one onset consonant
-        result = _parse_arpabet(["K", "AH1"])
+        result = parse_arpabet(["K", "AH1"])
         assert len(result) == 1
         assert result[0].weight == KSETRAJNA + KSETRAJNA  # 1 onset + 1
 
     def test_cluster_onset(self):
         # "S T R AH1" = 3 onset consonants
-        result = _parse_arpabet(["S", "T", "R", "AH1"])
+        result = parse_arpabet(["S", "T", "R", "AH1"])
         assert len(result) == 1
         assert result[0].weight == 3 + KSETRAJNA  # 3 onset + 1
 
     def test_coda_adds_to_last_syllable(self):
         # "AH1 N" = vowel + coda consonant
-        result = _parse_arpabet(["AH1", "N"])
+        result = parse_arpabet(["AH1", "N"])
         assert len(result) == 1
         assert result[0].weight == KSETRAJNA + KSETRAJNA  # 0 onset + 1 + 1 coda
 
     def test_two_syllables(self):
         # "D AH0 V OW1 SH AH0 N" = de-vo-tion (simplified)
-        result = _parse_arpabet(["D", "AH0", "V", "OW1", "SH", "AH0", "N"])
+        result = parse_arpabet(["D", "AH0", "V", "OW1", "SH", "AH0", "N"])
         assert len(result) == 3
 
     def test_empty_input(self):
-        result = _parse_arpabet([])
+        result = parse_arpabet([])
         assert result == ()
 
     def test_all_consonants_no_syllable(self):
         # No vowel nucleus → no syllables
-        result = _parse_arpabet(["K", "S", "T"])
+        result = parse_arpabet(["K", "S", "T"])
         assert result == ()
 
     def test_returns_tuple(self):
-        result = _parse_arpabet(["AH1"])
+        result = parse_arpabet(["AH1"])
         assert isinstance(result, tuple)
         assert isinstance(result[0], SyllableVector)
 
