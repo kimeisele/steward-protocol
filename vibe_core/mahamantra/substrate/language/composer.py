@@ -392,16 +392,44 @@ def _select_words(
     return selected
 
 
-def _pick_token(item: Dict[str, object]) -> str:
-    """Pick the best English token for a word. Bridge tokens first, meaning fallback."""
+def _pick_token(
+    item: Dict[str, object],
+    input_words: Tuple[str, ...] = (),
+    used: Optional[set] = None,
+) -> str:
+    """Pick the best English token for a word.
+
+    Scoring: length + input echo bonus. Skips already-used tokens.
+    Input matching ensures user's words echo in output (semantic grounding)
+    but doesn't dominate — it's a bonus, not absolute priority.
+    """
     tokens = item.get("tokens", ())
     if tokens:
-        # Pick longest token (most semantic content) — branchless max
+        best = ""
+        best_score = -1
+        input_set = set(input_words) if input_words else set()
+        used_set = used or set()
+
+        for t in tokens:
+            tl = t.lower()
+            if tl in used_set or len(tl) <= KSETRAJNA:
+                continue
+            # Score: length (content) + PANCHA bonus for input echo
+            s = len(t) + (PANCHA if tl in input_set else 0)
+            if s > best_score:
+                best_score = s
+                best = t
+
+        if best:
+            return best
+
+        # All tokens used or too short — pick longest regardless
         best = tokens[0]
         for t in tokens[KSETRAJNA:]:
             if len(t) > len(best):
                 best = t
         return best
+
     # Fallback: first word of meaning
     meaning = str(item.get("meaning", ""))
     parts = meaning.split()
@@ -445,12 +473,14 @@ def _assemble(
     selected: List[Dict[str, object]],
     template: List[Dict],
     rhythm: RhythmProfile,
+    input_text: str = "",
 ) -> str:
     """Assemble selected words into SVO sentence structure.
 
     1. Classify each selected word by coordinate mass → role.
     2. Place into SVO slots: Subject(REF) → Verb → Object(NOUN) → Quality → Particle.
     3. Template provides structural anchor words at key positions.
+    4. Input words echo in token selection (semantic grounding).
     """
     if not selected:
         return ""
@@ -464,6 +494,12 @@ def _assemble(
         else:
             by_role["NOUN"].append(item)
 
+    # Extract input words for semantic echo (lowercase, len > 1)
+    input_words: Tuple[str, ...] = tuple(
+        w.lower().strip("?!.,;:") for w in input_text.split()
+        if len(w.strip("?!.,;:")) > KSETRAJNA
+    ) if input_text else ()
+
     # Walk SVO order, pick best token from each role bucket
     ordered: List[str] = []
     used: set = set()
@@ -473,7 +509,7 @@ def _assemble(
         for item in bucket:
             if len(ordered) >= SEVEN:
                 break
-            token = _pick_token(item)
+            token = _pick_token(item, input_words, used)
             tl = token.lower()
             if tl and tl not in used and len(tl) > KSETRAJNA:
                 ordered.append(token)
@@ -527,7 +563,7 @@ def compose(
     pool = _build_pool(guardian_response, expansion_data, branch_words)
     pool = rank_resonant_by_rhythm(pool, rhythm, input_text, seed=seed, antaranga=antaranga, state=state)
     selected = _select_words(pool, rhythm, max_words=SEVEN)
-    return _assemble(selected, template, rhythm)
+    return _assemble(selected, template, rhythm, input_text)
 
 
 def chunk_sentence(words: List[str]) -> List[str]:
