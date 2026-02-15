@@ -60,17 +60,6 @@ agent-city/registry/pending.json
 data/state/*.json
 .playbook_state/
 
-# .vibe/state backup dirs (auto-generated, never commit)
-.vibe/state/*_backup/
-.vibe/state/a.json
-.vibe/state/b.json
-.vibe/state/flush_me.json
-.vibe/state/test_state.json
-.vibe/state/cleanup.json
-.vibe/state/legacy.json
-.vibe/state/state.json
-.vibe/state/akash.json
-
 # Runtime snapshot (auto-generated, changes every tick)
 vibe_snapshot.json
 
