@@ -298,18 +298,18 @@ def maha_respond(
     preset: str = "quantum",
 ) -> MahaResponse:
     """
-    THE COMPLETE MAHAMANTRA PIPELINE.
+    DEPRECATED: Shadow pipeline — runs its own encode→route→synth→rank
+    parallel to lotus_core.__call__(). Use MahamantraLotus()(text) instead.
 
-    Input (any language) → Encode → Route to Guardian → Rank words → Response.
-
-    This is the MahaLLM's single entry point:
-        response = maha_respond("fire")
-        response.guardian.name        → "parashurama"
-        response.guardian.function    → "enforcement"
-        response.top_meanings         → ["tapas", "tejas", ...]
-
-    Deterministic. Reproducible. No LLM.
+    All production callers have been rewired to consume __call__().
+    This function is kept only for research/ backward compatibility.
     """
+    import warnings
+    warnings.warn(
+        "maha_respond() is a shadow pipeline. Use MahamantraLotus()(text) instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
     from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
     from vibe_core.mahamantra.substrate.semantic_index import get_index
