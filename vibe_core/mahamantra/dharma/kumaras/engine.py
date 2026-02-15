@@ -96,9 +96,7 @@ class ShuddhiEngine(ShuddhiProtocol):
         vibration_msg = f"shuddhi:{result.rule_id}:{result.status.name}:{result.file_path}"
 
         try:
-            # Compute vibration and update Akash
-            vibration = maha._compute_vibration(vibration_msg)
-            maha._update_akash(vibration)
+            vibration = maha.vibrate(vibration_msg)
 
             logger.debug(
                 f"[SHUDDHI→AKASH] {result.rule_id} {result.status.name} "

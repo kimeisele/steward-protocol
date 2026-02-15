@@ -440,23 +440,14 @@ class CellularHealer:
             logger.warning(f"[HEALER] Failed to register healed cell: {e}")
 
     def _emit_vibration(self, result: CellularHealingResult) -> None:
-        """Emit healing vibration to Mahamantra (Akash)."""
+        """Emit healing vibration to Mahamantra via public vibrate() API."""
         try:
             from vibe_core.mahamantra import mahamantra
-            if hasattr(mahamantra, "akash"):
-                akash = mahamantra.akash
-                if hasattr(akash, "record"):
-                    akash.record(
-                        event="shuddhi_cellular",
-                        data={
-                            "status": result.status.value,
-                            "fragment": result.fragment.display_name if result.fragment else "unknown",
-                            "rule_id": result.shuddhi_result.rule_id,
-                            "old_address": f"0x{result.old_lotus_address:08X}",
-                            "new_address": f"0x{result.new_lotus_address:08X}",
-                            "maya_synced": result.maya_synced,
-                        },
-                    )
+            msg = (
+                f"shuddhi_cellular:{result.shuddhi_result.rule_id}"
+                f":{result.status.value}:{result.shuddhi_result.file_path}"
+            )
+            mahamantra.vibrate(msg)
         except Exception:
             pass  # Vibration is best-effort, never blocks healing
 
