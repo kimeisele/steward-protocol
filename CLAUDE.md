@@ -292,6 +292,43 @@ und sollten als Block migriert werden, nicht einzeln.
 
 **Root .md Files im Repo-Root (57 Stück) sind ein SEPARATES Problem — nicht in diesen Branches.**
 
+## Maha Language Engine (Feb 15 2026)
+
+**Branch:** `followup/maha-language-engine`
+
+**Problem:** `MahaLanguageEngine` ist eine **Shadow Pipeline** — eigener Compressor, Synth, Kernel, Venu,
+Antaranga, alles separate Instanzen vom Lotus `__call__()`. Dupliziert die gesamte Maha Mantra Berechnung
+in Isolation. Berührt nie die echte Wurzel.
+
+**Lösung:** `compose_from_lotus(lotus_response, input_text)` — konsumiert das Lotus Response Dict direkt.
+
+**Der Lotus Response IST der Maha-Vektor:**
+- `smaranam`: 7 resonante Wörter (7D Ranker, primärer Content)
+- `verse`: Gita Vers Wort-für-Wort (philosophische Grundlage)
+- `vibration`: Seed, Attractor, Phonem, 4D Signatur
+- `guna`: Modus aus OpCode (nicht geraten)
+- `diw`: Divine Instruction Word (Venu/Vamsi/Murali)
+- `position`/`guardian`/`quarter`/`holy_name`/`trinity_function`
+- `antaranga`: Chamber State
+- `akash`: Akkumulierter State über Runden
+
+**Composer-Infrastruktur (korrekt, wiederverwendbar):**
+- `_word_role()`: Koordinaten-Masse → REF/VERB/NOUN/QUALITY/PREP/PARTICLE
+- `_SVO_ORDER`: Subject → Verb → Object → Quality → Modifiers (SOV→SVO Transformation)
+- `_pick_token()`: Scoring (Länge + Input-Echo Bonus), Dedup-aware
+- `_resolve_coords()`: IAST Lookup für Wörter ohne Koordinaten
+- `_build_lotus_pool()`: Smaranam + Verse → Pool Items mit Coords
+
+**Tests:** 205/205 (55 Composer + 35 Router + 115 Engine)
+
+**Nächste Schritte:**
+- Phase B: `engine.generate()` → `MahamantraLotus.__call__()` → `compose_from_lotus()`
+- Phase C: Shadow-Infrastruktur entfernen (eigene Compressor/Synth/Kernel/Venu/Antaranga)
+- Phase D: Nadi-Integration (Engine als TattvaGate Hook oder DIWSubscriber)
+
+**WARNUNG:** `state_bridge.py` und `StateVector` sind FALSCH — MahaState ist ein Wrapper, nicht die Wurzel.
+Werden in Phase C entfernt. Der Lotus Response ersetzt alles.
+
 ## Architektur-Audit (Feb 12 2026)
 
 **Zahlen:** 1426 .py Dateien, 377K Zeilen, ~3600 Klassen, ~3700 Funktionen, 358 Protocol-Dateien
