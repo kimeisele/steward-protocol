@@ -165,6 +165,26 @@ def offer(
         >>> print(result["position"])  # 10
     """
 
+    # ── GOVARDHAN: Gate infrastructure for boundary enforcement ──
+    # Legacy I/O goes through gates WITHOUT the full computation pipeline.
+    # Only PARSE (validate input) and SYNC (govern side-effect) fire here.
+    _lotus = None
+    _TattvaGate = None
+    try:
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate as _TG
+
+        _lotus = get_mahamantra()
+        _TattvaGate = _TG
+        _lotus._fire_gate(_TattvaGate.PARSE, {
+            "input_data": content,
+            "entry_type": "offer",
+            "purpose": purpose,
+            "actor": actor,
+        })
+    except Exception:
+        pass  # Gate infrastructure may not be ready during early boot
+
     # Validate purpose exists in mapping
     if purpose not in PURPOSE_MAP:
         return OfferResult(
@@ -275,7 +295,25 @@ def offer(
             
         execution_result = result_data["execution_result"]
         error = result_data["error"]
-        
+
+        # ── GOVARDHAN: Fire SYNC gate at the boundary ──
+        # The side-effect happened. Notify gate providers/hooks.
+        if _lotus is not None and _TattvaGate is not None:
+            try:
+                _lotus._fire_gate(_TattvaGate.SYNC, {
+                    "position": position,
+                    "guardian": mahajana,
+                    "purpose": purpose,
+                    "actor": actor,
+                    "seed": None,
+                    "attractor": None,
+                    "opcode": None,
+                    "guna": None,
+                })
+                _lotus._active_gate = None
+            except Exception:
+                pass  # Gate hook/provider errors don't block I/O
+
         return OfferResult(
             success=True,
             position=position,
