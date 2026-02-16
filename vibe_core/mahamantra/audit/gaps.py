@@ -29,7 +29,7 @@ def get(root: Path = None) -> List[Any]:
     Returns:
         List of Gap objects with file_path, gap_type, description, severity
     """
-    from vibe_core.mahamantra.research.project_introspection import scan_codebase, find_gaps
+    from vibe_core.mahamantra_research.project_introspection import scan_codebase, find_gaps
     files, _ = scan_codebase(root or Path.cwd())
     return find_gaps(files)
 
