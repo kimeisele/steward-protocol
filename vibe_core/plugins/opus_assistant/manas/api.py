@@ -201,7 +201,8 @@ class ManasOracle:
             precautions = self._suggest_precautions(context, risks)
 
             # Query memory for historical patterns
-            success_rate = self.kernel._memory.get_success_rate(task_type)
+            self.kernel._ensure_booted()
+            success_rate = self.kernel._memory.get_success_rate(task_type) if self.kernel._memory else 0.5
             confidence = 0.5 + (success_rate * 0.5)  # Confidence based on history
 
             # OPUS-106: Query CognitiveWeaver for unified State + Knowledge wisdom
@@ -339,13 +340,15 @@ class ManasOracle:
             outcome = "success" if success else "failed"
             feedback = f"Error: {error}" if error else None
 
-            self.kernel._memory.record_intent_outcome(
-                intent_type=task_type,
-                description="Task execution via MANAS Oracle",
-                outcome=outcome,
-                feedback=feedback,
-                execution_time_ms=int(duration_ms),
-            )
+            self.kernel._ensure_booted()
+            if self.kernel._memory:
+                self.kernel._memory.record_intent_outcome(
+                    intent_type=task_type,
+                    description="Task execution via MANAS Oracle",
+                    outcome=outcome,
+                    feedback=feedback,
+                    execution_time_ms=int(duration_ms),
+                )
 
             logger.info(f"🧠 MANAS.post_analysis() recorded {task_type} → {'✅ success' if success else '❌ failed'}")
 

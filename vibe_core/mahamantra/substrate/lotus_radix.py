@@ -350,6 +350,11 @@ def lotus_128bit(default: V | None = None) -> LotusRadixN[V]:
     return LotusRadixN[V](levels=32, default=default)
 
 
+def lotus_256bit(default: V | None = None) -> LotusRadixN[V]:
+    """Create 256-bit key structure (SHA-256, ed25519)."""
+    return LotusRadixN[V](levels=64, default=default)
+
+
 # =============================================================================
 # LOTUS ARRAY - Flat O(1) for integers (Production Grade)
 # =============================================================================
@@ -375,6 +380,7 @@ class LotusArrayInt:
 
     def __init__(self) -> None:
         import array
+
         # 'q' = signed long long (8 bytes), -1 = empty
         # KEY_SPACE is 16^4 = 65536 (from constants above or implicit)
         # We calculate it here to ensure independence

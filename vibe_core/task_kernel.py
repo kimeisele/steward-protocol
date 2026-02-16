@@ -63,11 +63,11 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 # Import types from protocol (SSOT - Single Source of Truth)
 from vibe_core.protocols.task_kernel_protocol import (
-    TaskKernelStatus,
-    TaskKernelResult,
     InjectedCapabilities,
-    TaskKernelProtocol,
     TaskKernelFactoryProtocol,
+    TaskKernelProtocol,
+    TaskKernelResult,
+    TaskKernelStatus,
 )
 
 if TYPE_CHECKING:
@@ -656,16 +656,6 @@ class TaskKernel:
     # =========================================================================
     # STATUS
     # =========================================================================
-
-    @property
-    def status(self) -> TaskKernelStatus:
-        """Get current status."""
-        return self._status
-
-    @property
-    def result(self) -> Optional[TaskKernelResult]:
-        """Get result (None if not yet completed)."""
-        return self._result
 
     def get_status(self) -> Dict[str, Any]:
         """Get full status for monitoring."""
