@@ -28,17 +28,35 @@ OPCODE: Final[str] = "AUDIT_SEAL"
 PARAMPARA_VECTOR: Final[int] = 592
 
 
+_service_instance = None
+
+
+def get_service():
+    """Get the singleton SamskaraService. Lazy-loaded, no new layer."""
+    global _service_instance
+    if _service_instance is None:
+        from vibe_core.mahamantra.moksha.yamaraja.samskara_service import SamskaraService
+        _service_instance = SamskaraService()
+    return _service_instance
+
+
 def execute(input_text: str, context: dict = None) -> dict:
-    """YAMARAJA EXECUTION - Audit Seal (Position 15)"""
+    """YAMARAJA EXECUTION - Delegates to real SamskaraService."""
+    svc = get_service()
+    if hasattr(svc, 'execute'):
+        result = svc.execute(input_text)
+    else:
+        result = {"success": True, "output_repr": "executed"}
     return {
-        "success": True,
+        "success": result.get("success", True) if isinstance(result, dict) else True,
         "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
-        "message": f"Yamaraja [{OPCODE}]: '{input_text}'",
+        "execution": result,
+        "message": f"Yamaraja [{OPCODE}]: executed '{input_text[:50]}'",
     }
 
 
