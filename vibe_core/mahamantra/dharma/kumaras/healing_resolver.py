@@ -76,215 +76,136 @@ class HealingIntentResolver:
         from vibe_core.mahamantra.kernel.intent import IntentType
         return intent.type == IntentType.HEAL
 
-    def resolve(self, intent: "MantraIntent") -> "IntentResult":
-        """
-        Resolve a HEAL intent through the 5-gate pipeline.
+    # =========================================================================
+    # RESOLVE STEPS — Atomic, granular, individually callable
+    # PHASE 1 (SATTVA): validate → analyze → surgery
+    # PHASE 2 (RAJAS): commit
+    # =========================================================================
 
-        Intent params:
-            - file_path (str): Path to the file to heal
-            - rule_id (str): Which violation to heal
-            - dry_run (bool): If True, analysis only (no Maya-Sync)
-            - violation_id (str): Optional KG violation node ID
+    def _resolve_validate(self, intent: "MantraIntent") -> tuple:
+        """Resolve Step 1: Extract + validate params. Returns (file_path, rule_id, dry_run) or IntentResult."""
+        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
+        from vibe_core.mahamantra import Mahajana
 
-        Returns:
-            IntentResult with List[CellularHealingResult] as value.
-        """
-        from vibe_core.mahamantra.kernel.intent import (
-            IntentResult,
-            IntentStatus,
-        )
+        file_path_str = intent.params.get("file_path", "")
+        rule_id = intent.params.get("rule_id", "")
+        dry_run = bool(intent.params.get("dry_run", False))
+
+        if not file_path_str or not rule_id:
+            return IntentResult(intent=intent, status=IntentStatus.FAILED,
+                                error="HEAL intent requires 'file_path' and 'rule_id' params",
+                                resolved_by=Mahajana.SHAMBHU)
+
+        file_path = Path(str(file_path_str))
+        if not file_path.exists():
+            return IntentResult(intent=intent, status=IntentStatus.FAILED,
+                                error=f"File not found: {file_path}", resolved_by=Mahajana.SHAMBHU)
+
+        healer = get_cellular_healer()
+        if not healer.can_heal(str(rule_id)):
+            return IntentResult(intent=intent, status=IntentStatus.FAILED,
+                                error=f"No remedy registered for rule '{rule_id}'",
+                                resolved_by=Mahajana.SHAMBHU)
+
+        return file_path, rule_id, dry_run
+
+    def _resolve_sattva(self, intent: "MantraIntent", file_path: Path, rule_id: str) -> tuple:
+        """Resolve Step 2: SATTVA phase — Gates 0-3, CST surgery in RAM.
+        Returns (cell_results, purified, seed, attractor) or IntentResult on failure."""
+        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
+        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
+        from vibe_core.mahamantra import Mahajana
+
+        lotus = self._get_lotus()
+        healer = get_cellular_healer()
+
+        self._fire_gate_safe(lotus, TattvaGate.PARSE, {
+            "input_data": str(file_path), "intent_type": "HEAL", "rule_id": rule_id})
+
+        seed = self._compute_seed(str(file_path) + str(rule_id))
+        self._fire_gate_safe(lotus, TattvaGate.VALIDATE, {
+            "seed": seed, "rule_id": rule_id, "file_path": str(file_path), "remedy_available": True})
+
+        attractor = seed % 108
+        self._fire_gate_safe(lotus, TattvaGate.EXECUTE, {
+            "seed": seed, "attractor": attractor, "operation": "cellular_healing", "rule_id": rule_id})
+
+        try:
+            cell_results = healer.heal_file(file_path=file_path, rule_id=str(rule_id),
+                                            dry_run=True, governed=False)
+        except Exception as exc:
+            logger.error("[RESOLVER] CST surgery failed: %s", exc)
+            return IntentResult(intent=intent, status=IntentStatus.FAILED,
+                                error=f"CST surgery failed: {exc}", resolved_by=Mahajana.SHAMBHU)
+
+        purified = [r for r in cell_results if r.status == ShuddhiStatus.PURIFIED]
+        self._fire_gate_safe(lotus, TattvaGate.RESULT, {
+            "attractor": attractor, "fragments_total": len(cell_results),
+            "fragments_purified": len(purified), "dry_run": False})
+
+        return cell_results, purified, seed, attractor
+
+    def _resolve_rajas(self, intent: "MantraIntent", file_path: Path, rule_id: str,
+                       seed: int, attractor: int, dry_run: bool, cell_results: list) -> "IntentResult":
+        """Resolve Step 3: RAJAS phase — Gate 4 SYNC, governed write.
+        Returns IntentResult (dry_run or committed)."""
+        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
         from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
         from vibe_core.mahamantra.substrate.guna import Guna
         from vibe_core.mahamantra import Mahajana
 
-        # ── Extract params ──
-        file_path_str = intent.params.get("file_path", "")
-        rule_id = intent.params.get("rule_id", "")
-        dry_run = bool(intent.params.get("dry_run", False))
-        violation_id = intent.params.get("violation_id")
-
-        if not file_path_str or not rule_id:
-            return IntentResult(
-                intent=intent,
-                status=IntentStatus.FAILED,
-                error="HEAL intent requires 'file_path' and 'rule_id' params",
-                resolved_by=Mahajana.SHAMBHU,
-            )
-
-        file_path = Path(str(file_path_str))
-        if not file_path.exists():
-            return IntentResult(
-                intent=intent,
-                status=IntentStatus.FAILED,
-                error=f"File not found: {file_path}",
-                resolved_by=Mahajana.SHAMBHU,
-            )
-
-        # ── Get Lotus for gate firing ──
         lotus = self._get_lotus()
-        healer = get_cellular_healer()
-
-        if not healer.can_heal(str(rule_id)):
-            return IntentResult(
-                intent=intent,
-                status=IntentStatus.FAILED,
-                error=f"No remedy registered for rule '{rule_id}'",
-                resolved_by=Mahajana.SHAMBHU,
-            )
-
-        # =================================================================
-        # PHASE 1: SATTVA — Analysis in RAM (Gates 0-3)
-        # =================================================================
-        # No side effects. No disk writes. Pure observation.
-
-        # ── GATE 0: PARSE (Dharma/Chaitanya) ──
-        # "Does this file exist? Is the intent valid?"
-        parse_ctx: Dict[str, object] = {
-            "input_data": str(file_path),
-            "intent_type": "HEAL",
-            "rule_id": rule_id,
-        }
-        self._fire_gate_safe(lotus, TattvaGate.PARSE, parse_ctx)
-
-        # ── GATE 1: VALIDATE (Jnana/Nityananda) ──
-        # "Is the remedy available? Are fragments valid?"
-        seed = self._compute_seed(str(file_path) + str(rule_id))
-        validate_ctx: Dict[str, object] = {
-            "seed": seed,
-            "rule_id": rule_id,
-            "file_path": str(file_path),
-            "remedy_available": True,
-        }
-        self._fire_gate_safe(lotus, TattvaGate.VALIDATE, validate_ctx)
-
-        # ── GATE 2: EXECUTE (Advaita) ──
-        # "Apply the CSTRemedy to fragments in RAM."
-        attractor = seed % 108  # Vedic attractor
-        execute_ctx: Dict[str, object] = {
-            "seed": seed,
-            "attractor": attractor,
-            "operation": "cellular_healing",
-            "rule_id": rule_id,
-        }
-        self._fire_gate_safe(lotus, TattvaGate.EXECUTE, execute_ctx)
-
-        # ── Perform the actual CST surgery (in RAM — SATTVA safe) ──
-        try:
-            cell_results = healer.heal_file(
-                file_path=file_path,
-                rule_id=str(rule_id),
-                dry_run=True,  # Always dry_run in SATTVA phase
-                governed=False,
-            )
-        except Exception as exc:
-            logger.error("[RESOLVER] CST surgery failed: %s", exc)
-            return IntentResult(
-                intent=intent,
-                status=IntentStatus.FAILED,
-                error=f"CST surgery failed: {exc}",
-                resolved_by=Mahajana.SHAMBHU,
-            )
-
-        # ── GATE 3: RESULT (Gadadhara) ──
-        # "What did the surgery produce?"
-        purified = [r for r in cell_results if r.status == ShuddhiStatus.PURIFIED]
-        result_ctx: Dict[str, object] = {
-            "attractor": attractor,
-            "fragments_total": len(cell_results),
-            "fragments_purified": len(purified),
-            "dry_run": dry_run,
-        }
-        self._fire_gate_safe(lotus, TattvaGate.RESULT, result_ctx)
-
-        # ── If nothing to heal, return early ──
-        if not purified:
-            logger.info(
-                "[RESOLVER] No violations found for rule '%s' in %s",
-                rule_id, file_path.name,
-            )
-            return IntentResult(
-                intent=intent,
-                status=IntentStatus.RESOLVED,
-                value=cell_results,
-                resolved_by=Mahajana.SHAMBHU,
-                parampara_verified=intent.is_connected,
-            )
-
-        # =================================================================
-        # PHASE 2: RAJAS — Authorized Commit (Gate 4)
-        # =================================================================
-        # The Guna ESCALATES from SATTVA to RAJAS for the write.
 
         if dry_run:
-            # Dry run: fire SYNC gate for observability, but skip write
-            sync_ctx: Dict[str, object] = {
-                "position": attractor % 16,
-                "seed": seed,
-                "attractor": attractor,
-                "opcode": None,
-                "guna": Guna.SATTVA,  # Dry run stays SATTVA
-            }
-            self._fire_gate_safe(lotus, TattvaGate.SYNC, sync_ctx)
+            self._fire_gate_safe(lotus, TattvaGate.SYNC, {
+                "position": attractor % 16, "seed": seed, "attractor": attractor,
+                "opcode": None, "guna": Guna.SATTVA})
+            logger.info("[RESOLVER] DRY RUN: %d fragments would be healed in %s",
+                        len(cell_results), file_path.name)
+            return IntentResult(intent=intent, status=IntentStatus.RESOLVED, value=cell_results,
+                                resolved_by=Mahajana.SHAMBHU, parampara_verified=intent.is_connected)
 
-            logger.info(
-                "[RESOLVER] DRY RUN: %d fragments would be healed in %s",
-                len(purified), file_path.name,
-            )
-            return IntentResult(
-                intent=intent,
-                status=IntentStatus.RESOLVED,
-                value=cell_results,
-                resolved_by=Mahajana.SHAMBHU,
-                parampara_verified=intent.is_connected,
-            )
-
-        # ── GATE 4: SYNC (Srivasa) — RAJAS authorized commit ──
         from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+        self._fire_gate_safe(lotus, TattvaGate.SYNC, {
+            "position": attractor % 16, "seed": seed, "attractor": attractor,
+            "opcode": MantraOpCode.EXEC_OP, "guna": Guna.RAJAS})
 
-        sync_ctx = {
-            "position": attractor % 16,
-            "seed": seed,
-            "attractor": attractor,
-            "opcode": MantraOpCode.EXEC_OP,  # RAJAS opcode for commit
-            "guna": Guna.RAJAS,  # Guna escalation!
-        }
-        self._fire_gate_safe(lotus, TattvaGate.SYNC, sync_ctx)
-
-        # ── Now perform the governed write (Maya-Sync through Srivasa) ──
         try:
-            governed_results = healer.heal_file(
-                file_path=file_path,
-                rule_id=str(rule_id),
-                dry_run=False,
-                governed=True,  # Goes through EnforceGateProvider.write_source()
-            )
+            governed_results = get_cellular_healer().heal_file(
+                file_path=file_path, rule_id=str(rule_id), dry_run=False, governed=True)
         except Exception as exc:
             logger.error("[RESOLVER] Governed Maya-Sync failed: %s", exc)
-            return IntentResult(
-                intent=intent,
-                status=IntentStatus.FAILED,
-                error=f"Maya-Sync failed: {exc}",
-                resolved_by=Mahajana.SHAMBHU,
-            )
+            return IntentResult(intent=intent, status=IntentStatus.FAILED,
+                                error=f"Maya-Sync failed: {exc}", resolved_by=Mahajana.SHAMBHU)
 
-        # Count actual healings
-        actual_purified = [
-            r for r in governed_results
-            if r.status == ShuddhiStatus.PURIFIED and r.maya_synced
-        ]
+        actual_purified = [r for r in governed_results if r.status == ShuddhiStatus.PURIFIED and r.maya_synced]
+        logger.info("[RESOLVER] ✅ Healed %d/%d fragments in %s through 5-gate pipeline",
+                    len(actual_purified), len(governed_results), file_path.name)
 
-        logger.info(
-            "[RESOLVER] ✅ Healed %d/%d fragments in %s through 5-gate pipeline",
-            len(actual_purified), len(governed_results), file_path.name,
-        )
+        return IntentResult(intent=intent, status=IntentStatus.RESOLVED, value=governed_results,
+                            resolved_by=Mahajana.SHAMBHU, parampara_verified=intent.is_connected)
 
-        return IntentResult(
-            intent=intent,
-            status=IntentStatus.RESOLVED,
-            value=governed_results,
-            resolved_by=Mahajana.SHAMBHU,
-            parampara_verified=intent.is_connected,
-        )
+    def resolve(self, intent: "MantraIntent") -> "IntentResult":
+        """Resolve a HEAL intent through the 5-gate pipeline. Chains _resolve_* steps."""
+        from vibe_core.mahamantra.kernel.intent import IntentResult, IntentStatus
+        from vibe_core.mahamantra import Mahajana
+
+        validated = self._resolve_validate(intent)
+        if isinstance(validated, IntentResult):
+            return validated
+        file_path, rule_id, dry_run = validated
+
+        analyzed = self._resolve_sattva(intent, file_path, rule_id)
+        if isinstance(analyzed, IntentResult):
+            return analyzed
+        cell_results, purified, seed, attractor = analyzed
+
+        if not purified:
+            logger.info("[RESOLVER] No violations found for rule '%s' in %s", rule_id, file_path.name)
+            return IntentResult(intent=intent, status=IntentStatus.RESOLVED, value=cell_results,
+                                resolved_by=Mahajana.SHAMBHU, parampara_verified=intent.is_connected)
+
+        return self._resolve_rajas(intent, file_path, rule_id, seed, attractor, dry_run, cell_results)
 
     # =========================================================================
     # HELPERS
