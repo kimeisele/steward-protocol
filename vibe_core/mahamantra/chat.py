@@ -702,76 +702,45 @@ class FloodedMahajanaChat(MahajanaChat):
         self._heartbeat_count += 1
         return True  # Heartbeat successful
 
-    def respond(self, message: str) -> ChatResult:
-        """
-        Respond with FULL 12-NAGA flooding.
+    # =========================================================================
+    # RESPOND STEPS — Atomic, granular, individually callable
+    # PRE (4 NAGAs) → PROCESS (retry+generate) → POST (5 NAGAs)
+    # =========================================================================
 
-        THE COMPLETE FLOW (All 12 NAGAs):
-
-        PRE-PROCESSING:
-        1. PRAHLAD: Veto check (protection)
-        2. TAKSHAKA: Security scan (toxicity)
-        3. PADMA: Purity validation
-        4. KARKOTAKA: Credential check
-
-        PROCESSING:
-        5. KALIYA: Retry wrapper (resilience)
-        6. VASUKI: Serialize request
-        7. PARENT: Generate response via MahajanaChat
-
-        POST-PROCESSING:
-        8. CHITRAGUPTA: Audit the interaction
-        9. NARADA: Broadcast chat event
-        10. SESHA: Persist to ledger
-        11. SHANKHA: Signal completion
-        12. ANANTA: Bind to substrate
-        """
-        self._init_naga()
-
-        # === PRE-PROCESSING ===
-
-        # 1. PRAHLAD: Protection veto
+    def _respond_pre_check(self, message: str) -> Optional[ChatResult]:
+        """Respond Step 1: PRE-PROCESSING — Prahlad veto + Takshaka security + Padma purity.
+        Returns ChatResult if blocked, None if clear."""
         if self._prahlad and hasattr(self._prahlad, "can_proceed"):
             try:
                 if not self._prahlad.can_proceed("chat", message):
                     return ChatResult(
-                        success=False,
-                        response="Blocked by Prahlad: Operation not permitted",
-                        guardian=self.guardian,
-                        position=self.position,
-                        llm_used=False,
+                        success=False, response="Blocked by Prahlad: Operation not permitted",
+                        guardian=self.guardian, position=self.position, llm_used=False,
                     )
             except Exception:
                 logger.debug("Prahlad veto check failed", exc_info=True)
 
-        # 2. TAKSHAKA: Security scan
         if self._takshaka:
             try:
                 toxicity = self._takshaka.scan_toxicity(message)
                 if toxicity.get("is_toxic", False):
                     return ChatResult(
-                        success=False,
-                        response=f"Blocked by Takshaka: {toxicity.get('reason', 'toxic')}",
-                        guardian=self.guardian,
-                        position=self.position,
-                        llm_used=False,
+                        success=False, response=f"Blocked by Takshaka: {toxicity.get('reason', 'toxic')}",
+                        guardian=self.guardian, position=self.position, llm_used=False,
                     )
             except Exception:
                 logger.debug("Takshaka security scan failed", exc_info=True)
 
-        # 3. PADMA: Purity validation
         if self._padma and hasattr(self._padma, "validate"):
             try:
                 self._padma.validate(message)
             except Exception:
                 logger.debug("Padma validation failed", exc_info=True)
 
-        # 4. KARKOTAKA: Credential check (for sensitive operations)
-        # (No action needed for basic chat)
+        return None
 
-        # === PROCESSING ===
-
-        # 5. KALIYA: Retry wrapper
+    def _respond_generate(self, message: str) -> ChatResult:
+        """Respond Step 2: PROCESSING — Kaliya retry wrapper + parent generate."""
         max_retries = 1
         if self._kaliya and hasattr(self._kaliya, "get_retry_count"):
             try:
@@ -779,10 +748,6 @@ class FloodedMahajanaChat(MahajanaChat):
             except Exception:
                 logger.debug("Kaliya retry count failed", exc_info=True)
 
-        # 6. VASUKI: Serialize request (for network ops)
-        # (Chat is local, no serialization needed)
-
-        # 7. PARENT: Generate response with retry
         result = None
         for attempt in range(max_retries):
             try:
@@ -792,98 +757,77 @@ class FloodedMahajanaChat(MahajanaChat):
             except Exception as e:
                 if attempt == max_retries - 1:
                     result = ChatResult(
-                        success=False,
-                        response=f"Error after {max_retries} attempts: {e}",
-                        guardian=self.guardian,
-                        position=self.position,
-                        llm_used=False,
+                        success=False, response=f"Error after {max_retries} attempts: {e}",
+                        guardian=self.guardian, position=self.position, llm_used=False,
                     )
 
         if result is None:
             result = ChatResult(
-                success=False,
-                response="No response generated",
-                guardian=self.guardian,
-                position=self.position,
-                llm_used=False,
+                success=False, response="No response generated",
+                guardian=self.guardian, position=self.position, llm_used=False,
             )
+        return result
 
-        # === POST-PROCESSING ===
-
-        # 8. CHITRAGUPTA: Audit
+    def _respond_post_process(self, message: str, result: ChatResult) -> None:
+        """Respond Step 3: POST-PROCESSING — Chitragupta audit, Narada broadcast,
+        Sesha persist, Shankha signal, Ananta resonate."""
         if self._chitragupta:
             try:
                 self._chitragupta.record_event(
                     event_type="MAHAMANTRA_CHAT",
                     agent_id=f"MAHAMANTRA.{self.guardian.upper()}",
                     details={
-                        "position": self.position,
-                        "guardian": self.guardian,
-                        "message_len": len(message),
-                        "response_len": len(result.response),
-                        "llm_used": result.llm_used,
-                        "success": result.success,
-                        "naga_count": 12,
+                        "position": self.position, "guardian": self.guardian,
+                        "message_len": len(message), "response_len": len(result.response),
+                        "llm_used": result.llm_used, "success": result.success, "naga_count": 12,
                     },
                     result="OK" if result.success else "FAILED",
                 )
             except Exception:
                 logger.debug("Chitragupta audit failed", exc_info=True)
 
-        # 9. NARADA: Broadcast event
         if self._narada:
             try:
                 self._narada.broadcast_event(
-                    event_type="chat",
-                    source=f"mahamantra.{self.guardian}",
-                    data={
-                        "guardian": self.guardian,
-                        "position": self.position,
-                        "success": result.success,
-                    },
+                    event_type="chat", source=f"mahamantra.{self.guardian}",
+                    data={"guardian": self.guardian, "position": self.position, "success": result.success},
                 )
             except Exception:
                 logger.debug("Narada broadcast failed", exc_info=True)
 
-        # 10. SESHA: Persist
         if self._sesha and hasattr(self._sesha, "record_event"):
             try:
                 self._sesha.record_event(
                     event_type="CHAT_HISTORY",
-                    data={
-                        "guardian": self.guardian,
-                        "user": message[:100],
-                        "assistant": result.response[:100],
-                    },
+                    data={"guardian": self.guardian, "user": message[:100], "assistant": result.response[:100]},
                 )
             except Exception:
                 logger.debug("Sesha persist failed", exc_info=True)
 
-        # 11. SHANKHA: Signal completion
         if self._shankha and hasattr(self._shankha, "signal"):
             try:
-                self._shankha.signal(
-                    "chat_complete",
-                    {
-                        "guardian": self.guardian,
-                        "success": result.success,
-                    },
-                )
+                self._shankha.signal("chat_complete", {"guardian": self.guardian, "success": result.success})
             except Exception:
                 logger.debug("Shankha signal failed", exc_info=True)
 
-        # 12. ANANTA: Heartbeat to substrate
         if self._ananta and hasattr(self._ananta, "resonate"):
             try:
                 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-
                 self._ananta.resonate(MantraOpCode.EMIT)
             except Exception:
                 logger.debug("Ananta resonate failed", exc_info=True)
 
-        # GAD-000: Chant heartbeat
-        self.chant()
+    def respond(self, message: str) -> ChatResult:
+        """Respond with FULL 12-NAGA flooding. Chains the atomic _respond_* steps."""
+        self._init_naga()
 
+        blocked = self._respond_pre_check(message)
+        if blocked is not None:
+            return blocked
+
+        result = self._respond_generate(message)
+        self._respond_post_process(message, result)
+        self.chant()
         return result
 
 
