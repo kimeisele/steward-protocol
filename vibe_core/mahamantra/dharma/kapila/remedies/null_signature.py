@@ -50,14 +50,9 @@ TYPE_DEFAULTS = {
 }
 
 
-class NullSignatureRemedy(cst.CSTTransformer):
+class NullSignatureRemedy(CSTRemedy):
     """
     Heals Null* classes by adding default values to method parameters.
-
-    THE LILA (Divine Play):
-        1. DETECTION: Find classes starting with "Null"
-        2. ANALYSIS: Find methods with required arguments
-        3. TRANSFORMATION: Add default values based on type hints
 
     SAFETY:
         - Only transforms Null* classes
@@ -67,8 +62,6 @@ class NullSignatureRemedy(cst.CSTTransformer):
 
     def __init__(self):
         super().__init__()
-        self.applied = False
-        self.violation_found = False
         self._in_null_class = False
         self._class_name = ""
         self._methods_fixed = 0
@@ -78,7 +71,7 @@ class NullSignatureRemedy(cst.CSTTransformer):
         return "null_signature_mismatch"
 
     def requirements(self) -> List[str]:
-        return []  # No external requirements
+        return []
 
     def visit_ClassDef(self, node: cst.ClassDef) -> bool:
         """Track when we enter a Null* class."""
@@ -175,21 +168,6 @@ class NullSignatureRemedy(cst.CSTTransformer):
             if isinstance(node.value, cst.Name):
                 return node.value.value
         return "unknown"
-
-    def get_diff(self, old_code: str, new_code: str) -> str:
-        """Generates a unified diff for the change."""
-        import difflib
-
-        return "\n".join(
-            difflib.unified_diff(
-                old_code.splitlines(),
-                new_code.splitlines(),
-                fromfile="original",
-                tofile="purified",
-                lineterm="",
-            )
-        )
-
 
 def heal_null_signatures(file_path: str, dry_run: bool = True) -> dict:
     """

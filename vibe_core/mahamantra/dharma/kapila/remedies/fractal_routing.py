@@ -85,6 +85,10 @@ class FractalRoutingRemedy(CSTRemedy):
         self._all_index: int = -1
         self._is_init_file = False
 
+    def set_file_path(self, file_path: str) -> None:
+        """Track whether this is an __init__.py file."""
+        self._is_init_file = file_path.endswith("__init__.py")
+
     def visit_Module(self, node: cst.Module) -> bool:
         """Check module-level for existing __getattr__."""
         return True
@@ -115,8 +119,14 @@ class FractalRoutingRemedy(CSTRemedy):
         if self._has_getattr:
             return updated_node
 
-        # Mark that we found a violation and will fix it
+        # Always mark violation found (missing __getattr__)
         self.violation_found = True
+
+        # Only inject into __init__.py files
+        if not self._is_init_file:
+            return updated_node
+
+        # Safe to auto-fix in __init__.py
         self.applied = True
 
         # Parse the fractal __getattr__ function
@@ -161,40 +171,3 @@ class FractalRoutingRemedy(CSTRemedy):
         return updated_node.with_changes(body=new_body)
 
 
-class FractalRoutingDetector(CSTRemedy):
-    """
-    Detection-only remedy for missing fractal routing.
-
-    Use this to scan and report which __init__.py files
-    are missing the fractal routing __getattr__.
-
-    Does NOT transform - only detects for reporting.
-    """
-
-    @property
-    def rule_id(self) -> str:
-        return "fractal_routing_detection"
-
-    def requirements(self) -> List[str]:
-        return []
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._has_getattr = False
-
-    def visit_FunctionDef(self, node: cst.FunctionDef) -> bool:
-        """Detect if __getattr__ exists."""
-        if node.name.value == "__getattr__":
-            self._has_getattr = True
-        return False
-
-    def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:
-        """Mark violation if __getattr__ is missing."""
-        if not self._has_getattr:
-            self.violation_found = True
-        return updated_node
-
-    @property
-    def has_fractal_routing(self) -> bool:
-        """Returns True if file has __getattr__."""
-        return self._has_getattr

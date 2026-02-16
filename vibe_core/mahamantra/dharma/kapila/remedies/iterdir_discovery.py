@@ -82,7 +82,6 @@ class IterdirDiscoveryRemedy(CSTRemedy):
 
         self._iterdir_calls_found += 1
         self.violation_found = True
-        self.applied = True
 
         # Return unchanged - we add comment at statement level
         return updated_node

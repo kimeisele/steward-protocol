@@ -68,6 +68,7 @@ class ShuddhiStatus(str, Enum):
     """The state of a purification attempt."""
 
     PURIFIED = "purified"  # Transformation successful and verified
+    DETECTED = "detected"  # Violation found but not auto-fixable
     SKIPPED = "skipped"  # No violation found in the file
     FAILED = "failed"  # Error during transformation or verification
     OUT_OF_SCOPE = "out_of_scope"  # Heuristic: Required context missing
