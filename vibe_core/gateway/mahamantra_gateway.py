@@ -1,18 +1,34 @@
 """
-MAHAMANTRA GATEWAY - The ONE Entry Point
-=========================================
+GOVARDHAN GATEWAY — The Boundary Layer (Imperative Shell)
+==========================================================
 
-"sarvasya cāhaṁ hṛdi sanniviṣṭo" - I am seated in everyone's heart.
+"govardhanaṁ parvataṁ ekena hastena dhārayat"
+"He held Govardhan Hill with one hand, sheltering all beneath."
+— Srimad Bhagavatam 10.25
 
-THIS IS IT. The bridge between GatewayProtocol and mahamantra.execute().
+ARCHITECTURE: Functional Core / Imperative Shell
+=================================================
+__call__() in lotus_core.py is the FUNCTIONAL CORE (Vrindavan).
+Pure computation. Deterministic. No side-effects.
+
+THIS FILE is the IMPERATIVE SHELL (Govardhan).
+The 5 Pancha Tattva Gates live HERE — at the boundary between
+the outside world (Legacy, CLI, HTTP, Agents) and the pure core.
+
+FLOW:
+    Outside → receive() → PARSE → VALIDATE → __call__() → RESULT → SYNC → Outside
+                           ↑                                              ↑
+                     Boundary IN                                    Boundary OUT
+
+The gates are border control, not highway checkpoints.
+Everything under Govardhan is protected.
 
 ALL entry points converge here:
-    CLI      → gateway.receive() → mahamantra
-    HTTP     → gateway.receive() → mahamantra
-    CHAT     → gateway.receive() → mahamantra
-    AGENT    → gateway.receive() → mahamantra
-
-NO MANUAL WIRING. Protocol-first. SSOT.
+    CLI      → gateway.receive() → govardhan
+    HTTP     → gateway.receive() → govardhan
+    CHAT     → gateway.receive() → govardhan
+    AGENT    → gateway.receive() → govardhan
+    LEGACY   → gateway.offer()   → govardhan (I/O only, no pipeline)
 """
 
 from __future__ import annotations
@@ -22,6 +38,7 @@ __mahajana__ = "vyasa"
 __position__ = 4
 __genesis__ = "0x30983307"
 
+import logging
 from typing import Dict, List, Optional
 
 from vibe_core.protocols.gateway import (
@@ -32,63 +49,152 @@ from vibe_core.protocols.gateway import (
     create_request,
 )
 
+logger = logging.getLogger("GOVARDHAN")
 
-class MahamantraGateway(GatewayProtocol):
+
+class GovardhanGateway(GatewayProtocol):
     """
-    THE Gateway implementation.
+    The Boundary Layer — Govardhan Hill.
 
-    Bridges GatewayProtocol to mahamantra.execute().
-    All rivers flow to the sea.
+    Krishna holds the hill with one hand. Everything beneath is sheltered.
+    The 5 Pancha Tattva Gates fire HERE at the boundary:
+
+        PARSE    — What is this? (input validation)
+        VALIDATE — Is it legitimate? (seed/parampara)
+        EXECUTE  — Pure computation via __call__() (Vrindavan)
+        RESULT   — Is the output valid? (result verification)
+        SYNC     — Side-effects: I/O, state, response (governance)
     """
 
     def receive(self, request: GatewayRequest) -> GatewayResponse:
         """
-        Receive and process ANY request.
+        Receive and process ANY request through the 5 Gates.
 
-        CLI, HTTP, CHAT, AGENT - all come here.
-        Mahamantra routes. Mahajana executes.
+        This is the ONE entry point. CLI, HTTP, CHAT, AGENT — all come here.
+        The gates fire at the boundary, then the pure core computes.
         """
-        from vibe_core.mahamantra import mahamantra
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 
+        lotus = get_mahamantra()
         command = request["command"]
         args = request.get("args", [])
         entry_type = request.get("entry_type", EntryType.CLI.value)
 
-        # Execute through mahamantra
-        result = mahamantra.execute(command, args)
+        # =================================================================
+        # GATE 0: PARSE — What is this?
+        # Boundary IN: validate the request shape before it enters.
+        # =================================================================
+        lotus._fire_gate(TattvaGate.PARSE, {
+            "input_data": command,
+            "entry_type": entry_type,
+            "args": args,
+        })
+
+        # =================================================================
+        # GATE 1: VALIDATE — Is it legitimate?
+        # Compress to seed, verify parampara at the border.
+        # =================================================================
+        lotus._fire_gate(TattvaGate.VALIDATE, {
+            "input_text": command,
+            "seed": None,  # seed computed inside __call__
+            "input_coords": None,
+        })
+
+        # =================================================================
+        # GATE 2: EXECUTE — Pure computation (Vrindavan).
+        # __call__() is deterministic. No side-effects.
+        # =================================================================
+        lotus._fire_gate(TattvaGate.EXECUTE, {
+            "seed": None,
+            "attractor": None,
+            "parampara_verified": None,
+        })
+
+        try:
+            result = lotus(command)
+        except Exception as exc:
+            logger.error("Govardhan: computation failed: %s", exc)
+            return GatewayResponse(
+                success=False,
+                exit_code=1,
+                output="",
+                error=str(exc),
+                position=-1,
+                guardian="unknown",
+                quarter="unknown",
+                guna="tamas",
+                entry_type=entry_type,
+                routed_via="govardhan[error]",
+            )
+
+        # =================================================================
+        # GATE 3: RESULT — Is the output valid?
+        # Boundary OUT: verify the computation result.
+        # =================================================================
+        lotus._fire_gate(TattvaGate.RESULT, {
+            "attractor": result.get("vibration", {}).get("attractor"),
+            "resonant_words": result.get("smaranam", ()),
+            "verse_result": result.get("verse"),
+        })
+
+        # =================================================================
+        # GATE 4: SYNC — Side-effects (governance).
+        # This is where I/O happens. The pure core never touches disk.
+        # =================================================================
+        lotus._fire_gate(TattvaGate.SYNC, {
+            "position": result.get("position"),
+            "guardian": result.get("guardian"),
+            "seed": result.get("vibration", {}).get("seed"),
+            "attractor": result.get("vibration", {}).get("attractor"),
+            "opcode": result.get("guna", {}).get("opcode"),
+            "guna": result.get("guna", {}).get("mode"),
+        })
+
+        # Reset gate state
+        lotus._active_gate = None
+
+        # Build response
+        cell_alive = result.get("cell", {}).get("is_alive", False)
 
         return GatewayResponse(
-            success=result["success"],
-            exit_code=result["exit_code"],
-            output=result.get("output", ""),
-            error=result.get("error"),
+            success=cell_alive,
+            exit_code=0 if cell_alive else 1,
+            output="",
+            error=None,
             position=result["position"],
             guardian=result["guardian"],
             quarter=result["quarter"],
-            guna=result.get("verse", {}).get("guna", result.get("guna", "sattva")) if result.get("verse") else result.get("guna", "sattva"),
+            guna=result.get("verse", {}).get("guna", result.get("guna", {}).get("mode", "sattva")) if result.get("verse") else result.get("guna", {}).get("mode", "sattva"),
             entry_type=entry_type,
-            routed_via="mahamantra",
+            routed_via="govardhan",
         )
 
     def route(self, command: str) -> Dict[str, object]:
-        """Route command to position/guardian."""
-        from vibe_core.mahamantra import mahamantra
+        """Route command to position/guardian via pure computation."""
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
 
-        return mahamantra.route(command)
+        lotus = get_mahamantra()
+        result = lotus(command)
+        return {
+            "position": result["position"],
+            "guardian": result["guardian"],
+            "quarter": result["quarter"],
+        }
 
 
 # =============================================================================
 # SINGLETON - One Gateway to rule them all
 # =============================================================================
 
-_gateway: Optional[MahamantraGateway] = None
+_gateway: Optional[GovardhanGateway] = None
 
 
-def get_gateway() -> MahamantraGateway:
-    """Get the singleton gateway instance."""
+def get_gateway() -> GovardhanGateway:
+    """Get the singleton Govardhan gateway instance."""
     global _gateway
     if _gateway is None:
-        _gateway = MahamantraGateway()
+        _gateway = GovardhanGateway()
     return _gateway
 
 
@@ -131,7 +237,11 @@ def agent_call(command: str, args: Optional[List[str]] = None) -> GatewayRespons
     return get_gateway().receive(request)
 
 
+# Backward-compatible alias
+MahamantraGateway = GovardhanGateway
+
 __all__ = [
+    "GovardhanGateway",
     "MahamantraGateway",
     "get_gateway",
     "execute",
