@@ -137,7 +137,7 @@ class Auditor:
         from vibe_core.mahamantra.protocols.seed._axioms import (
             WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT, PANCHA, HALVES
         )
-        from vibe_core.mahamantra.research.acintya_mathematics import QUALITIES
+        from vibe_core.mahamantra_research.acintya_mathematics import QUALITIES
 
         graph = DerivationGraph()
 
