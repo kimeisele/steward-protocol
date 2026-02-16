@@ -27,7 +27,7 @@ STRUCTURE:
 
 USAGE:
 ======
-    from vibe_core.mahamantra.research.lotus import LotusRadixN
+    from vibe_core.mahamantra_research.lotus import LotusRadixN
 
     # 16-bit keys (65,536 key space)
     index = LotusRadixN[str](levels=4)
@@ -66,17 +66,18 @@ __genesis__ = "0x6013ddeb"  # GenesisByte: parampara % 37 == 0
 # =============================================================================
 
 # From lotus_tree.py - Optimized 16-bit implementations
-from vibe_core.mahamantra.research.lotus_tree import (
+from vibe_core.mahamantra_research.lotus_tree import (
     LotusArrayInt,
     LotusRadixInt,
     KEY_SPACE,
     LEVELS,
+    RADIX,
     SLOTS_PER_LEVEL,
     BITS_PER_LEVEL,
 )
 
 # From lotus_radix_n.py - Generic N-level implementation
-from vibe_core.mahamantra.research.lotus_radix_n import (
+from vibe_core.mahamantra_research.lotus_radix_n import (
     LotusRadixN,
     lotus_16bit,
     lotus_32bit,

@@ -53,7 +53,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 # Use project introspection
-from vibe_core.mahamantra.research.project_introspection import (
+from vibe_core.mahamantra_research.project_introspection import (
     FileInfo,
     extract_imports,
     scan_codebase,
@@ -228,7 +228,7 @@ def analyze_research_production_gap(files: List[FileInfo]) -> Tuple[List[GapReco
                     source_file=rf.path,
                     description=f"Core research module '{module_name}' not imported by any production code",
                     severity="warning",
-                    recommendation=f"Import from vibe_core.mahamantra.research.{module_name}",
+                    recommendation=f"Import from vibe_core.mahamantra_research.{module_name}",
                 )
             )
         elif len(importers) == 0:

@@ -234,7 +234,7 @@ def scan_lotus() -> ImmuneReport:
 
     # 5. Axiom verification (spiritual_tdd.py)
     try:
-        from vibe_core.mahamantra.research.spiritual_tdd import (
+        from vibe_core.mahamantra_research.spiritual_tdd import (
             run_spiritual_tests, verify_all_derived,
         )
         axiom_results = run_spiritual_tests()

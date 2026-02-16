@@ -6,7 +6,7 @@ Echte Git-Analyse mit Production mahamantra imports.
 Kein Buzzword-Marketing. Nur Daten.
 
 USAGE:
-    from vibe_core.mahamantra.research.git import GitLab
+    from vibe_core.mahamantra_research.git import GitLab
     lab = GitLab()
     lab.analyze(months=6)
 """

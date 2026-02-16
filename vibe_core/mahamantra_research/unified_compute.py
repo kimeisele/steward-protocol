@@ -47,7 +47,7 @@ __genesis__ = "0x4f97da85"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass
 from typing import Final
 
-from ..protocols._seed import (
+from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
     KSETRAJNA,
     KSHETRA,

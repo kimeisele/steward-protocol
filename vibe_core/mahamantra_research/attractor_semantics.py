@@ -299,7 +299,7 @@ def print_cycle_analysis() -> None:
 
 def analyze_mod_space(mod: int) -> None:
     """Analyze attractors in a given mod space with semantic interpretation."""
-    from vibe_core.mahamantra.research.attractor_analysis import find_all_attractors
+    from vibe_core.mahamantra_research.attractor_analysis import find_all_attractors
     
     print(f"\n{'=' * 60}")
     print(f"MOD {mod} SEMANTIC ANALYSIS")

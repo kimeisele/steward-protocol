@@ -35,7 +35,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 # Section routing from verified analysis
-from vibe_core.mahamantra.research.language_model_resonance import (
+from vibe_core.mahamantra_research.language_model_resonance import (
     CHAPTER_18_SECTIONS,
     SECTION_SIGNATURES,
 )

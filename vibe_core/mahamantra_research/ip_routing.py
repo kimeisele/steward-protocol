@@ -42,7 +42,7 @@ __genesis__ = "0x006e3e0a"  # GenesisByte: parampara % 37 == 0
 import warnings
 from typing import Final, Optional
 
-from ..protocols._seed import QUARTERS, WORDS
+from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS
 
 # =============================================================================
 # CONSTANTS (kept for backward compatibility and benchmarking)

@@ -504,7 +504,7 @@ def respond(intent: str) -> ResonanceResponse:
 
     This is the main entry point for simple usage:
 
-        from vibe_core.mahamantra.research.resonance_response import respond
+        from vibe_core.mahamantra_research.resonance_response import respond
 
         response = respond("What is the meaning of life?")
         print(response.syllables.as_string)  # e.g., "a-kha-dha-u"

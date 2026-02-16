@@ -73,7 +73,7 @@ from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
     WORDS,
 )
-from vibe_core.mahamantra.research.gita_verse_derivation import (
+from vibe_core.mahamantra_research.gita_verse_derivation import (
     KEY_VERSES,
     DerivedVerse,
 )
