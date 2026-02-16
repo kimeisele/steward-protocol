@@ -108,7 +108,7 @@ import math
 from dataclasses import dataclass
 from typing import Final
 
-from ..protocols._seed import (
+from vibe_core.mahamantra.protocols._seed import (
     GITA_CHAPTERS,
     JIVA_CYCLE,
     KSETRAJNA,

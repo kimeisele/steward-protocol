@@ -20,7 +20,7 @@ from typing import List, Optional, Tuple
 import datetime
 
 # Import research dependencies
-from vibe_core.mahamantra.research.bhoga_prasadam import transform, KSETRAJNA, PRASADAM
+from vibe_core.mahamantra_research.bhoga_prasadam import transform, KSETRAJNA, PRASADAM
 from vibe_core.mahamantra.protocols._seed import (
     HARE_COUNT, 
     KRISHNA_COUNT,

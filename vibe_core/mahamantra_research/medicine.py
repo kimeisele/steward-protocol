@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Final
 
 # Import THE LAW
-from ..protocols._seed import (
+from vibe_core.mahamantra.protocols._seed import (
     COSMIC_FRAME,
     FIELD_RESONANCE,
     GITA_CHAPTERS,

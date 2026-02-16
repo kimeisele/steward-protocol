@@ -60,7 +60,7 @@ from vibe_core.mahamantra.protocols._seed import (
     WORDS,
 )
 
-from vibe_core.mahamantra.research.shabda_translation import (
+from vibe_core.mahamantra_research.shabda_translation import (
     VibrationSignature,
     ArticulationPoint,
     VoicingType,

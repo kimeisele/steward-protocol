@@ -36,7 +36,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Final
 
-from ..protocols._seed import (
+from vibe_core.mahamantra.protocols._seed import (
     # Building blocks
     AKSARA_COUNT,
     FIELD_RESONANCE,

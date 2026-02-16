@@ -31,7 +31,7 @@ __genesis__ = "0xcb60fa27"  # GenesisByte: parampara % 37 == 0
 import array
 from typing import Final
 
-from ..protocols._seed import (
+from vibe_core.mahamantra.protocols._seed import (
     HALF_SIZE,
     KSETRAJNA,
     MAHAJANA_COUNT,

@@ -62,7 +62,7 @@ from vibe_core.mahamantra.protocols._seed import (
     MAHA_QUANTUM,
     WORDS,
 )
-from vibe_core.mahamantra.research.dharma import MahaResonator
+from vibe_core.mahamantra_research.dharma import MahaResonator
 
 # Global resonator instance (reuse, don't recreate)
 _RESONATOR = MahaResonator(mod_space=MAHA_QUANTUM)

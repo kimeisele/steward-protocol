@@ -35,7 +35,7 @@ EXPERIMENT:
 import ast
 from typing import Dict, List, Tuple
 
-from vibe_core.mahamantra.research.lotus_file_addressing import (
+from vibe_core.mahamantra_research.lotus_file_addressing import (
     CodeFragment,
     parse_file_to_fragments,
 )

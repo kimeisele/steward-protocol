@@ -369,7 +369,7 @@ def prove_unification() -> GUTProof:
 
     # 5. Get coverage from introspection
     try:
-        from vibe_core.mahamantra.research.project_introspection import measure_scale
+        from vibe_core.mahamantra_research.project_introspection import measure_scale
 
         metrics = measure_scale()
         parampara_cov = metrics.get("valid_parampara", 0) / max(metrics.get("total_files", 1), 1)
@@ -377,7 +377,7 @@ def prove_unification() -> GUTProof:
         parampara_cov = 0.0
 
     try:
-        from vibe_core.mahamantra.research.gap_analysis import run_full_analysis
+        from vibe_core.mahamantra_research.gap_analysis import run_full_analysis
 
         report = run_full_analysis()
         seed_cov = report.seed_coverage
