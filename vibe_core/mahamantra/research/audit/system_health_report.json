@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-02-14 20:02:29",
+  "overall": "DEGRADED",
+  "metrics": [
+    {
+      "name": "shuddhi_self_scan",
+      "status": "PASS",
+      "value": 162,
+      "detail": ""
+    },
+    {
+      "name": "ruff_f821",
+      "status": "FAIL",
+      "value": 4,
+      "detail": ""
+    },
+    {
+      "name": "gate_pipeline",
+      "status": "PASS",
+      "value": "OPERATIONAL",
+      "detail": ""
+    },
+    {
+      "name": "core_imports",
+      "status": "PASS",
+      "value": 0,
+      "detail": ""
+    },
+    {
+      "name": "test_suite",
+      "status": "FAIL",
+      "value": 0,
+      "detail": ""
+    }
+  ],
+  "violations_by_rule": {
+    "missing_fractal_routing": 117,
+    "any_type_usage": 11,
+    "broken_genesis": 8,
+    "silent_failure": 12,
+    "path_scanning_discovery": 6,
+    "iterdir_discovery": 2,
+    "get_instance_antipattern": 1,
+    "missing_mahajana": 5
+  },
+  "healable_total": 162,
+  "files_scanned": 131,
+  "f821_count": 4,
+  "gate_pipeline_status": "OPERATIONAL",
+  "import_errors": []
+}

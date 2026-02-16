@@ -1,0 +1,661 @@
+{
+  "stats": {
+    "total_blocks": 618,
+    "grade_distribution": {
+      "A": 0,
+      "B": 0,
+      "C": 538,
+      "D": 60,
+      "E": 10,
+      "F": 10
+    },
+    "mahamantra": {
+      "blocks": 126,
+      "avg_cc": 15.56
+    },
+    "legacy": {
+      "blocks": 492,
+      "avg_cc": 15.7
+    },
+    "dir_averages": {
+      "envoy_sync.py": {
+        "count": 2,
+        "avg_cc": 12.0,
+        "max_cc": 13,
+        "grade": "C"
+      },
+      "plugin_loader.py": {
+        "count": 1,
+        "avg_cc": 29.0,
+        "max_cc": 29,
+        "grade": "D"
+      },
+      "orchestration_cycle.py": {
+        "count": 1,
+        "avg_cc": 15.0,
+        "max_cc": 15,
+        "grade": "C"
+      },
+      "doc_renderer.py": {
+        "count": 3,
+        "avg_cc": 15.33,
+        "max_cc": 21,
+        "grade": "C"
+      },
+      "settings_sync.py": {
+        "count": 2,
+        "avg_cc": 15.5,
+        "max_cc": 20,
+        "grade": "C"
+      },
+      "prana_orchestrator.py": {
+        "count": 2,
+        "avg_cc": 14.0,
+        "max_cc": 15,
+        "grade": "C"
+      },
+      "boot_orchestrator.py": {
+        "count": 3,
+        "avg_cc": 14.67,
+        "max_cc": 20,
+        "grade": "C"
+      },
+      "ouroboros": {
+        "count": 5,
+        "avg_cc": 12.4,
+        "max_cc": 15,
+        "grade": "C"
+      },
+      "cartridges": {
+        "count": 83,
+        "avg_cc": 16.22,
+        "max_cc": 54,
+        "grade": "C"
+      },
+      "cortex": {
+        "count": 7,
+        "avg_cc": 26.43,
+        "max_cc": 82,
+        "grade": "D"
+      },
+      "playbook": {
+        "count": 4,
+        "avg_cc": 18.0,
+        "max_cc": 28,
+        "grade": "C"
+      },
+      "tools": {
+        "count": 7,
+        "avg_cc": 16.14,
+        "max_cc": 29,
+        "grade": "C"
+      },
+      "vajra": {
+        "count": 3,
+        "avg_cc": 14.67,
+        "max_cc": 17,
+        "grade": "C"
+      },
+      "task_management": {
+        "count": 1,
+        "avg_cc": 12.0,
+        "max_cc": 12,
+        "grade": "C"
+      },
+      "plugins": {
+        "count": 156,
+        "avg_cc": 15.63,
+        "max_cc": 71,
+        "grade": "C"
+      },
+      "naga": {
+        "count": 32,
+        "avg_cc": 16.5,
+        "max_cc": 43,
+        "grade": "C"
+      },
+      "phoenix": {
+        "count": 4,
+        "avg_cc": 13.0,
+        "max_cc": 14,
+        "grade": "C"
+      },
+      "runtime": {
+        "count": 14,
+        "avg_cc": 13.79,
+        "max_cc": 19,
+        "grade": "C"
+      },
+      "agents": {
+        "count": 1,
+        "avg_cc": 15.0,
+        "max_cc": 15,
+        "grade": "C"
+      },
+      "cli": {
+        "count": 61,
+        "avg_cc": 15.85,
+        "max_cc": 31,
+        "grade": "C"
+      },
+      "state": {
+        "count": 16,
+        "avg_cc": 13.94,
+        "max_cc": 28,
+        "grade": "C"
+      },
+      "specialists": {
+        "count": 1,
+        "avg_cc": 12.0,
+        "max_cc": 12,
+        "grade": "C"
+      },
+      "mahamantra": {
+        "count": 126,
+        "avg_cc": 15.56,
+        "max_cc": 44,
+        "grade": "C"
+      },
+      "knowledge": {
+        "count": 4,
+        "avg_cc": 12.5,
+        "max_cc": 14,
+        "grade": "C"
+      },
+      "scripts": {
+        "count": 2,
+        "avg_cc": 14.5,
+        "max_cc": 15,
+        "grade": "C"
+      },
+      "shuddhi": {
+        "count": 1,
+        "avg_cc": 12.0,
+        "max_cc": 12,
+        "grade": "C"
+      },
+      "steward": {
+        "count": 8,
+        "avg_cc": 15.75,
+        "max_cc": 34,
+        "grade": "C"
+      },
+      "loaders": {
+        "count": 9,
+        "avg_cc": 13.78,
+        "max_cc": 19,
+        "grade": "C"
+      },
+      "protocols": {
+        "count": 47,
+        "avg_cc": 15.85,
+        "max_cc": 36,
+        "grade": "C"
+      },
+      "genesis": {
+        "count": 1,
+        "avg_cc": 12.0,
+        "max_cc": 12,
+        "grade": "C"
+      },
+      "services": {
+        "count": 11,
+        "avg_cc": 13.45,
+        "max_cc": 23,
+        "grade": "C"
+      }
+    }
+  },
+  "top_50": [
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cortex/engines/circuit_engine.py",
+      "lineno": 633,
+      "name": "_execute_circuit",
+      "classname": "CognitiveCircuitExecutor",
+      "complexity": 82,
+      "grade": "F",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/interface/renderers/git.py",
+      "lineno": 308,
+      "name": "analyze_commits",
+      "classname": "GitAnalyzerV2",
+      "complexity": 71,
+      "grade": "F",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/opus_assistant/core/verification_logic.py",
+      "lineno": 586,
+      "name": "_verify_semantic",
+      "classname": "VerificationEngine",
+      "complexity": 61,
+      "grade": "F",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cartridges/system/watchman/tools/standards_inspection.py",
+      "lineno": 116,
+      "name": "_matches_rule",
+      "classname": "UniversalRuleVisitor",
+      "complexity": 54,
+      "grade": "F",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cartridges/system/envoy/provider.py",
+      "lineno": 324,
+      "name": "route_and_execute",
+      "classname": "UniversalProvider",
+      "complexity": 52,
+      "grade": "F",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cartridges/system/envoy/cartridge_main.py",
+      "lineno": 338,
+      "name": "_route_command",
+      "classname": "EnvoyCartridge",
+      "complexity": 50,
+      "grade": "F",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/analysis/universal_generator.py",
+      "lineno": 210,
+      "name": "generate_formulas",
+      "classname": "",
+      "complexity": 44,
+      "grade": "F",
+      "is_mahamantra": true
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/naga/components/bootloader.py",
+      "lineno": 63,
+      "name": "NagaBootloader",
+      "classname": "",
+      "complexity": 43,
+      "grade": "F",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/naga/components/bootloader.py",
+      "lineno": 69,
+      "name": "boot",
+      "classname": "NagaBootloader",
+      "complexity": 42,
+      "grade": "F",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/substrate/phonetic_bridge.py",
+      "lineno": 388,
+      "name": "_build_phoneme_sthana_from_protocols",
+      "classname": "",
+      "complexity": 41,
+      "grade": "F",
+      "is_mahamantra": true
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cortex/engines/circuit_engine.py",
+      "lineno": 171,
+      "name": "_evaluate_invariant",
+      "classname": "InvariantChecker",
+      "complexity": 37,
+      "grade": "E",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/protocols/mahajanas/nrisimha/types/narasimha.py",
+      "lineno": 185,
+      "name": "audit_agent",
+      "classname": "NarasimhaProtocol",
+      "complexity": 36,
+      "grade": "E",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cartridges/system/envoy/deterministic_executor.py",
+      "lineno": 557,
+      "name": "execute",
+      "classname": "DeterministicExecutor",
+      "complexity": 34,
+      "grade": "E",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/steward/loader.py",
+      "lineno": 74,
+      "name": "discover_and_load",
+      "classname": "AgentLoader",
+      "complexity": 34,
+      "grade": "E",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cartridges/system/envoy/deterministic_executor.py",
+      "lineno": 776,
+      "name": "_execute_phase_actions",
+      "classname": "DeterministicExecutor",
+      "complexity": 33,
+      "grade": "E",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/task_manager/plugin_main.py",
+      "lineno": 313,
+      "name": "_handle_actuators",
+      "classname": "TaskManagerPlugin",
+      "complexity": 33,
+      "grade": "E",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/chat.py",
+      "lineno": 705,
+      "name": "respond",
+      "classname": "FloodedMahajanaChat",
+      "complexity": 33,
+      "grade": "E",
+      "is_mahamantra": true
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/opus_assistant/manas/analyzers/doc_harness_analyzer.py",
+      "lineno": 464,
+      "name": "_result_to_intents",
+      "classname": "DocHarnessAnalyzer",
+      "complexity": 32,
+      "grade": "E",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/research/six_attractors_deep.py",
+      "lineno": 112,
+      "name": "find_derivations",
+      "classname": "",
+      "complexity": 32,
+      "grade": "E",
+      "is_mahamantra": true
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cli/samskara_cli.py",
+      "lineno": 31,
+      "name": "_format_output",
+      "classname": "",
+      "complexity": 31,
+      "grade": "E",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugin_loader.py",
+      "lineno": 64,
+      "name": "discover_and_load",
+      "classname": "PluginLoader",
+      "complexity": 29,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/tools/tool_registry.py",
+      "lineno": 199,
+      "name": "execute",
+      "classname": "ToolRegistry",
+      "complexity": 29,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/interface/renderers/cognition.py",
+      "lineno": 234,
+      "name": "_render_arsenal",
+      "classname": "CognitionRenderer",
+      "complexity": 29,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/runtime_extensions/hot_loader.py",
+      "lineno": 40,
+      "name": "hot_load",
+      "classname": "",
+      "complexity": 29,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cli/knowledge_cli.py",
+      "lineno": 336,
+      "name": "cmd_query",
+      "classname": "KnowledgeCLI",
+      "complexity": 29,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cli/naga_commands/purify/scan.py",
+      "lineno": 58,
+      "name": "execute",
+      "classname": "ScanCommand",
+      "complexity": 29,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/playbook/executor.py",
+      "lineno": 355,
+      "name": "execute_step",
+      "classname": "GraphExecutor",
+      "complexity": 28,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/opus_assistant/manas/intent_router.py",
+      "lineno": 942,
+      "name": "route",
+      "classname": "IntentRouter",
+      "complexity": 28,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/opus_assistant/manas/router/handlers/system_handler.py",
+      "lineno": 84,
+      "name": "_handle_cleanup_disk",
+      "classname": "SystemHandler",
+      "complexity": 28,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/naga/cortex/cortex_main.py",
+      "lineno": 801,
+      "name": "get_context_for_manas",
+      "classname": "NagaCortex",
+      "complexity": 28,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/state/samskara.py",
+      "lineno": 89,
+      "name": "consolidate_viveka_decisions",
+      "classname": "",
+      "complexity": 28,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/opus_assistant/events/kernel_tick.py",
+      "lineno": 1269,
+      "name": "_check_session_karma",
+      "classname": "KernelTickHandler",
+      "complexity": 27,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/research/lotus_file_addressing.py",
+      "lineno": 71,
+      "name": "parse_file_to_fragments",
+      "classname": "",
+      "complexity": 27,
+      "grade": "D",
+      "is_mahamantra": true
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/protocols/testable_registry.py",
+      "lineno": 92,
+      "name": "discover_from_kernel",
+      "classname": "TestableRegistry",
+      "complexity": 27,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/opus_assistant/manas/cortex/silpa_action.py",
+      "lineno": 426,
+      "name": "_handle_genesis",
+      "classname": "SilpaAction",
+      "complexity": 26,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py",
+      "lineno": 1518,
+      "name": "_gather_dependency_graph",
+      "classname": "OpusDashboardRenderer",
+      "complexity": 26,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/protocols/universal/watertight.py",
+      "lineno": 56,
+      "name": "WatertightValidator",
+      "classname": "",
+      "complexity": 26,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cartridges/system/watchman/cartridge_main.py",
+      "lineno": 233,
+      "name": "_scan_file",
+      "classname": "WatchmanCartridge",
+      "complexity": 25,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/opus_assistant/manas/circuit_executor.py",
+      "lineno": 539,
+      "name": "_script_generate_harness",
+      "classname": "CognitiveCircuitExecutor",
+      "complexity": 25,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cli/unified_cli.py",
+      "lineno": 1124,
+      "name": "cmd_poke",
+      "classname": "UnifiedCLI",
+      "complexity": 25,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cli/naga_commands/serve/diagnose.py",
+      "lineno": 152,
+      "name": "_diagnose_from_chitragupta",
+      "classname": "DiagnoseCommand",
+      "complexity": 25,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/research/attractor_analysis.py",
+      "lineno": 145,
+      "name": "analyze_attractor",
+      "classname": "",
+      "complexity": 25,
+      "grade": "D",
+      "is_mahamantra": true
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/research/rama_resonance.py",
+      "lineno": 252,
+      "name": "extract_rama_resonance",
+      "classname": "",
+      "complexity": 25,
+      "grade": "D",
+      "is_mahamantra": true
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/protocols/primal.py",
+      "lineno": 51,
+      "name": "WatertightValidator",
+      "classname": "",
+      "complexity": 25,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/protocols/universal/watertight.py",
+      "lineno": 62,
+      "name": "inspect",
+      "classname": "WatertightValidator",
+      "complexity": 25,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cartridges/system/herald/core/agency_director.py",
+      "lineno": 160,
+      "name": "run_cycle",
+      "classname": "AgencyDirector",
+      "complexity": 24,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/plugins/interface/renderers/git.py",
+      "lineno": 149,
+      "name": "GitAnalyzerV2",
+      "classname": "",
+      "complexity": 24,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/cli/unified_cli.py",
+      "lineno": 730,
+      "name": "cmd_update",
+      "classname": "UnifiedCLI",
+      "complexity": 24,
+      "grade": "D",
+      "is_mahamantra": false
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/mahamantra/cli/veda_explorer.py",
+      "lineno": 505,
+      "name": "_extract_params",
+      "classname": "VedaExplorer",
+      "complexity": 24,
+      "grade": "D",
+      "is_mahamantra": true
+    },
+    {
+      "filepath": "/Users/ss/projects/steward-protocol/vibe_core/protocols/primal.py",
+      "lineno": 55,
+      "name": "inspect",
+      "classname": "WatertightValidator",
+      "complexity": 24,
+      "grade": "D",
+      "is_mahamantra": false
+    }
+  ]
+}
