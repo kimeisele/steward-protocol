@@ -80,3 +80,31 @@ class TestVibratePubicAPIExists:
     def test_vibrate_not_underscore(self):
         """vibrate() must not be a private method."""
         assert not "vibrate".startswith("_")
+
+
+class TestAkashPublicProperty:
+    """MahamantraLotus.akash must be a public read-only property."""
+
+    def test_akash_property_exists(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        assert isinstance(MahamantraLotus.akash, property)
+
+    def test_akash_returns_dict(self):
+        from vibe_core.mahamantra import mahamantra
+        akash = mahamantra.akash
+        assert isinstance(akash, dict)
+
+    def test_akash_has_required_keys(self):
+        from vibe_core.mahamantra import mahamantra
+        akash = mahamantra.akash
+        required = {"resonance_level", "accumulated_value", "total_beats",
+                    "total_rounds", "attractor_counts", "last_seed",
+                    "last_position", "last_attractor"}
+        assert required.issubset(akash.keys())
+
+    def test_akash_is_copy_not_reference(self):
+        """Mutating the returned dict must not affect internal state."""
+        from vibe_core.mahamantra import mahamantra
+        akash = mahamantra.akash
+        akash["total_beats"] = 999999
+        assert mahamantra.akash["total_beats"] != 999999
