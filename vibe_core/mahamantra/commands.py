@@ -524,10 +524,8 @@ def cli_serve(
     """
     from datetime import datetime
 
-    from vibe_core.di import ServiceRegistry
-    from vibe_core.mahamantra.karma.janaka import TaskPriority
-    from vibe_core.protocols.mahajanas.janaka import JanakaProtocol
-    from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+    from vibe_core.mahamantra.karma.janaka import TaskPriority, JanakaProtocol
+    from vibe_core.mahamantra.karma.janaka import get_service as get_janaka
 
     # Map priority string to enum (default to normal if empty)
     priority = priority or "normal"
@@ -539,11 +537,8 @@ def cli_serve(
     }
     task_priority = priority_map.get(priority.lower(), TaskPriority.NORMAL)
 
-    # Get JanakaService via ServiceRegistry (mahamantra = force, consistent routing)
-    janaka = ServiceRegistry.get(JanakaProtocol)
-    if janaka is None:
-        janaka = JanakaService()
-        ServiceRegistry.register(JanakaProtocol, janaka)
+    # Get JanakaService through Mahajana folder (canonical path)
+    janaka = get_janaka()
 
     start_time = datetime.now()
 
