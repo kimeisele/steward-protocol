@@ -445,7 +445,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         if not silent:
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
 
-    def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
+    def execute(self, command: str, args: Optional[List[str]] = None, *, opcode: Optional[int] = None) -> ExecuteResult:
         """
         Execute a command through the Govardhan Gateway.
 
@@ -454,6 +454,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         result with execute-specific fields.
 
         Architecture: execute() → Govardhan → __call__() (pure core)
+
+        Args:
+            command: Input text to process
+            args: Optional argument list
+            opcode: Optional MantraOpCode value for explicit gate routing
         """
         from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 
@@ -479,7 +484,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 "parampara_verified": None,
             })
 
-            result = self(command)  # __call__ is pure — no gates inside
+            result = self(command, opcode=opcode)  # __call__ is pure — no gates inside
 
             # ── GATE 3: RESULT — Is the output valid? ──
             self._fire_gate(TattvaGate.RESULT, {
