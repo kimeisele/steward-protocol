@@ -221,20 +221,19 @@ def count_mahajana_stubs() -> Dict[str, dict]:
                 py_files = [f for f in py_files if "__pycache__" not in str(f)]
                 total_bytes = sum(f.stat().st_size for f in py_files)
 
-                # Check if execute() is a stub
-                is_stub = True
+                # Classify: WIRED (delegates to real service), REAL (own code), or STUB
+                status = "STUB"
                 if init.exists():
                     src = init.read_text(encoding="utf-8", errors="replace")
-                    # Stub = execute() returns dict with just identity info
-                    if "def execute(" in src:
-                        # Check if there's real logic beyond the stub
-                        if len(py_files) > 2 or total_bytes > 5000:
-                            is_stub = False
+                    if "def get_service(" in src:
+                        status = "WIRED"
+                    elif len(py_files) > 2 or total_bytes > 5000:
+                        status = "REAL"
 
                 result[f"{quarter}/{sub.name}"] = {
                     "files": len(py_files),
                     "bytes": total_bytes,
-                    "is_stub": is_stub,
+                    "status": status,
                     "has_execute": "def execute(" in (init.read_text(encoding="utf-8", errors="replace") if init.exists() else ""),
                 }
 
@@ -282,13 +281,14 @@ def main():
     print("MAHAJANA FOLDER STATUS")
     print(f"{'='*70}")
     stubs = count_mahajana_stubs()
-    real_count = sum(1 for v in stubs.values() if not v["is_stub"])
-    stub_count = sum(1 for v in stubs.values() if v["is_stub"])
-    print(f"  Real (>5KB or >2 files): {real_count}")
-    print(f"  Stubs (identity only):   {stub_count}")
+    wired_count = sum(1 for v in stubs.values() if v["status"] == "WIRED")
+    real_count = sum(1 for v in stubs.values() if v["status"] == "REAL")
+    stub_count = sum(1 for v in stubs.values() if v["status"] == "STUB")
+    print(f"  Wired (delegates to Service): {wired_count}")
+    print(f"  Real (own code >5KB):         {real_count}")
+    print(f"  Stubs (identity only):        {stub_count}")
     for name, info in sorted(stubs.items()):
-        status = "REAL" if not info["is_stub"] else "STUB"
-        print(f"    [{status:4s}] {name:30s} {info['files']:2d} files, {info['bytes']:6d} bytes")
+        print(f"    [{info['status']:5s}] {name:30s} {info['files']:2d} files, {info['bytes']:6d} bytes")
 
 
 if __name__ == "__main__":
