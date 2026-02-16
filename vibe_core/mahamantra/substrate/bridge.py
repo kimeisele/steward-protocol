@@ -176,7 +176,7 @@ def offer(
 
         _lotus = get_mahamantra()
         _TattvaGate = _TG
-        _lotus._fire_gate(_TattvaGate.PARSE, {
+        _lotus.fire_gate(_TattvaGate.PARSE, {
             "input_data": content,
             "entry_type": "offer",
             "purpose": purpose,
@@ -300,7 +300,7 @@ def offer(
         # The side-effect happened. Notify gate providers/hooks.
         if _lotus is not None and _TattvaGate is not None:
             try:
-                _lotus._fire_gate(_TattvaGate.SYNC, {
+                _lotus.fire_gate(_TattvaGate.SYNC, {
                     "position": position,
                     "guardian": mahajana,
                     "purpose": purpose,

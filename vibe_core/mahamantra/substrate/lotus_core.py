@@ -294,6 +294,20 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             self._gate_hooks[gate] = []
         self._gate_hooks[gate].append(callback)
 
+    def fire_gate(self, gate: TattvaGate, ctx: Dict[str, object]) -> None:
+        """
+        Fire a Pancha Tattva Gate at the boundary.
+
+        Public API for boundary consumers (GovardhanGateway, execute(),
+        bridge.offer(), HealingIntentResolver) that need to fire gates
+        with domain-specific context.
+
+        Args:
+            gate: Which TattvaGate to fire
+            ctx: Gate context dict with domain-specific data
+        """
+        self._fire_gate(gate, ctx)
+
     def _fire_gate(self, gate: TattvaGate, ctx: Dict[str, object]) -> None:
         """Set active gate, fire registered hooks, then dispatch gate providers."""
         self._active_gate = gate
@@ -464,21 +478,21 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         try:
             # ── GATE 0: PARSE — What is this? ──
-            self._fire_gate(TattvaGate.PARSE, {
+            self.fire_gate(TattvaGate.PARSE, {
                 "input_data": command,
                 "entry_type": "execute",
                 "args": args or [],
             })
 
             # ── GATE 1: VALIDATE — Is it legitimate? ──
-            self._fire_gate(TattvaGate.VALIDATE, {
+            self.fire_gate(TattvaGate.VALIDATE, {
                 "input_text": command,
                 "seed": None,
                 "input_coords": None,
             })
 
             # ── GATE 2: EXECUTE — Pure computation (Vrindavan) ──
-            self._fire_gate(TattvaGate.EXECUTE, {
+            self.fire_gate(TattvaGate.EXECUTE, {
                 "seed": None,
                 "attractor": None,
                 "parampara_verified": None,
@@ -487,14 +501,14 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             result = self(command, opcode=opcode)  # __call__ is pure — no gates inside
 
             # ── GATE 3: RESULT — Is the output valid? ──
-            self._fire_gate(TattvaGate.RESULT, {
+            self.fire_gate(TattvaGate.RESULT, {
                 "attractor": result.get("vibration", {}).get("attractor"),
                 "resonant_words": result.get("smaranam", ()),
                 "verse_result": result.get("verse"),
             })
 
             # ── GATE 4: SYNC — Side-effects (governance) ──
-            self._fire_gate(TattvaGate.SYNC, {
+            self.fire_gate(TattvaGate.SYNC, {
                 "position": result.get("position"),
                 "guardian": result.get("guardian"),
                 "seed": result.get("vibration", {}).get("seed"),
