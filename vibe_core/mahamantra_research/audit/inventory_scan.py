@@ -32,7 +32,10 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Any
 
-MAHAMANTRA_ROOT = Path(__file__).resolve().parent.parent.parent  # mahamantra/
+# Script now lives in vibe_core/mahamantra_research/audit/
+# We scan the canonical runtime package at vibe_core/mahamantra/
+VIBE_CORE_ROOT = Path(__file__).resolve().parents[2]
+MAHAMANTRA_ROOT = VIBE_CORE_ROOT / "mahamantra"
 
 CATEGORY_MAP = {
     "substrate": "substrate",
@@ -241,7 +244,7 @@ def main():
         "files": inventory,
     }
 
-    output_path = root / "research" / "audit" / "INVENTORY.json"
+    output_path = Path(__file__).resolve().with_name("INVENTORY.json")
     with open(output_path, "w") as f:
         json.dump(result, f, indent=2)
 
