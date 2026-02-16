@@ -200,8 +200,8 @@ def scan_lotus() -> ImmuneReport:
 
     # 1. MahamantraLotus itself (the root)
     try:
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        lotus = MahamantraLotus()
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        lotus = get_mahamantra()
         verdicts.append(audit_component(lotus, "MahamantraLotus", 0))
     except Exception as e:
         verdicts.append(_error_verdict("MahamantraLotus", 0, e))
@@ -292,9 +292,9 @@ def scan_lotus() -> ImmuneReport:
 
     # 7. Determinism test: same input → same output
     try:
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        lotus_a = MahamantraLotus()
-        lotus_b = MahamantraLotus()
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        lotus_a = get_mahamantra()
+        lotus_b = get_mahamantra()
         result_a = lotus_a("determinism_test")
         result_b = lotus_b("determinism_test")
         deterministic = (
