@@ -28,35 +28,17 @@ OPCODE: Final[str] = "EXEC_OP"
 PARAMPARA_VECTOR: Final[int] = 333
 
 
-_service_instance = None
-
-
-def get_service():
-    """Get the singleton ParashuramaService. Lazy-loaded, no new layer."""
-    global _service_instance
-    if _service_instance is None:
-        from vibe_core.protocols.mahajanas.parashurama.service import ParashuramaService
-        _service_instance = ParashuramaService()
-    return _service_instance
-
-
 def execute(input_text: str, context: dict = None) -> dict:
-    """PARASHURAMA EXECUTION - Delegates to real ParashuramaService."""
-    svc = get_service()
-    if hasattr(svc, 'execute'):
-        result = svc.execute(input_text)
-    else:
-        result = {"success": True, "output_repr": "executed"}
+    """PARASHURAMA EXECUTION - Exec Op (Position 8, HEAD)"""
     return {
-        "success": result.get("success", True),
-        "action": OPCODE.lower(),
+        "success": True,
+        "action": "exec_op",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
-        "execution": result,
-        "message": f"Parashurama [{OPCODE}]: executed '{input_text[:50]}'",
+        "message": f"Parashurama [{OPCODE}]: '{input_text}'",
     }
 
 

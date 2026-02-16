@@ -28,35 +28,17 @@ OPCODE: Final[str] = "YIELD_CPU"
 PARAMPARA_VECTOR: Final[int] = 481
 
 
-_service_instance = None
-
-
-def get_service():
-    """Get the singleton NrisimhaService. Lazy-loaded, no new layer."""
-    global _service_instance
-    if _service_instance is None:
-        from vibe_core.protocols.mahajanas.nrisimha.service import NrisimhaService
-        _service_instance = NrisimhaService()
-    return _service_instance
-
-
 def execute(input_text: str, context: dict = None) -> dict:
-    """NRISIMHA EXECUTION - Delegates to real NrisimhaService."""
-    svc = get_service()
-    if hasattr(svc, 'execute'):
-        result = svc.execute(input_text)
-    else:
-        result = {"success": True, "output_repr": "executed"}
+    """NRISIMHA EXECUTION - Yield CPU (Position 12, HEAD)"""
     return {
-        "success": result.get("success", True),
-        "action": OPCODE.lower(),
+        "success": True,
+        "action": "yield_cpu",
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
-        "execution": result,
-        "message": f"Nrisimha [{OPCODE}]: executed '{input_text[:50]}'",
+        "message": f"Nrisimha [{OPCODE}]: '{input_text}'",
     }
 
 
