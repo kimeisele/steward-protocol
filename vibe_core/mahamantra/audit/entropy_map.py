@@ -240,6 +240,188 @@ def count_mahajana_stubs() -> Dict[str, dict]:
     return result
 
 
+def map_orchestration_chain() -> Dict[str, object]:
+    """
+    Verify the VenuService -> Singularity -> Listener chain from code.
+
+    Returns dict with:
+      - heartbeat_chain: list of verified links
+      - orphaned: list of built-but-never-called infrastructure
+      - unattached_services: services instantiated outside boot_orchestrator
+    """
+    vc = VIBE_CORE / "vibe_core"
+    heartbeat_chain: List[dict] = []
+    orphaned: List[dict] = []
+    unattached: List[dict] = []
+
+    # 1. VenuService.start() -> singularity.tick()
+    venu_svc = vc / "services" / "venu_service.py"
+    if venu_svc.exists():
+        src = venu_svc.read_text(encoding="utf-8", errors="replace")
+        has_sing_tick = "_singularity.tick()" in src
+        has_start = "async def start(" in src
+        heartbeat_chain.append({
+            "link": "VenuService.start() -> singularity.tick()",
+            "file": "services/venu_service.py",
+            "connected": has_sing_tick and has_start,
+        })
+
+    # 2. singularity.tick() -> _broadcast()
+    sing = vc / "mahamantra" / "kernel" / "singularity.py"
+    if sing.exists():
+        src = sing.read_text(encoding="utf-8", errors="replace")
+        has_broadcast = "_broadcast(state)" in src or "self._broadcast(state)" in src
+        heartbeat_chain.append({
+            "link": "singularity.tick() -> _broadcast(state)",
+            "file": "mahamantra/kernel/singularity.py",
+            "connected": has_broadcast,
+        })
+
+    # 3. boot_orchestrator starts VenuService + wraps with BalaramaProxy
+    boot = vc / "boot_orchestrator.py"
+    if boot.exists():
+        src = boot.read_text(encoding="utf-8", errors="replace")
+        heartbeat_chain.append({
+            "link": "boot_orchestrator -> VenuService()",
+            "file": "boot_orchestrator.py",
+            "connected": "VenuService()" in src,
+        })
+        heartbeat_chain.append({
+            "link": "boot_orchestrator -> wrap_service() -> BalaramaProxy",
+            "file": "boot_orchestrator.py",
+            "connected": "wrap_service(" in src,
+        })
+
+    # 4. BalaramaProxy._attach_to_heartbeat() -> register_listener()
+    proxy = vc / "mahamantra" / "substrate" / "proxy.py"
+    if proxy.exists():
+        src = proxy.read_text(encoding="utf-8", errors="replace")
+        heartbeat_chain.append({
+            "link": "BalaramaProxy.__init__() -> _attach_to_heartbeat() -> register_listener()",
+            "file": "mahamantra/substrate/proxy.py",
+            "connected": "register_listener(" in src and "_attach_to_heartbeat" in src,
+        })
+
+    # === ORPHANED INFRASTRUCTURE (built, 0 callers) ===
+    # adopt_services()
+    adoption = vc / "mahamantra" / "lila" / "adoption.py"
+    if adoption.exists():
+        callers = 0
+        for py in vc.rglob("*.py"):
+            if "__pycache__" in str(py) or py == adoption:
+                continue
+            try:
+                if "adopt_services" in py.read_text(encoding="utf-8", errors="replace"):
+                    callers += 1
+            except Exception:
+                continue
+        if callers == 0:
+            orphaned.append({
+                "function": "adopt_services()",
+                "file": "mahamantra/lila/adoption.py",
+                "callers": 0,
+                "purpose": "OrbitalReactor mounting pipeline",
+            })
+
+    # auto_wrap_services()
+    if proxy.exists():
+        callers = 0
+        for py in vc.rglob("*.py"):
+            if "__pycache__" in str(py) or py == proxy:
+                continue
+            try:
+                if "auto_wrap_services" in py.read_text(encoding="utf-8", errors="replace"):
+                    callers += 1
+            except Exception:
+                continue
+        if callers == 0:
+            orphaned.append({
+                "function": "auto_wrap_services()",
+                "file": "mahamantra/substrate/proxy.py",
+                "callers": 0,
+                "purpose": "Lotus-driven BalaramaProxy wrapping",
+            })
+
+    # ModuleRouter / mahamantra.mod runtime callers
+    if sing.exists():
+        mod_callers = 0
+        for py in vc.rglob("*.py"):
+            if "__pycache__" in str(py) or py == sing:
+                continue
+            try:
+                src = py.read_text(encoding="utf-8", errors="replace")
+                if ".mod." in src or "mahamantra.mod" in src:
+                    # Exclude comments and docstrings (rough heuristic)
+                    lines = [l for l in src.split("\n")
+                             if (".mod." in l or "mahamantra.mod" in l)
+                             and not l.strip().startswith("#")
+                             and not l.strip().startswith('"""')
+                             and not l.strip().startswith("'")]
+                    if lines:
+                        mod_callers += 1
+            except Exception:
+                continue
+        orphaned.append({
+            "function": "ModuleRouter / mahamantra.mod",
+            "file": "mahamantra/kernel/singularity.py",
+            "callers": mod_callers,
+            "purpose": "On-demand module/type access",
+        })
+
+    # === UNATTACHED SERVICES (instantiated outside boot_orchestrator) ===
+    # kernel_impl.py builds own MahamantraProxies
+    kimpl = vc / "kernel_impl.py"
+    if kimpl.exists():
+        src = kimpl.read_text(encoding="utf-8", errors="replace")
+        if "MahamantraProxy(" in src:
+            proxy_lines = [l.strip() for l in src.split("\n") if "MahamantraProxy(" in l and not l.strip().startswith("#")]
+            unattached.append({
+                "file": "kernel_impl.py",
+                "issue": "builds own MahamantraProxy with hardcoded positions",
+                "count": len(proxy_lines),
+                "examples": proxy_lines[:3],
+            })
+
+    # Direct Service() instantiation outside boot_orchestrator
+    service_pattern = "Service()"
+    for py in vc.rglob("*.py"):
+        if "__pycache__" in str(py):
+            continue
+        rel = str(py.relative_to(vc))
+        # Skip boot_orchestrator (it's the canonical path), tests, and protocols
+        if rel == "boot_orchestrator.py" or "test" in rel.lower() or "protocol" in rel.lower():
+            continue
+        # Skip service definitions themselves
+        if rel.startswith("services/") or rel.startswith("protocols/mahajanas/"):
+            continue
+        try:
+            src = py.read_text(encoding="utf-8", errors="replace")
+            svc_lines = [
+                l.strip() for l in src.split("\n")
+                if service_pattern in l
+                and not l.strip().startswith("#")
+                and not l.strip().startswith("def ")
+                and not l.strip().startswith('"""')
+                and "Null" not in l
+                and "= {" not in l
+            ]
+            if svc_lines:
+                unattached.append({
+                    "file": rel,
+                    "issue": "direct Service() instantiation",
+                    "count": len(svc_lines),
+                    "examples": svc_lines[:2],
+                })
+        except Exception:
+            continue
+
+    return {
+        "heartbeat_chain": heartbeat_chain,
+        "orphaned": orphaned,
+        "unattached_services": unattached,
+    }
+
+
 def main():
     """Print the verified entropy map."""
     print("=" * 70)
@@ -289,6 +471,32 @@ def main():
     print(f"  Stubs (identity only):        {stub_count}")
     for name, info in sorted(stubs.items()):
         print(f"    [{info['status']:5s}] {name:30s} {info['files']:2d} files, {info['bytes']:6d} bytes")
+
+    # === ORCHESTRATION CHAIN ===
+    print(f"\n{'='*70}")
+    print("VENU ORCHESTRATION CHAIN (The Flute)")
+    print(f"{'='*70}")
+    orch = map_orchestration_chain()
+
+    print("\n  HEARTBEAT CHAIN:")
+    for link in orch["heartbeat_chain"]:
+        status = "OK" if link["connected"] else "BROKEN"
+        print(f"    [{status:6s}] {link['link']}")
+        print(f"             {link['file']}")
+
+    print(f"\n  ORPHANED INFRASTRUCTURE (built, never called):")
+    for o in orch["orphaned"]:
+        print(f"    [{o['callers']:2d} callers] {o['function']}")
+        print(f"                {o['file']} — {o['purpose']}")
+
+    print(f"\n  UNATTACHED SERVICES ({len(orch['unattached_services'])} files bypass boot_orchestrator):")
+    for u in orch["unattached_services"][:15]:
+        print(f"    {u['file']} ({u['count']}x)")
+        for ex in u.get("examples", [])[:1]:
+            print(f"      {ex[:100]}")
+    remaining = len(orch["unattached_services"]) - 15
+    if remaining > 0:
+        print(f"    ... and {remaining} more")
 
 
 if __name__ == "__main__":
