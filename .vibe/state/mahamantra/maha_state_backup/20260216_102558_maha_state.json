@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "timestamp": "2026-02-16T10:25:58.893299",
+  "timestamp": "2026-02-16T10:25:58.817567",
   "parampara": 37,
   "entries": {
     "balarama_test.json": {
@@ -31,17 +31,17 @@
       "key": "a",
       "value": 1,
       "source": "sovereign",
-      "timestamp": "2026-02-16T10:25:58.891816",
-      "pierced": true,
-      "hash": "5830514e3102fdcb"
+      "timestamp": "2026-02-16T10:25:58.750745",
+      "pierced": false,
+      "hash": "c6495864ad62551e"
     },
     "b": {
       "key": "b",
       "value": 2,
       "source": "sovereign",
-      "timestamp": "2026-02-16T10:25:58.891850",
+      "timestamp": "2026-02-16T10:25:58.750788",
       "pierced": false,
-      "hash": "cf4591e5219c1ab2"
+      "hash": "880da85f2063c26b"
     },
     "test": {
       "key": "test",
@@ -172,7 +172,7 @@
       "hash": "e8e69b6b1bed4fe2"
     }
   },
-  "boot_count": 1042,
+  "boot_count": 1041,
   "thresholds": {
     "max_entries": 72,
     "kernel_reserve": 16,

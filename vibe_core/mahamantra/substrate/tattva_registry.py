@@ -27,6 +27,7 @@ __genesis__ = "0x030295b1"
 
 import logging
 import threading
+import warnings
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from vibe_core.mahamantra.protocols._pancha import TattvaDict
@@ -79,26 +80,24 @@ class TattvaRegistry:
 
     def register(self, name: str, obj: object) -> bool:
         """
-        Register an object's __tattva__ in the registry.
-
-        Args:
-            name: Unique identifier (e.g., "venu_orchestrator", "singularity")
-            obj: Any object with a __tattva__ property
-
-        Returns:
-            True if registered, False if obj has no __tattva__
+        DEPRECATED: Self-declared __tattva__ (5 strings) is Ahankara.
+        Use register_gate_provider() with Capability Protocols instead.
         """
+        warnings.warn(
+            f"TattvaRegistry.register('{name}'): __tattva__ registration is deprecated. "
+            "Use register_gate_provider() with Capability Protocols.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         tattva = getattr(obj, "__tattva__", None)
         if tattva is None:
             return False
 
         if not isinstance(tattva, dict):
-            logger.warning("Rejected %s: __tattva__ is %s, not dict", name, type(tattva).__name__)
             return False
 
         self._entries[name] = tattva
         self._objects[name] = obj
-        logger.debug("Registered: %s", name)
         return True
 
     def unregister(self, name: str) -> bool:
@@ -122,16 +121,12 @@ class TattvaRegistry:
         return self._objects.get(name)
 
     def query(self, key: str, pattern: str) -> List[Tuple[str, TattvaDict]]:
-        """
-        Find components where __tattva__[key] contains pattern.
-
-        Args:
-            key: One of the 5 tattva keys (chaitanya/nityananda/advaita/gadadhara/srivasa)
-            pattern: Substring to search for (case-insensitive)
-
-        Returns:
-            List of (name, tattva_dict) tuples matching the query
-        """
+        """DEPRECATED: String-matching on self-declared __tattva__ is not real capability discovery."""
+        warnings.warn(
+            "TattvaRegistry.query() is deprecated. Use get_gate_providers() for capability-based lookup.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         pattern_lower = pattern.lower()
         results = []
         for name, tattva in self._entries.items():
@@ -141,15 +136,12 @@ class TattvaRegistry:
         return results
 
     def by_capability(self, capability: str) -> List[Tuple[str, TattvaDict]]:
-        """
-        Find components by capability across ALL 5 tattva fields.
-
-        Args:
-            capability: Substring to search for (case-insensitive)
-
-        Returns:
-            List of (name, tattva_dict) tuples where any field matches
-        """
+        """DEPRECATED: String-matching on self-declared __tattva__ is not real capability discovery."""
+        warnings.warn(
+            "TattvaRegistry.by_capability() is deprecated. Use get_gate_providers() for real capability checks.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         cap_lower = capability.lower()
         results = []
         for name, tattva in self._entries.items():

@@ -40,8 +40,6 @@ from vibe_core.mahamantra.protocols._gad import (
     GADProtocol,
 )
 
-# Import Protocol Types
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 
 # =============================================================================
@@ -824,35 +822,20 @@ def auto_wrap_services(*, silent: bool = True) -> dict[str, BalaramaProxy]:
 # =============================================================================
 
 
-class MahamantraProxy(PanchaTattvaProtocol):
+class MahamantraProxy:
     """
     The Balarama Proxy (Object Wrapper).
-    Wraps a target object and provides the 5 Tattva answers.
+    Transparent forwarding proxy with position/guardian metadata.
+
+    Capability compliance is checked at the Gate level via
+    register_gate_provider() + Capability Protocols, NOT via
+    self-declared __tattva__ strings.
     """
 
     def __init__(self, target: object, position: int, guardian: str):
         self._target = target
         self._position = position
         self._guardian = guardian
-
-    @property
-    def __tattva__(self) -> TattvaDict:
-        """
-        Derives the 5 Truths.
-        If the target already has __tattva__, it wins (Sovereignty).
-        Otherwise, Balarama provides the strength (Derived from position).
-        """
-        if hasattr(self._target, "__tattva__"):
-            return self._target.__tattva__  # type: ignore
-
-        # Default Tattva derived from the Lotus Position
-        return {
-            "chaitanya": f"Proxied {type(self._target).__name__}",
-            "nityananda": f"Lotus Position {self._position}",
-            "advaita": "Automatic Integration",
-            "gadadhara": "Balarama Proxy Flow",
-            "srivasa": f"Guarded by {self._guardian}",
-        }
 
     def __getattr__(self, name: str) -> object:
         """Forward everything to the target."""
