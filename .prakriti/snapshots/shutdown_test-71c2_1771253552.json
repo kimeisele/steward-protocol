@@ -1,0 +1,47 @@
+{
+  "timestamp": 1771253552.8583174,
+  "git": {
+    "is_repo": true,
+    "branch": "claude/debug-codebase-architecture-vECNH",
+    "sha": "0994f04",
+    "dirty": true,
+    "workspace": "/home/user/steward-protocol"
+  },
+  "files": {
+    "workspace": "/home/user/steward-protocol",
+    "last_snapshot": null,
+    "dirty_count": null,
+    "dirty_files": []
+  },
+  "kernel": {
+    "available": true,
+    "status": "RUNNING",
+    "uptime_seconds": 3.125528573989868,
+    "agent_count": 1,
+    "queue_pending": 0,
+    "plugins_loaded": 24
+  },
+  "ephemeral": {
+    "store_keys": 0,
+    "thought_count": 0,
+    "session_count": 0,
+    "active_sessions": []
+  },
+  "personas": {
+    "personas_dir": "/home/user/steward-protocol/config/personas",
+    "loaded": [
+      "envoy"
+    ],
+    "modified": [
+      "envoy"
+    ],
+    "available": [
+      "curator"
+    ]
+  },
+  "session": {
+    "session_id": "test-71c2",
+    "boot_time": 1771253550.974781,
+    "commit_count": 0
+  }
+}
