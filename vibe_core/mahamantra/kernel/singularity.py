@@ -893,6 +893,28 @@ class Mahamantra:
             self._time_keeper = TimeKeeper(start_ticks=self._tick_counter)
         return self._time_keeper
 
+    # =========================================================================
+    # CLOCK - The Scheduler (MantraClock drives MantraVoices)
+    # =========================================================================
+
+    @property
+    def clock(self) -> "MantraClock":
+        """
+        The Master Clock — schedules tasks on positions (0-15).
+
+        MantraVoices submit tasks to positions. tick() fires clock.tick_once()
+        which executes all queued tasks at the current position.
+
+        This is how atomare Steps become orchestrierbar:
+            voice = mahamantra.clock.add_voice()
+            voice.submit(my_step, position=5)
+            # → fires on next tick at position 5
+        """
+        if not hasattr(self, "_clock"):
+            from vibe_core.mahamantra.venu.clock import MantraClock
+            self._clock = MantraClock()
+        return self._clock
+
     def get_time(self) -> KalaTime:
         """Get current Cosmic Time."""
         return self.kala.get_time()
@@ -1051,6 +1073,14 @@ class Mahamantra:
         # 2. PLAY THE FLUTE (Krishna IS the flute)
         # One path, one player. VenuService → tick() → step().
         diw = self.venu.step()
+
+        # 2.5 CLOCK — Execute all Voice tasks queued at this position
+        # The flute has played, now the jivas dance.
+        if hasattr(self, "_clock"):
+            try:
+                self._clock.tick_once()
+            except Exception as _exc:
+                logger.warning("MantraClock tick failed: %s", _exc)
 
         state = TickState(
             tick=current,
