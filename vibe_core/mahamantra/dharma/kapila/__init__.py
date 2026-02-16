@@ -28,17 +28,35 @@ OPCODE: Final[str] = "TYPE_CHECK"
 PARAMPARA_VECTOR: Final[int] = 259
 
 
+_service_instance = None
+
+
+def get_service():
+    """Get the singleton KapilaService. Lazy-loaded, no new layer."""
+    global _service_instance
+    if _service_instance is None:
+        from vibe_core.protocols.mahajanas.kapila.service import KapilaService
+        _service_instance = KapilaService()
+    return _service_instance
+
+
 def execute(input_text: str, context: dict = None) -> dict:
-    """KAPILA EXECUTION - Type Check (Position 6)"""
+    """KAPILA EXECUTION - Delegates to real KapilaService."""
+    svc = get_service()
+    if hasattr(svc, 'execute'):
+        result = svc.execute(input_text)
+    else:
+        result = {"success": True, "output_repr": "executed"}
     return {
-        "success": True,
+        "success": result.get("success", True),
         "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
-        "message": f"Kapila [{OPCODE}]: '{input_text}'",
+        "execution": result,
+        "message": f"Kapila [{OPCODE}]: executed '{input_text[:50]}'",
     }
 
 

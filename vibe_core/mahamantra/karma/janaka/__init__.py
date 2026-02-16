@@ -28,17 +28,38 @@ OPCODE: Final[str] = "STATE_SYNC"
 PARAMPARA_VECTOR: Final[int] = 407
 
 
+_service_instance = None
+
+
+def get_service():
+    """Get the singleton JanakaService. Lazy-loaded, no new layer."""
+    global _service_instance
+    if _service_instance is None:
+        from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+        _service_instance = JanakaService()
+    return _service_instance
+
+
 def execute(input_text: str, context: dict = None) -> dict:
-    """JANAKA EXECUTION - State Sync (Position 10)"""
+    """JANAKA EXECUTION - Delegates to real JanakaService."""
+    svc = get_service()
+    task_id = svc.submit(
+        name=input_text[:50],
+        task_input=input_text,
+        sovereign_id="mahamantra.karma.janaka",
+    )
+    result = svc.execute(task_id)
     return {
-        "success": True,
+        "success": result.get("success", False),
         "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
-        "message": f"Janaka [{OPCODE}]: '{input_text}'",
+        "task_id": task_id,
+        "execution": result,
+        "message": f"Janaka [{OPCODE}]: executed '{input_text[:50]}'",
     }
 
 

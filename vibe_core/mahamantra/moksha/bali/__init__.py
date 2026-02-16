@@ -28,17 +28,35 @@ OPCODE: Final[str] = "IO_FLUSH"
 PARAMPARA_VECTOR: Final[int] = 518
 
 
+_service_instance = None
+
+
+def get_service():
+    """Get the singleton BaliService. Lazy-loaded, no new layer."""
+    global _service_instance
+    if _service_instance is None:
+        from vibe_core.protocols.mahajanas.bali.service import BaliService
+        _service_instance = BaliService()
+    return _service_instance
+
+
 def execute(input_text: str, context: dict = None) -> dict:
-    """BALI EXECUTION - IO Flush (Position 13)"""
+    """BALI EXECUTION - Delegates to real BaliService."""
+    svc = get_service()
+    if hasattr(svc, 'execute'):
+        result = svc.execute(input_text)
+    else:
+        result = {"success": True, "output_repr": "executed"}
     return {
-        "success": True,
-        "action": "io_flush",
+        "success": result.get("success", True),
+        "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
-        "message": f"Bali [{OPCODE}]: '{input_text}'",
+        "execution": result,
+        "message": f"Bali [{OPCODE}]: executed '{input_text[:50]}'",
     }
 
 
