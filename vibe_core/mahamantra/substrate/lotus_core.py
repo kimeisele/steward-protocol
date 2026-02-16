@@ -446,11 +446,62 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
 
     def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
-        """Execute a command through the Mahamantra. SSOT: delegates to __call__."""
+        """
+        Execute a command through the Govardhan Gateway.
+
+        Routes through the boundary layer where the 5 Pancha Tattva Gates
+        fire (PARSE→VALIDATE→__call__()→RESULT→SYNC), then enriches the
+        result with execute-specific fields.
+
+        Architecture: execute() → Govardhan → __call__() (pure core)
+        """
+        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
+
         try:
-            result = self(command)  # __call__ is the SSOT - returns EVERYTHING
+            # ── GATE 0: PARSE — What is this? ──
+            self._fire_gate(TattvaGate.PARSE, {
+                "input_data": command,
+                "entry_type": "execute",
+                "args": args or [],
+            })
+
+            # ── GATE 1: VALIDATE — Is it legitimate? ──
+            self._fire_gate(TattvaGate.VALIDATE, {
+                "input_text": command,
+                "seed": None,
+                "input_coords": None,
+            })
+
+            # ── GATE 2: EXECUTE — Pure computation (Vrindavan) ──
+            self._fire_gate(TattvaGate.EXECUTE, {
+                "seed": None,
+                "attractor": None,
+                "parampara_verified": None,
+            })
+
+            result = self(command)  # __call__ is pure — no gates inside
+
+            # ── GATE 3: RESULT — Is the output valid? ──
+            self._fire_gate(TattvaGate.RESULT, {
+                "attractor": result.get("vibration", {}).get("attractor"),
+                "resonant_words": result.get("smaranam", ()),
+                "verse_result": result.get("verse"),
+            })
+
+            # ── GATE 4: SYNC — Side-effects (governance) ──
+            self._fire_gate(TattvaGate.SYNC, {
+                "position": result.get("position"),
+                "guardian": result.get("guardian"),
+                "seed": result.get("vibration", {}).get("seed"),
+                "attractor": result.get("vibration", {}).get("attractor"),
+                "opcode": result.get("guna", {}).get("opcode"),
+                "guna": result.get("guna", {}).get("mode"),
+            })
+
+            self._active_gate = None
+
         except Exception as exc:
-            # TRUTH: Surface errors, don't swallow them
+            self._active_gate = None
             logger.error("Mahamantra execute failed: %s", exc)
             return {
                 "success": False,
