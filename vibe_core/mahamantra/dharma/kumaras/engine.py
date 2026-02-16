@@ -175,12 +175,20 @@ class ShuddhiEngine(ShuddhiProtocol):
 
             # 3. Check if any changes were made
             if not transformer.applied:
-                result = ShuddhiResult(
-                    status=ShuddhiStatus.SKIPPED,
-                    file_path=file_path,
-                    rule_id=rule_id,
-                    message="No violations found in the file structure.",
-                )
+                if transformer.violation_found:
+                    result = ShuddhiResult(
+                        status=ShuddhiStatus.DETECTED,
+                        file_path=file_path,
+                        rule_id=rule_id,
+                        message="Violation detected (no auto-fix available).",
+                    )
+                else:
+                    result = ShuddhiResult(
+                        status=ShuddhiStatus.SKIPPED,
+                        file_path=file_path,
+                        rule_id=rule_id,
+                        message="No violations found in the file structure.",
+                    )
                 self._emit_vibration(result)
                 return result
 
@@ -270,7 +278,19 @@ class ShuddhiEngine(ShuddhiProtocol):
                 logger.warning("[SHUDDHI] Remedy %s failed on %s: %s", rule_id, file_path, e)
                 continue
 
-            if not transformer.applied:
+            if not transformer.applied and not transformer.violation_found:
+                continue
+
+            # Detection-only: violation found but no auto-fix
+            if transformer.violation_found and not transformer.applied:
+                result = ShuddhiResult(
+                    status=ShuddhiStatus.DETECTED,
+                    file_path=file_path,
+                    rule_id=rule_id,
+                    message="Violation detected (no auto-fix available).",
+                )
+                self._emit_vibration(result)
+                results.append(result)
                 continue
 
             new_code = modified_module.code
@@ -341,8 +361,19 @@ class ShuddhiEngine(ShuddhiProtocol):
         except Exception:
             return None
 
-        if not transformer.applied:
+        if not transformer.applied and not transformer.violation_found:
             return None
+
+        # Detection-only: violation found but no auto-fix
+        if transformer.violation_found and not transformer.applied:
+            result = ShuddhiResult(
+                status=ShuddhiStatus.DETECTED,
+                file_path=file_path or Path("<cell>"),
+                rule_id=rule_id,
+                message="Violation detected (no auto-fix available).",
+            )
+            self._emit_vibration(result)
+            return result
 
         new_code = modified_module.code
 

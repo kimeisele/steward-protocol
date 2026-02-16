@@ -76,7 +76,6 @@ class PathScanningDiscoveryRemedy(CSTRemedy):
             return updated_node
 
         self.violation_found = True
-        self.applied = True
         return updated_node
 
     def leave_SimpleStatementLine(

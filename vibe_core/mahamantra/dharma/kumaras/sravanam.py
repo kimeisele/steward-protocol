@@ -65,7 +65,7 @@ logger = logging.getLogger("SHUDDHI.SRAVANAM")
 #   Yamaraja (15) = missing_fractal_routing            (judgment = compliance)
 
 GUARDIAN_RULE_MAP: Dict[str, List[str]] = {
-    "vyasa":       ["missing_mahajana", "broken_genesis"],
+    "vyasa":       ["missing_mahajana", "broken_genesis", "F811"],
     "brahma":      ["any_type_usage"],
     "narada":      ["silent_failure"],
     "shambhu":     ["subprocess_timeout"],
@@ -76,8 +76,8 @@ GUARDIAN_RULE_MAP: Dict[str, List[str]] = {
     "parashurama": ["unsafe_io_write"],
     "prahlada":    ["direct_registry_instantiation"],
     "janaka":      ["iterdir_discovery"],
-    "bhishma":     ["any_type_detection"],
-    "nrisimha":    ["fractal_routing_detection"],
+    "bhishma":     ["any_type_usage"],
+    "nrisimha":    ["missing_fractal_routing"],
     "bali":        ["unsafe_io_write"],
     "shuka":       ["silent_failure"],
     "yamaraja":    ["missing_fractal_routing"],
