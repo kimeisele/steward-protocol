@@ -25,6 +25,7 @@ __position__ = 4
 __genesis__ = "0x28eed02b"
 
 from vibe_core.gateway.mahamantra_gateway import (
+    GovardhanGateway,
     MahamantraGateway,
     get_gateway,
     execute,
@@ -33,6 +34,7 @@ from vibe_core.gateway.mahamantra_gateway import (
 )
 
 __all__ = [
+    "GovardhanGateway",
     "MahamantraGateway",
     "get_gateway",
     "execute",

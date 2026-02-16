@@ -147,9 +147,9 @@ class MahaLLMKernel(MahaResonanceProtocol):
             Gate 3: DASYAM → SHABDA (position → guardian → phoneme)
             Gate 4: SAKHYAM → KIRTAN → YAJNA (cell → chamber → reactor)
         """
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
 
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         lr = lotus(text)
 
         # Extract resonant words from __call__() response
@@ -204,14 +204,14 @@ class MahaLLMKernel(MahaResonanceProtocol):
         """
         self._ensure_loaded()
 
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
         from vibe_core.mahamantra.substrate.varnamala_codec import encode as encode_iast
 
         # Check if it's a known divine name with IAST form
         iast_form = DIVINE_NAMES.get(name.lower())
 
         # Run through __call__() for resonance (the ONE pipeline)
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         lr = lotus(iast_form if iast_form else name)
 
         # Extract coords from NAMA (Gate 0 already computed them)
@@ -367,7 +367,7 @@ class MahaLLMKernel(MahaResonanceProtocol):
         if g is None:
             raise ValueError(f"Unknown guardian: {guardian_name}")
 
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
         from vibe_core.mahamantra.substrate.guardian_router import GUARDIANS
 
         # Find the guardian's position index (0-15)
@@ -376,7 +376,7 @@ class MahaLLMKernel(MahaResonanceProtocol):
             0,
         )
 
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         lr = lotus(text, opcode=guardian_position)
 
         # Extract resonant words from __call__() response

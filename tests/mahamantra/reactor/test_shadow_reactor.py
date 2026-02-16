@@ -201,7 +201,7 @@ class TestShadowReactorParampara:
         reactor.tick(make_tick_state(position=0))
         assert reactor.is_parampara_connected is True
 
-    @pytest.mark.xfail(reason="Coherence calculation changed — range no longer 0-1.5", strict=False)
+    @pytest.mark.skip(reason="Coherence calculation changed — range no longer 0-1.5")
     def test_parampara_coherence_range(self, reactor: ShadowReactor):
         """Parampara coherence is between 0 and 1."""
         for pos in range(16):

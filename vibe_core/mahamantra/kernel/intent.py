@@ -307,6 +307,13 @@ class MantraKernel:
         Resolve an intent.
 
         If no specific resolver, Krishna handles it (surrender).
+
+        SURRENDER IS NOT A NOOP.
+        "sarva-dharmān parityajya mām ekaṁ śaraṇaṁ vraja"
+        Krishna IS Mahamantra. Surrender means Mahamantra.__call__()
+        routes the intent through the 5-gate computation pipeline.
+        The intent's target becomes the input, the opcode maps to
+        the MantraOpCode. Krishna DOES the work.
         """
         # Verify parampara
         parampara_ok = intent.is_connected
@@ -319,13 +326,55 @@ class MantraKernel:
             result.parampara_verified = parampara_ok
             return result
 
-        # No resolver? Surrender to Krishna
-        return IntentResult(
-            intent=intent,
-            status=IntentStatus.SURRENDERED,
-            resolved_by=intent.guardian,
-            parampara_verified=parampara_ok,
-        )
+        # No resolver? Krishna handles it HIMSELF.
+        # Surrender = route through Mahamantra computation pipeline.
+        return self._krishna_resolves(intent, parampara_ok)
+
+    def _krishna_resolves(self, intent: MantraIntent[T], parampara_ok: bool) -> IntentResult[T]:
+        """
+        Krishna IS the ultimate resolver.
+
+        When no specialized resolver exists, Mahamantra itself
+        processes the intent through Lotus.__call__() — the 5-gate
+        computation pipeline (PARSE→VALIDATE→EXECUTE→RESULT→SYNC).
+
+        This is NOT a fallback. This is the DESIGN.
+        Specialized resolvers are optimizations. Krishna is the source.
+        """
+        try:
+            from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
+            lotus = get_mahamantra()
+
+            # Route through execute() — the governed path (Govardhan).
+            # 5 Pancha Tattva Gates fire at the boundary:
+            # PARSE → VALIDATE → __call__() → RESULT → SYNC
+            computation_result = lotus.execute(
+                intent.target,
+                opcode=intent.opcode.value,
+            )
+
+            return IntentResult(
+                intent=intent,
+                status=IntentStatus.SURRENDERED,
+                value=computation_result,
+                resolved_by=intent.guardian,
+                parampara_verified=parampara_ok,
+            )
+
+        except Exception as exc:
+            import logging
+            logging.getLogger("MANTRA_KERNEL").warning(
+                "Krishna resolution failed for %s(%s): %s",
+                intent.type.value, intent.target, exc,
+            )
+            return IntentResult(
+                intent=intent,
+                status=IntentStatus.FAILED,
+                error=f"Krishna resolution failed: {exc}",
+                resolved_by=intent.guardian,
+                parampara_verified=parampara_ok,
+            )
 
     def queue(self, intent: MantraIntent[object]) -> None:
         """Queue an intent for later resolution."""

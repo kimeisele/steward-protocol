@@ -304,7 +304,7 @@ class HealingIntentResolver:
     ) -> None:
         """Fire a gate with error isolation."""
         try:
-            lotus._fire_gate(gate, ctx)
+            lotus.fire_gate(gate, ctx)
         except Exception as exc:
             logger.warning(
                 "[RESOLVER] Gate %s fire failed (non-fatal): %s",

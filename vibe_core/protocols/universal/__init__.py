@@ -22,7 +22,8 @@ from .enforce import EnforceProtocol
 from .infer import InferProtocol
 from .jagannath import JagannathDeity, JagannathProtocol, PuriTemple, RathaYatra
 from .krishna import IdentityStatus, KrishnaProtocol
-from .mantra import MantraProtocol
+# NOTE: MantraProtocol already imported from protocols.substrate (line 12).
+# DO NOT import from .mantra — that triggers DeprecationWarning on every import.
 
 # PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
 from vibe_core.protocols.substrate.mantra.prabhupada import (
