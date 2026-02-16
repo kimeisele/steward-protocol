@@ -1,0 +1,237 @@
+"""
+RESEARCH DEPARTMENT - Kapila's Domain (Position 6 - Sankhya Analysis)
+=====================================================================
+
+"sāṅkhya-yogau pṛthag bālāḥ pravadanti na paṇḍitāḥ"
+
+"Only the ignorant speak of Sankhya (analytical study) and yoga (action)
+as being different. Those who are truly learned say they are one."
+— Bhagavad Gita 5.4
+
+ARCHITECTURE:
+=============
+
+Research is EXPERIMENTAL code that uses existing technology:
+    - Lotus Tree: O(1) holographic data structure
+    - Mahamantra Kernel: Intent routing
+    - Substrate: The truth table (WORDS=16, QUARTERS=4)
+
+IMPORT PATTERNS:
+================
+
+1. SPECIFIC MODULE (recommended):
+    from vibe_core.mahamantra.research.lotus_tree import LotusRadix
+    from vibe_core.mahamantra.research.physics import PHYSICS_PREDICTIONS
+    from vibe_core.mahamantra.research.dharma.maha_algorithm import MahaModularSynth
+
+2. CATEGORY (for exploration):
+    from vibe_core.mahamantra.research import lotus      # Data structures
+    from vibe_core.mahamantra.research import predictions # Physics/Bio/Chem
+    from vibe_core.mahamantra.research import compute    # Core algorithms
+
+3. TOP-LEVEL (only the essentials):
+    from vibe_core.mahamantra.research import (
+        LotusRadix,          # O(1) data structure
+        MahaGenerator,       # Number generation
+        PHYSICS_PREDICTIONS, # 17 physics constants
+    )
+
+CATEGORIES:
+===========
+
+lotus/          - O(1) Data Structures (LotusRadix, LotusArray, etc.)
+dharma/         - Core Algorithm (MahaAlgorithm, Sequencer, Synth)
+predictions     - Physics/Chemistry/Biology/Medicine
+hardware        - Hardware alignment, SIMD, cache optimization
+compute         - Unified compute, compression, classification
+
+For PRODUCTION code, use the adapters instead:
+    from vibe_core.mahamantra import mahamantra
+    mahamantra.router      # Production Lotus
+    mahamantra.synth()     # Production Synth
+    mahamantra.bio()       # Production DNA indexing
+"""
+
+# === MAHAJANA DECLARATION (machine-readable) ===
+__mahajana__ = "kapila"
+__position__ = 6
+__genesis__ = "0x23493400"  # GenesisByte: parampara % 37 == 0
+
+from typing import Final
+
+from vibe_core.mahamantra.protocols._seed import PARAMPARA
+
+# Verify Parampara connection (DERIVED from _seed.py!)
+assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
+
+
+# =============================================================================
+# CATEGORY MODULES (Lazy loaded for fast import)
+# =============================================================================
+
+
+def __getattr__(name: str):
+    """Lazy-load category modules on first access."""
+
+    # LOTUS - Data Structures
+    if name == "lotus":
+        import types
+
+        from vibe_core.mahamantra.research import lotus_acintya, lotus_full_spectrum, lotus_radix_n, lotus_tree
+
+        module = types.SimpleNamespace(
+            LotusRadix=lotus_tree.LotusRadix,
+            LotusArray=lotus_tree.LotusArray,
+            LotusArrayInt=lotus_tree.LotusArrayInt,
+            LotusRadixN=lotus_radix_n.LotusRadixN,
+            lotus_16bit=lotus_radix_n.lotus_16bit,
+            lotus_32bit=lotus_radix_n.lotus_32bit,
+            lotus_64bit=lotus_radix_n.lotus_64bit,
+            lotus_128bit=lotus_radix_n.lotus_128bit,
+            lotus_256bit=lotus_radix_n.lotus_256bit,
+        )
+        return module
+
+    # PREDICTIONS - Physics/Chemistry/Biology/Medicine
+    if name == "predictions":
+        import types
+
+        from vibe_core.mahamantra.research import biology, chemistry, medicine, physics
+
+        module = types.SimpleNamespace(
+            PHYSICS_PREDICTIONS=physics.PHYSICS_PREDICTIONS,
+            CHEMISTRY_PREDICTIONS=chemistry.CHEMISTRY_PREDICTIONS,
+            BIOLOGY_PREDICTIONS=biology.BIOLOGY_PREDICTIONS,
+            MEDICINE_PREDICTIONS=medicine.MEDICINE_PREDICTIONS,
+        )
+        return module
+
+    # COMPUTE - Core algorithms
+    if name == "compute":
+        import types
+
+        from vibe_core.mahamantra.research import computation, maha_compression, maha_generator, unified_compute
+
+        module = types.SimpleNamespace(
+            MahaGenerator=maha_generator.MahaGenerator,
+            UnifiedComputeUnit=unified_compute.UnifiedComputeUnit,
+        )
+        return module
+
+    # DHARMA - Access to dharma submodule
+    if name == "dharma":
+        from vibe_core.mahamantra.research import dharma as _dharma
+
+        return _dharma
+
+    # ==========================================================================
+    # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
+    # Any .py file or subpackage in research/ is auto-discoverable
+    # ==========================================================================
+    import importlib
+    from pathlib import Path
+
+    research_root = Path(__file__).parent
+
+    # 1. Check for subpackage (folder with __init__.py)
+    subpkg_path = research_root / name
+    if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
+        return importlib.import_module(f"vibe_core.mahamantra.research.{name}")
+
+    # 2. Check for module (.py file)
+    module_path = research_root / f"{name}.py"
+    if module_path.exists():
+        return importlib.import_module(f"vibe_core.mahamantra.research.{name}")
+
+    raise AttributeError(f"module 'research' has no attribute '{name}'")
+
+
+# =============================================================================
+# TOP-LEVEL EXPORTS (Only the essentials)
+# =============================================================================
+
+# Lotus Data Structures
+# DNA k-mer (research - benchmarked, not yet promoted)
+from vibe_core.mahamantra.research.dna_kmer import Lotus8merIndex, LotusKmerRadix
+
+# IP Routing (DEPRECATED - use adapters/network.py LotusIPRouter)
+from vibe_core.mahamantra.research.ip_routing import LotusIPv4Router
+
+# Lotus Tree (LotusRadix DEPRECATED - use adapters/routing.py HolographicRouter)
+# LotusArrayInt is unique research (array.array for C-speed integers)
+from vibe_core.mahamantra.research.lotus_tree import (
+    LotusArray,
+    LotusArrayInt,
+    LotusRadix,
+)
+
+# Generator
+from vibe_core.mahamantra.research.maha_generator import MahaGenerator
+
+# Predictions (most requested)
+from vibe_core.mahamantra.research.physics import PHYSICS_PREDICTIONS
+
+# Research Gateway
+from vibe_core.mahamantra.research_gateway import (
+    RESEARCH_MODULES,
+    auto_connect,
+    connect_research,
+    get_research_status,
+    get_rollout_tracker,
+    is_production_ready,
+)
+
+# =============================================================================
+# DHARMA SUB-MODULE EXPORTS (Core Algorithm)
+# =============================================================================
+# These are the most important from dharma/
+from vibe_core.mahamantra.substrate.algorithm.maha import (
+    SYNTH_PRESETS,
+    MahaModularSynth,
+    MahaSynthParams,
+)
+
+# Classification (Relocated to Substrate)
+from vibe_core.mahamantra.substrate.classifier import (
+    Classification,
+    StructuralAlignment,
+    classify_algorithm,
+)
+from vibe_core.mahamantra.substrate.resonance.resonator import MahaResonator
+
+# NOTE: maha_sequencer was DELETED - consolidated into dharma/engine.py
+
+
+# =============================================================================
+# __all__ - What gets exported with "from research import *"
+# =============================================================================
+
+__all__ = [
+    # Lotus Data Structures
+    "LotusRadix",
+    "LotusArray",
+    "LotusArrayInt",
+    "LotusIPv4Router",
+    "Lotus8merIndex",
+    "LotusKmerRadix",
+    # Generator
+    "MahaGenerator",
+    # Predictions
+    "PHYSICS_PREDICTIONS",
+    # Classification
+    "classify_algorithm",
+    "Classification",
+    "StructuralAlignment",
+    # Dharma (Core Algorithm)
+    "MahaModularSynth",
+    "MahaResonator",
+    "MahaSynthParams",
+    "SYNTH_PRESETS",
+    # Research Gateway
+    "connect_research",
+    "get_research_status",
+    "is_production_ready",
+    "auto_connect",
+    "get_rollout_tracker",
+    "RESEARCH_MODULES",
+]
