@@ -54,7 +54,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Final
 
-from ..protocols._seed import (
+from vibe_core.mahamantra.protocols._seed import (
     ABHINNA_MATERIAL,
     ABHINNA_SPIRITUAL,
     AKSARA_COUNT,

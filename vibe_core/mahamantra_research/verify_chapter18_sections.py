@@ -36,7 +36,7 @@ assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 
 # --- Imports ---
 from vibe_core.mahamantra.protocols._seed import PANCHA, TRINITY
-from vibe_core.mahamantra.research.language_model_resonance import (
+from vibe_core.mahamantra_research.language_model_resonance import (
     CHAPTER_18_SECTIONS,
     CHAPTER_18_VERSES,
 )

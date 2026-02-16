@@ -32,7 +32,7 @@ __genesis__ = "0x76f4fec6"  # GenesisByte: parampara % 37 == 0
 
 from typing import Final
 
-from ..protocols._seed import (
+from vibe_core.mahamantra.protocols._seed import (
     CHAITANYA_BIRTH,  # 1486 = Chaitanya's appearance year
     CHAITANYA_UNION,
     HALVES,

@@ -78,7 +78,7 @@ from vibe_core.mahamantra.protocols._seed import (
 )
 
 # Das ECHTE Encoding-System
-from vibe_core.mahamantra.research.shabda_translation import (
+from vibe_core.mahamantra_research.shabda_translation import (
     SANSKRIT_PHONEME_MAP,
     SPARSHA_CONSONANTS,
     VARNAMALA_TOTAL,

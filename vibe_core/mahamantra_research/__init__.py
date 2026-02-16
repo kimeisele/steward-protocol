@@ -20,9 +20,9 @@ IMPORT PATTERNS:
 ================
 
 1. SPECIFIC MODULE (recommended):
-    from vibe_core.mahamantra.research.lotus_tree import LotusRadix
-    from vibe_core.mahamantra.research.physics import PHYSICS_PREDICTIONS
-    from vibe_core.mahamantra.research.dharma.maha_algorithm import MahaModularSynth
+    from vibe_core.mahamantra_research.lotus_tree import LotusRadix
+    from vibe_core.mahamantra_research.physics import PHYSICS_PREDICTIONS
+    from vibe_core.mahamantra_research.dharma.maha_algorithm import MahaModularSynth
 
 2. CATEGORY (for exploration):
     from vibe_core.mahamantra.research import lotus      # Data structures
@@ -77,7 +77,7 @@ def __getattr__(name: str):
     if name == "lotus":
         import types
 
-        from vibe_core.mahamantra.research import lotus_acintya, lotus_full_spectrum, lotus_radix_n, lotus_tree
+        from vibe_core.mahamantra_research import lotus_acintya, lotus_full_spectrum, lotus_radix_n, lotus_tree
 
         module = types.SimpleNamespace(
             LotusRadix=lotus_tree.LotusRadix,
@@ -96,7 +96,7 @@ def __getattr__(name: str):
     if name == "predictions":
         import types
 
-        from vibe_core.mahamantra.research import biology, chemistry, medicine, physics
+        from vibe_core.mahamantra_research import biology, chemistry, medicine, physics
 
         module = types.SimpleNamespace(
             PHYSICS_PREDICTIONS=physics.PHYSICS_PREDICTIONS,
@@ -110,7 +110,7 @@ def __getattr__(name: str):
     if name == "compute":
         import types
 
-        from vibe_core.mahamantra.research import computation, maha_compression, maha_generator, unified_compute
+        from vibe_core.mahamantra_research import computation, maha_compression, maha_generator, unified_compute
 
         module = types.SimpleNamespace(
             MahaGenerator=maha_generator.MahaGenerator,
@@ -120,7 +120,7 @@ def __getattr__(name: str):
 
     # DHARMA - Access to dharma submodule
     if name == "dharma":
-        from vibe_core.mahamantra.research import dharma as _dharma
+        from vibe_core.mahamantra_research import dharma as _dharma
 
         return _dharma
 
@@ -136,12 +136,12 @@ def __getattr__(name: str):
     # 1. Check for subpackage (folder with __init__.py)
     subpkg_path = research_root / name
     if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
-        return importlib.import_module(f"vibe_core.mahamantra.research.{name}")
+        return importlib.import_module(f"vibe_core.mahamantra_research.{name}")
 
     # 2. Check for module (.py file)
     module_path = research_root / f"{name}.py"
     if module_path.exists():
-        return importlib.import_module(f"vibe_core.mahamantra.research.{name}")
+        return importlib.import_module(f"vibe_core.mahamantra_research.{name}")
 
     raise AttributeError(f"module 'research' has no attribute '{name}'")
 
@@ -152,24 +152,24 @@ def __getattr__(name: str):
 
 # Lotus Data Structures
 # DNA k-mer (research - benchmarked, not yet promoted)
-from vibe_core.mahamantra.research.dna_kmer import Lotus8merIndex, LotusKmerRadix
+from vibe_core.mahamantra_research.dna_kmer import Lotus8merIndex, LotusKmerRadix
 
 # IP Routing (DEPRECATED - use adapters/network.py LotusIPRouter)
-from vibe_core.mahamantra.research.ip_routing import LotusIPv4Router
+from vibe_core.mahamantra_research.ip_routing import LotusIPv4Router
 
 # Lotus Tree (LotusRadix DEPRECATED - use adapters/routing.py HolographicRouter)
 # LotusArrayInt is unique research (array.array for C-speed integers)
-from vibe_core.mahamantra.research.lotus_tree import (
+from vibe_core.mahamantra_research.lotus_tree import (
     LotusArray,
     LotusArrayInt,
     LotusRadix,
 )
 
 # Generator
-from vibe_core.mahamantra.research.maha_generator import MahaGenerator
+from vibe_core.mahamantra_research.maha_generator import MahaGenerator
 
 # Predictions (most requested)
-from vibe_core.mahamantra.research.physics import PHYSICS_PREDICTIONS
+from vibe_core.mahamantra_research.physics import PHYSICS_PREDICTIONS
 
 # Research Gateway
 from vibe_core.mahamantra.research_gateway import (

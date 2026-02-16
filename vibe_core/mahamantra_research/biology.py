@@ -18,7 +18,7 @@ from enum import Enum
 from typing import Final
 
 # Import THE LAW
-from ..protocols._seed import (
+from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     HARE_COUNT,
     JIVA_QUALITIES,

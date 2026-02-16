@@ -118,7 +118,7 @@ class ResearchResponse:
 
 def _handle_scale_query(query: ResearchQuery) -> ResearchResponse:
     """Handle query about codebase scale."""
-    from vibe_core.mahamantra.research.project_introspection import measure_scale
+    from vibe_core.mahamantra_research.project_introspection import measure_scale
 
     try:
         metrics = measure_scale()
@@ -154,7 +154,7 @@ DERIVED FROM:
 
 def _handle_gaps_query(query: ResearchQuery) -> ResearchResponse:
     """Handle query about gaps in the system."""
-    from vibe_core.mahamantra.research.gap_analysis import run_full_analysis
+    from vibe_core.mahamantra_research.gap_analysis import run_full_analysis
 
     try:
         report = run_full_analysis()
@@ -193,7 +193,7 @@ TOP GAPS:
 
 def _handle_module_query(query: ResearchQuery) -> ResearchResponse:
     """Handle query about a specific module."""
-    from vibe_core.mahamantra.research.project_introspection import (
+    from vibe_core.mahamantra_research.project_introspection import (
         extract_mahajana_info,
         scan_codebase,
     )
@@ -414,7 +414,7 @@ Coherence:  {validation["coherence"]}
 """
 
     if validation["prabhupada_year"]:
-        from vibe_core.mahamantra.research.dharma.maha_algorithm import PRABHUPADA_BUILD
+        from vibe_core.mahamantra_research.dharma.maha_algorithm import PRABHUPADA_BUILD
 
         delta = validation["prabhupada_year"] - PRABHUPADA_BUILD
         content += f"""PRABHUPADA RESONANCE:
@@ -459,7 +459,7 @@ def _handle_kirtan_query(query: ResearchQuery) -> ResearchResponse:
 
     Bridges LilaStepSequencer (7-beat) with MahaAlgorithm for max computing.
     """
-    from vibe_core.mahamantra.research.dharma.maha_algorithm import (
+    from vibe_core.mahamantra_research.dharma.maha_algorithm import (
         SEVEN,
         MahaKirtan,
     )

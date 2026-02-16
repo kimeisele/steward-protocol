@@ -60,7 +60,7 @@ from vibe_core.mahamantra.protocols._seed import (
 # Use ACTUAL Lotus data structures!
 # NOTE: LotusArrayInt is unique research (array.array for C-speed)
 # For radix tree, use HolographicRouter from adapters/routing.py
-from vibe_core.mahamantra.research.lotus_tree import (
+from vibe_core.mahamantra_research.lotus_tree import (
     KEY_SPACE,
     LotusArrayInt,
 )

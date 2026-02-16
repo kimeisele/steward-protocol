@@ -49,13 +49,13 @@ from vibe_core.mahamantra.protocols._seed import (
     TRINITY,
     WORDS,
 )
-from vibe_core.mahamantra.research.guardian_syllable_trees import (
+from vibe_core.mahamantra_research.guardian_syllable_trees import (
     ALL_GUARDIANS,
     KNOWN_CONSTANTS,
     compute_guardian_syllable_vibrations,
 )
-from vibe_core.mahamantra.research.shabda_spawning import compute_vibration_sum
-from vibe_core.mahamantra.research.syllable_analysis import (
+from vibe_core.mahamantra_research.shabda_spawning import compute_vibration_sum
+from vibe_core.mahamantra_research.syllable_analysis import (
     syllabify_sanskrit,
     syllable_to_rama_index,
 )

@@ -30,7 +30,7 @@ FILES:
 
 USAGE:
 ======
-    from vibe_core.mahamantra.research.gita import (
+    from vibe_core.mahamantra_research.gita import (
         GITA_CHAPTERS,      # 18 (The Fixed Point)
         GITA_VERSES,        # 700 (Total verses)
         CHAPTER_18_VERSE,   # BG 18.66 data
@@ -41,7 +41,7 @@ USAGE:
     assert verify_fixed_point() == True
 
     # Access specific verse data
-    from vibe_core.mahamantra.research.gita import get_verse
+    from vibe_core.mahamantra_research.gita import get_verse
     verse = get_verse(18, 66)  # The ultimate instruction
 """
 

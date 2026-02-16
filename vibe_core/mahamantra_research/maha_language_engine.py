@@ -518,10 +518,10 @@ class MahaLanguageEngine:
             5. Section → Verse Template
         """
         from vibe_core.mahamantra.adapters.synth import create_synth
-        from vibe_core.mahamantra.research.language_model_resonance import (
+        from vibe_core.mahamantra_research.language_model_resonance import (
             SECTION_SIGNATURES,
         )
-        from vibe_core.mahamantra.research.maha_compose_prototype import (
+        from vibe_core.mahamantra_research.maha_compose_prototype import (
             extract_template,
             route_to_section,
         )
@@ -578,7 +578,7 @@ class MahaLanguageEngine:
         and RESONATE (prana adds). This creates a unique standing wave
         for every distinct prompt.
         """
-        from vibe_core.mahamantra.research.language_runtime.antaranga_bridge import (
+        from vibe_core.mahamantra_research.language_runtime.antaranga_bridge import (
             impact_keystroke,
             modulate_with_diw,
         )
@@ -727,7 +727,7 @@ class MahaLanguageEngine:
         )
 
         # Layer 3: Shabda spawning — H/K/R derivative seeds from attractor
-        from vibe_core.mahamantra.research.shabda_spawning import ShabdaSeed
+        from vibe_core.mahamantra_research.shabda_spawning import ShabdaSeed
 
         root = ShabdaSeed(
             text=guardian_name,
@@ -911,7 +911,7 @@ class MahaLanguageEngine:
         Position = (attractor mod WORDS) + 1 because MahaSequencer expects 1-16.
         Length = QUARTERS (4) — one phoneme per phase.
         """
-        from vibe_core.mahamantra.research.maha_sequencer import MahaSequencer
+        from vibe_core.mahamantra_research.maha_sequencer import MahaSequencer
 
         seq = MahaSequencer()
         position = (attractor % WORDS) + KSETRAJNA  # 1-16
