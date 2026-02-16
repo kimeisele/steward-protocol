@@ -522,8 +522,8 @@ class TestComposeFromWave:
     def test_with_real_lotus(self):
         """End-to-end: Lotus __call__ → compose_from_wave."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        lotus = MahamantraLotus()
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        lotus = get_mahamantra()
         lr = lotus("What is the meaning of life?")
         result = compose_from_wave(lr, "What is the meaning of life?")
         assert isinstance(result, str)
@@ -532,9 +532,9 @@ class TestComposeFromWave:
     def test_real_lotus_deterministic_a(self):
         """First half: Lotus + compose_from_wave."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
         text = "devotion and surrender"
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         lr = lotus(text)
         result = compose_from_wave(lr, text)
         TestComposeFromWave._lotus_seed = lr["vibration"]["seed"]
@@ -545,9 +545,9 @@ class TestComposeFromWave:
     def test_real_lotus_deterministic_b(self):
         """Second half: same Lotus input after full reset must match."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
         text = "devotion and surrender"
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         lr = lotus(text)
         result = compose_from_wave(lr, text)
         assert lr["vibration"]["seed"] == TestComposeFromWave._lotus_seed
