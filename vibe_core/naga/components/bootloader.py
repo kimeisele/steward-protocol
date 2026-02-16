@@ -65,216 +65,169 @@ class NagaBootloader:
     Constructs the NAGA Kernel.
     """
 
-    @classmethod
-    def boot(
-        cls,
-        config: Optional[NagaConfig],
-        correction_orchestrator: "CorrectionOrchestratorProtocol" = None,
-        key_store: Optional[KeyStoreProtocol] = None,
-        ledger: Optional["VibeLedger"] = None,
-    ) -> "NagaKernel":
-        """
-        The Act of Creation.
-        """
-        if config is None:
-            config = NagaConfig()
+    # =========================================================================
+    # BOOT STEPS — Atomic, granular, individually callable
+    # Scan → Identity → Steward → Services → Governance → Bind → Assemble
+    # =========================================================================
 
-        # -1. Scan for Services (Narada)
+    @classmethod
+    def _boot_scan(cls) -> tuple:
+        """Boot Step 0: Narada service discovery. Returns (scanner, discovered)."""
         sys.stderr.write(">>> BOOTSTRAP: Scanning...\n")
         from vibe_core.naga.scanner import NaradaScanner
-
         scanner = NaradaScanner()
         discovered = scanner.scan()
         logger.info(f"🔍 Narada discovered {len(discovered)} NAGA services")
+        return scanner, discovered
 
-        # 0. Identity (Atman) - IMPL-214 Persistence (Ashvamedha Refactoring)
+    @classmethod
+    def _boot_identity(cls, key_store: Optional[KeyStoreProtocol]) -> NagaIdentity:
+        """Boot Step 1: Load or generate identity keys. Returns NagaIdentity."""
         if key_store is None:
             key_store = FileKeyStore()
-
         keys = key_store.load("naga_federation")
-
         if keys:
             priv_bytes, pub_bytes = keys
             priv_pem = priv_bytes.decode("utf-8")
             pub_pem = pub_bytes.decode("utf-8")
         else:
-            # Generate new keys (if L1 Missing)
             logger.info("Generating new keys for naga_federation")
             priv_pem, pub_pem = generate_keys()
             key_store.save("naga_federation", priv_pem.encode("utf-8"), pub_pem.encode("utf-8"))
-
         identity = NagaIdentity.from_keys(agent_id="naga_federation", private_key=priv_pem, public_key=pub_pem)
         logger.info(f"Identity loaded: {identity.fingerprint}")
+        return identity
 
-        # 0.5 Steward (The Sovereign) - IMPL-217 Operation Narasimha Phase 2
+    @classmethod
+    def _boot_steward(cls, identity: NagaIdentity) -> object:
+        """Boot Step 2: Create and register DigitalSteward. Returns steward."""
         from vibe_core.phoenix.section_loader import SectionLoader
         from vibe_core.phoenix.sections.steward.section_main import StewardConfig
         from vibe_core.protocols.steward import StewardProtocol
         from vibe_core.steward.manager import DigitalSteward
-
-        # Load "Persona" from config/steward.yaml via SectionLoader
         try:
             sections, _ = SectionLoader.discover()
             steward_config = sections.get("steward", StewardConfig())
         except Exception:
             logger.warning("SectionLoader failed - creating default Steward Config")
-            steward_config = StewardConfig()  # Default empty persona
-
-        # Create Active Steward (Hand + Stift)
+            steward_config = StewardConfig()
         steward = DigitalSteward(identity=identity, config=steward_config)
         logger.info(f"Steward activated: Role='{steward.config.user_context.default_user.role}'")
-
-        # 1. Registry
-        registry = KulikaRegistry()
-
-        # Register Steward in ServiceRegistry (Global DI, NOT KulikaRegistry)
-        # Steward is accessed via ServiceRegistry.get(StewardProtocol)
         ServiceRegistry.register(StewardProtocol, steward)
+        return steward
 
-        # 2. Base Services (Kings)
-        # ------------------------
-
-        # Sesha (Memory)
+    @classmethod
+    def _boot_base_services(cls, config: NagaConfig, registry: KulikaRegistry,
+                            correction_orchestrator: "CorrectionOrchestratorProtocol",
+                            ledger: Optional["VibeLedger"]) -> tuple:
+        """Boot Step 3: Create base services (Sesha, Takshaka, Vasuki, Karkotaka).
+        Returns (sesha, takshaka, vasuki, karkotaka)."""
         sesha = None
         if config.sesha.enabled:
-            # NOTE: Legacy SeshaService init doesn't take registry, it might use global.
-            # We follow existing patterns.
             sesha = SeshaService()
             registry.register(sesha, force=True)
             if correction_orchestrator:
-                # Use as_handler() to get the CorrectionHandler callable
                 correction_orchestrator.dispatcher.register_handler(
-                    DriftSource.STATE, sesha.as_handler(), handler_id="sesha"
-                )
-            # Inject kernel's ledger for 10,000-year persistence (NO SPLIT BRAIN)
+                    DriftSource.STATE, sesha.as_handler(), handler_id="sesha")
             if ledger:
                 sesha.inject_ledger(ledger)
                 logger.info("🐍 SESHA: Kernel ledger injected - Full persistence active")
 
-        # Takshaka (Biter)
         takshaka = None
         if config.takshaka.enabled:
             if sesha:
-                # Pass trust_mode from config
                 takshaka = TakshakaService(sesha=sesha, trust_mode=config.takshaka.trust_mode)
                 registry.register(takshaka, force=True)
                 if correction_orchestrator:
                     correction_orchestrator.dispatcher.register_handler(
-                        DriftSource.COGNITIVE, takshaka.as_handler(), handler_id="takshaka"
-                    )
+                        DriftSource.COGNITIVE, takshaka.as_handler(), handler_id="takshaka")
             else:
                 logger.warning("Takshaka disabled: Sesha is required.")
 
-        # Vasuki (Monitor)
         vasuki = None
         if config.vasuki.enabled:
-            # Vasuki needs Sesha and Takshaka
             if sesha and takshaka:
                 vasuki = VasukiService(sesha=sesha, takshaka=takshaka)
                 registry.register(vasuki, force=True)
                 if correction_orchestrator:
                     correction_orchestrator.dispatcher.register_handler(
-                        DriftSource.CONFIG, vasuki.as_handler(), handler_id="vasuki"
-                    )
+                        DriftSource.CONFIG, vasuki.as_handler(), handler_id="vasuki")
             else:
                 logger.warning("Vasuki disabled: Sesha and Takshaka are required.")
 
-        # Karkotaka (Secrets)
         karkotaka = None
         if config.karkotaka.enabled:
             karkotaka = KarkotakaService()
             registry.register(karkotaka, force=True)
 
-        # 3. Intelligence
-        # ---------------
+        return sesha, takshaka, vasuki, karkotaka
 
-        # Cortex (Mind)
-        cortex = None
-        if config.cortex.enabled:
-            # Cortex needs orchestrator reference? Or just services?
-            # It usually takes `naga_orchestrator`.
-            # We will pass the KERNEL later?
-            # Wait, Cortex expects an object with .takshaka etc.
-            # The Kernel satisfies that duck-typing mostly, but Cortex takes `naga_orchestrator`.
-            # We might need to pass `None` first and attach Kernel later, or pass a proxy.
-            # For now, let's instantiate.
-            cortex = NagaCortex(naga_orchestrator=None, config=config.cortex)
-
-        # 4. Governance & Reliability (The Judges)
-        # ----------------------------------------
-
-        # Kaliya (Quarantine)
+    @classmethod
+    def _boot_intelligence_governance(cls, config: NagaConfig, registry: KulikaRegistry,
+                                      identity: NagaIdentity, cortex: object,
+                                      correction_orchestrator: "CorrectionOrchestratorProtocol") -> tuple:
+        """Boot Step 4: Create governance services (Kaliya, Chitragupta, Narada, Prahlad).
+        Returns (kaliya, chitragupta, narada, prahlad)."""
         kaliya = None
-        # Using config fallback or default enabled
         if getattr(config, "kaliya_enabled", True):
             kaliya = KaliyaService(cortex=cortex, identity=identity)
             registry.register(kaliya, force=True)
             if correction_orchestrator:
                 correction_orchestrator.dispatcher.register_handler(
-                    DriftSource.RELIABILITY, kaliya.as_handler(), handler_id="kaliya"
-                )
+                    DriftSource.RELIABILITY, kaliya.as_handler(), handler_id="kaliya")
 
-        # Chitragupta (Profiler)
         chitragupta = None
         if getattr(config, "chitragupta_enabled", True):
             chitragupta = ChitraguptaService(cortex=cortex, identity=identity)
             registry.register(chitragupta, force=True)
             if correction_orchestrator:
                 correction_orchestrator.dispatcher.register_handler(
-                    DriftSource.PERFORMANCE, chitragupta.as_handler(), handler_id="chitragupta"
-                )
+                    DriftSource.PERFORMANCE, chitragupta.as_handler(), handler_id="chitragupta")
 
-        # Narada (Observer - The Cosmic Journalist)
-        # NOTE: Narada is GOVERNANCE, not Infrastructure - no CorrectionHandler
         narada = None
         if getattr(config, "narada_enabled", True):
             narada = NaradaService(cortex=cortex, identity=identity)
             registry.register(narada, force=True)
             logger.info("🎵 NARADA activated - The Observer sees all")
 
-        # Prahlad (Resilience)
         prahlad = None
         if config.prahlad.enabled:
             prahlad = PrahladService(cortex=cortex, identity=identity)
             registry.register(prahlad, force=True)
             if correction_orchestrator:
                 correction_orchestrator.dispatcher.register_handler(
-                    DriftSource.STRUCTURAL, prahlad.as_handler(), handler_id="prahlad"
-                )
+                    DriftSource.STRUCTURAL, prahlad.as_handler(), handler_id="prahlad")
 
-        # 4. Stability & Observability
-        # ----------------------------
+        return kaliya, chitragupta, narada, prahlad
 
-        # Ouroboros (Watcher)
+    @classmethod
+    def _boot_stability(cls, config: NagaConfig, cortex: object,
+                        sesha: object, takshaka: object) -> tuple:
+        """Boot Step 5: Create stability services (Ouroboros, Flood, CommitWatcher).
+        Returns (ouroboros, flood, watcher)."""
         ouroboros = None
         if config.prahlad.enabled:
-            # Config field might be slightly different, checking standard
-            # Assuming 'ouroboros_enabled' or similar exists on NagaConfig or implicity
-            # Going safe, assuming default enabled if not found or explicit
             ouroboros = NagaOuroboros(orchestrator=None)  # type: ignore
             if cortex:
                 cortex.set_ouroboros(ouroboros)
 
-        # Flood Manager
         flood = None
         if config.flood.enabled:
             flood = NagaFloodManager(sesha=sesha, takshaka=takshaka, enabled=True, config=config.flood)
             flood.start()
-
             if cortex:
                 flood.set_cortex_callback(cortex.receive_signal)
 
-        # Commit Watcher
         watcher = None
         if config.commit_watcher.enabled:
             watcher = CommitWatcher(
-                sesha=sesha, takshaka=takshaka, enabled=config.commit_watcher.enabled, config=config.commit_watcher
-            )
+                sesha=sesha, takshaka=takshaka, enabled=config.commit_watcher.enabled, config=config.commit_watcher)
 
-        # 4.5 PROTOCOL REGISTRATION (ServiceRegistry Binding)
-        # ---------------------------------------------------
-        # NagaProxy._resolve_nagas() needs Protocol-keyed services.
-        # Without this, observations are created but NOT routed to NAGA services.
+        return ouroboros, flood, watcher
+
+    @classmethod
+    def _boot_bind_protocols(cls, sesha, takshaka, vasuki, kaliya, chitragupta, narada) -> None:
+        """Boot Step 6: Register NAGA services in ServiceRegistry for protocol routing."""
         if sesha:
             ServiceRegistry.register(SeshaProtocol, sesha)
         if takshaka:
@@ -289,81 +242,77 @@ class NagaBootloader:
             ServiceRegistry.register(NaradaProtocol, narada)
         logger.info("🐍 BRAHMA: Protocol bindings complete - NAGA services observable")
 
-        # 5. Assemble Kernel
+    @classmethod
+    def _boot_wire_hiranyakashipu(cls, config: NagaConfig, scanner: object) -> None:
+        """Boot Step 7: Wire Hiranyakashipu attack framework (if enabled)."""
+        if not (config.prahlad.enabled and config.prahlad.chaos_probe_enabled):
+            return
+        try:
+            from pathlib import Path
+            from vibe_core.naga.hiranyakashipu import (
+                LivingTestFramework, inject_seeds_from_narada, wire_hiranyakashipu_to_protocols)
+            living_framework = LivingTestFramework()
+            seed_dir = Path(__file__).parent.parent / "hiranyakashipu" / "seeds"
+            if seed_dir.exists():
+                living_framework.add_seed_dir(seed_dir)
+                seed_count = living_framework.load_seeds()
+                logger.info(f"🔥 BRAHMA: Loaded {seed_count} Hiranyakashipu attack seeds")
+            wire_hiranyakashipu_to_protocols(living_framework, "vibe_core")
+            try:
+                inject_seeds_from_narada(scanner, living_framework)
+                logger.info("🔥 BRAHMA: Narada seeds injected")
+            except Exception as e:
+                logger.warning(f"!!! BRAHMA: Narada seed injection failed: {e}")
+            logger.info("🔥 BRAHMA: HIRANYAKASHIPU wired - Attack Framework active")
+        except Exception as e:
+            logger.warning(f"!!! BRAHMA: HIRANYAKASHIPU failed to wire: {e}")
+
+    @classmethod
+    def boot(
+        cls,
+        config: Optional[NagaConfig],
+        correction_orchestrator: "CorrectionOrchestratorProtocol" = None,
+        key_store: Optional[KeyStoreProtocol] = None,
+        ledger: Optional["VibeLedger"] = None,
+    ) -> "NagaKernel":
+        """The Act of Creation. Chains the atomic _boot_* steps."""
+        if config is None:
+            config = NagaConfig()
+
+        scanner, _discovered = cls._boot_scan()
+        identity = cls._boot_identity(key_store)
+        cls._boot_steward(identity)
+        registry = KulikaRegistry()
+
+        sesha, takshaka, vasuki, karkotaka = cls._boot_base_services(
+            config, registry, correction_orchestrator, ledger)
+
+        cortex = None
+        if config.cortex.enabled:
+            cortex = NagaCortex(naga_orchestrator=None, config=config.cortex)
+
+        kaliya, chitragupta, narada, prahlad = cls._boot_intelligence_governance(
+            config, registry, identity, cortex, correction_orchestrator)
+
+        ouroboros, flood, watcher = cls._boot_stability(config, cortex, sesha, takshaka)
+
+        cls._boot_bind_protocols(sesha, takshaka, vasuki, kaliya, chitragupta, narada)
+
         kernel = NagaKernel(
-            identity=identity,
-            registry=registry,
-            sesha=sesha,
-            vasuki=vasuki,
-            takshaka=takshaka,
-            karkotaka=karkotaka,
-            kaliya=kaliya,
-            chitragupta=chitragupta,
-            narada=narada,
-            cortex=cortex,
-            ouroboros=ouroboros,
-            flood_manager=flood,
-            commit_watcher=watcher,
+            identity=identity, registry=registry, sesha=sesha, vasuki=vasuki,
+            takshaka=takshaka, karkotaka=karkotaka, kaliya=kaliya,
+            chitragupta=chitragupta, narada=narada, cortex=cortex,
+            ouroboros=ouroboros, flood_manager=flood, commit_watcher=watcher,
         )
 
-        # 6. Post-Wiring (Circular deps)
         if cortex:
-            # Cortex needs access to the system.
-            # Previously it took 'naga_orchestrator'.
-            # We should inject the Kernel (Vishnu) as the source of truth.
-            # Note: Cortex might still expect 'orchestrator' typing.
-            # We rely on Duck Typing or we might updating Cortex later.
             cortex._naga_orchestrator = kernel  # type: ignore
-
-            # Also bootstrapping cortex deps if not passed in init
             cortex._shesha_service = sesha
             cortex._takshaka_service = takshaka
-
         if ouroboros:
             ouroboros._orchestrator = kernel  # type: ignore
 
-        # 7. Hiranyakashipu (Attack Framework)
-        # ------------------------------------
-        if config.prahlad.enabled and config.prahlad.chaos_probe_enabled:
-            try:
-                from pathlib import Path
-
-                from vibe_core.naga.hiranyakashipu import (
-                    LivingTestFramework,
-                    inject_seeds_from_narada,
-                    wire_hiranyakashipu_to_protocols,
-                )
-
-                # Create the LIVING framework
-                living_framework = LivingTestFramework()
-
-                # Load seeds from the package
-                # adjust path to be relative to this file or vibe_core/naga
-                # This file is vibe_core/naga/components/bootloader.py
-                # seeds are in vibe_core/naga/hiranyakashipu/seeds
-                seed_dir = Path(__file__).parent.parent / "hiranyakashipu" / "seeds"
-
-                if seed_dir.exists():
-                    living_framework.add_seed_dir(seed_dir)
-                    seed_count = living_framework.load_seeds()
-                    logger.info(f"🔥 BRAHMA: Loaded {seed_count} Hiranyakashipu attack seeds")
-
-                # Wire to protocols
-                # Note: wire_hiranyakashipu_to_protocols expects module name or object?
-                # It usually patches vibe_core.
-                wire_hiranyakashipu_to_protocols(living_framework, "vibe_core")
-
-                # Narada Injection
-                try:
-                    # We inject seeds from the scanner we created earlier
-                    inject_seeds_from_narada(scanner, living_framework)
-                    logger.info("🔥 BRAHMA: Narada seeds injected")
-                except Exception as e:
-                    logger.warning(f"!!! BRAHMA: Narada seed injection failed: {e}")
-
-                logger.info("🔥 BRAHMA: HIRANYAKASHIPU wired - Attack Framework active")
-            except Exception as e:
-                logger.warning(f"!!! BRAHMA: HIRANYAKASHIPU failed to wire: {e}")
+        cls._boot_wire_hiranyakashipu(config, scanner)
 
         logger.info("🪷 BRAHMA: Creation complete. The Lotus opens.")
         return kernel
