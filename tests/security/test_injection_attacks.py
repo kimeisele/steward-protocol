@@ -55,8 +55,10 @@ class TestCommandInjection:
 
         # Verify the payload is stored as-is (not executed)
         events = kernel.ledger.get_all_events()
-        assert len(events) == 1
-        assert events[0]["details"]["payload"] == malicious_input
+        # Filter to our test event (bootstrap may add events)
+        test_events = [e for e in events if e.get("agent_id") == "test_agent"]
+        assert len(test_events) == 1
+        assert test_events[0]["details"]["payload"] == malicious_input
 
     @pytest.mark.parametrize(
         "null_byte_input",

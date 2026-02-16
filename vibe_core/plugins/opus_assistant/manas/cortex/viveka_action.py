@@ -1659,7 +1659,6 @@ class VivekaAction(BaseAction):
 
     def _load_karma_log(self) -> Dict[str, Any]:
         """Load karma log from disk."""
-        import json
 
         from vibe_core.plugins.opus_assistant.core.state_paths import get_opus_state_path
 

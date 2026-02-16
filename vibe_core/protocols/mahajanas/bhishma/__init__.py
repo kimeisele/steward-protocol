@@ -39,8 +39,7 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra import WorkerProtocol, Mahajana, MantraOpCode, ProtocolRegistry
-
+from vibe_core.mahamantra import Mahajana, MantraOpCode, ProtocolRegistry, WorkerProtocol
 
 # =============================================================================
 # BHISHMA PROTOCOL BASE - Derives from MantraPosition 11
@@ -168,10 +167,6 @@ class BhishmaProtocol(Protocol):
         """Get commitment state. WATERTIGHT."""
         ...
 
-    def get_state(self) -> CommitState:
-        """Get commitment state. WATERTIGHT."""
-        ...
-
 
 # =============================================================================
 # NULL BHISHMA
@@ -247,28 +242,30 @@ class NullBhishma(BhishmaProtocolBase):
 
 from vibe_core.protocols.mahajanas.bhishma.ledger import (
     GENESIS_HASH,
+    Ledger,
     LedgerEntry,
     LedgerProtocol,
-    Ledger,
     NullLedger,
+)
+from vibe_core.protocols.mahajanas.bhishma.ledger import (
     LOTUS_POSITION as LEDGER_POSITION,
+)
+from vibe_core.protocols.mahajanas.bhishma.lineage import (
+    LOTUS_POSITION as LINEAGE_POSITION,
 )
 
 # =============================================================================
 # LINEAGE - Parampara Chain Verification
 # =============================================================================
-
 from vibe_core.protocols.mahajanas.bhishma.lineage import (
     PARAMPARA_DIVISOR,
-    LineageStatus,
-    LineageNode,
-    LineageVerification,
-    LineageProtocol,
     Lineage,
+    LineageNode,
+    LineageProtocol,
+    LineageStatus,
+    LineageVerification,
     NullLineage,
-    LOTUS_POSITION as LINEAGE_POSITION,
 )
-
 
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE

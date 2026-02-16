@@ -142,8 +142,8 @@ class TestProcessManagerInit:
 class TestSpawnAgent:
     """Test spawn_agent method."""
 
-    @patch("vibe_core.process_manager.Process")
-    @patch("vibe_core.process_manager.Pipe")
+    @patch("vibe_core.mahamantra.substrate.process_manager.Process")
+    @patch("vibe_core.mahamantra.substrate.process_manager.Pipe")
     def test_spawn_agent_creates_process(self, mock_pipe, mock_process_class):
         """Should create and start a new process."""
         # Setup mocks
@@ -167,8 +167,8 @@ class TestSpawnAgent:
         # Verify process was created and started
         mock_process.start.assert_called_once()
 
-    @patch("vibe_core.process_manager.Process")
-    @patch("vibe_core.process_manager.Pipe")
+    @patch("vibe_core.mahamantra.substrate.process_manager.Process")
+    @patch("vibe_core.mahamantra.substrate.process_manager.Pipe")
     def test_spawn_agent_stores_info(self, mock_pipe, mock_process_class):
         """Should store AgentProcessInfo in processes dict."""
         mock_parent_conn = MagicMock()
@@ -194,8 +194,8 @@ class TestSpawnAgent:
         assert info.cartridge_path == "/path/to/cartridge.py"
         assert info.cartridge_class_name == "MyCartridge"
 
-    @patch("vibe_core.process_manager.Process")
-    @patch("vibe_core.process_manager.Pipe")
+    @patch("vibe_core.mahamantra.substrate.process_manager.Process")
+    @patch("vibe_core.mahamantra.substrate.process_manager.Pipe")
     def test_spawn_agent_sets_last_heartbeat(self, mock_pipe, mock_process_class):
         """Should set last_heartbeat to current time."""
         mock_pipe.return_value = (MagicMock(), MagicMock())
@@ -452,8 +452,8 @@ class TestGetPendingMessages:
 class TestHandleCrash:
     """Test _handle_crash method."""
 
-    @patch("vibe_core.process_manager.Process")
-    @patch("vibe_core.process_manager.Pipe")
+    @patch("vibe_core.mahamantra.substrate.process_manager.Process")
+    @patch("vibe_core.mahamantra.substrate.process_manager.Pipe")
     def test_handle_crash_restarts_agent(self, mock_pipe, mock_process_class):
         """Should restart crashed agent."""
         mock_parent_conn = MagicMock()
