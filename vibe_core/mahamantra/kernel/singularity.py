@@ -1082,6 +1082,16 @@ class Mahamantra:
             except Exception as _exc:
                 logger.warning("MantraClock tick failed: %s", _exc)
 
+        # 2.6 INTENT KERNEL — Process queued intents
+        # Intents declared between ticks are resolved here, on the beat.
+        try:
+            from vibe_core.mahamantra.kernel.intent import get_kernel
+            kernel = get_kernel()
+            if not kernel._queue.is_empty:
+                kernel.process_queue()
+        except Exception as _exc:
+            logger.warning("MantraKernel process_queue failed: %s", _exc)
+
         state = TickState(
             tick=current,
             position=current,
