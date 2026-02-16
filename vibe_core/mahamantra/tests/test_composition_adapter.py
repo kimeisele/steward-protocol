@@ -250,8 +250,8 @@ class TestBackwardCompat:
     def test_real_lotus_through_adapter(self):
         """End-to-end: Lotus → adapter.compose()."""
         from vibe_core.mahamantra.adapters.composition import MahaComposition
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        lotus = MahamantraLotus()
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        lotus = get_mahamantra()
         lr = lotus("What is the meaning of life?")
         adapter = MahaComposition()
         result = adapter.compose(lr, "What is the meaning of life?")

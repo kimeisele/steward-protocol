@@ -63,7 +63,6 @@ import importlib
 import logging
 from typing import TYPE_CHECKING, Callable, Dict, Iterator, List, Optional, Type, TypedDict, Union
 
-from vibe_core.mahamantra.substrate.tattva_registry import get_registry
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +96,6 @@ from vibe_core.mahamantra.protocols import (
 # =============================================================================
 from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader
 from vibe_core.mahamantra.protocols._kala import KalaTime
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol
 from vibe_core.mahamantra.seed.types import TickState
 from vibe_core.mahamantra.substrate import (
     # Position
@@ -131,7 +129,6 @@ from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 # CELL ROUTER INTEGRATION (O(1) Cell Registry - IPv6-like Routing)
 # =============================================================================
 from vibe_core.mahamantra.substrate.cell_router import CellRouter, get_router
-from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
 from vibe_core.mahamantra.substrate.seed import (
     ALL_GUARDIANS,
     MAHAJANA_TO_POSITION,
@@ -381,14 +378,7 @@ class ModuleRouter:
                 module_path = f"vibe_core.mahamantra.{quarter}.{name}"
                 module = importlib.import_module(module_path)
 
-                # BALARAMA PROXY: Wrap if not compliant
-                if not isinstance(module, PanchaTattvaProtocol) and not hasattr(module, "__tattva__"):
-                    # Find position
-                    pos_idx = _get_index_by_guardian_name(name) or 0
-                    module = MahamantraProxy(module, pos_idx, name)
-
                 self._modules[name] = module
-                get_registry().register(name, module)
                 return module
             except ImportError as _exc:
                 logger.exception("Unexpected error: %s", _exc)
@@ -397,13 +387,7 @@ class ModuleRouter:
         module_path = f"vibe_core.protocols.mahajanas.{name}"
         module = importlib.import_module(module_path)
 
-        # BALARAMA PROXY: Wrap legacy modules too
-        if not isinstance(module, PanchaTattvaProtocol) and not hasattr(module, "__tattva__"):
-            pos_idx = _get_index_by_guardian_name(name) or 0
-            module = MahamantraProxy(module, pos_idx, name)
-
         self._modules[name] = module
-        get_registry().register(name, module)
         return module
 
     def __getattr__(self, name: str) -> object:

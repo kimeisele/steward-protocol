@@ -44,7 +44,7 @@ class MahaLanguageEngine:
 
     def generate(self, text: str) -> EngineResult:
         """Lotus → MahaComposition.compose() → EngineResult."""
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
         from vibe_core.mahamantra.substrate.language.phonetics import scan_syllable_rhythm
         from vibe_core.mahamantra.adapters.composition import get_composition
         from vibe_core.mahamantra.substrate.language.section_router import (
@@ -52,7 +52,7 @@ class MahaLanguageEngine:
         )
 
         # === LOTUS: The real Maha Mantra computation ===
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         lr = lotus(text)
 
         vib = lr.get("vibration", {})
