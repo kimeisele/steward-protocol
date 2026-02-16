@@ -85,7 +85,7 @@ class GovardhanGateway(GatewayProtocol):
         # GATE 0: PARSE — What is this?
         # Boundary IN: validate the request shape before it enters.
         # =================================================================
-        lotus._fire_gate(TattvaGate.PARSE, {
+        lotus.fire_gate(TattvaGate.PARSE, {
             "input_data": command,
             "entry_type": entry_type,
             "args": args,
@@ -95,7 +95,7 @@ class GovardhanGateway(GatewayProtocol):
         # GATE 1: VALIDATE — Is it legitimate?
         # Compress to seed, verify parampara at the border.
         # =================================================================
-        lotus._fire_gate(TattvaGate.VALIDATE, {
+        lotus.fire_gate(TattvaGate.VALIDATE, {
             "input_text": command,
             "seed": None,  # seed computed inside __call__
             "input_coords": None,
@@ -105,7 +105,7 @@ class GovardhanGateway(GatewayProtocol):
         # GATE 2: EXECUTE — Pure computation (Vrindavan).
         # __call__() is deterministic. No side-effects.
         # =================================================================
-        lotus._fire_gate(TattvaGate.EXECUTE, {
+        lotus.fire_gate(TattvaGate.EXECUTE, {
             "seed": None,
             "attractor": None,
             "parampara_verified": None,
@@ -132,7 +132,7 @@ class GovardhanGateway(GatewayProtocol):
         # GATE 3: RESULT — Is the output valid?
         # Boundary OUT: verify the computation result.
         # =================================================================
-        lotus._fire_gate(TattvaGate.RESULT, {
+        lotus.fire_gate(TattvaGate.RESULT, {
             "attractor": result.get("vibration", {}).get("attractor"),
             "resonant_words": result.get("smaranam", ()),
             "verse_result": result.get("verse"),
@@ -142,7 +142,7 @@ class GovardhanGateway(GatewayProtocol):
         # GATE 4: SYNC — Side-effects (governance).
         # This is where I/O happens. The pure core never touches disk.
         # =================================================================
-        lotus._fire_gate(TattvaGate.SYNC, {
+        lotus.fire_gate(TattvaGate.SYNC, {
             "position": result.get("position"),
             "guardian": result.get("guardian"),
             "seed": result.get("vibration", {}).get("seed"),
