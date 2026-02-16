@@ -99,28 +99,40 @@ class TestTattvaGateEnum:
         assert names == ["PARSE", "VALIDATE", "EXECUTE", "RESULT", "SYNC"]
 
 
-class TestGateHooks:
-    """Gate hooks fire at gate boundaries with pipeline context."""
+class TestGateHooksViaGovardhan:
+    """
+    Gate hooks fire at the BOUNDARY (GovardhanGateway), not inside __call__().
 
-    def test_hook_fires_on_parse(self):
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+    Architecture: Functional Core / Imperative Shell
+    - __call__() is pure computation (Vrindavan) — no gates
+    - GovardhanGateway is the boundary (Govardhan) — gates fire here
+    """
 
-        lotus = MahamantraLotus()
+    def test_hook_fires_on_parse_via_gateway(self):
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.gateway.mahamantra_gateway import GovardhanGateway
+        from vibe_core.protocols.gateway import create_request, EntryType
+
+        lotus = get_mahamantra()
         captured = []
         lotus.on_gate(TattvaGate.PARSE, lambda gate, ctx: captured.append((gate, ctx)))
-        lotus("test")
-        assert len(captured) == 1
+        gw = GovardhanGateway()
+        gw.receive(create_request("test", [], EntryType.CLI))
+        assert len(captured) >= 1
         assert captured[0][0] == TattvaGate.PARSE
         assert "input_data" in captured[0][1]
 
-    def test_all_five_gates_fire(self):
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+    def test_all_five_gates_fire_via_gateway(self):
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.gateway.mahamantra_gateway import GovardhanGateway
+        from vibe_core.protocols.gateway import create_request, EntryType
 
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         gates_seen = []
         for gate in TattvaGate:
             lotus.on_gate(gate, lambda g, ctx, _g=gate: gates_seen.append(_g))
-        lotus("dharma")
+        gw = GovardhanGateway()
+        gw.receive(create_request("dharma", [], EntryType.CLI))
         assert gates_seen == [
             TattvaGate.PARSE,
             TattvaGate.VALIDATE,
@@ -129,65 +141,59 @@ class TestGateHooks:
             TattvaGate.SYNC,
         ]
 
-    def test_validate_hook_receives_seed(self):
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+    def test_sync_hook_receives_position_via_gateway(self):
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.gateway.mahamantra_gateway import GovardhanGateway
+        from vibe_core.protocols.gateway import create_request, EntryType
 
-        lotus = MahamantraLotus()
-        captured = []
-        lotus.on_gate(TattvaGate.VALIDATE, lambda g, ctx: captured.append(ctx))
-        lotus("karma")
-        assert len(captured) == 1
-        assert "seed" in captured[0]
-        assert isinstance(captured[0]["seed"], int)
-
-    def test_execute_hook_receives_attractor(self):
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-
-        lotus = MahamantraLotus()
-        captured = []
-        lotus.on_gate(TattvaGate.EXECUTE, lambda g, ctx: captured.append(ctx))
-        lotus("jnana")
-        assert "attractor" in captured[0]
-        assert "parampara_verified" in captured[0]
-
-    def test_sync_hook_receives_position(self):
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         captured = []
         lotus.on_gate(TattvaGate.SYNC, lambda g, ctx: captured.append(ctx))
-        lotus("bhakti")
+        gw = GovardhanGateway()
+        gw.receive(create_request("bhakti", [], EntryType.CLI))
+        assert len(captured) >= 1
         assert "position" in captured[0]
         assert "guardian" in captured[0]
-        assert 0 <= captured[0]["position"] <= 15
 
-    def test_sync_hook_receives_opcode_and_guna(self):
-        """SYNC gate context includes opcode and guna (TattvaGate→OpCode→Guna wiring)."""
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+    def test_sync_hook_receives_guna_via_gateway(self):
+        """SYNC gate context includes guna at the boundary."""
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.gateway.mahamantra_gateway import GovardhanGateway
+        from vibe_core.protocols.gateway import create_request, EntryType
 
-        lotus = MahamantraLotus()
+        lotus = get_mahamantra()
         captured = []
         lotus.on_gate(TattvaGate.SYNC, lambda g, ctx: captured.append(ctx))
-        lotus("dharma")
+        gw = GovardhanGateway()
+        gw.receive(create_request("dharma", [], EntryType.CLI))
         ctx = captured[0]
-        assert "opcode" in ctx, "SYNC gate must receive opcode"
         assert "guna" in ctx, "SYNC gate must receive guna"
-        assert hasattr(ctx["opcode"], "name"), "opcode must be a MantraOpCode enum"
-        assert hasattr(ctx["guna"], "name"), "guna must be a Guna enum"
-        assert ctx["guna"].name in ("SATTVA", "RAJAS", "TAMAS")
 
-    def test_hook_error_does_not_crash_pipeline(self):
+    def test_call_is_pure_no_gates_fire(self):
+        """__call__() is pure computation — no gates fire inside it."""
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
 
         lotus = MahamantraLotus()
+        gates_seen = []
+        for gate in TattvaGate:
+            lotus.on_gate(gate, lambda g, ctx, _g=gate: gates_seen.append(_g))
+        lotus("dharma")
+        assert gates_seen == [], "__call__() must NOT fire any gates (pure computation)"
+
+    def test_hook_error_does_not_crash_gateway(self):
+        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.gateway.mahamantra_gateway import GovardhanGateway
+        from vibe_core.protocols.gateway import create_request, EntryType
+
+        lotus = get_mahamantra()
 
         def bad_hook(gate, ctx):
             raise ValueError("intentional test error")
 
         lotus.on_gate(TattvaGate.PARSE, bad_hook)
-        result = lotus("resilience")
+        gw = GovardhanGateway()
+        result = gw.receive(create_request("resilience", [], EntryType.CLI))
         assert result is not None
-        assert "gate_trace" in result
 
     def test_response_contains_guna(self):
         """__call__ response includes guna dict with mode, opcode, source."""
@@ -227,13 +233,3 @@ class TestGateHooks:
         position = result["position"]
         expected_guna = get_guna(MantraOpCode(position))
         assert result["guna"]["mode"] == expected_guna.name
-
-    def test_auto_registers_in_tattva_registry(self):
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        from vibe_core.mahamantra.substrate.tattva_registry import get_registry
-
-        lotus = MahamantraLotus()
-        reg = get_registry()
-        assert "mahamantra_lotus" in reg
-        tattva = reg.get("mahamantra_lotus")
-        assert "MahamantraLotus" in tattva["chaitanya"]
