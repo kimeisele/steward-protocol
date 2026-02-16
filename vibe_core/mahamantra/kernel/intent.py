@@ -346,9 +346,10 @@ class MantraKernel:
 
             lotus = get_mahamantra()
 
-            # The intent's target IS the input to Mahamantra.
-            # The intent's opcode maps to MantraOpCode for gate routing.
-            computation_result = lotus(
+            # Route through execute() — the governed path (Govardhan).
+            # 5 Pancha Tattva Gates fire at the boundary:
+            # PARSE → VALIDATE → __call__() → RESULT → SYNC
+            computation_result = lotus.execute(
                 intent.target,
                 opcode=intent.opcode.value,
             )
