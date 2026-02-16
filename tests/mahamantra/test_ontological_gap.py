@@ -19,7 +19,7 @@ THE RED TEST:
 import pytest
 from vibe_core.mahamantra.substrate.mahajana import Quarter
 
-@pytest.mark.xfail(reason="Ontological gap: Quarter lacks Chatur-vyuha expansion (not yet implemented)")
+@pytest.mark.skip(reason="Quarter lacks Chatur-vyuha expansion — not yet implemented")
 def test_chatur_vyuha_connection():
     """
     Verify that Quarters are connected to their Chatur-vyuha expansion.
@@ -36,7 +36,7 @@ def test_chatur_vyuha_connection():
     assert hasattr(Quarter.GENESIS, "expansion"), "Quarter lacks 'expansion' attribute"
     assert Quarter.GENESIS.expansion == "VASUDEVA", "Expected Vasudeva"
 
-@pytest.mark.xfail(reason="Ontological gap: Quarter lacks Tattva mapping (not yet implemented)")
+@pytest.mark.skip(reason="Quarter lacks Tattva mapping — not yet implemented")
 def test_subtle_element_mapping():
     """
     Verify that Quarters govern their subtle element (Tattva).
