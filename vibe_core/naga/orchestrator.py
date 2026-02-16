@@ -27,7 +27,6 @@ from vibe_core.phoenix.sections.naga.section_main import NagaConfig
 from vibe_core.protocols.naga import NagaFederationProtocol
 
 if TYPE_CHECKING:
-    from vibe_core.protocols import VibeLedger
     from vibe_core.naga.commit_watcher import NagaCommitWatcher as CommitWatcher
     from vibe_core.naga.components.destructor import NagaDestructor
     from vibe_core.naga.components.kernel import NagaKernel
@@ -46,6 +45,7 @@ if TYPE_CHECKING:
     from vibe_core.naga.services.sesha import SeshaService
     from vibe_core.naga.services.takshaka import TakshakaService
     from vibe_core.naga.services.vasuki import VasukiService
+    from vibe_core.protocols import VibeLedger
     from vibe_core.protocols.correction import CorrectionOrchestratorProtocol
 
 logger = logging.getLogger("NAGA")
@@ -101,7 +101,6 @@ class NagaOrchestrator:
         orchestrator._generate_boot_matrix(config)
 
         # 5. Register in ServiceRegistry for protocol-based access
-        from vibe_core.di import ServiceRegistry
 
         ServiceRegistry.register(NagaFederationProtocol, orchestrator)
 

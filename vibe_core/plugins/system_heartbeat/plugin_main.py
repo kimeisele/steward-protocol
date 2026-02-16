@@ -23,7 +23,6 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from vibe_core.protocols import (
     CognitiveKernelProtocol,
     SystemHeartbeatProtocol,
-    SystemHeartbeatProtocol,
 )
 
 if TYPE_CHECKING:
