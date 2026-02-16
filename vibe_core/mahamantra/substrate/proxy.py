@@ -887,6 +887,8 @@ class MahamantraProxy(PanchaTattvaProtocol):
                 response = handler(message)
                 if isinstance(response, str):
                     return response
+                if isinstance(response, dict):
+                    return response.get("message", str(response))
             except Exception as e:
                 return f"⚠️ Proxy Execution Error (at {self._guardian}): {e}"
 
