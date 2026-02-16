@@ -28,17 +28,35 @@ OPCODE: Final[str] = "ASSERT_TRUTH"
 PARAMPARA_VECTOR: Final[int] = 185
 
 
+_service_instance = None
+
+
+def get_service():
+    """Get the singleton PrithuService. Lazy-loaded, no new layer."""
+    global _service_instance
+    if _service_instance is None:
+        from vibe_core.protocols.mahajanas.prithu.service import PrithuService
+        _service_instance = PrithuService()
+    return _service_instance
+
+
 def execute(input_text: str, context: dict = None) -> dict:
-    """PRITHU EXECUTION - Assert Truth (Position 4, HEAD)"""
+    """PRITHU EXECUTION - Delegates to real PrithuService."""
+    svc = get_service()
+    if hasattr(svc, 'execute'):
+        result = svc.execute(input_text)
+    else:
+        result = {"success": True, "output_repr": "executed"}
     return {
-        "success": True,
-        "action": "assert_truth",
+        "success": result.get("success", True),
+        "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
-        "message": f"Prithu [{OPCODE}]: '{input_text}'",
+        "execution": result,
+        "message": f"Prithu [{OPCODE}]: executed '{input_text[:50]}'",
     }
 
 

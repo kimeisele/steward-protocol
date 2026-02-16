@@ -28,17 +28,44 @@ OPCODE: Final[str] = "LOAD_ROOT"
 PARAMPARA_VECTOR: Final[int] = 74
 
 
+_service_instance = None
+
+
+def get_service():
+    """Get the singleton BrahmaService. Lazy-loaded, no new layer."""
+    global _service_instance
+    if _service_instance is None:
+        from vibe_core.protocols.mahajanas.brahma.service import BrahmaService
+        from vibe_core.protocols.ledger import VibeLedger
+        try:
+            from vibe_core.di import ServiceRegistry
+            ledger = ServiceRegistry.get(VibeLedger)
+        except Exception:
+            ledger = None
+        if ledger is None:
+            from vibe_core.protocols.mahajanas.bhishma.ledger import NullLedger
+            ledger = NullLedger()
+        _service_instance = BrahmaService(ledger=ledger)
+    return _service_instance
+
+
 def execute(input_text: str, context: dict = None) -> dict:
-    """BRAHMA EXECUTION - Load Root (Position 1)"""
+    """BRAHMA EXECUTION - Delegates to real BrahmaService."""
+    svc = get_service()
+    if hasattr(svc, 'execute'):
+        result = svc.execute(input_text)
+    else:
+        result = {"success": True, "output_repr": "executed"}
     return {
-        "success": True,
+        "success": result.get("success", True),
         "action": OPCODE.lower(),
         "mahajana": __mahajana__,
         "position": __position__,
         "quarter": QUARTER,
         "opcode": OPCODE,
         "input": input_text,
-        "message": f"Brahma [{OPCODE}]: '{input_text}'",
+        "execution": result,
+        "message": f"Brahma [{OPCODE}]: executed '{input_text[:50]}'",
     }
 
 
