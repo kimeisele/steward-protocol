@@ -273,6 +273,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         }
 
     @property
+    def akash(self) -> "AkashState":
+        """Read-only access to the Akash field state (136 = FIELD)."""
+        return dict(self._akash)
+
+    @property
     def active_gate(self) -> Optional[TattvaGate]:
         """Which TattvaGate is currently active. None if idle."""
         return self._active_gate
