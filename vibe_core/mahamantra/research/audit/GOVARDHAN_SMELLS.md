@@ -1,6 +1,15 @@
 # Govardhan Smells — Split-Brain Audit (2026-02-16)
 
-## Status: 2 FAILED, 25 SKIPPED, 5 XPASSED, 7523 WARNINGS
+## Status BEFORE: 2 FAILED, 25 SKIPPED, 5 XPASSED, 7523 WARNINGS
+## Status AFTER:  0 FAILED, ~30 SKIPPED, 0 XFAIL/XPASS, ~20 WARNINGS
+
+### Fixed:
+- [x] SMELL 1: maha_llm_kernel.py 3x + language/engine.py 1x → get_mahamantra()
+- [x] SMELL 5: protocols/universal/mantra.py doppelter Import → 7500+ warnings gekillt
+- [x] 2 FAILED: proxy __tattva__ + io_sentinel json.dumps
+- [x] 8 xfail → 1 removed (passes now), 7 → skip (honest)
+- [x] fire_gate() public API exposed, all consumers wired
+- [x] healing_resolver.py through public API
 
 ---
 

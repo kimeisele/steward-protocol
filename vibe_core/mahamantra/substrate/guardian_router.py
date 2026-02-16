@@ -299,7 +299,7 @@ def maha_respond(
 ) -> MahaResponse:
     """
     DEPRECATED: Shadow pipeline — runs its own encode→route→synth→rank
-    parallel to lotus_core.__call__(). Use MahamantraLotus()(text) instead.
+    parallel to lotus_core.__call__(). Use get_mahamantra()(text) instead.
 
     All production callers have been rewired to consume __call__().
     This function is kept only for research/ backward compatibility.
