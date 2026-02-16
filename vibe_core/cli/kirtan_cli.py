@@ -124,7 +124,7 @@ class KirtanCLI:
     def _ensure_research(self):
         """Lazy-load ResearchChat."""
         if self._research_chat is None:
-            from vibe_core.mahamantra.research.research_chat import get_research_chat
+            from vibe_core.mahamantra_research.research_chat import get_research_chat
 
             self._research_chat = get_research_chat()
         return self._research_chat
@@ -318,7 +318,7 @@ class KirtanCLI:
         """
         if not args:
             # Enter interactive research mode
-            from vibe_core.mahamantra.research.research_chat import main as research_main
+            from vibe_core.mahamantra_research.research_chat import main as research_main
 
             research_main()
             return 0

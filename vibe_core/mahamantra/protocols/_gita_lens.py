@@ -80,7 +80,7 @@ from vibe_core.mahamantra.protocols._maha_compute import (
     get_gita_chapter,  # Attractor → Chapter
     get_gita_insight,  # Chapter → Insight
 )
-from vibe_core.mahamantra.research.gita import (
+from vibe_core.mahamantra_research.gita import (
     # Data
     CHAPTER_18_VERSE,  # The ultimate verse
     # Constants
