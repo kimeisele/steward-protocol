@@ -93,6 +93,7 @@ class SentinelReport(TypedDict):
 _lock = threading.Lock()
 _armed: bool = False
 _original_dump = json.dump
+_original_dumps = json.dumps
 _total_calls: int = 0
 _authorized_calls: int = 0
 _rogue_calls: int = 0
@@ -135,9 +136,25 @@ def _inspect_caller(call_type: str) -> Optional[SentinelViolation]:
 # GUARDED WRAPPERS
 # =============================================================================
 
+def _record_violation(violation: SentinelViolation) -> None:
+    """Record a violation (shared by dump and dumps guards)."""
+    global _rogue_calls
+    with _lock:
+        _rogue_calls += 1
+        key = f"{violation['caller_file']}:{violation['caller_line']}"
+        _rogue_callers[key] += 1
+        if len(_recent_violations) < _MAX_RECENT:
+            _recent_violations.append(violation)
+    logger.warning(
+        "ROGUE WRITER: %s called from %s:%d (%s) — not routed through StateService",
+        violation["call_type"], violation["caller_file"],
+        violation["caller_line"], violation["caller_func"],
+    )
+
+
 def _guarded_dump(*args, **kwargs):
     """Wrapper around json.dump that logs rogue callers."""
-    global _total_calls, _authorized_calls, _rogue_calls
+    global _total_calls, _authorized_calls
     with _lock:
         _total_calls += 1
     violation = _inspect_caller("json.dump")
@@ -145,17 +162,22 @@ def _guarded_dump(*args, **kwargs):
         with _lock:
             _authorized_calls += 1
     else:
-        with _lock:
-            _rogue_calls += 1
-            key = f"{violation['caller_file']}:{violation['caller_line']}"
-            _rogue_callers[key] += 1
-            if len(_recent_violations) < _MAX_RECENT:
-                _recent_violations.append(violation)
-        logger.warning(
-            "ROGUE WRITER: json.dump called from %s:%d (%s) — not routed through StateService",
-            violation["caller_file"], violation["caller_line"], violation["caller_func"],
-        )
+        _record_violation(violation)
     return _original_dump(*args, **kwargs)
+
+
+def _guarded_dumps(*args, **kwargs):
+    """Wrapper around json.dumps that logs rogue callers."""
+    global _total_calls, _authorized_calls
+    with _lock:
+        _total_calls += 1
+    violation = _inspect_caller("json.dumps")
+    if violation is None:
+        with _lock:
+            _authorized_calls += 1
+    else:
+        _record_violation(violation)
+    return _original_dumps(*args, **kwargs)
 
 
 # =============================================================================
@@ -168,8 +190,9 @@ def arm() -> None:
     if _armed:
         return
     json.dump = _guarded_dump
+    json.dumps = _guarded_dumps
     _armed = True
-    logger.info("I/O Sentinel ARMED — monitoring json.dump calls")
+    logger.info("I/O Sentinel ARMED — monitoring json.dump/json.dumps calls")
 
 
 def disarm() -> None:
@@ -178,6 +201,7 @@ def disarm() -> None:
     if not _armed:
         return
     json.dump = _original_dump
+    json.dumps = _original_dumps
     _armed = False
     logger.info("I/O Sentinel DISARMED")
 

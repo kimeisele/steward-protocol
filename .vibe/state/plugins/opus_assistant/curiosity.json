@@ -9,63 +9,63 @@
   "sources": [
     {
       "type": "uncertainty",
-      "description": "Low confidence decision: BLOCKED : Empty intent",
-      "weight": 0.12,
-      "timestamp": "2026-02-16T13:26:21.981441"
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-16T13:50:54.715080"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-16T13:50:58.216451"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-16T13:50:59.804824"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-16T13:51:04.025296"
     },
     {
       "type": "uncertainty",
       "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:22.759837"
+      "timestamp": "2026-02-16T13:51:05.796252"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on run_tests: Run test suite",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-16T13:51:06.426512"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
+      "weight": 0.039999999999999994,
+      "timestamp": "2026-02-16T13:51:10.151053"
     },
     {
       "type": "uncertainty",
       "description": "Low confidence decision: WARN_EXECUTE on check_lint: Check linting errors",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:26.534876"
+      "timestamp": "2026-02-16T13:51:17.359093"
+    },
+    {
+      "type": "uncertainty",
+      "description": "Low confidence decision: BLOCKED : Empty intent",
+      "weight": 0.12,
+      "timestamp": "2026-02-16T13:51:17.630967"
     },
     {
       "type": "uncertainty",
       "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
       "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:30.594510"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:33.911409"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:36.655621"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on detect_import_regression: Import order regression",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:37.920555"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Update import statements after refactor",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:47.537246"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on fix_test: Fix failing test in auth module",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:50.318780"
-    },
-    {
-      "type": "uncertainty",
-      "description": "Low confidence decision: WARN_EXECUTE on refactor_code: Refactor utility function for clarity",
-      "weight": 0.039999999999999994,
-      "timestamp": "2026-02-16T13:26:50.881151"
+      "timestamp": "2026-02-16T13:51:18.554702"
     }
   ]
 }

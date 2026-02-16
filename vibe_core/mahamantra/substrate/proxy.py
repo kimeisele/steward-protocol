@@ -841,6 +841,17 @@ class MahamantraProxy:
         """Forward everything to the target."""
         return getattr(self._target, name)
 
+    @property
+    def __tattva__(self) -> Dict[str, object]:
+        """Pancha Tattva declaration — every governed object must have this."""
+        return {
+            "chaitanya": self._guardian,
+            "nityananda": self._position,
+            "advaita": type(self._target).__name__,
+            "gadadhara": getattr(self._target, "__module__", "unknown"),
+            "srivasa": "proxy",
+        }
+
     def __repr__(self) -> str:
         return f"MahamantraProxy({self._target!r}, pos={self._position})"
 

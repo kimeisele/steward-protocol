@@ -350,6 +350,75 @@ def lotus_128bit(default: V | None = None) -> LotusRadixN[V]:
     return LotusRadixN[V](levels=32, default=default)
 
 
-def lotus_256bit(default: V | None = None) -> LotusRadixN[V]:
-    """Create 256-bit key structure (SHA-256 hashes)."""
-    return LotusRadixN[V](levels=QUALITIES, default=default)
+# =============================================================================
+# LOTUS ARRAY - Flat O(1) for integers (Production Grade)
+# =============================================================================
+
+
+class LotusArrayInt:
+    """
+    O(1) integer key-value store using array.array.
+
+    PRODUCTION GRADE: Uses array.array('q') for C-level speed.
+    Pre-allocates all 65536 slots (512KB memory).
+
+    FASTER than dict for:
+      - Sequential access
+      - Range queries
+      - Predictable memory layout
+
+    Uses array.array('q') for 64-bit signed integers.
+    -1 means empty slot.
+    """
+
+    __slots__ = ("_data", "_size")
+
+    def __init__(self) -> None:
+        import array
+        # 'q' = signed long long (8 bytes), -1 = empty
+        # KEY_SPACE is 16^4 = 65536 (from constants above or implicit)
+        # We calculate it here to ensure independence
+        self._data: array.array[int] = array.array("q", [-1] * 65536)
+        self._size: int = 0
+
+    def __getitem__(self, key: int) -> int:
+        """O(1) lookup - single array access, no bounds check."""
+        return self._data[key]
+
+    def __setitem__(self, key: int, value: int) -> None:
+        """O(1) insert - single array access."""
+        old = self._data[key]
+        self._data[key] = value
+        if old == -1 and value != -1:
+            self._size += 1
+        elif old != -1 and value == -1:
+            self._size -= 1
+
+    def get(self, key: int) -> int:
+        """O(1) lookup, returns -1 if not found."""
+        return self._data[key]
+
+    def __len__(self) -> int:
+        return self._size
+
+    def __contains__(self, key: int) -> bool:
+        return self._data[key] != -1
+
+    def range_sum(self, start: int, end: int) -> int:
+        """O(k) range sum - IMPOSSIBLE with hash tables."""
+        total = 0
+        data = self._data
+        for i in range(start, end):
+            v = data[i]
+            if v != -1:
+                total += v
+        return total
+
+    def range_count(self, start: int, end: int) -> int:
+        """O(k) count non-empty in range."""
+        count = 0
+        data = self._data
+        for i in range(start, end):
+            if data[i] != -1:
+                count += 1
+        return count

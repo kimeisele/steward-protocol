@@ -26,7 +26,7 @@ import logging
 from typing import TYPE_CHECKING, Dict, Optional, Union
 
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
-from vibe_core.mahamantra.research.lotus_tree import LotusArrayInt
+from vibe_core.mahamantra.substrate.lotus_radix import LotusArrayInt
 from vibe_core.mahamantra.adapters.compression import MahaCompression
 from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 
