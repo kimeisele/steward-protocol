@@ -633,6 +633,45 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                 except Exception as e:
                     logger.warning(f"⚠️ Could not arm I/O Sentinel: {e}")
 
+                # GOVARDHAN: Ingest codebase into CellRouter (Sravanam needs cells to scan)
+                try:
+                    from vibe_core.mahamantra.dharma.kumaras.fragment_parser import (
+                        parse_file_to_fragments,
+                        register_fragments_as_cells,
+                    )
+
+                    mahamantra_root = Path(__file__).parent / "mahamantra"
+                    ingested_cells = 0
+                    ingested_files = 0
+                    for py_file in sorted(mahamantra_root.rglob("*.py")):
+                        if "__pycache__" in str(py_file):
+                            continue
+                        try:
+                            frags = parse_file_to_fragments(py_file)
+                            addrs = register_fragments_as_cells(frags)
+                            ingested_cells += len(addrs)
+                            ingested_files += 1
+                        except Exception:
+                            pass  # Unparseable files are skipped silently
+
+                    if ingested_cells:
+                        logger.info(
+                            f"      → {ingested_cells} cells ingested from "
+                            f"{ingested_files} files into CellRouter"
+                        )
+                except Exception as e:
+                    logger.debug(f"Codebase ingestion skipped: {e}")
+
+                # GOVARDHAN: Wire Sravanam listener (organic per-tick scanning)
+                try:
+                    from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
+
+                    listener = wire_sravanam()
+                    if listener:
+                        logger.info("      → Sravanam listener wired (organic cell scanning active)")
+                except Exception as e:
+                    logger.debug(f"Sravanam wiring skipped: {e}")
+
                 # GOVARDHAN: Register Mahamantra governance hook (King installs itself)
                 try:
                     from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
