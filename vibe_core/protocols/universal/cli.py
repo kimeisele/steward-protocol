@@ -926,7 +926,7 @@ def verify_gad000() -> GAD000Seal:
     heads_seen = set()
 
     try:
-        from vibe_core.protocols.universal.mantra import MantraOpCode
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
         from vibe_core.protocols.mahajanas.router import MahajanaRouter, HEAD_OPCODES, Mahajana
 
         router = MahajanaRouter()

@@ -16,7 +16,7 @@ __genesis__ = "0xa1316135"  # GenesisByte: parampara % 37 == 0
 from typing import Optional, Any
 from vibe_core.protocols.testable import BaseTestable
 from vibe_core.protocols.substrate.byte import MANTRA_SEQUENCE
-from vibe_core.protocols.universal.mantra import MantraProtocol
+from vibe_core.protocols.substrate import MantraProtocol
 from vibe_core.protocols.universal.types import SovereignContext
 
 
