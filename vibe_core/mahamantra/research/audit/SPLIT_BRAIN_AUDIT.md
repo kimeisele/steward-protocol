@@ -11,6 +11,7 @@
 | **HERALD** | Nov 21-23, 2025 | 141 | Marketing Agent, STEWARD Protocol, Crypto Identity |
 | **AGENT CITY** | Nov 24 - Dec 10 | 1256 | 26 Agents, Districts, Cartridges, Playbooks, Gateway, Cortex |
 | **OPUS/MANAS** | Dec 11 - Jan 9 | 1563 | Cognitive Architecture, MANAS 6D, NAGA, VAJRA, Executor Singularity |
+|**NAGA** | ??? | ??? | ??? Architecture |
 | **MAHAMANTRA** | Jan 10 - now | 1348 | Transformation. "Alles gehört einer Person." Lotus, Substrate, Seed. |
 
 **Total: ~4308 non-merge commits in 87 days.**

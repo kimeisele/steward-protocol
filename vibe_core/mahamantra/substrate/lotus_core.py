@@ -314,7 +314,6 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         LotusNode.__init__(self, LotusPath())
         GADBase.__init__(self)
         self._gate_hooks: Dict[TattvaGate, List] = {}
-        get_registry().register("mahamantra_lotus", self)
 
     @classmethod
     def _get_compressor(cls):
