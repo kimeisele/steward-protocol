@@ -1,0 +1,5043 @@
+{
+  "scan_date": "2026-02-16",
+  "total_files": 495,
+  "total_loc": 111958,
+  "avg_health": 96.4,
+  "categories": {
+    "research": {
+      "files": 139,
+      "loc": 36693,
+      "smells": 25
+    },
+    "substrate": {
+      "files": 94,
+      "loc": 28260,
+      "smells": 68
+    },
+    "protocol": {
+      "files": 71,
+      "loc": 13016,
+      "smells": 56
+    },
+    "dharma": {
+      "files": 44,
+      "loc": 6096,
+      "smells": 27
+    },
+    "adapter": {
+      "files": 24,
+      "loc": 6073,
+      "smells": 9
+    },
+    "cli": {
+      "files": 14,
+      "loc": 3878,
+      "smells": 8
+    },
+    "test": {
+      "files": 23,
+      "loc": 3599,
+      "smells": 2
+    },
+    "analysis": {
+      "files": 9,
+      "loc": 2369,
+      "smells": 1
+    },
+    "root": {
+      "files": 7,
+      "loc": 2086,
+      "smells": 3
+    },
+    "kernel": {
+      "files": 7,
+      "loc": 2070,
+      "smells": 5
+    },
+    "reactor": {
+      "files": 5,
+      "loc": 1895,
+      "smells": 6
+    },
+    "audit": {
+      "files": 21,
+      "loc": 1841,
+      "smells": 6
+    },
+    "lila": {
+      "files": 6,
+      "loc": 1206,
+      "smells": 2
+    },
+    "moksha": {
+      "files": 6,
+      "loc": 725,
+      "smells": 2
+    },
+    "demo": {
+      "files": 3,
+      "loc": 564,
+      "smells": 0
+    },
+    "genesis": {
+      "files": 6,
+      "loc": 454,
+      "smells": 1
+    },
+    "karma": {
+      "files": 6,
+      "loc": 343,
+      "smells": 0
+    },
+    "venu": {
+      "files": 4,
+      "loc": 260,
+      "smells": 0
+    },
+    "namarupa": {
+      "files": 3,
+      "loc": 210,
+      "smells": 2
+    },
+    "seed": {
+      "files": 1,
+      "loc": 137,
+      "smells": 1
+    },
+    "net": {
+      "files": 1,
+      "loc": 102,
+      "smells": 1
+    },
+    "sound": {
+      "files": 1,
+      "loc": 81,
+      "smells": 1
+    }
+  },
+  "smell_counts": {
+    "any_type": 109,
+    "no_identity": 68,
+    "ungoverned_io": 27,
+    "deprecated_code": 18,
+    "singleton_bypass": 3,
+    "private_gate_call": 1
+  },
+  "sick_files_count": 3,
+  "sick_files": [
+    {
+      "path": "research/audit/inventory_scan.py",
+      "loc": 218,
+      "category": "research",
+      "smells": [
+        "singleton_bypass",
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 60
+    },
+    {
+      "path": "substrate/sankirtan.py",
+      "loc": 1025,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 60
+    },
+    {
+      "path": "reactor/shadow.py",
+      "loc": 913,
+      "category": "reactor",
+      "smells": [
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 65
+    }
+  ],
+  "files": [
+    {
+      "path": "__init__.py",
+      "loc": 64,
+      "category": "root",
+      "smells": [
+        "singleton_bypass"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 85
+    },
+    {
+      "path": "__main__.py",
+      "loc": 148,
+      "category": "root",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "_audit_architecture_flow.py",
+      "loc": 252,
+      "category": "root",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "adapters/__init__.py",
+      "loc": 87,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/attention.py",
+      "loc": 237,
+      "category": "adapter",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "adapters/bio.py",
+      "loc": 269,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/cell.py",
+      "loc": 125,
+      "category": "adapter",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "adapters/classification.py",
+      "loc": 315,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/cli.py",
+      "loc": 209,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/composition.py",
+      "loc": 343,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/compression.py",
+      "loc": 375,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/compute.py",
+      "loc": 439,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/gita_resonance.py",
+      "loc": 384,
+      "category": "adapter",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "adapters/hardware.py",
+      "loc": 318,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/hash.py",
+      "loc": 148,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/japa.py",
+      "loc": 338,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "adapters/llm.py",
+      "loc": 487,
+      "category": "adapter",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "adapters/maha_format.py",
+      "loc": 109,
+      "category": "adapter",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "adapters/network.py",
+      "loc": 282,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/orchestrator.py",
+      "loc": 210,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/pipeline.py",
+      "loc": 278,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/rama_router.py",
+      "loc": 54,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/routing.py",
+      "loc": 326,
+      "category": "adapter",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "adapters/shabda_adapter.py",
+      "loc": 68,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/synth.py",
+      "loc": 417,
+      "category": "adapter",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "adapters/transform.py",
+      "loc": 190,
+      "category": "adapter",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "adapters/tulasi_gate.py",
+      "loc": 65,
+      "category": "adapter",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "analysis/__init__.py",
+      "loc": 24,
+      "category": "analysis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "analysis/derivation_graph.py",
+      "loc": 588,
+      "category": "analysis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "analysis/narada_vina/__init__.py",
+      "loc": 132,
+      "category": "analysis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "analysis/narada_vina/endpoints.py",
+      "loc": 299,
+      "category": "analysis",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "analysis/narada_vina/engine.py",
+      "loc": 122,
+      "category": "analysis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "analysis/narada_vina/knowledge.py",
+      "loc": 430,
+      "category": "analysis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "analysis/narada_vina/tattvas.py",
+      "loc": 278,
+      "category": "analysis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "analysis/narada_vina/validation.py",
+      "loc": 204,
+      "category": "analysis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "analysis/universal_generator.py",
+      "loc": 292,
+      "category": "analysis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/__init__.py",
+      "loc": 38,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/audit_dispatcher.py",
+      "loc": 110,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/audit_registry.py",
+      "loc": 164,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/compliance.py",
+      "loc": 35,
+      "category": "audit",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "audit/drift.py",
+      "loc": 255,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/gaps.py",
+      "loc": 32,
+      "category": "audit",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "audit/heal_mahamantra.py",
+      "loc": 133,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "audit/hygiene_auditor.py",
+      "loc": 123,
+      "category": "audit",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "audit/invariants.py",
+      "loc": 47,
+      "category": "audit",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "audit/kernel.py",
+      "loc": 93,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/lineage_auditor.py",
+      "loc": 106,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/log/__init__.py",
+      "loc": 0,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "audit/log/entry.py",
+      "loc": 72,
+      "category": "audit",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "audit/log/protocol.py",
+      "loc": 33,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "audit/protocol_auditor.py",
+      "loc": 103,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/protocol_liberation.py",
+      "loc": 70,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "audit/protocol_resurrection.py",
+      "loc": 115,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/scale.py",
+      "loc": 24,
+      "category": "audit",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "audit/ssot_auditor.py",
+      "loc": 84,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "audit/tests/__init__.py",
+      "loc": 0,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "audit/tests/test_audit_system.py",
+      "loc": 204,
+      "category": "audit",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "chat.py",
+      "loc": 679,
+      "category": "root",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "cli/__init__.py",
+      "loc": 113,
+      "category": "cli",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "cli/auto.py",
+      "loc": 460,
+      "category": "cli",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "cli/bridge.py",
+      "loc": 118,
+      "category": "cli",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "cli/cell_wrapper.py",
+      "loc": 66,
+      "category": "cli",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "cli/engine.py",
+      "loc": 322,
+      "category": "cli",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "cli/entry.py",
+      "loc": 216,
+      "category": "cli",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "cli/entry_protocol.py",
+      "loc": 100,
+      "category": "cli",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "cli/event_bridge.py",
+      "loc": 125,
+      "category": "cli",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "cli/map.py",
+      "loc": 234,
+      "category": "cli",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "cli/observe.py",
+      "loc": 195,
+      "category": "cli",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "cli/protocol.py",
+      "loc": 531,
+      "category": "cli",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "cli/samskara.py",
+      "loc": 110,
+      "category": "cli",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "cli/steward.py",
+      "loc": 352,
+      "category": "cli",
+      "smells": [
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 85
+    },
+    {
+      "path": "cli/veda_explorer.py",
+      "loc": 936,
+      "category": "cli",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 70
+    },
+    {
+      "path": "commands.py",
+      "loc": 590,
+      "category": "root",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "demos/__init__.py",
+      "loc": 15,
+      "category": "demo",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "demos/bio_indexer.py",
+      "loc": 276,
+      "category": "demo",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "demos/log_sentinel.py",
+      "loc": 273,
+      "category": "demo",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/__init__.py",
+      "loc": 28,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/components/__init__.py",
+      "loc": 3,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "dharma/components/hologram.py",
+      "loc": 49,
+      "category": "dharma",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "dharma/components/layers.py",
+      "loc": 61,
+      "category": "dharma",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "dharma/components/linguist.py",
+      "loc": 121,
+      "category": "dharma",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "dharma/components/matrix.py",
+      "loc": 35,
+      "category": "dharma",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "dharma/components/shabda.py",
+      "loc": 125,
+      "category": "dharma",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "dharma/engine.py",
+      "loc": 67,
+      "category": "dharma",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "dharma/kapila/__init__.py",
+      "loc": 48,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/__init__.py",
+      "loc": 14,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/any_type_usage.py",
+      "loc": 122,
+      "category": "dharma",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "dharma/kapila/remedies/base.py",
+      "loc": 42,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/broken_genesis.py",
+      "loc": 157,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/f811_redefinition.py",
+      "loc": 111,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/fractal_routing.py",
+      "loc": 117,
+      "category": "dharma",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "dharma/kapila/remedies/get_instance.py",
+      "loc": 120,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/hardcoded_constants.py",
+      "loc": 205,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/iterdir_discovery.py",
+      "loc": 185,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/missing_mahajana.py",
+      "loc": 290,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/null_signature.py",
+      "loc": 180,
+      "category": "dharma",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "dharma/kapila/remedies/path_scanning.py",
+      "loc": 94,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/silent_except.py",
+      "loc": 168,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/subprocess_timeout.py",
+      "loc": 81,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kapila/remedies/unsafe_io_write.py",
+      "loc": 123,
+      "category": "dharma",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "dharma/kapila/remedy_loader.py",
+      "loc": 152,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kumaras/__init__.py",
+      "loc": 48,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kumaras/engine.py",
+      "loc": 492,
+      "category": "dharma",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "dharma/kumaras/fragment.py",
+      "loc": 179,
+      "category": "dharma",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "dharma/kumaras/fragment_parser.py",
+      "loc": 268,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kumaras/healing_intent.py",
+      "loc": 357,
+      "category": "dharma",
+      "smells": [
+        "any_type",
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 80
+    },
+    {
+      "path": "dharma/kumaras/healing_resolver.py",
+      "loc": 267,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kumaras/locator.py",
+      "loc": 115,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kumaras/protocol.py",
+      "loc": 147,
+      "category": "dharma",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "dharma/kumaras/sravanam.py",
+      "loc": 262,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/kumaras/tests/__init__.py",
+      "loc": 0,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "dharma/kumaras/tests/test_cellular_healer.py",
+      "loc": 143,
+      "category": "dharma",
+      "smells": [
+        "ungoverned_io",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 80
+    },
+    {
+      "path": "dharma/kumaras/tests/test_fragment_parser.py",
+      "loc": 184,
+      "category": "dharma",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "dharma/kumaras/tests/test_healing_resolver.py",
+      "loc": 220,
+      "category": "dharma",
+      "smells": [
+        "ungoverned_io",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 80
+    },
+    {
+      "path": "dharma/kumaras/tests/test_sravanam.py",
+      "loc": 136,
+      "category": "dharma",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "dharma/kumaras/tests/test_write_source_gate.py",
+      "loc": 139,
+      "category": "dharma",
+      "smells": [
+        "ungoverned_io",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 80
+    },
+    {
+      "path": "dharma/kumaras/types.py",
+      "loc": 40,
+      "category": "dharma",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "dharma/kumaras/validation.py",
+      "loc": 305,
+      "category": "dharma",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "dharma/manu/__init__.py",
+      "loc": 48,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "dharma/prithu/__init__.py",
+      "loc": 48,
+      "category": "dharma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "genesis/__init__.py",
+      "loc": 68,
+      "category": "genesis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "genesis/brahma/__init__.py",
+      "loc": 48,
+      "category": "genesis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "genesis/brahma/adapter.py",
+      "loc": 194,
+      "category": "genesis",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "genesis/narada/__init__.py",
+      "loc": 48,
+      "category": "genesis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "genesis/shambhu/__init__.py",
+      "loc": 48,
+      "category": "genesis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "genesis/vyasa/__init__.py",
+      "loc": 48,
+      "category": "genesis",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "karma/__init__.py",
+      "loc": 68,
+      "category": "karma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "karma/bhishma/__init__.py",
+      "loc": 48,
+      "category": "karma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "karma/bhishma/protocol.py",
+      "loc": 80,
+      "category": "karma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "karma/janaka/__init__.py",
+      "loc": 51,
+      "category": "karma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "karma/parashurama/__init__.py",
+      "loc": 48,
+      "category": "karma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "karma/prahlada/__init__.py",
+      "loc": 48,
+      "category": "karma",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "kernel/__init__.py",
+      "loc": 78,
+      "category": "kernel",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "kernel/daemon.py",
+      "loc": 369,
+      "category": "kernel",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "kernel/fractal.py",
+      "loc": 259,
+      "category": "kernel",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "kernel/intent.py",
+      "loc": 314,
+      "category": "kernel",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "kernel/maha_kernel.py",
+      "loc": 127,
+      "category": "kernel",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "kernel/phoenix.py",
+      "loc": 105,
+      "category": "kernel",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "kernel/singularity.py",
+      "loc": 818,
+      "category": "kernel",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 80
+    },
+    {
+      "path": "lila/__init__.py",
+      "loc": 87,
+      "category": "lila",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "lila/adhikara.py",
+      "loc": 278,
+      "category": "lila",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "lila/adoption.py",
+      "loc": 91,
+      "category": "lila",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "lila/jiva_shadow.py",
+      "loc": 329,
+      "category": "lila",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "lila/migration.py",
+      "loc": 159,
+      "category": "lila",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "lila/registry.py",
+      "loc": 262,
+      "category": "lila",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "lotus_projection.py",
+      "loc": 239,
+      "category": "root",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "moksha/__init__.py",
+      "loc": 69,
+      "category": "moksha",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "moksha/bali/__init__.py",
+      "loc": 48,
+      "category": "moksha",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "moksha/nrisimha/__init__.py",
+      "loc": 51,
+      "category": "moksha",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "moksha/shuka/__init__.py",
+      "loc": 48,
+      "category": "moksha",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "moksha/yamaraja/__init__.py",
+      "loc": 54,
+      "category": "moksha",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "moksha/yamaraja/samskara_service.py",
+      "loc": 455,
+      "category": "moksha",
+      "smells": [
+        "any_type",
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 80
+    },
+    {
+      "path": "namarupa/__init__.py",
+      "loc": 16,
+      "category": "namarupa",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "namarupa/akshara.py",
+      "loc": 115,
+      "category": "namarupa",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "namarupa/atom.py",
+      "loc": 79,
+      "category": "namarupa",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "net/vimana.py",
+      "loc": 102,
+      "category": "net",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/__init__.py",
+      "loc": 148,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_adhikara.py",
+      "loc": 229,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_audit.py",
+      "loc": 157,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_bhava.py",
+      "loc": 190,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_blueprint.py",
+      "loc": 102,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_bridge.py",
+      "loc": 476,
+      "category": "protocol",
+      "smells": [
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 85
+    },
+    {
+      "path": "protocols/_capabilities.py",
+      "loc": 111,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_composition.py",
+      "loc": 77,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_core.py",
+      "loc": 383,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_declaration.py",
+      "loc": 403,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_dhyana.py",
+      "loc": 379,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_entropy.py",
+      "loc": 339,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_fractal.py",
+      "loc": 312,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_gad.py",
+      "loc": 493,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_gita_lens.py",
+      "loc": 285,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_graph.py",
+      "loc": 439,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_guna.py",
+      "loc": 31,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_header.py",
+      "loc": 323,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_holographic.py",
+      "loc": 307,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_indriya.py",
+      "loc": 381,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_kala.py",
+      "loc": 52,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_karma.py",
+      "loc": 53,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_lila.py",
+      "loc": 361,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_lotus.py",
+      "loc": 396,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_maha_compute.py",
+      "loc": 295,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_orbit.py",
+      "loc": 43,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_ouroboros.py",
+      "loc": 424,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_pancha.py",
+      "loc": 44,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_payload.py",
+      "loc": 279,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_prabhupada.py",
+      "loc": 72,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_rollout.py",
+      "loc": 122,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_sankirtan.py",
+      "loc": 73,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_seed.py",
+      "loc": 27,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_seed_cell.py",
+      "loc": 140,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/_sense.py",
+      "loc": 388,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_shabda_derivation.py",
+      "loc": 214,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_singularity.py",
+      "loc": 343,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_steward.py",
+      "loc": 395,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/_venu.py",
+      "loc": 333,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/attention.py",
+      "loc": 49,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/bio.py",
+      "loc": 45,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/cell.py",
+      "loc": 68,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/classification.py",
+      "loc": 70,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/compression.py",
+      "loc": 162,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/compute.py",
+      "loc": 53,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/dharma_protocol.py",
+      "loc": 80,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/diw.py",
+      "loc": 149,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/gita.py",
+      "loc": 53,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/hardware.py",
+      "loc": 132,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/hash.py",
+      "loc": 44,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/japa.py",
+      "loc": 99,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/llm.py",
+      "loc": 93,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/network.py",
+      "loc": 48,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/offering.py",
+      "loc": 34,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/orchestrator.py",
+      "loc": 56,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/pipeline.py",
+      "loc": 86,
+      "category": "protocol",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "protocols/resonance.py",
+      "loc": 146,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/routing.py",
+      "loc": 66,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/sankalpa/__init__.py",
+      "loc": 68,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "protocols/sankalpa/types.py",
+      "loc": 256,
+      "category": "protocol",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "protocols/seed/__init__.py",
+      "loc": 521,
+      "category": "protocol",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "protocols/seed/_algorithm.py",
+      "loc": 27,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/seed/_axioms.py",
+      "loc": 27,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/seed/_cosmic.py",
+      "loc": 55,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/seed/_extended.py",
+      "loc": 425,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/seed/_primary.py",
+      "loc": 62,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/seed/_secondary.py",
+      "loc": 89,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/seed/_topology.py",
+      "loc": 158,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/synth.py",
+      "loc": 82,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/transform.py",
+      "loc": 42,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "protocols/types.py",
+      "loc": 52,
+      "category": "protocol",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "reactor/__init__.py",
+      "loc": 69,
+      "category": "reactor",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "reactor/loop.py",
+      "loc": 338,
+      "category": "reactor",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "reactor/shadow.py",
+      "loc": 913,
+      "category": "reactor",
+      "smells": [
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 65
+    },
+    {
+      "path": "reactor/shadow_oracle.py",
+      "loc": 239,
+      "category": "reactor",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "reactor/shadow_protocol.py",
+      "loc": 336,
+      "category": "reactor",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "research/CLI/05_GAD_COMPLIANCE_TEST.py",
+      "loc": 607,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "research/PROOF_HARDCORE.py",
+      "loc": 403,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/__init__.py",
+      "loc": 147,
+      "category": "research",
+      "smells": [
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 80
+    },
+    {
+      "path": "research/acintya_mathematics.py",
+      "loc": 527,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/adi_guru_factor.py",
+      "loc": 320,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/ananta_shesha_python.py",
+      "loc": 360,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/attractor_analysis.py",
+      "loc": 342,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/attractor_semantics.py",
+      "loc": 266,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/audit/architecture_map.py",
+      "loc": 317,
+      "category": "research",
+      "smells": [
+        "private_gate_call"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 75
+    },
+    {
+      "path": "research/audit/complexity_hotspots.py",
+      "loc": 156,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/audit/e2e_healing_test.py",
+      "loc": 115,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/audit/healing_loop_diagnosis.py",
+      "loc": 163,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/audit/inventory_scan.py",
+      "loc": 218,
+      "category": "research",
+      "smells": [
+        "singleton_bypass",
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 60
+    },
+    {
+      "path": "research/audit/legacy_absorption_map.py",
+      "loc": 183,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/audit/organism_state.py",
+      "loc": 151,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/audit/sankhya_audit.py",
+      "loc": 223,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/audit/system_health_20260214.py",
+      "loc": 217,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/basin_bridge.py",
+      "loc": 214,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/basin_vs_string.py",
+      "loc": 112,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/bench_rank_words.py",
+      "loc": 48,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/bhoga_prasadam.py",
+      "loc": 292,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/biology.py",
+      "loc": 165,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/chaitanya_singularity.py",
+      "loc": 384,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/chaitanya_tattva.py",
+      "loc": 318,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/chemistry.py",
+      "loc": 144,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/clean_room_extraction.py",
+      "loc": 273,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/climate_impact.py",
+      "loc": 331,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/code_intent_bridge.py",
+      "loc": 259,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/code_intent_gap.py",
+      "loc": 192,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/code_seed_integration.py",
+      "loc": 261,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/computation.py",
+      "loc": 167,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/consciousness_mathematics.py",
+      "loc": 401,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/dharma/__init__.py",
+      "loc": 32,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/dharma/axiom_gate.py",
+      "loc": 222,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/dharma/gad_kirtan.py",
+      "loc": 371,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/dharma/sequence_solver.py",
+      "loc": 60,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/dharma/teental_matrix.py",
+      "loc": 269,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/dharma/vishvarupa_solver.py",
+      "loc": 62,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/dna_kmer.py",
+      "loc": 401,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/flute_algorithm.py",
+      "loc": 208,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/gap_analysis.py",
+      "loc": 377,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/genesis/__init__.py",
+      "loc": 51,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/git/__init__.py",
+      "loc": 17,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/git/findings.py",
+      "loc": 84,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/git/lab.py",
+      "loc": 304,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/gita/__init__.py",
+      "loc": 146,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/gita/canonical_derivation.py",
+      "loc": 154,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/gita_verse_content.py",
+      "loc": 394,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/gita_verse_derivation.py",
+      "loc": 360,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/gita_verse_text.py",
+      "loc": 883,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 85
+    },
+    {
+      "path": "research/golden_age_peak.py",
+      "loc": 284,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/goloka_tattva.py",
+      "loc": 259,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/guardian_lexikon_bridge.py",
+      "loc": 325,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/guardian_syllable_trees.py",
+      "loc": 429,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/guru_parampara.py",
+      "loc": 241,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/gut_synthesis.py",
+      "loc": 398,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "research/hardware/__init__.py",
+      "loc": 112,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/hardware.py",
+      "loc": 281,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/hardware_lotus.py",
+      "loc": 382,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/hkr_decomposition.py",
+      "loc": 253,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/intent_from_math.py",
+      "loc": 272,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/intent_from_seed.py",
+      "loc": 182,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/ip_routing.py",
+      "loc": 147,
+      "category": "research",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "research/japa.py",
+      "loc": 196,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/karma/__init__.py",
+      "loc": 31,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/karma_mathematics.py",
+      "loc": 420,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/ki_training_paradigm.py",
+      "loc": 390,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/kishora_architecture.py",
+      "loc": 164,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/kishora_engineering.py",
+      "loc": 161,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "research/language_model_resonance.py",
+      "loc": 384,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/language_runtime/__init__.py",
+      "loc": 19,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/language_runtime/antaranga_bridge.py",
+      "loc": 119,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/language_runtime/contracts.py",
+      "loc": 28,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/language_runtime/incremental.py",
+      "loc": 113,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/language_runtime/session.py",
+      "loc": 100,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/language_runtime/venu_bridge.py",
+      "loc": 67,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/llm_holographic.py",
+      "loc": 479,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/lotus/__init__.py",
+      "loc": 114,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/lotus_acintya.py",
+      "loc": 325,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/lotus_file_addressing.py",
+      "loc": 248,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/lotus_full_spectrum.py",
+      "loc": 376,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/lotus_radix_n.py",
+      "loc": 343,
+      "category": "research",
+      "smells": [
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 80
+    },
+    {
+      "path": "research/lotus_tree.py",
+      "loc": 166,
+      "category": "research",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "research/madhurya_analysis.py",
+      "loc": 312,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/maha_compose_prototype.py",
+      "loc": 397,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/maha_compression.py",
+      "loc": 422,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/maha_generator.py",
+      "loc": 285,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/maha_language_engine.py",
+      "loc": 1142,
+      "category": "research",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 70
+    },
+    {
+      "path": "research/maha_lossless.py",
+      "loc": 226,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/maha_sequencer.py",
+      "loc": 583,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/mahajana_derivation.py",
+      "loc": 559,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/mantra_computation_bridge.py",
+      "loc": 439,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/medicine.py",
+      "loc": 161,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/moksha/__init__.py",
+      "loc": 31,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/moores_law.py",
+      "loc": 230,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/nitya_kishora.py",
+      "loc": 129,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/nityananda_substrate.py",
+      "loc": 349,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/physics.py",
+      "loc": 387,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/position_holograph.py",
+      "loc": 270,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/prabhupada_topology.py",
+      "loc": 113,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/project_introspection.py",
+      "loc": 404,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/quantum_entanglement.py",
+      "loc": 181,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/rama_resonance.py",
+      "loc": 318,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/research_chat.py",
+      "loc": 589,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "research/research_lab.py",
+      "loc": 487,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "research/resonance_bridge.py",
+      "loc": 197,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/resonance_response.py",
+      "loc": 384,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/routing_holographic.py",
+      "loc": 334,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/sanskrit_extraction.py",
+      "loc": 303,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/self_organization.py",
+      "loc": 192,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/semantic_basins.py",
+      "loc": 221,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/semantic_basins_deep.py",
+      "loc": 181,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/shabda_intent.py",
+      "loc": 284,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/shabda_spawning.py",
+      "loc": 516,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/shabda_translation.py",
+      "loc": 392,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/siksastakam_complete.py",
+      "loc": 507,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/six_attractors_deep.py",
+      "loc": 317,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/spell_intent.py",
+      "loc": 214,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/spiritual_tdd.py",
+      "loc": 515,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/syllable_analysis.py",
+      "loc": 205,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/synthesis_target_architecture.py",
+      "loc": 219,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 90
+    },
+    {
+      "path": "research/test_immune_system.py",
+      "loc": 292,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/topology_test.py",
+      "loc": 71,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/tulasi_bridge.py",
+      "loc": 73,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/tulasi_lila.py",
+      "loc": 148,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/unified_compute.py",
+      "loc": 302,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/vedic_western_synthesis.py",
+      "loc": 330,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/verify_algorithm_purity.py",
+      "loc": 65,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/verify_chapter18_sections.py",
+      "loc": 376,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "research/verify_concept_weight.py",
+      "loc": 223,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/verify_dhatu_bridge.py",
+      "loc": 226,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/verify_holistic_addressing.py",
+      "loc": 60,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/verify_math_intent.py",
+      "loc": 35,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/verify_meaning_bridge.py",
+      "loc": 115,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/verify_meaning_coverage.py",
+      "loc": 56,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/verify_remnant_intent.py",
+      "loc": 102,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/verify_shabda_first.py",
+      "loc": 101,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/what_is_13.py",
+      "loc": 238,
+      "category": "research",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "research/yantra_computation.py",
+      "loc": 406,
+      "category": "research",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "research_gateway.py",
+      "loc": 114,
+      "category": "root",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "seed/types.py",
+      "loc": 137,
+      "category": "seed",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "sound/audio_engine.py",
+      "loc": 81,
+      "category": "sound",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/__init__.py",
+      "loc": 409,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/_legacy.py",
+      "loc": 55,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/acintya.py",
+      "loc": 401,
+      "category": "substrate",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/algorithm/__init__.py",
+      "loc": 43,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "substrate/algorithm/maha.py",
+      "loc": 700,
+      "category": "substrate",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 85
+    },
+    {
+      "path": "substrate/antaranga.py",
+      "loc": 246,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/basin_map.py",
+      "loc": 209,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/boot.py",
+      "loc": 49,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/bridge.py",
+      "loc": 324,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/byte.py",
+      "loc": 371,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/cell.py",
+      "loc": 398,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/cell_router.py",
+      "loc": 211,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/chamber.py",
+      "loc": 528,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/classifier/__init__.py",
+      "loc": 43,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "substrate/classifier/core.py",
+      "loc": 346,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/clock.py",
+      "loc": 166,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/cluster.py",
+      "loc": 80,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/config.py",
+      "loc": 416,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 80
+    },
+    {
+      "path": "substrate/errors.py",
+      "loc": 181,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/event_bus.py",
+      "loc": 660,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "substrate/event_types.py",
+      "loc": 58,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/fractal.py",
+      "loc": 60,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/gate_providers.py",
+      "loc": 675,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 75
+    },
+    {
+      "path": "substrate/gita.py",
+      "loc": 95,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/guardian_router.py",
+      "loc": 320,
+      "category": "substrate",
+      "smells": [
+        "deprecated_code",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "substrate/guna.py",
+      "loc": 193,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/harmonics.py",
+      "loc": 665,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "substrate/intents.py",
+      "loc": 98,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "substrate/io_sentinel.py",
+      "loc": 179,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "substrate/kala.py",
+      "loc": 48,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/language/__init__.py",
+      "loc": 36,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "substrate/language/composer.py",
+      "loc": 283,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/language/engine.py",
+      "loc": 114,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/language/mantra_grid.py",
+      "loc": 96,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/language/mode_affinity.py",
+      "loc": 48,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/language/phonetics.py",
+      "loc": 115,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/language/section_router.py",
+      "loc": 127,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/language/state_bridge.py",
+      "loc": 61,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/language/types.py",
+      "loc": 71,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/ledger.py",
+      "loc": 650,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/lila_chronology.py",
+      "loc": 1127,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 85
+    },
+    {
+      "path": "substrate/lineage.py",
+      "loc": 547,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "substrate/lipta.py",
+      "loc": 32,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/lotus_core.py",
+      "loc": 958,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 75
+    },
+    {
+      "path": "substrate/lotus_radix.py",
+      "loc": 288,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/lotus_types.py",
+      "loc": 363,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/maha_llm_kernel.py",
+      "loc": 325,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "substrate/maha_state.py",
+      "loc": 546,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 80
+    },
+    {
+      "path": "substrate/mahajana.py",
+      "loc": 93,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/mantra/__init__.py",
+      "loc": 55,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "substrate/mantra/engineering.py",
+      "loc": 375,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/mantra/kirtan.py",
+      "loc": 149,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/mantra/prabhupada_engineering.py",
+      "loc": 355,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/mantra/prabhupada_kirtan.py",
+      "loc": 464,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/mantra/siksastakam.py",
+      "loc": 175,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/memory.py",
+      "loc": 139,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 80
+    },
+    {
+      "path": "substrate/nadi.py",
+      "loc": 620,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/opcode.py",
+      "loc": 159,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/orbit.py",
+      "loc": 48,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/pancha_tattva.py",
+      "loc": 321,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/pancha_walk.py",
+      "loc": 194,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/parampara.py",
+      "loc": 363,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/phonetic_bridge.py",
+      "loc": 483,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/phonetic_encoder.py",
+      "loc": 194,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "substrate/phonetics/__init__.py",
+      "loc": 21,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "substrate/phonetics/shabda.py",
+      "loc": 184,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/position.py",
+      "loc": 174,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/prabhupada.py",
+      "loc": 117,
+      "category": "substrate",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/process_manager.py",
+      "loc": 320,
+      "category": "substrate",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/protocol.py",
+      "loc": 448,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/proxy.py",
+      "loc": 603,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 75
+    },
+    {
+      "path": "substrate/rama_grid.py",
+      "loc": 326,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/registry.py",
+      "loc": 131,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/resonance/__init__.py",
+      "loc": 31,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "substrate/resonance/oracle.py",
+      "loc": 165,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/resonance/resonator.py",
+      "loc": 112,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/resonance_ranker.py",
+      "loc": 614,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 80
+    },
+    {
+      "path": "substrate/samana_bridge.py",
+      "loc": 605,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/samskara.py",
+      "loc": 457,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 80
+    },
+    {
+      "path": "substrate/sankalpa/will.py",
+      "loc": 461,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "substrate/sankirtan.py",
+      "loc": 1025,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 60
+    },
+    {
+      "path": "substrate/sanskrit_lookup.py",
+      "loc": 186,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 80
+    },
+    {
+      "path": "substrate/seed.py",
+      "loc": 768,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/seed_to_words.py",
+      "loc": 281,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 85
+    },
+    {
+      "path": "substrate/semantic_index.py",
+      "loc": 403,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io",
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 80
+    },
+    {
+      "path": "substrate/shuddhi.py",
+      "loc": 166,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/tattva.py",
+      "loc": 275,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/tattva_registry.py",
+      "loc": 187,
+      "category": "substrate",
+      "smells": [
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 95
+    },
+    {
+      "path": "substrate/varnamala_codec.py",
+      "loc": 198,
+      "category": "substrate",
+      "smells": [
+        "no_identity"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "substrate/venu.py",
+      "loc": 245,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "substrate/venu_orchestrator.py",
+      "loc": 388,
+      "category": "substrate",
+      "smells": [
+        "any_type",
+        "deprecated_code"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 85
+    },
+    {
+      "path": "substrate/wiring.py",
+      "loc": 644,
+      "category": "substrate",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "substrate/wordnet_bridge.py",
+      "loc": 219,
+      "category": "substrate",
+      "smells": [
+        "ungoverned_io"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "substrate/yajna.py",
+      "loc": 305,
+      "category": "substrate",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "tests/__init__.py",
+      "loc": 0,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/conftest.py",
+      "loc": 34,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_composition_adapter.py",
+      "loc": 193,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_gate_providers_wiring.py",
+      "loc": 45,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_io_sentinel.py",
+      "loc": 132,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_language_composer.py",
+      "loc": 432,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_language_engine.py",
+      "loc": 138,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "tests/test_language_mantra_grid.py",
+      "loc": 142,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_language_mode_affinity.py",
+      "loc": 56,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_language_phonetics.py",
+      "loc": 194,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_language_section_router.py",
+      "loc": 189,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_language_types.py",
+      "loc": 131,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_maha_llm_kernel.py",
+      "loc": 141,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_organic_sravanam.py",
+      "loc": 121,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_pancha_walk.py",
+      "loc": 300,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_real_violation_count.py",
+      "loc": 73,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "tests/test_sanskrit_lookup.py",
+      "loc": 109,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_shuddhi_engine_fixes.py",
+      "loc": 83,
+      "category": "test",
+      "smells": [
+        "any_type"
+      ],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 90
+    },
+    {
+      "path": "tests/test_shuddhi_remedies.py",
+      "loc": 80,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_unified_heartbeat.py",
+      "loc": 186,
+      "category": "test",
+      "smells": [
+        "singleton_bypass"
+      ],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 80
+    },
+    {
+      "path": "tests/test_varnamala_codec.py",
+      "loc": 93,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "tests/test_venu_orchestrator.py",
+      "loc": 642,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 95
+    },
+    {
+      "path": "tests/test_vibration_wiring.py",
+      "loc": 85,
+      "category": "test",
+      "smells": [],
+      "has_mahajana": false,
+      "has_position": false,
+      "health": 100
+    },
+    {
+      "path": "venu/__init__.py",
+      "loc": 42,
+      "category": "venu",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "venu/clock.py",
+      "loc": 99,
+      "category": "venu",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "venu/tick.py",
+      "loc": 53,
+      "category": "venu",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    },
+    {
+      "path": "venu/voice.py",
+      "loc": 66,
+      "category": "venu",
+      "smells": [],
+      "has_mahajana": true,
+      "has_position": true,
+      "health": 100
+    }
+  ]
+}
