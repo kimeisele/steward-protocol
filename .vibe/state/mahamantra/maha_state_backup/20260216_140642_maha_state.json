@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "timestamp": "2026-02-16T13:41:23.545151",
+  "timestamp": "2026-02-16T14:06:42.926454",
   "parampara": 37,
   "entries": {
     "balarama_test.json": {
@@ -15,164 +15,164 @@
       "key": "my.key",
       "value": "my_value",
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:21.464217",
+      "timestamp": "2026-02-16T14:06:40.574910",
       "pierced": false,
-      "hash": "f49793c595909e33"
+      "hash": "28bb56871510aec2"
     },
     "exists": {
       "key": "exists",
       "value": 123,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.379871",
+      "timestamp": "2026-02-16T14:06:42.472604",
       "pierced": false,
-      "hash": "57eec3196f361aca"
+      "hash": "650e444944c581c1"
     },
     "a": {
       "key": "a",
       "value": 1,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.389315",
+      "timestamp": "2026-02-16T14:06:42.510255",
       "pierced": false,
-      "hash": "8adbfed41ec1547a"
+      "hash": "71368d3dde8146dd"
     },
     "b": {
       "key": "b",
       "value": 2,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.389546",
+      "timestamp": "2026-02-16T14:06:42.510289",
       "pierced": false,
-      "hash": "2fc23a6db7c41555"
+      "hash": "c295f6a24de7c84e"
     },
     "test": {
       "key": "test",
       "value": "value",
-      "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.542450",
+      "source": "boot",
+      "timestamp": "2026-02-16T14:06:42.546328",
       "pierced": false,
-      "hash": "6b37755511d12368"
+      "hash": "98ac6561bc8a390c"
     },
     "str": {
       "key": "str",
       "value": "string",
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.426653",
+      "timestamp": "2026-02-16T14:06:42.643501",
       "pierced": false,
-      "hash": "0cae724c2658f7f5"
+      "hash": "e3f0194134032c1d"
     },
     "int": {
       "key": "int",
       "value": 42,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.426700",
+      "timestamp": "2026-02-16T14:06:42.643528",
       "pierced": false,
-      "hash": "ab78d4009393df3e"
+      "hash": "ee3a531458b0b76a"
     },
     "float": {
       "key": "float",
       "value": 3.14,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.426723",
+      "timestamp": "2026-02-16T14:06:42.643540",
       "pierced": false,
-      "hash": "ddfdb37a249a28d3"
+      "hash": "f4dc4296894faf59"
     },
     "bool": {
       "key": "bool",
       "value": true,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.426744",
+      "timestamp": "2026-02-16T14:06:42.643552",
       "pierced": false,
-      "hash": "316b99b970270521"
+      "hash": "3cd96b7ee1b688e5"
     },
     "none": {
       "key": "none",
       "value": null,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.426762",
+      "timestamp": "2026-02-16T14:06:42.643562",
       "pierced": false,
-      "hash": "b9de896a0823139f"
+      "hash": "d77858ba609e4ddc"
     },
     "override.key": {
       "key": "override.key",
       "value": "sovereign_value",
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.438875",
+      "timestamp": "2026-02-16T14:06:42.674473",
       "pierced": true,
-      "hash": "2fe7571245030146"
+      "hash": "074b2f43870de70a"
     },
     "func.key": {
       "key": "func.key",
       "value": 999,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.464105",
+      "timestamp": "2026-02-16T14:06:42.703281",
       "pierced": true,
-      "hash": "0cec64a230099db8"
+      "hash": "5c757a462a74a5b0"
     },
     "normal": {
       "key": "normal",
       "value": 1,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.501682",
+      "timestamp": "2026-02-16T14:06:42.735507",
       "pierced": false,
-      "hash": "9d60632aea3646f5"
+      "hash": "39c809e9a91e0c2f"
     },
     "pierced1": {
       "key": "pierced1",
       "value": 2,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.501739",
+      "timestamp": "2026-02-16T14:06:42.735547",
       "pierced": true,
-      "hash": "8d26c5812f75a880"
+      "hash": "dd21ebd896fac91b"
     },
     "pierced2": {
       "key": "pierced2",
       "value": 3,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.501770",
+      "timestamp": "2026-02-16T14:06:42.735563",
       "pierced": true,
-      "hash": "835160ab2f7a1a72"
+      "hash": "0c5ff68f33527402"
     },
     "not_pierced": {
       "key": "not_pierced",
       "value": 1,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.518454",
+      "timestamp": "2026-02-16T14:06:42.825266",
       "pierced": false,
-      "hash": "74b8c72d325aae5c"
+      "hash": "019c9124a7db746b"
     },
     "dedup.key": {
       "key": "dedup.key",
       "value": "value",
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.522548",
+      "timestamp": "2026-02-16T14:06:42.851832",
       "pierced": true,
-      "hash": "fc65590a7c9fd992"
+      "hash": "485eb9e6d6fc0968"
     },
     "observed.key": {
       "key": "observed.key",
       "value": "observed_value",
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.529557",
+      "timestamp": "2026-02-16T14:06:42.875556",
       "pierced": false,
-      "hash": "a5702c1f98f2fc95"
+      "hash": "8bd964e53555ca4c"
     },
     "first": {
       "key": "first",
       "value": 1,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.535423",
+      "timestamp": "2026-02-16T14:06:42.911308",
       "pierced": false,
-      "hash": "04a8cc6ab22ff750"
+      "hash": "4dcb151af8c7ff6c"
     },
     "second": {
       "key": "second",
       "value": 2,
       "source": "sovereign",
-      "timestamp": "2026-02-16T13:41:23.535456",
+      "timestamp": "2026-02-16T14:06:42.911346",
       "pierced": false,
-      "hash": "c20286e528c4a4c5"
+      "hash": "1a38a53ce9570784"
     }
   },
-  "boot_count": 1185,
+  "boot_count": 1216,
   "thresholds": {
     "max_entries": 72,
     "kernel_reserve": 16,
