@@ -8,7 +8,7 @@
 - Sprache = Syllables, NICHT Tokens. Die 49 Varnamala Matrix ist der Kompositionsraum.
 - Protocol statt konkrete Klassen (Dependency Inversion).
 - Wenn eine Zahl im Code auftaucht ohne Ableitung aus dem Mantra: Architektur-Verletzung.
-- `research/` ist load-bearing — `_gita_lens.py`, `maha_kernel.py`, `adapters/routing.py` importieren daraus.
+- `mahamantra_research/` (moved from `mahamantra/research/`) ist load-bearing — `_gita_lens.py`, `maha_kernel.py`, `adapters/routing.py` importieren daraus.
 - DIW-Konsumenten MÜSSEN `diw.unpack()` benutzen. Keine manuellen Bit-Shifts.
 
 ## Das Mantra
@@ -59,16 +59,43 @@ COORD_HARMONIC  — H-Orbit (×SEVEN mod 49)
 49/49 Bijektion. 4127/4127 Wörter unique. IS_SHRUTI = R²-Residuen mod 49.
 `substrate/varnamala_codec.py`, `substrate/pancha_walk.py`, `adapters/synth.py`.
 
+## Architecture Layers (Stand 2026-02-17)
+
+```
+Lotus (substrate/lotus_core.py)     = Public API / Fassade. `from vibe_core.mahamantra import mahamantra`
+Singularity (kernel/singularity.py) = Interner Kern. tick, kala, venu, routing, governance
+MahaKernel (kernel/maha_kernel.py)  = Seed→Address Computation. __call__() only. Kein Routing-Proxy.
+```
+
+Lotus delegiert an Singularity. Das ist ein valides Fassade-Pattern, KEIN Merge-Target.
+`from vibe_core.mahamantra import mahamantra` → Lotus (64 Imports).
+`from ...kernel.singularity import mahamantra as _singularity` → Singularity (4 Imports, aliased).
+
+Siehe `mahamantra/SPLIT_BRAIN_DIAGNOSIS.md` für vollständige Analyse.
+
 ## Pipeline: `MahamantraLotus.__call__()`
 
 `substrate/lotus_core.py`. Entry: `steward "text"` → `MahamantraLotus.__call__()`.
 
+**`__call__()` ist PURE COMPUTATION. Keine Gates drin.** Gates feuern nur am Boundary (`execute()`/`GovardhanGateway`).
+
 ```
-GATE 0 PARSE:     SRAVANAM (input) → NAMA (encode) → KIRTANAM (compress → seed)
-GATE 1 VALIDATE:  PADA_SEVANAM (synth → attractor) → ARCANAM (parampara check)
-GATE 2 EXECUTE:   SMARANAM (rank_words 7D) → VANDANAM (Gita verse match)
-GATE 3 RESULT:    DASYAM (position/guardian/shabda)
-GATE 4 SYNC:      SAKHYAM (cell+kirtan) → YAJNA (16 ticks) → ATMA_NIVEDANAM (response)
+9 NavaBhakti Steps (pure, individually callable):
+  1. sravanam()      — Receive input
+  2. nama()          — RAMA coordinate encoding
+  3. kirtanam()      — MahaCompression → seed
+  4. pada_sevanam()   — Synth → attractor
+  5. arcanam()       — Parampara check (ShadowOracle)
+  6. smaranam()      — rank_words 7D resonance
+  7. vandanam()      — Gita verse match
+  8. dasyam()        — Position/guardian/shabda/RAMA Grid
+  9. sakhyam()       — MahaCellUnified creation
+  + kirtan + spell_kirtan + yajna cycle + atma_nivedanam
+```
+
+Gates (execute/GovardhanGateway boundary ONLY):
+```
+GATE 0 PARSE → GATE 1 VALIDATE → __call__() → GATE 3 RESULT → GATE 4 SYNC
 ```
 
 Seed = deterministisch (gleicher Input → gleicher Seed). Kein XOR.
@@ -127,8 +154,23 @@ EIN Pfad: `__call__()` → `MahaComposition.compose()` → English Output.
 
 ## Heartbeat
 
-1 Singularity, 1 VenuOrchestrator, 1 `tick()`. `_owned` Flag verhindert doppelten `step()`.
-`Singularity._listeners` = einziger Broadcast-Kanal. LotusBridge verbindet VenuService.
+**VenuService ist DER Runtime-Heartbeat.** Flow:
+```
+VenuService.start() loop
+  → _dispatch_beat_subscribers()    # 5 BeatSubscribers (Ouroboros, Shuddhi, Kala, Jagannath, LotusBridge)
+  → Singularity.tick()              # Kala.advance() + VenuOrchestrator.step() + _broadcast()
+  → MantraClock.tick_once()         # 0 voices (prepared infrastructure)
+```
+
+**MahamantraDaemon** ist alternativer CLI-Pfad: `_singularity.chant_quarter()` → `Singularity.tick()`.
+
+7 Dispatch-Mechanismen existieren, 3 aktiv:
+1. DIWSubscriberProtocol (VenuOrchestrator._emit) — 2 Subscriber
+2. BeatSubscriberProtocol (VenuService) — 5 Subscriber
+3. Singularity._listeners (_broadcast) — 1+ Listener
+4-7: MantraClock/Voice, MantraKernel/Intent, gate_hooks, TattvaRegistry — prepared, 0 consumers
+
+**NIEMALS** neue Dispatch-Mechanismen oder Clocks erstellen. **NIEMALS** etwas in tick() verdrahten.
 
 ## Fallen
 
@@ -140,11 +182,17 @@ EIN Pfad: `__call__()` → `MahaComposition.compose()` → English Output.
 - Private Keys liegen in Git (`data/identities/*.key`, `data/security/master.key`).
 - `seed.py` hat ~20 F811 Redefinitionen (absichtliche Re-Derivation).
 - Tests mit blocking loops hängen: `test_singularity`, `test_daemon*`, `test_gad`, `test_graph`, `test_entry`.
+- **3 verschiedene `get_kernel()` Singletons**: `maha_kernel.py` (Seed→Address), `maha_llm_kernel.py` (LLM Resonance), `intent.py` (Intent Resolution). Nicht verwechseln.
+- **`__call__()` hat KEINE Gates.** Gates feuern nur in `execute()`/`GovardhanGateway`. Wer Gates in `__call__()` packt, erzeugt Doppel-Fire.
+- **Lotus und Singularity sind ZWEI Objekte.** Nicht mergen. Lotus = Fassade, Singularity = Kern.
 
 ## Arbeitsweise
 
-- Senior Architekt. Entscheidungen treffen, nicht fragen.
+- Senior Architekt + CTO + umsetzender Agent. Entscheidungen treffen, nicht fragen.
 - User spricht Deutsch, delegiert.
 - Code muss schön sein. Kein if-else Slop.
 - Ruff: `python -m ruff check --select F821,F811`
 - 100% AI-generierte Codebase — IMMER versteckte Probleme erwarten.
+- **FREEZE**: Keine neuen Features. Nur konsolidieren, verdrahten, aufräumen.
+- **Kein blindes Löschen**: Alles ist potenziell Gold. Prüfe Verdrahtung bevor du etwas als "tot" markierst.
+- Lies `mahamantra/SPLIT_BRAIN_DIAGNOSIS.md` bevor du an Mahamantra arbeitest.
