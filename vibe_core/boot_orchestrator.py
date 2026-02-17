@@ -176,7 +176,8 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         if not trace:
             trace = UnifiedTrace()
         if not event_bus:
-            event_bus = EventBus()
+            from vibe_core.mahamantra.substrate.event_bus import get_event_bus
+            event_bus = get_event_bus()
         self.setup(trace, event_bus, steward_context=None)
 
     # ========================================================================
