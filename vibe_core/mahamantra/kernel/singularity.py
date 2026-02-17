@@ -1053,6 +1053,16 @@ class Mahamantra:
         # 3. BROADCAST (Narada) — TickState now carries the DIW
         self._broadcast(state)
 
+        # 4. INTENT RESOLUTION — Process queued intents after broadcast
+        # MantraKernel resolves declared intents through the computation
+        # pipeline. This is the "capability injection" path: components
+        # declare WHAT they want, Krishna resolves HOW.
+        try:
+            from vibe_core.mahamantra.kernel.intent import get_kernel as _get_intent_kernel
+            _get_intent_kernel().process_queue()
+        except Exception as exc:
+            logger.debug("Intent resolution skipped: %s", exc)
+
         return state
 
     def get_tick(self) -> int:
