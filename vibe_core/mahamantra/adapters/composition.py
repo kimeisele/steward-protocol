@@ -36,7 +36,7 @@ __position__ = 2
 __genesis__ = "0x2c80316d"
 
 import logging
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, Optional, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
@@ -274,164 +274,10 @@ class MahaComposition:
     def compose(self, lotus_response: Dict, input_text: str) -> str:
         """Compose English output from a Lotus response.
 
-        Pipeline:
-            1. Pool extraction (substrate)
-            2. Multi-scorer ranking (protocol-based scorers)
-            3. Context-driven selection (quarter/prana → max_words)
-            4. Grid alignment (substrate)
-            5. Assembly (grid order → English)
+        Delegates to composition_vm.compose_pipeline() — 6-step dispatch loop.
         """
-        from vibe_core.mahamantra.substrate.language.composer import (
-            _build_lotus_pool,
-        )
-        from vibe_core.mahamantra.substrate.language.phonetics import (
-            syllable_vectors_for_word,
-        )
-        from vibe_core.mahamantra.substrate.language.mantra_grid import (
-            align_syllables_to_grid,
-        )
-        from vibe_core.mahamantra.substrate.language.types import SyllableVector
-
-        # === 1. EXTRACT CONTEXT ===
-        kwargs = _extract_scorer_kwargs(lotus_response, input_text)
-        seed = kwargs.pop("seed")
-        max_words = _context_max_words(lotus_response)
-
-        self._last_context = {
-            "guna_mode": kwargs.get("guna_mode"),
-            "quarter": str(lotus_response.get("quarter", "")),
-            "guardian": str(lotus_response.get("guardian", "")),
-            "max_words": max_words,
-            "scorer_names": tuple(s.name for s in self._scorers),
-        }
-
-        # === 2. POOL EXTRACTION (substrate) ===
-        pool = _build_lotus_pool(lotus_response)
-        if not pool:
-            return ""
-
-        # === 3. MULTI-SCORER RANKING ===
-        ranked: List[Dict] = []
-        for item in pool:
-            scored = dict(item)
-            total_boost = 0.0
-            for scorer in self._scorers:
-                try:
-                    boost = scorer.score(scored, seed, **kwargs)
-                    scored[f"_{scorer.name}_score"] = boost
-                    total_boost += boost
-                except Exception as exc:
-                    logger.warning("Scorer %s failed: %s", scorer.name, exc)
-                    scored[f"_{scorer.name}_score"] = 0.0
-            base_score = float(scored.get("score", 0.0))
-            scored["_total_score"] = base_score + total_boost
-            ranked.append(scored)
-
-        ranked.sort(key=lambda it: float(it.get("_total_score", 0.0)), reverse=True)
-
-        # === 4. SELECT (context-driven count, deduplicate) ===
-        selected: List[Dict] = []
-        used_sanskrit: set = set()
-        for item in ranked:
-            if len(selected) >= max_words:
-                break
-            sk = item.get("sanskrit", "")
-            if sk in used_sanskrit:
-                continue
-            selected.append(item)
-            used_sanskrit.add(sk)
-
-        if not selected:
-            return ""
-
-        # === 5. SYLLABLE VECTORS + GRID ALIGNMENT (substrate) ===
-        word_syllables: List[Tuple[Dict, Tuple[SyllableVector, ...]]] = []
-        for item in selected:
-            tokens = item.get("tokens", ())
-            meaning = str(item.get("meaning", ""))
-            english = ""
-            if tokens:
-                english = max(tokens, key=len)
-            elif meaning:
-                parts = meaning.split()
-                english = max(parts, key=len) if parts else ""
-            if english:
-                svs = syllable_vectors_for_word(english)
-                if svs:
-                    word_syllables.append((item, svs))
-
-        if not word_syllables:
-            # Fallback: meanings joined
-            return " ".join(
-                str(it.get("meaning", "")).split()[0]
-                for it in selected[:max_words]
-                if it.get("meaning")
-            )
-
-        # Collect all syllable vectors
-        all_vectors: List[SyllableVector] = []
-        vector_to_word: List[int] = []
-        for wi, (_, svs) in enumerate(word_syllables):
-            for sv in svs:
-                all_vectors.append(sv)
-                vector_to_word.append(wi)
-
-        if not all_vectors:
-            return " ".join(
-                str(it.get("meaning", "")).split()[0]
-                for it in selected[:max_words]
-                if it.get("meaning")
-            )
-
-        grid_positions = align_syllables_to_grid(tuple(all_vectors))
-
-        # === 6. ASSEMBLE: grid position → sentence order ===
-        word_earliest: Dict[int, int] = {}
-        for si, gp in enumerate(grid_positions):
-            wi = vector_to_word[si]
-            if wi not in word_earliest or gp < word_earliest[wi]:
-                word_earliest[wi] = gp
-
-        word_grid_pos = sorted(
-            ((word_earliest.get(wi, wi * HALVES), wi) for wi in range(len(word_syllables))),
-        )
-
-        output_parts: List[str] = []
-        used_words: set = set()
-        total_words = 0
-
-        for _, wi in word_grid_pos:
-            if total_words >= max_words:
-                break
-            item = word_syllables[wi][0]
-            meaning = str(item.get("meaning", "")).strip()
-            if not meaning:
-                continue
-
-            tokens = item.get("tokens", ())
-            if tokens:
-                best_token = ""
-                for t in sorted(tokens, key=len, reverse=True):
-                    if t.lower() not in used_words and len(t) > KSETRAJNA:
-                        best_token = t
-                        break
-                if best_token:
-                    output_parts.append(best_token)
-                    used_words.add(best_token.lower())
-                    total_words += KSETRAJNA
-                    continue
-
-            for mw in meaning.split():
-                if total_words >= max_words:
-                    break
-                mwl = mw.lower()
-                if mwl not in used_words and len(mwl) > KSETRAJNA:
-                    output_parts.append(mw)
-                    used_words.add(mwl)
-                    total_words += KSETRAJNA
-
-        self._compositions += KSETRAJNA
-        return " ".join(output_parts)
+        from vibe_core.mahamantra.adapters.composition_vm import compose_pipeline
+        return compose_pipeline(self, lotus_response, input_text)
 
 
 # =============================================================================
