@@ -272,3 +272,121 @@ class TestSravanamListenerWiring:
         finally:
             if spy_call in mahamantra._listeners:
                 mahamantra._listeners.remove(spy_call)
+
+
+# =============================================================================
+# TEST 5: INTENT RESOLVER WIRED IN TICK
+# =============================================================================
+
+
+class TestIntentResolverInTick:
+    """Verify MantraKernel.process_queue() runs inside Singularity.tick()."""
+
+    def test_tick_processes_queued_intents(self):
+        """A queued intent gets resolved when tick() fires."""
+        from vibe_core.mahamantra.kernel.intent import (
+            IntentType,
+            IntentStatus,
+            MantraIntent,
+            get_kernel,
+        )
+
+        kernel = get_kernel()
+
+        # Queue a SURRENDER intent (always resolves via _krishna_resolves)
+        intent: MantraIntent = MantraIntent(
+            type=IntentType.SURRENDER,
+            target="test_tick_integration",
+            params={},
+            parampara_vector=37 * 12,  # 444 — always connected
+        )
+        kernel.queue(intent)
+
+        # Tick should drain the queue
+        mahamantra.tick()
+
+        # Queue should be empty after tick
+        assert kernel._queue.is_empty, (
+            "Intent queue NOT drained by tick(). "
+            "MantraKernel.process_queue() is not wired in Singularity.tick()."
+        )
+
+    def test_empty_queue_no_error(self):
+        """tick() with empty intent queue does not error."""
+        # Just tick — should not raise
+        mahamantra.tick()
+
+
+# =============================================================================
+# TEST 6: REACTOR LOOP READS STATE (CONSUMER, NOT DRIVER)
+# =============================================================================
+
+
+class TestReactorLoopConsumer:
+    """Verify ReactorLoop._meditate() reads Singularity state, does NOT drive tick."""
+
+    def test_meditate_uses_get_tick_not_tick(self):
+        """_meditate() must call get_tick() (read), not tick() (advance)."""
+        import inspect
+        from vibe_core.mahamantra.reactor.loop import ReactorLoop
+
+        source = inspect.getsource(ReactorLoop._meditate)
+
+        # Must use get_tick() to READ position
+        assert "get_tick()" in source, (
+            "_meditate() does not call get_tick(). "
+            "It should READ the current position, not advance it."
+        )
+
+        # Must NOT call _singularity.tick() (that would double-tick)
+        assert "_singularity.tick()" not in source, (
+            "_meditate() calls _singularity.tick() — this would DOUBLE-TICK "
+            "because VenuService already drives Singularity.tick()."
+        )
+
+    def test_process_request_uses_clock(self):
+        """_process_request() must use Clock for tick_state, not hardcoded 'unknown'."""
+        import inspect
+        from vibe_core.mahamantra.reactor.loop import ReactorLoop
+
+        source = inspect.getsource(ReactorLoop._process_request)
+
+        assert "get_tick_info" in source, (
+            "_process_request() does not use get_tick_info(). "
+            "It should use the stateless Clock for real quarter/guardian/word."
+        )
+        assert '"unknown"' not in source, (
+            "_process_request() still has hardcoded 'unknown' values. "
+            "Must use Clock for real tick_state."
+        )
+
+
+# =============================================================================
+# TEST 7: BOOTSTRAP WIRING
+# =============================================================================
+
+
+class TestBootstrapWiring:
+    """Verify bootstrap() wires gate providers and HealingIntentResolver."""
+
+    def test_bootstrap_wires_gate_providers(self):
+        """After bootstrap, gate_providers import is reachable."""
+        import inspect
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        source = inspect.getsource(MahamantraLotus.bootstrap)
+        assert "wire_gate_providers" in source, (
+            "bootstrap() does not call wire_gate_providers(). "
+            "Gate providers must be wired at boot."
+        )
+
+    def test_bootstrap_wires_healing_resolver(self):
+        """After bootstrap, HealingIntentResolver is wired."""
+        import inspect
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        source = inspect.getsource(MahamantraLotus.bootstrap)
+        assert "wire_healing_resolver" in source, (
+            "bootstrap() does not call wire_healing_resolver(). "
+            "HealingIntentResolver must be wired at boot."
+        )
