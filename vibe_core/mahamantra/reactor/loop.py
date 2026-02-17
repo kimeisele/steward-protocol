@@ -298,11 +298,11 @@ class ReactorLoop(threading.Thread):
             time.sleep(1.0)
             
     def _init_bus(self):
-        """Initialize the EventBus (Narada)."""
+        """Initialize the EventBus (Narada) — uses shared singleton, not a private instance."""
         try:
-            from vibe_core.mahamantra.substrate.event_bus import EventBus
-            self._bus = EventBus()
-            logger.info("ReactorLoop: Narada (EventBus) awakened.")
+            from vibe_core.mahamantra.substrate.event_bus import get_event_bus
+            self._bus = get_event_bus()
+            logger.info("ReactorLoop: Narada (EventBus) shared singleton acquired.")
         except Exception as e:
             logger.error(f"ReactorLoop: Failed to init EventBus: {e}")
 
