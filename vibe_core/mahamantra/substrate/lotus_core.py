@@ -455,6 +455,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 if not silent:
                     _log.debug(f"Kapila cognition wiring failed: {e}")
 
+        # Wire gate providers into TattvaRegistry (always — gates fire on every execute())
+        try:
+            from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers
+            count = wire_gate_providers()
+            if not silent:
+                _log.info(f"Gate providers wired: {count} providers registered")
+        except Exception as e:
+            if not silent:
+                _log.debug(f"Gate provider wiring deferred: {e}")
+
         self._bootstrapped = True
         if not silent:
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
