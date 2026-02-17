@@ -266,14 +266,18 @@ class ReactorLoop(threading.Thread):
             logger.error(f"ReactorLoop: Failed to wire bus: {e}")
 
     def _init_memory(self):
-        """Register the Persistent Memory (The Soul's Context)."""
+        """Register the Persistent Memory (The Soul's Context) — idempotent."""
         try:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.memory import MemoryProtocol
+
+            # Check-first: don't overwrite if already registered
+            existing = ServiceRegistry.get(MemoryProtocol)
+            if existing is not None:
+                logger.info("ReactorLoop: PersistentMemory already registered.")
+                return
+
             from vibe_core.mahamantra.substrate.memory import PersistentMemory
-            
-            # Register Global Memory for Mahamantra
-            # Phase 3: "Kapila's Promotion" relies on this.
             memory = PersistentMemory()
             ServiceRegistry.register(MemoryProtocol, memory)
             logger.info("ReactorLoop: PersistentMemory registered (Akshara).")
