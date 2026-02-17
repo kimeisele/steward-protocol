@@ -465,6 +465,15 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"Gate provider wiring deferred: {e}")
 
+        # Wire HealingIntentResolver into MantraKernel (idempotent)
+        # IntentResolver processes queued HEAL intents on every Singularity.tick()
+        try:
+            from vibe_core.mahamantra.dharma.kumaras.healing_resolver import wire_healing_resolver
+            wire_healing_resolver()
+        except Exception as e:
+            if not silent:
+                _log.debug(f"HealingResolver wiring deferred: {e}")
+
         self._bootstrapped = True
         if not silent:
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
