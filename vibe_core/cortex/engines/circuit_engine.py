@@ -630,6 +630,230 @@ class CognitiveCircuitExecutor:
             requester_id=requester_id,
         )
 
+    # =========================================================================
+    # CIRCUIT EXECUTION STEPS — Atomic, granular, individually callable
+    # =========================================================================
+
+    def _exec_invariant_fail(self, circuit_id: str, state_name: str, error_msg: str,
+                             state: "CircuitState", syscall_count: int,
+                             phase: str = "") -> CircuitExecutionResult:
+        """Helper: Build invariant violation result + fire meta-callbacks."""
+        logger.error(f"🚨 {error_msg}")
+        if self._on_error:
+            try:
+                self._on_error(circuit_id, state_name, error_msg)
+            except Exception as e:
+                logger.warning(f"Meta-callback on_error failed: {e}")
+
+        violations = self.invariant_checker.get_violations()
+        output = {"error": error_msg, "violations": [v.__dict__ for v in violations]}
+        if state_name != "GLOBAL":
+            output["state"] = state_name
+        if phase:
+            output["phase"] = phase
+
+        result = CircuitExecutionResult(
+            success=False, final_state="INVARIANT_VIOLATION", output=output,
+            state_history=state.history, syscall_count=syscall_count, error=error_msg,
+        )
+        if self._on_circuit_end:
+            try:
+                self._on_circuit_end(circuit_id, False, "INVARIANT_VIOLATION", result.output)
+            except Exception as e:
+                logger.warning(f"Meta-callback on_end failed: {e}")
+        return result
+
+    def _exec_run_operations(self, operations: list, state: "CircuitState",
+                             compilation: CompilationResult, circuit_def: Dict,
+                             requester_id: str, recursion_depth: int) -> int:
+        """Execute Step: Run operations in current state. Returns updated syscall_count delta."""
+        syscall_delta = 0
+        for operation in operations:
+            action = operation.get("action")
+
+            if action == "COMPILE_REQUEST":
+                logger.info("✅ COMPILE_REQUEST: Using pre-compiled syscall")
+
+            elif action == "CHECK_CONSTITUTION":
+                role = compilation.syscall_request.params.get("role", "")
+                forbidden = circuit_def.get("forbidden_roles", [])
+                if role.lower() in [r.lower() for r in forbidden]:
+                    state.variables["constitutional_check"] = {
+                        "passed": False, "violation": f"Role '{role}' is forbidden"}
+                else:
+                    state.variables["constitutional_check"] = {"passed": True}
+                logger.info(f"🛡️ Constitutional check: {state.variables['constitutional_check']}")
+
+            elif action == "PREPARE_RESOURCES":
+                state.variables["resources_prepared"] = True
+                logger.info("💰 Resources prepared")
+
+            elif action == "GENERATE_MICRO_CIRCUIT":
+                context = self._resolve_params(operation.get("context", {}), state.variables)
+                constraints = operation.get("constraints", {})
+                architect = self.kernel.get_agent("architect") or self.kernel.get_agent("science")
+                if not architect:
+                    raise RuntimeError("No Architect agent available for circuit generation")
+                prompt = f"""
+                    TASK: Generate a valid YAML cognitive circuit (micro-circuit) for the following context.
+                    CONTEXT:
+                    {json.dumps(context, indent=2)}
+                    CONSTRAINTS:
+                    - Max states: {constraints.get("max_states", 3)}
+                    - Allowed tools: {constraints.get("allowed_tools", "ALL")}
+                    - Output format: ONLY valid YAML, no markdown blocks.
+                    The circuit must follow the standard schema:
+                    circuit:
+                      id: "MICRO_GENERATED_..."
+                      entry_state: "START"
+                      states: ...
+                    """
+                logger.info("🧠 VibeCortex: Generating micro-circuit...")
+                generated_yaml = architect.run(prompt)
+                if "```yaml" in generated_yaml:
+                    generated_yaml = generated_yaml.split("```yaml")[1].split("```")[0]
+                elif "```" in generated_yaml:
+                    generated_yaml = generated_yaml.split("```")[1].split("```")[0]
+                try:
+                    micro_circuit = yaml.safe_load(generated_yaml)
+                    if "circuit" in micro_circuit:
+                        micro_circuit = micro_circuit["circuit"]
+                    if "states" not in micro_circuit:
+                        raise ValueError("Generated YAML missing 'states'")
+                    state.variables["generated_circuit"] = micro_circuit
+                    logger.info(f"✨ Micro-circuit generated: {micro_circuit.get('id', 'UNKNOWN')}")
+                except Exception as e:
+                    logger.error(f"Failed to parse generated circuit: {e}")
+                    state.variables["generation_error"] = str(e)
+
+            elif action == "EXECUTE_MICRO_CIRCUIT":
+                micro_circuit = state.variables.get("generated_circuit")
+                if not micro_circuit:
+                    logger.error("No micro-circuit found to execute")
+                    state.variables["micro_result"] = {"success": False, "error": "No circuit generated"}
+                else:
+                    logger.info("🚀 Launching Micro-Circuit...")
+                    micro_result = self._execute_circuit(
+                        micro_circuit, raw_input=state.variables.get("raw_input", ""),
+                        compilation=compilation, requester_id=requester_id,
+                        recursion_depth=recursion_depth + 1,
+                    )
+                    state.variables["micro_result"] = {
+                        "success": micro_result.success, "output": micro_result.output,
+                        "final_state": micro_result.final_state,
+                    }
+                    logger.info(f"🏁 Micro-Circuit finished: {micro_result.success}")
+
+            elif action == "EXECUTE_SYSCALL":
+                syscall_type_str = operation.get("syscall_type")
+                syscall_type = SyscallType[syscall_type_str]
+                if syscall_type == SyscallType.SPAWN_COGNITION and state.variables.get("_syscall_request"):
+                    request = state.variables["_syscall_request"]
+                else:
+                    params = self._resolve_params(operation.get("params", {}), state.variables)
+                    request = SyscallRequest(
+                        syscall_type=syscall_type, params=params, requester_id=requester_id)
+                result = self.syscall_executor.execute(request)
+                syscall_delta += 1
+                result_key = f"{syscall_type_str.lower()}_result"
+                state.syscall_results[result_key] = result
+                state.variables[result_key] = result
+                if syscall_type == SyscallType.SPAWN_COGNITION:
+                    state.variables["spawn_result"] = {
+                        "success": result.success, "agent_id": result.output.get("agent_id"),
+                        "karma_block_id": result.karma_block_id, "error": result.error,
+                    }
+                logger.info(f"⚡ SYSCALL {syscall_type_str}: success={result.success}")
+
+        return syscall_delta
+
+    def _exec_run_actions(self, actions: list, state: "CircuitState",
+                          circuit_id: str, raw_input: str,
+                          current_state_name: str) -> None:
+        """Execute Step: Run action handlers in current state."""
+        import asyncio
+        for action_def in actions:
+            action_type = action_def.get("action_type")
+            target = action_def.get("target", "")
+            params = self._resolve_params(action_def.get("params", {}), state.variables)
+            capture_as = action_def.get("capture_as")
+
+            if not action_type:
+                logger.warning(f"⚠️ Action missing action_type: {action_def}")
+                continue
+
+            logger.info(f"🎯 ACTION: {action_type} → {target}")
+
+            if self.action_registry and self.action_registry.has(action_type):
+                handler = self.action_registry.get(action_type)
+                action_context = ActionContext(
+                    phase_id=current_state_name, playbook_id=circuit_id,
+                    execution_id=f"circuit_{circuit_id}_{len(state.history)}",
+                    user_input=raw_input, phase_results=state.variables,
+                    kernel=self.kernel,
+                    emit_event=self._create_emit_event_callback(circuit_id),
+                )
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        result = loop.run_until_complete(handler.execute(target, params, action_context))
+                    finally:
+                        loop.close()
+                    if result.success:
+                        logger.info(f"   ✅ {action_type} succeeded")
+                        if capture_as:
+                            state.variables[capture_as] = result.data
+                    else:
+                        logger.error(f"   ❌ {action_type} failed: {result.error}")
+                        state.variables[f"{action_type.lower()}_error"] = result.error
+                except Exception as e:
+                    logger.error(f"   ❌ Action handler exception: {e}")
+                    state.variables[f"{action_type.lower()}_error"] = str(e)
+            else:
+                logger.warning(f"⚠️ No handler for action_type: {action_type}")
+
+    def _exec_find_next_state(self, current_state_def: Dict, state: "CircuitState",
+                              circuit_id: str, current_state_name: str) -> str:
+        """Execute Step: Evaluate transitions, return next state name or empty string."""
+        transitions = current_state_def.get("transitions", [])
+        if not transitions:
+            if "on_success" in current_state_def:
+                transitions.append({"condition": "true", "to": current_state_def["on_success"]})
+                logger.debug(f"   ⚙️ Converted on_success → {current_state_def['on_success']}")
+
+        next_state = self._evaluate_transitions(transitions, state.variables)
+
+        if next_state:
+            if self._on_state_transition:
+                try:
+                    self._on_state_transition(circuit_id, current_state_name, next_state, state.variables)
+                except Exception as e:
+                    logger.warning(f"Meta-callback on_transition failed: {e}")
+        return next_state or ""
+
+    def _exec_build_result(self, state: "CircuitState", circuit_id: str,
+                           syscall_count: int) -> CircuitExecutionResult:
+        """Execute Step: Build final CircuitExecutionResult from terminal state."""
+        final_state = state.current_state
+        success_state_names = ["success", "healthy", "complete", "done", "finished"]
+        success = any(s in final_state.lower() for s in success_state_names)
+        if not success and state.is_terminal and state.output:
+            result_status = state.output.get("status", "").lower()
+            success = result_status in success_state_names
+
+        result = CircuitExecutionResult(
+            success=success, final_state=final_state, output=state.output or {},
+            state_history=state.history, syscall_count=syscall_count,
+            error=None if success else state.output.get("reason") if state.output else None,
+        )
+        if self._on_circuit_end:
+            try:
+                self._on_circuit_end(circuit_id, success, final_state, result.output)
+            except Exception as e:
+                logger.warning(f"Meta-callback on_end failed: {e}")
+        return result
+
     def _execute_circuit(
         self,
         circuit_def: Dict,
@@ -639,58 +863,38 @@ class CognitiveCircuitExecutor:
         recursion_depth: int = 0,
     ) -> CircuitExecutionResult:
         """
-        Execute a specific circuit definition.
-
-        This is the state machine driver. It:
-        1. Starts at entry_state
-        2. Executes operations in current state
-        3. Evaluates transitions
-        4. Moves to next state
-        5. Repeats until terminal state
+        Execute a specific circuit definition. Chains the atomic _exec_* steps.
+        State machine driver: entry → operations → actions → invariants → transitions → terminal.
         """
         circuit_id = circuit_def["id"]
         logger.info(f"🔄 Executing circuit: {circuit_id} (Depth: {recursion_depth})")
 
-        # SAFETY: Check recursion depth
         runtime_config = _get_runtime_config()
-        MAX_RECURSION_DEPTH = runtime_config.limits.max_recursion_depth
-        if recursion_depth > MAX_RECURSION_DEPTH:
-            error_msg = f"MAX_RECURSION_DEPTH ({MAX_RECURSION_DEPTH}) exceeded in circuit {circuit_id}"
+        if recursion_depth > runtime_config.limits.max_recursion_depth:
+            error_msg = f"MAX_RECURSION_DEPTH ({runtime_config.limits.max_recursion_depth}) exceeded in circuit {circuit_id}"
             logger.error(f"🚨 {error_msg}")
             return CircuitExecutionResult(
-                success=False,
-                final_state="RECURSION_LIMIT_EXCEEDED",
-                output={"error": error_msg},
-                state_history=[],
-                syscall_count=0,
-                error=error_msg,
+                success=False, final_state="RECURSION_LIMIT_EXCEEDED",
+                output={"error": error_msg}, state_history=[], syscall_count=0, error=error_msg,
             )
 
-        # META-CIRCUIT: Notify start
         if self._on_circuit_start:
             try:
                 self._on_circuit_start(circuit_id, raw_input, requester_id)
             except Exception as e:
                 logger.warning(f"Meta-callback on_start failed: {e}")
 
-        # Initialize state
-        # IMPORTANT: Store both the full compilation result AND the syscall request
-        # The circuit conditions reference "compiled_request.is_syscall" which is on CompilationResult
         state = CircuitState(
             current_state=circuit_def.get("entry_state", "SHABDA"),
             variables={
-                "raw_input": raw_input,
-                "requester_id": requester_id,
-                # Store full compilation for is_syscall check
+                "raw_input": raw_input, "requester_id": requester_id,
                 "compiled_request": {
                     "is_syscall": compilation.is_syscall,
                     "syscall_type": compilation.syscall_request.syscall_type.value
-                    if compilation.syscall_request
-                    else None,
+                    if compilation.syscall_request else None,
                     "params": compilation.syscall_request.params if compilation.syscall_request else {},
                     "confidence": compilation.confidence,
                 },
-                # Also store the actual request for later use
                 "_syscall_request": compilation.syscall_request,
             },
         )
@@ -699,440 +903,95 @@ class CognitiveCircuitExecutor:
         max_transitions = runtime_config.limits.max_circuit_transitions
         syscall_count = 0
 
-        # Clear any previous violations
         self.invariant_checker.clear_violations()
 
-        # Check global circuit invariants at start
+        # Check global invariants
         global_invariants = circuit_def.get("invariants", [])
-        global_invariant_checks = [inv.get("check", inv) if isinstance(inv, dict) else inv for inv in global_invariants]
-        if global_invariant_checks:
-            logger.info(f"🔒 Checking {len(global_invariant_checks)} global invariants...")
-            if not self.invariant_checker.check_invariants(global_invariant_checks, state.variables, "GLOBAL"):
+        global_checks = [inv.get("check", inv) if isinstance(inv, dict) else inv for inv in global_invariants]
+        if global_checks:
+            logger.info(f"🔒 Checking {len(global_checks)} global invariants...")
+            if not self.invariant_checker.check_invariants(global_checks, state.variables, "GLOBAL"):
                 violations = self.invariant_checker.get_violations()
-                error_msg = f"Global invariant violation: {violations[0].reason if violations else 'unknown'}"
-                logger.error(f"🚨 {error_msg}")
+                return self._exec_invariant_fail(
+                    circuit_id, "GLOBAL",
+                    f"Global invariant violation: {violations[0].reason if violations else 'unknown'}",
+                    state, syscall_count)
 
-                # META-CIRCUIT: Notify error
-                if self._on_error:
-                    try:
-                        self._on_error(circuit_id, "GLOBAL", error_msg)
-                    except Exception as e:
-                        logger.warning(f"Meta-callback on_error failed: {e}")
-
-                return CircuitExecutionResult(
-                    success=False,
-                    final_state="INVARIANT_VIOLATION",
-                    output={"error": error_msg, "violations": [v.__dict__ for v in violations]},
-                    state_history=state.history,
-                    syscall_count=syscall_count,
-                    error=error_msg,
-                )
-
+        # State machine loop
         while not state.is_terminal and len(state.history) < max_transitions:
             current_state_name = state.current_state
             state.history.append(current_state_name)
-
             logger.info(f"📍 State: {current_state_name}")
 
             current_state_def = states.get(current_state_name)
             if not current_state_def:
                 return CircuitExecutionResult(
-                    success=False,
-                    final_state=current_state_name,
+                    success=False, final_state=current_state_name,
                     output={"error": f"Unknown state: {current_state_name}"},
-                    state_history=state.history,
-                    syscall_count=syscall_count,
+                    state_history=state.history, syscall_count=syscall_count,
                     error=f"Circuit has undefined state: {current_state_name}",
                 )
 
-            # ================================================================
-            # INVARIANT ENFORCEMENT - Check state invariants BEFORE execution
-            # ================================================================
+            # Pre-operation invariant check
             state_invariants = current_state_def.get("invariants", [])
             if state_invariants:
                 logger.info(f"🔒 Checking {len(state_invariants)} invariants for state {current_state_name}...")
                 if not self.invariant_checker.check_invariants(state_invariants, state.variables, current_state_name):
                     violations = self.invariant_checker.get_violations()
-                    error_msg = f"State invariant violation in {current_state_name}: {violations[-1].reason if violations else 'unknown'}"
-                    logger.error(f"🚨 {error_msg}")
+                    return self._exec_invariant_fail(
+                        circuit_id, current_state_name,
+                        f"State invariant violation in {current_state_name}: {violations[-1].reason if violations else 'unknown'}",
+                        state, syscall_count)
 
-                    # META-CIRCUIT: Notify error (may attempt recovery)
-                    if self._on_error:
-                        try:
-                            recovery = self._on_error(circuit_id, current_state_name, error_msg)
-                            if recovery:
-                                logger.info(f"🔧 Recovery suggested: {recovery}")
-                                # Recovery could modify variables or skip state
-                        except Exception as e:
-                            logger.warning(f"Meta-callback on_error failed: {e}")
-
-                    # HALT EXECUTION - invariants are NOT documentation, they are SECURITY
-                    result = CircuitExecutionResult(
-                        success=False,
-                        final_state="INVARIANT_VIOLATION",
-                        output={
-                            "error": error_msg,
-                            "state": current_state_name,
-                            "violations": [v.__dict__ for v in violations],
-                        },
-                        state_history=state.history,
-                        syscall_count=syscall_count,
-                        error=error_msg,
-                    )
-
-                    if self._on_circuit_end:
-                        try:
-                            self._on_circuit_end(circuit_id, False, "INVARIANT_VIOLATION", result.output)
-                        except Exception as e:
-                            logger.warning(f"Meta-callback on_end failed: {e}")
-
-                    return result
-
-            # Check if terminal
+            # Terminal check
             if current_state_def.get("terminal", False):
                 state.is_terminal = True
-                # BACKWARD COMPATIBILITY: Support both 'output' and 'result' fields
                 output_def = current_state_def.get("output") or current_state_def.get("result", {})
-                state.output = self._resolve_output(
-                    output_def,
-                    state.variables,
-                )
+                state.output = self._resolve_output(output_def, state.variables)
                 break
 
-            # Execute operations
-            for operation in current_state_def.get("operations", []):
-                action = operation.get("action")
+            # Run operations + actions
+            syscall_count += self._exec_run_operations(
+                current_state_def.get("operations", []), state, compilation,
+                circuit_def, requester_id, recursion_depth)
+            self._exec_run_actions(
+                current_state_def.get("actions", []), state, circuit_id,
+                raw_input, current_state_name)
 
-                if action == "COMPILE_REQUEST":
-                    # Already compiled - keep the dict structure intact
-                    # Don't overwrite compiled_request with syscall_request!
-                    logger.info("✅ COMPILE_REQUEST: Using pre-compiled syscall")
-                    # compiled_request is already set in variables with is_syscall=True
-
-                elif action == "CHECK_CONSTITUTION":
-                    # Constitutional check (simplified)
-                    role = compilation.syscall_request.params.get("role", "")
-                    forbidden = circuit_def.get("forbidden_roles", [])
-
-                    if role.lower() in [r.lower() for r in forbidden]:
-                        state.variables["constitutional_check"] = {
-                            "passed": False,
-                            "violation": f"Role '{role}' is forbidden",
-                        }
-                    else:
-                        state.variables["constitutional_check"] = {"passed": True}
-
-                    logger.info(f"🛡️ Constitutional check: {state.variables['constitutional_check']}")
-
-                elif action == "PREPARE_RESOURCES":
-                    # Resource preparation (simplified)
-                    state.variables["resources_prepared"] = True
-                    logger.info("💰 Resources prepared")
-
-                elif action == "GENERATE_MICRO_CIRCUIT":
-                    # VIBECORTEX: Just-in-Time Circuit Generation
-                    context = self._resolve_params(operation.get("context", {}), state.variables)
-                    constraints = operation.get("constraints", {})
-
-                    # Get Architect Agent (or fallback to Science)
-                    architect = self.kernel.get_agent("architect") or self.kernel.get_agent("science")
-                    if not architect:
-                        raise RuntimeError("No Architect agent available for circuit generation")
-
-                    # Prompt for circuit generation
-                    prompt = f"""
-                    TASK: Generate a valid YAML cognitive circuit (micro-circuit) for the following context.
-
-                    CONTEXT:
-                    {json.dumps(context, indent=2)}
-
-                    CONSTRAINTS:
-                    - Max states: {constraints.get("max_states", 3)}
-                    - Allowed tools: {constraints.get("allowed_tools", "ALL")}
-                    - Output format: ONLY valid YAML, no markdown blocks.
-
-                    The circuit must follow the standard schema:
-                    circuit:
-                      id: "MICRO_GENERATED_..."
-                      entry_state: "START"
-                      states: ...
-                    """
-
-                    logger.info("🧠 VibeCortex: Generating micro-circuit...")
-                    generated_yaml = architect.run(prompt)  # Assuming .run() or .execute()
-
-                    # Clean markdown code blocks if present
-                    if "```yaml" in generated_yaml:
-                        generated_yaml = generated_yaml.split("```yaml")[1].split("```")[0]
-                    elif "```" in generated_yaml:
-                        generated_yaml = generated_yaml.split("```")[1].split("```")[0]
-
-                    try:
-                        micro_circuit = yaml.safe_load(generated_yaml)
-                        # Unwrap if nested under 'circuit' key
-                        if "circuit" in micro_circuit:
-                            micro_circuit = micro_circuit["circuit"]
-
-                        # Validate basic structure
-                        if "states" not in micro_circuit:
-                            raise ValueError("Generated YAML missing 'states'")
-
-                        state.variables["generated_circuit"] = micro_circuit
-                        logger.info(f"✨ Micro-circuit generated: {micro_circuit.get('id', 'UNKNOWN')}")
-
-                    except Exception as e:
-                        logger.error(f"Failed to parse generated circuit: {e}")
-                        state.variables["generation_error"] = str(e)
-                        # Don't crash, let invariants handle it
-
-                elif action == "EXECUTE_MICRO_CIRCUIT":
-                    # VIBECORTEX: Recursive Execution
-                    micro_circuit = state.variables.get("generated_circuit")
-                    if not micro_circuit:
-                        logger.error("No micro-circuit found to execute")
-                        state.variables["micro_result"] = {"success": False, "error": "No circuit generated"}
-                    else:
-                        logger.info("🚀 Launching Micro-Circuit...")
-                        micro_result = self._execute_circuit(
-                            micro_circuit,
-                            raw_input=state.variables.get("raw_input", ""),  # Pass original input or derived
-                            compilation=compilation,  # Pass original compilation context
-                            requester_id=requester_id,
-                            recursion_depth=recursion_depth + 1,  # RECURSION!
-                        )
-
-                        state.variables["micro_result"] = {
-                            "success": micro_result.success,
-                            "output": micro_result.output,
-                            "final_state": micro_result.final_state,
-                        }
-                        logger.info(f"🏁 Micro-Circuit finished: {micro_result.success}")
-
-                elif action == "EXECUTE_SYSCALL":
-                    # The actual syscall execution
-                    syscall_type_str = operation.get("syscall_type")
-                    syscall_type = SyscallType[syscall_type_str]
-
-                    # For SPAWN_COGNITION, use the pre-compiled request IF it exists and is valid
-                    if syscall_type == SyscallType.SPAWN_COGNITION and state.variables.get("_syscall_request"):
-                        request = state.variables["_syscall_request"]
-                    else:
-                        # Resolve params from variables
-                        params = self._resolve_params(
-                            operation.get("params", {}),
-                            state.variables,
-                        )
-
-                        request = SyscallRequest(
-                            syscall_type=syscall_type,
-                            params=params,
-                            requester_id=requester_id,
-                        )
-
-                    result = self.syscall_executor.execute(request)
-                    syscall_count += 1
-
-                    # Store result
-                    result_key = f"{syscall_type_str.lower()}_result"
-                    state.syscall_results[result_key] = result
-                    state.variables[result_key] = result
-
-                    # Special handling for SPAWN_COGNITION
-                    if syscall_type == SyscallType.SPAWN_COGNITION:
-                        state.variables["spawn_result"] = {
-                            "success": result.success,
-                            "agent_id": result.output.get("agent_id"),
-                            "karma_block_id": result.karma_block_id,
-                            "error": result.error,
-                        }
-
-                    logger.info(f"⚡ SYSCALL {syscall_type_str}: success={result.success}")
-
-            # ================================================================
-            # OPUS-307 Phase H: Execute actions (CLI_LOOPBACK, FOR_EACH, etc.)
-            # These are different from operations - they use action_type and the
-            # action handler registry for dispatch.
-            # ================================================================
-            import asyncio
-
-            actions = current_state_def.get("actions", [])
-            for action_def in actions:
-                action_type = action_def.get("action_type")
-                target = action_def.get("target", "")
-                params = self._resolve_params(action_def.get("params", {}), state.variables)
-                capture_as = action_def.get("capture_as")
-
-                if not action_type:
-                    logger.warning(f"⚠️ Action missing action_type: {action_def}")
-                    continue
-
-                logger.info(f"🎯 ACTION: {action_type} → {target}")
-
-                if self.action_registry and self.action_registry.has(action_type):
-                    handler = self.action_registry.get(action_type)
-
-                    # Create action context with EventBus wiring (OPUS-307)
-                    action_context = ActionContext(
-                        phase_id=current_state_name,
-                        playbook_id=circuit_id,
-                        execution_id=f"circuit_{circuit_id}_{len(state.history)}",
-                        user_input=raw_input,
-                        phase_results=state.variables,
-                        kernel=self.kernel,
-                        emit_event=self._create_emit_event_callback(circuit_id),
-                    )
-
-                    try:
-                        # Run async handler (action handlers are async)
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                        try:
-                            result = loop.run_until_complete(handler.execute(target, params, action_context))
-                        finally:
-                            loop.close()
-
-                        if result.success:
-                            logger.info(f"   ✅ {action_type} succeeded")
-                            if capture_as:
-                                state.variables[capture_as] = result.data
-                        else:
-                            logger.error(f"   ❌ {action_type} failed: {result.error}")
-                            state.variables[f"{action_type.lower()}_error"] = result.error
-                    except Exception as e:
-                        logger.error(f"   ❌ Action handler exception: {e}")
-                        state.variables[f"{action_type.lower()}_error"] = str(e)
-                else:
-                    logger.warning(f"⚠️ No handler for action_type: {action_type}")
-
-            # ================================================================
-            # POST-OPERATION INVARIANT CHECK - Ensure operations didn't break anything
-            # ================================================================
+            # Post-operation invariant check
             if state_invariants:
                 logger.debug(f"🔒 Re-checking invariants after operations in {current_state_name}...")
                 if not self.invariant_checker.check_invariants(state_invariants, state.variables, current_state_name):
                     violations = self.invariant_checker.get_violations()
-                    error_msg = f"Post-operation invariant violation in {current_state_name}: {violations[-1].reason if violations else 'unknown'}"
-                    logger.error(f"🚨 {error_msg}")
+                    return self._exec_invariant_fail(
+                        circuit_id, current_state_name,
+                        f"Post-operation invariant violation in {current_state_name}: {violations[-1].reason if violations else 'unknown'}",
+                        state, syscall_count, phase="post_operation")
 
-                    if self._on_error:
-                        try:
-                            self._on_error(circuit_id, current_state_name, error_msg)
-                        except Exception as e:
-                            logger.warning(f"Meta-callback on_error failed: {e}")
-
-                    result = CircuitExecutionResult(
-                        success=False,
-                        final_state="INVARIANT_VIOLATION",
-                        output={
-                            "error": error_msg,
-                            "state": current_state_name,
-                            "phase": "post_operation",
-                            "violations": [v.__dict__ for v in violations],
-                        },
-                        state_history=state.history,
-                        syscall_count=syscall_count,
-                        error=error_msg,
-                    )
-
-                    if self._on_circuit_end:
-                        try:
-                            self._on_circuit_end(circuit_id, False, "INVARIANT_VIOLATION", result.output)
-                        except Exception as e:
-                            logger.warning(f"Meta-callback on_end failed: {e}")
-
-                    return result
-
-            # Evaluate transitions
-            # BACKWARD COMPATIBILITY: Support old-style on_success/on_failure format
-            transitions = current_state_def.get("transitions", [])
-            if not transitions:
-                # Convert on_success/on_failure to transitions format
-                if "on_success" in current_state_def:
-                    transitions.append(
-                        {
-                            "condition": "true",  # Default: always transition
-                            "to": current_state_def["on_success"],
-                        }
-                    )
-                    logger.debug(f"   ⚙️ Converted on_success → {current_state_def['on_success']}")
-
-            next_state = self._evaluate_transitions(
-                transitions,
-                state.variables,
-            )
-
+            # Transitions
+            next_state = self._exec_find_next_state(current_state_def, state, circuit_id, current_state_name)
             if next_state:
-                # META-CIRCUIT: Notify state transition
-                if self._on_state_transition:
-                    try:
-                        self._on_state_transition(circuit_id, current_state_name, next_state, state.variables)
-                    except Exception as e:
-                        logger.warning(f"Meta-callback on_transition failed: {e}")
-
                 state.current_state = next_state
             else:
-                # No valid transition - stuck
                 error_msg = f"Circuit stuck at state: {current_state_name}"
-
-                # META-CIRCUIT: Notify error (may attempt recovery)
                 if self._on_error:
                     try:
-                        recovery = self._on_error(circuit_id, current_state_name, error_msg)
-                        if recovery:
-                            logger.info(f"🔧 Recovery action suggested: {recovery}")
-                            # Could implement recovery logic here
+                        self._on_error(circuit_id, current_state_name, error_msg)
                     except Exception as e:
                         logger.warning(f"Meta-callback on_error failed: {e}")
-
                 result = CircuitExecutionResult(
-                    success=False,
-                    final_state=current_state_name,
+                    success=False, final_state=current_state_name,
                     output={"error": "No valid transition from current state"},
-                    state_history=state.history,
-                    syscall_count=syscall_count,
-                    error=error_msg,
+                    state_history=state.history, syscall_count=syscall_count, error=error_msg,
                 )
-
-                # META-CIRCUIT: Notify end (failure)
                 if self._on_circuit_end:
                     try:
                         self._on_circuit_end(circuit_id, False, current_state_name, result.output)
                     except Exception as e:
                         logger.warning(f"Meta-callback on_end failed: {e}")
-
                 return result
 
-        # Build final result
-        final_state = state.current_state
-        # BACKWARD COMPATIBILITY: Accept multiple success indicators
-        # - Explicit "SUCCESS" state name or success-indicating names
-        # - Terminal state with result.status == "success"
-        # - Terminal state without explicit failure markers
-        success_state_names = ["success", "healthy", "complete", "done", "finished"]
-        success = any(s in final_state.lower() for s in success_state_names)
-
-        # Also check output status if present
-        if not success and state.is_terminal and state.output:
-            result_status = state.output.get("status", "").lower()
-            success = result_status in success_state_names
-
-        result = CircuitExecutionResult(
-            success=success,
-            final_state=final_state,
-            output=state.output or {},
-            state_history=state.history,
-            syscall_count=syscall_count,
-            error=None if success else state.output.get("reason") if state.output else None,
-        )
-
-        # META-CIRCUIT: Notify end
-        if self._on_circuit_end:
-            try:
-                self._on_circuit_end(circuit_id, success, final_state, result.output)
-            except Exception as e:
-                logger.warning(f"Meta-callback on_end failed: {e}")
-
-        return result
+        return self._exec_build_result(state, circuit_id, syscall_count)
 
     def _evaluate_transitions(
         self,

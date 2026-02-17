@@ -31,7 +31,7 @@ class MockMahamantra:
 def mock_singularity():
     """Patch the global mahamantra instance."""
     mock = MockMahamantra()
-    with patch("vibe_core.mahamantra.kernel.daemon.mahamantra", mock):
+    with patch("vibe_core.mahamantra.kernel.daemon._singularity", mock):
         yield mock
 
 @pytest.mark.asyncio

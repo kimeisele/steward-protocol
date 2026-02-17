@@ -33,8 +33,8 @@ ARCHITECTURE:
 """
 
 # === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "janaka"
-__position__ = 10
+__mahajana__ = "yamaraja"
+__position__ = 15
 __genesis__ = "0xba1ef2e0"  # GenesisByte: parampara % 37 == 0
 
 import logging

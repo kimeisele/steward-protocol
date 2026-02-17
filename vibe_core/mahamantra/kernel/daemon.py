@@ -63,7 +63,7 @@ from typing import (
     runtime_checkable,
 )
 
-from vibe_core.mahamantra.kernel.singularity import mahamantra
+from vibe_core.mahamantra.kernel.singularity import mahamantra as _singularity
 from vibe_core.mahamantra.protocols._core import Quarter
 from vibe_core.mahamantra.protocols._entropy import (
     HEALTH_SADHANA,
@@ -234,7 +234,7 @@ class MahamantraDaemon:
         logger.info("=" * 60)
 
         # Initial audit
-        audit = mahamantra.audit()
+        audit = _singularity.audit()
         health = audit.get("health_score", 0.0)
         self._metrics.last_health_score = health
         self._metrics.record_health(health)
@@ -263,7 +263,7 @@ class MahamantraDaemon:
                 break
 
             # === MEASURE ===
-            audit = mahamantra.audit()
+            audit = _singularity.audit()
             health = audit.get("health_score", 0.0)
             self._metrics.last_health_score = health
             self._metrics.record_health(health)
@@ -312,7 +312,7 @@ class MahamantraDaemon:
                 break
 
             # Chant the quarter
-            chant_result = mahamantra.chant_quarter(quarter)
+            chant_result = _singularity.chant_quarter(quarter)
             self._metrics.total_chants += KSETRAJNA
             self._metrics.last_chant_time = datetime.now()
 

@@ -732,12 +732,16 @@ class BalaramaProxy(GADBase, GADProtocol):
             The response string.
         """
         # 1. Try Service Implementation
-        handler = getattr(self.module, "on_chat", None)
+        handler = getattr(self.module, "execute", None)
+        if not callable(handler):
+            handler = getattr(self.module, "on_chat", None)
         if callable(handler):
             try:
                 response = handler(message)
                 if isinstance(response, str):
                     return response
+                if isinstance(response, dict):
+                    return response.get("message", str(response))
             except Exception as e:
                 # Log error but don't crash the chat
                 logger.warning(f"Transformation failed in {self.module_name}: {e}")
@@ -881,6 +885,8 @@ class MahamantraProxy:
                 response = handler(message)
                 if isinstance(response, str):
                     return response
+                if isinstance(response, dict):
+                    return response.get("message", str(response))
             except Exception as e:
                 return f"⚠️ Proxy Execution Error (at {self._guardian}): {e}"
 

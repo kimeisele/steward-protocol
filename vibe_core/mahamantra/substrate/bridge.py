@@ -120,6 +120,89 @@ class OfferResult(Dict[str, object]):
     pass
 
 
+# =============================================================================
+# OFFER STEPS — Atomic, granular, individually callable
+# =============================================================================
+
+def _offer_fail(position: int, mahajana: str, quarter: str, purpose: str, error: str, **kw) -> OfferResult:
+    """Return a failed OfferResult."""
+    return OfferResult(success=False, position=position, mahajana=mahajana,
+                       quarter=quarter, purpose=purpose, error=error, **kw)
+
+
+def _offer_validate(purpose: str) -> tuple:
+    """Offer Step 1: Validate purpose, resolve position/mahajana/quarter.
+    Returns (position, mahajana, quarter, genesis, word) or OfferResult on failure."""
+    if purpose not in PURPOSE_MAP:
+        return _offer_fail(-KSETRAJNA, "unknown", "unknown", purpose,
+                           f"Unknown purpose '{purpose}'. Must be one of: {list(PURPOSE_MAP.keys())}")
+
+    position = PURPOSE_MAP[purpose]
+    if not (0 <= position < WORDS):
+        return _offer_fail(position, "unknown", "unknown", purpose,
+                           f"Position {position} out of bounds (0 to {WORDS - KSETRAJNA})")
+
+    mahajana = POSITION_TO_MAHAJANA.get(position, "unknown")
+    declaration = lotus_declaration(position)
+    quarter = declaration["quarter_name"]
+    genesis = declaration.get("genesis", "")
+    word = declaration.get("word", "")
+    return position, mahajana, quarter, genesis, word
+
+
+def _offer_check_parampara(parampara_vector: Optional[int], position: int,
+                           mahajana: str, quarter: str, purpose: str) -> Optional[OfferResult]:
+    """Offer Step 2: Parampara validation. Returns OfferResult on failure, None on success."""
+    if parampara_vector is not None and not verify_parampara(parampara_vector):
+        return _offer_fail(position, mahajana, quarter, purpose,
+                           f"Parampara validation failed for vector {parampara_vector}")
+    return None
+
+
+def _offer_execute(content: Union[str, bytes, Dict[str, object], object],
+                   purpose: str, actor: Optional[str], timeout: float,
+                   position: int, mahajana: str, quarter: str,
+                   genesis: str, word: str) -> OfferResult:
+    """Offer Step 3: Publish intent to reactor loop, collect result."""
+    from vibe_core.mahamantra.reactor.loop import get_loop
+
+    loop, mailbox = get_loop()
+
+    if not loop.wait_until_ready(timeout=5.0):
+        return _offer_fail(position, mahajana, quarter, purpose,
+                           "Reactor Init Timeout", execution_result=None, intent_id=None)
+
+    ticket = mailbox.create_ticket()
+    event_type = purpose.upper()
+    details = content if isinstance(content, dict) else {"data": content}
+
+    loop.publish(
+        event_type=event_type, agent_id=actor or "bridge",
+        message=f"Offer: {purpose}", details=details, task_id=ticket,
+    )
+
+    try:
+        result_data = mailbox.collect(ticket, timeout=timeout)
+        if not result_data["success"]:
+            return _offer_fail(position, mahajana, quarter, purpose,
+                               result_data["error"] or "Unknown Reactor Error",
+                               execution_result=None, intent_id=None)
+        return OfferResult(
+            success=True, position=position, mahajana=mahajana, quarter=quarter,
+            purpose=purpose, error=result_data["error"],
+            execution_result=result_data["execution_result"], intent_id=None,
+            actor=actor, genesis=genesis, word=word,
+        )
+    except TimeoutError:
+        return _offer_fail(position, mahajana, quarter, purpose,
+                           "Reactor Timeout (MahaMailbox expired)",
+                           execution_result=None, intent_id=None)
+    except Exception as e:
+        return _offer_fail(position, mahajana, quarter, purpose,
+                           f"Bridge/Loop Error: {str(e)}",
+                           execution_result=None, intent_id=None)
+
+
 def offer(
     content: Union[str, bytes, Dict[str, object], object],
     purpose: str,
@@ -129,227 +212,18 @@ def offer(
 ) -> OfferResult:
     """
     Offer content to the Mahamantra for routing and execution.
-
-    THE BRIDGE PATTERN:
-    -------------------
-    Old World services call: bridge.offer(data, purpose="state_update")
-    Bridge validates, routes to correct Position/Mahajana.
-    New World executes through position-based protocol.
-
-    WATERTIGHT GUARANTEES:
-    ----------------------
-    1. All routing derived from seed.py (no hardcoded positions)
-    2. Parampara validation via verify_parampara() (no manual % 37)
-    3. Purpose mapped to Position via get_mahajana_position()
-    4. Returns structured result (success, position, mahajana)
-
-    Args:
-        content: The data/operation to offer
-        purpose: Purpose string (must exist in PURPOSE_MAP)
-        actor: Optional identifier of who is making the offer
-        parampara_vector: Optional value for Parampara validation
-                         If None, derived from content hash
-
-    Returns:
-        OfferResult dict with:
-            - success: bool
-            - position: int (0 to WORDS-1)
-            - mahajana: str
-            - quarter: str
-            - purpose: str
-            - error: Optional[str]
-
-    Example:
-        >>> result = offer("some state", purpose="state_update", actor="service_x")
-        >>> print(result["mahajana"])  # "janaka"
-        >>> print(result["position"])  # 10
+    Chains the atomic _offer_* steps.
     """
+    validated = _offer_validate(purpose)
+    if isinstance(validated, dict):
+        return validated  # Validation failed
+    position, mahajana, quarter, genesis, word = validated
 
-    # ── GOVARDHAN: Gate infrastructure for boundary enforcement ──
-    # Legacy I/O goes through gates WITHOUT the full computation pipeline.
-    # Only PARSE (validate input) and SYNC (govern side-effect) fire here.
-    _lotus = None
-    _TattvaGate = None
-    try:
-        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
-        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate as _TG
+    parampara_err = _offer_check_parampara(parampara_vector, position, mahajana, quarter, purpose)
+    if parampara_err is not None:
+        return parampara_err
 
-        _lotus = get_mahamantra()
-        _TattvaGate = _TG
-        _lotus.fire_gate(_TattvaGate.PARSE, {
-            "input_data": content,
-            "entry_type": "offer",
-            "purpose": purpose,
-            "actor": actor,
-        })
-    except Exception:
-        pass  # Gate infrastructure may not be ready during early boot
-
-    # Validate purpose exists in mapping
-    if purpose not in PURPOSE_MAP:
-        return OfferResult(
-            success=False,
-            position=-KSETRAJNA,
-            mahajana="unknown",
-            quarter="unknown",
-            purpose=purpose,
-            error=f"Unknown purpose '{purpose}'. Must be one of: {list(PURPOSE_MAP.keys())}",
-        )
-
-    # Get position from PURPOSE_MAP (already derived from seed.py)
-    position = PURPOSE_MAP[purpose]
-
-    # Validate position is within bounds (using WORDS from seed, not hardcoded 16)
-    if not (0 <= position < WORDS):
-        return OfferResult(
-            success=False,
-            position=position,
-            mahajana="unknown",
-            quarter="unknown",
-            purpose=purpose,
-            error=f"Position {position} out of bounds (0 to {WORDS - KSETRAJNA})",
-        )
-
-    # Get mahajana name for this position (from seed mapping)
-    mahajana = POSITION_TO_MAHAJANA.get(position, "unknown")
-
-    # Get lotus declaration for this position (includes genesis, quarter, etc)
-    declaration = lotus_declaration(position)
-    quarter = declaration["quarter_name"]
-    genesis = declaration.get("genesis", "")
-    word = declaration.get("word", "")
-
-    # Parampara validation (using verify_parampara from seed, not manual % 37)
-    if parampara_vector is not None:
-        if not verify_parampara(parampara_vector):
-            return OfferResult(
-                success=False,
-                position=position,
-                mahajana=mahajana,
-                quarter=quarter,
-                purpose=purpose,
-                error=f"Parampara validation failed for vector {parampara_vector}",
-            )
-
-    # =========================================================================
-    # EXECUTION: RESOANCE ROUTING (The Flow)
-    # =========================================================================
-    # Phase 4 (Narada): We publish the intent and wait for the echo.
-    # No more hardcoded teleportation (target_position).
-    
-    from vibe_core.mahamantra.reactor.loop import get_loop
-    
-    # 1. Get the Loop and Mailbox
-    loop, mailbox = get_loop()
-    
-    # 2. Wait for Readiness (Narada must be awake)
-    if not loop.wait_until_ready(timeout=5.0):
-        return OfferResult(
-            success=False,
-            position=position,
-            mahajana=mahajana,
-            quarter=quarter,
-            purpose=purpose,
-            error="Reactor Init Timeout",
-            execution_result=None,
-            intent_id=None,
-        )
-    
-    # 3. Prepare Ticket (The Promise)
-    ticket = mailbox.create_ticket()
-    
-    # 4. Broadcast Intent (The Shout)
-    # Map purpose to EventType (e.g. remember -> REMEMBER)
-    event_type = purpose.upper()
-    
-    # Prepare details
-    if isinstance(content, dict):
-        details = content
-    else:
-        details = {"data": content}
-        
-    loop.publish(
-        event_type=event_type,
-        agent_id=actor or "bridge",
-        message=f"Offer: {purpose}",
-        details=details,
-        task_id=ticket 
-    )
-    
-    # 4. Wait for Echo (Sync)
-    try:
-        result_data = mailbox.collect(ticket, timeout=timeout)
-        
-        # 5. Unpack Result
-        if not result_data["success"]:
-            return OfferResult(
-                success=False,
-                position=position,
-                mahajana=mahajana,
-                quarter=quarter,
-                purpose=purpose,
-                error=result_data["error"] or "Unknown Reactor Error",
-                execution_result=None,
-                intent_id=None,
-            )
-            
-        execution_result = result_data["execution_result"]
-        error = result_data["error"]
-
-        # ── GOVARDHAN: Fire SYNC gate at the boundary ──
-        # The side-effect happened. Notify gate providers/hooks.
-        if _lotus is not None and _TattvaGate is not None:
-            try:
-                _lotus.fire_gate(_TattvaGate.SYNC, {
-                    "position": position,
-                    "guardian": mahajana,
-                    "purpose": purpose,
-                    "actor": actor,
-                    "seed": None,
-                    "attractor": None,
-                    "opcode": None,
-                    "guna": None,
-                })
-                _lotus._active_gate = None
-            except Exception:
-                pass  # Gate hook/provider errors don't block I/O
-
-        return OfferResult(
-            success=True,
-            position=position,
-            mahajana=mahajana,
-            quarter=quarter,
-            purpose=purpose,
-            error=error,
-            execution_result=execution_result,
-            intent_id=None,
-            actor=actor,
-            genesis=genesis,
-            word=word,
-        )
-
-    except TimeoutError:
-        return OfferResult(
-            success=False,
-            position=position,
-            mahajana=mahajana,
-            quarter=quarter,
-            purpose=purpose,
-            error="Reactor Timeout (MahaMailbox expired)",
-            execution_result=None,
-            intent_id=None,
-        )
-    except Exception as e:
-        return OfferResult(
-            success=False,
-            position=position,
-            mahajana=mahajana,
-            quarter=quarter,
-            purpose=purpose,
-            error=f"Bridge/Loop Error: {str(e)}",
-            execution_result=None,
-            intent_id=None,
-        )
+    return _offer_execute(content, purpose, actor, timeout, position, mahajana, quarter, genesis, word)
 
 
 # =============================================================================
