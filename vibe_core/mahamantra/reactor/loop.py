@@ -344,9 +344,10 @@ class ReactorLoop(threading.Thread):
         
         The Reactor is ALIVE. It breathes (ticks) even when no one is asking.
 
-        UNIFIED HEARTBEAT: Delegates to Singularity.tick() — the ONE
-        heartbeat that advances Kala, plays Venu, and broadcasts to all
-        listeners. No separate position counter. No fake tick_states.
+        UNIFIED HEARTBEAT: Reads the current Singularity state and feeds it
+        to ShadowReactor. Does NOT call Singularity.tick() — VenuService is
+        the ONE driver. ReactorLoop is a CONSUMER of the heartbeat, not a
+        second driver.
         """
         self._idle_ticks += 1
         
@@ -357,13 +358,22 @@ class ReactorLoop(threading.Thread):
         if self._idle_ticks % 10 == 0:
             if self._reactor:
                 try:
-                    # UNIFIED HEARTBEAT: Singularity.tick() is the ONE source
-                    # of position, quarter, guardian, word, diw.
-                    # No manual counter. No fake "OM" words.
+                    # READ current position from Singularity (no advance!)
+                    # VenuService drives Singularity.tick(). We only consume.
                     from vibe_core.mahamantra.kernel.singularity import mahamantra as _singularity
-                    tick_state = _singularity.tick()
+                    from vibe_core.mahamantra.substrate.clock import get_tick_info
+                    pos = _singularity.get_tick()
+                    info = get_tick_info(pos)
+                    tick_state = {
+                        "tick": pos,
+                        "position": pos,
+                        "quarter": info["quarter"],
+                        "guardian": info["guardian"],
+                        "word": info["word"],
+                        "opcode": info["opcode"],
+                    }
 
-                    # Feed the REAL tick_state to ShadowReactor
+                    # Feed the REAL state to ShadowReactor
                     self._reactor.tick(tick_state)
                     
                     # Periodic Log (every 108 chants = ~10s)
