@@ -398,34 +398,20 @@ class ReactorLoop(threading.Thread):
             if request.target_position >= 0:
                 self._reactor._position = request.target_position
             
-            # 3. Prepare Tick State
-            # We assume position from the cell or just tick from current?
-            # For Phase 1 compatibility, we mapped intent directly to position.
-            # But ShadowReactor is stateful. It has its OWN position.
-            # wait... sticky point:
-            # Ephemeral reactor was creating NEW reactor at specific pos.
-            # Persistent reactor is at `self._reactor.position`.
-            # If we want to support "Random Access" (routing), we might need to 
-            # FORCE the reactor to jump or just accept that it WALKS.
-            #
-            # FOR NOW (Bridge compatibility): We force the reactor's position 
-            # to the target if it's a direct routing request.
-            # This preserves the "Soul" (cycle count, history) but allows "Teleportation" (Routing).
-            
-            # Let's trust the Bridge's routing for the target.
-            # But wait, ShadowReactor.tick OVERWRITES `state['position']` with `self._position`.
-            # See shadow.py:506: `position=self._position,`
-            
-            # I will add `target_position` to LoopRequest.
-            
-            # 4. Tick
+            # 3. Prepare Tick State from Clock (stateless, no side effects)
+            # Clock gives us the REAL quarter/guardian/word for any position.
+            # We do NOT call Singularity.tick() here — that would advance the
+            # global counter. Requests are routed, not ticked.
+            from vibe_core.mahamantra.substrate.clock import get_tick_info
+            pos = request.target_position if request.target_position >= 0 else self._reactor.position
+            info = get_tick_info(pos)
             tick_state = {
-                "tick": request.target_position if request.target_position >= 0 else self._reactor.position, 
-                "position": request.target_position if request.target_position >= 0 else self._reactor.position,
-                "quarter": "unknown",
-                "guardian": "unknown", 
-                "word": "unknown",
-                "opcode": None,
+                "tick": pos,
+                "position": pos,
+                "quarter": info["quarter"],
+                "guardian": info["guardian"],
+                "word": info["word"],
+                "opcode": info["opcode"],
             }
             
             # EXECUTE
