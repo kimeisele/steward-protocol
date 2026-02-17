@@ -343,6 +343,10 @@ class ReactorLoop(threading.Thread):
         "dhyāyen nārāyaṇaṁ devam" - Meditate on the Lord.
         
         The Reactor is ALIVE. It breathes (ticks) even when no one is asking.
+
+        UNIFIED HEARTBEAT: Delegates to Singularity.tick() — the ONE
+        heartbeat that advances Kala, plays Venu, and broadcasts to all
+        listeners. No separate position counter. No fake tick_states.
         """
         self._idle_ticks += 1
         
@@ -353,21 +357,13 @@ class ReactorLoop(threading.Thread):
         if self._idle_ticks % 10 == 0:
             if self._reactor:
                 try:
-                    # DRIVE THE CYCLE: Manually advance position
-                    # "cakram parivartayāmi" - I turn the wheel.
-                    current_pos = self._reactor.position
-                    next_pos = (current_pos + 1) % 16
-                    self._reactor._position = next_pos
-                    
-                    # Self-Chant
-                    tick_state = {
-                        "tick": next_pos,
-                        "position": next_pos,
-                        "quarter": self._reactor.get_state()["quarter"], # Carry forward
-                        "guardian": self._reactor.get_state()["guardian"],
-                        "word": "OM", # The sound of silence
-                        "opcode": None 
-                    }
+                    # UNIFIED HEARTBEAT: Singularity.tick() is the ONE source
+                    # of position, quarter, guardian, word, diw.
+                    # No manual counter. No fake "OM" words.
+                    from vibe_core.mahamantra.kernel.singularity import mahamantra as _singularity
+                    tick_state = _singularity.tick()
+
+                    # Feed the REAL tick_state to ShadowReactor
                     self._reactor.tick(tick_state)
                     
                     # Periodic Log (every 108 chants = ~10s)
