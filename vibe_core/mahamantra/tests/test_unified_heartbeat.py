@@ -390,3 +390,96 @@ class TestBootstrapWiring:
             "bootstrap() does not call wire_healing_resolver(). "
             "HealingIntentResolver must be wired at boot."
         )
+
+
+# =============================================================================
+# PHASE 3: Anti-Split-Brain Regression Tests
+# =============================================================================
+
+
+class TestAntiSplitBrain:
+    """Regression tests: re-export shims resolve to SSOT, no duplicate instances."""
+
+    def test_ledger_reexport_resolves_to_ssot(self):
+        """prithu/types/ledger.py must re-export from mahamantra/substrate/ledger.py."""
+        from vibe_core.protocols.mahajanas.prithu.types.ledger import (
+            InMemoryLedger as PrithuLedger,
+            SQLiteLedger as PrithuSQLite,
+        )
+        from vibe_core.mahamantra.substrate.ledger import (
+            InMemoryLedger as SSOTLedger,
+            SQLiteLedger as SSOTSQLite,
+        )
+        assert PrithuLedger is SSOTLedger, (
+            "prithu InMemoryLedger is NOT the SSOT class — re-export broken!"
+        )
+        assert PrithuSQLite is SSOTSQLite, (
+            "prithu SQLiteLedger is NOT the SSOT class — re-export broken!"
+        )
+
+    def test_lineage_reexport_resolves_to_ssot(self):
+        """prithu/types/lineage.py must re-export from mahamantra/substrate/lineage.py."""
+        from vibe_core.protocols.mahajanas.prithu.types.lineage import (
+            LineageChain as PrithuChain,
+            LineageBlock as PrithuBlock,
+        )
+        from vibe_core.mahamantra.substrate.lineage import (
+            LineageChain as SSOTChain,
+            LineageBlock as SSOTBlock,
+        )
+        assert PrithuChain is SSOTChain, (
+            "prithu LineageChain is NOT the SSOT class — re-export broken!"
+        )
+        assert PrithuBlock is SSOTBlock, (
+            "prithu LineageBlock is NOT the SSOT class — re-export broken!"
+        )
+
+    def test_process_manager_reexport_resolves_to_ssot(self):
+        """vyasa/types/process_manager.py must re-export from mahamantra/substrate/process_manager.py."""
+        from vibe_core.protocols.mahajanas.vyasa.types.process_manager import (
+            ProcessManager as VyasaPM,
+            ProcessStatus as VyasaPS,
+        )
+        from vibe_core.mahamantra.substrate.process_manager import (
+            ProcessManager as SSOTPM,
+            ProcessStatus as SSOTPS,
+        )
+        assert VyasaPM is SSOTPM, (
+            "vyasa ProcessManager is NOT the SSOT class — re-export broken!"
+        )
+        assert VyasaPS is SSOTPS, (
+            "vyasa ProcessStatus is NOT the SSOT class — re-export broken!"
+        )
+
+    def test_eventbus_singleton_shared(self):
+        """get_event_bus() must return the same instance every time."""
+        from vibe_core.mahamantra.substrate.event_bus import get_event_bus
+        bus1 = get_event_bus()
+        bus2 = get_event_bus()
+        assert bus1 is bus2, (
+            "get_event_bus() returned different instances — singleton broken!"
+        )
+
+    def test_reactor_loop_uses_shared_eventbus(self):
+        """ReactorLoop._init_bus must use get_event_bus(), not EventBus()."""
+        import inspect
+        from vibe_core.mahamantra.reactor.loop import ReactorLoop
+        source = inspect.getsource(ReactorLoop._init_bus)
+        assert "get_event_bus" in source, (
+            "ReactorLoop._init_bus does not call get_event_bus(). "
+            "It must use the shared singleton, not create a private EventBus()."
+        )
+        assert "EventBus()" not in source, (
+            "ReactorLoop._init_bus still creates EventBus() directly. "
+            "This causes split-brain — events fired in one bus never reach the other."
+        )
+
+    def test_boot_orchestrator_uses_shared_eventbus(self):
+        """BootOrchestrator must use get_event_bus(), not EventBus()."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator.__init__)
+        assert "get_event_bus" in source, (
+            "BootOrchestrator.__init__ does not call get_event_bus(). "
+            "It must use the shared singleton."
+        )
