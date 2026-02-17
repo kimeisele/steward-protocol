@@ -154,12 +154,13 @@ obwohl VenuService sie schon separat treibt. Das ist jetzt revertiert.
 
 ## KONKRETER SANIERUNGSPLAN
 
-### Priorität 1: Naming-Klarheit (Split-Brain eliminieren)
-- [ ] Die 4 direkten `from ...singularity import mahamantra` Imports bereinigen
-  - `daemon.py`: braucht Singularity für `.audit()`, `.chant_quarter()` → kann über Lotus gehen
-  - `maha_kernel.py`: braucht Singularity für `.mod` → kann über Lotus gehen (Lotus delegiert ohnehin)
-  - `lotus_core.py`: intern, braucht Singularity-Instanz → umbenennen zu `_singularity`
-  - `test_unified_heartbeat.py`: Test, explizit Singularity testen → OK, bleibt
+### Priorität 1: Naming-Klarheit (Split-Brain eliminieren) — DONE
+- [x] `daemon.py`: `import mahamantra` → `import mahamantra as _singularity`, alle Aufrufe umbenannt
+- [x] `maha_kernel.py`: `import mahamantra as _singularity` → `import mahamantra as _sing` (war schon aliased)
+- [x] `lotus_core.py`: war schon `as _singularity` — korrekt
+- [x] `test_unified_heartbeat.py`: bleibt (expliziter Singularity-Test)
+- [x] `test_daemon_soul.py`: Mock-Target von `daemon.mahamantra` → `daemon._singularity` angepasst
+- **3920 Tests grün** (1 pre-existing failure in test_io_sentinel)
 
 ### Priorität 2: Tote Code-Pfade markieren
 - [ ] MantraKernel.process_queue() wird nie aufgerufen → Docstring: "Called by VenuService when intents are queued"
@@ -167,10 +168,11 @@ obwohl VenuService sie schon separat treibt. Das ist jetzt revertiert.
 - [ ] gate_hooks hat 0 Hooks → Docstring: "Hooks registered via lotus.on_gate()"
 - [ ] TattvaRegistry hat 0 Gate Providers → Docstring: "Providers registered via registry.register_gate_provider()"
 
-### Priorität 3: MahaKernel-Singleton klären
-- [ ] MahaKernel hat `__getattr__` das an Singularity delegiert — das ist ein Proxy-Pattern
-- [ ] Lotus.kernel delegiert an MahaKernel → MahaKernel delegiert an Singularity → Doppel-Delegation
-- [ ] Entscheidung: MahaKernel ist für `__call__()` (Seed→Address), nicht für Routing. `__getattr__` entfernen.
+### Priorität 3: MahaKernel-Singleton klären — DONE
+- [x] `MahaKernel.__getattr__` entfernt (war toter Code, niemand greift über MahaKernel auf Singularity-Attribute zu)
+- [x] MahaKernel ist jetzt klar: nur `__call__()` (Seed→Address), `ledger`, `memory`
+- [x] Keine Doppel-Delegation mehr: Lotus→MahaKernel ist nur für `__call__()`, nicht für Routing
+- **3920 Tests grün** nach Entfernung
 
 ### Was NICHT passieren darf
 1. Keine neue Schicht draufpacken
