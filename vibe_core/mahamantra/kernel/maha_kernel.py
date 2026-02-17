@@ -66,8 +66,8 @@ class MahaKernel(PanchaTattvaProtocol):
         
         # 4. LEGACY INFRASTRUCTURE (Required for Governance/Ledger)
         # EKAMEVADVITIYAM: Use the ONE singleton, never create a second.
-        from vibe_core.mahamantra.kernel.singularity import mahamantra as _singularity
-        self._singularity = _singularity
+        from vibe_core.mahamantra.kernel.singularity import mahamantra as _sing
+        self._singularity = _sing
 
         # 5. LEDGER (The Immutable Log)
         from vibe_core.mahamantra import InMemoryLedger, SQLiteLedger
