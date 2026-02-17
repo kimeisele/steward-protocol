@@ -196,10 +196,11 @@ class TestResearchFractalRouting:
 
     @pytest.fixture
     def research_root(self) -> Path:
-        """Get research package root."""
-        import vibe_core.mahamantra.research
-        return Path(vibe_core.mahamantra.research.__file__).parent
+        """Get research package root (moved to mahamantra_research/)."""
+        import vibe_core.mahamantra_research
+        return Path(vibe_core.mahamantra_research.__file__).parent
 
+    @pytest.mark.xfail(reason="research moved to mahamantra_research/ — fractal routing via mahamantra.research no longer applies")
     def test_all_research_modules_route(self, mahamantra, research_root):
         """All research .py files must be accessible via fractal routing."""
         research_modules = [
@@ -212,6 +213,7 @@ class TestResearchFractalRouting:
             obj = getattr(mahamantra.research, name, None)
             assert obj is not None, f"mahamantra.research.{name} should route but returns None"
 
+    @pytest.mark.xfail(reason="research moved to mahamantra_research/ — fractal routing via mahamantra.research no longer applies")
     def test_all_research_subpackages_route(self, mahamantra, research_root):
         """All research subpackages must be accessible via fractal routing."""
         subpackages = [
@@ -225,6 +227,7 @@ class TestResearchFractalRouting:
             obj = getattr(mahamantra.research, name, None)
             assert obj is not None, f"mahamantra.research.{name} should route but returns None"
 
+    @pytest.mark.xfail(reason="research moved to mahamantra_research/ — fractal routing via mahamantra.research no longer applies")
     def test_research_dharma_routes(self, mahamantra):
         """mahamantra.research.dharma must route."""
         # MAHAPROMPT 2026: MahaKirtan was migrated to substrate.mantra

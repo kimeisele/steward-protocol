@@ -616,7 +616,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         P.register_cell(result_cell)
         return result_cell
 
-    def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
+    def execute(self, command: str, args: Optional[List[str]] = None, *, opcode: Optional[int] = None) -> ExecuteResult:
         """Execute a command through the Mahamantra. SSOT: delegates to __call__."""
         try:
             # ── GATE 0: PARSE — What is this? ──
@@ -698,22 +698,19 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         MAHA_QUANTUM = P.MAHA_QUANTUM
         COSMIC_FRAME = P.COSMIC_FRAME
 
-        # GATE 0: CHAITANYA — PARSE / Identity
-        self._fire_gate(TattvaGate.PARSE, {"input_data": input_data})
+        # 1-3. SRAVANAM → NAMA → KIRTANAM (Receive → Identity → Compress)
         input_text, cell, seed = self.sravanam(input_data)
         input_coords = self.nama(input_text)
         seed = self.kirtanam(input_text, seed)
 
-        # GATE 1: NITYANANDA — VALIDATE / Substrate
-        self._fire_gate(TattvaGate.VALIDATE, {"input_text": input_text, "seed": seed, "input_coords": input_coords})
+        # 4-5. PADA_SEVANAM → ARCANAM (Attractor → Parampara)
         attractor, variance, raw_address = self.pada_sevanam(seed)
         oracle_validation = self.arcanam(seed)
         parampara_verified = oracle_validation["parampara_validated"]
         parampara_channel = oracle_validation["parampara_channel"]
         parampara_coherence = oracle_validation["coherence"]
 
-        # GATE 2: ADVAITA — EXECUTE / Bridge
-        self._fire_gate(TattvaGate.EXECUTE, {"seed": seed, "attractor": attractor, "parampara_verified": parampara_verified})
+        # 6-7. SMARANAM → VANDANAM (Resonance → Verse)
         resonant_words = self.smaranam(input_coords, attractor)
         vand = self.vandanam(attractor, seed)
         verse_result = vand["verse_result"]
@@ -723,8 +720,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         gita_phase = vand["gita_phase"]
         is_complete = vand["is_complete"]
 
-        # GATE 3: GADADHARA — RESULT / Energy
-        self._fire_gate(TattvaGate.RESULT, {"attractor": attractor, "resonant_words": resonant_words, "verse_result": verse_result})
+        # 8. DASYAM + SHABDA (Position/Quarter/Role + RAMA Grid)
         d = self.dasyam(attractor, opcode)
         position = d["position"]
         diw = d["diw"]
@@ -745,12 +741,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         pipeline_opcode = d["pipeline_opcode"]
         pipeline_guna = d["pipeline_guna"]
 
-        # GATE 4: SRIVASA — SYNC / Governance
-        self._fire_gate(TattvaGate.SYNC, {
-            "position": position, "guardian": guardian,
-            "seed": seed, "attractor": attractor,
-            "opcode": pipeline_opcode, "guna": pipeline_guna,
-        })
+        # 9. SAKHYAM (MahaCellUnified creation)
         result_cell = self.sakhyam(seed, raw_address, position, input_text)
 
         # =====================================================================
@@ -844,7 +835,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         self._akash["last_position"] = position
         self._akash["last_attractor"] = attractor
 
-        return {
+        result = {
             "input": input_text,
             "tattva_gate": "SRIVASA",  # last gate = SYNC (all 5 gates passed)
             "guna": {
@@ -947,6 +938,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 TattvaGate.SYNC.name,
             ),
         }
+        return result
 
     # =========================================================================
     # VENU - Krishna's Flute (Non-Different from Krishna)
