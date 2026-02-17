@@ -276,9 +276,106 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         return observations, metadata
 
+    # =========================================================================
+    # ORIENT PHASE STEPS — Atomic, granular, individually callable
+    # Each step is a discrete orientation action. _orient() chains them all.
+    # =========================================================================
+
+    def _orient_akasha(self) -> None:
+        """ORIENT Step 1: AKASHA (Space) — Create kernel via Factory + EntropyShell."""
+        logger.info("⚡ OPUS-095: Materializing Kernel via Factory (AKASHA)")
+        raw_kernel = self._kernel_factory.get_kernel(ledger_path=self.ledger_path)
+        from vibe_core.runtime.entropy_shell import EntropyShell
+        self.kernel = EntropyShell(raw_kernel)
+        logger.info(f"      → Kernel space allocated & wrapped in EntropyShell (ledger: {self.ledger_path})")
+
+    def _orient_vayu(self) -> None:
+        """ORIENT Step 2: VAYU (Air) — Establish communication channels."""
+        logger.info("⚡ OPUS-095: Establishing communication (VAYU)")
+        from vibe_core.runtime.prompt_context import PromptContext
+        self.prompt_context = PromptContext()
+        if self.kernel:
+            self.prompt_context.set_kernel(self.kernel)
+            logger.info("      → PromptContext initialized and kernel bound")
+
+    def _orient_agni_oracle(self) -> None:
+        """ORIENT Step 3a: AGNI — Oracle + Shuddhi + KernelFactory."""
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.protocols.shuddhi import ShuddhiProtocol
+        from vibe_core.runtime.oracle import KernelOracle
+        from vibe_core.shuddhi.engine import ShuddhiEngine
+
+        self.oracle = KernelOracle(self.kernel, self.project_root)
+        ServiceRegistry.register(ShuddhiProtocol, ShuddhiEngine())
+        logger.info("      → ShuddhiProtocol registered in ServiceRegistry")
+
+        from vibe_core.protocols.kernel_protocol import KernelFactoryProtocol
+        from vibe_core.services.kernel_factory import KernelFactory
+        ServiceRegistry.register(KernelFactoryProtocol, KernelFactory())
+        logger.info("      → KernelFactoryProtocol registered (EphemeralCities)")
+
+    def _orient_agni_knowledge(self) -> None:
+        """ORIENT Step 3b: AGNI — UnifiedKnowledgeGraph + TaskManager."""
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.knowledge.graph import UnifiedKnowledgeGraph, get_knowledge_graph
+        from vibe_core.protocols.mahajanas.prithu.knowledge import KnowledgeGraphProtocol
+        from vibe_core.protocols.task import TaskProtocol
+        from vibe_core.task_management.task_manager import TaskManager
+
+        kg = get_knowledge_graph()
+        ServiceRegistry.register(UnifiedKnowledgeGraph, kg)
+        ServiceRegistry.register(KnowledgeGraphProtocol, kg)
+        logger.info("      → UnifiedKnowledgeGraph registered in ServiceRegistry")
+        logger.info("      → KnowledgeGraphProtocol registered (OUROBOROS enabled)")
+
+        task_manager = TaskManager(self.project_root, self.kernel.io)
+        ServiceRegistry.register(TaskProtocol, task_manager)
+        logger.info("      → TaskProtocol registered in ServiceRegistry (Core Stack)")
+
+    def _orient_agni_services(self) -> None:
+        """ORIENT Step 3c: AGNI — Cartridge, Plugin, Circuit, Section services."""
+        from vibe_core.di import ServiceRegistry
+
+        from vibe_core.cartridge_service import CartridgeService
+        from vibe_core.protocols.cartridge import CartridgeProtocol
+        cartridge_svc = CartridgeService.get_instance(self.project_root)
+        cartridge_svc.scan()
+        ServiceRegistry.register(CartridgeProtocol, cartridge_svc)
+        logger.info(f"      → CartridgeProtocol registered ({len(cartridge_svc.list())} cartridges)")
+
+        from vibe_core.plugin_service import PluginService
+        from vibe_core.protocols.plugin import PluginServiceProtocol
+        plugin_svc = PluginService.get_instance(self.project_root)
+        plugin_svc.scan()
+        ServiceRegistry.register(PluginServiceProtocol, plugin_svc)
+        logger.info(f"      → PluginServiceProtocol registered ({len(plugin_svc.list())} plugins)")
+
+        from vibe_core.circuit_service import CircuitService
+        from vibe_core.protocols.circuit import CircuitServiceProtocol
+        circuit_svc = CircuitService.get_instance(self.project_root)
+        circuit_svc.scan()
+        ServiceRegistry.register(CircuitServiceProtocol, circuit_svc)
+        logger.info(f"      → CircuitServiceProtocol registered ({len(circuit_svc.list())} circuits)")
+
+        from vibe_core.protocols.section import SectionServiceProtocol
+        from vibe_core.section_service import SectionService
+        section_svc = SectionService.get_instance(self.project_root)
+        section_svc.scan()
+        ServiceRegistry.register(SectionServiceProtocol, section_svc)
+        logger.info(f"      → SectionServiceProtocol registered ({len(section_svc.list())} sections)")
+
+    def _orient_agni_naga(self) -> None:
+        """ORIENT Step 3d: AGNI — NAGA Federation + Oracle capabilities."""
+        self._naga_orchestrator = self.kernel.naga
+        if self._naga_orchestrator:
+            logger.info("      → NAGA Federation active (kernel.naga)")
+        else:
+            logger.warning("      → NAGA Federation not available (test mode?)")
+
     async def _orient(self, observations: List[Any]) -> Tuple[List[Any], Dict[str, Any]]:
         """
         ORIENT: Kernel + Communication + Oracle setup (AKASHA/VAYU/AGNI phases).
+        Chains the atomic _orient_* steps.
 
         Returns:
             (orientations, metadata)
@@ -287,113 +384,15 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         metadata = {}
 
         try:
-            # AKASHA: Space - Create kernel via Factory
-            logger.info("⚡ OPUS-095: Materializing Kernel via Factory (AKASHA)")
+            self._orient_akasha()
+            self._orient_vayu()
 
-            # THE FIX: No hardcoded class instantiation here
-            # Use get_kernel (Singleton Access)
-            raw_kernel = self._kernel_factory.get_kernel(ledger_path=self.ledger_path)
-
-            # PHASE 6.1: WRAP IN ENTROPY SHELL (The Kurukshetra Field)
-            # "The Field of Time surrounds the Immutable Core"
-            from vibe_core.runtime.entropy_shell import EntropyShell
-
-            self.kernel = EntropyShell(raw_kernel)
-
-            logger.info(f"      → Kernel space allocated & wrapped in EntropyShell (ledger: {self.ledger_path})")
-
-            # VAYU: Air - Establish communication channels
-            logger.info("⚡ OPUS-095: Establishing communication (VAYU)")
-            from vibe_core.runtime.prompt_context import PromptContext
-
-            self.prompt_context = PromptContext()
-            if self.kernel:
-                self.prompt_context.set_kernel(self.kernel)
-                logger.info("      → PromptContext initialized and kernel bound")
-
-            # AGNI: Fire - Make system visible (capabilities, UI)
             logger.info("⚡ OPUS-095: Making system visible (AGNI)")
-            from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.shuddhi import ShuddhiProtocol
-            from vibe_core.protocols.task import TaskProtocol
-            from vibe_core.runtime.oracle import KernelOracle
-            from vibe_core.shuddhi.engine import ShuddhiEngine
-            from vibe_core.task_management.task_manager import TaskManager
-
             if self.kernel:
-                self.oracle = KernelOracle(self.kernel, self.project_root)
-
-                # OPUS-212: Register Shuddhi self-healing service
-                ServiceRegistry.register(ShuddhiProtocol, ShuddhiEngine())
-                logger.info("      → ShuddhiProtocol registered in ServiceRegistry")
-
-                # PHASE 3: Register KernelFactory for EphemeralCities
-                from vibe_core.protocols.kernel_protocol import KernelFactoryProtocol
-                from vibe_core.services.kernel_factory import KernelFactory
-
-                ServiceRegistry.register(KernelFactoryProtocol, KernelFactory())
-                logger.info("      → KernelFactoryProtocol registered (EphemeralCities)")
-
-                # OPUS-312: Register UnifiedKnowledgeGraph (singleton)
-                # 6+ components need this: shuddhi, ouroboros, watchman, dojo, mirror
-                from vibe_core.knowledge.graph import UnifiedKnowledgeGraph, get_knowledge_graph
-                from vibe_core.protocols.mahajanas.prithu.knowledge import KnowledgeGraphProtocol
-
-                kg = get_knowledge_graph()  # Get or create singleton
-                ServiceRegistry.register(UnifiedKnowledgeGraph, kg)
-                ServiceRegistry.register(KnowledgeGraphProtocol, kg)  # OUROBOROS: Protocol binding
-                logger.info("      → UnifiedKnowledgeGraph registered in ServiceRegistry")
-                logger.info("      → KnowledgeGraphProtocol registered (OUROBOROS enabled)")
-
-                # OPUS-212: Register Core Task Service
-                task_manager = TaskManager(self.project_root, self.kernel.io)
-                ServiceRegistry.register(TaskProtocol, task_manager)
-                logger.info("      → TaskProtocol registered in ServiceRegistry (Core Stack)")
-
-                # OPUS-307: Register Cartridge Service (unified cartridge management)
-                from vibe_core.cartridge_service import CartridgeService
-                from vibe_core.protocols.cartridge import CartridgeProtocol
-
-                cartridge_svc = CartridgeService.get_instance(self.project_root)
-                cartridge_svc.scan()
-                ServiceRegistry.register(CartridgeProtocol, cartridge_svc)
-                logger.info(f"      → CartridgeProtocol registered ({len(cartridge_svc.list())} cartridges)")
-
-                # OPUS-307: Register Plugin Service (unified plugin management)
-                from vibe_core.plugin_service import PluginService
-                from vibe_core.protocols.plugin import PluginServiceProtocol
-
-                plugin_svc = PluginService.get_instance(self.project_root)
-                plugin_svc.scan()
-                ServiceRegistry.register(PluginServiceProtocol, plugin_svc)
-                logger.info(f"      → PluginServiceProtocol registered ({len(plugin_svc.list())} plugins)")
-
-                # OPUS-307: Register Circuit Service (unified circuit management)
-                from vibe_core.circuit_service import CircuitService
-                from vibe_core.protocols.circuit import CircuitServiceProtocol
-
-                circuit_svc = CircuitService.get_instance(self.project_root)
-                circuit_svc.scan()
-                ServiceRegistry.register(CircuitServiceProtocol, circuit_svc)
-                logger.info(f"      → CircuitServiceProtocol registered ({len(circuit_svc.list())} circuits)")
-
-                # OPUS-307: Register Section Service (unified section management)
-                from vibe_core.protocols.section import SectionServiceProtocol
-                from vibe_core.section_service import SectionService
-
-                section_svc = SectionService.get_instance(self.project_root)
-                section_svc.scan()
-                ServiceRegistry.register(SectionServiceProtocol, section_svc)
-                logger.info(f"      → SectionServiceProtocol registered ({len(section_svc.list())} sections)")
-
-                # NAGA Federation - The Invisible Guardians
-                # Now lives IN the kernel (-1 Foundation)
-                # "Wie Wasser in jede Ritze" - organic flooding into every byte
-                self._naga_orchestrator = self.kernel.naga
-                if self._naga_orchestrator:
-                    logger.info("      → NAGA Federation active (kernel.naga)")
-                else:
-                    logger.warning("      → NAGA Federation not available (test mode?)")
+                self._orient_agni_oracle()
+                self._orient_agni_knowledge()
+                self._orient_agni_services()
+                self._orient_agni_naga()
 
                 capabilities = self.oracle.get_system_capabilities()
                 logger.info(
@@ -488,9 +487,178 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         return decisions, metadata
 
+    # =========================================================================
+    # ACT PHASE STEPS — Atomic, granular, individually callable
+    # Each step is a discrete boot action. _act() chains them all.
+    # =========================================================================
+
+    async def _act_boot_kernel(self) -> int:
+        """ACT Step 1: Boot kernel + Daily Ritual + Conveyor Belt. Returns agent count."""
+        await self.kernel.boot_async(boot_mode=self.boot_mode)
+        logger.info("      → Kernel booted, ledger active")
+
+        if not self.boot_mode.should_skip_daily_ritual():
+            from vibe_core.steward.daily_ritual import DailyRitual
+            self.kernel.daily_ritual = DailyRitual(self.kernel)
+            logger.info("      → Daily Ritual attached (time dimension active)")
+        else:
+            logger.info("      → Daily Ritual SKIPPED (headless mode)")
+
+        self.boot_sequence = BootSequence(self.project_root)
+        logger.info("      → Conveyor Belt initialized (prompt generation ready)")
+
+        status = self.kernel.get_status()
+        total_agents = status.get("agents_registered", 0)
+        logger.info(f"      → Total agents registered: {total_agents}")
+        return total_agents
+
+    def _act_start_venu(self) -> None:
+        """ACT Step 2: Start VenuService (Krishna's Flute - Central Orchestrator)."""
+        from vibe_core.di import ServiceRegistry
+        from vibe_core.mahamantra.protocols._venu import VenuServiceProtocol
+        from vibe_core.services.venu_service import VenuService
+
+        self._venu_service = VenuService()
+        ServiceRegistry.register(VenuServiceProtocol, self._venu_service)
+
+    def _act_discover_beat_subscribers(self) -> None:
+        """ACT Step 3: YASODA'S ROPE — Auto-discover BeatSubscribers."""
+        from vibe_core.services.beat_discovery import discover_and_register_beat_subscribers
+        discover_and_register_beat_subscribers()
+        beat_count = self._venu_service.discover_beat_subscribers()
+        if beat_count:
+            logger.info(f"      → {beat_count} beat subscribers auto-wired to VenuService")
+
+    def _act_discover_diw_subscribers(self) -> None:
+        """ACT Step 4: VENU FLUTE — Auto-discover DIW subscribers."""
+        from vibe_core.services.diw_discovery import discover_and_register_diw_subscribers
+        discover_and_register_diw_subscribers()
+        diw_count = self._venu_service.discover_subscribers()
+        if diw_count:
+            logger.info(f"      → {diw_count} DIW subscribers auto-wired to orchestrator")
+
+    def _act_register_mala_flush(self) -> None:
+        """ACT Step 5: MALA FLUSH — Every 108 ticks (~27s), flush RAM state to disk."""
+        from vibe_core.state.state_service import get_state_service
+        _state_svc = get_state_service(self.project_root)
+        def _mala_flush(mala_count: int) -> None:
+            flushed = _state_svc.flush()
+            if flushed:
+                logger.debug(f"Mala {mala_count}: flushed {flushed} state files")
+        self._venu_service.clock.on_mala(_mala_flush)
+        logger.info("      → Mala flush registered (RAM→Disk every 108 ticks)")
+
+    def _act_embrace_balarama(self) -> None:
+        """ACT Step 6: Balarama embraces lotus-discovered services (organic wrapping)."""
+        from vibe_core.mahamantra.substrate.proxy import wrap_service
+
+        self._balarama_proxies = {}
+        kernel_positions = getattr(self.kernel, "_positions", None)
+        if kernel_positions is not None:
+            for pos, guardian, instance in kernel_positions.all_active():
+                mod_name = getattr(instance, "__module__", None)
+                if mod_name is None:
+                    mod_name = getattr(instance, "__name__", None)
+                if mod_name:
+                    try:
+                        proxy = wrap_service(mod_name, silent=True)
+                        self._balarama_proxies[mod_name] = proxy
+                    except Exception:
+                        pass  # Not all modules are wrappable
+
+        if self._balarama_proxies:
+            logger.info(f"      → Balarama embraced {len(self._balarama_proxies)} services (lotus-driven)")
+        else:
+            logger.debug("No lotus-discovered services to embrace")
+
+    def _act_wire_gate_providers(self) -> None:
+        """ACT Step 7: Wire Gate Providers (5 Watchers at the TattvaGates)."""
+        from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers
+        gate_count = wire_gate_providers()
+        if gate_count:
+            logger.info(f"      → {gate_count} gate providers wired (TattvaGates armed)")
+
+    def _act_arm_io_sentinel(self) -> None:
+        """ACT Step 8: Arm I/O Sentinel explicitly (enterprise hardening)."""
+        from vibe_core.mahamantra.substrate.io_sentinel import arm, is_armed
+        arm()
+        if is_armed():
+            logger.info("      → I/O Sentinel armed (rogue json writers monitored)")
+        else:
+            logger.warning("⚠️ I/O Sentinel failed to arm")
+
+    def _act_ingest_codebase(self) -> None:
+        """ACT Step 9: Ingest codebase into CellRouter (Sravanam needs cells to scan)."""
+        from vibe_core.mahamantra.dharma.kumaras.fragment_parser import (
+            parse_file_to_fragments,
+            register_fragments_as_cells,
+        )
+        mahamantra_root = Path(__file__).parent / "mahamantra"
+        ingested_cells = 0
+        ingested_files = 0
+        for py_file in sorted(mahamantra_root.rglob("*.py")):
+            if "__pycache__" in str(py_file):
+                continue
+            try:
+                frags = parse_file_to_fragments(py_file)
+                addrs = register_fragments_as_cells(frags)
+                ingested_cells += len(addrs)
+                ingested_files += 1
+            except Exception:
+                pass  # Unparseable files are skipped silently
+        if ingested_cells:
+            logger.info(f"      → {ingested_cells} cells ingested from {ingested_files} files into CellRouter")
+
+    def _act_wire_sravanam(self) -> None:
+        """ACT Step 10: Wire Sravanam listener (organic per-tick scanning)."""
+        from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
+        listener = wire_sravanam()
+        if listener:
+            logger.info("      → Sravanam listener wired (organic cell scanning active)")
+
+    def _act_register_governance_hook(self) -> None:
+        """ACT Step 11: Register Mahamantra governance hook (King installs itself)."""
+        from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
+        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
+        _WRITE_OPCODES = frozenset({
+            MantraOpCode.LEDGER_SIGN,
+            MantraOpCode.IO_FLUSH,
+            MantraOpCode.STATE_SYNC,
+        })
+
+        def _sudarshana_governance_check(
+            opcode: MantraOpCode,
+            instance: object,
+            args: tuple,
+            kwargs: dict,
+        ) -> bool:
+            """
+            SudarshanaChakra — the real security spin.
+            Registered by Mahamantra at boot. Runs before every
+            @mantra_governed call.
+            """
+            if opcode not in _WRITE_OPCODES:
+                return True
+            for arg in args:
+                arg_str = str(arg)
+                if "/.git/" in arg_str or "/.git" == arg_str[-5:]:
+                    logger.warning(
+                        f"🌀 SUDARSHANA BLOCKED: {opcode.name} targeting .git "
+                        f"via {type(instance).__name__}"
+                    )
+                    return False
+                if "__pycache__" in arg_str:
+                    return True
+            return True
+
+        register_governance_hook(_sudarshana_governance_check)
+        logger.info("      → Sudarshana governance hook active (Mahamantra is King)")
+
     async def _act(self, decisions: List[Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
         ACT: Kernel boot + Daily Ritual + Conveyor Belt (PRITHVI phase).
+        Chains the atomic _act_* steps.
 
         Returns:
             (results, metadata)
@@ -499,223 +667,54 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         metadata = {}
 
         try:
-            # PRITHVI: Earth - Persistence (boot kernel, ledger ready)
             logger.info("⚡ OPUS-095: Persistence and kernel finalization (PRITHVI)")
 
-            # Boot the kernel (finalizes manifests, ledger, scheduler)
-            # OPUS-306: Use boot_async() directly since we're in async context
-            # Using sync boot() causes deadlock (60s timeout in future.result())
             if self.kernel:
-                await self.kernel.boot_async(boot_mode=self.boot_mode)
-                logger.info("      → Kernel booted, ledger active")
+                total_agents = await self._act_boot_kernel()
 
-                # OPUS-031 Layer 4: Skip Daily Ritual in headless mode
-                if not self.boot_mode.should_skip_daily_ritual():
-                    from vibe_core.steward.daily_ritual import DailyRitual
-
-                    self.kernel.daily_ritual = DailyRitual(self.kernel)
-                    logger.info("      → Daily Ritual attached (time dimension active)")
-                else:
-                    logger.info("      → Daily Ritual SKIPPED (headless mode)")
-
-                # Initialize Conveyor Belt (BootSequence) for prompt generation
-                self.boot_sequence = BootSequence(self.project_root)
-                logger.info("      → Conveyor Belt initialized (prompt generation ready)")
-
-                # Final status
-                status = self.kernel.get_status()
-                total_agents = status.get("agents_registered", 0)
-                logger.info(f"      → Total agents registered: {total_agents}")
-
-                # GOVARDHAN: Start VenuService (Krishna's Flute - Central Orchestrator)
+                # GOVARDHAN: VenuService + subscribers
                 try:
-                    from vibe_core.di import ServiceRegistry
-                    from vibe_core.mahamantra.protocols._venu import VenuServiceProtocol
-                    from vibe_core.services.venu_service import VenuService
-
-                    self._venu_service = VenuService()
-
-                    ServiceRegistry.register(VenuServiceProtocol, self._venu_service)
-
-                    # YASODA'S ROPE: Auto-discover BeatSubscribers
-                    # No hardcoded list. No closure hacks. FOLDER=EXISTENCE.
+                    self._act_start_venu()
                     try:
-                        from vibe_core.services.beat_discovery import discover_and_register_beat_subscribers
-
-                        discover_and_register_beat_subscribers()
-                        beat_count = self._venu_service.discover_beat_subscribers()
-                        if beat_count:
-                            logger.info(f"      → {beat_count} beat subscribers auto-wired to VenuService")
+                        self._act_discover_beat_subscribers()
                     except Exception as e:
                         logger.warning(f"⚠️ BeatSubscriber discovery FAILED: {e}")
-
-                    # VENU FLUTE: Auto-discover DIW subscribers (FOLDER=EXISTENCE)
-                    # Any service registered under DIWSubscriberProtocol gets
-                    # the 19-bit DIW on every tick. No manual wiring.
                     try:
-                        from vibe_core.services.diw_discovery import discover_and_register_diw_subscribers
-
-                        discover_and_register_diw_subscribers()
-                        diw_count = self._venu_service.discover_subscribers()
-                        if diw_count:
-                            logger.info(f"      → {diw_count} DIW subscribers auto-wired to orchestrator")
+                        self._act_discover_diw_subscribers()
                     except Exception as e:
                         logger.warning(f"⚠️ DIW subscriber discovery FAILED: {e}")
-
-                    # MALA FLUSH: Every 108 ticks (~27s), flush RAM state to disk
                     try:
-                        from vibe_core.state.state_service import get_state_service
-                        _state_svc = get_state_service(self.project_root)
-                        def _mala_flush(mala_count: int) -> None:
-                            flushed = _state_svc.flush()
-                            if flushed:
-                                logger.debug(f"Mala {mala_count}: flushed {flushed} state files")
-                        self._venu_service.clock.on_mala(_mala_flush)
-                        logger.info("      → Mala flush registered (RAM→Disk every 108 ticks)")
+                        self._act_register_mala_flush()
                     except Exception as e:
                         logger.warning(f"⚠️ Mala flush registration FAILED: {e}")
-
-                    # Start the heartbeat (non-blocking async task)
                     asyncio.ensure_future(self._venu_service.start())
                     logger.info("      → VenuService started (Krishna's flute plays)")
                 except Exception as e:
                     logger.warning(f"⚠️ Could not start VenuService: {e}")
 
-                # GOVARDHAN: Balarama embraces lotus-discovered services (organic wrapping)
+                # GOVARDHAN: Balarama + Gates + Sentinel + Ingestion + Sravanam + Governance
                 try:
-                    from vibe_core.mahamantra.substrate.proxy import wrap_service
-
-                    self._balarama_proxies = {}
-                    # Use lotus-discovered positions from kernel (set by project_lotus in factory.py)
-                    kernel_positions = getattr(self.kernel, "_positions", None)
-                    if kernel_positions is not None:
-                        for pos, guardian, instance in kernel_positions.all_active():
-                            mod_name = getattr(instance, "__module__", None)
-                            if mod_name is None:
-                                # Module object (not a service instance) — get its __name__
-                                mod_name = getattr(instance, "__name__", None)
-                            if mod_name:
-                                try:
-                                    proxy = wrap_service(mod_name, silent=True)
-                                    self._balarama_proxies[mod_name] = proxy
-                                except Exception:
-                                    pass  # Not all modules are wrappable
-
-                    if self._balarama_proxies:
-                        logger.info(
-                            f"      → Balarama embraced {len(self._balarama_proxies)} services (lotus-driven)"
-                        )
-                    else:
-                        logger.debug("No lotus-discovered services to embrace")
+                    self._act_embrace_balarama()
                 except Exception as e:
                     logger.warning(f"⚠️ Balarama wrapping skipped: {e}")
-
-                # GOVARDHAN: Wire Gate Providers (5 Watchers at the TattvaGates)
                 try:
-                    from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers
-
-                    gate_count = wire_gate_providers()
-                    if gate_count:
-                        logger.info(f"      → {gate_count} gate providers wired (TattvaGates armed)")
+                    self._act_wire_gate_providers()
                 except Exception as e:
                     logger.debug(f"Gate provider wiring skipped: {e}")
-
-                # GOVARDHAN: Arm I/O Sentinel explicitly (enterprise hardening)
-                # gate_providers also arms on import, but boot should not rely on side effects.
                 try:
-                    from vibe_core.mahamantra.substrate.io_sentinel import arm, is_armed
-
-                    arm()
-                    if is_armed():
-                        logger.info("      → I/O Sentinel armed (rogue json writers monitored)")
-                    else:
-                        logger.warning("⚠️ I/O Sentinel failed to arm")
+                    self._act_arm_io_sentinel()
                 except Exception as e:
                     logger.warning(f"⚠️ Could not arm I/O Sentinel: {e}")
-
-                # GOVARDHAN: Ingest codebase into CellRouter (Sravanam needs cells to scan)
                 try:
-                    from vibe_core.mahamantra.dharma.kumaras.fragment_parser import (
-                        parse_file_to_fragments,
-                        register_fragments_as_cells,
-                    )
-
-                    mahamantra_root = Path(__file__).parent / "mahamantra"
-                    ingested_cells = 0
-                    ingested_files = 0
-                    for py_file in sorted(mahamantra_root.rglob("*.py")):
-                        if "__pycache__" in str(py_file):
-                            continue
-                        try:
-                            frags = parse_file_to_fragments(py_file)
-                            addrs = register_fragments_as_cells(frags)
-                            ingested_cells += len(addrs)
-                            ingested_files += 1
-                        except Exception:
-                            pass  # Unparseable files are skipped silently
-
-                    if ingested_cells:
-                        logger.info(
-                            f"      → {ingested_cells} cells ingested from "
-                            f"{ingested_files} files into CellRouter"
-                        )
+                    self._act_ingest_codebase()
                 except Exception as e:
                     logger.debug(f"Codebase ingestion skipped: {e}")
-
-                # GOVARDHAN: Wire Sravanam listener (organic per-tick scanning)
                 try:
-                    from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
-
-                    listener = wire_sravanam()
-                    if listener:
-                        logger.info("      → Sravanam listener wired (organic cell scanning active)")
+                    self._act_wire_sravanam()
                 except Exception as e:
                     logger.debug(f"Sravanam wiring skipped: {e}")
-
-                # GOVARDHAN: Register Mahamantra governance hook (King installs itself)
                 try:
-                    from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
-                    from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-
-                    # Dangerous opcodes that modify state require extra scrutiny
-                    _WRITE_OPCODES = frozenset({
-                        MantraOpCode.LEDGER_SIGN,   # File writes
-                        MantraOpCode.IO_FLUSH,      # I/O operations
-                        MantraOpCode.STATE_SYNC,    # State mutations
-                    })
-
-                    def _sudarshana_governance_check(
-                        opcode: MantraOpCode,
-                        instance: object,
-                        args: tuple,
-                        kwargs: dict,
-                    ) -> bool:
-                        """
-                        SudarshanaChakra — the real security spin.
-                        Registered by Mahamantra at boot. Runs before every
-                        @mantra_governed call.
-                        """
-                        # Always allow non-write opcodes
-                        if opcode not in _WRITE_OPCODES:
-                            return True
-
-                        # For write opcodes, check if any arg looks like a
-                        # forbidden path (.git, __pycache__, etc.)
-                        for arg in args:
-                            arg_str = str(arg)
-                            if "/.git/" in arg_str or "/.git" == arg_str[-5:]:
-                                logger.warning(
-                                    f"🌀 SUDARSHANA BLOCKED: {opcode.name} targeting .git "
-                                    f"via {type(instance).__name__}"
-                                )
-                                return False
-                            if "__pycache__" in arg_str:
-                                return True  # Allow cache writes
-
-                        return True
-
-                    register_governance_hook(_sudarshana_governance_check)
-                    logger.info("      → Sudarshana governance hook active (Mahamantra is King)")
+                    self._act_register_governance_hook()
                 except Exception as e:
                     logger.warning(f"⚠️ Could not register governance hook: {e}")
 

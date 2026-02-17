@@ -41,183 +41,76 @@ class ChantResult(TypedDict):
     parampara_connected: bool
 
 
-def cli_chant(
-    rounds: int = 1,
-    verbose: bool = False,
-    audio: bool = False,
-    dest: str = "",  # phase 5
-) -> ChantResult:
-    """
-    CLI Entry Point for Chant command.
+# =============================================================================
+# CLI_CHANT STEPS — Atomic, granular, individually callable
+# =============================================================================
 
-    COMPUTATION ON DEMAND:
-    - Spawns Shadow Reactor (no singleton, fresh per invocation)
-    - Executes n rounds (1 round = 16 ticks = full Yajna cycle)
-    - Returns machine-readable state
-
-    AUDIO SONIFICATION (Phase 4):
-    - If audio=True, streams raw 16-bit PCM to stdout (Binary Output).
-    - Ignores verbose mode if audio is enabled.
-
-    NETWORKED SANKIRTAN (Phase 5):
-    - If dest="host:port", streams cells to remote Vimana.
-
-    Args:
-        rounds: Number of complete cycles (default: 1)
-        verbose: If True, print each tick
-        audio: If True, stream PCM audio to stdout
-        dest: "host:port" address to stream to
-
-    Returns:
-        ChantResult with cycle results.
-    """
-    # Lazy imports to keep module load fast
-    import asyncio
-
-    from vibe_core.mahamantra import mahamantra
-    from vibe_core.mahamantra.net.vimana import VimanaClient
-    from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
-    from vibe_core.mahamantra.sound.audio_engine import PranaSoundEngine
-    from vibe_core.mahamantra.substrate.cell import MahaCellUnified
-    from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
+def _chant_validate_epoch() -> bool:
+    """Chant Step 0: Validate epoch lock (1972 signature)."""
     from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
-    from vibe_core.mahamantra.substrate.seed import WORDS
-    from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
+    return SravanamCheck.validate_epoch_lock()
 
-    # EPOCH LOCK CHECK (Boot validation - 1972 signature)
-    if not SravanamCheck.validate_epoch_lock():
-        return ChantResult(
-            success=False,
-            bhakti=NavaBhakti.KIRTANAM.value,
-            rounds=0,
-            ticks=0,
-            final_position=-1,
-            final_guardian="BLOCKED",
-            cycle_count=0,
-            switch_count=0,
-            parampara_connected=False,
-        )
 
-    results: List[Dict[str, object]] = []
-    total_ticks = rounds * WORDS  # 1 round = 16 positions
+def _chant_setup(audio: bool, dest: str) -> tuple:
+    """Chant Step 1: Setup chamber, audio engine, network client.
+    Returns (chamber, sound_engine, vimana_client) or raises ValueError for bad dest."""
+    from vibe_core.mahamantra.net.vimana import VimanaClient
+    from vibe_core.mahamantra.sound.audio_engine import PranaSoundEngine
+    from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
 
-    # Spawn SANKIRTAN CHAMBER (The New Engine)
     chamber = SankirtanChamber.create()
-
-    # Initialize Audio Engine if requested
     sound_engine = PranaSoundEngine() if audio else None
-
-    # Initialize Network Client
     vimana_client = None
     if dest:
-        try:
-            host, port = dest.split(":")
-            vimana_client = VimanaClient(host, int(port))
-        except ValueError:
-            print(f"Invalid destination format: {dest}. Use host:port")
-            return ChantResult(
-                success=False,
-                bhakti=NavaBhakti.KIRTANAM.value,
-                rounds=0,
-                ticks=0,
-                final_position=0,
-                final_guardian="",
-                cycle_count=0,
-                switch_count=0,
-                parampara_connected=False,
-            )
-
-    # Async Runner for Client
-    async def run_client_loop():
-        if vimana_client:
-            await vimana_client.connect()
-
-        # Create the Seed Cell (The Mantra itself)
-        seed_cell = MahaCellUnified.create(source=0, target=1, operation=0, initial_state="Hare Krishna")
-
-        nonlocal verbose
-        # Disable verbose output if streaming audio (binary clash)
-        if audio:
-            verbose = False
-            import sys
-            # Ensure stdout is in binary mode if possible, or warn user?
-            # In Python 3, sys.stdout.buffer.write() writes bytes.
-
-        if verbose:
-            print("=" * 60)
-            print("MAHAMANTRA CHANT - Sankirtan Chamber Active")
-            if dest:
-                print(f"Streaming to Vimana: {dest}")
-            print("=" * 60)
-            print(f"Rounds: {rounds} | Ticks: {total_ticks}")
-            print("-" * 60)
-
-        for tick_num in range(total_ticks):
-            # Get tick state from Singularity clock
-            tick_state = mahamantra.tick()
-
-            # Step 1: Dance (Transform Cell & Update Registry)
-            transformed_cell = chamber.dance(seed_cell)
-
-            # Step 1b: Audio Synthesis (Phase 4)
-            if sound_engine:
-                # Reconstruct DIW approx:
-                # Tick has advanced. So we look at tick-1.
-                t = chamber.tick - 1
-                # Map tick to "Fake DIW" for audio
-                # We'll construct a synthetic DIW from current chamber state.
-                synth_diw = chamber._orchestrator.harmonize(
-                    venu=t,  # Use tick as seed approx
-                    vamsi=t * 7,
-                    murali=t % WORDS,  # SSOT: WORDS from seed.py
-                    cluster_route=chamber._orchestrator.mode,
-                )
-                pcm = sound_engine.synthesize(synth_diw)
-                sys.stdout.buffer.write(pcm)
-
-            # Step 1c: Network Transmission (Phase 5)
-            if vimana_client:
-                await vimana_client.send(transformed_cell)
-
-            # Step 2: Metrics (Legacy)
-            current_diw = THE_FLUTE_CYCLE[chamber.tick % WORDS]
-            diw_parts = diw_unpack(current_diw)
-            # VAMSI encodes name region: H=0-169, K=170-339, R=340-511
-            vamsi_stride = 512 // 3  # 170
-            name_idx = min(diw_parts.vamsi // vamsi_stride, 2)
-            guardian_name = ["HARE", "KRISHNA", "RAMA"][name_idx]
+        host, port = dest.split(":")
+        vimana_client = VimanaClient(host, int(port))
+    return chamber, sound_engine, vimana_client
 
 
-            state = {
-                "position": chamber.tick % WORDS,
-                "guardian": guardian_name,
-                "phase": "kirtan",
-                "opcode": "TRANSFORM",
-                "resonance": chamber.resonance_count,
-                "transformations": chamber.total_transformations,
-                "active_cells": len(chamber.active_cells),
-            }
+def _chant_tick(chamber, seed_cell, tick_num: int, sound_engine, vimana_client,
+                verbose: bool, audio: bool, WORDS: int, THE_FLUTE_CYCLE, diw_unpack, mahamantra) -> dict:
+    """Chant Step 2: Execute one tick — dance, audio, network, metrics. Returns tick state dict."""
+    import sys
+    tick_state = mahamantra.tick()
+    transformed_cell = chamber.dance(seed_cell)
 
-            if verbose:
-                print(
-                    f"[{tick_num:02d}] ~ {guardian_name:12s} | "
-                    f"KIRTAN   | pos={state['position']:2d} | "
-                    f"res={state['resonance']} | cells={state['active_cells']}"
-                )
+    if sound_engine:
+        t = chamber.tick - 1
+        synth_diw = chamber._orchestrator.harmonize(
+            venu=t, vamsi=t * 7, murali=t % WORDS,
+            cluster_route=chamber._orchestrator.mode,
+        )
+        pcm = sound_engine.synthesize(synth_diw)
+        sys.stdout.buffer.write(pcm)
 
-            results.append(state)
+    current_diw = THE_FLUTE_CYCLE[chamber.tick % WORDS]
+    diw_parts = diw_unpack(current_diw)
+    vamsi_stride = 512 // 3
+    name_idx = min(diw_parts.vamsi // vamsi_stride, 2)
+    guardian_name = ["HARE", "KRISHNA", "RAMA"][name_idx]
 
-        if vimana_client:
-            await vimana_client.close()
+    state = {
+        "position": chamber.tick % WORDS,
+        "guardian": guardian_name,
+        "phase": "kirtan",
+        "opcode": "TRANSFORM",
+        "resonance": chamber.resonance_count,
+        "transformations": chamber.total_transformations,
+        "active_cells": len(chamber.active_cells),
+    }
 
-    # Create loop and run
-    # If standard run, we just run_until_complete?
-    # Or create a new loop if none exists.
-    try:
-        asyncio.run(run_client_loop())
-    except KeyboardInterrupt as _exc:
-        logger.exception("Unexpected error: %s", _exc)
+    if verbose:
+        print(
+            f"[{tick_num:02d}] ~ {guardian_name:12s} | "
+            f"KIRTAN   | pos={state['position']:2d} | "
+            f"res={state['resonance']} | cells={state['active_cells']}"
+        )
+    return state, transformed_cell
 
+
+def _chant_summary(results: list, rounds: int, total_ticks: int, chamber,
+                   verbose: bool, audio: bool) -> ChantResult:
+    """Chant Step 3: Build summary and return ChantResult."""
     if verbose:
         print("-" * 60)
         print(f"Completed {rounds} round(s)")
@@ -225,11 +118,11 @@ def cli_chant(
         print(f"  Active Cells (Registry): {len(chamber.active_cells)}")
         print("=" * 60)
     elif not audio:
-        # Always show minimal summary unless streaming audio
         final_pos = results[-1]["position"] if results else 0
         final_guard = results[-1]["guardian"] if results else "unknown"
         print(
-            f"CHANT: {rounds}r × {total_ticks}t → [{final_guard}@{final_pos}] Res={chamber.resonance_count} Cells={len(chamber.active_cells)}"
+            f"CHANT: {rounds}r × {total_ticks}t → [{final_guard}@{final_pos}] "
+            f"Res={chamber.resonance_count} Cells={len(chamber.active_cells)}"
         )
 
     return ChantResult(
@@ -243,6 +136,79 @@ def cli_chant(
         switch_count=chamber.total_transformations,
         parampara_connected=len(chamber.active_cells) > 0,
     )
+
+
+def _chant_fail(final_position: int = -1, final_guardian: str = "BLOCKED") -> ChantResult:
+    """Return a failed ChantResult."""
+    return ChantResult(
+        success=False, bhakti=NavaBhakti.KIRTANAM.value, rounds=0, ticks=0,
+        final_position=final_position, final_guardian=final_guardian,
+        cycle_count=0, switch_count=0, parampara_connected=False,
+    )
+
+
+def cli_chant(
+    rounds: int = 1,
+    verbose: bool = False,
+    audio: bool = False,
+    dest: str = "",
+) -> ChantResult:
+    """
+    CLI Entry Point for Chant command. Chains the atomic _chant_* steps.
+    """
+    import asyncio
+
+    from vibe_core.mahamantra import mahamantra
+    from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
+    from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+    from vibe_core.mahamantra.substrate.seed import WORDS
+    from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
+
+    if not _chant_validate_epoch():
+        return _chant_fail()
+
+    try:
+        chamber, sound_engine, vimana_client = _chant_setup(audio, dest)
+    except ValueError:
+        print(f"Invalid destination format: {dest}. Use host:port")
+        return _chant_fail(final_position=0, final_guardian="")
+
+    total_ticks = rounds * WORDS
+    results: List[Dict[str, object]] = []
+
+    async def run_client_loop():
+        if vimana_client:
+            await vimana_client.connect()
+        seed_cell = MahaCellUnified.create(source=0, target=1, operation=0, initial_state="Hare Krishna")
+        effective_verbose = verbose and not audio
+
+        if effective_verbose:
+            print("=" * 60)
+            print("MAHAMANTRA CHANT - Sankirtan Chamber Active")
+            if dest:
+                print(f"Streaming to Vimana: {dest}")
+            print("=" * 60)
+            print(f"Rounds: {rounds} | Ticks: {total_ticks}")
+            print("-" * 60)
+
+        for tick_num in range(total_ticks):
+            state, transformed_cell = _chant_tick(
+                chamber, seed_cell, tick_num, sound_engine, vimana_client,
+                effective_verbose, audio, WORDS, THE_FLUTE_CYCLE, diw_unpack, mahamantra,
+            )
+            if vimana_client:
+                await vimana_client.send(transformed_cell)
+            results.append(state)
+
+        if vimana_client:
+            await vimana_client.close()
+
+    try:
+        asyncio.run(run_client_loop())
+    except KeyboardInterrupt as _exc:
+        logger.exception("Unexpected error: %s", _exc)
+
+    return _chant_summary(results, rounds, total_ticks, chamber, verbose, audio)
 
 
 class VimanaServeResult(TypedDict):
@@ -524,10 +490,8 @@ def cli_serve(
     """
     from datetime import datetime
 
-    from vibe_core.di import ServiceRegistry
-    from vibe_core.mahamantra.karma.janaka import TaskPriority
-    from vibe_core.protocols.mahajanas.janaka import JanakaProtocol
-    from vibe_core.protocols.mahajanas.janaka.service import JanakaService
+    from vibe_core.mahamantra.karma.janaka import TaskPriority, JanakaProtocol
+    from vibe_core.mahamantra.karma.janaka import get_service as get_janaka
 
     # Map priority string to enum (default to normal if empty)
     priority = priority or "normal"
@@ -539,11 +503,8 @@ def cli_serve(
     }
     task_priority = priority_map.get(priority.lower(), TaskPriority.NORMAL)
 
-    # Get JanakaService via ServiceRegistry (mahamantra = force, consistent routing)
-    janaka = ServiceRegistry.get(JanakaProtocol)
-    if janaka is None:
-        janaka = JanakaService()
-        ServiceRegistry.register(JanakaProtocol, janaka)
+    # Get JanakaService through Mahajana folder (canonical path)
+    janaka = get_janaka()
 
     start_time = datetime.now()
 

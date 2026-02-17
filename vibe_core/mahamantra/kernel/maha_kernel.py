@@ -66,8 +66,8 @@ class MahaKernel(PanchaTattvaProtocol):
         
         # 4. LEGACY INFRASTRUCTURE (Required for Governance/Ledger)
         # EKAMEVADVITIYAM: Use the ONE singleton, never create a second.
-        from vibe_core.mahamantra.kernel.singularity import mahamantra as _singularity
-        self._singularity = _singularity
+        from vibe_core.mahamantra.kernel.singularity import mahamantra as _sing
+        self._singularity = _sing
 
         # 5. LEDGER (The Immutable Log)
         from vibe_core.mahamantra import InMemoryLedger, SQLiteLedger
@@ -179,10 +179,9 @@ class MahaKernel(PanchaTattvaProtocol):
     # SINGLETON ACCESS
     # =========================================================================
     
-    # Proxy remaining calls to Singularity for backward compatibility
-    # (But strict logic happens in __call__)
-    def __getattr__(self, name: str) -> object:
-        return getattr(self._singularity, name)
+    # NOTE: __getattr__ proxy to Singularity was REMOVED (2026-02-17).
+    # MahaKernel is for __call__() (Seed→Address), not for routing.
+    # Use `from vibe_core.mahamantra import mahamantra` for routing/governance.
 
 # =============================================================================
 # SINGLETON

@@ -459,23 +459,165 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         if not silent:
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
 
-    def execute(self, command: str, args: Optional[List[str]] = None, *, opcode: Optional[int] = None) -> ExecuteResult:
-        """
-        Execute a command through the Govardhan Gateway.
+    # =========================================================================
+    # NAVABHAKTI STEPS — Atomic, granular, individually callable
+    # Each step is a pure function. __call__() chains them all.
+    # Consumers can call individual steps for partial computation.
+    # =========================================================================
 
-        Routes through the boundary layer where the 5 Pancha Tattva Gates
-        fire (PARSE→VALIDATE→__call__()→RESULT→SYNC), then enriches the
-        result with execute-specific fields.
+    @staticmethod
+    def sravanam(input_data: Union[str, MahaCell]) -> tuple:
+        """1. SRAVANAM — Receive input (hearing). Returns (input_text, cell, seed)."""
+        if isinstance(input_data, MahaCell):
+            cell = input_data
+            input_text = cell.payload.decode("utf-8", errors="replace")
+            seed = cell.header.sravanam
+        else:
+            input_text = str(input_data)
+            cell = None
+            seed = None
+        return input_text, cell, seed
 
-        Architecture: execute() → Govardhan → __call__() (pure core)
+    @staticmethod
+    def nama(input_text: str) -> tuple:
+        """1.5. NAMA — Phonetic identity (RAMA coordinate sequence)."""
+        P = _get_pipeline()
+        return tuple(P.encode_text(input_text))
 
-        Args:
-            command: Input text to process
-            args: Optional argument list
-            opcode: Optional MantraOpCode value for explicit gate routing
-        """
-        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
+    def kirtanam(self, input_text: str, seed: Optional[int]) -> int:
+        """2. KIRTANAM — MahaCompression -> seed. Same input -> same seed. Always."""
+        if seed is None:
+            comp_result = self._get_compressor().compress(input_text)
+            return comp_result.seed
+        return seed
 
+    @staticmethod
+    def pada_sevanam(seed: int) -> tuple:
+        """3. PADA_SEVANAM — Attractor from seed. Returns (attractor, variance, raw_address)."""
+        P = _get_pipeline()
+        attractor = P.synth_transform(seed)
+        variance = seed & 0xFF
+        raw_address = (attractor << 8) | variance
+        return attractor, variance, raw_address
+
+    @staticmethod
+    def arcanam(seed: int) -> dict:
+        """4. ARCANAM — Parampara verification via ShadowOracle."""
+        P = _get_pipeline()
+        oracle = P.get_shadow_oracle()
+        return oracle.validate(seed)
+
+    @staticmethod
+    def smaranam(input_coords: tuple, attractor: int) -> list:
+        """5. SMARANAM — Word resonance (remembering). Returns ranked words."""
+        if not input_coords:
+            return []
+        P = _get_pipeline()
+        return P.rank_words(input_coords=input_coords, input_attractor=attractor, top_n=7)
+
+    @staticmethod
+    def vandanam(attractor: int, seed: int) -> dict:
+        """6. VANDANAM — GitaResonance -> verse match."""
+        P = _get_pipeline()
+        verse_result = P.match_attractor(attractor)
+        chapter = P.get_gita_chapter(attractor)
+        chapter_significance = P.get_chapter_significance(chapter)
+        gita_phase = "fruit" if P.is_fruit(chapter) else "field"
+        is_complete = P.is_fruit(chapter)
+
+        verse_info = None
+        if verse_result.matches:
+            verse_index = seed % len(verse_result.matches)
+            v = verse_result.matches[verse_index]
+            verse_info = {
+                "id": v.verse_id,
+                "chapter": v.chapter,
+                "verse": v.verse,
+                "guna": v.guna,
+                "dominant_name": v.dominant_name,
+                "significance": chapter_significance,
+            }
+            sanskrit = P.verse_words(v.chapter, v.verse)
+            if sanskrit:
+                verse_info["word_count"] = len(sanskrit.words)
+                verse_info["phoneme_count"] = sanskrit.phoneme_count
+                verse_info["words"] = tuple({"sanskrit": w.sanskrit, "meaning": w.meaning} for w in sanskrit.words)
+
+        return {
+            "verse_result": verse_result,
+            "verse_info": verse_info,
+            "chapter": chapter,
+            "chapter_significance": chapter_significance,
+            "gita_phase": gita_phase,
+            "is_complete": is_complete,
+        }
+
+    @staticmethod
+    def dasyam(attractor: int, opcode: Optional[int] = None) -> dict:
+        """7. DASYAM + SHABDA — Position/Quarter/Role + RAMA Grid phoneme signature."""
+        P = _get_pipeline()
+        WORDS = P.WORDS
+        position = attractor % WORDS
+
+        diw = P.THE_FLUTE_CYCLE[position]
+        diw_comp = P.diw_components[position]
+        quarter = P.quarter_names[position]
+        guardian = P.ALL_GUARDIANS[position]
+        role = P.roles[position]
+        quarter_head_name = P.quarter_head_names[position]
+        holy_name = P.holy_names[position]
+        trinity_function = P.trinity_functions[position]
+
+        rama_coord = P.rama_coords[position]
+        phoneme = P.phonemes[position]
+        phoneme_element = P.COORD_ELEMENT[rama_coord]
+        phoneme_varga = P.COORD_VARGA[rama_coord]
+        phoneme_sub = P.COORD_SUB[rama_coord]
+        phoneme_harmonic = P.COORD_HARMONIC[rama_coord]
+        phoneme_shruti = P.IS_SHRUTI[rama_coord]
+
+        if opcode is not None:
+            pipeline_opcode = P.MantraOpCode(opcode)
+        else:
+            pipeline_opcode = P.MantraOpCode(position)
+        pipeline_guna = P.get_guna(pipeline_opcode)
+
+        return {
+            "position": position,
+            "diw": diw,
+            "diw_comp": diw_comp,
+            "quarter": quarter,
+            "guardian": guardian,
+            "role": role,
+            "quarter_head_name": quarter_head_name,
+            "holy_name": holy_name,
+            "trinity_function": trinity_function,
+            "rama_coord": rama_coord,
+            "phoneme": phoneme,
+            "phoneme_element": phoneme_element,
+            "phoneme_varga": phoneme_varga,
+            "phoneme_sub": phoneme_sub,
+            "phoneme_harmonic": phoneme_harmonic,
+            "phoneme_shruti": phoneme_shruti,
+            "pipeline_opcode": pipeline_opcode,
+            "pipeline_guna": pipeline_guna,
+        }
+
+    @staticmethod
+    def sakhyam(seed: int, raw_address: int, position: int, input_text: str) -> object:
+        """8. SAKHYAM — MahaCellUnified creation (friendship)."""
+        P = _get_pipeline()
+        result_cell = P.MahaCellUnified.create(
+            source=seed,
+            target=raw_address,
+            operation=position,
+            dna=input_text,
+        )
+        P.register_cell(result_cell)
+        return result_cell
+
+    def execute(self, command: str, args: Optional[List[str]] = None) -> ExecuteResult:
+        """Execute a command through the Mahamantra. SSOT: delegates to __call__."""
         try:
             # ── GATE 0: PARSE — What is this? ──
             self.fire_gate(TattvaGate.PARSE, {
@@ -539,176 +681,77 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
     def __call__(self, input_data: Union[str, MahaCell], *, opcode: Optional[int] = None) -> Dict[str, object]:
         """
-        MANTRA-BASED COMPUTING — Pure Functional Core (Vrindavan).
+        MANTRA-BASED COMPUTING — chains the 9 NavaBhakti atomic steps.
 
         mahamantra("anything") → READS. UNDERSTANDS. COMPUTES. RESPONDS.
 
-        NO registry. NO services. NO delegation. NO side-effects.
-        Pure computation from the 16 words.
-
-        ARCHITECTURE: Functional Core / Imperative Shell
-        =================================================
-        This method is the FUNCTIONAL CORE. It is deterministic:
-        same input → same output. Always. No I/O, no state mutation.
-
-        The Pancha Tattva Gates (PARSE/VALIDATE/EXECUTE/RESULT/SYNC)
-        belong at the BOUNDARY (Govardhan Gateway), not inside this
-        pure computation. The boundary layer validates input, calls
-        this method, then handles side-effects (I/O, state, legacy).
-
-        NAVABHAKTI COMPUTATION STEPS:
-        =============================
-            1. SRAVANAM       — Receive input (hearing)
-            1.5 NAMA          — Phonetic identity (RAMA coords)
-            2. KIRTANAM       — MahaCompression → seed (chanting)
-            3. PADA_SEVANAM   — Attractor from seed (serving)
-            4. ARCANAM        — Parampara verification (worshiping)
-            5. SMARANAM       — Word resonance (remembering)
-            6. VANDANAM       — GitaResonance → verse match (praying)
-            7. DASYAM         — Position/Quarter determination (servitude)
-            7.5 SHABDA        — RAMA Grid phoneme signature
-            8. SAKHYAM        — MahaCell creation (friendship)
-            8.5-8.7 KIRTAN    — Chamber + Yajna cycle
-            9. ATMA_NIVEDANAM — Complete response (surrender)
-
-        Everything computed. No external LLM. No hardcoded routing.
+        Each step is individually callable (self.sravanam, self.nama, etc.).
+        __call__() is the FULL pipeline. Consumers needing partial computation
+        call individual steps directly.
 
         Args:
             input_data: Text string or MahaCell to process
-            opcode: Optional MantraOpCode value (0-15). If not provided,
-                    derived from position (attractor % 16). The OpCode
-                    determines the Guna via guna.get_guna(opcode).
-                    See substrate/guna.py: "The Guna is DERIVED from the OpCode."
+            opcode: Optional MantraOpCode value (0-15).
         """
-        # All seed-independent references resolved once via PipelineCache.
-        # Compressor owned by MahamantraLotus (class-level singleton).
         P = _get_pipeline()
         WORDS = P.WORDS
         MAHA_QUANTUM = P.MAHA_QUANTUM
         COSMIC_FRAME = P.COSMIC_FRAME
 
-        # 1. SRAVANAM - Receive input (Entry point)
-        if isinstance(input_data, MahaCell):
-            cell = input_data
-            input_text = cell.payload.decode("utf-8", errors="replace")
-            seed = cell.header.sravanam
-        else:
-            input_text = str(input_data)
-            cell = None
-            seed = None
+        # GATE 0: CHAITANYA — PARSE / Identity
+        self._fire_gate(TattvaGate.PARSE, {"input_data": input_data})
+        input_text, cell, seed = self.sravanam(input_data)
+        input_coords = self.nama(input_text)
+        seed = self.kirtanam(input_text, seed)
 
-        # =====================================================================
-        # 1.5. NAMA - Phonetic Identity (RAMA coordinate sequence)
-        # =====================================================================
-        input_coords = tuple(P.encode_text(input_text))
-
-        # =====================================================================
-        # 2. KIRTANAM - MahaCompression → seed
-        # =====================================================================
-        if seed is None:
-            comp_result = self._get_compressor().compress(input_text)
-            seed = comp_result.seed
-
-        # SEED IS PURE: Same input → same seed. Always.
-
-        # 3. PADA_SEVANAM - Attractor from Seed (Serial, not Parallel)
-        # Pipeline: text → compress → seed → synth → attractor (SERIAL)
-        attractor = P.synth_transform(seed)
-        variance = seed & 0xFF
-        raw_address = (attractor << 8) | variance  # 16-bit Hybrid Address
-
-        # =====================================================================
-        # 4. ARCANAM - Parampara verification via ShadowOracle (Gita 13.35)
-        # =====================================================================
-        oracle = P.get_shadow_oracle()
-        oracle_validation = oracle.validate(seed)
+        # GATE 1: NITYANANDA — VALIDATE / Substrate
+        self._fire_gate(TattvaGate.VALIDATE, {"input_text": input_text, "seed": seed, "input_coords": input_coords})
+        attractor, variance, raw_address = self.pada_sevanam(seed)
+        oracle_validation = self.arcanam(seed)
         parampara_verified = oracle_validation["parampara_validated"]
         parampara_channel = oracle_validation["parampara_channel"]
         parampara_coherence = oracle_validation["coherence"]
 
-        # 5. SMARANAM - Word Resonance (Remembering)
-        resonant_words = P.rank_words(
-            input_coords=input_coords,
-            input_attractor=attractor,
-            top_n=7,
-        ) if input_coords else []
+        # GATE 2: ADVAITA — EXECUTE / Bridge
+        self._fire_gate(TattvaGate.EXECUTE, {"seed": seed, "attractor": attractor, "parampara_verified": parampara_verified})
+        resonant_words = self.smaranam(input_coords, attractor)
+        vand = self.vandanam(attractor, seed)
+        verse_result = vand["verse_result"]
+        verse_info = vand["verse_info"]
+        chapter = vand["chapter"]
+        chapter_significance = vand["chapter_significance"]
+        gita_phase = vand["gita_phase"]
+        is_complete = vand["is_complete"]
 
-        # =====================================================================
-        # 6. VANDANAM - GitaResonance → verse match
-        # =====================================================================
-        verse_result = P.match_attractor(attractor)
-        chapter = P.get_gita_chapter(attractor)
-        chapter_significance = P.get_chapter_significance(chapter)
+        # GATE 3: GADADHARA — RESULT / Energy
+        self._fire_gate(TattvaGate.RESULT, {"attractor": attractor, "resonant_words": resonant_words, "verse_result": verse_result})
+        d = self.dasyam(attractor, opcode)
+        position = d["position"]
+        diw = d["diw"]
+        diw_comp = d["diw_comp"]
+        quarter = d["quarter"]
+        guardian = d["guardian"]
+        role = d["role"]
+        quarter_head_name = d["quarter_head_name"]
+        holy_name = d["holy_name"]
+        trinity_function = d["trinity_function"]
+        rama_coord = d["rama_coord"]
+        phoneme = d["phoneme"]
+        phoneme_element = d["phoneme_element"]
+        phoneme_varga = d["phoneme_varga"]
+        phoneme_sub = d["phoneme_sub"]
+        phoneme_harmonic = d["phoneme_harmonic"]
+        phoneme_shruti = d["phoneme_shruti"]
+        pipeline_opcode = d["pipeline_opcode"]
+        pipeline_guna = d["pipeline_guna"]
 
-        # TOPOLOGY: Field (Ch 1-16) = process, Fruit (Ch 17-18) = complete
-        gita_phase = "fruit" if P.is_fruit(chapter) else "field"
-        is_complete = P.is_fruit(chapter)  # Stopping condition
-
-        verse_info = None
-        if verse_result.matches:
-            verse_index = seed % len(verse_result.matches)
-            v = verse_result.matches[verse_index]
-            verse_info = {
-                "id": v.verse_id,
-                "chapter": v.chapter,
-                "verse": v.verse,
-                "guna": v.guna,
-                "dominant_name": v.dominant_name,
-                "significance": chapter_significance,
-            }
-
-            sanskrit = P.verse_words(v.chapter, v.verse)
-            if sanskrit:
-                verse_info["word_count"] = len(sanskrit.words)
-                verse_info["phoneme_count"] = sanskrit.phoneme_count
-                verse_info["words"] = tuple({"sanskrit": w.sanskrit, "meaning": w.meaning} for w in sanskrit.words)
-
-        # 7. DASYAM - Position/Quarter/Role determination
-        # Position from attractor (holographic - embedded in computation)
-        position = attractor % WORDS  # 0-15
-
-        # All position-dependent lookups are precomputed LUTs in PipelineCache
-        diw = P.THE_FLUTE_CYCLE[position]
-        diw_comp = P.diw_components[position]
-        quarter = P.quarter_names[position]
-        guardian = P.ALL_GUARDIANS[position]
-        role = P.roles[position]
-        quarter_head_name = P.quarter_head_names[position]
-        holy_name = P.holy_names[position]
-        trinity_function = P.trinity_functions[position]
-
-        # =====================================================================
-        # 7.5. SHABDA - RAMA Grid Phoneme + 4D Coordinate Signature
-        # =====================================================================
-        # Precomputed: position → rama_coord → phoneme (all in PipelineCache)
-        rama_coord = P.rama_coords[position]
-        phoneme = P.phonemes[position]
-        phoneme_element = P.COORD_ELEMENT[rama_coord]
-        phoneme_varga = P.COORD_VARGA[rama_coord]
-        phoneme_sub = P.COORD_SUB[rama_coord]
-        phoneme_harmonic = P.COORD_HARMONIC[rama_coord]
-        phoneme_shruti = P.IS_SHRUTI[rama_coord]
-
-        # =====================================================================
-        # GUNA DERIVATION — OpCode determines the Guna (BG 14.5)
-        # "The Guna is DERIVED from the OpCode, not decorated." (guna.py)
-        # =====================================================================
-        if opcode is not None:
-            pipeline_opcode = P.MantraOpCode(opcode)
-        else:
-            # Position IS the OpCode: FOLDER_IS_WIRING (guna.py line 57)
-            pipeline_opcode = P.MantraOpCode(position)
-        pipeline_guna = P.get_guna(pipeline_opcode)
-
-        # 8. SAKHYAM - MahaCellUnified creation (holographic format with lifecycle)
-        result_cell = P.MahaCellUnified.create(
-            source=seed,
-            target=raw_address,
-            operation=position,
-            dna=input_text,
-        )
-
-        P.register_cell(result_cell)
+        # GATE 4: SRIVASA — SYNC / Governance
+        self._fire_gate(TattvaGate.SYNC, {
+            "position": position, "guardian": guardian,
+            "seed": seed, "attractor": attractor,
+            "opcode": pipeline_opcode, "guna": pipeline_guna,
+        })
+        result_cell = self.sakhyam(seed, raw_address, position, input_text)
 
         # =====================================================================
         # 8.5. KIRTAN - Call and Response Loop

@@ -155,54 +155,40 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
             "srivasa": "Constitutional Oath",
         }
 
-    def __init__(
-        self,
-        ledger_path: str | None = None,
-        config: "PhoenixConfig | None" = None,
-        parent: "RealVibeKernel | None" = None,
-        load_plugins: bool = True,
-        test_mode: bool = False,
-    ):
-        # === SHARANAGATI - THE ONE LINE OF TRUTH ===
-        # The Kernel surrenders to Mahamantra BEFORE loading services.
-        # This wraps ManifestationService and PrakritiBinding with BalaramaProxy.
-        # All file writes will route through bridge.offer() → Dharmic governance.
-        mahamantra.bootstrap(silent=True)
+    # =========================================================================
+    # KERNEL INIT STEPS — Atomic, granular, individually callable
+    # Each step is a pure setup unit. __init__() chains them all.
+    # =========================================================================
 
+    def _init_sharanagati(self) -> None:
+        """Step 0: SHARANAGATI — Kernel surrenders to Mahamantra BEFORE loading services."""
+        mahamantra.bootstrap(silent=True)
         VajraGuarded.__init__(self)
         from vibe_core.di import ServiceRegistry
-
         ServiceRegistry.enable_narasimha()
-        ServiceRegistry.enable_naga_blessing()  # Auto-wrap ALL services with NagaProxy
+        ServiceRegistry.enable_naga_blessing()
 
-        self._config = config
-        self._parent = parent
-        self._child_kernels: list["RealVibeKernel"] = []
-        self._test_mode = test_mode
-        self._plugins: list[PluginProtocol] = []
-        self._agent_registry: dict[str, VibeAgent] = {}
-        self._completed_tasks: dict[str, TaskResult] = {}
-
-        # 1. LEDGER (Bhishma - Position 11)
+    def _init_ledger(self, ledger_path: str | None) -> None:
+        """Step 1: LEDGER (Bhishma - Position 11)."""
         l_path = ledger_path or "data/vibe_ledger.db"
         self.__ledger = SQLiteLedger(l_path) if l_path != ":memory:" else InMemoryLedger()
 
-        # Import services (will be wrapped with MahamantraProxy for governance)
+    def _init_mahajana_services(self) -> None:
+        """Step 2: MAHAJANA SERVICES — wrapped with MahamantraProxy for governance identity."""
         from vibe_core.services.bali_service import BaliService
         from vibe_core.services.bhishma_service import BhishmaService
         from vibe_core.services.brahma_service import BrahmaService
         from vibe_core.services.janaka_service import JanakaService
         from vibe_core.services.kapila_service import KapilaService
 
-        # 2. MAHAJANA SERVICES (wrapped with MahamantraProxy for governance identity)
-        # BALARAMA PATTERN: Services are governed through proxy, not code changes
         self.bhishma = MahamantraProxy(BhishmaService(self.__ledger), position=11, guardian="bhishma")
         self.brahma = MahamantraProxy(BrahmaService(self.__ledger), position=1, guardian="brahma")
         self.janaka = MahamantraProxy(JanakaService(), position=10, guardian="janaka")
         self.bali = MahamantraProxy(BaliService(), position=13, guardian="bali")
         self.kapila = MahamantraProxy(KapilaService(), position=6, guardian="kapila")
 
-        # 3. MANTRA (Vishnu Clock)
+    def _init_mantra_clock(self) -> None:
+        """Step 3: MANTRA (Vishnu Clock) — Sovereign context + Nrisimha watchdog."""
         self._sovereign_context = SovereignContext(
             identity_id="KERNEL_PRIME", signature="kernel_sig", roles=["sovereign"]
         )
@@ -217,24 +203,26 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         self.chaitanya = self.nrisimha
         self.watchdog = self.nrisimha
 
-        # 4. BLUEPRINTS & TOOLS
+    def _init_blueprints(self) -> None:
+        """Step 4: BLUEPRINTS & TOOLS — IO, Manifestation, EventBus, Cognitive, Runtime."""
         self.io = KernelIOService(self)
         self.manifestation = ManifestationService(self)
         self._event_bus = get_event_bus()
         self._cognitive: OperatorCognitiveProtocol = NullCognitive()
         self._unified_router, self._unified_executor = create_unified_runtime(self)
 
-        # 5. PRAKRITI (State Engine) - KernelProtocol requirement
+    def _init_prakriti(self) -> None:
+        """Step 5: PRAKRITI (State Engine) — KernelProtocol requirement."""
         self._prakriti = Prakriti()
         self._prakriti.inject_kernel(self)
 
-        # 6. LINEAGE (Parampara Chain) - KernelProtocol requirement
+    def _init_lineage(self) -> None:
+        """Step 6: LINEAGE (Parampara Chain) — KernelProtocol requirement."""
         from vibe_core.lineage import LineageChain
-
         self._lineage: LineageChain = LineageChain()
 
-        # 7. NAGA FEDERATION (Level -1 Foundation) - The Invisible Guardians
-        # NAGA lives IN the kernel, not as a plugin. Uses kernel.ledger (PUBLIC).
+    def _init_naga(self, test_mode: bool) -> None:
+        """Step 7: NAGA FEDERATION (Level -1 Foundation) — The Invisible Guardians."""
         self._naga: Optional["NagaOrchestrator"] = None
         if not test_mode:
             try:
@@ -243,27 +231,48 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
                     BasicCorrectionDispatcher,
                     BasicCorrectionOrchestrator,
                 )
-
-                # Create correction infrastructure
                 dispatcher = BasicCorrectionDispatcher()
                 correction_orchestrator = BasicCorrectionOrchestrator(dispatcher=dispatcher)
-
-                # Bootstrap NAGA with kernel's ledger (PUBLIC property)
                 self._naga = NagaOrchestrator.bootstrap(
-                    ledger=self.ledger,  # PUBLIC, not __ledger
+                    ledger=self.ledger,
                     correction_orchestrator=correction_orchestrator,
                 )
                 logger.info(f"🐍 NAGA Federation active - identity: {self._naga._identity.fingerprint}")
             except Exception as e:
                 logger.warning(f"🐍 NAGA Federation failed to bootstrap: {e}")
-                # Non-fatal - kernel works without NAGA
 
-        # 8. BOOTSTRAP
+    def _init_bootstrap(self, load_plugins: bool) -> None:
+        """Step 8: BOOTSTRAP — Plugin loading + seal."""
         if load_plugins:
             self.brahma.bootstrap(self, self._config)
-
         self._status = KernelStatus.STOPPED
         self.vajra_seal()
+
+    def __init__(
+        self,
+        ledger_path: str | None = None,
+        config: "PhoenixConfig | None" = None,
+        parent: "RealVibeKernel | None" = None,
+        load_plugins: bool = True,
+        test_mode: bool = False,
+    ):
+        self._config = config
+        self._parent = parent
+        self._child_kernels: list["RealVibeKernel"] = []
+        self._test_mode = test_mode
+        self._plugins: list[PluginProtocol] = []
+        self._agent_registry: dict[str, VibeAgent] = {}
+        self._completed_tasks: dict[str, TaskResult] = {}
+
+        self._init_sharanagati()
+        self._init_ledger(ledger_path)
+        self._init_mahajana_services()
+        self._init_mantra_clock()
+        self._init_blueprints()
+        self._init_prakriti()
+        self._init_lineage()
+        self._init_naga(test_mode)
+        self._init_bootstrap(load_plugins)
 
     def get_agent_capabilities(self, agent_id: str) -> List[str]:
         """Get capabilities for an agent. KernelProtocol compliant."""

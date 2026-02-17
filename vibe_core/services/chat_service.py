@@ -491,217 +491,150 @@ class ChatService(ChatProtocol, LotusBase):
     # CHAT OPERATIONS (Starship Command I/O)
     # ==========================================================================
 
-    async def chat(self, message: str, context: ChatContext) -> ChatResponse:
-        """
-        Process chat message through Resonance Gate.
+    # =========================================================================
+    # CHAT STEPS — Atomic, granular, individually callable
+    # Each step is a discrete chat action. chat() chains them all.
+    # =========================================================================
 
-        RESONANCE GATE:
-        1. Check for active RefinementState (user responding to "Path A or B?")
-        2. Compute ResonanceVector → magnitude = confidence
-        3. Apply thresholds:
-           - > 0.8: Auto-execute
-           - 0.4-0.8: Intent Negotiation (RefinementRequest)
-           - < 0.4: Silence (refuse to guess)
-        4. Route via Lotus → Mahajana
-        5. LLM interprets (not decides)
-        """
+    def _chat_receive(self, message: str, context: ChatContext) -> ChatMessage:
+        """Chat Step 1: Receive input, store in session, seed lotus."""
         timestamp = datetime.now()
-        session_id = context.session_id
-
-        # Create input message
         input_msg = ChatMessage(
             content=message,
             role="user",
             timestamp=timestamp,
-            session_id=session_id,
+            session_id=context.session_id,
             message_id=str(uuid.uuid4()),
         )
-
-        # Store in session history
-        if session_id not in self._sessions:
-            self._sessions[session_id] = []
-        self._sessions[session_id].append(input_msg)
-
-        # =================================================================
-        # LOTUS LIFECYCLE: SEED - Receive input (SHROTRA + MANAS)
-        # =================================================================
+        if context.session_id not in self._sessions:
+            self._sessions[context.session_id] = []
+        self._sessions[context.session_id].append(input_msg)
         self._lotus_seed(message)
+        return input_msg
 
-        # =================================================================
-        # NAGA OBSERVATION: Report chat start (Narada sees all)
-        # =================================================================
+    def _chat_resonance_gate(self, message: str, context: ChatContext) -> tuple:
+        """Chat Step 2: Resonance Gate — compute vector, apply thresholds.
+        Returns (magnitude, resonance_result) or raises early ChatResponse."""
+        resonance_result = self._compute_resonance(message)
+        magnitude = resonance_result["magnitude"]
+        logger.info(f"🔊 ChatService: Resonance magnitude={magnitude:.3f} (dominant={resonance_result['dominant']})")
+        return magnitude, resonance_result
+
+    async def _chat_cognitive_route(self, message: str, resonance_result: dict) -> tuple:
+        """Chat Step 3: Cognitive intent + Lotus routing. Returns (cognitive_result, lotus_result, mode)."""
+        self._lotus_stem(resonance_result)
+        cognitive_result = await self._process_cognitive(message)
+        logger.info(f"🧠 ChatService: Intent={cognitive_result.intent_type.value}")
+
+        lotus_result = self._lotus_route(message, cognitive_result, resonance_result)
+        lotus_result["resonance"] = resonance_result
+        logger.info(
+            f"🪷 ChatService: Lotus Route → {lotus_result['mahajana'].upper()} "
+            f"(pos={lotus_result['position']}, quarter={lotus_result['quarter']})"
+        )
+        mode = determine_chat_mode(cognitive_result, lotus_result)
+        return cognitive_result, lotus_result, mode
+
+    async def _chat_execute(self, message: str, cognitive_result: "CognitiveResult",
+                            lotus_result: dict, mode: "ChatMode", context: ChatContext) -> object:
+        """Chat Step 4: Execute if actionable (ShadowReactor or cli_bridge)."""
+        execution_result = None
+        if cognitive_result.intent_type == IntentType.EXECUTE or mode == ChatMode.SYSCALL:
+            position = lotus_result.get("position", 2)
+            if position in [1, 8]:
+                execution_result = await self._execute_via_shadow(message, lotus_result, context)
+                if execution_result:
+                    logger.info(f"🔥 ChatService: EXECUTED via ShadowReactor → {execution_result}")
+            if execution_result is None:
+                execution_result = await self._execute_via_bridge(message, lotus_result)
+                logger.info(f"⚡ ChatService: EXECUTED via cli_bridge → {execution_result}")
+        return execution_result
+
+    def _chat_build_context(self, message: str, lotus_result: dict,
+                            execution_result: object, naga_context: object) -> dict:
+        """Chat Step 5: Build knowledge context with execution result + NAGA intelligence."""
+        knowledge_context = self._get_knowledge_context_lotus(message, lotus_result)
+        if execution_result:
+            knowledge_context["execution_result"] = str(execution_result)
+        if naga_context:
+            if naga_context.active_threats:
+                knowledge_context["naga_threats"] = str(len(naga_context.active_threats))
+            if naga_context.anomaly_count > 0:
+                knowledge_context["naga_anomalies"] = str(naga_context.anomaly_count)
+            knowledge_context["naga_reason"] = naga_context.reason_code.value
+        self._lotus_bloom(lotus_result)
+        return knowledge_context
+
+    async def _chat_respond(self, message: str, context: ChatContext,
+                            cognitive_result: "CognitiveResult", lotus_result: dict,
+                            knowledge_context: dict, mode: "ChatMode",
+                            magnitude: float, execution_result: object) -> ChatResponse:
+        """Chat Step 6: Generate LLM response, create ChatResponse, complete lotus cycle."""
+        response_text = await self._generate_response_lotus(
+            message=message, context=context, cognitive_result=cognitive_result,
+            lotus_result=lotus_result, knowledge_context=knowledge_context,
+        )
+        response_msg = ChatMessage(
+            content=response_text, role="assistant", timestamp=datetime.now(),
+            session_id=context.session_id, message_id=str(uuid.uuid4()),
+            opcode=lotus_result.get("opcode", "EXTEND_CAP"), mahajana=lotus_result["mahajana"],
+        )
+        self._sessions[context.session_id].append(response_msg)
+        response = ChatResponse(
+            success=True, message=response_msg, mode=mode,
+            intent_type=cognitive_result.intent_type,
+            opcode=lotus_result.get("opcode", "EXTEND_CAP"),
+            mahajana=lotus_result["mahajana"], confidence=magnitude,
+        )
+        self._lotus_garuda(executed=execution_result is not None)
+        return response
+
+    async def chat(self, message: str, context: ChatContext) -> ChatResponse:
+        """
+        Process chat message through Resonance Gate.
+        Chains the atomic _chat_* steps.
+        """
+        self._chat_receive(message, context)
         self._report_to_narada("START", message, context)
-
-        # =================================================================
-        # NAGA INTELLIGENCE: Get Cortex context (NAGAs INFORM, not CONTROL)
-        # =================================================================
         naga_context = self._get_naga_intelligence()
 
         try:
-            # =================================================================
-            # CHECK: Is this a response to a previous RefinementRequest?
-            # =================================================================
-            if self._refinement_handler.has_active_refinement(session_id):
+            if self._refinement_handler.has_active_refinement(context.session_id):
                 return await self._handle_refinement_response(message, context)
 
-            # =================================================================
-            # STEP 1: RESONANCE - Compute resonance vector
-            # =================================================================
-            resonance_result = self._compute_resonance(message)
-            magnitude = resonance_result["magnitude"]
-            logger.info(
-                f"🔊 ChatService: Resonance magnitude={magnitude:.3f} (dominant={resonance_result['dominant']})"
-            )
+            magnitude, resonance_result = self._chat_resonance_gate(message, context)
 
-            # =================================================================
-            # RESONANCE GATE: Apply thresholds
-            # =================================================================
-
-            # SILENCE: < 0.4 - No resonance, refuse to guess
             if magnitude < self.RESONANCE_REFINE:
                 logger.info(f"🔇 ChatService: SILENCE (magnitude {magnitude:.3f} < {self.RESONANCE_REFINE})")
                 return self._refinement_handler.create_silence_response(message, context, magnitude)
-
-            # REFINEMENT: 0.4 - 0.7 - Intent Negotiation required
             if magnitude < self.RESONANCE_AUTO:
                 logger.info(f"❓ ChatService: REFINEMENT (magnitude {magnitude:.3f} in gray zone)")
                 return await self._refinement_handler.create_refinement_response(message, context, resonance_result)
 
-            # AUTO-EXECUTE: > 0.8 - High resonance, proceed
             logger.info(f"✅ ChatService: AUTO-EXECUTE (magnitude {magnitude:.3f} >= {self.RESONANCE_AUTO})")
 
-            # =================================================================
-            # LOTUS LIFECYCLE: STEM - Route to Mahajana (BUDDHI + AHANKARA)
-            # =================================================================
-            self._lotus_stem(resonance_result)
-
-            # =================================================================
-            # STEP 2: COGNITIVE - Intent from INTENT_MAP
-            # =================================================================
-            cognitive_result = await self._process_cognitive(message)
-            logger.info(f"🧠 ChatService: Intent={cognitive_result.intent_type.value}")
-
-            # =================================================================
-            # STEP 3: LOTUS ROUTING - O(1) position lookup + Substrate data
-            # =================================================================
-            lotus_result = self._lotus_route(message, cognitive_result, resonance_result)
-            lotus_result["resonance"] = resonance_result  # Attach resonance data
-            logger.info(
-                f"🪷 ChatService: Lotus Route → {lotus_result['mahajana'].upper()} "
-                f"(pos={lotus_result['position']}, quarter={lotus_result['quarter']})"
+            cognitive_result, lotus_result, mode = await self._chat_cognitive_route(message, resonance_result)
+            execution_result = await self._chat_execute(message, cognitive_result, lotus_result, mode, context)
+            knowledge_context = self._chat_build_context(message, lotus_result, execution_result, naga_context)
+            response = await self._chat_respond(
+                message, context, cognitive_result, lotus_result,
+                knowledge_context, mode, magnitude, execution_result,
             )
 
-            # Determine chat mode
-            mode = determine_chat_mode(cognitive_result, lotus_result)
-
-            # =================================================================
-            # STEP 4: EXECUTION - If actionable, DO IT (not just talk!)
-            # Living City: Try ShadowReactor for PARASHURAMA/BRAHMA positions,
-            # fall back to cli_bridge for simple commands.
-            # =================================================================
-            execution_result = None
-            if cognitive_result.intent_type == IntentType.EXECUTE or mode == ChatMode.SYSCALL:
-                # Try Shadow Reactor first for PARASHURAMA (8) / BRAHMA (1) positions
-                # These benefit from the Yajna Cycle (task isolation, async execution)
-                position = lotus_result.get("position", 2)
-                if position in [1, 8]:
-                    execution_result = await self._execute_via_shadow(message, lotus_result, context)
-                    if execution_result:
-                        logger.info(f"🔥 ChatService: EXECUTED via ShadowReactor → {execution_result}")
-
-                # Fall back to cli_bridge for other positions or if Shadow unavailable
-                if execution_result is None:
-                    execution_result = await self._execute_via_bridge(message, lotus_result)
-                    logger.info(f"⚡ ChatService: EXECUTED via cli_bridge → {execution_result}")
-
-            # =================================================================
-            # STEP 5: CONTEXT - Live substrate context + execution result + NAGA
-            # =================================================================
-            knowledge_context = self._get_knowledge_context_lotus(message, lotus_result)
-            if execution_result:
-                knowledge_context["execution_result"] = str(execution_result)
-
-            # Add NAGA intelligence to context (NAGAs INFORM)
-            if naga_context:
-                if naga_context.active_threats:
-                    knowledge_context["naga_threats"] = str(len(naga_context.active_threats))
-                if naga_context.anomaly_count > 0:
-                    knowledge_context["naga_anomalies"] = str(naga_context.anomaly_count)
-                knowledge_context["naga_reason"] = naga_context.reason_code.value
-
-            # =================================================================
-            # LOTUS LIFECYCLE: BLOOM - Unfold response (VAK + SHABDA)
-            # =================================================================
-            self._lotus_bloom(lotus_result)
-
-            # =================================================================
-            # STEP 6: LLM - Interpreter (responds to execution, not decides)
-            # =================================================================
-            response_text = await self._generate_response_lotus(
-                message=message,
-                context=context,
-                cognitive_result=cognitive_result,
-                lotus_result=lotus_result,
-                knowledge_context=knowledge_context,
-            )
-
-            # Create response message
-            response_msg = ChatMessage(
-                content=response_text,
-                role="assistant",
-                timestamp=datetime.now(),
-                session_id=session_id,
-                message_id=str(uuid.uuid4()),
-                opcode=lotus_result.get("opcode", "EXTEND_CAP"),
-                mahajana=lotus_result["mahajana"],
-            )
-
-            # Store response in history
-            self._sessions[session_id].append(response_msg)
-
-            response = ChatResponse(
-                success=True,
-                message=response_msg,
-                mode=mode,
-                intent_type=cognitive_result.intent_type,
-                opcode=lotus_result.get("opcode", "EXTEND_CAP"),
-                mahajana=lotus_result["mahajana"],
-                confidence=magnitude,  # Use resonance magnitude as confidence
-            )
-
-            # =================================================================
-            # LOTUS LIFECYCLE: GARUDA - Complete cycle (PANI + PADA if executed)
-            # =================================================================
-            self._lotus_garuda(executed=execution_result is not None)
-
-            # =================================================================
-            # NAGA OBSERVATION: Report chat success (Narada sees all)
-            # =================================================================
             self._report_to_narada("END", message, context, response)
-
-            # Log complete Kshetra involvement
             kshetra_names = [e.name for e in self._active_kshetra]
-            logger.info(
-                f"🕉️ ChatService: Lotus cycle complete - {len(self._active_kshetra)} Tattvas active: {kshetra_names}"
-            )
-
+            logger.info(f"🕉️ ChatService: Lotus cycle complete - {len(self._active_kshetra)} Tattvas active: {kshetra_names}")
             return response
 
         except Exception as e:
             logger.error(f"❌ ChatService: Chat failed: {e}")
             error_msg = ChatMessage(
-                content=f"Chat error: {e}",
-                role="assistant",
-                timestamp=datetime.now(),
-                session_id=context.session_id,
+                content=f"Chat error: {e}", role="assistant",
+                timestamp=datetime.now(), session_id=context.session_id,
             )
             error_response = ChatResponse(
-                success=False,
-                message=error_msg,
-                mode=ChatMode.DIRECT,
-                error=str(e),
+                success=False, message=error_msg, mode=ChatMode.DIRECT, error=str(e),
             )
-            # NAGA OBSERVATION: Report chat error (Narada sees all)
             self._report_to_narada("ERROR", message, context, error_response)
             return error_response
 
