@@ -83,8 +83,8 @@ class MahaLanguageEngine:
         section_mode = section_sig.get("mode", "CORE")
         template = extract_template(GITA_CHAPTERS, verse_num)
 
-        # === COMPOSITION: standing wave → syllable grid → English ===
-        output = get_composition().compose(lr, text)
+        # === COMPOSITION: use VM-composed output if available, else fallback ===
+        output = lr.get("composed") or get_composition().compose(lr, text)
 
         # === PACKAGE RESULT from Lotus response ===
         verse = lr.get("verse")
