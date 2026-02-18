@@ -92,6 +92,22 @@ class VibeFactory:
             from vibe_core.mahamantra.lotus_projection import project_lotus
 
             kernel._positions = project_lotus(kernel)
+
+            # Upgrade module-stubs to real instances for services the kernel
+            # already created (with correct constructor args like ledger).
+            # This makes them visible to Balarama auto_wrap_services().
+            _KERNEL_SERVICES = {
+                1: ("brahma", "brahma"),
+                11: ("bhishma", "bhishma"),
+                10: ("janaka", "janaka"),
+                13: ("bali", "bali"),
+                6: ("kapila", "kapila"),
+            }
+            for pos, (attr, guardian) in _KERNEL_SERVICES.items():
+                svc = getattr(kernel, attr, None)
+                if svc is not None:
+                    kernel._positions.register(pos, guardian, svc)
+
         except Exception as e:
             # Graceful degradation - kernel still works without projection
             import logging
