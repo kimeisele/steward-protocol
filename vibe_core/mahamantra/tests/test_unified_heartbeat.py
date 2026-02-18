@@ -591,3 +591,45 @@ class TestAntiSplitBrain:
             "_act_ingest_codebase() has bare 'except: pass'. "
             "Parse errors must be logged, not swallowed."
         )
+
+    # === Phase 3: Input Routing Regression Tests ===
+
+    def test_execute_intent_routes_through_lotus(self):
+        """_execute_intent() must call lotus.execute() for non-CONTROL intents."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._execute_intent)
+        assert "_lotus.execute(" in source, (
+            "_execute_intent() does not call lotus.execute(). "
+            "All non-CONTROL intents must flow through the 5-Gate pipeline."
+        )
+
+    def test_execute_intent_no_hardcoded_query_handling(self):
+        """_execute_intent() must NOT have hardcoded QUERY handling — lotus does it."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._execute_intent)
+        assert "IntentType.QUERY" not in source, (
+            "_execute_intent() still has hardcoded QUERY handling. "
+            "QUERY intents must flow through lotus.execute()."
+        )
+
+    def test_execute_intent_no_hardcoded_delegation(self):
+        """_execute_intent() must NOT have hardcoded DELEGATION handling — lotus does it."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._execute_intent)
+        assert "IntentType.DELEGATION" not in source, (
+            "_execute_intent() still has hardcoded DELEGATION handling. "
+            "DELEGATION intents must flow through lotus.execute()."
+        )
+
+    def test_execute_intent_keeps_control_local(self):
+        """_execute_intent() must still handle CONTROL (exit/shutdown) locally."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._execute_intent)
+        assert "IntentType.CONTROL" in source, (
+            "_execute_intent() lost CONTROL handling. "
+            "exit/shutdown must be handled locally (controls the operator loop)."
+        )
