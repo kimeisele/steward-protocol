@@ -258,11 +258,13 @@ RUNTIME PHASE (tick-driven):
 - DEFERRED: `cli_chant/serve/veda` — spezialisierte CLI-Commands, Gate-Provider-Wiring nötig
 - DEFERRED: `guardian_router.py` — eigene 4D-Routing-Logik, parallel zu __call__()
 
-### Phase 4: KERNEL THINNING (next)
-- `RealVibeKernel` stops owning services as attributes
-- Services accessed via BalaramaProxy registry or TattvaRegistry
-- `kernel_impl.py` becomes a thin compatibility shim
-- 34 files gradually migrated from kernel_impl imports
+### Phase 4: KERNEL THINNING (in progress)
+- ✅ Kernel services (brahma/bhishma/janaka/bali/kapila) registered in PositionRegistry after project_lotus()
+- ✅ Balarama can now discover and wrap kernel-owned services
+- NEXT: Kernel stops creating MahamantraProxy wrappers (Balarama does it)
+- NEXT: External code accesses services via PositionRegistry instead of kernel.brahma
+- NEXT: `kernel_impl.py` becomes a thin compatibility shim
+- BLOCKER: BrahmaService/BhishmaService need ledger arg — can't be auto-instantiated yet
 
 ### Phase 5: SELF-ASSIMILATION (future — the system absorbs new code at runtime)
 - New modules auto-discovered, identity inferred via `analyze_source()`
