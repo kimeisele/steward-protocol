@@ -499,6 +499,10 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"Balarama wrapping deferred: {e}")
 
+        # NOTE: Codebase ingestion (CellRouter population) stays in boot_orchestrator.
+        # It scans ~460 .py files via fragment_parser — too expensive for bootstrap().
+        # bootstrap() must be fast and side-effect-free (no filesystem I/O).
+
         # Wire Sravanam listener (organic per-tick cell scanning)
         try:
             from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
