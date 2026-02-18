@@ -255,7 +255,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     def _init_bootstrap(self, load_plugins: bool) -> None:
         """Step 8: BOOTSTRAP — Plugin loading + seal."""
         if load_plugins:
-            self.brahma.bootstrap(self, self._config)
+            self._raw_brahma.bootstrap(self, self._config)
         self._status = KernelStatus.STOPPED
         self.vajra_seal()
 
@@ -287,7 +287,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
 
     def get_agent_capabilities(self, agent_id: str) -> List[str]:
         """Get capabilities for an agent. KernelProtocol compliant."""
-        return self.brahma.get_agent_capabilities(agent_id)
+        return self._raw_brahma.get_agent_capabilities(agent_id)
 
     def grant_capability(
         self,
@@ -297,7 +297,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         reason: Optional[str] = None,
     ) -> Dict[str, object]:
         """Grant capabilities to an agent. KernelProtocol compliant."""
-        return self.brahma.grant_capability(agent_id, capabilities, granter_id, reason)
+        return self._raw_brahma.grant_capability(agent_id, capabilities, granter_id, reason)
 
     def revoke_capability(
         self,
@@ -307,7 +307,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         reason: Optional[str] = None,
     ) -> Dict[str, object]:
         """Revoke capabilities from an agent. KernelProtocol compliant."""
-        return self.brahma.revoke_capability(agent_id, capabilities, revoker_id, reason)
+        return self._raw_brahma.revoke_capability(agent_id, capabilities, revoker_id, reason)
 
     @property
     def ledger(self) -> VibeLedger:
@@ -336,7 +336,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         return self._plugins
 
     def get_agent_manifest(self, agent_id: str) -> Optional[AgentManifest]:
-        return self.brahma.get_manifest(agent_id)  # type: ignore
+        return self._raw_brahma.get_manifest(agent_id)  # type: ignore
 
     @property
     def sovereign_context(self) -> SovereignContext:
@@ -349,53 +349,53 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         return self.__ledger
 
     def bind_genes(self, gene_names: List[str]) -> bool:
-        return self.brahma.register_capabilities("kernel", gene_names) is None
+        return self._raw_brahma.register_capabilities("kernel", gene_names) is None
 
     async def pulse(self) -> Dict[str, object]:
         self.chaitanya.chant_mahamantra(self.sovereign_context)
-        return await self.janaka.pulse_orchestration(self, self._plugins)
+        return await self._raw_janaka.pulse_orchestration(self, self._plugins)
 
     def get_status(self) -> Dict[str, object]:
-        return self.bhishma.get_system_status(self)
+        return self._raw_bhishma.get_system_status(self)
 
     def get_capabilities(self) -> Dict[str, object]:
-        return self.brahma.get_capabilities(self)
+        return self._raw_brahma.get_capabilities(self)
 
     def register_agent(self, agent: VibeAgent, spawn_process: bool = True) -> None:
-        self.brahma.register_agent(self, agent, spawn_process)
+        self._raw_brahma.register_agent(self, agent, spawn_process)
 
     def terminate_agent(self, agent_id: str, reason: str = "Unknown") -> bool:
-        return self.brahma.terminate_agent(self, agent_id, reason)
+        return self._raw_brahma.terminate_agent(self, agent_id, reason)
 
     def compute_capability_resonance(self, agent_id: str, capability: str) -> float:
-        return self.janaka.compute_capability_resonance(self, agent_id, capability)
+        return self._raw_janaka.compute_capability_resonance(self, agent_id, capability)
 
     def record_verified_event(
         self, event_type: str, agent_id: str, details: Dict[str, object], caller_agent: "VibeAgent" = None
     ) -> str:
         """Verified event. Delegated to Bhishma."""
-        return self.bhishma.record_verified_event(self, event_type, agent_id, details, caller_agent)
+        return self._raw_bhishma.record_verified_event(self, event_type, agent_id, details, caller_agent)
 
     def submit_task(self, task: Task) -> str:
-        return self.janaka.submit_task(self, task)
+        return self._raw_janaka.submit_task(self, task)
 
     def get_task_result(self, task_id: str) -> Optional[Dict[str, object]]:
-        return self.janaka.get_task_result(self, task_id)
+        return self._raw_janaka.get_task_result(self, task_id)
 
     async def boot_async(self, boot_mode: BootMode | None = None) -> None:
         from vibe_core.boot_mode import BootMode
 
-        await self.brahma.boot_orchestration(self, boot_mode or BootMode.FULL)
+        await self._raw_brahma.boot_orchestration(self, boot_mode or BootMode.FULL)
         self._status = KernelStatus.RUNNING
 
     async def tick_async(self) -> None:
-        await self.janaka.tick_orchestration(self)
+        await self._raw_janaka.tick_orchestration(self)
 
     async def run_forever(self) -> None:
-        await self.janaka.run_loop(self)
+        await self._raw_janaka.run_loop(self)
 
     async def shutdown_async(self, reason: str = "User shutdown") -> None:
-        await self.bali.shutdown_orchestration(self, reason)
+        await self._raw_bali.shutdown_orchestration(self, reason)
         self._status = KernelStatus.STOPPED
 
     def merge_child_result(self, child: "RealVibeKernel", result: object) -> Dict[str, object]:
@@ -403,7 +403,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         Fold child kernel result back into parent.
         Delegated to BhishmaService (recording) and BrahmaService (tracking).
         """
-        if not self.brahma._child_kernels or child not in self.brahma._child_kernels:
+        if not self._raw_brahma._child_kernels or child not in self._raw_brahma._child_kernels:
             # Legacy check: check self._child_kernels too if present
             if child not in self._child_kernels:
                 raise ValueError("Cannot merge result from unknown child kernel")
@@ -411,13 +411,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         child_hash = child.get_ledger_hash()
 
         # Record via Bhishma
-        self.bhishma.record_merge(str(id(child)), child_hash, str(result)[:500])
+        self._raw_bhishma.record_merge(str(id(child)), child_hash, str(result)[:500])
 
         # Cleanup via Brahma (or locally)
         if child in self._child_kernels:
             self._child_kernels.remove(child)
-        if hasattr(self.brahma, "_child_kernels") and child in self.brahma._child_kernels:
-            self.brahma._child_kernels.remove(child)
+        if hasattr(self._raw_brahma, "_child_kernels") and child in self._raw_brahma._child_kernels:
+            self._raw_brahma._child_kernels.remove(child)
 
         return {"type": "EPHEMERAL_CITY_MERGE", "child_id": id(child), "result": str(result)[:500]}
 
@@ -428,20 +428,20 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         asyncio.run(self.shutdown_async(reason))
 
     def _get_settings_manifestation_data(self) -> Dict[str, object]:
-        return self.brahma.get_settings_data(self)
+        return self._raw_brahma.get_settings_data(self)
 
     def _get_operations_manifestation_data(self) -> Dict[str, object]:
-        return self.janaka.get_operations_data(self)
+        return self._raw_janaka.get_operations_data(self)
 
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
-        manifests = self.brahma.find_manifests_by_capability(capability)
+        manifests = self._raw_brahma.find_manifests_by_capability(capability)
         return [self._agent_registry[m.agent_id] for m in manifests if m.agent_id in self._agent_registry]  # type: ignore
 
     def _check_agent_capability(self, agent_id: str, capability: str) -> bool:
-        return self.brahma.has_capability(agent_id, capability)
+        return self._raw_brahma.has_capability(agent_id, capability)
 
     def _can_revoke_capability(self, actor: str, target: str) -> bool:
-        return self.brahma.can_modify_capability(self, actor, target)
+        return self._raw_brahma.can_modify_capability(self, actor, target)
 
     def _can_grant_capability(self, actor: str) -> bool:
         return actor == "kernel"
