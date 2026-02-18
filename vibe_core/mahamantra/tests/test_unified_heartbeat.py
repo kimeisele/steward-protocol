@@ -483,3 +483,41 @@ class TestAntiSplitBrain:
             "BootOrchestrator.__init__ does not call get_event_bus(). "
             "It must use the shared singleton."
         )
+
+    def test_bootstrap_wires_balarama(self):
+        """lotus.bootstrap() must call auto_wrap_services() for Balarama absorption."""
+        import inspect
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        source = inspect.getsource(MahamantraLotus.bootstrap)
+        assert "auto_wrap_services" in source, (
+            "bootstrap() does not call auto_wrap_services(). "
+            "Balarama Pattern must be wired at boot."
+        )
+
+    def test_bootstrap_wires_adoption(self):
+        """lotus.bootstrap() must call adopt_services() for orbital mounting."""
+        import inspect
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        source = inspect.getsource(MahamantraLotus.bootstrap)
+        assert "adopt_services" in source, (
+            "bootstrap() does not call adopt_services(). "
+            "Orbital reactor mounting must happen at boot."
+        )
+
+    def test_auto_wrap_services_produces_proxies(self):
+        """auto_wrap_services() must produce at least 1 BalaramaProxy."""
+        from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
+        proxies = auto_wrap_services(silent=True)
+        assert len(proxies) > 0, (
+            "auto_wrap_services() returned 0 proxies — lotus discovery broken!"
+        )
+
+    def test_balarama_proxy_has_identity(self):
+        """BalaramaProxy must extract mahajana identity from folder structure."""
+        from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
+        proxies = auto_wrap_services(silent=True)
+        # At least one proxy should have identity
+        identified = [p for p in proxies.values() if p.has_identity]
+        assert len(identified) > 0, (
+            "No BalaramaProxy has identity — folder-based identity extraction broken!"
+        )
