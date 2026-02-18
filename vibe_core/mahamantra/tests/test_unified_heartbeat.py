@@ -592,6 +592,52 @@ class TestAntiSplitBrain:
             "Parse errors must be logged, not swallowed."
         )
 
+    # === Phase 4: Kernel Thinning Regression Tests ===
+
+    def test_kernel_has_raw_services(self):
+        """RealVibeKernel must store raw service instances as _raw_* attributes."""
+        import inspect
+        from vibe_core.kernel_impl import RealVibeKernel
+        source = inspect.getsource(RealVibeKernel._init_mahajana_services)
+        for name in ("_raw_brahma", "_raw_bhishma", "_raw_janaka", "_raw_bali", "_raw_kapila"):
+            assert name in source, (
+                f"_init_mahajana_services() does not set {name}. "
+                "Raw services must be stored for direct internal access."
+            )
+
+    def test_kernel_internals_use_raw_not_proxy(self):
+        """Kernel methods must use _raw_* (direct), not self.brahma (proxy)."""
+        import inspect
+        from vibe_core.kernel_impl import RealVibeKernel
+        # Check a representative set of methods
+        for method_name in ("get_agent_capabilities", "register_agent", "get_status", "boot_async"):
+            method = getattr(RealVibeKernel, method_name)
+            source = inspect.getsource(method)
+            assert "self.brahma." not in source and "self.bhishma." not in source, (
+                f"{method_name}() still uses proxy (self.brahma/bhishma). "
+                "Must use self._raw_brahma/_raw_bhishma."
+            )
+
+    def test_factory_registers_raw_services_in_position_registry(self):
+        """factory.py must register _raw_* services (not proxies) in PositionRegistry."""
+        import inspect
+        from vibe_core.factory import VibeFactory
+        source = inspect.getsource(VibeFactory.get_kernel)
+        assert "_raw_brahma" in source, (
+            "factory.py does not reference _raw_brahma. "
+            "PositionRegistry must get raw services, not MahamantraProxy wrappers."
+        )
+
+    def test_external_refs_use_raw_with_fallback(self):
+        """External kernel.brahma refs must use _raw_brahma with fallback."""
+        import inspect
+        from vibe_core.protocols.mahajanas.manu.types import kernel_ops
+        source = inspect.getsource(kernel_ops)
+        assert "_raw_brahma" in source, (
+            "kernel_ops.py does not reference _raw_brahma. "
+            "Security code must use raw service with fallback."
+        )
+
     # === Phase 3: Input Routing Regression Tests ===
 
     def test_execute_intent_routes_through_lotus(self):
