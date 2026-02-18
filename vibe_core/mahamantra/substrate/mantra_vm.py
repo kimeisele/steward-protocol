@@ -343,10 +343,12 @@ def execute_cycle(
         for op in CYCLE:
             DISPATCH[op](lotus, ctx)
     else:
-        # Compiled path: core + custom ops
+        # Compiled path: core + custom ops with condition evaluation
         compiled = compiler.compile()
         dispatch = compiler.dispatch
         for cop in compiled:
+            if cop.condition is not None and not cop.condition(ctx):
+                continue  # Condition bits: skip this op
             dispatch[cop.op_id](lotus, ctx)
 
     return ctx["_result"]
