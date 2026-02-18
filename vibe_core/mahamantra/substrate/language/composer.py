@@ -365,6 +365,10 @@ def compose_from_wave(
     See: protocols/_composition.py (THE LAW)
          adapters/composition.py (THE BRIDGE)
     """
+    # Use VM-composed output if available (auto-composed inside execute_cycle)
+    composed = lotus_response.get("composed") if isinstance(lotus_response, dict) else None
+    if composed:
+        return composed
     from vibe_core.mahamantra.adapters.composition import get_composition
     return get_composition().compose(lotus_response, input_text)
 
