@@ -18,7 +18,7 @@ USAGE:
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Callable, Dict, Final, Tuple
+from typing import Callable, Dict, Final, List, Optional, Protocol, Tuple, runtime_checkable
 
 from vibe_core.mahamantra.protocols._seed import (
     KSETRAJNA,
@@ -66,9 +66,58 @@ VAMSI_ADDR: Final[Tuple[int, ...]] = tuple(
 CYCLE: Final[Tuple[NavaBhaktiOp, ...]] = tuple(NavaBhaktiOp(i) for i in range(MAHAJANA_COUNT))
 
 
+@runtime_checkable
+class VMCapabilityProtocol(Protocol):
+    """Protocol for services that register custom ops into the Mantra VM.
+
+    Implement this to inject custom operations into the VM execution cycle.
+    The CycleCompiler discovers all VMCapability implementations at bootstrap
+    and registers their ops automatically.
+
+    USAGE:
+        class MyAnalyzer:
+            def vm_ops(self) -> List[VMOpDeclaration]:
+                return [VMOpDeclaration(
+                    name="my_analysis",
+                    gate=2,  # EXECUTE phase
+                    handler=self._analyze,
+                    condition=lambda ctx: ctx.get("seed") is not None,
+                )]
+
+            def _analyze(self, lotus, ctx):
+                ctx["my_result"] = do_analysis(ctx["seed"])
+    """
+
+    def vm_ops(self) -> List["VMOpDeclaration"]:
+        """Return list of ops to register in the VM cycle."""
+        ...
+
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class VMOpDeclaration:
+    """Declaration of a custom VM operation.
+
+    name: Unique name for the op.
+    gate: TattvaGate index (0=PARSE, 1=VALIDATE, 2=EXECUTE, 3=RESULT, 4=SYNC).
+    handler: Function(lotus, ctx) -> None.
+    priority: Ordering within same gate (higher = later). Default 0.
+    condition: Optional callable(ctx) -> bool. None = always run.
+    """
+    name: str
+    gate: int
+    handler: Callable
+    priority: int = 0
+    condition: Optional[Callable[[dict], bool]] = None
+
+
 __all__ = [
     "NavaBhaktiOp",
     "GATE_INDEX",
     "VAMSI_ADDR",
     "CYCLE",
+    "VMCapabilityProtocol",
+    "VMOpDeclaration",
 ]
