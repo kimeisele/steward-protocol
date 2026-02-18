@@ -570,13 +570,15 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
             logger.info(f"      → {count} gate providers active (wired via lotus.bootstrap)")
 
     def _act_arm_io_sentinel(self) -> None:
-        """ACT Step 8: Arm I/O Sentinel explicitly (enterprise hardening)."""
-        from vibe_core.mahamantra.substrate.io_sentinel import arm, is_armed
-        arm()
+        """ACT Step 8: I/O Sentinel — already armed by gate_providers import (verify only)."""
+        from vibe_core.mahamantra.substrate.io_sentinel import is_armed
         if is_armed():
-            logger.info("      → I/O Sentinel armed (rogue json writers monitored)")
+            logger.info("      → I/O Sentinel armed (via gate_providers import)")
         else:
-            logger.warning("⚠️ I/O Sentinel failed to arm")
+            # Fallback: arm explicitly if not yet armed
+            from vibe_core.mahamantra.substrate.io_sentinel import arm
+            arm()
+            logger.info("      → I/O Sentinel armed (explicit fallback)")
 
     def _act_ingest_codebase(self) -> None:
         """ACT Step 9: Ingest codebase into CellRouter (Sravanam needs cells to scan)."""
@@ -601,50 +603,21 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
             logger.info(f"      → {ingested_cells} cells ingested from {ingested_files} files into CellRouter")
 
     def _act_wire_sravanam(self) -> None:
-        """ACT Step 10: Wire Sravanam listener (organic per-tick scanning)."""
-        from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
-        listener = wire_sravanam()
+        """ACT Step 10: Sravanam — already wired by lotus.bootstrap() (verify only)."""
+        from vibe_core.mahamantra.dharma.kumaras import sravanam as _srav_mod
+        listener = getattr(_srav_mod, '_listener', None)
         if listener:
-            logger.info("      → Sravanam listener wired (organic cell scanning active)")
+            logger.info("      → Sravanam listener active (wired via lotus.bootstrap)")
+        else:
+            logger.debug("Sravanam: not yet wired (lotus.bootstrap may not have run)")
 
     def _act_register_governance_hook(self) -> None:
-        """ACT Step 11: Register Mahamantra governance hook (King installs itself)."""
-        from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
-        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-
-        _WRITE_OPCODES = frozenset({
-            MantraOpCode.LEDGER_SIGN,
-            MantraOpCode.IO_FLUSH,
-            MantraOpCode.STATE_SYNC,
-        })
-
-        def _sudarshana_governance_check(
-            opcode: MantraOpCode,
-            instance: object,
-            args: tuple,
-            kwargs: dict,
-        ) -> bool:
-            """
-            SudarshanaChakra — the real security spin.
-            Registered by Mahamantra at boot. Runs before every
-            @mantra_governed call.
-            """
-            if opcode not in _WRITE_OPCODES:
-                return True
-            for arg in args:
-                arg_str = str(arg)
-                if "/.git/" in arg_str or "/.git" == arg_str[-5:]:
-                    logger.warning(
-                        f"🌀 SUDARSHANA BLOCKED: {opcode.name} targeting .git "
-                        f"via {type(instance).__name__}"
-                    )
-                    return False
-                if "__pycache__" in arg_str:
-                    return True
-            return True
-
-        register_governance_hook(_sudarshana_governance_check)
-        logger.info("      → Sudarshana governance hook active (Mahamantra is King)")
+        """ACT Step 11: Governance hook — already registered by lotus.bootstrap() (verify only)."""
+        from vibe_core.protocols.substrate.mantra_protocol import has_governance_hook
+        if has_governance_hook():
+            logger.info("      → Sudarshana governance hook active (via lotus.bootstrap)")
+        else:
+            logger.debug("Governance hook: not yet registered (lotus.bootstrap may not have run)")
 
     async def _act(self, decisions: List[Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """

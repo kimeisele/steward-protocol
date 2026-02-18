@@ -58,6 +58,11 @@ def register_governance_hook(hook: GovernanceCheck) -> None:
     logger.info(f"Governance hook registered: {hook.__qualname__}")
 
 
+def has_governance_hook() -> bool:
+    """Check if at least one governance hook is registered."""
+    return len(_governance_hooks) > 0
+
+
 @runtime_checkable
 class MantraProtocol(Protocol):
     """

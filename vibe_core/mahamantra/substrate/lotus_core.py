@@ -499,6 +499,52 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"Balarama wrapping deferred: {e}")
 
+        # Wire Sravanam listener (organic per-tick cell scanning)
+        try:
+            from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
+            listener = wire_sravanam()
+            if not silent and listener:
+                _log.info("Sravanam listener wired (organic cell scanning)")
+        except Exception as e:
+            if not silent:
+                _log.debug(f"Sravanam wiring deferred: {e}")
+
+        # Register Sudarshana governance hook (blocks .git writes via @mantra_governed)
+        try:
+            from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
+            from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
+            _WRITE_OPCODES = frozenset({
+                MantraOpCode.LEDGER_SIGN,
+                MantraOpCode.IO_FLUSH,
+                MantraOpCode.STATE_SYNC,
+            })
+
+            def _sudarshana_governance_check(
+                opcode: MantraOpCode,
+                instance: object,
+                args: tuple,
+                kwargs: dict,
+            ) -> bool:
+                if opcode not in _WRITE_OPCODES:
+                    return True
+                for arg in args:
+                    arg_str = str(arg)
+                    if "/.git/" in arg_str or "/.git" == arg_str[-5:]:
+                        _log.warning(
+                            f"SUDARSHANA BLOCKED: {opcode.name} targeting .git "
+                            f"via {type(instance).__name__}"
+                        )
+                        return False
+                return True
+
+            register_governance_hook(_sudarshana_governance_check)
+            if not silent:
+                _log.info("Sudarshana governance hook active")
+        except Exception as e:
+            if not silent:
+                _log.debug(f"Governance hook deferred: {e}")
+
         self._bootstrapped = True
         if not silent:
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
