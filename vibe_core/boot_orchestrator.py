@@ -561,11 +561,13 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
             logger.debug("Balarama: no proxies (lotus.bootstrap may not have run yet)")
 
     def _act_wire_gate_providers(self) -> None:
-        """ACT Step 7: Wire Gate Providers (5 Watchers at the TattvaGates)."""
-        from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers
-        gate_count = wire_gate_providers()
-        if gate_count:
-            logger.info(f"      → {gate_count} gate providers wired (TattvaGates armed)")
+        """ACT Step 7: Gate Providers — already wired by lotus.bootstrap() (idempotent)."""
+        # wire_gate_providers() is idempotent, but lotus.bootstrap() already calls it.
+        # We just verify they're armed.
+        from vibe_core.mahamantra.substrate.tattva_registry import get_registry
+        count = get_registry().gate_provider_count()
+        if count:
+            logger.info(f"      → {count} gate providers active (wired via lotus.bootstrap)")
 
     def _act_arm_io_sentinel(self) -> None:
         """ACT Step 8: Arm I/O Sentinel explicitly (enterprise hardening)."""
