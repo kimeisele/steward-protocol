@@ -549,6 +549,34 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"Governance hook deferred: {e}")
 
+        # Micro-Kernel: Discover VMCapability implementations and register their ops
+        # in the CycleCompiler. This is the BUILD phase — compile once, dispatch at runtime.
+        try:
+            from vibe_core.mahamantra.protocols._navabhakti import VMCapabilityProtocol
+            from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
+            compiler = get_compiler()
+            vm_cap_count = 0
+            # Check Balarama-wrapped services for VMCapability
+            for proxy in getattr(self, "_balarama_proxies", None) or []:
+                target = getattr(proxy, "_target", proxy)
+                if isinstance(target, VMCapabilityProtocol):
+                    for decl in target.vm_ops():
+                        compiler.register_op(
+                            name=decl.name,
+                            gate=decl.gate,
+                            handler=decl.handler,
+                            priority=decl.priority,
+                            condition=decl.condition,
+                        )
+                        vm_cap_count += 1
+            if vm_cap_count > 0:
+                compiler.compile()
+                if not silent:
+                    _log.info(f"Micro-Kernel: {vm_cap_count} VM ops registered from capabilities")
+        except Exception as e:
+            if not silent:
+                _log.debug(f"VM capability discovery deferred: {e}")
+
         self._bootstrapped = True
         if not silent:
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")

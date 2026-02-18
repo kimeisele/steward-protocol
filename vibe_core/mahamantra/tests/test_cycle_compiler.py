@@ -279,6 +279,115 @@ class TestConditionBits:
                 )
 
 
+class TestMicroKernelWiring:
+    """VMCapabilityProtocol auto-discovery at bootstrap."""
+
+    def test_vm_capability_discovered_at_bootstrap(self):
+        """A service implementing VMCapabilityProtocol gets its ops registered."""
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
+        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
+        from unittest.mock import patch
+
+        old_compiler = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+
+        try:
+            marker = []
+
+            class FakeVMService:
+                """A service that declares a VM op."""
+                def vm_ops(self):
+                    return [VMOpDeclaration(
+                        name="fake_telemetry",
+                        gate=4,
+                        handler=lambda lotus, ctx: marker.append("VM_CAP_RAN"),
+                    )]
+
+            class FakeProxy:
+                def __init__(self, target):
+                    self._target = target
+
+            fake_proxies = [FakeProxy(FakeVMService())]
+
+            # Mock auto_wrap_services to return our fake proxy
+            with patch(
+                "vibe_core.mahamantra.substrate.proxy.auto_wrap_services",
+                return_value=fake_proxies,
+            ):
+                lotus = MahamantraLotus()
+                lotus._bootstrapped = False
+                lotus.bootstrap(lazy=True, silent=True)
+
+            # The compiler should now have the custom op
+            compiler = cc_mod.get_compiler()
+            assert compiler.custom_count == 1
+
+            # Execute and verify the custom op runs
+            result = execute_cycle(lotus, "test micro-kernel")
+            assert len(marker) == 1, "VMCapability op did not run"
+            assert result is not None
+        finally:
+            cc_mod._COMPILER = old_compiler
+
+    def test_no_vm_capabilities_zero_overhead(self):
+        """Without VMCapability services, CycleCompiler stays at 0 custom ops."""
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        old_compiler = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+
+        try:
+            lotus = MahamantraLotus()
+            lotus._bootstrapped = False
+            lotus.bootstrap(lazy=True, silent=True)
+
+            compiler = cc_mod.get_compiler()
+            assert compiler.custom_count == 0
+            assert not compiler.is_compiled  # Never compiled = fast path
+        finally:
+            cc_mod._COMPILER = old_compiler
+
+    def test_vm_capability_with_condition(self):
+        """VMCapability ops with conditions are evaluated correctly."""
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
+        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
+
+        old_compiler = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+
+        try:
+            marker = []
+
+            class ConditionalService:
+                def vm_ops(self):
+                    return [VMOpDeclaration(
+                        name="conditional_cap",
+                        gate=4,
+                        handler=lambda lotus, ctx: marker.append("COND_RAN"),
+                        condition=lambda ctx: False,  # Never runs
+                    )]
+
+            class FakeProxy:
+                def __init__(self, target):
+                    self._target = target
+
+            lotus = MahamantraLotus()
+            lotus._bootstrapped = False
+            lotus._balarama_proxies = [FakeProxy(ConditionalService())]
+            lotus.bootstrap(lazy=True, silent=True)
+
+            result = execute_cycle(lotus, "test conditional cap")
+            assert len(marker) == 0, "Conditional VMCapability ran when it shouldn't"
+            assert result is not None
+        finally:
+            cc_mod._COMPILER = old_compiler
+
+
 class TestSingleton:
     """Global compiler singleton."""
 
