@@ -474,6 +474,31 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if not silent:
                 _log.debug(f"HealingResolver wiring deferred: {e}")
 
+        # Balarama Pattern: Wrap all lotus-discovered services with BalaramaProxy
+        # This gives every service: identity, heartbeat, governed I/O — automatically.
+        # "Let the wildness be wild. We flood the land with the ocean (Seed)."
+        try:
+            from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
+            proxies = auto_wrap_services(silent=silent)
+            self._balarama_proxies = proxies
+            if not silent and proxies:
+                _log.info(f"Balarama: {len(proxies)} services absorbed")
+
+            # Mount proxies into OrbitalShadowReactors (positional scheduling)
+            if proxies:
+                try:
+                    from vibe_core.mahamantra.lila.adoption import adopt_services
+                    reactors = adopt_services(proxies)
+                    self._orbital_reactors = reactors
+                    if not silent and reactors:
+                        _log.info(f"Adoption: {len(reactors)} orbital reactors mounted")
+                except Exception as e:
+                    if not silent:
+                        _log.debug(f"Orbital adoption deferred: {e}")
+        except Exception as e:
+            if not silent:
+                _log.debug(f"Balarama wrapping deferred: {e}")
+
         self._bootstrapped = True
         if not silent:
             _log.info("Mahamantra bootstrap complete (lazy mode)" if lazy else "Mahamantra bootstrap complete")
