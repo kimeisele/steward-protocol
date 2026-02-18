@@ -258,13 +258,16 @@ RUNTIME PHASE (tick-driven):
 - DEFERRED: `cli_chant/serve/veda` — spezialisierte CLI-Commands, Gate-Provider-Wiring nötig
 - DEFERRED: `guardian_router.py` — eigene 4D-Routing-Logik, parallel zu __call__()
 
-### Phase 4: KERNEL THINNING (in progress)
-- ✅ Kernel services (brahma/bhishma/janaka/bali/kapila) registered in PositionRegistry after project_lotus()
-- ✅ Balarama can now discover and wrap kernel-owned services
-- NEXT: Kernel stops creating MahamantraProxy wrappers (Balarama does it)
-- NEXT: External code accesses services via PositionRegistry instead of kernel.brahma
-- NEXT: `kernel_impl.py` becomes a thin compatibility shim
-- BLOCKER: BrahmaService/BhishmaService need ledger arg — can't be auto-instantiated yet
+### Phase 4: KERNEL THINNING ✅
+- ✅ 4a: Kernel services registered in PositionRegistry after project_lotus()
+- ✅ 4b1: 3 properties (ledger, scheduler, manifest_registry) → _raw_* direct access
+- ✅ 4b2+b3: All 28 kernel method delegations + boot/lifecycle → _raw_* direct access
+- ✅ 4b4: factory.py registers raw services (not proxies) in PositionRegistry
+- ✅ 4c1+c2: External kernel.brahma refs (kernel_ops.py, plugin_main.py) → _raw_ with fallback
+- ✅ 4d: 4 regression tests for kernel thinning (636 total green)
+- ✅ 4e: MahamantraProxy wrappers REMOVED from kernel — Balarama handles governance wrapping
+- ✅ MahamantraProxy import removed from kernel_impl.py
+- RESULT: kernel_impl.py no longer imports or uses MahamantraProxy. Zero proxy overhead.
 
 ### Phase 5: SELF-ASSIMILATION (future — the system absorbs new code at runtime)
 - New modules auto-discovered, identity inferred via `analyze_source()`
