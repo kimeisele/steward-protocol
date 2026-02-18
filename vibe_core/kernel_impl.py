@@ -174,18 +174,29 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         self.__ledger = SQLiteLedger(l_path) if l_path != ":memory:" else InMemoryLedger()
 
     def _init_mahajana_services(self) -> None:
-        """Step 2: MAHAJANA SERVICES — wrapped with MahamantraProxy for governance identity."""
+        """Step 2: MAHAJANA SERVICES — raw instances + MahamantraProxy wrappers.
+
+        Raw services stored as _raw_* for direct internal access.
+        Proxy wrappers kept as self.brahma etc. for backward compatibility.
+        Phase 4b: Internal code migrates from self.brahma → self._raw_brahma.
+        """
         from vibe_core.services.bali_service import BaliService
         from vibe_core.services.bhishma_service import BhishmaService
         from vibe_core.services.brahma_service import BrahmaService
         from vibe_core.services.janaka_service import JanakaService
         from vibe_core.services.kapila_service import KapilaService
 
-        self.bhishma = MahamantraProxy(BhishmaService(self.__ledger), position=11, guardian="bhishma")
-        self.brahma = MahamantraProxy(BrahmaService(self.__ledger), position=1, guardian="brahma")
-        self.janaka = MahamantraProxy(JanakaService(), position=10, guardian="janaka")
-        self.bali = MahamantraProxy(BaliService(), position=13, guardian="bali")
-        self.kapila = MahamantraProxy(KapilaService(), position=6, guardian="kapila")
+        self._raw_bhishma = BhishmaService(self.__ledger)
+        self._raw_brahma = BrahmaService(self.__ledger)
+        self._raw_janaka = JanakaService()
+        self._raw_bali = BaliService()
+        self._raw_kapila = KapilaService()
+
+        self.bhishma = MahamantraProxy(self._raw_bhishma, position=11, guardian="bhishma")
+        self.brahma = MahamantraProxy(self._raw_brahma, position=1, guardian="brahma")
+        self.janaka = MahamantraProxy(self._raw_janaka, position=10, guardian="janaka")
+        self.bali = MahamantraProxy(self._raw_bali, position=13, guardian="bali")
+        self.kapila = MahamantraProxy(self._raw_kapila, position=6, guardian="kapila")
 
     def _init_mantra_clock(self) -> None:
         """Step 3: MANTRA (Vishnu Clock) — Sovereign context + Nrisimha watchdog."""
@@ -300,11 +311,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
 
     @property
     def ledger(self) -> VibeLedger:
-        return self.bhishma.underlying_ledger
+        return self._raw_bhishma.underlying_ledger
 
     @property
     def scheduler(self) -> VibeScheduler:
-        return self.janaka._scheduler
+        return self._raw_janaka._scheduler
 
     @property
     def status(self) -> KernelStatus:
@@ -318,7 +329,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
 
     @property
     def manifest_registry(self) -> ManifestRegistry:
-        return self.brahma._manifest_registry  # type: ignore
+        return self._raw_brahma._manifest_registry  # type: ignore
 
     @property
     def plugins(self) -> List[PluginProtocol]:
