@@ -326,6 +326,9 @@ def execute_cycle(
     Replaces the hardcoded __call__() sequence with a data-driven loop.
     Same input → same output. Verified by key-by-key equivalence tests.
 
+    If CycleCompiler has custom ops registered, uses the compiled cycle.
+    Otherwise, zero-overhead static CYCLE dispatch (the common case).
+
     PURE COMPUTATION — no gates. Gates fire at the boundary (execute()).
     """
     ctx: Dict[str, object] = {
@@ -333,7 +336,17 @@ def execute_cycle(
         "opcode": opcode,
     }
 
-    for op in CYCLE:
-        DISPATCH[op](lotus, ctx)
+    # Fast path: no custom ops → static dispatch (zero overhead)
+    from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
+    compiler = get_compiler()
+    if compiler.custom_count == 0:
+        for op in CYCLE:
+            DISPATCH[op](lotus, ctx)
+    else:
+        # Compiled path: core + custom ops
+        compiled = compiler.compile()
+        dispatch = compiler.dispatch
+        for cop in compiled:
+            dispatch[cop.op_id](lotus, ctx)
 
     return ctx["_result"]

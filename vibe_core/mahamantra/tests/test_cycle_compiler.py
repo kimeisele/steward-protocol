@@ -1,0 +1,196 @@
+"""
+CYCLE COMPILER — Tests
+=======================
+
+Verifies:
+1. Core cycle unchanged when no custom ops
+2. Custom ops register and compile correctly
+3. Gate ordering preserved (core before custom within same gate)
+4. VAMSI addresses are collision-free
+5. execute_cycle() uses compiled path when custom ops exist
+6. Unregister invalidates compiled cycle
+"""
+
+import pytest
+
+from vibe_core.mahamantra.substrate.cycle_compiler import (
+    CycleCompiler,
+    CompiledOp,
+    get_compiler,
+)
+from vibe_core.mahamantra.protocols._navabhakti import (
+    CYCLE as CORE_CYCLE,
+    GATE_INDEX,
+    NavaBhaktiOp,
+    VAMSI_ADDR,
+)
+from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT, PARAMPARA
+
+
+class TestCycleCompilerCore:
+    """Core cycle behavior without custom ops."""
+
+    def test_compile_core_only(self):
+        cc = CycleCompiler()
+        cycle = cc.compile()
+        assert len(cycle) == MAHAJANA_COUNT
+        for i, cop in enumerate(cycle):
+            assert cop.is_core
+            assert cop.op_id == i
+            assert cop.gate == GATE_INDEX[i]
+            assert cop.vamsi_addr == VAMSI_ADDR[i]
+
+    def test_core_gate_order_preserved(self):
+        cc = CycleCompiler()
+        cycle = cc.compile()
+        gates = [cop.gate for cop in cycle]
+        for i in range(1, len(gates)):
+            assert gates[i] >= gates[i - 1], (
+                f"Gate order broken: {gates[i-1]} -> {gates[i]} at position {i}"
+            )
+
+    def test_zero_custom_count(self):
+        cc = CycleCompiler()
+        assert cc.custom_count == 0
+
+    def test_compile_is_cached(self):
+        cc = CycleCompiler()
+        c1 = cc.compile()
+        c2 = cc.compile()
+        assert c1 is c2
+
+
+class TestCustomOps:
+    """Custom operation registration and compilation."""
+
+    def _dummy_handler(self, lotus, ctx):
+        ctx["_custom_ran"] = True
+
+    def test_register_op(self):
+        cc = CycleCompiler()
+        op_id = cc.register_op("test_op", gate=2, handler=self._dummy_handler)
+        assert op_id == MAHAJANA_COUNT
+        assert cc.custom_count == 1
+
+    def test_register_duplicate_raises(self):
+        cc = CycleCompiler()
+        cc.register_op("dup", gate=0, handler=self._dummy_handler)
+        with pytest.raises(ValueError, match="already registered"):
+            cc.register_op("dup", gate=0, handler=self._dummy_handler)
+
+    def test_register_invalid_gate_raises(self):
+        cc = CycleCompiler()
+        with pytest.raises(ValueError, match="Gate must be 0-4"):
+            cc.register_op("bad", gate=5, handler=self._dummy_handler)
+
+    def test_compile_with_custom_op(self):
+        cc = CycleCompiler()
+        cc.register_op("my_analysis", gate=2, handler=self._dummy_handler)
+        cycle = cc.compile()
+        assert len(cycle) == MAHAJANA_COUNT + 1
+        custom = [c for c in cycle if not c.is_core]
+        assert len(custom) == 1
+        assert custom[0].name == "my_analysis"
+        assert custom[0].gate == 2
+
+    def test_custom_op_after_core_in_same_gate(self):
+        cc = CycleCompiler()
+        cc.register_op("after_smaranam", gate=2, handler=self._dummy_handler)
+        cycle = cc.compile()
+        # EXECUTE gate (2) has: SMARANAM, VANDANAM, then custom
+        execute_ops = [c for c in cycle if c.gate == 2]
+        assert execute_ops[0].name == "SMARANAM"
+        assert execute_ops[1].name == "VANDANAM"
+        assert execute_ops[2].name == "after_smaranam"
+
+    def test_custom_vamsi_no_collision_with_core(self):
+        cc = CycleCompiler()
+        cc.register_op("op1", gate=0, handler=self._dummy_handler)
+        cc.register_op("op2", gate=3, handler=self._dummy_handler)
+        cycle = cc.compile()
+        core_addrs = set(VAMSI_ADDR)
+        custom_addrs = {c.vamsi_addr for c in cycle if not c.is_core}
+        assert not (core_addrs & custom_addrs), "Custom VAMSI collides with core"
+
+    def test_custom_vamsi_no_collision_with_flute(self):
+        from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
+        cc = CycleCompiler()
+        for i in range(5):
+            cc.register_op(f"op_{i}", gate=i, handler=self._dummy_handler)
+        cycle = cc.compile()
+        flute_set = set(THE_FLUTE_CYCLE)
+        custom_addrs = {c.vamsi_addr for c in cycle if not c.is_core}
+        assert not (flute_set & custom_addrs), "Custom VAMSI collides with flute cycle"
+
+    def test_unregister_invalidates(self):
+        cc = CycleCompiler()
+        cc.register_op("temp", gate=0, handler=self._dummy_handler)
+        cc.compile()
+        assert cc.is_compiled
+        cc.unregister_op("temp")
+        assert not cc.is_compiled
+        assert cc.custom_count == 0
+
+    def test_unregister_nonexistent(self):
+        cc = CycleCompiler()
+        assert cc.unregister_op("nope") is False
+
+    def test_dispatch_includes_custom(self):
+        cc = CycleCompiler()
+        cc.register_op("my_op", gate=1, handler=self._dummy_handler)
+        dispatch = cc.dispatch
+        # Core ops present
+        for op in NavaBhaktiOp:
+            assert op in dispatch or op.value in dispatch
+        # Custom op present
+        assert MAHAJANA_COUNT in dispatch
+
+
+class TestExecuteCycleIntegration:
+    """Verify execute_cycle uses CycleCompiler when custom ops exist."""
+
+    def test_custom_op_runs_in_pipeline(self):
+        from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler, _COMPILER
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+
+        # Save and reset global compiler
+        old = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+
+        try:
+            compiler = get_compiler()
+            marker = []
+
+            def _inject_marker(lotus, ctx):
+                marker.append("CUSTOM_RAN")
+                ctx["_custom_marker"] = True
+
+            compiler.register_op("marker_op", gate=4, handler=_inject_marker)
+
+            lotus = MahamantraLotus()
+            lotus.bootstrap(lazy=True, silent=True)
+            result = execute_cycle(lotus, "test custom op")
+
+            assert len(marker) == 1, "Custom op did not run"
+            assert result is not None
+            assert "input" in result
+        finally:
+            # Restore
+            cc_mod._COMPILER = old
+
+
+class TestSingleton:
+    """Global compiler singleton."""
+
+    def test_get_compiler_returns_same(self):
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        old = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+        try:
+            c1 = get_compiler()
+            c2 = get_compiler()
+            assert c1 is c2
+        finally:
+            cc_mod._COMPILER = old
