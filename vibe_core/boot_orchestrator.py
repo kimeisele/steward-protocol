@@ -550,27 +550,15 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         logger.info("      → Mala flush registered (RAM→Disk every 108 ticks)")
 
     def _act_embrace_balarama(self) -> None:
-        """ACT Step 6: Balarama embraces lotus-discovered services (organic wrapping)."""
-        from vibe_core.mahamantra.substrate.proxy import wrap_service
-
-        self._balarama_proxies = {}
-        kernel_positions = getattr(self.kernel, "_positions", None)
-        if kernel_positions is not None:
-            for pos, guardian, instance in kernel_positions.all_active():
-                mod_name = getattr(instance, "__module__", None)
-                if mod_name is None:
-                    mod_name = getattr(instance, "__name__", None)
-                if mod_name:
-                    try:
-                        proxy = wrap_service(mod_name, silent=True)
-                        self._balarama_proxies[mod_name] = proxy
-                    except Exception:
-                        pass  # Not all modules are wrappable
-
-        if self._balarama_proxies:
-            logger.info(f"      → Balarama embraced {len(self._balarama_proxies)} services (lotus-driven)")
+        """ACT Step 6: Balarama — delegates to lotus.bootstrap() (no manual wrapping)."""
+        # Balarama wrapping now happens inside lotus.bootstrap() via auto_wrap_services().
+        # We just read the result here for logging.
+        from vibe_core.mahamantra import mahamantra as _lotus
+        proxies = getattr(_lotus, "_balarama_proxies", None)
+        if proxies:
+            logger.info(f"      → Balarama: {len(proxies)} services already absorbed (via lotus.bootstrap)")
         else:
-            logger.debug("No lotus-discovered services to embrace")
+            logger.debug("Balarama: no proxies (lotus.bootstrap may not have run yet)")
 
     def _act_wire_gate_providers(self) -> None:
         """ACT Step 7: Wire Gate Providers (5 Watchers at the TattvaGates)."""
