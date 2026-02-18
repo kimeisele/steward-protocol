@@ -589,6 +589,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         mahamantra_root = Path(__file__).parent / "mahamantra"
         ingested_cells = 0
         ingested_files = 0
+        skipped_files = 0
         for py_file in sorted(mahamantra_root.rglob("*.py")):
             if "__pycache__" in str(py_file):
                 continue
@@ -597,10 +598,13 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
                 addrs = register_fragments_as_cells(frags)
                 ingested_cells += len(addrs)
                 ingested_files += 1
-            except Exception:
-                pass  # Unparseable files are skipped silently
+            except Exception as parse_err:
+                skipped_files += 1
+                logger.debug(f"CellRouter: skipped {py_file.name}: {parse_err}")
         if ingested_cells:
             logger.info(f"      → {ingested_cells} cells ingested from {ingested_files} files into CellRouter")
+        if skipped_files:
+            logger.debug(f"      → {skipped_files} files skipped during ingestion")
 
     def _act_wire_sravanam(self) -> None:
         """ACT Step 10: Sravanam — already wired by lotus.bootstrap() (verify only)."""
