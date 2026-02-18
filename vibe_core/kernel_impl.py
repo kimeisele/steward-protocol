@@ -160,8 +160,13 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     # =========================================================================
 
     def _init_sharanagati(self) -> None:
-        """Step 0: SHARANAGATI — Kernel surrenders to Mahamantra BEFORE loading services."""
-        mahamantra.bootstrap(silent=True)
+        """Step 0: SHARANAGATI — Kernel surrenders to Mahamantra BEFORE loading services.
+
+        Boot Inversion (Phase 2): If boot_orchestrator already called
+        mahamantra.bootstrap(), this is a no-op (idempotent).
+        """
+        if not mahamantra._bootstrapped:
+            mahamantra.bootstrap(silent=True)
         VajraGuarded.__init__(self)
         from vibe_core.di import ServiceRegistry
         ServiceRegistry.enable_narasimha()
