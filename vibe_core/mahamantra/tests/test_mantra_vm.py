@@ -105,7 +105,7 @@ class TestVMEquivalence:
     @pytest.mark.parametrize("text", _TEST_INPUTS)
     def test_vm_output_keys(self, lotus, text):
         result = lotus(text)
-        expected_keys = {
+        core_keys = {
             "input", "tattva_gate", "guna", "vibration", "parampara",
             "chapter", "chapter_significance", "verse", "matches",
             "gita_phase", "is_complete", "position", "guardian",
@@ -113,7 +113,10 @@ class TestVMEquivalence:
             "trinity_function", "diw", "cell", "nama", "smaranam",
             "antaranga", "akash", "execution", "yajna", "gate_trace",
         }
-        assert set(result.keys()) == expected_keys
+        # Core keys must always be present; VMCapability ops may add extras (e.g. "composed")
+        assert core_keys <= set(result.keys()), (
+            f"Missing core keys: {core_keys - set(result.keys())}"
+        )
 
     @pytest.mark.parametrize("text", _TEST_INPUTS)
     def test_deterministic(self, text):

@@ -556,11 +556,11 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
             compiler = get_compiler()
             vm_cap_count = 0
-            # Check Balarama-wrapped services for VMCapability
-            for proxy in getattr(self, "_balarama_proxies", None) or []:
-                target = getattr(proxy, "_target", proxy)
-                if isinstance(target, VMCapabilityProtocol):
-                    for decl in target.vm_ops():
+
+            def _register_capability(obj):
+                nonlocal vm_cap_count
+                if isinstance(obj, VMCapabilityProtocol):
+                    for decl in obj.vm_ops():
                         compiler.register_op(
                             name=decl.name,
                             gate=decl.gate,
@@ -569,6 +569,19 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                             condition=decl.condition,
                         )
                         vm_cap_count += 1
+
+            # 1. Check Balarama-wrapped services
+            for proxy in getattr(self, "_balarama_proxies", None) or []:
+                target = getattr(proxy, "_target", proxy)
+                _register_capability(target)
+
+            # 2. Check known adapters (singletons that implement VMCapability)
+            try:
+                from vibe_core.mahamantra.adapters.composition import get_composition
+                _register_capability(get_composition())
+            except Exception:
+                pass
+
             if vm_cap_count > 0:
                 compiler.compile()
                 if not silent:
