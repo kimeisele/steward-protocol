@@ -257,3 +257,101 @@ class TestBackwardCompat:
         result = adapter.compose(lr, "What is the meaning of life?")
         assert isinstance(result, str)
         assert len(result) > 0
+
+
+# =============================================================================
+# VMCapabilityProtocol — MahaComposition as first production consumer
+# =============================================================================
+
+class TestCompositionVMCapability:
+    """MahaComposition implements VMCapabilityProtocol."""
+
+    def test_vm_ops_returns_declaration(self):
+        """vm_ops() returns a valid VMOpDeclaration list."""
+        from vibe_core.mahamantra.adapters.composition import MahaComposition
+        adapter = MahaComposition()
+        ops = adapter.vm_ops()
+        assert len(ops) == 1
+        decl = ops[0]
+        assert decl.name == "composition"
+        assert decl.gate == 4  # SYNC phase (after _build_result)
+        assert decl.priority == 10
+        assert callable(decl.handler)
+
+    def test_isinstance_vm_capability(self):
+        """MahaComposition satisfies VMCapabilityProtocol."""
+        from vibe_core.mahamantra.adapters.composition import MahaComposition
+        from vibe_core.mahamantra.protocols._navabhakti import VMCapabilityProtocol
+        adapter = MahaComposition()
+        assert isinstance(adapter, VMCapabilityProtocol)
+
+    def test_vm_compose_runs_in_cycle(self):
+        """When registered as VM op, composition runs inside execute_cycle()."""
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.adapters.composition import MahaComposition
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
+
+        old_compiler = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+
+        try:
+            compiler = cc_mod.get_compiler()
+            adapter = MahaComposition()
+
+            # Register composition's VM ops
+            for decl in adapter.vm_ops():
+                compiler.register_op(
+                    name=decl.name,
+                    gate=decl.gate,
+                    handler=decl.handler,
+                    priority=decl.priority,
+                    condition=decl.condition,
+                )
+
+            lotus = MahamantraLotus()
+            lotus.bootstrap(lazy=True, silent=True)
+            result = execute_cycle(lotus, "What is dharma?")
+
+            # The result should now contain "composed" key
+            assert "composed" in result, (
+                f"VM composition op did not produce 'composed' key. "
+                f"Keys: {sorted(result.keys())}"
+            )
+            assert isinstance(result["composed"], str)
+        finally:
+            cc_mod._COMPILER = old_compiler
+
+    def test_vm_compose_produces_nonempty(self):
+        """VM-composed output is a non-empty English string."""
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.adapters.composition import MahaComposition
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
+
+        old_compiler = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+
+        try:
+            compiler = cc_mod.get_compiler()
+            adapter = MahaComposition()
+
+            for decl in adapter.vm_ops():
+                compiler.register_op(
+                    name=decl.name, gate=decl.gate,
+                    handler=decl.handler, priority=decl.priority,
+                    condition=decl.condition,
+                )
+
+            lotus = MahamantraLotus()
+            lotus.bootstrap(lazy=True, silent=True)
+
+            result = execute_cycle(lotus, "Hare Krishna")
+
+            assert "composed" in result
+            assert isinstance(result["composed"], str)
+            assert len(result["composed"]) > 0, "Composed output is empty"
+            # Verify adapter counter incremented
+            assert adapter.compositions >= 1
+        finally:
+            cc_mod._COMPILER = old_compiler

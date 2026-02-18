@@ -36,7 +36,7 @@ __position__ = 2
 __genesis__ = "0x2c80316d"
 
 import logging
-from typing import Dict, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
@@ -249,6 +249,10 @@ class MahaComposition:
     Wires substrate scoring atoms into a ranked pipeline.
     Each scorer is a CompositionScorerProtocol implementation.
     Scorers are pluggable — add/remove without touching this class.
+
+    Implements VMCapabilityProtocol: when discovered by bootstrap(),
+    registers a RESULT-gate op that auto-composes English output
+    into the VM result dict (ctx["_result"]["composed"]).
     """
 
     _naga_flooded: bool = True
@@ -278,6 +282,34 @@ class MahaComposition:
         """
         from vibe_core.mahamantra.adapters.composition_vm import compose_pipeline
         return compose_pipeline(self, lotus_response, input_text)
+
+    # =========================================================================
+    # VMCapabilityProtocol — auto-register as VM custom op at bootstrap
+    # =========================================================================
+
+    def vm_ops(self) -> List["VMOpDeclaration"]:
+        """Declare composition as a RESULT-gate VM op.
+
+        When registered, execute_cycle() automatically composes English
+        output and stores it in result["composed"]. Callers no longer
+        need to call compose() separately.
+        """
+        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
+
+        def _vm_compose(lotus, ctx):
+            result = ctx.get("_result")
+            if result is None:
+                return
+            input_text = ctx.get("input_text", "")
+            composed = self.compose(result, input_text)
+            result["composed"] = composed
+
+        return [VMOpDeclaration(
+            name="composition",
+            gate=4,  # SYNC phase — after ATMA_NIVEDANAM writes ctx["_result"]
+            handler=_vm_compose,
+            priority=10,  # After core SYNC ops (priority 0)
+        )]
 
 
 # =============================================================================
