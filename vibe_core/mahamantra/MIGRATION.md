@@ -233,16 +233,21 @@ RUNTIME PHASE (tick-driven):
 - Understand Balarama Pattern
 - Identify unwired infrastructure
 
-### Phase 1: WIRE THE BALARAMA PATTERN
-- `auto_wrap_services()` called from `lotus.bootstrap()`
-- `adopt_services()` called after wrapping
-- Proxies stored in a registry accessible at runtime (not orphaned in boot_orchestrator)
-- Verify: wrapped services receive heartbeat ticks at correct positions
+### Phase 1: WIRE THE BALARAMA PATTERN ✅
+- ✅ `auto_wrap_services()` called from `lotus.bootstrap()` — 16/16 proxies
+- ✅ `adopt_services()` called after wrapping — 16 orbital reactors
+- ✅ `wire_sravanam()` moved into `lotus.bootstrap()`
+- ✅ Sudarshana governance hook moved into `lotus.bootstrap()`
+- ✅ `boot_orchestrator` Steps 6-11 now VERIFY instead of DUPLICATE
+- ✅ `has_governance_hook()` added to `mantra_protocol.py`
+- ✅ 4 new regression tests (621 total green)
+- REMAINING: `_act_ingest_codebase()` still in boot_orchestrator (needs Path)
 
-### Phase 2: BOOT INVERSION
-- `lotus.bootstrap()` becomes the PRIMARY boot (does everything)
-- `boot_orchestrator` reduced to: `lotus.bootstrap()` + `VenuService.start()`
-- ServiceRegistry registrations that duplicate TattvaRegistry → eliminated
+### Phase 2: BOOT INVERSION (next)
+- `lotus.bootstrap()` is now the PRIMARY Mahamantra boot
+- `boot_orchestrator` still owns: Kernel creation, ServiceRegistry, VenuService, Agent Discovery
+- Next: ServiceRegistry registrations that duplicate TattvaRegistry → eliminate
+- Next: VenuService lifecycle owned by Mahamantra
 
 ### Phase 3: INPUT ROUTING
 - User input flows through `lotus.execute()`, not `_execute_intent()`
