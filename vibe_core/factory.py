@@ -93,18 +93,18 @@ class VibeFactory:
 
             kernel._positions = project_lotus(kernel)
 
-            # Upgrade module-stubs to real instances for services the kernel
-            # already created (with correct constructor args like ledger).
+            # Upgrade module-stubs to real service instances (not proxies).
+            # Uses _raw_* (direct) with fallback to proxy attributes.
             # This makes them visible to Balarama auto_wrap_services().
             _KERNEL_SERVICES = {
-                1: ("brahma", "brahma"),
-                11: ("bhishma", "bhishma"),
-                10: ("janaka", "janaka"),
-                13: ("bali", "bali"),
-                6: ("kapila", "kapila"),
+                1: ("_raw_brahma", "brahma", "brahma"),
+                11: ("_raw_bhishma", "bhishma", "bhishma"),
+                10: ("_raw_janaka", "janaka", "janaka"),
+                13: ("_raw_bali", "bali", "bali"),
+                6: ("_raw_kapila", "kapila", "kapila"),
             }
-            for pos, (attr, guardian) in _KERNEL_SERVICES.items():
-                svc = getattr(kernel, attr, None)
+            for pos, (raw_attr, fallback_attr, guardian) in _KERNEL_SERVICES.items():
+                svc = getattr(kernel, raw_attr, None) or getattr(kernel, fallback_attr, None)
                 if svc is not None:
                     kernel._positions.register(pos, guardian, svc)
 
