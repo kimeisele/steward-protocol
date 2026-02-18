@@ -57,12 +57,17 @@ class CompiledOp:
 
     Core ops have op_id < MAHAJANA_COUNT and use NavaBhaktiOp dispatch.
     Custom ops have op_id >= MAHAJANA_COUNT and use their own handler.
+
+    condition: Optional callable(ctx) -> bool. If set and returns False,
+    the op is SKIPPED. This is the Condition Bits mechanism (bits 27-30
+    of the 32-bit DIW). Core ops always have condition=None (unconditional).
     """
     op_id: int          # NavaBhaktiOp value for core, sequential for custom
     name: str           # Human-readable name
     gate: int           # TattvaGate index (0-4)
     vamsi_addr: int     # VAMSI address (collision-free)
     is_core: bool       # True = NavaBhaktiOp, False = custom
+    condition: Optional[Callable[[dict], bool]] = None  # None = always run
 
 
 @dataclass
@@ -72,6 +77,7 @@ class CustomOp:
     gate: int                                    # 0=PARSE, 1=VALIDATE, 2=EXECUTE, 3=RESULT, 4=SYNC
     handler: Callable[["MahamantraLotus", dict], None]  # Same signature as VM wrappers
     priority: int = 0                            # Within same gate, higher = later
+    condition: Optional[Callable[[dict], bool]] = None  # None = always run
 
 
 class CycleCompiler:
@@ -94,6 +100,7 @@ class CycleCompiler:
         gate: int,
         handler: Callable,
         priority: int = 0,
+        condition: Optional[Callable[[dict], bool]] = None,
     ) -> int:
         """Register a custom operation.
 
@@ -102,6 +109,8 @@ class CycleCompiler:
             gate: TattvaGate index (0=PARSE, 1=VALIDATE, 2=EXECUTE, 3=RESULT, 4=SYNC).
             handler: Function(lotus, ctx) -> None. Same signature as VM wrappers.
             priority: Ordering within same gate (higher = later). Default 0.
+            condition: Optional callable(ctx) -> bool. If set and returns False,
+                       the op is skipped at runtime. None = always run.
 
         Returns:
             The assigned op_id.
@@ -116,6 +125,7 @@ class CycleCompiler:
 
         self._custom_ops[name] = CustomOp(
             name=name, gate=gate, handler=handler, priority=priority,
+            condition=condition,
         )
         self._compiled = None  # Invalidate
         self._dispatch = None
@@ -166,6 +176,7 @@ class CycleCompiler:
                 gate=cop.gate,
                 vamsi_addr=_CUSTOM_BASE + i * PARAMPARA,
                 is_core=False,
+                condition=cop.condition,
             ))
 
         # 3. Merge: for each gate, core ops first, then custom ops

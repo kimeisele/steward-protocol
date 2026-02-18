@@ -75,6 +75,8 @@ VAMSI_SHIFT: Final[int] = VENU_HOLES                          # bits 6-14
 MURALI_SHIFT: Final[int] = VENU_HOLES + VAMSI_HOLES           # bits 15-18
 VELOCITY_SHIFT: Final[int] = FLUTE_HOLES_SUM                  # bits 19-22
 CLUSTER_SHIFT: Final[int] = FLUTE_HOLES_SUM + MURALI_HOLES    # bits 23-26
+CONDITION_SHIFT: Final[int] = 27                               # bits 27-30
+CONDITION_MASK: Final[int] = 0xF                               # 4 bits
 
 
 # =============================================================================
@@ -205,6 +207,8 @@ __all__ = [
     "MURALI_SHIFT",
     "VELOCITY_SHIFT",
     "CLUSTER_SHIFT",
+    "CONDITION_SHIFT",
+    "CONDITION_MASK",
     # Masks
     "VENU_MASK",
     "VAMSI_MASK",
