@@ -282,6 +282,19 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     # Each step is a discrete orientation action. _orient() chains them all.
     # =========================================================================
 
+    def _orient_mahamantra(self) -> None:
+        """ORIENT Step 0: MAHAMANTRA — Bootstrap the micro-kernel BEFORE legacy kernel.
+
+        Boot Inversion (Phase 2): Mahamantra boots first. The legacy kernel
+        detects this via _bootstrapped flag and skips redundant bootstrap.
+        """
+        from vibe_core.mahamantra import mahamantra as _lotus
+        if not _lotus._bootstrapped:
+            _lotus.bootstrap(silent=True)
+            logger.info("      → Mahamantra bootstrapped (primary boot)")
+        else:
+            logger.info("      → Mahamantra already bootstrapped (idempotent)")
+
     def _orient_akasha(self) -> None:
         """ORIENT Step 1: AKASHA (Space) — Create kernel via Factory + EntropyShell."""
         logger.info("⚡ OPUS-095: Materializing Kernel via Factory (AKASHA)")
@@ -385,6 +398,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         metadata = {}
 
         try:
+            self._orient_mahamantra()
             self._orient_akasha()
             self._orient_vayu()
 

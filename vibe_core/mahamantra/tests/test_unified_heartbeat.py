@@ -679,3 +679,41 @@ class TestAntiSplitBrain:
             "_execute_intent() lost CONTROL handling. "
             "exit/shutdown must be handled locally (controls the operator loop)."
         )
+
+    # === Phase 2: Boot Inversion Regression Tests ===
+
+    def test_boot_orchestrator_has_orient_mahamantra(self):
+        """boot_orchestrator must have _orient_mahamantra() as ORIENT Step 0."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        assert hasattr(BootOrchestrator, "_orient_mahamantra"), (
+            "BootOrchestrator missing _orient_mahamantra(). "
+            "Mahamantra must boot BEFORE the legacy kernel (Boot Inversion)."
+        )
+        source = inspect.getsource(BootOrchestrator._orient_mahamantra)
+        assert "_lotus.bootstrap(" in source, (
+            "_orient_mahamantra() does not call bootstrap(). "
+            "It must call mahamantra.bootstrap() as the primary boot."
+        )
+
+    def test_orient_calls_mahamantra_before_akasha(self):
+        """_orient() must call _orient_mahamantra() BEFORE _orient_akasha()."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._orient)
+        mahamantra_pos = source.index("_orient_mahamantra")
+        akasha_pos = source.index("_orient_akasha")
+        assert mahamantra_pos < akasha_pos, (
+            "_orient() calls _orient_akasha before _orient_mahamantra. "
+            "Mahamantra must boot FIRST (Boot Inversion)."
+        )
+
+    def test_kernel_sharanagati_is_idempotent(self):
+        """_init_sharanagati() must skip bootstrap if already done."""
+        import inspect
+        from vibe_core.kernel_impl import RealVibeKernel
+        source = inspect.getsource(RealVibeKernel._init_sharanagati)
+        assert "_bootstrapped" in source, (
+            "_init_sharanagati() does not check _bootstrapped. "
+            "It must be idempotent — skip bootstrap if already done by boot_orchestrator."
+        )
