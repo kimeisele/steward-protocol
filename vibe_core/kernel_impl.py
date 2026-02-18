@@ -53,7 +53,6 @@ if TYPE_CHECKING:
 # Phase 2: ONE IMPORT - KRISHNA ROUTES ALLES
 from vibe_core.mahamantra import mahamantra
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
-from vibe_core.mahamantra.substrate.proxy import MahamantraProxy
 
 from .errors import kernel_fault
 from .event_bus import Event, EventType, get_event_bus
@@ -92,7 +91,7 @@ from .protocols.agent import AgentManifest, VibeAgent
 from .protocols.auditor import AuditorProtocol, NullAuditor
 
 # Services accessed via: mahamantra.<quarter>.<mahajana> (folder-based routing)
-# Or wrapped with MahamantraProxy for governance identity
+# Governance wrapping handled by Balarama auto_wrap_services() at boot
 from .protocols.cognition import (
     CognitiveContext,
     CognitiveResult,
@@ -174,11 +173,11 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         self.__ledger = SQLiteLedger(l_path) if l_path != ":memory:" else InMemoryLedger()
 
     def _init_mahajana_services(self) -> None:
-        """Step 2: MAHAJANA SERVICES — raw instances + MahamantraProxy wrappers.
+        """Step 2: MAHAJANA SERVICES — raw instances only.
 
-        Raw services stored as _raw_* for direct internal access.
-        Proxy wrappers kept as self.brahma etc. for backward compatibility.
-        Phase 4b: Internal code migrates from self.brahma → self._raw_brahma.
+        MahamantraProxy wrappers removed (Phase 4e). All internal code uses
+        _raw_* directly. Balarama auto_wrap_services() handles governance
+        wrapping automatically at lotus.bootstrap() time.
         """
         from vibe_core.services.bali_service import BaliService
         from vibe_core.services.bhishma_service import BhishmaService
@@ -191,12 +190,6 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         self._raw_janaka = JanakaService()
         self._raw_bali = BaliService()
         self._raw_kapila = KapilaService()
-
-        self.bhishma = MahamantraProxy(self._raw_bhishma, position=11, guardian="bhishma")
-        self.brahma = MahamantraProxy(self._raw_brahma, position=1, guardian="brahma")
-        self.janaka = MahamantraProxy(self._raw_janaka, position=10, guardian="janaka")
-        self.bali = MahamantraProxy(self._raw_bali, position=13, guardian="bali")
-        self.kapila = MahamantraProxy(self._raw_kapila, position=6, guardian="kapila")
 
     def _init_mantra_clock(self) -> None:
         """Step 3: MANTRA (Vishnu Clock) — Sovereign context + Nrisimha watchdog."""
