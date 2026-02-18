@@ -320,19 +320,19 @@ class TestMicroKernelWiring:
                 lotus._bootstrapped = False
                 lotus.bootstrap(lazy=True, silent=True)
 
-            # The compiler should now have the custom op
+            # The compiler should have our fake op + composition adapter
             compiler = cc_mod.get_compiler()
-            assert compiler.custom_count == 1
+            assert compiler.custom_count >= 1, f"Expected at least 1 custom op, got {compiler.custom_count}"
 
-            # Execute and verify the custom op runs
+            # Execute and verify our fake custom op runs
             result = execute_cycle(lotus, "test micro-kernel")
             assert len(marker) == 1, "VMCapability op did not run"
             assert result is not None
         finally:
             cc_mod._COMPILER = old_compiler
 
-    def test_no_vm_capabilities_zero_overhead(self):
-        """Without VMCapability services, CycleCompiler stays at 0 custom ops."""
+    def test_composition_adapter_auto_discovered(self):
+        """Bootstrap auto-discovers MahaComposition as VMCapability."""
         import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
 
@@ -345,8 +345,10 @@ class TestMicroKernelWiring:
             lotus.bootstrap(lazy=True, silent=True)
 
             compiler = cc_mod.get_compiler()
-            assert compiler.custom_count == 0
-            assert not compiler.is_compiled  # Never compiled = fast path
+            # MahaComposition implements VMCapabilityProtocol → auto-registered
+            assert compiler.custom_count >= 1, (
+                f"Expected composition adapter to be discovered, got {compiler.custom_count} custom ops"
+            )
         finally:
             cc_mod._COMPILER = old_compiler
 
