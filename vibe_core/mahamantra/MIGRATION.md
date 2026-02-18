@@ -249,12 +249,16 @@ RUNTIME PHASE (tick-driven):
 - Next: ServiceRegistry registrations that duplicate TattvaRegistry → eliminate
 - Next: VenuService lifecycle owned by Mahamantra
 
-### Phase 3: INPUT ROUTING
-- User input flows through `lotus.execute()`, not `_execute_intent()`
-- `run_with_operator()` delegates to lotus instead of hardcoded if/elif
-- Chat/voice input → lotus.__call__() → position routing → guardian execution
+### Phase 3: INPUT ROUTING (operator loop done, CLI/chat deferred) ✅
+- ✅ `_execute_intent()` now routes through `lotus.execute()` (was hardcoded if/elif)
+- ✅ Only CONTROL (exit/shutdown) stays local (controls the loop)
+- ✅ QUERY, DELEGATION, all other intents → 5-Gate pipeline
+- ✅ 4 regression tests (632 total green)
+- DEFERRED: `chat_service.py` — eigenständiges LLM-Subsystem, nicht durch lotus ersetzbar
+- DEFERRED: `cli_chant/serve/veda` — spezialisierte CLI-Commands, Gate-Provider-Wiring nötig
+- DEFERRED: `guardian_router.py` — eigene 4D-Routing-Logik, parallel zu __call__()
 
-### Phase 4: KERNEL THINNING
+### Phase 4: KERNEL THINNING (next)
 - `RealVibeKernel` stops owning services as attributes
 - Services accessed via BalaramaProxy registry or TattvaRegistry
 - `kernel_impl.py` becomes a thin compatibility shim
