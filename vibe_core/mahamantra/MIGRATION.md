@@ -243,11 +243,13 @@ RUNTIME PHASE (tick-driven):
 - ✅ 4 new regression tests (621 total green)
 - REMAINING: `_act_ingest_codebase()` still in boot_orchestrator (needs Path)
 
-### Phase 2: BOOT INVERSION (next)
-- `lotus.bootstrap()` is now the PRIMARY Mahamantra boot
+### Phase 2: BOOT INVERSION ✅
+- ✅ `_orient_mahamantra()` added as ORIENT Step 0 — Mahamantra boots BEFORE legacy kernel
+- ✅ `_init_sharanagati()` is idempotent — skips bootstrap if already done
+- ✅ 3 regression tests (639 total green)
 - `boot_orchestrator` still owns: Kernel creation, ServiceRegistry, VenuService, Agent Discovery
-- Next: ServiceRegistry registrations that duplicate TattvaRegistry → eliminate
-- Next: VenuService lifecycle owned by Mahamantra
+- NEXT: ServiceRegistry registrations that duplicate TattvaRegistry → eliminate
+- NEXT: VenuService lifecycle owned by Mahamantra
 
 ### Phase 3: INPUT ROUTING (operator loop done, CLI/chat deferred) ✅
 - ✅ `_execute_intent()` now routes through `lotus.execute()` (was hardcoded if/elif)
