@@ -26,7 +26,7 @@
 | **Bootstrap** | `lotus.bootstrap()` | Lightweight — gate providers + healing resolver | KING |
 | **Pipeline** | `lotus.__call__(input)` → 5 TattvaGates | PARSE→VALIDATE→EXECUTE→RESULT→SYNC | KING |
 | **DI** | `substrate/tattva_registry.py` | Gate provider registration (capability-checked) | KING |
-| **VM** | `substrate/mantra_vm.py` | NavaBhakti dispatch (12 instructions) | KING |
+| **VM** | `substrate/mantra_vm.py` | NavaBhakti dispatch (12 instructions) + CycleCompiler | KING |
 | **Entry** | `__main__.py` | `mahamantra.execute(input)` — pure computation | KING |
 | **Routing** | `substrate/cell_router.py` | O(1) IPv6-like cell routing | KING |
 | **Clock** | `venu/clock.py` + `substrate/venu_orchestrator.py` | MantraClock + DIW flute cycle | KING |
@@ -210,18 +210,33 @@ Legacy code does NOT need to be rewritten. It needs to be:
 BUILD PHASE (fraktal — every component has its own build/runtime):
   lotus.bootstrap()
     → Gate Providers wired (TattvaRegistry)
+    → HealingResolver wired (MantraKernel)
     → auto_wrap_services() → BalaramaProxy for every discovered module
     → adopt_services() → OrbitalShadowReactor for every proxy
-    → CellRouter populated
+    → Sravanam listener wired (organic cell scanning)
+    → Sudarshana governance hook active
+    → VMCapability discovery → CycleCompiler.register_op() for each capability
+    → CycleCompiler.compile() → frozen cycle tuple (12 core + N custom ops)
+    → CellRouter populated (boot_orchestrator)
     → Singularity initialized
-    → HealingResolver wired
 
 RUNTIME PHASE (tick-driven):
-  Singularity.tick() → broadcast → gated listeners fire at their position
-  Input → lotus.execute(input) → 5-Gate Pipeline → position routing → Output
-  BalaramaProxy handles Legacy services transparently
-  
-  Legacy code stays as-is. Mahamantra absorbs it.
+  Singularity.tick()
+    → Kala (time advance)
+    → VenuOrchestrator.step() → DIW → DIWSubscribers
+    → _broadcast(TickState) → Listeners (Sravanam, etc.)
+    → MantraKernel.process_queue() → Intent Resolution
+  VenuService._dispatch_beat_subscribers()
+    → Ouroboros (72 ticks), Shuddhi (144 ticks), KalaBridge (72 ticks)
+
+COMPUTATION (on demand):
+  lotus.execute(input) → __call__() → execute_cycle()
+    → CycleCompiler dispatches: 12 core ops + N custom ops
+    → Condition bits: ops can be conditionally skipped
+    → VM registers: persistent state across cycles
+    → Result: 27-key dict
+
+  Legacy code stays as-is. Mahamantra absorbs it via BalaramaProxy.
 ```
 
 ---
@@ -271,7 +286,53 @@ RUNTIME PHASE (tick-driven):
 - ✅ MahamantraProxy import removed from kernel_impl.py
 - RESULT: kernel_impl.py no longer imports or uses MahamantraProxy. Zero proxy overhead.
 
-### Phase 5: SELF-ASSIMILATION (future — the system absorbs new code at runtime)
+### Phase 5: MANTRA VM — Realtime Runtime OS ✅
+
+#### VM Phase 1: PoC ✅
+- ✅ `__call__()` delegates to `execute_cycle()` in `mantra_vm.py`
+- ✅ 12 NavaBhaktiOp wrappers (`_w_sravanam` through `_w_atma_nivedanam`)
+- ✅ DISPATCH table maps NavaBhaktiOp → wrapper function
+- ✅ `_build_result()` produces 27-key output dict
+- ✅ 32 equivalence + isolation tests
+
+#### VM Phase 2: Condition Bits (27-30) ✅
+- ✅ Bits 27-30 of 32-bit DIW = CONDITION field (4 bits)
+- ✅ `CONDITION_SHIFT` + `CONDITION_MASK` in `protocols/diw.py`
+- ✅ `CompiledOp.condition`: optional callable(ctx) → bool
+- ✅ If condition returns False, op is SKIPPED in dispatch loop
+- ✅ Core ops always unconditional (condition=None)
+- ✅ 4 condition tests
+
+#### VM Phase 3: CycleCompiler ✅
+- ✅ `substrate/cycle_compiler.py` — compiles cycles from core + custom ops
+- ✅ `register_op(name, gate, handler, priority, condition)` → assigns VAMSI address
+- ✅ Custom ops get addresses above core range (>444), collision-free
+- ✅ `compile()` → frozen tuple of CompiledOps, ordered by gate then priority
+- ✅ `execute_cycle()` fast path (0 custom ops) vs compiled path
+- ✅ 16 compiler tests
+
+#### VM Phase 4: VM Registers ✅
+- ✅ `lotus._vm_registers` — persistent dict across `execute_cycle()` calls
+- ✅ Available in ctx as `ctx["vm_registers"]`
+- ✅ Custom ops read/write registers for inter-cycle state
+- ✅ Condition bits can read registers for dynamic behavior
+- ✅ Isolated per Lotus instance
+- ✅ 4 register tests
+
+#### Micro-Kernel: VMCapabilityProtocol ✅
+- ✅ `VMCapabilityProtocol` in `protocols/_navabhakti.py` — runtime_checkable
+- ✅ `VMOpDeclaration` dataclass — declares name, gate, handler, priority, condition
+- ✅ Auto-discovery at `lotus.bootstrap()` — scans Balarama-wrapped services
+- ✅ Services implementing `VMCapabilityProtocol` get ops auto-registered
+- ✅ 3 micro-kernel wiring tests
+- ✅ **666 total tests green**
+
+### Phase 6: SUBSTRATE REDUCTION (next)
+- substrate/ becomes internal build detail behind VM
+- 95 direct substrate accesses from outside mahamantra/ → route through VM/protocols
+- 34K lines substrate/ → implementation detail, not public API
+
+### Phase 7: SELF-ASSIMILATION (future — the system absorbs new code at runtime)
 - New modules auto-discovered, identity inferred via `analyze_source()`
 - Build-phase and runtime-phase are fraktal
 - No manual wiring ever needed
@@ -295,7 +356,7 @@ RUNTIME PHASE (tick-driven):
 
 1. **Verify before cutting** — every file must be checked for actual usage
 2. **No blind deletion** — mark DEPRECATED first, delete in next phase
-3. **Tests must stay green** — 617+ tests, no regressions
+3. **Tests must stay green** — 666+ tests, no regressions
 4. **Fraktal** — Build/Runtime separation applies at every level
 5. **Mahamantra is King** — all new code goes in mahamantra/
 6. **Legacy is Legacy** — no new features in Legacy code
