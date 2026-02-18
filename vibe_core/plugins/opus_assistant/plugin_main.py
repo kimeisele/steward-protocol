@@ -275,8 +275,9 @@ class OpusAssistantPlugin(KernelPlugin, OpusAssistantProtocol):
                 if isinstance(value, list):
                     all_caps.extend(value)
 
-            if all_caps and hasattr(kernel, "brahma"):
-                kernel.brahma.register_capabilities("manas", all_caps)
+            brahma = getattr(kernel, "_raw_brahma", None) or getattr(kernel, "brahma", None)
+            if all_caps and brahma:
+                brahma.register_capabilities("manas", all_caps)
                 logger.info(f"⚡ OPUS-112: MANAS registered with {len(all_caps)} capabilities")
             else:
                 logger.debug("⚡ OPUS-112: No MANAS capabilities to register or no registry")
