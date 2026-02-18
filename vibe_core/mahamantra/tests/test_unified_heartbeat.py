@@ -521,3 +521,73 @@ class TestAntiSplitBrain:
         assert len(identified) > 0, (
             "No BalaramaProxy has identity — folder-based identity extraction broken!"
         )
+
+    def test_bootstrap_wires_sravanam(self):
+        """lotus.bootstrap() must call wire_sravanam() for organic cell scanning."""
+        import inspect
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        source = inspect.getsource(MahamantraLotus.bootstrap)
+        assert "wire_sravanam" in source, (
+            "bootstrap() does not call wire_sravanam(). "
+            "Sravanam listener must be wired at boot."
+        )
+
+    def test_bootstrap_wires_governance_hook(self):
+        """lotus.bootstrap() must register the Sudarshana governance hook."""
+        import inspect
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        source = inspect.getsource(MahamantraLotus.bootstrap)
+        assert "register_governance_hook" in source, (
+            "bootstrap() does not call register_governance_hook(). "
+            "Sudarshana governance must be registered at boot."
+        )
+
+    def test_boot_orchestrator_does_not_duplicate_gate_wiring(self):
+        """boot_orchestrator must NOT import wire_gate_providers — lotus.bootstrap() does it."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._act_wire_gate_providers)
+        assert "from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers" not in source, (
+            "_act_wire_gate_providers() still imports wire_gate_providers. "
+            "It should only verify via get_registry(), not re-wire."
+        )
+
+    def test_boot_orchestrator_does_not_duplicate_sravanam(self):
+        """boot_orchestrator must NOT call wire_sravanam() — lotus.bootstrap() does it."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._act_wire_sravanam)
+        assert "wire_sravanam()" not in source, (
+            "_act_wire_sravanam() still calls wire_sravanam(). "
+            "It should only verify, not re-wire."
+        )
+
+    def test_boot_orchestrator_does_not_duplicate_governance(self):
+        """boot_orchestrator must NOT import register_governance_hook — lotus.bootstrap() does it."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._act_register_governance_hook)
+        assert "from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook" not in source, (
+            "_act_register_governance_hook() still imports register_governance_hook. "
+            "It should only verify via has_governance_hook(), not re-register."
+        )
+
+    def test_ingestion_stays_in_boot_orchestrator(self):
+        """Codebase ingestion must stay in boot_orchestrator (I/O too expensive for bootstrap)."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._act_ingest_codebase)
+        assert "parse_file_to_fragments" in source, (
+            "_act_ingest_codebase() no longer does ingestion. "
+            "Ingestion must stay in boot_orchestrator (too expensive for bootstrap)."
+        )
+
+    def test_ingestion_logs_errors_not_silent(self):
+        """Codebase ingestion must log parse errors, never swallow them silently."""
+        import inspect
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        source = inspect.getsource(BootOrchestrator._act_ingest_codebase)
+        assert "except Exception:" not in source or "pass" not in source.split("except Exception:")[-1].split("\n")[1], (
+            "_act_ingest_codebase() has bare 'except: pass'. "
+            "Parse errors must be logged, not swallowed."
+        )
