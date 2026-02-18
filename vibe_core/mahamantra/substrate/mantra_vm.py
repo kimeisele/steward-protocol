@@ -331,9 +331,14 @@ def execute_cycle(
 
     PURE COMPUTATION — no gates. Gates fire at the boundary (execute()).
     """
+    # VM registers: persistent state across cycles, stored on lotus instance
+    if not hasattr(lotus, "_vm_registers"):
+        lotus._vm_registers = {}
+
     ctx: Dict[str, object] = {
         "input_data": input_data,
         "opcode": opcode,
+        "vm_registers": lotus._vm_registers,
     }
 
     # Fast path: no custom ops → static dispatch (zero overhead)

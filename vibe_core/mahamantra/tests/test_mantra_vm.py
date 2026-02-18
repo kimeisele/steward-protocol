@@ -212,3 +212,93 @@ class TestStepIsolation:
         }
         for key in required:
             assert key in ctx, f"Missing ctx key after dasyam: {key}"
+
+
+# =============================================================================
+# VM REGISTERS — Persistent state across cycles
+# =============================================================================
+
+class TestVMRegisters:
+    """Verify vm_registers persist across execute_cycle() calls."""
+
+    def test_registers_in_ctx(self, lotus):
+        """vm_registers dict is available in ctx during execution."""
+        result = lotus("test registers")
+        assert hasattr(lotus, "_vm_registers")
+        assert isinstance(lotus._vm_registers, dict)
+
+    def test_registers_persist_across_cycles(self):
+        """State written to vm_registers survives between cycles."""
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
+        from unittest.mock import patch
+
+        old_compiler = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+
+        try:
+            compiler = cc_mod.get_compiler()
+
+            def _write_register(lotus, ctx):
+                regs = ctx["vm_registers"]
+                count = regs.get("call_count", 0)
+                regs["call_count"] = count + 1
+
+            compiler.register_op("counter", gate=4, handler=_write_register)
+
+            m = MahamantraLotus()
+            m.bootstrap(lazy=True, silent=True)
+
+            m("first call")
+            assert m._vm_registers["call_count"] == 1
+
+            m("second call")
+            assert m._vm_registers["call_count"] == 2
+
+            m("third call")
+            assert m._vm_registers["call_count"] == 3
+        finally:
+            cc_mod._COMPILER = old_compiler
+
+    def test_registers_isolated_per_instance(self):
+        """Each Lotus instance has its own vm_registers."""
+        m1 = MahamantraLotus()
+        m1.bootstrap(lazy=True, silent=True)
+        m2 = MahamantraLotus()
+        m2.bootstrap(lazy=True, silent=True)
+
+        m1("test")
+        m2("test")
+
+        assert m1._vm_registers is not m2._vm_registers
+
+    def test_registers_condition_reads_register(self):
+        """Condition bits can read vm_registers for dynamic behavior."""
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+        from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
+
+        old_compiler = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+
+        try:
+            compiler = cc_mod.get_compiler()
+            marker = []
+
+            def _setup(lotus, ctx):
+                ctx["vm_registers"]["armed"] = True
+
+            def _guarded(lotus, ctx):
+                marker.append("FIRED")
+
+            compiler.register_op("arm", gate=3, handler=_setup)
+            compiler.register_op(
+                "guarded_op", gate=4, handler=_guarded,
+                condition=lambda ctx: ctx.get("vm_registers", {}).get("armed", False),
+            )
+
+            m = MahamantraLotus()
+            m.bootstrap(lazy=True, silent=True)
+            m("test armed")
+            assert len(marker) == 1, "Guarded op should fire when register is armed"
+        finally:
+            cc_mod._COMPILER = old_compiler
