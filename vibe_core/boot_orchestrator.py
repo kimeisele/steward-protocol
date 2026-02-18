@@ -823,35 +823,40 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         )
 
     async def _execute_intent(self, intent: Intent) -> str:
-        """Execute an intent and return result message."""
+        """Execute an intent through lotus.execute() — the single routing point.
+
+        Only CONTROL intents (exit/shutdown) are handled locally because they
+        control the operator loop itself. Everything else flows through
+        mahamantra.execute() which fires the 5 TattvaGates and runs the
+        full NavaBhakti pipeline.
+        """
         logger.info(f"Executing intent: {intent.intent_type.value} - {intent.raw_input}")
 
+        # CONTROL intents manage the operator loop — they cannot go through lotus
         if intent.intent_type == IntentType.CONTROL:
             if intent.raw_input.lower() in ("exit", "quit", "shutdown", "stop"):
                 self._running = False
                 return "Shutting down Agent City..."
-            elif intent.raw_input.lower() == "status":
-                status = self.kernel.get_status()
-                return f"Kernel: {status}"
 
-        elif intent.intent_type == IntentType.QUERY:
-            if not intent.raw_input or intent.raw_input.lower() == "status":
-                status = self.kernel.get_status()
-                return f"Agents: {status.get('agents_registered', 0)} | Sarga: complete"
-
-        elif intent.intent_type == IntentType.DELEGATION:
-            if intent.target_agent:
-                agent = self.kernel.agent_registry.get(intent.target_agent)
-                if agent:
-                    return f"Delegated to {intent.target_agent}: {intent.raw_input}"
-                return f"Agent not found: {intent.target_agent}"
-
-        elif intent.intent_type == IntentType.REFLEX:
-            # Reflexes are automatic, no action needed
+        # REFLEX intents are automatic, no output
+        if intent.intent_type == IntentType.REFLEX:
             return ""
 
-        # Default: treat as command
-        return f"Command received: {intent.raw_input}"
+        # EVERYTHING ELSE → lotus.execute() (the single routing point)
+        from vibe_core.mahamantra import mahamantra as _lotus
+        try:
+            result = _lotus.execute(intent.raw_input or "")
+            if result.get("success"):
+                guardian = result.get("guardian", "unknown")
+                position = result.get("position", -1)
+                handler = result.get("handler", "mahamantra")
+                return f"[{handler}] guardian={guardian} pos={position}"
+            else:
+                error = result.get("error", "unknown error")
+                return f"Mahamantra execution failed: {error}"
+        except Exception as exc:
+            logger.error(f"lotus.execute() failed: {exc}")
+            return f"Error: {exc}"
 
     async def run_with_operator(self) -> None:
         """
