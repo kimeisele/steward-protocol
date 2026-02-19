@@ -820,8 +820,8 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         mahamantra("anything") → READS. UNDERSTANDS. COMPUTES. RESPONDS.
 
-        12 instructions (MAHAJANA_COUNT) dispatched via NavaBhaktiOp.
-        Each step is individually callable (self.sravanam, self.nama, etc.).
+        9 instructions (NAVA) dispatched via NavaBhaktiOp (SB 7.5.23).
+        Each step is individually callable (self.sravanam, self.kirtanam, etc.).
         __call__() is the FULL pipeline via VM dispatch.
 
         PURE COMPUTATION — no gates. Gates fire at execute() boundary.

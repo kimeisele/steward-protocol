@@ -1,8 +1,11 @@
 """
-NAVABHAKTI INSTRUCTION SET — The 12 VM Operations
+NAVABHAKTI INSTRUCTION SET — The 9 VM Operations
 ===================================================
 
-"nava-vidha bhakti" — Nine forms of devotion, extended to 12 (MAHAJANA_COUNT).
+"nava-vidha bhakti" — Nine forms of devotional service (SB 7.5.23).
+
+    sravanam kirtanam visnoh smaranam pada-sevanam
+    arcanam vandanam dasyam sakhyam atma-nivedanam
 
 Each instruction maps to a VAMSI address at PARAMPARA(37) stride:
     addr = PARAMPARA * (index + KSETRAJNA)
@@ -22,48 +25,54 @@ from typing import Callable, Dict, Final, List, Optional, Protocol, Tuple, runti
 
 from vibe_core.mahamantra.protocols._seed import (
     KSETRAJNA,
-    MAHAJANA_COUNT,
+    NAVA,
     PARAMPARA,
 )
 
 
 class NavaBhaktiOp(IntEnum):
-    """12 VM instructions = MAHAJANA_COUNT."""
-    SRAVANAM = 0
-    NAMA = 1
-    KIRTANAM = 2
-    PADA_SEVANAM = 3
-    ARCANAM = 4
-    SMARANAM = 5
-    VANDANAM = 6
-    DASYAM = 7
-    SAKHYAM = 8
-    KIRTAN = 9
-    YAJNA = 10
-    ATMA_NIVEDANAM = 11
+    """9 VM instructions = NAVA (SB 7.5.23).
+
+    Execution order respects data dependencies:
+    SRAVANAM → KIRTANAM → PADA_SEVANAM → ARCANAM → SMARANAM →
+    VANDANAM → DASYAM → SAKHYAM → ATMA_NIVEDANAM
+    """
+    SRAVANAM = 0        # Hearing (includes phonetic encoding)
+    KIRTANAM = 1        # Chanting (compression → seed)
+    PADA_SEVANAM = 2    # Serving the feet (seed → attractor)
+    ARCANAM = 3         # Worship (parampara verification)
+    SMARANAM = 4        # Remembering (word resonance, needs attractor)
+    VANDANAM = 5        # Prayer (verse matching)
+    DASYAM = 6          # Servitude (position/guardian routing)
+    SAKHYAM = 7         # Friendship (cell creation + chamber)
+    ATMA_NIVEDANAM = 8  # Self-surrender (reactor + akash update + result)
 
 
-assert len(NavaBhaktiOp) == MAHAJANA_COUNT
+assert len(NavaBhaktiOp) == NAVA
 
 # Gate index per instruction (TattvaGate.value)
 GATE_INDEX: Final[Tuple[int, ...]] = (
-    0, 0, 0,    # PARSE:    SRAVANAM, NAMA, KIRTANAM
-    1, 1,       # VALIDATE: PADA_SEVANAM, ARCANAM
-    2, 2,       # EXECUTE:  SMARANAM, VANDANAM
-    3,          # RESULT:   DASYAM
-    4, 4, 4, 4, # SYNC:     SAKHYAM, KIRTAN, YAJNA, ATMA_NIVEDANAM
+    0,       # PARSE:    SRAVANAM
+    0,       # PARSE:    KIRTANAM
+    1,       # VALIDATE: PADA_SEVANAM
+    1,       # VALIDATE: ARCANAM
+    2,       # EXECUTE:  SMARANAM
+    2,       # EXECUTE:  VANDANAM
+    3,       # RESULT:   DASYAM
+    4,       # SYNC:     SAKHYAM
+    4,       # SYNC:     ATMA_NIVEDANAM
 )
 
-assert len(GATE_INDEX) == MAHAJANA_COUNT
+assert len(GATE_INDEX) == NAVA
 
-# VAMSI addresses: PARAMPARA * (i + KSETRAJNA) for i in range(12)
+# VAMSI addresses: PARAMPARA * (i + KSETRAJNA) for i in range(9)
 VAMSI_ADDR: Final[Tuple[int, ...]] = tuple(
-    PARAMPARA * (i + KSETRAJNA) for i in range(MAHAJANA_COUNT)
+    PARAMPARA * (i + KSETRAJNA) for i in range(NAVA)
 )
-# = (37, 74, 111, 148, 185, 222, 259, 296, 333, 370, 407, 444)
+# = (37, 74, 111, 148, 185, 222, 259, 296, 333)
 
-# The fixed execution cycle (Phase 1: static, like THE_FLUTE_CYCLE)
-CYCLE: Final[Tuple[NavaBhaktiOp, ...]] = tuple(NavaBhaktiOp(i) for i in range(MAHAJANA_COUNT))
+# The execution cycle — 9 steps of devotional service
+CYCLE: Final[Tuple[NavaBhaktiOp, ...]] = tuple(NavaBhaktiOp(i) for i in range(NAVA))
 
 
 @runtime_checkable

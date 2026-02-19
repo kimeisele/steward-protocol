@@ -24,7 +24,7 @@ from vibe_core.mahamantra.protocols._navabhakti import (
     NavaBhaktiOp,
     VAMSI_ADDR,
 )
-from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT, PARAMPARA
+from vibe_core.mahamantra.protocols._seed import NAVA, PARAMPARA
 
 
 class TestCycleCompilerCore:
@@ -33,7 +33,7 @@ class TestCycleCompilerCore:
     def test_compile_core_only(self):
         cc = CycleCompiler()
         cycle = cc.compile()
-        assert len(cycle) == MAHAJANA_COUNT
+        assert len(cycle) == NAVA
         for i, cop in enumerate(cycle):
             assert cop.is_core
             assert cop.op_id == i
@@ -69,7 +69,7 @@ class TestCustomOps:
     def test_register_op(self):
         cc = CycleCompiler()
         op_id = cc.register_op("test_op", gate=2, handler=self._dummy_handler)
-        assert op_id == MAHAJANA_COUNT
+        assert op_id == NAVA
         assert cc.custom_count == 1
 
     def test_register_duplicate_raises(self):
@@ -87,7 +87,7 @@ class TestCustomOps:
         cc = CycleCompiler()
         cc.register_op("my_analysis", gate=2, handler=self._dummy_handler)
         cycle = cc.compile()
-        assert len(cycle) == MAHAJANA_COUNT + 1
+        assert len(cycle) == NAVA + 1
         custom = [c for c in cycle if not c.is_core]
         assert len(custom) == 1
         assert custom[0].name == "my_analysis"
@@ -143,7 +143,7 @@ class TestCustomOps:
         for op in NavaBhaktiOp:
             assert op in dispatch or op.value in dispatch
         # Custom op present
-        assert MAHAJANA_COUNT in dispatch
+        assert NAVA in dispatch
 
 
 class TestExecuteCycleIntegration:

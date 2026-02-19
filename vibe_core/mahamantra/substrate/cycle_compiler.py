@@ -4,9 +4,9 @@ CYCLE COMPILER — Build → Runtime Bridge
 
 Compiles execution cycles from registered operations.
 
-Phase 1 (static): CYCLE = 12 fixed NavaBhaktiOps (mantra_vm.py)
+Phase 1 (static): CYCLE = 9 fixed NavaBhaktiOps (mantra_vm.py)
 Phase 3 (this):   CycleCompiler builds cycles from:
-    - The 12 core NavaBhaktiOps (always present)
+    - The 9 core NavaBhaktiOps (always present)
     - Custom ops registered at runtime via register_op()
 
 Custom ops get VAMSI addresses above the core range (>444).
@@ -23,7 +23,7 @@ USAGE:
     compiler = get_compiler()
     compiler.register_op("my_analysis", gate=2, handler=my_fn)
     cycle = compiler.compile()
-    # cycle is now (SRAVANAM, NAMA, ..., MY_ANALYSIS, ..., ATMA_NIVEDANAM)
+    # cycle is now (SRAVANAM, ..., MY_ANALYSIS, ..., ATMA_NIVEDANAM)
 """
 
 from __future__ import annotations
@@ -39,24 +39,24 @@ from vibe_core.mahamantra.protocols._navabhakti import (
     VAMSI_ADDR,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    MAHAJANA_COUNT,
+    NAVA,
     PARAMPARA,
 )
 
 logger = logging.getLogger("CYCLE.COMPILER")
 
 # Custom ops start after the core VAMSI range
-# Core range: 37..444 (PARAMPARA * 1..12)
-# Custom range: 481+ (PARAMPARA * 13+)
-_CUSTOM_BASE: Final[int] = PARAMPARA * (MAHAJANA_COUNT + 1)  # 481
+# Core range: 37..333 (PARAMPARA * 1..9)
+# Custom range: 370+ (PARAMPARA * 10+)
+_CUSTOM_BASE: Final[int] = PARAMPARA * (NAVA + 1)  # 370
 
 
 @dataclass(frozen=True)
 class CompiledOp:
     """A single operation in a compiled cycle.
 
-    Core ops have op_id < MAHAJANA_COUNT and use NavaBhaktiOp dispatch.
-    Custom ops have op_id >= MAHAJANA_COUNT and use their own handler.
+    Core ops have op_id < NAVA and use NavaBhaktiOp dispatch.
+    Custom ops have op_id >= NAVA and use their own handler.
 
     condition: Optional callable(ctx) -> bool. If set and returns False,
     the op is SKIPPED. This is the Condition Bits mechanism (bits 27-30
@@ -90,7 +90,7 @@ class CycleCompiler:
 
     def __init__(self) -> None:
         self._custom_ops: Dict[str, CustomOp] = {}
-        self._next_id: int = MAHAJANA_COUNT  # First custom op ID
+        self._next_id: int = NAVA  # First custom op ID
         self._compiled: Optional[Tuple[CompiledOp, ...]] = None
         self._dispatch: Optional[Dict[int, Callable]] = None
 
@@ -171,7 +171,7 @@ class CycleCompiler:
         custom_ops: List[CompiledOp] = []
         for i, cop in enumerate(custom_sorted):
             custom_ops.append(CompiledOp(
-                op_id=MAHAJANA_COUNT + i,
+                op_id=NAVA + i,
                 name=cop.name,
                 gate=cop.gate,
                 vamsi_addr=_CUSTOM_BASE + i * PARAMPARA,
@@ -197,7 +197,7 @@ class CycleCompiler:
         from vibe_core.mahamantra.substrate.mantra_vm import DISPATCH as CORE_DISPATCH
         self._dispatch = dict(CORE_DISPATCH)  # Copy core dispatch
         for i, cop in enumerate(custom_sorted):
-            self._dispatch[MAHAJANA_COUNT + i] = cop.handler
+            self._dispatch[NAVA + i] = cop.handler
 
         logger.info(
             "Compiled cycle: %d ops (%d core + %d custom)",
