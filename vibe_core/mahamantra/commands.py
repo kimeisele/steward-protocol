@@ -42,101 +42,12 @@ class ChantResult(TypedDict):
 
 
 # =============================================================================
-# CLI_CHANT STEPS — Atomic, granular, individually callable
+# CLI_CHANT — Routes through lotus.execute() (the VM)
 # =============================================================================
-
-def _chant_validate_epoch() -> bool:
-    """Chant Step 0: Validate epoch lock (1972 signature)."""
-    from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
-    return SravanamCheck.validate_epoch_lock()
-
-
-def _chant_setup(audio: bool, dest: str) -> tuple:
-    """Chant Step 1: Setup chamber, audio engine, network client.
-    Returns (chamber, sound_engine, vimana_client) or raises ValueError for bad dest."""
-    from vibe_core.mahamantra.net.vimana import VimanaClient
-    from vibe_core.mahamantra.sound.audio_engine import PranaSoundEngine
-    from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
-
-    chamber = SankirtanChamber.create()
-    sound_engine = PranaSoundEngine() if audio else None
-    vimana_client = None
-    if dest:
-        host, port = dest.split(":")
-        vimana_client = VimanaClient(host, int(port))
-    return chamber, sound_engine, vimana_client
-
-
-def _chant_tick(chamber, seed_cell, tick_num: int, sound_engine, vimana_client,
-                verbose: bool, audio: bool, WORDS: int, THE_FLUTE_CYCLE, diw_unpack, mahamantra) -> dict:
-    """Chant Step 2: Execute one tick — dance, audio, network, metrics. Returns tick state dict."""
-    import sys
-    tick_state = mahamantra.tick()
-    transformed_cell = chamber.dance(seed_cell)
-
-    if sound_engine:
-        t = chamber.tick - 1
-        synth_diw = chamber._orchestrator.harmonize(
-            venu=t, vamsi=t * 7, murali=t % WORDS,
-            cluster_route=chamber._orchestrator.mode,
-        )
-        pcm = sound_engine.synthesize(synth_diw)
-        sys.stdout.buffer.write(pcm)
-
-    current_diw = THE_FLUTE_CYCLE[chamber.tick % WORDS]
-    diw_parts = diw_unpack(current_diw)
-    vamsi_stride = 512 // 3
-    name_idx = min(diw_parts.vamsi // vamsi_stride, 2)
-    guardian_name = ["HARE", "KRISHNA", "RAMA"][name_idx]
-
-    state = {
-        "position": chamber.tick % WORDS,
-        "guardian": guardian_name,
-        "phase": "kirtan",
-        "opcode": "TRANSFORM",
-        "resonance": chamber.resonance_count,
-        "transformations": chamber.total_transformations,
-        "active_cells": len(chamber.active_cells),
-    }
-
-    if verbose:
-        print(
-            f"[{tick_num:02d}] ~ {guardian_name:12s} | "
-            f"KIRTAN   | pos={state['position']:2d} | "
-            f"res={state['resonance']} | cells={state['active_cells']}"
-        )
-    return state, transformed_cell
-
-
-def _chant_summary(results: list, rounds: int, total_ticks: int, chamber,
-                   verbose: bool, audio: bool) -> ChantResult:
-    """Chant Step 3: Build summary and return ChantResult."""
-    if verbose:
-        print("-" * 60)
-        print(f"Completed {rounds} round(s)")
-        print(f"  Resonance: {chamber.resonance_count} | Transformations: {chamber.total_transformations}")
-        print(f"  Active Cells (Registry): {len(chamber.active_cells)}")
-        print("=" * 60)
-    elif not audio:
-        final_pos = results[-1]["position"] if results else 0
-        final_guard = results[-1]["guardian"] if results else "unknown"
-        print(
-            f"CHANT: {rounds}r × {total_ticks}t → [{final_guard}@{final_pos}] "
-            f"Res={chamber.resonance_count} Cells={len(chamber.active_cells)}"
-        )
-
-    return ChantResult(
-        success=True,
-        bhakti=NavaBhakti.KIRTANAM.value,
-        rounds=rounds,
-        ticks=total_ticks,
-        final_position=results[-1]["position"] if results else 0,
-        final_guardian=results[-1]["guardian"] if results else "unknown",
-        cycle_count=chamber.resonance_count,
-        switch_count=chamber.total_transformations,
-        parampara_connected=len(chamber.active_cells) > 0,
-    )
-
+# The VM already does kirtan + yajna + chamber work inside execute_cycle().
+# cli_chant(rounds=N) = call lotus.execute("Hare Krishna") N times.
+# Audio/network are I/O side effects using the VM's output.
+# =============================================================================
 
 def _chant_fail(final_position: int = -1, final_guardian: str = "BLOCKED") -> ChantResult:
     """Return a failed ChantResult."""
@@ -154,61 +65,141 @@ def cli_chant(
     dest: str = "",
 ) -> ChantResult:
     """
-    CLI Entry Point for Chant command. Chains the atomic _chant_* steps.
+    CLI Entry Point for Chant command.
+
+    Routes ALL computation through lotus.execute() → execute_cycle() (the VM).
+    Each round = one lotus.execute("Hare Krishna") call which internally runs
+    the full 12-step NavaBhakti pipeline including kirtan + yajna (16 ticks).
+
+    Audio and Vimana streaming are I/O side effects that use the VM's output
+    (DIW data, cell state) rather than computing their own.
     """
     import asyncio
+    import sys
 
-    from vibe_core.mahamantra import mahamantra
-    from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
-    from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+    from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
+    from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
     from vibe_core.mahamantra.substrate.seed import WORDS
-    from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
 
-    if not _chant_validate_epoch():
+    # Validate epoch lock
+    if not SravanamCheck.validate_epoch_lock():
         return _chant_fail()
 
-    try:
-        chamber, sound_engine, vimana_client = _chant_setup(audio, dest)
-    except ValueError:
-        print(f"Invalid destination format: {dest}. Use host:port")
-        return _chant_fail(final_position=0, final_guardian="")
+    # I/O setup (side effects — not computation)
+    sound_engine = None
+    vimana_client = None
+    if audio:
+        from vibe_core.mahamantra.sound.audio_engine import PranaSoundEngine
+        sound_engine = PranaSoundEngine()
+    if dest:
+        try:
+            from vibe_core.mahamantra.net.vimana import VimanaClient
+            host, port = dest.split(":")
+            vimana_client = VimanaClient(host, int(port))
+        except ValueError:
+            print(f"Invalid destination format: {dest}. Use host:port")
+            return _chant_fail(final_position=0, final_guardian="")
 
+    lotus = get_mahamantra()
     total_ticks = rounds * WORDS
-    results: List[Dict[str, object]] = []
+    round_results: List[Dict[str, object]] = []
 
-    async def run_client_loop():
+    effective_verbose = verbose and not audio
+    if effective_verbose:
+        print("=" * 60)
+        print("MAHAMANTRA CHANT - Through VM Pipeline")
+        if dest:
+            print(f"Streaming to Vimana: {dest}")
+        print("=" * 60)
+        print(f"Rounds: {rounds} | Ticks per round: {WORDS} | Total: {total_ticks}")
+        print("-" * 60)
+
+    async def _stream_loop():
+        """Handle async I/O (vimana) around synchronous VM calls."""
         if vimana_client:
             await vimana_client.connect()
-        seed_cell = MahaCellUnified.create(source=0, target=1, operation=0, initial_state="Hare Krishna")
-        effective_verbose = verbose and not audio
 
-        if effective_verbose:
-            print("=" * 60)
-            print("MAHAMANTRA CHANT - Sankirtan Chamber Active")
-            if dest:
-                print(f"Streaming to Vimana: {dest}")
-            print("=" * 60)
-            print(f"Rounds: {rounds} | Ticks: {total_ticks}")
-            print("-" * 60)
+        for round_num in range(rounds):
+            # === COMPUTATION: Through the VM ===
+            result = lotus.execute("Hare Krishna")
+            round_results.append(result)
 
-        for tick_num in range(total_ticks):
-            state, transformed_cell = _chant_tick(
-                chamber, seed_cell, tick_num, sound_engine, vimana_client,
-                effective_verbose, audio, WORDS, THE_FLUTE_CYCLE, diw_unpack, mahamantra,
-            )
+            # === I/O SIDE EFFECTS: Use VM output ===
+            position = result.get("position", 0)
+            guardian = result.get("guardian", "unknown")
+            diw_data = result.get("diw", {})
+            execution = result.get("execution", {})
+            kirtan_cycles = execution.get("kirtan_cycles", 1)
+            yajna = result.get("yajna", {})
+
+            if effective_verbose:
+                print(
+                    f"[{round_num:02d}] ~ {str(guardian):12s} | "
+                    f"KIRTAN   | pos={position:2d} | "
+                    f"cycles={kirtan_cycles} | phase={yajna.get('phase', '?')}"
+                )
+
+            # Audio synthesis from VM's DIW output
+            if sound_engine and diw_data:
+                from vibe_core.mahamantra.protocols.diw import pack
+                synth_diw = pack(
+                    venu=diw_data.get("venu", 0),
+                    vamsi=diw_data.get("vamsi", 0),
+                    murali=diw_data.get("murali", 0),
+                )
+                pcm = sound_engine.synthesize(synth_diw)
+                sys.stdout.buffer.write(pcm)
+
+            # Vimana streaming from VM's cell output
             if vimana_client:
-                await vimana_client.send(transformed_cell)
-            results.append(state)
+                cell = result.get("cell", {})
+                await vimana_client.send(cell)
 
         if vimana_client:
             await vimana_client.close()
 
     try:
-        asyncio.run(run_client_loop())
+        asyncio.run(_stream_loop())
     except KeyboardInterrupt as _exc:
         logger.exception("Unexpected error: %s", _exc)
 
-    return _chant_summary(results, rounds, total_ticks, chamber, verbose, audio)
+    # === BUILD RESULT from VM outputs ===
+    last = round_results[-1] if round_results else {}
+    last_execution = last.get("execution", {}) if last else {}
+    last_yajna = last.get("yajna", {}) if last else {}
+
+    total_cycles = sum(
+        r.get("execution", {}).get("kirtan_cycles", 0) for r in round_results
+    )
+    total_switches = sum(
+        r.get("yajna", {}).get("switch_count", 0) for r in round_results
+    )
+
+    if effective_verbose:
+        print("-" * 60)
+        print(f"Completed {rounds} round(s) through VM pipeline")
+        print(f"  Total kirtan cycles: {total_cycles}")
+        print(f"  Total yajna switches: {total_switches}")
+        print("=" * 60)
+    elif not audio:
+        final_pos = last.get("position", 0)
+        final_guard = last.get("guardian", "unknown")
+        print(
+            f"CHANT: {rounds}r × {WORDS}t → [{final_guard}@{final_pos}] "
+            f"Cycles={total_cycles} Switches={total_switches}"
+        )
+
+    return ChantResult(
+        success=True,
+        bhakti=NavaBhakti.KIRTANAM.value,
+        rounds=rounds,
+        ticks=total_ticks,
+        final_position=last.get("position", 0),
+        final_guardian=str(last.get("guardian", "unknown")),
+        cycle_count=total_cycles,
+        switch_count=total_switches,
+        parampara_connected=last.get("parampara", {}).get("verified", False),
+    )
 
 
 class VimanaServeResult(TypedDict):
@@ -278,8 +269,8 @@ def cli_listen(
     SHRAVANAM (Hearing) - The first process of devotional service.
     Before you chant, you must hear.
 
-    The Temple receives clean offerings from the Priest (event_bridge).
-    No file I/O here - that's the Priest's work.
+    Routes through lotus.execute() to register the listen intent in the VM,
+    then fetches events as an I/O concern.
 
     Args:
         source: Event source (violations, syscalls, all)
@@ -290,7 +281,12 @@ def cli_listen(
     Returns:
         ListenResult with event entries.
     """
-    # The Priest fetches the offerings (event_bridge handles all I/O)
+    # === COMPUTATION: Route through the VM ===
+    from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+    lotus = get_mahamantra()
+    lotus.execute(f"listen {source}")
+
+    # === I/O: Fetch events (event_bridge handles all I/O) ===
     entries, total_entries = get_events(
         source=source,
         limit=tail,
@@ -363,6 +359,9 @@ def cli_resolve(
     VANDANAM (Praying) - Humbly requesting knowledge.
     "Who is this Mahajana? What is their position?"
 
+    Routes through lotus.execute() to register the resolve intent in the VM,
+    then performs the lookup as an I/O concern.
+
     Args:
         name: Mahajana name, alias, or position (0-15)
         json: Output as JSON
@@ -370,7 +369,12 @@ def cli_resolve(
     Returns:
         ResolveResult with mahajana details.
     """
-    # SSOT imports from seed.py and wiring.py
+    # === COMPUTATION: Route through the VM ===
+    from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+    lotus = get_mahamantra()
+    lotus.execute(f"resolve {name}")
+
+    # === I/O: Lookup from SSOT ===
     from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS, get_quarter_name
     from vibe_core.mahamantra.substrate.wiring import get_position_from_name
 
@@ -476,8 +480,8 @@ def cli_serve(
     PADA_SEVANAM (Serving the Feet) - Execution of duty.
     "Janaka acts without attachment. The work is the offering."
 
-    Submits tasks to JanakaService for execution.
-    The task enters the queue and can be executed immediately.
+    Routes through lotus.execute() first to compute position/guardian routing
+    for the task, then submits to JanakaService with VM-computed context.
 
     Args:
         task: Task description to execute
@@ -490,8 +494,18 @@ def cli_serve(
     """
     from datetime import datetime
 
-    from vibe_core.mahamantra.karma.janaka import TaskPriority, JanakaProtocol
+    from vibe_core.mahamantra.karma.janaka import TaskPriority
     from vibe_core.mahamantra.karma.janaka import get_service as get_janaka
+    from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
+    # === COMPUTATION: Route task through the VM ===
+    lotus = get_mahamantra()
+    vm_result = lotus.execute(task)
+
+    # VM tells us WHERE this task belongs (position, guardian, opcode)
+    vm_position = vm_result.get("position", 10)  # 10 = Janaka's position
+    vm_guardian = vm_result.get("guardian", "janaka")
+    vm_seed = vm_result.get("vibration", {}).get("seed", 0)
 
     # Map priority string to enum (default to normal if empty)
     priority = priority or "normal"
@@ -508,16 +522,16 @@ def cli_serve(
 
     start_time = datetime.now()
 
-    # Submit the task
+    # Submit the task with VM-computed routing context
     task_id = janaka.submit(
         name=task[:50],  # Truncate long names
         task_input=task,
         priority=task_priority,
-        sovereign_id="cli_serve",
+        sovereign_id=f"cli_serve[{vm_guardian}@{vm_position}]",
     )
 
     status = "queued"
-    message = f"Task queued with priority {priority}"
+    message = f"Task queued with priority {priority} (VM: {vm_guardian}@{vm_position})"
     exec_time_ms = 0
 
     # Execute if requested
@@ -548,11 +562,12 @@ def cli_serve(
     # === PRESENTATION ===
     if not json:
         print("=" * 60)
-        print("MAHAMANTRA SERVE - Pada Sevanam")
+        print("MAHAMANTRA SERVE - Pada Sevanam (Through VM Pipeline)")
         print("=" * 60)
         print(f"  Task:     {task[:50]}{'...' if len(task) > 50 else ''}")
         print(f"  ID:       {task_id}")
         print(f"  Priority: {priority.upper()}")
+        print(f"  VM Route: {vm_guardian}@{vm_position} (seed={vm_seed})")
         print(f"  Status:   {status.upper()}")
         print(f"  Time:     {result['execution_time_ms']}ms")
         print("-" * 60)
@@ -590,8 +605,9 @@ def cli_veda(
     ATMA_NIVEDANAM (Self-Surrender) - Complete dedication.
     "Whatever you do, offer it to Me." (BG 9.27)
 
-    The Veda-Explorer chat interface - neuro-symbolic processing.
-    Deterministic first, LLM fallback.
+    Routes through lotus.execute() for deterministic computation (vibration,
+    resonant words, verse, guardian). VedaExplorer and LLM use VM output
+    as context — they are I/O concerns, not computation.
 
     Args:
         message: Message to process (ignored if interactive)
@@ -618,7 +634,7 @@ def cli_veda(
     # Create explorer
     explorer = VedaExplorer(mode=explorer_mode)
 
-    # Interactive mode
+    # Interactive mode (REPL is inherently multi-turn I/O)
     if interactive:
         explorer.repl()
         return VedaCLIResult(
@@ -650,51 +666,32 @@ def cli_veda(
             print("=" * 60)
         return result
 
-    # Process message
-    # ŚRAVAṆAM CHECK: Must hear before speaking
-    import time
+    # === COMPUTATION: Route message through the VM ===
+    from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
 
-    from vibe_core.mahamantra.substrate.harmonics import SravanamCheck
+    lotus = get_mahamantra()
+    vm_result = lotus.execute(message)
 
-    # Get current tick (based on system time modulo JIVA_CYCLE)
-    current_tick = int(time.time() * 1000) % 432  # ms modulo JIVA_CYCLE
+    # VM gives us deterministic context for the message
+    vm_guardian = vm_result.get("guardian", "unknown")
+    vm_position = vm_result.get("position", 0)
+    vm_verse = vm_result.get("verse", {})
+    vm_smaranam = vm_result.get("smaranam", ())
+    vm_composed = vm_result.get("composed", "")
+    vm_parampara = vm_result.get("parampara", {})
 
-    # Estimate tokens (rough: 1 token ≈ 4 chars)
-    input_tokens = len(message) // 4 + 1
-    # Estimate output will be 2x input (conservative for 2:1 ratio)
-    estimated_output = input_tokens * 2
-
-    # Default resonance (will be updated by actual processing)
-    resonance = 0.5  # REFINE zone - safe default
-
-    # Dynamic emission check
-    can_emit, reason, delay = SravanamCheck.can_emit_dynamic(
-        input_tokens=input_tokens,
-        output_tokens=estimated_output,
-        resonance=resonance,
-        tick=current_tick,
-        strict=False,  # Not strict for chat
-    )
-
-    if not can_emit and delay > 0:
-        # Wait for next Gajra if delay is small
-        if delay <= SravanamCheck.MAX_EGO_OFFSET:
-            time.sleep(delay * 0.001)  # Convert to seconds (rough)
-            current_tick = (current_tick + delay) % 432
-
+    # === I/O: VedaExplorer / LLM use VM output as context ===
     # CREATIVE MODE: Use NAGA-flooded chat (Layer -1 integration)
     if explorer_mode == ExplorerMode.CREATIVE:
         try:
-            from vibe_core.mahamantra.chat import flooded_routed_chat, get_guardian_for_message
+            from vibe_core.mahamantra.chat import flooded_routed_chat
 
-            # Route to appropriate guardian with NAGA flooding
-            guardian = get_guardian_for_message(message)
             response = flooded_routed_chat(message)
 
             veda_result = {
                 "success": True,
                 "intent": "creative",
-                "response": f"[NAGA x {guardian.upper()}] {response}",
+                "response": f"[NAGA x {vm_guardian.upper()}] {response}",
                 "llm_used": True,
                 "naga_flooded": True,
             }
@@ -704,6 +701,11 @@ def cli_veda(
             veda_result["naga_error"] = str(e)
     else:
         veda_result = explorer.process(message)
+
+    # Enrich with VM computation
+    if vm_composed and not veda_result.get("llm_used"):
+        # Deterministic path: use VM-composed output
+        veda_result["response"] = vm_composed or veda_result.get("response", "")
 
     result = VedaCLIResult(
         success=veda_result.get("success", False),
@@ -717,16 +719,18 @@ def cli_veda(
     # === PRESENTATION ===
     if not json:
         naga_status = "FLOODED" if veda_result.get("naga_flooded") else "Standard"
-        ego_offset = SravanamCheck.calculate_ego_offset(current_tick)
-        on_gajra = SravanamCheck.is_on_gajra(current_tick)
-        phase_dist, nearest_sync = SravanamCheck.calculate_phase_angle(current_tick)
 
         print("=" * 60)
-        print("VEDA EXPLORER - Atma Nivedanam")
+        print("VEDA EXPLORER - Atma Nivedanam (Through VM Pipeline)")
         print("=" * 60)
-        print(f"  Mode: {explorer_mode.value.upper()} ({naga_status})")
-        print(f"  LLM:  {'Available' if explorer.llm_available else 'Not available'}")
-        print(f"  Phase: tick={current_tick} ego={ego_offset} {'GAJRA' if on_gajra else ''} sync→{nearest_sync}")
+        print(f"  Mode:     {explorer_mode.value.upper()} ({naga_status})")
+        print(f"  VM Route: {vm_guardian}@{vm_position}")
+        if vm_verse:
+            print(f"  Verse:    {vm_verse}")
+        if vm_smaranam:
+            words = ", ".join(s.get("sanskrit", "?") for s in vm_smaranam[:3])
+            print(f"  Smaranam: {words}")
+        print(f"  LLM:      {'Available' if explorer.llm_available else 'Not available'}")
         print("-" * 60)
         print(f"  Input: {message}")
         print(f"  Intent: {result['intent']}")
