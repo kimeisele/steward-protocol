@@ -46,14 +46,14 @@ python -m vibe_core.mahamantra "anything"
 ```
 steward <command> <args>
   → MahamantraCLIEntry.run()
-    → if "chat": gateway_chat(message)          ← BYPASSES EVERYTHING
+    → if "chat": lotus.execute(message) → gateway_chat(message)  ← WIRED ✅
     → else: cli_auto.execute(command, remaining) ← Protocol introspection
       → discovers GuardianService methods
       → calls them directly                      ← BYPASSES VM, BYPASSES KERNEL
 ```
 
-**Verdict**: ❌ BYPASSES VM. Calls guardian services directly via reflection.
-The `chat` command goes through `vibe_core.gateway` — completely outside mahamantra.
+**Verdict**: ⚠️ PARTIALLY WIRED. Chat command now routes through VM first.
+Other commands still use cli_auto protocol introspection (direct service calls).
 
 ---
 
@@ -216,7 +216,8 @@ SHOULD BE:
 |------|-------------|-----------------|----------------|
 | `__main__.py` | ✅ | ❌ | ✅ |
 | `cli/steward.py` | ✅ | ❌ | ❌ (calls __call__ not execute) |
-| `cli/entry.py` | ❌ | ❌ | ❌ |
+| `cli/entry.py` chat | ✅ (WIRED) | ❌ | ✅ |
+| `cli/entry.py` other | ❌ | ❌ | ❌ |
 | `cli_chant` | ✅ (WIRED) | ❌ | ✅ |
 | `cli_serve` | ✅ (WIRED) | ❌ | ✅ |
 | `cli_veda` | ✅ (WIRED) | ❌ | ✅ |
@@ -225,8 +226,8 @@ SHOULD BE:
 | `chat.py` | ❌ | ❌ | ❌ |
 | `kernel.resolve()` | ✅ | ✅ | ✅ |
 
-**Score: 7/8 computation paths go through the VM. 1/8 goes through the kernel.**
-**Remaining bypass: `cli/entry.py` chat command + `chat.py` direct LLM.**
+**Score: 8/9 computation paths go through the VM. 1/9 goes through the kernel.**
+**Remaining bypasses: `cli/entry.py` non-chat commands (cli_auto) + `chat.py` direct LLM.**
 
 ---
 
