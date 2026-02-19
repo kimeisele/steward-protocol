@@ -220,6 +220,61 @@ class TestStepIsolation:
 # VM REGISTERS — Persistent state across cycles
 # =============================================================================
 
+class TestVenuDriven:
+    """Verify Venu orchestrates the VM execution cycle."""
+
+    def test_venu_diw_in_ctx(self):
+        """Each step receives a venu_diw from Venu's step()."""
+        import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+
+        old = cc_mod._COMPILER
+        cc_mod._COMPILER = None
+        try:
+            compiler = cc_mod.get_compiler()
+            diws_seen = []
+
+            def _capture_diw(lotus, ctx):
+                diws_seen.append(ctx["venu_diw"])
+
+            compiler.register_op("diw_capture", gate=4, handler=_capture_diw)
+
+            m = MahamantraLotus()
+            m.bootstrap(lazy=True, silent=True)
+            m("test venu driven")
+            assert len(diws_seen) == 1
+            assert isinstance(diws_seen[0], int)
+            assert diws_seen[0] != 0, "DIW must not be zero (SUNYA)"
+        finally:
+            cc_mod._COMPILER = old
+
+    def test_venu_tick_advances(self):
+        """Venu's tick advances by total ops (core + custom) per execute_cycle call."""
+        from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
+        m = MahamantraLotus()
+        m.bootstrap(lazy=True, silent=True)
+        compiler = get_compiler()
+        total_ops = NAVA + compiler.custom_count
+        tick_before = m.venu.tick
+        m("first call")
+        tick_after = m.venu.tick
+        assert tick_after - tick_before == total_ops, (
+            f"Venu tick should advance by {total_ops}, got {tick_after - tick_before}"
+        )
+
+    def test_venu_tick_advances_multiple_calls(self):
+        """Multiple calls advance Venu tick consistently."""
+        from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
+        m = MahamantraLotus()
+        m.bootstrap(lazy=True, silent=True)
+        compiler = get_compiler()
+        total_ops = NAVA + compiler.custom_count
+        tick_start = m.venu.tick
+        m("call 1")
+        m("call 2")
+        m("call 3")
+        assert m.venu.tick - tick_start == 3 * total_ops
+
+
 class TestVMRegisters:
     """Verify vm_registers persist across execute_cycle() calls."""
 
