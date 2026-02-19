@@ -316,7 +316,11 @@ def execute_cycle(
     opcode: Optional[int] = None,
 ) -> Dict[str, object]:
     """
-    Execute the 9-step NavaBhakti pipeline via VAMSI dispatch.
+    Execute the 9-step NavaBhakti pipeline, driven by Venu.
+
+    Venu's step() is called for each of the 9 ops, providing a fresh
+    DIW context per step. The flute plays 9 notes, each note drives
+    one bhakti step. ctx["venu_diw"] holds the current note.
 
     If CycleCompiler has custom ops registered, uses the compiled cycle.
     Otherwise, zero-overhead static CYCLE dispatch (the common case).
@@ -327,25 +331,34 @@ def execute_cycle(
     if not hasattr(lotus, "_vm_registers"):
         lotus._vm_registers = {}
 
+    # Venu drives the cycle — the flute plays, the VM dances
+    venu = lotus.venu
+
     ctx: Dict[str, object] = {
         "input_data": input_data,
         "opcode": opcode,
         "vm_registers": lotus._vm_registers,
+        "venu_diw": 0,       # Current DIW from Venu (updated each step)
+        "venu_step": 0,      # Which step of the 9 we're on
     }
 
-    # Fast path: no custom ops → static dispatch (zero overhead)
+    # Fast path: no custom ops → Venu-driven dispatch
     from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
     compiler = get_compiler()
     if compiler.custom_count == 0:
-        for op in CYCLE:
-            DISPATCH[op](lotus, ctx)
+        for i, op in enumerate(CYCLE):
+            ctx["venu_diw"] = venu.step()   # The flute plays
+            ctx["venu_step"] = i
+            DISPATCH[op](lotus, ctx)        # The VM dances
     else:
         # Compiled path: core + custom ops with condition evaluation
         compiled = compiler.compile()
         dispatch = compiler.dispatch
-        for cop in compiled:
+        for i, cop in enumerate(compiled):
+            ctx["venu_diw"] = venu.step()   # The flute plays
+            ctx["venu_step"] = i
             if cop.condition is not None and not cop.condition(ctx):
                 continue  # Condition bits: skip this op
-            dispatch[cop.op_id](lotus, ctx)
+            dispatch[cop.op_id](lotus, ctx) # The VM dances
 
     return ctx["_result"]
