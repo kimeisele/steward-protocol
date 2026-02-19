@@ -120,6 +120,13 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
                 return 1
             # Combine all remaining args into message
             message = " ".join(remaining)
+
+            # === COMPUTATION: Route through the VM first ===
+            from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+            lotus = get_mahamantra()
+            lotus.execute(message)
+
+            # === I/O: LLM chat is a side effect using VM context ===
             response = gateway_chat(message)
 
             # Print output from GatewayResponse
