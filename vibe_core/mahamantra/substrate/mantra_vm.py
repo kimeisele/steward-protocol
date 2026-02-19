@@ -2,18 +2,17 @@
 MANTRA VM — DIW-Dispatched Execution Engine
 =============================================
 
-Replaces the hardcoded 250-line __call__() pipeline with a 12-instruction
-dispatch loop. Each instruction reads from / writes to a shared ctx dict.
+"nava-vidha bhakti" — Nine forms of devotional service (SB 7.5.23).
 
-The 9 NavaBhakti methods on MahamantraLotus remain individually callable.
-This engine chains them via VAMSI-addressed dispatch.
+9-instruction dispatch loop. Each instruction reads from / writes to
+a shared ctx dict.
 
 ARCHITECTURE:
     execute_cycle(lotus, input_data, opcode) -> result dict
     - Builds ctx dict
-    - Iterates CYCLE (12 instructions) via DISPATCH table
+    - Iterates CYCLE (9 instructions) via DISPATCH table
     - PURE COMPUTATION — no gates (gates fire at execute() boundary)
-    - Returns the same 27-key dict as the old __call__()
+    - Returns the 27-key result dict
 """
 
 from __future__ import annotations
@@ -33,21 +32,21 @@ logger = logging.getLogger("MAHAMANTRA.VM")
 
 
 # =============================================================================
-# 12 WRAPPER FUNCTIONS — Read ctx, call method, write ctx
+# 9 WRAPPER FUNCTIONS — The true NavaBhakti (SB 7.5.23)
 # =============================================================================
 
 def _w_sravanam(lotus: "MahamantraLotus", ctx: dict) -> None:
+    """1. SRAVANAM — Hearing. Parse input AND encode phonetic coords."""
     text, cell, seed = lotus.sravanam(ctx["input_data"])
     ctx["input_text"] = text
     ctx["cell"] = cell
     ctx["seed"] = seed
-
-
-def _w_nama(lotus: "MahamantraLotus", ctx: dict) -> None:
+    # Phonetic encoding (was split out as fake 'NAMA' step)
     ctx["input_coords"] = lotus.nama(ctx["input_text"])
 
 
 def _w_kirtanam(lotus: "MahamantraLotus", ctx: dict) -> None:
+    """2. KIRTANAM — Chanting. Compression + chamber transformation."""
     ctx["seed"] = lotus.kirtanam(ctx["input_text"], ctx["seed"])
 
 
@@ -102,12 +101,11 @@ def _w_dasyam(lotus: "MahamantraLotus", ctx: dict) -> None:
 
 
 def _w_sakhyam(lotus: "MahamantraLotus", ctx: dict) -> None:
+    """8. SAKHYAM — Friendship. Cell creation + chamber transformation."""
     ctx["result_cell"] = lotus.sakhyam(
         ctx["seed"], ctx["raw_address"], ctx["position"], ctx["input_text"],
     )
-
-
-def _w_kirtan(lotus: "MahamantraLotus", ctx: dict) -> None:
+    # Chamber work (was split out as fake 'KIRTAN' step)
     from vibe_core.mahamantra.substrate.lotus_core import _get_pipeline
     P = _get_pipeline()
     chamber = P.get_chamber()
@@ -122,10 +120,13 @@ def _w_kirtan(lotus: "MahamantraLotus", ctx: dict) -> None:
         ctx["result_cell"] = chamber.spell_kirtan(ctx["result_cell"], ctx["input_coords"])
 
 
-def _w_yajna(lotus: "MahamantraLotus", ctx: dict) -> None:
+def _w_atma_nivedanam(lotus: "MahamantraLotus", ctx: dict) -> None:
+    """9. ATMA_NIVEDANAM — Self-surrender. Reactor + akash update + result."""
     from vibe_core.mahamantra.substrate.lotus_core import _get_pipeline
     from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader, HEADER_DAILY_CYCLES
     P = _get_pipeline()
+
+    # Yajna/reactor work (was split out as fake 'YAJNA' step)
     reactor = P.get_shadow_reactor_factory().spawn(
         auto_discover=False, initial_position=ctx["position"], forced_lagna=0,
     )
@@ -159,10 +160,7 @@ def _w_yajna(lotus: "MahamantraLotus", ctx: dict) -> None:
     ctx["shadow_state"] = shadow_state
     ctx["guardian_result"] = guardian_result
 
-
-def _w_atma_nivedanam(lotus: "MahamantraLotus", ctx: dict) -> None:
-    from vibe_core.mahamantra.substrate.lotus_core import _get_pipeline
-    P = _get_pipeline()
+    # Akash update
     WORDS = P.WORDS
     lotus._akash["total_beats"] += WORDS
     lotus._akash["total_rounds"] += 1
@@ -184,16 +182,13 @@ def _w_atma_nivedanam(lotus: "MahamantraLotus", ctx: dict) -> None:
 
 DISPATCH = {
     NavaBhaktiOp.SRAVANAM: _w_sravanam,
-    NavaBhaktiOp.NAMA: _w_nama,
     NavaBhaktiOp.KIRTANAM: _w_kirtanam,
+    NavaBhaktiOp.SMARANAM: _w_smaranam,
     NavaBhaktiOp.PADA_SEVANAM: _w_pada_sevanam,
     NavaBhaktiOp.ARCANAM: _w_arcanam,
-    NavaBhaktiOp.SMARANAM: _w_smaranam,
     NavaBhaktiOp.VANDANAM: _w_vandanam,
     NavaBhaktiOp.DASYAM: _w_dasyam,
     NavaBhaktiOp.SAKHYAM: _w_sakhyam,
-    NavaBhaktiOp.KIRTAN: _w_kirtan,
-    NavaBhaktiOp.YAJNA: _w_yajna,
     NavaBhaktiOp.ATMA_NIVEDANAM: _w_atma_nivedanam,
 }
 
@@ -321,10 +316,7 @@ def execute_cycle(
     opcode: Optional[int] = None,
 ) -> Dict[str, object]:
     """
-    Execute the full NavaBhakti pipeline via VAMSI dispatch.
-
-    Replaces the hardcoded __call__() sequence with a data-driven loop.
-    Same input → same output. Verified by key-by-key equivalence tests.
+    Execute the 9-step NavaBhakti pipeline via VAMSI dispatch.
 
     If CycleCompiler has custom ops registered, uses the compiled cycle.
     Otherwise, zero-overhead static CYCLE dispatch (the common case).

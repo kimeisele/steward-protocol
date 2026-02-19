@@ -15,7 +15,6 @@ from vibe_core.mahamantra.substrate.mantra_vm import (
     DISPATCH,
     execute_cycle,
     _w_sravanam,
-    _w_nama,
     _w_kirtanam,
     _w_pada_sevanam,
     _w_arcanam,
@@ -30,7 +29,7 @@ from vibe_core.mahamantra.protocols._navabhakti import (
     NavaBhaktiOp,
     VAMSI_ADDR,
 )
-from vibe_core.mahamantra.protocols._seed import MAHAJANA_COUNT, PARAMPARA
+from vibe_core.mahamantra.protocols._seed import NAVA, PARAMPARA
 
 
 # =============================================================================
@@ -52,13 +51,13 @@ class TestNavaBhaktiProtocol:
     """Verify the instruction set is correctly derived from the Mantra."""
 
     def test_instruction_count(self):
-        assert len(NavaBhaktiOp) == MAHAJANA_COUNT == 12
+        assert len(NavaBhaktiOp) == NAVA == 9
 
     def test_cycle_length(self):
-        assert len(CYCLE) == MAHAJANA_COUNT
+        assert len(CYCLE) == NAVA
 
     def test_gate_index_length(self):
-        assert len(GATE_INDEX) == MAHAJANA_COUNT
+        assert len(GATE_INDEX) == NAVA
 
     def test_vamsi_addresses_stride(self):
         for i, addr in enumerate(VAMSI_ADDR):
@@ -169,10 +168,10 @@ class TestStepIsolation:
         assert ctx["cell"] is None
         assert ctx["seed"] is None
 
-    def test_nama_produces_coords(self, lotus):
+    def test_sravanam_produces_coords(self, lotus):
+        """SRAVANAM now includes phonetic encoding (was fake NAMA step)."""
         ctx = {"input_data": "hello"}
         _w_sravanam(lotus, ctx)
-        _w_nama(lotus, ctx)
         assert isinstance(ctx["input_coords"], tuple)
         assert len(ctx["input_coords"]) > 0
 
