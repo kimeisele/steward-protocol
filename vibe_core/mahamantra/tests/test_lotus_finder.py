@@ -66,6 +66,28 @@ class TestModuleMap:
         # wiring.py exists as a direct child — must resolve to root
         assert module_map["wiring"].parent == _SUBSTRATE_ROOT
 
+    def test_namespace_collision_detected(self):
+        """Two nested files with same stem must raise ImportError."""
+        import tempfile, shutil
+        from vibe_core.mahamantra.substrate.lotus_finder import _build_module_map, _SUBSTRATE_ROOT
+
+        # Create two nested files with same stem in different subdirs
+        # Names must NOT start with _ (those are skipped by the finder)
+        dir_a = _SUBSTRATE_ROOT / "test_collision_a"
+        dir_b = _SUBSTRATE_ROOT / "test_collision_b"
+        try:
+            dir_a.mkdir(exist_ok=True)
+            dir_b.mkdir(exist_ok=True)
+            (dir_a / "__init__.py").touch()
+            (dir_b / "__init__.py").touch()
+            (dir_a / "collider.py").write_text("X = 1\n")
+            (dir_b / "collider.py").write_text("X = 2\n")
+            with pytest.raises(ImportError, match="NAMESPACE COLLISION.*collider"):
+                _build_module_map()
+        finally:
+            shutil.rmtree(dir_a, ignore_errors=True)
+            shutil.rmtree(dir_b, ignore_errors=True)
+
     def test_module_map_covers_known_modules(self):
         """Key modules that are heavily imported must be in the map."""
         from vibe_core.mahamantra.substrate.lotus_finder import _build_module_map
