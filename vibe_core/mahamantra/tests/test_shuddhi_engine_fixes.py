@@ -100,7 +100,7 @@ class TestFractalRoutingSafety:
     def test_non_init_file_not_injected(self, engine):
         """fractal_routing must NOT inject __getattr__ into regular .py files."""
         r = engine.purify(
-            _substrate_root() / "pancha_tattva.py",
+            _substrate_root() / "core" / "pancha_tattva.py",
             "missing_fractal_routing",
         )
         assert r.status == ShuddhiStatus.DETECTED
@@ -109,7 +109,7 @@ class TestFractalRoutingSafety:
     def test_purify_detected_via_purify_method(self, engine):
         """purify() must also return DETECTED, not SKIPPED."""
         r = engine.purify(
-            _substrate_root() / "tattva_registry.py",
+            _substrate_root() / "vm" / "tattva_registry.py",
             "any_type_usage",
         )
         # This file uses Any — should be DETECTED or SKIPPED depending on content
