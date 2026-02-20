@@ -86,11 +86,11 @@ def _scan_files():
     from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT, MAHAMANTRA_ROOT
     return [
         SUBSTRATE_ROOT / "lotus_core.py",
-        SUBSTRATE_ROOT / "tattva_registry.py",
-        SUBSTRATE_ROOT / "pancha_tattva.py",
+        SUBSTRATE_ROOT / "vm" / "tattva_registry.py",
+        SUBSTRATE_ROOT / "core" / "pancha_tattva.py",
         SUBSTRATE_ROOT / "encoding" / "wordnet_bridge.py",
-        SUBSTRATE_ROOT / "gate_providers.py",
-        SUBSTRATE_ROOT / "cell_router.py",
+        SUBSTRATE_ROOT / "vm" / "gate_providers.py",
+        SUBSTRATE_ROOT / "cell_system" / "cell_router.py",
         MAHAMANTRA_ROOT / "dharma" / "kumaras" / "engine.py",
         MAHAMANTRA_ROOT / "dharma" / "kumaras" / "sravanam.py",
         MAHAMANTRA_ROOT / "adapters" / "composition.py",
