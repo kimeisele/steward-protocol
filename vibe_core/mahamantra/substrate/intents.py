@@ -23,13 +23,15 @@ __genesis__ = "0x50f34ca4"  # GenesisByte: parampara % 37 == 0
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
+from vibe_core.mahamantra.substrate._paths import PROJECT_ROOT
+
 # =============================================================================
 # YAML LOADER - Runtime Intent Loading
 # =============================================================================
 # "Prompt as Infrastructure" - NO STATIC DICTS
 
 _INTENT_CACHE: Optional[Dict[int, Tuple[str, ...]]] = None
-_YAML_PATH = Path(__file__).parent.parent.parent.parent / "knowledge" / "guardian_intents.yaml"
+_YAML_PATH = PROJECT_ROOT / "knowledge" / "guardian_intents.yaml"
 
 
 def _load_intents_from_yaml() -> Dict[int, Tuple[str, ...]]:
