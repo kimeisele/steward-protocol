@@ -107,15 +107,30 @@ def _build_module_map() -> Dict[str, Path]:
 
     # Pass 2: Nested .py files (lower priority — for AFTER reorganization)
     # Only register if the name isn't already taken by a direct child.
+    # COLLISION DETECTION: crash hard if two nested files share a stem.
+    # Collect ALL nested files first, then detect collisions
+    nested_by_name: Dict[str, list] = {}
     for py_file in _SUBSTRATE_ROOT.rglob("*.py"):
         if py_file.name.startswith("_"):
             continue
-        # Skip direct children (already registered)
         if py_file.parent == _SUBSTRATE_ROOT:
             continue
         name = py_file.stem
-        if name not in module_map:
-            module_map[name] = py_file
+        nested_by_name.setdefault(name, []).append(py_file)
+
+    for name, paths in sorted(nested_by_name.items()):
+        # Direct child already owns this name — skip (direct wins)
+        if name in module_map:
+            continue
+        # Two nested files with same stem — COLLISION
+        if len(paths) > 1:
+            collision_paths = [str(p.relative_to(_SUBSTRATE_ROOT)) for p in paths]
+            raise ImportError(
+                f"[LOTUS.FINDER] NAMESPACE COLLISION: '{name}' found in "
+                f"{collision_paths}. Rename one or add a direct child "
+                f"substrate/{name}.py to disambiguate."
+            )
+        module_map[name] = paths[0]
 
     logger.debug("[LOTUS.FINDER] Built module map: %d modules", len(module_map))
     return module_map
