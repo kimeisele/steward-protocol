@@ -95,7 +95,8 @@ class TestFractalRoutingSafety:
     """missing_fractal_routing must NOT inject into non-__init__.py."""
 
     def test_regular_file_detected_not_purified(self, engine):
-        f = Path("vibe_core/mahamantra/substrate/pancha_tattva.py")
+        from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+        f = SUBSTRATE_ROOT / "pancha_tattva.py"
         r = engine.purify(f, "missing_fractal_routing")
         assert r.status == ShuddhiStatus.DETECTED
         assert r.purified_code is None
