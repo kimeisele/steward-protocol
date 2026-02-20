@@ -41,19 +41,22 @@ class TestFragmentIngestion:
     """Files must decompose into cells in the CellRouter."""
 
     def test_parse_single_file(self):
-        f = Path("vibe_core/mahamantra/substrate/lotus_core.py")
+        from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+        f = SUBSTRATE_ROOT / "lotus_core.py"
         frags = parse_file_to_fragments(f)
         assert len(frags.fragments) > 0
 
     def test_register_populates_router(self, fresh_router):
-        f = Path("vibe_core/mahamantra/substrate/lotus_core.py")
+        from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+        f = SUBSTRATE_ROOT / "lotus_core.py"
         frags = parse_file_to_fragments(f)
         addrs = register_fragments_as_cells(frags)
         assert len(addrs) > 0
         assert len(fresh_router) == len(addrs)
 
     def test_cells_have_positions(self, fresh_router):
-        f = Path("vibe_core/mahamantra/substrate/lotus_core.py")
+        from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+        f = SUBSTRATE_ROOT / "lotus_core.py"
         frags = parse_file_to_fragments(f)
         register_fragments_as_cells(frags)
         positions = set()
@@ -79,22 +82,23 @@ class TestFragmentIngestion:
 
 
 # Small subset of files for fast scan tests
-_SCAN_FILES = [
-    Path("vibe_core/mahamantra/substrate/lotus_core.py"),
-    Path("vibe_core/mahamantra/substrate/tattva_registry.py"),
-    Path("vibe_core/mahamantra/substrate/pancha_tattva.py"),
-    Path("vibe_core/mahamantra/substrate/wordnet_bridge.py"),
-    Path("vibe_core/mahamantra/substrate/gate_providers.py"),
-    Path("vibe_core/mahamantra/substrate/cell_router.py"),
-    Path("vibe_core/mahamantra/dharma/kumaras/engine.py"),
-    Path("vibe_core/mahamantra/dharma/kumaras/sravanam.py"),
-    Path("vibe_core/mahamantra/adapters/composition.py"),
-    Path("vibe_core/mahamantra/kernel/singularity.py"),
-]
-
+def _scan_files():
+    from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT, MAHAMANTRA_ROOT
+    return [
+        SUBSTRATE_ROOT / "lotus_core.py",
+        SUBSTRATE_ROOT / "vm" / "tattva_registry.py",
+        SUBSTRATE_ROOT / "core" / "pancha_tattva.py",
+        SUBSTRATE_ROOT / "encoding" / "wordnet_bridge.py",
+        SUBSTRATE_ROOT / "vm" / "gate_providers.py",
+        SUBSTRATE_ROOT / "cell_system" / "cell_router.py",
+        MAHAMANTRA_ROOT / "dharma" / "kumaras" / "engine.py",
+        MAHAMANTRA_ROOT / "dharma" / "kumaras" / "sravanam.py",
+        MAHAMANTRA_ROOT / "adapters" / "composition.py",
+        MAHAMANTRA_ROOT / "kernel" / "singularity.py",
+    ]
 
 def _ingest_subset():
-    for f in _SCAN_FILES:
+    for f in _scan_files():
         if f.exists():
             try:
                 frags = parse_file_to_fragments(f)

@@ -26,7 +26,7 @@
 | **Bootstrap** | `lotus.bootstrap()` | Lightweight — gate providers + healing resolver | KING |
 | **Pipeline** | `lotus.__call__(input)` → 5 TattvaGates | PARSE→VALIDATE→EXECUTE→RESULT→SYNC | KING |
 | **DI** | `substrate/tattva_registry.py` | Gate provider registration (capability-checked) | KING |
-| **VM** | `substrate/mantra_vm.py` | NavaBhakti dispatch (12 instructions) + CycleCompiler | KING |
+| **VM** | `substrate/mantra_vm.py` | NavaBhakti dispatch (9 instructions, Venu-driven) + CycleCompiler | KING |
 | **Entry** | `__main__.py` | `mahamantra.execute(input)` — pure computation | KING |
 | **Routing** | `substrate/cell_router.py` | O(1) IPv6-like cell routing | KING |
 | **Clock** | `venu/clock.py` + `substrate/venu_orchestrator.py` | MantraClock + DIW flute cycle | KING |
@@ -216,7 +216,7 @@ BUILD PHASE (fraktal — every component has its own build/runtime):
     → Sravanam listener wired (organic cell scanning)
     → Sudarshana governance hook active
     → VMCapability discovery → CycleCompiler.register_op() for each capability
-    → CycleCompiler.compile() → frozen cycle tuple (12 core + N custom ops)
+    → CycleCompiler.compile() → frozen cycle tuple (9 core + N custom ops)
     → CellRouter populated (boot_orchestrator)
     → Singularity initialized
 
@@ -231,7 +231,7 @@ RUNTIME PHASE (tick-driven):
 
 COMPUTATION (on demand):
   lotus.execute(input) → __call__() → execute_cycle()
-    → CycleCompiler dispatches: 12 core ops + N custom ops
+    → CycleCompiler dispatches: 9 core ops + N custom ops
     → Condition bits: ops can be conditionally skipped
     → VM registers: persistent state across cycles
     → Result: 27-key dict
@@ -290,7 +290,7 @@ COMPUTATION (on demand):
 
 #### VM Phase 1: PoC ✅
 - ✅ `__call__()` delegates to `execute_cycle()` in `mantra_vm.py`
-- ✅ 12 NavaBhaktiOp wrappers (`_w_sravanam` through `_w_atma_nivedanam`)
+- ✅ 9 NavaBhaktiOp wrappers (`_w_sravanam` through `_w_atma_nivedanam`)
 - ✅ DISPATCH table maps NavaBhaktiOp → wrapper function
 - ✅ `_build_result()` produces 27-key output dict
 - ✅ 32 equivalence + isolation tests

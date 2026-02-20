@@ -52,7 +52,8 @@ assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 # DATA
 # =============================================================================
 
-_DATA_PATH: Final[Path] = Path(__file__).parent.parent / "data" / "wordnet_bridge.json"
+from vibe_core.mahamantra.substrate._paths import DATA_DIR
+_DATA_PATH: Final[Path] = DATA_DIR / "wordnet_bridge.json"
 
 # Loaded state
 _synset_list: Optional[List[str]] = None  # index → synset_id

@@ -155,7 +155,8 @@ class LineageChain:
         Discover project root by walking up from this file.
         Looks for pyproject.toml or .git as markers.
         """
-        current = Path(__file__).resolve().parent
+        from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+        current = SUBSTRATE_ROOT
         for _ in range(TEN):  # Max 10 levels up
             if (current / "pyproject.toml").exists() or (current / ".git").exists():
                 return current
