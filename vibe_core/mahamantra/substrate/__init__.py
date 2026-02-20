@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     # MAHAJANA
     # ACINTYA
-    from vibe_core.mahamantra.substrate.acintya import (
+    from vibe_core.mahamantra.substrate.core.acintya import (
         ACINTYA_ACCEPTED,
         GURU_ENTROPY,
         KRISHNA,
@@ -69,7 +69,7 @@ if TYPE_CHECKING:
     )
 
     # GUNA
-    from vibe_core.mahamantra.substrate.guna import (
+    from vibe_core.mahamantra.substrate.core.guna import (
         OPCODE_GUNA,
         RAJAS_OPCODES,
         SATTVA_OPCODES,
@@ -78,7 +78,7 @@ if TYPE_CHECKING:
         Guna,
         GunaQoS,
     )
-    from vibe_core.mahamantra.substrate.mahajana import (
+    from vibe_core.mahamantra.substrate.core.mahajana import (
         AVATARA_COUNT,
         MAHAJANA_COUNT,
         TOTAL_POSITIONS,
@@ -89,7 +89,7 @@ if TYPE_CHECKING:
     )
 
     # OPCODE
-    from vibe_core.mahamantra.substrate.opcode import (
+    from vibe_core.mahamantra.substrate.core.opcode import (
         DHARMA_OPCODES,
         GENESIS_OPCODES,
         KARMA_OPCODES,
@@ -102,14 +102,14 @@ if TYPE_CHECKING:
     )
 
     # POSITION
-    from vibe_core.mahamantra.substrate.position import (
+    from vibe_core.mahamantra.substrate.core.position import (
         MAHAMANTRA_POSITIONS,
         Guardian,
         MantraPosition,
     )
 
     # PROTOCOL
-    from vibe_core.mahamantra.substrate.protocol import (
+    from vibe_core.mahamantra.substrate.governance.protocol import (
         HeadProtocol,
         MantraAware,
         MantraProtocol,
@@ -118,7 +118,7 @@ if TYPE_CHECKING:
     )
 
     # TATTVA
-    from vibe_core.mahamantra.substrate.tattva import (
+    from vibe_core.mahamantra.substrate.core.tattva import (
         JIVA,
         PURUSHOTTAMA,
         GuruConnection,
@@ -144,7 +144,7 @@ if TYPE_CHECKING:
     )
 
     # YAJNA
-    from vibe_core.mahamantra.substrate.yajna import (
+    from vibe_core.mahamantra.substrate.services.yajna import (
         MAHA_POSITIONS,
         MALA_ROUNDS,
         PRIME_SIGNATURE,
