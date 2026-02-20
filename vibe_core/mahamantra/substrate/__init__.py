@@ -220,18 +220,20 @@ def _build_ast_index() -> dict[str, str]:
     """
     Extract __all__ from substrate .py files using AST (no imports).
 
+    Uses LotusFinder's module map for file paths, so this works even
+    after files are moved into subdirectories.
+
     ~50ms vs ~1800ms for import-based scanning. Zero side effects.
     """
     import ast
-    from pathlib import Path
+    from vibe_core.mahamantra.substrate.lotus_finder import _get_module_map
 
-    substrate_root = Path(__file__).parent
     index: dict[str, str] = {}
+    module_map = _get_module_map()
 
-    for py_file in sorted(substrate_root.glob("*.py")):
-        if py_file.name.startswith("_"):
+    for mod_name, py_file in sorted(module_map.items()):
+        if py_file.name == "__init__.py":
             continue
-        mod_name = py_file.stem
         try:
             tree = ast.parse(py_file.read_text(), filename=str(py_file))
         except SyntaxError:
