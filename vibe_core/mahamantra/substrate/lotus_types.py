@@ -118,7 +118,7 @@ class LotusNode:
 
     # Base path for the mahamantra package
     # Adjusted for move to substrate/: Go up one level to reach vibe_core/mahamantra
-    _BASE_PATH: Path = Path(__file__).parent.parent
+    from vibe_core.mahamantra.substrate._paths import MAHAMANTRA_ROOT as _BASE_PATH
 
     def __init__(self, path: LotusPath = LotusPath()) -> None:
         self._path = path

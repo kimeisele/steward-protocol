@@ -31,7 +31,7 @@ python -m vibe_core.mahamantra "anything"
       → fire_gate(PARSE)
       → fire_gate(VALIDATE)
       → fire_gate(EXECUTE)
-      → lotus.__call__() → execute_cycle() → 12 core ops + custom ops (VM!)
+      → lotus.__call__() → execute_cycle() → 9 core ops + custom ops (VM!)
       → fire_gate(RESULT)
       → fire_gate(SYNC)
     → _render_response()

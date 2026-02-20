@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     # MAHAJANA
     # ACINTYA
-    from vibe_core.mahamantra.substrate.acintya import (
+    from vibe_core.mahamantra.substrate.core.acintya import (
         ACINTYA_ACCEPTED,
         GURU_ENTROPY,
         KRISHNA,
@@ -69,7 +69,7 @@ if TYPE_CHECKING:
     )
 
     # GUNA
-    from vibe_core.mahamantra.substrate.guna import (
+    from vibe_core.mahamantra.substrate.core.guna import (
         OPCODE_GUNA,
         RAJAS_OPCODES,
         SATTVA_OPCODES,
@@ -78,7 +78,7 @@ if TYPE_CHECKING:
         Guna,
         GunaQoS,
     )
-    from vibe_core.mahamantra.substrate.mahajana import (
+    from vibe_core.mahamantra.substrate.core.mahajana import (
         AVATARA_COUNT,
         MAHAJANA_COUNT,
         TOTAL_POSITIONS,
@@ -89,7 +89,7 @@ if TYPE_CHECKING:
     )
 
     # OPCODE
-    from vibe_core.mahamantra.substrate.opcode import (
+    from vibe_core.mahamantra.substrate.core.opcode import (
         DHARMA_OPCODES,
         GENESIS_OPCODES,
         KARMA_OPCODES,
@@ -102,14 +102,14 @@ if TYPE_CHECKING:
     )
 
     # POSITION
-    from vibe_core.mahamantra.substrate.position import (
+    from vibe_core.mahamantra.substrate.core.position import (
         MAHAMANTRA_POSITIONS,
         Guardian,
         MantraPosition,
     )
 
     # PROTOCOL
-    from vibe_core.mahamantra.substrate.protocol import (
+    from vibe_core.mahamantra.substrate.governance.protocol import (
         HeadProtocol,
         MantraAware,
         MantraProtocol,
@@ -118,7 +118,7 @@ if TYPE_CHECKING:
     )
 
     # TATTVA
-    from vibe_core.mahamantra.substrate.tattva import (
+    from vibe_core.mahamantra.substrate.core.tattva import (
         JIVA,
         PURUSHOTTAMA,
         GuruConnection,
@@ -144,7 +144,7 @@ if TYPE_CHECKING:
     )
 
     # YAJNA
-    from vibe_core.mahamantra.substrate.yajna import (
+    from vibe_core.mahamantra.substrate.services.yajna import (
         MAHA_POSITIONS,
         MALA_ROUNDS,
         PRIME_SIGNATURE,
@@ -160,333 +160,152 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
-# LAZY IMPORT REGISTRY
+# SYMBOL DISCOVERY (replaces 280-entry _LAZY_IMPORTS dict)
+# =============================================================================
+# The LotusFinder (lotus_finder.py) handles MODULE-level discovery via
+# sys.meta_path. This __getattr__ handles SYMBOL-level discovery:
+#   from vibe_core.mahamantra.substrate import Mahajana
+# → scans substrate modules' __all__ to find which module exports "Mahajana"
+#
+# CONFLICT TABLE: When multiple modules export the same symbol name,
+# this table picks the canonical winner. Only ~20 entries needed.
+# Everything else is auto-discovered from __all__ lists.
 # =============================================================================
 
-_LAZY_IMPORTS = {
-    # === MAHAJANA ===
-    "Mahajana": "mahajana",
+_CONFLICT_WINNERS = {
+    # Symbol → canonical module (when multiple modules export the same name)
+    "FRACTAL_BASE": "wiring",
+    "Guna": "guna",
+    "HolyName": "byte",
     "MAHAJANA_COUNT": "mahajana",
-    "Avatara": "mahajana",
-    "AVATARA_COUNT": "mahajana",
-    "Quarter": "mahajana",
-    "Sampradaya": "mahajana",
-    "TOTAL_POSITIONS": "mahajana",
-    # === TATTVA ===
-    "Purushottama": "tattva",
-    "PURUSHOTTAMA": "tattva",
-    "KshetraElement": "tattva",
-    "GuruTattva": "tattva",
-    "GuruConnection": "tattva",
-    "JIVA": "tattva",
-    # === ACINTYA ===
-    "SYSTEM_MANIFESTATION": "acintya",
-    "ACINTYA_ACCEPTED": "acintya",
-    "TRINITY": "acintya",
     "PARAMPARA": "acintya",
     "PHASES": "acintya",
-    "GURU_ENTROPY": "acintya",
-    "PARAMPARA_VECTOR": "acintya",
-    "PurushaTattva": "acintya",
-    "PURUSHA": "acintya",
-    "KRISHNA_ASPECT": "acintya",
-    "KRISHNA_SMALLEST": "acintya",
-    "KRISHNA_LARGEST": "acintya",
-    "ProtocolLevel": "acintya",
-    "AcintyaAspect": "acintya",
-    "KrishnaPresence": "acintya",
-    "KRISHNA": "acintya",
-    "JivaCondition": "acintya",
-    "JivaState": "acintya",
-    "AcintyaAware": "acintya",
-    "ParamparaProtocol": "acintya",
-    "ParamparaConnection": "acintya",
-    "vibration_is_krishna": "acintya",
-    "mantra_is_krishna": "acintya",
-    "mantra_not_different_from_source": "acintya",
-    "check_bheda_abheda": "acintya",
-    "verify_parampara": "acintya",
-    "get_guru_entropy": "acintya",
-    # === BYTE ===
-    "HolyName": "byte",
-    "MantraTrit": "byte",
-    "MantraByte": "byte",
-    "GenesisByte": "byte",
-    # === WIRING ===
-    "FOLDER_IS_WIRING": "wiring",
-    "NO_FOLDER_NO_EXISTENCE": "wiring",
-    "POSITIONS_PER_QUARTER": "wiring",
-    "QUARTER_COUNT": "wiring",
-    "FRACTAL_BASE": "wiring",
-    "PositionMapping": "wiring",
-    "POSITION_MAPPINGS": "wiring",
-    "POSITION_BY_FOLDER": "wiring",
-    "POSITION_BY_NAME": "wiring",
-    "POSITION_BY_INDEX": "wiring",
-    "folder_exists": "wiring",
-    "get_position_from_folder": "wiring",
-    "get_position_from_name": "wiring",
-    "get_wiring_by_index": "wiring",  # Old get_position_by_index (returns PositionMapping)
-    "WiringProtocol": "wiring",
-    "WiringVerification": "wiring",
-    "verify_wiring": "wiring",
-    "calculate_fractal_depth": "wiring",
-    "calculate_total_nodes": "wiring",
-    # === PARAMPARA ===
-    "ParamparaNode": "parampara",
-    "PARAMPARA_GRAPH": "parampara",
-    "get_position": "parampara",
-    "get_quarter": "parampara",
-    "get_sampradaya": "parampara",
-    "get_guru": "parampara",
-    "get_mahajana_at_position": "parampara",
-    "get_37_formula": "parampara",
-    # === OPCODE ===
-    "MantraOpCode": "opcode",
-    "OPCODE_NAMES": "opcode",
-    "MAHAJANA_OPCODES": "opcode",
-    "GENESIS_OPCODES": "opcode",
-    "DHARMA_OPCODES": "opcode",
-    "KARMA_OPCODES": "opcode",
-    "MOKSHA_OPCODES": "opcode",
-    "QUARTER_OPCODES": "opcode",
-    "get_opcode": "opcode",
-    "get_opcode_name": "opcode",
-    "get_mahajana_opcode": "opcode",
-    "get_opcode_quarter": "opcode",
-    "get_quarter_opcodes": "opcode",
-    "OPCODE_PARAMPARA": "opcode",
-    "get_opcode_parampara": "opcode",
-    "verify_opcode_parampara": "opcode",
-    # === POSITION ===
-    "Guardian": "position",
-    "MantraPosition": "position",
-    "MAHAMANTRA_POSITIONS": "position",
-    "get_position_by_index": "position",  # Returns MantraPosition (SSOT)
-    "get_position_by_guardian": "position",
-    "get_position_by_opcode": "position",
-    "get_positions_by_quarter": "position",
-    "get_head_position": "position",
-    "get_worker_positions": "position",
-    "get_worker_positions_for_quarter": "position",
-    "get_all_head_positions": "position",
-    "get_all_worker_positions": "position",
-    "get_quarter_positions": "position",
-    # === PROTOCOL ===
-    "MantraProtocol": "protocol",
-    "WorkerProtocol": "protocol",
-    "HeadProtocol": "protocol",
-    "MantraAware": "protocol",
-    "ProtocolRegistry": "protocol",
-    # === PANCHA TATTVA ===
-    "PanchaTattva": "pancha_tattva",
-    "TattvaIndex": "pancha_tattva",
-    "TattvaAspect": "pancha_tattva",
-    "PANCHA_TATTVA_ASPECTS": "pancha_tattva",
-    "get_tattva_aspect": "pancha_tattva",
-    "get_tattva_by_index": "pancha_tattva",
-    "get_tattva_by_capability": "pancha_tattva",
-    "get_tattva_by_protocol": "pancha_tattva",
-    "TATTVA_TO_HOLYNAME": "pancha_tattva",
-    "tattva_to_trit": "pancha_tattva",
-    "TattvaGate": "pancha_tattva",
-    "GATE_TO_TATTVA": "pancha_tattva",
-    "PanchaTattvaAware": "pancha_tattva",
-    "get_tattva_for_position": "pancha_tattva",
-    "PANCHA_TATTVA_COUNT": "pancha_tattva",
-    "PANCHA_TATTVA_VECTOR": "pancha_tattva",
-    "verify_pancha_tattva_parampara": "pancha_tattva",
-    "PANCHA_TATTVA_MANTRA": "pancha_tattva",
-    "PANCHA_TATTVA_MEANING": "pancha_tattva",
-    # === WATERTIGHT ===
-    "TypeViolation": "watertight",
-    "WatertightReport": "watertight",
-    "check_file": "watertight",
-    "check_directory": "watertight",
-    "verify_watertight": "watertight",
-    "print_report": "watertight",
-    "is_watertight": "watertight",
-    "FORBIDDEN_TYPES": "watertight",
-    # === GUNA ===
-    "Guna": "guna",
-    "VISHUDDHA_SATTVA": "guna",
-    "is_vishuddha": "guna",
-    "SATTVA_OPCODES": "guna",
-    "RAJAS_OPCODES": "guna",
-    "TAMAS_OPCODES": "guna",
-    "OPCODE_GUNA": "guna",
-    "get_guna": "guna",
-    "get_guna_by_position": "guna",
-    "is_sattva": "guna",
-    "is_rajas": "guna",
-    "is_tamas": "guna",
-    "GunaQoS": "guna",
-    # === SCANNER ===
-    "MahajanaAlias": "scanner",
-    "MAHAJANA_ALIASES": "scanner",
-    "resolve_mahajana": "scanner",
-    "get_mahajana_position": "scanner",
-    "get_mahajana_name": "scanner",
-    "SimpleDeclaration": "scanner",
-    "ScanResult": "scanner",
-    "scan_all": "scanner",
-    "scan_for_governance": "scanner",
-    "print_scan_report": "scanner",
-    # === YAJNA ===
-    "PRIME_SIGNATURE": "yajna",
-    "MAHA_POSITIONS": "yajna",
-    "MALA_ROUNDS": "yajna",
-    "YAJNA_TRINITY": "yajna",
-    "STD_MANTRA_PATTERN": "yajna",
-    "DissonanceError": "yajna",
-    "TamasBlockError": "yajna",
-    "ParamparaBreakError": "yajna",
-    "YajnaGuna": "yajna",
-    "YajnaHolyName": "yajna",
-    "Bhoga": "yajna",
-    "Prasadam": "yajna",
-    "YajnaMantraByte": "yajna",
-    "YajnaProtocol": "yajna",
-    "Yajna": "yajna",
-    "get_yajna": "yajna",
-    "offer": "yajna",
-    # === LILA CHRONOLOGY ===
-    "BUILD_YEAR": "lila_chronology",
-    "RUNTIME_END": "lila_chronology",
-    "RUNTIME_YEARS": "lila_chronology",
-    "LilaPhase": "lila_chronology",
-    "YearFrequency": "lila_chronology",
-    "LilaChronology": "lila_chronology",
-    "get_lila_chronology": "lila_chronology",
-    "get_phase": "lila_chronology",
-    "PHASE_BOUNDARIES": "lila_chronology",
-    # Step Sequencer
-    "DOUBLE_DIGIT_YEARS": "lila_chronology",
-    "STEP_INTERVAL": "lila_chronology",
-    "STEP_OFFSET": "lila_chronology",
-    "SEVEN_BEATS_DELTAS": "lila_chronology",
-    "StepBeat": "lila_chronology",
-    "LilaStepSequencer": "lila_chronology",
-    "get_step_sequencer": "lila_chronology",
-    # Kirtan Runtime
-    "KirtanState": "lila_chronology",
-    "KirtanRuntime": "lila_chronology",
-    "get_kirtan_runtime": "lila_chronology",
-    # Flute Sync
-    "FluteSync": "lila_chronology",
-    # Synth Presets
-    "LilaSynthParams": "lila_chronology",
-    "LILA_SYNTH_PRESETS": "lila_chronology",
-    # Analysis API
-    "analyze_year": "lila_chronology",
-    "get_arithmetic_sequence": "lila_chronology",
-    # === SANKIRTAN (The Mass Chanting) ===
-    # "sankirtan ist nicht verschieden von mahamantra selbst krishna"
-    "FilePayload": "sankirtan",
-    "SankirtanSamskara": "sankirtan",
-    "PhaseResult": "sankirtan",
-    "SankirtanPipelineContext": "sankirtan",  # Alias to avoid collision with _legacy
-    "process_file_pipeline": "sankirtan",
-    "iterate_sankirtan": "sankirtan",
-    "InjectionResult": "sankirtan",
-    "SankirtanResult": "sankirtan",
-    "chant_over_files": "sankirtan",
-    "perform_sankirtan": "sankirtan",
-    "get_mahajana_for_path": "sankirtan",
-    "has_declaration": "sankirtan",
-    "inject_declaration": "sankirtan",
-    "inject_file": "sankirtan",
-    "print_sankirtan_report": "sankirtan",
-    "cli_sankirtan": "sankirtan",
-    "FOLDER_MAHAJANA_MAP": "sankirtan",
-    "heal_wiring": "sankirtan",
-    # === CELL (Fundamental computational unit) ===
-    "MahaCellUnified": "cell",
-    "CellLifecycleState": "cell",
-    "GENESIS_PRANA": "cell",
-    "METABOLIC_COST": "cell",
-    "MITOSIS_THRESHOLD": "cell",
-    "MAX_AGE_CYCLES": "cell",
-    # === MAHA STATE (Sovereign state - MINIMAL) ===
-    "MahaState": "maha_state",
-    "StateEntry": "maha_state",
-    "get_maha_state": "maha_state",
-    "pierce": "maha_state",
-    # === CELL ROUTER (O(1) cell registry) ===
-    "CellRouter": "cell_router",
-    "get_router": "cell_router",
-    "register_cell": "cell_router",
-    "KEY_BITS": "cell_router",
-    "KEY_MASK": "cell_router",
-    # === LOTUS RADIX (CLI backbone, prefix routing) ===
-    "LotusRadixN": "lotus_radix",
-    "SLOTS_PER_LEVEL": "lotus_radix",
-    "BITS_PER_LEVEL": "lotus_radix",
-    "NIBBLE_MASK": "lotus_radix",
-    "lotus_16bit": "lotus_radix",
-    "lotus_32bit": "lotus_radix",
-    "lotus_64bit": "lotus_radix",
-    "lotus_128bit": "lotus_radix",
-    "lotus_256bit": "lotus_radix",
-    # === LEGACY (Balarama-wrapped from protocols/substrate) ===
-    "Declaration": "_legacy",
-    "DeclarationType": "_legacy",
-    "FileStatus": "_legacy",
-    "ScanConfig": "_legacy",
-    "ScannedFile": "_legacy",
     "Phase": "_legacy",
-    "PhaseStatus": "_legacy",
-    "PipelineExecutor": "_legacy",
-    "SamskaraProtocol": "_legacy",
+    "PhaseResult": "sankirtan",
     "PipelineContext": "_legacy",
-    "LEGACY_PURUSHOTTAMA": "_legacy",
+    "Quarter": "mahajana",
+    "SYSTEM_MANIFESTATION": "acintya",
+    "Sampradaya": "mahajana",
+    "TRINITY": "acintya",
+    "get_position": "parampara",
+    "get_position_by_guardian": "position",
+    "get_position_by_index": "position",
+    "get_quarter": "parampara",
+    "offer": "yajna",
+    "verify_parampara": "acintya",
 }
 
-# Special aliases
-_LAZY_ALIASES = {
+# Aliases: symbol_name → (module_name, real_attr_name)
+_ALIASES = {
     "YAJNA_TRINITY": ("yajna", "TRINITY"),
     "YajnaGuna": ("yajna", "Guna"),
     "YajnaHolyName": ("yajna", "HolyName"),
     "YajnaMantraByte": ("yajna", "MantraByte"),
     "get_mahajana_position": ("scanner", "get_position"),
     "get_mahajana_name": ("scanner", "get_name"),
-    "get_wiring_by_index": ("wiring", "get_position_by_index"),  # Alias for old wiring func
-    # Sankirtan aliases
+    "get_wiring_by_index": ("wiring", "get_position_by_index"),
     "SankirtanPipelineContext": ("sankirtan", "PipelineContext"),
 }
 
+# Symbol cache: populated incrementally as symbols are resolved.
+# Maps symbol_name → module_name. Grows over time, never shrinks.
+_SYMBOL_CACHE: dict[str, str] = {}
+
+# AST-based symbol index: built lazily on first cache miss.
+# Extracts __all__ from source files WITHOUT importing them.
+_AST_INDEX: dict[str, str] | None = None
+
+
+def _build_ast_index() -> dict[str, str]:
+    """
+    Extract __all__ from substrate .py files using AST (no imports).
+
+    Uses LotusFinder's module map for file paths, so this works even
+    after files are moved into subdirectories.
+
+    ~50ms vs ~1800ms for import-based scanning. Zero side effects.
+    """
+    import ast
+    from vibe_core.mahamantra.substrate.lotus_finder import _get_module_map
+
+    index: dict[str, str] = {}
+    module_map = _get_module_map()
+
+    for mod_name, py_file in sorted(module_map.items()):
+        if py_file.name == "__init__.py":
+            continue
+        try:
+            tree = ast.parse(py_file.read_text(), filename=str(py_file))
+        except SyntaxError:
+            continue
+        for node in ast.iter_child_nodes(tree):
+            if isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == "__all__":
+                        if isinstance(node.value, (ast.List, ast.Tuple)):
+                            for elt in node.value.elts:
+                                if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                                    sym = elt.value
+                                    if sym not in index:
+                                        index[sym] = mod_name
+
+    # Apply conflict winners (override first-found with canonical choice)
+    for sym, mod_name in _CONFLICT_WINNERS.items():
+        index[sym] = mod_name
+
+    return index
+
+
+def _get_ast_index() -> dict[str, str]:
+    """Get or build the AST-based symbol index."""
+    global _AST_INDEX
+    if _AST_INDEX is None:
+        _AST_INDEX = _build_ast_index()
+    return _AST_INDEX
+
 
 def __getattr__(name: str):
-    """Lazy import on attribute access. O(1) lookup."""
-    # 1. Check explicit class/function exports
-    if name in _LAZY_IMPORTS:
-        import importlib
+    """
+    Auto-discover symbols from substrate modules.
 
-        module_name = _LAZY_IMPORTS[name]
-        module = importlib.import_module(f".{module_name}", __package__)
+    Resolution order:
+    1. Aliases (renamed symbols) — O(1)
+    2. Symbol cache (previously resolved) — O(1)
+    3. Conflict winners (explicit disambiguation) — O(1)
+    4. AST index (extracted from __all__ without importing) — O(1) after first build
+    5. Fractal fallback (subpackages and .py files by name)
+    """
+    import importlib
 
-        # Handle aliases
-        if name in _LAZY_ALIASES:
-            _, attr_name = _LAZY_ALIASES[name]
-            return getattr(module, attr_name)
+    # 1. Aliases
+    if name in _ALIASES:
+        mod_name, attr_name = _ALIASES[name]
+        module = importlib.import_module(f".{mod_name}", __package__)
+        return getattr(module, attr_name)
 
+    # 2. Symbol cache (previously resolved)
+    if name in _SYMBOL_CACHE:
+        mod_name = _SYMBOL_CACHE[name]
+        module = importlib.import_module(f".{mod_name}", __package__)
         return getattr(module, name)
 
-    # ==========================================================================
-    # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
-    # Any .py file or subpackage in substrate/ is auto-discoverable
-    # ==========================================================================
+    # 3. AST index (zero-import scan of __all__ declarations)
+    index = _get_ast_index()
+    if name in index:
+        mod_name = index[name]
+        _SYMBOL_CACHE[name] = mod_name
+        module = importlib.import_module(f".{mod_name}", __package__)
+        return getattr(module, name)
+
+    # 4. Fractal fallback: subpackage or .py file by name
     from pathlib import Path
-    import importlib
 
     substrate_root = Path(__file__).parent
 
-    # 2. Check for subpackage (folder with __init__.py)
     subpkg_path = substrate_root / name
     if subpkg_path.is_dir() and (subpkg_path / "__init__.py").exists():
         return importlib.import_module(f"{__name__}.{name}")
 
-    # 3. Check for module (.py file)
     module_path = substrate_root / f"{name}.py"
     if module_path.exists():
         return importlib.import_module(f"{__name__}.{name}")
@@ -495,7 +314,12 @@ def __getattr__(name: str):
 
 
 # =============================================================================
-# EXPORTS
+# EXPORTS (auto-discovered, not manually maintained)
 # =============================================================================
 
-__all__ = list(_LAZY_IMPORTS.keys())
+def _get_all():
+    """Build __all__ from the AST index."""
+    return list(_get_ast_index().keys()) + list(_ALIASES.keys())
+
+# Lazy __all__ — computed on first access by Python's import machinery
+__all__ = property(lambda self: _get_all())

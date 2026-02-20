@@ -729,7 +729,8 @@ def validate_fractal_discovery(base_path: Optional[str] = None) -> SankirtanVali
     from pathlib import Path
 
     if base_path is None:
-        base_path = str(Path(__file__).parent.parent)
+        from vibe_core.mahamantra.substrate._paths import MAHAMANTRA_ROOT
+        base_path = str(MAHAMANTRA_ROOT)
 
     mahamantra_root = Path(base_path)
     results: List[ValidationResult] = []
