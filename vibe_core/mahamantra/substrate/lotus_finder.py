@@ -151,6 +151,11 @@ class _LotusLoader(importlib.abc.Loader):
         return None  # Use default module creation
 
     def exec_module(self, module: ModuleType) -> None:
+        # Set __file__ BEFORE execution so class-level Path(__file__) works
+        module.__file__ = str(self._path)
+        module.__loader__ = self
+        if hasattr(module, "__spec__") and module.__spec__ is not None:
+            module.__spec__.origin = str(self._path)
         # Use the standard SourceFileLoader to actually execute the module
         loader = importlib.machinery.SourceFileLoader(self._fullname, str(self._path))
         loader.exec_module(module)
