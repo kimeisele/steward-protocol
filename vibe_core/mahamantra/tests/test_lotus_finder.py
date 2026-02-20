@@ -25,15 +25,19 @@ import pytest
 class TestModuleMap:
     """Test the filesystem scanning logic."""
 
-    def test_build_module_map_finds_direct_children(self):
-        """Direct .py files in substrate/ are in the map."""
+    def test_build_module_map_finds_modules(self):
+        """Modules in substrate/ (direct or nested) are in the map."""
         from vibe_core.mahamantra.substrate.lotus_finder import _build_module_map, _SUBSTRATE_ROOT
 
         module_map = _build_module_map()
 
-        # seed.py exists as a direct child
+        # seed.py exists (may be direct or nested after reorg)
         assert "seed" in module_map
-        assert module_map["seed"] == _SUBSTRATE_ROOT / "seed.py"
+        assert module_map["seed"].name == "seed.py"
+
+        # wiring.py is a direct child
+        assert "wiring" in module_map
+        assert module_map["wiring"] == _SUBSTRATE_ROOT / "wiring.py"
 
     def test_build_module_map_finds_subpackages(self):
         """Subpackages (dirs with __init__.py) are in the map."""
@@ -59,9 +63,8 @@ class TestModuleMap:
 
         module_map = _build_module_map()
 
-        # seed.py exists both at substrate/seed.py and potentially nested
-        # Direct child must win
-        assert module_map["seed"].parent == _SUBSTRATE_ROOT
+        # wiring.py exists as a direct child — must resolve to root
+        assert module_map["wiring"].parent == _SUBSTRATE_ROOT
 
     def test_module_map_covers_known_modules(self):
         """Key modules that are heavily imported must be in the map."""
