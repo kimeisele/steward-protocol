@@ -25,6 +25,12 @@ __mahajana__ = "brahma"
 __position__ = 1
 __genesis__ = "0x7340d7d6"
 
+# LOTUS FINDER: Install import-level routing BEFORE any substrate imports.
+# This makes Python's import system go through the Lotus principle:
+# FOLDER = EXISTENCE = WIRING. Files can be moved without breaking imports.
+from vibe_core.mahamantra.substrate.lotus_finder import install as _install_lotus_finder
+_install_lotus_finder()
+
 from vibe_core.mahamantra.substrate.wiring import enable_universal_discovery
 
 # =============================================================================
