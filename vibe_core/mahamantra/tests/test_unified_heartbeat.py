@@ -2,14 +2,18 @@
 UNIFIED HEARTBEAT - Integration Test Suite
 ===========================================
 
-Tests that the 4 surgeries actually work end-to-end:
+Real integration tests that verify the system's wiring end-to-end:
 
 1. ONE Singularity singleton (no duplicate Krishnas)
 2. VenuService → Singularity.tick() → _broadcast() → listeners fire
 3. SravanamListener receives ticks (healing scanner is ALIVE)
-4. Silent failures are visible (logger.warning, not debug)
+4. Intent resolver wired in tick
+5. Re-export shims resolve to SSOT (no split-brain)
+6. BalaramaProxy produces real proxies with identity
+7. Architectural wiring contracts (via wiring_auditor)
 
-These are INTEGRATION tests — they test ROADS, not buildings.
+Every test uses REAL objects. No mocks. No MagicMock.
+Source-level architecture checks live in wiring_auditor.py.
 """
 from __future__ import annotations
 
@@ -318,87 +322,12 @@ class TestIntentResolverInTick:
 
 
 # =============================================================================
-# TEST 6: REACTOR LOOP READS STATE (CONSUMER, NOT DRIVER)
-# =============================================================================
-
-
-class TestReactorLoopConsumer:
-    """Verify ReactorLoop._meditate() reads Singularity state, does NOT drive tick."""
-
-    def test_meditate_uses_get_tick_not_tick(self):
-        """_meditate() must call get_tick() (read), not tick() (advance)."""
-        import inspect
-        from vibe_core.mahamantra.reactor.loop import ReactorLoop
-
-        source = inspect.getsource(ReactorLoop._meditate)
-
-        # Must use get_tick() to READ position
-        assert "get_tick()" in source, (
-            "_meditate() does not call get_tick(). "
-            "It should READ the current position, not advance it."
-        )
-
-        # Must NOT call _singularity.tick() (that would double-tick)
-        assert "_singularity.tick()" not in source, (
-            "_meditate() calls _singularity.tick() — this would DOUBLE-TICK "
-            "because VenuService already drives Singularity.tick()."
-        )
-
-    def test_process_request_uses_clock(self):
-        """_process_request() must use Clock for tick_state, not hardcoded 'unknown'."""
-        import inspect
-        from vibe_core.mahamantra.reactor.loop import ReactorLoop
-
-        source = inspect.getsource(ReactorLoop._process_request)
-
-        assert "get_tick_info" in source, (
-            "_process_request() does not use get_tick_info(). "
-            "It should use the stateless Clock for real quarter/guardian/word."
-        )
-        assert '"unknown"' not in source, (
-            "_process_request() still has hardcoded 'unknown' values. "
-            "Must use Clock for real tick_state."
-        )
-
-
-# =============================================================================
-# TEST 7: BOOTSTRAP WIRING
-# =============================================================================
-
-
-class TestBootstrapWiring:
-    """Verify bootstrap() wires gate providers and HealingIntentResolver."""
-
-    def test_bootstrap_wires_gate_providers(self):
-        """After bootstrap, gate_providers import is reachable."""
-        import inspect
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-
-        source = inspect.getsource(MahamantraLotus.bootstrap)
-        assert "wire_gate_providers" in source, (
-            "bootstrap() does not call wire_gate_providers(). "
-            "Gate providers must be wired at boot."
-        )
-
-    def test_bootstrap_wires_healing_resolver(self):
-        """After bootstrap, HealingIntentResolver is wired."""
-        import inspect
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-
-        source = inspect.getsource(MahamantraLotus.bootstrap)
-        assert "wire_healing_resolver" in source, (
-            "bootstrap() does not call wire_healing_resolver(). "
-            "HealingIntentResolver must be wired at boot."
-        )
-
-
-# =============================================================================
-# PHASE 3: Anti-Split-Brain Regression Tests
+# TEST 6: ANTI-SPLIT-BRAIN — Real object identity checks
 # =============================================================================
 
 
 class TestAntiSplitBrain:
-    """Regression tests: re-export shims resolve to SSOT, no duplicate instances."""
+    """Re-export shims resolve to SSOT, shared singletons are shared."""
 
     def test_ledger_reexport_resolves_to_ssot(self):
         """prithu/types/ledger.py must re-export from mahamantra/substrate/ledger.py."""
@@ -460,50 +389,6 @@ class TestAntiSplitBrain:
             "get_event_bus() returned different instances — singleton broken!"
         )
 
-    def test_reactor_loop_uses_shared_eventbus(self):
-        """ReactorLoop._init_bus must use get_event_bus(), not EventBus()."""
-        import inspect
-        from vibe_core.mahamantra.reactor.loop import ReactorLoop
-        source = inspect.getsource(ReactorLoop._init_bus)
-        assert "get_event_bus" in source, (
-            "ReactorLoop._init_bus does not call get_event_bus(). "
-            "It must use the shared singleton, not create a private EventBus()."
-        )
-        assert "EventBus()" not in source, (
-            "ReactorLoop._init_bus still creates EventBus() directly. "
-            "This causes split-brain — events fired in one bus never reach the other."
-        )
-
-    def test_boot_orchestrator_uses_shared_eventbus(self):
-        """BootOrchestrator must use get_event_bus(), not EventBus()."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator.__init__)
-        assert "get_event_bus" in source, (
-            "BootOrchestrator.__init__ does not call get_event_bus(). "
-            "It must use the shared singleton."
-        )
-
-    def test_bootstrap_wires_balarama(self):
-        """lotus.bootstrap() must call auto_wrap_services() for Balarama absorption."""
-        import inspect
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        source = inspect.getsource(MahamantraLotus.bootstrap)
-        assert "auto_wrap_services" in source, (
-            "bootstrap() does not call auto_wrap_services(). "
-            "Balarama Pattern must be wired at boot."
-        )
-
-    def test_bootstrap_wires_adoption(self):
-        """lotus.bootstrap() must call adopt_services() for orbital mounting."""
-        import inspect
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        source = inspect.getsource(MahamantraLotus.bootstrap)
-        assert "adopt_services" in source, (
-            "bootstrap() does not call adopt_services(). "
-            "Orbital reactor mounting must happen at boot."
-        )
-
     def test_auto_wrap_services_produces_proxies(self):
         """auto_wrap_services() must produce at least 1 BalaramaProxy."""
         from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
@@ -516,204 +401,38 @@ class TestAntiSplitBrain:
         """BalaramaProxy must extract mahajana identity from folder structure."""
         from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
         proxies = auto_wrap_services(silent=True)
-        # At least one proxy should have identity
         identified = [p for p in proxies.values() if p.has_identity]
         assert len(identified) > 0, (
             "No BalaramaProxy has identity — folder-based identity extraction broken!"
         )
 
-    def test_bootstrap_wires_sravanam(self):
-        """lotus.bootstrap() must call wire_sravanam() for organic cell scanning."""
-        import inspect
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        source = inspect.getsource(MahamantraLotus.bootstrap)
-        assert "wire_sravanam" in source, (
-            "bootstrap() does not call wire_sravanam(). "
-            "Sravanam listener must be wired at boot."
-        )
 
-    def test_bootstrap_wires_governance_hook(self):
-        """lotus.bootstrap() must register the Sudarshana governance hook."""
-        import inspect
-        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-        source = inspect.getsource(MahamantraLotus.bootstrap)
-        assert "register_governance_hook" in source, (
-            "bootstrap() does not call register_governance_hook(). "
-            "Sudarshana governance must be registered at boot."
-        )
+# =============================================================================
+# TEST 7: WIRING AUDITOR — all source-level architecture checks
+# =============================================================================
 
-    def test_boot_orchestrator_does_not_duplicate_gate_wiring(self):
-        """boot_orchestrator must NOT import wire_gate_providers — lotus.bootstrap() does it."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._act_wire_gate_providers)
-        assert "from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers" not in source, (
-            "_act_wire_gate_providers() still imports wire_gate_providers. "
-            "It should only verify via get_registry(), not re-wire."
-        )
 
-    def test_boot_orchestrator_does_not_duplicate_sravanam(self):
-        """boot_orchestrator must NOT call wire_sravanam() — lotus.bootstrap() does it."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._act_wire_sravanam)
-        assert "wire_sravanam()" not in source, (
-            "_act_wire_sravanam() still calls wire_sravanam(). "
-            "It should only verify, not re-wire."
-        )
+class TestWiringAuditor:
+    """Run the wiring auditor and assert zero findings.
 
-    def test_boot_orchestrator_does_not_duplicate_governance(self):
-        """boot_orchestrator must NOT import register_governance_hook — lotus.bootstrap() does it."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._act_register_governance_hook)
-        assert "from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook" not in source, (
-            "_act_register_governance_hook() still imports register_governance_hook. "
-            "It should only verify via has_governance_hook(), not re-register."
-        )
+    This replaces ~25 individual inspect.getsource() grep-tests with a
+    single auditor that checks ALL architectural wiring contracts.
+    If any contract is violated, the auditor returns findings with
+    precise descriptions of what broke.
+    """
 
-    def test_ingestion_stays_in_boot_orchestrator(self):
-        """Codebase ingestion must stay in boot_orchestrator (I/O too expensive for bootstrap)."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._act_ingest_codebase)
-        assert "parse_file_to_fragments" in source, (
-            "_act_ingest_codebase() no longer does ingestion. "
-            "Ingestion must stay in boot_orchestrator (too expensive for bootstrap)."
-        )
+    def test_wiring_auditor_zero_findings(self):
+        """All architectural wiring contracts must be intact."""
+        from vibe_core.mahamantra.audit.wiring_auditor import Auditor
 
-    def test_ingestion_logs_errors_not_silent(self):
-        """Codebase ingestion must log parse errors, never swallow them silently."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._act_ingest_codebase)
-        assert "except Exception:" not in source or "pass" not in source.split("except Exception:")[-1].split("\n")[1], (
-            "_act_ingest_codebase() has bare 'except: pass'. "
-            "Parse errors must be logged, not swallowed."
-        )
+        auditor = Auditor()
+        findings = auditor.run_audit()
 
-    # === Phase 4: Kernel Thinning Regression Tests ===
-
-    def test_kernel_has_raw_services(self):
-        """RealVibeKernel must store raw service instances as _raw_* attributes."""
-        import inspect
-        from vibe_core.kernel_impl import RealVibeKernel
-        source = inspect.getsource(RealVibeKernel._init_mahajana_services)
-        for name in ("_raw_brahma", "_raw_bhishma", "_raw_janaka", "_raw_bali", "_raw_kapila"):
-            assert name in source, (
-                f"_init_mahajana_services() does not set {name}. "
-                "Raw services must be stored for direct internal access."
+        if findings:
+            violations = "\n".join(
+                f"  [{f.severity.value.upper()}] {f.description}"
+                for f in findings
             )
-
-    def test_kernel_internals_use_raw_not_proxy(self):
-        """Kernel methods must use _raw_* (direct), not self.brahma (proxy)."""
-        import inspect
-        from vibe_core.kernel_impl import RealVibeKernel
-        # Check a representative set of methods
-        for method_name in ("get_agent_capabilities", "register_agent", "get_status", "boot_async"):
-            method = getattr(RealVibeKernel, method_name)
-            source = inspect.getsource(method)
-            assert "self.brahma." not in source and "self.bhishma." not in source, (
-                f"{method_name}() still uses proxy (self.brahma/bhishma). "
-                "Must use self._raw_brahma/_raw_bhishma."
+            pytest.fail(
+                f"Wiring auditor found {len(findings)} violation(s):\n{violations}"
             )
-
-    def test_factory_registers_raw_services_in_position_registry(self):
-        """factory.py must register _raw_* services (not proxies) in PositionRegistry."""
-        import inspect
-        from vibe_core.factory import VibeFactory
-        source = inspect.getsource(VibeFactory.get_kernel)
-        assert "_raw_brahma" in source, (
-            "factory.py does not reference _raw_brahma. "
-            "PositionRegistry must get raw services, not MahamantraProxy wrappers."
-        )
-
-    def test_external_refs_use_raw_with_fallback(self):
-        """External kernel.brahma refs must use _raw_brahma with fallback."""
-        import inspect
-        from vibe_core.protocols.mahajanas.manu.types import kernel_ops
-        source = inspect.getsource(kernel_ops)
-        assert "_raw_brahma" in source, (
-            "kernel_ops.py does not reference _raw_brahma. "
-            "Security code must use raw service with fallback."
-        )
-
-    # === Phase 3: Input Routing Regression Tests ===
-
-    def test_execute_intent_routes_through_lotus(self):
-        """_execute_intent() must call lotus.execute() for non-CONTROL intents."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._execute_intent)
-        assert "_lotus.execute(" in source, (
-            "_execute_intent() does not call lotus.execute(). "
-            "All non-CONTROL intents must flow through the 5-Gate pipeline."
-        )
-
-    def test_execute_intent_no_hardcoded_query_handling(self):
-        """_execute_intent() must NOT have hardcoded QUERY handling — lotus does it."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._execute_intent)
-        assert "IntentType.QUERY" not in source, (
-            "_execute_intent() still has hardcoded QUERY handling. "
-            "QUERY intents must flow through lotus.execute()."
-        )
-
-    def test_execute_intent_no_hardcoded_delegation(self):
-        """_execute_intent() must NOT have hardcoded DELEGATION handling — lotus does it."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._execute_intent)
-        assert "IntentType.DELEGATION" not in source, (
-            "_execute_intent() still has hardcoded DELEGATION handling. "
-            "DELEGATION intents must flow through lotus.execute()."
-        )
-
-    def test_execute_intent_keeps_control_local(self):
-        """_execute_intent() must still handle CONTROL (exit/shutdown) locally."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._execute_intent)
-        assert "IntentType.CONTROL" in source, (
-            "_execute_intent() lost CONTROL handling. "
-            "exit/shutdown must be handled locally (controls the operator loop)."
-        )
-
-    # === Phase 2: Boot Inversion Regression Tests ===
-
-    def test_boot_orchestrator_has_orient_mahamantra(self):
-        """boot_orchestrator must have _orient_mahamantra() as ORIENT Step 0."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        assert hasattr(BootOrchestrator, "_orient_mahamantra"), (
-            "BootOrchestrator missing _orient_mahamantra(). "
-            "Mahamantra must boot BEFORE the legacy kernel (Boot Inversion)."
-        )
-        source = inspect.getsource(BootOrchestrator._orient_mahamantra)
-        assert "_lotus.bootstrap(" in source, (
-            "_orient_mahamantra() does not call bootstrap(). "
-            "It must call mahamantra.bootstrap() as the primary boot."
-        )
-
-    def test_orient_calls_mahamantra_before_akasha(self):
-        """_orient() must call _orient_mahamantra() BEFORE _orient_akasha()."""
-        import inspect
-        from vibe_core.boot_orchestrator import BootOrchestrator
-        source = inspect.getsource(BootOrchestrator._orient)
-        mahamantra_pos = source.index("_orient_mahamantra")
-        akasha_pos = source.index("_orient_akasha")
-        assert mahamantra_pos < akasha_pos, (
-            "_orient() calls _orient_akasha before _orient_mahamantra. "
-            "Mahamantra must boot FIRST (Boot Inversion)."
-        )
-
-    def test_kernel_sharanagati_is_idempotent(self):
-        """_init_sharanagati() must skip bootstrap if already done."""
-        import inspect
-        from vibe_core.kernel_impl import RealVibeKernel
-        source = inspect.getsource(RealVibeKernel._init_sharanagati)
-        assert "_bootstrapped" in source, (
-            "_init_sharanagati() does not check _bootstrapped. "
-            "It must be idempotent — skip bootstrap if already done by boot_orchestrator."
-        )
