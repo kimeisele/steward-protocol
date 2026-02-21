@@ -1095,7 +1095,7 @@ class Mahamantra:
         owner = self.governance.get_owner(protocol_path)
         return owner
 
-    def audit(self) -> dict:
+    def governance_audit(self) -> dict:
         """
         Run governance audit.
 

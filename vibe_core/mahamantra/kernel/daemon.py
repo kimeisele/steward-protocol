@@ -234,7 +234,7 @@ class MahamantraDaemon:
         logger.info("=" * 60)
 
         # Initial audit
-        audit = _singularity.audit()
+        audit = _singularity.governance_audit()
         health = audit.get("health_score", 0.0)
         self._metrics.last_health_score = health
         self._metrics.record_health(health)
@@ -263,7 +263,7 @@ class MahamantraDaemon:
                 break
 
             # === MEASURE ===
-            audit = _singularity.audit()
+            audit = _singularity.governance_audit()
             health = audit.get("health_score", 0.0)
             self._metrics.last_health_score = health
             self._metrics.record_health(health)
