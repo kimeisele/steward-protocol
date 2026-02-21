@@ -25,25 +25,42 @@ QUARTERS=4, KSHETRA=24, NAVA=9, SHARANAGATI=6, MAHAJANA_COUNT=12, PARAMPARA=37, 
 
 ---
 
-## 2. Architecture: Three Layers
+## 2. Architecture: 7-Layer OS Model
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  Lotus  (substrate/lotus_core.py)                           │
-│  Public API. `from vibe_core.mahamantra import mahamantra`  │
-│  64 importers. Owns __call__(), execute(), bootstrap().     │
-├─────────────────────────────────────────────────────────────┤
-│  Singularity  (kernel/singularity.py)                       │
-│  Internal kernel. tick, kala, venu, routing, governance.    │
-│  4 importers (aliased as _singularity). NOT a merge target. │
-├─────────────────────────────────────────────────────────────┤
-│  MahaKernel  (kernel/maha_kernel.py)                        │
-│  Seed→Address computation only. __call__() only.            │
-│  No routing proxy. No __getattr__ (removed).                │
-└─────────────────────────────────────────────────────────────┘
+Layer 7  CLI/User     cli/entry.py, cli/auto.py, cli/map.py
+Layer 6  Adapters     adapters/ (67 lazy-loaded classes, __getattr__ discovery)
+Layer 5  Application  lila/, reactor/, analysis/, namarupa/, venu/
+Layer 4  Quarters     genesis/, dharma/, karma/, moksha/ (16 Mahajana folders)
+Layer 3  Governance   audit/, dharma/kapila/remedies/ (healing + compliance)
+Layer 2  Kernel       kernel/singularity.py (tick, kala, venu, routing)
+                      kernel/daemon.py (heartbeat loop)
+                      kernel/maha_kernel.py (Seed→Address, __call__ only)
+Layer 1  Substrate    substrate/ (53 files, 8 subdirs, LotusFinder)
+Layer 0  Protocols    protocols/ (388 importers, SSOT for types/constants)
 ```
 
-Lotus→Singularity is a valid Facade pattern. Do not merge them.
+**Three Core Objects (do NOT merge):**
+
+| | Lotus | Singularity | MahaKernel |
+|---|---|---|---|
+| File | `substrate/lotus_core.py` | `kernel/singularity.py` | `kernel/maha_kernel.py` |
+| Import | `from vibe_core.mahamantra import mahamantra` | aliased as `_singularity` | `kernel.get_kernel()` |
+| Role | Public API, `__call__()`, execute(), gates | Internal kernel, tick, routing | Seed→Address only |
+
+**Singularity Routers (User-Space, Layer 6/7 ONLY — never in hot loop):**
+
+| Property | Router | Backend | Pattern |
+|---|---|---|---|
+| `mahamantra.protocols` | ProtocolRouter | 16 protocol bases, lazy importlib | `__getattr__` |
+| `mahamantra.mod` | ModuleRouter | 16 mahajana modules, lazy importlib | `__getattr__` |
+| `mahamantra.adapt` | AdapterRouter | `adapters/__init__.py` discovery | `__getattr__` |
+| `mahamantra.audit` | AuditRouter | `audit/` package, AuditKernel | `__getattr__` |
+| `mahamantra.heal` | HealRouter | `dharma/kapila/remedies/`, ShuddhiEngine | `__getattr__` |
+
+**Hot Loop (Layer 2, O(1) integers only):**
+`VenuOrchestrator.step()`, `MantraVM.execute_cycle()`, `Antaranga` — raw DIW math.
+These must NEVER use `__getattr__` routers. Pure integer dispatch only.
 
 ---
 
@@ -212,7 +229,7 @@ These are factual line counts. Whether they should be decomposed is a separate d
 - User spricht Deutsch, delegiert.
 - Verify every claim against code. Other agents have made false claims about this codebase.
 - `python -m ruff check --select F821,F811` before every commit.
-- `python -m pytest vibe_core/mahamantra/tests/ -x -q` — 587 tests must pass.
+- `python -m pytest vibe_core/mahamantra/tests/ -x -q` — 705 tests must pass.
 - 100% AI-generated codebase — ALWAYS expect hidden problems.
 - **No blind deletion.** Check wiring before marking anything as dead.
 - **No spaghetti.** No shifting monoliths. Every change must reduce complexity, not relocate it.
