@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-02-21T20:18:27.651409",
+  "intent_type": "export_env",
+  "intent_title": "Export environment for debugging",
+  "success": true,
+  "old_weight": 0.1,
+  "new_weight": 0.15000000000000002,
+  "delta": 0.05
+}
