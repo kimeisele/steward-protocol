@@ -1532,14 +1532,6 @@ class UnifiedCLI:
         """
         try:
             from vibe_core.mahamantra.substrate.mantra import PersonAnchoredOperator
-            from vibe_core.services.chat_indriya import get_chat_indriya
-
-            # Initialize ChatIndriya for Shravanam/Kirtanam
-            indriya = None
-            try:
-                indriya = get_chat_indriya("operator_default")
-            except Exception as e:
-                logger.warning(f"ChatIndriya not available: {e}")
 
             # Create operator
             operator = PersonAnchoredOperator()
