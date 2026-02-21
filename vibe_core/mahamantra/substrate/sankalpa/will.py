@@ -462,33 +462,26 @@ class SankalpaOrchestrator:
 
     async def execute_intent(self, intent: SankalpaIntent) -> SankalpaResult:
         """
-        Execute a SankalpaIntent via ChatProtocol.
+        Execute a SankalpaIntent via Kirtan-Flow (canonical VM pipeline).
 
         ADVAITA: Same entrance for all voices.
-        No bypass. Protocol handles routing.
+        All routing goes through mahamantra().__call__() → execute_cycle().
         """
         import time
 
-        from vibe_core.protocols.chat import ChatContext
-        from vibe_core.services.chat_service import get_chat_service
+        from vibe_core.mahamantra.render import kirtan_chat
 
         start = time.time()
 
-        chat_service = get_chat_service()
-        context = ChatContext(
-            session_id=f"sankalpa_{intent.id}",
-            history=[],
-        )
-
         try:
-            response = await chat_service.chat(intent.description, context)
+            response = kirtan_chat(intent.description, use_llm=True)
             elapsed_ms = int((time.time() - start) * 1000)
 
             return SankalpaResult(
-                success=response.success,
+                success=True,
                 intent_id=intent.id,
-                mahajana=response.mahajana or "narada",
-                response=response.message.content if response.message else None,
+                mahajana="kirtan",
+                response=response,
                 execution_time_ms=elapsed_ms,
             )
         except Exception as e:
