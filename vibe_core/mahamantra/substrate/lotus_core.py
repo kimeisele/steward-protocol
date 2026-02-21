@@ -582,6 +582,13 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             except Exception:
                 pass
 
+            # 3. Kirtan Renderer — adds "kirtan" key to every VM result
+            try:
+                from vibe_core.mahamantra.adapters.kirtan import get_kirtan
+                _register_capability(get_kirtan())
+            except Exception:
+                pass
+
             if vm_cap_count > 0:
                 compiler.compile()
                 if not silent:
