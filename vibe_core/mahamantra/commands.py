@@ -681,39 +681,24 @@ def cli_veda(
     vm_parampara = vm_result.get("parampara", {})
 
     # === I/O: VedaExplorer / LLM use VM output as context ===
-    # CREATIVE MODE: Kirtan-Flow (canonical VM pipeline + optional LLM)
-    # Shadow: kirtan_chat goes THROUGH __call__(), legacy flooded_routed_chat as fallback
+    # CREATIVE MODE: Use NAGA-flooded chat (Layer -1 integration)
     if explorer_mode == ExplorerMode.CREATIVE:
         try:
-            from vibe_core.mahamantra.render import kirtan_chat
+            from vibe_core.mahamantra.chat import flooded_routed_chat
 
-            response = kirtan_chat(message, use_llm=True)
+            response = flooded_routed_chat(message)
 
             veda_result = {
                 "success": True,
                 "intent": "creative",
-                "response": f"[KIRTAN x {vm_guardian.upper()}] {response}",
+                "response": f"[NAGA x {vm_guardian.upper()}] {response}",
                 "llm_used": True,
-                "kirtan_flow": True,
+                "naga_flooded": True,
             }
         except Exception as e:
-            # Balarama fallback: legacy flooded_routed_chat
-            try:
-                from vibe_core.mahamantra.chat import flooded_routed_chat
-
-                response = flooded_routed_chat(message)
-                veda_result = {
-                    "success": True,
-                    "intent": "creative",
-                    "response": f"[NAGA x {vm_guardian.upper()}] {response}",
-                    "llm_used": True,
-                    "naga_flooded": True,
-                    "kirtan_fallback": True,
-                }
-            except Exception as e2:
-                # Fall back to regular explorer on error
-                veda_result = explorer.process(message)
-                veda_result["naga_error"] = str(e2)
+            # Fall back to regular explorer on error
+            veda_result = explorer.process(message)
+            veda_result["naga_error"] = str(e)
     else:
         veda_result = explorer.process(message)
 
