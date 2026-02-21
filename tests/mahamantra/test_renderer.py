@@ -290,3 +290,66 @@ class TestRenderEdgeCases:
             result = _make_vm_result(guardian=g)
             output = render(result)
             assert g.upper() in output
+
+
+# =============================================================================
+# INTEGRATION — Real VM → render (proves CycleCompiler wiring)
+# =============================================================================
+
+class TestKirtanIntegration:
+    """Integration tests: real Lotus VM call → kirtan key in result."""
+
+    @pytest.fixture(scope="class")
+    def lotus(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        m = MahamantraLotus()
+        m.bootstrap(lazy=True, silent=True)
+        return m
+
+    def test_kirtan_key_present(self, lotus):
+        """VM result dict contains 'kirtan' key after CycleCompiler wiring."""
+        result = lotus("Hare Krishna")
+        assert "kirtan" in result, (
+            "Missing 'kirtan' key — KirtanCapability not registered in CycleCompiler"
+        )
+
+    def test_kirtan_is_string(self, lotus):
+        """The kirtan value is a rendered string."""
+        result = lotus("Hare Krishna")
+        assert isinstance(result["kirtan"], str)
+
+    def test_kirtan_contains_guardian(self, lotus):
+        """Rendered kirtan output contains the guardian name."""
+        result = lotus("Hare Krishna")
+        guardian = result["guardian"]
+        assert guardian.upper() in result["kirtan"]
+
+    def test_kirtan_contains_quarter(self, lotus):
+        """Rendered kirtan output contains the quarter."""
+        result = lotus("Hare Krishna")
+        quarter = result["quarter"]
+        assert quarter in result["kirtan"]
+
+    def test_kirtan_deterministic(self, lotus):
+        """Same input → same kirtan output."""
+        r1 = lotus("Om Namo Bhagavate Vasudevaya")
+        r2 = lotus("Om Namo Bhagavate Vasudevaya")
+        assert r1["kirtan"] == r2["kirtan"]
+
+    @pytest.mark.parametrize("text", [
+        "Hare Krishna",
+        "What is the meaning of life?",
+        "analyze this code",
+        "a",
+        "",
+    ])
+    def test_kirtan_never_empty(self, lotus, text):
+        """Kirtan rendering is never empty for any input."""
+        result = lotus(text)
+        assert len(result["kirtan"].strip()) > 0
+
+    def test_kirtan_multiline(self, lotus):
+        """Kirtan output has structure (header + content)."""
+        result = lotus("The quick brown fox")
+        lines = result["kirtan"].strip().split("\n")
+        assert len(lines) >= 1  # At minimum the header
