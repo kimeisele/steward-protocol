@@ -420,6 +420,120 @@ class ModuleRouter:
 _module_router = ModuleRouter()
 
 
+class AdapterRouter:
+    """
+    Routes to all adapters via dynamic discovery.
+
+    USER-SPACE ONLY. Never use in hot loop (VenuOrchestrator/MantraVM/Antaranga).
+
+    Delegates to adapters/__init__.py which already has __getattr__ + _LAZY_IMPORTS.
+
+    USAGE:
+        mahamantra.adapt.compression   # → MahaCompression()
+        mahamantra.adapt.attention     # → MahaAttention()
+        mahamantra.adapt.bio           # → LotusBio()
+        mahamantra.adapt.hardware      # → MahaHardware()
+    """
+
+    _cache: Dict[str, object]
+
+    def __init__(self) -> None:
+        self._cache = {}
+
+    def __getattr__(self, name: str) -> object:
+        if name.startswith("_"):
+            raise AttributeError(f"AdapterRouter has no attribute '{name}'")
+        if name in self._cache:
+            return self._cache[name]
+        adapters = importlib.import_module("vibe_core.mahamantra.adapters")
+        result = getattr(adapters, name)
+        self._cache[name] = result
+        return result
+
+    def __repr__(self) -> str:
+        return "AdapterRouter(dynamic)"
+
+
+class AuditRouter:
+    """
+    Routes to audit subsystem via dynamic discovery.
+
+    USER-SPACE ONLY. Syscall facade for Layer 3 (Governance).
+
+    USAGE:
+        kernel = mahamantra.audit.kernel()   # → AuditKernel
+        mahamantra.audit.compliance          # → compliance module
+        mahamantra.audit.drift               # → drift module
+    """
+
+    _cache: Dict[str, object]
+
+    def __init__(self) -> None:
+        self._cache = {}
+
+    def kernel(self) -> object:
+        """Get the AuditKernel (entry point for full audit runs)."""
+        audit_pkg = importlib.import_module("vibe_core.mahamantra.audit")
+        return audit_pkg.AuditKernel()
+
+    def __getattr__(self, name: str) -> object:
+        if name.startswith("_"):
+            raise AttributeError(f"AuditRouter has no attribute '{name}'")
+        if name in self._cache:
+            return self._cache[name]
+        module = importlib.import_module(f"vibe_core.mahamantra.audit.{name}")
+        self._cache[name] = module
+        return module
+
+    def __repr__(self) -> str:
+        return "AuditRouter(dynamic)"
+
+
+class HealRouter:
+    """
+    Routes to dharma/kapila remedies via dynamic discovery.
+
+    USER-SPACE ONLY. Syscall facade for Layer 3 (Healing).
+
+    Each remedy is a CSTRemedy subclass discovered from dharma/kapila/remedies/.
+    The router loads them lazily and provides a run_all() convenience method.
+
+    USAGE:
+        mahamantra.heal.broken_genesis       # → broken_genesis module
+        mahamantra.heal.missing_mahajana      # → missing_mahajana module
+        results = mahamantra.heal.run_all()   # → ShuddhiEngine.heal_all_violations()
+    """
+
+    _cache: Dict[str, object]
+
+    def __init__(self) -> None:
+        self._cache = {}
+
+    def run_all(self, dry_run: bool = True) -> list:
+        """Run all remedies via ShuddhiEngine. Returns list of HealResult."""
+        engine_mod = importlib.import_module("vibe_core.mahamantra.dharma.kumaras.engine")
+        engine = engine_mod.ShuddhiEngine()
+        return engine.heal_all_violations(dry_run=dry_run)
+
+    def __getattr__(self, name: str) -> object:
+        if name.startswith("_"):
+            raise AttributeError(f"HealRouter has no attribute '{name}'")
+        if name in self._cache:
+            return self._cache[name]
+        module = importlib.import_module(f"vibe_core.mahamantra.dharma.kapila.remedies.{name}")
+        self._cache[name] = module
+        return module
+
+    def __repr__(self) -> str:
+        return "HealRouter(dynamic)"
+
+
+# Singleton routers (User-Space)
+_adapter_router = AdapterRouter()
+_audit_router = AuditRouter()
+_heal_router = HealRouter()
+
+
 class Mahamantra:
     """
     THE Mahamantra - Krishna in Code Form.
@@ -667,6 +781,49 @@ class Mahamantra:
         "mattaḥ sarvaṁ pravartate" - Everything emanates from Me.
         """
         return _protocol_router
+
+    @property
+    def adapt(self) -> AdapterRouter:
+        """
+        Access all adapters via dynamic discovery.
+
+        USER-SPACE SYSCALL API (Layer 6/7).
+        DO NOT use in VenuOrchestrator/MantraVM/Antaranga hot loop.
+
+        USAGE:
+            mahamantra.adapt.compression   # → MahaCompression()
+            mahamantra.adapt.attention     # → MahaAttention()
+            mahamantra.adapt.bio           # → LotusBio()
+        """
+        return _adapter_router
+
+    @property
+    def audit(self) -> AuditRouter:
+        """
+        Access audit subsystem via dynamic discovery.
+
+        USER-SPACE SYSCALL API (Layer 3 Governance).
+
+        USAGE:
+            kernel = mahamantra.audit.kernel()  # Full audit
+            mahamantra.audit.compliance         # Compliance module
+            mahamantra.audit.drift              # Drift module
+        """
+        return _audit_router
+
+    @property
+    def heal(self) -> HealRouter:
+        """
+        Access healing remedies via dynamic discovery.
+
+        USER-SPACE SYSCALL API (Layer 3 Healing).
+
+        USAGE:
+            mahamantra.heal.run_all()              # Run all remedies
+            mahamantra.heal.broken_genesis          # Specific remedy
+            mahamantra.heal.missing_mahajana        # Specific remedy
+        """
+        return _heal_router
 
     @property
     def mod(self) -> ModuleRouter:
@@ -938,7 +1095,7 @@ class Mahamantra:
         owner = self.governance.get_owner(protocol_path)
         return owner
 
-    def audit(self) -> dict:
+    def governance_audit(self) -> dict:
         """
         Run governance audit.
 
@@ -1236,4 +1393,7 @@ __all__ = [
     "mahamantra",
     "ProtocolRouter",
     "ModuleRouter",
+    "AdapterRouter",
+    "AuditRouter",
+    "HealRouter",
 ]
