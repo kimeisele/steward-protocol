@@ -745,6 +745,59 @@ _tuv_badges = {}  # test_id -> TuvBadge
 _tuv_metadata = {}  # test_id -> scoring breakdown dict
 
 
+def _rama_metrics(test_name: str) -> dict:
+    """Compute RAMA coordinate metrics from test name (0.008ms/call)."""
+    try:
+        from vibe_core.mahamantra.substrate.varnamala_codec import encode
+    except ImportError:
+        return {}
+    coords = encode(test_name)
+    if not coords:
+        return {}
+    elements = [0, 0, 0, 0, 0]  # prithvi/jala/agni/vayu/akash
+    shruti_count = 0
+    for c in coords:
+        elements[c % 5] += 1
+        if (c * c) % 49 == c:
+            shruti_count += 1
+    el_names = ["prithvi", "jala", "agni", "vayu", "akash"]
+    return {
+        "coords": coords,
+        "length": len(coords),
+        "dominant_element": el_names[elements.index(max(elements))],
+        "element_dist": elements,
+        "shruti_ratio": shruti_count / len(coords),
+        "harmonic_sum": sum(c * 7 % 49 for c in coords),
+    }
+
+
+def _mahamantra_deep_scan(test_name: str) -> dict:
+    """Run full Mahamantra API for deep diagnostics (14ms/call, use sparingly)."""
+    try:
+        from vibe_core.mahamantra import mahamantra
+
+        result = mahamantra(test_name)
+        return {
+            "vibration": result.get("vibration", {}),
+            "parampara": result.get("parampara", {}),
+            "guna": result.get("guna", {}),
+            "chapter": result.get("chapter"),
+            "chapter_significance": result.get("chapter_significance", ""),
+            "quarter": result.get("quarter", ""),
+            "guardian": result.get("guardian", ""),
+            "position": result.get("position"),
+            "holy_name": result.get("holy_name", ""),
+            "cell_prana": result.get("cell", {}).get("prana", 0),
+            "cell_integrity": result.get("cell", {}).get("integrity", 0),
+            "cell_alive": result.get("cell", {}).get("is_alive", False),
+            "execution_success": result.get("execution", {}).get("success", False),
+            "kirtan_cycles": result.get("execution", {}).get("kirtan_cycles", 0),
+            "smaranam_top": result.get("smaranam", [{}])[0] if result.get("smaranam") else {},
+        }
+    except Exception:
+        return {}
+
+
 def _count_report_warnings(report) -> int:
     """Count warning-level messages from report captured sections."""
     count = 0
@@ -850,6 +903,9 @@ def _issue_tuv_badge(test_id: str, duration: float, gene_data: dict, report=None
     )
 
     _tuv_badges[test_id] = badge
+    # RAMA coordinate analysis (0.008ms — essentially free)
+    short_name = test_id.split("::")[-1] if "::" in test_id else test_id
+    rama = _rama_metrics(short_name)
     _tuv_metadata[test_id] = {
         "score": score,
         "breakdown": breakdown,
@@ -857,6 +913,7 @@ def _issue_tuv_badge(test_id: str, duration: float, gene_data: dict, report=None
         "entropy": entropy,
         "warnings": warning_count,
         "step": step,
+        "rama": rama,
     }
     return badge
 
@@ -996,6 +1053,58 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 detail = ", ".join(issues) if issues else "low across dimensions"
                 level = _get_badge_level(badge.score)
                 terminalreporter.write_line(f"  {badge.score:.2f} {level:<6s} {short_id} ({detail})")
+
+    # --- RAMA Coordinate Analysis (aggregate) ---
+    if _tuv_metadata:
+        el_totals = {"prithvi": 0, "jala": 0, "agni": 0, "vayu": 0, "akash": 0}
+        shruti_sum = 0.0
+        rama_count = 0
+        for meta in _tuv_metadata.values():
+            rama = meta.get("rama", {})
+            if rama:
+                el = rama.get("dominant_element", "")
+                if el in el_totals:
+                    el_totals[el] += 1
+                shruti_sum += rama.get("shruti_ratio", 0)
+                rama_count += 1
+        if rama_count > 0:
+            terminalreporter.write_line("")
+            terminalreporter.write_line("RAMA COORDINATES (phonemic fingerprint of test names):")
+            terminalreporter.write_line(
+                "  Elements: " + "  ".join(f"{k}={v}" for k, v in sorted(el_totals.items(), key=lambda x: -x[1]))
+            )
+            terminalreporter.write_line(f"  Avg Shruti Ratio: {shruti_sum / rama_count:.3f}")
+
+    # --- Deep Mahamantra Scan (worst 5 only — 14ms/call) ---
+    if _tuv_metadata and total > 3:
+        sorted_meta = sorted(_tuv_badges.items(), key=lambda x: x[1].score)
+        worst_5 = sorted_meta[:5]
+        terminalreporter.write_line("")
+        terminalreporter.write_line("MAHAMANTRA DEEP SCAN (worst 5 tests):")
+        for tid, badge in worst_5:
+            short_id = tid.split("::")[-1] if "::" in tid else tid
+            deep = _mahamantra_deep_scan(short_id)
+            if not deep:
+                terminalreporter.write_line(f"  {short_id}: [scan unavailable]")
+                continue
+            guna = deep.get("guna", {}).get("mode", "?")
+            ch = deep.get("chapter", "?")
+            ch_sig = deep.get("chapter_significance", "")
+            quarter = deep.get("quarter", "?")
+            guardian = deep.get("guardian", "?")
+            prana = deep.get("cell_prana", 0)
+            integrity = deep.get("cell_integrity", 0)
+            alive = deep.get("cell_alive", False)
+            word = deep.get("smaranam_top", {})
+            sanskrit = word.get("sanskrit", "-")
+            meaning = word.get("meaning", "-")
+            terminalreporter.write_line(f"  {badge.score:.2f} {short_id}")
+            terminalreporter.write_line(f"       Guna: {guna} | Ch.{ch} {ch_sig} | {quarter}/{guardian}")
+            terminalreporter.write_line(
+                f"       Cell: prana={prana} integrity={integrity:.3f}"
+                f" {'ALIVE' if alive else 'DEAD'}"
+                f' | Resonance: "{sanskrit}" ({meaning})'
+            )
 
 
 def pytest_runtest_logreport(report):
