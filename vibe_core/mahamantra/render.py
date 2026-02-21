@@ -17,6 +17,12 @@ ARCHITECTURE:
                                           ↓
                                     render(result) → str
 
+    kirtan_chat(input) → mahamantra(input) → result
+                              ↓                  ↓
+                         [optional LLM]    render(result)
+                              ↓
+                         enriched output
+
 EXTENSION PATTERN:
     Custom ops add keys to the result dict via CycleCompiler.
     The renderer discovers and uses them. No code changes needed.
@@ -31,7 +37,10 @@ __mahajana__ = "narada"
 __position__ = 3
 __genesis__ = "0xa7c1e2f0"  # GenesisByte: parampara % 37 == 0
 
+import logging
 from typing import Dict, List, Optional
+
+logger = logging.getLogger("KIRTAN")
 
 
 def render(result: Dict) -> str:
@@ -113,3 +122,107 @@ def _render_composed(result: Dict) -> str:
     trinity = str(result.get("trinity_function") or "")
     header = f"[{guardian.upper()} · {quarter} · {trinity}]"
     return f"{header}\n{composed}"
+
+
+# =============================================================================
+# KIRTAN CHAT — Shadow bridge (goes THROUGH __call__())
+# =============================================================================
+
+def kirtan_chat(message: str, *, use_llm: bool = True) -> str:
+    """Chat via the canonical VM pipeline with optional LLM enrichment.
+
+    This is the shadow replacement for the 6 legacy chat files.
+    ALL routing goes through mahamantra().__call__() → execute_cycle().
+
+    Flow:
+        1. mahamantra(message) → 27-key result dict (includes "kirtan" key)
+        2. If use_llm=True and LLM available: enrich with LLM using VM
+           result as structured context → return LLM response with header
+        3. Fallback: return result["kirtan"] (pure resonance rendering)
+
+    Args:
+        message: User input text.
+        use_llm: If True, attempt LLM enrichment. If False or LLM
+                 unavailable, return pure resonance rendering.
+
+    Returns:
+        Human-readable response string.
+    """
+    # Step 1: ALWAYS go through the canonical VM pipeline
+    lotus = _get_lotus()
+    result = lotus(message)
+
+    # Step 2: Pure resonance rendering is always available
+    kirtan_output = result.get("kirtan") or render(result)
+
+    # Step 3: Optional LLM enrichment
+    if not use_llm:
+        return kirtan_output
+
+    try:
+        from vibe_core.runtime.providers.factory import get_llm_provider
+        provider = get_llm_provider()
+
+        if not provider.is_available():
+            logger.debug("LLM not available, returning pure kirtan")
+            return kirtan_output
+
+        prompt = _build_llm_prompt(message, result)
+        llm_response = provider.invoke(
+            prompt=prompt,
+            model=provider.get_available_models()[0],
+            max_tokens=512,
+            temperature=0.7,
+        )
+
+        guardian = str(result.get("guardian") or "unknown")
+        return f"[{guardian.upper()}] {llm_response.content}"
+
+    except Exception as e:
+        logger.debug(f"LLM enrichment failed, returning pure kirtan: {e}")
+        return kirtan_output
+
+
+def _build_llm_prompt(message: str, result: Dict) -> str:
+    """Build a structured LLM prompt using VM result as context."""
+    guardian = str(result.get("guardian") or "unknown")
+    quarter = str(result.get("quarter") or "unknown")
+    trinity = str(result.get("trinity_function") or "")
+    phase = str(result.get("gita_phase") or "")
+
+    # Resonant words as context
+    smaranam = result.get("smaranam", ())
+    words = ", ".join(
+        f'{rw.get("sanskrit", "")} ({rw.get("meaning", "")})'
+        for rw in smaranam[:5]
+        if rw.get("sanskrit")
+    )
+
+    # Verse reference
+    verse = result.get("verse", {})
+    verse_ref = ""
+    if isinstance(verse, dict):
+        verse_ref = verse.get("ref", "")
+
+    return (
+        f"You are {guardian.upper()}, guardian of the {quarter} quarter. "
+        f"Your function is {trinity}. "
+        f"The current phase is {phase}.\n"
+        f"Resonant concepts: {words}\n"
+        f"{'Reference: ' + verse_ref if verse_ref else ''}\n"
+        f"User says: {message}\n"
+        f"Respond concisely as {guardian.upper()}, grounded in the above context."
+    )
+
+
+def _get_lotus():
+    """Get or create a bootstrapped MahamantraLotus singleton."""
+    global _LOTUS
+    if _LOTUS is None:
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+        _LOTUS = MahamantraLotus()
+        _LOTUS.bootstrap(lazy=True, silent=True)
+    return _LOTUS
+
+
+_LOTUS = None

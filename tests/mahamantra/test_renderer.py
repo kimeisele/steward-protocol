@@ -10,8 +10,9 @@ BALARAMA PATTERN: This is additive-only. No existing files modified.
 """
 
 import pytest
+from unittest.mock import patch, MagicMock
 
-from vibe_core.mahamantra.render import render, _render_resonance, _render_composed
+from vibe_core.mahamantra.render import render, _render_resonance, _render_composed, kirtan_chat, _build_llm_prompt
 
 
 # =============================================================================
@@ -353,3 +354,89 @@ class TestKirtanIntegration:
         result = lotus("The quick brown fox")
         lines = result["kirtan"].strip().split("\n")
         assert len(lines) >= 1  # At minimum the header
+
+
+# =============================================================================
+# KIRTAN CHAT — Shadow bridge tests
+# =============================================================================
+
+class TestKirtanChat:
+    """Test kirtan_chat() — the shadow replacement for legacy chat files."""
+
+    def test_pure_mode_returns_string(self):
+        """kirtan_chat with use_llm=False returns a string."""
+        output = kirtan_chat("Hare Krishna", use_llm=False)
+        assert isinstance(output, str)
+        assert len(output.strip()) > 0
+
+    def test_pure_mode_contains_guardian(self):
+        """Pure mode output contains the routed guardian."""
+        output = kirtan_chat("Hare Krishna", use_llm=False)
+        # Must contain SOME guardian name (uppercased)
+        assert "[" in output and "]" in output
+
+    def test_pure_mode_deterministic(self):
+        """Same input → same output in pure mode."""
+        r1 = kirtan_chat("Om Namo Bhagavate", use_llm=False)
+        r2 = kirtan_chat("Om Namo Bhagavate", use_llm=False)
+        assert r1 == r2
+
+    def test_llm_fallback_on_unavailable(self):
+        """When LLM is unavailable, kirtan_chat falls back to pure rendering."""
+        # Default use_llm=True but no LLM configured → should not crash
+        output = kirtan_chat("What is dharma?")
+        assert isinstance(output, str)
+        assert len(output.strip()) > 0
+
+    def test_empty_input(self):
+        """kirtan_chat handles empty input."""
+        output = kirtan_chat("", use_llm=False)
+        assert isinstance(output, str)
+
+    @pytest.mark.parametrize("text", [
+        "Hare Krishna",
+        "analyze this code",
+        "What is the meaning of life?",
+        "deploy the application",
+    ])
+    def test_various_inputs(self, text):
+        """kirtan_chat works for various input types."""
+        output = kirtan_chat(text, use_llm=False)
+        assert isinstance(output, str)
+        assert len(output.strip()) > 0
+
+
+class TestBuildLLMPrompt:
+    """Test the LLM prompt builder."""
+
+    def test_prompt_contains_guardian(self):
+        result = _make_vm_result(guardian="kapila")
+        prompt = _build_llm_prompt("test", result)
+        assert "KAPILA" in prompt
+
+    def test_prompt_contains_quarter(self):
+        result = _make_vm_result(quarter="dharma")
+        prompt = _build_llm_prompt("test", result)
+        assert "dharma" in prompt
+
+    def test_prompt_contains_user_message(self):
+        result = _make_vm_result()
+        prompt = _build_llm_prompt("What is devotion?", result)
+        assert "What is devotion?" in prompt
+
+    def test_prompt_contains_resonant_words(self):
+        result = _make_vm_result()
+        prompt = _build_llm_prompt("test", result)
+        assert "viveka" in prompt
+        assert "discrimination" in prompt
+
+    def test_prompt_contains_verse_ref(self):
+        result = _make_vm_result()
+        prompt = _build_llm_prompt("test", result)
+        assert "BG 2.63" in prompt
+
+    def test_prompt_is_string(self):
+        result = _make_vm_result()
+        prompt = _build_llm_prompt("test", result)
+        assert isinstance(prompt, str)
+        assert len(prompt) > 50
