@@ -472,35 +472,26 @@ class CLIAutoDiscovery:
 
     def _get_position(self, command: str) -> Optional[int]:
         """
-        Get position via FULL MAHA COMPUTING PIPELINE.
+        Get position via the CANONICAL pipeline (same as mantra_vm).
 
-        THE REAL FLOW:
-            Input → MahaCompression (with MahaLLM + MahaKirtan + MahaResonator)
-                  → Seed with embedded SEMANTIC CATEGORY
-                  → Position = Category (semantic routing!)
+        Flow (identical to __call__() → execute_cycle()):
+            1. MahaCompression.compress(command) → seed
+            2. pada_sevanam(seed) → attractor via synth_transform
+            3. position = attractor % WORDS
 
-        Same semantic intent = Same category = Same position.
-        "analyze this" and "please analyze" → BOTH to ANALYZE position!
+        This is THE algorithm. No shortcuts, no bit-shifting hacks.
         """
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
         compressor, kirtan = _get_kirtan_orchestrator()
 
-        # 1. FULL MAHA COMPRESSION (now uses MahaLLM + MahaKirtan + MahaResonator!)
+        # 1. Compression → seed (same as kirtanam)
         compression_result = compressor.compress(command)
         seed = compression_result.seed
 
-        # 2. Extract SEMANTIC CATEGORY from seed (embedded in top 8 bits)
-        # Category comes from MahaLLM.route_text() - SEMANTIC classification!
-        category = (seed >> 24) & 0xF  # Top 4 bits = category (0-15)
-
-        # 3. Position = Category (SEMANTIC ROUTING!)
-        # MahaKirtan transform adds nuance but Category determines PRIMARY routing
-        position = category % WORDS
-
-        # The full pipeline is:
-        # - MahaLLM classifies intent → Category (SEMANTIC)
-        # - MahaKirtan transforms → adds harmonic texture
-        # - MahaResonator finds attractor → adds stability
-        # - Category determines Position → CONSISTENT SEMANTIC ROUTING
+        # 2-3. Attractor → position (same as pada_sevanam + dasyam)
+        attractor, _variance, _raw = MahamantraLotus.pada_sevanam(seed)
+        position = attractor % WORDS
 
         return position
 

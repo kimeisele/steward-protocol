@@ -32,13 +32,15 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, WORDS
+from vibe_core.mahamantra.substrate.seed import (
+    ALL_GUARDIANS, WORDS, get_quarter_name, get_word_at,
+)
 
 logger = logging.getLogger(__name__)
 
 
 # =============================================================================
-# GUARDIAN DHARMA DESCRIPTIONS (SSOT)
+# GUARDIAN DHARMA DESCRIPTIONS (human-written, not derivable from seed)
 # =============================================================================
 
 GUARDIAN_DHARMA: Dict[str, str] = {
@@ -60,42 +62,14 @@ GUARDIAN_DHARMA: Dict[str, str] = {
     "yamaraja": "Judgment, Audit, Verdict - Urteil und Prüfung",
 }
 
+# DERIVED FROM SEED SSOT — not hardcoded.
+# get_word_at(pos).name gives "HARE"/"KRISHNA"/"RAMA" from the Mahamantra.
+# get_quarter_name(pos) gives "genesis"/"dharma"/"karma"/"moksha" from position.
 GUARDIAN_WORDS: Dict[str, str] = {
-    "vyasa": "HARE",
-    "brahma": "KRISHNA",
-    "narada": "HARE",
-    "shambhu": "KRISHNA",
-    "prithu": "KRISHNA",
-    "kumaras": "KRISHNA",
-    "kapila": "HARE",
-    "manu": "HARE",
-    "parashurama": "HARE",
-    "prahlada": "RAMA",
-    "janaka": "HARE",
-    "bhishma": "RAMA",
-    "nrisimha": "RAMA",
-    "bali": "RAMA",
-    "shuka": "HARE",
-    "yamaraja": "HARE",
+    ALL_GUARDIANS[i]: get_word_at(i).name for i in range(WORDS)
 }
-
 GUARDIAN_QUARTERS: Dict[str, str] = {
-    "vyasa": "GENESIS",
-    "brahma": "GENESIS",
-    "narada": "GENESIS",
-    "shambhu": "GENESIS",
-    "prithu": "DHARMA",
-    "kumaras": "DHARMA",
-    "kapila": "DHARMA",
-    "manu": "DHARMA",
-    "parashurama": "KARMA",
-    "prahlada": "KARMA",
-    "janaka": "KARMA",
-    "bhishma": "KARMA",
-    "nrisimha": "MOKSHA",
-    "bali": "MOKSHA",
-    "shuka": "MOKSHA",
-    "yamaraja": "MOKSHA",
+    ALL_GUARDIANS[i]: get_quarter_name(i).upper() for i in range(WORDS)
 }
 
 
@@ -401,10 +375,10 @@ def guardian_chat(message: str, *, guardian: str, position: Optional[int] = None
 
 def get_guardian_for_message(message: str) -> str:
     """
-    Use ChatService substrate routing to find the best guardian for a message.
+    Route message to guardian via the CANONICAL pipeline.
 
-    UNIFIED ROUTING: Uses VarnaTensor/SubstrateRoute (computational)
-    instead of old mahamantra.resonate() tree.
+    Same algorithm as mantra_vm.execute_cycle():
+        MahaCompression → seed → pada_sevanam → attractor → attractor % WORDS → guardian
 
     Args:
         message: User message
@@ -413,13 +387,13 @@ def get_guardian_for_message(message: str) -> str:
         Guardian name
     """
     try:
-        # Use ChatService's substrate routing (THE ONE TRUTH)
-        from vibe_core.services.chat_service import get_chat_service
+        from vibe_core.mahamantra.adapters.compression import MahaCompression
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
 
-        service = get_chat_service()
-        resonance = service._compute_resonance(message)
-
-        return resonance.get("mahajana", "narada")
+        seed = MahaCompression().compress(message).seed
+        attractor, _v, _r = MahamantraLotus.pada_sevanam(seed)
+        position = attractor % WORDS
+        return ALL_GUARDIANS[position]
 
     except Exception:
         return "narada"
