@@ -352,28 +352,19 @@ class MahamantraDaemon:
         The intensity of healing matches the entropy level:
         - GAJENDRA: heal_all_violations (aggressive)
         - SADHANA: heal_all_violations with dry_run first
+
+        Routes through mahamantra.heal (User-Space HealRouter).
         """
         # Don't heal in Samadhi - system is already pure
         if health >= HEALTH_SAMADHI:
             return
 
         try:
-            from vibe_core.mahamantra.dharma.kumaras.engine import ShuddhiEngine
-
-            # Lazy singleton - avoid import loop
-            if not hasattr(self, "_shuddhi_engine"):
-                self._shuddhi_engine: Optional[ShuddhiEngine] = ShuddhiEngine()
-                logger.info("☢️ SHUDDHI: Engine initialized for self-healing")
-
-            engine = self._shuddhi_engine
-            if engine is None:
-                return
-
             # In GAJENDRA mode (emergency), heal aggressively
             # In SADHANA mode, do dry-run first
             dry_run = health >= HEALTH_SADHANA
 
-            results = engine.heal_all_violations(dry_run=dry_run)
+            results = _singularity.heal.run_all(dry_run=dry_run)
             healed = sum(KSETRAJNA for r in results if r.status.value == "purified")
 
             if healed > 0:
