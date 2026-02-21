@@ -681,24 +681,19 @@ def cli_veda(
     vm_parampara = vm_result.get("parampara", {})
 
     # === I/O: VedaExplorer / LLM use VM output as context ===
-    # CREATIVE MODE: Use NAGA-flooded chat (Layer -1 integration)
+    # CREATIVE MODE: Kirtan-Flow (canonical VM pipeline + optional LLM)
     if explorer_mode == ExplorerMode.CREATIVE:
-        try:
-            from vibe_core.mahamantra.chat import flooded_routed_chat
+        from vibe_core.mahamantra.render import kirtan_chat
 
-            response = flooded_routed_chat(message)
+        response = kirtan_chat(message, use_llm=True)
 
-            veda_result = {
-                "success": True,
-                "intent": "creative",
-                "response": f"[NAGA x {vm_guardian.upper()}] {response}",
-                "llm_used": True,
-                "naga_flooded": True,
-            }
-        except Exception as e:
-            # Fall back to regular explorer on error
-            veda_result = explorer.process(message)
-            veda_result["naga_error"] = str(e)
+        veda_result = {
+            "success": True,
+            "intent": "creative",
+            "response": response,
+            "llm_used": True,
+            "kirtan_flow": True,
+        }
     else:
         veda_result = explorer.process(message)
 
