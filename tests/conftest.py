@@ -458,8 +458,8 @@ def _create_test_gene(test_name: str, markers: list):
       default → 0.3 (normal)
     """
     try:
-        from vibe_core.protocols.substrate.gene import iGene
         from vibe_core.protocols.substrate.byte import MantraByte
+        from vibe_core.protocols.substrate.gene import iGene
     except ImportError:
         return None
 
@@ -523,9 +523,10 @@ def chaos_gene(request):
             assert chaos_gene.entropy_load == 0.9
     """
     try:
-        from vibe_core.protocols.substrate.gene import iGene
-        from vibe_core.protocols.substrate.byte import MantraByte
         import random
+
+        from vibe_core.protocols.substrate.byte import MantraByte
+        from vibe_core.protocols.substrate.gene import iGene
 
         return iGene(
             entropy_load=0.9,  # Near fatal
@@ -547,8 +548,8 @@ def sattva_gene(request):
             assert not sattva_gene.is_fatal
     """
     try:
-        from vibe_core.protocols.substrate.gene import iGene
         from vibe_core.protocols.substrate.byte import MantraByte
+        from vibe_core.protocols.substrate.gene import iGene
 
         return iGene(
             entropy_load=0.1,  # Very stable
@@ -590,8 +591,8 @@ def guru_gene(request):
             assert guru_gene.mutation_vector % 37 == 0  # Connected
     """
     try:
-        from vibe_core.protocols.substrate.gene import iGene
         from vibe_core.protocols.substrate.byte import MantraByte
+        from vibe_core.protocols.substrate.gene import iGene
         from vibe_core.protocols.substrate.mantra.acintya import GURU_ENTROPY, PARAMPARA_VECTOR
 
         return iGene(
@@ -620,8 +621,8 @@ def anti_guru_gene(request):
             assert anti_guru_gene.mutation_vector % 37 != 0  # Disconnected
     """
     try:
-        from vibe_core.protocols.substrate.gene import iGene
         from vibe_core.protocols.substrate.byte import MantraByte
+        from vibe_core.protocols.substrate.gene import iGene
         from vibe_core.protocols.substrate.mantra.acintya import GURU_ENTROPY, PARAMPARA
 
         # Mutation vector NOT connected to parampara
@@ -671,7 +672,8 @@ def pytest_runtest_setup(item):
     The test is BORN.
     """
     test_id = item.nodeid
-    _mahamantra_state[test_id] = {"step": 0, "phase": "GENESIS"}
+    gene = _create_test_gene(item.name, list(item.iter_markers()))
+    _mahamantra_state[test_id] = {"step": 0, "phase": "GENESIS", "gene": gene}
 
     # Execute 4 Genesis steps
     for step in range(4):
@@ -740,44 +742,100 @@ def pytest_runtest_teardown(item, nextitem):
 # =============================================================================
 
 _tuv_badges = {}  # test_id -> TuvBadge
+_tuv_metadata = {}  # test_id -> scoring breakdown dict
 
 
-def _issue_tuv_badge(test_id: str, duration: float, gene_data: dict):
+def _count_report_warnings(report) -> int:
+    """Count warning-level messages from report captured sections."""
+    count = 0
+    for name, content in getattr(report, "sections", []):
+        lname = name.lower()
+        if "stderr" in lname or "log" in lname:
+            for line in content.splitlines():
+                if "WARNING" in line or "warning" in line.split("-")[0]:
+                    count += 1
+    return count
+
+
+def _issue_tuv_badge(test_id: str, duration: float, gene_data: dict, report=None):
     """
-    Issue a TÜV badge to a passing test.
+    Issue a TÜV badge with 6 scoring dimensions.
 
-    Badge score based on:
-      - Base score: 0.5 (passed)
-      - Gene bonus: +0.3 if entropy < 0.3 (sattva)
-      - Speed bonus: +0.2 if duration < 1s
+    Dimensions (max 1.0):
+      0.30 base          — test passed
+      0.20 gene quality  — entropy ≤0.3: sattva(+0.20), ≤0.5: rajas(+0.10)
+      0.15 speed         — <0.1s: +0.15, <1s: +0.10, <5s: +0.05
+      0.15 clean run     — 0 warnings: +0.15, ≤2: +0.10, ≤5: +0.05
+      0.10 parampara     — mutation_vector % 37 == 0
+      0.10 lifecycle     — all 16 maha steps completed
     """
     try:
-        from datetime import datetime, timedelta
-        from vibe_core.protocols.naga.tuv import TuvBadge
         import hashlib
+        from datetime import datetime, timedelta
+
+        from vibe_core.protocols.naga.tuv import TuvBadge
     except ImportError:
         return None
 
-    # Calculate score
-    score = 0.5  # Base: test passed
+    # --- Dimension 1: Base (passed) ---
+    score = 0.30
+    breakdown = {"base": 0.30}
 
-    # Gene bonus
-    if gene_data and "gene" in gene_data:
-        gene = gene_data["gene"]
-        if gene and hasattr(gene, "entropy_load"):
-            if gene.entropy_load < 0.3:
-                score += 0.3  # Sattva bonus
-            elif gene.entropy_load < 0.5:
-                score += 0.15  # Rajas bonus
+    # --- Dimension 2: Gene quality ---
+    gene_score = 0.0
+    entropy = None
+    gene = gene_data.get("gene") if gene_data else None
+    if gene and hasattr(gene, "entropy_load"):
+        entropy = gene.entropy_load
+        if entropy <= 0.3:
+            gene_score = 0.20  # Sattva
+        elif entropy <= 0.5:
+            gene_score = 0.10  # Rajas
+    score += gene_score
+    breakdown["gene"] = gene_score
 
-    # Speed bonus
-    if duration < 1.0:
-        score += 0.2
+    # --- Dimension 3: Speed ---
+    speed_score = 0.0
+    if duration < 0.1:
+        speed_score = 0.15
+    elif duration < 1.0:
+        speed_score = 0.10
     elif duration < 5.0:
-        score += 0.1
+        speed_score = 0.05
+    score += speed_score
+    breakdown["speed"] = speed_score
 
-    # Cap at 1.0
-    score = min(score, 1.0)
+    # --- Dimension 4: Clean execution ---
+    warning_count = _count_report_warnings(report) if report else 0
+    clean_score = 0.0
+    if warning_count == 0:
+        clean_score = 0.15
+    elif warning_count <= 2:
+        clean_score = 0.10
+    elif warning_count <= 5:
+        clean_score = 0.05
+    score += clean_score
+    breakdown["clean"] = clean_score
+
+    # --- Dimension 5: Parampara connection ---
+    parampara_score = 0.0
+    if gene and hasattr(gene, "mutation_vector"):
+        if gene.mutation_vector % 37 == 0:
+            parampara_score = 0.10
+    score += parampara_score
+    breakdown["parampara"] = parampara_score
+
+    # --- Dimension 6: Lifecycle completeness ---
+    # Badge is issued after "call" phase (step 12). MOKSHA (13-16) = teardown.
+    # Lifecycle complete = GENESIS(4) + DHARMA(8) + KARMA(12) all executed.
+    lifecycle_score = 0.0
+    step = gene_data.get("step", 0) if gene_data else 0
+    if step >= 12:
+        lifecycle_score = 0.10
+    score += lifecycle_score
+    breakdown["lifecycle"] = lifecycle_score
+
+    score = min(max(score, 0.0), 1.0)
 
     # Create signature
     sig_data = f"{test_id}:{score}:{datetime.now().isoformat()}"
@@ -786,12 +844,20 @@ def _issue_tuv_badge(test_id: str, duration: float, gene_data: dict):
     badge = TuvBadge(
         entity_id=test_id,
         issued_at=datetime.now(),
-        expires_at=datetime.now() + timedelta(days=1),  # Valid for 1 day
+        expires_at=datetime.now() + timedelta(days=1),
         score=score,
         signature=f"TÜV-{signature}",
     )
 
     _tuv_badges[test_id] = badge
+    _tuv_metadata[test_id] = {
+        "score": score,
+        "breakdown": breakdown,
+        "duration": duration,
+        "entropy": entropy,
+        "warnings": warning_count,
+        "step": step,
+    }
     return badge
 
 
@@ -828,27 +894,108 @@ def tuv_badge(request):
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """
-    Print TÜV badge summary at end of test session.
+    Print TÜV badge summary with full diagnostics.
     """
     if not _tuv_badges:
         return
 
-    # Count badges by level
-    gold = sum(1 for b in _tuv_badges.values() if b.score >= 0.9)
-    silver = sum(1 for b in _tuv_badges.values() if 0.7 <= b.score < 0.9)
-    bronze = sum(1 for b in _tuv_badges.values() if b.score < 0.7)
     total = len(_tuv_badges)
+    scores = [b.score for b in _tuv_badges.values()]
+    gold = sum(1 for s in scores if s >= 0.9)
+    silver = sum(1 for s in scores if 0.7 <= s < 0.9)
+    bronze = sum(1 for s in scores if s < 0.7)
+    avg_score = sum(scores) / total
 
     terminalreporter.write_sep("=", "TÜV BADGE SUMMARY")
-    terminalreporter.write_line(f"Total Badges Issued: {total}")
-    terminalreporter.write_line(f"  GOLD:   {gold}")
-    terminalreporter.write_line(f"  SILVER: {silver}")
-    terminalreporter.write_line(f"  BRONZE: {bronze}")
+    terminalreporter.write_line(
+        f"Total Badges Issued: {total}"
+        f"  GOLD: {gold}  SILVER: {silver}  BRONZE: {bronze}"
+        f"  Average Score: {avg_score:.2f}"
+    )
 
-    # Average score
-    if total > 0:
-        avg_score = sum(b.score for b in _tuv_badges.values()) / total
-        terminalreporter.write_line(f"  Average Score: {avg_score:.2f}")
+    # --- Score Distribution ---
+    bins = [(0.9, 1.01, "GOLD  "), (0.7, 0.9, "SILVER"), (0.5, 0.7, "BRONZE"), (0.0, 0.5, "BRONZE")]
+    terminalreporter.write_line("")
+    terminalreporter.write_line("SCORE DISTRIBUTION:")
+    max_bar = 30
+    for lo, hi, label in bins:
+        count = sum(1 for s in scores if lo <= s < hi)
+        if count == 0:
+            continue
+        bar_len = int((count / total) * max_bar) if total > 0 else 0
+        bar = "\u2588" * bar_len + "\u2591" * (max_bar - bar_len)
+        terminalreporter.write_line(f"  {lo:.1f}-{hi:.2f} {bar} {count:3d}  {label}")
+
+    # --- Dimension Breakdown (aggregate) ---
+    if _tuv_metadata:
+        dims = {"gene": [], "speed": [], "clean": [], "parampara": [], "lifecycle": []}
+        for meta in _tuv_metadata.values():
+            bd = meta.get("breakdown", {})
+            for dim in dims:
+                dims[dim].append(bd.get(dim, 0.0))
+
+        terminalreporter.write_line("")
+        terminalreporter.write_line("SCORING DIMENSIONS (how many tests hit max):")
+        dim_max = {"gene": 0.20, "speed": 0.15, "clean": 0.15, "parampara": 0.10, "lifecycle": 0.10}
+        dim_labels = {
+            "gene": "Gene Quality",
+            "speed": "Speed",
+            "clean": "Clean Run",
+            "parampara": "Parampara",
+            "lifecycle": "Lifecycle",
+        }
+        for dim, max_val in dim_max.items():
+            vals = dims[dim]
+            at_max = sum(1 for v in vals if v >= max_val)
+            at_zero = sum(1 for v in vals if v == 0.0)
+            partial = total - at_max - at_zero
+            terminalreporter.write_line(
+                f"  {dim_labels[dim]:<14s}  max: {at_max:3d}/{total}"
+                f"  partial: {partial:3d}/{total}"
+                f"  zero: {at_zero:3d}/{total}"
+            )
+
+    # --- Warning Summary ---
+    if _tuv_metadata:
+        warning_tests = [(tid, m["warnings"]) for tid, m in _tuv_metadata.items() if m.get("warnings", 0) > 0]
+        if warning_tests:
+            warning_tests.sort(key=lambda x: x[1], reverse=True)
+            total_warnings = sum(w for _, w in warning_tests)
+            terminalreporter.write_line("")
+            terminalreporter.write_line(f"WARNINGS: {total_warnings} total across {len(warning_tests)}/{total} tests")
+            for tid, wcount in warning_tests[:5]:
+                short_id = tid.split("::")[-1] if "::" in tid else tid
+                terminalreporter.write_line(f"  {wcount:3d} warnings  {short_id}")
+            if len(warning_tests) > 5:
+                terminalreporter.write_line(f"  ... and {len(warning_tests) - 5} more")
+
+    # --- Worst Performers ---
+    if _tuv_metadata and total > 3:
+        sorted_badges = sorted(_tuv_badges.items(), key=lambda x: x[1].score)
+        worst = sorted_badges[:5]
+        best_score = sorted_badges[-1][1].score
+        worst_score = sorted_badges[0][1].score
+
+        if worst_score < best_score:
+            terminalreporter.write_line("")
+            terminalreporter.write_line(f"WORST PERFORMERS (range {worst_score:.2f} - {best_score:.2f}):")
+            for tid, badge in worst:
+                short_id = tid.split("::")[-1] if "::" in tid else tid
+                meta = _tuv_metadata.get(tid, {})
+                issues = []
+                bd = meta.get("breakdown", {})
+                if bd.get("gene", 0) == 0:
+                    ent = meta.get("entropy")
+                    issues.append(f"entropy={ent:.2f}" if ent is not None else "no gene")
+                if bd.get("clean", 0) == 0:
+                    issues.append(f"{meta.get('warnings', '?')}w")
+                if bd.get("speed", 0) == 0:
+                    issues.append(f"{meta.get('duration', 0):.1f}s")
+                if bd.get("parampara", 0) == 0:
+                    issues.append("no parampara")
+                detail = ", ".join(issues) if issues else "low across dimensions"
+                level = _get_badge_level(badge.score)
+                terminalreporter.write_line(f"  {badge.score:.2f} {level:<6s} {short_id} ({detail})")
 
 
 def pytest_runtest_logreport(report):
@@ -874,7 +1021,7 @@ def pytest_runtest_logreport(report):
         # Issue badge and log result
         badge_status = ""
         if report.passed:
-            badge = _issue_tuv_badge(test_id, report.duration, gene_data)
+            badge = _issue_tuv_badge(test_id, report.duration, gene_data, report=report)
             if badge:
                 level = _get_badge_level(badge.score)
                 badge_status = f" | TÜV: {level} ({badge.score:.2f})"
@@ -956,7 +1103,7 @@ def discovered_test_cases(testable_registry, request):
         kernel = RealVibeKernel(test_mode=True, load_plugins=False, ledger_path=":memory:")
         testable_registry.discover_from_kernel(kernel)
     except Exception as e:
-        logger.warning(f"Failed to discover testables: {e}")
+        logging.warning(f"Failed to discover testables: {e}")
 
     return testable_registry.get_all_test_cases()
 
