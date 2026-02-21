@@ -22,6 +22,9 @@ class MockMahamantra:
         
     def audit(self):
         return self.audit_return
+
+    def governance_audit(self):
+        return self.audit_return
         
     def chant_quarter(self, quarter):
         self.chant_counts[quarter] += 1
