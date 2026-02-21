@@ -48,6 +48,7 @@ from vibe_core.mahamantra.protocols._seed import (
     VAMSI_HOLES,
 )
 
+import ctypes
 import struct
 from typing import Final, NamedTuple, Optional
 
@@ -92,6 +93,31 @@ assert _SLOT_SIZE == SLOT_BYTES, f"Slot size mismatch: {_SLOT_SIZE} != {SLOT_BYT
 
 
 # =============================================================================
+# CTYPES ZERO-COPY OVERLAY
+# =============================================================================
+# A C-struct mapped directly onto the bytearray. No unpack, no alloc.
+# Reading slot.prana is a single pointer dereference into contiguous RAM.
+
+class _CSlot(ctypes.LittleEndianStructure):
+    """32-byte C-struct overlay. Same layout as _SLOT_FMT."""
+    _fields_ = [
+        ("source", ctypes.c_uint32),
+        ("target", ctypes.c_uint32),
+        ("operation", ctypes.c_uint32),
+        ("arcanam", ctypes.c_uint32),
+        ("atma", ctypes.c_uint32),
+        ("flags", ctypes.c_uint32),
+        ("prana", ctypes.c_uint32),
+        ("integrity", ctypes.c_uint16),
+        ("cycle", ctypes.c_uint16),
+    ]
+
+assert ctypes.sizeof(_CSlot) == SLOT_BYTES, f"CSlot size mismatch: {ctypes.sizeof(_CSlot)} != {SLOT_BYTES}"
+
+_CSlotArray = _CSlot * ANTARANGA_SLOTS
+
+
+# =============================================================================
 # SLOT VIEW (Read-only snapshot, no allocation on hot path)
 # =============================================================================
 
@@ -128,20 +154,24 @@ class AntarangaRegistry:
     The outer SankirtanChamber wraps this for Python API compatibility.
     """
 
-    __slots__ = ('_mem',)
+    __slots__ = ('_mem', '_slots')
 
     def __init__(self) -> None:
         """Allocate the chamber: one contiguous block of silence."""
         self._mem = bytearray(CHAMBER_BYTES)
+        self._slots = _CSlotArray.from_buffer(self._mem)
 
     # =========================================================================
     # CORE: O(1) READ / WRITE
     # =========================================================================
 
     def get(self, slot: int) -> SlotView:
-        """Read slot as SlotView. O(1)."""
-        offset = slot * SLOT_BYTES
-        return SlotView(*struct.unpack_from(_SLOT_FMT, self._mem, offset))
+        """Read slot as SlotView. O(1). Zero-copy via ctypes overlay."""
+        s = self._slots[slot]
+        return SlotView(
+            s.source, s.target, s.operation, s.arcanam,
+            s.atma, s.flags, s.prana, s.integrity, s.cycle,
+        )
 
     def set_slot(
         self,
@@ -189,13 +219,12 @@ class AntarangaRegistry:
             Resident prana == 0 → SILENCE → visitor takes slot (Presence)
             Resident prana > 0  → RESONANCE → merge (prana add, integrity avg)
         """
-        offset = slot * SLOT_BYTES
+        s = self._slots[slot]
 
-        # Read resident prana (offset + 24 = lifecycle start)
-        r_prana = struct.unpack_from("<I", self._mem, offset + 24)[0]
-
-        if r_prana == 0:
-            # SILENCE → PRESENCE: visitor takes the slot
+        # Read resident prana via ctypes (zero-copy)
+        if s.prana == 0:
+            # SILENCE → PRESENCE: visitor takes the slot (bulk write)
+            offset = slot * SLOT_BYTES
             struct.pack_into(
                 _SLOT_FMT, self._mem, offset,
                 v_source, v_target, v_operation, v_arcanam, v_atma, FLAG_ACTIVE,
@@ -204,14 +233,12 @@ class AntarangaRegistry:
             return False
 
         # RESONANCE → MERGE: accumulate prana, average integrity
-        new_prana = min(r_prana + v_prana, MAX_PRANA_U32)
-        r_integrity = struct.unpack_from("<H", self._mem, offset + 28)[0]
-        new_integrity = (r_integrity + v_integrity) // HALVES
+        new_prana = min(s.prana + v_prana, MAX_PRANA_U32)
+        new_integrity = (s.integrity + v_integrity) // HALVES
 
         # Write back only the mutable lifecycle fields
-        struct.pack_into("<IHH", self._mem, offset + 24,
-                         new_prana, new_integrity,
-                         struct.unpack_from("<H", self._mem, offset + 30)[0])
+        struct.pack_into("<IHH", self._mem, slot * SLOT_BYTES + 24,
+                         new_prana, new_integrity, s.cycle)
         return True
 
     # =========================================================================
@@ -234,15 +261,15 @@ class AntarangaRegistry:
             SEVEN, QUALITIES,
         )
 
-        offset = slot * SLOT_BYTES
+        s = self._slots[slot]
 
-        # Read current lifecycle
-        prana = struct.unpack_from("<I", self._mem, offset + 24)[0]
+        # Read current lifecycle via ctypes (zero-copy)
+        prana = s.prana
         if prana == 0:
             return  # Dead slot, nothing to transform
 
-        integrity_u16 = struct.unpack_from("<H", self._mem, offset + 28)[0]
-        cycle = struct.unpack_from("<H", self._mem, offset + 30)[0]
+        integrity_u16 = s.integrity
+        cycle = s.cycle
 
         # Decode DIW
         venu = (diw >> VENU_SHIFT) & VENU_MASK
@@ -315,7 +342,7 @@ class AntarangaRegistry:
         prana = min(prana, MAX_PRANA_U32)
 
         # Write back lifecycle
-        struct.pack_into("<IHH", self._mem, offset + 24,
+        struct.pack_into("<IHH", self._mem, slot * SLOT_BYTES + 24,
                          prana, integrity_u16, cycle)
 
     # =========================================================================
@@ -323,31 +350,33 @@ class AntarangaRegistry:
     # =========================================================================
 
     def is_alive(self, slot: int) -> bool:
-        """Check if slot has active cell. O(1)."""
-        return struct.unpack_from("<I", self._mem, slot * SLOT_BYTES + 24)[0] > 0
+        """Check if slot has active cell. O(1). Zero-copy."""
+        return self._slots[slot].prana > 0
 
     def prana_at(self, slot: int) -> int:
-        """Read prana at slot. O(1)."""
-        return struct.unpack_from("<I", self._mem, slot * SLOT_BYTES + 24)[0]
+        """Read prana at slot. O(1). Zero-copy."""
+        return self._slots[slot].prana
 
     def active_count(self) -> int:
-        """Count active slots. O(N) but N=512 is small."""
+        """Count active slots. O(N) but N=512 is small. Zero-copy."""
+        slots = self._slots
         count = 0
         for i in range(ANTARANGA_SLOTS):
-            if struct.unpack_from("<I", self._mem, i * SLOT_BYTES + 24)[0] > 0:
+            if slots[i].prana > 0:
                 count += KSETRAJNA
         return count
 
     def total_prana(self) -> int:
-        """Sum of all prana in chamber. O(N)."""
+        """Sum of all prana in chamber. O(N). Zero-copy."""
+        slots = self._slots
         total = 0
         for i in range(ANTARANGA_SLOTS):
-            total += struct.unpack_from("<I", self._mem, i * SLOT_BYTES + 24)[0]
+            total += slots[i].prana
         return total
 
     def clear(self) -> None:
         """Wipe the chamber clean. O(1) — memset equivalent."""
-        self._mem[:] = b'\x00' * CHAMBER_BYTES
+        ctypes.memset(ctypes.addressof(self._slots), 0, CHAMBER_BYTES)
 
     @property
     def raw(self) -> memoryview:
