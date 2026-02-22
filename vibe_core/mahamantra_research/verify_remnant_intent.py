@@ -10,10 +10,16 @@ No SHA256. No keywords. Pure phonetic vibration through the Remnant Theorem.
 import sys
 from vibe_core.mahamantra.substrate.phonetics.shabda import text_to_vibration
 from vibe_core.mahamantra.substrate.pancha_walk import (
-    COORD_ELEMENT, COORD_VARGA, COORD_HARMONIC, IS_SHRUTI,
+    COORD_ELEMENT,
+    COORD_VARGA,
+    COORD_HARMONIC,
+    IS_SHRUTI,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    POSITION_SUM_KRISHNA, KSETRAJNA, TRINITY, NAVA,
+    POSITION_SUM_KRISHNA,
+    KSETRAJNA,
+    TRINITY,
+    NAVA,
 )
 
 KRISHNA = POSITION_SUM_KRISHNA  # 17
@@ -97,7 +103,9 @@ for guna, remnants in remnant_by_guna.items():
 print("\n" + "=" * 80)
 print("4D PHONETIC SIGNATURE")
 print("=" * 80)
-print(f"\n{'Text':<40} {'E':>4} {'El':>4} {'Va':>4} {'Ha':>4} {'Sh':>3} {'N':>3} {'E%17':>4} {'El%17':>5} {'Va%17':>5} {'Ha%17':>5}")
+print(
+    f"\n{'Text':<40} {'E':>4} {'El':>4} {'Va':>4} {'Ha':>4} {'Sh':>3} {'N':>3} {'E%17':>4} {'El%17':>5} {'Va%17':>5} {'Ha%17':>5}"
+)
 print("-" * 90)
 
 for text, expected in tests:
@@ -108,7 +116,9 @@ for text, expected in tests:
     ha = sig["harmonic_sum"]
     sh = sig["shruti_count"]
     n = sig["n_phonemes"]
-    print(f"{text[:38]:<40} {e:>4} {el:>4} {va:>4} {ha:>4} {sh:>3} {n:>3} {e%17:>4} {el%17:>5} {va%17:>5} {ha%17:>5}")
+    print(
+        f"{text[:38]:<40} {e:>4} {el:>4} {va:>4} {ha:>4} {sh:>3} {n:>3} {e % 17:>4} {el % 17:>5} {va % 17:>5} {ha % 17:>5}"
+    )
 
 # Normalize by phoneme count to remove length bias
 print("\n" + "=" * 80)

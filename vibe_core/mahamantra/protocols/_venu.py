@@ -27,7 +27,8 @@ Position 12-15 (MOKSHA):  R-R-H-H = Front-loaded (Cleanup)
 
 This is not coincidence. This is RHYTHM.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, TEN)
+
+from vibe_core.mahamantra.protocols._seed import HALVES, TEN
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -398,14 +399,14 @@ class DIWEvent(TypedDict):
     This is what flows from Krishna's flute to every jiva.
     """
 
-    diw: int           # 19-bit Divine Instruction Word (canonical 6-9-4)
-    tick: int           # Absolute tick count (0..COSMIC_FRAME-1)
-    position: int       # Position in 16-beat cycle (0..WORDS-1)
-    phase: int          # Quarter/phase (0..QUARTERS-1) = MURALI
-    venu: int           # Quality/Mood (6 bits)
-    vamsi: int          # Process/Action (9 bits)
-    murali: int         # Phase/Quarter (4 bits)
-    mode: int           # Kirtan mode (0=Solo, 1=CallResponse, 2=Chorus)
+    diw: int  # 19-bit Divine Instruction Word (canonical 6-9-4)
+    tick: int  # Absolute tick count (0..COSMIC_FRAME-1)
+    position: int  # Position in 16-beat cycle (0..WORDS-1)
+    phase: int  # Quarter/phase (0..QUARTERS-1) = MURALI
+    venu: int  # Quality/Mood (6 bits)
+    vamsi: int  # Process/Action (9 bits)
+    murali: int  # Phase/Quarter (4 bits)
+    mode: int  # Kirtan mode (0=Solo, 1=CallResponse, 2=Chorus)
 
 
 @runtime_checkable

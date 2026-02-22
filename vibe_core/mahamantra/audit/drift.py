@@ -55,8 +55,14 @@ logger = logging.getLogger("DRIFT_AUDITOR")
 # =============================================================================
 
 SACRED_CONSTANTS: Dict[str, int] = {
-    "PARAMPARA": 37, "WORDS": 16, "TRINITY": 3, "HARE_COUNT": 8,
-    "KRISHNA_COUNT": 4, "RAMA_COUNT": 4, "PANCHA": 5, "HALVES": 2,
+    "PARAMPARA": 37,
+    "WORDS": 16,
+    "TRINITY": 3,
+    "HARE_COUNT": 8,
+    "KRISHNA_COUNT": 4,
+    "RAMA_COUNT": 4,
+    "PANCHA": 5,
+    "HALVES": 2,
 }
 SSOT_FILES: Tuple[str, ...] = ("_axioms.py", "_seed.py")
 
@@ -64,6 +70,7 @@ SSOT_FILES: Tuple[str, ...] = ("_axioms.py", "_seed.py")
 # =============================================================================
 # DRIFT AUDITOR - Implements AuditProtocol
 # =============================================================================
+
 
 class Auditor:  # Renamed from DriftAuditor
     """
@@ -139,17 +146,19 @@ class Auditor:  # Renamed from DriftAuditor
                 continue
 
             mj = re.search(r'__mahajana__\s*[=:]\s*["\'](\w+)["\']', content)
-            pos = re.search(r'__position__\s*[=:]\s*(\d+)', content)
+            pos = re.search(r"__position__\s*[=:]\s*(\d+)", content)
 
             if mj and pos:
-                violations.append(LineageViolation(
-                    path=str(path),
-                    mahajana=mj.group(1),
-                    position=int(pos.group(1)),
-                    current_genesis=gen.group(1),
-                    correct_genesis=self._compute_genesis(mj.group(1), int(pos.group(1))),
-                    remainder=genesis % PARAMPARA,
-                ))
+                violations.append(
+                    LineageViolation(
+                        path=str(path),
+                        mahajana=mj.group(1),
+                        position=int(pos.group(1)),
+                        current_genesis=gen.group(1),
+                        correct_genesis=self._compute_genesis(mj.group(1), int(pos.group(1))),
+                        remainder=genesis % PARAMPARA,
+                    )
+                )
 
         return valid, len(violations), tuple(violations)
 
@@ -163,14 +172,14 @@ class Auditor:  # Renamed from DriftAuditor
             if any(s in str(path) for s in SSOT_FILES):
                 continue
 
-            lines = content.split('\n')
+            lines = content.split("\n")
             file_clean = True
 
             for i, line in enumerate(lines, 1):
-                if line.strip().startswith('#') or 'import' in line:
+                if line.strip().startswith("#") or "import" in line:
                     continue
                 for const, val in SACRED_CONSTANTS.items():
-                    if re.search(rf'\b{const}\s*=\s*{val}\b', line):
+                    if re.search(rf"\b{const}\s*=\s*{val}\b", line):
                         violations.append(SSOTViolation(str(path), i, const, val))
                         file_clean = False
 
@@ -187,25 +196,58 @@ class Auditor:  # Renamed from DriftAuditor
 
         # Registry: (module, class, protocol_module, protocol)
         checks = [
-            ("vibe_core.mahamantra.substrate.algorithm.maha", "MahaAlgorithm16",
-             "vibe_core.mahamantra.protocols._maha_compute", "MahaComputeProtocol"),
-            ("vibe_core.mahamantra.substrate.algorithm.maha", "MahaModularSynth",
-             "vibe_core.mahamantra.protocols._maha_compute", "MahaComputeProtocol"),
-            ("vibe_core.mahamantra.analysis.derivation_graph", "DerivationGraph",
-             "vibe_core.mahamantra.protocols._graph", "GraphProtocol"),
-            ("vibe_core.mahamantra.kernel.maha_kernel", "MahaKernel",
-             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
-            ("vibe_core.mahamantra.substrate.chamber", "SankirtanChamber",
-             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
-            ("vibe_core.mahamantra.substrate.resonance.resonator", "MahaResonator",
-             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
-            ("vibe_core.mahamantra.adapters.routing", "HolographicRouter",
-             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
-            ("vibe_core.mahamantra.orchestrator", "VenuOrchestrator",
-             "vibe_core.mahamantra.protocols._pancha", "PanchaTattvaProtocol"),
+            (
+                "vibe_core.mahamantra.substrate.algorithm.maha",
+                "MahaAlgorithm16",
+                "vibe_core.mahamantra.protocols._maha_compute",
+                "MahaComputeProtocol",
+            ),
+            (
+                "vibe_core.mahamantra.substrate.algorithm.maha",
+                "MahaModularSynth",
+                "vibe_core.mahamantra.protocols._maha_compute",
+                "MahaComputeProtocol",
+            ),
+            (
+                "vibe_core.mahamantra.analysis.derivation_graph",
+                "DerivationGraph",
+                "vibe_core.mahamantra.protocols._graph",
+                "GraphProtocol",
+            ),
+            (
+                "vibe_core.mahamantra.kernel.maha_kernel",
+                "MahaKernel",
+                "vibe_core.mahamantra.protocols._pancha",
+                "PanchaTattvaProtocol",
+            ),
+            (
+                "vibe_core.mahamantra.substrate.chamber",
+                "SankirtanChamber",
+                "vibe_core.mahamantra.protocols._pancha",
+                "PanchaTattvaProtocol",
+            ),
+            (
+                "vibe_core.mahamantra.substrate.resonance.resonator",
+                "MahaResonator",
+                "vibe_core.mahamantra.protocols._pancha",
+                "PanchaTattvaProtocol",
+            ),
+            (
+                "vibe_core.mahamantra.adapters.routing",
+                "HolographicRouter",
+                "vibe_core.mahamantra.protocols._pancha",
+                "PanchaTattvaProtocol",
+            ),
+            (
+                "vibe_core.mahamantra.orchestrator",
+                "VenuOrchestrator",
+                "vibe_core.mahamantra.protocols._pancha",
+                "PanchaTattvaProtocol",
+            ),
         ]
 
         import importlib
+
         for mod_name, cls_name, proto_mod, proto_name in checks:
             try:
                 mod = importlib.import_module(mod_name)
@@ -213,7 +255,7 @@ class Auditor:  # Renamed from DriftAuditor
                 proto_m = importlib.import_module(proto_mod)
                 proto = getattr(proto_m, proto_name)
 
-                instance = cls.create() if hasattr(cls, 'create') else cls()
+                instance = cls.create() if hasattr(cls, "create") else cls()
                 if isinstance(instance, proto):
                     alive += 1
                 else:
@@ -232,39 +274,45 @@ class Auditor:  # Renamed from DriftAuditor
         # 1. Lineage Check
         _, _, lin_violations = self.lineage()
         for v in lin_violations:
-            findings.append(AuditFinding(
-                source="DriftAuditor.lineage",
-                position=__position__,
-                mahajana=__mahajana__,
-                description=f"Broken lineage. Genesis {v.current_genesis} has remainder {v.remainder}",
-                file_path=v.path,
-                severity=FindingSeverity.CRITICAL,
-            ))
+            findings.append(
+                AuditFinding(
+                    source="DriftAuditor.lineage",
+                    position=__position__,
+                    mahajana=__mahajana__,
+                    description=f"Broken lineage. Genesis {v.current_genesis} has remainder {v.remainder}",
+                    file_path=v.path,
+                    severity=FindingSeverity.CRITICAL,
+                )
+            )
 
         # 2. SSOT Check
         _, ssot_violations = self.ssot()
         for v in ssot_violations:
-            findings.append(AuditFinding(
-                source="DriftAuditor.ssot",
-                position=__position__,
-                mahajana=__mahajana__,
-                description=f"Hardcoded sacred constant: {v.constant}={v.value}",
-                file_path=v.path,
-                line_number=v.line,
-                severity=FindingSeverity.WARNING,
-            ))
+            findings.append(
+                AuditFinding(
+                    source="DriftAuditor.ssot",
+                    position=__position__,
+                    mahajana=__mahajana__,
+                    description=f"Hardcoded sacred constant: {v.constant}={v.value}",
+                    file_path=v.path,
+                    line_number=v.line,
+                    severity=FindingSeverity.WARNING,
+                )
+            )
 
         # 3. Protocol Check
         _, _, proto_violations = self.protocols()
         for v in proto_violations:
-            findings.append(AuditFinding(
-                source="DriftAuditor.protocols",
-                position=__position__,
-                mahajana=__mahajana__,
-                description=f"Protocol violation for {v.class_name}: {v.error}",
-                file_path=v.module.replace('.', '/') + '.py',
-                severity=FindingSeverity.CRITICAL,
-            ))
+            findings.append(
+                AuditFinding(
+                    source="DriftAuditor.protocols",
+                    position=__position__,
+                    mahajana=__mahajana__,
+                    description=f"Protocol violation for {v.class_name}: {v.error}",
+                    file_path=v.module.replace(".", "/") + ".py",
+                    severity=FindingSeverity.CRITICAL,
+                )
+            )
 
         return findings
 
@@ -280,8 +328,7 @@ class Auditor:  # Renamed from DriftAuditor
             path = Path(v.path)
             content = path.read_text()
             new_content = re.sub(
-                r'(__genesis__\s*[=:]\s*["\']?)0x[0-9a-fA-F]+(["\']?)',
-                f'\\g<1>{v.correct_genesis}\\g<2>', content
+                r'(__genesis__\s*[=:]\s*["\']?)0x[0-9a-fA-F]+(["\']?)', f"\\g<1>{v.correct_genesis}\\g<2>", content
             )
             if not dry_run:
                 path.write_text(new_content)
@@ -294,13 +341,13 @@ class Auditor:  # Renamed from DriftAuditor
     def start_listening(self) -> None:
         """
         Hook into the Mahamantra Heartbeat (Japa Loop).
-        
+
         This makes the Audit ALIVE. Instead of just scanning files,
         we verify system integrity on every cosmic breath.
         """
         # Lazy import to avoid circular dependency
         from vibe_core.mahamantra import mahamantra
-        
+
         # Register self as listener
         # mahamantra is the singleton instance of MahamantraLotus
         mahamantra.register_listener(self._on_tick)
@@ -309,15 +356,15 @@ class Auditor:  # Renamed from DriftAuditor
     def _on_tick(self, state: Dict[str, object]) -> None:
         """
         Callback for Mahamantra Heartbeat.
-        
+
         Args:
             state: Tick state dict from MahamantraLotus.tick()
         """
         tick = state.get("tick", 0)
-        
+
         # LIVENESS CHECK (Every tick)
         # Just being called proves the heart is beating.
-        
+
         # MALA CHECK (Every 108 ticks)
         # Run a full audit scan periodically to detect drift.
         # 108 is the sacred number of beads in a Mala.
@@ -342,5 +389,8 @@ class Auditor:  # Renamed from DriftAuditor
 
 __all__ = [
     "Auditor",
-    "AuditReport", "LineageViolation", "SSOTViolation", "ProtocolViolation",
+    "AuditReport",
+    "LineageViolation",
+    "SSOTViolation",
+    "ProtocolViolation",
 ]

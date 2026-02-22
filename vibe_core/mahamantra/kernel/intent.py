@@ -364,9 +364,12 @@ class MantraKernel:
 
         except Exception as exc:
             import logging
+
             logging.getLogger("MANTRA_KERNEL").warning(
                 "Krishna resolution failed for %s(%s): %s",
-                intent.type.value, intent.target, exc,
+                intent.type.value,
+                intent.target,
+                exc,
             )
             return IntentResult(
                 intent=intent,

@@ -10,7 +10,8 @@ Implements the Math of Time:
 - 1728 Ticks = 1 Mala
 
 """
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS)
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, QUARTERS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

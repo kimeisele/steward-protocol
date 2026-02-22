@@ -30,10 +30,19 @@ from vibe_core.mahamantra.substrate.event_types import (  # noqa: F401
 # =============================================================================
 
 _LAZY_IMPORTS = {
-    "Event", "EventBus", "EventBusStatus", "EventDetails",
-    "MetricsEntry", "RateLimitStats", "StalledInfo",
-    "SubscriberCounts", "SubscriberHealth", "SubscriberMetrics",
-    "SudarshanaGuard", "ZombieInfo", "get_event_bus",
+    "Event",
+    "EventBus",
+    "EventBusStatus",
+    "EventDetails",
+    "MetricsEntry",
+    "RateLimitStats",
+    "StalledInfo",
+    "SubscriberCounts",
+    "SubscriberHealth",
+    "SubscriberMetrics",
+    "SudarshanaGuard",
+    "ZombieInfo",
+    "get_event_bus",
 }
 
 _LAZY_EVENTS = {
@@ -44,18 +53,31 @@ _LAZY_EVENTS = {
 def __getattr__(name):
     if name in _LAZY_IMPORTS:
         from vibe_core.mahamantra.substrate import event_bus
+
         return getattr(event_bus, name)
     if name in _LAZY_EVENTS:
         from vibe_core.protocols.mahajanas.narada import events
+
         return getattr(events, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 __all__ = [  # noqa: F822 — lazy imports via __getattr__
-    "EventType", "EventColor", "EVENT_COLOR_MAP",
-    "Event", "EventBus", "EventBusStatus", "EventDetails",
-    "MetricsEntry", "RateLimitStats", "StalledInfo",
-    "SubscriberCounts", "SubscriberHealth", "SubscriberMetrics",
-    "SudarshanaGuard", "ZombieInfo", "get_event_bus",
+    "EventType",
+    "EventColor",
+    "EVENT_COLOR_MAP",
+    "Event",
+    "EventBus",
+    "EventBusStatus",
+    "EventDetails",
+    "MetricsEntry",
+    "RateLimitStats",
+    "StalledInfo",
+    "SubscriberCounts",
+    "SubscriberHealth",
+    "SubscriberMetrics",
+    "SudarshanaGuard",
+    "ZombieInfo",
+    "get_event_bus",
     "emit_event",
 ]

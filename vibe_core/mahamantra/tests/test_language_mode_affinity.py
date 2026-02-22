@@ -17,6 +17,7 @@ from vibe_core.mahamantra.substrate.seed import HolyName
 # mode_anchor_phrases: protocol-derived anchor phrases
 # =============================================================================
 
+
 class TestModeAnchorPhrases:
     """mode_anchor_phrases builds anchors from trinity functions."""
 
@@ -54,6 +55,7 @@ class TestModeAnchorPhrases:
 # =============================================================================
 # classify_by_graph: WordNet semantic classification
 # =============================================================================
+
 
 class TestClassifyByGraph:
     """classify_by_graph classifies words by graph distance to anchors."""

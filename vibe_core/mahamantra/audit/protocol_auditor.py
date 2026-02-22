@@ -91,33 +91,34 @@ class Auditor:
                 instance = cls.create() if hasattr(cls, "create") else cls()
 
                 if not isinstance(instance, proto):
-                    findings.append(AuditFinding(
+                    findings.append(
+                        AuditFinding(
+                            source="protocol_auditor",
+                            position=__position__,
+                            mahajana=__mahajana__,
+                            description=(f"{cls_name} does not implement {proto_name}. isinstance() returned False."),
+                            file_path=mod_name.replace(".", "/") + ".py",
+                            severity=FindingSeverity.CRITICAL,
+                        )
+                    )
+            except Exception as e:
+                findings.append(
+                    AuditFinding(
                         source="protocol_auditor",
                         position=__position__,
                         mahajana=__mahajana__,
                         description=(
-                            f"{cls_name} does not implement {proto_name}. "
-                            f"isinstance() returned False."
+                            f"Cannot verify {cls_name} against {proto_name}: {type(e).__name__}: {str(e)[:120]}"
                         ),
                         file_path=mod_name.replace(".", "/") + ".py",
-                        severity=FindingSeverity.CRITICAL,
-                    ))
-            except Exception as e:
-                findings.append(AuditFinding(
-                    source="protocol_auditor",
-                    position=__position__,
-                    mahajana=__mahajana__,
-                    description=(
-                        f"Cannot verify {cls_name} against {proto_name}: "
-                        f"{type(e).__name__}: {str(e)[:120]}"
-                    ),
-                    file_path=mod_name.replace(".", "/") + ".py",
-                    severity=FindingSeverity.WARNING,
-                ))
+                        severity=FindingSeverity.WARNING,
+                    )
+                )
 
         logger.info(
             "Protocol audit: %d findings, %d checks",
-            len(findings), len(PROTOCOL_CHECKS),
+            len(findings),
+            len(PROTOCOL_CHECKS),
         )
         return findings
 

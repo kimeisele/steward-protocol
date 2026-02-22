@@ -10,7 +10,8 @@ Alle Imports INNERHALB mahamantra/ sollten hierüber gehen.
 
 NICHT NEU SCHREIBEN - nur wrappen.
 """
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "nityananda"

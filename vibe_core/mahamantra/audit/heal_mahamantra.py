@@ -47,11 +47,12 @@ CONSTANTS_MAP = {
 # IGNORE THESE (keep as numbers)
 IGNORE_VALUES = {0, -1}
 
+
 class HealingTransformer(cst.CSTTransformer):
     def __init__(self):
         self.needed_imports = set()
         self.modified = False
-        self.in_import = False # State tracking
+        self.in_import = False  # State tracking
 
     def visit_Import(self, node: cst.Import) -> None:
         self.in_import = True
@@ -71,6 +72,7 @@ class HealingTransformer(cst.CSTTransformer):
         try:
             # Use ast.literal_eval for safe parsing of 0x, 0b, etc.
             import ast
+
             val = ast.literal_eval(original_node.value)
             if val in CONSTANTS_MAP and val not in IGNORE_VALUES:
                 name = CONSTANTS_MAP[val]
@@ -85,30 +87,31 @@ class HealingTransformer(cst.CSTTransformer):
         # Replace Any with object, BUT skip imports
         if self.in_import:
             return updated_node
-            
+
         if original_node.value == "Any":
             self.modified = True
             return updated_node.with_changes(value="object")
-            
+
         return updated_node
 
     def leave_Attribute(self, original_node: cst.Attribute, updated_node: cst.Attribute) -> cst.BaseExpression:
         # Handle typing.Any -> object
         # structure: Attribute(value=Name(typing), attr=Name(Any))
-        # leave_Name matches inner nodes first. 
+        # leave_Name matches inner nodes first.
         # If we replaced Any->object in leave_Name, we get typing.object which is valid-ish but ugly.
-        # Ideally we want just 'object'. 
-        
+        # Ideally we want just 'object'.
+
         # If leave_Name already ran, updated_node.attr might be 'object'.
         if m.matches(updated_node, m.Attribute(value=m.Name("typing"), attr=m.Name("object"))):
-             self.modified = True
-             return cst.Name(value="object")
-             
+            self.modified = True
+            return cst.Name(value="object")
+
         if m.matches(updated_node, m.Attribute(value=m.Name("typing"), attr=m.Name("Any"))):
-             self.modified = True
-             return cst.Name(value="object")
+            self.modified = True
+            return cst.Name(value="object")
 
         return updated_node
+
 
 class ImportInjector(cst.CSTTransformer):
     def __init__(self, needed_imports: set):
@@ -121,10 +124,10 @@ class ImportInjector(cst.CSTTransformer):
 
         # Check if import already exists (simplistic check)
         # Better: Add to the first ImportFrom found, or top of file.
-        
+
         # Construct the import statement
         # from vibe_core.mahamantra.protocols._seed import (A, B, C)
-        
+
         names = [cst.ImportAlias(name=cst.Name(n)) for n in self.needed_imports]
         import_stmt = cst.ImportFrom(
             module=cst.parse_expression("vibe_core.mahamantra.protocols._seed"),
@@ -132,15 +135,16 @@ class ImportInjector(cst.CSTTransformer):
             lpar=cst.LeftParen(),
             rpar=cst.RightParen(),
         )
-        
+
         # Insert at top (after docstring)
         new_body = list(updated_node.body)
-        
+
         # Find insertion point (after docstring, before other imports ideally)
         # For now, just prepend to body, LibCST handles spacing somewhat
-        new_body.insert(1, cst.SimpleStatementLine(body=[import_stmt])) # Index 1 assuming docstring is 0
-        
+        new_body.insert(1, cst.SimpleStatementLine(body=[import_stmt]))  # Index 1 assuming docstring is 0
+
         return updated_node.with_changes(body=new_body)
+
 
 def heal_file(path: Path):
     if "_seed" in path.name or "seed/" in str(path):
@@ -149,12 +153,12 @@ def heal_file(path: Path):
 
     print(f"Healing {path}...")
     source = path.read_text()
-    
+
     try:
         wrapper = cst.MetadataWrapper(cst.parse_module(source))
         transformer = HealingTransformer()
         new_wrapper = wrapper.visit(transformer)
-        
+
         if transformer.modified:
             # Need to inject imports?
             if transformer.needed_imports:
@@ -166,9 +170,10 @@ def heal_file(path: Path):
             print("  -> HEALED")
         else:
             print("  -> CLEAN")
-            
+
     except Exception as e:
         print(f"  -> ERROR: {e}")
+
 
 def main():
     root = Path("vibe_core/mahamantra/substrate")
@@ -179,11 +184,12 @@ def main():
     root = Path("vibe_core/mahamantra/kernel")
     for path in root.rglob("*.py"):
         heal_file(path)
-        
+
     # Also target Protocols
     root = Path("vibe_core/mahamantra/protocols")
     for path in root.rglob("*.py"):
         heal_file(path)
+
 
 if __name__ == "__main__":
     main()

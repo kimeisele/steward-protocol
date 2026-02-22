@@ -22,6 +22,7 @@ from vibe_core.mahamantra.substrate.language.composer import (
 # rhythm_bias: grid-aligned rhythmic emphasis
 # =============================================================================
 
+
 class TestRhythmBias:
     """rhythm_bias computes emphasis bonus from 3D vectors + grid."""
 
@@ -74,6 +75,7 @@ class TestRhythmBias:
 # semantic_boost: WordNet graph distance bonus
 # =============================================================================
 
+
 class TestSemanticBoost:
     """semantic_boost: WordNet-based bonus for candidate words."""
 
@@ -93,6 +95,7 @@ class TestSemanticBoost:
 # chamber_boost: Antaranga prana-based boost
 # =============================================================================
 
+
 class TestChamberBoost:
     """chamber_boost: prana at word's slot from character wave."""
 
@@ -106,18 +109,21 @@ class TestChamberBoost:
         class MockAntaranga:
             def prana_at(self, slot):
                 return 0
+
         assert isinstance(chamber_boost(MockAntaranga(), 5, 42), float)
 
     def test_zero_prana_returns_zero(self):
         class MockAntaranga:
             def prana_at(self, slot):
                 return 0
+
         assert chamber_boost(MockAntaranga(), 5, 42) == 0.0
 
     def test_positive_prana_returns_positive(self):
         class MockAntaranga:
             def prana_at(self, slot):
                 return 10000
+
         result = chamber_boost(MockAntaranga(), 5, 42)
         assert result > 0.0
 
@@ -125,15 +131,18 @@ class TestChamberBoost:
         class MockAntaranga:
             def prana_at(self, slot):
                 return 999999999
+
         result = chamber_boost(MockAntaranga(), 5, 42)
         # Cap = PANCHA / (WORDS * HALVES) = 5/32 ≈ 0.15625
         from vibe_core.mahamantra.protocols._seed import PANCHA, HALVES
+
         assert result <= PANCHA / (WORDS * HALVES) + 1e-9
 
 
 # =============================================================================
 # rank_resonant_by_rhythm: full ranking pipeline
 # =============================================================================
+
 
 class TestRankResonantByRhythm:
     """rank_resonant_by_rhythm: base + rhythm + semantic + chamber."""
@@ -183,6 +192,7 @@ class TestRankResonantByRhythm:
 # chunk_sentence: word list → readable phrase chunks
 # =============================================================================
 
+
 class TestChunkSentence:
     """chunk_sentence groups flat word lists into readable phrases."""
 
@@ -221,6 +231,7 @@ class TestChunkSentence:
 # StateVector: numeric system state summary
 # =============================================================================
 
+
 class TestStateVector:
     """StateVector is a pure numeric NamedTuple with sane defaults."""
 
@@ -243,9 +254,9 @@ class TestStateVector:
 
     def test_is_namedtuple(self):
         sv = StateVector()
-        assert hasattr(sv, '_fields')
-        assert 'guna' in sv._fields
-        assert 'prana_level' in sv._fields
+        assert hasattr(sv, "_fields")
+        assert "guna" in sv._fields
+        assert "prana_level" in sv._fields
 
     def test_immutable(self):
         sv = StateVector()
@@ -256,6 +267,7 @@ class TestStateVector:
 # =============================================================================
 # state_affinity: StateVector → word selection bias
 # =============================================================================
+
 
 class TestStateAffinity:
     """state_affinity scores word-state alignment. All numeric, no keywords."""
@@ -299,6 +311,7 @@ class TestStateAffinity:
 
     def test_capped(self):
         from vibe_core.mahamantra.protocols._seed import PANCHA, HALVES
+
         sv = StateVector(guna=2, entry_count=72, uptime_ratio=1.0, prana_level=999999)
         item = {"score": 1.0, "coords": tuple(range(10)), "packed_hex": ""}
         result = state_affinity(sv, item, mode="DHARMA")
@@ -316,17 +329,20 @@ class TestStateAffinity:
 # extract_state_vector: MahaState → StateVector (graceful degradation)
 # =============================================================================
 
+
 class TestExtractStateVector:
     """extract_state_vector gracefully degrades when MahaState unavailable."""
 
     def test_returns_state_vector(self):
         from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
+
         sv = extract_state_vector(prana_level=42)
         assert isinstance(sv, StateVector)
         assert sv.prana_level == 42
 
     def test_default_guna_is_rajas(self):
         from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
+
         sv = extract_state_vector()
         # Even if MahaState fails, default is RAJAS (1)
         assert sv.guna in (0, 1, 2)
@@ -337,6 +353,7 @@ class TestBuildLotusPool:
 
     def test_smaranam_source(self):
         from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+
         resp = {
             "smaranam": [
                 {"sanskrit": "dharma", "meaning": "duty", "score": 0.9},
@@ -349,6 +366,7 @@ class TestBuildLotusPool:
 
     def test_verse_source(self):
         from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+
         resp = {
             "smaranam": [],
             "verse": {
@@ -364,12 +382,11 @@ class TestBuildLotusPool:
 
     def test_verse_capped_at_seven(self):
         from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+
         resp = {
             "smaranam": [],
             "verse": {
-                "words": tuple(
-                    {"sanskrit": f"w{i}", "meaning": f"meaning {i} long enough"} for i in range(20)
-                ),
+                "words": tuple({"sanskrit": f"w{i}", "meaning": f"meaning {i} long enough"} for i in range(20)),
             },
         }
         pool = _build_lotus_pool(resp)
@@ -378,11 +395,13 @@ class TestBuildLotusPool:
 
     def test_empty_response(self):
         from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+
         pool = _build_lotus_pool({})
         assert pool == []
 
     def test_coords_resolved(self):
         from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
+
         resp = {
             "smaranam": [
                 {"sanskrit": "dharma", "meaning": "duty", "score": 0.9},
@@ -398,6 +417,7 @@ class TestBuildLotusPool:
 # compose_from_wave: Antaranga-driven syllable composition
 # =============================================================================
 
+
 class TestComposeFromWave:
     """compose_from_wave reads the Antaranga standing wave for composition."""
 
@@ -406,17 +426,24 @@ class TestComposeFromWave:
             "input": "test input",
             "smaranam": smaranam or (),
             "verse": verse,
-            "vibration": {"seed": 42, "attractor": 7, "phoneme": "a",
-                          "signature": {"element": "prithvi", "varga": 0, "sub": 0, "harmonic": 0}},
+            "vibration": {
+                "seed": 42,
+                "attractor": 7,
+                "phoneme": "a",
+                "signature": {"element": "prithvi", "varga": 0, "sub": 0, "harmonic": 0},
+            },
             "guna": {"mode": "RAJAS", "opcode": "EXTEND_CAP", "opcode_value": 9},
             "diw": {"raw": 0, "venu": 0, "vamsi": 0, "murali": 0},
-            "position": 9, "guardian": "prahlada", "quarter": "karma",
+            "position": 9,
+            "guardian": "prahlada",
+            "quarter": "karma",
             "antaranga": {"active_slots": 0, "total_prana": 0},
             "akash": {"total_rounds": 0, "total_beats": 0},
         }
 
     def test_returns_string(self):
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
@@ -428,12 +455,14 @@ class TestComposeFromWave:
 
     def test_empty_smaranam_returns_empty(self):
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+
         resp = self._make_lotus_response(smaranam=[])
         result = compose_from_wave(resp, "test")
         assert isinstance(result, str)
 
     def test_output_nonempty_with_words(self):
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": "bhakti", "meaning": "devotional service", "score": 0.95},
@@ -447,6 +476,7 @@ class TestComposeFromWave:
     def test_deterministic_a(self):
         """First half of determinism check."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
@@ -462,6 +492,7 @@ class TestComposeFromWave:
     def test_deterministic_b(self):
         """Second half: same input after full singleton reset must match."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
@@ -474,6 +505,7 @@ class TestComposeFromWave:
 
     def test_max_seven_words(self):
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": f"word{i}", "meaning": f"meaning number {i} here", "score": 0.9 - i * 0.05}
@@ -487,6 +519,7 @@ class TestComposeFromWave:
     def test_wave_prana_ranking(self):
         """Words with higher post-modulation prana should be preferred."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": "dharma", "meaning": "duty", "score": 0.5},
@@ -501,20 +534,26 @@ class TestComposeFromWave:
     def test_verse_words_not_in_output_directly(self):
         """Verse words are computation input, not output fragments per se."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": "dharma", "meaning": "duty", "score": 0.9},
             ],
             verse={
-                "id": "BG.2.47", "chapter": 2, "verse": 47, "guna": "sattva",
-                "dominant_name": "KRISHNA", "significance": "Sankhya Yoga",
-                "word_count": 3, "phoneme_count": 15,
+                "id": "BG.2.47",
+                "chapter": 2,
+                "verse": 47,
+                "guna": "sattva",
+                "dominant_name": "KRISHNA",
+                "significance": "Sankhya Yoga",
+                "word_count": 3,
+                "phoneme_count": 15,
                 "words": (
                     {"sanskrit": "karmaṇi", "meaning": "prescribed duties"},
                     {"sanskrit": "eva", "meaning": "certainly"},
                     {"sanskrit": "adhikāras", "meaning": "right"},
                 ),
-            }
+            },
         )
         result = compose_from_wave(resp, "What should I do?")
         assert isinstance(result, str)
@@ -523,6 +562,7 @@ class TestComposeFromWave:
         """End-to-end: Lotus __call__ → compose_from_wave."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
         from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
         lotus = get_mahamantra()
         lr = lotus("What is the meaning of life?")
         result = compose_from_wave(lr, "What is the meaning of life?")
@@ -533,6 +573,7 @@ class TestComposeFromWave:
         """First half: Lotus + compose_from_wave."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
         from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
         text = "devotion and surrender"
         lotus = get_mahamantra()
         lr = lotus(text)
@@ -546,6 +587,7 @@ class TestComposeFromWave:
         """Second half: same Lotus input after full reset must match."""
         from vibe_core.mahamantra.substrate.language.composer import compose_from_wave
         from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
         text = "devotion and surrender"
         lotus = get_mahamantra()
         lr = lotus(text)

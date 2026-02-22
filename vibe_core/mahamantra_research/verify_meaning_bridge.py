@@ -15,10 +15,18 @@ No keywords. No SHA256. No ML. Pure Parampara ground truth.
 
 from vibe_core.mahamantra.substrate.semantic_index import get_index, words_by_meaning
 from vibe_core.mahamantra.substrate.pancha_walk import (
-    COORD_ELEMENT, COORD_VARGA, COORD_HARMONIC, IS_SHRUTI,
+    COORD_ELEMENT,
+    COORD_VARGA,
+    COORD_HARMONIC,
+    IS_SHRUTI,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    POSITION_SUM_KRISHNA, KSETRAJNA, TRINITY, NAVA, SEVEN, WORDS,
+    POSITION_SUM_KRISHNA,
+    KSETRAJNA,
+    TRINITY,
+    NAVA,
+    SEVEN,
+    WORDS,
 )
 
 KRISHNA = POSITION_SUM_KRISHNA  # 17
@@ -35,13 +43,37 @@ print()
 
 # Test: what Sanskrit words resonate with "error", "fail", "success", etc?
 probe_words = [
-    "error", "fail", "failure", "wrong", "fault",
-    "warning", "danger", "fear", "caution",
-    "success", "victory", "complete", "done", "good",
-    "pure", "divine", "transcendental", "supreme", "perfect",
-    "destroy", "death", "kill", "attack",
-    "create", "birth", "begin", "start",
-    "connection", "database", "system", "healthy",
+    "error",
+    "fail",
+    "failure",
+    "wrong",
+    "fault",
+    "warning",
+    "danger",
+    "fear",
+    "caution",
+    "success",
+    "victory",
+    "complete",
+    "done",
+    "good",
+    "pure",
+    "divine",
+    "transcendental",
+    "supreme",
+    "perfect",
+    "destroy",
+    "death",
+    "kill",
+    "attack",
+    "create",
+    "birth",
+    "begin",
+    "start",
+    "connection",
+    "database",
+    "system",
+    "healthy",
 ]
 
 print("=" * 80)
@@ -81,9 +113,11 @@ tests = [
 
 import re
 
+
 def tokenize_english(text):
     """Split English text into clean lowercase tokens."""
-    return [w for w in re.findall(r'[a-zA-Z]+', text.lower()) if len(w) >= 3]
+    return [w for w in re.findall(r"[a-zA-Z]+", text.lower()) if len(w) >= 3]
+
 
 def english_to_sanskrit_resonance(text):
     """
@@ -100,6 +134,7 @@ def english_to_sanskrit_resonance(text):
                 seen.add(wid)
                 resonant.append(w)
     return resonant
+
 
 def compute_4d_energy(words):
     """Compute aggregate 4D phonetic energy from Sanskrit words."""
@@ -118,6 +153,7 @@ def compute_4d_energy(words):
         "shruti_count": sum(1 for c in all_coords if IS_SHRUTI[c]),
         "n_coords": len(all_coords),
     }
+
 
 for text, expected in tests:
     tokens = tokenize_english(text)

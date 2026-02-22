@@ -89,22 +89,25 @@ class Auditor:
                     # Match: CONST_NAME = value (redefinition)
                     pattern = rf"\b{const_name}\s*[:=]\s*{const_val}\b"
                     if re.search(pattern, line):
-                        findings.append(AuditFinding(
-                            source="ssot_auditor",
-                            position=__position__,
-                            mahajana=__mahajana__,
-                            description=(
-                                f"Hardcoded sacred constant: {const_name} = {const_val}. "
-                                f"Import from protocols._seed instead."
-                            ),
-                            file_path=str(path),
-                            line_number=i,
-                            severity=FindingSeverity.WARNING,
-                        ))
+                        findings.append(
+                            AuditFinding(
+                                source="ssot_auditor",
+                                position=__position__,
+                                mahajana=__mahajana__,
+                                description=(
+                                    f"Hardcoded sacred constant: {const_name} = {const_val}. "
+                                    f"Import from protocols._seed instead."
+                                ),
+                                file_path=str(path),
+                                line_number=i,
+                                severity=FindingSeverity.WARNING,
+                            )
+                        )
 
         logger.info(
             "SSOT audit: %d findings from %s",
-            len(findings), self._root,
+            len(findings),
+            self._root,
         )
         return findings
 

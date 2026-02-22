@@ -16,7 +16,6 @@ class FakeResult(NamedTuple):
     sequencer_steps: tuple[int, ...]
 
 
-
 def _event() -> DIWEvent:
     return cast(
         DIWEvent,
@@ -38,7 +37,14 @@ def test_process_text_returns_runtime_envelope_with_tick_context() -> None:
     bridge.on_diw(_event())
 
     session = LanguageRuntimeSession(
-        generate=lambda text: FakeResult(seed=111, attractor=22, output=f"OUT:{text}", derivation="seed=111", stress_pattern=(1, 0, 1), sequencer_steps=(0, 2, 3)),
+        generate=lambda text: FakeResult(
+            seed=111,
+            attractor=22,
+            output=f"OUT:{text}",
+            derivation="seed=111",
+            stress_pattern=(1, 0, 1),
+            sequencer_steps=(0, 2, 3),
+        ),
         bridge=bridge,
     )
 
@@ -57,7 +63,9 @@ def test_process_text_returns_runtime_envelope_with_tick_context() -> None:
 
 def test_process_text_without_stress_uses_dash_signature() -> None:
     session = LanguageRuntimeSession(
-        generate=lambda text: FakeResult(seed=1, attractor=2, output=text, derivation="", stress_pattern=(), sequencer_steps=()),
+        generate=lambda text: FakeResult(
+            seed=1, attractor=2, output=text, derivation="", stress_pattern=(), sequencer_steps=()
+        ),
         bridge=VenuTickBridge(),
     )
 

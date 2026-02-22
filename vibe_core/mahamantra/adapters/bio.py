@@ -83,11 +83,16 @@ DEFAULT_KEY_BITS: Final[int] = WORDS  # 16
 
 # Lookup table for fast encoding
 _BASE_TO_INT: Final[dict] = {
-    'A': BASE_A, 'a': BASE_A,
-    'C': BASE_C, 'c': BASE_C,
-    'G': BASE_G, 'g': BASE_G,
-    'T': BASE_T, 't': BASE_T,
-    'U': BASE_T, 'u': BASE_T,  # RNA uracil = thymine
+    "A": BASE_A,
+    "a": BASE_A,
+    "C": BASE_C,
+    "c": BASE_C,
+    "G": BASE_G,
+    "g": BASE_G,
+    "T": BASE_T,
+    "t": BASE_T,
+    "U": BASE_T,
+    "u": BASE_T,  # RNA uracil = thymine
 }
 
 _INT_TO_BASE: Final[str] = "ACGT"
@@ -96,6 +101,7 @@ _INT_TO_BASE: Final[str] = "ACGT"
 # =============================================================================
 # ENCODING FUNCTIONS
 # =============================================================================
+
 
 def encode_kmer(kmer: str) -> int:
     """
@@ -134,12 +140,13 @@ def decode_kmer(key: int, k: int) -> str:
     for _ in range(k):
         bases.append(_INT_TO_BASE[key & 0b11])
         key >>= BITS_PER_BASE
-    return ''.join(reversed(bases))
+    return "".join(reversed(bases))
 
 
 # =============================================================================
 # LOTUS BIO INDEX
 # =============================================================================
+
 
 class LotusBio(MahaBioProtocol):
     """
@@ -184,7 +191,7 @@ class LotusBio(MahaBioProtocol):
     @property
     def key_space(self) -> int:
         """Total addressable k-mers (4^k)."""
-        return 4 ** self._k
+        return 4**self._k
 
     @property
     def unique_kmers(self) -> int:
@@ -239,7 +246,7 @@ class LotusBio(MahaBioProtocol):
         indexed = 0
 
         for i in range(len(sequence) - self._k + 1):
-            kmer = sequence[i:i + self._k]
+            kmer = sequence[i : i + self._k]
             if self.index_kmer(kmer, position=i):
                 indexed += 1
 
@@ -336,7 +343,7 @@ class LotusBio(MahaBioProtocol):
             List of matching KmerResults
         """
         if len(prefix) >= self._k:
-            return [self.query(prefix[:self._k])]
+            return [self.query(prefix[: self._k])]
 
         # Calculate range
         prefix_key = encode_kmer(prefix)
@@ -353,12 +360,14 @@ class LotusBio(MahaBioProtocol):
         results = []
         for entry in range_result.entries:
             kmer = decode_kmer(entry.key, self._k)
-            results.append(KmerResult(
-                kmer=kmer,
-                key=entry.key,
-                count=entry.value,
-                positions=self.find(kmer),
-            ))
+            results.append(
+                KmerResult(
+                    kmer=kmer,
+                    key=entry.key,
+                    count=entry.value,
+                    positions=self.find(kmer),
+                )
+            )
 
         return results
 
@@ -387,6 +396,7 @@ class LotusBio(MahaBioProtocol):
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
+
 
 def create_kmer_index(k: int = DEFAULT_K) -> LotusBio:
     """Create a new k-mer index."""

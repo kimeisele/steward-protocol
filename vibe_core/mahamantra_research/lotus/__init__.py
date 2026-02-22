@@ -90,6 +90,7 @@ from vibe_core.mahamantra_research.lotus_radix_n import (
 # CONVENIENCE FACTORIES
 # =============================================================================
 
+
 def create(bits: int = 16, default=None):
     """
     Factory function to create appropriate Lotus structure.
@@ -118,6 +119,7 @@ def create(bits: int = 16, default=None):
         # Use generic implementation
         return LotusRadixN(levels=levels, default=default)
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.
@@ -139,7 +141,6 @@ def __getattr__(name: str):
         return importlib.import_module(f"{__name__}.{name}")
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
 
 
 # =============================================================================

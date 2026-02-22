@@ -51,7 +51,6 @@ _MAHA_CELL: dict = {
     "RAMA_COUNT": 4,
     "PANCHA": 5,
     "HALVES": 2,
-
     # === PRIMARY DERIVATIONS ===
     "QUARTERS": 4,
     "KSETRAJNA": 1,
@@ -63,7 +62,6 @@ _MAHA_CELL: dict = {
     "AKSARA_COUNT": 32,
     "ROUNDS": 16,
     "AVATAR_COUNT": 4,
-
     # === SECONDARY DERIVATIONS ===
     "SEVEN": 7,
     "TEN": 10,
@@ -72,51 +70,41 @@ _MAHA_CELL: dict = {
     "MALA": 108,
     "MAHA_QUANTUM": 137,
     "GITA_CHAPTERS": 18,
-
     # === POSITION SUMS ===
     "POSITION_SUM_KRISHNA": 17,
     "POSITION_SUM_RAMA": 49,
     "POSITION_SUM_TOTAL": 136,
-
     # === PARAMPARA (37 Formula) ===
     "KSETRA_COUNT": 24,
     "KSETRAJNA_COUNT": 1,
     "PARAMPARA": 37,
-
     # === SIKSASTAKAM ===
     "SIKSASTAKAM_VERSES": 8,
     "SIKSASTAKAM_CACHE": 512,
-
     # === COSMIC FRAME ===
     "COSMIC_FRAME": 21600,
     "NAKSHATRA_UNIT": 800,
     "TITHI_UNIT": 720,
     "PADA_UNIT": 400,
     "QUARTER_UNIT": 5400,
-
     # === HARMONIC FREQUENCIES ===
     "JIVA_CYCLE": 432,
     "NADI_RESONANCE": 72,
     "FIELD_RESONANCE": 144,
-
     # === BINARY PATTERNS ===
     "BINARY_PATTERN_FIRST_HALF": 92,
     "BINARY_PATTERN_SECOND_HALF": 92,
-
     # === POLYRHYTHM ===
     "FIELD_STEPS": 16,
     "OBSERVER_BEATS": 7,
     "FULL_CYCLE": 112,
-
     # === FLUTE FREQUENCIES ===
     "VENU_FREQ": 72,
     "VAMSI_FREQ": 48,
     "MURALI_FREQ": 108,
-
     # === EPOCH ===
     "EPOCH_KEY": 1972,
     "GOLDEN_AGE_DURATION": 10000,
-
     # === TRANSCENDENTAL CELL ===
     # 1096 = 8 × 137 = 1024 + 72 (Header + Payload)
     "TRANSCENDENTAL_1096": 1096,
@@ -163,6 +151,7 @@ TRANSCENDENTAL_1096: Final[int] = _MAHA_CELL["TRANSCENDENTAL_1096"]
 # VERIFICATION (Only runs with MAHA_VERIFY=1)
 # =============================================================================
 
+
 def verify_shastra() -> bool:
     """
     Verify all derivations are correct.
@@ -200,6 +189,7 @@ def verify_shastra() -> bool:
 
     # Polyrhythm
     import math
+
     assert math.gcd(WORDS, SEVEN) == 1, "GCD(16, 7) = 1 (teilerfremd)"
     assert WORDS * SEVEN == 112, "LCM(16, 7) = 112"
 

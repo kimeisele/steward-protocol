@@ -624,9 +624,7 @@ class TestCLIExecutable:
 
     def test_cli_executable_is_protocol(self):
         """CLIExecutable is a runtime checkable protocol."""
-        assert hasattr(CLIExecutable, "__protocol_attrs__") or hasattr(
-            CLIExecutable, "_is_runtime_protocol"
-        )
+        assert hasattr(CLIExecutable, "__protocol_attrs__") or hasattr(CLIExecutable, "_is_runtime_protocol")
 
 
 # =============================================================================

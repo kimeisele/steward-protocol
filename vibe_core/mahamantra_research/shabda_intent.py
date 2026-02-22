@@ -71,6 +71,7 @@ from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM, QUARTERS
 # PURE SHABDA FINGERPRINT — no SHA256, no keywords
 # =============================================================================
 
+
 class ShabdaFingerprint:
     """
     The complete vibration identity of a text.
@@ -79,11 +80,20 @@ class ShabdaFingerprint:
     """
 
     __slots__ = (
-        "text", "vibrations", "phoneme_count",
-        "artic_dist", "voice_dist",
-        "vib_sum", "rama_coords",
-        "basin_hist", "hkr_color", "pa_hist",
-        "seed", "position", "attractor", "basin",
+        "text",
+        "vibrations",
+        "phoneme_count",
+        "artic_dist",
+        "voice_dist",
+        "vib_sum",
+        "rama_coords",
+        "basin_hist",
+        "hkr_color",
+        "pa_hist",
+        "seed",
+        "position",
+        "attractor",
+        "basin",
     )
 
     def __init__(self, text: str) -> None:
@@ -119,7 +129,9 @@ class ShabdaFingerprint:
         h, k, r = 0.0, 0.0, 0.0
         for c in self.rama_coords:
             ch, ck, cr = COORD_HKR[c]
-            h += ch; k += ck; r += cr
+            h += ch
+            k += ck
+            r += cr
         n = len(self.rama_coords)
         self.hkr_color = (h / n, k / n, r / n)
 
@@ -162,8 +174,10 @@ class ShabdaFingerprint:
     @property
     def dominant_hkr(self) -> str:
         h, k, r = self.hkr_color
-        if h >= k and h >= r: return "H"
-        if k >= r: return "K"
+        if h >= k and h >= r:
+            return "H"
+        if k >= r:
+            return "K"
         return "R"
 
 
@@ -174,13 +188,13 @@ def shabda_distance(a: ShabdaFingerprint, b: ShabdaFingerprint) -> float:
     All dimensions are weighted equally — the Mahamantra decides.
     """
     # Articulation distance (5D)
-    artic_d = sum((a.artic_dist[i] - b.artic_dist[i])**2 for i in range(5)) ** 0.5
+    artic_d = sum((a.artic_dist[i] - b.artic_dist[i]) ** 2 for i in range(5)) ** 0.5
 
     # Voicing distance (4D)
-    voice_d = sum((a.voice_dist[i] - b.voice_dist[i])**2 for i in range(4)) ** 0.5
+    voice_d = sum((a.voice_dist[i] - b.voice_dist[i]) ** 2 for i in range(4)) ** 0.5
 
     # HKR distance (3D)
-    hkr_d = sum((a.hkr_color[i] - b.hkr_color[i])**2 for i in range(3)) ** 0.5
+    hkr_d = sum((a.hkr_color[i] - b.hkr_color[i]) ** 2 for i in range(3)) ** 0.5
 
     # Basin histogram cosine distance
     dot = sum(a.basin_hist[i] * b.basin_hist[i] for i in range(BASIN_COUNT))
@@ -202,24 +216,27 @@ CORPUS = [
     ("clean", "def add(x: int, y: int) -> int:\n    return x + y"),
     ("clean", "def greet(name: str) -> str:\n    return f'Hello, {name}'"),
     ("clean", "class Config:\n    def __init__(self, path: Path) -> None:\n        self.path = path"),
-    ("clean", "from typing import Dict\ndef load(path: str) -> Dict[str, str]:\n    return json.loads(Path(path).read_text())"),
+    (
+        "clean",
+        "from typing import Dict\ndef load(path: str) -> Dict[str, str]:\n    return json.loads(Path(path).read_text())",
+    ),
     ("clean", "def validate(data: dict) -> bool:\n    return 'name' in data and 'id' in data"),
     ("clean", "import logging\nlogger = logging.getLogger(__name__)"),
-
     # BROKEN CODE
     ("broken", "from typing import Any\ndef f(x: Any) -> Any:\n    return x"),
     ("broken", "def load(p):\n    try:\n        return open(p).read()\n    except:\n        pass"),
     ("broken", "from typing import *\ndef g(a, b, c):\n    return a"),
-    ("broken", "def h(x: Any, y: Any, z: Any) -> Any:\n    try:\n        return x + y + z\n    except Exception:\n        pass"),
+    (
+        "broken",
+        "def h(x: Any, y: Any, z: Any) -> Any:\n    try:\n        return x + y + z\n    except Exception:\n        pass",
+    ),
     ("broken", "import os, sys, json, re, pathlib\nfrom typing import Any\nx: Any = None"),
     ("broken", "class Bad:\n    def do(self, thing):\n        try: return eval(thing)\n        except: return None"),
-
     # HEALTHY TEXT
     ("healthy", "All services healthy. Deployment complete."),
     ("healthy", "Tests passed. Coverage at 95 percent. No regressions."),
     ("healthy", "System stable for 30 days. Zero incidents."),
     ("healthy", "Performance optimized. Latency reduced by 40 percent."),
-
     # FAILING TEXT
     ("failing", "Connection refused. Retry failed after 5 attempts."),
     ("failing", "Out of memory. Process killed."),
@@ -240,9 +257,13 @@ if __name__ == "__main__":
     fingerprints: Dict[str, List[ShabdaFingerprint]] = {}
     all_fps: List[Tuple[str, ShabdaFingerprint]] = []
 
-    print(f"\n  {'#':>2}  {'Type':>8}  {'Pos':>3}  {'Q':>8}  {'Basin':>5}  {'DomA':>6}  {'DomH':>4}  "
-          f"{'HKR':>17}  {'Phon':>4}  Text")
-    print(f"  {'-'*2}  {'-'*8}  {'-'*3}  {'-'*8}  {'-'*5}  {'-'*6}  {'-'*4}  {'-'*17}  {'-'*4}  {'-'*35}")
+    print(
+        f"\n  {'#':>2}  {'Type':>8}  {'Pos':>3}  {'Q':>8}  {'Basin':>5}  {'DomA':>6}  {'DomH':>4}  "
+        f"{'HKR':>17}  {'Phon':>4}  Text"
+    )
+    print(
+        f"  {'-' * 2}  {'-' * 8}  {'-' * 3}  {'-' * 8}  {'-' * 5}  {'-' * 6}  {'-' * 4}  {'-' * 17}  {'-' * 4}  {'-' * 35}"
+    )
 
     for i, (label, text) in enumerate(CORPUS):
         fp = ShabdaFingerprint(text)
@@ -251,13 +272,15 @@ if __name__ == "__main__":
 
         hkr_str = f"({fp.hkr_color[0]:.2f},{fp.hkr_color[1]:.2f},{fp.hkr_color[2]:.2f})"
         text_short = text.replace("\n", " ")[:35]
-        print(f"  {i+1:>2}  {label:>8}  {fp.position:>3}  {fp.quarter_name:>8}  {fp.basin:>5}  "
-              f"{fp.dominant_articulation:>6}  {fp.dominant_hkr:>4}  {hkr_str:>17}  {fp.phoneme_count:>4}  {text_short}")
+        print(
+            f"  {i + 1:>2}  {label:>8}  {fp.position:>3}  {fp.quarter_name:>8}  {fp.basin:>5}  "
+            f"{fp.dominant_articulation:>6}  {fp.dominant_hkr:>4}  {hkr_str:>17}  {fp.phoneme_count:>4}  {text_short}"
+        )
 
     # === INTRA-GROUP vs INTER-GROUP DISTANCES ===
-    print(f"\n{'='*95}")
+    print(f"\n{'=' * 95}")
     print("  DISTANCE MATRIX — Do same-type inputs cluster together?")
-    print(f"{'='*95}")
+    print(f"{'=' * 95}")
 
     groups = ["clean", "broken", "healthy", "failing"]
     intra_distances = {}
@@ -274,7 +297,7 @@ if __name__ == "__main__":
 
     # Inter-group distances
     for i, g1 in enumerate(groups):
-        for g2 in groups[i+1:]:
+        for g2 in groups[i + 1 :]:
             dists = []
             for fp1 in fingerprints.get(g1, []):
                 for fp2 in fingerprints.get(g2, []):
@@ -291,9 +314,9 @@ if __name__ == "__main__":
         print(f"    {key:>16}: {d:.4f}")
 
     # === SEPARATION RATIO ===
-    print(f"\n{'='*95}")
+    print(f"\n{'=' * 95}")
     print("  SEPARATION ANALYSIS")
-    print(f"{'='*95}")
+    print(f"{'=' * 95}")
 
     # Good vs Bad
     good_fps = fingerprints.get("clean", []) + fingerprints.get("healthy", [])
@@ -301,12 +324,12 @@ if __name__ == "__main__":
 
     good_intra = []
     for i in range(len(good_fps)):
-        for j in range(i+1, len(good_fps)):
+        for j in range(i + 1, len(good_fps)):
             good_intra.append(shabda_distance(good_fps[i], good_fps[j]))
 
     bad_intra = []
     for i in range(len(bad_fps)):
-        for j in range(i+1, len(bad_fps)):
+        for j in range(i + 1, len(bad_fps)):
             bad_intra.append(shabda_distance(bad_fps[i], bad_fps[j]))
 
     cross = []
@@ -327,9 +350,9 @@ if __name__ == "__main__":
     print(f"  Separation ratio:     {separation_ratio:.4f}  (>1.0 = separable)")
 
     # === ARTICULATION CENTROID ===
-    print(f"\n{'='*95}")
+    print(f"\n{'=' * 95}")
     print("  ARTICULATION CENTROIDS — The Pancha Bhuta of Intent")
-    print(f"{'='*95}")
+    print(f"{'=' * 95}")
 
     artic_names = ["KANTHA", "TALU", "MURDHA", "DANTA", "OSHTHA"]
     element_names = ["Akasha", "Vayu", "Agni", "Jala", "Prithvi"]
@@ -352,9 +375,9 @@ if __name__ == "__main__":
             print(f"    {artic_names[i]:>6} ({element_names[i]:>7}): {centroid[i]:.3f}  {bar}")
 
     # === CONCLUSION ===
-    print(f"\n{'='*95}")
+    print(f"\n{'=' * 95}")
     print("  CONCLUSION")
-    print(f"{'='*95}")
+    print(f"{'=' * 95}")
 
     if separation_ratio > 1.2:
         print(f"\n  >>> SHABDA SEPARATES: ratio={separation_ratio:.2f}")

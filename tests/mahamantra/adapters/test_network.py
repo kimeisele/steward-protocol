@@ -320,11 +320,13 @@ class TestLotusIPRouterBatch:
         router.insert("192.168.0.0", 16, "gw_a")
         router.insert("10.0.0.0", 8, "gw_b")
 
-        results = router.lookup_batch([
-            "192.168.1.1",
-            "10.0.0.1",
-            "8.8.8.8",
-        ])
+        results = router.lookup_batch(
+            [
+                "192.168.1.1",
+                "10.0.0.1",
+                "8.8.8.8",
+            ]
+        )
 
         assert results == ["gw_a", "gw_b", None]
 

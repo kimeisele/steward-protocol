@@ -49,6 +49,7 @@ ENTERPRISE USAGE:
 __mahajana__ = "narada"  # Position 3 - The Divine Musician
 from datetime import datetime
 from typing import Final, List, Optional
+
 __genesis__ = "0x8c1456c3"  # GenesisByte: parampara % 37 == 0  # Japa layer
 
 from vibe_core.mahamantra.protocols.japa import (
@@ -60,15 +61,15 @@ from vibe_core.mahamantra.protocols.japa import (
     JapaState,
 )
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,           # 16 - The 16 words
-    QUARTERS,        # 4 - 4 quarters
-    KSHETRA,         # 24 - The field (prakriti elements)
-    KSETRAJNA,       # 1 - The observer
-    PRASADAM,        # 25 - KSHETRA + KSETRAJNA
-    MALA,            # 108 - Rounds per mala
-    NAVA,            # 9 - Nava-vidha bhakti processes
-    TRINITY,         # 3 - Observer levels
-    CHAITANYA_BIRTH, # 1486 - Appearance year CE
+    WORDS,  # 16 - The 16 words
+    QUARTERS,  # 4 - 4 quarters
+    KSHETRA,  # 24 - The field (prakriti elements)
+    KSETRAJNA,  # 1 - The observer
+    PRASADAM,  # 25 - KSHETRA + KSETRAJNA
+    MALA,  # 108 - Rounds per mala
+    NAVA,  # 9 - Nava-vidha bhakti processes
+    TRINITY,  # 3 - Observer levels
+    CHAITANYA_BIRTH,  # 1486 - Appearance year CE
 )
 
 # =============================================================================
@@ -76,7 +77,7 @@ from vibe_core.mahamantra.protocols._seed import (
 # =============================================================================
 
 # Alias for backward compatibility and clarity
-MALA_ROUNDS: Final[int] = MALA   # 108 rounds per mala
+MALA_ROUNDS: Final[int] = MALA  # 108 rounds per mala
 
 
 # =============================================================================
@@ -84,12 +85,12 @@ MALA_ROUNDS: Final[int] = MALA   # 108 rounds per mala
 # =============================================================================
 
 # Golden Age = WORDS × PRASADAM² = 16 × 625 = 10,000
-GOLDEN_AGE_YEARS: Final[int] = WORDS * (PRASADAM ** 2)
+GOLDEN_AGE_YEARS: Final[int] = WORDS * (PRASADAM**2)
 GOLDEN_AGE_END: Final[int] = CHAITANYA_BIRTH + GOLDEN_AGE_YEARS  # 11486 CE
 
 # Japa loop = Hearing + Chanting = 1 + 2 = 3 = TRINITY
 SHRAVANAM: Final[int] = 1  # Hearing (first process)
-KIRTANAM: Final[int] = 2   # Chanting (second process)
+KIRTANAM: Final[int] = 2  # Chanting (second process)
 JAPA_LOOP: Final[int] = SHRAVANAM + KIRTANAM  # 3 = TRINITY
 
 # Collapse = PRASADAM - KSHETRA = 25 - 24 = 1
@@ -108,6 +109,7 @@ assert MALA_ROUNDS == 108, "Mala = 108 rounds"
 # =============================================================================
 # MAHA JAPA ENGINE
 # =============================================================================
+
 
 class MahaJapa(MahaJapaProtocol):
     """
@@ -227,22 +229,22 @@ class MahaJapa(MahaJapaProtocol):
         """
         # The 16 operations (H=×7, K=+10, R=×value)
         ops = [
-            lambda v: (v * 7) % 65536,   # HARE
+            lambda v: (v * 7) % 65536,  # HARE
             lambda v: (v + 10) % 65536,  # KRISHNA
-            lambda v: (v * 7) % 65536,   # HARE
+            lambda v: (v * 7) % 65536,  # HARE
             lambda v: (v + 10) % 65536,  # KRISHNA
             lambda v: (v + 10) % 65536,  # KRISHNA
             lambda v: (v + 10) % 65536,  # KRISHNA
-            lambda v: (v * 7) % 65536,   # HARE
-            lambda v: (v * 7) % 65536,   # HARE
-            lambda v: (v * 7) % 65536,   # HARE
-            lambda v: (v * v) % 65536,   # RAMA
-            lambda v: (v * 7) % 65536,   # HARE
-            lambda v: (v * v) % 65536,   # RAMA
-            lambda v: (v * v) % 65536,   # RAMA
-            lambda v: (v * v) % 65536,   # RAMA
-            lambda v: (v * 7) % 65536,   # HARE
-            lambda v: (v * 7) % 65536,   # HARE
+            lambda v: (v * 7) % 65536,  # HARE
+            lambda v: (v * 7) % 65536,  # HARE
+            lambda v: (v * 7) % 65536,  # HARE
+            lambda v: (v * v) % 65536,  # RAMA
+            lambda v: (v * 7) % 65536,  # HARE
+            lambda v: (v * v) % 65536,  # RAMA
+            lambda v: (v * v) % 65536,  # RAMA
+            lambda v: (v * v) % 65536,  # RAMA
+            lambda v: (v * 7) % 65536,  # HARE
+            lambda v: (v * 7) % 65536,  # HARE
         ]
 
         # Apply operation based on round position in quarter

@@ -193,8 +193,6 @@ class MahaClassifier(MahaClassificationProtocol):
             entries_per_level=entries_per_level,
         )
 
-
-
         return self._to_result(inner)
 
     def quick_verdict(
@@ -299,15 +297,17 @@ class MahaClassifier(MahaClassificationProtocol):
 
     def compare_all_references(self) -> ComparisonResult:
         """Compare all pre-classified reference technologies."""
-        return self.compare([
-            self.lotus_array(),
-            self.ipv4_router(),
-            self.kmer_index(),
-            self.radix_n(8),
-            self.python_dict(),
-            self.neural_network(),
-            self.blockchain(),
-        ])
+        return self.compare(
+            [
+                self.lotus_array(),
+                self.ipv4_router(),
+                self.kmer_index(),
+                self.radix_n(8),
+                self.python_dict(),
+                self.neural_network(),
+                self.blockchain(),
+            ]
+        )
 
     # === HELPERS ===
 
@@ -335,7 +335,7 @@ class MahaClassifier(MahaClassificationProtocol):
                 "complexity": inner.complexity.name.lower(),
                 "memory": inner.memory.name.lower(),
                 "determinism": inner.determinism.name.lower(),
-            }
+            },
         )
 
     def _to_alignment(self, value: Union[str, StructuralAlignment]) -> StructuralAlignment:

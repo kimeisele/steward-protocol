@@ -11,6 +11,7 @@ __genesis__ = "0xb93c4f68"  # GenesisByte: parampara % 37 == 0
 
 from .derivation_graph import DerivationGraph, EdgeType, NodeCategory
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

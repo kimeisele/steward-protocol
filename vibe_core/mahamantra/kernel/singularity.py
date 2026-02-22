@@ -1216,6 +1216,7 @@ class Mahamantra:
         # declare WHAT they want, Krishna resolves HOW.
         try:
             from vibe_core.mahamantra.kernel.intent import get_kernel as _get_intent_kernel
+
             _get_intent_kernel().process_queue()
         except Exception as exc:
             logger.debug("Intent resolution skipped: %s", exc)

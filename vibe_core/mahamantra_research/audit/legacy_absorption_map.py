@@ -47,8 +47,11 @@ def classify_file(filepath: Path) -> FileClassification:
         content = filepath.read_text(encoding="utf-8", errors="replace")
     except Exception:
         return FileClassification(
-            path=str(filepath), code_lines=0, category="dead",
-            imports_mahamantra=False, has_reexport_marker=False,
+            path=str(filepath),
+            code_lines=0,
+            category="dead",
+            imports_mahamantra=False,
+            has_reexport_marker=False,
         )
 
     # Count non-empty, non-comment, non-docstring lines (rough SLOC)
@@ -70,8 +73,7 @@ def classify_file(filepath: Path) -> FileClassification:
 
     imports_mahamantra = "from vibe_core.mahamantra" in content
     has_reexport_marker = any(
-        marker in content
-        for marker in ["Re-export", "re-export", "CANONICAL", "backwards compat"]
+        marker in content for marker in ["Re-export", "re-export", "CANONICAL", "backwards compat"]
     )
 
     if code_lines < 5:
@@ -99,7 +101,8 @@ def scan_directory(base: Path, dirname: str) -> DirectoryReport:
         return DirectoryReport(name=dirname)
 
     py_files = [
-        f for f in dirpath.rglob("*.py")
+        f
+        for f in dirpath.rglob("*.py")
         if f.name != "__init__.py"
         and "test" not in f.name.lower()
         and "__pycache__" not in str(f)
@@ -137,13 +140,13 @@ def run_full_scan(project_root: Path) -> Dict:
     base = project_root / "vibe_core"
 
     # All top-level dirs except mahamantra
-    all_dirs = sorted([
-        d.name for d in base.iterdir()
-        if d.is_dir()
-        and d.name != "mahamantra"
-        and d.name != "__pycache__"
-        and d.name != ".benchmarks"
-    ])
+    all_dirs = sorted(
+        [
+            d.name
+            for d in base.iterdir()
+            if d.is_dir() and d.name != "mahamantra" and d.name != "__pycache__" and d.name != ".benchmarks"
+        ]
+    )
 
     reports = []
     totals = {"total": 0, "real": 0, "shim": 0, "dead": 0, "sloc": 0}

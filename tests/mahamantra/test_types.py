@@ -91,9 +91,18 @@ class TestExecuteResult:
         # Use __annotations__ directly to avoid TYPE_CHECKING import issues
         # MahaCell is forward-referenced and only imported under TYPE_CHECKING
         expected_keys = {
-            "success", "exit_code", "position", "guardian",
-            "quarter", "guna", "requires_confirmation", "output", "error",
-            "vibration", "akash", "maha_cell",  # Vibration flows through!
+            "success",
+            "exit_code",
+            "position",
+            "guardian",
+            "quarter",
+            "guna",
+            "requires_confirmation",
+            "output",
+            "error",
+            "vibration",
+            "akash",
+            "maha_cell",  # Vibration flows through!
         }
         assert set(ExecuteResult.__annotations__.keys()) == expected_keys
 
@@ -141,9 +150,16 @@ class TestLilaState:
         """LilaState has correct keys."""
         hints = get_type_hints(LilaState)
         expected_keys = {
-            "lila_position", "position", "phase", "cycle",
-            "quarter", "guardian", "word", "opcode",
-            "is_navadvipa", "is_puri"
+            "lila_position",
+            "position",
+            "phase",
+            "cycle",
+            "quarter",
+            "guardian",
+            "word",
+            "opcode",
+            "is_navadvipa",
+            "is_puri",
         }
         assert set(hints.keys()) == expected_keys
 
@@ -226,6 +242,7 @@ class TestTypeExports:
     def test_all_types_exported(self):
         """All types are in __all__ (moved from _types to seed/types)."""
         from vibe_core.mahamantra.seed import types as seed_types
+
         assert "TickState" in seed_types.__all__
         assert "RouteResult" in seed_types.__all__
         assert "ExecuteResult" in seed_types.__all__

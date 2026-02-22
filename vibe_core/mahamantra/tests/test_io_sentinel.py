@@ -36,8 +36,8 @@ def _clean_sentinel():
 # ARM / DISARM / IS_ARMED
 # =============================================================================
 
-class TestArmDisarm:
 
+class TestArmDisarm:
     def test_starts_disarmed(self):
         assert not is_armed()
 
@@ -65,8 +65,8 @@ class TestArmDisarm:
 # JSON.DUMP INTERCEPTION
 # =============================================================================
 
-class TestJsonDumpInterception:
 
+class TestJsonDumpInterception:
     def test_json_dump_still_works_when_armed(self):
         arm()
         buf = io.StringIO()
@@ -110,8 +110,8 @@ class TestJsonDumpInterception:
 # REPORT / RESET / DRAIN
 # =============================================================================
 
-class TestReportResetDrain:
 
+class TestReportResetDrain:
     def test_report_structure(self):
         r = report()
         assert "armed" in r
@@ -158,8 +158,8 @@ class TestReportResetDrain:
 # THREAD SAFETY
 # =============================================================================
 
-class TestThreadSafety:
 
+class TestThreadSafety:
     def test_concurrent_dumps_no_crash(self):
         arm()
         errors = []

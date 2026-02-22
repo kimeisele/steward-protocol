@@ -274,9 +274,7 @@ class CellularHealer:
         )
 
         logger.info(
-            f"[HEALER] Healed {fragment.display_name} "
-            f"(0x{old_address:08X} → 0x{new_address:08X}) "
-            f"rule={rule_id}"
+            f"[HEALER] Healed {fragment.display_name} (0x{old_address:08X} → 0x{new_address:08X}) rule={rule_id}"
         )
 
         return result
@@ -375,10 +373,7 @@ class CellularHealer:
                     guna=Guna.RAJAS,  # Healing commit = act of creation
                 )
                 if not result["success"]:
-                    logger.error(
-                        f"[MAYA-SYNC] Srivasa gate DENIED write to "
-                        f"{file_frags.file_path}: {result['reason']}"
-                    )
+                    logger.error(f"[MAYA-SYNC] Srivasa gate DENIED write to {file_frags.file_path}: {result['reason']}")
                     return False
             else:
                 # ── LEGACY PATH: Raw write (backward compat) ──
@@ -392,15 +387,10 @@ class CellularHealer:
             return True
 
         except SyntaxError as e:
-            logger.error(
-                f"[MAYA-SYNC] Reconstructed file fails compilation: "
-                f"{file_frags.file_path}: {e}"
-            )
+            logger.error(f"[MAYA-SYNC] Reconstructed file fails compilation: {file_frags.file_path}: {e}")
             return False
         except OSError as e:
-            logger.error(
-                f"[MAYA-SYNC] Cannot write {file_frags.file_path}: {e}"
-            )
+            logger.error(f"[MAYA-SYNC] Cannot write {file_frags.file_path}: {e}")
             return False
 
     # =========================================================================
@@ -417,6 +407,7 @@ class CellularHealer:
         """Compute Lotus address for source code via MahaCompression."""
         try:
             from vibe_core.mahamantra.adapters.compression import MahaCompression
+
             compression = MahaCompression()
             result = compression.compress(source_code)
             return result.seed
@@ -427,15 +418,13 @@ class CellularHealer:
         """Register a healed fragment as a new MahaCellUnified in the CellRouter."""
         try:
             from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+
             cell = MahaCellUnified.from_content(
                 content=fragment.source_code,
                 initial_state=fragment,
                 register=True,
             )
-            logger.debug(
-                f"[HEALER] Registered healed cell "
-                f"'{fragment.display_name}' @ 0x{cell.header.sravanam:08X}"
-            )
+            logger.debug(f"[HEALER] Registered healed cell '{fragment.display_name}' @ 0x{cell.header.sravanam:08X}")
         except Exception as e:
             logger.warning(f"[HEALER] Failed to register healed cell: {e}")
 
@@ -443,6 +432,7 @@ class CellularHealer:
         """Emit healing vibration to Mahamantra via public vibrate() API."""
         try:
             from vibe_core.mahamantra import mahamantra
+
             msg = (
                 f"shuddhi_cellular:{result.shuddhi_result.rule_id}"
                 f":{result.status.value}:{result.shuddhi_result.file_path}"

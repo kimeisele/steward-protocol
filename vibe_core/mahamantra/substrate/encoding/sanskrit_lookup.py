@@ -44,6 +44,7 @@ from vibe_core.mahamantra.substrate.varnamala_codec import (
 # =============================================================================
 
 from vibe_core.mahamantra.substrate._paths import DATA_DIR
+
 _DATA_DIR: Final[Path] = DATA_DIR
 _LEXICON_PATH: Final[Path] = _DATA_DIR / "rama_lexicon.json"
 

@@ -186,10 +186,24 @@ class TestFormatMap:
 
     def test_format_map_returns_string(self):
         """format_map returns string with mock result."""
-        quarters = ["genesis", "genesis", "genesis", "genesis",
-                    "dharma", "dharma", "dharma", "dharma",
-                    "karma", "karma", "karma", "karma",
-                    "moksha", "moksha", "moksha", "moksha"]
+        quarters = [
+            "genesis",
+            "genesis",
+            "genesis",
+            "genesis",
+            "dharma",
+            "dharma",
+            "dharma",
+            "dharma",
+            "karma",
+            "karma",
+            "karma",
+            "karma",
+            "moksha",
+            "moksha",
+            "moksha",
+            "moksha",
+        ]
         mock_result: MapResult = {
             "total_positions": 16,
             "positions": [

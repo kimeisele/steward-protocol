@@ -315,6 +315,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _ouroboros
+
         expected = [
             "OUROBOROS_CYCLE",
             "BodyType",

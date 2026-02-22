@@ -26,6 +26,7 @@ _LAZY = {"Event", "EventBus", "SubscriberMetrics", "SudarshanaGuard", "get_event
 def __getattr__(name):
     if name in _LAZY:
         from vibe_core.mahamantra.substrate import event_bus
+
         return getattr(event_bus, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

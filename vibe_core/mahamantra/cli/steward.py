@@ -62,6 +62,7 @@ from vibe_core.mahamantra.protocols._payload import PayloadType
 # Lazy imports to avoid circular dependencies
 def _get_mahamantra():
     from vibe_core.mahamantra import mahamantra
+
     return mahamantra
 
 
@@ -76,6 +77,7 @@ def _get_mahamantra():
 @dataclass(frozen=True)
 class ResonanceRoute:
     """A route determined by resonance - built from SSOTs."""
+
     chapter: int
     quarter: Quarter
     insight: str
@@ -149,6 +151,7 @@ RESONANCE_MAP: Final[Dict[int, ResonanceRoute]] = _build_resonance_map()
 # THE STEWARD - Universal Resonance Router
 # =============================================================================
 
+
 @dataclass
 class StewardResponse:
     """
@@ -172,6 +175,7 @@ class StewardResponse:
 
     "ohne die verankerung der PERSON wird es nicht klappen!"
     """
+
     input: str
     seed: int
     attractor: int
@@ -235,6 +239,7 @@ class Steward:
         """Lazy load Prabhupada - THE LINK."""
         if self._prabhupada is None:
             from vibe_core.mahamantra.substrate.prabhupada import Prabhupada
+
             self._prabhupada = Prabhupada()
         return self._prabhupada
 
@@ -243,6 +248,7 @@ class Steward:
         """Lazy load PrabhupadaKirtan."""
         if self._prabhupada_kirtan is None:
             from vibe_core.mahamantra.substrate.mantra import PrabhupadaKirtan
+
             self._prabhupada_kirtan = PrabhupadaKirtan()
         return self._prabhupada_kirtan
 
@@ -251,6 +257,7 @@ class Steward:
         """Lazy load Orchestrator - The Rhythmic Engine (Moksha Phase)."""
         if self._orchestrator is None:
             from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+
             self._orchestrator = Orchestrator()
         return self._orchestrator
 
@@ -259,6 +266,7 @@ class Steward:
         if self._link_verified:
             return True
         import vibe_core.mahamantra.cli.steward as steward_module
+
         self._link_verified = self.prabhupada.verify_link(steward_module)
         return self._link_verified
 
@@ -270,10 +278,10 @@ class Steward:
         KSHETRA (data), it does not judge GUNA.
         See substrate/guna.py: "The Guna is DERIVED from the OpCode, not decorated."
         """
-        lines = [line for line in input_text.split('\n') if line.strip()]
+        lines = [line for line in input_text.split("\n") if line.strip()]
         max_lines = MALA
         compressed_lines = lines[:max_lines]
-        return '\n'.join(compressed_lines) if compressed_lines else input_text[:256]
+        return "\n".join(compressed_lines) if compressed_lines else input_text[:256]
 
     @property
     def mahamantra(self):
@@ -299,9 +307,17 @@ class Steward:
         # 0. PRAPADYETA: Parampara Verification
         if not self._verify_parampara_link():
             return StewardResponse(
-                input=input_text, seed=0, attractor=0, chapter=0, route=RESONANCE_MAP[18],
-                call_response="CALL", resonance=0, vina_resonance=0, vina_string=0,
-                shadow_phase="blocked", shadow_position=0,
+                input=input_text,
+                seed=0,
+                attractor=0,
+                chapter=0,
+                route=RESONANCE_MAP[18],
+                call_response="CALL",
+                resonance=0,
+                vina_resonance=0,
+                vina_string=0,
+                shadow_phase="blocked",
+                shadow_position=0,
                 result={"success": False, "error": "MAYAVAD: No parampara link"},
                 message="MAYAVAD: Connection to Parampara not verified.",
             )
@@ -385,6 +401,7 @@ def get_steward() -> Steward:
 # =============================================================================
 # CLI ENTRY POINT
 # =============================================================================
+
 
 def cli_steward(input_text: str = "", verbose: bool = False) -> Dict[str, Any]:
     """

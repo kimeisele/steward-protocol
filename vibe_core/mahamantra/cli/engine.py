@@ -58,6 +58,7 @@ from vibe_core.mahamantra.cli.protocol import (
     CLIState,
 )
 from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+
 # SSOT - WORDS derives from Mahamantra counting
 from vibe_core.mahamantra.substrate.seed import WORDS
 

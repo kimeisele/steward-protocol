@@ -52,6 +52,7 @@ from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM
 # FULL MATHEMATICAL FINGERPRINT — everything the seed pipeline computes
 # =============================================================================
 
+
 def mathematical_fingerprint(text: str) -> dict:
     """
     Extract the COMPLETE mathematical fingerprint of a text input.
@@ -137,8 +138,11 @@ def mathematical_fingerprint(text: str) -> dict:
         "artic_dist": artic_dist,
         "voice_dist": voice_dist,
         "hkr": tuple(round(x, 3) for x in avg_hkr),
-        "dominant_hkr": "H" if avg_hkr[0] > avg_hkr[1] and avg_hkr[0] > avg_hkr[2]
-                        else "K" if avg_hkr[1] > avg_hkr[2] else "R",
+        "dominant_hkr": "H"
+        if avg_hkr[0] > avg_hkr[1] and avg_hkr[0] > avg_hkr[2]
+        else "K"
+        if avg_hkr[1] > avg_hkr[2]
+        else "R",
         "phoneme_attractor_dist": pa_dist,
         "dominant_phoneme_attractor": dominant_pa,
     }
@@ -150,63 +154,80 @@ def mathematical_fingerprint(text: str) -> dict:
 
 CORPUS = {
     # === CODE: GOOD ===
-    "typed_func": ("good", """
+    "typed_func": (
+        "good",
+        """
 def add(x: int, y: int) -> int:
     return x + y
-"""),
-    "typed_class": ("good", """
+""",
+    ),
+    "typed_class": (
+        "good",
+        """
 class Config:
     def __init__(self, path: Path) -> None:
         self.path = path
     def load(self) -> Dict[str, str]:
         return json.loads(self.path.read_text())
-"""),
-    "proper_error": ("good", """
+""",
+    ),
+    "proper_error": (
+        "good",
+        """
 def parse(data: str) -> dict:
     try:
         return json.loads(data)
     except json.JSONDecodeError as exc:
         logger.error("Parse failed: %s", exc)
         raise ValueError(f"Invalid JSON: {exc}") from exc
-"""),
-
+""",
+    ),
     # === CODE: BAD ===
-    "any_soup": ("bad", """
+    "any_soup": (
+        "bad",
+        """
 from typing import Any, Dict
 def process(data: Any) -> Dict[str, Any]:
     result: Dict[str, Any] = {}
     result["value"] = data
     return result
-"""),
-    "silent_except": ("bad", """
+""",
+    ),
+    "silent_except": (
+        "bad",
+        """
 def load(path):
     try:
         return open(path).read()
     except:
         pass
-"""),
-    "star_import": ("bad", """
+""",
+    ),
+    "star_import": (
+        "bad",
+        """
 from typing import *
 from pathlib import *
 def f(x, y, z):
     return x
-"""),
-
+""",
+    ),
     # === TEXT: HEALTHY ===
     "healthy_log": ("good", "All services healthy. Tests passed. Deployment verified."),
     "clean_report": ("good", "System stable. Memory usage optimal. Zero errors in 24h."),
-
     # === TEXT: BROKEN ===
     "error_log": ("bad", "FATAL: Connection timeout. Database crash. Memory leak detected."),
     "panic_log": ("bad", "PANIC: Unrecoverable error. System halting. Data corruption."),
-
     # === NEUTRAL ===
     "neutral_text": ("neutral", "The quick brown fox jumps over the lazy dog."),
-    "neutral_code": ("neutral", """
+    "neutral_code": (
+        "neutral",
+        """
 x = 42
 y = x * 2
 print(y)
-"""),
+""",
+    ),
 }
 
 
@@ -221,23 +242,29 @@ if __name__ == "__main__":
 
     results_by_quality = {"good": [], "bad": [], "neutral": []}
 
-    print(f"\n  {'Label':>16}  {'Exp':>4}  {'Cat':>3}  {'Pos':>3}  {'Basin':>5}  {'Attr':>5}  {'Type':>6}  "
-          f"{'HKR':>15}  {'Dom':>3}  {'DomPA':>5}")
-    print(f"  {'-'*16}  {'-'*4}  {'-'*3}  {'-'*3}  {'-'*5}  {'-'*5}  {'-'*6}  {'-'*15}  {'-'*3}  {'-'*5}")
+    print(
+        f"\n  {'Label':>16}  {'Exp':>4}  {'Cat':>3}  {'Pos':>3}  {'Basin':>5}  {'Attr':>5}  {'Type':>6}  "
+        f"{'HKR':>15}  {'Dom':>3}  {'DomPA':>5}"
+    )
+    print(
+        f"  {'-' * 16}  {'-' * 4}  {'-' * 3}  {'-' * 3}  {'-' * 5}  {'-' * 5}  {'-' * 6}  {'-' * 15}  {'-' * 3}  {'-' * 5}"
+    )
 
     for label, (expected, text) in CORPUS.items():
         fp = mathematical_fingerprint(text)
         results_by_quality[expected].append(fp)
 
         hkr_str = f"({fp['hkr'][0]:.2f},{fp['hkr'][1]:.2f},{fp['hkr'][2]:.2f})"
-        print(f"  {label:>16}  {expected:>4}  {fp['category']:>3}  {fp['position_16']:>3}  "
-              f"{fp['basin']:>5}  {fp['attractor_value']:>5}  {fp['attractor_type']:>6}  "
-              f"{hkr_str:>15}  {fp['dominant_hkr']:>3}  {fp['dominant_phoneme_attractor']:>5}")
+        print(
+            f"  {label:>16}  {expected:>4}  {fp['category']:>3}  {fp['position_16']:>3}  "
+            f"{fp['basin']:>5}  {fp['attractor_value']:>5}  {fp['attractor_type']:>6}  "
+            f"{hkr_str:>15}  {fp['dominant_hkr']:>3}  {fp['dominant_phoneme_attractor']:>5}"
+        )
 
     # === CLUSTER ANALYSIS ===
-    print(f"\n{'='*90}")
+    print(f"\n{'=' * 90}")
     print("  CLUSTER ANALYSIS — Do good/bad inputs naturally separate?")
-    print(f"{'='*90}")
+    print(f"{'=' * 90}")
 
     for quality in ["good", "bad", "neutral"]:
         fps = results_by_quality[quality]
@@ -266,9 +293,9 @@ if __name__ == "__main__":
         print(f"    HKR:       H={avg_h:.3f}  K={avg_k:.3f}  R={avg_r:.3f}")
 
     # === ARTICULATION ANALYSIS ===
-    print(f"\n{'='*90}")
+    print(f"\n{'=' * 90}")
     print("  ARTICULATION ANALYSIS — Does phonetic structure differ by quality?")
-    print(f"{'='*90}")
+    print(f"{'=' * 90}")
 
     artic_names = ["KANTHA", "TALU", "MURDHA", "DANTA", "OSHTHA"]
     voice_names = ["UNVOICED", "UNVOICED_ASP", "VOICED", "VOICED_ASP"]
@@ -301,17 +328,21 @@ if __name__ == "__main__":
         print(f"    Voicing:      {' | '.join(f'{n}={p}%' for n, p in zip(voice_names, voice_pct))}")
 
     # === VERDICT ===
-    print(f"\n{'='*90}")
+    print(f"\n{'=' * 90}")
     print("  VERDICT")
-    print(f"{'='*90}")
+    print(f"{'=' * 90}")
 
     good_basins = set(f["basin"] for f in results_by_quality["good"])
     bad_basins = set(f["basin"] for f in results_by_quality["bad"])
     overlap = good_basins & bad_basins
 
-    good_hkr = tuple(sum(f["hkr"][i] for f in results_by_quality["good"]) / len(results_by_quality["good"]) for i in range(3))
-    bad_hkr = tuple(sum(f["hkr"][i] for f in results_by_quality["bad"]) / len(results_by_quality["bad"]) for i in range(3))
-    hkr_dist = sum((good_hkr[i] - bad_hkr[i])**2 for i in range(3)) ** 0.5
+    good_hkr = tuple(
+        sum(f["hkr"][i] for f in results_by_quality["good"]) / len(results_by_quality["good"]) for i in range(3)
+    )
+    bad_hkr = tuple(
+        sum(f["hkr"][i] for f in results_by_quality["bad"]) / len(results_by_quality["bad"]) for i in range(3)
+    )
+    hkr_dist = sum((good_hkr[i] - bad_hkr[i]) ** 2 for i in range(3)) ** 0.5
 
     print(f"\n  Basin overlap (good ∩ bad):  {overlap}  ({len(overlap)} shared)")
     print(f"  HKR distance (good vs bad): {hkr_dist:.4f}")
@@ -345,7 +376,7 @@ if __name__ == "__main__":
     if good_total > 0 and bad_total > 0:
         good_pct = [a / good_total for a in good_artic]
         bad_pct = [a / bad_total for a in bad_artic]
-        artic_dist = sum((good_pct[i] - bad_pct[i])**2 for i in range(5)) ** 0.5
+        artic_dist = sum((good_pct[i] - bad_pct[i]) ** 2 for i in range(5)) ** 0.5
 
         print(f"\n  Articulation distance (good vs bad): {artic_dist:.4f}")
         if artic_dist > 0.02:

@@ -19,7 +19,9 @@ import logging
 from typing import Dict, Optional
 
 from vibe_core.mahamantra.protocols._seed import (
-    GITA_CHAPTERS, PARAMPARA, WORDS,
+    GITA_CHAPTERS,
+    PARAMPARA,
+    WORDS,
 )
 from vibe_core.mahamantra.substrate.language.types import EngineResult
 
@@ -48,7 +50,9 @@ class MahaLanguageEngine:
         from vibe_core.mahamantra.substrate.language.phonetics import scan_syllable_rhythm
         from vibe_core.mahamantra.adapters.composition import get_composition
         from vibe_core.mahamantra.substrate.language.section_router import (
-            SECTION_SIGNATURES, extract_template, route_to_section,
+            SECTION_SIGNATURES,
+            extract_template,
+            route_to_section,
         )
 
         # === LOTUS: The real Maha Mantra computation ===
@@ -65,11 +69,19 @@ class MahaLanguageEngine:
         if not nama.get("coords"):
             guna = lr.get("guna", {})
             return EngineResult(
-                input_text=text, seed=seed, attractor=0, guardian_name="",
-                guardian_function="", intent_category=guna.get("opcode", ""),
-                section_name="", section_mode="", verse_ref="",
-                resonant_words=(), template_words=(),
-                antaranga_active=0, antaranga_prana=0,
+                input_text=text,
+                seed=seed,
+                attractor=0,
+                guardian_name="",
+                guardian_function="",
+                intent_category=guna.get("opcode", ""),
+                section_name="",
+                section_mode="",
+                verse_ref="",
+                resonant_words=(),
+                template_words=(),
+                antaranga_active=0,
+                antaranga_prana=0,
                 output="[no phonemic content]",
                 derivation="input has no encodable phonemes",
                 syllable_count=rhythm.syllable_count,
@@ -94,12 +106,10 @@ class MahaLanguageEngine:
         diw = lr.get("diw", {})
 
         res_words = tuple(
-            (rw.get("sanskrit", ""), rw.get("meaning", ""), float(rw.get("score", 0)))
-            for rw in lr.get("smaranam", ())
+            (rw.get("sanskrit", ""), rw.get("meaning", ""), float(rw.get("score", 0))) for rw in lr.get("smaranam", ())
         )
         tmpl_words = tuple(
-            (tw.get("sanskrit", ""), tw.get("meaning", ""), tw.get("role", ""))
-            for tw in template[:WORDS]
+            (tw.get("sanskrit", ""), tw.get("meaning", ""), tw.get("role", "")) for tw in template[:WORDS]
         )
 
         verse_ref = verse["id"] if verse else f"BG.18.{verse_num}"
@@ -116,16 +126,21 @@ class MahaLanguageEngine:
         )
 
         return EngineResult(
-            input_text=text, seed=seed, attractor=attractor,
+            input_text=text,
+            seed=seed,
+            attractor=attractor,
             guardian_name=guardian_name,
             guardian_function=lr.get("trinity_function", ""),
             intent_category=guna.get("opcode", ""),
-            section_name=section_name, section_mode=section_mode,
+            section_name=section_name,
+            section_mode=section_mode,
             verse_ref=verse_ref,
-            resonant_words=res_words, template_words=tmpl_words,
+            resonant_words=res_words,
+            template_words=tmpl_words,
             antaranga_active=lotus_ant.get("active_slots", 0),
             antaranga_prana=lotus_ant.get("total_prana", 0),
-            output=output, derivation=derivation,
+            output=output,
+            derivation=derivation,
             diw_applied=diw.get("raw", 0),
             syllable_count=rhythm.syllable_count,
             stress_pattern=rhythm.stress_pattern,

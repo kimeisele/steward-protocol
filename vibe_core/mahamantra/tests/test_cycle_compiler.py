@@ -45,9 +45,7 @@ class TestCycleCompilerCore:
         cycle = cc.compile()
         gates = [cop.gate for cop in cycle]
         for i in range(1, len(gates)):
-            assert gates[i] >= gates[i - 1], (
-                f"Gate order broken: {gates[i-1]} -> {gates[i]} at position {i}"
-            )
+            assert gates[i] >= gates[i - 1], f"Gate order broken: {gates[i - 1]} -> {gates[i]} at position {i}"
 
     def test_zero_custom_count(self):
         cc = CycleCompiler()
@@ -114,6 +112,7 @@ class TestCustomOps:
 
     def test_custom_vamsi_no_collision_with_flute(self):
         from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
+
         cc = CycleCompiler()
         for i in range(5):
             cc.register_op(f"op_{i}", gate=i, handler=self._dummy_handler)
@@ -200,7 +199,9 @@ class TestConditionBits:
                 marker.append("RAN")
 
             compiler.register_op(
-                "always_run", gate=4, handler=_handler,
+                "always_run",
+                gate=4,
+                handler=_handler,
                 condition=lambda ctx: True,
             )
 
@@ -227,7 +228,9 @@ class TestConditionBits:
                 marker.append("SHOULD_NOT_RUN")
 
             compiler.register_op(
-                "never_run", gate=4, handler=_handler,
+                "never_run",
+                gate=4,
+                handler=_handler,
                 condition=lambda ctx: False,
             )
 
@@ -255,7 +258,9 @@ class TestConditionBits:
                 marker.append("CTX_CONDITIONAL")
 
             compiler.register_op(
-                "ctx_check", gate=4, handler=_handler,
+                "ctx_check",
+                gate=4,
+                handler=_handler,
                 condition=lambda ctx: ctx.get("parampara_verified", False),
             )
 
@@ -274,9 +279,7 @@ class TestConditionBits:
         cycle = cc.compile()
         for cop in cycle:
             if cop.is_core:
-                assert cop.condition is None, (
-                    f"Core op {cop.name} has condition set — core ops must be unconditional"
-                )
+                assert cop.condition is None, f"Core op {cop.name} has condition set — core ops must be unconditional"
 
 
 class TestMicroKernelWiring:
@@ -298,12 +301,15 @@ class TestMicroKernelWiring:
 
             class FakeVMService:
                 """A service that declares a VM op."""
+
                 def vm_ops(self):
-                    return [VMOpDeclaration(
-                        name="fake_telemetry",
-                        gate=4,
-                        handler=lambda lotus, ctx: marker.append("VM_CAP_RAN"),
-                    )]
+                    return [
+                        VMOpDeclaration(
+                            name="fake_telemetry",
+                            gate=4,
+                            handler=lambda lotus, ctx: marker.append("VM_CAP_RAN"),
+                        )
+                    ]
 
             class FakeProxy:
                 def __init__(self, target):
@@ -367,12 +373,14 @@ class TestMicroKernelWiring:
 
             class ConditionalService:
                 def vm_ops(self):
-                    return [VMOpDeclaration(
-                        name="conditional_cap",
-                        gate=4,
-                        handler=lambda lotus, ctx: marker.append("COND_RAN"),
-                        condition=lambda ctx: False,  # Never runs
-                    )]
+                    return [
+                        VMOpDeclaration(
+                            name="conditional_cap",
+                            gate=4,
+                            handler=lambda lotus, ctx: marker.append("COND_RAN"),
+                            condition=lambda ctx: False,  # Never runs
+                        )
+                    ]
 
             class FakeProxy:
                 def __init__(self, target):
@@ -395,6 +403,7 @@ class TestSingleton:
 
     def test_get_compiler_returns_same(self):
         import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
+
         old = cc_mod._COMPILER
         cc_mod._COMPILER = None
         try:

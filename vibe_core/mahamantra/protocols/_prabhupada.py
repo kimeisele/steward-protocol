@@ -19,8 +19,9 @@ WATERTIGHT:
 - No "Direct Access" to Krishna without passing through the Link.
 - The Link validates the signature against the 37 (Parampara).
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES)
+from vibe_core.mahamantra.protocols._seed import HALVES
 
 
 # === MAHAJANA DECLARATION ===

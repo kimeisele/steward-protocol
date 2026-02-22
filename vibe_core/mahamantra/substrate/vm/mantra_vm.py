@@ -35,6 +35,7 @@ logger = logging.getLogger("MAHAMANTRA.VM")
 # 9 WRAPPER FUNCTIONS — The true NavaBhakti (SB 7.5.23)
 # =============================================================================
 
+
 def _w_sravanam(lotus: "MahamantraLotus", ctx: dict) -> None:
     """1. SRAVANAM — Hearing. Parse input AND encode phonetic coords."""
     text, cell, seed = lotus.sravanam(ctx["input_data"])
@@ -103,10 +104,14 @@ def _w_dasyam(lotus: "MahamantraLotus", ctx: dict) -> None:
 def _w_sakhyam(lotus: "MahamantraLotus", ctx: dict) -> None:
     """8. SAKHYAM — Friendship. Cell creation + chamber transformation."""
     ctx["result_cell"] = lotus.sakhyam(
-        ctx["seed"], ctx["raw_address"], ctx["position"], ctx["input_text"],
+        ctx["seed"],
+        ctx["raw_address"],
+        ctx["position"],
+        ctx["input_text"],
     )
     # Chamber work (was split out as fake 'KIRTAN' step)
     from vibe_core.mahamantra.substrate.lotus_core import _get_pipeline
+
     P = _get_pipeline()
     chamber = P.get_chamber()
     rw = ctx["resonant_words"]
@@ -124,20 +129,28 @@ def _w_atma_nivedanam(lotus: "MahamantraLotus", ctx: dict) -> None:
     """9. ATMA_NIVEDANAM — Self-surrender. Reactor + akash update + result."""
     from vibe_core.mahamantra.substrate.lotus_core import _get_pipeline
     from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader, HEADER_DAILY_CYCLES
+
     P = _get_pipeline()
 
     # Yajna/reactor work (was split out as fake 'YAJNA' step)
     reactor = P.get_shadow_reactor_factory().spawn(
-        auto_discover=False, initial_position=ctx["position"], forced_lagna=0,
+        auto_discover=False,
+        initial_position=ctx["position"],
+        forced_lagna=0,
     )
     import vibe_core.mahamantra.substrate.mantra_vm as _this_module
+
     reactor.chant(_this_module)
     reactor.set_maha_cell(
         MahaCell(
             header=MahaHeader.create(
-                source=ctx["seed"], target=ctx["raw_address"],
-                operation=ctx["position"], link=0, intent=0,
-                ttl=HEADER_DAILY_CYCLES, state=0,
+                source=ctx["seed"],
+                target=ctx["raw_address"],
+                operation=ctx["position"],
+                link=0,
+                intent=0,
+                ttl=HEADER_DAILY_CYCLES,
+                state=0,
             ),
             payload=ctx["input_text"].encode("utf-8"),
         )
@@ -149,9 +162,12 @@ def _w_atma_nivedanam(lotus: "MahamantraLotus", ctx: dict) -> None:
         tp = (ctx["position"] + i) % P.WORDS
         tw, to = P.MAHAMANTRA_SEQUENCE[tp]
         tick_input = {
-            "tick": base_tick + i, "position": tp,
-            "quarter": P.quarter_names[tp], "guardian": P.ALL_GUARDIANS[tp],
-            "word": tw, "opcode": to.value,
+            "tick": base_tick + i,
+            "position": tp,
+            "quarter": P.quarter_names[tp],
+            "guardian": P.ALL_GUARDIANS[tp],
+            "word": tw,
+            "opcode": to.value,
         }
         shadow_state = reactor.tick(tick_input)
         tr = shadow_state.get("execution_result")
@@ -164,12 +180,8 @@ def _w_atma_nivedanam(lotus: "MahamantraLotus", ctx: dict) -> None:
     WORDS = P.WORDS
     lotus._akash["total_beats"] += WORDS
     lotus._akash["total_rounds"] += 1
-    lotus._akash["accumulated_value"] = (
-        lotus._akash["accumulated_value"] + ctx["attractor"]
-    ) % P.MAHA_QUANTUM
-    lotus._akash["attractor_counts"][ctx["attractor"]] = (
-        lotus._akash["attractor_counts"].get(ctx["attractor"], 0) + 1
-    )
+    lotus._akash["accumulated_value"] = (lotus._akash["accumulated_value"] + ctx["attractor"]) % P.MAHA_QUANTUM
+    lotus._akash["attractor_counts"][ctx["attractor"]] = lotus._akash["attractor_counts"].get(ctx["attractor"], 0) + 1
     lotus._akash["last_seed"] = ctx["seed"]
     lotus._akash["last_position"] = ctx["position"]
     lotus._akash["last_attractor"] = ctx["attractor"]
@@ -197,9 +209,11 @@ DISPATCH = {
 # RESULT BUILDER — 27-key output dict (identical to lotus_core.py:838-939)
 # =============================================================================
 
+
 def _build_result(ctx: dict, lotus: "MahamantraLotus", P: object) -> dict:
     from vibe_core.mahamantra.protocols._header import HEADER_SIZE_BYTES
     from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
+
     chamber = P.get_chamber()
     return {
         "input": ctx["input_text"],
@@ -310,6 +324,7 @@ def _build_result(ctx: dict, lotus: "MahamantraLotus", P: object) -> dict:
 # ENGINE — The dispatch loop
 # =============================================================================
 
+
 def execute_cycle(
     lotus: "MahamantraLotus",
     input_data: Union[str, object],
@@ -338,27 +353,28 @@ def execute_cycle(
         "input_data": input_data,
         "opcode": opcode,
         "vm_registers": lotus._vm_registers,
-        "venu_diw": 0,       # Current DIW from Venu (updated each step)
-        "venu_step": 0,      # Which step of the 9 we're on
+        "venu_diw": 0,  # Current DIW from Venu (updated each step)
+        "venu_step": 0,  # Which step of the 9 we're on
     }
 
     # Fast path: no custom ops → Venu-driven dispatch
     from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
+
     compiler = get_compiler()
     if compiler.custom_count == 0:
         for i, op in enumerate(CYCLE):
-            ctx["venu_diw"] = venu.step()   # The flute plays
+            ctx["venu_diw"] = venu.step()  # The flute plays
             ctx["venu_step"] = i
-            DISPATCH[op](lotus, ctx)        # The VM dances
+            DISPATCH[op](lotus, ctx)  # The VM dances
     else:
         # Compiled path: core + custom ops with condition evaluation
         compiled = compiler.compile()
         dispatch = compiler.dispatch
         for i, cop in enumerate(compiled):
-            ctx["venu_diw"] = venu.step()   # The flute plays
+            ctx["venu_diw"] = venu.step()  # The flute plays
             ctx["venu_step"] = i
             if cop.condition is not None and not cop.condition(ctx):
                 continue  # Condition bits: skip this op
-            dispatch[cop.op_id](lotus, ctx) # The VM dances
+            dispatch[cop.op_id](lotus, ctx)  # The VM dances
 
     return ctx["_result"]

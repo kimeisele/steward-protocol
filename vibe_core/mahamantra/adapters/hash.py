@@ -67,12 +67,12 @@ from vibe_core.mahamantra.protocols._seed import (
 
 # The 7 sacred lenses (mod spaces)
 LENSES: Final[Tuple[Tuple[str, int], ...]] = (
-    ("TRINITY", TRINITY),        # 3 - minimal
-    ("PANCHA", PANCHA),          # 5 - five elements
-    ("SEVEN", SEVEN),            # 7 - effects
-    ("PRIME_17", 17),            # 17 - first prime in chain
-    ("PARAMPARA", PARAMPARA),    # 37 - disciplic chain
-    ("PRIME_73", 73),            # 73 - third prime in chain
+    ("TRINITY", TRINITY),  # 3 - minimal
+    ("PANCHA", PANCHA),  # 5 - five elements
+    ("SEVEN", SEVEN),  # 7 - effects
+    ("PRIME_17", 17),  # 17 - first prime in chain
+    ("PARAMPARA", PARAMPARA),  # 37 - disciplic chain
+    ("PRIME_73", 73),  # 73 - third prime in chain
     ("MAHA_QUANTUM", MAHA_QUANTUM),  # 137 - full quantum
 )
 
@@ -80,6 +80,7 @@ LENSES: Final[Tuple[Tuple[str, int], ...]] = (
 # =============================================================================
 # THE ADAPTER
 # =============================================================================
+
 
 class DeterministicHash(MahaHashProtocol):
     """
@@ -114,12 +115,11 @@ class DeterministicHash(MahaHashProtocol):
         for i, char in enumerate(text.lower()):
             # Position 1-indexed, weight by triangular number
             pos = i + 1
-            char_val = ord(char) - ord('a') + 1 if char.isalpha() else ord(char)
+            char_val = ord(char) - ord("a") + 1 if char.isalpha() else ord(char)
             total += char_val * self.triangular(pos)
         return total
 
     def hash(self, text: str, mod_space: Optional[int] = None) -> int:
-
         """
         Hash string to integer in [0, mod_space).
 
@@ -153,14 +153,12 @@ class DeterministicHash(MahaHashProtocol):
         seed = self.encode(text)
 
         # Calculate each lens
-        lens_readings = tuple(
-            LensReading(name=name, mod_space=mod, value=seed % mod)
-            for name, mod in LENSES
-        )
+        lens_readings = tuple(LensReading(name=name, mod_space=mod, value=seed % mod) for name, mod in LENSES)
 
         # Find holographic factors (values appearing in multiple lenses)
         values = [lr.value for lr in lens_readings]
         from collections import Counter
+
         counts = Counter(values)
         holographic = tuple(v for v, c in counts.items() if c > 1)
 
@@ -186,6 +184,7 @@ class DeterministicHash(MahaHashProtocol):
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 def deterministic_hash(text: str, mod_space: int = MAHA_QUANTUM) -> int:
     """Quick hash function."""

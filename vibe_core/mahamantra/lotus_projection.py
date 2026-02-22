@@ -205,7 +205,9 @@ def project_lotus(kernel: "RealVibeKernel") -> PositionRegistry:
     """
     from vibe_core.vajra.auto_wire import auto_wire
     from vibe_core.mahamantra.substrate.seed import (
-        ALL_GUARDIANS, QUARTER_NAMES, WORDS_PER_QUARTER,
+        ALL_GUARDIANS,
+        QUARTER_NAMES,
+        WORDS_PER_QUARTER,
     )
 
     registry = PositionRegistry()

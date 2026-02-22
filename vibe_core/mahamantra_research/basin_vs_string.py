@@ -12,6 +12,7 @@ These are the TRUE test — can the math find meaning without grep?
 
 RUN: python3 -m vibe_core.mahamantra.research.basin_vs_string
 """
+
 import sys, os
 
 from vibe_core.mahamantra.substrate.resonance_ranker import resonate, rank_words
@@ -28,17 +29,18 @@ print("=" * 70)
 print("TEST 1: Words with string matches — basin-enhanced vs old")
 print("=" * 70)
 
-for word in ["fire", "devotion", "knowledge", "surrender", "war", "death",
-             "soul", "god", "truth", "love"]:
+for word in ["fire", "devotion", "knowledge", "surrender", "war", "death", "soul", "god", "truth", "love"]:
     results = resonate(word, top_n=5)
     meanings = [r.first_meaning for r in results]
     print(f"\n  '{word}' → {meanings}")
     if results:
         r = results[0]
         print(f"    Top: {r.sanskrit} ({r.first_meaning})")
-        print(f"    Scores: elem={r.element_score:.2f} harm={r.harmonic_score:.2f} "
-              f"shruti={r.shruti_score:.2f} varga={r.varga_score:.2f} "
-              f"basin={r.attractor_score:.2f} TOTAL={r.total_score:.3f}")
+        print(
+            f"    Scores: elem={r.element_score:.2f} harm={r.harmonic_score:.2f} "
+            f"shruti={r.shruti_score:.2f} varga={r.varga_score:.2f} "
+            f"basin={r.attractor_score:.2f} TOTAL={r.total_score:.3f}"
+        )
 
 # =============================================================================
 # TEST 2: Words WITHOUT string matches — pure resonance
@@ -50,18 +52,18 @@ print("=" * 70)
 # These words don't appear in the Gita meaning index, so string boost = 0.
 # Only phonetic + basin scoring can find them.
 NO_MATCH_WORDS = [
-    "dharma",      # The central concept — but not in English meanings
-    "karma",       # Same
-    "yoga",        # Same
-    "mantra",      # Same
-    "guru",        # Same
-    "avatar",      # Same
-    "chakra",      # Same
-    "prana",       # Same
-    "moksha",      # Same
-    "samsara",     # Same
-    "ahimsa",      # Same
-    "nirvana",     # Same
+    "dharma",  # The central concept — but not in English meanings
+    "karma",  # Same
+    "yoga",  # Same
+    "mantra",  # Same
+    "guru",  # Same
+    "avatar",  # Same
+    "chakra",  # Same
+    "prana",  # Same
+    "moksha",  # Same
+    "samsara",  # Same
+    "ahimsa",  # Same
+    "nirvana",  # Same
 ]
 
 for word in NO_MATCH_WORDS:

@@ -84,6 +84,7 @@ assert SHARANAGATI_SUM == SEVEN * MAHAJANA_COUNT, "84 = 7 × 12"
 @dataclass(frozen=True)
 class GitaVerse:
     """A verse from the Bhagavad Gita."""
+
     chapter: int
     verse: int
     sanskrit: str
@@ -104,6 +105,7 @@ CHAPTER_18_VERSE: Final[GitaVerse] = GitaVerse(
 # =============================================================================
 # VERIFICATION FUNCTIONS
 # =============================================================================
+
 
 def verify_fixed_point() -> bool:
     """
@@ -154,24 +156,25 @@ def get_chapter_significance(chapter: int) -> str:
 # LAZY IMPORTS FROM SUBFILES
 # =============================================================================
 
+
 def __getattr__(name: str):
     """Lazy import from gita verse files."""
     # From gita_verse_derivation.py
-    if name in ("GitaDerivation", "RUNDE_1_VERSES", "RUNDE_2_CHAPTERS",
-                "verify_gita_structure"):
+    if name in ("GitaDerivation", "RUNDE_1_VERSES", "RUNDE_2_CHAPTERS", "verify_gita_structure"):
         from vibe_core.mahamantra.research import gita_verse_derivation as gvd
+
         return getattr(gvd, name)
 
     # From gita_verse_content.py
-    if name in ("GitaVerseContent", "KEY_VERSES", "SURRENDER_VERSE",
-                "get_verse_content"):
+    if name in ("GitaVerseContent", "KEY_VERSES", "SURRENDER_VERSE", "get_verse_content"):
         from vibe_core.mahamantra.research import gita_verse_content as gvc
+
         return getattr(gvc, name)
 
     # From gita_verse_text.py
-    if name in ("VibrationAnalysis", "analyze_verse_vibration",
-                "VERSE_VIBRATIONS"):
+    if name in ("VibrationAnalysis", "analyze_verse_vibration", "VERSE_VIBRATIONS"):
         from vibe_core.mahamantra.research import gita_verse_text as gvt
+
         return getattr(gvt, name)
 
     # ==========================================================================

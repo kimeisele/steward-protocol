@@ -52,16 +52,18 @@ from vibe_core.mahamantra.protocols._seed import (
 # 1. AUDIT RESULT — What a living test produces
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class AuditVerdict:
     """Result of a single component self-test."""
+
     component: str
     position: int
-    daya: bool       # Mercy: crash handling
-    satyam: bool     # Truth: output verified
-    tapas: bool      # Austerity: resources bounded
-    saucam: bool     # Cleanliness: connections authorized
-    healthy: bool    # Overall health
+    daya: bool  # Mercy: crash handling
+    satyam: bool  # Truth: output verified
+    tapas: bool  # Austerity: resources bounded
+    saucam: bool  # Cleanliness: connections authorized
+    healthy: bool  # Overall health
     parampara: bool  # Link to disciplic succession
     elapsed_ms: float
 
@@ -78,6 +80,7 @@ class AuditVerdict:
 @dataclass
 class ImmuneReport:
     """Full immune system report — replaces pytest output."""
+
     verdicts: Tuple[AuditVerdict, ...] = ()
     total_ms: float = 0.0
 
@@ -106,20 +109,23 @@ class ImmuneReport:
             status = "✓" if v.passed else "✗"
             dharma = f"D{v.dharma_score}/4"
             para = "P" if v.parampara else "·"
-            lines.append(
-                f"  {status} [{v.position:2d}] {v.component:30s}  {dharma}  {para}  {v.elapsed_ms:.1f}ms"
-            )
+            lines.append(f"  {status} [{v.position:2d}] {v.component:30s}  {dharma}  {para}  {v.elapsed_ms:.1f}ms")
         if self.failed:
             lines.append("")
             lines.append("FAILURES:")
             for v in self.verdicts:
                 if not v.passed:
                     fails = []
-                    if not v.daya: fails.append("daya")
-                    if not v.satyam: fails.append("satyam")
-                    if not v.tapas: fails.append("tapas")
-                    if not v.saucam: fails.append("saucam")
-                    if not v.healthy: fails.append("health")
+                    if not v.daya:
+                        fails.append("daya")
+                    if not v.satyam:
+                        fails.append("satyam")
+                    if not v.tapas:
+                        fails.append("tapas")
+                    if not v.saucam:
+                        fails.append("saucam")
+                    if not v.healthy:
+                        fails.append("health")
                     lines.append(f"  [{v.position:2d}] {v.component}: {', '.join(fails)}")
         return "\n".join(lines)
 
@@ -127,6 +133,7 @@ class ImmuneReport:
 # =============================================================================
 # 2. AUDIT RUNNER — The living test runner
 # =============================================================================
+
 
 def audit_component(component: object, name: str, position: int) -> AuditVerdict:
     """
@@ -183,6 +190,7 @@ def _safe_call(obj: object, method: str, default: bool) -> bool:
 # 3. SYSTEM SCAN — Discover and audit all GAD components
 # =============================================================================
 
+
 def scan_lotus() -> ImmuneReport:
     """
     Scan the Lotus and audit every reachable GAD component.
@@ -201,6 +209,7 @@ def scan_lotus() -> ImmuneReport:
     # 1. MahamantraLotus itself (the root)
     try:
         from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
         lotus = get_mahamantra()
         verdicts.append(audit_component(lotus, "MahamantraLotus", 0))
     except Exception as e:
@@ -209,6 +218,7 @@ def scan_lotus() -> ImmuneReport:
     # 2. MahaKernel (the deterministic core)
     try:
         from vibe_core.mahamantra.kernel.maha_kernel import MahaKernel
+
         kernel = MahaKernel()
         verdicts.append(audit_component(kernel, "MahaKernel", 0))
     except Exception as e:
@@ -217,8 +227,11 @@ def scan_lotus() -> ImmuneReport:
     # 3. ShadowReactor (has its own test_daya!)
     try:
         from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
+
         reactor = get_shadow_reactor_factory().spawn(
-            auto_discover=False, initial_position=0, forced_lagna=0,
+            auto_discover=False,
+            initial_position=0,
+            forced_lagna=0,
         )
         verdicts.append(audit_component(reactor, "ShadowReactor", 0))
     except Exception as e:
@@ -227,6 +240,7 @@ def scan_lotus() -> ImmuneReport:
     # 4. SankirtanChamber (the resonance chamber)
     try:
         from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
+
         chamber = SankirtanChamber()
         verdicts.append(audit_component(chamber, "SankirtanChamber", 0))
     except Exception as e:
@@ -235,28 +249,33 @@ def scan_lotus() -> ImmuneReport:
     # 5. Axiom verification (spiritual_tdd.py)
     try:
         from vibe_core.mahamantra_research.spiritual_tdd import (
-            run_spiritual_tests, verify_all_derived,
+            run_spiritual_tests,
+            verify_all_derived,
         )
+
         axiom_results = run_spiritual_tests()
         all_axioms_pass = all(r.passed for r in axiom_results)
         derivations_pass = verify_all_derived()
-        verdicts.append(AuditVerdict(
-            component="MantraAxioms (7+13)",
-            position=0,
-            daya=True,
-            satyam=all_axioms_pass,
-            tapas=derivations_pass,
-            saucam=True,
-            healthy=all_axioms_pass and derivations_pass,
-            parampara=True,  # Axioms ARE the parampara
-            elapsed_ms=0.0,
-        ))
+        verdicts.append(
+            AuditVerdict(
+                component="MantraAxioms (7+13)",
+                position=0,
+                daya=True,
+                satyam=all_axioms_pass,
+                tapas=derivations_pass,
+                saucam=True,
+                healthy=all_axioms_pass and derivations_pass,
+                parampara=True,  # Axioms ARE the parampara
+                elapsed_ms=0.0,
+            )
+        )
     except Exception as e:
         verdicts.append(_error_verdict("MantraAxioms", 0, e))
 
     # 6. PipelineCache integrity (if available on feature branch)
     try:
         from vibe_core.mahamantra.substrate.lotus_core import _get_pipeline  # noqa: F401
+
         P = _get_pipeline()
         # Verify cache constants match seed
         cache_ok = (
@@ -268,31 +287,41 @@ def scan_lotus() -> ImmuneReport:
             and len(P.phonemes) == WORDS
             and len(P.diw_components) == WORDS
         )
-        verdicts.append(AuditVerdict(
-            component="PipelineCache",
-            position=0,
-            daya=True,
-            satyam=cache_ok,
-            tapas=True,
-            saucam=True,
-            healthy=cache_ok,
-            parampara=True,
-            elapsed_ms=0.0,
-        ))
+        verdicts.append(
+            AuditVerdict(
+                component="PipelineCache",
+                position=0,
+                daya=True,
+                satyam=cache_ok,
+                tapas=True,
+                saucam=True,
+                healthy=cache_ok,
+                parampara=True,
+                elapsed_ms=0.0,
+            )
+        )
     except ImportError:
         # _get_pipeline doesn't exist on main — skip, not a failure
-        verdicts.append(AuditVerdict(
-            component="PipelineCache (not on this branch)",
-            position=0,
-            daya=True, satyam=True, tapas=True, saucam=True,
-            healthy=True, parampara=True, elapsed_ms=0.0,
-        ))
+        verdicts.append(
+            AuditVerdict(
+                component="PipelineCache (not on this branch)",
+                position=0,
+                daya=True,
+                satyam=True,
+                tapas=True,
+                saucam=True,
+                healthy=True,
+                parampara=True,
+                elapsed_ms=0.0,
+            )
+        )
     except Exception as e:
         verdicts.append(_error_verdict("PipelineCache", 0, e))
 
     # 7. Determinism test: same input → same output
     try:
         from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
         lotus_a = get_mahamantra()
         lotus_b = get_mahamantra()
         result_a = lotus_a("determinism_test")
@@ -303,17 +332,19 @@ def scan_lotus() -> ImmuneReport:
             and result_a["position"] == result_b["position"]
             and result_a["chapter"] == result_b["chapter"]
         )
-        verdicts.append(AuditVerdict(
-            component="Determinism (seed→attractor→position)",
-            position=0,
-            daya=True,
-            satyam=deterministic,
-            tapas=True,
-            saucam=True,
-            healthy=deterministic,
-            parampara=True,
-            elapsed_ms=0.0,
-        ))
+        verdicts.append(
+            AuditVerdict(
+                component="Determinism (seed→attractor→position)",
+                position=0,
+                daya=True,
+                satyam=deterministic,
+                tapas=True,
+                saucam=True,
+                healthy=deterministic,
+                parampara=True,
+                elapsed_ms=0.0,
+            )
+        )
     except Exception as e:
         verdicts.append(_error_verdict("Determinism", 0, e))
 
@@ -327,8 +358,13 @@ def _error_verdict(name: str, position: int, error: Exception) -> AuditVerdict:
     return AuditVerdict(
         component=f"{name} (ERROR: {type(error).__name__})",
         position=position,
-        daya=False, satyam=False, tapas=False, saucam=False,
-        healthy=False, parampara=False, elapsed_ms=0.0,
+        daya=False,
+        satyam=False,
+        tapas=False,
+        saucam=False,
+        healthy=False,
+        parampara=False,
+        elapsed_ms=0.0,
     )
 
 

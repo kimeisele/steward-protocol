@@ -91,6 +91,7 @@ class PulseManager:
 
     def __init__(self):
         import warnings
+
         warnings.warn(
             "PulseManager is deprecated. Use VenuService + BeatSubscriberProtocol.",
             DeprecationWarning,
@@ -257,6 +258,7 @@ def get_pulse_manager() -> PulseManager:
         PulseManager (deprecated, zero consumers)
     """
     import warnings
+
     warnings.warn(
         "get_pulse_manager() is deprecated. Use VenuService + BeatSubscriberProtocol.",
         DeprecationWarning,

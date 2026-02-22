@@ -33,11 +33,16 @@ class Hotspot:
 
 
 def grade_for_cc(cc: int) -> str:
-    if cc <= 5: return "A"
-    if cc <= 10: return "B"
-    if cc <= 20: return "C"
-    if cc <= 30: return "D"
-    if cc <= 40: return "E"
+    if cc <= 5:
+        return "A"
+    if cc <= 10:
+        return "B"
+    if cc <= 20:
+        return "C"
+    if cc <= 30:
+        return "D"
+    if cc <= 40:
+        return "E"
     return "F"
 
 
@@ -46,7 +51,9 @@ def run_radon(target_dir: str) -> List[Hotspot]:
     try:
         result = subprocess.run(
             ["radon", "cc", target_dir, "-j", "-a", "-nc"],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
     except FileNotFoundError:
         print("ERROR: radon not installed. Run: pip install radon", file=sys.stderr)
@@ -63,15 +70,17 @@ def run_radon(target_dir: str) -> List[Hotspot]:
         is_maha = "mahamantra" in filepath
         for b in blocks:
             cc = b["complexity"]
-            hotspots.append(Hotspot(
-                filepath=filepath,
-                lineno=b["lineno"],
-                name=b["name"],
-                classname=b.get("classname", ""),
-                complexity=cc,
-                grade=grade_for_cc(cc),
-                is_mahamantra=is_maha,
-            ))
+            hotspots.append(
+                Hotspot(
+                    filepath=filepath,
+                    lineno=b["lineno"],
+                    name=b["name"],
+                    classname=b.get("classname", ""),
+                    complexity=cc,
+                    grade=grade_for_cc(cc),
+                    is_mahamantra=is_maha,
+                )
+            )
 
     return hotspots
 
@@ -145,7 +154,7 @@ def print_report(hotspots: List[Hotspot], stats: Dict) -> None:
     # Per-directory averages (sorted by avg CC descending)
     print(f"\nPer-Directory Average Complexity:")
     print(f"  {'Directory':22s} | {'Blocks':>6s} | {'Avg CC':>6s} | {'Max CC':>6s} | Grade")
-    print(f"  {'-'*70}")
+    print(f"  {'-' * 70}")
     for d, s in sorted(stats["dir_averages"].items(), key=lambda x: x[1]["avg_cc"], reverse=True):
         print(f"  {d:22s} | {s['count']:6d} | {s['avg_cc']:6.1f} | {s['max_cc']:6d} | {s['grade']}")
 
@@ -153,7 +162,7 @@ def print_report(hotspots: List[Hotspot], stats: Dict) -> None:
     worst = sorted(hotspots, key=lambda h: h.complexity, reverse=True)[:25]
     print(f"\nTOP 25 WORST FUNCTIONS:")
     print(f"  {'#':>3s} {'Grade':>5s} {'CC':>4s} | {'File':50s} | Function")
-    print(f"  {'-'*90}")
+    print(f"  {'-' * 90}")
     for i, h in enumerate(worst, 1):
         short = h.filepath.replace("vibe_core/", "")
         label = f"{h.classname}.{h.name}" if h.classname else h.name
@@ -179,18 +188,26 @@ def main():
 
     # Save JSON
     json_path = script_path.parent / "complexity_hotspots_report.json"
-    json_path.write_text(json.dumps({
-        "stats": stats,
-        "top_50": [
+    json_path.write_text(
+        json.dumps(
             {
-                "filepath": h.filepath, "lineno": h.lineno,
-                "name": h.name, "classname": h.classname,
-                "complexity": h.complexity, "grade": h.grade,
-                "is_mahamantra": h.is_mahamantra,
-            }
-            for h in sorted(hotspots, key=lambda h: h.complexity, reverse=True)[:50]
-        ],
-    }, indent=2))
+                "stats": stats,
+                "top_50": [
+                    {
+                        "filepath": h.filepath,
+                        "lineno": h.lineno,
+                        "name": h.name,
+                        "classname": h.classname,
+                        "complexity": h.complexity,
+                        "grade": h.grade,
+                        "is_mahamantra": h.is_mahamantra,
+                    }
+                    for h in sorted(hotspots, key=lambda h: h.complexity, reverse=True)[:50]
+                ],
+            },
+            indent=2,
+        )
+    )
     print(f"\nJSON report saved to: {json_path}")
 
 

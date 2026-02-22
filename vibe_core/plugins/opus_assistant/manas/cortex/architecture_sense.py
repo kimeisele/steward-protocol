@@ -221,9 +221,10 @@ class ArchitectureSense(BaseSense):
             if anomaly.anomaly_type == "circular_import":
                 # P0-FIX: Use deterministic hash instead of Python's randomized hash()
                 import hashlib
-                cycle_str = str(anomaly.details['cycle'])
-                cycle_bytes = cycle_str.encode('utf-8')
-                cycle_hash = int.from_bytes(hashlib.sha256(cycle_bytes).digest()[:4], byteorder='big')
+
+                cycle_str = str(anomaly.details["cycle"])
+                cycle_bytes = cycle_str.encode("utf-8")
+                cycle_hash = int.from_bytes(hashlib.sha256(cycle_bytes).digest()[:4], byteorder="big")
                 intent = Intent(
                     id=f"arch_fix_circle_{cycle_hash}",
                     intent_type="code_refactor",

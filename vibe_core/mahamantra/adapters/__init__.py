@@ -100,6 +100,7 @@ def __getattr__(name: str):
     # 1. Check explicit class/function exports
     if name in _LAZY_IMPORTS:
         import importlib
+
         module_name = _LAZY_IMPORTS[name]
         module = importlib.import_module(f".{module_name}", __package__)
         return getattr(module, name)

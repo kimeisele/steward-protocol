@@ -9,16 +9,39 @@ from typing import Final
 import math
 
 from ._axioms import (
-    WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT, PANCHA, HALVES,
+    WORDS,
+    TRINITY,
+    HARE_COUNT,
+    KRISHNA_COUNT,
+    RAMA_COUNT,
+    PANCHA,
+    HALVES,
 )
 from ._primary import (
-    QUARTERS, KSETRAJNA, HALF_SIZE, LILA, KSHETRA, NAVA, SHARANAGATI,
-    AKSARA_COUNT, AVATAR_COUNT,
+    QUARTERS,
+    KSETRAJNA,
+    HALF_SIZE,
+    LILA,
+    KSHETRA,
+    NAVA,
+    SHARANAGATI,
+    AKSARA_COUNT,
+    AVATAR_COUNT,
 )
 from ._secondary import (
-    MAHAJANA_COUNT, MALA, MALA_COMPLETE, JIVA_CYCLE, GITA_CHAPTERS,
-    QUALITIES, PARAMPARA, SEVEN, TEN, NADI_RESONANCE, FIELD_RESONANCE,
-    FLUTE_HOLES_SUM, FLUTE_VENU_VAMSI,
+    MAHAJANA_COUNT,
+    MALA,
+    MALA_COMPLETE,
+    JIVA_CYCLE,
+    GITA_CHAPTERS,
+    QUALITIES,
+    PARAMPARA,
+    SEVEN,
+    TEN,
+    NADI_RESONANCE,
+    FIELD_RESONANCE,
+    FLUTE_HOLES_SUM,
+    FLUTE_VENU_VAMSI,
 )
 from ._cosmic import NAKSHATRAS, JIVA_QUALITIES, COSMIC_FRAME
 
@@ -86,9 +109,11 @@ MAHAMANTRA_NAME_POS_HALF: Final[tuple[int, ...]] = (HALVES, QUARTERS, PANCHA, SH
 MAHAMANTRA_HARE_POS_SUM: Final[int] = sum(MAHAMANTRA_HARE_POS_HALF)  # 19
 MAHAMANTRA_NAME_POS_SUM: Final[int] = sum(MAHAMANTRA_NAME_POS_HALF)  # 17
 
+
 # Build binary pattern from positions
 def _build_half_binary() -> tuple[int, ...]:
     return tuple(0 if pos in MAHAMANTRA_HARE_POS_HALF else 1 for pos in range(1, HARE_COUNT + 1))
+
 
 MAHAMANTRA_HALF_BINARY: Final[tuple[int, ...]] = _build_half_binary()  # (0,1,0,1,1,1,0,0)
 
@@ -114,6 +139,7 @@ def _build_full_word_pattern() -> tuple[str, ...]:
             pattern.append(MAHAMANTRA_NAME_HARE if bit == 0 else name)
     return tuple(pattern)
 
+
 MAHAMANTRA_WORD_PATTERN: Final[tuple[str, ...]] = _build_full_word_pattern()
 
 assert len(MAHAMANTRA_WORD_PATTERN) == WORDS
@@ -130,6 +156,7 @@ def _compute_positions_by_name() -> tuple[tuple[int, ...], tuple[int, ...], tupl
     krishna_pos = tuple(i for i, name in enumerate(MAHAMANTRA_WORD_PATTERN) if name == MAHAMANTRA_NAME_KRISHNA)
     rama_pos = tuple(i for i, name in enumerate(MAHAMANTRA_WORD_PATTERN) if name == MAHAMANTRA_NAME_RAMA)
     return hare_pos, krishna_pos, rama_pos
+
 
 HARE_POSITIONS, KRISHNA_POSITIONS, RAMA_POSITIONS = _compute_positions_by_name()
 
@@ -271,7 +298,7 @@ KHALI_POSITION: Final[int] = NAVA  # 9
 # REMAINING PHYSICS CONSTANTS
 # =============================================================================
 # Cabibbo angle (scaled by TEN^3 = 1000)
-MAHA_CABIBBO_SCALED: Final[int] = (NAVA * (TEN ** TRINITY)) // (JIVA_QUALITIES - TEN)  # 225
+MAHA_CABIBBO_SCALED: Final[int] = (NAVA * (TEN**TRINITY)) // (JIVA_QUALITIES - TEN)  # 225
 MAHA_RYDBERG_SCALED: Final[int] = POSITION_SUM_TOTAL  # 136
 MAHA_HUBBLE: Final[int] = QUALITIES + TRINITY  # 67
 
@@ -279,10 +306,10 @@ MAHA_HUBBLE: Final[int] = QUALITIES + TRINITY  # 67
 MAHA_VUS_SCALED: Final[int] = MAHA_CABIBBO_SCALED  # 225
 _VCB_DIVISOR: Final[int] = JIVA_QUALITIES * HARE_COUNT  # 400
 # V_cb scaled by TEN^4 = 10000
-MAHA_VCB_SCALED: Final[int] = (POSITION_SUM_KRISHNA * (TEN ** QUARTERS)) // _VCB_DIVISOR  # 425
+MAHA_VCB_SCALED: Final[int] = (POSITION_SUM_KRISHNA * (TEN**QUARTERS)) // _VCB_DIVISOR  # 425
 _VUB_DIVISOR: Final[int] = JIVA_CYCLE * TEN  # 4320
 # V_ub scaled by TEN^5 = 100000
-MAHA_VUB_SCALED: Final[int] = (POSITION_SUM_KRISHNA * (TEN ** PANCHA)) // _VUB_DIVISOR  # 393
+MAHA_VUB_SCALED: Final[int] = (POSITION_SUM_KRISHNA * (TEN**PANCHA)) // _VUB_DIVISOR  # 393
 
 # Cosmological
 MAHA_OMEGA_M: Final[float] = (QUALITIES - KSETRAJNA) / HALVES  # 31.5
@@ -311,9 +338,9 @@ assert KSHETRA_BG13 == KSHETRA == 24
 # SHASTRA VERSE COUNTS (ALL DERIVED from Mahamantra constants!)
 # =============================================================================
 # TEN^2 = 100, TEN^3 = 1000 (derived, not hardcoded!)
-GITA_VERSES: Final[int] = SEVEN * (TEN ** HALVES)  # 7 × 100 = 700
-BHAGAVATAM_VERSES: Final[int] = GITA_CHAPTERS * (TEN ** TRINITY)  # 18 × 1000 = 18000
-KRISHNA_QUEENS: Final[int] = WORDS * (TEN ** TRINITY) + MALA  # 16 × 1000 + 108 = 16108
+GITA_VERSES: Final[int] = SEVEN * (TEN**HALVES)  # 7 × 100 = 700
+BHAGAVATAM_VERSES: Final[int] = GITA_CHAPTERS * (TEN**TRINITY)  # 18 × 1000 = 18000
+KRISHNA_QUEENS: Final[int] = WORDS * (TEN**TRINITY) + MALA  # 16 × 1000 + 108 = 16108
 
 # Standard Model
 QUARK_FLAVORS: Final[int] = SHARANAGATI  # 6
@@ -349,9 +376,7 @@ KSETRA_KSETRAJNA_VERSE: Final[int] = SEVEN * PANCHA  # 35
 PARAMPARA_ATTRACTOR_A: Final[int] = MAHAJANA_COUNT  # 12
 PARAMPARA_ATTRACTOR_B: Final[int] = HALVES * KSETRA_KSETRAJNA_CHAPTER  # 26
 PARAMPARA_ATTRACTOR_C: Final[int] = PARAMPARA - TRINITY  # 34
-PARAMPARA_CHANNELS: Final[tuple[int, ...]] = (
-    PARAMPARA_ATTRACTOR_A, PARAMPARA_ATTRACTOR_B, PARAMPARA_ATTRACTOR_C
-)
+PARAMPARA_CHANNELS: Final[tuple[int, ...]] = (PARAMPARA_ATTRACTOR_A, PARAMPARA_ATTRACTOR_B, PARAMPARA_ATTRACTOR_C)
 PARAMPARA_CHANNEL_NAMES: Final[tuple[str, ...]] = ("Mahajana", "Parampara", "Guru")
 
 

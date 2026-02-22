@@ -27,6 +27,7 @@ __genesis__ = "0x9d8b6a7c"  # GenesisByte: parampara % 37 == 0
 # NOTE: maha_algorithm, prabhupada_kirtan, prabhupada_engineering were MIGRATED to substrate.mantra
 # and removed from here to ensure zero research dependencies in core.
 
+
 def __getattr__(name: str):
     """
     Fractal routing fallback (experimental).
@@ -52,4 +53,3 @@ def __getattr__(name: str):
 __all__ = [
     # Remaining research modules
 ]
-

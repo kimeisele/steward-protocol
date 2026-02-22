@@ -37,14 +37,16 @@ logger = logging.getLogger("MAHA_COMPOSITION_VM")
 # INSTRUCTION SET — 6 pipeline steps
 # =============================================================================
 
+
 class CompositionOp(IntEnum):
     """6-step composition pipeline. Order matters — each reads previous ctx."""
-    CONTEXT = 0    # Extract scorer kwargs + max_words from lotus_response
-    POOL = 1       # Build word pool from smaranam/verse
-    RANK = 2       # Multi-scorer ranking (5 scorers, additive)
-    SELECT = 3     # Context-driven selection (deduplicate, cap at max_words)
-    ALIGN = 4      # Syllable vectors + grid alignment
-    ASSEMBLE = 5   # Grid position → sentence order → English string
+
+    CONTEXT = 0  # Extract scorer kwargs + max_words from lotus_response
+    POOL = 1  # Build word pool from smaranam/verse
+    RANK = 2  # Multi-scorer ranking (5 scorers, additive)
+    SELECT = 3  # Context-driven selection (deduplicate, cap at max_words)
+    ALIGN = 4  # Syllable vectors + grid alignment
+    ASSEMBLE = 5  # Grid position → sentence order → English string
 
 
 CYCLE = tuple(CompositionOp(i) for i in range(len(CompositionOp)))
@@ -79,6 +81,7 @@ def _ensure_imports():
     from vibe_core.mahamantra.substrate.language.types import (
         SyllableVector as SV,
     )
+
     _build_lotus_pool = blp
     _syllable_vectors_for_word = svfw
     _align_syllables_to_grid = astg
@@ -90,12 +93,14 @@ def _ensure_imports():
 # STEP WRAPPERS — each reads/writes ctx
 # =============================================================================
 
+
 def _w_context(adapter: "MahaComposition", ctx: dict) -> None:
     """Extract scorer kwargs and max_words from lotus_response."""
     from vibe_core.mahamantra.adapters.composition import (
         _extract_scorer_kwargs,
         _context_max_words,
     )
+
     kwargs = _extract_scorer_kwargs(ctx["lotus_response"], ctx["input_text"])
     ctx["seed"] = kwargs.pop("seed")
     ctx["scorer_kwargs"] = kwargs
@@ -199,9 +204,7 @@ def _w_assemble(adapter: "MahaComposition", ctx: dict) -> None:
     # Fallback: no syllable vectors → join first meanings
     if not word_syllables or grid_positions is None:
         ctx["output"] = " ".join(
-            str(it.get("meaning", "")).split()[0]
-            for it in selected[:max_words]
-            if it.get("meaning")
+            str(it.get("meaning", "")).split()[0] for it in selected[:max_words] if it.get("meaning")
         )
         return
 
@@ -270,6 +273,7 @@ DISPATCH = {
 # =============================================================================
 # ENGINE — the 6-line orchestrator
 # =============================================================================
+
 
 def compose_pipeline(
     adapter: "MahaComposition",

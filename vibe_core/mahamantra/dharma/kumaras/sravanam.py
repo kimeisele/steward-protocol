@@ -65,28 +65,29 @@ logger = logging.getLogger("SHUDDHI.SRAVANAM")
 #   Yamaraja (15) = missing_fractal_routing            (judgment = compliance)
 
 GUARDIAN_RULE_MAP: Dict[str, List[str]] = {
-    "vyasa":       ["missing_mahajana", "broken_genesis", "F811"],
-    "brahma":      ["any_type_usage"],
-    "narada":      ["silent_failure"],
-    "shambhu":     ["subprocess_timeout"],
-    "prithu":      ["path_scanning_discovery"],
-    "kumaras":     ["missing_fractal_routing"],
-    "kapila":      ["get_instance_antipattern"],
-    "manu":        ["hardcoded_constants"],
+    "vyasa": ["missing_mahajana", "broken_genesis", "F811"],
+    "brahma": ["any_type_usage"],
+    "narada": ["silent_failure"],
+    "shambhu": ["subprocess_timeout"],
+    "prithu": ["path_scanning_discovery"],
+    "kumaras": ["missing_fractal_routing"],
+    "kapila": ["get_instance_antipattern"],
+    "manu": ["hardcoded_constants"],
     "parashurama": ["unsafe_io_write"],
-    "prahlada":    ["direct_registry_instantiation"],
-    "janaka":      ["iterdir_discovery"],
-    "bhishma":     ["any_type_usage"],
-    "nrisimha":    ["missing_fractal_routing"],
-    "bali":        ["unsafe_io_write"],
-    "shuka":       ["silent_failure"],
-    "yamaraja":    ["missing_fractal_routing"],
+    "prahlada": ["direct_registry_instantiation"],
+    "janaka": ["iterdir_discovery"],
+    "bhishma": ["any_type_usage"],
+    "nrisimha": ["missing_fractal_routing"],
+    "bali": ["unsafe_io_write"],
+    "shuka": ["silent_failure"],
+    "yamaraja": ["missing_fractal_routing"],
 }
 
 
 # =============================================================================
 # SRAVANAM RESULT — What was heard
 # =============================================================================
+
 
 @dataclass(frozen=True)
 class SravanamReport:
@@ -102,6 +103,7 @@ class SravanamReport:
 # =============================================================================
 # SRAVANAM SCANNER — Scans Cells from CellRouter
 # =============================================================================
+
 
 class SravanamScanner:
     """
@@ -126,6 +128,7 @@ class SravanamScanner:
         """Lazy-load ShuddhiEngine to avoid circular imports."""
         if self._engine is None:
             from vibe_core.mahamantra.dharma.kumaras.engine import ShuddhiEngine
+
             self._engine = ShuddhiEngine()
         return self._engine
 
@@ -203,7 +206,10 @@ class SravanamScanner:
         if all_results:
             logger.info(
                 "[SRAVANAM] Position %d (%s): %d violations in %d cells",
-                position, guardian, len(all_results), len(cells),
+                position,
+                guardian,
+                len(all_results),
+                len(cells),
             )
 
         return SravanamReport(
@@ -224,10 +230,7 @@ class SravanamScanner:
         Returns:
             List of 16 SravanamReports.
         """
-        return [
-            self.scan_position(pos, max_cells=max_cells_per_position)
-            for pos in range(WORDS)
-        ]
+        return [self.scan_position(pos, max_cells=max_cells_per_position) for pos in range(WORDS)]
 
     @staticmethod
     def _extract_source(cell: "MahaCellUnified") -> Optional[str]:
@@ -275,6 +278,7 @@ class SravanamScanner:
 # =============================================================================
 # SRAVANAM LISTENER — Tick-Driven Scanning
 # =============================================================================
+
 
 class SravanamListener:
     """

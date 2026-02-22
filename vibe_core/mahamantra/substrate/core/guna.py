@@ -59,8 +59,9 @@ The Name itself (chant/tick) is above this classification.
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===

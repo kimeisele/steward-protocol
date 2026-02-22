@@ -144,9 +144,7 @@ class SilentExceptRemedy(CSTRemedy):
             body=new_body,
         )
 
-    def leave_Module(
-        self, original_node: cst.Module, updated_node: cst.Module
-    ) -> cst.Module:
+    def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:
         """Inject logging import + logger assignment if missing and we applied a fix."""
         if not self.applied:
             return updated_node
@@ -156,13 +154,7 @@ class SilentExceptRemedy(CSTRemedy):
         if not self._has_logger_import:
             # import logging
             new_stmts.append(
-                cst.SimpleStatementLine(
-                    body=[
-                        cst.Import(
-                            names=[cst.ImportAlias(name=cst.Name("logging"))]
-                        )
-                    ]
-                )
+                cst.SimpleStatementLine(body=[cst.Import(names=[cst.ImportAlias(name=cst.Name("logging"))])])
             )
 
         if not self._has_logger_assignment:
@@ -171,17 +163,13 @@ class SilentExceptRemedy(CSTRemedy):
                 cst.SimpleStatementLine(
                     body=[
                         cst.Assign(
-                            targets=[
-                                cst.AssignTarget(target=cst.Name(self._logger_name))
-                            ],
+                            targets=[cst.AssignTarget(target=cst.Name(self._logger_name))],
                             value=cst.Call(
                                 func=cst.Attribute(
                                     value=cst.Name("logging"),
                                     attr=cst.Name("getLogger"),
                                 ),
-                                args=[
-                                    cst.Arg(value=cst.Name("__name__"))
-                                ],
+                                args=[cst.Arg(value=cst.Name("__name__"))],
                             ),
                         )
                     ]
@@ -189,9 +177,7 @@ class SilentExceptRemedy(CSTRemedy):
             )
 
         if new_stmts:
-            return updated_node.with_changes(
-                body=(*new_stmts, *updated_node.body)
-            )
+            return updated_node.with_changes(body=(*new_stmts, *updated_node.body))
         return updated_node
 
     def _is_silent_handler(self, node: cst.ExceptHandler) -> bool:

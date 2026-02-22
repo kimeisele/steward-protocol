@@ -89,12 +89,12 @@ class TestMahaAttentionInit:
     def test_default_init(self):
         """Default init creates 16-bit address space."""
         attention = MahaAttention()
-        assert attention.address_space == 2 ** 16
+        assert attention.address_space == 2**16
 
     def test_custom_key_bits(self):
         """Can create with custom key bits."""
         attention = MahaAttention(key_bits=8)
-        assert attention.address_space == 2 ** 8 == 256
+        assert attention.address_space == 2**8 == 256
 
     def test_registered_intents_starts_zero(self):
         """registered_intents starts at 0."""
@@ -128,8 +128,10 @@ class TestMahaAttentionMemorize:
 
     def test_memorize_callable(self, attention: MahaAttention):
         """Can memorize callable handlers."""
+
         def my_handler():
             return "result"
+
         attention.memorize("do something", my_handler)
 
         result = attention.attend("do something")
@@ -227,11 +229,13 @@ class TestMahaAttentionBatch:
     def test_memorize_batch(self):
         """memorize_batch() registers multiple handlers."""
         attention = MahaAttention()
-        addresses = attention.memorize_batch({
-            "intent1": "handler1",
-            "intent2": "handler2",
-            "intent3": "handler3",
-        })
+        addresses = attention.memorize_batch(
+            {
+                "intent1": "handler1",
+                "intent2": "handler2",
+                "intent3": "handler3",
+            }
+        )
 
         assert len(addresses) == 3
         assert attention.registered_intents == 3
@@ -239,10 +243,12 @@ class TestMahaAttentionBatch:
     def test_attend_batch(self):
         """attend_batch() resolves multiple queries."""
         attention = MahaAttention()
-        attention.memorize_batch({
-            "intent1": "handler1",
-            "intent2": "handler2",
-        })
+        attention.memorize_batch(
+            {
+                "intent1": "handler1",
+                "intent2": "handler2",
+            }
+        )
 
         results = attention.attend_batch(["intent1", "intent2", "unknown"])
 

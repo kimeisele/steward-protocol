@@ -170,6 +170,7 @@ class TestGitaDhruvaAnalogy:
     def test_108_mala_connection(self):
         """108 = 18 × 6 = FIXED_POINT × SHARANAGATI."""
         from vibe_core.mahamantra.protocols._seed import MALA
+
         # Note: MALA is 108, let's verify the connection
         # 108 = 18 × 6 (simplified)
         # Actually 108 = 12 × 9 from seed, but 18 × 6 = 108 is also true

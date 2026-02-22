@@ -67,6 +67,7 @@ class ShuddhiEngine(ShuddhiProtocol):
         if self._mahamantra is None:
             try:
                 from vibe_core.mahamantra import mahamantra
+
                 self._mahamantra = mahamantra
             except ImportError:
                 logger.debug("[SHUDDHI] Mahamantra not available for vibration")
@@ -298,12 +299,14 @@ class ShuddhiEngine(ShuddhiProtocol):
             try:
                 compile(new_code, str(file_path), "exec")
             except SyntaxError as e:
-                results.append(ShuddhiResult(
-                    status=ShuddhiStatus.FAILED,
-                    file_path=file_path,
-                    rule_id=rule_id,
-                    message=f"Transformation produced invalid syntax: {e}",
-                ))
+                results.append(
+                    ShuddhiResult(
+                        status=ShuddhiStatus.FAILED,
+                        file_path=file_path,
+                        rule_id=rule_id,
+                        message=f"Transformation produced invalid syntax: {e}",
+                    )
+                )
                 continue
 
             result = ShuddhiResult(
@@ -517,6 +520,7 @@ class ShuddhiEngine(ShuddhiProtocol):
             logger.info(f"[SHUDDHI] Found {len(violations)} unhealed violations")
 
             from collections import defaultdict
+
             by_file: Dict[str, List[tuple]] = defaultdict(list)
             for v in violations:
                 rule_id = v.properties.get("rule_id", "")
@@ -542,6 +546,7 @@ class ShuddhiEngine(ShuddhiProtocol):
         from vibe_core.mahamantra.dharma.kumaras.healing_resolver import (
             wire_healing_resolver,
         )
+
         if not wire_healing_resolver():
             raise RuntimeError(
                 "FATAL: HealingIntentResolver could not be wired to MantraKernel. "
@@ -560,6 +565,7 @@ class ShuddhiEngine(ShuddhiProtocol):
             return
         try:
             from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
+
             wire_sravanam()
             self._sravanam_wired = True
         except Exception as exc:
@@ -625,7 +631,4 @@ class ShuddhiEngine(ShuddhiProtocol):
                                 logger.warning(f"[SHUDDHI->KG] Failed to record: {e}")
 
                 elif intent_result.error:
-                    logger.warning(
-                        "[SHUDDHI] Intent resolution failed: %s", intent_result.error
-                    )
-
+                    logger.warning("[SHUDDHI] Intent resolution failed: %s", intent_result.error)

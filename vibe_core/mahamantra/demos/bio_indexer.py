@@ -23,9 +23,9 @@ from typing import Final, Dict, List, Set, Optional
 import random
 
 from vibe_core.mahamantra.protocols._seed import (
-    QUARTERS,   # 4 - A, C, G, T
-    WORDS,      # 16 - 16 bits = 8-mer
-    HARE_COUNT, # 8 - bases per k-mer (fits in 16 bits)
+    QUARTERS,  # 4 - A, C, G, T
+    WORDS,  # 16 - 16 bits = 8-mer
+    HARE_COUNT,  # 8 - bases per k-mer (fits in 16 bits)
 )
 
 # =============================================================================
@@ -37,10 +37,10 @@ HALF_SIZE: Final[int] = HARE_COUNT  # 8 bases per k-mer
 
 # DNA base encoding (2 bits each = QUARTERS options)
 BASE_TO_BITS: Final[Dict[str, int]] = {
-    'A': 0b00,  # 0
-    'C': 0b01,  # 1
-    'G': 0b10,  # 2
-    'T': 0b11,  # 3
+    "A": 0b00,  # 0
+    "C": 0b01,  # 1
+    "G": 0b10,  # 2
+    "T": 0b11,  # 3
 }
 
 BITS_TO_BASE: Final[Dict[int, str]] = {v: k for k, v in BASE_TO_BITS.items()}
@@ -51,7 +51,8 @@ BITS_TO_BASE: Final[Dict[int, str]] = {v: k for k, v in BASE_TO_BITS.items()}
 # =============================================================================
 
 # Real SARS-CoV-2 sequence start (first ~1000 bases)
-SARS_COV2_PARTIAL: Final[str] = """
+SARS_COV2_PARTIAL: Final[str] = (
+    """
 ATTAAAGGTTTATACCTTCCCAGGTAACAAACCAACCAACTTTCGATCTCTTGTAGATCTGTTCTCTAAA
 CGAACTTTAAAATCTGTGTGGCTGTCACTCGGCTGCATGCTTAGTGCACTCACGCAGTATAATTAATAAC
 TAATTACTGTCGTTGACAGGACACGAGTAACTCGTCTATCTTCTGCAGGCTGCTTACGGTTTCGTCCGTG
@@ -67,15 +68,21 @@ TTACCCGTGAACTCATGCGTGAGCTTAACGGAGGGGCATACACTCGCTATGTCGATAACAACTTCTGTGG
 CCCTGATGGCTACCCTCTTGAGTGCATTAAAGACCTTCTAGCACGTGCTGGTAAAGCTTCATGCACTTTG
 TCCGAACAACTGGACTTTATTGACACTAAGAGGGGTGTATACTGCTGCCGTGAACATGAGCATGAAATTG
 CTTGGTACACGGAACGTTCTGAAAAGAGCTATGAATTGCAGACACCTTTTGAAATTAAATTGGCAAAGAA
-""".replace('\n', '').replace(' ', '').upper()
+""".replace("\n", "")
+    .replace(" ", "")
+    .upper()
+)
+
 
 def generate_random_genome(length: int) -> str:
     """Generate random DNA sequence."""
-    return ''.join(random.choice('ACGT') for _ in range(length))
+    return "".join(random.choice("ACGT") for _ in range(length))
+
 
 # =============================================================================
 # K-MER ENCODING (DNA → 16-bit integer)
 # =============================================================================
+
 
 def encode_kmer(kmer: str) -> int:
     """
@@ -94,24 +101,29 @@ def encode_kmer(kmer: str) -> int:
         result = (result << 2) | BASE_TO_BITS[base]
     return result
 
+
 def decode_kmer(code: int) -> str:
     """Decode integer back to k-mer."""
     bases = []
     for _ in range(HALF_SIZE):
         bases.append(BITS_TO_BASE[code & 0b11])
         code >>= 2
-    return ''.join(reversed(bases))
+    return "".join(reversed(bases))
+
 
 # =============================================================================
 # LOTUS BIO-INDEX (16-ary structure for DNA)
 # =============================================================================
 
+
 @dataclass
 class KmerMatch:
     """A k-mer match result."""
+
     kmer: str
     positions: List[int]
     count: int
+
 
 class LotusBioIndex:
     """
@@ -145,7 +157,7 @@ class LotusBioIndex:
 
         # Slide window and index each k-mer
         for i in range(self.sequence_length - self.k + 1):
-            kmer = self.sequence[i:i + self.k]
+            kmer = self.sequence[i : i + self.k]
 
             # Skip if contains invalid bases
             if any(b not in BASE_TO_BITS for b in kmer):
@@ -193,7 +205,7 @@ def naive_search(sequence: str, kmer: str) -> List[int]:
     positions = []
     k = len(kmer)
     for i in range(len(sequence) - k + 1):
-        if sequence[i:i + k] == kmer:
+        if sequence[i : i + k] == kmer:
             positions.append(i)
     return positions
 
@@ -202,9 +214,11 @@ def naive_search(sequence: str, kmer: str) -> List[int]:
 # BENCHMARK
 # =============================================================================
 
+
 @dataclass
 class BenchmarkResult:
     """Benchmark comparison result."""
+
     genome_size: int
     kmer_count: int
 
@@ -229,11 +243,8 @@ def run_benchmark(genome: str, num_queries: int = 1000) -> BenchmarkResult:
     index.build(genome)
 
     # Generate random query k-mers from the genome
-    query_positions = random.sample(
-        range(len(genome) - HALF_SIZE + 1),
-        min(num_queries, len(genome) - HALF_SIZE + 1)
-    )
-    query_kmers = [genome[i:i + HALF_SIZE] for i in query_positions]
+    query_positions = random.sample(range(len(genome) - HALF_SIZE + 1), min(num_queries, len(genome) - HALF_SIZE + 1))
+    query_kmers = [genome[i : i + HALF_SIZE] for i in query_positions]
 
     # Benchmark Lotus search
     start = time.perf_counter()
@@ -252,12 +263,9 @@ def run_benchmark(genome: str, num_queries: int = 1000) -> BenchmarkResult:
     naive_time = (time.perf_counter() - start) * 1000
 
     # Verify correctness
-    all_correct = all(
-        sorted(lotus) == sorted(naive)
-        for lotus, naive in zip(lotus_results, naive_results)
-    )
+    all_correct = all(sorted(lotus) == sorted(naive) for lotus, naive in zip(lotus_results, naive_results))
 
-    speedup = naive_time / lotus_time if lotus_time > 0 else float('inf')
+    speedup = naive_time / lotus_time if lotus_time > 0 else float("inf")
 
     return BenchmarkResult(
         genome_size=len(genome),
@@ -299,7 +307,7 @@ def main():
     print("=" * 80)
 
     # Clean the sequence
-    genome = ''.join(c for c in SARS_COV2_PARTIAL if c in 'ACGT')
+    genome = "".join(c for c in SARS_COV2_PARTIAL if c in "ACGT")
     print(f"  Genome size: {len(genome):,} bases")
 
     result = run_benchmark(genome, num_queries=500)
@@ -361,9 +369,15 @@ def main():
     print()
     print(f"  {'Genome Size':<20} {'Lotus (ms)':<15} {'Naive (ms)':<15} {'Speedup':<10}")
     print(f"  {'-' * 60}")
-    print(f"  {len(genome):>15,} bp {result.lotus_search_ms:>12.2f} {result.naive_search_ms:>12.2f} {result.speedup:>8.1f}x")
-    print(f"  {100_000:>15,} bp {result2.lotus_search_ms:>12.2f} {result2.naive_search_ms:>12.2f} {result2.speedup:>8.1f}x")
-    print(f"  {500_000:>15,} bp {result3.lotus_search_ms:>12.2f} {result3.naive_search_ms:>12.2f} {result3.speedup:>8.1f}x")
+    print(
+        f"  {len(genome):>15,} bp {result.lotus_search_ms:>12.2f} {result.naive_search_ms:>12.2f} {result.speedup:>8.1f}x"
+    )
+    print(
+        f"  {100_000:>15,} bp {result2.lotus_search_ms:>12.2f} {result2.naive_search_ms:>12.2f} {result2.speedup:>8.1f}x"
+    )
+    print(
+        f"  {500_000:>15,} bp {result3.lotus_search_ms:>12.2f} {result3.naive_search_ms:>12.2f} {result3.speedup:>8.1f}x"
+    )
     print()
 
     # The key insight
@@ -378,7 +392,9 @@ def main():
     print()
     print("  For human genome (3 billion bases):")
     naive_per_query = result3.naive_search_ms / 500 * (3_000_000_000 / 500_000)
-    print(f"    Naive: ~{naive_per_query * 1000:.0f}ms = {naive_per_query * 1000 / 1000 / 60:.0f} minutes per 1000 queries")
+    print(
+        f"    Naive: ~{naive_per_query * 1000:.0f}ms = {naive_per_query * 1000 / 1000 / 60:.0f} minutes per 1000 queries"
+    )
     print(f"    Lotus: ~{result3.lotus_search_ms:.1f}ms (constant!)")
     print()
 

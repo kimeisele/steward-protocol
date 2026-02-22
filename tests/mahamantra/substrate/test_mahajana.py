@@ -44,8 +44,18 @@ class TestMahajana:
     def test_all_12_names(self):
         """All 12 mahajana names from SB 6.3.20."""
         expected = {
-            "brahma", "narada", "shambhu", "kumaras", "kapila", "manu",
-            "prahlada", "janaka", "bhishma", "bali", "shuka", "yamaraja"
+            "brahma",
+            "narada",
+            "shambhu",
+            "kumaras",
+            "kapila",
+            "manu",
+            "prahlada",
+            "janaka",
+            "bhishma",
+            "bali",
+            "shuka",
+            "yamaraja",
         }
         actual = {m.value for m in Mahajana}
         assert actual == expected

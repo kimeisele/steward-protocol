@@ -95,9 +95,10 @@ def check_ruff_f821(root: Path) -> int:
     """Count undefined name errors in mahamantra."""
     try:
         result = subprocess.run(
-            ["python3", "-m", "ruff", "check", "--select", "F821",
-             str(root / "vibe_core" / "mahamantra")],
-            capture_output=True, text=True, timeout=30,
+            ["python3", "-m", "ruff", "check", "--select", "F821", str(root / "vibe_core" / "mahamantra")],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         # Count lines that are actual errors (not summary)
         lines = [l for l in result.stdout.strip().split("\n") if "F821" in l]
@@ -165,10 +166,17 @@ def check_test_suite(root: Path) -> Tuple[int, int, int]:
     """Run kumaras tests quickly."""
     try:
         result = subprocess.run(
-            ["python3", "-m", "pytest",
-             str(root / "vibe_core" / "mahamantra" / "dharma" / "kumaras" / "tests"),
-             "-q", "--tb=no"],
-            capture_output=True, text=True, timeout=30,
+            [
+                "python3",
+                "-m",
+                "pytest",
+                str(root / "vibe_core" / "mahamantra" / "dharma" / "kumaras" / "tests"),
+                "-q",
+                "--tb=no",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         # Parse "54 passed" from output
         for line in result.stdout.split("\n"):
@@ -176,7 +184,7 @@ def check_test_suite(root: Path) -> Tuple[int, int, int]:
                 parts = line.split()
                 for i, p in enumerate(parts):
                     if p == "passed":
-                        return int(parts[i-1]), 0, 0
+                        return int(parts[i - 1]), 0, 0
         return 0, 0, 0
     except Exception:
         return -1, -1, -1
@@ -250,17 +258,22 @@ def main():
 
     # Save JSON
     json_path = Path(__file__).parent / "system_health_report.json"
-    json_path.write_text(json.dumps({
-        "timestamp": report.timestamp,
-        "overall": overall,
-        "metrics": [asdict(m) for m in report.metrics],
-        "violations_by_rule": report.violations_by_rule,
-        "healable_total": report.healable_total,
-        "files_scanned": report.files_scanned,
-        "f821_count": report.f821_count,
-        "gate_pipeline_status": report.gate_pipeline_status,
-        "import_errors": report.import_errors,
-    }, indent=2))
+    json_path.write_text(
+        json.dumps(
+            {
+                "timestamp": report.timestamp,
+                "overall": overall,
+                "metrics": [asdict(m) for m in report.metrics],
+                "violations_by_rule": report.violations_by_rule,
+                "healable_total": report.healable_total,
+                "files_scanned": report.files_scanned,
+                "f821_count": report.f821_count,
+                "gate_pipeline_status": report.gate_pipeline_status,
+                "import_errors": report.import_errors,
+            },
+            indent=2,
+        )
+    )
     print(f"\nJSON: {json_path}")
 
 

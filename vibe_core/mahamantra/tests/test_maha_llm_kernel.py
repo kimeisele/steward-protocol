@@ -30,7 +30,6 @@ from vibe_core.mahamantra.substrate.maha_llm_kernel import (
 
 
 class TestKernelConstruction:
-
     def test_instantiation(self):
         kernel = MahaLLMKernel()
         assert kernel._index is None
@@ -54,7 +53,6 @@ class TestKernelConstruction:
 
 
 class TestResonate:
-
     @pytest.fixture(scope="class")
     def response(self):
         return resonate("What is dharma?")
@@ -108,7 +106,6 @@ class TestResonate:
 
 
 class TestExpand:
-
     @pytest.fixture(scope="class")
     def response(self):
         return expand("krishna")
@@ -163,7 +160,6 @@ class TestExpand:
 
 
 class TestResonateAs:
-
     @pytest.fixture(scope="class")
     def response(self):
         kernel = get_kernel()
@@ -206,7 +202,6 @@ class TestResonateAs:
 
 
 class TestGuardian:
-
     def test_returns_guardian_profile(self):
         profile = guardian("narada")
         assert isinstance(profile, GuardianProfile)

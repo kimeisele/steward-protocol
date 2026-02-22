@@ -48,12 +48,19 @@ from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL
 # GUARDIAN SIGNATURES (from research: guardian_syllable_trees.py Part 5)
 # =============================================================================
 
+
 class GuardianSignature:
     """A Guardian's 4D identity derived from their mod49 position."""
 
     __slots__ = (
-        "name", "mod49", "element", "element_name",
-        "varga", "is_shruti", "harmonic", "function",
+        "name",
+        "mod49",
+        "element",
+        "element_name",
+        "varga",
+        "is_shruti",
+        "harmonic",
+        "function",
     )
 
     def __init__(
@@ -73,35 +80,33 @@ class GuardianSignature:
 
     def __repr__(self) -> str:
         s_n = "shruti" if self.is_shruti else "nakshatra"
-        return (f"Guardian({self.name}, {self.element_name}, "
-                f"v{self.varga}, {s_n}, h→{self.harmonic}, {self.function})")
+        return f"Guardian({self.name}, {self.element_name}, v{self.varga}, {s_n}, h→{self.harmonic}, {self.function})"
 
 
 # The 16 Guardians with their verified mod49 positions and shastric functions
 _GUARDIAN_DATA: Final[Tuple[Tuple[str, int, str], ...]] = (
     # 12 Mahajanas
-    ("vyasa",       2,  "compilation"),
-    ("brahma",      6,  "creation"),
-    ("narada",      43, "transmission"),
-    ("shambhu",     9,  "destruction"),
-    ("prithu",      36, "organization"),
-    ("kumaras",     43, "wisdom"),
-    ("kapila",      6,  "analysis"),
-    ("manu",        12, "law"),
+    ("vyasa", 2, "compilation"),
+    ("brahma", 6, "creation"),
+    ("narada", 43, "transmission"),
+    ("shambhu", 9, "destruction"),
+    ("prithu", 36, "organization"),
+    ("kumaras", 43, "wisdom"),
+    ("kapila", 6, "analysis"),
+    ("manu", 12, "law"),
     ("parashurama", 42, "enforcement"),
-    ("prahlada",    16, "devotion"),
-    ("janaka",      21, "execution"),
-    ("bhishma",     27, "commitment"),
+    ("prahlada", 16, "devotion"),
+    ("janaka", 21, "execution"),
+    ("bhishma", 27, "commitment"),
     # 4 Avataras
-    ("nrisimha",    7,  "protection"),
-    ("bali",        35, "surrender"),
-    ("shuka",       22, "liberation"),
-    ("yamaraja",    5,  "judgment"),
+    ("nrisimha", 7, "protection"),
+    ("bali", 35, "surrender"),
+    ("shuka", 22, "liberation"),
+    ("yamaraja", 5, "judgment"),
 )
 
 GUARDIANS: Final[Tuple[GuardianSignature, ...]] = tuple(
-    GuardianSignature(name, mod49, fn)
-    for name, mod49, fn in _GUARDIAN_DATA
+    GuardianSignature(name, mod49, fn) for name, mod49, fn in _GUARDIAN_DATA
 )
 
 # Pre-built indices for fast lookup
@@ -118,18 +123,17 @@ for _g in GUARDIANS:
 # Seed-derived scoring weights for Guardian routing (integer SSOT)
 # Element=HARE_COUNT(8), Varga=PANCHA(5), Shruti=QUARTERS(4), Harmonic=TRINITY(3)
 # Sum = QUARTERS * PANCHA = 20
-_W_ELEMENT: Final[int] = HARE_COUNT   # 8  (was 0.40)
-_W_VARGA: Final[int] = PANCHA         # 5  (was 0.25)
-_W_SHRUTI: Final[int] = QUARTERS      # 4  (was 0.20)
-_W_HARMONIC: Final[int] = TRINITY     # 3  (was 0.15)
+_W_ELEMENT: Final[int] = HARE_COUNT  # 8  (was 0.40)
+_W_VARGA: Final[int] = PANCHA  # 5  (was 0.25)
+_W_SHRUTI: Final[int] = QUARTERS  # 4  (was 0.20)
+_W_HARMONIC: Final[int] = TRINITY  # 3  (was 0.15)
 _W_SUM: Final[int] = QUARTERS * PANCHA  # 20
 
 
 class RouteResult:
     """Result of routing an input to a Guardian."""
 
-    __slots__ = ("guardian", "score", "element_match", "varga_match",
-                 "shruti_match", "harmonic_distance")
+    __slots__ = ("guardian", "score", "element_match", "varga_match", "shruti_match", "harmonic_distance")
 
     def __init__(
         self,
@@ -153,8 +157,7 @@ class RouteResult:
         ) / _W_SUM
 
     def __repr__(self) -> str:
-        return (f"Route({self.guardian.name}, score={self.score:.3f}, "
-                f"fn={self.guardian.function})")
+        return f"Route({self.guardian.name}, score={self.score:.3f}, fn={self.guardian.function})"
 
 
 def _score_guardian(
@@ -234,6 +237,7 @@ def route_text(
     Auto-detects language and encodes to RAMA coordinates.
     """
     from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
+
     coords = encode_text(text)
     return route(coords, top_n=top_n)
 
@@ -280,15 +284,13 @@ class MahaResponse:
             "route_score": round(self.route_score, 4),
             "element_walk": list(self.element_walk),
             "top_words": [
-                {"sanskrit": w.sanskrit, "meaning": w.first_meaning,
-                 "score": round(w.total_score, 4)}
+                {"sanskrit": w.sanskrit, "meaning": w.first_meaning, "score": round(w.total_score, 4)}
                 for w in self.words[:5]
             ],
         }
 
     def __repr__(self) -> str:
-        return (f"MahaResponse('{self.text}' → {self.guardian.name}"
-                f"({self.guardian.function}), {len(self.words)} words)")
+        return f"MahaResponse('{self.text}' → {self.guardian.name}({self.guardian.function}), {len(self.words)} words)"
 
 
 def maha_respond(
@@ -305,6 +307,7 @@ def maha_respond(
     This function is kept only for research/ backward compatibility.
     """
     import warnings
+
     warnings.warn(
         "maha_respond() is a shadow pipeline. Use MahamantraLotus()(text) instead.",
         DeprecationWarning,
@@ -328,6 +331,7 @@ def maha_respond(
 
     # Step 3: Run through Guardian-tuned synth
     from vibe_core.mahamantra.adapters.synth import SynthParams
+
     params = SynthParams(
         mod_space=137,  # MAHA_QUANTUM
         feedback=1,
@@ -382,6 +386,7 @@ def maha_respond(
 
     # Step 5: Build response
     from vibe_core.mahamantra.substrate.pancha_walk import ELEMENT_NAMES as EN, COORD_ELEMENT as CE
+
     elem_walk = tuple(EN[CE[c]] for c in input_coords)
 
     return MahaResponse(

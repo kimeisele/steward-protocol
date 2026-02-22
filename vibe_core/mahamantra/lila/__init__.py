@@ -67,6 +67,7 @@ from vibe_core.mahamantra.lila.registry import (
     get_registry,
 )
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

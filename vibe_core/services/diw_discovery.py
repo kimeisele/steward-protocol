@@ -58,7 +58,8 @@ def discover_and_register_diw_subscribers() -> int:
         try:
             instance = cls()
             ServiceRegistry.register(
-                type(instance), instance,
+                type(instance),
+                instance,
                 protocols=[DIWSubscriberProtocol],
             )
             logger.info("DIW subscriber registered: %s", instance.subscriber_name)
@@ -73,7 +74,8 @@ def discover_and_register_diw_subscribers() -> int:
 
         bridge = get_narada_bridge()
         ServiceRegistry.register(
-            NaradaBridge, bridge,
+            NaradaBridge,
+            bridge,
             protocols=[DIWSubscriberProtocol],
         )
         logger.info("DIW subscriber registered: %s", bridge.subscriber_name)

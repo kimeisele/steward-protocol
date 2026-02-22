@@ -13,7 +13,8 @@ STRUKTUR:
 
 WATERTIGHT: No hardcoded intents in mahajana files.
 """
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUARTERS)
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, QUARTERS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

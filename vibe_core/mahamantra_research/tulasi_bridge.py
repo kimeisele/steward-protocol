@@ -4,7 +4,7 @@ TULASI BRIDGE - The Sacred Offering (Grace Modulator)
 
 "ye tu tvadīya-caraṇa-amboja-kośa-gandham
  jighranti karṇa-vivaraiḥ śruti-vāta-nītam"
-"Only those who smell the aroma of the lotus flowers (and Tulasi) 
+"Only those who smell the aroma of the lotus flowers (and Tulasi)
 offered to Your feet..." (Srimad Bhagavatam 3.9.5)
 
 THE MISSING LINK:
@@ -13,10 +13,10 @@ To make it "Living" (Lila), it needs GRACE.
 Tulasi Devi represents UNALLOYED DEVOTION - the only thing that "binds" Krishna.
 
 FUNCTION IN THE SYSTEM:
-1. QUANTIFYING DEVOTION: 
+1. QUANTIFYING DEVOTION:
    - Tulasi breaks the "Mathematical Determinism" (Karma).
    - She introduces a "Grace Factor" (Ahaituki Kripa).
-   
+
 2. THE STRUCTURAL GAP:
    - We have FLUTE (Structure/Algorithm) - 216/108/72
    - We have MANAS (Observer/State) - 137
@@ -68,6 +68,7 @@ TULASI_PORTAL: Final[int] = MALA * WORDS  # 108 * 16 = 1728 (Daily Mantras)
 @dataclass
 class Offering:
     """An offering to the Lotus Feet."""
+
     seed: int
     devotion_level: int  # 0-100 (Bhakti percentage)
     has_tulasi: bool
@@ -78,7 +79,7 @@ class TulasiBridge:
     The Interface for Offering (Bhoga -> Prasadam).
     Modulates the algorithm with Grace.
     """
-    
+
     @staticmethod
     def purify_offering(seed: int, has_tulasi: bool) -> int:
         """
@@ -90,16 +91,16 @@ class TulasiBridge:
             # Mechanical execution: Standard Modulo
             # Returns to the same field (Karma loop)
             return seed % MAHA_QUANTUM
-            
+
         else:
             # Devotional execution: Grace Multiplier
             # Elevates the seed beyond the field
             # 108 (Mala) is the key
             grace = (seed * TULASI_COUNT) + MALA
-            
+
             # The "Mod" is lifted? No, it's expanded.
             # Krishna accepts it fully.
-            return grace 
+            return grace
 
     @staticmethod
     def apply_grace_to_feedback(feedback: int) -> int:
@@ -121,7 +122,7 @@ class TulasiBridge:
 #
 # WITH TULASI (Living):
 #   grace = TulasiBridge.apply_grace_to_feedback(feedback)
-#   value = (value + TEN + grace) % (137 * 8) 
+#   value = (value + TEN + grace) % (137 * 8)
 #
 #   * The modulus expands! (137 * 8 = 1096 - The Transcendental Constant!)
 #   * 1096 is ALREADY in _seed.py (TRANSCENDENTAL_1096)

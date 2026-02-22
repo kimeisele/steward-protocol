@@ -56,6 +56,7 @@ class LotusBridgeSubscriber:
         if self._lotus is None:
             try:
                 from vibe_core.mahamantra import mahamantra
+
                 self._lotus = mahamantra
             except Exception as e:
                 logger.debug("MahamantraLotus not available: %s", e)

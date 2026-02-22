@@ -123,6 +123,7 @@ class MahamantraCLIEntry(CLIEntryProtocol, PanchaTattvaProtocol):
 
             # === COMPUTATION: Route through the VM first ===
             from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
             lotus = get_mahamantra()
             lotus.execute(message)
 

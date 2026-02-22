@@ -145,7 +145,7 @@ class BrokenGenesisRemedy(CSTRemedy):
         # PROOF OF TRUST: Enforce Strict Archetype Identity (Yoga Maya)
         # We don't just check % 37 == 0. We check if it matches the AUTHORITATIVE formula.
         expected_genesis = self._compute_valid_genesis()
-        
+
         # If we can't compute it (missing dependencies), we can't heal it.
         if expected_genesis is None:
             return updated_node

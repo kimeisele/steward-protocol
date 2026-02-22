@@ -24,6 +24,7 @@ from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 from vibe_core.mahamantra.substrate.chamber import SankirtanChamber
 from vibe_core.mahamantra.adapters.compression import MahaCompression
 
+
 class MahaCellCLI:
     """
     MahaCell as universal CLI wrapper.
@@ -44,7 +45,7 @@ class MahaCellCLI:
         """
         # Join input
         full_input = f"{command} {' '.join(args)}".strip()
-        
+
         # Compress to find Intent (Seed)
         # Using MahaCompression (from adapters/compression.py)
         result = self._compression.compress(full_input)
@@ -56,18 +57,18 @@ class MahaCellCLI:
         # Intent: The compressed seed
         # DNA: The original command string
         # P0-FIX: Use deterministic hash instead of Python's randomized hash()
-        command_bytes = command.encode('utf-8')
-        command_hash = int.from_bytes(hashlib.sha256(command_bytes).digest()[:4], byteorder='big')
+        command_bytes = command.encode("utf-8")
+        command_hash = int.from_bytes(hashlib.sha256(command_bytes).digest()[:4], byteorder="big")
         op_code = command_hash % WORDS
-        
+
         cell = MahaCellUnified.create(
             source=result.position,
             target=0,
             operation=op_code,
-            dna=full_input, 
-            initial_state=full_input # Payload is the command
+            dna=full_input,
+            initial_state=full_input,  # Payload is the command
         )
-        
+
         return cell
 
     def execute(self, cell: MahaCellUnified) -> MahaCellUnified:
@@ -80,7 +81,7 @@ class MahaCellCLI:
         # 1. Enter the Chamber
         # In the unified architecture, cells flow through.
         # kirtan() runs the transformation cycle.
-        
+
         # We run 1 full cycle (16 steps) to ensure processing
         result_cell = self._chamber.kirtan(cell, cycles=1)
 
@@ -89,14 +90,14 @@ class MahaCellCLI:
     def unwrap(self, cell: MahaCellUnified) -> str:
         """
         Extract result from MahaCell.
-        
+
         If the payload changed, return it.
         Otherwise, return a formatted string of the transformation.
         """
         # In a real system, the payload would be the result of the command execution.
         # For now, the Chamber transforms the METADATA (Prana, Integrity, Header).
         # We return a report of the transformation.
-        
+
         return (
             f"=== MAHA EXECUTION ===\n"
             f"Command: {cell.lifecycle.dna}\n"
@@ -104,4 +105,3 @@ class MahaCellCLI:
             f"Prana:   {cell.prana} (Integrity: {cell.membrane_integrity:.2%})\n"
             f"Result:  {cell.header.target} (Attractor)\n"
         )
-

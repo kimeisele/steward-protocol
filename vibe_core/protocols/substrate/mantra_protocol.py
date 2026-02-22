@@ -138,9 +138,7 @@ def mantra_governed(opcode: MantraOpCode) -> Callable[[F], F]:
             # 0. GOVERNANCE CHECK (Mahamantra is King)
             for hook in _governance_hooks:
                 if not hook(opcode, self, args, kwargs):
-                    raise PermissionError(
-                        f"Governance denied: {opcode.name} on {type(self).__name__}.{func.__name__}"
-                    )
+                    raise PermissionError(f"Governance denied: {opcode.name} on {type(self).__name__}.{func.__name__}")
 
             # 1. RESONANCE (Clock Signal)
             if hasattr(self, "resonate"):

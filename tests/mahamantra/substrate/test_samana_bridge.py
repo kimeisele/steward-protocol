@@ -51,6 +51,7 @@ from vibe_core.mahamantra.substrate.seed import (
 # TEST: SSOT-DERIVED CONSTANTS
 # =============================================================================
 
+
 class TestSamanaConstants:
     """Test that all constants are correctly derived from seed.py."""
 
@@ -77,6 +78,7 @@ class TestSamanaConstants:
 # TEST: SAMANA MESSAGE TYPES
 # =============================================================================
 
+
 class TestSamanaMessageType:
     """Test message type constants."""
 
@@ -100,6 +102,7 @@ class TestSamanaMessageType:
 # =============================================================================
 # TEST: SAMANA DISPATCH
 # =============================================================================
+
 
 class TestSamanaDispatch:
     """Test SamanaDispatch dataclass."""
@@ -175,6 +178,7 @@ class TestSamanaDispatch:
 # TEST: SAMANA FOLD
 # =============================================================================
 
+
 class TestSamanaFold:
     """Test SamanaFold dataclass."""
 
@@ -248,6 +252,7 @@ class TestSamanaFold:
 # =============================================================================
 # TEST: SAMANA BRIDGE
 # =============================================================================
+
 
 class TestSamanaBridge:
     """Test SamanaBridge implementation."""
@@ -416,6 +421,7 @@ class TestSamanaBridge:
 # TEST: SAMANA BRIDGE GAD COMPLIANCE
 # =============================================================================
 
+
 class TestSamanaBridgeGAD:
     """Test GAD-000 compliance of SamanaBridge."""
 
@@ -483,6 +489,7 @@ class TestSamanaBridgeGAD:
 # TEST: SAMANA BRIDGE PULSE (HEARTBEAT)
 # =============================================================================
 
+
 class TestSamanaBridgePulse:
     """Test pulse/heartbeat functionality."""
 
@@ -523,6 +530,7 @@ class TestSamanaBridgePulse:
 # TEST: FACTORY FUNCTION
 # =============================================================================
 
+
 class TestCreateSamanaBridge:
     """Test create_samana_bridge() factory function."""
 
@@ -545,6 +553,7 @@ class TestCreateSamanaBridge:
 # =============================================================================
 # TEST: BRIDGE STATS
 # =============================================================================
+
 
 class TestSamanaBridgeStats:
     """Test bridge statistics."""

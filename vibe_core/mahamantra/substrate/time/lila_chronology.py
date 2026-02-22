@@ -1056,11 +1056,7 @@ class FluteSync:
         vamsi_cf = _flute_res_cf(tick, VAMSI_HOLES)
 
         # Weighted average: (9*murali + 6*venu + 4*vamsi) // 19
-        return (
-            VAMSI_HOLES * murali_cf
-            + VENU_HOLES * venu_cf
-            + MURALI_HOLES * vamsi_cf
-        ) // FLUTE_HOLES_SUM
+        return (VAMSI_HOLES * murali_cf + VENU_HOLES * venu_cf + MURALI_HOLES * vamsi_cf) // FLUTE_HOLES_SUM
 
     @classmethod
     def get_combined_resonance(cls, tick: int) -> float:
@@ -1165,10 +1161,10 @@ class VinaSync:
     # ALL derived from named Seed constants, no hardcoded integers
     _VINA_ATTRACTORS: Final[Tuple[int, ...]] = (
         POSITION_SUM_TOTAL % VINA_FUNDAMENTAL,  # 0 (136 mod 136)
-        SHRUTIS,                                 # 22 (KSHETRA - HALVES)
-        GITA_CHAPTERS,                           # 18 (SHARANAGATI × TRINITY)
+        SHRUTIS,  # 22 (KSHETRA - HALVES)
+        GITA_CHAPTERS,  # 18 (SHARANAGATI × TRINITY)
         POSITION_SUM_HARE + POSITION_SUM_KRISHNA,  # 87 (70 + 17 = Hare+Krishna)
-        POSITION_SUM_RAMA,                       # 49 (SEVEN²)
+        POSITION_SUM_RAMA,  # 49 (SEVEN²)
     )
 
     # Vina component weights (Seed-derived):
@@ -1177,11 +1173,11 @@ class VinaSync:
     #   Fundamental= VINA_STRINGS (5) = PANCHA
     #   Sum = 5 + 7 + 5 = 17 = POSITION_SUM_KRISHNA
     # String alignment bonus = HALVES (2) out of POSITION_SUM_KRISHNA (17)
-    _W_STRING: Final[int] = VINA_STRINGS       # 5
-    _W_HARMONIC: Final[int] = SEVEN            # 7
+    _W_STRING: Final[int] = VINA_STRINGS  # 5
+    _W_HARMONIC: Final[int] = SEVEN  # 7
     _W_FUNDAMENTAL: Final[int] = VINA_STRINGS  # 5
     _W_VINA_SUM: Final[int] = POSITION_SUM_KRISHNA  # 17
-    _W_STRING_BONUS: Final[int] = HALVES       # 2
+    _W_STRING_BONUS: Final[int] = HALVES  # 2
 
     @classmethod
     def get_combined_resonance_cf(cls, seed: int, tick: int) -> int:
@@ -1260,8 +1256,8 @@ class KirtanSync:
     #   Sum   = KSHETRA         (24) — the field!
     # Identity: FLUTE_HOLES_SUM + VINA_STRINGS = 19 + 5 = 24 = KSHETRA
     _W_FLUTE: Final[int] = FLUTE_HOLES_SUM  # 19
-    _W_VINA: Final[int] = VINA_STRINGS      # 5
-    _W_KIRTAN_SUM: Final[int] = KSHETRA     # 24
+    _W_VINA: Final[int] = VINA_STRINGS  # 5
+    _W_KIRTAN_SUM: Final[int] = KSHETRA  # 24
 
     @classmethod
     def get_full_resonance(cls, seed: int, tick: int) -> Dict[str, object]:
@@ -1277,9 +1273,7 @@ class KirtanSync:
         vina_cf = VinaSync.get_combined_resonance_cf(seed, tick)
 
         # Combined: (19*flute + 5*vina) // 24
-        combined_cf = (
-            cls._W_FLUTE * flute_cf + cls._W_VINA * vina_cf
-        ) // cls._W_KIRTAN_SUM
+        combined_cf = (cls._W_FLUTE * flute_cf + cls._W_VINA * vina_cf) // cls._W_KIRTAN_SUM
 
         return {
             "flute": {

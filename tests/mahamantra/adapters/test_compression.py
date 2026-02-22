@@ -84,8 +84,7 @@ class TestMahaCompression:
         for text in texts:
             result = compressor.compress(text)
             assert result.intent_level is None, (
-                f"Compression must not assign intent to '{text}'. "
-                f"Guna comes from OpCode, not text content."
+                f"Compression must not assign intent to '{text}'. Guna comes from OpCode, not text content."
             )
 
     def test_guna_from_opcode_not_text(self):

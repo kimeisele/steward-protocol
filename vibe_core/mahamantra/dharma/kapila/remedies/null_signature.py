@@ -169,6 +169,7 @@ class NullSignatureRemedy(CSTRemedy):
                 return node.value.value
         return "unknown"
 
+
 def heal_null_signatures(file_path: str, dry_run: bool = True) -> dict:
     """
     Heal Null* signature mismatches in a file.

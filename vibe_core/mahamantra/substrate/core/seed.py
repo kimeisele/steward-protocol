@@ -12,7 +12,27 @@ Nicht Zahlen ÜBER das Mahamantra - DAS MAHAMANTRA.
 KRISHNA = MAHAMANTRA (non-different, Level -2)
 Alles sprießt aus den 16 Wörtern.
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, KSETRAJNA, KSHETRA, LILA, MALA, NAVA, PANCHA, PARAMPARA, POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA, POSITION_SUM_TOTAL, QUALITIES, QUARTERS, SHARANAGATI, TRINITY, WORDS)
+
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS,
+    HALVES,
+    KSETRAJNA,
+    KSHETRA,
+    LILA,
+    MALA,
+    NAVA,
+    PANCHA,
+    PARAMPARA,
+    POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
+    POSITION_SUM_TOTAL,
+    QUALITIES,
+    QUARTERS,
+    SHARANAGATI,
+    TRINITY,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -266,6 +286,7 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     POSITION_SUM_TOTAL as _PROTO_POSITION_SUM_TOTAL,
 )
+
 # NOTE: PRANA_DURATION_MS, PRANA_DURATION_S removed from protocols (external physics)
 # These timing constants are defined locally in substrate as physical implementation
 from vibe_core.mahamantra.protocols._seed import (
@@ -277,10 +298,12 @@ from vibe_core.mahamantra.protocols._seed import (
 from vibe_core.mahamantra.protocols._seed import (
     RAMA_COUNT as _PROTO_RAMA_COUNT,
 )
+
 # NOTE: SECONDS_PER_DAY removed from protocols (external physics - Earth rotation)
 from vibe_core.mahamantra.protocols._seed import (
     SHARANAGATI as _PROTO_SHARANAGATI,
 )
+
 # NOTE: TICK_INTERVAL_MS removed from protocols (depends on SECONDS_PER_DAY)
 from vibe_core.mahamantra.protocols._seed import (
     TRINITY as _PROTO_TRINITY,
@@ -550,7 +573,9 @@ assert len(NavaBhakti) == NAVA  # 9
 
 
 # PARAMPARA = Sankhya path ONLY (the legitimate derivation):
-assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA, f"Sankhya path {KSHETRA + MAHAJANA_COUNT + KSETRAJNA} != PARAMPARA {PARAMPARA}"
+assert KSHETRA + MAHAJANA_COUNT + KSETRAJNA == PARAMPARA, (
+    f"Sankhya path {KSHETRA + MAHAJANA_COUNT + KSETRAJNA} != PARAMPARA {PARAMPARA}"
+)
 
 
 # =============================================================================
@@ -678,7 +703,9 @@ DAILY_MANTRAS: Final[int] = MALA * ROUNDS  # 1728
 # 18 = SHARANAGATI × TRINITY = 6 × 3 (The 6 limbs acting through 3 Names)
 # All resonances divide by 18: 72/4, 108/6, 144/8, 432/24 = 18
 
-assert SHARANAGATI * TRINITY == GITA_CHAPTERS, f"SHARANAGATI*TRINITY={SHARANAGATI * TRINITY} != GITA_CHAPTERS {GITA_CHAPTERS}"
+assert SHARANAGATI * TRINITY == GITA_CHAPTERS, (
+    f"SHARANAGATI*TRINITY={SHARANAGATI * TRINITY} != GITA_CHAPTERS {GITA_CHAPTERS}"
+)
 
 # Verification: 18er-Harmonik
 assert MALA // GITA_CHAPTERS == SHARANAGATI, "108 / 18 = 6"
@@ -878,13 +905,13 @@ def verify_parampara(value: int) -> bool:
 def _derive_all_positions() -> Tuple[str, ...]:
     """
     DERIVE the 16 positions from AVATARAS and MAHAJANAS.
-    
+
     NOT hardcoded. COMPUTED.
     Structure: [Avatara₀, M₀, M₁, M₂, Avatara₁, M₃, M₄, M₅, ...]
     """
     result: list[str] = []
     workers_per_quarter = MAHAJANA_COUNT // QUARTERS  # 12 / 4 = 3
-    
+
     for q in range(QUARTERS):  # 0, 1, 2, 3
         # HEAD: The Avatara for this quarter
         result.append(AVATARAS[q])
@@ -892,7 +919,7 @@ def _derive_all_positions() -> Tuple[str, ...]:
         start_idx = q * workers_per_quarter
         end_idx = start_idx + workers_per_quarter
         result.extend(MAHAJANAS[start_idx:end_idx])
-    
+
     return tuple(result)
 
 

@@ -205,42 +205,52 @@ class TestAggregateEntropy:
 
     def test_aggregate_entropy_total_pain_max(self):
         """total_pain returns max pain."""
-        agg = AggregateEntropy(readings=[
-            EntropyReading(source="a", pain=0.3),
-            EntropyReading(source="b", pain=0.7),
-            EntropyReading(source="c", pain=0.5),
-        ])
+        agg = AggregateEntropy(
+            readings=[
+                EntropyReading(source="a", pain=0.3),
+                EntropyReading(source="b", pain=0.7),
+                EntropyReading(source="c", pain=0.5),
+            ]
+        )
         assert agg.total_pain == 0.7
 
     def test_aggregate_entropy_average_pain(self):
         """average_pain returns average."""
-        agg = AggregateEntropy(readings=[
-            EntropyReading(source="a", pain=0.3),
-            EntropyReading(source="b", pain=0.6),
-        ])
+        agg = AggregateEntropy(
+            readings=[
+                EntropyReading(source="a", pain=0.3),
+                EntropyReading(source="b", pain=0.6),
+            ]
+        )
         assert agg.average_pain == pytest.approx(0.45)
 
     def test_aggregate_entropy_health(self):
         """health is inverse of total_pain."""
-        agg = AggregateEntropy(readings=[
-            EntropyReading(source="a", pain=0.4),
-        ])
+        agg = AggregateEntropy(
+            readings=[
+                EntropyReading(source="a", pain=0.4),
+            ]
+        )
         assert agg.health == 0.6
 
     def test_aggregate_entropy_entropy_level(self):
         """entropy_level derives from total_pain."""
-        agg = AggregateEntropy(readings=[
-            EntropyReading(source="a", pain=0.02),
-        ])
+        agg = AggregateEntropy(
+            readings=[
+                EntropyReading(source="a", pain=0.02),
+            ]
+        )
         assert agg.entropy_level == EntropyLevel.SAMADHI
 
     def test_aggregate_entropy_dominant_source(self):
         """dominant_source returns source with max pain."""
-        agg = AggregateEntropy(readings=[
-            EntropyReading(source="a", pain=0.3),
-            EntropyReading(source="b", pain=0.7),
-            EntropyReading(source="c", pain=0.5),
-        ])
+        agg = AggregateEntropy(
+            readings=[
+                EntropyReading(source="a", pain=0.3),
+                EntropyReading(source="b", pain=0.7),
+                EntropyReading(source="c", pain=0.5),
+            ]
+        )
         assert agg.dominant_source == "b"
 
     def test_aggregate_entropy_add_reading(self):
@@ -322,6 +332,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _entropy
+
         expected = [
             "EntropyLevel",
             "EntropyReading",

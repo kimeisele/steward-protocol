@@ -47,8 +47,11 @@ def _ensure_seed() -> None:
     if _SEED_LOADED:
         return
     from vibe_core.mahamantra.substrate.seed import (
-        QUARTER_NAMES, ALL_GUARDIANS, WORDS_PER_QUARTER,
+        QUARTER_NAMES,
+        ALL_GUARDIANS,
+        WORDS_PER_QUARTER,
     )
+
     _QUARTER_NAMES = QUARTER_NAMES
     _QUARTER_SET = frozenset(QUARTER_NAMES)
     _GUARDIAN_SET = frozenset(ALL_GUARDIANS)
@@ -58,6 +61,7 @@ def _ensure_seed() -> None:
         end = start + WORDS_PER_QUARTER
         _GUARDIANS_BY_QUARTER[qname] = ALL_GUARDIANS[start:end]
     _SEED_LOADED = True
+
 
 # =============================================================================
 # THE LOTUS PATH
@@ -497,8 +501,7 @@ class LotusNode:
             if not base.exists():
                 return
             children = sorted(
-                child.name for child in base.iterdir()
-                if not child.name.startswith("_") and child.is_dir()
+                child.name for child in base.iterdir() if not child.name.startswith("_") and child.is_dir()
             )
 
         for child_name in children:

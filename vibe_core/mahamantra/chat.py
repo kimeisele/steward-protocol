@@ -33,7 +33,10 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional
 
 from vibe_core.mahamantra.substrate.seed import (
-    ALL_GUARDIANS, WORDS, get_quarter_name, get_word_at,
+    ALL_GUARDIANS,
+    WORDS,
+    get_quarter_name,
+    get_word_at,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,12 +68,8 @@ GUARDIAN_DHARMA: Dict[str, str] = {
 # DERIVED FROM SEED SSOT — not hardcoded.
 # get_word_at(pos).name gives "HARE"/"KRISHNA"/"RAMA" from the Mahamantra.
 # get_quarter_name(pos) gives "genesis"/"dharma"/"karma"/"moksha" from position.
-GUARDIAN_WORDS: Dict[str, str] = {
-    ALL_GUARDIANS[i]: get_word_at(i).name for i in range(WORDS)
-}
-GUARDIAN_QUARTERS: Dict[str, str] = {
-    ALL_GUARDIANS[i]: get_quarter_name(i).upper() for i in range(WORDS)
-}
+GUARDIAN_WORDS: Dict[str, str] = {ALL_GUARDIANS[i]: get_word_at(i).name for i in range(WORDS)}
+GUARDIAN_QUARTERS: Dict[str, str] = {ALL_GUARDIANS[i]: get_quarter_name(i).upper() for i in range(WORDS)}
 
 
 # =============================================================================
@@ -688,8 +687,11 @@ class FloodedMahajanaChat(MahajanaChat):
             try:
                 if not self._prahlad.can_proceed("chat", message):
                     return ChatResult(
-                        success=False, response="Blocked by Prahlad: Operation not permitted",
-                        guardian=self.guardian, position=self.position, llm_used=False,
+                        success=False,
+                        response="Blocked by Prahlad: Operation not permitted",
+                        guardian=self.guardian,
+                        position=self.position,
+                        llm_used=False,
                     )
             except Exception:
                 logger.debug("Prahlad veto check failed", exc_info=True)
@@ -699,8 +701,11 @@ class FloodedMahajanaChat(MahajanaChat):
                 toxicity = self._takshaka.scan_toxicity(message)
                 if toxicity.get("is_toxic", False):
                     return ChatResult(
-                        success=False, response=f"Blocked by Takshaka: {toxicity.get('reason', 'toxic')}",
-                        guardian=self.guardian, position=self.position, llm_used=False,
+                        success=False,
+                        response=f"Blocked by Takshaka: {toxicity.get('reason', 'toxic')}",
+                        guardian=self.guardian,
+                        position=self.position,
+                        llm_used=False,
                     )
             except Exception:
                 logger.debug("Takshaka security scan failed", exc_info=True)
@@ -731,14 +736,20 @@ class FloodedMahajanaChat(MahajanaChat):
             except Exception as e:
                 if attempt == max_retries - 1:
                     result = ChatResult(
-                        success=False, response=f"Error after {max_retries} attempts: {e}",
-                        guardian=self.guardian, position=self.position, llm_used=False,
+                        success=False,
+                        response=f"Error after {max_retries} attempts: {e}",
+                        guardian=self.guardian,
+                        position=self.position,
+                        llm_used=False,
                     )
 
         if result is None:
             result = ChatResult(
-                success=False, response="No response generated",
-                guardian=self.guardian, position=self.position, llm_used=False,
+                success=False,
+                response="No response generated",
+                guardian=self.guardian,
+                position=self.position,
+                llm_used=False,
             )
         return result
 
@@ -751,9 +762,13 @@ class FloodedMahajanaChat(MahajanaChat):
                     event_type="MAHAMANTRA_CHAT",
                     agent_id=f"MAHAMANTRA.{self.guardian.upper()}",
                     details={
-                        "position": self.position, "guardian": self.guardian,
-                        "message_len": len(message), "response_len": len(result.response),
-                        "llm_used": result.llm_used, "success": result.success, "naga_count": 12,
+                        "position": self.position,
+                        "guardian": self.guardian,
+                        "message_len": len(message),
+                        "response_len": len(result.response),
+                        "llm_used": result.llm_used,
+                        "success": result.success,
+                        "naga_count": 12,
                     },
                     result="OK" if result.success else "FAILED",
                 )
@@ -763,7 +778,8 @@ class FloodedMahajanaChat(MahajanaChat):
         if self._narada:
             try:
                 self._narada.broadcast_event(
-                    event_type="chat", source=f"mahamantra.{self.guardian}",
+                    event_type="chat",
+                    source=f"mahamantra.{self.guardian}",
                     data={"guardian": self.guardian, "position": self.position, "success": result.success},
                 )
             except Exception:
@@ -787,6 +803,7 @@ class FloodedMahajanaChat(MahajanaChat):
         if self._ananta and hasattr(self._ananta, "resonate"):
             try:
                 from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
                 self._ananta.resonate(MantraOpCode.EMIT)
             except Exception:
                 logger.debug("Ananta resonate failed", exc_info=True)

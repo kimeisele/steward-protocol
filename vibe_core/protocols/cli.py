@@ -38,6 +38,7 @@ from typing import Callable, Dict, List, Optional, Protocol, Type, TypedDict, Un
 from vibe_core.protocols.cli_execution import CLIPermissionLevel
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 

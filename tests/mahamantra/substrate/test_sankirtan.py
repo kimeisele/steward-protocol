@@ -469,6 +469,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.substrate import sankirtan
+
         expected = [
             "get_mahajana_for_path",
             "has_declaration",

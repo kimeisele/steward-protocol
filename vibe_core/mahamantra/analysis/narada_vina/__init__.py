@@ -110,6 +110,7 @@ assert KSETRAJNA == 1, "KSETRAJNA must be 1"
 if __name__ == "__main__":
     print(play_vina())
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

@@ -67,6 +67,7 @@ from vibe_core.protocols.substrate.scanner import (
 )
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 

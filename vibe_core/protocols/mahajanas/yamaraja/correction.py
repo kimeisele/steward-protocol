@@ -354,7 +354,9 @@ class CorrectionOrchestratorProtocol(Protocol):
 class NullDriftRegistry:
     """No-op drift registry (all is well)."""
 
-    def register_detector(self, source: DriftSource = None, detector: DriftDetector = None, detector_id: str = "") -> None:
+    def register_detector(
+        self, source: DriftSource = None, detector: DriftDetector = None, detector_id: str = ""
+    ) -> None:
         pass
 
     def unregister_detector(self, detector_id: str = "") -> bool:

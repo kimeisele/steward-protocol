@@ -165,27 +165,19 @@ class TestMahamantra:
 
     def test_first_quarter_pattern(self):
         """First quarter: Hare Krishna Hare Krishna."""
-        assert MAHAMANTRA[0:4] == (
-            HolyName.HARE, HolyName.KRISHNA, HolyName.HARE, HolyName.KRISHNA
-        )
+        assert MAHAMANTRA[0:4] == (HolyName.HARE, HolyName.KRISHNA, HolyName.HARE, HolyName.KRISHNA)
 
     def test_second_quarter_pattern(self):
         """Second quarter: Krishna Krishna Hare Hare."""
-        assert MAHAMANTRA[4:8] == (
-            HolyName.KRISHNA, HolyName.KRISHNA, HolyName.HARE, HolyName.HARE
-        )
+        assert MAHAMANTRA[4:8] == (HolyName.KRISHNA, HolyName.KRISHNA, HolyName.HARE, HolyName.HARE)
 
     def test_third_quarter_pattern(self):
         """Third quarter: Hare Rama Hare Rama."""
-        assert MAHAMANTRA[8:12] == (
-            HolyName.HARE, HolyName.RAMA, HolyName.HARE, HolyName.RAMA
-        )
+        assert MAHAMANTRA[8:12] == (HolyName.HARE, HolyName.RAMA, HolyName.HARE, HolyName.RAMA)
 
     def test_fourth_quarter_pattern(self):
         """Fourth quarter: Rama Rama Hare Hare."""
-        assert MAHAMANTRA[12:16] == (
-            HolyName.RAMA, HolyName.RAMA, HolyName.HARE, HolyName.HARE
-        )
+        assert MAHAMANTRA[12:16] == (HolyName.RAMA, HolyName.RAMA, HolyName.HARE, HolyName.HARE)
 
 
 # =============================================================================

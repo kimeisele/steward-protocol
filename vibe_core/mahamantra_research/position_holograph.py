@@ -30,16 +30,39 @@ from typing import Dict, List, Tuple, Final
 from collections import Counter
 
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS, HALVES, TRINITY, QUARTERS, PANCHA,
-    HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT,
-    SEVEN, TEN, KSETRAJNA, SHARANAGATI, NAVA,
-    MAHAJANA_COUNT, KSHETRA, PARAMPARA, MALA,
-    FIBONACCI_SEVEN, TRIANGULAR_SEVEN,
-    MAHA_QUANTUM, MAHA_ATTRACTORS, JIVA_QUALITIES,
-    POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA,
+    WORDS,
+    HALVES,
+    TRINITY,
+    QUARTERS,
+    PANCHA,
+    HARE_COUNT,
+    KRISHNA_COUNT,
+    RAMA_COUNT,
+    SEVEN,
+    TEN,
+    KSETRAJNA,
+    SHARANAGATI,
+    NAVA,
+    MAHAJANA_COUNT,
+    KSHETRA,
+    PARAMPARA,
+    MALA,
+    FIBONACCI_SEVEN,
+    TRIANGULAR_SEVEN,
+    MAHA_QUANTUM,
+    MAHA_ATTRACTORS,
+    JIVA_QUALITIES,
+    POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
     MAHAMANTRA_WORD_PATTERN,
-    HARE_POSITIONS, KRISHNA_POSITIONS, RAMA_POSITIONS,
-    MAHA_OP_MAP, MAHA_MULT, MAHA_ADD, MAHA_SQ,
+    HARE_POSITIONS,
+    KRISHNA_POSITIONS,
+    RAMA_POSITIONS,
+    MAHA_OP_MAP,
+    MAHA_MULT,
+    MAHA_ADD,
+    MAHA_SQ,
 )
 
 # The 16 positions (1-indexed for human readability)
@@ -102,9 +125,9 @@ print()
 print()
 
 # Which positions have which name?
-print("  HARE positions (1-indexed):    ", [p+1 for p in HARE_POSITIONS])
-print("  KRISHNA positions (1-indexed): ", [p+1 for p in KRISHNA_POSITIONS])
-print("  RAMA positions (1-indexed):    ", [p+1 for p in RAMA_POSITIONS])
+print("  HARE positions (1-indexed):    ", [p + 1 for p in HARE_POSITIONS])
+print("  KRISHNA positions (1-indexed): ", [p + 1 for p in KRISHNA_POSITIONS])
+print("  RAMA positions (1-indexed):    ", [p + 1 for p in RAMA_POSITIONS])
 print()
 
 # =============================================================================
@@ -114,9 +137,9 @@ print()
 print("3. POSITION MATHEMATICS")
 print("-" * 50)
 
-hare_pos = [p+1 for p in HARE_POSITIONS]
-krishna_pos = [p+1 for p in KRISHNA_POSITIONS]
-rama_pos = [p+1 for p in RAMA_POSITIONS]
+hare_pos = [p + 1 for p in HARE_POSITIONS]
+krishna_pos = [p + 1 for p in KRISHNA_POSITIONS]
+rama_pos = [p + 1 for p in RAMA_POSITIONS]
 
 print(f"  HARE sum:    {sum(hare_pos):3} = {hare_pos}")
 print(f"  KRISHNA sum: {sum(krishna_pos):3} = {krishna_pos}")
@@ -126,11 +149,14 @@ print()
 
 # Products
 import math
+
+
 def product_of_list(lst):
     result = 1
     for x in lst:
         result *= x
     return result
+
 
 hare_prod = product_of_list(hare_pos)
 krishna_prod = product_of_list(krishna_pos)
@@ -161,12 +187,14 @@ print()
 print("4. HOLOGRAPHIC PRINCIPLE - Algorithm from each position")
 print("-" * 50)
 
+
 def maha_step(value: int, name: str, mod: int) -> int:
     """Single step of Maha Algorithm."""
     op = MAHA_OP_MAP[name]
     v = (value * MAHA_MULT[op] + MAHA_ADD[op]) % mod
     squared = (v * v) % mod
     return MAHA_SQ[op] * squared + (1 - MAHA_SQ[op]) * v
+
 
 def maha_from_position(start_pos: int, seed: int, mod: int = MAHA_QUANTUM) -> Tuple[int, List[int]]:
     """
@@ -185,6 +213,7 @@ def maha_from_position(start_pos: int, seed: int, mod: int = MAHA_QUANTUM) -> Tu
 
     return value, trace
 
+
 print("  Starting from each position with seed=1:")
 print()
 results_by_pos = {}
@@ -192,13 +221,13 @@ for pos in range(WORDS):
     final, trace = maha_from_position(pos, seed=1)
     results_by_pos[pos] = final
     name = PATTERN[pos]
-    print(f"    Pos {pos+1:2} ({name}): 1 → {final:3}")
+    print(f"    Pos {pos + 1:2} ({name}): 1 → {final:3}")
 
 print()
 print("  Result frequency:")
 result_counts = Counter(results_by_pos.values())
 for val, count in sorted(result_counts.items()):
-    positions = [p+1 for p, v in results_by_pos.items() if v == val]
+    positions = [p + 1 for p, v in results_by_pos.items() if v == val]
     print(f"    Value {val:3}: appears from positions {positions}")
 print()
 
@@ -209,11 +238,13 @@ print()
 print("5. SELF-REFERENCE - Algorithm on its own output")
 print("-" * 50)
 
+
 def maha_full(value: int, mod: int = MAHA_QUANTUM) -> int:
     """Run full 16-step algorithm."""
     for name in PATTERN:
         value = maha_step(value, name, mod)
     return value
+
 
 print("  Iterating: f(f(f(...f(1)...)))")
 value = 1
@@ -248,7 +279,7 @@ for pos in range(WORDS):
         idx = (pos + offset) % WORDS
         context.append(PATTERN[idx])
     center = PATTERN[pos]
-    print(f"    Pos {pos+1:2}: {''.join(context[:2])} [{center}] {''.join(context[3:])}")
+    print(f"    Pos {pos + 1:2}: {''.join(context[:2])} [{center}] {''.join(context[3:])}")
 print()
 
 # =============================================================================
@@ -259,10 +290,10 @@ print("7. QUARTER TRANSITIONS")
 print("-" * 50)
 
 quarters = [
-    PATTERN[0:4],   # Q1: HKHK
-    PATTERN[4:8],   # Q2: KKHH
+    PATTERN[0:4],  # Q1: HKHK
+    PATTERN[4:8],  # Q2: KKHH
     PATTERN[8:12],  # Q3: HRHR
-    PATTERN[12:16], # Q4: RRHH
+    PATTERN[12:16],  # Q4: RRHH
 ]
 
 for i, q in enumerate(quarters):
@@ -279,7 +310,7 @@ for i, q in enumerate(quarters):
     for name in q:
         value = maha_step(value, name, MAHA_QUANTUM)
 
-    print(f"  Q{i+1}: {''.join(q)} → H={h_count} K={k_count} R={r_count} → 1→{value}")
+    print(f"  Q{i + 1}: {''.join(q)} → H={h_count} K={k_count} R={r_count} → 1→{value}")
 print()
 
 # =============================================================================
@@ -324,13 +355,13 @@ print("-" * 50)
 
 # Look at the actual position numbers where each name appears
 print("  HARE at positions:", hare_pos)
-print("    Differences:", [hare_pos[i+1] - hare_pos[i] for i in range(len(hare_pos)-1)])
+print("    Differences:", [hare_pos[i + 1] - hare_pos[i] for i in range(len(hare_pos) - 1)])
 print()
 print("  KRISHNA at positions:", krishna_pos)
-print("    Differences:", [krishna_pos[i+1] - krishna_pos[i] for i in range(len(krishna_pos)-1)])
+print("    Differences:", [krishna_pos[i + 1] - krishna_pos[i] for i in range(len(krishna_pos) - 1)])
 print()
 print("  RAMA at positions:", rama_pos)
-print("    Differences:", [rama_pos[i+1] - rama_pos[i] for i in range(len(rama_pos)-1)])
+print("    Differences:", [rama_pos[i + 1] - rama_pos[i] for i in range(len(rama_pos) - 1)])
 print()
 
 # =============================================================================

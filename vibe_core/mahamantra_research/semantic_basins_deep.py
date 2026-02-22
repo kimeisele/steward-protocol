@@ -19,7 +19,9 @@ THIS SCRIPT:
 
 RUN: python3 -m vibe_core.mahamantra.research.semantic_basins_deep
 """
+
 import sys, os
+
 _substrate = os.path.dirname(os.path.abspath(__file__))
 if _substrate in sys.path:
     sys.path.remove(_substrate)
@@ -29,7 +31,9 @@ from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth, Maha
 from vibe_core.mahamantra.substrate.varnamala_codec import encode as encode_iast
 from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL, rama_to_phoneme
 from vibe_core.mahamantra.substrate.pancha_walk import (
-    COORD_ELEMENT, ELEMENT_NAMES, IS_SHRUTI,
+    COORD_ELEMENT,
+    ELEMENT_NAMES,
+    IS_SHRUTI,
 )
 from vibe_core.mahamantra.substrate.semantic_index import get_index, words_at_position
 from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, SEVEN, WORDS
@@ -80,11 +84,36 @@ for att in sorted(basins_137.keys()):
                 # Extract significant words from meaning
                 for token in meaning.lower().split():
                     if len(token) >= 4 and token not in (
-                        "this", "that", "with", "from", "which", "have",
-                        "been", "they", "them", "their", "these", "those",
-                        "also", "very", "such", "into", "upon", "than",
-                        "only", "just", "even", "more", "most", "some",
-                        "what", "when", "will", "does", "done", "being",
+                        "this",
+                        "that",
+                        "with",
+                        "from",
+                        "which",
+                        "have",
+                        "been",
+                        "they",
+                        "them",
+                        "their",
+                        "these",
+                        "those",
+                        "also",
+                        "very",
+                        "such",
+                        "into",
+                        "upon",
+                        "than",
+                        "only",
+                        "just",
+                        "even",
+                        "more",
+                        "most",
+                        "some",
+                        "what",
+                        "when",
+                        "will",
+                        "does",
+                        "done",
+                        "being",
                     ):
                         all_meanings.append(token)
         element_counts[ELEMENT_NAMES[COORD_ELEMENT[rp]]] += 1
@@ -93,10 +122,12 @@ for att in sorted(basins_137.keys()):
 
     meaning_freq = Counter(all_meanings).most_common(20)
 
-    print(f"\n{'='*70}")
-    print(f"BASIN {att:3d} → RAMA {rama_att:2d} ({rama_to_phoneme(rama_att)}) "
-          f"| {len(members)} seeds | {len(all_words)} Gita words")
-    print(f"{'='*70}")
+    print(f"\n{'=' * 70}")
+    print(
+        f"BASIN {att:3d} → RAMA {rama_att:2d} ({rama_to_phoneme(rama_att)}) "
+        f"| {len(members)} seeds | {len(all_words)} Gita words"
+    )
+    print(f"{'=' * 70}")
     print(f"  RAMA positions: {sorted(rama_positions)}")
     print(f"  Elements: {dict(element_counts)}")
     print(f"  Shruti positions: {shruti_count}/{len(rama_positions)}")
@@ -112,15 +143,26 @@ print("DIVINE NAMES → BASIN MAPPING (mod 137)")
 print("=" * 70)
 
 NAMES = {
-    "hare": "harē", "krishna": "kṛṣṇa", "rama": "rāma",
-    "jagannath": "jagannātha", "govinda": "gōvinda",
-    "narayana": "nārāyaṇa", "vasudeva": "vāsudēva",
-    "hari": "hari", "vishnu": "viṣṇu", "achyuta": "acyuta",
-    "mukunda": "mukunda", "prahlada": "prahlāda",
-    "bhishma": "bhīṣma", "narada": "nārada",
-    "parashurama": "paraśurāma", "bali": "bali",
-    "kapila": "kapila", "shiva": "śiva",
-    "brahma": "brahmā", "indra": "indra",
+    "hare": "harē",
+    "krishna": "kṛṣṇa",
+    "rama": "rāma",
+    "jagannath": "jagannātha",
+    "govinda": "gōvinda",
+    "narayana": "nārāyaṇa",
+    "vasudeva": "vāsudēva",
+    "hari": "hari",
+    "vishnu": "viṣṇu",
+    "achyuta": "acyuta",
+    "mukunda": "mukunda",
+    "prahlada": "prahlāda",
+    "bhishma": "bhīṣma",
+    "narada": "nārada",
+    "parashurama": "paraśurāma",
+    "bali": "bali",
+    "kapila": "kapila",
+    "shiva": "śiva",
+    "brahma": "brahmā",
+    "indra": "indra",
 }
 
 basin_names = defaultdict(list)
@@ -158,9 +200,15 @@ print("\n" + "=" * 70)
 print("PER-SYLLABLE BASIN ANALYSIS — Each phoneme's attractor in mod-137")
 print("=" * 70)
 
-for name, iast in [("krishna", "kṛṣṇa"), ("rama", "rāma"), ("hare", "harē"),
-                    ("jagannath", "jagannātha"), ("narada", "nārada"),
-                    ("prahlada", "prahlāda"), ("parashurama", "paraśurāma")]:
+for name, iast in [
+    ("krishna", "kṛṣṇa"),
+    ("rama", "rāma"),
+    ("hare", "harē"),
+    ("jagannath", "jagannātha"),
+    ("narada", "nārada"),
+    ("prahlada", "prahlāda"),
+    ("parashurama", "paraśurāma"),
+]:
     coords = encode_iast(iast)
     if not coords:
         continue
@@ -182,8 +230,7 @@ for name, iast in [("krishna", "kṛṣṇa"), ("rama", "rāma"), ("hare", "har�
         # What words at this attractor?
         att_words = words_at_position(value % VARNAMALA_TOTAL)
         top_w = att_words[0].first_meaning if att_words else "—"
-        print(f"    {phoneme:4s} (RAMA {c:2d}, {element:8s}) → Basin {value:3d} "
-              f"({att_element:8s}): {top_w}")
+        print(f"    {phoneme:4s} (RAMA {c:2d}, {element:8s}) → Basin {value:3d} ({att_element:8s}): {top_w}")
 
     # Basin pattern = the name's "semantic DNA"
     pattern = tuple(syllable_basins)
@@ -199,10 +246,22 @@ print("THE MAHAMANTRA — Per-syllable basin pattern across 16 positions")
 print("=" * 70)
 
 MANTRA = [
-    "harē", "kṛṣṇa", "harē", "kṛṣṇa",
-    "kṛṣṇa", "kṛṣṇa", "harē", "harē",
-    "harē", "rāma", "harē", "rāma",
-    "rāma", "rāma", "harē", "harē",
+    "harē",
+    "kṛṣṇa",
+    "harē",
+    "kṛṣṇa",
+    "kṛṣṇa",
+    "kṛṣṇa",
+    "harē",
+    "harē",
+    "harē",
+    "rāma",
+    "harē",
+    "rāma",
+    "rāma",
+    "rāma",
+    "harē",
+    "harē",
 ]
 
 all_mantra_basins = []
@@ -218,7 +277,7 @@ for pos, word in enumerate(MANTRA):
                 break
         basins_for_word.append(value)
     all_mantra_basins.append(basins_for_word)
-    print(f"  {pos+1:2d}. {word:9s} → basins {basins_for_word}")
+    print(f"  {pos + 1:2d}. {word:9s} → basins {basins_for_word}")
 
 # Flatten and count
 flat = [b for word_basins in all_mantra_basins for b in word_basins]
@@ -226,7 +285,6 @@ basin_dist = Counter(flat)
 print(f"\n  Basin distribution across entire Mahamantra:")
 for b, count in basin_dist.most_common():
     rama_b = b % VARNAMALA_TOTAL
-    print(f"    Basin {b:3d} ({ELEMENT_NAMES[COORD_ELEMENT[rama_b]]:8s}): {count}× "
-          f"= {count/len(flat)*100:.0f}%")
+    print(f"    Basin {b:3d} ({ELEMENT_NAMES[COORD_ELEMENT[rama_b]]:8s}): {count}× = {count / len(flat) * 100:.0f}%")
 
 print("\nDONE.")

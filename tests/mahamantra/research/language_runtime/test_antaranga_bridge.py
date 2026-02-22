@@ -177,6 +177,7 @@ class TestVenuModulation:
         prana_before = chamber.total_prana()
 
         from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+
         venu = VenuOrchestrator()
         diw = venu.step()
         count = modulate_with_diw(chamber, diw)
@@ -192,6 +193,7 @@ class TestVenuModulation:
             impact_keystroke(chamber, char)
 
         from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+
         venu = VenuOrchestrator()
 
         prana_history = [chamber.total_prana()]
@@ -238,6 +240,7 @@ class TestSessionAntarangaIntegration:
         # Fresh session
         from vibe_core.mahamantra.research.maha_language_engine import get_engine
         from vibe_core.mahamantra.research.language_runtime.session import LanguageRuntimeSession
+
         session2 = LanguageRuntimeSession(generate=get_engine().generate)
         for char in "how":
             session2.keystroke(char)

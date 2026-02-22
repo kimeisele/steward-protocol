@@ -32,6 +32,7 @@ from vibe_core.mahamantra.protocols._seed import (
     WORDS,
 )
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

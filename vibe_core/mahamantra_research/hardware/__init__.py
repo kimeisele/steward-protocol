@@ -63,11 +63,11 @@ from vibe_core.mahamantra.protocols._seed import (
 # =============================================================================
 
 # These match actual silicon implementations
-SIMD_LANES: Final[int] = WORDS              # 16 (AVX-512)
-CACHE_LINE_BYTES: Final[int] = QUALITIES    # 64 bytes
-DATA_WIDTH: Final[int] = AKSARA_COUNT       # 32 bits
-PIPELINE_STAGES: Final[int] = HALF_SIZE     # 8 (Siksastakam verses)
-BUS_CHANNELS: Final[int] = QUARTERS         # 4
+SIMD_LANES: Final[int] = WORDS  # 16 (AVX-512)
+CACHE_LINE_BYTES: Final[int] = QUALITIES  # 64 bytes
+DATA_WIDTH: Final[int] = AKSARA_COUNT  # 32 bits
+PIPELINE_STAGES: Final[int] = HALF_SIZE  # 8 (Siksastakam verses)
+BUS_CHANNELS: Final[int] = QUARTERS  # 4
 
 # =============================================================================
 # EXPORTS FROM SUBFILES
@@ -76,16 +76,25 @@ BUS_CHANNELS: Final[int] = QUARTERS         # 4
 # Lazy imports to avoid circular dependencies
 # These are imported from parent research directory
 
+
 def __getattr__(name: str):
     """Lazy import from parent research files."""
-    if name in ("HardwareLimit", "AbhinnaHardware", "FractalLevel", "EraProjection",
-                "compute_fractal_states", "compute_text_capacity", "project_efficiency"):
+    if name in (
+        "HardwareLimit",
+        "AbhinnaHardware",
+        "FractalLevel",
+        "EraProjection",
+        "compute_fractal_states",
+        "compute_text_capacity",
+        "project_efficiency",
+    ):
         from vibe_core.mahamantra.research import hardware as hw_module
+
         return getattr(hw_module, name)
 
-    if name in ("PipelineStage", "SiksastakamVerse", "HardwareSpec",
-                "CoolingTheorem", "AltarPrinciple"):
+    if name in ("PipelineStage", "SiksastakamVerse", "HardwareSpec", "CoolingTheorem", "AltarPrinciple"):
         from vibe_core.mahamantra.research import hardware_lotus as hw_lotus
+
         return getattr(hw_lotus, name)
 
     # ==========================================================================
@@ -108,9 +117,11 @@ def __getattr__(name: str):
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
+
 # =============================================================================
 # VERIFICATION FUNCTION
 # =============================================================================
+
 
 def verify_alignment() -> dict:
     """

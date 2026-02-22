@@ -258,7 +258,9 @@ class NullKnowledgeGraph(KnowledgeGraphProtocolBase):
     def __init__(self) -> None:
         self._violations: Dict[str, ViolationNode] = {}
 
-    def add_node(self, node_id: str = "", node_type: NodeType = None, properties: Dict[str, str | int | bool] = None) -> None:
+    def add_node(
+        self, node_id: str = "", node_type: NodeType = None, properties: Dict[str, str | int | bool] = None
+    ) -> None:
         pass
 
     def get_node(self, node_id: str = "") -> Optional[ViolationNode]:

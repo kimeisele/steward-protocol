@@ -1,4 +1,3 @@
-
 from vibe_core.mahamantra import mahamantra
 
 try:
@@ -11,4 +10,5 @@ try:
 except Exception as e:
     print(f"Caught error: {type(e).__name__}: {e}")
     import traceback
+
     traceback.print_exc()

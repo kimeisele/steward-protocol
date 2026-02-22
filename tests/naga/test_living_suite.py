@@ -1,8 +1,9 @@
 import pytest
 from vibe_core.protocols.substrate.gene import iGene
 from vibe_core.protocols.substrate.byte import MantraByte
+
 # BalaramaInjector removed in foundation surgery — tests need rewrite
-pytestmark = pytest.mark.skip(reason='BalaramaInjector removed — tests need rewrite to use NagaProxy')
+pytestmark = pytest.mark.skip(reason="BalaramaInjector removed — tests need rewrite to use NagaProxy")
 from vibe_core.protocols.testable import BaseTestable
 
 

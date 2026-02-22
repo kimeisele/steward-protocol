@@ -134,6 +134,7 @@ class TestGuna:
     def test_guna_is_int_enum(self):
         """Guna is IntEnum."""
         from enum import IntEnum
+
         assert issubclass(Guna, IntEnum)
 
 
@@ -523,6 +524,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.substrate import yajna
+
         expected = [
             "PRIME_SIGNATURE",
             "MAHA_POSITIONS",

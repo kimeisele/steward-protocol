@@ -95,7 +95,8 @@ def discover_and_register_beat_subscribers() -> int:
         try:
             instance = cls()  # Zero-arg — all deps resolved lazily
             ServiceRegistry.register(
-                type(instance), instance,
+                type(instance),
+                instance,
                 protocols=[BeatSubscriberProtocol],
             )
             logger.info("Beat subscriber registered: %s", instance.beat_name)

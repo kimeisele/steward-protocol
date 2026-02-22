@@ -230,9 +230,11 @@ class TestHolographicRouterMahamantraAlignment:
     def test_slots_per_level_is_words(self):
         """Each level should have WORDS (16) slots."""
         from vibe_core.mahamantra.adapters.routing import SLOTS_PER_LEVEL
+
         assert SLOTS_PER_LEVEL == WORDS
 
     def test_bits_per_nibble_is_quarters(self):
         """Each nibble should be QUARTERS (4) bits."""
         from vibe_core.mahamantra.adapters.routing import BITS_PER_NIBBLE
+
         assert BITS_PER_NIBBLE == QUARTERS

@@ -146,11 +146,11 @@ class TestMahamantraCLIEntry:
         # Test 1: Position is always computed (never None)
         pos_analyze = cli_auto._get_position("analyze")
         assert pos_analyze is not None, "analyze must route to a position"
-        assert 0 <= pos_analyze < WORDS, f"Position must be 0-{WORDS-1}"
+        assert 0 <= pos_analyze < WORDS, f"Position must be 0-{WORDS - 1}"
 
         pos_judge = cli_auto._get_position("judge")
         assert pos_judge is not None, "judge must route to a position"
-        assert 0 <= pos_judge < WORDS, f"Position must be 0-{WORDS-1}"
+        assert 0 <= pos_judge < WORDS, f"Position must be 0-{WORDS - 1}"
 
         # Test 2: Routing is DETERMINISTIC (same input → same position)
         pos_analyze2 = cli_auto._get_position("analyze")

@@ -112,16 +112,17 @@ from vibe_core.mahamantra.substrate.semantic_index import (
 #   W_PA         =  3/20  × COSMIC_FRAME = 3240
 #                                   SUM = 21600 ✓
 
-W_ELEMENT_CF: Final[int] = 4536       # 21/100 × 21600 — Articulatory position (5 elements)
-W_HARMONIC_CF: Final[int] = 3780      # 7/40 × 21600 — Dissolution path kinship
-W_SHRUTI_CF: Final[int] = 3024        # 7/50 × 21600 — Character: fixed vs journey
-W_VARGA_CF: Final[int] = 2268         # 21/200 × 21600 — Operational: carrier/transform/release
-W_ATTRACTOR_CF: Final[int] = 1512     # 7/100 × 21600 — Basin: attractor convergence (coarse)
-W_HKR_CF: Final[int] = 3240           # 3/20 × 21600 — HKR proportion: divine operation mix (fine)
+W_ELEMENT_CF: Final[int] = 4536  # 21/100 × 21600 — Articulatory position (5 elements)
+W_HARMONIC_CF: Final[int] = 3780  # 7/40 × 21600 — Dissolution path kinship
+W_SHRUTI_CF: Final[int] = 3024  # 7/50 × 21600 — Character: fixed vs journey
+W_VARGA_CF: Final[int] = 2268  # 21/200 × 21600 — Operational: carrier/transform/release
+W_ATTRACTOR_CF: Final[int] = 1512  # 7/100 × 21600 — Basin: attractor convergence (coarse)
+W_HKR_CF: Final[int] = 3240  # 3/20 × 21600 — HKR proportion: divine operation mix (fine)
 W_PHONEME_ATTRACTOR_CF: Final[int] = 3240  # 3/20 × 21600 — Phoneme attractor charge
 
-assert (W_ELEMENT_CF + W_HARMONIC_CF + W_SHRUTI_CF + W_VARGA_CF
-        + W_ATTRACTOR_CF + W_HKR_CF + W_PHONEME_ATTRACTOR_CF) == COSMIC_FRAME
+assert (
+    W_ELEMENT_CF + W_HARMONIC_CF + W_SHRUTI_CF + W_VARGA_CF + W_ATTRACTOR_CF + W_HKR_CF + W_PHONEME_ATTRACTOR_CF
+) == COSMIC_FRAME
 
 # Float aliases (derived from integer SSOT, for backward-compatible computation)
 W_ELEMENT: Final[float] = W_ELEMENT_CF / COSMIC_FRAME
@@ -228,9 +229,14 @@ class RankedWord:
     """A lexicon word with its resonance score breakdown."""
 
     __slots__ = (
-        "word", "total_score",
-        "element_score", "harmonic_score", "shruti_score",
-        "varga_score", "attractor_score", "hkr_score",
+        "word",
+        "total_score",
+        "element_score",
+        "harmonic_score",
+        "shruti_score",
+        "varga_score",
+        "attractor_score",
+        "hkr_score",
         "phoneme_attractor_score",
     )
 
@@ -288,8 +294,7 @@ class RankedWord:
         }
 
     def __repr__(self) -> str:
-        return (f"RankedWord({self.sanskrit!r}, {self.first_meaning!r}, "
-                f"score={self.total_score:.4f})")
+        return f"RankedWord({self.sanskrit!r}, {self.first_meaning!r}, score={self.total_score:.4f})"
 
 
 # =============================================================================
@@ -325,14 +330,14 @@ def _compute_input_features(coords: Sequence[int]) -> Tuple:
     # Harmonic bitmask
     hm = 0
     for c in coords:
-        hm |= (1 << COORD_HARMONIC[c])
+        hm |= 1 << COORD_HARMONIC[c]
 
     # Shruti bitmask + ratio
     sm = 0
     shruti_count = 0
     for j, c in enumerate(coords):
         if IS_SHRUTI[c]:
-            sm |= (1 << j)
+            sm |= 1 << j
             shruti_count += 1
     sr = shruti_count * inv_nc
 
@@ -342,7 +347,7 @@ def _compute_input_features(coords: Sequence[int]) -> Tuple:
     for c in coords:
         b = COORD_BASIN[c]
         bi = BASIN_INDEX[b]
-        bsm |= (1 << bi)
+        bsm |= 1 << bi
         bh[bi] += 1
     bh_t = tuple(bh)
     bh_mag = sum(v * v for v in bh) ** 0.5
@@ -436,10 +441,17 @@ def _rank_words_vectorized(
     w_pa = W_PHONEME_ATTRACTOR
 
     # Pre-extract basin/pa hist elements for unrolled dot products
-    i_bh0 = i_bh[0]; i_bh1 = i_bh[1]; i_bh2 = i_bh[2]
-    i_bh3 = i_bh[3]; i_bh4 = i_bh[4]; i_bh5 = i_bh[5]
-    i_pah0 = i_pah[0]; i_pah1 = i_pah[1]; i_pah2 = i_pah[2]
-    i_pah3 = i_pah[3]; i_pah4 = i_pah[4]
+    i_bh0 = i_bh[0]
+    i_bh1 = i_bh[1]
+    i_bh2 = i_bh[2]
+    i_bh3 = i_bh[3]
+    i_bh4 = i_bh[4]
+    i_bh5 = i_bh[5]
+    i_pah0 = i_pah[0]
+    i_pah1 = i_pah[1]
+    i_pah2 = i_pah[2]
+    i_pah3 = i_pah[3]
+    i_pah4 = i_pah[4]
 
     # Scoring loop — store (total, i, e_final, h_final, s, v, a, hkr, pa)
     # to avoid recomputing scores for top-N
@@ -453,8 +465,11 @@ def _rank_words_vectorized(
 
         # 1. ELEMENT SCORE: 1.0 - L1(normalized_hist) / 2 (unrolled PANCHA=5)
         w_eh = vc_eh[i]
-        d0 = i_eh0 - w_eh[0]; d1 = i_eh1 - w_eh[1]; d2 = i_eh2 - w_eh[2]
-        d3 = i_eh3 - w_eh[3]; d4 = i_eh4 - w_eh[4]
+        d0 = i_eh0 - w_eh[0]
+        d1 = i_eh1 - w_eh[1]
+        d2 = i_eh2 - w_eh[2]
+        d3 = i_eh3 - w_eh[3]
+        d4 = i_eh4 - w_eh[4]
         e_raw = 1.0 - (_abs(d0) + _abs(d1) + _abs(d2) + _abs(d3) + _abs(d4)) * 0.5
 
         # 2. HARMONIC SCORE: Jaccard via bitmask bit_count
@@ -477,8 +492,9 @@ def _rank_words_vectorized(
         bj_union = (i_bsm | w_bsm).bit_count()
         bj = (i_bsm & w_bsm).bit_count() / bj_union if bj_union else 0.0
         w_bh = vc_bh[i]
-        b_dot = (i_bh0 * w_bh[0] + i_bh1 * w_bh[1] + i_bh2 * w_bh[2]
-                 + i_bh3 * w_bh[3] + i_bh4 * w_bh[4] + i_bh5 * w_bh[5])
+        b_dot = (
+            i_bh0 * w_bh[0] + i_bh1 * w_bh[1] + i_bh2 * w_bh[2] + i_bh3 * w_bh[3] + i_bh4 * w_bh[4] + i_bh5 * w_bh[5]
+        )
         w_bh_m = vc_bh_mag[i]
         bc = b_dot / (i_bh_mag * w_bh_m) if i_bh_mag > 0.0 and w_bh_m > 0.0 else 0.0
         a_raw = 0.4 * bj + 0.6 * bc
@@ -494,15 +510,19 @@ def _rank_words_vectorized(
 
         # 7. PHONEME ATTRACTOR SIMILARITY: cosine of histograms (unrolled 5)
         w_pah = vc_pah[i]
-        pa_dot = (i_pah0 * w_pah[0] + i_pah1 * w_pah[1] + i_pah2 * w_pah[2]
-                  + i_pah3 * w_pah[3] + i_pah4 * w_pah[4])
+        pa_dot = i_pah0 * w_pah[0] + i_pah1 * w_pah[1] + i_pah2 * w_pah[2] + i_pah3 * w_pah[3] + i_pah4 * w_pah[4]
         w_pah_m = vc_pah_mag[i]
         pa_raw = pa_dot / (i_pah_mag * w_pah_m) if i_pah_mag > 0.0 and w_pah_m > 0.0 else 0.0
 
         # Synth blending (element + harmonic only)
         if has_synth:
-            se_dist = (_abs(s_eh0 - w_eh[0]) + _abs(s_eh1 - w_eh[1]) + _abs(s_eh2 - w_eh[2])
-                       + _abs(s_eh3 - w_eh[3]) + _abs(s_eh4 - w_eh[4]))
+            se_dist = (
+                _abs(s_eh0 - w_eh[0])
+                + _abs(s_eh1 - w_eh[1])
+                + _abs(s_eh2 - w_eh[2])
+                + _abs(s_eh3 - w_eh[3])
+                + _abs(s_eh4 - w_eh[4])
+            )
             e_synth = 1.0 - se_dist * 0.5
             sh_union = (s_hm | w_hm).bit_count()
             h_synth = (s_hm & w_hm).bit_count() / sh_union if sh_union else 0.0
@@ -518,9 +538,9 @@ def _rank_words_vectorized(
             if e_final > 1.0:
                 e_final = 1.0
 
-        total = (w_e * e_final + w_h * h_final + w_s * s_raw
-                 + w_v * v_raw + w_a * a_raw + w_hkr * hkr_raw
-                 + w_pa * pa_raw)
+        total = (
+            w_e * e_final + w_h * h_final + w_s * s_raw + w_v * v_raw + w_a * a_raw + w_hkr * hkr_raw + w_pa * pa_raw
+        )
 
         scored.append((total, i, e_final, h_final, s_raw, v_raw, a_raw, hkr_raw, pa_raw))
 
@@ -532,8 +552,13 @@ def _rank_words_vectorized(
     return [
         RankedWord(
             word=words[i],
-            element=e, harmonic=h, shruti=s, varga=v,
-            attractor=a, hkr=hk, phoneme_attractor=pa,
+            element=e,
+            harmonic=h,
+            shruti=s,
+            varga=v,
+            attractor=a,
+            hkr=hk,
+            phoneme_attractor=pa,
         )
         for _, i, e, h, s, v, a, hk, pa in top
     ]
@@ -582,16 +607,18 @@ def _rank_words_slow(
             if dominant == element_bias:
                 e_final = min(1.0, e_final + 0.3)
 
-        ranked.append(RankedWord(
-            word=word,
-            element=e_final,
-            harmonic=h_final,
-            shruti=s_raw,
-            varga=v_raw,
-            attractor=a_raw,
-            hkr=hkr_raw,
-            phoneme_attractor=pa_raw,
-        ))
+        ranked.append(
+            RankedWord(
+                word=word,
+                element=e_final,
+                harmonic=h_final,
+                shruti=s_raw,
+                varga=v_raw,
+                attractor=a_raw,
+                hkr=hkr_raw,
+                phoneme_attractor=pa_raw,
+            )
+        )
 
     ranked.sort(key=lambda r: r.total_score, reverse=True)
     return ranked[:top_n]
@@ -778,11 +805,21 @@ def resonate_coords(
 
 # Guardian IAST names for full syllable-level resonance
 _GUARDIAN_IAST: Final[Dict[str, str]] = {
-    "vyasa": "vyāsa", "brahma": "brahmā", "narada": "nārada",
-    "shambhu": "śambhu", "prithu": "pṛthu", "kumaras": "kumāra",
-    "kapila": "kapila", "manu": "manu", "parashurama": "paraśurāma",
-    "prahlada": "prahlāda", "janaka": "janaka", "bhishma": "bhīṣma",
-    "nrisimha": "nṛsiṁha", "bali": "bali", "shuka": "śuka",
+    "vyasa": "vyāsa",
+    "brahma": "brahmā",
+    "narada": "nārada",
+    "shambhu": "śambhu",
+    "prithu": "pṛthu",
+    "kumaras": "kumāra",
+    "kapila": "kapila",
+    "manu": "manu",
+    "parashurama": "paraśurāma",
+    "prahlada": "prahlāda",
+    "janaka": "janaka",
+    "bhishma": "bhīṣma",
+    "nrisimha": "nṛsiṁha",
+    "bali": "bali",
+    "shuka": "śuka",
     "yamaraja": "yamarāja",
 }
 

@@ -45,6 +45,7 @@ from vibe_core.mahamantra_research.lotus_file_addressing import (
 # MANDALA SCORE — how well does a file match its natural ordering?
 # =============================================================================
 
+
 def mandala_score(fragments: List[CodeFragment]) -> float:
     """
     Compute how well the file's physical ordering matches the Lotus ordering.
@@ -124,6 +125,7 @@ def address_entropy(fragments: List[CodeFragment]) -> float:
 # ANALYZE REAL FILES FROM THE CODEBASE
 # =============================================================================
 
+
 def analyze_file(filepath: str) -> Tuple[List[CodeFragment], float, Dict[str, float], float]:
     """Parse and analyze a real file."""
     with open(filepath) as f:
@@ -173,12 +175,12 @@ if __name__ == "__main__":
             print(f"  ERROR parsing {filepath}: {e}")
 
     # === MANDALA SCORES ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  MANDALA SCORES — How well does each file match its natural Lotus ordering?")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     print(f"\n  {'File':>35}  {'Frags':>5}  {'Score':>6}  {'Entropy':>8}  {'Verdict':>12}")
-    print(f"  {'-'*35}  {'-'*5}  {'-'*6}  {'-'*8}  {'-'*12}")
+    print(f"  {'-' * 35}  {'-' * 5}  {'-' * 6}  {'-' * 8}  {'-' * 12}")
 
     for name, fragments, score, coherence, entropy in sorted(results, key=lambda r: -r[2]):
         if score > 0.7:
@@ -190,9 +192,9 @@ if __name__ == "__main__":
         print(f"  {name:>35}  {len(fragments):>5}  {score:>6.3f}  {entropy:>8.4f}  {verdict:>12}")
 
     # === QUARTER COHERENCE ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  QUARTER COHERENCE — Do same-kind fragments land in the same quarter?")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     # Aggregate across all files
     all_coherence: Dict[str, List[float]] = {}
@@ -201,16 +203,16 @@ if __name__ == "__main__":
             all_coherence.setdefault(kind, []).append(coh)
 
     print(f"\n  {'Kind':>10}  {'Avg Coherence':>14}  {'Samples':>8}")
-    print(f"  {'-'*10}  {'-'*14}  {'-'*8}")
+    print(f"  {'-' * 10}  {'-' * 14}  {'-' * 8}")
     for kind in sorted(all_coherence.keys()):
         values = all_coherence[kind]
         avg = sum(values) / len(values)
         print(f"  {kind:>10}  {avg:>14.3f}  {len(values):>8}")
 
     # === NATURAL ORDERING EXAMPLE ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  NATURAL ORDERING — What does the Mantra say the file should look like?")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     # Pick the file with the lowest mandala score (most disordered)
     worst = min(results, key=lambda r: r[2])
@@ -220,13 +222,13 @@ if __name__ == "__main__":
     print(f"\n  CURRENT ORDER (physical):")
     physical = sorted(fragments, key=lambda f: f.line_start)
     for i, f in enumerate(physical):
-        print(f"    {i+1:>2}. [{f.kind:>8}] {f.name:>30}  L{f.line_start:>4}  → 0x{f.lotus_address:04X}")
+        print(f"    {i + 1:>2}. [{f.kind:>8}] {f.name:>30}  L{f.line_start:>4}  → 0x{f.lotus_address:04X}")
 
     print(f"\n  LOTUS ORDER (natural):")
     lotus = sorted(fragments, key=lambda f: f.lotus_address)
     for i, f in enumerate(lotus):
         q_name = ["Q1:KSETRAJNA", "Q2:KRISHNA", "Q3:PRAKRITI", "Q4:KARMA"][f.quarter]
-        print(f"    {i+1:>2}. [{f.kind:>8}] {f.name:>30}  → 0x{f.lotus_address:04X}  {q_name}")
+        print(f"    {i + 1:>2}. [{f.kind:>8}] {f.name:>30}  → 0x{f.lotus_address:04X}  {q_name}")
 
     # === WHAT MOVES? ===
     print(f"\n  WHAT MOVES (physical → lotus):")
@@ -234,12 +236,12 @@ if __name__ == "__main__":
     lotus_names = [f.name for f in lotus]
     for i, (p, l) in enumerate(zip(phys_names, lotus_names)):
         if p != l:
-            print(f"    Position {i+1}: {p} → {l}")
+            print(f"    Position {i + 1}: {p} → {l}")
 
     # === CONCLUSION ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  CONCLUSION")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     avg_score = sum(r[2] for r in results) / len(results) if results else 0
     avg_entropy = sum(r[4] for r in results) / len(results) if results else 0

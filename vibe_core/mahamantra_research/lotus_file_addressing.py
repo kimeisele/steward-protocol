@@ -50,23 +50,25 @@ from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM, QUARTERS
 # CODE FRAGMENT — a piece of a file with its Lotus address
 # =============================================================================
 
+
 class CodeFragment(NamedTuple):
-    kind: str          # "import", "constant", "function", "class", "statement"
-    name: str          # e.g. "add", "Config", "import os"
-    source: str        # the actual source code
-    line_start: int    # line number in original file
-    line_end: int      # end line number
-    lotus_address: int # 16-bit Lotus address
-    position: int      # position in 16-word grid
-    quarter: int       # which quarter (0-3)
-    basin: int         # attractor basin
+    kind: str  # "import", "constant", "function", "class", "statement"
+    name: str  # e.g. "add", "Config", "import os"
+    source: str  # the actual source code
+    line_start: int  # line number in original file
+    line_end: int  # end line number
+    lotus_address: int  # 16-bit Lotus address
+    position: int  # position in 16-word grid
+    quarter: int  # which quarter (0-3)
+    basin: int  # attractor basin
     hkr: Tuple[float, float, float]  # HKR color
-    spell_value: int   # raw spell_cycle output
+    spell_value: int  # raw spell_cycle output
 
 
 # =============================================================================
 # FILE PARSER — split a Python file into addressable fragments
 # =============================================================================
+
 
 def parse_file_to_fragments(source: str) -> List[CodeFragment]:
     """
@@ -86,13 +88,19 @@ def parse_file_to_fragments(source: str) -> List[CodeFragment]:
         if isinstance(node, ast.Import):
             names = ", ".join(a.name for a in node.names)
             src = _extract_source(source_lines, node)
-            fragments.append(_make_fragment("import", f"import {names}", src, node.lineno, node.end_lineno or node.lineno))
+            fragments.append(
+                _make_fragment("import", f"import {names}", src, node.lineno, node.end_lineno or node.lineno)
+            )
 
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
             names = ", ".join(a.name for a in node.names) if not isinstance(node.names, str) else "*"
             src = _extract_source(source_lines, node)
-            fragments.append(_make_fragment("import", f"from {module} import {names}", src, node.lineno, node.end_lineno or node.lineno))
+            fragments.append(
+                _make_fragment(
+                    "import", f"from {module} import {names}", src, node.lineno, node.end_lineno or node.lineno
+                )
+            )
 
         elif isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
             src = _extract_source(source_lines, node)
@@ -106,10 +114,15 @@ def parse_file_to_fragments(source: str) -> List[CodeFragment]:
             for item in ast.iter_child_nodes(node):
                 if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     method_src = _extract_source(source_lines, item)
-                    fragments.append(_make_fragment(
-                        "method", f"{node.name}.{item.name}", method_src,
-                        item.lineno, item.end_lineno or item.lineno
-                    ))
+                    fragments.append(
+                        _make_fragment(
+                            "method",
+                            f"{node.name}.{item.name}",
+                            method_src,
+                            item.lineno,
+                            item.end_lineno or item.lineno,
+                        )
+                    )
 
         elif isinstance(node, ast.Assign):
             # Constants / module-level assignments
@@ -132,7 +145,7 @@ def parse_file_to_fragments(source: str) -> List[CodeFragment]:
 def _extract_source(lines: List[str], node: ast.AST) -> str:
     """Extract source lines for an AST node."""
     start = node.lineno - 1
-    end = (node.end_lineno or node.lineno)
+    end = node.end_lineno or node.lineno
     return "".join(lines[start:end]).rstrip()
 
 
@@ -159,6 +172,7 @@ def _make_fragment(kind: str, name: str, source: str, line_start: int, line_end:
 
     # Basin
     from vibe_core.mahamantra.substrate.algorithm.maha import MahaAlgorithm16
+
     algo = MahaAlgorithm16()
     basin_val = spell_value % MAHA_QUANTUM
     for _ in range(100):
@@ -171,15 +185,23 @@ def _make_fragment(kind: str, name: str, source: str, line_start: int, line_end:
     h, k, r = 0.0, 0.0, 0.0
     for c in coords:
         ch, ck, cr = COORD_HKR[c]
-        h += ch; k += ck; r += cr
+        h += ch
+        k += ck
+        r += cr
     n = len(coords)
     hkr = (round(h / n, 3), round(k / n, 3), round(r / n, 3))
 
     return CodeFragment(
-        kind=kind, name=name, source=source,
-        line_start=line_start, line_end=line_end,
-        lotus_address=lotus_address, position=position,
-        quarter=quarter, basin=basin_val, hkr=hkr,
+        kind=kind,
+        name=name,
+        source=source,
+        line_start=line_start,
+        line_end=line_end,
+        lotus_address=lotus_address,
+        position=position,
+        quarter=quarter,
+        basin=basin_val,
+        hkr=hkr,
         spell_value=spell_value,
     )
 
@@ -242,27 +264,31 @@ if __name__ == "__main__":
     fragments = parse_file_to_fragments(SAMPLE_FILE)
 
     print(f"\n  Parsed {len(fragments)} fragments from sample file\n")
-    print(f"  {'#':>2}  {'Kind':>8}  {'Name':>25}  {'Addr':>6}  {'Pos':>3}  {'Q':>8}  {'Basin':>5}  "
-          f"{'HKR':>17}  {'Lines':>7}")
-    print(f"  {'-'*2}  {'-'*8}  {'-'*25}  {'-'*6}  {'-'*3}  {'-'*8}  {'-'*5}  {'-'*17}  {'-'*7}")
+    print(
+        f"  {'#':>2}  {'Kind':>8}  {'Name':>25}  {'Addr':>6}  {'Pos':>3}  {'Q':>8}  {'Basin':>5}  "
+        f"{'HKR':>17}  {'Lines':>7}"
+    )
+    print(f"  {'-' * 2}  {'-' * 8}  {'-' * 25}  {'-' * 6}  {'-' * 3}  {'-' * 8}  {'-' * 5}  {'-' * 17}  {'-' * 7}")
 
     for i, f in enumerate(fragments):
         q_name = ["KSETRAJNA", "KRISHNA", "PRAKRITI", "KARMA"][f.quarter]
         hkr_str = f"({f.hkr[0]:.2f},{f.hkr[1]:.2f},{f.hkr[2]:.2f})"
-        print(f"  {i+1:>2}  {f.kind:>8}  {f.name:>25}  0x{f.lotus_address:04X}  {f.position:>3}  "
-              f"{q_name:>8}  {f.basin:>5}  {hkr_str:>17}  {f.line_start:>3}-{f.line_end:>3}")
+        print(
+            f"  {i + 1:>2}  {f.kind:>8}  {f.name:>25}  0x{f.lotus_address:04X}  {f.position:>3}  "
+            f"{q_name:>8}  {f.basin:>5}  {hkr_str:>17}  {f.line_start:>3}-{f.line_end:>3}"
+        )
 
     # === STORE IN LOTUS ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  LOTUS STORAGE — Fragments stored in HolographicRouter")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     router = HolographicRouter(levels=4)
     for f in fragments:
         router.insert(f.lotus_address, f)
 
     print(f"\n  Stored {len(router)} fragments in Lotus (16-bit address space)")
-    print(f"  Fill ratio: {len(router)}/{router.key_space} = {len(router)/router.key_space*100:.4f}%")
+    print(f"  Fill ratio: {len(router)}/{router.key_space} = {len(router) / router.key_space * 100:.4f}%")
 
     # Retrieve by address
     print(f"\n  RETRIEVAL TEST:")
@@ -272,9 +298,9 @@ if __name__ == "__main__":
             print(f"    0x{f.lotus_address:04X} → {retrieved.kind}: {retrieved.name}")
 
     # === CLUSTERING ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  NATURAL CLUSTERING — Do fragments of the same kind cluster?")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     by_kind: Dict[str, List[CodeFragment]] = {}
     for f in fragments:
@@ -299,9 +325,9 @@ if __name__ == "__main__":
         print(f"    Basins: {sorted(basins)}")
 
     # === PREFIX QUERY ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  PREFIX QUERY — Can we find fragments by address prefix?")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     # Find all fragments in the same high-byte bucket as the first function
     func_frags = by_kind.get("function", [])
@@ -316,9 +342,9 @@ if __name__ == "__main__":
             print(f"    0x{entry.key:04X} → {frag.kind}: {frag.name}")
 
     # === CONCLUSION ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  CONCLUSION")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
     print()
     print("  Every code fragment gets a deterministic Lotus address.")
     print("  The address is computed from the PHONETIC STRUCTURE of the code —")

@@ -22,11 +22,28 @@ from typing import List, Dict, Tuple
 from itertools import combinations, permutations
 
 from vibe_core.mahamantra.protocols._seed import (
-    SEVEN, TEN, WORDS, TRINITY, QUARTERS, PANCHA, HALVES,
-    MAHA_QUANTUM, PARAMPARA, MALA, JIVA_CYCLE,
-    POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA,
-    GITA_CHAPTERS, MAHAJANA_COUNT, NAVA, SHARANAGATI, KSETRAJNA,
-    KSHETRA, AKSARA_COUNT, NAKSHATRAS,
+    SEVEN,
+    TEN,
+    WORDS,
+    TRINITY,
+    QUARTERS,
+    PANCHA,
+    HALVES,
+    MAHA_QUANTUM,
+    PARAMPARA,
+    MALA,
+    JIVA_CYCLE,
+    POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
+    GITA_CHAPTERS,
+    MAHAJANA_COUNT,
+    NAVA,
+    SHARANAGATI,
+    KSETRAJNA,
+    KSHETRA,
+    AKSARA_COUNT,
+    NAKSHATRAS,
 )
 
 # The 6 Attractors discovered in mod 108
@@ -87,12 +104,12 @@ def analyze_attractor_structure():
         # 7-10 decomposition
         for i in range(20):
             for j in range(20):
-                if 7*i + 10*j == a:
+                if 7 * i + 10 * j == a:
                     relations.append(f"= {i}×7 + {j}×10")
 
         # Triangular
         for n in range(1, 20):
-            if n*(n+1)//2 == a:
+            if n * (n + 1) // 2 == a:
                 relations.append(f"= T({n})")
 
         print(f"  A={a:2}: {', '.join(relations[:5])}")
@@ -277,7 +294,7 @@ def analyze_position_in_sequence():
     A = ATTRACTORS
 
     # Differences between consecutive
-    diffs = [A[i+1] - A[i] for i in range(len(A)-1)]
+    diffs = [A[i + 1] - A[i] for i in range(len(A) - 1)]
     print(f"Consecutive differences: {diffs}")
     print(f"  = [3, 9, 15, 9, 27]")
     print(f"  Note: 3, 9, 15 are triangular-adjacent")
@@ -286,10 +303,10 @@ def analyze_position_in_sequence():
 
     # Ratios
     print("Ratios:")
-    for i in range(len(A)-1):
+    for i in range(len(A) - 1):
         if A[i] > 0:
-            r = A[i+1] / A[i]
-            print(f"  A[{i+1}]/A[{i}] = {A[i+1]}/{A[i]} = {r:.3f}")
+            r = A[i + 1] / A[i]
+            print(f"  A[{i + 1}]/A[{i}] = {A[i + 1]}/{A[i]} = {r:.3f}")
     print()
 
     # Sum formulas
@@ -314,7 +331,7 @@ def analyze_position_in_sequence():
         found = False
         for i in range(15):
             for j in range(15):
-                if 7*i + 10*j == a:
+                if 7 * i + 10 * j == a:
                     print(f"  {a:2} = {i}×7 + {j}×10")
                     found = True
                     break

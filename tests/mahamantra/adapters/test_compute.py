@@ -45,7 +45,7 @@ class TestMahaComputeConstants:
 
     def test_address_space_is_words_pow_quarters(self):
         """ADDRESS_SPACE must be WORDS^QUARTERS (65536)."""
-        assert ADDRESS_SPACE == WORDS ** QUARTERS == 65536
+        assert ADDRESS_SPACE == WORDS**QUARTERS == 65536
 
     def test_l1_cache_is_qualities(self):
         """L1_CACHE_KB must equal QUALITIES (64)."""
@@ -117,7 +117,7 @@ class TestComputeUnit:
         unit = ComputeUnit(
             name="MahaProcessor",
             simd_lanes=16,  # WORDS
-            cache_kb=256,   # Multiple of 64
+            cache_kb=256,  # Multiple of 64
             memory_levels=4,  # QUARTERS
         )
         assert unit.alignment == 1.0
@@ -127,7 +127,7 @@ class TestComputeUnit:
         """Partial alignment scores less than 1.0."""
         unit = ComputeUnit(
             name="StandardCPU",
-            simd_lanes=8,   # Not 16
+            simd_lanes=8,  # Not 16
             cache_kb=256,
             memory_levels=3,  # Not 4
         )
@@ -137,8 +137,8 @@ class TestComputeUnit:
         """Misaligned unit is not unified."""
         unit = ComputeUnit(
             name="OddProcessor",
-            simd_lanes=7,   # Not power of 2
-            cache_kb=100,   # Not multiple of 64
+            simd_lanes=7,  # Not power of 2
+            cache_kb=100,  # Not multiple of 64
             memory_levels=2,
         )
         assert unit.alignment < 0.5

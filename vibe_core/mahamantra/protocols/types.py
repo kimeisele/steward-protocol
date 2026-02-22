@@ -18,10 +18,11 @@ from enum import Enum
 # QUARTER (The 4 Divisions)
 # =============================================================================
 
+
 class Quarter(str, Enum):
     """
     The four quarters of the Mahamantra.
-    
+
     Hare Krishna Hare Krishna (Schöpfung)
     Krishna Krishna Hare Hare (Gesetz)
     Hare Rama Hare Rama (Handlung)
@@ -29,14 +30,15 @@ class Quarter(str, Enum):
     """
 
     GENESIS = "genesis"  # Hare Krishna Hare Krishna (Creation)
-    DHARMA = "dharma"    # Krishna Krishna Hare Hare (Law)
-    KARMA = "karma"      # Hare Rama Hare Rama (Action)
-    MOKSHA = "moksha"    # Rama Rama Hare Hare (Liberation)
+    DHARMA = "dharma"  # Krishna Krishna Hare Hare (Law)
+    KARMA = "karma"  # Hare Rama Hare Rama (Action)
+    MOKSHA = "moksha"  # Rama Rama Hare Hare (Liberation)
 
 
 # =============================================================================
 # SAMPRADAYA (The 4 Chains)
 # =============================================================================
+
 
 class Sampradaya(str, Enum):
     """
@@ -44,15 +46,16 @@ class Sampradaya(str, Enum):
     Each maps to a Quarter of the Mahamantra.
     """
 
-    BRAHMA = "brahma"    # Brahma -> Madhva -> Chaitanya (GENESIS)
-    KUMARA = "kumara"    # Four Kumaras -> Nimbarka (DHARMA)
-    SRI = "sri"          # Lakshmi -> Ramanuja (KARMA)
-    RUDRA = "rudra"      # Shiva -> Vishnuswami -> Vallabha (MOKSHA)
+    BRAHMA = "brahma"  # Brahma -> Madhva -> Chaitanya (GENESIS)
+    KUMARA = "kumara"  # Four Kumaras -> Nimbarka (DHARMA)
+    SRI = "sri"  # Lakshmi -> Ramanuja (KARMA)
+    RUDRA = "rudra"  # Shiva -> Vishnuswami -> Vallabha (MOKSHA)
 
 
 # =============================================================================
 # PHONETIC CLASS (The Sound Structure)
 # =============================================================================
+
 
 class PhoneticClass(str, Enum):
     """
@@ -70,13 +73,13 @@ class PhoneticClass(str, Enum):
 
     # Consonants by articulation point
     GUTTURAL = "G"  # k, kh, g, gh, ṅ (throat)
-    PALATAL = "P"   # c, ch, j, jh, ñ (palate)
-    RETROFLEX = "T" # ṭ, ṭh, ḍ, ḍh, ṇ (curled tongue)
-    DENTAL = "D"    # t, th, d, dh, n (teeth)
-    LABIAL = "B"    # p, ph, b, bh, m (lips)
+    PALATAL = "P"  # c, ch, j, jh, ñ (palate)
+    RETROFLEX = "T"  # ṭ, ṭh, ḍ, ḍh, ṇ (curled tongue)
+    DENTAL = "D"  # t, th, d, dh, n (teeth)
+    LABIAL = "B"  # p, ph, b, bh, m (lips)
 
     # Special
-    SEMIVOWEL = "S" # y, r, l, v
+    SEMIVOWEL = "S"  # y, r, l, v
     SIBILANT = "X"  # ś, ṣ, s
     ASPIRATE = "H"  # h (most important - in HARE!)
 

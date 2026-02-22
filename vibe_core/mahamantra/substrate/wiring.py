@@ -23,8 +23,9 @@ DERIVES FROM SSOT:
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, TEN, TRINITY)
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, TEN, TRINITY
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -72,13 +73,14 @@ _prithu_instance: Optional["PrithuService"] = None
 def get_prithu() -> "PrithuService":
     """
     Get or create PrithuService singleton (LAZY INIT).
-    
+
     MUST be lazy to break circular import cycle!
     DO NOT make this eager again!
     """
     global _prithu_instance
     if _prithu_instance is None:
         from vibe_core.mahamantra.dharma.prithu import PrithuService
+
         _prithu_instance = PrithuService()
     return _prithu_instance
 
@@ -483,9 +485,7 @@ def create_hybrid_getattr(
                 module = importlib.import_module(module_path)
                 return getattr(module, attr_name)
             except (ImportError, AttributeError) as e:
-                raise AttributeError(
-                    f"Legacy export '{name}' failed to load from {module_path}: {e}"
-                ) from e
+                raise AttributeError(f"Legacy export '{name}' failed to load from {module_path}: {e}") from e
 
         # 3. Not found
         raise AttributeError(f"module has no attribute '{name}'")
@@ -564,7 +564,7 @@ def create_universal_getattr(
             # FAIL FAST: If a Core Module fails to load, the system must crash.
             # No try/except here. We want to know IMMEDIATELY if seed.types is broken.
             module = importlib.import_module(mod_path)
-            
+
             # Scan __all__ if present (Preferred/Watertight)
             if hasattr(module, "__all__"):
                 for name in module.__all__:
@@ -594,9 +594,7 @@ def create_universal_getattr(
                 return getattr(module, name)
             except (ImportError, AttributeError) as e:
                 # Symbol in map but not in module? Drift detected!
-                raise AttributeError(
-                    f"Universal symbol '{name}' mapped to {mod_path} but failed load: {e}"
-                ) from e
+                raise AttributeError(f"Universal symbol '{name}' mapped to {mod_path} but failed load: {e}") from e
 
         # 3. Not Found
         raise AttributeError(f"module has no attribute '{name}'")
@@ -730,6 +728,7 @@ def validate_fractal_discovery(base_path: Optional[str] = None) -> SankirtanVali
 
     if base_path is None:
         from vibe_core.mahamantra.substrate._paths import MAHAMANTRA_ROOT
+
         base_path = str(MAHAMANTRA_ROOT)
 
     mahamantra_root = Path(base_path)
@@ -868,17 +867,17 @@ def print_validation_report(validation: SankirtanValidation) -> None:
     status = "✅ WATERTIGHT" if validation.is_watertight else "❌ LEAKING"
 
     print(f"""
-{'=' * 60}
+{"=" * 60}
   SANKIRTAN VALIDATOR - {status}
-{'=' * 60}
+{"=" * 60}
 
   Total Checked:  {validation.total_checked}
   Valid:          {validation.total_valid}
   Invalid:        {validation.total_invalid}
 
-  Quarters:       {'✅' if validation.quarters_valid else '❌'}
-  Guardians:      {'✅' if validation.guardians_valid else '❌'}
-  Adapters:       {'✅' if validation.adapters_valid else '❌'}
+  Quarters:       {"✅" if validation.quarters_valid else "❌"}
+  Guardians:      {"✅" if validation.guardians_valid else "❌"}
+  Adapters:       {"✅" if validation.adapters_valid else "❌"}
 """)
 
     if validation.errors:
@@ -889,9 +888,9 @@ def print_validation_report(validation: SankirtanValidation) -> None:
             print(f"    ... and {len(validation.errors) - TEN} more")
 
     print(f"""
-{'=' * 60}
+{"=" * 60}
   {"Krishna is always there." if validation.is_watertight else "Fix the wiring!"}
-{'=' * 60}
+{"=" * 60}
 """)
 
 

@@ -62,9 +62,7 @@ def extract_state_vector(prana_level: int = 0) -> StateVector:
 
         # Systems alive count
         systems = status.get("systems", {})
-        systems_alive = sum(
-            KSETRAJNA for v in systems.values() if v is True
-        ) if isinstance(systems, dict) else 0
+        systems_alive = sum(KSETRAJNA for v in systems.values() if v is True) if isinstance(systems, dict) else 0
 
         # Uptime ratio clamped to [0, 1]
         uptime_s = float(status.get("uptime_seconds", 0))

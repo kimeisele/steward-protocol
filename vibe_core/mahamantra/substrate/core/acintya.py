@@ -40,7 +40,19 @@ Everything rests upon Me, as pearls are strung on a thread."
 "brahmaṇo hi pratiṣṭhāham" - Gita 14.27
 "I am the source of Brahman."
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, KSHETRA, MAHAJANA_COUNT, MALA, PANCHA, PARAMPARA, QUALITIES, TEN, TRINITY)
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    KSETRAJNA,
+    KSHETRA,
+    MAHAJANA_COUNT,
+    MALA,
+    PANCHA,
+    PARAMPARA,
+    QUALITIES,
+    TEN,
+    TRINITY,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

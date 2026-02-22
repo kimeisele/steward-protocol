@@ -33,7 +33,9 @@ def mode_anchor_phrases() -> Dict[str, str]:
     holyname_mode = get_holyname_mode()
     return {
         holyname_mode[HolyName.HARE]: f"{HolyName.HARE.name.lower()} {get_trinity_function(HARE_POSITIONS[0])}",
-        holyname_mode[HolyName.KRISHNA]: f"{HolyName.KRISHNA.name.lower()} {get_trinity_function(KRISHNA_POSITIONS[0])}",
+        holyname_mode[
+            HolyName.KRISHNA
+        ]: f"{HolyName.KRISHNA.name.lower()} {get_trinity_function(KRISHNA_POSITIONS[0])}",
         holyname_mode[HolyName.RAMA]: f"{HolyName.RAMA.name.lower()} {get_trinity_function(RAMA_POSITIONS[0])}",
     }
 

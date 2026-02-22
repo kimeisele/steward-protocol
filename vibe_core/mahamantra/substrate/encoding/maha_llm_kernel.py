@@ -125,8 +125,10 @@ class MahaLLMKernel(MahaResonanceProtocol):
         if self._index is not None:
             return
         from vibe_core.mahamantra.substrate.semantic_index import get_index
+
         self._index = get_index()
         from vibe_core.mahamantra.substrate.guardian_router import GUARDIANS
+
         self._guardians = {g.name: g for g in GUARDIANS}
 
     # =========================================================================
@@ -226,8 +228,11 @@ class MahaLLMKernel(MahaResonanceProtocol):
 
         if not coords:
             return ExpansionResponse(
-                name=name, rama_coords=(), vibration_sum=0,
-                mod49=0, element_walk=(),
+                name=name,
+                rama_coords=(),
+                vibration_sum=0,
+                mod49=0,
+                element_walk=(),
             )
 
         vibration_sum = sum(coords)

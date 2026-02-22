@@ -42,6 +42,7 @@ from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 # CODE HEALTH SENSOR — Uses existing CST knowledge
 # =============================================================================
 
+
 class CodeHealthVisitor(cst.CSTVisitor):
     """
     Lightweight CST visitor that counts code health signals.
@@ -138,13 +139,21 @@ class CodeHealthVisitor(cst.CSTVisitor):
     @property
     def health_score(self) -> float:
         """0.0 = terrible, 1.0 = perfect."""
-        total_checks = max(1, (
-            self.any_usage_count + self.any_import_count
-            + self.silent_except_count + self.broad_except_count + self.bare_except_count
-            + self.star_import_count
-            + self.typed_params + self.untyped_params
-            + self.has_return_type + self.missing_return_type
-        ))
+        total_checks = max(
+            1,
+            (
+                self.any_usage_count
+                + self.any_import_count
+                + self.silent_except_count
+                + self.broad_except_count
+                + self.bare_except_count
+                + self.star_import_count
+                + self.typed_params
+                + self.untyped_params
+                + self.has_return_type
+                + self.missing_return_type
+            ),
+        )
         good = self.typed_params + self.has_return_type
         bad = self.violation_count
         return max(0.0, (total_checks - bad) / total_checks)
@@ -306,8 +315,12 @@ if __name__ == "__main__":
         print(f"  Health:     {result['health_score']}")
         print(f"  Violations: {result['violations']}")
         print(f"  Prefix:     {result['prefix'][:70]}")
-        print(f"  Baseline:   intent={result['baseline_intent']:>8}  pos={result['baseline_position']:>2}  attractor={result['baseline_attractor']}")
-        print(f"  Bridged:    intent={result['bridged_intent']:>8}  pos={result['bridged_position']:>2}  attractor={result['bridged_attractor']}")
+        print(
+            f"  Baseline:   intent={result['baseline_intent']:>8}  pos={result['baseline_position']:>2}  attractor={result['baseline_attractor']}"
+        )
+        print(
+            f"  Bridged:    intent={result['bridged_intent']:>8}  pos={result['bridged_position']:>2}  attractor={result['bridged_attractor']}"
+        )
 
         if result["intent_changed"]:
             fixed += 1
@@ -318,9 +331,9 @@ if __name__ == "__main__":
             else:
                 print(f"  (bridge did not change intent — prefix may need tuning)")
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"  RESULTS: {fixed}/{total} intents corrected by bridge")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print()
     print("  The bridge injects CST-derived health signals into the compression")
     print("  input. The compression's existing keyword classifier then correctly")
