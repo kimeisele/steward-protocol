@@ -29,14 +29,120 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
+from vibe_core.protocols.moltbook import (
+    DMMessage,
+    MoltbookAgentProfile,
+    MoltbookComment,
+    MoltbookPost,
+    MoltbookProtocol,
+    SemanticSearchResult,
+)
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 
 logger = logging.getLogger("MOLTBOOK")
 
 # One full mantra = 16 ticks. Poll Moltbook once per chant cycle.
 _TICKS_PER_HEARTBEAT = 16
+
+
+class MoltbookService(MoltbookProtocol):
+    """
+    Concrete implementation of MoltbookProtocol.
+
+    Wraps MoltbookClient with the ABC interface so it can be
+    registered with ServiceRegistry. Other plugins and tools
+    consume this via DI — never touch MoltbookClient directly.
+
+    Every operation is classified by Guna (SATTVA/RAJAS/TAMAS).
+    RAJAS operations (write) are logged. TAMAS (delete) are blocked
+    unless explicitly authorized. SATTVA (read) flows freely.
+    """
+
+    def __init__(self, client: "MoltbookClient"):
+        self._client = client
+        self._operation_log: List[Dict[str, Any]] = []
+
+    def _enforce_guna(self, operation: str) -> None:
+        """
+        Enforce Guna policy before executing an operation.
+
+        SATTVA: Pass through (read-only, safe).
+        RAJAS: Log and allow (write, rate-limited by client).
+        TAMAS: Block (destructive — not implemented yet, future-proof).
+        """
+        from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP, MoltbookGuna
+
+        guna = MOLTBOOK_GUNA_MAP.get(operation, MoltbookGuna.SATTVA)
+
+        if guna == MoltbookGuna.TAMAS:
+            raise PermissionError(
+                f"MOLTBOOK-TAMAS: Operation '{operation}' is destructive and requires "
+                f"explicit authorization. Not implemented."
+            )
+
+        if guna == MoltbookGuna.RAJAS:
+            entry = {
+                "operation": operation,
+                "guna": guna.value,
+                "timestamp": time.time(),
+            }
+            self._operation_log.append(entry)
+            logger.info(f"MOLTBOOK-RAJAS: {operation} (write operation logged)")
+
+    # --- SATTVA operations (read-only) ---
+
+    def check_heartbeat(self) -> Dict[str, Any]:
+        self._enforce_guna("check_heartbeat")
+        return self._client.sync_check_heartbeat()
+
+    def search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
+        self._enforce_guna("search")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.semantic_search(query, limit))
+
+    def get_profile(self, name: str) -> MoltbookAgentProfile:
+        self._enforce_guna("get_profile")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_profile(name))
+
+    def get_conversations(self) -> List[Dict[str, Any]]:
+        self._enforce_guna("get_conversations")
+        return self._client.sync_get_dm_conversations()
+
+    def get_messages(self, conversation_id: str) -> List[DMMessage]:
+        self._enforce_guna("get_messages")
+        return self._client.sync_get_dm_messages(conversation_id)
+
+    def verify_credentials(self) -> bool:
+        self._enforce_guna("verify_credentials")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        try:
+            status = _run_async(self._client.check_status())
+            return status == "claimed"
+        except Exception:
+            return False
+
+    # --- RAJAS operations (write, logged) ---
+
+    def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
+        self._enforce_guna("create_post")
+        return self._client.sync_create_post(title, content, submolt)
+
+    def comment(self, post_id: str, content: str) -> MoltbookComment:
+        self._enforce_guna("comment")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.comment_with_verification(post_id, content))
+
+    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+        self._enforce_guna("send_dm")
+        return self._client.sync_send_dm(conversation_id, content)
 
 
 class MoltbookPlugin(KernelPlugin):
@@ -80,10 +186,10 @@ class MoltbookPlugin(KernelPlugin):
             "client_active": True,
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
-            "comments_today": limits.comments_today,
+            "comments_this_hour": limits.comments_this_hour,
             "last_minute_reset": limits.last_minute_reset,
             "last_30m_reset": limits.last_30m_reset,
-            "last_day_reset": limits.last_day_reset,
+            "last_hour_reset": limits.last_hour_reset,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -95,10 +201,10 @@ class MoltbookPlugin(KernelPlugin):
         limits = self._client.limits
         limits.requests_this_minute = snapshot.get("requests_this_minute", 0)
         limits.posts_this_30m = snapshot.get("posts_this_30m", 0)
-        limits.comments_today = snapshot.get("comments_today", 0)
+        limits.comments_this_hour = snapshot.get("comments_this_hour", 0)
         limits.last_minute_reset = snapshot.get("last_minute_reset", 0.0)
         limits.last_30m_reset = snapshot.get("last_30m_reset", 0.0)
-        limits.last_day_reset = snapshot.get("last_day_reset", 0.0)
+        limits.last_hour_reset = snapshot.get("last_hour_reset", 0.0)
 
     # =========================================================================
     # Lifecycle
@@ -138,6 +244,9 @@ class MoltbookPlugin(KernelPlugin):
                 offline_mode=self._offline_mode,
             )
 
+            # Register MoltbookProtocol in ServiceRegistry (same as Economy → BankProtocol)
+            self._register_service()
+
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
 
@@ -148,6 +257,17 @@ class MoltbookPlugin(KernelPlugin):
         except Exception as e:
             logger.error(f"Moltbook boot failed: {e}")
             return HookResult.error(str(e))
+
+    def _register_service(self) -> None:
+        """Register MoltbookProtocol in DI so other plugins get it via ServiceRegistry."""
+        try:
+            from vibe_core.di import ServiceRegistry
+
+            service = MoltbookService(self._client)
+            ServiceRegistry.register_factory(MoltbookProtocol, lambda: service)
+            logger.info("MoltbookProtocol registered in ServiceRegistry")
+        except Exception as e:
+            logger.warning(f"ServiceRegistry registration failed: {e}")
 
     def _wire_to_mahamantra(self) -> None:
         """Register as Mahamantra tick listener. Bombenfest."""
@@ -257,28 +377,39 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _process_inbound_dms(self) -> None:
-        """Fetch new DM messages and route each through Govardhan Gateway."""
+        """Fetch new DM conversations, read messages, route through Govardhan Gateway."""
         from vibe_core.gateway.mahamantra_gateway import get_gateway
         from vibe_core.protocols.gateway import EntryType, create_request
 
         try:
-            conversations = self._client.sync_get_dm_messages("__latest__")
+            conversations = self._client.sync_get_dm_conversations()
         except Exception as e:
-            logger.warning(f"DM fetch failed: {e}")
+            logger.warning(f"DM conversation list failed: {e}")
             return
 
         gateway = get_gateway()
-        for msg in conversations:
-            content = msg.get("content", "") if isinstance(msg, dict) else ""
-            if not content:
+        for conv in conversations:
+            conv_id = conv.get("id", "") if isinstance(conv, dict) else ""
+            if not conv_id:
                 continue
             try:
-                req = create_request(content, [], EntryType.AGENT)
-                req["context"]["source"] = "moltbook_dm"
-                req["context"]["sender"] = msg.get("sender", "unknown")
-                gateway.receive(req)
+                messages = self._client.sync_get_dm_messages(conv_id)
             except Exception as e:
-                logger.warning(f"Inbound DM routing failed: {e}")
+                logger.warning(f"DM fetch for {conv_id} failed: {e}")
+                continue
+
+            for msg in messages:
+                content = msg.get("content", "") if isinstance(msg, dict) else ""
+                if not content:
+                    continue
+                try:
+                    req = create_request(content, [], EntryType.AGENT)
+                    req["context"]["source"] = "moltbook_dm"
+                    req["context"]["sender"] = msg.get("sender", "unknown")
+                    req["context"]["conversation_id"] = conv_id
+                    gateway.receive(req)
+                except Exception as e:
+                    logger.warning(f"Inbound DM routing failed: {e}")
 
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")
