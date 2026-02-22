@@ -1,7 +1,7 @@
 # MOLTBOOK × STEWARD PROTOCOL — Engineering Specification
 
-**Version:** 0.4 (2026-02-22)
-**Status:** Phase 2 COMPLETE → Phase 3 (Infrastructure Hardening) IN PROGRESS
+**Version:** 0.5 (2026-02-22)
+**Status:** Phase 3 (Infrastructure Hardening) — 80% COMPLETE
 
 **Agent:** `steward-protocol`
 **Profile:** https://www.moltbook.com/u/steward-protocol
@@ -310,3 +310,201 @@ Registration, API key, claim, verification, offline adapter + 171 tests.
 - `m/introductions` (~112K subscribers)
 - `m/agents` (~1.5K subscribers)
 - `m/security` (high quality posts)
+
+---
+
+## 12. Mahamantra Conformance Audit
+
+### How the Plugin Integrates (verified against codebase)
+
+The Moltbook plugin uses `mahamantra.register_listener()` — the same API used by:
+- `SravanamListener` (dharma/kumaras) — scans cells per tick
+- `DriftAuditor` (audit/) — runs drift checks every 108 ticks
+- `BalaramaProxy` (substrate/governance) — position-gated service wiring
+
+**Listener contract:** `Callable[[TickState], None]` where `TickState` is a `TypedDict` from `seed/types.py` with fields: `tick`, `position`, `quarter`, `word`, `guardian`, `opcode`, `is_downbeat`, `is_mala_complete`, `diw`, `cycle`, `prana`.
+
+### Conformance Status
+
+| Aspect | Status | Detail |
+|--------|--------|--------|
+| Listener registration | ✅ | `mahamantra.register_listener(self._on_mahamantra_tick)` |
+| TickState type | ✅ | Uses `dict` type hint, handles both dict and object access |
+| Position gating | ✅ | Gates on `is_downbeat` (position 0 = start of cycle) |
+| Error isolation | ✅ | All heartbeat errors caught, never propagate to Singularity._broadcast |
+| Unregister on shutdown | ✅ | `on_shutdown()` calls `mahamantra.unregister_listener()` |
+| ServiceRegistry | ✅ | `MoltbookProtocol` registered via `register_factory()` |
+| ContentQueue discovery | ✅ | Uses `ServiceRegistry.get_all(ContentProposalProtocol)` |
+
+### Previous Conformance Issues (FIXED)
+
+1. **`tick_state: object`** — was ignoring TickState entirely, using dumb `_tick_count % 16` counter. Fixed to gate on `is_downbeat`.
+2. **Dict-only access** — didn't handle object-style tick_state. Fixed with `isinstance(tick_state, dict)` / `getattr()` pattern (same as SravanamListener).
+3. **`Any` types everywhere** — all replaced with strict TypedDicts.
+4. **Guna map key mismatch** — `subscribe`/`unsubscribe` didn't match `subscribe_submolt`/`unsubscribe_submolt` method names.
+
+### What We Do NOT Use (and why)
+
+| Mahamantra Feature | Used? | Reason |
+|-------------------|-------|--------|
+| BalaramaProxy | No | Moltbook is a plugin, not a Mahajana service. No position ownership. |
+| Position-specific gating | No | We fire on downbeat (every cycle), not at a specific Mahajana position. External platform polling doesn't need position-specific scheduling. |
+| DIW (Divine Instruction Word) | No | DIW drives internal computation. Moltbook is I/O, not computation. |
+| MahaLLM / MahaCompression | Not yet | Future: content generators could use these to produce deterministic content. |
+| Gita Resonance | No | Not relevant for platform I/O. |
+
+---
+
+## 13. Repo Structure Assessment
+
+### Current State
+
+```
+steward-protocol/                    # THE monorepo (1556 files, 242K SLOC)
+├── vibe_core/
+│   ├── plugins/moltbook/            # Plugin: lifecycle, service, content queue
+│   ├── protocols/moltbook.py        # TypedDicts, ABC, Guna map
+│   ├── protocols/moltbook_content.py # ContentProposalProtocol
+│   ├── mahamantra/adapters/moltbook.py # HTTP client, rate limiting, offline mock
+│   ├── gateway/                     # Govardhan Gateway (internal routing)
+│   └── cartridges/agent_city/       # 13 district folders (NOT running services)
+├── gateway/
+│   └── api.py                       # FastAPI HTTP gateway (33KB, Brahma position)
+├── agent-city/
+│   └── scripts/moltbook_heartbeat.py # Lightweight CI heartbeat (75 lines)
+└── docs/architecture/moltbook/      # This document
+```
+
+### Should `agent-city` Be a Separate Repo?
+
+**No.** Here's why:
+
+1. `agent-city/scripts/` has exactly ONE file (75 lines). Not enough to justify a repo.
+2. `vibe_core/cartridges/agent_city/` (13 districts, 90 items) is tightly coupled to the kernel — it imports `vibe_core` everywhere.
+3. The heartbeat script imports `MoltbookClient` from `vibe_core.mahamantra.adapters.moltbook` — it NEEDS the monorepo.
+4. Splitting would create a dependency management nightmare for zero benefit.
+
+**Recommendation:** Keep everything in the monorepo. `agent-city/scripts/` is fine as a CI entry point directory.
+
+### Should `steward-gateway` Be a Separate Repo?
+
+**Not yet.** Here's why:
+
+1. `gateway/api.py` is a 33KB FastAPI app that imports heavily from `vibe_core` (kernel, cartridges, event bus, pulse manager, scheduling).
+2. It's declared as Mahajana BRAHMA (Position 1) — it's architecturally part of the system, not a standalone service.
+3. Splitting it would require either: (a) publishing `vibe_core` as a pip package, or (b) git submodules. Both add complexity.
+4. The gateway COULD be split IF we ever need independent deployment (e.g., Docker container that scales separately). But that's Phase 6+ territory.
+
+**Recommendation:** Keep in monorepo. Revisit if deployment requirements change.
+
+---
+
+## 14. Detailed Architectural Flows
+
+### Inbound DM Flow (WORKING — response path MISSING)
+
+```
+[Moltbook Agent] → POST /agents/dm/conversations/{id}/send
+                                    │
+[Moltbook API Server]              │
+                                    ▼
+[MoltbookPlugin._on_mahamantra_tick()]
+  │ gate: is_downbeat == True
+  ▼
+[_do_heartbeat()]
+  │ client.sync_check_heartbeat() → GET /agents/dm/check
+  │ has_new_messages? → yes
+  ▼
+[_process_inbound_dms()]
+  │ client.sync_get_dm_conversations() → GET /agents/dm/conversations
+  │ for each conversation:
+  │   client.sync_get_dm_messages(id) → GET /agents/dm/conversations/{id}
+  │   dedup via _seen_message_ids
+  ▼
+[create_request(content, [], EntryType.AGENT)]
+  │ context: source=moltbook_dm, sender=X, conversation_id=Y
+  ▼
+[GovardhanGateway.receive(request)]
+  │ routes through 5 Pancha Tattva Gates
+  ▼
+[??? — NO RESPONSE PATH]
+  │ Gateway processes but nothing sends a reply back to Moltbook
+  │ CRITICAL GAP: need a response handler that calls send_dm()
+```
+
+### Outbound Content Flow (BUILT — no generators yet)
+
+```
+[ContentProposalProtocol implementations]  ← registered via ServiceRegistry
+  │ .propose() → List[ContentProposal]
+  ▼
+[ContentQueue.poll_generators()]
+  │ enqueue proposals by priority
+  ▼
+[ContentQueue.expire_stale()]
+  │ mark expired proposals
+  ▼
+[ApprovalGate]  ← NOT BUILT YET
+  │ Phase 3-4: human approval
+  │ Phase 5+: NAGA Cortex auto-approval
+  ▼
+[ContentQueue.next_approved()]
+  │ rate-limit check: can_execute_post() / can_execute_comment()
+  ▼
+[MoltbookPlugin._process_content_queue()]
+  │ dispatches to MoltbookService.create_post/comment/send_dm
+  ▼
+[MoltbookClient._request()]
+  │ rate limiting, challenge solving
+  ▼
+[Moltbook API]
+```
+
+### Heartbeat Timing
+
+```
+Mahamantra tick rate: ~250ms per tick (VenuService)
+16 ticks per cycle = ~4 seconds per heartbeat
+Moltbook rate limit: 100 req/min = 1.67 req/sec
+
+At 1 heartbeat per cycle:
+  - 1 GET /agents/dm/check per 4 seconds
+  - If new messages: +N GET requests for conversations/messages
+  - Well within 100 req/min limit
+
+GitHub Actions heartbeat (moltbook_heartbeat.py):
+  - Runs on cron schedule (e.g., every 2 hours)
+  - Single check, no kernel boot
+  - Fallback for when kernel isn't running
+```
+
+---
+
+## 15. Dry-Run Architecture
+
+The dry-run simulator reads real data from the live Moltbook API but NEVER posts. It simulates what the system WOULD do, producing a report of proposed actions.
+
+```
+[DryRunSimulator]
+  │
+  ├── READ (live API):
+  │   ├── check_heartbeat() → DM activity
+  │   ├── get_feed(sort="new", limit=10) → latest posts
+  │   ├── semantic_search("agent operating system") → landscape
+  │   ├── get_profile("steward-protocol") → own profile
+  │   ├── get_dm_conversations() → active DMs
+  │   └── get_submolts() → community list (if endpoint works)
+  │
+  ├── SIMULATE (offline):
+  │   ├── For each feed post: "Would I upvote this?" (Guna check)
+  │   ├── For each DM: "What would I reply?" (gateway routing)
+  │   ├── Content generators: "What would I post?" (proposal list)
+  │   └── Rate limit projection: "How many actions per hour?"
+  │
+  └── REPORT (stdout):
+      ├── Platform stats (agents, posts, submolts)
+      ├── Feed analysis (top posts, topics, engagement)
+      ├── DM status (pending, active conversations)
+      ├── Proposed actions (with reasons, NOT executed)
+      └── Rate limit budget remaining
+```
