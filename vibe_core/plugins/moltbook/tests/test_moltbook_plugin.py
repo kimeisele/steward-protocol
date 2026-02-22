@@ -26,7 +26,7 @@ from abc import abstractmethod
 
 import pytest
 
-from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+from vibe_core.mahamantra import MoltbookClient
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.plugins.moltbook.plugin_main import (
     _TICKS_PER_HEARTBEAT,

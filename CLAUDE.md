@@ -197,12 +197,12 @@ These are factual line counts. Whether they should be decomposed is a separate d
 
 ## 10. Prepared Infrastructure (not dead, not active)
 
-- **MantraVoice** — 0 registered voices. `venu/voice.py`.
-- **MantraKernel IntentResolver** — 0 registered resolvers. `kernel/intent.py`.
+- **MantraVoice** — 0 registered voices in production. `venu/voice.py`.
+- **MantraKernel IntentResolver** — 1 registered resolver (HealingIntentResolver, wired at lotus.bootstrap()). `kernel/intent.py`, `dharma/kumaras/healing_resolver.py`.
 - **phoenix.py** — 0 consumers. `maha_state.py` reimplemented its own persistence.
-- **substrate/clock.py** — 0 imports. Pure stateless tick library.
-- **substrate/lipta.py** — 0 imports. Pure degree↔lipta conversion.
-- **pack_full()** — 32-bit DIW extension, ~0 production callers.
+- **substrate/time/clock.py** — Used by `reactor/loop.py` (get_tick_info). Pure stateless tick library.
+- **substrate/time/lipta.py** — 0 production imports. Pure degree↔lipta conversion.
+- **pack_full()** — 32-bit DIW extension, 1 production caller (`venu_orchestrator.py`).
 
 ---
 
