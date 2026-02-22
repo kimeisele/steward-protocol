@@ -1,6 +1,6 @@
 {
-  "verified_tip_hash": "b8ded2a7de1f5ced30a2541279da2e30f5c3cd1ab7ed44d3aae9f758d01e933f",
-  "verified_index": 87,
-  "verified_at": "2026-02-22T07:58:16.807989",
+  "verified_tip_hash": "d9565b23bb9fdee5eb98df307f5d4b512b832960e574e8ab07e52e5f7bb2769b",
+  "verified_index": 26,
+  "verified_at": "2026-02-22T09:33:47.051057",
   "chain_db_path": "/tmp/vibe_os/kernel/lineage.db"
 }
