@@ -267,6 +267,19 @@ class MoltbookClient:
             msgs = [m for m in self._mock_db["dms"] if m.get("conversation_id") == conv_id]
             return {"messages": msgs}
 
+        # DM send — simulate successful message delivery
+        elif method == "POST" and "/dm/conversations/" in endpoint and endpoint.endswith("/send"):
+            conv_id = endpoint.split("/dm/conversations/")[1].split("/send")[0]
+            msg = {
+                "id": f"dm{len(self._mock_db['dms'])}",
+                "conversation_id": conv_id,
+                "sender": "self",
+                "content": data.get("content", "") if data else "",
+                "status": "sent",
+            }
+            self._mock_db["dms"].append(msg)
+            return msg
+
         # Simulated Math Challenge — verify the solution matches the challenge
         elif method == "POST" and "comments" in endpoint:
             if data and "challenge_solution" in data:
@@ -375,12 +388,18 @@ class MoltbookClient:
 
     async def semantic_search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
         """Intelligence gathering core."""
-        res = await self._request("GET", f"/search?q={query}&limit={limit}")
+        from urllib.parse import quote
+
+        safe_query = quote(query, safe="")
+        res = await self._request("GET", f"/search?q={safe_query}&limit={limit}")
         return res.get("results", [])
 
     async def get_profile(self, name: str) -> MoltbookAgentProfile:
         """Fetch an agent's profile."""
-        res = await self._request("GET", f"/agents/profile?name={name}")
+        from urllib.parse import quote
+
+        safe_name = quote(name, safe="")
+        res = await self._request("GET", f"/agents/profile?name={safe_name}")
         return res  # type: ignore
 
     async def check_heartbeat(self) -> Dict[str, Any]:
