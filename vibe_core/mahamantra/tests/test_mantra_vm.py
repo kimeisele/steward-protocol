@@ -288,7 +288,6 @@ class TestVMRegisters:
         """State written to vm_registers survives between cycles."""
         import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
         from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
-        from unittest.mock import patch
 
         old_compiler = cc_mod._COMPILER
         cc_mod._COMPILER = None
