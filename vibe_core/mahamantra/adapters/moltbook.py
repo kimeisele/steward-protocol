@@ -250,6 +250,17 @@ class MoltbookClient:
         elif method == "GET" and endpoint.startswith("/search"):
             return {"results": [], "similarity": 0.95}
 
+        elif method == "GET" and endpoint.startswith("/agents/profile"):
+            return {
+                "name": "mock_agent",
+                "description": "Offline mock profile",
+                "metadata": None,
+                "karma": 0,
+                "x_handle": None,
+                "followers_count": 0,
+                "following_count": 0,
+            }
+
         elif method == "POST" and endpoint == "/posts":
             post = {"id": f"p{len(self._mock_db['posts'])}", "title": data["title"], "content": data["content"]}
             self._mock_db["posts"].append(post)
@@ -445,6 +456,9 @@ class MoltbookClient:
         return _run_async(self.get_dm_messages(conversation_id))  # type: ignore
 
 
+_SYNC_POOL = None
+
+
 def _run_async(coro):
     """Run a coroutine from sync context. Handles both in-loop and no-loop cases."""
     import asyncio
@@ -455,11 +469,13 @@ def _run_async(coro):
         loop = None
 
     if loop and loop.is_running():
-        # We're inside an async context (e.g. FastAPI) — run in a new thread.
+        # We're inside an async context — reuse module-level thread pool.
         import concurrent.futures
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(asyncio.run, coro).result(timeout=15.0)
+        global _SYNC_POOL
+        if _SYNC_POOL is None:
+            _SYNC_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        return _SYNC_POOL.submit(asyncio.run, coro).result(timeout=15.0)
     else:
         return asyncio.run(coro)
 
