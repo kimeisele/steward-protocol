@@ -18,6 +18,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from vibe_core.capability_registry import CapabilityRegistry
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.manifest_registry import InMemoryManifestRegistry
 from vibe_core.protocols.capability import CapabilityModifyResult
 from vibe_core.protocols.mahajanas.brahma import (
@@ -28,7 +29,6 @@ from vibe_core.protocols.mahajanas.brahma import (
 )
 from vibe_core.protocols.mahajanas.prithu.types.ledger import SQLiteLedger as VibeLedger  # Protocol-first
 from vibe_core.protocols.mahajanas.router import Mahajana
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.services._executable_mixin import ExecutableMixin
 
 logger = logging.getLogger("BRAHMA_SERVICE")
@@ -197,11 +197,12 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol, ExecutableMixin):
         import importlib
 
         factory_mod = importlib.import_module("vibe_core.services.kernel_factory")
-        factory = getattr(factory_mod, "kernel_factory")
+        KernelFactory = getattr(factory_mod, "KernelFactory")
+        factory = KernelFactory()
 
         logger.info(f"🌀 BRAHMA: Spawning ephemeral child kernel (parent: {id(parent_kernel)})")
 
-        child = factory.spawn(
+        child = factory.create_kernel(
             ledger_path=ledger_path,
             config=config,  # type: ignore
             parent=parent_kernel,  # type: ignore

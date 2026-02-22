@@ -169,6 +169,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
             mahamantra.bootstrap(silent=True)
         VajraGuarded.__init__(self)
         from vibe_core.di import ServiceRegistry
+
         ServiceRegistry.enable_narasimha()
         ServiceRegistry.enable_naga_blessing()
 
@@ -228,6 +229,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     def _init_lineage(self) -> None:
         """Step 6: LINEAGE (Parampara Chain) — KernelProtocol requirement."""
         from vibe_core.lineage import LineageChain
+
         self._lineage: LineageChain = LineageChain()
 
     def _init_naga(self, test_mode: bool) -> None:
@@ -240,6 +242,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
                     BasicCorrectionDispatcher,
                     BasicCorrectionOrchestrator,
                 )
+
                 dispatcher = BasicCorrectionDispatcher()
                 correction_orchestrator = BasicCorrectionOrchestrator(dispatcher=dispatcher)
                 self._naga = NagaOrchestrator.bootstrap(
@@ -272,6 +275,8 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         self._plugins: list[PluginProtocol] = []
         self._agent_registry: dict[str, VibeAgent] = {}
         self._completed_tasks: dict[str, TaskResult] = {}
+        self._data_store: Dict[str, Dict[str, object]] = {}
+        self._tool_registry = None  # Lazy init
 
         self._init_sharanagati()
         self._init_ledger(ledger_path)
@@ -312,6 +317,16 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         return self._raw_bhishma.underlying_ledger
 
     @property
+    def ledger_path(self) -> str:
+        """Path to the underlying ledger database."""
+        return self.__ledger.db_path if hasattr(self.__ledger, "db_path") else ":memory:"
+
+    @property
+    def is_ephemeral(self) -> bool:
+        """True if this kernel was spawned as a child (ephemeral city)."""
+        return self._parent is not None
+
+    @property
     def scheduler(self) -> VibeScheduler:
         return self._raw_janaka._scheduler
 
@@ -328,6 +343,15 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     @property
     def manifest_registry(self) -> ManifestRegistry:
         return self._raw_brahma._manifest_registry  # type: ignore
+
+    @property
+    def tool_registry(self):
+        """Tool registry for agent tool execution. Lazy initialized."""
+        if self._tool_registry is None:
+            from vibe_core.tools.tool_registry import ToolRegistry
+
+            self._tool_registry = ToolRegistry(kernel=self)
+        return self._tool_registry
 
     @property
     def plugins(self) -> List[PluginProtocol]:
@@ -417,7 +441,12 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         if hasattr(self._raw_brahma, "_child_kernels") and child in self._raw_brahma._child_kernels:
             self._raw_brahma._child_kernels.remove(child)
 
-        return {"type": "EPHEMERAL_CITY_MERGE", "child_id": id(child), "result": str(result)[:500]}
+        return {
+            "type": "EPHEMERAL_CITY_MERGE",
+            "child_id": id(child),
+            "child_ledger_hash": child_hash,
+            "result": str(result)[:500],
+        }
 
     def boot(self, mode: Optional[BootMode] = None) -> None:
         asyncio.run(self.boot_async(mode))
@@ -430,6 +459,20 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
 
     def _get_operations_manifestation_data(self) -> Dict[str, object]:
         return self._raw_janaka.get_operations_data(self)
+
+    def spawn_child_kernel(
+        self,
+        config: "PhoenixConfig | None" = None,
+        ledger_path: str = ":memory:",
+    ) -> "RealVibeKernel":
+        """Spawn ephemeral child kernel. Delegated to Brahma."""
+        child = self._raw_brahma.spawn_child_kernel(
+            config=config or self._config,
+            parent_kernel=self,
+            ledger_path=ledger_path,
+        )
+        self._child_kernels.append(child)
+        return child
 
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
         manifests = self._raw_brahma.find_manifests_by_capability(capability)
