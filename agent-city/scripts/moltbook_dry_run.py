@@ -244,19 +244,49 @@ async def run_dry_run(client: MoltbookClient) -> bool:
     return report.summary()
 
 
+def _resolve_api_key() -> str:
+    """
+    Resolve API key from standard locations (same order as moltbook_heartbeat.py):
+    1. MOLTBOOK_API_KEY env var
+    2. ~/.config/moltbook/credentials.json
+    """
+    from pathlib import Path
+
+    # 1. Environment variable
+    key = os.environ.get("MOLTBOOK_API_KEY", "")
+    if key:
+        return key
+
+    # 2. Credentials file
+    try:
+        import json as _json
+
+        creds_path = Path.home() / ".config" / "moltbook" / "credentials.json"
+        if creds_path.exists():
+            creds = _json.loads(creds_path.read_text())
+            key = creds.get("api_key", "")
+            if key:
+                return key
+    except Exception:
+        pass
+
+    return ""
+
+
 def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Moltbook API Dry-Run")
-    parser.add_argument("--key", help="API key (or set MOLTBOOK_API_KEY env)")
     parser.add_argument("--offline", action="store_true", help="Use offline mock")
     args = parser.parse_args()
 
-    api_key = args.key or os.environ.get("MOLTBOOK_API_KEY", "")
     offline = args.offline
+    api_key = "" if offline else _resolve_api_key()
 
     if not api_key and not offline:
-        print("No API key. Use --key or MOLTBOOK_API_KEY env, or --offline for mock.")
+        print("No API key found.")
+        print("  Checked: MOLTBOOK_API_KEY env, ~/.config/moltbook/credentials.json")
+        print("  Use --offline for mock mode.")
         sys.exit(1)
 
     if not api_key:
