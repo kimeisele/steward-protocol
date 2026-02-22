@@ -57,8 +57,8 @@ def main() -> int:
         heartbeat = client.sync_check_heartbeat()
         logger.info(f"Heartbeat: {heartbeat}")
 
-        if heartbeat.get("has_new_messages"):
-            logger.info("New messages detected!")
+        if heartbeat.get("has_activity"):
+            logger.info("New activity detected!")
             # In a full implementation, this would route through Govardhan Gateway
             # For now, just log the event
             # TODO: Wire to kernel.dispatch() or emit event
