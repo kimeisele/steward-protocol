@@ -49,6 +49,9 @@ if TYPE_CHECKING:
     from vibe_core.protocols.chat import ChatResponse
 from uuid import uuid4
 
+# Import Nadi infrastructure (for interfacing, not owning)
+from vibe_core.mahamantra import NadiProtocol, NadiType
+
 # Import Indriya infrastructure
 from vibe_core.mahamantra.protocols._indriya import (
     VRTTI_COUNT,
@@ -62,14 +65,10 @@ from vibe_core.mahamantra.protocols._indriya import (
     TanmatraMessage,
     Vrtti,
 )
-
-# Import Nadi infrastructure (for interfacing, not owning)
 from vibe_core.mahamantra.substrate.nadi import (
     NadiMessage,
     NadiOp,
     NadiPriority,
-    NadiProtocol,
-    NadiType,
 )
 
 # Import ChatService (BRAIN) - ChatIndriya wraps this (Balarama Pattern)
@@ -86,6 +85,7 @@ def _get_chat_service():
 
 # Import seed constants
 # GAD compliance
+from vibe_core.mahamantra import WORDS
 from vibe_core.mahamantra.protocols._gad import GADBase
 from vibe_core.mahamantra.protocols._seed import HARE_COUNT
 from vibe_core.mahamantra.protocols._seed import WORDS as SEED_WORDS
@@ -108,7 +108,6 @@ from vibe_core.mahamantra.substrate.seed import (
     NADI_RESONANCE,
     NAVA,
     PRANA_DURATION_MS,
-    WORDS,
 )
 
 logger = logging.getLogger("CHAT_INDRIYA")

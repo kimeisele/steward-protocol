@@ -29,6 +29,7 @@ __genesis__ = "0x7340d7d6"
 # This makes Python's import system go through the Lotus principle:
 # FOLDER = EXISTENCE = WIRING. Files can be moved without breaking imports.
 from vibe_core.mahamantra.substrate.lotus_finder import install as _install_lotus_finder
+
 _install_lotus_finder()
 
 from vibe_core.mahamantra.substrate.wiring import enable_universal_discovery
@@ -46,30 +47,39 @@ CORE_MODULES = [
     # === SEED (The DNA) ===
     "vibe_core.mahamantra.seed.types",
     "vibe_core.mahamantra.protocols._seed_cell",
-
     # === SUBSTRATE (The Engine) ===
-    "vibe_core.mahamantra.substrate.lotus_core",    # MahamantraLotus, mahamantra, lotus
-    "vibe_core.mahamantra.substrate.lotus_types",   # LotusNode
-    "vibe_core.mahamantra.substrate.mahajana",      # Enums
-    "vibe_core.mahamantra.substrate.opcode",        # MantraOpCode
-    "vibe_core.mahamantra.substrate.protocol",      # Base Protocols
-    "vibe_core.mahamantra.substrate.errors",        # Error Codes
-    "vibe_core.mahamantra.substrate.position",      # Position Logic
-    "vibe_core.mahamantra.substrate.cell",          # MahaCellUnified
-    "vibe_core.mahamantra.substrate.config",        # PhoenixConfig
-    "vibe_core.mahamantra.substrate.boot",          # BootMode
-    "vibe_core.mahamantra.substrate.event_types",   # EventType, EventColor (zero-dep leaf)
-    "vibe_core.mahamantra.substrate.event_bus",     # EventBus
-    "vibe_core.mahamantra.substrate.ledger",        # SQLiteLedger
-    "vibe_core.mahamantra.substrate.lineage",       # LineageChain, LineageBlock, LineageEventType
-    "vibe_core.mahamantra.substrate.shuddhi",       # ShuddhiProtocol, ShuddhiStatus, ShuddhiResult
+    "vibe_core.mahamantra.substrate.lotus_core",  # MahamantraLotus, mahamantra, lotus
+    "vibe_core.mahamantra.substrate.lotus_types",  # LotusNode
+    "vibe_core.mahamantra.substrate.mahajana",  # Enums
+    "vibe_core.mahamantra.substrate.opcode",  # MantraOpCode, MAHAJANA_OPCODES
+    "vibe_core.mahamantra.substrate.protocol",  # Base Protocols
+    "vibe_core.mahamantra.substrate.errors",  # Error Codes
+    "vibe_core.mahamantra.substrate.position",  # Position Logic
+    "vibe_core.mahamantra.substrate.cell",  # MahaCellUnified
+    "vibe_core.mahamantra.substrate.config",  # PhoenixConfig
+    "vibe_core.mahamantra.substrate.boot",  # BootMode
+    "vibe_core.mahamantra.substrate.event_types",  # EventType, EventColor (zero-dep leaf)
+    "vibe_core.mahamantra.substrate.event_bus",  # EventBus, get_event_bus
+    "vibe_core.mahamantra.substrate.ledger",  # SQLiteLedger
+    "vibe_core.mahamantra.substrate.lineage",  # LineageChain, LineageBlock, LineageEventType
+    "vibe_core.mahamantra.substrate.shuddhi",  # ShuddhiProtocol, ShuddhiStatus, ShuddhiResult
     "vibe_core.mahamantra.substrate.process_manager",  # ProcessManager, AgentProcessInfo, ProcessStatus
-    "vibe_core.mahamantra.substrate.maha_state",      # MahaState, StateEntry, get_maha_state, pierce
-    
+    "vibe_core.mahamantra.substrate.maha_state",  # MahaState, StateEntry, get_maha_state, pierce
+    # === PHASE 6: Substrate Reduction — Public API surface ===
+    "vibe_core.mahamantra.substrate.byte",  # MantraByte, HolyName, GenesisByte
+    "vibe_core.mahamantra.substrate.guna",  # Guna, GunaQoS, SATTVA_OPCODES
+    "vibe_core.mahamantra.substrate.seed",  # ALL_GUARDIANS, MAHAMANTRA, HALF_SIZE
+    "vibe_core.mahamantra.substrate.tattva",  # KshetraElement, GuruTattva
+    "vibe_core.mahamantra.substrate.nadi",  # NadiProtocol, LocalNadi, NadiType
+    "vibe_core.mahamantra.substrate.intents",  # INTENT_MAP, get_position_for_intent
+    "vibe_core.mahamantra.substrate.io_sentinel",  # is_armed, arm, drain_violations
+    "vibe_core.mahamantra.substrate.pancha_tattva",  # TattvaGate
+    "vibe_core.mahamantra.substrate.wiring",  # POSITION_BY_NAME
+    "vibe_core.mahamantra.substrate.samskara",  # Samskara types
     # === PROTOCOLS (The Standard) ===
-    "vibe_core.mahamantra.protocols._gad",          # GADBase
-    "vibe_core.mahamantra.protocols._header",       # MahaHeader
-    "vibe_core.mahamantra.protocols._payload",      # PayloadType
+    "vibe_core.mahamantra.protocols._gad",  # GADBase
+    "vibe_core.mahamantra.protocols._header",  # MahaHeader
+    "vibe_core.mahamantra.protocols._payload",  # PayloadType
 ]
 
 # Enable Universal Discovery (Fractal + Core Modules)
@@ -82,13 +92,16 @@ enable_universal_discovery(globals(), __file__, CORE_MODULES)
 # Universal discovery only resolves classes/functions, not module-level variables.
 _original_getattr = globals().get("__getattr__")
 
+
 def __getattr__(name):
     if name == "lotus":
         from vibe_core.mahamantra.substrate.lotus_core import lotus
+
         return lotus
     if _original_getattr is not None:
         return _original_getattr(name)
     raise AttributeError(f"module 'vibe_core.mahamantra' has no attribute {name!r}")
+
 
 def __dir__():
     """Module-level __dir__ so lazy __getattr__ names appear in dir()."""
@@ -102,7 +115,17 @@ def __dir__():
 # =============================================================================
 
 __all__ = [
-    "MahamantraLotus", "mahamantra", "AkashState", "ExecuteResult", "PhoenixConfig",
-    "genesis", "dharma", "karma", "moksha",
-    "substrate", "protocols", "adapters", "kernel",
+    "MahamantraLotus",
+    "mahamantra",
+    "AkashState",
+    "ExecuteResult",
+    "PhoenixConfig",
+    "genesis",
+    "dharma",
+    "karma",
+    "moksha",
+    "substrate",
+    "protocols",
+    "adapters",
+    "kernel",
 ]

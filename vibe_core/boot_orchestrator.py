@@ -64,13 +64,6 @@ from typing import Any, Dict, List, Optional, Tuple
 from vibe_core.boot_mode import BootMode
 from vibe_core.config import CityConfig
 from vibe_core.event_bus import EventBus
-from vibe_core.protocols.event import EventBusProtocol
-
-# OPUS-095: Removed RealVibeKernel dependency (Dependency Inversion)
-from vibe_core.protocols.kernel_protocol import KernelProtocol
-from vibe_core.protocols.boot_protocol import BootProtocol, KernelFactoryProtocol
-from vibe_core.protocols.substrate.byte import GenesisByte
-from vibe_core.services.kernel_factory import KernelFactory
 from vibe_core.operator_adapter import (
     LocalLLMOperator,
     TerminalOperator,
@@ -78,6 +71,11 @@ from vibe_core.operator_adapter import (
 )
 from vibe_core.orchestration_cycle import CognitiveCycle, CycleContext
 from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent
+from vibe_core.protocols.boot_protocol import BootProtocol, KernelFactoryProtocol
+from vibe_core.protocols.event import EventBusProtocol
+
+# OPUS-095: Removed RealVibeKernel dependency (Dependency Inversion)
+from vibe_core.protocols.kernel_protocol import KernelProtocol
 from vibe_core.protocols.operator_protocol import (
     GitState,
     IntentType,
@@ -85,9 +83,11 @@ from vibe_core.protocols.operator_protocol import (
     OperatorType,
     SystemContext,
 )
+from vibe_core.protocols.substrate.byte import GenesisByte
 from vibe_core.runtime.boot_sequence import BootSequence
 from vibe_core.runtime.unified_trace import UnifiedTrace
 from vibe_core.sarga import get_sarga
+from vibe_core.services.kernel_factory import KernelFactory
 
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
 
@@ -176,7 +176,8 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         if not trace:
             trace = UnifiedTrace()
         if not event_bus:
-            from vibe_core.mahamantra.substrate.event_bus import get_event_bus
+            from vibe_core.mahamantra import get_event_bus
+
             event_bus = get_event_bus()
         self.setup(trace, event_bus, steward_context=None)
 
@@ -289,6 +290,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         detects this via _bootstrapped flag and skips redundant bootstrap.
         """
         from vibe_core.mahamantra import mahamantra as _lotus
+
         if not _lotus._bootstrapped:
             _lotus.bootstrap(silent=True)
             logger.info("      → Mahamantra bootstrapped (primary boot)")
@@ -300,6 +302,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         logger.info("⚡ OPUS-095: Materializing Kernel via Factory (AKASHA)")
         raw_kernel = self._kernel_factory.get_kernel(ledger_path=self.ledger_path)
         from vibe_core.runtime.entropy_shell import EntropyShell
+
         self.kernel = EntropyShell(raw_kernel)
         logger.info(f"      → Kernel space allocated & wrapped in EntropyShell (ledger: {self.ledger_path})")
 
@@ -307,6 +310,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         """ORIENT Step 2: VAYU (Air) — Establish communication channels."""
         logger.info("⚡ OPUS-095: Establishing communication (VAYU)")
         from vibe_core.runtime.prompt_context import PromptContext
+
         self.prompt_context = PromptContext()
         if self.kernel:
             self.prompt_context.set_kernel(self.kernel)
@@ -325,6 +329,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         from vibe_core.protocols.kernel_protocol import KernelFactoryProtocol
         from vibe_core.services.kernel_factory import KernelFactory
+
         ServiceRegistry.register(KernelFactoryProtocol, KernelFactory())
         logger.info("      → KernelFactoryProtocol registered (EphemeralCities)")
 
@@ -348,10 +353,10 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
     def _orient_agni_services(self) -> None:
         """ORIENT Step 3c: AGNI — Cartridge, Plugin, Circuit, Section services."""
-        from vibe_core.di import ServiceRegistry
-
         from vibe_core.cartridge_service import CartridgeService
+        from vibe_core.di import ServiceRegistry
         from vibe_core.protocols.cartridge import CartridgeProtocol
+
         cartridge_svc = CartridgeService.get_instance(self.project_root)
         cartridge_svc.scan()
         ServiceRegistry.register(CartridgeProtocol, cartridge_svc)
@@ -359,6 +364,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         from vibe_core.plugin_service import PluginService
         from vibe_core.protocols.plugin import PluginServiceProtocol
+
         plugin_svc = PluginService.get_instance(self.project_root)
         plugin_svc.scan()
         ServiceRegistry.register(PluginServiceProtocol, plugin_svc)
@@ -366,6 +372,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         from vibe_core.circuit_service import CircuitService
         from vibe_core.protocols.circuit import CircuitServiceProtocol
+
         circuit_svc = CircuitService.get_instance(self.project_root)
         circuit_svc.scan()
         ServiceRegistry.register(CircuitServiceProtocol, circuit_svc)
@@ -373,6 +380,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         from vibe_core.protocols.section import SectionServiceProtocol
         from vibe_core.section_service import SectionService
+
         section_svc = SectionService.get_instance(self.project_root)
         section_svc.scan()
         ServiceRegistry.register(SectionServiceProtocol, section_svc)
@@ -514,6 +522,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         if not self.boot_mode.should_skip_daily_ritual():
             from vibe_core.steward.daily_ritual import DailyRitual
+
             self.kernel.daily_ritual = DailyRitual(self.kernel)
             logger.info("      → Daily Ritual attached (time dimension active)")
         else:
@@ -539,6 +548,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     def _act_discover_beat_subscribers(self) -> None:
         """ACT Step 3: YASODA'S ROPE — Auto-discover BeatSubscribers."""
         from vibe_core.services.beat_discovery import discover_and_register_beat_subscribers
+
         discover_and_register_beat_subscribers()
         beat_count = self._venu_service.discover_beat_subscribers()
         if beat_count:
@@ -547,6 +557,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     def _act_discover_diw_subscribers(self) -> None:
         """ACT Step 4: VENU FLUTE — Auto-discover DIW subscribers."""
         from vibe_core.services.diw_discovery import discover_and_register_diw_subscribers
+
         discover_and_register_diw_subscribers()
         diw_count = self._venu_service.discover_subscribers()
         if diw_count:
@@ -555,11 +566,14 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     def _act_register_mala_flush(self) -> None:
         """ACT Step 5: MALA FLUSH — Every 108 ticks (~27s), flush RAM state to disk."""
         from vibe_core.state.state_service import get_state_service
+
         _state_svc = get_state_service(self.project_root)
+
         def _mala_flush(mala_count: int) -> None:
             flushed = _state_svc.flush()
             if flushed:
                 logger.debug(f"Mala {mala_count}: flushed {flushed} state files")
+
         self._venu_service.clock.on_mala(_mala_flush)
         logger.info("      → Mala flush registered (RAM→Disk every 108 ticks)")
 
@@ -568,6 +582,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         # Balarama wrapping now happens inside lotus.bootstrap() via auto_wrap_services().
         # We just read the result here for logging.
         from vibe_core.mahamantra import mahamantra as _lotus
+
         proxies = getattr(_lotus, "_balarama_proxies", None)
         if proxies:
             logger.info(f"      → Balarama: {len(proxies)} services already absorbed (via lotus.bootstrap)")
@@ -579,6 +594,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         # wire_gate_providers() is idempotent, but lotus.bootstrap() already calls it.
         # We just verify they're armed.
         from vibe_core.mahamantra.substrate.tattva_registry import get_registry
+
         count = get_registry().gate_provider_count()
         if count:
             logger.info(f"      → {count} gate providers active (wired via lotus.bootstrap)")
@@ -586,11 +602,13 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     def _act_arm_io_sentinel(self) -> None:
         """ACT Step 8: I/O Sentinel — already armed by gate_providers import (verify only)."""
         from vibe_core.mahamantra.substrate.io_sentinel import is_armed
+
         if is_armed():
             logger.info("      → I/O Sentinel armed (via gate_providers import)")
         else:
             # Fallback: arm explicitly if not yet armed
             from vibe_core.mahamantra.substrate.io_sentinel import arm
+
             arm()
             logger.info("      → I/O Sentinel armed (explicit fallback)")
 
@@ -600,6 +618,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
             parse_file_to_fragments,
             register_fragments_as_cells,
         )
+
         mahamantra_root = Path(__file__).parent / "mahamantra"
         ingested_cells = 0
         ingested_files = 0
@@ -623,7 +642,8 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     def _act_wire_sravanam(self) -> None:
         """ACT Step 10: Sravanam — already wired by lotus.bootstrap() (verify only)."""
         from vibe_core.mahamantra.dharma.kumaras import sravanam as _srav_mod
-        listener = getattr(_srav_mod, '_listener', None)
+
+        listener = getattr(_srav_mod, "_listener", None)
         if listener:
             logger.info("      → Sravanam listener active (wired via lotus.bootstrap)")
         else:
@@ -632,6 +652,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     def _act_register_governance_hook(self) -> None:
         """ACT Step 11: Governance hook — already registered by lotus.bootstrap() (verify only)."""
         from vibe_core.protocols.substrate.mantra_protocol import has_governance_hook
+
         if has_governance_hook():
             logger.info("      → Sudarshana governance hook active (via lotus.bootstrap)")
         else:
@@ -858,6 +879,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
         # EVERYTHING ELSE → lotus.execute() (the single routing point)
         from vibe_core.mahamantra import mahamantra as _lotus
+
         try:
             result = _lotus.execute(intent.raw_input or "")
             if result.get("success"):
