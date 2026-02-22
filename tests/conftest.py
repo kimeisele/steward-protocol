@@ -903,13 +903,17 @@ def _issue_tuv_badge(test_id: str, duration: float, gene_data: dict, report=None
     score += clean_score
     breakdown["clean"] = clean_score
 
-    # --- Dimension 5: Parampara connection ---
-    parampara_score = 0.0
-    if gene and hasattr(gene, "mutation_vector"):
-        if gene.mutation_vector % 37 == 0:
-            parampara_score = 0.10
-    score += parampara_score
-    breakdown["parampara"] = parampara_score
+    # --- Dimension 5: Isolation (replaces random parampara) ---
+    # Reward well-isolated tests: unit/smoke (entropy≤0.3) = full credit,
+    # integration (≤0.5) = partial, hardening/e2e = none (expected side effects)
+    isolation_score = 0.0
+    if entropy is not None:
+        if entropy <= 0.3:
+            isolation_score = 0.10
+        elif entropy <= 0.5:
+            isolation_score = 0.05
+    score += isolation_score
+    breakdown["isolation"] = isolation_score
 
     # --- Dimension 6: Lifecycle completeness ---
     # Badge is issued after "call" phase (step 12). MOKSHA (13-16) = teardown.
@@ -949,6 +953,39 @@ def _issue_tuv_badge(test_id: str, duration: float, gene_data: dict, report=None
         "rama": rama,
     }
     return badge
+
+
+def _lcom4_summary():
+    """LCOM4 cohesion analysis of critical monolith files. Runs once at session end."""
+    try:
+        from vibe_core.shuddhi.analyzers.lcom4 import calculate_lcom4
+    except ImportError:
+        return []
+
+    repo = Path(__file__).parent.parent
+    maha = repo / "vibe_core" / "mahamantra"
+    targets = {
+        "lotus_core": maha / "substrate" / "lotus_core.py",
+        "singularity": maha / "kernel" / "singularity.py",
+        "gate_providers": maha / "substrate" / "vm" / "gate_providers.py",
+        "harmonics": maha / "substrate" / "encoding" / "harmonics.py",
+        "resonance_ranker": maha / "substrate" / "encoding" / "resonance_ranker.py",
+        "maha_kernel": maha / "kernel" / "maha_kernel.py",
+    }
+
+    rows = []
+    for name, path in targets.items():
+        if not path.exists():
+            continue
+        try:
+            results = calculate_lcom4(path.read_text())
+            for cls_name, r in results.items():
+                if r.score > 0:
+                    rows.append((name, cls_name, r.score, len(r.methods), r.is_god_class))
+        except Exception:
+            continue
+    rows.sort(key=lambda x: -x[2])
+    return rows
 
 
 def _get_badge_level(score: float) -> str:
@@ -1018,7 +1055,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
     # --- Dimension Breakdown (aggregate) ---
     if _tuv_metadata:
-        dims = {"gene": [], "speed": [], "clean": [], "parampara": [], "lifecycle": []}
+        dims = {"gene": [], "speed": [], "clean": [], "isolation": [], "lifecycle": []}
         for meta in _tuv_metadata.values():
             bd = meta.get("breakdown", {})
             for dim in dims:
@@ -1026,12 +1063,12 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
         terminalreporter.write_line("")
         terminalreporter.write_line("SCORING DIMENSIONS (how many tests hit max):")
-        dim_max = {"gene": 0.20, "speed": 0.15, "clean": 0.15, "parampara": 0.10, "lifecycle": 0.10}
+        dim_max = {"gene": 0.20, "speed": 0.15, "clean": 0.15, "isolation": 0.10, "lifecycle": 0.10}
         dim_labels = {
             "gene": "Gene Quality",
             "speed": "Speed",
             "clean": "Clean Run",
-            "parampara": "Parampara",
+            "isolation": "Isolation",
             "lifecycle": "Lifecycle",
         }
         for dim, max_val in dim_max.items():
@@ -1081,63 +1118,57 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                     issues.append(f"{meta.get('warnings', '?')}w")
                 if bd.get("speed", 0) == 0:
                     issues.append(f"{meta.get('duration', 0):.1f}s")
-                if bd.get("parampara", 0) == 0:
-                    issues.append("no parampara")
+                if bd.get("isolation", 0) == 0:
+                    issues.append("low isolation")
                 detail = ", ".join(issues) if issues else "low across dimensions"
                 level = _get_badge_level(badge.score)
                 terminalreporter.write_line(f"  {badge.score:.2f} {level:<6s} {short_id} ({detail})")
 
-    # --- RAMA Coordinate Analysis (aggregate) ---
-    if _tuv_metadata:
-        el_totals = {"prithvi": 0, "jala": 0, "agni": 0, "vayu": 0, "akash": 0}
-        shruti_sum = 0.0
-        rama_count = 0
-        for meta in _tuv_metadata.values():
-            rama = meta.get("rama", {})
-            if rama:
-                el = rama.get("dominant_element", "")
-                if el in el_totals:
-                    el_totals[el] += 1
-                shruti_sum += rama.get("shruti_ratio", 0)
-                rama_count += 1
-        if rama_count > 0:
-            terminalreporter.write_line("")
-            terminalreporter.write_line("RAMA COORDINATES (phonemic fingerprint of test names):")
-            terminalreporter.write_line(
-                "  Elements: " + "  ".join(f"{k}={v}" for k, v in sorted(el_totals.items(), key=lambda x: -x[1]))
-            )
-            terminalreporter.write_line(f"  Avg Shruti Ratio: {shruti_sum / rama_count:.3f}")
-
-    # --- Deep Mahamantra Scan (worst 5 only — 14ms/call) ---
-    if _tuv_metadata and total > 3:
-        sorted_meta = sorted(_tuv_badges.items(), key=lambda x: x[1].score)
-        worst_5 = sorted_meta[:5]
+    # --- LCOM4 Cohesion Analysis (monolith health) ---
+    lcom4_data = _lcom4_summary()
+    if lcom4_data:
         terminalreporter.write_line("")
-        terminalreporter.write_line("MAHAMANTRA DEEP SCAN (worst 5 tests):")
-        for tid, badge in worst_5:
-            short_id = tid.split("::")[-1] if "::" in tid else tid
-            deep = _mahamantra_deep_scan(short_id)
-            if not deep:
-                terminalreporter.write_line(f"  {short_id}: [scan unavailable]")
-                continue
-            guna = deep.get("guna", {}).get("mode", "?")
-            ch = deep.get("chapter", "?")
-            ch_sig = deep.get("chapter_significance", "")
-            quarter = deep.get("quarter", "?")
-            guardian = deep.get("guardian", "?")
-            prana = deep.get("cell_prana", 0)
-            integrity = deep.get("cell_integrity", 0)
-            alive = deep.get("cell_alive", False)
-            word = deep.get("smaranam_top", {})
-            sanskrit = word.get("sanskrit", "-")
-            meaning = word.get("meaning", "-")
-            terminalreporter.write_line(f"  {badge.score:.2f} {short_id}")
-            terminalreporter.write_line(f"       Guna: {guna} | Ch.{ch} {ch_sig} | {quarter}/{guardian}")
-            terminalreporter.write_line(
-                f"       Cell: prana={prana} integrity={integrity:.3f}"
-                f" {'ALIVE' if alive else 'DEAD'}"
-                f' | Resonance: "{sanskrit}" ({meaning})'
-            )
+        terminalreporter.write_line("LCOM4 COHESION (monolith files, 1=clean, >1=god class):")
+        god_count = 0
+        for name, cls_name, score, n_methods, is_god in lcom4_data:
+            marker = " GOD CLASS" if is_god else ""
+            terminalreporter.write_line(f"  LCOM4={score:<3d} {n_methods:>3d} methods  {name}:{cls_name}{marker}")
+            if is_god:
+                god_count += 1
+        terminalreporter.write_line(f"  Total: {len(lcom4_data)} classes analyzed, {god_count} god classes")
+
+    # --- God Class Detail (refactoring roadmap from LCOM4) ---
+    if lcom4_data:
+        god_classes = [row for row in lcom4_data if row[4]]  # is_god_class=True
+        if god_classes:
+            terminalreporter.write_line("")
+            terminalreporter.write_line("GOD CLASS REFACTORING TARGETS:")
+            try:
+                from vibe_core.shuddhi.analyzers.lcom4 import calculate_lcom4 as _cc_lcom4
+
+                repo = Path(__file__).parent.parent
+                maha = repo / "vibe_core" / "mahamantra"
+                path_map = {
+                    "lotus_core": maha / "substrate" / "lotus_core.py",
+                    "singularity": maha / "kernel" / "singularity.py",
+                    "gate_providers": maha / "substrate" / "vm" / "gate_providers.py",
+                    "harmonics": maha / "substrate" / "encoding" / "harmonics.py",
+                    "resonance_ranker": maha / "substrate" / "encoding" / "resonance_ranker.py",
+                    "maha_kernel": maha / "kernel" / "maha_kernel.py",
+                }
+                for name, cls_name, score, n_methods, _ in god_classes[:3]:
+                    path = path_map.get(name)
+                    if not path or not path.exists():
+                        continue
+                    results = _cc_lcom4(path.read_text())
+                    r = results.get(cls_name)
+                    if r and r.refactoring_suggestion:
+                        for line in r.refactoring_suggestion.splitlines():
+                            terminalreporter.write_line(f"  {line}")
+                        terminalreporter.write_line("")
+            except Exception:
+                for name, cls_name, score, n_methods, _ in god_classes[:3]:
+                    terminalreporter.write_line(f"  {cls_name} (LCOM4={score}): needs split into {score} classes")
 
 
 def pytest_runtest_logreport(report):
