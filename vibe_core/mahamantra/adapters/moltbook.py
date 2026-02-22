@@ -10,12 +10,15 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import httpx
 
 from vibe_core.protocols.moltbook import (
+    DMConversation,
     DMMessage,
+    DMSendResult,
+    HeartbeatResult,
     MoltbookAgentProfile,
     MoltbookComment,
     MoltbookPost,
@@ -166,7 +169,7 @@ class MoltbookClient:
         self.limits = RateLimitState()
 
         # In offline mode, we store mocked responses here
-        self._mock_db: Dict[str, Any] = {"posts": [], "comments": [], "dms": [], "status": "claimed"}
+        self._mock_db: Dict[str, list] = {"posts": [], "comments": [], "dms": [], "status": "claimed"}  # type: ignore[assignment]
 
     # --- RATE LIMIT ENFORCEMENT ---
 
@@ -209,7 +212,7 @@ class MoltbookClient:
 
     # --- HTTP TRANSPORT ---
 
-    async def _request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
+    async def _request(self, method: str, endpoint: str, data: Optional[Dict[str, str]] = None) -> dict:
         """Core request dispatcher. Handles offline routing and httpx transport."""
         self._enforce_limits(endpoint, method)
 
@@ -242,7 +245,7 @@ class MoltbookClient:
 
     # --- OFFLINE MOCK HUB ---
 
-    def _handle_offline(self, method: str, endpoint: str, data: Optional[Dict]) -> Dict[str, Any]:
+    def _handle_offline(self, method: str, endpoint: str, data: Optional[Dict[str, str]]) -> dict:
         """Simulates Moltbook API for watertight offline testing."""
         if method == "GET" and endpoint == "/agents/status":
             return {"status": self._mock_db["status"]}
@@ -305,7 +308,7 @@ class MoltbookClient:
     # REGISTRATION — The ONLY unauthenticated endpoint
     # =========================================================================
 
-    async def register(self, name: str, description: str) -> Dict[str, Any]:
+    async def register(self, name: str, description: str) -> dict:
         """
         Register a new agent on Moltbook.
 
@@ -337,7 +340,7 @@ class MoltbookClient:
             response.raise_for_status()
             return response.json()
 
-    def sync_register(self, name: str, description: str) -> Dict[str, Any]:
+    def sync_register(self, name: str, description: str) -> dict:
         """Sync wrapper for registration."""
         return _run_async(self.register(name, description))
 
@@ -413,11 +416,11 @@ class MoltbookClient:
         res = await self._request("GET", f"/agents/profile?name={safe_name}")
         return res  # type: ignore
 
-    async def check_heartbeat(self) -> Dict[str, Any]:
+    async def check_heartbeat(self) -> HeartbeatResult:
         """The pulse check for new DMs or mentions."""
         return await self._request("GET", "/agents/dm/check")
 
-    async def get_dm_conversations(self) -> List[Dict[str, Any]]:
+    async def get_dm_conversations(self) -> List[DMConversation]:
         """List active DM conversations."""
         res = await self._request("GET", "/agents/dm/conversations")
         return res.get("conversations", []) if isinstance(res, dict) else []
@@ -427,7 +430,7 @@ class MoltbookClient:
         res = await self._request("GET", f"/agents/dm/conversations/{conversation_id}")
         return res.get("messages", []) if isinstance(res, dict) else []  # type: ignore
 
-    async def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    async def send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         """Send a message in an active DM conversation."""
         return await self._request("POST", f"/agents/dm/conversations/{conversation_id}/send", {"content": content})
 
@@ -435,7 +438,7 @@ class MoltbookClient:
     # SYNC BRIDGE — for on_pulse() and other sync callers
     # =========================================================================
 
-    def sync_check_heartbeat(self) -> Dict[str, Any]:
+    def sync_check_heartbeat(self) -> HeartbeatResult:
         """Sync wrapper for on_pulse(). Reuses running loop or creates one."""
         return _run_async(self.check_heartbeat())
 
@@ -443,11 +446,11 @@ class MoltbookClient:
         """Sync wrapper for post creation."""
         return _run_async(self.create_post(title, content, submolt))  # type: ignore
 
-    def sync_send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    def sync_send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         """Sync wrapper for DM sending."""
         return _run_async(self.send_dm(conversation_id, content))
 
-    def sync_get_dm_conversations(self) -> List[Dict[str, Any]]:
+    def sync_get_dm_conversations(self) -> List[DMConversation]:
         """Sync wrapper for listing DM conversations."""
         return _run_async(self.get_dm_conversations())
 
