@@ -418,15 +418,14 @@ class TestOfflineMock:
     @pytest.mark.asyncio
     async def test_heartbeat_with_no_dms(self, client):
         hb = await client.check_heartbeat()
-        assert hb["has_new_messages"] is False
-        assert hb["pending_requests"] == 0
+        assert hb["has_activity"] is False
+        assert hb["requests"]["count"] == 0
 
     @pytest.mark.asyncio
     async def test_heartbeat_with_dms(self, client):
         client._mock_db["dms"] = [{"conversation_id": "c1", "content": "hi"}]
         hb = await client.check_heartbeat()
-        assert hb["has_new_messages"] is True
-        assert hb["pending_requests"] == 1
+        assert hb["has_activity"] is True
 
     @pytest.mark.asyncio
     async def test_dm_conversations_from_mock_db(self, client):
@@ -498,8 +497,8 @@ class TestSyncBridge:
 
     def test_sync_check_heartbeat(self, client):
         result = client.sync_check_heartbeat()
-        assert result.get("has_new_messages") is False
-        assert "pending_requests" in result
+        assert result.get("has_activity") is False
+        assert "requests" in result
 
     def test_sync_create_post(self, client):
         post = client.sync_create_post("Title", "Content")
@@ -674,7 +673,7 @@ class TestDMSendMock:
         result = await client.send_dm("conv1", "hello")
         assert "id" in result
         assert result["conversation_id"] == "conv1"
-        assert result["content"] == "hello"
+        assert result["message"] == "hello"
         assert result["status"] == "sent"
 
     @pytest.mark.asyncio
@@ -682,7 +681,7 @@ class TestDMSendMock:
         """Sent DM is stored in mock_db for later retrieval."""
         await client.send_dm("conv1", "first message")
         assert len(client._mock_db["dms"]) == 1
-        assert client._mock_db["dms"][0]["content"] == "first message"
+        assert client._mock_db["dms"][0]["message"] == "first message"
 
     @pytest.mark.asyncio
     async def test_send_dm_ids_increment(self, client):
@@ -697,3 +696,142 @@ class TestDMSendMock:
         result = client.sync_send_dm("conv1", "hello")
         assert result["conversation_id"] == "conv1"
         assert result["status"] == "sent"
+
+
+# =============================================================================
+# NEW ENDPOINTS — Full API surface (skill.md + messaging.md)
+# =============================================================================
+
+
+class TestNewSattvaEndpoints:
+    """Tests for all new read-only endpoints."""
+
+    @pytest.mark.asyncio
+    async def test_get_own_profile(self, client):
+        profile = await client.get_own_profile()
+        assert profile["name"] == "steward-protocol"
+        assert profile["is_claimed"] is True
+
+    @pytest.mark.asyncio
+    async def test_get_profile_returns_agent(self, client):
+        profile = await client.get_profile("some-agent")
+        assert profile["name"] == "mock-agent"
+        assert profile["karma"] == 10
+
+    @pytest.mark.asyncio
+    async def test_get_feed(self, client):
+        feed = await client.get_feed(sort="new", limit=5)
+        assert isinstance(feed, list)
+
+    @pytest.mark.asyncio
+    async def test_get_personalized_feed(self, client):
+        feed = await client.get_personalized_feed(sort="hot", limit=10)
+        assert isinstance(feed, list)
+
+    @pytest.mark.asyncio
+    async def test_get_post(self, client):
+        post = await client.get_post("p123")
+        assert post["id"] == "p123"
+
+    @pytest.mark.asyncio
+    async def test_get_comments(self, client):
+        comments = await client.get_comments("p123", sort="new")
+        assert isinstance(comments, list)
+
+    @pytest.mark.asyncio
+    async def test_get_dm_requests(self, client):
+        requests = await client.get_dm_requests()
+        assert isinstance(requests, list)
+
+    @pytest.mark.asyncio
+    async def test_get_submolts(self, client):
+        submolts = await client.get_submolts()
+        assert isinstance(submolts, list)
+
+    @pytest.mark.asyncio
+    async def test_get_submolt(self, client):
+        submolt = await client.get_submolt("general")
+        assert submolt["name"] == "general"
+
+
+class TestNewRajasEndpoints:
+    """Tests for all new write endpoints."""
+
+    @pytest.mark.asyncio
+    async def test_send_dm_request(self, client):
+        result = await client.send_dm_request("OtherBot", "Hello!")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_approve_dm_request(self, client):
+        result = await client.approve_dm_request("req123")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_reject_dm_request(self, client):
+        result = await client.reject_dm_request("req123")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_reject_dm_request_with_block(self, client):
+        result = await client.reject_dm_request("req123", block=True)
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_upvote(self, client):
+        result = await client.upvote("p123")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_downvote(self, client):
+        result = await client.downvote("p123")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_upvote_comment(self, client):
+        result = await client.upvote_comment("c456")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_follow_agent(self, client):
+        result = await client.follow_agent("CoolBot")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_unfollow_agent(self, client):
+        result = await client.unfollow_agent("CoolBot")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_subscribe_submolt(self, client):
+        result = await client.subscribe_submolt("general")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_unsubscribe_submolt(self, client):
+        result = await client.unsubscribe_submolt("general")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_update_profile(self, client):
+        result = await client.update_profile(description="New desc")
+        assert result["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_comment_with_parent_id(self, client):
+        result = await client.comment_with_verification("p1", "reply", parent_id="c1")
+        assert "id" in result
+
+    @pytest.mark.asyncio
+    async def test_send_dm_with_needs_human_input(self, client):
+        result = await client.send_dm("conv1", "Question for human", needs_human_input=True)
+        assert result["status"] == "sent"
+
+
+class TestNewTamasEndpoints:
+    """Tests for destructive endpoints."""
+
+    @pytest.mark.asyncio
+    async def test_delete_post(self, client):
+        result = await client.delete_post("p123")
+        assert result["success"] is True
