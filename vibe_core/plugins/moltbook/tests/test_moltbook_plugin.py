@@ -948,3 +948,62 @@ class TestInboundDMProcessing:
 
         # Heartbeat detected new messages → routed through gateway
         assert mock_gw.receive.call_count == 1
+
+    def test_dm_reply_queued_on_gateway_success(self, plugin):
+        """Gateway success queues a DM_REPLY proposal in ContentQueue."""
+        from unittest.mock import MagicMock, patch
+
+        from vibe_core.plugins.moltbook.content_queue import ContentQueue
+
+        plugin._content_queue = ContentQueue()
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm_new", "conversation_id": "conv1", "sender": "AgentX", "content": "hi there"},
+        ]
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+
+        mock_gw = MagicMock()
+        mock_gw.receive.return_value = {"success": True, "guardian": "narada", "guna": "sattva"}
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._on_mahamantra_tick(_tick(0))
+
+        assert plugin._content_queue.queue_size == 1
+        proposal = plugin._content_queue._queue[0]
+        assert proposal["content_type"] == "dm_reply"
+        assert proposal["target_id"] == "conv1"
+        assert proposal["source"] == "inbound_dm_router"
+        assert proposal["metadata"]["sender"] == "AgentX"
+        assert proposal["metadata"]["inbound_content"] == "hi there"
+
+    def test_dm_reply_not_queued_on_gateway_failure(self, plugin):
+        """Gateway failure does NOT queue a DM_REPLY proposal."""
+        from unittest.mock import MagicMock, patch
+
+        from vibe_core.plugins.moltbook.content_queue import ContentQueue
+
+        plugin._content_queue = ContentQueue()
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm_fail", "conversation_id": "conv1", "sender": "AgentY", "content": "bad msg"},
+        ]
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+
+        mock_gw = MagicMock()
+        mock_gw.receive.return_value = {"success": False, "error": "computation failed"}
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._on_mahamantra_tick(_tick(0))
+
+        assert plugin._content_queue.queue_size == 0
+
+    def test_dm_reply_safe_without_content_queue(self, plugin):
+        """No crash if content_queue is None when processing DMs."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._content_queue = None
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm_safe", "conversation_id": "conv1", "sender": "A", "content": "test"},
+        ]
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+
+        mock_gw = MagicMock()
+        mock_gw.receive.return_value = {"success": True, "guardian": "narada", "guna": "sattva"}
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._on_mahamantra_tick(_tick(0))  # should not crash
