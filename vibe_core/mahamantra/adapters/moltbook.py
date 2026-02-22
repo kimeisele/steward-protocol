@@ -282,8 +282,10 @@ class MoltbookClient:
                 "content": content,
                 "challenge_id": challenge_id,
                 "challenge_solution": solution,
-                "_challenge_solved": solution # mock hook
             }
+            # Mock hook: offline mode needs this to pass the mock gate
+            if self.offline_mode:
+                verify_data["_challenge_solved"] = solution
             res = await self._request("POST", f"/posts/{post_id}/comments", verify_data)
             
         return res # type: ignore
