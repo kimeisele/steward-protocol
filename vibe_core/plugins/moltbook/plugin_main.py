@@ -29,14 +29,75 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
+from vibe_core.protocols.moltbook import (
+    DMMessage,
+    MoltbookAgentProfile,
+    MoltbookComment,
+    MoltbookPost,
+    MoltbookProtocol,
+    SemanticSearchResult,
+)
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 
 logger = logging.getLogger("MOLTBOOK")
 
 # One full mantra = 16 ticks. Poll Moltbook once per chant cycle.
 _TICKS_PER_HEARTBEAT = 16
+
+
+class MoltbookService(MoltbookProtocol):
+    """
+    Concrete implementation of MoltbookProtocol.
+
+    Wraps MoltbookClient with the ABC interface so it can be
+    registered with ServiceRegistry. Other plugins and tools
+    consume this via DI — never touch MoltbookClient directly.
+    """
+
+    def __init__(self, client: "MoltbookClient"):
+        self._client = client
+
+    def check_heartbeat(self) -> Dict[str, Any]:
+        return self._client.sync_check_heartbeat()
+
+    def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
+        return self._client.sync_create_post(title, content, submolt)
+
+    def comment(self, post_id: str, content: str) -> MoltbookComment:
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.comment_with_verification(post_id, content))
+
+    def search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.semantic_search(query, limit))
+
+    def get_profile(self, name: str) -> MoltbookAgentProfile:
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_profile(name))
+
+    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+        return self._client.sync_send_dm(conversation_id, content)
+
+    def get_conversations(self) -> List[Dict[str, Any]]:
+        return self._client.sync_get_dm_conversations()
+
+    def get_messages(self, conversation_id: str) -> List[DMMessage]:
+        return self._client.sync_get_dm_messages(conversation_id)
+
+    def verify_credentials(self) -> bool:
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        try:
+            status = _run_async(self._client.check_status())
+            return status == "claimed"
+        except Exception:
+            return False
 
 
 class MoltbookPlugin(KernelPlugin):
@@ -138,6 +199,9 @@ class MoltbookPlugin(KernelPlugin):
                 offline_mode=self._offline_mode,
             )
 
+            # Register MoltbookProtocol in ServiceRegistry (same as Economy → BankProtocol)
+            self._register_service()
+
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
 
@@ -148,6 +212,17 @@ class MoltbookPlugin(KernelPlugin):
         except Exception as e:
             logger.error(f"Moltbook boot failed: {e}")
             return HookResult.error(str(e))
+
+    def _register_service(self) -> None:
+        """Register MoltbookProtocol in DI so other plugins get it via ServiceRegistry."""
+        try:
+            from vibe_core.di import ServiceRegistry
+
+            service = MoltbookService(self._client)
+            ServiceRegistry.register_factory(MoltbookProtocol, lambda: service)
+            logger.info("MoltbookProtocol registered in ServiceRegistry")
+        except Exception as e:
+            logger.warning(f"ServiceRegistry registration failed: {e}")
 
     def _wire_to_mahamantra(self) -> None:
         """Register as Mahamantra tick listener. Bombenfest."""

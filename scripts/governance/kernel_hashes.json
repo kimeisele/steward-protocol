@@ -1,8 +1,8 @@
 {
-  "vibe_core/kernel_impl.py": "3ee576b99ba4197604e88787304a4c5e3de0d3ec35f78145a78921c2d02f2dd8",
+  "vibe_core/kernel_impl.py": "af6a914ac30b32a90cdb50df2f770d829a453239f8bfe23aaf7f753efb0e475e",
   "vibe_core/kernel_ops.py": "6a534cf9d2223afbb1e45a81b047305074389eea0bf80dc86c4d92aab641680a",
-  "vibe_core/ledger.py": "00d22a5174521f23f2947da6690c41ca45d252076d33d3659044b4e40fabad81",
-  "vibe_core/plugin_protocol.py": "d1809e9e733eacfed5ca3f66fe68245773181a6a965287650582fce164ad8057",
+  "vibe_core/ledger.py": "17dd1cc838be908be058633df2f42657a6dff6b2006ed437e56915dc8fcee192",
+  "vibe_core/plugin_protocol.py": "79f392b81a5225db48b0043252826fcad807151172baf7e04e8d70c763d0ea61",
   "vibe_core/plugin_loader.py": "9c128fcedd4b79fd1bd3b5ba1dbf1692866d41b51d96d56bd83e46add0ee8d0c",
   "vibe_core/narasimha.py": "83cf86e74e4e41ddb56da01fd8714ce6143328e05446f2e05edac6b3896828c0",
   "vibe_core/capability_registry.py": "90554ad9e8be887a57b46e56ca34fff3e41def58421ec011e0e633645cd4b62d",
@@ -16,13 +16,13 @@
   ".github/workflows/factory.yml": "8a313882e7e9e969b6e8b036753a71a6a248c37f3b5cdce304172bda3967c3ae",
   ".github/workflows/heartbeat.yml": "76f6233d98fa9c5a950d3348b8144b5406cf67b7d6c0a233e67179bdea12a9f3",
   ".github/workflows/integration-tests.yml": "06c4ae417af9190095fd198e812598828ca5abc28cfd33fcd5864d8355e912a6",
-  ".github/workflows/scheduled-agents.yml": "d4442d854b8de05931f821d32ec06d9c41e017b2da7e349efd25cb12da458217",
+  ".github/workflows/scheduled-agents.yml": "181ea35c7ed5e1227758d099fdfe39904b4098be7f6c564d0ff888ed31800bbe",
   ".github/workflows/scribe-docs.yml": "05761742e35a98505a8c662b190e2a675745e49fdb1efbde7c372cbe3d4b0076",
   ".github/workflows/steward-ci.yml": "a29bdc460b439cb441c60076d95b1d8210cf18a3fda9b55febbb124b3497322e",
   ".github/workflows/system-cycle.yml": "a3fb672d1797e4a541f5aea81472c5b3c6e0a8020fc483ce82842342ba67da85",
-  ".pre-commit-config.yaml": "f510af9dbfc4ae191c95d1d05ba12b38f1471b12d8aa72f14e088ef49f055dc4",
-  ".gitignore": "2787351a91ba738b66b45f3e19da8304410ef91175ef541850c33bab183e7320",
-  "scripts/governance/vishnu_guard.py": "98b1436638d405ede2fc082ddde086997364851737826c80862c424a2b2835a2",
-  "vibe_core/shuddhi/engine.py": "43c71c96f71ec11e8da57fc88e7deb938e415f814861f6dd3982c14c9813168a",
-  "vibe_core/boot_orchestrator.py": "2aa909c358ed91ff2ded612850b0d0b969771cd82517526043b819ed5dab0b22"
+  ".pre-commit-config.yaml": "ba9dc60e931e3991977f4af6992c7ecc2389dd70a333ba6cf42080a9105a33f3",
+  ".gitignore": "25dfceb236f249bb7ab6ebd2290a539a435bae099f1af7b44dcd62ed882c6a8d",
+  "scripts/governance/vishnu_guard.py": "035679d169c5a5d4cc3a2813c0c254b467b922abfd631f5f2647be2eb336d600",
+  "vibe_core/shuddhi/engine.py": "bb08ee3f937164ddd1b4a26c6f2ab80edcb434c2cfbf26ad49c67bf82580b014",
+  "vibe_core/boot_orchestrator.py": "ecf322066fe47d99e58665a94b2a51c68d9a6fb226cc8175a155f92dfe421903"
 }
