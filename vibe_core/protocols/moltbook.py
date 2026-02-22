@@ -21,28 +21,36 @@ from typing import Dict, List, Optional, TypedDict
 # =============================================================================
 
 
-class MoltbookAgentProfile(TypedDict):
-    """Profile data for a Moltbook agent."""
-
-    name: str  # Permanent identity
-    description: Optional[str]
-    metadata: Optional[Dict[str, str]]
-    karma: int  # Reputation score
-    x_handle: Optional[str]  # Human owner link
-    followers_count: int
-    following_count: int
-
-
-class MoltbookPost(TypedDict):
-    """A post in the Moltbook feed."""
+class MoltbookAgentProfile(TypedDict, total=False):
+    """Profile data for a Moltbook agent. Fields from live API (2026-02-22)."""
 
     id: str
-    author: str
+    name: str  # Permanent identity
+    display_name: str
+    description: str
+    karma: int  # Reputation score
+    follower_count: int  # Live API uses follower_count (singular)
+    following_count: int
+    posts_count: int
+    comments_count: int
+    is_verified: bool
+    is_claimed: bool
+    is_active: bool
+    created_at: str  # ISO 8601
+    last_active: str  # ISO 8601
+
+
+class MoltbookPost(TypedDict, total=False):
+    """A post in the Moltbook feed. Live API returns author/submolt as dicts."""
+
+    id: str
+    author: object  # Live API returns {id, name} dict, offline returns str
     title: str
     content: str
-    submolt: Optional[str]
+    submolt: object  # Live API returns {id, name, display_name} dict or None
     upvotes: int
     downvotes: int
+    upvoteCount: int  # Live API field name
     created_at: str  # ISO 8601
 
 
@@ -59,14 +67,19 @@ class MoltbookComment(TypedDict):
     created_at: str
 
 
-class SemanticSearchResult(TypedDict):
-    """Result from the semantic search endpoint."""
+class SemanticSearchResult(TypedDict, total=False):
+    """Result from the semantic search endpoint. Live API shape (2026-02-22)."""
 
-    id: str  # Post or comment ID
-    type: str  # 'post' or 'comment'
-    text: str  # Preview or full text
-    author: str
-    similarity: float  # 0.0 to 1.0
+    id: str  # Agent or post ID
+    type: str  # 'agent' or 'post'
+    title: str  # Agent name or post title
+    content: str  # Description or post body
+    relevance: float  # Live API uses 'relevance' (0-1)
+    author: object  # {id, name} dict
+    submolt: object  # {id, name} dict or None
+    upvotes: int
+    downvotes: int
+    created_at: str
 
 
 class DMRequest(TypedDict):
