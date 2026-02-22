@@ -331,6 +331,7 @@ class MoltbookPlugin(KernelPlugin):
 
             # Register MoltbookProtocol + ContentProposalProtocol in ServiceRegistry
             self._register_service()
+            self._upgrade_proposer()
             self._register_proposer()
 
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
@@ -627,6 +628,16 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")
     # =========================================================================
+
+    def _upgrade_proposer(self) -> None:
+        """Try to upgrade from EchoContentProposer to LLMContentProposer."""
+        try:
+            from vibe_core.plugins.moltbook.llm_proposer import LLMContentProposer
+
+            self._proposer = LLMContentProposer()
+            logger.info("Content proposer upgraded to LLMContentProposer")
+        except Exception as e:
+            logger.info(f"LLM proposer not available ({e}), using EchoContentProposer")
 
     def _register_proposer(self) -> None:
         """Register ContentProposalProtocol in DI. Other plugins can swap the proposer."""
