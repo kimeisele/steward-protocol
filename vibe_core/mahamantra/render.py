@@ -128,6 +128,7 @@ def _render_composed(result: Dict) -> str:
 # KIRTAN CHAT — Shadow bridge (goes THROUGH __call__())
 # =============================================================================
 
+
 def kirtan_chat(message: str, *, use_llm: bool = True) -> str:
     """Chat via the canonical VM pipeline with optional LLM enrichment.
 
@@ -161,6 +162,7 @@ def kirtan_chat(message: str, *, use_llm: bool = True) -> str:
 
     try:
         from vibe_core.runtime.providers.factory import get_llm_provider
+
         provider = get_llm_provider()
 
         if not provider.is_available():
@@ -193,9 +195,7 @@ def _build_llm_prompt(message: str, result: Dict) -> str:
     # Resonant words as context
     smaranam = result.get("smaranam", ())
     words = ", ".join(
-        f'{rw.get("sanskrit", "")} ({rw.get("meaning", "")})'
-        for rw in smaranam[:5]
-        if rw.get("sanskrit")
+        f"{rw.get('sanskrit', '')} ({rw.get('meaning', '')})" for rw in smaranam[:5] if rw.get("sanskrit")
     )
 
     # Verse reference
@@ -220,6 +220,7 @@ def _get_lotus():
     global _LOTUS
     if _LOTUS is None:
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
         _LOTUS = MahamantraLotus()
         _LOTUS.bootstrap(lazy=True, silent=True)
     return _LOTUS

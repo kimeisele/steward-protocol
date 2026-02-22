@@ -21,8 +21,8 @@ __mahajana__ = "manu"
 __position__ = 7
 __genesis__ = "0xa2c02098"  # GenesisByte: parampara % 37 == 0
 
-from typing import List
 import uuid
+from typing import List
 
 from vibe_core.protocols.command import (
     BaseCommand,

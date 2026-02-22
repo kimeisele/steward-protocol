@@ -169,6 +169,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
             mahamantra.bootstrap(silent=True)
         VajraGuarded.__init__(self)
         from vibe_core.di import ServiceRegistry
+
         ServiceRegistry.enable_narasimha()
         ServiceRegistry.enable_naga_blessing()
 
@@ -228,6 +229,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     def _init_lineage(self) -> None:
         """Step 6: LINEAGE (Parampara Chain) — KernelProtocol requirement."""
         from vibe_core.lineage import LineageChain
+
         self._lineage: LineageChain = LineageChain()
 
     def _init_naga(self, test_mode: bool) -> None:
@@ -240,6 +242,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
                     BasicCorrectionDispatcher,
                     BasicCorrectionOrchestrator,
                 )
+
                 dispatcher = BasicCorrectionDispatcher()
                 correction_orchestrator = BasicCorrectionOrchestrator(dispatcher=dispatcher)
                 self._naga = NagaOrchestrator.bootstrap(
@@ -316,7 +319,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
     @property
     def ledger_path(self) -> str:
         """Path to the underlying ledger database."""
-        return self.__ledger.db_path if hasattr(self.__ledger, 'db_path') else ':memory:'
+        return self.__ledger.db_path if hasattr(self.__ledger, "db_path") else ":memory:"
 
     @property
     def is_ephemeral(self) -> bool:
@@ -346,6 +349,7 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         """Tool registry for agent tool execution. Lazy initialized."""
         if self._tool_registry is None:
             from vibe_core.tools.tool_registry import ToolRegistry
+
             self._tool_registry = ToolRegistry(kernel=self)
         return self._tool_registry
 
@@ -437,7 +441,12 @@ class RealVibeKernel(VibeKernel, VajraGuarded, PanchaTattvaProtocol):
         if hasattr(self._raw_brahma, "_child_kernels") and child in self._raw_brahma._child_kernels:
             self._raw_brahma._child_kernels.remove(child)
 
-        return {"type": "EPHEMERAL_CITY_MERGE", "child_id": id(child), "child_ledger_hash": child_hash, "result": str(result)[:500]}
+        return {
+            "type": "EPHEMERAL_CITY_MERGE",
+            "child_id": id(child),
+            "child_ledger_hash": child_hash,
+            "result": str(result)[:500],
+        }
 
     def boot(self, mode: Optional[BootMode] = None) -> None:
         asyncio.run(self.boot_async(mode))

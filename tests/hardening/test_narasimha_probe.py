@@ -16,11 +16,11 @@ If these tests PASS: Act 1 is complete, proceed to Act 2.
 If these tests FAIL: Act 1 is incomplete, fix before proceeding.
 """
 
-import pytest
 from typing import Protocol, runtime_checkable
 
-from vibe_core.di import ServiceRegistry
+import pytest
 
+from vibe_core.di import ServiceRegistry
 
 # =============================================================================
 # TEST FIXTURES - The Ghost Services

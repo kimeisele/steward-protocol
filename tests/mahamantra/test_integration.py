@@ -13,8 +13,10 @@ Verifies the integration of:
 """
 
 import pytest
+
 from vibe_core.mahamantra.commands import cli_chant
-from vibe_core.mahamantra.substrate.seed import WORDS, PARAMPARA
+from vibe_core.mahamantra.substrate.seed import PARAMPARA, WORDS
+
 
 def test_chant_integration_basic():
     """
@@ -22,7 +24,7 @@ def test_chant_integration_basic():
     Verifies that the CLI command spins up the Chamber and produces valid output.
     """
     result = cli_chant(rounds=1, verbose=False)
-    
+
     assert result["success"]
     assert result["rounds"] == 1
     assert result["ticks"] == WORDS  # 16
@@ -37,7 +39,7 @@ def test_chant_integration_basic():
 def test_chant_resonance_accumulation():
     """
     Test multiple rounds leading to resonance.
-    
+
     4 rounds = 64 ticks.
     The Chamber uses a single Seed Cell, which transforms and jumps around.
     It leaves a trail in the Registry.
@@ -45,13 +47,13 @@ def test_chant_resonance_accumulation():
     """
     ROUNDS = 4
     result = cli_chant(rounds=ROUNDS, verbose=False)
-    
+
     assert result["success"]
     assert result["rounds"] == ROUNDS
     assert result["ticks"] == ROUNDS * WORDS
     # Each round = one lotus.execute() with its own yajna switches
     assert result["switch_count"] >= 0
-    
+
     # Parampara verified through VM pipeline
     assert isinstance(result["parampara_connected"], bool)
 
@@ -62,7 +64,7 @@ def test_chant_verbose_mode(capsys):
     """
     result = cli_chant(rounds=1, verbose=True)
     assert result["success"]
-    
+
     captured = capsys.readouterr()
     assert "MAHAMANTRA CHANT - Through VM Pipeline" in captured.out
     assert "KIRTAN" in captured.out

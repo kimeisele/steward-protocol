@@ -30,13 +30,18 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Final, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, Final, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
 
 from vibe_core.mahamantra.protocols._navabhakti import (
     CYCLE as CORE_CYCLE,
+)
+from vibe_core.mahamantra.protocols._navabhakti import (
     GATE_INDEX,
-    NavaBhaktiOp,
     VAMSI_ADDR,
+    NavaBhaktiOp,
 )
 from vibe_core.mahamantra.protocols._seed import (
     NAVA,
@@ -62,21 +67,23 @@ class CompiledOp:
     the op is SKIPPED. This is the Condition Bits mechanism (bits 27-30
     of the 32-bit DIW). Core ops always have condition=None (unconditional).
     """
-    op_id: int          # NavaBhaktiOp value for core, sequential for custom
-    name: str           # Human-readable name
-    gate: int           # TattvaGate index (0-4)
-    vamsi_addr: int     # VAMSI address (collision-free)
-    is_core: bool       # True = NavaBhaktiOp, False = custom
+
+    op_id: int  # NavaBhaktiOp value for core, sequential for custom
+    name: str  # Human-readable name
+    gate: int  # TattvaGate index (0-4)
+    vamsi_addr: int  # VAMSI address (collision-free)
+    is_core: bool  # True = NavaBhaktiOp, False = custom
     condition: Optional[Callable[[dict], bool]] = None  # None = always run
 
 
 @dataclass
 class CustomOp:
     """A registered custom operation."""
+
     name: str
-    gate: int                                    # 0=PARSE, 1=VALIDATE, 2=EXECUTE, 3=RESULT, 4=SYNC
+    gate: int  # 0=PARSE, 1=VALIDATE, 2=EXECUTE, 3=RESULT, 4=SYNC
     handler: Callable[["MahamantraLotus", dict], None]  # Same signature as VM wrappers
-    priority: int = 0                            # Within same gate, higher = later
+    priority: int = 0  # Within same gate, higher = later
     condition: Optional[Callable[[dict], bool]] = None  # None = always run
 
 
@@ -124,7 +131,10 @@ class CycleCompiler:
             raise ValueError(f"Gate must be 0-4, got {gate}")
 
         self._custom_ops[name] = CustomOp(
-            name=name, gate=gate, handler=handler, priority=priority,
+            name=name,
+            gate=gate,
+            handler=handler,
+            priority=priority,
             condition=condition,
         )
         self._compiled = None  # Invalidate
@@ -155,13 +165,15 @@ class CycleCompiler:
         # 1. Build core ops
         core_ops: List[CompiledOp] = []
         for op in CORE_CYCLE:
-            core_ops.append(CompiledOp(
-                op_id=op.value,
-                name=op.name,
-                gate=GATE_INDEX[op.value],
-                vamsi_addr=VAMSI_ADDR[op.value],
-                is_core=True,
-            ))
+            core_ops.append(
+                CompiledOp(
+                    op_id=op.value,
+                    name=op.name,
+                    gate=GATE_INDEX[op.value],
+                    vamsi_addr=VAMSI_ADDR[op.value],
+                    is_core=True,
+                )
+            )
 
         # 2. Build custom ops
         custom_sorted = sorted(
@@ -170,14 +182,16 @@ class CycleCompiler:
         )
         custom_ops: List[CompiledOp] = []
         for i, cop in enumerate(custom_sorted):
-            custom_ops.append(CompiledOp(
-                op_id=NAVA + i,
-                name=cop.name,
-                gate=cop.gate,
-                vamsi_addr=_CUSTOM_BASE + i * PARAMPARA,
-                is_core=False,
-                condition=cop.condition,
-            ))
+            custom_ops.append(
+                CompiledOp(
+                    op_id=NAVA + i,
+                    name=cop.name,
+                    gate=cop.gate,
+                    vamsi_addr=_CUSTOM_BASE + i * PARAMPARA,
+                    is_core=False,
+                    condition=cop.condition,
+                )
+            )
 
         # 3. Merge: for each gate, core ops first, then custom ops
         merged: List[CompiledOp] = []
@@ -195,13 +209,16 @@ class CycleCompiler:
 
         # 4. Build dispatch table
         from vibe_core.mahamantra.substrate.mantra_vm import DISPATCH as CORE_DISPATCH
+
         self._dispatch = dict(CORE_DISPATCH)  # Copy core dispatch
         for i, cop in enumerate(custom_sorted):
             self._dispatch[NAVA + i] = cop.handler
 
         logger.info(
             "Compiled cycle: %d ops (%d core + %d custom)",
-            len(self._compiled), len(core_ops), len(custom_ops),
+            len(self._compiled),
+            len(core_ops),
+            len(custom_ops),
         )
         return self._compiled
 

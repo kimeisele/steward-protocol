@@ -7,17 +7,17 @@ Tests the full pipeline end-to-end. Determinism is the core invariant.
 import pytest
 
 from vibe_core.mahamantra.protocols._seed import PARAMPARA, WORDS
-from vibe_core.mahamantra.substrate.language.types import EngineResult
 from vibe_core.mahamantra.substrate.language.engine import (
     MahaLanguageEngine,
     generate,
     get_engine,
 )
-
+from vibe_core.mahamantra.substrate.language.types import EngineResult
 
 # =============================================================================
 # MahaLanguageEngine: construction and identity
 # =============================================================================
+
 
 class TestEngineConstruction:
     """MahaLanguageEngine: lazy-loaded orchestrator."""
@@ -25,16 +25,18 @@ class TestEngineConstruction:
     def test_instantiation(self):
         engine = MahaLanguageEngine()
         # Thin shell — no owned components, everything lives in Lotus/Chamber
-        assert not hasattr(engine, '_antaranga')
+        assert not hasattr(engine, "_antaranga")
 
     def test_genesis_lineage(self):
         """__genesis__ must be divisible by PARAMPARA (protocol invariant)."""
         from vibe_core.mahamantra.substrate.language import engine as mod
+
         genesis = int(mod.__genesis__, 16)
         assert genesis % PARAMPARA == 0
 
     def test_mahajana_is_narada(self):
         from vibe_core.mahamantra.substrate.language import engine as mod
+
         assert mod.__mahajana__ == "narada"
         assert mod.__position__ == 2
 
@@ -42,6 +44,7 @@ class TestEngineConstruction:
 # =============================================================================
 # generate(): full pipeline — determinism proof
 # =============================================================================
+
 
 class TestGenerate:
     """generate(): text in → EngineResult out. Must be deterministic."""
@@ -110,6 +113,7 @@ class TestGenerate:
 # Determinism: same input → same output, always
 # =============================================================================
 
+
 class TestDeterminism:
     """The Anti-Entropy invariant: identical input → identical output."""
 
@@ -167,6 +171,7 @@ class TestDeterminism:
 # =============================================================================
 # Singleton: get_engine() and generate() convenience
 # =============================================================================
+
 
 class TestSingleton:
     """get_engine() returns singleton, generate() is convenience wrapper."""

@@ -15,7 +15,8 @@ Implements:
 - InMemoryLedger: Fast, volatile ledger (for testing)
 - SQLiteLedger: Persistent, hash-chained + signed ledger (for production)
 """
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, QUALITIES, QUARTERS)
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, QUALITIES, QUARTERS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -827,9 +828,7 @@ class SQLiteLedger(VibeLedger):
     def get_top_hash(self) -> str:
         """Get hash of latest event (blockchain-style top of chain)."""
         cursor = self.connection.cursor()
-        row = cursor.execute(
-            "SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1"
-        ).fetchone()
+        row = cursor.execute("SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1").fetchone()
         if row:
             return row[0]
         return "0" * QUALITIES
@@ -837,9 +836,7 @@ class SQLiteLedger(VibeLedger):
     def get_meta(self, key: str) -> object:
         """Get metadata value by key from ledger_meta table."""
         cursor = self.connection.cursor()
-        row = cursor.execute(
-            "SELECT value FROM ledger_meta WHERE key = ?", (key,)
-        ).fetchone()
+        row = cursor.execute("SELECT value FROM ledger_meta WHERE key = ?", (key,)).fetchone()
         if row:
             try:
                 return json.loads(row[0])
@@ -871,7 +868,6 @@ class SQLiteLedger(VibeLedger):
 
         Returns path to the archive file.
         """
-        import shutil
 
         # 1. Get top hash before rotation
         top_hash = self.get_top_hash()

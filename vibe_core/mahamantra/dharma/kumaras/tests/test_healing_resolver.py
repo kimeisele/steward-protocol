@@ -23,20 +23,19 @@ from vibe_core.mahamantra.dharma.kumaras.healing_resolver import (
     wire_healing_resolver,
 )
 from vibe_core.mahamantra.kernel.intent import (
-    IntentType,
     IntentPriority,
     IntentStatus,
+    IntentType,
     MantraIntent,
     get_kernel,
 )
 from vibe_core.mahamantra.substrate.shuddhi import ShuddhiStatus
 
-
 # =============================================================================
 # FIXTURES
 # =============================================================================
 
-SICK_SOURCE = textwrap.dedent('''\
+SICK_SOURCE = textwrap.dedent("""\
     class FileWriter:
         def __init__(self):
             self.system = None
@@ -44,7 +43,7 @@ SICK_SOURCE = textwrap.dedent('''\
         def write_data(self, path, data):
             with open(path, 'w') as f:
                 f.write(data)
-''')
+""")
 
 CLEAN_SOURCE = textwrap.dedent('''\
     def clean_function(x: int) -> int:
@@ -199,10 +198,7 @@ class TestTwoPhaseGuna:
 
         assert result.status == IntentStatus.RESOLVED
         if result.value:
-            purified = [
-                r for r in result.value
-                if r.status == ShuddhiStatus.PURIFIED
-            ]
+            purified = [r for r in result.value if r.status == ShuddhiStatus.PURIFIED]
             if purified:
                 # File should be modified
                 new_content = f.read_text()
@@ -279,10 +275,7 @@ class TestE2EHealingThroughGates:
         assert result.status == IntentStatus.RESOLVED
 
         if result.value:
-            purified = [
-                r for r in result.value
-                if r.status == ShuddhiStatus.PURIFIED
-            ]
+            purified = [r for r in result.value if r.status == ShuddhiStatus.PURIFIED]
             if purified:
                 # File was healed through the 5-gate pipeline
                 healed = f.read_text()

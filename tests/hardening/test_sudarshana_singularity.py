@@ -20,13 +20,14 @@ If(All_16_Gates == TRUE) -> SINGULARITY ACHIEVED
 ELSE -> KERNEL_PANIC(Maya)
 """
 
-import pytest
 import asyncio
-from typing import List, Dict, Any
 from enum import Enum
+from typing import Any, Dict, List
 
-from vibe_core.protocols.primal import MantraOpCode, MAHAMANTRA_SEQUENCE
+import pytest
+
 from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.protocols.primal import MAHAMANTRA_SEQUENCE, MantraOpCode
 from vibe_core.protocols.universal import SovereignContext
 
 # =============================================================================
