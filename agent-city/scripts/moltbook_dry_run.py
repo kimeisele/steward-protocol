@@ -70,7 +70,7 @@ class DryRunReport:
         print(f"\n{'='*60}")
         print(f"DRY-RUN COMPLETE: {passed}/{total} passed, {failed} failed ({elapsed:.1f}s)")
         if failed:
-            print(f"\nFAILED:")
+            print("\nFAILED:")
             for r in self.results:
                 if not r["success"]:
                     print(f"  ✗ {r['name']}: {r['error']}")
