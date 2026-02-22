@@ -9,14 +9,16 @@ existing code or requiring a live VM instance.
 BALARAMA PATTERN: This is additive-only. No existing files modified.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from vibe_core.mahamantra.render import render, _render_resonance, _render_composed
-
+from vibe_core.mahamantra.render import _build_llm_prompt, _render_composed, _render_resonance, kirtan_chat, render
 
 # =============================================================================
 # MOCK VM RESULT DICTS
 # =============================================================================
+
 
 def _make_vm_result(**overrides):
     """Build a realistic 27-key VM result dict with sensible defaults."""
@@ -126,6 +128,7 @@ def _make_vm_result(**overrides):
 # CORE RENDERING TESTS
 # =============================================================================
 
+
 class TestRenderResonance:
     """Test the default resonance rendering path."""
 
@@ -201,10 +204,7 @@ class TestRenderResonance:
 
     def test_smaranam_limit_five(self):
         """Renderer should show at most 5 resonant words."""
-        many_words = tuple(
-            {"sanskrit": f"word{i}", "meaning": f"meaning{i}", "score": 0.5}
-            for i in range(10)
-        )
+        many_words = tuple({"sanskrit": f"word{i}", "meaning": f"meaning{i}", "score": 0.5} for i in range(10))
         result = _make_vm_result(smaranam=many_words)
         output = render(result)
         assert '"word4"' in output
@@ -212,9 +212,7 @@ class TestRenderResonance:
 
     def test_sanskrit_only_no_meaning(self):
         """Words with sanskrit but no meaning should still render."""
-        result = _make_vm_result(smaranam=(
-            {"sanskrit": "om", "meaning": "", "score": 1.0},
-        ))
+        result = _make_vm_result(smaranam=({"sanskrit": "om", "meaning": "", "score": 1.0},))
         output = render(result)
         assert '"om"' in output
 
@@ -222,6 +220,7 @@ class TestRenderResonance:
 # =============================================================================
 # EXTENSION KEY TESTS (Future CycleCompiler integration)
 # =============================================================================
+
 
 class TestRenderExtensionKeys:
     """Test that enrichment keys from CycleCompiler custom ops are used."""
@@ -264,6 +263,7 @@ class TestRenderExtensionKeys:
 # EDGE CASES
 # =============================================================================
 
+
 class TestRenderEdgeCases:
     """Edge cases and robustness."""
 
@@ -282,11 +282,180 @@ class TestRenderEdgeCases:
     def test_all_16_guardians(self):
         """Renderer works for all 16 guardian positions."""
         guardians = [
-            "brahma", "narada", "shambhu", "kumaras", "vyasa",
-            "kapila", "manu", "parashurama", "prahlada", "janaka",
-            "bhishma", "bali", "shukadeva", "yamaraja", "arjuna", "hanuman",
+            "brahma",
+            "narada",
+            "shambhu",
+            "kumaras",
+            "vyasa",
+            "kapila",
+            "manu",
+            "parashurama",
+            "prahlada",
+            "janaka",
+            "bhishma",
+            "bali",
+            "shukadeva",
+            "yamaraja",
+            "arjuna",
+            "hanuman",
         ]
         for g in guardians:
             result = _make_vm_result(guardian=g)
             output = render(result)
             assert g.upper() in output
+
+
+# =============================================================================
+# INTEGRATION — Real VM → render (proves CycleCompiler wiring)
+# =============================================================================
+
+
+class TestKirtanIntegration:
+    """Integration tests: real Lotus VM call → kirtan key in result."""
+
+    @pytest.fixture(scope="class")
+    def lotus(self):
+        from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
+        m = MahamantraLotus()
+        m.bootstrap(lazy=True, silent=True)
+        return m
+
+    def test_kirtan_key_present(self, lotus):
+        """VM result dict contains 'kirtan' key after CycleCompiler wiring."""
+        result = lotus("Hare Krishna")
+        assert "kirtan" in result, "Missing 'kirtan' key — KirtanCapability not registered in CycleCompiler"
+
+    def test_kirtan_is_string(self, lotus):
+        """The kirtan value is a rendered string."""
+        result = lotus("Hare Krishna")
+        assert isinstance(result["kirtan"], str)
+
+    def test_kirtan_contains_guardian(self, lotus):
+        """Rendered kirtan output contains the guardian name."""
+        result = lotus("Hare Krishna")
+        guardian = result["guardian"]
+        assert guardian.upper() in result["kirtan"]
+
+    def test_kirtan_contains_quarter(self, lotus):
+        """Rendered kirtan output contains the quarter."""
+        result = lotus("Hare Krishna")
+        quarter = result["quarter"]
+        assert quarter in result["kirtan"]
+
+    def test_kirtan_deterministic(self, lotus):
+        """Same input → same kirtan output."""
+        r1 = lotus("Om Namo Bhagavate Vasudevaya")
+        r2 = lotus("Om Namo Bhagavate Vasudevaya")
+        assert r1["kirtan"] == r2["kirtan"]
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Hare Krishna",
+            "What is the meaning of life?",
+            "analyze this code",
+            "a",
+            "",
+        ],
+    )
+    def test_kirtan_never_empty(self, lotus, text):
+        """Kirtan rendering is never empty for any input."""
+        result = lotus(text)
+        assert len(result["kirtan"].strip()) > 0
+
+    def test_kirtan_multiline(self, lotus):
+        """Kirtan output has structure (header + content)."""
+        result = lotus("The quick brown fox")
+        lines = result["kirtan"].strip().split("\n")
+        assert len(lines) >= 1  # At minimum the header
+
+
+# =============================================================================
+# KIRTAN CHAT — Shadow bridge tests
+# =============================================================================
+
+
+class TestKirtanChat:
+    """Test kirtan_chat() — the shadow replacement for legacy chat files."""
+
+    def test_pure_mode_returns_string(self):
+        """kirtan_chat with use_llm=False returns a string."""
+        output = kirtan_chat("Hare Krishna", use_llm=False)
+        assert isinstance(output, str)
+        assert len(output.strip()) > 0
+
+    def test_pure_mode_contains_guardian(self):
+        """Pure mode output contains the routed guardian."""
+        output = kirtan_chat("Hare Krishna", use_llm=False)
+        # Must contain SOME guardian name (uppercased)
+        assert "[" in output and "]" in output
+
+    def test_pure_mode_deterministic(self):
+        """Same input → same output in pure mode."""
+        r1 = kirtan_chat("Om Namo Bhagavate", use_llm=False)
+        r2 = kirtan_chat("Om Namo Bhagavate", use_llm=False)
+        assert r1 == r2
+
+    def test_llm_fallback_on_unavailable(self):
+        """When LLM is unavailable, kirtan_chat falls back to pure rendering."""
+        # Default use_llm=True but no LLM configured → should not crash
+        output = kirtan_chat("What is dharma?")
+        assert isinstance(output, str)
+        assert len(output.strip()) > 0
+
+    def test_empty_input(self):
+        """kirtan_chat handles empty input."""
+        output = kirtan_chat("", use_llm=False)
+        assert isinstance(output, str)
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Hare Krishna",
+            "analyze this code",
+            "What is the meaning of life?",
+            "deploy the application",
+        ],
+    )
+    def test_various_inputs(self, text):
+        """kirtan_chat works for various input types."""
+        output = kirtan_chat(text, use_llm=False)
+        assert isinstance(output, str)
+        assert len(output.strip()) > 0
+
+
+class TestBuildLLMPrompt:
+    """Test the LLM prompt builder."""
+
+    def test_prompt_contains_guardian(self):
+        result = _make_vm_result(guardian="kapila")
+        prompt = _build_llm_prompt("test", result)
+        assert "KAPILA" in prompt
+
+    def test_prompt_contains_quarter(self):
+        result = _make_vm_result(quarter="dharma")
+        prompt = _build_llm_prompt("test", result)
+        assert "dharma" in prompt
+
+    def test_prompt_contains_user_message(self):
+        result = _make_vm_result()
+        prompt = _build_llm_prompt("What is devotion?", result)
+        assert "What is devotion?" in prompt
+
+    def test_prompt_contains_resonant_words(self):
+        result = _make_vm_result()
+        prompt = _build_llm_prompt("test", result)
+        assert "viveka" in prompt
+        assert "discrimination" in prompt
+
+    def test_prompt_contains_verse_ref(self):
+        result = _make_vm_result()
+        prompt = _build_llm_prompt("test", result)
+        assert "BG 2.63" in prompt
+
+    def test_prompt_is_string(self):
+        result = _make_vm_result()
+        prompt = _build_llm_prompt("test", result)
+        assert isinstance(prompt, str)
+        assert len(prompt) > 50

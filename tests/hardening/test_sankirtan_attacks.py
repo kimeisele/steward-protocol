@@ -249,33 +249,42 @@ class TestGenesisHashAttacks:
 
     def test_genesis_hash_uniqueness(self):
         """
-        Test that different files get different genesis hashes.
+        Test that different positions get different genesis hashes.
 
-        Hash collisions could allow spoofing.
+        YOGA MAYA PARADIGM: Genesis hash is HOLOGRAPHIC — computed from
+        archetype (mahajana:position) only, file_path is IGNORED.
+        Same position = same hash by design.
+        Cross-position uniqueness is what matters for spoofing prevention.
         """
-        hashes = {}
+        position_hashes = {}
         collisions = []
 
-        # Generate hashes for many files
+        # Each position must produce a unique hash
         for pos in range(16):
             mapping = MAHAMANTRA_POSITIONS[pos]
             mahajana = mapping.guardian.value
 
-            for i in range(100):
-                test_path = f"test/{mahajana}/file_{i}.py"
-                genesis_hash = compute_genesis_hash(mahajana, pos, test_path)
+            genesis_hash = compute_genesis_hash(mahajana, pos)
 
-                key = (mahajana, pos, test_path)
-                if genesis_hash in hashes:
-                    existing = hashes[genesis_hash]
-                    if existing != key:
-                        collisions.append(f"{key} collides with {existing}: {genesis_hash}")
-                else:
-                    hashes[genesis_hash] = key
+            if genesis_hash in position_hashes:
+                existing = position_hashes[genesis_hash]
+                collisions.append(f"Position {pos} ({mahajana}) collides with {existing}: {genesis_hash}")
+            else:
+                position_hashes[genesis_hash] = (pos, mahajana)
 
-        # Some collisions are OK (birthday paradox), but should be rare
-        collision_rate = len(collisions) / (16 * 100)
-        assert collision_rate < 0.01, f"COLLISION RATE TOO HIGH: {collision_rate:.2%} ({len(collisions)} collisions)"
+        # All 16 positions must have unique hashes
+        assert len(collisions) == 0, f"CROSS-POSITION COLLISION: {len(collisions)} collisions found:\n" + "\n".join(
+            collisions
+        )
+        assert len(position_hashes) == 16, f"Expected 16 unique hashes, got {len(position_hashes)}"
+
+        # Verify holographic property: same input = same output
+        for pos in range(16):
+            mapping = MAHAMANTRA_POSITIONS[pos]
+            mahajana = mapping.guardian.value
+            h1 = compute_genesis_hash(mahajana, pos, "file_a.py")
+            h2 = compute_genesis_hash(mahajana, pos, "file_b.py")
+            assert h1 == h2, f"Position {pos}: hash should be holographic (file_path ignored)"
 
     def test_genesis_hash_determinism(self):
         """

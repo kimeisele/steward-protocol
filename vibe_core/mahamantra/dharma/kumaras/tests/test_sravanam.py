@@ -4,8 +4,9 @@ Tests for Sravanam — Fractal Cell Scanner.
 Tests the atomic scan_cell() path and the SravanamScanner/Listener.
 """
 
+from dataclasses import dataclass
 from pathlib import Path
-from unittest.mock import MagicMock
+from typing import Optional
 
 import pytest
 
@@ -17,7 +18,6 @@ from vibe_core.mahamantra.dharma.kumaras.sravanam import (
     SravanamScanner,
 )
 from vibe_core.mahamantra.substrate.shuddhi import ShuddhiStatus
-
 
 # =============================================================================
 # scan_cell() — Atomic Scan Unit Tests
@@ -144,10 +144,18 @@ class TestSravanamListener:
 
     def test_listener_disabled_skips_scan(self):
         """Disabled listener doesn't scan."""
+
+        @dataclass
+        class FakeTickState:
+            position: int = 5
+            quarter: int = 0
+            guardian: str = "kumaras"
+            word: int = 0
+            diw: int = 1
+
         listener = SravanamListener()
         listener.disable()
-        tick_state = MagicMock(position=5)
-        listener(tick_state)
+        listener(FakeTickState())
         assert listener.total_violations == 0
 
     def test_listener_enable_disable(self):
@@ -161,9 +169,14 @@ class TestSravanamListener:
 
     def test_listener_handles_missing_position(self):
         """Listener handles tick_state without position gracefully."""
+
+        class EmptyTickState:
+            """Tick state with no attributes — simulates malformed broadcast."""
+
+            pass
+
         listener = SravanamListener()
-        tick_state = MagicMock(spec=[])  # No position attribute
-        listener(tick_state)  # Should not raise
+        listener(EmptyTickState())  # Should not raise
         assert listener.total_violations == 0
 
 
@@ -189,8 +202,6 @@ class TestSravanamReport:
 
     def test_report_frozen(self):
         """Report is frozen (immutable)."""
-        report = SravanamReport(
-            position=0, guardian="vyasa", cells_scanned=0, violations_found=0
-        )
+        report = SravanamReport(position=0, guardian="vyasa", cells_scanned=0, violations_found=0)
         with pytest.raises(AttributeError):
             report.position = 1

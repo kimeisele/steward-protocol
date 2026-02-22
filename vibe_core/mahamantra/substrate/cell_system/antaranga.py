@@ -38,6 +38,11 @@ Collision Logic (pure byte arithmetic):
 
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING.
 """
+
+import ctypes
+import struct
+from typing import Final, NamedTuple, Optional
+
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
     KSETRAJNA,
@@ -47,9 +52,6 @@ from vibe_core.mahamantra.protocols._seed import (
     PARAMPARA,
     VAMSI_HOLES,
 )
-
-import struct
-from typing import Final, NamedTuple, Optional
 
 # === MAHAJANA DECLARATION ===
 __mahajana__ = "gauranga"
@@ -92,11 +94,41 @@ assert _SLOT_SIZE == SLOT_BYTES, f"Slot size mismatch: {_SLOT_SIZE} != {SLOT_BYT
 
 
 # =============================================================================
+# CTYPES ZERO-COPY OVERLAY
+# =============================================================================
+# A C-struct mapped directly onto the bytearray. No unpack, no alloc.
+# Reading slot.prana is a single pointer dereference into contiguous RAM.
+
+
+class _CSlot(ctypes.LittleEndianStructure):
+    """32-byte C-struct overlay. Same layout as _SLOT_FMT."""
+
+    _fields_ = [
+        ("source", ctypes.c_uint32),
+        ("target", ctypes.c_uint32),
+        ("operation", ctypes.c_uint32),
+        ("arcanam", ctypes.c_uint32),
+        ("atma", ctypes.c_uint32),
+        ("flags", ctypes.c_uint32),
+        ("prana", ctypes.c_uint32),
+        ("integrity", ctypes.c_uint16),
+        ("cycle", ctypes.c_uint16),
+    ]
+
+
+assert ctypes.sizeof(_CSlot) == SLOT_BYTES, f"CSlot size mismatch: {ctypes.sizeof(_CSlot)} != {SLOT_BYTES}"
+
+_CSlotArray = _CSlot * ANTARANGA_SLOTS
+
+
+# =============================================================================
 # SLOT VIEW (Read-only snapshot, no allocation on hot path)
 # =============================================================================
 
+
 class SlotView(NamedTuple):
     """Lightweight read-only view of a slot. No Python object overhead on write path."""
+
     source: int
     target: int
     operation: int
@@ -111,6 +143,7 @@ class SlotView(NamedTuple):
 # =============================================================================
 # ANTARANGA REGISTRY
 # =============================================================================
+
 
 class AntarangaRegistry:
     """
@@ -128,20 +161,31 @@ class AntarangaRegistry:
     The outer SankirtanChamber wraps this for Python API compatibility.
     """
 
-    __slots__ = ('_mem',)
+    __slots__ = ("_mem", "_slots")
 
     def __init__(self) -> None:
         """Allocate the chamber: one contiguous block of silence."""
         self._mem = bytearray(CHAMBER_BYTES)
+        self._slots = _CSlotArray.from_buffer(self._mem)
 
     # =========================================================================
     # CORE: O(1) READ / WRITE
     # =========================================================================
 
     def get(self, slot: int) -> SlotView:
-        """Read slot as SlotView. O(1)."""
-        offset = slot * SLOT_BYTES
-        return SlotView(*struct.unpack_from(_SLOT_FMT, self._mem, offset))
+        """Read slot as SlotView. O(1). Zero-copy via ctypes overlay."""
+        s = self._slots[slot]
+        return SlotView(
+            s.source,
+            s.target,
+            s.operation,
+            s.arcanam,
+            s.atma,
+            s.flags,
+            s.prana,
+            s.integrity,
+            s.cycle,
+        )
 
     def set_slot(
         self,
@@ -159,9 +203,18 @@ class AntarangaRegistry:
         """Write full slot. O(1)."""
         offset = slot * SLOT_BYTES
         struct.pack_into(
-            _SLOT_FMT, self._mem, offset,
-            source, target, operation, arcanam, atma_nivedanam, flags,
-            prana, integrity, cycle,
+            _SLOT_FMT,
+            self._mem,
+            offset,
+            source,
+            target,
+            operation,
+            arcanam,
+            atma_nivedanam,
+            flags,
+            prana,
+            integrity,
+            cycle,
         )
 
     # =========================================================================
@@ -189,29 +242,34 @@ class AntarangaRegistry:
             Resident prana == 0 → SILENCE → visitor takes slot (Presence)
             Resident prana > 0  → RESONANCE → merge (prana add, integrity avg)
         """
-        offset = slot * SLOT_BYTES
+        s = self._slots[slot]
 
-        # Read resident prana (offset + 24 = lifecycle start)
-        r_prana = struct.unpack_from("<I", self._mem, offset + 24)[0]
-
-        if r_prana == 0:
-            # SILENCE → PRESENCE: visitor takes the slot
+        # Read resident prana via ctypes (zero-copy)
+        if s.prana == 0:
+            # SILENCE → PRESENCE: visitor takes the slot (bulk write)
+            offset = slot * SLOT_BYTES
             struct.pack_into(
-                _SLOT_FMT, self._mem, offset,
-                v_source, v_target, v_operation, v_arcanam, v_atma, FLAG_ACTIVE,
-                v_prana, v_integrity, v_cycle,
+                _SLOT_FMT,
+                self._mem,
+                offset,
+                v_source,
+                v_target,
+                v_operation,
+                v_arcanam,
+                v_atma,
+                FLAG_ACTIVE,
+                v_prana,
+                v_integrity,
+                v_cycle,
             )
             return False
 
         # RESONANCE → MERGE: accumulate prana, average integrity
-        new_prana = min(r_prana + v_prana, MAX_PRANA_U32)
-        r_integrity = struct.unpack_from("<H", self._mem, offset + 28)[0]
-        new_integrity = (r_integrity + v_integrity) // HALVES
+        new_prana = min(s.prana + v_prana, MAX_PRANA_U32)
+        new_integrity = (s.integrity + v_integrity) // HALVES
 
         # Write back only the mutable lifecycle fields
-        struct.pack_into("<IHH", self._mem, offset + 24,
-                         new_prana, new_integrity,
-                         struct.unpack_from("<H", self._mem, offset + 30)[0])
+        struct.pack_into("<IHH", self._mem, slot * SLOT_BYTES + 24, new_prana, new_integrity, s.cycle)
         return True
 
     # =========================================================================
@@ -226,23 +284,29 @@ class AntarangaRegistry:
 
         DIW format: 6-bit VENU | 9-bit VAMSI | 4-bit MURALI
         """
-        from vibe_core.mahamantra.protocols.diw import (
-            VENU_SHIFT, VENU_MASK, VAMSI_SHIFT, VAMSI_MASK,
-            MURALI_SHIFT, MURALI_MASK, CLUSTER_SHIFT,
-        )
         from vibe_core.mahamantra.protocols._seed import (
-            SEVEN, QUALITIES,
+            QUALITIES,
+            SEVEN,
+        )
+        from vibe_core.mahamantra.protocols.diw import (
+            CLUSTER_SHIFT,
+            MURALI_MASK,
+            MURALI_SHIFT,
+            VAMSI_MASK,
+            VAMSI_SHIFT,
+            VENU_MASK,
+            VENU_SHIFT,
         )
 
-        offset = slot * SLOT_BYTES
+        s = self._slots[slot]
 
-        # Read current lifecycle
-        prana = struct.unpack_from("<I", self._mem, offset + 24)[0]
+        # Read current lifecycle via ctypes (zero-copy)
+        prana = s.prana
         if prana == 0:
             return  # Dead slot, nothing to transform
 
-        integrity_u16 = struct.unpack_from("<H", self._mem, offset + 28)[0]
-        cycle = struct.unpack_from("<H", self._mem, offset + 30)[0]
+        integrity_u16 = s.integrity
+        cycle = s.cycle
 
         # Decode DIW
         venu = (diw >> VENU_SHIFT) & VENU_MASK
@@ -268,86 +332,91 @@ class AntarangaRegistry:
 
         # Phase-specific transformation (mirrors _apply_diw exactly)
         if phase == 0:  # GENESIS
-            if name_region == 0:      # HARE
+            if name_region == 0:  # HARE
                 prana += base_delta * HALVES
-            elif name_region == 1:    # KRISHNA
+            elif name_region == 1:  # KRISHNA
                 prana += base_delta
-                integrity_u16 = min(INTEGRITY_FULL,
-                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100))
-            else:                     # RAMA
+                integrity_u16 = min(
+                    INTEGRITY_FULL, integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100)
+                )
+            else:  # RAMA
                 prana += base_delta
                 cycle += KSETRAJNA
 
         elif phase == 1:  # DHARMA
-            if name_region == 0:      # HARE
+            if name_region == 0:  # HARE
                 prana = max(0, prana - base_delta)
-            elif name_region == 1:    # KRISHNA
-                integrity_u16 = min(INTEGRITY_FULL,
-                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 50))
-            else:                     # RAMA
+            elif name_region == 1:  # KRISHNA
+                integrity_u16 = min(
+                    INTEGRITY_FULL, integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 50)
+                )
+            else:  # RAMA
                 cycle += KSETRAJNA
-                integrity_u16 = min(INTEGRITY_FULL,
-                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100))
+                integrity_u16 = min(
+                    INTEGRITY_FULL, integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100)
+                )
 
         elif phase == HALVES:  # KARMA
             prana = max(0, prana - base_delta)
-            if name_region == 0:      # HARE
+            if name_region == 0:  # HARE
                 cycle += KSETRAJNA
-            elif name_region == 1:    # KRISHNA
-                integrity_u16 = min(INTEGRITY_FULL,
-                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100))
+            elif name_region == 1:  # KRISHNA
+                integrity_u16 = min(
+                    INTEGRITY_FULL, integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100)
+                )
                 cycle += KSETRAJNA
-            else:                     # RAMA
+            else:  # RAMA
                 cycle += HALVES
 
         else:  # MOKSHA
             prana = max(0, prana - base_delta)
-            if name_region == 0:      # HARE
-                integrity_u16 = max(0,
-                    integrity_u16 - (intensity_fp * INTEGRITY_FULL) // (max_intensity * 200))
-            elif name_region == 1:    # KRISHNA
-                integrity_u16 = min(INTEGRITY_FULL,
-                    integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100))
-            else:                     # RAMA
+            if name_region == 0:  # HARE
+                integrity_u16 = max(0, integrity_u16 - (intensity_fp * INTEGRITY_FULL) // (max_intensity * 200))
+            elif name_region == 1:  # KRISHNA
+                integrity_u16 = min(
+                    INTEGRITY_FULL, integrity_u16 + (intensity_fp * INTEGRITY_FULL) // (max_intensity * 100)
+                )
+            else:  # RAMA
                 cycle += HALVES
 
         # Clamp prana
         prana = min(prana, MAX_PRANA_U32)
 
         # Write back lifecycle
-        struct.pack_into("<IHH", self._mem, offset + 24,
-                         prana, integrity_u16, cycle)
+        struct.pack_into("<IHH", self._mem, slot * SLOT_BYTES + 24, prana, integrity_u16, cycle)
 
     # =========================================================================
     # QUERY METHODS
     # =========================================================================
 
     def is_alive(self, slot: int) -> bool:
-        """Check if slot has active cell. O(1)."""
-        return struct.unpack_from("<I", self._mem, slot * SLOT_BYTES + 24)[0] > 0
+        """Check if slot has active cell. O(1). Zero-copy."""
+        return self._slots[slot].prana > 0
 
     def prana_at(self, slot: int) -> int:
-        """Read prana at slot. O(1)."""
-        return struct.unpack_from("<I", self._mem, slot * SLOT_BYTES + 24)[0]
+        """Read prana at slot. O(1). Zero-copy."""
+        return self._slots[slot].prana
 
     def active_count(self) -> int:
-        """Count active slots. O(N) but N=512 is small."""
+        """Count active slots. O(N) but N=512 is small. Zero-copy."""
+        slots = self._slots
         count = 0
         for i in range(ANTARANGA_SLOTS):
-            if struct.unpack_from("<I", self._mem, i * SLOT_BYTES + 24)[0] > 0:
+            if slots[i].prana > 0:
                 count += KSETRAJNA
         return count
 
     def total_prana(self) -> int:
-        """Sum of all prana in chamber. O(N)."""
+        """Sum of all prana in chamber. O(N). Zero-copy."""
+        slots = self._slots
         total = 0
         for i in range(ANTARANGA_SLOTS):
-            total += struct.unpack_from("<I", self._mem, i * SLOT_BYTES + 24)[0]
+            total += slots[i].prana
         return total
 
     def clear(self) -> None:
         """Wipe the chamber clean. O(1) — memset equivalent."""
-        self._mem[:] = b'\x00' * CHAMBER_BYTES
+        ctypes.memset(ctypes.addressof(self._slots), 0, CHAMBER_BYTES)
 
     @property
     def raw(self) -> memoryview:

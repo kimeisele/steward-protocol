@@ -23,14 +23,14 @@ if TYPE_CHECKING:
 
 # These imports are needed for class definition
 from vibe_core.mahamantra.protocols._gad import GADBase, GADProtocol
-from vibe_core.mahamantra.protocols._header import MahaCell, MahaHeader, HEADER_SIZE_BYTES, HEADER_DAILY_CYCLES
+from vibe_core.mahamantra.protocols._header import HEADER_DAILY_CYCLES, HEADER_SIZE_BYTES, MahaCell, MahaHeader
+from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.seed.types import (
     AkashState,
     ExecuteResult,
     VibrationState,
 )
 from vibe_core.mahamantra.substrate.lotus_types import LotusNode, LotusPath
-from vibe_core.mahamantra.protocols._pancha import TattvaDict
 from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 from vibe_core.mahamantra.substrate.tattva_registry import get_registry
 
@@ -77,33 +77,56 @@ class _PipelineCache:
 
     __slots__ = (
         # Constants (from _seed.py — the 7 axioms and derivations)
-        'WORDS', 'MAHA_QUANTUM', 'PARAMPARA', 'KSETRAJNA', 'MAX_CYCLES',
+        "WORDS",
+        "MAHA_QUANTUM",
+        "PARAMPARA",
+        "KSETRAJNA",
+        "MAX_CYCLES",
         # Stateless callables (function references, no owned state)
-        'encode_text', 'synth_transform',
-        'rank_words', 'match_attractor', 'get_gita_chapter',
-        'get_chapter_significance', 'is_fruit',
-        'verse_words',
-        'diw_unpack',
-        'get_shadow_oracle',
-        'get_chamber',
-        'get_shadow_reactor_factory',
+        "encode_text",
+        "synth_transform",
+        "rank_words",
+        "match_attractor",
+        "get_gita_chapter",
+        "get_chapter_significance",
+        "is_fruit",
+        "verse_words",
+        "diw_unpack",
+        "get_shadow_oracle",
+        "get_chamber",
+        "get_shadow_reactor_factory",
         # Classes (type references, not instances)
-        'MahaCellUnified', 'register_cell', 'TickStateInput',
+        "MahaCellUnified",
+        "register_cell",
+        "TickStateInput",
         # Position LUTs (length = WORDS = 16, precomputed tuples)
-        'ALL_GUARDIANS', 'MAHAMANTRA_SEQUENCE', 'THE_FLUTE_CYCLE',
-        'quarter_names', 'is_head_flags',
-        'quarter_head_names', 'holy_names', 'trinity_functions',
-        'rama_coords', 'phonemes', 'roles',
+        "ALL_GUARDIANS",
+        "MAHAMANTRA_SEQUENCE",
+        "THE_FLUTE_CYCLE",
+        "quarter_names",
+        "is_head_flags",
+        "quarter_head_names",
+        "holy_names",
+        "trinity_functions",
+        "rama_coords",
+        "phonemes",
+        "roles",
         # Phoneme signature LUTs (indexed by rama_coord, length = 49)
         # These are module-level tuples in pancha_walk.py — we hold references.
-        'COORD_ELEMENT', 'COORD_VARGA', 'COORD_SUB', 'COORD_HARMONIC',
-        'ELEMENT_NAMES', 'IS_SHRUTI',
+        "COORD_ELEMENT",
+        "COORD_VARGA",
+        "COORD_SUB",
+        "COORD_HARMONIC",
+        "ELEMENT_NAMES",
+        "IS_SHRUTI",
         # Precomputed DIW components (length = WORDS = 16)
-        'diw_components',
+        "diw_components",
         # COSMIC_FRAME for API boundary conversions
-        'COSMIC_FRAME',
+        "COSMIC_FRAME",
         # Guna derivation (OpCode → Guna)
-        'MantraOpCode', 'get_guna', 'Guna',
+        "MantraOpCode",
+        "get_guna",
+        "Guna",
     )
 
     def __init__(self) -> None:
@@ -111,11 +134,18 @@ class _PipelineCache:
         # NOTE: Compressor is NOT cached here — MahamantraLotus owns it
         # via _get_compressor() (class-level singleton). No duplication.
         from vibe_core.mahamantra.protocols._seed import (
-            COSMIC_FRAME, MAHA_QUANTUM, PARAMPARA, WORDS,
-            KSETRAJNA, QUARTERS,
-            get_name_at_position, get_quarter_head, get_trinity_function,
+            COSMIC_FRAME,
+            KSETRAJNA,
+            MAHA_QUANTUM,
+            PARAMPARA,
+            QUARTERS,
+            WORDS,
+            get_name_at_position,
+            get_quarter_head,
+            get_trinity_function,
             is_head,
         )
+
         self.COSMIC_FRAME = COSMIC_FRAME
         self.WORDS = WORDS
         self.MAHA_QUANTUM = MAHA_QUANTUM
@@ -125,80 +155,98 @@ class _PipelineCache:
 
         # --- Stateless callables (resolved once, no owned state) ---
         from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
+
         self.encode_text = encode_text
 
         # MahaModularSynth is stateless (pure function: seed → attractor).
         # No singleton exists elsewhere — safe to own one instance here.
         from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+
         self.synth_transform = MahaModularSynth(default_preset="quantum").transform
 
         from vibe_core.mahamantra.substrate.resonance_ranker import rank_words
+
         self.rank_words = rank_words
 
         from vibe_core.mahamantra.adapters.gita_resonance import match_attractor
+
         self.match_attractor = match_attractor
 
         from vibe_core.mahamantra.protocols._maha_compute import get_gita_chapter
+
         self.get_gita_chapter = get_gita_chapter
 
         from vibe_core.mahamantra.substrate.gita import get_chapter_significance
+
         self.get_chapter_significance = get_chapter_significance
 
         from vibe_core.mahamantra.protocols._seed import is_fruit
+
         self.is_fruit = is_fruit
 
         from vibe_core.mahamantra.substrate.sanskrit_lookup import verse_words
+
         self.verse_words = verse_words
 
         from vibe_core.mahamantra.protocols.diw import unpack as diw_unpack
+
         self.diw_unpack = diw_unpack
 
         from vibe_core.mahamantra.reactor.shadow_oracle import get_shadow_oracle
+
         self.get_shadow_oracle = get_shadow_oracle
 
         from vibe_core.mahamantra.substrate.chamber import get_chamber
+
         self.get_chamber = get_chamber
 
         from vibe_core.mahamantra.reactor.shadow import get_shadow_reactor_factory
+
         self.get_shadow_reactor_factory = get_shadow_reactor_factory
 
         # --- Classes (type references, not instances) ---
         from vibe_core.mahamantra.substrate.cell import MahaCellUnified
+
         self.MahaCellUnified = MahaCellUnified
 
         from vibe_core.mahamantra.substrate.cell_router import register_cell
+
         self.register_cell = register_cell
 
         from vibe_core.mahamantra.reactor.shadow_protocol import TickStateInput
+
         self.TickStateInput = TickStateInput
 
         # --- Static LUTs (length = WORDS) ---
         from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, get_quarter_name
+
         self.ALL_GUARDIANS = ALL_GUARDIANS
 
         from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
+
         self.THE_FLUTE_CYCLE = THE_FLUTE_CYCLE
 
         from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE, MantraOpCode
+
         self.MAHAMANTRA_SEQUENCE = MAHAMANTRA_SEQUENCE
         self.MantraOpCode = MantraOpCode
 
-        from vibe_core.mahamantra.substrate.guna import get_guna, Guna
+        from vibe_core.mahamantra.substrate.guna import Guna, get_guna
+
         self.get_guna = get_guna
         self.Guna = Guna
 
         # Precompute per-position lookups (16 entries each)
         self.quarter_names = tuple(get_quarter_name(p) for p in range(WORDS))
         self.is_head_flags = tuple(is_head(p) for p in range(WORDS))
-        self.quarter_head_names = tuple(
-            ALL_GUARDIANS[get_quarter_head(p)] for p in range(WORDS)
-        )
+        self.quarter_head_names = tuple(ALL_GUARDIANS[get_quarter_head(p)] for p in range(WORDS))
         self.holy_names = tuple(get_name_at_position(p) for p in range(WORDS))
         self.trinity_functions = tuple(get_trinity_function(p) for p in range(WORDS))
         self.roles = tuple("avatara" if is_head(p) else "mahajana" for p in range(WORDS))
 
         # RAMA grid lookups (16 entries)
         from vibe_core.mahamantra.substrate.rama_grid import krishna_route, rama_to_phoneme
+
         self.rama_coords = tuple(krishna_route(p) for p in range(WORDS))
         self.phonemes = tuple(rama_to_phoneme(krishna_route(p)) for p in range(WORDS))
 
@@ -207,9 +255,14 @@ class _PipelineCache:
 
         # --- Phoneme signature tables (references to module-level tuples) ---
         from vibe_core.mahamantra.substrate.pancha_walk import (
-            COORD_ELEMENT, COORD_VARGA, COORD_SUB, COORD_HARMONIC,
-            ELEMENT_NAMES, IS_SHRUTI,
+            COORD_ELEMENT,
+            COORD_HARMONIC,
+            COORD_SUB,
+            COORD_VARGA,
+            ELEMENT_NAMES,
+            IS_SHRUTI,
         )
+
         self.COORD_ELEMENT = COORD_ELEMENT
         self.COORD_VARGA = COORD_VARGA
         self.COORD_SUB = COORD_SUB
@@ -401,7 +454,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             callback: Function that accepts tick state dict
         """
         self._get_singularity().register_listener(callback)
-        logger.debug(f"🔗 Listener registered via Singularity")
+        logger.debug("🔗 Listener registered via Singularity")
 
     def unregister_listener(self, callback) -> None:
         """Remove a listener from tick events."""
@@ -458,6 +511,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # Wire gate providers into TattvaRegistry (always — gates fire on every execute())
         try:
             from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers
+
             count = wire_gate_providers()
             if not silent:
                 _log.info(f"Gate providers wired: {count} providers registered")
@@ -469,6 +523,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # IntentResolver processes queued HEAL intents on every Singularity.tick()
         try:
             from vibe_core.mahamantra.dharma.kumaras.healing_resolver import wire_healing_resolver
+
             wire_healing_resolver()
         except Exception as e:
             if not silent:
@@ -479,6 +534,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # "Let the wildness be wild. We flood the land with the ocean (Seed)."
         try:
             from vibe_core.mahamantra.substrate.proxy import auto_wrap_services
+
             proxies = auto_wrap_services(silent=silent)
             self._balarama_proxies = proxies
             if not silent and proxies:
@@ -488,6 +544,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             if proxies:
                 try:
                     from vibe_core.mahamantra.lila.adoption import adopt_services
+
                     reactors = adopt_services(proxies)
                     self._orbital_reactors = reactors
                     if not silent and reactors:
@@ -506,6 +563,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         # Wire Sravanam listener (organic per-tick cell scanning)
         try:
             from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
+
             listener = wire_sravanam()
             if not silent and listener:
                 _log.info("Sravanam listener wired (organic cell scanning)")
@@ -515,14 +573,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
 
         # Register Sudarshana governance hook (blocks .git writes via @mantra_governed)
         try:
-            from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
             from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+            from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook
 
-            _WRITE_OPCODES = frozenset({
-                MantraOpCode.LEDGER_SIGN,
-                MantraOpCode.IO_FLUSH,
-                MantraOpCode.STATE_SYNC,
-            })
+            _WRITE_OPCODES = frozenset(
+                {
+                    MantraOpCode.LEDGER_SIGN,
+                    MantraOpCode.IO_FLUSH,
+                    MantraOpCode.STATE_SYNC,
+                }
+            )
 
             def _sudarshana_governance_check(
                 opcode: MantraOpCode,
@@ -535,10 +595,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
                 for arg in args:
                     arg_str = str(arg)
                     if "/.git/" in arg_str or "/.git" == arg_str[-5:]:
-                        _log.warning(
-                            f"SUDARSHANA BLOCKED: {opcode.name} targeting .git "
-                            f"via {type(instance).__name__}"
-                        )
+                        _log.warning(f"SUDARSHANA BLOCKED: {opcode.name} targeting .git via {type(instance).__name__}")
                         return False
                 return True
 
@@ -554,6 +611,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         try:
             from vibe_core.mahamantra.protocols._navabhakti import VMCapabilityProtocol
             from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
+
             compiler = get_compiler()
             vm_cap_count = 0
 
@@ -578,7 +636,16 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             # 2. Check known adapters (singletons that implement VMCapability)
             try:
                 from vibe_core.mahamantra.adapters.composition import get_composition
+
                 _register_capability(get_composition())
+            except Exception:
+                pass
+
+            # 3. Kirtan Renderer — adds "kirtan" key to every VM result
+            try:
+                from vibe_core.mahamantra.adapters.kirtan import get_kirtan
+
+                _register_capability(get_kirtan())
             except Exception:
                 pass
 
@@ -755,44 +822,59 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
         """Execute a command through the Mahamantra. SSOT: delegates to __call__."""
         try:
             # ── GATE 0: PARSE — What is this? ──
-            self.fire_gate(TattvaGate.PARSE, {
-                "input_data": command,
-                "entry_type": "execute",
-                "args": args or [],
-            })
+            self.fire_gate(
+                TattvaGate.PARSE,
+                {
+                    "input_data": command,
+                    "entry_type": "execute",
+                    "args": args or [],
+                },
+            )
 
             # ── GATE 1: VALIDATE — Is it legitimate? ──
-            self.fire_gate(TattvaGate.VALIDATE, {
-                "input_text": command,
-                "seed": None,
-                "input_coords": None,
-            })
+            self.fire_gate(
+                TattvaGate.VALIDATE,
+                {
+                    "input_text": command,
+                    "seed": None,
+                    "input_coords": None,
+                },
+            )
 
             # ── GATE 2: EXECUTE — Pure computation (Vrindavan) ──
-            self.fire_gate(TattvaGate.EXECUTE, {
-                "seed": None,
-                "attractor": None,
-                "parampara_verified": None,
-            })
+            self.fire_gate(
+                TattvaGate.EXECUTE,
+                {
+                    "seed": None,
+                    "attractor": None,
+                    "parampara_verified": None,
+                },
+            )
 
             result = self(command, opcode=opcode)  # __call__ is pure — no gates inside
 
             # ── GATE 3: RESULT — Is the output valid? ──
-            self.fire_gate(TattvaGate.RESULT, {
-                "attractor": result.get("vibration", {}).get("attractor"),
-                "resonant_words": result.get("smaranam", ()),
-                "verse_result": result.get("verse"),
-            })
+            self.fire_gate(
+                TattvaGate.RESULT,
+                {
+                    "attractor": result.get("vibration", {}).get("attractor"),
+                    "resonant_words": result.get("smaranam", ()),
+                    "verse_result": result.get("verse"),
+                },
+            )
 
             # ── GATE 4: SYNC — Side-effects (governance) ──
-            self.fire_gate(TattvaGate.SYNC, {
-                "position": result.get("position"),
-                "guardian": result.get("guardian"),
-                "seed": result.get("vibration", {}).get("seed"),
-                "attractor": result.get("vibration", {}).get("attractor"),
-                "opcode": result.get("guna", {}).get("opcode"),
-                "guna": result.get("guna", {}).get("mode"),
-            })
+            self.fire_gate(
+                TattvaGate.SYNC,
+                {
+                    "position": result.get("position"),
+                    "guardian": result.get("guardian"),
+                    "seed": result.get("vibration", {}).get("seed"),
+                    "attractor": result.get("vibration", {}).get("attractor"),
+                    "opcode": result.get("guna", {}).get("opcode"),
+                    "guna": result.get("guna", {}).get("mode"),
+                },
+            )
 
             self._active_gate = None
 
@@ -831,6 +913,7 @@ class MahamantraLotus(LotusNode, GADBase, GADProtocol):
             opcode: Optional MantraOpCode value (0-15).
         """
         from vibe_core.mahamantra.substrate.mantra_vm import execute_cycle
+
         return execute_cycle(self, input_data, opcode=opcode)
 
     # =========================================================================

@@ -40,9 +40,9 @@
       "connections": [
         {
           "target": "action:detect_corrupted_state",
-          "weight": 0.9428808193305876,
+          "weight": 0.9454931181143026,
           "learned_at": "2026-02-05T00:19:40.179438",
-          "vairagya_applied": "2026-02-17T17:08:00.631056"
+          "vairagya_applied": "2026-02-21T21:22:01.997398"
         }
       ]
     },
@@ -91,9 +91,9 @@
       "connections": [
         {
           "target": "action:detect_code_smell",
-          "weight": 0.9428854138600592,
+          "weight": 0.9478593922127453,
           "learned_at": "2026-02-05T00:39:49.246974",
-          "vairagya_applied": "2026-02-17T17:08:31.869914"
+          "vairagya_applied": "2026-02-21T21:21:55.141478"
         }
       ]
     },
@@ -102,7 +102,7 @@
       "connections": [
         {
           "target": "action:evaluate_renderer_pattern",
-          "weight": 0.2,
+          "weight": 0.1,
           "learned_at": "2026-02-05T00:39:49.378642"
         }
       ]
@@ -112,9 +112,9 @@
       "connections": [
         {
           "target": "action:update_config",
-          "weight": 0.9467040500339445,
+          "weight": 0.9467040500699527,
           "learned_at": "2026-02-05T00:39:49.606645",
-          "vairagya_applied": "2026-02-17T17:08:33.394999"
+          "vairagya_applied": "2026-02-21T21:21:55.673390"
         }
       ]
     },
@@ -123,9 +123,9 @@
       "connections": [
         {
           "target": "action:detect_unregistered_state",
-          "weight": 0.9489507794455575,
+          "weight": 0.9478556343115565,
           "learned_at": "2026-02-05T00:39:49.740563",
-          "vairagya_applied": "2026-02-17T17:08:30.845578"
+          "vairagya_applied": "2026-02-21T21:21:57.575148"
         }
       ]
     },
@@ -194,7 +194,7 @@
       "connections": [
         {
           "target": "action:evaluate_tool_output",
-          "weight": 0.25,
+          "weight": 0.35000000000000125,
           "learned_at": "2026-02-05T00:39:50.947221"
         }
       ]
@@ -214,9 +214,9 @@
       "connections": [
         {
           "target": "action:refactor_code",
-          "weight": 0.9414760541425368,
+          "weight": 0.9428808939151874,
           "learned_at": "2026-02-05T00:39:51.263745",
-          "vairagya_applied": "2026-02-17T17:08:27.121968"
+          "vairagya_applied": "2026-02-21T21:21:58.050144"
         }
       ]
     },
@@ -255,7 +255,7 @@
       "connections": [
         {
           "target": "action:evaluate_doc_compliance",
-          "weight": 0.15000000000000002,
+          "weight": 0.1,
           "learned_at": "2026-02-05T00:53:38.422873"
         }
       ]
@@ -265,9 +265,9 @@
       "connections": [
         {
           "target": "action:detect_regression",
-          "weight": 0.9454931182537484,
+          "weight": 0.948950779469429,
           "learned_at": "2026-02-05T00:53:38.841231",
-          "vairagya_applied": "2026-02-17T17:08:24.805315"
+          "vairagya_applied": "2026-02-21T21:22:01.642322"
         }
       ]
     },
@@ -306,9 +306,9 @@
       "connections": [
         {
           "target": "action:evaluate_state_health",
-          "weight": 0.9499922515925746,
+          "weight": 0.9467040500701537,
           "learned_at": "2026-02-05T00:53:40.020972",
-          "vairagya_applied": "2026-02-17T17:08:20.439945"
+          "vairagya_applied": "2026-02-21T21:21:13.848758"
         }
       ]
     },
@@ -317,7 +317,7 @@
       "connections": [
         {
           "target": "action:evaluate_holon_structure",
-          "weight": 0.2,
+          "weight": 0.15000000000000002,
           "learned_at": "2026-02-05T00:53:40.159045"
         }
       ]
@@ -377,9 +377,9 @@
       "connections": [
         {
           "target": "action:detect_state_drift",
-          "weight": 0.9478556342773129,
+          "weight": 0.9478556343115565,
           "learned_at": "2026-02-05T00:53:41.774561",
-          "vairagya_applied": "2026-02-17T17:08:15.870835"
+          "vairagya_applied": "2026-02-21T21:21:52.500248"
         }
       ]
     },
@@ -428,7 +428,7 @@
       "connections": [
         {
           "target": "action:evaluate_data_sources",
-          "weight": 0.1,
+          "weight": 0.2,
           "learned_at": "2026-02-05T00:53:42.930274"
         }
       ]
@@ -448,9 +448,9 @@
       "connections": [
         {
           "target": "action:evaluate_code_quality",
-          "weight": 0.9489509117386195,
+          "weight": 0.9414776857646481,
           "learned_at": "2026-02-05T00:53:43.304899",
-          "vairagya_applied": "2026-02-17T17:08:30.234761"
+          "vairagya_applied": "2026-02-21T21:21:57.888632"
         }
       ]
     },
@@ -469,7 +469,7 @@
       "connections": [
         {
           "target": "action:evaluate_module_compliance",
-          "weight": 0.2,
+          "weight": 0.1,
           "learned_at": "2026-02-05T00:53:43.930187"
         }
       ]
@@ -509,9 +509,9 @@
       "connections": [
         {
           "target": "action:resolve_state_conflict",
-          "weight": 0.9499922515819431,
+          "weight": 0.9442197799156947,
           "learned_at": "2026-02-05T00:53:45.437073",
-          "vairagya_applied": "2026-02-17T17:08:28.852572"
+          "vairagya_applied": "2026-02-21T21:21:50.921852"
         }
       ]
     },
@@ -520,9 +520,9 @@
       "connections": [
         {
           "target": "action:null_test",
-          "weight": 0.9428808193081388,
+          "weight": 0.9454931181139447,
           "learned_at": "2026-02-05T00:53:45.682064",
-          "vairagya_applied": "2026-02-17T17:08:20.715536"
+          "vairagya_applied": "2026-02-21T21:21:49.338582"
         }
       ]
     },
@@ -551,9 +551,9 @@
       "connections": [
         {
           "target": "action:run_command",
-          "weight": 0.9467040500544927,
+          "weight": 0.9454931181138047,
           "learned_at": "2026-02-05T00:54:57.720598",
-          "vairagya_applied": "2026-02-17T17:08:19.400174"
+          "vairagya_applied": "2026-02-21T21:21:50.557324"
         }
       ]
     },
@@ -562,9 +562,9 @@
       "connections": [
         {
           "target": "action:ambiguous_action",
-          "weight": 0.9454931181030378,
+          "weight": 0.9467040500703747,
           "learned_at": "2026-02-05T00:54:58.333901",
-          "vairagya_applied": "2026-02-17T17:08:22.288845"
+          "vairagya_applied": "2026-02-21T21:22:00.426597"
         }
       ]
     },
@@ -603,9 +603,9 @@
       "connections": [
         {
           "target": "action:detect_flaky_test",
-          "weight": 0.9499922516042788,
+          "weight": 0.9499922516132753,
           "learned_at": "2026-02-05T00:54:59.612971",
-          "vairagya_applied": "2026-02-17T17:08:25.594298"
+          "vairagya_applied": "2026-02-21T21:21:59.049986"
         }
       ]
     },
@@ -614,9 +614,9 @@
       "connections": [
         {
           "target": "action:detect_silent_regression",
-          "weight": 0.9499922516042788,
+          "weight": 0.9454931181140372,
           "learned_at": "2026-02-05T00:54:59.857517",
-          "vairagya_applied": "2026-02-17T17:08:34.662990"
+          "vairagya_applied": "2026-02-21T21:21:56.901709"
         }
       ]
     },
@@ -625,9 +625,9 @@
       "connections": [
         {
           "target": "action:detect_orphan_state",
-          "weight": 0.9414728544040967,
+          "weight": 0.9489507794666695,
           "learned_at": "2026-02-05T00:55:01.118151",
-          "vairagya_applied": "2026-02-17T17:08:20.152417"
+          "vairagya_applied": "2026-02-21T21:21:32.450190"
         }
       ]
     },
@@ -636,9 +636,9 @@
       "connections": [
         {
           "target": "action:evaluate_commit_strategy",
-          "weight": 0.9478556342773129,
+          "weight": 0.9454931181135935,
           "learned_at": "2026-02-05T00:55:01.248520",
-          "vairagya_applied": "2026-02-17T17:07:33.419219"
+          "vairagya_applied": "2026-02-21T21:21:49.494702"
         }
       ]
     },
@@ -667,9 +667,9 @@
       "connections": [
         {
           "target": "action:",
-          "weight": 0.9499922515996156,
+          "weight": 0.9499922516130851,
           "learned_at": "2026-02-05T00:55:02.278527",
-          "vairagya_applied": "2026-02-17T17:08:12.695062"
+          "vairagya_applied": "2026-02-21T21:21:43.211302"
         }
       ]
     },
@@ -708,9 +708,9 @@
       "connections": [
         {
           "target": "action:self_inspection",
-          "weight": 0.9454931180757294,
+          "weight": 0.9428808193261148,
           "learned_at": "2026-02-05T00:55:40.298211",
-          "vairagya_applied": "2026-02-17T17:08:16.059836"
+          "vairagya_applied": "2026-02-21T21:21:46.760295"
         }
       ]
     },
@@ -719,7 +719,7 @@
       "connections": [
         {
           "target": "action:evaluate_refactoring",
-          "weight": 0.1,
+          "weight": 0.15000000000000002,
           "learned_at": "2026-02-05T00:55:41.079628"
         }
       ]
@@ -739,9 +739,9 @@
       "connections": [
         {
           "target": "action:evaluate_test_performance",
-          "weight": 0.9467040500635053,
+          "weight": 0.9489507794673249,
           "learned_at": "2026-02-05T00:55:42.199351",
-          "vairagya_applied": "2026-02-17T17:08:22.436547"
+          "vairagya_applied": "2026-02-21T21:22:01.458261"
         }
       ]
     },
@@ -770,9 +770,9 @@
       "connections": [
         {
           "target": "action:rename_class",
-          "weight": 0.9478556342968539,
+          "weight": 0.9489507794672455,
           "learned_at": "2026-02-05T00:56:47.281655",
-          "vairagya_applied": "2026-02-17T17:08:27.122008"
+          "vairagya_applied": "2026-02-21T21:21:50.711326"
         }
       ]
     },
@@ -791,9 +791,9 @@
       "connections": [
         {
           "target": "action:detect_gitignore_conflict",
-          "weight": 0.9442197798895474,
+          "weight": 0.9428808193261148,
           "learned_at": "2026-02-06T23:00:21.580700",
-          "vairagya_applied": "2026-02-17T17:08:11.862830"
+          "vairagya_applied": "2026-02-21T21:21:54.959592"
         }
       ]
     },
@@ -802,9 +802,9 @@
       "connections": [
         {
           "target": "action:audit_renderers",
-          "weight": 0.9442201486181395,
+          "weight": 0.9428808256208392,
           "learned_at": "2026-02-06T23:00:26.099618",
-          "vairagya_applied": "2026-02-17T17:08:29.509000"
+          "vairagya_applied": "2026-02-21T21:21:56.185375"
         }
       ]
     },
@@ -823,8 +823,8 @@
     "created": "2026-01-03T22:16:51.585643Z",
     "last_updated": "2026-01-12T04:07:37.512875Z",
     "updates_count": 8,
-    "last_synapse_update": "2026-02-17T17:08:34.955989",
-    "last_vairagya_prune": "2026-02-17T17:08:34.663086",
+    "last_synapse_update": "2026-02-21T21:22:02.220684",
+    "last_vairagya_prune": "2026-02-21T21:22:01.997525",
     "last_vairagya_count": 1
   }
 }

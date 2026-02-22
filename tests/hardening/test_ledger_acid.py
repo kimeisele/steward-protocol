@@ -65,7 +65,7 @@ def test_concurrent_writes_integrity():
             finally:
                 with lock:
                     event_ids.extend(local_ids)
-                ledger.close()
+                # shared conn pool — no close() needed
 
         # Launch threads
         threads = []
@@ -99,7 +99,7 @@ def test_concurrent_writes_integrity():
         unique_ids = set(e.get("event_id") for e in events)
         assert len(unique_ids) == actual_events, f"DUPLICATE EVENT IDS: {actual_events - len(unique_ids)} duplicates"
 
-        verify_ledger.close()
+        # shared conn pool — no close() needed
 
         assert not errors, f"THREAD ERRORS: {len(errors)} - {errors[:5]}"
 
@@ -173,7 +173,7 @@ os.kill(os.getpid(), 9)
             else:
                 lost += 1
 
-            verify_ledger.close()
+            # shared conn pool — no close() needed
 
         assert lost == 0, f"DATA LOSS: {lost}/{num_iterations} events lost after crash (survived: {survived})"
 
@@ -237,7 +237,7 @@ def test_replay_attack_detection():
 
         # Verify chain detects tampering
         integrity = ledger.verify_chain_integrity()
-        ledger.close()
+        # shared conn pool — no close() needed
 
         assert integrity["corrupted"], (
             "REPLAY ATTACK UNDETECTED: Injected old event, chain reported clean (injected: REPLAYED_EVT)"
@@ -281,7 +281,7 @@ def test_tamper_detection():
 
         # Verify tampering detected
         integrity = ledger.verify_chain_integrity()
-        ledger.close()
+        # shared conn pool — no close() needed
 
         assert integrity["corrupted"], "TAMPERING UNDETECTED: Modified payload, chain reported clean"
 

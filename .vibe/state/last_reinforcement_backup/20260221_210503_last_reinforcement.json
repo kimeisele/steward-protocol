@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-02-21T20:27:51.917000",
+  "intent_type": "reflex_trigger",
+  "intent_title": "Core file deleted - REFLEX blocks",
+  "success": true,
+  "old_weight": 0.2,
+  "new_weight": 0.25,
+  "delta": 0.05
+}

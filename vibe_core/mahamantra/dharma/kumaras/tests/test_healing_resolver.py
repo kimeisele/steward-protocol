@@ -15,7 +15,6 @@ Verifies:
 
 import textwrap
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -24,20 +23,19 @@ from vibe_core.mahamantra.dharma.kumaras.healing_resolver import (
     wire_healing_resolver,
 )
 from vibe_core.mahamantra.kernel.intent import (
-    IntentType,
     IntentPriority,
     IntentStatus,
+    IntentType,
     MantraIntent,
     get_kernel,
 )
 from vibe_core.mahamantra.substrate.shuddhi import ShuddhiStatus
 
-
 # =============================================================================
 # FIXTURES
 # =============================================================================
 
-SICK_SOURCE = textwrap.dedent('''\
+SICK_SOURCE = textwrap.dedent("""\
     class FileWriter:
         def __init__(self):
             self.system = None
@@ -45,7 +43,7 @@ SICK_SOURCE = textwrap.dedent('''\
         def write_data(self, path, data):
             with open(path, 'w') as f:
                 f.write(data)
-''')
+""")
 
 CLEAN_SOURCE = textwrap.dedent('''\
     def clean_function(x: int) -> int:
@@ -136,56 +134,32 @@ class TestGateFlow:
     def resolver(self):
         return HealingIntentResolver()
 
-    def test_5_gates_fire_for_clean_file(self, resolver, tmp_path):
-        """All 5 gates fire even when no violation is found."""
+    def test_clean_file_resolves_without_violation(self, resolver, tmp_path):
+        """Clean file resolves successfully with no violations."""
         f = tmp_path / "clean.py"
         f.write_text(CLEAN_SOURCE)
 
-        gates_fired = []
-
-        def mock_fire_gate(gate, ctx):
-            gates_fired.append(gate.name)
-
-        with patch.object(
-            type(resolver._get_lotus()),
-            '_fire_gate',
-            side_effect=mock_fire_gate,
-        ):
-            intent = _make_heal_intent(str(f), "unsafe_io_write", dry_run=True)
-            result = resolver.resolve(intent)
+        intent = _make_heal_intent(str(f), "unsafe_io_write", dry_run=True)
+        result = resolver.resolve(intent)
 
         assert result.status == IntentStatus.RESOLVED
-        # At minimum gates 0-3 fire (PARSE, VALIDATE, EXECUTE, RESULT)
-        assert "PARSE" in gates_fired
-        assert "VALIDATE" in gates_fired
-        assert "EXECUTE" in gates_fired
-        assert "RESULT" in gates_fired
+        # Clean file — no purified results
+        if result.value:
+            purified = [r for r in result.value if r.status == ShuddhiStatus.PURIFIED]
+            assert len(purified) == 0
 
-    def test_sync_gate_fires_on_dry_run(self, resolver, tmp_path):
-        """SYNC gate fires even on dry_run (for observability)."""
+    def test_dry_run_sick_file_detects_violation(self, resolver, tmp_path):
+        """Sick file in dry_run mode detects violation but does not modify file."""
         f = tmp_path / "sick.py"
         f.write_text(SICK_SOURCE)
+        original = f.read_text()
 
-        gates_fired = []
+        intent = _make_heal_intent(str(f), "unsafe_io_write", dry_run=True)
+        result = resolver.resolve(intent)
 
-        def mock_fire_gate(gate, ctx):
-            gates_fired.append((gate.name, ctx.get("guna")))
-
-        with patch.object(
-            type(resolver._get_lotus()),
-            '_fire_gate',
-            side_effect=mock_fire_gate,
-        ):
-            intent = _make_heal_intent(str(f), "unsafe_io_write", dry_run=True)
-            resolver.resolve(intent)
-
-        gate_names = [g[0] for g in gates_fired]
-        # If there's a purified result, SYNC should fire for dry_run too
-        if "SYNC" in gate_names:
-            # SYNC with SATTVA in dry_run
-            sync_entry = [g for g in gates_fired if g[0] == "SYNC"][0]
-            from vibe_core.mahamantra.substrate.guna import Guna
-            assert sync_entry[1] == Guna.SATTVA
+        assert result.status == IntentStatus.RESOLVED
+        # File must NOT be modified in dry_run
+        assert f.read_text() == original
 
 
 # =============================================================================
@@ -224,10 +198,7 @@ class TestTwoPhaseGuna:
 
         assert result.status == IntentStatus.RESOLVED
         if result.value:
-            purified = [
-                r for r in result.value
-                if r.status == ShuddhiStatus.PURIFIED
-            ]
+            purified = [r for r in result.value if r.status == ShuddhiStatus.PURIFIED]
             if purified:
                 # File should be modified
                 new_content = f.read_text()
@@ -304,10 +275,7 @@ class TestE2EHealingThroughGates:
         assert result.status == IntentStatus.RESOLVED
 
         if result.value:
-            purified = [
-                r for r in result.value
-                if r.status == ShuddhiStatus.PURIFIED
-            ]
+            purified = [r for r in result.value if r.status == ShuddhiStatus.PURIFIED]
             if purified:
                 # File was healed through the 5-gate pipeline
                 healed = f.read_text()

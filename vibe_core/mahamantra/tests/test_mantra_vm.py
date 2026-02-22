@@ -10,31 +10,31 @@ Also tests individual instruction wrappers in isolation.
 
 import pytest
 
-from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
-from vibe_core.mahamantra.substrate.mantra_vm import (
-    DISPATCH,
-    execute_cycle,
-    _w_sravanam,
-    _w_kirtanam,
-    _w_pada_sevanam,
-    _w_arcanam,
-    _w_smaranam,
-    _w_vandanam,
-    _w_dasyam,
-    _w_sakhyam,
-)
 from vibe_core.mahamantra.protocols._navabhakti import (
     CYCLE,
     GATE_INDEX,
-    NavaBhaktiOp,
     VAMSI_ADDR,
+    NavaBhaktiOp,
 )
 from vibe_core.mahamantra.protocols._seed import NAVA, PARAMPARA
-
+from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+from vibe_core.mahamantra.substrate.mantra_vm import (
+    DISPATCH,
+    _w_arcanam,
+    _w_dasyam,
+    _w_kirtanam,
+    _w_pada_sevanam,
+    _w_sakhyam,
+    _w_smaranam,
+    _w_sravanam,
+    _w_vandanam,
+    execute_cycle,
+)
 
 # =============================================================================
 # FIXTURES
 # =============================================================================
+
 
 @pytest.fixture(scope="module")
 def lotus():
@@ -46,6 +46,7 @@ def lotus():
 # =============================================================================
 # PROTOCOL INVARIANTS
 # =============================================================================
+
 
 class TestNavaBhaktiProtocol:
     """Verify the instruction set is correctly derived from the Mantra."""
@@ -65,6 +66,7 @@ class TestNavaBhaktiProtocol:
 
     def test_vamsi_no_collision_with_flute_cycle(self):
         from vibe_core.mahamantra.substrate.lotus_core import _get_pipeline
+
         P = _get_pipeline()
         flute_set = set(P.THE_FLUTE_CYCLE)
         vm_set = set(VAMSI_ADDR)
@@ -79,7 +81,7 @@ class TestNavaBhaktiProtocol:
         for i in range(1, len(GATE_INDEX)):
             assert GATE_INDEX[i] >= GATE_INDEX[i - 1], (
                 f"Gate index must be monotonically non-decreasing: "
-                f"GATE_INDEX[{i}]={GATE_INDEX[i]} < GATE_INDEX[{i-1}]={GATE_INDEX[i-1]}"
+                f"GATE_INDEX[{i}]={GATE_INDEX[i]} < GATE_INDEX[{i - 1}]={GATE_INDEX[i - 1]}"
             )
 
 
@@ -105,17 +107,36 @@ class TestVMEquivalence:
     def test_vm_output_keys(self, lotus, text):
         result = lotus(text)
         core_keys = {
-            "input", "tattva_gate", "guna", "vibration", "parampara",
-            "chapter", "chapter_significance", "verse", "matches",
-            "gita_phase", "is_complete", "position", "guardian",
-            "quarter", "role", "quarter_head", "holy_name",
-            "trinity_function", "diw", "cell", "nama", "smaranam",
-            "antaranga", "akash", "execution", "yajna", "gate_trace",
+            "input",
+            "tattva_gate",
+            "guna",
+            "vibration",
+            "parampara",
+            "chapter",
+            "chapter_significance",
+            "verse",
+            "matches",
+            "gita_phase",
+            "is_complete",
+            "position",
+            "guardian",
+            "quarter",
+            "role",
+            "quarter_head",
+            "holy_name",
+            "trinity_function",
+            "diw",
+            "cell",
+            "nama",
+            "smaranam",
+            "antaranga",
+            "akash",
+            "execution",
+            "yajna",
+            "gate_trace",
         }
         # Core keys must always be present; VMCapability ops may add extras (e.g. "composed")
-        assert core_keys <= set(result.keys()), (
-            f"Missing core keys: {core_keys - set(result.keys())}"
-        )
+        assert core_keys <= set(result.keys()), f"Missing core keys: {core_keys - set(result.keys())}"
 
     @pytest.mark.parametrize("text", _TEST_INPUTS)
     def test_deterministic(self, text):
@@ -157,6 +178,7 @@ class TestVMEquivalence:
 # =============================================================================
 # STEP ISOLATION — Individual wrappers
 # =============================================================================
+
 
 class TestStepIsolation:
     """Test individual VM wrappers produce correct ctx mutations."""
@@ -206,11 +228,24 @@ class TestStepIsolation:
         _w_pada_sevanam(lotus, ctx)
         _w_dasyam(lotus, ctx)
         required = {
-            "position", "diw", "diw_comp", "quarter", "guardian", "role",
-            "quarter_head_name", "holy_name", "trinity_function",
-            "rama_coord", "phoneme", "phoneme_element", "phoneme_varga",
-            "phoneme_sub", "phoneme_harmonic", "phoneme_shruti",
-            "pipeline_opcode", "pipeline_guna",
+            "position",
+            "diw",
+            "diw_comp",
+            "quarter",
+            "guardian",
+            "role",
+            "quarter_head_name",
+            "holy_name",
+            "trinity_function",
+            "rama_coord",
+            "phoneme",
+            "phoneme_element",
+            "phoneme_varga",
+            "phoneme_sub",
+            "phoneme_harmonic",
+            "phoneme_shruti",
+            "pipeline_opcode",
+            "pipeline_guna",
         }
         for key in required:
             assert key in ctx, f"Missing ctx key after dasyam: {key}"
@@ -219,6 +254,7 @@ class TestStepIsolation:
 # =============================================================================
 # VM REGISTERS — Persistent state across cycles
 # =============================================================================
+
 
 class TestVenuDriven:
     """Verify Venu orchestrates the VM execution cycle."""
@@ -250,6 +286,7 @@ class TestVenuDriven:
     def test_venu_tick_advances(self):
         """Venu's tick advances by total ops (core + custom) per execute_cycle call."""
         from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
+
         m = MahamantraLotus()
         m.bootstrap(lazy=True, silent=True)
         compiler = get_compiler()
@@ -264,6 +301,7 @@ class TestVenuDriven:
     def test_venu_tick_advances_multiple_calls(self):
         """Multiple calls advance Venu tick consistently."""
         from vibe_core.mahamantra.substrate.cycle_compiler import get_compiler
+
         m = MahamantraLotus()
         m.bootstrap(lazy=True, silent=True)
         compiler = get_compiler()
@@ -288,7 +326,6 @@ class TestVMRegisters:
         """State written to vm_registers survives between cycles."""
         import vibe_core.mahamantra.substrate.cycle_compiler as cc_mod
         from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
-        from unittest.mock import patch
 
         old_compiler = cc_mod._COMPILER
         cc_mod._COMPILER = None
@@ -349,7 +386,9 @@ class TestVMRegisters:
 
             compiler.register_op("arm", gate=3, handler=_setup)
             compiler.register_op(
-                "guarded_op", gate=4, handler=_guarded,
+                "guarded_op",
+                gate=4,
+                handler=_guarded,
                 condition=lambda ctx: ctx.get("vm_registers", {}).get("armed", False),
             )
 
