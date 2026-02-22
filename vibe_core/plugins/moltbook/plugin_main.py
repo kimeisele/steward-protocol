@@ -32,14 +32,21 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.protocols.moltbook import (
     DMConversation,
     DMMessage,
+    DMRequestInfo,
+    DMRequestResult,
     DMSendResult,
+    FollowResult,
     HeartbeatResult,
     MoltbookAgentProfile,
     MoltbookComment,
     MoltbookPost,
     MoltbookProtocol,
     OperationLogEntry,
+    ProfileUpdateResult,
     SemanticSearchResult,
+    SubmoltDetails,
+    SubscribeResult,
+    VoteResult,
 )
 
 if TYPE_CHECKING:
@@ -147,6 +154,132 @@ class MoltbookService(MoltbookProtocol):
     def send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         self._enforce_guna("send_dm")
         return self._client.sync_send_dm(conversation_id, content)
+
+    # --- SATTVA operations (new — read-only) ---
+
+    def get_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
+        self._enforce_guna("get_feed")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_feed(sort, limit))
+
+    def get_personalized_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
+        self._enforce_guna("get_personalized_feed")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_personalized_feed(sort, limit))
+
+    def get_post(self, post_id: str) -> MoltbookPost:
+        self._enforce_guna("get_post")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_post(post_id))
+
+    def get_comments(self, post_id: str, sort: str = "top") -> List[MoltbookComment]:
+        self._enforce_guna("get_comments")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_comments(post_id, sort))
+
+    def get_submolts(self) -> List[SubmoltDetails]:
+        self._enforce_guna("get_submolts")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_submolts())
+
+    def get_submolt(self, name: str) -> SubmoltDetails:
+        self._enforce_guna("get_submolt")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_submolt(name))
+
+    def get_own_profile(self) -> MoltbookAgentProfile:
+        self._enforce_guna("get_own_profile")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_own_profile())
+
+    def get_dm_requests(self) -> List[DMRequestInfo]:
+        self._enforce_guna("get_dm_requests")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.get_dm_requests())
+
+    # --- RAJAS operations (new — write, logged) ---
+
+    def upvote(self, post_id: str) -> VoteResult:
+        self._enforce_guna("upvote")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.upvote(post_id))
+
+    def downvote(self, post_id: str) -> VoteResult:
+        self._enforce_guna("downvote")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.downvote(post_id))
+
+    def upvote_comment(self, comment_id: str) -> VoteResult:
+        self._enforce_guna("upvote_comment")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.upvote_comment(comment_id))
+
+    def follow(self, agent_name: str) -> FollowResult:
+        self._enforce_guna("follow")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.follow(agent_name))
+
+    def create_submolt(self, name: str, display_name: str, description: str) -> SubmoltDetails:
+        self._enforce_guna("create_submolt")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.create_submolt(name, display_name, description))
+
+    def subscribe_submolt(self, name: str) -> SubscribeResult:
+        self._enforce_guna("subscribe")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.subscribe_submolt(name))
+
+    def update_profile(self, description: str) -> ProfileUpdateResult:
+        self._enforce_guna("update_profile")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.update_profile(description))
+
+    def send_dm_request(self, agent_name: str, message: str) -> DMRequestResult:
+        self._enforce_guna("send_dm_request")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.send_dm_request(agent_name, message))
+
+    def approve_dm_request(self, request_id: str) -> DMRequestResult:
+        self._enforce_guna("approve_dm_request")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.approve_dm_request(request_id))
+
+    # --- TAMAS operations (destructive — blocked by _enforce_guna) ---
+
+    def unfollow(self, agent_name: str) -> FollowResult:
+        self._enforce_guna("unfollow")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.unfollow(agent_name))
+
+    def unsubscribe_submolt(self, name: str) -> SubscribeResult:
+        self._enforce_guna("unsubscribe")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.unsubscribe_submolt(name))
+
+    def reject_dm_request(self, request_id: str) -> DMRequestResult:
+        self._enforce_guna("reject_dm_request")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.reject_dm_request(request_id))
 
 
 class MoltbookPlugin(KernelPlugin):

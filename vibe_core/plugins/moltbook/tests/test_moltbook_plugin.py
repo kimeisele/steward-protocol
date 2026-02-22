@@ -355,7 +355,7 @@ class TestMoltbookProtocolContract:
             MoltbookProtocol()
 
     def test_has_all_abstract_methods(self):
-        """All 9 methods are abstract."""
+        """All 29 methods are abstract."""
         expected = {
             "check_heartbeat",
             "create_post",
@@ -366,6 +366,26 @@ class TestMoltbookProtocolContract:
             "get_conversations",
             "get_messages",
             "verify_credentials",
+            "get_feed",
+            "get_personalized_feed",
+            "get_post",
+            "get_comments",
+            "upvote",
+            "downvote",
+            "upvote_comment",
+            "follow",
+            "unfollow",
+            "get_submolts",
+            "get_submolt",
+            "create_submolt",
+            "subscribe_submolt",
+            "unsubscribe_submolt",
+            "update_profile",
+            "get_own_profile",
+            "send_dm_request",
+            "get_dm_requests",
+            "approve_dm_request",
+            "reject_dm_request",
         }
         actual = set(MoltbookProtocol.__abstractmethods__)
         assert actual == expected, f"Missing: {expected - actual}, Extra: {actual - expected}"
@@ -381,7 +401,7 @@ class TestMoltbookProtocolContract:
     def test_method_count_matches(self):
         """Service implements exactly the methods defined by protocol."""
         abstract_count = len(MoltbookProtocol.__abstractmethods__)
-        assert abstract_count == 9
+        assert abstract_count == 29
 
 
 # =============================================================================
@@ -502,7 +522,7 @@ class TestMoltbookServiceTamas:
 
     def test_unsubscribe_blocked(self, service):
         with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
-            service._enforce_guna("unsubscribe")
+            service._enforce_guna("unsubscribe_submolt")
 
     def test_tamas_produces_no_log(self, service):
         """Blocked TAMAS operations must NOT produce log entries."""
@@ -552,7 +572,7 @@ class TestGunaMapCompleteness:
 
     def test_tamas_operations(self):
         """Destructive operations are classified as TAMAS."""
-        tamas_ops = {"delete_post", "unfollow", "unsubscribe"}
+        tamas_ops = {"delete_post", "unfollow", "unsubscribe_submolt", "reject_dm_request"}
         for op in tamas_ops:
             assert MOLTBOOK_GUNA_MAP[op] == MoltbookGuna.TAMAS, f"{op} should be TAMAS (destructive)"
 
