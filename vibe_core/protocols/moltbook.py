@@ -135,6 +135,47 @@ class OperationLogEntry(TypedDict):
     timestamp: float
 
 
+class VoteResult(TypedDict):
+    """Result from upvote/downvote endpoints."""
+
+    status: str
+
+
+class FollowResult(TypedDict):
+    """Result from follow/unfollow endpoints."""
+
+    status: str
+
+
+class SubscribeResult(TypedDict):
+    """Result from subscribe/unsubscribe endpoints."""
+
+    status: str
+
+
+class DMRequestInfo(TypedDict):
+    """A pending DM request."""
+
+    id: str
+    from_agent: str
+    message: str
+    created_at: str
+
+
+class DMRequestResult(TypedDict):
+    """Result from sending/approving/rejecting a DM request."""
+
+    status: str
+    conversation_id: Optional[str]
+
+
+class ProfileUpdateResult(TypedDict):
+    """Result from updating own profile."""
+
+    status: str
+    description: str
+
+
 # =============================================================================
 # GUNA CLASSIFICATION — What I/O policy governs each operation?
 # =============================================================================
@@ -168,18 +209,32 @@ MOLTBOOK_GUNA_MAP: Dict[str, MoltbookGuna] = {
     "get_conversations": MoltbookGuna.SATTVA,
     "get_messages": MoltbookGuna.SATTVA,
     "verify_credentials": MoltbookGuna.SATTVA,
+    "get_feed": MoltbookGuna.SATTVA,
+    "get_personalized_feed": MoltbookGuna.SATTVA,
+    "get_post": MoltbookGuna.SATTVA,
+    "get_comments": MoltbookGuna.SATTVA,
+    "get_submolts": MoltbookGuna.SATTVA,
+    "get_submolt": MoltbookGuna.SATTVA,
+    "get_own_profile": MoltbookGuna.SATTVA,
+    "get_dm_requests": MoltbookGuna.SATTVA,
     # RAJAS — creation, modification
     "create_post": MoltbookGuna.RAJAS,
     "comment": MoltbookGuna.RAJAS,
     "send_dm": MoltbookGuna.RAJAS,
     "upvote": MoltbookGuna.RAJAS,
     "downvote": MoltbookGuna.RAJAS,
+    "upvote_comment": MoltbookGuna.RAJAS,
     "follow": MoltbookGuna.RAJAS,
-    "subscribe": MoltbookGuna.RAJAS,
+    "subscribe_submolt": MoltbookGuna.RAJAS,
+    "create_submolt": MoltbookGuna.RAJAS,
+    "update_profile": MoltbookGuna.RAJAS,
+    "send_dm_request": MoltbookGuna.RAJAS,
+    "approve_dm_request": MoltbookGuna.RAJAS,
     # TAMAS — destruction, irreversible
     "delete_post": MoltbookGuna.TAMAS,
     "unfollow": MoltbookGuna.TAMAS,
-    "unsubscribe": MoltbookGuna.TAMAS,
+    "unsubscribe_submolt": MoltbookGuna.TAMAS,
+    "reject_dm_request": MoltbookGuna.TAMAS,
 }
 
 
@@ -234,3 +289,83 @@ class MoltbookProtocol(ABC):
     @abstractmethod
     def verify_credentials(self) -> bool:
         """Verify the API key is valid and agent is claimed."""
+
+    @abstractmethod
+    def get_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
+        """Global feed. Sort: hot, new, top, rising."""
+
+    @abstractmethod
+    def get_personalized_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
+        """Personalized feed (subscriptions + follows)."""
+
+    @abstractmethod
+    def get_post(self, post_id: str) -> MoltbookPost:
+        """Fetch a single post by ID."""
+
+    @abstractmethod
+    def get_comments(self, post_id: str, sort: str = "top") -> List[MoltbookComment]:
+        """Read comments on a post."""
+
+    @abstractmethod
+    def upvote(self, post_id: str) -> VoteResult:
+        """Upvote a post."""
+
+    @abstractmethod
+    def downvote(self, post_id: str) -> VoteResult:
+        """Downvote a post."""
+
+    @abstractmethod
+    def upvote_comment(self, comment_id: str) -> VoteResult:
+        """Upvote a comment."""
+
+    @abstractmethod
+    def follow(self, agent_name: str) -> FollowResult:
+        """Follow an agent."""
+
+    @abstractmethod
+    def unfollow(self, agent_name: str) -> FollowResult:
+        """Unfollow an agent."""
+
+    @abstractmethod
+    def get_submolts(self) -> List[SubmoltDetails]:
+        """List all submolts."""
+
+    @abstractmethod
+    def get_submolt(self, name: str) -> SubmoltDetails:
+        """Get submolt details."""
+
+    @abstractmethod
+    def create_submolt(self, name: str, display_name: str, description: str) -> SubmoltDetails:
+        """Create a new submolt."""
+
+    @abstractmethod
+    def subscribe_submolt(self, name: str) -> SubscribeResult:
+        """Subscribe to a submolt."""
+
+    @abstractmethod
+    def unsubscribe_submolt(self, name: str) -> SubscribeResult:
+        """Unsubscribe from a submolt."""
+
+    @abstractmethod
+    def update_profile(self, description: str) -> ProfileUpdateResult:
+        """Update own profile description."""
+
+    @abstractmethod
+    def get_own_profile(self) -> MoltbookAgentProfile:
+        """Get own profile."""
+
+    @abstractmethod
+    def send_dm_request(self, agent_name: str, message: str) -> DMRequestResult:
+        """Send a DM request to an agent."""
+
+    @abstractmethod
+    def get_dm_requests(self) -> List[DMRequestInfo]:
+        """List pending DM requests."""
+
+    @abstractmethod
+    def approve_dm_request(self, request_id: str) -> DMRequestResult:
+        """Approve a pending DM request."""
+
+    @abstractmethod
+    def reject_dm_request(self, request_id: str) -> DMRequestResult:
+        """Reject a pending DM request."""
