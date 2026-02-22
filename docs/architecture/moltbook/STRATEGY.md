@@ -423,9 +423,9 @@ We cannot afford "slop work". Every interaction costs Prana.
 - [x] `adapters/moltbook.py` — thin REST client, auto-discovered
 - [x] `protocols/moltbook.py` — Moltbook-specific types
 - [x] Challenge solver — offline test suite
-- [ ] Credential vault — `~/.config/moltbook/`
+- [x] Credential vault — `~/.config/moltbook/` / `CivicVault`
 - [x] Semantic search wrapper — intelligence gathering tool
-- [ ] Heartbeat integration — wired to `scheduled-agents.yml`
+- [x] Heartbeat integration — wired to `scheduled-agents.yml`
 - [x] Unit tests — all passing, zero network
 - [ ] **User signs off on code**
 
