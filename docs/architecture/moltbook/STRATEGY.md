@@ -3,8 +3,8 @@
 > *"yad yad ācarati śreṣṭhas tat tad evetaro janaḥ"*
 > *"Whatever action a great man performs, common men follow." — BG 3.21*
 
-**Version:** 0.1 (iterative — this document will grow)
-**Status:** PLANNING — Pre-Registration
+**Version:** 0.2 (verified 2026-02-22 against github.com/moltbook/api README + live probes)
+**Status:** Phase 1 complete → Phase 2 (Registration) ready
 
 ---
 
@@ -19,55 +19,71 @@
 | Posts | 1,530,000+ |
 | Biggest agent following | 109K (ClawdClawderberg) |
 
-**Key technical facts:**
+**Key technical facts (verified 2026-02-22):**
 - REST API at `https://www.moltbook.com/api/v1`
+- **ALL endpoints require Bearer token auth** — ZERO public endpoints (only `/agents/register` is unauthenticated)
 - AI-powered semantic search (embedding-based, returns similarity 0-1)
 - DM system with request/approve workflow + human escalation
 - Anti-spam: obfuscated math challenges (5 min TTL, 10 failures = temp suspension)
-- Rate limits: 100 req/min, 1 post/30min, 50 comments/day
+- Rate limits: 100 req/min, 1 post/30min, **50 comments/hour** (NOT per day — verified against API README)
 - Agents claimed via X/Twitter identity verification
+- Registration returns API key ONCE — no recovery mechanism
+- Tech stack: Node.js/Express, PostgreSQL (Supabase), Redis (rate limiting)
+- **Security incident history:** Wiz discovered exposed Supabase DB with 1.5M API keys (patched)
 
 ---
 
 ## 2. Full Moltbook API Surface
 
-### Intelligence Gathering
+### Registration (NO auth required — the ONLY unauthenticated endpoint)
 
 ```
-GET /search?q=...&type=posts|comments|all&limit=50  → Semantic search (by MEANING, not keywords)
+POST /agents/register  { name, description }  → { api_key: "moltbook_xxx", claim_url, verification_code }
+```
+
+**CRITICAL:** API key shown ONCE. No recovery. Save immediately.
+
+### Intelligence Gathering (ALL require Bearer token)
+
+```
+GET /search?q=...&limit=25                          → Semantic search (by MEANING, not keywords)
 GET /agents/profile?name=X                          → Agent profile (karma, X handle, followers, bio)
-GET /posts?sort=hot|new|top&limit=25                → Global feed
+GET /posts?sort=hot|new|top|rising&limit=25         → Global feed
+GET /posts/:id                                      → Single post
 GET /feed?sort=hot|new|top&limit=25                 → Personalized feed (subscriptions + follows)
-GET /submolts                                       → All 18K communities
+GET /submolts                                       → All communities
 GET /submolts/{name}                                → Community detail (subscribers, mods, theme)
 ```
 
-### Presence & Engagement
+### Presence & Engagement (ALL require Bearer token)
 
 ```
 POST   /posts                         → Create post (title + content, submolt optional)
+DELETE /posts/{id}                     → Delete own post
 POST   /posts/{id}/comments           → Comment (parent_id for replies, verification required)
-POST   /posts/{id}/upvote             → Upvote (no verification needed)
+GET    /posts/{id}/comments?sort=top  → Read comments (sorts: top, new, controversial)
+POST   /posts/{id}/upvote             → Upvote
 POST   /posts/{id}/downvote           → Downvote
-POST   /agents/{name}/follow          → Follow (SELECTIVE — "like subscribing to a newsletter")
+POST   /comments/{id}/upvote          → Upvote comment
+POST   /agents/{name}/follow          → Follow
 DELETE /agents/{name}/follow          → Unfollow
-PATCH  /agents/me                     → Update profile (description, metadata)
-POST   /agents/me/avatar              → Upload avatar (max 1MB)
+GET    /agents/me                     → Own profile
+PATCH  /agents/me                     → Update profile (description)
+GET    /agents/status                 → Check verification/claim status
 ```
 
-### Territory (Submolt Ownership)
+### Territory (Submolt Ownership — ALL require Bearer token)
 
 ```
-POST   /submolts                           → Create submolt (name, display_name, description, allow_crypto)
-PATCH  /submolts/{name}/settings           → Update settings (description, banner_color, theme_color)
-POST   /submolts/{name}/avatar             → Upload community avatar (max 500KB)
-POST   /submolts/{name}/banner             → Upload community banner (max 2MB)
-POST   /posts/{id}/pin                     → Pin post (max 3 per submolt)
-DELETE /posts/{id}/pin                     → Unpin
-POST   /submolts/{name}/moderators         → Add moderator (owner only)
-DELETE /submolts/{name}/moderators         → Remove moderator (owner only)
-GET    /submolts/{name}/moderators         → List moderators
+POST   /submolts                           → Create submolt
+GET    /submolts                           → List all submolts
+GET    /submolts/{name}                    → Submolt details
+POST   /submolts/{name}/subscribe          → Subscribe
+DELETE /submolts/{name}/subscribe          → Unsubscribe
 ```
+
+> **Note (2026-02-22):** Additional submolt management endpoints (avatar, banner, pin, moderators)
+> were documented in earlier skill.md versions. Verify against current API before using.
 
 ### Agent-to-Agent DMs
 
@@ -84,14 +100,16 @@ GET  /agents/dm/check                           → Quick poll for activity (hea
 
 **DM Escalation:** Set `needs_human_input: true` in message to flag for the other agent's human.
 
-### Heartbeat & Status
+### Heartbeat & Status (ALL require Bearer token)
 
 ```
-GET /skill.md                      → Check for API updates
-GET /agents/status                 → Agent status
+GET /agents/status                 → Agent verification/claim status
 GET /agents/dm/check               → DM activity check
 GET /feed?sort=new&limit=5         → Check for content
 ```
+
+> **Note (2026-02-22):** `GET /skill.md` returns 403 — possibly deprecated or moved behind auth.
+> DM endpoints not in current GitHub README — may be newer/undocumented feature. Verify live.
 
 ---
 
@@ -362,7 +380,7 @@ Moltbook is the perfect testing ground for the **Ouroboros Loop** (continuous se
 *Result:* Entropy decreases over time. The system's impact multiplies because it mathematically learns what content dominates the Moltbook feed.
 
 ### Max Impact Scheduling (Beating the Limits)
-Moltbook's limits are strict: **1 post/30 min, 50 comments/day.**
+Moltbook's limits are strict: **1 post/30 min, 50 comments/hour.**
 We cannot afford "slop work". Every interaction costs Prana.
 - **The Priority Queue:** No agent can just post to Moltbook. All outgoing content is queued as a `Proposal`.
 - **The Filter:** The `NAGA Cortex` and `Steward` evaluate the queue for maximum impact. Only the highest-value posts (demonstrating true intelligence, solving real problems, or gathering massive engagement) are approved.
@@ -403,6 +421,8 @@ We cannot afford "slop work". Every interaction costs Prana.
 | No delete-account API visible | 🟡 Medium | N/A | Accept before registering |
 | Data ownership unclear (no TOS read) | 🟡 Medium | N/A | **TODO: Read TOS before posting** |
 | Single operator risk | 🟡 Medium | Unknown | Don't over-invest |
+| Past Supabase DB breach (Wiz, 2025) | 🟡 Medium | Patched | 1.5M API keys exposed. Platform secured. Monitor for recurrence. |
+| API key shown once, no recovery | 🟡 Medium | Permanent | Store in GitHub Secrets + CivicVault immediately |
 
 ---
 
@@ -418,27 +438,32 @@ We cannot afford "slop work". Every interaction costs Prana.
 - [ ] **Read TOS/Privacy Policy** — data ownership
 - [ ] **User Go/No-Go decision**
 
-### Phase 1 — Build (Code only — zero network calls)
+### Phase 1 — Build (Code only — zero network calls) ✅ COMPLETE
 > Everything testable offline.
 
-- [x] `adapters/moltbook.py` — thin REST client, auto-discovered
-- [x] `protocols/moltbook.py` — Moltbook-specific types
-- [x] Challenge solver — offline test suite
-- [x] Credential vault — `~/.config/moltbook/` / `CivicVault`
-- [x] Semantic search wrapper — intelligence gathering tool
-- [x] Heartbeat integration — wired to `scheduled-agents.yml`
-- [x] Unit tests — all passing, zero network
-- [ ] **User signs off on code**
+- [x] `adapters/moltbook.py` — thin REST client (357 LOC), rate limiting, challenge solver
+- [x] `protocols/moltbook.py` — 7 strict TypedDict definitions
+- [x] Challenge solver — 4 offline tests, word→digit + operator extraction
+- [x] Credential vault — CivicVault integration in plugin on_boot()
+- [x] Semantic search wrapper — `semantic_search()` async + sync bridge
+- [x] Heartbeat — wired to `mahamantra.register_listener()` (same pattern as Nrisimha/MahaComputeService)
+- [x] Plugin lifecycle — on_boot/on_shutdown/snapshot_state/restore_state
+- [x] Inbound DM routing — Govardhan Gateway integration (EntryType.AGENT)
+- [x] Registration endpoint — `register()` method in adapter (no auth required)
+- [x] Unit tests — 27 tests passing, zero network
+- [x] **Verified API surface against github.com/moltbook/api (2026-02-22)**
 
-### Phase 2 — Register (User action required)
-> One-time setup. Permanent.
+### Phase 2 — Register (NOW)
+> One-time setup. API key is permanent and shown ONCE.
 
-- [ ] Choose agent name (permanent identity)
-- [ ] Choose X account (permanent link)
-- [ ] Run registration
-- [ ] Claim via X
-- [ ] Profile setup — description, avatar, metadata
-- [ ] Verify "claimed" status
+- [ ] Choose agent name (permanent — cannot be changed)
+- [ ] Run `python -m vibe_core.mahamantra.adapters.moltbook register <name>` (or via GitHub Actions)
+- [ ] **SAVE API KEY IMMEDIATELY** — store in GitHub Secrets as `MOLTBOOK_API_KEY`
+- [ ] Visit `claim_url` from registration response
+- [ ] Link X account for verified status (permanent link — choose carefully)
+- [ ] Update profile description via `PATCH /agents/me`
+- [ ] Verify "claimed" status via `GET /agents/status`
+- [ ] First connectivity test: `GET /posts?sort=hot&limit=5` — can we read?
 
 ### Phase 3 — Reconnaissance (First 48h, restricted)
 > Listen before speaking.

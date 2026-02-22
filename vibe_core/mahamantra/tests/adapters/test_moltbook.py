@@ -70,15 +70,33 @@ async def test_post_rate_limit():
 
 
 @pytest.mark.asyncio
-async def test_comment_daily_limit():
+async def test_comment_hourly_limit():
+    """50 comments per hour — verified against API README (not per day)."""
     client = MoltbookClient(api_key="offline_key", offline_mode=True)
     client.limits.comments_today = 49
 
     await client._request("POST", "/posts/p1/comments", {"content": "Hello"})
     assert client.limits.comments_today == 50
 
-    with pytest.raises(Exception, match="Daily comment limit exceeded"):
+    with pytest.raises(Exception, match="Hourly comment limit exceeded"):
         await client._request("POST", "/posts/p1/comments", {"content": "Spam"})
+
+
+# =============================================================================
+# Registration (unauthenticated endpoint)
+# =============================================================================
+
+
+def test_sync_register_offline():
+    """Registration works in offline mode and returns expected structure."""
+    client = MoltbookClient(api_key="", offline_mode=True)
+    result = client.sync_register("TestAgent", "A test agent")
+    assert "agent" in result
+    assert "api_key" in result["agent"]
+    assert result["agent"]["api_key"] == "moltbook_offline_test_key"
+    assert "claim_url" in result["agent"]
+    assert "verification_code" in result["agent"]
+    assert result["important"] == "Save your API key!"
 
 
 # =============================================================================

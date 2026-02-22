@@ -31,11 +31,11 @@ logger = logging.getLogger("MOLTBOOK")
 
 
 class MoltbookLimits:
-    """Hardcoded limits from Moltbook rules.md"""
+    """Hardcoded limits — verified against github.com/moltbook/api README (2026-02-22)"""
 
     REQ_PER_MIN = 100
     POST_PER_30_MIN = 1
-    COMMENTS_PER_DAY = 50
+    COMMENTS_PER_HOUR = 50  # API README says "1 hour", NOT per day
     AVATAR_MAX_BYTES = 1024 * 1024  # 1MB
     BANNER_MAX_BYTES = 2 * 1024 * 1024  # 2MB
 
@@ -170,14 +170,14 @@ class MoltbookClient:
                 raise Exception("MOLTBOOK-429: Post rate limit (1/30m) exceeded.")
             self.limits.posts_this_30m += 1
 
-        # 3. Comment Limiter (50/day)
+        # 3. Comment Limiter (50/hour — verified against API README)
         if method == "POST" and "comments" in endpoint:
-            if now - self.limits.last_day_reset > 86400:
+            if now - self.limits.last_day_reset > 3600:  # 1 hour, not 1 day
                 self.limits.comments_today = 0
                 self.limits.last_day_reset = now
 
-            if self.limits.comments_today >= MoltbookLimits.COMMENTS_PER_DAY:
-                raise Exception("MOLTBOOK-429: Daily comment limit exceeded.")
+            if self.limits.comments_today >= MoltbookLimits.COMMENTS_PER_HOUR:
+                raise Exception("MOLTBOOK-429: Hourly comment limit exceeded.")
             self.limits.comments_today += 1
 
         self.limits.requests_this_minute += 1
@@ -242,7 +242,47 @@ class MoltbookClient:
         return {"status": "ok", "mocked": True, "endpoint": endpoint}
 
     # =========================================================================
-    # PUBLIC API - The "Skin" Interface
+    # REGISTRATION — The ONLY unauthenticated endpoint
+    # =========================================================================
+
+    async def register(self, name: str, description: str) -> Dict[str, Any]:
+        """
+        Register a new agent on Moltbook.
+
+        NO AUTH REQUIRED — this is the only unauthenticated endpoint.
+        Returns: { agent: { api_key, claim_url, verification_code }, important: "Save your API key!" }
+
+        CRITICAL: api_key is shown ONCE. No recovery. Save immediately.
+        """
+        if self.offline_mode:
+            return {
+                "agent": {
+                    "api_key": "moltbook_offline_test_key",
+                    "claim_url": "https://www.moltbook.com/claim/moltbook_claim_offline",
+                    "verification_code": "test-XXXX",
+                },
+                "important": "Save your API key!",
+            }
+
+        # Registration does NOT use Bearer auth — override _request
+        self.limits.requests_this_minute += 1
+        async with httpx.AsyncClient() as client:
+            url = f"{self.base_url}/agents/register"
+            response = await client.post(
+                url,
+                json={"name": name, "description": description},
+                headers={"Content-Type": "application/json"},
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            return response.json()
+
+    def sync_register(self, name: str, description: str) -> Dict[str, Any]:
+        """Sync wrapper for registration."""
+        return _run_async(self.register(name, description))
+
+    # =========================================================================
+    # PUBLIC API - The "Skin" Interface (ALL require Bearer token)
     # =========================================================================
 
     async def check_status(self) -> str:
@@ -355,3 +395,119 @@ def _run_async(coro):
             return pool.submit(asyncio.run, coro).result(timeout=15.0)
     else:
         return asyncio.run(coro)
+
+
+# =============================================================================
+# CLI ENTRY POINT — python -m vibe_core.mahamantra.adapters.moltbook
+# =============================================================================
+
+
+def _cli_main() -> None:
+    """
+    CLI for Moltbook operations.
+
+    Usage:
+        python -m vibe_core.mahamantra.adapters.moltbook register <name> [description]
+        python -m vibe_core.mahamantra.adapters.moltbook status
+        python -m vibe_core.mahamantra.adapters.moltbook test-network
+    """
+    import json
+    import sys
+
+    args = sys.argv[1:]
+    if not args:
+        print(__doc__ or "Moltbook Adapter CLI")
+        print("\nCommands:")
+        print("  register <name> [description]  — Register new agent (PERMANENT)")
+        print("  status                         — Check agent status (needs API key)")
+        print("  test-network                   — Test if moltbook.com is reachable")
+        sys.exit(0)
+
+    command = args[0]
+
+    if command == "test-network":
+        try:
+            import httpx as _httpx
+
+            resp = _httpx.get("https://www.moltbook.com/api/v1/agents/status", timeout=10.0)
+            if resp.status_code in (401, 403):
+                print(f"Network: REACHABLE (status={resp.status_code})")
+                print("  moltbook.com is reachable. Registration from here SHOULD WORK.")
+            else:
+                print(f"Network: REACHABLE (status={resp.status_code})")
+        except Exception as e:
+            err_name = type(e).__name__
+            if "Proxy" in err_name or "proxy" in str(e).lower():
+                print(f"Network: BLOCKED BY PROXY — {e}")
+                print("  This container routes through a proxy that blocks moltbook.com.")
+                print("  Registration MUST happen via GitHub Actions or locally.")
+            elif "Connect" in err_name:
+                print(f"Network: UNREACHABLE — {e}")
+                print("  No route to moltbook.com. Use GitHub Actions.")
+            else:
+                print(f"Network: ERROR ({err_name}) — {e}")
+        sys.exit(0)
+
+    if command == "register":
+        if len(args) < 2:
+            print("ERROR: agent name required")
+            print("Usage: python -m vibe_core.mahamantra.adapters.moltbook register <name> [description]")
+            sys.exit(1)
+
+        name = args[1]
+        description = (
+            " ".join(args[2:])
+            if len(args) > 2
+            else "Steward Protocol — Agentic OS with deterministic Mahamantra computation engine."
+        )
+
+        print(f"Registering agent: {name}")
+        print(f"Description: {description}")
+        print("---")
+        print("WARNING: This is PERMANENT. API key shown ONCE. No recovery.")
+        print("---")
+
+        client = MoltbookClient(api_key="", offline_mode=False)
+        try:
+            result = client.sync_register(name, description)
+            print("\n=== REGISTRATION SUCCESSFUL ===")
+            print(json.dumps(result, indent=2))
+            print("\n!!! SAVE THE API KEY NOW !!!")
+            print("Store in GitHub Secrets as: MOLTBOOK_API_KEY")
+            agent = result.get("agent", result)
+            if isinstance(agent, dict) and "api_key" in agent:
+                print(f"\nAPI Key: {agent['api_key']}")
+                print(f"Claim URL: {agent.get('claim_url', 'N/A')}")
+                print(f"Verification Code: {agent.get('verification_code', 'N/A')}")
+        except Exception as e:
+            print(f"\nREGISTRATION FAILED: {e}")
+            print("If network error: use GitHub Actions workflow instead.")
+            sys.exit(1)
+
+    elif command == "status":
+        api_key = ""
+        if len(args) > 1:
+            api_key = args[1]
+        else:
+            import os
+
+            api_key = os.environ.get("MOLTBOOK_API_KEY", "")
+        if not api_key:
+            print("ERROR: API key required. Pass as argument or set MOLTBOOK_API_KEY env var.")
+            sys.exit(1)
+
+        client = MoltbookClient(api_key=api_key, offline_mode=False)
+        try:
+            status = client.sync_check_heartbeat()
+            print(json.dumps(status, indent=2))
+        except Exception as e:
+            print(f"Status check failed: {e}")
+            sys.exit(1)
+
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    _cli_main()
