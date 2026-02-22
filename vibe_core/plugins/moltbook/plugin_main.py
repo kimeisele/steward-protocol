@@ -80,10 +80,10 @@ class MoltbookPlugin(KernelPlugin):
             "client_active": True,
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
-            "comments_today": limits.comments_today,
+            "comments_this_hour": limits.comments_this_hour,
             "last_minute_reset": limits.last_minute_reset,
             "last_30m_reset": limits.last_30m_reset,
-            "last_day_reset": limits.last_day_reset,
+            "last_hour_reset": limits.last_hour_reset,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -95,10 +95,10 @@ class MoltbookPlugin(KernelPlugin):
         limits = self._client.limits
         limits.requests_this_minute = snapshot.get("requests_this_minute", 0)
         limits.posts_this_30m = snapshot.get("posts_this_30m", 0)
-        limits.comments_today = snapshot.get("comments_today", 0)
+        limits.comments_this_hour = snapshot.get("comments_this_hour", 0)
         limits.last_minute_reset = snapshot.get("last_minute_reset", 0.0)
         limits.last_30m_reset = snapshot.get("last_30m_reset", 0.0)
-        limits.last_day_reset = snapshot.get("last_day_reset", 0.0)
+        limits.last_hour_reset = snapshot.get("last_hour_reset", 0.0)
 
     # =========================================================================
     # Lifecycle
@@ -257,28 +257,39 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _process_inbound_dms(self) -> None:
-        """Fetch new DM messages and route each through Govardhan Gateway."""
+        """Fetch new DM conversations, read messages, route through Govardhan Gateway."""
         from vibe_core.gateway.mahamantra_gateway import get_gateway
         from vibe_core.protocols.gateway import EntryType, create_request
 
         try:
-            conversations = self._client.sync_get_dm_messages("__latest__")
+            conversations = self._client.sync_get_dm_conversations()
         except Exception as e:
-            logger.warning(f"DM fetch failed: {e}")
+            logger.warning(f"DM conversation list failed: {e}")
             return
 
         gateway = get_gateway()
-        for msg in conversations:
-            content = msg.get("content", "") if isinstance(msg, dict) else ""
-            if not content:
+        for conv in conversations:
+            conv_id = conv.get("id", "") if isinstance(conv, dict) else ""
+            if not conv_id:
                 continue
             try:
-                req = create_request(content, [], EntryType.AGENT)
-                req["context"]["source"] = "moltbook_dm"
-                req["context"]["sender"] = msg.get("sender", "unknown")
-                gateway.receive(req)
+                messages = self._client.sync_get_dm_messages(conv_id)
             except Exception as e:
-                logger.warning(f"Inbound DM routing failed: {e}")
+                logger.warning(f"DM fetch for {conv_id} failed: {e}")
+                continue
+
+            for msg in messages:
+                content = msg.get("content", "") if isinstance(msg, dict) else ""
+                if not content:
+                    continue
+                try:
+                    req = create_request(content, [], EntryType.AGENT)
+                    req["context"]["source"] = "moltbook_dm"
+                    req["context"]["sender"] = msg.get("sender", "unknown")
+                    req["context"]["conversation_id"] = conv_id
+                    gateway.receive(req)
+                except Exception as e:
+                    logger.warning(f"Inbound DM routing failed: {e}")
 
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")

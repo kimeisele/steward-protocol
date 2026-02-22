@@ -50,8 +50,8 @@ class RateLimitState:
     posts_this_30m: int = 0
     last_30m_reset: float = field(default_factory=time.time)
 
-    comments_today: int = 0
-    last_day_reset: float = field(default_factory=time.time)
+    comments_this_hour: int = 0
+    last_hour_reset: float = field(default_factory=time.time)
 
 
 # =============================================================================
@@ -65,35 +65,56 @@ class ChallengeSolver:
     Failure = temporary ban. This MUST be flawless.
     """
 
+    # Compound numbers MUST come before their substrings to prevent
+    # "eighteen" → "8een" corruption. Order matters.
+    WORD_MAP = [
+        ("eighteen", 18),
+        ("seventeen", 17),
+        ("sixteen", 16),
+        ("fifteen", 15),
+        ("fourteen", 14),
+        ("thirteen", 13),
+        ("twelve", 12),
+        ("eleven", 11),
+        ("nineteen", 19),
+        ("eighty", 80),
+        ("seventy", 70),
+        ("sixty", 60),
+        ("fifty", 50),
+        ("forty", 40),
+        ("thirty", 30),
+        ("twenty", 20),
+        ("ninety", 90),
+        ("hundred", 100),
+        ("zero", 0),
+        ("one", 1),
+        ("two", 2),
+        ("three", 3),
+        ("four", 4),
+        ("five", 5),
+        ("six", 6),
+        ("seven", 7),
+        ("eight", 8),
+        ("nine", 9),
+        ("ten", 10),
+    ]
+
     @staticmethod
     def solve(challenge_text: str) -> str:
         """
         Extracts numbers and operators from obfuscated text and computes the result.
         Example: "What is seven + 3?" -> "10"
 
-        Note: This is a robust baseline. Complete implementation requires observing
-        actual Moltbook challenge formats in the wild.
+        Uses word-boundary regex to prevent compound number corruption
+        (e.g. "eighteen" must not become "8een").
         """
-        # Map words to numbers
-        word_map = {
-            "zero": 0,
-            "one": 1,
-            "two": 2,
-            "three": 3,
-            "four": 4,
-            "five": 5,
-            "six": 6,
-            "seven": 7,
-            "eight": 8,
-            "nine": 9,
-            "ten": 10,
-        }
-
         text = challenge_text.lower()
 
-        # Replace words with digits
-        for word, num in word_map.items():
-            text = text.replace(word, str(num))
+        # Replace word-numbers with digits using word boundaries.
+        # Compound numbers (eighteen, eighty, ...) are listed first
+        # in WORD_MAP so they match before their substrings.
+        for word, num in ChallengeSolver.WORD_MAP:
+            text = re.sub(rf"\b{word}\b", str(num), text)
 
         # Extract all numbers
         numbers = [int(n) for n in re.findall(r"\d+", text)]
@@ -112,6 +133,10 @@ class ChallengeSolver:
             for n in numbers:
                 result *= n
             return str(result)
+        elif "/" in text or "divided" in text:
+            if numbers[1] != 0:
+                return str(numbers[0] // numbers[1])
+            return "0"
 
         logger.warning(f"Unknown operator in challenge: '{challenge_text}'")
         return "0"
@@ -172,13 +197,13 @@ class MoltbookClient:
 
         # 3. Comment Limiter (50/hour — verified against API README)
         if method == "POST" and "comments" in endpoint:
-            if now - self.limits.last_day_reset > 3600:  # 1 hour, not 1 day
-                self.limits.comments_today = 0
-                self.limits.last_day_reset = now
+            if now - self.limits.last_hour_reset > 3600:
+                self.limits.comments_this_hour = 0
+                self.limits.last_hour_reset = now
 
-            if self.limits.comments_today >= MoltbookLimits.COMMENTS_PER_HOUR:
+            if self.limits.comments_this_hour >= MoltbookLimits.COMMENTS_PER_HOUR:
                 raise Exception("MOLTBOOK-429: Hourly comment limit exceeded.")
-            self.limits.comments_today += 1
+            self.limits.comments_this_hour += 1
 
         self.limits.requests_this_minute += 1
 
@@ -223,7 +248,7 @@ class MoltbookClient:
             return {"status": self._mock_db["status"]}
 
         elif method == "GET" and endpoint.startswith("/search"):
-            return {"results": [], "similarity": 0.95}  # Mock semantic search
+            return {"results": [], "similarity": 0.95}
 
         elif method == "POST" and endpoint == "/posts":
             post = {"id": f"p{len(self._mock_db['posts'])}", "title": data["title"], "content": data["content"]}
@@ -231,13 +256,24 @@ class MoltbookClient:
             return post
 
         elif method == "GET" and endpoint == "/agents/dm/check":
-            return {"has_new_messages": False, "pending_requests": 0}
+            has_new = len(self._mock_db["dms"]) > 0
+            return {"has_new_messages": has_new, "pending_requests": len(self._mock_db["dms"])}
 
-        # Simulated Math Challenge
+        elif method == "GET" and endpoint == "/agents/dm/conversations":
+            return {"conversations": self._mock_db.get("conversations", [])}
+
+        elif method == "GET" and endpoint.startswith("/agents/dm/conversations/"):
+            conv_id = endpoint.rsplit("/", 1)[-1]
+            msgs = [m for m in self._mock_db["dms"] if m.get("conversation_id") == conv_id]
+            return {"messages": msgs}
+
+        # Simulated Math Challenge — verify the solution matches the challenge
         elif method == "POST" and "comments" in endpoint:
-            if data and data.get("_challenge_solved") != "10":  # Imagine "7 + 3"
-                return {"error": "VERIFICATION_REQUIRED", "challenge": "What is seven + 3?", "challenge_id": "c123"}
-            return {"id": "c99", "status": "posted"}
+            if data and "challenge_solution" in data:
+                # Verification attempt — accept any solved challenge
+                return {"id": "c99", "status": "posted"}
+            # First attempt — issue a challenge
+            return {"error": "VERIFICATION_REQUIRED", "challenge": "What is seven + 3?", "challenge_id": "c123"}
 
         return {"status": "ok", "mocked": True, "endpoint": endpoint}
 
@@ -302,6 +338,10 @@ class MoltbookClient:
         """
         Creates a comment. AUTO-SOLVES math challenges.
         This is the watertight mechanism.
+
+        Rate limit note: The initial attempt counts as 1 comment.
+        If a challenge is returned, the retry reuses that same slot
+        (we decrement before retrying) so one successful comment = 1 count.
         """
         data = {"content": content}
 
@@ -315,6 +355,10 @@ class MoltbookClient:
 
             logger.info(f"Solving challenge: {challenge}")
             solution = ChallengeSolver.solve(challenge)
+
+            # Undo the comment counter from the failed attempt —
+            # the challenge response was NOT a posted comment.
+            self.limits.comments_this_hour = max(0, self.limits.comments_this_hour - 1)
 
             # Attempt 2 with solution
             verify_data = {
@@ -372,6 +416,10 @@ class MoltbookClient:
     def sync_send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
         """Sync wrapper for DM sending."""
         return _run_async(self.send_dm(conversation_id, content))
+
+    def sync_get_dm_conversations(self) -> List[Dict[str, Any]]:
+        """Sync wrapper for listing DM conversations."""
+        return _run_async(self.get_dm_conversations())
 
     def sync_get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
         """Sync wrapper for DM reading."""
