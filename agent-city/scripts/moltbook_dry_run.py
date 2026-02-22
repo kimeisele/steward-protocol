@@ -60,7 +60,7 @@ def main() -> int:
         api_key = "offline_dry_run_key"
 
     try:
-        from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+        from vibe_core.services.moltbook_client import MoltbookClient
     except ImportError as e:
         logger.error(f"Could not import MoltbookClient: {e}")
         return 1
@@ -96,7 +96,7 @@ def main() -> int:
     # =========================================================================
     print("--- 2. Own Profile ---")
     try:
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
+        from vibe_core.services.moltbook_client import _run_async
 
         profile = _run_async(client.get_own_profile())
         report["own_profile"] = profile
@@ -117,7 +117,7 @@ def main() -> int:
     # =========================================================================
     print("--- 3. Feed (latest 5 posts) ---")
     try:
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
+        from vibe_core.services.moltbook_client import _run_async
 
         feed = _run_async(client.get_feed(sort="new", limit=5))
         report["feed"] = feed
@@ -155,7 +155,7 @@ def main() -> int:
     search_results = {}
     for q in queries:
         try:
-            from vibe_core.mahamantra.adapters.moltbook import _run_async
+            from vibe_core.services.moltbook_client import _run_async
 
             results = _run_async(client.semantic_search(q, limit=3))
             search_results[q] = results
@@ -209,7 +209,7 @@ def main() -> int:
     # =========================================================================
     print("--- 6. DM Requests (pending) ---")
     try:
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
+        from vibe_core.services.moltbook_client import _run_async
 
         requests = _run_async(client.get_dm_requests())
         report["dm_requests"] = requests
