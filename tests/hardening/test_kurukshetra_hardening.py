@@ -13,16 +13,17 @@ Configuration:
 - Uses 'security' marker.
 """
 
-import pytest
-import time
 import asyncio
+import time
 from typing import List
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.protocols.substrate import MantraOpCode, GeneManifest, Tattva
+from vibe_core.protocols.integrity import SECURITY_RING_0, VishnuIntegrityGuardian
+from vibe_core.protocols.substrate import GeneManifest, MantraOpCode, Tattva
 from vibe_core.protocols.universal import SovereignContext, TranscendentalQuality
-from vibe_core.protocols.integrity import VishnuIntegrityGuardian, SECURITY_RING_0
 from vibe_core.security import VajraViolation
 
 
@@ -50,7 +51,10 @@ class TestKurukshetraHardening:
     # Attack: Attempt to overwrite the Sovereign Identity of the Kernel.
     # Defense: VajraGuarded + Identity Immutability.
     # =========================================================================
-    @pytest.mark.xfail(reason="REAL SECURITY GAP: _sovereign_context not VajraGuarded — Python allows private attr overwrite", strict=False)
+    @pytest.mark.xfail(
+        reason="REAL SECURITY GAP: _sovereign_context not VajraGuarded — Python allows private attr overwrite",
+        strict=False,
+    )
     def test_hiranyakashipu_identity_theft(self, kernel):
         """
         Hiranyakashipu tries to become the Lord of the Universe (Kernel).

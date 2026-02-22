@@ -10,7 +10,7 @@ in the result dict containing the human-readable rendering.
 
 ARCHITECTURE:
     VM 9 Steps → ATMA_NIVEDANAM builds _result → KIRTAN_RENDER adds "kirtan"
-    
+
     Future CycleCompiler ops (MANAS, Language Engine) add their keys
     BEFORE this op. The renderer discovers and uses them automatically.
 """
@@ -40,7 +40,7 @@ def _kirtan_render_handler(lotus: object, ctx: dict) -> None:
 
 class KirtanCapability:
     """VMCapabilityProtocol implementation for the Kirtan Renderer.
-    
+
     Discovered and registered by lotus_core.bootstrap() alongside
     other VMCapability implementations (e.g. MahaComposition).
     """
@@ -49,9 +49,9 @@ class KirtanCapability:
         return [
             VMOpDeclaration(
                 name="KIRTAN_RENDER",
-                gate=4,       # SYNC — same gate as ATMA_NIVEDANAM
+                gate=4,  # SYNC — same gate as ATMA_NIVEDANAM
                 handler=_kirtan_render_handler,
-                priority=1,   # After ATMA_NIVEDANAM (priority 0)
+                priority=1,  # After ATMA_NIVEDANAM (priority 0)
             ),
         ]
 

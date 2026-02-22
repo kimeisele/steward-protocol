@@ -9,15 +9,16 @@ existing code or requiring a live VM instance.
 BALARAMA PATTERN: This is additive-only. No existing files modified.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
-from vibe_core.mahamantra.render import render, _render_resonance, _render_composed, kirtan_chat, _build_llm_prompt
-
+from vibe_core.mahamantra.render import _build_llm_prompt, _render_composed, _render_resonance, kirtan_chat, render
 
 # =============================================================================
 # MOCK VM RESULT DICTS
 # =============================================================================
+
 
 def _make_vm_result(**overrides):
     """Build a realistic 27-key VM result dict with sensible defaults."""
@@ -127,6 +128,7 @@ def _make_vm_result(**overrides):
 # CORE RENDERING TESTS
 # =============================================================================
 
+
 class TestRenderResonance:
     """Test the default resonance rendering path."""
 
@@ -202,10 +204,7 @@ class TestRenderResonance:
 
     def test_smaranam_limit_five(self):
         """Renderer should show at most 5 resonant words."""
-        many_words = tuple(
-            {"sanskrit": f"word{i}", "meaning": f"meaning{i}", "score": 0.5}
-            for i in range(10)
-        )
+        many_words = tuple({"sanskrit": f"word{i}", "meaning": f"meaning{i}", "score": 0.5} for i in range(10))
         result = _make_vm_result(smaranam=many_words)
         output = render(result)
         assert '"word4"' in output
@@ -213,9 +212,7 @@ class TestRenderResonance:
 
     def test_sanskrit_only_no_meaning(self):
         """Words with sanskrit but no meaning should still render."""
-        result = _make_vm_result(smaranam=(
-            {"sanskrit": "om", "meaning": "", "score": 1.0},
-        ))
+        result = _make_vm_result(smaranam=({"sanskrit": "om", "meaning": "", "score": 1.0},))
         output = render(result)
         assert '"om"' in output
 
@@ -223,6 +220,7 @@ class TestRenderResonance:
 # =============================================================================
 # EXTENSION KEY TESTS (Future CycleCompiler integration)
 # =============================================================================
+
 
 class TestRenderExtensionKeys:
     """Test that enrichment keys from CycleCompiler custom ops are used."""
@@ -265,6 +263,7 @@ class TestRenderExtensionKeys:
 # EDGE CASES
 # =============================================================================
 
+
 class TestRenderEdgeCases:
     """Edge cases and robustness."""
 
@@ -283,9 +282,22 @@ class TestRenderEdgeCases:
     def test_all_16_guardians(self):
         """Renderer works for all 16 guardian positions."""
         guardians = [
-            "brahma", "narada", "shambhu", "kumaras", "vyasa",
-            "kapila", "manu", "parashurama", "prahlada", "janaka",
-            "bhishma", "bali", "shukadeva", "yamaraja", "arjuna", "hanuman",
+            "brahma",
+            "narada",
+            "shambhu",
+            "kumaras",
+            "vyasa",
+            "kapila",
+            "manu",
+            "parashurama",
+            "prahlada",
+            "janaka",
+            "bhishma",
+            "bali",
+            "shukadeva",
+            "yamaraja",
+            "arjuna",
+            "hanuman",
         ]
         for g in guardians:
             result = _make_vm_result(guardian=g)
@@ -297,12 +309,14 @@ class TestRenderEdgeCases:
 # INTEGRATION — Real VM → render (proves CycleCompiler wiring)
 # =============================================================================
 
+
 class TestKirtanIntegration:
     """Integration tests: real Lotus VM call → kirtan key in result."""
 
     @pytest.fixture(scope="class")
     def lotus(self):
         from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
         m = MahamantraLotus()
         m.bootstrap(lazy=True, silent=True)
         return m
@@ -310,9 +324,7 @@ class TestKirtanIntegration:
     def test_kirtan_key_present(self, lotus):
         """VM result dict contains 'kirtan' key after CycleCompiler wiring."""
         result = lotus("Hare Krishna")
-        assert "kirtan" in result, (
-            "Missing 'kirtan' key — KirtanCapability not registered in CycleCompiler"
-        )
+        assert "kirtan" in result, "Missing 'kirtan' key — KirtanCapability not registered in CycleCompiler"
 
     def test_kirtan_is_string(self, lotus):
         """The kirtan value is a rendered string."""
@@ -337,13 +349,16 @@ class TestKirtanIntegration:
         r2 = lotus("Om Namo Bhagavate Vasudevaya")
         assert r1["kirtan"] == r2["kirtan"]
 
-    @pytest.mark.parametrize("text", [
-        "Hare Krishna",
-        "What is the meaning of life?",
-        "analyze this code",
-        "a",
-        "",
-    ])
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Hare Krishna",
+            "What is the meaning of life?",
+            "analyze this code",
+            "a",
+            "",
+        ],
+    )
     def test_kirtan_never_empty(self, lotus, text):
         """Kirtan rendering is never empty for any input."""
         result = lotus(text)
@@ -359,6 +374,7 @@ class TestKirtanIntegration:
 # =============================================================================
 # KIRTAN CHAT — Shadow bridge tests
 # =============================================================================
+
 
 class TestKirtanChat:
     """Test kirtan_chat() — the shadow replacement for legacy chat files."""
@@ -393,12 +409,15 @@ class TestKirtanChat:
         output = kirtan_chat("", use_llm=False)
         assert isinstance(output, str)
 
-    @pytest.mark.parametrize("text", [
-        "Hare Krishna",
-        "analyze this code",
-        "What is the meaning of life?",
-        "deploy the application",
-    ])
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Hare Krishna",
+            "analyze this code",
+            "What is the meaning of life?",
+            "deploy the application",
+        ],
+    )
     def test_various_inputs(self, text):
         """kirtan_chat works for various input types."""
         output = kirtan_chat(text, use_llm=False)

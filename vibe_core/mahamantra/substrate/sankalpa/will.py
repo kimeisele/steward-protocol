@@ -10,7 +10,8 @@ ADVAITA PRINCIPLE:
 All execution goes through ChatProtocol. No bypass. No special paths.
 Internal voice (Sankalpa) and external voice (User) enter the same gate.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, NAVA, TEN, TRINITY)
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, NAVA, TEN, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"

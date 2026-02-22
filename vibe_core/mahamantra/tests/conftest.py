@@ -32,16 +32,19 @@ def _reset_singletons():
 
     # --- Chamber: reset state, keep the allocation ---
     import vibe_core.mahamantra.substrate.chamber as chamber_mod
+
     if chamber_mod._chamber_instance is not None:
         chamber_mod._chamber_instance.reset()
 
     # --- Lotus: fresh instance, but _PipelineCache survives ---
     import vibe_core.mahamantra.substrate.lotus_core as lotus_mod
+
     lotus_mod._mahamantra_instance = None
     # _PIPELINE is stateless (function refs + constants) — DO NOT reset
 
     # --- Lotus class-level Akash state (accumulates across instances) ---
     from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
     MahamantraLotus._akash = {
         "resonance_level": 0,
         "accumulated_value": 0,
@@ -55,6 +58,7 @@ def _reset_singletons():
 
     # --- Composition: reset counters, keep scorers ---
     import vibe_core.mahamantra.adapters.composition as comp_mod
+
     if comp_mod._composition_instance is not None:
         comp_mod._composition_instance._compositions = 0
         comp_mod._composition_instance._last_context = {}
@@ -66,5 +70,6 @@ def _reset_singletons():
     # JSON data (_word_entries, _synset_list, _sid_to_int) is immutable.
     # _word_chain_sets is derived from immutable data (frozensets).
     import vibe_core.mahamantra.substrate.wordnet_bridge as wb_mod
+
     wb_mod._input_chain_ints.cache_clear()
     wb_mod._input_stems.cache_clear()

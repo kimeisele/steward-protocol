@@ -960,10 +960,12 @@ class UnifiedCLI:
             # 3. Load Synaptic Weights (RAM cache first, disk fallback)
             try:
                 from vibe_core.state.state_service import get_state_service
+
                 _state = get_state_service(workspace, plugin_id="opus_assistant")
                 synapses = _state.load("synapses.json", default={"schema": "v1", "weights": {}})
             except Exception as e:
                 import logging
+
                 logging.getLogger("CLI").warning(f"Synapses state load failed: {e}")
                 synapses = {"schema": "v1", "weights": {}}
 

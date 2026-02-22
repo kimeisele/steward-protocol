@@ -8,26 +8,27 @@ Tests:
 4. Individual auditors — each returns List[AuditFinding]
 """
 
-import pytest
 from pathlib import Path
 
+import pytest
+
+from vibe_core.mahamantra.audit.audit_dispatcher import (
+    AuditDispatcher,
+    AuditorProtocol,
+    RegisteredAuditor,
+)
 from vibe_core.mahamantra.audit.audit_registry import (
     AuditFinding,
     AuditRegistry,
     FindingSeverity,
     FindingStatus,
 )
-from vibe_core.mahamantra.audit.audit_dispatcher import (
-    AuditDispatcher,
-    AuditorProtocol,
-    RegisteredAuditor,
-)
 from vibe_core.mahamantra.audit.kernel import AuditKernel
-
 
 # =========================================================================
 # AuditRegistry Tests
 # =========================================================================
+
 
 class TestAuditRegistry:
     def test_register_and_count(self):
@@ -35,7 +36,9 @@ class TestAuditRegistry:
         assert reg.count == 0
 
         finding = AuditFinding(
-            source="test", position=0, mahajana="test",
+            source="test",
+            position=0,
+            mahajana="test",
             description="test finding",
         )
         reg.register(finding)
@@ -52,11 +55,17 @@ class TestAuditRegistry:
     def test_list_by_severity(self):
         reg = AuditRegistry()
         f_crit = AuditFinding(
-            source="a", position=0, mahajana="x", description="critical",
+            source="a",
+            position=0,
+            mahajana="x",
+            description="critical",
             severity=FindingSeverity.CRITICAL,
         )
         f_warn = AuditFinding(
-            source="b", position=1, mahajana="y", description="warning",
+            source="b",
+            position=1,
+            mahajana="y",
+            description="warning",
             severity=FindingSeverity.WARNING,
         )
         reg.register(f_crit)
@@ -79,9 +88,14 @@ class TestAuditRegistry:
 
     def test_clear(self):
         reg = AuditRegistry()
-        reg.register(AuditFinding(
-            source="a", position=0, mahajana="x", description="test",
-        ))
+        reg.register(
+            AuditFinding(
+                source="a",
+                position=0,
+                mahajana="x",
+                description="test",
+            )
+        )
         assert reg.count == 1
         reg.clear()
         assert reg.count == 0
@@ -111,6 +125,7 @@ class TestAuditRegistry:
 # AuditDispatcher Tests
 # =========================================================================
 
+
 class TestAuditDispatcher:
     def test_discover_finds_auditors(self):
         """Dispatcher should find auditors with __position__ + Auditor class."""
@@ -122,8 +137,7 @@ class TestAuditDispatcher:
         # protocol_auditor (pos 2), hygiene_auditor (pos 3),
         # protocol_resurrection (pos 5), drift (pos 15 — has Auditor class)
         assert len(dispatcher.auditors) >= 3, (
-            f"Expected at least 3 auditors, got {len(dispatcher.auditors)}: "
-            f"{list(dispatcher.auditors.keys())}"
+            f"Expected at least 3 auditors, got {len(dispatcher.auditors)}: {list(dispatcher.auditors.keys())}"
         )
 
     def test_run_all_populates_registry(self):
@@ -142,18 +156,16 @@ class TestAuditDispatcher:
 
         for pos, auditor in dispatcher.auditors.items():
             assert hasattr(auditor.instance, "run_audit"), (
-                f"Auditor at position {pos} ({auditor.module_path}) "
-                f"missing run_audit()"
+                f"Auditor at position {pos} ({auditor.module_path}) missing run_audit()"
             )
             result = auditor.instance.run_audit()
-            assert isinstance(result, list), (
-                f"Auditor at position {pos} returned {type(result)}, not list"
-            )
+            assert isinstance(result, list), f"Auditor at position {pos} returned {type(result)}, not list"
 
 
 # =========================================================================
 # AuditKernel Tests
 # =========================================================================
+
 
 class TestAuditKernel:
     def test_kernel_run_all(self):
@@ -186,14 +198,24 @@ class TestAuditKernel:
     def test_kernel_findings_filter(self):
         """Kernel.findings() should support severity filter."""
         reg = AuditRegistry()
-        reg.register(AuditFinding(
-            source="test", position=0, mahajana="x",
-            description="critical", severity=FindingSeverity.CRITICAL,
-        ))
-        reg.register(AuditFinding(
-            source="test", position=0, mahajana="x",
-            description="info", severity=FindingSeverity.INFO,
-        ))
+        reg.register(
+            AuditFinding(
+                source="test",
+                position=0,
+                mahajana="x",
+                description="critical",
+                severity=FindingSeverity.CRITICAL,
+            )
+        )
+        reg.register(
+            AuditFinding(
+                source="test",
+                position=0,
+                mahajana="x",
+                description="info",
+                severity=FindingSeverity.INFO,
+            )
+        )
 
         kernel = AuditKernel(
             dispatcher=AuditDispatcher(registry=reg),
@@ -213,16 +235,26 @@ class TestAuditKernel:
         )
         assert kernel.is_pristine  # empty = pristine
 
-        reg.register(AuditFinding(
-            source="test", position=0, mahajana="x",
-            description="warning", severity=FindingSeverity.WARNING,
-        ))
+        reg.register(
+            AuditFinding(
+                source="test",
+                position=0,
+                mahajana="x",
+                description="warning",
+                severity=FindingSeverity.WARNING,
+            )
+        )
         assert kernel.is_pristine  # warnings don't break pristine
 
-        reg.register(AuditFinding(
-            source="test", position=0, mahajana="x",
-            description="critical", severity=FindingSeverity.CRITICAL,
-        ))
+        reg.register(
+            AuditFinding(
+                source="test",
+                position=0,
+                mahajana="x",
+                description="critical",
+                severity=FindingSeverity.CRITICAL,
+            )
+        )
         assert not kernel.is_pristine  # critical breaks pristine
 
 
@@ -230,9 +262,11 @@ class TestAuditKernel:
 # Individual Auditor Tests
 # =========================================================================
 
+
 class TestLineageAuditor:
     def test_returns_list_of_findings(self):
         from vibe_core.mahamantra.audit.lineage_auditor import Auditor
+
         auditor = Auditor()
         result = auditor.run_audit()
         assert isinstance(result, list)
@@ -244,6 +278,7 @@ class TestLineageAuditor:
 class TestSSOTAuditor:
     def test_returns_list_of_findings(self):
         from vibe_core.mahamantra.audit.ssot_auditor import Auditor
+
         auditor = Auditor()
         result = auditor.run_audit()
         assert isinstance(result, list)
@@ -255,6 +290,7 @@ class TestSSOTAuditor:
 class TestHygieneAuditor:
     def test_returns_list_of_findings(self):
         from vibe_core.mahamantra.audit.hygiene_auditor import Auditor
+
         auditor = Auditor()
         result = auditor.run_audit()
         assert isinstance(result, list)

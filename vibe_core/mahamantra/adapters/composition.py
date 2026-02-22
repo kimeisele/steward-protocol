@@ -36,7 +36,10 @@ __position__ = 2
 __genesis__ = "0x2c80316d"
 
 import logging
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.protocols._navabhakti import VMOpDeclaration
 
 from vibe_core.mahamantra.protocols._seed import (
     HALVES,
@@ -189,6 +192,7 @@ def _extract_scorer_kwargs(lotus_response: Dict, input_text: str) -> Dict:
     antaranga = None
     try:
         from vibe_core.mahamantra.substrate.chamber import get_chamber
+
         antaranga = get_chamber().antaranga
     except (ImportError, AttributeError):
         pass
@@ -197,6 +201,7 @@ def _extract_scorer_kwargs(lotus_response: Dict, input_text: str) -> Dict:
     state = None
     try:
         from vibe_core.mahamantra.substrate.language.state_bridge import extract_state_vector
+
         ant_info = lotus_response.get("antaranga", {})
         state = extract_state_vector(prana_level=ant_info.get("total_prana", 0))
     except (ImportError, AttributeError):
@@ -281,6 +286,7 @@ class MahaComposition:
         Delegates to composition_vm.compose_pipeline() — 6-step dispatch loop.
         """
         from vibe_core.mahamantra.adapters.composition_vm import compose_pipeline
+
         return compose_pipeline(self, lotus_response, input_text)
 
     # =========================================================================
@@ -304,12 +310,14 @@ class MahaComposition:
             composed = self.compose(result, input_text)
             result["composed"] = composed
 
-        return [VMOpDeclaration(
-            name="composition",
-            gate=4,  # SYNC phase — after ATMA_NIVEDANAM writes ctx["_result"]
-            handler=_vm_compose,
-            priority=10,  # After core SYNC ops (priority 0)
-        )]
+        return [
+            VMOpDeclaration(
+                name="composition",
+                gate=4,  # SYNC phase — after ATMA_NIVEDANAM writes ctx["_result"]
+                handler=_vm_compose,
+                priority=10,  # After core SYNC ops (priority 0)
+            )
+        ]
 
 
 # =============================================================================

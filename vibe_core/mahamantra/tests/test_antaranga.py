@@ -15,6 +15,7 @@ import struct
 import pytest
 
 from vibe_core.mahamantra.substrate.cell_system.antaranga import (
+    _SLOT_FMT,
     ANTARANGA_SLOTS,
     CHAMBER_BYTES,
     FLAG_ACTIVE,
@@ -25,13 +26,12 @@ from vibe_core.mahamantra.substrate.cell_system.antaranga import (
     AntarangaRegistry,
     SlotView,
     _CSlot,
-    _SLOT_FMT,
 )
-
 
 # =============================================================================
 # FIXTURES
 # =============================================================================
+
 
 @pytest.fixture
 def reg():
@@ -42,6 +42,7 @@ def reg():
 # =============================================================================
 # CONSTANTS SANITY
 # =============================================================================
+
 
 class TestConstants:
     """Verify SSOT-derived constants are consistent."""
@@ -68,6 +69,7 @@ class TestConstants:
 # =============================================================================
 # INIT & CLEAR
 # =============================================================================
+
 
 class TestInitAndClear:
     """Registry starts silent and can be wiped."""
@@ -100,6 +102,7 @@ class TestInitAndClear:
 # =============================================================================
 # GET / SET
 # =============================================================================
+
 
 class TestGetSet:
     """O(1) read/write via ctypes overlay + struct.pack_into."""
@@ -156,6 +159,7 @@ class TestGetSet:
 # COLLISION (The Heart of Resonance)
 # =============================================================================
 
+
 class TestCollision:
     """PRESENCE (empty slot) vs RESONANCE (occupied slot)."""
 
@@ -209,6 +213,7 @@ class TestCollision:
 # QUERY METHODS
 # =============================================================================
 
+
 class TestQueries:
     """is_alive, prana_at, active_count, total_prana."""
 
@@ -246,6 +251,7 @@ class TestQueries:
 # APPLY DIW (The Reactor)
 # =============================================================================
 
+
 class TestApplyDiw:
     """DIW transforms lifecycle fields of active slots."""
 
@@ -264,15 +270,12 @@ class TestApplyDiw:
         assert after.target == before.target
         # Lifecycle changed (exact values depend on DIW decode)
         lifecycle_changed = (
-            after.prana != before.prana
-            or after.integrity != before.integrity
-            or after.cycle != before.cycle
+            after.prana != before.prana or after.integrity != before.integrity or after.cycle != before.cycle
         )
         assert lifecycle_changed, "DIW should transform at least one lifecycle field"
 
     def test_diw_preserves_header(self, reg):
-        reg.set_slot(0, 0xAAAA, 0xBBBB, 0xCCCC, 0xDDDD, 0xEEEE, FLAG_ACTIVE,
-                     GENESIS_PRANA_U32, INTEGRITY_FULL, 0)
+        reg.set_slot(0, 0xAAAA, 0xBBBB, 0xCCCC, 0xDDDD, 0xEEEE, FLAG_ACTIVE, GENESIS_PRANA_U32, INTEGRITY_FULL, 0)
         reg.apply_diw(0, 0x12345)
         sv = reg.get(0)
         assert sv.source == 0xAAAA
@@ -285,6 +288,7 @@ class TestApplyDiw:
 # =============================================================================
 # RAW MEMORY & SNAPSHOT
 # =============================================================================
+
 
 class TestRawMemory:
     """Direct memory access for snapshots and restore."""
@@ -332,6 +336,7 @@ class TestRawMemory:
 # =============================================================================
 # CTYPES ZERO-COPY CORRECTNESS
 # =============================================================================
+
 
 class TestCtypesOverlay:
     """Verify ctypes overlay is a true zero-copy view of _mem."""

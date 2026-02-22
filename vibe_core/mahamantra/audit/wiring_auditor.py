@@ -97,9 +97,9 @@ class Auditor:
         try:
             src = _source_of(BootOrchestrator, "_act_wire_gate_providers")
             if "from vibe_core.mahamantra.substrate.gate_providers import wire_gate_providers" in src:
-                findings.append(_finding(
-                    "_act_wire_gate_providers() re-imports wire_gate_providers — should only verify"
-                ))
+                findings.append(
+                    _finding("_act_wire_gate_providers() re-imports wire_gate_providers — should only verify")
+                )
         except AttributeError:
             pass
 
@@ -107,9 +107,7 @@ class Auditor:
         try:
             src = _source_of(BootOrchestrator, "_act_wire_sravanam")
             if "wire_sravanam()" in src:
-                findings.append(_finding(
-                    "_act_wire_sravanam() still calls wire_sravanam() — should only verify"
-                ))
+                findings.append(_finding("_act_wire_sravanam() still calls wire_sravanam() — should only verify"))
         except AttributeError:
             pass
 
@@ -117,9 +115,7 @@ class Auditor:
         try:
             src = _source_of(BootOrchestrator, "_act_register_governance_hook")
             if "from vibe_core.protocols.substrate.mantra_protocol import register_governance_hook" in src:
-                findings.append(_finding(
-                    "_act_register_governance_hook() re-imports — should only verify"
-                ))
+                findings.append(_finding("_act_register_governance_hook() re-imports — should only verify"))
         except AttributeError:
             pass
 
@@ -127,9 +123,9 @@ class Auditor:
         try:
             src = _source_of(BootOrchestrator, "_act_ingest_codebase")
             if "parse_file_to_fragments" not in src:
-                findings.append(_finding(
-                    "_act_ingest_codebase() no longer does ingestion — must stay in boot_orchestrator"
-                ))
+                findings.append(
+                    _finding("_act_ingest_codebase() no longer does ingestion — must stay in boot_orchestrator")
+                )
         except AttributeError:
             pass
 
@@ -185,20 +181,20 @@ class Auditor:
             try:
                 src = _source_of(RealVibeKernel, method_name)
                 if "self.brahma." in src or "self.bhishma." in src:
-                    findings.append(_finding(
-                        f"{method_name}() uses proxy (self.brahma/bhishma) — must use _raw_*"
-                    ))
+                    findings.append(_finding(f"{method_name}() uses proxy (self.brahma/bhishma) — must use _raw_*"))
             except AttributeError:
                 pass
 
         # factory.py must register _raw_* in PositionRegistry
         from vibe_core.factory import VibeFactory
+
         src = _source_of(VibeFactory, "get_kernel")
         if "_raw_brahma" not in src:
             findings.append(_finding("factory.py does not reference _raw_brahma"))
 
         # kernel_ops must use _raw_brahma
         from vibe_core.protocols.mahajanas.manu.types import kernel_ops
+
         src = inspect.getsource(kernel_ops)
         if "_raw_brahma" not in src:
             findings.append(_finding("kernel_ops.py does not reference _raw_brahma"))
@@ -267,6 +263,7 @@ class Auditor:
 
         # _init_sharanagati must be idempotent
         from vibe_core.kernel_impl import RealVibeKernel
+
         src = _source_of(RealVibeKernel, "_init_sharanagati")
         if "_bootstrapped" not in src:
             findings.append(_finding("_init_sharanagati() does not check _bootstrapped — not idempotent"))

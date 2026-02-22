@@ -273,8 +273,8 @@ class TestGenesisHashAttacks:
                 position_hashes[genesis_hash] = (pos, mahajana)
 
         # All 16 positions must have unique hashes
-        assert len(collisions) == 0, (
-            f"CROSS-POSITION COLLISION: {len(collisions)} collisions found:\n" + "\n".join(collisions)
+        assert len(collisions) == 0, f"CROSS-POSITION COLLISION: {len(collisions)} collisions found:\n" + "\n".join(
+            collisions
         )
         assert len(position_hashes) == 16, f"Expected 16 unique hashes, got {len(position_hashes)}"
 
