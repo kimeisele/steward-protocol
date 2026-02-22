@@ -478,18 +478,26 @@ class MoltbookPlugin(KernelPlugin):
     # Mahamantra Listener — THE heartbeat path
     # =========================================================================
 
-    def _on_mahamantra_tick(self, tick_state: object) -> None:
+    def _on_mahamantra_tick(self, tick_state: dict) -> None:
         """
         Called on every mahamantra.tick() via _broadcast().
 
-        Polls Moltbook once per full mantra cycle (16 ticks).
-        Same pattern as Nrisimha._on_mahamantra_tick().
+        Fires heartbeat once per mantra cycle, gated on is_downbeat
+        (position == 0). Uses the Mahamantra's own rhythm — not a
+        dumb counter. Same defensive dict/attr pattern as SravanamListener.
         """
         if not self._client:
             return
 
         self._tick_count += 1
-        if self._tick_count % _TICKS_PER_HEARTBEAT != 0:
+
+        # Gate: only fire on downbeat (position 0 = start of new cycle)
+        if isinstance(tick_state, dict):
+            is_downbeat = tick_state.get("is_downbeat", False)
+        else:
+            is_downbeat = getattr(tick_state, "is_downbeat", False)
+
+        if not is_downbeat:
             return
 
         self._do_heartbeat()

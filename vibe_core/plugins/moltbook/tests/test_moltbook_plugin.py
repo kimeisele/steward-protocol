@@ -194,70 +194,84 @@ class TestPluginStateContract:
 # =============================================================================
 
 
+def _tick(position: int = 1) -> dict:
+    """Create a realistic TickState dict for testing."""
+    return {"position": position, "is_downbeat": position == 0, "tick": position}
+
+
+def _cycle() -> list:
+    """One full 16-tick mantra cycle: positions 0-15. Downbeat at position 0."""
+    return [_tick(p) for p in range(16)]
+
+
 class TestMahamantraListener:
     """The Mahamantra tick listener is the REAL heartbeat path.
-    Same pattern as Nrisimha._on_mahamantra_tick()."""
+    Gated on is_downbeat (position 0), not a dumb counter."""
 
     def test_tick_increments_counter(self, plugin):
-        """Every tick increments the counter."""
-        for _ in range(5):
-            plugin._on_mahamantra_tick({})
+        """Every tick increments the counter, regardless of position."""
+        for t in [_tick(1), _tick(2), _tick(3), _tick(4), _tick(5)]:
+            plugin._on_mahamantra_tick(t)
         assert plugin._tick_count == 5
 
-    def test_no_heartbeat_before_16_ticks(self, plugin):
-        """First 15 ticks: tick counter increments, no heartbeat fires."""
+    def test_no_heartbeat_on_non_downbeat(self, plugin):
+        """Non-downbeat ticks: counter increments, no heartbeat fires."""
         initial_requests = plugin._client.limits.requests_this_minute
-        for _ in range(15):
-            plugin._on_mahamantra_tick({})
+        for p in range(1, 16):
+            plugin._on_mahamantra_tick(_tick(p))
         assert plugin._client.limits.requests_this_minute == initial_requests
 
-    def test_heartbeat_fires_at_tick_16(self, plugin):
-        """16th tick triggers heartbeat (one API request)."""
+    def test_heartbeat_fires_on_downbeat(self, plugin):
+        """Downbeat (position 0) triggers heartbeat."""
         initial_requests = plugin._client.limits.requests_this_minute
-        for _ in range(16):
-            plugin._on_mahamantra_tick({})
+        plugin._on_mahamantra_tick(_tick(0))
         assert plugin._client.limits.requests_this_minute == initial_requests + 1
         assert plugin._last_heartbeat_error is None
 
-    def test_heartbeat_fires_every_16_ticks(self, plugin):
+    def test_heartbeat_fires_every_cycle(self, plugin):
         """Multiple full mantra cycles each trigger exactly one heartbeat."""
-        for _ in range(_TICKS_PER_HEARTBEAT * 3):
-            plugin._on_mahamantra_tick({})
+        for _ in range(3):
+            for t in _cycle():
+                plugin._on_mahamantra_tick(t)
         assert plugin._tick_count == _TICKS_PER_HEARTBEAT * 3
         assert plugin._client.limits.requests_this_minute == 3
 
-    def test_heartbeat_at_exact_multiples(self, plugin):
-        """Heartbeat fires at tick 16, 32, 48 — exactly at multiples."""
-        for i in range(1, 49):
-            plugin._on_mahamantra_tick({})
-            expected = i // _TICKS_PER_HEARTBEAT
-            assert plugin._client.limits.requests_this_minute == expected, (
-                f"At tick {i}, expected {expected} heartbeats"
-            )
+    def test_heartbeat_only_on_downbeat_in_cycle(self, plugin):
+        """In a full cycle, heartbeat fires exactly once (at position 0)."""
+        for t in _cycle():
+            plugin._on_mahamantra_tick(t)
+        assert plugin._client.limits.requests_this_minute == 1
 
     def test_skips_without_client(self, bare_plugin):
         """No crash if tick fires before client is ready. No tick counted."""
-        bare_plugin._on_mahamantra_tick({})
+        bare_plugin._on_mahamantra_tick(_tick(0))
         assert bare_plugin._tick_count == 0
 
     def test_error_captured_not_raised(self, plugin):
         """Failed heartbeat sets error string, does not raise."""
         plugin._client.limits.requests_this_minute = 100  # Will trigger rate limit
-        for _ in range(_TICKS_PER_HEARTBEAT):
-            plugin._on_mahamantra_tick({})
+        plugin._on_mahamantra_tick(_tick(0))
         assert plugin._last_heartbeat_error is not None
         assert "rate limit" in plugin._last_heartbeat_error.lower()
 
     def test_error_clears_on_success(self, plugin):
         """Successful heartbeat clears previous error."""
         plugin._last_heartbeat_error = "previous error"
-        for _ in range(_TICKS_PER_HEARTBEAT):
-            plugin._on_mahamantra_tick({})
+        plugin._on_mahamantra_tick(_tick(0))
         assert plugin._last_heartbeat_error is None
 
     def test_listener_wired_flag_default_false(self, bare_plugin):
         """_listener_wired is False until _wire_to_mahamantra() succeeds."""
         assert bare_plugin._listener_wired is False
+
+    def test_supports_object_tick_state(self, plugin):
+        """Handles tick_state as object with attributes (not just dict)."""
+        class ObjState:
+            is_downbeat = True
+            position = 0
+        initial = plugin._client.limits.requests_this_minute
+        plugin._on_mahamantra_tick(ObjState())
+        assert plugin._client.limits.requests_this_minute == initial + 1
 
 
 # =============================================================================
@@ -330,8 +344,8 @@ class TestPluginAPI:
 
     def test_api_ticks_count(self, plugin):
         """Tick count reflects actual ticks processed."""
-        for _ in range(5):
-            plugin._on_mahamantra_tick({})
+        for p in range(5):
+            plugin._on_mahamantra_tick(_tick(p + 1))
         api = plugin.get_api()
         assert api["ticks_seen"] == 5
 
@@ -766,8 +780,8 @@ class TestPluginIsolation:
         p2 = MoltbookPlugin()
         p2._client = MoltbookClient(api_key="test", offline_mode=True)
 
-        for _ in range(5):
-            p1._on_mahamantra_tick({})
+        for p in range(5):
+            p1._on_mahamantra_tick(_tick(p + 1))
         assert p1._tick_count == 5
         assert p2._tick_count == 0
 
@@ -930,8 +944,7 @@ class TestInboundDMProcessing:
 
         mock_gw = MagicMock()
         with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            for _ in range(_TICKS_PER_HEARTBEAT):
-                plugin._on_mahamantra_tick({})
+            plugin._on_mahamantra_tick(_tick(0))  # downbeat triggers heartbeat
 
         # Heartbeat detected new messages → routed through gateway
         assert mock_gw.receive.call_count == 1
