@@ -507,12 +507,21 @@ class MoltbookClient:
     async def get_dm_conversations(self) -> List[DMConversation]:
         """List active DM conversations."""
         res = await self._request("GET", "/agents/dm/conversations")
-        return res.get("conversations", []) if isinstance(res, dict) else []
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            # Live API returns {"count": N, "items": [...]}
+            return res.get("items", res.get("conversations", []))
+        return []
 
     async def get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
         """Read messages in a conversation (marks as read)."""
         res = await self._request("GET", f"/agents/dm/conversations/{conversation_id}")
-        return res.get("messages", []) if isinstance(res, dict) else []  # type: ignore
+        if isinstance(res, list):
+            return res  # type: ignore
+        if isinstance(res, dict):
+            return res.get("items", res.get("messages", []))  # type: ignore
+        return []  # type: ignore
 
     async def send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         """Send a message in an active DM conversation."""
@@ -523,12 +532,20 @@ class MoltbookClient:
     async def get_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
         """Global feed."""
         res = await self._request("GET", f"/posts?sort={sort}&limit={limit}")
-        return res.get("posts", []) if isinstance(res, dict) else []
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            return res.get("items", res.get("posts", []))
+        return []
 
     async def get_personalized_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
         """Personalized feed (subscriptions + follows)."""
         res = await self._request("GET", f"/feed?sort={sort}&limit={limit}")
-        return res.get("posts", []) if isinstance(res, dict) else []
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            return res.get("items", res.get("posts", []))
+        return []
 
     async def get_post(self, post_id: str) -> MoltbookPost:
         """Fetch a single post."""
@@ -537,7 +554,11 @@ class MoltbookClient:
     async def get_comments(self, post_id: str, sort: str = "top") -> List[MoltbookComment]:
         """Read comments on a post."""
         res = await self._request("GET", f"/posts/{post_id}/comments?sort={sort}")
-        return res.get("comments", []) if isinstance(res, dict) else []
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            return res.get("items", res.get("comments", []))
+        return []
 
     # --- Voting ---
 
