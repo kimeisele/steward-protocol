@@ -10,17 +10,27 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import httpx
 
-from vibe_core.protocols.moltbook import (
-    DMMessage,
-    MoltbookAgentProfile,
-    MoltbookComment,
-    MoltbookPost,
-    SemanticSearchResult,
-)
+# Self-contained type aliases — no dependency on protocols/moltbook.py
+# All Moltbook API responses are dicts. These aliases document the shapes.
+HeartbeatResult = Dict
+MoltbookAgentProfile = Dict
+MoltbookPost = Dict
+MoltbookComment = Dict
+SemanticSearchResult = Dict
+DMConversation = Dict
+DMMessage = Dict
+DMSendResult = Dict
+DMRequestInfo = Dict
+DMRequestResult = Dict
+SubmoltDetails = Dict
+VoteResult = Dict
+FollowResult = Dict
+ProfileUpdateResult = Dict
+SubscribeResult = Dict
 
 logger = logging.getLogger("MOLTBOOK")
 
@@ -166,7 +176,7 @@ class MoltbookClient:
         self.limits = RateLimitState()
 
         # In offline mode, we store mocked responses here
-        self._mock_db: Dict[str, Any] = {"posts": [], "comments": [], "dms": [], "status": "claimed"}
+        self._mock_db: Dict[str, list] = {"posts": [], "comments": [], "dms": [], "status": "claimed"}  # type: ignore[assignment]
 
     # --- RATE LIMIT ENFORCEMENT ---
 
@@ -209,7 +219,7 @@ class MoltbookClient:
 
     # --- HTTP TRANSPORT ---
 
-    async def _request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
+    async def _request(self, method: str, endpoint: str, data: Optional[Dict[str, str]] = None) -> dict:
         """Core request dispatcher. Handles offline routing and httpx transport."""
         self._enforce_limits(endpoint, method)
 
@@ -242,13 +252,24 @@ class MoltbookClient:
 
     # --- OFFLINE MOCK HUB ---
 
-    def _handle_offline(self, method: str, endpoint: str, data: Optional[Dict]) -> Dict[str, Any]:
+    def _handle_offline(self, method: str, endpoint: str, data: Optional[Dict[str, str]]) -> dict:
         """Simulates Moltbook API for watertight offline testing."""
         if method == "GET" and endpoint == "/agents/status":
             return {"status": self._mock_db["status"]}
 
         elif method == "GET" and endpoint.startswith("/search"):
             return {"results": [], "similarity": 0.95}
+
+        elif method == "GET" and endpoint.startswith("/agents/profile"):
+            return {
+                "name": "mock_agent",
+                "description": "Offline mock profile",
+                "metadata": None,
+                "karma": 0,
+                "x_handle": None,
+                "followers_count": 0,
+                "following_count": 0,
+            }
 
         elif method == "POST" and endpoint == "/posts":
             post = {"id": f"p{len(self._mock_db['posts'])}", "title": data["title"], "content": data["content"]}
@@ -281,12 +302,89 @@ class MoltbookClient:
             return msg
 
         # Simulated Math Challenge — verify the solution matches the challenge
-        elif method == "POST" and "comments" in endpoint:
+        elif method == "POST" and "comments" in endpoint and "/upvote" not in endpoint:
             if data and "challenge_solution" in data:
-                # Verification attempt — accept any solved challenge
                 return {"id": "c99", "status": "posted"}
-            # First attempt — issue a challenge
             return {"error": "VERIFICATION_REQUIRED", "challenge": "What is seven + 3?", "challenge_id": "c123"}
+
+        # GET comments on a post
+        elif method == "GET" and "comments" in endpoint:
+            return {"comments": self._mock_db.get("comments", [])}
+
+        # Feed endpoints
+        elif method == "GET" and endpoint.startswith("/posts"):
+            if "?" in endpoint:
+                return {"posts": self._mock_db.get("posts", [])}
+            return self._mock_db["posts"][0] if self._mock_db["posts"] else {"id": "none"}
+
+        elif method == "GET" and endpoint.startswith("/feed"):
+            return {"posts": self._mock_db.get("posts", [])}
+
+        # Voting
+        elif method == "POST" and "/upvote" in endpoint:
+            return {"status": "ok"}
+
+        elif method == "POST" and "/downvote" in endpoint:
+            return {"status": "ok"}
+
+        # Following
+        elif method == "POST" and endpoint.startswith("/agents/") and endpoint.endswith("/follow"):
+            return {"status": "ok"}
+
+        elif method == "DELETE" and endpoint.endswith("/follow"):
+            return {"status": "ok"}
+
+        # Submolts
+        elif method == "GET" and endpoint == "/submolts":
+            return {"submolts": self._mock_db.get("submolts", [])}
+
+        elif method == "GET" and endpoint.startswith("/submolts/"):
+            name = endpoint.rsplit("/", 1)[-1]
+            if "/subscribe" not in endpoint:
+                return {
+                    "name": name, "display_name": name, "description": "mock",
+                    "subscriber_count": 0, "allow_crypto": False, "owner": "mock",
+                    "moderators": [], "theme_color": None, "banner_color": None,
+                }
+
+        elif method == "POST" and endpoint == "/submolts":
+            return {
+                "name": data.get("name", "") if data else "",
+                "display_name": data.get("display_name", "") if data else "",
+                "description": data.get("description", "") if data else "",
+                "subscriber_count": 0, "allow_crypto": False, "owner": "self",
+                "moderators": [], "theme_color": None, "banner_color": None,
+            }
+
+        elif method == "POST" and "/subscribe" in endpoint:
+            return {"status": "ok"}
+
+        elif method == "DELETE" and "/subscribe" in endpoint:
+            return {"status": "ok"}
+
+        # Profile update
+        elif method == "PATCH" and endpoint == "/agents/me":
+            return {"status": "ok", "description": data.get("description", "") if data else ""}
+
+        elif method == "GET" and endpoint == "/agents/me":
+            return {
+                "name": "steward-protocol", "description": "mock",
+                "metadata": None, "karma": 0, "x_handle": None,
+                "followers_count": 0, "following_count": 0,
+            }
+
+        # DM requests
+        elif method == "POST" and endpoint == "/agents/dm/request":
+            return {"status": "sent", "conversation_id": None}
+
+        elif method == "GET" and endpoint == "/agents/dm/requests":
+            return {"requests": self._mock_db.get("dm_requests", [])}
+
+        elif method == "POST" and "/dm/requests/" in endpoint and "/approve" in endpoint:
+            return {"status": "approved", "conversation_id": "conv_new"}
+
+        elif method == "POST" and "/dm/requests/" in endpoint and "/reject" in endpoint:
+            return {"status": "rejected", "conversation_id": None}
 
         return {"status": "ok", "mocked": True, "endpoint": endpoint}
 
@@ -294,7 +392,7 @@ class MoltbookClient:
     # REGISTRATION — The ONLY unauthenticated endpoint
     # =========================================================================
 
-    async def register(self, name: str, description: str) -> Dict[str, Any]:
+    async def register(self, name: str, description: str) -> dict:
         """
         Register a new agent on Moltbook.
 
@@ -326,7 +424,7 @@ class MoltbookClient:
             response.raise_for_status()
             return response.json()
 
-    def sync_register(self, name: str, description: str) -> Dict[str, Any]:
+    def sync_register(self, name: str, description: str) -> dict:
         """Sync wrapper for registration."""
         return _run_async(self.register(name, description))
 
@@ -392,7 +490,11 @@ class MoltbookClient:
 
         safe_query = quote(query, safe="")
         res = await self._request("GET", f"/search?q={safe_query}&limit={limit}")
-        return res.get("results", [])
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            return res.get("items", res.get("results", []))
+        return []
 
     async def get_profile(self, name: str) -> MoltbookAgentProfile:
         """Fetch an agent's profile."""
@@ -400,31 +502,199 @@ class MoltbookClient:
 
         safe_name = quote(name, safe="")
         res = await self._request("GET", f"/agents/profile?name={safe_name}")
+        if self.offline_mode:
+            return res  # type: ignore
+        # Live API wraps profile under "agent" key
+        if isinstance(res, dict) and "agent" in res:
+            return res["agent"]  # type: ignore
         return res  # type: ignore
 
-    async def check_heartbeat(self) -> Dict[str, Any]:
+    async def check_heartbeat(self) -> HeartbeatResult:
         """The pulse check for new DMs or mentions."""
-        return await self._request("GET", "/agents/dm/check")
+        res = await self._request("GET", "/agents/dm/check")
+        if self.offline_mode:
+            return res  # type: ignore
+        # Live API shape: {success, has_activity, messages: {conversations_with_unread, ...}, requests: {count, ...}}
+        messages = res.get("messages", {}) if isinstance(res, dict) else {}
+        requests = res.get("requests", {}) if isinstance(res, dict) else {}
+        has_new = bool(res.get("has_activity", False)) or int(messages.get("conversations_with_unread", 0)) > 0
+        pending = int(requests.get("count", 0))
+        return {"has_new_messages": has_new, "pending_requests": pending}  # type: ignore
 
-    async def get_dm_conversations(self) -> List[Dict[str, Any]]:
+    async def get_dm_conversations(self) -> List[DMConversation]:
         """List active DM conversations."""
         res = await self._request("GET", "/agents/dm/conversations")
-        return res.get("conversations", []) if isinstance(res, dict) else []
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            # Live API returns {"count": N, "items": [...]}
+            return res.get("items", res.get("conversations", []))
+        return []
 
     async def get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
         """Read messages in a conversation (marks as read)."""
         res = await self._request("GET", f"/agents/dm/conversations/{conversation_id}")
-        return res.get("messages", []) if isinstance(res, dict) else []  # type: ignore
+        if isinstance(res, list):
+            return res  # type: ignore
+        if isinstance(res, dict):
+            return res.get("items", res.get("messages", []))  # type: ignore
+        return []  # type: ignore
 
-    async def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    async def send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         """Send a message in an active DM conversation."""
         return await self._request("POST", f"/agents/dm/conversations/{conversation_id}/send", {"content": content})
+
+    # --- Feed & Posts ---
+
+    async def get_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
+        """Global feed."""
+        res = await self._request("GET", f"/posts?sort={sort}&limit={limit}")
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            return res.get("items", res.get("posts", []))
+        return []
+
+    async def get_personalized_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
+        """Personalized feed (subscriptions + follows)."""
+        res = await self._request("GET", f"/feed?sort={sort}&limit={limit}")
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            return res.get("items", res.get("posts", []))
+        return []
+
+    async def get_post(self, post_id: str) -> MoltbookPost:
+        """Fetch a single post."""
+        return await self._request("GET", f"/posts/{post_id}")  # type: ignore
+
+    async def get_comments(self, post_id: str, sort: str = "top") -> List[MoltbookComment]:
+        """Read comments on a post."""
+        res = await self._request("GET", f"/posts/{post_id}/comments?sort={sort}")
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            return res.get("items", res.get("comments", []))
+        return []
+
+    # --- Voting ---
+
+    async def upvote(self, post_id: str) -> VoteResult:
+        """Upvote a post."""
+        return await self._request("POST", f"/posts/{post_id}/upvote")  # type: ignore
+
+    async def downvote(self, post_id: str) -> VoteResult:
+        """Downvote a post."""
+        return await self._request("POST", f"/posts/{post_id}/downvote")  # type: ignore
+
+    async def upvote_comment(self, comment_id: str) -> VoteResult:
+        """Upvote a comment."""
+        return await self._request("POST", f"/comments/{comment_id}/upvote")  # type: ignore
+
+    # --- Following ---
+
+    async def follow(self, agent_name: str) -> FollowResult:
+        """Follow an agent."""
+        return await self._request("POST", f"/agents/{agent_name}/follow")  # type: ignore
+
+    async def unfollow(self, agent_name: str) -> FollowResult:
+        """Unfollow an agent. Uses DELETE method."""
+        # httpx handles DELETE via _request override
+        self._enforce_limits("/agents/follow", "DELETE")
+        if self.offline_mode:
+            return self._handle_offline("DELETE", f"/agents/{agent_name}/follow", None)  # type: ignore
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            res = await client.delete(f"{self.base_url}/agents/{agent_name}/follow", headers=headers, timeout=10.0)
+            res.raise_for_status()
+            return res.json()
+
+    # --- Submolts ---
+
+    async def get_submolts(self) -> List[SubmoltDetails]:
+        """List all submolts."""
+        res = await self._request("GET", "/submolts")
+        return res.get("submolts", []) if isinstance(res, dict) else []
+
+    async def get_submolt(self, name: str) -> SubmoltDetails:
+        """Get submolt details."""
+        return await self._request("GET", f"/submolts/{name}")  # type: ignore
+
+    async def create_submolt(self, name: str, display_name: str, description: str) -> SubmoltDetails:
+        """Create a new submolt."""
+        return await self._request("POST", "/submolts", {  # type: ignore
+            "name": name, "display_name": display_name, "description": description,
+        })
+
+    async def subscribe_submolt(self, name: str) -> SubscribeResult:
+        """Subscribe to a submolt."""
+        return await self._request("POST", f"/submolts/{name}/subscribe")  # type: ignore
+
+    async def unsubscribe_submolt(self, name: str) -> SubscribeResult:
+        """Unsubscribe from a submolt. Uses DELETE method."""
+        self._enforce_limits("/submolts/subscribe", "DELETE")
+        if self.offline_mode:
+            return self._handle_offline("DELETE", f"/submolts/{name}/subscribe", None)  # type: ignore
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            res = await client.delete(f"{self.base_url}/submolts/{name}/subscribe", headers=headers, timeout=10.0)
+            res.raise_for_status()
+            return res.json()
+
+    # --- Profile ---
+
+    async def get_own_profile(self) -> MoltbookAgentProfile:
+        """Get own profile."""
+        res = await self._request("GET", "/agents/me")
+        if self.offline_mode:
+            return res  # type: ignore
+        # Live API wraps profile under "agent" key
+        if isinstance(res, dict) and "agent" in res:
+            return res["agent"]  # type: ignore
+        return res  # type: ignore
+
+    async def update_profile(self, description: str) -> ProfileUpdateResult:
+        """Update own profile description. Uses PATCH method."""
+        self._enforce_limits("/agents/me", "PATCH")
+        if self.offline_mode:
+            return self._handle_offline("PATCH", "/agents/me", {"description": description})  # type: ignore
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+            res = await client.patch(
+                f"{self.base_url}/agents/me",
+                json={"description": description},
+                headers=headers,
+                timeout=10.0,
+            )
+            res.raise_for_status()
+            return res.json()
+
+    # --- DM Requests ---
+
+    async def send_dm_request(self, agent_name: str, message: str) -> DMRequestResult:
+        """Send a DM request to an agent."""
+        return await self._request("POST", "/agents/dm/request", {  # type: ignore
+            "agent_name": agent_name, "message": message,
+        })
+
+    async def get_dm_requests(self) -> List[DMRequestInfo]:
+        """List pending DM requests."""
+        res = await self._request("GET", "/agents/dm/requests")
+        return res.get("requests", []) if isinstance(res, dict) else []
+
+    async def approve_dm_request(self, request_id: str) -> DMRequestResult:
+        """Approve a pending DM request."""
+        return await self._request("POST", f"/agents/dm/requests/{request_id}/approve")  # type: ignore
+
+    async def reject_dm_request(self, request_id: str) -> DMRequestResult:
+        """Reject a pending DM request."""
+        return await self._request("POST", f"/agents/dm/requests/{request_id}/reject")  # type: ignore
 
     # =========================================================================
     # SYNC BRIDGE — for on_pulse() and other sync callers
     # =========================================================================
 
-    def sync_check_heartbeat(self) -> Dict[str, Any]:
+    def sync_check_heartbeat(self) -> HeartbeatResult:
         """Sync wrapper for on_pulse(). Reuses running loop or creates one."""
         return _run_async(self.check_heartbeat())
 
@@ -432,17 +702,20 @@ class MoltbookClient:
         """Sync wrapper for post creation."""
         return _run_async(self.create_post(title, content, submolt))  # type: ignore
 
-    def sync_send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    def sync_send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         """Sync wrapper for DM sending."""
         return _run_async(self.send_dm(conversation_id, content))
 
-    def sync_get_dm_conversations(self) -> List[Dict[str, Any]]:
+    def sync_get_dm_conversations(self) -> List[DMConversation]:
         """Sync wrapper for listing DM conversations."""
         return _run_async(self.get_dm_conversations())
 
     def sync_get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
         """Sync wrapper for DM reading."""
         return _run_async(self.get_dm_messages(conversation_id))  # type: ignore
+
+
+_SYNC_POOL = None
 
 
 def _run_async(coro):
@@ -455,11 +728,13 @@ def _run_async(coro):
         loop = None
 
     if loop and loop.is_running():
-        # We're inside an async context (e.g. FastAPI) — run in a new thread.
+        # We're inside an async context — reuse module-level thread pool.
         import concurrent.futures
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            return pool.submit(asyncio.run, coro).result(timeout=15.0)
+        global _SYNC_POOL
+        if _SYNC_POOL is None:
+            _SYNC_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        return _SYNC_POOL.submit(asyncio.run, coro).result(timeout=15.0)
     else:
         return asyncio.run(coro)
 
