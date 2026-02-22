@@ -370,17 +370,40 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"Mahamantra connection failed: {e}")
 
     def _try_vault(self, kernel: "RealVibeKernel") -> str:
-        """Attempt to load API key from CivicVault."""
+        """Attempt to load API key: CivicVault → env → ~/.config/moltbook/credentials.json."""
+        # 1. CivicVault (economy plugin)
         try:
             economy = kernel.api("economy")
-            if not economy:
-                return ""
-            vault = economy.get("vault") if isinstance(economy, dict) else None
-            if vault and hasattr(vault, "get_secret"):
-                key = vault.get_secret("moltbook_api_key")
-                return key if key else ""
+            if economy:
+                vault = economy.get("vault") if isinstance(economy, dict) else None
+                if vault and hasattr(vault, "get_secret"):
+                    key = vault.get_secret("moltbook_api_key")
+                    if key:
+                        return key
         except Exception as e:
             logger.debug(f"Vault lookup skipped: {e}")
+
+        # 2. Environment variable
+        import os
+
+        env_key = os.environ.get("MOLTBOOK_API_KEY", "")
+        if env_key:
+            return env_key
+
+        # 3. Credentials file (~/.config/moltbook/credentials.json)
+        try:
+            import json as _json
+
+            creds_path = Path.home() / ".config" / "moltbook" / "credentials.json"
+            if creds_path.exists():
+                creds = _json.loads(creds_path.read_text())
+                key = creds.get("api_key", "")
+                if key:
+                    logger.info("API key loaded from ~/.config/moltbook/credentials.json")
+                    return key
+        except Exception as e:
+            logger.debug(f"Credentials file lookup skipped: {e}")
+
         return ""
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
