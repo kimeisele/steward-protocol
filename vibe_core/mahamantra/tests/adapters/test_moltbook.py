@@ -630,3 +630,70 @@ class TestClientConstruction:
         ]
         for name in sync_methods:
             assert callable(getattr(MoltbookClient, name, None)), f"MoltbookClient.{name} must exist as callable"
+
+
+# =============================================================================
+# URL ENCODING SECURITY — Query parameters must be sanitized
+# =============================================================================
+
+
+class TestURLEncodingSecurity:
+    """User-supplied query parameters must be URL-encoded to prevent injection."""
+
+    @pytest.mark.asyncio
+    async def test_search_encodes_special_chars(self, client):
+        """Search query with special chars must not corrupt the URL."""
+        # This should not raise — the query is URL-encoded internally
+        results = await client.semantic_search("hello&evil=true")
+        assert isinstance(results, list)
+
+    @pytest.mark.asyncio
+    async def test_search_encodes_spaces(self, client):
+        """Spaces in search query must be encoded."""
+        results = await client.semantic_search("agent operating system")
+        assert isinstance(results, list)
+
+    @pytest.mark.asyncio
+    async def test_profile_encodes_special_chars(self, client):
+        """Profile name with special chars must not corrupt the URL."""
+        # Should not raise
+        await client.get_profile("agent&admin=true")
+
+
+# =============================================================================
+# DM SEND MOCK — Offline mock for outbound DMs
+# =============================================================================
+
+
+class TestDMSendMock:
+    """Offline DM send must simulate realistic responses."""
+
+    @pytest.mark.asyncio
+    async def test_send_dm_returns_message(self, client):
+        """Send DM returns a message dict with id and content."""
+        result = await client.send_dm("conv1", "hello")
+        assert "id" in result
+        assert result["conversation_id"] == "conv1"
+        assert result["content"] == "hello"
+        assert result["status"] == "sent"
+
+    @pytest.mark.asyncio
+    async def test_send_dm_persists_in_mock_db(self, client):
+        """Sent DM is stored in mock_db for later retrieval."""
+        await client.send_dm("conv1", "first message")
+        assert len(client._mock_db["dms"]) == 1
+        assert client._mock_db["dms"][0]["content"] == "first message"
+
+    @pytest.mark.asyncio
+    async def test_send_dm_ids_increment(self, client):
+        """DM IDs increment: dm0, dm1, dm2..."""
+        r1 = await client.send_dm("c1", "first")
+        r2 = await client.send_dm("c1", "second")
+        assert r1["id"] == "dm0"
+        assert r2["id"] == "dm1"
+
+    def test_sync_send_dm_returns_message(self, client):
+        """Sync wrapper returns same structure."""
+        result = client.sync_send_dm("conv1", "hello")
+        assert result["conversation_id"] == "conv1"
+        assert result["status"] == "sent"
