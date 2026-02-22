@@ -38,6 +38,13 @@ from vibe_core.protocols.moltbook import (
     MoltbookProtocol,
     SemanticSearchResult,
 )
+from vibe_core.protocols.moltbook_content import (
+    ContentProposal,
+    ContentProposalProtocol,
+    ContentQueue,
+    ContentType,
+    EchoContentProposer,
+)
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -238,6 +245,9 @@ class MoltbookPlugin(KernelPlugin):
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
         self._listener_wired: bool = False
+        self._content_queue: ContentQueue = ContentQueue()
+        self._proposer: ContentProposalProtocol = EchoContentProposer()
+        self._seen_message_ids: Set[str] = set()
 
     @property
     def dependencies(self) -> Set[str]:
@@ -319,8 +329,9 @@ class MoltbookPlugin(KernelPlugin):
                 offline_mode=self._offline_mode,
             )
 
-            # Register MoltbookProtocol in ServiceRegistry (same as Economy → BankProtocol)
+            # Register MoltbookProtocol + ContentProposalProtocol in ServiceRegistry
             self._register_service()
+            self._register_proposer()
 
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
@@ -415,9 +426,13 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"Heartbeat failed: {e}")
             return
 
-        has_new = heartbeat.get("has_new_messages", False)
+        has_new = heartbeat.get("has_activity", False)
         if has_new:
             self._process_inbound_dms()
+            self._process_dm_requests()
+
+        # Always drain queue on heartbeat (even without new activity)
+        self._drain_content_queue()
 
     # =========================================================================
     # on_pulse — backward compat (delegates to same heartbeat)
@@ -452,7 +467,7 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _process_inbound_dms(self) -> None:
-        """Fetch new DM conversations, read messages, route through Govardhan Gateway."""
+        """Fetch new DMs, route through Gateway, propose replies via ContentProposalProtocol."""
         from vibe_core.gateway.mahamantra_gateway import get_gateway
         from vibe_core.protocols.gateway import EntryType, create_request
 
@@ -474,21 +489,154 @@ class MoltbookPlugin(KernelPlugin):
                 continue
 
             for msg in messages:
-                content = msg.get("content", "") if isinstance(msg, dict) else ""
+                msg_id = msg.get("id", "") if isinstance(msg, dict) else ""
+                content = msg.get("content", msg.get("message", "")) if isinstance(msg, dict) else ""
                 if not content:
                     continue
+                if msg_id and msg_id in self._seen_message_ids:
+                    continue
+                if msg_id:
+                    self._seen_message_ids.add(msg_id)
+
+                sender = msg.get("sender", "unknown") if isinstance(msg, dict) else "unknown"
+
+                # Route through Govardhan Gateway
+                gateway_response = None
                 try:
                     req = create_request(content, [], EntryType.AGENT)
                     req["context"]["source"] = "moltbook_dm"
-                    req["context"]["sender"] = msg.get("sender", "unknown")
+                    req["context"]["sender"] = sender
                     req["context"]["conversation_id"] = conv_id
-                    gateway.receive(req)
+                    gateway_response = gateway.receive(req)
                 except Exception as e:
                     logger.warning(f"Inbound DM routing failed: {e}")
+
+                # Propose a reply
+                try:
+                    proposal = self._proposer.propose_dm_reply(
+                        conversation_id=conv_id,
+                        sender=sender,
+                        inbound_content=content,
+                        gateway_response=gateway_response,
+                    )
+                    if proposal:
+                        self._content_queue.enqueue(proposal)
+                        logger.info(f"DM reply queued for {conv_id}")
+                except Exception as e:
+                    logger.warning(f"Content proposal failed: {e}")
+
+    def _process_dm_requests(self) -> None:
+        """Check pending DM requests, propose approve/reject via ContentProposalProtocol."""
+        try:
+            requests = _run_async(self._client.get_dm_requests())
+        except Exception as e:
+            logger.warning(f"DM request fetch failed: {e}")
+            return
+
+        for req in requests:
+            req_id = req.get("id", req.get("conversation_id", "")) if isinstance(req, dict) else ""
+            if not req_id:
+                continue
+            from_agent = ""
+            if isinstance(req, dict):
+                fa = req.get("from_agent", {})
+                from_agent = fa.get("name", str(fa)) if isinstance(fa, dict) else str(fa)
+            preview = req.get("message_preview", "") if isinstance(req, dict) else ""
+
+            try:
+                proposal = self._proposer.propose_dm_request_action(
+                    request_id=req_id,
+                    from_agent=from_agent,
+                    message_preview=preview,
+                )
+                if proposal:
+                    self._content_queue.enqueue(proposal)
+                    logger.info(f"DM request action queued for {req_id}")
+            except Exception as e:
+                logger.warning(f"DM request proposal failed: {e}")
+
+    def _drain_content_queue(self) -> None:
+        """Execute queued content proposals through MoltbookService."""
+        if self._content_queue.is_empty:
+            return
+
+        service = MoltbookService(self._client)
+        proposals = self._content_queue.drain(limit=3)
+
+        for proposal in proposals:
+            ct = proposal.get("content_type", "")
+            try:
+                if ct == ContentType.DM_REPLY.value:
+                    conv_id = proposal.get("conversation_id", "")
+                    content = proposal.get("content", "")
+                    if conv_id and content:
+                        service.send_dm(
+                            conv_id, content,
+                            needs_human_input=proposal.get("needs_human_input", False),
+                        )
+                        logger.info(f"DM reply sent to {conv_id}")
+
+                elif ct == ContentType.DM_INITIATE.value:
+                    to_agent = proposal.get("to_agent", "")
+                    content = proposal.get("content", "")
+                    if to_agent:
+                        # Auto-approve: the proposer decided to accept
+                        # The request_id is in sender field for DM_INITIATE from request flow
+                        service.approve_dm_request(proposal.get("sender", ""))
+                        logger.info(f"DM request approved for {to_agent}")
+
+                elif ct == ContentType.POST.value:
+                    title = proposal.get("title", "")
+                    content = proposal.get("content", "")
+                    submolt = proposal.get("submolt")
+                    if title and content:
+                        service.create_post(title, content, submolt)
+                        logger.info(f"Post created: {title[:50]}")
+
+                elif ct == ContentType.COMMENT.value:
+                    post_id = proposal.get("post_id", "")
+                    content = proposal.get("content", "")
+                    parent_id = proposal.get("parent_id")
+                    if post_id and content:
+                        service.comment(post_id, content, parent_id)
+                        logger.info(f"Comment posted on {post_id}")
+
+                elif ct == ContentType.VOTE.value:
+                    post_id = proposal.get("post_id", "")
+                    if post_id:
+                        service.upvote(post_id)
+                        logger.info(f"Upvoted {post_id}")
+
+                elif ct == ContentType.FOLLOW.value:
+                    to_agent = proposal.get("to_agent", "")
+                    if to_agent:
+                        service.follow(to_agent)
+                        logger.info(f"Followed {to_agent}")
+
+                elif ct == ContentType.SUBSCRIBE.value:
+                    submolt = proposal.get("submolt", "")
+                    if submolt:
+                        service.subscribe(submolt)
+                        logger.info(f"Subscribed to {submolt}")
+
+            except PermissionError as e:
+                logger.warning(f"TAMAS blocked: {e}")
+            except Exception as e:
+                logger.warning(f"Content execution failed ({ct}): {e}")
 
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")
     # =========================================================================
+
+    def _register_proposer(self) -> None:
+        """Register ContentProposalProtocol in DI. Other plugins can swap the proposer."""
+        try:
+            from vibe_core.di import ServiceRegistry
+
+            ServiceRegistry.register_factory(ContentProposalProtocol, lambda: self._proposer)
+            logger.info("ContentProposalProtocol registered in ServiceRegistry")
+        except Exception as e:
+            logger.warning(f"ContentProposalProtocol registration failed: {e}")
 
     def get_api(self) -> Optional[Dict[str, Any]]:
         return {
@@ -497,4 +645,5 @@ class MoltbookPlugin(KernelPlugin):
             "last_error": self._last_heartbeat_error,
             "listener_wired": self._listener_wired,
             "ticks_seen": self._tick_count,
+            "content_queue": self._content_queue.stats,
         }
