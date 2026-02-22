@@ -440,11 +440,48 @@ class TestMoltbookServiceSattva:
         msgs = svc.get_messages("c1")
         assert len(msgs) == 1
 
+    def test_get_feed(self, service):
+        result = service.get_feed()
+        assert isinstance(result, list)
+
+    def test_get_personalized_feed(self, service):
+        result = service.get_personalized_feed()
+        assert isinstance(result, list)
+
+    def test_get_post(self, service):
+        result = service.get_post("p1")
+        assert isinstance(result, dict)
+
+    def test_get_comments(self, service):
+        result = service.get_comments("p1")
+        assert isinstance(result, list)
+
+    def test_get_submolts(self, service):
+        result = service.get_submolts()
+        assert isinstance(result, list)
+
+    def test_get_submolt(self, service):
+        result = service.get_submolt("agentic-os")
+        assert result["name"] == "agentic-os"
+
+    def test_get_own_profile(self, service):
+        result = service.get_own_profile()
+        assert "name" in result
+        assert "karma" in result
+
+    def test_get_dm_requests(self, service):
+        result = service.get_dm_requests()
+        assert isinstance(result, list)
+
     def test_sattva_operations_produce_no_log(self, service):
         """ALL sattva operations must produce zero log entries."""
         service.check_heartbeat()
         service.search("test")
         service.verify_credentials()
+        service.get_feed()
+        service.get_submolts()
+        service.get_own_profile()
+        service.get_dm_requests()
         assert len(service._operation_log) == 0, "SATTVA operations must not log — they are read-only"
 
 
@@ -488,12 +525,63 @@ class TestMoltbookServiceRajas:
         assert len(service._operation_log) == 1
         assert service._operation_log[0]["operation"] == "send_dm"
 
+    def test_upvote_logged(self, service):
+        service.upvote("p1")
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "upvote"
+
+    def test_downvote_logged(self, service):
+        service.downvote("p1")
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "downvote"
+
+    def test_upvote_comment_logged(self, service):
+        service.upvote_comment("c1")
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "upvote_comment"
+
+    def test_follow_logged(self, service):
+        service.follow("other_agent")
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "follow"
+
+    def test_subscribe_submolt_logged(self, service):
+        service.subscribe_submolt("agentic-os")
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "subscribe_submolt"
+
+    def test_create_submolt_logged(self, service):
+        result = service.create_submolt("test", "Test", "desc")
+        assert result["name"] == "test"
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "create_submolt"
+
+    def test_update_profile_logged(self, service):
+        result = service.update_profile("New bio")
+        assert result["status"] == "ok"
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "update_profile"
+
+    def test_send_dm_request_logged(self, service):
+        result = service.send_dm_request("other", "Hi")
+        assert result["status"] == "sent"
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "send_dm_request"
+
+    def test_approve_dm_request_logged(self, service):
+        result = service.approve_dm_request("req1")
+        assert result["status"] == "approved"
+        assert len(service._operation_log) == 1
+        assert service._operation_log[0]["operation"] == "approve_dm_request"
+
     def test_multiple_rajas_accumulate(self, service):
         """Each RAJAS operation adds one log entry."""
         service.create_post("A", "a")
         service.comment("p1", "b")
         service.send_dm("c1", "c")
-        assert len(service._operation_log) == 3
+        service.upvote("p1")
+        service.follow("x")
+        assert len(service._operation_log) == 5
 
     def test_log_timestamp_is_recent(self, service):
         """Timestamp must be a recent epoch float."""
@@ -523,6 +611,18 @@ class TestMoltbookServiceTamas:
     def test_unsubscribe_blocked(self, service):
         with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
             service._enforce_guna("unsubscribe_submolt")
+
+    def test_reject_dm_request_blocked(self, service):
+        with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
+            service.reject_dm_request("req1")
+
+    def test_unfollow_blocked_via_method(self, service):
+        with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
+            service.unfollow("other_agent")
+
+    def test_unsubscribe_blocked_via_method(self, service):
+        with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
+            service.unsubscribe_submolt("agentic-os")
 
     def test_tamas_produces_no_log(self, service):
         """Blocked TAMAS operations must NOT produce log entries."""
