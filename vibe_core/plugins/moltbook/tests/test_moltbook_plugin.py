@@ -307,7 +307,7 @@ class TestPluginAPI:
     def test_api_shape(self, plugin):
         """API dict has exactly the expected keys."""
         api = plugin.get_api()
-        expected_keys = {"client", "offline", "last_error", "listener_wired", "ticks_seen"}
+        expected_keys = {"client", "service", "content_queue", "offline", "last_error", "listener_wired", "ticks_seen"}
         assert set(api.keys()) == expected_keys
 
     def test_api_client_reference(self, plugin):
