@@ -57,7 +57,7 @@ def test_state_roundtrip():
     plugin = _make_plugin_with_client()
     plugin._client.limits.requests_this_minute = 85
     plugin._client.limits.posts_this_30m = 1
-    plugin._client.limits.comments_today = 42
+    plugin._client.limits.comments_this_hour = 42
 
     snapshot = plugin.snapshot_state()
     assert snapshot["client_active"] is True
@@ -69,7 +69,7 @@ def test_state_roundtrip():
     recovered.restore_state(snapshot)
     assert recovered._client.limits.requests_this_minute == 85
     assert recovered._client.limits.posts_this_30m == 1
-    assert recovered._client.limits.comments_today == 42
+    assert recovered._client.limits.comments_this_hour == 42
 
 
 def test_restore_ignores_wrong_version():

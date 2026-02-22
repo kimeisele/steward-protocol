@@ -35,9 +35,36 @@ def test_challenge_solver_multiplication():
     assert ChallengeSolver.solve("four times five") == "20"
 
 
+def test_challenge_solver_division():
+    assert ChallengeSolver.solve("What is twenty divided by 4?") == "5"
+    assert ChallengeSolver.solve("100 / five") == "20"
+
+
 def test_challenge_solver_edge_cases():
     assert ChallengeSolver.solve("What is the meaning of life?") == "0"
     assert ChallengeSolver.solve("Just the number 5") == "0"
+
+
+def test_challenge_solver_compound_numbers():
+    """Compound numbers must NOT be corrupted by substring replacement.
+    'eighteen' must NOT become '8een'. This was a real bug."""
+    assert ChallengeSolver.solve("What is eighteen + 2?") == "20"
+    assert ChallengeSolver.solve("What is eighteen - eight?") == "10"
+    assert ChallengeSolver.solve("What is eighty + twenty?") == "100"
+    assert ChallengeSolver.solve("What is thirteen + seven?") == "20"
+    assert ChallengeSolver.solve("What is nineteen - nine?") == "10"
+    assert ChallengeSolver.solve("What is fifteen * two?") == "30"
+    assert ChallengeSolver.solve("What is ninety - fifty?") == "40"
+
+
+def test_challenge_solver_teens_and_tens():
+    """All teen/tens numbers should be recognized."""
+    assert ChallengeSolver.solve("eleven + twelve") == "23"
+    assert ChallengeSolver.solve("fourteen + sixteen") == "30"
+    assert ChallengeSolver.solve("seventeen - thirteen") == "4"
+    assert ChallengeSolver.solve("thirty + forty") == "70"
+    assert ChallengeSolver.solve("sixty - fifty") == "10"
+    assert ChallengeSolver.solve("seventy + ninety") == "160"
 
 
 # =============================================================================
@@ -71,15 +98,30 @@ async def test_post_rate_limit():
 
 @pytest.mark.asyncio
 async def test_comment_hourly_limit():
-    """50 comments per hour — verified against API README (not per day)."""
+    """50 comments per hour — verified against API README."""
     client = MoltbookClient(api_key="offline_key", offline_mode=True)
-    client.limits.comments_today = 49
+    client.limits.comments_this_hour = 49
 
-    await client._request("POST", "/posts/p1/comments", {"content": "Hello"})
-    assert client.limits.comments_today == 50
+    # This triggers a challenge (first comment attempt), so _enforce_limits runs once
+    # for the initial attempt, then the challenge retry also runs _enforce_limits.
+    # But comment_with_verification now decrements on challenge, so net = +1.
+    await client._request("POST", "/posts/p1/comments", {"content": "Hello", "challenge_solution": "x"})
+    assert client.limits.comments_this_hour == 50
 
     with pytest.raises(Exception, match="Hourly comment limit exceeded"):
-        await client._request("POST", "/posts/p1/comments", {"content": "Spam"})
+        await client._request("POST", "/posts/p1/comments", {"content": "Spam", "challenge_solution": "x"})
+
+
+@pytest.mark.asyncio
+async def test_comment_verification_does_not_double_count():
+    """A challenged comment must count as 1, not 2, against the hourly limit.
+    This was a real bug — comment_with_verification called _request twice."""
+    client = MoltbookClient(api_key="offline_key", offline_mode=True)
+    initial = client.limits.comments_this_hour
+
+    await client.comment_with_verification("post_123", "Hello!")
+    # Should be initial + 1, NOT initial + 2
+    assert client.limits.comments_this_hour == initial + 1
 
 
 # =============================================================================
@@ -106,9 +148,50 @@ def test_sync_register_offline():
 
 @pytest.mark.asyncio
 async def test_comment_verification_flow():
+    """comment_with_verification auto-solves the math challenge."""
     client = MoltbookClient(api_key="offline_key", offline_mode=True)
     res = await client.comment_with_verification("post_123", "Brilliant architecture!")
     assert res.get("id") == "c99", "Failed to auto-solve verification challenge"
+
+
+# =============================================================================
+# Offline Mock — Conversations
+# =============================================================================
+
+
+@pytest.mark.asyncio
+async def test_offline_dm_conversations():
+    """Offline mock returns conversation list from mock_db."""
+    client = MoltbookClient(api_key="offline_key", offline_mode=True)
+    client._mock_db["conversations"] = [
+        {"id": "conv1", "with": "AgentX"},
+        {"id": "conv2", "with": "AgentY"},
+    ]
+    convs = await client.get_dm_conversations()
+    assert len(convs) == 2
+    assert convs[0]["id"] == "conv1"
+
+
+@pytest.mark.asyncio
+async def test_offline_dm_messages_by_conversation():
+    """Offline mock filters messages by conversation_id."""
+    client = MoltbookClient(api_key="offline_key", offline_mode=True)
+    client._mock_db["dms"] = [
+        {"conversation_id": "conv1", "sender": "AgentX", "content": "Hello"},
+        {"conversation_id": "conv2", "sender": "AgentY", "content": "Hi"},
+        {"conversation_id": "conv1", "sender": "AgentX", "content": "Follow up"},
+    ]
+    msgs = await client.get_dm_messages("conv1")
+    assert len(msgs) == 2
+    assert all(m["conversation_id"] == "conv1" for m in msgs)
+
+
+def test_sync_get_dm_conversations():
+    """sync_get_dm_conversations works from plain sync context."""
+    client = MoltbookClient(api_key="offline_key", offline_mode=True)
+    client._mock_db["conversations"] = [{"id": "c1"}]
+    convs = client.sync_get_dm_conversations()
+    assert len(convs) == 1
 
 
 # =============================================================================
