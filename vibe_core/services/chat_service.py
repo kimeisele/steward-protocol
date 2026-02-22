@@ -43,6 +43,8 @@ import uuid
 # NAGAs INFORM, they don't CONTROL (GAD-000 principle)
 from typing import TYPE_CHECKING
 
+# NADI - Energy channels (User ↔ System via PRANA)
+from vibe_core.mahamantra import MantraOpCode, NadiProtocol, NadiType
 from vibe_core.mahamantra.protocols._lotus import (
     MAHAJANA_POSITIONS,
     LotusBase,
@@ -65,16 +67,11 @@ from vibe_core.mahamantra.substrate.harmonics import (
 from vibe_core.mahamantra.substrate.harmonics import (
     ResonanceHarmonics,
 )
-
-# NADI - Energy channels (User ↔ System via PRANA)
 from vibe_core.mahamantra.substrate.nadi import (
     NadiMessage,
     NadiOp,
-    NadiProtocol,
-    NadiType,
     get_nadi,
 )
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
 
 # KSHETRA - The 24 Tattvas (BG 13.6-7)
 # Chat invokes: SHROTRA (hear), VAK (speak), MANAS (think), BUDDHI (understand)
@@ -535,8 +532,14 @@ class ChatService(ChatProtocol, LotusBase):
         mode = determine_chat_mode(cognitive_result, lotus_result)
         return cognitive_result, lotus_result, mode
 
-    async def _chat_execute(self, message: str, cognitive_result: "CognitiveResult",
-                            lotus_result: dict, mode: "ChatMode", context: ChatContext) -> object:
+    async def _chat_execute(
+        self,
+        message: str,
+        cognitive_result: "CognitiveResult",
+        lotus_result: dict,
+        mode: "ChatMode",
+        context: ChatContext,
+    ) -> object:
         """Chat Step 4: Execute if actionable (ShadowReactor or cli_bridge)."""
         execution_result = None
         if cognitive_result.intent_type == IntentType.EXECUTE or mode == ChatMode.SYSCALL:
@@ -550,8 +553,9 @@ class ChatService(ChatProtocol, LotusBase):
                 logger.info(f"⚡ ChatService: EXECUTED via cli_bridge → {execution_result}")
         return execution_result
 
-    def _chat_build_context(self, message: str, lotus_result: dict,
-                            execution_result: object, naga_context: object) -> dict:
+    def _chat_build_context(
+        self, message: str, lotus_result: dict, execution_result: object, naga_context: object
+    ) -> dict:
         """Chat Step 5: Build knowledge context with execution result + NAGA intelligence."""
         knowledge_context = self._get_knowledge_context_lotus(message, lotus_result)
         if execution_result:
@@ -565,26 +569,43 @@ class ChatService(ChatProtocol, LotusBase):
         self._lotus_bloom(lotus_result)
         return knowledge_context
 
-    async def _chat_respond(self, message: str, context: ChatContext,
-                            cognitive_result: "CognitiveResult", lotus_result: dict,
-                            knowledge_context: dict, mode: "ChatMode",
-                            magnitude: float, execution_result: object) -> ChatResponse:
+    async def _chat_respond(
+        self,
+        message: str,
+        context: ChatContext,
+        cognitive_result: "CognitiveResult",
+        lotus_result: dict,
+        knowledge_context: dict,
+        mode: "ChatMode",
+        magnitude: float,
+        execution_result: object,
+    ) -> ChatResponse:
         """Chat Step 6: Generate LLM response, create ChatResponse, complete lotus cycle."""
         response_text = await self._generate_response_lotus(
-            message=message, context=context, cognitive_result=cognitive_result,
-            lotus_result=lotus_result, knowledge_context=knowledge_context,
+            message=message,
+            context=context,
+            cognitive_result=cognitive_result,
+            lotus_result=lotus_result,
+            knowledge_context=knowledge_context,
         )
         response_msg = ChatMessage(
-            content=response_text, role="assistant", timestamp=datetime.now(),
-            session_id=context.session_id, message_id=str(uuid.uuid4()),
-            opcode=lotus_result.get("opcode", "EXTEND_CAP"), mahajana=lotus_result["mahajana"],
+            content=response_text,
+            role="assistant",
+            timestamp=datetime.now(),
+            session_id=context.session_id,
+            message_id=str(uuid.uuid4()),
+            opcode=lotus_result.get("opcode", "EXTEND_CAP"),
+            mahajana=lotus_result["mahajana"],
         )
         self._sessions[context.session_id].append(response_msg)
         response = ChatResponse(
-            success=True, message=response_msg, mode=mode,
+            success=True,
+            message=response_msg,
+            mode=mode,
             intent_type=cognitive_result.intent_type,
             opcode=lotus_result.get("opcode", "EXTEND_CAP"),
-            mahajana=lotus_result["mahajana"], confidence=magnitude,
+            mahajana=lotus_result["mahajana"],
+            confidence=magnitude,
         )
         self._lotus_garuda(executed=execution_result is not None)
         return response
@@ -617,23 +638,36 @@ class ChatService(ChatProtocol, LotusBase):
             execution_result = await self._chat_execute(message, cognitive_result, lotus_result, mode, context)
             knowledge_context = self._chat_build_context(message, lotus_result, execution_result, naga_context)
             response = await self._chat_respond(
-                message, context, cognitive_result, lotus_result,
-                knowledge_context, mode, magnitude, execution_result,
+                message,
+                context,
+                cognitive_result,
+                lotus_result,
+                knowledge_context,
+                mode,
+                magnitude,
+                execution_result,
             )
 
             self._report_to_narada("END", message, context, response)
             kshetra_names = [e.name for e in self._active_kshetra]
-            logger.info(f"🕉️ ChatService: Lotus cycle complete - {len(self._active_kshetra)} Tattvas active: {kshetra_names}")
+            logger.info(
+                f"🕉️ ChatService: Lotus cycle complete - {len(self._active_kshetra)} Tattvas active: {kshetra_names}"
+            )
             return response
 
         except Exception as e:
             logger.error(f"❌ ChatService: Chat failed: {e}")
             error_msg = ChatMessage(
-                content=f"Chat error: {e}", role="assistant",
-                timestamp=datetime.now(), session_id=context.session_id,
+                content=f"Chat error: {e}",
+                role="assistant",
+                timestamp=datetime.now(),
+                session_id=context.session_id,
             )
             error_response = ChatResponse(
-                success=False, message=error_msg, mode=ChatMode.DIRECT, error=str(e),
+                success=False,
+                message=error_msg,
+                mode=ChatMode.DIRECT,
+                error=str(e),
             )
             self._report_to_narada("ERROR", message, context, error_response)
             return error_response
@@ -705,7 +739,7 @@ class ChatService(ChatProtocol, LotusBase):
             }
 
         # FALLBACK: Legacy keyword matching (INTENT_MAP)
-        from vibe_core.mahamantra.substrate.intents import get_position_for_intent
+        from vibe_core.mahamantra import get_position_for_intent
 
         msg_lower = message.lower()
         words = msg_lower.split()
@@ -764,8 +798,7 @@ class ChatService(ChatProtocol, LotusBase):
 
         VarnaTensor observes phonetics for future Akasha learning.
         """
-        from vibe_core.mahamantra.substrate.intents import INTENT_MAP, get_position_for_intent
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS, HALF_SIZE
+        from vibe_core.mahamantra import ALL_GUARDIANS, HALF_SIZE, INTENT_MAP, get_position_for_intent
 
         msg_lower = message.lower()
         words = msg_lower.split()
@@ -1061,7 +1094,8 @@ class ChatService(ChatProtocol, LotusBase):
             return None
 
         try:
-            from vibe_core.mahamantra.substrate.seed import HALF_SIZE
+            from vibe_core.mahamantra import HALF_SIZE
+
             position = lotus_result.get("position", 2)
 
             # Only use Shadow for PARASHURAMA (8) or BRAHMA (1) positions

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from vibe_core.mahamantra.substrate.shuddhi import RemedyProtocol
+from vibe_core.mahamantra import ShuddhiProtocol as RemedyProtocol
 from vibe_core.mahamantra.dharma.kapila.remedies.base import CSTRemedy
 from vibe_core.mahamantra.dharma.kapila.remedy_loader import (
     RemedyLoader,
@@ -162,6 +162,7 @@ class TestExpectedRemedies:
         """ShuddhiEngine should not have hardcoded remedy imports."""
         # Canonical engine location (post-Samskara migration)
         from vibe_core.mahamantra.dharma.kumaras import engine as engine_mod
+
         engine_path = Path(engine_mod.__file__)
         content = engine_path.read_text()
 

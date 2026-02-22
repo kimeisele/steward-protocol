@@ -178,8 +178,7 @@ class ChatCommand(NagaCommandBase):
 
     def _get_help(self) -> str:
         """Help text - shows the INTENT_MAP truth, not local lies."""
-        from vibe_core.mahamantra.substrate.intents import INTENT_MAP
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        from vibe_core.mahamantra import ALL_GUARDIANS, INTENT_MAP
 
         lines = ["[PRAHLADA] Available intents (from INTENT_MAP SSOT):\n"]
 
