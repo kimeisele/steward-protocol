@@ -490,7 +490,11 @@ class MoltbookClient:
 
         safe_query = quote(query, safe="")
         res = await self._request("GET", f"/search?q={safe_query}&limit={limit}")
-        return res.get("results", [])
+        if isinstance(res, list):
+            return res
+        if isinstance(res, dict):
+            return res.get("items", res.get("results", []))
+        return []
 
     async def get_profile(self, name: str) -> MoltbookAgentProfile:
         """Fetch an agent's profile."""
@@ -498,11 +502,24 @@ class MoltbookClient:
 
         safe_name = quote(name, safe="")
         res = await self._request("GET", f"/agents/profile?name={safe_name}")
+        if self.offline_mode:
+            return res  # type: ignore
+        # Live API wraps profile under "agent" key
+        if isinstance(res, dict) and "agent" in res:
+            return res["agent"]  # type: ignore
         return res  # type: ignore
 
     async def check_heartbeat(self) -> HeartbeatResult:
         """The pulse check for new DMs or mentions."""
-        return await self._request("GET", "/agents/dm/check")
+        res = await self._request("GET", "/agents/dm/check")
+        if self.offline_mode:
+            return res  # type: ignore
+        # Live API shape: {success, has_activity, messages: {conversations_with_unread, ...}, requests: {count, ...}}
+        messages = res.get("messages", {}) if isinstance(res, dict) else {}
+        requests = res.get("requests", {}) if isinstance(res, dict) else {}
+        has_new = bool(res.get("has_activity", False)) or int(messages.get("conversations_with_unread", 0)) > 0
+        pending = int(requests.get("count", 0))
+        return {"has_new_messages": has_new, "pending_requests": pending}  # type: ignore
 
     async def get_dm_conversations(self) -> List[DMConversation]:
         """List active DM conversations."""
@@ -628,7 +645,13 @@ class MoltbookClient:
 
     async def get_own_profile(self) -> MoltbookAgentProfile:
         """Get own profile."""
-        return await self._request("GET", "/agents/me")  # type: ignore
+        res = await self._request("GET", "/agents/me")
+        if self.offline_mode:
+            return res  # type: ignore
+        # Live API wraps profile under "agent" key
+        if isinstance(res, dict) and "agent" in res:
+            return res["agent"]  # type: ignore
+        return res  # type: ignore
 
     async def update_profile(self, description: str) -> ProfileUpdateResult:
         """Update own profile description. Uses PATCH method."""

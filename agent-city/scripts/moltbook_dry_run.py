@@ -102,8 +102,10 @@ def main() -> int:
         report["own_profile"] = profile
         print(f"  name: {profile.get('name', '?')}")
         print(f"  karma: {profile.get('karma', '?')}")
-        print(f"  followers: {profile.get('followers_count', '?')}")
+        print(f"  followers: {profile.get('follower_count', profile.get('followers_count', '?'))}")
         print(f"  following: {profile.get('following_count', '?')}")
+        print(f"  posts: {profile.get('posts_count', '?')}")
+        print(f"  claimed: {profile.get('is_claimed', '?')}")
         print(f"  description: {str(profile.get('description', ''))[:80]}")
     except Exception as e:
         errors.append(f"own_profile: {e}")
