@@ -35,7 +35,8 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 from vibe_core.mahamantra.substrate.cell_system.cell import MahaCellUnified
 from vibe_core.mahamantra.substrate.cell_system.cell_router import get_router
-from vibe_core.gateway.mahamantra_gateway import EntryType, create_request, get_gateway
+from vibe_core.protocols.gateway import EntryType, create_request
+from vibe_core.gateway.mahamantra_gateway import get_gateway
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -60,14 +61,6 @@ class MoltbookPlugin(KernelPlugin):
         super().__init__()
         self._client: Optional[MoltbookClient] = None
         self._offline_mode: bool = True
-        
-        # In-memory "Starvation" / Rate Limit state
-        self._requests_this_minute: int = 0
-        self._posts_this_30m: int = 0
-        self._comments_today: int = 0
-        self._last_minute_reset: float = 0.0
-        self._last_post_time: float = 0.0
-        self._last_day_reset: float = 0.0
 
     @property
     def dependencies(self) -> Set[str]:
@@ -83,27 +76,36 @@ class MoltbookPlugin(KernelPlugin):
         return [self.STATE_DIR]
 
     def snapshot_state(self) -> Dict[str, Any]:
-        """Return current rate limits (Starvation State)."""
+        """Snapshot the adapter's REAL rate-limit state (not a shadow copy)."""
+        if not self._client:
+            return {"version": 1, "client_active": False}
+        limits = self._client.limits
         return {
             "version": 1,
-            "requests_this_minute": self._requests_this_minute,
-            "posts_this_30m": self._posts_this_30m,
-            "comments_today": self._comments_today,
-            "last_minute_reset": self._last_minute_reset,
-            "last_post_time": self._last_post_time,
-            "last_day_reset": self._last_day_reset,
+            "client_active": True,
+            "requests_this_minute": limits.requests_this_minute,
+            "posts_this_30m": limits.posts_this_30m,
+            "comments_today": limits.comments_today,
+            "last_minute_reset": limits.last_minute_reset,
+            "last_30m_reset": limits.last_30m_reset,
+            "last_day_reset": limits.last_day_reset,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        """Restore rate limits after crash/reboot."""
-        if snapshot.get("version") == 1:
-            self._requests_this_minute = snapshot.get("requests_this_minute", 0)
-            self._posts_this_30m = snapshot.get("posts_this_30m", 0)
-            self._comments_today = snapshot.get("comments_today", 0)
-            self._last_minute_reset = snapshot.get("last_minute_reset", 0.0)
-            self._last_post_time = snapshot.get("last_post_time", 0.0)
-            self._last_day_reset = snapshot.get("last_day_reset", 0.0)
+        """Restore the adapter's rate limits after crash/reboot."""
+        if snapshot.get("version") != 1 or not snapshot.get("client_active"):
+            return
+        # We can only restore if client exists (boot already happened)
+        if not self._client:
+            return
+        limits = self._client.limits
+        limits.requests_this_minute = snapshot.get("requests_this_minute", 0)
+        limits.posts_this_30m = snapshot.get("posts_this_30m", 0)
+        limits.comments_today = snapshot.get("comments_today", 0)
+        limits.last_minute_reset = snapshot.get("last_minute_reset", 0.0)
+        limits.last_30m_reset = snapshot.get("last_30m_reset", 0.0)
+        limits.last_day_reset = snapshot.get("last_day_reset", 0.0)
 
     # =========================================================================
     # KERNEL LIFECYCLE
