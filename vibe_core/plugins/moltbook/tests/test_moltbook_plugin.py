@@ -384,6 +384,7 @@ class TestMoltbookProtocolContract:
             "upvote_comment",
             "follow",
             "subscribe",
+            "create_submolt",
             "update_profile",
             # TAMAS
             "delete_post",
@@ -404,7 +405,7 @@ class TestMoltbookProtocolContract:
     def test_method_count_matches(self):
         """Service implements exactly the methods defined by protocol."""
         abstract_count = len(MoltbookProtocol.__abstractmethods__)
-        assert abstract_count == 29
+        assert abstract_count == 30
 
 
 # =============================================================================

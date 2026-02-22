@@ -33,7 +33,7 @@ from vibe_core.mahamantra import (
 )
 
 if TYPE_CHECKING:
-    from vibe_core.services.moltbook_client import MoltbookClient
+    from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 
 logger = logging.getLogger("MOLTBOOK_RESOLVER")
 
@@ -59,10 +59,16 @@ TARGET_OWN_PROFILE = "moltbook/profile/me"
 TARGET_CREATE_POST = "moltbook/post/create"
 TARGET_CREATE_COMMENT = "moltbook/comment/create"
 TARGET_SEND_DM = "moltbook/dm/send"
+TARGET_SEND_DM_REQUEST = "moltbook/dm/request"
+TARGET_APPROVE_DM = "moltbook/dm/approve"
+TARGET_REJECT_DM = "moltbook/dm/reject"
 TARGET_UPVOTE = "moltbook/upvote"
 TARGET_DOWNVOTE = "moltbook/downvote"
 TARGET_FOLLOW = "moltbook/follow"
 TARGET_UNFOLLOW = "moltbook/unfollow"
+TARGET_SUBSCRIBE = "moltbook/subscribe"
+TARGET_UNSUBSCRIBE = "moltbook/unsubscribe"
+TARGET_UPDATE_PROFILE = "moltbook/profile/update"
 
 # Intent types this resolver handles
 HANDLED_TYPES = {IntentType.READ, IntentType.WRITE, IntentType.OBSERVE, IntentType.SYNC}
@@ -111,7 +117,7 @@ class MoltbookResolver:
 
     def _dispatch(self, target: str, params: Dict[str, Union[str, int, bool, None]]) -> object:
         """Dispatch to the correct client method based on target."""
-        from vibe_core.services.moltbook_client import run_async
+        from vibe_core.mahamantra import run_async
 
         # --- READ operations ---
         if target == TARGET_FEED:
@@ -176,7 +182,7 @@ class MoltbookResolver:
             content = str(params.get("content", ""))
             if not post_id or not content:
                 raise ValueError("post_id and content required for comment")
-            return run_async(self._client.create_comment(post_id, content))
+            return run_async(self._client.comment_with_verification(post_id, content))
 
         if target == TARGET_SEND_DM:
             conv_id = str(params.get("conversation_id", ""))
@@ -208,6 +214,45 @@ class MoltbookResolver:
             if not name:
                 raise ValueError("name required for unfollow")
             return run_async(self._client.unfollow_agent(name))
+
+        if target == TARGET_SEND_DM_REQUEST:
+            to_agent = str(params.get("to_agent", ""))
+            message = str(params.get("message", ""))
+            if not to_agent:
+                raise ValueError("to_agent required for DM request")
+            return run_async(self._client.send_dm_request(to_agent, message))
+
+        if target == TARGET_APPROVE_DM:
+            request_id = str(params.get("request_id", ""))
+            if not request_id:
+                raise ValueError("request_id required for DM approve")
+            return run_async(self._client.approve_dm_request(request_id))
+
+        if target == TARGET_REJECT_DM:
+            request_id = str(params.get("request_id", ""))
+            block = bool(params.get("block", False))
+            if not request_id:
+                raise ValueError("request_id required for DM reject")
+            return run_async(self._client.reject_dm_request(request_id, block))
+
+        if target == TARGET_SUBSCRIBE:
+            submolt = str(params.get("submolt", ""))
+            if not submolt:
+                raise ValueError("submolt required for subscribe")
+            return run_async(self._client.subscribe_submolt(submolt))
+
+        if target == TARGET_UNSUBSCRIBE:
+            submolt = str(params.get("submolt", ""))
+            if not submolt:
+                raise ValueError("submolt required for unsubscribe")
+            return run_async(self._client.unsubscribe_submolt(submolt))
+
+        if target == TARGET_UPDATE_PROFILE:
+            description = params.get("description")
+            metadata = params.get("metadata")
+            desc_str = str(description) if description is not None else None
+            meta_dict = dict(metadata) if isinstance(metadata, dict) else None
+            return run_async(self._client.update_profile(desc_str, meta_dict))
 
         raise ValueError(f"Unknown moltbook target: {target}")
 
@@ -276,7 +321,7 @@ def boot_moltbook(api_key: str = "", offline: bool = False) -> MoltbookResolver:
     Returns the resolver for direct access if needed.
     """
     from vibe_core.mahamantra import get_kernel
-    from vibe_core.services.moltbook_client import MoltbookClient
+    from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 
     client = MoltbookClient(api_key=api_key, offline_mode=offline)
     resolver = MoltbookResolver(client)

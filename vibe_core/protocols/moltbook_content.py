@@ -27,7 +27,10 @@ Same pattern as MoltbookProtocol: types + ABC + Guna classification.
 from abc import ABC, abstractmethod
 from collections import deque
 from enum import Enum
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict
+
+if TYPE_CHECKING:
+    from vibe_core.mahamantra.substrate.encoding.resonance_ranker import RankedWord
 
 # =============================================================================
 # CONTENT TYPES — What kind of outbound action?
@@ -184,6 +187,15 @@ class ContentProposalProtocol(ABC):
     """
 
     @abstractmethod
+    def analyze(self, text: str) -> "List[RankedWord]":
+        """
+        Run resonance analysis on text via the mahamantra engine.
+
+        Returns ranked words from the 7D resonance scorer.
+        This is the foundation — all other methods use this result.
+        """
+
+    @abstractmethod
     def propose_dm_reply(
         self,
         conversation_id: str,
@@ -268,8 +280,11 @@ class EchoContentProposer(ContentProposalProtocol):
     - Never posts or comments (too risky without intelligence)
     - Never votes or follows (needs strategy)
 
-    Replace with an LLM-backed proposer when ready.
+    Replace with a resonance-backed proposer when ready.
     """
+
+    def analyze(self, text: str) -> "List[RankedWord]":
+        return []  # Echo proposer has no engine
 
     def propose_dm_reply(
         self,
