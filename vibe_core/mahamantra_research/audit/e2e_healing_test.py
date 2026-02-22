@@ -90,9 +90,9 @@ def run_cellular_healing(root: Path, violations: Dict[str, List[Tuple[Path, str]
         print("No violations with remedies found. Nothing to heal.")
         return
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"CELLULAR HEALING E2E TEST — rule: {test_rule}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     # Test on first target file
     target_file = targets[0][0]
@@ -131,7 +131,7 @@ def run_cellular_healing(root: Path, violations: Dict[str, List[Tuple[Path, str]
                 print(f"    {line}")
 
     # Verdict
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     if purified and not failed:
         print("VERDICT: PASS — Cellular healing pipeline works end-to-end.")
     elif purified and failed:
@@ -140,7 +140,7 @@ def run_cellular_healing(root: Path, violations: Dict[str, List[Tuple[Path, str]
         print(f"VERDICT: FAIL — {len(failed)} failures, 0 healed.")
     else:
         print("VERDICT: NO-OP — No violations found in fragments (all skipped).")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
 
 def main():

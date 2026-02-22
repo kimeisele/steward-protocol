@@ -193,6 +193,7 @@ class TestLotusPetal:
     def test_lotus_petal_parampara_vector(self):
         """parampara_vector is computed correctly."""
         from vibe_core.mahamantra.protocols._core import PARAMPARA
+
         petal = LotusPetal.create(0, "vyasa")
         assert petal.parampara_vector == (0 + 1) * PARAMPARA
 
@@ -319,6 +320,7 @@ class TestLotusBase:
 
     def test_lotus_base_subclass(self):
         """Can create LotusBase subclass."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 5
             LOTUS_NAME = "kumaras"
@@ -329,6 +331,7 @@ class TestLotusBase:
 
     def test_lotus_base_quarter(self):
         """lotus_quarter derived from position."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 4
             LOTUS_NAME = "prithu"
@@ -338,6 +341,7 @@ class TestLotusBase:
 
     def test_lotus_base_chant(self):
         """chant advances state."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 0
             LOTUS_NAME = "vyasa"
@@ -348,6 +352,7 @@ class TestLotusBase:
 
     def test_lotus_base_route_to(self):
         """route_to calculates route."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 0
             LOTUS_NAME = "vyasa"
@@ -359,6 +364,7 @@ class TestLotusBase:
 
     def test_lotus_base_is_connected(self):
         """is_connected is True."""
+
         class TestLotus(LotusBase):
             LOTUS_POSITION = 0
             LOTUS_NAME = "vyasa"
@@ -467,6 +473,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _lotus
+
         expected = [
             "LotusMode",
             "LotusPetal",

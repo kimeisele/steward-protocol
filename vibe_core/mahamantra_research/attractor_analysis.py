@@ -26,17 +26,35 @@ from dataclasses import dataclass
 
 # Import the SSOT
 from vibe_core.mahamantra.protocols._seed import (
-    SEVEN, TEN, WORDS, TRINITY, QUARTERS, PANCHA, HALVES,
-    MAHA_QUANTUM, PARAMPARA, MALA, JIVA_CYCLE,
-    POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA,
-    GITA_CHAPTERS, MAHAJANA_COUNT, NAVA, SHARANAGATI,
+    SEVEN,
+    TEN,
+    WORDS,
+    TRINITY,
+    QUARTERS,
+    PANCHA,
+    HALVES,
+    MAHA_QUANTUM,
+    PARAMPARA,
+    MALA,
+    JIVA_CYCLE,
+    POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
+    GITA_CHAPTERS,
+    MAHAJANA_COUNT,
+    NAVA,
+    SHARANAGATI,
     MAHAMANTRA_WORD_PATTERN,
-    MAHA_OP_MAP, MAHA_MULT, MAHA_ADD, MAHA_SQ,
+    MAHA_OP_MAP,
+    MAHA_MULT,
+    MAHA_ADD,
+    MAHA_SQ,
 )
 
 # =============================================================================
 # CORE: The primitive step function (from maha.py SSOT)
 # =============================================================================
+
 
 def maha_step(value: int, name: str, mod: int) -> int:
     """Single step of the Maha Algorithm. BRANCHLESS."""
@@ -57,17 +75,21 @@ def maha_oscillate(value: int, mod: int, pattern: Tuple[str, ...] = MAHAMANTRA_W
 # ATTRACTOR FINDING
 # =============================================================================
 
+
 @dataclass
 class AttractorInfo:
     """Information about an attractor."""
-    value: int              # The attractor value
-    cycle_length: int       # 1 = fixed point, >1 = cycle
-    basin_size: int         # How many seeds lead here
+
+    value: int  # The attractor value
+    cycle_length: int  # 1 = fixed point, >1 = cycle
+    basin_size: int  # How many seeds lead here
     basin_members: List[int]  # Which seeds
     convergence_steps: Dict[int, int]  # seed -> steps to reach
 
 
-def find_all_attractors(mod: int, max_iterations: int = 1000, pattern: Tuple[str, ...] = MAHAMANTRA_WORD_PATTERN) -> Dict[int, AttractorInfo]:
+def find_all_attractors(
+    mod: int, max_iterations: int = 1000, pattern: Tuple[str, ...] = MAHAMANTRA_WORD_PATTERN
+) -> Dict[int, AttractorInfo]:
     """
     Find ALL attractors for the given modular space.
 
@@ -132,7 +154,7 @@ def find_all_attractors(mod: int, max_iterations: int = 1000, pattern: Tuple[str
             cycle_length=cycle_len,
             basin_size=len(members),
             basin_members=sorted(members),
-            convergence_steps={s: seed_to_steps[s] for s in members}
+            convergence_steps={s: seed_to_steps[s] for s in members},
         )
 
     return result
@@ -141,6 +163,7 @@ def find_all_attractors(mod: int, max_iterations: int = 1000, pattern: Tuple[str
 # =============================================================================
 # ANALYSIS: What do the attractors mean?
 # =============================================================================
+
 
 def analyze_attractor(value: int) -> Dict:
     """Analyze what Mahamantra constants relate to this attractor value."""
@@ -201,7 +224,7 @@ def analyze_attractor(value: int) -> Dict:
     # Powers
     for base in [2, 3, 5, 7]:
         for exp in range(1, 8):
-            if base ** exp == value:
+            if base**exp == value:
                 analysis["relations"].append(f"= {base}^{exp}")
 
     # 7-10 decomposition
@@ -218,6 +241,7 @@ def analyze_attractor(value: int) -> Dict:
 # RESEARCH: Different modular spaces
 # =============================================================================
 
+
 def research_attractors():
     """Research attractors in various modular spaces."""
     print("=" * 70)
@@ -231,18 +255,18 @@ def research_attractors():
     # Test different modular spaces
     spaces = [
         ("MAHA_QUANTUM", MAHA_QUANTUM),  # 137
-        ("PARAMPARA", PARAMPARA),         # 37
+        ("PARAMPARA", PARAMPARA),  # 37
         ("RAMA_SUM", POSITION_SUM_RAMA),  # 49
         ("KRISHNA_SUM", POSITION_SUM_KRISHNA),  # 17
         ("HARE_SUM", POSITION_SUM_HARE),  # 70
-        ("WORDS", WORDS),                 # 16
-        ("MALA", MALA),                   # 108
+        ("WORDS", WORDS),  # 16
+        ("MALA", MALA),  # 108
     ]
 
     all_results = {}
 
     for name, mod in spaces:
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"MODULAR SPACE: {name} = {mod}")
         print("=" * 70)
 
@@ -325,7 +349,7 @@ def analyze_attractor_relationships():
 
         # Check sums/diffs of pairs
         for i, a1 in enumerate(attractor_values):
-            for a2 in attractor_values[i+1:]:
+            for a2 in attractor_values[i + 1 :]:
                 if a1 + a2 == struct_val:
                     found.append(f"A{a1} + A{a2}")
                 if abs(a1 - a2) == struct_val:
@@ -351,8 +375,10 @@ def analyze_single_step_attractors():
         sq = MAHA_SQ[op_idx]
 
         op_desc = f"v×{mult}" if mult != 1 else "v"
-        if add: op_desc += f"+{add}"
-        if sq: op_desc = f"({op_desc})²"
+        if add:
+            op_desc += f"+{add}"
+        if sq:
+            op_desc = f"({op_desc})²"
 
         print(f"\n{name} (op={op_idx}): {op_desc}")
 
@@ -397,8 +423,8 @@ def analyze_pattern_structure():
     # Quarter analysis
     print("\nQuarters (4 words each):")
     for q in range(4):
-        quarter = pattern[q*4:(q+1)*4]
-        print(f"  Q{q+1}: {' '.join(quarter)}")
+        quarter = pattern[q * 4 : (q + 1) * 4]
+        print(f"  Q{q + 1}: {' '.join(quarter)}")
 
     # Halves
     print("\nHalves (8 words each):")
@@ -421,7 +447,7 @@ def analyze_pattern_structure():
     for i, name in enumerate(pattern):
         old = value
         value = maha_step(value, name, mod)
-        print(f"  Step {i+1:2} ({name}): {old:3} → {value:3}")
+        print(f"  Step {i + 1:2} ({name}): {old:3} → {value:3}")
 
     print(f"\nFinal: {seed} → {value} (after 16 steps)")
 

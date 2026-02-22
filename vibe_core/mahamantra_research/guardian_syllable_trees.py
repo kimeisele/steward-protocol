@@ -71,25 +71,54 @@ from vibe_core.mahamantra.substrate.phonetics.shabda import (
 # =============================================================================
 
 KNOWN_CONSTANTS: Dict[int, str] = {
-    1: "KSETRAJNA", 2: "HALVES", 3: "TRINITY", 4: "QUARTERS", 5: "PANCHA",
-    6: "SHARANAGATI", 7: "SEVEN", 8: "HARE_COUNT", 9: "NAVA", 10: "TEN",
-    12: "MAHAJANA_COUNT", 16: "WORDS", 17: "KRISHNA_SUM", 24: "KSHETRA",
-    25: "PRASADAM", 37: "PARAMPARA", 48: "LILA", 49: "RAMA",
-    70: "HARE_SUM", 108: "MALA", 137: "MAHA_QUANTUM",
+    1: "KSETRAJNA",
+    2: "HALVES",
+    3: "TRINITY",
+    4: "QUARTERS",
+    5: "PANCHA",
+    6: "SHARANAGATI",
+    7: "SEVEN",
+    8: "HARE_COUNT",
+    9: "NAVA",
+    10: "TEN",
+    12: "MAHAJANA_COUNT",
+    16: "WORDS",
+    17: "KRISHNA_SUM",
+    24: "KSHETRA",
+    25: "PRASADAM",
+    37: "PARAMPARA",
+    48: "LILA",
+    49: "RAMA",
+    70: "HARE_SUM",
+    108: "MALA",
+    137: "MAHA_QUANTUM",
 }
 
 # The 16 Guardians (12 Mahajanas + 4 Avataras)
 ALL_GUARDIANS = (
-    "vyasa", "brahma", "narada", "shambhu",
-    "prithu", "kumaras", "kapila", "manu",
-    "parashurama", "prahlada", "janaka", "bhishma",
-    "nrisimha", "bali", "shuka", "yamaraja",
+    "vyasa",
+    "brahma",
+    "narada",
+    "shambhu",
+    "prithu",
+    "kumaras",
+    "kapila",
+    "manu",
+    "parashurama",
+    "prahlada",
+    "janaka",
+    "bhishma",
+    "nrisimha",
+    "bali",
+    "shuka",
+    "yamaraja",
 )
 
 
 # =============================================================================
 # PART 1: Guardian Syllable Vibrations
 # =============================================================================
+
 
 def compute_guardian_syllable_vibrations() -> Dict[str, List[Dict]]:
     """
@@ -106,11 +135,13 @@ def compute_guardian_syllable_vibrations() -> Dict[str, List[Dict]]:
         for syl in syllables:
             rama_idx = syllable_to_rama_index(syl)
             vib = compute_vibration_sum(syl)
-            syl_data.append({
-                "syllable": syl,
-                "rama_idx": rama_idx,
-                "vibration": vib,
-            })
+            syl_data.append(
+                {
+                    "syllable": syl,
+                    "rama_idx": rama_idx,
+                    "vibration": vib,
+                }
+            )
         results[name] = syl_data
 
     return results
@@ -119,6 +150,7 @@ def compute_guardian_syllable_vibrations() -> Dict[str, List[Dict]]:
 # =============================================================================
 # PART 2: Search Root Trees for Guardian Vibrations
 # =============================================================================
+
 
 def search_trees_for_guardians(depth: int = 4) -> Dict[str, List[Dict]]:
     """
@@ -166,24 +198,28 @@ def search_trees_for_guardians(depth: int = 4) -> Dict[str, List[Dict]]:
             vib = sd["vibration"]
             if vib in vib_index:
                 for tree_name, gen, lineage in vib_index[vib]:
-                    matches.append({
-                        "syllable": sd["syllable"],
-                        "vibration": vib,
-                        "tree": tree_name,
-                        "depth": gen,
-                        "lineage": lineage,
-                    })
+                    matches.append(
+                        {
+                            "syllable": sd["syllable"],
+                            "vibration": vib,
+                            "tree": tree_name,
+                            "depth": gen,
+                            "lineage": lineage,
+                        }
+                    )
             # Also check full name vibration
         full_vib = compute_vibration_sum(name)
         if full_vib in vib_index:
             for tree_name, gen, lineage in vib_index[full_vib]:
-                matches.append({
-                    "syllable": f"[{name}]",
-                    "vibration": full_vib,
-                    "tree": tree_name,
-                    "depth": gen,
-                    "lineage": lineage,
-                })
+                matches.append(
+                    {
+                        "syllable": f"[{name}]",
+                        "vibration": full_vib,
+                        "tree": tree_name,
+                        "depth": gen,
+                        "lineage": lineage,
+                    }
+                )
         results[name] = matches
 
     return results
@@ -192,6 +228,7 @@ def search_trees_for_guardians(depth: int = 4) -> Dict[str, List[Dict]]:
 # =============================================================================
 # PART 2b: Modular Search — reduce Guardian vibs to tree space
 # =============================================================================
+
 
 def search_trees_modular(depth: int = 4) -> None:
     """
@@ -285,6 +322,7 @@ def search_trees_modular(depth: int = 4) -> None:
 # PART 3: Unknown Interval Derivation
 # =============================================================================
 
+
 def derive_unknown_intervals() -> Dict[int, List[str]]:
     """
     Try to express unknown intervals as combinations of known constants.
@@ -332,6 +370,7 @@ def derive_unknown_intervals() -> Dict[int, List[str]]:
 # =============================================================================
 # PART 4: Full Name Vibration → Position Analysis
 # =============================================================================
+
 
 def analyze_name_positions() -> None:
     """
@@ -426,11 +465,21 @@ def analyze_guardian_4d() -> None:
 
     # Shastrische Funktionen (from mahajana_derivation.py)
     SHASTRISCH = {
-        "vyasa": "compilation", "brahma": "creation", "narada": "transmission",
-        "shambhu": "destruction", "prithu": "organization", "kumaras": "wisdom",
-        "kapila": "analysis", "manu": "law", "parashurama": "enforcement",
-        "prahlada": "devotion", "janaka": "execution", "bhishma": "commitment",
-        "nrisimha": "protection", "bali": "surrender", "shuka": "liberation",
+        "vyasa": "compilation",
+        "brahma": "creation",
+        "narada": "transmission",
+        "shambhu": "destruction",
+        "prithu": "organization",
+        "kumaras": "wisdom",
+        "kapila": "analysis",
+        "manu": "law",
+        "parashurama": "enforcement",
+        "prahlada": "devotion",
+        "janaka": "execution",
+        "bhishma": "commitment",
+        "nrisimha": "protection",
+        "bali": "surrender",
+        "shuka": "liberation",
         "yamaraja": "judgment",
     }
 
@@ -563,7 +612,9 @@ def run_analysis(tree_depth: int = 4) -> None:
     print()
     print(f"  Tree depth: {tree_depth}")
     print(f"  Guardians with tree matches (raw): {found_count}/16")
-    print(f"  Unknown intervals explained: {sum(1 for d in interval_derivations.values() if d)}/{len(interval_derivations)}")
+    print(
+        f"  Unknown intervals explained: {sum(1 for d in interval_derivations.values() if d)}/{len(interval_derivations)}"
+    )
     print(f"  All 16 Guardians found in mod-49 (RAMA) space")
     print(f"  All 16 Guardians have 4D Pancha Walk signatures")
     print()

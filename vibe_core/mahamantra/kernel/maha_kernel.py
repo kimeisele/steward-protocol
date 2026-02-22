@@ -13,8 +13,9 @@ MISSION:
 ARCHITECTURE:
     Input -> MahaCompression (Seed) -> MahaSynth (Attractor) -> Hybrid Address -> Result
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HARE_COUNT)
+from vibe_core.mahamantra.protocols._seed import HARE_COUNT
 
 
 __mahajana__ = "vishnu"
@@ -39,7 +40,7 @@ logger = logging.getLogger("MAHA_KERNEL")
 class MahaKernel(PanchaTattvaProtocol):
     """
     The Military Grade Deterministic Kernel.
-    
+
     IMPLEMENTS: PanchaTattvaProtocol (Governance)
     USES: LotusArrayInt (16-Bit Flat Memory)
     LOGIC: MahaModularSynth (Quantum) + Variance
@@ -56,21 +57,23 @@ class MahaKernel(PanchaTattvaProtocol):
         """
         # 1. 16-Bit Address Space (0-65535) - O(1) Access
         self._memory = LotusArrayInt()
-        
+
         # 2. Compression Engine (Intent -> Seed)
         self._compression = MahaCompression()
-        
+
         # 3. The Algorithm (Quantum Preset = Feedback Enabled)
         # This restores the observer effect (Ksetrajna) in the calculation.
         self._synth = MahaModularSynth(default_preset="quantum")
-        
+
         # 4. LEGACY INFRASTRUCTURE (Required for Governance/Ledger)
         # EKAMEVADVITIYAM: Use the ONE singleton, never create a second.
         from vibe_core.mahamantra.kernel.singularity import mahamantra as _sing
+
         self._singularity = _sing
 
         # 5. LEDGER (The Immutable Log)
         from vibe_core.mahamantra import InMemoryLedger, SQLiteLedger
+
         if ledger_path == ":memory:":
             self._ledger = InMemoryLedger()
         else:
@@ -103,16 +106,16 @@ class MahaKernel(PanchaTattvaProtocol):
     def __call__(self, input_data: Union[str, "MahaCell"]) -> int:
         """
         EXECUTE THE KERNEL SEQUENCE.
-        
+
         Algorithm:
         1. Extract 32-bit Seed (Intent).
         2. Calculate Attractor using MahaModularSynth (Quantum).
            This preserves the 'Sacred Mapping' (e.g. Analyze -> 49/Kapila).
         3. Create Hybrid Address: (Attractor << 8) | (Seed & 0xFF).
-        
+
         Args:
             input_data: Text or MahaCell
-            
+
         Returns:
             The calculated Address (0-65535) in Lotus Memory.
         """
@@ -123,7 +126,7 @@ class MahaKernel(PanchaTattvaProtocol):
             # Compress text to 32-bit seed (Intent extraction)
             result = self._compression.compress(input_data, extract_summary=False)
             seed = result.seed
-        elif hasattr(input_data, 'header'):
+        elif hasattr(input_data, "header"):
             # Extract seed from MahaCell header
             seed = input_data.header.sravanam
         else:
@@ -137,16 +140,16 @@ class MahaKernel(PanchaTattvaProtocol):
         # 2. TRANSFORM (The Sacred Path)
         # Use the standard synth to get the correct attractor (0-136)
         attractor = self._synth.transform(seed)
-        
+
         # 3. VARIANCE (The Detail)
         # Use lower 8 bits of seed for variance within the attractor bucket
         variance = seed & 0xFF
-        
+
         # 4. FUSION (16-Bit Address)
         # High Byte (8 bits) = Attractor (0-136)
         # Low Byte (8 bits) = Variance (0-255)
         final_address = (attractor << HARE_COUNT) | variance
-        
+
         return final_address
 
     # =========================================================================
@@ -169,7 +172,7 @@ class MahaKernel(PanchaTattvaProtocol):
     def ledger(self):
         """The immutable event ledger."""
         return self._ledger
-        
+
     @property
     def memory(self) -> LotusArrayInt:
         """Raw access to the memory array."""
@@ -178,10 +181,11 @@ class MahaKernel(PanchaTattvaProtocol):
     # =========================================================================
     # SINGLETON ACCESS
     # =========================================================================
-    
+
     # NOTE: __getattr__ proxy to Singularity was REMOVED (2026-02-17).
     # MahaKernel is for __call__() (Seed→Address), not for routing.
     # Use `from vibe_core.mahamantra import mahamantra` for routing/governance.
+
 
 # =============================================================================
 # SINGLETON
@@ -213,4 +217,3 @@ __all__ = [
     "get_kernel",
     "reset_kernel",
 ]
-

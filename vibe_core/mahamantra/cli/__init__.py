@@ -81,6 +81,7 @@ from vibe_core.mahamantra.cli.steward import (
     RESONANCE_MAP,
 )
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

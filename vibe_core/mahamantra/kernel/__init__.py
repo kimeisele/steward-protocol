@@ -14,7 +14,8 @@ Mahamantra IST:
 
 ALLES GLEICHZEITIG.
 """
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
@@ -48,6 +49,7 @@ from vibe_core.mahamantra.kernel.intent import (
     resolve,
     surrender,
 )
+
 
 def __getattr__(name: str):
     """

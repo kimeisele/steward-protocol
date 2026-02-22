@@ -72,6 +72,7 @@ _RESONATOR = MahaResonator(mod_space=MAHA_QUANTUM)
 # DATA TYPES (What we extract - NO TEXT)
 # =============================================================================
 
+
 @dataclass
 class VerseSignature:
     """
@@ -80,6 +81,7 @@ class VerseSignature:
     Contains ONLY mathematical/phonetic data.
     NO copyrighted text content.
     """
+
     # Reference (not content)
     verse_id: str  # e.g., "BG.18.66"
     chapter: int
@@ -112,6 +114,7 @@ class ResonanceIndex:
     This is the ONLY artifact we keep.
     Source database is DELETED after extraction.
     """
+
     book_code: str  # e.g., "BG"
     total_verses: int
     total_chapters: int
@@ -136,6 +139,7 @@ class ResonanceIndex:
 # EXTRACTION FUNCTIONS
 # =============================================================================
 
+
 def compute_guna(text: str) -> Tuple[str, int]:
     """
     Classify text into guna (mode) and compute seed.
@@ -159,7 +163,7 @@ def compute_guna(text: str) -> Tuple[str, int]:
     }
 
     # Compute seed (hash-based)
-    seed = int(hashlib.sha256(text.encode('utf-8')).hexdigest()[:8], 16)
+    seed = int(hashlib.sha256(text.encode("utf-8")).hexdigest()[:8], 16)
 
     # Find dominant guna (priority: suddha > sattva > rajas > tamas)
     if scores["suddha"] > 0:
@@ -292,8 +296,7 @@ def extract_from_database(db_path: str) -> ResonanceIndex:
             "avg_resonance_krishna": sum(s.resonance_krishna for s in sigs) / len(sigs),
             "avg_resonance_rama": sum(s.resonance_rama for s in sigs) / len(sigs),
             "dominant_guna": max(
-                ["tamas", "rajas", "sattva", "suddha"],
-                key=lambda g: sum(1 for s in sigs if s.guna == g)
+                ["tamas", "rajas", "sattva", "suddha"], key=lambda g: sum(1 for s in sigs if s.guna == g)
             ),
         }
 
@@ -318,13 +321,14 @@ def extract_from_database(db_path: str) -> ResonanceIndex:
 
 def save_index(index: ResonanceIndex, output_path: str) -> None:
     """Save resonance index to JSON."""
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(asdict(index), f, indent=2, ensure_ascii=False)
 
 
 # =============================================================================
 # MAIN
 # =============================================================================
+
 
 def main():
     """

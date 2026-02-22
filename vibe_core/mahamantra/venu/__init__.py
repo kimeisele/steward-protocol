@@ -28,6 +28,7 @@ from vibe_core.mahamantra.venu.tick import MantraTick
 from vibe_core.mahamantra.venu.voice import MantraVoice
 from vibe_core.mahamantra.venu.clock import MantraClock
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

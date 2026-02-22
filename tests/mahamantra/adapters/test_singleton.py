@@ -25,11 +25,13 @@ class TestMahamantraSingletonExists:
     def test_mahamantra_importable(self):
         """mahamantra should be importable."""
         from vibe_core.mahamantra import mahamantra
+
         assert mahamantra is not None
 
     def test_lotus_alias_exists(self):
         """lotus alias should exist."""
         from vibe_core.mahamantra import lotus, mahamantra
+
         assert lotus is mahamantra
 
 
@@ -39,34 +41,39 @@ class TestMahamantraAdapterAccess:
     def test_transform_property_exists(self):
         """mahamantra.transform should exist."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'transform')
+
+        assert hasattr(mahamantra, "transform")
         transform = mahamantra.transform
         assert transform is not None
 
     def test_hash_property_exists(self):
         """mahamantra.hash should exist."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'hash')
+
+        assert hasattr(mahamantra, "hash")
         h = mahamantra.hash
         assert h is not None
 
     def test_router_method_exists(self):
         """mahamantra.router() should exist."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'router')
+
+        assert hasattr(mahamantra, "router")
         assert callable(mahamantra.router)
 
     def test_orchestrator_property_exists(self):
         """mahamantra.orchestrator should exist."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'orchestrator')
+
+        assert hasattr(mahamantra, "orchestrator")
         o = mahamantra.orchestrator
         assert o is not None
 
     def test_gita_property_exists(self):
         """mahamantra.gita should exist."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'gita')
+
+        assert hasattr(mahamantra, "gita")
         g = mahamantra.gita
         assert g is not None
 
@@ -77,16 +84,18 @@ class TestMahamantraTransformIntegration:
     def test_transform_compute_works(self):
         """mahamantra.transform.compute() should work."""
         from vibe_core.mahamantra import mahamantra
+
         result = mahamantra.transform.compute(42)
         assert result is not None
-        assert hasattr(result, 'value')
+        assert hasattr(result, "value")
 
     def test_transform_find_attractor_works(self):
         """mahamantra.transform.find_attractor() should work."""
         from vibe_core.mahamantra import mahamantra
+
         result = mahamantra.transform.find_attractor(42)
         assert result is not None
-        assert hasattr(result, 'stable_value')
+        assert hasattr(result, "stable_value")
 
 
 class TestMahamantraHashIntegration:
@@ -95,6 +104,7 @@ class TestMahamantraHashIntegration:
     def test_hash_hash_works(self):
         """mahamantra.hash.hash() should work."""
         from vibe_core.mahamantra import mahamantra
+
         result = mahamantra.hash.hash("test")
         assert isinstance(result, int)
         assert 0 <= result < 137  # MAHA_QUANTUM
@@ -102,9 +112,10 @@ class TestMahamantraHashIntegration:
     def test_hash_analyze_works(self):
         """mahamantra.hash.analyze() should work."""
         from vibe_core.mahamantra import mahamantra
+
         result = mahamantra.hash.analyze("test")
         assert result is not None
-        assert hasattr(result, 'lenses')
+        assert hasattr(result, "lenses")
 
 
 class TestMahamantraRouterIntegration:
@@ -113,12 +124,14 @@ class TestMahamantraRouterIntegration:
     def test_router_creates_instance(self):
         """mahamantra.router() should create router."""
         from vibe_core.mahamantra import mahamantra
+
         router = mahamantra.router(levels=4)
         assert router is not None
 
     def test_router_operations_work(self):
         """Router operations should work."""
         from vibe_core.mahamantra import mahamantra
+
         router = mahamantra.router(levels=4)
         router[0x1234] = "test"
         assert router[0x1234] == "test"
@@ -130,13 +143,15 @@ class TestMahamantraOrchestratorIntegration:
     def test_orchestrator_tick_works(self):
         """mahamantra.orchestrator.tick() should work."""
         from vibe_core.mahamantra import mahamantra
+
         result = mahamantra.orchestrator.tick(42)
         assert result is not None
-        assert hasattr(result, 'beat')
+        assert hasattr(result, "beat")
 
     def test_orchestrator_round_works(self):
         """mahamantra.orchestrator.round() should work."""
         from vibe_core.mahamantra import mahamantra
+
         # Reset first to ensure clean state
         mahamantra.orchestrator.reset()
         result = mahamantra.orchestrator.round(42)
@@ -149,16 +164,19 @@ class TestMahamantraGitaIntegration:
     def test_gita_constants_accessible(self):
         """mahamantra.gita constants should be accessible."""
         from vibe_core.mahamantra import mahamantra
+
         assert mahamantra.gita.GITA_CHAPTERS == 18
 
     def test_gita_verify_fixed_point_works(self):
         """mahamantra.gita.verify_fixed_point() should work."""
         from vibe_core.mahamantra import mahamantra
+
         assert mahamantra.gita.verify_fixed_point() == True
 
     def test_gita_chapter_18_verse_accessible(self):
         """mahamantra.gita.CHAPTER_18_VERSE should be accessible."""
         from vibe_core.mahamantra import mahamantra
+
         verse = mahamantra.gita.CHAPTER_18_VERSE
         assert verse.chapter == 18
         assert verse.verse == 66
@@ -208,22 +226,26 @@ class TestMahamantraCoreFeatures:
     def test_tick_exists(self):
         """mahamantra.tick() should exist (Singularity)."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'tick')
+
+        assert hasattr(mahamantra, "tick")
 
     def test_shadow_exists(self):
         """mahamantra.shadow should exist (Shadow Reactor)."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'shadow')
+
+        assert hasattr(mahamantra, "shadow")
 
     def test_scan_exists(self):
         """mahamantra.scan() should exist (Governance)."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'scan')
+
+        assert hasattr(mahamantra, "scan")
 
     def test_execute_exists(self):
         """mahamantra.execute() should exist (CLI Bridge)."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'execute')
+
+        assert hasattr(mahamantra, "execute")
 
 
 class TestMahapromptLaw:

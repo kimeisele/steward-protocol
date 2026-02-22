@@ -64,12 +64,19 @@ class TestEquivalence:
             "input": "test input",
             "smaranam": smaranam or (),
             "verse": None,
-            "vibration": {"seed": 42, "attractor": 7, "phoneme": "a",
-                          "signature": {"element": "prithvi", "varga": 0, "sub": 0, "harmonic": 0}},
+            "vibration": {
+                "seed": 42,
+                "attractor": 7,
+                "phoneme": "a",
+                "signature": {"element": "prithvi", "varga": 0, "sub": 0, "harmonic": 0},
+            },
             "guna": {"mode": guna_mode, "opcode": "EXTEND_CAP", "opcode_value": 9},
             "diw": {"raw": 0, "venu": 0, "vamsi": 0, "murali": 0},
-            "position": 9, "guardian": "prahlada", "quarter": quarter,
-            "role": "devotion", "trinity_function": "deliverer",
+            "position": 9,
+            "guardian": "prahlada",
+            "quarter": quarter,
+            "role": "devotion",
+            "trinity_function": "deliverer",
             "chapter_significance": "Sankhya Yoga",
             "holy_name": "HARE",
             "antaranga": {"active_slots": 0, "total_prana": 0},
@@ -78,6 +85,7 @@ class TestEquivalence:
 
     def test_empty_pool_returns_empty(self):
         from vibe_core.mahamantra.adapters.composition import MahaComposition
+
         adapter = MahaComposition()
         resp = self._make_lotus_response(smaranam=[])
         result = compose_pipeline(adapter, resp, "test")
@@ -85,6 +93,7 @@ class TestEquivalence:
 
     def test_compose_returns_string(self):
         from vibe_core.mahamantra.adapters.composition import MahaComposition
+
         adapter = MahaComposition()
         resp = self._make_lotus_response(
             smaranam=[
@@ -97,15 +106,15 @@ class TestEquivalence:
 
     def test_compositions_counter(self):
         from vibe_core.mahamantra.adapters.composition import MahaComposition
+
         adapter = MahaComposition()
-        resp = self._make_lotus_response(
-            smaranam=[{"sanskrit": "dharma", "meaning": "duty", "score": 0.9}]
-        )
+        resp = self._make_lotus_response(smaranam=[{"sanskrit": "dharma", "meaning": "duty", "score": 0.9}])
         compose_pipeline(adapter, resp, "test")
         assert adapter.compositions >= 1
 
     def test_last_context_set(self):
         from vibe_core.mahamantra.adapters.composition import MahaComposition
+
         adapter = MahaComposition()
         resp = self._make_lotus_response(
             smaranam=[{"sanskrit": "dharma", "meaning": "duty", "score": 0.9}],
@@ -122,6 +131,7 @@ class TestEquivalence:
     def test_deterministic_a(self):
         """First half of determinism check. conftest resets state before next test."""
         from vibe_core.mahamantra.adapters.composition import MahaComposition
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
@@ -136,6 +146,7 @@ class TestEquivalence:
     def test_deterministic_b(self):
         """Second half: same input after singleton reset must produce same output."""
         from vibe_core.mahamantra.adapters.composition import MahaComposition
+
         resp = self._make_lotus_response(
             smaranam=[
                 {"sanskrit": "dharma", "meaning": "religious principles", "score": 0.9},
@@ -149,6 +160,7 @@ class TestEquivalence:
         """End-to-end: Lotus → compose_pipeline()."""
         from vibe_core.mahamantra.adapters.composition import MahaComposition
         from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
         lotus = get_mahamantra()
         lr = lotus("What is the meaning of life?")
         adapter = MahaComposition()
@@ -181,6 +193,7 @@ class TestStepIsolation:
     def test_context_step_populates_seed(self):
         from vibe_core.mahamantra.adapters.composition import MahaComposition
         from vibe_core.mahamantra.adapters.composition_vm import _w_context
+
         adapter = MahaComposition()
         ctx = {"lotus_response": self._make_lotus_response(), "input_text": "test"}
         _w_context(adapter, ctx)
@@ -191,6 +204,7 @@ class TestStepIsolation:
     def test_pool_step_populates_pool(self):
         from vibe_core.mahamantra.adapters.composition import MahaComposition
         from vibe_core.mahamantra.adapters.composition_vm import _w_context, _w_pool
+
         _ensure_imports()
         adapter = MahaComposition()
         ctx = {"lotus_response": self._make_lotus_response(), "input_text": "test"}
@@ -201,6 +215,7 @@ class TestStepIsolation:
     def test_rank_step_populates_ranked(self):
         from vibe_core.mahamantra.adapters.composition import MahaComposition
         from vibe_core.mahamantra.adapters.composition_vm import _w_context, _w_pool, _w_rank
+
         _ensure_imports()
         adapter = MahaComposition()
         ctx = {"lotus_response": self._make_lotus_response(), "input_text": "test"}
@@ -215,8 +230,12 @@ class TestStepIsolation:
     def test_select_step_deduplicates(self):
         from vibe_core.mahamantra.adapters.composition import MahaComposition
         from vibe_core.mahamantra.adapters.composition_vm import (
-            _w_context, _w_pool, _w_rank, _w_select,
+            _w_context,
+            _w_pool,
+            _w_rank,
+            _w_select,
         )
+
         _ensure_imports()
         adapter = MahaComposition()
         lr = self._make_lotus_response()
@@ -245,6 +264,7 @@ class TestImportCache:
 
     def test_ensure_imports_idempotent(self):
         import vibe_core.mahamantra.adapters.composition_vm as cvm
+
         cvm._ensure_imports()
         assert cvm._IMPORTS_CACHED is True
         assert cvm._build_lotus_pool is not None

@@ -29,8 +29,9 @@ The legacy becomes manageable. The sovereign layer ADDS, never REPLACES.
 
 WATERTIGHT: No Any types.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, TRINITY, WORDS)
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, PANCHA, TRINITY, WORDS
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -180,8 +181,12 @@ class GarudaFlightContext(Protocol):
 
 class _NullFlightContext:
     """No-op when Garuda not available."""
-    def __enter__(self) -> None: pass
-    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None: pass
+
+    def __enter__(self) -> None:
+        pass
+
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
+        pass
 
 
 # =============================================================================
@@ -264,6 +269,7 @@ class MahaState:
         if self._prakriti is None:
             try:
                 from vibe_core.state.prakriti import Prakriti
+
                 self._prakriti = Prakriti(self._workspace)
                 logger.debug("MahaState: Prakriti wrapped")
             except ImportError as e:
@@ -276,6 +282,7 @@ class MahaState:
         if self._state_service is None:
             try:
                 from vibe_core.state.state_service import get_state_service
+
                 self._state_service = get_state_service(self._workspace)
                 logger.debug("MahaState: StateService wrapped")
             except ImportError as e:
@@ -288,6 +295,7 @@ class MahaState:
         if self._sync_holon is None:
             try:
                 from vibe_core.state.sync_holon import StateSyncHolon
+
                 if self.prakriti:
                     self._sync_holon = StateSyncHolon(self.prakriti)
                     logger.debug("MahaState: StateSyncHolon wrapped")
@@ -301,6 +309,7 @@ class MahaState:
         if self._weaver is None:
             try:
                 from vibe_core.state.weaver import get_state_sync_weaver
+
                 self._weaver = get_state_sync_weaver(self.prakriti, self.sync_holon)
                 logger.debug("MahaState: StateSyncWeaver wrapped")
             except ImportError as e:
@@ -313,6 +322,7 @@ class MahaState:
         if self._cognitive_weaver is None:
             try:
                 from vibe_core.state.cognitive_weaver import get_cognitive_weaver
+
                 self._cognitive_weaver = get_cognitive_weaver()
                 logger.debug("MahaState: CognitiveWeaver wrapped")
             except ImportError as e:
@@ -325,6 +335,7 @@ class MahaState:
         if self._guna_classifier is None:
             try:
                 from vibe_core.state.guna_classifier import GunaClassifier
+
                 git_state = self.prakriti.git if self.prakriti else None
                 self._guna_classifier = GunaClassifier(
                     workspace=self._workspace,
@@ -603,6 +614,7 @@ class MahaState:
         if self._config_ref is None:
             try:
                 from vibe_core.mahamantra.substrate.config import get_config
+
                 self._config_ref = get_config()
             except Exception as _exc:
                 logger.exception("Unexpected error: %s", _exc)
@@ -612,6 +624,7 @@ class MahaState:
         if self._garuda_ref is None:
             try:
                 from vibe_core.naga.garuda import garuda
+
                 self._garuda_ref = garuda  # type: ignore[assignment]
             except Exception as _exc:
                 logger.exception("Unexpected error: %s", _exc)
@@ -658,7 +671,6 @@ class MahaState:
             "guna_classifier": self.guna_classifier is not None,
         }
 
-
     # =========================================================================
     # BALARAMA SEALING (Body/Soul Separation - Async)
     # =========================================================================
@@ -666,10 +678,10 @@ class MahaState:
     def seal(self, key: str, content: object) -> None:
         """
         Seal content: Compress to Seed + Set Sticky bit.
-        
+
         ASYNC SERIALIZATION: This does NOT write to disk immediately.
         It marks the state dirty. The System Loop will flush it.
-        
+
         Args:
             key: Path key (e.g. "viveka_decisions.json")
             content: Data to seal
@@ -677,25 +689,25 @@ class MahaState:
         try:
             # Lazy import to avoid circular dependency
             from vibe_core.mahamantra.adapters.compression import MahaCompression
-            
+
             # Compress content to Seed (Soul)
             result = MahaCompression().encode_samskara(content)
-            
+
             # Store Seed as the Value
             # source="seal" indicates this is a File Seal, not a Config Override
             self.set(key, result.seed, source="seal")
-            
+
             # Note: set() marks _dirty=True. We do NOT call save() here.
             # This prevents IO bloat.
             logger.debug(f"MahaState SEALED: {key} -> {result.seed}")
-            
+
         except Exception as e:
             logger.warning(f"Failed to seal {key}: {e}")
 
     def validate(self, key: str, content: object) -> str:
         """
         Validate content against sealed Seed.
-        
+
         Returns:
             "MATCH" - Perfect alignment
             "DRIFT" - New content, old seed (Atomicity gap) - OK
@@ -704,25 +716,27 @@ class MahaState:
         """
         config_seed = self.get(key)
         if config_seed is None:
-            return "UNKNOWN" # Not sealed yet
-            
+            return "UNKNOWN"  # Not sealed yet
+
         try:
             from vibe_core.mahamantra.adapters.compression import MahaCompression
+
             current_seed = MahaCompression().encode_samskara(content).seed
-            
+
             if current_seed == config_seed:
                 return "MATCH"
-            
+
             # If seeds mismatch, strictly it's DRIFT (unsealed changes)
             # We don't scream "TAMAS" yet unless we track timestamps.
             return "DRIFT"
-            
+
         except Exception:
             return "UNKNOWN"
 
     def persist(self) -> None:
         """Alias for save() (Sovereign Interface)."""
         self.save()
+
 
 # =============================================================================
 # CONVENIENCE FUNCTIONS

@@ -101,6 +101,7 @@ def main():
 
     # Only import heavy modules when actually needed
     import logging
+
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     # ==========================================================================

@@ -13,4 +13,3 @@ Protocol Liberation: All roads lead to Mahamantra.
 
 # Re-export from canonical location
 from vibe_core.mahamantra.dharma.kapila.remedies import *
-

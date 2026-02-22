@@ -11,8 +11,9 @@ The mod_space determines the "resonant frequency".
 
 NOTE: Uses maha_oscillate() from algorithm/ - NO DUPLICATION.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 
 # === MAHAJANA DECLARATION ===
@@ -38,6 +39,7 @@ from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
 @dataclass(frozen=True)
 class ResonanceResult:
     """Result of resonance analysis."""
+
     seed: int
     attractor: int
     cycles_to_converge: int
@@ -50,10 +52,12 @@ class MahaResonator:
     The Maha Resonator.
     Finds attractors by iterating the Maha Algorithm.
     """
+
     def __init__(self, mod_space: int = MAHA_QUANTUM) -> None:
         self.mod_space = mod_space
         # FIX: Cache synth instance for performance (same algorithm as MahaKernel)
         from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth, MahaSynthParams
+
         self._synth = MahaModularSynth(default_preset="quantum")
         self._params = MahaSynthParams(mod_space=mod_space)
 
@@ -139,8 +143,8 @@ class MahaResonator:
 
 # Preset Resonators
 RESONATOR_PRESETS: Final[Dict[str, MahaResonator]] = {
-    "material": MahaResonator(mod_space=POSITION_SUM_KRISHNA), # 17
-    "parampara": MahaResonator(mod_space=PARAMPARA),           # 37
+    "material": MahaResonator(mod_space=POSITION_SUM_KRISHNA),  # 17
+    "parampara": MahaResonator(mod_space=PARAMPARA),  # 37
     "transcendental": MahaResonator(mod_space=MALA_COMPLETE),  # 109
-    "quantum": MahaResonator(mod_space=MAHA_QUANTUM),          # 137
+    "quantum": MahaResonator(mod_space=MAHA_QUANTUM),  # 137
 }

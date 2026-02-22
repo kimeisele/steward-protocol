@@ -354,8 +354,7 @@ class NagaCortex:
 
         # For now, just log. Future: correlate with other signals
         logger.debug(
-            f"[CORTEX] Narada observation: {observation.function_name} "
-            f"(duration={observation.duration_ms:.1f}ms)"
+            f"[CORTEX] Narada observation: {observation.function_name} (duration={observation.duration_ms:.1f}ms)"
         )
 
     # =========================================================================

@@ -420,6 +420,7 @@ class TestGADBase:
 
     def test_gad_base_subclass(self):
         """Can create GADBase subclass."""
+
         class TestGAD(GADBase):
             __mahajana__ = "vyasa"
             __genesis__ = "0x00000025"  # 37 in hex
@@ -435,6 +436,7 @@ class TestGADBase:
 
     def test_gad_base_chant(self):
         """chant delegates to heartbeat."""
+
         class TestGAD(GADBase):
             __mahajana__ = "vyasa"
             __genesis__ = "0x00000025"
@@ -451,6 +453,7 @@ class TestGADBase:
 
     def test_gad_base_is_healthy(self):
         """is_healthy checks heartbeat state."""
+
         class TestGAD(GADBase):
             __mahajana__ = "vyasa"
             __genesis__ = "0x00000025"
@@ -471,6 +474,7 @@ class TestGADBase:
     @pytest.mark.skip(reason="GADBase.audit() passes undefined daya/satyam/tapas/saucam to GADAudit")
     def test_gad_base_audit(self):
         """audit returns GADAudit."""
+
         class TestGAD(GADBase):
             __mahajana__ = "vyasa"
             __genesis__ = "0x00000025"
@@ -553,6 +557,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _gad
+
         expected = [
             "GADCriterion",
             "DharmaPrinciple",

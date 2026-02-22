@@ -634,9 +634,15 @@ class CognitiveCircuitExecutor:
     # CIRCUIT EXECUTION STEPS — Atomic, granular, individually callable
     # =========================================================================
 
-    def _exec_invariant_fail(self, circuit_id: str, state_name: str, error_msg: str,
-                             state: "CircuitState", syscall_count: int,
-                             phase: str = "") -> CircuitExecutionResult:
+    def _exec_invariant_fail(
+        self,
+        circuit_id: str,
+        state_name: str,
+        error_msg: str,
+        state: "CircuitState",
+        syscall_count: int,
+        phase: str = "",
+    ) -> CircuitExecutionResult:
         """Helper: Build invariant violation result + fire meta-callbacks."""
         logger.error(f"🚨 {error_msg}")
         if self._on_error:
@@ -653,8 +659,12 @@ class CognitiveCircuitExecutor:
             output["phase"] = phase
 
         result = CircuitExecutionResult(
-            success=False, final_state="INVARIANT_VIOLATION", output=output,
-            state_history=state.history, syscall_count=syscall_count, error=error_msg,
+            success=False,
+            final_state="INVARIANT_VIOLATION",
+            output=output,
+            state_history=state.history,
+            syscall_count=syscall_count,
+            error=error_msg,
         )
         if self._on_circuit_end:
             try:
@@ -663,9 +673,15 @@ class CognitiveCircuitExecutor:
                 logger.warning(f"Meta-callback on_end failed: {e}")
         return result
 
-    def _exec_run_operations(self, operations: list, state: "CircuitState",
-                             compilation: CompilationResult, circuit_def: Dict,
-                             requester_id: str, recursion_depth: int) -> int:
+    def _exec_run_operations(
+        self,
+        operations: list,
+        state: "CircuitState",
+        compilation: CompilationResult,
+        circuit_def: Dict,
+        requester_id: str,
+        recursion_depth: int,
+    ) -> int:
         """Execute Step: Run operations in current state. Returns updated syscall_count delta."""
         syscall_delta = 0
         for operation in operations:
@@ -679,7 +695,9 @@ class CognitiveCircuitExecutor:
                 forbidden = circuit_def.get("forbidden_roles", [])
                 if role.lower() in [r.lower() for r in forbidden]:
                     state.variables["constitutional_check"] = {
-                        "passed": False, "violation": f"Role '{role}' is forbidden"}
+                        "passed": False,
+                        "violation": f"Role '{role}' is forbidden",
+                    }
                 else:
                     state.variables["constitutional_check"] = {"passed": True}
                 logger.info(f"🛡️ Constitutional check: {state.variables['constitutional_check']}")
@@ -734,12 +752,15 @@ class CognitiveCircuitExecutor:
                 else:
                     logger.info("🚀 Launching Micro-Circuit...")
                     micro_result = self._execute_circuit(
-                        micro_circuit, raw_input=state.variables.get("raw_input", ""),
-                        compilation=compilation, requester_id=requester_id,
+                        micro_circuit,
+                        raw_input=state.variables.get("raw_input", ""),
+                        compilation=compilation,
+                        requester_id=requester_id,
                         recursion_depth=recursion_depth + 1,
                     )
                     state.variables["micro_result"] = {
-                        "success": micro_result.success, "output": micro_result.output,
+                        "success": micro_result.success,
+                        "output": micro_result.output,
                         "final_state": micro_result.final_state,
                     }
                     logger.info(f"🏁 Micro-Circuit finished: {micro_result.success}")
@@ -751,8 +772,7 @@ class CognitiveCircuitExecutor:
                     request = state.variables["_syscall_request"]
                 else:
                     params = self._resolve_params(operation.get("params", {}), state.variables)
-                    request = SyscallRequest(
-                        syscall_type=syscall_type, params=params, requester_id=requester_id)
+                    request = SyscallRequest(syscall_type=syscall_type, params=params, requester_id=requester_id)
                 result = self.syscall_executor.execute(request)
                 syscall_delta += 1
                 result_key = f"{syscall_type_str.lower()}_result"
@@ -760,18 +780,21 @@ class CognitiveCircuitExecutor:
                 state.variables[result_key] = result
                 if syscall_type == SyscallType.SPAWN_COGNITION:
                     state.variables["spawn_result"] = {
-                        "success": result.success, "agent_id": result.output.get("agent_id"),
-                        "karma_block_id": result.karma_block_id, "error": result.error,
+                        "success": result.success,
+                        "agent_id": result.output.get("agent_id"),
+                        "karma_block_id": result.karma_block_id,
+                        "error": result.error,
                     }
                 logger.info(f"⚡ SYSCALL {syscall_type_str}: success={result.success}")
 
         return syscall_delta
 
-    def _exec_run_actions(self, actions: list, state: "CircuitState",
-                          circuit_id: str, raw_input: str,
-                          current_state_name: str) -> None:
+    def _exec_run_actions(
+        self, actions: list, state: "CircuitState", circuit_id: str, raw_input: str, current_state_name: str
+    ) -> None:
         """Execute Step: Run action handlers in current state."""
         import asyncio
+
         for action_def in actions:
             action_type = action_def.get("action_type")
             target = action_def.get("target", "")
@@ -787,9 +810,11 @@ class CognitiveCircuitExecutor:
             if self.action_registry and self.action_registry.has(action_type):
                 handler = self.action_registry.get(action_type)
                 action_context = ActionContext(
-                    phase_id=current_state_name, playbook_id=circuit_id,
+                    phase_id=current_state_name,
+                    playbook_id=circuit_id,
                     execution_id=f"circuit_{circuit_id}_{len(state.history)}",
-                    user_input=raw_input, phase_results=state.variables,
+                    user_input=raw_input,
+                    phase_results=state.variables,
                     kernel=self.kernel,
                     emit_event=self._create_emit_event_callback(circuit_id),
                 )
@@ -813,8 +838,9 @@ class CognitiveCircuitExecutor:
             else:
                 logger.warning(f"⚠️ No handler for action_type: {action_type}")
 
-    def _exec_find_next_state(self, current_state_def: Dict, state: "CircuitState",
-                              circuit_id: str, current_state_name: str) -> str:
+    def _exec_find_next_state(
+        self, current_state_def: Dict, state: "CircuitState", circuit_id: str, current_state_name: str
+    ) -> str:
         """Execute Step: Evaluate transitions, return next state name or empty string."""
         transitions = current_state_def.get("transitions", [])
         if not transitions:
@@ -832,8 +858,7 @@ class CognitiveCircuitExecutor:
                     logger.warning(f"Meta-callback on_transition failed: {e}")
         return next_state or ""
 
-    def _exec_build_result(self, state: "CircuitState", circuit_id: str,
-                           syscall_count: int) -> CircuitExecutionResult:
+    def _exec_build_result(self, state: "CircuitState", circuit_id: str, syscall_count: int) -> CircuitExecutionResult:
         """Execute Step: Build final CircuitExecutionResult from terminal state."""
         final_state = state.current_state
         success_state_names = ["success", "healthy", "complete", "done", "finished"]
@@ -843,8 +868,11 @@ class CognitiveCircuitExecutor:
             success = result_status in success_state_names
 
         result = CircuitExecutionResult(
-            success=success, final_state=final_state, output=state.output or {},
-            state_history=state.history, syscall_count=syscall_count,
+            success=success,
+            final_state=final_state,
+            output=state.output or {},
+            state_history=state.history,
+            syscall_count=syscall_count,
             error=None if success else state.output.get("reason") if state.output else None,
         )
         if self._on_circuit_end:
@@ -871,11 +899,17 @@ class CognitiveCircuitExecutor:
 
         runtime_config = _get_runtime_config()
         if recursion_depth > runtime_config.limits.max_recursion_depth:
-            error_msg = f"MAX_RECURSION_DEPTH ({runtime_config.limits.max_recursion_depth}) exceeded in circuit {circuit_id}"
+            error_msg = (
+                f"MAX_RECURSION_DEPTH ({runtime_config.limits.max_recursion_depth}) exceeded in circuit {circuit_id}"
+            )
             logger.error(f"🚨 {error_msg}")
             return CircuitExecutionResult(
-                success=False, final_state="RECURSION_LIMIT_EXCEEDED",
-                output={"error": error_msg}, state_history=[], syscall_count=0, error=error_msg,
+                success=False,
+                final_state="RECURSION_LIMIT_EXCEEDED",
+                output={"error": error_msg},
+                state_history=[],
+                syscall_count=0,
+                error=error_msg,
             )
 
         if self._on_circuit_start:
@@ -887,11 +921,13 @@ class CognitiveCircuitExecutor:
         state = CircuitState(
             current_state=circuit_def.get("entry_state", "SHABDA"),
             variables={
-                "raw_input": raw_input, "requester_id": requester_id,
+                "raw_input": raw_input,
+                "requester_id": requester_id,
                 "compiled_request": {
                     "is_syscall": compilation.is_syscall,
                     "syscall_type": compilation.syscall_request.syscall_type.value
-                    if compilation.syscall_request else None,
+                    if compilation.syscall_request
+                    else None,
                     "params": compilation.syscall_request.params if compilation.syscall_request else {},
                     "confidence": compilation.confidence,
                 },
@@ -913,9 +949,12 @@ class CognitiveCircuitExecutor:
             if not self.invariant_checker.check_invariants(global_checks, state.variables, "GLOBAL"):
                 violations = self.invariant_checker.get_violations()
                 return self._exec_invariant_fail(
-                    circuit_id, "GLOBAL",
+                    circuit_id,
+                    "GLOBAL",
                     f"Global invariant violation: {violations[0].reason if violations else 'unknown'}",
-                    state, syscall_count)
+                    state,
+                    syscall_count,
+                )
 
         # State machine loop
         while not state.is_terminal and len(state.history) < max_transitions:
@@ -926,9 +965,11 @@ class CognitiveCircuitExecutor:
             current_state_def = states.get(current_state_name)
             if not current_state_def:
                 return CircuitExecutionResult(
-                    success=False, final_state=current_state_name,
+                    success=False,
+                    final_state=current_state_name,
                     output={"error": f"Unknown state: {current_state_name}"},
-                    state_history=state.history, syscall_count=syscall_count,
+                    state_history=state.history,
+                    syscall_count=syscall_count,
                     error=f"Circuit has undefined state: {current_state_name}",
                 )
 
@@ -939,9 +980,12 @@ class CognitiveCircuitExecutor:
                 if not self.invariant_checker.check_invariants(state_invariants, state.variables, current_state_name):
                     violations = self.invariant_checker.get_violations()
                     return self._exec_invariant_fail(
-                        circuit_id, current_state_name,
+                        circuit_id,
+                        current_state_name,
                         f"State invariant violation in {current_state_name}: {violations[-1].reason if violations else 'unknown'}",
-                        state, syscall_count)
+                        state,
+                        syscall_count,
+                    )
 
             # Terminal check
             if current_state_def.get("terminal", False):
@@ -952,11 +996,11 @@ class CognitiveCircuitExecutor:
 
             # Run operations + actions
             syscall_count += self._exec_run_operations(
-                current_state_def.get("operations", []), state, compilation,
-                circuit_def, requester_id, recursion_depth)
+                current_state_def.get("operations", []), state, compilation, circuit_def, requester_id, recursion_depth
+            )
             self._exec_run_actions(
-                current_state_def.get("actions", []), state, circuit_id,
-                raw_input, current_state_name)
+                current_state_def.get("actions", []), state, circuit_id, raw_input, current_state_name
+            )
 
             # Post-operation invariant check
             if state_invariants:
@@ -964,9 +1008,13 @@ class CognitiveCircuitExecutor:
                 if not self.invariant_checker.check_invariants(state_invariants, state.variables, current_state_name):
                     violations = self.invariant_checker.get_violations()
                     return self._exec_invariant_fail(
-                        circuit_id, current_state_name,
+                        circuit_id,
+                        current_state_name,
                         f"Post-operation invariant violation in {current_state_name}: {violations[-1].reason if violations else 'unknown'}",
-                        state, syscall_count, phase="post_operation")
+                        state,
+                        syscall_count,
+                        phase="post_operation",
+                    )
 
             # Transitions
             next_state = self._exec_find_next_state(current_state_def, state, circuit_id, current_state_name)
@@ -980,9 +1028,12 @@ class CognitiveCircuitExecutor:
                     except Exception as e:
                         logger.warning(f"Meta-callback on_error failed: {e}")
                 result = CircuitExecutionResult(
-                    success=False, final_state=current_state_name,
+                    success=False,
+                    final_state=current_state_name,
                     output={"error": "No valid transition from current state"},
-                    state_history=state.history, syscall_count=syscall_count, error=error_msg,
+                    state_history=state.history,
+                    syscall_count=syscall_count,
+                    error=error_msg,
                 )
                 if self._on_circuit_end:
                     try:

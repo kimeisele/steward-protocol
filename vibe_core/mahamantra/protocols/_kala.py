@@ -16,7 +16,8 @@ HIERARCHY:
     4. MALA (Round)     : 1728 Ticks (108 Mantras)
 
 """
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, WORDS)
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, WORDS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"

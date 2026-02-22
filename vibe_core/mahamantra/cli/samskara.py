@@ -26,6 +26,7 @@ from vibe_core.mahamantra import Mahajana
 def _get_samskara_service() -> SamskaraService:
     """Get SamskaraService via consistent pattern (mahamantra = force)."""
     from vibe_core.di import ServiceRegistry
+
     service = ServiceRegistry.get(SamskaraService)
     if service is None:
         service = SamskaraService()

@@ -29,6 +29,7 @@ from vibe_core.tools.tool_protocol import Tool, ToolResult
 from vibe_core.tools.tool_registry import ToolRegistry
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 

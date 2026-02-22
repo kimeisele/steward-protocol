@@ -294,50 +294,60 @@ class TestAggregatePerception:
     def test_aggregate_perception_total_pain(self):
         """total_pain calculates from tamas perceptions."""
         agg = AggregatePerception()
-        agg.add_perception(SensePerception(
-            sense=Jnanendriya.GHRANA,
-            tanmatra=Tanmatra.GANDHA,
-            data={},
-            intensity=0.8,
-            quality="tamas",
-        ))
+        agg.add_perception(
+            SensePerception(
+                sense=Jnanendriya.GHRANA,
+                tanmatra=Tanmatra.GANDHA,
+                data={},
+                intensity=0.8,
+                quality="tamas",
+            )
+        )
         assert agg.total_pain > 0
 
     def test_aggregate_perception_dominant_sense(self):
         """dominant_sense returns highest intensity sense."""
         agg = AggregatePerception()
-        agg.add_perception(SensePerception(
-            sense=Jnanendriya.SROTRA,
-            tanmatra=Tanmatra.SABDA,
-            data={},
-            intensity=0.3,
-        ))
-        agg.add_perception(SensePerception(
-            sense=Jnanendriya.CAKSU,
-            tanmatra=Tanmatra.RUPA,
-            data={},
-            intensity=0.9,
-        ))
+        agg.add_perception(
+            SensePerception(
+                sense=Jnanendriya.SROTRA,
+                tanmatra=Tanmatra.SABDA,
+                data={},
+                intensity=0.3,
+            )
+        )
+        agg.add_perception(
+            SensePerception(
+                sense=Jnanendriya.CAKSU,
+                tanmatra=Tanmatra.RUPA,
+                data={},
+                intensity=0.9,
+            )
+        )
         assert agg.dominant_sense == Jnanendriya.CAKSU
 
     def test_aggregate_perception_needs_chanting(self):
         """needs_chanting returns True for high aggregate pain."""
         agg = AggregatePerception()
         # Add multiple high-intensity tamas perceptions to exceed threshold
-        agg.add_perception(SensePerception(
-            sense=Jnanendriya.GHRANA,
-            tanmatra=Tanmatra.GANDHA,
-            data={},
-            intensity=0.9,
-            quality="tamas",
-        ))
-        agg.add_perception(SensePerception(
-            sense=Jnanendriya.CAKSU,
-            tanmatra=Tanmatra.RUPA,
-            data={},
-            intensity=0.8,
-            quality="tamas",
-        ))
+        agg.add_perception(
+            SensePerception(
+                sense=Jnanendriya.GHRANA,
+                tanmatra=Tanmatra.GANDHA,
+                data={},
+                intensity=0.9,
+                quality="tamas",
+            )
+        )
+        agg.add_perception(
+            SensePerception(
+                sense=Jnanendriya.CAKSU,
+                tanmatra=Tanmatra.RUPA,
+                data={},
+                intensity=0.8,
+                quality="tamas",
+            )
+        )
         # Total pain = (0.9 + 0.8) / 5 = 0.34 > 0.3 threshold
         assert agg.needs_chanting is True
 
@@ -381,6 +391,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _sense
+
         expected = [
             "Tanmatra",
             "Mahabhuta",

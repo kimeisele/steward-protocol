@@ -46,10 +46,12 @@ from vibe_core.mahamantra.substrate.seed import HolyName
 # TOKENS — from wordnet_bridge precomputed data
 # =============================================================================
 
+
 def word_tokens(packed_hex: str) -> Tuple[str, ...]:
     """Get precomputed English tokens for a Gita word. O(1) lookup."""
     try:
         from vibe_core.mahamantra.substrate.wordnet_bridge import _ensure_loaded, _word_entries
+
         _ensure_loaded()
         entry = (_word_entries or {}).get(packed_hex, {})
         return tuple(entry.get("t", ()))
@@ -60,6 +62,7 @@ def word_tokens(packed_hex: str) -> Tuple[str, ...]:
 def dominant_element(coords: Sequence[int]) -> int:
     """Dominant element ordinal (0-4) from RAMA coordinates. Branchless."""
     from vibe_core.mahamantra.substrate.pancha_walk import COORD_ELEMENT
+
     counts = [0] * PANCHA
     for c in coords:
         counts[COORD_ELEMENT[c].value] += KSETRAJNA
@@ -79,6 +82,7 @@ def coord_mass(coords: Sequence[int]) -> int:
 # SCORING — rhythm, semantic, chamber (all derived, no hardcoded floats)
 # =============================================================================
 
+
 def rhythm_bias(rhythm: RhythmProfile, index: int) -> float:
     """Rhythmic emphasis from 3D vectors + grid. All coefficients derived."""
     if rhythm.syllable_count == 0 or not rhythm.sequencer_steps:
@@ -90,8 +94,8 @@ def rhythm_bias(rhythm: RhythmProfile, index: int) -> float:
     sv = rhythm.vectors[index % len(rhythm.vectors)] if rhythm.vectors else None
 
     score = 0.0
-    base = KSETRAJNA / WORDS                # 1/16
-    half_base = KSETRAJNA / (WORDS * HALVES) # 1/32
+    base = KSETRAJNA / WORDS  # 1/16
+    half_base = KSETRAJNA / (WORDS * HALVES)  # 1/32
 
     if gs.beat == 0:
         score += base
@@ -113,6 +117,7 @@ def semantic_boost(input_text: str, packed_hex: str) -> float:
         return 0.0
     try:
         from vibe_core.mahamantra.substrate.wordnet_bridge import semantic_score
+
         return semantic_score(input_text, packed_hex) * (KSETRAJNA / 10.0)
     except Exception:
         return 0.0
@@ -127,6 +132,7 @@ def chamber_boost(antaranga, first_coord: int, seed: int) -> float:
     if prana == 0:
         return 0.0
     from vibe_core.mahamantra.substrate.antaranga import GENESIS_PRANA_U32
+
     max_boost = PANCHA / (WORDS * HALVES)
     return min(max_boost, (prana / GENESIS_PRANA_U32) * (KSETRAJNA / WORDS))
 
@@ -167,6 +173,7 @@ def rank_resonant_by_rhythm(
 # =============================================================================
 # PROSODIC AFFINITY — syllable vector ↔ word coordinate properties
 # =============================================================================
+
 
 def prosodic_affinity(sv: SyllableVector, coords: Sequence[int]) -> float:
     """Score how well a syllable vector matches a word's coordinate properties.
@@ -210,6 +217,7 @@ def prosodic_affinity(sv: SyllableVector, coords: Sequence[int]) -> float:
 # STATE AFFINITY — semantic injection from MahaState
 # =============================================================================
 
+
 def state_affinity(
     sv: StateVector,
     item: Dict[str, object],
@@ -247,6 +255,7 @@ def state_affinity(
     # Axis 2: Entry count → Mass preference
     # Normalize entry count to [0, 1] using MAX_STATE_ENTRIES (72 = NADI_RESONANCE)
     from vibe_core.mahamantra.substrate.maha_state import MAX_STATE_ENTRIES
+
     entry_ratio = min(1.0, sv.entry_count / max(MAX_STATE_ENTRIES, KSETRAJNA))
     coords = item.get("coords", ())
     mass = len(coords) if coords else 0
@@ -268,10 +277,12 @@ def state_affinity(
 # COMPOSE — the three layers wired together
 # =============================================================================
 
+
 def _resolve_coords(sanskrit: str, first_coord: int) -> Tuple[int, ...]:
     """Resolve RAMA coordinates for a word. Lookup by IAST, fallback to first_coord."""
     try:
         from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+
         entry = word_by_iast(sanskrit)
         if entry is not None and entry.coords:
             return entry.coords
@@ -305,22 +316,25 @@ def _build_lotus_pool(lotus_response: Dict) -> List[Dict[str, object]]:
         phex = ""
         try:
             from vibe_core.mahamantra.substrate.sanskrit_lookup import word_by_iast
+
             entry = word_by_iast(sanskrit)
             if entry is not None:
                 phex = getattr(entry, "packed_hex", "")
         except Exception:
             pass
         tokens = word_tokens(phex) if phex else ()
-        pool.append({
-            "sanskrit": sanskrit,
-            "meaning": meaning,
-            "tokens": tokens,
-            "score": score,
-            "packed_hex": phex,
-            "first_coord": coords[0] if coords else -1,
-            "coords": coords,
-            "source": "smaranam",
-        })
+        pool.append(
+            {
+                "sanskrit": sanskrit,
+                "meaning": meaning,
+                "tokens": tokens,
+                "score": score,
+                "packed_hex": phex,
+                "first_coord": coords[0] if coords else -1,
+                "coords": coords,
+                "source": "smaranam",
+            }
+        )
 
     # Source 2: Verse words — Gita philosophical grounding
     verse = lotus_response.get("verse")
@@ -334,16 +348,18 @@ def _build_lotus_pool(lotus_response: Dict) -> List[Dict[str, object]]:
             if not meaning or len(meaning) <= KSETRAJNA:
                 continue
             coords = _resolve_coords(sanskrit, -1)
-            pool.append({
-                "sanskrit": sanskrit,
-                "meaning": meaning,
-                "tokens": (),
-                "score": PANCHA / WORDS,
-                "packed_hex": "",
-                "first_coord": coords[0] if coords else -1,
-                "coords": coords,
-                "source": "verse",
-            })
+            pool.append(
+                {
+                    "sanskrit": sanskrit,
+                    "meaning": meaning,
+                    "tokens": (),
+                    "score": PANCHA / WORDS,
+                    "packed_hex": "",
+                    "first_coord": coords[0] if coords else -1,
+                    "coords": coords,
+                    "source": "verse",
+                }
+            )
             verse_count += KSETRAJNA
 
     return pool
@@ -370,6 +386,7 @@ def compose_from_wave(
     if composed:
         return composed
     from vibe_core.mahamantra.adapters.composition import get_composition
+
     return get_composition().compose(lotus_response, input_text)
 
 

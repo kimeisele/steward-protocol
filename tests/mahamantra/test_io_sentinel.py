@@ -244,11 +244,13 @@ class TestSentinelOuroborosLoop:
 
     def test_violation_source_sentinel_exists(self):
         from vibe_core.ouroboros.ingestion import ViolationSource
+
         assert hasattr(ViolationSource, "SENTINEL")
         assert ViolationSource.SENTINEL.value == "sentinel"
 
     def test_ouroboros_subscriber_has_sentinel_ingestion(self):
         from vibe_core.services.healing_subscribers import OuroborosSubscriber
+
         sub = OuroborosSubscriber()
         assert hasattr(sub, "_ingest_sentinel_violations")
 
@@ -301,16 +303,19 @@ class TestKGPropertyKeyRegression:
     def test_engine_reads_file_key_from_kg(self):
         """ShuddhiEngine.heal_all_violations reads 'file' not 'file_path'."""
         import ast
+
         source = Path("/Users/ss/projects/steward-protocol/vibe_core/mahamantra/dharma/kumaras/engine.py").read_text()
         tree = ast.parse(source)
 
         # Find the heal_all_violations method and check it reads "file"
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
-                if (isinstance(node.func, ast.Attribute)
+                if (
+                    isinstance(node.func, ast.Attribute)
                     and node.func.attr == "get"
                     and len(node.args) >= 1
-                    and isinstance(node.args[0], ast.Constant)):
+                    and isinstance(node.args[0], ast.Constant)
+                ):
                     # If we find .get("file_path"...) that's the old bug
                     if node.args[0].value == "file_path":
                         # Check if this is in heal_all_violations context

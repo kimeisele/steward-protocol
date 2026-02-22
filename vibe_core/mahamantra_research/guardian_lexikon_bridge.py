@@ -71,11 +71,21 @@ from vibe_core.mahamantra.substrate.rama_grid import rama_to_phoneme
 
 # Shastrische Funktionen
 SHASTRISCH = {
-    "vyasa": "compilation", "brahma": "creation", "narada": "transmission",
-    "shambhu": "destruction", "prithu": "organization", "kumaras": "wisdom",
-    "kapila": "analysis", "manu": "law", "parashurama": "enforcement",
-    "prahlada": "devotion", "janaka": "execution", "bhishma": "commitment",
-    "nrisimha": "protection", "bali": "surrender", "shuka": "liberation",
+    "vyasa": "compilation",
+    "brahma": "creation",
+    "narada": "transmission",
+    "shambhu": "destruction",
+    "prithu": "organization",
+    "kumaras": "wisdom",
+    "kapila": "analysis",
+    "manu": "law",
+    "parashurama": "enforcement",
+    "prahlada": "devotion",
+    "janaka": "execution",
+    "bhishma": "commitment",
+    "nrisimha": "protection",
+    "bali": "surrender",
+    "shuka": "liberation",
     "yamaraja": "judgment",
 }
 
@@ -83,6 +93,7 @@ SHASTRISCH = {
 # =============================================================================
 # PART 6: Rama Lexikon → Guardian Semantic Vocabulary
 # =============================================================================
+
 
 def load_rama_lexicon() -> Dict:
     """Load the Rama Lexicon (Prabhupada's Gita word-for-word)."""
@@ -105,12 +116,14 @@ def build_coord_to_words_index(vocab: Dict) -> Dict[int, List[Dict]]:
         if not coords:
             continue
         first_coord = coords[0]
-        index[first_coord].append({
-            "sanskrit": entry["word"],
-            "meanings": entry.get("meanings", []),
-            "coords": coords,
-            "packed": packed_hex,
-        })
+        index[first_coord].append(
+            {
+                "sanskrit": entry["word"],
+                "meanings": entry.get("meanings", []),
+                "coords": coords,
+                "packed": packed_hex,
+            }
+        )
 
     return dict(index)
 
@@ -192,7 +205,9 @@ def guardian_semantic_vocabulary() -> None:
         if syl_words:
             print(f"     SYLLABLE VOCABULARY:")
             for syl, data in syl_words.items():
-                print(f"       {syl} (rama={data['rama_idx']}): {data['word_count']} words → {', '.join(data['sample_meanings'])}")
+                print(
+                    f"       {syl} (rama={data['rama_idx']}): {data['word_count']} words → {', '.join(data['sample_meanings'])}"
+                )
 
         print()
 
@@ -200,6 +215,7 @@ def guardian_semantic_vocabulary() -> None:
 # =============================================================================
 # PART 7: Shruti vs Nakshatra Distribution
 # =============================================================================
+
 
 def analyze_shruti_nakshatra() -> None:
     """
@@ -235,9 +251,14 @@ def analyze_shruti_nakshatra() -> None:
         role = "HEAD" if i % 4 == 0 else f"worker-{i % 4}"
 
         entry = {
-            "name": name, "pos": i, "m49": m49, "phoneme": phoneme,
-            "harmonic": harmonic, "shastrisch": shastrisch,
-            "quarter": quarter, "role": role,
+            "name": name,
+            "pos": i,
+            "m49": m49,
+            "phoneme": phoneme,
+            "harmonic": harmonic,
+            "shastrisch": shastrisch,
+            "quarter": quarter,
+            "role": role,
         }
 
         if is_shruti:
@@ -251,14 +272,18 @@ def analyze_shruti_nakshatra() -> None:
 
     print("  --- SHRUTI GUARDIANS (R-reachable = v² mod 49) ---")
     for e in shrutis:
-        print(f"    [{e['pos']:2d}] {e['name']:<14} mod49={e['m49']:>2} ({e['phoneme']}) "
-              f"quarter={e['quarter']:<8} {e['shastrisch']}")
+        print(
+            f"    [{e['pos']:2d}] {e['name']:<14} mod49={e['m49']:>2} ({e['phoneme']}) "
+            f"quarter={e['quarter']:<8} {e['shastrisch']}"
+        )
     print()
 
     print("  --- NAKSHATRA GUARDIANS (non-residue = journey) ---")
     for e in nakshatras:
-        print(f"    [{e['pos']:2d}] {e['name']:<14} mod49={e['m49']:>2} ({e['phoneme']}) "
-              f"quarter={e['quarter']:<8} {e['shastrisch']}")
+        print(
+            f"    [{e['pos']:2d}] {e['name']:<14} mod49={e['m49']:>2} ({e['phoneme']}) "
+            f"quarter={e['quarter']:<8} {e['shastrisch']}"
+        )
     print()
 
     # Quarter distribution
@@ -284,6 +309,7 @@ def analyze_shruti_nakshatra() -> None:
 # =============================================================================
 # PART 8: Harmonic Dissolution Paths
 # =============================================================================
+
 
 def analyze_dissolution_paths() -> None:
     """
@@ -313,11 +339,17 @@ def analyze_dissolution_paths() -> None:
         shastrisch = SHASTRISCH.get(name, "?")
 
         pos_to_guardian[m49] = name
-        guardian_data.append({
-            "name": name, "pos": i, "m49": m49, "harmonic": harmonic,
-            "phoneme": phoneme, "h_phoneme": h_phoneme,
-            "shastrisch": shastrisch,
-        })
+        guardian_data.append(
+            {
+                "name": name,
+                "pos": i,
+                "m49": m49,
+                "harmonic": harmonic,
+                "phoneme": phoneme,
+                "h_phoneme": h_phoneme,
+                "shastrisch": shastrisch,
+            }
+        )
 
     print(f"  Dissolution = (mod49 × SEVEN) mod 49")
     print(f"  SEVEN = {SEVEN} (the absorption constant)")
@@ -328,9 +360,11 @@ def analyze_dissolution_paths() -> None:
         target_shastrisch = SHASTRISCH.get(target_name, "?")
         arrow = f"→ {target_name}({target_shastrisch})" if target_name != "---" else f"→ position {g['harmonic']}"
 
-        print(f"  [{g['pos']:2d}] {g['name']:<14} ({g['shastrisch']:<13}) "
-              f"mod49={g['m49']:>2}({g['phoneme']}) "
-              f"×7→{g['harmonic']:>2}({g['h_phoneme']}) {arrow}")
+        print(
+            f"  [{g['pos']:2d}] {g['name']:<14} ({g['shastrisch']:<13}) "
+            f"mod49={g['m49']:>2}({g['phoneme']}) "
+            f"×7→{g['harmonic']:>2}({g['h_phoneme']}) {arrow}"
+        )
 
     # Find cycles
     print()
@@ -356,6 +390,7 @@ def analyze_dissolution_paths() -> None:
 # =============================================================================
 # PART 9: Per-Syllable 4D Analysis
 # =============================================================================
+
 
 def analyze_per_syllable_4d() -> None:
     """
@@ -397,9 +432,11 @@ def analyze_per_syllable_4d() -> None:
             varga_sequence.append(["svara", "sparsha", "shesha"][varga])
             shruti_pattern += "S" if shruti else "N"
 
-            print(f"     {syl:<6} rama={idx:>2} ({phoneme}) "
-                  f"elem={elem_name:<8} varga={['svara','sparsha','shesha'][varga]:<8} "
-                  f"sub={sub} harm={harmonic:>2} {'SHRUTI' if shruti else 'NAKSH'}")
+            print(
+                f"     {syl:<6} rama={idx:>2} ({phoneme}) "
+                f"elem={elem_name:<8} varga={['svara', 'sparsha', 'shesha'][varga]:<8} "
+                f"sub={sub} harm={harmonic:>2} {'SHRUTI' if shruti else 'NAKSH'}"
+            )
 
         # Element walk summary
         if element_sequence:
@@ -412,6 +449,7 @@ def analyze_per_syllable_4d() -> None:
 # =============================================================================
 # MAIN
 # =============================================================================
+
 
 def run_analysis() -> None:
     """Run all bridge analyses."""

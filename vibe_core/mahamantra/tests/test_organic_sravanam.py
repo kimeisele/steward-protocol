@@ -31,6 +31,7 @@ from vibe_core.mahamantra.protocols._seed import WORDS
 def fresh_router():
     """Reset CellRouter between tests to avoid cross-contamination."""
     import vibe_core.mahamantra.substrate.cell_router as cr
+
     old = cr._router
     cr._router = CellRouter()
     yield cr._router
@@ -42,12 +43,14 @@ class TestFragmentIngestion:
 
     def test_parse_single_file(self):
         from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+
         f = SUBSTRATE_ROOT / "lotus_core.py"
         frags = parse_file_to_fragments(f)
         assert len(frags.fragments) > 0
 
     def test_register_populates_router(self, fresh_router):
         from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+
         f = SUBSTRATE_ROOT / "lotus_core.py"
         frags = parse_file_to_fragments(f)
         addrs = register_fragments_as_cells(frags)
@@ -56,6 +59,7 @@ class TestFragmentIngestion:
 
     def test_cells_have_positions(self, fresh_router):
         from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+
         f = SUBSTRATE_ROOT / "lotus_core.py"
         frags = parse_file_to_fragments(f)
         register_fragments_as_cells(frags)
@@ -84,6 +88,7 @@ class TestFragmentIngestion:
 # Small subset of files for fast scan tests
 def _scan_files():
     from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT, MAHAMANTRA_ROOT
+
     return [
         SUBSTRATE_ROOT / "lotus_core.py",
         SUBSTRATE_ROOT / "vm" / "tattva_registry.py",
@@ -96,6 +101,7 @@ def _scan_files():
         MAHAMANTRA_ROOT / "adapters" / "composition.py",
         MAHAMANTRA_ROOT / "kernel" / "singularity.py",
     ]
+
 
 def _ingest_subset():
     for f in _scan_files():

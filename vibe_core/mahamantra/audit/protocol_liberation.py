@@ -81,4 +81,3 @@ PANCHA_TATTVA_STATUS = {
     "gadadhara": ("proxy.py", "EXISTS"),
     "srivasa": ("sankirtan.py", "EXISTS"),
 }
-

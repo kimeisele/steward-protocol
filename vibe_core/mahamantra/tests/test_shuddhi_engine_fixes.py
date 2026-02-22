@@ -32,8 +32,8 @@ def engine():
 
 # ── Discovery ────────────────────────────────────────────────────────
 
-class TestRemedyDiscovery:
 
+class TestRemedyDiscovery:
     def test_null_signature_discovered(self, engine):
         assert "null_signature_mismatch" in engine._remedies
 
@@ -57,8 +57,8 @@ class TestRemedyDiscovery:
 
 # ── DETECTED vs PURIFIED vs SKIPPED ─────────────────────────────────
 
-class TestDetectedStatus:
 
+class TestDetectedStatus:
     def test_any_type_used_is_detected(self, engine):
         code = "from typing import Any\ndef foo(x: Any) -> Any:\n    return x\n"
         r = engine.scan_cell(code, "any_type_usage", Path("<test>"))
@@ -91,12 +91,14 @@ class TestDetectedStatus:
 
 # ── fractal_routing safety ───────────────────────────────────────────
 
+
 def _substrate_root():
     from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+
     return SUBSTRATE_ROOT
 
-class TestFractalRoutingSafety:
 
+class TestFractalRoutingSafety:
     def test_non_init_file_not_injected(self, engine):
         """fractal_routing must NOT inject __getattr__ into regular .py files."""
         r = engine.purify(

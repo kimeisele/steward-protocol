@@ -57,18 +57,21 @@ logger = logging.getLogger("MAHAMANTRA.IO_SENTINEL")
 # AUTHORIZED CALLERS — These files MAY call json.dump directly
 # =============================================================================
 
-_AUTHORIZED_FILES: Final[FrozenSet[str]] = frozenset({
-    "state_service.py",
-    "atomic_io.py",
-    "io_sentinel.py",
-    "sync_holon.py",
-    "commit_authority.py",
-})
+_AUTHORIZED_FILES: Final[FrozenSet[str]] = frozenset(
+    {
+        "state_service.py",
+        "atomic_io.py",
+        "io_sentinel.py",
+        "sync_holon.py",
+        "commit_authority.py",
+    }
+)
 
 
 # =============================================================================
 # TYPES
 # =============================================================================
+
 
 class SentinelViolation(TypedDict):
     caller_file: str
@@ -106,6 +109,7 @@ _MAX_RECENT: Final[int] = 100
 # STACK INSPECTION
 # =============================================================================
 
+
 def _inspect_caller(call_type: str) -> Optional[SentinelViolation]:
     """
     Walk the call stack to find the REAL caller (skip wrappers).
@@ -136,6 +140,7 @@ def _inspect_caller(call_type: str) -> Optional[SentinelViolation]:
 # GUARDED WRAPPERS
 # =============================================================================
 
+
 def _record_violation(violation: SentinelViolation) -> None:
     """Record a violation (shared by dump and dumps guards)."""
     global _rogue_calls
@@ -147,8 +152,10 @@ def _record_violation(violation: SentinelViolation) -> None:
             _recent_violations.append(violation)
     logger.warning(
         "ROGUE WRITER: %s called from %s:%d (%s) — not routed through StateService",
-        violation["call_type"], violation["caller_file"],
-        violation["caller_line"], violation["caller_func"],
+        violation["call_type"],
+        violation["caller_file"],
+        violation["caller_line"],
+        violation["caller_func"],
     )
 
 
@@ -183,6 +190,7 @@ def _guarded_dumps(*args, **kwargs):
 # =============================================================================
 # PUBLIC API
 # =============================================================================
+
 
 def arm() -> None:
     """Arm the sentinel. Monkey-patches json.dump/json.dumps."""

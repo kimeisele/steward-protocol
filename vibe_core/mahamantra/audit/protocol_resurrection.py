@@ -46,13 +46,15 @@ class Auditor:
         for cls_name, status in compliance.items():
             if not status:
                 all_compliant = False
-                findings.append(AuditFinding(
-                    source="ProtocolResurrection.compliance",
-                    position=__position__,
-                    mahajana=__mahajana__,
-                    description=f"Class '{cls_name}' failed runtime protocol compliance check.",
-                    severity=FindingSeverity.CRITICAL,
-                ))
+                findings.append(
+                    AuditFinding(
+                        source="ProtocolResurrection.compliance",
+                        position=__position__,
+                        mahajana=__mahajana__,
+                        description=f"Class '{cls_name}' failed runtime protocol compliance check.",
+                        severity=FindingSeverity.CRITICAL,
+                    )
+                )
 
         # Add a summary finding
         summary_severity = FindingSeverity.INFO if all_compliant else FindingSeverity.WARNING
@@ -60,13 +62,15 @@ class Auditor:
         if not all_compliant:
             summary_desc = "DEAD CODE DETECTED: Some core classes do not comply with their protocols."
 
-        findings.append(AuditFinding(
-            source="ProtocolResurrection.summary",
-            position=__position__,
-            mahajana=__mahajana__,
-            description=summary_desc,
-            severity=summary_severity,
-        ))
+        findings.append(
+            AuditFinding(
+                source="ProtocolResurrection.summary",
+                position=__position__,
+                mahajana=__mahajana__,
+                description=summary_desc,
+                severity=summary_severity,
+            )
+        )
 
         return findings
 
@@ -135,7 +139,13 @@ class Auditor:
         """
         from vibe_core.mahamantra.analysis.derivation_graph import DerivationGraph
         from vibe_core.mahamantra.protocols.seed._axioms import (
-            WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT, PANCHA, HALVES
+            WORDS,
+            TRINITY,
+            HARE_COUNT,
+            KRISHNA_COUNT,
+            RAMA_COUNT,
+            PANCHA,
+            HALVES,
         )
         from vibe_core.mahamantra_research.acintya_mathematics import QUALITIES
 
@@ -149,5 +159,6 @@ class Auditor:
             "qualities": QUALITIES,  # 64 - Krishna's complete capability
             "king_formula": "7 Axioms → 49 Nodes → 92 Edges → ∞ RAM",
         }
+
 
 __all__ = ["Auditor"]

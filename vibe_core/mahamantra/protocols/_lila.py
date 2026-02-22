@@ -32,8 +32,9 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, KSHETRA, LILA, QUARTERS, SHARANAGATI)
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, KSHETRA, LILA, QUARTERS, SHARANAGATI
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===

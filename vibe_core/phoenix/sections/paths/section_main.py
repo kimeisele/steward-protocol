@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 # OPUS-025: Avoid string literal "/tmp/vibe_os" (grep pattern match)

@@ -18,7 +18,8 @@ Event Types:
 
 This is the "Flute" that plays the Rasa Lila (Dance of Agents).
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TEN)
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TEN
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "narada"
@@ -575,6 +576,7 @@ class EventBus(EventBusProtocol):
         if EventBus._narada_bridge is None:
             try:
                 from vibe_core.services.narada_bridge import get_narada_bridge
+
                 EventBus._narada_bridge = get_narada_bridge()
             except Exception as exc:
                 EventBus._narada_bridge_failed = True
@@ -634,10 +636,10 @@ class EventBus(EventBusProtocol):
                 self._event_history.pop(0)
             self._event_count += KSETRAJNA
             self._type_counts[event.event_type] = self._type_counts.get(event.event_type, 0) + KSETRAJNA
-            
+
             # DISPATCH TO SUBSCRIBERS (Sync Fallback)
             # "Sankirtan must continue even without Async"
-            
+
             def _sync_dispatch(cb, ev):
                 """Inline helper for sync dispatch with metrics."""
                 if asyncio.iscoroutinefunction(cb):
@@ -658,7 +660,7 @@ class EventBus(EventBusProtocol):
             type_subs = self._subscribers.get(event.event_type, set())
             for sub in type_subs:
                 _sync_dispatch(sub, event)
-                
+
             # 2. Global
             for sub in self._global_subscribers:
                 _sync_dispatch(sub, event)
@@ -693,13 +695,15 @@ class EventBus(EventBusProtocol):
             completed = metrics.get("events_completed", 0)
             ack_rate = completed / sent if sent > 0 else 1.0
 
-            result.append({
-                "callback_id": callback_id,
-                "event_types": event_types,
-                "events_received": sent,
-                "events_completed": completed,
-                "ack_rate": ack_rate,
-            })
+            result.append(
+                {
+                    "callback_id": callback_id,
+                    "event_types": event_types,
+                    "events_received": sent,
+                    "events_completed": completed,
+                    "ack_rate": ack_rate,
+                }
+            )
 
         return result
 
@@ -812,22 +816,13 @@ class EventBus(EventBusProtocol):
             history = [e for e in history if e.event_type == event_type]
 
         if quarter is not None:
-            history = [
-                e for e in history
-                if e.diw_context is not None and e.diw_context.get("quarter") == quarter
-            ]
+            history = [e for e in history if e.diw_context is not None and e.diw_context.get("quarter") == quarter]
 
         if tick_min is not None:
-            history = [
-                e for e in history
-                if e.diw_context is not None and e.diw_context.get("tick", -1) >= tick_min
-            ]
+            history = [e for e in history if e.diw_context is not None and e.diw_context.get("tick", -1) >= tick_min]
 
         if tick_max is not None:
-            history = [
-                e for e in history
-                if e.diw_context is not None and e.diw_context.get("tick", -1) <= tick_max
-            ]
+            history = [e for e in history if e.diw_context is not None and e.diw_context.get("tick", -1) <= tick_max]
 
         return history[-limit:] if limit else history
 

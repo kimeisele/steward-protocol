@@ -33,6 +33,7 @@ class TestTickState:
     def test_tick_state_is_typed_dict(self):
         """TickState is a TypedDict."""
         from typing import TypedDict
+
         # TickState inherits from TypedDict
         state: TickState = {
             "tick": 0,
@@ -116,6 +117,7 @@ class TestMahamantraProxy:
 
     def test_mahamantra_proxy_getattr_delegates(self):
         """MahamantraProxy delegates attribute access."""
+
         class Target:
             def method(self):
                 return "result"
@@ -132,6 +134,7 @@ class TestMahamantraProxy:
 
     def test_mahamantra_proxy_callable_target(self):
         """MahamantraProxy can call callable target."""
+
         def target_func(x):
             return x * 2
 
@@ -222,18 +225,21 @@ class TestModuleAttributes:
     def test_mahajana_declaration(self):
         """Module has __mahajana__ declaration."""
         from vibe_core.mahamantra.substrate import proxy
+
         assert hasattr(proxy, "__mahajana__")
         assert proxy.__mahajana__ == "nityananda"
 
     def test_position_declaration(self):
         """Module has __position__ declaration."""
         from vibe_core.mahamantra.substrate import proxy
+
         assert hasattr(proxy, "__position__")
         assert proxy.__position__ == 1
 
     def test_genesis_declaration(self):
         """Module has __genesis__ declaration."""
         from vibe_core.mahamantra.substrate import proxy
+
         assert hasattr(proxy, "__genesis__")
         assert proxy.__genesis__.startswith("0x")
 
@@ -249,6 +255,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.substrate import proxy
+
         expected = [
             "MahamantraProxy",
             "BalaramaProxy",

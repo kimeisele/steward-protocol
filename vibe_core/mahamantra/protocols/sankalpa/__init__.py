@@ -11,7 +11,8 @@ NISHKAMA KARMA - Action without attachment.
 ADVAITA: All execution goes through ChatProtocol.
 Internal voice (Sankalpa) and external voice (User) enter the same gate.
 """
-from vibe_core.mahamantra.protocols._seed import (NAVA)
+
+from vibe_core.mahamantra.protocols._seed import NAVA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"
@@ -42,6 +43,7 @@ from .types import (
 # IMPL MOVED TO SUBSTRATE (vibe_core.mahamantra.substrate.sankalpa)
 # from .will import ... (REMOVED FOR PURITY)
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.
@@ -50,6 +52,7 @@ def __getattr__(name: str):
     # Route to substrate implementation
     if name in ("handle_sankalpa_query", "SankalpaOrchestrator", "get_sankalpa"):
         from vibe_core.mahamantra.substrate.sankalpa import will
+
         return getattr(will, name)
 
     from pathlib import Path

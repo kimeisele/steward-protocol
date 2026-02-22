@@ -267,7 +267,7 @@ def analyze_mahamantra_correlation() -> dict:
     #   MAHAMANTRA_HALF_BINARY + MAHAMANTRA_NAME_HARE/KRISHNA/RAMA
     # NO LOCAL DERIVATION - ALL FROM SSOT!
     from vibe_core.mahamantra.protocols._seed import MAHAMANTRA_WORD_PATTERN
-    
+
     MAHAMANTRA_PATTERN = MAHAMANTRA_WORD_PATTERN
 
     correlations = []
@@ -282,8 +282,11 @@ def analyze_mahamantra_correlation() -> dict:
 
         # HARE = energy (bass?), NAME = identity (treble?)
         from vibe_core.mahamantra.protocols._seed import (
-            MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_RAMA
+            MAHAMANTRA_NAME_HARE,
+            MAHAMANTRA_NAME_KRISHNA,
+            MAHAMANTRA_NAME_RAMA,
         )
+
         is_hare = name == MAHAMANTRA_NAME_HARE
         is_name = name in (MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_RAMA)
 

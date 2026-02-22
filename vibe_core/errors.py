@@ -36,4 +36,3 @@ from vibe_core.mahamantra import (
 )
 
 __all__ = ["ErrorCode", "StructuredError", "ErrorCategory", "kernel_fault"]
-

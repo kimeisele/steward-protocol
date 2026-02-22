@@ -86,7 +86,7 @@ class TestEncodeKmer:
         kmer = "ACGTACGT"
         key = encode_kmer(kmer)
         # Each base is 2 bits, 8 bases = 16 bits
-        assert 0 <= key < 2 ** 16
+        assert 0 <= key < 2**16
 
     def test_encode_lowercase(self):
         """Lowercase bases work."""
@@ -191,10 +191,10 @@ class TestLotusBioInit:
     def test_key_space(self):
         """key_space is 4^k."""
         bio = LotusBio(k=8)
-        assert bio.key_space == 4 ** 8 == 65536
+        assert bio.key_space == 4**8 == 65536
 
         bio = LotusBio(k=4)
-        assert bio.key_space == 4 ** 4 == 256
+        assert bio.key_space == 4**4 == 256
 
 
 # =============================================================================

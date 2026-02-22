@@ -11,7 +11,8 @@ This is NISHKAMA KARMA (Action without attachment).
 
 NO `Any` TYPES. Everything is explicit. Satyam (Truth) over Tamas (Chaos).
 """
-from vibe_core.mahamantra.protocols._seed import (NAVA, TRINITY)
+
+from vibe_core.mahamantra.protocols._seed import NAVA, TRINITY
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prahlada"

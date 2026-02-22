@@ -63,8 +63,9 @@ class OuroborosSubscriber:
         try:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols.kernel_protocol import KernelProtocol
+
             kernel = ServiceRegistry.get(KernelProtocol)
-            if kernel and hasattr(kernel, '_workspace'):
+            if kernel and hasattr(kernel, "_workspace"):
                 return kernel._workspace
         except Exception:
             pass
@@ -74,6 +75,7 @@ class OuroborosSubscriber:
         if self._orchestrator is None:
             try:
                 from vibe_core.ouroboros.loop_orchestrator import OuroborosLoopOrchestrator
+
                 workspace = self._resolve_workspace()
                 self._orchestrator = OuroborosLoopOrchestrator(workspace=workspace)
             except Exception as e:
@@ -92,17 +94,19 @@ class OuroborosSubscriber:
 
             records = []
             for v in drained:
-                records.append(ViolationRecord(
-                    source=ViolationSource.SENTINEL,
-                    rule_id="unsafe_io_write",
-                    file_path=v["caller_file"],
-                    line=v["caller_line"],
-                    message=f"Rogue {v['call_type']} in {v['caller_func']}() — bypasses StateService",
-                    severity="MEDIUM",
-                    has_remedy=True,
-                    verification_status="verified",
-                    origin="live_scan",
-                ))
+                records.append(
+                    ViolationRecord(
+                        source=ViolationSource.SENTINEL,
+                        rule_id="unsafe_io_write",
+                        file_path=v["caller_file"],
+                        line=v["caller_line"],
+                        message=f"Rogue {v['call_type']} in {v['caller_func']}() — bypasses StateService",
+                        severity="MEDIUM",
+                        has_remedy=True,
+                        verification_status="verified",
+                        origin="live_scan",
+                    )
+                )
 
             orchestrator = self._get_orchestrator()
             if orchestrator is None:
@@ -119,7 +123,8 @@ class OuroborosSubscriber:
         if sentinel_count > 0:
             logger.info(
                 "[OUROBOROS] Sentinel: %d rogue I/O violations ingested (tick %d)",
-                sentinel_count, tick_count,
+                sentinel_count,
+                tick_count,
             )
 
         # Step 2: Ingest from CI artifacts / reports (existing path)
@@ -164,6 +169,7 @@ class ShuddhiSubscriber:
         if self._engine is None:
             try:
                 from vibe_core.mahamantra.dharma.kumaras.engine import ShuddhiEngine
+
                 self._engine = ShuddhiEngine()
             except Exception as e:
                 logger.debug(f"[SHUDDHI] Could not create engine: {e}")

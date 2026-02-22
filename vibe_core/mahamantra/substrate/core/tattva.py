@@ -41,7 +41,24 @@ BG 4.34: "tad viddhi praṇipātena paripraśnena sevayā"
 
 Der Guru ist die BRÜCKE, nicht ein Element.
 """
-from vibe_core.mahamantra.protocols._seed import (GITA_CHAPTERS, HALVES, HARE_COUNT, KSETRAJNA, KSHETRA, MAHAJANA_COUNT, NAVA, PANCHA, POSITION_SUM_KRISHNA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY, WORDS)
+
+from vibe_core.mahamantra.protocols._seed import (
+    GITA_CHAPTERS,
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    KSHETRA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    POSITION_SUM_KRISHNA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

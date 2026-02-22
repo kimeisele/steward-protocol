@@ -284,13 +284,21 @@ PHONEME_TO_VARGA: Final[Dict[str, VargaIndex]] = _build_phoneme_varga_from_proto
 #   OSHTHYA (lips/4) = rounded: UW (boot), UH (book), AW (bout)
 
 ARPABET_TO_VARGA: Final[Dict[str, VargaIndex]] = {
-    "AA": VargaIndex.KANTHYA, "AH": VargaIndex.KANTHYA, "AE": VargaIndex.KANTHYA,
+    "AA": VargaIndex.KANTHYA,
+    "AH": VargaIndex.KANTHYA,
+    "AE": VargaIndex.KANTHYA,
     "AY": VargaIndex.KANTHYA,
-    "IY": VargaIndex.TALAVYA, "IH": VargaIndex.TALAVYA, "EY": VargaIndex.TALAVYA,
+    "IY": VargaIndex.TALAVYA,
+    "IH": VargaIndex.TALAVYA,
+    "EY": VargaIndex.TALAVYA,
     "EH": VargaIndex.TALAVYA,
     "ER": VargaIndex.MURDHANYA,
-    "AO": VargaIndex.DANTYA, "OW": VargaIndex.DANTYA, "OY": VargaIndex.DANTYA,
-    "UW": VargaIndex.OSHTHYA, "UH": VargaIndex.OSHTHYA, "AW": VargaIndex.OSHTHYA,
+    "AO": VargaIndex.DANTYA,
+    "OW": VargaIndex.DANTYA,
+    "OY": VargaIndex.DANTYA,
+    "UW": VargaIndex.OSHTHYA,
+    "UH": VargaIndex.OSHTHYA,
+    "AW": VargaIndex.OSHTHYA,
 }
 
 
@@ -322,17 +330,15 @@ assert len(SthanaIndex) == PANCHA, f"SthanaIndex must have {PANCHA} values"
 # Sthana energy in COSMIC_FRAME space (integer SSOT, Seed-derived)
 # All values = CF * numerator // PANCHA (exact, no rounding)
 STHANA_ENERGY_CF: Final[Dict[SthanaIndex, int]] = {
-    SthanaIndex.SPARSHA: COSMIC_FRAME // PANCHA,             # 4320  (1/5 = 0.2)
+    SthanaIndex.SPARSHA: COSMIC_FRAME // PANCHA,  # 4320  (1/5 = 0.2)
     SthanaIndex.MAHAPRANA: COSMIC_FRAME * TRINITY // PANCHA,  # 12960 (3/5 = 0.6)
-    SthanaIndex.GHOSHAVAT: COSMIC_FRAME * QUARTERS // PANCHA, # 17280 (4/5 = 0.8)
-    SthanaIndex.GHOSHMAHA: COSMIC_FRAME,                      # 21600 (5/5 = 1.0)
-    SthanaIndex.ANUNASIKA: COSMIC_FRAME // HALVES,            # 10800 (1/2 = 0.5)
+    SthanaIndex.GHOSHAVAT: COSMIC_FRAME * QUARTERS // PANCHA,  # 17280 (4/5 = 0.8)
+    SthanaIndex.GHOSHMAHA: COSMIC_FRAME,  # 21600 (5/5 = 1.0)
+    SthanaIndex.ANUNASIKA: COSMIC_FRAME // HALVES,  # 10800 (1/2 = 0.5)
 }
 
 # Float alias for backward-compatible consumers
-STHANA_ENERGY: Final[Dict[SthanaIndex, float]] = {
-    k: v / COSMIC_FRAME for k, v in STHANA_ENERGY_CF.items()
-}
+STHANA_ENERGY: Final[Dict[SthanaIndex, float]] = {k: v / COSMIC_FRAME for k, v in STHANA_ENERGY_CF.items()}
 
 
 # =============================================================================

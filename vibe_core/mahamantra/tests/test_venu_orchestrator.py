@@ -7,6 +7,7 @@ Tests the 19-bit DIW pipeline end-to-end:
 
 ALL CONSTANTS FROM SSOT. NO MAGIC NUMBERS.
 """
+
 from __future__ import annotations
 
 import struct
@@ -167,6 +168,7 @@ class TestStep:
         diw = orch.step()
         # Mode should be in cluster bits (bits 23-26)
         from vibe_core.mahamantra.protocols.diw import CLUSTER_SHIFT
+
         cluster = (diw >> CLUSTER_SHIFT) & 0xF
         assert cluster == 2
 
@@ -174,6 +176,7 @@ class TestStep:
         """Mode 0 (SOLO) should not set any cluster bits."""
         diw = orch.step()
         from vibe_core.mahamantra.protocols.diw import CLUSTER_SHIFT
+
         cluster = (diw >> CLUSTER_SHIFT) & 0xF
         assert cluster == 0
 
@@ -279,9 +282,7 @@ class TestSpell:
         for coord in range(49):
             result = orch.spell((coord,))
             parts = unpack(result[0])
-            assert parts.venu == (coord & VENU_MASK), (
-                f"coord={coord}: venu={parts.venu}, expected {coord & VENU_MASK}"
-            )
+            assert parts.venu == (coord & VENU_MASK), f"coord={coord}: venu={parts.venu}, expected {coord & VENU_MASK}"
 
     def test_spell_advances_tick(self, orch: VenuOrchestrator):
         coords = tuple(range(5))
@@ -296,9 +297,7 @@ class TestSpell:
         for i, diw in enumerate(result):
             expected_phase = min(i // quarter_size, QUARTERS - 1)
             actual = unpack(diw).murali
-            assert actual == expected_phase, (
-                f"Position {i}: murali={actual}, expected phase {expected_phase}"
-            )
+            assert actual == expected_phase, f"Position {i}: murali={actual}, expected phase {expected_phase}"
 
 
 # =============================================================================
@@ -319,6 +318,7 @@ class TestHarmonize:
     def test_harmonize_with_velocity(self, orch: VenuOrchestrator):
         word = orch.harmonize(0, 0, 0, velocity=15)
         from vibe_core.mahamantra.protocols.diw import VELOCITY_SHIFT
+
         vel = (word >> VELOCITY_SHIFT) & 0xF
         assert vel == 15
 
@@ -540,6 +540,7 @@ class TestFromBytesHardening:
     def test_corrupt_tick_clamped(self, orch: VenuOrchestrator):
         """Tick exceeding COSMIC_FRAME should be wrapped via modulo."""
         from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME as CF
+
         corrupt = struct.pack("<QQQ", CF + 999, 0, 0)
         orch.from_bytes(corrupt)
         assert orch.tick < CF
@@ -549,6 +550,7 @@ class TestFromBytesHardening:
         corrupt = struct.pack("<QQQ", 0, 0, 999)
         orch.from_bytes(corrupt)
         from vibe_core.mahamantra.protocols._seed import HALVES as H
+
         assert orch.mode <= H
 
     def test_corrupt_prev_state_masked(self, orch: VenuOrchestrator):
@@ -563,6 +565,7 @@ class TestFromBytesHardening:
     def test_legacy_16_bytes_clamped(self, orch: VenuOrchestrator):
         """Legacy 16-byte format should also clamp values."""
         from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME as CF
+
         legacy = struct.pack("<QQ", CF + 1, 0xFFFFFFFF)
         orch.from_bytes(legacy)
         assert orch.tick < CF
@@ -834,10 +837,12 @@ class TestSharedOrchestrator:
 
     def setup_method(self):
         from vibe_core.di import ServiceRegistry
+
         ServiceRegistry.reset()
 
     def teardown_method(self):
         from vibe_core.di import ServiceRegistry
+
         ServiceRegistry.reset()
 
     def test_boot_path_shares_orchestrator(self):

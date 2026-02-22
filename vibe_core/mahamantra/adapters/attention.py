@@ -94,6 +94,7 @@ LINEAR_SCAN_OPS_PER_INTENT: Final[int] = 10  # Compare, branch, etc.
 # MAHA ATTENTION
 # =============================================================================
 
+
 class MahaAttention(MahaAttentionProtocol[Any]):
     """
     O(1) Attention Mechanism for Agentic Routing.
@@ -285,13 +286,15 @@ class MahaAttention(MahaAttentionProtocol[Any]):
 
         results = []
         for entry in range_result.entries:
-            results.append(AttentionResult(
-                query=query,
-                address=entry.key,
-                handler=entry.value,
-                found=True,
-                ops_saved=self._registered * LINEAR_SCAN_OPS_PER_INTENT,
-            ))
+            results.append(
+                AttentionResult(
+                    query=query,
+                    address=entry.key,
+                    handler=entry.value,
+                    found=True,
+                    ops_saved=self._registered * LINEAR_SCAN_OPS_PER_INTENT,
+                )
+            )
 
         return results
 

@@ -9,7 +9,8 @@ Implements the OrbitCalculator:
 - Determines if "It is Time" based on Kaksha (Frequency).
 
 """
-from vibe_core.mahamantra.protocols._seed import (QUARTERS)
+
+from vibe_core.mahamantra.protocols._seed import QUARTERS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

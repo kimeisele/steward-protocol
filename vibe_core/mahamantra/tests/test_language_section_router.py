@@ -30,6 +30,7 @@ from vibe_core.mahamantra.substrate.language.section_router import (
 # CHAPTER_18_SECTIONS: topology verification
 # =============================================================================
 
+
 class TestChapter18Sections:
     """CHAPTER_18_SECTIONS: 7 sections covering all 78 verses."""
 
@@ -83,6 +84,7 @@ class TestChapter18Sections:
 # SECTION_SIGNATURES: verified phonetic + semantic profiles
 # =============================================================================
 
+
 class TestSectionSignatures:
     """SECTION_SIGNATURES: one entry per section with mode and metadata."""
 
@@ -116,6 +118,7 @@ class TestSectionSignatures:
 # =============================================================================
 # route_to_section: attractor + seed → section + verse
 # =============================================================================
+
 
 class TestRouteToSection:
     """route_to_section: deterministic two-stage routing."""
@@ -168,6 +171,7 @@ class TestRouteToSection:
 # extract_template: chapter + verse → word slots
 # =============================================================================
 
+
 class TestExtractTemplate:
     """extract_template: Gita verse → grammatical template slots."""
 
@@ -211,6 +215,7 @@ class TestExtractTemplate:
 # =============================================================================
 # _infer_role: meaning → grammatical role
 # =============================================================================
+
 
 class TestInferRole:
     """_infer_role classifies by coordinate mass + verse position."""

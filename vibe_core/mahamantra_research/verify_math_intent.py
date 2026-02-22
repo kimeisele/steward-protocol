@@ -31,11 +31,11 @@ for text, expected in tests:
     seed = result.seed
     pos = seed % WORDS
     q = pos // QUARTERS
-    ok = (actual == expected)
+    ok = actual == expected
     if ok:
         correct += 1
     mark = "OK" if ok else "XX"
     print(f"  {mark}  pos={pos:>2} q={q} got={actual:>7} exp={expected:>6}  | {text[:45]}")
 
-print(f"\nScore: {correct}/{total} = {100*correct/total:.0f}%")
+print(f"\nScore: {correct}/{total} = {100 * correct / total:.0f}%")
 print("\nQuarter mapping: 0-3=TAMAS, 4-7=RAJAS, 8-11=SATTVA, 12-15=SUDDHA")

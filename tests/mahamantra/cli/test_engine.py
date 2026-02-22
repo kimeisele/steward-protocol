@@ -48,9 +48,7 @@ class TestMahajanaCliRegistration:
         """MahajanaCliRegistration auto-derives keywords."""
         reg = MahajanaCliRegistration(
             position=6,
-            capabilities=[
-                CLICapability(name="analyze", purpose="Analyze", keywords=["inspect", "check"])
-            ],
+            capabilities=[CLICapability(name="analyze", purpose="Analyze", keywords=["inspect", "check"])],
             handlers={"analyze": lambda ctx: CLIResult.ok()},
         )
         assert "analyze" in reg.keywords

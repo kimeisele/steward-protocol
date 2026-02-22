@@ -24,11 +24,12 @@ assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 def engine():
     """
     Get the InvariantEngine (THE JUDGE) singleton.
-    
+
     Returns:
         InvariantEngine with all registered rules
     """
     from vibe_core.cartridges.system.auditor.tools.invariant_tool import get_judge
+
     return get_judge()
 
 
@@ -42,20 +43,16 @@ def rule_info(name: str) -> Dict[str, Any]:
     rule = engine().rules.get(name)
     if not rule:
         return {"error": f"Rule {name} not found"}
-    return {
-        "name": rule.name,
-        "description": rule.description,
-        "severity": rule.severity.value
-    }
+    return {"name": rule.name, "description": rule.description, "severity": rule.severity.value}
 
 
 def verify(events: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Verify events against all invariants.
-    
+
     Args:
         events: List of event dicts from ledger
-        
+
     Returns:
         VerificationReport as dict
     """
@@ -64,4 +61,3 @@ def verify(events: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 __all__ = ["engine", "rules", "rule_info", "verify"]
-

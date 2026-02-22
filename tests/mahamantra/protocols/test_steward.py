@@ -308,18 +308,21 @@ class TestStewardSystem:
         """lotus property returns LotusHologram."""
         system = StewardSystem()
         from vibe_core.mahamantra.protocols._lotus import LotusHologram
+
         assert isinstance(system.lotus, LotusHologram)
 
     def test_steward_system_graph(self):
         """graph property returns ProtocolGraph."""
         system = StewardSystem()
         from vibe_core.mahamantra.protocols._graph import ProtocolGraph
+
         assert isinstance(system.graph, ProtocolGraph)
 
     def test_steward_system_bridges(self):
         """bridges property returns BridgeRegistry."""
         system = StewardSystem()
         from vibe_core.mahamantra.protocols._bridge import BridgeRegistry
+
         assert isinstance(system.bridges, BridgeRegistry)
 
     def test_steward_system_audit(self):
@@ -393,6 +396,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _steward
+
         expected = [
             "StewardMode",
             "StewardHealth",

@@ -38,18 +38,19 @@ from vibe_core.mahamantra.substrate.cell import MahaCellUnified
 
 C = TypeVar("C")
 
+
 @dataclass(frozen=True)
 class MahaCluster(Generic[C]):
     """
     Multiple Cells as Unity - WITHOUT Identity Loss.
-    
+
     "They become ONE but remain MANY."
     """
-    
+
     cells: List[MahaCellUnified[C]]
-    resonance_attractor: int        # Common attractor (18, 22, 49, 87, 136)
-    coherence: int                  # 0 - 28800 (COSMIC_FRAME + 33% MALA bonus)
-    
+    resonance_attractor: int  # Common attractor (18, 22, 49, 87, 136)
+    coherence: int  # 0 - 28800 (COSMIC_FRAME + 33% MALA bonus)
+
     # Meta-header generated post-init
     cluster_header: MahaHeader = field(init=False)
 
@@ -57,7 +58,7 @@ class MahaCluster(Generic[C]):
         """Generate cluster header from component cells."""
         if not self.cells:
             # Empty cluster case
-            object.__setattr__(self, 'cluster_header', MahaHeader.null())
+            object.__setattr__(self, "cluster_header", MahaHeader.null())
             return
 
         # Combined source = XOR of all sources (Standard Mahamantra Hashing)
@@ -79,7 +80,7 @@ class MahaCluster(Generic[C]):
             operation=base_op,
             state=len(self.cells),
         )
-        object.__setattr__(self, 'cluster_header', header)
+        object.__setattr__(self, "cluster_header", header)
 
     def split(self) -> List[MahaCellUnified[C]]:
         """Split back into individual cells - full integrity."""
@@ -105,8 +106,4 @@ class MahaCluster(Generic[C]):
         return self.coherence >= ResonanceHarmonics.THRESHOLD_SYNC
 
     def __repr__(self) -> str:
-        return (
-            f"<MahaCluster size={self.size} "
-            f"coherence={self.coherence:.2f} "
-            f"attractor={self.resonance_attractor}>"
-        )
+        return f"<MahaCluster size={self.size} coherence={self.coherence:.2f} attractor={self.resonance_attractor}>"

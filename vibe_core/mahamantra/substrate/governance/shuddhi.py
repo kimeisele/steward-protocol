@@ -18,7 +18,8 @@ ANTI-MAYAVAD:
     - All types explicit and WATERTIGHT
     - The protocol IS the purification, not a wrapper
 """
-from vibe_core.mahamantra.protocols._seed import (PANCHA)
+
+from vibe_core.mahamantra.protocols._seed import PANCHA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "kumaras"

@@ -67,6 +67,7 @@ LOG_TEMPLATES_SATTVA: Final[list[str]] = [
     "[FATAL] Cascade failure: 3/5 replicas unhealthy",
 ]
 
+
 def generate_log_line(template: str) -> str:
     """Fill in template with random values."""
     return template.format(
@@ -77,11 +78,12 @@ def generate_log_line(template: str) -> str:
         latency=random.randint(500, 5000),
         query_time=random.randint(1000, 10000),
         swap=random.randint(100, 2000),
-        version=f"v{random.randint(1,5)}.{random.randint(0,9)}.{random.randint(0,99)}",
+        version=f"v{random.randint(1, 5)}.{random.randint(0, 9)}.{random.randint(0, 99)}",
         user_id=random.randint(1000, 9999),
         pid=random.randint(1000, 65535),
         block=hex(random.randint(0x10000, 0xFFFFF)),
     )
+
 
 def generate_chaos_logs(
     total_lines: int = 10000,
@@ -92,7 +94,7 @@ def generate_chaos_logs(
     """Generate realistic server logs with specified noise distribution."""
     logs = []
     for i in range(total_lines):
-        timestamp = f"2024-01-{random.randint(1,28):02d}T{random.randint(0,23):02d}:{random.randint(0,59):02d}:{random.randint(0,59):02d}.{random.randint(0,999):03d}Z"
+        timestamp = f"2024-01-{random.randint(1, 28):02d}T{random.randint(0, 23):02d}:{random.randint(0, 59):02d}:{random.randint(0, 59):02d}.{random.randint(0, 999):03d}Z"
 
         roll = random.random()
         if roll < tamas_ratio:
@@ -111,6 +113,7 @@ def generate_chaos_logs(
 @dataclass
 class SentinelResult:
     """Result of Log Sentinel analysis."""
+
     total_lines: int
     total_bytes: int
 
@@ -134,13 +137,13 @@ class SentinelResult:
 ║   Processing time: {self.processing_time_ms:>10.2f} ms                                        ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║ INTENT CLASSIFICATION (Guna Analysis)                                        ║
-║   TAMAS  (Noise/Debug):    {self.tamas_count:>8,} ({self.tamas_count/self.total_lines*100:>5.1f}%)  → DISCARDED           ║
-║   RAJAS  (Warnings):       {self.rajas_count:>8,} ({self.rajas_count/self.total_lines*100:>5.1f}%)  → FLAGGED             ║
-║   SATTVA (Critical):       {self.sattva_count:>8,} ({self.sattva_count/self.total_lines*100:>5.1f}%)  → EXTRACTED           ║
+║   TAMAS  (Noise/Debug):    {self.tamas_count:>8,} ({self.tamas_count / self.total_lines * 100:>5.1f}%)  → DISCARDED           ║
+║   RAJAS  (Warnings):       {self.rajas_count:>8,} ({self.rajas_count / self.total_lines * 100:>5.1f}%)  → FLAGGED             ║
+║   SATTVA (Critical):       {self.sattva_count:>8,} ({self.sattva_count / self.total_lines * 100:>5.1f}%)  → EXTRACTED           ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║ COMPRESSION                                                                  ║
 ║   Input:  {self.total_bytes:>12,} bytes                                             ║
-║   Output: {len(''.join(self.extracted_insights)):>12,} bytes (insights only)                               ║
+║   Output: {len("".join(self.extracted_insights)):>12,} bytes (insights only)                               ║
 ║   Ratio:  {self.compression_ratio:>12,.0f}x                                                  ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║ EXTRACTED INSIGHTS (What actually matters)                                   ║
@@ -157,9 +160,9 @@ class LogSentinel:
     """
 
     # Log level patterns (standardized across most logging frameworks)
-    NOISE_LEVELS = {'[DEBUG]', '[TRACE]', '[VERBOSE]', '[FINE]', '[FINER]', '[FINEST]'}
-    ACTION_LEVELS = {'[WARN]', '[WARNING]', '[INFO]', '[NOTICE]'}
-    CRITICAL_LEVELS = {'[ERROR]', '[FATAL]', '[CRITICAL]', '[SEVERE]', '[ALERT]', '[EMERGENCY]'}
+    NOISE_LEVELS = {"[DEBUG]", "[TRACE]", "[VERBOSE]", "[FINE]", "[FINER]", "[FINEST]"}
+    ACTION_LEVELS = {"[WARN]", "[WARNING]", "[INFO]", "[NOTICE]"}
+    CRITICAL_LEVELS = {"[ERROR]", "[FATAL]", "[CRITICAL]", "[SEVERE]", "[ALERT]", "[EMERGENCY]"}
 
     def __init__(self):
         self.compressor = MahaCompression()
@@ -169,36 +172,36 @@ class LogSentinel:
         line_upper = line.upper()
         for level in self.CRITICAL_LEVELS:
             if level in line_upper:
-                return 'CRITICAL'
+                return "CRITICAL"
         for level in self.ACTION_LEVELS:
             if level in line_upper:
-                return 'ACTION'
+                return "ACTION"
         for level in self.NOISE_LEVELS:
             if level in line_upper:
-                return 'NOISE'
+                return "NOISE"
         # No explicit level - use heuristics
-        if 'ERROR' in line_upper or 'FAIL' in line_upper or 'EXCEPTION' in line_upper:
-            return 'CRITICAL'
-        if 'WARN' in line_upper:
-            return 'ACTION'
-        return 'NOISE'  # Default: noise
+        if "ERROR" in line_upper or "FAIL" in line_upper or "EXCEPTION" in line_upper:
+            return "CRITICAL"
+        if "WARN" in line_upper:
+            return "ACTION"
+        return "NOISE"  # Default: noise
 
     def analyze(self, logs: list[str]) -> SentinelResult:
         """Analyze logs and extract insights."""
         start_time = time.perf_counter()
 
-        total_bytes = sum(len(line.encode('utf-8')) for line in logs)
+        total_bytes = sum(len(line.encode("utf-8")) for line in logs)
 
-        tamas_lines = []   # Noise (DEBUG/TRACE) - DISCARD
-        rajas_lines = []   # Warnings (WARN/INFO) - FLAG
+        tamas_lines = []  # Noise (DEBUG/TRACE) - DISCARD
+        rajas_lines = []  # Warnings (WARN/INFO) - FLAG
         sattva_lines = []  # Critical (ERROR/FATAL) - EXTRACT
 
         # Classify each line by log level (fast path)
         for line in logs:
             level = self._detect_log_level(line)
-            if level == 'NOISE':
+            if level == "NOISE":
                 tamas_lines.append(line)
-            elif level == 'ACTION':
+            elif level == "ACTION":
                 rajas_lines.append(line)
             else:  # CRITICAL
                 sattva_lines.append(line)
@@ -209,7 +212,7 @@ class LogSentinel:
         end_time = time.perf_counter()
         processing_time = (end_time - start_time) * 1000
 
-        output_bytes = len('\n'.join(insights).encode('utf-8'))
+        output_bytes = len("\n".join(insights).encode("utf-8"))
         compression_ratio = total_bytes / max(output_bytes, 1)
 
         return SentinelResult(
@@ -223,11 +226,7 @@ class LogSentinel:
             processing_time_ms=processing_time,
         )
 
-    def _extract_insights(
-        self,
-        critical_lines: list[str],
-        warning_lines: list[str]
-    ) -> list[str]:
+    def _extract_insights(self, critical_lines: list[str], warning_lines: list[str]) -> list[str]:
         """Extract deduplicated, actionable insights."""
         import re
 
@@ -238,18 +237,18 @@ class LogSentinel:
         def normalize_pattern(msg: str) -> str:
             """Aggressive normalization: remove all IDs, numbers, hex, UUIDs."""
             # Remove hex addresses (0x...)
-            msg = re.sub(r'0x[0-9a-fA-F]+', '0x###', msg)
+            msg = re.sub(r"0x[0-9a-fA-F]+", "0x###", msg)
             # Remove UUIDs
-            msg = re.sub(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', 'UUID', msg)
+            msg = re.sub(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}", "UUID", msg)
             # Remove numbers (IDs, ports, etc.)
-            msg = re.sub(r'\d+', '#', msg)
+            msg = re.sub(r"\d+", "#", msg)
             # Remove IP addresses
-            msg = re.sub(r'#\.#\.#\.#', 'IP', msg)
+            msg = re.sub(r"#\.#\.#\.#", "IP", msg)
             return msg
 
         # Count patterns in critical lines
         for line in critical_lines:
-            parts = line.split(']', 1)
+            parts = line.split("]", 1)
             if len(parts) > 1:
                 msg = parts[1].strip()
                 pattern = normalize_pattern(msg)
@@ -257,7 +256,7 @@ class LogSentinel:
 
         # Process critical lines - deduplicate and add counts
         for line in critical_lines:
-            parts = line.split(']', 1)
+            parts = line.split("]", 1)
             if len(parts) > 1:
                 msg = parts[1].strip()
                 pattern = normalize_pattern(msg)
@@ -272,7 +271,7 @@ class LogSentinel:
         # Count warning patterns
         warning_pattern_counts: dict[str, int] = {}
         for line in warning_lines:
-            parts = line.split(']', 1)
+            parts = line.split("]", 1)
             if len(parts) > 1:
                 msg = parts[1].strip()
                 pattern = normalize_pattern(msg)
@@ -325,7 +324,9 @@ def main():
     print(f"  INPUT:  {result.total_lines:,} lines ({result.total_bytes / 1024 / 1024:.2f} MB)")
     print(f"  OUTPUT: {len(result.extracted_insights)} insights ({len(''.join(result.extracted_insights))} bytes)")
     print(f"  COMPRESSION: {result.compression_ratio:,.0f}x")
-    print(f"  TIME: {result.processing_time_ms:.0f}ms ({result.total_lines / result.processing_time_ms * 1000:.0f} lines/sec)")
+    print(
+        f"  TIME: {result.processing_time_ms:.0f}ms ({result.total_lines / result.processing_time_ms * 1000:.0f} lines/sec)"
+    )
     print()
 
     # The key metric
@@ -337,13 +338,15 @@ def main():
     gpt4_cost_per_1m_tokens = 30.0  # $30 per 1M input tokens
     tokens_estimate = result.total_bytes / 4  # ~4 chars per token
     raw_cost = (tokens_estimate / 1_000_000) * gpt4_cost_per_1m_tokens
-    compressed_tokens = len('\n'.join(result.extracted_insights)) / 4
+    compressed_tokens = len("\n".join(result.extracted_insights)) / 4
     compressed_cost = (compressed_tokens / 1_000_000) * gpt4_cost_per_1m_tokens
 
     print("  COST COMPARISON (GPT-4 pricing):")
     print(f"    Raw logs to LLM:        ${raw_cost:.2f}")
     print(f"    Compressed insights:    ${compressed_cost:.4f}")
-    print(f"    SAVINGS:                ${raw_cost - compressed_cost:.2f} ({(1 - compressed_cost/raw_cost) * 100:.1f}%)")
+    print(
+        f"    SAVINGS:                ${raw_cost - compressed_cost:.2f} ({(1 - compressed_cost / raw_cost) * 100:.1f}%)"
+    )
     print()
 
 

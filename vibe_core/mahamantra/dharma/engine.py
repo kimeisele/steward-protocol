@@ -26,13 +26,14 @@ from vibe_core.mahamantra.dharma.components.shabda import ShabdaEngine, Vibratio
 from typing import List
 from vibe_core.mahamantra.protocols.dharma_protocol import DharmaProtocol, SwarupaData, FractalNodeData
 
+
 class DharmaEngine:
     """
     The Unified Facade for Mahamantra Research & Execution.
     Implements: DharmaProtocol
     Singleton-style usage recommended.
     """
-    
+
     def __init__(self):
         self._linguist = Linguist()
         self._layers = LayerEngine()
@@ -49,7 +50,7 @@ class DharmaEngine:
     def get_layer(self, attractor: int) -> List[int]:
         """Project the Mantra into a dimension (e.g. 16, 49, 108)."""
         return self._layers.unfold(attractor)
-        
+
     def get_layer_signature(self, attractor: int) -> str:
         """Get ASCII sparkline of a layer."""
         return self._layers.signature(attractor)
@@ -58,7 +59,7 @@ class DharmaEngine:
     def analyze_field(self) -> List[int]:
         """Get Field Strengths of the 4 Quarters."""
         return self._matrix.analyze_quarters()
-        
+
     def get_spark(self, q1: int, q2: int) -> int:
         """Get Interaction Spark between two quarters (0-3)."""
         return self._matrix.interact(q1, q2)
@@ -72,19 +73,19 @@ class DharmaEngine:
     def get_vibration(self, phoneme: str) -> VibrationSignature | None:
         """Get VibrationSignature for a Sanskrit phoneme."""
         return self._shabda.get_signature(phoneme)
-        
+
     def freq_to_id(self, hz: float) -> int:
         """Convert Hz to Mahamantra Vibration ID."""
         return self._shabda.freq_to_id(hz)
-        
+
     def id_to_freq(self, vib_id: int) -> float:
         """Convert Vibration ID back to Hz."""
         return self._shabda.id_to_freq(vib_id)
-        
+
     def word_alignment(self, word: str) -> float:
         """Calculate Mahamantra alignment of a word (0.0 - 1.0)."""
         return self._shabda.word_alignment(word)
 
+
 # Singleton Instance
 dharma: DharmaProtocol = DharmaEngine()
-

@@ -39,11 +39,11 @@ class _MockComponent:
 
 class _NoTattvaComponent:
     """A component WITHOUT __tattva__."""
+
     pass
 
 
 class TestTattvaRegistryBasics:
-
     def test_singleton(self):
         r1 = get_registry()
         r2 = get_registry()
@@ -82,7 +82,6 @@ class TestTattvaRegistryBasics:
 
 
 class TestTattvaRegistryQuery:
-
     def test_get_by_name(self):
         reg = get_registry()
         comp = _MockComponent("Flute", "Rhythm")
@@ -130,7 +129,6 @@ class TestTattvaRegistryQuery:
 
 
 class TestTattvaRegistryIntrospection:
-
     def test_iterate(self):
         reg = get_registry()
         reg.register("a", _MockComponent("A", "X"))

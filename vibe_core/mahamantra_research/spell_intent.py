@@ -46,6 +46,7 @@ from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM
 # TEXT → RAMA COORDS (the bridge from Latin text to Mahamantra space)
 # =============================================================================
 
+
 def text_to_rama_coords(text: str) -> Tuple[int, ...]:
     """
     Convert arbitrary text to RAMA coordinates (0-48).
@@ -62,6 +63,7 @@ def text_to_rama_coords(text: str) -> Tuple[int, ...]:
 # =============================================================================
 # SPELL-BASED INTENT — text as program through the synth
 # =============================================================================
+
 
 def spell_intent(text: str, seed: int = 0) -> dict:
     """
@@ -88,6 +90,7 @@ def spell_intent(text: str, seed: int = 0) -> dict:
 
     # Basin: where does this converge?
     from vibe_core.mahamantra.substrate.algorithm.maha import MahaAlgorithm16
+
     algo = MahaAlgorithm16()
     basin_val = final % MAHA_QUANTUM
     for _ in range(100):
@@ -100,7 +103,9 @@ def spell_intent(text: str, seed: int = 0) -> dict:
     h, k, r = 0.0, 0.0, 0.0
     for c in coords:
         ch, ck, cr = COORD_HKR[c]
-        h += ch; k += ck; r += cr
+        h += ch
+        k += ck
+        r += cr
     n = len(coords)
     hkr = (h / n, k / n, r / n)
 
@@ -133,24 +138,27 @@ CORPUS = [
     ("clean", "def add(x: int, y: int) -> int:\n    return x + y"),
     ("clean", "def greet(name: str) -> str:\n    return f'Hello, {name}'"),
     ("clean", "class Config:\n    def __init__(self, path: Path) -> None:\n        self.path = path"),
-    ("clean", "from typing import Dict\ndef load(path: str) -> Dict[str, str]:\n    return json.loads(Path(path).read_text())"),
+    (
+        "clean",
+        "from typing import Dict\ndef load(path: str) -> Dict[str, str]:\n    return json.loads(Path(path).read_text())",
+    ),
     ("clean", "def validate(data: dict) -> bool:\n    return 'name' in data and 'id' in data"),
     ("clean", "import logging\nlogger = logging.getLogger(__name__)"),
-
     # BROKEN CODE
     ("broken", "from typing import Any\ndef f(x: Any) -> Any:\n    return x"),
     ("broken", "def load(p):\n    try:\n        return open(p).read()\n    except:\n        pass"),
     ("broken", "from typing import *\ndef g(a, b, c):\n    return a"),
-    ("broken", "def h(x: Any, y: Any, z: Any) -> Any:\n    try:\n        return x + y + z\n    except Exception:\n        pass"),
+    (
+        "broken",
+        "def h(x: Any, y: Any, z: Any) -> Any:\n    try:\n        return x + y + z\n    except Exception:\n        pass",
+    ),
     ("broken", "import os, sys, json, re, pathlib\nfrom typing import Any\nx: Any = None"),
     ("broken", "class Bad:\n    def do(self, thing):\n        try: return eval(thing)\n        except: return None"),
-
     # HEALTHY TEXT
     ("healthy", "All services healthy. Deployment complete."),
     ("healthy", "Tests passed. Coverage at 95 percent. No regressions."),
     ("healthy", "System stable for 30 days. Zero incidents."),
     ("healthy", "Performance optimized. Latency reduced by 40 percent."),
-
     # FAILING TEXT
     ("failing", "Connection refused. Retry failed after 5 attempts."),
     ("failing", "Out of memory. Process killed."),
@@ -171,24 +179,30 @@ if __name__ == "__main__":
 
     results_by_type: Dict[str, List[dict]] = {}
 
-    print(f"\n  {'#':>2}  {'Type':>8}  {'Final':>6}  {'Pos':>3}  {'Q':>8}  {'Basin':>5}  "
-          f"{'H%':>5}  {'K%':>5}  {'R%':>5}  {'OpH':>4}  {'OpK':>4}  {'OpR':>4}  Text")
-    print(f"  {'-'*2}  {'-'*8}  {'-'*6}  {'-'*3}  {'-'*8}  {'-'*5}  "
-          f"{'-'*5}  {'-'*5}  {'-'*5}  {'-'*4}  {'-'*4}  {'-'*4}  {'-'*30}")
+    print(
+        f"\n  {'#':>2}  {'Type':>8}  {'Final':>6}  {'Pos':>3}  {'Q':>8}  {'Basin':>5}  "
+        f"{'H%':>5}  {'K%':>5}  {'R%':>5}  {'OpH':>4}  {'OpK':>4}  {'OpR':>4}  Text"
+    )
+    print(
+        f"  {'-' * 2}  {'-' * 8}  {'-' * 6}  {'-' * 3}  {'-' * 8}  {'-' * 5}  "
+        f"{'-' * 5}  {'-' * 5}  {'-' * 5}  {'-' * 4}  {'-' * 4}  {'-' * 4}  {'-' * 30}"
+    )
 
     for i, (label, text) in enumerate(CORPUS):
         r = spell_intent(text)
         results_by_type.setdefault(label, []).append(r)
 
         text_short = text.replace("\n", " ")[:30]
-        print(f"  {i+1:>2}  {label:>8}  {r['final_value']:>6}  {r['position']:>3}  {r['quarter_name']:>8}  {r['basin']:>5}  "
-              f"{r['hkr'][0]:>5.2f}  {r['hkr'][1]:>5.2f}  {r['hkr'][2]:>5.2f}  "
-              f"{r['op_dist']['H']:>4.2f}  {r['op_dist']['K']:>4.2f}  {r['op_dist']['R']:>4.2f}  {text_short}")
+        print(
+            f"  {i + 1:>2}  {label:>8}  {r['final_value']:>6}  {r['position']:>3}  {r['quarter_name']:>8}  {r['basin']:>5}  "
+            f"{r['hkr'][0]:>5.2f}  {r['hkr'][1]:>5.2f}  {r['hkr'][2]:>5.2f}  "
+            f"{r['op_dist']['H']:>4.2f}  {r['op_dist']['K']:>4.2f}  {r['op_dist']['R']:>4.2f}  {text_short}"
+        )
 
     # === CLUSTER ANALYSIS ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  CLUSTER ANALYSIS — spell_cycle attractors by type")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     for label in ["clean", "broken", "healthy", "failing"]:
         rs = results_by_type.get(label, [])
@@ -218,9 +232,9 @@ if __name__ == "__main__":
         print(f"    Op dist:      H={avg_h:.3f}  K={avg_k:.3f}  R={avg_r:.3f}")
 
     # === GOOD vs BAD separation ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  GOOD vs BAD — Does spell_cycle separate?")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     good = results_by_type.get("clean", []) + results_by_type.get("healthy", [])
     bad = results_by_type.get("broken", []) + results_by_type.get("failing", [])
@@ -232,10 +246,14 @@ if __name__ == "__main__":
     good_basins = set(r["basin"] for r in good)
     bad_basins = set(r["basin"] for r in bad)
 
-    print(f"\n  Good finals:    avg={sum(good_finals)/len(good_finals):.1f}  range=[{min(good_finals)}, {max(good_finals)}]")
-    print(f"  Bad finals:     avg={sum(bad_finals)/len(bad_finals):.1f}  range=[{min(bad_finals)}, {max(bad_finals)}]")
-    print(f"  Good positions: avg={sum(good_positions)/len(good_positions):.1f}  {good_positions}")
-    print(f"  Bad positions:  avg={sum(bad_positions)/len(bad_positions):.1f}  {bad_positions}")
+    print(
+        f"\n  Good finals:    avg={sum(good_finals) / len(good_finals):.1f}  range=[{min(good_finals)}, {max(good_finals)}]"
+    )
+    print(
+        f"  Bad finals:     avg={sum(bad_finals) / len(bad_finals):.1f}  range=[{min(bad_finals)}, {max(bad_finals)}]"
+    )
+    print(f"  Good positions: avg={sum(good_positions) / len(good_positions):.1f}  {good_positions}")
+    print(f"  Bad positions:  avg={sum(bad_positions) / len(bad_positions):.1f}  {bad_positions}")
     print(f"  Good basins:    {sorted(good_basins)}")
     print(f"  Bad basins:     {sorted(bad_basins)}")
     print(f"  Basin overlap:  {good_basins & bad_basins}")
@@ -250,21 +268,21 @@ if __name__ == "__main__":
 
     print(f"\n  Good op dist:   H={good_h:.4f}  K={good_k:.4f}  R={good_r:.4f}")
     print(f"  Bad op dist:    H={bad_h:.4f}  K={bad_k:.4f}  R={bad_r:.4f}")
-    print(f"  Delta:          H={good_h-bad_h:+.4f}  K={good_k-bad_k:+.4f}  R={good_r-bad_r:+.4f}")
+    print(f"  Delta:          H={good_h - bad_h:+.4f}  K={good_k - bad_k:+.4f}  R={good_r - bad_r:+.4f}")
 
-    op_dist_distance = ((good_h-bad_h)**2 + (good_k-bad_k)**2 + (good_r-bad_r)**2) ** 0.5
+    op_dist_distance = ((good_h - bad_h) ** 2 + (good_k - bad_k) ** 2 + (good_r - bad_r) ** 2) ** 0.5
     print(f"  Op dist distance: {op_dist_distance:.4f}")
 
     # === FINAL VERDICT ===
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print("  VERDICT")
-    print(f"{'='*100}")
+    print(f"{'=' * 100}")
 
     # Check if finals separate
     good_mean = sum(good_finals) / len(good_finals)
     bad_mean = sum(bad_finals) / len(bad_finals)
-    good_var = sum((f - good_mean)**2 for f in good_finals) / len(good_finals)
-    bad_var = sum((f - bad_mean)**2 for f in bad_finals) / len(bad_finals)
+    good_var = sum((f - good_mean) ** 2 for f in good_finals) / len(good_finals)
+    bad_var = sum((f - bad_mean) ** 2 for f in bad_finals) / len(bad_finals)
     pooled_std = ((good_var + bad_var) / 2) ** 0.5
 
     if pooled_std > 0:

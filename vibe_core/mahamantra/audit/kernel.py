@@ -64,8 +64,7 @@ class AuditKernel:
         self._registry.clear()
         self._dispatcher.run_all()
         count = self._registry.count
-        logger.info("Audit complete: %d findings from %d auditors",
-                     count, len(self._dispatcher.auditors))
+        logger.info("Audit complete: %d findings from %d auditors", count, len(self._dispatcher.auditors))
         return count
 
     def run_by_position(self, position: int) -> int:
@@ -115,4 +114,3 @@ class AuditKernel:
 
 
 __all__ = ["AuditKernel"]
-

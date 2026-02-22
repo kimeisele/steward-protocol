@@ -39,6 +39,7 @@ from vibe_core.protocols.naga.cli_command import NagaCommandBase, NagaCommandRes
 from vibe_core.protocols.substrate import MantraOpCode
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 

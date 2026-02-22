@@ -21,6 +21,7 @@ __genesis__ = "0xa4fcb268"  # GenesisByte: parampara % 37 == 0
 
 __all__: list[str] = []
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

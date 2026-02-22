@@ -50,7 +50,7 @@ class StateVector(NamedTuple):
     prana_level: total antaranga prana from engine resonance stage
     """
 
-    guna: int = 1             # Default RAJAS (active)
+    guna: int = 1  # Default RAJAS (active)
     entry_count: int = 0
     boot_count: int = 0
     uptime_ratio: float = 0.0

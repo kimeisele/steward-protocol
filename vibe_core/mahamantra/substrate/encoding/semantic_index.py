@@ -62,6 +62,7 @@ from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL
 # =============================================================================
 
 from vibe_core.mahamantra.substrate._paths import DATA_DIR
+
 _DATA_DIR: Final[Path] = DATA_DIR
 _LEXICON_PATH: Final[Path] = _DATA_DIR / "rama_lexicon.json"
 
@@ -70,13 +71,21 @@ _LEXICON_PATH: Final[Path] = _DATA_DIR / "rama_lexicon.json"
 # WORD RECORD (lightweight, no WordEntry dependency)
 # =============================================================================
 
+
 class LexiconWord:
     """A word from the RAMA Lexicon with pre-computed 4D properties."""
 
     __slots__ = (
-        "sanskrit", "meanings", "coords", "packed_hex",
-        "first_coord", "element_walk", "varga_walk",
-        "shruti_pattern", "harmonic_walk", "basin_walk",
+        "sanskrit",
+        "meanings",
+        "coords",
+        "packed_hex",
+        "first_coord",
+        "element_walk",
+        "varga_walk",
+        "shruti_pattern",
+        "harmonic_walk",
+        "basin_walk",
         "phoneme_attractor_walk",
     )
 
@@ -123,6 +132,7 @@ class LexiconWord:
 # =============================================================================
 # SEMANTIC INDEX
 # =============================================================================
+
 
 class SemanticIndex:
     """
@@ -172,12 +182,14 @@ class SemanticIndex:
             if any(c < 0 or c >= VARNAMALA_TOTAL for c in coords):
                 continue
 
-            words.append(LexiconWord(
-                sanskrit=entry["word"],
-                meanings=tuple(entry.get("meanings", [])),
-                coords=coords,
-                packed_hex=packed_hex,
-            ))
+            words.append(
+                LexiconWord(
+                    sanskrit=entry["word"],
+                    meanings=tuple(entry.get("meanings", [])),
+                    coords=coords,
+                    packed_hex=packed_hex,
+                )
+            )
 
         self._words = tuple(words)
         self._build_indices()
@@ -385,11 +397,21 @@ class LexiconVectorCache:
     """
 
     __slots__ = (
-        '_words', '_n',
-        'element_hist_norm', 'varga_hist_norm',
-        'harmonic_bitmask', 'shruti_bitmask', 'shruti_ratio', 'coord_count',
-        'basin_set_bitmask', 'basin_hist', 'basin_hist_mag',
-        'hkr_color', 'pa_hist', 'pa_hist_mag', 'dominant_element',
+        "_words",
+        "_n",
+        "element_hist_norm",
+        "varga_hist_norm",
+        "harmonic_bitmask",
+        "shruti_bitmask",
+        "shruti_ratio",
+        "coord_count",
+        "basin_set_bitmask",
+        "basin_hist",
+        "basin_hist_mag",
+        "hkr_color",
+        "pa_hist",
+        "pa_hist_mag",
+        "dominant_element",
     )
 
     def __init__(self, words: Tuple[LexiconWord, ...]) -> None:
@@ -437,7 +459,7 @@ class LexiconVectorCache:
             # Harmonic bitmask (uint64 — values 0..48 fit in 49 bits)
             hm = 0
             for c in coords:
-                hm |= (1 << COORD_HARMONIC[c])
+                hm |= 1 << COORD_HARMONIC[c]
             self.harmonic_bitmask[i] = hm
 
             # Shruti bitmask + ratio
@@ -445,7 +467,7 @@ class LexiconVectorCache:
             shruti_count = 0
             for j, c in enumerate(coords):
                 if IS_SHRUTI[c]:
-                    sm |= (1 << j)
+                    sm |= 1 << j
                     shruti_count += 1
             self.shruti_bitmask[i] = sm
             self.shruti_ratio[i] = shruti_count * inv_nc
@@ -456,7 +478,7 @@ class LexiconVectorCache:
             for c in coords:
                 b = COORD_BASIN[c]
                 bi = BASIN_INDEX[b]
-                bsm |= (1 << bi)
+                bsm |= 1 << bi
                 bh[bi] += 1
             self.basin_set_bitmask[i] = bsm
             self.basin_hist[i] = tuple(bh)
@@ -537,8 +559,10 @@ def semantic_query(
 ) -> List[LexiconWord]:
     """Multi-dimensional semantic query over the Gita vocabulary."""
     return get_index().by_4d_query(
-        element=element, varga=varga,
-        is_shruti=is_shruti, harmonic_target=harmonic_target,
+        element=element,
+        varga=varga,
+        is_shruti=is_shruti,
+        harmonic_target=harmonic_target,
     )
 
 

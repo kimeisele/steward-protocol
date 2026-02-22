@@ -21,8 +21,9 @@ KEIN DUPLIKAT MEHR. NUR DIESE DATEI.
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===
@@ -114,7 +115,7 @@ class MantraProtocol(ABC):
     def get_resonance(cls, phrase: str) -> int:
         """
         Calculate resonance score for a given phrase.
-        
+
         Returns: int in range [0, 21600] (COSMIC_FRAME scaling)
 
         HARMONIC COMPUTATION (not discrete 1.0/0.5/0.0):
@@ -479,8 +480,8 @@ class ProtocolRegistry:
             if existing == protocol_class:
                 return protocol_class
             if existing.__name__ == protocol_class.__name__ and existing.__module__ == protocol_class.__module__:
-                 return protocol_class
-                 
+                return protocol_class
+
             raise ValueError(
                 f"Position {idx} already registered to {existing.__name__}, cannot register {protocol_class.__name__}"
             )

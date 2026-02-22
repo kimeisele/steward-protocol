@@ -16,11 +16,28 @@ NO SPECULATION. PURE MATH.
 """
 
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS, TRINITY, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT,
-    PANCHA, HALVES, SEVEN, TEN, QUARTERS, KSETRAJNA,
-    SHARANAGATI, NAVA, MAHAJANA_COUNT, MALA, PARAMPARA,
-    POSITION_SUM_HARE, POSITION_SUM_KRISHNA, POSITION_SUM_RAMA,
-    MAHAMANTRA_WORD_PATTERN, KSHETRA, AKSARA_COUNT,
+    WORDS,
+    TRINITY,
+    HARE_COUNT,
+    KRISHNA_COUNT,
+    RAMA_COUNT,
+    PANCHA,
+    HALVES,
+    SEVEN,
+    TEN,
+    QUARTERS,
+    KSETRAJNA,
+    SHARANAGATI,
+    NAVA,
+    MAHAJANA_COUNT,
+    MALA,
+    PARAMPARA,
+    POSITION_SUM_HARE,
+    POSITION_SUM_KRISHNA,
+    POSITION_SUM_RAMA,
+    MAHAMANTRA_WORD_PATTERN,
+    KSHETRA,
+    AKSARA_COUNT,
 )
 
 TARGET = 13
@@ -38,13 +55,13 @@ print("1. AXIOM COMBINATIONS (the 7 axioms)")
 print("-" * 50)
 
 axioms = {
-    "WORDS": WORDS,           # 16
-    "TRINITY": TRINITY,       # 3
-    "HARE_COUNT": HARE_COUNT, # 8
+    "WORDS": WORDS,  # 16
+    "TRINITY": TRINITY,  # 3
+    "HARE_COUNT": HARE_COUNT,  # 8
     "KRISHNA_COUNT": KRISHNA_COUNT,  # 4
-    "RAMA_COUNT": RAMA_COUNT, # 4
-    "PANCHA": PANCHA,         # 5
-    "HALVES": HALVES,         # 2
+    "RAMA_COUNT": RAMA_COUNT,  # 4
+    "PANCHA": PANCHA,  # 5
+    "HALVES": HALVES,  # 2
 }
 
 # Sum of two axioms
@@ -76,14 +93,14 @@ print("\n2. DERIVED CONSTANT COMBINATIONS")
 print("-" * 50)
 
 derived = {
-    "SEVEN": SEVEN,               # 7
-    "TEN": TEN,                   # 10
-    "QUARTERS": QUARTERS,         # 4
-    "KSETRAJNA": KSETRAJNA,       # 1
-    "SHARANAGATI": SHARANAGATI,   # 6
-    "NAVA": NAVA,                 # 9
-    "MAHAJANA": MAHAJANA_COUNT,   # 12
-    "KSHETRA": KSHETRA,           # 24
+    "SEVEN": SEVEN,  # 7
+    "TEN": TEN,  # 10
+    "QUARTERS": QUARTERS,  # 4
+    "KSETRAJNA": KSETRAJNA,  # 1
+    "SHARANAGATI": SHARANAGATI,  # 6
+    "NAVA": NAVA,  # 9
+    "MAHAJANA": MAHAJANA_COUNT,  # 12
+    "KSHETRA": KSHETRA,  # 24
 }
 
 all_constants = {**axioms, **derived}
@@ -113,6 +130,7 @@ for d in found_diffs:
 print("\n3. FIBONACCI ANALYSIS")
 print("-" * 50)
 
+
 def fib(n):
     if n <= 1:
         return n
@@ -120,6 +138,7 @@ def fib(n):
     for _ in range(n):
         a, b = b, a + b
     return a
+
 
 print("Fibonacci sequence:")
 for i in range(15):

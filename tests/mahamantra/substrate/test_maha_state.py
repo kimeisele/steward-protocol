@@ -558,10 +558,7 @@ class TestExports:
         from vibe_core.mahamantra.substrate.maha_state import __all__
 
         for name in __all__:
-            assert hasattr(
-                __import__("vibe_core.mahamantra.substrate.maha_state", fromlist=[name]),
-                name
-            )
+            assert hasattr(__import__("vibe_core.mahamantra.substrate.maha_state", fromlist=[name]), name)
 
     def test_substrate_exports(self):
         from vibe_core.mahamantra.substrate import (
@@ -570,6 +567,7 @@ class TestExports:
             get_maha_state,
             pierce,
         )
+
         assert MahaState is not None
         assert StateEntry is not None
 
@@ -580,4 +578,5 @@ class TestExports:
             get_maha_state,
             pierce,
         )
+
         assert MahaState is not None

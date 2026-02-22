@@ -17,8 +17,19 @@ The pattern repeats at ALL levels.
 SSOT: Diese Datei ist die Quelle für FractalLevel.
       protocols/substrate/mantra/routing.py IMPORTIERT von hier.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, MALA, PANCHA, QUALITIES, QUARTERS, SHARANAGATI, TRINITY, WORDS)
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    KSETRAJNA,
+    MALA,
+    PANCHA,
+    QUALITIES,
+    QUARTERS,
+    SHARANAGATI,
+    TRINITY,
+    WORDS,
+)
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===

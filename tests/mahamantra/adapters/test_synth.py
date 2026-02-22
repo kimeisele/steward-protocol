@@ -59,13 +59,28 @@ class TestPattern:
     def test_pattern_quarters(self):
         """PATTERN has correct quarter structure."""
         # Q1: H K H K (seeking Krishna)
-        assert PATTERN[0:4] == (MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_KRISHNA)
+        assert PATTERN[0:4] == (
+            MAHAMANTRA_NAME_HARE,
+            MAHAMANTRA_NAME_KRISHNA,
+            MAHAMANTRA_NAME_HARE,
+            MAHAMANTRA_NAME_KRISHNA,
+        )
         # Q2: K K H H (Krishna responds)
-        assert PATTERN[4:8] == (MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_KRISHNA, MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_HARE)
+        assert PATTERN[4:8] == (
+            MAHAMANTRA_NAME_KRISHNA,
+            MAHAMANTRA_NAME_KRISHNA,
+            MAHAMANTRA_NAME_HARE,
+            MAHAMANTRA_NAME_HARE,
+        )
         # Q3: H R H R (seeking Rama)
         assert PATTERN[8:12] == (MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_RAMA, MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_RAMA)
         # Q4: R R H H (Rama responds)
-        assert PATTERN[12:16] == (MAHAMANTRA_NAME_RAMA, MAHAMANTRA_NAME_RAMA, MAHAMANTRA_NAME_HARE, MAHAMANTRA_NAME_HARE)
+        assert PATTERN[12:16] == (
+            MAHAMANTRA_NAME_RAMA,
+            MAHAMANTRA_NAME_RAMA,
+            MAHAMANTRA_NAME_HARE,
+            MAHAMANTRA_NAME_HARE,
+        )
 
     def test_hare_count_in_pattern(self):
         """PATTERN has 8 HAREs."""

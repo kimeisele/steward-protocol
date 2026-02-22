@@ -315,12 +315,14 @@ class TestMahamantraSingletonPipeline:
     def test_pipeline_accessible(self):
         """mahamantra.pipeline should be accessible."""
         from vibe_core.mahamantra import mahamantra
-        assert hasattr(mahamantra, 'pipeline')
+
+        assert hasattr(mahamantra, "pipeline")
         assert mahamantra.pipeline is not None
 
     def test_pipeline_execute_works(self):
         """mahamantra.pipeline.execute() should work."""
         from vibe_core.mahamantra import mahamantra
+
         mahamantra.pipeline.reset()
         result = mahamantra.pipeline.execute("singleton test")
         assert isinstance(result, PipelineResult)

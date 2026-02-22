@@ -11,7 +11,8 @@ All errors must be structured so an AI operator can:
 
 See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
 """
-from vibe_core.mahamantra.protocols._seed import (QUARTERS)
+
+from vibe_core.mahamantra.protocols._seed import QUARTERS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"

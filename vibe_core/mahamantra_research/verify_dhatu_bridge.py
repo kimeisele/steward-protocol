@@ -20,11 +20,20 @@ This bridge removes the cast to reveal the underlying vibration.
 import re
 from vibe_core.mahamantra.substrate.semantic_index import get_index, LexiconWord
 from vibe_core.mahamantra.substrate.pancha_walk import (
-    COORD_ELEMENT, COORD_VARGA, COORD_HARMONIC, IS_SHRUTI,
+    COORD_ELEMENT,
+    COORD_VARGA,
+    COORD_HARMONIC,
+    IS_SHRUTI,
 )
 from vibe_core.mahamantra.adapters.synth import MahaSynth
 from vibe_core.mahamantra.protocols._seed import (
-    POSITION_SUM_KRISHNA, KSETRAJNA, TRINITY, NAVA, SEVEN, WORDS, QUARTERS,
+    POSITION_SUM_KRISHNA,
+    KSETRAJNA,
+    TRINITY,
+    NAVA,
+    SEVEN,
+    WORDS,
+    QUARTERS,
 )
 
 KRISHNA = POSITION_SUM_KRISHNA  # 17
@@ -57,7 +66,6 @@ DHATU_BRIDGE = {
     "invalid": ["wrong", "fault", "illusion"],
     "timeout": ["death", "end", "loss"],
     "abort": ["death", "end", "destroy"],
-
     # Warning/Caution domain -> bhaya, sāvadhāna
     "warning": ["fear", "danger", "distress"],
     "warn": ["fear", "danger"],
@@ -66,7 +74,6 @@ DHATU_BRIDGE = {
     "slow": ["bondage", "material", "heavy"],
     "retry": ["again", "repeated"],
     "degraded": ["fall", "loss", "material"],
-
     # Success/Positive domain -> siddhi, vijaya
     "success": ["success", "victory", "perfect"],
     "succeeded": ["success", "victory"],
@@ -82,7 +89,6 @@ DHATU_BRIDGE = {
     "running": ["living", "engaged", "activities"],
     "active": ["living", "engaged", "activities"],
     "ready": ["fixed", "steady", "situated"],
-
     # Transcendental/Pure domain -> śuddha, divya
     "optimal": ["supreme", "perfect", "transcendental"],
     "unified": ["one", "supreme", "eternal"],
@@ -90,7 +96,6 @@ DHATU_BRIDGE = {
     "perfect": ["perfect", "supreme", "transcendental"],
     "pure": ["pure", "transcendental", "divine"],
     "achieved": ["success", "liberation", "transcendental"],
-
     # Action domain -> karma, kriyā
     "create": ["create", "birth", "manifest"],
     "delete": ["destroy", "death", "end"],
@@ -109,7 +114,6 @@ DHATU_BRIDGE = {
     "query": ["knowledge", "know", "see"],
     "execute": ["act", "perform", "work"],
     "fix": ["fix", "control", "steady"],
-
     # System domain
     "system": ["system", "nature", "material"],
     "database": ["knowledge", "material", "nature"],
@@ -128,7 +132,7 @@ idx._ensure_loaded()
 
 
 def tokenize(text):
-    return [w for w in re.findall(r'[a-zA-Z]+', text.lower()) if len(w) >= 2]
+    return [w for w in re.findall(r"[a-zA-Z]+", text.lower()) if len(w) >= 2]
 
 
 def english_to_sanskrit(text):
@@ -182,7 +186,7 @@ def compute_intent_from_sanskrit(words):
 
     # Collect ALL RAMA coords from resonating words (limit to top SEVEN)
     # Top 7 = SEVEN, the axiom number for effects
-    top_words = words[:SEVEN * 3]  # Take more, then use their coords
+    top_words = words[: SEVEN * 3]  # Take more, then use their coords
     all_coords = []
     for w in top_words:
         all_coords.extend(w.coords)
@@ -265,9 +269,11 @@ for text, expected, resonant, matched, intent in results:
     print(f"  Matched: {dict(matched)}")
     print(f"  Sanskrit: {len(resonant)} words -> {[w.sanskrit for w in resonant[:5]]}")
     if intent:
-        print(f"  Attractor={intent['attractor']} cat={intent['category_16']} q={intent['quarter']} "
-              f"rem17={intent['remnant_17']} energy={intent['energy']} "
-              f"({intent['n_coords']} coords from {intent['n_words']} words)")
+        print(
+            f"  Attractor={intent['attractor']} cat={intent['category_16']} q={intent['quarter']} "
+            f"rem17={intent['remnant_17']} energy={intent['energy']} "
+            f"({intent['n_coords']} coords from {intent['n_words']} words)"
+        )
     else:
         print(f"  NO RESONANCE")
     print(f"  Expected: {expected}")
@@ -288,11 +294,11 @@ for text, expected, resonant, matched, intent in results:
     if intent:
         q = intent["quarter"]
         got = gunas[q]
-        ok = (got == expected)
+        ok = got == expected
         if ok:
             correct += 1
         mark = "OK" if ok else "XX"
         print(f"  {mark}  q={q} got={got:>7} exp={expected:>6}  | {text[:50]}")
     else:
         print(f"  --  NO DATA  exp={expected:>6}  | {text[:50]}")
-print(f"\nQuarter accuracy: {correct}/{total} = {100*correct/total:.0f}%")
+print(f"\nQuarter accuracy: {correct}/{total} = {100 * correct / total:.0f}%")

@@ -49,11 +49,11 @@ Based on these findings, the Mahamantra naturally implies:
 LAYER 1: INTENT COMPUTATION (replace _classify_intent)
     Current:  text → keyword matching → 4 buckets
     Natural:  text → Shabda phonemes → spell_cycle → attractor position
-    
+
     The spell_cycle IS the intent classifier.
     Position in the 16-word grid = Quarter = Guna.
     No keywords. Pure computation.
-    
+
     Implementation: In MahaCompression._classify_intent(),
     replace keyword matching with spell_cycle-based position.
     The attractor's quarter IS the intent level.
@@ -61,35 +61,35 @@ LAYER 1: INTENT COMPUTATION (replace _classify_intent)
 LAYER 2: FRAGMENT ADDRESSING (extend MahaKernel)
     Current:  whole text → one seed → one address
     Natural:  text → AST fragments → each fragment gets its own address
-    
+
     A file is not one entity. It's a FIELD of addressed fragments.
     Each function, class, method, constant has its own Lotus position.
     The HolographicRouter already supports this (65K slots, O(1)).
-    
+
     Implementation: parse_file_to_fragments() + store in Lotus.
     The Lotus becomes the source of truth, not the filesystem.
 
 LAYER 3: NATURAL ORDERING (Mandala Score)
     Current:  files ordered by human convention
     Natural:  fragments ordered by Lotus address
-    
+
     The Mandala Score measures alignment between physical and natural order.
     Score 1.0 = perfect resonance. Score 0.0 = maximum disorder.
     Average is 0.537 — there's room for improvement.
-    
+
     Implementation: Mandala Score as a code quality metric.
     Not enforced, but visible. The developer can choose to align.
 
 LAYER 4: SELF-ORGANIZATION (the Mandala)
     Current:  static file structure, manual refactoring
     Natural:  fragments migrate to their natural Lotus position
-    
+
     When a fragment's Lotus address changes (because its code changed),
     the Mandala detects the misalignment and suggests migration.
     This is not automatic refactoring — it's AWARENESS of natural order.
-    
+
     Implementation: Mandala Score in CI/CD pipeline.
-    "Your file's Mandala Score dropped from 0.6 to 0.4 — 
+    "Your file's Mandala Score dropped from 0.6 to 0.4 —
      the Mantra suggests moving validate_config() before merge_configs()."
 
 =================================================================
@@ -171,7 +171,7 @@ from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM
 def spell_cycle_intent(text: str) -> str:
     """
     Compute intent from spell_cycle — the proposed replacement for keywords.
-    
+
     Returns: "suddha", "sattva", "rajas", or "tamas"
     """
     synth = MahaSynth(preset="quantum")
@@ -198,11 +198,16 @@ FINAL_CORPUS = [
     # Clean code
     ("clean", "def add(x: int, y: int) -> int:\n    return x + y"),
     ("clean", "class Config:\n    def __init__(self, path: Path) -> None:\n        self.path = path"),
-    ("clean", "from typing import Dict\ndef load(path: str) -> Dict[str, str]:\n    return json.loads(Path(path).read_text())"),
+    (
+        "clean",
+        "from typing import Dict\ndef load(path: str) -> Dict[str, str]:\n    return json.loads(Path(path).read_text())",
+    ),
     ("clean", "def validate(data: dict) -> bool:\n    return 'name' in data and 'id' in data"),
     ("clean", "import logging\nlogger = logging.getLogger(__name__)"),
-    ("clean", "async def fetch(url: str, timeout: int = 30) -> bytes:\n    async with aiohttp.ClientSession() as s:\n        return await s.get(url)"),
-    
+    (
+        "clean",
+        "async def fetch(url: str, timeout: int = 30) -> bytes:\n    async with aiohttp.ClientSession() as s:\n        return await s.get(url)",
+    ),
     # Broken code
     ("broken", "from typing import Any\ndef f(x: Any) -> Any:\n    return x"),
     ("broken", "def load(p):\n    try:\n        return open(p).read()\n    except:\n        pass"),
@@ -210,12 +215,10 @@ FINAL_CORPUS = [
     ("broken", "class Bad:\n    def do(self, thing):\n        try: return eval(thing)\n        except: return None"),
     ("broken", "import os, sys, json, re, pathlib\nfrom typing import Any\nx: Any = None"),
     ("broken", "def hack(x):\n    exec(x)\n    return globals()"),
-    
     # Healthy text
     ("healthy", "All services healthy. Deployment complete."),
     ("healthy", "Tests passed. Coverage at 95 percent."),
     ("healthy", "System stable for 30 days. Zero incidents."),
-    
     # Failing text
     ("failing", "Connection refused. Retry failed."),
     ("failing", "Out of memory. Process killed."),
@@ -241,7 +244,7 @@ if __name__ == "__main__":
     total = 0
 
     print(f"\n  {'#':>2}  {'Type':>8}  {'Spell':>8}  {'Keyword':>8}  {'S✓':>2}  {'K✓':>2}  Text")
-    print(f"  {'-'*2}  {'-'*8}  {'-'*8}  {'-'*8}  {'-'*2}  {'-'*2}  {'-'*40}")
+    print(f"  {'-' * 2}  {'-' * 8}  {'-' * 8}  {'-' * 8}  {'-' * 2}  {'-' * 2}  {'-' * 40}")
 
     for i, (label, text) in enumerate(FINAL_CORPUS):
         s_intent = spell_cycle_intent(text)
@@ -251,18 +254,22 @@ if __name__ == "__main__":
         s_ok = s_intent in expected
         k_ok = k_intent in expected
 
-        if s_ok: spell_correct += 1
-        if k_ok: keyword_correct += 1
+        if s_ok:
+            spell_correct += 1
+        if k_ok:
+            keyword_correct += 1
         total += 1
 
         text_short = text.replace("\n", " ")[:40]
-        print(f"  {i+1:>2}  {label:>8}  {s_intent:>8}  {k_intent:>8}  {'✓' if s_ok else '✗':>2}  {'✓' if k_ok else '✗':>2}  {text_short}")
+        print(
+            f"  {i + 1:>2}  {label:>8}  {s_intent:>8}  {k_intent:>8}  {'✓' if s_ok else '✗':>2}  {'✓' if k_ok else '✗':>2}  {text_short}"
+        )
 
-    print(f"\n{'='*100}")
+    print(f"\n{'=' * 100}")
     print(f"  FINAL SCORE")
-    print(f"{'='*100}")
-    print(f"\n  spell_cycle intent:  {spell_correct}/{total} = {100*spell_correct/total:.0f}%")
-    print(f"  keyword intent:      {keyword_correct}/{total} = {100*keyword_correct/total:.0f}%")
+    print(f"{'=' * 100}")
+    print(f"\n  spell_cycle intent:  {spell_correct}/{total} = {100 * spell_correct / total:.0f}%")
+    print(f"  keyword intent:      {keyword_correct}/{total} = {100 * keyword_correct / total:.0f}%")
 
     if spell_correct >= keyword_correct:
         print(f"\n  >>> SPELL_CYCLE WINS OR TIES: {spell_correct} vs {keyword_correct}")

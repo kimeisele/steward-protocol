@@ -55,6 +55,7 @@ from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM, QUARTERS
 # MATHEMATICAL INTENT — derived from seed position, no keywords
 # =============================================================================
 
+
 def intent_from_seed(text: str) -> Tuple[str, int, int, dict]:
     """
     Derive intent purely from the seed's mathematical properties.
@@ -96,13 +97,18 @@ def intent_from_seed(text: str) -> Tuple[str, int, int, dict]:
     transformed = synth.transform((category * MAHA_QUANTUM) + (merged % MAHA_QUANTUM))
     attractor = transformed % MAHA_QUANTUM
 
-    return math_guna, position, category, {
-        "keyword_guna": keyword_guna,
-        "seed": seed,
-        "attractor": attractor,
-        "transformed": transformed,
-        "quarter": quarter,
-    }
+    return (
+        math_guna,
+        position,
+        category,
+        {
+            "keyword_guna": keyword_guna,
+            "seed": seed,
+            "attractor": attractor,
+            "transformed": transformed,
+            "quarter": quarter,
+        },
+    )
 
 
 # =============================================================================
@@ -114,30 +120,35 @@ CORPUS = [
     ("clean", "def add(x: int, y: int) -> int:\n    return x + y"),
     ("clean", "def greet(name: str) -> str:\n    return f'Hello, {name}'"),
     ("clean", "class Config:\n    def __init__(self, path: Path) -> None:\n        self.path = path"),
-    ("clean", "from typing import Dict\ndef load(path: str) -> Dict[str, str]:\n    return json.loads(Path(path).read_text())"),
+    (
+        "clean",
+        "from typing import Dict\ndef load(path: str) -> Dict[str, str]:\n    return json.loads(Path(path).read_text())",
+    ),
     ("clean", "def validate(data: dict) -> bool:\n    return 'name' in data and 'id' in data"),
-    ("clean", "import logging\nlogger = logging.getLogger(__name__)\ndef process(item: str) -> str:\n    logger.info('Processing %s', item)\n    return item.strip()"),
-
+    (
+        "clean",
+        "import logging\nlogger = logging.getLogger(__name__)\ndef process(item: str) -> str:\n    logger.info('Processing %s', item)\n    return item.strip()",
+    ),
     # === CODE: BROKEN (expected: TAMAS or RAJAS) ===
     ("broken", "from typing import Any\ndef f(x: Any) -> Any:\n    return x"),
     ("broken", "def load(p):\n    try:\n        return open(p).read()\n    except:\n        pass"),
     ("broken", "from typing import *\ndef g(a, b, c):\n    return a"),
-    ("broken", "def h(x: Any, y: Any, z: Any) -> Any:\n    try:\n        return x + y + z\n    except Exception:\n        pass"),
+    (
+        "broken",
+        "def h(x: Any, y: Any, z: Any) -> Any:\n    try:\n        return x + y + z\n    except Exception:\n        pass",
+    ),
     ("broken", "import os, sys, json, re, pathlib\nfrom typing import Any\nx: Any = None"),
     ("broken", "class Bad:\n    def do(self, thing):\n        try: return eval(thing)\n        except: return None"),
-
     # === TEXT: HEALTHY (expected: SATTVA or SUDDHA) ===
     ("healthy", "All services healthy. Deployment complete."),
     ("healthy", "Tests passed. Coverage at 95%. No regressions."),
     ("healthy", "System stable for 30 days. Zero incidents."),
     ("healthy", "Performance optimized. Latency reduced by 40%."),
-
     # === TEXT: BROKEN (expected: TAMAS or RAJAS) ===
     ("failing", "ERROR: Connection refused. Retry failed after 5 attempts."),
     ("failing", "FATAL: Out of memory. Process killed by OOM killer."),
     ("failing", "PANIC: Database corruption detected. Backup failed."),
     ("failing", "CRITICAL: Security breach. Unauthorized access detected."),
-
     # === NEUTRAL ===
     ("neutral", "The weather is nice today."),
     ("neutral", "x = 42"),
@@ -170,8 +181,12 @@ if __name__ == "__main__":
         "neutral": {"sattva", "rajas"},  # neutral could be either
     }
 
-    print(f"\n  {'#':>2}  {'Type':>8}  {'Math':>8}  {'Keyword':>8}  {'Pos':>3}  {'Q':>1}  {'Cat':>3}  {'Attr':>4}  {'M✓':>2}  {'K✓':>2}  Text")
-    print(f"  {'-'*2}  {'-'*8}  {'-'*8}  {'-'*8}  {'-'*3}  {'-'*1}  {'-'*3}  {'-'*4}  {'-'*2}  {'-'*2}  {'-'*40}")
+    print(
+        f"\n  {'#':>2}  {'Type':>8}  {'Math':>8}  {'Keyword':>8}  {'Pos':>3}  {'Q':>1}  {'Cat':>3}  {'Attr':>4}  {'M✓':>2}  {'K✓':>2}  Text"
+    )
+    print(
+        f"  {'-' * 2}  {'-' * 8}  {'-' * 8}  {'-' * 8}  {'-' * 3}  {'-' * 1}  {'-' * 3}  {'-' * 4}  {'-' * 2}  {'-' * 2}  {'-' * 40}"
+    )
 
     for i, (label, text) in enumerate(CORPUS):
         math_guna, position, category, info = intent_from_seed(text)
@@ -190,21 +205,23 @@ if __name__ == "__main__":
         total += 1
 
         text_short = text.replace("\n", " ")[:40]
-        print(f"  {i+1:>2}  {label:>8}  {math_guna:>8}  {keyword_guna:>8}  {position:>3}  {info['quarter']:>1}  "
-              f"{category:>3}  {info['attractor']:>4}  {'✓' if math_ok else '✗':>2}  {'✓' if keyword_ok else '✗':>2}  {text_short}")
+        print(
+            f"  {i + 1:>2}  {label:>8}  {math_guna:>8}  {keyword_guna:>8}  {position:>3}  {info['quarter']:>1}  "
+            f"{category:>3}  {info['attractor']:>4}  {'✓' if math_ok else '✗':>2}  {'✓' if keyword_ok else '✗':>2}  {text_short}"
+        )
 
     # === SUMMARY ===
-    print(f"\n{'='*90}")
+    print(f"\n{'=' * 90}")
     print(f"  ACCURACY COMPARISON")
-    print(f"{'='*90}")
-    print(f"  Math-based (from seed position):  {math_correct}/{total} = {100*math_correct/total:.0f}%")
-    print(f"  Keyword-based (current system):   {keyword_correct}/{total} = {100*keyword_correct/total:.0f}%")
-    print(f"  Agreement (math == keyword):      {agreements}/{total} = {100*agreements/total:.0f}%")
+    print(f"{'=' * 90}")
+    print(f"  Math-based (from seed position):  {math_correct}/{total} = {100 * math_correct / total:.0f}%")
+    print(f"  Keyword-based (current system):   {keyword_correct}/{total} = {100 * keyword_correct / total:.0f}%")
+    print(f"  Agreement (math == keyword):      {agreements}/{total} = {100 * agreements / total:.0f}%")
 
     # === POSITION DISTRIBUTION ===
-    print(f"\n{'='*90}")
+    print(f"\n{'=' * 90}")
     print(f"  POSITION DISTRIBUTION BY TYPE")
-    print(f"{'='*90}")
+    print(f"{'=' * 90}")
 
     by_type: Dict[str, List[int]] = {}
     for label, text in CORPUS:
@@ -221,9 +238,9 @@ if __name__ == "__main__":
             print(f"            avg={avg:.1f}  Q-dist=[Q1={q_dist[0]}, Q2={q_dist[1]}, Q3={q_dist[2]}, Q4={q_dist[3]}]")
 
     # === CONCLUSION ===
-    print(f"\n{'='*90}")
+    print(f"\n{'=' * 90}")
     print(f"  CONCLUSION")
-    print(f"{'='*90}")
+    print(f"{'=' * 90}")
 
     if math_correct > keyword_correct:
         print(f"\n  >>> MATH WINS: {math_correct} vs {keyword_correct}")

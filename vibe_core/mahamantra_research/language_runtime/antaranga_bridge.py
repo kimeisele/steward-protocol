@@ -44,20 +44,18 @@ from vibe_core.mahamantra.substrate.rama_grid import SVARAS
 
 # English vowel → SVARAS position (protocol-derived from rama_grid.py)
 # a→0, i→1, u→2, e→10, o→12 — exact positions in the 16-vowel system
-_VOWEL_TO_SVARA: Final[Dict[str, int]] = {
-    s: idx for idx, s in enumerate(SVARAS) if s in "aeiou"
-}
+_VOWEL_TO_SVARA: Final[Dict[str, int]] = {s: idx for idx, s in enumerate(SVARAS) if s in "aeiou"}
 
 
 class ImpactResult(NamedTuple):
     """Result of a keystroke impact in the Antaranga."""
 
     char: str
-    rama_coord: int          # 0-48 RAMA grid position
-    slot: int                # 0-511 Antaranga slot
-    prana_injected: int      # prana value injected
-    resonated: bool          # True if merged with existing, False if new presence
-    total_prana_after: int   # total prana in chamber after impact
+    rama_coord: int  # 0-48 RAMA grid position
+    slot: int  # 0-511 Antaranga slot
+    prana_injected: int  # prana value injected
+    resonated: bool  # True if merged with existing, False if new presence
+    total_prana_after: int  # total prana in chamber after impact
 
 
 def char_to_rama_coord(char: str) -> int:

@@ -479,6 +479,7 @@ assert len(ALL_VERSES) == HALF_SIZE, "Must have exactly 8 verses"
 # RUNDE 2: THE SIKSASTAKAM → MAHAMANTRA BRIDGE
 # =============================================================================
 
+
 class SiksastakamBridge:
     """
     The bridge between Siksastakam and Mahamantra.
@@ -587,6 +588,7 @@ The Siksastakam IS the Gita in compressed form!
 # RUNDE 5: VERIFICATION
 # =============================================================================
 
+
 def verify_siksastakam_encoding() -> dict:
     """Verify the Siksastakam mathematical encoding."""
     results = {
@@ -602,7 +604,7 @@ def verify_siksastakam_encoding() -> dict:
 
     # Verify each verse
     for i, verse in enumerate(ALL_VERSES):
-        key = f"verse_{i+1}"
+        key = f"verse_{i + 1}"
         results[key] = {
             "encoded": verse.encoded_constant,
             "value": verse.encoded_value,
@@ -610,11 +612,13 @@ def verify_siksastakam_encoding() -> dict:
             "stage_matches_index": verse.pipeline_stage == i,
         }
 
-    results["all_valid"] = all([
-        results["verse_count_valid"],
-        results["product_equals_words"],
-        results["gita_encoding_valid"],
-    ])
+    results["all_valid"] = all(
+        [
+            results["verse_count_valid"],
+            results["product_equals_words"],
+            results["gita_encoding_valid"],
+        ]
+    )
 
     return results
 
@@ -682,8 +686,14 @@ HARE KRISHNA!
 __all__ = [
     # Verse data
     "SiksastakamVerse",
-    "VERSE_1", "VERSE_2", "VERSE_3", "VERSE_4",
-    "VERSE_5", "VERSE_6", "VERSE_7", "VERSE_8",
+    "VERSE_1",
+    "VERSE_2",
+    "VERSE_3",
+    "VERSE_4",
+    "VERSE_5",
+    "VERSE_6",
+    "VERSE_7",
+    "VERSE_8",
     "ALL_VERSES",
     # Bridge
     "SiksastakamBridge",

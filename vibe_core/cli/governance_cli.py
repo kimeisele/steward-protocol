@@ -43,6 +43,7 @@ from vibe_core.protocols.naga.intel_bridge import (
 )
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 

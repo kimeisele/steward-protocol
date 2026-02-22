@@ -63,10 +63,11 @@ class PrithuService(PrithuProtocolBase):
             "valid": 0,
             "invalid": 0,
         }
-        
+
         # VARNASHRAMA INTEGRATION:
         # Spawn the JivaShadow qualified for this position (4).
         from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+
         self._shadow = spawn_shadow_for_position(4, context=b"prithu_service_v1")
 
     # =========================================================================

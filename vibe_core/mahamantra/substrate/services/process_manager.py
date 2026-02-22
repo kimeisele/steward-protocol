@@ -13,7 +13,8 @@ Philosophy:
 "The Kernel is the Temple. Agents are the visitors.
 If a visitor collapses, the Temple stands."
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA)
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"

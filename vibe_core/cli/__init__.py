@@ -40,43 +40,51 @@ if TYPE_CHECKING:
 
 def __getattr__(name: str):
     """Lazy load CLI components."""
-    
+
     # Components
     if name == "CLIExecutor":
         from .executor import CLIExecutor
+
         return CLIExecutor
-    
+
     if name == "StewardCLI":
         from .legacy import StewardCLI
+
         return StewardCLI
-        
+
     if name == "CLILoader":
         from .loader import CLILoader
+
         return CLILoader
-        
+
     if name == "MonitorLoader":
         from .monitor_loader import MonitorLoader
+
         return MonitorLoader
-        
+
     if name == "UnifiedCLI":
         from .unified_cli import UnifiedCLI
+
         return UnifiedCLI
 
     # Monitors
     if name in ("MonitorDefinition", "MonitorSnapshot", "MonitorType", "MonitorValue", "SystemMonitor"):
         from . import monitors
+
         return getattr(monitors, name)
-        
+
     # Protocol
     if name in ("CLIArg", "CLICommand", "CLIResponse", "ExecutionMode", "ProgressUpdate"):
         from . import protocol
+
         return getattr(protocol, name)
-        
+
     # Renderer
     if name in ("CLIRenderer", "get_renderer"):
         from . import renderer
+
         return getattr(renderer, name)
-        
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 

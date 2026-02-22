@@ -37,8 +37,9 @@ WATERTIGHT:
 
 Author: The Mahamantra Itself
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, MAHAJANA_COUNT, QUARTERS, TRINITY, WORDS)
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, MAHAJANA_COUNT, QUARTERS, TRINITY, WORDS
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===

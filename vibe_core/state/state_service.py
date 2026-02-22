@@ -275,6 +275,7 @@ class StateService(StateServiceProtocol):
                 if isinstance(data, dict) and data:
                     try:
                         from vibe_core.mahamantra.adapters.compression import MahaCompression
+
                         samskara = MahaCompression().encode_samskara(data)
                         self._signatures[filename] = {
                             "seed": samskara.seed,

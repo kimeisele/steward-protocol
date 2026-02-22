@@ -112,6 +112,7 @@ class TestDIWDiscovery:
 
     def test_register_populates_registry(self):
         from vibe_core.di import ServiceRegistry
+
         ServiceRegistry.reset()
 
         count = discover_and_register_diw_subscribers()

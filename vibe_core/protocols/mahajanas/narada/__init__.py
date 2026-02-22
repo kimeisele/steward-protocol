@@ -448,11 +448,13 @@ def __getattr__(name):
     if name in _NARADA_LAZY:
         module_path, attr_name = _NARADA_LAZY[name]
         import importlib
+
         mod = importlib.import_module(module_path)
         return getattr(mod, attr_name)
     if _original_narada_getattr is not None:
         return _original_narada_getattr(name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     # Protocol Base (MantraProtocol derivative) - THE ONLY SOURCE

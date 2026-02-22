@@ -22,10 +22,12 @@ logger = logging.getLogger("vimana")
 # Default Port (108 names * 100)
 DEFAULT_PORT = 10800
 
+
 class VimanaProtocol(asyncio.Protocol):
     """
     AsyncIO Protocol for receiving Cells.
     """
+
     def __init__(self, chamber: SankirtanChamber, on_cell: Optional[Callable[[MahaCellUnified], None]] = None):
         self.chamber = chamber
         self.on_cell = on_cell
@@ -39,7 +41,7 @@ class VimanaProtocol(asyncio.Protocol):
 
     def data_received(self, data):
         self._buffer.extend(data)
-        
+
         while True:
             # 1. Read Length Header
             if self._expected_len == -1:
@@ -47,35 +49,35 @@ class VimanaProtocol(asyncio.Protocol):
                     self._expected_len = struct.unpack(">I", self._buffer[:4])[0]
                     del self._buffer[:4]
                 else:
-                    break # Wait for more data
-            
+                    break  # Wait for more data
+
             # 2. Read Payload
             if self._expected_len != -1:
                 if len(self._buffer) >= self._expected_len:
-                    payload = self._buffer[:self._expected_len]
-                    del self._buffer[:self._expected_len]
-                    
+                    payload = self._buffer[: self._expected_len]
+                    del self._buffer[: self._expected_len]
+
                     # Process Cell
                     self._process_payload(payload)
-                    
+
                     # Reset for next packet
                     self._expected_len = -1
                 else:
-                    break # Wait for more data
+                    break  # Wait for more data
 
     def _process_payload(self, data: bytes):
         try:
             cell, _ = MahaCellUnified.from_bytes(data)
-            
+
             # Interact with Chamber (The main purpose)
             # We treat incoming cells as visitors engaging in "dance"
             result_cell = self.chamber.dance(cell)
-            
+
             if self.on_cell:
                 self.on_cell(result_cell)
-                
+
             logger.debug(f"Received & Danced: {cell.header.dna} -> Res: {self.chamber.resonance_count}")
-            
+
         except Exception as e:
             logger.error(f"Failed to process Vimana payload: {e}")
             # Close connection on error? Or just log?
@@ -89,6 +91,7 @@ class VimanaServer:
     """
     TCP Server listening for Cells.
     """
+
     def __init__(self, host: str, port: int, chamber: SankirtanChamber):
         self.host = host
         self.port = port
@@ -97,12 +100,9 @@ class VimanaServer:
 
     async def start(self):
         loop = asyncio.get_running_loop()
-        self.server = await loop.create_server(
-            lambda: VimanaProtocol(self.chamber),
-            self.host, self.port
-        )
+        self.server = await loop.create_server(lambda: VimanaProtocol(self.chamber), self.host, self.port)
         logger.info(f"Vimana Server listening on {self.host}:{self.port}")
-        
+
     async def serve_forever(self):
         if not self.server:
             await self.start()
@@ -114,6 +114,7 @@ class VimanaClient:
     """
     TCP Client for sending Cells.
     """
+
     def __init__(self, host: str, port: int):
         self.host = host
         self.port = port
@@ -127,13 +128,13 @@ class VimanaClient:
     async def send(self, cell: MahaCellUnified) -> None:
         if not self.writer:
             await self.connect()
-            
+
         data = cell.to_bytes()
         length = len(data)
-        
+
         # [Length][Payload]
         packet = struct.pack(">I", length) + data
-        
+
         self.writer.write(packet)
         await self.writer.drain()
 

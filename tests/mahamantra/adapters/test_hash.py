@@ -67,9 +67,9 @@ class TestDeterministicHashTriangular:
     def test_triangular_numbers_correct(self):
         """Verify triangular number formula."""
         h = DeterministicHash()
-        assert h.triangular(1) == 1   # 1
-        assert h.triangular(2) == 3   # 1+2
-        assert h.triangular(3) == 6   # 1+2+3
+        assert h.triangular(1) == 1  # 1
+        assert h.triangular(2) == 3  # 1+2
+        assert h.triangular(3) == 6  # 1+2+3
         assert h.triangular(4) == 10  # 1+2+3+4
         assert h.triangular(16) == 136  # T(16) = POSITION_SUM_TOTAL
 
@@ -121,13 +121,13 @@ class TestDeterministicHashSevenLenses:
     def test_lens_mod_spaces_correct(self):
         """Verify lens mod spaces."""
         lens_mods = [mod for _, mod in LENSES]
-        assert TRINITY in lens_mods      # 3
-        assert PANCHA in lens_mods       # 5
-        assert SEVEN in lens_mods        # 7
-        assert 17 in lens_mods           # Prime
-        assert PARAMPARA in lens_mods    # 37
-        assert 73 in lens_mods           # Prime
-        assert MAHA_QUANTUM in lens_mods # 137
+        assert TRINITY in lens_mods  # 3
+        assert PANCHA in lens_mods  # 5
+        assert SEVEN in lens_mods  # 7
+        assert 17 in lens_mods  # Prime
+        assert PARAMPARA in lens_mods  # 37
+        assert 73 in lens_mods  # Prime
+        assert MAHA_QUANTUM in lens_mods  # 137
 
     def test_analyze_returns_all_lenses(self):
         """Analysis should return all 7 lenses."""
@@ -163,7 +163,7 @@ class TestDeterministicHashParampara:
         """MultiLensReading should include parampara_validated."""
         h = DeterministicHash()
         reading = h.analyze("test")
-        assert hasattr(reading, 'parampara_validated')
+        assert hasattr(reading, "parampara_validated")
         assert isinstance(reading.parampara_validated, bool)
 
 
@@ -174,7 +174,7 @@ class TestDeterministicHashHolographic:
         """Values appearing in multiple lenses should be detected."""
         h = DeterministicHash()
         reading = h.analyze("test")
-        assert hasattr(reading, 'holographic_factors')
+        assert hasattr(reading, "holographic_factors")
         # Holographic factors are values that appear in 2+ lenses
 
     def test_holographic_factors_are_common_values(self):

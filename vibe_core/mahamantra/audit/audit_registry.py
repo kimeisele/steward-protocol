@@ -26,8 +26,13 @@ __position__ = 15
 __genesis__ = "0x8fd1e5e1"  # GenesisByte: parampara % 37 == 0
 
 __all__ = [
-    "AuditFinding", "AuditRegistry", "FindingStatus", "FindingSeverity",
-    "SourceCache", "get_registry", "get_source_cache",
+    "AuditFinding",
+    "AuditRegistry",
+    "FindingStatus",
+    "FindingSeverity",
+    "SourceCache",
+    "get_registry",
+    "get_source_cache",
 ]
 
 import logging
@@ -43,6 +48,7 @@ _audit_logger = logging.getLogger("AUDIT.CACHE")
 
 class FindingStatus(Enum):
     """Lifecycle of an audit finding."""
+
     IDENTIFIED = "identified"
     INVESTIGATING = "investigating"
     RESOLVED = "resolved"
@@ -51,6 +57,7 @@ class FindingStatus(Enum):
 
 class FindingSeverity(Enum):
     """Severity of an audit finding."""
+
     CRITICAL = "critical"
     WARNING = "warning"
     INFO = "info"
@@ -99,7 +106,9 @@ class AuditRegistryProtocol(Protocol):
         """Return a list of all findings."""
         ...
 
-    def list_by(self, status: Optional[FindingStatus] = None, severity: Optional[FindingSeverity] = None) -> List[AuditFinding]:
+    def list_by(
+        self, status: Optional[FindingStatus] = None, severity: Optional[FindingSeverity] = None
+    ) -> List[AuditFinding]:
         """Filter findings by status or severity."""
         ...
 
@@ -134,7 +143,9 @@ class AuditRegistry(AuditRegistryProtocol):
         """Return a list of all findings."""
         return list(self._findings.values())
 
-    def list_by(self, status: Optional[FindingStatus] = None, severity: Optional[FindingSeverity] = None) -> List[AuditFinding]:
+    def list_by(
+        self, status: Optional[FindingStatus] = None, severity: Optional[FindingSeverity] = None
+    ) -> List[AuditFinding]:
         """Filter findings by status or severity."""
         results = self.list_all()
         if status:
@@ -155,6 +166,7 @@ class AuditRegistry(AuditRegistryProtocol):
 
 # Singleton instance
 _registry: Optional[AuditRegistry] = None
+
 
 def get_registry() -> AuditRegistry:
     """Get the singleton AuditRegistry instance."""
@@ -207,9 +219,7 @@ class SourceCache:
             result.append((path, content))
 
         self._files = tuple(result)
-        _audit_logger.debug(
-            "SourceCache: scanned %d files from %s", len(self._files), self._root
-        )
+        _audit_logger.debug("SourceCache: scanned %d files from %s", len(self._files), self._root)
         return self._files
 
     def invalidate(self) -> None:

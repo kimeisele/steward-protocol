@@ -93,12 +93,13 @@ DEFAULT_MOD: Final[int] = MAHA_QUANTUM
 # TRANSFORM-SPECIFIC COEFFICIENT (Core coefficients imported from _seed.py)
 # =============================================================================
 # For position-based add: KRISHNA adds position, others don't
-_POS_ADD: Final[Tuple[int, ...]] = (0, 1, 0)    # H+0, K+pos, R+0
+_POS_ADD: Final[Tuple[int, ...]] = (0, 1, 0)  # H+0, K+pos, R+0
 
 
 # =============================================================================
 # THE ADAPTER
 # =============================================================================
+
 
 class MahaTransform(MahaTransformProtocol):
     """
@@ -118,10 +119,10 @@ class MahaTransform(MahaTransformProtocol):
 
     # Presets map to mod spaces (DERIVED from _seed.py)
     PRESETS: Final[dict] = {
-        "classical": SEVEN + TEN,      # 17 - Prime, fast convergence
-        "quantum": MAHA_QUANTUM,       # 137 - Maha Quantum, balanced
-        "wide": HALVES ** NAVA,        # 2^9 = 512 - Large space, more diversity
-        "trinity": TRINITY,            # 3 - Minimal (H, K, R only)
+        "classical": SEVEN + TEN,  # 17 - Prime, fast convergence
+        "quantum": MAHA_QUANTUM,  # 137 - Maha Quantum, balanced
+        "wide": HALVES**NAVA,  # 2^9 = 512 - Large space, more diversity
+        "trinity": TRINITY,  # 3 - Minimal (H, K, R only)
     }
 
     def __init__(
@@ -157,7 +158,9 @@ class MahaTransform(MahaTransformProtocol):
             op_idx = _OP_MAP[op]
 
             # Non-squared path: value * MULT + ADD + POS_ADD * position + feedback
-            non_sq = (value * _MULT[op_idx] + _ADD[op_idx] + _POS_ADD[op_idx] * position + self._feedback_acc) % self.mod_space
+            non_sq = (
+                value * _MULT[op_idx] + _ADD[op_idx] + _POS_ADD[op_idx] * position + self._feedback_acc
+            ) % self.mod_space
 
             # Squared path: value * value + feedback
             sq = (value * value + self._feedback_acc) % self.mod_space
@@ -262,6 +265,7 @@ class MahaTransform(MahaTransformProtocol):
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 def transform(seed: int, mod_space: int = DEFAULT_MOD) -> int:
     """Quick transformation. Returns just the value."""

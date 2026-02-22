@@ -18,6 +18,7 @@ ARJUNA PATTERN (Self-Healing):
 - If the Reactor crashes, it is reborn.
 - If a tick fails, the result is still delivered (FailureResult).
 """
+
 import atexit
 import logging
 import threading
@@ -42,6 +43,7 @@ MAILBOX_TIMEOUT_S = 10.0  # Max time to wait for a result
 @dataclass
 class LoopRequest:
     """A request to the Reactor Loop."""
+
     tracking_id: str
     maha_cell: "MahaCellUnified"  # Typed reference
     purpose: str
@@ -51,10 +53,11 @@ class LoopRequest:
 class MahaMailbox:
     """
     Thread-safe mailbox for async results.
-    
+
     Maps tracking_id -> Result.
     Sync callers wait on a specific tracking_id.
     """
+
     def __init__(self):
         self._results: Dict[str, object] = {}
         self._events: Dict[str, threading.Event] = {}
@@ -79,7 +82,7 @@ class MahaMailbox:
     def collect(self, tracking_id: str, timeout: float = MAILBOX_TIMEOUT_S) -> object:
         """
         Wait for and retrieve a result.
-        
+
         Returns:
             The result object/dict.
         Raises:
@@ -88,7 +91,7 @@ class MahaMailbox:
         event = None
         with self._lock:
             event = self._events.get(tracking_id)
-        
+
         if not event:
             raise ValueError(f"Invalid tracking ID: {tracking_id}")
 
@@ -99,19 +102,20 @@ class MahaMailbox:
         with self._lock:
             result = self._results.pop(tracking_id, None)
             del self._events[tracking_id]
-        
+
         if not signaled:
             raise TimeoutError(f"Mailbox timed out waiting for {tracking_id}")
-            
+
         return result
 
 
 class ReactorLoop(threading.Thread):
     """
     The Eternal Thread.
-    
+
     Hosts the ShadowReactor instance and keeps it alive.
     """
+
     def __init__(self):
         super().__init__(name="ReactorLoop-1", daemon=True)
         self._queue: queue.Queue[LoopRequest] = queue.Queue()
@@ -123,31 +127,38 @@ class ReactorLoop(threading.Thread):
         self._bus: Optional[object] = None  # Narada (Initialized in run)
         self._dojo: Optional[object] = None  # Dojo (Initialized in run)
         self._ready_event = threading.Event()
-        
+
     def attach_mailbox(self, mailbox: MahaMailbox):
         """Connect the loop to a mailbox."""
         self._mailbox = mailbox
 
     def submit(self, maha_cell: "MahaCellUnified", purpose: str, target_position: int = -1) -> str:
         """
-        Submit work to the loop. 
+        Submit work to the loop.
         Returns tracking_id to wait on.
         """
         if not self._mailbox:
             raise RuntimeError("ReactorLoop has no mailbox attached!")
-            
+
         ticket = self._mailbox.create_ticket()
         request = LoopRequest(ticket, maha_cell, purpose, target_position)
         self._queue.put(request)
         return ticket
-        
+
     def wait_until_ready(self, timeout: float = 5.0) -> bool:
         """Wait for the reactor loop to fully initialize."""
         if self._running:
             return True
         return self._ready_event.wait(timeout)
 
-    def publish(self, event_type: str, agent_id: str, message: str, details: Optional[Dict] = None, task_id: Optional[str] = None) -> str:
+    def publish(
+        self,
+        event_type: str,
+        agent_id: str,
+        message: str,
+        details: Optional[Dict] = None,
+        task_id: Optional[str] = None,
+    ) -> str:
         """
         Broadcasting Intent (Resonance Routing).
         Delegates to Narada (EventBus).
@@ -164,22 +175,22 @@ class ReactorLoop(threading.Thread):
         """The Main Loop."""
         # Yield to allow main thread to complete imports (avoid import deadlock)
         time.sleep(0.1)
-        
+
         logger.info("ReactorLoop: STARTING (Hari Bol!)")
-        
+
         # 1. Initialize Reactor (First Birth)
         self._init_memory()  # NEW: Awaken Memory (Phase 3)
-        self._init_bus()     # NEW: Wake Narada (Phase 4)
-        self._init_dojo()    # NEW: Open Dojo (Phase 5)
+        self._init_bus()  # NEW: Wake Narada (Phase 4)
+        self._init_dojo()  # NEW: Open Dojo (Phase 5)
         self._init_reactor()
-        
+
         # 2. Wire the Cosmos (Auto-Discovery)
         # Must happen AFTER reactor exists
         self._wire_bus()
-        
+
         self._running = True
-        self._ready_event.set() # Signal readiness
-        
+        self._ready_event.set()  # Signal readiness
+
         while not self._stop_event.is_set():
             try:
                 # 2. Fetch Work
@@ -189,20 +200,20 @@ class ReactorLoop(threading.Thread):
                     # Idle heartbeat
                     self._meditate()
                     continue
-                
+
                 # 3. Process Work (The Tick)
                 self._process_request(request)
-                
+
             except Exception as e:
                 # ARJUNA PATTERN: Global Loop Safety
                 # If the loop logic itself crashes, we catch it here.
                 logger.critical(f"ReactorLoop CRITICAL FAILURE: {e}", exc_info=True)
-                # We can't easily notify the mailbox here because we might not know 
+                # We can't easily notify the mailbox here because we might not know
                 # which request caused the crash if it happened outside _process_request.
                 # But _process_request has its own try/catch.
-                
+
                 # Re-init reactor if it seems dead
-                pass # Continue loop
+                pass  # Continue loop
 
         self._running = False
         logger.info("ReactorLoop: STOPPED")
@@ -243,22 +254,22 @@ class ReactorLoop(threading.Thread):
             # Any event with task_id is a Bridge request → deposit result
             self._bus.subscribe(self._on_bridge_event)
             logger.info("ReactorLoop: Global bridge handler wired (Narada hears all)")
-            
+
             # 2. Iterate the Mandala (16 Positions)
             # Auto-wire modules that declare __listening_for__
             for pos in range(16):
                 try:
                     module = self._reactor._route_to_position(pos)
-                    
+
                     if not module:
                         continue
-                        
+
                     if hasattr(module, "on_event") and hasattr(module, "__listening_for__"):
                         events = getattr(module, "__listening_for__")
                         if events and isinstance(events, list):
                             self._bus.subscribe(module.on_event, events)
                             logger.info(f"ReactorLoop: Auto-wired Pos {pos} ({module.__name__}) to {events}")
-                            
+
                 except Exception as e:
                     logger.warning(f"ReactorLoop: Failed to wire Pos {pos}: {e}")
 
@@ -278,10 +289,11 @@ class ReactorLoop(threading.Thread):
                 return
 
             from vibe_core.mahamantra.substrate.memory import PersistentMemory
+
             memory = PersistentMemory()
             ServiceRegistry.register(MemoryProtocol, memory)
             logger.info("ReactorLoop: PersistentMemory registered (Akshara).")
-            
+
         except Exception as e:
             logger.error(f"ReactorLoop: Failed to register Memory: {e}")
 
@@ -291,20 +303,21 @@ class ReactorLoop(threading.Thread):
             logger.info("ReactorLoop: Spawning ShadowReactor...")
             # Using forced_lagna=0 for direct mapping, as established in Phase 1
             self._reactor = ShadowReactor(auto_discover=True, forced_lagna=0)
-            
+
             # SANKIRTAN MERCY: Grant authorization
             # "api cet su-durācāro..." (Gita 9.30)
-            self._reactor._sankirtan_shakti = 108.0 
-            
+            self._reactor._sankirtan_shakti = 108.0
+
         except Exception as e:
             logger.error(f"ReactorLoop: Failed to init reactor: {e}")
             # If we can't spawn, we are in trouble. Sleep and retry?
             time.sleep(1.0)
-            
+
     def _init_bus(self):
         """Initialize the EventBus (Narada) — uses shared singleton, not a private instance."""
         try:
             from vibe_core.mahamantra.substrate.event_bus import get_event_bus
+
             self._bus = get_event_bus()
             logger.info("ReactorLoop: Narada (EventBus) shared singleton acquired.")
         except Exception as e:
@@ -313,19 +326,22 @@ class ReactorLoop(threading.Thread):
     def _on_bridge_event(self, event):
         """
         Global Bridge Handler — closes the offer() → mailbox loop.
-        
+
         Any event with a task_id is a Bridge request.
         The routing (position/mahajana) already happened in offer().
         We deposit success so the caller unblocks.
         """
         if not self._mailbox or not event.task_id:
             return
-        
-        self._mailbox.deposit(event.task_id, {
-            "success": True,
-            "execution_result": event.details,
-            "error": None,
-        })
+
+        self._mailbox.deposit(
+            event.task_id,
+            {
+                "success": True,
+                "execution_result": event.details,
+                "error": None,
+            },
+        )
 
     def _init_dojo(self):
         """Initialize the Dojo (Legacy Training Ground)."""
@@ -333,9 +349,10 @@ class ReactorLoop(threading.Thread):
             # Import lazily to avoid heavy startup if not needed
             from vibe_core.plugins.opus_assistant.manas.dojo.runner import DojoRunner
             from pathlib import Path
+
             # Use default workspace or specific dojo path?
             # Assuming current working dir or derived from env
-            workspace = Path(".") 
+            workspace = Path(".")
             self._dojo = DojoRunner(workspace)
             logger.info("ReactorLoop: DojoRunner initialized for Meditation.")
         except Exception as e:
@@ -345,7 +362,7 @@ class ReactorLoop(threading.Thread):
         """
         Perform background duties when the reactor is idle.
         "dhyāyen nārāyaṇaṁ devam" - Meditate on the Lord.
-        
+
         The Reactor is ALIVE. It breathes (ticks) even when no one is asking.
 
         UNIFIED HEARTBEAT: Reads the current Singularity state and feeds it
@@ -354,10 +371,10 @@ class ReactorLoop(threading.Thread):
         second driver.
         """
         self._idle_ticks += 1
-        
+
         # MEDITATION RHYTHM:
         # Loop interval is ~10ms.
-        # We don't want to spin too fast. 
+        # We don't want to spin too fast.
         # Chant every 10 ticks = 100ms = 10Hz frequency.
         if self._idle_ticks % 10 == 0:
             if self._reactor:
@@ -366,6 +383,7 @@ class ReactorLoop(threading.Thread):
                     # VenuService drives Singularity.tick(). We only consume.
                     from vibe_core.mahamantra.kernel.singularity import mahamantra as _singularity
                     from vibe_core.mahamantra.substrate.clock import get_tick_info
+
                     pos = _singularity.get_tick()
                     info = get_tick_info(pos)
                     tick_state = {
@@ -379,44 +397,47 @@ class ReactorLoop(threading.Thread):
 
                     # Feed the REAL state to ShadowReactor
                     self._reactor.tick(tick_state)
-                    
+
                     # Periodic Log (every 108 chants = ~10s)
                     if self._idle_ticks % 1080 == 0:
-                         logger.debug(f"ReactorLoop: Meditating... (Cycle: {self._reactor.cycle_count}, Pos: {self._reactor.position})")
-                
+                        logger.debug(
+                            f"ReactorLoop: Meditating... (Cycle: {self._reactor.cycle_count}, Pos: {self._reactor.position})"
+                        )
+
                     # DOJO TICK (Legacy Mounting)
                     # "Practice even when no one is watching."
-                    if self._dojo and self._idle_ticks % 5 == 0: # Every 5 ticks (~500ms)
+                    if self._dojo and self._idle_ticks % 5 == 0:  # Every 5 ticks (~500ms)
                         self._dojo.meditate_tick()
-                         
+
                 except Exception as e:
                     logger.warning(f"ReactorLoop: Meditation stumbled: {e}")
 
     def _process_request(self, request: LoopRequest):
         """
-        Process a single request. 
+        Process a single request.
         Guarded by Arjuna Pattern to ensure Mailbox delivery.
         """
         try:
             if not self._reactor:
                 self._init_reactor()
                 if not self._reactor:
-                     raise RuntimeError("Reactor unavailable")
+                    raise RuntimeError("Reactor unavailable")
 
             # 1. Inject Payload
             # Note: ShadowReactor interface might need set_maha_cell exposed or we use internal
             self._reactor.set_maha_cell(request.maha_cell)
-            
+
             # 2. Teleportation (Routing)
             # If target position is specified, we force the reactor to jump there.
             if request.target_position >= 0:
                 self._reactor._position = request.target_position
-            
+
             # 3. Prepare Tick State from Clock (stateless, no side effects)
             # Clock gives us the REAL quarter/guardian/word for any position.
             # We do NOT call Singularity.tick() here — that would advance the
             # global counter. Requests are routed, not ticked.
             from vibe_core.mahamantra.substrate.clock import get_tick_info
+
             pos = request.target_position if request.target_position >= 0 else self._reactor.position
             info = get_tick_info(pos)
             tick_state = {
@@ -427,10 +448,10 @@ class ReactorLoop(threading.Thread):
                 "word": info["word"],
                 "opcode": info["opcode"],
             }
-            
+
             # EXECUTE
             final_state = self._reactor.tick(tick_state)
-            
+
             # 4. Success Result
             result = {
                 "success": True,
@@ -439,19 +460,15 @@ class ReactorLoop(threading.Thread):
                 "state_snapshot": {
                     "position": final_state["position"],
                     "cycle_count": final_state["cycle_count"],
-                    "phase": final_state["phase"]
-                }
+                    "phase": final_state["phase"],
+                },
             }
             self._mailbox.deposit(request.tracking_id, result)
 
         except Exception as e:
             logger.error(f"ReactorLoop: Error processing {request.tracking_id}: {e}", exc_info=True)
             # ARJUNA FIX: Deposit failure so Bridge doesn't hang
-            failure_result = {
-                "success": False,
-                "error": str(e),
-                "execution_result": None
-            }
+            failure_result = {"success": False, "error": str(e), "execution_result": None}
             if self._mailbox:
                 self._mailbox.deposit(request.tracking_id, failure_result)
 
@@ -460,6 +477,7 @@ class ReactorLoop(threading.Thread):
 _global_loop: Optional[ReactorLoop] = None
 _global_mailbox: Optional[MahaMailbox] = None
 _init_lock = threading.Lock()
+
 
 def get_loop() -> Tuple[ReactorLoop, MahaMailbox]:
     """Get or create the global reactor loop."""

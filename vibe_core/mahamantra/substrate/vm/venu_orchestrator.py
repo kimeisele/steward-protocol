@@ -239,9 +239,7 @@ class VenuOrchestrator:
             TypeError: If subscriber doesn't implement the protocol.
         """
         if not isinstance(subscriber, DIWSubscriberProtocol):
-            raise TypeError(
-                f"{type(subscriber).__name__} does not implement DIWSubscriberProtocol"
-            )
+            raise TypeError(f"{type(subscriber).__name__} does not implement DIWSubscriberProtocol")
         self._subscribers.append(subscriber)
 
     def unsubscribe(self, subscriber: DIWSubscriberProtocol) -> None:
@@ -283,7 +281,9 @@ class VenuOrchestrator:
             except Exception as exc:
                 logger.error(
                     "DIW subscriber %s error at tick %d: %s",
-                    sub.subscriber_name, self._tick, exc,
+                    sub.subscriber_name,
+                    self._tick,
+                    exc,
                 )
 
     # =========================================================================

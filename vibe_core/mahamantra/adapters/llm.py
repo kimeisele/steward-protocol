@@ -77,8 +77,8 @@ from vibe_core.protocols.mahajanas.kapila.cognition import (
 )
 
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,      # 16 branches per level
-    QUARTERS,   # 4 levels = 16 bits
+    WORDS,  # 16 branches per level
+    QUARTERS,  # 4 levels = 16 bits
 )
 
 
@@ -95,15 +95,14 @@ from vibe_core.mahamantra.protocols.llm import (
 # MAHAMANTRA CONSTANTS (DERIVED from _seed.py)
 # =============================================================================
 
-INTENT_SPACE: Final[int] = WORDS ** QUARTERS  # 16^4 = 65536 = total intent space
-ROUTING_OPS: Final[int] = QUARTERS            # Always 4 ops to route
-
-
+INTENT_SPACE: Final[int] = WORDS**QUARTERS  # 16^4 = 65536 = total intent space
+ROUTING_OPS: Final[int] = QUARTERS  # Always 4 ops to route
 
 
 # =============================================================================
 # HOLOGRAPHIC TREE NODE
 # =============================================================================
+
 
 class HolographicNode:
     """
@@ -125,6 +124,7 @@ class HolographicNode:
 # =============================================================================
 # MAHA LLM - HOLOGRAPHIC INTENT ROUTER
 # =============================================================================
+
 
 class MahaLLM(MahaLLMProtocol):
     """
@@ -518,7 +518,7 @@ class MahaLLM(MahaLLMProtocol):
         """
         # Route the text to find category and potential agent
         route = self.route_text(intent)
-        
+
         # Map 16 Maha Categories to 4 Kapila IntentTypes
         # This is the translation from "Vedic" (16) to "Sankhya" (4)
         intent_type = IntentType.EXECUTE  # Default
@@ -528,7 +528,7 @@ class MahaLLM(MahaLLMProtocol):
             intent_type = IntentType.CHAT
         elif route.category in [IntentCategory.SURRENDER, IntentCategory.TRANSFORM]:
             intent_type = IntentType.ROUTE
-        
+
         return CognitiveResult(
             intent_type=intent_type,
             confidence=1.0,  # Holographic routing is deterministic
@@ -612,9 +612,9 @@ THEORETICAL_SPEEDUP: Final[int] = INTENT_SPACE // ROUTING_OPS  # 16,384x
 # Intent levels (hierarchy)
 INTENT_LEVELS: Final[Dict[int, Dict]] = {
     1: {"capacity": WORDS, "description": "16 core categories"},
-    2: {"capacity": WORDS ** 2, "description": "256 sub-categories"},
-    3: {"capacity": WORDS ** 3, "description": "4,096 fine intents"},
-    4: {"capacity": WORDS ** 4, "description": "65,536 full space"},
+    2: {"capacity": WORDS**2, "description": "256 sub-categories"},
+    3: {"capacity": WORDS**3, "description": "4,096 fine intents"},
+    4: {"capacity": WORDS**4, "description": "65,536 full space"},
 }
 
 
@@ -680,7 +680,7 @@ if __name__ == "__main__":
     ]
     for text in texts:
         result = llm.route_text(text)
-        print(f"   \"{text[:30]}...\" → {result.agent} ({result.category_name})")
+        print(f'   "{text[:30]}..." → {result.agent} ({result.category_name})')
 
     print("\n4. INTEGRATION WITH MAHACOMPRESSION")
     print("   compression.compress() → seed → llm.route_seed() → agent")

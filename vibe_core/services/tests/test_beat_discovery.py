@@ -53,6 +53,7 @@ class TestBeatDiscovery:
 
     def test_register_populates_service_registry(self):
         from vibe_core.di import ServiceRegistry
+
         ServiceRegistry.reset()
 
         count = discover_and_register_beat_subscribers()
@@ -82,6 +83,5 @@ class TestBeatDiscovery:
         for cls in classes:
             instance = cls()
             assert instance.beat_interval in valid_intervals, (
-                f"{cls.__name__}.beat_interval={instance.beat_interval} "
-                f"not in {valid_intervals}"
+                f"{cls.__name__}.beat_interval={instance.beat_interval} not in {valid_intervals}"
             )

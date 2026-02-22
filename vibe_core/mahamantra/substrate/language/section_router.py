@@ -62,13 +62,62 @@ for i in range(len(CHAPTER_18_SECTIONS) - 1):
 
 # Verified section signatures (phonetic + semantic profiles)
 SECTION_SIGNATURES: Final[Dict[str, Dict[str, object]]] = {
-    "TYAGA": {"element": "vayu", "attractor_ratio_18_22": 1.13, "shesha_pct": 25.5, "unique_word_pct": 65.8, "semantic": "renunciation", "mode": "FILTER"},
-    "SANKHYA": {"element": "jala", "attractor_ratio_18_22": 0.50, "shesha_pct": 23.3, "unique_word_pct": 60.0, "semantic": "analysis", "mode": "VERB"},
-    "TRAIGUNYA": {"element": "jala", "attractor_ratio_18_22": 0.95, "shesha_pct": 23.1, "unique_word_pct": 79.9, "semantic": "qualities", "mode": "QUALITY"},
-    "VARNASHRAMA": {"element": "prithvi", "attractor_ratio_18_22": 0.69, "shesha_pct": 28.8, "unique_word_pct": 70.9, "semantic": "duty", "mode": "CONTEXT"},
-    "BRAHMAN": {"element": "jala", "attractor_ratio_18_22": 0.69, "shesha_pct": 25.0, "unique_word_pct": 68.8, "semantic": "liberation", "mode": "TARGET"},
-    "RAHASYA": {"element": "vayu", "attractor_ratio_18_22": 1.04, "shesha_pct": 30.2, "unique_word_pct": 72.9, "semantic": "devotion", "mode": "CORE"},
-    "SANJAYA": {"element": "prithvi", "attractor_ratio_18_22": 1.13, "shesha_pct": 26.6, "unique_word_pct": 78.4, "semantic": "conclusion", "mode": "CLOSURE"},
+    "TYAGA": {
+        "element": "vayu",
+        "attractor_ratio_18_22": 1.13,
+        "shesha_pct": 25.5,
+        "unique_word_pct": 65.8,
+        "semantic": "renunciation",
+        "mode": "FILTER",
+    },
+    "SANKHYA": {
+        "element": "jala",
+        "attractor_ratio_18_22": 0.50,
+        "shesha_pct": 23.3,
+        "unique_word_pct": 60.0,
+        "semantic": "analysis",
+        "mode": "VERB",
+    },
+    "TRAIGUNYA": {
+        "element": "jala",
+        "attractor_ratio_18_22": 0.95,
+        "shesha_pct": 23.1,
+        "unique_word_pct": 79.9,
+        "semantic": "qualities",
+        "mode": "QUALITY",
+    },
+    "VARNASHRAMA": {
+        "element": "prithvi",
+        "attractor_ratio_18_22": 0.69,
+        "shesha_pct": 28.8,
+        "unique_word_pct": 70.9,
+        "semantic": "duty",
+        "mode": "CONTEXT",
+    },
+    "BRAHMAN": {
+        "element": "jala",
+        "attractor_ratio_18_22": 0.69,
+        "shesha_pct": 25.0,
+        "unique_word_pct": 68.8,
+        "semantic": "liberation",
+        "mode": "TARGET",
+    },
+    "RAHASYA": {
+        "element": "vayu",
+        "attractor_ratio_18_22": 1.04,
+        "shesha_pct": 30.2,
+        "unique_word_pct": 72.9,
+        "semantic": "devotion",
+        "mode": "CORE",
+    },
+    "SANJAYA": {
+        "element": "prithvi",
+        "attractor_ratio_18_22": 1.13,
+        "shesha_pct": 26.6,
+        "unique_word_pct": 78.4,
+        "semantic": "conclusion",
+        "mode": "CLOSURE",
+    },
 }
 
 
@@ -122,13 +171,15 @@ def extract_template(chapter: int, verse: int) -> List[Dict]:
     for i, w in enumerate(vw.words):
         meaning = w.meaning if w.meaning else ""
         role = _infer_role(w.coords, i, total)
-        slots.append({
-            "position": i,
-            "sanskrit": w.sanskrit,
-            "meaning": meaning,
-            "role": role,
-            "coords": w.coords,
-        })
+        slots.append(
+            {
+                "position": i,
+                "sanskrit": w.sanskrit,
+                "meaning": meaning,
+                "role": role,
+                "coords": w.coords,
+            }
+        )
     return slots
 
 

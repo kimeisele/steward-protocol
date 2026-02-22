@@ -23,14 +23,23 @@ This is like arithmetic coding with a binary tree!
 
 from typing import List, Tuple, Optional
 from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM, MALA, PARAMPARA, SEVEN, TEN,
-    MAHAMANTRA_WORD_PATTERN, WORDS,
-    MAHA_OP_MAP, MAHA_MULT, MAHA_ADD, MAHA_SQ,
+    MAHA_QUANTUM,
+    MALA,
+    PARAMPARA,
+    SEVEN,
+    TEN,
+    MAHAMANTRA_WORD_PATTERN,
+    WORDS,
+    MAHA_OP_MAP,
+    MAHA_MULT,
+    MAHA_ADD,
+    MAHA_SQ,
 )
 
 
 def mod_inverse(a: int, m: int) -> Optional[int]:
     """Compute modular inverse of a mod m using extended Euclidean algorithm."""
+
     def extended_gcd(a: int, b: int) -> Tuple[int, int, int]:
         if a == 0:
             return b, 0, 1
@@ -63,6 +72,7 @@ def mod_sqrt(a: int, m: int) -> List[int]:
 # =============================================================================
 # FORWARD OPERATIONS (with tracking)
 # =============================================================================
+
 
 def maha_step_forward(value: int, name: str, mod: int) -> Tuple[int, int]:
     """
@@ -123,6 +133,7 @@ def maha_step_inverse(value: int, name: str, mod: int, branch: int = 0) -> int:
 # FULL ENCODE / DECODE
 # =============================================================================
 
+
 def encode(value: int, mod: int, pattern: Tuple[str, ...] = MAHAMANTRA_WORD_PATTERN) -> Tuple[int, List[int]]:
     """
     Encode a value by applying the full pattern.
@@ -161,6 +172,7 @@ def decode(encoded: int, branches: List[int], mod: int, pattern: Tuple[str, ...]
 # TEST LOSSLESS PROPERTY
 # =============================================================================
 
+
 def test_lossless(mod: int = MAHA_QUANTUM):
     """Test if encode/decode is lossless for all values in mod space."""
     print(f"\nTesting lossless encoding in mod {mod}")
@@ -198,6 +210,7 @@ def analyze_compression_ratio():
 
     # Original: log2(mod) bits to represent a value
     import math
+
     original_bits = math.ceil(math.log2(mod))
     print(f"\nOriginal value: needs {original_bits} bits (for mod {mod})")
 

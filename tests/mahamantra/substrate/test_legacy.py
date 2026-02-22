@@ -145,6 +145,7 @@ class TestDeclarationType:
     def test_declaration_type_is_enum(self):
         """DeclarationType is an Enum."""
         from enum import Enum
+
         assert issubclass(DeclarationType, Enum)
 
     def test_declaration_type_has_mahajana(self):
@@ -167,6 +168,7 @@ class TestFileStatus:
     def test_file_status_is_enum(self):
         """FileStatus is an Enum."""
         from enum import Enum
+
         assert issubclass(FileStatus, Enum)
 
 
@@ -239,11 +241,9 @@ class TestPathToModule:
     def test_path_to_module_basic(self):
         """path_to_module converts path to module name."""
         from pathlib import Path
+
         # path_to_module requires (file_path, base_path)
-        module_name = path_to_module(
-            Path("vibe_core/mahamantra/substrate/seed.py"),
-            Path(".")
-        )
+        module_name = path_to_module(Path("vibe_core/mahamantra/substrate/seed.py"), Path("."))
         assert "." in module_name  # Should be dotted module path
         assert ".py" not in module_name  # Should not have .py extension
 
@@ -259,18 +259,21 @@ class TestModuleAttributes:
     def test_mahajana_declaration(self):
         """Module has __mahajana__ declaration."""
         from vibe_core.mahamantra.substrate import _legacy
+
         assert hasattr(_legacy, "__mahajana__")
         assert _legacy.__mahajana__ == "nityananda"
 
     def test_position_declaration(self):
         """Module has __position__ declaration."""
         from vibe_core.mahamantra.substrate import _legacy
+
         assert hasattr(_legacy, "__position__")
         assert _legacy.__position__ == 1
 
     def test_genesis_declaration(self):
         """Module has __genesis__ declaration."""
         from vibe_core.mahamantra.substrate import _legacy
+
         assert hasattr(_legacy, "__genesis__")
         assert _legacy.__genesis__.startswith("0x")
 
@@ -286,6 +289,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.substrate import _legacy
+
         expected = [
             # Scanner
             "Declaration",
@@ -314,4 +318,5 @@ class TestModuleExports:
     def test_export_count_matches_all(self):
         """Number of exports matches __all__ length."""
         from vibe_core.mahamantra.substrate import _legacy
+
         assert len(_legacy.__all__) == 17  # Total expected exports

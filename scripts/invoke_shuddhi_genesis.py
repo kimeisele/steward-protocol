@@ -1,4 +1,3 @@
-
 import sys
 import os
 import argparse
@@ -16,6 +15,7 @@ from vibe_core.mahamantra.substrate.shuddhi import ShuddhiStatus
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("GENESIS_HEALER")
 
+
 def main():
     parser = argparse.ArgumentParser(description="Invoke ShuddhiEngine to heal Genesis markers.")
     parser.add_argument("--dry-run", action="store_true", help="Show what would happen without modifying files.")
@@ -28,19 +28,19 @@ def main():
 
     if args.dry_run:
         print("🔍 RUNNING IN DRY-RUN MODE (No files will be modified)")
-    
+
     # Initialize Engine
     engine = ShuddhiEngine()
-    
+
     # Target Rule ID
-    RULE_ID = "broken_genesis" 
-    
+    RULE_ID = "broken_genesis"
+
     # Check if remedy exists
     if not engine.can_heal(RULE_ID):
         print(f"❌ Error: Remedy '{RULE_ID}' not found in ShuddhiEngine!")
         print("Available remedies:", engine.list_remedies())
         sys.exit(1)
-        
+
     print(f"✅ Engine initialized. Targeting remedy: {RULE_ID}")
     print(f"📂 Scanning directories: {SCAN_DIRECTORIES}")
     print("-" * 60)
@@ -65,19 +65,19 @@ def main():
             # Skip hidden/test/sankirtan specific skips
             if any(part.startswith(".") or part == "__pycache__" for part in file_path.parts):
                 continue
-                
+
             total_files += 1
-            
+
             # SCAN
             # In dry-run, engine.scan_file returns results but doesn't write types usually?
-            # actually engine.scan_file does NOT write to disk, it returns results. 
+            # actually engine.scan_file does NOT write to disk, it returns results.
             # engine.purify DOES write if we ask it to? No, purify returns result.
             # We must use scan_file which returns results, then we decide what to do.
             # Wait, engine.scan_file returns Purified results but does it write?
             # implementation says: "scan_file... Returns List[ShuddhiResult]". It compiles but doesn't write.
-            
+
             results = engine.scan_file(file_path, rule_ids=[RULE_ID])
-            
+
             for result in results:
                 if result.status == ShuddhiStatus.PURIFIED:
                     if args.dry_run:
@@ -103,6 +103,7 @@ def main():
     else:
         print(f"Healed {healed_files} files")
     print(f"Failed: {failed_files}")
+
 
 if __name__ == "__main__":
     main()

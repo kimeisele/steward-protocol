@@ -59,6 +59,7 @@ class TestFractalLevel:
     def test_fractal_level_is_int_enum(self):
         """FractalLevel is IntEnum."""
         from enum import IntEnum
+
         assert issubclass(FractalLevel, IntEnum)
 
     def test_fractal_levels_sequential(self):
@@ -160,6 +161,7 @@ class TestFractalBase:
 
     def test_fractal_base_is_prime(self):
         """FRACTAL_BASE (37) is prime."""
+
         def is_prime(n):
             if n < 2:
                 return False
@@ -167,6 +169,7 @@ class TestFractalBase:
                 if n % i == 0:
                     return False
             return True
+
         assert is_prime(FRACTAL_BASE)
 
 
@@ -211,6 +214,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.substrate import fractal
+
         assert "FractalLevel" in fractal.__all__
         assert "DIMENSIONS" in fractal.__all__
         assert "MAHAMANTRA_COUNTS" in fractal.__all__

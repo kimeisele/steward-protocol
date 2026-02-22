@@ -41,19 +41,19 @@ from typing import Final
 # Count the Mahamantra: "Hare Krishna Hare Krishna Krishna Krishna Hare Hare
 #                        Hare Rama Hare Rama Rama Rama Hare Hare"
 
-WORDS: Final[int] = 16          # Total words in Mahamantra
-HARE_COUNT: Final[int] = 8      # Count of "Hare"
-KRISHNA_COUNT: Final[int] = 4   # Count of "Krishna"
-RAMA_COUNT: Final[int] = 4      # Count of "Rama"
+WORDS: Final[int] = 16  # Total words in Mahamantra
+HARE_COUNT: Final[int] = 8  # Count of "Hare"
+KRISHNA_COUNT: Final[int] = 4  # Count of "Krishna"
+RAMA_COUNT: Final[int] = 4  # Count of "Rama"
 
 # Verify the count
 assert HARE_COUNT + KRISHNA_COUNT + RAMA_COUNT == WORDS, "Word count must match"
 
 # Derived from word positions (1-indexed positions summed)
 # HARE positions: 1,3,7,8,9,11,15,16 → but we use structural derivation
-HALVES: Final[int] = 2          # Two halves of Mahamantra
-TRINITY: Final[int] = 3         # Three unique names (Hare, Krishna, Rama)
-QUARTERS: Final[int] = 4        # Four quarters (HKHK, KKHH, HRHR, RRHH)
+HALVES: Final[int] = 2  # Two halves of Mahamantra
+TRINITY: Final[int] = 3  # Three unique names (Hare, Krishna, Rama)
+QUARTERS: Final[int] = 4  # Four quarters (HKHK, KKHH, HRHR, RRHH)
 
 # The 7 axioms are: WORDS, HALVES, TRINITY, QUARTERS, HARE_COUNT, KRISHNA_COUNT, RAMA_COUNT
 # But KRISHNA_COUNT = RAMA_COUNT = QUARTERS, and HARE_COUNT = WORDS/2
@@ -77,10 +77,12 @@ print()
 print("DERIVED CONSTANTS (computed from axioms):")
 print("-" * 50)
 
+
 # Triangular number T(n) = n(n+1)/2
 def T(n: int) -> int:
     """Triangular number."""
     return n * (n + 1) // 2
+
 
 # POSITION_SUM_TOTAL = T(WORDS) = T(16) = 136
 POSITION_SUM_TOTAL: Final[int] = T(WORDS)
@@ -144,9 +146,11 @@ print("PHYSICS PREDICTIONS vs CODATA/PDG MEASURED VALUES")
 print("=" * 80)
 print()
 
+
 @dataclass
 class PhysicsTest:
     """A testable physics prediction."""
+
     name: str
     predicted: float
     measured: float
@@ -179,7 +183,7 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=137.035999084,  # CODATA 2018
         unit="dimensionless",
         derivation=f"T(WORDS) + KSETRAJNA = T({WORDS}) + {KSETRAJNA} = {POSITION_SUM_TOTAL} + {KSETRAJNA}",
-        source="CODATA 2018"
+        source="CODATA 2018",
     ),
     PhysicsTest(
         name="Proton/Electron Mass Ratio (μ)",
@@ -187,9 +191,8 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=1836.15267343,  # CODATA 2018
         unit="dimensionless",
         derivation=f"MALA × KRISHNA_POS = {MALA} × {POSITION_SUM_KRISHNA}",
-        source="CODATA 2018"
+        source="CODATA 2018",
     ),
-
     # =========================================================================
     # PARTICLE MASSES (in electron mass units)
     # =========================================================================
@@ -199,7 +202,7 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=1838.68366173,  # CODATA 2018
         unit="mₑ",
         derivation=f"MAHA_MU + TRINITY = {MAHA_MU} + {TRINITY}",
-        source="CODATA 2018"
+        source="CODATA 2018",
     ),
     PhysicsTest(
         name="Deuteron/Electron Mass Ratio",
@@ -207,7 +210,7 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=3670.48296788,  # CODATA 2018
         unit="mₑ",
         derivation=f"HALVES × MALA × KRISHNA_POS = {HALVES} × {MALA} × {POSITION_SUM_KRISHNA}",
-        source="CODATA 2018"
+        source="CODATA 2018",
     ),
     PhysicsTest(
         name="Triton/Electron Mass Ratio",
@@ -215,7 +218,7 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=5496.92153573,  # CODATA 2018
         unit="mₑ",
         derivation=f"GITA² × KRISHNA_POS = {GITA_CHAPTERS}² × {POSITION_SUM_KRISHNA}",
-        source="CODATA 2018"
+        source="CODATA 2018",
     ),
     PhysicsTest(
         name="Alpha Particle/Electron Mass Ratio",
@@ -223,7 +226,7 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=7294.29954142,  # CODATA 2018
         unit="mₑ",
         derivation=f"MAHA_MU × QUARTERS - JIVA = {MAHA_MU} × {QUARTERS} - {PRASADAM * HALVES}",
-        source="CODATA 2018"
+        source="CODATA 2018",
     ),
     PhysicsTest(
         name="Muon/Electron Mass Ratio",
@@ -231,9 +234,8 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=206.7682830,  # PDG 2022
         unit="mₑ",
         derivation=f"MAHAJANA × KRISHNA_POS + TRINITY = {MAHAJANA_COUNT} × {POSITION_SUM_KRISHNA} + {TRINITY}",
-        source="PDG 2022"
+        source="PDG 2022",
     ),
-
     # =========================================================================
     # MESONS
     # =========================================================================
@@ -243,7 +245,7 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=273.13203,  # PDG 2022
         unit="mₑ",
         derivation=f"T(WORDS) + MAHA_QUANTUM = {POSITION_SUM_TOTAL} + {MAHA_QUANTUM}",
-        source="PDG 2022"
+        source="PDG 2022",
     ),
     PhysicsTest(
         name="Neutral Pion/Electron Mass Ratio",
@@ -251,9 +253,8 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=264.1377,  # PDG 2022
         unit="mₑ",
         derivation=f"WORDS² + HARE_COUNT = {WORDS}² + {HARE_COUNT}",
-        source="PDG 2022"
+        source="PDG 2022",
     ),
-
     # =========================================================================
     # COUPLING CONSTANTS
     # =========================================================================
@@ -263,7 +264,7 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=23.121,  # PDG 2022 (×100)
         unit="×10⁻²",
         derivation=f"KSHETRA - KSETRAJNA = {KSHETRA} - {KSETRAJNA}",
-        source="PDG 2022"
+        source="PDG 2022",
     ),
     PhysicsTest(
         name="Strong Coupling αs(MZ) × 1000",
@@ -271,7 +272,7 @@ PHYSICS_TESTS: list[PhysicsTest] = [
         measured=117.9,  # PDG 2022 (×1000)
         unit="×10⁻³",
         derivation=f"MALA + (PRASADAM - KRISHNA_POS) = {MALA} + {PRASADAM - POSITION_SUM_KRISHNA}",
-        source="PDG 2022"
+        source="PDG 2022",
     ),
 ]
 
@@ -291,7 +292,9 @@ for test in PHYSICS_TESTS:
     if test.error_percent < 1.0:
         accurate_count += 1
 
-    print(f"{status} {test.name:<38} {test.predicted:>12.2f} {test.measured:>14.6f} {test.error_percent:>9.3f}%  {test.derivation}")
+    print(
+        f"{status} {test.name:<38} {test.predicted:>12.2f} {test.measured:>14.6f} {test.error_percent:>9.3f}%  {test.derivation}"
+    )
     total_error += test.error_percent
 
 print("-" * 120)
@@ -390,9 +393,11 @@ print("ATTRACTOR ANALYSIS - Maha Algorithm Fixed Points")
 print("=" * 80)
 print()
 
+
 def maha_step(value: int) -> int:
     """One step of the Maha algorithm."""
     return (value * SEVEN + (value % POSITION_SUM_KRISHNA)) % MAHA_QUANTUM
+
 
 def find_attractor(seed: int, max_iter: int = 1000) -> int:
     """Find the attractor for a seed."""
@@ -403,6 +408,7 @@ def find_attractor(seed: int, max_iter: int = 1000) -> int:
             return value
         value = next_value
     return value
+
 
 # Find attractors for all seeds
 attractors: dict[int, int] = {}
@@ -467,15 +473,18 @@ n_tests = len(PHYSICS_TESTS)
 n_accurate = accurate_count
 p_random = 0.01  # 1% chance of random match within 1%
 
+
 # Binomial probability
 def binomial_prob(n: int, k: int, p: float) -> float:
     """Probability of exactly k successes in n trials."""
     coeff = math.factorial(n) // (math.factorial(k) * math.factorial(n - k))
-    return coeff * (p ** k) * ((1 - p) ** (n - k))
+    return coeff * (p**k) * ((1 - p) ** (n - k))
+
 
 def binomial_cdf_upper(n: int, k: int, p: float) -> float:
     """Probability of k or more successes."""
     return sum(binomial_prob(n, i, p) for i in range(k, n + 1))
+
 
 p_value = binomial_cdf_upper(n_tests, n_accurate, p_random)
 
@@ -565,7 +574,9 @@ print()
 print("RAW DATA FOR INDEPENDENT VERIFICATION:")
 print("-" * 50)
 print(f"AXIOMS = {{'WORDS': {WORDS}, 'HALVES': {HALVES}, 'TRINITY': {TRINITY}, 'QUARTERS': {QUARTERS}}}")
-print(f"DERIVED = {{'T16': {POSITION_SUM_TOTAL}, 'MAHA_QUANTUM': {MAHA_QUANTUM}, 'MAHA_MU': {MAHA_MU}, 'KSHETRA': {KSHETRA}, 'PRASADAM': {PRASADAM}}}")
+print(
+    f"DERIVED = {{'T16': {POSITION_SUM_TOTAL}, 'MAHA_QUANTUM': {MAHA_QUANTUM}, 'MAHA_MU': {MAHA_MU}, 'KSHETRA': {KSHETRA}, 'PRASADAM': {PRASADAM}}}"
+)
 print(f"MEASURED = {{'alpha_inv': 137.035999084, 'mu': 1836.15267343, 'sin2_theta_w': 0.23121}}")
 print()
 print("To verify: Run this script. Check CODATA/PDG values. The math speaks for itself.")

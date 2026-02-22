@@ -6,7 +6,7 @@ ATTRACTOR SEMANTICS - The Meaning of Numbers
 "Sound is Brahman, the Supreme is Brahman."
 
 This module maps attractor values to their VERIFIED meanings.
-No speculation - only what is mathematically proven and 
+No speculation - only what is mathematically proven and
 documented in the codebase.
 
 THE 4-CYCLE (mod 137):
@@ -30,6 +30,7 @@ VERIFIED MEANINGS:
 - 37 = PARAMPARA
 - 72 = MELAKARTAS (Parent Ragas)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -72,15 +73,16 @@ __genesis__ = "0xsemantic"
 # VERIFIED ATTRACTOR MEANINGS
 # =============================================================================
 
+
 class AttractorMeaning(Enum):
     """Categories of attractor meanings."""
-    
-    SCRIPTURE = "scripture"      # Gita, Vedas
-    ALPHABET = "alphabet"        # Varnamala, letters
-    MUSIC = "music"              # Shrutis, Ragas, Melakartas
-    ENERGY = "energy"            # Position sums, combined energies
-    STRUCTURE = "structure"      # Mahajanas, Quarters, etc.
-    FIELD = "field"              # Vaikuntha, T(16)
+
+    SCRIPTURE = "scripture"  # Gita, Vedas
+    ALPHABET = "alphabet"  # Varnamala, letters
+    MUSIC = "music"  # Shrutis, Ragas, Melakartas
+    ENERGY = "energy"  # Position sums, combined energies
+    STRUCTURE = "structure"  # Mahajanas, Quarters, etc.
+    FIELD = "field"  # Vaikuntha, T(16)
     TRANSMISSION = "transmission"  # Parampara
     UNKNOWN = "unknown"
 
@@ -88,13 +90,13 @@ class AttractorMeaning(Enum):
 @dataclass(frozen=True)
 class AttractorSemantics:
     """Semantic meaning of an attractor value."""
-    
+
     value: int
     name: str
     meaning: AttractorMeaning
     description: str
     derivation: str  # How it's derived from axioms
-    
+
 
 # The verified semantic map
 ATTRACTOR_SEMANTICS: Final[Dict[int, AttractorSemantics]] = {
@@ -106,7 +108,6 @@ ATTRACTOR_SEMANTICS: Final[Dict[int, AttractorSemantics]] = {
         description="The 18 chapters of Bhagavad Gita",
         derivation="18 = 2 × 9 = HALVES × NAVA",
     ),
-    
     # Alphabet
     POSITION_SUM_RAMA: AttractorSemantics(
         value=POSITION_SUM_RAMA,
@@ -115,7 +116,6 @@ ATTRACTOR_SEMANTICS: Final[Dict[int, AttractorSemantics]] = {
         description="Sanskrit Alphabet (49 letters) = RAMA position sum",
         derivation="49 = 7² = SEVEN × SEVEN",
     ),
-    
     # Music
     SHRUTIS: AttractorSemantics(
         value=SHRUTIS,
@@ -131,7 +131,6 @@ ATTRACTOR_SEMANTICS: Final[Dict[int, AttractorSemantics]] = {
         description="72 parent ragas in Carnatic music",
         derivation="72 = JIVA_CYCLE / SHARANAGATI = 432 / 6",
     ),
-    
     # Energy
     POSITION_SUM_HARE: AttractorSemantics(
         value=POSITION_SUM_HARE,
@@ -154,7 +153,6 @@ ATTRACTOR_SEMANTICS: Final[Dict[int, AttractorSemantics]] = {
         description="Combined energy of HARE + KRISHNA (without RAMA)",
         derivation="HARE_KRISHNA_COMBINED = POSITION_SUM_HARE + POSITION_SUM_KRISHNA",
     ),
-    
     # Field
     POSITION_SUM_TOTAL: AttractorSemantics(
         value=POSITION_SUM_TOTAL,
@@ -163,7 +161,6 @@ ATTRACTOR_SEMANTICS: Final[Dict[int, AttractorSemantics]] = {
         description="T(16) = Complete field, Vaikuntha energy",
         derivation="136 = 70 + 17 + 49 = HARE + KRISHNA + RAMA = T(16)",
     ),
-    
     # Structure
     MAHAJANA_COUNT: AttractorSemantics(
         value=MAHAJANA_COUNT,
@@ -193,7 +190,6 @@ ATTRACTOR_SEMANTICS: Final[Dict[int, AttractorSemantics]] = {
         description="64 qualities of Krishna",
         derivation="64 = WORDS × QUARTERS = 16 × 4",
     ),
-    
     # Transmission
     PARAMPARA: AttractorSemantics(
         value=PARAMPARA,
@@ -202,7 +198,6 @@ ATTRACTOR_SEMANTICS: Final[Dict[int, AttractorSemantics]] = {
         description="Disciplic succession constant",
         derivation="37 = PRIME (12th prime number)",
     ),
-    
     # 6 Attractors from mod 108
     KSETRAJNA: AttractorSemantics(
         value=KSETRAJNA,
@@ -246,10 +241,10 @@ def interpret_attractor(value: int) -> str:
 # =============================================================================
 
 CYCLE_4_VALUES: Final[Tuple[int, ...]] = (
-    GITA_CHAPTERS,           # 18
-    POSITION_SUM_RAMA,       # 49
-    HARE_KRISHNA_COMBINED,   # 87 = HARE + KRISHNA
-    SHRUTIS,                 # 22
+    GITA_CHAPTERS,  # 18
+    POSITION_SUM_RAMA,  # 49
+    HARE_KRISHNA_COMBINED,  # 87 = HARE + KRISHNA
+    SHRUTIS,  # 22
 )
 
 CYCLE_4_INTERPRETATION: Final[str] = """
@@ -279,10 +274,10 @@ def print_cycle_analysis() -> None:
     print()
     print("VERIFIED CYCLE (computed):")
     print("-" * 40)
-    
+
     from vibe_core.mahamantra.substrate.algorithm import maha_oscillate
     import warnings
-    
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         v = GITA_CHAPTERS
@@ -297,25 +292,26 @@ def print_cycle_analysis() -> None:
 # ATTRACTOR BASIN ANALYSIS
 # =============================================================================
 
+
 def analyze_mod_space(mod: int) -> None:
     """Analyze attractors in a given mod space with semantic interpretation."""
     from vibe_core.mahamantra_research.attractor_analysis import find_all_attractors
-    
+
     print(f"\n{'=' * 60}")
     print(f"MOD {mod} SEMANTIC ANALYSIS")
     print("=" * 60)
-    
+
     attractors = find_all_attractors(mod)
     vals = sorted([a.value for a in attractors.values()])
-    
+
     print(f"\nAttractors: {vals}")
     print(f"Count: {len(vals)}, Sum: {sum(vals)}")
     print()
-    
+
     for a in sorted(attractors.values(), key=lambda x: -x.basin_size):
         sem = get_semantics(a.value)
         cycle_info = "FIXED" if a.cycle_length == KSETRAJNA else f"cycle-{a.cycle_length}"
-        
+
         if sem:
             print(f"  {a.value:3} = {sem.name:20} | basin={a.basin_size:3} | {cycle_info}")
             print(f"        {sem.description}")
@@ -329,10 +325,10 @@ def run_full_semantic_analysis() -> None:
     print("=" * 70)
     print("ATTRACTOR SEMANTICS - Full Analysis")
     print("=" * 70)
-    
+
     # The 4-cycle
     print_cycle_analysis()
-    
+
     # Key mod spaces
     for mod in [MAHA_QUANTUM, MALA, PARAMPARA, POSITION_SUM_HARE]:
         analyze_mod_space(mod)

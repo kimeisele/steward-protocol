@@ -162,5 +162,3 @@ class TestPhoenixRecovery:
         save_state(tick=0, lila_tick=0)
         tick, lila = init_phoenix()
         assert tick == 0 and lila == 0
-
-
