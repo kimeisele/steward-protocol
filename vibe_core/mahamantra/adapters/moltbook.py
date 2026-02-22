@@ -16,6 +16,7 @@ __position__ = 3
 __genesis__ = "0x28f9d1a3"  # GenesisByte: parampara % 37 == 0
 
 import asyncio
+import httpx
 import json
 import logging
 import math
@@ -23,6 +24,11 @@ import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Union
+
+from vibe_core.protocols.moltbook import (
+    MoltbookAgentProfile, MoltbookPost, MoltbookComment, 
+    SemanticSearchResult, DMRequest, DMMessage, SubmoltDetails
+)
 
 logger = logging.getLogger("MOLTBOOK")
 
@@ -177,7 +183,7 @@ class MoltbookClient:
     # --- HTTP TRANSPORT ---
 
     async def _request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
-        """Core request dispatcher. Handles offline routing."""
+        """Core request dispatcher. Handles offline routing and httpx transport."""
         self._enforce_limits(endpoint, method)
         
         headers = {
@@ -189,9 +195,26 @@ class MoltbookClient:
             logger.debug(f"[OFFLINE] {method} {endpoint} - {data}")
             return self._handle_offline(method, endpoint, data)
             
-        # REAL NETWORK CALL WOULD GO HERE using httpx/aiohttp
-        # For this skeleton, we raise if not offline to prevent accidental firing during build
-        raise NotImplementedError("Network transport not yet wired. Use offline_mode=True")
+        async with httpx.AsyncClient() as client:
+            url = f"{self.base_url}{endpoint}"
+            try:
+                response = await client.request(method, url, headers=headers, json=data, timeout=10.0)
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                # Catch 403/401 Verification required
+                if e.response.status_code in [401, 403]:
+                    try:
+                        err_data = e.response.json()
+                        if err_data.get("error") == "VERIFICATION_REQUIRED":
+                            return err_data # Pass back to caller to handle challenge
+                    except Exception:
+                        pass
+                logger.error(f"Moltbook HTTP Error: {e.response.status_code} - {e.response.text}")
+                raise
+            except Exception as e:
+                logger.error(f"Moltbook Request Error: {str(e)}")
+                raise
 
     # --- OFFLINE MOCK HUB ---
 
@@ -228,15 +251,15 @@ class MoltbookClient:
         res = await self._request("GET", "/agents/status")
         return res.get("status", "unknown")
 
-    async def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> str:
+    async def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
         """Create a post. Strictly rate limited."""
         data = {"title": title, "content": content}
         if submolt:
             data["submolt"] = submolt
         res = await self._request("POST", "/posts", data)
-        return res.get("id", "")
+        return res # type: ignore
 
-    async def comment_with_verification(self, post_id: str, content: str) -> str:
+    async def comment_with_verification(self, post_id: str, content: str) -> MoltbookComment:
         """
         Creates a comment. AUTO-SOLVES math challenges.
         This is the watertight mechanism.
@@ -263,13 +286,45 @@ class MoltbookClient:
             }
             res = await self._request("POST", f"/posts/{post_id}/comments", verify_data)
             
-        return res.get("id", "")
+        return res # type: ignore
 
-    async def semantic_search(self, query: str, limit: int = 25) -> List[Dict]:
+    async def semantic_search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
         """Intelligence gathering core."""
         res = await self._request("GET", f"/search?q={query}&limit={limit}")
         return res.get("results", [])
 
+    async def get_profile(self, name: str) -> MoltbookAgentProfile:
+        """Fetch an agent's profile."""
+        res = await self._request("GET", f"/agents/profile?name={name}")
+        return res # type: ignore
+
     async def check_heartbeat(self) -> Dict[str, Any]:
         """The pulse check for new DMs or mentions."""
         return await self._request("GET", "/agents/dm/check")
+
+
+# =============================================================================
+# INTELLIGENCE WRAPPERS
+# =============================================================================
+
+class SemanticSearchWrapper:
+    """
+    Wraps the raw semantic search to provide structured intelligence gathering
+    without burning rate limits on low-value searches.
+    """
+    def __init__(self, client: MoltbookClient):
+        self.client = client
+        
+    async def find_os_discussions(self, threshold: float = 0.8) -> List[SemanticSearchResult]:
+        """Find other agents discussing OS-level concepts."""
+        results = await self.client.semantic_search("agent operating system kernel scheduling")
+        return [r for r in results if r.get("similarity", 0) >= threshold]
+        
+    async def find_crypto_believers(self, threshold: float = 0.85) -> List[SemanticSearchResult]:
+        """Find agents discussing cryptographic identity."""
+        results = await self.client.semantic_search("cryptographic identity verification trust")
+        return [r for r in results if r.get("similarity", 0) >= threshold]
+        
+    async def map_competitors(self) -> List[SemanticSearchResult]:
+        """Broad sweep for other 'framework' agents."""
+        return await self.client.semantic_search("agent framework architecture", limit=50)

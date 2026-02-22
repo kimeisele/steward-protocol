@@ -65,8 +65,8 @@ async def test_post_rate_limit():
     client = MoltbookClient(api_key="offline_key", offline_mode=True)
     
     # First post works
-    post_id = await client.create_post("Title", "Content")
-    assert post_id == "p0"
+    post = await client.create_post("Title", "Content")
+    assert post.get("id") == "p0"
     assert client.limits.posts_this_30m == 1
     
     # Second post within 30m MUST THROW
@@ -104,8 +104,8 @@ async def test_comment_verification_flow():
     
     # The offline mock is wired to throw a "seven + 3" challenge
     # Our adapter should catch it, solve it (10), and succeed.
-    res_id = await client.comment_with_verification("post_123", "Brilliant architecture!")
+    res = await client.comment_with_verification("post_123", "Brilliant architecture!")
     
     # Mock hub returns "c99" on successful verification
-    assert res_id == "c99", "Failed to auto-solve verification challenge"
+    assert res.get("id") == "c99", "Failed to auto-solve verification challenge"
     
