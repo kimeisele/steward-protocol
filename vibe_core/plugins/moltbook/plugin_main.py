@@ -2,21 +2,28 @@
 Moltbook Plugin — Sensor/Actuator Membrane
 ===========================================
 
-Bridges the Moltbook social network to the Visnu Kernel via the
-standard Plugin lifecycle (on_boot / on_pulse / on_shutdown).
+Bridges the Moltbook social network to the Mahamantra Engine via
+mahamantra.register_listener() — the REAL heartbeat path.
 
-Inbound (SENSORS phase in on_pulse):
-    Polls Moltbook for new DMs → routes them through Govardhan Gateway
-    → the 5 Pancha Tattva Gates fire → result becomes a Cell.
+Architecture (verified against code):
+    mahamantra.tick()                            # singularity.py:1159
+        → kala.advance()                         # Time
+        → venu.step()                            # DIW from LUT
+        → _broadcast(TickState)                  # Narada dispatch
+            → Nrisimha._on_mahamantra_tick()     # Watchdog (wired)
+            → MahaComputeService.on_tick()       # Compute (wired)
+            → MoltbookPlugin._on_mahamantra_tick # THIS (wired at boot)
 
-Outbound (ACTUATORS, future):
-    Content approved by NAGA Cortex → posted to Moltbook via the adapter.
+The plugin polls Moltbook once per full Mantra (16 ticks = 1 chant cycle).
+Inbound DMs route through Govardhan Gateway → 5 Gates → Cell.
 
-All network I/O goes through MoltbookClient (adapters/moltbook.py).
-Rate-limit state survives reboots via PluginStateContract.
+on_pulse() is kept for backward compatibility but the REAL path
+is the Mahamantra listener. When the split-brain heals and
+kernel.pulse() works, both paths converge safely.
 """
 
 import logging
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
@@ -28,15 +35,16 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("MOLTBOOK")
 
+# One full mantra = 16 ticks. Poll Moltbook once per chant cycle.
+_TICKS_PER_HEARTBEAT = 16
+
 
 class MoltbookPlugin(KernelPlugin):
     """
-    Moltbook membrane for the Visnu Kernel.
+    Moltbook membrane wired to Mahamantra via register_listener().
 
-    Follows the same pattern as EconomyPlugin / SanghaNetworkPlugin:
-    - Lazy client creation in on_boot
-    - State snapshot/restore for crash recovery
-    - Single codepath for heartbeat (no separate script)
+    Same pattern as Nrisimha and MahaComputeService:
+    bombenfest zum Mahamantra at __init__/on_boot time.
     """
 
     plugin_id = "moltbook"
@@ -47,6 +55,8 @@ class MoltbookPlugin(KernelPlugin):
         self._offline_mode: bool = True
         self._last_heartbeat_error: Optional[str] = None
         self._state_dir: Optional[Path] = None
+        self._tick_count: int = 0
+        self._listener_wired: bool = False
 
     @property
     def dependencies(self) -> Set[str]:
@@ -102,7 +112,7 @@ class MoltbookPlugin(KernelPlugin):
         from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 
         try:
-            # Resolve state dir via phoenix config or fallback
+            # Resolve state dir
             try:
                 from vibe_core.phoenix.config import get_config
 
@@ -127,6 +137,10 @@ class MoltbookPlugin(KernelPlugin):
                 api_key=api_key,
                 offline_mode=self._offline_mode,
             )
+
+            # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
+            self._wire_to_mahamantra()
+
             mode = "OFFLINE" if self._offline_mode else "LIVE"
             logger.info(f"Moltbook booted [{mode}]")
             return HookResult.ok()
@@ -135,8 +149,21 @@ class MoltbookPlugin(KernelPlugin):
             logger.error(f"Moltbook boot failed: {e}")
             return HookResult.error(str(e))
 
+    def _wire_to_mahamantra(self) -> None:
+        """Register as Mahamantra tick listener. Bombenfest."""
+        if self._listener_wired:
+            return
+        try:
+            from vibe_core.mahamantra import mahamantra
+
+            mahamantra.register_listener(self._on_mahamantra_tick)
+            self._listener_wired = True
+            logger.info("PARAMPARA: Moltbook wired to Mahamantra")
+        except Exception as e:
+            logger.warning(f"Mahamantra connection failed: {e}")
+
     def _try_vault(self, kernel: "RealVibeKernel") -> str:
-        """Attempt to load API key from CivicVault. Returns empty string on failure."""
+        """Attempt to load API key from CivicVault."""
         try:
             economy = kernel.api("economy")
             if not economy:
@@ -150,12 +177,55 @@ class MoltbookPlugin(KernelPlugin):
         return ""
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+        # Unregister listener
+        if self._listener_wired:
+            try:
+                from vibe_core.mahamantra import mahamantra
+
+                mahamantra.unregister_listener(self._on_mahamantra_tick)
+                self._listener_wired = False
+            except Exception:
+                pass
         self._client = None
         logger.info("Moltbook shutdown")
         return HookResult.ok()
 
     # =========================================================================
-    # Pulse — The heartbeat
+    # Mahamantra Listener — THE heartbeat path
+    # =========================================================================
+
+    def _on_mahamantra_tick(self, tick_state: object) -> None:
+        """
+        Called on every mahamantra.tick() via _broadcast().
+
+        Polls Moltbook once per full mantra cycle (16 ticks).
+        Same pattern as Nrisimha._on_mahamantra_tick().
+        """
+        if not self._client:
+            return
+
+        self._tick_count += 1
+        if self._tick_count % _TICKS_PER_HEARTBEAT != 0:
+            return
+
+        self._do_heartbeat()
+
+    def _do_heartbeat(self) -> None:
+        """Execute one heartbeat cycle: check DMs, route inbound."""
+        try:
+            heartbeat = self._client.sync_check_heartbeat()
+            self._last_heartbeat_error = None
+        except Exception as e:
+            self._last_heartbeat_error = str(e)
+            logger.warning(f"Heartbeat failed: {e}")
+            return
+
+        has_new = heartbeat.get("has_new_messages", False)
+        if has_new:
+            self._process_inbound_dms()
+
+    # =========================================================================
+    # on_pulse — backward compat (delegates to same heartbeat)
     # =========================================================================
 
     @property
@@ -164,36 +234,27 @@ class MoltbookPlugin(KernelPlugin):
 
     def on_pulse(self, kernel: "RealVibeKernel", transaction: object) -> HookResult:
         """
-        Runs during the macro-cycle (GitHub Actions headless or kernel tick).
-
-        SENSOR work: poll Moltbook for new DMs, route inbound through Govardhan.
-        ACTUATOR work: deferred to Phase 4 (content proposals via NAGA Cortex).
+        Backward compat: if kernel.pulse() ever gets fixed,
+        this delegates to the same heartbeat logic.
         """
         if not self._client:
             return HookResult.error("Client not initialized")
 
-        try:
-            heartbeat = self._client.sync_check_heartbeat()
-            self._last_heartbeat_error = None
-        except Exception as e:
-            self._last_heartbeat_error = str(e)
-            logger.warning(f"Heartbeat failed: {e}")
-            return HookResult.ok(data={"heartbeat": "failed", "error": str(e)})
-
-        has_new = heartbeat.get("has_new_messages", False)
-        pending = heartbeat.get("pending_requests", 0)
-
-        if has_new:
-            self._process_inbound_dms()
+        self._do_heartbeat()
 
         return HookResult.ok(
             data={
-                "heartbeat": "ok",
-                "has_new_messages": has_new,
-                "pending_requests": pending,
+                "heartbeat": "ok" if not self._last_heartbeat_error else "failed",
+                "error": self._last_heartbeat_error,
                 "offline": self._offline_mode,
+                "listener_wired": self._listener_wired,
+                "ticks_seen": self._tick_count,
             }
         )
+
+    # =========================================================================
+    # Inbound DM Processing
+    # =========================================================================
 
     def _process_inbound_dms(self) -> None:
         """Fetch new DM messages and route each through Govardhan Gateway."""
@@ -228,4 +289,6 @@ class MoltbookPlugin(KernelPlugin):
             "client": self._client,
             "offline": self._offline_mode,
             "last_error": self._last_heartbeat_error,
+            "listener_wired": self._listener_wired,
+            "ticks_seen": self._tick_count,
         }
