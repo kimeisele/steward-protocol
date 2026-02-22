@@ -36,6 +36,7 @@ __genesis__ = "0x118d39d4"  # GenesisByte: parampara % 37 == 0
 import logging
 from typing import Any, Dict, Optional, Tuple
 
+from vibe_core.mahamantra import MAHA_QUANTUM, WORDS, PanchaTattvaProtocol, TattvaDict
 from vibe_core.mahamantra.protocols._maha_compute import (
     ALL_ATTRACTORS,
     ATTRACTOR_CYCLE,
@@ -50,11 +51,6 @@ from vibe_core.mahamantra.protocols._maha_compute import (
     get_gita_insight,
     get_operation,
     is_attractor,
-)
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
-from vibe_core.mahamantra.protocols._seed import (
-    MAHA_QUANTUM,
-    WORDS,
 )
 
 logger = logging.getLogger("MAHA_COMPUTE")

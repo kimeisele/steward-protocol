@@ -28,7 +28,6 @@ from typing import Any, Dict, Optional
 # VibeOS Integration
 from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 # OPUS-307 Phase I.2: ExecutorSingularity replaces DeterministicExecutor
 from vibe_core.cartridges.system.envoy.executor_singularity import (
@@ -38,6 +37,7 @@ from vibe_core.cartridges.system.envoy.executor_singularity import (
 
 # GAD-5500: The Missing Link (Wiring)
 from vibe_core.config import CityConfig
+from vibe_core.mahamantra import PanchaTattvaProtocol, TattvaDict
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin

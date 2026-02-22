@@ -33,11 +33,10 @@ from enum import Enum
 from typing import Dict, List, Optional, Protocol, Union, runtime_checkable
 
 # MantraOpCode for chat
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.mahamantra import MantraOpCode
 
 # Cognitive types
-from vibe_core.protocols.cognition import IntentType, CognitiveResult
-
+from vibe_core.protocols.cognition import CognitiveResult, IntentType
 
 # =============================================================================
 # STRICT TYPES (NO ANY)

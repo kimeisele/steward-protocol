@@ -22,7 +22,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from vibe_core.mahamantra.protocols._venu import (
+from vibe_core.mahamantra import (
     VENU_FIELD_TICKS,
     VENU_NADI_TICKS,
 )

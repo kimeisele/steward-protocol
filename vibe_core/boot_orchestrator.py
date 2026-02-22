@@ -539,7 +539,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     def _act_start_venu(self) -> None:
         """ACT Step 2: Start VenuService (Krishna's Flute - Central Orchestrator)."""
         from vibe_core.di import ServiceRegistry
-        from vibe_core.mahamantra.protocols._venu import VenuServiceProtocol
+        from vibe_core.mahamantra import VenuServiceProtocol
         from vibe_core.services.venu_service import VenuService
 
         self._venu_service = VenuService()

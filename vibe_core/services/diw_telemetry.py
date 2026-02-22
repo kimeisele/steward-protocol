@@ -32,8 +32,7 @@ __genesis__ = "0x5a3c2e76"
 import logging
 from typing import Dict, List
 
-from vibe_core.mahamantra.protocols._seed import QUARTERS, WORDS
-from vibe_core.mahamantra.protocols._venu import DIWEvent, DIWSubscriberProtocol
+from vibe_core.mahamantra import QUARTERS, WORDS, DIWEvent, DIWSubscriberProtocol
 
 logger = logging.getLogger("DIW.TELEMETRY")
 

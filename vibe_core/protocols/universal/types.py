@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Protocol, TypeVar, Union, runtime_
 
 # Import Layer -1 (Holy Name Maths) for Resonance Calculation
 # SSOT: byte.py defines HolyName with VOID for binary encoding
-from vibe_core.mahamantra.substrate.byte import HolyName, MantraByte
+from vibe_core.mahamantra import HolyName, MantraByte
 
 # T = TypeVar("T") # Reserved for Generics if upgrades needed
 

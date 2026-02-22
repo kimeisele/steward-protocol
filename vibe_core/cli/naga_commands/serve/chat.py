@@ -26,7 +26,7 @@ __genesis__ = "0xedb5ebb8"  # GenesisByte: parampara % 37 == 0
 
 from typing import List, Optional
 
-from vibe_core.mahamantra.substrate.harmonics import ResonanceHarmonics
+from vibe_core.mahamantra import ResonanceHarmonics
 from vibe_core.protocols.naga.cli_command import (
     NAGA_COMMAND_REGISTRY,
     NagaCommandBase,

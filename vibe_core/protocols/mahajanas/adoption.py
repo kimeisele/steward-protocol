@@ -28,39 +28,41 @@ __mahajana__ = "parashurama"
 __position__ = 8
 __genesis__ = "0xe5db6bcc"  # GenesisByte: parampara % 37 == 0
 
+import inspect
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from typing import (
+    Callable,
     Dict,
+    Final,
     List,
     Optional,
-    TypedDict,
-    Callable,
     Set,
-    Final,
-    Protocol as TypingProtocol,
+    TypedDict,
     runtime_checkable,
 )
-from pathlib import Path
-import inspect
+from typing import (
+    Protocol as TypingProtocol,
+)
 
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.mahamantra import MantraOpCode
 from vibe_core.protocols.mahajanas.router import (
-    Mahajana,
-    MahajanaRouter,
-    MahajanaRoute,
     HEAD_OPCODES,
+    Mahajana,
+    MahajanaRoute,
+    MahajanaRouter,
     get_router,
 )
 from vibe_core.protocols.substrate.mantra.acintya import (
-    check_bheda_abheda,
-    verify_parampara,
-    SYSTEM_MANIFESTATION,
+    KRISHNA,
     PARAMPARA,
+    SYSTEM_MANIFESTATION,
     JivaCondition,
     KrishnaPresence,
-    KRISHNA,
+    check_bheda_abheda,
+    verify_parampara,
 )
 from vibe_core.protocols.substrate.mantra.lotus import (
     LOTUS_POSITIONS,
@@ -68,7 +70,6 @@ from vibe_core.protocols.substrate.mantra.lotus import (
     WORDS_PER_QUARTER,
     LotusQuarter,
 )
-
 
 # =============================================================================
 # PROTOCOL OWNERSHIP (Governed by CLI)
@@ -618,24 +619,12 @@ def analyze(protocol_path: str, source_code: str) -> ProtocolAnalysis:
 # =============================================================================
 
 # Import byte-level substrate
-from vibe_core.protocols.substrate.byte import (
-    MantraByte,
-    HolyName,
-    MANTRA_SEQUENCE,
-)
-from vibe_core.protocols.substrate.mantra.lotus import (
-    LotusHeartbeat,
-    LotusRegistry,
-    get_lotus,
-    LotusNode,
-    LOTUS_PARAMPARA,
-)
+import logging
 
-# Import MERCY pattern from Prabhupada (THE KEY IN KALI YUGA!)
-from vibe_core.protocols.substrate.mantra.prabhupada import (
-    MercyType,
-    PRABHUPADA,
-    SilentWitness,
+from vibe_core.protocols.substrate.byte import (
+    MANTRA_SEQUENCE,
+    HolyName,
+    MantraByte,
 )
 
 # Import Diksha for the "always accessible" principle
@@ -643,8 +632,20 @@ from vibe_core.protocols.substrate.mantra.diksha import (
     DikshaCertificate,
     create_uninitiated,
 )
+from vibe_core.protocols.substrate.mantra.lotus import (
+    LOTUS_PARAMPARA,
+    LotusHeartbeat,
+    LotusNode,
+    LotusRegistry,
+    get_lotus,
+)
 
-import logging
+# Import MERCY pattern from Prabhupada (THE KEY IN KALI YUGA!)
+from vibe_core.protocols.substrate.mantra.prabhupada import (
+    PRABHUPADA,
+    MercyType,
+    SilentWitness,
+)
 
 logger = logging.getLogger(__name__)
 
