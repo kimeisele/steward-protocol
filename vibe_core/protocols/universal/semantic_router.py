@@ -317,11 +317,12 @@ _semantic_router: Optional[SemanticRouter] = None
 
 def get_semantic_router() -> SemanticRouter:
     import warnings
+
     warnings.warn(
         "The legacy SemanticRouter is deprecated and will be removed. "
         "Use 'vibe_core.mahamantra.adapters.cli.get_adapter' instead.",
         DeprecationWarning,
-        stacklevel=2
+        stacklevel=2,
     )
     """Get the global SemanticRouter instance."""
     global _semantic_router

@@ -53,12 +53,13 @@ class BhishmaService(BhishmaProtocol, PanchaTattvaProtocol, ExecutableMixin):
 
     def __init__(self, ledger: LedgerProtocol):
         self._ledger = ledger
-        
+
         # VARNASHRAMA INTEGRATION:
         # Spawn the JivaShadow qualified for this position (11).
         from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+
         self._shadow = spawn_shadow_for_position(11, context=b"bhishma_service_v1")
-        
+
         logger.info(f"🛡️ BHISHMA: Initialized with {type(ledger).__name__}")
 
     @property

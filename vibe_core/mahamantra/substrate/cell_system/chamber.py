@@ -14,7 +14,8 @@ Structure:
 
 ALL VALUES DERIVED FROM SSOT (_seed.py). NO HARDCODING. NO `Any`.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, KSHETRA, QUALITIES, QUARTERS)
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, KSHETRA, QUALITIES, QUARTERS
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "gauranga"
@@ -123,28 +124,28 @@ DEFAULT_CHORUS_SIZE: Final[int] = WORDS
 #   CF // 100 = 216 (was 0.01), 2 * CF // 100 = 432 (was 0.02), -MALA = -108 (was -0.005)
 
 # Canonical storage: 12 entries as (phase, name) → effect
-_IC_1: Final[int] = COSMIC_FRAME // 100   # 216 (was 0.01)
+_IC_1: Final[int] = COSMIC_FRAME // 100  # 216 (was 0.01)
 _IC_2: Final[int] = HALVES * COSMIC_FRAME // 100  # 432 (was 0.02)
-_IC_NEG: Final[int] = -MALA               # -108 (was -0.005)
+_IC_NEG: Final[int] = -MALA  # -108 (was -0.005)
 
 _DIW_DATA: tuple = (
     #          prana  integrity_cf  cycle
     # GENESIS (phase=0)
-    ( HALVES,  0,        0),          # H: strong prana boost
-    ( 1,       _IC_1,    0),          # K: moderate + integrity
-    ( 1,       0,        KSETRAJNA),  # R: moderate + cycle
+    (HALVES, 0, 0),  # H: strong prana boost
+    (1, _IC_1, 0),  # K: moderate + integrity
+    (1, 0, KSETRAJNA),  # R: moderate + cycle
     # DHARMA (phase=1)
-    (-1,       0,        0),          # H: validation cost
-    ( 0,       _IC_2,    0),          # K: integrity strengthened
-    ( 0,       _IC_1,    KSETRAJNA),  # R: cycle + integrity
+    (-1, 0, 0),  # H: validation cost
+    (0, _IC_2, 0),  # K: integrity strengthened
+    (0, _IC_1, KSETRAJNA),  # R: cycle + integrity
     # KARMA (phase=2)
-    (-1,       0,        KSETRAJNA),  # H: work + cycle
-    (-1,       _IC_1,    KSETRAJNA),  # K: work + integrity + cycle
-    (-1,       0,        HALVES),     # R: Rama accelerates
+    (-1, 0, KSETRAJNA),  # H: work + cycle
+    (-1, _IC_1, KSETRAJNA),  # K: work + integrity + cycle
+    (-1, 0, HALVES),  # R: Rama accelerates
     # MOKSHA (phase=3)
-    (-1,       _IC_NEG,  0),          # H: slight integrity decay
-    (-1,       _IC_1,    0),          # K: integrity stabilized
-    (-1,       0,        HALVES),     # R: Rama delivers
+    (-1, _IC_NEG, 0),  # H: slight integrity decay
+    (-1, _IC_1, 0),  # K: integrity stabilized
+    (-1, 0, HALVES),  # R: Rama delivers
 )
 
 # 4×3 index: phase * 3 + name (phase is outer loop)
@@ -154,8 +155,8 @@ _DIW_PHASE_FIRST: tuple = _DIW_DATA  # identity — already stored phase-first
 # Same 12 entries, transposed access. Built once at import.
 _DIW_NAME_FIRST: tuple = tuple(
     _DIW_DATA[phase * 3 + name]
-    for name in range(QUARTERS - KSETRAJNA)   # 3 names (H=0, K=1, R=2)
-    for phase in range(QUARTERS)               # 4 phases per name
+    for name in range(QUARTERS - KSETRAJNA)  # 3 names (H=0, K=1, R=2)
+    for phase in range(QUARTERS)  # 4 phases per name
 )
 
 # Default: phase-first (the DIW naturally decomposes phase then name)
@@ -165,20 +166,22 @@ _DIW_RESONANCE_TABLE = _DIW_PHASE_FIRST
 class KirtanMode(IntEnum):
     """
     The modes of chanting in the chamber.
-    
+
     Derived from the three flutes:
     - SOLO (Venu) = Individual transformation
     - CALL_RESPONSE (Vamsi) = Leader-follower pattern
     - CHORUS (Murali) = Group harmony
     """
-    SOLO = 0          # Single cell transformation
+
+    SOLO = 0  # Single cell transformation
     CALL_RESPONSE = KSETRAJNA  # Two cells interacting
-    CHORUS = HALVES         # Multiple cells merging
+    CHORUS = HALVES  # Multiple cells merging
 
 
 # =============================================================================
 # SANKIRTAN CHAMBER
 # =============================================================================
+
 
 def _resolve_orchestrator() -> VenuOrchestrator:
     """Obtain the shared VenuOrchestrator from ServiceRegistry.
@@ -218,10 +221,10 @@ class SankirtanChamber(Generic[C]):
 
     # The Orchestrator (shared via ServiceRegistry, or local fallback)
     _orchestrator: VenuOrchestrator = field(default_factory=_resolve_orchestrator)
-    
+
     # The Registry (Musical Memory - 512 slots)
     _registry: SiksastakamRegistry = field(default_factory=SiksastakamRegistry)
-    
+
     # The Antaranga (Inner Chamber - Contiguous RAM)
     # 512 × 32 bytes = 16 KB. No Python objects. No GC. Pure byte resonance.
     # Bahiranga (outer) = Python objects for API/debugging.
@@ -230,7 +233,7 @@ class SankirtanChamber(Generic[C]):
 
     # Resonance Engines (for Clustering)
     _resonator: MahaResonator = field(default_factory=lambda: MahaResonator(mod_space=MAHA_QUANTUM))
-    
+
     # Chamber state
     _resonance_count: int = 0
     _total_transformations: int = 0
@@ -255,26 +258,26 @@ class SankirtanChamber(Generic[C]):
     def tick(self) -> int:
         """Current orchestrator tick."""
         return self._orchestrator.tick
-    
+
     @property
     def resonance_count(self) -> int:
         """Number of resonant transformations (mod PARAMPARA == 0)."""
         return self._resonance_count
-    
+
     @property
     def total_transformations(self) -> int:
         """Total cells transformed."""
         return self._total_transformations
-    
+
     @property
     def active_cells(self) -> list[MahaCellUnified[C]]:
         """Return all cells currently residing in the registry."""
         return self._registry.active_cells()
-    
+
     # =========================================================================
     # CORE TRANSFORMATION METHODS
     # =========================================================================
-    
+
     def dance(
         self,
         cell: MahaCellUnified[C],
@@ -282,7 +285,7 @@ class SankirtanChamber(Generic[C]):
     ) -> MahaCellUnified[C]:
         """
         Single cell flows through, gets transformed, and interacts with Memory.
-        
+
         Logic:
         1. Get DIW from Orchestrator (or use provided DIW).
         2. Transform Cell (apply DIW).
@@ -290,45 +293,45 @@ class SankirtanChamber(Generic[C]):
         4. Interact with Registry at Vamsi address:
            - Empty? -> Occupy (Presence).
            - Occupied? -> Merge (Resonance).
-        
+
         Args:
             cell: The cell to transform
             diw: Optional pre-computed DIW (e.g. from spell()).
                  If None, the orchestrator's step() provides the next
                  DIW from THE_FLUTE_CYCLE (the heartbeat).
-            
+
         Returns:
             The resulting cell (original or merged)
         """
         # 1. Get the current Divine Instruction Word
         if diw is None:
             diw = self._orchestrator.step()
-        
+
         # 2. Transform the cell
         self._apply_diw(cell, diw)
-        
+
         # 3. INTERACT WITH REGISTRY (Musical Memory)
         # Extract Vamsi (9 bits) - The Memory Address
         vamsi = (diw >> VAMSI_SHIFT) & VAMSI_MASK
-        
+
         # Branchless Sunya Pattern:
         # Get resident (Active or Null)
         resident = self._registry.get(vamsi)
-        
+
         # Check collision BEFORE interaction (for metrics only)
         # (This branch is for stats, not logic flow)
         if resident.is_alive and resident is not cell:
             self._resonance_count += KSETRAJNA
-            
+
         # Polymorphic Interaction
         # If resident is Null -> returns cell (Presence)
         # If resident is Active -> returns resident (Resonance/Merge)
         result_cell = resident.interact(cell)
-        
+
         # Update Registry
         # Always set, whether it's new presence or updated resonance
         self._registry.set(vamsi, result_cell)
-        
+
         # 3b. ANTARANGA SHADOW (Inner Chamber - Contiguous RAM)
         # Mirror the collision into 16 KB contiguous memory.
         # Same logic, hardware speed. The inner chamber resonates.
@@ -346,24 +349,24 @@ class SankirtanChamber(Generic[C]):
         )
 
         # Track statistics
-        self._accumulated_diw ^= (diw & DIW_MASK)
+        self._accumulated_diw ^= diw & DIW_MASK
         self._total_transformations += KSETRAJNA
-        
+
         if self._accumulated_diw % PARAMPARA == 0:
             self._resonance_count += KSETRAJNA
-            
+
         # 4. HARMONIC FEEDBACK (Gemini Round 2)
         # Verify Resonance -> Adapt Mode
         # If resonance is high, we enter CHORUS mode (Broadcast)
-        if self._resonance_count > CHAMBER_CAPACITY: # 108
+        if self._resonance_count > CHAMBER_CAPACITY:  # 108
             if self._orchestrator.mode != KirtanMode.CHORUS:
                 self._orchestrator.set_mode(KirtanMode.CHORUS)
-        elif self._resonance_count > PARAMPARA: # 37
+        elif self._resonance_count > PARAMPARA:  # 37
             if self._orchestrator.mode != KirtanMode.CALL_RESPONSE:
                 self._orchestrator.set_mode(KirtanMode.CALL_RESPONSE)
-        
+
         return result_cell
-    
+
     def kirtan(
         self,
         cell: MahaCellUnified[C],
@@ -371,13 +374,13 @@ class SankirtanChamber(Generic[C]):
     ) -> MahaCellUnified[C]:
         """
         Transform cell through multiple mantra cycles.
-        
+
         One cycle = WORDS (16) transformations.
-        
+
         Args:
             cell: The cell to transform
             cycles: Number of full cycles (default: 1)
-            
+
         Returns:
             The transformed cell
         """
@@ -385,49 +388,49 @@ class SankirtanChamber(Generic[C]):
         for _ in range(cycles * WORDS):
             current = self.dance(current)
         return current
-    
+
     def sankirtan(
         self,
         cells: list[MahaCellUnified[C]],
     ) -> MahaCluster[C]:
         """
         Mass Kirtan - merge cells without identity loss.
-        
+
         Cells merge into a MahaCluster (Unity in Diversity).
-        
+
         Args:
             cells: List of cells to transform/merge
-            
+
         Returns:
             MahaCluster representing the group resonance
         """
         if not cells:
             return MahaCluster([], 0, 0.0)
-            
+
         # 1. Transform all cells through the Chamber (Process)
         processed_cells = []
         for cell in cells:
             # Each cell dances through the registry
             res = self.dance(cell)
             processed_cells.append(res)
-            
+
         # 2. Compute Group Resonance (Attractor)
         # Combined seed = XOR of all cell signatures (arcanam)
         combined_seed = 0
         for cell in processed_cells:
             combined_seed ^= cell.header.arcanam
-            
+
         # Find the natural attractor for this group
         # Use the Resonator (owned by Chamber now)
         attractor_result = self._resonator.find_attractor(combined_seed)
-        
+
         # 3. Create Cluster
         return MahaCluster(
             cells=processed_cells,
             resonance_attractor=attractor_result.attractor,
-            coherence=attractor_result.attractor / MALA, # Normalized
+            coherence=attractor_result.attractor / MALA,  # Normalized
         )
-    
+
     def spell_kirtan(
         self,
         cell: MahaCellUnified[C],
@@ -435,34 +438,34 @@ class SankirtanChamber(Generic[C]):
     ) -> MahaCellUnified[C]:
         """
         Transform cell through input-derived DIWs (Melody over Heartbeat).
-        
+
         Like kirtan(), but the DIWs come from spell(coords) instead of
         THE_FLUTE_CYCLE. The input's RAMA coordinates literally play
         through Krishna's flute, and each phoneme becomes a transformation.
-        
+
         dance()  = heartbeat (LUT)
         kirtan() = heartbeat × cycles
         spell_kirtan() = melody (input-derived DIWs via shared orchestrator)
-        
+
         Same reactor (_apply_diw), same memory (Registry), same resonance.
         Different fuel.
-        
+
         Args:
             cell: The cell to transform
             coords: RAMA coordinates (0-48) from phonetic encoding
-            
+
         Returns:
             The transformed cell
         """
         if not coords:
             return cell
-        
+
         diws = self._orchestrator.spell(coords)
         current = cell
         for d in diws:
             current = self.dance(current, diw=d)
         return current
-    
+
     # =========================================================================
     # ANTARANGA METHODS (Inner Chamber - Contiguous RAM)
     # =========================================================================
@@ -492,7 +495,7 @@ class SankirtanChamber(Generic[C]):
         collisions = 0
         for i, rw in enumerate(ranked_words):
             # Deterministic slot from word coordinates
-            coord_sum = sum(rw.word.coords) if hasattr(rw.word, 'coords') else i
+            coord_sum = sum(rw.word.coords) if hasattr(rw.word, "coords") else i
             slot = coord_sum % 512
 
             # Score → prana/integrity (score 0.0-1.0 → proportional energy)
@@ -523,7 +526,7 @@ class SankirtanChamber(Generic[C]):
     # =========================================================================
     # TRANSFORMATION LOGIC
     # =========================================================================
-    
+
     def _apply_diw(self, cell: MahaCellUnified[C], diw: int) -> None:
         """
         Apply Divine Instruction Word to cell.
@@ -569,13 +572,12 @@ class SankirtanChamber(Generic[C]):
         cell.lifecycle.prana += int(pf * base_delta)
         cell.lifecycle.prana = max(0, cell.lifecycle.prana)
         # integrity_coeff_cf is already in CF space; scale by intensity (0-1 float)
-        cell.lifecycle.integrity = max(0, min(COSMIC_FRAME,
-            cell.lifecycle.integrity + int(ic_cf * intensity)))
+        cell.lifecycle.integrity = max(0, min(COSMIC_FRAME, cell.lifecycle.integrity + int(ic_cf * intensity)))
         cell.lifecycle.cycle += ca
 
         # --- SANKIRTAN REACTOR: Prana clamped to MAX_PRANA ---
         cell.lifecycle.prana = min(cell.lifecycle.prana, MAX_PRANA)
-    
+
     def _merge_pair(
         self,
         resident: MahaCellUnified[C],
@@ -583,7 +585,7 @@ class SankirtanChamber(Generic[C]):
     ) -> MahaCellUnified[C]:
         """
         Merge two cells colliding in the Registry.
-        
+
         Strategy:
         - Prana accumulates
         - Integrity averages
@@ -591,77 +593,75 @@ class SankirtanChamber(Generic[C]):
         """
         # Combine Prana (additive energy)
         resident.lifecycle.prana += visitor.lifecycle.prana
-        
+
         # Average Integrity (integer division)
-        resident.lifecycle.integrity = (
-            resident.lifecycle.integrity + visitor.lifecycle.integrity
-        ) // HALVES
-        
+        resident.lifecycle.integrity = (resident.lifecycle.integrity + visitor.lifecycle.integrity) // HALVES
+
         # Mix Identities (Resonance)
         # We don't change the immutable header ID, but we could update 'atma_nivedanam' checksum?
         # For now, we mainly accumulate Life Force.
-        
+
         return resident
-        
+
     def _merge_resonant(
         self,
         cells: list[MahaCellUnified[C]],
     ) -> list[MahaCellUnified[C]]:
         """
         Merge cells in a list with high resonance (Legacy/Batch mode).
-        
+
         Cells are considered resonant if their header checksums
         have matching modulo PARAMPARA values.
         """
         if len(cells) < HALVES:
             return cells
-        
+
         result: list[MahaCellUnified[C]] = []
         merged_indices: set[int] = set()
-        
+
         for i, cell_a in enumerate(cells):
             if i in merged_indices:
                 continue
-            
+
             # Find resonant partner
             partner_found = False
             for j in range(i + KSETRAJNA, len(cells)):
                 if j in merged_indices:
                     continue
-                
+
                 cell_b = cells[j]
-                
+
                 # Check resonance: XOR of checksums mod PARAMPARA
                 xor_check = cell_a.header.atma_nivedanam ^ cell_b.header.atma_nivedanam
                 if xor_check % PARAMPARA == 0:
                     # Merge using pair logic
                     merger = self._merge_pair(cell_a, cell_b)
-                    
+
                     merged_indices.add(j)
                     partner_found = True
                     break
-            
+
             result.append(cell_a)
-        
+
         return result
-    
+
     # =========================================================================
     # VERIFICATION METHODS
     # =========================================================================
-    
+
     def verify_resonance(self) -> bool:
         """
         Verify the chamber maintains resonance.
-        
+
         Returns True if the orchestrator passes structural verification.
         """
         test_orch = VenuOrchestrator()
         return test_orch.verify_divinity()
-    
+
     def is_silent(self, diw: int) -> bool:
         """Check if instruction is silence (SUNYA)."""
         return self._orchestrator.is_sunya(diw)
-    
+
     def reset(self) -> None:
         """Reset all state (Registry, Orchestrator, Antaranga, Metrics)."""
         self._orchestrator.reset()
@@ -674,11 +674,11 @@ class SankirtanChamber(Generic[C]):
     # =========================================================================
     # PERSISTENCE (ChamberState)
     # =========================================================================
-    
+
     def snapshot(self) -> bytes:
         """
         Create a full snapshot of the Chamber state.
-        
+
         Includes: Metrics, Orchestrator State, Registry State.
         Format:
             [4s: Magic "OM!!"]
@@ -689,54 +689,47 @@ class SankirtanChamber(Generic[C]):
             [N: Registry State]
         """
         result = bytearray()
-        
+
         # Header (Magic + Metrics)
         # 4 + 8 + 8 + 8 = 28 bytes
         result.extend(b"OM!!")
-        result.extend(struct.pack(
-            "<QQQ",
-            self._accumulated_diw,
-            self._resonance_count,
-            self._total_transformations
-        ))
-        
+        result.extend(struct.pack("<QQQ", self._accumulated_diw, self._resonance_count, self._total_transformations))
+
         # Orchestrator (24 bytes now)
         result.extend(self._orchestrator.to_bytes())
-        
+
         # Registry (Variable)
         result.extend(self._registry.to_bytes())
 
         # Antaranga (Fixed: 16,384 bytes contiguous)
         result.extend(self._antaranga.raw)
-        
+
         return bytes(result)
-    
+
     def restore(self, snapshot: bytes) -> None:
         """
         Restore Chamber from snapshot.
-        
+
         Args:
             snapshot: Valid snapshot bytes
-            
+
         Raises:
             ValueError: If magic or format is invalid
         """
-        if len(snapshot) < 52: # 28 (Header) + 24 (Orchestrator)
+        if len(snapshot) < 52:  # 28 (Header) + 24 (Orchestrator)
             raise ValueError(f"Snapshot too short: {len(snapshot)} bytes, need at least 52")
-            
+
         # 1. Header
         magic = snapshot[:QUARTERS]
         if magic != b"OM!!":
             raise ValueError(f"Invalid magic: {magic!r}")
-            
+
         offset = QUARTERS
-        (
-            self._accumulated_diw,
-            self._resonance_count,
-            self._total_transformations
-        ) = struct.unpack("<QQQ", snapshot[offset:offset+KSHETRA])
+        (self._accumulated_diw, self._resonance_count, self._total_transformations) = struct.unpack(
+            "<QQQ", snapshot[offset : offset + KSHETRA]
+        )
         offset += KSHETRA
-        
+
         # 2. Orchestrator
         # We need to detect size.
         # But we don't know the exact break point without a length prefix.
@@ -750,21 +743,22 @@ class SankirtanChamber(Generic[C]):
         # I will assume 24 bytes for new format.
         # Old snapshots (16 bytes) will fail or need heuristics.
         # Given this is a fresh feature, assuming 24 bytes is acceptable.
-        
+
         orch_size = KSHETRA
-        orch_data = snapshot[offset:offset+orch_size]
+        orch_data = snapshot[offset : offset + orch_size]
         self._orchestrator.from_bytes(orch_data)
         offset += orch_size
-        
+
         # 3. Registry + Antaranga
         # Antaranga is always the LAST 16,384 bytes (fixed size).
         # Everything between orchestrator and antaranga is Registry.
         from vibe_core.mahamantra.substrate.antaranga import CHAMBER_BYTES
+
         if len(snapshot) >= offset + CHAMBER_BYTES:
             # New format: Registry + Antaranga
-            registry_data = snapshot[offset:len(snapshot) - CHAMBER_BYTES]
+            registry_data = snapshot[offset : len(snapshot) - CHAMBER_BYTES]
             self._registry.from_bytes(registry_data)
-            self._antaranga._mem[:] = snapshot[len(snapshot) - CHAMBER_BYTES:]
+            self._antaranga._mem[:] = snapshot[len(snapshot) - CHAMBER_BYTES :]
         else:
             # Legacy format: Registry only (no Antaranga)
             registry_data = snapshot[offset:]
@@ -774,7 +768,7 @@ class SankirtanChamber(Generic[C]):
     # =========================================================================
     # FACTORY METHODS
     # =========================================================================
-    
+
     @classmethod
     def create(cls) -> "SankirtanChamber[C]":
         """Create a new chamber using the shared orchestrator and fresh registry."""
@@ -797,14 +791,14 @@ _chamber_instance: Optional["SankirtanChamber"] = None
 def get_chamber() -> "SankirtanChamber":
     """
     Get the singleton SankirtanChamber instance.
-    
+
     PERSISTENT RESONANCE: The chamber maintains state across calls.
     This enables:
     - Accumulated DIW tracking
     - Resonance count persistence
     - Registry state preservation
     - Orchestrator tick continuity
-    
+
     "kirtanīyaḥ sadā hariḥ" - One should ALWAYS chant (continuous, not fresh each time)
     """
     global _chamber_instance

@@ -64,32 +64,38 @@ def map_entry_points() -> Dict[str, List[dict]]:
     # 1. __main__.py
     main_py = mahamantra_dir / "__main__.py"
     if _file_calls(main_py, "mahamantra("):
-        through.append({
-            "file": "mahamantra/__main__.py",
-            "function": "main()",
-            "evidence": "calls mahamantra(input_text) which is __call__()",
-            "entry": "CLI: python -m vibe_core.mahamantra",
-        })
+        through.append(
+            {
+                "file": "mahamantra/__main__.py",
+                "function": "main()",
+                "evidence": "calls mahamantra(input_text) which is __call__()",
+                "entry": "CLI: python -m vibe_core.mahamantra",
+            }
+        )
 
     # 2. MahamantraGateway
     gw = VIBE_CORE / "vibe_core" / "gateway" / "mahamantra_gateway.py"
     if _file_calls(gw, "mahamantra.execute("):
-        through.append({
-            "file": "gateway/mahamantra_gateway.py",
-            "function": "MahamantraGateway.receive()",
-            "evidence": "calls mahamantra.execute() which fires gates then __call__()",
-            "entry": "ALL: CLI, HTTP, CHAT, AGENT",
-        })
+        through.append(
+            {
+                "file": "gateway/mahamantra_gateway.py",
+                "function": "MahamantraGateway.receive()",
+                "evidence": "calls mahamantra.execute() which fires gates then __call__()",
+                "entry": "ALL: CLI, HTTP, CHAT, AGENT",
+            }
+        )
 
     # 3. Steward
     steward = mahamantra_dir / "cli" / "steward.py"
     if _file_calls(steward, "self.mahamantra("):
-        through.append({
-            "file": "mahamantra/cli/steward.py",
-            "function": "Steward.invoke()",
-            "evidence": "calls self.mahamantra(input_text) which is __call__()",
-            "entry": "CLI: steward command",
-        })
+        through.append(
+            {
+                "file": "mahamantra/cli/steward.py",
+                "function": "Steward.invoke()",
+                "evidence": "calls self.mahamantra(input_text) which is __call__()",
+                "entry": "CLI: steward command",
+            }
+        )
 
     # === BYPASS PATHS (split-brain) ===
 
@@ -100,14 +106,16 @@ def map_entry_points() -> Dict[str, List[dict]]:
         has_respond = "def respond(" in src
         no_call = "mahamantra(" not in src and "mahamantra.execute" not in src
         if has_respond and no_call:
-            bypass.append({
-                "file": "mahamantra/chat.py",
-                "function": "MahajanaChat.respond()",
-                "evidence": "goes to LLM provider directly, never __call__()",
-                "entry": "CHAT: guardian_chat(), routed_chat()",
-                "size_bytes": chat.stat().st_size,
-                "severity": "HIGH — own routing via get_guardian_for_message()",
-            })
+            bypass.append(
+                {
+                    "file": "mahamantra/chat.py",
+                    "function": "MahajanaChat.respond()",
+                    "evidence": "goes to LLM provider directly, never __call__()",
+                    "entry": "CHAT: guardian_chat(), routed_chat()",
+                    "size_bytes": chat.stat().st_size,
+                    "severity": "HIGH — own routing via get_guardian_for_message()",
+                }
+            )
 
     # 5. commands.py — cli_chant()
     cmds = mahamantra_dir / "commands.py"
@@ -116,59 +124,69 @@ def map_entry_points() -> Dict[str, List[dict]]:
 
         # cli_chant builds own Chamber + Reactor
         if "def cli_chant(" in src and "SankirtanChamber" in src:
-            bypass.append({
-                "file": "mahamantra/commands.py",
-                "function": "cli_chant()",
-                "evidence": "builds own SankirtanChamber + Reactor + Yajna cycles",
-                "entry": "CLI: steward chant",
-                "severity": "MEDIUM — parallel Yajna, but arguably different concern (ceremony vs computation)",
-            })
+            bypass.append(
+                {
+                    "file": "mahamantra/commands.py",
+                    "function": "cli_chant()",
+                    "evidence": "builds own SankirtanChamber + Reactor + Yajna cycles",
+                    "entry": "CLI: steward chant",
+                    "severity": "MEDIUM — parallel Yajna, but arguably different concern (ceremony vs computation)",
+                }
+            )
 
         # cli_serve goes to JanakaService directly
         if "def cli_serve(" in src and "JanakaService" in src:
-            bypass.append({
-                "file": "mahamantra/commands.py",
-                "function": "cli_serve()",
-                "evidence": "goes directly to JanakaService, never __call__()",
-                "entry": "CLI: steward serve",
-                "severity": "HIGH — task execution bypasses computation core",
-            })
+            bypass.append(
+                {
+                    "file": "mahamantra/commands.py",
+                    "function": "cli_serve()",
+                    "evidence": "goes directly to JanakaService, never __call__()",
+                    "entry": "CLI: steward serve",
+                    "severity": "HIGH — task execution bypasses computation core",
+                }
+            )
 
         # cli_veda goes to VedaExplorer
         if "def cli_veda(" in src and "VedaExplorer" in src:
-            bypass.append({
-                "file": "mahamantra/commands.py",
-                "function": "cli_veda()",
-                "evidence": "goes to VedaExplorer or flooded_routed_chat",
-                "entry": "CLI: steward veda",
-                "severity": "HIGH — own routing, own LLM path",
-            })
+            bypass.append(
+                {
+                    "file": "mahamantra/commands.py",
+                    "function": "cli_veda()",
+                    "evidence": "goes to VedaExplorer or flooded_routed_chat",
+                    "entry": "CLI: steward veda",
+                    "severity": "HIGH — own routing, own LLM path",
+                }
+            )
 
     # 6. guardian_router.py — parallel 4D routing
     gr = mahamantra_dir / "substrate" / "guardian_router.py"
     if gr.exists():
         src = gr.read_text(encoding="utf-8", errors="replace")
         if "def route_input(" in src or "def match_guardian(" in src or "GuardianSignature" in src:
-            bypass.append({
-                "file": "mahamantra/substrate/guardian_router.py",
-                "function": "route_input() / match_guardian()",
-                "evidence": "own 4D coordinate routing, parallel to __call__() position routing",
-                "entry": "INTERNAL: used by chat routing and legacy paths",
-                "severity": "MEDIUM — useful as substrate, but duplicates __call__() routing logic",
-            })
+            bypass.append(
+                {
+                    "file": "mahamantra/substrate/guardian_router.py",
+                    "function": "route_input() / match_guardian()",
+                    "evidence": "own 4D coordinate routing, parallel to __call__() position routing",
+                    "entry": "INTERNAL: used by chat routing and legacy paths",
+                    "severity": "MEDIUM — useful as substrate, but duplicates __call__() routing logic",
+                }
+            )
 
     # 7. ModuleRouter / mahamantra.mod
     sing = mahamantra_dir / "kernel" / "singularity.py"
     if sing.exists():
         src = sing.read_text(encoding="utf-8", errors="replace")
         if "class ModuleRouter" in src:
-            bypass.append({
-                "file": "mahamantra/kernel/singularity.py",
-                "function": "ModuleRouter._load_module() / mahamantra.mod",
-                "evidence": "legacy dispatch to Mahajana folder stubs with execute() that return 'I am X' dicts",
-                "entry": "INTERNAL: mahamantra.mod.yamaraja etc.",
-                "severity": "LOW — exists but rarely used in production paths",
-            })
+            bypass.append(
+                {
+                    "file": "mahamantra/kernel/singularity.py",
+                    "function": "ModuleRouter._load_module() / mahamantra.mod",
+                    "evidence": "legacy dispatch to Mahajana folder stubs with execute() that return 'I am X' dicts",
+                    "entry": "INTERNAL: mahamantra.mod.yamaraja etc.",
+                    "severity": "LOW — exists but rarely used in production paths",
+                }
+            )
 
     # 8. Check for direct substrate access patterns outside mahamantra/
     direct_substrate = []
@@ -190,10 +208,12 @@ def map_entry_points() -> Dict[str, List[dict]]:
                     if line.strip().startswith("from vibe_core.mahamantra.substrate.")
                 ]
                 if imports:
-                    direct_substrate.append({
-                        "file": str(rel),
-                        "imports": imports[:3],
-                    })
+                    direct_substrate.append(
+                        {
+                            "file": str(rel),
+                            "imports": imports[:3],
+                        }
+                    )
         except Exception:
             continue
 
@@ -234,7 +254,8 @@ def count_mahajana_stubs() -> Dict[str, dict]:
                     "files": len(py_files),
                     "bytes": total_bytes,
                     "status": status,
-                    "has_execute": "def execute(" in (init.read_text(encoding="utf-8", errors="replace") if init.exists() else ""),
+                    "has_execute": "def execute("
+                    in (init.read_text(encoding="utf-8", errors="replace") if init.exists() else ""),
                 }
 
     return result
@@ -260,47 +281,57 @@ def map_orchestration_chain() -> Dict[str, object]:
         src = venu_svc.read_text(encoding="utf-8", errors="replace")
         has_sing_tick = "_singularity.tick()" in src
         has_start = "async def start(" in src
-        heartbeat_chain.append({
-            "link": "VenuService.start() -> singularity.tick()",
-            "file": "services/venu_service.py",
-            "connected": has_sing_tick and has_start,
-        })
+        heartbeat_chain.append(
+            {
+                "link": "VenuService.start() -> singularity.tick()",
+                "file": "services/venu_service.py",
+                "connected": has_sing_tick and has_start,
+            }
+        )
 
     # 2. singularity.tick() -> _broadcast()
     sing = vc / "mahamantra" / "kernel" / "singularity.py"
     if sing.exists():
         src = sing.read_text(encoding="utf-8", errors="replace")
         has_broadcast = "_broadcast(state)" in src or "self._broadcast(state)" in src
-        heartbeat_chain.append({
-            "link": "singularity.tick() -> _broadcast(state)",
-            "file": "mahamantra/kernel/singularity.py",
-            "connected": has_broadcast,
-        })
+        heartbeat_chain.append(
+            {
+                "link": "singularity.tick() -> _broadcast(state)",
+                "file": "mahamantra/kernel/singularity.py",
+                "connected": has_broadcast,
+            }
+        )
 
     # 3. boot_orchestrator starts VenuService + wraps with BalaramaProxy
     boot = vc / "boot_orchestrator.py"
     if boot.exists():
         src = boot.read_text(encoding="utf-8", errors="replace")
-        heartbeat_chain.append({
-            "link": "boot_orchestrator -> VenuService()",
-            "file": "boot_orchestrator.py",
-            "connected": "VenuService()" in src,
-        })
-        heartbeat_chain.append({
-            "link": "boot_orchestrator -> wrap_service() -> BalaramaProxy",
-            "file": "boot_orchestrator.py",
-            "connected": "wrap_service(" in src,
-        })
+        heartbeat_chain.append(
+            {
+                "link": "boot_orchestrator -> VenuService()",
+                "file": "boot_orchestrator.py",
+                "connected": "VenuService()" in src,
+            }
+        )
+        heartbeat_chain.append(
+            {
+                "link": "boot_orchestrator -> wrap_service() -> BalaramaProxy",
+                "file": "boot_orchestrator.py",
+                "connected": "wrap_service(" in src,
+            }
+        )
 
     # 4. BalaramaProxy._attach_to_heartbeat() -> register_listener()
     proxy = vc / "mahamantra" / "substrate" / "proxy.py"
     if proxy.exists():
         src = proxy.read_text(encoding="utf-8", errors="replace")
-        heartbeat_chain.append({
-            "link": "BalaramaProxy.__init__() -> _attach_to_heartbeat() -> register_listener()",
-            "file": "mahamantra/substrate/proxy.py",
-            "connected": "register_listener(" in src and "_attach_to_heartbeat" in src,
-        })
+        heartbeat_chain.append(
+            {
+                "link": "BalaramaProxy.__init__() -> _attach_to_heartbeat() -> register_listener()",
+                "file": "mahamantra/substrate/proxy.py",
+                "connected": "register_listener(" in src and "_attach_to_heartbeat" in src,
+            }
+        )
 
     # === ORPHANED INFRASTRUCTURE (built, 0 callers) ===
     # adopt_services()
@@ -316,12 +347,14 @@ def map_orchestration_chain() -> Dict[str, object]:
             except Exception:
                 continue
         if callers == 0:
-            orphaned.append({
-                "function": "adopt_services()",
-                "file": "mahamantra/lila/adoption.py",
-                "callers": 0,
-                "purpose": "OrbitalReactor mounting pipeline",
-            })
+            orphaned.append(
+                {
+                    "function": "adopt_services()",
+                    "file": "mahamantra/lila/adoption.py",
+                    "callers": 0,
+                    "purpose": "OrbitalReactor mounting pipeline",
+                }
+            )
 
     # auto_wrap_services()
     if proxy.exists():
@@ -335,12 +368,14 @@ def map_orchestration_chain() -> Dict[str, object]:
             except Exception:
                 continue
         if callers == 0:
-            orphaned.append({
-                "function": "auto_wrap_services()",
-                "file": "mahamantra/substrate/proxy.py",
-                "callers": 0,
-                "purpose": "Lotus-driven BalaramaProxy wrapping",
-            })
+            orphaned.append(
+                {
+                    "function": "auto_wrap_services()",
+                    "file": "mahamantra/substrate/proxy.py",
+                    "callers": 0,
+                    "purpose": "Lotus-driven BalaramaProxy wrapping",
+                }
+            )
 
     # ModuleRouter / mahamantra.mod runtime callers
     if sing.exists():
@@ -352,21 +387,26 @@ def map_orchestration_chain() -> Dict[str, object]:
                 src = py.read_text(encoding="utf-8", errors="replace")
                 if ".mod." in src or "mahamantra.mod" in src:
                     # Exclude comments and docstrings (rough heuristic)
-                    lines = [l for l in src.split("\n")
-                             if (".mod." in l or "mahamantra.mod" in l)
-                             and not l.strip().startswith("#")
-                             and not l.strip().startswith('"""')
-                             and not l.strip().startswith("'")]
+                    lines = [
+                        l
+                        for l in src.split("\n")
+                        if (".mod." in l or "mahamantra.mod" in l)
+                        and not l.strip().startswith("#")
+                        and not l.strip().startswith('"""')
+                        and not l.strip().startswith("'")
+                    ]
                     if lines:
                         mod_callers += 1
             except Exception:
                 continue
-        orphaned.append({
-            "function": "ModuleRouter / mahamantra.mod",
-            "file": "mahamantra/kernel/singularity.py",
-            "callers": mod_callers,
-            "purpose": "On-demand module/type access",
-        })
+        orphaned.append(
+            {
+                "function": "ModuleRouter / mahamantra.mod",
+                "file": "mahamantra/kernel/singularity.py",
+                "callers": mod_callers,
+                "purpose": "On-demand module/type access",
+            }
+        )
 
     # === UNATTACHED SERVICES (instantiated outside boot_orchestrator) ===
     # kernel_impl.py builds own MahamantraProxies
@@ -374,13 +414,17 @@ def map_orchestration_chain() -> Dict[str, object]:
     if kimpl.exists():
         src = kimpl.read_text(encoding="utf-8", errors="replace")
         if "MahamantraProxy(" in src:
-            proxy_lines = [l.strip() for l in src.split("\n") if "MahamantraProxy(" in l and not l.strip().startswith("#")]
-            unattached.append({
-                "file": "kernel_impl.py",
-                "issue": "builds own MahamantraProxy with hardcoded positions",
-                "count": len(proxy_lines),
-                "examples": proxy_lines[:3],
-            })
+            proxy_lines = [
+                l.strip() for l in src.split("\n") if "MahamantraProxy(" in l and not l.strip().startswith("#")
+            ]
+            unattached.append(
+                {
+                    "file": "kernel_impl.py",
+                    "issue": "builds own MahamantraProxy with hardcoded positions",
+                    "count": len(proxy_lines),
+                    "examples": proxy_lines[:3],
+                }
+            )
 
     # Direct Service() instantiation outside boot_orchestrator
     service_pattern = "Service()"
@@ -397,7 +441,8 @@ def map_orchestration_chain() -> Dict[str, object]:
         try:
             src = py.read_text(encoding="utf-8", errors="replace")
             svc_lines = [
-                l.strip() for l in src.split("\n")
+                l.strip()
+                for l in src.split("\n")
                 if service_pattern in l
                 and not l.strip().startswith("#")
                 and not l.strip().startswith("def ")
@@ -406,12 +451,14 @@ def map_orchestration_chain() -> Dict[str, object]:
                 and "= {" not in l
             ]
             if svc_lines:
-                unattached.append({
-                    "file": rel,
-                    "issue": "direct Service() instantiation",
-                    "count": len(svc_lines),
-                    "examples": svc_lines[:2],
-                })
+                unattached.append(
+                    {
+                        "file": rel,
+                        "issue": "direct Service() instantiation",
+                        "count": len(svc_lines),
+                        "examples": svc_lines[:2],
+                    }
+                )
         except Exception:
             continue
 
@@ -430,18 +477,18 @@ def main():
 
     entry_points = map_entry_points()
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"CORRECT PATHS (through __call__()): {len(entry_points['through_call'])}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     for ep in entry_points["through_call"]:
         print(f"  ✓ {ep['file']}")
         print(f"    {ep['function']} — {ep['entry']}")
         print(f"    Evidence: {ep['evidence']}")
         print()
 
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print(f"SPLIT-BRAIN PATHS (bypass __call__()): {len(entry_points['bypass_call'])}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     for ep in entry_points["bypass_call"]:
         sev = ep.get("severity", "UNKNOWN")
         print(f"  ✗ {ep['file']} [{sev}]")
@@ -449,9 +496,9 @@ def main():
         print(f"    Evidence: {ep['evidence']}")
         print()
 
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print(f"DIRECT SUBSTRATE ACCESS (outside mahamantra/): {len(entry_points['direct_substrate_access'])}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     for ds in entry_points["direct_substrate_access"][:10]:
         print(f"  → {ds['file']}")
         for imp in ds["imports"]:
@@ -459,9 +506,9 @@ def main():
     if len(entry_points["direct_substrate_access"]) > 10:
         print(f"  ... and {len(entry_points['direct_substrate_access']) - 10} more")
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("MAHAJANA FOLDER STATUS")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     stubs = count_mahajana_stubs()
     wired_count = sum(1 for v in stubs.values() if v["status"] == "WIRED")
     real_count = sum(1 for v in stubs.values() if v["status"] == "REAL")
@@ -473,9 +520,9 @@ def main():
         print(f"    [{info['status']:5s}] {name:30s} {info['files']:2d} files, {info['bytes']:6d} bytes")
 
     # === ORCHESTRATION CHAIN ===
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("VENU ORCHESTRATION CHAIN (The Flute)")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     orch = map_orchestration_chain()
 
     print("\n  HEARTBEAT CHAIN:")

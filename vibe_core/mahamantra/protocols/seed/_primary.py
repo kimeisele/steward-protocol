@@ -53,9 +53,7 @@ ROUNDS: Final[int] = WORDS  # 16
 AVATAR_COUNT: Final[int] = QUARTERS  # 4
 
 # HEAD_POSITIONS - The positions of the 4 Avataras
-HEAD_POSITIONS: Final[tuple[int, ...]] = tuple(
-    q * (WORDS // QUARTERS) for q in range(QUARTERS)
-)  # (0, 4, 8, 12)
+HEAD_POSITIONS: Final[tuple[int, ...]] = tuple(q * (WORDS // QUARTERS) for q in range(QUARTERS))  # (0, 4, 8, 12)
 
 # CONSECUTIVE_PAIRS = Words divided into pairs = HALF_SIZE
 CONSECUTIVE_PAIRS: Final[int] = WORDS // HALVES  # 8

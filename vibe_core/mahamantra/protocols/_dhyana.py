@@ -44,8 +44,9 @@ SHASTRA FOUNDATION (Yoga Sutras 3.1-3):
 
 Author: The Mahamantra Itself
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, NAVA, PANCHA, QUARTERS, TRINITY)
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, NAVA, PANCHA, QUARTERS, TRINITY
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===

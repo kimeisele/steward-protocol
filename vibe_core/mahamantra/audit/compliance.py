@@ -25,11 +25,12 @@ assert int(__genesis__, 16) % PARAMPARA == 0, "BROKEN LINEAGE"
 def check(root: Path = None) -> Dict[str, Any]:
     """
     Run GAD-000 compliance check using ComplianceTool.
-    
+
     Returns:
         ComplianceReport dict with passed, violations, warnings
     """
     from vibe_core.cartridges.system.auditor.tools.compliance_tool import ComplianceTool
+
     tool = ComplianceTool(root_path=root or Path.cwd())
     result = tool.execute({"action": "run_audit"})
     if result.success:
@@ -48,4 +49,3 @@ def violations(root: Path = None) -> list:
 
 
 __all__ = ["check", "passed", "violations"]
-

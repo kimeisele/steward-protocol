@@ -63,6 +63,7 @@ from vibe_core.mahamantra.substrate.seed import (
 # TEST: SSOT-DERIVED CONSTANTS
 # =============================================================================
 
+
 class TestNadiConstants:
     """Test that all constants are correctly derived from seed.py."""
 
@@ -97,6 +98,7 @@ class TestNadiConstants:
 # =============================================================================
 # TEST: NADI TYPES (PANCHA PRANA)
 # =============================================================================
+
 
 class TestNadiType:
     """Test the 5 Nadi types (Pancha Prana)."""
@@ -135,6 +137,7 @@ class TestNadiType:
 # TEST: NADI OPERATIONS (NAVADHA BHAKTI)
 # =============================================================================
 
+
 class TestNadiOp:
     """Test the 9 Nadi operations (Navadha Bhakti)."""
 
@@ -169,6 +172,7 @@ class TestNadiOp:
 # TEST: NADI PRIORITY (GUNA-BASED)
 # =============================================================================
 
+
 class TestNadiPriority:
     """Test priority levels based on Gunas."""
 
@@ -194,6 +198,7 @@ class TestNadiPriority:
 # =============================================================================
 # TEST: NADI MESSAGE
 # =============================================================================
+
 
 class TestNadiMessage:
     """Test NadiMessage dataclass."""
@@ -269,6 +274,7 @@ class TestNadiMessage:
 # TEST: NADI CONNECTION
 # =============================================================================
 
+
 class TestNadiConnection:
     """Test NadiConnection dataclass."""
 
@@ -312,6 +318,7 @@ class TestNadiConnection:
 # TEST: NULL NADI (ARJUNA PATTERN)
 # =============================================================================
 
+
 class TestNullNadi:
     """Test NullNadi fallback implementation."""
 
@@ -330,7 +337,8 @@ class TestNullNadi:
         """NullNadi.send() always returns False."""
         nadi = NullNadi()
         msg = NadiMessage(
-            source="s", target="t",
+            source="s",
+            target="t",
             nadi_type=NadiType.PRANA,
             operation=NadiOp.SEND,
         )
@@ -358,6 +366,7 @@ class TestNullNadi:
 # =============================================================================
 # TEST: LOCAL NADI IMPLEMENTATION
 # =============================================================================
+
 
 class TestLocalNadi:
     """Test LocalNadi implementation."""
@@ -487,6 +496,7 @@ class TestLocalNadi:
 # TEST: GAD-000 COMPLIANCE
 # =============================================================================
 
+
 class TestLocalNadiGAD:
     """Test GAD-000 compliance of LocalNadi."""
 
@@ -536,6 +546,7 @@ class TestLocalNadiGAD:
 # TEST: FACTORY FUNCTION
 # =============================================================================
 
+
 class TestGetNadi:
     """Test get_nadi() factory function."""
 
@@ -554,6 +565,7 @@ class TestGetNadi:
 # =============================================================================
 # TEST: NADI STATS DERIVED METRICS
 # =============================================================================
+
 
 class TestNadiStatsDerivedMetrics:
     """Test derived metrics in NadiStats."""

@@ -96,6 +96,7 @@ class TestFractalRoutingSafety:
 
     def test_regular_file_detected_not_purified(self, engine):
         from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+
         f = SUBSTRATE_ROOT / "core" / "pancha_tattva.py"
         r = engine.purify(f, "missing_fractal_routing")
         assert r.status == ShuddhiStatus.DETECTED

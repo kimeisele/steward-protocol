@@ -33,19 +33,28 @@ ALSO:
 
 RUN: python3 -m vibe_core.mahamantra.research.semantic_basins
 """
+
 import sys, os
+
 _substrate = os.path.dirname(os.path.abspath(__file__))
 if _substrate in sys.path:
     sys.path.remove(_substrate)
 
 from collections import defaultdict
 from vibe_core.mahamantra.substrate.algorithm.maha import (
-    MahaModularSynth, MahaSynthParams, MAHA_16_STEPS, PATTERN,
+    MahaModularSynth,
+    MahaSynthParams,
+    MAHA_16_STEPS,
+    PATTERN,
 )
 from vibe_core.mahamantra.substrate.varnamala_codec import encode as encode_iast
 from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL, rama_to_phoneme
 from vibe_core.mahamantra.substrate.pancha_walk import (
-    COORD_ELEMENT, COORD_HARMONIC, COORD_VARGA, ELEMENT_NAMES, IS_SHRUTI,
+    COORD_ELEMENT,
+    COORD_HARMONIC,
+    COORD_VARGA,
+    ELEMENT_NAMES,
+    IS_SHRUTI,
 )
 from vibe_core.mahamantra.substrate.semantic_index import get_index, words_at_position
 from vibe_core.mahamantra.protocols._seed import MAHA_QUANTUM, SEVEN, WORDS
@@ -85,8 +94,10 @@ for att in sorted(basins.keys()):
     words_here = words_at_position(att)
     n_words = len(words_here)
     top_meanings = ", ".join(w.first_meaning for w in words_here[:3]) if words_here else "—"
-    print(f"  Basin {att:2d} ({rama_to_phoneme(att):4s} {element:8s} {shruti:6s}) "
-          f"← {len(members):2d} coords: {' '.join(phonemes[:8])}")
+    print(
+        f"  Basin {att:2d} ({rama_to_phoneme(att):4s} {element:8s} {shruti:6s}) "
+        f"← {len(members):2d} coords: {' '.join(phonemes[:8])}"
+    )
     print(f"           {n_words} Gita words. Top: {top_meanings}")
 
 # =============================================================================
@@ -161,8 +172,9 @@ for name, iast in sorted(NAMES.items()):
     print(f"    Elements:       {' → '.join(elements)}")
     print(f"    Attractors:     {attractors}")
     print(f"    Att. Elements:  {' → '.join(att_elements)}")
-    print(f"    Name attractor: {name_value} ({rama_to_phoneme(name_value)} "
-          f"{ELEMENT_NAMES[COORD_ELEMENT[name_value]]})")
+    print(
+        f"    Name attractor: {name_value} ({rama_to_phoneme(name_value)} {ELEMENT_NAMES[COORD_ELEMENT[name_value]]})"
+    )
 
 # =============================================================================
 # PART 3: BASIN SHARING — Which names share attractor basins?
@@ -178,8 +190,7 @@ for name, sig in name_signatures.items():
 for att in sorted(att_groups.keys()):
     names = att_groups[att]
     if len(names) > 1:
-        print(f"\n  SHARED BASIN {att} ({rama_to_phoneme(att)} "
-              f"{ELEMENT_NAMES[COORD_ELEMENT[att]]}):")
+        print(f"\n  SHARED BASIN {att} ({rama_to_phoneme(att)} {ELEMENT_NAMES[COORD_ELEMENT[att]]}):")
         for n in names:
             print(f"    → {n}")
     else:
@@ -195,14 +206,26 @@ print("=" * 70)
 
 # The 16 words of the Mahamantra
 MANTRA_WORDS = [
-    "harē", "kṛṣṇa", "harē", "kṛṣṇa",
-    "kṛṣṇa", "kṛṣṇa", "harē", "harē",
-    "harē", "rāma", "harē", "rāma",
-    "rāma", "rāma", "harē", "harē",
+    "harē",
+    "kṛṣṇa",
+    "harē",
+    "kṛṣṇa",
+    "kṛṣṇa",
+    "kṛṣṇa",
+    "harē",
+    "harē",
+    "harē",
+    "rāma",
+    "harē",
+    "rāma",
+    "rāma",
+    "rāma",
+    "harē",
+    "harē",
 ]
 
 print(f"\n  Pos  Word      H/K/R  Coords → Attractors → Element → Gita Words")
-print(f"  {'─'*75}")
+print(f"  {'─' * 75}")
 
 for pos in range(WORDS):
     word = MANTRA_WORDS[pos]
@@ -230,10 +253,12 @@ for pos in range(WORDS):
 
     att_elements = [ELEMENT_NAMES[COORD_ELEMENT[a]][0] for a in attractors]
 
-    print(f"  {pos+1:2d}   {word:9s} {op}      "
-          f"{list(coords)} → {attractors} "
-          f"{''.join(att_elements):5s} "
-          f"{', '.join(gita_words[:3])}")
+    print(
+        f"  {pos + 1:2d}   {word:9s} {op}      "
+        f"{list(coords)} → {attractors} "
+        f"{''.join(att_elements):5s} "
+        f"{', '.join(gita_words[:3])}"
+    )
 
 # =============================================================================
 # PART 5: MAHA_QUANTUM (137) BASINS — The full algorithm space
@@ -259,8 +284,9 @@ for att in sorted(basins_137.keys()):
     rama_att = att % VARNAMALA_TOTAL
     words_here = words_at_position(rama_att)
     top = words_here[0].first_meaning if words_here else "—"
-    print(f"  Basin {att:3d} (→RAMA {rama_att:2d} {rama_to_phoneme(rama_att):4s}): "
-          f"{len(members):3d} seeds. Gita: {top}")
+    print(
+        f"  Basin {att:3d} (→RAMA {rama_att:2d} {rama_to_phoneme(rama_att):4s}): {len(members):3d} seeds. Gita: {top}"
+    )
 
 # =============================================================================
 # PART 6: CROSS-SPACE RESONANCE — Same name in mod-49 vs mod-137
@@ -287,7 +313,9 @@ for name, sig in sorted(name_signatures.items()):
     att_137_rama = att_137 % VARNAMALA_TOTAL
     same = "✓ SAME" if att_137_rama == att_49 else "✗ DIFF"
 
-    print(f"  {name:15s}  RAMA={att_49:2d}({ELEMENT_NAMES[COORD_ELEMENT[att_49]]:8s})  "
-          f"QUANTUM={att_137:3d}→RAMA={att_137_rama:2d}({ELEMENT_NAMES[COORD_ELEMENT[att_137_rama]]:8s})  {same}")
+    print(
+        f"  {name:15s}  RAMA={att_49:2d}({ELEMENT_NAMES[COORD_ELEMENT[att_49]]:8s})  "
+        f"QUANTUM={att_137:3d}→RAMA={att_137_rama:2d}({ELEMENT_NAMES[COORD_ELEMENT[att_137_rama]]:8s})  {same}"
+    )
 
 print("\nDONE.")

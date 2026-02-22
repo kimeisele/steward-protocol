@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any, Dict, List
 from ..base import BaseRenderer
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:

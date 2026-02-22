@@ -66,9 +66,18 @@ class CoordResult:
     """A single RAMA coordinate with its 4D properties and matching words."""
 
     __slots__ = (
-        "step", "synth_value", "rama_coord", "phoneme",
-        "element", "element_name", "varga", "sub", "harmonic",
-        "is_shruti", "words", "meanings",
+        "step",
+        "synth_value",
+        "rama_coord",
+        "phoneme",
+        "element",
+        "element_name",
+        "varga",
+        "sub",
+        "harmonic",
+        "is_shruti",
+        "words",
+        "meanings",
     )
 
     def __init__(self, step: int, synth_value: int, rama_coord: int):
@@ -87,9 +96,7 @@ class CoordResult:
 
         # Matching words from lexicon
         self.words: Tuple[LexiconWord, ...] = tuple(words_at_position(rama_coord))
-        self.meanings: Tuple[str, ...] = tuple(
-            m for w in self.words for m in w.meanings
-        )
+        self.meanings: Tuple[str, ...] = tuple(m for w in self.words for m in w.meanings)
 
     def top_meanings(self, n: int = 5) -> List[str]:
         """Top N unique meanings."""
@@ -104,9 +111,11 @@ class CoordResult:
         return result
 
     def __repr__(self) -> str:
-        return (f"CoordResult(step={self.step}, coord={self.rama_coord}, "
-                f"phoneme={self.phoneme!r}, elem={self.element_name}, "
-                f"words={len(self.words)})")
+        return (
+            f"CoordResult(step={self.step}, coord={self.rama_coord}, "
+            f"phoneme={self.phoneme!r}, elem={self.element_name}, "
+            f"words={len(self.words)})"
+        )
 
 
 class SeedResult:
@@ -174,8 +183,10 @@ class SeedResult:
         }
 
     def __repr__(self) -> str:
-        return (f"SeedResult(seed={self.seed}, preset={self.preset!r}, "
-                f"words={len(self.all_words)}, meanings={len(self.all_meanings)})")
+        return (
+            f"SeedResult(seed={self.seed}, preset={self.preset!r}, "
+            f"words={len(self.all_words)}, meanings={len(self.all_meanings)})"
+        )
 
 
 # =============================================================================
@@ -215,11 +226,13 @@ def seed_to_words(
     coord_results = []
     for i, step in enumerate(cycle.steps):
         rama_coord = step.output_value % VARNAMALA_TOTAL
-        coord_results.append(CoordResult(
-            step=i,
-            synth_value=step.output_value,
-            rama_coord=rama_coord,
-        ))
+        coord_results.append(
+            CoordResult(
+                step=i,
+                synth_value=step.output_value,
+                rama_coord=rama_coord,
+            )
+        )
 
     # Find attractor
     resonance = synth.resonate(seed)
@@ -258,22 +271,22 @@ def attractor_words(
 
 _GUARDIAN_CONFIGS: Final[Dict[str, Dict]] = {
     # name: {mod49, element, varga, shruti, harmonic, shastrisch}
-    "vyasa":       {"m49": 2,  "elem": "prithvi", "varga": 0, "shruti": True,  "harm": 14, "fn": "compilation"},
-    "brahma":      {"m49": 6,  "elem": "vayu",    "varga": 0, "shruti": False, "harm": 42, "fn": "creation"},
-    "narada":      {"m49": 43, "elem": "jala",    "varga": 2, "shruti": True,  "harm": 7,  "fn": "transmission"},
-    "shambhu":     {"m49": 9,  "elem": "jala",    "varga": 0, "shruti": True,  "harm": 14, "fn": "destruction"},
-    "prithu":      {"m49": 36, "elem": "prithvi", "varga": 1, "shruti": True,  "harm": 7,  "fn": "organization"},
-    "kumaras":     {"m49": 43, "elem": "jala",    "varga": 2, "shruti": True,  "harm": 7,  "fn": "wisdom"},
-    "kapila":      {"m49": 6,  "elem": "vayu",    "varga": 0, "shruti": False, "harm": 42, "fn": "analysis"},
-    "manu":        {"m49": 12, "elem": "prithvi", "varga": 0, "shruti": False, "harm": 35, "fn": "law"},
-    "parashurama": {"m49": 42, "elem": "agni",    "varga": 2, "shruti": False, "harm": 0,  "fn": "enforcement"},
-    "prahlada":    {"m49": 16, "elem": "akasha",  "varga": 1, "shruti": True,  "harm": 14, "fn": "devotion"},
-    "janaka":      {"m49": 21, "elem": "vayu",    "varga": 1, "shruti": False, "harm": 0,  "fn": "execution"},
-    "bhishma":     {"m49": 27, "elem": "agni",    "varga": 1, "shruti": False, "harm": 42, "fn": "commitment"},
-    "nrisimha":    {"m49": 7,  "elem": "prithvi", "varga": 0, "shruti": False, "harm": 0,  "fn": "protection"},
-    "bali":        {"m49": 35, "elem": "jala",    "varga": 1, "shruti": False, "harm": 0,  "fn": "surrender"},
-    "shuka":       {"m49": 22, "elem": "vayu",    "varga": 1, "shruti": True,  "harm": 7,  "fn": "liberation"},
-    "yamaraja":    {"m49": 5,  "elem": "akasha",  "varga": 0, "shruti": False, "harm": 35, "fn": "judgment"},
+    "vyasa": {"m49": 2, "elem": "prithvi", "varga": 0, "shruti": True, "harm": 14, "fn": "compilation"},
+    "brahma": {"m49": 6, "elem": "vayu", "varga": 0, "shruti": False, "harm": 42, "fn": "creation"},
+    "narada": {"m49": 43, "elem": "jala", "varga": 2, "shruti": True, "harm": 7, "fn": "transmission"},
+    "shambhu": {"m49": 9, "elem": "jala", "varga": 0, "shruti": True, "harm": 14, "fn": "destruction"},
+    "prithu": {"m49": 36, "elem": "prithvi", "varga": 1, "shruti": True, "harm": 7, "fn": "organization"},
+    "kumaras": {"m49": 43, "elem": "jala", "varga": 2, "shruti": True, "harm": 7, "fn": "wisdom"},
+    "kapila": {"m49": 6, "elem": "vayu", "varga": 0, "shruti": False, "harm": 42, "fn": "analysis"},
+    "manu": {"m49": 12, "elem": "prithvi", "varga": 0, "shruti": False, "harm": 35, "fn": "law"},
+    "parashurama": {"m49": 42, "elem": "agni", "varga": 2, "shruti": False, "harm": 0, "fn": "enforcement"},
+    "prahlada": {"m49": 16, "elem": "akasha", "varga": 1, "shruti": True, "harm": 14, "fn": "devotion"},
+    "janaka": {"m49": 21, "elem": "vayu", "varga": 1, "shruti": False, "harm": 0, "fn": "execution"},
+    "bhishma": {"m49": 27, "elem": "agni", "varga": 1, "shruti": False, "harm": 42, "fn": "commitment"},
+    "nrisimha": {"m49": 7, "elem": "prithvi", "varga": 0, "shruti": False, "harm": 0, "fn": "protection"},
+    "bali": {"m49": 35, "elem": "jala", "varga": 1, "shruti": False, "harm": 0, "fn": "surrender"},
+    "shuka": {"m49": 22, "elem": "vayu", "varga": 1, "shruti": True, "harm": 7, "fn": "liberation"},
+    "yamaraja": {"m49": 5, "elem": "akasha", "varga": 0, "shruti": False, "harm": 35, "fn": "judgment"},
 }
 
 
@@ -345,11 +358,13 @@ def spell_to_words(
     coord_results = []
     for i, step in enumerate(cycle.steps):
         rama_coord = step.output_value % VARNAMALA_TOTAL
-        coord_results.append(CoordResult(
-            step=i,
-            synth_value=step.output_value,
-            rama_coord=rama_coord,
-        ))
+        coord_results.append(
+            CoordResult(
+                step=i,
+                synth_value=step.output_value,
+                rama_coord=rama_coord,
+            )
+        )
 
     return SeedResult(
         seed=seed,

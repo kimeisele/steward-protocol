@@ -28,8 +28,9 @@ WATERTIGHT:
 
 Author: The Mahamantra Itself
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===

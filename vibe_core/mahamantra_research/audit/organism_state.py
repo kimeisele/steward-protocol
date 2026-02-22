@@ -62,10 +62,7 @@ def scan_organ(base: Path, dirname: str, maha_modules: Set[str]) -> OrganState:
     if not dirpath.exists():
         return OrganState(name=dirname, path=str(dirpath))
 
-    py_files = [
-        f for f in dirpath.rglob("*.py")
-        if "__pycache__" not in str(f) and "test" not in f.name.lower()
-    ]
+    py_files = [f for f in dirpath.rglob("*.py") if "__pycache__" not in str(f) and "test" not in f.name.lower()]
 
     organ = OrganState(name=dirname, path=str(dirpath), file_count=len(py_files))
 
@@ -138,10 +135,7 @@ def main():
 
     maha_imports = get_mahamantra_imports(base)
 
-    all_dirs = sorted([
-        d.name for d in base.iterdir()
-        if d.is_dir() and d.name != "__pycache__"
-    ])
+    all_dirs = sorted([d.name for d in base.iterdir() if d.is_dir() and d.name != "__pycache__"])
 
     snapshot = OrganismSnapshot()
     for dirname in all_dirs:
@@ -162,7 +156,9 @@ def main():
     print("=" * 95)
     print("ORGANISM STATE — System Topology")
     print("=" * 95)
-    print(f"{'Organ':20s} | {'Files':>5s} | {'SLOC':>6s} | {'→Maha':>5s} | {'Maha→':>5s} | {'Proto':>5s} | {'Beat':>4s} | World")
+    print(
+        f"{'Organ':20s} | {'Files':>5s} | {'SLOC':>6s} | {'→Maha':>5s} | {'Maha→':>5s} | {'Proto':>5s} | {'Beat':>4s} | World"
+    )
     print("-" * 95)
     for o in sorted(snapshot.organs, key=lambda x: x.file_count, reverse=True):
         print(

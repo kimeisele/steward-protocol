@@ -239,7 +239,7 @@ SANSKRIT_PHONEME_MAP: Final[dict[str, VibrationSignature]] = {
     "d": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 48, 1),
     "n": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 48, 1),
     "s": VibrationSignature(ArticulationPoint.DANTA, VoicingType.UNVOICED, 36, 1),  # sibilant
-    "z": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 36, 1),    # sibilant
+    "z": VibrationSignature(ArticulationPoint.DANTA, VoicingType.VOICED, 36, 1),  # sibilant
     # Labials (pa-varga): p, b, m, f, v, w
     "p": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.UNVOICED, 48, 1),
     "b": VibrationSignature(ArticulationPoint.OSHTHA, VoicingType.VOICED, 48, 1),

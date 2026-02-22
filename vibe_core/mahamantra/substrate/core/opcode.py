@@ -14,8 +14,21 @@ REVERTED TO TRUTH (Post-Legacy Clean Slate).
 
 WATERTIGHT: No Any types. All typed explicitly.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HALVES, HARE_COUNT, KSETRAJNA, MAHAJANA_COUNT, NAVA, PANCHA, QUARTERS, SEVEN, SHARANAGATI, TEN, TRINITY)
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    HARE_COUNT,
+    KSETRAJNA,
+    MAHAJANA_COUNT,
+    NAVA,
+    PANCHA,
+    QUARTERS,
+    SEVEN,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -201,7 +214,9 @@ def get_quarter_opcodes(quarter: Quarter) -> FrozenSet[MantraOpCode]:
 # PARAMPARA VECTORS - For each opcode (PARAMPARA imported from acintya.py SSOT)
 # =============================================================================
 
-OPCODE_PARAMPARA: Final[Dict[MantraOpCode, int]] = {opcode: (opcode.value + KSETRAJNA) * PARAMPARA for opcode in MantraOpCode}
+OPCODE_PARAMPARA: Final[Dict[MantraOpCode, int]] = {
+    opcode: (opcode.value + KSETRAJNA) * PARAMPARA for opcode in MantraOpCode
+}
 
 
 def get_opcode_parampara(opcode: MantraOpCode) -> int:

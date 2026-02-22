@@ -14,7 +14,18 @@ The lineage is eternal.
 
 This is the SOUL of the system.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, PANCHA, QUALITIES, QUARTERS, SHARANAGATI, TEN, TRINITY, WORDS)
+
+from vibe_core.mahamantra.protocols._seed import (
+    HALVES,
+    KSETRAJNA,
+    PANCHA,
+    QUALITIES,
+    QUARTERS,
+    SHARANAGATI,
+    TEN,
+    TRINITY,
+    WORDS,
+)
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "prithu"
@@ -156,6 +167,7 @@ class LineageChain:
         Looks for pyproject.toml or .git as markers.
         """
         from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT
+
         current = SUBSTRATE_ROOT
         for _ in range(TEN):  # Max 10 levels up
             if (current / "pyproject.toml").exists() or (current / ".git").exists():

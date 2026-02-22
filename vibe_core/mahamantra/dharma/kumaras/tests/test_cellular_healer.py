@@ -31,7 +31,7 @@ from vibe_core.mahamantra.substrate.shuddhi import ShuddhiStatus
 # =============================================================================
 
 # Source with an unsafe_io_write violation inside a class method
-SICK_METHOD_SOURCE = textwrap.dedent('''\
+SICK_METHOD_SOURCE = textwrap.dedent("""\
     class FileWriter:
         def __init__(self):
             self.system = None
@@ -39,7 +39,7 @@ SICK_METHOD_SOURCE = textwrap.dedent('''\
         def write_data(self, path, data):
             with open(path, 'w') as f:
                 f.write(data)
-''')
+""")
 
 # Source with NO violation
 CLEAN_SOURCE = textwrap.dedent('''\
@@ -174,20 +174,28 @@ class TestCellularHealingResult:
 
     def test_success_property(self):
         result = CellularHealingResult(
-            shuddhi_result=type("R", (), {
-                "success": True,
-                "status": ShuddhiStatus.PURIFIED,
-                "rule_id": "test",
-            })(),
+            shuddhi_result=type(
+                "R",
+                (),
+                {
+                    "success": True,
+                    "status": ShuddhiStatus.PURIFIED,
+                    "rule_id": "test",
+                },
+            )(),
         )
         assert result.success is True
 
     def test_status_property(self):
         result = CellularHealingResult(
-            shuddhi_result=type("R", (), {
-                "success": False,
-                "status": ShuddhiStatus.FAILED,
-                "rule_id": "test",
-            })(),
+            shuddhi_result=type(
+                "R",
+                (),
+                {
+                    "success": False,
+                    "status": ShuddhiStatus.FAILED,
+                    "rule_id": "test",
+                },
+            )(),
         )
         assert result.status == ShuddhiStatus.FAILED

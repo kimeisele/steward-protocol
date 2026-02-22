@@ -8,6 +8,7 @@ they've been moved to within the substrate tree.
 Usage:
     from vibe_core.mahamantra.substrate._paths import SUBSTRATE_ROOT, MAHAMANTRA_ROOT, VIBE_CORE_ROOT
 """
+
 from __future__ import annotations
 
 from pathlib import Path

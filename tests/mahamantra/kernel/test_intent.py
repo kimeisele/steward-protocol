@@ -1013,6 +1013,7 @@ class TestIntentResolverProtocol:
         class IncompleteResolver:
             def can_resolve(self, intent):
                 return True
+
             # Missing resolve method
 
         resolver = IncompleteResolver()

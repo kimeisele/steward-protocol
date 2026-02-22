@@ -280,6 +280,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.substrate import bridge
+
         assert "offer" in bridge.__all__
         assert "query_purpose" in bridge.__all__
         assert "PURPOSE_MAP" in bridge.__all__

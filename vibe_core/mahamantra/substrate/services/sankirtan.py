@@ -803,6 +803,7 @@ def iterate_sankirtan(
     """
     if base_path is None:
         from vibe_core.mahamantra.substrate._paths import VIBE_CORE_ROOT
+
         base_path = VIBE_CORE_ROOT
 
     for dir_name in SCAN_DIRECTORIES:
@@ -954,6 +955,7 @@ def perform_sankirtan(
     """
     if base_path is None:
         from vibe_core.mahamantra.substrate._paths import VIBE_CORE_ROOT
+
         base_path = VIBE_CORE_ROOT
 
     # Scanner removed - folder IS wiring. Use direct file discovery.
@@ -1406,6 +1408,7 @@ def heal_wiring(base_path: Optional[Path] = None, dry_run: bool = True) -> Dict[
 
     if base_path is None:
         from vibe_core.mahamantra.substrate._paths import VIBE_CORE_ROOT
+
         base_path = VIBE_CORE_ROOT
 
     stats = {"checked": 0, "healed": 0, "skipped": 0, "failed": 0}

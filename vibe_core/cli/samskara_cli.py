@@ -25,6 +25,7 @@ from typing import Dict, List
 from vibe_core.protocols import register_cli, CLIMeta
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 

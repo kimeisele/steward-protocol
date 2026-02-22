@@ -8,6 +8,7 @@ Persists to `.vibe/state/mahamantra/memory.json`.
 
 "akṣarāṇām a-kāro 'smi" - Of letters I am the letter A.
 """
+
 import json
 import logging
 from pathlib import Path
@@ -19,20 +20,21 @@ from vibe_core.protocols.memory import MemoryProtocol, MemoryEntry, Entity, Memo
 
 logger = logging.getLogger("Mahamantra.Memory")
 
+
 class PersistentMemory:
     """
     JSON-backed persistent memory implementing MemoryProtocol.
     """
-    
+
     def __init__(self, workspace: Optional[Path] = None):
         self._workspace = workspace or Path.cwd()
         self._state_dir = self._workspace / ".vibe" / "state" / "mahamantra"
         self._memory_file = self._state_dir / "memory.json"
         self._store: Dict[str, MemoryEntry] = {}
         self._entities: Dict[str, List[Entity]] = {}
-        
+
         self._load()
-        
+
     def _get_key(self, key: str, session_id: Optional[str]) -> str:
         return f"{session_id or 'global'}::{key}"
 
@@ -40,7 +42,7 @@ class PersistentMemory:
         """Load from disk."""
         if not self._memory_file.exists():
             return
-            
+
         try:
             data = json.loads(self._memory_file.read_text())
             # Rehydrate MemoryEntries
@@ -58,13 +60,13 @@ class PersistentMemory:
         """Atomic save to disk."""
         try:
             self._state_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Serialize
             data = {
                 "store": {k: asdict(v) for k, v in self._store.items() if not v.is_expired},
-                "updated_at": datetime.now().isoformat()
+                "updated_at": datetime.now().isoformat(),
             }
-            
+
             temp = self._memory_file.with_suffix(".tmp")
             temp.write_text(json.dumps(data, indent=2, default=str))
             temp.replace(self._memory_file)
@@ -83,21 +85,22 @@ class PersistentMemory:
     ) -> None:
         """Store a value."""
         store_key = self._get_key(key, session_id)
-        
+
         expires_at = None
         if ttl_seconds:
             from datetime import timedelta
+
             expires_at = datetime.now() + timedelta(seconds=ttl_seconds)
-            
+
         entry = MemoryEntry(
             key=key,
             value=value,
             session_id=session_id,
             created_at=datetime.now(),
             expires_at=expires_at,
-            tags=tags or []
+            tags=tags or [],
         )
-        
+
         self._store[store_key] = entry
         self._save()
         logger.debug(f"Remembered: {key}")
@@ -110,15 +113,15 @@ class PersistentMemory:
         """Retrieve a value."""
         store_key = self._get_key(key, session_id)
         entry = self._store.get(store_key)
-        
+
         if not entry:
             return None
-            
+
         if entry.is_expired:
             del self._store[store_key]
             self._save()
             return None
-            
+
         return entry.value
 
     def forget(
@@ -156,8 +159,10 @@ class PersistentMemory:
     def resolve_reference(self, reference: str, session_id: str) -> Optional[Entity]:
         # Simple resolution for MVP
         entities = self._entities.get(session_id, [])
-        if not entities: return None
-        if "last" in reference: return entities[-1]
+        if not entities:
+            return None
+        if "last" in reference:
+            return entities[-1]
         return None
 
     def get_stats(self) -> MemoryStats:
@@ -165,12 +170,14 @@ class PersistentMemory:
 
     def clear_session(self, session_id: str) -> int:
         keys = [k for k in self._store if k.startswith(f"{session_id}::")]
-        for k in keys: del self._store[k]
+        for k in keys:
+            del self._store[k]
         self._save()
         return len(keys)
 
     def clear_expired(self) -> int:
         keys = [k for k, v in self._store.items() if v.is_expired]
-        for k in keys: del self._store[k]
+        for k in keys:
+            del self._store[k]
         self._save()
         return len(keys)

@@ -142,10 +142,9 @@ _VOWEL_GROUP_RE: Final = re.compile(r"[aeiouy]+")
 class SyllableVector(NamedTuple):
     """3D phonetic vector for a single syllable."""
 
-    stress: int   # 0=unstressed, 1=primary, 2=secondary
-    height: int   # vowel height 1-5 (low→high)
-    weight: int   # syllable weight (consonant mass + 1)
-
+    stress: int  # 0=unstressed, 1=primary, 2=secondary
+    height: int  # vowel height 1-5 (low→high)
+    weight: int  # syllable weight (consonant mass + 1)
 
 
 def _varga_height(varga: VargaIndex) -> int:
@@ -220,7 +219,9 @@ def _fallback_vectors(word: str) -> Tuple[SyllableVector, ...]:
     if not groups:
         return ()
     if len(groups) == KSETRAJNA:
-        return (SyllableVector(stress=KSETRAJNA, height=3, weight=max(KSETRAJNA, len(word) - len(groups[0]) + KSETRAJNA)),)
+        return (
+            SyllableVector(stress=KSETRAJNA, height=3, weight=max(KSETRAJNA, len(word) - len(groups[0]) + KSETRAJNA)),
+        )
     return tuple(
         SyllableVector(
             stress=KSETRAJNA if i == 0 else 0,
@@ -258,10 +259,10 @@ _HOLYNAME_MODE: Final[Dict[HolyName, str]] = {
 class GridStep(NamedTuple):
     """One position in the 32-step mantra sequencer."""
 
-    position: int       # 0-31
-    holy_name: HolyName # HARE/KRISHNA/RAMA (from seed.MAHAMANTRA)
-    mode: str           # DHARMA/GENESIS/KARMA
-    beat: int           # 0=downbeat (stressed), 1=upbeat (unstressed)
+    position: int  # 0-31
+    holy_name: HolyName  # HARE/KRISHNA/RAMA (from seed.MAHAMANTRA)
+    mode: str  # DHARMA/GENESIS/KARMA
+    beat: int  # 0=downbeat (stressed), 1=upbeat (unstressed)
 
 
 @lru_cache(maxsize=1)
@@ -359,7 +360,9 @@ def _mode_anchor_phrases() -> Dict[str, str]:
     """
     return {
         _HOLYNAME_MODE[HolyName.HARE]: f"{HolyName.HARE.name.lower()} {get_trinity_function(HARE_POSITIONS[0])}",
-        _HOLYNAME_MODE[HolyName.KRISHNA]: f"{HolyName.KRISHNA.name.lower()} {get_trinity_function(KRISHNA_POSITIONS[0])}",
+        _HOLYNAME_MODE[
+            HolyName.KRISHNA
+        ]: f"{HolyName.KRISHNA.name.lower()} {get_trinity_function(KRISHNA_POSITIONS[0])}",
         _HOLYNAME_MODE[HolyName.RAMA]: f"{HolyName.RAMA.name.lower()} {get_trinity_function(RAMA_POSITIONS[0])}",
     }
 
@@ -389,11 +392,11 @@ class RhythmProfile(NamedTuple):
     """Temporal profile for a text input — 3D syllable vectors on mantra grid."""
 
     syllable_count: int
-    stress_pattern: Tuple[int, ...]           # per-syllable stress (0/1/2)
-    sequencer_steps: Tuple[int, ...]          # grid positions (0-31)
-    signature: str                            # compact stress string
+    stress_pattern: Tuple[int, ...]  # per-syllable stress (0/1/2)
+    sequencer_steps: Tuple[int, ...]  # grid positions (0-31)
+    signature: str  # compact stress string
     vectors: Tuple[SyllableVector, ...] = ()  # full 3D vectors
-    grid_modes: Tuple[str, ...] = ()          # mode at each aligned position
+    grid_modes: Tuple[str, ...] = ()  # mode at each aligned position
 
 
 # =============================================================================
@@ -815,11 +818,13 @@ class MahaLanguageEngine:
             if sub_result.all_words:
                 for w in sub_result.all_words[:PANCHA]:
                     if w.meanings:
-                        sub_words.append({
-                            "sanskrit": w.sanskrit,
-                            "meaning": w.meanings[0],
-                            "first_coord": w.first_coord,
-                        })
+                        sub_words.append(
+                            {
+                                "sanskrit": w.sanskrit,
+                                "meaning": w.meanings[0],
+                                "first_coord": w.first_coord,
+                            }
+                        )
 
             # Prana at this branch's Antaranga slot
             branch_slot = (sub_seed * SEVEN) % 512
@@ -843,11 +848,13 @@ class MahaLanguageEngine:
                 if leaf_result.all_words:
                     for w in leaf_result.all_words[:HALVES]:
                         if w.meanings:
-                            leaf_words.append({
-                                "sanskrit": w.sanskrit,
-                                "meaning": w.meanings[0],
-                                "first_coord": w.first_coord,
-                            })
+                            leaf_words.append(
+                                {
+                                    "sanskrit": w.sanskrit,
+                                    "meaning": w.meanings[0],
+                                    "first_coord": w.first_coord,
+                                }
+                            )
 
                 leaf_slot = (leaf_seed * SEVEN) % 512
                 leaf_prana = self._antaranga.prana_at(leaf_slot)
@@ -1011,9 +1018,12 @@ class MahaLanguageEngine:
         # Normalize: GENESIS_PRANA_U32 = 13700 is a typical single-char impact.
         # Scale to 0.0-0.15 range so it's meaningful but doesn't overwhelm.
         from vibe_core.mahamantra.substrate.antaranga import GENESIS_PRANA_U32
+
         return min(0.15, (prana / GENESIS_PRANA_U32) * 0.05)
 
-    def _rank_resonant_by_rhythm(self, resonant: List[Dict[str, object]], rhythm: RhythmProfile, input_text: str = "", seed: int = 0) -> List[Dict[str, object]]:
+    def _rank_resonant_by_rhythm(
+        self, resonant: List[Dict[str, object]], rhythm: RhythmProfile, input_text: str = "", seed: int = 0
+    ) -> List[Dict[str, object]]:
         """Rank resonant pool by base score + rhythm + semantic + chamber boost."""
         ranked: List[Dict[str, object]] = []
         for i, item in enumerate(resonant):
@@ -1132,14 +1142,16 @@ class MahaLanguageEngine:
                     for bw in bwords:
                         meaning = bw.get("meaning", "")
                         if meaning:
-                            by_mode[mode_name].append({
-                                "sanskrit": bw.get("sanskrit", ""),
-                                "meaning": meaning,
-                                "score": 0.4,
-                                "all_meanings": (meaning,),
-                                "first_coord": bw.get("first_coord", -1),
-                                "from_branch": True,
-                            })
+                            by_mode[mode_name].append(
+                                {
+                                    "sanskrit": bw.get("sanskrit", ""),
+                                    "meaning": meaning,
+                                    "score": 0.4,
+                                    "all_meanings": (meaning,),
+                                    "first_coord": bw.get("first_coord", -1),
+                                    "from_branch": True,
+                                }
+                            )
 
         # === RHYTHMIC SEQUENCING: walk grid modes, pick words ===
         parts: List[str] = []
@@ -1292,7 +1304,10 @@ class MahaLanguageEngine:
 
         # Step 4.5: SPROUT (fractal derivation tree from Antaranga wave)
         sprout = self._sprout_derivation_tree(
-            seed, route["attractor"], g.name, exp["shabda_children"],
+            seed,
+            route["attractor"],
+            g.name,
+            exp["shabda_children"],
         )
 
         # Step 5: MODULATE (VenuOrchestrator DIW → Antaranga)

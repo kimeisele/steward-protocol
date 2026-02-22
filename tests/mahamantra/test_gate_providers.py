@@ -58,6 +58,7 @@ class CapableEnforcer:
 
 class Impostor:
     """Satisfies nothing."""
+
     pass
 
 
@@ -79,7 +80,6 @@ def registry():
 
 
 class TestGateProviderRegistration:
-
     def test_capable_parser_accepted(self, registry):
         assert registry.register_gate_provider("parser", CapableParser(), TattvaGate.PARSE)
 
@@ -113,7 +113,6 @@ class TestGateProviderRegistration:
 
 
 class TestProviderQueries:
-
     def test_get_providers_empty(self, registry):
         assert registry.get_gate_providers(TattvaGate.PARSE) == []
 
@@ -149,7 +148,6 @@ class TestProviderQueries:
 
 
 class TestViolations:
-
     def test_no_violations_initially(self, registry):
         assert registry.violations == []
 
@@ -180,7 +178,6 @@ class TestViolations:
 
 
 class TestTattvaDescription:
-
     def test_tattva_includes_gate_providers(self, registry):
         registry.register_gate_provider("parser", CapableParser(), TattvaGate.PARSE)
         tattva = registry.__tattva__
@@ -198,7 +195,6 @@ class TestTattvaDescription:
 
 
 class TestFullPipeline:
-
     def test_register_all_5_gates(self, registry):
         pairs = [
             ("parser", CapableParser(), TattvaGate.PARSE),

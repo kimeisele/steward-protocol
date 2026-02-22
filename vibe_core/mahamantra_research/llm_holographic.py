@@ -340,9 +340,10 @@ def intent_category_from_text(text: str) -> int:
     # Simple hash to 16 categories
     # P0-FIX: Use deterministic hash instead of Python's randomized hash()
     import hashlib
+
     text_normalized = text.lower().strip()
-    text_bytes = text_normalized.encode('utf-8')
-    text_hash_int = int.from_bytes(hashlib.sha256(text_bytes).digest()[:4], byteorder='big')
+    text_bytes = text_normalized.encode("utf-8")
+    text_hash_int = int.from_bytes(hashlib.sha256(text_bytes).digest()[:4], byteorder="big")
     return text_hash_int % WORDS
 
 

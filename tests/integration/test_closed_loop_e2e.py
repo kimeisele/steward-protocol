@@ -34,6 +34,7 @@ from vibe_core.mahamantra.substrate.shuddhi import ShuddhiStatus
 # FIXTURES
 # =============================================================================
 
+
 @pytest.fixture
 def kg():
     """Fresh Knowledge Graph per test."""
@@ -90,6 +91,7 @@ def broken_file_silent_fail(tmp_path):
 # E2E: FULL CLOSED LOOP
 # =============================================================================
 
+
 class TestClosedLoopE2E:
     """End-to-end proof of the self-healing pipeline."""
 
@@ -133,15 +135,11 @@ class TestClosedLoopE2E:
         )
 
         # --- STEP 4: VERIFY healing succeeded ---
-        assert result.status == ShuddhiStatus.PURIFIED, (
-            f"Expected PURIFIED, got {result.status}: {result.message}"
-        )
+        assert result.status == ShuddhiStatus.PURIFIED, f"Expected PURIFIED, got {result.status}: {result.message}"
 
         # --- STEP 5: VERIFY file on disk is healed ---
         healed_code = broken_file.read_text()
-        assert "Any" not in healed_code, (
-            f"Any should be removed from healed file.\nHealed code:\n{healed_code}"
-        )
+        assert "Any" not in healed_code, f"Any should be removed from healed file.\nHealed code:\n{healed_code}"
         assert "Dict" in healed_code, "Dict import should remain"
         assert "List" in healed_code, "List import should remain"
 
@@ -190,17 +188,13 @@ class TestClosedLoopE2E:
 
             # Verify KG is updated
             healed_violations = kg.get_violations(healed=True)
-            assert len(healed_violations) == 1, (
-                f"Expected 1 healed violation, got {len(healed_violations)}"
-            )
+            assert len(healed_violations) == 1, f"Expected 1 healed violation, got {len(healed_violations)}"
             assert healed_violations[0].properties["healed"] is True
             assert healed_violations[0].properties["healed_by"] == "any_type_usage"
 
             # Verify no unhealed violations remain
             unhealed = kg.get_violations(healed=False)
-            assert len(unhealed) == 0, (
-                f"Expected 0 unhealed violations, got {len(unhealed)}"
-            )
+            assert len(unhealed) == 0, f"Expected 0 unhealed violations, got {len(unhealed)}"
         finally:
             # Restore original KG registration
             if original:
@@ -210,6 +204,7 @@ class TestClosedLoopE2E:
 # =============================================================================
 # COMPONENT TESTS — Each link in the chain
 # =============================================================================
+
 
 class TestChainLinks:
     """Test each individual link in the closed loop."""
@@ -307,6 +302,7 @@ class TestChainLinks:
 # MULTI-VIOLATION TEST
 # =============================================================================
 
+
 class TestMultiViolation:
     """Test healing multiple violations in sequence."""
 
@@ -314,9 +310,7 @@ class TestMultiViolation:
         """Heal multiple violations across multiple files."""
         # Create two broken files
         file1 = tmp_path / "mod1.py"
-        file1.write_text(
-            "from typing import Any, Dict\n\ndef f(x: Dict) -> None:\n    pass\n"
-        )
+        file1.write_text("from typing import Any, Dict\n\ndef f(x: Dict) -> None:\n    pass\n")
 
         file2 = tmp_path / "mod2.py"
         file2.write_text(
@@ -359,9 +353,7 @@ class TestMultiViolation:
                 violation_id=node.id,
                 write_file=True,
             )
-            assert result.status == ShuddhiStatus.PURIFIED, (
-                f"Failed to heal {file_path}: {result.message}"
-            )
+            assert result.status == ShuddhiStatus.PURIFIED, f"Failed to heal {file_path}: {result.message}"
 
         # Verify both files healed
         assert "Any" not in file1.read_text()

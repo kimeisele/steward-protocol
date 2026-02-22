@@ -21,7 +21,6 @@ def test_narada_envoy_alignment():
     assert pos.guardian.value == "narada"
 
 
-
 def test_bhishma_archivist_alignment():
     """Verify Archivist is Bhishma at Position 11."""
     pos = mahamantra[11]

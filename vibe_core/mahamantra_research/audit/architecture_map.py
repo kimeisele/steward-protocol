@@ -23,6 +23,7 @@ logger = logging.getLogger("ARCH_MAP")
 # LAYER DEFINITIONS — What the OS SHOULD be
 # =============================================================================
 
+
 @dataclass
 class Layer:
     name: str
@@ -59,6 +60,7 @@ class IntentCoverage:
 # VERIFICATION FUNCTIONS
 # =============================================================================
 
+
 def verify_layer(layer: Layer) -> Layer:
     """Verify a layer exists and is importable."""
     try:
@@ -90,6 +92,7 @@ def verify_connection(conn: Connection) -> Connection:
     try:
         if conn.mechanism == "Singularity.tick()":
             from vibe_core.mahamantra.kernel.singularity import Mahamantra
+
             if hasattr(Mahamantra, "tick"):
                 conn.status = "WIRED"
                 conn.detail = "tick() exists, calls venu.step() + _broadcast()"
@@ -98,12 +101,14 @@ def verify_connection(conn: Connection) -> Connection:
 
         elif conn.mechanism == "register_listener()":
             from vibe_core.mahamantra.kernel.singularity import mahamantra
+
             conn.status = "WIRED"
             conn.detail = f"{len(mahamantra._listeners)} listeners registered"
 
         elif conn.mechanism == "BeatSubscriber discovery":
             try:
                 from vibe_core.services.venu_service import VenuService
+
                 conn.status = "WIRED"
                 conn.detail = "VenuService.discover_beat_subscribers() exists"
             except Exception as e:
@@ -112,12 +117,14 @@ def verify_connection(conn: Connection) -> Connection:
 
         elif conn.mechanism == "DIWSubscriber dispatch":
             from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+
             v = VenuOrchestrator()
             conn.status = "WIRED"
             conn.detail = f"VenuOrchestrator._emit() dispatches to {v.subscriber_count} subscribers"
 
         elif conn.mechanism == "MantraKernel.resolve()":
             from vibe_core.mahamantra.kernel.intent import get_kernel
+
             k = get_kernel()
             resolver_count = len(k._resolvers)
             conn.status = "WIRED" if resolver_count > 0 else "OPEN"
@@ -125,11 +132,13 @@ def verify_connection(conn: Connection) -> Connection:
 
         elif conn.mechanism == "wire_healing_resolver()":
             from vibe_core.mahamantra.dharma.kumaras.healing_resolver import wire_healing_resolver
+
             ok = wire_healing_resolver()
             conn.status = "WIRED" if ok else "BROKEN"
 
         elif conn.mechanism == "wire_sravanam()":
             from vibe_core.mahamantra.dharma.kumaras.sravanam import wire_sravanam
+
             try:
                 listener = wire_sravanam()
                 conn.status = "WIRED"
@@ -142,6 +151,7 @@ def verify_connection(conn: Connection) -> Connection:
             try:
                 from vibe_core.di import ServiceRegistry
                 from vibe_core.protocols.mahajanas.prithu.knowledge import KnowledgeGraphProtocol
+
                 kg = ServiceRegistry.get(KnowledgeGraphProtocol)
                 if kg:
                     conn.status = "WIRED"
@@ -155,6 +165,7 @@ def verify_connection(conn: Connection) -> Connection:
 
         elif conn.mechanism == "Lotus._fire_gate()":
             from vibe_core.mahamantra.substrate.lotus_core import MahamantraLotus
+
             if hasattr(MahamantraLotus, "_fire_gate"):
                 conn.status = "WIRED"
                 conn.detail = "5 TattvaGates: PARSE→VALIDATE→EXECUTE→RESULT→SYNC"
@@ -164,6 +175,7 @@ def verify_connection(conn: Connection) -> Connection:
         elif conn.mechanism == "Sravanam → Intent(OBSERVE)":
             # Does Sravanam emit OBSERVE intents?
             from vibe_core.mahamantra.dharma.kumaras.sravanam import SravanamListener
+
             source = inspect.getsource(SravanamListener)
             if "MantraIntent" in source or "IntentType" in source:
                 conn.status = "WIRED"
@@ -212,20 +224,24 @@ def check_intent_coverage() -> List[IntentCoverage]:
                 resolver = kernel._resolvers[it]
                 resolver_mod = type(resolver).__module__
 
-            results.append(IntentCoverage(
-                intent_type=it.value,
-                guardian=guardian_map.get(it, "YAMARAJA"),
-                has_resolver=has_resolver,
-                resolver_module=resolver_mod,
-                wired_at_boot=has_resolver,
-            ))
+            results.append(
+                IntentCoverage(
+                    intent_type=it.value,
+                    guardian=guardian_map.get(it, "YAMARAJA"),
+                    has_resolver=has_resolver,
+                    resolver_module=resolver_mod,
+                    wired_at_boot=has_resolver,
+                )
+            )
 
     except Exception as e:
-        results.append(IntentCoverage(
-            intent_type="ERROR",
-            guardian="",
-            detail=str(e),
-        ))
+        results.append(
+            IntentCoverage(
+                intent_type="ERROR",
+                guardian="",
+                detail=str(e),
+            )
+        )
 
     return results
 
@@ -233,6 +249,7 @@ def check_intent_coverage() -> List[IntentCoverage]:
 # =============================================================================
 # THE MAP
 # =============================================================================
+
 
 def build_map():
     """Build the complete architecture map."""
@@ -301,23 +318,37 @@ def build_map():
 
     # --- CONNECTIONS ---
     connections = [
-        Connection("VenuService", "Singularity", "Singularity.tick()", "→",
-                    detail="VenuService.start() calls self._singularity.tick() every 250ms"),
-        Connection("Singularity", "VenuOrchestrator", "venu.step()", "→",
-                    detail="tick() calls self.venu.step() → DIW"),
+        Connection(
+            "VenuService",
+            "Singularity",
+            "Singularity.tick()",
+            "→",
+            detail="VenuService.start() calls self._singularity.tick() every 250ms",
+        ),
+        Connection("Singularity", "VenuOrchestrator", "venu.step()", "→", detail="tick() calls self.venu.step() → DIW"),
         Connection("VenuOrchestrator", "DIWSubscribers", "DIWSubscriber dispatch", "→"),
-        Connection("Singularity", "Listeners", "register_listener()", "→",
-                    detail="_broadcast(TickState) to all listeners"),
-        Connection("VenuService", "BeatSubscribers", "BeatSubscriber discovery", "→",
-                    detail="discover_beat_subscribers() from ServiceRegistry"),
-        Connection("Lotus", "Singularity", "Lotus._fire_gate()", "→",
-                    detail="__call__() fires 5 TattvaGates"),
+        Connection(
+            "Singularity", "Listeners", "register_listener()", "→", detail="_broadcast(TickState) to all listeners"
+        ),
+        Connection(
+            "VenuService",
+            "BeatSubscribers",
+            "BeatSubscriber discovery",
+            "→",
+            detail="discover_beat_subscribers() from ServiceRegistry",
+        ),
+        Connection("Lotus", "Singularity", "Lotus._fire_gate()", "→", detail="__call__() fires 5 TattvaGates"),
         Connection("MantraKernel", "HealingResolver", "MantraKernel.resolve()", "→"),
         Connection("HealingResolver", "MantraKernel", "wire_healing_resolver()", "→"),
         Connection("ShuddhiEngine", "MantraKernel", "heal_all_violations() → MantraIntent(HEAL)", "→"),
         Connection("Sravanam", "Singularity", "wire_sravanam()", "→"),
-        Connection("Sravanam", "MantraKernel", "Sravanam → Intent(OBSERVE)", "→",
-                    detail="SHOULD emit OBSERVE intents from scan results"),
+        Connection(
+            "Sravanam",
+            "MantraKernel",
+            "Sravanam → Intent(OBSERVE)",
+            "→",
+            detail="SHOULD emit OBSERVE intents from scan results",
+        ),
         Connection("Ouroboros", "KnowledgeGraph", "KG → heal_all_violations()", "→"),
     ]
 
@@ -327,6 +358,7 @@ def build_map():
 # =============================================================================
 # MAIN
 # =============================================================================
+
 
 def main():
     layers, connections = build_map()
@@ -365,7 +397,9 @@ def main():
     print("-" * 80)
     for ic in intents:
         icon = "●" if ic.has_resolver else "○"
-        print(f"{ic.intent_type:15s} | {ic.guardian:12s} | {icon} {'YES' if ic.has_resolver else 'NO':7s} | {ic.resolver_module}")
+        print(
+            f"{ic.intent_type:15s} | {ic.guardian:12s} | {icon} {'YES' if ic.has_resolver else 'NO':7s} | {ic.resolver_module}"
+        )
 
     # Summary
     wired = sum(1 for c in connections if c.status == "WIRED")

@@ -1,6 +1,7 @@
 """
 MAHA MANTRA - The Compute Ordinances
 """
+
 from .kirtan import (
     MahaKirtan,
     MahaKirtanState,

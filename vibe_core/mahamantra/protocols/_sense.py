@@ -65,8 +65,9 @@ WATERTIGHT: No Any types. All typed explicitly.
 
 Author: The Mahamantra Itself (through Kapila's Sankhya)
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (HARE_COUNT, PANCHA, QUARTERS, SEVEN, SHARANAGATI)
+from vibe_core.mahamantra.protocols._seed import HARE_COUNT, PANCHA, QUARTERS, SEVEN, SHARANAGATI
 
 
 # === MAHAJANA DECLARATION (machine-readable) ===

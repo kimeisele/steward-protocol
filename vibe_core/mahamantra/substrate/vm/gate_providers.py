@@ -54,16 +54,18 @@ logger = logging.getLogger("MAHAMANTRA.GATES")
 
 class IOPolicy(Enum):
     """I/O policy derived from Guna. The Gate's teeth."""
-    VISHUDDHA = "vishuddha"        # Transcendental: bypasses the Gate entirely
-    CACHE_ONLY = "cache_only"      # SATTVA: RAM only, no disk touch
+
+    VISHUDDHA = "vishuddha"  # Transcendental: bypasses the Gate entirely
+    CACHE_ONLY = "cache_only"  # SATTVA: RAM only, no disk touch
     WRITE_BEHIND = "write_behind"  # RAJAS: RAM cache, deferred flush
-    SYNC_FLUSH = "sync_flush"      # TAMAS: Immediate disk write
-    DENIED = "denied"              # VOID: No Guna = Mayavad = no right
+    SYNC_FLUSH = "sync_flush"  # TAMAS: Immediate disk write
+    DENIED = "denied"  # VOID: No Guna = Mayavad = no right
 
 
 # =============================================================================
 # WATERTIGHT TYPES — No Any, No dict, No list
 # =============================================================================
+
 
 class ParseResult(TypedDict):
     valid: bool
@@ -71,11 +73,13 @@ class ParseResult(TypedDict):
     parse_count: int
     reason: str
 
+
 class ValidateResult(TypedDict):
     valid: bool
     seed: int
     validate_count: int
     reason: str
+
 
 class InferResult(TypedDict):
     seed: int
@@ -83,10 +87,12 @@ class InferResult(TypedDict):
     attractor_frequency: int
     unique_attractors: int
 
+
 class RouteResult(TypedDict):
     attractor: int
     position: int
     position_frequency: int
+
 
 class EnforceResult(TypedDict):
     position: int
@@ -94,6 +100,7 @@ class EnforceResult(TypedDict):
     attractor: int
     committed: bool
     enforce_count: int
+
 
 class IOWriteResult(TypedDict):
     success: bool
@@ -104,6 +111,7 @@ class IOWriteResult(TypedDict):
     guna_policy: str
     reason: str
 
+
 class AuditEntry(TypedDict, total=False):
     actor: str
     file: str
@@ -113,22 +121,27 @@ class AuditEntry(TypedDict, total=False):
     guna_policy: str
     denied_reason: str
 
+
 class ParseStats(TypedDict):
     parse_count: int
     last_input_type: Optional[str]
 
+
 class ValidateStats(TypedDict):
     validate_count: int
     rejection_count: int
+
 
 class InferStats(TypedDict):
     infer_count: int
     unique_attractors: int
     top_attractors: list
 
+
 class RouteStats(TypedDict):
     route_count: int
     position_distribution: Dict[int, int]
+
 
 class EnforceStats(TypedDict):
     enforce_count: int
@@ -149,6 +162,7 @@ class EnforceStats(TypedDict):
 # GATE 0: CHAITANYA — MantraGateProvider (PARSE / Identity)
 # =============================================================================
 # Observer at the entry gate. Validates input shape, tracks seed generation.
+
 
 class MantraGateProvider:
     """Watcher at PARSE gate — validates and tracks incoming input."""
@@ -175,7 +189,8 @@ class MantraGateProvider:
 
         logger.debug(
             "PARSE gate: input #%d type=%s",
-            self._parse_count, self._last_input_type,
+            self._parse_count,
+            self._last_input_type,
         )
         return ParseResult(
             valid=True,
@@ -196,6 +211,7 @@ class MantraGateProvider:
 # GATE 1: NITYANANDA — StorageGateProvider (VALIDATE / Substrate)
 # =============================================================================
 # Observer at the validation gate. Verifies seed is within valid range.
+
 
 class StorageGateProvider:
     """Watcher at VALIDATE gate — verifies seed integrity."""
@@ -245,6 +261,7 @@ class StorageGateProvider:
 # =============================================================================
 # Observer at the execution gate. Tracks attractor distribution.
 
+
 class InferGateProvider:
     """Watcher at EXECUTE gate — tracks inference patterns."""
 
@@ -265,7 +282,9 @@ class InferGateProvider:
 
         logger.debug(
             "EXECUTE gate: seed=%d attractor=%d (seen %dx)",
-            seed, attractor, self._attractor_seen[attractor],
+            seed,
+            attractor,
+            self._attractor_seen[attractor],
         )
         return InferResult(
             seed=seed,
@@ -279,9 +298,7 @@ class InferGateProvider:
         return InferStats(
             infer_count=self._infer_count,
             unique_attractors=len(self._attractor_seen),
-            top_attractors=sorted(
-                self._attractor_seen.items(), key=lambda x: x[1], reverse=True
-            )[:5],
+            top_attractors=sorted(self._attractor_seen.items(), key=lambda x: x[1], reverse=True)[:5],
         )
 
 
@@ -289,6 +306,7 @@ class InferGateProvider:
 # GATE 3: GADADHARA — SyncGateProvider (RESULT / Energy)
 # =============================================================================
 # Observer at the result gate. Tracks position distribution across the 16 words.
+
 
 class SyncGateProvider:
     """Watcher at RESULT gate — tracks routing and energy flow."""
@@ -312,7 +330,9 @@ class SyncGateProvider:
 
         logger.debug(
             "RESULT gate: attractor=%d → position=%d (hit %dx)",
-            attractor, position, self._position_hits[position],
+            attractor,
+            position,
+            self._position_hits[position],
         )
         return RouteResult(
             attractor=attractor,
@@ -343,13 +363,21 @@ class SyncGateProvider:
 #   gate = get_sync_gate()
 #   gate.write("maha_state.json", data, actor="maha_state")
 
+
 class EnforceGateProvider:
     """Controller at SYNC gate — governs all state I/O through StateService."""
 
     __slots__ = (
-        "_enforce_count", "_state_service", "_last_position", "_last_seed",
-        "_last_opcode", "_last_guna",
-        "_writes_total", "_writes_denied", "_writes_cached", "_writes_flushed",
+        "_enforce_count",
+        "_state_service",
+        "_last_position",
+        "_last_seed",
+        "_last_opcode",
+        "_last_guna",
+        "_writes_total",
+        "_writes_denied",
+        "_writes_cached",
+        "_writes_flushed",
         "_sattva_blocks",
         "_audit_log",
     )
@@ -376,6 +404,7 @@ class EnforceGateProvider:
         try:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols import StateServiceProtocol
+
             svc = ServiceRegistry.get(StateServiceProtocol)
             if svc is not None:
                 self._state_service = svc
@@ -385,6 +414,7 @@ class EnforceGateProvider:
         # Fallback: direct import
         try:
             from vibe_core.state.state_service import get_state_service
+
             self._state_service = get_state_service()
         except (ImportError, RuntimeError):
             pass
@@ -394,8 +424,9 @@ class EnforceGateProvider:
     # ROLE 1: Pipeline Observer (called by _fire_gate in lotus_core.__call__)
     # =========================================================================
 
-    def enforce(self, position: int, seed: int, attractor: int,
-                opcode: Optional[object] = None, guna: Optional[object] = None) -> EnforceResult:
+    def enforce(
+        self, position: int, seed: int, attractor: int, opcode: Optional[object] = None, guna: Optional[object] = None
+    ) -> EnforceResult:
         """
         Pipeline checkpoint at SYNC gate.
 
@@ -415,18 +446,22 @@ class EnforceGateProvider:
         committed = False
         if state_svc is not None:
             try:
-                state_svc.mark_dirty(
-                    state_svc.state_root / "gate_audit.json"
-                )
+                state_svc.mark_dirty(state_svc.state_root / "gate_audit.json")
                 committed = True
             except (AttributeError, OSError) as exc:
                 logger.debug("SYNC gate: StateService mark_dirty failed: %s", exc)
 
-        guna_name = getattr(guna, 'name', str(guna)) if guna is not None else 'NONE'
-        opcode_name = getattr(opcode, 'name', str(opcode)) if opcode is not None else 'NONE'
+        guna_name = getattr(guna, "name", str(guna)) if guna is not None else "NONE"
+        opcode_name = getattr(opcode, "name", str(opcode)) if opcode is not None else "NONE"
         logger.debug(
             "SYNC gate: position=%d seed=%d attractor=%d guna=%s opcode=%s committed=%s (#%d)",
-            position, seed, attractor, guna_name, opcode_name, committed, self._enforce_count,
+            position,
+            seed,
+            attractor,
+            guna_name,
+            opcode_name,
+            committed,
+            self._enforce_count,
         )
         return EnforceResult(
             position=position,
@@ -458,6 +493,7 @@ class EnforceGateProvider:
         None/VOID → DENIED    (Mayavad: no Guna = no existence = no right)
         """
         from vibe_core.mahamantra.substrate.guna import is_vishuddha
+
         if actor and is_vishuddha(actor):
             return IOPolicy.VISHUDDHA
         if guna is None:
@@ -506,8 +542,12 @@ class EnforceGateProvider:
             policy_for_write = IOPolicy.WRITE_BEHIND  # mechanism is Rajas
             # but the AUDIT records it as vishuddha (transcendental origin)
             return self._do_write(
-                filename, data, actor=actor, policy=policy,
-                mechanism=policy_for_write, create_backup=create_backup,
+                filename,
+                data,
+                actor=actor,
+                policy=policy,
+                mechanism=policy_for_write,
+                create_backup=create_backup,
             )
 
         # ── DENIED or SATTVA: No right to write. ──
@@ -516,24 +556,39 @@ class EnforceGateProvider:
             if policy == IOPolicy.CACHE_ONLY:
                 self._sattva_blocks += 1
             self._writes_denied += 1
-            self._record_audit(AuditEntry(
-                actor=actor, file=filename, allowed=False,
-                guna_policy=policy.value, denied_reason=reason,
-            ))
+            self._record_audit(
+                AuditEntry(
+                    actor=actor,
+                    file=filename,
+                    allowed=False,
+                    guna_policy=policy.value,
+                    denied_reason=reason,
+                )
+            )
             logger.debug(
                 "SYNC I/O BLOCKED: %s tried to write %s (%s)",
-                actor, filename, reason,
+                actor,
+                filename,
+                reason,
             )
             return IOWriteResult(
-                success=False, cached=False, flushed=False,
-                actor=actor, file=filename,
-                guna_policy=policy.value, reason=reason,
+                success=False,
+                cached=False,
+                flushed=False,
+                actor=actor,
+                file=filename,
+                guna_policy=policy.value,
+                reason=reason,
             )
 
         # ── RAJAS / TAMAS: Material write path ──
         return self._do_write(
-            filename, data, actor=actor, policy=policy,
-            mechanism=policy, create_backup=create_backup,
+            filename,
+            data,
+            actor=actor,
+            policy=policy,
+            mechanism=policy,
+            create_backup=create_backup,
         )
 
     def _do_write(
@@ -556,14 +611,23 @@ class EnforceGateProvider:
         state_svc = self._get_state_service()
         if state_svc is None:
             self._writes_denied += 1
-            self._record_audit(AuditEntry(
-                actor=actor, file=filename, allowed=False,
-                guna_policy=policy.value, denied_reason="no_state_service",
-            ))
+            self._record_audit(
+                AuditEntry(
+                    actor=actor,
+                    file=filename,
+                    allowed=False,
+                    guna_policy=policy.value,
+                    denied_reason="no_state_service",
+                )
+            )
             return IOWriteResult(
-                success=False, cached=False, flushed=False,
-                actor=actor, file=filename,
-                guna_policy=policy.value, reason="no_state_service",
+                success=False,
+                cached=False,
+                flushed=False,
+                actor=actor,
+                file=filename,
+                guna_policy=policy.value,
+                reason="no_state_service",
             )
 
         try:
@@ -572,14 +636,23 @@ class EnforceGateProvider:
         except (OSError, ValueError, TypeError) as exc:
             logger.warning("SYNC I/O: StateService.save failed for %s: %s", filename, exc)
             self._writes_denied += 1
-            self._record_audit(AuditEntry(
-                actor=actor, file=filename, allowed=False,
-                guna_policy=policy.value, denied_reason=str(exc),
-            ))
+            self._record_audit(
+                AuditEntry(
+                    actor=actor,
+                    file=filename,
+                    allowed=False,
+                    guna_policy=policy.value,
+                    denied_reason=str(exc),
+                )
+            )
             return IOWriteResult(
-                success=False, cached=False, flushed=False,
-                actor=actor, file=filename,
-                guna_policy=policy.value, reason=str(exc),
+                success=False,
+                cached=False,
+                flushed=False,
+                actor=actor,
+                file=filename,
+                guna_policy=policy.value,
+                reason=str(exc),
             )
 
         flushed = False
@@ -591,14 +664,24 @@ class EnforceGateProvider:
             except (OSError, ValueError, RuntimeError) as exc:
                 logger.warning("SYNC I/O: TAMAS flush failed for %s: %s", filename, exc)
 
-        self._record_audit(AuditEntry(
-            actor=actor, file=filename, allowed=True,
-            cached=True, flushed=flushed, guna_policy=policy.value,
-        ))
+        self._record_audit(
+            AuditEntry(
+                actor=actor,
+                file=filename,
+                allowed=True,
+                cached=True,
+                flushed=flushed,
+                guna_policy=policy.value,
+            )
+        )
         return IOWriteResult(
-            success=True, cached=True, flushed=flushed,
-            actor=actor, file=filename,
-            guna_policy=policy.value, reason="",
+            success=True,
+            cached=True,
+            flushed=flushed,
+            actor=actor,
+            file=filename,
+            guna_policy=policy.value,
+            reason="",
         )
 
     # =========================================================================
@@ -645,8 +728,11 @@ class EnforceGateProvider:
         # ── VISHUDDHA: Transcendental bypass → falls through to write ──
         if policy == IOPolicy.VISHUDDHA:
             return self._do_write_source(
-                _Path(file_path), content, actor=actor,
-                policy=policy, backup=backup,
+                _Path(file_path),
+                content,
+                actor=actor,
+                policy=policy,
+                backup=backup,
             )
 
         # ── DENIED or SATTVA: No right to write source. ──
@@ -655,24 +741,38 @@ class EnforceGateProvider:
             if policy == IOPolicy.CACHE_ONLY:
                 self._sattva_blocks += 1
             self._writes_denied += 1
-            self._record_audit(AuditEntry(
-                actor=actor, file=fname, allowed=False,
-                guna_policy=policy.value, denied_reason=reason,
-            ))
+            self._record_audit(
+                AuditEntry(
+                    actor=actor,
+                    file=fname,
+                    allowed=False,
+                    guna_policy=policy.value,
+                    denied_reason=reason,
+                )
+            )
             logger.debug(
                 "SYNC SOURCE BLOCKED: %s tried to write %s (%s)",
-                actor, fname, reason,
+                actor,
+                fname,
+                reason,
             )
             return IOWriteResult(
-                success=False, cached=False, flushed=False,
-                actor=actor, file=fname,
-                guna_policy=policy.value, reason=reason,
+                success=False,
+                cached=False,
+                flushed=False,
+                actor=actor,
+                file=fname,
+                guna_policy=policy.value,
+                reason=reason,
             )
 
         # ── RAJAS / TAMAS: Material write path (source file) ──
         return self._do_write_source(
-            _Path(file_path), content, actor=actor,
-            policy=policy, backup=backup,
+            _Path(file_path),
+            content,
+            actor=actor,
+            policy=policy,
+            backup=backup,
         )
 
     def _do_write_source(
@@ -686,6 +786,7 @@ class EnforceGateProvider:
     ) -> IOWriteResult:
         """Internal source-file write executor."""
         import shutil
+
         fname = str(file_path)
 
         try:
@@ -698,31 +799,52 @@ class EnforceGateProvider:
             file_path.write_text(content, encoding="utf-8")
             self._writes_flushed += 1
 
-            self._record_audit(AuditEntry(
-                actor=actor, file=fname, allowed=True,
-                cached=False, flushed=True, guna_policy=policy.value,
-            ))
+            self._record_audit(
+                AuditEntry(
+                    actor=actor,
+                    file=fname,
+                    allowed=True,
+                    cached=False,
+                    flushed=True,
+                    guna_policy=policy.value,
+                )
+            )
             logger.debug(
                 "SYNC SOURCE OK: %s wrote %s (policy=%s)",
-                actor, fname, policy.value,
+                actor,
+                fname,
+                policy.value,
             )
             return IOWriteResult(
-                success=True, cached=False, flushed=True,
-                actor=actor, file=fname,
-                guna_policy=policy.value, reason="",
+                success=True,
+                cached=False,
+                flushed=True,
+                actor=actor,
+                file=fname,
+                guna_policy=policy.value,
+                reason="",
             )
 
         except OSError as exc:
             self._writes_denied += 1
-            self._record_audit(AuditEntry(
-                actor=actor, file=fname, allowed=False,
-                guna_policy=policy.value, denied_reason=str(exc),
-            ))
+            self._record_audit(
+                AuditEntry(
+                    actor=actor,
+                    file=fname,
+                    allowed=False,
+                    guna_policy=policy.value,
+                    denied_reason=str(exc),
+                )
+            )
             logger.warning("SYNC SOURCE FAILED: %s → %s: %s", actor, fname, exc)
             return IOWriteResult(
-                success=False, cached=False, flushed=False,
-                actor=actor, file=fname,
-                guna_policy=policy.value, reason=str(exc),
+                success=False,
+                cached=False,
+                flushed=False,
+                actor=actor,
+                file=fname,
+                guna_policy=policy.value,
+                reason=str(exc),
             )
 
     def flush(self, filename: Optional[str] = None) -> int:
@@ -775,8 +897,8 @@ class EnforceGateProvider:
             enforce_count=self._enforce_count,
             last_position=self._last_position,
             last_seed=self._last_seed,
-            last_opcode=getattr(self._last_opcode, 'name', None),
-            last_guna=getattr(self._last_guna, 'name', None),
+            last_opcode=getattr(self._last_opcode, "name", None),
+            last_guna=getattr(self._last_guna, "name", None),
             state_service_available=self._get_state_service() is not None,
             writes_total=self._writes_total,
             writes_cached=self._writes_cached,
@@ -793,14 +915,17 @@ class EnforceGateProvider:
 # Import Guna HERE (not at top) to avoid circular imports.
 # The LUT is the SSOT. If it's not in the table, it's DENIED.
 
+
 def _populate_guna_policy_lut() -> None:
     """Build the Guna→IOPolicy lookup table. Called once at module load."""
     from vibe_core.mahamantra.substrate.guna import Guna
+
     EnforceGateProvider._GUNA_POLICY = {
         int(Guna.SATTVA): IOPolicy.CACHE_ONLY,
         int(Guna.RAJAS): IOPolicy.WRITE_BEHIND,
         int(Guna.TAMAS): IOPolicy.SYNC_FLUSH,
     }
+
 
 _populate_guna_policy_lut()
 
@@ -812,10 +937,13 @@ _populate_guna_policy_lut()
 # Armed here because gate_providers is imported by every mahamantra path.
 # No boot dependency. No wiring step. Just: import → armed.
 
+
 def _arm_io_sentinel() -> None:
     """Arm the I/O sentinel. Called once at module load."""
     from vibe_core.mahamantra.substrate.io_sentinel import arm
+
     arm()
+
 
 _arm_io_sentinel()
 

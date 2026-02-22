@@ -193,6 +193,7 @@ class TestMahaTransformMathematicalProperties:
         # This is implicit in the algorithm, but we verify
         # the pattern length matches WORDS
         from vibe_core.mahamantra.adapters.transform import PATTERN
+
         assert len(PATTERN) == WORDS
 
     def test_seven_multiplier_used(self):
@@ -209,6 +210,7 @@ class TestMahaTransformMathematicalProperties:
         t = MahaTransform()
         results = [t.compute(i).value for i in range(1000)]
         from collections import Counter
+
         counts = Counter(results)
         # Some values should appear much more often (attractors)
         max_count = max(counts.values())

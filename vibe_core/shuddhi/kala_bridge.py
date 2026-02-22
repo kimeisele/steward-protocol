@@ -76,6 +76,7 @@ class KalaBridgeSubscriber:
         try:
             from vibe_core.di import ServiceRegistry
             from vibe_core.protocols import VibeKernel
+
             kernel = ServiceRegistry.get(VibeKernel)
             if kernel and hasattr(kernel, "project_root"):
                 return kernel.project_root
@@ -106,7 +107,8 @@ class KalaBridgeSubscriber:
             if tasks_created > 0:
                 logger.info(
                     "[KALA] Log scan: %d tasks created (nadi %d)",
-                    tasks_created, self._nadi_count,
+                    tasks_created,
+                    self._nadi_count,
                 )
         except Exception as e:
             logger.debug("[KALA] Log scan failed: %s", e)
@@ -121,10 +123,7 @@ class KalaBridgeSubscriber:
             if not task_service:
                 return
 
-            existing = [
-                t for t in task_service.list_tasks()
-                if t.title == "PATROL: Watchman Deep Inspection"
-            ]
+            existing = [t for t in task_service.list_tasks() if t.title == "PATROL: Watchman Deep Inspection"]
             if existing:
                 return
 

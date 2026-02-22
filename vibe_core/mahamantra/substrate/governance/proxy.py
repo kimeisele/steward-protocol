@@ -16,8 +16,9 @@ Proxy wraps them and routes operations through Mahamantra.
 
 WATERTIGHT: NO hardcoded numbers. ALL from seed.py.
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 
 # === MAHAJANA DECLARATION ===
@@ -39,7 +40,6 @@ from vibe_core.mahamantra.protocols._gad import (
     GADBase,
     GADProtocol,
 )
-
 
 
 # =============================================================================

@@ -64,19 +64,19 @@ class TestParamparaNode:
     def test_parampara_node_has_required_fields(self):
         """ParamparaNode has required fields."""
         node = PARAMPARA_GRAPH[Mahajana.BRAHMA]
-        assert hasattr(node, 'mahajana')
-        assert hasattr(node, 'position')
-        assert hasattr(node, 'quarter')
-        assert hasattr(node, 'sampradaya')
-        assert hasattr(node, 'is_head')
+        assert hasattr(node, "mahajana")
+        assert hasattr(node, "position")
+        assert hasattr(node, "quarter")
+        assert hasattr(node, "sampradaya")
+        assert hasattr(node, "is_head")
 
     def test_parampara_node_optional_fields(self):
         """ParamparaNode has optional fields with defaults."""
         node = PARAMPARA_GRAPH[Mahajana.BRAHMA]
-        assert hasattr(node, 'guru')
-        assert hasattr(node, 'shishyas')
-        assert hasattr(node, 'serves')
-        assert hasattr(node, 'served_by')
+        assert hasattr(node, "guru")
+        assert hasattr(node, "shishyas")
+        assert hasattr(node, "serves")
+        assert hasattr(node, "served_by")
 
 
 # =============================================================================
@@ -94,10 +94,18 @@ class TestParamparaGraph:
     def test_all_mahajanas_in_graph(self):
         """All 12 Mahajanas are in the graph."""
         expected = {
-            Mahajana.BRAHMA, Mahajana.NARADA, Mahajana.SHAMBHU,
-            Mahajana.KUMARAS, Mahajana.KAPILA, Mahajana.MANU,
-            Mahajana.PRAHLADA, Mahajana.JANAKA, Mahajana.BHISHMA,
-            Mahajana.BALI, Mahajana.SHUKA, Mahajana.YAMARAJA,
+            Mahajana.BRAHMA,
+            Mahajana.NARADA,
+            Mahajana.SHAMBHU,
+            Mahajana.KUMARAS,
+            Mahajana.KAPILA,
+            Mahajana.MANU,
+            Mahajana.PRAHLADA,
+            Mahajana.JANAKA,
+            Mahajana.BHISHMA,
+            Mahajana.BALI,
+            Mahajana.SHUKA,
+            Mahajana.YAMARAJA,
         }
         assert set(PARAMPARA_GRAPH.keys()) == expected
 
@@ -227,8 +235,8 @@ class TestPrakriti24:
     def test_prakriti_element_has_rhythm(self):
         """PrakritiElement has rhythm coordinates."""
         element = PRAKRITI_24[0]
-        assert hasattr(element, 'rhythm_3x8')
-        assert hasattr(element, 'rhythm_4x6')
+        assert hasattr(element, "rhythm_3x8")
+        assert hasattr(element, "rhythm_4x6")
 
     def test_prakriti_category_counts(self):
         """Category counts are correct."""

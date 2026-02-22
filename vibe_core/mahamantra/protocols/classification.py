@@ -1,5 +1,5 @@
 from typing import Protocol, runtime_checkable, List, Union, Callable, Dict, Literal
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 from dataclasses import dataclass
 
 # Type Aliases
@@ -8,11 +8,12 @@ ComplexityLiteral = Literal["structure", "hash", "tree", "linear", "quadratic", 
 MemoryLiteral = Literal["bounded_static", "bounded_dynamic", "unbounded_gc", "unbounded_manual", "unbounded_never"]
 DeterminismLiteral = Literal["always", "usually", "random", "chaotic"]
 
+
 @runtime_checkable
 class MahaClassificationProtocol(Protocol):
     """
     Protocol for MahaClassification: Technology Analysis.
-    
+
     Classifies algorithms based on the Mercy Equation (G = f/K).
     """
 
@@ -44,18 +45,20 @@ class MahaClassificationProtocol(Protocol):
     ) -> str:
         """Get quick ANUKULYA/PRATIKULYA verdict."""
         ...
-        
+
     def compare(self, technologies: List["ClassificationResult"]) -> "ComparisonResult":
         """Compare multiple technologies."""
         ...
-        
+
     def compare_all_references(self) -> "ComparisonResult":
         """Compare reference implementations."""
         ...
 
+
 @dataclass(frozen=True)
 class ClassificationResult:
     """Enterprise-friendly classification result."""
+
     name: str
     verdict: str
     is_anukulya: bool
@@ -66,19 +69,21 @@ class ClassificationResult:
     complexity: str
     memory: str
     determinism: str
-    
+
     # Method to export as dict - Typed strictly
     to_dict: Callable[[], Dict[str, Union[str, int, float, bool]]]
+
 
 @dataclass(frozen=True)
 class ComparisonResult:
     """Result of comparing technologies."""
+
     technologies: List[ClassificationResult]
-    
+
     @property
     def best(self) -> ClassificationResult:
         return max(self.technologies, key=lambda t: t.mercy_advantage)
-        
+
     @property
     def summary(self) -> str:
         return f"Comparison of {len(self.technologies)} technologies. Best: {self.best.name}"

@@ -197,6 +197,7 @@ class TestGraphNode:
             lotus_position=0,
         )
         from vibe_core.mahamantra.protocols._core import PARAMPARA
+
         assert node.parampara_vector == (0 + 1) * PARAMPARA
 
     def test_graph_node_is_connected(self):
@@ -343,12 +344,7 @@ class TestGraphBuilder:
 
     def test_graph_builder_add_mahajana(self):
         """add_mahajana adds mahajana node."""
-        graph = (
-            GraphBuilder()
-            .add_source()
-            .add_mahajana("BRAHMA", Sampradaya.BRAHMA)
-            .build()
-        )
+        graph = GraphBuilder().add_source().add_mahajana("BRAHMA", Sampradaya.BRAHMA).build()
         node = graph.get_node("BRAHMA")
         assert node is not None
         assert node.node_type == NodeType.MAHAJANA
@@ -356,11 +352,7 @@ class TestGraphBuilder:
     def test_graph_builder_diksha(self):
         """diksha adds diksha edge."""
         graph = (
-            GraphBuilder()
-            .add_source()
-            .add_mahajana("BRAHMA", Sampradaya.BRAHMA)
-            .diksha("KRISHNA", "BRAHMA")
-            .build()
+            GraphBuilder().add_source().add_mahajana("BRAHMA", Sampradaya.BRAHMA).diksha("KRISHNA", "BRAHMA").build()
         )
         parent = graph.get_parent("BRAHMA")
         assert parent == "KRISHNA"
@@ -463,6 +455,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _graph
+
         expected = [
             "NodeType",
             "EdgeType",

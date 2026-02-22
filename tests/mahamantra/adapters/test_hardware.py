@@ -115,28 +115,44 @@ class TestPipelineStageInfo:
     def test_high_bit(self):
         """high_bit calculates correctly."""
         info = PipelineStageInfo(
-            stage=0, name="L0", bit_range="31-28",
-            sanskrit="", english="", hardware_effect="",
+            stage=0,
+            name="L0",
+            bit_range="31-28",
+            sanskrit="",
+            english="",
+            hardware_effect="",
         )
         assert info.high_bit == 31
 
         info = PipelineStageInfo(
-            stage=7, name="L7", bit_range="3-0",
-            sanskrit="", english="", hardware_effect="",
+            stage=7,
+            name="L7",
+            bit_range="3-0",
+            sanskrit="",
+            english="",
+            hardware_effect="",
         )
         assert info.high_bit == 3
 
     def test_low_bit(self):
         """low_bit calculates correctly."""
         info = PipelineStageInfo(
-            stage=0, name="L0", bit_range="31-28",
-            sanskrit="", english="", hardware_effect="",
+            stage=0,
+            name="L0",
+            bit_range="31-28",
+            sanskrit="",
+            english="",
+            hardware_effect="",
         )
         assert info.low_bit == 28
 
         info = PipelineStageInfo(
-            stage=7, name="L7", bit_range="3-0",
-            sanskrit="", english="", hardware_effect="",
+            stage=7,
+            name="L7",
+            bit_range="3-0",
+            sanskrit="",
+            english="",
+            hardware_effect="",
         )
         assert info.low_bit == 0
 
@@ -168,8 +184,12 @@ class TestHardwareSpec:
     def test_total_latency_cycles(self):
         """total_latency_cycles equals pipeline_stages."""
         spec = HardwareSpec(
-            data_width=32, next_hop_width=16, branching_factor=16,
-            nibble_size=4, pipeline_stages=8, root_base_address=0,
+            data_width=32,
+            next_hop_width=16,
+            branching_factor=16,
+            nibble_size=4,
+            pipeline_stages=8,
+            root_base_address=0,
         )
         assert spec.total_latency_cycles == 8
 
@@ -200,24 +220,36 @@ class TestHardwareSpec:
     def test_address_space(self):
         """address_space calculates 2^data_width."""
         spec = HardwareSpec(
-            data_width=32, next_hop_width=16, branching_factor=16,
-            nibble_size=4, pipeline_stages=8, root_base_address=0,
+            data_width=32,
+            next_hop_width=16,
+            branching_factor=16,
+            nibble_size=4,
+            pipeline_stages=8,
+            root_base_address=0,
         )
-        assert spec.address_space == 2 ** 32
+        assert spec.address_space == 2**32
 
     def test_max_next_hops(self):
         """max_next_hops calculates 2^next_hop_width."""
         spec = HardwareSpec(
-            data_width=32, next_hop_width=16, branching_factor=16,
-            nibble_size=4, pipeline_stages=8, root_base_address=0,
+            data_width=32,
+            next_hop_width=16,
+            branching_factor=16,
+            nibble_size=4,
+            pipeline_stages=8,
+            root_base_address=0,
         )
-        assert spec.max_next_hops == 2 ** 16 == 65536
+        assert spec.max_next_hops == 2**16 == 65536
 
     def test_to_dict(self):
         """to_dict returns correct dictionary."""
         spec = HardwareSpec(
-            data_width=32, next_hop_width=16, branching_factor=16,
-            nibble_size=4, pipeline_stages=8, root_base_address=0xBA5E0000,
+            data_width=32,
+            next_hop_width=16,
+            branching_factor=16,
+            nibble_size=4,
+            pipeline_stages=8,
+            root_base_address=0xBA5E0000,
         )
         d = spec.to_dict()
         assert d["data_width"] == 32
@@ -448,7 +480,7 @@ class TestMahaHardwareIntegration:
         spec = hw.spec()
         assert spec.is_verified is True
         assert spec.total_latency_cycles == 8
-        assert spec.address_space == 2 ** 32
+        assert spec.address_space == 2**32
 
     def test_full_pipeline_flow(self):
         """Full pipeline inspection flow works."""

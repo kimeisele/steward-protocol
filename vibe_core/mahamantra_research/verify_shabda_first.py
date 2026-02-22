@@ -12,13 +12,21 @@ import hashlib
 import sys
 from vibe_core.mahamantra.substrate.phonetics.shabda import text_to_vibration
 from vibe_core.mahamantra.substrate.pancha_walk import (
-    COORD_ELEMENT, COORD_VARGA, COORD_HARMONIC, IS_SHRUTI,
+    COORD_ELEMENT,
+    COORD_VARGA,
+    COORD_HARMONIC,
+    IS_SHRUTI,
 )
 from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
 from vibe_core.mahamantra.adapters.synth import MahaSynth
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS, QUARTERS, MAHA_QUANTUM, POSITION_SUM_KRISHNA,
-    KSETRAJNA, TRINITY, SEVEN,
+    WORDS,
+    QUARTERS,
+    MAHA_QUANTUM,
+    POSITION_SUM_KRISHNA,
+    KSETRAJNA,
+    TRINITY,
+    SEVEN,
 )
 
 
@@ -48,9 +56,7 @@ def shabda_first_seed(text):
     category = attractor % WORDS  # 0-15
 
     # SHA256 is just salt — refines position WITHIN category
-    text_hash = int.from_bytes(
-        hashlib.sha256(text.lower().encode()).digest()[:4], "big"
-    )
+    text_hash = int.from_bytes(hashlib.sha256(text.lower().encode()).digest()[:4], "big")
     salt = text_hash % MAHA_QUANTUM
 
     # Seed: category (phonetic) + salt (structural)
@@ -96,14 +102,14 @@ cat_by_guna = {"tamas": [], "rajas": [], "sattva": [], "suddha": []}
 for text, expected in tests:
     seed, cat, attr = shabda_first_seed(text)
     got = intent_from_category(cat)
-    ok = (got == expected)
+    ok = got == expected
     if ok:
         correct += 1
     mark = "OK" if ok else "XX"
     cat_by_guna[expected].append(cat)
     print(f"  {mark}  cat={cat:>2} attr={attr:>6} got={got:>7} exp={expected:>6}  | {text[:42]}")
 
-print(f"\nScore: {correct}/{total} = {100*correct/total:.0f}%")
+print(f"\nScore: {correct}/{total} = {100 * correct / total:.0f}%")
 
 print("\nCategory distribution by expected guna:")
 for guna, cats in cat_by_guna.items():

@@ -57,6 +57,7 @@ from vibe_core.mahamantra.reactor.shadow import (
     shadow,
 )
 
+
 def __getattr__(name: str):
     """
     Fractal routing: folder IS wiring.

@@ -26,6 +26,7 @@ WHAT WE MEASURE:
 
 RUN: python3 -m vibe_core.mahamantra.research.hkr_decomposition
 """
+
 from __future__ import annotations
 import sys, os
 
@@ -139,9 +140,11 @@ def hkr_trace(seed: int, mod_space: int = MAHA_QUANTUM) -> dict:
 print("=" * 70)
 print("PART 1: HKR COLOR for every RAMA coordinate (0-48)")
 print("=" * 70)
-print(f"\n  {'Coord':5s} {'Phon':4s} {'Elem':8s} {'Basin':5s} "
-      f"{'H%':6s} {'K%':6s} {'R%':6s} {'Dominant':8s} {'H∆':6s} {'K∆':6s} {'R∆':6s}")
-print(f"  {'─'*75}")
+print(
+    f"\n  {'Coord':5s} {'Phon':4s} {'Elem':8s} {'Basin':5s} "
+    f"{'H%':6s} {'K%':6s} {'R%':6s} {'Dominant':8s} {'H∆':6s} {'K∆':6s} {'R∆':6s}"
+)
+print(f"  {'─' * 75}")
 
 coord_hkr = {}
 for c in range(VARNAMALA_TOTAL):
@@ -154,9 +157,11 @@ for c in range(VARNAMALA_TOTAL):
     element = ELEMENT_NAMES[COORD_ELEMENT[c]]
     basin = COORD_BASIN[c]
 
-    print(f"  {c:5d} {phoneme:4s} {element:8s} {basin:5d} "
-          f"{h:5.1%} {k:5.1%} {r:5.1%} {dominant:8s} "
-          f"{trace['h_delta']:6d} {trace['k_delta']:6d} {trace['r_delta']:6d}")
+    print(
+        f"  {c:5d} {phoneme:4s} {element:8s} {basin:5d} "
+        f"{h:5.1%} {k:5.1%} {r:5.1%} {dominant:8s} "
+        f"{trace['h_delta']:6d} {trace['k_delta']:6d} {trace['r_delta']:6d}"
+    )
 
 # =============================================================================
 # PART 2: HKR uniqueness — how many unique HKR signatures?
@@ -186,11 +191,17 @@ print("PART 3: DIVINE NAMES — HKR color signatures")
 print("=" * 70)
 
 NAMES = {
-    "hare": "harē", "krishna": "kṛṣṇa", "rama": "rāma",
-    "jagannath": "jagannātha", "govinda": "gōvinda",
-    "narayana": "nārāyaṇa", "prahlada": "prahlāda",
-    "bhishma": "bhīṣma", "narada": "nārada",
-    "parashurama": "paraśurāma", "bali": "bali",
+    "hare": "harē",
+    "krishna": "kṛṣṇa",
+    "rama": "rāma",
+    "jagannath": "jagannātha",
+    "govinda": "gōvinda",
+    "narayana": "nārāyaṇa",
+    "prahlada": "prahlāda",
+    "bhishma": "bhīṣma",
+    "narada": "nārada",
+    "parashurama": "paraśurāma",
+    "bali": "bali",
     "kapila": "kapila",
 }
 
@@ -210,8 +221,7 @@ for name, iast in sorted(NAMES.items()):
 
     name_hkr[name] = (avg_h, avg_k, avg_r)
 
-    dominant = "HARE" if avg_h >= avg_k and avg_h >= avg_r else (
-        "KRISHNA" if avg_k >= avg_r else "RAMA")
+    dominant = "HARE" if avg_h >= avg_k and avg_h >= avg_r else ("KRISHNA" if avg_k >= avg_r else "RAMA")
 
     print(f"\n  {name:15s} ({iast})")
     print(f"    HKR color: H={avg_h:.1%} K={avg_k:.1%} R={avg_r:.1%} → {dominant}")
@@ -230,10 +240,16 @@ print("=" * 70)
 from vibe_core.mahamantra.substrate.phonetic_encoder import encode_text
 
 PAIRS = [
-    ("fire", "agni"), ("water", "jala"), ("earth", "pṛthivī"),
-    ("devotion", "bhakti"), ("surrender", "śaraṇāgati"),
-    ("knowledge", "jñāna"), ("truth", "satya"), ("love", "prēma"),
-    ("guru", "guru"), ("dharma", "dharma"),
+    ("fire", "agni"),
+    ("water", "jala"),
+    ("earth", "pṛthivī"),
+    ("devotion", "bhakti"),
+    ("surrender", "śaraṇāgati"),
+    ("knowledge", "jñāna"),
+    ("truth", "satya"),
+    ("love", "prēma"),
+    ("guru", "guru"),
+    ("dharma", "dharma"),
 ]
 
 for en, sk in PAIRS:
@@ -256,7 +272,7 @@ for en, sk in PAIRS:
     sk_r = sum(s[2] for s in sk_hkr_list) / len(sk_hkr_list)
 
     # HKR distance (Euclidean in 3D)
-    dist = ((en_h - sk_h)**2 + (en_k - sk_k)**2 + (en_r - sk_r)**2) ** 0.5
+    dist = ((en_h - sk_h) ** 2 + (en_k - sk_k) ** 2 + (en_r - sk_r) ** 2) ** 0.5
     similarity = max(0, 1.0 - dist * 2)  # Scale: 0 = opposite, 1 = identical
 
     print(f"\n  {en:12s} H={en_h:.1%} K={en_k:.1%} R={en_r:.1%}")
@@ -271,14 +287,26 @@ print("PART 5: THE MAHAMANTRA — HKR color per position")
 print("=" * 70)
 
 MANTRA = [
-    "harē", "kṛṣṇa", "harē", "kṛṣṇa",
-    "kṛṣṇa", "kṛṣṇa", "harē", "harē",
-    "harē", "rāma", "harē", "rāma",
-    "rāma", "rāma", "harē", "harē",
+    "harē",
+    "kṛṣṇa",
+    "harē",
+    "kṛṣṇa",
+    "kṛṣṇa",
+    "kṛṣṇa",
+    "harē",
+    "harē",
+    "harē",
+    "rāma",
+    "harē",
+    "rāma",
+    "rāma",
+    "rāma",
+    "harē",
+    "harē",
 ]
 
 print(f"\n  {'Pos':3s} {'Word':9s} {'Op':3s} {'H%':6s} {'K%':6s} {'R%':6s} {'Dominant':8s}")
-print(f"  {'─'*50}")
+print(f"  {'─' * 50}")
 
 total_h = total_k = total_r = 0.0
 n_syllables = 0
@@ -300,16 +328,15 @@ for pos in range(16):
     total_r += avg_r * len(coords)
     n_syllables += len(coords)
 
-    dominant = "HARE" if avg_h >= avg_k and avg_h >= avg_r else (
-        "KRISHNA" if avg_k >= avg_r else "RAMA")
+    dominant = "HARE" if avg_h >= avg_k and avg_h >= avg_r else ("KRISHNA" if avg_k >= avg_r else "RAMA")
 
-    print(f"  {pos+1:3d} {word:9s} {op:3s} {avg_h:5.1%} {avg_k:5.1%} {avg_r:5.1%} {dominant}")
+    print(f"  {pos + 1:3d} {word:9s} {op:3s} {avg_h:5.1%} {avg_k:5.1%} {avg_r:5.1%} {dominant}")
 
 if n_syllables > 0:
     print(f"\n  MAHAMANTRA TOTAL HKR COLOR:")
-    print(f"    H = {total_h/n_syllables:.1%}")
-    print(f"    K = {total_k/n_syllables:.1%}")
-    print(f"    R = {total_r/n_syllables:.1%}")
+    print(f"    H = {total_h / n_syllables:.1%}")
+    print(f"    K = {total_k / n_syllables:.1%}")
+    print(f"    R = {total_r / n_syllables:.1%}")
 
 # =============================================================================
 # PART 6: Basin × HKR — does HKR differentiate WITHIN basins?
@@ -319,6 +346,7 @@ print("PART 6: BASIN × HKR — differentiation within basins")
 print("=" * 70)
 
 from collections import defaultdict
+
 basin_hkr_spread: Dict[int, List[Tuple[float, float, float]]] = defaultdict(list)
 
 for c in range(VARNAMALA_TOTAL):

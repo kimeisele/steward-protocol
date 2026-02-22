@@ -101,6 +101,7 @@ class VibrationSignature:
         Sum capped at WORDS(16), then scaled: score * COSMIC_FRAME // WORDS.
         """
         from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME
+
         points = 0
         if self.base_frequency == NADI_RESONANCE:
             points += QUARTERS
@@ -120,6 +121,7 @@ class VibrationSignature:
     def mahamantra_alignment(self) -> float:
         """Float API boundary — returns 0.0 to 1.0 for external consumers."""
         from vibe_core.mahamantra.protocols._seed import COSMIC_FRAME
+
         return self.mahamantra_alignment_cf / COSMIC_FRAME
 
 

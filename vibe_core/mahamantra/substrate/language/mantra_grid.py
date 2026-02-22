@@ -40,10 +40,10 @@ _HOLYNAME_MODE: Final[Dict[HolyName, str]] = {
 class GridStep(NamedTuple):
     """One position in the 32-step mantra sequencer."""
 
-    position: int       # 0-31
-    holy_name: HolyName # HARE/KRISHNA/RAMA (from seed.MAHAMANTRA)
-    mode: str           # DHARMA/GENESIS/KARMA
-    beat: int           # 0=downbeat (stressed), 1=upbeat (unstressed)
+    position: int  # 0-31
+    holy_name: HolyName  # HARE/KRISHNA/RAMA (from seed.MAHAMANTRA)
+    mode: str  # DHARMA/GENESIS/KARMA
+    beat: int  # 0=downbeat (stressed), 1=upbeat (unstressed)
 
 
 @lru_cache(maxsize=1)

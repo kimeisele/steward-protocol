@@ -64,6 +64,7 @@ class TestPanchaTattvaProtocol:
 
     def test_pancha_tattva_implementation(self):
         """Test implementation of PanchaTattvaProtocol."""
+
         class TestImplementation:
             @property
             def __tattva__(self) -> TattvaDict:
@@ -91,6 +92,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _pancha
+
         expected = [
             "TattvaDict",
             "PanchaTattvaProtocol",

@@ -46,6 +46,7 @@ class AuditorProtocol(Protocol):
 @dataclass
 class RegisteredAuditor:
     """Metadata for a discovered auditor."""
+
     module_path: str
     position: int
     mahajana: str
@@ -136,6 +137,7 @@ class AuditDispatcher:
 
 # Singleton instance
 _dispatcher: Optional[AuditDispatcher] = None
+
 
 def get_dispatcher() -> AuditDispatcher:
     """Get the singleton AuditDispatcher instance."""

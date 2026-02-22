@@ -69,17 +69,17 @@ from vibe_core.mahamantra.protocols._seed import (
 # =============================================================================
 
 BEATS_PER_ROUND: Final[int] = SEVEN  # 7
-ROUNDS_PER_MALA: Final[int] = MALA   # 108
+ROUNDS_PER_MALA: Final[int] = MALA  # 108
 TICKS_PER_MALA: Final[int] = BEATS_PER_ROUND * ROUNDS_PER_MALA  # 756
 
 # Beat pattern (derived from Mahamantra structure)
 BEAT_PATTERN: Final[Tuple[str, ...]] = (
-    "CALL",      # Beat 1: Hare Krishna
+    "CALL",  # Beat 1: Hare Krishna
     "RESPONSE",  # Beat 2: Hare Krishna
-    "IMMUNE",    # Beat 3: Krishna Krishna (double source)
-    "CALL",      # Beat 4: Hare Hare
+    "IMMUNE",  # Beat 3: Krishna Krishna (double source)
+    "CALL",  # Beat 4: Hare Hare
     "RESPONSE",  # Beat 5: Hare Rama
-    "CALL",      # Beat 6: Hare Rama
+    "CALL",  # Beat 6: Hare Rama
     "RESPONSE",  # Beat 7: Rama Rama
 )
 
@@ -87,6 +87,7 @@ BEAT_PATTERN: Final[Tuple[str, ...]] = (
 # =============================================================================
 # THE ORCHESTRATOR
 # =============================================================================
+
 
 class Orchestrator(MahaOrchestratorProtocol):
     """
@@ -265,6 +266,7 @@ class Orchestrator(MahaOrchestratorProtocol):
 # =============================================================================
 # CONVENIENCE FUNCTIONS
 # =============================================================================
+
 
 def tick(seed: int) -> TickResult:
     """Quick single tick."""

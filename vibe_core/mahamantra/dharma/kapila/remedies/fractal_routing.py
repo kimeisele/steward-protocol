@@ -169,5 +169,3 @@ class FractalRoutingRemedy(CSTRemedy):
             new_body.append(getattr_func)
 
         return updated_node.with_changes(body=new_body)
-
-

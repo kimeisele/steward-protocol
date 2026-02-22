@@ -56,6 +56,7 @@ from vibe_core.mahamantra.protocols._seed import WORDS, MAHA_QUANTUM
 # LAYER 3: CODE HEALTH SIGNAL
 # =============================================================================
 
+
 def compute_code_health_signal(text: str) -> Optional[int]:
     """
     Compute a structural health signal from Python source code.
@@ -92,13 +93,13 @@ def compute_code_health_signal(text: str) -> Optional[int]:
     # Weighted signal: each violation type has a weight
     # These weights are derived from MAHAMANTRA constants
     signal = (
-        counter.any_usage * 7      # SEVEN — Any is a serious violation
+        counter.any_usage * 7  # SEVEN — Any is a serious violation
         + counter.silent_except * 5  # PANCHA — silent failure
-        + counter.broad_except * 3   # TRINITY — broad catch
-        + counter.bare_except * 7    # SEVEN — bare except is as bad as Any
-        + counter.star_import * 5    # PANCHA — wildcard import
-        + counter.untyped_params * 1 # KSETRAJNA — untyped param (minor)
-        + counter.missing_return * 1 # KSETRAJNA — missing return (minor)
+        + counter.broad_except * 3  # TRINITY — broad catch
+        + counter.bare_except * 7  # SEVEN — bare except is as bad as Any
+        + counter.star_import * 5  # PANCHA — wildcard import
+        + counter.untyped_params * 1  # KSETRAJNA — untyped param (minor)
+        + counter.missing_return * 1  # KSETRAJNA — missing return (minor)
     )
 
     return signal
@@ -169,6 +170,7 @@ class _ViolationCounter(cst.CSTVisitor):
 # ENHANCED SEED COMPUTATION (simulated)
 # =============================================================================
 
+
 def compute_seed_with_code_layer(text: str) -> Tuple[int, int, Optional[int]]:
     """
     Simulate the enhanced 3-layer seed computation.
@@ -218,6 +220,7 @@ def compute_seed_with_code_layer(text: str) -> Tuple[int, int, Optional[int]]:
 # ENHANCED INTENT CLASSIFICATION
 # =============================================================================
 
+
 def classify_code_intent(text: str) -> IntentLevel:
     """
     Code-aware intent classification.
@@ -241,9 +244,9 @@ def classify_code_intent(text: str) -> IntentLevel:
     elif code_signal <= 2:
         return INTENT_SATTVA  # Minor issues = goodness
     elif code_signal <= 10:
-        return INTENT_RAJAS   # Moderate issues = passion
+        return INTENT_RAJAS  # Moderate issues = passion
     else:
-        return INTENT_TAMAS   # Severe issues = ignorance
+        return INTENT_TAMAS  # Severe issues = ignorance
 
 
 # =============================================================================
@@ -310,8 +313,10 @@ if __name__ == "__main__":
     print("  CODE SEED INTEGRATION — Layer 3: Code Health Signal")
     print("=" * 78)
 
-    print(f"\n  {'Label':>14}  {'Signal':>6}  {'Old Intent':>10}  {'New Intent':>10}  {'Old Seed':>12}  {'New Seed':>12}  {'Fixed?'}")
-    print(f"  {'-'*14}  {'-'*6}  {'-'*10}  {'-'*10}  {'-'*12}  {'-'*12}  {'-'*6}")
+    print(
+        f"\n  {'Label':>14}  {'Signal':>6}  {'Old Intent':>10}  {'New Intent':>10}  {'Old Seed':>12}  {'New Seed':>12}  {'Fixed?'}"
+    )
+    print(f"  {'-' * 14}  {'-' * 6}  {'-' * 10}  {'-' * 10}  {'-' * 12}  {'-' * 12}  {'-' * 6}")
 
     correct_fixes = 0
     false_fixes = 0
@@ -339,11 +344,13 @@ if __name__ == "__main__":
 
         seed_changed = old_seed != new_seed
 
-        print(f"  {label:>14}  {signal_str:>6}  {old_intent:>10}  {new_intent:>10}  {old_seed:>12}  {new_seed:>12}  {'YES' if changed else ''}")
+        print(
+            f"  {label:>14}  {signal_str:>6}  {old_intent:>10}  {new_intent:>10}  {old_seed:>12}  {new_seed:>12}  {'YES' if changed else ''}"
+        )
 
-    print(f"\n{'='*78}")
+    print(f"\n{'=' * 78}")
     print(f"  RESULTS")
-    print(f"{'='*78}")
+    print(f"{'=' * 78}")
     print(f"  Intent corrections: {correct_fixes}/{total}")
     print()
     print("  KEY FINDINGS:")

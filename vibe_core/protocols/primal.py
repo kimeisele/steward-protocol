@@ -201,4 +201,5 @@ class AlignmentScore:
 from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE
 
 import logging
+
 logger = logging.getLogger(__name__)

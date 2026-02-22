@@ -1,4 +1,3 @@
-
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
 __position__ = 1

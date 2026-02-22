@@ -45,13 +45,25 @@ sys.path.insert(0, "/Users/ss/projects/steward-protocol")
 from vibe_core.mahamantra.protocols.seed._axioms import WORDS, TRINITY, HALVES
 from vibe_core.mahamantra.protocols.seed._extended import MAHAMANTRA_WORD_PATTERN
 from vibe_core.mahamantra.protocols.seed._primary import (
-    KSETRAJNA, NAVA, QUARTERS, SHARANAGATI,
+    KSETRAJNA,
+    NAVA,
+    QUARTERS,
+    SHARANAGATI,
 )
 from vibe_core.mahamantra.protocols.seed._secondary import (
-    JIVA_CYCLE, MALA, MAHAJANA_COUNT, PARAMPARA, QUALITIES, SEVEN, TEN,
+    JIVA_CYCLE,
+    MALA,
+    MAHAJANA_COUNT,
+    PARAMPARA,
+    QUALITIES,
+    SEVEN,
+    TEN,
 )
 from vibe_core.mahamantra.protocols.seed._algorithm import (
-    MAHA_ADD, MAHA_MULT, MAHA_OP_MAP, MAHA_SQ,
+    MAHA_ADD,
+    MAHA_MULT,
+    MAHA_OP_MAP,
+    MAHA_SQ,
 )
 
 PATTERN: Final[Tuple[str, ...]] = MAHAMANTRA_WORD_PATTERN
@@ -67,9 +79,9 @@ def run_experiments():
     # =========================================================================
     # EXP 1: MahaSynth — Run Mahajana names through spell_cycle()
     # =========================================================================
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("EXP 1: MahaSynth.spell_cycle() — Mahajana names as phoneme sequences")
-    print("="*70)
+    print("=" * 70)
 
     from vibe_core.mahamantra.adapters.synth import MahaSynth, SYNTH_PRESETS
     from vibe_core.mahamantra.substrate.varnamala_codec import encode
@@ -79,7 +91,7 @@ def run_experiments():
         synth = MahaSynth(preset=preset_name)
         print(f"\n  Preset: {preset_name} (mod={synth.mod_space})")
         print(f"  {'pos':>4} {'name':<15} {'coords':<25} {'final':>6} {'attractor':>10}")
-        print(f"  {'-'*65}")
+        print(f"  {'-' * 65}")
 
         for i, gname in enumerate(ALL_GUARDIANS):
             coords = encode(gname)
@@ -95,9 +107,9 @@ def run_experiments():
     # =========================================================================
     # EXP 2: SankirtanChamber — Transform cells with DIW
     # =========================================================================
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("EXP 2: SankirtanChamber — Mahajana names as cells through kirtan()")
-    print("="*70)
+    print("=" * 70)
 
     from vibe_core.mahamantra.substrate.chamber import SankirtanChamber, reset_chamber
     from vibe_core.mahamantra.substrate.cell import MahaCellUnified
@@ -106,7 +118,7 @@ def run_experiments():
     chamber = SankirtanChamber.create()
 
     print(f"\n  {'pos':>4} {'name':<15} {'prana_before':>12} {'prana_after':>12} {'integrity':>10} {'cycles':>7}")
-    print(f"  {'-'*65}")
+    print(f"  {'-' * 65}")
 
     cell_results = []
     for i, gname in enumerate(ALL_GUARDIANS):
@@ -116,16 +128,20 @@ def run_experiments():
         # 1 kirtan cycle = 16 dance() calls = 16 DIW applications
         result_cell = chamber.dance(cell)
 
-        cell_results.append({
-            "pos": i,
-            "name": gname,
-            "prana": result_cell.lifecycle.prana,
-            "integrity": result_cell.lifecycle.integrity,
-            "cycle": result_cell.lifecycle.cycle,
-            "word": ["H", "K", "R"][MAHAMANTRA[i]],
-        })
+        cell_results.append(
+            {
+                "pos": i,
+                "name": gname,
+                "prana": result_cell.lifecycle.prana,
+                "integrity": result_cell.lifecycle.integrity,
+                "cycle": result_cell.lifecycle.cycle,
+                "word": ["H", "K", "R"][MAHAMANTRA[i]],
+            }
+        )
 
-        print(f"  {i:>4} {gname:<15} {prana_before:>12} {result_cell.lifecycle.prana:>12} {result_cell.lifecycle.integrity:>10.4f} {result_cell.lifecycle.cycle:>7}")
+        print(
+            f"  {i:>4} {gname:<15} {prana_before:>12} {result_cell.lifecycle.prana:>12} {result_cell.lifecycle.integrity:>10.4f} {result_cell.lifecycle.cycle:>7}"
+        )
 
     print(f"\n  Chamber stats: {chamber.total_transformations} transformations, {chamber.resonance_count} resonances")
     print(f"  Accumulated DIW: {chamber._accumulated_diw} (0x{chamber._accumulated_diw:05x})")
@@ -133,9 +149,9 @@ def run_experiments():
     # =========================================================================
     # EXP 3: Close the Loop — Cell resonance feeds back into synth
     # =========================================================================
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("EXP 3: CLOSED LOOP — Cell prana feeds back as synth seed")
-    print("="*70)
+    print("=" * 70)
 
     synth = MahaSynth(preset="quantum")
     reset_chamber()
@@ -174,9 +190,9 @@ def run_experiments():
     # =========================================================================
     # EXP 4: Sankirtan — Mass chanting, do cells cluster by quarter?
     # =========================================================================
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("EXP 4: Sankirtan — Mass chanting, quarter clustering")
-    print("="*70)
+    print("=" * 70)
 
     reset_chamber()
     chamber = SankirtanChamber.create()
@@ -206,9 +222,9 @@ def run_experiments():
     # =========================================================================
     # EXP 5: Chaitanya Equation — Continuous chanting (many rounds)
     # =========================================================================
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("EXP 5: Chaitanya Equation — Does continuous chanting converge?")
-    print("="*70)
+    print("=" * 70)
 
     reset_chamber()
     chamber = SankirtanChamber.create()
@@ -219,12 +235,14 @@ def run_experiments():
 
     print(f"\n  Chanting '{test_name}' through {MAHAJANA_COUNT} kirtan rounds:")
     print(f"  {'round':>6} {'prana':>8} {'integrity':>10} {'cycle':>7} {'acc_diw':>10}")
-    print(f"  {'-'*50}")
+    print(f"  {'-' * 50}")
 
     for round_num in range(1, MAHAJANA_COUNT + 1):
         cell = chamber.kirtan(cell, cycles=1)
         if round_num <= 4 or round_num >= MAHAJANA_COUNT - 1:
-            print(f"  {round_num:>6} {cell.lifecycle.prana:>8} {cell.lifecycle.integrity:>10.4f} {cell.lifecycle.cycle:>7} {chamber._accumulated_diw:>10}")
+            print(
+                f"  {round_num:>6} {cell.lifecycle.prana:>8} {cell.lifecycle.integrity:>10.4f} {cell.lifecycle.cycle:>7} {chamber._accumulated_diw:>10}"
+            )
         elif round_num == 5:
             print(f"  {'...':>6}")
 
@@ -234,9 +252,9 @@ def run_experiments():
     # =========================================================================
     # EXP 6: Preset comparison — which preset best separates Mahajanas?
     # =========================================================================
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("EXP 6: Which synth preset best differentiates Mahajana names?")
-    print("="*70)
+    print("=" * 70)
 
     for preset_name in sorted(SYNTH_PRESETS.keys()):
         synth = MahaSynth(preset=preset_name)
@@ -251,14 +269,16 @@ def run_experiments():
             res = synth.resonate(sum(coords))
             attractors.add(res.attractor)
 
-        print(f"  {preset_name:<12} mod={synth.mod_space:>4}: {len(final_vals):>2}/16 unique finals, {len(attractors):>2} attractors")
+        print(
+            f"  {preset_name:<12} mod={synth.mod_space:>4}: {len(final_vals):>2}/16 unique finals, {len(attractors):>2} attractors"
+        )
 
     # =========================================================================
     # EXP 7: The 3 Ur-Names — Hare, Krishna, Rama through spell_cycle
     # =========================================================================
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("EXP 7: The 3 Ur-Names through spell_cycle (all presets)")
-    print("="*70)
+    print("=" * 70)
 
     for ur_name in ["hare", "kṛṣṇa", "rāma"]:
         coords = encode(ur_name)
@@ -270,20 +290,22 @@ def run_experiments():
             synth = MahaSynth(preset=preset_name)
             r = synth.spell_cycle(coords, seed=sum(coords))
             res = synth.resonate(sum(coords))
-            print(f"    {preset_name:<12}: spell→{r.final_value:>4}, attractor→{res.attractor:>4} (cycle_len={res.cycle_length})")
+            print(
+                f"    {preset_name:<12}: spell→{r.final_value:>4}, attractor→{res.attractor:>4} (cycle_len={res.cycle_length})"
+            )
 
     # =========================================================================
     # EXP 8: VenuOrchestrator DIW analysis — what does the LUT actually produce?
     # =========================================================================
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("EXP 8: VenuOrchestrator — THE_FLUTE_CYCLE LUT analysis")
-    print("="*70)
+    print("=" * 70)
 
     from vibe_core.mahamantra.substrate.venu_orchestrator import THE_FLUTE_CYCLE
     from vibe_core.mahamantra.protocols.diw import unpack, DIW_MASK
 
     print(f"\n  {'pos':>4} {'word':<3} {'DIW':>8} {'VENU':>5} {'VAMSI':>6} {'MURALI':>7}")
-    print(f"  {'-'*40}")
+    print(f"  {'-' * 40}")
 
     cycle_xor = 0
     for pos, diw in enumerate(THE_FLUTE_CYCLE):

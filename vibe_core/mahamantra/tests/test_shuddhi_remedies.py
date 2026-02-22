@@ -37,6 +37,7 @@ def _purify_code(engine: ShuddhiEngine, code: str, rule_id: str):
 # silent_failure remedy
 # =============================================================================
 
+
 class TestSilentExceptRemedy:
     """SilentExceptRemedy must produce runnable code."""
 
@@ -84,6 +85,7 @@ class TestSilentExceptRemedy:
 # =============================================================================
 # Remedy loader
 # =============================================================================
+
 
 class TestRemedyLoader:
     """RemedyLoader must discover all remedies."""

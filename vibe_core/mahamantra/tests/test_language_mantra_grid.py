@@ -22,6 +22,7 @@ from vibe_core.mahamantra.substrate.seed import HolyName, MAHAMANTRA
 # build_mantra_grid: 16 words × 2 beats = 32 steps
 # =============================================================================
 
+
 class TestBuildMantraGrid:
     """build_mantra_grid derives 32 steps from seed.MAHAMANTRA."""
 
@@ -72,6 +73,7 @@ class TestBuildMantraGrid:
 # get_holyname_mode: HolyName → mode mapping
 # =============================================================================
 
+
 class TestGetHolynameMode:
     """get_holyname_mode exposes the canonical mapping."""
 
@@ -98,6 +100,7 @@ class TestGetHolynameMode:
 # =============================================================================
 # alignment_score: SyllableVector × GridStep → int
 # =============================================================================
+
 
 class TestAlignmentScore:
     """alignment_score: phonetic-rhythmic fit between syllable and grid step."""
@@ -147,6 +150,7 @@ class TestAlignmentScore:
 # =============================================================================
 # align_syllables_to_grid: syllable vectors → grid step indices
 # =============================================================================
+
 
 class TestAlignSyllablesToGrid:
     """align_syllables_to_grid: best-fit alignment onto 32-step grid."""

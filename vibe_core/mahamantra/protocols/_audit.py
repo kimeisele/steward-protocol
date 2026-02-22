@@ -26,8 +26,9 @@ PANCHA TATTVA:
 
 Author: The Mahamantra Itself
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (WORDS)
+from vibe_core.mahamantra.protocols._seed import WORDS
 
 
 # === MAHAJANA DECLARATION ===
@@ -55,9 +56,11 @@ assert int(__genesis__, WORDS) % PARAMPARA == 0, "BROKEN LINEAGE"
 # AUDIT RESULT TYPES - Machine-Readable
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class LineageViolation:
     """A single broken lineage."""
+
     path: str
     mahajana: str
     position: int
@@ -69,6 +72,7 @@ class LineageViolation:
 @dataclass(frozen=True)
 class SSOTViolation:
     """A hardcoded sacred constant."""
+
     path: str
     line: int
     constant: str
@@ -78,6 +82,7 @@ class SSOTViolation:
 @dataclass(frozen=True)
 class ProtocolViolation:
     """A class not implementing its protocol."""
+
     class_name: str
     module: str
     protocol: str
@@ -87,6 +92,7 @@ class ProtocolViolation:
 @dataclass(frozen=True)
 class AuditReport:
     """Complete audit report - THE KSETRAJNA'S VIEW."""
+
     # Lineage (genesis % 37)
     lineage_valid: int
     lineage_broken: int
@@ -102,16 +108,12 @@ class AuditReport:
     lineage_violations: tuple[LineageViolation, ...] = field(default_factory=tuple)
     ssot_violations: tuple[SSOTViolation, ...] = field(default_factory=tuple)
     protocol_violations: tuple[ProtocolViolation, ...] = field(default_factory=tuple)
-    
+
     @property
     def is_pristine(self) -> bool:
         """System is pristine when all checks pass."""
-        return (
-            self.lineage_broken == 0 and
-            len(self.ssot_violations) == 0 and
-            self.protocols_dead == 0
-        )
-    
+        return self.lineage_broken == 0 and len(self.ssot_violations) == 0 and self.protocols_dead == 0
+
     @property
     def legitimacy(self) -> float:
         """Legitimacy score (0.0 - 1.0)."""
@@ -125,50 +127,51 @@ class AuditReport:
 # AUDIT PROTOCOL - The Interface
 # =============================================================================
 
+
 @runtime_checkable
 class AuditProtocol(Protocol):
     """
     The Audit Protocol - The Ksetrajna observing the Ksetra.
-    
+
     Every auditor MUST implement this protocol.
     GAD-000 compliant: Discoverable, Observable, Parseable, Composable, Idempotent, Recoverable.
     """
-    
+
     # === GAD-000 CRITERIA ===
-    
+
     def discover(self) -> Dict[str, object]:
         """Return machine-readable capability description."""
         ...
-    
+
     def get_state(self) -> Dict[str, object]:
         """Return current audit state."""
         ...
-    
+
     @property
     def is_idempotent(self) -> bool:
         """Audit is always idempotent (read-only)."""
         ...
-    
+
     # === AUDIT METHODS ===
-    
+
     def lineage(self) -> tuple[int, int, tuple[LineageViolation, ...]]:
         """Check lineage (genesis % 37). Returns (valid, broken, violations)."""
         ...
-    
+
     def ssot(self) -> tuple[int, tuple[SSOTViolation, ...]]:
         """Check SSOT. Returns (clean, violations)."""
         ...
-    
+
     def protocols(self) -> tuple[int, int, tuple[ProtocolViolation, ...]]:
         """Check protocols. Returns (alive, dead, violations)."""
         ...
-    
+
     def audit(self) -> AuditReport:
         """Run full audit. Returns complete report."""
         ...
-    
+
     # === PANCHA TATTVA ===
-    
+
     @property
     def __tattva__(self) -> TattvaDict:
         """The 5-fold truth of this auditor."""
@@ -179,15 +182,16 @@ class AuditProtocol(Protocol):
 # AUDIT PROTOCOL DEFINITION - Self-Reference
 # =============================================================================
 
+
 class AuditProtocolDef(MahamantraProtocolBase):
     """
     The Audit Protocol Definition.
-    
+
     Position 15 (YAMARAJA) - The judge of dharma.
     Level CONTRACT - Where protocols live.
     Quarter MOKSHA - Liberation through truth.
     """
-    
+
     __protocol_identity__ = ProtocolIdentity(
         name="AuditProtocol",
         mahajana="yamaraja",
@@ -195,11 +199,11 @@ class AuditProtocolDef(MahamantraProtocolBase):
         level=Level.CONTRACT,
         quarter=Quarter.MOKSHA,
     )
-    
+
     __protocol_capability__ = ProtocolCapability.create(
         provides=[
             "lineage_check",
-            "ssot_check", 
+            "ssot_check",
             "protocol_check",
             "full_audit",
             "legitimacy_score",
@@ -222,4 +226,3 @@ __all__ = [
     "AuditProtocol",
     "AuditProtocolDef",
 ]
-

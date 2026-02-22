@@ -92,14 +92,14 @@ from vibe_core.mahamantra.protocols.seed._topology import CHAPTER_VERSES
 # =============================================================================
 
 # Quarter sums
-GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])   # Ch 1-4: 203
-DHARMA_SUM: Final[int] = sum(CHAPTER_VERSES[4:8])    # Ch 5-8: 134
-KARMA_SUM: Final[int] = sum(CHAPTER_VERSES[8:12])    # Ch 9-12: 151
+GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])  # Ch 1-4: 203
+DHARMA_SUM: Final[int] = sum(CHAPTER_VERSES[4:8])  # Ch 5-8: 134
+KARMA_SUM: Final[int] = sum(CHAPTER_VERSES[8:12])  # Ch 9-12: 151
 MOKSHA_SUM: Final[int] = sum(CHAPTER_VERSES[12:16])  # Ch 13-16: 106
-FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])   # Ch 17-18: 106
+FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])  # Ch 17-18: 106
 
 # The Field (16 Guardians' domain)
-FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])    # Ch 1-16: 594
+FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])  # Ch 1-16: 594
 
 # =============================================================================
 # NOTE: The old "EPOCH EQUATION" (1972 = 204 × 9 + 136) was based on wrong
@@ -124,9 +124,7 @@ assert EPOCH_KEY == GENESIS_SUM * NAVA + EPOCH_ADDITIVE, (
 
 FIELD_FACTOR: Final[int] = FIELD_SUM // GITA_CHAPTERS  # 33
 
-assert FIELD_SUM == GITA_CHAPTERS * FIELD_FACTOR, (
-    f"THE FIELD: {FIELD_SUM} = {GITA_CHAPTERS} × {FIELD_FACTOR}"
-)
+assert FIELD_SUM == GITA_CHAPTERS * FIELD_FACTOR, f"THE FIELD: {FIELD_SUM} = {GITA_CHAPTERS} × {FIELD_FACTOR}"
 assert FIELD_SUM % GITA_CHAPTERS == 0, "Field must be divisible by GITA_CHAPTERS"
 assert FIELD_SUM % NAVA == 0, "Field must be divisible by NAVA"
 assert FIELD_SUM % SHARANAGATI == 0, "Field must be divisible by SHARANAGATI"

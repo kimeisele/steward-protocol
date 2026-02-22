@@ -39,7 +39,7 @@ class TestLotusRadixNConstants:
 
     def test_slots_matches_bits(self):
         """2^BITS_PER_LEVEL must equal SLOTS_PER_LEVEL."""
-        assert 2 ** BITS_PER_LEVEL == SLOTS_PER_LEVEL
+        assert 2**BITS_PER_LEVEL == SLOTS_PER_LEVEL
 
 
 # =============================================================================

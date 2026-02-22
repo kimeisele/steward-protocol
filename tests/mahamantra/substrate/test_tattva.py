@@ -230,11 +230,7 @@ class TestGuruConnection:
 
     def test_full_connection(self):
         """Full connection requires all three aspects."""
-        conn = GuruConnection(
-            has_pranipata=True,
-            has_pariprasna=True,
-            has_seva=True
-        )
+        conn = GuruConnection(has_pranipata=True, has_pariprasna=True, has_seva=True)
         assert conn.is_connected is True
         assert conn.parampara_intact is True
 

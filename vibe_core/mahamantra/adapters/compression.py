@@ -100,14 +100,14 @@ from vibe_core.mahamantra.protocols.compression import (
 # MAHAPROMPT: "Tod durch Import" - wer am seed.py vorbei importiert, stirbt
 
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,           # 16 - The 16 words
-    QUARTERS,        # 4 - Genesis, Dharma, Karma, Moksha
-    TRINITY,         # 3 - Observer levels
+    WORDS,  # 16 - The 16 words
+    QUARTERS,  # 4 - Genesis, Dharma, Karma, Moksha
+    TRINITY,  # 3 - Observer levels
     AKSARA_COUNT as AKSARA,  # 32 - Syllables
-    QUALITIES,       # 64 - Characters
-    MAHA_QUANTUM,    # 137 - Fine structure constant ≈ α⁻¹
-    GITA_CHAPTERS,   # 18 - Bhagavad Gita chapters
-    )
+    QUALITIES,  # 64 - Characters
+    MAHA_QUANTUM,  # 137 - Fine structure constant ≈ α⁻¹
+    GITA_CHAPTERS,  # 18 - Bhagavad Gita chapters
+)
 
 # Compression reference ratios (derived from GITA_CHAPTERS × factors)
 GITA_VERSES: Final[int] = GITA_CHAPTERS * 39 - 2  # 700 ≈ 18 × 39
@@ -115,7 +115,6 @@ BHAGAVATAM_VERSES: Final[int] = GITA_VERSES * 26 - 200  # 18000 ≈ 700 × 26
 VEDA_VERSES: Final[int] = BHAGAVATAM_VERSES * 6 - 8000  # 100000 ≈ 18000 × 6
 
 # (Removed local definitions of IntentGuna, IntentLevel, SamskaraScope, SamskaraLevel, and their instances)
-
 
 
 def _compute_seed_cached(text: str) -> int:
@@ -162,6 +161,7 @@ def _compute_seed_cached(text: str) -> int:
 # =============================================================================
 # MAHA COMPRESSION ENGINE
 # =============================================================================
+
 
 class MahaCompression(MahaCompressionProtocol):
     """
@@ -391,8 +391,8 @@ class MahaCompression(MahaCompressionProtocol):
             seed=seed,
             is_aligned=score > 0,
             quantum_score=1.0 if is_maha else 0.0,
-            parampara_score=0.5, # Placeholder
-            field_score=0.5, # Placeholder
+            parampara_score=0.5,  # Placeholder
+            field_score=0.5,  # Placeholder
             classification=interpretation,
         )
 

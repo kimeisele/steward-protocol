@@ -29,124 +29,132 @@ SSOT_AXIOMS = {
 # Known derived constants (should be computed, not hardcoded)
 DERIVED_CONSTANTS = {
     "MAHA_QUANTUM": 137,  # Should be derived
-    "PARAMPARA": 37,      # Should be derived
-    "QUARTERS": 4,        # = WORDS // QUARTERS
-    "HALF_SIZE": 8,       # = WORDS // HALVES
+    "PARAMPARA": 37,  # Should be derived
+    "QUARTERS": 4,  # = WORDS // QUARTERS
+    "HALF_SIZE": 8,  # = WORDS // HALVES
 }
+
 
 def find_hardcoded_magic_numbers(file_path: str) -> List[Dict]:
     """Find hardcoded magic numbers that should be SSOT constants."""
     findings = []
     magic_numbers = {16, 137, 37, 4, 8, 3, 5, 2}  # SSOT values
-    
+
     try:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
-            
+
         # Skip if it's the SSOT file itself
-        if '_axioms.py' in file_path or '_seed.py' in file_path:
+        if "_axioms.py" in file_path or "_seed.py" in file_path:
             return []
-            
-        for i, line in enumerate(content.split('\n'), 1):
+
+        for i, line in enumerate(content.split("\n"), 1):
             # Skip comments and strings
-            if line.strip().startswith('#'):
+            if line.strip().startswith("#"):
                 continue
-                
+
             # Find numeric literals
-            for match in re.finditer(r'\b(\d+)\b', line):
+            for match in re.finditer(r"\b(\d+)\b", line):
                 num = int(match.group(1))
                 if num in magic_numbers:
                     # Check if it's already using a constant
                     if not any(const in line for const in SSOT_AXIOMS.keys()):
                         if not any(const in line for const in DERIVED_CONSTANTS.keys()):
-                            findings.append({
-                                'file': file_path,
-                                'line': i,
-                                'number': num,
-                                'code': line.strip()[:80],
-                                'should_be': [k for k, v in {**SSOT_AXIOMS, **DERIVED_CONSTANTS}.items() if v == num]
-                            })
+                            findings.append(
+                                {
+                                    "file": file_path,
+                                    "line": i,
+                                    "number": num,
+                                    "code": line.strip()[:80],
+                                    "should_be": [
+                                        k for k, v in {**SSOT_AXIOMS, **DERIVED_CONSTANTS}.items() if v == num
+                                    ],
+                                }
+                            )
     except Exception as e:
         pass
-    
+
     return findings
+
 
 def find_duplicate_definitions(root_dir: str) -> Dict[str, List[str]]:
     """Find constants defined in multiple places (SSOT violations)."""
     definitions = defaultdict(list)
-    
+
     for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if d != '__pycache__' and not d.startswith('.')]
-        
+        dirs[:] = [d for d in dirs if d != "__pycache__" and not d.startswith(".")]
+
         for file in files:
-            if not file.endswith('.py'):
+            if not file.endswith(".py"):
                 continue
-            if 'test' in file.lower():
+            if "test" in file.lower():
                 continue
-                
+
             file_path = os.path.join(root, file)
             try:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
-                    
+
                 # Find constant definitions
-                for match in re.finditer(r'^([A-Z][A-Z_0-9]+)\s*[:=]', content, re.MULTILINE):
+                for match in re.finditer(r"^([A-Z][A-Z_0-9]+)\s*[:=]", content, re.MULTILINE):
                     const_name = match.group(1)
                     definitions[const_name].append(file_path)
             except:
                 pass
-    
+
     # Filter to only duplicates
     return {k: v for k, v in definitions.items() if len(v) > 1}
+
 
 def find_import_chaos(root_dir: str) -> Dict[str, int]:
     """Find files with excessive imports (complexity indicator)."""
     import_counts = {}
-    
+
     for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if d != '__pycache__' and not d.startswith('.')]
-        
+        dirs[:] = [d for d in dirs if d != "__pycache__" and not d.startswith(".")]
+
         for file in files:
-            if not file.endswith('.py'):
+            if not file.endswith(".py"):
                 continue
-                
+
             file_path = os.path.join(root, file)
             try:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
-                    
-                imports = len(re.findall(r'^(?:from|import)\s+', content, re.MULTILINE))
+
+                imports = len(re.findall(r"^(?:from|import)\s+", content, re.MULTILINE))
                 if imports > 20:  # Threshold for "too many imports"
                     import_counts[file_path] = imports
             except:
                 pass
-    
+
     return dict(sorted(import_counts.items(), key=lambda x: -x[1])[:20])
+
 
 def find_circular_import_risk(root_dir: str) -> List[Tuple[str, str]]:
     """Find potential circular import patterns."""
     # Map file -> what it imports
     imports_map = {}
-    
+
     for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if d != '__pycache__' and not d.startswith('.')]
-        
+        dirs[:] = [d for d in dirs if d != "__pycache__" and not d.startswith(".")]
+
         for file in files:
-            if not file.endswith('.py'):
+            if not file.endswith(".py"):
                 continue
-                
+
             file_path = os.path.join(root, file)
             try:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
-                    
+
                 imports = set()
-                for match in re.finditer(r'from\s+([\w.]+)\s+import', content):
+                for match in re.finditer(r"from\s+([\w.]+)\s+import", content):
                     imports.add(match.group(1))
                 imports_map[file_path] = imports
             except:
                 pass
-    
+
     # Find cycles (simplified - just direct mutual imports)
     cycles = []
     checked = set()
@@ -158,14 +166,14 @@ def find_circular_import_risk(root_dir: str) -> List[Tuple[str, str]]:
             if pair in checked:
                 continue
             checked.add(pair)
-            
+
             # Check if they import each other's modules
-            module_a = file_a.replace('/', '.').replace('.py', '')
-            module_b = file_b.replace('/', '.').replace('.py', '')
-            
+            module_a = file_a.replace("/", ".").replace(".py", "")
+            module_b = file_b.replace("/", ".").replace(".py", "")
+
             if any(module_b in imp for imp in imports_a) and any(module_a in imp for imp in imports_b):
                 cycles.append((file_a, file_b))
-    
+
     return cycles[:20]  # Top 20
 
 
@@ -174,37 +182,39 @@ def analyze_file_complexity(root_dir: str) -> List[Dict]:
     complex_files = []
 
     for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if d != '__pycache__' and not d.startswith('.')]
+        dirs[:] = [d for d in dirs if d != "__pycache__" and not d.startswith(".")]
 
         for file in files:
-            if not file.endswith('.py'):
+            if not file.endswith(".py"):
                 continue
-            if 'test' in file.lower():
+            if "test" in file.lower():
                 continue
 
             file_path = os.path.join(root, file)
             try:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
 
                 line_count = len(lines)
-                func_count = len(re.findall(r'^\s*def\s+', content, re.MULTILINE))
-                class_count = len(re.findall(r'^\s*class\s+', content, re.MULTILINE))
+                func_count = len(re.findall(r"^\s*def\s+", content, re.MULTILINE))
+                class_count = len(re.findall(r"^\s*class\s+", content, re.MULTILINE))
 
                 # Flag if too complex
                 if line_count > 500 or func_count > 30 or class_count > 5:
-                    complex_files.append({
-                        'file': file_path,
-                        'lines': line_count,
-                        'functions': func_count,
-                        'classes': class_count,
-                        'complexity_score': line_count + func_count * 10 + class_count * 50
-                    })
+                    complex_files.append(
+                        {
+                            "file": file_path,
+                            "lines": line_count,
+                            "functions": func_count,
+                            "classes": class_count,
+                            "complexity_score": line_count + func_count * 10 + class_count * 50,
+                        }
+                    )
             except:
                 pass
 
-    return sorted(complex_files, key=lambda x: -x['complexity_score'])[:30]
+    return sorted(complex_files, key=lambda x: -x["complexity_score"])[:30]
 
 
 def main():
@@ -219,9 +229,9 @@ def main():
     print("🔍 SCANNING FOR HARDCODED MAGIC NUMBERS...")
     all_magic = []
     for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if d != '__pycache__']
+        dirs[:] = [d for d in dirs if d != "__pycache__"]
         for file in files:
-            if file.endswith('.py') and 'test' not in file.lower():
+            if file.endswith(".py") and "test" not in file.lower():
                 findings = find_hardcoded_magic_numbers(os.path.join(root, file))
                 all_magic.extend(findings)
 
@@ -264,13 +274,13 @@ def main():
 
     # Save detailed report
     report = {
-        'magic_numbers': all_magic[:100],  # Top 100
-        'duplicates': {k: v for k, v in list(duplicates.items())[:50]},
-        'import_chaos': import_chaos,
-        'complex_files': complex_files,
+        "magic_numbers": all_magic[:100],  # Top 100
+        "duplicates": {k: v for k, v in list(duplicates.items())[:50]},
+        "import_chaos": import_chaos,
+        "complex_files": complex_files,
     }
 
-    with open('DEEP_AUDIT_REPORT.json', 'w') as f:
+    with open("DEEP_AUDIT_REPORT.json", "w") as f:
         json.dump(report, f, indent=2)
 
     print("✓ Detailed report saved to DEEP_AUDIT_REPORT.json")
@@ -278,5 +288,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

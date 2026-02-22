@@ -31,9 +31,7 @@ class TestCLIEntryProtocol:
 
     def test_cli_entry_protocol_is_protocol(self):
         """CLIEntryProtocol is a runtime checkable protocol."""
-        assert hasattr(CLIEntryProtocol, "__protocol_attrs__") or hasattr(
-            CLIEntryProtocol, "_is_runtime_protocol"
-        )
+        assert hasattr(CLIEntryProtocol, "__protocol_attrs__") or hasattr(CLIEntryProtocol, "_is_runtime_protocol")
 
     def test_cli_entry_protocol_implementation(self):
         """CLIEntryProtocol can be implemented."""

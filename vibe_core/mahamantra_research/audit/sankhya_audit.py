@@ -47,34 +47,29 @@ TATTVAS: List[TattvaMapping] = [
     TattvaMapping(3, "Tejas", "Fire", "mahabhuta", "Computation, transformation, CPU"),
     TattvaMapping(4, "Vayu", "Air", "mahabhuta", "Events, signals, messages"),
     TattvaMapping(5, "Akasa", "Ether", "mahabhuta", "Network, address space, namespace"),
-
     # B. 5 Tanmatras (Subtle Elements) — sense objects
     TattvaMapping(6, "Gandha", "Smell", "tanmatra", "Code smells, entropy, patterns"),
     TattvaMapping(7, "Rasa", "Taste", "tanmatra", "Test results, validation outcomes"),
     TattvaMapping(8, "Rupa", "Form", "tanmatra", "AST, code structure, types"),
     TattvaMapping(9, "Sparsa", "Touch", "tanmatra", "File changes, git diffs, state mutations"),
     TattvaMapping(10, "Sabda", "Sound", "tanmatra", "Logs, events, signals, exceptions"),
-
     # C. 5 Jnanendriyas (Knowledge Senses) — input sensors
     TattvaMapping(11, "Caksu", "Eye", "jnanendriya", "Code analysis, AST parsing, static analysis"),
     TattvaMapping(12, "Srotra", "Ear", "jnanendriya", "Log listener, event subscriber, signal handler"),
     TattvaMapping(13, "Ghrana", "Nose", "jnanendriya", "Entropy detector, code smell scanner"),
     TattvaMapping(14, "Jihva", "Tongue", "jnanendriya", "Test runner, type checker, validator"),
     TattvaMapping(15, "Tvak", "Skin", "jnanendriya", "Filesystem watcher, git monitor, state observer"),
-
     # D. 5 Karmendriyas (Action Senses) — output actuators
     TattvaMapping(16, "Vak", "Voice", "karmendriya", "Output generation, response composition, logging"),
     TattvaMapping(17, "Pani", "Hands", "karmendriya", "File operations, code editing, transformation"),
     TattvaMapping(18, "Pada", "Feet", "karmendriya", "Navigation, routing, import resolution"),
     TattvaMapping(19, "Payu", "Excretion", "karmendriya", "Garbage collection, cleanup, cache eviction"),
     TattvaMapping(20, "Upastha", "Generation", "karmendriya", "Process spawning, cell creation, code generation"),
-
     # E. Antahkarana (Internal Instruments)
     TattvaMapping(21, "Manas", "Mind", "antahkarana", "Central coordinator, accepts/rejects, routes input to buddhi"),
     TattvaMapping(22, "Buddhi", "Intelligence", "antahkarana", "Decision engine, analysis, Lotus pipeline"),
     TattvaMapping(23, "Ahankara", "False Ego", "antahkarana", "Identity module, ownership, position claims"),
     TattvaMapping(24, "Pradhana", "Unmanifested", "antahkarana", "Seed constants, axioms, unmanifested potential"),
-
     # F. Transcendental
     TattvaMapping(25, "Jiva", "Soul", "transcendental", "The user, the developer, the conscious observer"),
     TattvaMapping(26, "Paramatma", "Supersoul", "transcendental", "Krishna/Mahamantra — the knower of ALL fields"),
@@ -118,41 +113,63 @@ def map_tattva(t: TattvaMapping) -> TattvaMapping:
     # Keywords to search for each tattva
     keyword_map: Dict[int, Tuple[List[str], List[str], List[str]]] = {
         # (protocol_keywords, impl_keywords, legacy_keywords)
-
         # Mahabhutas
         1: (["mahabhuta", "prthvi", "earth"], ["sqlite", "db_path", "flush"], ["ledger", "store"]),
         2: (["jala", "water", "stream"], ["pipeline", "data_flow"], ["conveyor", "stream"]),
         3: (["tejas", "fire", "compute"], ["lotus_core", "__call__", "pipeline"], ["kernel_impl", "execute"]),
         4: (["vayu", "air", "signal"], ["event_bus", "broadcast", "emit"], ["signal_bus", "event_bus"]),
         5: (["akasa", "ether", "namespace"], ["cell_router", "address", "position"], ["topology", "network"]),
-
         # Tanmatras
         6: (["gandha", "smell", "entropy"], ["entropy", "code_smell"], ["ouroboros", "violation"]),
         7: (["rasa", "taste", "validation"], ["test_result", "validate"], ["vajra", "harness"]),
         8: (["rupa", "form", "ast"], ["parse", "fragment", "ast"], ["loaders", "parser"]),
         9: (["sparsa", "touch", "diff"], ["git_diff", "file_change", "mutation"], ["git", "watcher"]),
         10: (["sabda", "sound", "log"], ["log_sentinel", "listener"], ["logging", "event"]),
-
         # Jnanendriyas
-        11: (["caksu", "eye", "jnanendriya"], ["code_analysis", "static_analysis", "scanner"], ["analyst", "architecture_tool"]),
-        12: (["srotra", "ear", "jnanendriya"], ["sravanam", "listener", "subscriber"], ["beat_subscriber", "diw_subscriber"]),
+        11: (
+            ["caksu", "eye", "jnanendriya"],
+            ["code_analysis", "static_analysis", "scanner"],
+            ["analyst", "architecture_tool"],
+        ),
+        12: (
+            ["srotra", "ear", "jnanendriya"],
+            ["sravanam", "listener", "subscriber"],
+            ["beat_subscriber", "diw_subscriber"],
+        ),
         13: (["ghrana", "nose", "jnanendriya"], ["entropy", "smell", "detector"], ["shuddhi", "watchman"]),
         14: (["jihva", "tongue", "jnanendriya"], ["test_runner", "type_check", "validator"], ["vajra", "pytest"]),
-        15: (["tvak", "skin", "jnanendriya"], ["file_watcher", "state_observer", "monitor"], ["io_sentinel", "state_service"]),
-
+        15: (
+            ["tvak", "skin", "jnanendriya"],
+            ["file_watcher", "state_observer", "monitor"],
+            ["io_sentinel", "state_service"],
+        ),
         # Karmendriyas
         16: (["vak", "voice", "karmendriya"], ["compose", "generate", "output"], ["renderer", "scribe"]),
         17: (["pani", "hands", "karmendriya"], ["file_op", "edit", "transform"], ["file_operator", "io_service"]),
-        18: (["pada", "feet", "karmendriya"], ["router", "navigate", "import_resolution"], ["layered_router", "routing"]),
+        18: (
+            ["pada", "feet", "karmendriya"],
+            ["router", "navigate", "import_resolution"],
+            ["layered_router", "routing"],
+        ),
         19: (["payu", "excretion", "karmendriya"], ["gc", "cleanup", "evict", "prune"], ["garbage_collect", "prune"]),
-        20: (["upastha", "generation", "karmendriya"], ["spawn", "create_cell", "generate"], ["process_manager", "agent_birth"]),
-
+        20: (
+            ["upastha", "generation", "karmendriya"],
+            ["spawn", "create_cell", "generate"],
+            ["process_manager", "agent_birth"],
+        ),
         # Antahkarana
         21: (["manas", "mind", "antahkarana"], ["mantra_kernel", "intent", "accept_reject"], ["manas", "cortex"]),
-        22: (["buddhi", "intelligence", "antahkarana"], ["lotus_core", "__call__", "pipeline_cache"], ["kernel_impl", "execute"]),
-        23: (["ahankara", "ego", "identity"], ["__mahajana__", "__position__", "__genesis__"], ["identity", "manifest"]),
+        22: (
+            ["buddhi", "intelligence", "antahkarana"],
+            ["lotus_core", "__call__", "pipeline_cache"],
+            ["kernel_impl", "execute"],
+        ),
+        23: (
+            ["ahankara", "ego", "identity"],
+            ["__mahajana__", "__position__", "__genesis__"],
+            ["identity", "manifest"],
+        ),
         24: (["pradhana", "unmanifested", "avyakta"], ["seed.py", "PARAMPARA", "axiom"], ["seed", "constant"]),
-
         # Transcendental
         25: (["jiva", "soul", "ksetrajna"], ["user", "developer", "observer"], []),
         26: (["paramatma", "supersoul", "krishna"], ["mahamantra", "lotus", "singularity"], []),
@@ -162,18 +179,14 @@ def map_tattva(t: TattvaMapping) -> TattvaMapping:
 
     # Search in mahamantra/protocols/ for protocol definitions
     if proto_kw:
-        t.protocol_files = [
-            f for f, _ in find_files_with_keywords(MAHA / "protocols", proto_kw)
-        ]
+        t.protocol_files = [f for f, _ in find_files_with_keywords(MAHA / "protocols", proto_kw)]
 
     # Search in mahamantra/ (excluding protocols/ and research/) for implementations
     if impl_kw:
         for subdir in ["substrate", "kernel", "dharma", "services", "reactor", "net"]:
             p = MAHA / subdir
             if p.exists():
-                t.impl_files.extend([
-                    f for f, _ in find_files_with_keywords(p, impl_kw)
-                ])
+                t.impl_files.extend([f for f, _ in find_files_with_keywords(p, impl_kw)])
 
     # Search in vibe_core/ (excluding mahamantra/) for legacy candidates
     if legacy_kw:
@@ -182,9 +195,7 @@ def map_tattva(t: TattvaMapping) -> TattvaMapping:
                 continue
             if item.name in {"__pycache__", ".benchmarks"}:
                 continue
-            t.legacy_candidates.extend([
-                f for f, _ in find_files_with_keywords(item, legacy_kw)
-            ])
+            t.legacy_candidates.extend([f for f, _ in find_files_with_keywords(item, legacy_kw)])
         # Also check root files
         for py in sorted(VIBE.glob("*.py")):
             if scan_file_for_keywords(py, legacy_kw):

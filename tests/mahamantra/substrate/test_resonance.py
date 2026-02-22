@@ -304,9 +304,7 @@ class TestResonanceThresholds:
         CF = ResonanceHarmonics.COSMIC_FRAME
         refine_scaled = int(ResonanceHarmonics.THRESHOLD_REFINE * CF)
 
-        assert score > refine_scaled, (
-            f"Single match {score} should exceed THRESHOLD_REFINE {refine_scaled}"
-        )
+        assert score > refine_scaled, f"Single match {score} should exceed THRESHOLD_REFINE {refine_scaled}"
 
     def test_single_match_near_auto_threshold(self):
         """Single match should be near THRESHOLD_AUTO scaled to COSMIC_FRAME."""

@@ -81,11 +81,11 @@ def detect_language(text: str) -> str:
 # Only 5 entries needed. Everything else is already in the IAST index.
 
 _ARTICULATORY_FALLBACK: Final[Dict[str, int]] = {
-    "f": 37,   # pha — labiodental fricative → aspirated labial (same lips)
-    "w": 44,   # va  — labial approximant → labial semivowel (same lips)
-    "z": 23,   # ja  — voiced alveolar fricative → voiced palatal (closest)
-    "x": 16,   # ka  — /ks/ cluster → velar component
-    "q": 16,   # ka  — /kw/ cluster → velar component
+    "f": 37,  # pha — labiodental fricative → aspirated labial (same lips)
+    "w": 44,  # va  — labial approximant → labial semivowel (same lips)
+    "z": 23,  # ja  — voiced alveolar fricative → voiced palatal (closest)
+    "x": 16,  # ka  — /ks/ cluster → velar component
+    "q": 16,  # ka  — /kw/ cluster → velar component
 }
 
 
@@ -122,7 +122,7 @@ def _unified_encode(text: str) -> Tuple[int, ...]:
         # Step 1: IAST greedy longest-match (ROOT)
         matched = False
         for length in range(min(_MAX_IAST_LEN, len(text_lower) - i), 0, -1):
-            candidate = text_lower[i:i + length]
+            candidate = text_lower[i : i + length]
             if candidate in _IAST_INDEX:
                 coords.append(_IAST_INDEX[candidate])
                 i += length
@@ -188,16 +188,18 @@ def encode_with_detail(text: str) -> List[Dict]:
         # IAST greedy longest-match
         matched = False
         for length in range(min(_MAX_IAST_LEN, len(text_lower) - i), 0, -1):
-            candidate = text_lower[i:i + length]
+            candidate = text_lower[i : i + length]
             if candidate in _IAST_INDEX:
                 coord = _IAST_INDEX[candidate]
-                details.append({
-                    "grapheme": candidate,
-                    "rama_coord": coord,
-                    "phoneme": r2p(coord),
-                    "element": ELEMENT_NAMES[COORD_ELEMENT[coord]],
-                    "is_exact": True,
-                })
+                details.append(
+                    {
+                        "grapheme": candidate,
+                        "rama_coord": coord,
+                        "phoneme": r2p(coord),
+                        "element": ELEMENT_NAMES[COORD_ELEMENT[coord]],
+                        "is_exact": True,
+                    }
+                )
                 i += length
                 matched = True
                 break
@@ -208,13 +210,15 @@ def encode_with_detail(text: str) -> List[Dict]:
         # Articulatory fallback
         if ch in _ARTICULATORY_FALLBACK:
             coord = _ARTICULATORY_FALLBACK[ch]
-            details.append({
-                "grapheme": ch,
-                "rama_coord": coord,
-                "phoneme": r2p(coord),
-                "element": ELEMENT_NAMES[COORD_ELEMENT[coord]],
-                "is_exact": False,
-            })
+            details.append(
+                {
+                    "grapheme": ch,
+                    "rama_coord": coord,
+                    "phoneme": r2p(coord),
+                    "element": ELEMENT_NAMES[COORD_ELEMENT[coord]],
+                    "is_exact": False,
+                }
+            )
             i += 1
             continue
 
@@ -255,11 +259,13 @@ def text_to_words(
     coord_results = []
     for i, step in enumerate(cycle.steps):
         rama_coord = step.output_value % VARNAMALA_TOTAL
-        coord_results.append(CoordResult(
-            step=i,
-            synth_value=step.output_value,
-            rama_coord=rama_coord,
-        ))
+        coord_results.append(
+            CoordResult(
+                step=i,
+                synth_value=step.output_value,
+                rama_coord=rama_coord,
+            )
+        )
 
     return SeedResult(
         seed=seed,

@@ -119,13 +119,9 @@ class TestMoveProof:
 
         # Count non-private .py files in substrate/
         substrate_root = lf._SUBSTRATE_ROOT
-        direct_py_count = sum(
-            1 for f in substrate_root.glob("*.py")
-            if not f.name.startswith("_")
-        )
+        direct_py_count = sum(1 for f in substrate_root.glob("*.py") if not f.name.startswith("_"))
 
         # Module map should have at least this many (plus nested + subpackages)
         assert len(module_map) >= direct_py_count, (
-            f"Module map has {len(module_map)} entries but substrate/ has "
-            f"{direct_py_count} non-private .py files"
+            f"Module map has {len(module_map)} entries but substrate/ has {direct_py_count} non-private .py files"
         )

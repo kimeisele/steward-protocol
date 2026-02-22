@@ -41,16 +41,16 @@ from typing import Final, NamedTuple
 
 from vibe_core.mahamantra.protocols._seed import (
     # Flute structure (SSOT)
-    VENU_HOLES,       # 6 = SHARANAGATI
-    VAMSI_HOLES,      # 9 = NAVA
-    MURALI_HOLES,     # 4 = QUARTERS
+    VENU_HOLES,  # 6 = SHARANAGATI
+    VAMSI_HOLES,  # 9 = NAVA
+    MURALI_HOLES,  # 4 = QUARTERS
     FLUTE_HOLES_SUM,  # 19
     # Verification constants
-    GITA_CHAPTERS,    # 18
-    KSETRAJNA,        # 1
-    SHARANAGATI,      # 6
-    NAVA,             # 9
-    QUARTERS,         # 4
+    GITA_CHAPTERS,  # 18
+    KSETRAJNA,  # 1
+    SHARANAGATI,  # 6
+    NAVA,  # 9
+    QUARTERS,  # 4
 )
 
 
@@ -70,24 +70,24 @@ assert MURALI_HOLES == QUARTERS, "MURALI = QUARTERS (4)"
 # BIT SHIFTS (canonical positions)
 # =============================================================================
 
-VENU_SHIFT: Final[int] = 0                                    # bits 0-5
-VAMSI_SHIFT: Final[int] = VENU_HOLES                          # bits 6-14
-MURALI_SHIFT: Final[int] = VENU_HOLES + VAMSI_HOLES           # bits 15-18
-VELOCITY_SHIFT: Final[int] = FLUTE_HOLES_SUM                  # bits 19-22
-CLUSTER_SHIFT: Final[int] = FLUTE_HOLES_SUM + MURALI_HOLES    # bits 23-26
-CONDITION_SHIFT: Final[int] = 27                               # bits 27-30
-CONDITION_MASK: Final[int] = 0xF                               # 4 bits
+VENU_SHIFT: Final[int] = 0  # bits 0-5
+VAMSI_SHIFT: Final[int] = VENU_HOLES  # bits 6-14
+MURALI_SHIFT: Final[int] = VENU_HOLES + VAMSI_HOLES  # bits 15-18
+VELOCITY_SHIFT: Final[int] = FLUTE_HOLES_SUM  # bits 19-22
+CLUSTER_SHIFT: Final[int] = FLUTE_HOLES_SUM + MURALI_HOLES  # bits 23-26
+CONDITION_SHIFT: Final[int] = 27  # bits 27-30
+CONDITION_MASK: Final[int] = 0xF  # 4 bits
 
 
 # =============================================================================
 # BIT MASKS (derived from shifts and widths)
 # =============================================================================
 
-VENU_MASK: Final[int] = (KSETRAJNA << VENU_HOLES) - KSETRAJNA        # 0x3F (6 bits)
-VAMSI_MASK: Final[int] = (KSETRAJNA << VAMSI_HOLES) - KSETRAJNA      # 0x1FF (9 bits)
-MURALI_MASK: Final[int] = (KSETRAJNA << MURALI_HOLES) - KSETRAJNA    # 0xF (4 bits)
-DIW_MASK: Final[int] = (KSETRAJNA << FLUTE_HOLES_SUM) - KSETRAJNA    # 0x7FFFF (19 bits)
-SUNYA_MASK: Final[int] = KSETRAJNA << 31                              # bit 31
+VENU_MASK: Final[int] = (KSETRAJNA << VENU_HOLES) - KSETRAJNA  # 0x3F (6 bits)
+VAMSI_MASK: Final[int] = (KSETRAJNA << VAMSI_HOLES) - KSETRAJNA  # 0x1FF (9 bits)
+MURALI_MASK: Final[int] = (KSETRAJNA << MURALI_HOLES) - KSETRAJNA  # 0xF (4 bits)
+DIW_MASK: Final[int] = (KSETRAJNA << FLUTE_HOLES_SUM) - KSETRAJNA  # 0x7FFFF (19 bits)
+SUNYA_MASK: Final[int] = KSETRAJNA << 31  # bit 31
 
 
 # =============================================================================
@@ -104,6 +104,7 @@ assert DIW_MASK == 0x7FFFF, f"DIW_MASK must be 0x7FFFF, got {hex(DIW_MASK)}"
 # DIW STRUCTURE (The Atomic Unit)
 # =============================================================================
 
+
 class DIW(NamedTuple):
     """
     The 19-bit Divine Instruction Word — decomposed view.
@@ -111,14 +112,16 @@ class DIW(NamedTuple):
     This is NOT a conversion. It is a VIEW on the same integer.
     The raw word and this struct are non-different (abhinna).
     """
-    venu: int     # 6 bits: Quality/Mood (Sharanagati)
-    vamsi: int    # 9 bits: Process/Action (Nava Bhakti)
-    murali: int   # 4 bits: Phase/Quarter (Quarters)
+
+    venu: int  # 6 bits: Quality/Mood (Sharanagati)
+    vamsi: int  # 9 bits: Process/Action (Nava Bhakti)
+    murali: int  # 4 bits: Phase/Quarter (Quarters)
 
 
 # =============================================================================
 # PACK / UNPACK (The Dual View)
 # =============================================================================
+
 
 def pack(venu: int, vamsi: int, murali: int) -> int:
     """
@@ -132,11 +135,7 @@ def pack(venu: int, vamsi: int, murali: int) -> int:
     Returns:
         19-bit integer
     """
-    return (
-        (venu & VENU_MASK)
-        | ((vamsi & VAMSI_MASK) << VAMSI_SHIFT)
-        | ((murali & MURALI_MASK) << MURALI_SHIFT)
-    )
+    return (venu & VENU_MASK) | ((vamsi & VAMSI_MASK) << VAMSI_SHIFT) | ((murali & MURALI_MASK) << MURALI_SHIFT)
 
 
 def unpack(word: int) -> DIW:

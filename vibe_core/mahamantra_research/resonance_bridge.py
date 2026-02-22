@@ -48,16 +48,19 @@ __genesis__ = "0xf3018ef4"  # GenesisByte: parampara % 37 == 0
 # Q4 (pos 12-15) = TAMAS  — karmic consequence, ignorance
 
 GUNA_NAMES: Final[Tuple[str, str, str, str]] = (
-    "suddha", "sattva", "rajas", "tamas",
+    "suddha",
+    "sattva",
+    "rajas",
+    "tamas",
 )
 
 # Guna → IntentType mapping (from kernel/intent.py IntentType enum values)
 # Each guna maps to the PRIMARY intent type for that quarter.
 GUNA_TO_INTENT_TYPE: Final[Dict[str, str]] = {
-    "suddha": "wake",       # Q1: genesis, initialization
-    "sattva": "resolve",    # Q2: dharma, sanctioned resolution
-    "rajas": "transform",   # Q3: karma, material execution
-    "tamas": "heal",        # Q4: moksha, karmic consequence → healing
+    "suddha": "wake",  # Q1: genesis, initialization
+    "sattva": "resolve",  # Q2: dharma, sanctioned resolution
+    "rajas": "transform",  # Q3: karma, material execution
+    "tamas": "heal",  # Q4: moksha, karmic consequence → healing
 }
 
 
@@ -75,32 +78,32 @@ class ResonancePacket:
     """
 
     # Identity
-    seed: int                              # compressed input hash
-    attractor: int                         # fixed-point attractor
-    position: int                          # seed % 16 → grid position
+    seed: int  # compressed input hash
+    attractor: int  # fixed-point attractor
+    position: int  # seed % 16 → grid position
 
     # Energy
-    prana: int                             # total Antaranga prana
-    active_slots: int                      # number of live slots
+    prana: int  # total Antaranga prana
+    active_slots: int  # number of live slots
 
     # Routing
-    guardian: str                          # Mahajana name (from routing)
-    quarter: int                           # position // 4 → which quarter
-    guna: str                              # suddha/sattva/rajas/tamas
+    guardian: str  # Mahajana name (from routing)
+    quarter: int  # position // 4 → which quarter
+    guna: str  # suddha/sattva/rajas/tamas
 
     # Fractal
     branch_energies: Tuple[int, int, int]  # (DHARMA, GENESIS, KARMA) prana
-    tree_depth: int                        # fractal tree depth
+    tree_depth: int  # fractal tree depth
 
     # Semantic
     mode_words: Dict[str, Tuple[str, ...]]  # mode → top word meanings
-    verse_ref: str                         # BG.18.N
+    verse_ref: str  # BG.18.N
 
     # Raw coords (for spell_kirtan)
-    rama_coords: Tuple[int, ...]           # character wave RAMA coordinates
+    rama_coords: Tuple[int, ...]  # character wave RAMA coordinates
 
     # Derived intent
-    intent_type: str                       # from guna → IntentType mapping
+    intent_type: str  # from guna → IntentType mapping
 
     @property
     def is_transcendental(self) -> bool:
@@ -260,7 +263,7 @@ class ResonanceBridge:
         This bridge does NOT import production code.
         """
         return {
-            "type": packet.intent_type,       # str, caller maps to IntentType enum
+            "type": packet.intent_type,  # str, caller maps to IntentType enum
             "target": target,
             "params": {
                 "seed": packet.seed,

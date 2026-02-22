@@ -54,25 +54,25 @@ class TestResonanceHarmonicsConstants:
         """THRESHOLD_AUTO = NADI_RESONANCE / MALA = 72/108 = 2/3."""
         expected = NADI_RESONANCE / MALA
         assert ResonanceHarmonics.THRESHOLD_AUTO == expected
-        assert abs(ResonanceHarmonics.THRESHOLD_AUTO - 2/3) < 0.0001
+        assert abs(ResonanceHarmonics.THRESHOLD_AUTO - 2 / 3) < 0.0001
 
     def test_threshold_refine_is_lila_over_mala(self):
         """THRESHOLD_REFINE = LILA / MALA = 48/108 = 4/9."""
         expected = LILA / MALA
         assert ResonanceHarmonics.THRESHOLD_REFINE == expected
-        assert abs(ResonanceHarmonics.THRESHOLD_REFINE - 4/9) < 0.0001
+        assert abs(ResonanceHarmonics.THRESHOLD_REFINE - 4 / 9) < 0.0001
 
     def test_threshold_sync_is_field_over_mala(self):
         """THRESHOLD_SYNC = FIELD_RESONANCE / MALA = 144/108 = 4/3."""
         expected = FIELD_RESONANCE / MALA
         assert ResonanceHarmonics.THRESHOLD_SYNC == expected
-        assert abs(ResonanceHarmonics.THRESHOLD_SYNC - 4/3) < 0.0001
+        assert abs(ResonanceHarmonics.THRESHOLD_SYNC - 4 / 3) < 0.0001
 
     def test_ratio_mantra_process_is_words_over_nava(self):
         """RATIO_MANTRA_PROCESS = WORDS / NAVA = 16/9."""
         expected = WORDS / NAVA
         assert ResonanceHarmonics.RATIO_MANTRA_PROCESS == expected
-        assert abs(ResonanceHarmonics.RATIO_MANTRA_PROCESS - 16/9) < 0.0001
+        assert abs(ResonanceHarmonics.RATIO_MANTRA_PROCESS - 16 / 9) < 0.0001
 
     def test_ratio_nadi_lila_is_perfect_fifth(self):
         """RATIO_NADI_LILA = 72/48 = 3/2 (Perfect Fifth)."""
@@ -96,7 +96,7 @@ class TestResonanceHarmonicsMethods:
         """should_auto_execute returns True when resonance >= THRESHOLD_AUTO (scaled)."""
         CF = ResonanceHarmonics.COSMIC_FRAME
         assert ResonanceHarmonics.should_auto_execute(int(0.7 * CF)) is True
-        assert ResonanceHarmonics.should_auto_execute(int(2/3 * CF)) is True
+        assert ResonanceHarmonics.should_auto_execute(int(2 / 3 * CF)) is True
         assert ResonanceHarmonics.should_auto_execute(CF) is True
 
     def test_should_auto_execute_below_threshold(self):
@@ -110,7 +110,7 @@ class TestResonanceHarmonicsMethods:
         """needs_refinement returns True in REFINE <= r < AUTO zone (scaled)."""
         CF = ResonanceHarmonics.COSMIC_FRAME
         assert ResonanceHarmonics.needs_refinement(int(0.5 * CF)) is True
-        assert ResonanceHarmonics.needs_refinement(int(4/9 * CF)) is True
+        assert ResonanceHarmonics.needs_refinement(int(4 / 9 * CF)) is True
         assert ResonanceHarmonics.needs_refinement(int(0.6 * CF)) is True
 
     def test_needs_refinement_outside_zone(self):
@@ -129,14 +129,14 @@ class TestResonanceHarmonicsMethods:
     def test_is_silent_above_refine(self):
         """is_silent returns False when resonance >= THRESHOLD_REFINE (scaled)."""
         CF = ResonanceHarmonics.COSMIC_FRAME
-        assert ResonanceHarmonics.is_silent(int(4/9 * CF)) is False
+        assert ResonanceHarmonics.is_silent(int(4 / 9 * CF)) is False
         assert ResonanceHarmonics.is_silent(int(0.5 * CF)) is False
         assert ResonanceHarmonics.is_silent(CF) is False
 
     def test_is_multi_agent_sync(self):
         """is_multi_agent_sync returns True when resonance >= THRESHOLD_SYNC (scaled)."""
         CF = ResonanceHarmonics.COSMIC_FRAME
-        assert ResonanceHarmonics.is_multi_agent_sync(int(4/3 * CF)) is True
+        assert ResonanceHarmonics.is_multi_agent_sync(int(4 / 3 * CF)) is True
         assert ResonanceHarmonics.is_multi_agent_sync(int(1.5 * CF)) is True
         assert ResonanceHarmonics.is_multi_agent_sync(int(2.0 * CF)) is True
         assert ResonanceHarmonics.is_multi_agent_sync(CF) is False
@@ -156,14 +156,14 @@ class TestResonanceHarmonicsZones:
     def test_zone_refine(self):
         """Resonance in [THRESHOLD_REFINE, THRESHOLD_AUTO) is REFINE zone (scaled)."""
         CF = ResonanceHarmonics.COSMIC_FRAME
-        assert ResonanceHarmonics.get_zone(int(4/9 * CF)) == "REFINE"
+        assert ResonanceHarmonics.get_zone(int(4 / 9 * CF)) == "REFINE"
         assert ResonanceHarmonics.get_zone(int(0.5 * CF)) == "REFINE"
         assert ResonanceHarmonics.get_zone(int(0.6 * CF)) == "REFINE"
 
     def test_zone_auto(self):
         """Resonance in [THRESHOLD_AUTO, THRESHOLD_SYNC) is AUTO zone (scaled)."""
         CF = ResonanceHarmonics.COSMIC_FRAME
-        assert ResonanceHarmonics.get_zone(int(2/3 * CF)) == "AUTO"
+        assert ResonanceHarmonics.get_zone(int(2 / 3 * CF)) == "AUTO"
         assert ResonanceHarmonics.get_zone(int(0.8 * CF)) == "AUTO"
         assert ResonanceHarmonics.get_zone(CF) == "AUTO"
         assert ResonanceHarmonics.get_zone(int(1.2 * CF)) == "AUTO"
@@ -171,7 +171,7 @@ class TestResonanceHarmonicsZones:
     def test_zone_sync(self):
         """Resonance >= THRESHOLD_SYNC is SYNC zone (scaled)."""
         CF = ResonanceHarmonics.COSMIC_FRAME
-        assert ResonanceHarmonics.get_zone(int(4/3 * CF)) == "SYNC"
+        assert ResonanceHarmonics.get_zone(int(4 / 3 * CF)) == "SYNC"
         assert ResonanceHarmonics.get_zone(int(1.5 * CF)) == "SYNC"
         assert ResonanceHarmonics.get_zone(int(2.0 * CF)) == "SYNC"
 
@@ -199,7 +199,7 @@ class TestVedicScaleSwaras:
 
     def test_swara_ma_equals_threshold_sync(self):
         """Ma = 4/3 (Perfect Fourth) = THRESHOLD_SYNC."""
-        assert abs(VedicScaleMapping.SWARA_MA - 4/3) < 0.0001
+        assert abs(VedicScaleMapping.SWARA_MA - 4 / 3) < 0.0001
         assert abs(VedicScaleMapping.SWARA_MA - ResonanceHarmonics.THRESHOLD_SYNC) < 0.0001
 
     def test_swara_pa_is_perfect_fifth(self):
@@ -209,11 +209,11 @@ class TestVedicScaleSwaras:
 
     def test_swara_dha_is_5_over_3(self):
         """Dha = 5/3 (Major Sixth)."""
-        assert abs(VedicScaleMapping.SWARA_DHA - 5/3) < 0.0001
+        assert abs(VedicScaleMapping.SWARA_DHA - 5 / 3) < 0.0001
 
     def test_swara_ni_equals_ratio_mantra_process(self):
         """Ni = 16/9 (Minor Seventh) = RATIO_MANTRA_PROCESS."""
-        assert abs(VedicScaleMapping.SWARA_NI - 16/9) < 0.0001
+        assert abs(VedicScaleMapping.SWARA_NI - 16 / 9) < 0.0001
         assert abs(VedicScaleMapping.SWARA_NI - ResonanceHarmonics.RATIO_MANTRA_PROCESS) < 0.0001
 
     def test_swara_tuple_has_8_elements(self):
@@ -233,7 +233,7 @@ class TestVedicScaleSyncPoints:
         """MURALI (4 holes) produces quarter divisions: 0.25, 0.5, 0.75."""
         points = VedicScaleMapping.get_murali_sync_points()
         assert len(points) == MURALI_HOLES - 1  # 3 points
-        expected = (1/4, 2/4, 3/4)
+        expected = (1 / 4, 2 / 4, 3 / 4)
         for actual, exp in zip(points, expected):
             assert abs(actual - exp) < 0.0001
 
@@ -241,7 +241,7 @@ class TestVedicScaleSyncPoints:
         """VENU (6 holes) produces sixth divisions."""
         points = VedicScaleMapping.get_venu_sync_points()
         assert len(points) == VENU_HOLES - 1  # 5 points
-        expected = (1/6, 2/6, 3/6, 4/6, 5/6)
+        expected = (1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6)
         for actual, exp in zip(points, expected):
             assert abs(actual - exp) < 0.0001
 
@@ -249,7 +249,7 @@ class TestVedicScaleSyncPoints:
         """VAMSI (9 holes) produces ninth divisions."""
         points = VedicScaleMapping.get_vamsi_sync_points()
         assert len(points) == VAMSI_HOLES - 1  # 8 points
-        expected = tuple(i/9 for i in range(1, 9))
+        expected = tuple(i / 9 for i in range(1, 9))
         for actual, exp in zip(points, expected):
             assert abs(actual - exp) < 0.0001
 
@@ -257,13 +257,13 @@ class TestVedicScaleSyncPoints:
         """THRESHOLD_REFINE (4/9) appears in VAMSI sync points."""
         vamsi_points = VedicScaleMapping.get_vamsi_sync_points()
         # 4/9 is the 4th sync point
-        assert any(abs(p - 4/9) < 0.0001 for p in vamsi_points)
+        assert any(abs(p - 4 / 9) < 0.0001 for p in vamsi_points)
 
     def test_threshold_auto_is_venu_4th_sync(self):
         """THRESHOLD_AUTO (2/3) appears in VENU sync points."""
         venu_points = VedicScaleMapping.get_venu_sync_points()
         # 4/6 = 2/3 is the 4th sync point
-        assert any(abs(p - 2/3) < 0.0001 for p in venu_points)
+        assert any(abs(p - 2 / 3) < 0.0001 for p in venu_points)
 
     def test_all_sync_points_are_unique_and_sorted(self):
         """get_all_sync_points returns unique, sorted values."""
@@ -373,7 +373,7 @@ class TestSravanamCheckConstants:
 
     def test_bootstrap_ratio(self):
         """BOOTSTRAP_RATIO = 2/9."""
-        assert abs(SravanamCheck.BOOTSTRAP_RATIO - 2/9) < 0.0001
+        assert abs(SravanamCheck.BOOTSTRAP_RATIO - 2 / 9) < 0.0001
 
     def test_dharma_pillars_is_4(self):
         """DHARMA_PILLARS = (2 × 18) / 9 = 4."""
@@ -439,7 +439,7 @@ class TestSravanamCheckPhaseLock:
     def test_phase_locked_above_threshold(self):
         """Phase locked when resonance >= THRESHOLD_REFINE."""
         assert SravanamCheck.verify_phase_lock(0.5) is True
-        assert SravanamCheck.verify_phase_lock(4/9) is True
+        assert SravanamCheck.verify_phase_lock(4 / 9) is True
         assert SravanamCheck.verify_phase_lock(1.0) is True
 
     def test_phase_not_locked_below_threshold(self):
@@ -454,7 +454,7 @@ class TestSravanamCheckParampara:
     def test_parampara_connected_above_auto(self):
         """Parampara connected when resonance >= THRESHOLD_AUTO."""
         assert SravanamCheck.verify_parampara_connection(0.7) is True
-        assert SravanamCheck.verify_parampara_connection(2/3) is True
+        assert SravanamCheck.verify_parampara_connection(2 / 3) is True
         assert SravanamCheck.verify_parampara_connection(1.0) is True
 
     def test_parampara_lost_below_auto(self):
@@ -584,7 +584,7 @@ class TestSravanamCheckDynamicEmit:
             output_tokens=50,
             resonance=0.7,
             tick=0,  # On Gajra
-            strict=True
+            strict=True,
         )
         assert can is True
         assert delay == 0
@@ -592,11 +592,7 @@ class TestSravanamCheckDynamicEmit:
     def test_can_emit_dynamic_entropy_fail(self):
         """can_emit_dynamic fails on entropy violation."""
         can, reason, delay = SravanamCheck.can_emit_dynamic(
-            input_tokens=50,
-            output_tokens=100,
-            resonance=0.7,
-            tick=0,
-            strict=False
+            input_tokens=50, output_tokens=100, resonance=0.7, tick=0, strict=False
         )
         assert can is False
         assert "Entropy" in reason
@@ -608,7 +604,7 @@ class TestSravanamCheckDynamicEmit:
             output_tokens=50,
             resonance=0.7,
             tick=10,  # Not on Gajra
-            strict=True
+            strict=True,
         )
         # May or may not emit depending on ego offset
         # But if not emitting, should have delay info
@@ -696,8 +692,6 @@ class TestHarmonicsIntegration:
         assert zone == "AUTO"
 
         # Full dynamic check
-        can, reason, delay = SravanamCheck.can_emit_dynamic(
-            input_tokens, output_tokens, resonance, tick, strict=True
-        )
+        can, reason, delay = SravanamCheck.can_emit_dynamic(input_tokens, output_tokens, resonance, tick, strict=True)
         assert can is True
         assert delay == 0

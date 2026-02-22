@@ -37,14 +37,15 @@ class NavaBhaktiOp(IntEnum):
     SRAVANAM → KIRTANAM → PADA_SEVANAM → ARCANAM → SMARANAM →
     VANDANAM → DASYAM → SAKHYAM → ATMA_NIVEDANAM
     """
-    SRAVANAM = 0        # Hearing (includes phonetic encoding)
-    KIRTANAM = 1        # Chanting (compression → seed)
-    PADA_SEVANAM = 2    # Serving the feet (seed → attractor)
-    ARCANAM = 3         # Worship (parampara verification)
-    SMARANAM = 4        # Remembering (word resonance, needs attractor)
-    VANDANAM = 5        # Prayer (verse matching)
-    DASYAM = 6          # Servitude (position/guardian routing)
-    SAKHYAM = 7         # Friendship (cell creation + chamber)
+
+    SRAVANAM = 0  # Hearing (includes phonetic encoding)
+    KIRTANAM = 1  # Chanting (compression → seed)
+    PADA_SEVANAM = 2  # Serving the feet (seed → attractor)
+    ARCANAM = 3  # Worship (parampara verification)
+    SMARANAM = 4  # Remembering (word resonance, needs attractor)
+    VANDANAM = 5  # Prayer (verse matching)
+    DASYAM = 6  # Servitude (position/guardian routing)
+    SAKHYAM = 7  # Friendship (cell creation + chamber)
     ATMA_NIVEDANAM = 8  # Self-surrender (reactor + akash update + result)
 
 
@@ -52,23 +53,21 @@ assert len(NavaBhaktiOp) == NAVA
 
 # Gate index per instruction (TattvaGate.value)
 GATE_INDEX: Final[Tuple[int, ...]] = (
-    0,       # PARSE:    SRAVANAM
-    0,       # PARSE:    KIRTANAM
-    1,       # VALIDATE: PADA_SEVANAM
-    1,       # VALIDATE: ARCANAM
-    2,       # EXECUTE:  SMARANAM
-    2,       # EXECUTE:  VANDANAM
-    3,       # RESULT:   DASYAM
-    4,       # SYNC:     SAKHYAM
-    4,       # SYNC:     ATMA_NIVEDANAM
+    0,  # PARSE:    SRAVANAM
+    0,  # PARSE:    KIRTANAM
+    1,  # VALIDATE: PADA_SEVANAM
+    1,  # VALIDATE: ARCANAM
+    2,  # EXECUTE:  SMARANAM
+    2,  # EXECUTE:  VANDANAM
+    3,  # RESULT:   DASYAM
+    4,  # SYNC:     SAKHYAM
+    4,  # SYNC:     ATMA_NIVEDANAM
 )
 
 assert len(GATE_INDEX) == NAVA
 
 # VAMSI addresses: PARAMPARA * (i + KSETRAJNA) for i in range(9)
-VAMSI_ADDR: Final[Tuple[int, ...]] = tuple(
-    PARAMPARA * (i + KSETRAJNA) for i in range(NAVA)
-)
+VAMSI_ADDR: Final[Tuple[int, ...]] = tuple(PARAMPARA * (i + KSETRAJNA) for i in range(NAVA))
 # = (37, 74, 111, 148, 185, 222, 259, 296, 333)
 
 # The execution cycle — 9 steps of devotional service
@@ -115,6 +114,7 @@ class VMOpDeclaration:
     priority: Ordering within same gate (higher = later). Default 0.
     condition: Optional callable(ctx) -> bool. None = always run.
     """
+
     name: str
     gate: int
     handler: Callable

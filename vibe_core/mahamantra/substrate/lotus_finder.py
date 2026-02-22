@@ -214,7 +214,7 @@ class LotusFinder(importlib.abc.MetaPathFinder):
             return None
 
         # Extract the module name after "vibe_core.mahamantra.substrate."
-        remainder = fullname[len(_SUBSTRATE_PREFIX):]
+        remainder = fullname[len(_SUBSTRATE_PREFIX) :]
 
         # Only handle direct submodules (e.g., "seed"), not deep paths
         # (e.g., "language.engine" — Python handles those normally once

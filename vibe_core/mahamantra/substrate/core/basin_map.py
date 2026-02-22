@@ -11,7 +11,7 @@ TWO PRECOMPUTED TABLES:
 
 2. COORD_HKR[0..48] — (h, k, r) proportion for each coord.
    How much each divine operation (Hare/Krishna/Rama) contributes
-   to the 16-step transformation. 
+   to the 16-step transformation.
    Fine-grained fingerprint WITHIN basins.
 
    H (Hare)    = Energy/Shakti   (multiplication: v × 7 × adsr)
@@ -51,9 +51,11 @@ from vibe_core.mahamantra.substrate.rama_grid import VARNAMALA_TOTAL
 #  115  = akasha  : result, ether, sacrifice, fruits
 #  122  = vayu    : knowledge, intelligence, body, nature
 
+
 def _compute_basin_table() -> Tuple[int, ...]:
     """Compute basin for each RAMA coord. Called once at import time."""
     from vibe_core.mahamantra.substrate.algorithm.maha import MahaModularSynth
+
     synth = MahaModularSynth(default_preset="quantum")
     table = []
     for coord in range(VARNAMALA_TOTAL):
@@ -146,6 +148,7 @@ def basin_cosine(coords_a: Sequence[int], coords_b: Sequence[int]) -> float:
 def _compute_phoneme_attractor_table() -> Tuple[int, ...]:
     """Compute MahaAlgorithm16 attractor for each RAMA coord. Called once at import."""
     from vibe_core.mahamantra.substrate.algorithm.maha import MahaAlgorithm16
+
     algo = MahaAlgorithm16()
     table = []
     for coord in range(VARNAMALA_TOTAL):
@@ -254,11 +257,13 @@ def _compute_hkr_table() -> Tuple[Tuple[float, float, float], ...]:
         if total == 0:
             table.append((0.333, 0.333, 0.334))
         else:
-            table.append((
-                deltas["H"] / total,
-                deltas["K"] / total,
-                deltas["R"] / total,
-            ))
+            table.append(
+                (
+                    deltas["H"] / total,
+                    deltas["K"] / total,
+                    deltas["R"] / total,
+                )
+            )
 
     return tuple(table)
 
@@ -286,7 +291,7 @@ def hkr_distance(coords_a: Sequence[int], coords_b: Sequence[int]) -> float:
     """Euclidean distance between HKR colors. 0.0 = identical."""
     a = hkr_color(coords_a)
     b = hkr_color(coords_b)
-    return ((a[0] - b[0])**2 + (a[1] - b[1])**2 + (a[2] - b[2])**2) ** 0.5
+    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2) ** 0.5
 
 
 def hkr_similarity(coords_a: Sequence[int], coords_b: Sequence[int]) -> float:

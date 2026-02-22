@@ -59,6 +59,7 @@ from vibe_core.mahamantra.protocols._seed import (
 @dataclass(frozen=True)
 class ResonantWord:
     """A word found by resonance, with its score and coordinates."""
+
     sanskrit: str
     meanings: Tuple[str, ...]
     score: float
@@ -74,6 +75,7 @@ class ResonantWord:
 @dataclass(frozen=True)
 class ResonanceResponse:
     """Complete response from the resonance engine."""
+
     input_text: str
     guardian_name: str
     guardian_function: str
@@ -95,6 +97,7 @@ class ResonanceResponse:
 @dataclass(frozen=True)
 class SeedNode:
     """A node in a semantic tree spawned from a divine name."""
+
     phoneme: str
     rama_coord: int
     element: str
@@ -106,6 +109,7 @@ class SeedNode:
 @dataclass(frozen=True)
 class ExpansionResponse:
     """Result of expanding a divine name into a semantic tree."""
+
     name: str
     rama_coords: Tuple[int, ...]
     vibration_sum: int
@@ -119,6 +123,7 @@ class ExpansionResponse:
 @dataclass(frozen=True)
 class GuardianProfile:
     """A Guardian's complete semantic profile."""
+
     name: str
     function: str
     mod49: int

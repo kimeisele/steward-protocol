@@ -60,13 +60,21 @@ def compare_seeds(label_a: str, code_a: str, label_b: str, code_b: str) -> dict:
 
 def print_comparison(result: dict) -> None:
     """Pretty-print a comparison result."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  {result['label_a']}  vs  {result['label_b']}")
-    print(f"{'='*60}")
-    print(f"  Seed:      {result['seed_a']:>12}  |  {result['seed_b']:>12}  {'DIFFER' if result['seeds_differ'] else 'SAME'}")
-    print(f"  Intent:    {result['intent_a']:>12}  |  {result['intent_b']:>12}  {'DIFFER' if result['intents_differ'] else 'SAME'}")
-    print(f"  Position:  {result['position_a']:>12}  |  {result['position_b']:>12}  {'DIFFER' if result['positions_differ'] else 'SAME'}")
-    print(f"  Vibration: {result['vibration_sum_a']:>12}  |  {result['vibration_sum_b']:>12}  delta={result['vibration_delta']}")
+    print(f"{'=' * 60}")
+    print(
+        f"  Seed:      {result['seed_a']:>12}  |  {result['seed_b']:>12}  {'DIFFER' if result['seeds_differ'] else 'SAME'}"
+    )
+    print(
+        f"  Intent:    {result['intent_a']:>12}  |  {result['intent_b']:>12}  {'DIFFER' if result['intents_differ'] else 'SAME'}"
+    )
+    print(
+        f"  Position:  {result['position_a']:>12}  |  {result['position_b']:>12}  {'DIFFER' if result['positions_differ'] else 'SAME'}"
+    )
+    print(
+        f"  Vibration: {result['vibration_sum_a']:>12}  |  {result['vibration_sum_b']:>12}  delta={result['vibration_delta']}"
+    )
     print(f"  Phonemes:  {result['phoneme_count_a']:>12}  |  {result['phoneme_count_b']:>12}")
 
 
@@ -156,19 +164,37 @@ def handle_success(result: str) -> None:
 # EXPERIMENT 5: Phonetic signature of code tokens
 # =============================================================================
 
+
 def analyze_code_phonetics():
     """What does Shabda hear when it listens to code tokens?"""
     tokens = [
-        "Any", "str", "int", "Dict", "List", "Optional",
-        "def", "class", "import", "return", "raise",
-        "except", "pass", "try", "finally",
-        "Exception", "TypeError", "ValueError",
-        "self", "None", "True", "False",
+        "Any",
+        "str",
+        "int",
+        "Dict",
+        "List",
+        "Optional",
+        "def",
+        "class",
+        "import",
+        "return",
+        "raise",
+        "except",
+        "pass",
+        "try",
+        "finally",
+        "Exception",
+        "TypeError",
+        "ValueError",
+        "self",
+        "None",
+        "True",
+        "False",
     ]
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  SHABDA PHONETIC ANALYSIS OF CODE TOKENS")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     for token in tokens:
         vibs = text_to_vibration(token)
@@ -180,12 +206,15 @@ def analyze_code_phonetics():
         for v in vibs:
             articulations.add(v.articulation.name)
 
-        print(f"  {token:>15}  vib_sum={vib_sum:>6}  phonemes={phoneme_count:>2}  articulation={','.join(sorted(articulations))}")
+        print(
+            f"  {token:>15}  vib_sum={vib_sum:>6}  phonemes={phoneme_count:>2}  articulation={','.join(sorted(articulations))}"
+        )
 
 
 # =============================================================================
 # EXPERIMENT 6: Can compression distinguish code quality?
 # =============================================================================
+
 
 def code_quality_spectrum():
     """Run a spectrum of code quality through compression."""
@@ -193,26 +222,31 @@ def code_quality_spectrum():
     synth = MahaModularSynth(default_preset="quantum")
 
     samples = [
-        ("garbage",     "x = 1\ny = 2\nz = x + y"),
-        ("any_soup",    "def f(x: Any, y: Any) -> Any: return Any"),
+        ("garbage", "x = 1\ny = 2\nz = x + y"),
+        ("any_soup", "def f(x: Any, y: Any) -> Any: return Any"),
         ("silent_fail", "try:\n    x()\nexcept:\n    pass"),
         ("typed_clean", "def add(x: int, y: int) -> int:\n    return x + y"),
-        ("documented",  'def add(x: int, y: int) -> int:\n    """Add two integers."""\n    return x + y'),
-        ("robust",      "def add(x: int, y: int) -> int:\n    if not isinstance(x, int):\n        raise TypeError(f'Expected int, got {type(x)}')\n    return x + y"),
-        ("text_prose",  "The system is healthy and all tests pass successfully."),
-        ("text_error",  "FATAL: Connection timeout. Database crash. Memory leak detected."),
+        ("documented", 'def add(x: int, y: int) -> int:\n    """Add two integers."""\n    return x + y'),
+        (
+            "robust",
+            "def add(x: int, y: int) -> int:\n    if not isinstance(x, int):\n        raise TypeError(f'Expected int, got {type(x)}')\n    return x + y",
+        ),
+        ("text_prose", "The system is healthy and all tests pass successfully."),
+        ("text_error", "FATAL: Connection timeout. Database crash. Memory leak detected."),
     ]
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("  CODE QUALITY SPECTRUM THROUGH COMPRESSION")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  {'Label':>15}  {'Seed':>12}  {'Attractor':>10}  {'Pos':>4}  {'Intent':>8}")
-    print(f"  {'-'*15}  {'-'*12}  {'-'*10}  {'-'*4}  {'-'*8}")
+    print(f"  {'-' * 15}  {'-' * 12}  {'-' * 10}  {'-' * 4}  {'-' * 8}")
 
     for label, code in samples:
         result = comp.compress(code)
         attractor = synth.transform(result.seed)
-        print(f"  {label:>15}  {result.seed:>12}  {attractor:>10}  {result.position:>4}  {result.intent_level.guna.value:>8}")
+        print(
+            f"  {label:>15}  {result.seed:>12}  {attractor:>10}  {result.position:>4}  {result.intent_level.guna.value:>8}"
+        )
 
 
 # =============================================================================
@@ -249,9 +283,9 @@ if __name__ == "__main__":
     code_quality_spectrum()
 
     # Summary
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  SUMMARY")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  Intent-blind comparisons: {gap_count}/{len(comparisons)}")
     print(f"  (Higher = more gaps in code-awareness)")
     print()

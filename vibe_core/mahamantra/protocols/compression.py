@@ -4,7 +4,8 @@ Compression Protocol Types - SSOT for MahaCompression
 
 All types used by MahaCompression adapter must be defined here.
 """
-from vibe_core.mahamantra.protocols._seed import (HALVES, KSETRAJNA, TRINITY)
+
+from vibe_core.mahamantra.protocols._seed import HALVES, KSETRAJNA, TRINITY
 
 from typing import Protocol, runtime_checkable, Final, Literal, Optional, Union
 from dataclasses import dataclass
@@ -15,23 +16,27 @@ from enum import Enum
 # INTENT GUNA (The 3 Modes + 1 Transcendental)
 # =============================================================================
 
+
 class IntentGuna(Enum):
     """The 3 Modes of Material Nature + 1 Transcendental."""
-    SATTVA = "sattva"   # Creation / Goodness
-    RAJAS = "rajas"     # Passion / Activity
-    TAMAS = "tamas"     # Ignorance / Destruction
-    SUDDHA = "suddha"   # Pure / Transcendental
+
+    SATTVA = "sattva"  # Creation / Goodness
+    RAJAS = "rajas"  # Passion / Activity
+    TAMAS = "tamas"  # Ignorance / Destruction
+    SUDDHA = "suddha"  # Pure / Transcendental
 
 
 # =============================================================================
 # INTENT LEVEL
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class IntentLevel:
     """
     Detailed intent classification.
     """
+
     guna: IntentGuna
     confidence: float
     category: str
@@ -45,7 +50,7 @@ INTENT_TAMAS: Final[IntentLevel] = IntentLevel(
     confidence=1.0,
     category="DESTRUCTION",
     score=0,
-    system_interpretation="Ignorance/destruction mode - requires confirmation"
+    system_interpretation="Ignorance/destruction mode - requires confirmation",
 )
 
 INTENT_RAJAS: Final[IntentLevel] = IntentLevel(
@@ -53,7 +58,7 @@ INTENT_RAJAS: Final[IntentLevel] = IntentLevel(
     confidence=1.0,
     category="ACTION",
     score=KSETRAJNA,
-    system_interpretation="Passion/action mode - execute with caution"
+    system_interpretation="Passion/action mode - execute with caution",
 )
 
 INTENT_SATTVA: Final[IntentLevel] = IntentLevel(
@@ -61,7 +66,7 @@ INTENT_SATTVA: Final[IntentLevel] = IntentLevel(
     confidence=1.0,
     category="CREATION",
     score=HALVES,
-    system_interpretation="Goodness/creation mode - clean execution"
+    system_interpretation="Goodness/creation mode - clean execution",
 )
 
 INTENT_SUDDHA: Final[IntentLevel] = IntentLevel(
@@ -69,7 +74,7 @@ INTENT_SUDDHA: Final[IntentLevel] = IntentLevel(
     confidence=1.0,
     category="TRANSCENDENTAL",
     score=TRINITY,
-    system_interpretation="Pure/transcendental mode - divine execution"
+    system_interpretation="Pure/transcendental mode - divine execution",
 )
 
 ALL_INTENT_LEVELS: Final[tuple[IntentLevel, ...]] = (
@@ -84,18 +89,21 @@ ALL_INTENT_LEVELS: Final[tuple[IntentLevel, ...]] = (
 # SAMSKARA (Impression/Memory Levels)
 # =============================================================================
 
+
 class SamskaraLevel(Enum):
     """Level of samskara (impression) encoding."""
-    MICRO = "micro"    # Single event
-    MESO = "meso"      # Session/conversation
-    MACRO = "macro"    # Lifetime/persistent
+
+    MICRO = "micro"  # Single event
+    MESO = "meso"  # Session/conversation
+    MACRO = "macro"  # Lifetime/persistent
 
 
 class SamskaraScope(Enum):
     """Scope of samskara encoding."""
-    MICRO = "micro"      # Session level
-    MESO = "meso"        # Service level
-    MACRO = "macro"      # Platform level
+
+    MICRO = "micro"  # Session level
+    MESO = "meso"  # Service level
+    MACRO = "macro"  # Platform level
 
 
 # Pre-defined Samskara Levels
@@ -114,6 +122,7 @@ ALL_SAMSKARA_LEVELS: Final[tuple[SamskaraLevel, ...]] = (
 # COMPRESSION RESULTS
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class CompressionResult:
     """
@@ -127,6 +136,7 @@ class CompressionResult:
     The calling layer may set intent_level from its own OpCode context
     via guna.get_guna(opcode).
     """
+
     seed: int
     input_size: int
     output_size: int
@@ -148,6 +158,7 @@ class SamskaraResult:
 
     NOTE: intent_level is Optional — same principle as CompressionResult.
     """
+
     seed: int
     data_hash: int
     item_count: int
@@ -165,6 +176,7 @@ class PhysicsVerification:
     - PARAMPARA (37)
     - POSITION_SUM_TOTAL (136)
     """
+
     seed: int
     is_aligned: bool
     quantum_score: float
@@ -176,6 +188,7 @@ class PhysicsVerification:
 # =============================================================================
 # PROTOCOL
 # =============================================================================
+
 
 @runtime_checkable
 class MahaCompressionProtocol(Protocol):

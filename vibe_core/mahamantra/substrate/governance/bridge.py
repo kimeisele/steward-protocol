@@ -16,8 +16,9 @@ All operations route to the correct Position/Mahajana.
 
 WATERTIGHT: NO hardcoded numbers. ALL from seed.py (SSOT).
 """
+
 from __future__ import annotations
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA, TEN)
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA, TEN
 
 
 # === MAHAJANA DECLARATION ===
@@ -69,22 +70,22 @@ PURPOSE_MAP: Final[Dict[str, int]] = {
     # NAVABHAKTI OPERATIONS (9 processes - SRAVANAM first!)
     # ==========================================================================
     # SRAVANAM: Hearing - THE ENTRY POINT (Narada = communication)
-    "hearing": get_mahajana_position("narada"),     # Position 2 - SRAVANAM
-    "sravanam": get_mahajana_position("narada"),    # Position 2 - SRAVANAM (alias)
-    "receive": get_mahajana_position("narada"),     # Position 2 - SRAVANAM (alias)
+    "hearing": get_mahajana_position("narada"),  # Position 2 - SRAVANAM
+    "sravanam": get_mahajana_position("narada"),  # Position 2 - SRAVANAM (alias)
+    "receive": get_mahajana_position("narada"),  # Position 2 - SRAVANAM (alias)
     # KIRTANAM: Chanting - Output/Response
-    "chanting": get_mahajana_position("narada"),    # Position 2 - KIRTANAM
-    "kirtanam": get_mahajana_position("narada"),    # Position 2 - KIRTANAM (alias)
+    "chanting": get_mahajana_position("narada"),  # Position 2 - KIRTANAM
+    "kirtanam": get_mahajana_position("narada"),  # Position 2 - KIRTANAM (alias)
     # ==========================================================================
     # GENESIS OPERATIONS (Creation)
-    "genesis": get_mahajana_position("brahma"),     # Position 1 - BRAHMA
-    "creation": get_mahajana_position("brahma"),    # Position 1 - BRAHMA (alias)
-    "wake": get_mahajana_position("brahma"),        # Position 1 - BRAHMA (alias)
+    "genesis": get_mahajana_position("brahma"),  # Position 1 - BRAHMA
+    "creation": get_mahajana_position("brahma"),  # Position 1 - BRAHMA (alias)
+    "wake": get_mahajana_position("brahma"),  # Position 1 - BRAHMA (alias)
     # ==========================================================================
     # JUDGMENT OPERATIONS (Moksha)
-    "judge": get_mahajana_position("yamaraja"),     # Position 15 - YAMARAJA
+    "judge": get_mahajana_position("yamaraja"),  # Position 15 - YAMARAJA
     "judgment": get_mahajana_position("yamaraja"),  # Position 15 - YAMARAJA (alias)
-    "audit": get_mahajana_position("yamaraja"),     # Position 15 - YAMARAJA (alias)
+    "audit": get_mahajana_position("yamaraja"),  # Position 15 - YAMARAJA (alias)
     # ==========================================================================
     # STATE OPERATIONS
     "state_update": get_mahajana_position("janaka"),  # Position 10 - STATE_SYNC
@@ -124,23 +125,31 @@ class OfferResult(Dict[str, object]):
 # OFFER STEPS — Atomic, granular, individually callable
 # =============================================================================
 
+
 def _offer_fail(position: int, mahajana: str, quarter: str, purpose: str, error: str, **kw) -> OfferResult:
     """Return a failed OfferResult."""
-    return OfferResult(success=False, position=position, mahajana=mahajana,
-                       quarter=quarter, purpose=purpose, error=error, **kw)
+    return OfferResult(
+        success=False, position=position, mahajana=mahajana, quarter=quarter, purpose=purpose, error=error, **kw
+    )
 
 
 def _offer_validate(purpose: str) -> tuple:
     """Offer Step 1: Validate purpose, resolve position/mahajana/quarter.
     Returns (position, mahajana, quarter, genesis, word) or OfferResult on failure."""
     if purpose not in PURPOSE_MAP:
-        return _offer_fail(-KSETRAJNA, "unknown", "unknown", purpose,
-                           f"Unknown purpose '{purpose}'. Must be one of: {list(PURPOSE_MAP.keys())}")
+        return _offer_fail(
+            -KSETRAJNA,
+            "unknown",
+            "unknown",
+            purpose,
+            f"Unknown purpose '{purpose}'. Must be one of: {list(PURPOSE_MAP.keys())}",
+        )
 
     position = PURPOSE_MAP[purpose]
     if not (0 <= position < WORDS):
-        return _offer_fail(position, "unknown", "unknown", purpose,
-                           f"Position {position} out of bounds (0 to {WORDS - KSETRAJNA})")
+        return _offer_fail(
+            position, "unknown", "unknown", purpose, f"Position {position} out of bounds (0 to {WORDS - KSETRAJNA})"
+        )
 
     mahajana = POSITION_TO_MAHAJANA.get(position, "unknown")
     declaration = lotus_declaration(position)
@@ -150,57 +159,89 @@ def _offer_validate(purpose: str) -> tuple:
     return position, mahajana, quarter, genesis, word
 
 
-def _offer_check_parampara(parampara_vector: Optional[int], position: int,
-                           mahajana: str, quarter: str, purpose: str) -> Optional[OfferResult]:
+def _offer_check_parampara(
+    parampara_vector: Optional[int], position: int, mahajana: str, quarter: str, purpose: str
+) -> Optional[OfferResult]:
     """Offer Step 2: Parampara validation. Returns OfferResult on failure, None on success."""
     if parampara_vector is not None and not verify_parampara(parampara_vector):
-        return _offer_fail(position, mahajana, quarter, purpose,
-                           f"Parampara validation failed for vector {parampara_vector}")
+        return _offer_fail(
+            position, mahajana, quarter, purpose, f"Parampara validation failed for vector {parampara_vector}"
+        )
     return None
 
 
-def _offer_execute(content: Union[str, bytes, Dict[str, object], object],
-                   purpose: str, actor: Optional[str], timeout: float,
-                   position: int, mahajana: str, quarter: str,
-                   genesis: str, word: str) -> OfferResult:
+def _offer_execute(
+    content: Union[str, bytes, Dict[str, object], object],
+    purpose: str,
+    actor: Optional[str],
+    timeout: float,
+    position: int,
+    mahajana: str,
+    quarter: str,
+    genesis: str,
+    word: str,
+) -> OfferResult:
     """Offer Step 3: Publish intent to reactor loop, collect result."""
     from vibe_core.mahamantra.reactor.loop import get_loop
 
     loop, mailbox = get_loop()
 
     if not loop.wait_until_ready(timeout=5.0):
-        return _offer_fail(position, mahajana, quarter, purpose,
-                           "Reactor Init Timeout", execution_result=None, intent_id=None)
+        return _offer_fail(
+            position, mahajana, quarter, purpose, "Reactor Init Timeout", execution_result=None, intent_id=None
+        )
 
     ticket = mailbox.create_ticket()
     event_type = purpose.upper()
     details = content if isinstance(content, dict) else {"data": content}
 
     loop.publish(
-        event_type=event_type, agent_id=actor or "bridge",
-        message=f"Offer: {purpose}", details=details, task_id=ticket,
+        event_type=event_type,
+        agent_id=actor or "bridge",
+        message=f"Offer: {purpose}",
+        details=details,
+        task_id=ticket,
     )
 
     try:
         result_data = mailbox.collect(ticket, timeout=timeout)
         if not result_data["success"]:
-            return _offer_fail(position, mahajana, quarter, purpose,
-                               result_data["error"] or "Unknown Reactor Error",
-                               execution_result=None, intent_id=None)
+            return _offer_fail(
+                position,
+                mahajana,
+                quarter,
+                purpose,
+                result_data["error"] or "Unknown Reactor Error",
+                execution_result=None,
+                intent_id=None,
+            )
         return OfferResult(
-            success=True, position=position, mahajana=mahajana, quarter=quarter,
-            purpose=purpose, error=result_data["error"],
-            execution_result=result_data["execution_result"], intent_id=None,
-            actor=actor, genesis=genesis, word=word,
+            success=True,
+            position=position,
+            mahajana=mahajana,
+            quarter=quarter,
+            purpose=purpose,
+            error=result_data["error"],
+            execution_result=result_data["execution_result"],
+            intent_id=None,
+            actor=actor,
+            genesis=genesis,
+            word=word,
         )
     except TimeoutError:
-        return _offer_fail(position, mahajana, quarter, purpose,
-                           "Reactor Timeout (MahaMailbox expired)",
-                           execution_result=None, intent_id=None)
+        return _offer_fail(
+            position,
+            mahajana,
+            quarter,
+            purpose,
+            "Reactor Timeout (MahaMailbox expired)",
+            execution_result=None,
+            intent_id=None,
+        )
     except Exception as e:
-        return _offer_fail(position, mahajana, quarter, purpose,
-                           f"Bridge/Loop Error: {str(e)}",
-                           execution_result=None, intent_id=None)
+        return _offer_fail(
+            position, mahajana, quarter, purpose, f"Bridge/Loop Error: {str(e)}", execution_result=None, intent_id=None
+        )
 
 
 def offer(
@@ -264,9 +305,9 @@ def wrap_cell(
     # Map quarter → PayloadType (GENESIS/DHARMA/KARMA/MOKSHA)
     quarter_to_type = {
         "genesis": PayloadType.ARJUNA_VISHADA,  # Ch.1 - Raw input
-        "dharma": PayloadType.JNANA_VIJNANA,    # Ch.7 - Typed/validated (Kapila Memory)
-        "karma": PayloadType.VIBHUTI,           # Ch.10 - Execution
-        "moksha": PayloadType.MOKSA_SANNYASA,   # Ch.18 - Output
+        "dharma": PayloadType.JNANA_VIJNANA,  # Ch.7 - Typed/validated (Kapila Memory)
+        "karma": PayloadType.VIBHUTI,  # Ch.10 - Execution
+        "moksha": PayloadType.MOKSA_SANNYASA,  # Ch.18 - Output
     }
     payload_type = quarter_to_type.get(quarter.lower(), PayloadType.ARJUNA_VISHADA)
 
@@ -277,6 +318,7 @@ def wrap_cell(
         content_bytes = content.encode("utf-8")
     else:
         import json
+
         content_bytes = json.dumps(content, default=str).encode("utf-8")
 
     # Create typed payload

@@ -90,7 +90,9 @@ def _fallback_vectors(word: str) -> Tuple[SyllableVector, ...]:
     if not groups:
         return ()
     if len(groups) == KSETRAJNA:
-        return (SyllableVector(stress=KSETRAJNA, height=3, weight=max(KSETRAJNA, len(word) - len(groups[0]) + KSETRAJNA)),)
+        return (
+            SyllableVector(stress=KSETRAJNA, height=3, weight=max(KSETRAJNA, len(word) - len(groups[0]) + KSETRAJNA)),
+        )
     return tuple(
         SyllableVector(
             stress=KSETRAJNA if i == 0 else 0,

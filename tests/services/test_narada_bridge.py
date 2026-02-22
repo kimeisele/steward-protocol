@@ -207,6 +207,7 @@ class TestNaradaBridgeSingleton:
     def test_singleton_returns_same_instance(self):
         # Reset the module-level singleton for this test
         import vibe_core.services.narada_bridge as mod
+
         mod._bridge_instance = None
 
         a = get_narada_bridge()
@@ -231,6 +232,7 @@ class TestEventDIWContext:
 
     def test_event_has_diw_context_field(self):
         from vibe_core.mahamantra.substrate.event_bus import Event
+
         event = Event()
         assert hasattr(event, "diw_context")
         assert event.diw_context is None
@@ -344,10 +346,10 @@ class TestTickIndexedHistory:
         #   murali 0 → genesis, murali 1 → dharma,
         #   murali 2 → karma, murali 3 → moksha
         ticks = [
-            (0, 0, 0),    # tick=0, position=0, murali=0 → genesis
-            (2, 2, 0),    # tick=2, position=2, murali=0 → genesis
-            (5, 5, 1),    # tick=5, position=5, murali=1 → dharma
-            (8, 8, 2),    # tick=8, position=8, murali=2 → karma
+            (0, 0, 0),  # tick=0, position=0, murali=0 → genesis
+            (2, 2, 0),  # tick=2, position=2, murali=0 → genesis
+            (5, 5, 1),  # tick=5, position=5, murali=1 → dharma
+            (8, 8, 2),  # tick=8, position=8, murali=2 → karma
             (10, 10, 2),  # tick=10, position=10, murali=2 → karma
             (13, 13, 3),  # tick=13, position=13, murali=3 → moksha
         ]

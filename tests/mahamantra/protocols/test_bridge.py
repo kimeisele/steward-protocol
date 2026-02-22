@@ -499,11 +499,7 @@ class TestBridgeBuilder:
     def test_bridge_builder_basic(self):
         """Basic builder usage."""
         bridge = (
-            BridgeBuilder[int, str]("test")
-            .from_system("A")
-            .to_system("B")
-            .with_transform(lambda x: str(x))
-            .build()
+            BridgeBuilder[int, str]("test").from_system("A").to_system("B").with_transform(lambda x: str(x)).build()
         )
         assert bridge.spec.name == "test"
 
@@ -580,6 +576,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _bridge
+
         expected = [
             "BridgeType",
             "BridgeDirection",

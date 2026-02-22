@@ -92,7 +92,7 @@ class TestMahaClassifier:
         assert comparison is not None
         # ComparisonResult may have different attributes
         # Just verify we got a valid comparison object
-        assert hasattr(comparison, 'summary') or hasattr(comparison, 'results') or hasattr(comparison, 'ranked')
+        assert hasattr(comparison, "summary") or hasattr(comparison, "results") or hasattr(comparison, "ranked")
 
     # =========================================================================
     # QUICK VERDICT
@@ -134,5 +134,5 @@ class TestMahaClassifier:
             max_memory_bytes=512_000,
         )
         # Check if golden_age_viable exists on result
-        if hasattr(result, 'golden_age_viable'):
+        if hasattr(result, "golden_age_viable"):
             assert result.golden_age_viable is True

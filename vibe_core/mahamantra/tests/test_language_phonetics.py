@@ -25,6 +25,7 @@ from vibe_core.mahamantra.substrate.phonetic_bridge import VargaIndex
 # _varga_height: VargaIndex → 1-5 (PANCHA scale)
 # =============================================================================
 
+
 class TestVargaHeight:
     """_varga_height maps articulatory position to PANCHA height scale."""
 
@@ -47,6 +48,7 @@ class TestVargaHeight:
 # =============================================================================
 # parse_arpabet: ARPAbet phoneme list → SyllableVector tuple
 # =============================================================================
+
 
 class TestParseArpabet:
     """parse_arpabet converts CMU phoneme sequences to 3D vectors."""
@@ -108,6 +110,7 @@ class TestParseArpabet:
 # _fallback_vectors: vowel-group approximation when CMU unavailable
 # =============================================================================
 
+
 class TestFallbackVectors:
     """_fallback_vectors uses vowel groups for approximate vectors."""
 
@@ -139,11 +142,13 @@ class TestFallbackVectors:
 # syllable_vectors_for_word: CMU lookup with fallback
 # =============================================================================
 
+
 class TestNoNltkDependency:
     """phonetics.py must NOT import nltk — zero external dependencies."""
 
     def test_no_nltk_in_module(self):
         import vibe_core.mahamantra.substrate.language.phonetics as mod
+
         source = open(mod.__file__).read()
         assert "import nltk" not in source
         assert "from nltk" not in source
@@ -187,6 +192,7 @@ class TestSyllableVectorsForWord:
 # stress_for_word: backward compat wrapper
 # =============================================================================
 
+
 class TestStressForWord:
     """stress_for_word extracts stress digits from syllable vectors."""
 
@@ -209,6 +215,7 @@ class TestStressForWord:
 # =============================================================================
 # scan_syllable_rhythm: text → RhythmProfile on mantra grid
 # =============================================================================
+
 
 class TestScanSyllableRhythm:
     """scan_syllable_rhythm: full text → RhythmProfile with grid alignment."""
@@ -267,6 +274,7 @@ class TestScanSyllableRhythm:
 # =============================================================================
 # Regex patterns
 # =============================================================================
+
 
 class TestRegexPatterns:
     """_WORD_TOKEN_RE and _VOWEL_GROUP_RE patterns."""

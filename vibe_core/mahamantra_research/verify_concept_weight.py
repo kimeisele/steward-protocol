@@ -100,7 +100,7 @@ DHATU_BRIDGE = {
 
 
 def tokenize(text):
-    return [w for w in re.findall(r'[a-zA-Z]+', text.lower()) if len(w) >= 2]
+    return [w for w in re.findall(r"[a-zA-Z]+", text.lower()) if len(w) >= 2]
 
 
 def english_to_sanskrit(text):
@@ -144,6 +144,7 @@ def element_distribution(words):
 def hkr_distribution(words):
     """Get H/K/R distribution from Sanskrit words."""
     from vibe_core.mahamantra.substrate.basin_map import COORD_HKR
+
     if not words:
         return (0.0, 0.0, 0.0)
     h_sum = k_sum = r_sum = 0.0
@@ -183,7 +184,9 @@ print("Elements: Ak=Akasha Va=Vayu Ag=Agni Ja=Jala Pr=Prithvi")
 print("HKR: H=Hare K=Krishna R=Rama")
 print("=" * 100)
 
-header = f"{'Text':<40} {'Ak':>5} {'Va':>5} {'Ag':>5} {'Ja':>5} {'Pr':>5} | {'H':>5} {'K':>5} {'R':>5} | {'N':>3} {'Exp':<7}"
+header = (
+    f"{'Text':<40} {'Ak':>5} {'Va':>5} {'Ag':>5} {'Ja':>5} {'Pr':>5} | {'H':>5} {'K':>5} {'R':>5} | {'N':>3} {'Exp':<7}"
+)
 print(header)
 print("-" * 100)
 
@@ -195,10 +198,12 @@ for text, expected in tests:
     hkr = hkr_distribution(resonant)
     data_by_guna[expected].append({"elem": elem, "hkr": hkr, "n": len(resonant)})
 
-    print(f"{text[:38]:<40} "
-          f"{elem[0]:>5.2f} {elem[1]:>5.2f} {elem[2]:>5.2f} {elem[3]:>5.2f} {elem[4]:>5.2f} | "
-          f"{hkr[0]:>5.2f} {hkr[1]:>5.2f} {hkr[2]:>5.2f} | "
-          f"{len(resonant):>3} {expected:<7}")
+    print(
+        f"{text[:38]:<40} "
+        f"{elem[0]:>5.2f} {elem[1]:>5.2f} {elem[2]:>5.2f} {elem[3]:>5.2f} {elem[4]:>5.2f} | "
+        f"{hkr[0]:>5.2f} {hkr[1]:>5.2f} {hkr[2]:>5.2f} | "
+        f"{len(resonant):>3} {expected:<7}"
+    )
 
 print("\n" + "=" * 100)
 print("AVERAGE BY GUNA")
@@ -213,11 +218,13 @@ for guna in ["tamas", "rajas", "sattva", "suddha"]:
     avg_hkr = tuple(sum(e["hkr"][i] for e in entries) / n for i in range(3))
     avg_n = sum(e["n"] for e in entries) / n
 
-    print(f"  {guna:>7} (n={n}): "
-          f"Ak={avg_elem[0]:.3f} Va={avg_elem[1]:.3f} Ag={avg_elem[2]:.3f} "
-          f"Ja={avg_elem[3]:.3f} Pr={avg_elem[4]:.3f} | "
-          f"H={avg_hkr[0]:.3f} K={avg_hkr[1]:.3f} R={avg_hkr[2]:.3f} | "
-          f"avg_words={avg_n:.0f}")
+    print(
+        f"  {guna:>7} (n={n}): "
+        f"Ak={avg_elem[0]:.3f} Va={avg_elem[1]:.3f} Ag={avg_elem[2]:.3f} "
+        f"Ja={avg_elem[3]:.3f} Pr={avg_elem[4]:.3f} | "
+        f"H={avg_hkr[0]:.3f} K={avg_hkr[1]:.3f} R={avg_hkr[2]:.3f} | "
+        f"avg_words={avg_n:.0f}"
+    )
 
 # Check: is there ANY dimension that separates the gunas?
 print("\n" + "=" * 100)

@@ -59,13 +59,14 @@ class KapilaService(PanchaTattvaProtocol, ExecutableMixin):
 
     def __init__(self):
         self._analyses_performed = 0
-        
+
         # VARNASHRAMA INTEGRATION:
         # Spawn the JivaShadow qualified for this position.
         # "Subdivision is already sufficient." - User
         from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+
         self._shadow = spawn_shadow_for_position(6, context=b"kapila_service_v1")
-        
+
         # Lazy import to avoid circular dependency
         from vibe_core.protocols.cognition import NullCognitive
 

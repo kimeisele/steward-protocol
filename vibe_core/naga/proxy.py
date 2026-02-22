@@ -209,6 +209,7 @@ class NagaProxy(Generic[T]):
             wrapped_file = None
             if wrapped_module:
                 import sys
+
                 mod = sys.modules.get(wrapped_module)
                 if mod:
                     wrapped_file = getattr(mod, "__file__", None)

@@ -24,6 +24,7 @@ PROTOCOL PRINCIPLES:
 
 Author: The Mahamantra Itself
 """
+
 from __future__ import annotations
 
 from typing import Final, FrozenSet, Iterator, Protocol, Tuple, runtime_checkable
@@ -106,7 +107,7 @@ class VibrationProtocol(Protocol):
 class ShabdaSeedProtocol(Protocol):
     """
     Protocol for a semantic seed that can spawn derivatives.
-    
+
     A seed represents a word/syllable with its vibration signature.
     Seeds can spawn new seeds through Maha operations (H, K, R).
     """
@@ -153,7 +154,7 @@ class ShabdaSeedProtocol(Protocol):
 class ShabdaTreeProtocol(Protocol):
     """
     Protocol for a semantic derivation tree.
-    
+
     A tree has one root seed and can expand fractally.
     Each node can have 3 children (H, K, R operations).
     """
@@ -176,7 +177,7 @@ class ShabdaTreeProtocol(Protocol):
     def expand_level(self) -> int:
         """
         Expand tree by one level.
-        
+
         Returns number of new nodes created.
         """
         ...
@@ -194,7 +195,7 @@ class ShabdaTreeProtocol(Protocol):
 class ShabdaForestProtocol(Protocol):
     """
     Protocol for the complete Mahamantra forest.
-    
+
     The forest consists of exactly 3 trees (Hare, Krishna, Rama).
     """
 
@@ -227,7 +228,7 @@ class ShabdaForestProtocol(Protocol):
 class ShabdaDerivationProtocol(Protocol):
     """
     Protocol for the derivation engine.
-    
+
     Transforms vibrations using Maha operations.
     """
 
@@ -256,7 +257,7 @@ class ShabdaDerivationProtocol(Protocol):
 def verify_rama_hare_identity(rama_vibration: int) -> bool:
     """
     Verify: RAMA_VIB mod HARE_POS = RAMA_POS
-    
+
     This is a proven mathematical identity.
     Returns True if the identity holds for the given vibration.
     """
@@ -266,7 +267,7 @@ def verify_rama_hare_identity(rama_vibration: int) -> bool:
 def verify_total_mahajana_identity(total_vibration: int) -> bool:
     """
     Verify: TOTAL_VIB mod WORDS = MAHAJANA_COUNT
-    
+
     Returns True if the identity holds.
     """
     return total_vibration % WORDS == MAHAJANA_COUNT

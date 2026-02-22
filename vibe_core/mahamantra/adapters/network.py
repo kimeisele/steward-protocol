@@ -79,6 +79,7 @@ _MASK: Final[int] = (1 << QUARTERS) - 1  # 4-bit mask = 0xF
 # LOTUS NODE
 # =============================================================================
 
+
 class _LotusNode:
     """Minimal routing node - optimized for speed."""
 
@@ -94,6 +95,7 @@ class _LotusNode:
 # =============================================================================
 # LOTUS IPv4 ROUTER
 # =============================================================================
+
 
 class LotusIPRouter(MahaNetworkProtocol):
     """
@@ -389,6 +391,7 @@ class LotusIPRouter(MahaNetworkProtocol):
 # =============================================================================
 # FACTORY FUNCTION
 # =============================================================================
+
 
 def create_ip_router() -> LotusIPRouter:
     """Create a new IPv4 router."""

@@ -400,6 +400,7 @@ class TestGrowthRule:
 
     def test_growth_rule_custom_can_grow(self):
         """Custom can_grow function."""
+
         def only_even(addr):
             return addr.position % 2 == 0
 
@@ -452,6 +453,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.protocols import _fractal
+
         expected = [
             "FractalAddress",
             "FractalNode",

@@ -249,6 +249,7 @@ class ScanCommand(NagaCommandBase):
     def _get_security_patterns(cls):
         """Precompile security regex patterns (once)."""
         import re
+
         if cls._SECURITY_PATTERNS is None:
             cls._SECURITY_PATTERNS = [
                 (re.compile(r"eval\s*\("), "EVAL"),

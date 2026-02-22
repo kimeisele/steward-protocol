@@ -116,12 +116,21 @@ class TestEngineResult:
 
     def test_extended_defaults(self):
         r = EngineResult(
-            input_text="x", seed=0, attractor=0,
-            guardian_name="", guardian_function="",
-            intent_category="", section_name="", section_mode="",
-            verse_ref="", resonant_words=(), template_words=(),
-            antaranga_active=0, antaranga_prana=0,
-            output="", derivation="",
+            input_text="x",
+            seed=0,
+            attractor=0,
+            guardian_name="",
+            guardian_function="",
+            intent_category="",
+            section_name="",
+            section_mode="",
+            verse_ref="",
+            resonant_words=(),
+            template_words=(),
+            antaranga_active=0,
+            antaranga_prana=0,
+            output="",
+            derivation="",
         )
         assert r.attention_cached is False
         assert r.expansion_depth == 0
@@ -137,14 +146,21 @@ class TestEngineResult:
     def test_resonant_words_structure(self):
         """Each resonant word is (sanskrit, meaning, score)."""
         r = EngineResult(
-            input_text="x", seed=0, attractor=0,
-            guardian_name="", guardian_function="",
-            intent_category="", section_name="", section_mode="",
+            input_text="x",
+            seed=0,
+            attractor=0,
+            guardian_name="",
+            guardian_function="",
+            intent_category="",
+            section_name="",
+            section_mode="",
             verse_ref="",
             resonant_words=(("bhakti", "devotion", 0.95), ("dharma", "duty", 0.8)),
             template_words=(),
-            antaranga_active=0, antaranga_prana=0,
-            output="", derivation="",
+            antaranga_active=0,
+            antaranga_prana=0,
+            output="",
+            derivation="",
         )
         sanskrit, meaning, score = r.resonant_words[0]
         assert sanskrit == "bhakti"

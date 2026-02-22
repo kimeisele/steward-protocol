@@ -26,7 +26,8 @@ USAGE:
 PROTOCOL:
     Implements MahaRoutingProtocol from protocols/routing.py
 """
-from vibe_core.mahamantra.protocols._seed import (KSETRAJNA)
+
+from vibe_core.mahamantra.protocols._seed import KSETRAJNA
 
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "vyasa"
@@ -61,6 +62,7 @@ FULL_KEY_BITS: Final[int] = 32
 # =============================================================================
 # CELL ROUTER - Implements MahaRoutingProtocol
 # =============================================================================
+
 
 @dataclass
 class CellRouter:
@@ -128,11 +130,13 @@ class CellRouter:
         entries = []
         for key, cell in self._cells.items():
             if start <= key < end:
-                entries.append(RouteEntry(
-                    key=key,
-                    value=cell,
-                    depth=0,  # Flat structure
-                ))
+                entries.append(
+                    RouteEntry(
+                        key=key,
+                        value=cell,
+                        depth=0,  # Flat structure
+                    )
+                )
 
         return RangeResult(
             entries=tuple(entries),
@@ -157,11 +161,13 @@ class CellRouter:
         entries = []
         for key, cell in self._cells.items():
             if (key & mask) == target:
-                entries.append(RouteEntry(
-                    key=key,
-                    value=cell,
-                    depth=0,
-                ))
+                entries.append(
+                    RouteEntry(
+                        key=key,
+                        value=cell,
+                        depth=0,
+                    )
+                )
 
         return RangeResult(
             entries=tuple(entries),

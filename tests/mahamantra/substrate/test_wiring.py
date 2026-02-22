@@ -91,6 +91,7 @@ class TestPositionByFolder:
     def test_position_by_folder_values_are_positions(self):
         """All values are MantraPosition objects."""
         from vibe_core.mahamantra.substrate.position import MantraPosition
+
         for folder, pos in POSITION_BY_FOLDER.items():
             assert isinstance(pos, MantraPosition)
 
@@ -272,6 +273,7 @@ class TestGetPositionByOpcode:
     def test_get_position_by_opcode_returns_position(self):
         """Valid opcode returns position."""
         from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+
         # Try first opcode
         pos = get_position_by_opcode(MantraOpCode.SYS_WAKE)
         # May or may not find a position, just check it doesn't crash
@@ -295,45 +297,25 @@ class TestWiringVerification:
 
     def test_wiring_verification_creation(self):
         """WiringVerification can be created."""
-        wv = WiringVerification(
-            folder_path="test/path",
-            exists=True,
-            position=0,
-            is_connected=True,
-            violations=[]
-        )
+        wv = WiringVerification(folder_path="test/path", exists=True, position=0, is_connected=True, violations=[])
         assert wv.folder_path == "test/path"
 
     def test_wiring_verification_is_valid_true(self):
         """is_valid returns True when all conditions met."""
-        wv = WiringVerification(
-            folder_path="test/path",
-            exists=True,
-            position=0,
-            is_connected=True,
-            violations=[]
-        )
+        wv = WiringVerification(folder_path="test/path", exists=True, position=0, is_connected=True, violations=[])
         assert wv.is_valid is True
 
     def test_wiring_verification_is_valid_false_not_exists(self):
         """is_valid returns False when not exists."""
         wv = WiringVerification(
-            folder_path="test/path",
-            exists=False,
-            position=None,
-            is_connected=False,
-            violations=["Folder not found"]
+            folder_path="test/path", exists=False, position=None, is_connected=False, violations=["Folder not found"]
         )
         assert wv.is_valid is False
 
     def test_wiring_verification_is_valid_false_violations(self):
         """is_valid returns False when has violations."""
         wv = WiringVerification(
-            folder_path="test/path",
-            exists=True,
-            position=0,
-            is_connected=True,
-            violations=["Some violation"]
+            folder_path="test/path", exists=True, position=0, is_connected=True, violations=["Some violation"]
         )
         assert wv.is_valid is False
 
@@ -414,6 +396,7 @@ class TestModuleExports:
     def test_all_exports(self):
         """All expected items are in __all__."""
         from vibe_core.mahamantra.substrate import wiring
+
         expected = [
             "FOLDER_IS_WIRING",
             "NO_FOLDER_NO_EXISTENCE",

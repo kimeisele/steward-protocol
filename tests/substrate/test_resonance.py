@@ -56,7 +56,6 @@ from vibe_core.mahamantra.protocols._seed import MAHAMANTRA_NAME_HARE, MAHAMANTR
 class TestPhoneticClass:
     """Test the PhoneticClass enum."""
 
-
     def test_vowels_exist(self):
         """All Sanskrit vowels are represented."""
         assert PhoneticClass.VOWEL_A.value == "A"

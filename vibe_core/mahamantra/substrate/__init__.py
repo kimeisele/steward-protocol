@@ -19,6 +19,7 @@ LEVEL -1 (SUBSTRATE):
 LAZY IMPORTS: All imports deferred until accessed.
 This prevents 1000ms+ cascades when importing a single module.
 """
+
 from __future__ import annotations
 
 
@@ -317,9 +318,11 @@ def __getattr__(name: str):
 # EXPORTS (auto-discovered, not manually maintained)
 # =============================================================================
 
+
 def _get_all():
     """Build __all__ from the AST index."""
     return list(_get_ast_index().keys()) + list(_ALIASES.keys())
+
 
 # Lazy __all__ — computed on first access by Python's import machinery
 __all__ = property(lambda self: _get_all())

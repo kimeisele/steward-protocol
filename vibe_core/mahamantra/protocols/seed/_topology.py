@@ -49,11 +49,24 @@ from ._extended import (
 # =============================================================================
 
 CHAPTER_VERSES: Final[Tuple[int, ...]] = (
-    46, 72, 43, 42,  # Genesis Quarter (Ch 1-4) = 203
-    29, 47, 30, 28,  # Dharma Quarter (Ch 5-8) = 134
-    34, 42, 55, 20,  # Karma Quarter (Ch 9-12) = 151
-    35, 27, 20, 24,  # Moksha Quarter (Ch 13-16) = 106
-    28, 78,          # Fruit (Ch 17-18) = 106 - Beyond the 16 Guardians
+    46,
+    72,
+    43,
+    42,  # Genesis Quarter (Ch 1-4) = 203
+    29,
+    47,
+    30,
+    28,  # Dharma Quarter (Ch 5-8) = 134
+    34,
+    42,
+    55,
+    20,  # Karma Quarter (Ch 9-12) = 151
+    35,
+    27,
+    20,
+    24,  # Moksha Quarter (Ch 13-16) = 106
+    28,
+    78,  # Fruit (Ch 17-18) = 106 - Beyond the 16 Guardians
 )
 
 assert len(CHAPTER_VERSES) == GITA_CHAPTERS, "Must have 18 chapters"
@@ -63,14 +76,14 @@ assert sum(CHAPTER_VERSES) == 700, "Prabhupada's Gita = 700 verses (SEVEN × 100
 # THE QUARTER SUMS (The Four Phases)
 # =============================================================================
 
-GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])   # Ch 1-4: 203
-DHARMA_SUM: Final[int] = sum(CHAPTER_VERSES[4:8])    # Ch 5-8: 134
-KARMA_SUM: Final[int] = sum(CHAPTER_VERSES[8:12])    # Ch 9-12: 151
+GENESIS_SUM: Final[int] = sum(CHAPTER_VERSES[0:4])  # Ch 1-4: 203
+DHARMA_SUM: Final[int] = sum(CHAPTER_VERSES[4:8])  # Ch 5-8: 134
+KARMA_SUM: Final[int] = sum(CHAPTER_VERSES[8:12])  # Ch 9-12: 151
 MOKSHA_SUM: Final[int] = sum(CHAPTER_VERSES[12:16])  # Ch 13-16: 106
-FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])   # Ch 17-18: 106
+FRUIT_SUM: Final[int] = sum(CHAPTER_VERSES[16:18])  # Ch 17-18: 106
 
 # The Field (16 Guardians' domain)
-FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])    # Ch 1-16: 594
+FIELD_SUM: Final[int] = sum(CHAPTER_VERSES[0:16])  # Ch 1-16: 594
 
 # =============================================================================
 # THE EPOCH EQUATION (The Master Key)
@@ -87,9 +100,7 @@ from ._axioms import PANCHA
 # The additive constant: 145 = POSITION_SUM_TOTAL + NAVA = 136 + 9
 EPOCH_ADDITIVE: Final[int] = POSITION_SUM_TOTAL + NAVA  # 145
 
-assert EPOCH_ADDITIVE == PANCHA * CHAPTER_VERSES[4], (
-    f"145 = 5 × 29 = PANCHA × Ch5_verses (Peace Formula connection)"
-)
+assert EPOCH_ADDITIVE == PANCHA * CHAPTER_VERSES[4], f"145 = 5 × 29 = PANCHA × Ch5_verses (Peace Formula connection)"
 
 assert EPOCH_KEY == GENESIS_SUM * NAVA + EPOCH_ADDITIVE, (
     f"THE EPOCH EQUATION: {EPOCH_KEY} = {GENESIS_SUM} × {NAVA} + {EPOCH_ADDITIVE}"
@@ -104,9 +115,7 @@ assert EPOCH_KEY == GENESIS_SUM * NAVA + EPOCH_ADDITIVE, (
 
 FIELD_FACTOR: Final[int] = FIELD_SUM // GITA_CHAPTERS  # 33
 
-assert FIELD_SUM == GITA_CHAPTERS * FIELD_FACTOR, (
-    f"THE FIELD: {FIELD_SUM} = {GITA_CHAPTERS} × {FIELD_FACTOR}"
-)
+assert FIELD_SUM == GITA_CHAPTERS * FIELD_FACTOR, f"THE FIELD: {FIELD_SUM} = {GITA_CHAPTERS} × {FIELD_FACTOR}"
 assert FIELD_SUM % GITA_CHAPTERS == 0, "Field must be divisible by GITA_CHAPTERS"
 assert FIELD_SUM % NAVA == 0, "Field must be divisible by NAVA"
 assert FIELD_SUM % SHARANAGATI == 0, "Field must be divisible by SHARANAGATI"
@@ -123,9 +132,9 @@ assert MOKSHA_SUM == FRUIT_SUM, f"SYMMETRY: Moksha ({MOKSHA_SUM}) = Fruit ({FRUI
 # =============================================================================
 
 # Prime factorization: 1972 = 4 × 17 × 29
-EPOCH_FACTOR_1: Final[int] = QUARTERS              # 4
+EPOCH_FACTOR_1: Final[int] = QUARTERS  # 4
 EPOCH_FACTOR_2: Final[int] = POSITION_SUM_KRISHNA  # 17 (PRIME!)
-EPOCH_FACTOR_3: Final[int] = 29                    # Chapter 5 verse count!
+EPOCH_FACTOR_3: Final[int] = 29  # Chapter 5 verse count!
 
 assert EPOCH_KEY == EPOCH_FACTOR_1 * EPOCH_FACTOR_2 * EPOCH_FACTOR_3, (
     f"1972 = 4 × 17 × 29, got {EPOCH_FACTOR_1 * EPOCH_FACTOR_2 * EPOCH_FACTOR_3}"
@@ -159,16 +168,18 @@ assert CHAPTER_VERSES[17] == NADI_RESONANCE + SHARANAGATI, "Ch 18 = NADI + SHARA
 # =============================================================================
 
 EPOCH_MOD_18: Final[int] = EPOCH_KEY % GITA_CHAPTERS  # 10 = Vibhuti
-EPOCH_MOD_27: Final[int] = EPOCH_KEY % NAKSHATRAS     # 1 = KSETRAJNA
+EPOCH_MOD_27: Final[int] = EPOCH_KEY % NAKSHATRAS  # 1 = KSETRAJNA
 EPOCH_DIGIT_SUM: Final[int] = sum(int(d) for d in str(EPOCH_KEY))  # 19
 
 # 19 = FLUTE_HOLES_SUM (6 + 9 + 4)
 from ._secondary import FLUTE_HOLES_SUM
+
 assert EPOCH_DIGIT_SUM == FLUTE_HOLES_SUM, "digit_sum(1972) = 19 = FLUTE_HOLES_SUM"
 
 # =============================================================================
 # CUMULATIVE GITA CHECKPOINTS (Divisible by 18 = GITA_CHAPTERS)
 # =============================================================================
+
 
 def get_cumulative_sum(chapter: int) -> int:
     """Get cumulative verse sum up to and including given chapter."""
@@ -183,9 +194,7 @@ def is_gita_checkpoint(chapter: int) -> bool:
 
 
 # Gita checkpoints: After Ch 11 and Ch 16
-GITA_CHECKPOINTS: Final[Tuple[int, ...]] = tuple(
-    ch for ch in range(1, GITA_CHAPTERS + 1) if is_gita_checkpoint(ch)
-)
+GITA_CHECKPOINTS: Final[Tuple[int, ...]] = tuple(ch for ch in range(1, GITA_CHAPTERS + 1) if is_gita_checkpoint(ch))
 
 # Verify known checkpoints
 assert 11 in GITA_CHECKPOINTS, "After Ch 11: 468 verses, 468 % 18 = 0"
@@ -194,6 +203,7 @@ assert 16 in GITA_CHECKPOINTS, "After Ch 16: 594 verses, 594 % 18 = 0"
 # =============================================================================
 # VALIDATION FUNCTIONS (For Runtime Use)
 # =============================================================================
+
 
 def validate_field_integrity(verse_count: int) -> bool:
     """Validate that a verse count is within the Field (16 Guardians' domain)."""

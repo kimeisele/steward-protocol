@@ -56,6 +56,7 @@ class TestVerifyLink:
 
     def test_verify_link_no_identity_fails(self):
         """Object without __mahajana__ or mahajana fails."""
+
         class NoIdentity:
             pass
 
@@ -64,6 +65,7 @@ class TestVerifyLink:
 
     def test_verify_link_no_genesis_fails(self):
         """Object with identity but no genesis fails."""
+
         class NoGenesis:
             __mahajana__ = "vyasa"
 
@@ -72,6 +74,7 @@ class TestVerifyLink:
 
     def test_verify_link_invalid_genesis_fails(self):
         """Object with invalid genesis (not % 37) fails."""
+
         class InvalidGenesis:
             __mahajana__ = "vyasa"
             __genesis__ = "0x00000001"  # 1 is not divisible by 37
@@ -81,6 +84,7 @@ class TestVerifyLink:
 
     def test_verify_link_valid_genesis_succeeds(self):
         """Object with valid genesis (% 37 == 0) succeeds."""
+
         class ValidComponent:
             __mahajana__ = "vyasa"
             __genesis__ = "0x00000025"  # 37 in hex, divisible by 37
@@ -90,6 +94,7 @@ class TestVerifyLink:
 
     def test_verify_link_larger_valid_genesis(self):
         """Object with larger valid genesis succeeds."""
+
         class ValidComponent:
             __mahajana__ = "brahma"
             __genesis__ = "0x0000004a"  # 74 = 37 * 2
@@ -99,6 +104,7 @@ class TestVerifyLink:
 
     def test_verify_link_with_mahajana_attribute(self):
         """Object with mahajana (not __mahajana__) works."""
+
         class MahajanaAttr:
             mahajana = "narada"
             genesis = "0x00000025"  # 37
@@ -108,6 +114,7 @@ class TestVerifyLink:
 
     def test_verify_link_non_string_genesis_fails(self):
         """Non-string genesis fails."""
+
         class IntGenesis:
             __mahajana__ = "shambhu"
             __genesis__ = 37  # int, not string
@@ -117,6 +124,7 @@ class TestVerifyLink:
 
     def test_verify_link_invalid_hex_fails(self):
         """Invalid hex string fails."""
+
         class InvalidHex:
             __mahajana__ = "kapila"
             __genesis__ = "not_hex"
@@ -126,6 +134,7 @@ class TestVerifyLink:
 
     def test_verify_link_empty_genesis_fails(self):
         """Empty genesis string fails."""
+
         class EmptyGenesis:
             __mahajana__ = "manu"
             __genesis__ = ""
@@ -171,6 +180,7 @@ class TestProtocolCompliance:
     def test_implements_prabhupada_protocol(self):
         """Prabhupada implements PrabhupadaProtocol."""
         from vibe_core.mahamantra.protocols._prabhupada import PrabhupadaProtocol
+
         assert isinstance(prabhupada, PrabhupadaProtocol)
 
     def test_has_verify_link(self):
@@ -194,6 +204,7 @@ class TestParamparaValidation:
 
     def test_37_is_valid(self):
         """37 (0x25) is valid parampara."""
+
         class Valid37:
             __mahajana__ = "test"
             __genesis__ = "0x00000025"  # 37
@@ -202,6 +213,7 @@ class TestParamparaValidation:
 
     def test_74_is_valid(self):
         """74 (0x4a) is valid parampara (37 * 2)."""
+
         class Valid74:
             __mahajana__ = "test"
             __genesis__ = "0x0000004a"  # 74
@@ -210,6 +222,7 @@ class TestParamparaValidation:
 
     def test_111_is_valid(self):
         """111 (0x6f) is valid parampara (37 * 3)."""
+
         class Valid111:
             __mahajana__ = "test"
             __genesis__ = "0x0000006f"  # 111
@@ -218,6 +231,7 @@ class TestParamparaValidation:
 
     def test_444_is_valid(self):
         """444 (0x1bc) is valid parampara (37 * 12)."""
+
         class Valid444:
             __mahajana__ = "test"
             __genesis__ = "0x000001bc"  # 444
@@ -226,6 +240,7 @@ class TestParamparaValidation:
 
     def test_36_is_invalid(self):
         """36 is not valid parampara."""
+
         class Invalid36:
             __mahajana__ = "test"
             __genesis__ = "0x00000024"  # 36
@@ -234,6 +249,7 @@ class TestParamparaValidation:
 
     def test_38_is_invalid(self):
         """38 is not valid parampara."""
+
         class Invalid38:
             __mahajana__ = "test"
             __genesis__ = "0x00000026"  # 38
@@ -251,6 +267,7 @@ class TestEdgeCases:
 
     def test_verify_link_none_object(self):
         """verify_link with None-like object."""
+
         # None itself doesn't have attributes, so hasattr returns False
         class NullLike:
             pass
@@ -260,6 +277,7 @@ class TestEdgeCases:
 
     def test_verify_link_zero_genesis(self):
         """Zero genesis (0x0) is divisible by 37."""
+
         class ZeroGenesis:
             __mahajana__ = "test"
             __genesis__ = "0x00000000"  # 0
@@ -270,6 +288,7 @@ class TestEdgeCases:
 
     def test_verify_link_large_genesis(self):
         """Large valid genesis works."""
+
         class LargeGenesis:
             __mahajana__ = "test"
             __genesis__ = "0xffffffff"  # Very large

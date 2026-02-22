@@ -199,11 +199,15 @@ class TestLoadState:
         test_dir = tmp_path / ".vibe_state"
         test_file = test_dir / "mahamantra_tick.json"
         test_dir.mkdir(parents=True)
-        test_file.write_text(json.dumps({
-            "tick": 8,
-            "lila_tick": 32,
-            "parampara": PARAMPARA,
-        }))
+        test_file.write_text(
+            json.dumps(
+                {
+                    "tick": 8,
+                    "lila_tick": 32,
+                    "parampara": PARAMPARA,
+                }
+            )
+        )
 
         monkeypatch.setattr(phoenix, "STATE_DIR", test_dir)
         monkeypatch.setattr(phoenix, "STATE_FILE", test_file)
@@ -221,11 +225,15 @@ class TestLoadState:
         test_dir = tmp_path / ".vibe_state"
         test_file = test_dir / "mahamantra_tick.json"
         test_dir.mkdir(parents=True)
-        test_file.write_text(json.dumps({
-            "tick": 8,
-            "lila_tick": 32,
-            "parampara": 999,  # Wrong parampara
-        }))
+        test_file.write_text(
+            json.dumps(
+                {
+                    "tick": 8,
+                    "lila_tick": 32,
+                    "parampara": 999,  # Wrong parampara
+                }
+            )
+        )
 
         monkeypatch.setattr(phoenix, "STATE_DIR", test_dir)
         monkeypatch.setattr(phoenix, "STATE_FILE", test_file)
@@ -240,11 +248,15 @@ class TestLoadState:
         test_dir = tmp_path / ".vibe_state"
         test_file = test_dir / "mahamantra_tick.json"
         test_dir.mkdir(parents=True)
-        test_file.write_text(json.dumps({
-            "tick": WORDS + 5,  # Out of range
-            "lila_tick": 32,
-            "parampara": PARAMPARA,
-        }))
+        test_file.write_text(
+            json.dumps(
+                {
+                    "tick": WORDS + 5,  # Out of range
+                    "lila_tick": 32,
+                    "parampara": PARAMPARA,
+                }
+            )
+        )
 
         monkeypatch.setattr(phoenix, "STATE_DIR", test_dir)
         monkeypatch.setattr(phoenix, "STATE_FILE", test_file)
@@ -259,11 +271,15 @@ class TestLoadState:
         test_dir = tmp_path / ".vibe_state"
         test_file = test_dir / "mahamantra_tick.json"
         test_dir.mkdir(parents=True)
-        test_file.write_text(json.dumps({
-            "tick": -1,
-            "lila_tick": 32,
-            "parampara": PARAMPARA,
-        }))
+        test_file.write_text(
+            json.dumps(
+                {
+                    "tick": -1,
+                    "lila_tick": 32,
+                    "parampara": PARAMPARA,
+                }
+            )
+        )
 
         monkeypatch.setattr(phoenix, "STATE_DIR", test_dir)
         monkeypatch.setattr(phoenix, "STATE_FILE", test_file)
@@ -278,11 +294,15 @@ class TestLoadState:
         test_dir = tmp_path / ".vibe_state"
         test_file = test_dir / "mahamantra_tick.json"
         test_dir.mkdir(parents=True)
-        test_file.write_text(json.dumps({
-            "tick": 5,
-            "lila_tick": LILA + 10,  # Out of range
-            "parampara": PARAMPARA,
-        }))
+        test_file.write_text(
+            json.dumps(
+                {
+                    "tick": 5,
+                    "lila_tick": LILA + 10,  # Out of range
+                    "parampara": PARAMPARA,
+                }
+            )
+        )
 
         monkeypatch.setattr(phoenix, "STATE_DIR", test_dir)
         monkeypatch.setattr(phoenix, "STATE_FILE", test_file)
@@ -312,10 +332,14 @@ class TestLoadState:
         test_dir = tmp_path / ".vibe_state"
         test_file = test_dir / "mahamantra_tick.json"
         test_dir.mkdir(parents=True)
-        test_file.write_text(json.dumps({
-            "parampara": PARAMPARA,
-            # Missing tick and lila_tick
-        }))
+        test_file.write_text(
+            json.dumps(
+                {
+                    "parampara": PARAMPARA,
+                    # Missing tick and lila_tick
+                }
+            )
+        )
 
         monkeypatch.setattr(phoenix, "STATE_DIR", test_dir)
         monkeypatch.setattr(phoenix, "STATE_FILE", test_file)
@@ -344,11 +368,15 @@ class TestClearState:
         test_dir = tmp_path / ".vibe_state"
         test_file = test_dir / "mahamantra_tick.json"
         test_dir.mkdir(parents=True)
-        test_file.write_text(json.dumps({
-            "tick": 5,
-            "lila_tick": 10,
-            "parampara": PARAMPARA,
-        }))
+        test_file.write_text(
+            json.dumps(
+                {
+                    "tick": 5,
+                    "lila_tick": 10,
+                    "parampara": PARAMPARA,
+                }
+            )
+        )
 
         monkeypatch.setattr(phoenix, "STATE_DIR", test_dir)
         monkeypatch.setattr(phoenix, "STATE_FILE", test_file)
@@ -400,11 +428,15 @@ class TestInitPhoenix:
         test_dir = tmp_path / ".vibe_state"
         test_file = test_dir / "mahamantra_tick.json"
         test_dir.mkdir(parents=True)
-        test_file.write_text(json.dumps({
-            "tick": 12,
-            "lila_tick": 40,
-            "parampara": PARAMPARA,
-        }))
+        test_file.write_text(
+            json.dumps(
+                {
+                    "tick": 12,
+                    "lila_tick": 40,
+                    "parampara": PARAMPARA,
+                }
+            )
+        )
 
         monkeypatch.setattr(phoenix, "STATE_DIR", test_dir)
         monkeypatch.setattr(phoenix, "STATE_FILE", test_file)

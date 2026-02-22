@@ -39,6 +39,7 @@ from vibe_core.protocols.mahajanas.owned_protocol import OwnedProtocol, Protocol
 from vibe_core.mahamantra.substrate.event_types import EventType  # noqa: F401  # SSOT leaf
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 

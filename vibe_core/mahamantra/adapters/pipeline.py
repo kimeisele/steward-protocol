@@ -120,6 +120,7 @@ assert len(PHASE_SPECS) == QUARTERS, f"Must have {QUARTERS} phases"
 # THE PIPELINE
 # =============================================================================
 
+
 class MahamantraPipeline(MahaPipelineProtocol):
     """
     The 4-Phase Pipeline: Genesis → Dharma → Karma → Moksha
@@ -142,6 +143,7 @@ class MahamantraPipeline(MahaPipelineProtocol):
     def _get_hash(self):
         if self._hash is None:
             from vibe_core.mahamantra.adapters.hash import DeterministicHash
+
             self._hash = DeterministicHash()
         return self._hash
 
@@ -149,6 +151,7 @@ class MahamantraPipeline(MahaPipelineProtocol):
     def _get_transform(self):
         if self._transform is None:
             from vibe_core.mahamantra.adapters.transform import MahaTransform
+
             self._transform = MahaTransform()
         return self._transform
 
@@ -156,6 +159,7 @@ class MahamantraPipeline(MahaPipelineProtocol):
     def _get_router(self):
         if self._router is None:
             from vibe_core.mahamantra.adapters.routing import HolographicRouter
+
             self._router = HolographicRouter()
         return self._router
 
@@ -163,6 +167,7 @@ class MahamantraPipeline(MahaPipelineProtocol):
     def _get_orchestrator(self):
         if self._orchestrator is None:
             from vibe_core.mahamantra.adapters.orchestrator import Orchestrator
+
             self._orchestrator = Orchestrator()
         return self._orchestrator
 
@@ -303,11 +308,14 @@ class MahamantraPipeline(MahaPipelineProtocol):
         dharma_result = self.dharma(genesis_result.hash_value)
 
         # Phase 3: Karma - Route (store the full result)
-        karma_result = self.karma(dharma_result.attractor, payload={
-            "input": value,
-            "hash": genesis_result.hash_value,
-            "attractor": dharma_result.attractor,
-        })
+        karma_result = self.karma(
+            dharma_result.attractor,
+            payload={
+                "input": value,
+                "hash": genesis_result.hash_value,
+                "attractor": dharma_result.attractor,
+            },
+        )
 
         # Phase 4: Moksha - Complete
         moksha_result = self.moksha(dharma_result.attractor)
@@ -328,6 +336,7 @@ class MahamantraPipeline(MahaPipelineProtocol):
         if self._router is not None:
             # Create fresh router
             from vibe_core.mahamantra.adapters.routing import HolographicRouter
+
             self._router = HolographicRouter()
 
     def get_phase_spec(self, quarter: Quarter) -> PhaseSpec:

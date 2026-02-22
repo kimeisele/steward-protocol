@@ -164,6 +164,7 @@ class TestOrbitProtocolCompliance:
     def test_implements_orbit_protocol(self):
         """OrbitCalculator implements OrbitProtocol."""
         from vibe_core.mahamantra.protocols._orbit import OrbitProtocol
+
         calc = OrbitCalculator()
         assert isinstance(calc, OrbitProtocol)
 
@@ -237,17 +238,20 @@ class TestModuleAttributes:
     def test_mahajana_declaration(self):
         """Module has __mahajana__ declaration."""
         from vibe_core.mahamantra.substrate import orbit
+
         assert hasattr(orbit, "__mahajana__")
         assert orbit.__mahajana__ == "prithu"
 
     def test_position_declaration(self):
         """Module has __position__ declaration."""
         from vibe_core.mahamantra.substrate import orbit
+
         assert hasattr(orbit, "__position__")
         assert orbit.__position__ == 4
 
     def test_genesis_declaration(self):
         """Module has __genesis__ declaration."""
         from vibe_core.mahamantra.substrate import orbit
+
         assert hasattr(orbit, "__genesis__")
         assert orbit.__genesis__.startswith("0x")

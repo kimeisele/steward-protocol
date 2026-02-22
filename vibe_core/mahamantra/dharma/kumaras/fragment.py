@@ -39,7 +39,6 @@ from typing import List, Optional
 import libcst as cst
 
 
-
 # =============================================================================
 # FRAGMENT TYPE (Natural code boundaries)
 # =============================================================================
@@ -48,12 +47,12 @@ import libcst as cst
 class FragmentType(str, Enum):
     """The type of atomic code unit. Derived from CST node type."""
 
-    FUNCTION = "function"    # FunctionDef at module level
-    METHOD = "method"        # FunctionDef inside ClassDef
-    CLASS = "class"          # ClassDef (entire class)
-    IMPORT = "import"        # Import / ImportFrom block
-    CONSTANT = "constant"    # Module-level SimpleStatementLine (assignment)
-    MODULE = "module"        # Entire module (fallback / reconstruction)
+    FUNCTION = "function"  # FunctionDef at module level
+    METHOD = "method"  # FunctionDef inside ClassDef
+    CLASS = "class"  # ClassDef (entire class)
+    IMPORT = "import"  # Import / ImportFrom block
+    CONSTANT = "constant"  # Module-level SimpleStatementLine (assignment)
+    MODULE = "module"  # Entire module (fallback / reconstruction)
 
 
 # =============================================================================
@@ -81,18 +80,18 @@ class CSTFragment:
 
     # Identity
     fragment_type: FragmentType
-    qualified_name: str          # e.g. "MyClass.my_method" or "process_data"
+    qualified_name: str  # e.g. "MyClass.my_method" or "process_data"
 
     # Origin (Maya reference)
     file_path: Path
-    line_start: int              # 1-indexed, inclusive
-    line_end: int                # 1-indexed, inclusive
+    line_start: int  # 1-indexed, inclusive
+    line_end: int  # 1-indexed, inclusive
 
     # Content
-    source_code: str             # The exact source text of this fragment
+    source_code: str  # The exact source text of this fragment
 
     # Ordering (for file reconstruction)
-    sort_key: int                # Position index in original file (0-based)
+    sort_key: int  # Position index in original file (0-based)
 
     # Parent context (for methods)
     parent_class: Optional[str] = None  # Class name if this is a METHOD

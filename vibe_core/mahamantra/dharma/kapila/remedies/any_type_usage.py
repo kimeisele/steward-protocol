@@ -182,5 +182,3 @@ class AnyTypeRemedy(CSTRemedy):
                 new_body.append(statement)
 
         return updated_node.with_changes(body=new_body)
-
-

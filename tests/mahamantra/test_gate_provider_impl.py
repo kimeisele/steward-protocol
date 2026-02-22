@@ -30,6 +30,7 @@ from vibe_core.mahamantra.substrate.tattva_registry import TattvaRegistry, get_r
 # FIXTURES
 # =============================================================================
 
+
 @pytest.fixture(autouse=True)
 def _reset_registry():
     """Reset TattvaRegistry singleton before each test."""
@@ -42,6 +43,7 @@ def _reset_registry():
 def _reset_providers():
     """Reset provider singletons before each test."""
     import vibe_core.mahamantra.substrate.gate_providers as gp
+
     gp._PROVIDERS = None
     yield
     gp._PROVIDERS = None
@@ -51,31 +53,37 @@ def _reset_providers():
 # 1. CAPABILITY PROTOCOL COMPLIANCE
 # =============================================================================
 
+
 class TestCapabilityCompliance:
     """Each provider must satisfy its Capability Protocol."""
 
     def test_mantra_is_mantra_capable(self):
         from vibe_core.mahamantra.protocols._capabilities import MantraCapability
+
         provider = MantraGateProvider()
         assert isinstance(provider, MantraCapability)
 
     def test_storage_is_storage_capable(self):
         from vibe_core.mahamantra.protocols._capabilities import StorageCapability
+
         provider = StorageGateProvider()
         assert isinstance(provider, StorageCapability)
 
     def test_infer_is_infer_capable(self):
         from vibe_core.mahamantra.protocols._capabilities import InferCapability
+
         provider = InferGateProvider()
         assert isinstance(provider, InferCapability)
 
     def test_sync_is_sync_capable(self):
         from vibe_core.mahamantra.protocols._capabilities import SyncCapability
+
         provider = SyncGateProvider()
         assert isinstance(provider, SyncCapability)
 
     def test_enforce_is_enforce_capable(self):
         from vibe_core.mahamantra.protocols._capabilities import EnforceCapability
+
         provider = EnforceGateProvider()
         assert isinstance(provider, EnforceCapability)
 
@@ -84,8 +92,8 @@ class TestCapabilityCompliance:
 # 2. MANTRA GATE PROVIDER (PARSE)
 # =============================================================================
 
-class TestMantraGateProvider:
 
+class TestMantraGateProvider:
     def test_parse_valid_string(self):
         p = MantraGateProvider()
         result = p.parse("hello")
@@ -118,8 +126,8 @@ class TestMantraGateProvider:
 # 3. STORAGE GATE PROVIDER (VALIDATE)
 # =============================================================================
 
-class TestStorageGateProvider:
 
+class TestStorageGateProvider:
     def test_validate_valid_seed(self):
         p = StorageGateProvider()
         result = p.validate(12345)
@@ -156,8 +164,8 @@ class TestStorageGateProvider:
 # 4. INFER GATE PROVIDER (EXECUTE)
 # =============================================================================
 
-class TestInferGateProvider:
 
+class TestInferGateProvider:
     def test_infer_tracks_attractor(self):
         p = InferGateProvider()
         result = p.infer(seed=100, attractor=42)
@@ -196,8 +204,8 @@ class TestInferGateProvider:
 # 5. SYNC GATE PROVIDER (RESULT)
 # =============================================================================
 
-class TestSyncGateProvider:
 
+class TestSyncGateProvider:
     def test_route_computes_position(self):
         p = SyncGateProvider()
         result = p.route(attractor=42)
@@ -206,9 +214,9 @@ class TestSyncGateProvider:
 
     def test_route_position_distribution(self):
         p = SyncGateProvider()
-        p.route(attractor=0)   # pos 0
+        p.route(attractor=0)  # pos 0
         p.route(attractor=16)  # pos 0
-        p.route(attractor=1)   # pos 1
+        p.route(attractor=1)  # pos 1
         dist = p.stats["position_distribution"]
         assert dist[0] == 2
         assert dist[1] == 1
@@ -224,8 +232,8 @@ class TestSyncGateProvider:
 # 6. ENFORCE GATE PROVIDER (SYNC)
 # =============================================================================
 
-class TestEnforceGateProvider:
 
+class TestEnforceGateProvider:
     def test_enforce_tracks_count(self):
         p = EnforceGateProvider()
         result = p.enforce(position=5, seed=100, attractor=42)
@@ -236,6 +244,7 @@ class TestEnforceGateProvider:
     def test_enforce_without_state_service(self):
         """Without StateService in DI, committed should be False."""
         from unittest.mock import patch
+
         p = EnforceGateProvider()
         p._state_service = None  # Reset any cached DI lookup
         with patch.object(EnforceGateProvider, "_get_state_service", return_value=None):
@@ -256,8 +265,8 @@ class TestEnforceGateProvider:
 # 7. GET_PROVIDERS SINGLETON
 # =============================================================================
 
-class TestGetProviders:
 
+class TestGetProviders:
     def test_returns_5_providers(self):
         providers = get_providers()
         assert len(providers) == 5
@@ -280,8 +289,8 @@ class TestGetProviders:
 # 8. WIRE_GATE_PROVIDERS
 # =============================================================================
 
-class TestWireGateProviders:
 
+class TestWireGateProviders:
     def test_wires_all_5(self):
         count = wire_gate_providers()
         assert count == 5
@@ -323,8 +332,8 @@ class TestWireGateProviders:
 # 9. INTEGRATION: _fire_gate dispatches to real providers
 # =============================================================================
 
-class TestFireGateIntegration:
 
+class TestFireGateIntegration:
     def test_fire_gate_calls_parse_provider(self):
         wire_gate_providers()
         providers = get_providers()
@@ -332,6 +341,7 @@ class TestFireGateIntegration:
 
         # Simulate what lotus_core._fire_gate does
         from vibe_core.mahamantra.substrate.lotus_core import _dispatch_provider
+
         _dispatch_provider(TattvaGate.PARSE, mantra, {"input_data": "test"})
 
         assert mantra.stats["parse_count"] == 1
@@ -343,6 +353,7 @@ class TestFireGateIntegration:
         storage = providers["storage_gate"]
 
         from vibe_core.mahamantra.substrate.lotus_core import _dispatch_provider
+
         _dispatch_provider(TattvaGate.VALIDATE, storage, {"seed": 42})
 
         assert storage.stats["validate_count"] == 1
@@ -353,6 +364,7 @@ class TestFireGateIntegration:
         infer = providers["infer_gate"]
 
         from vibe_core.mahamantra.substrate.lotus_core import _dispatch_provider
+
         _dispatch_provider(TattvaGate.EXECUTE, infer, {"seed": 1, "attractor": 99})
 
         assert infer.stats["infer_count"] == 1
@@ -364,6 +376,7 @@ class TestFireGateIntegration:
         sync = providers["sync_gate"]
 
         from vibe_core.mahamantra.substrate.lotus_core import _dispatch_provider
+
         _dispatch_provider(TattvaGate.RESULT, sync, {"attractor": 42})
 
         assert sync.stats["route_count"] == 1
@@ -374,8 +387,10 @@ class TestFireGateIntegration:
         enforce = providers["enforce_gate"]
 
         from vibe_core.mahamantra.substrate.lotus_core import _dispatch_provider
+
         _dispatch_provider(
-            TattvaGate.SYNC, enforce,
+            TattvaGate.SYNC,
+            enforce,
             {"position": 5, "seed": 100, "attractor": 42},
         )
 
@@ -387,12 +402,14 @@ class TestFireGateIntegration:
 # 10. ENFORCE GATE — I/O CONTROLLER (ROLE 2)
 # =============================================================================
 
+
 class TestEnforceGateIOController:
     """Tests for EnforceGateProvider as I/O Controller (write/load/flush)."""
 
     def test_write_with_state_service(self):
         """write() should route through StateService when available."""
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         result = gate.write("test_state.json", {"key": "value"}, actor="test", guna=Guna.RAJAS)
         assert result["actor"] == "test"
@@ -402,6 +419,7 @@ class TestEnforceGateIOController:
     def test_write_tracks_audit(self):
         """write() should record audit entries."""
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         gate.write("a.json", {}, actor="mod_a", guna=Guna.RAJAS)
         gate.write("b.json", {}, actor="mod_b", guna=Guna.RAJAS)
@@ -411,9 +429,12 @@ class TestEnforceGateIOController:
     def test_write_without_state_service_denies(self, monkeypatch):
         """write() should deny if no StateService available (even with valid Guna)."""
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         monkeypatch.setattr(
-            EnforceGateProvider, "_get_state_service", lambda self: None,
+            EnforceGateProvider,
+            "_get_state_service",
+            lambda self: None,
         )
         result = gate.write("x.json", {}, actor="rogue", guna=Guna.RAJAS)
         assert result["success"] is False
@@ -448,6 +469,7 @@ class TestEnforceGateIOController:
     def test_enforce_and_write_independent(self):
         """Pipeline enforce() and I/O write() are independent operations."""
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         gate.enforce(position=3, seed=42, attractor=99)
         gate.write("state.json", {"x": 1}, actor="test", guna=Guna.RAJAS)
@@ -460,11 +482,13 @@ class TestGetSyncGate:
 
     def test_returns_enforce_gate(self):
         from vibe_core.mahamantra.substrate.gate_providers import get_sync_gate
+
         gate = get_sync_gate()
         assert isinstance(gate, EnforceGateProvider)
 
     def test_singleton(self):
         from vibe_core.mahamantra.substrate.gate_providers import get_sync_gate
+
         g1 = get_sync_gate()
         g2 = get_sync_gate()
         assert g1 is g2
@@ -477,32 +501,38 @@ class TestGetSyncGate:
 # Ksetrajna (knower of the field) = the policy that DECIDES based on Guna.
 # =============================================================================
 
+
 class TestGunaPolicyResolution:
     """_resolve_policy() maps Guna → IOPolicy correctly."""
 
     def test_sattva_resolves_to_cache_only(self):
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
         from vibe_core.mahamantra.substrate.guna import Guna
+
         assert EnforceGateProvider._resolve_policy(Guna.SATTVA) == IOPolicy.CACHE_ONLY
 
     def test_rajas_resolves_to_write_behind(self):
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
         from vibe_core.mahamantra.substrate.guna import Guna
+
         assert EnforceGateProvider._resolve_policy(Guna.RAJAS) == IOPolicy.WRITE_BEHIND
 
     def test_tamas_resolves_to_sync_flush(self):
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
         from vibe_core.mahamantra.substrate.guna import Guna
+
         assert EnforceGateProvider._resolve_policy(Guna.TAMAS) == IOPolicy.SYNC_FLUSH
 
     def test_none_resolves_to_denied(self):
         """None = VOID = Mayavad = no right to write."""
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+
         assert EnforceGateProvider._resolve_policy(None) == IOPolicy.DENIED
 
     def test_garbage_resolves_to_denied(self):
         """Unknown values = DENIED. No duck-typing. No 'anything else'."""
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+
         assert EnforceGateProvider._resolve_policy("SATTVA") == IOPolicy.DENIED
         assert EnforceGateProvider._resolve_policy(999) == IOPolicy.DENIED
         assert EnforceGateProvider._resolve_policy(object()) == IOPolicy.DENIED
@@ -513,6 +543,7 @@ class TestGunaIOPolicySattva:
 
     def test_sattva_blocks_write(self):
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         result = gate.write("obs.json", {"x": 1}, actor="observer", guna=Guna.SATTVA)
         assert result["success"] is False
@@ -521,6 +552,7 @@ class TestGunaIOPolicySattva:
 
     def test_sattva_increments_sattva_blocks(self):
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         gate.write("a.json", {}, actor="a", guna=Guna.SATTVA)
         gate.write("b.json", {}, actor="b", guna=Guna.SATTVA)
@@ -530,6 +562,7 @@ class TestGunaIOPolicySattva:
 
     def test_sattva_records_audit(self):
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         gate.write("x.json", {}, actor="spy", guna=Guna.SATTVA)
         assert gate.stats["audit_log_size"] == 1
@@ -546,6 +579,7 @@ class TestGunaIOPolicyRajas:
 
     def test_rajas_allows_write(self):
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         result = gate.write("state.json", {"key": "val"}, actor="creator", guna=Guna.RAJAS)
         assert result["guna_policy"] == "write_behind"
@@ -554,6 +588,7 @@ class TestGunaIOPolicyRajas:
 
     def test_rajas_no_immediate_flush(self):
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         result = gate.write("state.json", {}, actor="mod", guna=Guna.RAJAS)
         assert result["flushed"] is False
@@ -573,6 +608,7 @@ class TestGunaIOPolicyTamas:
 
     def test_tamas_writes_and_flushes(self):
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         result = gate.write("cleanup.json", {"dead": True}, actor="shiva", guna=Guna.TAMAS)
         assert result["guna_policy"] == "sync_flush"
@@ -582,6 +618,7 @@ class TestGunaIOPolicyTamas:
 
     def test_tamas_increments_flushed_counter(self):
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         gate.write("flush_me.json", {}, actor="destroyer", guna=Guna.TAMAS)
         # If StateService is available, writes_flushed should increment
@@ -592,9 +629,12 @@ class TestGunaIOPolicyTamas:
     def test_tamas_without_state_service_denied(self, monkeypatch):
         """TAMAS still denied if no StateService (no ungoverned fallback)."""
         from vibe_core.mahamantra.substrate.guna import Guna
+
         gate = EnforceGateProvider()
         monkeypatch.setattr(
-            EnforceGateProvider, "_get_state_service", lambda self: None,
+            EnforceGateProvider,
+            "_get_state_service",
+            lambda self: None,
         )
         result = gate.write("x.json", {}, actor="rogue", guna=Guna.TAMAS)
         assert result["success"] is False
@@ -667,30 +707,35 @@ class TestGunaIOPolicyIntegration:
 # The Name transcends the three modes. No gate holds it.
 # =============================================================================
 
+
 class TestVishuddhaBypass:
     """VISHUDDHA = transcendental. The Name bypasses the Gate entirely."""
 
     def test_vishuddha_resolves_for_chant(self):
         """actor='chant' → VISHUDDHA (transcendental bypass)."""
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+
         policy = EnforceGateProvider._resolve_policy(None, actor="chant")
         assert policy == IOPolicy.VISHUDDHA
 
     def test_vishuddha_resolves_for_tick(self):
         """actor='tick' → VISHUDDHA (the heartbeat of the Name)."""
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+
         policy = EnforceGateProvider._resolve_policy(None, actor="tick")
         assert policy == IOPolicy.VISHUDDHA
 
     def test_vishuddha_resolves_for_mahamantra(self):
         """actor='mahamantra' → VISHUDDHA (direct access to the source)."""
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+
         policy = EnforceGateProvider._resolve_policy(None, actor="mahamantra")
         assert policy == IOPolicy.VISHUDDHA
 
     def test_vishuddha_bypasses_guna_check(self):
         """VISHUDDHA doesn't need a Guna — it IS the source."""
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+
         # Even with guna=None, vishuddha actor bypasses
         policy = EnforceGateProvider._resolve_policy(None, actor="chant")
         assert policy == IOPolicy.VISHUDDHA
@@ -713,6 +758,7 @@ class TestVishuddhaBypass:
     def test_non_vishuddha_actor_not_bypassed(self):
         """Regular actors don't get VISHUDDHA bypass."""
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+
         policy = EnforceGateProvider._resolve_policy(None, actor="some_plugin")
         assert policy == IOPolicy.DENIED
 
@@ -721,11 +767,13 @@ class TestVishuddhaBypass:
 # 13. VOID — Mayavad (No Guna = No Existence)
 # =============================================================================
 
+
 class TestVoidDenied:
     """VOID = Mayavad. No Guna, no existence, no right to write."""
 
     def test_none_guna_none_actor_is_void(self):
         from vibe_core.mahamantra.substrate.gate_providers import IOPolicy
+
         assert EnforceGateProvider._resolve_policy(None) == IOPolicy.DENIED
 
     def test_void_write_denied(self):

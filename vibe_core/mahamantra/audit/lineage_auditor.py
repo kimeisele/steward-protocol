@@ -46,9 +46,7 @@ class Auditor:
         cache = get_source_cache(self._root)
 
         for path, content in cache.scan():
-            gen_match = re.search(
-                r'__genesis__\s*[=:]\s*["\']?(0x[0-9a-fA-F]+)', content
-            )
+            gen_match = re.search(r'__genesis__\s*[=:]\s*["\']?(0x[0-9a-fA-F]+)', content)
             if not gen_match:
                 continue
 
@@ -56,39 +54,41 @@ class Auditor:
             try:
                 genesis_val = int(genesis_str, 16)
             except ValueError:
-                findings.append(AuditFinding(
-                    source="lineage_auditor",
-                    position=__position__,
-                    mahajana=__mahajana__,
-                    description=f"Invalid genesis format: {genesis_str}",
-                    file_path=str(path),
-                    severity=FindingSeverity.CRITICAL,
-                ))
+                findings.append(
+                    AuditFinding(
+                        source="lineage_auditor",
+                        position=__position__,
+                        mahajana=__mahajana__,
+                        description=f"Invalid genesis format: {genesis_str}",
+                        file_path=str(path),
+                        severity=FindingSeverity.CRITICAL,
+                    )
+                )
                 continue
 
             remainder = genesis_val % PARAMPARA
             if remainder != 0:
                 mj = re.search(r'__mahajana__\s*[=:]\s*["\'](\w+)["\']', content)
-                pos = re.search(r'__position__\s*[=:]\s*(\d+)', content)
+                pos = re.search(r"__position__\s*[=:]\s*(\d+)", content)
                 mahajana = mj.group(1) if mj else "unknown"
                 position = int(pos.group(1)) if pos else -1
 
                 correct = self._compute_genesis(mahajana, position)
-                findings.append(AuditFinding(
-                    source="lineage_auditor",
-                    position=__position__,
-                    mahajana=__mahajana__,
-                    description=(
-                        f"Broken lineage: {genesis_str} % {PARAMPARA} = {remainder}. "
-                        f"Correct: {correct}"
-                    ),
-                    file_path=str(path),
-                    severity=FindingSeverity.CRITICAL,
-                ))
+                findings.append(
+                    AuditFinding(
+                        source="lineage_auditor",
+                        position=__position__,
+                        mahajana=__mahajana__,
+                        description=(f"Broken lineage: {genesis_str} % {PARAMPARA} = {remainder}. Correct: {correct}"),
+                        file_path=str(path),
+                        severity=FindingSeverity.CRITICAL,
+                    )
+                )
 
         logger.info(
             "Lineage audit: %d findings from %s",
-            len(findings), self._root,
+            len(findings),
+            self._root,
         )
         return findings
 
@@ -104,14 +104,14 @@ class Auditor:
             content = path.read_text()
 
             mj = re.search(r'__mahajana__\s*[=:]\s*["\'](\w+)["\']', content)
-            pos = re.search(r'__position__\s*[=:]\s*(\d+)', content)
+            pos = re.search(r"__position__\s*[=:]\s*(\d+)", content)
             if not mj or not pos:
                 continue
 
             correct = self._compute_genesis(mj.group(1), int(pos.group(1)))
             new_content = re.sub(
                 r'(__genesis__\s*[=:]\s*["\']?)0x[0-9a-fA-F]+(["\']?)',
-                rf'\g<1>{correct}\g<2>',
+                rf"\g<1>{correct}\g<2>",
                 content,
             )
             if not dry_run:

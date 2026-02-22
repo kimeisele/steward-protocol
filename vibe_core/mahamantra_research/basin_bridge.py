@@ -28,7 +28,9 @@ ALSO:
 
 RUN: python3 -m vibe_core.mahamantra.research.basin_bridge
 """
+
 import sys, os
+
 _substrate = os.path.dirname(os.path.abspath(__file__))
 if _substrate in sys.path:
     sys.path.remove(_substrate)
@@ -125,9 +127,11 @@ PAIRS = [
     ("moon", "candra"),
 ]
 
-print(f"\n  {'English':12s} {'Sanskrit':15s} {'EN basins':20s} {'SK basins':20s} "
-      f"{'Jaccard':8s} {'Hist-Sim':8s} {'Shared':8s}")
-print(f"  {'─'*95}")
+print(
+    f"\n  {'English':12s} {'Sanskrit':15s} {'EN basins':20s} {'SK basins':20s} "
+    f"{'Jaccard':8s} {'Hist-Sim':8s} {'Shared':8s}"
+)
+print(f"  {'─' * 95}")
 
 shared_count = 0
 total_count = 0
@@ -155,11 +159,12 @@ for en, sk in PAIRS:
         shared_count += 1
 
     marker = "✓" if shared else "✗"
-    print(f"  {en:12s} {sk:15s} {str(sorted(en_set)):20s} {str(sorted(sk_set)):20s} "
-          f"{j:7.2f}  {h:7.2f}  {marker} {sorted(shared)}")
+    print(
+        f"  {en:12s} {sk:15s} {str(sorted(en_set)):20s} {str(sorted(sk_set)):20s} "
+        f"{j:7.2f}  {h:7.2f}  {marker} {sorted(shared)}"
+    )
 
-print(f"\n  SHARED BASINS: {shared_count}/{total_count} pairs "
-      f"({shared_count/total_count*100:.0f}%)")
+print(f"\n  SHARED BASINS: {shared_count}/{total_count} pairs ({shared_count / total_count * 100:.0f}%)")
 
 # =============================================================================
 # PART 2: ALL 4127 Gita words — basin signatures
@@ -219,8 +224,20 @@ print("\n" + "=" * 70)
 print("PART 3: BASIN-BASED MATCHING — English → Gita words (NO string lookup)")
 print("=" * 70)
 
-TEST_WORDS = ["fire", "water", "knowledge", "devotion", "surrender",
-              "war", "truth", "love", "death", "mind", "soul", "god"]
+TEST_WORDS = [
+    "fire",
+    "water",
+    "knowledge",
+    "devotion",
+    "surrender",
+    "war",
+    "truth",
+    "love",
+    "death",
+    "mind",
+    "soul",
+    "god",
+]
 
 for test_word in TEST_WORDS:
     en_coords = encode_text(test_word)
@@ -269,7 +286,7 @@ for test_word in ["fire", "devotion", "knowledge", "surrender"]:
         for hex_key, wb in word_basins.items():
             j = jaccard(en_bset, wb["bset"])
             h = histogram_similarity(en_hist, wb["hist"])
-            scores.append((0.4*j + 0.6*h, wb["word"]))
+            scores.append((0.4 * j + 0.6 * h, wb["word"]))
         scores.sort(key=lambda x: -x[0])
         basin_top = [w.first_meaning for _, w in scores[:5]]
     else:

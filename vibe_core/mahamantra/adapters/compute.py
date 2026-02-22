@@ -62,8 +62,8 @@ from dataclasses import dataclass
 from typing import Dict, Final, Iterator, List, Literal, Optional
 
 from vibe_core.mahamantra.protocols._seed import (
-    WORDS,      # 16 - Mahamantra words = SIMD lanes
-    QUARTERS,   # 4 - Memory hierarchy levels
+    WORDS,  # 16 - Mahamantra words = SIMD lanes
+    QUARTERS,  # 4 - Memory hierarchy levels
     QUALITIES,  # 64 - Cache line size
 )
 
@@ -71,7 +71,7 @@ from vibe_core.mahamantra.protocols._seed import (
 # CONSTANTS (DERIVED from _seed.py)
 # =============================================================================
 
-ADDRESS_SPACE: Final[int] = WORDS ** QUARTERS  # 16^4 = 65536 = standard Lotus capacity
+ADDRESS_SPACE: Final[int] = WORDS**QUARTERS  # 16^4 = 65536 = standard Lotus capacity
 
 # Hardware alignment
 SIMD_LANES: Final[int] = WORDS  # 16 parallel operations
@@ -224,7 +224,7 @@ class DataAnalysis:
     def verdict(self) -> str:
         """Human-readable analysis verdict."""
         if self.efficiency_score >= 0.9:
-            return f"OPTIMAL: {self.memory_tier}-resident, {self.cache_hit_rate*100:.0f}% cache hits"
+            return f"OPTIMAL: {self.memory_tier}-resident, {self.cache_hit_rate * 100:.0f}% cache hits"
         elif self.efficiency_score >= 0.7:
             return f"GOOD: {self.memory_tier}-resident, some cache misses"
         elif self.efficiency_score >= 0.5:
@@ -280,7 +280,7 @@ class MahaCompute:
         optimal_depth = self._calculate_optimal_depth(total_bytes)
         memory_tier = self._get_memory_tier(entries)
         cache_hit_rate = self._estimate_cache_hit_rate(optimal_depth, access_pattern)
-        lotus_capacity = WORDS ** optimal_depth
+        lotus_capacity = WORDS**optimal_depth
 
         # Does it fit in L3?
         fits_in_cache = total_bytes <= L3_CACHE_MB * 1024 * 1024
@@ -508,7 +508,7 @@ RESULT:
                 name="L3",
                 size_kb=L3_CACHE_MB * 1024,
                 latency_cycles=40,
-                lotus_entries=16 ** 5,  # 1M entries
+                lotus_entries=16**5,  # 1M entries
                 quarter=2,
                 quarter_name=quarter_names[2],
             ),
@@ -516,7 +516,7 @@ RESULT:
                 name="RAM",
                 size_kb=RAM_GB * 1024 * 1024,
                 latency_cycles=200,
-                lotus_entries=16 ** 8,  # 4B entries
+                lotus_entries=16**8,  # 4B entries
                 quarter=3,
                 quarter_name=quarter_names[3],
             ),
@@ -538,7 +538,7 @@ RESULT:
             return "L1"
         elif entries <= ADDRESS_SPACE:
             return "L2"
-        elif entries <= 16 ** 5:
+        elif entries <= 16**5:
             return "L3"
         else:
             return "RAM"

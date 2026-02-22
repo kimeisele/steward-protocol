@@ -120,9 +120,7 @@ class MissingMahajanaRemedy(CSTRemedy):
         elif name == "__genesis__":
             self._has_genesis = True
 
-    def leave_Module(
-        self, original_node: cst.Module, updated_node: cst.Module
-    ) -> cst.Module:
+    def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:
         """
         LILA PHASES: INFERENCE → COMPUTATION → INJECTION.
 
@@ -153,11 +151,7 @@ class MissingMahajanaRemedy(CSTRemedy):
         insert_idx = self._find_insert_index(updated_node.body)
 
         # Create new body with DNA injected
-        new_body = (
-            list(updated_node.body[:insert_idx])
-            + dna_statements
-            + list(updated_node.body[insert_idx:])
-        )
+        new_body = list(updated_node.body[:insert_idx]) + dna_statements + list(updated_node.body[insert_idx:])
 
         return updated_node.with_changes(body=new_body)
 
@@ -170,6 +164,7 @@ class MissingMahajanaRemedy(CSTRemedy):
         """
         try:
             from vibe_core.mahamantra.lila.adoption import analyze_source
+
             result = analyze_source(self._source_code)
             if result.get("score", 0.0) >= 0.3:
                 self._inferred_mahajana = result.get("mahajana")

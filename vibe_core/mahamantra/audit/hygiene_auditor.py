@@ -51,28 +51,32 @@ class _HygieneVisitor(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> None:
         if node.id == "Any":
-            self.findings.append(AuditFinding(
-                source="hygiene_auditor",
-                position=__position__,
-                mahajana=__mahajana__,
-                description=f"Usage of 'Any' type",
-                file_path=self.filepath,
-                line_number=node.lineno,
-                severity=FindingSeverity.WARNING,
-            ))
+            self.findings.append(
+                AuditFinding(
+                    source="hygiene_auditor",
+                    position=__position__,
+                    mahajana=__mahajana__,
+                    description=f"Usage of 'Any' type",
+                    file_path=self.filepath,
+                    line_number=node.lineno,
+                    severity=FindingSeverity.WARNING,
+                )
+            )
         self.generic_visit(node)
 
     def visit_Attribute(self, node: ast.Attribute) -> None:
         if node.attr == "Any":
-            self.findings.append(AuditFinding(
-                source="hygiene_auditor",
-                position=__position__,
-                mahajana=__mahajana__,
-                description=f"Usage of 'typing.Any' type",
-                file_path=self.filepath,
-                line_number=node.lineno,
-                severity=FindingSeverity.WARNING,
-            ))
+            self.findings.append(
+                AuditFinding(
+                    source="hygiene_auditor",
+                    position=__position__,
+                    mahajana=__mahajana__,
+                    description=f"Usage of 'typing.Any' type",
+                    file_path=self.filepath,
+                    line_number=node.lineno,
+                    severity=FindingSeverity.WARNING,
+                )
+            )
         self.generic_visit(node)
 
 
@@ -99,14 +103,16 @@ class Auditor:
             try:
                 tree = ast.parse(source, filename=str(path))
             except SyntaxError:
-                findings.append(AuditFinding(
-                    source="hygiene_auditor",
-                    position=__position__,
-                    mahajana=__mahajana__,
-                    description="SyntaxError — cannot parse",
-                    file_path=str(path),
-                    severity=FindingSeverity.CRITICAL,
-                ))
+                findings.append(
+                    AuditFinding(
+                        source="hygiene_auditor",
+                        position=__position__,
+                        mahajana=__mahajana__,
+                        description="SyntaxError — cannot parse",
+                        file_path=str(path),
+                        severity=FindingSeverity.CRITICAL,
+                    )
+                )
                 continue
             except Exception:
                 continue
@@ -120,30 +126,34 @@ class Auditor:
                 try:
                     val = int(visitor.genesis_value, 16)
                     if val % PARAMPARA != 0:
-                        findings.append(AuditFinding(
+                        findings.append(
+                            AuditFinding(
+                                source="hygiene_auditor",
+                                position=__position__,
+                                mahajana=__mahajana__,
+                                description=(
+                                    f"Broken genesis: {visitor.genesis_value} % {PARAMPARA} = {val % PARAMPARA}"
+                                ),
+                                file_path=str(path),
+                                severity=FindingSeverity.CRITICAL,
+                            )
+                        )
+                except ValueError:
+                    findings.append(
+                        AuditFinding(
                             source="hygiene_auditor",
                             position=__position__,
                             mahajana=__mahajana__,
-                            description=(
-                                f"Broken genesis: {visitor.genesis_value} "
-                                f"% {PARAMPARA} = {val % PARAMPARA}"
-                            ),
+                            description=f"Invalid genesis format: {visitor.genesis_value}",
                             file_path=str(path),
                             severity=FindingSeverity.CRITICAL,
-                        ))
-                except ValueError:
-                    findings.append(AuditFinding(
-                        source="hygiene_auditor",
-                        position=__position__,
-                        mahajana=__mahajana__,
-                        description=f"Invalid genesis format: {visitor.genesis_value}",
-                        file_path=str(path),
-                        severity=FindingSeverity.CRITICAL,
-                    ))
+                        )
+                    )
 
         logger.info(
             "Hygiene audit: %d findings from %s",
-            len(findings), self._root,
+            len(findings),
+            self._root,
         )
         return findings
 

@@ -157,6 +157,7 @@ def _get_gate_capability():
     global _GATE_CAPABILITY_CACHE
     if _GATE_CAPABILITY_CACHE is None:
         from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
+
         _GATE_CAPABILITY_CACHE = {
             TattvaGate.PARSE: MantraCapability,
             TattvaGate.VALIDATE: StorageCapability,

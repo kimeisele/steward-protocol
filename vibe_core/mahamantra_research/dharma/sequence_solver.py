@@ -1,9 +1,8 @@
-
 """
 SEQUENCE SOLVER - The Mahamantra as a State Machine (REAL FILE)
 ===================================================
 
-Hypothesis: 
+Hypothesis:
 The names are not derived from Position via a formula f(pos).
 They are derived from the STATE of the system as it executes the Mantra sequentially.
 
@@ -49,42 +48,44 @@ CONSTANTS = {
     "LILA": SEVEN * SEVEN - 1,  # 48 = 7² - 1
 }
 
+
 def analyze_transitions():
     print("ANALYZING SEQUENTIAL TRANSITIONS (Mod 49)")
     print("=" * 60)
-    
+
     # We look at transition from Target[i] to Target[i+1]
     # This corresponds to Step i+2 in the sequence (Pos 2, 3...)
-    
+
     for i in range(len(TARGETS) - 1):
         prev = TARGETS[i]
-        curr = TARGETS[i+1]
+        curr = TARGETS[i + 1]
         step_pos = i + 2
-        op_char = PATTERN[step_pos - 1] # 0-indexed pattern
-        
+        op_char = PATTERN[step_pos - 1]  # 0-indexed pattern
+
         diff = (curr - prev) % 49
-        
+
         matches = []
-        
+
         # Additive Check (prev + C = curr)
         for name, val in CONSTANTS.items():
             if diff == val:
                 matches.append(f"+{name}")
             if diff == (49 - val):
                 matches.append(f"-{name}")
-                
+
         # Multiplicative Check (prev * C = curr)
         # Only feasible if prev has inverse or we brute force
         for name, val in CONSTANTS.items():
             if (prev * val) % 49 == curr:
                 matches.append(f"*{name}")
-                
+
         # Special Ops
         if (prev * prev) % 49 == curr:
             matches.append("SQUARE")
-            
+
         match_str = ", ".join(matches) if matches else "-"
         print(f"[{op_char}] {prev:2} -> {curr:2} (Pos {step_pos:2}): Diff {diff:2} | {match_str}")
+
 
 if __name__ == "__main__":
     analyze_transitions()

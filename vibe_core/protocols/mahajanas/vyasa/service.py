@@ -56,10 +56,11 @@ class VyasaService(VyasaProtocolBase):
         self._resources_loaded = 0
         self._services_started = 0
         self._total_wakes = 0
-        
+
         # VARNASHRAMA INTEGRATION:
         # Spawn the JivaShadow qualified for this position (0).
         from vibe_core.mahamantra.lila.adhikara import spawn_shadow_for_position
+
         self._shadow = spawn_shadow_for_position(0, context=b"vyasa_service_v1")
 
     def _ensure_orchestrator(self) -> LegacyBootOrchestrator:

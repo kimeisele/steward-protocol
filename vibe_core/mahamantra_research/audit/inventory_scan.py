@@ -91,7 +91,8 @@ def detect_smells(source: str, rel_path: str, category: str) -> List[str]:
     if "MahamantraLotus()" in source:
         # Exclude the singleton factory itself and docstrings
         lines_with_call = [
-            l.strip() for l in source.splitlines()
+            l.strip()
+            for l in source.splitlines()
             if "MahamantraLotus()" in l
             and not l.strip().startswith("#")
             and not l.strip().startswith('"')
@@ -102,7 +103,7 @@ def detect_smells(source: str, rel_path: str, category: str) -> List[str]:
             smells.append("singleton_bypass")
 
     # Any type usage
-    if re.search(r'\bAny\b', source):
+    if re.search(r"\bAny\b", source):
         # Check it's actually a type annotation, not just a word
         if "from typing import" in source and "Any" in source:
             smells.append("any_type")
@@ -112,10 +113,10 @@ def detect_smells(source: str, rel_path: str, category: str) -> List[str]:
     # Ungoverned I/O (only flag in production code, not tests/research)
     if category not in ("test", "research", "demo", "audit"):
         io_patterns = [
-            r'open\(',
-            r'\.write_text\(',
-            r'\.write_bytes\(',
-            r'json\.dump\(',
+            r"open\(",
+            r"\.write_text\(",
+            r"\.write_bytes\(",
+            r"json\.dump\(",
         ]
         for pat in io_patterns:
             if re.search(pat, source):
