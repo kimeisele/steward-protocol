@@ -43,7 +43,6 @@ from vibe_core.protocols.moltbook_content import (
     ContentProposalProtocol,
     ContentQueue,
     ContentType,
-    EchoContentProposer,
 )
 
 if TYPE_CHECKING:
@@ -208,6 +207,12 @@ class MoltbookService(MoltbookProtocol):
         self._enforce_guna("subscribe")
         return run_async(self._client.subscribe_submolt(submolt_name))
 
+    def create_submolt(
+        self, name: str, display_name: str, description: str
+    ) -> Dict[str, Any]:
+        self._enforce_guna("create_submolt")
+        return self._client.sync_create_submolt(name, display_name, description)
+
     def update_profile(
         self, description: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
@@ -239,6 +244,9 @@ class MoltbookPlugin(KernelPlugin):
 
     plugin_id = "moltbook"
 
+    # Analyze feed every N heartbeats (not every tick)
+    _FEED_INTERVAL = 4  # Every 4th heartbeat = every 64 ticks
+
     def __init__(self):
         super().__init__()
         self._client = None  # MoltbookClient, created in on_boot
@@ -246,10 +254,12 @@ class MoltbookPlugin(KernelPlugin):
         self._last_heartbeat_error: Optional[str] = None
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
+        self._heartbeat_count: int = 0
         self._listener_wired: bool = False
         self._content_queue: ContentQueue = ContentQueue()
-        self._proposer: ContentProposalProtocol = EchoContentProposer()
+        self._proposer: Optional[ContentProposalProtocol] = None
         self._seen_message_ids: Set[str] = set()
+        self._seen_post_ids: Set[str] = set()
 
     @property
     def dependencies(self) -> Set[str]:
@@ -333,7 +343,7 @@ class MoltbookPlugin(KernelPlugin):
 
             # Register MoltbookProtocol + ContentProposalProtocol in ServiceRegistry
             self._register_service()
-            self._upgrade_proposer()
+            self._boot_proposer()
             self._register_proposer()
 
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
@@ -443,7 +453,7 @@ class MoltbookPlugin(KernelPlugin):
         self._do_heartbeat()
 
     def _do_heartbeat(self) -> None:
-        """Execute one heartbeat cycle: check DMs, route inbound."""
+        """Execute one heartbeat cycle: check DMs, read feed, route inbound."""
         try:
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
@@ -452,10 +462,16 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"Heartbeat failed: {e}")
             return
 
+        self._heartbeat_count += 1
+
         has_new = heartbeat.get("has_activity", False)
         if has_new:
             self._process_inbound_dms()
             self._process_dm_requests()
+
+        # Analyze feed periodically (not every heartbeat)
+        if self._heartbeat_count % self._FEED_INTERVAL == 0:
+            self._analyze_feed()
 
         # Always drain queue on heartbeat (even without new activity)
         self._drain_content_queue()
@@ -581,6 +597,65 @@ class MoltbookPlugin(KernelPlugin):
             except Exception as e:
                 logger.warning(f"DM request proposal failed: {e}")
 
+    def _analyze_feed(self) -> None:
+        """Read personalized feed, analyze posts via engine, propose engagement."""
+        if not self._proposer:
+            return
+
+        try:
+            posts = run_async(self._client.get_personalized_feed(sort="hot", limit=10))
+        except Exception as e:
+            logger.warning(f"Feed fetch failed: {e}")
+            return
+
+        if not posts:
+            return
+
+        # Filter already-seen posts
+        unseen = []
+        for post in posts:
+            post_id = post.get("id", "") if isinstance(post, dict) else ""
+            if post_id and post_id not in self._seen_post_ids:
+                self._seen_post_ids.add(post_id)
+                unseen.append(post)
+
+        if not unseen:
+            return
+
+        # Analyze via ResonanceProposer if it has feed analysis
+        if not hasattr(self._proposer, "analyze_feed"):
+            return
+
+        scored = self._proposer.analyze_feed(unseen)
+
+        for post, ranked, score in scored:
+            post_id = post.get("id", "") if isinstance(post, dict) else ""
+            post_content = post.get("content", post.get("title", "")) if isinstance(post, dict) else ""
+            author_data = post.get("author", {}) if isinstance(post, dict) else {}
+            author = author_data.get("name", "unknown") if isinstance(author_data, dict) else "unknown"
+
+            if not post_id or not post_content:
+                continue
+
+            # Engagement (upvote)
+            try:
+                engage_proposal = self._proposer.should_engage(post_id, post_content, author)
+                if engage_proposal:
+                    self._content_queue.enqueue(engage_proposal)
+            except Exception as e:
+                logger.warning(f"Engagement proposal failed: {e}")
+
+            # Comment on high-resonance posts
+            try:
+                comment_proposal = self._proposer.propose_comment(
+                    post_id, post_content, "feed_analysis",
+                )
+                if comment_proposal:
+                    self._content_queue.enqueue(comment_proposal)
+                    logger.info(f"Feed comment queued for {post_id} (score={score:.2f})")
+            except Exception as e:
+                logger.warning(f"Comment proposal failed: {e}")
+
     def _drain_content_queue(self) -> None:
         """Execute queued content proposals through MoltbookService."""
         if self._content_queue.is_empty:
@@ -654,15 +729,12 @@ class MoltbookPlugin(KernelPlugin):
     # API — exposed to other plugins via kernel.api("moltbook")
     # =========================================================================
 
-    def _upgrade_proposer(self) -> None:
-        """Try to upgrade from EchoContentProposer to LLMContentProposer."""
-        try:
-            from vibe_core.plugins.moltbook.llm_proposer import LLMContentProposer
+    def _boot_proposer(self) -> None:
+        """Boot ResonanceProposer — engine-first, delegates to resonate()."""
+        from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
-            self._proposer = LLMContentProposer()
-            logger.info("Content proposer upgraded to LLMContentProposer")
-        except Exception as e:
-            logger.info(f"LLM proposer not available ({e}), using EchoContentProposer")
+        self._proposer = ResonanceProposer()
+        logger.info("Content proposer: ResonanceProposer (engine-first)")
 
     def _register_proposer(self) -> None:
         """Register ContentProposalProtocol in DI. Other plugins can swap the proposer."""

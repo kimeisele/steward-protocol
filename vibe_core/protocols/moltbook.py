@@ -213,6 +213,7 @@ MOLTBOOK_GUNA_MAP: Dict[str, MoltbookGuna] = {
     "follow": MoltbookGuna.RAJAS,
     "subscribe": MoltbookGuna.RAJAS,
     "update_profile": MoltbookGuna.RAJAS,
+    "create_submolt": MoltbookGuna.RAJAS,
     # TAMAS — destruction, irreversible
     "delete_post": MoltbookGuna.TAMAS,
     "unfollow": MoltbookGuna.TAMAS,
@@ -339,6 +340,12 @@ class MoltbookProtocol(ABC):
     @abstractmethod
     def subscribe(self, submolt_name: str) -> Dict[str, Any]:
         """POST /submolts/NAME/subscribe."""
+
+    @abstractmethod
+    def create_submolt(
+        self, name: str, display_name: str, description: str
+    ) -> SubmoltDetails:
+        """POST /submolts — create a new submolt community."""
 
     @abstractmethod
     def update_profile(

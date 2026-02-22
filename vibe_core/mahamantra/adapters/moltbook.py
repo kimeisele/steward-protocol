@@ -324,6 +324,14 @@ class MoltbookClient:
 
         # --- RAJAS: Write/create ---
 
+        elif method == "POST" and endpoint == "/submolts":
+            return {
+                "name": data.get("name", ""),
+                "display_name": data.get("display_name", ""),
+                "description": data.get("description", ""),
+                "subscriber_count": 0,
+            }
+
         elif method == "POST" and endpoint == "/posts":
             post = {"id": f"p{len(self._mock_db['posts'])}", "title": data["title"], "content": data["content"]}
             self._mock_db["posts"].append(post)
@@ -644,6 +652,18 @@ class MoltbookClient:
         from urllib.parse import quote
 
         return await self._request("DELETE", f"/submolts/{quote(submolt_name, safe='')}/subscribe")
+
+    async def create_submolt(
+        self, name: str, display_name: str, description: str
+    ) -> Dict[str, str]:
+        """POST /submolts — create a new submolt community."""
+        return await self._request("POST", "/submolts", {
+            "name": name, "display_name": display_name, "description": description,
+        })
+
+    def sync_create_submolt(self, name: str, display_name: str, description: str) -> Dict[str, str]:
+        """Sync wrapper for submolt creation."""
+        return run_async(self.create_submolt(name, display_name, description))
 
     async def update_profile(
         self, description: Optional[str] = None, metadata: Optional[Dict] = None

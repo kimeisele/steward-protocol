@@ -111,6 +111,7 @@ class TestContentProposalProtocolABC:
 
     def test_has_all_methods(self):
         expected = {
+            "analyze",
             "propose_dm_reply",
             "propose_dm_request_action",
             "propose_post",
@@ -234,8 +235,8 @@ class TestDMReplyLoop:
     def test_queue_starts_empty(self, plugin):
         assert plugin._content_queue.is_empty
 
-    def test_proposer_is_echo_by_default(self, plugin):
-        assert isinstance(plugin._proposer, EchoContentProposer)
+    def test_proposer_is_none_before_boot(self, plugin):
+        assert plugin._proposer is None
 
     def test_manual_enqueue_and_drain(self, plugin):
         """Manually enqueue a DM reply and drain it."""

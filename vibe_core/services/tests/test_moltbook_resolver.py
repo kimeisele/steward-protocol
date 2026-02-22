@@ -16,12 +16,20 @@ from vibe_core.mahamantra import (
 from vibe_core.services.moltbook_resolver import (
     HANDLED_TYPES,
     MOLTBOOK_PREFIX,
+    TARGET_APPROVE_DM,
+    TARGET_CREATE_COMMENT,
     TARGET_CREATE_POST,
     TARGET_DM_CHECK,
     TARGET_FEED,
     TARGET_OWN_PROFILE,
+    TARGET_REJECT_DM,
     TARGET_SEARCH,
     TARGET_SEND_DM,
+    TARGET_SEND_DM_REQUEST,
+    TARGET_SUBSCRIBE,
+    TARGET_UNFOLLOW,
+    TARGET_UNSUBSCRIBE,
+    TARGET_UPDATE_PROFILE,
     TARGET_UPVOTE,
     MoltbookResolver,
     create_moltbook_listener,
@@ -160,6 +168,124 @@ class TestResolveWrite:
         )
         result = resolver.resolve(intent)
         assert result.status == IntentStatus.FAILED
+
+    def test_create_comment(self, resolver, mock_client):
+        mock_client.comment_with_verification = AsyncMock(return_value={"id": "c1"})
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_CREATE_COMMENT,
+            params={"post_id": "p1", "content": "nice post"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status in (IntentStatus.RESOLVED, IntentStatus.FAILED)
+
+    def test_create_comment_requires_post_id(self, resolver):
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_CREATE_COMMENT,
+            params={"content": "nice"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status == IntentStatus.FAILED
+        assert "post_id" in result.error
+
+    def test_send_dm_request(self, resolver, mock_client):
+        mock_client.send_dm_request = AsyncMock(return_value={"success": True})
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_SEND_DM_REQUEST,
+            params={"to_agent": "agent42", "message": "hey"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status in (IntentStatus.RESOLVED, IntentStatus.FAILED)
+
+    def test_send_dm_request_requires_agent(self, resolver):
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_SEND_DM_REQUEST,
+            params={"message": "hey"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status == IntentStatus.FAILED
+        assert "to_agent" in result.error
+
+    def test_approve_dm(self, resolver, mock_client):
+        mock_client.approve_dm_request = AsyncMock(return_value={"success": True})
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_APPROVE_DM,
+            params={"request_id": "req1"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status in (IntentStatus.RESOLVED, IntentStatus.FAILED)
+
+    def test_approve_dm_requires_id(self, resolver):
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_APPROVE_DM,
+            params={},
+        )
+        result = resolver.resolve(intent)
+        assert result.status == IntentStatus.FAILED
+
+    def test_reject_dm(self, resolver, mock_client):
+        mock_client.reject_dm_request = AsyncMock(return_value={"success": True})
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_REJECT_DM,
+            params={"request_id": "req1", "block": True},
+        )
+        result = resolver.resolve(intent)
+        assert result.status in (IntentStatus.RESOLVED, IntentStatus.FAILED)
+
+    def test_subscribe(self, resolver, mock_client):
+        mock_client.subscribe_submolt = AsyncMock(return_value={"success": True})
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_SUBSCRIBE,
+            params={"submolt": "general"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status in (IntentStatus.RESOLVED, IntentStatus.FAILED)
+
+    def test_subscribe_requires_submolt(self, resolver):
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_SUBSCRIBE,
+            params={},
+        )
+        result = resolver.resolve(intent)
+        assert result.status == IntentStatus.FAILED
+
+    def test_unsubscribe(self, resolver, mock_client):
+        mock_client.unsubscribe_submolt = AsyncMock(return_value={"success": True})
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_UNSUBSCRIBE,
+            params={"submolt": "general"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status in (IntentStatus.RESOLVED, IntentStatus.FAILED)
+
+    def test_unfollow(self, resolver, mock_client):
+        mock_client.unfollow_agent = AsyncMock(return_value={"success": True})
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_UNFOLLOW,
+            params={"name": "agent42"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status in (IntentStatus.RESOLVED, IntentStatus.FAILED)
+
+    def test_update_profile(self, resolver, mock_client):
+        mock_client.update_profile = AsyncMock(return_value={"success": True})
+        intent = MantraIntent(
+            type=IntentType.WRITE,
+            target=TARGET_UPDATE_PROFILE,
+            params={"description": "new bio"},
+        )
+        result = resolver.resolve(intent)
+        assert result.status in (IntentStatus.RESOLVED, IntentStatus.FAILED)
 
     def test_unknown_target_fails(self, resolver):
         intent = MantraIntent(
