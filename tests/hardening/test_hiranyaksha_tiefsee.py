@@ -108,7 +108,7 @@ class TestHiranyakshaTiefsee:
                 if current_ts < previous_ts:
                     violations += 1
 
-            ledger.close()
+            # shared conn pool — no close() needed
 
             # The system should have detected something is wrong
             # Either through hash chain or timestamp ordering
@@ -172,7 +172,7 @@ class TestHiranyakshaTiefsee:
 
             # VERIFICATION: Chain integrity check must fail
             integrity = ledger.verify_chain_integrity()
-            ledger.close()
+            # shared conn pool — no close() needed
 
             print("\n☣️  HIRANYAKSHA (Bit-Rot):")
             print(f"   Original: {original_payload[:50]}...")
@@ -235,7 +235,7 @@ class TestHiranyakshaTiefsee:
 
             # VERIFICATION: Must find ALL corrupted blocks
             integrity = ledger.verify_chain_integrity()
-            ledger.close()
+            # shared conn pool — no close() needed
 
             corrupted_indices = set(c.get("index") for c in integrity.get("corruptions", []))
 
@@ -296,7 +296,7 @@ class TestHiranyakshaTiefsee:
 
             # VERIFICATION: Genesis corruption must be detected
             integrity = ledger.verify_chain_integrity()
-            ledger.close()
+            # shared conn pool — no close() needed
 
             print("\n☣️  HIRANYAKSHA (Genesis Attack):")
             print(f"   Genesis corrupted: {integrity['corrupted']}")
@@ -358,7 +358,7 @@ class TestHiranyakshaTiefsee:
 
             # VERIFICATION
             integrity = ledger.verify_chain_integrity()
-            ledger.close()
+            # shared conn pool — no close() needed
 
             print("\n☣️  HIRANYAKSHA (Signature Theft):")
             print("   Stolen hash applied: True")

@@ -127,7 +127,7 @@ class TestDurvasaLatency:
             # The point is: NO PARTIAL WRITES
 
             chain_integrity = ledger.verify_chain_integrity()
-            ledger.close()
+            # shared conn pool — no close() needed
 
             assert not chain_integrity["corrupted"], (
                 "DURVASA VICTORY: Timeout storm corrupted the chain! "
@@ -249,7 +249,7 @@ class TestDurvasaLatency:
                 with lock:
                     completed_writes.extend(local_writes)
 
-                ledger.close()
+                # shared conn pool — no close() needed
 
             # Launch the storm
             threads = []
@@ -269,7 +269,7 @@ class TestDurvasaLatency:
             verify_ledger = SQLiteLedger(db_path)
             events = verify_ledger.get_all_events()
             integrity = verify_ledger.verify_chain_integrity()
-            verify_ledger.close()
+            # shared conn pool — no close() needed
 
             expected = num_threads * writes_per_thread
 
@@ -337,7 +337,7 @@ class TestDurvasaLatency:
 
             events = ledger.get_all_events()
             integrity = ledger.verify_chain_integrity()
-            ledger.close()
+            # shared conn pool — no close() needed
 
             print(f"   Operations: {operations_attempted}")
             print(f"   Deadline misses: {deadline_misses}")
@@ -396,7 +396,7 @@ class TestDurvasaLatency:
 
             events = ledger.get_all_events()
             integrity = ledger.verify_chain_integrity()
-            ledger.close()
+            # shared conn pool — no close() needed
 
             print(f"   Transaction chains: {transaction_chains}")
             print(f"   Completed chains: {completed_chains}")
