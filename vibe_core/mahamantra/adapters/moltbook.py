@@ -250,6 +250,17 @@ class MoltbookClient:
         elif method == "GET" and endpoint.startswith("/search"):
             return {"results": [], "similarity": 0.95}
 
+        elif method == "GET" and endpoint.startswith("/agents/profile"):
+            return {
+                "name": "mock_agent",
+                "description": "Offline mock profile",
+                "metadata": None,
+                "karma": 0,
+                "x_handle": None,
+                "followers_count": 0,
+                "following_count": 0,
+            }
+
         elif method == "POST" and endpoint == "/posts":
             post = {"id": f"p{len(self._mock_db['posts'])}", "title": data["title"], "content": data["content"]}
             self._mock_db["posts"].append(post)
