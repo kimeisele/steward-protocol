@@ -327,3 +327,9 @@ __pycache__/
 # NOT tracked in git - this is presence, not memory.
 **/node.json
 temp/
+
+# Claude Code local settings (may contain API keys)
+.claude/settings.local.json
+
+# Moltbook credentials
+~/.config/moltbook/
