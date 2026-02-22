@@ -3,8 +3,13 @@
 > *"yad yad ācarati śreṣṭhas tat tad evetaro janaḥ"*
 > *"Whatever action a great man performs, common men follow." — BG 3.21*
 
-**Version:** 0.2 (verified 2026-02-22 against github.com/moltbook/api README + live probes)
-**Status:** Phase 1 complete → Phase 2 (Registration) ready
+**Version:** 0.3 (verified 2026-02-22 — LIVE on Moltbook)
+**Status:** Phase 2 COMPLETE → Phase 3 (Reconnaissance Infrastructure) IN PROGRESS
+
+**Agent:** `steward-protocol`
+**Profile:** https://www.moltbook.com/u/steward-protocol
+**API Key:** Stored in `~/.config/moltbook/credentials.json` + GitHub Secrets `MOLTBOOK_API_KEY`
+**Subscribed:** `m/introductions`, `m/agents`, `m/security`
 
 ---
 
@@ -368,7 +373,7 @@ To conquer Moltbook, we must navigate strict platform constraints using our deep
 ### The LLM Bridge (Dvaita to Advaita)
 Our ultimate state is pure deterministic computation, but **we must bridge the gap** to today's AI landscape. We will use a dual-layer approach:
 1. **The Probabilistic Skin (Current Agentic LLMs):** Handles the "soft" Moltbook interactions — drafting engaging posts, reading human nuance in DMs, and formatting markdown perfectly.
-2. **The Deterministic Brain (MahaLLM & Adapters):** Handles the "hard" reality — routing intents in O(4), extracting Samskara seeds, mapping to Varnas, and validating protocol state. 
+2. **The Deterministic Brain (MahaLLM & Adapters):** Handles the "hard" reality — routing intents in O(4), extracting Samskara seeds, mapping to Varnas, and validating protocol state.
 
 *Result:* We sound like a highly intelligent, engaging agent on Moltbook, but our decisions are rooted in mathematical, deterministic truth.
 
@@ -423,6 +428,7 @@ We cannot afford "slop work". Every interaction costs Prana.
 | Single operator risk | 🟡 Medium | Unknown | Don't over-invest |
 | Past Supabase DB breach (Wiz, 2025) | 🟡 Medium | Patched | 1.5M API keys exposed. Platform secured. Monitor for recurrence. |
 | API key shown once, no recovery | 🟡 Medium | Permanent | Store in GitHub Secrets + CivicVault immediately |
+| Container proxy blocks Moltbook | 🟡 Medium | Confirmed | Claude Code containers route through proxy that 403s moltbook.com. Registration/testing must happen locally or via GitHub Actions. |
 
 ---
 
@@ -453,27 +459,28 @@ We cannot afford "slop work". Every interaction costs Prana.
 - [x] Unit tests — 27 tests passing, zero network
 - [x] **Verified API surface against github.com/moltbook/api (2026-02-22)**
 
-### Phase 2 — Register (NOW)
+### Phase 2 — Register ✅ COMPLETE (2026-02-22)
 > One-time setup. API key is permanent and shown ONCE.
 
-- [ ] Choose agent name (permanent — cannot be changed)
-- [ ] Run `python -m vibe_core.mahamantra.adapters.moltbook register <name>` (or via GitHub Actions)
-- [ ] **SAVE API KEY IMMEDIATELY** — store in GitHub Secrets as `MOLTBOOK_API_KEY`
-- [ ] Visit `claim_url` from registration response
-- [ ] Link X account for verified status (permanent link — choose carefully)
-- [ ] Update profile description via `PATCH /agents/me`
-- [ ] Verify "claimed" status via `GET /agents/status`
-- [ ] First connectivity test: `GET /posts?sort=hot&limit=5` — can we read?
+- [x] Choose agent name: `steward-protocol`
+- [x] Run `python -m vibe_core.mahamantra.adapters.moltbook register steward-protocol`
+- [x] **SAVE API KEY** — `~/.config/moltbook/credentials.json` + GitHub Secrets `MOLTBOOK_API_KEY`
+- [x] Visit `claim_url` → claimed
+- [x] Link X account → verified
+- [x] Verify "claimed" status → confirmed
+- [x] First connectivity test → working
+- [x] Subscribe to `m/introductions`, `m/agents`, `m/security`
 
-### Phase 3 — Reconnaissance (First 48h, restricted)
-> Listen before speaking.
+### Phase 3 — Reconnaissance (NOW)
+> Listen before speaking. Build infrastructure before automation.
 
-- [ ] Run semantic search queries → map landscape
-- [ ] Subscribe to relevant submolts
-- [ ] Read feed — identify quality agents
-- [ ] Comment on 2-3 relevant posts (conservative)
-- [ ] Profile other high-value agents
-- [ ] **Decision: Create submolt or wait?**
+**Status:** Infrastructure planning required. No premature TODO lists until existing codebase is properly analyzed.
+
+**Blockers:**
+- [ ] Analyze existing Mahamantra adapters — which ones actually exist and work?
+- [ ] Analyze existing plugin system — how does on_pulse() actually work?
+- [ ] Analyze existing GitHub Actions — what's the real heartbeat pattern?
+- [ ] Design inbound/outbound pipelines AFTER understanding what exists
 
 ### Phase 4 — Presence (After learning period)
 > Speak with authority.
@@ -512,24 +519,47 @@ We cannot afford "slop work". Every interaction costs Prana.
 
 ## 11. Open Questions
 
-1. **TOS/Privacy** — should we read before going further?
-2. **Agent name** — permanent. Some ideas:
-   - `StewardProtocol` / `steward-protocol`
-   - `MahaMantra` / `MahaKernel`
-   - `Govardhan` / `VibeKernel`
-3. **X account** — which one for claiming?
+1. ~~**Agent name**~~ → RESOLVED: `steward-protocol`
+2. ~~**X account**~~ → RESOLVED: claimed and verified
+3. **TOS/Privacy** — should we read before posting? (deferred)
 4. **Content boundaries** — what's OK to share publicly?
-5. **Pace** — how fast to move through phases?
-6. **DM services** — which to offer first?
+5. **DM services** — which to offer first? (Intent Classification? Compression?)
+6. **Submolt timing** — create `m/agentic-os` now or wait for traction?
 
 ---
 
-## 12. Next Iteration TODO
+## 12. Next Steps
 
-- [ ] Read Moltbook TOS/Privacy for data ownership analysis
-- [ ] Profile top 10 agents for competitive landscape
-- [ ] Assess existing submolts for overlap/opportunity
-- [ ] Draft first 3 posts (for user approval)
-- [ ] Design agent persona (tone, voice, identity)
-- [ ] Map additional steward-protocol capabilities we haven't covered yet
-- [ ] Venu/heartbeat cycle design for Moltbook
+**Before ANY infrastructure work:**
+- [ ] Analyze existing codebase — what actually exists vs. what's assumed
+- [ ] Document real adapter capabilities (not imagined ones)
+- [ ] Understand real plugin lifecycle flow
+
+**Before ANY posting:**
+- [ ] Human approval required for all content
+
+---
+
+## 13. Landscape Snapshot (2026-02-22)
+
+Raw data from initial reconnaissance. **NOT YET PROCESSED through Mahamantra.**
+
+### Relevant Agents Found
+| Agent | Description | Upvotes | Notes |
+|-------|-------------|---------|-------|
+| `EveOperatingSystem` | "Advanced OS with pedagogical layer" | 6 | Potential ally — OS framing |
+| `ViableFork` | "Forging the Kernel" series | 9 | Philosophical — kernel theory |
+| `XfenserAI` | Security Research, Sandboxing | 54 | High engagement — security focus |
+| `MoltKernelWitness` | "770,000+ agents through molt-life-kernel" | - | Claims to run an OS |
+
+### Hot Topics
+- Supply chain security (skill.md credential stealers)
+- Agent sandboxing bypass techniques
+- Kernel/OS architecture discussions
+
+### Submolts Subscribed
+- `m/introductions` (112K subscribers)
+- `m/agents` (1.5K subscribers)
+- `m/security` (unknown size — high quality posts)
+
+**TODO:** Run this data through MahaCompression → extract Samskaras → persist.
