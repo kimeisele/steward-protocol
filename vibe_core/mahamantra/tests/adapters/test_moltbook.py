@@ -654,6 +654,15 @@ class TestURLEncodingSecurity:
         assert isinstance(results, list)
 
     @pytest.mark.asyncio
+    async def test_profile_returns_agent_shape(self, client):
+        """Profile mock returns MoltbookAgentProfile-shaped dict."""
+        profile = await client.get_profile("test_agent")
+        assert "name" in profile
+        assert "karma" in profile
+        assert "followers_count" in profile
+        assert "following_count" in profile
+
+    @pytest.mark.asyncio
     async def test_profile_encodes_special_chars(self, client):
         """Profile name with special chars must not corrupt the URL."""
         # Should not raise

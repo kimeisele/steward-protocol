@@ -163,6 +163,7 @@ class MoltbookPlugin(KernelPlugin):
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
         self._listener_wired: bool = False
+        self._seen_message_ids: Set[str] = set()
 
     @property
     def dependencies(self) -> Set[str]:
@@ -399,8 +400,11 @@ class MoltbookPlugin(KernelPlugin):
                 continue
 
             for msg in messages:
+                msg_id = msg.get("id", "") if isinstance(msg, dict) else ""
                 content = msg.get("content", "") if isinstance(msg, dict) else ""
                 if not content:
+                    continue
+                if msg_id and msg_id in self._seen_message_ids:
                     continue
                 try:
                     req = create_request(content, [], EntryType.AGENT)
@@ -408,6 +412,8 @@ class MoltbookPlugin(KernelPlugin):
                     req["context"]["sender"] = msg.get("sender", "unknown")
                     req["context"]["conversation_id"] = conv_id
                     gateway.receive(req)
+                    if msg_id:
+                        self._seen_message_ids.add(msg_id)
                 except Exception as e:
                     logger.warning(f"Inbound DM routing failed: {e}")
 
