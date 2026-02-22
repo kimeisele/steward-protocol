@@ -29,8 +29,6 @@ from typing import Callable, Dict, Iterator, List, Optional
 
 import yaml
 
-from .protocol import CLIArg, CLICommand, CommandRegistry, ExecutionMode
-
 # === SUBSTRATE PROTOCOL ===
 from vibe_core.protocols.substrate.cli_loader import (
     CLILoaderConfig,
@@ -39,9 +37,15 @@ from vibe_core.protocols.substrate.cli_loader import (
     DiscoveredCommand,
     LoaderProgress,
     LoaderResult,
+)
+from vibe_core.protocols.substrate.cli_loader import (
     get_default_config as get_substrate_config,
+)
+from vibe_core.protocols.substrate.cli_loader import (
     parse_manifest as substrate_parse_manifest,
 )
+
+from .protocol import CLIArg, CLICommand, CommandRegistry, ExecutionMode
 
 logger = logging.getLogger("CLI_LOADER")
 
@@ -314,7 +318,7 @@ class CLILoader:
         return CLICommand(
             name=discovered.get("name", ""),
             namespace=discovered.get("namespace"),
-            plugin_id=discovered.get("source_module", ""),
+            plugin_id=Path(discovered.get("source_module", "")).name,
             handler=discovered.get("handler", ""),
             execution_mode=execution_mode,
             help=discovered.get("help", ""),

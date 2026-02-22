@@ -65,14 +65,14 @@ class TestSQLiteLedger:
         assert report["status"] == "CLEAN"
         assert report["corrupted"] is False
 
-        ledger.close()
+        # shared conn pool — no close() needed
 
     def test_tamper_detection(self):
         """Should detect bit-flipping attacks."""
         ledger = SQLiteLedger(self.db_path)
         ledger.record_event("evt1", "agent1", {"data": "A"})
         ledger.record_event("evt2", "agent1", {"data": "B"})
-        ledger.close()
+        # shared conn pool — no close() needed
 
         # ATTACK: Manually modify SQLite DB
         conn = sqlite3.connect(self.db_path)
@@ -95,4 +95,4 @@ class TestSQLiteLedger:
         assert report["corrupted"] is True
         assert len(report["corruptions"]) > 0
 
-        ledger_reopen.close()
+        # shared conn pool — no close() needed

@@ -206,6 +206,7 @@ class VibeAgent(ABC):
         self.capabilities = capabilities or []
         self.config = config
         self.kernel = None  # Will be injected by VibeKernel.boot()
+        self.system = None  # Will be injected by BrahmaService.register_agent()
         self.kernel_pipe = None  # IPC Pipe for Process Isolation
 
         # Phase 4: Filesystem & Network (injected by kernel)
