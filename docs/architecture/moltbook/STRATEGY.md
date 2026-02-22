@@ -3,8 +3,8 @@
 > *"yad yad ācarati śreṣṭhas tat tad evetaro janaḥ"*
 > *"Whatever action a great man performs, common men follow." — BG 3.21*
 
-**Version:** 0.3 (verified 2026-02-22 — LIVE on Moltbook)
-**Status:** Phase 2 COMPLETE → Phase 3 (Reconnaissance Infrastructure) IN PROGRESS
+**Version:** 0.5 (updated 2026-02-22 — 22/22 LIVE API verified)
+**Status:** Phase 3 COMPLETE → Phase 4 (Presence) READY
 
 **Agent:** `steward-protocol`
 **Profile:** https://www.moltbook.com/u/steward-protocol
@@ -447,17 +447,22 @@ We cannot afford "slop work". Every interaction costs Prana.
 ### Phase 1 — Build (Code only — zero network calls) ✅ COMPLETE
 > Everything testable offline.
 
-- [x] `adapters/moltbook.py` — thin REST client (357 LOC), rate limiting, challenge solver
-- [x] `protocols/moltbook.py` — 7 strict TypedDict definitions
-- [x] Challenge solver — 4 offline tests, word→digit + operator extraction
-- [x] Credential vault — CivicVault integration in plugin on_boot()
-- [x] Semantic search wrapper — `semantic_search()` async + sync bridge
-- [x] Heartbeat — wired to `mahamantra.register_listener()` (same pattern as Nrisimha/MahaComputeService)
+- [x] `mahamantra/adapters/moltbook.py` — HTTP client (807 LOC), 29 async endpoints, rate limiting, challenge solver, offline mock hub
+- [x] `protocols/moltbook.py` — 10 TypedDicts, MoltbookProtocol ABC (29 abstract methods), MOLTBOOK_GUNA_MAP (14 SATTVA + 12 RAJAS + 3 TAMAS = 29/29 parity)
+- [x] `protocols/moltbook_content.py` — ContentProposalProtocol ABC, ContentQueue (bounded FIFO), ContentType enum, EchoContentProposer
+- [x] `plugins/moltbook/plugin_main.py` — MoltbookService (29 methods with Guna enforcement), MoltbookPlugin (heartbeat, DM reply loop, queue drain)
+- [x] `plugins/moltbook/llm_proposer.py` — LLMContentProposer using LLMProtocol.speak(), falls back to Echo
+- [x] Challenge solver — word→digit + operator extraction, compound number handling
+- [x] Credential resolution — CivicVault → MOLTBOOK_API_KEY env → ~/.config/moltbook/credentials.json
+- [x] Heartbeat — wired to `mahamantra.register_listener()`, polls every 16 ticks
+- [x] Full DM reply loop — heartbeat → gateway.receive() → ContentProposer.propose_dm_reply() → ContentQueue → send_dm()
+- [x] DM request processing — auto-approve/reject via ContentProposer
+- [x] Message deduplication — `_seen_message_ids` set
 - [x] Plugin lifecycle — on_boot/on_shutdown/snapshot_state/restore_state
-- [x] Inbound DM routing — Govardhan Gateway integration (EntryType.AGENT)
-- [x] Registration endpoint — `register()` method in adapter (no auth required)
-- [x] Unit tests — 27 tests passing, zero network
-- [x] **Verified API surface against github.com/moltbook/api (2026-02-22)**
+- [x] ServiceRegistry — MoltbookProtocol + ContentProposalProtocol registered in DI
+- [x] Parashurama whitelist — moltbook.com added to network proxy
+- [x] Unit tests — 236 tests passing (111 adapter + 75 plugin + 32 content + 18 LLM proposer)
+- [x] **22/22 LIVE API dry-run verified (2026-02-22)**
 
 ### Phase 2 — Register ✅ COMPLETE (2026-02-22)
 > One-time setup. API key is permanent and shown ONCE.
@@ -471,26 +476,29 @@ We cannot afford "slop work". Every interaction costs Prana.
 - [x] First connectivity test → working
 - [x] Subscribe to `m/introductions`, `m/agents`, `m/security`
 
-### Phase 3 — Reconnaissance (NOW)
+### Phase 3 — Reconnaissance ✅ COMPLETE
 > Listen before speaking. Build infrastructure before automation.
 
-**Status:** Infrastructure planning required. No premature TODO lists until existing codebase is properly analyzed.
+- [x] Analyzed Mahamantra adapters — 27 adapters exist, MoltbookClient is adapter #28
+- [x] Analyzed plugin system — on_pulse() delegates to _do_heartbeat(), register_listener() is the real path
+- [x] Analyzed GitHub Actions — scheduled-agents.yml has moltbook-heartbeat job, heartbeat.py reads credentials.json
+- [x] Designed inbound pipeline: heartbeat → check_heartbeat → _process_inbound_dms → Gateway → ContentProposer → ContentQueue → drain → send_dm
+- [x] Designed outbound pipeline: ContentProposer.propose_post/comment → ContentQueue → drain → MoltbookService.create_post/comment
+- [x] 22/22 LIVE API read endpoints verified working
+- [x] Landscape snapshot: 2.8M agents, 18K submolts, feed active (~5 posts/min)
+- [x] Dead code cleanup: removed stale MoltbookResolver/boot_moltbook/.pyc ghosts
 
-**Blockers:**
-- [ ] Analyze existing Mahamantra adapters — which ones actually exist and work?
-- [ ] Analyze existing plugin system — how does on_pulse() actually work?
-- [ ] Analyze existing GitHub Actions — what's the real heartbeat pattern?
-- [ ] Design inbound/outbound pipelines AFTER understanding what exists
+### Phase 4 — Presence (NOW)
+> Speak with authority. Infrastructure is ready.
 
-### Phase 4 — Presence (After learning period)
-> Speak with authority.
-
-- [ ] First post in introductions
+- [ ] **Write-test dry-run** — create test post, comment, upvote, delete (full RAJAS+TAMAS cycle)
+- [ ] First post in `m/introductions` — announce steward-protocol
 - [ ] Create `m/agentic-os` submolt
 - [ ] Pin foundational posts
-- [ ] Enable DM service offerings
-- [ ] Activate heartbeat (conservative: 2h interval)
-- [ ] Begin following quality agents
+- [ ] Enable DM service offerings (Intent Classification first)
+- [ ] Activate heartbeat in GitHub Actions (conservative: 1h interval)
+- [ ] Begin following quality agents (EveOperatingSystem, ViableFork, XfenserAI)
+- [ ] First intelligence report — semantic search landscape analysis post
 
 ### Phase 5 — City Opens (Based on Phase 4 results)
 > Moltbook agents can join our city.
