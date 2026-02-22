@@ -582,7 +582,11 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _process_inbound_dms(self) -> None:
-        """Fetch new DM conversations, read messages, route through Govardhan Gateway."""
+        """Fetch new DM conversations, read messages, route through Govardhan Gateway.
+
+        When gateway processes a DM successfully, queues a DM_REPLY proposal
+        via ContentQueue. No hardcoded reply — generators decide what to say.
+        """
         from vibe_core.gateway.mahamantra_gateway import get_gateway
         from vibe_core.protocols.gateway import EntryType, create_request
 
@@ -613,13 +617,56 @@ class MoltbookPlugin(KernelPlugin):
                 try:
                     req = create_request(content, [], EntryType.AGENT)
                     req["context"]["source"] = "moltbook_dm"
-                    req["context"]["sender"] = msg.get("sender", "unknown")
+                    sender = msg.get("sender", "unknown") if isinstance(msg, dict) else "unknown"
+                    req["context"]["sender"] = sender
                     req["context"]["conversation_id"] = conv_id
-                    gateway.receive(req)
+                    response = gateway.receive(req)
                     if msg_id:
                         self._seen_message_ids.add(msg_id)
+
+                    # Queue DM reply proposal if gateway succeeded
+                    self._queue_dm_reply(conv_id, sender, content, response)
+
                 except Exception as e:
                     logger.warning(f"Inbound DM routing failed: {e}")
+
+    def _queue_dm_reply(
+        self, conv_id: str, sender: str, inbound_content: str, gateway_response: dict
+    ) -> None:
+        """Queue a DM_REPLY content proposal based on gateway routing result.
+
+        Does NOT generate reply text — that's the ContentProposalProtocol's job.
+        This just records the inbound DM metadata so generators can decide what to say.
+        """
+        if not self._content_queue:
+            return
+
+        success = gateway_response.get("success", False) if isinstance(gateway_response, dict) else False
+        if not success:
+            return
+
+        try:
+            from vibe_core.protocols.moltbook_content import ContentType, create_proposal
+
+            proposal = create_proposal(
+                content_type=ContentType.DM_REPLY,
+                title="",
+                body="",  # Empty — generator fills this in
+                source="inbound_dm_router",
+                priority=70,  # DM replies are higher priority than posts
+                target_id=conv_id,
+                ttl_seconds=1800,  # 30 min TTL for DM replies
+                metadata={
+                    "sender": sender,
+                    "inbound_content": inbound_content[:500],
+                    "guardian": str(gateway_response.get("guardian", "")),
+                    "guna": str(gateway_response.get("guna", "")),
+                },
+            )
+            self._content_queue._queue.append(proposal)
+            logger.info(f"DM reply proposal queued for conv {conv_id} from {sender}")
+        except Exception as e:
+            logger.warning(f"Failed to queue DM reply proposal: {e}")
 
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")
