@@ -204,7 +204,7 @@ class TestKernelIntegration:
         # kernel_impl.py is VISNU-protected, so we work around by registering
         # the manifest directly - this is what boot() does internally
         manifest = agent.get_manifest()
-        kernel._manifest_registry.register(manifest)
+        kernel.manifest_registry.register(manifest)
 
         interface = AgentSystemInterface(kernel, "searcher")
 

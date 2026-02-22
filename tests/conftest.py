@@ -446,6 +446,29 @@ _mahamantra_state = {}
 # =============================================================================
 
 
+# Cache gene classes at module level (avoid 751+ repeated lazy imports)
+_MantraByte = None
+_iGene = None
+_gene_imports_failed = False
+
+
+def _ensure_gene_imports():
+    global _MantraByte, _iGene, _gene_imports_failed
+    if _MantraByte is not None:
+        return True
+    if _gene_imports_failed:
+        return False
+    try:
+        from vibe_core.protocols.substrate.byte import MantraByte
+        from vibe_core.protocols.substrate.gene import iGene
+        _MantraByte = MantraByte
+        _iGene = iGene
+        return True
+    except ImportError:
+        _gene_imports_failed = True
+        return False
+
+
 def _create_test_gene(test_name: str, markers: list):
     """
     Create an iGene for a test based on its markers.
@@ -457,10 +480,7 @@ def _create_test_gene(test_name: str, markers: list):
       @pytest.mark.smoke → 0.1 (minimal stress)
       default → 0.3 (normal)
     """
-    try:
-        from vibe_core.protocols.substrate.byte import MantraByte
-        from vibe_core.protocols.substrate.gene import iGene
-    except ImportError:
+    if not _ensure_gene_imports():
         return None
 
     # Determine entropy based on markers
@@ -480,9 +500,9 @@ def _create_test_gene(test_name: str, markers: list):
     # Create gene with standard Mahamantra shield
     import random
 
-    return iGene(
+    return _iGene(
         entropy_load=entropy,
-        mantra_shield=MantraByte.standard_16(),
+        mantra_shield=_MantraByte.standard_16(),
         mutation_vector=random.getrandbits(32),
     )
 
@@ -638,14 +658,25 @@ def anti_guru_gene(request):
         return None
 
 
+# Cache mahamantra sequence at module level
+_cached_sequence = None
+_cached_opcode = None
+_sequence_loaded = False
+
+
 def _get_mahamantra_sequence():
-    """Lazy import to avoid circular dependencies."""
+    """Lazy import to avoid circular dependencies (cached after first call)."""
+    global _cached_sequence, _cached_opcode, _sequence_loaded
+    if _sequence_loaded:
+        return _cached_sequence, _cached_opcode
     try:
         from vibe_core.protocols.substrate import MAHAMANTRA_SEQUENCE, MantraOpCode
-
-        return MAHAMANTRA_SEQUENCE, MantraOpCode
+        _cached_sequence = MAHAMANTRA_SEQUENCE
+        _cached_opcode = MantraOpCode
     except ImportError:
-        return None, None
+        pass
+    _sequence_loaded = True
+    return _cached_sequence, _cached_opcode
 
 
 def _emit_mantra_step(step: int, phase: str, test_name: str):
