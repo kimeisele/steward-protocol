@@ -49,12 +49,19 @@ class ChantResult(TypedDict):
 # Audio/network are I/O side effects using the VM's output.
 # =============================================================================
 
+
 def _chant_fail(final_position: int = -1, final_guardian: str = "BLOCKED") -> ChantResult:
     """Return a failed ChantResult."""
     return ChantResult(
-        success=False, bhakti=NavaBhakti.KIRTANAM.value, rounds=0, ticks=0,
-        final_position=final_position, final_guardian=final_guardian,
-        cycle_count=0, switch_count=0, parampara_connected=False,
+        success=False,
+        bhakti=NavaBhakti.KIRTANAM.value,
+        rounds=0,
+        ticks=0,
+        final_position=final_position,
+        final_guardian=final_guardian,
+        cycle_count=0,
+        switch_count=0,
+        parampara_connected=False,
     )
 
 
@@ -90,10 +97,12 @@ def cli_chant(
     vimana_client = None
     if audio:
         from vibe_core.mahamantra.sound.audio_engine import PranaSoundEngine
+
         sound_engine = PranaSoundEngine()
     if dest:
         try:
             from vibe_core.mahamantra.net.vimana import VimanaClient
+
             host, port = dest.split(":")
             vimana_client = VimanaClient(host, int(port))
         except ValueError:
@@ -142,6 +151,7 @@ def cli_chant(
             # Audio synthesis from VM's DIW output
             if sound_engine and diw_data:
                 from vibe_core.mahamantra.protocols.diw import pack
+
                 synth_diw = pack(
                     venu=diw_data.get("venu", 0),
                     vamsi=diw_data.get("vamsi", 0),
@@ -168,12 +178,8 @@ def cli_chant(
     last_execution = last.get("execution", {}) if last else {}
     last_yajna = last.get("yajna", {}) if last else {}
 
-    total_cycles = sum(
-        r.get("execution", {}).get("kirtan_cycles", 0) for r in round_results
-    )
-    total_switches = sum(
-        r.get("yajna", {}).get("switch_count", 0) for r in round_results
-    )
+    total_cycles = sum(r.get("execution", {}).get("kirtan_cycles", 0) for r in round_results)
+    total_switches = sum(r.get("yajna", {}).get("switch_count", 0) for r in round_results)
 
     if effective_verbose:
         print("-" * 60)
@@ -185,8 +191,7 @@ def cli_chant(
         final_pos = last.get("position", 0)
         final_guard = last.get("guardian", "unknown")
         print(
-            f"CHANT: {rounds}r × {WORDS}t → [{final_guard}@{final_pos}] "
-            f"Cycles={total_cycles} Switches={total_switches}"
+            f"CHANT: {rounds}r × {WORDS}t → [{final_guard}@{final_pos}] Cycles={total_cycles} Switches={total_switches}"
         )
 
     return ChantResult(
@@ -283,6 +288,7 @@ def cli_listen(
     """
     # === COMPUTATION: Route through the VM ===
     from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
     lotus = get_mahamantra()
     lotus.execute(f"listen {source}")
 
@@ -371,6 +377,7 @@ def cli_resolve(
     """
     # === COMPUTATION: Route through the VM ===
     from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+
     lotus = get_mahamantra()
     lotus.execute(f"resolve {name}")
 
@@ -494,8 +501,7 @@ def cli_serve(
     """
     from datetime import datetime
 
-    from vibe_core.mahamantra.karma.janaka import TaskPriority
-    from vibe_core.mahamantra.karma.janaka import get_service as get_janaka
+    from vibe_core.mahamantra.karma.janaka import JanakaService, TaskPriority
     from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
 
     # === COMPUTATION: Route task through the VM ===
@@ -518,7 +524,7 @@ def cli_serve(
     task_priority = priority_map.get(priority.lower(), TaskPriority.NORMAL)
 
     # Get JanakaService through Mahajana folder (canonical path)
-    janaka = get_janaka()
+    janaka = JanakaService()
 
     start_time = datetime.now()
 
@@ -681,24 +687,19 @@ def cli_veda(
     vm_parampara = vm_result.get("parampara", {})
 
     # === I/O: VedaExplorer / LLM use VM output as context ===
-    # CREATIVE MODE: Use NAGA-flooded chat (Layer -1 integration)
+    # CREATIVE MODE: Kirtan-Flow (canonical VM pipeline + optional LLM)
     if explorer_mode == ExplorerMode.CREATIVE:
-        try:
-            from vibe_core.mahamantra.chat import flooded_routed_chat
+        from vibe_core.mahamantra.render import kirtan_chat
 
-            response = flooded_routed_chat(message)
+        response = kirtan_chat(message, use_llm=True)
 
-            veda_result = {
-                "success": True,
-                "intent": "creative",
-                "response": f"[NAGA x {vm_guardian.upper()}] {response}",
-                "llm_used": True,
-                "naga_flooded": True,
-            }
-        except Exception as e:
-            # Fall back to regular explorer on error
-            veda_result = explorer.process(message)
-            veda_result["naga_error"] = str(e)
+        veda_result = {
+            "success": True,
+            "intent": "creative",
+            "response": response,
+            "llm_used": True,
+            "kirtan_flow": True,
+        }
     else:
         veda_result = explorer.process(message)
 

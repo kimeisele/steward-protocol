@@ -960,10 +960,12 @@ class UnifiedCLI:
             # 3. Load Synaptic Weights (RAM cache first, disk fallback)
             try:
                 from vibe_core.state.state_service import get_state_service
+
                 _state = get_state_service(workspace, plugin_id="opus_assistant")
                 synapses = _state.load("synapses.json", default={"schema": "v1", "weights": {}})
             except Exception as e:
                 import logging
+
                 logging.getLogger("CLI").warning(f"Synapses state load failed: {e}")
                 synapses = {"schema": "v1", "weights": {}}
 
@@ -1532,14 +1534,6 @@ class UnifiedCLI:
         """
         try:
             from vibe_core.mahamantra.substrate.mantra import PersonAnchoredOperator
-            from vibe_core.services.chat_indriya import get_chat_indriya
-
-            # Initialize ChatIndriya for Shravanam/Kirtanam
-            indriya = None
-            try:
-                indriya = get_chat_indriya("operator_default")
-            except Exception as e:
-                logger.warning(f"ChatIndriya not available: {e}")
 
             # Create operator
             operator = PersonAnchoredOperator()

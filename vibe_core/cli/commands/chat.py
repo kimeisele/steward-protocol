@@ -21,8 +21,8 @@ __mahajana__ = "manu"
 __position__ = 7
 __genesis__ = "0xa2c02098"  # GenesisByte: parampara % 37 == 0
 
-from typing import List
 import uuid
+from typing import List
 
 from vibe_core.protocols.command import (
     BaseCommand,
@@ -67,45 +67,15 @@ class ChatCommand(BaseCommand):
                 error="No message provided. Usage: steward chat <message>",
             )
 
-        try:
-            # Import ChatIndriya (THE SENSE ORGAN - not ChatService directly!)
-            from vibe_core.services.chat_indriya import get_chat_indriya
+        # Kirtan-Flow: canonical VM pipeline + optional LLM
+        from vibe_core.mahamantra.render import kirtan_chat
 
-            # Get sense organ (via ServiceRegistry, NAGA-wrapped)
-            indriya = get_chat_indriya()
+        response = kirtan_chat(message, use_llm=True)
 
-            # Create session ID
-            session_id = str(uuid.uuid4())
-
-            # Execute through INDRIYA (not Service!)
-            # This triggers: NIDRA → PRAMANA → VIKALPA → SMRTI → NIDRA
-            response_tanmatra = await indriya.chat(message, session_id)
-
-            # Extract response data from TanmatraMessage
-            metadata = response_tanmatra.metadata or {}
-            success = metadata.get("success", True)
-            mahajana = metadata.get("mahajana", "narada")
-
-            if success:
-                return CommandResult(
-                    success=True,
-                    output=f"🕉️ [{mahajana}] {response_tanmatra.content}",
-                    data={
-                        "mahajana": mahajana,
-                        "intent": response_tanmatra.intent.value,
-                        "tanmatra": response_tanmatra.tanmatra.value,
-                        "message_id": response_tanmatra.message_id,
-                        "vrtti_compliant": True,  # Went through proper state machine
-                    },
-                )
-            else:
-                return CommandResult(
-                    success=False,
-                    error=f"Chat failed: {response_tanmatra.content}",
-                )
-
-        except Exception as e:
-            return CommandResult(
-                success=False,
-                error=f"Chat failed: {e}",
-            )
+        return CommandResult(
+            success=True,
+            output=response,
+            data={
+                "kirtan_flow": True,
+            },
+        )

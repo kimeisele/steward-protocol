@@ -15,7 +15,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9439641988070766,
+      "avg_dharmic_score": 0.9454931181148765,
       "trend": "stable"
     },
     {
@@ -60,7 +60,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.8478613084817211,
+      "avg_dharmic_score": 0.9671047772806294,
       "trend": "stable"
     },
     {
@@ -78,7 +78,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9412856915413058,
+      "avg_dharmic_score": 0.9467040500635053,
       "trend": "stable"
     },
     {
@@ -87,7 +87,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9412856915413058,
+      "avg_dharmic_score": 0.944219779911195,
       "trend": "stable"
     },
     {
@@ -97,6 +97,78 @@
       "decision_modifier": "ग",
       "count": 1,
       "avg_dharmic_score": 0.1,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ङ",
+      "layer": "KERNEL",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1999999999999999,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.14999999999999997,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ण",
+      "layer": "REPAIR",
+      "decision": "EXECUTE",
+      "decision_modifier": "क",
+      "count": 1,
+      "avg_dharmic_score": 0.9428814047316229,
       "trend": "stable"
     },
     {
@@ -136,39 +208,12 @@
       "trend": "stable"
     },
     {
-      "akshara": "ङ",
-      "layer": "KERNEL",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
-      "trend": "stable"
-    },
-    {
       "akshara": "ञ",
       "layer": "COGNITION",
-      "decision": "WARN_EXECUTE",
-      "decision_modifier": "ख",
-      "count": 1,
-      "avg_dharmic_score": 0.4000000000000001,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ण",
-      "layer": "REPAIR",
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9465509682300073,
+      "avg_dharmic_score": 0.9454931181319963,
       "trend": "stable"
     },
     {
@@ -177,16 +222,7 @@
       "decision": "BLOCK",
       "decision_modifier": "ग",
       "count": 1,
-      "avg_dharmic_score": 0.1,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
+      "avg_dharmic_score": 0.15000000000000002,
       "trend": "stable"
     },
     {
@@ -213,43 +249,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9427629397047508,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "EXECUTE",
-      "decision_modifier": "क",
-      "count": 1,
-      "avg_dharmic_score": 0.9412856915413058,
+      "avg_dharmic_score": 0.9442197799129366,
       "trend": "stable"
     },
     {
@@ -312,7 +312,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9477100550049481,
+      "avg_dharmic_score": 0.9478556343054252,
       "trend": "stable"
     },
     {
@@ -375,7 +375,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9442241492717598,
+      "avg_dharmic_score": 0.9744412724312436,
       "trend": "stable"
     },
     {
@@ -429,7 +429,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9427028292640224,
+      "avg_dharmic_score": 0.9414728544431462,
       "trend": "stable"
     },
     {
@@ -438,7 +438,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9464729070966078,
+      "avg_dharmic_score": 0.9478556343091845,
       "trend": "stable"
     },
     {
@@ -465,7 +465,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9453321470919075,
+      "avg_dharmic_score": 0.9428808193232144,
       "trend": "stable"
     },
     {
@@ -474,7 +474,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9497934551675702,
+      "avg_dharmic_score": 0.9489507794656308,
       "trend": "stable"
     },
     {
@@ -510,7 +510,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9464729070966078,
+      "avg_dharmic_score": 0.9414728544471919,
       "trend": "stable"
     },
     {
@@ -519,7 +519,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9477100550049481,
+      "avg_dharmic_score": 0.9454931181127939,
       "trend": "stable"
     },
     {
@@ -528,7 +528,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9427028292640224,
+      "avg_dharmic_score": 0.9442197799085654,
       "trend": "stable"
     },
     {
@@ -537,43 +537,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9452500630223554,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "EXECUTE",
-      "decision_modifier": "क",
-      "count": 1,
-      "avg_dharmic_score": 0.9453321470919075,
-      "trend": "stable"
-    },
-    {
-      "akshara": "ञ",
-      "layer": "COGNITION",
-      "decision": "BLOCK",
-      "decision_modifier": "ग",
-      "count": 1,
-      "avg_dharmic_score": 0.1,
+      "avg_dharmic_score": 0.984277582112083,
       "trend": "stable"
     },
     {
@@ -600,7 +564,16 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9465509682300073,
+      "avg_dharmic_score": 0.9428808193244272,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1,
       "trend": "stable"
     },
     {
@@ -627,7 +600,34 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9440505131376637,
+      "avg_dharmic_score": 0.9489507794611124,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "BLOCK",
+      "decision_modifier": "ग",
+      "count": 1,
+      "avg_dharmic_score": 0.1,
+      "trend": "stable"
+    },
+    {
+      "akshara": "ञ",
+      "layer": "COGNITION",
+      "decision": "EXECUTE",
+      "decision_modifier": "क",
+      "count": 1,
+      "avg_dharmic_score": 0.9467040500691924,
       "trend": "stable"
     },
     {
@@ -654,7 +654,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9497934551675702,
+      "avg_dharmic_score": 0.9509826812589367,
       "trend": "stable"
     },
     {
@@ -672,7 +672,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9426120666628823,
+      "avg_dharmic_score": 0.9454931181093144,
       "trend": "stable"
     },
     {
@@ -681,7 +681,7 @@
       "decision": "EXECUTE",
       "decision_modifier": "क",
       "count": 1,
-      "avg_dharmic_score": 0.9487417379050856,
+      "avg_dharmic_score": 0.9478556953184765,
       "trend": "stable"
     },
     {
@@ -790,8 +790,8 @@
       "layer": "COGNITION",
       "decision": "BLOCK",
       "meaning": "COGNITION actions should BLOCK",
-      "total_count": 45,
-      "avg_score": 0.109,
+      "total_count": 46,
+      "avg_score": 0.113,
       "intent_types": [
         "COGNITION"
       ],
@@ -805,7 +805,7 @@
       "decision": "EXECUTE",
       "meaning": "COGNITION actions should EXECUTE",
       "total_count": 28,
-      "avg_score": 0.919,
+      "avg_score": 0.926,
       "intent_types": [
         "COGNITION"
       ],
@@ -827,15 +827,14 @@
       "REPAIR": 5
     },
     "decision_distribution": {
-      "BLOCK": 54,
-      "EXECUTE": 32,
-      "WARN_EXECUTE": 1
+      "BLOCK": 55,
+      "EXECUTE": 32
     },
     "top_mantras": [
       "ञग",
       "ञक"
     ],
-    "generated_at": "2026-02-06T23:10:57.865674"
+    "generated_at": "2026-02-21T19:55:34.245946"
   },
   "version": "1.0"
 }

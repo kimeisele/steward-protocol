@@ -20,7 +20,6 @@ Plus convergence properties:
 
 import pytest
 
-
 # =============================================================================
 # FIXTURES
 # =============================================================================
@@ -51,11 +50,14 @@ class TestIdentity:
     """mahamantra IS the singleton. Two imports = same object."""
 
     def test_singleton_identity(self):
-        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
-        from vibe_core.mahamantra.substrate.lotus_core import mahamantra as m2
+        import vibe_core.mahamantra.substrate.lotus_core as lotus_mod
 
-        m1 = get_mahamantra()
+        m1 = lotus_mod.get_mahamantra()
+        m2 = lotus_mod.get_mahamantra()
         assert m1 is m2
+        # Module-level alias is set at import time; after singleton reset
+        # it may be stale, but get_mahamantra() must always be idempotent
+        assert m1 is lotus_mod._mahamantra_instance
 
     def test_singleton_across_calls(self):
         from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
