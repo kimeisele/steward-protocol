@@ -264,3 +264,88 @@ def test_service_search():
     service = MoltbookService(client)
     results = service.search("agent operating system")
     assert isinstance(results, list)
+
+
+# =============================================================================
+# Guna Enforcement (SATTVA/RAJAS/TAMAS policy)
+# =============================================================================
+
+
+def test_sattva_operations_not_logged():
+    """SATTVA (read-only) operations don't appear in the operation log."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    service.check_heartbeat()
+    service.search("test")
+    service.verify_credentials()
+    assert len(service._operation_log) == 0
+
+
+def test_rajas_operations_are_logged():
+    """RAJAS (write) operations are logged with timestamp and guna."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    service.create_post("Title", "Content")
+    assert len(service._operation_log) == 1
+    entry = service._operation_log[0]
+    assert entry["operation"] == "create_post"
+    assert entry["guna"] == "rajas"
+    assert "timestamp" in entry
+
+
+def test_rajas_comment_logged():
+    """Comments (RAJAS) are logged."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    service.comment("p1", "hello")
+    assert len(service._operation_log) == 1
+    assert service._operation_log[0]["operation"] == "comment"
+
+
+def test_rajas_send_dm_logged():
+    """DMs (RAJAS) are logged."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    service.send_dm("conv1", "hello")
+    assert len(service._operation_log) == 1
+    assert service._operation_log[0]["operation"] == "send_dm"
+
+
+def test_tamas_operations_blocked():
+    """TAMAS (destructive) operations are blocked with PermissionError."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
+        service._enforce_guna("delete_post")
+
+
+def test_guna_map_completeness():
+    """Every MoltbookProtocol method has a Guna classification."""
+    from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP
+
+    protocol_methods = {
+        "check_heartbeat",
+        "create_post",
+        "comment",
+        "search",
+        "get_profile",
+        "send_dm",
+        "get_conversations",
+        "get_messages",
+        "verify_credentials",
+    }
+    for method in protocol_methods:
+        assert method in MOLTBOOK_GUNA_MAP, f"{method} missing from MOLTBOOK_GUNA_MAP"
+
+
+# =============================================================================
+# Parashurama Whitelist
+# =============================================================================
+
+
+def test_moltbook_in_parashurama_whitelist():
+    """moltbook.com must be in Parashurama's default whitelist."""
+    from vibe_core.protocols.mahajanas.parashurama.types.network_proxy import KernelNetworkProxy
+
+    assert "www.moltbook.com" in KernelNetworkProxy.DEFAULT_WHITELIST
+    assert "moltbook.com" in KernelNetworkProxy.DEFAULT_WHITELIST

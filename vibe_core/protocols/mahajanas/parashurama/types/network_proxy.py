@@ -57,6 +57,9 @@ class KernelNetworkProxy:
         # General
         "wikipedia.org",
         "en.wikipedia.org",
+        # Moltbook — AI agent social network (platform integration)
+        "www.moltbook.com",
+        "moltbook.com",
     ]
 
     def __init__(self, kernel=None):
