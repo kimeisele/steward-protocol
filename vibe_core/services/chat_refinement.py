@@ -18,21 +18,21 @@ __position__ = 2
 __genesis__ = "0x66d82a7a"  # GenesisByte: parampara % 37 == 0
 
 import logging
+import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
-import uuid
 
+from vibe_core.mahamantra.protocols._lotus import get_position_mahajana
 from vibe_core.protocols.chat import (
-    ChatMode,
-    ChatMessage,
-    ChatResponse,
     ChatContext,
+    ChatMessage,
+    ChatMode,
+    ChatResponse,
     RefinementPath,
     RefinementRequest,
     RefinementState,
 )
 from vibe_core.protocols.cognition import CognitiveResult, IntentType
-from vibe_core.mahamantra.protocols._lotus import get_position_mahajana
 
 logger = logging.getLogger("CHAT_REFINEMENT")
 
@@ -110,7 +110,7 @@ def discover_refinement_paths(
     Returns:
         List of RefinementPath candidates, sorted by confidence
     """
-    from vibe_core.mahamantra.substrate.intents import INTENT_MAP
+    from vibe_core.mahamantra import INTENT_MAP
 
     paths = []
     msg_lower = message.lower()
@@ -337,7 +337,7 @@ def simple_intent_detection(message: str) -> CognitiveResult:
     Uses mahamantra/substrate/intents.py - NO ML, pure dict lookup.
     Extracted from ChatService for modularity.
     """
-    from vibe_core.mahamantra.substrate.intents import get_position_for_intent
+    from vibe_core.mahamantra import get_position_for_intent
 
     msg_lower = message.lower()
     words = msg_lower.split()

@@ -16,7 +16,8 @@ from datetime import datetime
 from typing import Optional
 
 # LIVING SOURCE - Nrisimha springt aus der Säule
-from vibe_core.mahamantra.substrate.opcode import MAHAMANTRA_SEQUENCE, MantraOpCode
+from vibe_core.mahamantra import MAHAMANTRA_SEQUENCE, MantraOpCode
+from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.protocols.universal import (
     AlignmentScore,
     DriftContext,
@@ -24,7 +25,6 @@ from vibe_core.protocols.universal import (
     Resonance,
     SovereignContext,
 )
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 logger = logging.getLogger("NRISIMHA_WATCHDOG")
 

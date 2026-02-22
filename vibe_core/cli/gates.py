@@ -44,18 +44,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, Final, List, Optional, Tuple, Union
 
+from vibe_core.protocols.substrate.mantra.acintya import PARAMPARA
+
 # =============================================================================
 # MANTRA SUBSTRATE IMPORTS (The Source)
 # =============================================================================
-
 from vibe_core.protocols.substrate.mantra.lotus import (
-    grow_lotus,
-    LotusQuarter,
     LOTUS_POSITIONS,
+    LotusQuarter,
+    grow_lotus,
 )
-
-from vibe_core.protocols.substrate.mantra.acintya import PARAMPARA
-
 
 # =============================================================================
 # GATE CONSTANTS (From Mantra)
@@ -239,7 +237,7 @@ def execute_gate(
     try:
         import importlib
 
-        from vibe_core.mahamantra.substrate.seed import ALL_GUARDIANS
+        from vibe_core.mahamantra import ALL_GUARDIANS
 
         # Get guardian name from position and load module
         guardian_name = ALL_GUARDIANS[position]
