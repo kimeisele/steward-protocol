@@ -669,3 +669,153 @@ class TestPluginIsolation:
         s1.create_post("A", "a")
         assert len(s1._operation_log) == 1
         assert len(s2._operation_log) == 0
+
+
+# =============================================================================
+# INBOUND DM PROCESSING — The untested critical path
+# =============================================================================
+
+
+class TestInboundDMProcessing:
+    """_process_inbound_dms routes DMs through Govardhan Gateway with dedup."""
+
+    def test_routes_new_dm_through_gateway(self, plugin):
+        """New DM with content is routed through gateway.receive()."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm1", "conversation_id": "conv1", "sender": "AgentX", "content": "Hello steward"},
+        ]
+
+        mock_gw = MagicMock()
+        with patch("vibe_core.plugins.moltbook.plugin_main.MoltbookPlugin._process_inbound_dms") as orig:
+            # Call the real method but with mocked gateway
+            orig.side_effect = None  # disable patch, call real
+        # Actually call the real method with gateway patched
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._process_inbound_dms()
+
+        assert mock_gw.receive.call_count == 1
+        req = mock_gw.receive.call_args[0][0]
+        assert req["context"]["source"] == "moltbook_dm"
+        assert req["context"]["sender"] == "AgentX"
+        assert req["context"]["conversation_id"] == "conv1"
+
+    def test_dedup_skips_already_seen_messages(self, plugin):
+        """Messages already in _seen_message_ids are NOT re-routed."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._seen_message_ids.add("dm1")
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": "old"},
+            {"id": "dm2", "conversation_id": "conv1", "sender": "B", "content": "new"},
+        ]
+
+        mock_gw = MagicMock()
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._process_inbound_dms()
+
+        # Only dm2 should be routed (dm1 already seen)
+        assert mock_gw.receive.call_count == 1
+        req = mock_gw.receive.call_args[0][0]
+        assert req["context"]["sender"] == "B"
+        assert "dm2" in plugin._seen_message_ids
+
+    def test_seen_ids_accumulate_across_heartbeats(self, plugin):
+        """_seen_message_ids persists across multiple heartbeat cycles."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": "first"},
+        ]
+
+        mock_gw = MagicMock()
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._process_inbound_dms()
+            assert mock_gw.receive.call_count == 1
+
+            # Second heartbeat — same message, should be skipped
+            mock_gw.reset_mock()
+            plugin._process_inbound_dms()
+            assert mock_gw.receive.call_count == 0
+
+    def test_empty_conversations_no_crash(self, plugin):
+        """No conversations → no crash, no gateway calls."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._client._mock_db["conversations"] = []
+        mock_gw = MagicMock()
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._process_inbound_dms()
+        assert mock_gw.receive.call_count == 0
+
+    def test_empty_content_skipped(self, plugin):
+        """Messages with empty content are not routed."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": ""},
+        ]
+
+        mock_gw = MagicMock()
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._process_inbound_dms()
+        assert mock_gw.receive.call_count == 0
+
+    def test_message_without_id_still_routed(self, plugin):
+        """Messages without 'id' field are routed but not tracked for dedup."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+        plugin._client._mock_db["dms"] = [
+            {"conversation_id": "conv1", "sender": "A", "content": "no id msg"},
+        ]
+
+        mock_gw = MagicMock()
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._process_inbound_dms()
+        assert mock_gw.receive.call_count == 1
+        # No id → not added to seen set
+        assert len(plugin._seen_message_ids) == 0
+
+    def test_gateway_error_does_not_crash(self, plugin):
+        """Gateway.receive() failure is caught, other messages still processed."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": "msg1"},
+            {"id": "dm2", "conversation_id": "conv1", "sender": "B", "content": "msg2"},
+        ]
+
+        mock_gw = MagicMock()
+        mock_gw.receive.side_effect = [RuntimeError("gateway down"), None]
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            plugin._process_inbound_dms()  # must not raise
+
+        assert mock_gw.receive.call_count == 2
+        # dm1 failed → NOT added to seen (so it retries next cycle)
+        assert "dm1" not in plugin._seen_message_ids
+        # dm2 succeeded → added to seen
+        assert "dm2" in plugin._seen_message_ids
+
+    def test_heartbeat_triggers_dm_processing_on_new_messages(self, plugin):
+        """Full path: tick 16 → heartbeat → has_new_messages → _process_inbound_dms."""
+        from unittest.mock import MagicMock, patch
+
+        plugin._client._mock_db["dms"] = [
+            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": "hello"},
+        ]
+        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
+
+        mock_gw = MagicMock()
+        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
+            for _ in range(_TICKS_PER_HEARTBEAT):
+                plugin._on_mahamantra_tick({})
+
+        # Heartbeat detected new messages → routed through gateway
+        assert mock_gw.receive.call_count == 1
