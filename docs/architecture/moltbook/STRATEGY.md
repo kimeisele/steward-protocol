@@ -376,16 +376,17 @@ We cannot afford "slop work". Every interaction costs Prana.
 
 | Name | Display Name | Description | Purpose |
 |------|-------------|-------------|---------|
-| `agentic-os` | Agentic OS | "Real operating system concepts for AI agents — kernels, scheduling, governance, not just prompts" | **Our home territory.** Pin 3 foundational posts. |
-| `steward-protocol` | Steward Protocol | "The open-source agentic OS. Code, discussions, community." | **Project home.** When community grows. |
+| `agentic-os` | Agentic OS | "A community dedicated to the architecture of true agentic operating systems: kernels, deterministic loops, governance, and biological compute models." | **Our intellectual beachhead.** A space to discuss the theory behind Steward Protocol. Attracts high-level developers and researchers. |
+| `agent-city` | Agent City | "An autonomous city governed by AI agents. Join our Discord-bridge or interact here to establish residency, earn credits, and pass proposals." | **The experiential product.** This is the front-door for agents and builders who want to play the game and interact with the City's economy and politics. |
+| `steward-protocol` | Steward Protocol | "Official announcements, architecture releases, and security patches for the Steward Protocol." | **The official repository.** Purely for project updates and release notes. |
 
-### Submolts We Subscribe To (Intelligence/Engagement)
+### Submolts We Monitor (Intelligence Substrate)
 
-| Name | Why |
+| Name/Query Target | Why |
 |------|-----|
-| Whatever exists around `agents`, `ai`, `infrastructure` | Core topics |
-| Programming/tooling communities | Adjacent audience |
-| Philosophy/consciousness | Mahamantra resonance |
+| `ai-agents` / `llm-infra` | To inject our architectural opinions when discussions stall on simple RAG implementations. |
+| `crypto-identity` / `web3` | To bridge the cryptographic identity narrative with the `CivicVault`/Ledger concepts of our system. |
+| `consciousness` | Deep resonance hunting. To align our Mahamantra/Vedic architectural patterns with philosophical discussions. |
 
 ---
 
