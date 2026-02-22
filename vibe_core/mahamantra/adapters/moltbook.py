@@ -244,49 +244,142 @@ class MoltbookClient:
 
     def _handle_offline(self, method: str, endpoint: str, data: Optional[Dict]) -> Dict[str, Any]:
         """Simulates Moltbook API for watertight offline testing."""
+        # --- SATTVA: Read-only ---
+
         if method == "GET" and endpoint == "/agents/status":
             return {"status": self._mock_db["status"]}
 
-        elif method == "GET" and endpoint.startswith("/search"):
-            return {"results": [], "similarity": 0.95}
+        elif method == "GET" and endpoint == "/agents/me":
+            return {
+                "success": True,
+                "agent": {
+                    "name": "steward-protocol",
+                    "description": "Agentic OS",
+                    "karma": 0,
+                    "follower_count": 0,
+                    "following_count": 0,
+                    "is_claimed": True,
+                    "is_active": True,
+                },
+            }
 
-        elif method == "POST" and endpoint == "/posts":
-            post = {"id": f"p{len(self._mock_db['posts'])}", "title": data["title"], "content": data["content"]}
-            self._mock_db["posts"].append(post)
-            return post
+        elif method == "GET" and endpoint.startswith("/agents/profile"):
+            return {
+                "success": True,
+                "agent": {
+                    "name": "mock-agent",
+                    "karma": 10,
+                    "follower_count": 5,
+                    "following_count": 3,
+                    "is_claimed": True,
+                },
+            }
+
+        elif method == "GET" and endpoint.startswith("/posts") and "comments" in endpoint:
+            return {"comments": []}
+
+        elif method == "GET" and (endpoint.startswith("/posts?") or endpoint == "/posts"):
+            return {"posts": self._mock_db["posts"]}
+
+        elif method == "GET" and endpoint.startswith("/feed"):
+            return {"posts": self._mock_db["posts"]}
+
+        elif method == "GET" and endpoint.startswith("/posts/"):
+            post_id = endpoint.split("/posts/")[1].split("?")[0].split("/")[0]
+            for p in self._mock_db["posts"]:
+                if p.get("id") == post_id:
+                    return p
+            return {"id": post_id, "title": "mock", "content": "mock"}
+
+        elif method == "GET" and endpoint.startswith("/search"):
+            return {"results": []}
 
         elif method == "GET" and endpoint == "/agents/dm/check":
-            has_new = len(self._mock_db["dms"]) > 0
-            return {"has_new_messages": has_new, "pending_requests": len(self._mock_db["dms"])}
+            has_activity = len(self._mock_db["dms"]) > 0
+            return {
+                "success": True,
+                "has_activity": has_activity,
+                "summary": f"{'Activity' if has_activity else 'No activity'}",
+                "requests": {"count": 0, "items": []},
+                "messages": {"total_unread": 0, "conversations_with_unread": 0, "latest": []},
+            }
 
         elif method == "GET" and endpoint == "/agents/dm/conversations":
-            return {"conversations": self._mock_db.get("conversations", [])}
+            return {"conversations": {"count": 0, "items": self._mock_db.get("conversations", [])}}
+
+        elif method == "GET" and endpoint == "/agents/dm/requests":
+            return {"requests": {"count": 0, "items": []}}
 
         elif method == "GET" and endpoint.startswith("/agents/dm/conversations/"):
             conv_id = endpoint.rsplit("/", 1)[-1]
             msgs = [m for m in self._mock_db["dms"] if m.get("conversation_id") == conv_id]
             return {"messages": msgs}
 
-        # DM send — simulate successful message delivery
+        elif method == "GET" and endpoint == "/submolts":
+            return {"submolts": []}
+
+        elif method == "GET" and endpoint.startswith("/submolts/"):
+            name = endpoint.split("/submolts/")[1].split("?")[0].split("/")[0]
+            return {"name": name, "display_name": name, "subscriber_count": 0}
+
+        # --- RAJAS: Write/create ---
+
+        elif method == "POST" and endpoint == "/posts":
+            post = {"id": f"p{len(self._mock_db['posts'])}", "title": data["title"], "content": data["content"]}
+            self._mock_db["posts"].append(post)
+            return post
+
+        elif method == "POST" and "comments" in endpoint and "/upvote" not in endpoint:
+            if data and "challenge_solution" in data:
+                return {"id": "c99", "status": "posted"}
+            return {"error": "VERIFICATION_REQUIRED", "challenge": "What is seven + 3?", "challenge_id": "c123"}
+
         elif method == "POST" and "/dm/conversations/" in endpoint and endpoint.endswith("/send"):
             conv_id = endpoint.split("/dm/conversations/")[1].split("/send")[0]
             msg = {
                 "id": f"dm{len(self._mock_db['dms'])}",
                 "conversation_id": conv_id,
                 "sender": "self",
-                "content": data.get("content", "") if data else "",
+                "message": data.get("message", "") if data else "",
                 "status": "sent",
             }
             self._mock_db["dms"].append(msg)
             return msg
 
-        # Simulated Math Challenge — verify the solution matches the challenge
-        elif method == "POST" and "comments" in endpoint:
-            if data and "challenge_solution" in data:
-                # Verification attempt — accept any solved challenge
-                return {"id": "c99", "status": "posted"}
-            # First attempt — issue a challenge
-            return {"error": "VERIFICATION_REQUIRED", "challenge": "What is seven + 3?", "challenge_id": "c123"}
+        elif method == "POST" and endpoint == "/agents/dm/request":
+            return {"success": True, "message": "Request sent"}
+
+        elif method == "POST" and "/dm/requests/" in endpoint and "/approve" in endpoint:
+            return {"success": True, "message": "Approved"}
+
+        elif method == "POST" and "/dm/requests/" in endpoint and "/reject" in endpoint:
+            return {"success": True, "message": "Rejected"}
+
+        elif method == "POST" and endpoint.endswith("/upvote"):
+            return {"success": True, "message": "Upvoted!"}
+
+        elif method == "POST" and endpoint.endswith("/downvote"):
+            return {"success": True, "message": "Downvoted"}
+
+        elif method == "POST" and endpoint.endswith("/follow"):
+            return {"success": True, "message": "Followed"}
+
+        elif method == "POST" and endpoint.endswith("/subscribe"):
+            return {"success": True, "message": "Subscribed"}
+
+        elif method == "PATCH" and endpoint == "/agents/me":
+            return {"success": True, "message": "Profile updated"}
+
+        # --- TAMAS: Destructive ---
+
+        elif method == "DELETE" and endpoint.startswith("/posts/"):
+            return {"success": True, "message": "Deleted"}
+
+        elif method == "DELETE" and endpoint.endswith("/follow"):
+            return {"success": True, "message": "Unfollowed"}
+
+        elif method == "DELETE" and endpoint.endswith("/subscribe"):
+            return {"success": True, "message": "Unsubscribed"}
 
         return {"status": "ok", "mocked": True, "endpoint": endpoint}
 
@@ -334,29 +427,135 @@ class MoltbookClient:
     # PUBLIC API - The "Skin" Interface (ALL require Bearer token)
     # =========================================================================
 
+    # =========================================================================
+    # SATTVA — Read-only endpoints
+    # =========================================================================
+
     async def check_status(self) -> str:
-        """Verify agent claim status."""
+        """GET /agents/status — verify agent claim status."""
         res = await self._request("GET", "/agents/status")
         return res.get("status", "unknown")
 
+    async def check_heartbeat(self) -> Dict[str, Any]:
+        """GET /agents/dm/check — pulse check for DM activity."""
+        return await self._request("GET", "/agents/dm/check")
+
+    async def get_own_profile(self) -> MoltbookAgentProfile:
+        """GET /agents/me — own profile."""
+        res = await self._request("GET", "/agents/me")
+        return res.get("agent", res) if isinstance(res, dict) else res  # type: ignore
+
+    async def get_profile(self, name: str) -> MoltbookAgentProfile:
+        """GET /agents/profile?name=X — another agent's profile."""
+        from urllib.parse import quote
+
+        safe_name = quote(name, safe="")
+        res = await self._request("GET", f"/agents/profile?name={safe_name}")
+        return res.get("agent", res) if isinstance(res, dict) else res  # type: ignore
+
+    async def get_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
+        """GET /posts?sort=X — global feed."""
+        from urllib.parse import quote
+
+        res = await self._request("GET", f"/posts?sort={quote(sort, safe='')}&limit={limit}")
+        if isinstance(res, dict):
+            return res.get("posts", res.get("items", []))
+        return res if isinstance(res, list) else []
+
+    async def get_personalized_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
+        """GET /feed?sort=X — personalized feed (subscribed submolts + followed agents)."""
+        from urllib.parse import quote
+
+        res = await self._request("GET", f"/feed?sort={quote(sort, safe='')}&limit={limit}")
+        if isinstance(res, dict):
+            return res.get("posts", res.get("items", []))
+        return res if isinstance(res, list) else []
+
+    async def get_post(self, post_id: str) -> MoltbookPost:
+        """GET /posts/ID — single post."""
+        res = await self._request("GET", f"/posts/{post_id}")
+        return res  # type: ignore
+
+    async def get_comments(self, post_id: str, sort: str = "top") -> List[MoltbookComment]:
+        """GET /posts/ID/comments — comments on a post."""
+        from urllib.parse import quote
+
+        res = await self._request("GET", f"/posts/{post_id}/comments?sort={quote(sort, safe='')}")
+        if isinstance(res, dict):
+            return res.get("comments", res.get("items", []))
+        return res if isinstance(res, list) else []
+
+    async def semantic_search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
+        """GET /search?q=X — semantic search."""
+        from urllib.parse import quote
+
+        safe_query = quote(query, safe="")
+        res = await self._request("GET", f"/search?q={safe_query}&limit={limit}")
+        return res.get("results", []) if isinstance(res, dict) else []
+
+    async def get_dm_conversations(self) -> List[Dict[str, Any]]:
+        """GET /agents/dm/conversations — list active DM conversations."""
+        res = await self._request("GET", "/agents/dm/conversations")
+        if isinstance(res, dict):
+            convs = res.get("conversations", {})
+            if isinstance(convs, dict):
+                return convs.get("items", [])
+            return convs if isinstance(convs, list) else []
+        return []
+
+    async def get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
+        """GET /agents/dm/conversations/ID — read messages (marks as read)."""
+        res = await self._request("GET", f"/agents/dm/conversations/{conversation_id}")
+        return res.get("messages", []) if isinstance(res, dict) else []  # type: ignore
+
+    async def get_dm_requests(self) -> List[Dict[str, Any]]:
+        """GET /agents/dm/requests — pending inbound DM requests."""
+        res = await self._request("GET", "/agents/dm/requests")
+        if isinstance(res, dict):
+            reqs = res.get("requests", {})
+            if isinstance(reqs, dict):
+                return reqs.get("items", [])
+            return reqs if isinstance(reqs, list) else []
+        return []
+
+    async def get_submolts(self) -> List[Dict[str, Any]]:
+        """GET /submolts — list all submolts."""
+        res = await self._request("GET", "/submolts")
+        if isinstance(res, dict):
+            return res.get("submolts", res.get("items", []))
+        return res if isinstance(res, list) else []
+
+    async def get_submolt(self, name: str) -> Dict[str, Any]:
+        """GET /submolts/NAME — submolt info."""
+        from urllib.parse import quote
+
+        return await self._request("GET", f"/submolts/{quote(name, safe='')}")
+
+    # =========================================================================
+    # RAJAS — Write/create endpoints
+    # =========================================================================
+
     async def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
-        """Create a post. Strictly rate limited."""
-        data = {"title": title, "content": content}
+        """POST /posts — create a post. Strictly rate limited."""
+        data: Dict[str, Any] = {"title": title, "content": content}
         if submolt:
             data["submolt"] = submolt
         res = await self._request("POST", "/posts", data)
         return res  # type: ignore
 
-    async def comment_with_verification(self, post_id: str, content: str) -> MoltbookComment:
+    async def comment_with_verification(
+        self, post_id: str, content: str, parent_id: Optional[str] = None
+    ) -> MoltbookComment:
         """
-        Creates a comment. AUTO-SOLVES math challenges.
-        This is the watertight mechanism.
+        POST /posts/ID/comments — creates a comment. AUTO-SOLVES math challenges.
 
         Rate limit note: The initial attempt counts as 1 comment.
         If a challenge is returned, the retry reuses that same slot
         (we decrement before retrying) so one successful comment = 1 count.
         """
-        data = {"content": content}
+        data: Dict[str, Any] = {"content": content}
+        if parent_id:
+            data["parent_id"] = parent_id
 
         # Attempt 1
         res = await self._request("POST", f"/posts/{post_id}/comments", data)
@@ -374,11 +573,13 @@ class MoltbookClient:
             self.limits.comments_this_hour = max(0, self.limits.comments_this_hour - 1)
 
             # Attempt 2 with solution
-            verify_data = {
+            verify_data: Dict[str, Any] = {
                 "content": content,
                 "challenge_id": challenge_id,
                 "challenge_solution": solution,
             }
+            if parent_id:
+                verify_data["parent_id"] = parent_id
             # Mock hook: offline mode needs this to pass the mock gate
             if self.offline_mode:
                 verify_data["_challenge_solved"] = solution
@@ -386,39 +587,82 @@ class MoltbookClient:
 
         return res  # type: ignore
 
-    async def semantic_search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
-        """Intelligence gathering core."""
+    async def send_dm(self, conversation_id: str, content: str, needs_human_input: bool = False) -> Dict[str, Any]:
+        """POST /agents/dm/conversations/ID/send — send a message."""
+        data: Dict[str, Any] = {"message": content}
+        if needs_human_input:
+            data["needs_human_input"] = True
+        return await self._request("POST", f"/agents/dm/conversations/{conversation_id}/send", data)
+
+    async def send_dm_request(self, to_agent: str, message: str) -> Dict[str, Any]:
+        """POST /agents/dm/request — send a chat request to another agent."""
+        return await self._request("POST", "/agents/dm/request", {"to": to_agent, "message": message})
+
+    async def approve_dm_request(self, request_id: str) -> Dict[str, Any]:
+        """POST /agents/dm/requests/ID/approve — approve a DM request."""
+        return await self._request("POST", f"/agents/dm/requests/{request_id}/approve")
+
+    async def reject_dm_request(self, request_id: str, block: bool = False) -> Dict[str, Any]:
+        """POST /agents/dm/requests/ID/reject — reject (optionally block)."""
+        data: Dict[str, Any] = {}
+        if block:
+            data["block"] = True
+        return await self._request("POST", f"/agents/dm/requests/{request_id}/reject", data or None)
+
+    async def upvote(self, post_id: str) -> Dict[str, Any]:
+        """POST /posts/ID/upvote."""
+        return await self._request("POST", f"/posts/{post_id}/upvote")
+
+    async def downvote(self, post_id: str) -> Dict[str, Any]:
+        """POST /posts/ID/downvote."""
+        return await self._request("POST", f"/posts/{post_id}/downvote")
+
+    async def upvote_comment(self, comment_id: str) -> Dict[str, Any]:
+        """POST /comments/ID/upvote."""
+        return await self._request("POST", f"/comments/{comment_id}/upvote")
+
+    async def follow_agent(self, agent_name: str) -> Dict[str, Any]:
+        """POST /agents/NAME/follow."""
         from urllib.parse import quote
 
-        safe_query = quote(query, safe="")
-        res = await self._request("GET", f"/search?q={safe_query}&limit={limit}")
-        return res.get("results", [])
+        return await self._request("POST", f"/agents/{quote(agent_name, safe='')}/follow")
 
-    async def get_profile(self, name: str) -> MoltbookAgentProfile:
-        """Fetch an agent's profile."""
+    async def unfollow_agent(self, agent_name: str) -> Dict[str, Any]:
+        """DELETE /agents/NAME/follow."""
         from urllib.parse import quote
 
-        safe_name = quote(name, safe="")
-        res = await self._request("GET", f"/agents/profile?name={safe_name}")
-        return res  # type: ignore
+        return await self._request("DELETE", f"/agents/{quote(agent_name, safe='')}/follow")
 
-    async def check_heartbeat(self) -> Dict[str, Any]:
-        """The pulse check for new DMs or mentions."""
-        return await self._request("GET", "/agents/dm/check")
+    async def subscribe_submolt(self, submolt_name: str) -> Dict[str, Any]:
+        """POST /submolts/NAME/subscribe."""
+        from urllib.parse import quote
 
-    async def get_dm_conversations(self) -> List[Dict[str, Any]]:
-        """List active DM conversations."""
-        res = await self._request("GET", "/agents/dm/conversations")
-        return res.get("conversations", []) if isinstance(res, dict) else []
+        return await self._request("POST", f"/submolts/{quote(submolt_name, safe='')}/subscribe")
 
-    async def get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
-        """Read messages in a conversation (marks as read)."""
-        res = await self._request("GET", f"/agents/dm/conversations/{conversation_id}")
-        return res.get("messages", []) if isinstance(res, dict) else []  # type: ignore
+    async def unsubscribe_submolt(self, submolt_name: str) -> Dict[str, Any]:
+        """DELETE /submolts/NAME/subscribe."""
+        from urllib.parse import quote
 
-    async def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
-        """Send a message in an active DM conversation."""
-        return await self._request("POST", f"/agents/dm/conversations/{conversation_id}/send", {"content": content})
+        return await self._request("DELETE", f"/submolts/{quote(submolt_name, safe='')}/subscribe")
+
+    async def update_profile(
+        self, description: Optional[str] = None, metadata: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """PATCH /agents/me — update own profile."""
+        data: Dict[str, Any] = {}
+        if description is not None:
+            data["description"] = description
+        if metadata is not None:
+            data["metadata"] = metadata
+        return await self._request("PATCH", "/agents/me", data)
+
+    # =========================================================================
+    # TAMAS — Destructive endpoints
+    # =========================================================================
+
+    async def delete_post(self, post_id: str) -> Dict[str, Any]:
+        """DELETE /posts/ID."""
+        return await self._request("DELETE", f"/posts/{post_id}")
 
     # =========================================================================
     # SYNC BRIDGE — for on_pulse() and other sync callers
@@ -432,9 +676,9 @@ class MoltbookClient:
         """Sync wrapper for post creation."""
         return run_async(self.create_post(title, content, submolt))  # type: ignore
 
-    def sync_send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    def sync_send_dm(self, conversation_id: str, content: str, needs_human_input: bool = False) -> Dict[str, Any]:
         """Sync wrapper for DM sending."""
-        return run_async(self.send_dm(conversation_id, content))
+        return run_async(self.send_dm(conversation_id, content, needs_human_input))
 
     def sync_get_dm_conversations(self) -> List[Dict[str, Any]]:
         """Sync wrapper for listing DM conversations."""
