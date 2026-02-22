@@ -355,17 +355,20 @@ class TestMoltbookProtocolContract:
             MoltbookProtocol()
 
     def test_has_all_abstract_methods(self):
-        """All 9 methods are abstract."""
+        """All protocol methods are abstract."""
         expected = {
-            "check_heartbeat",
-            "create_post",
-            "comment",
-            "search",
-            "get_profile",
-            "send_dm",
-            "get_conversations",
-            "get_messages",
-            "verify_credentials",
+            # SATTVA
+            "check_heartbeat", "get_own_profile", "get_profile",
+            "get_feed", "get_personalized_feed", "get_post", "get_comments",
+            "search", "get_conversations", "get_messages", "get_dm_requests",
+            "get_submolts", "get_submolt", "verify_credentials",
+            # RAJAS
+            "create_post", "comment", "send_dm", "send_dm_request",
+            "approve_dm_request", "reject_dm_request",
+            "upvote", "downvote", "upvote_comment",
+            "follow", "subscribe", "update_profile",
+            # TAMAS
+            "delete_post", "unfollow", "unsubscribe",
         }
         actual = set(MoltbookProtocol.__abstractmethods__)
         assert actual == expected, f"Missing: {expected - actual}, Extra: {actual - expected}"
@@ -381,7 +384,7 @@ class TestMoltbookProtocolContract:
     def test_method_count_matches(self):
         """Service implements exactly the methods defined by protocol."""
         abstract_count = len(MoltbookProtocol.__abstractmethods__)
-        assert abstract_count == 9
+        assert abstract_count == 29
 
 
 # =============================================================================
@@ -394,8 +397,8 @@ class TestMoltbookServiceSattva:
 
     def test_check_heartbeat(self, service):
         result = service.check_heartbeat()
-        assert "has_new_messages" in result
-        assert "pending_requests" in result
+        assert "has_activity" in result
+        assert "requests" in result
 
     def test_search_returns_list(self, service):
         results = service.search("agent operating system")
