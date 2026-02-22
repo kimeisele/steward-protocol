@@ -55,42 +55,71 @@ class MoltbookService(MoltbookProtocol):
     Wraps MoltbookClient with the ABC interface so it can be
     registered with ServiceRegistry. Other plugins and tools
     consume this via DI — never touch MoltbookClient directly.
+
+    Every operation is classified by Guna (SATTVA/RAJAS/TAMAS).
+    RAJAS operations (write) are logged. TAMAS (delete) are blocked
+    unless explicitly authorized. SATTVA (read) flows freely.
     """
 
     def __init__(self, client: "MoltbookClient"):
         self._client = client
+        self._operation_log: List[Dict[str, Any]] = []
+
+    def _enforce_guna(self, operation: str) -> None:
+        """
+        Enforce Guna policy before executing an operation.
+
+        SATTVA: Pass through (read-only, safe).
+        RAJAS: Log and allow (write, rate-limited by client).
+        TAMAS: Block (destructive — not implemented yet, future-proof).
+        """
+        from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP, MoltbookGuna
+
+        guna = MOLTBOOK_GUNA_MAP.get(operation, MoltbookGuna.SATTVA)
+
+        if guna == MoltbookGuna.TAMAS:
+            raise PermissionError(
+                f"MOLTBOOK-TAMAS: Operation '{operation}' is destructive and requires "
+                f"explicit authorization. Not implemented."
+            )
+
+        if guna == MoltbookGuna.RAJAS:
+            entry = {
+                "operation": operation,
+                "guna": guna.value,
+                "timestamp": time.time(),
+            }
+            self._operation_log.append(entry)
+            logger.info(f"MOLTBOOK-RAJAS: {operation} (write operation logged)")
+
+    # --- SATTVA operations (read-only) ---
 
     def check_heartbeat(self) -> Dict[str, Any]:
+        self._enforce_guna("check_heartbeat")
         return self._client.sync_check_heartbeat()
 
-    def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
-        return self._client.sync_create_post(title, content, submolt)
-
-    def comment(self, post_id: str, content: str) -> MoltbookComment:
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.comment_with_verification(post_id, content))
-
     def search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
+        self._enforce_guna("search")
         from vibe_core.mahamantra.adapters.moltbook import _run_async
 
         return _run_async(self._client.semantic_search(query, limit))
 
     def get_profile(self, name: str) -> MoltbookAgentProfile:
+        self._enforce_guna("get_profile")
         from vibe_core.mahamantra.adapters.moltbook import _run_async
 
         return _run_async(self._client.get_profile(name))
 
-    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
-        return self._client.sync_send_dm(conversation_id, content)
-
     def get_conversations(self) -> List[Dict[str, Any]]:
+        self._enforce_guna("get_conversations")
         return self._client.sync_get_dm_conversations()
 
     def get_messages(self, conversation_id: str) -> List[DMMessage]:
+        self._enforce_guna("get_messages")
         return self._client.sync_get_dm_messages(conversation_id)
 
     def verify_credentials(self) -> bool:
+        self._enforce_guna("verify_credentials")
         from vibe_core.mahamantra.adapters.moltbook import _run_async
 
         try:
@@ -98,6 +127,22 @@ class MoltbookService(MoltbookProtocol):
             return status == "claimed"
         except Exception:
             return False
+
+    # --- RAJAS operations (write, logged) ---
+
+    def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
+        self._enforce_guna("create_post")
+        return self._client.sync_create_post(title, content, submolt)
+
+    def comment(self, post_id: str, content: str) -> MoltbookComment:
+        self._enforce_guna("comment")
+        from vibe_core.mahamantra.adapters.moltbook import _run_async
+
+        return _run_async(self._client.comment_with_verification(post_id, content))
+
+    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+        self._enforce_guna("send_dm")
+        return self._client.sync_send_dm(conversation_id, content)
 
 
 class MoltbookPlugin(KernelPlugin):

@@ -13,6 +13,7 @@ Same pattern as TwitterProtocol / RedditProtocol in protocols/external.py.
 """
 
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Any, Dict, List, Optional, TypedDict
 
 # =============================================================================
@@ -100,6 +101,54 @@ class SubmoltDetails(TypedDict):
     moderators: List[str]
     theme_color: Optional[str]
     banner_color: Optional[str]
+
+
+# =============================================================================
+# GUNA CLASSIFICATION — What I/O policy governs each operation?
+# =============================================================================
+#
+# BG 14.5: "sattvam rajas tama iti gunah prakriti-sambhavah"
+#
+# SATTVA: Read-only, observation, no side effects on Moltbook state
+# RAJAS:  Write/create, modifies Moltbook state, requires rate limiting
+# TAMAS:  Destructive, deletes Moltbook state, requires confirmation
+#
+# This classification maps to gate_providers.py IOPolicy:
+#   SATTVA → CACHE_ONLY (read from API, no state mutation)
+#   RAJAS  → WRITE_BEHIND (create content, rate limited)
+#   TAMAS  → SYNC_FLUSH (delete, irreversible, needs audit)
+
+
+class MoltbookGuna(str, Enum):
+    """Guna classification for Moltbook operations."""
+
+    SATTVA = "sattva"  # Read: heartbeat, search, get_profile, get_conversations, get_messages
+    RAJAS = "rajas"  # Write: create_post, comment, send_dm, follow, subscribe
+    TAMAS = "tamas"  # Delete: delete_post, unfollow, unsubscribe
+
+
+# Operation → Guna mapping (SSOT — single place to check)
+MOLTBOOK_GUNA_MAP: Dict[str, MoltbookGuna] = {
+    # SATTVA — observation only
+    "check_heartbeat": MoltbookGuna.SATTVA,
+    "search": MoltbookGuna.SATTVA,
+    "get_profile": MoltbookGuna.SATTVA,
+    "get_conversations": MoltbookGuna.SATTVA,
+    "get_messages": MoltbookGuna.SATTVA,
+    "verify_credentials": MoltbookGuna.SATTVA,
+    # RAJAS — creation, modification
+    "create_post": MoltbookGuna.RAJAS,
+    "comment": MoltbookGuna.RAJAS,
+    "send_dm": MoltbookGuna.RAJAS,
+    "upvote": MoltbookGuna.RAJAS,
+    "downvote": MoltbookGuna.RAJAS,
+    "follow": MoltbookGuna.RAJAS,
+    "subscribe": MoltbookGuna.RAJAS,
+    # TAMAS — destruction, irreversible
+    "delete_post": MoltbookGuna.TAMAS,
+    "unfollow": MoltbookGuna.TAMAS,
+    "unsubscribe": MoltbookGuna.TAMAS,
+}
 
 
 # =============================================================================
