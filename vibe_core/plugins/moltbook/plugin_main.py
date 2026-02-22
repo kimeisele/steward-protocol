@@ -238,7 +238,7 @@ class MoltbookService(MoltbookProtocol):
         return _run_async(self._client.create_submolt(name, display_name, description))
 
     def subscribe_submolt(self, name: str) -> SubscribeResult:
-        self._enforce_guna("subscribe")
+        self._enforce_guna("subscribe_submolt")
         from vibe_core.mahamantra.adapters.moltbook import _run_async
 
         return _run_async(self._client.subscribe_submolt(name))
@@ -270,7 +270,7 @@ class MoltbookService(MoltbookProtocol):
         return _run_async(self._client.unfollow(agent_name))
 
     def unsubscribe_submolt(self, name: str) -> SubscribeResult:
-        self._enforce_guna("unsubscribe")
+        self._enforce_guna("unsubscribe_submolt")
         from vibe_core.mahamantra.adapters.moltbook import _run_async
 
         return _run_async(self._client.unsubscribe_submolt(name))
