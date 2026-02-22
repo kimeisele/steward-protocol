@@ -36,7 +36,7 @@ __genesis__ = "0x6e44c339"  # GenesisByte: parampara % 37 == 0
 import logging
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from vibe_core.mahamantra.protocols._seed import PARAMPARA
+from vibe_core.mahamantra import PARAMPARA
 from vibe_core.plugin_protocol import HookResult, KernelPlugin
 
 # Verify genesis

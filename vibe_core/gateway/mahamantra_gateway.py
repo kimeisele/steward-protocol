@@ -73,8 +73,7 @@ class GovardhanGateway(GatewayProtocol):
         This is the ONE entry point. CLI, HTTP, CHAT, AGENT — all come here.
         The gates fire at the boundary, then the pure core computes.
         """
-        from vibe_core.mahamantra import TattvaGate
-        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.mahamantra import TattvaGate, get_mahamantra
 
         lotus = get_mahamantra()
         command = request["command"]
@@ -189,7 +188,7 @@ class GovardhanGateway(GatewayProtocol):
 
     def route(self, command: str) -> Dict[str, object]:
         """Route command to position/guardian via pure computation."""
-        from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
+        from vibe_core.mahamantra import get_mahamantra
 
         lotus = get_mahamantra()
         result = lotus(command)

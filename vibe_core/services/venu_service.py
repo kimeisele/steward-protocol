@@ -36,18 +36,19 @@ import logging
 import time
 from typing import Callable, List
 
-from vibe_core.mahamantra.protocols._venu import (
-    VENU_TICK_S,
+from vibe_core.mahamantra import (
     VENU_MAX_JITTER_MS,
-    VENU_TICKS_PER_MALA,
     VENU_POSITIONS,
+    VENU_TICK_S,
+    VENU_TICKS_PER_MALA,
     BeatSubscriberProtocol,
     DIWSubscriberProtocol,
     HeartbeatMetrics,
     MantraClockProtocol,
+    PanchaTattvaProtocol,
+    TattvaDict,
     VenuOrchestratorProtocol,
 )
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
 from vibe_core.mahamantra.venu.clock import MantraClock
 

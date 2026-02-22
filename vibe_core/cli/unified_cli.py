@@ -1533,7 +1533,7 @@ class UnifiedCLI:
         Exit: Type "37" (PARAMPARA) or Ctrl+C
         """
         try:
-            from vibe_core.mahamantra.substrate.mantra import PersonAnchoredOperator
+            from vibe_core.mahamantra import PersonAnchoredOperator
 
             # Create operator
             operator = PersonAnchoredOperator()

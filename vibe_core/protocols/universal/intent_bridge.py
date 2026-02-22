@@ -39,12 +39,11 @@ __genesis__ = "0xedcdfef7"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Optional, Union, List
+from typing import Dict, List, Optional, Union
 
-from vibe_core.protocols.cognition import IntentType, CognitiveResult
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.mahamantra import MantraOpCode
+from vibe_core.protocols.cognition import CognitiveResult, IntentType
 from vibe_core.semantic_syscalls import SyscallType
-
 
 # =============================================================================
 # INTENT → OPCODE MAPPING (Primary Translation)

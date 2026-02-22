@@ -29,13 +29,12 @@ __mahajana__ = "janaka"
 __position__ = 10
 __genesis__ = "0x340d6bca"  # GenesisByte: parampara % 37 == 0
 
-from typing import Protocol, runtime_checkable, Any, List, Optional, TypeVar, Generic
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Generic, List, Optional, Protocol, TypeVar, runtime_checkable
 
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.mahamantra import MantraOpCode
 from vibe_core.protocols.mahajanas.router import Mahajana, route
-
 
 # =============================================================================
 # RESULT TYPES - What a Mahajana returns

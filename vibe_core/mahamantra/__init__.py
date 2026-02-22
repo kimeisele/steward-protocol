@@ -76,10 +76,20 @@ CORE_MODULES = [
     "vibe_core.mahamantra.substrate.pancha_tattva",  # TattvaGate
     "vibe_core.mahamantra.substrate.wiring",  # POSITION_BY_NAME
     "vibe_core.mahamantra.substrate.samskara",  # Samskara types
+    "vibe_core.mahamantra.substrate.harmonics",  # ResonanceHarmonics, compute_*
+    "vibe_core.mahamantra.substrate.phonetic_bridge",  # phonetic encoding/decoding
+    "vibe_core.mahamantra.substrate.mantra",  # PersonAnchoredOperator, MahaKirtan
     # === PROTOCOLS (The Standard) ===
     "vibe_core.mahamantra.protocols._gad",  # GADBase
     "vibe_core.mahamantra.protocols._header",  # MahaHeader
     "vibe_core.mahamantra.protocols._payload",  # PayloadType
+    "vibe_core.mahamantra.protocols._pancha",  # PanchaTattvaProtocol, TattvaDict
+    "vibe_core.mahamantra.protocols._venu",  # DIWEvent, BeatSubscriberProtocol, VenuServiceProtocol
+    "vibe_core.mahamantra.protocols._seed",  # WORDS, QUARTERS, PANCHA, PARAMPARA, etc.
+    "vibe_core.mahamantra.protocols._maha_compute",  # MahaComputeProtocol
+    "vibe_core.mahamantra.protocols._lotus",  # Lotus protocol types
+    # === KERNEL (Intent Resolution) ===
+    "vibe_core.mahamantra.kernel.intent",  # IntentType, MantraIntent, get_kernel, etc.
 ]
 
 # Enable Universal Discovery (Fractal + Core Modules)

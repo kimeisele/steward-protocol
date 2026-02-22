@@ -85,10 +85,9 @@ def _get_chat_service():
 
 # Import seed constants
 # GAD compliance
-from vibe_core.mahamantra import WORDS
+from vibe_core.mahamantra import HARE_COUNT, WORDS
+from vibe_core.mahamantra import WORDS as SEED_WORDS
 from vibe_core.mahamantra.protocols._gad import GADBase
-from vibe_core.mahamantra.protocols._seed import HARE_COUNT
-from vibe_core.mahamantra.protocols._seed import WORDS as SEED_WORDS
 
 # CONSCIENCE - Dharmic alignment check (Buddhi function)
 from vibe_core.mahamantra.protocols.sankalpa import (

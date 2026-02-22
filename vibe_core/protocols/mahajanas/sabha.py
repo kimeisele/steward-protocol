@@ -55,17 +55,17 @@ __position__ = 10
 __genesis__ = "0xdcf02af3"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterator, List, Optional, Protocol, runtime_checkable
 from datetime import datetime
+from typing import Dict, Iterator, List, Optional, Protocol, runtime_checkable
 
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-from vibe_core.protocols.substrate.byte import MantraByte, MANTRA_SEQUENCE
+from vibe_core.mahamantra import MantraOpCode
 from vibe_core.protocols.mahajanas.router import (
     Mahajana,
+    MahajanaRoute,
     MahajanaRouter,
     get_router,
-    MahajanaRoute,
 )
+from vibe_core.protocols.substrate.byte import MANTRA_SEQUENCE, MantraByte
 
 
 @dataclass

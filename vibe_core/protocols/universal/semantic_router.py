@@ -39,27 +39,26 @@ __position__ = 4
 __genesis__ = "0x696a79f6"  # GenesisByte: parampara % 37 == 0
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union
 from datetime import datetime
+from typing import Dict, List, Optional, Union
 
+from vibe_core.mahamantra import MantraOpCode
 from vibe_core.protocols.cognition import (
-    CognitiveResult,
     CognitiveContext,
+    CognitiveResult,
     IntentType,
 )
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-from vibe_core.protocols.universal.intent_bridge import (
-    IntentOpCodeBridge,
-    BridgeResult,
-    get_bridge,
-)
 from vibe_core.protocols.mahajanas.router import (
-    MahajanaRouter,
     Mahajana,
     MahajanaRoute,
+    MahajanaRouter,
     get_router,
 )
-
+from vibe_core.protocols.universal.intent_bridge import (
+    BridgeResult,
+    IntentOpCodeBridge,
+    get_bridge,
+)
 
 # =============================================================================
 # SEMANTIC ROUTE RESULT
