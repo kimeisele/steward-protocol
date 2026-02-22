@@ -100,15 +100,15 @@ class MoltbookService(MoltbookProtocol):
 
     def search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
         self._enforce_guna("search")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
+        from vibe_core.mahamantra import run_async
 
-        return _run_async(self._client.semantic_search(query, limit))
+        return run_async(self._client.semantic_search(query, limit))
 
     def get_profile(self, name: str) -> MoltbookAgentProfile:
         self._enforce_guna("get_profile")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
+        from vibe_core.mahamantra import run_async
 
-        return _run_async(self._client.get_profile(name))
+        return run_async(self._client.get_profile(name))
 
     def get_conversations(self) -> List[Dict[str, Any]]:
         self._enforce_guna("get_conversations")
@@ -120,10 +120,10 @@ class MoltbookService(MoltbookProtocol):
 
     def verify_credentials(self) -> bool:
         self._enforce_guna("verify_credentials")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
+        from vibe_core.mahamantra import run_async
 
         try:
-            status = _run_async(self._client.check_status())
+            status = run_async(self._client.check_status())
             return status == "claimed"
         except Exception:
             return False
@@ -136,9 +136,9 @@ class MoltbookService(MoltbookProtocol):
 
     def comment(self, post_id: str, content: str) -> MoltbookComment:
         self._enforce_guna("comment")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
+        from vibe_core.mahamantra import run_async
 
-        return _run_async(self._client.comment_with_verification(post_id, content))
+        return run_async(self._client.comment_with_verification(post_id, content))
 
     def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
         self._enforce_guna("send_dm")

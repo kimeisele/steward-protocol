@@ -342,9 +342,15 @@ class MoltbookClient:
             name = endpoint.rsplit("/", 1)[-1]
             if "/subscribe" not in endpoint:
                 return {
-                    "name": name, "display_name": name, "description": "mock",
-                    "subscriber_count": 0, "allow_crypto": False, "owner": "mock",
-                    "moderators": [], "theme_color": None, "banner_color": None,
+                    "name": name,
+                    "display_name": name,
+                    "description": "mock",
+                    "subscriber_count": 0,
+                    "allow_crypto": False,
+                    "owner": "mock",
+                    "moderators": [],
+                    "theme_color": None,
+                    "banner_color": None,
                 }
 
         elif method == "POST" and endpoint == "/submolts":
@@ -352,8 +358,12 @@ class MoltbookClient:
                 "name": data.get("name", "") if data else "",
                 "display_name": data.get("display_name", "") if data else "",
                 "description": data.get("description", "") if data else "",
-                "subscriber_count": 0, "allow_crypto": False, "owner": "self",
-                "moderators": [], "theme_color": None, "banner_color": None,
+                "subscriber_count": 0,
+                "allow_crypto": False,
+                "owner": "self",
+                "moderators": [],
+                "theme_color": None,
+                "banner_color": None,
             }
 
         elif method == "POST" and "/subscribe" in endpoint:
@@ -368,9 +378,13 @@ class MoltbookClient:
 
         elif method == "GET" and endpoint == "/agents/me":
             return {
-                "name": "steward-protocol", "description": "mock",
-                "metadata": None, "karma": 0, "x_handle": None,
-                "followers_count": 0, "following_count": 0,
+                "name": "steward-protocol",
+                "description": "mock",
+                "metadata": None,
+                "karma": 0,
+                "x_handle": None,
+                "followers_count": 0,
+                "following_count": 0,
             }
 
         # DM requests
@@ -426,7 +440,7 @@ class MoltbookClient:
 
     def sync_register(self, name: str, description: str) -> dict:
         """Sync wrapper for registration."""
-        return _run_async(self.register(name, description))
+        return run_async(self.register(name, description))
 
     # =========================================================================
     # PUBLIC API - The "Skin" Interface (ALL require Bearer token)
@@ -622,9 +636,15 @@ class MoltbookClient:
 
     async def create_submolt(self, name: str, display_name: str, description: str) -> SubmoltDetails:
         """Create a new submolt."""
-        return await self._request("POST", "/submolts", {  # type: ignore
-            "name": name, "display_name": display_name, "description": description,
-        })
+        return await self._request(
+            "POST",
+            "/submolts",
+            {  # type: ignore
+                "name": name,
+                "display_name": display_name,
+                "description": description,
+            },
+        )
 
     async def subscribe_submolt(self, name: str) -> SubscribeResult:
         """Subscribe to a submolt."""
@@ -673,9 +693,14 @@ class MoltbookClient:
 
     async def send_dm_request(self, agent_name: str, message: str) -> DMRequestResult:
         """Send a DM request to an agent."""
-        return await self._request("POST", "/agents/dm/request", {  # type: ignore
-            "agent_name": agent_name, "message": message,
-        })
+        return await self._request(
+            "POST",
+            "/agents/dm/request",
+            {  # type: ignore
+                "agent_name": agent_name,
+                "message": message,
+            },
+        )
 
     async def get_dm_requests(self) -> List[DMRequestInfo]:
         """List pending DM requests."""
@@ -696,29 +721,29 @@ class MoltbookClient:
 
     def sync_check_heartbeat(self) -> HeartbeatResult:
         """Sync wrapper for on_pulse(). Reuses running loop or creates one."""
-        return _run_async(self.check_heartbeat())
+        return run_async(self.check_heartbeat())
 
     def sync_create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
         """Sync wrapper for post creation."""
-        return _run_async(self.create_post(title, content, submolt))  # type: ignore
+        return run_async(self.create_post(title, content, submolt))  # type: ignore
 
     def sync_send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         """Sync wrapper for DM sending."""
-        return _run_async(self.send_dm(conversation_id, content))
+        return run_async(self.send_dm(conversation_id, content))
 
     def sync_get_dm_conversations(self) -> List[DMConversation]:
         """Sync wrapper for listing DM conversations."""
-        return _run_async(self.get_dm_conversations())
+        return run_async(self.get_dm_conversations())
 
     def sync_get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
         """Sync wrapper for DM reading."""
-        return _run_async(self.get_dm_messages(conversation_id))  # type: ignore
+        return run_async(self.get_dm_messages(conversation_id))  # type: ignore
 
 
 _SYNC_POOL = None
 
 
-def _run_async(coro):
+def run_async(coro):
     """Run a coroutine from sync context. Handles both in-loop and no-loop cases."""
     import asyncio
 
