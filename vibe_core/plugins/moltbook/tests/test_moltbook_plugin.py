@@ -26,7 +26,7 @@ from abc import abstractmethod
 
 import pytest
 
-from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+from vibe_core.mahamantra import MoltbookClient
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.plugins.moltbook.plugin_main import (
     _TICKS_PER_HEARTBEAT,
@@ -358,17 +358,37 @@ class TestMoltbookProtocolContract:
         """All protocol methods are abstract."""
         expected = {
             # SATTVA
-            "check_heartbeat", "get_own_profile", "get_profile",
-            "get_feed", "get_personalized_feed", "get_post", "get_comments",
-            "search", "get_conversations", "get_messages", "get_dm_requests",
-            "get_submolts", "get_submolt", "verify_credentials",
+            "check_heartbeat",
+            "get_own_profile",
+            "get_profile",
+            "get_feed",
+            "get_personalized_feed",
+            "get_post",
+            "get_comments",
+            "search",
+            "get_conversations",
+            "get_messages",
+            "get_dm_requests",
+            "get_submolts",
+            "get_submolt",
+            "verify_credentials",
             # RAJAS
-            "create_post", "comment", "send_dm", "send_dm_request",
-            "approve_dm_request", "reject_dm_request",
-            "upvote", "downvote", "upvote_comment",
-            "follow", "subscribe", "update_profile",
+            "create_post",
+            "comment",
+            "send_dm",
+            "send_dm_request",
+            "approve_dm_request",
+            "reject_dm_request",
+            "upvote",
+            "downvote",
+            "upvote_comment",
+            "follow",
+            "subscribe",
+            "update_profile",
             # TAMAS
-            "delete_post", "unfollow", "unsubscribe",
+            "delete_post",
+            "unfollow",
+            "unsubscribe",
         }
         actual = set(MoltbookProtocol.__abstractmethods__)
         assert actual == expected, f"Missing: {expected - actual}, Extra: {actual - expected}"

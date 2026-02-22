@@ -24,8 +24,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from vibe_core.mahamantra.protocols._seed import SHARANAGATI
-from vibe_core.mahamantra.protocols._venu import VENU_NADI_TICKS
+from vibe_core.mahamantra import SHARANAGATI, VENU_NADI_TICKS
 
 logger = logging.getLogger("SHUDDHI.KALA")
 

@@ -22,7 +22,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from vibe_core.mahamantra.protocols._venu import (
+from vibe_core.mahamantra import (
     VENU_FIELD_TICKS,
     VENU_NADI_TICKS,
 )
@@ -85,7 +85,7 @@ class OuroborosSubscriber:
     def _ingest_sentinel_violations(self) -> int:
         """Drain I/O Sentinel violations and push into KG."""
         try:
-            from vibe_core.mahamantra.substrate.io_sentinel import drain_violations
+            from vibe_core.mahamantra import drain_violations
             from vibe_core.ouroboros.ingestion import ViolationRecord, ViolationSource
 
             drained = drain_violations()

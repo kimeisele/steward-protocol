@@ -17,7 +17,7 @@ import importlib
 import logging
 from typing import List, Tuple, Type
 
-from vibe_core.mahamantra.protocols._venu import DIWSubscriberProtocol
+from vibe_core.mahamantra import DIWSubscriberProtocol
 
 logger = logging.getLogger("DIW.DISCOVERY")
 

@@ -202,7 +202,8 @@ class NagaProxy(Generic[T]):
         # "Manual Labor ist Maya" - MAHAPROMPT.md
         if position == -1 or guardian == "unknown":
             from pathlib import Path
-            from vibe_core.mahamantra.substrate.sankirtan import get_mahajana_for_path
+
+            from vibe_core.mahamantra import get_mahajana_for_path
 
             # Try to get module file path
             wrapped_module = getattr(wrapped, "__module__", None)

@@ -250,17 +250,30 @@ class MoltbookClient:
             return {"status": self._mock_db["status"]}
 
         elif method == "GET" and endpoint == "/agents/me":
-            return {"success": True, "agent": {
-                "name": "steward-protocol", "description": "Agentic OS",
-                "karma": 0, "follower_count": 0, "following_count": 0,
-                "is_claimed": True, "is_active": True,
-            }}
+            return {
+                "success": True,
+                "agent": {
+                    "name": "steward-protocol",
+                    "description": "Agentic OS",
+                    "karma": 0,
+                    "follower_count": 0,
+                    "following_count": 0,
+                    "is_claimed": True,
+                    "is_active": True,
+                },
+            }
 
         elif method == "GET" and endpoint.startswith("/agents/profile"):
-            return {"success": True, "agent": {
-                "name": "mock-agent", "karma": 10, "follower_count": 5,
-                "following_count": 3, "is_claimed": True,
-            }}
+            return {
+                "success": True,
+                "agent": {
+                    "name": "mock-agent",
+                    "karma": 10,
+                    "follower_count": 5,
+                    "following_count": 3,
+                    "is_claimed": True,
+                },
+            }
 
         elif method == "GET" and endpoint.startswith("/posts") and "comments" in endpoint:
             return {"comments": []}
@@ -284,7 +297,8 @@ class MoltbookClient:
         elif method == "GET" and endpoint == "/agents/dm/check":
             has_activity = len(self._mock_db["dms"]) > 0
             return {
-                "success": True, "has_activity": has_activity,
+                "success": True,
+                "has_activity": has_activity,
                 "summary": f"{'Activity' if has_activity else 'No activity'}",
                 "requests": {"count": 0, "items": []},
                 "messages": {"total_unread": 0, "conversations_with_unread": 0, "latest": []},
@@ -407,7 +421,7 @@ class MoltbookClient:
 
     def sync_register(self, name: str, description: str) -> Dict[str, Any]:
         """Sync wrapper for registration."""
-        return _run_async(self.register(name, description))
+        return run_async(self.register(name, description))
 
     # =========================================================================
     # PUBLIC API - The "Skin" Interface (ALL require Bearer token)
@@ -529,7 +543,9 @@ class MoltbookClient:
         res = await self._request("POST", "/posts", data)
         return res  # type: ignore
 
-    async def comment_with_verification(self, post_id: str, content: str, parent_id: Optional[str] = None) -> MoltbookComment:
+    async def comment_with_verification(
+        self, post_id: str, content: str, parent_id: Optional[str] = None
+    ) -> MoltbookComment:
         """
         POST /posts/ID/comments — creates a comment. AUTO-SOLVES math challenges.
 
@@ -629,7 +645,9 @@ class MoltbookClient:
 
         return await self._request("DELETE", f"/submolts/{quote(submolt_name, safe='')}/subscribe")
 
-    async def update_profile(self, description: Optional[str] = None, metadata: Optional[Dict] = None) -> Dict[str, Any]:
+    async def update_profile(
+        self, description: Optional[str] = None, metadata: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """PATCH /agents/me — update own profile."""
         data: Dict[str, Any] = {}
         if description is not None:
@@ -652,26 +670,26 @@ class MoltbookClient:
 
     def sync_check_heartbeat(self) -> Dict[str, Any]:
         """Sync wrapper for on_pulse(). Reuses running loop or creates one."""
-        return _run_async(self.check_heartbeat())
+        return run_async(self.check_heartbeat())
 
     def sync_create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
         """Sync wrapper for post creation."""
-        return _run_async(self.create_post(title, content, submolt))  # type: ignore
+        return run_async(self.create_post(title, content, submolt))  # type: ignore
 
     def sync_send_dm(self, conversation_id: str, content: str, needs_human_input: bool = False) -> Dict[str, Any]:
         """Sync wrapper for DM sending."""
-        return _run_async(self.send_dm(conversation_id, content, needs_human_input))
+        return run_async(self.send_dm(conversation_id, content, needs_human_input))
 
     def sync_get_dm_conversations(self) -> List[Dict[str, Any]]:
         """Sync wrapper for listing DM conversations."""
-        return _run_async(self.get_dm_conversations())
+        return run_async(self.get_dm_conversations())
 
     def sync_get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
         """Sync wrapper for DM reading."""
-        return _run_async(self.get_dm_messages(conversation_id))  # type: ignore
+        return run_async(self.get_dm_messages(conversation_id))  # type: ignore
 
 
-def _run_async(coro):
+def run_async(coro):
     """Run a coroutine from sync context. Handles both in-loop and no-loop cases."""
     import asyncio
 

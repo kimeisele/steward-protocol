@@ -20,7 +20,7 @@ __genesis__ = "0x386870f6"  # GenesisByte: parampara % 37 == 0
 
 import logging
 
-from vibe_core.mahamantra.protocols._venu import VENU_FIELD_TICKS
+from vibe_core.mahamantra import VENU_FIELD_TICKS
 
 logger = logging.getLogger("JAGANNATH.BEAT")
 

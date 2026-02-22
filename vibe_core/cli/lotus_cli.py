@@ -31,12 +31,8 @@ __genesis__ = "0xac560f43"  # GenesisByte: parampara % 37 == 0
 
 from typing import List
 
-from vibe_core.mahamantra.adapters.cli import (
-    AdapterResult,
-)
-from vibe_core.mahamantra.adapters.cli import (
-    get_adapter as get_mahamantra_cli_adapter,
-)
+from vibe_core.mahamantra import AdapterResult
+from vibe_core.mahamantra import get_adapter as get_mahamantra_cli_adapter
 from vibe_core.protocols.cli import CLIMeta, register_cli
 
 

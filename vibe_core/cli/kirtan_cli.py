@@ -108,7 +108,7 @@ class KirtanCLI:
     def _ensure_kirtan(self):
         """Lazy-load MahaKirtan."""
         if self._kirtan is None:
-            from vibe_core.mahamantra.substrate.mantra import MahaKirtan
+            from vibe_core.mahamantra import MahaKirtan
 
             self._kirtan = MahaKirtan()
         return self._kirtan
@@ -116,7 +116,7 @@ class KirtanCLI:
     def _ensure_operator(self, **kwargs):
         """Lazy-load PersonAnchoredOperator."""
         if self._operator is None:
-            from vibe_core.mahamantra.substrate.mantra import PersonAnchoredOperator
+            from vibe_core.mahamantra import PersonAnchoredOperator
 
             self._operator = PersonAnchoredOperator(**kwargs)
         return self._operator
@@ -220,7 +220,7 @@ class KirtanCLI:
                 i += 1
 
         # Create and run operator
-        from vibe_core.mahamantra.substrate.mantra import PersonAnchoredOperator
+        from vibe_core.mahamantra import PersonAnchoredOperator
 
         operator = PersonAnchoredOperator(
             mod_space=mod_space,
@@ -339,8 +339,7 @@ class KirtanCLI:
 
         Usage: vibe kirtan synth [--preset NAME] [--mod N]
         """
-        from vibe_core.mahamantra.substrate.mantra import MahaModularSynth
-        from vibe_core.mahamantra.substrate.algorithm.maha import SYNTH_PRESETS
+        from vibe_core.mahamantra import SYNTH_PRESETS, MahaModularSynth
 
         preset = "quantum"
         mod_space = MAHA_QUANTUM
@@ -393,7 +392,7 @@ class KirtanCLI:
         """
         from dataclasses import fields
 
-        from vibe_core.mahamantra.substrate.algorithm.maha import SYNTH_PRESETS
+        from vibe_core.mahamantra import SYNTH_PRESETS
 
         print("Available Synth Presets:")
         print("=" * 40)

@@ -36,24 +36,24 @@ __genesis__ = "0xde0bbed4"  # GenesisByte: parampara % 37 == 0
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, Protocol, runtime_checkable, List, Union, Dict
+from typing import TYPE_CHECKING, Dict, List, Optional, Protocol, Union, runtime_checkable
 
 if TYPE_CHECKING:
-    from vibe_core.protocols.universal.types import SovereignContext
     from vibe_core.protocols.mahajanas.router import MahajanaRouter
+    from vibe_core.protocols.universal.types import SovereignContext
 
 # IMPORTS (The Holy Trinity of Dependencies)
-from .bridge import MayavadError, SetuBandha
-
-# PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
-from vibe_core.protocols.substrate.mantra.prabhupada import PRABHUPADA
-from .steward import VedicSteward
+import logging
 
 # Strict Type Imports (NO ANY - PROMPT.md §IV.1)
 from vibe_core.protocols.cli_execution import CLICapabilityToken
 from vibe_core.protocols.command import CommandContext
 
-import logging
+# PRABHUPADA is in substrate/mantra/ - where he belongs (near the Mahamantra)
+from vibe_core.protocols.substrate.mantra.prabhupada import PRABHUPADA
+
+from .bridge import MayavadError, SetuBandha
+from .steward import VedicSteward
 
 logger = logging.getLogger(__name__)
 
@@ -703,7 +703,7 @@ class MantraProcessor:
             return None
 
         try:
-            from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+            from vibe_core.mahamantra import MantraOpCode
 
             opcode = MantraOpCode(opcode_value)
             return self._router.route(opcode).value
@@ -717,7 +717,7 @@ class MantraProcessor:
             return False
 
         try:
-            from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+            from vibe_core.mahamantra import MantraOpCode
             from vibe_core.protocols.mahajanas.router import HEAD_OPCODES
 
             opcode = MantraOpCode(opcode_value)
@@ -753,7 +753,7 @@ class MantraProcessor:
             )
 
         try:
-            from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+            from vibe_core.mahamantra import MantraOpCode
             from vibe_core.protocols.mahajanas.router import HEAD_OPCODES
 
             opcode = MantraOpCode(opcode_value)
@@ -795,7 +795,7 @@ class MantraProcessor:
         commands = []
         for cmd, opcode_value in self._opcode_map.items():
             try:
-                from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+                from vibe_core.mahamantra import MantraOpCode
                 from vibe_core.protocols.mahajanas.router import HEAD_OPCODES
 
                 opcode = MantraOpCode(opcode_value)
@@ -927,8 +927,8 @@ def verify_gad000() -> GAD000Seal:
     heads_seen = set()
 
     try:
-        from vibe_core.mahamantra.substrate.opcode import MantraOpCode
-        from vibe_core.protocols.mahajanas.router import MahajanaRouter, HEAD_OPCODES, Mahajana
+        from vibe_core.mahamantra import MantraOpCode
+        from vibe_core.protocols.mahajanas.router import HEAD_OPCODES, Mahajana, MahajanaRouter
 
         router = MahajanaRouter()
 

@@ -341,7 +341,9 @@ class MoltbookProtocol(ABC):
         """POST /submolts/NAME/subscribe."""
 
     @abstractmethod
-    def update_profile(self, description: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def update_profile(
+        self, description: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """PATCH /agents/me — update own profile."""
 
     # --- TAMAS: Destructive ---
