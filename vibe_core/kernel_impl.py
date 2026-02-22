@@ -51,8 +51,7 @@ if TYPE_CHECKING:
     from vibe_core.protocols.economy import BankProtocol, VaultProtocol
 
 # Phase 2: ONE IMPORT - KRISHNA ROUTES ALLES
-from vibe_core.mahamantra import mahamantra
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
+from vibe_core.mahamantra import PanchaTattvaProtocol, TattvaDict, mahamantra
 
 from .errors import kernel_fault
 from .event_bus import Event, EventType, get_event_bus

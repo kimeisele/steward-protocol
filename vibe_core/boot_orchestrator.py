@@ -539,7 +539,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
     def _act_start_venu(self) -> None:
         """ACT Step 2: Start VenuService (Krishna's Flute - Central Orchestrator)."""
         from vibe_core.di import ServiceRegistry
-        from vibe_core.mahamantra.protocols._venu import VenuServiceProtocol
+        from vibe_core.mahamantra import VenuServiceProtocol
         from vibe_core.services.venu_service import VenuService
 
         self._venu_service = VenuService()
@@ -593,7 +593,7 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
         """ACT Step 7: Gate Providers — already wired by lotus.bootstrap() (idempotent)."""
         # wire_gate_providers() is idempotent, but lotus.bootstrap() already calls it.
         # We just verify they're armed.
-        from vibe_core.mahamantra.substrate.tattva_registry import get_registry
+        from vibe_core.mahamantra import get_registry
 
         count = get_registry().gate_provider_count()
         if count:
@@ -601,13 +601,13 @@ class BootOrchestrator(CognitiveCycle, BootProtocol):
 
     def _act_arm_io_sentinel(self) -> None:
         """ACT Step 8: I/O Sentinel — already armed by gate_providers import (verify only)."""
-        from vibe_core.mahamantra.substrate.io_sentinel import is_armed
+        from vibe_core.mahamantra import is_armed
 
         if is_armed():
             logger.info("      → I/O Sentinel armed (via gate_providers import)")
         else:
             # Fallback: arm explicitly if not yet armed
-            from vibe_core.mahamantra.substrate.io_sentinel import arm
+            from vibe_core.mahamantra import arm
 
             arm()
             logger.info("      → I/O Sentinel armed (explicit fallback)")

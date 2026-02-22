@@ -40,25 +40,23 @@ from typing import Any, Callable, Dict, Final, List, Optional
 from uuid import uuid4
 
 # Import Nadi infrastructure
-from vibe_core.mahamantra import LocalNadi, MantraOpCode, NadiProtocol, NadiType
-
 # GAD compliance
-from vibe_core.mahamantra.protocols._gad import GADBase
-from vibe_core.mahamantra.substrate.nadi import (
+from vibe_core.mahamantra import (
     NADI_CAPACITY,
+    NADI_RESONANCE,
     NADI_TIMEOUT_MS,
+    NAVA,
+    PRANA_DURATION_MS,
+    SHARANAGATI,
+    GADBase,
+    LocalNadi,
+    MantraOpCode,
     NadiConnection,
     NadiMessage,
     NadiOp,
     NadiPriority,
-)
-
-# Import seed constants
-from vibe_core.mahamantra.substrate.seed import (
-    NADI_RESONANCE,
-    NAVA,
-    PRANA_DURATION_MS,
-    SHARANAGATI,
+    NadiProtocol,
+    NadiType,
 )
 
 # Import MahajanaRouter for routing decisions

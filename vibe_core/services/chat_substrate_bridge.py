@@ -34,19 +34,18 @@ from datetime import datetime
 from typing import Dict, Final, List, Optional, Tuple
 
 # Substrate imports
-from vibe_core.mahamantra import MAHAMANTRA, WORDS, HolyName, MantraByte
-from vibe_core.mahamantra.protocols._gad import GADBase
-from vibe_core.mahamantra.protocols._lotus import (
+from vibe_core.mahamantra import (
     MAHAJANA_POSITIONS,
-    get_position_mahajana,
-)
-from vibe_core.mahamantra.substrate.byte import (
+    MAHAMANTRA,
     MANTRA_SEQUENCE,
-    MantraBit,
-)
-from vibe_core.mahamantra.substrate.seed import (
     PARAMPARA,
+    WORDS,
+    GADBase,
+    HolyName,
+    MantraBit,
+    MantraByte,
     Quarter,
+    get_position_mahajana,
 )
 
 logger = logging.getLogger("CHAT_SUBSTRATE")
@@ -63,12 +62,8 @@ logger = logging.getLogger("CHAT_SUBSTRATE")
 #   THRESHOLD_MANIFEST = NADI/MALA = 72/108 = 2/3 ≈ 0.667
 #   THRESHOLD_NEGOTIATE = LILA/MALA = 48/108 = 4/9 ≈ 0.444
 
-from vibe_core.mahamantra.substrate.harmonics import (
-    THRESHOLD_AUTO as THRESHOLD_MANIFEST,
-)
-from vibe_core.mahamantra.substrate.harmonics import (
-    THRESHOLD_REFINE as THRESHOLD_NEGOTIATE,
-)
+from vibe_core.mahamantra import THRESHOLD_AUTO as THRESHOLD_MANIFEST
+from vibe_core.mahamantra import THRESHOLD_REFINE as THRESHOLD_NEGOTIATE
 
 # Below LILA/MALA = Silence (no resonance)
 
@@ -140,10 +135,8 @@ class SubstrateRoute:
 # NO HARDCODED VOWEL/WESTERN MAPPINGS - Universal Phonetic Bridge handles all!
 
 # Import from Universal Phonetic Bridge (the unified SSOT)
-from vibe_core.mahamantra.substrate.phonetic_bridge import (
-    PHONEME_TO_VARGA as _PHONEME_TO_VARGA,
-)
-from vibe_core.mahamantra.substrate.phonetic_bridge import (
+from vibe_core.mahamantra import PHONEME_TO_VARGA as _PHONEME_TO_VARGA
+from vibe_core.mahamantra import (
     VARGA_TO_QUARTER,
     VargaIndex,
     get_phonetic_bridge,
@@ -171,15 +164,9 @@ STHANA_ANUNASIKA: Final[int] = 4  # Nasal → continuous (0.5)
 PHONEME_VARGA: Final[Dict[str, int]] = {k: v.value for k, v in _PHONEME_TO_VARGA.items()}
 
 # Import PHONEME_TO_STHANA from phonetic_bridge (already derived from protocols)
-from vibe_core.mahamantra.substrate.phonetic_bridge import (
-    PHONEME_TO_STHANA as _PHONEME_TO_STHANA,
-)
-from vibe_core.mahamantra.substrate.phonetic_bridge import (
-    STHANA_ENERGY as _STHANA_ENERGY,
-)
-from vibe_core.mahamantra.substrate.phonetic_bridge import (
-    SthanaIndex,
-)
+from vibe_core.mahamantra import PHONEME_TO_STHANA as _PHONEME_TO_STHANA
+from vibe_core.mahamantra import STHANA_ENERGY as _STHANA_ENERGY
+from vibe_core.mahamantra import SthanaIndex
 
 # PHONEME_STHANA: Derived from Universal Phonetic Bridge (converts SthanaIndex to int)
 PHONEME_STHANA: Final[Dict[str, int]] = {k: v.value for k, v in _PHONEME_TO_STHANA.items()}

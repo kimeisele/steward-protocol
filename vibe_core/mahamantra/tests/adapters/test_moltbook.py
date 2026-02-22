@@ -31,7 +31,7 @@ from vibe_core.mahamantra.adapters.moltbook import (
     MoltbookClient,
     MoltbookLimits,
     RateLimitState,
-    _run_async,
+    run_async,
 )
 
 # =============================================================================

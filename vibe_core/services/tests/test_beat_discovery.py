@@ -9,11 +9,12 @@ Verifies:
 """
 
 import pytest
+
+from vibe_core.mahamantra import BeatSubscriberProtocol
 from vibe_core.services.beat_discovery import (
-    discover_beat_subscriber_classes,
     discover_and_register_beat_subscribers,
+    discover_beat_subscriber_classes,
 )
-from vibe_core.mahamantra.protocols._venu import BeatSubscriberProtocol
 
 
 class TestBeatDiscovery:
@@ -74,7 +75,7 @@ class TestBeatDiscovery:
 
     def test_beat_intervals_are_harmonic(self):
         """All intervals must be derived from SSOT or be 1 (every-tick bridge)."""
-        from vibe_core.mahamantra.protocols._venu import VENU_NADI_TICKS, VENU_FIELD_TICKS
+        from vibe_core.mahamantra import VENU_FIELD_TICKS, VENU_NADI_TICKS
 
         classes = discover_beat_subscriber_classes()
         # 1 = every tick (LotusBridge), NADI=72, FIELD=144

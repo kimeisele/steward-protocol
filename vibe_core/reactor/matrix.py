@@ -71,7 +71,7 @@ class PhoneticGuna(IntEnum):
 
     This is PHONETIC physics - energy levels in sound production.
     For BG 14 Gunas (SATTVA=0, RAJAS=1, TAMAS=2), use:
-        from vibe_core.mahamantra.substrate.guna import Guna
+        from vibe_core.mahamantra import Guna
     """
 
     TAMAS = -1  # Inertia, storage, read (phonetic: minimal energy)

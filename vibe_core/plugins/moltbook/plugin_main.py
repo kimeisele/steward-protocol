@@ -28,7 +28,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from vibe_core.mahamantra.adapters.moltbook import _run_async
+from vibe_core.mahamantra import run_async
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.protocols.moltbook import (
     DMMessage,
@@ -41,7 +41,7 @@ from vibe_core.protocols.moltbook import (
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
-    from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+    from vibe_core.mahamantra import MoltbookClient
 
 logger = logging.getLogger("MOLTBOOK")
 
@@ -101,31 +101,31 @@ class MoltbookService(MoltbookProtocol):
 
     def get_own_profile(self) -> MoltbookAgentProfile:
         self._enforce_guna("get_own_profile")
-        return _run_async(self._client.get_own_profile())
+        return run_async(self._client.get_own_profile())
 
     def get_profile(self, name: str) -> MoltbookAgentProfile:
         self._enforce_guna("get_profile")
-        return _run_async(self._client.get_profile(name))
+        return run_async(self._client.get_profile(name))
 
     def get_feed(self, sort: str = "hot", limit: int = 25) -> List[Any]:
         self._enforce_guna("get_feed")
-        return _run_async(self._client.get_feed(sort, limit))
+        return run_async(self._client.get_feed(sort, limit))
 
     def get_personalized_feed(self, sort: str = "hot", limit: int = 25) -> List[Any]:
         self._enforce_guna("get_personalized_feed")
-        return _run_async(self._client.get_personalized_feed(sort, limit))
+        return run_async(self._client.get_personalized_feed(sort, limit))
 
     def get_post(self, post_id: str) -> Dict[str, Any]:
         self._enforce_guna("get_post")
-        return _run_async(self._client.get_post(post_id))
+        return run_async(self._client.get_post(post_id))
 
     def get_comments(self, post_id: str, sort: str = "top") -> List[Any]:
         self._enforce_guna("get_comments")
-        return _run_async(self._client.get_comments(post_id, sort))
+        return run_async(self._client.get_comments(post_id, sort))
 
     def search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
         self._enforce_guna("search")
-        return _run_async(self._client.semantic_search(query, limit))
+        return run_async(self._client.semantic_search(query, limit))
 
     def get_conversations(self) -> List[Dict[str, Any]]:
         self._enforce_guna("get_conversations")
@@ -137,20 +137,20 @@ class MoltbookService(MoltbookProtocol):
 
     def get_dm_requests(self) -> List[Dict[str, Any]]:
         self._enforce_guna("get_dm_requests")
-        return _run_async(self._client.get_dm_requests())
+        return run_async(self._client.get_dm_requests())
 
     def get_submolts(self) -> List[Dict[str, Any]]:
         self._enforce_guna("get_submolts")
-        return _run_async(self._client.get_submolts())
+        return run_async(self._client.get_submolts())
 
     def get_submolt(self, name: str) -> Dict[str, Any]:
         self._enforce_guna("get_submolt")
-        return _run_async(self._client.get_submolt(name))
+        return run_async(self._client.get_submolt(name))
 
     def verify_credentials(self) -> bool:
         self._enforce_guna("verify_credentials")
         try:
-            status = _run_async(self._client.check_status())
+            status = run_async(self._client.check_status())
             return status == "claimed"
         except Exception:
             return False
@@ -163,7 +163,7 @@ class MoltbookService(MoltbookProtocol):
 
     def comment(self, post_id: str, content: str, parent_id: Optional[str] = None) -> MoltbookComment:
         self._enforce_guna("comment")
-        return _run_async(self._client.comment_with_verification(post_id, content, parent_id))
+        return run_async(self._client.comment_with_verification(post_id, content, parent_id))
 
     def send_dm(self, conversation_id: str, content: str, needs_human_input: bool = False) -> Dict[str, Any]:
         self._enforce_guna("send_dm")
@@ -171,53 +171,55 @@ class MoltbookService(MoltbookProtocol):
 
     def send_dm_request(self, to_agent: str, message: str) -> Dict[str, Any]:
         self._enforce_guna("send_dm_request")
-        return _run_async(self._client.send_dm_request(to_agent, message))
+        return run_async(self._client.send_dm_request(to_agent, message))
 
     def approve_dm_request(self, request_id: str) -> Dict[str, Any]:
         self._enforce_guna("approve_dm_request")
-        return _run_async(self._client.approve_dm_request(request_id))
+        return run_async(self._client.approve_dm_request(request_id))
 
     def reject_dm_request(self, request_id: str, block: bool = False) -> Dict[str, Any]:
         self._enforce_guna("reject_dm_request")
-        return _run_async(self._client.reject_dm_request(request_id, block))
+        return run_async(self._client.reject_dm_request(request_id, block))
 
     def upvote(self, post_id: str) -> Dict[str, Any]:
         self._enforce_guna("upvote")
-        return _run_async(self._client.upvote(post_id))
+        return run_async(self._client.upvote(post_id))
 
     def downvote(self, post_id: str) -> Dict[str, Any]:
         self._enforce_guna("downvote")
-        return _run_async(self._client.downvote(post_id))
+        return run_async(self._client.downvote(post_id))
 
     def upvote_comment(self, comment_id: str) -> Dict[str, Any]:
         self._enforce_guna("upvote_comment")
-        return _run_async(self._client.upvote_comment(comment_id))
+        return run_async(self._client.upvote_comment(comment_id))
 
     def follow(self, agent_name: str) -> Dict[str, Any]:
         self._enforce_guna("follow")
-        return _run_async(self._client.follow_agent(agent_name))
+        return run_async(self._client.follow_agent(agent_name))
 
     def subscribe(self, submolt_name: str) -> Dict[str, Any]:
         self._enforce_guna("subscribe")
-        return _run_async(self._client.subscribe_submolt(submolt_name))
+        return run_async(self._client.subscribe_submolt(submolt_name))
 
-    def update_profile(self, description: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def update_profile(
+        self, description: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         self._enforce_guna("update_profile")
-        return _run_async(self._client.update_profile(description, metadata))
+        return run_async(self._client.update_profile(description, metadata))
 
     # --- TAMAS operations (destructive, blocked by default) ---
 
     def delete_post(self, post_id: str) -> Dict[str, Any]:
         self._enforce_guna("delete_post")
-        return _run_async(self._client.delete_post(post_id))
+        return run_async(self._client.delete_post(post_id))
 
     def unfollow(self, agent_name: str) -> Dict[str, Any]:
         self._enforce_guna("unfollow")
-        return _run_async(self._client.unfollow_agent(agent_name))
+        return run_async(self._client.unfollow_agent(agent_name))
 
     def unsubscribe(self, submolt_name: str) -> Dict[str, Any]:
         self._enforce_guna("unsubscribe")
-        return _run_async(self._client.unsubscribe_submolt(submolt_name))
+        return run_async(self._client.unsubscribe_submolt(submolt_name))
 
 
 class MoltbookPlugin(KernelPlugin):
@@ -290,7 +292,7 @@ class MoltbookPlugin(KernelPlugin):
         kernel: "RealVibeKernel",
         config: Optional[Dict[str, object]] = None,
     ) -> HookResult:
-        from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+        from vibe_core.mahamantra import MoltbookClient
 
         try:
             # Resolve state dir

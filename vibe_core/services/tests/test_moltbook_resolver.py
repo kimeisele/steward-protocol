@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from vibe_core.mahamantra.kernel.intent import (
+from vibe_core.mahamantra import (
     IntentPriority,
     IntentResult,
     IntentStatus,

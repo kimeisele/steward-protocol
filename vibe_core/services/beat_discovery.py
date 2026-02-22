@@ -28,7 +28,7 @@ import importlib
 import logging
 from typing import List, Tuple, Type
 
-from vibe_core.mahamantra.protocols._venu import BeatSubscriberProtocol
+from vibe_core.mahamantra import BeatSubscriberProtocol
 
 logger = logging.getLogger("BEAT.DISCOVERY")
 

@@ -36,8 +36,7 @@ __genesis__ = "0xec02c0c4"
 import logging
 from typing import Dict, Optional, TypedDict
 
-from vibe_core.mahamantra.protocols._seed import QUARTERS
-from vibe_core.mahamantra.protocols._venu import DIWEvent
+from vibe_core.mahamantra import QUARTERS, DIWEvent
 
 logger = logging.getLogger("NARADA.BRIDGE")
 

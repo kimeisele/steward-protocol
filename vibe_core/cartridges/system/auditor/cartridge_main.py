@@ -26,9 +26,9 @@ import subprocess
 from typing import Any, Dict, Optional
 
 from vibe_core.config import CityConfig
+from vibe_core.mahamantra import PanchaTattvaProtocol, TattvaDict
 from vibe_core.protocols import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
-from vibe_core.mahamantra.protocols._pancha import PanchaTattvaProtocol, TattvaDict
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin

@@ -10,13 +10,13 @@ Verifies:
 """
 
 import pytest
-from vibe_core.mahamantra.protocols._venu import DIWEvent, DIWSubscriberProtocol
-from vibe_core.mahamantra.protocols._seed import WORDS, QUARTERS
-from vibe_core.services.diw_telemetry import DIWTelemetrySubscriber
+
+from vibe_core.mahamantra import QUARTERS, WORDS, DIWEvent, DIWSubscriberProtocol
 from vibe_core.services.diw_discovery import (
-    discover_diw_subscriber_classes,
     discover_and_register_diw_subscribers,
+    discover_diw_subscriber_classes,
 )
+from vibe_core.services.diw_telemetry import DIWTelemetrySubscriber
 
 
 def _make_event(position: int, phase: int = 0, mode: int = 0, diw: int = 0x1234) -> DIWEvent:
@@ -85,7 +85,7 @@ class TestDIWTelemetrySubscriber:
 
     def test_orchestrator_integration(self):
         """Prove the subscriber works with VenuOrchestrator end-to-end."""
-        from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
+        from vibe_core.mahamantra import VenuOrchestrator
 
         orch = VenuOrchestrator()
         sub = DIWTelemetrySubscriber()

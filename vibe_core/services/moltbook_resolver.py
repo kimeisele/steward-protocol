@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Dict, Optional, Union
 
-from vibe_core.mahamantra.kernel.intent import (
+from vibe_core.mahamantra import (
     IntentResult,
     IntentStatus,
     IntentType,
@@ -111,13 +111,13 @@ class MoltbookResolver:
 
     def _dispatch(self, target: str, params: Dict[str, Union[str, int, bool, None]]) -> object:
         """Dispatch to the correct client method based on target."""
-        from vibe_core.services.moltbook_client import _run_async
+        from vibe_core.services.moltbook_client import run_async
 
         # --- READ operations ---
         if target == TARGET_FEED:
             sort = str(params.get("sort", "hot"))
             limit = int(params.get("limit", 25))
-            return _run_async(self._client.get_feed(sort=sort, limit=limit))
+            return run_async(self._client.get_feed(sort=sort, limit=limit))
 
         if target == TARGET_DM_CHECK:
             return self._client.sync_check_heartbeat()
@@ -132,35 +132,35 @@ class MoltbookResolver:
             return self._client.sync_get_dm_messages(conv_id)
 
         if target == TARGET_DM_REQUESTS:
-            return _run_async(self._client.get_dm_requests())
+            return run_async(self._client.get_dm_requests())
 
         if target == TARGET_SEARCH:
             query = str(params.get("query", ""))
             limit = int(params.get("limit", 25))
             if not query:
                 raise ValueError("query required for search")
-            return _run_async(self._client.semantic_search(query, limit=limit))
+            return run_async(self._client.semantic_search(query, limit=limit))
 
         if target == TARGET_POST:
             post_id = str(params.get("post_id", ""))
             if not post_id:
                 raise ValueError("post_id required")
-            return _run_async(self._client.get_post(post_id))
+            return run_async(self._client.get_post(post_id))
 
         if target == TARGET_COMMENTS:
             post_id = str(params.get("post_id", ""))
             if not post_id:
                 raise ValueError("post_id required for comments")
-            return _run_async(self._client.get_comments(post_id))
+            return run_async(self._client.get_comments(post_id))
 
         if target == TARGET_OWN_PROFILE:
-            return _run_async(self._client.get_own_profile())
+            return run_async(self._client.get_own_profile())
 
         if target == TARGET_PROFILE:
             name = str(params.get("name", ""))
             if not name:
                 raise ValueError("name required for profile")
-            return _run_async(self._client.get_profile(name))
+            return run_async(self._client.get_profile(name))
 
         # --- WRITE operations ---
         if target == TARGET_CREATE_POST:
@@ -176,7 +176,7 @@ class MoltbookResolver:
             content = str(params.get("content", ""))
             if not post_id or not content:
                 raise ValueError("post_id and content required for comment")
-            return _run_async(self._client.create_comment(post_id, content))
+            return run_async(self._client.create_comment(post_id, content))
 
         if target == TARGET_SEND_DM:
             conv_id = str(params.get("conversation_id", ""))
@@ -189,25 +189,25 @@ class MoltbookResolver:
             post_id = str(params.get("post_id", ""))
             if not post_id:
                 raise ValueError("post_id required for upvote")
-            return _run_async(self._client.upvote(post_id))
+            return run_async(self._client.upvote(post_id))
 
         if target == TARGET_DOWNVOTE:
             post_id = str(params.get("post_id", ""))
             if not post_id:
                 raise ValueError("post_id required for downvote")
-            return _run_async(self._client.downvote(post_id))
+            return run_async(self._client.downvote(post_id))
 
         if target == TARGET_FOLLOW:
             name = str(params.get("name", ""))
             if not name:
                 raise ValueError("name required for follow")
-            return _run_async(self._client.follow_agent(name))
+            return run_async(self._client.follow_agent(name))
 
         if target == TARGET_UNFOLLOW:
             name = str(params.get("name", ""))
             if not name:
                 raise ValueError("name required for unfollow")
-            return _run_async(self._client.unfollow_agent(name))
+            return run_async(self._client.unfollow_agent(name))
 
         raise ValueError(f"Unknown moltbook target: {target}")
 
@@ -225,14 +225,14 @@ def create_moltbook_listener(client: "MoltbookClient") -> callable:
     The MantraKernel processes the queue and the resolver handles I/O.
 
     Usage:
-        from vibe_core.mahamantra.kernel.singularity import mahamantra
-        from vibe_core.mahamantra.kernel.intent import get_kernel
+        from vibe_core.mahamantra import mahamantra, get_kernel
 
         listener = create_moltbook_listener(client)
         mahamantra.register_listener(listener)
     """
+
     def on_tick(tick_state: dict) -> None:
-        from vibe_core.mahamantra.kernel.intent import IntentPriority, get_kernel
+        from vibe_core.mahamantra import IntentPriority, get_kernel
 
         # Gate on downbeat
         if isinstance(tick_state, dict):
@@ -246,13 +246,15 @@ def create_moltbook_listener(client: "MoltbookClient") -> callable:
         kernel = get_kernel()
 
         # Queue DM check on every downbeat (~4 seconds)
-        kernel.queue(MantraIntent(
-            type=IntentType.SYNC,
-            target=TARGET_DM_CHECK,
-            params={},
-            priority=IntentPriority.NORMAL,
-            requester="moltbook_listener",
-        ))
+        kernel.queue(
+            MantraIntent(
+                type=IntentType.SYNC,
+                target=TARGET_DM_CHECK,
+                params={},
+                priority=IntentPriority.NORMAL,
+                requester="moltbook_listener",
+            )
+        )
 
     return on_tick
 
@@ -273,7 +275,7 @@ def boot_moltbook(api_key: str = "", offline: bool = False) -> MoltbookResolver:
 
     Returns the resolver for direct access if needed.
     """
-    from vibe_core.mahamantra.kernel.intent import get_kernel
+    from vibe_core.mahamantra import get_kernel
     from vibe_core.services.moltbook_client import MoltbookClient
 
     client = MoltbookClient(api_key=api_key, offline_mode=offline)
@@ -286,15 +288,14 @@ def boot_moltbook(api_key: str = "", offline: bool = False) -> MoltbookResolver:
 
     logger.info("Moltbook resolver registered with MantraKernel for %s", [t.value for t in HANDLED_TYPES])
 
-    # Register Singularity listener
+    # Register tick listener via Lotus facade
     try:
-        from vibe_core.mahamantra.kernel.singularity import _get_singularity
+        from vibe_core.mahamantra import mahamantra
 
-        singularity = _get_singularity()
         listener = create_moltbook_listener(client)
-        singularity.register_listener(listener)
-        logger.info("Moltbook listener registered with Singularity")
+        mahamantra.register_listener(listener)
+        logger.info("Moltbook listener registered via Lotus facade")
     except Exception as e:
-        logger.warning("Could not register Singularity listener: %s", e)
+        logger.warning("Could not register listener: %s", e)
 
     return resolver

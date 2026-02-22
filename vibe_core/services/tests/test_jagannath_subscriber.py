@@ -4,10 +4,7 @@ Tests for JagannathSubscriber — BeatSubscriberProtocol compliance.
 
 from unittest.mock import MagicMock, patch
 
-from vibe_core.mahamantra.protocols._venu import (
-    BeatSubscriberProtocol,
-    VENU_FIELD_TICKS,
-)
+from vibe_core.mahamantra import VENU_FIELD_TICKS, BeatSubscriberProtocol
 from vibe_core.services.jagannath_subscriber import JagannathSubscriber
 
 

@@ -18,7 +18,7 @@ from typing import Protocol, TypeVar, runtime_checkable
 
 # NOTE: SSOT for OpCodes is vibe_core.mahamantra.substrate.opcode
 # Re-export for backward compatibility (deprecated)
-from vibe_core.mahamantra.substrate.opcode import MantraOpCode
+from vibe_core.mahamantra import MantraOpCode
 from vibe_core.protocols.substrate.byte import MantraByte
 from vibe_core.protocols.universal.guna import ONE, ZERO, GunaProfile, GunaProtocol
 

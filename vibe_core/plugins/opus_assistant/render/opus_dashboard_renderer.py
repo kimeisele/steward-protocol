@@ -984,7 +984,7 @@ class OpusDashboardRenderer:
         - next_actions → Planned actions from planner
         """
         try:
-            from vibe_core.mahamantra.protocols.sankalpa import (
+            from vibe_core.mahamantra import (
                 MissionStatus,
                 SankalpaOrchestrator,
             )
