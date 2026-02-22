@@ -126,45 +126,41 @@ class TestDeterminism:
         "surrender everything",
     ]
 
-    def test_deterministic_seeds(self):
+    @pytest.fixture(scope="class")
+    def paired_results(self):
+        """Generate all pairs once, reuse across all determinism tests."""
         engine = MahaLanguageEngine()
+        pairs = {}
         for text in self.INPUTS:
             r1 = engine.generate(text)
             r2 = engine.generate(text)
+            pairs[text] = (r1, r2)
+        return pairs
+
+    def test_deterministic_seeds(self, paired_results):
+        for text, (r1, r2) in paired_results.items():
             assert r1.seed == r2.seed, f"seed mismatch for '{text}'"
 
-    def test_living_output(self):
+    def test_living_output(self, paired_results):
         """Output is LIVING — Chamber accumulates (Kshetrajna changes the field).
         Same seed does NOT guarantee same output. That's by design."""
-        engine = MahaLanguageEngine()
-        for text in self.INPUTS:
-            r1 = engine.generate(text)
-            r2 = engine.generate(text)
+        for text, (r1, r2) in paired_results.items():
             # Seed is deterministic
             assert r1.seed == r2.seed, f"seed mismatch for '{text}'"
             # Output is living — both must be non-empty strings
             assert isinstance(r1.output, str) and len(r1.output) > 0
             assert isinstance(r2.output, str) and len(r2.output) > 0
 
-    def test_deterministic_attractor(self):
-        engine = MahaLanguageEngine()
-        for text in self.INPUTS:
-            r1 = engine.generate(text)
-            r2 = engine.generate(text)
+    def test_deterministic_attractor(self, paired_results):
+        for text, (r1, r2) in paired_results.items():
             assert r1.attractor == r2.attractor, f"attractor mismatch for '{text}'"
 
-    def test_deterministic_guardian(self):
-        engine = MahaLanguageEngine()
-        for text in self.INPUTS:
-            r1 = engine.generate(text)
-            r2 = engine.generate(text)
+    def test_deterministic_guardian(self, paired_results):
+        for text, (r1, r2) in paired_results.items():
             assert r1.guardian_name == r2.guardian_name, f"guardian mismatch for '{text}'"
 
-    def test_deterministic_section(self):
-        engine = MahaLanguageEngine()
-        for text in self.INPUTS:
-            r1 = engine.generate(text)
-            r2 = engine.generate(text)
+    def test_deterministic_section(self, paired_results):
+        for text, (r1, r2) in paired_results.items():
             assert r1.section_name == r2.section_name, f"section mismatch for '{text}'"
 
 
