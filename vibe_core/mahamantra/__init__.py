@@ -90,6 +90,19 @@ CORE_MODULES = [
     "vibe_core.mahamantra.protocols._lotus",  # Lotus protocol types
     # === KERNEL (Intent Resolution) ===
     "vibe_core.mahamantra.kernel.intent",  # IntentType, MantraIntent, get_kernel, etc.
+    # === BOUNDARY EXPANSION (Phase 2: services/cli/plugins use public API) ===
+    "vibe_core.mahamantra.protocols._indriya",  # IndriyaProtocol, Vrtti, Tanmatra, etc.
+    "vibe_core.mahamantra.protocols.sankalpa",  # Ashrama, GunaState, check_conscience
+    "vibe_core.mahamantra.substrate.prabhupada",  # get_prabhupada
+    "vibe_core.mahamantra.substrate.venu_orchestrator",  # VenuOrchestrator
+    "vibe_core.mahamantra.substrate.tattva_registry",  # get_registry (gate providers)
+    "vibe_core.mahamantra.substrate.sankirtan",  # get_mahajana_for_path
+    "vibe_core.mahamantra.substrate.algorithm.maha",  # SYNTH_PRESETS, MahaModularSynth
+    "vibe_core.mahamantra.adapters.cli",  # AdapterResult, get_adapter
+    "vibe_core.mahamantra.adapters.moltbook",  # MoltbookClient
+    "vibe_core.mahamantra.adapters.compression",  # MahaCompression
+    "vibe_core.mahamantra.venu.clock",  # MantraClock
+    "vibe_core.mahamantra.substrate.samana_bridge",  # SamanaBridge, SamanaFold
 ]
 
 # Enable Universal Discovery (Fractal + Core Modules)

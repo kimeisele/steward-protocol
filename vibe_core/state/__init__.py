@@ -39,7 +39,7 @@ __genesis__ = "0x1f10b83d"  # GenesisByte: parampara % 37 == 0
 # MAHASTATE - THE KING (Import first, route through it)
 # =============================================================================
 
-from vibe_core.mahamantra.substrate.maha_state import (
+from vibe_core.mahamantra import (
     MahaState,
     StateEntry,
     get_maha_state,
@@ -147,11 +147,11 @@ from .state_service import (
     StatePolicy,
     StateService,
     WriteResult,
+    reset_state_service,
 )
 
 # OVERRIDE: Route through MahaState
 from .state_service import get_state_service as _raw_get_state_service
-from .state_service import reset_state_service
 
 
 def get_state_service(
@@ -197,11 +197,11 @@ from .weaver import (
     WeaverMode,
     WeaverStateMap,
     WeavingAdvice,
+    reset_state_sync_weaver,
 )
 
 # OVERRIDE: Route through MahaState
 from .weaver import get_state_sync_weaver as _raw_get_state_sync_weaver
-from .weaver import reset_state_sync_weaver
 
 
 def get_state_sync_weaver(

@@ -45,30 +45,28 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, Final, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.mahamantra.protocols.sankalpa.types import ConscienceVerdict
+    from vibe_core.mahamantra import ConscienceVerdict
     from vibe_core.protocols.chat import ChatResponse
 from uuid import uuid4
 
 # Import Nadi infrastructure (for interfacing, not owning)
-from vibe_core.mahamantra import NadiProtocol, NadiType
-
 # Import Indriya infrastructure
-from vibe_core.mahamantra.protocols._indriya import (
+from vibe_core.mahamantra import (
     VRTTI_COUNT,
     IndriyaProtocol,
     IndriyaState,
     IndriyaType,
     Jnanendriya,
     Karmendriya,
+    NadiMessage,
+    NadiOp,
+    NadiPriority,
+    NadiProtocol,
+    NadiType,
     Tanmatra,
     TanmatraIntent,
     TanmatraMessage,
     Vrtti,
-)
-from vibe_core.mahamantra.substrate.nadi import (
-    NadiMessage,
-    NadiOp,
-    NadiPriority,
 )
 
 # Import ChatService (BRAIN) - ChatIndriya wraps this (Balarama Pattern)
@@ -85,29 +83,20 @@ def _get_chat_service():
 
 # Import seed constants
 # GAD compliance
-from vibe_core.mahamantra import HARE_COUNT, WORDS
-from vibe_core.mahamantra import WORDS as SEED_WORDS
-from vibe_core.mahamantra.protocols._gad import GADBase
-
-# CONSCIENCE - Dharmic alignment check (Buddhi function)
-from vibe_core.mahamantra.protocols.sankalpa import (
-    Ashrama,
-    GunaState,
-    check_conscience,
-)
-
-# NADI - Energy channels (the missing wiring!)
-from vibe_core.mahamantra.substrate.nadi import (
-    get_nadi,
-)
-
-# SHAKTI - Energy transmission through Prabhupada
-from vibe_core.mahamantra.substrate.prabhupada import get_prabhupada
-from vibe_core.mahamantra.substrate.seed import (
+from vibe_core.mahamantra import (
+    HARE_COUNT,
     NADI_RESONANCE,
     NAVA,
     PRANA_DURATION_MS,
+    WORDS,
+    Ashrama,
+    GADBase,
+    GunaState,
+    check_conscience,
+    get_nadi,
+    get_prabhupada,
 )
+from vibe_core.mahamantra import WORDS as SEED_WORDS
 
 logger = logging.getLogger("CHAT_INDRIYA")
 

@@ -36,16 +36,19 @@ __genesis__ = "0x118d39d4"  # GenesisByte: parampara % 37 == 0
 import logging
 from typing import Any, Dict, Optional, Tuple
 
-from vibe_core.mahamantra import MAHA_QUANTUM, WORDS, PanchaTattvaProtocol, TattvaDict
-from vibe_core.mahamantra.protocols._maha_compute import (
+from vibe_core.mahamantra import (
     ALL_ATTRACTORS,
     ATTRACTOR_CYCLE,
     ATTRACTOR_FIXED,
+    MAHA_QUANTUM,
     PATTERN,
+    WORDS,
     AttractorType,
     MahaComputeProtocol,
     MahaComputeResult,
     MahaComputeState,
+    PanchaTattvaProtocol,
+    TattvaDict,
     apply_operation,
     get_gita_chapter,
     get_gita_insight,
@@ -70,7 +73,7 @@ class MahaComputeService(MahaComputeProtocol, PanchaTattvaProtocol):
     USAGE:
         # Auto-registered on import, accessible via ServiceRegistry:
         from vibe_core.di import ServiceRegistry
-        from vibe_core.mahamantra.protocols._maha_compute import MahaComputeProtocol
+        from vibe_core.mahamantra import MahaComputeProtocol
 
         service = ServiceRegistry.get(MahaComputeProtocol)
         result = service.compute_now(seed=42)
@@ -307,7 +310,7 @@ def _auto_register() -> None:
     """
     try:
         from vibe_core.di import ServiceRegistry
-        from vibe_core.mahamantra.protocols._maha_compute import MahaComputeProtocol
+        from vibe_core.mahamantra import MahaComputeProtocol
 
         service = get_maha_compute_service()
 

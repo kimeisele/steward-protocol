@@ -339,8 +339,7 @@ class KirtanCLI:
 
         Usage: vibe kirtan synth [--preset NAME] [--mod N]
         """
-        from vibe_core.mahamantra import MahaModularSynth
-        from vibe_core.mahamantra.substrate.algorithm.maha import SYNTH_PRESETS
+        from vibe_core.mahamantra import SYNTH_PRESETS, MahaModularSynth
 
         preset = "quantum"
         mod_space = MAHA_QUANTUM
@@ -393,7 +392,7 @@ class KirtanCLI:
         """
         from dataclasses import fields
 
-        from vibe_core.mahamantra.substrate.algorithm.maha import SYNTH_PRESETS
+        from vibe_core.mahamantra import SYNTH_PRESETS
 
         print("Available Synth Presets:")
         print("=" * 40)
