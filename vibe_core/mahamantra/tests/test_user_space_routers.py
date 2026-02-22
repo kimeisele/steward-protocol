@@ -7,7 +7,6 @@ They are Layer 6/7 syscall facades — NEVER used in hot loops.
 from __future__ import annotations
 
 import pytest
-from unittest.mock import patch, MagicMock
 
 
 # =============================================================================

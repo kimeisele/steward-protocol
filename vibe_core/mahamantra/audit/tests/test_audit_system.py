@@ -10,7 +10,6 @@ Tests:
 
 import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 from vibe_core.mahamantra.audit.audit_registry import (
     AuditFinding,
