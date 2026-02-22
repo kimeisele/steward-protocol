@@ -92,9 +92,6 @@ _LAZY_IMPORTS = {
     "MahaLLM": "llm",
     "RegistrationResult": "llm",
     "IntentCategory": "llm",
-    # moltbook.py
-    "MoltbookBridge": "moltbook",
-    "create_moltbook_bridge": "moltbook",
 }
 
 
@@ -103,7 +100,6 @@ def __getattr__(name: str):
     # 1. Check explicit class/function exports
     if name in _LAZY_IMPORTS:
         import importlib
-
         module_name = _LAZY_IMPORTS[name]
         module = importlib.import_module(f".{module_name}", __package__)
         return getattr(module, name)
@@ -112,8 +108,8 @@ def __getattr__(name: str):
     # FRACTAL ROUTING: "EIN IMPORT. KRISHNA ROUTET ALLES."
     # Any .py file or subpackage in adapters/ is auto-discoverable
     # ==========================================================================
-    import importlib
     from pathlib import Path
+    import importlib
 
     adapters_root = Path(__file__).parent
 

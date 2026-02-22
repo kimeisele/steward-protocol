@@ -1,3 +1,4 @@
+
 # === MAHAJANA DECLARATION (machine-readable) ===
 __mahajana__ = "brahma"
 __position__ = 1
@@ -924,12 +925,6 @@ def serve_markdown(filepath: str):
     # Serve with UTF-8
     return PlainTextResponse(content=doc_path.read_text(encoding="utf-8"), media_type="text/markdown; charset=utf-8")
 
-
-# --- MOLTBOOK PLATFORM BRIDGE ---
-# Moltbook integration routes (lazy-loaded, no boot cost if unused)
-from gateway.moltbook_routes import router as moltbook_router
-
-app.include_router(moltbook_router)
 
 # --- MOUNT FRONTEND (LAST STEP!) ---
 # Mount static files at ROOT (/) to serve as the main website
