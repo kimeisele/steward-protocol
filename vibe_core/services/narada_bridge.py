@@ -48,12 +48,12 @@ _QUARTER_NAMES = ("genesis", "dharma", "karma", "moksha")
 class DIWContext(TypedDict):
     """Rhythmic context stamped onto every agent event after bridge is wired."""
 
-    diw: int           # 19-bit Divine Instruction Word
-    tick: int          # Absolute tick count
-    position: int      # Position in 16-beat cycle (0..15)
-    phase: int         # Quarter/phase (0..3)
-    quarter: str       # Quarter name (genesis/dharma/karma/moksha)
-    mode: int          # Kirtan mode (0=Solo, 1=CallResponse, 2=Chorus)
+    diw: int  # 19-bit Divine Instruction Word
+    tick: int  # Absolute tick count
+    position: int  # Position in 16-beat cycle (0..15)
+    phase: int  # Quarter/phase (0..3)
+    quarter: str  # Quarter name (genesis/dharma/karma/moksha)
+    mode: int  # Kirtan mode (0=Solo, 1=CallResponse, 2=Chorus)
 
 
 class NaradaBridge:
@@ -70,8 +70,12 @@ class NaradaBridge:
     """
 
     __slots__ = (
-        "_context", "_prev_phase", "_total_ticks",
-        "_phase_transitions", "_event_bus_ref", "_event_bus_failed",
+        "_context",
+        "_prev_phase",
+        "_total_ticks",
+        "_phase_transitions",
+        "_event_bus_ref",
+        "_event_bus_failed",
     )
 
     def __init__(self) -> None:
@@ -193,7 +197,7 @@ class NaradaBridge:
         from_quarter = _QUARTER_NAMES[from_phase % QUARTERS]
         to_quarter = _QUARTER_NAMES[to_phase % QUARTERS]
 
-        from vibe_core.mahamantra.substrate.event_bus import EventType
+        from vibe_core.mahamantra import EventType
 
         bus.emit_sync(
             event_type=EventType.PHASE_TRANSITION,
@@ -207,7 +211,9 @@ class NaradaBridge:
 
         logger.debug(
             "Phase transition: %s → %s at tick %d",
-            from_quarter, to_quarter, tick,
+            from_quarter,
+            to_quarter,
+            tick,
         )
 
     def _get_event_bus(self):
@@ -221,7 +227,8 @@ class NaradaBridge:
 
         if self._event_bus_ref is None:
             try:
-                from vibe_core.mahamantra.substrate.event_bus import get_event_bus
+                from vibe_core.mahamantra import get_event_bus
+
                 self._event_bus_ref = get_event_bus()
             except Exception as exc:
                 self._event_bus_failed = True

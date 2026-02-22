@@ -73,8 +73,8 @@ class GovardhanGateway(GatewayProtocol):
         This is the ONE entry point. CLI, HTTP, CHAT, AGENT — all come here.
         The gates fire at the boundary, then the pure core computes.
         """
+        from vibe_core.mahamantra import TattvaGate
         from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
-        from vibe_core.mahamantra.substrate.pancha_tattva import TattvaGate
 
         lotus = get_mahamantra()
         command = request["command"]
@@ -85,31 +85,40 @@ class GovardhanGateway(GatewayProtocol):
         # GATE 0: PARSE — What is this?
         # Boundary IN: validate the request shape before it enters.
         # =================================================================
-        lotus.fire_gate(TattvaGate.PARSE, {
-            "input_data": command,
-            "entry_type": entry_type,
-            "args": args,
-        })
+        lotus.fire_gate(
+            TattvaGate.PARSE,
+            {
+                "input_data": command,
+                "entry_type": entry_type,
+                "args": args,
+            },
+        )
 
         # =================================================================
         # GATE 1: VALIDATE — Is it legitimate?
         # Compress to seed, verify parampara at the border.
         # =================================================================
-        lotus.fire_gate(TattvaGate.VALIDATE, {
-            "input_text": command,
-            "seed": None,  # seed computed inside __call__
-            "input_coords": None,
-        })
+        lotus.fire_gate(
+            TattvaGate.VALIDATE,
+            {
+                "input_text": command,
+                "seed": None,  # seed computed inside __call__
+                "input_coords": None,
+            },
+        )
 
         # =================================================================
         # GATE 2: EXECUTE — Pure computation (Vrindavan).
         # __call__() is deterministic. No side-effects.
         # =================================================================
-        lotus.fire_gate(TattvaGate.EXECUTE, {
-            "seed": None,
-            "attractor": None,
-            "parampara_verified": None,
-        })
+        lotus.fire_gate(
+            TattvaGate.EXECUTE,
+            {
+                "seed": None,
+                "attractor": None,
+                "parampara_verified": None,
+            },
+        )
 
         try:
             result = lotus(command)
@@ -132,24 +141,30 @@ class GovardhanGateway(GatewayProtocol):
         # GATE 3: RESULT — Is the output valid?
         # Boundary OUT: verify the computation result.
         # =================================================================
-        lotus.fire_gate(TattvaGate.RESULT, {
-            "attractor": result.get("vibration", {}).get("attractor"),
-            "resonant_words": result.get("smaranam", ()),
-            "verse_result": result.get("verse"),
-        })
+        lotus.fire_gate(
+            TattvaGate.RESULT,
+            {
+                "attractor": result.get("vibration", {}).get("attractor"),
+                "resonant_words": result.get("smaranam", ()),
+                "verse_result": result.get("verse"),
+            },
+        )
 
         # =================================================================
         # GATE 4: SYNC — Side-effects (governance).
         # This is where I/O happens. The pure core never touches disk.
         # =================================================================
-        lotus.fire_gate(TattvaGate.SYNC, {
-            "position": result.get("position"),
-            "guardian": result.get("guardian"),
-            "seed": result.get("vibration", {}).get("seed"),
-            "attractor": result.get("vibration", {}).get("attractor"),
-            "opcode": result.get("guna", {}).get("opcode"),
-            "guna": result.get("guna", {}).get("mode"),
-        })
+        lotus.fire_gate(
+            TattvaGate.SYNC,
+            {
+                "position": result.get("position"),
+                "guardian": result.get("guardian"),
+                "seed": result.get("vibration", {}).get("seed"),
+                "attractor": result.get("vibration", {}).get("attractor"),
+                "opcode": result.get("guna", {}).get("opcode"),
+                "guna": result.get("guna", {}).get("mode"),
+            },
+        )
 
         # Reset gate state
         lotus._active_gate = None
@@ -165,7 +180,9 @@ class GovardhanGateway(GatewayProtocol):
             position=result["position"],
             guardian=result["guardian"],
             quarter=result["quarter"],
-            guna=result.get("verse", {}).get("guna", result.get("guna", {}).get("mode", "sattva")) if result.get("verse") else result.get("guna", {}).get("mode", "sattva"),
+            guna=result.get("verse", {}).get("guna", result.get("guna", {}).get("mode", "sattva"))
+            if result.get("verse")
+            else result.get("guna", {}).get("mode", "sattva"),
             entry_type=entry_type,
             routed_via="govardhan",
         )
