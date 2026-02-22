@@ -26,15 +26,19 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Dict, List, Optional, Set
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.protocols.moltbook import (
+    DMConversation,
     DMMessage,
+    DMSendResult,
+    HeartbeatResult,
     MoltbookAgentProfile,
     MoltbookComment,
     MoltbookPost,
     MoltbookProtocol,
+    OperationLogEntry,
     SemanticSearchResult,
 )
 
@@ -63,7 +67,7 @@ class MoltbookService(MoltbookProtocol):
 
     def __init__(self, client: "MoltbookClient"):
         self._client = client
-        self._operation_log: List[Dict[str, Any]] = []
+        self._operation_log: List[OperationLogEntry] = []
 
     def _enforce_guna(self, operation: str) -> None:
         """
@@ -94,7 +98,7 @@ class MoltbookService(MoltbookProtocol):
 
     # --- SATTVA operations (read-only) ---
 
-    def check_heartbeat(self) -> Dict[str, Any]:
+    def check_heartbeat(self) -> HeartbeatResult:
         self._enforce_guna("check_heartbeat")
         return self._client.sync_check_heartbeat()
 
@@ -110,7 +114,7 @@ class MoltbookService(MoltbookProtocol):
 
         return _run_async(self._client.get_profile(name))
 
-    def get_conversations(self) -> List[Dict[str, Any]]:
+    def get_conversations(self) -> List[DMConversation]:
         self._enforce_guna("get_conversations")
         return self._client.sync_get_dm_conversations()
 
@@ -140,7 +144,7 @@ class MoltbookService(MoltbookProtocol):
 
         return _run_async(self._client.comment_with_verification(post_id, content))
 
-    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    def send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         self._enforce_guna("send_dm")
         return self._client.sync_send_dm(conversation_id, content)
 
@@ -178,7 +182,7 @@ class MoltbookPlugin(KernelPlugin):
             return [self._state_dir]
         return []
 
-    def snapshot_state(self) -> Dict[str, Any]:
+    def snapshot_state(self) -> dict:
         if not self._client:
             return {"version": 1, "client_active": False}
         limits = self._client.limits
@@ -194,7 +198,7 @@ class MoltbookPlugin(KernelPlugin):
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+    def restore_state(self, snapshot: dict) -> None:
         if snapshot.get("version") != 1 or not snapshot.get("client_active"):
             return
         if not self._client:
@@ -421,7 +425,7 @@ class MoltbookPlugin(KernelPlugin):
     # API — exposed to other plugins via kernel.api("moltbook")
     # =========================================================================
 
-    def get_api(self) -> Optional[Dict[str, Any]]:
+    def get_api(self) -> Optional[dict]:
         return {
             "client": self._client,
             "offline": self._offline_mode,

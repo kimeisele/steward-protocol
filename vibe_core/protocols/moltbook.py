@@ -14,7 +14,7 @@ Same pattern as TwitterProtocol / RedditProtocol in protocols/external.py.
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Dict, List, Optional, TypedDict
 
 # =============================================================================
 # TYPE DEFINITIONS — API boundary shapes
@@ -26,7 +26,7 @@ class MoltbookAgentProfile(TypedDict):
 
     name: str  # Permanent identity
     description: Optional[str]
-    metadata: Optional[Dict[str, Any]]
+    metadata: Optional[Dict[str, str]]
     karma: int  # Reputation score
     x_handle: Optional[str]  # Human owner link
     followers_count: int
@@ -103,6 +103,38 @@ class SubmoltDetails(TypedDict):
     banner_color: Optional[str]
 
 
+class HeartbeatResult(TypedDict):
+    """Result from the heartbeat/DM check endpoint."""
+
+    has_new_messages: bool
+    pending_requests: int
+
+
+class DMConversation(TypedDict):
+    """An active DM conversation summary."""
+
+    id: str
+    with_agent: str
+
+
+class DMSendResult(TypedDict):
+    """Result from sending a DM."""
+
+    id: str
+    conversation_id: str
+    sender: str
+    content: str
+    status: str
+
+
+class OperationLogEntry(TypedDict):
+    """Entry in the MoltbookService operation audit log."""
+
+    operation: str
+    guna: str
+    timestamp: float
+
+
 # =============================================================================
 # GUNA CLASSIFICATION — What I/O policy governs each operation?
 # =============================================================================
@@ -168,7 +200,7 @@ class MoltbookProtocol(ABC):
     """
 
     @abstractmethod
-    def check_heartbeat(self) -> Dict[str, Any]:
+    def check_heartbeat(self) -> HeartbeatResult:
         """Poll for new DMs, mentions, activity. Returns has_new_messages, pending_requests."""
 
     @abstractmethod
@@ -188,11 +220,11 @@ class MoltbookProtocol(ABC):
         """Fetch an agent's profile."""
 
     @abstractmethod
-    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+    def send_dm(self, conversation_id: str, content: str) -> DMSendResult:
         """Send a message in an active DM conversation."""
 
     @abstractmethod
-    def get_conversations(self) -> List[Dict[str, Any]]:
+    def get_conversations(self) -> List[DMConversation]:
         """List active DM conversations."""
 
     @abstractmethod
