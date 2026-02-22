@@ -26,8 +26,9 @@ __position__ = 5
 __genesis__ = "0xfe9a70b8"  # GenesisByte: parampara % 37 == 0
 
 import logging
+import os
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import libcst as cst
 
@@ -220,12 +221,18 @@ class _FragmentExtractor(cst.CSTVisitor):
 # =============================================================================
 
 
+# mtime-based fragment cache: (resolved_path) → (mtime_ns, FileFragments)
+# Invalidates when file content changes. Eliminates redundant libcst parses
+# in Sravanam tick cycles and test bulk ingestion.
+_fragment_cache: Dict[str, Tuple[int, FileFragments]] = {}
+
+
 def parse_file_to_fragments(file_path: Path) -> FileFragments:
     """
     Parse a Python file into atomic CSTFragments.
 
-    Each top-level function, class, import block, and constant
-    becomes its own fragment with a deterministic sort_key.
+    Results are cached by (resolved_path, mtime_ns). Same file with
+    unchanged content returns instantly. Cache auto-invalidates on edit.
 
     Args:
         file_path: Path to the Python file.
@@ -237,8 +244,16 @@ def parse_file_to_fragments(file_path: Path) -> FileFragments:
         FileNotFoundError: If file doesn't exist.
         cst.ParserSyntaxError: If file can't be parsed.
     """
+    resolved = str(file_path.resolve())
+    mtime_ns = os.stat(resolved).st_mtime_ns
+    cached = _fragment_cache.get(resolved)
+    if cached is not None and cached[0] == mtime_ns:
+        return cached[1]
+
     source = file_path.read_text(encoding="utf-8")
-    return parse_source_to_fragments(source, file_path)
+    result = parse_source_to_fragments(source, file_path)
+    _fragment_cache[resolved] = (mtime_ns, result)
+    return result
 
 
 def parse_source_to_fragments(source: str, file_path: Path) -> FileFragments:

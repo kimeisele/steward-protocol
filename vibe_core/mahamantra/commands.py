@@ -494,8 +494,7 @@ def cli_serve(
     """
     from datetime import datetime
 
-    from vibe_core.mahamantra.karma.janaka import TaskPriority
-    from vibe_core.mahamantra.karma.janaka import get_service as get_janaka
+    from vibe_core.mahamantra.karma.janaka import JanakaService, TaskPriority
     from vibe_core.mahamantra.substrate.lotus_core import get_mahamantra
 
     # === COMPUTATION: Route task through the VM ===
@@ -518,7 +517,7 @@ def cli_serve(
     task_priority = priority_map.get(priority.lower(), TaskPriority.NORMAL)
 
     # Get JanakaService through Mahajana folder (canonical path)
-    janaka = get_janaka()
+    janaka = JanakaService()
 
     start_time = datetime.now()
 
