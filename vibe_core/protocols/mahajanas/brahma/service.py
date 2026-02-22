@@ -197,11 +197,12 @@ class BrahmaService(BrahmaProtocol, PanchaTattvaProtocol, ExecutableMixin):
         import importlib
 
         factory_mod = importlib.import_module("vibe_core.services.kernel_factory")
-        factory = getattr(factory_mod, "kernel_factory")
+        KernelFactory = getattr(factory_mod, "KernelFactory")
+        factory = KernelFactory()
 
         logger.info(f"🌀 BRAHMA: Spawning ephemeral child kernel (parent: {id(parent_kernel)})")
 
-        child = factory.spawn(
+        child = factory.create_kernel(
             ledger_path=ledger_path,
             config=config,  # type: ignore
             parent=parent_kernel,  # type: ignore
