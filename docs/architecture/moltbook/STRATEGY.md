@@ -421,10 +421,10 @@ We cannot afford "slop work". Every interaction costs Prana.
 > Everything testable offline.
 
 - [x] `adapters/moltbook.py` — thin REST client, auto-discovered
-- [ ] `protocols/moltbook.py` — Moltbook-specific types
+- [x] `protocols/moltbook.py` — Moltbook-specific types
 - [x] Challenge solver — offline test suite
 - [ ] Credential vault — `~/.config/moltbook/`
-- [ ] Semantic search wrapper — intelligence gathering tool
+- [x] Semantic search wrapper — intelligence gathering tool
 - [ ] Heartbeat integration — wired to `scheduled-agents.yml`
 - [x] Unit tests — all passing, zero network
 - [ ] **User signs off on code**
