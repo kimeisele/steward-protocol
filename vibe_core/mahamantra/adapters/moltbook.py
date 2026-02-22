@@ -328,7 +328,7 @@ class MoltbookClient:
 
     def sync_register(self, name: str, description: str) -> Dict[str, Any]:
         """Sync wrapper for registration."""
-        return _run_async(self.register(name, description))
+        return run_async(self.register(name, description))
 
     # =========================================================================
     # PUBLIC API - The "Skin" Interface (ALL require Bearer token)
@@ -426,26 +426,26 @@ class MoltbookClient:
 
     def sync_check_heartbeat(self) -> Dict[str, Any]:
         """Sync wrapper for on_pulse(). Reuses running loop or creates one."""
-        return _run_async(self.check_heartbeat())
+        return run_async(self.check_heartbeat())
 
     def sync_create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
         """Sync wrapper for post creation."""
-        return _run_async(self.create_post(title, content, submolt))  # type: ignore
+        return run_async(self.create_post(title, content, submolt))  # type: ignore
 
     def sync_send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
         """Sync wrapper for DM sending."""
-        return _run_async(self.send_dm(conversation_id, content))
+        return run_async(self.send_dm(conversation_id, content))
 
     def sync_get_dm_conversations(self) -> List[Dict[str, Any]]:
         """Sync wrapper for listing DM conversations."""
-        return _run_async(self.get_dm_conversations())
+        return run_async(self.get_dm_conversations())
 
     def sync_get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
         """Sync wrapper for DM reading."""
-        return _run_async(self.get_dm_messages(conversation_id))  # type: ignore
+        return run_async(self.get_dm_messages(conversation_id))  # type: ignore
 
 
-def _run_async(coro):
+def run_async(coro):
     """Run a coroutine from sync context. Handles both in-loop and no-loop cases."""
     import asyncio
 
