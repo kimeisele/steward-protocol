@@ -314,7 +314,7 @@ class CLILoader:
         return CLICommand(
             name=discovered.get("name", ""),
             namespace=discovered.get("namespace"),
-            plugin_id=discovered.get("source_module", ""),
+            plugin_id=Path(discovered.get("source_module", "")).name,
             handler=discovered.get("handler", ""),
             execution_mode=execution_mode,
             help=discovered.get("help", ""),

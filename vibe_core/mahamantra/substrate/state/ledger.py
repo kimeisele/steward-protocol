@@ -813,3 +813,116 @@ class SQLiteLedger(VibeLedger):
             "total_events": len(events),
             "corrupted": False,
         }
+
+    def count_events(self) -> int:
+        """Return total number of events (cached for performance)."""
+        if self._cache_valid and self._event_count_cache is not None:
+            return self._event_count_cache
+        cursor = self.connection.cursor()
+        row = cursor.execute("SELECT COUNT(*) FROM ledger_events").fetchone()
+        self._event_count_cache = row[0] if row else 0
+        self._cache_valid = True
+        return self._event_count_cache
+
+    def get_top_hash(self) -> str:
+        """Get hash of latest event (blockchain-style top of chain)."""
+        cursor = self.connection.cursor()
+        row = cursor.execute(
+            "SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        if row:
+            return row[0]
+        return "0" * QUALITIES
+
+    def get_meta(self, key: str) -> object:
+        """Get metadata value by key from ledger_meta table."""
+        cursor = self.connection.cursor()
+        row = cursor.execute(
+            "SELECT value FROM ledger_meta WHERE key = ?", (key,)
+        ).fetchone()
+        if row:
+            try:
+                return json.loads(row[0])
+            except (json.JSONDecodeError, TypeError):
+                return row[0]
+        return None
+
+    def set_meta(self, key: str, value: object) -> None:
+        """Set metadata value in ledger_meta table."""
+        with self._write_lock:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "INSERT OR REPLACE INTO ledger_meta (key, value) VALUES (?, ?)",
+                (key, json.dumps(value, default=str)),
+            )
+            self.connection.commit()
+
+    def get_events_since(self, last_id: int) -> list:
+        """Get events with id > last_id (for incremental fetching)."""
+        cursor = self.connection.cursor()
+        cursor.execute(
+            "SELECT * FROM ledger_events WHERE id > ? ORDER BY id ASC",
+            (last_id,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def rotate(self) -> str:
+        """Rotate ledger: archive current DB, create fresh one with genesis linkage.
+
+        Returns path to the archive file.
+        """
+        import shutil
+
+        # 1. Get top hash before rotation
+        top_hash = self.get_top_hash()
+        event_count = self.count_events()
+
+        # 2. Create archive directory
+        archive_dir = os.path.join(os.path.dirname(self.db_path), "ledger", "archive")
+        os.makedirs(archive_dir, exist_ok=True)
+
+        # 3. Archive current DB
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        archive_name = f"ledger_{timestamp}.db"
+        archive_path = os.path.join(archive_dir, archive_name)
+
+        # Flush WAL before copy
+        self.connection.execute("PRAGMA wal_checkpoint(FULL)")
+        shutil.copy2(self.db_path, archive_path)
+
+        logger.info(f"📦 Archived ledger to {archive_path} ({event_count} events)")
+
+        # 4. Clear hot DB and invalidate shared connection
+        _invalidate_shared_conn(self.db_path)
+        self._connection = None
+        self._initialized = False
+        self._cache_valid = False
+
+        # Remove old DB file and recreate
+        os.remove(self.db_path)
+
+        # 5. Record genesis event in fresh DB (links to previous chain)
+        self.record_event(
+            "LEDGER_GENESIS",
+            "SYSTEM",
+            {
+                "previous_ledger_hash": top_hash,
+                "previous_event_count": event_count,
+                "archive_path": archive_path,
+            },
+        )
+
+        logger.info(f"🔄 Ledger rotated — genesis linked to {top_hash[:16]}...")
+        return archive_path
+
+    def close(self) -> None:
+        """Close ledger connection (protocol compliance).
+
+        Note: With shared connection pool, this invalidates the cached connection
+        so it will be recreated on next access.
+        """
+        if self._connection is not None:
+            _invalidate_shared_conn(self.db_path)
+            self._connection = None
+            self._initialized = False
+            self._cache_valid = False
