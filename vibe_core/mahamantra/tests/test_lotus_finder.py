@@ -9,25 +9,25 @@ Verifies that:
 """
 
 import importlib
-import sys
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Module map tests (no sys.meta_path mutation needed)
 # ---------------------------------------------------------------------------
+
 
 class TestModuleMap:
     """Test the filesystem scanning logic."""
 
     def test_build_module_map_finds_modules(self):
         """Modules in substrate/ (direct or nested) are in the map."""
-        from vibe_core.mahamantra.substrate.lotus_finder import _build_module_map, _SUBSTRATE_ROOT
+        from vibe_core.mahamantra.substrate.lotus_finder import _SUBSTRATE_ROOT, _build_module_map
 
         module_map = _build_module_map()
 
@@ -59,7 +59,7 @@ class TestModuleMap:
 
     def test_build_module_map_direct_wins_over_nested(self):
         """Direct child takes priority over nested file with same name."""
-        from vibe_core.mahamantra.substrate.lotus_finder import _build_module_map, _SUBSTRATE_ROOT
+        from vibe_core.mahamantra.substrate.lotus_finder import _SUBSTRATE_ROOT, _build_module_map
 
         module_map = _build_module_map()
 
@@ -68,8 +68,7 @@ class TestModuleMap:
 
     def test_namespace_collision_detected(self):
         """Two nested files with same stem must raise ImportError."""
-        import tempfile, shutil
-        from vibe_core.mahamantra.substrate.lotus_finder import _build_module_map, _SUBSTRATE_ROOT
+        from vibe_core.mahamantra.substrate.lotus_finder import _SUBSTRATE_ROOT, _build_module_map
 
         # Create two nested files with same stem in different subdirs
         # Names must NOT start with _ (those are skipped by the finder)
@@ -95,9 +94,19 @@ class TestModuleMap:
         module_map = _build_module_map()
 
         critical_modules = [
-            "seed", "lotus_core", "opcode", "wiring", "pancha_walk",
-            "rama_grid", "venu_orchestrator", "mantra_vm", "cell",
-            "chamber", "registry", "antaranga", "shuddhi",
+            "seed",
+            "lotus_core",
+            "opcode",
+            "wiring",
+            "pancha_walk",
+            "rama_grid",
+            "venu_orchestrator",
+            "mantra_vm",
+            "cell",
+            "chamber",
+            "registry",
+            "antaranga",
+            "shuddhi",
         ]
         for name in critical_modules:
             assert name in module_map, f"{name} not found in module map"
@@ -106,6 +115,7 @@ class TestModuleMap:
 # ---------------------------------------------------------------------------
 # Install / Uninstall tests
 # ---------------------------------------------------------------------------
+
 
 class TestInstallation:
     """Test sys.meta_path installation."""
@@ -148,6 +158,7 @@ class TestInstallation:
 # Finder resolution tests
 # ---------------------------------------------------------------------------
 
+
 class TestFinderResolution:
     """Test that the finder correctly resolves modules."""
 
@@ -164,9 +175,7 @@ class TestFinderResolution:
         from vibe_core.mahamantra.substrate.lotus_finder import LotusFinder
 
         finder = LotusFinder()
-        spec = finder.find_spec(
-            "vibe_core.mahamantra.substrate.language.engine", None
-        )
+        spec = finder.find_spec("vibe_core.mahamantra.substrate.language.engine", None)
         assert spec is None
 
     def test_finder_ignores_already_loaded(self):
@@ -178,9 +187,7 @@ class TestFinderResolution:
         # Force it into sys.modules if not already
         import vibe_core.mahamantra.substrate.seed  # noqa: F401
 
-        spec = finder.find_spec(
-            "vibe_core.mahamantra.substrate.seed", None
-        )
+        spec = finder.find_spec("vibe_core.mahamantra.substrate.seed", None)
         assert spec is None  # Already loaded, finder defers
 
     def test_finder_resolves_known_module(self):
@@ -192,9 +199,7 @@ class TestFinderResolution:
         # Remove seed from sys.modules temporarily to test resolution
         saved = sys.modules.pop("vibe_core.mahamantra.substrate.seed", None)
         try:
-            spec = finder.find_spec(
-                "vibe_core.mahamantra.substrate.seed", None
-            )
+            spec = finder.find_spec("vibe_core.mahamantra.substrate.seed", None)
             assert spec is not None
             assert "seed" in spec.origin
         finally:
@@ -206,15 +211,14 @@ class TestFinderResolution:
         from vibe_core.mahamantra.substrate.lotus_finder import LotusFinder
 
         finder = LotusFinder()
-        spec = finder.find_spec(
-            "vibe_core.mahamantra.substrate.does_not_exist_xyz", None
-        )
+        spec = finder.find_spec("vibe_core.mahamantra.substrate.does_not_exist_xyz", None)
         assert spec is None
 
 
 # ---------------------------------------------------------------------------
 # Integration test: moved file still importable
 # ---------------------------------------------------------------------------
+
 
 class TestMovedFileResolution:
     """
@@ -243,6 +247,7 @@ class TestMovedFileResolution:
 
         # Patch _SUBSTRATE_ROOT to use our fake tree
         import vibe_core.mahamantra.substrate.lotus_finder as lf
+
         original_root = lf._SUBSTRATE_ROOT
 
         try:
@@ -260,6 +265,7 @@ class TestMovedFileResolution:
 # ---------------------------------------------------------------------------
 # Cache invalidation
 # ---------------------------------------------------------------------------
+
 
 class TestCacheInvalidation:
     """Test that invalidate_cache() forces re-scan."""
