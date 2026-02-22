@@ -689,10 +689,6 @@ class TestInboundDMProcessing:
         ]
 
         mock_gw = MagicMock()
-        with patch("vibe_core.plugins.moltbook.plugin_main.MoltbookPlugin._process_inbound_dms") as orig:
-            # Call the real method but with mocked gateway
-            orig.side_effect = None  # disable patch, call real
-        # Actually call the real method with gateway patched
         with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
             plugin._process_inbound_dms()
 
