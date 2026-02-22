@@ -40,22 +40,20 @@ from typing import Any, Callable, Dict, Final, List, Optional
 from uuid import uuid4
 
 # Import Nadi infrastructure
-from vibe_core.mahamantra import WORDS, LocalNadi, NadiProtocol, NadiType
-
-# GAD compliance
-from vibe_core.mahamantra.protocols._gad import GADBase
-from vibe_core.mahamantra.substrate.nadi import (
+# GAD compliance + Nadi + Seed constants
+from vibe_core.mahamantra import (
+    NADI_RESONANCE,
     NADI_TIMEOUT_MS,
+    PRANA_DURATION_MS,
+    WORDS,
+    GADBase,
+    LocalNadi,
     NadiConnection,
     NadiMessage,
     NadiOp,
     NadiPriority,
-)
-
-# Import seed constants
-from vibe_core.mahamantra.substrate.seed import (
-    NADI_RESONANCE,
-    PRANA_DURATION_MS,
+    NadiProtocol,
+    NadiType,
 )
 
 # Import ChatSubstrateBridge for routing

@@ -274,7 +274,7 @@ class StateService(StateServiceProtocol):
                 # without the full __call__() overhead (~0.1ms per call).
                 if isinstance(data, dict) and data:
                     try:
-                        from vibe_core.mahamantra.adapters.compression import MahaCompression
+                        from vibe_core.mahamantra import MahaCompression
 
                         samskara = MahaCompression().encode_samskara(data)
                         self._signatures[filename] = {

@@ -22,7 +22,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from vibe_core.mahamantra.protocols._lotus import get_position_mahajana
+from vibe_core.mahamantra import get_position_mahajana
 from vibe_core.protocols.chat import (
     ChatContext,
     ChatMessage,

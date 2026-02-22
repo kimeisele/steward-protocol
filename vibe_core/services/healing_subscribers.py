@@ -85,7 +85,7 @@ class OuroborosSubscriber:
     def _ingest_sentinel_violations(self) -> int:
         """Drain I/O Sentinel violations and push into KG."""
         try:
-            from vibe_core.mahamantra.substrate.io_sentinel import drain_violations
+            from vibe_core.mahamantra import drain_violations
             from vibe_core.ouroboros.ingestion import ViolationRecord, ViolationSource
 
             drained = drain_violations()

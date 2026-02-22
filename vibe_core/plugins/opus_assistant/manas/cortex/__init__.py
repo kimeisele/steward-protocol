@@ -33,6 +33,8 @@ __mahajana__ = "prahlada"
 __position__ = 9
 __genesis__ = "0xde97569d"  # GenesisByte: parampara % 37 == 0
 
+# OPUS-055: SANKALPA (The Will) - Now in mahamantra/protocols/
+from vibe_core.mahamantra import SankalpaOrchestrator
 from vibe_core.plugins.opus_assistant.manas.cortex.akasha import (
     AkashaContext,
     AkashaNode,
@@ -129,11 +131,6 @@ from vibe_core.plugins.opus_assistant.manas.cortex.samvada import (
 from vibe_core.plugins.opus_assistant.manas.cortex.samvada_handler import (
     SamvadaHandler,
     create_manas_handler,
-)
-
-# OPUS-055: SANKALPA (The Will) - Now in mahamantra/protocols/
-from vibe_core.mahamantra.protocols.sankalpa import (
-    SankalpaOrchestrator,
 )
 from vibe_core.plugins.opus_assistant.manas.cortex.shell import (
     CommandRisk,

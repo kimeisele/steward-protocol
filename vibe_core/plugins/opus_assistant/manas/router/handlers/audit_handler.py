@@ -125,7 +125,7 @@ class SankalpaHandler(BaseHandler):
 
     def handle(self, intent: "Intent") -> Dict[str, Any]:
         """Route to SANKALPA for strategy planning."""
-        from vibe_core.mahamantra.protocols.sankalpa import SankalpaOrchestrator
+        from vibe_core.mahamantra import SankalpaOrchestrator
 
         logger.info(f"🎯 SANKALPA handling: {intent.title}")
 

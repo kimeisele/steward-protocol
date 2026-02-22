@@ -44,13 +44,13 @@ from vibe_core.mahamantra import (
     BeatSubscriberProtocol,
     DIWSubscriberProtocol,
     HeartbeatMetrics,
+    MantraClock,
     MantraClockProtocol,
     PanchaTattvaProtocol,
     TattvaDict,
+    VenuOrchestrator,
     VenuOrchestratorProtocol,
 )
-from vibe_core.mahamantra.substrate.venu_orchestrator import VenuOrchestrator
-from vibe_core.mahamantra.venu.clock import MantraClock
 
 logger = logging.getLogger("VENU_SERVICE")
 

@@ -35,8 +35,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 if TYPE_CHECKING:
+    from vibe_core.mahamantra import SamanaBridge, SamanaFold
     from vibe_core.mahamantra.reactor.shadow import ShadowReactor
-    from vibe_core.mahamantra.substrate.samana_bridge import SamanaBridge, SamanaFold
 import uuid
 
 # NAGA INTEGRATION - The Invisible Guardians enhance chat intelligence
@@ -44,42 +44,28 @@ import uuid
 from typing import TYPE_CHECKING
 
 # NADI - Energy channels (User ↔ System via PRANA)
-from vibe_core.mahamantra import MantraOpCode, NadiProtocol, NadiType
-from vibe_core.mahamantra.protocols._lotus import (
+from vibe_core.mahamantra import (
+    JNANENDRIYAS,
+    KARMENDRIYAS,
     MAHAJANA_POSITIONS,
+    KshetraElement,
     LotusBase,
     LotusHologram,
     LotusMode,
     LotusRoute,
     LotusState,
-    get_mahajana_position,
-    get_position_mahajana,
-)
-from vibe_core.mahamantra.substrate.harmonics import (
-    THRESHOLD_AUTO as HARMONIC_AUTO,
-)
-from vibe_core.mahamantra.substrate.harmonics import (
-    THRESHOLD_REFINE as HARMONIC_REFINE,
-)
-
-# RESONANCE HARMONICS - Derived from Seed, not hardcoded!
-# NADI/MALA = 72/108 = 2/3, LILA/MALA = 48/108 = 4/9
-from vibe_core.mahamantra.substrate.harmonics import (
-    ResonanceHarmonics,
-)
-from vibe_core.mahamantra.substrate.nadi import (
+    MantraOpCode,
     NadiMessage,
     NadiOp,
+    NadiProtocol,
+    NadiType,
+    ResonanceHarmonics,
+    get_mahajana_position,
     get_nadi,
+    get_position_mahajana,
 )
-
-# KSHETRA - The 24 Tattvas (BG 13.6-7)
-# Chat invokes: SHROTRA (hear), VAK (speak), MANAS (think), BUDDHI (understand)
-from vibe_core.mahamantra.substrate.tattva import (
-    JNANENDRIYAS,
-    KARMENDRIYAS,
-    KshetraElement,
-)
+from vibe_core.mahamantra import THRESHOLD_AUTO as HARMONIC_AUTO
+from vibe_core.mahamantra import THRESHOLD_REFINE as HARMONIC_REFINE
 from vibe_core.protocols.chat import (
     CHAT_OPCODE,
     CHAT_PHASE,

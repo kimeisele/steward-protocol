@@ -40,7 +40,7 @@ from vibe_core.protocols.moltbook import (
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
-    from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+    from vibe_core.mahamantra import MoltbookClient
 
 logger = logging.getLogger("MOLTBOOK")
 
@@ -215,7 +215,7 @@ class MoltbookPlugin(KernelPlugin):
         kernel: "RealVibeKernel",
         config: Optional[Dict[str, object]] = None,
     ) -> HookResult:
-        from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+        from vibe_core.mahamantra import MoltbookClient
 
         try:
             # Resolve state dir
