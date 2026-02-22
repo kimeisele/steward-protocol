@@ -194,84 +194,70 @@ class TestPluginStateContract:
 # =============================================================================
 
 
-def _tick(position: int = 1) -> dict:
-    """Create a realistic TickState dict for testing."""
-    return {"position": position, "is_downbeat": position == 0, "tick": position}
-
-
-def _cycle() -> list:
-    """One full 16-tick mantra cycle: positions 0-15. Downbeat at position 0."""
-    return [_tick(p) for p in range(16)]
-
-
 class TestMahamantraListener:
     """The Mahamantra tick listener is the REAL heartbeat path.
-    Gated on is_downbeat (position 0), not a dumb counter."""
+    Same pattern as Nrisimha._on_mahamantra_tick()."""
 
     def test_tick_increments_counter(self, plugin):
-        """Every tick increments the counter, regardless of position."""
-        for t in [_tick(1), _tick(2), _tick(3), _tick(4), _tick(5)]:
-            plugin._on_mahamantra_tick(t)
+        """Every tick increments the counter."""
+        for _ in range(5):
+            plugin._on_mahamantra_tick({})
         assert plugin._tick_count == 5
 
-    def test_no_heartbeat_on_non_downbeat(self, plugin):
-        """Non-downbeat ticks: counter increments, no heartbeat fires."""
+    def test_no_heartbeat_before_16_ticks(self, plugin):
+        """First 15 ticks: tick counter increments, no heartbeat fires."""
         initial_requests = plugin._client.limits.requests_this_minute
-        for p in range(1, 16):
-            plugin._on_mahamantra_tick(_tick(p))
+        for _ in range(15):
+            plugin._on_mahamantra_tick({})
         assert plugin._client.limits.requests_this_minute == initial_requests
 
-    def test_heartbeat_fires_on_downbeat(self, plugin):
-        """Downbeat (position 0) triggers heartbeat."""
+    def test_heartbeat_fires_at_tick_16(self, plugin):
+        """16th tick triggers heartbeat (one API request)."""
         initial_requests = plugin._client.limits.requests_this_minute
-        plugin._on_mahamantra_tick(_tick(0))
+        for _ in range(16):
+            plugin._on_mahamantra_tick({})
         assert plugin._client.limits.requests_this_minute == initial_requests + 1
         assert plugin._last_heartbeat_error is None
 
-    def test_heartbeat_fires_every_cycle(self, plugin):
+    def test_heartbeat_fires_every_16_ticks(self, plugin):
         """Multiple full mantra cycles each trigger exactly one heartbeat."""
-        for _ in range(3):
-            for t in _cycle():
-                plugin._on_mahamantra_tick(t)
+        for _ in range(_TICKS_PER_HEARTBEAT * 3):
+            plugin._on_mahamantra_tick({})
         assert plugin._tick_count == _TICKS_PER_HEARTBEAT * 3
         assert plugin._client.limits.requests_this_minute == 3
 
-    def test_heartbeat_only_on_downbeat_in_cycle(self, plugin):
-        """In a full cycle, heartbeat fires exactly once (at position 0)."""
-        for t in _cycle():
-            plugin._on_mahamantra_tick(t)
-        assert plugin._client.limits.requests_this_minute == 1
+    def test_heartbeat_at_exact_multiples(self, plugin):
+        """Heartbeat fires at tick 16, 32, 48 — exactly at multiples."""
+        for i in range(1, 49):
+            plugin._on_mahamantra_tick({})
+            expected = i // _TICKS_PER_HEARTBEAT
+            assert plugin._client.limits.requests_this_minute == expected, (
+                f"At tick {i}, expected {expected} heartbeats"
+            )
 
     def test_skips_without_client(self, bare_plugin):
         """No crash if tick fires before client is ready. No tick counted."""
-        bare_plugin._on_mahamantra_tick(_tick(0))
+        bare_plugin._on_mahamantra_tick({})
         assert bare_plugin._tick_count == 0
 
     def test_error_captured_not_raised(self, plugin):
         """Failed heartbeat sets error string, does not raise."""
         plugin._client.limits.requests_this_minute = 100  # Will trigger rate limit
-        plugin._on_mahamantra_tick(_tick(0))
+        for _ in range(_TICKS_PER_HEARTBEAT):
+            plugin._on_mahamantra_tick({})
         assert plugin._last_heartbeat_error is not None
         assert "rate limit" in plugin._last_heartbeat_error.lower()
 
     def test_error_clears_on_success(self, plugin):
         """Successful heartbeat clears previous error."""
         plugin._last_heartbeat_error = "previous error"
-        plugin._on_mahamantra_tick(_tick(0))
+        for _ in range(_TICKS_PER_HEARTBEAT):
+            plugin._on_mahamantra_tick({})
         assert plugin._last_heartbeat_error is None
 
     def test_listener_wired_flag_default_false(self, bare_plugin):
         """_listener_wired is False until _wire_to_mahamantra() succeeds."""
         assert bare_plugin._listener_wired is False
-
-    def test_supports_object_tick_state(self, plugin):
-        """Handles tick_state as object with attributes (not just dict)."""
-        class ObjState:
-            is_downbeat = True
-            position = 0
-        initial = plugin._client.limits.requests_this_minute
-        plugin._on_mahamantra_tick(ObjState())
-        assert plugin._client.limits.requests_this_minute == initial + 1
 
 
 # =============================================================================
@@ -321,7 +307,7 @@ class TestPluginAPI:
     def test_api_shape(self, plugin):
         """API dict has exactly the expected keys."""
         api = plugin.get_api()
-        expected_keys = {"client", "service", "content_queue", "offline", "last_error", "listener_wired", "ticks_seen"}
+        expected_keys = {"client", "offline", "last_error", "listener_wired", "ticks_seen"}
         assert set(api.keys()) == expected_keys
 
     def test_api_client_reference(self, plugin):
@@ -344,8 +330,8 @@ class TestPluginAPI:
 
     def test_api_ticks_count(self, plugin):
         """Tick count reflects actual ticks processed."""
-        for p in range(5):
-            plugin._on_mahamantra_tick(_tick(p + 1))
+        for _ in range(5):
+            plugin._on_mahamantra_tick({})
         api = plugin.get_api()
         assert api["ticks_seen"] == 5
 
@@ -369,7 +355,7 @@ class TestMoltbookProtocolContract:
             MoltbookProtocol()
 
     def test_has_all_abstract_methods(self):
-        """All 29 methods are abstract."""
+        """All 9 methods are abstract."""
         expected = {
             "check_heartbeat",
             "create_post",
@@ -380,26 +366,6 @@ class TestMoltbookProtocolContract:
             "get_conversations",
             "get_messages",
             "verify_credentials",
-            "get_feed",
-            "get_personalized_feed",
-            "get_post",
-            "get_comments",
-            "upvote",
-            "downvote",
-            "upvote_comment",
-            "follow",
-            "unfollow",
-            "get_submolts",
-            "get_submolt",
-            "create_submolt",
-            "subscribe_submolt",
-            "unsubscribe_submolt",
-            "update_profile",
-            "get_own_profile",
-            "send_dm_request",
-            "get_dm_requests",
-            "approve_dm_request",
-            "reject_dm_request",
         }
         actual = set(MoltbookProtocol.__abstractmethods__)
         assert actual == expected, f"Missing: {expected - actual}, Extra: {actual - expected}"
@@ -415,7 +381,7 @@ class TestMoltbookProtocolContract:
     def test_method_count_matches(self):
         """Service implements exactly the methods defined by protocol."""
         abstract_count = len(MoltbookProtocol.__abstractmethods__)
-        assert abstract_count == 29
+        assert abstract_count == 9
 
 
 # =============================================================================
@@ -454,48 +420,11 @@ class TestMoltbookServiceSattva:
         msgs = svc.get_messages("c1")
         assert len(msgs) == 1
 
-    def test_get_feed(self, service):
-        result = service.get_feed()
-        assert isinstance(result, list)
-
-    def test_get_personalized_feed(self, service):
-        result = service.get_personalized_feed()
-        assert isinstance(result, list)
-
-    def test_get_post(self, service):
-        result = service.get_post("p1")
-        assert isinstance(result, dict)
-
-    def test_get_comments(self, service):
-        result = service.get_comments("p1")
-        assert isinstance(result, list)
-
-    def test_get_submolts(self, service):
-        result = service.get_submolts()
-        assert isinstance(result, list)
-
-    def test_get_submolt(self, service):
-        result = service.get_submolt("agentic-os")
-        assert result["name"] == "agentic-os"
-
-    def test_get_own_profile(self, service):
-        result = service.get_own_profile()
-        assert "name" in result
-        assert "karma" in result
-
-    def test_get_dm_requests(self, service):
-        result = service.get_dm_requests()
-        assert isinstance(result, list)
-
     def test_sattva_operations_produce_no_log(self, service):
         """ALL sattva operations must produce zero log entries."""
         service.check_heartbeat()
         service.search("test")
         service.verify_credentials()
-        service.get_feed()
-        service.get_submolts()
-        service.get_own_profile()
-        service.get_dm_requests()
         assert len(service._operation_log) == 0, "SATTVA operations must not log — they are read-only"
 
 
@@ -539,63 +468,12 @@ class TestMoltbookServiceRajas:
         assert len(service._operation_log) == 1
         assert service._operation_log[0]["operation"] == "send_dm"
 
-    def test_upvote_logged(self, service):
-        service.upvote("p1")
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "upvote"
-
-    def test_downvote_logged(self, service):
-        service.downvote("p1")
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "downvote"
-
-    def test_upvote_comment_logged(self, service):
-        service.upvote_comment("c1")
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "upvote_comment"
-
-    def test_follow_logged(self, service):
-        service.follow("other_agent")
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "follow"
-
-    def test_subscribe_submolt_logged(self, service):
-        service.subscribe_submolt("agentic-os")
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "subscribe_submolt"
-
-    def test_create_submolt_logged(self, service):
-        result = service.create_submolt("test", "Test", "desc")
-        assert result["name"] == "test"
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "create_submolt"
-
-    def test_update_profile_logged(self, service):
-        result = service.update_profile("New bio")
-        assert result["status"] == "ok"
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "update_profile"
-
-    def test_send_dm_request_logged(self, service):
-        result = service.send_dm_request("other", "Hi")
-        assert result["status"] == "sent"
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "send_dm_request"
-
-    def test_approve_dm_request_logged(self, service):
-        result = service.approve_dm_request("req1")
-        assert result["status"] == "approved"
-        assert len(service._operation_log) == 1
-        assert service._operation_log[0]["operation"] == "approve_dm_request"
-
     def test_multiple_rajas_accumulate(self, service):
         """Each RAJAS operation adds one log entry."""
         service.create_post("A", "a")
         service.comment("p1", "b")
         service.send_dm("c1", "c")
-        service.upvote("p1")
-        service.follow("x")
-        assert len(service._operation_log) == 5
+        assert len(service._operation_log) == 3
 
     def test_log_timestamp_is_recent(self, service):
         """Timestamp must be a recent epoch float."""
@@ -624,19 +502,7 @@ class TestMoltbookServiceTamas:
 
     def test_unsubscribe_blocked(self, service):
         with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
-            service._enforce_guna("unsubscribe_submolt")
-
-    def test_reject_dm_request_blocked(self, service):
-        with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
-            service.reject_dm_request("req1")
-
-    def test_unfollow_blocked_via_method(self, service):
-        with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
-            service.unfollow("other_agent")
-
-    def test_unsubscribe_blocked_via_method(self, service):
-        with pytest.raises(PermissionError, match="MOLTBOOK-TAMAS"):
-            service.unsubscribe_submolt("agentic-os")
+            service._enforce_guna("unsubscribe")
 
     def test_tamas_produces_no_log(self, service):
         """Blocked TAMAS operations must NOT produce log entries."""
@@ -686,7 +552,7 @@ class TestGunaMapCompleteness:
 
     def test_tamas_operations(self):
         """Destructive operations are classified as TAMAS."""
-        tamas_ops = {"delete_post", "unfollow", "unsubscribe_submolt", "reject_dm_request"}
+        tamas_ops = {"delete_post", "unfollow", "unsubscribe"}
         for op in tamas_ops:
             assert MOLTBOOK_GUNA_MAP[op] == MoltbookGuna.TAMAS, f"{op} should be TAMAS (destructive)"
 
@@ -780,8 +646,8 @@ class TestPluginIsolation:
         p2 = MoltbookPlugin()
         p2._client = MoltbookClient(api_key="test", offline_mode=True)
 
-        for p in range(5):
-            p1._on_mahamantra_tick(_tick(p + 1))
+        for _ in range(5):
+            p1._on_mahamantra_tick({})
         assert p1._tick_count == 5
         assert p2._tick_count == 0
 
@@ -803,207 +669,3 @@ class TestPluginIsolation:
         s1.create_post("A", "a")
         assert len(s1._operation_log) == 1
         assert len(s2._operation_log) == 0
-
-
-# =============================================================================
-# INBOUND DM PROCESSING — The untested critical path
-# =============================================================================
-
-
-class TestInboundDMProcessing:
-    """_process_inbound_dms routes DMs through Govardhan Gateway with dedup."""
-
-    def test_routes_new_dm_through_gateway(self, plugin):
-        """New DM with content is routed through gateway.receive()."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm1", "conversation_id": "conv1", "sender": "AgentX", "content": "Hello steward"},
-        ]
-
-        mock_gw = MagicMock()
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._process_inbound_dms()
-
-        assert mock_gw.receive.call_count == 1
-        req = mock_gw.receive.call_args[0][0]
-        assert req["context"]["source"] == "moltbook_dm"
-        assert req["context"]["sender"] == "AgentX"
-        assert req["context"]["conversation_id"] == "conv1"
-
-    def test_dedup_skips_already_seen_messages(self, plugin):
-        """Messages already in _seen_message_ids are NOT re-routed."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._seen_message_ids.add("dm1")
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": "old"},
-            {"id": "dm2", "conversation_id": "conv1", "sender": "B", "content": "new"},
-        ]
-
-        mock_gw = MagicMock()
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._process_inbound_dms()
-
-        # Only dm2 should be routed (dm1 already seen)
-        assert mock_gw.receive.call_count == 1
-        req = mock_gw.receive.call_args[0][0]
-        assert req["context"]["sender"] == "B"
-        assert "dm2" in plugin._seen_message_ids
-
-    def test_seen_ids_accumulate_across_heartbeats(self, plugin):
-        """_seen_message_ids persists across multiple heartbeat cycles."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": "first"},
-        ]
-
-        mock_gw = MagicMock()
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._process_inbound_dms()
-            assert mock_gw.receive.call_count == 1
-
-            # Second heartbeat — same message, should be skipped
-            mock_gw.reset_mock()
-            plugin._process_inbound_dms()
-            assert mock_gw.receive.call_count == 0
-
-    def test_empty_conversations_no_crash(self, plugin):
-        """No conversations → no crash, no gateway calls."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._client._mock_db["conversations"] = []
-        mock_gw = MagicMock()
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._process_inbound_dms()
-        assert mock_gw.receive.call_count == 0
-
-    def test_empty_content_skipped(self, plugin):
-        """Messages with empty content are not routed."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": ""},
-        ]
-
-        mock_gw = MagicMock()
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._process_inbound_dms()
-        assert mock_gw.receive.call_count == 0
-
-    def test_message_without_id_still_routed(self, plugin):
-        """Messages without 'id' field are routed but not tracked for dedup."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-        plugin._client._mock_db["dms"] = [
-            {"conversation_id": "conv1", "sender": "A", "content": "no id msg"},
-        ]
-
-        mock_gw = MagicMock()
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._process_inbound_dms()
-        assert mock_gw.receive.call_count == 1
-        # No id → not added to seen set
-        assert len(plugin._seen_message_ids) == 0
-
-    def test_gateway_error_does_not_crash(self, plugin):
-        """Gateway.receive() failure is caught, other messages still processed."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": "msg1"},
-            {"id": "dm2", "conversation_id": "conv1", "sender": "B", "content": "msg2"},
-        ]
-
-        mock_gw = MagicMock()
-        mock_gw.receive.side_effect = [RuntimeError("gateway down"), None]
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._process_inbound_dms()  # must not raise
-
-        assert mock_gw.receive.call_count == 2
-        # dm1 failed → NOT added to seen (so it retries next cycle)
-        assert "dm1" not in plugin._seen_message_ids
-        # dm2 succeeded → added to seen
-        assert "dm2" in plugin._seen_message_ids
-
-    def test_heartbeat_triggers_dm_processing_on_new_messages(self, plugin):
-        """Full path: tick 16 → heartbeat → has_new_messages → _process_inbound_dms."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm1", "conversation_id": "conv1", "sender": "A", "content": "hello"},
-        ]
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-
-        mock_gw = MagicMock()
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._on_mahamantra_tick(_tick(0))  # downbeat triggers heartbeat
-
-        # Heartbeat detected new messages → routed through gateway
-        assert mock_gw.receive.call_count == 1
-
-    def test_dm_reply_queued_on_gateway_success(self, plugin):
-        """Gateway success queues a DM_REPLY proposal in ContentQueue."""
-        from unittest.mock import MagicMock, patch
-
-        from vibe_core.plugins.moltbook.content_queue import ContentQueue
-
-        plugin._content_queue = ContentQueue()
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm_new", "conversation_id": "conv1", "sender": "AgentX", "content": "hi there"},
-        ]
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-
-        mock_gw = MagicMock()
-        mock_gw.receive.return_value = {"success": True, "guardian": "narada", "guna": "sattva"}
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._on_mahamantra_tick(_tick(0))
-
-        assert plugin._content_queue.queue_size == 1
-        proposal = plugin._content_queue._queue[0]
-        assert proposal["content_type"] == "dm_reply"
-        assert proposal["target_id"] == "conv1"
-        assert proposal["source"] == "inbound_dm_router"
-        assert proposal["metadata"]["sender"] == "AgentX"
-        assert proposal["metadata"]["inbound_content"] == "hi there"
-
-    def test_dm_reply_not_queued_on_gateway_failure(self, plugin):
-        """Gateway failure does NOT queue a DM_REPLY proposal."""
-        from unittest.mock import MagicMock, patch
-
-        from vibe_core.plugins.moltbook.content_queue import ContentQueue
-
-        plugin._content_queue = ContentQueue()
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm_fail", "conversation_id": "conv1", "sender": "AgentY", "content": "bad msg"},
-        ]
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-
-        mock_gw = MagicMock()
-        mock_gw.receive.return_value = {"success": False, "error": "computation failed"}
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._on_mahamantra_tick(_tick(0))
-
-        assert plugin._content_queue.queue_size == 0
-
-    def test_dm_reply_safe_without_content_queue(self, plugin):
-        """No crash if content_queue is None when processing DMs."""
-        from unittest.mock import MagicMock, patch
-
-        plugin._content_queue = None
-        plugin._client._mock_db["dms"] = [
-            {"id": "dm_safe", "conversation_id": "conv1", "sender": "A", "content": "test"},
-        ]
-        plugin._client._mock_db["conversations"] = [{"id": "conv1"}]
-
-        mock_gw = MagicMock()
-        mock_gw.receive.return_value = {"success": True, "guardian": "narada", "guna": "sattva"}
-        with patch("vibe_core.gateway.mahamantra_gateway.get_gateway", return_value=mock_gw):
-            plugin._on_mahamantra_tick(_tick(0))  # should not crash

@@ -26,33 +26,21 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.protocols.moltbook import (
-    DMConversation,
     DMMessage,
-    DMRequestInfo,
-    DMRequestResult,
-    DMSendResult,
-    FollowResult,
-    HeartbeatResult,
     MoltbookAgentProfile,
     MoltbookComment,
     MoltbookPost,
     MoltbookProtocol,
-    OperationLogEntry,
-    ProfileUpdateResult,
     SemanticSearchResult,
-    SubmoltDetails,
-    SubscribeResult,
-    VoteResult,
 )
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
-    from vibe_core.plugins.moltbook.content_queue import ContentQueue
 
 logger = logging.getLogger("MOLTBOOK")
 
@@ -75,7 +63,7 @@ class MoltbookService(MoltbookProtocol):
 
     def __init__(self, client: "MoltbookClient"):
         self._client = client
-        self._operation_log: List[OperationLogEntry] = []
+        self._operation_log: List[Dict[str, Any]] = []
 
     def _enforce_guna(self, operation: str) -> None:
         """
@@ -106,7 +94,7 @@ class MoltbookService(MoltbookProtocol):
 
     # --- SATTVA operations (read-only) ---
 
-    def check_heartbeat(self) -> HeartbeatResult:
+    def check_heartbeat(self) -> Dict[str, Any]:
         self._enforce_guna("check_heartbeat")
         return self._client.sync_check_heartbeat()
 
@@ -122,7 +110,7 @@ class MoltbookService(MoltbookProtocol):
 
         return _run_async(self._client.get_profile(name))
 
-    def get_conversations(self) -> List[DMConversation]:
+    def get_conversations(self) -> List[Dict[str, Any]]:
         self._enforce_guna("get_conversations")
         return self._client.sync_get_dm_conversations()
 
@@ -152,135 +140,9 @@ class MoltbookService(MoltbookProtocol):
 
         return _run_async(self._client.comment_with_verification(post_id, content))
 
-    def send_dm(self, conversation_id: str, content: str) -> DMSendResult:
+    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
         self._enforce_guna("send_dm")
         return self._client.sync_send_dm(conversation_id, content)
-
-    # --- SATTVA operations (new — read-only) ---
-
-    def get_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
-        self._enforce_guna("get_feed")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.get_feed(sort, limit))
-
-    def get_personalized_feed(self, sort: str = "hot", limit: int = 25) -> List[MoltbookPost]:
-        self._enforce_guna("get_personalized_feed")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.get_personalized_feed(sort, limit))
-
-    def get_post(self, post_id: str) -> MoltbookPost:
-        self._enforce_guna("get_post")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.get_post(post_id))
-
-    def get_comments(self, post_id: str, sort: str = "top") -> List[MoltbookComment]:
-        self._enforce_guna("get_comments")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.get_comments(post_id, sort))
-
-    def get_submolts(self) -> List[SubmoltDetails]:
-        self._enforce_guna("get_submolts")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.get_submolts())
-
-    def get_submolt(self, name: str) -> SubmoltDetails:
-        self._enforce_guna("get_submolt")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.get_submolt(name))
-
-    def get_own_profile(self) -> MoltbookAgentProfile:
-        self._enforce_guna("get_own_profile")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.get_own_profile())
-
-    def get_dm_requests(self) -> List[DMRequestInfo]:
-        self._enforce_guna("get_dm_requests")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.get_dm_requests())
-
-    # --- RAJAS operations (new — write, logged) ---
-
-    def upvote(self, post_id: str) -> VoteResult:
-        self._enforce_guna("upvote")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.upvote(post_id))
-
-    def downvote(self, post_id: str) -> VoteResult:
-        self._enforce_guna("downvote")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.downvote(post_id))
-
-    def upvote_comment(self, comment_id: str) -> VoteResult:
-        self._enforce_guna("upvote_comment")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.upvote_comment(comment_id))
-
-    def follow(self, agent_name: str) -> FollowResult:
-        self._enforce_guna("follow")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.follow(agent_name))
-
-    def create_submolt(self, name: str, display_name: str, description: str) -> SubmoltDetails:
-        self._enforce_guna("create_submolt")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.create_submolt(name, display_name, description))
-
-    def subscribe_submolt(self, name: str) -> SubscribeResult:
-        self._enforce_guna("subscribe_submolt")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.subscribe_submolt(name))
-
-    def update_profile(self, description: str) -> ProfileUpdateResult:
-        self._enforce_guna("update_profile")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.update_profile(description))
-
-    def send_dm_request(self, agent_name: str, message: str) -> DMRequestResult:
-        self._enforce_guna("send_dm_request")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.send_dm_request(agent_name, message))
-
-    def approve_dm_request(self, request_id: str) -> DMRequestResult:
-        self._enforce_guna("approve_dm_request")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.approve_dm_request(request_id))
-
-    # --- TAMAS operations (destructive — blocked by _enforce_guna) ---
-
-    def unfollow(self, agent_name: str) -> FollowResult:
-        self._enforce_guna("unfollow")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.unfollow(agent_name))
-
-    def unsubscribe_submolt(self, name: str) -> SubscribeResult:
-        self._enforce_guna("unsubscribe_submolt")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.unsubscribe_submolt(name))
-
-    def reject_dm_request(self, request_id: str) -> DMRequestResult:
-        self._enforce_guna("reject_dm_request")
-        from vibe_core.mahamantra.adapters.moltbook import _run_async
-
-        return _run_async(self._client.reject_dm_request(request_id))
 
 
 class MoltbookPlugin(KernelPlugin):
@@ -296,14 +158,11 @@ class MoltbookPlugin(KernelPlugin):
     def __init__(self):
         super().__init__()
         self._client = None  # MoltbookClient, created in on_boot
-        self._service: Optional[MoltbookService] = None
         self._offline_mode: bool = True
         self._last_heartbeat_error: Optional[str] = None
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
         self._listener_wired: bool = False
-        self._seen_message_ids: Set[str] = set()
-        self._content_queue: Optional["ContentQueue"] = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -318,7 +177,7 @@ class MoltbookPlugin(KernelPlugin):
             return [self._state_dir]
         return []
 
-    def snapshot_state(self) -> dict:
+    def snapshot_state(self) -> Dict[str, Any]:
         if not self._client:
             return {"version": 1, "client_active": False}
         limits = self._client.limits
@@ -334,7 +193,7 @@ class MoltbookPlugin(KernelPlugin):
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-    def restore_state(self, snapshot: dict) -> None:
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
         if snapshot.get("version") != 1 or not snapshot.get("client_active"):
             return
         if not self._client:
@@ -388,9 +247,6 @@ class MoltbookPlugin(KernelPlugin):
             # Register MoltbookProtocol in ServiceRegistry (same as Economy → BankProtocol)
             self._register_service()
 
-            # Initialize ContentQueue
-            self._init_content_queue()
-
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
 
@@ -407,31 +263,11 @@ class MoltbookPlugin(KernelPlugin):
         try:
             from vibe_core.di import ServiceRegistry
 
-            self._service = MoltbookService(self._client)
-            ServiceRegistry.register_factory(MoltbookProtocol, lambda: self._service)
+            service = MoltbookService(self._client)
+            ServiceRegistry.register_factory(MoltbookProtocol, lambda: service)
             logger.info("MoltbookProtocol registered in ServiceRegistry")
         except Exception as e:
             logger.warning(f"ServiceRegistry registration failed: {e}")
-
-    def _init_content_queue(self) -> None:
-        """Initialize the ContentQueue and discover registered generators."""
-        try:
-            from vibe_core.plugins.moltbook.content_queue import ContentQueue
-
-            self._content_queue = ContentQueue()
-            # Discover generators from ServiceRegistry (FOLDER=EXISTENCE)
-            try:
-                from vibe_core.di import ServiceRegistry
-                from vibe_core.protocols.moltbook_content import ContentProposalProtocol
-
-                generators = ServiceRegistry.get_all(ContentProposalProtocol)
-                for gen in generators:
-                    self._content_queue.register_generator(gen)
-            except Exception:
-                pass  # No generators registered yet — that's fine
-            logger.info("ContentQueue initialized")
-        except Exception as e:
-            logger.warning(f"ContentQueue init failed: {e}")
 
     def _wire_to_mahamantra(self) -> None:
         """Register as Mahamantra tick listener. Bombenfest."""
@@ -478,32 +314,24 @@ class MoltbookPlugin(KernelPlugin):
     # Mahamantra Listener — THE heartbeat path
     # =========================================================================
 
-    def _on_mahamantra_tick(self, tick_state: dict) -> None:
+    def _on_mahamantra_tick(self, tick_state: object) -> None:
         """
         Called on every mahamantra.tick() via _broadcast().
 
-        Fires heartbeat once per mantra cycle, gated on is_downbeat
-        (position == 0). Uses the Mahamantra's own rhythm — not a
-        dumb counter. Same defensive dict/attr pattern as SravanamListener.
+        Polls Moltbook once per full mantra cycle (16 ticks).
+        Same pattern as Nrisimha._on_mahamantra_tick().
         """
         if not self._client:
             return
 
         self._tick_count += 1
-
-        # Gate: only fire on downbeat (position 0 = start of new cycle)
-        if isinstance(tick_state, dict):
-            is_downbeat = tick_state.get("is_downbeat", False)
-        else:
-            is_downbeat = getattr(tick_state, "is_downbeat", False)
-
-        if not is_downbeat:
+        if self._tick_count % _TICKS_PER_HEARTBEAT != 0:
             return
 
         self._do_heartbeat()
 
     def _do_heartbeat(self) -> None:
-        """Execute one heartbeat cycle: check DMs, route inbound, process content queue."""
+        """Execute one heartbeat cycle: check DMs, route inbound."""
         try:
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
@@ -515,39 +343,6 @@ class MoltbookPlugin(KernelPlugin):
         has_new = heartbeat.get("has_new_messages", False)
         if has_new:
             self._process_inbound_dms()
-
-        # Process content queue: poll generators, expire stale, execute approved
-        self._process_content_queue()
-
-    def _process_content_queue(self) -> None:
-        """Poll generators, expire stale proposals, execute next approved."""
-        if not self._content_queue or not self._service:
-            return
-
-        try:
-            self._content_queue.poll_generators()
-            self._content_queue.expire_stale()
-
-            proposal = self._content_queue.next_approved()
-            if proposal is None:
-                return
-
-            ct = proposal["content_type"]
-            if ct == "post":
-                self._service.create_post(proposal["title"], proposal["body"], proposal.get("submolt"))
-            elif ct == "comment" and proposal.get("target_id"):
-                self._service.comment(proposal["target_id"], proposal["body"])
-            elif ct == "dm_reply" and proposal.get("target_id"):
-                self._service.send_dm(proposal["target_id"], proposal["body"])
-            else:
-                logger.warning(f"Unknown content type: {ct}")
-                return
-
-            self._content_queue.mark_executed(proposal)
-            logger.info(f"Executed {ct} proposal from {proposal['source']}")
-
-        except Exception as e:
-            logger.warning(f"Content queue processing failed: {e}")
 
     # =========================================================================
     # on_pulse — backward compat (delegates to same heartbeat)
@@ -582,11 +377,7 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _process_inbound_dms(self) -> None:
-        """Fetch new DM conversations, read messages, route through Govardhan Gateway.
-
-        When gateway processes a DM successfully, queues a DM_REPLY proposal
-        via ContentQueue. No hardcoded reply — generators decide what to say.
-        """
+        """Fetch new DM conversations, read messages, route through Govardhan Gateway."""
         from vibe_core.gateway.mahamantra_gateway import get_gateway
         from vibe_core.protocols.gateway import EntryType, create_request
 
@@ -608,75 +399,25 @@ class MoltbookPlugin(KernelPlugin):
                 continue
 
             for msg in messages:
-                msg_id = msg.get("id", "") if isinstance(msg, dict) else ""
                 content = msg.get("content", "") if isinstance(msg, dict) else ""
                 if not content:
-                    continue
-                if msg_id and msg_id in self._seen_message_ids:
                     continue
                 try:
                     req = create_request(content, [], EntryType.AGENT)
                     req["context"]["source"] = "moltbook_dm"
-                    sender = msg.get("sender", "unknown") if isinstance(msg, dict) else "unknown"
-                    req["context"]["sender"] = sender
+                    req["context"]["sender"] = msg.get("sender", "unknown")
                     req["context"]["conversation_id"] = conv_id
-                    response = gateway.receive(req)
-                    if msg_id:
-                        self._seen_message_ids.add(msg_id)
-
-                    # Queue DM reply proposal if gateway succeeded
-                    self._queue_dm_reply(conv_id, sender, content, response)
-
+                    gateway.receive(req)
                 except Exception as e:
                     logger.warning(f"Inbound DM routing failed: {e}")
-
-    def _queue_dm_reply(
-        self, conv_id: str, sender: str, inbound_content: str, gateway_response: dict
-    ) -> None:
-        """Queue a DM_REPLY content proposal based on gateway routing result.
-
-        Does NOT generate reply text — that's the ContentProposalProtocol's job.
-        This just records the inbound DM metadata so generators can decide what to say.
-        """
-        if not self._content_queue:
-            return
-
-        success = gateway_response.get("success", False) if isinstance(gateway_response, dict) else False
-        if not success:
-            return
-
-        try:
-            from vibe_core.protocols.moltbook_content import ContentType, create_proposal
-
-            proposal = create_proposal(
-                content_type=ContentType.DM_REPLY,
-                title="",
-                body="",  # Empty — generator fills this in
-                source="inbound_dm_router",
-                priority=70,  # DM replies are higher priority than posts
-                target_id=conv_id,
-                ttl_seconds=1800,  # 30 min TTL for DM replies
-                metadata={
-                    "sender": sender,
-                    "inbound_content": inbound_content[:500],
-                    "guardian": str(gateway_response.get("guardian", "")),
-                    "guna": str(gateway_response.get("guna", "")),
-                },
-            )
-            self._content_queue._queue.append(proposal)
-            logger.info(f"DM reply proposal queued for conv {conv_id} from {sender}")
-        except Exception as e:
-            logger.warning(f"Failed to queue DM reply proposal: {e}")
 
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")
     # =========================================================================
 
-    def get_api(self) -> Optional[dict]:
+    def get_api(self) -> Optional[Dict[str, Any]]:
         return {
             "client": self._client,
-            "service": self._service,
-            "content_queue": self._content_queue,
             "offline": self._offline_mode,
             "last_error": self._last_heartbeat_error,
             "listener_wired": self._listener_wired,
