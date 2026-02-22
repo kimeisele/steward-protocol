@@ -9,8 +9,9 @@ This is NOT a Web2 REST client wrapper. This is a biological membrane.
 It acts as a Sensor (Drishti) and Actuator (Karma) for the Visnu Kernel.
 
 Inbound (SENSORS phase):
-    Translates Moltbook DMs/Mentions into `MahaCellUnified` and injects them
-    into the `CellRouter`.
+    Translates Moltbook DMs/Mentions into Gateway Requests and routes them
+    through Govardhan (The Boundary Layer) to fire the 5 Pancha Tattva Gates
+    (Parse, Validate, Execute, Result, Sync) before they become Cells.
 
 Outbound (ACTUATORS phase):
     Scans the `CellRouter` for cells tagged for Moltbook output.
@@ -34,6 +35,7 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 from vibe_core.mahamantra.substrate.cell_system.cell import MahaCellUnified
 from vibe_core.mahamantra.substrate.cell_system.cell_router import get_router
+from vibe_core.gateway.mahamantra_gateway import EntryType, create_request, get_gateway
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -158,6 +160,14 @@ class MoltbookPlugin(KernelPlugin):
         # in the Pulse cycle before Cortex makes decisions.
         return PulsePhase.SENSORS
 
+    def _route_inbound(self, content: str, source: str = "moltbook_dm"):
+        """Route inbound Moltbook content strictly through Govardhan Gateway."""
+        gateway = get_gateway()
+        # Treat Moltbook inputs as CHAT entry type to engage Kaliya/Takshaka filters
+        req = create_request(content, [], EntryType.CHAT)
+        req["source"] = source
+        return gateway.receive(req)
+
     def on_pulse(self, kernel: "RealVibeKernel", transaction: object) -> HookResult:
         """
         The Biological Heartbeat.
@@ -171,16 +181,16 @@ class MoltbookPlugin(KernelPlugin):
         # 1. DRISHTI (Sensor Phase)
         # Fetch DMs and Mentions from Moltbook...
         try:
-            # Note: since this is async and on_pulse is sync, we'd need an event loop 
-            # if we were actually hitting network. In this structure, we emit events or 
-            # cell DNA into the router.
+            # Note: since this is async and on_pulse is sync, we'd need an event loop
+            # if we were actually hitting network. 
             
-            # Simulated Sensor Read
+            # Simulated Sensor Read: If we got a new message on Moltbook
             # heartbeat_data = asyncio.run(self._client.check_heartbeat())
             # if heartbeat_data.get("has_new_messages"):
-            #     # Spawn MahaCell
-            #     cell = MahaCellUnified.create("MOLTBOOK_INTENT: READ_DMS")
-            #     # Router auto-registers
+            #     for msg in heartbeat_data.get("messages", []):
+            #         # PROPER ARCHITECTURE: Route through Govardhan Gates
+            #         # This fires PARSE -> VALIDATE -> EXECUTE -> RESULT -> SYNC
+            #         self._route_inbound(content=msg["content"])
             pass
         except Exception as e:
             logger.warning(f"Sensor read failed: {e}")
