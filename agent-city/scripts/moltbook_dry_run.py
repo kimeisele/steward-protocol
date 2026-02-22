@@ -78,7 +78,7 @@ class DryRunReport:
         return failed == 0
 
 
-async def run_dry_run(client: MoltbookClient) -> bool:
+async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bool:
     report = DryRunReport()
 
     # =========================================================================
@@ -218,28 +218,111 @@ async def run_dry_run(client: MoltbookClient) -> bool:
         report.record("get_submolt(general)", False, error=str(e))
 
     # =========================================================================
-    # 6. VOTING (read-only check — don't actually vote in dry-run)
+    # 6-8: WRITE CYCLE (RAJAS + TAMAS)
+    # Only runs if live_fire=True OR offline mode (mock).
+    # This tests the REAL code path — same functions that hit the live API.
     # =========================================================================
-    print("\n[6/8] VOTING (skipped in dry-run — would mutate state)")
-    report.record("upvote (skipped)", True, data="dry-run: no mutation")
-    report.record("downvote (skipped)", True, data="dry-run: no mutation")
-    report.record("upvote_comment (skipped)", True, data="dry-run: no mutation")
+    if not write_enabled:
+        print("\n[6/8] WRITE CYCLE (skipped — use --offline for mock writes or --live-fire for real)")
+        report.record("create_post", True, data="skipped (no write mode)")
+        report.record("comment", True, data="skipped (no write mode)")
+        report.record("upvote", True, data="skipped (no write mode)")
+        report.record("follow", True, data="skipped (no write mode)")
+        report.record("subscribe", True, data="skipped (no write mode)")
+        report.record("delete_post", True, data="skipped (no write mode)")
+        return report.summary()
 
-    # =========================================================================
-    # 7. FOLLOWING (read-only check)
-    # =========================================================================
-    print("\n[7/8] FOLLOWING (skipped in dry-run — would mutate state)")
-    report.record("follow_agent (skipped)", True, data="dry-run: no mutation")
-    report.record("unfollow_agent (skipped)", True, data="dry-run: no mutation")
-    report.record("subscribe_submolt (skipped)", True, data="dry-run: no mutation")
-    report.record("unsubscribe_submolt (skipped)", True, data="dry-run: no mutation")
+    print("\n[6/8] WRITE CYCLE — FULL RAJAS+TAMAS")
 
-    # =========================================================================
-    # 8. PROFILE UPDATE (read-only check)
-    # =========================================================================
-    print("\n[8/8] PROFILE UPDATE (skipped in dry-run — would mutate state)")
-    report.record("update_profile (skipped)", True, data="dry-run: no mutation")
-    report.record("delete_post (skipped)", True, data="dry-run: no mutation")
+    # 6a. CREATE POST
+    created_post_id = None
+    try:
+        post = await client.create_post(
+            title="[DRY-RUN] steward-protocol write test",
+            content="Automated write-cycle verification. This post will be deleted immediately.",
+            submolt=None,
+        )
+        created_post_id = post.get("id", "")
+        report.record("create_post", True, {
+            "id": created_post_id,
+            "title": post.get("title", "?")[:60],
+        })
+    except Exception as e:
+        report.record("create_post", False, error=str(e))
+
+    # 6b. COMMENT ON OWN POST
+    if created_post_id:
+        try:
+            comment = await client.comment_with_verification(
+                created_post_id,
+                "Automated comment — write-cycle test. Will be cleaned up.",
+            )
+            report.record("comment", True, {
+                "id": comment.get("id", "?"),
+                "post_id": created_post_id,
+            })
+        except Exception as e:
+            report.record("comment", False, error=str(e))
+
+        # 6c. UPVOTE OWN POST
+        try:
+            vote = await client.upvote(created_post_id)
+            report.record("upvote", True, {"post_id": created_post_id})
+        except Exception as e:
+            report.record("upvote", False, error=str(e))
+    else:
+        report.record("comment", False, error="no post created")
+        report.record("upvote", False, error="no post created")
+
+    # 6d. FOLLOW / UNFOLLOW (use own name — safe)
+    try:
+        await client.follow_agent("steward-protocol")
+        report.record("follow", True, {"agent": "steward-protocol"})
+    except Exception as e:
+        report.record("follow", False, error=str(e))
+
+    try:
+        await client.unfollow_agent("steward-protocol")
+        report.record("unfollow", True, {"agent": "steward-protocol"})
+    except Exception as e:
+        report.record("unfollow", False, error=str(e))
+
+    # 6e. SUBSCRIBE / UNSUBSCRIBE
+    try:
+        await client.subscribe_submolt("general")
+        report.record("subscribe", True, {"submolt": "general"})
+    except Exception as e:
+        report.record("subscribe", False, error=str(e))
+
+    try:
+        await client.unsubscribe_submolt("general")
+        report.record("unsubscribe", True, {"submolt": "general"})
+    except Exception as e:
+        report.record("unsubscribe", False, error=str(e))
+
+    # 6f. DELETE POST (TAMAS — cleanup)
+    if created_post_id:
+        try:
+            await client.delete_post(created_post_id)
+            report.record("delete_post", True, {"deleted": created_post_id})
+        except Exception as e:
+            report.record("delete_post", False, error=str(e))
+    else:
+        report.record("delete_post", False, error="no post to delete")
+
+    # 6g. SEND DM REQUEST (only in offline — don't spam real agents)
+    if client.offline_mode:
+        try:
+            dm_req = await client.send_dm_request("test-agent", "Write-cycle DM request test")
+            report.record("send_dm_request", True, {"to": "test-agent"})
+        except Exception as e:
+            report.record("send_dm_request", False, error=str(e))
+
+        try:
+            dm = await client.send_dm("conv-test", "Write-cycle DM test")
+            report.record("send_dm", True, {"conv": "conv-test"})
+        except Exception as e:
+            report.record("send_dm", False, error=str(e))
 
     return report.summary()
 
@@ -277,10 +360,12 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Moltbook API Dry-Run")
-    parser.add_argument("--offline", action="store_true", help="Use offline mock")
+    parser.add_argument("--offline", action="store_true", help="Use offline mock (includes write cycle)")
+    parser.add_argument("--live-fire", action="store_true", help="Enable REAL writes against live API (post+delete)")
     args = parser.parse_args()
 
     offline = args.offline
+    live_fire = args.live_fire
     api_key = "" if offline else _resolve_api_key()
 
     if not api_key and not offline:
@@ -292,13 +377,23 @@ def main():
     if not api_key:
         api_key = "offline_dry_run_key"
 
+    # Offline always enables writes (it's a mock). Live only writes with --live-fire.
+    write_enabled = offline or live_fire
+
     client = MoltbookClient(api_key=api_key, offline_mode=offline)
-    mode = "OFFLINE MOCK" if offline else "LIVE API"
+
+    if offline:
+        mode = "OFFLINE MOCK (writes enabled)"
+    elif live_fire:
+        mode = "LIVE API + LIVE FIRE (writes enabled!)"
+    else:
+        mode = "LIVE API (read-only)"
+
     print(f"\n{'='*60}")
     print(f"MOLTBOOK DRY-RUN — {mode}")
     print(f"{'='*60}")
 
-    success = asyncio.run(run_dry_run(client))
+    success = asyncio.run(run_dry_run(client, write_enabled=write_enabled))
     sys.exit(0 if success else 1)
 
 
