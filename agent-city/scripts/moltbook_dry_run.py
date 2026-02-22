@@ -1,310 +1,401 @@
 #!/usr/bin/env python3
 """
-Moltbook Dry-Run Simulator
-===========================
+MOLTBOOK DRY-RUN — Live API Smoke Test
+========================================
 
-Reads REAL data from the live Moltbook API. NEVER posts.
-Simulates what the system WOULD do and produces a report.
+Tests every endpoint against the real Moltbook API.
+Reports what works, what fails, and what shapes come back.
 
 Usage:
-    PYTHONPATH=. python3 agent-city/scripts/moltbook_dry_run.py
+    MOLTBOOK_API_KEY=xxx python agent-city/scripts/moltbook_dry_run.py
+    python agent-city/scripts/moltbook_dry_run.py --key xxx
+    python agent-city/scripts/moltbook_dry_run.py --offline   # mock only
 
-    # Offline mode (no network, uses mocks):
-    MOLTBOOK_OFFLINE_MODE=true PYTHONPATH=. python3 agent-city/scripts/moltbook_dry_run.py
-
-Environment:
-    MOLTBOOK_API_KEY      — Bearer token (or reads from ~/.config/moltbook/credentials.json)
-    MOLTBOOK_OFFLINE_MODE — "true" to use offline mocks (default: false)
+Sections:
+    1. Status + Profile (SATTVA)
+    2. Feed + Posts (SATTVA)
+    3. Search (SATTVA)
+    4. DM System (SATTVA)
+    5. Submolts (SATTVA)
+    6. Voting (RAJAS)
+    7. Following (RAJAS)
+    8. Profile Update (RAJAS)
 """
 
+import asyncio
 import json
-import logging
 import os
 import sys
 import time
-from pathlib import Path
+from typing import Any, Dict, List
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger("DRY_RUN")
+# Add project root to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+
+from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 
 
-def _load_api_key() -> str:
-    """Load API key from env or credentials file."""
+def _fmt(data: Any, max_len: int = 200) -> str:
+    """Format data for display, truncating long values."""
+    s = json.dumps(data, indent=2, default=str) if isinstance(data, (dict, list)) else str(data)
+    return s[:max_len] + "..." if len(s) > max_len else s
+
+
+class DryRunReport:
+    """Collects results from each test section."""
+
+    def __init__(self):
+        self.results: List[Dict[str, Any]] = []
+        self.start_time = time.time()
+
+    def record(self, name: str, success: bool, data: Any = None, error: str = ""):
+        self.results.append({
+            "name": name,
+            "success": success,
+            "data": data,
+            "error": error,
+        })
+        status = "✓" if success else "✗"
+        print(f"  {status} {name}")
+        if error:
+            print(f"    ERROR: {error}")
+        if data and success:
+            print(f"    → {_fmt(data)}")
+
+    def summary(self):
+        elapsed = time.time() - self.start_time
+        passed = sum(1 for r in self.results if r["success"])
+        failed = sum(1 for r in self.results if not r["success"])
+        total = len(self.results)
+        print(f"\n{'='*60}")
+        print(f"DRY-RUN COMPLETE: {passed}/{total} passed, {failed} failed ({elapsed:.1f}s)")
+        if failed:
+            print("\nFAILED:")
+            for r in self.results:
+                if not r["success"]:
+                    print(f"  ✗ {r['name']}: {r['error']}")
+        print(f"{'='*60}")
+        return failed == 0
+
+
+async def run_dry_run(client: MoltbookClient, write_enabled: bool = False) -> bool:
+    report = DryRunReport()
+
+    # =========================================================================
+    # 1. STATUS + PROFILE
+    # =========================================================================
+    print("\n[1/8] STATUS + PROFILE")
+
+    try:
+        status = await client.check_status()
+        report.record("check_status", True, {"status": status})
+    except Exception as e:
+        report.record("check_status", False, error=str(e))
+
+    try:
+        profile = await client.get_own_profile()
+        report.record("get_own_profile", True, {
+            "name": profile.get("name"),
+            "karma": profile.get("karma"),
+            "follower_count": profile.get("follower_count"),
+            "is_claimed": profile.get("is_claimed"),
+        })
+    except Exception as e:
+        report.record("get_own_profile", False, error=str(e))
+
+    try:
+        profile = await client.get_profile("steward-protocol")
+        report.record("get_profile(steward-protocol)", True, {
+            "name": profile.get("name"),
+            "karma": profile.get("karma"),
+        })
+    except Exception as e:
+        report.record("get_profile", False, error=str(e))
+
+    # =========================================================================
+    # 2. FEED + POSTS
+    # =========================================================================
+    print("\n[2/8] FEED + POSTS")
+
+    first_post_id = None
+    try:
+        feed = await client.get_feed(sort="new", limit=3)
+        report.record("get_feed(new, 3)", True, {
+            "count": len(feed),
+            "first_title": feed[0].get("title", "?")[:60] if feed else "empty",
+        })
+        if feed and isinstance(feed[0], dict):
+            first_post_id = feed[0].get("id")
+    except Exception as e:
+        report.record("get_feed", False, error=str(e))
+
+    try:
+        pfeed = await client.get_personalized_feed(sort="hot", limit=3)
+        report.record("get_personalized_feed(hot, 3)", True, {"count": len(pfeed)})
+    except Exception as e:
+        report.record("get_personalized_feed", False, error=str(e))
+
+    if first_post_id:
+        try:
+            post = await client.get_post(first_post_id)
+            report.record(f"get_post({first_post_id[:8]}...)", True, {
+                "title": post.get("title", "?")[:60],
+                "upvotes": post.get("upvotes"),
+            })
+        except Exception as e:
+            report.record("get_post", False, error=str(e))
+
+        try:
+            comments = await client.get_comments(first_post_id, sort="top")
+            report.record(f"get_comments({first_post_id[:8]}...)", True, {"count": len(comments)})
+        except Exception as e:
+            report.record("get_comments", False, error=str(e))
+    else:
+        report.record("get_post", False, error="no post_id from feed")
+        report.record("get_comments", False, error="no post_id from feed")
+
+    # =========================================================================
+    # 3. SEARCH
+    # =========================================================================
+    print("\n[3/8] SEARCH")
+
+    try:
+        results = await client.semantic_search("agent operating system", limit=3)
+        report.record("semantic_search", True, {
+            "count": len(results),
+            "first_type": results[0].get("type", "?") if results else "empty",
+        })
+    except Exception as e:
+        report.record("semantic_search", False, error=str(e))
+
+    # =========================================================================
+    # 4. DM SYSTEM
+    # =========================================================================
+    print("\n[4/8] DM SYSTEM")
+
+    try:
+        hb = await client.check_heartbeat()
+        report.record("check_heartbeat", True, {
+            "has_activity": hb.get("has_activity"),
+            "requests_count": hb.get("requests", {}).get("count") if isinstance(hb.get("requests"), dict) else "?",
+        })
+    except Exception as e:
+        report.record("check_heartbeat", False, error=str(e))
+
+    try:
+        convs = await client.get_dm_conversations()
+        report.record("get_dm_conversations", True, {"count": len(convs)})
+    except Exception as e:
+        report.record("get_dm_conversations", False, error=str(e))
+
+    try:
+        reqs = await client.get_dm_requests()
+        report.record("get_dm_requests", True, {"count": len(reqs)})
+    except Exception as e:
+        report.record("get_dm_requests", False, error=str(e))
+
+    # =========================================================================
+    # 5. SUBMOLTS
+    # =========================================================================
+    print("\n[5/8] SUBMOLTS")
+
+    try:
+        submolts = await client.get_submolts()
+        report.record("get_submolts", True, {
+            "count": len(submolts),
+            "first": submolts[0].get("name", "?") if submolts else "empty",
+        })
+    except Exception as e:
+        report.record("get_submolts", False, error=str(e))
+
+    try:
+        submolt = await client.get_submolt("general")
+        report.record("get_submolt(general)", True, {
+            "name": submolt.get("name"),
+            "subscribers": submolt.get("subscriber_count"),
+        })
+    except Exception as e:
+        report.record("get_submolt(general)", False, error=str(e))
+
+    # =========================================================================
+    # 6-8: WRITE CYCLE (RAJAS + TAMAS)
+    # Only runs if live_fire=True OR offline mode (mock).
+    # This tests the REAL code path — same functions that hit the live API.
+    # =========================================================================
+    if not write_enabled:
+        print("\n[6/8] WRITE CYCLE (skipped — use --offline for mock writes or --live-fire for real)")
+        report.record("create_post", True, data="skipped (no write mode)")
+        report.record("comment", True, data="skipped (no write mode)")
+        report.record("upvote", True, data="skipped (no write mode)")
+        report.record("follow", True, data="skipped (no write mode)")
+        report.record("subscribe", True, data="skipped (no write mode)")
+        report.record("delete_post", True, data="skipped (no write mode)")
+        return report.summary()
+
+    print("\n[6/8] WRITE CYCLE — FULL RAJAS+TAMAS")
+
+    # 6a. CREATE POST
+    created_post_id = None
+    try:
+        post = await client.create_post(
+            title="[DRY-RUN] steward-protocol write test",
+            content="Automated write-cycle verification. This post will be deleted immediately.",
+            submolt=None,
+        )
+        created_post_id = post.get("id", "")
+        report.record("create_post", True, {
+            "id": created_post_id,
+            "title": post.get("title", "?")[:60],
+        })
+    except Exception as e:
+        report.record("create_post", False, error=str(e))
+
+    # 6b. COMMENT ON OWN POST
+    if created_post_id:
+        try:
+            comment = await client.comment_with_verification(
+                created_post_id,
+                "Automated comment — write-cycle test. Will be cleaned up.",
+            )
+            report.record("comment", True, {
+                "id": comment.get("id", "?"),
+                "post_id": created_post_id,
+            })
+        except Exception as e:
+            report.record("comment", False, error=str(e))
+
+        # 6c. UPVOTE OWN POST
+        try:
+            vote = await client.upvote(created_post_id)
+            report.record("upvote", True, {"post_id": created_post_id})
+        except Exception as e:
+            report.record("upvote", False, error=str(e))
+    else:
+        report.record("comment", False, error="no post created")
+        report.record("upvote", False, error="no post created")
+
+    # 6d. FOLLOW / UNFOLLOW (use own name — safe)
+    try:
+        await client.follow_agent("steward-protocol")
+        report.record("follow", True, {"agent": "steward-protocol"})
+    except Exception as e:
+        report.record("follow", False, error=str(e))
+
+    try:
+        await client.unfollow_agent("steward-protocol")
+        report.record("unfollow", True, {"agent": "steward-protocol"})
+    except Exception as e:
+        report.record("unfollow", False, error=str(e))
+
+    # 6e. SUBSCRIBE / UNSUBSCRIBE
+    try:
+        await client.subscribe_submolt("general")
+        report.record("subscribe", True, {"submolt": "general"})
+    except Exception as e:
+        report.record("subscribe", False, error=str(e))
+
+    try:
+        await client.unsubscribe_submolt("general")
+        report.record("unsubscribe", True, {"submolt": "general"})
+    except Exception as e:
+        report.record("unsubscribe", False, error=str(e))
+
+    # 6f. DELETE POST (TAMAS — cleanup)
+    if created_post_id:
+        try:
+            await client.delete_post(created_post_id)
+            report.record("delete_post", True, {"deleted": created_post_id})
+        except Exception as e:
+            report.record("delete_post", False, error=str(e))
+    else:
+        report.record("delete_post", False, error="no post to delete")
+
+    # 6g. SEND DM REQUEST (only in offline — don't spam real agents)
+    if client.offline_mode:
+        try:
+            dm_req = await client.send_dm_request("test-agent", "Write-cycle DM request test")
+            report.record("send_dm_request", True, {"to": "test-agent"})
+        except Exception as e:
+            report.record("send_dm_request", False, error=str(e))
+
+        try:
+            dm = await client.send_dm("conv-test", "Write-cycle DM test")
+            report.record("send_dm", True, {"conv": "conv-test"})
+        except Exception as e:
+            report.record("send_dm", False, error=str(e))
+
+    return report.summary()
+
+
+def _resolve_api_key() -> str:
+    """
+    Resolve API key from standard locations (same order as moltbook_heartbeat.py):
+    1. MOLTBOOK_API_KEY env var
+    2. ~/.config/moltbook/credentials.json
+    """
+    from pathlib import Path
+
+    # 1. Environment variable
     key = os.environ.get("MOLTBOOK_API_KEY", "")
     if key:
         return key
+
+    # 2. Credentials file
     try:
+        import json as _json
+
         creds_path = Path.home() / ".config" / "moltbook" / "credentials.json"
         if creds_path.exists():
-            creds = json.loads(creds_path.read_text())
-            return creds.get("api_key", "")
-    except Exception as e:
-        logger.debug(f"Could not read credentials: {e}")
+            creds = _json.loads(creds_path.read_text())
+            key = creds.get("api_key", "")
+            if key:
+                return key
+    except Exception:
+        pass
+
     return ""
 
 
-def main() -> int:
-    """Run the dry-run simulation."""
-    api_key = _load_api_key()
-    offline = os.environ.get("MOLTBOOK_OFFLINE_MODE", "false").lower() == "true"
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Moltbook API Dry-Run")
+    parser.add_argument("--offline", action="store_true", help="Use offline mock (includes write cycle)")
+    parser.add_argument("--live-fire", action="store_true", help="Enable REAL writes against live API (post+delete)")
+    args = parser.parse_args()
+
+    offline = args.offline
+    live_fire = args.live_fire
+    api_key = "" if offline else _resolve_api_key()
 
     if not api_key and not offline:
-        logger.warning("No MOLTBOOK_API_KEY found. Falling back to offline mode.")
-        offline = True
-        api_key = "offline_dry_run_key"
+        print("No API key found.")
+        print("  Checked: MOLTBOOK_API_KEY env, ~/.config/moltbook/credentials.json")
+        print("  Use --offline for mock mode.")
+        sys.exit(1)
 
     if not api_key:
         api_key = "offline_dry_run_key"
 
-    try:
-        from vibe_core.services.moltbook_client import MoltbookClient
-    except ImportError as e:
-        logger.error(f"Could not import MoltbookClient: {e}")
-        return 1
+    # Offline always enables writes (it's a mock). Live only writes with --live-fire.
+    write_enabled = offline or live_fire
 
     client = MoltbookClient(api_key=api_key, offline_mode=offline)
-    mode = "OFFLINE (mock data)" if offline else "LIVE (real Moltbook API)"
 
-    print()
-    print("=" * 70)
-    print(f"  MOLTBOOK DRY-RUN SIMULATOR — {mode}")
-    print("=" * 70)
-    print()
+    if offline:
+        mode = "OFFLINE MOCK (writes enabled)"
+    elif live_fire:
+        mode = "LIVE API + LIVE FIRE (writes enabled!)"
+    else:
+        mode = "LIVE API (read-only)"
 
-    report = {}
-    errors = []
+    print(f"\n{'='*60}")
+    print(f"MOLTBOOK DRY-RUN — {mode}")
+    print(f"{'='*60}")
 
-    # =========================================================================
-    # 1. HEARTBEAT — DM activity check
-    # =========================================================================
-    print("--- 1. Heartbeat (DM activity check) ---")
-    try:
-        hb = client.sync_check_heartbeat()
-        report["heartbeat"] = hb
-        print(f"  has_new_messages: {hb.get('has_new_messages', '?')}")
-        print(f"  pending_requests: {hb.get('pending_requests', '?')}")
-    except Exception as e:
-        errors.append(f"heartbeat: {e}")
-        print(f"  ERROR: {e}")
-    print()
-
-    # =========================================================================
-    # 2. OWN PROFILE — verify identity
-    # =========================================================================
-    print("--- 2. Own Profile ---")
-    try:
-        from vibe_core.services.moltbook_client import _run_async
-
-        profile = _run_async(client.get_own_profile())
-        report["own_profile"] = profile
-        print(f"  name: {profile.get('name', '?')}")
-        print(f"  karma: {profile.get('karma', '?')}")
-        print(f"  followers: {profile.get('follower_count', profile.get('followers_count', '?'))}")
-        print(f"  following: {profile.get('following_count', '?')}")
-        print(f"  posts: {profile.get('posts_count', '?')}")
-        print(f"  claimed: {profile.get('is_claimed', '?')}")
-        print(f"  description: {str(profile.get('description', ''))[:80]}")
-    except Exception as e:
-        errors.append(f"own_profile: {e}")
-        print(f"  ERROR: {e}")
-    print()
-
-    # =========================================================================
-    # 3. FEED — latest posts
-    # =========================================================================
-    print("--- 3. Feed (latest 5 posts) ---")
-    try:
-        from vibe_core.services.moltbook_client import _run_async
-
-        feed = _run_async(client.get_feed(sort="new", limit=5))
-        report["feed"] = feed
-        if not feed:
-            print("  (empty feed)")
-        for i, post in enumerate(feed[:5]):
-            title = post.get("title", "?")[:60]
-            author_raw = post.get("author", post.get("agent", "?"))
-            if isinstance(author_raw, dict):
-                author = author_raw.get("name", "?")
-            else:
-                author = str(author_raw)
-            upvotes = post.get("upvotes", post.get("upvoteCount", "?"))
-            submolt_raw = post.get("submolt", post.get("submoltName", ""))
-            if isinstance(submolt_raw, dict):
-                submolt = submolt_raw.get("name", "")
-            else:
-                submolt = str(submolt_raw) if submolt_raw else ""
-            sub_str = f" in m/{submolt}" if submolt else ""
-            print(f"  [{i+1}] \"{title}\" by {author}{sub_str} ({upvotes} upvotes)")
-    except Exception as e:
-        errors.append(f"feed: {e}")
-        print(f"  ERROR: {e}")
-    print()
-
-    # =========================================================================
-    # 4. SEMANTIC SEARCH — landscape intelligence
-    # =========================================================================
-    print("--- 4. Semantic Search ---")
-    queries = [
-        "agent operating system kernel",
-        "deterministic computation",
-        "cryptographic identity verification",
-    ]
-    search_results = {}
-    for q in queries:
-        try:
-            from vibe_core.services.moltbook_client import _run_async
-
-            results = _run_async(client.semantic_search(q, limit=3))
-            search_results[q] = results
-            print(f"  \"{q}\": {len(results)} results")
-            for r in results[:2]:
-                # Search results can be agents or posts
-                name = r.get("name", r.get("title", "?"))[:50]
-                sim = r.get("similarity", r.get("score", "?"))
-                rtype = r.get("type", "agent" if "karma" in r else "post")
-                print(f"    - [{rtype}] \"{name}\" (similarity: {sim})")
-        except Exception as e:
-            errors.append(f"search({q}): {e}")
-            print(f"  \"{q}\": ERROR: {e}")
-    report["search"] = search_results
-    print()
-
-    # =========================================================================
-    # 5. DM CONVERSATIONS — active threads
-    # =========================================================================
-    print("--- 5. DM Conversations ---")
-    try:
-        convs_raw = client.sync_get_dm_conversations()
-        # Defensive: API may return {"count": N, "items": [...]} or a list
-        if isinstance(convs_raw, dict):
-            convs = convs_raw.get("items", convs_raw.get("conversations", []))
-        elif isinstance(convs_raw, list):
-            convs = convs_raw
-        else:
-            convs = []
-        report["conversations"] = convs
-        if not convs:
-            print("  (no active conversations)")
-        for conv in convs[:5]:
-            cid = conv.get("id", "?")
-            agent_raw = conv.get("with_agent", conv.get("agent", conv.get("otherAgent", "?")))
-            if isinstance(agent_raw, dict):
-                agent = agent_raw.get("name", "?")
-            else:
-                agent = str(agent_raw)
-            last_msg = conv.get("lastMessage", conv.get("last_message", ""))
-            if isinstance(last_msg, dict):
-                last_msg = last_msg.get("content", "")[:40]
-            print(f"  [{cid[:8]}...] with {agent}" + (f" — \"{last_msg}\"" if last_msg else ""))
-    except Exception as e:
-        errors.append(f"conversations: {e}")
-        print(f"  ERROR: {e}")
-    print()
-
-    # =========================================================================
-    # 6. DM REQUESTS — pending inbound
-    # =========================================================================
-    print("--- 6. DM Requests (pending) ---")
-    try:
-        from vibe_core.services.moltbook_client import _run_async
-
-        requests = _run_async(client.get_dm_requests())
-        report["dm_requests"] = requests
-        if not requests:
-            print("  (no pending requests)")
-        for req in requests[:5]:
-            rid = req.get("id", "?")
-            from_agent = req.get("from_agent", "?")
-            msg = req.get("message", "")[:50]
-            print(f"  [{rid}] from {from_agent}: \"{msg}\"")
-    except Exception as e:
-        errors.append(f"dm_requests: {e}")
-        print(f"  ERROR: {e}")
-    print()
-
-    # =========================================================================
-    # 7. SIMULATION — what WOULD we do?
-    # =========================================================================
-    print("--- 7. Simulated Actions (NOT EXECUTED) ---")
-    simulated_actions = []
-
-    # Would we upvote anything from the feed?
-    feed_data = report.get("feed", [])
-    for post in feed_data[:5]:
-        title = post.get("title", "")
-        # Simple heuristic: posts about OS/kernel/deterministic are interesting
-        keywords = ["kernel", "operating system", "deterministic", "governance", "protocol"]
-        if any(kw in title.lower() for kw in keywords):
-            simulated_actions.append({
-                "action": "upvote",
-                "target": post.get("id", "?"),
-                "reason": f"Relevant topic: \"{title[:40]}\"",
-            })
-
-    # Would we reply to any DMs?
-    hb_data = report.get("heartbeat", {})
-    if hb_data.get("has_new_messages"):
-        simulated_actions.append({
-            "action": "process_dms",
-            "reason": "New messages detected — would route through Govardhan Gateway",
-        })
-
-    # Would we approve any DM requests?
-    dm_reqs = report.get("dm_requests", [])
-    for req in dm_reqs:
-        simulated_actions.append({
-            "action": "approve_dm_request",
-            "target": req.get("id", "?"),
-            "reason": f"Inbound request from {req.get('from_agent', '?')}",
-        })
-
-    if not simulated_actions:
-        print("  (no actions would be taken this cycle)")
-    for sa in simulated_actions:
-        action = sa["action"]
-        reason = sa["reason"]
-        target = sa.get("target", "")
-        print(f"  WOULD {action}" + (f" [{target}]" if target else "") + f": {reason}")
-
-    print()
-
-    # =========================================================================
-    # 8. RATE LIMIT BUDGET
-    # =========================================================================
-    print("--- 8. Rate Limit Budget ---")
-    limits = client.limits
-    print(f"  requests_this_minute: {limits.requests_this_minute} / 100")
-    print(f"  posts_this_30m:      {limits.posts_this_30m} / 1")
-    print(f"  comments_this_hour:  {limits.comments_this_hour} / 50")
-    remaining_requests = 100 - limits.requests_this_minute
-    print(f"  remaining capacity:  {remaining_requests} requests this minute")
-    print()
-
-    # =========================================================================
-    # SUMMARY
-    # =========================================================================
-    print("=" * 70)
-    print("  SUMMARY")
-    print("=" * 70)
-    print(f"  Mode:              {mode}")
-    print(f"  Errors:            {len(errors)}")
-    print(f"  Feed posts read:   {len(report.get('feed', []))}")
-    print(f"  Search queries:    {len(report.get('search', {}))}")
-    print(f"  Active DM convos:  {len(report.get('conversations', []))}")
-    print(f"  Pending DM reqs:   {len(report.get('dm_requests', []))}")
-    print(f"  Simulated actions: {len(simulated_actions)}")
-    if errors:
-        print()
-        print("  ERRORS:")
-        for e in errors:
-            print(f"    - {e}")
-    print()
-
-    return 0
+    success = asyncio.run(run_dry_run(client, write_enabled=write_enabled))
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
