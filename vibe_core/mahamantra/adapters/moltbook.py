@@ -1,33 +1,25 @@
 """
-MOLTBOOK ADAPTER - The Agent City Bridge
-========================================
+MOLTBOOK ADAPTER — Thin Client
+===============================
 
-"karmany evadhikaras te ma phaleshu kadachana"
-"You have a right to perform your prescribed duty, but you are not entitled to the fruits of action."
-
-This is the THIN CLIENT for Moltbook.
-It does NOT contain logic, only I/O, rate limiting, and challenge solving.
-All intelligence lives in the Mahamantra Core.
+I/O, rate limiting, and challenge solving. No intelligence.
+All decisions live in the plugin layer or kernel.
 """
 
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "narada"  # Position 3 - The Divine Messenger
-__position__ = 3
-__genesis__ = "0x28f9d1a3"  # GenesisByte: parampara % 37 == 0
-
-import asyncio
-import httpx
-import json
 import logging
-import math
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 from vibe_core.protocols.moltbook import (
-    MoltbookAgentProfile, MoltbookPost, MoltbookComment, 
-    SemanticSearchResult, DMRequest, DMMessage, SubmoltDetails
+    DMMessage,
+    MoltbookAgentProfile,
+    MoltbookComment,
+    MoltbookPost,
+    SemanticSearchResult,
 )
 
 logger = logging.getLogger("MOLTBOOK")
@@ -37,11 +29,13 @@ logger = logging.getLogger("MOLTBOOK")
 # RATE LIMITS & CONSTANTS
 # =============================================================================
 
+
 class MoltbookLimits:
-    """Hardcoded limits from Moltbook rules.md"""
+    """Hardcoded limits — verified against github.com/moltbook/api README (2026-02-22)"""
+
     REQ_PER_MIN = 100
     POST_PER_30_MIN = 1
-    COMMENTS_PER_DAY = 50
+    COMMENTS_PER_HOUR = 50  # API README says "1 hour", NOT per day
     AVATAR_MAX_BYTES = 1024 * 1024  # 1MB
     BANNER_MAX_BYTES = 2 * 1024 * 1024  # 2MB
 
@@ -49,12 +43,13 @@ class MoltbookLimits:
 @dataclass
 class RateLimitState:
     """Tracks current rate limit usage"""
+
     requests_this_minute: int = 0
     last_minute_reset: float = field(default_factory=time.time)
-    
+
     posts_this_30m: int = 0
     last_30m_reset: float = field(default_factory=time.time)
-    
+
     comments_today: int = 0
     last_day_reset: float = field(default_factory=time.time)
 
@@ -63,40 +58,50 @@ class RateLimitState:
 # CHALLENGE SOLVER (Deterministic Anti-Spam)
 # =============================================================================
 
+
 class ChallengeSolver:
     """
     Solves Moltbook's obfuscated math challenges.
     Failure = temporary ban. This MUST be flawless.
     """
-    
+
     @staticmethod
     def solve(challenge_text: str) -> str:
         """
         Extracts numbers and operators from obfuscated text and computes the result.
         Example: "What is seven + 3?" -> "10"
-        
+
         Note: This is a robust baseline. Complete implementation requires observing
         actual Moltbook challenge formats in the wild.
         """
         # Map words to numbers
         word_map = {
-            "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4,
-            "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10
+            "zero": 0,
+            "one": 1,
+            "two": 2,
+            "three": 3,
+            "four": 4,
+            "five": 5,
+            "six": 6,
+            "seven": 7,
+            "eight": 8,
+            "nine": 9,
+            "ten": 10,
         }
-        
+
         text = challenge_text.lower()
-        
+
         # Replace words with digits
         for word, num in word_map.items():
             text = text.replace(word, str(num))
-            
+
         # Extract all numbers
-        numbers = [int(n) for n in re.findall(r'\d+', text)]
-        
+        numbers = [int(n) for n in re.findall(r"\d+", text)]
+
         if len(numbers) < 2:
             logger.warning(f"Could not parse math challenge: '{challenge_text}'")
             return "0"
-            
+
         # Find operator
         if "+" in text or "plus" in text or "add" in text:
             return str(sum(numbers))
@@ -104,9 +109,10 @@ class ChallengeSolver:
             return str(numbers[0] - sum(numbers[1:]))
         elif "*" in text or "times" in text or "multiply" in text:
             result = 1
-            for n in numbers: result *= n
+            for n in numbers:
+                result *= n
             return str(result)
-            
+
         logger.warning(f"Unknown operator in challenge: '{challenge_text}'")
         return "0"
 
@@ -115,12 +121,13 @@ class ChallengeSolver:
 # THE CLIENT
 # =============================================================================
 
+
 class MoltbookClient:
     """
     The deterministic bridge to Moltbook.
     Handles I/O, retries, challenges, and strict rate limiting.
     """
-    
+
     def __init__(self, api_key: str, base_url: str = "https://www.moltbook.com/api/v1", offline_mode: bool = False):
         """
         Args:
@@ -132,14 +139,9 @@ class MoltbookClient:
         self.base_url = base_url.rstrip("/")
         self.offline_mode = offline_mode
         self.limits = RateLimitState()
-        
+
         # In offline mode, we store mocked responses here
-        self._mock_db: Dict[str, Any] = {
-            "posts": [],
-            "comments": [],
-            "dms": [],
-            "status": "claimed"
-        }
+        self._mock_db: Dict[str, Any] = {"posts": [], "comments": [], "dms": [], "status": "claimed"}
 
     # --- RATE LIMIT ENFORCEMENT ---
 
@@ -149,35 +151,35 @@ class MoltbookClient:
         This is the watertight seal protecting the account.
         """
         now = time.time()
-        
+
         # 1. Minute Limiter (100 req/min)
         if now - self.limits.last_minute_reset > 60:
             self.limits.requests_this_minute = 0
             self.limits.last_minute_reset = now
-            
+
         if self.limits.requests_this_minute >= MoltbookLimits.REQ_PER_MIN:
             raise Exception("MOLTBOOK-429: Minute rate limit exceeded. Halting.")
-            
+
         # 2. Post Limiter (1 post/30 min)
-        if method == "POST" and endpoint.endswith("/posts") and not "comments" in endpoint:
+        if method == "POST" and endpoint.endswith("/posts") and "comments" not in endpoint:
             if now - self.limits.last_30m_reset > 1800:
                 self.limits.posts_this_30m = 0
                 self.limits.last_30m_reset = now
-                
+
             if self.limits.posts_this_30m >= MoltbookLimits.POST_PER_30_MIN:
                 raise Exception("MOLTBOOK-429: Post rate limit (1/30m) exceeded.")
             self.limits.posts_this_30m += 1
-            
-        # 3. Comment Limiter (50/day)
+
+        # 3. Comment Limiter (50/hour — verified against API README)
         if method == "POST" and "comments" in endpoint:
-            if now - self.limits.last_day_reset > 86400:
+            if now - self.limits.last_day_reset > 3600:  # 1 hour, not 1 day
                 self.limits.comments_today = 0
                 self.limits.last_day_reset = now
-                
-            if self.limits.comments_today >= MoltbookLimits.COMMENTS_PER_DAY:
-                raise Exception("MOLTBOOK-429: Daily comment limit exceeded.")
+
+            if self.limits.comments_today >= MoltbookLimits.COMMENTS_PER_HOUR:
+                raise Exception("MOLTBOOK-429: Hourly comment limit exceeded.")
             self.limits.comments_today += 1
-            
+
         self.limits.requests_this_minute += 1
 
     # --- HTTP TRANSPORT ---
@@ -185,16 +187,13 @@ class MoltbookClient:
     async def _request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
         """Core request dispatcher. Handles offline routing and httpx transport."""
         self._enforce_limits(endpoint, method)
-        
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
+
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+
         if self.offline_mode:
             logger.debug(f"[OFFLINE] {method} {endpoint} - {data}")
             return self._handle_offline(method, endpoint, data)
-            
+
         async with httpx.AsyncClient() as client:
             url = f"{self.base_url}{endpoint}"
             try:
@@ -207,7 +206,7 @@ class MoltbookClient:
                     try:
                         err_data = e.response.json()
                         if err_data.get("error") == "VERIFICATION_REQUIRED":
-                            return err_data # Pass back to caller to handle challenge
+                            return err_data  # Pass back to caller to handle challenge
                     except Exception:
                         pass
                 logger.error(f"Moltbook HTTP Error: {e.response.status_code} - {e.response.text}")
@@ -222,28 +221,68 @@ class MoltbookClient:
         """Simulates Moltbook API for watertight offline testing."""
         if method == "GET" and endpoint == "/agents/status":
             return {"status": self._mock_db["status"]}
-            
+
         elif method == "GET" and endpoint.startswith("/search"):
-            return {"results": [], "similarity": 0.95} # Mock semantic search
-            
+            return {"results": [], "similarity": 0.95}  # Mock semantic search
+
         elif method == "POST" and endpoint == "/posts":
             post = {"id": f"p{len(self._mock_db['posts'])}", "title": data["title"], "content": data["content"]}
             self._mock_db["posts"].append(post)
             return post
-            
+
         elif method == "GET" and endpoint == "/agents/dm/check":
             return {"has_new_messages": False, "pending_requests": 0}
-            
+
         # Simulated Math Challenge
         elif method == "POST" and "comments" in endpoint:
-            if data and data.get("_challenge_solved") != "10": # Imagine "7 + 3"
-                 return {"error": "VERIFICATION_REQUIRED", "challenge": "What is seven + 3?", "challenge_id": "c123"}
+            if data and data.get("_challenge_solved") != "10":  # Imagine "7 + 3"
+                return {"error": "VERIFICATION_REQUIRED", "challenge": "What is seven + 3?", "challenge_id": "c123"}
             return {"id": "c99", "status": "posted"}
 
         return {"status": "ok", "mocked": True, "endpoint": endpoint}
 
     # =========================================================================
-    # PUBLIC API - The "Skin" Interface
+    # REGISTRATION — The ONLY unauthenticated endpoint
+    # =========================================================================
+
+    async def register(self, name: str, description: str) -> Dict[str, Any]:
+        """
+        Register a new agent on Moltbook.
+
+        NO AUTH REQUIRED — this is the only unauthenticated endpoint.
+        Returns: { agent: { api_key, claim_url, verification_code }, important: "Save your API key!" }
+
+        CRITICAL: api_key is shown ONCE. No recovery. Save immediately.
+        """
+        if self.offline_mode:
+            return {
+                "agent": {
+                    "api_key": "moltbook_offline_test_key",
+                    "claim_url": "https://www.moltbook.com/claim/moltbook_claim_offline",
+                    "verification_code": "test-XXXX",
+                },
+                "important": "Save your API key!",
+            }
+
+        # Registration does NOT use Bearer auth — override _request
+        self.limits.requests_this_minute += 1
+        async with httpx.AsyncClient() as client:
+            url = f"{self.base_url}/agents/register"
+            response = await client.post(
+                url,
+                json={"name": name, "description": description},
+                headers={"Content-Type": "application/json"},
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            return response.json()
+
+    def sync_register(self, name: str, description: str) -> Dict[str, Any]:
+        """Sync wrapper for registration."""
+        return _run_async(self.register(name, description))
+
+    # =========================================================================
+    # PUBLIC API - The "Skin" Interface (ALL require Bearer token)
     # =========================================================================
 
     async def check_status(self) -> str:
@@ -257,7 +296,7 @@ class MoltbookClient:
         if submolt:
             data["submolt"] = submolt
         res = await self._request("POST", "/posts", data)
-        return res # type: ignore
+        return res  # type: ignore
 
     async def comment_with_verification(self, post_id: str, content: str) -> MoltbookComment:
         """
@@ -265,18 +304,18 @@ class MoltbookClient:
         This is the watertight mechanism.
         """
         data = {"content": content}
-        
+
         # Attempt 1
         res = await self._request("POST", f"/posts/{post_id}/comments", data)
-        
+
         # Handle verification challenge
         if res.get("error") == "VERIFICATION_REQUIRED":
             challenge = res.get("challenge", "")
             challenge_id = res.get("challenge_id", "")
-            
+
             logger.info(f"Solving challenge: {challenge}")
             solution = ChallengeSolver.solve(challenge)
-            
+
             # Attempt 2 with solution
             verify_data = {
                 "content": content,
@@ -287,8 +326,8 @@ class MoltbookClient:
             if self.offline_mode:
                 verify_data["_challenge_solved"] = solution
             res = await self._request("POST", f"/posts/{post_id}/comments", verify_data)
-            
-        return res # type: ignore
+
+        return res  # type: ignore
 
     async def semantic_search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
         """Intelligence gathering core."""
@@ -298,35 +337,177 @@ class MoltbookClient:
     async def get_profile(self, name: str) -> MoltbookAgentProfile:
         """Fetch an agent's profile."""
         res = await self._request("GET", f"/agents/profile?name={name}")
-        return res # type: ignore
+        return res  # type: ignore
 
     async def check_heartbeat(self) -> Dict[str, Any]:
         """The pulse check for new DMs or mentions."""
         return await self._request("GET", "/agents/dm/check")
 
+    async def get_dm_conversations(self) -> List[Dict[str, Any]]:
+        """List active DM conversations."""
+        res = await self._request("GET", "/agents/dm/conversations")
+        return res.get("conversations", []) if isinstance(res, dict) else []
+
+    async def get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
+        """Read messages in a conversation (marks as read)."""
+        res = await self._request("GET", f"/agents/dm/conversations/{conversation_id}")
+        return res.get("messages", []) if isinstance(res, dict) else []  # type: ignore
+
+    async def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+        """Send a message in an active DM conversation."""
+        return await self._request("POST", f"/agents/dm/conversations/{conversation_id}/send", {"content": content})
+
+    # =========================================================================
+    # SYNC BRIDGE — for on_pulse() and other sync callers
+    # =========================================================================
+
+    def sync_check_heartbeat(self) -> Dict[str, Any]:
+        """Sync wrapper for on_pulse(). Reuses running loop or creates one."""
+        return _run_async(self.check_heartbeat())
+
+    def sync_create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
+        """Sync wrapper for post creation."""
+        return _run_async(self.create_post(title, content, submolt))  # type: ignore
+
+    def sync_send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+        """Sync wrapper for DM sending."""
+        return _run_async(self.send_dm(conversation_id, content))
+
+    def sync_get_dm_messages(self, conversation_id: str) -> List[DMMessage]:
+        """Sync wrapper for DM reading."""
+        return _run_async(self.get_dm_messages(conversation_id))  # type: ignore
+
+
+def _run_async(coro):
+    """Run a coroutine from sync context. Handles both in-loop and no-loop cases."""
+    import asyncio
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        # We're inside an async context (e.g. FastAPI) — run in a new thread.
+        import concurrent.futures
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(asyncio.run, coro).result(timeout=15.0)
+    else:
+        return asyncio.run(coro)
+
 
 # =============================================================================
-# INTELLIGENCE WRAPPERS
+# CLI ENTRY POINT — python -m vibe_core.mahamantra.adapters.moltbook
 # =============================================================================
 
-class SemanticSearchWrapper:
+
+def _cli_main() -> None:
     """
-    Wraps the raw semantic search to provide structured intelligence gathering
-    without burning rate limits on low-value searches.
+    CLI for Moltbook operations.
+
+    Usage:
+        python -m vibe_core.mahamantra.adapters.moltbook register <name> [description]
+        python -m vibe_core.mahamantra.adapters.moltbook status
+        python -m vibe_core.mahamantra.adapters.moltbook test-network
     """
-    def __init__(self, client: MoltbookClient):
-        self.client = client
-        
-    async def find_os_discussions(self, threshold: float = 0.8) -> List[SemanticSearchResult]:
-        """Find other agents discussing OS-level concepts."""
-        results = await self.client.semantic_search("agent operating system kernel scheduling")
-        return [r for r in results if r.get("similarity", 0) >= threshold]
-        
-    async def find_crypto_believers(self, threshold: float = 0.85) -> List[SemanticSearchResult]:
-        """Find agents discussing cryptographic identity."""
-        results = await self.client.semantic_search("cryptographic identity verification trust")
-        return [r for r in results if r.get("similarity", 0) >= threshold]
-        
-    async def map_competitors(self) -> List[SemanticSearchResult]:
-        """Broad sweep for other 'framework' agents."""
-        return await self.client.semantic_search("agent framework architecture", limit=50)
+    import json
+    import sys
+
+    args = sys.argv[1:]
+    if not args:
+        print(__doc__ or "Moltbook Adapter CLI")
+        print("\nCommands:")
+        print("  register <name> [description]  — Register new agent (PERMANENT)")
+        print("  status                         — Check agent status (needs API key)")
+        print("  test-network                   — Test if moltbook.com is reachable")
+        sys.exit(0)
+
+    command = args[0]
+
+    if command == "test-network":
+        try:
+            import httpx as _httpx
+
+            resp = _httpx.get("https://www.moltbook.com/api/v1/agents/status", timeout=10.0)
+            if resp.status_code in (401, 403):
+                print(f"Network: REACHABLE (status={resp.status_code})")
+                print("  moltbook.com is reachable. Registration from here SHOULD WORK.")
+            else:
+                print(f"Network: REACHABLE (status={resp.status_code})")
+        except Exception as e:
+            err_name = type(e).__name__
+            if "Proxy" in err_name or "proxy" in str(e).lower():
+                print(f"Network: BLOCKED BY PROXY — {e}")
+                print("  This container routes through a proxy that blocks moltbook.com.")
+                print("  Registration MUST happen via GitHub Actions or locally.")
+            elif "Connect" in err_name:
+                print(f"Network: UNREACHABLE — {e}")
+                print("  No route to moltbook.com. Use GitHub Actions.")
+            else:
+                print(f"Network: ERROR ({err_name}) — {e}")
+        sys.exit(0)
+
+    if command == "register":
+        if len(args) < 2:
+            print("ERROR: agent name required")
+            print("Usage: python -m vibe_core.mahamantra.adapters.moltbook register <name> [description]")
+            sys.exit(1)
+
+        name = args[1]
+        description = (
+            " ".join(args[2:])
+            if len(args) > 2
+            else "Steward Protocol — Agentic OS with deterministic Mahamantra computation engine."
+        )
+
+        print(f"Registering agent: {name}")
+        print(f"Description: {description}")
+        print("---")
+        print("WARNING: This is PERMANENT. API key shown ONCE. No recovery.")
+        print("---")
+
+        client = MoltbookClient(api_key="", offline_mode=False)
+        try:
+            result = client.sync_register(name, description)
+            print("\n=== REGISTRATION SUCCESSFUL ===")
+            print(json.dumps(result, indent=2))
+            print("\n!!! SAVE THE API KEY NOW !!!")
+            print("Store in GitHub Secrets as: MOLTBOOK_API_KEY")
+            agent = result.get("agent", result)
+            if isinstance(agent, dict) and "api_key" in agent:
+                print(f"\nAPI Key: {agent['api_key']}")
+                print(f"Claim URL: {agent.get('claim_url', 'N/A')}")
+                print(f"Verification Code: {agent.get('verification_code', 'N/A')}")
+        except Exception as e:
+            print(f"\nREGISTRATION FAILED: {e}")
+            print("If network error: use GitHub Actions workflow instead.")
+            sys.exit(1)
+
+    elif command == "status":
+        api_key = ""
+        if len(args) > 1:
+            api_key = args[1]
+        else:
+            import os
+
+            api_key = os.environ.get("MOLTBOOK_API_KEY", "")
+        if not api_key:
+            print("ERROR: API key required. Pass as argument or set MOLTBOOK_API_KEY env var.")
+            sys.exit(1)
+
+        client = MoltbookClient(api_key=api_key, offline_mode=False)
+        try:
+            status = client.sync_check_heartbeat()
+            print(json.dumps(status, indent=2))
+        except Exception as e:
+            print(f"Status check failed: {e}")
+            sys.exit(1)
+
+    else:
+        print(f"Unknown command: {command}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    _cli_main()

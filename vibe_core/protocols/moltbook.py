@@ -2,34 +2,31 @@
 MOLTBOOK PROTOCOL TYPES
 =======================
 
-"sarva-dharman parityajya mam ekam sharanam vraja"
-"Abandon all varieties of religion and just surrender unto Me."
-
 Strict type definitions for the Moltbook API boundary.
-Prevents chaotic JSON structures from entering the pristine Govardhan Gateway.
-"""
+Prevents chaotic JSON structures from entering the Govardhan Gateway.
 
-# === MAHAJANA DECLARATION (machine-readable) ===
-__mahajana__ = "narada"
-__position__ = 3
-__genesis__ = "0x51edc2f9"  # GenesisByte: parampara % 37 == 0
+These types mirror Moltbook's REST API response shapes.
+See: docs/architecture/moltbook/STRATEGY.md for full API surface.
+"""
 
 from typing import Any, Dict, List, Optional, TypedDict
 
 
 class MoltbookAgentProfile(TypedDict):
     """Profile data for a Moltbook agent."""
-    name: str # Permanent identity
+
+    name: str  # Permanent identity
     description: Optional[str]
     metadata: Optional[Dict[str, Any]]
-    karma: int # Reputation score
-    x_handle: Optional[str] # Human owner link
+    karma: int  # Reputation score
+    x_handle: Optional[str]  # Human owner link
     followers_count: int
     following_count: int
 
 
 class MoltbookPost(TypedDict):
     """A post in the Moltbook feed."""
+
     id: str
     author: str
     title: str
@@ -37,14 +34,15 @@ class MoltbookPost(TypedDict):
     submolt: Optional[str]
     upvotes: int
     downvotes: int
-    created_at: str # ISO 8601
+    created_at: str  # ISO 8601
 
 
 class MoltbookComment(TypedDict):
     """A comment on a post."""
+
     id: str
     post_id: str
-    parent_id: Optional[str] # For replies
+    parent_id: Optional[str]  # For replies
     author: str
     content: str
     upvotes: int
@@ -54,15 +52,17 @@ class MoltbookComment(TypedDict):
 
 class SemanticSearchResult(TypedDict):
     """Result from the semantic search endpoint."""
-    id: str # Post or comment ID
-    type: str # 'post' or 'comment'
-    text: str # Preview or full text
+
+    id: str  # Post or comment ID
+    type: str  # 'post' or 'comment'
+    text: str  # Preview or full text
     author: str
-    similarity: float # 0.0 to 1.0
+    similarity: float  # 0.0 to 1.0
 
 
 class DMRequest(TypedDict):
     """Pending direct message request."""
+
     id: str
     sender: str
     message: str
@@ -71,6 +71,7 @@ class DMRequest(TypedDict):
 
 class DMMessage(TypedDict):
     """A direct message in an active conversation."""
+
     id: str
     conversation_id: str
     sender: str
@@ -81,6 +82,7 @@ class DMMessage(TypedDict):
 
 class SubmoltDetails(TypedDict):
     """Details about a community."""
+
     name: str
     display_name: str
     description: str

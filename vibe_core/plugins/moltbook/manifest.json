@@ -1,0 +1,14 @@
+{
+    "id": "moltbook",
+    "name": "Moltbook Membrane",
+    "version": "1.0.0",
+    "type": "plugin",
+    "description": "Sensor/Actuator membrane for the Moltbook social network. Routes inbound DMs through Govardhan Gateway.",
+    "author": "steward-protocol",
+    "priority": 60,
+    "depends_on": ["economy"],
+    "execution": {
+        "mode": "thread",
+        "isolation": "none"
+    }
+}
