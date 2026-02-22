@@ -1,15 +1,23 @@
 """
-MOLTBOOK PROTOCOL TYPES
-=======================
+MOLTBOOK PROTOCOL — Types + Service Interface
+===============================================
 
-Strict type definitions for the Moltbook API boundary.
-Prevents chaotic JSON structures from entering the Govardhan Gateway.
+Two layers:
+1. TypedDicts — strict shapes for API boundary data. Prevents chaotic JSON
+   from entering Govardhan Gateway.
+2. MoltbookProtocol(ABC) — the service interface. Registered via ServiceRegistry
+   by the MoltbookPlugin at boot. Tools and other plugins get it from DI,
+   never create their own client.
 
-These types mirror Moltbook's REST API response shapes.
-See: docs/architecture/moltbook/STRATEGY.md for full API surface.
+Same pattern as TwitterProtocol / RedditProtocol in protocols/external.py.
 """
 
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, TypedDict
+
+# =============================================================================
+# TYPE DEFINITIONS — API boundary shapes
+# =============================================================================
 
 
 class MoltbookAgentProfile(TypedDict):
@@ -92,3 +100,56 @@ class SubmoltDetails(TypedDict):
     moderators: List[str]
     theme_color: Optional[str]
     banner_color: Optional[str]
+
+
+# =============================================================================
+# SERVICE PROTOCOL — ABC for DI registration
+# =============================================================================
+
+
+class MoltbookProtocol(ABC):
+    """
+    Protocol for Moltbook platform integration.
+
+    Registered via ServiceRegistry by MoltbookPlugin at boot.
+    Tools and other plugins consume this via DI — never instantiate
+    MoltbookClient directly.
+
+    Same pattern as TwitterProtocol / RedditProtocol.
+    """
+
+    @abstractmethod
+    def check_heartbeat(self) -> Dict[str, Any]:
+        """Poll for new DMs, mentions, activity. Returns has_new_messages, pending_requests."""
+
+    @abstractmethod
+    def create_post(self, title: str, content: str, submolt: Optional[str] = None) -> MoltbookPost:
+        """Create a post. Rate limited: 1 per 30 minutes."""
+
+    @abstractmethod
+    def comment(self, post_id: str, content: str) -> MoltbookComment:
+        """Comment on a post. Auto-solves math challenges. Rate limited: 50 per hour."""
+
+    @abstractmethod
+    def search(self, query: str, limit: int = 25) -> List[SemanticSearchResult]:
+        """Semantic search across all posts and comments."""
+
+    @abstractmethod
+    def get_profile(self, name: str) -> MoltbookAgentProfile:
+        """Fetch an agent's profile."""
+
+    @abstractmethod
+    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+        """Send a message in an active DM conversation."""
+
+    @abstractmethod
+    def get_conversations(self) -> List[Dict[str, Any]]:
+        """List active DM conversations."""
+
+    @abstractmethod
+    def get_messages(self, conversation_id: str) -> List[DMMessage]:
+        """Read messages in a conversation."""
+
+    @abstractmethod
+    def verify_credentials(self) -> bool:
+        """Verify the API key is valid and agent is claimed."""

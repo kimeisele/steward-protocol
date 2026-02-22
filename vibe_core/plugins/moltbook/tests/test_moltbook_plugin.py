@@ -3,14 +3,20 @@ Moltbook Plugin Tests
 =====================
 
 Tests the Mahamantra-native heartbeat path (register_listener),
-plugin lifecycle, and state contract. All tests run offline.
+plugin lifecycle, state contract, and MoltbookProtocol service.
+All tests run offline.
 """
 
 import pytest
 
 from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
 from vibe_core.plugin_protocol import PulsePhase
-from vibe_core.plugins.moltbook.plugin_main import _TICKS_PER_HEARTBEAT, MoltbookPlugin
+from vibe_core.plugins.moltbook.plugin_main import (
+    _TICKS_PER_HEARTBEAT,
+    MoltbookPlugin,
+    MoltbookService,
+)
+from vibe_core.protocols.moltbook import MoltbookProtocol
 
 
 def _make_plugin_with_client(**kwargs) -> MoltbookPlugin:
@@ -184,3 +190,77 @@ def test_get_api_without_boot():
     plugin = MoltbookPlugin()
     api = plugin.get_api()
     assert api["client"] is None
+
+
+# =============================================================================
+# MoltbookService (Protocol Implementation)
+# =============================================================================
+
+
+def test_service_implements_protocol():
+    """MoltbookService is a proper MoltbookProtocol implementation."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    assert isinstance(service, MoltbookProtocol)
+
+
+def test_service_check_heartbeat():
+    """Service delegates heartbeat to client."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    result = service.check_heartbeat()
+    assert "has_new_messages" in result
+    assert "pending_requests" in result
+
+
+def test_service_create_post():
+    """Service delegates post creation to client."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    post = service.create_post("Title", "Content")
+    assert post["id"] == "p0"
+    assert post["title"] == "Title"
+
+
+def test_service_comment_with_verification():
+    """Service delegates comment (with auto-challenge) to client."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    comment = service.comment("post_123", "Interesting!")
+    assert comment["id"] == "c99"
+
+
+def test_service_verify_credentials_offline():
+    """Offline mode returns 'claimed' status → verify_credentials returns True."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    assert service.verify_credentials() is True
+
+
+def test_service_get_conversations():
+    """Service returns conversation list from client."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    client._mock_db["conversations"] = [{"id": "conv1"}]
+    service = MoltbookService(client)
+    convs = service.get_conversations()
+    assert len(convs) == 1
+    assert convs[0]["id"] == "conv1"
+
+
+def test_service_get_messages():
+    """Service returns messages filtered by conversation_id."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    client._mock_db["dms"] = [
+        {"conversation_id": "c1", "sender": "A", "content": "Hello"},
+    ]
+    service = MoltbookService(client)
+    msgs = service.get_messages("c1")
+    assert len(msgs) == 1
+
+
+def test_service_search():
+    """Service delegates semantic search to client."""
+    client = MoltbookClient(api_key="test", offline_mode=True)
+    service = MoltbookService(client)
+    results = service.search("agent operating system")
+    assert isinstance(results, list)
