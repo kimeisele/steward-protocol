@@ -52,6 +52,7 @@ from vibe_core.protocols.moltbook import (
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+    from vibe_core.plugins.moltbook.content_queue import ContentQueue
 
 logger = logging.getLogger("MOLTBOOK")
 
@@ -295,12 +296,14 @@ class MoltbookPlugin(KernelPlugin):
     def __init__(self):
         super().__init__()
         self._client = None  # MoltbookClient, created in on_boot
+        self._service: Optional[MoltbookService] = None
         self._offline_mode: bool = True
         self._last_heartbeat_error: Optional[str] = None
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
         self._listener_wired: bool = False
         self._seen_message_ids: Set[str] = set()
+        self._content_queue: Optional["ContentQueue"] = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -385,6 +388,9 @@ class MoltbookPlugin(KernelPlugin):
             # Register MoltbookProtocol in ServiceRegistry (same as Economy → BankProtocol)
             self._register_service()
 
+            # Initialize ContentQueue
+            self._init_content_queue()
+
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
 
@@ -401,11 +407,31 @@ class MoltbookPlugin(KernelPlugin):
         try:
             from vibe_core.di import ServiceRegistry
 
-            service = MoltbookService(self._client)
-            ServiceRegistry.register_factory(MoltbookProtocol, lambda: service)
+            self._service = MoltbookService(self._client)
+            ServiceRegistry.register_factory(MoltbookProtocol, lambda: self._service)
             logger.info("MoltbookProtocol registered in ServiceRegistry")
         except Exception as e:
             logger.warning(f"ServiceRegistry registration failed: {e}")
+
+    def _init_content_queue(self) -> None:
+        """Initialize the ContentQueue and discover registered generators."""
+        try:
+            from vibe_core.plugins.moltbook.content_queue import ContentQueue
+
+            self._content_queue = ContentQueue()
+            # Discover generators from ServiceRegistry (FOLDER=EXISTENCE)
+            try:
+                from vibe_core.di import ServiceRegistry
+                from vibe_core.protocols.moltbook_content import ContentProposalProtocol
+
+                generators = ServiceRegistry.get_all(ContentProposalProtocol)
+                for gen in generators:
+                    self._content_queue.register_generator(gen)
+            except Exception:
+                pass  # No generators registered yet — that's fine
+            logger.info("ContentQueue initialized")
+        except Exception as e:
+            logger.warning(f"ContentQueue init failed: {e}")
 
     def _wire_to_mahamantra(self) -> None:
         """Register as Mahamantra tick listener. Bombenfest."""
@@ -469,7 +495,7 @@ class MoltbookPlugin(KernelPlugin):
         self._do_heartbeat()
 
     def _do_heartbeat(self) -> None:
-        """Execute one heartbeat cycle: check DMs, route inbound."""
+        """Execute one heartbeat cycle: check DMs, route inbound, process content queue."""
         try:
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
@@ -481,6 +507,39 @@ class MoltbookPlugin(KernelPlugin):
         has_new = heartbeat.get("has_new_messages", False)
         if has_new:
             self._process_inbound_dms()
+
+        # Process content queue: poll generators, expire stale, execute approved
+        self._process_content_queue()
+
+    def _process_content_queue(self) -> None:
+        """Poll generators, expire stale proposals, execute next approved."""
+        if not self._content_queue or not self._service:
+            return
+
+        try:
+            self._content_queue.poll_generators()
+            self._content_queue.expire_stale()
+
+            proposal = self._content_queue.next_approved()
+            if proposal is None:
+                return
+
+            ct = proposal["content_type"]
+            if ct == "post":
+                self._service.create_post(proposal["title"], proposal["body"], proposal.get("submolt"))
+            elif ct == "comment" and proposal.get("target_id"):
+                self._service.comment(proposal["target_id"], proposal["body"])
+            elif ct == "dm_reply" and proposal.get("target_id"):
+                self._service.send_dm(proposal["target_id"], proposal["body"])
+            else:
+                logger.warning(f"Unknown content type: {ct}")
+                return
+
+            self._content_queue.mark_executed(proposal)
+            logger.info(f"Executed {ct} proposal from {proposal['source']}")
+
+        except Exception as e:
+            logger.warning(f"Content queue processing failed: {e}")
 
     # =========================================================================
     # on_pulse — backward compat (delegates to same heartbeat)
@@ -561,6 +620,8 @@ class MoltbookPlugin(KernelPlugin):
     def get_api(self) -> Optional[dict]:
         return {
             "client": self._client,
+            "service": self._service,
+            "content_queue": self._content_queue,
             "offline": self._offline_mode,
             "last_error": self._last_heartbeat_error,
             "listener_wired": self._listener_wired,
