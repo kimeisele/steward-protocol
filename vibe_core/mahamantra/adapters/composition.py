@@ -283,11 +283,85 @@ class MahaComposition:
     def compose(self, lotus_response: Dict, input_text: str) -> str:
         """Compose English output from a Lotus response.
 
-        Delegates to composition_vm.compose_pipeline() — 6-step dispatch loop.
+        Inline pipeline: CONTEXT → POOL → RANK → SELECT → ASSEMBLE.
+        Meaning-based assembly (not grid-position ordering).
         """
-        from vibe_core.mahamantra.adapters.composition_vm import compose_pipeline
+        from vibe_core.mahamantra.substrate.language.composer import _build_lotus_pool
 
-        return compose_pipeline(self, lotus_response, input_text)
+        # CONTEXT: extract scorer kwargs + max_words
+        kwargs = _extract_scorer_kwargs(lotus_response, input_text)
+        seed = kwargs.pop("seed")
+        max_words = _context_max_words(lotus_response)
+
+        # POOL: build word pool from smaranam + verse
+        pool = _build_lotus_pool(lotus_response)
+        if not pool:
+            return ""
+
+        # RANK: 5-scorer additive ranking
+        ranked: List[Dict] = []
+        for item in pool:
+            scored = dict(item)
+            total_boost = 0.0
+            for scorer in self._scorers:
+                try:
+                    boost = scorer.score(scored, seed, **kwargs)
+                    scored[f"_{scorer.name}_score"] = boost
+                    total_boost += boost
+                except Exception as exc:
+                    logger.warning("Scorer %s failed: %s", scorer.name, exc)
+                    scored[f"_{scorer.name}_score"] = 0.0
+            scored["_total_score"] = float(scored.get("score", 0.0)) + total_boost
+            ranked.append(scored)
+        ranked.sort(key=lambda it: float(it.get("_total_score", 0.0)), reverse=True)
+
+        # SELECT: deduplicate, cap at max_words
+        selected: List[Dict] = []
+        used_sanskrit: set = set()
+        for item in ranked:
+            if len(selected) >= max_words:
+                break
+            sk = item.get("sanskrit", "")
+            if sk in used_sanskrit:
+                continue
+            selected.append(item)
+            used_sanskrit.add(sk)
+
+        # ASSEMBLE: meaning-based (score-ranked order, not grid position)
+        output_parts: List[str] = []
+        used_words: set = set()
+        for item in selected:
+            tokens = item.get("tokens", ())
+            meaning = str(item.get("meaning", "")).strip()
+            if not meaning:
+                continue
+            # Prefer precomputed English tokens
+            if tokens:
+                best = ""
+                for t in sorted(tokens, key=len, reverse=True):
+                    if t.lower() not in used_words and len(t) > KSETRAJNA:
+                        best = t
+                        break
+                if best:
+                    output_parts.append(best)
+                    used_words.add(best.lower())
+                    continue
+            # Fallthrough: use longest meaning word
+            for mw in meaning.split():
+                if mw.lower() not in used_words and len(mw) > KSETRAJNA:
+                    output_parts.append(mw)
+                    used_words.add(mw.lower())
+                    break
+
+        self._compositions += KSETRAJNA
+        self._last_context = {
+            "guna_mode": kwargs.get("guna_mode"),
+            "quarter": str(lotus_response.get("quarter", "")),
+            "guardian": str(lotus_response.get("guardian", "")),
+            "max_words": max_words,
+            "scorer_names": tuple(s.name for s in self._scorers),
+        }
+        return " ".join(output_parts)
 
     # =========================================================================
     # VMCapabilityProtocol — auto-register as VM custom op at bootstrap

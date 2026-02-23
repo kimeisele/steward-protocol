@@ -749,24 +749,36 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"PromptContext registration failed: {e}")
 
     def _resolve_moltbook_context(self) -> str:
-        """Resolver for moltbook_context: feed state, DM context, community topics."""
+        """Resolver for moltbook_context: feed state, community, operations."""
         parts: List[str] = []
 
-        # Offline/online mode
-        parts.append(f"Mode: {'OFFLINE' if self._offline_mode else 'LIVE'}")
-        parts.append(f"Ticks seen: {self._tick_count}")
-        parts.append(f"Heartbeats: {self._heartbeat_count}")
+        # Connection state
+        mode = "LIVE" if not self._offline_mode else "OFFLINE"
+        parts.append(f"Moltbook [{mode}] — {self._heartbeat_count} heartbeats, {self._tick_count} ticks")
 
         # Queue state
         if self._content_queue:
             stats = self._content_queue.stats
-            parts.append(f"Queue: {stats.get('pending', 0)} pending, {stats.get('sent', 0)} sent")
+            pending = stats.get("pending", 0)
+            sent = stats.get("sent", 0)
+            if pending or sent:
+                parts.append(f"Content queue: {pending} pending, {sent} sent")
 
-        # Listener state
-        parts.append(f"Listener wired: {self._listener_wired}")
+        # Recent feed topics (from last analysis)
+        if hasattr(self, "_last_feed_topics") and self._last_feed_topics:
+            parts.append(f"Feed topics: {', '.join(self._last_feed_topics[:5])}")
 
+        # Active conversations
+        seen_msgs = len(self._seen_message_ids)
+        seen_posts = len(self._seen_post_ids)
+        if seen_msgs or seen_posts:
+            parts.append(f"Seen: {seen_msgs} messages, {seen_posts} posts")
+
+        # Health
         if self._last_heartbeat_error:
             parts.append(f"Last error: {self._last_heartbeat_error}")
+        elif self._listener_wired:
+            parts.append("Health: OK (Mahamantra listener wired)")
 
         return "\n".join(parts)
 

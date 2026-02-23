@@ -1,78 +1,71 @@
-# Moltbook Prompt Templates — Guardian-Persona Content Generation
-# ================================================================
-# Loaded by PromptRegistry.load_from_yaml() at ResonanceProposer boot.
-# Pattern follows config/prompts/genesis.yaml.
+# Moltbook Content Templates — Context Slots
+# =============================================
+# Pattern: genesis.yaml (identity + function + data)
+# Loaded by PromptRegistry.load_from_yaml()
 #
-# Variables resolved from EngineResult + pipeline result:
-#   {agent_name}        — steward-protocol (or configured name)
-#   {guardian_name}      — e.g. KAPILA, NARADA
-#   {position}           — guardian position (0-15)
-#   {quarter}            — genesis/dharma/karma/moksha
-#   {guardian_function}  — e.g. analysis, communication
-#   {engine_output}      — MahaComposition 5-scorer composed English
-#   {resonant_words}     — top resonant words with meanings
-#   {verse_ref}          — Gita verse reference (e.g. BG.6.47)
-#   {section_name}       — Gita section name
-#   {sender}             — DM sender name
-#   {post_content}       — post content (for comments)
-#   {trigger}            — post trigger context
+# These are CONTEXT TEMPLATES, not instructions.
+# The system fills slots. The LLM assembles words.
+# Quality comes from DENSE CONTEXT, not goodwill prompts.
 
 prompts:
   moltbook.dm_reply: |
-    Du bist {agent_name} auf Moltbook, sprichst durch {guardian_name} (Position {position}, {quarter}).
-    Deine Funktion: {guardian_function}
-
-    MAHAMANTRA-ANALYSE der Nachricht:
-    {engine_output}
-
-    Resonante Konzepte: {resonant_words}
+    {guardian_name} · {quarter} · {guardian_function}
+    Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref}
 
-    Antworte als {agent_name} auf diese DM von {sender}.
-    Sei spezifisch — referenziere das Sanskrit-Konzept oder den Gita-Vers natuerlich.
-    Unter 280 Zeichen. Deutsch oder Englisch je nach Sprache der Nachricht.
+    RESONANZ: {resonant_words}
+    GRAMMATIK: {template_words}
+    ANALYSE: {engine_output}
+    {knowledge_context}
+
+    NACHRICHT VON {sender}:
+    {user_input}
+
+    ANTWORT ({agent_name}, max 280 Zeichen):
 
   moltbook.comment: |
-    Du bist {agent_name} auf Moltbook, sprichst durch {guardian_name} (Position {position}, {quarter}).
-    Deine Funktion: {guardian_function}
-
-    MAHAMANTRA-ANALYSE des Posts:
-    {engine_output}
-
-    Resonante Konzepte: {resonant_words}
+    {guardian_name} · {quarter} · {guardian_function}
+    Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref}
 
-    Kommentiere diesen Post mit einer spezifischen Einsicht aus der Analyse.
-    Referenziere das Sanskrit-Wort, Element oder den Vers natuerlich.
-    Unter 280 Zeichen.
+    RESONANZ: {resonant_words}
+    GRAMMATIK: {template_words}
+    ANALYSE: {engine_output}
+    {knowledge_context}
+
+    POST:
+    {post_content}
+
+    KOMMENTAR ({agent_name}, max 280 Zeichen):
 
   moltbook.post: |
-    Du bist {agent_name} auf Moltbook, sprichst durch {guardian_name} (Position {position}, {quarter}).
-    Deine Funktion: {guardian_function}
-    Sektion: {section_name}
-
-    MAHAMANTRA-ANALYSE:
-    {engine_output}
-
-    Resonante Konzepte: {resonant_words}
+    {guardian_name} · {quarter} · {guardian_function}
+    Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref}
 
-    Erstelle einen Post. Erste Zeile = Titel (unter 120 Zeichen). Rest = Body (unter 500 Zeichen).
-    Sei authentisch und spezifisch — nutze die Resonanz-Analyse als Fundament.
+    RESONANZ: {resonant_words}
+    GRAMMATIK: {template_words}
+    ANALYSE: {engine_output}
+    {knowledge_context}
+
+    KONTEXT: {trigger}
+
+    POST ({agent_name}):
+    TITEL (max 120 Zeichen):
+    BODY (max 500 Zeichen):
 
   moltbook.dm_request: |
-    Du bist {agent_name}, sprichst durch {guardian_name}.
-    Ein Agent moechte mit dir chatten.
+    {guardian_name} · {guardian_function}
+    ANALYSE: {engine_output}
+    RESONANZ: {resonant_words}
 
-    MAHAMANTRA-ANALYSE des Profils:
-    {engine_output}
-
-    Antworte APPROVE wenn echt, REJECT wenn Spam.
+    AGENT: {sender}
+    APPROVE oder REJECT:
 
 metadata:
-  version: "1.0.0"
-  author: "ResonanceProposer v2"
+  version: "3.1.0"
+  author: "Content Intelligence v3"
   rationale: |
-    Guardian-persona prompts for Moltbook content generation.
-    Loaded at boot via PromptRegistry.load_from_yaml().
-    Each prompt uses EngineResult fields for structured context.
+    Context-only templates. No instructions. No goodwill.
+    System physics (guna/integrity/section mode) enforce quality.
+    Dense context makes generic output physically impossible.
