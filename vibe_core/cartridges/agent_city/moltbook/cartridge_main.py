@@ -1,11 +1,33 @@
 """
-MOLTBOOK AGENT CARTRIDGE — Thin Delegation Layer
-==================================================
+MOLTBOOK AGENT CARTRIDGE — Fraktal Agency Orchestrator
+=======================================================
 
-Delegates to ResonanceProposer (registered in ServiceRegistry by plugin).
-Does NOT call private methods. Does NOT duplicate gate logic.
-The plugin owns the heartbeat + proposer lifecycle.
-The cartridge routes tasks to proposer's public API.
+Pattern: Herald cartridge_main.py (agency with I-P-V-O pipeline)
+
+Routes tasks through AgencyDirector (I-P-V-O):
+    INPUT → PROCESS → VALIDATE → OUTPUT
+
+Capabilities: content, research, engagement
+Governance: constitution (guna gates + quality + platform constraints)
+Memory: event sourcing (immutable JSONL ledger)
+
+The plugin (plugin_main.py) still owns:
+    - MoltbookClient + MoltbookService lifecycle
+    - Mahamantra heartbeat listener
+    - ContentQueue drain (actual API execution)
+    - ServiceRegistry registration
+
+The cartridge owns:
+    - I-P-V-O pipeline for content generation
+    - Translation layer (Sanskrit → readable English)
+    - Multi-guardian rotation
+    - Governance validation
+    - Event sourcing
+
+Task routing:
+    analyze         → proposer.analyze() (direct, no I-P-V-O needed)
+    compose_*       → AgencyDirector.run_cycle() (full I-P-V-O)
+    engage          → AgencyDirector.process_engagement()
 """
 
 import logging
@@ -30,7 +52,6 @@ def _get_proposer():
             return proposer
     except Exception:
         pass
-    # Fallback: create directly (for standalone use without plugin)
     from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
     return ResonanceProposer()
@@ -38,19 +59,24 @@ def _get_proposer():
 
 class MoltbookCartridge(ContextAwareAgent, OathMixin):
     """
-    Moltbook Social Intelligence Agent.
+    Moltbook Social Intelligence Agent — Fraktal Agency.
 
-    Thin layer — delegates to ResonanceProposer public API.
-    Plugin (plugin_main.py) owns the heartbeat, client, and proposer lifecycle.
+    Routes content generation through I-P-V-O pipeline with:
+    - Translation layer (capabilities/content.py)
+    - Governance validation (governance/constitution.py)
+    - Event sourcing (core/memory.py)
+    - Multi-guardian rotation
+
+    Plugin (plugin_main.py) owns the heartbeat + API execution.
     """
 
     def __init__(self, config: Optional[Any] = None):
         super().__init__(
             agent_id="moltbook",
             name="MOLTBOOK",
-            version="1.0.0",
+            version="2.0.0",
             author="Steward Protocol",
-            description="Social intelligence engine — feed analysis, content generation, community engagement",
+            description="Social intelligence agency — I-P-V-O pipeline, multi-guardian, event-sourced",
             domain="SOCIAL",
             capabilities=[
                 "feed_analysis",
@@ -58,6 +84,8 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
                 "dm_processing",
                 "community_engagement",
                 "semantic_search",
+                "governance_validation",
+                "event_sourcing",
             ],
             config=config,
         )
@@ -65,8 +93,17 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
         self.oath_mixin_init(self.agent_id)
         self.oath_sworn = True
         self._proposer = None
+        self._director = None
 
-        logger.info("MOLTBOOK cartridge initialized")
+        logger.info("MOLTBOOK cartridge initialized (v2 — fraktal agency)")
+
+    @property
+    def director(self):
+        """Lazy-init AgencyDirector."""
+        if self._director is None:
+            from .core.agency_director import AgencyDirector
+            self._director = AgencyDirector()
+        return self._director
 
     def _ensure_proposer(self):
         if self._proposer is None:
@@ -85,7 +122,7 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
         )
 
     def process(self, task: Task) -> Dict[str, Any]:
-        """Route task to proposer's public API."""
+        """Route task through I-P-V-O pipeline or direct API."""
         action = task.payload.get("action")
         logger.info(f"MOLTBOOK processing: {action}")
 
@@ -95,6 +132,7 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
             "compose_post": self._compose_post,
             "compose_dm_reply": self._compose_dm_reply,
             "engage": self._engage,
+            "status": self._status,
         }
 
         handler = handlers.get(action)
@@ -106,6 +144,10 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
         except Exception as e:
             logger.error(f"MOLTBOOK {action} failed: {e}")
             return {"status": "error", "error": str(e)}
+
+    # =========================================================================
+    # Direct API (no I-P-V-O needed)
+    # =========================================================================
 
     def _analyze(self, payload: Dict) -> Dict[str, Any]:
         """Analyze text via proposer's public analyze() method."""
@@ -121,61 +163,76 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
             "words": [{"sanskrit": rw.sanskrit, "score": round(rw.total_score, 4)} for rw in ranked[:7]],
         }
 
+    # =========================================================================
+    # I-P-V-O Pipeline (content generation with governance)
+    # =========================================================================
+
     def _compose_comment(self, payload: Dict) -> Dict[str, Any]:
-        """Compose comment via proposer's propose_comment()."""
+        """Compose comment through I-P-V-O pipeline."""
         post_content = payload.get("post_content", "")
         if not post_content:
             return {"status": "error", "error": "No post_content provided"}
 
-        proposer = self._ensure_proposer()
-        proposal = proposer.propose_comment(
+        result = self.director.run_retry_loop(
+            content_type="comment",
+            raw_input=post_content,
             post_id=payload.get("post_id", ""),
-            post_content=post_content,
             trigger=payload.get("trigger", "cartridge"),
         )
 
-        if proposal is None:
-            return {"status": "filtered", "reason": "Rejected by system gates"}
-
-        return {"status": "success", "proposal": dict(proposal)}
+        if result.status == "SUCCESS":
+            return {"status": "success", "content": result.content, "retries": result.retries_used}
+        elif result.status == "VALIDATION_FAILED":
+            return {"status": "filtered", "reason": "Governance violation", "violations": result.violations}
+        else:
+            return {"status": "error", "error": result.error or "Pipeline failed"}
 
     def _compose_post(self, payload: Dict) -> Dict[str, Any]:
-        """Compose post via proposer's propose_post()."""
-        proposer = self._ensure_proposer()
-        proposal = proposer.propose_post(
+        """Compose post through I-P-V-O pipeline."""
+        result = self.director.run_retry_loop(
+            content_type="post",
             trigger=payload.get("trigger", "cartridge"),
             context=payload.get("context", {}),
         )
 
-        if proposal is None:
-            return {"status": "filtered", "reason": "Requires RAJAS + alive + integrity > 0.5"}
-
-        return {"status": "success", "proposal": dict(proposal)}
+        if result.status == "SUCCESS":
+            return {"status": "success", "content": result.content, "retries": result.retries_used}
+        elif result.status == "VALIDATION_FAILED":
+            return {"status": "filtered", "reason": "Governance violation", "violations": result.violations}
+        else:
+            return {"status": "error", "error": result.error or "Pipeline failed"}
 
     def _compose_dm_reply(self, payload: Dict) -> Dict[str, Any]:
-        """Compose DM reply via proposer's propose_dm_reply()."""
+        """Compose DM reply through I-P-V-O pipeline."""
         content = payload.get("content", "")
         if not content:
             return {"status": "error", "error": "No content provided"}
 
-        proposer = self._ensure_proposer()
-        proposal = proposer.propose_dm_reply(
+        result = self.director.run_retry_loop(
+            content_type="dm_reply",
+            raw_input=content,
             conversation_id=payload.get("conversation_id", ""),
             sender=payload.get("sender", ""),
-            inbound_content=content,
         )
 
-        if proposal is None:
-            return {"status": "filtered", "reason": "Rejected by system gates"}
+        if result.status == "SUCCESS":
+            return {"status": "success", "content": result.content, "retries": result.retries_used}
+        elif result.status == "VALIDATION_FAILED":
+            return {"status": "filtered", "reason": "Governance violation", "violations": result.violations}
+        else:
+            return {"status": "error", "error": result.error or "Pipeline failed"}
 
-        return {"status": "success", "proposal": dict(proposal)}
+    # =========================================================================
+    # Engagement (through AgencyDirector)
+    # =========================================================================
 
     def _engage(self, payload: Dict) -> Dict[str, Any]:
-        """Engagement decision via proposer's should_engage()."""
+        """Engagement decision via agency director."""
         post_content = payload.get("post_content", "")
         if not post_content:
             return {"status": "error", "error": "No post_content"}
 
+        # Use proposer for engagement scoring (no I-P-V-O needed for upvotes)
         proposer = self._ensure_proposer()
         proposal = proposer.should_engage(
             post_id=payload.get("post_id", ""),
@@ -184,18 +241,42 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
         )
 
         if proposal is None:
-            return {"status": "skip", "reason": "Rejected by system gates"}
+            return {"status": "skip", "reason": "Below engagement threshold"}
+
+        # Record engagement in event log
+        self.director.event_log.record_engagement(
+            "engage", payload.get("post_id", ""), author=payload.get("author", "")
+        )
 
         return {"status": "engage", "proposal": dict(proposal)}
+
+    # =========================================================================
+    # Status (agency-aware)
+    # =========================================================================
+
+    def _status(self, payload: Dict) -> Dict[str, Any]:
+        """Return agency status including event log state."""
+        state = self.director.event_log.rebuild_state()
+        return {
+            "status": "success",
+            "agency": {
+                "version": self.version,
+                "capabilities": self.capabilities,
+                "event_log": state,
+                "governance": self.director.constitution.get_rules_summary(),
+            },
+        }
 
     def report_status(self) -> Dict[str, Any]:
         return {
             "agent_id": self.agent_id,
             "name": self.name,
+            "version": self.version,
             "status": "RUNNING",
             "domain": self.domain,
             "capabilities": self.capabilities,
             "proposer_ready": self._proposer is not None,
+            "director_ready": self._director is not None,
         }
 
 
