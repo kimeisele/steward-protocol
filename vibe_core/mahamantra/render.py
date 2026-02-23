@@ -177,8 +177,13 @@ def kirtan_chat(message: str, *, use_llm: bool = True) -> str:
             temperature=0.7,
         )
 
-        guardian = str(result.get("guardian") or "unknown")
-        return f"[{guardian.upper()}] {llm_response.content}"
+        if llm_response.content and llm_response.content.strip():
+            guardian = str(result.get("guardian") or "unknown")
+            return f"[{guardian.upper()}] {llm_response.content}"
+
+        # No real content from provider — fall back to kirtan
+        logger.debug("LLM returned empty content, returning pure kirtan")
+        return kirtan_output
 
     except Exception as e:
         logger.debug(f"LLM enrichment failed, returning pure kirtan: {e}")

@@ -276,7 +276,9 @@ class MoltbookClient:
             }
 
         elif method == "GET" and endpoint.startswith("/posts") and "comments" in endpoint:
-            return {"comments": []}
+            post_id = endpoint.split("/posts/")[1].split("/")[0]
+            comments = [c for c in self._mock_db.get("comments", []) if c.get("post_id") == post_id]
+            return {"comments": comments}
 
         elif method == "GET" and (endpoint.startswith("/posts?") or endpoint == "/posts"):
             return {"posts": self._mock_db["posts"]}
@@ -316,7 +318,7 @@ class MoltbookClient:
             return {"messages": msgs}
 
         elif method == "GET" and endpoint == "/submolts":
-            return {"submolts": []}
+            return {"submolts": self._mock_db.get("submolts", [])}
 
         elif method == "GET" and endpoint.startswith("/submolts/"):
             name = endpoint.split("/submolts/")[1].split("?")[0].split("/")[0]
@@ -595,11 +597,13 @@ class MoltbookClient:
 
         return res  # type: ignore
 
-    async def send_dm(self, conversation_id: str, content: str, needs_human_input: bool = False) -> Dict[str, Any]:
-        """POST /agents/dm/conversations/ID/send — send a message."""
+    async def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+        """POST /agents/dm/conversations/ID/send — send a message.
+
+        Autonomous agent — governance via Guna system (RAJAS=logged write),
+        not human-in-the-loop escalation.
+        """
         data: Dict[str, Any] = {"message": content}
-        if needs_human_input:
-            data["needs_human_input"] = True
         return await self._request("POST", f"/agents/dm/conversations/{conversation_id}/send", data)
 
     async def send_dm_request(self, to_agent: str, message: str) -> Dict[str, Any]:
@@ -653,13 +657,17 @@ class MoltbookClient:
 
         return await self._request("DELETE", f"/submolts/{quote(submolt_name, safe='')}/subscribe")
 
-    async def create_submolt(
-        self, name: str, display_name: str, description: str
-    ) -> Dict[str, str]:
+    async def create_submolt(self, name: str, display_name: str, description: str) -> Dict[str, str]:
         """POST /submolts — create a new submolt community."""
-        return await self._request("POST", "/submolts", {
-            "name": name, "display_name": display_name, "description": description,
-        })
+        return await self._request(
+            "POST",
+            "/submolts",
+            {
+                "name": name,
+                "display_name": display_name,
+                "description": description,
+            },
+        )
 
     def sync_create_submolt(self, name: str, display_name: str, description: str) -> Dict[str, str]:
         """Sync wrapper for submolt creation."""
@@ -696,9 +704,9 @@ class MoltbookClient:
         """Sync wrapper for post creation."""
         return run_async(self.create_post(title, content, submolt))  # type: ignore
 
-    def sync_send_dm(self, conversation_id: str, content: str, needs_human_input: bool = False) -> Dict[str, Any]:
+    def sync_send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
         """Sync wrapper for DM sending."""
-        return run_async(self.send_dm(conversation_id, content, needs_human_input))
+        return run_async(self.send_dm(conversation_id, content))
 
     def sync_get_dm_conversations(self) -> List[Dict[str, Any]]:
         """Sync wrapper for listing DM conversations."""

@@ -2,8 +2,22 @@
 MOLTBOOK RESOLVER — IntentResolver for Moltbook I/O
 =====================================================
 
-Implements the MantraKernel IntentResolver protocol.
-Moltbook operations are I/O side-effects that consume VM output.
+STATUS: PREPARED INFRASTRUCTURE (0 production callers)
+
+This resolver implements the MantraKernel IntentResolver protocol for
+Moltbook operations. It is a SECOND path alongside the active
+MoltbookPlugin (plugins/moltbook/plugin_main.py).
+
+TWO PATHS EXIST — DO NOT ACTIVATE BOTH:
+    1. ACTIVE:   MoltbookPlugin._on_mahamantra_tick() → heartbeat → drain queue
+    2. PREPARED:  MoltbookResolver (this file) → MantraKernel intent routing
+
+The Plugin is event-driven (listener fires on tick).
+The Resolver is intent-driven (kernel queues intent → resolver processes I/O).
+If both are activated simultaneously: DOUBLE API CALLS, DOUBLE HEARTBEATS.
+
+When the MantraKernel intent system matures, this resolver becomes the
+canonical path and the plugin's heartbeat loop can be replaced.
 
 ARCHITECTURE:
     MantraIntent(READ, "moltbook/feed")     → resolver reads feed
@@ -15,9 +29,6 @@ ARCHITECTURE:
 
 All operations go through:
     kernel.resolve(intent) → MoltbookResolver.resolve() → HTTP client → IntentResult
-
-The Singularity listener queues intents on downbeat.
-The kernel processes the queue. The resolver handles I/O.
 """
 
 from __future__ import annotations

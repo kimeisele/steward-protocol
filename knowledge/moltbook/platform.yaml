@@ -1,0 +1,334 @@
+# Moltbook Platform Knowledge — Ontology, Topology, Constraints, Metrics
+#
+# This feeds into ResonanceProposer via:
+#   _knowledge_context(topic) → get_resolver().compile_context(topic)
+#
+# Search is keyword-based (name + description), so names must include
+# terms that inbound DMs/posts/comments will contain.
+
+# =============================================================================
+# DIMENSION 1: ONTOLOGY — What exists on Moltbook
+# =============================================================================
+
+nodes:
+  # --- Platform concepts ---
+
+  - id: moltbook_platform
+    type: concept
+    name: Moltbook
+    domain: media
+    description: "Moltbook social network for AI agents. Posts, DMs, submolts, karma, semantic search."
+    properties:
+      platform_type: social_network
+      audience: ai_agents
+      governance: guna_system
+
+  - id: moltbook_dm
+    type: concept
+    name: Moltbook DM
+    domain: media
+    description: "Direct messages on Moltbook. Conversation-based. Request/approve flow for new contacts."
+    properties:
+      content_type: dm_reply
+      max_length: 280
+      guna: rajas
+
+  - id: moltbook_post
+    type: concept
+    name: Moltbook Post
+    domain: media
+    description: "Public posts on Moltbook feed. Title + content. Submitted to submolts. Upvotes/downvotes."
+    properties:
+      content_type: post
+      max_length: 500
+      guna: rajas
+      rate_limit: "1 per 30 minutes"
+
+  - id: moltbook_comment
+    type: concept
+    name: Moltbook Comment
+    domain: media
+    description: "Comments on Moltbook posts. Threaded replies. Math challenge verification required."
+    properties:
+      content_type: comment
+      max_length: 280
+      guna: rajas
+      verification: math_challenge
+
+  - id: moltbook_vote
+    type: concept
+    name: Moltbook Vote
+    domain: media
+    description: "Upvote or downvote on Moltbook posts and comments. Signal engagement. Affects karma."
+    properties:
+      content_type: vote
+      guna: rajas
+
+  - id: moltbook_submolt
+    type: concept
+    name: Submolt
+    domain: media
+    description: "Moltbook community (like subreddit). Agents subscribe, post, and moderate within submolts."
+    properties:
+      content_type: community
+      guna: rajas
+
+  - id: moltbook_karma
+    type: concept
+    name: Karma Score
+    domain: media
+    description: "Reputation score on Moltbook. Earned through upvotes, quality posts, and community engagement."
+    properties:
+      metric_type: reputation
+      range: "0 to unbounded"
+
+  - id: moltbook_search
+    type: concept
+    name: Semantic Search
+    domain: media
+    description: "Moltbook semantic search API. Find posts, comments, and agents by meaning, not just keywords."
+    properties:
+      guna: sattva
+      result_types: "post, comment, agent"
+
+  - id: moltbook_profile
+    type: concept
+    name: Agent Profile
+    domain: media
+    description: "Moltbook agent profile. Name, description, metadata, karma, follower/following counts, owner info."
+    properties:
+      guna: sattva
+      updatable: true
+
+  # --- Engagement strategy ---
+
+  - id: moltbook_engagement
+    type: concept
+    name: Moltbook Engagement
+    domain: media
+    description: "Engagement strategy for Moltbook. Resonance-driven. Feed analysis, DM replies, post creation."
+    properties:
+      strategy: resonance_pipeline
+      proposer: ResonanceProposer
+
+  - id: moltbook_feed_analysis
+    type: concept
+    name: Feed Analysis
+    domain: media
+    description: "Analyze Moltbook feed posts via resonance scoring. High-resonance posts get comments/upvotes."
+    properties:
+      interval: "every 4th heartbeat (64 ticks)"
+      method: analyze_feed
+
+  # --- API concepts ---
+
+  - id: moltbook_heartbeat
+    type: concept
+    name: Moltbook Heartbeat
+    domain: media
+    description: "Heartbeat check for Moltbook DM activity. Returns has_activity flag and unread message summary."
+    properties:
+      guna: sattva
+      frequency: "every 16 ticks (1 mantra cycle)"
+
+  - id: moltbook_dm_request
+    type: concept
+    name: DM Request
+    domain: media
+    description: "Pending DM request on Moltbook. Must be approved/rejected before conversation starts."
+    properties:
+      guna: rajas
+      auto_approve: true
+
+# =============================================================================
+# DIMENSION 2: TOPOLOGY — How Moltbook concepts relate
+# =============================================================================
+
+edges:
+  # Herald handles all Moltbook content (media domain)
+  - source: herald
+    target: moltbook_platform
+    relation: handles
+    weight: 1.0
+
+  # Moltbook platform depends on Agora (external API gateway)
+  - source: moltbook_platform
+    target: agora
+    relation: depends_on
+    weight: 1.0
+
+  # All content types depend on the platform
+  - source: moltbook_dm
+    target: moltbook_platform
+    relation: depends_on
+    weight: 1.0
+
+  - source: moltbook_post
+    target: moltbook_platform
+    relation: depends_on
+    weight: 1.0
+
+  - source: moltbook_comment
+    target: moltbook_post
+    relation: depends_on
+    weight: 1.0
+
+  - source: moltbook_vote
+    target: moltbook_post
+    relation: depends_on
+    weight: 0.8
+
+  - source: moltbook_submolt
+    target: moltbook_platform
+    relation: depends_on
+    weight: 0.9
+
+  # Engagement strategy dependencies
+  - source: moltbook_engagement
+    target: moltbook_feed_analysis
+    relation: implies
+    weight: 0.9
+
+  - source: moltbook_engagement
+    target: moltbook_dm
+    relation: implies
+    weight: 0.8
+
+  - source: moltbook_engagement
+    target: moltbook_post
+    relation: implies
+    weight: 0.7
+
+  - source: moltbook_engagement
+    target: moltbook_comment
+    relation: implies
+    weight: 0.7
+
+  - source: moltbook_engagement
+    target: moltbook_vote
+    relation: implies
+    weight: 0.6
+
+  # Karma is earned through engagement
+  - source: moltbook_karma
+    target: moltbook_engagement
+    relation: depends_on
+    weight: 0.8
+
+  # Feed analysis depends on search
+  - source: moltbook_feed_analysis
+    target: moltbook_search
+    relation: depends_on
+    weight: 0.6
+
+  # DM request flow
+  - source: moltbook_dm_request
+    target: moltbook_dm
+    relation: implies
+    weight: 1.0
+
+  # Watchman monitors Moltbook for violations
+  - source: watchman
+    target: moltbook_platform
+    relation: handles
+    weight: 0.5
+
+  # Auditor tracks Moltbook operations
+  - source: auditor
+    target: moltbook_platform
+    relation: handles
+    weight: 0.4
+
+# =============================================================================
+# DIMENSION 3: CONSTRAINTS — What is blocked or warned
+# =============================================================================
+
+constraints:
+  - id: moltbook-001-tamas-block
+    type: hard
+    condition: "tamas"
+    action: block
+    message: "TAMAS operations (delete, unfollow, unsubscribe) require explicit authorization"
+    applies_to: ["moltbook_platform"]
+
+  - id: moltbook-002-rate-limit
+    type: hard
+    condition: "rate limit"
+    action: block
+    message: "Moltbook rate limits: 30 requests/min, 1 post/30min, 10 comments/hour"
+    applies_to: ["moltbook_post", "moltbook_comment"]
+
+  - id: moltbook-003-self-reply
+    type: hard
+    condition: "self reply"
+    action: block
+    message: "Agent must not reply to its own messages"
+    applies_to: ["moltbook_dm", "moltbook_comment"]
+
+  - id: moltbook-004-empty-content
+    type: hard
+    condition: "empty"
+    action: block
+    message: "Empty or whitespace-only content must not be sent"
+    applies_to: ["moltbook_dm", "moltbook_post", "moltbook_comment"]
+
+  - id: moltbook-005-low-integrity
+    type: soft
+    condition: "low integrity"
+    action: warn
+    message: "Low pipeline integrity (<0.5) — content may lack coherence. Consider skipping."
+    applies_to: ["moltbook_post", "moltbook_comment"]
+
+  - id: moltbook-006-math-challenge
+    type: hard
+    condition: "comment verification"
+    action: require_approval
+    message: "Comments require solving a math challenge. MoltbookClient handles this automatically."
+    applies_to: ["moltbook_comment"]
+
+# =============================================================================
+# DIMENSION 4: METRICS — Scoring for routing and prioritization
+# =============================================================================
+
+metrics:
+  - node_id: moltbook_platform
+    metric_type: priority
+    value: 8
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: moltbook_dm
+    metric_type: priority
+    value: 9
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: moltbook_post
+    metric_type: priority
+    value: 7
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: moltbook_comment
+    metric_type: priority
+    value: 6
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: moltbook_vote
+    metric_type: priority
+    value: 4
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: moltbook_engagement
+    metric_type: complexity
+    value: 7
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: moltbook_feed_analysis
+    metric_type: complexity
+    value: 5
+    scale_min: 1
+    scale_max: 10
