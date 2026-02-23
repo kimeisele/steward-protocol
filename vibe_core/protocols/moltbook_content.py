@@ -88,6 +88,9 @@ class ContentProposal(TypedDict, total=False):
     gateway_guardian: str
     gateway_guna: str
 
+    # Internal: retry tracking (set by _drain_content_queue on failure)
+    _retries: int
+
 
 # =============================================================================
 # CONTENT QUEUE — Bounded FIFO for outbound proposals
