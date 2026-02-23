@@ -267,16 +267,20 @@ class AgencyDirector:
         """
         seed_text = raw_input or ctx.get("trigger", content_type)
 
-        # Circuit executor primary (if plugin wired)
-        if self._plugin and hasattr(self._plugin, "execute_content_circuit"):
-            result = self._plugin.execute_content_circuit(
-                seed_text, content_type,
-                post_id=ctx.get("post_id", ""),
-                sender=ctx.get("sender", ""),
-                trigger=ctx.get("trigger", "agency"),
-            )
-            if result and result.get("content"):
-                return result["content"], {"source": "circuit", **result}
+        # Circuit executor primary (if plugin wired and has circuit)
+        try:
+            executor = getattr(self._plugin, "execute_content_circuit", None) if self._plugin else None
+            if executor:
+                result = executor(
+                    seed_text, content_type,
+                    post_id=ctx.get("post_id", ""),
+                    sender=ctx.get("sender", ""),
+                    trigger=ctx.get("trigger", "agency"),
+                )
+                if result and result.get("content"):
+                    return result["content"], {"source": "circuit", **result}
+        except Exception as e:
+            logger.debug(f"Circuit executor unavailable: {e}")
 
         # Run Mahamantra VM pipeline
         pipeline_result = self._run_pipeline(seed_text)

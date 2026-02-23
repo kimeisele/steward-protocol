@@ -28,7 +28,7 @@ EXTENSION PATTERN:
     The renderer discovers and uses them. No code changes needed.
 
     "cognitive_response"  → MANAS integration (future)
-    "composed_text"       → Language Engine (future)
+    "composed"/"composed_text" → MahaComposition / Language Engine
     (default)             → Pure resonance rendering (now)
 """
 
@@ -59,8 +59,8 @@ def render(result: Dict) -> str:
     if "cognitive_response" in result:
         return str(result["cognitive_response"])
 
-    # Future: Language Engine adds this via CycleCompiler
-    if "composed_text" in result:
+    # MahaComposition output: "composed" (from vm_ops) or "composed_text" (from CycleCompiler)
+    if "composed" in result or "composed_text" in result:
         return _render_composed(result)
 
     # Default: Pure resonance rendering
@@ -116,7 +116,7 @@ def _render_resonance(result: Dict) -> str:
 
 def _render_composed(result: Dict) -> str:
     """Render with Language Engine composed text + resonance context."""
-    composed = str(result["composed_text"])
+    composed = str(result.get("composed") or result.get("composed_text") or "")
     guardian = str(result.get("guardian") or "unknown")
     quarter = str(result.get("quarter") or "unknown")
     trinity = str(result.get("trinity_function") or "")
