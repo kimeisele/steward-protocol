@@ -2,32 +2,28 @@
 MOLTBOOK AGENT CARTRIDGE — Fraktal Agency Orchestrator
 =======================================================
 
-Pattern: Herald cartridge_main.py (agency with I-P-V-O pipeline)
-
 Routes tasks through AgencyDirector (I-P-V-O):
-    INPUT → PROCESS → VALIDATE → OUTPUT
+    INPUT:    Knowledge Graph + MahaLLM Kernel + ServiceRegistry discovery
+    PROCESS:  mahamantra(text) → MahaComposition/LLM → content
+    VALIDATE: Constitution check (governance/constitution.py)
+    OUTPUT:   CycleResult → caller
 
-Capabilities: content, research, engagement
-Governance: constitution (guna gates + quality + platform constraints)
-Memory: event sourcing (immutable JSONL ledger)
+Guna informs STYLE (guardian, tone), NOT gating.
+Only TAMAS + dead cell = skip. SATTVA and RAJAS both produce content.
 
-The plugin (plugin_main.py) still owns:
-    - MoltbookClient + MoltbookService lifecycle
-    - Mahamantra heartbeat listener
-    - ContentQueue drain (actual API execution)
-    - ServiceRegistry registration
-
-The cartridge owns:
-    - I-P-V-O pipeline for content generation
-    - Translation layer (Sanskrit → readable English)
-    - Multi-guardian rotation
-    - Governance validation
-    - Event sourcing
+Systems wired:
+    - Mahamantra VM pipeline (27-key result: guna, guardian, smaranam, verse)
+    - MahaComposition (5 scorers: prana, rhythm, semantic/WordNet, mode, state)
+    - MahaLanguageEngine (EngineResult: resonant words, template, section)
+    - Knowledge Graph (domain context, constraint checking)
+    - MahaLLM Kernel (guardian vocabulary, semantic expansion)
+    - EventBus (system visibility: THOUGHT, ACTION, VIOLATION events)
+    - ServiceRegistry (dynamic capability discovery)
 
 Task routing:
     analyze         → proposer.analyze() (direct, no I-P-V-O needed)
-    compose_*       → AgencyDirector.run_cycle() (full I-P-V-O)
-    engage          → AgencyDirector.process_engagement()
+    compose_*       → AgencyDirector.run_retry_loop() (full I-P-V-O)
+    engage          → proposer.should_engage() + event_log
 """
 
 import logging
@@ -59,24 +55,20 @@ def _get_proposer():
 
 class MoltbookCartridge(ContextAwareAgent, OathMixin):
     """
-    Moltbook Social Intelligence Agent — Fraktal Agency.
+    Moltbook Social Intelligence Agent.
 
-    Routes content generation through I-P-V-O pipeline with:
-    - Translation layer (capabilities/content.py)
-    - Governance validation (governance/constitution.py)
-    - Event sourcing (core/memory.py)
-    - Multi-guardian rotation
-
-    Plugin (plugin_main.py) owns the heartbeat + API execution.
+    Uses Mahamantra substrate directly for content generation.
+    Guna → style (not gate). Guardian from pipeline (not static pool).
+    MahaComposition + LLM for content. EventBus for visibility.
     """
 
     def __init__(self, config: Optional[Any] = None):
         super().__init__(
             agent_id="moltbook",
             name="MOLTBOOK",
-            version="2.0.0",
+            version="3.0.0",
             author="Steward Protocol",
-            description="Social intelligence agency — I-P-V-O pipeline, multi-guardian, event-sourced",
+            description="Social intelligence agency — mahamantra-direct I-P-V-O, dynamic guna-style, event-sourced",
             domain="SOCIAL",
             capabilities=[
                 "feed_analysis",
@@ -95,7 +87,7 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
         self._proposer = None
         self._director = None
 
-        logger.info("MOLTBOOK cartridge initialized (v2 — fraktal agency)")
+        logger.info("MOLTBOOK cartridge initialized (v3 — mahamantra-direct agency)")
 
     @property
     def director(self):
@@ -189,10 +181,17 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
 
     def _compose_post(self, payload: Dict) -> Dict[str, Any]:
         """Compose post through I-P-V-O pipeline."""
+        # Build seed text from trigger + topics
+        trigger = payload.get("trigger", "cartridge")
+        context = payload.get("context", {})
+        topics = context.get("feed_topics", [])
+        seed = f"{trigger}: {', '.join(str(t) for t in topics[:3])}" if topics else trigger
+
         result = self.director.run_retry_loop(
             content_type="post",
-            trigger=payload.get("trigger", "cartridge"),
-            context=payload.get("context", {}),
+            raw_input=seed,
+            trigger=trigger,
+            context=context,
         )
 
         if result.status == "SUCCESS":
