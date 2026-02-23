@@ -440,13 +440,21 @@ class ResonanceProposer(ContentProposalProtocol):
         if not comment:
             return None
 
-        return ContentProposal(
+        proposal = ContentProposal(
             content_type=ContentType.COMMENT.value,
             content=comment[:280],
             post_id=post_id,
             source=trigger,
             priority=1,
         )
+
+        # Thread context: pass parent_id for reply chains
+        if context:
+            parent_id = context.get("parent_id")
+            if parent_id:
+                proposal["parent_id"] = parent_id
+
+        return proposal
 
     def should_engage(
         self,

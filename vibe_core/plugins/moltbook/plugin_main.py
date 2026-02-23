@@ -27,10 +27,10 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Set
 
 from vibe_core.mahamantra import run_async
-from vibe_core.mahamantra.protocols._gad import GADAudit, GADBase
+from vibe_core.mahamantra.protocols._gad import GADBase
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.protocols.moltbook import (
     DMMessage,
@@ -76,6 +76,13 @@ class MoltbookService(MoltbookProtocol, GADBase):
     RAJAS operations (write) are logged. TAMAS (delete) are blocked
     unless explicitly authorized. SATTVA (read) flows freely.
     """
+
+    # Sovereign Identity (class-level → hasattr(instance, ...) resolves True)
+    # Narada = the travelling sage who connects all worlds (social platform adapter)
+    # Genesis: 999000000 = 37 × 27000000 → verify_link() passes (PARAMPARA check)
+    __mahajana__: ClassVar[str] = "narada"
+    __position__: ClassVar[int] = 2  # Narada position: Communication/Broadcast
+    __genesis__: ClassVar[str] = "0x3b8b87c0"  # int(hex,16) % 37 == 0
 
     def __init__(self, client: "MoltbookClient"):
         GADBase.__init__(self)
