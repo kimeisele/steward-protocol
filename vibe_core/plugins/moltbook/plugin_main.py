@@ -827,14 +827,14 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"Heartbeat phase '{label}' failed: {e}")
 
     def _trim_memory(self) -> None:
-        """Trim in-memory tracking sets to _MAX_SEEN_IDS.
+        """Trim in-memory tracking sets and flush proposer caches.
 
         Prevents unbounded growth during long-running sessions.
-        The persist-time cap only fires on shutdown — this trims live.
+        Also flushes pipeline/engine caches in ResonanceProposer
+        to prevent stale results from accumulating.
         """
         cap = self._MAX_SEEN_IDS
         if len(self._seen_message_ids) > cap:
-            # Keep most recent (sorted lexicographically — IDs are monotonic)
             self._seen_message_ids = set(sorted(self._seen_message_ids)[-cap:])
         if len(self._seen_post_ids) > cap:
             self._seen_post_ids = set(sorted(self._seen_post_ids)[-cap:])
@@ -843,6 +843,9 @@ class MoltbookPlugin(KernelPlugin):
         if len(self._comment_post_map) > cap:
             keys = sorted(self._comment_post_map.keys())[-cap:]
             self._comment_post_map = {k: self._comment_post_map[k] for k in keys}
+        # Flush proposer pipeline/engine caches
+        if self._proposer and hasattr(self._proposer, "flush_cache"):
+            self._proposer.flush_cache()
 
     # =========================================================================
     # Mahamantra Listener — THE heartbeat path
