@@ -151,6 +151,11 @@ def _build_context(
     guardian_cfg = _GUARDIAN_CONFIGS.get(engine_result.guardian_name or "", {})
     section = _section_data(engine_result)
 
+    # Extended EngineResult fields for richer context
+    intent = getattr(engine_result, "intent_category", "") or ""
+    expanded = ", ".join(getattr(engine_result, "expanded_names", ()) or ())
+    syllables = str(getattr(engine_result, "syllable_count", 0) or 0)
+
     return {
         "agent_name": agent_name,
         "guardian_name": guardian,
@@ -164,6 +169,9 @@ def _build_context(
         "knowledge_context": _knowledge_context(user_input[:200]),
         "user_input": user_input,
         "derivation": engine_result.derivation or "",
+        "intent_category": intent,
+        "expanded_names": expanded,
+        "syllable_count": syllables,
         **section,
         **extra,
     }
@@ -264,14 +272,18 @@ class ResonanceProposer(ContentProposalProtocol):
             pass
 
         if not prompt:
+            # Fallback: pure context, no YAML available
             prompt = (
                 f"{ctx['guardian_name']} · {ctx['quarter']} · {ctx['guardian_function']}\n"
                 f"Sektion: {ctx['section_name']} ({ctx['section_semantic']})\n"
-                f"Vers: {ctx['verse_ref']}\n"
+                f"Vers: {ctx['verse_ref']} | Intent: {ctx['intent_category']}\n"
                 f"RESONANZ: {ctx['resonant_words']}\n"
+                f"NAMEN: {ctx['expanded_names']}\n"
+                f"DERIVATION: {ctx['derivation']}\n"
                 f"ANALYSE: {ctx['engine_output']}\n"
                 f"{ctx['knowledge_context']}\n"
-                f"INPUT: {user_input}\n"
+                f"{user_input}\n"
+                f"{ctx['agent_name']}:\n"
             )
 
         # Try real LLM provider (NOT the template mock LLMEngine.speak())

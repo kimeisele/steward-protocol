@@ -90,6 +90,7 @@ class ContentProposal(TypedDict, total=False):
 
     # Internal: retry tracking (set by _drain_content_queue on failure)
     _retries: int
+    _retry_after: float  # epoch timestamp — skip until this time (exponential backoff)
 
 
 # =============================================================================

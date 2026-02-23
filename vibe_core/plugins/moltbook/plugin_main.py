@@ -118,6 +118,9 @@ class MoltbookService(MoltbookProtocol, GADBase):
                 "timestamp": time.time(),
             }
             self._operation_log.append(entry)
+            # Prevent unbounded growth: trim when log exceeds 5000 entries
+            if len(self._operation_log) > 5000:
+                self._operation_log = self._operation_log[-2500:]
             logger.info(f"MOLTBOOK-RAJAS: {operation} (write operation logged)")
 
     # --- SATTVA operations (read-only) ---
@@ -447,18 +450,11 @@ class MoltbookPlugin(KernelPlugin):
 
     plugin_id = "moltbook"
 
-    # Analyze feed every N heartbeats (not every tick)
-    _FEED_INTERVAL = 4  # Every 4th heartbeat = every 64 ticks
-
-    # Autonomous post creation: every N heartbeats (conservative to avoid spam)
-    # 16 ticks/heartbeat × 24 heartbeats = 384 ticks between posts
-    _POST_INTERVAL = 24  # Every 24th heartbeat ≈ every 384 ticks
-
-    # Reply monitoring: check replies to own comments periodically
-    _REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
-
-    # Profile update: refresh bio/metadata periodically
-    _PROFILE_UPDATE_INTERVAL = 48  # Every 48th heartbeat ≈ 768 ticks
+    # Defaults for heartbeat intervals (overridable via config at boot)
+    _DEFAULT_FEED_INTERVAL = 4  # Every 4th heartbeat = every 64 ticks
+    _DEFAULT_POST_INTERVAL = 24  # Every 24th heartbeat ≈ every 384 ticks
+    _DEFAULT_REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
+    _DEFAULT_PROFILE_UPDATE_INTERVAL = 48  # Every 48th heartbeat ≈ 768 ticks
 
     # Persistence: queue + seen IDs survive restarts
     _QUEUE_STATE_FILE = "content_queue.json"
@@ -475,6 +471,11 @@ class MoltbookPlugin(KernelPlugin):
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
         self._heartbeat_count: int = 0
+        # Intervals (configured at boot, defaults from class)
+        self._feed_interval: int = self._DEFAULT_FEED_INTERVAL
+        self._post_interval: int = self._DEFAULT_POST_INTERVAL
+        self._reply_check_interval: int = self._DEFAULT_REPLY_CHECK_INTERVAL
+        self._profile_update_interval: int = self._DEFAULT_PROFILE_UPDATE_INTERVAL
         self._listener_wired: bool = False
         self._content_queue: ContentQueue = ContentQueue()
         self._proposer: Optional[ContentProposalProtocol] = None
@@ -489,6 +490,7 @@ class MoltbookPlugin(KernelPlugin):
         self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
         self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
         self._agent_name: str = "steward-protocol"  # Resolved from profile at boot
+        self._last_heartbeat_ts: float = 0.0  # Debounce guard: epoch of last heartbeat
 
     @property
     def dependencies(self) -> Set[str]:
@@ -554,6 +556,9 @@ class MoltbookPlugin(KernelPlugin):
                 data = json.loads(queue_path.read_text())
                 if data.get("version") == 1:
                     for p in data.get("proposals", []):
+                        # Clear stale retry state from previous session
+                        p.pop("_retries", None)
+                        p.pop("_retry_after", None)
                         self._content_queue.enqueue(p)
                     stats = data.get("stats", {})
                     self._content_queue._total_enqueued = stats.get("total_enqueued", 0)
@@ -598,10 +603,10 @@ class MoltbookPlugin(KernelPlugin):
 
     def snapshot_state(self) -> Dict[str, Any]:
         if not self._client:
-            return {"version": 4, "client_active": False}
+            return {"version": 5, "client_active": False}
         limits = self._client.limits
         return {
-            "version": 4,
+            "version": 5,
             "client_active": True,
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
@@ -617,11 +622,17 @@ class MoltbookPlugin(KernelPlugin):
             "comment_thread_count": len(self._comment_post_map),
             "followed_agent_count": len(self._followed_agents),
             "subscribed_submolt_count": len(self._subscribed_submolts),
+            "intervals": {
+                "feed": self._feed_interval,
+                "post": self._post_interval,
+                "reply_check": self._reply_check_interval,
+                "profile_update": self._profile_update_interval,
+            },
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        if snapshot.get("version") not in (1, 2, 3, 4) or not snapshot.get("client_active"):
+        if snapshot.get("version") not in (1, 2, 3, 4, 5) or not snapshot.get("client_active"):
             return
         if not self._client:
             return
@@ -658,6 +669,14 @@ class MoltbookPlugin(KernelPlugin):
             cfg = config or {}
             self._offline_mode = bool(cfg.get("offline_mode", True))
             api_key = str(cfg.get("api_key", ""))
+
+            # Configurable heartbeat intervals (all in heartbeat counts, 1 hb = 16 ticks)
+            self._feed_interval = int(cfg.get("feed_interval", self._DEFAULT_FEED_INTERVAL))
+            self._post_interval = int(cfg.get("post_interval", self._DEFAULT_POST_INTERVAL))
+            self._reply_check_interval = int(cfg.get("reply_check_interval", self._DEFAULT_REPLY_CHECK_INTERVAL))
+            self._profile_update_interval = int(
+                cfg.get("profile_update_interval", self._DEFAULT_PROFILE_UPDATE_INTERVAL)
+            )
 
             if not api_key:
                 api_key = self._try_vault(kernel)
@@ -832,8 +851,20 @@ class MoltbookPlugin(KernelPlugin):
 
         self._do_heartbeat()
 
+    # Minimum seconds between heartbeats (prevents double-fire from on_pulse + tick)
+    _HEARTBEAT_DEBOUNCE_S = 2.0
+
     def _do_heartbeat(self) -> None:
-        """Execute one heartbeat cycle: check DMs, read feed, create posts, monitor replies."""
+        """Execute one heartbeat cycle: check DMs, read feed, create posts, monitor replies.
+
+        Debounce guard: if on_pulse() AND _on_mahamantra_tick() both call this
+        within the same tick window, the second call is silently skipped.
+        """
+        now = time.time()
+        if (now - self._last_heartbeat_ts) < self._HEARTBEAT_DEBOUNCE_S:
+            return  # Already fired recently — skip (split-brain guard)
+        self._last_heartbeat_ts = now
+
         try:
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
@@ -850,27 +881,27 @@ class MoltbookPlugin(KernelPlugin):
             self._safe_call(self._process_dm_requests, "dm_requests")
 
         # Analyze feed periodically (not every heartbeat)
-        if self._heartbeat_count % self._FEED_INTERVAL == 0:
+        if self._heartbeat_count % self._feed_interval == 0:
             self._safe_call(self._analyze_feed, "feed_analysis")
 
         # Autonomous post creation (uses feed topics as seed)
-        if self._heartbeat_count % self._POST_INTERVAL == 0:
+        if self._heartbeat_count % self._post_interval == 0:
             self._safe_call(self._maybe_create_post, "post_creation")
 
         # Monitor replies to our own comments
-        if self._heartbeat_count % self._REPLY_CHECK_INTERVAL == 0:
+        if self._heartbeat_count % self._reply_check_interval == 0:
             self._safe_call(self._check_own_comment_replies, "reply_monitoring")
 
         # Submolt discovery (once at startup, then periodically)
-        if self._heartbeat_count == 1 or self._heartbeat_count % (self._POST_INTERVAL * 4) == 0:
+        if self._heartbeat_count == 1 or self._heartbeat_count % (self._post_interval * 4) == 0:
             self._safe_call(self._discover_submolts, "submolt_discovery")
 
         # Profile auto-update (karma, activity stats in bio)
-        if self._heartbeat_count % self._PROFILE_UPDATE_INTERVAL == 0:
+        if self._heartbeat_count % self._profile_update_interval == 0:
             self._safe_call(self._update_profile, "profile_update")
 
         # Trim in-memory sets periodically to prevent unbounded growth
-        if self._heartbeat_count % self._PROFILE_UPDATE_INTERVAL == 0:
+        if self._heartbeat_count % self._profile_update_interval == 0:
             self._trim_memory()
 
         # Monitor queue health — warn on overflow
@@ -1308,8 +1339,9 @@ class MoltbookPlugin(KernelPlugin):
     def _drain_content_queue(self) -> None:
         """Execute queued content proposals through MoltbookService.
 
-        Failed proposals are re-enqueued with a retry counter.
-        After _MAX_PROPOSAL_RETRIES, the proposal is dropped and logged.
+        Failed proposals are re-enqueued with exponential backoff:
+        retry 1 → 2s delay, retry 2 → 4s delay. After _MAX_PROPOSAL_RETRIES,
+        the proposal is dropped and logged.
         """
         if self._content_queue.is_empty:
             return
@@ -1319,8 +1351,15 @@ class MoltbookPlugin(KernelPlugin):
         service = self._service
         proposals = self._content_queue.drain(limit=3)
         failed: List[ContentProposal] = []
+        deferred: List[ContentProposal] = []
 
+        now = time.time()
         for proposal in proposals:
+            # Exponential backoff: skip proposals that aren't ready yet
+            retry_after = proposal.get("_retry_after", 0.0)
+            if retry_after > now:
+                deferred.append(proposal)
+                continue
             ct = proposal.get("content_type", "")
             try:
                 if ct == ContentType.DM_REPLY.value:
@@ -1388,14 +1427,18 @@ class MoltbookPlugin(KernelPlugin):
                 retries = proposal.get("_retries", 0)
                 if retries < self._MAX_PROPOSAL_RETRIES:
                     proposal["_retries"] = retries + 1
+                    # Exponential backoff: 2^retries seconds (2s, 4s)
+                    proposal["_retry_after"] = time.time() + (2 ** proposal["_retries"])
                     failed.append(proposal)
-                    logger.warning(f"Content execution failed ({ct}), retry {retries + 1}: {e}")
+                    logger.warning(
+                        f"Content execution failed ({ct}), retry {retries + 1}, backoff {2 ** proposal['_retries']}s: {e}"
+                    )
                 else:
                     self._log_activity("proposal_dropped", {"type": ct, "error": str(e)[:200]})
                     logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
 
-        # Re-enqueue failed proposals for next heartbeat
-        for proposal in failed:
+        # Re-enqueue: deferred (not yet ready) + failed (with backoff)
+        for proposal in deferred + failed:
             self._content_queue.enqueue(proposal)
 
     # =========================================================================
@@ -1475,5 +1518,12 @@ class MoltbookPlugin(KernelPlugin):
             "last_error": self._last_heartbeat_error,
             "listener_wired": self._listener_wired,
             "ticks_seen": self._tick_count,
+            "heartbeats": self._heartbeat_count,
             "content_queue": self._content_queue.stats,
+            "intervals": {
+                "feed": self._feed_interval,
+                "post": self._post_interval,
+                "reply_check": self._reply_check_interval,
+                "profile_update": self._profile_update_interval,
+            },
         }
