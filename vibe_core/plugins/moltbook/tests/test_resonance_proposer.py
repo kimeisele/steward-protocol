@@ -26,10 +26,12 @@ from vibe_core.plugins.moltbook.resonance_proposer import (
     _build_context,
     _format_resonant_words,
     _format_template_words,
+    _guardian_vocabulary,
     _guna_mode,
     _integrity,
     _is_alive,
     _is_tamas,
+    _phonetic_context,
     _section_data,
     _should_skip,
 )
@@ -354,6 +356,64 @@ class TestContextBuilders:
         assert data["section_name"] == "dharma"
         assert data["section_mode"] == "CORE"
 
+    def test_guardian_vocabulary_kapila(self):
+        """MahaLLM Kernel → kapila's top-10 vocabulary words."""
+        vocab = _guardian_vocabulary("kapila")
+        assert isinstance(vocab, str)
+        assert len(vocab) > 0
+        # Should contain Sanskrit words with meanings
+        assert "(" in vocab  # Format: "word (meaning), ..."
+
+    def test_guardian_vocabulary_unknown_returns_empty(self):
+        assert _guardian_vocabulary("nonexistent_guardian") == ""
+
+    def test_guardian_vocabulary_multiple_guardians(self):
+        """Different guardians have different vocabularies."""
+        kapila = _guardian_vocabulary("kapila")
+        manu = _guardian_vocabulary("manu")
+        assert kapila != manu  # Different guardians → different word palettes
+
+    def test_phonetic_context_with_coords(self):
+        """Pipeline NAMA coords → element walk + shruti pattern."""
+        result = _make_pipeline_result()
+        # _make_pipeline_result has nama.coords = (1, 2, 3)
+        ctx = _phonetic_context(result)
+        assert "element_walk" in ctx
+        assert "shruti_pattern" in ctx
+        assert len(ctx["element_walk"]) > 0
+        assert len(ctx["shruti_pattern"]) == 3  # 3 coords → 3 S/N chars
+
+    def test_phonetic_context_empty_coords(self):
+        result = {"nama": {"coords": ()}}
+        ctx = _phonetic_context(result)
+        assert ctx["element_walk"] == ""
+        assert ctx["shruti_pattern"] == ""
+
+    def test_phonetic_context_no_nama(self):
+        ctx = _phonetic_context({})
+        assert ctx["element_walk"] == ""
+        assert ctx["shruti_pattern"] == ""
+
+    def test_build_context_has_kernel_fields(self):
+        """_build_context includes MahaLLM Kernel + phonetic data."""
+        er = _make_engine_result()
+        pr = _make_pipeline_result()
+        ctx = _build_context(er, "steward-protocol", "test", pipeline_result=pr)
+        assert "guardian_vocabulary" in ctx
+        assert "element_walk" in ctx
+        assert "shruti_pattern" in ctx
+        # kapila vocabulary should be populated
+        assert len(ctx["guardian_vocabulary"]) > 0
+
+    def test_build_context_without_pipeline_result(self):
+        """Without pipeline_result, phonetic fields are empty strings."""
+        er = _make_engine_result()
+        ctx = _build_context(er, "steward-protocol", "test")
+        assert ctx["element_walk"] == ""
+        assert ctx["shruti_pattern"] == ""
+        # guardian_vocabulary still works (independent of pipeline)
+        assert len(ctx["guardian_vocabulary"]) > 0
+
 
 # =========================================================================
 # MahaLanguageEngine — real pipeline, no mocks
@@ -634,10 +694,18 @@ class TestCompose:
 
     def test_compose_sends_context_to_llm(self):
         p, provider = _proposer_with_llm("response")
-        p._compose("moltbook.dm_reply", _make_engine_result(), "test input", sender="AgentX")
+        p._compose(
+            "moltbook.dm_reply",
+            _make_engine_result(),
+            "test input",
+            pipeline_result=_make_pipeline_result(),
+            sender="AgentX",
+        )
         ctx = provider.last_prompt
         assert "KAPILA" in ctx
         assert "BG.6.47" in ctx
+        # MahaLLM Kernel: guardian vocabulary present
+        assert "VOKABULAR" in ctx
 
     def test_compose_no_provider_with_pipeline_result_returns_fallback(self):
         p = _proposer_no_llm()
