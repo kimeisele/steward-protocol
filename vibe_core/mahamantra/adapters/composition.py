@@ -16,7 +16,7 @@ ARCHITECTURE:
     2. Multi-scorer ranking (each scorer is CompositionScorerProtocol)
     3. Context-driven selection (quarter/prana determine word count)
     4. Grid alignment (substrate: align_syllables_to_grid)
-    5. Assembly (grid order → English)
+    5. Assembly (SVO role ordering → phrase chunking → English)
 
 SCORERS (pluggable, protocol-based):
     PranaScorer   — Antaranga standing wave prana at word's RAMA coords
@@ -327,31 +327,52 @@ class MahaComposition:
             selected.append(item)
             used_sanskrit.add(sk)
 
-        # ASSEMBLE: meaning-based (score-ranked order, not grid position)
-        output_parts: List[str] = []
+        # ASSEMBLE: role-aware SVO ordering + phrase chunking
+        from vibe_core.mahamantra.substrate.language.section_router import infer_role
+        from vibe_core.mahamantra.substrate.language.composer import chunk_sentence
+
+        # SVO role ordering for English output
+        _ROLE_ORDER = {
+            "NOUN": 0,    # Subject/object first
+            "VERB": 1,    # Action
+            "QUALITY": 2, # Modifiers
+            "PREP": 3,    # Relational
+            "REF": 4,     # References
+            "PARTICLE": 5,# Function words
+        }
+
+        # 1. Assign roles from RAMA coords + extract English words
+        role_items: List[Tuple[int, str]] = []
         used_words: set = set()
-        for item in selected:
+        for idx, item in enumerate(selected):
+            coords = item.get("coords", ())
+            role = infer_role(coords, idx, len(selected)) if coords else "NOUN"
             tokens = item.get("tokens", ())
             meaning = str(item.get("meaning", "")).strip()
             if not meaning:
                 continue
-            # Prefer precomputed English tokens
+            # Extract best English word (prefer tokens, fall back to longest meaning)
+            word = ""
             if tokens:
-                best = ""
                 for t in sorted(tokens, key=len, reverse=True):
                     if t.lower() not in used_words and len(t) > KSETRAJNA:
-                        best = t
+                        word = t
                         break
-                if best:
-                    output_parts.append(best)
-                    used_words.add(best.lower())
-                    continue
-            # Fallthrough: use longest meaning word
-            for mw in meaning.split():
-                if mw.lower() not in used_words and len(mw) > KSETRAJNA:
-                    output_parts.append(mw)
-                    used_words.add(mw.lower())
-                    break
+            if not word:
+                for mw in meaning.split():
+                    if mw.lower() not in used_words and len(mw) > KSETRAJNA:
+                        word = mw
+                        break
+            if word:
+                used_words.add(word.lower())
+                role_items.append((_ROLE_ORDER.get(role, 3), word))
+
+        # 2. Sort by SVO role order
+        role_items.sort(key=lambda x: x[0])
+        ordered_words = [w for _, w in role_items]
+
+        # 3. Chunk into readable phrases
+        chunks = chunk_sentence(ordered_words)
 
         self._compositions += KSETRAJNA
         self._last_context = {
@@ -361,7 +382,7 @@ class MahaComposition:
             "max_words": max_words,
             "scorer_names": tuple(s.name for s in self._scorers),
         }
-        return " ".join(output_parts)
+        return " — ".join(chunks)
 
     # =========================================================================
     # VMCapabilityProtocol — auto-register as VM custom op at bootstrap

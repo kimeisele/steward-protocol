@@ -170,7 +170,7 @@ def extract_template(chapter: int, verse: int) -> List[Dict]:
     total = len(vw.words)
     for i, w in enumerate(vw.words):
         meaning = w.meaning if w.meaning else ""
-        role = _infer_role(w.coords, i, total)
+        role = infer_role(w.coords, i, total)
         slots.append(
             {
                 "position": i,
@@ -183,7 +183,7 @@ def extract_template(chapter: int, verse: int) -> List[Dict]:
     return slots
 
 
-def _infer_role(coords: Sequence[int], position: int, total: int) -> str:
+def infer_role(coords: Sequence[int], position: int, total: int) -> str:
     """Infer grammatical role from RAMA coordinate properties.
 
     Coordinate mass (len(coords)) correlates with grammatical function:

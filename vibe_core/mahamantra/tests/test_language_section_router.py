@@ -20,7 +20,7 @@ from vibe_core.mahamantra.substrate.language.section_router import (
     CHAPTER_18_SECTIONS,
     CHAPTER_18_VERSES,
     SECTION_SIGNATURES,
-    _infer_role,
+    infer_role as _infer_role,
     extract_template,
     route_to_section,
 )
