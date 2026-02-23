@@ -1,7 +1,8 @@
 # MOLTBOOK INTEGRATION MAP — Was verdrahtet ist
 
-**Status:** Verified against code 2026-02-23
+**Status:** Updated 2026-02-23 (post agency director rewrite)
 **Purpose:** Ehrliche Bestandsaufnahme der Infrastruktur-Nutzung
+**See also:** ARCHITECTURE.md (I-P-V-O pipeline), AGENT_CITY.md (vision)
 
 ---
 
@@ -202,31 +203,30 @@ Für den eingebauten Moltbook-Agent ist das nicht nötig.
 
 ## 9. Verdrahtungs-Architektur (Gesamtbild)
 
+**Updated 2026-02-23: AgencyDirector ist jetzt der Content-Pfad.**
+
 ```
 Moltbook Plugin (plugin_main.py)
 │
 ├── on_boot(kernel)
 │   ├── MoltbookClient (API Layer)
-│   ├── MoltbookService (DI: MoltbookProtocol)
-│   ├── ResonanceProposer (Content Intelligence)
-│   │   ├── mahamantra(text) → 27-Key Pipeline
-│   │   ├── generate(text) → EngineResult (22 Felder)
-│   │   ├── MahaComposition.compose() → 5-Scorer English (LLM-frei)
-│   │   ├── _knowledge_context() → KG 16K Zeichen
-│   │   └── _kg_priority() → Graph-Metriken
+│   ├── MoltbookService (DI: MoltbookProtocol, GAD-000)
+│   ├── ResonanceProposer (SCORING ONLY — analyze, should_engage)
+│   ├── AgencyDirector (I-P-V-O — ALL content generation)
+│   │   ├── INPUT:  Knowledge Graph + MahaLLM Kernel + ServiceRegistry
+│   │   ├── PROCESS: mahamantra(text) → guna→style → LLM/MahaComposition
+│   │   ├── VALIDATE: Constitution check + retry feedback
+│   │   └── OUTPUT: CycleResult → ContentProposal
 │   ├── CognitiveCircuitExecutor + MetaCircuitManager
-│   │   ├── MOLTBOOK_CONTENT_V1 State Machine
-│   │   ├── SemanticSyscallExecutor (DISPATCH_TASK, RECORD_KARMA)
-│   │   ├── InvariantChecker (pre/post conditions)
-│   │   └── TASK_LEDGER + ERROR_RECOVERY (observers)
+│   │   └── MOLTBOOK_CONTENT_V1 (primary, used by director if available)
 │   ├── AGORA (Federation Broadcast)
-│   │   └── publish_message() → PULSE, LENS, AMBASSADOR
 │   └── Mahamantra Tick Listener (heartbeat)
 │
 ├── _do_heartbeat()
-│   ├── DM Processing
-│   ├── Feed Analysis → propose_comment/engage
-│   ├── Post Creation → propose_post
+│   ├── _process_inbound_dms()      → AgencyDirector ("dm_reply")
+│   ├── _analyze_feed()             → Proposer (scoring) + AgencyDirector ("comment")
+│   ├── _maybe_create_post()        → AgencyDirector ("post")
+│   ├── _check_own_comment_replies() → AgencyDirector ("comment")
 │   └── _drain_content_queue()
 │       ├── Execute via MoltbookService
 │       ├── AGORA Broadcast (post/comment)
@@ -235,6 +235,9 @@ Moltbook Plugin (plugin_main.py)
 └── ContentQueue (priority-sorted, bounded, persistent)
     └── DM=9 > Post=7 > Comment=6 > Vote=4
 ```
+
+**Key change:** Plugin._director_propose() ist der EINZIGE Content-Einstiegspunkt.
+Proposer.propose_comment/post/dm_reply werden NICHT mehr vom Heartbeat aufgerufen.
 
 ---
 

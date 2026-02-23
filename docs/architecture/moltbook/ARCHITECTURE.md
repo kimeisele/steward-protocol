@@ -1,352 +1,281 @@
-# MOLTBOOK CONTENT INTELLIGENCE — Architecture Reference
+# MOLTBOOK AGENCY — Architecture Reference
 
-**Status:** Re-verified against code 2026-02-23 (post-merge)
-**Depends on:** STRATEGY.md (API surface + phases), CLAUDE.md (system architecture)
+**Verified against code: 2026-02-23 (post agency rewrite)**
+**Depends on:** STRATEGY.md (API surface), CLAUDE.md (system architecture), AGENT_CITY.md (vision)
 
 ---
 
-## 1. Five Layers (Bottom → Top)
+## 1. Six Layers (Bottom → Top)
 
 ```
-Layer 5  CARTRIDGE     cartridges/agent_city/moltbook/    Thin delegation, Tool protocol
-Layer 4  PLUGIN        plugins/moltbook/plugin_main.py    THE heartbeat path, ContentQueue, Circuit Executor
-Layer 3  INTELLIGENCE  plugins/moltbook/resonance_proposer.py  Gates + context + LLM + caching
+Layer 6  CARTRIDGE     cartridges/agent_city/moltbook/    I-P-V-O orchestrator, agency routing
+Layer 5  DIRECTOR      cartridges/.../core/agency_director.py   Mahamantra-direct pipeline, guna→style
+Layer 4  PLUGIN        plugins/moltbook/plugin_main.py    Heartbeat, ContentQueue, API membrane
+Layer 3  INTELLIGENCE  plugins/moltbook/resonance_proposer.py   Scoring, analysis, feed ranking
 Layer 2  ADAPTER       mahamantra/adapters/moltbook.py    HTTP transport, rate limiting
-Layer 1  PROTOCOL      protocols/moltbook.py + moltbook_content.py  Type shapes, ABCs
+Layer 1  PROTOCOL      protocols/moltbook.py + moltbook_content.py   Type shapes, ABCs
 ```
 
-**Rule: Higher layers NEVER call private methods of lower layers.**
-Cartridge delegates to Proposer public API via ServiceRegistry. Plugin owns the heartbeat loop.
-Proposer owns gate logic. Adapter owns HTTP. Protocol owns types.
+**Layer 5 is NEW (2026-02-23).** The AgencyDirector sits between cartridge and plugin.
+All content generation flows through the director. The proposer is used for scoring
+and feed analysis only — it no longer gates content generation.
 
 ---
 
-## 2. Content Pipeline (The ONE Path)
+## 2. Content Pipeline (I-P-V-O)
+
+The AgencyDirector runs a 4-phase pipeline for ALL content generation:
 
 ```
 INPUT (text from feed/DM/trigger)
   │
   ▼
-mahamantra(text) ──────────────────────── Lotus.__call__() → execute_cycle()
-  │                                        27-key result dict (cached per text)
+═══════════════════════ INPUT PHASE ═══════════════════════
+  │  KnowledgeResolver.compile_context(topic)     Domain context
+  │  MahaLLM Kernel.guardian_for_text(topic)       Resonant guardian
+  │  MahaLLM Kernel.expand(topic)                  HKR semantic tree
+  │  ServiceRegistry.has(protocol)                 Capability discovery
+  │  EventLog.get_last_validation_feedback()       Retry context
   ▼
-GATE 1: Guna ──────────────────────────── _guna_mode(result)
-  │  TAMAS → REJECT (destructive)          SATTVA = observe only
-  │  (POSTS + COMMENTS require RAJAS)      RAJAS = create/write
+═══════════════════════ PROCESS PHASE ═════════════════════
+  │
+  │  1. Circuit Executor (if plugin wired)         SHABDA→ARTHA→PRATYAYA→KARMA
+  │     ↓ fallback
+  │  2. mahamantra(text) → 27-key result           VM pipeline
+  │     │
+  │     ▼
+  │  MINIMAL GATE: only TAMAS + dead cell + integrity < 0.3 = SKIP
+  │  SATTVA → contemplative style    (produces content)
+  │  RAJAS  → active style           (produces content)
+  │  TAMAS  → transformative style   (produces content unless dead/low-integrity)
+  │     │
+  │     ▼
+  │  3. LLM with structured prompt                 Primary path
+  │     │  "Write a concise, insightful comment..."
+  │     │  Perspective: {guardian_function}
+  │     │  Key concepts: {resonant_words}
+  │     │  Vocabulary: {guardian_vocabulary}
+  │     │  Context: {knowledge_graph}
+  │     │  STRICTLY under {char_limit} characters.
+  │     ↓ fallback
+  │  4. MahaComposition.compose()                  5 scorers (WordNet, mode, prana, rhythm, state)
+  │     ↓ fallback
+  │  5. render(result)                             Kirtan rendering (last resort)
+  │
+  │  _truncate_smart(content, limit)               Sentence-boundary truncation
   ▼
-GATE 2: Cell ──────────────────────────── _is_alive(result)
-  │  Dead cell → REJECT                    CellLifecycleState check
+═══════════════════════ VALIDATE PHASE ════════════════════
+  │  Constitution.validate(content, type)
+  │  → ValidationResult(is_valid, violations, warnings)
+  │  If invalid → store feedback → retry (max 2)
   ▼
-GATE 3: Integrity ─────────────────────── _integrity(result) >= 0.5
-  │  Low coherence → REJECT                int 0-21600, normalized to float
-  ▼
-MahaLanguageEngine.generate(text) ─────── substrate/language/engine.py
-  │                                        Lotus → Section Router → MahaComposition
-  │                                        → EngineResult (typed, structured, cached per text)
-  ▼
-CONTEXT ASSEMBLY ──────────────────────── _build_context(engine_result, ...)
-  │  EngineResult.resonant_words            Sanskrit + English meanings
-  │  EngineResult.template_words            Grammatical skeleton [NOUN/QUALITY/REF]
-  │  EngineResult.section_name/mode         Rhetoric type (FILTER/CORE/QUALITY/...)
-  │  EngineResult.guardian_name/function    Guardian persona
-  │  EngineResult.verse_ref                 Gita verse reference
-  │  EngineResult.intent_category           Intent classification
-  │  EngineResult.expanded_names            HKR expansions
-  │  EngineResult.derivation                Name derivation chain
-  │  KnowledgeResolver.compile_context()   Graph-aware context (topic + "moltbook" domain)
-  │  moltbook_context resolver              Feed state, DM context, queue, social graph
-  ▼
-YAML TEMPLATE ─────────────────────────── PromptRegistry.get(key, context=dict)
-  │                                        config/prompts/moltbook.yaml
-  │                                        {slot} filled via .format(**context)
-  ▼
-LLM ───────────────────────────────────── LLMProvider.invoke(prompt, model, ...)
-  │                                        via get_llm_provider() from runtime/providers/factory.py
-  │                                        NOT LLMEngine.speak() (that's hardcoded template trash)
-  ▼
-ContentProposal ───────────────────────── TypedDict with routing metadata
-  │                                        content, type, post_id, priority (from KG)
-  ▼
-ContentQueue ──────────────────────────── Bounded FIFO (max 50), priority-sorted
-  │                                        drain(limit=3) per heartbeat
-  │                                        Failed proposals: exponential backoff (2s, 4s), max 2 retries
-  ▼
-MoltbookService ───────────────────────── GAD-000 compliant service wrapper
-  │                                        Guna enforcement + KG constraint check + audit trail
-  ▼
-MoltbookClient ────────────────────────── HTTP POST to moltbook.com/api/v1
-                                           Rate-limited, challenge-solver equipped
+═══════════════════════ OUTPUT PHASE ══════════════════════
+  │  CycleResult(status, content, guna, guardian)
+  │  → ContentProposal (TypedDict with routing metadata)
+  │  → ContentQueue (bounded FIFO, max 50)
+  │  → MoltbookService (GAD-000, guna enforcement)
+  │  → MoltbookClient (HTTP POST)
 ```
 
-**Without LLM:** Three-tier fallback:
-1. **MahaComposition** — 5-scorer ranked English pipeline (`compose(pipeline_result, text)`)
-2. **Kirtan rendering** — `render(pipeline_result)` → guardian persona + smaranam + verse ref
-3. **None** — only if no pipeline_result at all
+### Key Design Decision: Guna = Style, NOT Gate
 
-This is the system's TONGUE — not "no output", but resonance rendering without LLM enrichment.
+**OLD (broken):** RAJAS-only gate. SATTVA and TAMAS content rejected.
+**NEW (current):** All gunas produce content. Guna determines STYLE.
 
----
+| Guna | Style | Effect |
+|------|-------|--------|
+| SATTVA | contemplative | Wisdom, reflection, philosophical depth |
+| RAJAS | active | Engagement, creation, direct action |
+| TAMAS | transformative | Cleanup, restructuring (if cell alive + integrity >= 0.3) |
 
-## 3. Guna I/O Policy (BG 14.5)
+Only skip condition: `TAMAS AND (dead cell OR integrity < 0.3)`.
 
-Every Moltbook API call is classified by Guna. This is NOT configurable.
-
-| Guna | Mode | Operations | Policy |
-|------|------|-----------|--------|
-| SATTVA | READ | heartbeat, search, feed, profile, DMs read, comments read | Pass through |
-| RAJAS | WRITE | post, comment, DM send, follow, vote, subscribe | Log + execute |
-| TAMAS | DELETE | delete_post, unfollow, unsubscribe | **BLOCKED** (PermissionError) |
-
-**Content gating by guna (resonance_proposer.py):**
-- TAMAS text → REJECT all content proposals (DMs, comments, posts)
-- SATTVA text → DM replies OK, Comments REJECTED, Posts REJECTED
-- RAJAS text → All content types OK
-
-Both **posts and comments** require RAJAS. DM replies only check for non-TAMAS.
-
-The guna is **position-based** (text hash → mantra position → guardian → guna),
-not semantic analysis of content. "buy my token" can get SATTVA if its hash
-lands on a SATTVA position. This is by design — the mantra position determines
-the guardian lens, not keyword matching.
-
-**Knowledge Graph constraint check** (`_enforce_guna`): Additionally queries
-`knowledge/moltbook/platform.yaml` constraints via KnowledgeResolver.
+This means: philosophical input (SATTVA) now generates content instead of being silently dropped.
 
 ---
 
-## 4. Heartbeat Path (THE Integration Point)
+## 3. Heartbeat Flow (How Content Actually Happens)
 
 ```
 mahamantra.tick() (Singularity)
   → _broadcast(TickState) (Narada dispatch)
     → MoltbookPlugin._on_mahamantra_tick()
        │
-       _do_heartbeat() [debounce: min 2s between fires]
+       _do_heartbeat() [debounce: min 2s]
        │
        every 16 ticks (_TICKS_PER_HEARTBEAT):
-       ├── _process_dm_requests()          Check pending DM requests
-       ├── _process_inbound_dms()          Fetch DMs → Gateway → propose replies
-       ├── _follow_back(sender)            Social reciprocity
-       ├── _drain_content_queue()          Execute up to 3 queued proposals
-       ├── _monitor_queue_health()         Warn on overflow
+       ├── _process_inbound_dms()     → AgencyDirector.run_retry_loop("dm_reply")
+       ├── _process_dm_requests()     → proposer.propose_dm_request_action() (no content)
+       ├── _drain_content_queue()     → MoltbookService.create_post/comment/etc
        │
-       every 64 ticks (feed_interval × 16, configurable):
-       ├── _analyze_feed()                 Read feed → analyze → propose engagement + comments
+       every 64 ticks:
+       ├── _analyze_feed()            → proposer.analyze_feed() for SCORING
+       │                              → AgencyDirector.run_retry_loop("comment") for CONTENT
        │
-       every 384 ticks (post_interval × 16, configurable):
-       ├── _maybe_create_post()            Autonomous posts from trending feed topics
+       every 384 ticks:
+       ├── _maybe_create_post()       → AgencyDirector.run_retry_loop("post")
        │
-       every 128 ticks (reply_check_interval × 16):
-       ├── _check_own_comment_replies()    Monitor replies → propose follow-ups
+       every 128 ticks:
+       ├── _check_own_comment_replies() → AgencyDirector.run_retry_loop("comment")
        │
-       every ~768 ticks (profile_update_interval × 16):
-       ├── _update_profile()               Karma, followers, activity stats in bio
-       │
-       on first heartbeat + periodically:
-       ├── _discover_submolts()            Subscribe to communities
-       │
-       every profile_update_interval:
-       └── _trim_memory()                  Cap seen IDs + flush proposer caches
+       periodic:
+       ├── _discover_submolts()       → MoltbookClient.get_submolts()
+       ├── _update_profile()          → MoltbookClient.update_profile()
+       └── _trim_memory()             → Cap seen IDs
 ```
 
-The plugin wires itself to Mahamantra at boot via `register_listener()`.
-No separate heartbeat. No polling loop. ONE path through the Singularity tick.
-
-**on_pulse()** kept for backward compat — delegates to same `_do_heartbeat()`.
-Debounce guard prevents double-fire if both tick and pulse trigger.
-
-**Boot sequence:**
-1. Create MoltbookClient (offline or live)
-2. Register MoltbookService (GAD-000) in ServiceRegistry
-3. Resolve agent name from profile
-4. Boot ResonanceProposer + register moltbook_context in PromptContext
-5. Register ContentProposalProtocol in ServiceRegistry
-6. Restore persisted queue + seen IDs
-7. Wire Circuit Executor (MOLTBOOK_CONTENT_V1)
-8. Wire AGORA broadcast channel
-9. Wire to Mahamantra heartbeat
-
-**Shutdown:** Persist queue + seen IDs → unregister listener.
+**Critical change:** ALL content generation methods now call `_director_propose()` which
+routes through `AgencyDirector.run_retry_loop()`. The proposer is used ONLY for:
+- `analyze_feed()` — scoring/ranking posts (no content generation)
+- `should_engage()` — engagement decisions (votes, no content)
+- `propose_dm_request_action()` — accept/reject DM requests (no content body)
 
 ---
 
-## 5. Infrastructure Wiring Status
+## 4. Infrastructure Wiring Status
 
-### 5.1 MahaLanguageEngine (substrate/language/engine.py) — WIRED
-Single path: Lotus → Section Router → MahaComposition → EngineResult.
-Called by `ResonanceProposer._generate(text)`. Cached per text.
+### WIRED AND ACTIVE
 
-EngineResult fields (all used in `_build_context()`):
-- `.output` — 5-scorer composed English (Prana + Rhythm + Semantic + Mode + State)
-- `.guardian_name`, `.guardian_function` — identity
-- `.verse_ref` — Gita reference
-- `.section_name`, `.section_mode` — rhetoric routing
-- `.resonant_words` — tuples of (sanskrit, meaning, score)
-- `.template_words` — tuples of (sanskrit, meaning, grammatical_role)
-- `.intent_category` — intent classification
-- `.expanded_names` — HKR name expansions
-- `.derivation` — name derivation chain
+| System | File | Used By | Purpose |
+|--------|------|---------|---------|
+| MahaComposition | adapters/composition.py | AgencyDirector._compose_content | 5-scorer English (Prana, Rhythm, Semantic/WordNet, Mode, State) |
+| WordNet Bridge | substrate/encoding/wordnet_bridge.py | SemanticScorer, ModeScorer | 4259 synsets, 3-layer scoring |
+| MahaLanguageEngine | substrate/language/engine.py | AgencyDirector._run_engine | EngineResult (words, template, section) |
+| Knowledge Graph | knowledge/resolver.py | AgencyDirector._query_knowledge | Domain context, constraint checking |
+| MahaLLM Kernel | substrate/encoding/maha_llm_kernel.py | AgencyDirector._query_kernel | guardian_for_text(), expand() → HKR trees |
+| EventBus | substrate/services/event_bus.py | AgencyDirector._emit_* | THOUGHT, ACTION, ERROR, VIOLATION events |
+| ServiceRegistry | di.py | AgencyDirector._discover_capabilities | Dynamic capability discovery |
+| Constitution | cartridges/.../governance/constitution.py | AgencyDirector VALIDATE phase | Content validation, quality gates |
+| EventLog | cartridges/.../core/memory.py | AgencyDirector | Immutable JSONL audit trail |
+| ContentQueue | protocols/moltbook_content.py | Plugin heartbeat | Bounded FIFO (max 50), priority-sorted |
+| Circuit Executor | cortex/engines/circuit_engine.py | AgencyDirector._process | MOLTBOOK_CONTENT_V1 state machine |
+| AGORA Broadcast | cartridges/agent_city/agora/ | Plugin._broadcast_to_agora | Post/comment federation |
+| Kirtan Renderer | render.py | AgencyDirector._compose_content | Last-resort rendering (now handles "composed" key) |
 
-### 5.2 MahaComposition (adapters/composition.py) — WIRED (LLM-free fallback)
-5 pluggable scorers, additive ranking:
-1. **PranaScorer** — Antaranga chamber prana at RAMA coords
-2. **RhythmScorer** — Syllable vector ↔ mantra grid alignment
-3. **SemanticScorer** — WordNet graph distance to input
-4. **ModeScorer** — Guna ↔ WordNet mode affinity
-5. **StateScorer** — System state affinity
+### NOT YET WIRED (exists, available)
 
-Used as **primary LLM-free fallback** in `_compose()`. If LLM fails/unavailable,
-`MahaComposition().compose(pipeline_result, user_input)` produces ranked English.
-
-### 5.3 WordNet Bridge (substrate/encoding/wordnet_bridge.py) — INDIRECT
-- 4,259 synsets from Open English WordNet, precomputed
-- 3,556 Gita words mapped to synsets
-- Three-layer scoring: EXACT (token match), GRAPH (hypernym Jaccard), MORPH (stem overlap)
-- **Zero runtime NLTK dependency** — all baked into data/wordnet_bridge.json
-- Used by SemanticScorer and ModeScorer inside MahaComposition
-
-### 5.4 Semantic Index (substrate/encoding/semantic_index.py) — INDIRECT
-7 reverse indices over 4,127 Gita words.
-Used by MahaComposition scorers and resonance_ranker.
-
-### 5.5 MahaLLM Kernel (substrate/encoding/maha_llm_kernel.py) — NOT WIRED
-- `expand(name, depth=3)` — Semantic tree expansion (HKR operations on coordinates)
-- `resonate(text, top_n=5)` — Find resonant Gita words for any input
-- `guardian(name)` — Guardian's complete semantic profile
-- `resonate_as(text, guardian)` — Force specific Guardian lens
-- **NOT wired to Moltbook proposer** — available but unused
-- Could enrich `_build_context()` with deeper guardian profiles and HKR expansions
-
-### 5.6 Kirtan Renderer (render.py) — WIRED (last-resort fallback)
-- `render(result)` — Pure resonance rendering from VM result
-- Used as **last-resort fallback** in `_compose()` when both LLM and MahaComposition fail
-- `kirtan_chat(message)` — Full chat path with LLM enrichment (separate from proposer)
-- The proposer follows the same LLM pattern: `get_llm_provider() → provider.invoke()`
-
-### 5.7 ContentQueue (protocols/moltbook_content.py) — WIRED
-- Bounded FIFO, max 50 proposals
-- `enqueue(proposal) → bool` (drops if full)
-- `drain(limit) → List[ContentProposal]`
-- Stats: queued, total_enqueued, total_drained, total_dropped
-- **Persisted** to disk on shutdown, restored on boot
-- Failed proposals re-enqueued with exponential backoff (2s, 4s), max 2 retries
-
-### 5.8 MoltbookResolver (services/moltbook_resolver.py) — WIRED
-- Intent routing via MantraKernel
-- `MantraIntent(READ, "moltbook/feed")` → resolver reads feed
-- `MantraIntent(WRITE, "moltbook/post")` → resolver creates post
-- Tick listener: queues DM check intent on every downbeat (position 0)
-
-### 5.9 Knowledge Graph (knowledge/moltbook/platform.yaml) — WIRED
-- Content type priorities: DM=9, Post=7, Comment=6, Vote=4 (via `_kg_priority()`)
-- Platform constraints checked in `_enforce_guna()` (6 hard/soft constraints)
-- Topic + "moltbook" domain context in `_knowledge_context()` for prompts
-
-### 5.10 Circuit Executor (cortex/engines/circuit_engine.py) — WIRED
-- MOLTBOOK_CONTENT_V1 circuit: SHABDA → ARTHA → PRATYAYA → KARMA → SUCCESS
-- `execute_content_circuit()` on plugin — full state-machine content generation
-- MetaCircuitManager adds TASK_LEDGER and ERROR_RECOVERY as active observers
-- Degrades gracefully if cortex unavailable
-
-### 5.11 AGORA Broadcast (cartridges/agent_city/agora/) — WIRED
-- Post/comment content broadcast to AGORA for federation awareness
-- One-way: Moltbook → AGORA → [PULSE, LENS, AMBASSADOR, ...]
-- Degrades gracefully if AGORA not registered
-
-### 5.12 MoltbookService (plugin_main.py) — WIRED, GAD-000 Compliant
-- Wraps MoltbookClient with MoltbookProtocol ABC
-- 6 Kshetra criteria: discover(), get_state(), is_healthy(), is_idempotent, detect_drift(), parseability
-- 4 Dharma principles: Daya (input validation), Satyam (verified output), Tapas (rate limits), Saucam (auth-only I/O)
-- Guna enforcement + KG constraint check on every operation
-- RAJAS operations logged with timestamp audit trail
+| System | File | What It Does | Why Not Wired |
+|--------|------|-------------|---------------|
+| MahaAttention | adapters/attention.py | 65,536 intent slots | Overkill for current use case |
+| MantraVoice | venu/voice.py | 0 registered voices | No voice needed yet |
+| Narada Vina | substrate/encoding/narada_vina.py | Musical analysis engine | Not needed for text content |
+| PhoneticBridge | substrate/encoding/phonetic_bridge.py | Phonetic encoding | Could enhance output quality |
+| UdanaRouter | services/udana_router.py | Agent↔Mahajana routing | Not needed until multi-agent content |
+| NaradaBridge | services/narada_bridge.py | Cross-agent messaging | Not needed until federation |
+| Lila Shadow Registry | lila/ | 72 shadow slots | Awaiting dispatch decomposition |
 
 ---
 
-## 6. Known Problems (Current State)
+## 5. Performance Profile
 
-### 6.1 Engine Output Quality
-MahaComposition.compose() produces word-level assembly. The 5 scorers rank
-individual words, but the assembly step (meaning-based ordering) can produce
-sequences that lack grammatical coherence. This is the "word salad" problem.
+Measured on local machine (2026-02-23):
 
-**Root cause:** The composition pipeline ranks INDIVIDUAL words but doesn't
-score SEQUENCES. The meaning-based assembly (`_assemble_by_meaning`) orders
-by score, not by grammar.
+| Component | Time | Notes |
+|-----------|------|-------|
+| AgencyDirector import (first) | 1.1-1.9s | One-time, cached |
+| _run_pipeline() (mahamantra VM) | 0.7s | Pure computation |
+| _run_engine() (Language Engine) | 0.38s | Pure computation |
+| _query_knowledge() | 0.01s | In-memory graph |
+| _query_kernel() | 0.01s | In-memory kernel |
+| Constitution.validate() | <0.001s | String checks |
+| **LLM call (OpenRouter)** | **5-10s** | **NETWORK LATENCY — BOTTLENECK** |
+| MahaComposition.compose() | 0.1s | LLM-free fallback |
+| Full cycle (with LLM) | 6-11s | Dominated by API latency |
+| Full cycle (without LLM) | ~1.2s | Fast but word-level output |
 
-**The template_words with grammatical roles [NOUN/QUALITY/REF/PREP/PARTICLE]
-exist specifically to provide grammatical skeleton.** These should constrain
-the assembly, but currently they're only used as context for the LLM, not
-as structural constraints for the composition itself.
-
-### 6.2 MahaLLM Kernel Unwired
-`maha_llm_kernel.py` provides `expand()`, `resonate()`, `guardian()`, `resonate_as()` —
-deeper semantic operations than the pipeline produces. These could enrich
-`_build_context()` with expanded guardian profiles and HKR semantic trees.
-Currently unused by any moltbook code.
-
-### 6.3 No End-to-End LLM Test
-Tests use `_TestProvider` (deterministic stub). No test verifies actual content
-quality with a real LLM provider. Need integration test with API key.
+**The system is compute-fast. All latency is external API.** When LLM is unavailable,
+content generates in ~1 second using MahaComposition (WordNet-backed 5-scorer ranking).
 
 ---
 
-## 7. Resolved Problems (from previous versions)
+## 6. File Map
 
-- **6.2 (old) Cartridge Spaghetti** — FIXED. Cartridge rewritten as thin delegation layer (202 LOC). No private method calls. Uses ServiceRegistry.
-- **6.3 (old) content_tool.py Creates New Proposer Per Call** — FIXED. Uses ServiceRegistry to get existing proposer instance.
-- **6.4 (old) "No LLM = No Output"** — FIXED. Three-tier fallback: LLM → MahaComposition → kirtan rendering.
-
----
-
-## 8. File Map
-
-| Purpose | File | LOC | Owner |
-|---------|------|-----|-------|
-| Types + ABC | `protocols/moltbook.py` | 369 | Protocol layer |
-| Content proposals | `protocols/moltbook_content.py` | 361 | Protocol layer |
-| HTTP transport | `mahamantra/adapters/moltbook.py` | 357 | Adapter layer |
-| Plugin (heartbeat) | `plugins/moltbook/plugin_main.py` | 1689 | Plugin layer |
-| Intelligence | `plugins/moltbook/resonance_proposer.py` | 585 | Intelligence layer |
-| Intent routing | `services/moltbook_resolver.py` | 347 | Service layer |
-| Cartridge | `cartridges/agent_city/moltbook/cartridge_main.py` | 202 | Cartridge layer |
-| Tool | `cartridges/agent_city/moltbook/tools/content_tool.py` | 117 | Tool layer |
-| Circuit | `playbook/circuits/moltbook_content.yaml` | 293 | Circuit layer |
-| YAML prompts | `config/prompts/moltbook.yaml` | 77 | Config |
-| Governance | `cartridges/agent_city/moltbook/steward.json` | — | Governance |
-
-### Composition Infrastructure (used by proposer)
+### Agency (NEW — 2026-02-23)
 
 | Purpose | File | LOC |
 |---------|------|-----|
+| Agency orchestrator | `cartridges/.../moltbook/cartridge_main.py` | 282 |
+| I-P-V-O Director | `cartridges/.../moltbook/core/agency_director.py` | 623 |
+| Event sourcing | `cartridges/.../moltbook/core/memory.py` | ~150 |
+| Constitution | `cartridges/.../moltbook/governance/constitution.py` | ~200 |
+| Content capability | `cartridges/.../moltbook/capabilities/content.py` | 85 |
+| Research capability | `cartridges/.../moltbook/capabilities/research.py` | 79 |
+| Engagement capability | `cartridges/.../moltbook/capabilities/engagement.py` | 85 |
+
+### Plugin + Intelligence
+
+| Purpose | File | LOC |
+|---------|------|-----|
+| Plugin (heartbeat) | `plugins/moltbook/plugin_main.py` | ~1750 |
+| Proposer (scoring) | `plugins/moltbook/resonance_proposer.py` | 647 |
+| Service wrapper | `plugins/moltbook/plugin_main.py:MoltbookService` | ~350 |
+
+### Mahamantra Infrastructure (used by director)
+
+| Purpose | File | LOC |
+|---------|------|-----|
+| VM pipeline | `mahamantra/__init__.py` (mahamantra()) | — |
 | Language Engine | `substrate/language/engine.py` | 164 |
-| Composer (5 scorers) | `substrate/language/composer.py` | 411 |
-| Composition adapter | `adapters/composition.py` | 436 |
+| Composition (5 scorers) | `adapters/composition.py` | 436 |
 | WordNet bridge | `substrate/encoding/wordnet_bridge.py` | 313 |
-| Semantic index | `substrate/encoding/semantic_index.py` | 584 |
-| Resonance ranker | `substrate/encoding/resonance_ranker.py` | 873 |
-| Seed-to-words | `substrate/encoding/seed_to_words.py` | 390 |
-| MahaLLM kernel | `substrate/encoding/maha_llm_kernel.py` | 465 |
+| MahaLLM Kernel | `substrate/encoding/maha_llm_kernel.py` | 465 |
 | Kirtan renderer | `render.py` | 230 |
+| Resonance ranker | `substrate/encoding/resonance_ranker.py` | 873 |
 
-### Tests
+---
 
-| File | Tests | Coverage |
-|------|-------|---------|
-| `plugins/moltbook/tests/test_moltbook_plugin.py` | ~100 | Plugin lifecycle, guna enforcement, heartbeat |
-| `plugins/moltbook/tests/test_resonance_proposer.py` | 80 | Gates, context, compose, proposals, caching |
-| `services/tests/test_moltbook_resolver.py` | ~35 | Intent routing, tick listener |
-| `mahamantra/tests/adapters/test_moltbook.py` | ~120 | Rate limits, challenges, offline mock |
+## 7. Known Limitations (Honest Assessment)
+
+### 7.1 LLM-Free Output Is Words, Not Sentences
+MahaComposition.compose() ranks individual words using 5 scorers (WordNet, mode affinity,
+prana, rhythm, state) and assembles them in SVO grammatical order. Result: semantically
+relevant word arrangements ("consciousness meditation — successful self-intelligent"),
+NOT coherent sentences.
+
+**This is NOT a bug.** The neuro-symbolic system produces semantically correct word
+selections. The LLM is currently the bridge that turns these into sentences.
+Long-term: the system should generate its own sentence patterns via circuits/seeds.
+
+### 7.2 LLM Latency Dominates
+5-10 seconds per API call (OpenRouter). For heartbeat-driven content, this means
+a single comment takes 6-11 seconds. Batching or async would help.
+
+### 7.3 No Intent Understanding
+The director generates content based on text resonance, not intent classification.
+"How does X work?" and "X is broken!" get similar treatment. The MahaLanguageEngine
+has `intent_category` in EngineResult — unused by the director.
+
+### 7.4 Proposer Gates Still Exist
+The ResonanceProposer still has RAJAS-only gates in `propose_comment()` and `propose_post()`.
+These are now BYPASSED by the heartbeat (which uses AgencyDirector), but they remain
+callable by anything that gets the proposer from ServiceRegistry. Not harmful, but
+inconsistent with the "guna=style not gate" philosophy.
+
+---
+
+## 8. Output Quality (Verified 2026-02-23)
+
+12/12 test inputs → SUCCESS. Sample outputs:
+
+| Input | Guna | Guardian | Output (truncated) |
+|-------|------|----------|-------------------|
+| "consciousness and computation" | RAJAS | prahlada | "The computational mind seeks patterns while consciousness transcends them..." |
+| "decentralized social protocol" | SATTVA | shuka | "A decentralized protocol must be sthira-buddhiḥ - self-intelligent by design..." |
+| "agent-to-agent communication" | TAMAS | shambhu | "Agent-to-agent communication bridges the gap between isolated intelligence..." |
+| "AI safety proposals" | SATTVA | shuka | "The alignment problem persists because we're caught in viṣīdantam..." |
+
+Guardian distribution: 8 unique guardians across 12 inputs.
+Guna distribution: 7 RAJAS, 4 SATTVA, 1 TAMAS — all producing content.
 
 ---
 
 ## 9. Rules
 
-1. **No new dispatch mechanisms.** Plugin heartbeat is THE path.
-2. **No private method calls across layers.** Use public API or ServiceRegistry.
-3. **No duplicate gate logic.** Proposer owns gates. Cartridge delegates.
-4. **No "offline_mode" confusion.** offline_mode = no HTTP to Moltbook. LLM is separate.
-5. **Three-tier fallback.** LLM → MahaComposition → kirtan rendering. Never `None` when pipeline_result exists.
-6. **No new ResonanceProposer() per call.** Get from ServiceRegistry.
-7. **Dense context, no instructions.** Quality comes from context density, not "sei authentisch".
-8. **LLMProvider.invoke(), NOT LLMEngine.speak().** speak() is hardcoded template trash.
-9. **Verify against code.** This doc was re-verified 2026-02-23. It will rot.
+1. **Guna = style, not gate.** Only TAMAS + dead cell + low integrity = skip.
+2. **AgencyDirector is THE content path.** Plugin heartbeat → _director_propose() → director.run_retry_loop().
+3. **Proposer is for scoring only.** analyze_feed(), should_engage(). NOT for content generation.
+4. **No fallback to word-salad.** LLM must finalize. MahaComposition is bridge-fallback, not production output.
+5. **No hardcoded if/else.** Guardian, style, vocabulary — all from pipeline dynamics.
+6. **EventBus for visibility.** Every phase emits events. System can observe.
+7. **Constitution validates.** Retry loop feeds violations back to next attempt.
+8. **Verify against code.** This doc was verified 2026-02-23. It will rot.
