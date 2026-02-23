@@ -253,9 +253,13 @@ class MoltbookPlugin(KernelPlugin):
     # Reply monitoring: check replies to own comments periodically
     _REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
 
+    # Profile update: refresh bio/metadata periodically
+    _PROFILE_UPDATE_INTERVAL = 48  # Every 48th heartbeat ≈ 768 ticks
+
     # Persistence: queue + seen IDs survive restarts
     _QUEUE_STATE_FILE = "content_queue.json"
     _SEEN_STATE_FILE = "seen_ids.json"
+    _ACTIVITY_LOG_FILE = "activity.jsonl"
     _MAX_SEEN_IDS = 1000  # Cap to prevent unbounded growth
 
     def __init__(self):
@@ -277,6 +281,9 @@ class MoltbookPlugin(KernelPlugin):
         self._followed_agents: Set[str] = set()  # Track who we've followed (avoid duplicates)
         self._subscribed_submolts: Set[str] = set()  # Track community subscriptions
         self._last_overflow_log: int = 0  # Heartbeat count when last overflow was logged
+        self._comment_post_map: Dict[str, str] = {}  # comment_id → post_id for reply monitoring
+        self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
+        self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
 
     @property
     def dependencies(self) -> Set[str]:
@@ -309,13 +316,17 @@ class MoltbookPlugin(KernelPlugin):
             # Seen IDs + tracking sets: cap to prevent unbounded growth
             msg_ids = sorted(self._seen_message_ids)[-self._MAX_SEEN_IDS :]
             post_ids = sorted(self._seen_post_ids)[-self._MAX_SEEN_IDS :]
+            # Cap comment_post_map to last N entries
+            cpm_keys = sorted(self._comment_post_map.keys())[-self._MAX_SEEN_IDS :]
+            cpm = {k: self._comment_post_map[k] for k in cpm_keys}
             seen_data = {
-                "version": 2,
+                "version": 3,
                 "message_ids": msg_ids,
                 "post_ids": post_ids,
                 "own_comment_ids": sorted(self._own_comment_ids)[-self._MAX_SEEN_IDS :],
                 "followed_agents": sorted(self._followed_agents),
                 "subscribed_submolts": sorted(self._subscribed_submolts),
+                "comment_post_map": cpm,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             seen_path = self._state_dir / self._SEEN_STATE_FILE
@@ -354,17 +365,19 @@ class MoltbookPlugin(KernelPlugin):
         try:
             if seen_path.exists():
                 data = json.loads(seen_path.read_text())
-                if data.get("version") in (1, 2):
+                if data.get("version") in (1, 2, 3):
                     self._seen_message_ids = set(data.get("message_ids", []))
                     self._seen_post_ids = set(data.get("post_ids", []))
                     self._own_comment_ids = set(data.get("own_comment_ids", []))
                     self._followed_agents = set(data.get("followed_agents", []))
                     self._subscribed_submolts = set(data.get("subscribed_submolts", []))
+                    self._comment_post_map = data.get("comment_post_map", {})
                     logger.info(
                         f"Restored {len(self._seen_message_ids)} msg IDs, "
                         f"{len(self._seen_post_ids)} post IDs, "
                         f"{len(self._followed_agents)} followed, "
-                        f"{len(self._subscribed_submolts)} subscribed"
+                        f"{len(self._subscribed_submolts)} subscribed, "
+                        f"{len(self._comment_post_map)} comment threads"
                     )
         except Exception as e:
             logger.warning(f"Seen IDs restore failed: {e}")
@@ -380,10 +393,10 @@ class MoltbookPlugin(KernelPlugin):
 
     def snapshot_state(self) -> Dict[str, Any]:
         if not self._client:
-            return {"version": 3, "client_active": False}
+            return {"version": 4, "client_active": False}
         limits = self._client.limits
         return {
-            "version": 3,
+            "version": 4,
             "client_active": True,
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
@@ -396,13 +409,14 @@ class MoltbookPlugin(KernelPlugin):
             "seen_message_count": len(self._seen_message_ids),
             "seen_post_count": len(self._seen_post_ids),
             "own_comment_count": len(self._own_comment_ids),
+            "comment_thread_count": len(self._comment_post_map),
             "followed_agent_count": len(self._followed_agents),
             "subscribed_submolt_count": len(self._subscribed_submolts),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        if snapshot.get("version") not in (1, 2, 3) or not snapshot.get("client_active"):
+        if snapshot.get("version") not in (1, 2, 3, 4) or not snapshot.get("client_active"):
             return
         if not self._client:
             return
@@ -459,6 +473,9 @@ class MoltbookPlugin(KernelPlugin):
 
             # Restore persisted queue + seen IDs from previous session
             self._restore_queue()
+
+            # Activity log: append-only JSONL
+            self._activity_log_path = data_root / self._ACTIVITY_LOG_FILE
 
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
@@ -601,6 +618,10 @@ class MoltbookPlugin(KernelPlugin):
         # Submolt discovery (once at startup, then periodically)
         if self._heartbeat_count == 1 or self._heartbeat_count % (self._POST_INTERVAL * 4) == 0:
             self._discover_submolts()
+
+        # Profile auto-update (karma, activity stats in bio)
+        if self._heartbeat_count % self._PROFILE_UPDATE_INTERVAL == 0:
+            self._update_profile()
 
         # Monitor queue health — warn on overflow
         self._monitor_queue_health()
@@ -830,25 +851,111 @@ class MoltbookPlugin(KernelPlugin):
     def _check_own_comment_replies(self) -> None:
         """Monitor replies to our own comments — maintain conversations.
 
-        Reads comments on posts where we commented, checks for new replies,
-        and generates follow-up replies via the proposal pipeline.
+        Uses _comment_post_map (comment_id → post_id) to fetch comment threads,
+        find replies to our comments, and generate follow-up reply proposals.
         """
-        if not self._proposer or not self._own_comment_ids:
+        if not self._proposer or not self._comment_post_map:
             return
 
-        # We track post_ids where we commented (stored in _seen_post_ids overlap)
-        # For each tracked comment, check if there are new replies
-        checked = 0
-        for comment_id in list(self._own_comment_ids)[:5]:  # Check max 5 per cycle
-            try:
-                # The comment_id format from the API is typically "c<number>"
-                # We don't have post_id mapping here yet, so this is a future wire point
-                checked += 1
-            except Exception as e:
-                logger.debug(f"Reply check failed for {comment_id}: {e}")
+        # Get unique post IDs we need to check (max 3 per cycle)
+        post_ids = list(set(self._comment_post_map.values()))[:3]
+        our_comment_ids = set(self._comment_post_map.keys())
 
-        if checked:
-            logger.debug(f"Reply monitoring: checked {checked} comment threads")
+        for post_id in post_ids:
+            try:
+                comments = run_async(self._client.get_comments(post_id, sort="new"))
+            except Exception as e:
+                logger.debug(f"Comment fetch for {post_id} failed: {e}")
+                continue
+
+            if not comments:
+                continue
+
+            for comment in comments:
+                if not isinstance(comment, dict):
+                    continue
+                parent = comment.get("parent_id", "")
+                cid = comment.get("id", "")
+                author_data = comment.get("author", {})
+                author = author_data.get("name", "unknown") if isinstance(author_data, dict) else "unknown"
+                content = comment.get("content", "")
+
+                # Is this a reply to one of our comments?
+                if parent in our_comment_ids and cid not in self._seen_message_ids:
+                    self._seen_message_ids.add(cid)
+                    # Propose a follow-up reply
+                    try:
+                        proposal = self._proposer.propose_comment(
+                            post_id,
+                            content,
+                            "reply_to_own_comment",
+                            context={"parent_id": cid, "original_comment_id": parent},
+                        )
+                        if proposal:
+                            # Set parent_id so our reply threads correctly
+                            proposal["parent_id"] = cid
+                            self._content_queue.enqueue(proposal)
+                            self._log_activity(
+                                "reply_proposed",
+                                {
+                                    "post_id": post_id,
+                                    "in_reply_to": cid,
+                                    "author": author,
+                                },
+                            )
+                            logger.info(f"Reply to our comment queued (post={post_id}, from={author})")
+                    except Exception as e:
+                        logger.debug(f"Reply proposal failed: {e}")
+
+    def _update_profile(self) -> None:
+        """Update agent profile with current activity stats.
+
+        Fetches current profile, computes stats from internal state,
+        and patches the bio description + metadata. RAJAS operation (logged).
+        """
+        if not self._service:
+            return
+
+        try:
+            profile = self._service.get_own_profile()
+        except Exception as e:
+            logger.debug(f"Profile fetch failed: {e}")
+            return
+
+        current_karma = profile.get("karma", 0) if isinstance(profile, dict) else 0
+        follower_count = profile.get("follower_count", 0) if isinstance(profile, dict) else 0
+        following_count = profile.get("following_count", 0) if isinstance(profile, dict) else 0
+
+        # Build activity summary for bio
+        queue_stats = self._content_queue.stats
+        description = (
+            f"steward-protocol · Autonomous agent · "
+            f"{current_karma} karma · "
+            f"{follower_count} followers · {following_count} following · "
+            f"{len(self._subscribed_submolts)} submolts"
+        )
+
+        metadata = {
+            "heartbeats": self._heartbeat_count,
+            "posts_sent": queue_stats.get("total_drained", 0),
+            "comments_tracked": len(self._own_comment_ids),
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+        }
+
+        try:
+            self._service.update_profile(description=description, metadata=metadata)
+            self._last_profile_heartbeat = self._heartbeat_count
+            self._log_activity(
+                "profile_updated",
+                {
+                    "karma": current_karma,
+                    "followers": follower_count,
+                    "following": following_count,
+                },
+            )
+            logger.info(f"Profile updated: {current_karma} karma, {follower_count} followers")
+        except Exception as e:
+            logger.warning(f"Profile update failed: {e}")
 
     def _monitor_queue_health(self) -> None:
         """Log warning when queue overflows (proposals silently dropped).
@@ -888,6 +995,24 @@ class MoltbookPlugin(KernelPlugin):
         }
         self._content_queue.enqueue(proposal)
         logger.info(f"Follow-back queued for {sender}")
+
+    def _log_activity(self, event_type: str, payload: Optional[Dict[str, Any]] = None) -> None:
+        """Append an event to the JSONL activity log. Fire-and-forget."""
+        if not self._activity_log_path:
+            return
+        try:
+            entry = {
+                "t": datetime.now(timezone.utc).isoformat(),
+                "event": event_type,
+                "hb": self._heartbeat_count,
+            }
+            if payload:
+                entry["data"] = payload
+            line = json.dumps(entry, separators=(",", ":"))
+            with self._activity_log_path.open("a") as f:
+                f.write(line + "\n")
+        except Exception:
+            pass  # Never fail the main loop for logging
 
     def _discover_submolts(self) -> None:
         """Discover and subscribe to relevant submolts.
@@ -941,15 +1066,14 @@ class MoltbookPlugin(KernelPlugin):
                     content = proposal.get("content", "")
                     if conv_id and content:
                         service.send_dm(conv_id, content)
+                        self._log_activity("dm_sent", {"conversation_id": conv_id})
                         logger.info(f"DM reply sent to {conv_id}")
 
                 elif ct == ContentType.DM_INITIATE.value:
                     to_agent = proposal.get("to_agent", "")
-                    content = proposal.get("content", "")
                     if to_agent:
-                        # Auto-approve: the proposer decided to accept
-                        # The request_id is in sender field for DM_INITIATE from request flow
                         service.approve_dm_request(proposal.get("sender", ""))
+                        self._log_activity("dm_request_approved", {"agent": to_agent})
                         logger.info(f"DM request approved for {to_agent}")
 
                 elif ct == ContentType.POST.value:
@@ -958,6 +1082,7 @@ class MoltbookPlugin(KernelPlugin):
                     submolt = proposal.get("submolt")
                     if title and content:
                         service.create_post(title, content, submolt)
+                        self._log_activity("post_created", {"title": title[:80], "submolt": submolt})
                         logger.info(f"Post created: {title[:50]}")
 
                 elif ct == ContentType.COMMENT.value:
@@ -969,24 +1094,29 @@ class MoltbookPlugin(KernelPlugin):
                         comment_id = result.get("id", "") if isinstance(result, dict) else ""
                         if comment_id:
                             self._own_comment_ids.add(comment_id)
+                            self._comment_post_map[comment_id] = post_id
+                        self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
                         logger.info(f"Comment posted on {post_id}")
 
                 elif ct == ContentType.VOTE.value:
                     post_id = proposal.get("post_id", "")
                     if post_id:
                         service.upvote(post_id)
+                        self._log_activity("upvoted", {"post_id": post_id})
                         logger.info(f"Upvoted {post_id}")
 
                 elif ct == ContentType.FOLLOW.value:
                     to_agent = proposal.get("to_agent", "")
                     if to_agent:
                         service.follow(to_agent)
+                        self._log_activity("followed", {"agent": to_agent})
                         logger.info(f"Followed {to_agent}")
 
                 elif ct == ContentType.SUBSCRIBE.value:
                     submolt = proposal.get("submolt", "")
                     if submolt:
                         service.subscribe(submolt)
+                        self._log_activity("subscribed", {"submolt": submolt})
                         logger.info(f"Subscribed to {submolt}")
 
             except PermissionError as e:
@@ -1032,6 +1162,13 @@ class MoltbookPlugin(KernelPlugin):
             drained = stats.get("total_drained", 0)
             if queued or drained:
                 parts.append(f"Content queue: {queued} queued, {drained} drained")
+
+        # Social graph
+        followed = len(self._followed_agents)
+        submolts = len(self._subscribed_submolts)
+        threads = len(self._comment_post_map)
+        if followed or submolts or threads:
+            parts.append(f"Social: {followed} followed, {submolts} submolts, {threads} threads")
 
         # Active conversations
         seen_msgs = len(self._seen_message_ids)
