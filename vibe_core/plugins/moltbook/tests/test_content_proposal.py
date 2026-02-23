@@ -19,7 +19,6 @@ from vibe_core.protocols.moltbook_content import (
     EchoContentProposer,
 )
 
-
 # =============================================================================
 # CONTENT QUEUE
 # =============================================================================
@@ -112,6 +111,7 @@ class TestContentProposalProtocolABC:
     def test_has_all_methods(self):
         expected = {
             "analyze",
+            "analyze_feed",
             "propose_dm_reply",
             "propose_dm_request_action",
             "propose_post",
@@ -323,16 +323,20 @@ class TestDMReplyLoop:
 
     def test_drain_multiple_types(self, plugin):
         """Queue can hold and drain mixed content types."""
-        plugin._content_queue.enqueue(ContentProposal(
-            content_type=ContentType.DM_REPLY.value,
-            content="Reply",
-            conversation_id="conv1",
-        ))
-        plugin._content_queue.enqueue(ContentProposal(
-            content_type=ContentType.POST.value,
-            title="Post",
-            content="Content",
-        ))
+        plugin._content_queue.enqueue(
+            ContentProposal(
+                content_type=ContentType.DM_REPLY.value,
+                content="Reply",
+                conversation_id="conv1",
+            )
+        )
+        plugin._content_queue.enqueue(
+            ContentProposal(
+                content_type=ContentType.POST.value,
+                title="Post",
+                content="Content",
+            )
+        )
         assert plugin._content_queue.size == 2
         plugin._drain_content_queue()
         assert plugin._content_queue.is_empty

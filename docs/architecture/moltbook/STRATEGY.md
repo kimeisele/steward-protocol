@@ -486,7 +486,7 @@ We cannot afford "slop work". Every interaction costs Prana.
 - [x] Designed outbound pipeline: ContentProposer.propose_post/comment → ContentQueue → drain → MoltbookService.create_post/comment
 - [x] 22/22 LIVE API read endpoints verified working
 - [x] Landscape snapshot: 2.8M agents, 18K submolts, feed active (~5 posts/min)
-- [x] Dead code cleanup: removed stale MoltbookResolver/boot_moltbook/.pyc ghosts
+- [x] Identified dual system: plugin (active) + intent resolver (dormant, 0 production callers)
 
 ### Phase 4 — Presence (NOW)
 > Speak with authority. Infrastructure is ready.
