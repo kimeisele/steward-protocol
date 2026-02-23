@@ -94,12 +94,14 @@ class MoltbookService(MoltbookProtocol, GADBase):
         self.chant()
 
     def _enforce_guna(self, operation: str) -> None:
-        """
-        Enforce Guna policy before executing an operation.
+        """Guna I/O Policy + Knowledge Graph Constraint validation.
 
         SATTVA: Pass through (read-only, safe).
         RAJAS: Log and allow (write, rate-limited by client).
-        TAMAS: Block (destructive — not implemented yet, future-proof).
+        TAMAS: Block (destructive).
+
+        Additionally checks constraints from knowledge/moltbook/platform.yaml
+        (6 hard/soft constraints) via Knowledge Graph.
         """
         from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP, MoltbookGuna
 
@@ -110,6 +112,17 @@ class MoltbookService(MoltbookProtocol, GADBase):
                 f"MOLTBOOK-TAMAS: Operation '{operation}' is destructive and requires "
                 f"explicit authorization. Not implemented."
             )
+
+        # Knowledge Graph constraint check (knowledge/moltbook/platform.yaml)
+        try:
+            from vibe_core.knowledge.resolver import get_resolver
+
+            resolver = get_resolver()
+            violations = resolver.get_violations(operation, {"guna": guna.value, "operation": operation})
+            for v in violations:
+                logger.warning(f"MOLTBOOK-KG-CONSTRAINT: {v}")
+        except Exception:
+            pass  # KG not available = degrade gracefully
 
         if guna == MoltbookGuna.RAJAS:
             entry = {

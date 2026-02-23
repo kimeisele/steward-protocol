@@ -52,6 +52,35 @@ _PROMPT_KEYS = {
 
 _MOLTBOOK_YAML = Path(__file__).resolve().parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
 
+# Knowledge Graph node IDs → ContentType mapping (knowledge/moltbook/platform.yaml)
+_KG_CONTENT_TYPE_NODES = {
+    ContentType.DM_REPLY.value: "moltbook_dm",
+    ContentType.DM_INITIATE.value: "moltbook_dm_request",
+    ContentType.POST.value: "moltbook_post",
+    ContentType.COMMENT.value: "moltbook_comment",
+    ContentType.VOTE.value: "moltbook_vote",
+}
+
+
+def _kg_priority(content_type: str) -> int:
+    """Get priority from Knowledge Graph metrics (knowledge/moltbook/platform.yaml).
+
+    Falls back to 1 if KG unavailable. This replaces hardcoded priority=1
+    with the graph-defined priorities: DM=9, Post=7, Comment=6, Vote=4.
+    """
+    node_id = _KG_CONTENT_TYPE_NODES.get(content_type)
+    if not node_id:
+        return 1
+    try:
+        from vibe_core.knowledge.resolver import get_resolver
+        from vibe_core.knowledge.schema import MetricType
+
+        resolver = get_resolver()
+        priority = resolver.graph.get_metric(node_id, MetricType.PRIORITY)
+        return int(priority) if priority else 1
+    except Exception:
+        return 1
+
 
 def _load_yaml_prompts() -> None:
     """Load Moltbook prompts from YAML."""
@@ -128,11 +157,22 @@ def _section_data(engine_result) -> Dict[str, str]:
 
 
 def _knowledge_context(topic: str) -> str:
-    """KnowledgeResolver → graph-aware context."""
+    """KnowledgeResolver → graph-aware context.
+
+    Queries the Knowledge Graph with the topic AND Moltbook domain terms
+    to get platform-specific knowledge from knowledge/moltbook/platform.yaml.
+    """
     try:
         from vibe_core.knowledge.resolver import get_resolver
 
-        return get_resolver().compile_context(topic)
+        resolver = get_resolver()
+        # Primary: topic-specific knowledge
+        ctx = resolver.compile_context(topic)
+        # Secondary: Moltbook domain knowledge (platform ontology + constraints)
+        moltbook_ctx = resolver.compile_context("moltbook")
+        if moltbook_ctx and moltbook_ctx != ctx:
+            ctx = f"{ctx}\n{moltbook_ctx}" if ctx else moltbook_ctx
+        return ctx
     except Exception:
         return ""
 
@@ -354,7 +394,7 @@ class ResonanceProposer(ContentProposalProtocol):
             conversation_id=conversation_id,
             source="inbound_dm",
             sender=sender,
-            priority=1,
+            priority=_kg_priority(ContentType.DM_REPLY.value),
             gateway_success=bool(gw.get("success")),
             gateway_position=gw.get("position", -1),
             gateway_guardian=gw.get("guardian", "unknown"),
@@ -377,7 +417,7 @@ class ResonanceProposer(ContentProposalProtocol):
             to_agent=from_agent,
             source="dm_request_pipeline",
             sender=from_agent,
-            priority=1,
+            priority=_kg_priority(ContentType.DM_INITIATE.value),
         )
 
     def propose_post(
@@ -422,7 +462,7 @@ class ResonanceProposer(ContentProposalProtocol):
             title=title,
             content=content[:500],
             source=trigger,
-            priority=1,
+            priority=_kg_priority(ContentType.POST.value),
         )
 
     def propose_comment(
@@ -460,7 +500,7 @@ class ResonanceProposer(ContentProposalProtocol):
             content=comment[:280],
             post_id=post_id,
             source=trigger,
-            priority=1,
+            priority=_kg_priority(ContentType.COMMENT.value),
         )
 
         # Thread context: pass parent_id for reply chains
@@ -485,7 +525,7 @@ class ResonanceProposer(ContentProposalProtocol):
             content_type=ContentType.VOTE.value,
             post_id=post_id,
             source="pipeline_engagement",
-            priority=0,
+            priority=_kg_priority(ContentType.VOTE.value),
         )
 
     def analyze_feed(
