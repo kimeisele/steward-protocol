@@ -140,7 +140,7 @@ def run_research():
 
     print(f"\n--- GUNA DISTRIBUTION ({len(test_cases)} inputs) ---")
     for guna, count in guna_counts.items():
-        print(f"  {guna}: {count} ({count/len(test_cases)*100:.0f}%)")
+        print(f"  {guna}: {count} ({count / len(test_cases) * 100:.0f}%)")
 
     # Pipeline results
     print(f"\n--- PIPELINE RESULTS ---")
@@ -150,14 +150,16 @@ def run_research():
         e = a["engine"]
         print(f"\n[{a['label']}] {a['text'][:60]}")
         if p:
-            print(f"  Guna={p['guna']} Guardian={p['guardian']} Quarter={p['quarter']} "
-                  f"Pos={p['position']} Integrity={p['integrity']:.3f}")
+            print(
+                f"  Guna={p['guna']} Guardian={p['guardian']} Quarter={p['quarter']} "
+                f"Pos={p['position']} Integrity={p['integrity']:.3f}"
+            )
             print(f"  Skip={g['skip']} TAMAS={g['tamas']} Alive={g['alive']}")
         if e:
             print(f"  Engine: {e['output']}")
             print(f"  Section: {e['section']} Mode={e['mode']} Verse={e['verse']}")
-            if e['resonant_words']:
-                top3 = ", ".join(f"{s} ({m})" for s, m, _ in e['resonant_words'][:3])
+            if e["resonant_words"]:
+                top3 = ", ".join(f"{s} ({m})" for s, m, _ in e["resonant_words"][:3])
                 print(f"  Resonant: {top3}")
 
     # === 2. Context for LLM ===
@@ -202,10 +204,14 @@ def run_research():
             print(f"\n[{a['label']}]")
             for rw in a["ranked_words"][:3]:
                 bd = rw["breakdown"]
-                meaning_str = ", ".join(rw["meaning"]) if isinstance(rw["meaning"], (list, tuple)) else str(rw["meaning"])
+                meaning_str = (
+                    ", ".join(rw["meaning"]) if isinstance(rw["meaning"], (list, tuple)) else str(rw["meaning"])
+                )
                 print(f"  {rw['sanskrit']:30s} {meaning_str:40s} score={rw['score']:.4f}")
-                print(f"    element={bd.get('element', 0):.3f} harmonic={bd.get('harmonic', 0):.3f} "
-                      f"shruti={bd.get('shruti', 0):.3f} attractor={bd.get('attractor', 0):.3f}")
+                print(
+                    f"    element={bd.get('element', 0):.3f} harmonic={bd.get('harmonic', 0):.3f} "
+                    f"shruti={bd.get('shruti', 0):.3f} attractor={bd.get('attractor', 0):.3f}"
+                )
 
     # === 4. Gap Analysis ===
     print(f"\n{'=' * 80}")

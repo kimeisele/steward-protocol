@@ -24,6 +24,7 @@ def _get_proposer():
     try:
         from vibe_core.di import ServiceRegistry
         from vibe_core.protocols.moltbook_content import ContentProposalProtocol
+
         proposer = ServiceRegistry.get(ContentProposalProtocol)
         if proposer is not None:
             return proposer
@@ -31,6 +32,7 @@ def _get_proposer():
         pass
     # Fallback: create directly (for standalone use without plugin)
     from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
+
     return ResonanceProposer()
 
 
@@ -116,10 +118,7 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
 
         return {
             "status": "success",
-            "words": [
-                {"sanskrit": rw.sanskrit, "score": round(rw.total_score, 4)}
-                for rw in ranked[:7]
-            ],
+            "words": [{"sanskrit": rw.sanskrit, "score": round(rw.total_score, 4)} for rw in ranked[:7]],
         }
 
     def _compose_comment(self, payload: Dict) -> Dict[str, Any]:

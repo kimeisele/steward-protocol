@@ -1,5 +1,5 @@
 {
-  "vibe_core/kernel_impl.py": "af6a914ac30b32a90cdb50df2f770d829a453239f8bfe23aaf7f753efb0e475e",
+  "vibe_core/kernel_impl.py": "1b13aaf8922803117366936ffdf11a1c7f29672ff78bec00f7cc45f5ee85d790",
   "vibe_core/kernel_ops.py": "6a534cf9d2223afbb1e45a81b047305074389eea0bf80dc86c4d92aab641680a",
   "vibe_core/ledger.py": "29d9851fc657105b51a0803fce424bf2f0f5f2c97375d7335689e8fd3f9dfe95",
   "vibe_core/plugin_protocol.py": "79f392b81a5225db48b0043252826fcad807151172baf7e04e8d70c763d0ea61",
@@ -24,5 +24,5 @@
   ".gitignore": "25dfceb236f249bb7ab6ebd2290a539a435bae099f1af7b44dcd62ed882c6a8d",
   "scripts/governance/vishnu_guard.py": "035679d169c5a5d4cc3a2813c0c254b467b922abfd631f5f2647be2eb336d600",
   "vibe_core/shuddhi/engine.py": "bb08ee3f937164ddd1b4a26c6f2ab80edcb434c2cfbf26ad49c67bf82580b014",
-  "vibe_core/boot_orchestrator.py": "ecf322066fe47d99e58665a94b2a51c68d9a6fb226cc8175a155f92dfe421903"
+  "vibe_core/boot_orchestrator.py": "6e397ba5b9b448fa4d85307b7da30b2c5679ed496fa7f180c33cb3f7fa179447"
 }
