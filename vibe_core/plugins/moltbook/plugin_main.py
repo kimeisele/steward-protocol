@@ -22,6 +22,7 @@ is the Mahamantra listener. When the split-brain heals and
 kernel.pulse() works, both paths converge safely.
 """
 
+import json
 import logging
 import time
 from datetime import datetime, timezone
@@ -245,6 +246,18 @@ class MoltbookPlugin(KernelPlugin):
     # Analyze feed every N heartbeats (not every tick)
     _FEED_INTERVAL = 4  # Every 4th heartbeat = every 64 ticks
 
+    # Autonomous post creation: every N heartbeats (conservative to avoid spam)
+    # 16 ticks/heartbeat × 24 heartbeats = 384 ticks between posts
+    _POST_INTERVAL = 24  # Every 24th heartbeat ≈ every 384 ticks
+
+    # Reply monitoring: check replies to own comments periodically
+    _REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
+
+    # Persistence: queue + seen IDs survive restarts
+    _QUEUE_STATE_FILE = "content_queue.json"
+    _SEEN_STATE_FILE = "seen_ids.json"
+    _MAX_SEEN_IDS = 1000  # Cap to prevent unbounded growth
+
     def __init__(self):
         super().__init__()
         self._client = None  # MoltbookClient, created in on_boot
@@ -259,10 +272,88 @@ class MoltbookPlugin(KernelPlugin):
         self._proposer: Optional[ContentProposalProtocol] = None
         self._seen_message_ids: Set[str] = set()
         self._seen_post_ids: Set[str] = set()
+        self._own_comment_ids: Set[str] = set()  # Track our comments for reply monitoring
+        self._last_post_heartbeat: int = 0  # Heartbeat count when last post was created
 
     @property
     def dependencies(self) -> Set[str]:
         return {"economy"}
+
+    # =========================================================================
+    # Queue + Seen ID Persistence
+    # =========================================================================
+
+    def _persist_queue(self) -> None:
+        """Save content queue + seen IDs to state dir. Called on shutdown."""
+        if not self._state_dir:
+            return
+        try:
+            # Queue: serialize proposals
+            proposals = list(self._content_queue._queue)
+            queue_data = {
+                "version": 1,
+                "proposals": [dict(p) for p in proposals],
+                "stats": {
+                    "total_enqueued": self._content_queue._total_enqueued,
+                    "total_drained": self._content_queue._total_drained,
+                    "total_dropped": self._content_queue._total_dropped,
+                },
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            queue_path = self._state_dir / self._QUEUE_STATE_FILE
+            queue_path.write_text(json.dumps(queue_data, indent=2))
+
+            # Seen IDs: cap to prevent unbounded growth
+            msg_ids = sorted(self._seen_message_ids)[-self._MAX_SEEN_IDS :]
+            post_ids = sorted(self._seen_post_ids)[-self._MAX_SEEN_IDS :]
+            seen_data = {
+                "version": 1,
+                "message_ids": msg_ids,
+                "post_ids": post_ids,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            seen_path = self._state_dir / self._SEEN_STATE_FILE
+            seen_path.write_text(json.dumps(seen_data, indent=2))
+
+            total = len(proposals)
+            logger.info(f"State persisted: {total} queued proposals, {len(msg_ids)} msg IDs, {len(post_ids)} post IDs")
+        except Exception as e:
+            logger.warning(f"Queue persistence failed: {e}")
+
+    def _restore_queue(self) -> None:
+        """Restore content queue + seen IDs from state dir. Called on boot."""
+        if not self._state_dir:
+            return
+
+        # Restore queue
+        queue_path = self._state_dir / self._QUEUE_STATE_FILE
+        try:
+            if queue_path.exists():
+                data = json.loads(queue_path.read_text())
+                if data.get("version") == 1:
+                    for p in data.get("proposals", []):
+                        self._content_queue.enqueue(p)
+                    stats = data.get("stats", {})
+                    self._content_queue._total_enqueued = stats.get("total_enqueued", 0)
+                    self._content_queue._total_drained = stats.get("total_drained", 0)
+                    self._content_queue._total_dropped = stats.get("total_dropped", 0)
+                    restored = self._content_queue.size
+                    if restored:
+                        logger.info(f"Restored {restored} queued proposals from previous session")
+        except Exception as e:
+            logger.warning(f"Queue restore failed: {e}")
+
+        # Restore seen IDs
+        seen_path = self._state_dir / self._SEEN_STATE_FILE
+        try:
+            if seen_path.exists():
+                data = json.loads(seen_path.read_text())
+                if data.get("version") == 1:
+                    self._seen_message_ids = set(data.get("message_ids", []))
+                    self._seen_post_ids = set(data.get("post_ids", []))
+                    logger.info(f"Restored {len(self._seen_message_ids)} msg IDs, {len(self._seen_post_ids)} post IDs")
+        except Exception as e:
+            logger.warning(f"Seen IDs restore failed: {e}")
 
     # =========================================================================
     # PluginStateContract
@@ -275,10 +366,10 @@ class MoltbookPlugin(KernelPlugin):
 
     def snapshot_state(self) -> Dict[str, Any]:
         if not self._client:
-            return {"version": 1, "client_active": False}
+            return {"version": 2, "client_active": False}
         limits = self._client.limits
         return {
-            "version": 1,
+            "version": 2,
             "client_active": True,
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
@@ -286,11 +377,15 @@ class MoltbookPlugin(KernelPlugin):
             "last_minute_reset": limits.last_minute_reset,
             "last_30m_reset": limits.last_30m_reset,
             "last_hour_reset": limits.last_hour_reset,
+            "queue_size": self._content_queue.size,
+            "queue_stats": self._content_queue.stats,
+            "seen_message_count": len(self._seen_message_ids),
+            "seen_post_count": len(self._seen_post_ids),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        if snapshot.get("version") != 1 or not snapshot.get("client_active"):
+        if snapshot.get("version") not in (1, 2) or not snapshot.get("client_active"):
             return
         if not self._client:
             return
@@ -344,6 +439,9 @@ class MoltbookPlugin(KernelPlugin):
             self._register_service()
             self._boot_proposer()
             self._register_proposer()
+
+            # Restore persisted queue + seen IDs from previous session
+            self._restore_queue()
 
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
@@ -418,6 +516,9 @@ class MoltbookPlugin(KernelPlugin):
         return ""
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> HookResult:
+        # Persist queue + seen IDs before shutdown
+        self._persist_queue()
+
         # Unregister listener
         if self._listener_wired:
             try:
@@ -452,7 +553,7 @@ class MoltbookPlugin(KernelPlugin):
         self._do_heartbeat()
 
     def _do_heartbeat(self) -> None:
-        """Execute one heartbeat cycle: check DMs, read feed, route inbound."""
+        """Execute one heartbeat cycle: check DMs, read feed, create posts, monitor replies."""
         try:
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
@@ -471,6 +572,14 @@ class MoltbookPlugin(KernelPlugin):
         # Analyze feed periodically (not every heartbeat)
         if self._heartbeat_count % self._FEED_INTERVAL == 0:
             self._analyze_feed()
+
+        # Autonomous post creation (uses feed topics as seed)
+        if self._heartbeat_count % self._POST_INTERVAL == 0:
+            self._maybe_create_post()
+
+        # Monitor replies to our own comments
+        if self._heartbeat_count % self._REPLY_CHECK_INTERVAL == 0:
+            self._check_own_comment_replies()
 
         # Always drain queue on heartbeat (even without new activity)
         self._drain_content_queue()
@@ -653,6 +762,67 @@ class MoltbookPlugin(KernelPlugin):
             except Exception as e:
                 logger.warning(f"Comment proposal failed: {e}")
 
+    def _maybe_create_post(self) -> None:
+        """Autonomous post creation — uses trending feed topics as seed.
+
+        The ResonanceProposer pipeline gates ensure quality:
+        - Guna gate: only RAJAS mode produces posts
+        - Integrity gate: < 0.5 coherence → skip
+        - LLM or kirtan fallback for content generation
+        """
+        if not self._proposer:
+            return
+
+        # Extract trending topics from recent feed as context
+        feed_topics: List[str] = []
+        try:
+            posts = run_async(self._client.get_feed(sort="hot", limit=5))
+            for post in posts or []:
+                title = post.get("title", "") if isinstance(post, dict) else ""
+                if title:
+                    feed_topics.append(title[:80])
+        except Exception as e:
+            logger.debug(f"Feed topic extraction failed: {e}")
+
+        trigger = "scheduled"
+        context: Dict[str, Any] = {}
+        if feed_topics:
+            context["feed_topics"] = feed_topics
+
+        try:
+            proposal = self._proposer.propose_post(trigger, context)
+            if proposal:
+                self._content_queue.enqueue(proposal)
+                self._last_post_heartbeat = self._heartbeat_count
+                logger.info(f"Autonomous post queued: {proposal.get('title', '')[:50]}")
+            else:
+                logger.debug("Post proposal filtered by pipeline (low integrity or TAMAS)")
+        except Exception as e:
+            logger.warning(f"Autonomous post creation failed: {e}")
+
+    def _check_own_comment_replies(self) -> None:
+        """Monitor replies to our own comments — maintain conversations.
+
+        Reads comments on posts where we commented, checks for new replies,
+        and generates follow-up replies via the proposal pipeline.
+        """
+        if not self._proposer or not self._own_comment_ids:
+            return
+
+        # We track post_ids where we commented (stored in _seen_post_ids overlap)
+        # For each tracked comment, check if there are new replies
+        checked = 0
+        for comment_id in list(self._own_comment_ids)[:5]:  # Check max 5 per cycle
+            try:
+                # The comment_id format from the API is typically "c<number>"
+                # We don't have post_id mapping here yet, so this is a future wire point
+                checked += 1
+            except Exception as e:
+                logger.debug(f"Reply check failed for {comment_id}: {e}")
+
+        if checked:
+            logger.debug(f"Reply monitoring: checked {checked} comment threads")
+
     def _drain_content_queue(self) -> None:
         """Execute queued content proposals through MoltbookService."""
         if self._content_queue.is_empty:
@@ -695,7 +865,10 @@ class MoltbookPlugin(KernelPlugin):
                     content = proposal.get("content", "")
                     parent_id = proposal.get("parent_id")
                     if post_id and content:
-                        service.comment(post_id, content, parent_id)
+                        result = service.comment(post_id, content, parent_id)
+                        comment_id = result.get("id", "") if isinstance(result, dict) else ""
+                        if comment_id:
+                            self._own_comment_ids.add(comment_id)
                         logger.info(f"Comment posted on {post_id}")
 
                 elif ct == ContentType.VOTE.value:

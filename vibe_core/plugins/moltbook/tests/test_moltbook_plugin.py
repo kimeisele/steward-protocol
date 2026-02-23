@@ -122,13 +122,13 @@ class TestPluginStateContract:
     def test_snapshot_without_client(self, bare_plugin):
         """Pre-boot plugin returns minimal snapshot."""
         snapshot = bare_plugin.snapshot_state()
-        assert snapshot["version"] == 1
+        assert snapshot["version"] == 2
         assert snapshot["client_active"] is False
 
     def test_snapshot_with_client(self, plugin):
-        """Active plugin includes all rate limit fields."""
+        """Active plugin includes all rate limit fields + queue state."""
         snapshot = plugin.snapshot_state()
-        assert snapshot["version"] == 1
+        assert snapshot["version"] == 2
         assert snapshot["client_active"] is True
         assert "requests_this_minute" in snapshot
         assert "posts_this_30m" in snapshot
@@ -136,6 +136,10 @@ class TestPluginStateContract:
         assert "last_minute_reset" in snapshot
         assert "last_30m_reset" in snapshot
         assert "last_hour_reset" in snapshot
+        assert "queue_size" in snapshot
+        assert "queue_stats" in snapshot
+        assert "seen_message_count" in snapshot
+        assert "seen_post_count" in snapshot
         assert "timestamp" in snapshot
 
     def test_snapshot_captures_current_limits(self, plugin):
