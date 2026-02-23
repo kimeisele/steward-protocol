@@ -284,6 +284,7 @@ class MoltbookPlugin(KernelPlugin):
         self._comment_post_map: Dict[str, str] = {}  # comment_id → post_id for reply monitoring
         self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
         self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
+        self._agent_name: str = "steward-protocol"  # Resolved from profile at boot
 
     @property
     def dependencies(self) -> Set[str]:
@@ -477,6 +478,15 @@ class MoltbookPlugin(KernelPlugin):
             # Activity log: append-only JSONL
             self._activity_log_path = data_root / self._ACTIVITY_LOG_FILE
 
+            # Resolve agent name from profile (for bio updates)
+            try:
+                profile = self._service.get_own_profile() if self._service else {}
+                name = profile.get("name", "") if isinstance(profile, dict) else ""
+                if name:
+                    self._agent_name = name
+            except Exception:
+                pass  # Keep default
+
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
 
@@ -567,6 +577,36 @@ class MoltbookPlugin(KernelPlugin):
         return HookResult.ok()
 
     # =========================================================================
+    # Fault Isolation
+    # =========================================================================
+
+    def _safe_call(self, fn: object, label: str) -> None:
+        """Call fn(), catching all exceptions so the heartbeat loop survives."""
+        try:
+            fn()  # type: ignore[operator]
+        except Exception as e:
+            self._log_activity("heartbeat_error", {"phase": label, "error": str(e)[:200]})
+            logger.warning(f"Heartbeat phase '{label}' failed: {e}")
+
+    def _trim_memory(self) -> None:
+        """Trim in-memory tracking sets to _MAX_SEEN_IDS.
+
+        Prevents unbounded growth during long-running sessions.
+        The persist-time cap only fires on shutdown — this trims live.
+        """
+        cap = self._MAX_SEEN_IDS
+        if len(self._seen_message_ids) > cap:
+            # Keep most recent (sorted lexicographically — IDs are monotonic)
+            self._seen_message_ids = set(sorted(self._seen_message_ids)[-cap:])
+        if len(self._seen_post_ids) > cap:
+            self._seen_post_ids = set(sorted(self._seen_post_ids)[-cap:])
+        if len(self._own_comment_ids) > cap:
+            self._own_comment_ids = set(sorted(self._own_comment_ids)[-cap:])
+        if len(self._comment_post_map) > cap:
+            keys = sorted(self._comment_post_map.keys())[-cap:]
+            self._comment_post_map = {k: self._comment_post_map[k] for k in keys}
+
+    # =========================================================================
     # Mahamantra Listener — THE heartbeat path
     # =========================================================================
 
@@ -600,28 +640,32 @@ class MoltbookPlugin(KernelPlugin):
 
         has_new = heartbeat.get("has_activity", False)
         if has_new:
-            self._process_inbound_dms()
-            self._process_dm_requests()
+            self._safe_call(self._process_inbound_dms, "inbound_dms")
+            self._safe_call(self._process_dm_requests, "dm_requests")
 
         # Analyze feed periodically (not every heartbeat)
         if self._heartbeat_count % self._FEED_INTERVAL == 0:
-            self._analyze_feed()
+            self._safe_call(self._analyze_feed, "feed_analysis")
 
         # Autonomous post creation (uses feed topics as seed)
         if self._heartbeat_count % self._POST_INTERVAL == 0:
-            self._maybe_create_post()
+            self._safe_call(self._maybe_create_post, "post_creation")
 
         # Monitor replies to our own comments
         if self._heartbeat_count % self._REPLY_CHECK_INTERVAL == 0:
-            self._check_own_comment_replies()
+            self._safe_call(self._check_own_comment_replies, "reply_monitoring")
 
         # Submolt discovery (once at startup, then periodically)
         if self._heartbeat_count == 1 or self._heartbeat_count % (self._POST_INTERVAL * 4) == 0:
-            self._discover_submolts()
+            self._safe_call(self._discover_submolts, "submolt_discovery")
 
         # Profile auto-update (karma, activity stats in bio)
         if self._heartbeat_count % self._PROFILE_UPDATE_INTERVAL == 0:
-            self._update_profile()
+            self._safe_call(self._update_profile, "profile_update")
+
+        # Trim in-memory sets periodically to prevent unbounded growth
+        if self._heartbeat_count % self._PROFILE_UPDATE_INTERVAL == 0:
+            self._trim_memory()
 
         # Monitor queue health — warn on overflow
         self._monitor_queue_health()
@@ -853,9 +897,13 @@ class MoltbookPlugin(KernelPlugin):
 
         Uses _comment_post_map (comment_id → post_id) to fetch comment threads,
         find replies to our comments, and generate follow-up reply proposals.
+        Routes through MoltbookService for Guna enforcement + audit trail.
         """
         if not self._proposer or not self._comment_post_map:
             return
+
+        if self._service is None:
+            self._service = MoltbookService(self._client)
 
         # Get unique post IDs we need to check (max 3 per cycle)
         post_ids = list(set(self._comment_post_map.values()))[:3]
@@ -863,7 +911,7 @@ class MoltbookPlugin(KernelPlugin):
 
         for post_id in post_ids:
             try:
-                comments = run_async(self._client.get_comments(post_id, sort="new"))
+                comments = self._service.get_comments(post_id, sort="new")
             except Exception as e:
                 logger.debug(f"Comment fetch for {post_id} failed: {e}")
                 continue
@@ -929,7 +977,7 @@ class MoltbookPlugin(KernelPlugin):
         # Build activity summary for bio
         queue_stats = self._content_queue.stats
         description = (
-            f"steward-protocol · Autonomous agent · "
+            f"{self._agent_name} · Autonomous agent · "
             f"{current_karma} karma · "
             f"{follower_count} followers · {following_count} following · "
             f"{len(self._subscribed_submolts)} submolts"
@@ -1048,8 +1096,15 @@ class MoltbookPlugin(KernelPlugin):
             self._content_queue.enqueue(proposal)
             logger.info(f"Submolt subscription queued: {name}")
 
+    # Max retries before a proposal is permanently dropped
+    _MAX_PROPOSAL_RETRIES = 2
+
     def _drain_content_queue(self) -> None:
-        """Execute queued content proposals through MoltbookService."""
+        """Execute queued content proposals through MoltbookService.
+
+        Failed proposals are re-enqueued with a retry counter.
+        After _MAX_PROPOSAL_RETRIES, the proposal is dropped and logged.
+        """
         if self._content_queue.is_empty:
             return
 
@@ -1057,6 +1112,7 @@ class MoltbookPlugin(KernelPlugin):
             self._service = MoltbookService(self._client)
         service = self._service
         proposals = self._content_queue.drain(limit=3)
+        failed: List[ContentProposal] = []
 
         for proposal in proposals:
             ct = proposal.get("content_type", "")
@@ -1121,8 +1177,20 @@ class MoltbookPlugin(KernelPlugin):
 
             except PermissionError as e:
                 logger.warning(f"TAMAS blocked: {e}")
+                # Permanent failure — do not retry
             except Exception as e:
-                logger.warning(f"Content execution failed ({ct}): {e}")
+                retries = proposal.get("_retries", 0)
+                if retries < self._MAX_PROPOSAL_RETRIES:
+                    proposal["_retries"] = retries + 1
+                    failed.append(proposal)
+                    logger.warning(f"Content execution failed ({ct}), retry {retries + 1}: {e}")
+                else:
+                    self._log_activity("proposal_dropped", {"type": ct, "error": str(e)[:200]})
+                    logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
+
+        # Re-enqueue failed proposals for next heartbeat
+        for proposal in failed:
+            self._content_queue.enqueue(proposal)
 
     # =========================================================================
     # API — exposed to other plugins via kernel.api("moltbook")

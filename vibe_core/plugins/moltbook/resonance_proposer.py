@@ -208,10 +208,16 @@ class ResonanceProposer(ContentProposalProtocol):
             provider = get_llm_provider()
             if provider and provider.is_available():
                 self._llm = provider
+                logger.info("LLM provider resolved — intelligent content generation active")
             else:
                 self._llm = None
-        except Exception:
+                logger.warning(
+                    "No LLM provider available — content generation uses kirtan rendering only. "
+                    "Configure an LLM provider for richer output."
+                )
+        except Exception as e:
             self._llm = None
+            logger.warning(f"LLM provider resolution failed: {e} — using kirtan fallback")
         self._llm_resolved = True
         return self._llm
 

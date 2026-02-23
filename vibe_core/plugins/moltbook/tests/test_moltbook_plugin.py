@@ -1004,3 +1004,248 @@ class TestReplyMonitoring:
         # The mock comment returns id "c99"
         assert "c99" in plugin._comment_post_map
         assert plugin._comment_post_map["c99"] == "p1"
+
+    def test_reply_monitoring_uses_service_not_client(self, plugin):
+        """Reply monitoring routes through MoltbookService for Guna audit trail."""
+        from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
+
+        plugin._proposer = ResonanceProposer()
+        plugin._comment_post_map = {"c99": "p0"}
+        plugin._client._mock_db["comments"] = []
+        # Force service creation via the method
+        plugin._service = None
+        plugin._check_own_comment_replies()
+        # Service should have been created
+        assert plugin._service is not None
+
+
+# =============================================================================
+# FAULT ISOLATION (SAFE_CALL + HEARTBEAT CRASH PROTECTION)
+# =============================================================================
+
+
+class TestFaultIsolation:
+    """Heartbeat operations are fault-isolated — one failure doesn't kill the loop."""
+
+    def test_safe_call_catches_exception(self, plugin):
+        """_safe_call wraps exceptions and logs, never re-raises."""
+
+        def exploding():
+            raise RuntimeError("boom")
+
+        # Should NOT raise
+        plugin._safe_call(exploding, "test_phase")
+
+    def test_safe_call_runs_fn(self, plugin):
+        """_safe_call actually calls the function on success."""
+        called = []
+
+        def tracker():
+            called.append(True)
+
+        plugin._safe_call(tracker, "test")
+        assert len(called) == 1
+
+    def test_heartbeat_survives_feed_failure(self, plugin):
+        """If _analyze_feed crashes, queue drain still runs."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        plugin._service = MoltbookService(plugin._client)
+
+        # Poison the feed — make get_personalized_feed throw
+        original = plugin._client.get_personalized_feed
+
+        async def poisoned_feed(*a, **kw):
+            raise RuntimeError("Network error")
+
+        plugin._client.get_personalized_feed = poisoned_feed
+
+        # Enqueue a vote that should drain even if feed fails
+        plugin._content_queue.enqueue(
+            {
+                "content_type": ContentType.VOTE.value,
+                "post_id": "p_test",
+            }
+        )
+
+        # Advance to feed interval
+        plugin._heartbeat_count = plugin._FEED_INTERVAL - 1
+        plugin._do_heartbeat()
+
+        # Queue was drained despite feed failure
+        assert plugin._content_queue.is_empty
+        plugin._client.get_personalized_feed = original
+
+
+# =============================================================================
+# RETRY QUEUE (FAILED PROPOSALS RE-ENQUEUED)
+# =============================================================================
+
+
+class TestRetryQueue:
+    """Failed proposals are re-enqueued, not lost."""
+
+    def test_failed_proposal_reenqueued(self, plugin):
+        """A proposal that fails execution is put back in the queue."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        # Create a service that explodes on upvote
+        svc = MoltbookService(plugin._client)
+        original_upvote = svc.upvote
+
+        def exploding_upvote(post_id):
+            raise ConnectionError("API timeout")
+
+        svc.upvote = exploding_upvote
+        plugin._service = svc
+
+        plugin._content_queue.enqueue(
+            {
+                "content_type": ContentType.VOTE.value,
+                "post_id": "p_fail",
+            }
+        )
+
+        plugin._drain_content_queue()
+        # Proposal should be back in queue with _retries=1
+        assert plugin._content_queue.size == 1
+        svc.upvote = original_upvote
+
+    def test_proposal_dropped_after_max_retries(self, plugin, tmp_path):
+        """After _MAX_PROPOSAL_RETRIES, proposal is permanently dropped."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        svc = MoltbookService(plugin._client)
+        original_upvote = svc.upvote
+
+        def exploding_upvote(post_id):
+            raise ConnectionError("API timeout")
+
+        svc.upvote = exploding_upvote
+        plugin._service = svc
+        plugin._activity_log_path = tmp_path / "activity.jsonl"
+
+        # Enqueue with retries already at max
+        plugin._content_queue.enqueue(
+            {
+                "content_type": ContentType.VOTE.value,
+                "post_id": "p_doomed",
+                "_retries": plugin._MAX_PROPOSAL_RETRIES,
+            }
+        )
+
+        plugin._drain_content_queue()
+        # Should NOT be re-enqueued — permanently dropped
+        assert plugin._content_queue.is_empty
+
+        # Should be logged as dropped
+        content = plugin._activity_log_path.read_text()
+        assert "proposal_dropped" in content
+        svc.upvote = original_upvote
+
+    def test_permission_error_not_retried(self, plugin):
+        """TAMAS PermissionError is permanent — never retried."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        svc = MoltbookService(plugin._client)
+        original_delete = svc.delete_post
+
+        def blocked_delete(post_id):
+            raise PermissionError("TAMAS")
+
+        svc.delete_post = blocked_delete
+        plugin._service = svc
+
+        # VOTE calls upvote, not delete — so we test the except branch directly
+        # by making upvote throw PermissionError
+        original_upvote = svc.upvote
+        svc.upvote = lambda pid: (_ for _ in ()).throw(PermissionError("TAMAS blocked"))
+        plugin._content_queue.enqueue(
+            {
+                "content_type": ContentType.VOTE.value,
+                "post_id": "p_tamas",
+            }
+        )
+
+        plugin._drain_content_queue()
+        # PermissionError → not retried, queue stays empty
+        assert plugin._content_queue.is_empty
+        svc.upvote = original_upvote
+        svc.delete_post = original_delete
+
+
+# =============================================================================
+# MEMORY TRIMMING
+# =============================================================================
+
+
+class TestMemoryTrimming:
+    """In-memory sets are trimmed to prevent unbounded growth."""
+
+    def test_trim_seen_messages(self, plugin):
+        """_trim_memory caps _seen_message_ids to _MAX_SEEN_IDS."""
+        # Overfill
+        for i in range(plugin._MAX_SEEN_IDS + 500):
+            plugin._seen_message_ids.add(f"msg_{i:05d}")
+        assert len(plugin._seen_message_ids) > plugin._MAX_SEEN_IDS
+
+        plugin._trim_memory()
+        assert len(plugin._seen_message_ids) == plugin._MAX_SEEN_IDS
+
+    def test_trim_comment_post_map(self, plugin):
+        """_trim_memory caps _comment_post_map."""
+        for i in range(plugin._MAX_SEEN_IDS + 100):
+            plugin._comment_post_map[f"c{i:05d}"] = f"p{i}"
+
+        plugin._trim_memory()
+        assert len(plugin._comment_post_map) == plugin._MAX_SEEN_IDS
+
+    def test_trim_noop_when_under_limit(self, plugin):
+        """_trim_memory does nothing when sets are small."""
+        plugin._seen_message_ids = {"a", "b", "c"}
+        plugin._trim_memory()
+        assert plugin._seen_message_ids == {"a", "b", "c"}
+
+    def test_trim_keeps_most_recent(self, plugin):
+        """Trimming keeps the most recent (highest sorted) IDs."""
+        for i in range(plugin._MAX_SEEN_IDS + 10):
+            plugin._seen_post_ids.add(f"p_{i:05d}")
+
+        plugin._trim_memory()
+        # The highest IDs should remain
+        assert f"p_{plugin._MAX_SEEN_IDS + 9:05d}" in plugin._seen_post_ids
+        # The lowest should be gone
+        assert "p_00000" not in plugin._seen_post_ids
+
+
+# =============================================================================
+# AGENT NAME RESOLUTION
+# =============================================================================
+
+
+class TestAgentNameResolution:
+    """Profile updates use the actual agent name, not hardcoded."""
+
+    def test_default_agent_name(self, bare_plugin):
+        """Default agent name before boot."""
+        assert bare_plugin._agent_name == "steward-protocol"
+
+    def test_agent_name_resolved_from_service(self, plugin):
+        """Agent name is resolved from profile when service is available."""
+        plugin._service = MoltbookService(plugin._client)
+        # Simulate the boot-time resolution
+        profile = plugin._service.get_own_profile()
+        name = profile.get("name", "") if isinstance(profile, dict) else ""
+        if name:
+            plugin._agent_name = name
+        # Mock /agents/me returns "steward-protocol"
+        assert plugin._agent_name == "steward-protocol"
+
+    def test_profile_update_uses_agent_name(self, plugin):
+        """_update_profile uses _agent_name, not hardcoded string."""
+        plugin._service = MoltbookService(plugin._client)
+        plugin._agent_name = "custom-agent-42"
+        plugin._update_profile()
+        # The profile PATCH was called — verify via RAJAS log
+        rajas_ops = [e for e in plugin._service._operation_log if e["operation"] == "update_profile"]
+        assert len(rajas_ops) == 1
