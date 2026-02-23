@@ -27,10 +27,11 @@ Same pattern as MoltbookProtocol: types + ABC + Guna classification.
 from abc import ABC, abstractmethod
 from collections import deque
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple, TypedDict
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.substrate.encoding.resonance_ranker import RankedWord
+    from vibe_core.protocols.moltbook import MoltbookPost
 
 # =============================================================================
 # CONTENT TYPES — What kind of outbound action?
@@ -264,6 +265,18 @@ class ContentProposalProtocol(ABC):
         Returns a VOTE or FOLLOW proposal, or None to skip.
         """
 
+    @abstractmethod
+    def analyze_feed(
+        self,
+        posts: Sequence["MoltbookPost"],
+    ) -> List[Tuple["MoltbookPost", "List[RankedWord]", float]]:
+        """
+        Analyze a list of feed posts and return scored rankings.
+
+        Used by the plugin to score feed items for engagement decisions.
+        Returns (post, ranked_words, score) tuples sorted by score descending.
+        """
+
 
 # =============================================================================
 # DEFAULT IMPLEMENTATION — Echo/Acknowledge (safe for testing + initial deploy)
@@ -345,6 +358,12 @@ class EchoContentProposer(ContentProposalProtocol):
         author: str,
     ) -> Optional[ContentProposal]:
         return None  # Echo proposer never votes/follows
+
+    def analyze_feed(
+        self,
+        posts: Sequence["MoltbookPost"],
+    ) -> List[Tuple["MoltbookPost", "List[RankedWord]", float]]:
+        return []  # Echo proposer has no engine for feed analysis
 
 
 # =============================================================================

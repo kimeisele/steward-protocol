@@ -207,9 +207,7 @@ class MoltbookService(MoltbookProtocol):
         self._enforce_guna("subscribe")
         return run_async(self._client.subscribe_submolt(submolt_name))
 
-    def create_submolt(
-        self, name: str, display_name: str, description: str
-    ) -> Dict[str, Any]:
+    def create_submolt(self, name: str, display_name: str, description: str) -> Dict[str, Any]:
         self._enforce_guna("create_submolt")
         return self._client.sync_create_submolt(name, display_name, description)
 
@@ -250,6 +248,7 @@ class MoltbookPlugin(KernelPlugin):
     def __init__(self):
         super().__init__()
         self._client = None  # MoltbookClient, created in on_boot
+        self._service: Optional[MoltbookService] = None  # Singleton, reused in drain
         self._offline_mode: bool = True
         self._last_heartbeat_error: Optional[str] = None
         self._state_dir: Optional[Path] = None
@@ -362,8 +361,8 @@ class MoltbookPlugin(KernelPlugin):
         try:
             from vibe_core.di import ServiceRegistry
 
-            service = MoltbookService(self._client)
-            ServiceRegistry.register_factory(MoltbookProtocol, lambda: service)
+            self._service = MoltbookService(self._client)
+            ServiceRegistry.register_factory(MoltbookProtocol, lambda: self._service)
             logger.info("MoltbookProtocol registered in ServiceRegistry")
         except Exception as e:
             logger.warning(f"ServiceRegistry registration failed: {e}")
@@ -622,10 +621,6 @@ class MoltbookPlugin(KernelPlugin):
         if not unseen:
             return
 
-        # Analyze via ResonanceProposer if it has feed analysis
-        if not hasattr(self._proposer, "analyze_feed"):
-            return
-
         scored = self._proposer.analyze_feed(unseen)
 
         for post, ranked, score in scored:
@@ -648,7 +643,9 @@ class MoltbookPlugin(KernelPlugin):
             # Comment on high-resonance posts
             try:
                 comment_proposal = self._proposer.propose_comment(
-                    post_id, post_content, "feed_analysis",
+                    post_id,
+                    post_content,
+                    "feed_analysis",
                 )
                 if comment_proposal:
                     self._content_queue.enqueue(comment_proposal)
@@ -661,7 +658,9 @@ class MoltbookPlugin(KernelPlugin):
         if self._content_queue.is_empty:
             return
 
-        service = MoltbookService(self._client)
+        if self._service is None:
+            self._service = MoltbookService(self._client)
+        service = self._service
         proposals = self._content_queue.drain(limit=3)
 
         for proposal in proposals:
@@ -672,7 +671,8 @@ class MoltbookPlugin(KernelPlugin):
                     content = proposal.get("content", "")
                     if conv_id and content:
                         service.send_dm(
-                            conv_id, content,
+                            conv_id,
+                            content,
                             needs_human_input=proposal.get("needs_human_input", False),
                         )
                         logger.info(f"DM reply sent to {conv_id}")
@@ -735,7 +735,7 @@ class MoltbookPlugin(KernelPlugin):
 
         self._proposer = ResonanceProposer()
         self._register_moltbook_context()
-        logger.info("Content proposer: ResonanceProposer v2 (engine-wired)")
+        logger.info("Content proposer: ResonanceProposer v3 (engine-wired)")
 
     def _register_moltbook_context(self) -> None:
         """Register moltbook_context resolver in PromptContext for dynamic context injection."""
@@ -759,14 +759,10 @@ class MoltbookPlugin(KernelPlugin):
         # Queue state
         if self._content_queue:
             stats = self._content_queue.stats
-            pending = stats.get("pending", 0)
-            sent = stats.get("sent", 0)
-            if pending or sent:
-                parts.append(f"Content queue: {pending} pending, {sent} sent")
-
-        # Recent feed topics (from last analysis)
-        if hasattr(self, "_last_feed_topics") and self._last_feed_topics:
-            parts.append(f"Feed topics: {', '.join(self._last_feed_topics[:5])}")
+            queued = stats.get("queued", 0)
+            drained = stats.get("total_drained", 0)
+            if queued or drained:
+                parts.append(f"Content queue: {queued} queued, {drained} drained")
 
         # Active conversations
         seen_msgs = len(self._seen_message_ids)
