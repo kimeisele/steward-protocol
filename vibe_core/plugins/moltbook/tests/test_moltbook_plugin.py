@@ -50,6 +50,7 @@ def plugin():
     p = MoltbookPlugin()
     p._client = MoltbookClient(api_key="test", offline_mode=True)
     p._offline_mode = True
+    p._HEARTBEAT_DEBOUNCE_S = 0  # Disable debounce in tests (instant ticks)
     return p
 
 
@@ -122,13 +123,13 @@ class TestPluginStateContract:
     def test_snapshot_without_client(self, bare_plugin):
         """Pre-boot plugin returns minimal snapshot."""
         snapshot = bare_plugin.snapshot_state()
-        assert snapshot["version"] == 4
+        assert snapshot["version"] == 5
         assert snapshot["client_active"] is False
 
     def test_snapshot_with_client(self, plugin):
         """Active plugin includes all rate limit fields + queue state + tracking counts."""
         snapshot = plugin.snapshot_state()
-        assert snapshot["version"] == 4
+        assert snapshot["version"] == 5
         assert snapshot["client_active"] is True
         assert "requests_this_minute" in snapshot
         assert "posts_this_30m" in snapshot
@@ -316,7 +317,19 @@ class TestPluginAPI:
     def test_api_shape(self, plugin):
         """API dict has exactly the expected keys."""
         api = plugin.get_api()
-        expected_keys = {"client", "offline", "last_error", "listener_wired", "ticks_seen", "content_queue"}
+        expected_keys = {
+            "client",
+            "offline",
+            "last_error",
+            "listener_wired",
+            "ticks_seen",
+            "content_queue",
+            "heartbeats",
+            "intervals",
+            "circuit_executor",
+            "agora_wired",
+            "execute_content_circuit",
+        }
         assert set(api.keys()) == expected_keys
 
     def test_api_client_reference(self, plugin):
@@ -1069,7 +1082,7 @@ class TestFaultIsolation:
         )
 
         # Advance to feed interval
-        plugin._heartbeat_count = plugin._FEED_INTERVAL - 1
+        plugin._heartbeat_count = plugin._feed_interval - 1
         plugin._do_heartbeat()
 
         # Queue was drained despite feed failure

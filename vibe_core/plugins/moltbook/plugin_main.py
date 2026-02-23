@@ -475,6 +475,22 @@ class MoltbookPlugin(KernelPlugin):
     _ACTIVITY_LOG_FILE = "activity.jsonl"
     _MAX_SEEN_IDS = 1000  # Cap to prevent unbounded growth
 
+    # Autonomous post creation: every N heartbeats (conservative to avoid spam)
+    # 16 ticks/heartbeat × 24 heartbeats = 384 ticks between posts
+    _POST_INTERVAL = 24  # Every 24th heartbeat ≈ every 384 ticks
+
+    # Reply monitoring: check replies to own comments periodically
+    _REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
+
+    # Profile update: refresh bio/metadata periodically
+    _PROFILE_UPDATE_INTERVAL = 48  # Every 48th heartbeat ≈ 768 ticks
+
+    # Persistence: queue + seen IDs survive restarts
+    _QUEUE_STATE_FILE = "content_queue.json"
+    _SEEN_STATE_FILE = "seen_ids.json"
+    _ACTIVITY_LOG_FILE = "activity.jsonl"
+    _MAX_SEEN_IDS = 1000  # Cap to prevent unbounded growth
+
     def __init__(self):
         super().__init__()
         self._client = None  # MoltbookClient, created in on_boot
