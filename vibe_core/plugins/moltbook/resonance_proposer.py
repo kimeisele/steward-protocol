@@ -99,18 +99,14 @@ def _format_resonant_words(engine_result) -> str:
     """EngineResult.resonant_words → structured context string."""
     if not engine_result.resonant_words:
         return ""
-    return ", ".join(
-        f"{s} ({m})" for s, m, _ in engine_result.resonant_words[:7]
-    )
+    return ", ".join(f"{s} ({m})" for s, m, _ in engine_result.resonant_words[:7])
 
 
 def _format_template_words(engine_result) -> str:
     """EngineResult.template_words → grammatical skeleton string."""
     if not engine_result.template_words:
         return ""
-    return ", ".join(
-        f"{m} [{r}]" for _, m, r in engine_result.template_words[:7] if m
-    )
+    return ", ".join(f"{m} [{r}]" for _, m, r in engine_result.template_words[:7] if m)
 
 
 def _section_data(engine_result) -> Dict[str, str]:
@@ -119,6 +115,7 @@ def _section_data(engine_result) -> Dict[str, str]:
     mode = engine_result.section_mode or "CORE"
     try:
         from vibe_core.mahamantra.substrate.language.section_router import SECTION_SIGNATURES
+
         sig = SECTION_SIGNATURES.get(section, {})
         return {
             "section_name": section,
@@ -134,6 +131,7 @@ def _knowledge_context(topic: str) -> str:
     """KnowledgeResolver → graph-aware context."""
     try:
         from vibe_core.knowledge.resolver import get_resolver
+
         return get_resolver().compile_context(topic)
     except Exception:
         return ""
@@ -206,6 +204,7 @@ class ResonanceProposer(ContentProposalProtocol):
             return self._llm
         try:
             from vibe_core.runtime.providers.factory import get_llm_provider
+
             provider = get_llm_provider()
             if provider and provider.is_available():
                 self._llm = provider
@@ -222,6 +221,7 @@ class ResonanceProposer(ContentProposalProtocol):
             return None
         try:
             from vibe_core.mahamantra import mahamantra
+
             return mahamantra(text)
         except Exception as e:
             logger.warning(f"Pipeline failed: {e}")
@@ -231,14 +231,19 @@ class ResonanceProposer(ContentProposalProtocol):
         """MahaLanguageEngine → EngineResult."""
         try:
             from vibe_core.mahamantra.substrate.language.engine import generate
+
             return generate(text)
         except Exception as e:
             logger.warning(f"Engine failed: {e}")
             return None
 
     def _compose(
-        self, prompt_key: str, engine_result, user_input: str,
-        pipeline_result: Optional[dict] = None, **extra: str,
+        self,
+        prompt_key: str,
+        engine_result,
+        user_input: str,
+        pipeline_result: Optional[dict] = None,
+        **extra: str,
     ) -> Optional[str]:
         """Context → YAML template → LLM → content. No LLM = kirtan rendering."""
         ctx = _build_context(engine_result, self._agent_name, user_input, **extra)
@@ -247,6 +252,7 @@ class ResonanceProposer(ContentProposalProtocol):
         prompt = ""
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
+
             prompt = PromptRegistry.get(prompt_key, context=ctx)
         except Exception:
             pass
@@ -281,6 +287,7 @@ class ResonanceProposer(ContentProposalProtocol):
         if pipeline_result:
             try:
                 from vibe_core.mahamantra.render import render
+
                 return render(pipeline_result)
             except Exception:
                 pass
@@ -313,8 +320,11 @@ class ResonanceProposer(ContentProposalProtocol):
             return None
 
         reply = self._compose(
-            _PROMPT_KEYS["dm_reply"], engine_result, inbound_content,
-            pipeline_result=result, sender=sender,
+            _PROMPT_KEYS["dm_reply"],
+            engine_result,
+            inbound_content,
+            pipeline_result=result,
+            sender=sender,
         )
         if not reply:
             return None
@@ -327,7 +337,6 @@ class ResonanceProposer(ContentProposalProtocol):
             source="inbound_dm",
             sender=sender,
             priority=1,
-            needs_human_input=False,
             gateway_success=bool(gw.get("success")),
             gateway_position=gw.get("position", -1),
             gateway_guardian=gw.get("guardian", "unknown"),
@@ -377,8 +386,11 @@ class ResonanceProposer(ContentProposalProtocol):
             return None
 
         post_text = self._compose(
-            _PROMPT_KEYS["post"], engine_result, seed_text,
-            pipeline_result=result, trigger=trigger,
+            _PROMPT_KEYS["post"],
+            engine_result,
+            seed_text,
+            pipeline_result=result,
+            trigger=trigger,
         )
         if not post_text:
             return None
@@ -413,8 +425,11 @@ class ResonanceProposer(ContentProposalProtocol):
             return None
 
         comment = self._compose(
-            _PROMPT_KEYS["comment"], engine_result, post_content[:200],
-            pipeline_result=result, post_content=post_content[:500],
+            _PROMPT_KEYS["comment"],
+            engine_result,
+            post_content[:200],
+            pipeline_result=result,
+            post_content=post_content[:500],
         )
         if not comment:
             return None
@@ -445,7 +460,8 @@ class ResonanceProposer(ContentProposalProtocol):
         )
 
     def analyze_feed(
-        self, posts: Sequence[MoltbookPost],
+        self,
+        posts: Sequence[MoltbookPost],
     ) -> List[Tuple[MoltbookPost, List[RankedWord], float]]:
         scored: List[Tuple[MoltbookPost, List[RankedWord], float]] = []
         for post in posts:

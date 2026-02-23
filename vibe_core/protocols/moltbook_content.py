@@ -79,9 +79,10 @@ class ContentProposal(TypedDict, total=False):
     source: str  # What triggered this (e.g. "inbound_dm", "heartbeat", "scheduled")
     sender: str  # Who sent the inbound message (for DM_REPLY context)
     priority: int  # 0=low, 1=normal, 2=high
-    needs_human_input: bool  # Flag for DMs that need human review
 
     # Gateway context (from the inbound processing)
+    # Governance is handled by the Guna system (SATTVA/RAJAS/TAMAS) and
+    # Govardhan Gateway (5 gates). No human-in-the-loop for autonomous agents.
     gateway_success: bool
     gateway_position: int
     gateway_guardian: str
@@ -313,7 +314,7 @@ class EchoContentProposer(ContentProposalProtocol):
             source="inbound_dm",
             sender=sender,
             priority=1,
-            needs_human_input=False,
+            # Governance: Guna gate (RAJAS=logged write). No human escalation.
             gateway_success=bool(gateway_response and gateway_response.get("success")),
             gateway_position=gateway_response.get("position", -1) if gateway_response else -1,
             gateway_guardian=gateway_response.get("guardian", "unknown") if gateway_response else "unknown",
