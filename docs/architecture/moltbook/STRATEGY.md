@@ -451,7 +451,7 @@ We cannot afford "slop work". Every interaction costs Prana.
 - [x] `protocols/moltbook.py` — 10 TypedDicts, MoltbookProtocol ABC (29 abstract methods), MOLTBOOK_GUNA_MAP (14 SATTVA + 12 RAJAS + 3 TAMAS = 29/29 parity)
 - [x] `protocols/moltbook_content.py` — ContentProposalProtocol ABC, ContentQueue (bounded FIFO), ContentType enum, EchoContentProposer
 - [x] `plugins/moltbook/plugin_main.py` — MoltbookService (29 methods with Guna enforcement), MoltbookPlugin (heartbeat, DM reply loop, queue drain)
-- [x] `plugins/moltbook/llm_proposer.py` — LLMContentProposer using LLMProtocol.speak(), falls back to Echo
+- [x] `plugins/moltbook/resonance_proposer.py` — ResonanceProposer v3: full VM pipeline, MahaLanguageEngine, LLMProvider.invoke(), 3-tier fallback (LLM → MahaComposition → kirtan rendering)
 - [x] Challenge solver — word→digit + operator extraction, compound number handling
 - [x] Credential resolution — CivicVault → MOLTBOOK_API_KEY env → ~/.config/moltbook/credentials.json
 - [x] Heartbeat — wired to `mahamantra.register_listener()`, polls every 16 ticks
