@@ -23,27 +23,69 @@ Knowledge Context liefert **16.159 Zeichen** semantische Daten pro Proposal.
 
 ---
 
-## 2. Content Generation Circuit
+## 2. Content Generation Circuits
 
-**Status: NICHT VERDRAHTET**
+**Status: SPEZIFIKATION + EXECUTOR EXISTIEREN — NICHT VERDRAHTET**
 
-`knowledge/genesis/circuits/content_generation.yaml` definiert:
+### 2a. MOLTBOOK_CONTENT_V1 Circuit (YAML-Spezifikation)
+
+`vibe_core/playbook/circuits/moltbook_content.yaml` — 294 Zeilen, VEDA-4 State Machine:
 ```
 SHABDA → ARTHA → PRATYAYA → KARMA → REVIEW → SUCCESS
+  │         │         │         │         │
+  Parse     Gates     Context   Record    Human
+  Pipeline  Guna/     Dense     Karma     Review
+  Analysis  Cell/     Assembly  Ledger    Gate
+            Integrity
 ```
 
-VEDA-4 State Machine für Content-Generierung. Wurde für die generische Content-Pipeline gebaut.
-Die Moltbook-Pipeline nutzt stattdessen den ad-hoc Flow:
-```
-mahamantra(text) → gates → generate() → _compose() → LLM/kirtan
+**Terminal States:** SUCCESS, FAILURE, VALIDATION_FAILED, GENERATION_FAILED, REVIEW_REJECTED
+
+**Variables:** raw_input, content_type, target_text, post_id, sender, trigger, auto_approve
+
+**Invarianten:** Jeder State hat explizite Pre-/Post-Conditions.
+Die aktuelle Pipeline in `resonance_proposer.py` implementiert diese Logik ad-hoc.
+
+### 2b. CognitiveCircuitExecutor (Python-Runtime)
+
+`vibe_core/cortex/engines/circuit_engine.py` — **1519 Zeilen**, produktionsreif:
+
+```python
+executor = CognitiveCircuitExecutor(kernel)
+result = executor.execute_by_id("MOLTBOOK_CONTENT_V1", {
+    "raw_input": text,
+    "content_type": "comment",
+    "target_text": post_content,
+    "post_id": post_id,
+    "auto_approve": True,
+})
 ```
 
-**Gap:** Der Circuit definiert Invarianten, Transitionen und Agent-Routing (herald, envoy).
-Die Pipeline prüft KEINE Invarianten und routet nicht über Agents.
+**Features:** InvariantChecker, MetaCircuitManager (TASK_LEDGER + ERROR_RECOVERY),
+State-History-Audit-Trail, Stuck-Detection, Recovery-Strategies.
 
-**Einschätzung:** Der Circuit ist eine deklarative Spezifikation, kein ausführbarer Code.
-Um ihn zu nutzen, bräuchte man einen Circuit-Executor der YAMLs interpretiert.
-Existiert der? → Prüfen: `vibe_core/cortex/`, `vibe_core/runtime/`.
+### 2c. Generischer Content Circuit
+
+`knowledge/genesis/circuits/content_generation.yaml` — Generische Version für
+Blog/Doc/Announcement-Generierung. Routet über `herald` Agent.
+
+### 2d. Gap-Analyse
+
+| Feature | Ad-hoc Pipeline | Circuit Executor |
+|---------|-----------------|------------------|
+| State Machine | Implizit (if/else) | Explizit (YAML) |
+| Invarianten | Nicht geprüft | Pre/Post-Conditions |
+| Audit Trail | Activity Log (JSONL) | State History |
+| Error Recovery | try/except + retry | MetaCircuit ERROR_RECOVERY |
+| Stuck Detection | Nicht vorhanden | MetaCircuit TASK_LEDGER |
+| Human Review | Nicht vorhanden | REVIEW State |
+
+**Einschätzung:** Der Circuit-Executor KANN die Moltbook-Pipeline ersetzen.
+Benötigt: Kernel-Instanz + Syscall-Handler für DISPATCH_TASK/RECORD_KARMA.
+Das ist die sauberste Architektur — aber ein größerer Umbau (Phase 2).
+
+**Sofort nutzbar:** Die Circuit-YAML als Spezifikation/Dokumentation.
+Die ad-hoc Pipeline implementiert die gleiche Logik, nur weniger formal.
 
 ---
 
@@ -175,19 +217,48 @@ Federation wird relevant wenn multiple Agents auf Moltbook zusammenarbeiten.
 
 | Was | Warum nicht |
 |-----|-------------|
-| Circuit-Executor bauen | Wäre neues System, nicht vorhandenes verdrahten |
+| Circuit-Executor verdrahten | Executor EXISTIERT (1519 Zeilen), Circuit EXISTIERT (294 Zeilen). Benötigt Kernel+Syscall-Handler. Phase 2. |
 | Intent-Routing einbinden | Moltbook ist autonom, nicht user-facing |
 | HERALD-Agent delegation | Kein Multi-Agent-Setup, direkter API-Call ist richtig |
 | Alle EngineResult-Felder nutzen | stress_pattern/sequencer_steps sind Telemetrie, kein Content |
 | Starter Pack für Moltbook | Overkill für eingebauten Agent |
-| Moltbook-spezifischen Circuit YAML schreiben | Wäre Spaghetti — die Pipeline IS der Circuit |
 
 ---
 
-## 10. Nächste Schritte (wenn Multi-Agent)
+## 10. Nächste Schritte
 
-1. **HERALD-Delegation** — Content-Requests über HERALD dispatchen statt direkt
+### Phase 2: Circuit-Executor Verdrahtung (nächster großer Schritt)
+
+```python
+# Was gebaut werden müsste:
+# 1. Kernel-Instanz im Plugin-Kontext bereitstellen
+# 2. Moltbook-spezifische Syscall-Handler registrieren:
+#    - DISPATCH_TASK("moltbook", "analyze") → mahamantra(text)
+#    - DISPATCH_TASK("moltbook", "compose") → _compose(...)
+#    - RECORD_KARMA → _log_activity()
+# 3. Pipeline durch executor.execute_by_id("MOLTBOOK_CONTENT_V1", ...) ersetzen
+```
+
+**Gewinn:** Invarianten, Audit Trail, Stuck Detection, Error Recovery — alles gratis.
+**Aufwand:** Kernel-Integration + Syscall-Handler-Registry.
+
+### Phase 3: Multi-Agent (Federation)
+
+1. **HERALD-Delegation** — Content-Requests über HERALD dispatchen
 2. **PULSE-Integration** — Social Amplification via PULSE Agent
-3. **Federation Protocol** — Moltbook-Agent als eigenständiger Node in Agent City
-4. **Circuit-Executor** — YAML-Circuits als ausführbare State Machines
-5. **Moltbook Cartridge** — Starter Pack für Moltbook-Agenten-Instanziierung
+3. **Federation Protocol** — Moltbook-Agent als Node in Agent City
+4. **Moltbook Cartridge** — Starter Pack für Agenten-Instanziierung
+
+### Infrastruktur-Inventar (verifiziert)
+
+| Komponente | Datei | Zeilen | Status |
+|---|---|---|---|
+| Circuit Executor | `cortex/engines/circuit_engine.py` | 1519 | Produktionsreif |
+| Moltbook Circuit | `playbook/circuits/moltbook_content.yaml` | 294 | Spezifikation |
+| Knowledge Graph | `knowledge/graph.py` | 658 | WIRED |
+| Knowledge Resolver | `knowledge/resolver.py` | 151 | WIRED |
+| Moltbook Platform | `knowledge/moltbook/platform.yaml` | 335 | WIRED |
+| Blueprint Generator | `cartridges/system/envoy/blueprint_generator.py` | ~800 | Nicht verdrahtet |
+| Semantic Syscalls | `semantic_syscalls.py` | ~400 | Nicht verdrahtet |
+| Playbook Executor | `plugins/test_orchestration/playbook_executor.py` | ~500 | Nicht verdrahtet |
+| 25 Circuit YAMLs | `playbook/circuits/*.yaml` | ~5000 | Spezifikationen |
