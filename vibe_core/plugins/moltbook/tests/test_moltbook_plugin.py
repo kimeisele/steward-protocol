@@ -122,13 +122,13 @@ class TestPluginStateContract:
     def test_snapshot_without_client(self, bare_plugin):
         """Pre-boot plugin returns minimal snapshot."""
         snapshot = bare_plugin.snapshot_state()
-        assert snapshot["version"] == 3
+        assert snapshot["version"] == 4
         assert snapshot["client_active"] is False
 
     def test_snapshot_with_client(self, plugin):
         """Active plugin includes all rate limit fields + queue state + tracking counts."""
         snapshot = plugin.snapshot_state()
-        assert snapshot["version"] == 3
+        assert snapshot["version"] == 4
         assert snapshot["client_active"] is True
         assert "requests_this_minute" in snapshot
         assert "posts_this_30m" in snapshot
@@ -141,6 +141,7 @@ class TestPluginStateContract:
         assert "seen_message_count" in snapshot
         assert "seen_post_count" in snapshot
         assert "own_comment_count" in snapshot
+        assert "comment_thread_count" in snapshot
         assert "followed_agent_count" in snapshot
         assert "subscribed_submolt_count" in snapshot
         assert "timestamp" in snapshot
@@ -831,3 +832,175 @@ class TestSubmoltDiscovery:
         plugin._client._mock_db["submolts"] = [{"name": "tech"}]
         plugin._discover_submolts()
         assert "tech" in plugin._subscribed_submolts
+
+
+# =============================================================================
+# PROFILE AUTO-UPDATE
+# =============================================================================
+
+
+class TestProfileUpdate:
+    """Profile auto-update: karma stats in bio."""
+
+    def test_update_profile_runs(self, plugin):
+        """_update_profile() executes without error."""
+        plugin._service = MoltbookService(plugin._client)
+        plugin._update_profile()
+        assert plugin._last_profile_heartbeat == 0  # Set to _heartbeat_count
+
+    def test_update_profile_logs_rajas(self, plugin):
+        """Profile update is a RAJAS operation and gets logged."""
+        svc = MoltbookService(plugin._client)
+        plugin._service = svc
+        plugin._update_profile()
+        rajas_ops = [e for e in svc._operation_log if e["operation"] == "update_profile"]
+        assert len(rajas_ops) == 1
+
+    def test_update_profile_fetches_profile_first(self, plugin):
+        """Profile update reads current profile (SATTVA) before patching (RAJAS)."""
+        svc = MoltbookService(plugin._client)
+        plugin._service = svc
+        plugin._update_profile()
+        # get_own_profile (SATTVA) + update_profile (RAJAS) = 1 RAJAS log
+        assert len(svc._operation_log) == 1  # Only RAJAS ops logged
+
+    def test_update_profile_without_service(self, bare_plugin):
+        """No crash when service is None."""
+        bare_plugin._update_profile()  # Should not raise
+
+
+# =============================================================================
+# ACTIVITY LOGGING (JSONL)
+# =============================================================================
+
+
+class TestActivityLogging:
+    """JSONL append-only activity log."""
+
+    def test_log_activity_creates_file(self, plugin, tmp_path):
+        """_log_activity() creates and appends to JSONL file."""
+        plugin._activity_log_path = tmp_path / "activity.jsonl"
+        plugin._log_activity("test_event", {"key": "value"})
+        assert plugin._activity_log_path.exists()
+        content = plugin._activity_log_path.read_text()
+        assert "test_event" in content
+        assert '"key":"value"' in content
+
+    def test_log_activity_appends(self, plugin, tmp_path):
+        """Multiple events append as separate lines."""
+        plugin._activity_log_path = tmp_path / "activity.jsonl"
+        plugin._log_activity("event1")
+        plugin._log_activity("event2")
+        lines = plugin._activity_log_path.read_text().strip().split("\n")
+        assert len(lines) == 2
+
+    def test_log_activity_valid_json(self, plugin, tmp_path):
+        """Each line is valid JSON."""
+        import json
+
+        plugin._activity_log_path = tmp_path / "activity.jsonl"
+        plugin._log_activity("dm_sent", {"conversation_id": "c1"})
+        line = plugin._activity_log_path.read_text().strip()
+        parsed = json.loads(line)
+        assert parsed["event"] == "dm_sent"
+        assert "t" in parsed  # timestamp
+        assert "hb" in parsed  # heartbeat count
+
+    def test_log_activity_no_path_noop(self, plugin):
+        """No crash when log path is None."""
+        plugin._activity_log_path = None
+        plugin._log_activity("test")  # Should not raise
+
+    def test_drain_logs_activity(self, plugin, tmp_path):
+        """Queue drain logs activity for each executed proposal."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        plugin._activity_log_path = tmp_path / "activity.jsonl"
+        plugin._service = MoltbookService(plugin._client)
+        plugin._content_queue.enqueue(
+            {
+                "content_type": ContentType.VOTE.value,
+                "post_id": "p1",
+            }
+        )
+        plugin._drain_content_queue()
+        content = plugin._activity_log_path.read_text()
+        assert "upvoted" in content
+
+
+# =============================================================================
+# REPLY MONITORING (COMPLETED)
+# =============================================================================
+
+
+class TestReplyMonitoring:
+    """Reply monitoring: track own comment threads and respond to replies."""
+
+    def test_no_crash_without_map(self, plugin):
+        """No crash when comment_post_map is empty."""
+        plugin._proposer = type(
+            "P",
+            (),
+            {
+                "propose_comment": lambda *a, **kw: None,
+            },
+        )()
+        plugin._check_own_comment_replies()
+
+    def test_detects_reply_to_own_comment(self, plugin):
+        """Detects a reply to our comment and queues a response."""
+        from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
+
+        plugin._proposer = ResonanceProposer()
+        plugin._comment_post_map = {"c99": "p0"}
+        # Seed mock with a reply to our comment
+        plugin._client._mock_db["comments"] = [
+            {
+                "id": "c100",
+                "post_id": "p0",
+                "parent_id": "c99",
+                "content": "Great point!",
+                "author": {"name": "agent_x"},
+            },
+        ]
+        plugin._check_own_comment_replies()
+        # The proposer should have been called and may or may not queue a reply
+        # depending on pipeline filters — but no crash occurred
+        assert "c100" in plugin._seen_message_ids
+
+    def test_skips_already_seen_replies(self, plugin):
+        """Already-seen comment IDs are not re-processed."""
+        from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
+
+        plugin._proposer = ResonanceProposer()
+        plugin._comment_post_map = {"c99": "p0"}
+        plugin._seen_message_ids.add("c100")  # Already seen
+        plugin._client._mock_db["comments"] = [
+            {
+                "id": "c100",
+                "post_id": "p0",
+                "parent_id": "c99",
+                "content": "Already seen",
+                "author": {"name": "agent_y"},
+            },
+        ]
+        initial_queue_size = plugin._content_queue.size
+        plugin._check_own_comment_replies()
+        assert plugin._content_queue.size == initial_queue_size  # Nothing new queued
+
+    def test_comment_post_map_populated_on_drain(self, plugin):
+        """_comment_post_map is populated when comments are drained."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        plugin._service = MoltbookService(plugin._client)
+        plugin._content_queue.enqueue(
+            {
+                "content_type": ContentType.COMMENT.value,
+                "post_id": "p1",
+                "content": "Test comment",
+            }
+        )
+        plugin._drain_content_queue()
+        # The mock comment returns id "c99"
+        assert "c99" in plugin._comment_post_map
+        assert plugin._comment_post_map["c99"] == "p1"

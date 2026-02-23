@@ -276,7 +276,9 @@ class MoltbookClient:
             }
 
         elif method == "GET" and endpoint.startswith("/posts") and "comments" in endpoint:
-            return {"comments": []}
+            post_id = endpoint.split("/posts/")[1].split("/")[0]
+            comments = [c for c in self._mock_db.get("comments", []) if c.get("post_id") == post_id]
+            return {"comments": comments}
 
         elif method == "GET" and (endpoint.startswith("/posts?") or endpoint == "/posts"):
             return {"posts": self._mock_db["posts"]}
