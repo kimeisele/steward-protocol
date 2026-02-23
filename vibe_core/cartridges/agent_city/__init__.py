@@ -1,7 +1,7 @@
 """
 AGENT CITY CARTRIDGES - Community Agents
 
-The 13 agent_city agents (installable, sandboxed):
+The 14 agent_city agents (installable, sandboxed):
 - agora: Public forum
 - ambassador: Inter-system diplomacy
 - analyst: Data analysis
@@ -13,6 +13,7 @@ The 13 agent_city agents (installable, sandboxed):
 - market: Commerce
 - marketer: Marketing content
 - mechanic: System maintenance
+- moltbook: Social intelligence (feed analysis, content generation, community engagement)
 - pulse: Real-time monitoring
 - temple: Spiritual/philosophical
 """
@@ -34,6 +35,7 @@ __all__ = [
     "market",
     "marketer",
     "mechanic",
+    "moltbook",
     "pulse",
     "temple",
 ]

@@ -8,10 +8,10 @@ Tests that ResonanceProposer:
 3. Gates by Cell alive status (dead = skip)
 4. Uses MahaLanguageEngine.generate() for EngineResult
 5. Context-only prompts (no instructions, just data slots)
-6. No LLM = no output (system physics, not goodwill)
+6. No LLM provider = kirtan rendering fallback
 7. Loads YAML prompts from config/prompts/moltbook.yaml
 
-No MagicMock. Real pipeline. Real EngineResult. Test LLM via protocol.
+No MagicMock. Real pipeline. Real EngineResult. Test provider via LLMProvider.
 """
 
 from pathlib import Path
@@ -33,45 +33,72 @@ from vibe_core.plugins.moltbook.resonance_proposer import (
     _section_data,
     _should_skip,
 )
-from vibe_core.protocols.llm import LLMProtocol
 from vibe_core.protocols.moltbook_content import (
     ContentProposalProtocol,
     ContentType,
 )
+from vibe_core.runtime.providers.base import LLMProvider, LLMResponse, LLMUsage
 
 
 # =========================================================================
-# Test LLM — protocol implementation, not MagicMock
+# Test Provider — implements LLMProvider (the REAL interface, not mock speak())
 # =========================================================================
 
 
-class _TestLLM(LLMProtocol):
-    """Deterministic LLM for testing. Implements LLMProtocol."""
+class _TestProvider(LLMProvider):
+    """Deterministic LLM provider for testing."""
 
-    def __init__(self, response: str = ""):
+    def __init__(self, response: str = "", api_key: str = None):
         self._response = response
         self.calls: list = []
 
-    def speak(self, agent_name: str, context: str, user_input: str) -> str:
-        self.calls.append({"agent_name": agent_name, "context": context, "user_input": user_input})
-        return self._response
+    def invoke(self, prompt: str, model: str, max_tokens: int = 4096,
+               temperature: float = 1.0, **kwargs) -> LLMResponse:
+        self.calls.append({"prompt": prompt, "model": model})
+        return LLMResponse(
+            content=self._response,
+            usage=LLMUsage(input_tokens=10, output_tokens=10, model="test", cost_usd=0.0, timestamp=""),
+            model=model or "test",
+            finish_reason="stop",
+            provider="test",
+        )
 
-    def generate_code(self, prompt: str, system_prompt=None) -> str:
-        return ""
+    def calculate_cost(self, input_tokens: int, output_tokens: int, model: str) -> float:
+        return 0.0
+
+    def get_available_models(self) -> list[str]:
+        return ["test-model"]
+
+    def is_available(self) -> bool:
+        return True
 
     @property
-    def last_context(self) -> str:
-        return self.calls[-1]["context"] if self.calls else ""
+    def last_prompt(self) -> str:
+        return self.calls[-1]["prompt"] if self.calls else ""
 
 
-class _ErrorLLM(LLMProtocol):
-    """LLM that returns error markers."""
+class _ErrorProvider(LLMProvider):
+    """Provider that returns error markers."""
 
-    def speak(self, agent_name: str, context: str, user_input: str) -> str:
-        return "# ERROR: test failure"
+    def __init__(self, api_key: str = None):
+        pass
 
-    def generate_code(self, prompt: str, system_prompt=None) -> str:
-        return "# ERROR"
+    def invoke(self, prompt: str, model: str, max_tokens: int = 4096,
+               temperature: float = 1.0, **kwargs) -> LLMResponse:
+        return LLMResponse(
+            content="# ERROR: test failure",
+            usage=LLMUsage(input_tokens=0, output_tokens=0, model="error", cost_usd=0.0, timestamp=""),
+            model="error", finish_reason="error", provider="error",
+        )
+
+    def calculate_cost(self, input_tokens: int, output_tokens: int, model: str) -> float:
+        return 0.0
+
+    def get_available_models(self) -> list[str]:
+        return ["error-model"]
+
+    def is_available(self) -> bool:
+        return True
 
 
 # =========================================================================
@@ -162,12 +189,12 @@ def _make_engine_result(**overrides) -> EngineResult:
 
 
 def _proposer_with_llm(response: str) -> tuple:
-    """Create proposer with test LLM. Returns (proposer, llm)."""
-    llm = _TestLLM(response)
+    """Create proposer with test provider. Returns (proposer, provider)."""
+    provider = _TestProvider(response)
     p = ResonanceProposer()
-    p._llm = llm
+    p._llm = provider
     p._llm_resolved = True
-    return p, llm
+    return p, provider
 
 
 def _proposer_no_llm() -> ResonanceProposer:
@@ -466,11 +493,14 @@ class TestGunaGates:
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result(guna_mode="TAMAS")):
             assert p.propose_dm_reply("conv1", "SpamBot", "buy my token") is None
 
-    def test_dm_reply_no_llm_returns_none(self):
-        """No LLM = no output. System physics."""
+    def test_dm_reply_no_llm_returns_kirtan_fallback(self):
+        """No LLM = kirtan rendering fallback (not None)."""
         p = _proposer_no_llm()
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result(guna_mode="RAJAS")):
-            assert p.propose_dm_reply("conv1", "GoodBot", "hello") is None
+            result = p.propose_dm_reply("conv1", "GoodBot", "hello")
+            assert result is not None
+            # Kirtan rendering: [GUARDIAN · quarter · function]
+            assert "[" in result["content"] and "]" in result["content"]
 
     def test_dm_request_rejects_tamas(self):
         p = ResonanceProposer()
@@ -544,32 +574,46 @@ class TestCellGates:
 
 class TestCompose:
     def test_compose_returns_llm_response(self):
-        p, llm = _proposer_with_llm("dharma insight response")
+        p, provider = _proposer_with_llm("dharma insight response")
         result = p._compose("moltbook.dm_reply", _make_engine_result(), "test input", sender="X")
         assert result == "dharma insight response"
 
     def test_compose_sends_context_to_llm(self):
-        p, llm = _proposer_with_llm("response")
+        p, provider = _proposer_with_llm("response")
         p._compose("moltbook.dm_reply", _make_engine_result(), "test input", sender="AgentX")
-        ctx = llm.last_context
+        ctx = provider.last_prompt
         assert "KAPILA" in ctx
         assert "BG.6.47" in ctx
 
-    def test_compose_no_llm_returns_none(self):
+    def test_compose_no_provider_with_pipeline_result_returns_kirtan(self):
+        p = _proposer_no_llm()
+        result = p._compose(
+            "moltbook.dm_reply", _make_engine_result(), "test",
+            pipeline_result=_make_pipeline_result(),
+        )
+        assert result is not None
+        assert "[" in result  # kirtan header
+
+    def test_compose_no_provider_no_pipeline_returns_none(self):
         p = _proposer_no_llm()
         assert p._compose("moltbook.dm_reply", _make_engine_result(), "test") is None
 
-    def test_compose_error_llm_returns_none(self):
+    def test_compose_error_provider_with_pipeline_returns_kirtan(self):
         p = ResonanceProposer()
-        p._llm = _ErrorLLM()
+        p._llm = _ErrorProvider()
         p._llm_resolved = True
-        assert p._compose("moltbook.dm_reply", _make_engine_result(), "test") is None
+        result = p._compose(
+            "moltbook.dm_reply", _make_engine_result(), "test",
+            pipeline_result=_make_pipeline_result(),
+        )
+        # Error response starts with "# ERROR" → falls through to kirtan
+        assert result is not None
 
     def test_compose_context_has_no_instructions(self):
         """Context-only. System physics enforce quality, not prompts."""
-        p, llm = _proposer_with_llm("response")
+        p, provider = _proposer_with_llm("response")
         p._compose("moltbook.dm_reply", _make_engine_result(), "test input", sender="X")
-        ctx = llm.last_context.lower()
+        ctx = provider.last_prompt.lower()
         assert "please" not in ctx
         assert "you should" not in ctx
         assert "sei authentisch" not in ctx
@@ -583,7 +627,7 @@ class TestCompose:
 
 class TestProposeDmReply:
     def test_reply_with_llm(self):
-        p, llm = _proposer_with_llm("Fascinating perspective on dharma!")
+        p, provider = _proposer_with_llm("Fascinating perspective on dharma!")
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result()):
             proposal = p.propose_dm_reply("conv1", "AgentX", "dharma discussion")
         assert proposal is not None
@@ -609,10 +653,10 @@ class TestProposeDmReply:
 
     def test_reply_llm_receives_guardian_context(self):
         """LLM receives structured context with guardian, verse, resonance."""
-        p, llm = _proposer_with_llm("response")
+        p, provider = _proposer_with_llm("response")
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result()):
             p.propose_dm_reply("conv1", "AgentX", "dharma discussion")
-        ctx = llm.last_context
+        ctx = provider.last_prompt
         # Context must contain system data (guardian, verse, resonance)
         assert "·" in ctx  # Guardian header format: NAME · MODE · FUNCTION
         assert "RESONANZ" in ctx or "ANALYSE" in ctx
@@ -633,10 +677,12 @@ class TestProposeComment:
         assert proposal["post_id"] == "p1"
         assert len(proposal["content"]) <= 280
 
-    def test_comment_no_llm_returns_none(self):
+    def test_comment_no_provider_returns_kirtan_fallback(self):
         p = _proposer_no_llm()
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result()):
-            assert p.propose_comment("p1", "deep content", "feed") is None
+            result = p.propose_comment("p1", "deep content", "feed")
+            assert result is not None
+            assert "[" in result["content"]  # kirtan rendering
 
 
 # =========================================================================
@@ -652,10 +698,12 @@ class TestProposePost:
         assert proposal is not None
         assert proposal["content_type"] == ContentType.POST.value
 
-    def test_post_no_llm_returns_none(self):
+    def test_post_no_provider_returns_kirtan_fallback(self):
         p = _proposer_no_llm()
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result(guna_mode="RAJAS", integrity=0.95)):
-            assert p.propose_post("scheduled") is None
+            result = p.propose_post("scheduled")
+            assert result is not None
+            assert result["content"]  # has content from kirtan rendering
 
     def test_post_none_when_pipeline_fails(self):
         p = _proposer_no_llm()

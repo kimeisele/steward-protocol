@@ -2,18 +2,16 @@
 RESONANCE PROPOSER v3 — Content Intelligence Layer
 =====================================================
 
-Single path. No fallbacks. No instructions in prompts.
+Single path. No instructions in prompts.
 System physics (guna/integrity/section mode) enforce quality.
 LLM gets DENSE CONTEXT and assembles words.
-No LLM = no output.
+No LLM = kirtan rendering via render(result).
 
 The system IS the constraint:
     - Guna gate = TAMAS filter (destructive → skip)
     - Integrity gate = noise filter (low coherence → skip)
     - Section mode = rhetoric shaping (FILTER/VERB/QUALITY/CORE/...)
-    - Resonant words = semantic grounding
-    - Template words = grammatical skeleton
-    - KnowledgeResolver = graph-aware context
+    - Dense context = semantic grounding (resonant/template/section/knowledge)
 
 Quality comes from CONTEXT DENSITY, not from "please don't be sloppy".
 """
@@ -181,7 +179,8 @@ def _build_context(
 class ResonanceProposer(ContentProposalProtocol):
     """
     Content Intelligence layer. System physics enforce quality.
-    LLM gets dense context, assembles words. No LLM = no output.
+    LLM gets dense context, assembles words.
+    No LLM = kirtan rendering via render(result).
     """
 
     def __init__(
@@ -201,17 +200,20 @@ class ResonanceProposer(ContentProposalProtocol):
 
         _load_yaml_prompts()
 
-    def _get_llm(self):
-        """Lazy-resolve LLMProtocol."""
+    def _get_provider(self):
+        """Lazy-resolve LLM Provider (the REAL LLM, not the template mock)."""
         if self._llm_resolved:
             return self._llm
         try:
-            from vibe_core.di import ServiceRegistry
-            from vibe_core.protocols.llm import LLMProtocol
-            self._llm = ServiceRegistry.get(LLMProtocol)
-            self._llm_resolved = True
+            from vibe_core.runtime.providers.factory import get_llm_provider
+            provider = get_llm_provider()
+            if provider and provider.is_available():
+                self._llm = provider
+            else:
+                self._llm = None
         except Exception:
-            self._llm_resolved = True
+            self._llm = None
+        self._llm_resolved = True
         return self._llm
 
     def _run_pipeline(self, text: str) -> Optional[dict]:
@@ -234,12 +236,11 @@ class ResonanceProposer(ContentProposalProtocol):
             logger.warning(f"Engine failed: {e}")
             return None
 
-    def _compose(self, prompt_key: str, engine_result, user_input: str, **extra: str) -> Optional[str]:
-        """Context → YAML template → LLM → content. No LLM = None."""
-        llm = self._get_llm()
-        if not llm:
-            return None
-
+    def _compose(
+        self, prompt_key: str, engine_result, user_input: str,
+        pipeline_result: Optional[dict] = None, **extra: str,
+    ) -> Optional[str]:
+        """Context → YAML template → LLM → content. No LLM = kirtan rendering."""
         ctx = _build_context(engine_result, self._agent_name, user_input, **extra)
 
         # Fill YAML template with context
@@ -251,7 +252,6 @@ class ResonanceProposer(ContentProposalProtocol):
             pass
 
         if not prompt:
-            # Minimal inline context (same structure, no instructions)
             prompt = (
                 f"{ctx['guardian_name']} · {ctx['quarter']} · {ctx['guardian_function']}\n"
                 f"Sektion: {ctx['section_name']} ({ctx['section_semantic']})\n"
@@ -262,12 +262,29 @@ class ResonanceProposer(ContentProposalProtocol):
                 f"INPUT: {user_input}\n"
             )
 
-        try:
-            result = llm.speak(self._agent_name, prompt, user_input)
-            if result and not result.startswith("# ERROR"):
-                return result.strip()
-        except Exception as e:
-            logger.warning(f"LLM failed: {e}")
+        # Try real LLM provider (NOT the template mock LLMEngine.speak())
+        provider = self._get_provider()
+        if provider:
+            try:
+                response = provider.invoke(
+                    prompt=prompt,
+                    model=provider.get_available_models()[0] if provider.get_available_models() else None,
+                    max_tokens=512,
+                    temperature=0.7,
+                )
+                if response and response.content and not response.content.startswith("# ERROR"):
+                    return response.content.strip()
+            except Exception as e:
+                logger.warning(f"LLM provider failed: {e}")
+
+        # Fallback: kirtan rendering (the system's tongue without enrichment)
+        if pipeline_result:
+            try:
+                from vibe_core.mahamantra.render import render
+                return render(pipeline_result)
+            except Exception:
+                pass
+
         return None
 
     # =========================================================================
@@ -295,7 +312,10 @@ class ResonanceProposer(ContentProposalProtocol):
         if not engine_result:
             return None
 
-        reply = self._compose(_PROMPT_KEYS["dm_reply"], engine_result, inbound_content, sender=sender)
+        reply = self._compose(
+            _PROMPT_KEYS["dm_reply"], engine_result, inbound_content,
+            pipeline_result=result, sender=sender,
+        )
         if not reply:
             return None
 
@@ -356,7 +376,10 @@ class ResonanceProposer(ContentProposalProtocol):
         if not engine_result:
             return None
 
-        post_text = self._compose(_PROMPT_KEYS["post"], engine_result, seed_text, trigger=trigger)
+        post_text = self._compose(
+            _PROMPT_KEYS["post"], engine_result, seed_text,
+            pipeline_result=result, trigger=trigger,
+        )
         if not post_text:
             return None
 
@@ -391,7 +414,7 @@ class ResonanceProposer(ContentProposalProtocol):
 
         comment = self._compose(
             _PROMPT_KEYS["comment"], engine_result, post_content[:200],
-            post_content=post_content[:500],
+            pipeline_result=result, post_content=post_content[:500],
         )
         if not comment:
             return None

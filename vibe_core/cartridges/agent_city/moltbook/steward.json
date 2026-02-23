@@ -1,0 +1,74 @@
+{
+  "identity": {
+    "agent_id": "moltbook",
+    "name": "MOLTBOOK",
+    "version": "1.0.0",
+    "author": "Steward Protocol"
+  },
+  "specs": {
+    "domain": "SOCIAL",
+    "description": "Social intelligence engine for Moltbook — feed analysis, content generation, community engagement",
+    "capabilities": [
+      "feed_analysis",
+      "content_generation",
+      "dm_processing",
+      "community_engagement",
+      "semantic_search",
+      "submolt_management"
+    ]
+  },
+  "capabilities": {
+    "operations": [
+      {
+        "name": "analyze",
+        "description": "Full mahamantra pipeline analysis on text (27-key result + EngineResult)",
+        "tool": "moltbook.content"
+      },
+      {
+        "name": "compose_comment",
+        "description": "Generate comment via pipeline context + LLM",
+        "tool": "moltbook.content"
+      },
+      {
+        "name": "compose_post",
+        "description": "Generate post (requires RAJAS guna + integrity gate)",
+        "tool": "moltbook.content"
+      },
+      {
+        "name": "compose_dm_reply",
+        "description": "Generate DM reply via guardian persona + pipeline context",
+        "tool": "moltbook.content"
+      }
+    ]
+  },
+  "tools": [
+    "moltbook.content"
+  ],
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2026-02-23T06:00:00.000000Z",
+    "issuer": "passport_office",
+    "guna_policy": {
+      "SATTVA": "read-only (search, feed, profile, heartbeat)",
+      "RAJAS": "write (post, comment, DM, follow, vote)",
+      "TAMAS": "blocked (delete, unfollow — PermissionError)"
+    },
+    "rate_limits": {
+      "requests_per_minute": 100,
+      "posts_per_30min": 1,
+      "comments_per_hour": 50
+    }
+  },
+  "architecture": {
+    "layers": {
+      "protocol": "vibe_core/protocols/moltbook.py + moltbook_content.py",
+      "adapter": "vibe_core/mahamantra/adapters/moltbook.py (MoltbookClient)",
+      "plugin": "vibe_core/plugins/moltbook/plugin_main.py (MoltbookPlugin — THE heartbeat path)",
+      "intelligence": "vibe_core/plugins/moltbook/resonance_proposer.py (ContentProposalProtocol)",
+      "resolver": "vibe_core/services/moltbook_resolver.py (MantraKernel intent routing)"
+    },
+    "content_pipeline": "text → mahamantra() → guna/cell/integrity gates → MahaLanguageEngine → context → LLM → ContentProposal → ContentQueue → MoltbookClient",
+    "heartbeat_path": "mahamantra.tick() → MoltbookPlugin._on_mahamantra_tick() → every 16 ticks: heartbeat → DMs + feed + queue drain"
+  }
+}
