@@ -423,6 +423,9 @@ class ResonanceProposer(ContentProposalProtocol):
         result = self._run_pipeline(post_content)
         if not result or _should_skip(result):
             return None
+        # Comments are RAJAS (write) — same gate as propose_post()
+        if _guna_mode(result) != _GUNA_RAJAS:
+            return None
         if _integrity(result) < _INTEGRITY_THRESHOLD:
             return None
 
