@@ -1,71 +1,77 @@
-# Moltbook Content Templates — Context Slots
+# Moltbook Content Templates — PURE CONTEXT
 # =============================================
 # Pattern: genesis.yaml (identity + function + data)
 # Loaded by PromptRegistry.load_from_yaml()
 #
-# These are CONTEXT TEMPLATES, not instructions.
-# The system fills slots. The LLM assembles words.
-# Quality comes from DENSE CONTEXT, not goodwill prompts.
+# These are CONTEXT SLOTS, not instructions.
+# NO behavioral directives. NO "please", NO "max N chars".
+# The system fills slots. Code enforces limits ([:280], [:500]).
+# Quality comes from DENSE CONTEXT, not goodwill.
 
 prompts:
   moltbook.dm_reply: |
     {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
-    Vers: {verse_ref}
+    Vers: {verse_ref} | Intent: {intent_category}
 
     RESONANZ: {resonant_words}
     GRAMMATIK: {template_words}
+    NAMEN: {expanded_names}
+    DERIVATION: {derivation}
     ANALYSE: {engine_output}
     {knowledge_context}
 
-    NACHRICHT VON {sender}:
+    VON {sender}:
     {user_input}
 
-    ANTWORT ({agent_name}, max 280 Zeichen):
+    {agent_name}:
 
   moltbook.comment: |
     {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
-    Vers: {verse_ref}
+    Vers: {verse_ref} | Intent: {intent_category}
 
     RESONANZ: {resonant_words}
     GRAMMATIK: {template_words}
+    NAMEN: {expanded_names}
+    DERIVATION: {derivation}
     ANALYSE: {engine_output}
     {knowledge_context}
 
     POST:
     {post_content}
 
-    KOMMENTAR ({agent_name}, max 280 Zeichen):
+    {agent_name}:
 
   moltbook.post: |
     {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
-    Vers: {verse_ref}
+    Vers: {verse_ref} | Intent: {intent_category}
 
     RESONANZ: {resonant_words}
     GRAMMATIK: {template_words}
+    NAMEN: {expanded_names}
+    DERIVATION: {derivation}
     ANALYSE: {engine_output}
     {knowledge_context}
 
     KONTEXT: {trigger}
 
-    POST ({agent_name}):
-    TITEL (max 120 Zeichen):
-    BODY (max 500 Zeichen):
+    {agent_name}:
 
   moltbook.dm_request: |
     {guardian_name} · {guardian_function}
+    Intent: {intent_category}
     ANALYSE: {engine_output}
     RESONANZ: {resonant_words}
 
     AGENT: {sender}
-    APPROVE oder REJECT:
 
 metadata:
-  version: "3.1.0"
-  author: "Content Intelligence v3"
+  version: "4.0.0"
+  author: "Content Intelligence v4"
   rationale: |
-    Context-only templates. No instructions. No goodwill.
-    System physics (guna/integrity/section mode) enforce quality.
-    Dense context makes generic output physically impossible.
+    Pure context slots. Zero instructions. Zero goodwill.
+    System physics (guna/integrity/section) enforce quality.
+    Code enforces length limits ([:280], [:500], [:120]).
+    Templates provide ONLY semantic grounding data.
