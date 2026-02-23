@@ -52,8 +52,9 @@ class _TestProvider(LLMProvider):
         self._response = response
         self.calls: list = []
 
-    def invoke(self, prompt: str, model: str, max_tokens: int = 4096,
-               temperature: float = 1.0, **kwargs) -> LLMResponse:
+    def invoke(
+        self, prompt: str, model: str, max_tokens: int = 4096, temperature: float = 1.0, **kwargs
+    ) -> LLMResponse:
         self.calls.append({"prompt": prompt, "model": model})
         return LLMResponse(
             content=self._response,
@@ -83,12 +84,15 @@ class _ErrorProvider(LLMProvider):
     def __init__(self, api_key: str = None):
         pass
 
-    def invoke(self, prompt: str, model: str, max_tokens: int = 4096,
-               temperature: float = 1.0, **kwargs) -> LLMResponse:
+    def invoke(
+        self, prompt: str, model: str, max_tokens: int = 4096, temperature: float = 1.0, **kwargs
+    ) -> LLMResponse:
         return LLMResponse(
             content="# ERROR: test failure",
             usage=LLMUsage(input_tokens=0, output_tokens=0, model="error", cost_usd=0.0, timestamp=""),
-            model="error", finish_reason="error", provider="error",
+            model="error",
+            finish_reason="error",
+            provider="error",
         )
 
     def calculate_cost(self, input_tokens: int, output_tokens: int, model: str) -> float:
@@ -134,14 +138,25 @@ def _make_pipeline_result(
             "rama_index": 42,
             "phoneme": "ka",
             "signature": {
-                "element": element, "varga": 1, "sub": 2,
-                "harmonic": 7, "shruti": shruti, "frequency": 36,
+                "element": element,
+                "varga": 1,
+                "sub": 2,
+                "harmonic": 7,
+                "shruti": shruti,
+                "frequency": 36,
             },
         },
         "parampara": {"verified": parampara_verified, "channel": 2, "coherence": 18000},
         "chapter": chapter,
         "chapter_significance": chapter_significance,
-        "verse": {"id": "BG.6.47", "chapter": 6, "verse": 47, "guna": "sattva", "dominant_name": "KRISHNA", "ref": "BG.6.47"},
+        "verse": {
+            "id": "BG.6.47",
+            "chapter": 6,
+            "verse": 47,
+            "guna": "sattva",
+            "dominant_name": "KRISHNA",
+            "ref": "BG.6.47",
+        },
         "matches": 1,
         "gita_phase": "field",
         "is_complete": False,
@@ -154,18 +169,30 @@ def _make_pipeline_result(
         "trinity_function": "maintainer",
         "diw": {"raw": 42, "venu": 3, "vamsi": 200, "murali": 1},
         "cell": {
-            "header_size": 72, "payload_size": 10, "total_size": 82,
-            "valid": True, "parampara_verified": parampara_verified,
-            "prana": prana, "integrity": integrity, "is_alive": is_alive, "cycle": 1,
+            "header_size": 72,
+            "payload_size": 10,
+            "total_size": 82,
+            "valid": True,
+            "parampara_verified": parampara_verified,
+            "prana": prana,
+            "integrity": integrity,
+            "is_alive": is_alive,
+            "cycle": 1,
         },
         "nama": {"coords": (1, 2, 3), "phoneme_count": 3},
         "smaranam": smaranam,
         "antaranga": {"active_slots": 3, "total_prana": 100, "collisions": 0, "size_bytes": 16384},
         "akash": {"resonance_level": 10, "accumulated_value": 50, "total_beats": 16, "total_rounds": 1},
         "execution": {
-            "success": is_alive, "prana": prana, "integrity": integrity,
-            "kirtan_cycles": 1, "transformations": 16, "yajna_ticks": 16,
-            "cycles": 1, "guardian_acted": False, "guardian_result": None,
+            "success": is_alive,
+            "prana": prana,
+            "integrity": integrity,
+            "kirtan_cycles": 1,
+            "transformations": 16,
+            "yajna_ticks": 16,
+            "cycles": 1,
+            "guardian_acted": False,
+            "guardian_result": None,
         },
         "yajna": {"phase": None, "cycle_count": 0, "switch_count": 0, "return_count": 0, "dissonance": None},
         "gate_trace": ("PARSE", "VALIDATE", "EXECUTE", "RESULT", "SYNC"),
@@ -175,14 +202,21 @@ def _make_pipeline_result(
 def _make_engine_result(**overrides) -> EngineResult:
     """Build a real EngineResult from types.py."""
     defaults = dict(
-        input_text="test", seed=0, attractor=0,
-        guardian_name="kapila", guardian_function="analysis",
-        intent_category="", section_name="dharma", section_mode="CORE",
+        input_text="test",
+        seed=0,
+        attractor=0,
+        guardian_name="kapila",
+        guardian_function="analysis",
+        intent_category="",
+        section_name="dharma",
+        section_mode="CORE",
         verse_ref="BG.6.47",
         resonant_words=(("dharma", "righteousness", 0.85), ("karma", "action", 0.72)),
         template_words=(("dharma", "righteousness", "noun"),),
-        antaranga_active=0, antaranga_prana=0,
-        output="dharma righteousness consciousness", derivation="",
+        antaranga_active=0,
+        antaranga_prana=0,
+        output="dharma righteousness consciousness",
+        derivation="",
     )
     defaults.update(overrides)
     return EngineResult(**defaults)
@@ -466,12 +500,33 @@ class TestRunPipeline:
     def test_27_keys(self):
         result = ResonanceProposer()._run_pipeline("test input for key count")
         expected = {
-            "input", "tattva_gate", "guna", "vibration", "parampara",
-            "chapter", "chapter_significance", "verse", "matches",
-            "gita_phase", "is_complete", "position", "guardian",
-            "quarter", "role", "quarter_head", "holy_name",
-            "trinity_function", "diw", "cell", "nama", "smaranam",
-            "antaranga", "akash", "execution", "yajna", "gate_trace",
+            "input",
+            "tattva_gate",
+            "guna",
+            "vibration",
+            "parampara",
+            "chapter",
+            "chapter_significance",
+            "verse",
+            "matches",
+            "gita_phase",
+            "is_complete",
+            "position",
+            "guardian",
+            "quarter",
+            "role",
+            "quarter_head",
+            "holy_name",
+            "trinity_function",
+            "diw",
+            "cell",
+            "nama",
+            "smaranam",
+            "antaranga",
+            "akash",
+            "execution",
+            "yajna",
+            "gate_trace",
         }
         assert expected.issubset(set(result.keys()))
 
@@ -493,14 +548,13 @@ class TestGunaGates:
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result(guna_mode="TAMAS")):
             assert p.propose_dm_reply("conv1", "SpamBot", "buy my token") is None
 
-    def test_dm_reply_no_llm_returns_kirtan_fallback(self):
-        """No LLM = kirtan rendering fallback (not None)."""
+    def test_dm_reply_no_llm_returns_fallback(self):
+        """No LLM = MahaComposition or kirtan rendering fallback (not None)."""
         p = _proposer_no_llm()
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result(guna_mode="RAJAS")):
             result = p.propose_dm_reply("conv1", "GoodBot", "hello")
             assert result is not None
-            # Kirtan rendering: [GUARDIAN · quarter · function]
-            assert "[" in result["content"] and "]" in result["content"]
+            assert result["content"]  # Non-empty content from fallback pipeline
 
     def test_dm_request_rejects_tamas(self):
         p = ResonanceProposer()
@@ -585,14 +639,16 @@ class TestCompose:
         assert "KAPILA" in ctx
         assert "BG.6.47" in ctx
 
-    def test_compose_no_provider_with_pipeline_result_returns_kirtan(self):
+    def test_compose_no_provider_with_pipeline_result_returns_fallback(self):
         p = _proposer_no_llm()
         result = p._compose(
-            "moltbook.dm_reply", _make_engine_result(), "test",
+            "moltbook.dm_reply",
+            _make_engine_result(),
+            "test",
             pipeline_result=_make_pipeline_result(),
         )
         assert result is not None
-        assert "[" in result  # kirtan header
+        assert result.strip()  # Non-empty fallback (MahaComposition or kirtan)
 
     def test_compose_no_provider_no_pipeline_returns_none(self):
         p = _proposer_no_llm()
@@ -603,7 +659,9 @@ class TestCompose:
         p._llm = _ErrorProvider()
         p._llm_resolved = True
         result = p._compose(
-            "moltbook.dm_reply", _make_engine_result(), "test",
+            "moltbook.dm_reply",
+            _make_engine_result(),
+            "test",
             pipeline_result=_make_pipeline_result(),
         )
         # Error response starts with "# ERROR" → falls through to kirtan
@@ -677,12 +735,12 @@ class TestProposeComment:
         assert proposal["post_id"] == "p1"
         assert len(proposal["content"]) <= 280
 
-    def test_comment_no_provider_returns_kirtan_fallback(self):
+    def test_comment_no_provider_returns_fallback(self):
         p = _proposer_no_llm()
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result()):
             result = p.propose_comment("p1", "deep content", "feed")
             assert result is not None
-            assert "[" in result["content"]  # kirtan rendering
+            assert result["content"]  # Non-empty fallback content
 
 
 # =========================================================================
@@ -741,10 +799,12 @@ class TestAnalyzeFeed:
             {"id": "p1", "content": "spam content"},
             {"id": "p2", "content": "quality content"},
         ]
-        results_iter = iter([
-            _make_pipeline_result(guna_mode="TAMAS"),
-            _make_pipeline_result(guna_mode="RAJAS"),
-        ])
+        results_iter = iter(
+            [
+                _make_pipeline_result(guna_mode="TAMAS"),
+                _make_pipeline_result(guna_mode="RAJAS"),
+            ]
+        )
         with patch.object(p, "_run_pipeline", side_effect=lambda t: next(results_iter)):
             scored = p.analyze_feed(posts)
         assert len(scored) == 1
