@@ -525,10 +525,75 @@ class MoltbookPlugin(KernelPlugin):
         self._meta_circuit_manager = None
         # AGORA broadcast channel (cartridges/agent_city/agora/) — wired at boot
         self._agora = None
+        # Agency Director — I-P-V-O pipeline (mahamantra-direct, guna=style not gate)
+        self._agency_director = None
 
     @property
     def dependencies(self) -> Set[str]:
         return {"economy"}
+
+    # =========================================================================
+    # Agency Director — I-P-V-O pipeline (replaces direct proposer calls)
+    # =========================================================================
+
+    @property
+    def agency_director(self):
+        """Lazy-init AgencyDirector with plugin reference for circuit execution."""
+        if self._agency_director is None:
+            from vibe_core.cartridges.agent_city.moltbook.core.agency_director import AgencyDirector
+            self._agency_director = AgencyDirector(plugin=self)
+        return self._agency_director
+
+    def _director_propose(
+        self,
+        content_type: str,
+        raw_input: str,
+        proposal_type: str,
+        **extra,
+    ) -> Optional[ContentProposal]:
+        """Run AgencyDirector I-P-V-O cycle and convert CycleResult → ContentProposal.
+
+        This is the SINGLE entry point for all content generation from the heartbeat.
+        The director handles: mahamantra pipeline, guna→style (not gate), WordNet-backed
+        MahaComposition, LLM with structured prompts, governance validation, retry.
+        """
+        result = self.agency_director.run_retry_loop(
+            content_type=content_type,
+            raw_input=raw_input,
+            **extra,
+        )
+
+        if result.status != "SUCCESS" or not result.content:
+            if result.status == "VALIDATION_FAILED":
+                logger.info(f"Director {content_type} filtered: {result.violations}")
+            elif result.error:
+                logger.warning(f"Director {content_type} failed: {result.error}")
+            return None
+
+        # Convert CycleResult → ContentProposal (queue format)
+        from vibe_core.plugins.moltbook.resonance_proposer import _kg_priority
+
+        proposal = ContentProposal(
+            content_type=proposal_type,
+            content=result.content,
+            source=extra.get("trigger", "agency_director"),
+            priority=_kg_priority(proposal_type),
+        )
+
+        # Copy routing fields from extra kwargs
+        for key in ("post_id", "conversation_id", "sender", "parent_id", "submolt", "to_agent"):
+            if key in extra and extra[key]:
+                proposal[key] = extra[key]
+
+        # Gateway context if available
+        gw = extra.get("gateway_response") or {}
+        if gw:
+            proposal["gateway_success"] = bool(gw.get("success"))
+            proposal["gateway_position"] = gw.get("position", -1)
+            proposal["gateway_guardian"] = gw.get("guardian", "unknown")
+            proposal["gateway_guna"] = gw.get("guna", "sattva")
+
+        return proposal
 
     # =========================================================================
     # Queue + Seen ID Persistence
@@ -1098,7 +1163,7 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _process_inbound_dms(self) -> None:
-        """Fetch new DMs, route through Gateway, propose replies via ContentProposalProtocol."""
+        """Fetch new DMs, route through Gateway, reply via AgencyDirector I-P-V-O."""
         from vibe_core.gateway.mahamantra_gateway import get_gateway
         from vibe_core.protocols.gateway import EntryType, create_request
 
@@ -1142,12 +1207,15 @@ class MoltbookPlugin(KernelPlugin):
                 except Exception as e:
                     logger.warning(f"Inbound DM routing failed: {e}")
 
-                # Propose a reply
+                # Propose a reply via Agency Director (I-P-V-O pipeline)
                 try:
-                    proposal = self._proposer.propose_dm_reply(
+                    proposal = self._director_propose(
+                        content_type="dm_reply",
+                        raw_input=content,
+                        proposal_type=ContentType.DM_REPLY.value,
                         conversation_id=conv_id,
                         sender=sender,
-                        inbound_content=content,
+                        trigger="inbound_dm",
                         gateway_response=gateway_response,
                     )
                     if proposal:
@@ -1190,7 +1258,7 @@ class MoltbookPlugin(KernelPlugin):
                 logger.warning(f"DM request proposal failed: {e}")
 
     def _analyze_feed(self) -> None:
-        """Read personalized feed, analyze posts via engine, propose engagement."""
+        """Read personalized feed, score via proposer, generate via AgencyDirector."""
         if not self._proposer:
             return
 
@@ -1233,12 +1301,14 @@ class MoltbookPlugin(KernelPlugin):
             except Exception as e:
                 logger.warning(f"Engagement proposal failed: {e}")
 
-            # Comment on high-resonance posts
+            # Comment on high-resonance posts via Agency Director (I-P-V-O)
             try:
-                comment_proposal = self._proposer.propose_comment(
-                    post_id,
-                    post_content,
-                    "feed_analysis",
+                comment_proposal = self._director_propose(
+                    content_type="comment",
+                    raw_input=post_content,
+                    proposal_type=ContentType.COMMENT.value,
+                    post_id=post_id,
+                    trigger="feed_analysis",
                 )
                 if comment_proposal:
                     self._content_queue.enqueue(comment_proposal)
@@ -1249,14 +1319,12 @@ class MoltbookPlugin(KernelPlugin):
     def _maybe_create_post(self) -> None:
         """Autonomous post creation — uses trending feed topics as seed.
 
-        The ResonanceProposer pipeline gates ensure quality:
-        - Guna gate: only RAJAS mode produces posts
-        - Integrity gate: < 0.5 coherence → skip
-        - LLM or kirtan fallback for content generation
+        Routes through AgencyDirector I-P-V-O pipeline:
+        - Guna informs STYLE (not gate): SATTVA=contemplative, RAJAS=active
+        - Only TAMAS + dead cell = skip. Everything else generates content.
+        - MahaComposition (5 scorers) + LLM with structured prompts
+        - Constitution validates output
         """
-        if not self._proposer:
-            return
-
         # Extract trending topics from recent feed as context
         feed_topics: List[str] = []
         try:
@@ -1269,18 +1337,31 @@ class MoltbookPlugin(KernelPlugin):
             logger.debug(f"Feed topic extraction failed: {e}")
 
         trigger = "scheduled"
-        context: Dict[str, Any] = {}
-        if feed_topics:
-            context["feed_topics"] = feed_topics
+        seed = f"{trigger}: {', '.join(feed_topics[:3])}" if feed_topics else trigger
 
         try:
-            proposal = self._proposer.propose_post(trigger, context)
+            proposal = self._director_propose(
+                content_type="post",
+                raw_input=seed,
+                proposal_type=ContentType.POST.value,
+                trigger=trigger,
+                context={"feed_topics": feed_topics} if feed_topics else {},
+            )
             if proposal:
+                # Extract title from first line if present
+                content = proposal.get("content", "")
+                lines = content.strip().split("\n", 1)
+                if len(lines) > 1:
+                    proposal["title"] = lines[0].strip().lstrip("#").strip()[:120]
+                    proposal["content"] = lines[1].strip()
+                else:
+                    proposal["title"] = content[:120]
+
                 self._content_queue.enqueue(proposal)
                 self._last_post_heartbeat = self._heartbeat_count
                 logger.info(f"Autonomous post queued: {proposal.get('title', '')[:50]}")
             else:
-                logger.debug("Post proposal filtered by pipeline (low integrity or TAMAS)")
+                logger.debug("Post proposal filtered by director (TAMAS+dead or governance)")
         except Exception as e:
             logger.warning(f"Autonomous post creation failed: {e}")
 
@@ -1291,7 +1372,7 @@ class MoltbookPlugin(KernelPlugin):
         find replies to our comments, and generate follow-up reply proposals.
         Routes through MoltbookService for Guna enforcement + audit trail.
         """
-        if not self._proposer or not self._comment_post_map:
+        if not self._comment_post_map:
             return
 
         if self._service is None:
@@ -1323,17 +1404,17 @@ class MoltbookPlugin(KernelPlugin):
                 # Is this a reply to one of our comments?
                 if parent in our_comment_ids and cid not in self._seen_message_ids:
                     self._seen_message_ids.add(cid)
-                    # Propose a follow-up reply
+                    # Propose a follow-up reply via Agency Director (I-P-V-O)
                     try:
-                        proposal = self._proposer.propose_comment(
-                            post_id,
-                            content,
-                            "reply_to_own_comment",
-                            context={"parent_id": cid, "original_comment_id": parent},
+                        proposal = self._director_propose(
+                            content_type="comment",
+                            raw_input=content,
+                            proposal_type=ContentType.COMMENT.value,
+                            post_id=post_id,
+                            parent_id=cid,
+                            trigger="reply_to_own_comment",
                         )
                         if proposal:
-                            # Set parent_id so our reply threads correctly
-                            proposal["parent_id"] = cid
                             self._content_queue.enqueue(proposal)
                             self._log_activity(
                                 "reply_proposed",
