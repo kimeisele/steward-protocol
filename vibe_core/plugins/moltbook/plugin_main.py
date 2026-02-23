@@ -90,6 +90,8 @@ class MoltbookService(MoltbookProtocol, GADBase):
         self._operation_log: List[Dict[str, Any]] = []
         self._last_api_error: Optional[str] = None
         self._consecutive_failures: int = 0
+        # First chant: transition heartbeat from DISCONNECTED → CHANTING
+        self.chant()
 
     def _enforce_guna(self, operation: str) -> None:
         """
@@ -671,6 +673,17 @@ class MoltbookPlugin(KernelPlugin):
 
             # Register MoltbookProtocol + ContentProposalProtocol in ServiceRegistry
             self._register_service()
+
+            # Resolve agent name from profile BEFORE booting proposer
+            # (proposer uses agent_name in content templates)
+            try:
+                profile = self._service.get_own_profile() if self._service else {}
+                name = profile.get("name", "") if isinstance(profile, dict) else ""
+                if name:
+                    self._agent_name = name
+            except Exception:
+                pass  # Keep default
+
             self._boot_proposer()
             self._register_proposer()
 
@@ -679,15 +692,6 @@ class MoltbookPlugin(KernelPlugin):
 
             # Activity log: append-only JSONL
             self._activity_log_path = data_root / self._ACTIVITY_LOG_FILE
-
-            # Resolve agent name from profile (for bio updates)
-            try:
-                profile = self._service.get_own_profile() if self._service else {}
-                name = profile.get("name", "") if isinstance(profile, dict) else ""
-                if name:
-                    self._agent_name = name
-            except Exception:
-                pass  # Keep default
 
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
@@ -1402,7 +1406,7 @@ class MoltbookPlugin(KernelPlugin):
         """Boot ResonanceProposer + register moltbook_context in PromptContext."""
         from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
-        self._proposer = ResonanceProposer()
+        self._proposer = ResonanceProposer(agent_name=self._agent_name)
         self._register_moltbook_context()
         logger.info("Content proposer: ResonanceProposer v3 (engine-wired)")
 
