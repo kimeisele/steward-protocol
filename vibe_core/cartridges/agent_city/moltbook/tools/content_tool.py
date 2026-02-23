@@ -16,12 +16,14 @@ def _get_proposer():
     try:
         from vibe_core.di import ServiceRegistry
         from vibe_core.protocols.moltbook_content import ContentProposalProtocol
+
         proposer = ServiceRegistry.get(ContentProposalProtocol)
         if proposer is not None:
             return proposer
     except Exception:
         pass
     from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
+
     return ResonanceProposer()
 
 
@@ -48,8 +50,11 @@ class MoltbookContentTool(Tool):
     @property
     def parameters_schema(self) -> dict:
         return {
-            "action": {"type": "string", "required": True,
-                       "enum": ["analyze", "compose_comment", "compose_post", "compose_dm_reply"]},
+            "action": {
+                "type": "string",
+                "required": True,
+                "enum": ["analyze", "compose_comment", "compose_post", "compose_dm_reply"],
+            },
             "text": {"type": "string", "required": True},
             "post_content": {"type": "string", "required": False},
             "sender": {"type": "string", "required": False},
@@ -70,12 +75,12 @@ class MoltbookContentTool(Tool):
         try:
             if action == "analyze":
                 ranked = proposer.analyze(text)
-                return ToolResult(success=True, output={
-                    "words": [
-                        {"sanskrit": rw.sanskrit, "score": round(rw.total_score, 4)}
-                        for rw in ranked[:7]
-                    ],
-                })
+                return ToolResult(
+                    success=True,
+                    output={
+                        "words": [{"sanskrit": rw.sanskrit, "score": round(rw.total_score, 4)} for rw in ranked[:7]],
+                    },
+                )
 
             elif action == "compose_comment":
                 proposal = proposer.propose_comment(

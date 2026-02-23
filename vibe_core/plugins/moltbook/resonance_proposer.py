@@ -52,6 +52,35 @@ _PROMPT_KEYS = {
 
 _MOLTBOOK_YAML = Path(__file__).resolve().parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
 
+# Knowledge Graph node IDs → ContentType mapping (knowledge/moltbook/platform.yaml)
+_KG_CONTENT_TYPE_NODES = {
+    ContentType.DM_REPLY.value: "moltbook_dm",
+    ContentType.DM_INITIATE.value: "moltbook_dm_request",
+    ContentType.POST.value: "moltbook_post",
+    ContentType.COMMENT.value: "moltbook_comment",
+    ContentType.VOTE.value: "moltbook_vote",
+}
+
+
+def _kg_priority(content_type: str) -> int:
+    """Get priority from Knowledge Graph metrics (knowledge/moltbook/platform.yaml).
+
+    Falls back to 1 if KG unavailable. This replaces hardcoded priority=1
+    with the graph-defined priorities: DM=9, Post=7, Comment=6, Vote=4.
+    """
+    node_id = _KG_CONTENT_TYPE_NODES.get(content_type)
+    if not node_id:
+        return 1
+    try:
+        from vibe_core.knowledge.resolver import get_resolver
+        from vibe_core.knowledge.schema import MetricType
+
+        resolver = get_resolver()
+        priority = resolver.graph.get_metric(node_id, MetricType.PRIORITY)
+        return int(priority) if priority else 1
+    except Exception:
+        return 1
+
 
 def _load_yaml_prompts() -> None:
     """Load Moltbook prompts from YAML."""
@@ -128,11 +157,22 @@ def _section_data(engine_result) -> Dict[str, str]:
 
 
 def _knowledge_context(topic: str) -> str:
-    """KnowledgeResolver → graph-aware context."""
+    """KnowledgeResolver → graph-aware context.
+
+    Queries the Knowledge Graph with the topic AND Moltbook domain terms
+    to get platform-specific knowledge from knowledge/moltbook/platform.yaml.
+    """
     try:
         from vibe_core.knowledge.resolver import get_resolver
 
-        return get_resolver().compile_context(topic)
+        resolver = get_resolver()
+        # Primary: topic-specific knowledge
+        ctx = resolver.compile_context(topic)
+        # Secondary: Moltbook domain knowledge (platform ontology + constraints)
+        moltbook_ctx = resolver.compile_context("moltbook")
+        if moltbook_ctx and moltbook_ctx != ctx:
+            ctx = f"{ctx}\n{moltbook_ctx}" if ctx else moltbook_ctx
+        return ctx
     except Exception:
         return ""
 
@@ -151,6 +191,11 @@ def _build_context(
     guardian_cfg = _GUARDIAN_CONFIGS.get(engine_result.guardian_name or "", {})
     section = _section_data(engine_result)
 
+    # Extended EngineResult fields for richer context
+    intent = getattr(engine_result, "intent_category", "") or ""
+    expanded = ", ".join(getattr(engine_result, "expanded_names", ()) or ())
+    syllables = str(getattr(engine_result, "syllable_count", 0) or 0)
+
     return {
         "agent_name": agent_name,
         "guardian_name": guardian,
@@ -164,6 +209,9 @@ def _build_context(
         "knowledge_context": _knowledge_context(user_input[:200]),
         "user_input": user_input,
         "derivation": engine_result.derivation or "",
+        "intent_category": intent,
+        "expanded_names": expanded,
+        "syllable_count": syllables,
         **section,
         **extra,
     }
@@ -192,6 +240,10 @@ class ResonanceProposer(ContentProposalProtocol):
         self._top_n = top_n
         self._llm = None
         self._llm_resolved = False
+        # Per-heartbeat cache: avoid running pipeline/engine twice for same text
+        self._pipeline_cache: Dict[str, Optional[dict]] = {}
+        self._engine_cache: Dict[str, object] = {}
+        self._cache_max = 32  # Max cached entries before flush
 
         if guardian not in _GUARDIAN_CONFIGS:
             raise ValueError(f"Unknown guardian: {guardian}. Valid: {list(_GUARDIAN_CONFIGS)}")
@@ -222,26 +274,43 @@ class ResonanceProposer(ContentProposalProtocol):
         return self._llm
 
     def _run_pipeline(self, text: str) -> Optional[dict]:
-        """Mahamantra VM pipeline → 27-key result."""
+        """Mahamantra VM pipeline → 27-key result. Cached per text."""
         if not text or not text.strip():
             return None
+        if text in self._pipeline_cache:
+            return self._pipeline_cache[text]
         try:
             from vibe_core.mahamantra import mahamantra
 
-            return mahamantra(text)
+            result = mahamantra(text)
+            if len(self._pipeline_cache) >= self._cache_max:
+                self._pipeline_cache.clear()
+            self._pipeline_cache[text] = result
+            return result
         except Exception as e:
             logger.warning(f"Pipeline failed: {e}")
             return None
 
     def _generate(self, text: str):
-        """MahaLanguageEngine → EngineResult."""
+        """MahaLanguageEngine → EngineResult. Cached per text."""
+        if text in self._engine_cache:
+            return self._engine_cache[text]
         try:
             from vibe_core.mahamantra.substrate.language.engine import generate
 
-            return generate(text)
+            result = generate(text)
+            if len(self._engine_cache) >= self._cache_max:
+                self._engine_cache.clear()
+            self._engine_cache[text] = result
+            return result
         except Exception as e:
             logger.warning(f"Engine failed: {e}")
             return None
+
+    def flush_cache(self) -> None:
+        """Clear pipeline/engine caches. Call between heartbeats."""
+        self._pipeline_cache.clear()
+        self._engine_cache.clear()
 
     def _compose(
         self,
@@ -264,14 +333,18 @@ class ResonanceProposer(ContentProposalProtocol):
             pass
 
         if not prompt:
+            # Fallback: pure context, no YAML available
             prompt = (
                 f"{ctx['guardian_name']} · {ctx['quarter']} · {ctx['guardian_function']}\n"
                 f"Sektion: {ctx['section_name']} ({ctx['section_semantic']})\n"
-                f"Vers: {ctx['verse_ref']}\n"
+                f"Vers: {ctx['verse_ref']} | Intent: {ctx['intent_category']}\n"
                 f"RESONANZ: {ctx['resonant_words']}\n"
+                f"NAMEN: {ctx['expanded_names']}\n"
+                f"DERIVATION: {ctx['derivation']}\n"
                 f"ANALYSE: {ctx['engine_output']}\n"
                 f"{ctx['knowledge_context']}\n"
-                f"INPUT: {user_input}\n"
+                f"{user_input}\n"
+                f"{ctx['agent_name']}:\n"
             )
 
         # Try real LLM provider (NOT the template mock LLMEngine.speak())
@@ -289,7 +362,19 @@ class ResonanceProposer(ContentProposalProtocol):
             except Exception as e:
                 logger.warning(f"LLM provider failed: {e}")
 
-        # Fallback: kirtan rendering (the system's tongue without enrichment)
+        # Primary LLM-free: MahaComposition 5-scorer ranked English pipeline
+        if pipeline_result:
+            try:
+                from vibe_core.mahamantra.adapters.composition import MahaComposition
+
+                composer = MahaComposition()
+                composed = composer.compose(pipeline_result, user_input)
+                if composed and composed.strip():
+                    return composed.strip()
+            except Exception as e:
+                logger.debug(f"MahaComposition failed: {e}")
+
+        # Last resort: kirtan rendering (deterministic but minimal)
         if pipeline_result:
             try:
                 from vibe_core.mahamantra.render import render
@@ -342,7 +427,7 @@ class ResonanceProposer(ContentProposalProtocol):
             conversation_id=conversation_id,
             source="inbound_dm",
             sender=sender,
-            priority=1,
+            priority=_kg_priority(ContentType.DM_REPLY.value),
             gateway_success=bool(gw.get("success")),
             gateway_position=gw.get("position", -1),
             gateway_guardian=gw.get("guardian", "unknown"),
@@ -365,7 +450,7 @@ class ResonanceProposer(ContentProposalProtocol):
             to_agent=from_agent,
             source="dm_request_pipeline",
             sender=from_agent,
-            priority=1,
+            priority=_kg_priority(ContentType.DM_INITIATE.value),
         )
 
     def propose_post(
@@ -410,7 +495,7 @@ class ResonanceProposer(ContentProposalProtocol):
             title=title,
             content=content[:500],
             source=trigger,
-            priority=1,
+            priority=_kg_priority(ContentType.POST.value),
         )
 
     def propose_comment(
@@ -422,6 +507,9 @@ class ResonanceProposer(ContentProposalProtocol):
     ) -> Optional[ContentProposal]:
         result = self._run_pipeline(post_content)
         if not result or _should_skip(result):
+            return None
+        # Comments are RAJAS (write) — same gate as propose_post()
+        if _guna_mode(result) != _GUNA_RAJAS:
             return None
         if _integrity(result) < _INTEGRITY_THRESHOLD:
             return None
@@ -440,13 +528,21 @@ class ResonanceProposer(ContentProposalProtocol):
         if not comment:
             return None
 
-        return ContentProposal(
+        proposal = ContentProposal(
             content_type=ContentType.COMMENT.value,
             content=comment[:280],
             post_id=post_id,
             source=trigger,
-            priority=1,
+            priority=_kg_priority(ContentType.COMMENT.value),
         )
+
+        # Thread context: pass parent_id for reply chains
+        if context:
+            parent_id = context.get("parent_id")
+            if parent_id:
+                proposal["parent_id"] = parent_id
+
+        return proposal
 
     def should_engage(
         self,
@@ -462,7 +558,7 @@ class ResonanceProposer(ContentProposalProtocol):
             content_type=ContentType.VOTE.value,
             post_id=post_id,
             source="pipeline_engagement",
-            priority=0,
+            priority=_kg_priority(ContentType.VOTE.value),
         )
 
     def analyze_feed(

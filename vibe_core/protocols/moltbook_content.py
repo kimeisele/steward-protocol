@@ -88,6 +88,10 @@ class ContentProposal(TypedDict, total=False):
     gateway_guardian: str
     gateway_guna: str
 
+    # Internal: retry tracking (set by _drain_content_queue on failure)
+    _retries: int
+    _retry_after: float  # epoch timestamp — skip until this time (exponential backoff)
+
 
 # =============================================================================
 # CONTENT QUEUE — Bounded FIFO for outbound proposals
@@ -95,13 +99,11 @@ class ContentProposal(TypedDict, total=False):
 
 
 class ContentQueue:
-    """
-    Bounded FIFO queue for outbound content proposals.
+    """Bounded priority queue for outbound content proposals.
 
-    Prevents runaway posting. The plugin tick loop drains this
-    and executes proposals through MoltbookService.
-
-    Thread-safe enough for single-threaded tick loop usage.
+    Drains highest-priority proposals first (DM=9 > Post=7 > Comment=6 > Vote=4).
+    Within same priority level, FIFO order is preserved.
+    Priorities come from Knowledge Graph metrics (knowledge/moltbook/platform.yaml).
     """
 
     DEFAULT_MAX_SIZE = 50
@@ -132,16 +134,23 @@ class ContentQueue:
         return True
 
     def drain(self, limit: int = 5) -> List[ContentProposal]:
-        """
-        Drain up to `limit` proposals from the queue.
+        """Drain up to `limit` proposals, highest priority first.
 
-        Returns proposals in FIFO order. The caller is responsible
-        for executing them through MoltbookService.
+        Sorts by priority (descending) so DM replies (priority=9) are
+        processed before votes (priority=4). Within same priority, FIFO.
         """
-        result: List[ContentProposal] = []
-        for _ in range(min(limit, len(self._queue))):
-            result.append(self._queue.popleft())
-            self._total_drained += 1
+        n = min(limit, len(self._queue))
+        if n == 0:
+            return []
+
+        # Sort by priority descending (stable sort preserves FIFO within same priority)
+        items = sorted(self._queue, key=lambda p: p.get("priority", 0), reverse=True)
+        result = items[:n]
+        # Remove drained items from queue
+        remaining = items[n:]
+        self._queue.clear()
+        self._queue.extend(remaining)
+        self._total_drained += n
         return result
 
     def peek(self) -> Optional[ContentProposal]:

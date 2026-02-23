@@ -27,10 +27,10 @@ import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Set
 
 from vibe_core.mahamantra import run_async
-from vibe_core.mahamantra.protocols._gad import GADAudit, GADBase
+from vibe_core.mahamantra.protocols._gad import GADBase
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.protocols.moltbook import (
     DMMessage,
@@ -77,20 +77,31 @@ class MoltbookService(MoltbookProtocol, GADBase):
     unless explicitly authorized. SATTVA (read) flows freely.
     """
 
+    # Sovereign Identity (class-level → hasattr(instance, ...) resolves True)
+    # Narada = the travelling sage who connects all worlds (social platform adapter)
+    # Genesis: 999000000 = 37 × 27000000 → verify_link() passes (PARAMPARA check)
+    __mahajana__: ClassVar[str] = "narada"
+    __position__: ClassVar[int] = 2  # Narada position: Communication/Broadcast
+    __genesis__: ClassVar[str] = "0x3b8b87c0"  # int(hex,16) % 37 == 0
+
     def __init__(self, client: "MoltbookClient"):
         GADBase.__init__(self)
         self._client = client
         self._operation_log: List[Dict[str, Any]] = []
         self._last_api_error: Optional[str] = None
         self._consecutive_failures: int = 0
+        # First chant: transition heartbeat from DISCONNECTED → CHANTING
+        self.chant()
 
     def _enforce_guna(self, operation: str) -> None:
-        """
-        Enforce Guna policy before executing an operation.
+        """Guna I/O Policy + Knowledge Graph Constraint validation.
 
         SATTVA: Pass through (read-only, safe).
         RAJAS: Log and allow (write, rate-limited by client).
-        TAMAS: Block (destructive — not implemented yet, future-proof).
+        TAMAS: Block (destructive).
+
+        Additionally checks constraints from knowledge/moltbook/platform.yaml
+        (6 hard/soft constraints) via Knowledge Graph.
         """
         from vibe_core.protocols.moltbook import MOLTBOOK_GUNA_MAP, MoltbookGuna
 
@@ -102,6 +113,17 @@ class MoltbookService(MoltbookProtocol, GADBase):
                 f"explicit authorization. Not implemented."
             )
 
+        # Knowledge Graph constraint check (knowledge/moltbook/platform.yaml)
+        try:
+            from vibe_core.knowledge.resolver import get_resolver
+
+            resolver = get_resolver()
+            violations = resolver.get_violations(operation, {"guna": guna.value, "operation": operation})
+            for v in violations:
+                logger.warning(f"MOLTBOOK-KG-CONSTRAINT: {v}")
+        except Exception:
+            pass  # KG not available = degrade gracefully
+
         if guna == MoltbookGuna.RAJAS:
             entry = {
                 "operation": operation,
@@ -109,6 +131,9 @@ class MoltbookService(MoltbookProtocol, GADBase):
                 "timestamp": time.time(),
             }
             self._operation_log.append(entry)
+            # Prevent unbounded growth: trim when log exceeds 5000 entries
+            if len(self._operation_log) > 5000:
+                self._operation_log = self._operation_log[-2500:]
             logger.info(f"MOLTBOOK-RAJAS: {operation} (write operation logged)")
 
     # --- SATTVA operations (read-only) ---
@@ -438,8 +463,17 @@ class MoltbookPlugin(KernelPlugin):
 
     plugin_id = "moltbook"
 
-    # Analyze feed every N heartbeats (not every tick)
-    _FEED_INTERVAL = 4  # Every 4th heartbeat = every 64 ticks
+    # Defaults for heartbeat intervals (overridable via config at boot)
+    _DEFAULT_FEED_INTERVAL = 4  # Every 4th heartbeat = every 64 ticks
+    _DEFAULT_POST_INTERVAL = 24  # Every 24th heartbeat ≈ every 384 ticks
+    _DEFAULT_REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
+    _DEFAULT_PROFILE_UPDATE_INTERVAL = 48  # Every 48th heartbeat ≈ 768 ticks
+
+    # Persistence: queue + seen IDs survive restarts
+    _QUEUE_STATE_FILE = "content_queue.json"
+    _SEEN_STATE_FILE = "seen_ids.json"
+    _ACTIVITY_LOG_FILE = "activity.jsonl"
+    _MAX_SEEN_IDS = 1000  # Cap to prevent unbounded growth
 
     # Autonomous post creation: every N heartbeats (conservative to avoid spam)
     # 16 ticks/heartbeat × 24 heartbeats = 384 ticks between posts
@@ -466,6 +500,11 @@ class MoltbookPlugin(KernelPlugin):
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
         self._heartbeat_count: int = 0
+        # Intervals (configured at boot, defaults from class)
+        self._feed_interval: int = self._DEFAULT_FEED_INTERVAL
+        self._post_interval: int = self._DEFAULT_POST_INTERVAL
+        self._reply_check_interval: int = self._DEFAULT_REPLY_CHECK_INTERVAL
+        self._profile_update_interval: int = self._DEFAULT_PROFILE_UPDATE_INTERVAL
         self._listener_wired: bool = False
         self._content_queue: ContentQueue = ContentQueue()
         self._proposer: Optional[ContentProposalProtocol] = None
@@ -480,6 +519,12 @@ class MoltbookPlugin(KernelPlugin):
         self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
         self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
         self._agent_name: str = "steward-protocol"  # Resolved from profile at boot
+        self._last_heartbeat_ts: float = 0.0  # Debounce guard: epoch of last heartbeat
+        # Circuit Executor (cortex/engines/circuit_engine.py) — wired at boot
+        self._circuit_executor = None
+        self._meta_circuit_manager = None
+        # AGORA broadcast channel (cartridges/agent_city/agora/) — wired at boot
+        self._agora = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -545,6 +590,9 @@ class MoltbookPlugin(KernelPlugin):
                 data = json.loads(queue_path.read_text())
                 if data.get("version") == 1:
                     for p in data.get("proposals", []):
+                        # Clear stale retry state from previous session
+                        p.pop("_retries", None)
+                        p.pop("_retry_after", None)
                         self._content_queue.enqueue(p)
                     stats = data.get("stats", {})
                     self._content_queue._total_enqueued = stats.get("total_enqueued", 0)
@@ -589,10 +637,10 @@ class MoltbookPlugin(KernelPlugin):
 
     def snapshot_state(self) -> Dict[str, Any]:
         if not self._client:
-            return {"version": 4, "client_active": False}
+            return {"version": 5, "client_active": False}
         limits = self._client.limits
         return {
-            "version": 4,
+            "version": 5,
             "client_active": True,
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
@@ -608,11 +656,17 @@ class MoltbookPlugin(KernelPlugin):
             "comment_thread_count": len(self._comment_post_map),
             "followed_agent_count": len(self._followed_agents),
             "subscribed_submolt_count": len(self._subscribed_submolts),
+            "intervals": {
+                "feed": self._feed_interval,
+                "post": self._post_interval,
+                "reply_check": self._reply_check_interval,
+                "profile_update": self._profile_update_interval,
+            },
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        if snapshot.get("version") not in (1, 2, 3, 4) or not snapshot.get("client_active"):
+        if snapshot.get("version") not in (1, 2, 3, 4, 5) or not snapshot.get("client_active"):
             return
         if not self._client:
             return
@@ -650,6 +704,14 @@ class MoltbookPlugin(KernelPlugin):
             self._offline_mode = bool(cfg.get("offline_mode", True))
             api_key = str(cfg.get("api_key", ""))
 
+            # Configurable heartbeat intervals (all in heartbeat counts, 1 hb = 16 ticks)
+            self._feed_interval = int(cfg.get("feed_interval", self._DEFAULT_FEED_INTERVAL))
+            self._post_interval = int(cfg.get("post_interval", self._DEFAULT_POST_INTERVAL))
+            self._reply_check_interval = int(cfg.get("reply_check_interval", self._DEFAULT_REPLY_CHECK_INTERVAL))
+            self._profile_update_interval = int(
+                cfg.get("profile_update_interval", self._DEFAULT_PROFILE_UPDATE_INTERVAL)
+            )
+
             if not api_key:
                 api_key = self._try_vault(kernel)
 
@@ -664,6 +726,17 @@ class MoltbookPlugin(KernelPlugin):
 
             # Register MoltbookProtocol + ContentProposalProtocol in ServiceRegistry
             self._register_service()
+
+            # Resolve agent name from profile BEFORE booting proposer
+            # (proposer uses agent_name in content templates)
+            try:
+                profile = self._service.get_own_profile() if self._service else {}
+                name = profile.get("name", "") if isinstance(profile, dict) else ""
+                if name:
+                    self._agent_name = name
+            except Exception:
+                pass  # Keep default
+
             self._boot_proposer()
             self._register_proposer()
 
@@ -673,14 +746,11 @@ class MoltbookPlugin(KernelPlugin):
             # Activity log: append-only JSONL
             self._activity_log_path = data_root / self._ACTIVITY_LOG_FILE
 
-            # Resolve agent name from profile (for bio updates)
-            try:
-                profile = self._service.get_own_profile() if self._service else {}
-                name = profile.get("name", "") if isinstance(profile, dict) else ""
-                if name:
-                    self._agent_name = name
-            except Exception:
-                pass  # Keep default
+            # Circuit Executor: wire MOLTBOOK_CONTENT_V1 circuit for state-machine content generation
+            self._wire_circuit_executor(kernel)
+
+            # AGORA: wire broadcast channel for federation publishing
+            self._wire_agora(kernel)
 
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
@@ -716,6 +786,118 @@ class MoltbookPlugin(KernelPlugin):
             logger.info("PARAMPARA: Moltbook wired to Mahamantra")
         except Exception as e:
             logger.warning(f"Mahamantra connection failed: {e}")
+
+    def _wire_circuit_executor(self, kernel: "RealVibeKernel") -> None:
+        """Wire CognitiveCircuitExecutor + MetaCircuitManager from cortex.
+
+        The executor loads MOLTBOOK_CONTENT_V1 (and all other circuits) from
+        playbook/circuits/*.yaml. MetaCircuitManager adds TASK_LEDGER and
+        ERROR_RECOVERY as active observers.
+
+        Degrades gracefully: if kernel or cortex unavailable, plugin continues
+        with the ad-hoc proposer pipeline.
+        """
+        try:
+            from vibe_core.cortex.engines.circuit_engine import create_circuit_executor_with_meta
+
+            executor, manager = create_circuit_executor_with_meta(kernel)
+            if "MOLTBOOK_CONTENT_V1" in executor.circuits:
+                self._circuit_executor = executor
+                self._meta_circuit_manager = manager
+                logger.info(
+                    f"Circuit executor wired: {len(executor.circuits)} circuits loaded, MOLTBOOK_CONTENT_V1 available"
+                )
+            else:
+                logger.warning("MOLTBOOK_CONTENT_V1 not found in loaded circuits — circuit path disabled")
+        except Exception as e:
+            logger.warning(f"Circuit executor wiring failed (non-fatal): {e}")
+
+    def _wire_agora(self, kernel: "RealVibeKernel") -> None:
+        """Wire AGORA broadcast channel for federation publishing.
+
+        After content is published to Moltbook, it is also broadcast to AGORA
+        so other agents in Agent City (PULSE, LENS, AMBASSADOR) can observe.
+
+        Degrades gracefully: if AGORA not registered, content still publishes
+        to Moltbook directly.
+        """
+        try:
+            agora = kernel.get_agent("agora") if hasattr(kernel, "get_agent") else None
+            if agora and hasattr(agora, "publish_message"):
+                self._agora = agora
+                logger.info("AGORA broadcast channel wired for federation publishing")
+            else:
+                logger.info("AGORA not available — federation broadcasting disabled (non-fatal)")
+        except Exception as e:
+            logger.debug(f"AGORA wiring skipped: {e}")
+
+    def _broadcast_to_agora(self, content_type: str, content: str, metadata: Dict[str, Any]) -> None:
+        """Broadcast published content to AGORA for federation awareness.
+
+        One-way: Moltbook → AGORA → [PULSE, LENS, AMBASSADOR, ...]
+        """
+        if not self._agora:
+            return
+        try:
+            self._agora.publish_message(
+                source="moltbook",
+                message_type="narrative",
+                content=content[:500],
+                metadata={
+                    "content_type": content_type,
+                    "agent_name": self._agent_name,
+                    **metadata,
+                },
+            )
+        except Exception as e:
+            logger.debug(f"AGORA broadcast failed (non-fatal): {e}")
+
+    def execute_content_circuit(
+        self,
+        raw_input: str,
+        content_type: str = "comment",
+        post_id: str = "",
+        sender: str = "",
+        trigger: str = "heartbeat",
+        auto_approve: bool = True,
+    ) -> Optional[Dict[str, Any]]:
+        """Execute MOLTBOOK_CONTENT_V1 circuit for content generation.
+
+        Uses the full circuit state machine: SHABDA → ARTHA → PRATYAYA → KARMA → SUCCESS.
+        Falls back to ad-hoc proposer if circuit executor not wired.
+
+        Returns circuit output dict on success, None on failure/filtering.
+        """
+        if not self._circuit_executor:
+            return None
+        try:
+            from vibe_core.circuit_types import CircuitExecutionResult
+
+            result: CircuitExecutionResult = self._circuit_executor.execute_by_id(
+                "MOLTBOOK_CONTENT_V1",
+                {
+                    "raw_input": raw_input,
+                    "content_type": content_type,
+                    "target_text": raw_input,
+                    "post_id": post_id,
+                    "sender": sender,
+                    "trigger": trigger,
+                    "auto_approve": auto_approve,
+                },
+                requester_id="moltbook",
+            )
+            if result.success:
+                logger.info(
+                    f"Circuit MOLTBOOK_CONTENT_V1 completed: "
+                    f"{' → '.join(result.state_history)} | {result.syscall_count} syscalls"
+                )
+                return result.output
+            else:
+                logger.info(f"Circuit filtered/failed: {result.final_state} — {result.error or 'filtered'}")
+                return None
+        except Exception as e:
+            logger.warning(f"Circuit execution failed: {e}")
+            return None
 
     def _try_vault(self, kernel: "RealVibeKernel") -> str:
         """Attempt to load API key: CivicVault → env → ~/.config/moltbook/credentials.json."""
@@ -784,14 +966,14 @@ class MoltbookPlugin(KernelPlugin):
             logger.warning(f"Heartbeat phase '{label}' failed: {e}")
 
     def _trim_memory(self) -> None:
-        """Trim in-memory tracking sets to _MAX_SEEN_IDS.
+        """Trim in-memory tracking sets and flush proposer caches.
 
         Prevents unbounded growth during long-running sessions.
-        The persist-time cap only fires on shutdown — this trims live.
+        Also flushes pipeline/engine caches in ResonanceProposer
+        to prevent stale results from accumulating.
         """
         cap = self._MAX_SEEN_IDS
         if len(self._seen_message_ids) > cap:
-            # Keep most recent (sorted lexicographically — IDs are monotonic)
             self._seen_message_ids = set(sorted(self._seen_message_ids)[-cap:])
         if len(self._seen_post_ids) > cap:
             self._seen_post_ids = set(sorted(self._seen_post_ids)[-cap:])
@@ -800,6 +982,9 @@ class MoltbookPlugin(KernelPlugin):
         if len(self._comment_post_map) > cap:
             keys = sorted(self._comment_post_map.keys())[-cap:]
             self._comment_post_map = {k: self._comment_post_map[k] for k in keys}
+        # Flush proposer pipeline/engine caches
+        if self._proposer and hasattr(self._proposer, "flush_cache"):
+            self._proposer.flush_cache()
 
     # =========================================================================
     # Mahamantra Listener — THE heartbeat path
@@ -821,8 +1006,20 @@ class MoltbookPlugin(KernelPlugin):
 
         self._do_heartbeat()
 
+    # Minimum seconds between heartbeats (prevents double-fire from on_pulse + tick)
+    _HEARTBEAT_DEBOUNCE_S = 2.0
+
     def _do_heartbeat(self) -> None:
-        """Execute one heartbeat cycle: check DMs, read feed, create posts, monitor replies."""
+        """Execute one heartbeat cycle: check DMs, read feed, create posts, monitor replies.
+
+        Debounce guard: if on_pulse() AND _on_mahamantra_tick() both call this
+        within the same tick window, the second call is silently skipped.
+        """
+        now = time.time()
+        if (now - self._last_heartbeat_ts) < self._HEARTBEAT_DEBOUNCE_S:
+            return  # Already fired recently — skip (split-brain guard)
+        self._last_heartbeat_ts = now
+
         try:
             heartbeat = self._client.sync_check_heartbeat()
             self._last_heartbeat_error = None
@@ -839,27 +1036,27 @@ class MoltbookPlugin(KernelPlugin):
             self._safe_call(self._process_dm_requests, "dm_requests")
 
         # Analyze feed periodically (not every heartbeat)
-        if self._heartbeat_count % self._FEED_INTERVAL == 0:
+        if self._heartbeat_count % self._feed_interval == 0:
             self._safe_call(self._analyze_feed, "feed_analysis")
 
         # Autonomous post creation (uses feed topics as seed)
-        if self._heartbeat_count % self._POST_INTERVAL == 0:
+        if self._heartbeat_count % self._post_interval == 0:
             self._safe_call(self._maybe_create_post, "post_creation")
 
         # Monitor replies to our own comments
-        if self._heartbeat_count % self._REPLY_CHECK_INTERVAL == 0:
+        if self._heartbeat_count % self._reply_check_interval == 0:
             self._safe_call(self._check_own_comment_replies, "reply_monitoring")
 
         # Submolt discovery (once at startup, then periodically)
-        if self._heartbeat_count == 1 or self._heartbeat_count % (self._POST_INTERVAL * 4) == 0:
+        if self._heartbeat_count == 1 or self._heartbeat_count % (self._post_interval * 4) == 0:
             self._safe_call(self._discover_submolts, "submolt_discovery")
 
         # Profile auto-update (karma, activity stats in bio)
-        if self._heartbeat_count % self._PROFILE_UPDATE_INTERVAL == 0:
+        if self._heartbeat_count % self._profile_update_interval == 0:
             self._safe_call(self._update_profile, "profile_update")
 
         # Trim in-memory sets periodically to prevent unbounded growth
-        if self._heartbeat_count % self._PROFILE_UPDATE_INTERVAL == 0:
+        if self._heartbeat_count % self._profile_update_interval == 0:
             self._trim_memory()
 
         # Monitor queue health — warn on overflow
@@ -1297,8 +1494,9 @@ class MoltbookPlugin(KernelPlugin):
     def _drain_content_queue(self) -> None:
         """Execute queued content proposals through MoltbookService.
 
-        Failed proposals are re-enqueued with a retry counter.
-        After _MAX_PROPOSAL_RETRIES, the proposal is dropped and logged.
+        Failed proposals are re-enqueued with exponential backoff:
+        retry 1 → 2s delay, retry 2 → 4s delay. After _MAX_PROPOSAL_RETRIES,
+        the proposal is dropped and logged.
         """
         if self._content_queue.is_empty:
             return
@@ -1308,8 +1506,15 @@ class MoltbookPlugin(KernelPlugin):
         service = self._service
         proposals = self._content_queue.drain(limit=3)
         failed: List[ContentProposal] = []
+        deferred: List[ContentProposal] = []
 
+        now = time.time()
         for proposal in proposals:
+            # Exponential backoff: skip proposals that aren't ready yet
+            retry_after = proposal.get("_retry_after", 0.0)
+            if retry_after > now:
+                deferred.append(proposal)
+                continue
             ct = proposal.get("content_type", "")
             try:
                 if ct == ContentType.DM_REPLY.value:
@@ -1334,6 +1539,7 @@ class MoltbookPlugin(KernelPlugin):
                     if title and content:
                         service.create_post(title, content, submolt)
                         self._log_activity("post_created", {"title": title[:80], "submolt": submolt})
+                        self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
                         logger.info(f"Post created: {title[:50]}")
 
                 elif ct == ContentType.COMMENT.value:
@@ -1347,6 +1553,7 @@ class MoltbookPlugin(KernelPlugin):
                             self._own_comment_ids.add(comment_id)
                             self._comment_post_map[comment_id] = post_id
                         self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
+                        self._broadcast_to_agora("comment", content, {"post_id": post_id})
                         logger.info(f"Comment posted on {post_id}")
 
                 elif ct == ContentType.VOTE.value:
@@ -1377,14 +1584,18 @@ class MoltbookPlugin(KernelPlugin):
                 retries = proposal.get("_retries", 0)
                 if retries < self._MAX_PROPOSAL_RETRIES:
                     proposal["_retries"] = retries + 1
+                    # Exponential backoff: 2^retries seconds (2s, 4s)
+                    proposal["_retry_after"] = time.time() + (2 ** proposal["_retries"])
                     failed.append(proposal)
-                    logger.warning(f"Content execution failed ({ct}), retry {retries + 1}: {e}")
+                    logger.warning(
+                        f"Content execution failed ({ct}), retry {retries + 1}, backoff {2 ** proposal['_retries']}s: {e}"
+                    )
                 else:
                     self._log_activity("proposal_dropped", {"type": ct, "error": str(e)[:200]})
                     logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
 
-        # Re-enqueue failed proposals for next heartbeat
-        for proposal in failed:
+        # Re-enqueue: deferred (not yet ready) + failed (with backoff)
+        for proposal in deferred + failed:
             self._content_queue.enqueue(proposal)
 
     # =========================================================================
@@ -1395,7 +1606,7 @@ class MoltbookPlugin(KernelPlugin):
         """Boot ResonanceProposer + register moltbook_context in PromptContext."""
         from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
-        self._proposer = ResonanceProposer()
+        self._proposer = ResonanceProposer(agent_name=self._agent_name)
         self._register_moltbook_context()
         logger.info("Content proposer: ResonanceProposer v3 (engine-wired)")
 
@@ -1464,5 +1675,15 @@ class MoltbookPlugin(KernelPlugin):
             "last_error": self._last_heartbeat_error,
             "listener_wired": self._listener_wired,
             "ticks_seen": self._tick_count,
+            "heartbeats": self._heartbeat_count,
             "content_queue": self._content_queue.stats,
+            "intervals": {
+                "feed": self._feed_interval,
+                "post": self._post_interval,
+                "reply_check": self._reply_check_interval,
+                "profile_update": self._profile_update_interval,
+            },
+            "circuit_executor": bool(self._circuit_executor),
+            "agora_wired": bool(self._agora),
+            "execute_content_circuit": self.execute_content_circuit,
         }
