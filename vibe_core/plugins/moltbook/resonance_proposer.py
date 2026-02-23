@@ -362,7 +362,19 @@ class ResonanceProposer(ContentProposalProtocol):
             except Exception as e:
                 logger.warning(f"LLM provider failed: {e}")
 
-        # Fallback: kirtan rendering (the system's tongue without enrichment)
+        # Primary LLM-free: MahaComposition 5-scorer ranked English pipeline
+        if pipeline_result:
+            try:
+                from vibe_core.mahamantra.adapters.composition import MahaComposition
+
+                composer = MahaComposition()
+                composed = composer.compose(pipeline_result, user_input)
+                if composed and composed.strip():
+                    return composed.strip()
+            except Exception as e:
+                logger.debug(f"MahaComposition failed: {e}")
+
+        # Last resort: kirtan rendering (deterministic but minimal)
         if pipeline_result:
             try:
                 from vibe_core.mahamantra.render import render
