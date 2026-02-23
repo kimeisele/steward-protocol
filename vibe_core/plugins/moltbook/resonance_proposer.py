@@ -240,6 +240,10 @@ class ResonanceProposer(ContentProposalProtocol):
         self._top_n = top_n
         self._llm = None
         self._llm_resolved = False
+        # Per-heartbeat cache: avoid running pipeline/engine twice for same text
+        self._pipeline_cache: Dict[str, Optional[dict]] = {}
+        self._engine_cache: Dict[str, object] = {}
+        self._cache_max = 32  # Max cached entries before flush
 
         if guardian not in _GUARDIAN_CONFIGS:
             raise ValueError(f"Unknown guardian: {guardian}. Valid: {list(_GUARDIAN_CONFIGS)}")
@@ -270,26 +274,43 @@ class ResonanceProposer(ContentProposalProtocol):
         return self._llm
 
     def _run_pipeline(self, text: str) -> Optional[dict]:
-        """Mahamantra VM pipeline → 27-key result."""
+        """Mahamantra VM pipeline → 27-key result. Cached per text."""
         if not text or not text.strip():
             return None
+        if text in self._pipeline_cache:
+            return self._pipeline_cache[text]
         try:
             from vibe_core.mahamantra import mahamantra
 
-            return mahamantra(text)
+            result = mahamantra(text)
+            if len(self._pipeline_cache) >= self._cache_max:
+                self._pipeline_cache.clear()
+            self._pipeline_cache[text] = result
+            return result
         except Exception as e:
             logger.warning(f"Pipeline failed: {e}")
             return None
 
     def _generate(self, text: str):
-        """MahaLanguageEngine → EngineResult."""
+        """MahaLanguageEngine → EngineResult. Cached per text."""
+        if text in self._engine_cache:
+            return self._engine_cache[text]
         try:
             from vibe_core.mahamantra.substrate.language.engine import generate
 
-            return generate(text)
+            result = generate(text)
+            if len(self._engine_cache) >= self._cache_max:
+                self._engine_cache.clear()
+            self._engine_cache[text] = result
+            return result
         except Exception as e:
             logger.warning(f"Engine failed: {e}")
             return None
+
+    def flush_cache(self) -> None:
+        """Clear pipeline/engine caches. Call between heartbeats."""
+        self._pipeline_cache.clear()
+        self._engine_cache.clear()
 
     def _compose(
         self,
