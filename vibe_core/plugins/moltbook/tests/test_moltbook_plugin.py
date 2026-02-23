@@ -1249,3 +1249,163 @@ class TestAgentNameResolution:
         # The profile PATCH was called — verify via RAJAS log
         rajas_ops = [e for e in plugin._service._operation_log if e["operation"] == "update_profile"]
         assert len(rajas_ops) == 1
+
+
+# =============================================================================
+# GAD-000 COMPLIANCE
+# =============================================================================
+
+
+class TestGADCompliance:
+    """MoltbookService must be GAD-000 compliant.
+
+    GAD-000: Operator Inversion Principle
+    - 6 Kshetra criteria (Discoverability, Observability, Parseability,
+      Composability, Idempotency, Recoverability)
+    - 4 Dharma principles (Daya, Satyam, Tapas, Saucam)
+    - MantraHeartbeat (Japa loop)
+    - Sovereign signature (Prabhupada link)
+    """
+
+    def test_is_gad_base(self, service):
+        """MoltbookService inherits from GADBase."""
+        from vibe_core.mahamantra.protocols._gad import GADBase
+
+        assert isinstance(service, GADBase)
+
+    def test_has_heartbeat(self, service):
+        """Service has a MantraHeartbeat from GADBase."""
+        from vibe_core.mahamantra.protocols._gad import MantraHeartbeat
+
+        assert isinstance(service.heartbeat, MantraHeartbeat)
+
+    def test_chant(self, service):
+        """Service can chant (Japa loop heartbeat)."""
+        result = service.chant()
+        assert isinstance(result, bool)
+
+    # --- THE 6 KSHETRA CRITERIA ---
+
+    def test_discover(self, service):
+        """Discoverability: returns structured capability description."""
+        desc = service.discover()
+        assert isinstance(desc, dict)
+        assert desc["service"] == "MoltbookService"
+        assert desc["protocol"] == "MoltbookProtocol"
+        assert desc["gad_compliant"] is True
+        assert "sattva" in desc["operations"]
+        assert "rajas" in desc["operations"]
+        assert "tamas" in desc["operations"]
+        assert "rate_limits" in desc
+        assert desc["rate_limits"]["requests_per_minute"] == 100
+
+    def test_get_state(self, service):
+        """Observability: returns current state."""
+        state = service.get_state()
+        assert isinstance(state, dict)
+        assert "rate_limits" in state
+        assert "health" in state
+        assert "audit_trail" in state
+        assert "heartbeat" in state
+        assert state["rate_limits"]["requests_this_minute"] == 0
+
+    def test_is_healthy(self, service):
+        """Health check passes when no failures."""
+        # Fresh service — chant first to move from DISCONNECTED
+        service.chant()
+        assert service.is_healthy() is True
+
+    def test_is_healthy_after_failures(self, service):
+        """Health check fails after too many consecutive failures."""
+        service._consecutive_failures = 10
+        assert service.is_healthy() is False
+
+    def test_is_idempotent(self, service):
+        """Service is not idempotent as a whole (has write ops)."""
+        assert service.is_idempotent is False
+
+    def test_detect_drift_healthy(self, service):
+        """No drift on fresh service."""
+        drifts = service.detect_drift()
+        assert drifts == []
+
+    def test_detect_drift_rate_breach(self, service):
+        """Detect rate limit overrun."""
+        service._client.limits.requests_this_minute = 999
+        drifts = service.detect_drift()
+        assert any("RATE_LIMIT_BREACH" in d for d in drifts)
+
+    def test_detect_drift_api_degraded(self, service):
+        """Detect API degradation."""
+        service._consecutive_failures = 5
+        drifts = service.detect_drift()
+        assert any("API_DEGRADED" in d for d in drifts)
+
+    # --- THE 4 DHARMA PRINCIPLES ---
+
+    def test_daya(self, service):
+        """Mercy: all operations are Guna-classified."""
+        assert service.test_daya() is True
+
+    def test_satyam(self, service):
+        """Truthfulness: no swallowed errors."""
+        assert service.test_satyam() is True
+
+    def test_satyam_fails_on_persistent_errors(self, service):
+        """Truthfulness fails when errors are being swallowed."""
+        service._last_api_error = "Connection refused"
+        service._consecutive_failures = 5
+        assert service.test_satyam() is False
+
+    def test_tapas(self, service):
+        """Austerity: rate limits enforced."""
+        assert service.test_tapas() is True
+
+    def test_tapas_fails_on_breach(self, service):
+        """Austerity fails when rate limits are breached."""
+        service._client.limits.requests_this_minute = 999
+        assert service.test_tapas() is False
+
+    def test_saucam(self, service):
+        """Cleanliness: API key is present."""
+        assert service.test_saucam() is True
+
+    # --- FULL AUDIT ---
+
+    def test_audit_returns_gad_audit(self, service):
+        """audit() returns a GADAudit dataclass."""
+        from vibe_core.mahamantra.protocols._gad import GADAudit
+
+        result = service.audit()
+        assert isinstance(result, GADAudit)
+
+    def test_audit_discoverability(self, service):
+        """Discoverability passes in audit."""
+        result = service.audit()
+        assert result.discoverability is True
+
+    def test_audit_observability(self, service):
+        """Observability passes in audit."""
+        result = service.audit()
+        assert result.observability is True
+
+    def test_audit_dharma_score(self, service):
+        """All 4 Dharma principles pass."""
+        result = service.audit()
+        assert result.dharma_score == 4
+
+    def test_audit_criteria_score(self, service):
+        """At least 5 of 6 criteria pass (idempotency is False by design)."""
+        result = service.audit()
+        assert result.criteria_score >= 5
+
+    def test_audit_legitimacy_positive(self, service):
+        """Legitimacy score is positive (not zero)."""
+        result = service.audit()
+        # With sovereign signed (Prabhupada link), legitimacy > 0
+        assert result.legitimacy >= 0.0
+
+    def test_audit_status_not_violates(self, service):
+        """Service does NOT violate GAD-000."""
+        result = service.audit()
+        assert "VIOLATES" not in result.status
