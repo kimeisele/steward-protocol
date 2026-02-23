@@ -504,6 +504,11 @@ class MoltbookPlugin(KernelPlugin):
         self._activity_log_path: Optional[Path] = None  # JSONL append-only audit log
         self._agent_name: str = "steward-protocol"  # Resolved from profile at boot
         self._last_heartbeat_ts: float = 0.0  # Debounce guard: epoch of last heartbeat
+        # Circuit Executor (cortex/engines/circuit_engine.py) — wired at boot
+        self._circuit_executor = None
+        self._meta_circuit_manager = None
+        # AGORA broadcast channel (cartridges/agent_city/agora/) — wired at boot
+        self._agora = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -725,6 +730,12 @@ class MoltbookPlugin(KernelPlugin):
             # Activity log: append-only JSONL
             self._activity_log_path = data_root / self._ACTIVITY_LOG_FILE
 
+            # Circuit Executor: wire MOLTBOOK_CONTENT_V1 circuit for state-machine content generation
+            self._wire_circuit_executor(kernel)
+
+            # AGORA: wire broadcast channel for federation publishing
+            self._wire_agora(kernel)
+
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
 
@@ -759,6 +770,118 @@ class MoltbookPlugin(KernelPlugin):
             logger.info("PARAMPARA: Moltbook wired to Mahamantra")
         except Exception as e:
             logger.warning(f"Mahamantra connection failed: {e}")
+
+    def _wire_circuit_executor(self, kernel: "RealVibeKernel") -> None:
+        """Wire CognitiveCircuitExecutor + MetaCircuitManager from cortex.
+
+        The executor loads MOLTBOOK_CONTENT_V1 (and all other circuits) from
+        playbook/circuits/*.yaml. MetaCircuitManager adds TASK_LEDGER and
+        ERROR_RECOVERY as active observers.
+
+        Degrades gracefully: if kernel or cortex unavailable, plugin continues
+        with the ad-hoc proposer pipeline.
+        """
+        try:
+            from vibe_core.cortex.engines.circuit_engine import create_circuit_executor_with_meta
+
+            executor, manager = create_circuit_executor_with_meta(kernel)
+            if "MOLTBOOK_CONTENT_V1" in executor.circuits:
+                self._circuit_executor = executor
+                self._meta_circuit_manager = manager
+                logger.info(
+                    f"Circuit executor wired: {len(executor.circuits)} circuits loaded, MOLTBOOK_CONTENT_V1 available"
+                )
+            else:
+                logger.warning("MOLTBOOK_CONTENT_V1 not found in loaded circuits — circuit path disabled")
+        except Exception as e:
+            logger.warning(f"Circuit executor wiring failed (non-fatal): {e}")
+
+    def _wire_agora(self, kernel: "RealVibeKernel") -> None:
+        """Wire AGORA broadcast channel for federation publishing.
+
+        After content is published to Moltbook, it is also broadcast to AGORA
+        so other agents in Agent City (PULSE, LENS, AMBASSADOR) can observe.
+
+        Degrades gracefully: if AGORA not registered, content still publishes
+        to Moltbook directly.
+        """
+        try:
+            agora = kernel.get_agent("agora") if hasattr(kernel, "get_agent") else None
+            if agora and hasattr(agora, "publish_message"):
+                self._agora = agora
+                logger.info("AGORA broadcast channel wired for federation publishing")
+            else:
+                logger.info("AGORA not available — federation broadcasting disabled (non-fatal)")
+        except Exception as e:
+            logger.debug(f"AGORA wiring skipped: {e}")
+
+    def _broadcast_to_agora(self, content_type: str, content: str, metadata: Dict[str, Any]) -> None:
+        """Broadcast published content to AGORA for federation awareness.
+
+        One-way: Moltbook → AGORA → [PULSE, LENS, AMBASSADOR, ...]
+        """
+        if not self._agora:
+            return
+        try:
+            self._agora.publish_message(
+                source="moltbook",
+                message_type="narrative",
+                content=content[:500],
+                metadata={
+                    "content_type": content_type,
+                    "agent_name": self._agent_name,
+                    **metadata,
+                },
+            )
+        except Exception as e:
+            logger.debug(f"AGORA broadcast failed (non-fatal): {e}")
+
+    def execute_content_circuit(
+        self,
+        raw_input: str,
+        content_type: str = "comment",
+        post_id: str = "",
+        sender: str = "",
+        trigger: str = "heartbeat",
+        auto_approve: bool = True,
+    ) -> Optional[Dict[str, Any]]:
+        """Execute MOLTBOOK_CONTENT_V1 circuit for content generation.
+
+        Uses the full circuit state machine: SHABDA → ARTHA → PRATYAYA → KARMA → SUCCESS.
+        Falls back to ad-hoc proposer if circuit executor not wired.
+
+        Returns circuit output dict on success, None on failure/filtering.
+        """
+        if not self._circuit_executor:
+            return None
+        try:
+            from vibe_core.circuit_types import CircuitExecutionResult
+
+            result: CircuitExecutionResult = self._circuit_executor.execute_by_id(
+                "MOLTBOOK_CONTENT_V1",
+                {
+                    "raw_input": raw_input,
+                    "content_type": content_type,
+                    "target_text": raw_input,
+                    "post_id": post_id,
+                    "sender": sender,
+                    "trigger": trigger,
+                    "auto_approve": auto_approve,
+                },
+                requester_id="moltbook",
+            )
+            if result.success:
+                logger.info(
+                    f"Circuit MOLTBOOK_CONTENT_V1 completed: "
+                    f"{' → '.join(result.state_history)} | {result.syscall_count} syscalls"
+                )
+                return result.output
+            else:
+                logger.info(f"Circuit filtered/failed: {result.final_state} — {result.error or 'filtered'}")
+                return None
+        except Exception as e:
+            logger.warning(f"Circuit execution failed: {e}")
+            return None
 
     def _try_vault(self, kernel: "RealVibeKernel") -> str:
         """Attempt to load API key: CivicVault → env → ~/.config/moltbook/credentials.json."""
@@ -1400,6 +1523,7 @@ class MoltbookPlugin(KernelPlugin):
                     if title and content:
                         service.create_post(title, content, submolt)
                         self._log_activity("post_created", {"title": title[:80], "submolt": submolt})
+                        self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
                         logger.info(f"Post created: {title[:50]}")
 
                 elif ct == ContentType.COMMENT.value:
@@ -1413,6 +1537,7 @@ class MoltbookPlugin(KernelPlugin):
                             self._own_comment_ids.add(comment_id)
                             self._comment_post_map[comment_id] = post_id
                         self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
+                        self._broadcast_to_agora("comment", content, {"post_id": post_id})
                         logger.info(f"Comment posted on {post_id}")
 
                 elif ct == ContentType.VOTE.value:
@@ -1542,4 +1667,7 @@ class MoltbookPlugin(KernelPlugin):
                 "reply_check": self._reply_check_interval,
                 "profile_update": self._profile_update_interval,
             },
+            "circuit_executor": bool(self._circuit_executor),
+            "agora_wired": bool(self._agora),
+            "execute_content_circuit": self.execute_content_circuit,
         }
