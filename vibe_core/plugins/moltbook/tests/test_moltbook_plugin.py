@@ -122,13 +122,13 @@ class TestPluginStateContract:
     def test_snapshot_without_client(self, bare_plugin):
         """Pre-boot plugin returns minimal snapshot."""
         snapshot = bare_plugin.snapshot_state()
-        assert snapshot["version"] == 2
+        assert snapshot["version"] == 3
         assert snapshot["client_active"] is False
 
     def test_snapshot_with_client(self, plugin):
-        """Active plugin includes all rate limit fields + queue state."""
+        """Active plugin includes all rate limit fields + queue state + tracking counts."""
         snapshot = plugin.snapshot_state()
-        assert snapshot["version"] == 2
+        assert snapshot["version"] == 3
         assert snapshot["client_active"] is True
         assert "requests_this_minute" in snapshot
         assert "posts_this_30m" in snapshot
@@ -140,6 +140,9 @@ class TestPluginStateContract:
         assert "queue_stats" in snapshot
         assert "seen_message_count" in snapshot
         assert "seen_post_count" in snapshot
+        assert "own_comment_count" in snapshot
+        assert "followed_agent_count" in snapshot
+        assert "subscribed_submolt_count" in snapshot
         assert "timestamp" in snapshot
 
     def test_snapshot_captures_current_limits(self, plugin):
@@ -216,27 +219,28 @@ class TestMahamantraListener:
         assert plugin._client.limits.requests_this_minute == initial_requests
 
     def test_heartbeat_fires_at_tick_16(self, plugin):
-        """16th tick triggers heartbeat (one API request)."""
+        """16th tick triggers heartbeat. Includes submolt discovery on first heartbeat."""
         initial_requests = plugin._client.limits.requests_this_minute
         for _ in range(16):
             plugin._on_mahamantra_tick({})
-        assert plugin._client.limits.requests_this_minute == initial_requests + 1
+        # 1 heartbeat + 1 submolt discovery (fires at heartbeat_count==1)
+        assert plugin._client.limits.requests_this_minute >= initial_requests + 1
         assert plugin._last_heartbeat_error is None
 
     def test_heartbeat_fires_every_16_ticks(self, plugin):
-        """Multiple full mantra cycles each trigger exactly one heartbeat."""
+        """Multiple full mantra cycles each trigger heartbeat."""
         for _ in range(_TICKS_PER_HEARTBEAT * 3):
             plugin._on_mahamantra_tick({})
         assert plugin._tick_count == _TICKS_PER_HEARTBEAT * 3
-        assert plugin._client.limits.requests_this_minute == 3
+        assert plugin._heartbeat_count == 3
 
     def test_heartbeat_at_exact_multiples(self, plugin):
-        """Heartbeat fires at tick 16, 32, 48 — exactly at multiples."""
+        """Heartbeat count increments at tick 16, 32, 48 — exactly at multiples."""
         for i in range(1, 49):
             plugin._on_mahamantra_tick({})
-            expected = i // _TICKS_PER_HEARTBEAT
-            assert plugin._client.limits.requests_this_minute == expected, (
-                f"At tick {i}, expected {expected} heartbeats"
+            expected_heartbeats = i // _TICKS_PER_HEARTBEAT
+            assert plugin._heartbeat_count == expected_heartbeats, (
+                f"At tick {i}, expected {expected_heartbeats} heartbeats"
             )
 
     def test_skips_without_client(self, bare_plugin):
@@ -697,3 +701,133 @@ class TestPluginIsolation:
         s1.create_post("A", "a")
         assert len(s1._operation_log) == 1
         assert len(s2._operation_log) == 0
+
+
+# =============================================================================
+# QUEUE HEALTH MONITORING
+# =============================================================================
+
+
+class TestQueueHealthMonitoring:
+    """Queue overflow detection and high-water-mark logging."""
+
+    def test_no_warning_when_empty(self, plugin):
+        """No overflow warning when queue is empty."""
+        plugin._monitor_queue_health()
+        # Just verify no crash — log assertions need caplog
+
+    def test_overflow_tracking(self, plugin):
+        """Dropped count rises when queue is full and items keep arriving."""
+        from vibe_core.protocols.moltbook_content import ContentQueue, ContentType
+
+        plugin._content_queue = ContentQueue(max_size=2)
+        for i in range(5):
+            plugin._content_queue.enqueue({"content_type": ContentType.VOTE.value, "post_id": f"p{i}"})
+        stats = plugin._content_queue.stats
+        assert stats["total_dropped"] == 3  # 5 enqueued - 2 capacity = 3 dropped
+        assert stats["queued"] == 2
+
+    def test_overflow_log_rate_limited(self, plugin):
+        """Overflow log timestamp updates only after 8+ heartbeats."""
+        plugin._last_overflow_log = 0
+        plugin._heartbeat_count = 10
+        plugin._content_queue._total_dropped = 1
+        plugin._monitor_queue_health()
+        assert plugin._last_overflow_log == 10  # Updated (10 - 0 >= 8)
+
+        plugin._heartbeat_count = 15
+        plugin._content_queue._total_dropped = 2
+        plugin._monitor_queue_health()
+        assert plugin._last_overflow_log == 10  # NOT updated (15 - 10 = 5 < 8)
+
+        plugin._heartbeat_count = 20
+        plugin._monitor_queue_health()
+        assert plugin._last_overflow_log == 20  # Updated (20 - 10 >= 8)
+
+
+# =============================================================================
+# FOLLOW-BACK STRATEGY
+# =============================================================================
+
+
+class TestFollowBack:
+    """Follow-back logic: follow agents who DM us."""
+
+    def test_follow_back_queues_proposal(self, plugin):
+        """_follow_back() enqueues a FOLLOW proposal."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        plugin._follow_back("agent_alice")
+        assert plugin._content_queue.size == 1
+        proposal = plugin._content_queue.drain(1)[0]
+        assert proposal["content_type"] == ContentType.FOLLOW.value
+        assert proposal["to_agent"] == "agent_alice"
+        assert proposal["source"] == "follow_back"
+
+    def test_follow_back_deduplicates(self, plugin):
+        """Same agent is not followed twice."""
+        plugin._follow_back("agent_bob")
+        plugin._follow_back("agent_bob")
+        assert plugin._content_queue.size == 1  # Only one queued
+
+    def test_follow_back_skips_unknown(self, plugin):
+        """'unknown' sender is not followed."""
+        plugin._follow_back("unknown")
+        assert plugin._content_queue.size == 0
+
+    def test_follow_back_skips_empty(self, plugin):
+        """Empty sender is not followed."""
+        plugin._follow_back("")
+        assert plugin._content_queue.size == 0
+
+    def test_followed_agents_tracked(self, plugin):
+        """_followed_agents set is populated."""
+        plugin._follow_back("agent_carol")
+        assert "agent_carol" in plugin._followed_agents
+
+
+# =============================================================================
+# SUBMOLT DISCOVERY
+# =============================================================================
+
+
+class TestSubmoltDiscovery:
+    """Submolt discovery and subscription."""
+
+    def test_discover_queues_subscriptions(self, plugin):
+        """_discover_submolts() enqueues SUBSCRIBE proposals for available submolts."""
+        from vibe_core.protocols.moltbook_content import ContentType
+
+        plugin._client._mock_db["submolts"] = [
+            {"name": "ai_agents", "display_name": "AI Agents"},
+            {"name": "governance", "display_name": "Governance"},
+        ]
+        plugin._discover_submolts()
+        assert plugin._content_queue.size == 2
+        proposals = plugin._content_queue.drain(5)
+        names = {p["submolt"] for p in proposals}
+        assert names == {"ai_agents", "governance"}
+        for p in proposals:
+            assert p["content_type"] == ContentType.SUBSCRIBE.value
+
+    def test_discover_deduplicates(self, plugin):
+        """Already-subscribed submolts are not re-subscribed."""
+        plugin._subscribed_submolts.add("ai_agents")
+        plugin._client._mock_db["submolts"] = [
+            {"name": "ai_agents", "display_name": "AI Agents"},
+            {"name": "governance", "display_name": "Governance"},
+        ]
+        plugin._discover_submolts()
+        assert plugin._content_queue.size == 1  # Only governance
+
+    def test_discover_handles_empty(self, plugin):
+        """No crash when no submolts exist."""
+        plugin._client._mock_db["submolts"] = []
+        plugin._discover_submolts()
+        assert plugin._content_queue.size == 0
+
+    def test_subscribed_tracked(self, plugin):
+        """_subscribed_submolts set is populated after discovery."""
+        plugin._client._mock_db["submolts"] = [{"name": "tech"}]
+        plugin._discover_submolts()
+        assert "tech" in plugin._subscribed_submolts

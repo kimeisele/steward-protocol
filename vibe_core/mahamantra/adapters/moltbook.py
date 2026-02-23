@@ -316,7 +316,7 @@ class MoltbookClient:
             return {"messages": msgs}
 
         elif method == "GET" and endpoint == "/submolts":
-            return {"submolts": []}
+            return {"submolts": self._mock_db.get("submolts", [])}
 
         elif method == "GET" and endpoint.startswith("/submolts/"):
             name = endpoint.split("/submolts/")[1].split("?")[0].split("/")[0]
