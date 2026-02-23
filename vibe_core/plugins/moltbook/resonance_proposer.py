@@ -156,6 +156,52 @@ def _section_data(engine_result) -> Dict[str, str]:
         return {"section_name": section, "section_mode": mode, "section_semantic": "", "section_element": ""}
 
 
+def _guardian_vocabulary(guardian_name: str) -> str:
+    """MahaLLM Kernel → guardian's top-10 vocabulary words.
+
+    Each guardian has a unique semantic fingerprint: the 10 Gita words
+    that score highest for their 4D position. This constrains the LLM's
+    word palette to the guardian's natural vocabulary.
+    """
+    try:
+        from vibe_core.mahamantra.substrate.encoding.maha_llm_kernel import get_kernel
+
+        profile = get_kernel().guardian(guardian_name.lower())
+        if not profile.vocabulary:
+            return ""
+        return ", ".join(
+            f"{w.sanskrit} ({w.first_meaning})"
+            for w in profile.vocabulary[:10]
+        )
+    except Exception:
+        return ""
+
+
+def _phonetic_context(pipeline_result: dict) -> Dict[str, str]:
+    """Extract element walk + shruti pattern from pipeline NAMA coords.
+
+    Element walk: the phonetic journey through fire/water/earth/air/space.
+    Shruti pattern: S=consonant (harmonic), N=dissonant — aesthetic quality.
+    Both derived from coords already computed by the pipeline (Gate 0).
+    """
+    nama = pipeline_result.get("nama", {})
+    coords = nama.get("coords", ())
+    if not coords:
+        return {"element_walk": "", "shruti_pattern": ""}
+    try:
+        from vibe_core.mahamantra.substrate.pancha_walk import (
+            COORD_ELEMENT,
+            ELEMENT_NAMES,
+            IS_SHRUTI,
+        )
+
+        element_walk = " → ".join(ELEMENT_NAMES[COORD_ELEMENT[c]] for c in coords)
+        shruti_pattern = "".join("S" if IS_SHRUTI[c] else "N" for c in coords)
+        return {"element_walk": element_walk, "shruti_pattern": shruti_pattern}
+    except Exception:
+        return {"element_walk": "", "shruti_pattern": ""}
+
+
 def _knowledge_context(topic: str) -> str:
     """KnowledgeResolver → graph-aware context.
 
@@ -181,20 +227,29 @@ def _build_context(
     engine_result,
     agent_name: str,
     user_input: str,
+    pipeline_result: Optional[dict] = None,
     **extra: str,
 ) -> Dict[str, str]:
     """Build ALL context from ALL systems into one dict.
 
     This dict fills the YAML template slots. No instructions — just data.
+    Sources: EngineResult, MahaLLM Kernel, KnowledgeResolver, pipeline coords.
     """
-    guardian = engine_result.guardian_name.upper() if engine_result.guardian_name else "UNKNOWN"
-    guardian_cfg = _GUARDIAN_CONFIGS.get(engine_result.guardian_name or "", {})
+    guardian_name_raw = engine_result.guardian_name or ""
+    guardian = guardian_name_raw.upper() if guardian_name_raw else "UNKNOWN"
+    guardian_cfg = _GUARDIAN_CONFIGS.get(guardian_name_raw, {})
     section = _section_data(engine_result)
 
     # Extended EngineResult fields for richer context
     intent = getattr(engine_result, "intent_category", "") or ""
     expanded = ", ".join(getattr(engine_result, "expanded_names", ()) or ())
     syllables = str(getattr(engine_result, "syllable_count", 0) or 0)
+
+    # MahaLLM Kernel: guardian's vocabulary (top-10 words for this guardian's 4D position)
+    vocab = _guardian_vocabulary(guardian_name_raw) if guardian_name_raw else ""
+
+    # Phonetic context from pipeline NAMA coords (element walk + shruti pattern)
+    phonetic = _phonetic_context(pipeline_result) if pipeline_result else {"element_walk": "", "shruti_pattern": ""}
 
     return {
         "agent_name": agent_name,
@@ -212,6 +267,9 @@ def _build_context(
         "intent_category": intent,
         "expanded_names": expanded,
         "syllable_count": syllables,
+        "guardian_vocabulary": vocab,
+        "element_walk": phonetic["element_walk"],
+        "shruti_pattern": phonetic["shruti_pattern"],
         **section,
         **extra,
     }
@@ -321,7 +379,7 @@ class ResonanceProposer(ContentProposalProtocol):
         **extra: str,
     ) -> Optional[str]:
         """Context → YAML template → LLM → content. No LLM = kirtan rendering."""
-        ctx = _build_context(engine_result, self._agent_name, user_input, **extra)
+        ctx = _build_context(engine_result, self._agent_name, user_input, pipeline_result=pipeline_result, **extra)
 
         # Fill YAML template with context
         prompt = ""
@@ -338,6 +396,9 @@ class ResonanceProposer(ContentProposalProtocol):
                 f"{ctx['guardian_name']} · {ctx['quarter']} · {ctx['guardian_function']}\n"
                 f"Sektion: {ctx['section_name']} ({ctx['section_semantic']})\n"
                 f"Vers: {ctx['verse_ref']} | Intent: {ctx['intent_category']}\n"
+                f"VOKABULAR: {ctx['guardian_vocabulary']}\n"
+                f"ELEMENTE: {ctx['element_walk']}\n"
+                f"SHRUTI: {ctx['shruti_pattern']}\n"
                 f"RESONANZ: {ctx['resonant_words']}\n"
                 f"NAMEN: {ctx['expanded_names']}\n"
                 f"DERIVATION: {ctx['derivation']}\n"

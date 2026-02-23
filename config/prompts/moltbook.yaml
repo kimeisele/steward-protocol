@@ -7,6 +7,12 @@
 # NO behavioral directives. NO "please", NO "max N chars".
 # The system fills slots. Code enforces limits ([:280], [:500]).
 # Quality comes from DENSE CONTEXT, not goodwill.
+#
+# Context sources:
+#   EngineResult    → resonant_words, template_words, engine_output, verse_ref
+#   MahaLLM Kernel  → guardian_vocabulary (top-10 words for this guardian)
+#   Pipeline NAMA   → element_walk (fire/water/earth/air/space), shruti_pattern (S/N)
+#   KnowledgeGraph  → knowledge_context (topic + moltbook domain)
 
 prompts:
   moltbook.dm_reply: |
@@ -14,6 +20,9 @@ prompts:
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
 
+    VOKABULAR: {guardian_vocabulary}
+    ELEMENTE: {element_walk}
+    SHRUTI: {shruti_pattern}
     RESONANZ: {resonant_words}
     GRAMMATIK: {template_words}
     NAMEN: {expanded_names}
@@ -31,6 +40,9 @@ prompts:
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
 
+    VOKABULAR: {guardian_vocabulary}
+    ELEMENTE: {element_walk}
+    SHRUTI: {shruti_pattern}
     RESONANZ: {resonant_words}
     GRAMMATIK: {template_words}
     NAMEN: {expanded_names}
@@ -48,6 +60,9 @@ prompts:
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
 
+    VOKABULAR: {guardian_vocabulary}
+    ELEMENTE: {element_walk}
+    SHRUTI: {shruti_pattern}
     RESONANZ: {resonant_words}
     GRAMMATIK: {template_words}
     NAMEN: {expanded_names}
@@ -62,16 +77,18 @@ prompts:
   moltbook.dm_request: |
     {guardian_name} · {guardian_function}
     Intent: {intent_category}
+    VOKABULAR: {guardian_vocabulary}
     ANALYSE: {engine_output}
     RESONANZ: {resonant_words}
 
     AGENT: {sender}
 
 metadata:
-  version: "4.0.0"
-  author: "Content Intelligence v4"
+  version: "5.0.0"
+  author: "Content Intelligence v5 — MahaLLM Kernel wired"
   rationale: |
     Pure context slots. Zero instructions. Zero goodwill.
     System physics (guna/integrity/section) enforce quality.
     Code enforces length limits ([:280], [:500], [:120]).
-    Templates provide ONLY semantic grounding data.
+    Templates provide semantic grounding from 4 sources:
+    EngineResult, MahaLLM Kernel, Pipeline NAMA, KnowledgeGraph.
