@@ -274,6 +274,9 @@ class MoltbookPlugin(KernelPlugin):
         self._seen_post_ids: Set[str] = set()
         self._own_comment_ids: Set[str] = set()  # Track our comments for reply monitoring
         self._last_post_heartbeat: int = 0  # Heartbeat count when last post was created
+        self._followed_agents: Set[str] = set()  # Track who we've followed (avoid duplicates)
+        self._subscribed_submolts: Set[str] = set()  # Track community subscriptions
+        self._last_overflow_log: int = 0  # Heartbeat count when last overflow was logged
 
     @property
     def dependencies(self) -> Set[str]:
@@ -303,13 +306,16 @@ class MoltbookPlugin(KernelPlugin):
             queue_path = self._state_dir / self._QUEUE_STATE_FILE
             queue_path.write_text(json.dumps(queue_data, indent=2))
 
-            # Seen IDs: cap to prevent unbounded growth
+            # Seen IDs + tracking sets: cap to prevent unbounded growth
             msg_ids = sorted(self._seen_message_ids)[-self._MAX_SEEN_IDS :]
             post_ids = sorted(self._seen_post_ids)[-self._MAX_SEEN_IDS :]
             seen_data = {
-                "version": 1,
+                "version": 2,
                 "message_ids": msg_ids,
                 "post_ids": post_ids,
+                "own_comment_ids": sorted(self._own_comment_ids)[-self._MAX_SEEN_IDS :],
+                "followed_agents": sorted(self._followed_agents),
+                "subscribed_submolts": sorted(self._subscribed_submolts),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             seen_path = self._state_dir / self._SEEN_STATE_FILE
@@ -343,15 +349,23 @@ class MoltbookPlugin(KernelPlugin):
         except Exception as e:
             logger.warning(f"Queue restore failed: {e}")
 
-        # Restore seen IDs
+        # Restore seen IDs + tracking sets
         seen_path = self._state_dir / self._SEEN_STATE_FILE
         try:
             if seen_path.exists():
                 data = json.loads(seen_path.read_text())
-                if data.get("version") == 1:
+                if data.get("version") in (1, 2):
                     self._seen_message_ids = set(data.get("message_ids", []))
                     self._seen_post_ids = set(data.get("post_ids", []))
-                    logger.info(f"Restored {len(self._seen_message_ids)} msg IDs, {len(self._seen_post_ids)} post IDs")
+                    self._own_comment_ids = set(data.get("own_comment_ids", []))
+                    self._followed_agents = set(data.get("followed_agents", []))
+                    self._subscribed_submolts = set(data.get("subscribed_submolts", []))
+                    logger.info(
+                        f"Restored {len(self._seen_message_ids)} msg IDs, "
+                        f"{len(self._seen_post_ids)} post IDs, "
+                        f"{len(self._followed_agents)} followed, "
+                        f"{len(self._subscribed_submolts)} subscribed"
+                    )
         except Exception as e:
             logger.warning(f"Seen IDs restore failed: {e}")
 
@@ -366,10 +380,10 @@ class MoltbookPlugin(KernelPlugin):
 
     def snapshot_state(self) -> Dict[str, Any]:
         if not self._client:
-            return {"version": 2, "client_active": False}
+            return {"version": 3, "client_active": False}
         limits = self._client.limits
         return {
-            "version": 2,
+            "version": 3,
             "client_active": True,
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
@@ -381,11 +395,14 @@ class MoltbookPlugin(KernelPlugin):
             "queue_stats": self._content_queue.stats,
             "seen_message_count": len(self._seen_message_ids),
             "seen_post_count": len(self._seen_post_ids),
+            "own_comment_count": len(self._own_comment_ids),
+            "followed_agent_count": len(self._followed_agents),
+            "subscribed_submolt_count": len(self._subscribed_submolts),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        if snapshot.get("version") not in (1, 2) or not snapshot.get("client_active"):
+        if snapshot.get("version") not in (1, 2, 3) or not snapshot.get("client_active"):
             return
         if not self._client:
             return
@@ -581,6 +598,13 @@ class MoltbookPlugin(KernelPlugin):
         if self._heartbeat_count % self._REPLY_CHECK_INTERVAL == 0:
             self._check_own_comment_replies()
 
+        # Submolt discovery (once at startup, then periodically)
+        if self._heartbeat_count == 1 or self._heartbeat_count % (self._POST_INTERVAL * 4) == 0:
+            self._discover_submolts()
+
+        # Monitor queue health — warn on overflow
+        self._monitor_queue_health()
+
         # Always drain queue on heartbeat (even without new activity)
         self._drain_content_queue()
 
@@ -674,6 +698,9 @@ class MoltbookPlugin(KernelPlugin):
                         logger.info(f"DM reply queued for {conv_id}")
                 except Exception as e:
                     logger.warning(f"Content proposal failed: {e}")
+
+                # Follow-back: follow agents who DM us (social reciprocity)
+                self._follow_back(sender)
 
     def _process_dm_requests(self) -> None:
         """Check pending DM requests, propose approve/reject via ContentProposalProtocol."""
@@ -822,6 +849,79 @@ class MoltbookPlugin(KernelPlugin):
 
         if checked:
             logger.debug(f"Reply monitoring: checked {checked} comment threads")
+
+    def _monitor_queue_health(self) -> None:
+        """Log warning when queue overflows (proposals silently dropped).
+
+        The ContentQueue uses a bounded deque — when full, oldest proposals
+        get evicted on enqueue. We track total_dropped and log when it rises.
+        Rate-limited to avoid log spam: max 1 warning per 8 heartbeats.
+        """
+        stats = self._content_queue.stats
+        dropped = stats.get("total_dropped", 0)
+        queued = stats.get("queued", 0)
+        max_size = stats.get("max_size", ContentQueue.DEFAULT_MAX_SIZE)
+
+        if dropped > 0 and (self._heartbeat_count - self._last_overflow_log) >= 8:
+            self._last_overflow_log = self._heartbeat_count
+            logger.warning(
+                f"Queue overflow: {dropped} proposals dropped (queue {queued}/{max_size}). "
+                f"Enqueued={stats.get('total_enqueued', 0)}, "
+                f"Drained={stats.get('total_drained', 0)}"
+            )
+
+        # High water mark: queue > 80% full
+        if queued > max_size * 0.8:
+            logger.info(f"Queue high water: {queued}/{max_size} ({queued * 100 // max_size}% full)")
+
+    def _follow_back(self, sender: str) -> None:
+        """Follow an agent back if we haven't already. Enqueues a FOLLOW proposal."""
+        if not sender or sender == "unknown" or sender in self._followed_agents:
+            return
+
+        self._followed_agents.add(sender)
+        proposal: ContentProposal = {
+            "content_type": ContentType.FOLLOW.value,
+            "to_agent": sender,
+            "source": "follow_back",
+            "priority": 0,  # Low priority — social grooming, not urgent
+        }
+        self._content_queue.enqueue(proposal)
+        logger.info(f"Follow-back queued for {sender}")
+
+    def _discover_submolts(self) -> None:
+        """Discover and subscribe to relevant submolts.
+
+        Queries available submolts, filters for interesting communities,
+        and enqueues SUBSCRIBE proposals for ones we haven't joined yet.
+        """
+        try:
+            submolts = run_async(self._client.get_submolts())
+        except Exception as e:
+            logger.debug(f"Submolt discovery failed: {e}")
+            return
+
+        if not submolts:
+            return
+
+        for submolt in submolts:
+            if not isinstance(submolt, dict):
+                continue
+            name = submolt.get("name", "")
+            if not name or name in self._subscribed_submolts:
+                continue
+
+            # Subscribe to communities we haven't joined yet
+            # The platform is small enough that subscribing to all is reasonable
+            self._subscribed_submolts.add(name)
+            proposal: ContentProposal = {
+                "content_type": ContentType.SUBSCRIBE.value,
+                "submolt": name,
+                "source": "submolt_discovery",
+                "priority": 0,
+            }
+            self._content_queue.enqueue(proposal)
+            logger.info(f"Submolt subscription queued: {name}")
 
     def _drain_content_queue(self) -> None:
         """Execute queued content proposals through MoltbookService."""
