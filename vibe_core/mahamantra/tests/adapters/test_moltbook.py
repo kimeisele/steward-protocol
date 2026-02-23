@@ -823,8 +823,8 @@ class TestNewRajasEndpoints:
         assert "id" in result
 
     @pytest.mark.asyncio
-    async def test_send_dm_with_needs_human_input(self, client):
-        result = await client.send_dm("conv1", "Question for human", needs_human_input=True)
+    async def test_send_dm_basic(self, client):
+        result = await client.send_dm("conv1", "Autonomous agent reply")
         assert result["status"] == "sent"
 
 

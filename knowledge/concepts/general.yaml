@@ -16,12 +16,14 @@ domains:
   DOM_FINANCE: [money, credit, fund, transfer, pay, budget]
   DOM_SYSTEM: [kernel, logs, error, boot, shutdown, performance, memory]
   DOM_AGENT: [agent, actor, cartridge, herald, civic, envoy, watchman, forum, science, engineer, oracle, artisan, auditor]
+  DOM_MOLTBOOK: [moltbook, submolt, dm, karma, feed, upvote, downvote, comment, follower, following]
 
 entities:
   ENT_ENVOY: [envoy, hi, hello, hey, talk, chat, speak, ask]
   ENT_HERALD: [herald, publish, broadcast, announce, share]
   ENT_CIVIC: [civic, governance, voting, rules]
   ENT_WATCHMAN: [watchman, monitor, watch, guard]
+  ENT_MOLTBOOK: [moltbook, submolt, post, dm, karma, feed, trending, message]
 
 patterns:
   PAT_CASUAL: [casual, chat, conversation, small talk, chit chat]

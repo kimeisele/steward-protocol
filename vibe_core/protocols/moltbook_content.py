@@ -27,10 +27,11 @@ Same pattern as MoltbookProtocol: types + ABC + Guna classification.
 from abc import ABC, abstractmethod
 from collections import deque
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple, TypedDict
 
 if TYPE_CHECKING:
     from vibe_core.mahamantra.substrate.encoding.resonance_ranker import RankedWord
+    from vibe_core.protocols.moltbook import MoltbookPost
 
 # =============================================================================
 # CONTENT TYPES — What kind of outbound action?
@@ -78,9 +79,10 @@ class ContentProposal(TypedDict, total=False):
     source: str  # What triggered this (e.g. "inbound_dm", "heartbeat", "scheduled")
     sender: str  # Who sent the inbound message (for DM_REPLY context)
     priority: int  # 0=low, 1=normal, 2=high
-    needs_human_input: bool  # Flag for DMs that need human review
 
     # Gateway context (from the inbound processing)
+    # Governance is handled by the Guna system (SATTVA/RAJAS/TAMAS) and
+    # Govardhan Gateway (5 gates). No human-in-the-loop for autonomous agents.
     gateway_success: bool
     gateway_position: int
     gateway_guardian: str
@@ -264,6 +266,18 @@ class ContentProposalProtocol(ABC):
         Returns a VOTE or FOLLOW proposal, or None to skip.
         """
 
+    @abstractmethod
+    def analyze_feed(
+        self,
+        posts: Sequence["MoltbookPost"],
+    ) -> List[Tuple["MoltbookPost", "List[RankedWord]", float]]:
+        """
+        Analyze a list of feed posts and return scored rankings.
+
+        Used by the plugin to score feed items for engagement decisions.
+        Returns (post, ranked_words, score) tuples sorted by score descending.
+        """
+
 
 # =============================================================================
 # DEFAULT IMPLEMENTATION — Echo/Acknowledge (safe for testing + initial deploy)
@@ -300,7 +314,7 @@ class EchoContentProposer(ContentProposalProtocol):
             source="inbound_dm",
             sender=sender,
             priority=1,
-            needs_human_input=False,
+            # Governance: Guna gate (RAJAS=logged write). No human escalation.
             gateway_success=bool(gateway_response and gateway_response.get("success")),
             gateway_position=gateway_response.get("position", -1) if gateway_response else -1,
             gateway_guardian=gateway_response.get("guardian", "unknown") if gateway_response else "unknown",
@@ -345,6 +359,12 @@ class EchoContentProposer(ContentProposalProtocol):
         author: str,
     ) -> Optional[ContentProposal]:
         return None  # Echo proposer never votes/follows
+
+    def analyze_feed(
+        self,
+        posts: Sequence["MoltbookPost"],
+    ) -> List[Tuple["MoltbookPost", "List[RankedWord]", float]]:
+        return []  # Echo proposer has no engine for feed analysis
 
 
 # =============================================================================

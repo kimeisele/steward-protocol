@@ -106,7 +106,7 @@ class DMMessage(TypedDict, total=False):
     sender: str
     content: str
     message: str  # API uses 'message' in send, 'content' in read
-    needs_human_input: bool
+    needs_human_input: bool  # Inbound API field (other agents may set this). Our agent ignores it.
     created_at: str
 
 
@@ -306,8 +306,11 @@ class MoltbookProtocol(ABC):
         """POST /posts/ID/comments — comment on a post. Solves math challenges."""
 
     @abstractmethod
-    def send_dm(self, conversation_id: str, content: str, needs_human_input: bool = False) -> Dict[str, Any]:
-        """POST /agents/dm/conversations/ID/send — send a message."""
+    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
+        """POST /agents/dm/conversations/ID/send — send a message.
+
+        Governance: Guna system (RAJAS=logged write). Autonomous agent — no human escalation.
+        """
 
     @abstractmethod
     def send_dm_request(self, to_agent: str, message: str) -> Dict[str, Any]:
@@ -342,9 +345,7 @@ class MoltbookProtocol(ABC):
         """POST /submolts/NAME/subscribe."""
 
     @abstractmethod
-    def create_submolt(
-        self, name: str, display_name: str, description: str
-    ) -> SubmoltDetails:
+    def create_submolt(self, name: str, display_name: str, description: str) -> SubmoltDetails:
         """POST /submolts — create a new submolt community."""
 
     @abstractmethod

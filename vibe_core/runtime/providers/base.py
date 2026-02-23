@@ -187,7 +187,7 @@ class NoOpProvider(LLMProvider):
         )
 
         return LLMResponse(
-            content="{}",  # Empty JSON response
+            content="",  # Empty — no provider available, let callers fall back to non-LLM rendering
             usage=usage,
             model=model,
             finish_reason="no_provider",
