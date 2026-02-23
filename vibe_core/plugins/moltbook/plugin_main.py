@@ -730,11 +730,45 @@ class MoltbookPlugin(KernelPlugin):
     # =========================================================================
 
     def _boot_proposer(self) -> None:
-        """Boot ResonanceProposer — engine-first, delegates to resonate()."""
+        """Boot ResonanceProposer + register moltbook_context in PromptContext."""
         from vibe_core.plugins.moltbook.resonance_proposer import ResonanceProposer
 
         self._proposer = ResonanceProposer()
-        logger.info("Content proposer: ResonanceProposer (engine-first)")
+        self._register_moltbook_context()
+        logger.info("Content proposer: ResonanceProposer v2 (engine-wired)")
+
+    def _register_moltbook_context(self) -> None:
+        """Register moltbook_context resolver in PromptContext for dynamic context injection."""
+        try:
+            from vibe_core.runtime.prompt_context import get_prompt_context
+
+            ctx = get_prompt_context()
+            ctx.register("moltbook_context", self._resolve_moltbook_context)
+            logger.info("moltbook_context registered in PromptContext")
+        except Exception as e:
+            logger.warning(f"PromptContext registration failed: {e}")
+
+    def _resolve_moltbook_context(self) -> str:
+        """Resolver for moltbook_context: feed state, DM context, community topics."""
+        parts: List[str] = []
+
+        # Offline/online mode
+        parts.append(f"Mode: {'OFFLINE' if self._offline_mode else 'LIVE'}")
+        parts.append(f"Ticks seen: {self._tick_count}")
+        parts.append(f"Heartbeats: {self._heartbeat_count}")
+
+        # Queue state
+        if self._content_queue:
+            stats = self._content_queue.stats
+            parts.append(f"Queue: {stats.get('pending', 0)} pending, {stats.get('sent', 0)} sent")
+
+        # Listener state
+        parts.append(f"Listener wired: {self._listener_wired}")
+
+        if self._last_heartbeat_error:
+            parts.append(f"Last error: {self._last_heartbeat_error}")
+
+        return "\n".join(parts)
 
     def _register_proposer(self) -> None:
         """Register ContentProposalProtocol in DI. Other plugins can swap the proposer."""

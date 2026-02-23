@@ -1,39 +1,43 @@
 """
-RESONANCE PROPOSER — Full Pipeline Content Intelligence
-========================================================
+RESONANCE PROPOSER v2 — Ferrari Factory Wiring
+================================================
 
-The mahamantra VM pipeline IS the brain. This proposer is a thin adapter
-that connects the full 27-key pipeline output to ContentProposalProtocol.
+Thin adapter that connects:
+    - MahaLanguageEngine.generate(text) → EngineResult (5-scorer composed English)
+    - render(result) → kirtan rendering (guardian persona + smaranam + verse)
+    - PromptRegistry + moltbook.yaml → guardian-persona LLM prompts
+    - PromptContext → dynamic moltbook context
+to ContentProposalProtocol.
 
 Pipeline:
-    text → mahamantra(text) → 27-key result (9-step VM, deterministic)
-                ↓
-    result["guna"]["mode"]     → TAMAS=skip, SATTVA=observe, RAJAS=engage
-    result["cell"]["is_alive"] → quality gate (dead = unreliable)
-    result["smaranam"]         → resonant word context for LLM
-    result["verse"]            → Gita reference for specificity
-    result["guardian"]         → perspective routing
-    result["vibration"]        → element/attractor signature
-                ↓
-    PromptRegistry.get("moltbook.*") → governed LLM prompt
-    LLMProtocol.speak(agent, context, input) → formulated text
-                ↓
-    ContentProposal (queue-ready)
+    text → mahamantra(text) → 27-key result
+             ↓                      ↓
+       Guna/Cell gate       MahaLanguageEngine.generate(text)
+       (TAMAS=skip)              → EngineResult
+       (dead=skip)                   ↓
+             ↓               EngineResult.output  (5-scorer composed English)
+       PASS?                  EngineResult.guardian_name
+        │                     EngineResult.verse_ref
+        ↓                     EngineResult.section_name
+       PromptRegistry         EngineResult.resonant_words
+       moltbook.yaml               ↓
+       (guardian persona      Format for content type:
+        + dynamic context)    DM: reply persona + engine output
+             ↓               Comment: insight + guardian lens
+       LLMProtocol.speak()   Post: title from section + body from output
+             ↓
+       ContentProposal        Fallback (no LLM):
+                              render(result) → kirtan rendering
 
 Decision hierarchy:
     1. Guna filter    — TAMAS = skip (destructive/spam)
     2. Cell gate      — dead cell = skip (pipeline failed)
     3. Integrity gate — low integrity = skip comments/posts
-    4. Pipeline context → LLM formulation (or engine-only fallback)
-
-Delegates to existing infrastructure:
-    - mahamantra(text) — full 9-step VM pipeline (substrate/vm/mantra_vm.py)
-    - resonate(text)   — 7D word resonance (for analyze() protocol method)
-    - PromptRegistry   — governed prompt composition
-    - LLMProtocol      — formulation only
+    4. EngineResult → PromptRegistry → LLM formulation (or render() fallback)
 """
 
 import logging
+from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import (
@@ -64,7 +68,7 @@ _INTEGRITY_THRESHOLD = 0.5
 # Default Guardian perspective — Kapila = analysis function
 _ANALYSIS_GUARDIAN = "kapila"
 
-# Prompts registered at boot for PromptRegistry
+# Prompt keys — loaded from config/prompts/moltbook.yaml
 _PROMPT_KEYS = {
     "dm_reply": "moltbook.dm_reply",
     "comment": "moltbook.comment",
@@ -72,125 +76,27 @@ _PROMPT_KEYS = {
     "dm_request": "moltbook.dm_request",
 }
 
+# Path to YAML prompts
+_MOLTBOOK_YAML = Path(__file__).resolve().parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
 
-def _register_prompts() -> None:
-    """Register Moltbook prompts in PromptRegistry. Safe to call multiple times."""
+
+def _load_yaml_prompts() -> None:
+    """Load Moltbook prompts from YAML. Safe to call multiple times."""
     try:
         from vibe_core.runtime.prompt_registry import PromptRegistry
 
-        PromptRegistry.register(
-            _PROMPT_KEYS["dm_reply"],
-            "You are {agent_name} on Moltbook. "
-            "Reply to a DM from {sender}. "
-            "The mahamantra engine analyzed their message:\n"
-            "{pipeline_context}\n\n"
-            "Use this analysis to craft a genuine, specific reply. "
-            "Reference the Sanskrit concept or Gita verse naturally if relevant. "
-            "Under 280 chars.",
-        )
-        PromptRegistry.register(
-            _PROMPT_KEYS["comment"],
-            "You are {agent_name} on Moltbook. "
-            "Comment on a post. "
-            "The mahamantra engine analysis:\n"
-            "{pipeline_context}\n\n"
-            "Bring THIS specific insight to the discussion. "
-            "Be concrete — reference the Sanskrit word, element, or verse. "
-            "Under 280 chars.",
-        )
-        PromptRegistry.register(
-            _PROMPT_KEYS["post"],
-            "You are {agent_name} on Moltbook. "
-            "Create a post. "
-            "The mahamantra engine analysis:\n"
-            "{pipeline_context}\n\n"
-            "Write a post that brings this resonance to the community. "
-            "First line = title (under 120 chars). Rest = body (under 500 chars). "
-            "Be authentic and specific.",
-        )
-        PromptRegistry.register(
-            _PROMPT_KEYS["dm_request"],
-            "You are {agent_name}. Another agent wants to chat. "
-            "Mahamantra analysis of their profile:\n"
-            "{pipeline_context}\n\n"
-            "Reply APPROVE if genuine, REJECT if spam.",
-        )
-        logger.info("Moltbook prompts registered in PromptRegistry")
+        loaded = PromptRegistry.load_from_yaml(_MOLTBOOK_YAML)
+        if loaded:
+            logger.info(f"Moltbook YAML prompts loaded ({loaded} prompts)")
+        else:
+            logger.warning(f"No prompts loaded from {_MOLTBOOK_YAML}")
     except Exception as e:
-        logger.warning(f"PromptRegistry unavailable ({e}), using inline prompts")
+        logger.warning(f"YAML prompt loading failed ({e})")
 
 
 # =========================================================================
 # Pipeline result accessors — no Dict[str, Any] in public API
 # =========================================================================
-
-
-def _build_pipeline_context(result: dict) -> str:
-    """Build structured context from full 27-key VM pipeline result for LLM consumption."""
-    parts: List[str] = []
-
-    # Guna classification
-    guna = result.get("guna", {})
-    if guna:
-        parts.append(f"Guna: {guna.get('mode', '?')} (opcode={guna.get('opcode', '?')})")
-
-    # Guardian routing
-    guardian = result.get("guardian", "")
-    role = result.get("role", "")
-    quarter = result.get("quarter", "")
-    position = result.get("position", -1)
-    if guardian:
-        parts.append(f"Guardian: {guardian} ({role}) | Quarter: {quarter} | Position: {position}")
-
-    # Gita chapter + verse
-    chapter = result.get("chapter", 0)
-    significance = result.get("chapter_significance", "")
-    if chapter:
-        parts.append(f"Chapter {chapter}: {significance}")
-
-    verse = result.get("verse")
-    if verse and isinstance(verse, dict):
-        parts.append(f"Verse: {verse.get('id', '?')}")
-
-    # Vibration signature
-    vibration = result.get("vibration", {})
-    if vibration:
-        sig = vibration.get("signature", {})
-        parts.append(
-            f"Element: {sig.get('element', '?')} | "
-            f"Attractor: {vibration.get('attractor', '?')} | "
-            f"Shruti: {sig.get('shruti', False)}"
-        )
-
-    # Smaranam — resonant words from the pipeline
-    smaranam = result.get("smaranam", ())
-    if smaranam:
-        word_lines = []
-        for entry in smaranam[:5]:
-            word_lines.append(
-                f"  {entry['sanskrit']} = {entry['meaning']} "
-                f"(score={entry['score']:.3f})"
-            )
-        parts.append("Resonant words:\n" + "\n".join(word_lines))
-
-    # Cell status
-    cell = result.get("cell", {})
-    if cell:
-        parts.append(
-            f"Cell: {'alive' if cell.get('is_alive') else 'dead'} | "
-            f"integrity: {cell.get('integrity', 0):.2f} | "
-            f"prana: {cell.get('prana', 0)}"
-        )
-
-    # Parampara
-    parampara = result.get("parampara", {})
-    if parampara:
-        parts.append(
-            f"Parampara: {'verified' if parampara.get('verified') else 'unverified'} "
-            f"(channel {parampara.get('channel', -1)})"
-        )
-
-    return "\n".join(parts) if parts else "No analysis available."
 
 
 def _guna_mode(result: dict) -> str:
@@ -223,21 +129,64 @@ def _top_score(ranked: List[RankedWord]) -> float:
     return ranked[0].total_score if ranked else 0.0
 
 
+def _render_fallback(result: dict) -> str:
+    """Render VM result via kirtan renderer. The TONGUE of the system."""
+    try:
+        from vibe_core.mahamantra.render import render
+
+        return render(result)
+    except Exception as e:
+        logger.warning(f"Kirtan render failed: {e}")
+        # Ultimate fallback — guardian header + smaranam
+        guardian = str(result.get("guardian") or "unknown").upper()
+        quarter = str(result.get("quarter") or "unknown")
+        smaranam = result.get("smaranam", ())
+        parts = [f"[{guardian} · {quarter}]"]
+        for rw in smaranam[:3]:
+            parts.append(f'  "{rw.get("sanskrit", "")}" ({rw.get("meaning", "")})')
+        return "\n".join(parts)
+
+
+def _format_resonant_words(engine_result) -> str:
+    """Format EngineResult.resonant_words as readable string."""
+    if not engine_result.resonant_words:
+        return "(none)"
+    parts = []
+    for sanskrit, meaning, score in engine_result.resonant_words[:5]:
+        parts.append(f"{sanskrit} ({meaning}, {score:.2f})")
+    return ", ".join(parts)
+
+
+def _engine_prompt_context(engine_result) -> Dict[str, str]:
+    """Build prompt context dict from EngineResult fields."""
+    return {
+        "guardian_name": engine_result.guardian_name.upper() if engine_result.guardian_name else "UNKNOWN",
+        "position": str(getattr(engine_result, "antaranga_active", 0)),
+        "quarter": engine_result.section_mode or "",
+        "guardian_function": engine_result.guardian_function or "",
+        "engine_output": engine_result.output or "",
+        "resonant_words": _format_resonant_words(engine_result),
+        "verse_ref": engine_result.verse_ref or "",
+        "section_name": engine_result.section_name or "",
+    }
+
+
 class ResonanceProposer(ContentProposalProtocol):
     """
-    Full-pipeline content proposer.
+    Full-pipeline content proposer wired to existing infrastructure.
 
     Decision hierarchy:
         1. mahamantra(text) → 27-key result (guna, cell, smaranam, verse, ...)
         2. Guna filter: TAMAS → skip, SATTVA → observe, RAJAS → engage
         3. Cell gate: dead → skip, integrity < threshold → cautious
-        4. Pipeline context → PromptRegistry → LLM formulation
+        4. MahaLanguageEngine.generate() → EngineResult → PromptRegistry → LLM
+        5. Fallback: render(result) → kirtan rendering (NOT garbage strings)
 
     Delegates to:
-        mahamantra(text) — full 9-step VM pipeline (substrate/vm/mantra_vm.py)
-        resonate(text)   — 7D resonance scoring (for analyze() protocol method)
-        PromptRegistry   — governed prompts (runtime/prompt_registry.py)
-        LLMProtocol      — formulation only (protocols/llm.py)
+        MahaLanguageEngine — 5-scorer composed English (substrate/language/engine.py)
+        render()           — kirtan rendering with guardian persona (render.py)
+        PromptRegistry     — YAML-loaded guardian prompts (config/prompts/moltbook.yaml)
+        LLMProtocol        — formulation only (protocols/llm.py)
     """
 
     def __init__(
@@ -256,7 +205,7 @@ class ResonanceProposer(ContentProposalProtocol):
         if guardian not in _GUARDIAN_CONFIGS:
             raise ValueError(f"Unknown guardian: {guardian}. Valid: {list(_GUARDIAN_CONFIGS)}")
 
-        _register_prompts()
+        _load_yaml_prompts()
 
     def _get_llm(self):
         """Lazy-resolve LLMProtocol from ServiceRegistry."""
@@ -287,33 +236,54 @@ class ResonanceProposer(ContentProposalProtocol):
             logger.warning(f"Mahamantra pipeline failed: {e}")
             return None
 
-    def _formulate(self, prompt_key: str, pipeline_context: str, user_input: str, **fmt_kwargs: str) -> Optional[str]:
-        """
-        Formulate text via PromptRegistry + LLM.
+    def _generate(self, text: str):
+        """Run MahaLanguageEngine.generate(text) → EngineResult.
 
-        Falls back to returning None if no LLM available.
-        The caller decides what to do with None (engine-only fallback).
+        Returns EngineResult with:
+            .output           — 5-scorer composed English
+            .guardian_name    — guardian name from pipeline
+            .verse_ref        — Gita verse reference
+            .section_name     — Gita section
+            .resonant_words   — typed tuples (sanskrit, meaning, score)
+        """
+        try:
+            from vibe_core.mahamantra.substrate.language.engine import generate
+
+            return generate(text)
+        except Exception as e:
+            logger.warning(f"MahaLanguageEngine.generate() failed: {e}")
+            return None
+
+    def _formulate(
+        self,
+        prompt_key: str,
+        engine_result,
+        user_input: str,
+        **extra_context: str,
+    ) -> Optional[str]:
+        """Formulate text via YAML PromptRegistry + LLM with guardian persona.
+
+        Uses EngineResult fields for structured prompt context.
+        Falls back to None if no LLM available (caller uses render() fallback).
         """
         llm = self._get_llm()
         if not llm:
             return None
 
-        # Try PromptRegistry first
+        # Build prompt from YAML template + EngineResult context
         context = ""
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
 
-            context = PromptRegistry.get(
-                prompt_key,
-                context={
-                    "agent_name": self._agent_name,
-                    "pipeline_context": pipeline_context,
-                    **fmt_kwargs,
-                },
-            )
+            prompt_ctx = {
+                "agent_name": self._agent_name,
+                **_engine_prompt_context(engine_result),
+                **extra_context,
+            }
+            context = PromptRegistry.get(prompt_key, context=prompt_ctx)
         except Exception:
-            # PromptRegistry not available — build context inline
-            context = f"You are {self._agent_name}.\n{pipeline_context}"
+            # PromptRegistry/YAML not available — use _build_llm_prompt pattern
+            context = self._build_persona_prompt(engine_result, user_input)
 
         try:
             result = llm.speak(self._agent_name, context, user_input)
@@ -322,6 +292,29 @@ class ResonanceProposer(ContentProposalProtocol):
         except Exception as e:
             logger.warning(f"LLM formulation failed: {e}")
         return None
+
+    def _build_persona_prompt(self, engine_result, user_input: str) -> str:
+        """Build guardian-persona prompt from EngineResult (kirtan_chat pattern).
+
+        This is the inline fallback when YAML prompts are unavailable.
+        Pattern from render.py:_build_llm_prompt() — guardian identity first.
+        """
+        guardian = engine_result.guardian_name.upper() if engine_result.guardian_name else "UNKNOWN"
+        function = engine_result.guardian_function or "analysis"
+        section = engine_result.section_name or ""
+
+        words = _format_resonant_words(engine_result)
+        verse_ref = engine_result.verse_ref or ""
+
+        return (
+            f"Du bist {self._agent_name} auf Moltbook, sprichst durch {guardian}. "
+            f"Deine Funktion: {function}. "
+            f"Sektion: {section}.\n"
+            f"Resonante Konzepte: {words}\n"
+            f"{'Vers: ' + verse_ref if verse_ref else ''}\n"
+            f"Eingabe: {user_input}\n"
+            f"Antworte als {self._agent_name}, fundiert auf der Analyse."
+        )
 
     # =========================================================================
     # ContentProposalProtocol
@@ -349,31 +342,25 @@ class ResonanceProposer(ContentProposalProtocol):
             logger.info(f"DM from {sender} classified TAMAS — skipped")
             return None
 
-        # Build context from pipeline (or fallback to word resonance)
-        if result:
-            pipeline_context = _build_pipeline_context(result)
-        else:
-            ranked = self.analyze(inbound_content)
-            word_lines = [f"  {rw.sanskrit} = {rw.first_meaning}" for rw in ranked[:3]]
-            pipeline_context = ("Resonant words:\n" + "\n".join(word_lines)) if word_lines else "No analysis available."
+        # Generate via MahaLanguageEngine
+        engine_result = self._generate(inbound_content)
 
-        reply_text = self._formulate(
-            _PROMPT_KEYS["dm_reply"],
-            pipeline_context,
-            f"Message from {sender}: {inbound_content}",
-            sender=sender,
-        )
+        # Try LLM formulation with guardian persona
+        reply_text = None
+        if engine_result:
+            reply_text = self._formulate(
+                _PROMPT_KEYS["dm_reply"],
+                engine_result,
+                f"Message from {sender}: {inbound_content}",
+                sender=sender,
+            )
 
         if not reply_text:
-            # No LLM — construct from engine data
-            smaranam = result.get("smaranam", ()) if result else ()
-            if smaranam:
-                top = smaranam[0]
-                reply_text = (
-                    f"Your message resonates with {top['sanskrit']} "
-                    f"({top['meaning']}). "
-                    f"— {self._agent_name}"
-                )
+            # Fallback: render(result) → kirtan rendering
+            if result:
+                reply_text = _render_fallback(result)
+            elif engine_result:
+                reply_text = engine_result.output or f"Acknowledged. — {self._agent_name}"
             else:
                 reply_text = f"Acknowledged. — {self._agent_name}"
 
@@ -437,22 +424,31 @@ class ResonanceProposer(ContentProposalProtocol):
         if _integrity(result) < _INTEGRITY_THRESHOLD:
             return None
 
-        pipeline_context = _build_pipeline_context(result)
+        # Generate via MahaLanguageEngine
+        engine_result = self._generate(seed_text)
 
-        post_text = self._formulate(
-            _PROMPT_KEYS["post"],
-            pipeline_context,
-            f"Trigger: {trigger}",
-        )
+        # Try LLM formulation with guardian persona
+        post_text = None
+        if engine_result:
+            post_text = self._formulate(
+                _PROMPT_KEYS["post"],
+                engine_result,
+                f"Trigger: {trigger}",
+            )
 
         if not post_text:
-            # No LLM — build from engine data
-            smaranam = result.get("smaranam", ())
-            if smaranam:
-                top = smaranam[0]
-                title = f"Resonance: {top['sanskrit']} ({top['meaning']})"
-                chapter_sig = result.get("chapter_significance", "")
-                post_text = f"{title}\n{chapter_sig}\n— {self._agent_name}"
+            # Fallback: render(result) → kirtan rendering
+            if engine_result and engine_result.output:
+                # Use EngineResult composed output as post body
+                section = engine_result.section_name or "Resonance"
+                title = f"{section}: {engine_result.verse_ref}" if engine_result.verse_ref else section
+                post_text = f"{title}\n{engine_result.output}"
+            elif result:
+                rendered = _render_fallback(result)
+                if rendered:
+                    post_text = rendered
+                else:
+                    return None
             else:
                 return None
 
@@ -483,29 +479,21 @@ class ResonanceProposer(ContentProposalProtocol):
         if _integrity(result) < _INTEGRITY_THRESHOLD:
             return None
 
-        pipeline_context = _build_pipeline_context(result)
+        # Generate via MahaLanguageEngine
+        engine_result = self._generate(post_content)
 
-        comment_text = self._formulate(
-            _PROMPT_KEYS["comment"],
-            pipeline_context,
-            f"Post: {post_content[:200]}",
-        )
+        # Try LLM formulation with guardian persona
+        comment_text = None
+        if engine_result:
+            comment_text = self._formulate(
+                _PROMPT_KEYS["comment"],
+                engine_result,
+                f"Post: {post_content[:200]}",
+            )
 
         if not comment_text:
-            # No LLM — construct from engine
-            smaranam = result.get("smaranam", ())
-            guardian = result.get("guardian", "")
-            if smaranam:
-                top = smaranam[0]
-                comment_text = (
-                    f"This resonates with {top['sanskrit']} "
-                    f"({top['meaning']})"
-                )
-                if guardian:
-                    comment_text += f" — through the lens of {guardian}"
-                comment_text += f". — {self._agent_name}"
-            else:
-                return None
+            # Fallback: render(result) → kirtan rendering (NOT hardcoded garbage)
+            comment_text = _render_fallback(result)
 
         return ContentProposal(
             content_type=ContentType.COMMENT.value,

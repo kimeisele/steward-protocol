@@ -1,16 +1,18 @@
 """
-RESONANCE PROPOSER — Tests
+RESONANCE PROPOSER v2 — Tests
 ==============================
 
 Tests that ResonanceProposer:
 1. Uses the full mahamantra VM pipeline (27-key result)
 2. Filters by Guna classification (TAMAS = skip)
 3. Gates by Cell alive status (dead = skip)
-4. Uses pipeline context for LLM prompts
-5. Falls back to word resonance when pipeline unavailable
-6. Integrates with MoltbookPlugin
+4. Uses MahaLanguageEngine.generate() for EngineResult
+5. Falls back to render() (kirtan rendering), NOT hardcoded garbage
+6. Loads YAML prompts from config/prompts/moltbook.yaml
+7. Integrates with MoltbookPlugin (moltbook_context resolver)
 """
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,11 +20,12 @@ import pytest
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import RankedWord
 from vibe_core.plugins.moltbook.resonance_proposer import (
     ResonanceProposer,
-    _build_pipeline_context,
+    _format_resonant_words,
     _guna_mode,
-    _is_tamas,
-    _is_alive,
     _integrity,
+    _is_alive,
+    _is_tamas,
+    _render_fallback,
     _should_skip,
     _top_score,
 )
@@ -75,7 +78,7 @@ def _make_pipeline_result(
         "parampara": {"verified": parampara_verified, "channel": 2, "coherence": 18000},
         "chapter": chapter,
         "chapter_significance": chapter_significance,
-        "verse": {"id": "BG.6.47", "chapter": 6, "verse": 47, "guna": "sattva", "dominant_name": "KRISHNA"},
+        "verse": {"id": "BG.6.47", "chapter": 6, "verse": 47, "guna": "sattva", "dominant_name": "KRISHNA", "ref": "BG.6.47"},
         "matches": 1,
         "gita_phase": "field",
         "is_complete": False,
@@ -190,53 +193,154 @@ class TestPipelineHelpers:
 
 
 # =========================================================================
-# Pipeline context
+# render() fallback (replaces _build_pipeline_context tests)
 # =========================================================================
 
 
-class TestPipelineContext:
-    """_build_pipeline_context produces structured text from 27-key result."""
+class TestRenderFallback:
+    """_render_fallback produces kirtan rendering from 27-key result."""
 
-    def test_includes_guna(self):
-        ctx = _build_pipeline_context(_make_pipeline_result(guna_mode="RAJAS"))
-        assert "RAJAS" in ctx
-
-    def test_includes_guardian(self):
-        ctx = _build_pipeline_context(_make_pipeline_result(guardian="kapila"))
-        assert "kapila" in ctx
-
-    def test_includes_chapter(self):
-        ctx = _build_pipeline_context(_make_pipeline_result(chapter=6, chapter_significance="Dhyana Yoga"))
-        assert "Chapter 6" in ctx
-        assert "Dhyana Yoga" in ctx
-
-    def test_includes_verse(self):
-        ctx = _build_pipeline_context(_make_pipeline_result())
-        assert "BG.6.47" in ctx
-
-    def test_includes_element(self):
-        ctx = _build_pipeline_context(_make_pipeline_result(element="agni"))
-        assert "agni" in ctx
+    def test_includes_guardian_header(self):
+        rendered = _render_fallback(_make_pipeline_result(guardian="kapila", quarter="dharma"))
+        assert "KAPILA" in rendered
+        assert "dharma" in rendered
 
     def test_includes_smaranam(self):
-        ctx = _build_pipeline_context(_make_pipeline_result(
+        rendered = _render_fallback(_make_pipeline_result(
             smaranam=({"sanskrit": "dharma", "meaning": "righteousness", "score": 0.85},),
         ))
-        assert "dharma" in ctx
-        assert "righteousness" in ctx
+        assert "dharma" in rendered
+        assert "righteousness" in rendered
 
-    def test_includes_cell_status(self):
-        ctx = _build_pipeline_context(_make_pipeline_result(is_alive=True, integrity=0.95))
-        assert "alive" in ctx
-        assert "0.95" in ctx
+    def test_includes_verse_ref(self):
+        rendered = _render_fallback(_make_pipeline_result())
+        # render() includes verse reference from result
+        assert "BG.6.47" in rendered or "Chapter" in rendered or "field" in rendered
 
-    def test_includes_parampara(self):
-        ctx = _build_pipeline_context(_make_pipeline_result(parampara_verified=True))
-        assert "verified" in ctx
+    def test_empty_result_still_renders(self):
+        rendered = _render_fallback({"guardian": "unknown", "quarter": "unknown"})
+        assert "UNKNOWN" in rendered
 
-    def test_empty_result(self):
-        ctx = _build_pipeline_context({})
-        assert ctx == "No analysis available."
+
+# =========================================================================
+# MahaLanguageEngine integration
+# =========================================================================
+
+
+class TestGenerate:
+    """_generate() calls MahaLanguageEngine.generate() → EngineResult."""
+
+    def test_returns_engine_result(self):
+        proposer = ResonanceProposer()
+        result = proposer._generate("dharma karma yoga")
+        assert result is not None
+        # EngineResult has typed fields
+        assert hasattr(result, "output")
+        assert hasattr(result, "guardian_name")
+        assert hasattr(result, "verse_ref")
+        assert hasattr(result, "section_name")
+        assert hasattr(result, "resonant_words")
+
+    def test_engine_result_has_output(self):
+        proposer = ResonanceProposer()
+        result = proposer._generate("consciousness meditation")
+        assert result is not None
+        assert isinstance(result.output, str)
+        assert len(result.output) > 0
+
+    def test_engine_result_has_guardian(self):
+        proposer = ResonanceProposer()
+        result = proposer._generate("dharma")
+        assert result is not None
+        assert isinstance(result.guardian_name, str)
+
+    def test_engine_result_has_resonant_words(self):
+        proposer = ResonanceProposer()
+        result = proposer._generate("fire water earth")
+        assert result is not None
+        assert isinstance(result.resonant_words, tuple)
+        for rw in result.resonant_words:
+            assert len(rw) == 3  # (sanskrit, meaning, score)
+
+    def test_engine_result_has_verse_ref(self):
+        proposer = ResonanceProposer()
+        result = proposer._generate("dharma")
+        assert result is not None
+        assert isinstance(result.verse_ref, str)
+        assert "BG" in result.verse_ref or result.verse_ref == ""
+
+    def test_empty_text(self):
+        proposer = ResonanceProposer()
+        result = proposer._generate("")
+        # Empty text may still produce an EngineResult with "no phonemic content"
+        # or the engine may handle it gracefully
+
+
+class TestFormatResonantWords:
+    """_format_resonant_words formats EngineResult.resonant_words."""
+
+    def test_formats_words(self):
+        from vibe_core.mahamantra.substrate.language.types import EngineResult
+
+        er = EngineResult(
+            input_text="test", seed=0, attractor=0,
+            guardian_name="kapila", guardian_function="analysis",
+            intent_category="", section_name="", section_mode="",
+            verse_ref="BG.6.47",
+            resonant_words=(("dharma", "righteousness", 0.85), ("karma", "action", 0.72)),
+            template_words=(), antaranga_active=0, antaranga_prana=0,
+            output="test output", derivation="",
+        )
+        formatted = _format_resonant_words(er)
+        assert "dharma" in formatted
+        assert "righteousness" in formatted
+        assert "0.85" in formatted
+
+    def test_empty_words(self):
+        from vibe_core.mahamantra.substrate.language.types import EngineResult
+
+        er = EngineResult(
+            input_text="test", seed=0, attractor=0,
+            guardian_name="", guardian_function="",
+            intent_category="", section_name="", section_mode="",
+            verse_ref="",
+            resonant_words=(), template_words=(),
+            antaranga_active=0, antaranga_prana=0,
+            output="", derivation="",
+        )
+        assert _format_resonant_words(er) == "(none)"
+
+
+# =========================================================================
+# YAML prompt loading
+# =========================================================================
+
+
+class TestYamlPrompts:
+    """Moltbook YAML prompts load correctly."""
+
+    def test_yaml_file_exists(self):
+        yaml_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
+        assert yaml_path.exists(), f"moltbook.yaml not found at {yaml_path}"
+
+    def test_yaml_loads_prompts(self):
+        from vibe_core.runtime.prompt_registry import PromptRegistry
+
+        yaml_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
+        count = PromptRegistry.load_from_yaml(yaml_path)
+        assert count >= 4  # dm_reply, comment, post, dm_request
+
+    def test_yaml_prompts_have_guardian_persona(self):
+        from vibe_core.runtime.prompt_registry import PromptRegistry
+
+        yaml_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
+        PromptRegistry.load_from_yaml(yaml_path)
+
+        # Check that prompts contain guardian persona placeholders
+        for key in ("moltbook.dm_reply", "moltbook.comment", "moltbook.post"):
+            prompt = PromptRegistry.get(key)
+            assert "{guardian_name}" in prompt
+            assert "{engine_output}" in prompt
 
 
 # =========================================================================
@@ -467,14 +571,14 @@ class TestCellGating:
 
 
 # =========================================================================
-# DM reply
+# DM reply — now uses render() fallback, not hardcoded strings
 # =========================================================================
 
 
 class TestProposeDmReply:
-    """DM replies use pipeline context."""
+    """DM replies use EngineResult + render() fallback."""
 
-    def test_reply_without_llm(self):
+    def test_reply_without_llm_uses_render(self):
         proposer = ResonanceProposer()
         proposer._llm_resolved = True
         proposer._llm = None
@@ -486,8 +590,10 @@ class TestProposeDmReply:
         assert proposal["content_type"] == ContentType.DM_REPLY.value
         assert proposal["conversation_id"] == "conv1"
         assert proposal["sender"] == "AgentX"
-        assert "dharma" in proposal["content"]
-        assert len(proposal["content"]) <= 280
+        # Should use render() — contains guardian header, NOT "Your message resonates with"
+        content = proposal["content"]
+        assert "resonates with" not in content.lower()
+        assert len(content) <= 280
 
     def test_reply_with_gateway(self):
         proposer = ResonanceProposer()
@@ -514,13 +620,13 @@ class TestProposeDmReply:
 
         assert proposal is not None
         assert proposal["content"] == "Fascinating perspective on dharma!"
-        # LLM was called with pipeline context
+        # LLM was called with guardian-persona context (from YAML or inline)
         call_args = mock_llm.speak.call_args
         context_arg = call_args[0][1]
-        assert any(x in context_arg for x in ("Guna:", "Guardian:", "Chapter", "You are"))
+        assert any(x in context_arg for x in ("guardian", "Guardian", "KAPILA", "Funktion", "Du bist"))
 
     def test_reply_fallback_no_pipeline(self):
-        """When pipeline fails, falls back to word resonance."""
+        """When pipeline fails, falls back gracefully."""
         proposer = ResonanceProposer()
         proposer._llm_resolved = True
         proposer._llm = None
@@ -560,14 +666,14 @@ class TestProposeDmRequest:
 
 
 # =========================================================================
-# Comment
+# Comment — now uses render() fallback, not "This resonates with X"
 # =========================================================================
 
 
 class TestProposeComment:
     """Comments require alive cell + adequate integrity."""
 
-    def test_comment_without_llm(self):
+    def test_comment_without_llm_uses_render(self):
         proposer = ResonanceProposer()
         proposer._llm_resolved = True
         proposer._llm = None
@@ -581,9 +687,13 @@ class TestProposeComment:
         assert proposal is not None
         assert proposal["content_type"] == ContentType.COMMENT.value
         assert proposal["post_id"] == "p1"
-        assert "jnana" in proposal["content"]
-        assert "narada" in proposal["content"]
-        assert len(proposal["content"]) <= 280
+        content = proposal["content"]
+        # Should use render() — contains guardian header
+        assert "NARADA" in content
+        # Should NOT contain garbage patterns
+        assert "This resonates with" not in content
+        assert "through the lens of" not in content
+        assert len(content) <= 280
 
 
 # =========================================================================
@@ -676,7 +786,7 @@ class TestAnalyzeFeed:
 
 
 # =========================================================================
-# Post
+# Post — now uses EngineResult + render() fallback
 # =========================================================================
 
 
@@ -756,6 +866,17 @@ class TestLivePipeline:
         }
         assert expected_keys.issubset(set(result.keys()))
 
+    def test_engine_result_matches_pipeline(self):
+        """MahaLanguageEngine.generate() produces EngineResult with guardian from pipeline."""
+        proposer = ResonanceProposer()
+        text = "dharma karma consciousness"
+        pipeline_result = proposer._run_pipeline(text)
+        engine_result = proposer._generate(text)
+        assert pipeline_result is not None
+        assert engine_result is not None
+        # Both should reference the same guardian (deterministic)
+        assert engine_result.guardian_name == pipeline_result["guardian"]
+
 
 # =========================================================================
 # Plugin integration
@@ -784,3 +905,34 @@ class TestPluginIntegration:
         assert hasattr(plugin._proposer, "analyze")
         assert hasattr(plugin._proposer, "analyze_feed")
         assert hasattr(plugin._proposer, "_run_pipeline")
+        assert hasattr(plugin._proposer, "_generate")
+
+    def test_plugin_registers_moltbook_context(self):
+        """Plugin boot registers moltbook_context resolver in PromptContext."""
+        from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+        from vibe_core.plugins.moltbook.plugin_main import MoltbookPlugin
+        from vibe_core.runtime.prompt_context import get_prompt_context
+
+        plugin = MoltbookPlugin()
+        plugin._client = MoltbookClient(api_key="test", offline_mode=True)
+        plugin._boot_proposer()
+
+        ctx = get_prompt_context()
+        assert "moltbook_context" in ctx._resolvers
+
+    def test_moltbook_context_resolver_returns_string(self):
+        """moltbook_context resolver produces valid context string."""
+        from vibe_core.mahamantra.adapters.moltbook import MoltbookClient
+        from vibe_core.plugins.moltbook.plugin_main import MoltbookPlugin
+        from vibe_core.runtime.prompt_context import get_prompt_context
+
+        plugin = MoltbookPlugin()
+        plugin._client = MoltbookClient(api_key="test", offline_mode=True)
+        plugin._boot_proposer()
+
+        ctx = get_prompt_context()
+        resolved = ctx.resolve(["moltbook_context"])
+        assert "moltbook_context" in resolved
+        context_str = resolved["moltbook_context"]
+        assert isinstance(context_str, str)
+        assert "Mode:" in context_str
