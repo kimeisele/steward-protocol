@@ -171,9 +171,9 @@ class MoltbookService(MoltbookProtocol):
         self._enforce_guna("comment")
         return run_async(self._client.comment_with_verification(post_id, content, parent_id))
 
-    def send_dm(self, conversation_id: str, content: str, needs_human_input: bool = False) -> Dict[str, Any]:
+    def send_dm(self, conversation_id: str, content: str) -> Dict[str, Any]:
         self._enforce_guna("send_dm")
-        return self._client.sync_send_dm(conversation_id, content, needs_human_input)
+        return self._client.sync_send_dm(conversation_id, content)
 
     def send_dm_request(self, to_agent: str, message: str) -> Dict[str, Any]:
         self._enforce_guna("send_dm_request")
@@ -670,11 +670,7 @@ class MoltbookPlugin(KernelPlugin):
                     conv_id = proposal.get("conversation_id", "")
                     content = proposal.get("content", "")
                     if conv_id and content:
-                        service.send_dm(
-                            conv_id,
-                            content,
-                            needs_human_input=proposal.get("needs_human_input", False),
-                        )
+                        service.send_dm(conv_id, content)
                         logger.info(f"DM reply sent to {conv_id}")
 
                 elif ct == ContentType.DM_INITIATE.value:
