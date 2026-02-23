@@ -1,0 +1,293 @@
+# MOLTBOOK CONTENT CIRCUIT
+# ========================
+# Cognitive circuit for Moltbook social content generation.
+#
+# Uses the full mahamantra pipeline as the semantic backbone:
+#   1. SHABDA: Parse input → run pipeline → extract guna/guardian/verse
+#   2. ARTHA: Validate gates (TAMAS=reject, dead=reject, integrity<0.5=reject)
+#   3. PRATYAYA: Build dense context (resonant words + template grammar + section rhetoric)
+#   4. KARMA: Compose content via LLM with dense context
+#
+# System physics enforce quality. No instructions. Dense context prevents generic output.
+
+circuit:
+  id: MOLTBOOK_CONTENT_V1
+  name: Moltbook Social Content Circuit
+  type: cognitive_circuit
+
+  intent_match:
+    primary: "CMD_CREATE"
+    secondary:
+      - "DOM_SOCIAL"
+      - "DOM_MOLTBOOK"
+
+  intent: |
+    Generate Moltbook social content (comments, posts, DM replies) using
+    the mahamantra pipeline for semantic grounding. Every piece of content
+    is filtered by guna classification, cell viability, and integrity thresholds.
+
+  description: |
+    The Moltbook Content Circuit transforms feed data and conversation context
+    into semantically grounded social content. Unlike generic content generation,
+    this circuit uses the 27-key mahamantra pipeline result as the foundation:
+    guardian persona, Gita verse reference, 7D-scored resonant words, and
+    grammatical template words with roles.
+
+  version: "1.0"
+
+  triggers:
+    primary:
+      - pattern: "moltbook (comment|post|reply)"
+        confidence: 0.85
+      - pattern: "compose (comment|post|reply) for moltbook"
+        confidence: 0.85
+      - pattern: "engage with (post|feed|agent)"
+        confidence: 0.80
+    anti:
+      - "create agent"
+      - "spawn"
+      - "governance"
+
+  # ==========================================================================
+  # STATE MACHINE
+  # ==========================================================================
+
+  entry_state: SHABDA
+
+  states:
+    # ------------------------------------------------------------------
+    # SHABDA: Parse input through mahamantra pipeline
+    # ------------------------------------------------------------------
+    SHABDA:
+      description: |
+        Run text through the full mahamantra VM pipeline.
+        Extract 27-key result: guna, guardian, verse, cell state.
+        Run MahaLanguageEngine for EngineResult with resonant/template words.
+      invariants:
+        - "raw_input is not empty"
+      operations:
+        - action: COMPILE_REQUEST
+          description: "Parse content request parameters"
+          params:
+            extract:
+              - content_type    # comment, post, dm_reply
+              - target_text     # the text to analyze/respond to
+              - post_id         # for comments
+              - sender          # for DM replies
+              - trigger         # for posts
+        - action: EXECUTE_SYSCALL
+          description: "Dispatch pipeline analysis to moltbook agent"
+          syscall_type: DISPATCH_TASK
+          params:
+            agent_id: "moltbook"
+            task_payload:
+              action: "analyze"
+              text: "{{ target_text }}"
+      transitions:
+        - condition: "pipeline_result is not empty"
+          target: ARTHA
+        - condition: "pipeline_result == null"
+          target: FAILURE
+
+    # ------------------------------------------------------------------
+    # ARTHA: Validate through system gates
+    # ------------------------------------------------------------------
+    ARTHA:
+      description: |
+        Apply deterministic gates. These are NOT configurable.
+        TAMAS = reject. Dead cell = reject. Low integrity = reject.
+        This is system physics, not policy.
+      invariants:
+        - "pipeline_result is not empty"
+      operations:
+        - action: CHECK_STATE
+          description: "Verify guna, cell viability, integrity"
+          params:
+            checks:
+              - "guna != TAMAS"
+              - "cell.is_alive == true"
+              - "cell.integrity >= 0.5"
+      transitions:
+        - condition: "guna == TAMAS"
+          target: VALIDATION_FAILED
+        - condition: "cell.is_alive == false"
+          target: VALIDATION_FAILED
+        - condition: "cell.integrity < 0.5"
+          target: VALIDATION_FAILED
+        - condition: "content_type == post AND guna != RAJAS"
+          target: VALIDATION_FAILED
+        - condition: "all_checks_passed"
+          target: PRATYAYA
+
+    # ------------------------------------------------------------------
+    # PRATYAYA: Build dense context
+    # ------------------------------------------------------------------
+    PRATYAYA:
+      description: |
+        Assemble dense context from all systems:
+        - EngineResult: resonant words, template words, section mode, verse ref
+        - Guardian: persona, function, position
+        - KnowledgeResolver: graph-aware context
+        - PromptContext: dynamic system state
+        Fill YAML template slots. No instructions — just data.
+      invariants:
+        - "pipeline_result is not empty"
+        - "engine_result is not empty"
+      operations:
+        - action: EXECUTE_SYSCALL
+          description: "Dispatch content composition to moltbook agent"
+          syscall_type: DISPATCH_TASK
+          params:
+            agent_id: "moltbook"
+            task_payload:
+              action: "{{ compose_action }}"
+              post_id: "{{ post_id }}"
+              post_content: "{{ target_text }}"
+              sender: "{{ sender }}"
+              trigger: "{{ trigger }}"
+      transitions:
+        - condition: "proposal is not empty"
+          target: KARMA
+        - condition: "proposal == null"
+          target: GENERATION_FAILED
+
+    # ------------------------------------------------------------------
+    # KARMA: Record and finalize
+    # ------------------------------------------------------------------
+    KARMA:
+      description: |
+        Content generated. Record karma event.
+        The content is ready for publishing or human review.
+      invariants:
+        - "proposal is not empty"
+      operations:
+        - action: EXECUTE_SYSCALL
+          description: "Record content generation in karma ledger"
+          syscall_type: RECORD_KARMA
+          params:
+            agent_id: "moltbook"
+            action: "content_generated"
+            details:
+              content_type: "{{ content_type }}"
+              guna: "{{ guna }}"
+              guardian: "{{ guardian }}"
+              verse: "{{ verse }}"
+      transitions:
+        - condition: "auto_approve == true"
+          target: SUCCESS
+        - condition: "auto_approve == false"
+          target: REVIEW
+
+    # ------------------------------------------------------------------
+    # REVIEW: Human approval gate
+    # ------------------------------------------------------------------
+    REVIEW:
+      description: |
+        Present content for human review before publishing.
+        Shows: content, guardian persona, verse reference, guna classification.
+      invariants:
+        - "proposal is not empty"
+      operations:
+        - action: EMIT_EVENT
+          description: "Emit content review request"
+          params:
+            event_type: "MOLTBOOK_CONTENT_REVIEW"
+            data:
+              proposal: "{{ proposal }}"
+              guardian: "{{ guardian }}"
+              verse: "{{ verse }}"
+              guna: "{{ guna }}"
+      transitions:
+        - condition: "review_approved"
+          target: SUCCESS
+        - condition: "review_rejected"
+          target: REVIEW_REJECTED
+
+    # ------------------------------------------------------------------
+    # Terminal states
+    # ------------------------------------------------------------------
+    SUCCESS:
+      description: "Content approved and ready for publishing."
+      terminal: true
+      output:
+        status: "success"
+        proposal: "{{ proposal }}"
+        guardian: "{{ guardian }}"
+        verse: "{{ verse }}"
+        guna: "{{ guna }}"
+
+    FAILURE:
+      description: "Pipeline analysis failed."
+      terminal: true
+      output:
+        status: "error"
+        reason: "Pipeline returned no result"
+
+    VALIDATION_FAILED:
+      description: "Content rejected by system gates (guna/cell/integrity)."
+      terminal: true
+      output:
+        status: "filtered"
+        reason: "{{ validation_reason }}"
+        guna: "{{ guna }}"
+
+    GENERATION_FAILED:
+      description: "Content composition failed (no LLM or engine error)."
+      terminal: true
+      output:
+        status: "error"
+        reason: "Composition failed"
+
+    REVIEW_REJECTED:
+      description: "Content rejected by human reviewer."
+      terminal: true
+      output:
+        status: "rejected"
+        reason: "Human review rejected"
+
+  # ==========================================================================
+  # VARIABLES
+  # ==========================================================================
+
+  variables:
+    raw_input:
+      type: string
+      required: true
+      description: "The raw content request or text to process"
+    content_type:
+      type: string
+      required: false
+      default: "comment"
+      description: "Type: comment, post, dm_reply"
+    target_text:
+      type: string
+      required: false
+      description: "The text to analyze/respond to"
+    post_id:
+      type: string
+      required: false
+      description: "Post ID for comments"
+    sender:
+      type: string
+      required: false
+      description: "Sender agent for DM replies"
+    trigger:
+      type: string
+      required: false
+      default: "circuit"
+      description: "Trigger source for posts"
+    auto_approve:
+      type: boolean
+      required: false
+      default: false
+      description: "Skip human review (for automated pipelines)"
+
+  forbidden_roles: []
+
+  metadata:
+    created: "2026-02-23"
+    purpose: "Moltbook social content generation via mahamantra pipeline"
+    estimated_latency_ms: 3000
+    syscalls: 3
+    agents_used:
+      - "moltbook"

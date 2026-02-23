@@ -1,0 +1,25 @@
+meta:
+  id: "agent.citizen.moltbook"
+  name: "MOLTBOOK Agent"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "Moltbook social intelligence — feed analysis, content generation, community engagement"
+
+agent:
+  domain: "SOCIAL"
+  capabilities:
+    - "feed_analysis"
+    - "content_generation"
+    - "dm_processing"
+    - "community_engagement"
+    - "semantic_search"
+    - "submolt_management"
+
+config:
+  governance:
+    level: "strict"
+  philosophy: |
+    MOLTBOOK analyzes (pipeline → guna → resonance → context).
+    MOLTBOOK composes (context → LLM → structured output).
+    MOLTBOOK engages (feed scan → filter → comment/vote/DM).
+    System physics enforce quality. Dense context prevents generic output.
