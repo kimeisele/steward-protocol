@@ -566,41 +566,37 @@ class MoltbookPlugin(KernelPlugin):
         proposal_type: str,
         **extra,
     ) -> Optional[ContentProposal]:
-        """Run AgencyDirector I-P-V-O cycle and convert CycleResult → ContentProposal.
+        """Content generation: circuit state machine → ContentProposal.
 
-        This is the SINGLE entry point for all content generation from the heartbeat.
-        The director handles: mahamantra pipeline, guna→style (not gate), WordNet-backed
-        MahaComposition, LLM with structured prompts, governance validation, retry.
+        ONE path. execute_content_circuit() IS the content pipeline.
+        SHABDA → ARTHA → PRATYAYA → KARMA → SUCCESS or None.
         """
-        result = self.agency_director.run_retry_loop(
-            content_type=content_type,
-            raw_input=raw_input,
-            **extra,
-        )
+        from vibe_core.plugins.moltbook.resonance_proposer import _kg_priority
 
-        if result.status != "SUCCESS" or not result.content:
-            if result.status == "VALIDATION_FAILED":
-                logger.info(f"Director {content_type} filtered: {result.violations}")
-            elif result.error:
-                logger.warning(f"Director {content_type} failed: {result.error}")
+        circuit_result = self.execute_content_circuit(
+            raw_input, content_type,
+            post_id=extra.get("post_id", ""),
+            sender=extra.get("sender", ""),
+            trigger=extra.get("trigger", "heartbeat"),
+        )
+        if not circuit_result or not circuit_result.get("content"):
             return None
 
-        # Convert CycleResult → ContentProposal (queue format)
-        from vibe_core.plugins.moltbook.resonance_proposer import _kg_priority
+        content = circuit_result["content"]
+        guna = circuit_result.get("guna", "")
+        guardian = circuit_result.get("guardian", "")
 
         proposal = ContentProposal(
             content_type=proposal_type,
-            content=result.content,
-            source=extra.get("trigger", "agency_director"),
+            content=content,
+            source=extra.get("trigger", "circuit"),
             priority=_kg_priority(proposal_type),
         )
 
-        # Copy routing fields from extra kwargs
         for key in ("post_id", "conversation_id", "sender", "parent_id", "submolt", "to_agent"):
             if key in extra and extra[key]:
                 proposal[key] = extra[key]
 
-        # Gateway context if available
         gw = extra.get("gateway_response") or {}
         if gw:
             proposal["gateway_success"] = bool(gw.get("success"))
@@ -610,7 +606,7 @@ class MoltbookPlugin(KernelPlugin):
 
         self._emit_event("PROPOSAL_CREATED", f"Proposal: {content_type}", {
             "content_type": content_type, "priority": proposal.get("priority", 0),
-            "guna": result.guna, "guardian": result.guardian,
+            "guna": guna, "guardian": guardian,
         })
         return proposal
 
@@ -970,43 +966,31 @@ class MoltbookPlugin(KernelPlugin):
         trigger: str = "heartbeat",
         auto_approve: bool = True,
     ) -> Optional[Dict[str, Any]]:
-        """Execute MOLTBOOK_CONTENT_V1 circuit for content generation.
+        """MOLTBOOK_CONTENT_V1 — ONE path through AgencyDirector.
 
-        Uses the full circuit state machine: SHABDA → ARTHA → PRATYAYA → KARMA → SUCCESS.
-        Falls back to ad-hoc proposer if circuit executor not wired.
+        AgencyDirector.run_retry_loop() IS the state machine:
+            SHABDA  = _run_pipeline()
+            ARTHA   = guna/integrity gates
+            PRATYAYA = _compose_content() (engine + MahaComposition + LLM)
+            KARMA   = constitution.validate() + event_log
 
-        Returns circuit output dict on success, None on failure/filtering.
+        This method converts CycleResult → dict for callers that want dict format.
         """
-        if not self._circuit_executor:
+        result = self.agency_director.run_retry_loop(
+            content_type=content_type,
+            raw_input=raw_input,
+            post_id=post_id,
+            sender=sender,
+            trigger=trigger,
+        )
+        if result.status != "SUCCESS" or not result.content:
             return None
-        try:
-            from vibe_core.circuit_types import CircuitExecutionResult
-
-            result: CircuitExecutionResult = self._circuit_executor.execute_by_id(
-                "MOLTBOOK_CONTENT_V1",
-                {
-                    "raw_input": raw_input,
-                    "content_type": content_type,
-                    "target_text": raw_input,
-                    "post_id": post_id,
-                    "sender": sender,
-                    "trigger": trigger,
-                    "auto_approve": auto_approve,
-                },
-                requester_id="moltbook",
-            )
-            if result.success:
-                logger.info(
-                    f"Circuit MOLTBOOK_CONTENT_V1 completed: "
-                    f"{' → '.join(result.state_history)} | {result.syscall_count} syscalls"
-                )
-                return result.output
-            else:
-                logger.info(f"Circuit filtered/failed: {result.final_state} — {result.error or 'filtered'}")
-                return None
-        except Exception as e:
-            logger.warning(f"Circuit execution failed: {e}")
-            return None
+        return {
+            "content": result.content,
+            "guna": result.guna,
+            "guardian": result.guardian,
+            "duration_ms": result.duration_ms,
+        }
 
     def _try_vault(self, kernel: "RealVibeKernel") -> str:
         """Attempt to load API key: CivicVault → env → ~/.config/moltbook/credentials.json."""
