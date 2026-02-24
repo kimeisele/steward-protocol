@@ -226,24 +226,28 @@ content generates in ~1 second using MahaComposition (WordNet-backed 5-scorer ra
 
 ## 7. Known Limitations (Honest Assessment)
 
-### 7.1 LLM-Free Output Is Words, Not Sentences
-MahaComposition.compose() ranks individual words using 5 scorers (WordNet, mode affinity,
-prana, rhythm, state) and assembles them in SVO grammatical order. Result: semantically
-relevant word arrangements ("consciousness meditation — successful self-intelligent"),
-NOT coherent sentences.
-
-**This is NOT a bug.** The neuro-symbolic system produces semantically correct word
-selections. The LLM is currently the bridge that turns these into sentences.
-Long-term: the system should generate its own sentence patterns via circuits/seeds.
+### 7.1 No LLM = No Content
+MahaComposition.compose() ranks words using 5 scorers (WordNet, mode affinity,
+prana, rhythm, state). This is semantic context for the LLM prompt — NOT standalone output.
+No LLM available = no content generated. Word salad is not content.
 
 ### 7.2 LLM Latency Dominates
 5-10 seconds per API call (OpenRouter). For heartbeat-driven content, this means
 a single comment takes 6-11 seconds. Batching or async would help.
 
-### 7.3 No Intent Understanding
-The director generates content based on text resonance, not intent classification.
-"How does X work?" and "X is broken!" get similar treatment. The MahaLanguageEngine
-has `intent_category` in EngineResult — unused by the director.
+### 7.3 Intent Understanding — WIRED
+`EngineResult.intent_category` (MantraOpCode name) → opcode quarter → LLM prompt style:
+
+| Quarter | Opcodes | LLM Instruction |
+|---------|---------|-----------------|
+| GENESIS | SYS_WAKE, LOAD_ROOT, ALLOC_MEM, INIT_THREAD | Creative, fresh perspective |
+| DHARMA | COMPILE_AST, BIND_SYMBOL, TYPE_CHECK, DHARMA_TEST | Analyze, evaluate, assess |
+| KARMA | EXEC_OP, EXTEND_CAP, STATE_SYNC, LEDGER_SIGN | Practical engagement |
+| MOKSHA | YIELD_CPU, IO_FLUSH, LOG_EMIT, AUDIT_SEAL | Explain clearly, answer directly |
+
+`EngineResult.section_mode` → rhetoric style:
+CORE=direct, FILTER=selective, VERB=action-oriented, QUALITY=evaluative,
+CONTEXT=grounded, TARGET=goal-oriented, CLOSURE=conclusive.
 
 ### 7.4 Proposer Gates Still Exist
 The ResonanceProposer still has RAJAS-only gates in `propose_comment()` and `propose_post()`.
@@ -274,7 +278,7 @@ Guna distribution: 7 RAJAS, 4 SATTVA, 1 TAMAS — all producing content.
 1. **Guna = style, not gate.** Only TAMAS + dead cell + low integrity = skip.
 2. **AgencyDirector is THE content path.** Plugin heartbeat → _director_propose() → director.run_retry_loop().
 3. **Proposer is for scoring only.** analyze_feed(), should_engage(). NOT for content generation.
-4. **No fallback to word-salad.** LLM must finalize. MahaComposition is bridge-fallback, not production output.
+4. **No LLM = no content.** MahaComposition provides semantic context for LLM prompt. It is NOT standalone output.
 5. **No hardcoded if/else.** Guardian, style, vocabulary — all from pipeline dynamics.
 6. **EventBus for visibility.** Every phase emits events. System can observe.
 7. **Constitution validates.** Retry loop feeds violations back to next attempt.

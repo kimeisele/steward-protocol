@@ -234,9 +234,9 @@ but every component exists individually.
 | LLM structured prompts (no meta-commentary) | DONE | — |
 | Constitution validation + retry | DONE | — |
 | EventBus visibility | DONE | — |
-| Intent understanding (EngineResult.intent_category) | NOT DONE | HIGH |
-| No word-salad fallback (LLM must finalize) | NOT ENFORCED | HIGH |
-| Output adapts to input context | PARTIAL | HIGH |
+| Intent understanding (EngineResult.intent_category) | DONE | — |
+| No word-salad fallback (no LLM = no content) | DONE | — |
+| Output adapts to input context (intent + section_mode) | DONE | — |
 
 ### 5.2 Submolt + Community
 
@@ -300,18 +300,11 @@ but every component exists individually.
 
 ---
 
-## 7. Next Session Priorities
+## 7. Next Priorities
 
-1. **Intent understanding** — Wire EngineResult.intent_category into AgencyDirector.
-   Questions should get answers. Statements should get commentary. Requests should get action.
-
-2. **Enforce LLM finalization** — Remove MahaComposition as standalone output path.
-   Use it to INFORM the LLM prompt, not as fallback content.
-
+1. ~~**Intent understanding**~~ — DONE. OpCode quarter → LLM prompt style.
+2. ~~**Enforce LLM finalization**~~ — DONE. No LLM = no content.
 3. **Create m/agent-city submolt** — Single API call. Posts go there.
-
 4. **Populate agent-city repo** — Push registry, pokedex, governance structure.
-   This is the public artifact.
-
 5. **Heartbeat efficiency** — Profile actual production heartbeat timing.
-   Consider: batch LLM calls, async where possible, skip redundant queries.
+6. **Deep infrastructure exploration** — Vibe containers, spawning, migration.
