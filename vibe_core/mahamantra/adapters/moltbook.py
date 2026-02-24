@@ -59,6 +59,105 @@ class RateLimitState:
 # =============================================================================
 
 
+class ChallengeMonitor:
+    """Tracks challenge solve attempts for ban avoidance.
+
+    10 consecutive failures = ban. This monitor detects failure trends
+    and halts commenting before the ban threshold.
+    """
+
+    BAN_THRESHOLD = 10  # Max allowed failures before ban
+    HALT_THRESHOLD = 5  # Stop attempting after this many consecutive failures
+
+    def __init__(self):
+        self._consecutive_failures: int = 0
+        self._total_attempts: int = 0
+        self._total_successes: int = 0
+        self._total_failures: int = 0
+        self._halted: bool = False
+        self._last_challenge_format: str = ""  # Track format changes
+
+    @property
+    def is_halted(self) -> bool:
+        """True when too many consecutive failures — stop commenting."""
+        return self._halted
+
+    @property
+    def failure_rate(self) -> float:
+        if self._total_attempts == 0:
+            return 0.0
+        return self._total_failures / self._total_attempts
+
+    def record_success(self) -> None:
+        """Record a successful challenge solve."""
+        self._consecutive_failures = 0
+        self._total_attempts += 1
+        self._total_successes += 1
+        if self._halted:
+            self._halted = False
+            logger.info("Challenge monitor: resumed after successful solve")
+
+    def record_failure(self, challenge_text: str = "") -> None:
+        """Record a failed challenge solve."""
+        self._consecutive_failures += 1
+        self._total_attempts += 1
+        self._total_failures += 1
+
+        if self._consecutive_failures >= self.HALT_THRESHOLD:
+            self._halted = True
+            logger.error(
+                f"CHALLENGE MONITOR HALT: {self._consecutive_failures} consecutive failures. "
+                f"Commenting suspended to avoid ban. "
+                f"Last challenge: {challenge_text[:100]}"
+            )
+
+    def check_format_change(self, challenge_text: str) -> bool:
+        """Detect if the challenge format has changed.
+
+        Returns True if format appears different from previous challenges.
+        """
+        # Simple format detection: check structural pattern
+        text = challenge_text.lower().strip()
+        # Extract format signature: has numbers? has operators? has words?
+        has_digits = bool(re.search(r"\d", text))
+        has_operator = any(op in text for op in ["+", "-", "*", "/", "plus", "minus", "times", "divided"])
+        has_question = text.startswith("what")
+
+        fmt = f"digits={has_digits}|op={has_operator}|q={has_question}"
+
+        if self._last_challenge_format and fmt != self._last_challenge_format:
+            logger.warning(
+                f"Challenge format change detected! "
+                f"Was: {self._last_challenge_format}, Now: {fmt}. "
+                f"Challenge: {challenge_text[:100]}"
+            )
+            self._last_challenge_format = fmt
+            return True
+
+        self._last_challenge_format = fmt
+        return False
+
+    def get_stats(self) -> dict:
+        """Return monitoring stats for diagnostics."""
+        return {
+            "total_attempts": self._total_attempts,
+            "total_successes": self._total_successes,
+            "total_failures": self._total_failures,
+            "consecutive_failures": self._consecutive_failures,
+            "failure_rate": self.failure_rate,
+            "halted": self._halted,
+        }
+
+
+# Module-level singleton — shared across all client instances
+_challenge_monitor = ChallengeMonitor()
+
+
+def get_challenge_monitor() -> ChallengeMonitor:
+    """Get the global challenge monitor singleton."""
+    return _challenge_monitor
+
+
 class ChallengeSolver:
     """
     Solves Moltbook's obfuscated math challenges.
@@ -562,7 +661,17 @@ class MoltbookClient:
         Rate limit note: The initial attempt counts as 1 comment.
         If a challenge is returned, the retry reuses that same slot
         (we decrement before retrying) so one successful comment = 1 count.
+
+        Ban avoidance: ChallengeMonitor tracks consecutive failures.
+        If halted (5+ failures), commenting is refused to prevent ban.
         """
+        monitor = _challenge_monitor
+
+        # Ban avoidance: refuse to comment if halted
+        if monitor.is_halted:
+            logger.error("Comment refused: challenge monitor halted (too many solve failures)")
+            return {"error": "CHALLENGE_MONITOR_HALTED", "stats": monitor.get_stats()}  # type: ignore
+
         data: Dict[str, Any] = {"content": content}
         if parent_id:
             data["parent_id"] = parent_id
@@ -574,6 +683,9 @@ class MoltbookClient:
         if res.get("error") == "VERIFICATION_REQUIRED":
             challenge = res.get("challenge", "")
             challenge_id = res.get("challenge_id", "")
+
+            # Format change detection
+            monitor.check_format_change(challenge)
 
             logger.info(f"Solving challenge: {challenge}")
             solution = ChallengeSolver.solve(challenge)
@@ -594,6 +706,17 @@ class MoltbookClient:
             if self.offline_mode:
                 verify_data["_challenge_solved"] = solution
             res = await self._request("POST", f"/posts/{post_id}/comments", verify_data)
+
+            # Track solve result for ban avoidance
+            if res.get("error"):
+                monitor.record_failure(challenge)
+                logger.warning(
+                    f"Challenge solve FAILED: {challenge[:60]} → {solution} "
+                    f"(consecutive={monitor._consecutive_failures})"
+                )
+            else:
+                monitor.record_success()
+                logger.debug(f"Challenge solved: {challenge[:60]} → {solution}")
 
         return res  # type: ignore
 

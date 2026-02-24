@@ -27,6 +27,7 @@ import time
 import pytest
 
 from vibe_core.mahamantra.adapters.moltbook import (
+    ChallengeMonitor,
     ChallengeSolver,
     MoltbookClient,
     MoltbookLimits,
@@ -835,3 +836,74 @@ class TestNewTamasEndpoints:
     async def test_delete_post(self, client):
         result = await client.delete_post("p123")
         assert result["success"] is True
+
+
+# =============================================================================
+# CHALLENGE MONITOR — Ban Avoidance
+# =============================================================================
+
+
+class TestChallengeMonitor:
+    """ChallengeMonitor tracks solve attempts and halts before ban threshold."""
+
+    def test_fresh_monitor_not_halted(self):
+        monitor = ChallengeMonitor()
+        assert not monitor.is_halted
+        assert monitor.failure_rate == 0.0
+
+    def test_success_resets_consecutive_failures(self):
+        monitor = ChallengeMonitor()
+        monitor.record_failure("test")
+        monitor.record_failure("test")
+        assert monitor._consecutive_failures == 2
+        monitor.record_success()
+        assert monitor._consecutive_failures == 0
+
+    def test_halt_after_threshold(self):
+        monitor = ChallengeMonitor()
+        for i in range(ChallengeMonitor.HALT_THRESHOLD):
+            monitor.record_failure(f"challenge {i}")
+        assert monitor.is_halted
+
+    def test_halt_cleared_on_success(self):
+        monitor = ChallengeMonitor()
+        for i in range(ChallengeMonitor.HALT_THRESHOLD):
+            monitor.record_failure(f"challenge {i}")
+        assert monitor.is_halted
+        monitor.record_success()
+        assert not monitor.is_halted
+
+    def test_failure_rate_calculation(self):
+        monitor = ChallengeMonitor()
+        monitor.record_success()
+        monitor.record_failure("test")
+        monitor.record_success()
+        assert monitor._total_attempts == 3
+        assert monitor._total_failures == 1
+        assert abs(monitor.failure_rate - 1 / 3) < 0.01
+
+    def test_get_stats_returns_dict(self):
+        monitor = ChallengeMonitor()
+        monitor.record_success()
+        stats = monitor.get_stats()
+        assert stats["total_attempts"] == 1
+        assert stats["total_successes"] == 1
+        assert stats["halted"] is False
+
+    def test_format_change_detection(self):
+        monitor = ChallengeMonitor()
+        # First challenge sets baseline
+        changed = monitor.check_format_change("What is 5 + 3?")
+        assert not changed  # First time, no previous format
+
+        # Same format — no change
+        changed = monitor.check_format_change("What is 7 + 2?")
+        assert not changed
+
+        # Different format — detected
+        changed = monitor.check_format_change("No question mark here")
+        assert changed
+
+    def test_ban_threshold_higher_than_halt(self):
+        """HALT_THRESHOLD must be lower than BAN_THRESHOLD to prevent bans."""
+        assert ChallengeMonitor.HALT_THRESHOLD < ChallengeMonitor.BAN_THRESHOLD

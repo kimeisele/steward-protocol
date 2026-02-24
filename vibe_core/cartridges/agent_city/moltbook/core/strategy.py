@@ -21,14 +21,75 @@ from vibe_core.mahamantra.substrate.core.seed import TRINITY
 
 logger = logging.getLogger("MOLTBOOK.STRATEGY")
 
-# Domain topics for initial mission seeding (from knowledge/moltbook/platform.yaml domain)
-_SEED_TOPICS = (
+# Fallback topics — ONLY used when KG + Sankalpa + Feed all fail.
+# In production, topics are derived dynamically from Knowledge Graph nodes.
+_FALLBACK_TOPICS = (
     ("ai_governance", "AI governance and transparent decision-making in autonomous systems"),
     ("decentralized_protocols", "Decentralized protocols and agent-to-agent coordination"),
     ("open_source_ai", "Open source AI development and collaborative tooling"),
     ("community_building", "Community building and social dynamics in agent networks"),
     ("agent_autonomy", "Agent autonomy, identity, and self-directed action"),
 )
+
+
+def _derive_seed_topics() -> tuple:
+    """Derive mission topics from Knowledge Graph + existing Sankalpa missions.
+
+    Priority order:
+    1. KnowledgeResolver → KG nodes with moltbook domain concepts
+    2. Existing Sankalpa missions (persisted from previous runs)
+    3. _FALLBACK_TOPICS (hardcoded, last resort only)
+
+    Returns tuple of (topic_id, description) pairs.
+    """
+    topics: list = []
+
+    # Source 1: Knowledge Graph — search for moltbook-related domain concepts
+    try:
+        from vibe_core.knowledge.resolver import get_resolver
+
+        resolver = get_resolver()
+        if resolver and hasattr(resolver, "graph"):
+            # Search for moltbook domain nodes
+            nodes = resolver.graph.search_nodes("moltbook")
+            for node in nodes:
+                desc = getattr(node, "description", "")
+                node_id = getattr(node, "id", "")
+                if desc and node_id and len(desc) > 20:
+                    topics.append((f"kg_{node_id}", desc[:200]))
+
+            # Also search for broader agent/protocol concepts
+            for query in ("agent coordination", "autonomous systems", "decentralized"):
+                extra_nodes = resolver.graph.search_nodes(query)
+                for node in extra_nodes[:2]:
+                    desc = getattr(node, "description", "")
+                    node_id = getattr(node, "id", "")
+                    if desc and node_id and (node_id, desc[:200]) not in [(t[0], t[1]) for t in topics]:
+                        topics.append((f"kg_{node_id}", desc[:200]))
+    except Exception as e:
+        logger.debug(f"KG topic derivation failed: {e}")
+
+    # Source 2: Existing Sankalpa missions (from previous runs, persisted to disk)
+    try:
+        from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
+
+        orch = SankalpaOrchestrator()
+        existing = orch.registry.get_all_missions()
+        for mission in existing:
+            mid = mission.id
+            desc = mission.description
+            if desc and mid not in {t[0] for t in topics}:
+                topics.append((mid, desc[:200]))
+    except Exception as e:
+        logger.debug(f"Sankalpa topic derivation failed: {e}")
+
+    if topics:
+        logger.info(f"Derived {len(topics)} seed topics from KG + Sankalpa")
+        return tuple(topics)
+
+    # Source 3: Fallback — only when all dynamic sources fail
+    logger.info("Using fallback seed topics (KG + Sankalpa unavailable)")
+    return _FALLBACK_TOPICS
 
 
 @dataclass
@@ -91,9 +152,10 @@ class MoltbookStrategyPlanner:
         return self._orchestrator
 
     def _seed_missions(self) -> None:
-        """Load initial missions from domain topics.
+        """Load initial missions from dynamically derived topics.
 
-        Creates missions for each core topic area. Only seeds once —
+        Sources: KG domain nodes → Sankalpa missions → fallback topics.
+        Creates missions for each topic area. Only seeds once —
         subsequent calls are no-ops (missions persist in registry).
         """
         if self._missions_seeded:
@@ -117,7 +179,10 @@ class MoltbookStrategyPlanner:
 
             existing = {m.id for m in orch.registry.get_all_missions()}
 
-            for topic_id, description in _SEED_TOPICS:
+            # Derive topics dynamically instead of hardcoded list
+            seed_topics = _derive_seed_topics()
+
+            for topic_id, description in seed_topics:
                 mission_id = f"moltbook_{topic_id}"
                 if mission_id in existing:
                     continue

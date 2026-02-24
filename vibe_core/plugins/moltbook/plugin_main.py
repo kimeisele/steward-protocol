@@ -488,9 +488,10 @@ class MoltbookPlugin(KernelPlugin):
     # Adaptive interval adjustment: recalculate based on feedback stats
     _INTERVAL_ADJUST_INTERVAL = KSHETRA  # 24 field elements
 
-    # Persistence: queue + seen IDs survive restarts
+    # Persistence: queue + seen IDs + phase state survive restarts
     _QUEUE_STATE_FILE = "content_queue.json"
     _SEEN_STATE_FILE = "seen_ids.json"
+    _PHASE_STATE_FILE = "phase_state.json"
     _ACTIVITY_LOG_FILE = "activity.jsonl"
     _MAX_SEEN_IDS = MALA * NAVA  # 972 ≈ 1000 (108 beads × 9 processes)
 
@@ -693,6 +694,9 @@ class MoltbookPlugin(KernelPlugin):
 
             total = len(proposals)
             logger.info(f"State persisted: {total} queued proposals, {len(msg_ids)} msg IDs, {len(post_ids)} post IDs")
+
+            # Also persist cross-phase state (feed_topics + intents)
+            self._persist_phase_state()
         except Exception as e:
             logger.warning(f"Queue persistence failed: {e}")
 
@@ -745,6 +749,88 @@ class MoltbookPlugin(KernelPlugin):
         except Exception as e:
             logger.warning(f"Seen IDs restore failed: {e}")
 
+        # Restore cross-phase state (feed_topics + intents from previous run)
+        self._restore_phase_state()
+
+    def _persist_phase_state(self) -> None:
+        """Save cross-phase state (feed_topics + intents + heartbeat_count).
+
+        Survives GitHub Actions restarts so DHARMA can use GENESIS results
+        from a previous run, and KARMA can use DHARMA intents.
+        """
+        if not self._state_dir:
+            return
+        try:
+            # Serialize intents as dicts (StrategicIntent → dict)
+            intent_dicts = []
+            for intent in self._current_intents:
+                if hasattr(intent, "__dict__"):
+                    intent_dicts.append(intent.__dict__)
+                elif isinstance(intent, dict):
+                    intent_dicts.append(intent)
+
+            phase_data = {
+                "version": 1,
+                "heartbeat_count": self._heartbeat_count,
+                "feed_topics": self._current_feed_topics[:20],  # Cap to prevent bloat
+                "intents": intent_dicts,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            phase_path = self._state_dir / self._PHASE_STATE_FILE
+            phase_path.write_text(json.dumps(phase_data, indent=2, default=str))
+        except Exception as e:
+            logger.debug(f"Phase state persist failed: {e}")
+
+    def _restore_phase_state(self) -> None:
+        """Restore cross-phase state from previous run."""
+        if not self._state_dir:
+            return
+        phase_path = self._state_dir / self._PHASE_STATE_FILE
+        try:
+            if not phase_path.exists():
+                return
+            data = json.loads(phase_path.read_text())
+            if data.get("version") != 1:
+                return
+
+            # Restore heartbeat_count (highest wins — snapshot or phase)
+            saved_hb = int(data.get("heartbeat_count", 0))
+            if saved_hb > self._heartbeat_count:
+                self._heartbeat_count = saved_hb
+
+            # Restore feed topics (raw dicts, no deserialization needed)
+            topics = data.get("feed_topics", [])
+            if topics and not self._current_feed_topics:
+                self._current_feed_topics = topics
+                logger.info(f"Restored {len(topics)} feed topics from previous run")
+
+            # Restore intents as StrategicIntent objects
+            intent_dicts = data.get("intents", [])
+            if intent_dicts and not self._current_intents:
+                try:
+                    from vibe_core.cartridges.agent_city.moltbook.core.strategy import StrategicIntent
+
+                    intents = []
+                    for d in intent_dicts:
+                        intents.append(
+                            StrategicIntent(
+                                action_type=d.get("action_type", "skip"),
+                                topic=d.get("topic", ""),
+                                reasoning=d.get("reasoning", ""),
+                                priority=int(d.get("priority", 5)),
+                                mission_id=d.get("mission_id", ""),
+                                target_post_id=d.get("target_post_id", ""),
+                                engagement_context=d.get("engagement_context", ""),
+                                submolt_context=d.get("submolt_context", ""),
+                            )
+                        )
+                    self._current_intents = intents
+                    logger.info(f"Restored {len(intents)} strategic intents from previous run")
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.debug(f"Phase state restore failed: {e}")
+
     # =========================================================================
     # PluginStateContract
     # =========================================================================
@@ -756,11 +842,12 @@ class MoltbookPlugin(KernelPlugin):
 
     def snapshot_state(self) -> Dict[str, Any]:
         if not self._client:
-            return {"version": 5, "client_active": False}
+            return {"version": 6, "client_active": False, "heartbeat_count": self._heartbeat_count}
         limits = self._client.limits
         return {
-            "version": 5,
+            "version": 6,
             "client_active": True,
+            "heartbeat_count": self._heartbeat_count,
             "requests_this_minute": limits.requests_this_minute,
             "posts_this_30m": limits.posts_this_30m,
             "comments_this_hour": limits.comments_this_hour,
@@ -786,9 +873,11 @@ class MoltbookPlugin(KernelPlugin):
         }
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        if snapshot.get("version") not in (1, 2, 3, 4, 5) or not snapshot.get("client_active"):
+        if snapshot.get("version") not in (1, 2, 3, 4, 5, 6):
             return
-        if not self._client:
+        # Restore heartbeat_count even without client (survives GitHub Actions restarts)
+        self._heartbeat_count = int(snapshot.get("heartbeat_count", self._heartbeat_count))
+        if not snapshot.get("client_active") or not self._client:
             return
         limits = self._client.limits
         limits.requests_this_minute = snapshot.get("requests_this_minute", 0)
@@ -1292,8 +1381,6 @@ class MoltbookPlugin(KernelPlugin):
                     continue
                 if msg_id and msg_id in self._seen_message_ids:
                     continue
-                if msg_id:
-                    self._seen_message_ids.add(msg_id)
 
                 sender = msg.get("sender", "unknown") if isinstance(msg, dict) else "unknown"
 
@@ -1321,9 +1408,16 @@ class MoltbookPlugin(KernelPlugin):
                     )
                     if proposal:
                         self._content_queue.enqueue(proposal)
+                        # Mark seen AFTER successful enqueue (not before)
+                        if msg_id:
+                            self._seen_message_ids.add(msg_id)
                         logger.info(f"DM reply queued for {conv_id}")
+                    elif msg_id:
+                        # Proposal was None (filtered/empty) — still mark seen
+                        self._seen_message_ids.add(msg_id)
                 except Exception as e:
                     logger.warning(f"Content proposal failed: {e}")
+                    # Do NOT mark as seen — will retry next heartbeat
 
                 # Follow-back: follow agents who DM us (social reciprocity)
                 self._follow_back(sender)
@@ -2260,6 +2354,10 @@ class MoltbookPlugin(KernelPlugin):
         if self._content_queue.is_empty:
             return
 
+        # Offline gate: never send content when offline
+        if self._offline_mode:
+            return
+
         if self._service is None:
             self._service = MoltbookService(self._client)
         service = self._service
@@ -2321,6 +2419,33 @@ class MoltbookPlugin(KernelPlugin):
                     duration_ms=elapsed,
                 )
                 # Permanent failure — do not retry
+            except ConnectionError as e:
+                # HTTP 429 / rate limit from platform — long backoff
+                elapsed = (time.monotonic() - t0) * 1000
+                is_429 = "429" in str(e) or "rate" in str(e).lower()
+                backoff_secs = 300 if is_429 else 60  # 5min for 429, 1min for other connection errors
+                retries = proposal.get("_retries", 0)
+                if retries < self._MAX_PROPOSAL_RETRIES:
+                    proposal["_retries"] = retries + 1
+                    proposal["_retry_after"] = time.time() + backoff_secs
+                    failed.append(proposal)
+                    feedback.signal_partial(
+                        f"moltbook.drain.{ct}",
+                        "rate_limited_429" if is_429 else "connection_error",
+                        {"content_type": ct, "backoff_secs": backoff_secs},
+                    )
+                    logger.warning(
+                        f"{'429 rate limited' if is_429 else 'Connection error'} ({ct}), backoff {backoff_secs}s: {e}"
+                    )
+                else:
+                    self._log_activity("proposal_dropped", {"type": ct, "error": str(e)[:200]})
+                    feedback.signal_failure(
+                        f"moltbook.drain.{ct}",
+                        "dropped_after_retries",
+                        {"content_type": ct, "retries": retries},
+                        duration_ms=elapsed,
+                    )
+                    logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
             except Exception as e:
                 elapsed = (time.monotonic() - t0) * 1000
                 retries = proposal.get("_retries", 0)
