@@ -1,6 +1,6 @@
 # MOLTBOOK AGENCY — Architecture Reference
 
-**Verified against code: 2026-02-23 (post agency rewrite)**
+**Verified against code: 2026-02-24 (single-path architecture)**
 **Depends on:** STRATEGY.md (API surface), CLAUDE.md (system architecture), AGENT_CITY.md (vision)
 
 ---
@@ -24,24 +24,23 @@ and feed analysis only — it no longer gates content generation.
 
 ## 2. Content Pipeline (I-P-V-O)
 
-The AgencyDirector runs a 4-phase pipeline for ALL content generation:
+**Single path. No fallbacks.** Plugin calls circuit → director → pipeline → LLM → validate.
 
 ```
-INPUT (text from feed/DM/trigger)
-  │
-  ▼
-═══════════════════════ INPUT PHASE ═══════════════════════
+Heartbeat → _director_propose()
+  → execute_content_circuit()              (thin wrapper, format adapter)
+    → AgencyDirector.run_retry_loop()      (max 2 retries on governance failure)
+      → run_cycle()                        (I-P-V-O orchestrator)
+
+═══════════════════════ INPUT (SHABDA) ════════════════════
   │  KnowledgeResolver.compile_context(topic)     Domain context
   │  MahaLLM Kernel.guardian_for_text(topic)       Resonant guardian
   │  MahaLLM Kernel.expand(topic)                  HKR semantic tree
   │  ServiceRegistry.has(protocol)                 Capability discovery
   │  EventLog.get_last_validation_feedback()       Retry context
   ▼
-═══════════════════════ PROCESS PHASE ═════════════════════
-  │
-  │  1. Circuit Executor (if plugin wired)         SHABDA→ARTHA→PRATYAYA→KARMA
-  │     ↓ fallback
-  │  2. mahamantra(text) → 27-key result           VM pipeline
+═══════════════════════ PROCESS (ARTHA→PRATYAYA) ═════════
+  │  mahamantra(text) → 27-key result              VM pipeline
   │     │
   │     ▼
   │  MINIMAL GATE: only TAMAS + dead cell + integrity < 0.3 = SKIP
@@ -50,26 +49,27 @@ INPUT (text from feed/DM/trigger)
   │  TAMAS  → transformative style   (produces content unless dead/low-integrity)
   │     │
   │     ▼
-  │  3. LLM with structured prompt                 Primary path
-  │     │  "Write a concise, insightful comment..."
-  │     │  Perspective: {guardian_function}
-  │     │  Key concepts: {resonant_words}
-  │     │  Vocabulary: {guardian_vocabulary}
-  │     │  Context: {knowledge_graph}
-  │     │  STRICTLY under {char_limit} characters.
-  │     ↓ fallback
-  │  4. MahaComposition.compose()                  5 scorers (WordNet, mode, prana, rhythm, state)
-  │     ↓ fallback
-  │  5. render(result)                             Kirtan rendering (last resort)
+  │  ResonanceHarmonics.get_zone()                 Resonance zone classification
+  │  VedicScaleMapping.resonance_to_rasa()         Rasa emotional tone
+  │     │
+  │     ▼
+  │  _compose_content():
+  │     MahaLanguageEngine.generate()              EngineResult (words, section, verse)
+  │     MahaComposition.compose()                  5 scorers → resonant Gita vocabulary
+  │     context_builders → prompt_ctx (10 keys)    Guardian voice, resonance, themes
+  │     PromptRegistry.get(moltbook.yaml)          YAML template → system message
+  │     LLM.invoke(system=context, user=task)      deepseek generates natural language
+  │     SravanamCheck.can_emit()                   Entropy advisory (observability)
+  │     _truncate_smart(content, limit)            Sentence-boundary truncation
   │
-  │  _truncate_smart(content, limit)               Sentence-boundary truncation
+  │  No LLM = no content. No fallback to word salad.
   ▼
-═══════════════════════ VALIDATE PHASE ════════════════════
+═══════════════════════ VALIDATE (KARMA) ═════════════════
   │  Constitution.validate(content, type)
   │  → ValidationResult(is_valid, violations, warnings)
   │  If invalid → store feedback → retry (max 2)
   ▼
-═══════════════════════ OUTPUT PHASE ══════════════════════
+═══════════════════════ OUTPUT ═══════════════════════════
   │  CycleResult(status, content, guna, guardian)
   │  → ContentProposal (TypedDict with routing metadata)
   │  → ContentQueue (bounded FIFO, max 50)
@@ -104,19 +104,19 @@ mahamantra.tick() (Singularity)
        _do_heartbeat() [debounce: min 2s]
        │
        every 16 ticks (_TICKS_PER_HEARTBEAT):
-       ├── _process_inbound_dms()     → AgencyDirector.run_retry_loop("dm_reply")
+       ├── _process_inbound_dms()     → _director_propose("dm_reply")
        ├── _process_dm_requests()     → proposer.propose_dm_request_action() (no content)
        ├── _drain_content_queue()     → MoltbookService.create_post/comment/etc
        │
        every 64 ticks:
        ├── _analyze_feed()            → proposer.analyze_feed() for SCORING
-       │                              → AgencyDirector.run_retry_loop("comment") for CONTENT
+       │                              → _director_propose("comment") for CONTENT
        │
        every 384 ticks:
-       ├── _maybe_create_post()       → AgencyDirector.run_retry_loop("post")
+       ├── _maybe_create_post()       → _director_propose("post")
        │
        every 128 ticks:
-       ├── _check_own_comment_replies() → AgencyDirector.run_retry_loop("comment")
+       ├── _check_own_comment_replies() → _director_propose("comment")
        │
        periodic:
        ├── _discover_submolts()       → MoltbookClient.get_submolts()
@@ -124,8 +124,9 @@ mahamantra.tick() (Singularity)
        └── _trim_memory()             → Cap seen IDs
 ```
 
-**Critical change:** ALL content generation methods now call `_director_propose()` which
-routes through `AgencyDirector.run_retry_loop()`. The proposer is used ONLY for:
+**Critical change:** ALL content generation flows through ONE path:
+`_director_propose()` → `execute_content_circuit()` → `director.run_retry_loop()`.
+No fallbacks. The proposer is used ONLY for:
 - `analyze_feed()` — scoring/ranking posts (no content generation)
 - `should_engage()` — engagement decisions (votes, no content)
 - `propose_dm_request_action()` — accept/reject DM requests (no content body)
@@ -148,9 +149,9 @@ routes through `AgencyDirector.run_retry_loop()`. The proposer is used ONLY for:
 | Constitution | cartridges/.../governance/constitution.py | AgencyDirector VALIDATE phase | Content validation, quality gates |
 | EventLog | cartridges/.../core/memory.py | AgencyDirector | Immutable JSONL audit trail |
 | ContentQueue | protocols/moltbook_content.py | Plugin heartbeat | Bounded FIFO (max 50), priority-sorted |
-| Circuit Executor | cortex/engines/circuit_engine.py | AgencyDirector._process | MOLTBOOK_CONTENT_V1 state machine |
+| Circuit Wrapper | plugin_main.py:execute_content_circuit | _director_propose() | Thin format adapter → director.run_retry_loop() |
 | AGORA Broadcast | cartridges/agent_city/agora/ | Plugin._broadcast_to_agora | Post/comment federation |
-| Kirtan Renderer | render.py | AgencyDirector._compose_content | Last-resort rendering (now handles "composed" key) |
+| Kirtan Renderer | render.py | AgencyDirector._compose_content | MahaComposition output formatting (handles "composed" key) |
 
 ### NOT YET WIRED (exists, available)
 
@@ -179,12 +180,10 @@ Measured on local machine (2026-02-23):
 | _query_kernel() | 0.01s | In-memory kernel |
 | Constitution.validate() | <0.001s | String checks |
 | **LLM call (OpenRouter)** | **5-10s** | **NETWORK LATENCY — BOTTLENECK** |
-| MahaComposition.compose() | 0.1s | LLM-free fallback |
+| MahaComposition.compose() | 0.1s | Semantic context for LLM prompt |
 | Full cycle (with LLM) | 6-11s | Dominated by API latency |
-| Full cycle (without LLM) | ~1.2s | Fast but word-level output |
 
-**The system is compute-fast. All latency is external API.** When LLM is unavailable,
-content generates in ~1 second using MahaComposition (WordNet-backed 5-scorer ranking).
+**The system is compute-fast. All latency is external API.**
 
 ---
 
@@ -276,10 +275,10 @@ Guna distribution: 7 RAJAS, 4 SATTVA, 1 TAMAS — all producing content.
 ## 9. Rules
 
 1. **Guna = style, not gate.** Only TAMAS + dead cell + low integrity = skip.
-2. **AgencyDirector is THE content path.** Plugin heartbeat → _director_propose() → director.run_retry_loop().
+2. **Single content path.** Plugin heartbeat → _director_propose() → execute_content_circuit() → director.run_retry_loop(). No fallbacks.
 3. **Proposer is for scoring only.** analyze_feed(), should_engage(). NOT for content generation.
 4. **No LLM = no content.** MahaComposition provides semantic context for LLM prompt. It is NOT standalone output.
 5. **No hardcoded if/else.** Guardian, style, vocabulary — all from pipeline dynamics.
 6. **EventBus for visibility.** Every phase emits events. System can observe.
 7. **Constitution validates.** Retry loop feeds violations back to next attempt.
-8. **Verify against code.** This doc was verified 2026-02-23. It will rot.
+8. **Verify against code.** This doc was verified 2026-02-24. It will rot.

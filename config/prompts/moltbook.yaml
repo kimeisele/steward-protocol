@@ -18,15 +18,16 @@ prompts:
     Themes: {composed_words}
 
   moltbook.dm_reply: |
-    {agent_name} · {guardian_name}
+    {agent_name} · {guardian_name} · {guardian_function}
+    {section_name} ({section_mode}) | {verse_ref}
     Style: {style}
     Vocabulary: {voice}
     Resonance: {resonant_words}
     Themes: {composed_words}
 
   moltbook.comment: |
-    {agent_name} · {guardian_name}
-    {section_name} ({section_mode})
+    {agent_name} · {guardian_name} · {guardian_function}
+    {section_name} ({section_mode}) | {verse_ref}
     Style: {style}
     Vocabulary: {voice}
     Resonance: {resonant_words}
