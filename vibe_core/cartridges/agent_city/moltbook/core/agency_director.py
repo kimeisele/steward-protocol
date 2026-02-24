@@ -303,6 +303,10 @@ class AgencyDirector:
         self.feedback.signal_success(feedback_cmd, {
             "guna": guna, "guardian": guardian, "length": len(content),
         }, duration_ms=elapsed)
+        self._emit("COMPLETED", f"Content generated: {content_type}", {
+            "content_type": content_type, "guna": guna, "guardian": guardian,
+            "length": len(content), "duration_ms": elapsed,
+        })
         return CycleResult(
             status="SUCCESS", phase="OUTPUT", cycle_id=cycle_id,
             content_type=content_type, content=content,
@@ -655,6 +659,17 @@ class AgencyDirector:
                 f"{agent_name}:\n"
             )
 
+        # Quota check before LLM call
+        try:
+            from vibe_core.runtime.quota_manager import OperationalQuota, QuotaExceededError
+            quota = OperationalQuota()
+            quota.check_before_request(estimated_tokens=512, operation=f"moltbook.{content_type}")
+        except QuotaExceededError as e:
+            logger.warning(f"Quota exceeded: {e}")
+            return None
+        except Exception:
+            pass  # QuotaManager unavailable — proceed without guard
+
         try:
             models = provider.get_available_models()
             response = provider.invoke(
@@ -664,7 +679,17 @@ class AgencyDirector:
                 temperature=0.7,
             )
             if response and response.content and not response.content.startswith("# ERROR"):
-                return response.content.strip()
+                content = response.content.strip()
+                # Record usage after successful call
+                try:
+                    quota.record_request(
+                        tokens_used=len(content.split()) + len(prompt.split()),
+                        cost_usd=0.01,
+                        operation=f"moltbook.{content_type}",
+                    )
+                except Exception:
+                    pass
+                return content
         except Exception as e:
             logger.warning(f"LLM failed: {e}")
 
