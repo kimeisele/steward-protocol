@@ -12,7 +12,9 @@ Guna informs STYLE (guardian, tone), NOT gating.
 Only TAMAS + dead cell = skip. Everything else generates content.
 
 Wires: MahaComposition (5 scorers incl. WordNet + mode_affinity),
-       MahaLanguageEngine, Knowledge Graph, EventBus.
+       MahaLanguageEngine, Knowledge Graph, EventBus,
+       ResonanceHarmonics (zone classification), VedicScaleMapping (rasa → LLM tone),
+       SravanamCheck (entropy advisory).
 """
 
 import logging
@@ -27,6 +29,11 @@ from vibe_core.mahamantra.substrate.core.seed import (
     PANCHA,
     QUARTERS,
     SHARANAGATI,
+)
+from vibe_core.mahamantra.substrate.encoding.harmonics import (
+    ResonanceHarmonics,
+    SravanamCheck,
+    VedicScaleMapping,
 )
 
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
@@ -130,6 +137,17 @@ _ENGAGEMENT_DISPATCH = {
     "follow_back": "_do_follow_back",
     "subscribe": "_do_subscribe",
     "upvote": "_do_upvote",
+}
+
+# =========================================================================
+# Rasa → LLM tone guidance (from VedicScaleMapping, harmonics.py)
+# Derived from cell resonance → zone → emotional register for content
+# =========================================================================
+_RASA_TONE = {
+    "Shanta": "Maintain a calm, grounded tone.",
+    "Karuna": "Show compassion and understanding.",
+    "Vira": "Be confident and direct.",
+    "Adbhuta": "Express wonder and deep insight.",
 }
 
 
@@ -254,6 +272,8 @@ class AgencyDirector:
         self._emit_action(f"Generated {content_type}", {
             "content_type": content_type, "guna": guna, "guardian": guardian,
             "length": len(content),
+            "zone": process_ctx.get("resonance_zone", ""),
+            "rasa": process_ctx.get("rasa", ""),
         })
 
         # ===== VALIDATE =====
@@ -423,10 +443,36 @@ class AgencyDirector:
             return "", {"guna": guna, "guardian": guardian, "skipped": True, "status": "SKIPPED"}
 
         style = _GUNA_STYLE.get(guna, "active")
-        logger.info(f"PROCESS: guna={guna} style={style} guardian={guardian} integrity={integrity:.3f}")
 
-        # Compose content using MahaComposition (5 scorers: prana, rhythm, semantic/WordNet, mode, state)
-        content = self._compose_content(pipeline_result, seed_text, content_type, input_ctx)
+        # Resonance classification — zone (integer CF) + rasa (emotional tone)
+        resonance_zone = ResonanceHarmonics.get_zone(integrity_cf)
+        rasa_name, rasa_meaning = VedicScaleMapping.resonance_to_rasa(integrity)
+        logger.info(
+            f"PROCESS: guna={guna} style={style} guardian={guardian} "
+            f"integrity={integrity:.3f} zone={resonance_zone} rasa={rasa_name}"
+        )
+
+        # Compose content — rasa guides LLM emotional register
+        content = self._compose_content(
+            pipeline_result, seed_text, content_type, input_ctx,
+            rasa_name=rasa_name,
+        )
+
+        # SravanamCheck advisory — entropy verification (observability, not blocking)
+        sravanam_ok = True
+        sravanam_reason = ""
+        if content:
+            input_tokens = len(seed_text.split())
+            output_tokens = len(content.split())
+            sravanam_ok, sravanam_reason = SravanamCheck.can_emit(
+                input_tokens, output_tokens, integrity,
+            )
+            if not sravanam_ok:
+                safe_size = SravanamCheck.compute_safe_output_size(input_tokens)
+                logger.info(
+                    f"SravanamCheck advisory: {sravanam_reason} "
+                    f"(safe_output={safe_size}, actual={output_tokens})"
+                )
 
         # Smart truncation: trim to last sentence boundary within limit
         char_limit = _CHAR_LIMIT.get(content_type, _DEFAULT_CHAR_LIMIT)
@@ -439,7 +485,12 @@ class AgencyDirector:
             "guardian": guardian,
             "style": style,
             "integrity": integrity,
+            "resonance_zone": resonance_zone,
+            "rasa": rasa_name,
+            "sravanam_ok": sravanam_ok,
         }
+        if not sravanam_ok:
+            process_ctx["sravanam_advisory"] = sravanam_reason
 
         # Explicit status when LLM produced no content
         if not content:
@@ -474,10 +525,13 @@ class AgencyDirector:
         input_text: str,
         content_type: str,
         input_ctx: Dict[str, Any],
+        *,
+        rasa_name: str = "",
     ) -> str:
         """Compose content via LLM. No LLM = no content.
 
         MahaComposition provides semantic context (ranked words) for the LLM prompt.
+        Rasa (from cell resonance) guides LLM emotional register.
         It is NOT standalone output. Word salad is not content.
         """
         engine_result = self._run_engine(input_text)
@@ -493,6 +547,7 @@ class AgencyDirector:
         content = self._try_llm_compose(
             engine_result, pipeline_result, input_text,
             content_type, input_ctx, composed_words,
+            rasa_name=rasa_name,
         )
         if content:
             return content
@@ -509,11 +564,14 @@ class AgencyDirector:
         content_type: str,
         input_ctx: Dict[str, Any],
         composed_words: str = "",
+        *,
+        rasa_name: str = "",
     ) -> Optional[str]:
         """LLM composition with intent-aware structured context.
 
         Intent comes from MantraOpCode quarter (genesis/dharma/karma/moksha).
         Rhetoric comes from section_mode (CORE/FILTER/VERB/QUALITY).
+        Rasa comes from cell resonance → VedicScaleMapping (emotional register).
         composed_words = MahaComposition ranked English (semantic context, not output).
         """
         try:
@@ -582,6 +640,11 @@ class AgencyDirector:
         if intent_instruction or mode_instruction:
             style_parts = [s for s in (intent_instruction, mode_instruction) if s]
             prompt_parts.append(f"\nStyle: {' '.join(style_parts)}")
+
+        # Rasa tone guidance (cell resonance → emotional register)
+        rasa_tone = _RASA_TONE.get(rasa_name)
+        if rasa_tone:
+            prompt_parts.append(f"Tone: {rasa_tone}")
 
         if function:
             prompt_parts.append(f"Perspective: {function}")
