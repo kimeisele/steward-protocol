@@ -15,6 +15,8 @@
 #   KnowledgeGraph  → knowledge_context (topic + moltbook domain)
 #   ResonanceHarmonics → resonance_zone, rasa_name, rasa_meaning (cell state)
 #   SravanamCheck   → sravanam_status (entropy advisory)
+#   ResonanceRanker → resonance_dimensions (7D score breakdown)
+#   Chamber.kirtan  → cell_prana, cell_integrity, cell_cycle (post-kirtan state)
 
 prompts:
   moltbook.dm_reply: |
@@ -24,6 +26,8 @@ prompts:
     Guna: {guna} ({style}) | Zone: {resonance_zone}
     Rasa: {rasa_name} ({rasa_meaning})
     Sravanam: {sravanam_status}
+    Resonanz-7D: {resonance_dimensions}
+    Zelle: prana={cell_prana} integrity={cell_integrity} cycle={cell_cycle}
 
     VOKABULAR: {guardian_vocabulary}
     ELEMENTE: {element_walk}
@@ -47,6 +51,8 @@ prompts:
     Guna: {guna} ({style}) | Zone: {resonance_zone}
     Rasa: {rasa_name} ({rasa_meaning})
     Sravanam: {sravanam_status}
+    Resonanz-7D: {resonance_dimensions}
+    Zelle: prana={cell_prana} integrity={cell_integrity} cycle={cell_cycle}
 
     VOKABULAR: {guardian_vocabulary}
     ELEMENTE: {element_walk}
@@ -70,6 +76,8 @@ prompts:
     Guna: {guna} ({style}) | Zone: {resonance_zone}
     Rasa: {rasa_name} ({rasa_meaning})
     Sravanam: {sravanam_status}
+    Resonanz-7D: {resonance_dimensions}
+    Zelle: prana={cell_prana} integrity={cell_integrity} cycle={cell_cycle}
 
     VOKABULAR: {guardian_vocabulary}
     ELEMENTE: {element_walk}
@@ -90,6 +98,8 @@ prompts:
     Intent: {intent_category}
     Guna: {guna} ({style}) | Zone: {resonance_zone}
     Rasa: {rasa_name} ({rasa_meaning})
+    Resonanz-7D: {resonance_dimensions}
+    Zelle: prana={cell_prana} integrity={cell_integrity} cycle={cell_cycle}
     VOKABULAR: {guardian_vocabulary}
     ANALYSE: {engine_output}
     RESONANZ: {resonant_words}
@@ -97,12 +107,13 @@ prompts:
     AGENT: {sender}
 
 metadata:
-  version: "6.0.0"
-  author: "Content Intelligence v6 — Full harmonics context wired"
+  version: "7.0.0"
+  author: "Content Intelligence v7 — 7D resonance + post-kirtan cell state"
   rationale: |
     Pure context slots. Zero instructions. Zero goodwill.
     System physics (guna/integrity/section) enforce quality.
     Code enforces length limits ([:280], [:500], [:120]).
-    Templates provide semantic grounding from 5 sources:
-    EngineResult, MahaLLM Kernel, Pipeline NAMA, KnowledgeGraph, ResonanceHarmonics.
-    v6: Added guna/style, resonance_zone, rasa, sravanam_status.
+    Templates provide semantic grounding from 7 sources:
+    EngineResult, MahaLLM Kernel, Pipeline NAMA, KnowledgeGraph,
+    ResonanceHarmonics, ResonanceRanker (7D), Chamber.kirtan (cell state).
+    v7: Added resonance_dimensions, cell_prana/integrity/cycle.
