@@ -39,7 +39,7 @@ from vibe_core.mahamantra.substrate.encoding.harmonics import (
     VedicScaleMapping,
 )
 
-from .context_builders import build_moltbook_context
+from .context_builders import guardian_vocabulary_short
 
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
 
@@ -119,6 +119,24 @@ _PROMPT_KEYS = {
 }
 
 _MOLTBOOK_YAML = Path(__file__).resolve().parent.parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
+
+# Content-type → atomic task (user message for LLM)
+# The ONLY text telling the LLM what to DO.
+# System message = identity + composed words (WHO you are + WHAT words to use).
+# User message = atomic task (WHAT to produce).
+_TASK_TEMPLATES = {
+    "post": "Post about: {input}",
+    "dm_reply": "Reply to: {input}",
+    "comment": "Comment on: {input}",
+    "dm_request": "Message: {input}",
+}
+
+
+def _build_task_message(content_type: str, input_text: str) -> str:
+    """Build atomic task message for LLM user role."""
+    template = _TASK_TEMPLATES.get(content_type, "Write about: {input}")
+    return template.format(input=input_text[:200] if input_text else content_type)
+
 
 _YAML_LOADED = False
 
@@ -547,61 +565,74 @@ class AgencyDirector:
         resonance_zone: str = "",
         sravanam_status: str = "",
     ) -> str:
-        """Compose content via LLM. No LLM = no content.
+        """Deterministic pre-processing → atomic LLM call.
 
-        Uses build_moltbook_context() → PromptRegistry.get() → LLM.
-        MahaComposition provides semantic context for the prompt.
-        All orchestration data (guna, rasa, zone) flows as CONTEXT, not instructions.
+        1. MahaComposition (5 scorers) → deterministic English words
+           Guna/quarter/prana/rhythm/semantics ALREADY encoded in word selection.
+        2. Guardian vocabulary → voice fingerprint (5 meanings, ~15 tokens)
+        3. Atomic LLM call: identity + words + voice → natural language
+        4. Code enforces: char limits, constitution, sravanam (in _process())
+
+        Harmonics kwargs (guna, rasa, etc.) are accepted for caller compatibility
+        but do NOT go to the LLM — they're physics, not prompt text.
         """
         _load_yaml_prompts()
 
         engine_result = self._run_engine(input_text)
 
-        # MahaComposition: semantic context for LLM (NOT standalone output)
+        # Step 1: MahaComposition — deterministic English (5 scorers)
+        # Quarter → max_words, guna → mode scoring, prana → energy,
+        # rhythm → phonemic alignment, semantics → WordNet relevance
         composed_words = ""
         try:
             from vibe_core.mahamantra.adapters.composition import get_composition
             composed_words = get_composition().compose(pipeline_result, input_text) or ""
         except Exception as e:
-            logger.debug(f"MahaComposition unavailable: {e}")
+            logger.debug(f"MahaComposition: {e}")
 
-        # Determine agent name from plugin or default
+        # Fallback: resonant words from engine if composition empty
+        if not composed_words and engine_result:
+            words = getattr(engine_result, "resonant_words", ()) or ()
+            composed_words = ", ".join(m for _, m, _ in words[:5])
+
+        if not composed_words:
+            logger.warning("No composed words — cannot generate content")
+            return ""
+
+        # Step 2: Guardian voice (top-5 meanings, ~15 tokens)
+        guardian_name = ""
+        guardian_function = "analysis"
+        if engine_result:
+            guardian_name = getattr(engine_result, "guardian_name", "") or ""
+            guardian_function = getattr(engine_result, "guardian_function", "") or "analysis"
+
+        voice = guardian_vocabulary_short(guardian_name)
+
+        # Step 3: Agent identity
         agent_name = "steward-protocol"
         if self._plugin and hasattr(self._plugin, "_agent_name"):
             agent_name = self._plugin._agent_name
 
-        # Content-type-specific extra context slots (for YAML template)
-        extra: Dict[str, str] = {
-            "guna": guna,
-            "style": style,
-            "resonance_zone": resonance_zone,
-            "rasa_name": rasa_name,
-            "rasa_meaning": rasa_meaning,
-            "sravanam_status": sravanam_status,
+        # Step 4: ATOMIC prompt context (~50 tokens total)
+        prompt_ctx = {
+            "agent_name": agent_name,
+            "guardian_name": guardian_name.upper() if guardian_name else "KAPILA",
+            "guardian_function": guardian_function,
             "composed_words": composed_words,
+            "voice": voice,
         }
 
-        # Map intent category → quarter (data for context, not instruction)
-        if engine_result:
-            intent_cat = getattr(engine_result, "intent_category", "") or ""
-            quarter = _INTENT_QUARTER.get(intent_cat, "")
-            if quarter:
-                extra["intent_quarter"] = quarter
+        # Step 5: Task input (content-type-specific fragment)
+        task_input = input_text
+        if content_type == "comment":
+            task_input = str(input_ctx.get("raw_input", input_text))[:200]
+        elif content_type == "dm_reply":
+            task_input = input_text[:200]
+        else:
+            task_input = str(input_ctx.get("trigger", input_text))[:200]
 
-        # Content-type-specific slots from input_ctx
-        extra["sender"] = str(input_ctx.get("sender", ""))
-        extra["trigger"] = str(input_ctx.get("trigger", content_type))
-        extra["post_content"] = str(input_ctx.get("raw_input", input_text))[:500]
-
-        # Retry feedback as context
-        prev_violations = input_ctx.get("previous_violations", [])
-        if prev_violations:
-            extra["previous_violations"] = "; ".join(str(v) for v in prev_violations[:3])
-
-        content = self._try_llm_compose(
-            engine_result, pipeline_result, input_text,
-            content_type, agent_name, extra,
-        )
+        # Step 6: Atomic LLM call
+        content = self._try_llm_compose(prompt_ctx, task_input, content_type)
         if content:
             return content
 
@@ -611,18 +642,23 @@ class AgencyDirector:
 
     def _try_llm_compose(
         self,
-        engine_result,
-        pipeline_result: dict,
-        input_text: str,
+        prompt_ctx: Dict[str, str],
+        task_input: str,
         content_type: str,
-        agent_name: str,
-        extra: Dict[str, str],
     ) -> Optional[str]:
-        """Build context → fill YAML template → LLM.
+        """ATOMIC LLM call. System = identity + words. User = task + input.
 
-        Context comes from build_moltbook_context() (shared with ResonanceProposer).
-        Template comes from PromptRegistry.get() (config/prompts/moltbook.yaml).
-        No hardcoded instructions. Dense context does the work.
+        System message (~50 tokens): filled YAML template
+            - agent_name, guardian_name, guardian_function
+            - composed_words (from MahaComposition, deterministic)
+            - voice (guardian vocabulary top-5 meanings)
+
+        User message (~30 tokens): atomic task + input fragment
+            - "Post about: {topic}" / "Reply to: {message}" / etc.
+
+        Total: ~80 tokens input. Not 900.
+        MahaComposition's 5 scorers encode ALL intelligence in word selection.
+        LLM's only job: assemble those words into natural language.
         """
         try:
             from vibe_core.runtime.providers.factory import get_llm_provider
@@ -632,76 +668,61 @@ class AgencyDirector:
         except Exception:
             return None
 
-        # Build full context dict from all systems
-        ctx = build_moltbook_context(
-            engine_result, agent_name, input_text,
-            pipeline_result=pipeline_result,
-            **extra,
-        )
-
-        # Get prompt from YAML template via PromptRegistry
+        # Fill YAML template with atomic context
         prompt_key = _PROMPT_KEYS.get(content_type, "moltbook.post")
-        prompt = ""
+        system_msg = ""
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
-            prompt = PromptRegistry.get(prompt_key, context=ctx)
+            system_msg = PromptRegistry.get(prompt_key, context=prompt_ctx)
         except Exception as e:
-            logger.warning(f"PromptRegistry failed for {prompt_key}: {e}")
+            logger.warning(f"PromptRegistry: {e}")
 
-        if not prompt:
-            # Fallback: structured context without YAML template
-            prompt = (
-                f"{ctx.get('guardian_name', '')} · {ctx.get('quarter', '')} · {ctx.get('guardian_function', '')}\n"
-                f"Sektion: {ctx.get('section_name', '')} ({ctx.get('section_semantic', '')}) | "
-                f"Modus: {ctx.get('section_mode', '')}\n"
-                f"Vers: {ctx.get('verse_ref', '')} | Intent: {ctx.get('intent_category', '')}\n"
-                f"Guna: {ctx.get('guna', '')} ({ctx.get('style', '')}) | "
-                f"Zone: {ctx.get('resonance_zone', '')}\n"
-                f"Rasa: {ctx.get('rasa_name', '')} ({ctx.get('rasa_meaning', '')})\n"
-                f"VOKABULAR: {ctx.get('guardian_vocabulary', '')}\n"
-                f"RESONANZ: {ctx.get('resonant_words', '')}\n"
-                f"ANALYSE: {ctx.get('engine_output', '')}\n"
-                f"{ctx.get('knowledge_context', '')}\n"
-                f"{input_text}\n"
-                f"{agent_name}:\n"
+        if not system_msg:
+            # Fallback: inline atomic prompt
+            system_msg = (
+                f"{prompt_ctx.get('agent_name', '')} · {prompt_ctx.get('guardian_name', '')}\n"
+                f"Words: {prompt_ctx.get('composed_words', '')}\n"
+                f"Voice: {prompt_ctx.get('voice', '')}"
             )
 
-        # Quota check before LLM call
+        # Atomic task message
+        user_msg = _build_task_message(content_type, task_input)
+
+        # Quota check
         try:
             from vibe_core.runtime.quota_manager import OperationalQuota, QuotaExceededError
             quota = OperationalQuota()
-            quota.check_before_request(estimated_tokens=512, operation=f"moltbook.{content_type}")
+            quota.check_before_request(estimated_tokens=128, operation=f"moltbook.{content_type}")
         except QuotaExceededError as e:
             logger.warning(f"Quota exceeded: {e}")
             return None
-        except Exception as e:
-            logger.debug(f"QuotaManager unavailable: {e}")
+        except Exception:
+            pass
 
         try:
             response = provider.invoke(
                 prompt="",
-                model=None,  # Use config default (sonnet), NOT models[0] (opus)
-                max_tokens=256,
+                model=None,  # Config default (deepseek/deepseek-v3.2)
+                max_tokens=128,
                 temperature=0.7,
                 messages=[
-                    {"role": "system", "content": prompt},
-                    {"role": "user", "content": input_text},
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": user_msg},
                 ],
             )
             if response and response.content and not response.content.startswith("# ERROR"):
                 content = response.content.strip()
-                # Record usage after successful call
                 try:
                     quota.record_request(
-                        tokens_used=len(content.split()) + len(prompt.split()),
-                        cost_usd=0.01,
+                        tokens_used=len(content.split()) + len(system_msg.split()),
+                        cost_usd=0.001,
                         operation=f"moltbook.{content_type}",
                     )
-                except Exception as e:
-                    logger.debug(f"Quota recording failed: {e}")
+                except Exception:
+                    pass
                 return content
         except Exception as e:
-            logger.warning(f"LLM failed: {e}")
+            logger.warning(f"LLM: {e}")
 
         return None
 

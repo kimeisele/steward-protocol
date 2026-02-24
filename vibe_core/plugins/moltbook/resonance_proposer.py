@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from vibe_core.cartridges.agent_city.moltbook.core.context_builders import (
-    build_moltbook_context,
+    guardian_vocabulary_short,
 )
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import (
     RankedWord,
@@ -54,6 +54,22 @@ _PROMPT_KEYS = {
 }
 
 _MOLTBOOK_YAML = Path(__file__).resolve().parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
+
+# Content-type → atomic task (user message for LLM)
+_TASK_TEMPLATES = {
+    "dm_reply": "Reply to: {input}",
+    "comment": "Comment on: {input}",
+    "post": "Post about: {input}",
+    "dm_request": "Message: {input}",
+}
+
+
+def _build_task_message(prompt_key: str, input_text: str) -> str:
+    """Build atomic task message for LLM user role."""
+    # Extract content type from prompt key (e.g., "moltbook.dm_reply" → "dm_reply")
+    ct = prompt_key.rsplit(".", 1)[-1] if "." in prompt_key else prompt_key
+    template = _TASK_TEMPLATES.get(ct, "Write about: {input}")
+    return template.format(input=input_text[:200] if input_text else "")
 
 # Knowledge Graph node IDs → ContentType mapping (knowledge/moltbook/platform.yaml)
 _KG_CONTENT_TYPE_NODES = {
@@ -231,68 +247,89 @@ class ResonanceProposer(ContentProposalProtocol):
         pipeline_result: Optional[dict] = None,
         **extra: str,
     ) -> Optional[str]:
-        """Context → YAML template → LLM → content. No LLM = kirtan rendering."""
-        ctx = build_moltbook_context(engine_result, self._agent_name, user_input, pipeline_result=pipeline_result, **extra)
+        """Deterministic pre-processing → atomic LLM → fallback chain.
 
-        # Fill YAML template with context
-        prompt = ""
-        try:
-            from vibe_core.runtime.prompt_registry import PromptRegistry
+        1. MahaComposition (5 scorers) → deterministic English (standalone-quality)
+        2. Resonant words from engine → vocabulary hint (LLM-only, not standalone)
+        3. If LLM: atomic prompt (identity + words) → natural language
+        4. If no LLM: MahaComposition output directly (already English)
+        5. Last resort: kirtan rendering
 
-            prompt = PromptRegistry.get(prompt_key, context=ctx)
-        except Exception as e:
-            logger.warning(f"PromptRegistry failed for {prompt_key}: {e}")
-
-        if not prompt:
-            # Fallback: pure context, no YAML available
-            prompt = (
-                f"{ctx.get('guardian_name', '')} · {ctx.get('quarter', '')} · {ctx.get('guardian_function', '')}\n"
-                f"Sektion: {ctx.get('section_name', '')} ({ctx.get('section_semantic', '')})\n"
-                f"Vers: {ctx.get('verse_ref', '')} | Intent: {ctx.get('intent_category', '')}\n"
-                f"VOKABULAR: {ctx.get('guardian_vocabulary', '')}\n"
-                f"ELEMENTE: {ctx.get('element_walk', '')}\n"
-                f"SHRUTI: {ctx.get('shruti_pattern', '')}\n"
-                f"RESONANZ: {ctx.get('resonant_words', '')}\n"
-                f"NAMEN: {ctx.get('expanded_names', '')}\n"
-                f"DERIVATION: {ctx.get('derivation', '')}\n"
-                f"ANALYSE: {ctx.get('engine_output', '')}\n"
-                f"{ctx.get('knowledge_context', '')}\n"
-                f"{user_input}\n"
-                f"{ctx.get('agent_name', '')}:\n"
-            )
-
-        # Try real LLM provider (NOT the template mock LLMEngine.speak())
-        provider = self._get_provider()
-        if provider:
-            try:
-                response = provider.invoke(
-                    prompt="",
-                    model=None,  # Use config default, NOT models[0] (opus)
-                    max_tokens=512,
-                    temperature=0.7,
-                    messages=[
-                        {"role": "system", "content": prompt},
-                        {"role": "user", "content": user_input},
-                    ],
-                )
-                if response and response.content and not response.content.startswith("# ERROR"):
-                    return response.content.strip()
-            except Exception as e:
-                logger.warning(f"LLM provider failed: {e}")
-
-        # Primary LLM-free: MahaComposition 5-scorer ranked English pipeline
+        MahaComposition runs BEFORE LLM (pre-processing), not after (fallback).
+        """
+        # Step 1: MahaComposition — deterministic English (standalone-quality)
+        composed = ""
         if pipeline_result:
             try:
                 from vibe_core.mahamantra.adapters.composition import MahaComposition
 
                 composer = MahaComposition()
-                composed = composer.compose(pipeline_result, user_input)
-                if composed and composed.strip():
-                    return composed.strip()
+                composed = composer.compose(pipeline_result, user_input) or ""
             except Exception as e:
-                logger.debug(f"MahaComposition failed: {e}")
+                logger.debug(f"MahaComposition: {e}")
 
-        # Last resort: kirtan rendering (deterministic but minimal)
+        # Vocabulary hint: composed words OR resonant words (for LLM input)
+        # Resonant words are raw meanings — only useful as LLM input, not standalone
+        vocab = composed
+        if not vocab and engine_result:
+            words = getattr(engine_result, "resonant_words", ()) or ()
+            vocab = ", ".join(m for _, m, _ in words[:5])
+
+        # Step 2: Guardian voice
+        guardian_name = getattr(engine_result, "guardian_name", "") or "" if engine_result else ""
+        guardian_function = getattr(engine_result, "guardian_function", "") or "analysis" if engine_result else "analysis"
+        voice = guardian_vocabulary_short(guardian_name)
+
+        # Step 3: Atomic prompt context
+        prompt_ctx = {
+            "agent_name": self._agent_name,
+            "guardian_name": guardian_name.upper() if guardian_name else "KAPILA",
+            "guardian_function": guardian_function,
+            "composed_words": vocab,
+            "voice": voice,
+        }
+
+        # Step 4: Try LLM with atomic prompt
+        provider = self._get_provider()
+        if provider and vocab:
+            system_msg = ""
+            try:
+                from vibe_core.runtime.prompt_registry import PromptRegistry
+
+                system_msg = PromptRegistry.get(prompt_key, context=prompt_ctx)
+            except Exception as e:
+                logger.warning(f"PromptRegistry: {e}")
+
+            if not system_msg:
+                system_msg = (
+                    f"{self._agent_name} · {prompt_ctx['guardian_name']}\n"
+                    f"Words: {vocab}\n"
+                    f"Voice: {voice}"
+                )
+
+            user_msg = _build_task_message(prompt_key, user_input)
+
+            try:
+                response = provider.invoke(
+                    prompt="",
+                    model=None,  # Config default (deepseek/deepseek-v3.2)
+                    max_tokens=128,
+                    temperature=0.7,
+                    messages=[
+                        {"role": "system", "content": system_msg},
+                        {"role": "user", "content": user_msg},
+                    ],
+                )
+                if response and response.content and not response.content.startswith("# ERROR"):
+                    return response.content.strip()
+            except Exception as e:
+                logger.warning(f"LLM: {e}")
+
+        # Step 5: No LLM — MahaComposition output only (not raw resonant words)
+        if composed:
+            return composed
+
+        # Step 6: Last resort — kirtan rendering
         if pipeline_result:
             try:
                 from vibe_core.mahamantra.render import render

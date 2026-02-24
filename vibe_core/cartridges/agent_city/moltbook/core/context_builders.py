@@ -71,6 +71,26 @@ def guardian_vocabulary(guardian_name: str) -> str:
         return ""
 
 
+def guardian_vocabulary_short(guardian_name: str) -> str:
+    """Top-5 guardian vocabulary — meanings only (no Sanskrit).
+
+    For atomic prompts: gives LLM a voice fingerprint in ~15 tokens.
+    MahaComposition already scores words against guardian vocabulary.
+    This is identity context, not instruction.
+    """
+    if not guardian_name:
+        return ""
+    try:
+        from vibe_core.mahamantra.substrate.encoding.maha_llm_kernel import get_kernel
+
+        profile = get_kernel().guardian(guardian_name.lower())
+        if not profile.vocabulary:
+            return ""
+        return ", ".join(w.first_meaning for w in profile.vocabulary[:5])
+    except Exception:
+        return ""
+
+
 def phonetic_context(pipeline_result: Optional[dict]) -> Dict[str, str]:
     """Extract element walk + shruti pattern from pipeline NAMA coords.
 
