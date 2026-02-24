@@ -469,6 +469,11 @@ class MoltbookPlugin(KernelPlugin):
     _DEFAULT_REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
     _DEFAULT_PROFILE_UPDATE_INTERVAL = 48  # Every 48th heartbeat ≈ 768 ticks
 
+    # Engagement tracking: poll own posts for metrics
+    _ENGAGEMENT_TRACK_INTERVAL = 12  # Every 12th heartbeat
+    # Adaptive interval adjustment: recalculate based on feedback stats
+    _INTERVAL_ADJUST_INTERVAL = 24  # Every 24th heartbeat
+
     # Persistence: queue + seen IDs survive restarts
     _QUEUE_STATE_FILE = "content_queue.json"
     _SEEN_STATE_FILE = "seen_ids.json"
@@ -527,6 +532,9 @@ class MoltbookPlugin(KernelPlugin):
         self._agora = None
         # Agency Director — I-P-V-O pipeline (mahamantra-direct, guna=style not gate)
         self._agency_director = None
+        # Engagement tracking: own post IDs → metadata for polling
+        self._own_post_ids: Dict[str, Dict[str, object]] = {}
+        self._MAX_OWN_POST_IDS = 200
 
     @property
     def dependencies(self) -> Set[str]:
@@ -625,14 +633,22 @@ class MoltbookPlugin(KernelPlugin):
             # Cap comment_post_map to last N entries
             cpm_keys = sorted(self._comment_post_map.keys())[-self._MAX_SEEN_IDS :]
             cpm = {k: self._comment_post_map[k] for k in cpm_keys}
+            # Cap own_post_ids to most recent entries
+            own_post_keys = sorted(
+                self._own_post_ids.keys(),
+                key=lambda k: self._own_post_ids[k].get("created_at", 0),
+            )[-self._MAX_OWN_POST_IDS:]
+            own_posts = {k: self._own_post_ids[k] for k in own_post_keys}
+
             seen_data = {
-                "version": 3,
+                "version": 4,
                 "message_ids": msg_ids,
                 "post_ids": post_ids,
                 "own_comment_ids": sorted(self._own_comment_ids)[-self._MAX_SEEN_IDS :],
                 "followed_agents": sorted(self._followed_agents),
                 "subscribed_submolts": sorted(self._subscribed_submolts),
                 "comment_post_map": cpm,
+                "own_post_ids": own_posts,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             seen_path = self._state_dir / self._SEEN_STATE_FILE
@@ -674,13 +690,14 @@ class MoltbookPlugin(KernelPlugin):
         try:
             if seen_path.exists():
                 data = json.loads(seen_path.read_text())
-                if data.get("version") in (1, 2, 3):
+                if data.get("version") in (1, 2, 3, 4):
                     self._seen_message_ids = set(data.get("message_ids", []))
                     self._seen_post_ids = set(data.get("post_ids", []))
                     self._own_comment_ids = set(data.get("own_comment_ids", []))
                     self._followed_agents = set(data.get("followed_agents", []))
                     self._subscribed_submolts = set(data.get("subscribed_submolts", []))
                     self._comment_post_map = data.get("comment_post_map", {})
+                    self._own_post_ids = data.get("own_post_ids", {})
                     logger.info(
                         f"Restored {len(self._seen_message_ids)} msg IDs, "
                         f"{len(self._seen_post_ids)} post IDs, "
@@ -719,6 +736,7 @@ class MoltbookPlugin(KernelPlugin):
             "seen_post_count": len(self._seen_post_ids),
             "own_comment_count": len(self._own_comment_ids),
             "comment_thread_count": len(self._comment_post_map),
+            "own_post_count": len(self._own_post_ids),
             "followed_agent_count": len(self._followed_agents),
             "subscribed_submolt_count": len(self._subscribed_submolts),
             "intervals": {
@@ -792,6 +810,9 @@ class MoltbookPlugin(KernelPlugin):
             # Register MoltbookProtocol + ContentProposalProtocol in ServiceRegistry
             self._register_service()
 
+            # Register FeedbackProtocol (InMemoryFeedback) for learning signals
+            self._register_feedback()
+
             # Resolve agent name from profile BEFORE booting proposer
             # (proposer uses agent_name in content templates)
             try:
@@ -838,6 +859,18 @@ class MoltbookPlugin(KernelPlugin):
             logger.info("MoltbookProtocol registered in ServiceRegistry")
         except Exception as e:
             logger.warning(f"ServiceRegistry registration failed: {e}")
+
+    def _register_feedback(self) -> None:
+        """Register FeedbackProtocol (InMemoryFeedback) for learning signals."""
+        try:
+            from vibe_core.di import ServiceRegistry
+            from vibe_core.protocols.feedback import FeedbackProtocol, InMemoryFeedback
+
+            if not ServiceRegistry.is_registered(FeedbackProtocol):
+                ServiceRegistry.register_factory(FeedbackProtocol, InMemoryFeedback)
+                logger.info("FeedbackProtocol registered in ServiceRegistry")
+        except Exception as e:
+            logger.warning(f"FeedbackProtocol registration failed: {e}")
 
     def _wire_to_mahamantra(self) -> None:
         """Register as Mahamantra tick listener. Bombenfest."""
@@ -1047,6 +1080,12 @@ class MoltbookPlugin(KernelPlugin):
         if len(self._comment_post_map) > cap:
             keys = sorted(self._comment_post_map.keys())[-cap:]
             self._comment_post_map = {k: self._comment_post_map[k] for k in keys}
+        if len(self._own_post_ids) > self._MAX_OWN_POST_IDS:
+            sorted_keys = sorted(
+                self._own_post_ids.keys(),
+                key=lambda k: self._own_post_ids[k].get("created_at", 0),
+            )[-self._MAX_OWN_POST_IDS:]
+            self._own_post_ids = {k: self._own_post_ids[k] for k in sorted_keys}
         # Flush proposer pipeline/engine caches
         if self._proposer and hasattr(self._proposer, "flush_cache"):
             self._proposer.flush_cache()
@@ -1119,6 +1158,14 @@ class MoltbookPlugin(KernelPlugin):
         # Profile auto-update (karma, activity stats in bio)
         if self._heartbeat_count % self._profile_update_interval == 0:
             self._safe_call(self._update_profile, "profile_update")
+
+        # Engagement tracking: poll own posts for upvotes/replies
+        if self._heartbeat_count % self._ENGAGEMENT_TRACK_INTERVAL == 0:
+            self._safe_call(self._track_engagement, "engagement_tracking")
+
+        # Adaptive interval adjustment based on feedback stats
+        if self._heartbeat_count % self._INTERVAL_ADJUST_INTERVAL == 0:
+            self._safe_call(self._adjust_intervals, "interval_adjustment")
 
         # Trim in-memory sets periodically to prevent unbounded growth
         if self._heartbeat_count % self._profile_update_interval == 0:
@@ -1339,12 +1386,16 @@ class MoltbookPlugin(KernelPlugin):
         trigger = "scheduled"
         seed = f"{trigger}: {', '.join(feed_topics[:3])}" if feed_topics else trigger
 
+        # Select best submolt via resonance cross-scoring
+        selected_submolt = self._select_submolt(seed)
+
         try:
             proposal = self._director_propose(
                 content_type="post",
                 raw_input=seed,
                 proposal_type=ContentType.POST.value,
                 trigger=trigger,
+                submolt=selected_submolt or "",
                 context={"feed_topics": feed_topics} if feed_topics else {},
             )
             if proposal:
@@ -1478,6 +1529,141 @@ class MoltbookPlugin(KernelPlugin):
         except Exception as e:
             logger.warning(f"Profile update failed: {e}")
 
+    def _track_engagement(self) -> None:
+        """Poll own posts/comments for engagement metrics (upvotes, replies).
+
+        Feeds results into:
+          - EventLog (engagement_metric event for persistence)
+          - FeedbackProtocol (signal_success/failure for adaptive learning)
+        """
+        if not self._service or not self._own_post_ids:
+            return
+
+        from vibe_core.protocols.feedback import get_feedback_safe
+        feedback = get_feedback_safe()
+
+        event_log = self.agency_director.event_log
+
+        # Poll up to 5 most recent own posts
+        recent_posts = sorted(
+            self._own_post_ids.items(),
+            key=lambda kv: kv[1].get("created_at", 0),
+            reverse=True,
+        )[:5]
+
+        for post_id, meta in recent_posts:
+            try:
+                post = self._service.get_post(post_id)
+            except Exception as e:
+                logger.debug(f"Engagement poll failed for {post_id}: {e}")
+                continue
+
+            if not isinstance(post, dict):
+                continue
+
+            upvotes = int(post.get("upvotes", 0))
+            downvotes = int(post.get("downvotes", 0))
+            replies = int(post.get("comment_count", 0))
+            submolt = str(meta.get("submolt", ""))
+            net_score = upvotes - downvotes
+
+            event_log.record_engagement_metric(
+                content_id=post_id, content_type="post",
+                upvotes=upvotes, downvotes=downvotes,
+                replies=replies, submolt=submolt,
+            )
+
+            ctx = {"submolt": submolt, "upvotes": upvotes, "replies": replies, "net_score": net_score}
+            if net_score > 0 or replies > 0:
+                feedback.signal_success("moltbook.post", ctx, duration_ms=0.0)
+            elif net_score < 0:
+                feedback.signal_failure("moltbook.post", "negative_engagement", ctx, duration_ms=0.0)
+
+        # Poll up to 5 own comments for engagement
+        comment_ids = list(self._own_comment_ids)[-5:]
+        for comment_id in comment_ids:
+            post_id = self._comment_post_map.get(comment_id, "")
+            if not post_id:
+                continue
+            try:
+                comments = self._service.get_comments(post_id, sort="new")
+            except Exception:
+                continue
+            for c in (comments or []):
+                if not isinstance(c, dict):
+                    continue
+                if c.get("id") == comment_id:
+                    upvotes = int(c.get("upvotes", 0))
+                    downvotes = int(c.get("downvotes", 0))
+                    net_score = upvotes - downvotes
+                    event_log.record_engagement_metric(
+                        content_id=comment_id, content_type="comment",
+                        upvotes=upvotes, downvotes=downvotes, replies=0,
+                    )
+                    ctx = {"upvotes": upvotes, "net_score": net_score}
+                    if net_score > 0:
+                        feedback.signal_success("moltbook.comment", ctx, duration_ms=0.0)
+                    elif net_score < 0:
+                        feedback.signal_failure("moltbook.comment", "negative_engagement", ctx, duration_ms=0.0)
+                    break
+
+        logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
+
+    # Interval bounds (min/max heartbeats)
+    _MIN_FEED_INTERVAL = 2
+    _MAX_FEED_INTERVAL = 12
+    _MIN_POST_INTERVAL = 12
+    _MAX_POST_INTERVAL = 48
+
+    def _adjust_intervals(self) -> None:
+        """Adjust heartbeat intervals based on feedback success rate.
+
+        Reads FeedbackProtocol stats. Needs ≥5 signals for cold start protection.
+        Linear interpolation:
+          - High success (80%+) → shorter intervals (more active)
+          - Low success (20%-) → longer intervals (more conservative)
+        """
+        from vibe_core.protocols.feedback import get_feedback_safe
+        stats = get_feedback_safe().get_stats()
+
+        if stats.total_signals < 5:
+            return  # Cold start: not enough data
+
+        rate = stats.success_rate
+
+        # Linear interpolation for feed interval
+        if rate >= 0.8:
+            new_feed = self._MIN_FEED_INTERVAL
+        elif rate <= 0.2:
+            new_feed = self._MAX_FEED_INTERVAL
+        else:
+            # Interpolate: 0.2 → max, 0.8 → min
+            t = (rate - 0.2) / 0.6
+            new_feed = round(self._MAX_FEED_INTERVAL - t * (self._MAX_FEED_INTERVAL - self._MIN_FEED_INTERVAL))
+
+        # Linear interpolation for post interval
+        if rate >= 0.8:
+            new_post = self._MIN_POST_INTERVAL
+        elif rate <= 0.3:
+            new_post = self._MAX_POST_INTERVAL
+        else:
+            t = (rate - 0.3) / 0.5
+            new_post = round(self._MAX_POST_INTERVAL - t * (self._MAX_POST_INTERVAL - self._MIN_POST_INTERVAL))
+
+        old_feed, old_post = self._feed_interval, self._post_interval
+        self._feed_interval = max(self._MIN_FEED_INTERVAL, min(self._MAX_FEED_INTERVAL, new_feed))
+        self._post_interval = max(self._MIN_POST_INTERVAL, min(self._MAX_POST_INTERVAL, new_post))
+
+        if self._feed_interval != old_feed or self._post_interval != old_post:
+            self._log_activity("intervals_adjusted", {
+                "feed": self._feed_interval, "post": self._post_interval,
+                "success_rate": round(rate, 3), "total_signals": stats.total_signals,
+            })
+            logger.info(
+                f"Intervals adjusted: feed={old_feed}→{self._feed_interval}, "
+                f"post={old_post}→{self._post_interval} (rate={rate:.1%}, signals={stats.total_signals})"
+            )
+
     def _monitor_queue_health(self) -> None:
         """Log warning when queue overflows (proposals silently dropped).
 
@@ -1535,11 +1721,13 @@ class MoltbookPlugin(KernelPlugin):
         except Exception:
             pass  # Never fail the main loop for logging
 
-    def _discover_submolts(self) -> None:
-        """Discover and subscribe to relevant submolts.
+    _SUBMOLT_RESONANCE_THRESHOLD = 0.3  # Minimum resonance score to subscribe
 
-        Queries available submolts, filters for interesting communities,
-        and enqueues SUBSCRIBE proposals for ones we haven't joined yet.
+    def _discover_submolts(self) -> None:
+        """Discover and subscribe to relevant submolts via resonance scoring.
+
+        Uses resonate() to score each submolt by name+description.
+        Only subscribes if score > threshold OR fewer than 3 subscriptions (cold start).
         """
         try:
             submolts = run_async(self._client.get_submolts())
@@ -1550,6 +1738,24 @@ class MoltbookPlugin(KernelPlugin):
         if not submolts:
             return
 
+        try:
+            from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
+        except ImportError:
+            # Fallback: subscribe to all (original behavior)
+            for submolt in submolts:
+                if not isinstance(submolt, dict):
+                    continue
+                name = submolt.get("name", "")
+                if name and name not in self._subscribed_submolts:
+                    self._subscribed_submolts.add(name)
+                    self._content_queue.enqueue({
+                        "content_type": ContentType.SUBSCRIBE.value,
+                        "submolt": name, "source": "submolt_discovery", "priority": 0,
+                    })
+            return
+
+        cold_start = len(self._subscribed_submolts) < 3
+
         for submolt in submolts:
             if not isinstance(submolt, dict):
                 continue
@@ -1557,17 +1763,93 @@ class MoltbookPlugin(KernelPlugin):
             if not name or name in self._subscribed_submolts:
                 continue
 
-            # Subscribe to communities we haven't joined yet
-            # The platform is small enough that subscribing to all is reasonable
-            self._subscribed_submolts.add(name)
-            proposal: ContentProposal = {
-                "content_type": ContentType.SUBSCRIBE.value,
-                "submolt": name,
-                "source": "submolt_discovery",
-                "priority": 0,
-            }
-            self._content_queue.enqueue(proposal)
-            logger.info(f"Submolt subscription queued: {name}")
+            # Score by resonance: name + description
+            desc = submolt.get("description", "")
+            probe = f"{name} {desc}".strip()
+            try:
+                ranked = resonate(probe, top_n=3)
+                score = sum(w.total_score for w in ranked) / len(ranked) if ranked else 0.0
+            except Exception:
+                score = 0.0
+
+            if score > self._SUBMOLT_RESONANCE_THRESHOLD or cold_start:
+                self._subscribed_submolts.add(name)
+                proposal: ContentProposal = {
+                    "content_type": ContentType.SUBSCRIBE.value,
+                    "submolt": name,
+                    "source": "submolt_discovery",
+                    "priority": 0,
+                }
+                self._content_queue.enqueue(proposal)
+                logger.info(f"Submolt subscription queued: {name} (score={score:.3f})")
+            else:
+                logger.debug(f"Submolt skipped: {name} (score={score:.3f} < {self._SUBMOLT_RESONANCE_THRESHOLD})")
+
+    def _select_submolt(self, seed_text: str) -> Optional[str]:
+        """Select best submolt for content via resonance cross-scoring.
+
+        For each subscribed submolt, compute resonance between content words
+        and submolt name. Weight by engagement history if available.
+        """
+        if not self._subscribed_submolts:
+            return None
+
+        try:
+            from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
+        except ImportError:
+            return None
+
+        # Get content resonance profile
+        try:
+            content_ranked = resonate(seed_text, top_n=3)
+            content_score = sum(w.total_score for w in content_ranked) if content_ranked else 0.0
+        except Exception:
+            return None
+
+        if content_score == 0.0:
+            return None
+
+        # Build engagement history lookup (submolt → avg net_score)
+        engagement_weights: Dict[str, float] = {}
+        try:
+            event_log = self.agency_director.event_log
+            metrics = event_log.get_events_by_type("engagement_metric", limit=50)
+            submolt_scores: Dict[str, List[int]] = {}
+            for e in metrics:
+                s = e.payload.get("submolt", "")
+                if s:
+                    ns = e.payload.get("net_score", 0)
+                    submolt_scores.setdefault(s, []).append(ns)
+            for s, scores in submolt_scores.items():
+                engagement_weights[s] = sum(scores) / len(scores) if scores else 0.0
+        except Exception:
+            pass
+
+        # Cross-score each subscribed submolt
+        best_submolt: Optional[str] = None
+        best_score = 0.0
+
+        for submolt_name in self._subscribed_submolts:
+            try:
+                submolt_ranked = resonate(submolt_name, top_n=3)
+                submolt_total = sum(w.total_score for w in submolt_ranked) if submolt_ranked else 0.0
+            except Exception:
+                continue
+
+            # Cross-score: product of content and submolt resonance
+            cross = content_score * submolt_total
+
+            # Weight by engagement history (1.0 + normalized avg)
+            eng_weight = 1.0 + max(0.0, engagement_weights.get(submolt_name, 0.0) * 0.1)
+            weighted = cross * eng_weight
+
+            if weighted > best_score:
+                best_score = weighted
+                best_submolt = submolt_name
+
+        if best_submolt:
+            logger.debug(f"Selected submolt: {best_submolt} (score={best_score:.3f})")
+        return best_submolt
 
     # Max retries before a proposal is permanently dropped
     _MAX_PROPOSAL_RETRIES = 2
@@ -1618,10 +1900,15 @@ class MoltbookPlugin(KernelPlugin):
                     content = proposal.get("content", "")
                     submolt = proposal.get("submolt")
                     if title and content:
-                        service.create_post(title, content, submolt)
-                        self._log_activity("post_created", {"title": title[:80], "submolt": submolt})
+                        post_result = service.create_post(title, content, submolt)
+                        post_id = post_result.get("id", "") if isinstance(post_result, dict) else ""
+                        if post_id:
+                            self._own_post_ids[post_id] = {
+                                "submolt": submolt or "", "created_at": time.time(), "title": title[:80],
+                            }
+                        self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
                         self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
-                        logger.info(f"Post created: {title[:50]}")
+                        logger.info(f"Post created: {title[:50]} (id={post_id})")
 
                 elif ct == ContentType.COMMENT.value:
                     post_id = proposal.get("post_id", "")
