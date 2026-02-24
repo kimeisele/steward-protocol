@@ -13,12 +13,17 @@
 #   MahaLLM Kernel  → guardian_vocabulary (top-10 words for this guardian)
 #   Pipeline NAMA   → element_walk (fire/water/earth/air/space), shruti_pattern (S/N)
 #   KnowledgeGraph  → knowledge_context (topic + moltbook domain)
+#   ResonanceHarmonics → resonance_zone, rasa_name, rasa_meaning (cell state)
+#   SravanamCheck   → sravanam_status (entropy advisory)
 
 prompts:
   moltbook.dm_reply: |
     {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
+    Guna: {guna} ({style}) | Zone: {resonance_zone}
+    Rasa: {rasa_name} ({rasa_meaning})
+    Sravanam: {sravanam_status}
 
     VOKABULAR: {guardian_vocabulary}
     ELEMENTE: {element_walk}
@@ -39,6 +44,9 @@ prompts:
     {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
+    Guna: {guna} ({style}) | Zone: {resonance_zone}
+    Rasa: {rasa_name} ({rasa_meaning})
+    Sravanam: {sravanam_status}
 
     VOKABULAR: {guardian_vocabulary}
     ELEMENTE: {element_walk}
@@ -59,6 +67,9 @@ prompts:
     {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
+    Guna: {guna} ({style}) | Zone: {resonance_zone}
+    Rasa: {rasa_name} ({rasa_meaning})
+    Sravanam: {sravanam_status}
 
     VOKABULAR: {guardian_vocabulary}
     ELEMENTE: {element_walk}
@@ -77,6 +88,8 @@ prompts:
   moltbook.dm_request: |
     {guardian_name} · {guardian_function}
     Intent: {intent_category}
+    Guna: {guna} ({style}) | Zone: {resonance_zone}
+    Rasa: {rasa_name} ({rasa_meaning})
     VOKABULAR: {guardian_vocabulary}
     ANALYSE: {engine_output}
     RESONANZ: {resonant_words}
@@ -84,11 +97,12 @@ prompts:
     AGENT: {sender}
 
 metadata:
-  version: "5.0.0"
-  author: "Content Intelligence v5 — MahaLLM Kernel wired"
+  version: "6.0.0"
+  author: "Content Intelligence v6 — Full harmonics context wired"
   rationale: |
     Pure context slots. Zero instructions. Zero goodwill.
     System physics (guna/integrity/section) enforce quality.
     Code enforces length limits ([:280], [:500], [:120]).
-    Templates provide semantic grounding from 4 sources:
-    EngineResult, MahaLLM Kernel, Pipeline NAMA, KnowledgeGraph.
+    Templates provide semantic grounding from 5 sources:
+    EngineResult, MahaLLM Kernel, Pipeline NAMA, KnowledgeGraph, ResonanceHarmonics.
+    v6: Added guna/style, resonance_zone, rasa, sravanam_status.

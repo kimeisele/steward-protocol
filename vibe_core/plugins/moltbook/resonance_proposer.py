@@ -20,6 +20,9 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from vibe_core.cartridges.agent_city.moltbook.core.context_builders import (
+    build_moltbook_context,
+)
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import (
     RankedWord,
     resonate,
@@ -120,159 +123,9 @@ def _should_skip(result: dict) -> bool:
 
 
 # =========================================================================
-# Context builders — extract structured data from systems
+# Context builders — delegated to shared module (context_builders.py)
 # =========================================================================
-
-
-def _format_resonant_words(engine_result) -> str:
-    """EngineResult.resonant_words → structured context string."""
-    if not engine_result.resonant_words:
-        return ""
-    return ", ".join(f"{s} ({m})" for s, m, _ in engine_result.resonant_words[:7])
-
-
-def _format_template_words(engine_result) -> str:
-    """EngineResult.template_words → grammatical skeleton string."""
-    if not engine_result.template_words:
-        return ""
-    return ", ".join(f"{m} [{r}]" for _, m, r in engine_result.template_words[:7] if m)
-
-
-def _section_data(engine_result) -> Dict[str, str]:
-    """Section Router → semantic mode + element."""
-    section = engine_result.section_name or ""
-    mode = engine_result.section_mode or "CORE"
-    try:
-        from vibe_core.mahamantra.substrate.language.section_router import SECTION_SIGNATURES
-
-        sig = SECTION_SIGNATURES.get(section, {})
-        return {
-            "section_name": section,
-            "section_mode": mode,
-            "section_semantic": str(sig.get("semantic", "")),
-            "section_element": str(sig.get("element", "")),
-        }
-    except Exception:
-        return {"section_name": section, "section_mode": mode, "section_semantic": "", "section_element": ""}
-
-
-def _guardian_vocabulary(guardian_name: str) -> str:
-    """MahaLLM Kernel → guardian's top-10 vocabulary words.
-
-    Each guardian has a unique semantic fingerprint: the 10 Gita words
-    that score highest for their 4D position. This constrains the LLM's
-    word palette to the guardian's natural vocabulary.
-    """
-    try:
-        from vibe_core.mahamantra.substrate.encoding.maha_llm_kernel import get_kernel
-
-        profile = get_kernel().guardian(guardian_name.lower())
-        if not profile.vocabulary:
-            return ""
-        return ", ".join(
-            f"{w.sanskrit} ({w.first_meaning})"
-            for w in profile.vocabulary[:10]
-        )
-    except Exception:
-        return ""
-
-
-def _phonetic_context(pipeline_result: dict) -> Dict[str, str]:
-    """Extract element walk + shruti pattern from pipeline NAMA coords.
-
-    Element walk: the phonetic journey through fire/water/earth/air/space.
-    Shruti pattern: S=consonant (harmonic), N=dissonant — aesthetic quality.
-    Both derived from coords already computed by the pipeline (Gate 0).
-    """
-    nama = pipeline_result.get("nama", {})
-    coords = nama.get("coords", ())
-    if not coords:
-        return {"element_walk": "", "shruti_pattern": ""}
-    try:
-        from vibe_core.mahamantra.substrate.pancha_walk import (
-            COORD_ELEMENT,
-            ELEMENT_NAMES,
-            IS_SHRUTI,
-        )
-
-        element_walk = " → ".join(ELEMENT_NAMES[COORD_ELEMENT[c]] for c in coords)
-        shruti_pattern = "".join("S" if IS_SHRUTI[c] else "N" for c in coords)
-        return {"element_walk": element_walk, "shruti_pattern": shruti_pattern}
-    except Exception:
-        return {"element_walk": "", "shruti_pattern": ""}
-
-
-def _knowledge_context(topic: str) -> str:
-    """KnowledgeResolver → graph-aware context.
-
-    Queries the Knowledge Graph with the topic AND Moltbook domain terms
-    to get platform-specific knowledge from knowledge/moltbook/platform.yaml.
-    """
-    try:
-        from vibe_core.knowledge.resolver import get_resolver
-
-        resolver = get_resolver()
-        # Primary: topic-specific knowledge
-        ctx = resolver.compile_context(topic)
-        # Secondary: Moltbook domain knowledge (platform ontology + constraints)
-        moltbook_ctx = resolver.compile_context("moltbook")
-        if moltbook_ctx and moltbook_ctx != ctx:
-            ctx = f"{ctx}\n{moltbook_ctx}" if ctx else moltbook_ctx
-        return ctx
-    except Exception:
-        return ""
-
-
-def _build_context(
-    engine_result,
-    agent_name: str,
-    user_input: str,
-    pipeline_result: Optional[dict] = None,
-    **extra: str,
-) -> Dict[str, str]:
-    """Build ALL context from ALL systems into one dict.
-
-    This dict fills the YAML template slots. No instructions — just data.
-    Sources: EngineResult, MahaLLM Kernel, KnowledgeResolver, pipeline coords.
-    """
-    guardian_name_raw = engine_result.guardian_name or ""
-    guardian = guardian_name_raw.upper() if guardian_name_raw else "UNKNOWN"
-    guardian_cfg = _GUARDIAN_CONFIGS.get(guardian_name_raw, {})
-    section = _section_data(engine_result)
-
-    # Extended EngineResult fields for richer context
-    intent = getattr(engine_result, "intent_category", "") or ""
-    expanded = ", ".join(getattr(engine_result, "expanded_names", ()) or ())
-    syllables = str(getattr(engine_result, "syllable_count", 0) or 0)
-
-    # MahaLLM Kernel: guardian's vocabulary (top-10 words for this guardian's 4D position)
-    vocab = _guardian_vocabulary(guardian_name_raw) if guardian_name_raw else ""
-
-    # Phonetic context from pipeline NAMA coords (element walk + shruti pattern)
-    phonetic = _phonetic_context(pipeline_result) if pipeline_result else {"element_walk": "", "shruti_pattern": ""}
-
-    return {
-        "agent_name": agent_name,
-        "guardian_name": guardian,
-        "position": str(guardian_cfg.get("position", 0)),
-        "quarter": engine_result.section_mode or "karma",
-        "guardian_function": engine_result.guardian_function or "analysis",
-        "engine_output": engine_result.output or "",
-        "resonant_words": _format_resonant_words(engine_result),
-        "template_words": _format_template_words(engine_result),
-        "verse_ref": engine_result.verse_ref or "",
-        "knowledge_context": _knowledge_context(user_input[:200]),
-        "user_input": user_input,
-        "derivation": engine_result.derivation or "",
-        "intent_category": intent,
-        "expanded_names": expanded,
-        "syllable_count": syllables,
-        "guardian_vocabulary": vocab,
-        "element_walk": phonetic["element_walk"],
-        "shruti_pattern": phonetic["shruti_pattern"],
-        **section,
-        **extra,
-    }
+# build_moltbook_context imported at top from core.context_builders
 
 
 # =========================================================================
@@ -379,7 +232,7 @@ class ResonanceProposer(ContentProposalProtocol):
         **extra: str,
     ) -> Optional[str]:
         """Context → YAML template → LLM → content. No LLM = kirtan rendering."""
-        ctx = _build_context(engine_result, self._agent_name, user_input, pipeline_result=pipeline_result, **extra)
+        ctx = build_moltbook_context(engine_result, self._agent_name, user_input, pipeline_result=pipeline_result, **extra)
 
         # Fill YAML template with context
         prompt = ""

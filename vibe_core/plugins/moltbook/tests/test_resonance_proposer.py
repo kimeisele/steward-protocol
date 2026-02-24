@@ -21,18 +21,20 @@ import pytest
 
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import RankedWord
 from vibe_core.mahamantra.substrate.language.types import EngineResult
+from vibe_core.cartridges.agent_city.moltbook.core.context_builders import (
+    build_moltbook_context as _build_context,
+    format_resonant_words as _format_resonant_words,
+    format_template_words as _format_template_words,
+    guardian_vocabulary as _guardian_vocabulary,
+    phonetic_context as _phonetic_context,
+    section_data as _section_data,
+)
 from vibe_core.plugins.moltbook.resonance_proposer import (
     ResonanceProposer,
-    _build_context,
-    _format_resonant_words,
-    _format_template_words,
-    _guardian_vocabulary,
     _guna_mode,
     _integrity,
     _is_alive,
     _is_tamas,
-    _phonetic_context,
-    _section_data,
     _should_skip,
 )
 from vibe_core.protocols.moltbook_content import (
