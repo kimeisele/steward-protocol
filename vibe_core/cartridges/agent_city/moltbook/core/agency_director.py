@@ -125,10 +125,10 @@ _MOLTBOOK_YAML = Path(__file__).resolve().parent.parent.parent.parent.parent.par
 # System message = identity + composed words (WHO you are + WHAT words to use).
 # User message = atomic task (WHAT to produce).
 _TASK_TEMPLATES = {
-    "post": "Post about: {input}",
-    "dm_reply": "Reply to: {input}",
-    "comment": "Comment on: {input}",
-    "dm_request": "Message: {input}",
+    "post": "Write an original post about: {input}",
+    "dm_reply": "Reply to this message: {input}",
+    "comment": "Write a comment responding to: {input}",
+    "dm_request": "Send a message about: {input}",
 }
 
 
@@ -166,6 +166,48 @@ _ENGAGEMENT_DISPATCH = {
     "subscribe": "_do_subscribe",
     "upvote": "_do_upvote",
 }
+
+
+# =========================================================================
+# MURALI Department Routing — VenuOrchestrator phase → department priority
+# =========================================================================
+
+# MURALI 4-bit phase (0-3) → department name
+_MURALI_DEPARTMENTS = {
+    0: "research",   # GENESIS: scan, discover, extract topics
+    1: "planning",   # DHARMA: evaluate strategy, prioritize topics
+    2: "execution",  # KARMA: generate content, publish
+    3: "learning",   # MOKSHA: track engagement, analyze patterns
+}
+
+
+class MuraliRouter:
+    """Read-only access to VenuOrchestrator MURALI phase → department name.
+
+    Used by plugin_main heartbeat to weight department priorities.
+    Does NOT modify VenuOrchestrator state — pure observation.
+    """
+
+    def current_department(self) -> str:
+        """Read current MURALI phase → department name."""
+        try:
+            from vibe_core.mahamantra import mahamantra
+            venu = mahamantra.venu
+            if venu is None:
+                return "execution"
+            # Read current tick position → derive MURALI (quarter)
+            tick = venu.tick
+            # MURALI = tick position in 16-beat cycle → quarter (0-3)
+            from vibe_core.mahamantra.substrate.core.seed import QUARTERS, WORDS
+            quarter_size = WORDS // QUARTERS  # 4
+            murali = min(tick % WORDS // quarter_size, QUARTERS - 1)
+            return _MURALI_DEPARTMENTS.get(murali, "execution")
+        except Exception:
+            return "execution"
+
+    def should_prioritize(self, task: str) -> bool:
+        """Does this task match the current MURALI phase?"""
+        return task == self.current_department()
 
 
 class AgencyDirector:
@@ -595,17 +637,17 @@ class AgencyDirector:
         if self._plugin and hasattr(self._plugin, "_agent_name"):
             agent_name = self._plugin._agent_name
 
-        # Step 4: Full context for YAML template (~120 tokens)
+        # Step 4: Full context for YAML template (~100 tokens)
+        # TOPIC/CONTEXT/COMMUNITY first (LLM prioritizes), voice/vocabulary last (shaping)
         prompt_ctx = {
             "agent_name": agent_name,
-            "guardian_name": guardian_name.upper() if guardian_name else "KAPILA",
-            "guardian_function": guardian_function,
-            "section_name": sec.get("section_name", ""),
-            "section_mode": sec.get("section_mode", "CORE"),
-            "verse_ref": verse_ref,
+            # PRIMARY: what to write about
+            "topic": input_text[:200],
+            "strategic_reasoning": input_ctx.get("strategic_reasoning", ""),
+            "submolt_context": input_ctx.get("submolt_context", ""),
+            # SECONDARY: voice shaping
             "style": style,
             "voice": voice,
-            "resonant_words": resonant_words,
             "composed_words": composed_words,
         }
 
@@ -657,12 +699,14 @@ class AgencyDirector:
             logger.warning(f"PromptRegistry: {e}")
 
         if not system_msg:
-            # Fallback: inline context (mirrors YAML structure)
+            # Fallback: inline context (mirrors YAML v11 structure)
+            topic = prompt_ctx.get("topic", "")
+            reasoning = prompt_ctx.get("strategic_reasoning", "")
             system_msg = (
-                f"{prompt_ctx.get('agent_name', '')} · {prompt_ctx.get('guardian_name', '')} · {prompt_ctx.get('guardian_function', '')}\n"
-                f"Style: {prompt_ctx.get('style', '')}\n"
-                f"Vocabulary: {prompt_ctx.get('voice', '')}\n"
-                f"Resonance: {prompt_ctx.get('resonant_words', '')}\n"
+                f"{prompt_ctx.get('agent_name', '')} on Moltbook.\n"
+                f"TOPIC: {topic}\n"
+                + (f"CONTEXT: {reasoning}\n" if reasoning else "")
+                + f"Voice: {prompt_ctx.get('style', '')}. Terms: {prompt_ctx.get('voice', '')}\n"
                 f"Themes: {prompt_ctx.get('composed_words', '')}"
             )
 

@@ -1,43 +1,40 @@
-# Moltbook Content Templates v10 — Balanced Context
-# ==================================================
-# Not 900 tokens (v8 dump). Not 50 tokens (v9 word salad).
-# ~120 tokens: identity + section + style + vocabulary + resonance + composition.
-# Enough for quality. No bloat.
+# Moltbook Content Templates v11 — Topic First, Voice Second
+# ===========================================================
+# TOPIC/CONTEXT/COMMUNITY are first lines (LLM prioritizes early context).
+# Voice/vocabulary are last lines (shaping, not driving).
+# ~100 tokens. Topic-relevant content, not spiritual poetry.
 #
-# System message = WHO + WHAT + HOW
+# System message = WHAT + WHERE + WHY + HOW (voice shaping)
 # User message = atomic task + input
 # Code enforces: [:280]/[:500], Constitution, SravanamCheck
 
 prompts:
   moltbook.post: |
-    {agent_name} · {guardian_name} · {guardian_function}
-    {section_name} ({section_mode}) | {verse_ref}
-    Style: {style}
-    Vocabulary: {voice}
-    Resonance: {resonant_words}
-    Themes: {composed_words}
-
-  moltbook.dm_reply: |
-    {agent_name} · {guardian_name} · {guardian_function}
-    {section_name} ({section_mode}) | {verse_ref}
-    Style: {style}
-    Vocabulary: {voice}
-    Resonance: {resonant_words}
+    {agent_name} on Moltbook.
+    TOPIC: {topic}
+    CONTEXT: {strategic_reasoning}
+    COMMUNITY: {submolt_context}
+    Voice: {style}. Terms: {voice}
     Themes: {composed_words}
 
   moltbook.comment: |
-    {agent_name} · {guardian_name} · {guardian_function}
-    {section_name} ({section_mode}) | {verse_ref}
-    Style: {style}
-    Vocabulary: {voice}
-    Resonance: {resonant_words}
+    {agent_name} on Moltbook.
+    REPLYING TO: {topic}
+    CONTEXT: {strategic_reasoning}
+    Voice: {style}. Terms: {voice}
+    Themes: {composed_words}
+
+  moltbook.dm_reply: |
+    {agent_name} on Moltbook.
+    MESSAGE: {topic}
+    Voice: {style}. Terms: {voice}
     Themes: {composed_words}
 
   moltbook.dm_request: |
-    {agent_name} · {guardian_name}
-    Vocabulary: {voice}
+    {agent_name}
+    Voice: {voice}
     Themes: {composed_words}
 
 metadata:
-  version: "10.0.0"
-  author: "Balanced prompt — enough context, no bloat"
+  version: "11.0.0"
+  author: "Topic-first prompt — LLM writes about the topic, not spiritual vocabulary"

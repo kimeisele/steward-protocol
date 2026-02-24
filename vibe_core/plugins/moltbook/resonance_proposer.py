@@ -283,17 +283,15 @@ class ResonanceProposer(ContentProposalProtocol):
         guna = pipeline_result.get("guna", {}).get("mode", "RAJAS") if pipeline_result else "RAJAS"
         style = {"SATTVA": "contemplative", "RAJAS": "active", "TAMAS": "transformative"}.get(guna, "active")
 
-        # Step 3: Full context for YAML template (~120 tokens)
+        # Step 3: Full context for YAML template v11 (~100 tokens)
+        # Topic-first, voice-secondary
         prompt_ctx = {
             "agent_name": self._agent_name,
-            "guardian_name": guardian_name.upper() if guardian_name else "KAPILA",
-            "guardian_function": guardian_function,
-            "section_name": sec.get("section_name", ""),
-            "section_mode": sec.get("section_mode", "CORE"),
-            "verse_ref": verse_ref,
+            "topic": user_input[:200] if user_input else "",
+            "strategic_reasoning": extra.get("strategic_reasoning", ""),
+            "submolt_context": extra.get("submolt_context", ""),
             "style": style,
             "voice": voice,
-            "resonant_words": resonant_words_str,
             "composed_words": vocab,
         }
 
@@ -309,11 +307,13 @@ class ResonanceProposer(ContentProposalProtocol):
                 logger.warning(f"PromptRegistry: {e}")
 
             if not system_msg:
+                topic = prompt_ctx.get("topic", "")
+                reasoning = prompt_ctx.get("strategic_reasoning", "")
                 system_msg = (
-                    f"{self._agent_name} · {prompt_ctx['guardian_name']} · {guardian_function}\n"
-                    f"Style: {style}\n"
-                    f"Vocabulary: {voice}\n"
-                    f"Resonance: {resonant_words_str}\n"
+                    f"{self._agent_name} on Moltbook.\n"
+                    f"TOPIC: {topic}\n"
+                    + (f"CONTEXT: {reasoning}\n" if reasoning else "")
+                    + f"Voice: {style}. Terms: {voice}\n"
                     f"Themes: {vocab}"
                 )
 

@@ -387,7 +387,7 @@ class TestYamlPrompts:
         assert count >= 4
 
     def test_yaml_prompts_have_context_slots_no_instructions(self):
-        """YAML prompts: context slots (identity + style + vocabulary + resonance + themes). No instructions."""
+        """YAML prompts v11: topic-first context slots. No instructions."""
         from vibe_core.runtime.prompt_registry import PromptRegistry
 
         yaml_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
@@ -395,12 +395,11 @@ class TestYamlPrompts:
 
         for key in ("moltbook.dm_reply", "moltbook.comment", "moltbook.post"):
             prompt = PromptRegistry.get(key)
-            # Context slots present
-            assert "{guardian_name}" in prompt
+            # v11 context slots: topic-first, voice-secondary
             assert "{composed_words}" in prompt
             assert "{voice}" in prompt
-            assert "{resonant_words}" in prompt
             assert "{style}" in prompt
+            assert "{agent_name}" in prompt
             # NO instructions (system physics, not goodwill)
             lower = prompt.lower()
             assert "please" not in lower
@@ -616,7 +615,7 @@ class TestCompose:
         assert result == "dharma insight response"
 
     def test_compose_sends_full_context_to_llm(self):
-        """LLM gets: identity + style + vocabulary + resonance + themes."""
+        """LLM gets: topic-first context (v11) + voice shaping."""
         p, provider = _proposer_with_llm("response")
         p._compose(
             "moltbook.dm_reply",
@@ -626,9 +625,9 @@ class TestCompose:
             sender="AgentX",
         )
         ctx = provider.last_prompt
-        assert "KAPILA" in ctx  # Guardian identity
-        assert "Style:" in ctx  # Guna-derived style
-        assert "Themes:" in ctx or "Vocabulary:" in ctx  # Context slots filled
+        assert "Moltbook" in ctx  # Agent identity
+        assert "Voice:" in ctx or "Terms:" in ctx  # Voice shaping
+        assert "Themes:" in ctx  # Context slots filled
         # Balanced: not 900 tokens, not 50 tokens
         assert len(ctx) < 500, f"System prompt too long ({len(ctx)} chars)"
 
@@ -703,13 +702,13 @@ class TestProposeDmReply:
         assert len(proposal["content"]) <= 280
 
     def test_reply_llm_receives_context_prompt(self):
-        """LLM receives balanced context: identity + style + vocabulary + themes."""
+        """LLM receives topic-first context (v11): topic + voice + themes."""
         p, provider = _proposer_with_llm("response")
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result()):
             p.propose_dm_reply("conv1", "AgentX", "dharma discussion")
         ctx = provider.last_prompt
-        assert "·" in ctx  # Identity format: NAME · GUARDIAN
-        assert "Style:" in ctx or "Themes:" in ctx  # Context slots filled
+        assert "Moltbook" in ctx  # Agent identity
+        assert "Voice:" in ctx or "Themes:" in ctx  # Context slots filled
         assert len(ctx) < 500  # Balanced, not a dump
 
 
