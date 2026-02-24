@@ -97,6 +97,51 @@ def phonetic_context(pipeline_result: Optional[dict]) -> Dict[str, str]:
         return {"element_walk": "", "shruti_pattern": ""}
 
 
+def resonance_dimensions(text: str) -> str:
+    """7D resonance score breakdown for input text.
+
+    Uses resonance_ranker.resonate() to score against Gita lexicon.
+    Returns formatted dimension breakdown for LLM context.
+    """
+    if not text or not text.strip():
+        return ""
+    try:
+        from vibe_core.mahamantra.substrate.encoding.resonance_ranker import resonate
+
+        ranked = resonate(text, top_n=3)
+        if not ranked:
+            return ""
+        # Use top word's breakdown as representative
+        bd = ranked[0].score_breakdown()
+        parts = []
+        for dim in ("element", "harmonic", "shruti", "varga", "attractor", "hkr", "phoneme_attractor"):
+            score = bd.get(dim, 0.0)
+            if score > 0.01:
+                parts.append(f"{dim}={score:.2f}")
+        return f"total={bd.get('total', 0.0):.2f} [{', '.join(parts)}]" if parts else ""
+    except Exception:
+        return ""
+
+
+def cell_state_context(pipeline_result: Optional[dict]) -> Dict[str, str]:
+    """Extract post-kirtan cell state from pipeline result.
+
+    The VM already runs Chamber.kirtan() during execute_cycle().
+    These values reflect the refined cell after N×16 transformations.
+    """
+    if not pipeline_result:
+        return {"cell_prana": "", "cell_integrity": "", "cell_cycle": "", "cell_alive": ""}
+    cell = pipeline_result.get("cell", {})
+    if not cell:
+        return {"cell_prana": "", "cell_integrity": "", "cell_cycle": "", "cell_alive": ""}
+    return {
+        "cell_prana": str(cell.get("prana", "")),
+        "cell_integrity": f"{cell.get('integrity', 0.0):.3f}" if cell.get("integrity") is not None else "",
+        "cell_cycle": str(cell.get("cycle", "")),
+        "cell_alive": str(cell.get("is_alive", "")),
+    }
+
+
 def knowledge_context(topic: str) -> str:
     """KnowledgeResolver -> graph-aware context.
 
@@ -157,6 +202,12 @@ def build_moltbook_context(
     engine_output = ""
     guardian_function = "analysis"
 
+    # Extended EngineResult fields (Phase 5: full extraction)
+    antaranga_active = "0"
+    antaranga_prana = "0"
+    stress_pattern = ""
+    phoneme_trajectory = ""
+
     if engine_result:
         intent = getattr(engine_result, "intent_category", "") or ""
         expanded = ", ".join(getattr(engine_result, "expanded_names", ()) or ())
@@ -165,12 +216,23 @@ def build_moltbook_context(
         verse_ref = getattr(engine_result, "verse_ref", "") or ""
         engine_output = getattr(engine_result, "output", "") or ""
         guardian_function = getattr(engine_result, "guardian_function", "") or "analysis"
+        antaranga_active = str(getattr(engine_result, "antaranga_active", 0) or 0)
+        antaranga_prana = str(getattr(engine_result, "antaranga_prana", 0) or 0)
+        stress_raw = getattr(engine_result, "stress_pattern", ()) or ()
+        stress_pattern = "".join(str(s) for s in stress_raw) if stress_raw else ""
+        phoneme_trajectory = getattr(engine_result, "phoneme_trajectory", "") or ""
 
     # MahaLLM Kernel: guardian vocabulary
     vocab = guardian_vocabulary(guardian_name_raw)
 
     # Phonetic context from pipeline NAMA coords
     phonetic = phonetic_context(pipeline_result)
+
+    # 7D resonance score breakdown
+    res_dims = resonance_dimensions(user_input) if user_input else ""
+
+    # Post-kirtan cell state (VM already runs Chamber.kirtan())
+    cell_ctx = cell_state_context(pipeline_result)
 
     ctx = {
         # Identity + structure
@@ -188,11 +250,19 @@ def build_moltbook_context(
         "intent_category": intent,
         "expanded_names": expanded,
         "syllable_count": syllables,
+        # Antaranga (cell resonance state)
+        "antaranga_active": antaranga_active,
+        "antaranga_prana": antaranga_prana,
+        "stress_pattern": stress_pattern,
+        "phoneme_trajectory": phoneme_trajectory,
         # External systems
         "knowledge_context": knowledge_context(user_input[:200] if user_input else ""),
         "guardian_vocabulary": vocab,
         "element_walk": phonetic["element_walk"],
         "shruti_pattern": phonetic["shruti_pattern"],
+        "resonance_dimensions": res_dims,
+        # Cell state (post-kirtan from VM)
+        **cell_ctx,
         # Input
         "user_input": user_input or "",
         # Harmonics defaults (overridden by caller via **extra)
