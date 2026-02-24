@@ -599,6 +599,10 @@ class MoltbookPlugin(KernelPlugin):
             proposal["gateway_guardian"] = gw.get("guardian", "unknown")
             proposal["gateway_guna"] = gw.get("guna", "sattva")
 
+        self._emit_event("PROPOSAL_CREATED", f"Proposal: {content_type}", {
+            "content_type": content_type, "priority": proposal.get("priority", 0),
+            "guna": result.guna, "guardian": result.guardian,
+        })
         return proposal
 
     # =========================================================================
@@ -1726,6 +1730,18 @@ class MoltbookPlugin(KernelPlugin):
         except Exception as e:
             logger.debug(f"Activity log write failed: {e}")
 
+    def _emit_event(self, event_type_name: str, message: str, data: Optional[Dict[str, Any]] = None) -> None:
+        """Emit event to system EventBus. Fire-and-forget."""
+        try:
+            from vibe_core.mahamantra.substrate.services.event_bus import get_event_bus
+            from vibe_core.mahamantra.substrate.event_types import EventType
+
+            bus = get_event_bus()
+            et = getattr(EventType, event_type_name, EventType.ACTION)
+            bus.emit_sync(et, "moltbook", message, data or {})
+        except Exception:
+            pass  # EventBus unavailable — graceful degradation
+
     # Resonance threshold scaled to COSMIC_FRAME — integer comparison, no floats
     # 6480 / 21600 ≈ 0.3 (SHARANAGATI / (QUARTERS × PANCHA))
     _SUBMOLT_RESONANCE_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480
@@ -1903,6 +1919,9 @@ class MoltbookPlugin(KernelPlugin):
                 }
             self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
             self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
+            self._emit_event("BROADCAST", f"Post published: {title[:50]}", {
+                "content_type": "post", "post_id": post_id, "submolt": submolt or "",
+            })
             logger.info(f"Post created: {title[:50]} (id={post_id})")
 
     def _drain_comment(self, service: MoltbookService, proposal: ContentProposal) -> None:
@@ -1917,6 +1936,9 @@ class MoltbookPlugin(KernelPlugin):
                 self._comment_post_map[comment_id] = post_id
             self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
             self._broadcast_to_agora("comment", content, {"post_id": post_id})
+            self._emit_event("BROADCAST", f"Comment published on {post_id}", {
+                "content_type": "comment", "post_id": post_id, "comment_id": comment_id,
+            })
             logger.info(f"Comment posted on {post_id}")
 
     def _drain_vote(self, service: MoltbookService, proposal: ContentProposal) -> None:
@@ -1957,6 +1979,9 @@ class MoltbookPlugin(KernelPlugin):
         failed: List[ContentProposal] = []
         deferred: List[ContentProposal] = []
 
+        from vibe_core.protocols.feedback import get_feedback_safe
+        feedback = get_feedback_safe()
+
         now = time.time()
         for proposal in proposals:
             # Exponential backoff: skip proposals that aren't ready yet
@@ -1965,27 +1990,43 @@ class MoltbookPlugin(KernelPlugin):
                 deferred.append(proposal)
                 continue
             ct = proposal.get("content_type", "")
+            t0 = time.monotonic()
             try:
                 handler_name = self._DRAIN_DISPATCH.get(ct)
                 if handler_name:
                     getattr(self, handler_name)(service, proposal)
+                    elapsed = (time.monotonic() - t0) * 1000
+                    feedback.signal_success(f"moltbook.drain.{ct}", {
+                        "content_type": ct, "priority": proposal.get("priority", 0),
+                    }, duration_ms=elapsed)
                 else:
                     logger.warning(f"Unknown content type in drain queue: {ct}")
             except PermissionError as e:
                 logger.warning(f"TAMAS blocked: {e}")
+                elapsed = (time.monotonic() - t0) * 1000
+                feedback.signal_failure(f"moltbook.drain.{ct}", "tamas_blocked", {
+                    "content_type": ct,
+                }, duration_ms=elapsed)
                 # Permanent failure — do not retry
             except Exception as e:
+                elapsed = (time.monotonic() - t0) * 1000
                 retries = proposal.get("_retries", 0)
                 if retries < self._MAX_PROPOSAL_RETRIES:
                     proposal["_retries"] = retries + 1
                     # Exponential backoff: 2^retries seconds (2s, 4s)
                     proposal["_retry_after"] = time.time() + (2 ** proposal["_retries"])
                     failed.append(proposal)
+                    feedback.signal_partial(f"moltbook.drain.{ct}", f"retry_{retries + 1}", {
+                        "content_type": ct, "retries": retries + 1,
+                    })
                     logger.warning(
                         f"Content execution failed ({ct}), retry {retries + 1}, backoff {2 ** proposal['_retries']}s: {e}"
                     )
                 else:
                     self._log_activity("proposal_dropped", {"type": ct, "error": str(e)[:200]})
+                    feedback.signal_failure(f"moltbook.drain.{ct}", "dropped_after_retries", {
+                        "content_type": ct, "retries": retries,
+                    }, duration_ms=elapsed)
                     logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
 
         # Re-enqueue: deferred (not yet ready) + failed (with backoff)
