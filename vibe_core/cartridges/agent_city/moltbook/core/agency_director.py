@@ -39,7 +39,7 @@ from vibe_core.mahamantra.substrate.encoding.harmonics import (
     VedicScaleMapping,
 )
 
-from .context_builders import guardian_vocabulary_short
+from .context_builders import format_resonant_words, guardian_vocabulary_short, section_data
 
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
 
@@ -599,27 +599,36 @@ class AgencyDirector:
             logger.warning("No composed words — cannot generate content")
             return ""
 
-        # Step 2: Guardian voice (top-5 meanings, ~15 tokens)
+        # Step 2: Extract engine data for context
         guardian_name = ""
         guardian_function = "analysis"
+        verse_ref = ""
         if engine_result:
             guardian_name = getattr(engine_result, "guardian_name", "") or ""
             guardian_function = getattr(engine_result, "guardian_function", "") or "analysis"
+            verse_ref = getattr(engine_result, "verse_ref", "") or ""
 
         voice = guardian_vocabulary_short(guardian_name)
+        sec = section_data(engine_result)
+        resonant_words = format_resonant_words(engine_result)
 
         # Step 3: Agent identity
         agent_name = "steward-protocol"
         if self._plugin and hasattr(self._plugin, "_agent_name"):
             agent_name = self._plugin._agent_name
 
-        # Step 4: ATOMIC prompt context (~50 tokens total)
+        # Step 4: Full context for YAML template (~120 tokens)
         prompt_ctx = {
             "agent_name": agent_name,
             "guardian_name": guardian_name.upper() if guardian_name else "KAPILA",
             "guardian_function": guardian_function,
-            "composed_words": composed_words,
+            "section_name": sec.get("section_name", ""),
+            "section_mode": sec.get("section_mode", "CORE"),
+            "verse_ref": verse_ref,
+            "style": style,
             "voice": voice,
+            "resonant_words": resonant_words,
+            "composed_words": composed_words,
         }
 
         # Step 5: Task input (content-type-specific fragment)
@@ -646,19 +655,11 @@ class AgencyDirector:
         task_input: str,
         content_type: str,
     ) -> Optional[str]:
-        """ATOMIC LLM call. System = identity + words. User = task + input.
+        """LLM call. System = YAML context (~120 tokens). User = task + input.
 
-        System message (~50 tokens): filled YAML template
-            - agent_name, guardian_name, guardian_function
-            - composed_words (from MahaComposition, deterministic)
-            - voice (guardian vocabulary top-5 meanings)
-
-        User message (~30 tokens): atomic task + input fragment
-            - "Post about: {topic}" / "Reply to: {message}" / etc.
-
-        Total: ~80 tokens input. Not 900.
-        MahaComposition's 5 scorers encode ALL intelligence in word selection.
-        LLM's only job: assemble those words into natural language.
+        System message: identity + section + style + vocabulary + resonance + themes.
+        User message: atomic task ("Post about: ..." / "Reply to: ...").
+        LLM assembles the composed words into natural language.
         """
         try:
             from vibe_core.runtime.providers.factory import get_llm_provider
@@ -678,11 +679,13 @@ class AgencyDirector:
             logger.warning(f"PromptRegistry: {e}")
 
         if not system_msg:
-            # Fallback: inline atomic prompt
+            # Fallback: inline context (mirrors YAML structure)
             system_msg = (
-                f"{prompt_ctx.get('agent_name', '')} · {prompt_ctx.get('guardian_name', '')}\n"
-                f"Words: {prompt_ctx.get('composed_words', '')}\n"
-                f"Voice: {prompt_ctx.get('voice', '')}"
+                f"{prompt_ctx.get('agent_name', '')} · {prompt_ctx.get('guardian_name', '')} · {prompt_ctx.get('guardian_function', '')}\n"
+                f"Style: {prompt_ctx.get('style', '')}\n"
+                f"Vocabulary: {prompt_ctx.get('voice', '')}\n"
+                f"Resonance: {prompt_ctx.get('resonant_words', '')}\n"
+                f"Themes: {prompt_ctx.get('composed_words', '')}"
             )
 
         # Atomic task message

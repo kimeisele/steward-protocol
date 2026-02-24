@@ -21,7 +21,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from vibe_core.cartridges.agent_city.moltbook.core.context_builders import (
+    format_resonant_words,
     guardian_vocabulary_short,
+    section_data,
 )
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import (
     RankedWord,
@@ -136,12 +138,6 @@ def _integrity(result: dict) -> float:
 
 def _should_skip(result: dict) -> bool:
     return _is_tamas(result) or not _is_alive(result)
-
-
-# =========================================================================
-# Context builders — delegated to shared module (context_builders.py)
-# =========================================================================
-# build_moltbook_context imported at top from core.context_builders
 
 
 # =========================================================================
@@ -275,18 +271,30 @@ class ResonanceProposer(ContentProposalProtocol):
             words = getattr(engine_result, "resonant_words", ()) or ()
             vocab = ", ".join(m for _, m, _ in words[:5])
 
-        # Step 2: Guardian voice
+        # Step 2: Extract engine data for context
         guardian_name = getattr(engine_result, "guardian_name", "") or "" if engine_result else ""
         guardian_function = getattr(engine_result, "guardian_function", "") or "analysis" if engine_result else "analysis"
+        verse_ref = getattr(engine_result, "verse_ref", "") or "" if engine_result else ""
         voice = guardian_vocabulary_short(guardian_name)
+        sec = section_data(engine_result)
+        resonant_words_str = format_resonant_words(engine_result)
 
-        # Step 3: Atomic prompt context
+        # Derive style from pipeline guna
+        guna = pipeline_result.get("guna", {}).get("mode", "RAJAS") if pipeline_result else "RAJAS"
+        style = {"SATTVA": "contemplative", "RAJAS": "active", "TAMAS": "transformative"}.get(guna, "active")
+
+        # Step 3: Full context for YAML template (~120 tokens)
         prompt_ctx = {
             "agent_name": self._agent_name,
             "guardian_name": guardian_name.upper() if guardian_name else "KAPILA",
             "guardian_function": guardian_function,
-            "composed_words": vocab,
+            "section_name": sec.get("section_name", ""),
+            "section_mode": sec.get("section_mode", "CORE"),
+            "verse_ref": verse_ref,
+            "style": style,
             "voice": voice,
+            "resonant_words": resonant_words_str,
+            "composed_words": vocab,
         }
 
         # Step 4: Try LLM with atomic prompt
@@ -302,9 +310,11 @@ class ResonanceProposer(ContentProposalProtocol):
 
             if not system_msg:
                 system_msg = (
-                    f"{self._agent_name} · {prompt_ctx['guardian_name']}\n"
-                    f"Words: {vocab}\n"
-                    f"Voice: {voice}"
+                    f"{self._agent_name} · {prompt_ctx['guardian_name']} · {guardian_function}\n"
+                    f"Style: {style}\n"
+                    f"Vocabulary: {voice}\n"
+                    f"Resonance: {resonant_words_str}\n"
+                    f"Themes: {vocab}"
                 )
 
             user_msg = _build_task_message(prompt_key, user_input)
