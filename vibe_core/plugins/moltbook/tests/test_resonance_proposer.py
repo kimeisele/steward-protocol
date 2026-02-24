@@ -59,7 +59,7 @@ class _TestProvider(LLMProvider):
     def invoke(
         self, prompt: str, model: str, max_tokens: int = 4096, temperature: float = 1.0, **kwargs
     ) -> LLMResponse:
-        self.calls.append({"prompt": prompt, "model": model})
+        self.calls.append({"prompt": prompt, "model": model, "messages": kwargs.get("messages")})
         return LLMResponse(
             content=self._response,
             usage=LLMUsage(input_tokens=10, output_tokens=10, model="test", cost_usd=0.0, timestamp=""),
@@ -79,7 +79,16 @@ class _TestProvider(LLMProvider):
 
     @property
     def last_prompt(self) -> str:
-        return self.calls[-1]["prompt"] if self.calls else ""
+        """Return system message content (context), falling back to prompt."""
+        if not self.calls:
+            return ""
+        last = self.calls[-1]
+        msgs = last.get("messages")
+        if msgs:
+            for msg in msgs:
+                if msg.get("role") == "system":
+                    return msg["content"]
+        return last.get("prompt", "")
 
 
 class _ErrorProvider(LLMProvider):

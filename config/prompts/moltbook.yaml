@@ -1,7 +1,7 @@
-# Moltbook Content Templates — PURE CONTEXT
-# =============================================
-# Pattern: genesis.yaml (identity + function + data)
+# Moltbook Content Templates — PURE CONTEXT (System Message)
+# ===========================================================
 # Loaded by PromptRegistry.load_from_yaml()
+# Sent as SYSTEM message. User input goes as USER message.
 #
 # These are CONTEXT SLOTS, not instructions.
 # NO behavioral directives. NO "please", NO "max N chars".
@@ -20,7 +20,7 @@
 
 prompts:
   moltbook.dm_reply: |
-    {guardian_name} · {quarter} · {guardian_function}
+    {agent_name} — {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
     Guna: {guna} ({style}) | Zone: {resonance_zone}
@@ -38,14 +38,9 @@ prompts:
     DERIVATION: {derivation}
     ANALYSE: {engine_output}
     {knowledge_context}
-
-    VON {sender}:
-    {user_input}
-
-    {agent_name}:
 
   moltbook.comment: |
-    {guardian_name} · {quarter} · {guardian_function}
+    {agent_name} — {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
     Guna: {guna} ({style}) | Zone: {resonance_zone}
@@ -62,15 +57,13 @@ prompts:
     NAMEN: {expanded_names}
     DERIVATION: {derivation}
     ANALYSE: {engine_output}
+    KOMPOSITION: {composed_words}
     {knowledge_context}
 
-    POST:
-    {post_content}
-
-    {agent_name}:
+    POST: {post_content}
 
   moltbook.post: |
-    {guardian_name} · {quarter} · {guardian_function}
+    {agent_name} — {guardian_name} · {quarter} · {guardian_function}
     Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
     Vers: {verse_ref} | Intent: {intent_category}
     Guna: {guna} ({style}) | Zone: {resonance_zone}
@@ -87,14 +80,11 @@ prompts:
     NAMEN: {expanded_names}
     DERIVATION: {derivation}
     ANALYSE: {engine_output}
+    KOMPOSITION: {composed_words}
     {knowledge_context}
 
-    KONTEXT: {trigger}
-
-    {agent_name}:
-
   moltbook.dm_request: |
-    {guardian_name} · {guardian_function}
+    {agent_name} — {guardian_name} · {guardian_function}
     Intent: {intent_category}
     Guna: {guna} ({style}) | Zone: {resonance_zone}
     Rasa: {rasa_name} ({rasa_meaning})
@@ -104,16 +94,12 @@ prompts:
     ANALYSE: {engine_output}
     RESONANZ: {resonant_words}
 
-    AGENT: {sender}
-
 metadata:
-  version: "7.0.0"
-  author: "Content Intelligence v7 — 7D resonance + post-kirtan cell state"
+  version: "8.0.0"
+  author: "Content Intelligence v8 — system/user message split"
   rationale: |
     Pure context slots. Zero instructions. Zero goodwill.
-    System physics (guna/integrity/section) enforce quality.
-    Code enforces length limits ([:280], [:500], [:120]).
-    Templates provide semantic grounding from 7 sources:
-    EngineResult, MahaLLM Kernel, Pipeline NAMA, KnowledgeGraph,
-    ResonanceHarmonics, ResonanceRanker (7D), Chamber.kirtan (cell state).
-    v7: Added resonance_dimensions, cell_prana/integrity/cycle.
+    v8: Templates sent as SYSTEM message. User input as USER message.
+    LLM understands context is identity/framing, not content to analyze.
+    Removed {agent_name}: completion markers (chat API, not completion).
+    Removed {user_input}/{sender}/{trigger} from system context (now in user msg).

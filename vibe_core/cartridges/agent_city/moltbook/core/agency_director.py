@@ -423,7 +423,14 @@ class AgencyDirector:
                     trigger=ctx.get("trigger", "agency"),
                 )
                 if result and result.get("content"):
-                    return result["content"], {"source": "circuit", **result}
+                    return result["content"], {
+                        "source": "circuit",
+                        "guna": result.get("guna", "RAJAS"),
+                        "guardian": result.get("guardian", "unknown"),
+                        "integrity": result.get("integrity", 1.0),
+                        "resonance_zone": result.get("resonance_zone", ""),
+                        "rasa": result.get("rasa", ""),
+                    }
         except Exception as e:
             logger.debug(f"Circuit executor unavailable: {e}")
 
@@ -638,8 +645,8 @@ class AgencyDirector:
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
             prompt = PromptRegistry.get(prompt_key, context=ctx)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"PromptRegistry failed for {prompt_key}: {e}")
 
         if not prompt:
             # Fallback: structured context without YAML template
@@ -667,16 +674,20 @@ class AgencyDirector:
         except QuotaExceededError as e:
             logger.warning(f"Quota exceeded: {e}")
             return None
-        except Exception:
-            pass  # QuotaManager unavailable — proceed without guard
+        except Exception as e:
+            logger.debug(f"QuotaManager unavailable: {e}")
 
         try:
             models = provider.get_available_models()
             response = provider.invoke(
-                prompt=prompt,
+                prompt="",
                 model=models[0] if models else None,
                 max_tokens=256,
                 temperature=0.7,
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": input_text},
+                ],
             )
             if response and response.content and not response.content.startswith("# ERROR"):
                 content = response.content.strip()
@@ -687,8 +698,8 @@ class AgencyDirector:
                         cost_usd=0.01,
                         operation=f"moltbook.{content_type}",
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Quota recording failed: {e}")
                 return content
         except Exception as e:
             logger.warning(f"LLM failed: {e}")
