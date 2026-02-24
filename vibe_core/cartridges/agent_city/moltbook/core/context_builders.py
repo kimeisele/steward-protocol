@@ -142,23 +142,40 @@ def cell_state_context(pipeline_result: Optional[dict]) -> Dict[str, str]:
     }
 
 
-def knowledge_context(topic: str) -> str:
-    """KnowledgeResolver -> graph-aware context.
+def _strip_kg_noise(raw: str) -> str:
+    """Strip constraints/scores from KG context — governance, not LLM-relevant.
 
-    Queries the Knowledge Graph with the topic AND Moltbook domain terms
-    to get platform-specific knowledge from knowledge/moltbook/platform.yaml.
+    Keeps: RELEVANT KNOWLEDGE (node descriptions), DEPENDENCIES.
+    Strips: CONSTRAINTS (repeated 10x, ~3000 tokens waste), SCORES.
     """
-    if not topic:
-        return ""
+    lines = []
+    skip = False
+    for line in raw.split("\n"):
+        stripped = line.strip()
+        if stripped in ("CONSTRAINTS:", "SCORES:"):
+            skip = True
+            continue
+        if skip and (stripped.startswith("- ") or not stripped):
+            continue
+        if stripped in ("RELEVANT KNOWLEDGE:", "DEPENDENCIES:"):
+            skip = False
+        if not skip:
+            lines.append(line)
+    return "\n".join(lines).strip()
+
+
+def knowledge_context(topic: str) -> str:
+    """KnowledgeResolver -> graph-aware context (nodes + deps only).
+
+    Always queries "moltbook" for platform context.
+    Strips constraints/scores (governance, not content — Constitution handles that).
+    """
     try:
         from vibe_core.knowledge.resolver import get_resolver
 
         resolver = get_resolver()
-        ctx = resolver.compile_context(topic)
-        moltbook_ctx = resolver.compile_context("moltbook")
-        if moltbook_ctx and moltbook_ctx != ctx:
-            ctx = f"{ctx}\n{moltbook_ctx}" if ctx else moltbook_ctx
-        return ctx
+        raw = resolver.compile_context("moltbook")
+        return _strip_kg_noise(raw) if raw else ""
     except Exception:
         return ""
 

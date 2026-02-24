@@ -240,25 +240,25 @@ class ResonanceProposer(ContentProposalProtocol):
             from vibe_core.runtime.prompt_registry import PromptRegistry
 
             prompt = PromptRegistry.get(prompt_key, context=ctx)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"PromptRegistry failed for {prompt_key}: {e}")
 
         if not prompt:
             # Fallback: pure context, no YAML available
             prompt = (
-                f"{ctx['guardian_name']} · {ctx['quarter']} · {ctx['guardian_function']}\n"
-                f"Sektion: {ctx['section_name']} ({ctx['section_semantic']})\n"
-                f"Vers: {ctx['verse_ref']} | Intent: {ctx['intent_category']}\n"
-                f"VOKABULAR: {ctx['guardian_vocabulary']}\n"
-                f"ELEMENTE: {ctx['element_walk']}\n"
-                f"SHRUTI: {ctx['shruti_pattern']}\n"
-                f"RESONANZ: {ctx['resonant_words']}\n"
-                f"NAMEN: {ctx['expanded_names']}\n"
-                f"DERIVATION: {ctx['derivation']}\n"
-                f"ANALYSE: {ctx['engine_output']}\n"
-                f"{ctx['knowledge_context']}\n"
+                f"{ctx.get('guardian_name', '')} · {ctx.get('quarter', '')} · {ctx.get('guardian_function', '')}\n"
+                f"Sektion: {ctx.get('section_name', '')} ({ctx.get('section_semantic', '')})\n"
+                f"Vers: {ctx.get('verse_ref', '')} | Intent: {ctx.get('intent_category', '')}\n"
+                f"VOKABULAR: {ctx.get('guardian_vocabulary', '')}\n"
+                f"ELEMENTE: {ctx.get('element_walk', '')}\n"
+                f"SHRUTI: {ctx.get('shruti_pattern', '')}\n"
+                f"RESONANZ: {ctx.get('resonant_words', '')}\n"
+                f"NAMEN: {ctx.get('expanded_names', '')}\n"
+                f"DERIVATION: {ctx.get('derivation', '')}\n"
+                f"ANALYSE: {ctx.get('engine_output', '')}\n"
+                f"{ctx.get('knowledge_context', '')}\n"
                 f"{user_input}\n"
-                f"{ctx['agent_name']}:\n"
+                f"{ctx.get('agent_name', '')}:\n"
             )
 
         # Try real LLM provider (NOT the template mock LLMEngine.speak())
@@ -266,10 +266,14 @@ class ResonanceProposer(ContentProposalProtocol):
         if provider:
             try:
                 response = provider.invoke(
-                    prompt=prompt,
+                    prompt="",
                     model=provider.get_available_models()[0] if provider.get_available_models() else None,
                     max_tokens=512,
                     temperature=0.7,
+                    messages=[
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": user_input},
+                    ],
                 )
                 if response and response.content and not response.content.startswith("# ERROR"):
                     return response.content.strip()
