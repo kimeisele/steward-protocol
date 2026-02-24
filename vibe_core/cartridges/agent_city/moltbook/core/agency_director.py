@@ -678,10 +678,9 @@ class AgencyDirector:
             logger.debug(f"QuotaManager unavailable: {e}")
 
         try:
-            models = provider.get_available_models()
             response = provider.invoke(
                 prompt="",
-                model=models[0] if models else None,
+                model=None,  # Use config default (sonnet), NOT models[0] (opus)
                 max_tokens=256,
                 temperature=0.7,
                 messages=[

@@ -267,7 +267,7 @@ class ResonanceProposer(ContentProposalProtocol):
             try:
                 response = provider.invoke(
                     prompt="",
-                    model=provider.get_available_models()[0] if provider.get_available_models() else None,
+                    model=None,  # Use config default, NOT models[0] (opus)
                     max_tokens=512,
                     temperature=0.7,
                     messages=[
