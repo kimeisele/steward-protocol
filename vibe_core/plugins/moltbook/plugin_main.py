@@ -2046,13 +2046,17 @@ class MoltbookPlugin(KernelPlugin):
         logger.info("Content proposer: ResonanceProposer v3 (engine-wired)")
 
     def _register_moltbook_context(self) -> None:
-        """Register moltbook_context resolver in PromptContext for dynamic context injection."""
+        """Register moltbook context resolvers in PromptContext for dynamic context injection."""
         try:
             from vibe_core.runtime.prompt_context import get_prompt_context
 
             ctx = get_prompt_context()
             ctx.register("moltbook_context", self._resolve_moltbook_context)
-            logger.info("moltbook_context registered in PromptContext")
+            ctx.register("moltbook_engagement_trends", self._resolve_engagement_trends)
+            ctx.register("moltbook_active_submolts", self._resolve_active_submolts)
+            ctx.register("moltbook_queue_depth", self._resolve_queue_depth)
+            ctx.register("moltbook_recent_content", self._resolve_recent_content)
+            logger.info("moltbook_context (5 resolvers) registered in PromptContext")
         except Exception as e:
             logger.warning(f"PromptContext registration failed: {e}")
 
@@ -2092,6 +2096,53 @@ class MoltbookPlugin(KernelPlugin):
             parts.append("Health: OK (Mahamantra listener wired)")
 
         return "\n".join(parts)
+
+    def _resolve_engagement_trends(self) -> str:
+        """Recent engagement trends from FeedbackProtocol stats."""
+        try:
+            from vibe_core.protocols.feedback import get_feedback_safe
+            stats = get_feedback_safe().get_stats()
+            return (
+                f"Success rate: {stats.success_rate:.0%}, "
+                f"Total: {stats.total_signals}, "
+                f"Failures: {stats.total_failures}"
+            )
+        except Exception:
+            return ""
+
+    def _resolve_active_submolts(self) -> str:
+        """Currently subscribed submolts."""
+        if not self._subscribed_submolts:
+            return "none"
+        return ", ".join(sorted(self._subscribed_submolts))
+
+    def _resolve_queue_depth(self) -> str:
+        """Current content queue depth + stats."""
+        if not self._content_queue:
+            return "0"
+        stats = self._content_queue.stats
+        return f"{stats.get('queued', 0)} pending, {stats.get('total_drained', 0)} drained, {stats.get('total_dropped', 0)} dropped"
+
+    def _resolve_recent_content(self) -> str:
+        """Last 3 generated content pieces from activity log (avoid repetition)."""
+        if not self._activity_log_path or not self._activity_log_path.exists():
+            return ""
+        try:
+            lines = self._activity_log_path.read_text().strip().split("\n")
+            recent = []
+            for line in reversed(lines):
+                if len(recent) >= 3:
+                    break
+                try:
+                    entry = json.loads(line)
+                    if entry.get("event") in ("post_created", "comment_posted", "dm_sent"):
+                        data = entry.get("data", {})
+                        recent.append(f"{entry['event']}: {data.get('title', data.get('post_id', ''))[:60]}")
+                except Exception:
+                    continue
+            return " | ".join(recent) if recent else ""
+        except Exception:
+            return ""
 
     def _register_proposer(self) -> None:
         """Register ContentProposalProtocol in DI. Other plugins can swap the proposer."""
