@@ -476,8 +476,8 @@ class TestYamlPrompts:
         count = PromptRegistry.load_from_yaml(yaml_path)
         assert count >= 4
 
-    def test_yaml_prompts_are_context_slots_not_instructions(self):
-        """System physics enforce quality. Prompts are context, not instructions."""
+    def test_yaml_prompts_are_atomic_not_instructions(self):
+        """Atomic prompts: identity + composed words + voice. No instructions."""
         from vibe_core.runtime.prompt_registry import PromptRegistry
 
         yaml_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
@@ -485,10 +485,9 @@ class TestYamlPrompts:
 
         for key in ("moltbook.dm_reply", "moltbook.comment", "moltbook.post"):
             prompt = PromptRegistry.get(key)
-            # Context slots present
+            # Atomic slots: identity + words
             assert "{guardian_name}" in prompt
-            assert "{engine_output}" in prompt
-            assert "{resonant_words}" in prompt
+            assert "{composed_words}" in prompt
             # NO instructions (system physics, not goodwill)
             lower = prompt.lower()
             assert "sei authentisch" not in lower
@@ -496,6 +495,8 @@ class TestYamlPrompts:
             assert "please" not in lower
             assert "you should" not in lower
             assert "be creative" not in lower
+            # Atomic = SHORT (not 900 tokens of context dump)
+            assert len(prompt) < 200, f"Prompt too long ({len(prompt)} chars): not atomic"
 
 
 # =========================================================================
@@ -703,7 +704,8 @@ class TestCompose:
         result = p._compose("moltbook.dm_reply", _make_engine_result(), "test input", sender="X")
         assert result == "dharma insight response"
 
-    def test_compose_sends_context_to_llm(self):
+    def test_compose_sends_atomic_context_to_llm(self):
+        """Atomic prompt: identity + composed words + voice. Not 900-token dump."""
         p, provider = _proposer_with_llm("response")
         p._compose(
             "moltbook.dm_reply",
@@ -713,10 +715,10 @@ class TestCompose:
             sender="AgentX",
         )
         ctx = provider.last_prompt
-        assert "KAPILA" in ctx
-        assert "BG.6.47" in ctx
-        # MahaLLM Kernel: guardian vocabulary present
-        assert "VOKABULAR" in ctx
+        assert "KAPILA" in ctx  # Guardian identity
+        assert "Words:" in ctx or "composed_words" in ctx.lower()  # Composed words slot
+        # Atomic = SHORT (not 900 tokens)
+        assert len(ctx) < 500, f"System prompt too long ({len(ctx)} chars): not atomic"
 
     def test_compose_no_provider_with_pipeline_result_returns_fallback(self):
         p = _proposer_no_llm()
@@ -788,15 +790,14 @@ class TestProposeDmReply:
             proposal = p.propose_dm_reply("conv1", "X", "hello")
         assert len(proposal["content"]) <= 280
 
-    def test_reply_llm_receives_guardian_context(self):
-        """LLM receives structured context with guardian, verse, resonance."""
+    def test_reply_llm_receives_atomic_prompt(self):
+        """LLM receives atomic prompt: identity + words. Not context dump."""
         p, provider = _proposer_with_llm("response")
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result()):
             p.propose_dm_reply("conv1", "AgentX", "dharma discussion")
         ctx = provider.last_prompt
-        # Context must contain system data (guardian, verse, resonance)
-        assert "·" in ctx  # Guardian header format: NAME · MODE · FUNCTION
-        assert "RESONANZ" in ctx or "ANALYSE" in ctx
+        assert "·" in ctx  # Identity format: NAME · GUARDIAN
+        assert "Words:" in ctx or len(ctx) < 500  # Atomic, not a dump
 
 
 # =========================================================================

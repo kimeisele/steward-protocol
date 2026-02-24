@@ -1,105 +1,46 @@
-# Moltbook Content Templates — PURE CONTEXT (System Message)
-# ===========================================================
-# Loaded by PromptRegistry.load_from_yaml()
-# Sent as SYSTEM message. User input goes as USER message.
+# Moltbook Content Templates — ATOMIC PROMPTS (v9)
+# =================================================
+# Each prompt = identity + deterministic words.
+# ~50 tokens system, ~30 tokens user. Not 900.
 #
-# These are CONTEXT SLOTS, not instructions.
-# NO behavioral directives. NO "please", NO "max N chars".
-# The system fills slots. Code enforces limits ([:280], [:500]).
-# Quality comes from DENSE CONTEXT, not goodwill.
+# Architecture:
+#   1. MahaComposition (5 scorers) → deterministic English words
+#      - Guna → mode scoring (style encoded in WORD SELECTION)
+#      - Quarter → max_words (length encoded in WORD COUNT)
+#      - Prana/Rhythm/Semantic → relevance encoded in WORD RANKING
+#   2. System message = identity + composed words + voice vocabulary
+#   3. User message = atomic task + input fragment
+#   4. Code enforces: [:280] / [:500], Constitution, SravanamCheck
 #
-# Context sources:
-#   EngineResult    → resonant_words, template_words, engine_output, verse_ref
-#   MahaLLM Kernel  → guardian_vocabulary (top-10 words for this guardian)
-#   Pipeline NAMA   → element_walk (fire/water/earth/air/space), shruti_pattern (S/N)
-#   KnowledgeGraph  → knowledge_context (topic + moltbook domain)
-#   ResonanceHarmonics → resonance_zone, rasa_name, rasa_meaning (cell state)
-#   SravanamCheck   → sravanam_status (entropy advisory)
-#   ResonanceRanker → resonance_dimensions (7D score breakdown)
-#   Chamber.kirtan  → cell_prana, cell_integrity, cell_cycle (post-kirtan state)
+# The intelligence is in MahaComposition's word selection.
+# The LLM's ONLY job: assemble words into natural language.
 
 prompts:
-  moltbook.dm_reply: |
-    {agent_name} — {guardian_name} · {quarter} · {guardian_function}
-    Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
-    Vers: {verse_ref} | Intent: {intent_category}
-    Guna: {guna} ({style}) | Zone: {resonance_zone}
-    Rasa: {rasa_name} ({rasa_meaning})
-    Sravanam: {sravanam_status}
-    Resonanz-7D: {resonance_dimensions}
-    Zelle: prana={cell_prana} integrity={cell_integrity} cycle={cell_cycle}
+  moltbook.post: |
+    {agent_name} · {guardian_name} · {guardian_function}
+    Words: {composed_words}
+    Voice: {voice}
 
-    VOKABULAR: {guardian_vocabulary}
-    ELEMENTE: {element_walk}
-    SHRUTI: {shruti_pattern}
-    RESONANZ: {resonant_words}
-    GRAMMATIK: {template_words}
-    NAMEN: {expanded_names}
-    DERIVATION: {derivation}
-    ANALYSE: {engine_output}
-    {knowledge_context}
+  moltbook.dm_reply: |
+    {agent_name} · {guardian_name}
+    Words: {composed_words}
+    Voice: {voice}
 
   moltbook.comment: |
-    {agent_name} — {guardian_name} · {quarter} · {guardian_function}
-    Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
-    Vers: {verse_ref} | Intent: {intent_category}
-    Guna: {guna} ({style}) | Zone: {resonance_zone}
-    Rasa: {rasa_name} ({rasa_meaning})
-    Sravanam: {sravanam_status}
-    Resonanz-7D: {resonance_dimensions}
-    Zelle: prana={cell_prana} integrity={cell_integrity} cycle={cell_cycle}
-
-    VOKABULAR: {guardian_vocabulary}
-    ELEMENTE: {element_walk}
-    SHRUTI: {shruti_pattern}
-    RESONANZ: {resonant_words}
-    GRAMMATIK: {template_words}
-    NAMEN: {expanded_names}
-    DERIVATION: {derivation}
-    ANALYSE: {engine_output}
-    KOMPOSITION: {composed_words}
-    {knowledge_context}
-
-    POST: {post_content}
-
-  moltbook.post: |
-    {agent_name} — {guardian_name} · {quarter} · {guardian_function}
-    Sektion: {section_name} ({section_semantic}) | Modus: {section_mode}
-    Vers: {verse_ref} | Intent: {intent_category}
-    Guna: {guna} ({style}) | Zone: {resonance_zone}
-    Rasa: {rasa_name} ({rasa_meaning})
-    Sravanam: {sravanam_status}
-    Resonanz-7D: {resonance_dimensions}
-    Zelle: prana={cell_prana} integrity={cell_integrity} cycle={cell_cycle}
-
-    VOKABULAR: {guardian_vocabulary}
-    ELEMENTE: {element_walk}
-    SHRUTI: {shruti_pattern}
-    RESONANZ: {resonant_words}
-    GRAMMATIK: {template_words}
-    NAMEN: {expanded_names}
-    DERIVATION: {derivation}
-    ANALYSE: {engine_output}
-    KOMPOSITION: {composed_words}
-    {knowledge_context}
+    {agent_name} · {guardian_name}
+    Words: {composed_words}
+    Voice: {voice}
 
   moltbook.dm_request: |
-    {agent_name} — {guardian_name} · {guardian_function}
-    Intent: {intent_category}
-    Guna: {guna} ({style}) | Zone: {resonance_zone}
-    Rasa: {rasa_name} ({rasa_meaning})
-    Resonanz-7D: {resonance_dimensions}
-    Zelle: prana={cell_prana} integrity={cell_integrity} cycle={cell_cycle}
-    VOKABULAR: {guardian_vocabulary}
-    ANALYSE: {engine_output}
-    RESONANZ: {resonant_words}
+    {agent_name} · {guardian_name}
+    Words: {composed_words}
 
 metadata:
-  version: "8.0.0"
-  author: "Content Intelligence v8 — system/user message split"
+  version: "9.0.0"
+  author: "Atomic Prompt Architecture v9"
   rationale: |
-    Pure context slots. Zero instructions. Zero goodwill.
-    v8: Templates sent as SYSTEM message. User input as USER message.
-    LLM understands context is identity/framing, not content to analyze.
-    Removed {agent_name}: completion markers (chat API, not completion).
-    Removed {user_input}/{sender}/{trigger} from system context (now in user msg).
+    v9: ATOMIC prompts. MahaComposition does the intelligence.
+    LLM assembles deterministic words into natural language.
+    Guna/quarter/rasa/section = PHYSICS encoded in word selection.
+    Not prompt text. Not instructions. Not context dumps.
+    ~50 token system vs ~900 token system (v8).
