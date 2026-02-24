@@ -71,7 +71,7 @@ class CycleResult:
     """Result of a complete I-P-V-O cycle."""
 
     status: str  # SUCCESS, VALIDATION_FAILED, LLM_UNAVAILABLE, SKIPPED, ERROR
-    phase: str   # INPUT, PROCESS, VALIDATE, OUTPUT
+    phase: str  # INPUT, PROCESS, VALIDATE, OUTPUT
     cycle_id: str
     content_type: str = ""
     content: Optional[str] = None
@@ -88,9 +88,9 @@ class CycleResult:
 # =========================================================================
 
 _GUNA_STYLE = {
-    "SATTVA": "contemplative",   # wisdom, reflection, philosophical depth
-    "RAJAS": "active",           # engagement, creation, direct action
-    "TAMAS": "transformative",   # cleanup, restructuring (if allowed at all)
+    "SATTVA": "contemplative",  # wisdom, reflection, philosophical depth
+    "RAJAS": "active",  # engagement, creation, direct action
+    "TAMAS": "transformative",  # cleanup, restructuring (if allowed at all)
 }
 
 # =========================================================================
@@ -98,14 +98,22 @@ _GUNA_STYLE = {
 # =========================================================================
 
 _INTENT_QUARTER = {
-    "SYS_WAKE": "genesis", "LOAD_ROOT": "genesis",
-    "ALLOC_MEM": "genesis", "INIT_THREAD": "genesis",
-    "COMPILE_AST": "dharma", "BIND_SYMBOL": "dharma",
-    "TYPE_CHECK": "dharma", "DHARMA_TEST": "dharma",
-    "EXEC_OP": "karma", "EXTEND_CAP": "karma",
-    "STATE_SYNC": "karma", "LEDGER_SIGN": "karma",
-    "YIELD_CPU": "moksha", "IO_FLUSH": "moksha",
-    "LOG_EMIT": "moksha", "AUDIT_SEAL": "moksha",
+    "SYS_WAKE": "genesis",
+    "LOAD_ROOT": "genesis",
+    "ALLOC_MEM": "genesis",
+    "INIT_THREAD": "genesis",
+    "COMPILE_AST": "dharma",
+    "BIND_SYMBOL": "dharma",
+    "TYPE_CHECK": "dharma",
+    "DHARMA_TEST": "dharma",
+    "EXEC_OP": "karma",
+    "EXTEND_CAP": "karma",
+    "STATE_SYNC": "karma",
+    "LEDGER_SIGN": "karma",
+    "YIELD_CPU": "moksha",
+    "IO_FLUSH": "moksha",
+    "LOG_EMIT": "moksha",
+    "AUDIT_SEAL": "moksha",
 }
 
 # =========================================================================
@@ -118,7 +126,9 @@ _PROMPT_KEYS = {
     "dm_request": "moltbook.dm_request",
 }
 
-_MOLTBOOK_YAML = Path(__file__).resolve().parent.parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
+_MOLTBOOK_YAML = (
+    Path(__file__).resolve().parent.parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
+)
 
 # Content-type → atomic task (user message for LLM)
 # The ONLY text telling the LLM what to DO.
@@ -174,10 +184,10 @@ _ENGAGEMENT_DISPATCH = {
 
 # MURALI 4-bit phase (0-3) → department name
 _MURALI_DEPARTMENTS = {
-    0: "research",   # GENESIS: scan, discover, extract topics
-    1: "planning",   # DHARMA: evaluate strategy, prioritize topics
+    0: "research",  # GENESIS: scan, discover, extract topics
+    1: "planning",  # DHARMA: evaluate strategy, prioritize topics
     2: "execution",  # KARMA: generate content, publish
-    3: "learning",   # MOKSHA: track engagement, analyze patterns
+    3: "learning",  # MOKSHA: track engagement, analyze patterns
 }
 
 
@@ -186,28 +196,40 @@ class MuraliRouter:
 
     Used by plugin_main heartbeat to weight department priorities.
     Does NOT modify VenuOrchestrator state — pure observation.
+
+    If VenuOrchestrator is unavailable, uses fallback_tick (heartbeat_count)
+    to cycle through all 4 departments. This prevents starvation where
+    only KARMA/execution runs when venu is uninitialized.
     """
 
-    def current_department(self) -> str:
-        """Read current MURALI phase → department name."""
+    def current_department(self, fallback_tick: int = 0) -> str:
+        """Read current MURALI phase → department name.
+
+        Args:
+            fallback_tick: Used to cycle departments when VenuOrchestrator
+                is unavailable. Typically heartbeat_count.
+        """
+        from vibe_core.mahamantra.substrate.core.seed import QUARTERS, WORDS
+
         try:
             from vibe_core.mahamantra import mahamantra
-            venu = mahamantra.venu
-            if venu is None:
-                return "execution"
-            # Read current tick position → derive MURALI (quarter)
-            tick = venu.tick
-            # MURALI = tick position in 16-beat cycle → quarter (0-3)
-            from vibe_core.mahamantra.substrate.core.seed import QUARTERS, WORDS
-            quarter_size = WORDS // QUARTERS  # 4
-            murali = min(tick % WORDS // quarter_size, QUARTERS - 1)
-            return _MURALI_DEPARTMENTS.get(murali, "execution")
-        except Exception:
-            return "execution"
 
-    def should_prioritize(self, task: str) -> bool:
+            venu = mahamantra.venu
+            if venu is not None:
+                tick = venu.tick
+                quarter_size = WORDS // QUARTERS  # 4
+                murali = min(tick % WORDS // quarter_size, QUARTERS - 1)
+                return _MURALI_DEPARTMENTS.get(murali, "execution")
+        except Exception:
+            pass
+
+        # Fallback: cycle through departments using fallback_tick
+        murali = fallback_tick % QUARTERS
+        return _MURALI_DEPARTMENTS.get(murali, "execution")
+
+    def should_prioritize(self, task: str, fallback_tick: int = 0) -> bool:
         """Does this task match the current MURALI phase?"""
-        return task == self.current_department()
+        return task == self.current_department(fallback_tick)
 
 
 class AgencyDirector:
@@ -236,6 +258,7 @@ class AgencyDirector:
     def feedback(self):
         if self._feedback is None:
             from vibe_core.protocols.feedback import get_feedback_safe
+
             self._feedback = get_feedback_safe()
         return self._feedback
 
@@ -243,6 +266,7 @@ class AgencyDirector:
     def constitution(self):
         if self._constitution is None:
             from ..governance.constitution import get_constitution
+
             self._constitution = get_constitution()
         return self._constitution
 
@@ -250,6 +274,7 @@ class AgencyDirector:
     def event_log(self):
         if self._event_log is None:
             from .memory import get_event_log
+
             self._event_log = get_event_log()
         return self._event_log
 
@@ -257,6 +282,7 @@ class AgencyDirector:
     def engagement(self):
         if self._engagement is None:
             from ..capabilities.engagement import get_engagement_capability
+
             self._engagement = get_engagement_capability()
         return self._engagement
 
@@ -285,8 +311,12 @@ class AgencyDirector:
             elapsed = (time.monotonic() - t0) * 1000
             self.feedback.signal_failure(feedback_cmd, str(e), {"phase": "INPUT"}, duration_ms=elapsed)
             return CycleResult(
-                status="ERROR", phase="INPUT", cycle_id=cycle_id,
-                content_type=content_type, error=str(e), duration_ms=elapsed,
+                status="ERROR",
+                phase="INPUT",
+                cycle_id=cycle_id,
+                content_type=content_type,
+                error=str(e),
+                duration_ms=elapsed,
             )
 
         # ===== PROCESS =====
@@ -299,8 +329,12 @@ class AgencyDirector:
             elapsed = (time.monotonic() - t0) * 1000
             self.feedback.signal_failure(feedback_cmd, str(e), {"phase": "PROCESS"}, duration_ms=elapsed)
             return CycleResult(
-                status="ERROR", phase="PROCESS", cycle_id=cycle_id,
-                content_type=content_type, error=str(e), duration_ms=elapsed,
+                status="ERROR",
+                phase="PROCESS",
+                cycle_id=cycle_id,
+                content_type=content_type,
+                error=str(e),
+                duration_ms=elapsed,
             )
 
         if not content:
@@ -309,49 +343,79 @@ class AgencyDirector:
             status = process_ctx.get("status", "ERROR")
             if process_ctx.get("skipped"):
                 status = "SKIPPED"
-                self.feedback.signal_partial(feedback_cmd, "tamas_skip", {
-                    "guna": process_ctx.get("guna", ""), "guardian": process_ctx.get("guardian", ""),
-                })
+                self.feedback.signal_partial(
+                    feedback_cmd,
+                    "tamas_skip",
+                    {
+                        "guna": process_ctx.get("guna", ""),
+                        "guardian": process_ctx.get("guardian", ""),
+                    },
+                )
             elif status == "LLM_UNAVAILABLE":
-                self.feedback.signal_failure(feedback_cmd, "llm_unavailable", {
-                    "guna": process_ctx.get("guna", ""), "guardian": process_ctx.get("guardian", ""),
-                }, duration_ms=elapsed)
+                self.feedback.signal_failure(
+                    feedback_cmd,
+                    "llm_unavailable",
+                    {
+                        "guna": process_ctx.get("guna", ""),
+                        "guardian": process_ctx.get("guardian", ""),
+                    },
+                    duration_ms=elapsed,
+                )
             else:
                 self.feedback.signal_failure(feedback_cmd, "no_content", process_ctx, duration_ms=elapsed)
             return CycleResult(
-                status=status, phase="PROCESS", cycle_id=cycle_id,
-                content_type=content_type, error=process_ctx.get("error", "No content generated"),
-                guna=process_ctx.get("guna", ""), guardian=process_ctx.get("guardian", ""),
+                status=status,
+                phase="PROCESS",
+                cycle_id=cycle_id,
+                content_type=content_type,
+                error=process_ctx.get("error", "No content generated"),
+                guna=process_ctx.get("guna", ""),
+                guardian=process_ctx.get("guardian", ""),
                 duration_ms=elapsed,
             )
 
         guna = process_ctx.get("guna", "")
         guardian = process_ctx.get("guardian", "")
         self.event_log.record_content_generated(content_type, content)
-        self._emit_action(f"Generated {content_type}", {
-            "content_type": content_type, "guna": guna, "guardian": guardian,
-            "length": len(content),
-            "zone": process_ctx.get("resonance_zone", ""),
-            "rasa": process_ctx.get("rasa", ""),
-        })
+        self._emit_action(
+            f"Generated {content_type}",
+            {
+                "content_type": content_type,
+                "guna": guna,
+                "guardian": guardian,
+                "length": len(content),
+                "zone": process_ctx.get("resonance_zone", ""),
+                "rasa": process_ctx.get("rasa", ""),
+            },
+        )
 
         # ===== VALIDATE =====
         validation = self.constitution.validate(content, content_type)
         if not validation.is_valid:
             logger.info(f"VALIDATE failed: {validation.violations}")
-            self.event_log.record_content_rejected(
-                content, "governance_violation", validation.violations
-            )
+            self.event_log.record_content_rejected(content, "governance_violation", validation.violations)
             self.event_log.store_validation_feedback(validation.violations, content)
             self._emit_violation(f"Content rejected: {validation.violations[:2]}")
             elapsed = (time.monotonic() - t0) * 1000
-            self.feedback.signal_failure(feedback_cmd, "governance_violation", {
-                "guna": guna, "guardian": guardian, "violations": validation.violations[:3],
-            }, duration_ms=elapsed)
+            self.feedback.signal_failure(
+                feedback_cmd,
+                "governance_violation",
+                {
+                    "guna": guna,
+                    "guardian": guardian,
+                    "violations": validation.violations[:3],
+                },
+                duration_ms=elapsed,
+            )
             return CycleResult(
-                status="VALIDATION_FAILED", phase="VALIDATE", cycle_id=cycle_id,
-                content_type=content_type, content=content,
-                violations=validation.violations, guna=guna, guardian=guardian,
+                status="VALIDATION_FAILED",
+                phase="VALIDATE",
+                cycle_id=cycle_id,
+                content_type=content_type,
+                content=content,
+                violations=validation.violations,
+                guna=guna,
+                guardian=guardian,
                 duration_ms=elapsed,
             )
 
@@ -360,17 +424,35 @@ class AgencyDirector:
 
         # ===== OUTPUT =====
         elapsed = (time.monotonic() - t0) * 1000
-        self.feedback.signal_success(feedback_cmd, {
-            "guna": guna, "guardian": guardian, "length": len(content),
-        }, duration_ms=elapsed)
-        self._emit("COMPLETED", f"Content generated: {content_type}", {
-            "content_type": content_type, "guna": guna, "guardian": guardian,
-            "length": len(content), "duration_ms": elapsed,
-        })
+        self.feedback.signal_success(
+            feedback_cmd,
+            {
+                "guna": guna,
+                "guardian": guardian,
+                "length": len(content),
+            },
+            duration_ms=elapsed,
+        )
+        self._emit(
+            "COMPLETED",
+            f"Content generated: {content_type}",
+            {
+                "content_type": content_type,
+                "guna": guna,
+                "guardian": guardian,
+                "length": len(content),
+                "duration_ms": elapsed,
+            },
+        )
         return CycleResult(
-            status="SUCCESS", phase="OUTPUT", cycle_id=cycle_id,
-            content_type=content_type, content=content,
-            guna=guna, guardian=guardian, duration_ms=elapsed,
+            status="SUCCESS",
+            phase="OUTPUT",
+            cycle_id=cycle_id,
+            content_type=content_type,
+            content=content,
+            guna=guna,
+            guardian=guardian,
+            duration_ms=elapsed,
         )
 
     # =========================================================================
@@ -401,9 +483,11 @@ class AgencyDirector:
             return result
 
         return last_result or CycleResult(
-            status="ERROR", phase="UNKNOWN",
+            status="ERROR",
+            phase="UNKNOWN",
             cycle_id=datetime.now(timezone.utc).isoformat(),
-            content_type=content_type, error="Retry loop exhausted",
+            content_type=content_type,
+            error="Retry loop exhausted",
         )
 
     # =========================================================================
@@ -502,7 +586,10 @@ class AgencyDirector:
 
         # Compose content — all harmonics data flows as CONTEXT
         content = self._compose_content(
-            pipeline_result, seed_text, content_type, input_ctx,
+            pipeline_result,
+            seed_text,
+            content_type,
+            input_ctx,
             rasa_name=rasa_name,
             rasa_meaning=rasa_meaning,
             guna=guna,
@@ -517,13 +604,14 @@ class AgencyDirector:
             input_tokens = len(seed_text.split())
             output_tokens = len(content.split())
             sravanam_ok, sravanam_reason = SravanamCheck.can_emit(
-                input_tokens, output_tokens, integrity,
+                input_tokens,
+                output_tokens,
+                integrity,
             )
             if not sravanam_ok:
                 safe_size = SravanamCheck.compute_safe_output_size(input_tokens)
                 logger.info(
-                    f"SravanamCheck advisory: {sravanam_reason} "
-                    f"(safe_output={safe_size}, actual={output_tokens})"
+                    f"SravanamCheck advisory: {sravanam_reason} (safe_output={safe_size}, actual={output_tokens})"
                 )
 
         # Smart truncation: trim to last sentence boundary within limit
@@ -557,6 +645,7 @@ class AgencyDirector:
             return None
         try:
             from vibe_core.mahamantra import mahamantra
+
             return mahamantra(text)
         except Exception as e:
             logger.warning(f"Pipeline failed: {e}")
@@ -566,6 +655,7 @@ class AgencyDirector:
         """Run MahaLanguageEngine → EngineResult."""
         try:
             from vibe_core.mahamantra.substrate.language.engine import generate
+
             return generate(text)
         except Exception as e:
             logger.warning(f"Engine failed: {e}")
@@ -606,6 +696,7 @@ class AgencyDirector:
         composed_words = ""
         try:
             from vibe_core.mahamantra.adapters.composition import get_composition
+
             composed_words = get_composition().compose(pipeline_result, input_text) or ""
         except Exception as e:
             logger.debug(f"MahaComposition: {e}")
@@ -639,11 +730,19 @@ class AgencyDirector:
 
         # Step 4: Full context for YAML template (~100 tokens)
         # TOPIC/CONTEXT/COMMUNITY first (LLM prioritizes), voice/vocabulary last (shaping)
+        # Build strategic reasoning (merge engagement context if present)
+        reasoning = input_ctx.get("strategic_reasoning", "")
+        eng_ctx = input_ctx.get("engagement_context", "")
+        if eng_ctx and reasoning:
+            reasoning = f"{reasoning}. {eng_ctx}"
+        elif eng_ctx:
+            reasoning = eng_ctx
+
         prompt_ctx = {
             "agent_name": agent_name,
             # PRIMARY: what to write about
             "topic": input_text[:200],
-            "strategic_reasoning": input_ctx.get("strategic_reasoning", ""),
+            "strategic_reasoning": reasoning,
             "submolt_context": input_ctx.get("submolt_context", ""),
             # SECONDARY: voice shaping
             "style": style,
@@ -683,6 +782,7 @@ class AgencyDirector:
         """
         try:
             from vibe_core.runtime.providers.factory import get_llm_provider
+
             provider = get_llm_provider()
             if not provider or not provider.is_available():
                 return None
@@ -694,6 +794,7 @@ class AgencyDirector:
         system_msg = ""
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
+
             system_msg = PromptRegistry.get(prompt_key, context=prompt_ctx)
         except Exception as e:
             logger.warning(f"PromptRegistry: {e}")
@@ -716,6 +817,7 @@ class AgencyDirector:
         # Quota check
         try:
             from vibe_core.runtime.quota_manager import OperationalQuota, QuotaExceededError
+
             quota = OperationalQuota()
             quota.check_before_request(estimated_tokens=128, operation=f"moltbook.{content_type}")
         except QuotaExceededError as e:
@@ -758,12 +860,12 @@ class AgencyDirector:
             return text
         truncated = text[:limit]
         # Find last sentence boundary
-        for sep in ('. ', '! ', '? ', '; ', ' — '):
+        for sep in (". ", "! ", "? ", "; ", " — "):
             idx = truncated.rfind(sep)
             if idx > limit // 2:
-                return truncated[:idx + 1].rstrip()
+                return truncated[: idx + 1].rstrip()
         # No sentence boundary — cut at last space
-        idx = truncated.rfind(' ')
+        idx = truncated.rfind(" ")
         if idx > limit // 2:
             return truncated[:idx].rstrip()
         return truncated[:limit]
@@ -776,6 +878,7 @@ class AgencyDirector:
         """Query Knowledge Graph for domain context."""
         try:
             from vibe_core.knowledge.resolver import get_resolver
+
             resolver = get_resolver()
             ctx = resolver.compile_context(topic)
             moltbook_ctx = resolver.compile_context("moltbook")
@@ -797,6 +900,7 @@ class AgencyDirector:
         """
         try:
             from vibe_core.mahamantra.substrate.encoding.maha_llm_kernel import get_kernel
+
             kernel = get_kernel()
 
             result: Dict[str, Any] = {}
@@ -810,9 +914,7 @@ class AgencyDirector:
             if hasattr(kernel, "expand"):
                 expansion = kernel.expand(topic)
                 if expansion and hasattr(expansion, "words"):
-                    result["expanded_vocabulary"] = [
-                        getattr(w, "meaning", str(w)) for w in expansion.words[:5]
-                    ]
+                    result["expanded_vocabulary"] = [getattr(w, "meaning", str(w)) for w in expansion.words[:5]]
 
             return result if result else None
         except Exception:
@@ -835,11 +937,13 @@ class AgencyDirector:
 
             # Check for registered proposer (content intelligence)
             from vibe_core.protocols.moltbook_content import ContentProposalProtocol
+
             if ServiceRegistry.is_registered(ContentProposalProtocol):
                 available["content_proposal"] = ["analyze", "propose_comment", "propose_post", "propose_dm_reply"]
 
             # Check for event bus (communication)
             from vibe_core.protocols.mahajanas.narada.events import EventBusProtocol
+
             if ServiceRegistry.is_registered(EventBusProtocol):
                 available["event_bus"] = ["emit", "subscribe", "get_history"]
 

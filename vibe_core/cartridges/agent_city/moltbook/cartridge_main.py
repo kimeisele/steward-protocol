@@ -94,6 +94,7 @@ class MoltbookCartridge(ContextAwareAgent, OathMixin):
         """Lazy-init AgencyDirector."""
         if self._director is None:
             from .core.agency_director import AgencyDirector
+
             self._director = AgencyDirector()
         return self._director
 

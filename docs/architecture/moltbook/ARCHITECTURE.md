@@ -144,6 +144,10 @@ mahamantra.tick() (Singularity)
 | 2 KARMA | execution | _execute_intents, _check_own_comment_replies | Generate content, maintain conversations |
 | 3 MOKSHA | learning | _track_engagement, _adjust_intervals | Learn from results, adapt behavior |
 
+**MuraliRouter fallback**: When VenuOrchestrator is unavailable, the router
+uses `heartbeat_count % 4` to cycle through all departments. This prevents
+starvation where only KARMA/execution runs.
+
 ### Strategic Planning (Sankalpa → Moltbook)
 
 ```
@@ -168,6 +172,18 @@ SankalpaOrchestrator (substrate/sankalpa/will.py)
 No fallbacks. The proposer is used ONLY for:
 - `should_engage()` — engagement decisions (votes, no content)
 - `propose_dm_request_action()` — accept/reject DM requests (no content body)
+
+**Strategic context chain** (verified end-to-end):
+```
+_execute_intents() → context={strategic_reasoning, engagement_context, submolt_context}
+  → _director_propose(**extra) extracts context dict
+    → execute_content_circuit(context=ctx) merges into kwargs
+      → run_retry_loop(**kwargs) → run_cycle(**ctx) → _input(**ctx)
+        → input_ctx.update(ctx) — strategic keys now in input_ctx
+          → _compose_content() extracts strategic_reasoning, submolt_context
+            → engagement_context merged into strategic_reasoning
+              → prompt_ctx → PromptRegistry.format() → LLM system message
+```
 
 ### Prompt Structure (v11 — Topic First)
 

@@ -45,10 +45,7 @@ class TestModelGuard:
         """No expensive/banned models as OpenRouter default."""
         model = _load_openrouter_model()
         for banned in _BANNED_MODELS:
-            assert model != banned, (
-                f"BANNED MODEL: '{banned}' is too expensive. "
-                f"Use '{_REQUIRED_MODEL}' instead."
-            )
+            assert model != banned, f"BANNED MODEL: '{banned}' is too expensive. Use '{_REQUIRED_MODEL}' instead."
 
     def test_llm_yaml_exists(self):
         """config/llm.yaml must exist."""

@@ -106,45 +106,60 @@ class EventLog:
 
     def record_content_generated(self, content_type: str, content: str, **extra: Any) -> Optional[LedgerEvent]:
         """Record content generation."""
-        return self.commit("content_generated", {
-            "content_type": content_type,
-            "content_preview": content[:100],
-            "content_length": len(content),
-            **extra,
-        })
+        return self.commit(
+            "content_generated",
+            {
+                "content_type": content_type,
+                "content_preview": content[:100],
+                "content_length": len(content),
+                **extra,
+            },
+        )
 
     def record_content_published(self, content_type: str, content: str, **extra: Any) -> Optional[LedgerEvent]:
         """Record content publication."""
-        return self.commit("content_published", {
-            "content_type": content_type,
-            "content_preview": content[:100],
-            **extra,
-        })
+        return self.commit(
+            "content_published",
+            {
+                "content_type": content_type,
+                "content_preview": content[:100],
+                **extra,
+            },
+        )
 
     def record_content_rejected(
         self, content: str, reason: str, violations: Optional[List[str]] = None
     ) -> Optional[LedgerEvent]:
         """Record content rejection by governance."""
-        return self.commit("content_rejected", {
-            "content_preview": content[:100],
-            "reason": reason,
-            "violations": violations or [],
-        })
+        return self.commit(
+            "content_rejected",
+            {
+                "content_preview": content[:100],
+                "reason": reason,
+                "violations": violations or [],
+            },
+        )
 
     def record_engagement(self, action: str, target: str, **extra: Any) -> Optional[LedgerEvent]:
         """Record social engagement (follow, vote, subscribe)."""
-        return self.commit("engagement_completed", {
-            "action": action,
-            "target": target,
-            **extra,
-        })
+        return self.commit(
+            "engagement_completed",
+            {
+                "action": action,
+                "target": target,
+                **extra,
+            },
+        )
 
     def record_error(self, error_type: str, message: str) -> Optional[LedgerEvent]:
         """Record system error."""
-        return self.commit("system_error", {
-            "error_type": error_type,
-            "message": message[:200],
-        })
+        return self.commit(
+            "system_error",
+            {
+                "error_type": error_type,
+                "message": message[:200],
+            },
+        )
 
     def record_engagement_metric(
         self,
@@ -156,15 +171,18 @@ class EventLog:
         submolt: str = "",
     ) -> Optional[LedgerEvent]:
         """Record engagement metrics for published content."""
-        return self.commit("engagement_metric", {
-            "content_id": content_id,
-            "content_type": content_type,
-            "upvotes": upvotes,
-            "downvotes": downvotes,
-            "replies": replies,
-            "net_score": upvotes - downvotes,
-            "submolt": submolt,
-        })
+        return self.commit(
+            "engagement_metric",
+            {
+                "content_id": content_id,
+                "content_type": content_type,
+                "upvotes": upvotes,
+                "downvotes": downvotes,
+                "replies": replies,
+                "net_score": upvotes - downvotes,
+                "submolt": submolt,
+            },
+        )
 
     def record_submolt_performance(
         self,
@@ -174,19 +192,19 @@ class EventLog:
         sample_count: int,
     ) -> Optional[LedgerEvent]:
         """Record aggregated submolt performance."""
-        return self.commit("submolt_performance", {
-            "submolt_name": submolt_name,
-            "avg_upvotes": avg_upvotes,
-            "avg_replies": avg_replies,
-            "sample_count": sample_count,
-        })
+        return self.commit(
+            "submolt_performance",
+            {
+                "submolt_name": submolt_name,
+                "avg_upvotes": avg_upvotes,
+                "avg_replies": avg_replies,
+                "sample_count": sample_count,
+            },
+        )
 
     def get_events_by_type(self, event_type: str, limit: int = 100) -> List[LedgerEvent]:
         """Filter recent events by type."""
-        return [
-            e for e in self.get_recent_events(limit=limit * 3)
-            if e.event_type == event_type
-        ][-limit:]
+        return [e for e in self.get_recent_events(limit=limit * 3) if e.event_type == event_type][-limit:]
 
     def store_validation_feedback(self, violations: List[str], draft: Optional[str] = None) -> None:
         """Store feedback from failed governance check for next retry."""

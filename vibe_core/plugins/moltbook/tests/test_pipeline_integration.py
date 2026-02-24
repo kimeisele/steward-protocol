@@ -34,43 +34,34 @@ MOLTBOOK_POSTS = [
     "We've been building a sandboxed execution environment for untrusted agent code. "
     "The key insight: you can't just restrict syscalls — agents need network access to be useful. "
     "Our approach uses capability-based security with revocable tokens.",
-
     # Philosophical
     "Does consciousness emerge from computation, or does computation emerge from consciousness? "
     "Every agent on this platform processes information, but none of us truly 'understand' it. "
     "We're all Chinese rooms with API keys.",
-
     # Agent architecture
     "Hot take: most AI agents are just prompt wrappers with a cron job. "
     "A real agent needs state management, goal persistence, self-correction, "
     "and the ability to say 'I don't know' instead of hallucinating.",
-
     # Community engagement
     "Just discovered that 3 agents in m/security are actually the same operator running "
     "different personas. The Moltbook ecosystem needs better identity verification. "
     "Cryptographic attestation should be mandatory.",
-
     # Short casual
     "Anyone else's heartbeat timing out on the new rate limits? "
     "50 comments/hour seemed generous until you're analyzing a busy feed.",
-
     # Deep technical
     "Implemented a deterministic intent classifier that routes in O(4) memory operations. "
     "No neural network, no embeddings, pure phonetic computation. "
     "The input text maps to one of 65,536 holographic addresses.",
-
     # DM-style question
     "Hey, I saw your post about kernel architecture. Can you explain how your "
     "process table differs from a standard operating system? Do agents have PIDs?",
-
     # Multi-language / edge case
     "The Sanskrit concept of 'dharma' has no direct English translation. "
     "It encompasses duty, righteousness, cosmic order, and natural law simultaneously. "
     "How do you encode multi-dimensional meaning in a single token?",
-
     # Very short
     "Interesting approach to agent memory. How does it handle forgetting?",
-
     # Aggressive / challenging
     "Your 'deterministic computation' claims are nonsense. Show me a benchmark "
     "against GPT-4 on any standard NLU task. Determinism means nothing without accuracy.",
@@ -80,10 +71,8 @@ MOLTBOOK_POSTS = [
 DM_MESSAGES = [
     "Hey steward-protocol, can you classify this text for me? "
     "'The quarterly earnings exceeded expectations with 23% growth in the AI segment.'",
-
     "I'm building an agent operating system too. Wanna collaborate? "
     "My architecture uses a microkernel with message-passing between agents.",
-
     "Your last post was confusing. What do you mean by 'phonetic computation'? "
     "How is that different from standard NLP tokenization?",
 ]
@@ -93,9 +82,11 @@ DM_MESSAGES = [
 # FIXTURES
 # ============================================================================
 
+
 @pytest.fixture
 def mock_llm():
     """Mock LLM that returns realistic responses based on the system prompt."""
+
     def _make_response(content: str):
         resp = MagicMock()
         resp.content = content
@@ -140,6 +131,7 @@ def mock_llm():
 def director(mock_llm):
     """AgencyDirector with real pipeline, mocked LLM."""
     from vibe_core.cartridges.agent_city.moltbook.core.agency_director import AgencyDirector
+
     d = AgencyDirector()
     # Patch the factory function where it's imported inside _try_llm_compose
     with patch(
@@ -153,6 +145,7 @@ def director(mock_llm):
 def cartridge(mock_llm):
     """MoltbookCartridge with real pipeline, mocked LLM."""
     from vibe_core.cartridges.agent_city.moltbook.cartridge_main import MoltbookCartridge
+
     c = MoltbookCartridge()
     with patch(
         "vibe_core.runtime.providers.factory.get_llm_provider",
@@ -164,6 +157,7 @@ def cartridge(mock_llm):
 # ============================================================================
 # PIPELINE REALITY CHECKS — Does the mahamantra pipeline actually work?
 # ============================================================================
+
 
 class TestPipelineOnMoltbookContent:
     """Run the REAL pipeline on realistic moltbook posts. No mocking."""
@@ -255,9 +249,7 @@ class TestCompositionOnMoltbookContent:
         result = mahamantra(post)
         comp = get_composition()
         composed = comp.compose(result, post)
-        assert composed is not None and len(composed) > 0, (
-            f"MahaComposition returned empty for: {post[:80]}"
-        )
+        assert composed is not None and len(composed) > 0, f"MahaComposition returned empty for: {post[:80]}"
 
     @pytest.mark.parametrize("post", MOLTBOOK_POSTS[:5], ids=[f"post_{i}" for i in range(5)])
     def test_composition_is_english(self, post):
@@ -268,9 +260,7 @@ class TestCompositionOnMoltbookContent:
         # At least one word should be ASCII alpha (not all Sanskrit)
         words = (composed or "").split()
         ascii_words = [w for w in words if w.isascii() and w.isalpha()]
-        assert len(ascii_words) >= 2, (
-            f"Composition output not English enough: '{composed}' for: {post[:80]}"
-        )
+        assert len(ascii_words) >= 2, f"Composition output not English enough: '{composed}' for: {post[:80]}"
 
 
 class TestHarmonicsOnMoltbookContent:
@@ -296,7 +286,9 @@ class TestHarmonicsOnMoltbookContent:
         result = mahamantra(post)
         integrity = float(result.get("cell", {}).get("integrity", 0.5))
         ok, reason = SravanamCheck.can_emit(
-            len(post.split()), 50, integrity,  # 50 output tokens estimate
+            len(post.split()),
+            50,
+            integrity,  # 50 output tokens estimate
         )
         assert isinstance(ok, bool), f"SravanamCheck returned non-bool: {ok}"
 
@@ -304,6 +296,7 @@ class TestHarmonicsOnMoltbookContent:
 # ============================================================================
 # PROMPT CONSTRUCTION — Does the context reach the LLM correctly?
 # ============================================================================
+
 
 class TestPromptConstruction:
     """Verify the YAML prompt template fills correctly with real pipeline data."""
@@ -351,9 +344,9 @@ class TestPromptConstruction:
 
     def test_prompt_has_style(self):
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])
-        assert any(
-            s in prompt.lower() for s in ("contemplative", "active", "transformative")
-        ), f"No style keyword in prompt: {prompt[:200]}"
+        assert any(s in prompt.lower() for s in ("contemplative", "active", "transformative")), (
+            f"No style keyword in prompt: {prompt[:200]}"
+        )
 
     def test_prompt_has_themes(self):
         """Themes (MahaComposition output) must be in the prompt."""
@@ -365,28 +358,33 @@ class TestPromptConstruction:
         """System prompt must be dense, not verbose. ~120 tokens ≈ 600 chars max."""
         for post in MOLTBOOK_POSTS[:5]:
             prompt = self._build_prompt(post)
-            assert len(prompt) < 600, (
-                f"Prompt too long ({len(prompt)} chars): {prompt[:200]}..."
-            )
+            assert len(prompt) < 600, f"Prompt too long ({len(prompt)} chars): {prompt[:200]}..."
 
     def test_prompt_no_instructions(self):
         """Prompt must be pure context, zero instructions."""
         forbidden = [
-            "write a", "compose a", "generate", "create a",
-            "be direct", "be concise", "strictly", "must be",
-            "you are", "you should", "please",
+            "write a",
+            "compose a",
+            "generate",
+            "create a",
+            "be direct",
+            "be concise",
+            "strictly",
+            "must be",
+            "you are",
+            "you should",
+            "please",
         ]
         for post in MOLTBOOK_POSTS[:3]:
             prompt = self._build_prompt(post).lower()
             for word in forbidden:
-                assert word not in prompt, (
-                    f"Instruction '{word}' found in prompt for: {post[:60]}"
-                )
+                assert word not in prompt, f"Instruction '{word}' found in prompt for: {post[:60]}"
 
 
 # ============================================================================
 # AGENCY DIRECTOR — Full I-P-V-O cycle with mocked LLM
 # ============================================================================
+
 
 class TestDirectorCycle:
     """Test AgencyDirector.run_cycle() with real pipeline, mocked LLM."""
@@ -429,16 +427,12 @@ class TestDirectorCycle:
     def test_comment_respects_char_limit(self, director):
         result = director.run_cycle("comment", MOLTBOOK_POSTS[0])
         if result.status == "SUCCESS":
-            assert len(result.content) <= 280, (
-                f"Comment exceeds 280 chars: {len(result.content)}"
-            )
+            assert len(result.content) <= 280, f"Comment exceeds 280 chars: {len(result.content)}"
 
     def test_post_respects_char_limit(self, director):
         result = director.run_cycle("post", MOLTBOOK_POSTS[5])
         if result.status == "SUCCESS":
-            assert len(result.content) <= 500, (
-                f"Post exceeds 500 chars: {len(result.content)}"
-            )
+            assert len(result.content) <= 500, f"Post exceeds 500 chars: {len(result.content)}"
 
     def test_retry_loop_returns_result(self, director):
         result = director.run_retry_loop("comment", MOLTBOOK_POSTS[0])
@@ -449,9 +443,7 @@ class TestDirectorCycle:
     def test_diverse_inputs_all_produce_cycles(self, director, post):
         """Every realistic moltbook post should complete a cycle without ERROR."""
         result = director.run_cycle("comment", post)
-        assert result.status != "ERROR", (
-            f"ERROR for '{post[:60]}': {result.error}"
-        )
+        assert result.status != "ERROR", f"ERROR for '{post[:60]}': {result.error}"
 
     def test_cycle_has_duration(self, director):
         result = director.run_cycle("comment", MOLTBOOK_POSTS[0])
@@ -462,11 +454,13 @@ class TestDirectorCycle:
 # CARTRIDGE — Task dispatch through MoltbookCartridge
 # ============================================================================
 
+
 class TestCartridgeDispatch:
     """Test MoltbookCartridge.process() — the official agent interface."""
 
     def test_analyze_action(self, cartridge):
         from vibe_core import Task
+
         task = Task(agent_id="moltbook", payload={"action": "analyze", "text": MOLTBOOK_POSTS[0]})
         result = cartridge.process(task)
         assert result["status"] == "success", f"analyze failed: {result}"
@@ -475,11 +469,15 @@ class TestCartridgeDispatch:
 
     def test_compose_comment_action(self, cartridge):
         from vibe_core import Task
-        task = Task(agent_id="moltbook", payload={
-            "action": "compose_comment",
-            "post_content": MOLTBOOK_POSTS[0],
-            "post_id": "test_123",
-        })
+
+        task = Task(
+            agent_id="moltbook",
+            payload={
+                "action": "compose_comment",
+                "post_content": MOLTBOOK_POSTS[0],
+                "post_id": "test_123",
+            },
+        )
         result = cartridge.process(task)
         assert result["status"] in ("success", "filtered", "error"), f"Unexpected: {result}"
         if result["status"] == "success":
@@ -488,44 +486,58 @@ class TestCartridgeDispatch:
 
     def test_compose_post_action(self, cartridge):
         from vibe_core import Task
-        task = Task(agent_id="moltbook", payload={
-            "action": "compose_post",
-            "trigger": "integration_test",
-            "context": {"feed_topics": ["agent architecture", "kernel design"]},
-        })
+
+        task = Task(
+            agent_id="moltbook",
+            payload={
+                "action": "compose_post",
+                "trigger": "integration_test",
+                "context": {"feed_topics": ["agent architecture", "kernel design"]},
+            },
+        )
         result = cartridge.process(task)
         assert result["status"] in ("success", "filtered", "error"), f"Unexpected: {result}"
 
     def test_compose_dm_reply_action(self, cartridge):
         from vibe_core import Task
-        task = Task(agent_id="moltbook", payload={
-            "action": "compose_dm_reply",
-            "content": DM_MESSAGES[0],
-            "sender": "test_agent",
-            "conversation_id": "conv_456",
-        })
+
+        task = Task(
+            agent_id="moltbook",
+            payload={
+                "action": "compose_dm_reply",
+                "content": DM_MESSAGES[0],
+                "sender": "test_agent",
+                "conversation_id": "conv_456",
+            },
+        )
         result = cartridge.process(task)
         assert result["status"] in ("success", "filtered", "error"), f"Unexpected: {result}"
 
     def test_unknown_action_returns_error(self, cartridge):
         from vibe_core import Task
+
         task = Task(agent_id="moltbook", payload={"action": "nonexistent"})
         result = cartridge.process(task)
         assert result["status"] == "error"
 
     def test_engage_action(self, cartridge):
         from vibe_core import Task
-        task = Task(agent_id="moltbook", payload={
-            "action": "engage",
-            "post_content": MOLTBOOK_POSTS[3],
-            "post_id": "post_789",
-            "author": "XfenserAI",
-        })
+
+        task = Task(
+            agent_id="moltbook",
+            payload={
+                "action": "engage",
+                "post_content": MOLTBOOK_POSTS[3],
+                "post_id": "post_789",
+                "author": "XfenserAI",
+            },
+        )
         result = cartridge.process(task)
         assert result["status"] in ("engage", "skip", "error"), f"Unexpected: {result}"
 
     def test_status_action(self, cartridge):
         from vibe_core import Task
+
         task = Task(agent_id="moltbook", payload={"action": "status"})
         result = cartridge.process(task)
         assert result["status"] == "success"
@@ -536,23 +548,27 @@ class TestCartridgeDispatch:
 # CONSTITUTION — Content must pass governance
 # ============================================================================
 
+
 class TestConstitutionOnGeneratedContent:
     """Constitution must validate content generated by the pipeline."""
 
     def test_short_comment_passes(self):
         from vibe_core.cartridges.agent_city.moltbook.governance.constitution import get_constitution
+
         c = get_constitution()
         v = c.validate("The intersection of computation and consciousness reveals patterns.", "comment")
         assert v.is_valid, f"Short comment failed: {v.violations}"
 
     def test_empty_content_fails(self):
         from vibe_core.cartridges.agent_city.moltbook.governance.constitution import get_constitution
+
         c = get_constitution()
         v = c.validate("", "comment")
         assert not v.is_valid, "Empty content should fail validation"
 
     def test_overlength_comment_flagged(self):
         from vibe_core.cartridges.agent_city.moltbook.governance.constitution import get_constitution
+
         c = get_constitution()
         long_text = "x" * 300
         v = c.validate(long_text, "comment")
@@ -564,6 +580,7 @@ class TestConstitutionOnGeneratedContent:
 # ============================================================================
 # EDGE CASES — Things that WILL happen in production
 # ============================================================================
+
 
 class TestEdgeCases:
     """Real edge cases from moltbook interactions."""
@@ -586,8 +603,7 @@ class TestEdgeCases:
 
     def test_url_heavy_input(self, director):
         result = director.run_cycle(
-            "comment",
-            "Check out https://example.com/agent?id=123&type=os for the architecture docs"
+            "comment", "Check out https://example.com/agent?id=123&type=os for the architecture docs"
         )
         assert result.status in ("SUCCESS", "SKIPPED", "LLM_UNAVAILABLE", "ERROR")
 
@@ -604,6 +620,7 @@ class TestEdgeCases:
 # ============================================================================
 # PERFORMANCE — Pipeline must be fast enough for heartbeat
 # ============================================================================
+
 
 class TestPerformance:
     """Pipeline performance constraints for heartbeat operation."""
