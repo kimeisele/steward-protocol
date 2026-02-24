@@ -679,29 +679,32 @@ class SankirtanChamber(Generic[C]):
         """
         Create a full snapshot of the Chamber state.
 
-        Includes: Metrics, Orchestrator State, Registry State.
+        Includes: Metrics, Orchestrator State, Registry State, Antaranga.
         Format:
             [4s: Magic "OM!!"]
             [Q: accumulated_diw]
             [Q: resonance_count]
             [Q: total_transformations]
-            [24s: Orchestrator State] (was 16s)
-            [N: Registry State]
+            [I: orchestrator_size]
+            [orchestrator_size bytes: Orchestrator State]
+            [N: Registry State (variable, TLV internally)]
+            [16384: Antaranga (fixed, always last)]
         """
         result = bytearray()
 
-        # Header (Magic + Metrics)
-        # 4 + 8 + 8 + 8 = 28 bytes
+        # Header (Magic + Metrics): 4 + 8 + 8 + 8 = 28 bytes
         result.extend(b"OM!!")
         result.extend(struct.pack("<QQQ", self._accumulated_diw, self._resonance_count, self._total_transformations))
 
-        # Orchestrator (24 bytes now)
-        result.extend(self._orchestrator.to_bytes())
+        # Orchestrator (length-prefixed)
+        orch_bytes = self._orchestrator.to_bytes()
+        result.extend(struct.pack("<I", len(orch_bytes)))
+        result.extend(orch_bytes)
 
-        # Registry (Variable)
+        # Registry (Variable, self-describing via internal count+TLV)
         result.extend(self._registry.to_bytes())
 
-        # Antaranga (Fixed: 16,384 bytes contiguous)
+        # Antaranga (Fixed: 16,384 bytes contiguous, always last)
         result.extend(self._antaranga.raw)
 
         return bytes(result)
@@ -716,8 +719,9 @@ class SankirtanChamber(Generic[C]):
         Raises:
             ValueError: If magic or format is invalid
         """
-        if len(snapshot) < 52:  # 28 (Header) + 24 (Orchestrator)
-            raise ValueError(f"Snapshot too short: {len(snapshot)} bytes, need at least 52")
+        # 28 (Header) + 4 (orch length) + 24 (Orchestrator min)
+        if len(snapshot) < 56:
+            raise ValueError(f"Snapshot too short: {len(snapshot)} bytes, need at least 56")
 
         # 1. Header
         magic = snapshot[:QUARTERS]
@@ -730,23 +734,12 @@ class SankirtanChamber(Generic[C]):
         )
         offset += KSHETRA
 
-        # 2. Orchestrator
-        # We need to detect size.
-        # But we don't know the exact break point without a length prefix.
-        # However, VenuOrchestrator.from_bytes() handles length check.
-        # Let's peek 24 bytes if strictly 24 are available.
-        # Wait, Registry data follows. How do we know where Orchestrator ends?
-        # WE DON'T.
-        # This is a binary format flaw. Logic update needed.
-        # Orchestrator size MUST be fixed or prefixed.
-        # Since I changed it to 24 bytes, and I control both files...
-        # I will assume 24 bytes for new format.
-        # Old snapshots (16 bytes) will fail or need heuristics.
-        # Given this is a fresh feature, assuming 24 bytes is acceptable.
-
-        orch_size = KSHETRA
-        orch_data = snapshot[offset : offset + orch_size]
-        self._orchestrator.from_bytes(orch_data)
+        # 2. Orchestrator (length-prefixed)
+        orch_size = struct.unpack("<I", snapshot[offset : offset + QUARTERS])[0]
+        offset += QUARTERS
+        if len(snapshot) < offset + orch_size:
+            raise ValueError(f"Snapshot truncated: need {orch_size} orchestrator bytes at offset {offset}")
+        self._orchestrator.from_bytes(snapshot[offset : offset + orch_size])
         offset += orch_size
 
         # 3. Registry + Antaranga
@@ -755,12 +748,10 @@ class SankirtanChamber(Generic[C]):
         from vibe_core.mahamantra.substrate.antaranga import CHAMBER_BYTES
 
         if len(snapshot) >= offset + CHAMBER_BYTES:
-            # New format: Registry + Antaranga
             registry_data = snapshot[offset : len(snapshot) - CHAMBER_BYTES]
             self._registry.from_bytes(registry_data)
             self._antaranga._mem[:] = snapshot[len(snapshot) - CHAMBER_BYTES :]
         else:
-            # Legacy format: Registry only (no Antaranga)
             registry_data = snapshot[offset:]
             self._registry.from_bytes(registry_data)
             self._antaranga.clear()
