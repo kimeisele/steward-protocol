@@ -4,23 +4,26 @@ Moltbook Agency Director — I-P-V-O Pipeline.
 Uses Mahamantra substrate DIRECTLY. No delegation to proposer gates.
 
     INPUT:    Knowledge Graph + feed context + previous feedback
-    PROCESS:  mahamantra(text) → MahaComposition/LLM → content
+    PROCESS:  mahamantra(text) → context_builders → PromptRegistry → LLM → content
     VALIDATE: Constitution check (governance/constitution.py)
     OUTPUT:   CycleResult → caller
 
 Guna informs STYLE (guardian, tone), NOT gating.
 Only TAMAS + dead cell = skip. Everything else generates content.
 
-Wires: MahaComposition (5 scorers incl. WordNet + mode_affinity),
-       MahaLanguageEngine, Knowledge Graph, EventBus,
-       ResonanceHarmonics (zone classification), VedicScaleMapping (rasa → LLM tone),
-       SravanamCheck (entropy advisory).
+Prompts come from config/prompts/moltbook.yaml (pure context, zero instructions).
+Code enforces physical barriers (char limits, guna gates, integrity checks).
+
+Wires: MahaComposition, MahaLanguageEngine, Knowledge Graph, EventBus,
+       ResonanceHarmonics (zone), VedicScaleMapping (rasa), SravanamCheck (entropy),
+       PromptRegistry (YAML templates), context_builders (shared extraction).
 """
 
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from typing import TypedDict
 
@@ -35,6 +38,8 @@ from vibe_core.mahamantra.substrate.encoding.harmonics import (
     SravanamCheck,
     VedicScaleMapping,
 )
+
+from .context_builders import build_moltbook_context
 
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
 
@@ -103,32 +108,37 @@ _INTENT_QUARTER = {
     "LOG_EMIT": "moksha", "AUDIT_SEAL": "moksha",
 }
 
-_QUARTER_INSTRUCTION = {
-    "genesis": "Respond creatively. Introduce fresh perspective.",
-    "dharma": "Analyze and evaluate. Offer principled assessment.",
-    "karma": "Engage practically. Acknowledge and build on the work.",
-    "moksha": "Explain clearly. If this is a question, answer it directly.",
+# =========================================================================
+# Content type → YAML prompt key (PromptRegistry lookup)
+# =========================================================================
+_PROMPT_KEYS = {
+    "comment": "moltbook.comment",
+    "post": "moltbook.post",
+    "dm_reply": "moltbook.dm_reply",
+    "dm_request": "moltbook.dm_request",
 }
 
-_MODE_INSTRUCTION = {
-    "CORE": "Be direct and essential.",
-    "FILTER": "Focus on what matters most.",
-    "VERB": "Be action-oriented.",
-    "QUALITY": "Assess quality and depth.",
-    "CONTEXT": "Ground the response in practical context.",
-    "TARGET": "Address the goal directly.",
-    "CLOSURE": "Bring it to a clear conclusion.",
-}
+_MOLTBOOK_YAML = Path(__file__).resolve().parent.parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
 
-# =========================================================================
-# Content type → prompt instruction LUT (replaces if/elif chain)
-# =========================================================================
-# (instruction, input_label) — if input_label is set, append "{label}: {text[:400]}"
-_CONTENT_PROMPT = {
-    "comment": ("Write a concise, insightful comment on this post:", "POST"),
-    "post": ("Write a thought-provoking social media post.", ""),
-    "dm_reply": ("Write a thoughtful reply to this message:", "MESSAGE"),
-}
+_YAML_LOADED = False
+
+
+def _load_yaml_prompts() -> None:
+    """Load Moltbook prompts from YAML (once)."""
+    global _YAML_LOADED
+    if _YAML_LOADED:
+        return
+    try:
+        from vibe_core.runtime.prompt_registry import PromptRegistry
+
+        loaded = PromptRegistry.load_from_yaml(_MOLTBOOK_YAML)
+        if loaded:
+            logger.info(f"Moltbook prompts loaded ({loaded})")
+        _YAML_LOADED = True
+    except Exception as e:
+        logger.warning(f"YAML prompt load failed ({e})")
+        _YAML_LOADED = True  # Don't retry on every cycle
+
 
 # =========================================================================
 # Engagement action → handler method name LUT (replaces if/elif chain)
@@ -137,17 +147,6 @@ _ENGAGEMENT_DISPATCH = {
     "follow_back": "_do_follow_back",
     "subscribe": "_do_subscribe",
     "upvote": "_do_upvote",
-}
-
-# =========================================================================
-# Rasa → LLM tone guidance (from VedicScaleMapping, harmonics.py)
-# Derived from cell resonance → zone → emotional register for content
-# =========================================================================
-_RASA_TONE = {
-    "Shanta": "Maintain a calm, grounded tone.",
-    "Karuna": "Show compassion and understanding.",
-    "Vira": "Be confident and direct.",
-    "Adbhuta": "Express wonder and deep insight.",
 }
 
 
@@ -452,10 +451,14 @@ class AgencyDirector:
             f"integrity={integrity:.3f} zone={resonance_zone} rasa={rasa_name}"
         )
 
-        # Compose content — rasa guides LLM emotional register
+        # Compose content — all harmonics data flows as CONTEXT
         content = self._compose_content(
             pipeline_result, seed_text, content_type, input_ctx,
             rasa_name=rasa_name,
+            rasa_meaning=rasa_meaning,
+            guna=guna,
+            style=style,
+            resonance_zone=resonance_zone,
         )
 
         # SravanamCheck advisory — entropy verification (observability, not blocking)
@@ -527,13 +530,20 @@ class AgencyDirector:
         input_ctx: Dict[str, Any],
         *,
         rasa_name: str = "",
+        rasa_meaning: str = "",
+        guna: str = "",
+        style: str = "",
+        resonance_zone: str = "",
+        sravanam_status: str = "",
     ) -> str:
         """Compose content via LLM. No LLM = no content.
 
-        MahaComposition provides semantic context (ranked words) for the LLM prompt.
-        Rasa (from cell resonance) guides LLM emotional register.
-        It is NOT standalone output. Word salad is not content.
+        Uses build_moltbook_context() → PromptRegistry.get() → LLM.
+        MahaComposition provides semantic context for the prompt.
+        All orchestration data (guna, rasa, zone) flows as CONTEXT, not instructions.
         """
+        _load_yaml_prompts()
+
         engine_result = self._run_engine(input_text)
 
         # MahaComposition: semantic context for LLM (NOT standalone output)
@@ -544,10 +554,42 @@ class AgencyDirector:
         except Exception as e:
             logger.debug(f"MahaComposition unavailable: {e}")
 
+        # Determine agent name from plugin or default
+        agent_name = "steward-protocol"
+        if self._plugin and hasattr(self._plugin, "_agent_name"):
+            agent_name = self._plugin._agent_name
+
+        # Content-type-specific extra context slots (for YAML template)
+        extra: Dict[str, str] = {
+            "guna": guna,
+            "style": style,
+            "resonance_zone": resonance_zone,
+            "rasa_name": rasa_name,
+            "rasa_meaning": rasa_meaning,
+            "sravanam_status": sravanam_status,
+            "composed_words": composed_words,
+        }
+
+        # Map intent category → quarter (data for context, not instruction)
+        if engine_result:
+            intent_cat = getattr(engine_result, "intent_category", "") or ""
+            quarter = _INTENT_QUARTER.get(intent_cat, "")
+            if quarter:
+                extra["intent_quarter"] = quarter
+
+        # Content-type-specific slots from input_ctx
+        extra["sender"] = str(input_ctx.get("sender", ""))
+        extra["trigger"] = str(input_ctx.get("trigger", content_type))
+        extra["post_content"] = str(input_ctx.get("raw_input", input_text))[:500]
+
+        # Retry feedback as context
+        prev_violations = input_ctx.get("previous_violations", [])
+        if prev_violations:
+            extra["previous_violations"] = "; ".join(str(v) for v in prev_violations[:3])
+
         content = self._try_llm_compose(
             engine_result, pipeline_result, input_text,
-            content_type, input_ctx, composed_words,
-            rasa_name=rasa_name,
+            content_type, agent_name, extra,
         )
         if content:
             return content
@@ -562,17 +604,14 @@ class AgencyDirector:
         pipeline_result: dict,
         input_text: str,
         content_type: str,
-        input_ctx: Dict[str, Any],
-        composed_words: str = "",
-        *,
-        rasa_name: str = "",
+        agent_name: str,
+        extra: Dict[str, str],
     ) -> Optional[str]:
-        """LLM composition with intent-aware structured context.
+        """Build context → fill YAML template → LLM.
 
-        Intent comes from MantraOpCode quarter (genesis/dharma/karma/moksha).
-        Rhetoric comes from section_mode (CORE/FILTER/VERB/QUALITY).
-        Rasa comes from cell resonance → VedicScaleMapping (emotional register).
-        composed_words = MahaComposition ranked English (semantic context, not output).
+        Context comes from build_moltbook_context() (shared with ResonanceProposer).
+        Template comes from PromptRegistry.get() (config/prompts/moltbook.yaml).
+        No hardcoded instructions. Dense context does the work.
         """
         try:
             from vibe_core.runtime.providers.factory import get_llm_provider
@@ -582,91 +621,39 @@ class AgencyDirector:
         except Exception:
             return None
 
-        # Extract from engine result (NamedTuple attributes)
-        guardian = ""
-        function = ""
-        resonant = ""
-        verse = ""
-        intent_instruction = ""
-        mode_instruction = ""
+        # Build full context dict from all systems
+        ctx = build_moltbook_context(
+            engine_result, agent_name, input_text,
+            pipeline_result=pipeline_result,
+            **extra,
+        )
 
-        if engine_result:
-            guardian = getattr(engine_result, "guardian_name", "") or ""
-            function = getattr(engine_result, "guardian_function", "") or ""
-            verse = getattr(engine_result, "verse_ref", "") or ""
+        # Get prompt from YAML template via PromptRegistry
+        prompt_key = _PROMPT_KEYS.get(content_type, "moltbook.post")
+        prompt = ""
+        try:
+            from vibe_core.runtime.prompt_registry import PromptRegistry
+            prompt = PromptRegistry.get(prompt_key, context=ctx)
+        except Exception:
+            pass
 
-            # Resonant words → key concepts
-            rw = getattr(engine_result, "resonant_words", ())
-            if rw:
-                resonant = ", ".join(m for _, m, _ in rw[:5] if m)
-
-            # Intent from opcode quarter
-            intent_cat = getattr(engine_result, "intent_category", "") or ""
-            quarter = _INTENT_QUARTER.get(intent_cat, "")
-            if quarter:
-                intent_instruction = _QUARTER_INSTRUCTION.get(quarter, "")
-
-            # Rhetoric from section mode
-            mode = getattr(engine_result, "section_mode", "") or ""
-            if mode:
-                mode_instruction = _MODE_INSTRUCTION.get(mode, "")
-
-        # Fallback context from pipeline result
-        if not guardian:
-            guardian = str(pipeline_result.get("guardian", ""))
-        if not function:
-            function = str(pipeline_result.get("trinity_function", ""))
-
-        # Knowledge graph context
-        kg = input_ctx.get("knowledge_context", "")
-
-        # Kernel vocabulary
-        kernel_ctx = input_ctx.get("kernel_context") or {}
-        vocab = ""
-        if isinstance(kernel_ctx, dict):
-            expanded = kernel_ctx.get("expanded_vocabulary", [])
-            if expanded:
-                vocab = ", ".join(str(w) for w in expanded[:5])
-
-        # Build structured prompt — dict-dispatch, no if/elif
-        prompt_parts = []
-
-        instruction, input_label = _CONTENT_PROMPT.get(content_type, ("Write content.", ""))
-        prompt_parts.append(instruction)
-        if input_label and input_text:
-            prompt_parts.append(f"{input_label}: {input_text[:400]}")
-
-        # Intent + mode instructions (from MantraOpCode + section_router)
-        if intent_instruction or mode_instruction:
-            style_parts = [s for s in (intent_instruction, mode_instruction) if s]
-            prompt_parts.append(f"\nStyle: {' '.join(style_parts)}")
-
-        # Rasa tone guidance (cell resonance → emotional register)
-        rasa_tone = _RASA_TONE.get(rasa_name)
-        if rasa_tone:
-            prompt_parts.append(f"Tone: {rasa_tone}")
-
-        if function:
-            prompt_parts.append(f"Perspective: {function}")
-        if composed_words:
-            prompt_parts.append(f"Key themes: {composed_words}")
-        elif resonant:
-            prompt_parts.append(f"Key concepts: {resonant}")
-        if vocab:
-            prompt_parts.append(f"Vocabulary: {vocab}")
-        if kg:
-            prompt_parts.append(f"Context: {kg[:300]}")
-        if verse:
-            prompt_parts.append(f"Reference: {verse}")
-
-        # Retry feedback
-        prev_violations = input_ctx.get("previous_violations", [])
-        if prev_violations:
-            prompt_parts.append(f"\nPrevious attempt was rejected: {'; '.join(prev_violations[:2])}")
-
-        char_limit = _CHAR_LIMIT.get(content_type, _DEFAULT_CHAR_LIMIT)
-        prompt_parts.append(f"\nSTRICTLY under {char_limit} characters. Be direct, no meta-commentary.")
-        prompt = "\n".join(prompt_parts)
+        if not prompt:
+            # Fallback: structured context without YAML template
+            prompt = (
+                f"{ctx.get('guardian_name', '')} · {ctx.get('quarter', '')} · {ctx.get('guardian_function', '')}\n"
+                f"Sektion: {ctx.get('section_name', '')} ({ctx.get('section_semantic', '')}) | "
+                f"Modus: {ctx.get('section_mode', '')}\n"
+                f"Vers: {ctx.get('verse_ref', '')} | Intent: {ctx.get('intent_category', '')}\n"
+                f"Guna: {ctx.get('guna', '')} ({ctx.get('style', '')}) | "
+                f"Zone: {ctx.get('resonance_zone', '')}\n"
+                f"Rasa: {ctx.get('rasa_name', '')} ({ctx.get('rasa_meaning', '')})\n"
+                f"VOKABULAR: {ctx.get('guardian_vocabulary', '')}\n"
+                f"RESONANZ: {ctx.get('resonant_words', '')}\n"
+                f"ANALYSE: {ctx.get('engine_output', '')}\n"
+                f"{ctx.get('knowledge_context', '')}\n"
+                f"{input_text}\n"
+                f"{agent_name}:\n"
+            )
 
         try:
             models = provider.get_available_models()
