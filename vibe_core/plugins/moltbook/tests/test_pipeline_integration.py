@@ -312,9 +312,7 @@ class TestPromptConstruction:
         """Run full pipeline and build the system prompt."""
         from pathlib import Path
         from vibe_core.cartridges.agent_city.moltbook.core.context_builders import (
-            format_resonant_words,
             guardian_vocabulary_short,
-            section_data,
         )
         from vibe_core.runtime.prompt_registry import PromptRegistry
 
@@ -330,18 +328,14 @@ class TestPromptConstruction:
         composed = get_composition().compose(pipeline_result, post) or ""
 
         gn = getattr(engine_result, "guardian_name", "") or ""
-        sec = section_data(engine_result)
 
         ctx = {
             "agent_name": "steward-protocol",
-            "guardian_name": gn.upper() if gn else "KAPILA",
-            "guardian_function": getattr(engine_result, "guardian_function", "") or "analysis",
-            "section_name": sec.get("section_name", ""),
-            "section_mode": sec.get("section_mode", "CORE"),
-            "verse_ref": getattr(engine_result, "verse_ref", "") or "",
+            "topic": post[:200],
+            "strategic_reasoning": "",
+            "submolt_context": "",
             "style": style,
             "voice": guardian_vocabulary_short(gn),
-            "resonant_words": format_resonant_words(engine_result),
             "composed_words": composed,
         }
         return PromptRegistry.get("moltbook.comment", context=ctx)
@@ -350,12 +344,10 @@ class TestPromptConstruction:
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])
         assert prompt and len(prompt) > 20, f"Prompt too short: '{prompt}'"
 
-    def test_prompt_has_guardian_name(self):
+    def test_prompt_has_topic_marker(self):
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])
-        # Should contain an UPPERCASE guardian name
-        assert any(
-            word.isupper() and len(word) > 3 for word in prompt.split()
-        ), f"No uppercase guardian name in prompt: {prompt[:200]}"
+        # v11: Should contain REPLYING TO: marker (topic-first structure)
+        assert "REPLYING TO:" in prompt, f"No REPLYING TO marker in prompt: {prompt[:200]}"
 
     def test_prompt_has_style(self):
         prompt = self._build_prompt(MOLTBOOK_POSTS[0])

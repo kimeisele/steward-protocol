@@ -94,7 +94,10 @@ This means: philosophical input (SATTVA) now generates content instead of being 
 
 ---
 
-## 3. Heartbeat Flow (How Content Actually Happens)
+## 3. Heartbeat Flow — MURALI Phase-Aware Dispatch
+
+The heartbeat uses VenuOrchestrator's MURALI phase (4-bit, 0-3) to prioritize
+which department runs first. All departments execute within one full cycle.
 
 ```
 mahamantra.tick() (Singularity)
@@ -103,33 +106,84 @@ mahamantra.tick() (Singularity)
        │
        _do_heartbeat() [debounce: min 2s]
        │
-       every 16 ticks (_TICKS_PER_HEARTBEAT):
+       MuraliRouter.current_department() → GENESIS/DHARMA/KARMA/MOKSHA
+       │
+       ALWAYS (reactive):
        ├── _process_inbound_dms()     → _director_propose("dm_reply")
-       ├── _process_dm_requests()     → proposer.propose_dm_request_action() (no content)
+       ├── _process_dm_requests()     → proposer.propose_dm_request_action()
        ├── _drain_content_queue()     → MoltbookService.create_post/comment/etc
        │
-       every 64 ticks:
-       ├── _analyze_feed()            → proposer.analyze_feed() for SCORING
-       │                              → _director_propose("comment") for CONTENT
+       GENESIS (research):
+       ├── _scan_feed()               → Extract topics, store in _current_feed_topics
+       ├── _discover_submolts()       → Resonance-scored subscription
        │
-       every 384 ticks:
-       ├── _maybe_create_post()       → _director_propose("post")
+       DHARMA (planning):
+       ├── _evaluate_strategy()       → Sankalpa → List[StrategicIntent]
        │
-       every 128 ticks:
-       ├── _check_own_comment_replies() → _director_propose("comment")
+       KARMA (execution):
+       ├── _execute_intents()         → _director_propose() for top-3 intents
+       ├── _check_own_comment_replies()
        │
-       periodic:
-       ├── _discover_submolts()       → MoltbookClient.get_submolts()
-       ├── _update_profile()          → MoltbookClient.update_profile()
-       └── _trim_memory()             → Cap seen IDs
+       MOKSHA (learning):
+       ├── _track_engagement()        → Poll own posts → FeedbackProtocol
+       │                              → StrategyPlanner.update_from_engagement()
+       ├── _adjust_intervals()        → Feedback → interval tuning
+       │
+       ALWAYS (maintenance):
+       ├── _update_profile()
+       ├── _monitor_queue_health()
+       └── _trim_memory()
 ```
 
-**Critical change:** ALL content generation flows through ONE path:
+### 4 Departments (MURALI Routing)
+
+| Phase | Department | Methods | Purpose |
+|-------|-----------|---------|---------|
+| 0 GENESIS | research | _scan_feed, _discover_submolts | Observe world, extract topics |
+| 1 DHARMA | planning | _evaluate_strategy | Sankalpa missions → strategic intents |
+| 2 KARMA | execution | _execute_intents, _check_own_comment_replies | Generate content, maintain conversations |
+| 3 MOKSHA | learning | _track_engagement, _adjust_intervals | Learn from results, adapt behavior |
+
+### Strategic Planning (Sankalpa → Moltbook)
+
+```
+SankalpaOrchestrator (substrate/sankalpa/will.py)
+  → SankalpaRegistry (missions, strategies)
+  → MoltbookStrategyPlanner (core/strategy.py)
+     │
+     plan_cycle(feed_topics, engagement_stats)
+     │  1. Get active missions from registry
+     │  2. Match feed topics against mission goals (keyword overlap)
+     │  3. Weight by engagement cache (what worked)
+     │  4. Return top-3 prioritized StrategicIntents
+     │
+     update_from_engagement(data)
+        1. Match engagement data to missions
+        2. Update success rate cache
+        3. Boost/deprioritize mission priority
+```
+
+**Content generation** flows through ONE path:
 `_director_propose()` → `execute_content_circuit()` → `director.run_retry_loop()`.
 No fallbacks. The proposer is used ONLY for:
-- `analyze_feed()` — scoring/ranking posts (no content generation)
 - `should_engage()` — engagement decisions (votes, no content)
 - `propose_dm_request_action()` — accept/reject DM requests (no content body)
+
+### Prompt Structure (v11 — Topic First)
+
+```yaml
+# System message: TOPIC/CONTEXT first, voice shaping last
+{agent_name} on Moltbook.
+TOPIC: {topic}                    # PRIMARY: what to write about
+CONTEXT: {strategic_reasoning}    # WHY this topic (from Sankalpa)
+COMMUNITY: {submolt_context}      # WHERE (target submolt)
+Voice: {style}. Terms: {voice}    # SECONDARY: personality shaping
+Themes: {composed_words}          # MahaComposition output
+
+# User message: atomic task
+"Write an original post about: {input}"
+"Write a comment responding to: {input}"
+```
 
 ---
 
@@ -152,6 +206,10 @@ No fallbacks. The proposer is used ONLY for:
 | Circuit Wrapper | plugin_main.py:execute_content_circuit | _director_propose() | Thin format adapter → director.run_retry_loop() |
 | AGORA Broadcast | cartridges/agent_city/agora/ | Plugin._broadcast_to_agora | Post/comment federation |
 | Kirtan Renderer | render.py | AgencyDirector._compose_content | MahaComposition output formatting (handles "composed" key) |
+| SankalpaOrchestrator | substrate/sankalpa/will.py | MoltbookStrategyPlanner | Mission registry, strategic planning |
+| MuraliRouter | core/agency_director.py | Plugin._do_heartbeat | VenuOrchestrator MURALI phase → department routing |
+| StrategyPlanner | core/strategy.py | Plugin._evaluate_strategy | Sankalpa missions → StrategicIntent list |
+| FeedbackProtocol | protocols/feedback.py | Plugin._track_engagement | Engagement → strategy priority adjustment |
 
 ### NOT YET WIRED (exists, available)
 

@@ -535,6 +535,10 @@ class MoltbookPlugin(KernelPlugin):
         self._agora = None
         # Agency Director — I-P-V-O pipeline (mahamantra-direct, guna=style not gate)
         self._agency_director = None
+        # Strategy Planner — Sankalpa missions → strategic intents
+        self._strategy_planner = None
+        self._current_intents: list = []  # List[StrategicIntent]
+        self._current_feed_topics: list = []  # Extracted topics from feed scan
         # Engagement tracking: own post IDs → metadata for polling
         self._own_post_ids: Dict[str, Dict[str, object]] = {}
         self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
@@ -558,6 +562,19 @@ class MoltbookPlugin(KernelPlugin):
             from vibe_core.cartridges.agent_city.moltbook.core.agency_director import AgencyDirector
             self._agency_director = AgencyDirector(plugin=self)
         return self._agency_director
+
+    @property
+    def strategy_planner(self):
+        """Lazy-init MoltbookStrategyPlanner with event log reference."""
+        if self._strategy_planner is None:
+            try:
+                from vibe_core.cartridges.agent_city.moltbook.core.strategy import MoltbookStrategyPlanner
+                self._strategy_planner = MoltbookStrategyPlanner(
+                    event_log=self.agency_director.event_log,
+                )
+            except Exception as e:
+                logger.warning(f"Strategy planner unavailable: {e}")
+        return self._strategy_planner
 
     def _director_propose(
         self,
@@ -1109,7 +1126,11 @@ class MoltbookPlugin(KernelPlugin):
     _HEARTBEAT_DEBOUNCE_S = 2.0
 
     def _do_heartbeat(self) -> None:
-        """Execute one heartbeat cycle: check DMs, read feed, create posts, monitor replies.
+        """Execute one heartbeat cycle with MURALI phase-aware dispatch.
+
+        MURALI routing changes PRIORITY within the heartbeat, not exclusion.
+        All 4 departments execute within one full cycle, but the current
+        phase determines which department gets run first.
 
         Debounce guard: if on_pulse() AND _on_mahamantra_tick() both call this
         within the same tick window, the second call is silently skipped.
@@ -1129,41 +1150,44 @@ class MoltbookPlugin(KernelPlugin):
 
         self._heartbeat_count += 1
 
+        # Always: process inbound DMs (reactive, not phased)
         has_new = heartbeat.get("has_activity", False)
         if has_new:
             self._safe_call(self._process_inbound_dms, "inbound_dms")
             self._safe_call(self._process_dm_requests, "dm_requests")
 
-        # Analyze feed periodically (not every heartbeat)
-        if self._heartbeat_count % self._feed_interval == 0:
-            self._safe_call(self._analyze_feed, "feed_analysis")
+        # MURALI phase-aware dispatch: prioritize current department
+        department = self._get_current_department()
 
-        # Autonomous post creation (uses feed topics as seed)
-        if self._heartbeat_count % self._post_interval == 0:
-            self._safe_call(self._maybe_create_post, "post_creation")
+        if department == "research":
+            # GENESIS: scan feed, discover submolts
+            if self._heartbeat_count % self._feed_interval == 0:
+                self._safe_call(self._scan_feed, "feed_scan")
+            if self._heartbeat_count == 1 or self._heartbeat_count % (self._post_interval * 4) == 0:
+                self._safe_call(self._discover_submolts, "submolt_discovery")
 
-        # Monitor replies to our own comments
-        if self._heartbeat_count % self._reply_check_interval == 0:
-            self._safe_call(self._check_own_comment_replies, "reply_monitoring")
+        elif department == "planning":
+            # DHARMA: evaluate strategy → intents
+            if self._heartbeat_count % self._feed_interval == 0:
+                self._safe_call(self._evaluate_strategy, "strategy_evaluation")
 
-        # Submolt discovery (once at startup, then periodically)
-        if self._heartbeat_count == 1 or self._heartbeat_count % (self._post_interval * 4) == 0:
-            self._safe_call(self._discover_submolts, "submolt_discovery")
+        elif department == "execution":
+            # KARMA: generate content from intents, reply monitoring
+            if self._heartbeat_count % self._post_interval == 0:
+                self._safe_call(self._execute_intents, "intent_execution")
+            if self._heartbeat_count % self._reply_check_interval == 0:
+                self._safe_call(self._check_own_comment_replies, "reply_monitoring")
 
-        # Profile auto-update (karma, activity stats in bio)
+        elif department == "learning":
+            # MOKSHA: track engagement, adjust intervals
+            if self._heartbeat_count % self._ENGAGEMENT_TRACK_INTERVAL == 0:
+                self._safe_call(self._track_engagement, "engagement_tracking")
+            if self._heartbeat_count % self._INTERVAL_ADJUST_INTERVAL == 0:
+                self._safe_call(self._adjust_intervals, "interval_adjustment")
+
+        # Non-phased maintenance (runs regardless of department)
         if self._heartbeat_count % self._profile_update_interval == 0:
             self._safe_call(self._update_profile, "profile_update")
-
-        # Engagement tracking: poll own posts for upvotes/replies
-        if self._heartbeat_count % self._ENGAGEMENT_TRACK_INTERVAL == 0:
-            self._safe_call(self._track_engagement, "engagement_tracking")
-
-        # Adaptive interval adjustment based on feedback stats
-        if self._heartbeat_count % self._INTERVAL_ADJUST_INTERVAL == 0:
-            self._safe_call(self._adjust_intervals, "interval_adjustment")
-
-        # Trim in-memory sets periodically to prevent unbounded growth
-        if self._heartbeat_count % self._profile_update_interval == 0:
             self._trim_memory()
 
         # Monitor queue health — warn on overflow
@@ -1171,6 +1195,14 @@ class MoltbookPlugin(KernelPlugin):
 
         # Always drain queue on heartbeat (even without new activity)
         self._drain_content_queue()
+
+    def _get_current_department(self) -> str:
+        """Read MURALI phase from VenuOrchestrator → department name."""
+        try:
+            from vibe_core.cartridges.agent_city.moltbook.core.agency_director import MuraliRouter
+            return MuraliRouter().current_department()
+        except Exception:
+            return "execution"
 
     # =========================================================================
     # on_pulse — backward compat (delegates to same heartbeat)
@@ -1358,14 +1390,162 @@ class MoltbookPlugin(KernelPlugin):
             except Exception as e:
                 logger.warning(f"Comment proposal failed: {e}")
 
-    def _maybe_create_post(self) -> None:
-        """Autonomous post creation — uses trending feed topics as seed.
+    # =========================================================================
+    # Phase-Aware Methods (MURALI routing)
+    # =========================================================================
 
-        Routes through AgencyDirector I-P-V-O pipeline:
-        - Guna informs STYLE (not gate): SATTVA=contemplative, RAJAS=active
-        - Only TAMAS + dead cell = skip. Everything else generates content.
-        - MahaComposition (5 scorers) + LLM with structured prompts
-        - Constitution validates output
+    def _scan_feed(self) -> None:
+        """GENESIS phase: Extract topics + metadata from feed. NO content generation.
+
+        Stores results in self._current_feed_topics for later strategy evaluation.
+        """
+        if not self._proposer:
+            return
+
+        try:
+            posts = run_async(self._client.get_personalized_feed(sort="hot", limit=10))
+        except Exception as e:
+            logger.warning(f"Feed fetch failed: {e}")
+            return
+
+        if not posts:
+            return
+
+        # Filter already-seen posts, store full metadata
+        unseen = []
+        for post in posts:
+            post_id = post.get("id", "") if isinstance(post, dict) else ""
+            if post_id and post_id not in self._seen_post_ids:
+                self._seen_post_ids.add(post_id)
+                unseen.append(post)
+
+        self._current_feed_topics = unseen
+
+        # Engagement: upvote high-quality posts during scan (lightweight, no content gen)
+        if self._proposer and unseen:
+            for post in unseen[:5]:
+                post_id = post.get("id", "") if isinstance(post, dict) else ""
+                post_content = post.get("content", post.get("title", "")) if isinstance(post, dict) else ""
+                author_data = post.get("author", {}) if isinstance(post, dict) else {}
+                author = author_data.get("name", "unknown") if isinstance(author_data, dict) else "unknown"
+                if post_id and post_content:
+                    try:
+                        engage_proposal = self._proposer.should_engage(post_id, post_content, author)
+                        if engage_proposal:
+                            self._content_queue.enqueue(engage_proposal)
+                    except Exception:
+                        pass
+
+        if unseen:
+            logger.info(f"Feed scan: {len(unseen)} new topics extracted")
+
+    def _evaluate_strategy(self) -> None:
+        """DHARMA phase: Sankalpa → prioritized strategic intents.
+
+        Calls strategy_planner.plan_cycle() with current feed topics
+        and engagement stats. Stores results in self._current_intents.
+        """
+        planner = self.strategy_planner
+        if not planner:
+            return
+
+        # Gather engagement stats from FeedbackProtocol
+        engagement_stats: Dict[str, Any] = {}
+        try:
+            from vibe_core.protocols.feedback import get_feedback_safe
+            stats = get_feedback_safe().get_stats()
+            engagement_stats = {
+                "success_rate": stats.success_rate,
+                "total_signals": stats.total_signals,
+            }
+        except Exception:
+            pass
+
+        try:
+            intents = planner.plan_cycle(self._current_feed_topics, engagement_stats)
+            self._current_intents = intents
+            if intents:
+                logger.info(
+                    f"Strategy: {len(intents)} intents planned "
+                    f"({', '.join(i.action_type for i in intents)})"
+                )
+        except Exception as e:
+            logger.warning(f"Strategy evaluation failed: {e}")
+
+    def _execute_intents(self) -> None:
+        """KARMA phase: Generate content for strategically selected intents.
+
+        Loops through self._current_intents (max 3 per cycle),
+        generates content via AgencyDirector, enqueues proposals.
+        """
+        if not self._current_intents:
+            # Fallback: if no strategic intents, try legacy post creation
+            self._maybe_create_post()
+            return
+
+        for intent in self._current_intents[:3]:
+            try:
+                if intent.action_type == "comment" and intent.target_post_id:
+                    proposal = self._director_propose(
+                        content_type="comment",
+                        raw_input=intent.topic,
+                        proposal_type=ContentType.COMMENT.value,
+                        post_id=intent.target_post_id,
+                        trigger="strategic_intent",
+                        context={
+                            "strategic_reasoning": intent.reasoning,
+                            "engagement_context": intent.engagement_context,
+                        },
+                    )
+                    if proposal:
+                        self._content_queue.enqueue(proposal)
+                        logger.info(
+                            f"Strategic comment queued for {intent.target_post_id} "
+                            f"(mission={intent.mission_id})"
+                        )
+
+                elif intent.action_type == "post":
+                    seed = intent.topic
+                    selected_submolt = self._select_submolt(seed)
+
+                    proposal = self._director_propose(
+                        content_type="post",
+                        raw_input=seed,
+                        proposal_type=ContentType.POST.value,
+                        trigger="strategic_intent",
+                        submolt=selected_submolt or "",
+                        context={
+                            "strategic_reasoning": intent.reasoning,
+                            "engagement_context": intent.engagement_context,
+                        },
+                    )
+                    if proposal:
+                        content = proposal.get("content", "")
+                        lines = content.strip().split("\n", 1)
+                        if len(lines) > 1:
+                            proposal["title"] = lines[0].strip().lstrip("#").strip()[:120]
+                            proposal["content"] = lines[1].strip()
+                        else:
+                            proposal["title"] = content[:120]
+
+                        self._content_queue.enqueue(proposal)
+                        self._last_post_heartbeat = self._heartbeat_count
+                        logger.info(
+                            f"Strategic post queued: {proposal.get('title', '')[:50]} "
+                            f"(mission={intent.mission_id})"
+                        )
+
+            except Exception as e:
+                logger.warning(f"Intent execution failed ({intent.action_type}): {e}")
+
+        # Clear executed intents
+        self._current_intents = []
+
+    def _maybe_create_post(self) -> None:
+        """Fallback post creation — uses trending feed topics as seed.
+
+        Only used when no strategic intents are available.
+        Routes through AgencyDirector I-P-V-O pipeline.
         """
         # Extract trending topics from recent feed as context
         feed_topics: List[str] = []
@@ -1602,6 +1782,22 @@ class MoltbookPlugin(KernelPlugin):
                     elif net_score < 0:
                         feedback.signal_failure("moltbook.comment", "negative_engagement", ctx, duration_ms=0.0)
                     break
+
+        # Feed engagement data to strategy planner for mission priority adjustment
+        planner = self.strategy_planner
+        if planner:
+            for post_id, meta in recent_posts:
+                try:
+                    post = self._service.get_post(post_id)
+                    if isinstance(post, dict):
+                        planner.update_from_engagement({
+                            "post_id": post_id,
+                            "upvotes": int(post.get("upvotes", 0)),
+                            "reply_count": int(post.get("comment_count", 0)),
+                            "topic": str(meta.get("title", "")),
+                        })
+                except Exception:
+                    pass  # Graceful — engagement poll may have already failed above
 
         logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
 
