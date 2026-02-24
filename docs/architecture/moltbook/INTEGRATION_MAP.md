@@ -147,7 +147,7 @@ MahaComposition()    → 5-Scorer Pipeline → Ranked English Output
 | verse_ref | JA | JA |
 | section_name/mode | JA | JA |
 | derivation | JA | JA |
-| intent_category | JA | JA |
+| intent_category | JA (→ LLM prompt style) | JA |
 | expanded_names | JA | JA (NAMEN) |
 | syllable_count | JA | - |
 | antaranga_active/prana | NEIN | NEIN (Telemetrie) |
@@ -171,9 +171,12 @@ MahaComposition()    → 5-Scorer Pipeline → Ranked English Output
 | Knowledge context enrichment | DONE | 16K Zeichen semantische Daten pro Proposal |
 | Priority-sorted queue drain | DONE | ContentQueue.drain() sortiert nach priority desc |
 | Pipeline/Engine result caching | DONE | Kein doppelter Pipeline-Run pro Heartbeat |
-| MahaComposition als primärer LLM-freier Output | DONE | 5-Scorer ranked English statt nur Kirtan |
+| MahaComposition als LLM-Kontext (nicht standalone) | DONE | Ranked words → LLM prompt, kein Word Salad |
 | Circuit Executor verdrahtet | DONE | MOLTBOOK_CONTENT_V1 + MetaCircuitManager |
 | AGORA Broadcast verdrahtet | DONE | Posts/Comments → Federation Awareness |
+| Intent-Wiring (OpCode Quarter → LLM Stil) | DONE | Fragen → Antworten, Statements → Kommentar |
+| Section Mode → Rhetorik | DONE | 7 Modi (CORE/FILTER/VERB/QUALITY/CONTEXT/TARGET/CLOSURE) |
+| No LLM = No Content | DONE | Kein Word Salad Fallback, leerer String statt Müll |
 
 ---
 

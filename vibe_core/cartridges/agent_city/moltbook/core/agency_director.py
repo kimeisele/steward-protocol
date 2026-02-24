@@ -49,6 +49,38 @@ _GUNA_STYLE = {
     "TAMAS": "transformative",   # cleanup, restructuring (if allowed at all)
 }
 
+# =========================================================================
+# Intent quarter → response style (MantraOpCode quarters, opcode.py)
+# =========================================================================
+
+_INTENT_QUARTER = {
+    "SYS_WAKE": "genesis", "LOAD_ROOT": "genesis",
+    "ALLOC_MEM": "genesis", "INIT_THREAD": "genesis",
+    "COMPILE_AST": "dharma", "BIND_SYMBOL": "dharma",
+    "TYPE_CHECK": "dharma", "DHARMA_TEST": "dharma",
+    "EXEC_OP": "karma", "EXTEND_CAP": "karma",
+    "STATE_SYNC": "karma", "LEDGER_SIGN": "karma",
+    "YIELD_CPU": "moksha", "IO_FLUSH": "moksha",
+    "LOG_EMIT": "moksha", "AUDIT_SEAL": "moksha",
+}
+
+_QUARTER_INSTRUCTION = {
+    "genesis": "Respond creatively. Introduce fresh perspective.",
+    "dharma": "Analyze and evaluate. Offer principled assessment.",
+    "karma": "Engage practically. Acknowledge and build on the work.",
+    "moksha": "Explain clearly. If this is a question, answer it directly.",
+}
+
+_MODE_INSTRUCTION = {
+    "CORE": "Be direct and essential.",
+    "FILTER": "Focus on what matters most.",
+    "VERB": "Be action-oriented.",
+    "QUALITY": "Assess quality and depth.",
+    "CONTEXT": "Ground the response in practical context.",
+    "TARGET": "Address the goal directly.",
+    "CLOSURE": "Bring it to a clear conclusion.",
+}
+
 
 class AgencyDirector:
     """
@@ -347,38 +379,31 @@ class AgencyDirector:
         content_type: str,
         input_ctx: Dict[str, Any],
     ) -> str:
-        """Compose content using ALL available systems.
+        """Compose content via LLM. No LLM = no content.
 
-        Priority:
-            1. LLM with structured context (if provider available)
-            2. MahaComposition (5-scorer ranked English — WordNet, mode, prana, rhythm, state)
-            3. render() (kirtan — last resort)
+        MahaComposition provides semantic context (ranked words) for the LLM prompt.
+        It is NOT standalone output. Word salad is not content.
         """
-        # Try LLM path: use proposer's _compose which handles template + LLM + fallback
         engine_result = self._run_engine(input_text)
-        if engine_result:
-            content = self._try_llm_compose(engine_result, pipeline_result, input_text, content_type, input_ctx)
-            if content:
-                return content
 
-        # MahaComposition: 5-scorer ranked English (WordNet + mode_affinity + prana + rhythm + state)
+        # MahaComposition: semantic context for LLM (NOT standalone output)
+        composed_words = ""
         try:
             from vibe_core.mahamantra.adapters.composition import get_composition
-            composed = get_composition().compose(pipeline_result, input_text)
-            if composed and composed.strip():
-                # Enrich with guardian context for readability
-                guardian = str(pipeline_result.get("guardian", ""))
-                guna = pipeline_result.get("guna", {}).get("mode", "")
-                return self._enrich_composed(composed, guardian, guna, content_type, input_ctx)
-        except Exception as e:
-            logger.debug(f"MahaComposition failed: {e}")
-
-        # Last resort: kirtan rendering
-        try:
-            from vibe_core.mahamantra.render import render
-            return render(pipeline_result)
+            composed_words = get_composition().compose(pipeline_result, input_text) or ""
         except Exception:
-            return ""
+            pass
+
+        content = self._try_llm_compose(
+            engine_result, pipeline_result, input_text,
+            content_type, input_ctx, composed_words,
+        )
+        if content:
+            return content
+
+        # No LLM = no content. Not word salad. Not kirtan dump.
+        logger.warning("LLM unavailable — no content generated")
+        return ""
 
     def _try_llm_compose(
         self,
@@ -387,8 +412,14 @@ class AgencyDirector:
         input_text: str,
         content_type: str,
         input_ctx: Dict[str, Any],
+        composed_words: str = "",
     ) -> Optional[str]:
-        """Try LLM composition with structured context from all systems."""
+        """LLM composition with intent-aware structured context.
+
+        Intent comes from MantraOpCode quarter (genesis/dharma/karma/moksha).
+        Rhetoric comes from section_mode (CORE/FILTER/VERB/QUALITY).
+        composed_words = MahaComposition ranked English (semantic context, not output).
+        """
         try:
             from vibe_core.runtime.providers.factory import get_llm_provider
             provider = get_llm_provider()
@@ -397,36 +428,74 @@ class AgencyDirector:
         except Exception:
             return None
 
-        # Build context from engine result + pipeline
-        try:
-            from vibe_core.plugins.moltbook.resonance_proposer import _build_context
-            ctx = _build_context(engine_result, "steward-protocol", input_text, pipeline_result=pipeline_result)
-        except Exception:
-            ctx = {}
+        # Extract from engine result (NamedTuple attributes)
+        guardian = ""
+        function = ""
+        resonant = ""
+        verse = ""
+        intent_instruction = ""
+        mode_instruction = ""
 
-        # Add knowledge graph context
+        if engine_result:
+            guardian = getattr(engine_result, "guardian_name", "") or ""
+            function = getattr(engine_result, "guardian_function", "") or ""
+            verse = getattr(engine_result, "verse_ref", "") or ""
+
+            # Resonant words → key concepts
+            rw = getattr(engine_result, "resonant_words", ())
+            if rw:
+                resonant = ", ".join(m for _, m, _ in rw[:5] if m)
+
+            # Intent from opcode quarter
+            intent_cat = getattr(engine_result, "intent_category", "") or ""
+            quarter = _INTENT_QUARTER.get(intent_cat, "")
+            if quarter:
+                intent_instruction = _QUARTER_INSTRUCTION.get(quarter, "")
+
+            # Rhetoric from section mode
+            mode = getattr(engine_result, "section_mode", "") or ""
+            if mode:
+                mode_instruction = _MODE_INSTRUCTION.get(mode, "")
+
+        # Fallback context from pipeline result
+        if not guardian:
+            guardian = str(pipeline_result.get("guardian", ""))
+        if not function:
+            function = str(pipeline_result.get("trinity_function", ""))
+
+        # Knowledge graph context
         kg = input_ctx.get("knowledge_context", "")
 
-        # Build a structured prompt — NOT a raw data dump
-        guardian = ctx.get("guardian_name", "UNKNOWN")
-        function = ctx.get("guardian_function", "analysis")
-        resonant = ctx.get("resonant_words", "")
-        verse = ctx.get("verse_ref", "")
-        vocab = ctx.get("guardian_vocabulary", "")
+        # Kernel vocabulary
+        kernel_ctx = input_ctx.get("kernel_context") or {}
+        vocab = ""
+        if isinstance(kernel_ctx, dict):
+            expanded = kernel_ctx.get("expanded_vocabulary", [])
+            if expanded:
+                vocab = ", ".join(str(w) for w in expanded[:5])
 
-        # The key difference: we give the LLM STRUCTURE, not raw internal terms
+        # Build structured prompt
         prompt_parts = []
+
         if content_type == "comment":
-            prompt_parts.append(f"Write a concise, insightful comment on this post:")
+            prompt_parts.append("Write a concise, insightful comment on this post:")
             prompt_parts.append(f"POST: {input_text[:400]}")
         elif content_type == "post":
-            prompt_parts.append(f"Write a thought-provoking social media post.")
+            prompt_parts.append("Write a thought-provoking social media post.")
         elif content_type == "dm_reply":
-            prompt_parts.append(f"Write a thoughtful reply to this message:")
+            prompt_parts.append("Write a thoughtful reply to this message:")
             prompt_parts.append(f"MESSAGE: {input_text[:400]}")
 
-        prompt_parts.append(f"\nPerspective: {function}")
-        if resonant:
+        # Intent + mode instructions (from MantraOpCode + section_router)
+        if intent_instruction or mode_instruction:
+            style_parts = [s for s in (intent_instruction, mode_instruction) if s]
+            prompt_parts.append(f"\nStyle: {' '.join(style_parts)}")
+
+        if function:
+            prompt_parts.append(f"Perspective: {function}")
+        if composed_words:
+            prompt_parts.append(f"Key themes: {composed_words}")
+        elif resonant:
             prompt_parts.append(f"Key concepts: {resonant}")
         if vocab:
             prompt_parts.append(f"Vocabulary: {vocab}")
@@ -435,19 +504,20 @@ class AgencyDirector:
         if verse:
             prompt_parts.append(f"Reference: {verse}")
 
-        # Content type limits (from platform.yaml knowledge graph)
-        char_limit = {"comment": 280, "dm_reply": 280, "post": 500}.get(content_type, 280)
-        # Violations from previous attempt (retry feedback)
+        # Retry feedback
         prev_violations = input_ctx.get("previous_violations", [])
         if prev_violations:
             prompt_parts.append(f"\nPrevious attempt was rejected: {'; '.join(prev_violations[:2])}")
+
+        char_limit = {"comment": 280, "dm_reply": 280, "post": 500}.get(content_type, 280)
         prompt_parts.append(f"\nSTRICTLY under {char_limit} characters. Be direct, no meta-commentary.")
         prompt = "\n".join(prompt_parts)
 
         try:
+            models = provider.get_available_models()
             response = provider.invoke(
                 prompt=prompt,
-                model=provider.get_available_models()[0] if provider.get_available_models() else None,
+                model=models[0] if models else None,
                 max_tokens=256,
                 temperature=0.7,
             )
@@ -457,24 +527,6 @@ class AgencyDirector:
             logger.warning(f"LLM failed: {e}")
 
         return None
-
-    def _enrich_composed(
-        self,
-        composed: str,
-        guardian: str,
-        guna: str,
-        content_type: str,
-        input_ctx: Dict[str, Any],
-    ) -> str:
-        """Enrich MahaComposition output with context.
-
-        MahaComposition gives us ranked, SVO-ordered English words.
-        We add minimal framing based on guna style and content type.
-        """
-        # The composed output from MahaComposition is already the best
-        # we can do without LLM — it uses WordNet, mode_affinity, all 5 scorers.
-        # Don't append garbage. Return it as-is.
-        return composed
 
     @staticmethod
     def _truncate_smart(text: str, limit: int) -> str:
