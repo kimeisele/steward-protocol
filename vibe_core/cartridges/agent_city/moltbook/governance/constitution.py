@@ -32,8 +32,9 @@ class ValidationResult:
         return self.is_valid
 
 
-# Platform constraints from knowledge/moltbook/platform.yaml
-PLATFORM_CONSTRAINTS: Dict[str, Dict[str, object]] = {
+# Platform constraints — defaults match knowledge/moltbook/platform.yaml nodes.
+# KG-loaded overrides queried at runtime via _check_kg_constraints().
+_DEFAULT_CONSTRAINTS: Dict[str, Dict[str, object]] = {
     "dm_reply": {"max_length": 280, "guna": "rajas"},
     "comment": {"max_length": 280, "guna": "rajas"},
     "post": {"max_length": 500, "guna": "rajas"},
@@ -41,6 +42,35 @@ PLATFORM_CONSTRAINTS: Dict[str, Dict[str, object]] = {
     "follow": {"guna": "rajas"},
     "subscribe": {"guna": "rajas"},
 }
+
+# KG node IDs for dynamic constraint loading
+_KG_CONTENT_NODES = {
+    "dm_reply": "moltbook_dm",
+    "comment": "moltbook_comment",
+    "post": "moltbook_post",
+    "vote": "moltbook_vote",
+}
+
+
+def _load_platform_constraints() -> Dict[str, Dict[str, object]]:
+    """Load platform constraints from Knowledge Graph, falling back to defaults."""
+    constraints = dict(_DEFAULT_CONSTRAINTS)
+    try:
+        from vibe_core.knowledge.resolver import get_resolver
+        resolver = get_resolver()
+        for ct, node_id in _KG_CONTENT_NODES.items():
+            node = resolver.graph.get_node(node_id)
+            if node and hasattr(node, "properties"):
+                props = node.properties or {}
+                ml = props.get("max_length")
+                if ml is not None:
+                    constraints.setdefault(ct, {})["max_length"] = int(ml)
+    except Exception:
+        pass  # KG unavailable — use defaults
+    return constraints
+
+
+PLATFORM_CONSTRAINTS: Dict[str, Dict[str, object]] = _load_platform_constraints()
 
 # Words that signal low-quality output (word salad, template leaks)
 QUALITY_BLOCKERS = [

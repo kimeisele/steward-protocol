@@ -494,6 +494,11 @@ class MoltbookPlugin(KernelPlugin):
     _ACTIVITY_LOG_FILE = "activity.jsonl"
     _MAX_SEEN_IDS = MALA * NAVA  # 972 ≈ 1000 (108 beads × 9 processes)
 
+    # Rate limits (from platform.yaml moltbook-002-rate-limit)
+    _POST_INTERVAL_SEC = 30 * 60   # 1 post per 30 minutes
+    _COMMENT_LIMIT_PER_HOUR = 10   # 10 comments per hour
+    _DM_LIMIT_PER_HOUR = 30        # 30 DM operations per hour
+
     def __init__(self):
         super().__init__()
         self._client = None  # MoltbookClient, created in on_boot
@@ -533,6 +538,10 @@ class MoltbookPlugin(KernelPlugin):
         # Engagement tracking: own post IDs → metadata for polling
         self._own_post_ids: Dict[str, Dict[str, object]] = {}
         self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
+        # Rate limiting (from platform.yaml: 1 post/30min, 10 comments/hour)
+        self._last_post_ts: float = 0.0
+        self._comment_timestamps: List[float] = []
+        self._dm_timestamps: List[float] = []
 
     @property
     def dependencies(self) -> Set[str]:
@@ -1962,12 +1971,44 @@ class MoltbookPlugin(KernelPlugin):
             self._log_activity("subscribed", {"submolt": submolt})
             logger.info(f"Subscribed to {submolt}")
 
+    def _check_rate_limit(self, content_type: str) -> bool:
+        """Check if content type is within rate limits. Returns True if OK."""
+        now = time.time()
+        hour_ago = now - 3600
+
+        if content_type == "post":
+            if now - self._last_post_ts < self._POST_INTERVAL_SEC:
+                logger.info(f"Rate limit: post too soon ({now - self._last_post_ts:.0f}s < {self._POST_INTERVAL_SEC}s)")
+                return False
+        elif content_type == "comment":
+            self._comment_timestamps = [t for t in self._comment_timestamps if t > hour_ago]
+            if len(self._comment_timestamps) >= self._COMMENT_LIMIT_PER_HOUR:
+                logger.info(f"Rate limit: {len(self._comment_timestamps)} comments in last hour")
+                return False
+        elif content_type in ("dm_reply", "dm_initiate"):
+            self._dm_timestamps = [t for t in self._dm_timestamps if t > hour_ago]
+            if len(self._dm_timestamps) >= self._DM_LIMIT_PER_HOUR:
+                logger.info(f"Rate limit: {len(self._dm_timestamps)} DMs in last hour")
+                return False
+        return True
+
+    def _record_rate_limit(self, content_type: str) -> None:
+        """Record that a content action was executed (for rate limiting)."""
+        now = time.time()
+        if content_type == "post":
+            self._last_post_ts = now
+        elif content_type == "comment":
+            self._comment_timestamps.append(now)
+        elif content_type in ("dm_reply", "dm_initiate"):
+            self._dm_timestamps.append(now)
+
     def _drain_content_queue(self) -> None:
         """Execute queued content proposals through MoltbookService.
 
         Uses dispatch table — no if/elif chains. Failed proposals are
         re-enqueued with exponential backoff: retry 1 → 2s, retry 2 → 4s.
         After _MAX_PROPOSAL_RETRIES, the proposal is dropped and logged.
+        Rate limits enforced from platform.yaml (1 post/30min, 10 comments/hour).
         """
         if self._content_queue.is_empty:
             return
@@ -1990,11 +2031,21 @@ class MoltbookPlugin(KernelPlugin):
                 deferred.append(proposal)
                 continue
             ct = proposal.get("content_type", "")
+
+            # Rate limit check — defer if too soon
+            if not self._check_rate_limit(ct):
+                proposal["_retry_after"] = now + 60  # Re-check in 60s
+                deferred.append(proposal)
+                feedback.signal_partial(f"moltbook.drain.{ct}", "rate_limited", {
+                    "content_type": ct,
+                })
+                continue
             t0 = time.monotonic()
             try:
                 handler_name = self._DRAIN_DISPATCH.get(ct)
                 if handler_name:
                     getattr(self, handler_name)(service, proposal)
+                    self._record_rate_limit(ct)
                     elapsed = (time.monotonic() - t0) * 1000
                     feedback.signal_success(f"moltbook.drain.{ct}", {
                         "content_type": ct, "priority": proposal.get("priority", 0),
