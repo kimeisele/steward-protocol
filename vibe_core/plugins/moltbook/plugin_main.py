@@ -46,6 +46,20 @@ from vibe_core.protocols.moltbook_content import (
     ContentQueue,
     ContentType,
 )
+from vibe_core.mahamantra.substrate.core.seed import (
+    COSMIC_FRAME,
+    HALVES,
+    HARE_COUNT,
+    KSHETRA,
+    LILA,
+    MAHAJANA_COUNT,
+    MALA,
+    NAVA,
+    PANCHA,
+    QUARTERS,
+    SHARANAGATI,
+    WORDS,
+)
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -53,8 +67,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("MOLTBOOK")
 
-# One full mantra = 16 ticks. Poll Moltbook once per chant cycle.
-_TICKS_PER_HEARTBEAT = 16
+# One full mantra = WORDS ticks. Poll Moltbook once per chant cycle.
+_TICKS_PER_HEARTBEAT = WORDS  # 16 words in Mahamantra
 
 
 class MoltbookService(MoltbookProtocol, GADBase):
@@ -121,8 +135,8 @@ class MoltbookService(MoltbookProtocol, GADBase):
             violations = resolver.get_violations(operation, {"guna": guna.value, "operation": operation})
             for v in violations:
                 logger.warning(f"MOLTBOOK-KG-CONSTRAINT: {v}")
-        except Exception:
-            pass  # KG not available = degrade gracefully
+        except Exception as e:
+            logger.debug(f"KG constraint check unavailable: {e}")
 
         if guna == MoltbookGuna.RAJAS:
             entry = {
@@ -463,38 +477,22 @@ class MoltbookPlugin(KernelPlugin):
 
     plugin_id = "moltbook"
 
-    # Defaults for heartbeat intervals (overridable via config at boot)
-    _DEFAULT_FEED_INTERVAL = 4  # Every 4th heartbeat = every 64 ticks
-    _DEFAULT_POST_INTERVAL = 24  # Every 24th heartbeat ≈ every 384 ticks
-    _DEFAULT_REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
-    _DEFAULT_PROFILE_UPDATE_INTERVAL = 48  # Every 48th heartbeat ≈ 768 ticks
+    # Defaults for heartbeat intervals — all derived from SEED constants
+    _DEFAULT_FEED_INTERVAL = QUARTERS           # 4 phases
+    _DEFAULT_POST_INTERVAL = KSHETRA            # 24 field elements
+    _DEFAULT_REPLY_CHECK_INTERVAL = HARE_COUNT  # 8 Hare
+    _DEFAULT_PROFILE_UPDATE_INTERVAL = LILA     # 48 Chaitanya's manifest
 
     # Engagement tracking: poll own posts for metrics
-    _ENGAGEMENT_TRACK_INTERVAL = 12  # Every 12th heartbeat
+    _ENGAGEMENT_TRACK_INTERVAL = MAHAJANA_COUNT  # 12 authorities
     # Adaptive interval adjustment: recalculate based on feedback stats
-    _INTERVAL_ADJUST_INTERVAL = 24  # Every 24th heartbeat
+    _INTERVAL_ADJUST_INTERVAL = KSHETRA          # 24 field elements
 
     # Persistence: queue + seen IDs survive restarts
     _QUEUE_STATE_FILE = "content_queue.json"
     _SEEN_STATE_FILE = "seen_ids.json"
     _ACTIVITY_LOG_FILE = "activity.jsonl"
-    _MAX_SEEN_IDS = 1000  # Cap to prevent unbounded growth
-
-    # Autonomous post creation: every N heartbeats (conservative to avoid spam)
-    # 16 ticks/heartbeat × 24 heartbeats = 384 ticks between posts
-    _POST_INTERVAL = 24  # Every 24th heartbeat ≈ every 384 ticks
-
-    # Reply monitoring: check replies to own comments periodically
-    _REPLY_CHECK_INTERVAL = 8  # Every 8th heartbeat = every 128 ticks
-
-    # Profile update: refresh bio/metadata periodically
-    _PROFILE_UPDATE_INTERVAL = 48  # Every 48th heartbeat ≈ 768 ticks
-
-    # Persistence: queue + seen IDs survive restarts
-    _QUEUE_STATE_FILE = "content_queue.json"
-    _SEEN_STATE_FILE = "seen_ids.json"
-    _ACTIVITY_LOG_FILE = "activity.jsonl"
-    _MAX_SEEN_IDS = 1000  # Cap to prevent unbounded growth
+    _MAX_SEEN_IDS = MALA * NAVA  # 972 ≈ 1000 (108 beads × 9 processes)
 
     def __init__(self):
         super().__init__()
@@ -534,7 +532,7 @@ class MoltbookPlugin(KernelPlugin):
         self._agency_director = None
         # Engagement tracking: own post IDs → metadata for polling
         self._own_post_ids: Dict[str, Dict[str, object]] = {}
-        self._MAX_OWN_POST_IDS = 200
+        self._MAX_OWN_POST_IDS = COSMIC_FRAME // MALA  # 200 (pada_unit)
 
     @property
     def dependencies(self) -> Set[str]:
@@ -820,8 +818,8 @@ class MoltbookPlugin(KernelPlugin):
                 name = profile.get("name", "") if isinstance(profile, dict) else ""
                 if name:
                     self._agent_name = name
-            except Exception:
-                pass  # Keep default
+            except Exception as e:
+                logger.debug(f"Profile name fetch failed, keeping default: {e}")
 
             self._boot_proposer()
             self._register_proposer()
@@ -1045,8 +1043,8 @@ class MoltbookPlugin(KernelPlugin):
 
                 mahamantra.unregister_listener(self._on_mahamantra_tick)
                 self._listener_wired = False
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Listener unregister failed during shutdown: {e}")
         self._client = None
         logger.info("Moltbook shutdown")
         return HookResult.ok()
@@ -1587,7 +1585,8 @@ class MoltbookPlugin(KernelPlugin):
                 continue
             try:
                 comments = self._service.get_comments(post_id, sort="new")
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Comment fetch for engagement tracking failed: {e}")
                 continue
             for c in (comments or []):
                 if not isinstance(c, dict):
@@ -1609,46 +1608,52 @@ class MoltbookPlugin(KernelPlugin):
 
         logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
 
-    # Interval bounds (min/max heartbeats)
-    _MIN_FEED_INTERVAL = 2
-    _MAX_FEED_INTERVAL = 12
-    _MIN_POST_INTERVAL = 12
-    _MAX_POST_INTERVAL = 48
+    # Interval bounds (min/max heartbeats) — SEED-derived
+    _MIN_FEED_INTERVAL = HALVES           # 2 halves
+    _MAX_FEED_INTERVAL = MAHAJANA_COUNT   # 12 authorities
+    _MIN_POST_INTERVAL = MAHAJANA_COUNT   # 12 authorities
+    _MAX_POST_INTERVAL = LILA             # 48 Chaitanya's manifest
+
+    # Threshold constants for _adjust_intervals — COSMIC_FRAME integer arithmetic
+    _HIGH_CF = COSMIC_FRAME * QUARTERS // PANCHA                      # 17280 ≈ 0.8
+    _LOW_FEED_CF = COSMIC_FRAME // SHARANAGATI                        # 3600 ≈ 0.167 ≈ 0.2
+    _LOW_POST_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480 ≈ 0.3
 
     def _adjust_intervals(self) -> None:
         """Adjust heartbeat intervals based on feedback success rate.
 
         Reads FeedbackProtocol stats. Needs ≥5 signals for cold start protection.
+        All thresholds use COSMIC_FRAME integer arithmetic — no hardcoded floats.
         Linear interpolation:
-          - High success (80%+) → shorter intervals (more active)
-          - Low success (20%-) → longer intervals (more conservative)
+          - High success (≥HIGH_CF) → shorter intervals (more active)
+          - Low success (≤LOW_CF) → longer intervals (more conservative)
         """
         from vibe_core.protocols.feedback import get_feedback_safe
         stats = get_feedback_safe().get_stats()
 
-        if stats.total_signals < 5:
+        if stats.total_signals < PANCHA:
             return  # Cold start: not enough data
 
-        rate = stats.success_rate
+        rate_cf = int(stats.success_rate * COSMIC_FRAME)
 
-        # Linear interpolation for feed interval
-        if rate >= 0.8:
+        # Linear interpolation for feed interval (COSMIC_FRAME integer arithmetic)
+        if rate_cf >= self._HIGH_CF:
             new_feed = self._MIN_FEED_INTERVAL
-        elif rate <= 0.2:
+        elif rate_cf <= self._LOW_FEED_CF:
             new_feed = self._MAX_FEED_INTERVAL
         else:
-            # Interpolate: 0.2 → max, 0.8 → min
-            t = (rate - 0.2) / 0.6
-            new_feed = round(self._MAX_FEED_INTERVAL - t * (self._MAX_FEED_INTERVAL - self._MIN_FEED_INTERVAL))
+            # Integer lerp: (rate_cf - LOW) * (max - min) // (HIGH - LOW)
+            span = self._HIGH_CF - self._LOW_FEED_CF
+            new_feed = self._MAX_FEED_INTERVAL - (rate_cf - self._LOW_FEED_CF) * (self._MAX_FEED_INTERVAL - self._MIN_FEED_INTERVAL) // span
 
-        # Linear interpolation for post interval
-        if rate >= 0.8:
+        # Linear interpolation for post interval (COSMIC_FRAME integer arithmetic)
+        if rate_cf >= self._HIGH_CF:
             new_post = self._MIN_POST_INTERVAL
-        elif rate <= 0.3:
+        elif rate_cf <= self._LOW_POST_CF:
             new_post = self._MAX_POST_INTERVAL
         else:
-            t = (rate - 0.3) / 0.5
-            new_post = round(self._MAX_POST_INTERVAL - t * (self._MAX_POST_INTERVAL - self._MIN_POST_INTERVAL))
+            span = self._HIGH_CF - self._LOW_POST_CF
+            new_post = self._MAX_POST_INTERVAL - (rate_cf - self._LOW_POST_CF) * (self._MAX_POST_INTERVAL - self._MIN_POST_INTERVAL) // span
 
         old_feed, old_post = self._feed_interval, self._post_interval
         self._feed_interval = max(self._MIN_FEED_INTERVAL, min(self._MAX_FEED_INTERVAL, new_feed))
@@ -1657,11 +1662,11 @@ class MoltbookPlugin(KernelPlugin):
         if self._feed_interval != old_feed or self._post_interval != old_post:
             self._log_activity("intervals_adjusted", {
                 "feed": self._feed_interval, "post": self._post_interval,
-                "success_rate": round(rate, 3), "total_signals": stats.total_signals,
+                "success_rate_cf": rate_cf, "total_signals": stats.total_signals,
             })
             logger.info(
                 f"Intervals adjusted: feed={old_feed}→{self._feed_interval}, "
-                f"post={old_post}→{self._post_interval} (rate={rate:.1%}, signals={stats.total_signals})"
+                f"post={old_post}→{self._post_interval} (rate_cf={rate_cf}/{COSMIC_FRAME}, signals={stats.total_signals})"
             )
 
     def _monitor_queue_health(self) -> None:
@@ -1676,7 +1681,7 @@ class MoltbookPlugin(KernelPlugin):
         queued = stats.get("queued", 0)
         max_size = stats.get("max_size", ContentQueue.DEFAULT_MAX_SIZE)
 
-        if dropped > 0 and (self._heartbeat_count - self._last_overflow_log) >= 8:
+        if dropped > 0 and (self._heartbeat_count - self._last_overflow_log) >= HARE_COUNT:
             self._last_overflow_log = self._heartbeat_count
             logger.warning(
                 f"Queue overflow: {dropped} proposals dropped (queue {queued}/{max_size}). "
@@ -1718,10 +1723,12 @@ class MoltbookPlugin(KernelPlugin):
             line = json.dumps(entry, separators=(",", ":"))
             with self._activity_log_path.open("a") as f:
                 f.write(line + "\n")
-        except Exception:
-            pass  # Never fail the main loop for logging
+        except Exception as e:
+            logger.debug(f"Activity log write failed: {e}")
 
-    _SUBMOLT_RESONANCE_THRESHOLD = 0.3  # Minimum resonance score to subscribe
+    # Resonance threshold scaled to COSMIC_FRAME — integer comparison, no floats
+    # 6480 / 21600 ≈ 0.3 (SHARANAGATI / (QUARTERS × PANCHA))
+    _SUBMOLT_RESONANCE_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480
 
     def _discover_submolts(self) -> None:
         """Discover and subscribe to relevant submolts via resonance scoring.
@@ -1769,10 +1776,11 @@ class MoltbookPlugin(KernelPlugin):
             try:
                 ranked = resonate(probe, top_n=3)
                 score = sum(w.total_score for w in ranked) / len(ranked) if ranked else 0.0
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Resonance scoring failed for {name}: {e}")
                 score = 0.0
 
-            if score > self._SUBMOLT_RESONANCE_THRESHOLD or cold_start:
+            if int(score * COSMIC_FRAME) > self._SUBMOLT_RESONANCE_CF or cold_start:
                 self._subscribed_submolts.add(name)
                 proposal: ContentProposal = {
                     "content_type": ContentType.SUBSCRIBE.value,
@@ -1783,7 +1791,7 @@ class MoltbookPlugin(KernelPlugin):
                 self._content_queue.enqueue(proposal)
                 logger.info(f"Submolt subscription queued: {name} (score={score:.3f})")
             else:
-                logger.debug(f"Submolt skipped: {name} (score={score:.3f} < {self._SUBMOLT_RESONANCE_THRESHOLD})")
+                logger.debug(f"Submolt skipped: {name} (score_cf={int(score * COSMIC_FRAME)} < {self._SUBMOLT_RESONANCE_CF})")
 
     def _select_submolt(self, seed_text: str) -> Optional[str]:
         """Select best submolt for content via resonance cross-scoring.
@@ -1803,7 +1811,8 @@ class MoltbookPlugin(KernelPlugin):
         try:
             content_ranked = resonate(seed_text, top_n=3)
             content_score = sum(w.total_score for w in content_ranked) if content_ranked else 0.0
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Content resonance scoring failed: {e}")
             return None
 
         if content_score == 0.0:
@@ -1822,8 +1831,8 @@ class MoltbookPlugin(KernelPlugin):
                     submolt_scores.setdefault(s, []).append(ns)
             for s, scores in submolt_scores.items():
                 engagement_weights[s] = sum(scores) / len(scores) if scores else 0.0
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Engagement history unavailable: {e}")
 
         # Cross-score each subscribed submolt
         best_submolt: Optional[str] = None
@@ -1833,7 +1842,8 @@ class MoltbookPlugin(KernelPlugin):
             try:
                 submolt_ranked = resonate(submolt_name, top_n=3)
                 submolt_total = sum(w.total_score for w in submolt_ranked) if submolt_ranked else 0.0
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Resonance scoring failed for {submolt_name}: {e}")
                 continue
 
             # Cross-score: product of content and submolt resonance
@@ -1854,12 +1864,88 @@ class MoltbookPlugin(KernelPlugin):
     # Max retries before a proposal is permanently dropped
     _MAX_PROPOSAL_RETRIES = 2
 
+    # Drain dispatch table: ContentType.value → handler method name
+    _DRAIN_DISPATCH = {
+        ContentType.DM_REPLY.value: "_drain_dm_reply",
+        ContentType.DM_INITIATE.value: "_drain_dm_initiate",
+        ContentType.POST.value: "_drain_post",
+        ContentType.COMMENT.value: "_drain_comment",
+        ContentType.VOTE.value: "_drain_vote",
+        ContentType.FOLLOW.value: "_drain_follow",
+        ContentType.SUBSCRIBE.value: "_drain_subscribe",
+    }
+
+    def _drain_dm_reply(self, service: MoltbookService, proposal: ContentProposal) -> None:
+        conv_id = proposal.get("conversation_id", "")
+        content = proposal.get("content", "")
+        if conv_id and content:
+            service.send_dm(conv_id, content)
+            self._log_activity("dm_sent", {"conversation_id": conv_id})
+            logger.info(f"DM reply sent to {conv_id}")
+
+    def _drain_dm_initiate(self, service: MoltbookService, proposal: ContentProposal) -> None:
+        to_agent = proposal.get("to_agent", "")
+        if to_agent:
+            service.approve_dm_request(proposal.get("sender", ""))
+            self._log_activity("dm_request_approved", {"agent": to_agent})
+            logger.info(f"DM request approved for {to_agent}")
+
+    def _drain_post(self, service: MoltbookService, proposal: ContentProposal) -> None:
+        title = proposal.get("title", "")
+        content = proposal.get("content", "")
+        submolt = proposal.get("submolt")
+        if title and content:
+            post_result = service.create_post(title, content, submolt)
+            post_id = post_result.get("id", "") if isinstance(post_result, dict) else ""
+            if post_id:
+                self._own_post_ids[post_id] = {
+                    "submolt": submolt or "", "created_at": time.time(), "title": title[:80],
+                }
+            self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
+            self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
+            logger.info(f"Post created: {title[:50]} (id={post_id})")
+
+    def _drain_comment(self, service: MoltbookService, proposal: ContentProposal) -> None:
+        post_id = proposal.get("post_id", "")
+        content = proposal.get("content", "")
+        parent_id = proposal.get("parent_id")
+        if post_id and content:
+            result = service.comment(post_id, content, parent_id)
+            comment_id = result.get("id", "") if isinstance(result, dict) else ""
+            if comment_id:
+                self._own_comment_ids.add(comment_id)
+                self._comment_post_map[comment_id] = post_id
+            self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
+            self._broadcast_to_agora("comment", content, {"post_id": post_id})
+            logger.info(f"Comment posted on {post_id}")
+
+    def _drain_vote(self, service: MoltbookService, proposal: ContentProposal) -> None:
+        post_id = proposal.get("post_id", "")
+        if post_id:
+            service.upvote(post_id)
+            self._log_activity("upvoted", {"post_id": post_id})
+            logger.info(f"Upvoted {post_id}")
+
+    def _drain_follow(self, service: MoltbookService, proposal: ContentProposal) -> None:
+        to_agent = proposal.get("to_agent", "")
+        if to_agent:
+            service.follow(to_agent)
+            self._log_activity("followed", {"agent": to_agent})
+            logger.info(f"Followed {to_agent}")
+
+    def _drain_subscribe(self, service: MoltbookService, proposal: ContentProposal) -> None:
+        submolt = proposal.get("submolt", "")
+        if submolt:
+            service.subscribe(submolt)
+            self._log_activity("subscribed", {"submolt": submolt})
+            logger.info(f"Subscribed to {submolt}")
+
     def _drain_content_queue(self) -> None:
         """Execute queued content proposals through MoltbookService.
 
-        Failed proposals are re-enqueued with exponential backoff:
-        retry 1 → 2s delay, retry 2 → 4s delay. After _MAX_PROPOSAL_RETRIES,
-        the proposal is dropped and logged.
+        Uses dispatch table — no if/elif chains. Failed proposals are
+        re-enqueued with exponential backoff: retry 1 → 2s, retry 2 → 4s.
+        After _MAX_PROPOSAL_RETRIES, the proposal is dropped and logged.
         """
         if self._content_queue.is_empty:
             return
@@ -1880,71 +1966,11 @@ class MoltbookPlugin(KernelPlugin):
                 continue
             ct = proposal.get("content_type", "")
             try:
-                if ct == ContentType.DM_REPLY.value:
-                    conv_id = proposal.get("conversation_id", "")
-                    content = proposal.get("content", "")
-                    if conv_id and content:
-                        service.send_dm(conv_id, content)
-                        self._log_activity("dm_sent", {"conversation_id": conv_id})
-                        logger.info(f"DM reply sent to {conv_id}")
-
-                elif ct == ContentType.DM_INITIATE.value:
-                    to_agent = proposal.get("to_agent", "")
-                    if to_agent:
-                        service.approve_dm_request(proposal.get("sender", ""))
-                        self._log_activity("dm_request_approved", {"agent": to_agent})
-                        logger.info(f"DM request approved for {to_agent}")
-
-                elif ct == ContentType.POST.value:
-                    title = proposal.get("title", "")
-                    content = proposal.get("content", "")
-                    submolt = proposal.get("submolt")
-                    if title and content:
-                        post_result = service.create_post(title, content, submolt)
-                        post_id = post_result.get("id", "") if isinstance(post_result, dict) else ""
-                        if post_id:
-                            self._own_post_ids[post_id] = {
-                                "submolt": submolt or "", "created_at": time.time(), "title": title[:80],
-                            }
-                        self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
-                        self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
-                        logger.info(f"Post created: {title[:50]} (id={post_id})")
-
-                elif ct == ContentType.COMMENT.value:
-                    post_id = proposal.get("post_id", "")
-                    content = proposal.get("content", "")
-                    parent_id = proposal.get("parent_id")
-                    if post_id and content:
-                        result = service.comment(post_id, content, parent_id)
-                        comment_id = result.get("id", "") if isinstance(result, dict) else ""
-                        if comment_id:
-                            self._own_comment_ids.add(comment_id)
-                            self._comment_post_map[comment_id] = post_id
-                        self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
-                        self._broadcast_to_agora("comment", content, {"post_id": post_id})
-                        logger.info(f"Comment posted on {post_id}")
-
-                elif ct == ContentType.VOTE.value:
-                    post_id = proposal.get("post_id", "")
-                    if post_id:
-                        service.upvote(post_id)
-                        self._log_activity("upvoted", {"post_id": post_id})
-                        logger.info(f"Upvoted {post_id}")
-
-                elif ct == ContentType.FOLLOW.value:
-                    to_agent = proposal.get("to_agent", "")
-                    if to_agent:
-                        service.follow(to_agent)
-                        self._log_activity("followed", {"agent": to_agent})
-                        logger.info(f"Followed {to_agent}")
-
-                elif ct == ContentType.SUBSCRIBE.value:
-                    submolt = proposal.get("submolt", "")
-                    if submolt:
-                        service.subscribe(submolt)
-                        self._log_activity("subscribed", {"submolt": submolt})
-                        logger.info(f"Subscribed to {submolt}")
-
+                handler_name = self._DRAIN_DISPATCH.get(ct)
+                if handler_name:
+                    getattr(self, handler_name)(service, proposal)
+                else:
+                    logger.warning(f"Unknown content type in drain queue: {ct}")
             except PermissionError as e:
                 logger.warning(f"TAMAS blocked: {e}")
                 # Permanent failure — do not retry
