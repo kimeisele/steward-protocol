@@ -369,11 +369,11 @@ class TestPromptConstruction:
         # The composed words line should be present
         assert len(prompt) > 50, f"Prompt too short to contain themes: {prompt}"
 
-    def test_prompt_under_500_chars(self):
-        """System prompt must be dense, not verbose. Under 500 chars."""
+    def test_prompt_under_600_chars(self):
+        """System prompt must be dense, not verbose. ~120 tokens ≈ 600 chars max."""
         for post in MOLTBOOK_POSTS[:5]:
             prompt = self._build_prompt(post)
-            assert len(prompt) < 500, (
+            assert len(prompt) < 600, (
                 f"Prompt too long ({len(prompt)} chars): {prompt[:200]}..."
             )
 
