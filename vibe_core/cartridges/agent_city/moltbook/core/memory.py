@@ -20,6 +20,17 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("MOLTBOOK_MEMORY")
 
+# Event type → state counter key LUT (replaces if/elif chain in rebuild_state)
+_EVENT_COUNTERS = {
+    "content_generated": "content_generated",
+    "content_published": "content_published",
+    "content_rejected": "content_rejected",
+    "engagement_completed": "engagements",
+    "system_error": "errors",
+    "engagement_metric": "engagement_metrics",
+    "submolt_performance": "submolt_updates",
+}
+
 
 @dataclass
 class LedgerEvent:
@@ -220,21 +231,9 @@ class EventLog:
             "last_activity": None,
         }
         for event in self.get_recent_events(limit=10000):
-            et = event.event_type
-            if et == "content_generated":
-                state["content_generated"] += 1
-            elif et == "content_published":
-                state["content_published"] += 1
-            elif et == "content_rejected":
-                state["content_rejected"] += 1
-            elif et == "engagement_completed":
-                state["engagements"] += 1
-            elif et == "system_error":
-                state["errors"] += 1
-            elif et == "engagement_metric":
-                state["engagement_metrics"] += 1
-            elif et == "submolt_performance":
-                state["submolt_updates"] += 1
+            counter = _EVENT_COUNTERS.get(event.event_type)
+            if counter:
+                state[counter] += 1
             state["last_activity"] = event.timestamp
         return state
 

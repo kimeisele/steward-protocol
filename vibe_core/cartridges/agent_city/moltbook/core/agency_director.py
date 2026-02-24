@@ -22,7 +22,22 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from typing import TypedDict
 
+from vibe_core.mahamantra.substrate.core.seed import (
+    COSMIC_FRAME,
+    PANCHA,
+    QUARTERS,
+    SHARANAGATI,
+)
+
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
+
+# Character limits per content type (not cleanly derivable from SEED — config constants)
+_CHAR_LIMIT = {"comment": 280, "dm_reply": 280, "post": 500}
+_DEFAULT_CHAR_LIMIT = 280
+
+# Integrity threshold scaled to COSMIC_FRAME — integer comparison, no floats
+# 6480 / 21600 ≈ 0.3 (SHARANAGATI / (QUARTERS × PANCHA))
+_MIN_INTEGRITY_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480
 
 
 class DirectorContext(TypedDict, total=False):
@@ -96,6 +111,25 @@ _MODE_INSTRUCTION = {
     "CONTEXT": "Ground the response in practical context.",
     "TARGET": "Address the goal directly.",
     "CLOSURE": "Bring it to a clear conclusion.",
+}
+
+# =========================================================================
+# Content type → prompt instruction LUT (replaces if/elif chain)
+# =========================================================================
+# (instruction, input_label) — if input_label is set, append "{label}: {text[:400]}"
+_CONTENT_PROMPT = {
+    "comment": ("Write a concise, insightful comment on this post:", "POST"),
+    "post": ("Write a thought-provoking social media post.", ""),
+    "dm_reply": ("Write a thoughtful reply to this message:", "MESSAGE"),
+}
+
+# =========================================================================
+# Engagement action → handler method name LUT (replaces if/elif chain)
+# =========================================================================
+_ENGAGEMENT_DISPATCH = {
+    "follow_back": "_do_follow_back",
+    "subscribe": "_do_subscribe",
+    "upvote": "_do_upvote",
 }
 
 
@@ -383,8 +417,9 @@ class AgencyDirector:
 
         # Minimal gate: only TAMAS + dead/low-integrity = skip
         # SATTVA and RAJAS BOTH produce content (different styles)
-        if guna == "TAMAS" and (not alive or integrity < 0.3):
-            logger.info(f"TAMAS + dead/low-integrity ({integrity:.2f}): skipping")
+        integrity_cf = int(integrity * COSMIC_FRAME)
+        if guna == "TAMAS" and (not alive or integrity_cf < _MIN_INTEGRITY_CF):
+            logger.info(f"TAMAS + dead/low-integrity (cf={integrity_cf}/{COSMIC_FRAME}): skipping")
             return "", {"guna": guna, "guardian": guardian, "skipped": True, "status": "SKIPPED"}
 
         style = _GUNA_STYLE.get(guna, "active")
@@ -394,7 +429,7 @@ class AgencyDirector:
         content = self._compose_content(pipeline_result, seed_text, content_type, input_ctx)
 
         # Smart truncation: trim to last sentence boundary within limit
-        char_limit = {"comment": 280, "dm_reply": 280, "post": 500}.get(content_type, 280)
+        char_limit = _CHAR_LIMIT.get(content_type, _DEFAULT_CHAR_LIMIT)
         if content and len(content) > char_limit:
             content = self._truncate_smart(content, char_limit)
 
@@ -452,8 +487,8 @@ class AgencyDirector:
         try:
             from vibe_core.mahamantra.adapters.composition import get_composition
             composed_words = get_composition().compose(pipeline_result, input_text) or ""
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"MahaComposition unavailable: {e}")
 
         content = self._try_llm_compose(
             engine_result, pipeline_result, input_text,
@@ -535,17 +570,13 @@ class AgencyDirector:
             if expanded:
                 vocab = ", ".join(str(w) for w in expanded[:5])
 
-        # Build structured prompt
+        # Build structured prompt — dict-dispatch, no if/elif
         prompt_parts = []
 
-        if content_type == "comment":
-            prompt_parts.append("Write a concise, insightful comment on this post:")
-            prompt_parts.append(f"POST: {input_text[:400]}")
-        elif content_type == "post":
-            prompt_parts.append("Write a thought-provoking social media post.")
-        elif content_type == "dm_reply":
-            prompt_parts.append("Write a thoughtful reply to this message:")
-            prompt_parts.append(f"MESSAGE: {input_text[:400]}")
+        instruction, input_label = _CONTENT_PROMPT.get(content_type, ("Write content.", ""))
+        prompt_parts.append(instruction)
+        if input_label and input_text:
+            prompt_parts.append(f"{input_label}: {input_text[:400]}")
 
         # Intent + mode instructions (from MantraOpCode + section_router)
         if intent_instruction or mode_instruction:
@@ -570,7 +601,7 @@ class AgencyDirector:
         if prev_violations:
             prompt_parts.append(f"\nPrevious attempt was rejected: {'; '.join(prev_violations[:2])}")
 
-        char_limit = {"comment": 280, "dm_reply": 280, "post": 500}.get(content_type, 280)
+        char_limit = _CHAR_LIMIT.get(content_type, _DEFAULT_CHAR_LIMIT)
         prompt_parts.append(f"\nSTRICTLY under {char_limit} characters. Be direct, no meta-commentary.")
         prompt = "\n".join(prompt_parts)
 
@@ -718,22 +749,31 @@ class AgencyDirector:
     # =========================================================================
 
     def process_engagement(self, action: str, target: str, **ctx: Any) -> bool:
-        """Process a social engagement action."""
-        if action == "follow_back":
-            if self.engagement.should_follow_back(target):
-                self.engagement.mark_followed(target)
-                self.event_log.record_engagement("follow", target)
-                self._emit_action("Followed back", {"target": target})
-                return True
-        elif action == "subscribe":
-            if self.engagement.should_subscribe(target):
-                self.engagement.mark_subscribed(target)
-                self.event_log.record_engagement("subscribe", target)
-                self._emit_action("Subscribed", {"target": target})
-                return True
-        elif action == "upvote":
-            author = ctx.get("author", "")
-            if self.engagement.should_upvote(target, author):
-                self.event_log.record_engagement("upvote", target)
-                return True
+        """Process a social engagement action via dict-dispatch."""
+        handler_name = _ENGAGEMENT_DISPATCH.get(action)
+        if handler_name:
+            return getattr(self, handler_name)(target, **ctx)
+        return False
+
+    def _do_follow_back(self, target: str, **ctx: Any) -> bool:
+        if self.engagement.should_follow_back(target):
+            self.engagement.mark_followed(target)
+            self.event_log.record_engagement("follow", target)
+            self._emit_action("Followed back", {"target": target})
+            return True
+        return False
+
+    def _do_subscribe(self, target: str, **ctx: Any) -> bool:
+        if self.engagement.should_subscribe(target):
+            self.engagement.mark_subscribed(target)
+            self.event_log.record_engagement("subscribe", target)
+            self._emit_action("Subscribed", {"target": target})
+            return True
+        return False
+
+    def _do_upvote(self, target: str, **ctx: Any) -> bool:
+        author = ctx.get("author", "")
+        if self.engagement.should_upvote(target, author):
+            self.event_log.record_engagement("upvote", target)
+            return True
         return False
