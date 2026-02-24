@@ -60,9 +60,7 @@ class ResearchCapability:
                 topics.append(title[:80])
         return topics
 
-    def should_engage(
-        self, post_id: str, post_content: str, author: str
-    ) -> Optional[Dict[str, Any]]:
+    def should_engage(self, post_id: str, post_content: str, author: str) -> Optional[Dict[str, Any]]:
         """Determine if we should engage with a post."""
         return self.proposer.should_engage(post_id, post_content, author)
 

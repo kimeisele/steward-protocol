@@ -57,6 +57,7 @@ def _load_platform_constraints() -> Dict[str, Dict[str, object]]:
     constraints = dict(_DEFAULT_CONSTRAINTS)
     try:
         from vibe_core.knowledge.resolver import get_resolver
+
         resolver = get_resolver()
         for ct, node_id in _KG_CONTENT_NODES.items():
             node = resolver.graph.get_node(node_id)
@@ -75,13 +76,13 @@ PLATFORM_CONSTRAINTS: Dict[str, Dict[str, object]] = _load_platform_constraints(
 # Words that signal low-quality output (word salad, template leaks)
 QUALITY_BLOCKERS = [
     "unknown · unknown",  # Unresolved guardian leak
-    "PARTICLE",           # Template role leak
-    "NOUN",               # Template role leak
-    "VERB",               # Template role leak
-    "QUALITY",            # Template role leak
-    "SATTVA",             # Internal guna leak (raw, not translated)
-    "RAJAS",              # Internal guna leak
-    "TAMAS",              # Internal guna leak
+    "PARTICLE",  # Template role leak
+    "NOUN",  # Template role leak
+    "VERB",  # Template role leak
+    "QUALITY",  # Template role leak
+    "SATTVA",  # Internal guna leak (raw, not translated)
+    "RAJAS",  # Internal guna leak
+    "TAMAS",  # Internal guna leak
 ]
 
 # Sanskrit terms that should NOT appear raw in output
@@ -150,9 +151,7 @@ class MoltbookConstitution:
 
         max_len = constraints.get("max_length")
         if max_len and len(content) > int(max_len):
-            violations.append(
-                f"Content too long for {content_type}: {len(content)} chars (max {max_len})"
-            )
+            violations.append(f"Content too long for {content_type}: {len(content)} chars (max {max_len})")
 
     def _check_quality(self, content: str, violations: List[str], warnings: List[str]) -> None:
         """Check for quality blockers (template leaks, internal term exposure)."""
@@ -168,9 +167,7 @@ class MoltbookConstitution:
             if term in content_lower:
                 warnings.append(f"Untranslated pipeline term: '{term}' — needs translation layer")
 
-    def _check_coherence(
-        self, content: str, content_type: str, violations: List[str], warnings: List[str]
-    ) -> None:
+    def _check_coherence(self, content: str, content_type: str, violations: List[str], warnings: List[str]) -> None:
         """Check content coherence (not just random words)."""
         words = content.split()
 
@@ -179,18 +176,14 @@ class MoltbookConstitution:
         required = min_words.get(content_type, 3)
 
         if len(words) < required:
-            violations.append(
-                f"Too few words for {content_type}: {len(words)} (min {required})"
-            )
+            violations.append(f"Too few words for {content_type}: {len(words)} (min {required})")
 
         # Check for excessive repetition (word salad indicator)
         if len(words) > 3:
             unique = set(w.lower() for w in words)
             ratio = len(unique) / len(words)
             if ratio < 0.4:
-                warnings.append(
-                    f"Low word diversity ({ratio:.0%}) — possible word salad"
-                )
+                warnings.append(f"Low word diversity ({ratio:.0%}) — possible word salad")
 
     def _check_kg_constraints(self, content_type: str, warnings: List[str]) -> None:
         """Check Knowledge Graph constraints from platform.yaml."""
@@ -198,9 +191,7 @@ class MoltbookConstitution:
             from vibe_core.knowledge.resolver import get_resolver
 
             resolver = get_resolver()
-            violations = resolver.get_violations(
-                content_type, {"content_type": content_type}
-            )
+            violations = resolver.get_violations(content_type, {"content_type": content_type})
             for v in violations:
                 warnings.append(f"KG constraint: {v}")
         except Exception:

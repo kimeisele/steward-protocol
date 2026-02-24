@@ -11,8 +11,10 @@ Uses:
     - FeedbackProtocol (protocols/feedback.py) — engagement stats for priority adjustment
 """
 
+import json
 import logging
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from vibe_core.mahamantra.substrate.core.seed import TRINITY
@@ -62,12 +64,17 @@ class MoltbookStrategyPlanner:
     MOKSHA phase: engagement data → mission priority adjustments.
     """
 
-    def __init__(self, event_log=None):
+    _CACHE_FILE = "engagement_cache.json"
+
+    def __init__(self, event_log=None, state_dir: Optional[Path] = None):
         self._event_log = event_log
         self._orchestrator = None
         self._missions_seeded = False
+        self._state_dir = state_dir
         # Cache: mission_id → engagement stats
         self._engagement_cache: Dict[str, Dict[str, float]] = {}
+        # Restore from disk
+        self._restore_engagement_cache()
 
     @property
     def orchestrator(self):
@@ -75,6 +82,7 @@ class MoltbookStrategyPlanner:
         if self._orchestrator is None:
             try:
                 from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
+
                 self._orchestrator = SankalpaOrchestrator()
                 if not self._missions_seeded:
                     self._seed_missions()
@@ -143,6 +151,10 @@ class MoltbookStrategyPlanner:
                 orch.registry._missions[mission.id] = mission
                 logger.info(f"Seeded mission: {mission_id}")
 
+            # Persist seeded missions to disk
+            if hasattr(orch.registry, "_save"):
+                orch.registry._save()
+
             self._missions_seeded = True
         except Exception as e:
             logger.warning(f"Mission seeding failed: {e}")
@@ -175,17 +187,27 @@ class MoltbookStrategyPlanner:
             # No missions available — generate a single default post intent
             if feed_topics:
                 best = feed_topics[0]
-                return [StrategicIntent(
-                    action_type="comment",
-                    topic=str(best.get("title", best.get("content", "")))[:200],
-                    reasoning="Feed topic (no active missions)",
-                    priority=5,
-                    mission_id="default",
-                    target_post_id=str(best.get("id", "")),
-                )]
+                return [
+                    StrategicIntent(
+                        action_type="comment",
+                        topic=str(best.get("title", best.get("content", "")))[:200],
+                        reasoning="Feed topic (no active missions)",
+                        priority=5,
+                        mission_id="default",
+                        target_post_id=str(best.get("id", "")),
+                    )
+                ]
             return []
 
         intents: List[StrategicIntent] = []
+
+        # Global engagement fallback (from FeedbackProtocol)
+        global_eng = ""
+        if engagement_stats:
+            rate = engagement_stats.get("success_rate", 0)
+            total = engagement_stats.get("total_signals", 0)
+            if total > 0:
+                global_eng = f"Overall: {rate:.0%} success ({total} signals)"
 
         # Match feed topics against missions
         matches = self._match_topics(feed_topics, missions)
@@ -196,16 +218,20 @@ class MoltbookStrategyPlanner:
             eng_context = ""
             if eng:
                 eng_context = f"Success rate: {eng.get('success_rate', 0):.0%}"
+            elif global_eng:
+                eng_context = global_eng
 
-            intents.append(StrategicIntent(
-                action_type="comment",
-                topic=match.topic,
-                reasoning=f"Matches mission '{match.mission_name}' (relevance={match.relevance:.2f})",
-                priority=self._mission_priority_score(match.mission_id, missions),
-                mission_id=match.mission_id,
-                target_post_id=match.post_id,
-                engagement_context=eng_context,
-            ))
+            intents.append(
+                StrategicIntent(
+                    action_type="comment",
+                    topic=match.topic,
+                    reasoning=f"Matches mission '{match.mission_name}' (relevance={match.relevance:.2f})",
+                    priority=self._mission_priority_score(match.mission_id, missions),
+                    mission_id=match.mission_id,
+                    target_post_id=match.post_id,
+                    engagement_context=eng_context,
+                )
+            )
 
         # Add a post intent from highest-priority mission without feed match
         matched_mission_ids = {m.mission_id for m in matches}
@@ -215,15 +241,19 @@ class MoltbookStrategyPlanner:
                 eng_context = ""
                 if eng:
                     eng_context = f"Success rate: {eng.get('success_rate', 0):.0%}"
+                elif global_eng:
+                    eng_context = global_eng
 
-                intents.append(StrategicIntent(
-                    action_type="post",
-                    topic=mission.description,
-                    reasoning=f"Mission '{mission.name}' — proactive post",
-                    priority=self._mission_priority_score(mission.id, missions),
-                    mission_id=mission.id,
-                    engagement_context=eng_context,
-                ))
+                intents.append(
+                    StrategicIntent(
+                        action_type="post",
+                        topic=mission.description,
+                        reasoning=f"Mission '{mission.name}' — proactive post",
+                        priority=self._mission_priority_score(mission.id, missions),
+                        mission_id=mission.id,
+                        engagement_context=eng_context,
+                    )
+                )
                 break  # Only one proactive post per cycle
 
         # Sort by priority (descending), take top 3
@@ -266,7 +296,9 @@ class MoltbookStrategyPlanner:
                         relevance=relevance,
                         post_meta={
                             "upvotes": post.get("upvotes", 0),
-                            "author": post.get("author", {}).get("name", "") if isinstance(post.get("author"), dict) else "",
+                            "author": post.get("author", {}).get("name", "")
+                            if isinstance(post.get("author"), dict)
+                            else "",
                         },
                     )
 
@@ -321,9 +353,14 @@ class MoltbookStrategyPlanner:
             overlap = len(topic_words & desc_words)
             if overlap >= 2 or (desc_words and overlap / len(desc_words) > 0.2):
                 # Update engagement cache
-                cache = self._engagement_cache.setdefault(mission.id, {
-                    "total": 0, "positive": 0, "success_rate": 0.5,
-                })
+                cache = self._engagement_cache.setdefault(
+                    mission.id,
+                    {
+                        "total": 0,
+                        "positive": 0,
+                        "success_rate": 0.5,
+                    },
+                )
                 cache["total"] += 1
                 if net_score > 0:
                     cache["positive"] += 1
@@ -340,18 +377,27 @@ class MoltbookStrategyPlanner:
                     f"Engagement update for {mission.id}: "
                     f"rate={cache['success_rate']:.2f} ({cache['positive']}/{total})"
                 )
+                self._save_engagement_cache()
                 break
+
+    def _persist_registry(self) -> None:
+        """Persist registry to disk if available."""
+        orch = self._orchestrator
+        if orch and hasattr(orch.registry, "_save"):
+            orch.registry._save()
 
     def _boost_mission(self, mission) -> None:
         """Boost mission priority (medium → high, high → critical)."""
         try:
             from vibe_core.mahamantra.protocols.sankalpa.types import MissionPriority
+
             prio = mission.priority
             if prio == MissionPriority.LOW:
                 mission.priority = MissionPriority.MEDIUM
             elif prio == MissionPriority.MEDIUM:
                 mission.priority = MissionPriority.HIGH
             logger.info(f"Mission boosted: {mission.id} → {mission.priority.value}")
+            self._persist_registry()
         except Exception:
             pass
 
@@ -359,6 +405,7 @@ class MoltbookStrategyPlanner:
         """Deprioritize mission (high → medium, medium → low)."""
         try:
             from vibe_core.mahamantra.protocols.sankalpa.types import MissionPriority
+
             prio = mission.priority
             if prio == MissionPriority.CRITICAL:
                 mission.priority = MissionPriority.HIGH
@@ -367,5 +414,34 @@ class MoltbookStrategyPlanner:
             elif prio == MissionPriority.MEDIUM:
                 mission.priority = MissionPriority.LOW
             logger.info(f"Mission deprioritized: {mission.id} → {mission.priority.value}")
+            self._persist_registry()
         except Exception:
             pass
+
+    # -----------------------------------------------------------------------
+    # Engagement cache persistence (survives GitHub Actions restarts)
+    # -----------------------------------------------------------------------
+
+    def _save_engagement_cache(self) -> None:
+        """Persist engagement cache to JSON file."""
+        if not self._state_dir:
+            return
+        try:
+            cache_path = self._state_dir / self._CACHE_FILE
+            cache_path.write_text(json.dumps(self._engagement_cache, indent=2))
+        except Exception as e:
+            logger.debug(f"Engagement cache save failed: {e}")
+
+    def _restore_engagement_cache(self) -> None:
+        """Restore engagement cache from JSON file on init."""
+        if not self._state_dir:
+            return
+        try:
+            cache_path = self._state_dir / self._CACHE_FILE
+            if cache_path.exists():
+                data = json.loads(cache_path.read_text())
+                if isinstance(data, dict):
+                    self._engagement_cache = data
+                    logger.info(f"Engagement cache restored: {len(data)} missions")
+        except Exception as e:
+            logger.debug(f"Engagement cache restore failed: {e}")

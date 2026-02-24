@@ -270,6 +270,35 @@ class JanakaService(JanakaProtocol, PanchaTattvaProtocol, ExecutableMixin):
         except Exception:
             return 0.0
 
+    async def pulse_orchestration(self, kernel: object, plugins: list) -> Dict[str, object]:
+        """Execute pulse cycle: iterate plugins sorted by PulsePhase.
+
+        SENSORS → COGNITION → ACTUATORS → CLEANUP
+        Each plugin's on_pulse() is called in phase order.
+        """
+        from vibe_core.plugin_protocol import PulsePhase
+
+        results: Dict[str, object] = {"success": True, "plugins": {}}
+        # Sort plugins by pulse_phase (lower value = earlier execution)
+        ordered = sorted(
+            plugins,
+            key=lambda p: getattr(p, "pulse_phase", PulsePhase.ACTUATORS).value,
+        )
+        for plugin in ordered:
+            if not hasattr(plugin, "on_pulse"):
+                continue
+            plugin_id = getattr(plugin, "plugin_id", type(plugin).__name__)
+            try:
+                result = plugin.on_pulse(kernel, None)
+                if hasattr(result, "data"):
+                    results["plugins"][plugin_id] = result.data
+                logger.debug(f"👑 JANAKA: Pulse {plugin_id} OK")
+            except Exception as e:
+                logger.warning(f"👑 JANAKA: Pulse {plugin_id} failed: {e}")
+                results["plugins"][plugin_id] = {"error": str(e)}
+                results["success"] = False
+        return results
+
     async def tick_orchestration(self, kernel: object) -> None:
         """💓 THE ASYNC TICK ORCHESTRATION. Delegated from Kernel."""
         from vibe_core.protocols.substrate import MantraOpCode

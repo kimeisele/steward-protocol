@@ -478,15 +478,15 @@ class MoltbookPlugin(KernelPlugin):
     plugin_id = "moltbook"
 
     # Defaults for heartbeat intervals — all derived from SEED constants
-    _DEFAULT_FEED_INTERVAL = QUARTERS           # 4 phases
-    _DEFAULT_POST_INTERVAL = KSHETRA            # 24 field elements
+    _DEFAULT_FEED_INTERVAL = QUARTERS  # 4 phases
+    _DEFAULT_POST_INTERVAL = KSHETRA  # 24 field elements
     _DEFAULT_REPLY_CHECK_INTERVAL = HARE_COUNT  # 8 Hare
-    _DEFAULT_PROFILE_UPDATE_INTERVAL = LILA     # 48 Chaitanya's manifest
+    _DEFAULT_PROFILE_UPDATE_INTERVAL = LILA  # 48 Chaitanya's manifest
 
     # Engagement tracking: poll own posts for metrics
     _ENGAGEMENT_TRACK_INTERVAL = MAHAJANA_COUNT  # 12 authorities
     # Adaptive interval adjustment: recalculate based on feedback stats
-    _INTERVAL_ADJUST_INTERVAL = KSHETRA          # 24 field elements
+    _INTERVAL_ADJUST_INTERVAL = KSHETRA  # 24 field elements
 
     # Persistence: queue + seen IDs survive restarts
     _QUEUE_STATE_FILE = "content_queue.json"
@@ -495,9 +495,9 @@ class MoltbookPlugin(KernelPlugin):
     _MAX_SEEN_IDS = MALA * NAVA  # 972 ≈ 1000 (108 beads × 9 processes)
 
     # Rate limits (from platform.yaml moltbook-002-rate-limit)
-    _POST_INTERVAL_SEC = 30 * 60   # 1 post per 30 minutes
-    _COMMENT_LIMIT_PER_HOUR = 10   # 10 comments per hour
-    _DM_LIMIT_PER_HOUR = 30        # 30 DM operations per hour
+    _POST_INTERVAL_SEC = 30 * 60  # 1 post per 30 minutes
+    _COMMENT_LIMIT_PER_HOUR = 10  # 10 comments per hour
+    _DM_LIMIT_PER_HOUR = 30  # 30 DM operations per hour
 
     def __init__(self):
         super().__init__()
@@ -560,6 +560,7 @@ class MoltbookPlugin(KernelPlugin):
         """Lazy-init AgencyDirector with plugin reference for circuit execution."""
         if self._agency_director is None:
             from vibe_core.cartridges.agent_city.moltbook.core.agency_director import AgencyDirector
+
             self._agency_director = AgencyDirector(plugin=self)
         return self._agency_director
 
@@ -569,8 +570,10 @@ class MoltbookPlugin(KernelPlugin):
         if self._strategy_planner is None:
             try:
                 from vibe_core.cartridges.agent_city.moltbook.core.strategy import MoltbookStrategyPlanner
+
                 self._strategy_planner = MoltbookStrategyPlanner(
                     event_log=self.agency_director.event_log,
+                    state_dir=self._state_dir,
                 )
             except Exception as e:
                 logger.warning(f"Strategy planner unavailable: {e}")
@@ -590,11 +593,15 @@ class MoltbookPlugin(KernelPlugin):
         """
         from vibe_core.plugins.moltbook.resonance_proposer import _kg_priority
 
+        # Extract context dict and pass through to AgencyDirector
+        extra_context = extra.get("context", {})
         circuit_result = self.execute_content_circuit(
-            raw_input, content_type,
+            raw_input,
+            content_type,
             post_id=extra.get("post_id", ""),
             sender=extra.get("sender", ""),
             trigger=extra.get("trigger", "heartbeat"),
+            context=extra_context if isinstance(extra_context, dict) else {},
         )
         if not circuit_result or not circuit_result.get("content"):
             return None
@@ -621,10 +628,16 @@ class MoltbookPlugin(KernelPlugin):
             proposal["gateway_guardian"] = gw.get("guardian", "unknown")
             proposal["gateway_guna"] = gw.get("guna", "sattva")
 
-        self._emit_event("PROPOSAL_CREATED", f"Proposal: {content_type}", {
-            "content_type": content_type, "priority": proposal.get("priority", 0),
-            "guna": guna, "guardian": guardian,
-        })
+        self._emit_event(
+            "PROPOSAL_CREATED",
+            f"Proposal: {content_type}",
+            {
+                "content_type": content_type,
+                "priority": proposal.get("priority", 0),
+                "guna": guna,
+                "guardian": guardian,
+            },
+        )
         return proposal
 
     # =========================================================================
@@ -661,7 +674,7 @@ class MoltbookPlugin(KernelPlugin):
             own_post_keys = sorted(
                 self._own_post_ids.keys(),
                 key=lambda k: self._own_post_ids[k].get("created_at", 0),
-            )[-self._MAX_OWN_POST_IDS:]
+            )[-self._MAX_OWN_POST_IDS :]
             own_posts = {k: self._own_post_ids[k] for k in own_post_keys}
 
             seen_data = {
@@ -982,6 +995,7 @@ class MoltbookPlugin(KernelPlugin):
         sender: str = "",
         trigger: str = "heartbeat",
         auto_approve: bool = True,
+        context: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         """MOLTBOOK_CONTENT_V1 — ONE path through AgencyDirector.
 
@@ -992,14 +1006,20 @@ class MoltbookPlugin(KernelPlugin):
             KARMA   = constitution.validate() + event_log
 
         This method converts CycleResult → dict for callers that want dict format.
+        Context dict flows through to AgencyDirector._input() → _compose_content()
+        for strategic reasoning, engagement context, submolt context.
         """
-        result = self.agency_director.run_retry_loop(
-            content_type=content_type,
-            raw_input=raw_input,
-            post_id=post_id,
-            sender=sender,
-            trigger=trigger,
-        )
+        kwargs: Dict[str, Any] = {
+            "content_type": content_type,
+            "raw_input": raw_input,
+            "post_id": post_id,
+            "sender": sender,
+            "trigger": trigger,
+        }
+        # Thread strategic context through to _input() → _compose_content()
+        if context:
+            kwargs.update(context)
+        result = self.agency_director.run_retry_loop(**kwargs)
         if result.status != "SUCCESS" or not result.content:
             return None
         return {
@@ -1096,7 +1116,7 @@ class MoltbookPlugin(KernelPlugin):
             sorted_keys = sorted(
                 self._own_post_ids.keys(),
                 key=lambda k: self._own_post_ids[k].get("created_at", 0),
-            )[-self._MAX_OWN_POST_IDS:]
+            )[-self._MAX_OWN_POST_IDS :]
             self._own_post_ids = {k: self._own_post_ids[k] for k in sorted_keys}
         # Flush proposer pipeline/engine caches
         if self._proposer and hasattr(self._proposer, "flush_cache"):
@@ -1197,12 +1217,19 @@ class MoltbookPlugin(KernelPlugin):
         self._drain_content_queue()
 
     def _get_current_department(self) -> str:
-        """Read MURALI phase from VenuOrchestrator → department name."""
+        """Read MURALI phase from VenuOrchestrator → department name.
+
+        Falls back to heartbeat_count cycling when venu is unavailable,
+        ensuring all 4 departments (research/planning/execution/learning) run.
+        """
         try:
             from vibe_core.cartridges.agent_city.moltbook.core.agency_director import MuraliRouter
-            return MuraliRouter().current_department()
+
+            return MuraliRouter().current_department(fallback_tick=self._heartbeat_count)
         except Exception:
-            return "execution"
+            # Last resort: cycle through departments using heartbeat count
+            departments = ("research", "planning", "execution", "learning")
+            return departments[self._heartbeat_count % len(departments)]
 
     # =========================================================================
     # on_pulse — backward compat (delegates to same heartbeat)
@@ -1453,6 +1480,7 @@ class MoltbookPlugin(KernelPlugin):
         engagement_stats: Dict[str, Any] = {}
         try:
             from vibe_core.protocols.feedback import get_feedback_safe
+
             stats = get_feedback_safe().get_stats()
             engagement_stats = {
                 "success_rate": stats.success_rate,
@@ -1465,10 +1493,7 @@ class MoltbookPlugin(KernelPlugin):
             intents = planner.plan_cycle(self._current_feed_topics, engagement_stats)
             self._current_intents = intents
             if intents:
-                logger.info(
-                    f"Strategy: {len(intents)} intents planned "
-                    f"({', '.join(i.action_type for i in intents)})"
-                )
+                logger.info(f"Strategy: {len(intents)} intents planned ({', '.join(i.action_type for i in intents)})")
         except Exception as e:
             logger.warning(f"Strategy evaluation failed: {e}")
 
@@ -1495,18 +1520,19 @@ class MoltbookPlugin(KernelPlugin):
                         context={
                             "strategic_reasoning": intent.reasoning,
                             "engagement_context": intent.engagement_context,
+                            "submolt_context": intent.submolt_context,
                         },
                     )
                     if proposal:
                         self._content_queue.enqueue(proposal)
                         logger.info(
-                            f"Strategic comment queued for {intent.target_post_id} "
-                            f"(mission={intent.mission_id})"
+                            f"Strategic comment queued for {intent.target_post_id} (mission={intent.mission_id})"
                         )
 
                 elif intent.action_type == "post":
                     seed = intent.topic
                     selected_submolt = self._select_submolt(seed)
+                    submolt_ctx = intent.submolt_context or selected_submolt or ""
 
                     proposal = self._director_propose(
                         content_type="post",
@@ -1517,6 +1543,7 @@ class MoltbookPlugin(KernelPlugin):
                         context={
                             "strategic_reasoning": intent.reasoning,
                             "engagement_context": intent.engagement_context,
+                            "submolt_context": submolt_ctx,
                         },
                     )
                     if proposal:
@@ -1531,8 +1558,7 @@ class MoltbookPlugin(KernelPlugin):
                         self._content_queue.enqueue(proposal)
                         self._last_post_heartbeat = self._heartbeat_count
                         logger.info(
-                            f"Strategic post queued: {proposal.get('title', '')[:50]} "
-                            f"(mission={intent.mission_id})"
+                            f"Strategic post queued: {proposal.get('title', '')[:50]} (mission={intent.mission_id})"
                         )
 
             except Exception as e:
@@ -1715,6 +1741,7 @@ class MoltbookPlugin(KernelPlugin):
             return
 
         from vibe_core.protocols.feedback import get_feedback_safe
+
         feedback = get_feedback_safe()
 
         event_log = self.agency_director.event_log
@@ -1743,9 +1770,12 @@ class MoltbookPlugin(KernelPlugin):
             net_score = upvotes - downvotes
 
             event_log.record_engagement_metric(
-                content_id=post_id, content_type="post",
-                upvotes=upvotes, downvotes=downvotes,
-                replies=replies, submolt=submolt,
+                content_id=post_id,
+                content_type="post",
+                upvotes=upvotes,
+                downvotes=downvotes,
+                replies=replies,
+                submolt=submolt,
             )
 
             ctx = {"submolt": submolt, "upvotes": upvotes, "replies": replies, "net_score": net_score}
@@ -1765,7 +1795,7 @@ class MoltbookPlugin(KernelPlugin):
             except Exception as e:
                 logger.debug(f"Comment fetch for engagement tracking failed: {e}")
                 continue
-            for c in (comments or []):
+            for c in comments or []:
                 if not isinstance(c, dict):
                     continue
                 if c.get("id") == comment_id:
@@ -1773,8 +1803,11 @@ class MoltbookPlugin(KernelPlugin):
                     downvotes = int(c.get("downvotes", 0))
                     net_score = upvotes - downvotes
                     event_log.record_engagement_metric(
-                        content_id=comment_id, content_type="comment",
-                        upvotes=upvotes, downvotes=downvotes, replies=0,
+                        content_id=comment_id,
+                        content_type="comment",
+                        upvotes=upvotes,
+                        downvotes=downvotes,
+                        replies=0,
                     )
                     ctx = {"upvotes": upvotes, "net_score": net_score}
                     if net_score > 0:
@@ -1790,26 +1823,28 @@ class MoltbookPlugin(KernelPlugin):
                 try:
                     post = self._service.get_post(post_id)
                     if isinstance(post, dict):
-                        planner.update_from_engagement({
-                            "post_id": post_id,
-                            "upvotes": int(post.get("upvotes", 0)),
-                            "reply_count": int(post.get("comment_count", 0)),
-                            "topic": str(meta.get("title", "")),
-                        })
+                        planner.update_from_engagement(
+                            {
+                                "post_id": post_id,
+                                "upvotes": int(post.get("upvotes", 0)),
+                                "reply_count": int(post.get("comment_count", 0)),
+                                "topic": str(meta.get("title", "")),
+                            }
+                        )
                 except Exception:
                     pass  # Graceful — engagement poll may have already failed above
 
         logger.debug(f"Engagement tracked: {len(recent_posts)} posts, {len(comment_ids)} comments")
 
     # Interval bounds (min/max heartbeats) — SEED-derived
-    _MIN_FEED_INTERVAL = HALVES           # 2 halves
-    _MAX_FEED_INTERVAL = MAHAJANA_COUNT   # 12 authorities
-    _MIN_POST_INTERVAL = MAHAJANA_COUNT   # 12 authorities
-    _MAX_POST_INTERVAL = LILA             # 48 Chaitanya's manifest
+    _MIN_FEED_INTERVAL = HALVES  # 2 halves
+    _MAX_FEED_INTERVAL = MAHAJANA_COUNT  # 12 authorities
+    _MIN_POST_INTERVAL = MAHAJANA_COUNT  # 12 authorities
+    _MAX_POST_INTERVAL = LILA  # 48 Chaitanya's manifest
 
     # Threshold constants for _adjust_intervals — COSMIC_FRAME integer arithmetic
-    _HIGH_CF = COSMIC_FRAME * QUARTERS // PANCHA                      # 17280 ≈ 0.8
-    _LOW_FEED_CF = COSMIC_FRAME // SHARANAGATI                        # 3600 ≈ 0.167 ≈ 0.2
+    _HIGH_CF = COSMIC_FRAME * QUARTERS // PANCHA  # 17280 ≈ 0.8
+    _LOW_FEED_CF = COSMIC_FRAME // SHARANAGATI  # 3600 ≈ 0.167 ≈ 0.2
     _LOW_POST_CF = COSMIC_FRAME * SHARANAGATI // (QUARTERS * PANCHA)  # 6480 ≈ 0.3
 
     def _adjust_intervals(self) -> None:
@@ -1822,6 +1857,7 @@ class MoltbookPlugin(KernelPlugin):
           - Low success (≤LOW_CF) → longer intervals (more conservative)
         """
         from vibe_core.protocols.feedback import get_feedback_safe
+
         stats = get_feedback_safe().get_stats()
 
         if stats.total_signals < PANCHA:
@@ -1837,7 +1873,10 @@ class MoltbookPlugin(KernelPlugin):
         else:
             # Integer lerp: (rate_cf - LOW) * (max - min) // (HIGH - LOW)
             span = self._HIGH_CF - self._LOW_FEED_CF
-            new_feed = self._MAX_FEED_INTERVAL - (rate_cf - self._LOW_FEED_CF) * (self._MAX_FEED_INTERVAL - self._MIN_FEED_INTERVAL) // span
+            new_feed = (
+                self._MAX_FEED_INTERVAL
+                - (rate_cf - self._LOW_FEED_CF) * (self._MAX_FEED_INTERVAL - self._MIN_FEED_INTERVAL) // span
+            )
 
         # Linear interpolation for post interval (COSMIC_FRAME integer arithmetic)
         if rate_cf >= self._HIGH_CF:
@@ -1846,17 +1885,25 @@ class MoltbookPlugin(KernelPlugin):
             new_post = self._MAX_POST_INTERVAL
         else:
             span = self._HIGH_CF - self._LOW_POST_CF
-            new_post = self._MAX_POST_INTERVAL - (rate_cf - self._LOW_POST_CF) * (self._MAX_POST_INTERVAL - self._MIN_POST_INTERVAL) // span
+            new_post = (
+                self._MAX_POST_INTERVAL
+                - (rate_cf - self._LOW_POST_CF) * (self._MAX_POST_INTERVAL - self._MIN_POST_INTERVAL) // span
+            )
 
         old_feed, old_post = self._feed_interval, self._post_interval
         self._feed_interval = max(self._MIN_FEED_INTERVAL, min(self._MAX_FEED_INTERVAL, new_feed))
         self._post_interval = max(self._MIN_POST_INTERVAL, min(self._MAX_POST_INTERVAL, new_post))
 
         if self._feed_interval != old_feed or self._post_interval != old_post:
-            self._log_activity("intervals_adjusted", {
-                "feed": self._feed_interval, "post": self._post_interval,
-                "success_rate_cf": rate_cf, "total_signals": stats.total_signals,
-            })
+            self._log_activity(
+                "intervals_adjusted",
+                {
+                    "feed": self._feed_interval,
+                    "post": self._post_interval,
+                    "success_rate_cf": rate_cf,
+                    "total_signals": stats.total_signals,
+                },
+            )
             logger.info(
                 f"Intervals adjusted: feed={old_feed}→{self._feed_interval}, "
                 f"post={old_post}→{self._post_interval} (rate_cf={rate_cf}/{COSMIC_FRAME}, signals={stats.total_signals})"
@@ -1960,10 +2007,14 @@ class MoltbookPlugin(KernelPlugin):
                 name = submolt.get("name", "")
                 if name and name not in self._subscribed_submolts:
                     self._subscribed_submolts.add(name)
-                    self._content_queue.enqueue({
-                        "content_type": ContentType.SUBSCRIBE.value,
-                        "submolt": name, "source": "submolt_discovery", "priority": 0,
-                    })
+                    self._content_queue.enqueue(
+                        {
+                            "content_type": ContentType.SUBSCRIBE.value,
+                            "submolt": name,
+                            "source": "submolt_discovery",
+                            "priority": 0,
+                        }
+                    )
             return
 
         cold_start = len(self._subscribed_submolts) < 3
@@ -1996,7 +2047,9 @@ class MoltbookPlugin(KernelPlugin):
                 self._content_queue.enqueue(proposal)
                 logger.info(f"Submolt subscription queued: {name} (score={score:.3f})")
             else:
-                logger.debug(f"Submolt skipped: {name} (score_cf={int(score * COSMIC_FRAME)} < {self._SUBMOLT_RESONANCE_CF})")
+                logger.debug(
+                    f"Submolt skipped: {name} (score_cf={int(score * COSMIC_FRAME)} < {self._SUBMOLT_RESONANCE_CF})"
+                )
 
     def _select_submolt(self, seed_text: str) -> Optional[str]:
         """Select best submolt for content via resonance cross-scoring.
@@ -2104,13 +2157,21 @@ class MoltbookPlugin(KernelPlugin):
             post_id = post_result.get("id", "") if isinstance(post_result, dict) else ""
             if post_id:
                 self._own_post_ids[post_id] = {
-                    "submolt": submolt or "", "created_at": time.time(), "title": title[:80],
+                    "submolt": submolt or "",
+                    "created_at": time.time(),
+                    "title": title[:80],
                 }
             self._log_activity("post_created", {"title": title[:80], "submolt": submolt, "post_id": post_id})
             self._broadcast_to_agora("post", content, {"title": title[:80], "submolt": submolt})
-            self._emit_event("BROADCAST", f"Post published: {title[:50]}", {
-                "content_type": "post", "post_id": post_id, "submolt": submolt or "",
-            })
+            self._emit_event(
+                "BROADCAST",
+                f"Post published: {title[:50]}",
+                {
+                    "content_type": "post",
+                    "post_id": post_id,
+                    "submolt": submolt or "",
+                },
+            )
             logger.info(f"Post created: {title[:50]} (id={post_id})")
 
     def _drain_comment(self, service: MoltbookService, proposal: ContentProposal) -> None:
@@ -2125,9 +2186,15 @@ class MoltbookPlugin(KernelPlugin):
                 self._comment_post_map[comment_id] = post_id
             self._log_activity("comment_posted", {"post_id": post_id, "comment_id": comment_id})
             self._broadcast_to_agora("comment", content, {"post_id": post_id})
-            self._emit_event("BROADCAST", f"Comment published on {post_id}", {
-                "content_type": "comment", "post_id": post_id, "comment_id": comment_id,
-            })
+            self._emit_event(
+                "BROADCAST",
+                f"Comment published on {post_id}",
+                {
+                    "content_type": "comment",
+                    "post_id": post_id,
+                    "comment_id": comment_id,
+                },
+            )
             logger.info(f"Comment posted on {post_id}")
 
     def _drain_vote(self, service: MoltbookService, proposal: ContentProposal) -> None:
@@ -2201,6 +2268,7 @@ class MoltbookPlugin(KernelPlugin):
         deferred: List[ContentProposal] = []
 
         from vibe_core.protocols.feedback import get_feedback_safe
+
         feedback = get_feedback_safe()
 
         now = time.time()
@@ -2216,9 +2284,13 @@ class MoltbookPlugin(KernelPlugin):
             if not self._check_rate_limit(ct):
                 proposal["_retry_after"] = now + 60  # Re-check in 60s
                 deferred.append(proposal)
-                feedback.signal_partial(f"moltbook.drain.{ct}", "rate_limited", {
-                    "content_type": ct,
-                })
+                feedback.signal_partial(
+                    f"moltbook.drain.{ct}",
+                    "rate_limited",
+                    {
+                        "content_type": ct,
+                    },
+                )
                 continue
             t0 = time.monotonic()
             try:
@@ -2227,17 +2299,27 @@ class MoltbookPlugin(KernelPlugin):
                     getattr(self, handler_name)(service, proposal)
                     self._record_rate_limit(ct)
                     elapsed = (time.monotonic() - t0) * 1000
-                    feedback.signal_success(f"moltbook.drain.{ct}", {
-                        "content_type": ct, "priority": proposal.get("priority", 0),
-                    }, duration_ms=elapsed)
+                    feedback.signal_success(
+                        f"moltbook.drain.{ct}",
+                        {
+                            "content_type": ct,
+                            "priority": proposal.get("priority", 0),
+                        },
+                        duration_ms=elapsed,
+                    )
                 else:
                     logger.warning(f"Unknown content type in drain queue: {ct}")
             except PermissionError as e:
                 logger.warning(f"TAMAS blocked: {e}")
                 elapsed = (time.monotonic() - t0) * 1000
-                feedback.signal_failure(f"moltbook.drain.{ct}", "tamas_blocked", {
-                    "content_type": ct,
-                }, duration_ms=elapsed)
+                feedback.signal_failure(
+                    f"moltbook.drain.{ct}",
+                    "tamas_blocked",
+                    {
+                        "content_type": ct,
+                    },
+                    duration_ms=elapsed,
+                )
                 # Permanent failure — do not retry
             except Exception as e:
                 elapsed = (time.monotonic() - t0) * 1000
@@ -2247,17 +2329,28 @@ class MoltbookPlugin(KernelPlugin):
                     # Exponential backoff: 2^retries seconds (2s, 4s)
                     proposal["_retry_after"] = time.time() + (2 ** proposal["_retries"])
                     failed.append(proposal)
-                    feedback.signal_partial(f"moltbook.drain.{ct}", f"retry_{retries + 1}", {
-                        "content_type": ct, "retries": retries + 1,
-                    })
+                    feedback.signal_partial(
+                        f"moltbook.drain.{ct}",
+                        f"retry_{retries + 1}",
+                        {
+                            "content_type": ct,
+                            "retries": retries + 1,
+                        },
+                    )
                     logger.warning(
                         f"Content execution failed ({ct}), retry {retries + 1}, backoff {2 ** proposal['_retries']}s: {e}"
                     )
                 else:
                     self._log_activity("proposal_dropped", {"type": ct, "error": str(e)[:200]})
-                    feedback.signal_failure(f"moltbook.drain.{ct}", "dropped_after_retries", {
-                        "content_type": ct, "retries": retries,
-                    }, duration_ms=elapsed)
+                    feedback.signal_failure(
+                        f"moltbook.drain.{ct}",
+                        "dropped_after_retries",
+                        {
+                            "content_type": ct,
+                            "retries": retries,
+                        },
+                        duration_ms=elapsed,
+                    )
                     logger.error(f"Proposal dropped after {retries} retries ({ct}): {e}")
 
         # Re-enqueue: deferred (not yet ready) + failed (with backoff)
@@ -2332,6 +2425,7 @@ class MoltbookPlugin(KernelPlugin):
         """Recent engagement trends from FeedbackProtocol stats."""
         try:
             from vibe_core.protocols.feedback import get_feedback_safe
+
             stats = get_feedback_safe().get_stats()
             return (
                 f"Success rate: {stats.success_rate:.0%}, "

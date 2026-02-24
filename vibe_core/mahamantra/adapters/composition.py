@@ -333,12 +333,12 @@ class MahaComposition:
 
         # SVO role ordering for English output
         _ROLE_ORDER = {
-            "NOUN": 0,    # Subject/object first
-            "VERB": 1,    # Action
-            "QUALITY": 2, # Modifiers
-            "PREP": 3,    # Relational
-            "REF": 4,     # References
-            "PARTICLE": 5,# Function words
+            "NOUN": 0,  # Subject/object first
+            "VERB": 1,  # Action
+            "QUALITY": 2,  # Modifiers
+            "PREP": 3,  # Relational
+            "REF": 4,  # References
+            "PARTICLE": 5,  # Function words
         }
 
         # 1. Assign roles from RAMA coords + extract English words

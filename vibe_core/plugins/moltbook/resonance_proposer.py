@@ -73,6 +73,7 @@ def _build_task_message(prompt_key: str, input_text: str) -> str:
     template = _TASK_TEMPLATES.get(ct, "Write about: {input}")
     return template.format(input=input_text[:200] if input_text else "")
 
+
 # Knowledge Graph node IDs → ContentType mapping (knowledge/moltbook/platform.yaml)
 _KG_CONTENT_TYPE_NODES = {
     ContentType.DM_REPLY.value: "moltbook_dm",
@@ -273,7 +274,9 @@ class ResonanceProposer(ContentProposalProtocol):
 
         # Step 2: Extract engine data for context
         guardian_name = getattr(engine_result, "guardian_name", "") or "" if engine_result else ""
-        guardian_function = getattr(engine_result, "guardian_function", "") or "analysis" if engine_result else "analysis"
+        guardian_function = (
+            getattr(engine_result, "guardian_function", "") or "analysis" if engine_result else "analysis"
+        )
         verse_ref = getattr(engine_result, "verse_ref", "") or "" if engine_result else ""
         voice = guardian_vocabulary_short(guardian_name)
         sec = section_data(engine_result)

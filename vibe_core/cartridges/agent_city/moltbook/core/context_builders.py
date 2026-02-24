@@ -79,6 +79,7 @@ def engagement_context(content_type: str = "") -> str:
     """
     try:
         from vibe_core.protocols.feedback import get_feedback_safe
+
         stats = get_feedback_safe().get_stats()
         if stats.total_signals < 3:
             return ""

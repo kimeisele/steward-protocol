@@ -335,7 +335,6 @@ class TestContextBuilders:
         assert data["section_mode"] == "CORE"
 
 
-
 # =========================================================================
 # MahaLanguageEngine — real pipeline, no mocks
 # =========================================================================
