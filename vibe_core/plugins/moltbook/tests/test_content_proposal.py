@@ -229,7 +229,7 @@ class TestDMReplyLoop:
 
         plugin = MoltbookPlugin()
         plugin._client = MoltbookClient(api_key="test", offline_mode=True)
-        plugin._offline_mode = True
+        plugin._offline_mode = False  # Tests need online mode to drain queue
         return plugin
 
     def test_queue_starts_empty(self, plugin):

@@ -123,13 +123,13 @@ class TestPluginStateContract:
     def test_snapshot_without_client(self, bare_plugin):
         """Pre-boot plugin returns minimal snapshot."""
         snapshot = bare_plugin.snapshot_state()
-        assert snapshot["version"] == 5
+        assert snapshot["version"] == 6
         assert snapshot["client_active"] is False
 
     def test_snapshot_with_client(self, plugin):
         """Active plugin includes all rate limit fields + queue state + tracking counts."""
         snapshot = plugin.snapshot_state()
-        assert snapshot["version"] == 5
+        assert snapshot["version"] == 6
         assert snapshot["client_active"] is True
         assert "requests_this_minute" in snapshot
         assert "posts_this_30m" in snapshot
@@ -930,6 +930,7 @@ class TestActivityLogging:
 
         plugin._activity_log_path = tmp_path / "activity.jsonl"
         plugin._service = MoltbookService(plugin._client)
+        plugin._offline_mode = False  # Must be online to drain
         plugin._content_queue.enqueue(
             {
                 "content_type": ContentType.VOTE.value,
@@ -1006,6 +1007,7 @@ class TestReplyMonitoring:
         from vibe_core.protocols.moltbook_content import ContentType
 
         plugin._service = MoltbookService(plugin._client)
+        plugin._offline_mode = False
         plugin._content_queue.enqueue(
             {
                 "content_type": ContentType.COMMENT.value,
@@ -1064,6 +1066,7 @@ class TestFaultIsolation:
         from vibe_core.protocols.moltbook_content import ContentType
 
         plugin._service = MoltbookService(plugin._client)
+        plugin._offline_mode = False
 
         # Poison the feed — make get_personalized_feed throw
         original = plugin._client.get_personalized_feed
@@ -1111,6 +1114,7 @@ class TestRetryQueue:
 
         svc.upvote = exploding_upvote
         plugin._service = svc
+        plugin._offline_mode = False
 
         plugin._content_queue.enqueue(
             {
@@ -1136,6 +1140,7 @@ class TestRetryQueue:
 
         svc.upvote = exploding_upvote
         plugin._service = svc
+        plugin._offline_mode = False
         plugin._activity_log_path = tmp_path / "activity.jsonl"
 
         # Enqueue with retries already at max
@@ -1161,6 +1166,7 @@ class TestRetryQueue:
         from vibe_core.protocols.moltbook_content import ContentType
 
         svc = MoltbookService(plugin._client)
+        plugin._offline_mode = False
         original_delete = svc.delete_post
 
         def blocked_delete(post_id):
