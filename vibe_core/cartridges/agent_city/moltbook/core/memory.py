@@ -135,6 +135,48 @@ class EventLog:
             "message": message[:200],
         })
 
+    def record_engagement_metric(
+        self,
+        content_id: str,
+        content_type: str,
+        upvotes: int,
+        downvotes: int,
+        replies: int,
+        submolt: str = "",
+    ) -> Optional[LedgerEvent]:
+        """Record engagement metrics for published content."""
+        return self.commit("engagement_metric", {
+            "content_id": content_id,
+            "content_type": content_type,
+            "upvotes": upvotes,
+            "downvotes": downvotes,
+            "replies": replies,
+            "net_score": upvotes - downvotes,
+            "submolt": submolt,
+        })
+
+    def record_submolt_performance(
+        self,
+        submolt_name: str,
+        avg_upvotes: float,
+        avg_replies: float,
+        sample_count: int,
+    ) -> Optional[LedgerEvent]:
+        """Record aggregated submolt performance."""
+        return self.commit("submolt_performance", {
+            "submolt_name": submolt_name,
+            "avg_upvotes": avg_upvotes,
+            "avg_replies": avg_replies,
+            "sample_count": sample_count,
+        })
+
+    def get_events_by_type(self, event_type: str, limit: int = 100) -> List[LedgerEvent]:
+        """Filter recent events by type."""
+        return [
+            e for e in self.get_recent_events(limit=limit * 3)
+            if e.event_type == event_type
+        ][-limit:]
+
     def store_validation_feedback(self, violations: List[str], draft: Optional[str] = None) -> None:
         """Store feedback from failed governance check for next retry."""
         self.pending_validation_feedback = {
@@ -173,6 +215,8 @@ class EventLog:
             "content_rejected": 0,
             "engagements": 0,
             "errors": 0,
+            "engagement_metrics": 0,
+            "submolt_updates": 0,
             "last_activity": None,
         }
         for event in self.get_recent_events(limit=10000):
@@ -187,6 +231,10 @@ class EventLog:
                 state["engagements"] += 1
             elif et == "system_error":
                 state["errors"] += 1
+            elif et == "engagement_metric":
+                state["engagement_metrics"] += 1
+            elif et == "submolt_performance":
+                state["submolt_updates"] += 1
             state["last_activity"] = event.timestamp
         return state
 

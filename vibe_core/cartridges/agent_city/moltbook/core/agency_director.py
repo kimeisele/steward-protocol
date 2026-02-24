@@ -16,18 +16,34 @@ Wires: MahaComposition (5 scorers incl. WordNet + mode_affinity),
 """
 
 import logging
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+from typing import TypedDict
 
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
+
+
+class DirectorContext(TypedDict, total=False):
+    """Typed context for AgencyDirector I-P-V-O cycles."""
+
+    trigger: str
+    post_id: str
+    sender: str
+    conversation_id: str
+    parent_id: str
+    submolt: str
+    to_agent: str
+    gateway_response: Dict[str, str]
+    context: Dict[str, str]
 
 
 @dataclass
 class CycleResult:
     """Result of a complete I-P-V-O cycle."""
 
-    status: str  # SUCCESS, VALIDATION_FAILED, ERROR
+    status: str  # SUCCESS, VALIDATION_FAILED, LLM_UNAVAILABLE, SKIPPED, ERROR
     phase: str   # INPUT, PROCESS, VALIDATE, OUTPUT
     cycle_id: str
     content_type: str = ""
@@ -37,6 +53,7 @@ class CycleResult:
     retries_used: int = 0
     guna: str = ""
     guardian: str = ""
+    duration_ms: float = 0.0
 
 
 # =========================================================================
@@ -100,8 +117,16 @@ class AgencyDirector:
         self._constitution = None
         self._event_log = None
         self._engagement = None
+        self._feedback = None
 
     # -- Lazy properties (only what we OWN, not what we USE) --
+
+    @property
+    def feedback(self):
+        if self._feedback is None:
+            from vibe_core.protocols.feedback import get_feedback_safe
+            self._feedback = get_feedback_safe()
+        return self._feedback
 
     @property
     def constitution(self):
@@ -136,7 +161,9 @@ class AgencyDirector:
     ) -> CycleResult:
         """Execute one I-P-V-O cycle."""
         cycle_id = datetime.now(timezone.utc).isoformat()
+        t0 = time.monotonic()
         self._emit_thought(f"Starting {content_type} cycle")
+        feedback_cmd = f"moltbook.{content_type}"
 
         # ===== INPUT =====
         try:
@@ -144,9 +171,11 @@ class AgencyDirector:
         except Exception as e:
             logger.error(f"INPUT failed: {e}")
             self.event_log.record_error("input_failure", str(e))
+            elapsed = (time.monotonic() - t0) * 1000
+            self.feedback.signal_failure(feedback_cmd, str(e), {"phase": "INPUT"}, duration_ms=elapsed)
             return CycleResult(
                 status="ERROR", phase="INPUT", cycle_id=cycle_id,
-                content_type=content_type, error=str(e),
+                content_type=content_type, error=str(e), duration_ms=elapsed,
             )
 
         # ===== PROCESS =====
@@ -156,15 +185,33 @@ class AgencyDirector:
             logger.error(f"PROCESS failed: {e}")
             self.event_log.record_error("process_failure", str(e))
             self._emit_error(f"PROCESS failed: {e}")
+            elapsed = (time.monotonic() - t0) * 1000
+            self.feedback.signal_failure(feedback_cmd, str(e), {"phase": "PROCESS"}, duration_ms=elapsed)
             return CycleResult(
                 status="ERROR", phase="PROCESS", cycle_id=cycle_id,
-                content_type=content_type, error=str(e),
+                content_type=content_type, error=str(e), duration_ms=elapsed,
             )
 
         if not content:
+            elapsed = (time.monotonic() - t0) * 1000
+            # Distinguish TAMAS skip from LLM unavailability
+            status = process_ctx.get("status", "ERROR")
+            if process_ctx.get("skipped"):
+                status = "SKIPPED"
+                self.feedback.signal_partial(feedback_cmd, "tamas_skip", {
+                    "guna": process_ctx.get("guna", ""), "guardian": process_ctx.get("guardian", ""),
+                })
+            elif status == "LLM_UNAVAILABLE":
+                self.feedback.signal_failure(feedback_cmd, "llm_unavailable", {
+                    "guna": process_ctx.get("guna", ""), "guardian": process_ctx.get("guardian", ""),
+                }, duration_ms=elapsed)
+            else:
+                self.feedback.signal_failure(feedback_cmd, "no_content", process_ctx, duration_ms=elapsed)
             return CycleResult(
-                status="ERROR", phase="PROCESS", cycle_id=cycle_id,
-                content_type=content_type, error="No content generated",
+                status=status, phase="PROCESS", cycle_id=cycle_id,
+                content_type=content_type, error=process_ctx.get("error", "No content generated"),
+                guna=process_ctx.get("guna", ""), guardian=process_ctx.get("guardian", ""),
+                duration_ms=elapsed,
             )
 
         guna = process_ctx.get("guna", "")
@@ -184,20 +231,29 @@ class AgencyDirector:
             )
             self.event_log.store_validation_feedback(validation.violations, content)
             self._emit_violation(f"Content rejected: {validation.violations[:2]}")
+            elapsed = (time.monotonic() - t0) * 1000
+            self.feedback.signal_failure(feedback_cmd, "governance_violation", {
+                "guna": guna, "guardian": guardian, "violations": validation.violations[:3],
+            }, duration_ms=elapsed)
             return CycleResult(
                 status="VALIDATION_FAILED", phase="VALIDATE", cycle_id=cycle_id,
                 content_type=content_type, content=content,
                 violations=validation.violations, guna=guna, guardian=guardian,
+                duration_ms=elapsed,
             )
 
         if validation.warnings:
             logger.info(f"VALIDATE warnings: {validation.warnings}")
 
         # ===== OUTPUT =====
+        elapsed = (time.monotonic() - t0) * 1000
+        self.feedback.signal_success(feedback_cmd, {
+            "guna": guna, "guardian": guardian, "length": len(content),
+        }, duration_ms=elapsed)
         return CycleResult(
             status="SUCCESS", phase="OUTPUT", cycle_id=cycle_id,
             content_type=content_type, content=content,
-            guna=guna, guardian=guardian,
+            guna=guna, guardian=guardian, duration_ms=elapsed,
         )
 
     # =========================================================================
@@ -329,7 +385,7 @@ class AgencyDirector:
         # SATTVA and RAJAS BOTH produce content (different styles)
         if guna == "TAMAS" and (not alive or integrity < 0.3):
             logger.info(f"TAMAS + dead/low-integrity ({integrity:.2f}): skipping")
-            return "", {"guna": guna, "guardian": guardian, "skipped": True}
+            return "", {"guna": guna, "guardian": guardian, "skipped": True, "status": "SKIPPED"}
 
         style = _GUNA_STYLE.get(guna, "active")
         logger.info(f"PROCESS: guna={guna} style={style} guardian={guardian} integrity={integrity:.3f}")
@@ -349,6 +405,11 @@ class AgencyDirector:
             "style": style,
             "integrity": integrity,
         }
+
+        # Explicit status when LLM produced no content
+        if not content:
+            process_ctx["status"] = "LLM_UNAVAILABLE"
+            process_ctx["error"] = "LLM unavailable — no content generated"
 
         return content, process_ctx
 
@@ -612,12 +673,12 @@ class AgencyDirector:
 
             # Check for registered proposer (content intelligence)
             from vibe_core.protocols.moltbook_content import ContentProposalProtocol
-            if ServiceRegistry.has(ContentProposalProtocol):
+            if ServiceRegistry.is_registered(ContentProposalProtocol):
                 available["content_proposal"] = ["analyze", "propose_comment", "propose_post", "propose_dm_reply"]
 
             # Check for event bus (communication)
             from vibe_core.protocols.mahajanas.narada.events import EventBusProtocol
-            if ServiceRegistry.has(EventBusProtocol):
+            if ServiceRegistry.is_registered(EventBusProtocol):
                 available["event_bus"] = ["emit", "subscribe", "get_history"]
 
             return available if available else None
