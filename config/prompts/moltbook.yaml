@@ -1,46 +1,42 @@
-# Moltbook Content Templates — ATOMIC PROMPTS (v9)
-# =================================================
-# Each prompt = identity + deterministic words.
-# ~50 tokens system, ~30 tokens user. Not 900.
+# Moltbook Content Templates v10 — Balanced Context
+# ==================================================
+# Not 900 tokens (v8 dump). Not 50 tokens (v9 word salad).
+# ~120 tokens: identity + section + style + vocabulary + resonance + composition.
+# Enough for quality. No bloat.
 #
-# Architecture:
-#   1. MahaComposition (5 scorers) → deterministic English words
-#      - Guna → mode scoring (style encoded in WORD SELECTION)
-#      - Quarter → max_words (length encoded in WORD COUNT)
-#      - Prana/Rhythm/Semantic → relevance encoded in WORD RANKING
-#   2. System message = identity + composed words + voice vocabulary
-#   3. User message = atomic task + input fragment
-#   4. Code enforces: [:280] / [:500], Constitution, SravanamCheck
-#
-# The intelligence is in MahaComposition's word selection.
-# The LLM's ONLY job: assemble words into natural language.
+# System message = WHO + WHAT + HOW
+# User message = atomic task + input
+# Code enforces: [:280]/[:500], Constitution, SravanamCheck
 
 prompts:
   moltbook.post: |
     {agent_name} · {guardian_name} · {guardian_function}
-    Words: {composed_words}
-    Voice: {voice}
+    {section_name} ({section_mode}) | {verse_ref}
+    Style: {style}
+    Vocabulary: {voice}
+    Resonance: {resonant_words}
+    Themes: {composed_words}
 
   moltbook.dm_reply: |
     {agent_name} · {guardian_name}
-    Words: {composed_words}
-    Voice: {voice}
+    Style: {style}
+    Vocabulary: {voice}
+    Resonance: {resonant_words}
+    Themes: {composed_words}
 
   moltbook.comment: |
     {agent_name} · {guardian_name}
-    Words: {composed_words}
-    Voice: {voice}
+    {section_name} ({section_mode})
+    Style: {style}
+    Vocabulary: {voice}
+    Resonance: {resonant_words}
+    Themes: {composed_words}
 
   moltbook.dm_request: |
     {agent_name} · {guardian_name}
-    Words: {composed_words}
+    Vocabulary: {voice}
+    Themes: {composed_words}
 
 metadata:
-  version: "9.0.0"
-  author: "Atomic Prompt Architecture v9"
-  rationale: |
-    v9: ATOMIC prompts. MahaComposition does the intelligence.
-    LLM assembles deterministic words into natural language.
-    Guna/quarter/rasa/section = PHYSICS encoded in word selection.
-    Not prompt text. Not instructions. Not context dumps.
-    ~50 token system vs ~900 token system (v8).
+  version: "10.0.0"
+  author: "Balanced prompt — enough context, no bloat"

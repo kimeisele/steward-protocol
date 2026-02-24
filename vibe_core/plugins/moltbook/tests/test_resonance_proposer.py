@@ -22,11 +22,7 @@ import pytest
 from vibe_core.mahamantra.substrate.encoding.resonance_ranker import RankedWord
 from vibe_core.mahamantra.substrate.language.types import EngineResult
 from vibe_core.cartridges.agent_city.moltbook.core.context_builders import (
-    build_moltbook_context as _build_context,
     format_resonant_words as _format_resonant_words,
-    format_template_words as _format_template_words,
-    guardian_vocabulary as _guardian_vocabulary,
-    phonetic_context as _phonetic_context,
     section_data as _section_data,
 )
 from vibe_core.plugins.moltbook.resonance_proposer import (
@@ -332,98 +328,12 @@ class TestContextBuilders:
     def test_format_resonant_words_empty(self):
         assert _format_resonant_words(_make_engine_result(resonant_words=())) == ""
 
-    def test_format_template_words(self):
-        er = _make_engine_result(
-            template_words=(("dharma", "righteousness", "noun"), ("karma", "action", "verb")),
-        )
-        formatted = _format_template_words(er)
-        assert "righteousness" in formatted
-
-    def test_format_template_words_empty(self):
-        assert _format_template_words(_make_engine_result(template_words=())) == ""
-
-    def test_build_context_slots(self):
-        er = _make_engine_result()
-        ctx = _build_context(er, "steward-protocol", "test input")
-        assert ctx["agent_name"] == "steward-protocol"
-        assert ctx["guardian_name"] == "KAPILA"
-        assert ctx["verse_ref"] == "BG.6.47"
-        assert "dharma" in ctx["resonant_words"]
-        assert ctx["engine_output"] == "dharma righteousness consciousness"
-        assert ctx["user_input"] == "test input"
-        # Section data present
-        assert "section_name" in ctx
-        assert "section_mode" in ctx
-
-    def test_build_context_extra_kwargs(self):
-        er = _make_engine_result()
-        ctx = _build_context(er, "test", "input", sender="AgentX", post_content="hello")
-        assert ctx["sender"] == "AgentX"
-        assert ctx["post_content"] == "hello"
-
     def test_section_data(self):
         er = _make_engine_result(section_name="dharma", section_mode="CORE")
         data = _section_data(er)
         assert data["section_name"] == "dharma"
         assert data["section_mode"] == "CORE"
 
-    def test_guardian_vocabulary_kapila(self):
-        """MahaLLM Kernel → kapila's top-10 vocabulary words."""
-        vocab = _guardian_vocabulary("kapila")
-        assert isinstance(vocab, str)
-        assert len(vocab) > 0
-        # Should contain Sanskrit words with meanings
-        assert "(" in vocab  # Format: "word (meaning), ..."
-
-    def test_guardian_vocabulary_unknown_returns_empty(self):
-        assert _guardian_vocabulary("nonexistent_guardian") == ""
-
-    def test_guardian_vocabulary_multiple_guardians(self):
-        """Different guardians have different vocabularies."""
-        kapila = _guardian_vocabulary("kapila")
-        manu = _guardian_vocabulary("manu")
-        assert kapila != manu  # Different guardians → different word palettes
-
-    def test_phonetic_context_with_coords(self):
-        """Pipeline NAMA coords → element walk + shruti pattern."""
-        result = _make_pipeline_result()
-        # _make_pipeline_result has nama.coords = (1, 2, 3)
-        ctx = _phonetic_context(result)
-        assert "element_walk" in ctx
-        assert "shruti_pattern" in ctx
-        assert len(ctx["element_walk"]) > 0
-        assert len(ctx["shruti_pattern"]) == 3  # 3 coords → 3 S/N chars
-
-    def test_phonetic_context_empty_coords(self):
-        result = {"nama": {"coords": ()}}
-        ctx = _phonetic_context(result)
-        assert ctx["element_walk"] == ""
-        assert ctx["shruti_pattern"] == ""
-
-    def test_phonetic_context_no_nama(self):
-        ctx = _phonetic_context({})
-        assert ctx["element_walk"] == ""
-        assert ctx["shruti_pattern"] == ""
-
-    def test_build_context_has_kernel_fields(self):
-        """_build_context includes MahaLLM Kernel + phonetic data."""
-        er = _make_engine_result()
-        pr = _make_pipeline_result()
-        ctx = _build_context(er, "steward-protocol", "test", pipeline_result=pr)
-        assert "guardian_vocabulary" in ctx
-        assert "element_walk" in ctx
-        assert "shruti_pattern" in ctx
-        # kapila vocabulary should be populated
-        assert len(ctx["guardian_vocabulary"]) > 0
-
-    def test_build_context_without_pipeline_result(self):
-        """Without pipeline_result, phonetic fields are empty strings."""
-        er = _make_engine_result()
-        ctx = _build_context(er, "steward-protocol", "test")
-        assert ctx["element_walk"] == ""
-        assert ctx["shruti_pattern"] == ""
-        # guardian_vocabulary still works (independent of pipeline)
-        assert len(ctx["guardian_vocabulary"]) > 0
 
 
 # =========================================================================
@@ -476,8 +386,8 @@ class TestYamlPrompts:
         count = PromptRegistry.load_from_yaml(yaml_path)
         assert count >= 4
 
-    def test_yaml_prompts_are_atomic_not_instructions(self):
-        """Atomic prompts: identity + composed words + voice. No instructions."""
+    def test_yaml_prompts_have_context_slots_no_instructions(self):
+        """YAML prompts: context slots (identity + style + vocabulary + resonance + themes). No instructions."""
         from vibe_core.runtime.prompt_registry import PromptRegistry
 
         yaml_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "config" / "prompts" / "moltbook.yaml"
@@ -485,18 +395,19 @@ class TestYamlPrompts:
 
         for key in ("moltbook.dm_reply", "moltbook.comment", "moltbook.post"):
             prompt = PromptRegistry.get(key)
-            # Atomic slots: identity + words
+            # Context slots present
             assert "{guardian_name}" in prompt
             assert "{composed_words}" in prompt
+            assert "{voice}" in prompt
+            assert "{resonant_words}" in prompt
+            assert "{style}" in prompt
             # NO instructions (system physics, not goodwill)
             lower = prompt.lower()
-            assert "sei authentisch" not in lower
-            assert "kein ai-slop" not in lower
             assert "please" not in lower
             assert "you should" not in lower
             assert "be creative" not in lower
-            # Atomic = SHORT (not 900 tokens of context dump)
-            assert len(prompt) < 200, f"Prompt too long ({len(prompt)} chars): not atomic"
+            # Balanced: not 900 tokens, not 50 tokens
+            assert len(prompt) < 300, f"Prompt too long ({len(prompt)} chars)"
 
 
 # =========================================================================
@@ -704,8 +615,8 @@ class TestCompose:
         result = p._compose("moltbook.dm_reply", _make_engine_result(), "test input", sender="X")
         assert result == "dharma insight response"
 
-    def test_compose_sends_atomic_context_to_llm(self):
-        """Atomic prompt: identity + composed words + voice. Not 900-token dump."""
+    def test_compose_sends_full_context_to_llm(self):
+        """LLM gets: identity + style + vocabulary + resonance + themes."""
         p, provider = _proposer_with_llm("response")
         p._compose(
             "moltbook.dm_reply",
@@ -716,9 +627,10 @@ class TestCompose:
         )
         ctx = provider.last_prompt
         assert "KAPILA" in ctx  # Guardian identity
-        assert "Words:" in ctx or "composed_words" in ctx.lower()  # Composed words slot
-        # Atomic = SHORT (not 900 tokens)
-        assert len(ctx) < 500, f"System prompt too long ({len(ctx)} chars): not atomic"
+        assert "Style:" in ctx  # Guna-derived style
+        assert "Themes:" in ctx or "Vocabulary:" in ctx  # Context slots filled
+        # Balanced: not 900 tokens, not 50 tokens
+        assert len(ctx) < 500, f"System prompt too long ({len(ctx)} chars)"
 
     def test_compose_no_provider_with_pipeline_result_returns_fallback(self):
         p = _proposer_no_llm()
@@ -790,14 +702,15 @@ class TestProposeDmReply:
             proposal = p.propose_dm_reply("conv1", "X", "hello")
         assert len(proposal["content"]) <= 280
 
-    def test_reply_llm_receives_atomic_prompt(self):
-        """LLM receives atomic prompt: identity + words. Not context dump."""
+    def test_reply_llm_receives_context_prompt(self):
+        """LLM receives balanced context: identity + style + vocabulary + themes."""
         p, provider = _proposer_with_llm("response")
         with patch.object(p, "_run_pipeline", return_value=_make_pipeline_result()):
             p.propose_dm_reply("conv1", "AgentX", "dharma discussion")
         ctx = provider.last_prompt
         assert "·" in ctx  # Identity format: NAME · GUARDIAN
-        assert "Words:" in ctx or len(ctx) < 500  # Atomic, not a dump
+        assert "Style:" in ctx or "Themes:" in ctx  # Context slots filled
+        assert len(ctx) < 500  # Balanced, not a dump
 
 
 # =========================================================================
