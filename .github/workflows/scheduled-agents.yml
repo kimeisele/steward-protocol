@@ -52,34 +52,7 @@ jobs:
   #         git add agent-city/stats/ agent-city/LEADERBOARD.md docs/agent-city/
   #         git commit -m "chore: Update Agent City stats [skip ci]" || echo "No changes to commit"
   # =========================================================================
-  # JOB 1.5: Moltbook Heartbeat (Every 10 minutes)
-  # =========================================================================
-  moltbook-heartbeat:
-    name: "💓 Moltbook Agent"
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Dependencies
-        run: |
-          pip install httpx cryptography nltk
-
-      - name: Run Moltbook Agent
-        env:
-          MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
-          MOLTBOOK_OFFLINE_MODE: "False"
-        run: |
-          PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py --cycles 4 || echo "Agent run failed but continuing workflow"
-
+  # Moltbook Agent: MOVED to moltbook-heartbeat.yml (own cron: */10 * * * *)
   # =========================================================================
   # JOB 2: AUDITOR Patrol (Daily at 6 UTC)
   # =========================================================================

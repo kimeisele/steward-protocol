@@ -1,0 +1,37 @@
+name: "💓 Moltbook Agent Heartbeat"
+
+on:
+  schedule:
+    # Every 10 minutes — matches rate limits:
+    #   1 post/30min  → MIN 12 heartbeats → 3 runs × 4 cycles = 30min ✓
+    #   10 comments/h → enforced by plugin rate limiter
+    #   30 DMs/h      → enforced by plugin rate limiter
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  moltbook-heartbeat:
+    name: "💓 Moltbook Agent"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install httpx cryptography nltk
+
+      - name: Run Moltbook Agent
+        env:
+          MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
+          MOLTBOOK_OFFLINE_MODE: "False"
+        run: |
+          PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py --cycles 4 || echo "Agent run failed but continuing workflow"
