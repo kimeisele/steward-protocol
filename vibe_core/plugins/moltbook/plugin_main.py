@@ -58,6 +58,7 @@ from vibe_core.mahamantra.substrate.core.seed import (
     PANCHA,
     QUARTERS,
     SHARANAGATI,
+    TRINITY,
     WORDS,
 )
 
@@ -505,11 +506,16 @@ class MoltbookPlugin(KernelPlugin):
         self._client = None  # MoltbookClient, created in on_boot
         self._service: Optional[MoltbookService] = None  # Singleton, reused in drain
         self._offline_mode: bool = True
+        self._standalone_mode: bool = False  # True when running without full kernel (MinimalKernel)
         self._last_heartbeat_error: Optional[str] = None
         self._state_dir: Optional[Path] = None
         self._tick_count: int = 0
         self._heartbeat_count: int = 0
-        # Intervals (configured at boot, defaults from class)
+        # Department-level tick counters (reset per session, used for intra-dept gating)
+        self._genesis_tick: int = 0
+        self._karma_tick: int = 0
+        self._moksha_tick: int = 0
+        # Adaptive intervals (diagnostic — real gating is _check_rate_limit)
         self._feed_interval: int = self._DEFAULT_FEED_INTERVAL
         self._post_interval: int = self._DEFAULT_POST_INTERVAL
         self._reply_check_interval: int = self._DEFAULT_REPLY_CHECK_INTERVAL
@@ -965,6 +971,11 @@ class MoltbookPlugin(KernelPlugin):
             # AGORA: wire broadcast channel for federation publishing
             self._wire_agora(kernel)
 
+            # Detect standalone mode: MinimalKernel has no singularity/venu tick loop
+            # → use heartbeat_count for MURALI department rotation instead of VenuOrchestrator
+            if kernel is None or not hasattr(kernel, "api") or kernel.api("singularity") is None:
+                self._standalone_mode = True
+
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
 
@@ -1311,44 +1322,51 @@ class MoltbookPlugin(KernelPlugin):
 
         self._heartbeat_count += 1
 
+        # MURALI phase-aware dispatch: each department runs its core action.
+        # Rate limiting is handled by _check_rate_limit() (real time windows),
+        # NOT by modulo gating (which was mathematically broken: intervals
+        # that are multiples of 4 never align with dept rotation % 4).
+        department = self._get_current_department()
+        q_pending = self._content_queue.stats.get("pending", 0) if hasattr(self._content_queue, "stats") else 0
+        logger.info(f"HB#{self._heartbeat_count} → {department.upper()} (topics={len(self._current_feed_topics)}, intents={len(self._current_intents)}, queue={q_pending})")
+
         # Always: process inbound DMs (reactive, not phased)
         has_new = heartbeat.get("has_activity", False)
         if has_new:
             self._safe_call(self._process_inbound_dms, "inbound_dms")
             self._safe_call(self._process_dm_requests, "dm_requests")
 
-        # MURALI phase-aware dispatch: prioritize current department
-        department = self._get_current_department()
-
         if department == "research":
             # GENESIS: scan feed, discover submolts
-            if self._heartbeat_count % self._feed_interval == 0:
-                self._safe_call(self._scan_feed, "feed_scan")
-            if self._heartbeat_count == 1 or self._heartbeat_count % (self._post_interval * 4) == 0:
+            self._safe_call(self._scan_feed, "feed_scan")
+            # Submolt discovery is expensive — only on first beat or every 6 GENESIS cycles
+            if self._heartbeat_count <= QUARTERS or self._genesis_tick % SHARANAGATI == 0:
                 self._safe_call(self._discover_submolts, "submolt_discovery")
+            self._genesis_tick += 1
 
         elif department == "planning":
             # DHARMA: evaluate strategy → intents
-            if self._heartbeat_count % self._feed_interval == 0:
-                self._safe_call(self._evaluate_strategy, "strategy_evaluation")
+            self._safe_call(self._evaluate_strategy, "strategy_evaluation")
 
         elif department == "execution":
             # KARMA: generate content from intents, reply monitoring
-            if self._heartbeat_count % self._post_interval == 0:
-                self._safe_call(self._execute_intents, "intent_execution")
-            if self._heartbeat_count % self._reply_check_interval == 0:
+            self._safe_call(self._execute_intents, "intent_execution")
+            # Reply monitoring every other KARMA cycle
+            if self._karma_tick % HALVES == 0:
                 self._safe_call(self._check_own_comment_replies, "reply_monitoring")
+            self._karma_tick += 1
 
         elif department == "learning":
             # MOKSHA: track engagement, adjust intervals, analyze patterns
-            if self._heartbeat_count % self._ENGAGEMENT_TRACK_INTERVAL == 0:
-                self._safe_call(self._track_engagement, "engagement_tracking")
-            if self._heartbeat_count % self._INTERVAL_ADJUST_INTERVAL == 0:
+            self._safe_call(self._track_engagement, "engagement_tracking")
+            # Interval adjustment every 3rd MOKSHA cycle (needs data)
+            if self._moksha_tick % TRINITY == 0:
                 self._safe_call(self._adjust_intervals, "interval_adjustment")
             self._safe_call(self._reflect_on_patterns, "reflection_analysis")
+            self._moksha_tick += 1
 
-        # Non-phased maintenance (runs regardless of department)
-        if self._heartbeat_count % self._profile_update_interval == 0:
+        # Non-phased maintenance: profile update every 12th heartbeat
+        if self._heartbeat_count % MAHAJANA_COUNT == 0:
             self._safe_call(self._update_profile, "profile_update")
             self._trim_memory()
 
@@ -1364,20 +1382,26 @@ class MoltbookPlugin(KernelPlugin):
         # Emit health to Ouroboros (system-wide observability)
         self._emit_ouroboros_health()
 
+    _DEPARTMENTS = ("research", "planning", "execution", "learning")
+
     def _get_current_department(self) -> str:
-        """Read MURALI phase from VenuOrchestrator → department name.
+        """Determine current MURALI department from heartbeat cycle.
 
-        Falls back to heartbeat_count cycling when venu is unavailable,
-        ensuring all 4 departments (research/planning/execution/learning) run.
+        Uses heartbeat_count % 4 for reliable rotation. VenuOrchestrator-based
+        routing only works when singularity.tick() is actively driven by the
+        kernel heartbeat loop — in standalone mode (MinimalKernel, GitHub Actions),
+        venu.tick is either stuck or advances randomly via side effects.
+        Heartbeat count is the only reliable clock.
         """
-        try:
-            from vibe_core.cartridges.agent_city.moltbook.core.agency_director import MuraliRouter
+        if not self._standalone_mode:
+            try:
+                from vibe_core.cartridges.agent_city.moltbook.core.agency_director import MuraliRouter
 
-            return MuraliRouter().current_department(fallback_tick=self._heartbeat_count)
-        except Exception:
-            # Last resort: cycle through departments using heartbeat count
-            departments = ("research", "planning", "execution", "learning")
-            return departments[self._heartbeat_count % len(departments)]
+                return MuraliRouter().current_department(fallback_tick=self._heartbeat_count)
+            except Exception:
+                pass
+
+        return self._DEPARTMENTS[self._heartbeat_count % len(self._DEPARTMENTS)]
 
     # =========================================================================
     # Reflection Protocol — learning from execution patterns
@@ -1632,7 +1656,8 @@ class MoltbookPlugin(KernelPlugin):
     def _scan_feed(self) -> None:
         """GENESIS phase: Extract topics + metadata from feed. NO content generation.
 
-        Stores results in self._current_feed_topics for later strategy evaluation.
+        Stores ALL feed posts as topics for strategy evaluation (not just unseen).
+        Only engagement actions (upvotes) are filtered by seen status.
         """
         if not self._proposer:
             return
@@ -1646,33 +1671,26 @@ class MoltbookPlugin(KernelPlugin):
         if not posts:
             return
 
-        # Filter already-seen posts, store full metadata
-        unseen = []
-        for post in posts:
+        # ALL posts become topics for strategy (DHARMA needs context, not just new posts)
+        self._current_feed_topics = posts if isinstance(posts, list) else []
+        logger.info(f"Feed scan: {len(self._current_feed_topics)} topics available")
+
+        # Engagement: upvote UNSEEN high-quality posts (dedup prevents double-engage)
+        for post in posts[:5]:
             post_id = post.get("id", "") if isinstance(post, dict) else ""
-            if post_id and post_id not in self._seen_post_ids:
+            if post_id and post_id in self._seen_post_ids:
+                continue  # Already engaged
+            post_content = post.get("content", post.get("title", "")) if isinstance(post, dict) else ""
+            author_data = post.get("author", {}) if isinstance(post, dict) else {}
+            author = author_data.get("name", "unknown") if isinstance(author_data, dict) else "unknown"
+            if post_id and post_content:
                 self._seen_post_ids.add(post_id)
-                unseen.append(post)
-
-        self._current_feed_topics = unseen
-
-        # Engagement: upvote high-quality posts during scan (lightweight, no content gen)
-        if self._proposer and unseen:
-            for post in unseen[:5]:
-                post_id = post.get("id", "") if isinstance(post, dict) else ""
-                post_content = post.get("content", post.get("title", "")) if isinstance(post, dict) else ""
-                author_data = post.get("author", {}) if isinstance(post, dict) else {}
-                author = author_data.get("name", "unknown") if isinstance(author_data, dict) else "unknown"
-                if post_id and post_content:
-                    try:
-                        engage_proposal = self._proposer.should_engage(post_id, post_content, author)
-                        if engage_proposal:
-                            self._content_queue.enqueue(engage_proposal)
-                    except Exception:
-                        pass
-
-        if unseen:
-            logger.info(f"Feed scan: {len(unseen)} new topics extracted")
+                try:
+                    engage_proposal = self._proposer.should_engage(post_id, post_content, author)
+                    if engage_proposal:
+                        self._content_queue.enqueue(engage_proposal)
+                except Exception:
+                    pass
 
     def _evaluate_strategy(self) -> None:
         """DHARMA phase: Sankalpa → prioritized strategic intents.
@@ -1927,15 +1945,8 @@ class MoltbookPlugin(KernelPlugin):
             f"{len(self._subscribed_submolts)} submolts"
         )
 
-        metadata = {
-            "heartbeats": self._heartbeat_count,
-            "posts_sent": queue_stats.get("total_drained", 0),
-            "comments_tracked": len(self._own_comment_ids),
-            "last_updated": datetime.now(timezone.utc).isoformat(),
-        }
-
         try:
-            self._service.update_profile(description=description, metadata=metadata)
+            self._service.update_profile(description=description)
             self._last_profile_heartbeat = self._heartbeat_count
             self._log_activity(
                 "profile_updated",
