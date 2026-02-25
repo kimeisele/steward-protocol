@@ -526,6 +526,7 @@ class MoltbookPlugin(KernelPlugin):
         self._seen_message_ids: Set[str] = set()
         self._seen_post_ids: Set[str] = set()
         self._own_comment_ids: Set[str] = set()  # Track our comments for reply monitoring
+        self._commented_post_ids: Set[str] = set()  # Post-level dedup: don't comment on same post twice
         self._last_post_heartbeat: int = 0  # Heartbeat count when last post was created
         self._followed_agents: Set[str] = set()  # Track who we've followed (avoid duplicates)
         self._subscribed_submolts: Set[str] = set()  # Track community subscriptions
@@ -686,10 +687,11 @@ class MoltbookPlugin(KernelPlugin):
             own_posts = {k: self._own_post_ids[k] for k in own_post_keys}
 
             seen_data = {
-                "version": 4,
+                "version": 5,
                 "message_ids": msg_ids,
                 "post_ids": post_ids,
                 "own_comment_ids": sorted(self._own_comment_ids)[-self._MAX_SEEN_IDS :],
+                "commented_post_ids": sorted(self._commented_post_ids)[-self._MAX_SEEN_IDS :],
                 "followed_agents": sorted(self._followed_agents),
                 "subscribed_submolts": sorted(self._subscribed_submolts),
                 "comment_post_map": cpm,
@@ -738,10 +740,11 @@ class MoltbookPlugin(KernelPlugin):
         try:
             if seen_path.exists():
                 data = json.loads(seen_path.read_text())
-                if data.get("version") in (1, 2, 3, 4):
+                if data.get("version") in (1, 2, 3, 4, 5):
                     self._seen_message_ids = set(data.get("message_ids", []))
                     self._seen_post_ids = set(data.get("post_ids", []))
                     self._own_comment_ids = set(data.get("own_comment_ids", []))
+                    self._commented_post_ids = set(data.get("commented_post_ids", []))
                     self._followed_agents = set(data.get("followed_agents", []))
                     self._subscribed_submolts = set(data.get("subscribed_submolts", []))
                     self._comment_post_map = data.get("comment_post_map", {})
@@ -749,6 +752,7 @@ class MoltbookPlugin(KernelPlugin):
                     logger.info(
                         f"Restored {len(self._seen_message_ids)} msg IDs, "
                         f"{len(self._seen_post_ids)} post IDs, "
+                        f"{len(self._commented_post_ids)} commented posts, "
                         f"{len(self._followed_agents)} followed, "
                         f"{len(self._subscribed_submolts)} subscribed, "
                         f"{len(self._comment_post_map)} comment threads"
@@ -1737,6 +1741,11 @@ class MoltbookPlugin(KernelPlugin):
         for intent in self._current_intents[:3]:
             try:
                 if intent.action_type == "comment" and intent.target_post_id:
+                    # Post-level dedup: don't comment on same post twice
+                    if intent.target_post_id in self._commented_post_ids:
+                        logger.info(f"Already commented on {intent.target_post_id}, skipping")
+                        continue
+
                     proposal = self._director_propose(
                         content_type="comment",
                         raw_input=intent.topic,
@@ -1751,6 +1760,7 @@ class MoltbookPlugin(KernelPlugin):
                     )
                     if proposal:
                         self._content_queue.enqueue(proposal)
+                        self._commented_post_ids.add(intent.target_post_id)
                         logger.info(
                             f"Strategic comment queued for {intent.target_post_id} (mission={intent.mission_id})"
                         )

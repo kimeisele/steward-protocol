@@ -1418,6 +1418,89 @@ class TestGADCompliance:
         result = service.audit()
         assert result.criteria_score >= 5
 
+
+# =============================================================================
+# COMMENT DEDUP — Post-level deduplication
+# =============================================================================
+
+
+class TestCommentDedup:
+    """Post-level comment dedup: don't comment on the same post twice per session.
+
+    _commented_post_ids tracks target_post_id → skip if already seen.
+    Persisted in seen_ids.json (version 5).
+    """
+
+    def test_init_has_empty_set(self, plugin):
+        """Fresh plugin starts with empty commented_post_ids."""
+        assert isinstance(plugin._commented_post_ids, set)
+        assert len(plugin._commented_post_ids) == 0
+
+    def test_add_and_check(self, plugin):
+        """Adding a post_id prevents it from matching again."""
+        plugin._commented_post_ids.add("post-123")
+        assert "post-123" in plugin._commented_post_ids
+        assert "post-456" not in plugin._commented_post_ids
+
+    def test_persistence_roundtrip(self, plugin, tmp_path):
+        """commented_post_ids survive save → load cycle."""
+        plugin._state_dir = tmp_path
+        plugin._commented_post_ids = {"p1", "p2", "p3"}
+
+        # Save
+        plugin._persist_queue()
+
+        # Load into new plugin
+        p2 = MoltbookPlugin()
+        p2._client = MoltbookClient(api_key="test", offline_mode=True)
+        p2._state_dir = tmp_path
+        p2._restore_queue()
+
+        assert p2._commented_post_ids == {"p1", "p2", "p3"}
+
+    def test_persistence_version_5(self, plugin, tmp_path):
+        """seen_ids.json version is 5 with commented_post_ids field."""
+        import json
+
+        plugin._state_dir = tmp_path
+        plugin._commented_post_ids = {"post-abc"}
+        plugin._persist_queue()
+
+        seen_file = tmp_path / "seen_ids.json"
+        assert seen_file.exists()
+        data = json.loads(seen_file.read_text())
+        assert data["version"] == 5
+        assert "commented_post_ids" in data
+        assert "post-abc" in data["commented_post_ids"]
+
+    def test_empty_set_persists_cleanly(self, plugin, tmp_path):
+        """Empty commented_post_ids doesn't break persistence."""
+        plugin._state_dir = tmp_path
+        plugin._persist_queue()
+
+        p2 = MoltbookPlugin()
+        p2._client = MoltbookClient(api_key="test", offline_mode=True)
+        p2._state_dir = tmp_path
+        p2._restore_queue()
+
+        assert p2._commented_post_ids == set()
+
+    def test_backward_compat_no_field(self, plugin, tmp_path):
+        """Old seen_ids.json without commented_post_ids → empty set, no crash."""
+        import json
+
+        seen_file = tmp_path / "seen_ids.json"
+        seen_file.write_text(json.dumps({
+            "version": 4,
+            "message_ids": [],
+            "post_ids": [],
+        }))
+
+        plugin._state_dir = tmp_path
+        plugin._restore_queue()
+
+        assert plugin._commented_post_ids == set()
+
     def test_audit_legitimacy_positive(self, service):
         """Legitimacy score is positive (not zero)."""
         result = service.audit()

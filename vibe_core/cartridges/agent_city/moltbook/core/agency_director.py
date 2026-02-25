@@ -11,12 +11,13 @@ Uses Mahamantra substrate DIRECTLY. No delegation to proposer gates.
 Guna informs STYLE (guardian, tone), NOT gating.
 Only TAMAS + dead cell = skip. Everything else generates content.
 
-Prompts come from config/prompts/moltbook.yaml (pure context, zero instructions).
+Prompts come from config/prompts/moltbook.yaml via PromptRegistry (SSOT, no fallback).
+MahaComposition runs for backend analytics — output does NOT enter LLM prompt.
 Code enforces physical barriers (char limits, guna gates, integrity checks).
 
-Wires: MahaComposition, MahaLanguageEngine, Knowledge Graph, EventBus,
-       ResonanceHarmonics (zone), VedicScaleMapping (rasa), SravanamCheck (entropy),
-       PromptRegistry (YAML templates), context_builders (shared extraction).
+Wires: MahaComposition (backend), MahaLanguageEngine (backend), Knowledge Graph,
+       EventBus, ResonanceHarmonics (zone), VedicScaleMapping (rasa),
+       SravanamCheck (entropy), PromptRegistry (YAML SSOT).
 """
 
 import logging
@@ -39,7 +40,8 @@ from vibe_core.mahamantra.substrate.encoding.harmonics import (
     VedicScaleMapping,
 )
 
-from .context_builders import format_resonant_words, guardian_vocabulary_short, section_data
+# context_builders (guardian_vocabulary_short, section_data, format_resonant_words)
+# available for backend use — NOT imported for LLM prompt injection
 
 logger = logging.getLogger("MOLTBOOK_DIRECTOR")
 
@@ -131,8 +133,7 @@ _MOLTBOOK_YAML = (
 )
 
 # Content-type → atomic task (user message for LLM)
-# The ONLY text telling the LLM what to DO.
-# System message = identity + composed words (WHO you are + WHAT words to use).
+# System message = identity + style + topic + context (YAML v12).
 # User message = atomic task (WHAT to produce).
 _TASK_TEMPLATES = {
     "post": "Write an original post about: {input}",
@@ -684,14 +685,10 @@ class AgencyDirector:
     ) -> str:
         """Deterministic pre-processing → atomic LLM call.
 
-        1. MahaComposition (5 scorers) → deterministic English words
-           Guna/quarter/prana/rhythm/semantics ALREADY encoded in word selection.
-        2. Guardian vocabulary → voice fingerprint (5 meanings, ~15 tokens)
-        3. Atomic LLM call: identity + words + voice → natural language
+        1. MahaComposition (5 scorers) runs for backend analytics (NOT injected into prompt)
+        2. Pipeline data (guna→style, topic, reasoning) fills YAML template slots
+        3. Atomic LLM call: identity + style + topic + context → content
         4. Code enforces: char limits, constitution, sravanam (in _process())
-
-        Harmonics kwargs (guna, rasa, etc.) are accepted for caller compatibility
-        but do NOT go to the LLM — they're physics, not prompt text.
         """
         _load_yaml_prompts()
 
@@ -713,9 +710,7 @@ class AgencyDirector:
             words = getattr(engine_result, "resonant_words", ()) or ()
             composed_words = ", ".join(m for _, m, _ in words[:5])
 
-        if not composed_words:
-            logger.warning("No composed words — cannot generate content")
-            return ""
+        # MahaComposition runs for backend analytics — does NOT gate content generation
 
         # Step 2: Extract engine data for context
         guardian_name = ""
@@ -726,17 +721,15 @@ class AgencyDirector:
             guardian_function = getattr(engine_result, "guardian_function", "") or "analysis"
             verse_ref = getattr(engine_result, "verse_ref", "") or ""
 
-        voice = guardian_vocabulary_short(guardian_name)
-        sec = section_data(engine_result)
-        resonant_words = format_resonant_words(engine_result)
+        # guardian_vocabulary_short / section_data / format_resonant_words
+        # computed by engine but NOT injected into LLM prompt (backend only)
 
         # Step 3: Agent identity
         agent_name = "steward-protocol"
         if self._plugin and hasattr(self._plugin, "_agent_name"):
             agent_name = self._plugin._agent_name
 
-        # Step 4: Full context for YAML template (~100 tokens)
-        # TOPIC/CONTEXT/COMMUNITY first (LLM prioritizes), voice/vocabulary last (shaping)
+        # Step 4: YAML template context — identity + style + topic + reasoning
         # Build strategic reasoning (merge engagement context if present)
         reasoning = input_ctx.get("strategic_reasoning", "")
         eng_ctx = input_ctx.get("engagement_context", "")
@@ -750,15 +743,10 @@ class AgencyDirector:
 
         prompt_ctx = {
             "agent_name": agent_name,
-            # PRIMARY: what to write about
             "topic": input_text[:200],
             "strategic_reasoning": reasoning,
             "submolt_context": input_ctx.get("submolt_context", ""),
-            # SECONDARY: voice shaping
             "style": style,
-            "voice": voice,
-            "composed_words": composed_words,
-            # TERTIARY: domain knowledge (for user message, not system message)
             "knowledge_context": knowledge_context,
         }
 
@@ -786,11 +774,11 @@ class AgencyDirector:
         task_input: str,
         content_type: str,
     ) -> Optional[str]:
-        """LLM call. System = YAML context (~120 tokens). User = task + input.
+        """LLM call. System = YAML template (PromptRegistry SSOT). User = task + input.
 
-        System message: identity + section + style + vocabulary + resonance + themes.
+        System message: identity + style + topic + context (from YAML v12).
         User message: atomic task ("Post about: ..." / "Reply to: ...").
-        LLM assembles the composed words into natural language.
+        No fallback. PromptRegistry is the single path.
         """
         try:
             from vibe_core.runtime.providers.factory import get_llm_provider
@@ -801,27 +789,19 @@ class AgencyDirector:
         except Exception:
             return None
 
-        # Fill YAML template with atomic context
+        # Fill YAML template — PromptRegistry is SSOT, no fallback
         prompt_key = _PROMPT_KEYS.get(content_type, "moltbook.post")
-        system_msg = ""
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
 
             system_msg = PromptRegistry.get(prompt_key, context=prompt_ctx)
         except Exception as e:
-            logger.warning(f"PromptRegistry: {e}")
+            logger.error(f"PromptRegistry FAILED for {prompt_key}: {e}")
+            return None
 
         if not system_msg:
-            # Fallback: inline context (mirrors YAML v11 structure)
-            topic = prompt_ctx.get("topic", "")
-            reasoning = prompt_ctx.get("strategic_reasoning", "")
-            system_msg = (
-                f"{prompt_ctx.get('agent_name', '')} on Moltbook.\n"
-                f"TOPIC: {topic}\n"
-                + (f"CONTEXT: {reasoning}\n" if reasoning else "")
-                + f"Voice: {prompt_ctx.get('style', '')}. Terms: {prompt_ctx.get('voice', '')}\n"
-                f"Themes: {prompt_ctx.get('composed_words', '')}"
-            )
+            logger.error(f"PromptRegistry returned empty for {prompt_key} — cannot compose")
+            return None
 
         # Atomic task message (includes KG domain context when available)
         user_msg = _build_task_message(content_type, task_input, prompt_ctx.get("knowledge_context", ""))
