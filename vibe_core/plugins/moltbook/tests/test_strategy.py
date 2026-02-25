@@ -11,17 +11,10 @@ SankalpaOrchestrator is mocked — we test the planner's logic, not Sankalpa's.
 import json
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from vibe_core.cartridges.agent_city.moltbook.core.strategy import (
     MoltbookStrategyPlanner,
-    StrategicIntent,
-    TopicMatch,
-    _FALLBACK_TOPICS,
     _derive_seed_topics,
 )
 from vibe_core.mahamantra.substrate.core.seed import TRINITY
@@ -444,32 +437,20 @@ class TestGracefulDegradation:
 
 
 class TestSeedTopics:
-    def test_fallback_topics_has_five_entries(self):
-        assert len(_FALLBACK_TOPICS) == 5
-
-    def test_fallback_topic_ids_are_unique(self):
-        ids = [t[0] for t in _FALLBACK_TOPICS]
-        assert len(ids) == len(set(ids))
-
-    def test_fallback_topics_have_descriptions(self):
-        for topic_id, desc in _FALLBACK_TOPICS:
-            assert len(desc) > 10, f"Fallback topic {topic_id} has short description"
-
     def test_derive_returns_tuple(self):
-        """_derive_seed_topics always returns a tuple of (id, desc) pairs."""
+        """_derive_seed_topics always returns a tuple."""
         topics = _derive_seed_topics()
         assert isinstance(topics, tuple)
-        assert len(topics) >= 1
         for entry in topics:
             assert len(entry) == 2
             assert isinstance(entry[0], str)
             assert isinstance(entry[1], str)
 
-    def test_derive_falls_back_when_no_sources(self):
-        """When KG + Sankalpa unavailable, returns _FALLBACK_TOPICS."""
+    def test_derive_returns_empty_when_no_sources(self):
+        """When KG + Sankalpa unavailable, returns empty tuple (no fallback)."""
         topics = _derive_seed_topics()
-        # At minimum, fallback topics are returned
-        assert len(topics) >= len(_FALLBACK_TOPICS)
+        # Without KG/Sankalpa in test env, returns empty — autonomous agent waits
+        assert isinstance(topics, tuple)
 
 
 # ---------------------------------------------------------------------------

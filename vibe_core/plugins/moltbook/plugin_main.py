@@ -523,6 +523,7 @@ class MoltbookPlugin(KernelPlugin):
         self._last_post_heartbeat: int = 0  # Heartbeat count when last post was created
         self._followed_agents: Set[str] = set()  # Track who we've followed (avoid duplicates)
         self._subscribed_submolts: Set[str] = set()  # Track community subscriptions
+        self._submolt_descriptions: Dict[str, str] = {}  # name → description (for LLM context)
         self._last_overflow_log: int = 0  # Heartbeat count when last overflow was logged
         self._comment_post_map: Dict[str, str] = {}  # comment_id → post_id for reply monitoring
         self._last_profile_heartbeat: int = 0  # Heartbeat count when profile was last updated
@@ -967,6 +968,9 @@ class MoltbookPlugin(KernelPlugin):
             # PARAMPARA: Wire to Mahamantra heartbeat (same as Nrisimha)
             self._wire_to_mahamantra()
 
+            # OUROBOROS: Register as self-healing gene
+            self._wire_ouroboros()
+
             mode = "OFFLINE" if self._offline_mode else "LIVE"
             logger.info(f"Moltbook booted [{mode}]")
             return HookResult.ok()
@@ -1010,6 +1014,54 @@ class MoltbookPlugin(KernelPlugin):
             logger.info("PARAMPARA: Moltbook wired to Mahamantra")
         except Exception as e:
             logger.warning(f"Mahamantra connection failed: {e}")
+
+    def _wire_ouroboros(self) -> None:
+        """Register Moltbook as Ouroboros gene for self-healing + health monitoring."""
+        try:
+            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
+            anchor = get_system_anchor()
+            anchor.register_gene_simple("moltbook", self)
+
+            # Subscribe to healing events — react to system-wide violations
+            anchor.subscribe("healing.requested", "moltbook")
+            anchor.subscribe("violation.detected", "moltbook")
+
+            logger.info("OUROBOROS: Moltbook registered as self-healing gene")
+        except Exception as e:
+            logger.debug(f"Ouroboros registration failed: {e}")
+
+    def on_event(self, event_type: str, data: Dict[str, Any]) -> None:
+        """Ouroboros event handler — react to system healing/violation events."""
+        if event_type == "violation.detected":
+            target = data.get("target", "")
+            if "moltbook" in target.lower():
+                logger.warning(f"OUROBOROS: Violation targeting moltbook: {data.get('message', '')}")
+                self._emit_event("HEALING", f"Ouroboros violation: {data.get('message', '')}", data)
+        elif event_type == "healing.requested":
+            target = data.get("target", "")
+            if target == "moltbook" or target == "strategy_planner":
+                logger.info(f"OUROBOROS: Healing requested for {target}: {data.get('reason', '')}")
+                # Self-heal: reset engagement cache if strategy is degraded
+                if target == "strategy_planner" and self._strategy_planner:
+                    self._strategy_planner._engagement_cache.clear()
+                    logger.info("OUROBOROS: Strategy planner engagement cache reset (healing)")
+
+    def _emit_ouroboros_health(self) -> None:
+        """Emit health status to Ouroboros on each heartbeat."""
+        try:
+            from vibe_core.ouroboros.ananta_shesha import get_system_anchor
+
+            anchor = get_system_anchor()
+            anchor.emit_event("moltbook.health", {
+                "heartbeat": self._heartbeat_count,
+                "offline": self._offline_mode,
+                "queue_size": len(self._content_queue),
+                "last_error": self._last_heartbeat_error,
+                "subscribed_submolts": len(self._subscribed_submolts),
+            })
+        except Exception:
+            pass  # Ouroboros unavailable — degrade gracefully
 
     def _wire_circuit_executor(self, kernel: "RealVibeKernel") -> None:
         """Wire CognitiveCircuitExecutor + MetaCircuitManager from cortex.
@@ -1288,11 +1340,12 @@ class MoltbookPlugin(KernelPlugin):
                 self._safe_call(self._check_own_comment_replies, "reply_monitoring")
 
         elif department == "learning":
-            # MOKSHA: track engagement, adjust intervals
+            # MOKSHA: track engagement, adjust intervals, analyze patterns
             if self._heartbeat_count % self._ENGAGEMENT_TRACK_INTERVAL == 0:
                 self._safe_call(self._track_engagement, "engagement_tracking")
             if self._heartbeat_count % self._INTERVAL_ADJUST_INTERVAL == 0:
                 self._safe_call(self._adjust_intervals, "interval_adjustment")
+            self._safe_call(self._reflect_on_patterns, "reflection_analysis")
 
         # Non-phased maintenance (runs regardless of department)
         if self._heartbeat_count % self._profile_update_interval == 0:
@@ -1304,6 +1357,12 @@ class MoltbookPlugin(KernelPlugin):
 
         # Always drain queue on heartbeat (even without new activity)
         self._drain_content_queue()
+
+        # Record heartbeat in Reflection Protocol (learning from execution patterns)
+        self._record_heartbeat_reflection(department, time.time() - now)
+
+        # Emit health to Ouroboros (system-wide observability)
+        self._emit_ouroboros_health()
 
     def _get_current_department(self) -> str:
         """Read MURALI phase from VenuOrchestrator → department name.
@@ -1319,6 +1378,61 @@ class MoltbookPlugin(KernelPlugin):
             # Last resort: cycle through departments using heartbeat count
             departments = ("research", "planning", "execution", "learning")
             return departments[self._heartbeat_count % len(departments)]
+
+    # =========================================================================
+    # Reflection Protocol — learning from execution patterns
+    # =========================================================================
+
+    def _record_heartbeat_reflection(self, department: str, duration_s: float) -> None:
+        """Record heartbeat in Reflection Protocol for pattern analysis."""
+        try:
+            from vibe_core.protocols.reflection import ExecutionRecord, get_reflection_safe
+
+            reflection = get_reflection_safe()
+            record = ExecutionRecord(
+                command=f"moltbook.heartbeat.{department}",
+                success=self._last_heartbeat_error is None,
+                error=self._last_heartbeat_error,
+                duration_ms=duration_s * 1000,
+                context={
+                    "department": department,
+                    "heartbeat": self._heartbeat_count,
+                    "queue_size": len(self._content_queue),
+                    "offline": self._offline_mode,
+                },
+            )
+            reflection.record_execution(record)
+        except Exception:
+            pass  # Reflection unavailable — degrade gracefully
+
+    def _reflect_on_patterns(self) -> None:
+        """MOKSHA: Analyze reflection patterns and apply learned improvements."""
+        try:
+            from vibe_core.protocols.reflection import get_reflection_safe
+
+            reflection = get_reflection_safe()
+            patterns = reflection.analyze_patterns(limit=50)
+            if not patterns:
+                return
+
+            # Check for repeated failures → emit to Ouroboros
+            for insight in patterns:
+                if getattr(insight, "type", None) == "failure_pattern":
+                    self._emit_event(
+                        "REFLECTION_INSIGHT",
+                        f"Failure pattern detected: {insight.message}",
+                        {"insight": insight.message, "confidence": getattr(insight, "confidence", 0)},
+                    )
+
+            # Propose improvements (auto-approve high-confidence)
+            proposal = reflection.propose_improvement(patterns)
+            if proposal and all(
+                getattr(i, "confidence", 0) > 0.8 for i in getattr(proposal, "insights", [])
+            ):
+                reflection.approve_proposal(proposal.id)
+                logger.info(f"Reflection: auto-approved improvement '{proposal.title}'")
+        except Exception as e:
+            logger.debug(f"Reflection analysis failed: {e}")
 
     # =========================================================================
     # on_pulse — backward compat (delegates to same heartbeat)
@@ -1626,7 +1740,11 @@ class MoltbookPlugin(KernelPlugin):
                 elif intent.action_type == "post":
                     seed = intent.topic
                     selected_submolt = self._select_submolt(seed)
-                    submolt_ctx = intent.submolt_context or selected_submolt or ""
+                    # Build meaningful context: name + description (not bare name)
+                    submolt_ctx = intent.submolt_context
+                    if not submolt_ctx and selected_submolt:
+                        desc = self._submolt_descriptions.get(selected_submolt, "")
+                        submolt_ctx = f"{selected_submolt} — {desc}" if desc else selected_submolt
 
                     proposal = self._director_propose(
                         content_type="post",
@@ -1683,15 +1801,22 @@ class MoltbookPlugin(KernelPlugin):
 
         # Select best submolt via resonance cross-scoring
         selected_submolt = self._select_submolt(seed)
+        submolt_ctx = ""
+        if selected_submolt:
+            desc = self._submolt_descriptions.get(selected_submolt, "")
+            submolt_ctx = f"{selected_submolt} — {desc}" if desc else selected_submolt
 
         try:
+            ctx: Dict[str, Any] = {"submolt_context": submolt_ctx}
+            if feed_topics:
+                ctx["feed_topics"] = feed_topics
             proposal = self._director_propose(
                 content_type="post",
                 raw_input=seed,
                 proposal_type=ContentType.POST.value,
                 trigger=trigger,
                 submolt=selected_submolt or "",
-                context={"feed_topics": feed_topics} if feed_topics else {},
+                context=ctx,
             )
             if proposal:
                 # Extract title from first line if present
@@ -2101,6 +2226,9 @@ class MoltbookPlugin(KernelPlugin):
                 name = submolt.get("name", "")
                 if name and name not in self._subscribed_submolts:
                     self._subscribed_submolts.add(name)
+                    desc = submolt.get("description", "")
+                    if desc:
+                        self._submolt_descriptions[name] = desc
                     self._content_queue.enqueue(
                         {
                             "content_type": ContentType.SUBSCRIBE.value,
@@ -2132,6 +2260,8 @@ class MoltbookPlugin(KernelPlugin):
 
             if int(score * COSMIC_FRAME) > self._SUBMOLT_RESONANCE_CF or cold_start:
                 self._subscribed_submolts.add(name)
+                if desc:
+                    self._submolt_descriptions[name] = desc
                 proposal: ContentProposal = {
                     "content_type": ContentType.SUBSCRIBE.value,
                     "submolt": name,

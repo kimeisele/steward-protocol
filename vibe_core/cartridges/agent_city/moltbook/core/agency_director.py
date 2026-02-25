@@ -142,10 +142,17 @@ _TASK_TEMPLATES = {
 }
 
 
-def _build_task_message(content_type: str, input_text: str) -> str:
-    """Build atomic task message for LLM user role."""
+def _build_task_message(content_type: str, input_text: str, knowledge: str = "") -> str:
+    """Build atomic task message for LLM user role.
+
+    Includes KG domain context when available — gives the LLM real knowledge
+    beyond just the topic name.
+    """
     template = _TASK_TEMPLATES.get(content_type, "Write about: {input}")
-    return template.format(input=input_text[:200] if input_text else content_type)
+    msg = template.format(input=input_text[:200] if input_text else content_type)
+    if knowledge:
+        msg += f"\n\nDomain context: {knowledge[:300]}"
+    return msg
 
 
 _YAML_LOADED = False
@@ -738,6 +745,9 @@ class AgencyDirector:
         elif eng_ctx:
             reasoning = eng_ctx
 
+        # Knowledge Graph domain context (fetched in _input, used in user message)
+        knowledge_context = input_ctx.get("knowledge_context", "")
+
         prompt_ctx = {
             "agent_name": agent_name,
             # PRIMARY: what to write about
@@ -748,6 +758,8 @@ class AgencyDirector:
             "style": style,
             "voice": voice,
             "composed_words": composed_words,
+            # TERTIARY: domain knowledge (for user message, not system message)
+            "knowledge_context": knowledge_context,
         }
 
         # Step 5: Task input (content-type-specific fragment)
@@ -811,8 +823,8 @@ class AgencyDirector:
                 f"Themes: {prompt_ctx.get('composed_words', '')}"
             )
 
-        # Atomic task message
-        user_msg = _build_task_message(content_type, task_input)
+        # Atomic task message (includes KG domain context when available)
+        user_msg = _build_task_message(content_type, task_input, prompt_ctx.get("knowledge_context", ""))
 
         # Quota check
         try:
