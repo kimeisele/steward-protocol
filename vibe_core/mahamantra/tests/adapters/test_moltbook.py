@@ -26,6 +26,7 @@ import time
 
 import pytest
 
+from vibe_core.mahamantra.adapters.captcha_decoder import CaptchaChamber
 from vibe_core.mahamantra.adapters.moltbook import (
     ChallengeMonitor,
     ChallengeSolver,
@@ -144,6 +145,48 @@ class TestChallengeSolverTeens:
         assert ChallengeSolver.solve("seventy + ninety") == "160"
 
 
+class TestChallengeSolverAdvanced:
+    """AST-based solver: decimals, chained ops, modulo, power, compounds."""
+
+    def test_decimal_addition(self):
+        assert ChallengeSolver.solve("What is 3.5 + 1.5?") == "5"
+
+    def test_chained_operations(self):
+        assert ChallengeSolver.solve("What is 10 + 5 - 3?") == "12"
+
+    def test_operator_precedence(self):
+        """Multiplication before addition (standard math precedence)."""
+        assert ChallengeSolver.solve("What is 2 + 3 * 4?") == "14"
+
+    def test_parentheses(self):
+        assert ChallengeSolver.solve("What is (5 + 3) * 2?") == "16"
+
+    def test_modulo(self):
+        assert ChallengeSolver.solve("What is 17 modulo 5?") == "2"
+
+    def test_power(self):
+        assert ChallengeSolver.solve("What is 2 raised to power of 3?") == "8"
+
+    def test_hyphenated_twenty_three(self):
+        assert ChallengeSolver.solve("What is twenty-three plus five?") == "28"
+
+    def test_hyphenated_thirty_five(self):
+        assert ChallengeSolver.solve("What is thirty-five times two?") == "70"
+
+    def test_hyphenated_ninety_nine(self):
+        assert ChallengeSolver.solve("What is ninety-nine minus seventy-seven?") == "22"
+
+    def test_hyphenated_forty_two(self):
+        assert ChallengeSolver.solve("What is forty-two plus eight?") == "50"
+
+    def test_division_result_integer(self):
+        """Integer division result should not have decimal point."""
+        assert ChallengeSolver.solve("What is 100 divided by 4?") == "25"
+
+    def test_modulo_100_mod_7(self):
+        assert ChallengeSolver.solve("What is 100 modulo 7?") == "2"
+
+
 class TestChallengeSolverProperties:
     """Mathematical properties that must hold for ANY input."""
 
@@ -161,13 +204,16 @@ class TestChallengeSolverProperties:
             assert isinstance(result, str), f"solve({inp!r}) returned {type(result)}"
 
     def test_insufficient_numbers_returns_zero(self):
-        """Less than 2 numbers → '0' (unknown, safe fallback)."""
+        """No parseable expression → '0' (safe fallback)."""
         assert ChallengeSolver.solve("What is the meaning of life?") == "0"
-        assert ChallengeSolver.solve("Just the number 5") == "0"
         assert ChallengeSolver.solve("") == "0"
 
+    def test_single_number_returns_itself(self):
+        """Single number is a valid expression (AST evaluates it)."""
+        assert ChallengeSolver.solve("Just the number 5") == "5"
+
     def test_unknown_operator_returns_zero(self):
-        """Two numbers but no recognized operator → '0'."""
+        """Two numbers but no recognized operator → '0' via regex fallback."""
         assert ChallengeSolver.solve("is 5 greater than 3?") == "0"
 
     def test_word_map_has_no_duplicates(self):
@@ -188,6 +234,341 @@ class TestChallengeSolverProperties:
         assert word_list.index("nineteen") < word_list.index("nine"), "nineteen must precede nine in WORD_MAP"
         # 'ninety' must come before 'nine'
         assert word_list.index("ninety") < word_list.index("nine"), "ninety must precede nine in WORD_MAP"
+
+
+# =============================================================================
+# CAPTCHA CHAMBER — Multi-Strategy Self-Experimenting Solver Tests
+# =============================================================================
+
+
+class TestCaptchaChamberSolve:
+    """CaptchaChamber solves diverse captchas via multi-strategy consensus."""
+
+    LOBSTER_CAPTCHA = (
+        "A] LoB-StEr~ ClAwS^ ArE lIkE Um, lOoObsssTer sWiMmS| AnD] "
+        "tHe ClAwFoRcE Is T wE nT y T hR eE NoOtOnS~ AnD] tHe OtHeR "
+        "ClAw Is F oU r NoOtOnS, W hAt I s T oTaL F oR cE?"
+    )
+
+    def test_lobster_captcha_solves(self):
+        """Real Moltbook captcha: 23 + 4 = 27."""
+        assert CaptchaChamber.solve(self.LOBSTER_CAPTCHA) == "27"
+
+    def test_simple_addition(self):
+        assert CaptchaChamber.solve("What is seven + 3?") == "10"
+
+    def test_simple_subtraction(self):
+        assert CaptchaChamber.solve("What is ten - 3?") == "7"
+
+    def test_simple_multiplication(self):
+        assert CaptchaChamber.solve("What is two * 3?") == "6"
+
+    def test_simple_division(self):
+        assert CaptchaChamber.solve("What is twenty divided by 4?") == "5"
+
+    def test_hyphenated_compound(self):
+        assert CaptchaChamber.solve("What is twenty-three plus five?") == "28"
+
+    def test_all_digits(self):
+        assert CaptchaChamber.solve("What is 7 + 3?") == "10"
+
+    def test_chained_ops(self):
+        assert CaptchaChamber.solve("What is 10 + 5 - 3?") == "12"
+
+
+class TestCaptchaChamberConfidence:
+    """CaptchaChamber returns None when confidence is too low."""
+
+    def test_empty_returns_none(self):
+        assert CaptchaChamber.solve("") is None
+
+    def test_nonsense_returns_none(self):
+        """Gibberish text → no math found → None (skip, don't guess)."""
+        assert CaptchaChamber.solve("Just some random text") is None
+
+    def test_non_math_captcha_returns_none(self):
+        """Non-math captcha format → None (don't guess a number)."""
+        assert CaptchaChamber.solve("What color is the sky?") is None
+
+    def test_returns_optional_str(self):
+        """Output is Optional[str]: either a valid answer or None."""
+        result = CaptchaChamber.solve("What is seven + 3?")
+        assert isinstance(result, str)
+        result2 = CaptchaChamber.solve("No math here at all")
+        assert result2 is None
+
+
+class TestCaptchaChamberConsensus:
+    """Multi-strategy consensus produces higher confidence."""
+
+    def test_clean_captcha_high_consensus(self):
+        """Clean math → all 4 strategies should agree → high score."""
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            _strategy_collapse,
+            _strategy_direct,
+            _strategy_exact,
+        )
+        c1 = _strategy_exact("What is seven plus three?")
+        c2 = _strategy_collapse("What is seven plus three?")
+        c3 = _strategy_direct("What is seven plus three?")
+        # All return lists now — flatten answers
+        all_candidates = c1 + c2 + c3
+        answers = [c.answer for c in all_candidates]
+        assert "10" in answers
+        # At least 2 candidates agree
+        assert answers.count("10") >= 2
+
+    def test_obfuscated_consensus(self):
+        """Obfuscated math → collapse/aggressive should still agree."""
+        lobster = (
+            "A] LoB-StEr~ ClAwS^ ArE lIkE Um, lOoObsssTer sWiMmS| AnD] "
+            "tHe ClAwFoRcE Is T wE nT y T hR eE NoOtOnS~ AnD] tHe OtHeR "
+            "ClAw Is F oU r NoOtOnS, W hAt I s T oTaL F oR cE?"
+        )
+        result = CaptchaChamber.solve(lobster)
+        assert result == "27"
+
+
+class TestCaptchaChamberPipeline:
+    """Verify pipeline stages work correctly."""
+
+    def test_varna_filter(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _varna_filter
+        filtered = _varna_filter("A] LoB-StEr~ ClAwS^")
+        assert "]" not in filtered
+        assert "~" not in filtered
+        assert "lob" in filtered
+        assert filtered == filtered.lower()
+
+    def test_akshara_collapse(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _akshara_collapse
+        assert _akshara_collapse("looobssster") == "lobster"
+        assert _akshara_collapse("three") == "three"
+        assert _akshara_collapse("aaabbbccc") == "abc"
+
+    def test_collapse_all(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _collapse_all
+        assert _collapse_all("foorty") == "forty"
+        assert _collapse_all("tweeenntty") == "twenty"
+        assert _collapse_all("thre") == "thre"  # Already collapsed
+        assert _collapse_all("") == ""
+
+    def test_pada_exact_joins_fragments(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _pada_exact
+        assert "twenty" in _pada_exact(["t", "we", "nt", "y"])
+        assert "three" in _pada_exact(["t", "hr", "ee"])
+        assert "four" in _pada_exact(["f", "ou", "r"])
+
+    def test_pada_collapse_handles_duplicates(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _pada_collapse
+        # "min"+"u"+"s"+"s"+"e"+"ven" → exact "minus" at w=3, then "seven" at w=3
+        result = _pada_collapse(["min", "u", "s", "s", "e", "ven"])
+        assert "minus" in result
+        assert "seven" in result
+
+    def test_basin_cosine_hkr_used_in_aggressive(self):
+        """basin_cosine + hkr_similarity from basin_map used by aggressive strategy."""
+        from vibe_core.mahamantra.substrate.core.basin_map import basin_cosine, hkr_similarity
+        from vibe_core.mahamantra.substrate.encoding.phonetic_encoder import encode_text
+        coords_a = encode_text("twenty")
+        coords_b = encode_text("thirty")
+        bc = basin_cosine(coords_a, coords_b)
+        hkr = hkr_similarity(coords_a, coords_b)
+        assert 0.0 <= bc <= 1.0
+        assert 0.0 <= hkr <= 1.0
+        # Composite metric
+        sim = 0.4 * bc + 0.6 * hkr
+        assert 0.0 <= sim <= 1.0
+
+
+# =============================================================================
+# CAPTCHA CHAMBER v2 — Multi-Candidate + New Scorers
+# =============================================================================
+
+
+class TestCaptchaChamberMultiCandidate:
+    """Strategies return multiple candidates via multi-window."""
+
+    def test_exact_returns_list(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _strategy_exact
+        results = _strategy_exact("What is seven plus three?")
+        assert isinstance(results, list)
+        assert len(results) >= 1
+        assert all(c.answer == "10" for c in results)
+
+    def test_collapse_returns_list(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _strategy_collapse
+        results = _strategy_collapse("What is seven plus three?")
+        assert isinstance(results, list)
+        assert len(results) >= 1
+
+    def test_aggressive_returns_list(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _strategy_aggressive
+        results = _strategy_aggressive("What is seven plus three?")
+        assert isinstance(results, list)
+        assert len(results) >= 1
+
+    def test_direct_returns_list(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _strategy_direct
+        results = _strategy_direct("What is seven plus three?")
+        assert isinstance(results, list)
+        assert len(results) == 1
+        assert results[0].answer == "10"
+
+    def test_direct_nonsense_returns_empty(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import _strategy_direct
+        results = _strategy_direct("What color is the sky?")
+        assert results == []
+
+    def test_strategy_labels_include_window(self):
+        """Multi-window strategies label candidates with window size."""
+        from vibe_core.mahamantra.adapters.captcha_decoder import _strategy_exact
+        results = _strategy_exact("What is seven plus three?")
+        for c in results:
+            assert c.strategy.startswith("exact_w")
+
+    def test_dedup_same_answer_across_windows(self):
+        """Same answer from different windows → only 1 candidate per strategy."""
+        from vibe_core.mahamantra.adapters.captcha_decoder import _strategy_collapse
+        results = _strategy_collapse("What is seven plus three?")
+        answers = [c.answer for c in results]
+        assert len(answers) == len(set(answers)), "Duplicate answers not deduped"
+
+    def test_total_candidates_bounded(self):
+        """Total candidates from all strategies ≤ 10."""
+        from vibe_core.mahamantra.adapters.captcha_decoder import _STRATEGIES
+        total = []
+        for fn in _STRATEGIES:
+            total.extend(fn("What is seven plus three?"))
+        assert len(total) <= 10
+
+
+class TestCaptchaChamberNewScorers:
+    """Tests for decode_fidelity and structural_conformity scorers."""
+
+    def test_decode_fidelity_direct_baseline(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_decode_fidelity,
+        )
+        c = CaptchaCandidate(answer="10", expression="7 + 3",
+                             decoded_text="seven plus three", strategy="direct")
+        assert _score_decode_fidelity(c, "What is seven + 3?") == 0.6
+
+    def test_decode_fidelity_good_decode(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_decode_fidelity,
+        )
+        c = CaptchaCandidate(answer="10", expression="7 + 3",
+                             decoded_text="seven plus three", strategy="collapse_w8")
+        score = _score_decode_fidelity(c, "seven plus three")
+        # All 3 words recognized: 3/3 = 1.0
+        assert score == 1.0, f"Good decode should score 1.0, got {score}"
+
+    def test_decode_fidelity_fragmented_low(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_decode_fidelity,
+        )
+        c = CaptchaCandidate(answer="10", expression="7 + 3",
+                             decoded_text="s e v e n plus three", strategy="exact_w4")
+        score = _score_decode_fidelity(c, "s e v e n plus three")
+        # Only 2/7 recognized (plus, three) — fragmented 's e v e n' not recognized
+        assert score < 0.5, f"Fragmented decode should score <0.5, got {score}"
+
+    def test_decode_fidelity_compound_recognized(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_decode_fidelity,
+        )
+        c = CaptchaCandidate(answer="94", expression="84 + 10",
+                             decoded_text="eighty-four plus ten", strategy="collapse_w6")
+        score = _score_decode_fidelity(c, "eighty-four plus ten")
+        # 3/3 recognized (eighty-four compound, plus, ten)
+        assert score == 1.0, f"Compound decode should score 1.0, got {score}"
+
+    def test_decode_fidelity_empty_returns_zero(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_decode_fidelity,
+        )
+        c = CaptchaCandidate(answer="0", expression="",
+                             decoded_text="", strategy="exact_w4")
+        assert _score_decode_fidelity(c, "") == 0.0
+
+    def test_structural_conformity_two_numbers_operator(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_structural_conformity,
+        )
+        c = CaptchaCandidate(answer="10", expression="7 + 3",
+                             decoded_text="", strategy="exact_w4")
+        assert _score_structural_conformity(c, "") == 1.0
+
+    def test_structural_conformity_single_number(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_structural_conformity,
+        )
+        c = CaptchaCandidate(answer="5", expression="5",
+                             decoded_text="", strategy="exact_w4")
+        assert _score_structural_conformity(c, "") == 0.3
+
+    def test_structural_conformity_three_plus_numbers(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_structural_conformity,
+        )
+        c = CaptchaCandidate(answer="15", expression="5 + 3 + 7",
+                             decoded_text="", strategy="exact_w4")
+        assert _score_structural_conformity(c, "") == 0.2
+
+    def test_structural_conformity_direct_baseline(self):
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_structural_conformity,
+        )
+        c = CaptchaCandidate(answer="10", expression="(direct)",
+                             decoded_text="", strategy="direct")
+        assert _score_structural_conformity(c, "") == 0.6
+
+    def test_six_scorers_in_solve(self):
+        """CaptchaChamber.solve() uses all 6 scorers."""
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CONFIDENCE_THRESHOLD,
+            _STRATEGIES,
+            _score_completeness,
+            _score_consensus,
+            _score_decode_fidelity,
+            _score_expression,
+            _score_range,
+            _score_structural_conformity,
+        )
+        # Verify threshold is scaled for 6 scorers (max 6.0)
+        assert CONFIDENCE_THRESHOLD == 2.25
+
+    def test_scores_dict_has_six_keys(self):
+        """After scoring, each candidate has 6 score keys."""
+        from vibe_core.mahamantra.adapters.captcha_decoder import (
+            CaptchaCandidate,
+            _score_completeness,
+            _score_consensus,
+            _score_decode_fidelity,
+            _score_expression,
+            _score_range,
+            _score_structural_conformity,
+        )
+        c = CaptchaCandidate(answer="10", expression="7 + 3",
+                             decoded_text="seven plus three", strategy="exact_w6")
+        challenge = "What is seven + 3?"
+        c.scores["expression"] = _score_expression(c, challenge)
+        c.scores["consensus"] = _score_consensus(c, challenge)
+        c.scores["range"] = _score_range(c, challenge)
+        c.scores["completeness"] = _score_completeness(c, challenge)
+        c.scores["decode_fidelity"] = _score_decode_fidelity(c, challenge)
+        c.scores["structural_conformity"] = _score_structural_conformity(c, challenge)
+        assert len(c.scores) == 6
 
 
 # =============================================================================

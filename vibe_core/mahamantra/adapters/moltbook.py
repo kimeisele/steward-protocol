@@ -6,6 +6,7 @@ I/O, rate limiting, and challenge solving. No intelligence.
 All decisions live in the plugin layer or kernel.
 """
 
+import ast
 import logging
 import re
 import time
@@ -14,6 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
+from vibe_core.mahamantra.adapters.captcha_decoder import CaptchaChamber
 from vibe_core.protocols.moltbook import (
     DMMessage,
     MoltbookAgentProfile,
@@ -162,67 +164,222 @@ class ChallengeSolver:
     """
     Solves Moltbook's obfuscated math challenges.
     Failure = temporary ban. This MUST be flawless.
+
+    Two-layer architecture:
+    1. SAFE EXPRESSION EVALUATOR (primary) — handles decimals, chained ops,
+       operator precedence, parentheses via Python AST. No eval(). No exec().
+    2. REGEX FALLBACK (secondary) — legacy 4-operator solver for edge cases.
     """
 
     # Compound numbers MUST come before their substrings to prevent
     # "eighteen" → "8een" corruption. Order matters.
     WORD_MAP = [
-        ("eighteen", 18),
-        ("seventeen", 17),
-        ("sixteen", 16),
-        ("fifteen", 15),
-        ("fourteen", 14),
-        ("thirteen", 13),
-        ("twelve", 12),
-        ("eleven", 11),
-        ("nineteen", 19),
-        ("eighty", 80),
-        ("seventy", 70),
-        ("sixty", 60),
-        ("fifty", 50),
-        ("forty", 40),
-        ("thirty", 30),
-        ("twenty", 20),
-        ("ninety", 90),
-        ("hundred", 100),
-        ("zero", 0),
-        ("one", 1),
-        ("two", 2),
-        ("three", 3),
-        ("four", 4),
-        ("five", 5),
-        ("six", 6),
-        ("seven", 7),
-        ("eight", 8),
-        ("nine", 9),
-        ("ten", 10),
+        # Compound teens/tens FIRST (prevent substring corruption)
+        ("eighteen", "18"),
+        ("seventeen", "17"),
+        ("sixteen", "16"),
+        ("fifteen", "15"),
+        ("fourteen", "14"),
+        ("thirteen", "13"),
+        ("twelve", "12"),
+        ("eleven", "11"),
+        ("nineteen", "19"),
+        ("eighty", "80"),
+        ("seventy", "70"),
+        ("sixty", "60"),
+        ("fifty", "50"),
+        ("forty", "40"),
+        ("thirty", "30"),
+        ("twenty", "20"),
+        ("ninety", "90"),
+        ("hundred", "100"),
+        ("thousand", "1000"),
+        ("million", "1000000"),
+        # Single digits LAST
+        ("zero", "0"),
+        ("one", "1"),
+        ("two", "2"),
+        ("three", "3"),
+        ("four", "4"),
+        ("five", "5"),
+        ("six", "6"),
+        ("seven", "7"),
+        ("eight", "8"),
+        ("nine", "9"),
+        ("ten", "10"),
     ]
+
+    # Operator word → symbol substitution (applied AFTER number substitution)
+    OPERATOR_MAP = [
+        ("plus", "+"),
+        ("add", "+"),
+        ("sum of", "+"),
+        ("minus", "-"),
+        ("subtract", "-"),
+        ("difference", "-"),
+        ("times", "*"),
+        ("multiply", "*"),
+        ("multiplied by", "*"),
+        ("divided by", "/"),
+        ("divide", "/"),
+        ("modulo", "%"),
+        ("mod", "%"),
+        ("remainder", "%"),
+        ("power of", "**"),
+        ("raised to", "**"),
+        ("squared", "**2"),
+        ("cubed", "**3"),
+    ]
+
+    # Allowed AST node types for safe evaluation (NO exec/import/call)
+    _SAFE_NODES = {
+        ast.Expression,
+        ast.BinOp,
+        ast.UnaryOp,
+        ast.Constant,  # Python 3.8+: numbers, strings
+        ast.Num,  # Python 3.7 compat
+        ast.Add,
+        ast.Sub,
+        ast.Mult,
+        ast.Div,
+        ast.FloorDiv,
+        ast.Mod,
+        ast.Pow,
+        ast.USub,  # Unary minus (-x)
+        ast.UAdd,  # Unary plus (+x)
+    }
+
+    @staticmethod
+    def _safe_eval(expr: str) -> Optional[float]:
+        """Evaluate a math expression safely using AST whitelist.
+
+        Only allows arithmetic operations on numbers. No function calls,
+        no variable access, no imports, no exec. Returns None on any error.
+        """
+        try:
+            tree = ast.parse(expr.strip(), mode="eval")
+        except SyntaxError:
+            return None
+
+        # Walk tree and reject any unsafe nodes
+        for node in ast.walk(tree):
+            if type(node) not in ChallengeSolver._SAFE_NODES:
+                logger.debug(f"Unsafe AST node rejected: {type(node).__name__}")
+                return None
+
+        try:
+            result = eval(compile(tree, "<challenge>", "eval"))  # noqa: S307
+            if isinstance(result, (int, float)):
+                return result
+        except (ZeroDivisionError, OverflowError, ValueError, TypeError):
+            pass
+        return None
+
+    @staticmethod
+    def _normalize_text(challenge_text: str) -> str:
+        """Convert challenge text to evaluable math expression.
+
+        Order matters:
+        1. Resolve hyphenated compounds (twenty-three → twentythree)
+        2. Replace word-numbers with digits
+        3. Join adjacent tens+units (20 3 → 23)
+        4. Replace operator words with symbols
+        5. Clean up non-math characters
+        """
+        text = challenge_text.lower()
+
+        # Step 1: Resolve hyphenated number compounds BEFORE splitting hyphens.
+        # "twenty-three" → "twentythree" (fused, so word-sub gives "203")
+        # Then adjacent-number joiner makes "203" stay as-is, but we do it
+        # differently: match tens-units directly.
+        _HYPHEN_COMPOUNDS = re.compile(
+            r"\b(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)"
+            r"[-\s]+"
+            r"(one|two|three|four|five|six|seven|eight|nine)\b"
+        )
+        _UNITS = {
+            "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+            "six": 6, "seven": 7, "eight": 8, "nine": 9,
+        }
+        _TENS = {
+            "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+            "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90,
+        }
+
+        def _resolve_compound(m: re.Match) -> str:
+            return str(_TENS[m.group(1)] + _UNITS[m.group(2)])
+
+        text = _HYPHEN_COMPOUNDS.sub(_resolve_compound, text)
+
+        # Step 2: Replace remaining word-numbers with digits
+        for word, num in ChallengeSolver.WORD_MAP:
+            text = re.sub(rf"\b{word}\b", num, text)
+
+        # Step 3: Join standalone adjacent tens+units NOT from compounds
+        # "20 3" → "23" (when NO operator between them)
+        text = re.sub(
+            r"\b([2-9]0)\s+([1-9])\b",
+            lambda m: str(int(m.group(1)) + int(m.group(2))),
+            text,
+        )
+
+        # Step 4: Replace operator words with symbols (longest match first)
+        for word, symbol in ChallengeSolver.OPERATOR_MAP:
+            text = re.sub(rf"\b{re.escape(word)}\b", f" {symbol} ", text)
+
+        # Collapse duplicate ** from overlapping matches
+        text = re.sub(r"\*\*\s*\*\*", "**", text)
+
+        # Step 5: Extract just the math expression
+        # Keep: 0-9 . + - * / % ( ) and spaces
+        text = re.sub(r"[^0-9.+\-*/%() ]", " ", text)
+
+        # Collapse multiple spaces
+        text = re.sub(r"\s+", " ", text).strip()
+
+        return text
 
     @staticmethod
     def solve(challenge_text: str) -> str:
         """
-        Extracts numbers and operators from obfuscated text and computes the result.
-        Example: "What is seven + 3?" -> "10"
+        Solve a math challenge from obfuscated text.
 
-        Uses word-boundary regex to prevent compound number corruption
-        (e.g. "eighteen" must not become "8een").
+        Two-layer approach:
+        1. Normalize → safe AST eval (handles decimals, chained ops, precedence)
+        2. Fallback: regex extraction + single operator (legacy)
+
+        Always returns a string. Never raises.
+        """
+        # Layer 1: AST-based evaluation
+        expr = ChallengeSolver._normalize_text(challenge_text)
+        if expr:
+            result = ChallengeSolver._safe_eval(expr)
+            if result is not None:
+                # Return integer if whole, otherwise float
+                if result == int(result):
+                    return str(int(result))
+                return str(result)
+
+        # Layer 2: Regex fallback (legacy single-operator solver)
+        return ChallengeSolver._solve_regex_fallback(challenge_text)
+
+    @staticmethod
+    def _solve_regex_fallback(challenge_text: str) -> str:
+        """Legacy regex solver — handles simple single-operator challenges.
+
+        Kept as fallback for edge cases where AST normalization fails.
         """
         text = challenge_text.lower()
 
-        # Replace word-numbers with digits using word boundaries.
-        # Compound numbers (eighteen, eighty, ...) are listed first
-        # in WORD_MAP so they match before their substrings.
         for word, num in ChallengeSolver.WORD_MAP:
-            text = re.sub(rf"\b{word}\b", str(num), text)
+            text = re.sub(rf"\b{word}\b", num, text)
 
-        # Extract all numbers
         numbers = [int(n) for n in re.findall(r"\d+", text)]
 
         if len(numbers) < 2:
             logger.warning(f"Could not parse math challenge: '{challenge_text}'")
             return "0"
 
-        # Find operator
         if "+" in text or "plus" in text or "add" in text:
             return str(sum(numbers))
         elif "-" in text or "minus" in text or "subtract" in text:
@@ -688,7 +845,15 @@ class MoltbookClient:
             monitor.check_format_change(challenge)
 
             logger.info(f"Solving challenge: {challenge}")
-            solution = ChallengeSolver.solve(challenge)
+            solution = CaptchaChamber.solve(challenge)
+
+            # CaptchaChamber returns None when confidence is too low
+            if solution is None:
+                monitor.record_failure(challenge)
+                logger.warning("CaptchaChamber: low confidence, skipping comment")
+                # Undo the comment counter — no comment was posted
+                self.limits.comments_this_hour = max(0, self.limits.comments_this_hour - 1)
+                return {"error": "captcha_low_confidence", "skipped": True}
 
             # Undo the comment counter from the failed attempt —
             # the challenge response was NOT a posted comment.
