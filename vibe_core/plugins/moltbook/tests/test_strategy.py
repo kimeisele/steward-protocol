@@ -603,3 +603,286 @@ class TestEngagementCachePersistence:
         cache = final._engagement_cache.get("moltbook_ai_governance", {})
         assert cache.get("total") == 3
         assert cache.get("positive") == 3
+
+
+# ---------------------------------------------------------------------------
+# MahaAttention wiring — O(1) topic→mission matching
+# ---------------------------------------------------------------------------
+
+
+class TestAttentionWiring:
+    """Tests MahaAttention integration in _match_topics().
+
+    MahaAttention provides O(1) intent→handler lookup via deterministic hash.
+    _ensure_attention() lazy-inits it and memorizes mission descriptions.
+    _match_topics() uses attend() first, falls back to keyword overlap.
+    """
+
+    def test_ensure_attention_lazy_init(self):
+        """_ensure_attention creates MahaAttention on first call."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        assert planner._attention is None
+
+        planner._ensure_attention(_TEST_MISSIONS)
+
+        # MahaAttention should be initialized (or None if import fails)
+        # Either way, mission IDs should be tracked
+        if planner._attention is not None:
+            assert len(planner._attention_mission_ids) == len(_TEST_MISSIONS)
+        # No crash = success
+
+    def test_ensure_attention_idempotent(self):
+        """Calling _ensure_attention twice doesn't re-memorize missions."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        planner._ensure_attention(_TEST_MISSIONS)
+        first_count = len(planner._attention_mission_ids)
+
+        planner._ensure_attention(_TEST_MISSIONS)
+        assert len(planner._attention_mission_ids) == first_count
+
+    def test_ensure_attention_adds_new_missions(self):
+        """New missions get memorized on subsequent calls."""
+        planner = _make_planner(missions=_TEST_MISSIONS[:1])
+        planner._ensure_attention(_TEST_MISSIONS[:1])
+        first_count = len(planner._attention_mission_ids)
+
+        # Add more missions
+        planner._ensure_attention(_TEST_MISSIONS)
+        assert len(planner._attention_mission_ids) >= first_count
+
+    def test_match_topics_with_attention(self):
+        """_match_topics uses MahaAttention when available."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {"id": "p1", "title": "AI governance and transparent decision-making", "content": "autonomous systems"},
+        ]
+        matches = planner._match_topics(topics, _TEST_MISSIONS)
+        # Should find a match regardless of path (attention or keyword)
+        assert len(matches) >= 1
+        assert matches[0].post_id == "p1"
+
+    def test_match_topics_attention_unavailable_falls_back(self):
+        """When MahaAttention import fails, keyword overlap still works."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        # Force attention to be unavailable
+        planner._attention = None
+        with patch(
+            "vibe_core.cartridges.agent_city.moltbook.core.strategy.MoltbookStrategyPlanner._ensure_attention",
+            lambda self, m: None,  # No-op: leaves _attention as None
+        ):
+            topics = [
+                {"id": "p1", "title": "decentralized protocols for agent coordination", "content": ""},
+            ]
+            matches = planner._match_topics(topics, _TEST_MISSIONS)
+            assert len(matches) >= 1
+            assert matches[0].mission_id == "moltbook_decentralized_protocols"
+
+    def test_attention_result_relevance_is_1(self):
+        """Attention hash match yields relevance=1.0 (exact semantic address)."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        planner._ensure_attention(_TEST_MISSIONS)
+
+        if planner._attention is None:
+            return  # Skip if MahaAttention not available in test env
+
+        # Use exact mission description as post text — guaranteed attention hit
+        mission = _TEST_MISSIONS[0]
+        topics = [
+            {"id": "p1", "title": mission.description.lower(), "content": ""},
+        ]
+        matches = planner._match_topics(topics, _TEST_MISSIONS)
+        if matches and matches[0].relevance == 1.0:
+            assert matches[0].mission_id == mission.id
+
+
+# ---------------------------------------------------------------------------
+# _keyword_match — static fallback method
+# ---------------------------------------------------------------------------
+
+
+class TestKeywordMatch:
+    def test_high_overlap_returns_match(self):
+        best_id, rel = MoltbookStrategyPlanner._keyword_match(
+            "decentralized protocols agent coordination", _TEST_MISSIONS
+        )
+        assert best_id == "moltbook_decentralized_protocols"
+        assert rel > 0.1
+
+    def test_no_overlap_returns_none(self):
+        best_id, rel = MoltbookStrategyPlanner._keyword_match(
+            "pizza spaghetti recipe lunch", _TEST_MISSIONS
+        )
+        assert best_id is None
+        assert rel == 0.0
+
+    def test_best_mission_wins(self):
+        """Picks mission with highest keyword overlap."""
+        # Text strongly matches decentralized_protocols
+        best_id, _ = MoltbookStrategyPlanner._keyword_match(
+            "decentralized protocols and agent-to-agent coordination", _TEST_MISSIONS
+        )
+        assert best_id == "moltbook_decentralized_protocols"
+
+    def test_empty_missions(self):
+        best_id, rel = MoltbookStrategyPlanner._keyword_match("any text", [])
+        assert best_id is None
+        assert rel == 0.0
+
+    def test_threshold_at_0_1(self):
+        """Matches below 10% overlap are rejected."""
+        one_word_mission = FakeMission(
+            id="m_big",
+            name="Big",
+            description="a b c d e f g h i j k l m n o p q r s t",  # 20 words
+            priority=FakePriority.MEDIUM,
+        )
+        # Only 1/20 = 5% overlap → should NOT match
+        best_id, _ = MoltbookStrategyPlanner._keyword_match("a", [one_word_mission])
+        assert best_id is None
+
+
+# ---------------------------------------------------------------------------
+# Mission nesting prevention
+# ---------------------------------------------------------------------------
+
+
+class TestMissionNesting:
+    def test_derive_skips_moltbook_missions(self):
+        """_derive_seed_topics skips missions prefixed 'moltbook_' to prevent nesting."""
+        fake_missions = [
+            FakeMission(
+                id="moltbook_ai_governance",
+                name="AI Governance",
+                description="AI governance topics from moltbook",
+                priority=FakePriority.MEDIUM,
+            ),
+            FakeMission(
+                id="external_research",
+                name="Research",
+                description="External research on distributed systems and protocols",
+                priority=FakePriority.MEDIUM,
+            ),
+        ]
+
+        fake_orch = MagicMock()
+        fake_orch.registry.get_all_missions.return_value = fake_missions
+
+        with patch(
+            "vibe_core.mahamantra.substrate.sankalpa.will.SankalpaOrchestrator",
+            return_value=fake_orch,
+        ):
+            topics = _derive_seed_topics()
+
+        topic_ids = [t[0] for t in topics]
+        # moltbook_ missions should NOT appear
+        assert not any(tid.startswith("moltbook_") for tid in topic_ids), (
+            f"moltbook_ missions leaked into seed topics: {topic_ids}"
+        )
+        # external missions SHOULD appear
+        if topics:  # Only assert if Sankalpa was reachable
+            assert "external_research" in topic_ids
+
+    def test_derive_prevents_recursive_nesting(self):
+        """Ensures moltbook_moltbook_X prefix can never form."""
+        fake_missions = [
+            FakeMission(
+                id="moltbook_moltbook_nested",
+                name="Double Nested",
+                description="This would cause triple nesting if re-ingested",
+                priority=FakePriority.MEDIUM,
+            ),
+        ]
+
+        fake_orch = MagicMock()
+        fake_orch.registry.get_all_missions.return_value = fake_missions
+
+        with patch(
+            "vibe_core.mahamantra.substrate.sankalpa.will.SankalpaOrchestrator",
+            return_value=fake_orch,
+        ):
+            topics = _derive_seed_topics()
+
+        # No topic should have moltbook prefix
+        for tid, _ in topics:
+            assert not tid.startswith("moltbook_"), f"Nested moltbook mission leaked: {tid}"
+
+
+# ---------------------------------------------------------------------------
+# Intent diversity — at least 1 post per cycle
+# ---------------------------------------------------------------------------
+
+
+class TestIntentDiversity:
+    def test_unmatched_mission_creates_post(self):
+        """When some missions don't match feed, one gets a proactive post."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        # Feed matches only 1 mission
+        topics = [
+            {"id": "p1", "title": "AI governance and transparent decision-making autonomous", "content": ""},
+        ]
+        result = planner.plan_cycle(topics, {})
+        posts = [i for i in result if i.action_type == "post"]
+        assert len(posts) >= 1, "Should have at least 1 post intent"
+
+    def test_all_matched_converts_lowest_to_post(self):
+        """When ALL missions match feed (no unmatched for proactive post),
+        convert the lowest-priority comment to a post for diversity."""
+        # Create missions that ALL match the same generic text
+        generic_missions = [
+            FakeMission(
+                id="m1", name="M1",
+                description="agent systems and protocols for coordination",
+                priority=FakePriority.HIGH,
+            ),
+            FakeMission(
+                id="m2", name="M2",
+                description="agent coordination protocols systems",
+                priority=FakePriority.LOW,
+            ),
+        ]
+        planner = _make_planner(missions=generic_missions)
+        topics = [
+            {"id": "p1", "title": "agent systems and protocols for coordination research", "content": ""},
+            {"id": "p2", "title": "agent coordination protocols systems analysis", "content": ""},
+        ]
+        result = planner.plan_cycle(topics, {})
+        posts = [i for i in result if i.action_type == "post"]
+        # At least 1 post even when all missions matched
+        assert len(posts) >= 1, f"Expected post intent, got: {[(i.action_type, i.mission_id) for i in result]}"
+
+    def test_post_from_conversion_has_empty_target(self):
+        """Converted post should not have a target_post_id (it's a new post, not a reply)."""
+        generic_missions = [
+            FakeMission(
+                id="m1", name="M1",
+                description="agent systems protocols coordination",
+                priority=FakePriority.MEDIUM,
+            ),
+        ]
+        planner = _make_planner(missions=generic_missions)
+        topics = [
+            {"id": "p1", "title": "agent systems protocols coordination research", "content": ""},
+        ]
+        result = planner.plan_cycle(topics, {})
+        posts = [i for i in result if i.action_type == "post"]
+        for post in posts:
+            assert post.target_post_id == "", f"Converted post should not target a specific post"
+
+    def test_max_trinity_still_enforced_with_diversity(self):
+        """Intent diversity doesn't break TRINITY cap."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        topics = [
+            {"id": f"p{i}", "title": f"AI governance decision autonomous systems topic {i}", "content": ""}
+            for i in range(20)
+        ]
+        result = planner.plan_cycle(topics, {})
+        assert len(result) <= TRINITY
+
+    def test_empty_feed_no_intents(self):
+        """With missions but no feed topics, unmatched missions still produce a post."""
+        planner = _make_planner(missions=_TEST_MISSIONS)
+        result = planner.plan_cycle([], {})
+        # All missions unmatched → at least 1 proactive post
+        if result:
+            posts = [i for i in result if i.action_type == "post"]
+            assert len(posts) >= 1

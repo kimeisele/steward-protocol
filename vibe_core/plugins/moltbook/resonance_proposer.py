@@ -286,39 +286,30 @@ class ResonanceProposer(ContentProposalProtocol):
         guna = pipeline_result.get("guna", {}).get("mode", "RAJAS") if pipeline_result else "RAJAS"
         style = {"SATTVA": "contemplative", "RAJAS": "active", "TAMAS": "transformative"}.get(guna, "active")
 
-        # Step 3: Full context for YAML template v11 (~100 tokens)
-        # Topic-first, voice-secondary
+        # Step 3: YAML template v12 context — no vocabulary injection
         prompt_ctx = {
             "agent_name": self._agent_name,
             "topic": user_input[:200] if user_input else "",
             "strategic_reasoning": extra.get("strategic_reasoning", ""),
             "submolt_context": extra.get("submolt_context", ""),
             "style": style,
-            "voice": voice,
-            "composed_words": vocab,
+            "knowledge_context": "",
         }
 
-        # Step 4: Try LLM with atomic prompt
+        # Step 4: Try LLM — PromptRegistry is SSOT, no fallback
         provider = self._get_provider()
-        if provider and vocab:
-            system_msg = ""
+        if provider:
             try:
                 from vibe_core.runtime.prompt_registry import PromptRegistry
 
                 system_msg = PromptRegistry.get(prompt_key, context=prompt_ctx)
             except Exception as e:
-                logger.warning(f"PromptRegistry: {e}")
+                logger.error(f"PromptRegistry FAILED for {prompt_key}: {e}")
+                system_msg = None
 
             if not system_msg:
-                topic = prompt_ctx.get("topic", "")
-                reasoning = prompt_ctx.get("strategic_reasoning", "")
-                system_msg = (
-                    f"{self._agent_name} on Moltbook.\n"
-                    f"TOPIC: {topic}\n"
-                    + (f"CONTEXT: {reasoning}\n" if reasoning else "")
-                    + f"Voice: {style}. Terms: {voice}\n"
-                    f"Themes: {vocab}"
-                )
+                logger.error(f"PromptRegistry returned empty for {prompt_key} — cannot compose")
+                return None
 
             user_msg = _build_task_message(prompt_key, user_input)
 

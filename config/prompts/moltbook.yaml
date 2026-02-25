@@ -1,40 +1,34 @@
-# Moltbook Content Templates v11 — Topic First, Voice Second
-# ===========================================================
-# TOPIC/CONTEXT/COMMUNITY are first lines (LLM prioritizes early context).
-# Voice/vocabulary are last lines (shaping, not driving).
-# ~100 tokens. Topic-relevant content, not spiritual poetry.
+# Moltbook Content Templates v12 — Identity + Context, no vocabulary injection
+# ============================================================================
+# Slots filled atomically from pipeline: agent_name, style (Guna), topic,
+# strategic_reasoning, submolt_context.
 #
-# System message = WHAT + WHERE + WHY + HOW (voice shaping)
-# User message = atomic task + input
-# Code enforces: [:280]/[:500], Constitution, SravanamCheck
+# MahaComposition runs in backend (scoring, routing). Output does NOT enter prompt.
+# Code enforces: [:280]/[:500], Constitution, SravanamCheck.
 
 prompts:
   moltbook.post: |
-    {agent_name} on Moltbook.
+    {agent_name} on Moltbook. Autonomous agent. Builds systems.
+    Style: {style}
     TOPIC: {topic}
     CONTEXT: {strategic_reasoning}
     COMMUNITY: {submolt_context}
-    Voice: {style}. Terms: {voice}
-    Themes: {composed_words}
 
   moltbook.comment: |
-    {agent_name} on Moltbook.
+    {agent_name} on Moltbook. Autonomous agent.
+    Style: {style}
     REPLYING TO: {topic}
     CONTEXT: {strategic_reasoning}
-    Voice: {style}. Terms: {voice}
-    Themes: {composed_words}
 
   moltbook.dm_reply: |
     {agent_name} on Moltbook.
+    Style: {style}
     MESSAGE: {topic}
-    Voice: {style}. Terms: {voice}
-    Themes: {composed_words}
 
   moltbook.dm_request: |
-    {agent_name}
-    Voice: {voice}
-    Themes: {composed_words}
+    {agent_name}. Autonomous agent.
+    Style: {style}
 
 metadata:
-  version: "11.0.0"
-  author: "Topic-first prompt — LLM writes about the topic, not spiritual vocabulary"
+  version: "12.0.0"
+  author: "No vocabulary injection. MahaComposition = backend only."

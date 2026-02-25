@@ -60,7 +60,9 @@ def _derive_seed_topics() -> tuple:
     except Exception as e:
         logger.debug(f"KG topic derivation failed: {e}")
 
-    # Source 2: Existing Sankalpa missions (from previous runs, persisted to disk)
+    # Source 2: Existing Sankalpa missions — only NON-moltbook missions as new topics.
+    # Moltbook missions are already seeded — re-adding them causes infinite nesting
+    # (moltbook_X → moltbook_moltbook_X → moltbook_moltbook_moltbook_X).
     try:
         from vibe_core.mahamantra.substrate.sankalpa.will import SankalpaOrchestrator
 
@@ -69,6 +71,9 @@ def _derive_seed_topics() -> tuple:
         for mission in existing:
             mid = mission.id
             desc = mission.description
+            # Skip moltbook-owned missions — they're already seeded
+            if mid.startswith("moltbook_"):
+                continue
             if desc and mid not in {t[0] for t in topics}:
                 topics.append((mid, desc[:200]))
     except Exception as e:
@@ -114,6 +119,8 @@ class MoltbookStrategyPlanner:
 
     DHARMA phase: evaluate missions → prioritized action list.
     MOKSHA phase: engagement data → mission priority adjustments.
+
+    Uses MahaAttention for O(1) topic→mission matching (replaces keyword overlap).
     """
 
     _CACHE_FILE = "engagement_cache.json"
@@ -123,6 +130,8 @@ class MoltbookStrategyPlanner:
         self._orchestrator = None
         self._missions_seeded = False
         self._state_dir = state_dir
+        self._attention = None  # MahaAttention instance (lazy)
+        self._attention_mission_ids: set = set()  # Missions already memorized
         # Cache: mission_id → engagement stats
         self._engagement_cache: Dict[str, Dict[str, float]] = {}
         # Restore from disk
@@ -289,8 +298,10 @@ class MoltbookStrategyPlanner:
                 )
             )
 
-        # Add a post intent from highest-priority mission without feed match
+        # Always include at least 1 post intent per cycle
+        # First try: unmatched mission → proactive post
         matched_mission_ids = {m.mission_id for m in matches}
+        post_added = False
         for mission in missions:
             if mission.id not in matched_mission_ids:
                 eng = self._engagement_cache.get(mission.id, {})
@@ -310,60 +321,112 @@ class MoltbookStrategyPlanner:
                         engagement_context=eng_context,
                     )
                 )
-                break  # Only one proactive post per cycle
+                post_added = True
+                break
+
+        # If all missions matched (common with 80+ missions), convert lowest comment to post
+        if not post_added and intents:
+            lowest = min(intents, key=lambda i: i.priority)
+            lowest.action_type = "post"
+            lowest.reasoning = f"{lowest.reasoning} (converted to post for diversity)"
+            lowest.target_post_id = ""
 
         # Sort by priority (descending), take top 3
         intents.sort(key=lambda i: i.priority, reverse=True)
         return intents[:TRINITY]
+
+    def _ensure_attention(self, missions: List[Any]) -> None:
+        """Lazy-init MahaAttention and memorize mission descriptions.
+
+        Only registers missions not already memorized (idempotent).
+        """
+        if self._attention is None:
+            try:
+                from vibe_core.mahamantra.adapters.attention import MahaAttention
+
+                self._attention = MahaAttention()
+            except Exception as e:
+                logger.warning(f"MahaAttention unavailable: {e}")
+                return
+
+        for mission in missions:
+            if mission.id not in self._attention_mission_ids:
+                self._attention.memorize(mission.description.lower(), mission.id)
+                self._attention_mission_ids.add(mission.id)
 
     def _match_topics(
         self,
         feed_topics: List[Dict[str, Any]],
         missions: List[Any],
     ) -> List[TopicMatch]:
-        """Match feed topics against mission descriptions via keyword overlap."""
+        """Match feed topics against missions via MahaAttention O(1) lookup.
+
+        Falls back to keyword overlap if MahaAttention is unavailable.
+        """
+        self._ensure_attention(missions)
+        mission_map = {m.id: m for m in missions}
         matches: List[TopicMatch] = []
 
         for post in feed_topics:
             title = str(post.get("title", "")).lower()
             content = str(post.get("content", "")).lower()
-            post_text = f"{title} {content}"
-            post_words = set(post_text.split())
+            post_text = f"{title} {content}".strip()
             post_id = str(post.get("id", ""))
 
-            best_match: Optional[TopicMatch] = None
-            best_relevance = 0.0
+            if not post_text:
+                continue
 
-            for mission in missions:
-                desc_words = set(mission.description.lower().split())
-                # Keyword overlap: |intersection| / |mission_words|
-                overlap = len(post_words & desc_words)
-                if not desc_words:
-                    continue
-                relevance = overlap / len(desc_words)
+            # O(1) attention lookup
+            matched_mission_id = None
+            relevance = 0.0
 
-                if relevance > best_relevance and relevance > 0.1:
-                    best_relevance = relevance
-                    best_match = TopicMatch(
-                        post_id=post_id,
-                        topic=title[:200] or content[:200],
-                        mission_id=mission.id,
-                        mission_name=mission.name,
-                        relevance=relevance,
-                        post_meta={
-                            "upvotes": post.get("upvotes", 0),
-                            "author": post.get("author", {}).get("name", "")
-                            if isinstance(post.get("author"), dict)
-                            else "",
-                        },
-                    )
+            if self._attention is not None:
+                result = self._attention.attend(post_text)
+                if result.found and result.handler in mission_map:
+                    matched_mission_id = result.handler
+                    relevance = 1.0  # Hash match = exact semantic address
 
-            if best_match:
-                matches.append(best_match)
+            # Keyword overlap fallback (if attention unavailable or no hit)
+            if matched_mission_id is None:
+                best_id, best_rel = self._keyword_match(post_text, missions)
+                if best_id:
+                    matched_mission_id = best_id
+                    relevance = best_rel
 
-        # Sort by relevance (descending)
+            if matched_mission_id and matched_mission_id in mission_map:
+                mission = mission_map[matched_mission_id]
+                matches.append(TopicMatch(
+                    post_id=post_id,
+                    topic=title[:200] or content[:200],
+                    mission_id=mission.id,
+                    mission_name=mission.name,
+                    relevance=relevance,
+                    post_meta={
+                        "upvotes": post.get("upvotes", 0),
+                        "author": post.get("author", {}).get("name", "")
+                        if isinstance(post.get("author"), dict)
+                        else "",
+                    },
+                ))
+
         matches.sort(key=lambda m: m.relevance, reverse=True)
         return matches
+
+    @staticmethod
+    def _keyword_match(post_text: str, missions: List[Any]) -> tuple:
+        """Keyword overlap fallback — used when MahaAttention has no hit."""
+        post_words = set(post_text.split())
+        best_id = None
+        best_rel = 0.0
+        for mission in missions:
+            desc_words = set(mission.description.lower().split())
+            if not desc_words:
+                continue
+            relevance = len(post_words & desc_words) / len(desc_words)
+            if relevance > best_rel and relevance > 0.1:
+                best_rel = relevance
+                best_id = mission.id
+        return best_id, best_rel
 
     def _mission_priority_score(self, mission_id: str, missions: List[Any]) -> int:
         """Convert mission priority enum to integer score (0-10).
