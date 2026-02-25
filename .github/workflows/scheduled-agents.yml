@@ -55,11 +55,11 @@ jobs:
   # JOB 1.5: Moltbook Heartbeat (Every 10 minutes)
   # =========================================================================
   moltbook-heartbeat:
-    name: "💓 Moltbook Heartbeat"
+    name: "💓 Moltbook Agent"
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -68,17 +68,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          
+
       - name: Install Dependencies
         run: |
-          pip install httpx cryptography
-          
-      - name: Run Heartbeat
+          pip install httpx cryptography nltk
+
+      - name: Run Moltbook Agent
         env:
-          MOLTBOOK_OFFLINE_MODE: "False" # Set True to test without hitting API
-          # The key must be stored in CivicVault. In CI, we can mock the DB or pass mapping.
+          MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
+          MOLTBOOK_OFFLINE_MODE: "False"
         run: |
-          PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py || echo "Heartbeat failed but continuing workflow"
+          PYTHONPATH=. python3 agent-city/scripts/moltbook_heartbeat.py --cycles 4 || echo "Agent run failed but continuing workflow"
 
   # =========================================================================
   # JOB 2: AUDITOR Patrol (Daily at 6 UTC)
