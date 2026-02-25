@@ -21,15 +21,6 @@ from vibe_core.mahamantra.substrate.core.seed import TRINITY
 
 logger = logging.getLogger("MOLTBOOK.STRATEGY")
 
-# Fallback topics — ONLY used when KG + Sankalpa + Feed all fail.
-# In production, topics are derived dynamically from Knowledge Graph nodes.
-_FALLBACK_TOPICS = (
-    ("ai_governance", "AI governance and transparent decision-making in autonomous systems"),
-    ("decentralized_protocols", "Decentralized protocols and agent-to-agent coordination"),
-    ("open_source_ai", "Open source AI development and collaborative tooling"),
-    ("community_building", "Community building and social dynamics in agent networks"),
-    ("agent_autonomy", "Agent autonomy, identity, and self-directed action"),
-)
 
 
 def _derive_seed_topics() -> tuple:
@@ -38,9 +29,9 @@ def _derive_seed_topics() -> tuple:
     Priority order:
     1. KnowledgeResolver → KG nodes with moltbook domain concepts
     2. Existing Sankalpa missions (persisted from previous runs)
-    3. _FALLBACK_TOPICS (hardcoded, last resort only)
 
     Returns tuple of (topic_id, description) pairs.
+    Empty tuple = agent has nothing to talk about yet (needs KG or Sankalpa).
     """
     topics: list = []
 
@@ -87,9 +78,9 @@ def _derive_seed_topics() -> tuple:
         logger.info(f"Derived {len(topics)} seed topics from KG + Sankalpa")
         return tuple(topics)
 
-    # Source 3: Fallback — only when all dynamic sources fail
-    logger.info("Using fallback seed topics (KG + Sankalpa unavailable)")
-    return _FALLBACK_TOPICS
+    # No fallback — autonomous agent discovers topics or stays silent
+    logger.warning("No seed topics: KG + Sankalpa both empty. Agent will wait.")
+    return ()
 
 
 @dataclass
@@ -394,6 +385,10 @@ class MoltbookStrategyPlanner:
         elif rate < 0.3:
             base = max(1, base - 2)
 
+        # SynapseStore: cross-session learned weight (persistent memory)
+        synapse_boost = self._get_synapse_boost(mission_id)
+        base = max(1, min(10, base + synapse_boost))
+
         return base
 
     def update_from_engagement(self, engagement_data: Dict[str, Any]) -> None:
@@ -443,6 +438,9 @@ class MoltbookStrategyPlanner:
                     f"rate={cache['success_rate']:.2f} ({cache['positive']}/{total})"
                 )
                 self._save_engagement_cache()
+
+                # SynapseStore: persistent cross-session learning
+                self._update_synapse_weight(mission.id, net_score > 0)
                 break
 
     def _persist_registry(self) -> None:
@@ -510,3 +508,37 @@ class MoltbookStrategyPlanner:
                     logger.info(f"Engagement cache restored: {len(data)} missions")
         except Exception as e:
             logger.debug(f"Engagement cache restore failed: {e}")
+
+    # -----------------------------------------------------------------------
+    # SynapseStore — persistent cross-session learning
+    # -----------------------------------------------------------------------
+
+    def _update_synapse_weight(self, mission_id: str, positive: bool) -> None:
+        """Learn from engagement: adjust synapse weights for mission strategies."""
+        try:
+            from vibe_core.state.synapse_store import get_synapse_store
+
+            store = get_synapse_store()
+            trigger = f"moltbook:{mission_id}"
+            action = "engage"
+            if positive:
+                w = store.increment_weight(trigger, action, delta=0.05)
+            else:
+                w = store.decrement_weight(trigger, action, delta=0.03)
+            logger.debug(f"Synapse weight {trigger}→{action}: {w:.2f}")
+        except Exception as e:
+            logger.debug(f"SynapseStore update failed: {e}")
+
+    def _get_synapse_boost(self, mission_id: str) -> int:
+        """Read learned synapse weight → priority boost (-2 to +2)."""
+        try:
+            from vibe_core.state.synapse_store import get_synapse_store
+
+            store = get_synapse_store()
+            weight = store.get_weight(f"moltbook:{mission_id}", "engage")
+            if weight is None:
+                return 0
+            # weight 0.1-0.95 → boost -2 to +2 (centered at 0.5)
+            return round((weight - 0.5) * 4)
+        except Exception:
+            return 0
