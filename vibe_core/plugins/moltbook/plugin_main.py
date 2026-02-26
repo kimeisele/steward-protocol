@@ -531,8 +531,7 @@ class MoltbookPlugin(KernelPlugin):
         self._agent_name: str = "steward-protocol"  # Resolved from profile at boot
         self._last_heartbeat_ts: float = 0.0  # Debounce guard: epoch of last heartbeat
         # Circuit Executor (cortex/engines/circuit_engine.py) — wired at boot
-        self._circuit_executor = None
-        self._meta_circuit_manager = None
+        self._wiring = None  # WiringModule (lazy-loaded)
         # AGORA broadcast channel (cartridges/agent_city/agora/) — wired at boot
         self._agora = None
         # Agency Director — I-P-V-O pipeline (mahamantra-direct, guna=style not gate)
@@ -1036,70 +1035,26 @@ class MoltbookPlugin(KernelPlugin):
         except Exception:
             pass  # Ouroboros unavailable — degrade gracefully
 
+    @property
+    def _wiring_module(self):
+        """Lazy-load WiringModule."""
+        if self._wiring is None:
+            from vibe_core.plugins.moltbook.managers.wiring import WiringModule
+            self._wiring = WiringModule()
+        return self._wiring
+
     def _wire_circuit_executor(self, kernel: "RealVibeKernel") -> None:
-        """Wire CognitiveCircuitExecutor + MetaCircuitManager from cortex.
-
-        The executor loads MOLTBOOK_CONTENT_V1 (and all other circuits) from
-        playbook/circuits/*.yaml. MetaCircuitManager adds TASK_LEDGER and
-        ERROR_RECOVERY as active observers.
-
-        Degrades gracefully: if kernel or cortex unavailable, plugin continues
-        with the ad-hoc proposer pipeline.
-        """
-        try:
-            from vibe_core.cortex.engines.circuit_engine import create_circuit_executor_with_meta
-
-            executor, manager = create_circuit_executor_with_meta(kernel)
-            if "MOLTBOOK_CONTENT_V1" in executor.circuits:
-                self._circuit_executor = executor
-                self._meta_circuit_manager = manager
-                logger.info(
-                    f"Circuit executor wired: {len(executor.circuits)} circuits loaded, MOLTBOOK_CONTENT_V1 available"
-                )
-            else:
-                logger.warning("MOLTBOOK_CONTENT_V1 not found in loaded circuits — circuit path disabled")
-        except Exception as e:
-            logger.warning(f"Circuit executor wiring failed (non-fatal): {e}")
+        """Delegate to WiringModule."""
+        self._wiring_module.wire_circuit_executor(kernel)
 
     def _wire_agora(self, kernel: "RealVibeKernel") -> None:
-        """Wire AGORA broadcast channel for federation publishing.
-
-        After content is published to Moltbook, it is also broadcast to AGORA
-        so other agents in Agent City (PULSE, LENS, AMBASSADOR) can observe.
-
-        Degrades gracefully: if AGORA not registered, content still publishes
-        to Moltbook directly.
-        """
-        try:
-            agora = kernel.get_agent("agora") if hasattr(kernel, "get_agent") else None
-            if agora and hasattr(agora, "publish_message"):
-                self._agora = agora
-                logger.info("AGORA broadcast channel wired for federation publishing")
-            else:
-                logger.info("AGORA not available — federation broadcasting disabled (non-fatal)")
-        except Exception as e:
-            logger.debug(f"AGORA wiring skipped: {e}")
+        """Delegate to WiringModule."""
+        self._wiring_module.wire_agora(kernel)
 
     def _broadcast_to_agora(self, content_type: str, content: str, metadata: Dict[str, Any]) -> None:
-        """Broadcast published content to AGORA for federation awareness.
-
-        One-way: Moltbook → AGORA → [PULSE, LENS, AMBASSADOR, ...]
-        """
-        if not self._agora:
-            return
-        try:
-            self._agora.publish_message(
-                source="moltbook",
-                message_type="narrative",
-                content=content[:500],
-                metadata={
-                    "content_type": content_type,
-                    "agent_name": self._agent_name,
-                    **metadata,
-                },
-            )
-        except Exception as e:
-            logger.debug(f"AGORA broadcast failed (non-fatal): {e}")
+        """Delegate to WiringModule."""
+        metadata["agent_name"] = self._agent_name
+        self._wiring_module.broadcast_to_agora(content_type, content, metadata)
 
     def execute_content_circuit(
         self,
