@@ -527,6 +527,8 @@ class MoltbookPlugin(KernelPlugin):
         self._content_circuit_executor = None
         # Guna enforcement (extracted manager)
         self._guna_enforcer_mgr = None
+        # State snapshot (extracted manager)
+        self._state_snapshot_mgr = None
 
     @property
     def dependencies(self) -> Set[str]:
@@ -741,6 +743,15 @@ class MoltbookPlugin(KernelPlugin):
             self._guna_enforcer_mgr = GunaEnforcer(self)
         return self._guna_enforcer_mgr
 
+    @property
+    def _snapshot(self):
+        """Lazy-init StateSnapshot for state capture and restore."""
+        if self._state_snapshot_mgr is None:
+            from vibe_core.plugins.moltbook.managers.state_snapshot import StateSnapshot
+
+            self._state_snapshot_mgr = StateSnapshot(self)
+        return self._state_snapshot_mgr
+
     def _ensure_service(self):
         """Ensure MoltbookService exists, create if needed. Used by managers."""
         if self._service is None:
@@ -836,59 +847,10 @@ class MoltbookPlugin(KernelPlugin):
         return []
 
     def snapshot_state(self) -> Dict[str, Any]:
-        if not self._client:
-            return {
-                "version": 7,
-                "client_active": False,
-                "heartbeat_count": self._heartbeat.current_heartbeat_count,
-                "orchestrator_state": self._heartbeat.snapshot(),
-            }
-        limits = self._client.limits
-        return {
-            "version": 7,
-            "client_active": True,
-            "heartbeat_count": self._heartbeat.current_heartbeat_count,
-            "orchestrator_state": self._heartbeat.snapshot(),
-            "requests_this_minute": limits.requests_this_minute,
-            "posts_this_30m": limits.posts_this_30m,
-            "comments_this_hour": limits.comments_this_hour,
-            "last_minute_reset": limits.last_minute_reset,
-            "last_30m_reset": limits.last_30m_reset,
-            "last_hour_reset": limits.last_hour_reset,
-            "queue_size": self._content_queue.size,
-            "queue_stats": self._content_queue.stats,
-            "seen_message_count": len(self._seen_message_ids),
-            "seen_post_count": len(self._seen_post_ids),
-            "own_comment_count": len(self._own_comment_ids),
-            "comment_thread_count": len(self._comment_post_map),
-            "own_post_count": len(self._own_post_ids),
-            "followed_agent_count": len(self._followed_agents),
-            "subscribed_submolt_count": len(self._subscribed_submolts),
-            "intervals": {
-                "feed": self._feed_interval,
-                "post": self._post_interval,
-                "reply_check": self._reply_check_interval,
-                "profile_update": self._profile_update_interval,
-            },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
+        return self._snapshot.snapshot()
 
     def restore_state(self, snapshot: Dict[str, Any]) -> None:
-        if snapshot.get("version") not in (1, 2, 3, 4, 5, 6, 7):
-            return
-        # Restore orchestrator state for recovery after restarts
-        orch_state = snapshot.get("orchestrator_state", {})
-        if orch_state:
-            self._heartbeat.restore(orch_state)
-        if not snapshot.get("client_active") or not self._client:
-            return
-        limits = self._client.limits
-        limits.requests_this_minute = snapshot.get("requests_this_minute", 0)
-        limits.posts_this_30m = snapshot.get("posts_this_30m", 0)
-        limits.comments_this_hour = snapshot.get("comments_this_hour", 0)
-        limits.last_minute_reset = snapshot.get("last_minute_reset", 0.0)
-        limits.last_30m_reset = snapshot.get("last_30m_reset", 0.0)
-        limits.last_hour_reset = snapshot.get("last_hour_reset", 0.0)
+        self._snapshot.restore(snapshot)
 
     # =========================================================================
     # Lifecycle
